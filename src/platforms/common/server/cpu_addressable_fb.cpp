@@ -24,6 +24,8 @@
 #include <xf86drm.h>
 #include <drm_fourcc.h>
 
+#include "mir/fatal.h"
+
 namespace mg = mir::graphics;
 
 class mg::CPUAddressableFB::Buffer : public mir::renderer::software::RWMappableBuffer
@@ -83,6 +85,11 @@ class mg::CPUAddressableFB::Buffer : public mir::renderer::software::RWMappableB
         auto len() const -> size_t
         {
             return len_;
+        }
+
+        void mark_dirty() override
+        {
+            // No-op
         }
 
     private:

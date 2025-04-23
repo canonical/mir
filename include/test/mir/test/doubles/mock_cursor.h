@@ -1,5 +1,5 @@
 /*
- * Copyright © Canonical Ltd.
+* Copyright © Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3,
@@ -14,27 +14,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_GRAPHICS_NULL_CURSOR_H_
-#define MIR_GRAPHICS_NULL_CURSOR_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_CURSOR_H
+#define MIR_TEST_DOUBLES_MOCK_CURSOR_H
 
 #include "mir/graphics/cursor.h"
+#include <memory>
 
-namespace mir
+namespace mir::test::doubles
 {
-namespace graphics
+struct MockCursor : public graphics::Cursor
 {
-
-class NullCursor : public Cursor
-{
-public:
-    void show(std::shared_ptr<CursorImage> const&) override {}
-    void hide() override {}
-    void move_to(geometry::Point) override {}
-    void scale(float) override {}
-    bool is(std::shared_ptr<Renderable> const&) const override { return false; }
+    MOCK_METHOD(void, show, (std::shared_ptr<graphics::CursorImage> const&), (override));
+    MOCK_METHOD(void, hide, (), (override));
+    MOCK_METHOD(void, move_to, (mir::geometry::Point), (override));
+    MOCK_METHOD(void, scale, (float), (override));
+    MOCK_METHOD(bool, is, (std::shared_ptr<mir::graphics::Renderable> const&), (const override));
 };
-
-}
 }
 
-#endif
+#endif //MIR_TEST_DOUBLES_MOCK_CURSOR_H

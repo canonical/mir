@@ -66,6 +66,9 @@ protected:
 
     /// \note This must be called with a current GL context
     void upload_to_texture(void const* pixels, geometry::Stride const& stride);
+
+    /// \note This must be called with a current GL context
+    void update_texture(void const* pixels, geometry::Stride const& stride);
 private:
     geometry::Size const size_;
     MirPixelFormat const pixel_format_;
@@ -89,6 +92,7 @@ public:
     auto map_rw() -> std::unique_ptr<renderer::software::Mapping<unsigned char>> override;
 
     void bind() override;
+    void mark_dirty();
 
     auto format() const -> MirPixelFormat override { return ShmBuffer::pixel_format(); }
     auto stride() const -> geometry::Stride override { return stride_; }
@@ -107,6 +111,7 @@ private:
     std::unique_ptr<unsigned char[]> const pixels;
     std::mutex uploaded_mutex;
     bool uploaded{false};
+    bool is_dirty{false};
 };
 
 class MappableBackedShmBuffer :
@@ -123,6 +128,7 @@ public:
     auto map_rw() -> std::unique_ptr<renderer::software::Mapping<unsigned char>> override;
 
     void bind() override;
+    void mark_dirty();
 
     auto format() const -> MirPixelFormat override;
     auto stride() const -> geometry::Stride override;
@@ -134,6 +140,7 @@ private:
     std::shared_ptr<renderer::software::RWMappableBuffer> const data;
     std::mutex uploaded_mutex;
     bool uploaded{false};
+    bool is_dirty{false};
 };
 
 class NotifyingMappableBackedShmBuffer : public MappableBackedShmBuffer

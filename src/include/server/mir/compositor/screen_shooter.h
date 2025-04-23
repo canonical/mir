@@ -35,6 +35,7 @@ class WriteMappableBuffer;
 }
 namespace compositor
 {
+class SceneElement;
 
 class ScreenShooter
 {
@@ -47,6 +48,19 @@ public:
     virtual void capture(
         std::shared_ptr<renderer::software::WriteMappableBuffer> const& buffer,
         mir::geometry::Rectangle const& area,
+        std::function<void(std::optional<time::Timestamp>)>&& callback) = 0;
+
+    virtual void capture_with_cursor(
+        std::shared_ptr<renderer::software::WriteMappableBuffer> const& buffer,
+        mir::geometry::Rectangle const& area,
+        bool with_cursor,
+        std::function<void(std::optional<time::Timestamp>)>&& callback) = 0;
+
+    virtual void capture_with_filter(
+        std::shared_ptr<renderer::software::WriteMappableBuffer> const& buffer,
+        geometry::Rectangle const& area,
+        std::function<bool(std::shared_ptr<SceneElement const> const&)> const& filter,
+        bool with_cursor,
         std::function<void(std::optional<time::Timestamp>)>&& callback) = 0;
 
 private:

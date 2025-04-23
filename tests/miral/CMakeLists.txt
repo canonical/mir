@@ -74,6 +74,7 @@ mir_add_wrapped_executable(miral-test NOINSTALL
     external_client.cpp
     config_file.cpp
     runner.cpp
+    magnification.cpp
     wayland_extensions.cpp
     zone.cpp
     server_example_decoration.cpp server_example_decoration.h

@@ -16,6 +16,7 @@
 
 #include "basic_accessibility_manager.h"
 #include "mouse_keys_transformer.h"
+#include "basic_magnification_manager.h"
 
 #include "mir/graphics/cursor.h"
 #include "mir/input/composite_event_filter.h"
@@ -135,6 +136,7 @@ mir::shell::BasicAccessibilityManager::BasicAccessibilityManager(
     bool enable_key_repeat,
     std::shared_ptr<mir::graphics::Cursor> const& cursor,
     std::shared_ptr<shell::MouseKeysTransformer> const& mousekeys_transformer,
+    std::shared_ptr<MagnificationManager> const& magnification_manager,
     std::shared_ptr<input::InputDeviceRegistry> const& input_device_registry) :
     main_loop{std::move(main_loop)},
     the_composite_event_filter{std::move(the_composite_event_filter)},
@@ -142,6 +144,7 @@ mir::shell::BasicAccessibilityManager::BasicAccessibilityManager(
     cursor{cursor},
     event_transformer{event_transformer},
     transformer{mousekeys_transformer},
+    magnification_manager_{magnification_manager},
     input_device_registry{input_device_registry}
 {
 }
@@ -164,4 +167,9 @@ void mir::shell::BasicAccessibilityManager::acceleration_factors(double constant
 void mir::shell::BasicAccessibilityManager::max_speed(double x_axis, double y_axis)
 {
     transformer->max_speed(x_axis, y_axis);
+}
+
+std::shared_ptr<mir::shell::MagnificationManager> const& mir::shell::BasicAccessibilityManager::magnification_manager() const
+{
+    return magnification_manager_;
 }

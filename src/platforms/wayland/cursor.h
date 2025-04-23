@@ -50,6 +50,8 @@ public:
 
     void scale(float) override;
 
+    bool is(std::shared_ptr<graphics::Renderable> const& renderable) const override;
+
 private:
     wl_shm* const shm;
     std::function<void()> const flush_wl;

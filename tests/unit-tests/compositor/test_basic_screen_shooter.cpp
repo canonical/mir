@@ -21,6 +21,7 @@
 #include "mir/test/doubles/stub_gl_rendering_provider.h"
 #include "src/server/compositor/basic_screen_shooter.h"
 
+#include "mir/test/doubles/mock_cursor.h"
 #include "mir/renderer/renderer_factory.h"
 #include "mir/test/doubles/mock_scene.h"
 #include "mir/test/doubles/mock_renderer.h"
@@ -111,7 +112,8 @@ struct BasicScreenShooter : Test
             gl_providers,
             renderer_factory,
             buffer_allocator,
-            std::make_shared<mtd::StubGLConfig>());
+            std::make_shared<mtd::StubGLConfig>(),
+            cursor);
     }
 
     std::unique_ptr<mtd::MockRenderer> next_renderer{std::make_unique<testing::NiceMock<mtd::MockRenderer>>()};
@@ -140,6 +142,7 @@ struct BasicScreenShooter : Test
     std::vector<std::shared_ptr<mg::GLRenderingProvider>> gl_providers{gl_provider};
     std::shared_ptr<MockRendererFactory> renderer_factory{std::make_shared<testing::NiceMock<MockRendererFactory>>()};
     std::shared_ptr<mtd::StubBufferAllocator> buffer_allocator;
+    std::shared_ptr<mtd::MockCursor> cursor{std::make_shared<NiceMock<mtd::MockCursor>>()};
     std::shared_ptr<mtd::AdvanceableClock> clock{std::make_shared<mtd::AdvanceableClock>()};
     mtd::ExplicitExecutor executor;
     std::unique_ptr<mc::BasicScreenShooter> shooter;
@@ -175,6 +178,50 @@ TEST_F(BasicScreenShooter, renders_scene_elements)
     EXPECT_CALL(callback, Call(std::make_optional(clock->now())));
     executor.execute();
 }
+
+TEST_F(BasicScreenShooter, can_filter_scene_elements)
+{
+    shooter->capture_with_filter(
+        buffer,
+        viewport_rect,
+        [&](std::shared_ptr<mc::SceneElement const> const&element)
+        {
+            return element->renderable() != renderables[0];
+        },
+        true,
+        [&](auto time)
+        {
+            callback.Call(time);
+        });
+    InSequence seq;
+    auto const expected_renderables = mg::RenderableList(renderables.begin() + 1, renderables.end());;
+    EXPECT_CALL(*next_renderer, render(Eq(expected_renderables)));
+    EXPECT_CALL(callback, Call(std::make_optional(clock->now())));
+    executor.execute();
+}
+
+TEST_F(BasicScreenShooter, can_render_without_cursor)
+{
+    InSequence seq;
+    EXPECT_CALL(*cursor, is(::testing::_))
+        .WillOnce(Return(true));
+    EXPECT_CALL(*cursor, is(::testing::_))
+        .WillRepeatedly(Return(false));
+    shooter->capture_with_cursor(
+        buffer,
+        viewport_rect,
+        false,
+        [&](auto time)
+        {
+            callback.Call(time);
+        });
+
+    auto const expected_renderables = mg::RenderableList(renderables.begin() + 1, renderables.end());;
+    EXPECT_CALL(*next_renderer, render(Eq(expected_renderables)));
+    EXPECT_CALL(callback, Call(std::make_optional(clock->now())));
+    executor.execute();
+}
+
 
 TEST_F(BasicScreenShooter, sets_viewport_correctly_before_render)
 {
@@ -255,7 +302,8 @@ TEST_F(BasicScreenShooter, ensures_renderer_is_current_on_only_one_thread)
         gl_providers,
         renderer_factory,
         buffer_allocator,
-        std::make_shared<mtd::StubGLConfig>());
+        std::make_shared<mtd::StubGLConfig>(),
+        std::make_shared<NiceMock<mtd::MockCursor>>());
 
     ON_CALL(*next_renderer, render(_))
         .WillByDefault(

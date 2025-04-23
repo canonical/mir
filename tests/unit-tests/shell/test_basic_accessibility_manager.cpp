@@ -21,24 +21,24 @@
 
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/glib_main_loop.h"
-#include "mir/input/composite_event_filter.h"
 #include "mir/input/input_event_transformer.h"
 #include "mir/input/mousekeys_keymap.h"
 #include "mir/input/virtual_input_device.h"
-#include "mir/test/fake_shared.h"
+#include "mir/shell/magnification_manager.h"
 
+#include "mir/test/fake_shared.h"
 #include "mir/test/doubles/mock_input_seat.h"
 #include "mir/test/doubles/mock_key_mapper.h"
 #include "mir/test/doubles/mock_led_observer_registrar.h"
 #include "mir/test/doubles/mock_server_status_listener.h"
 #include "mir/test/doubles/advanceable_clock.h"
+#include "mir/test/doubles/stub_composite_event_filter.h"
 #include "mir/test/doubles/stub_cursor.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <memory>
-
 
 using namespace testing;
 namespace mt = mir::test;
@@ -65,25 +65,14 @@ struct MockMouseKeysTransformer : public mir::shell::MouseKeysTransformer
         (override));
 };
 
-struct StubCompositeEventFilter : mir::input::CompositeEventFilter
+struct MockMagnificationManager : public mir::shell::MagnificationManager
 {
-    bool handle(const MirEvent& event) override;
-    void append(const std::weak_ptr<EventFilter>& filter) override;
-    void prepend(const std::weak_ptr<EventFilter>& filter) override;
+    MOCK_METHOD(void, magnification, (float), (override));
+    MOCK_METHOD(float, magnification, (), (const override));
+    MOCK_METHOD(bool, enabled, (bool), (override));
+    MOCK_METHOD(void, size, (mir::geometry::Size const&), (override));
+    MOCK_METHOD(mir::geometry::Size, size, (), (const override));
 };
-
-bool StubCompositeEventFilter::handle(const MirEvent& /*event*/)
-{
-    return false;
-}
-
-void StubCompositeEventFilter::append(const std::weak_ptr<EventFilter>& /*filter*/)
-{
-}
-
-void StubCompositeEventFilter::prepend(const std::weak_ptr<EventFilter>& /*filter*/)
-{
-}
 
 struct TestBasicAccessibilityManager : Test
 {
@@ -95,6 +84,7 @@ struct TestBasicAccessibilityManager : Test
             true,
             std::make_shared<mir::test::doubles::StubCursor>(),
             mock_mousekeys_transformer,
+            std::make_shared<MockMagnificationManager>(),
             input_device_hub}
     {
         basic_accessibility_manager.register_keyboard_helper(mock_key_helper);
@@ -111,7 +101,7 @@ struct TestBasicAccessibilityManager : Test
         std::make_shared<NiceMock<MockMouseKeysTransformer>>()};
 
     std::shared_ptr<mir::MainLoop> const main_loop{std::make_shared<mir::GLibMainLoop>(mt::fake_shared(clock))};
-    std::shared_ptr<mir::input::CompositeEventFilter> const composite_filter{std::make_shared<StubCompositeEventFilter>()};
+    std::shared_ptr<mir::input::CompositeEventFilter> const composite_filter{std::make_shared<mtd::StubCompositeEventFilter>()};
     std::shared_ptr<mir::input::DefaultInputDeviceHub> const input_device_hub{
         std::make_shared<mir::input::DefaultInputDeviceHub>(
             mt::fake_shared(mock_seat),
@@ -256,4 +246,9 @@ TEST_F(TestBasicAccessibilityManager, calling_set_max_speed_calls_set_max_speed_
 
     basic_accessibility_manager.mousekeys_enabled(true);
     basic_accessibility_manager.max_speed(max_x, max_y);
+}
+
+TEST_F(TestBasicAccessibilityManager, can_get_magnification_manager)
+{
+    EXPECT_THAT(basic_accessibility_manager.magnification_manager(), Ne(nullptr));
 }

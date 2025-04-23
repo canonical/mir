@@ -205,6 +205,16 @@ void ms::SurfaceStack::add_input_visualization(
     emit_scene_changed();
 }
 
+void ms::SurfaceStack::prepend_input_visualization(
+    std::shared_ptr<mg::Renderable> const& overlay)
+{
+    {
+        RecursiveWriteLock lg(guard);
+        overlays.insert(overlays.begin(), overlay);
+    }
+    emit_scene_changed();
+}
+
 void ms::SurfaceStack::remove_input_visualization(
     std::weak_ptr<mg::Renderable> const& weak_overlay)
 {

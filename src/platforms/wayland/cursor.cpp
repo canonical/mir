@@ -138,3 +138,8 @@ void mir::platform::wayland::Cursor::scale(float new_scale)
 
     show(current_cursor_image);
 }
+
+bool mir::platform::wayland::Cursor::is(std::shared_ptr<graphics::Renderable> const&) const
+{
+    return false;
+}

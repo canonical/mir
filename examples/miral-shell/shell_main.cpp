@@ -34,6 +34,7 @@
 #include <miral/x11_support.h>
 #include <miral/wayland_extensions.h>
 #include <miral/mousekeys_config.h>
+#include <miral/magnification.h>
 
 #include <xkbcommon/xkbcommon-keysyms.h>
 
@@ -145,6 +146,7 @@ int main(int argc, char const* argv[])
 
     auto const initial_mousekeys_state = false;
     miral::MouseKeysConfig mousekeys_config{initial_mousekeys_state};
+    Magnification magnifier{false};
 
     auto toggle_mousekeys_filter = [mousekeys_on = initial_mousekeys_state, &mousekeys_config](MirEvent const* event) mutable {
         if(mir_event_get_type(event) != mir_event_type_input)
@@ -167,6 +169,76 @@ int main(int argc, char const* argv[])
             mousekeys_on = !mousekeys_on;
             mousekeys_config.enabled(mousekeys_on);
             return true;
+        }
+
+
+
+        return false;
+    };
+
+    auto magnifier_controls_filter = [ magnifier ](MirEvent const* event) mutable
+    {
+        if(mir_event_get_type(event) != mir_event_type_input)
+            return false;
+
+        auto const* input_event = mir_event_get_input_event(event);
+        if(mir_input_event_get_type(input_event) != mir_input_event_type_key)
+            return false;
+
+        auto const* key_event = mir_input_event_get_keyboard_event(input_event);
+        auto const modifiers = mir_keyboard_event_modifiers(key_event);
+        float constexpr magnification_step = 0.1f;
+        float constexpr min_magnification = 1.f;
+        float constexpr max_magnification = 5.f;
+
+        int constexpr size_step = 50.f;
+        auto const set_size = [&](int next_width, int next_height)
+        {
+            int constexpr min_dimension = 100.f;
+            int constexpr max_dimension = 1000.f;
+            if (next_width < min_dimension)
+                return;
+
+            if (next_width > max_dimension)
+                return;
+
+            if (next_height < min_dimension)
+                return;
+
+            if (next_height > max_dimension)
+                return;
+
+            magnifier.size(Size(next_width, next_height));
+        };
+
+        if (mir_keyboard_event_action(key_event) != mir_keyboard_action_down)
+            return false;
+
+        if (modifiers & mir_input_event_modifier_ctrl)
+        {
+            switch (mir_keyboard_event_keysym(key_event))
+            {
+            case XKB_KEY_equal:
+                if (modifiers & mir_input_event_modifier_alt)
+                    set_size(magnifier.size().width.as_int() + size_step,
+                        magnifier.size().height.as_int() + size_step);
+                else if (!magnifier.enabled(true))
+                    magnifier.magnification(std::clamp(
+                        magnifier.magnification() + magnification_step, min_magnification, max_magnification));
+                return true;
+            case XKB_KEY_minus:
+                if (modifiers & mir_input_event_modifier_alt)
+                    set_size(magnifier.size().width.as_int() - size_step,
+                        magnifier.size().height.as_int() - size_step);
+                else
+                    magnifier.magnification(std::clamp(
+                        magnifier.magnification() - magnification_step, min_magnification, max_magnification));
+                return true;
+            case XKB_KEY_Escape:
+                magnifier.enabled(false);
+                return true;
+            }
+
         }
 
         return false;
@@ -194,6 +266,8 @@ int main(int argc, char const* argv[])
             ConfigurationOption{[&](std::string const& cmd) { terminal_cmd = cmd; },
                                 "shell-terminal-emulator", "terminal emulator to use", terminal_cmd},
             mousekeys_config,
-            AppendEventFilter{toggle_mousekeys_filter}
+            magnifier,
+            AppendEventFilter{toggle_mousekeys_filter},
+            AppendEventFilter{magnifier_controls_filter}
         });
 }

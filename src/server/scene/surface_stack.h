@@ -118,6 +118,7 @@ public:
 
     // Intended for input overlays, as described in mir::input::Scene documentation.
     void add_input_visualization(std::shared_ptr<graphics::Renderable> const& overlay) override;
+    void prepend_input_visualization(std::shared_ptr<graphics::Renderable> const& overlay) override;
     void remove_input_visualization(std::weak_ptr<graphics::Renderable> const& overlay) override;
 
     void emit_scene_changed() override;

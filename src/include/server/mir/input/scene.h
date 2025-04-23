@@ -51,6 +51,9 @@ public:
     // in to the scene (i.e. cursors, touchspots). Overlay renderables will be rendered above all surfaces.
     // Within the set of overlay renderables, rendering order is undefined.
     virtual void add_input_visualization(std::shared_ptr<graphics::Renderable> const& overlay) = 0;
+    /// Like [add_input_visualization] except that the added renderable is guaranteed to be inserted
+    /// at the bottom of the overlay render order.
+    virtual void prepend_input_visualization(std::shared_ptr<graphics::Renderable> const& overlay) = 0;
     virtual void remove_input_visualization(std::weak_ptr<graphics::Renderable> const& overlay) = 0;
     
     // As input visualizations added through the overlay system will not use the standard SurfaceObserver

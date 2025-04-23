@@ -55,6 +55,11 @@ struct StubScene : public mtd::StubInputScene
         overlays.push_back(overlay);
     }
 
+    void prepend_input_visualization(std::shared_ptr<mg::Renderable> const& overlay) override
+    {
+        overlays.insert(overlays.begin(), overlay);
+    }
+
     void remove_input_visualization(std::weak_ptr<mg::Renderable> const& overlay) override
     {
         auto l = overlay.lock();

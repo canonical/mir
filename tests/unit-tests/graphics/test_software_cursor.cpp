@@ -43,6 +43,9 @@ struct MockInputScene : mtd::StubInputScene
     MOCK_METHOD1(add_input_visualization,
                  void(std::shared_ptr<mg::Renderable> const&));
 
+    MOCK_METHOD1(prepend_input_visualization,
+                 void(std::shared_ptr<mg::Renderable> const&));
+
     MOCK_METHOD1(remove_input_visualization,
                  void(std::weak_ptr<mg::Renderable> const&));
 
@@ -523,4 +526,18 @@ TEST_F(SoftwareCursor, handles_argb_8888_buffer_with_stride)
             reinterpret_cast<uint32_t const*>(mapping->data() + (stride * y) + mapping->size().width.as_uint32_t())};
         EXPECT_THAT(line, Each(Eq(expected_pixel)));
     }
+}
+
+TEST_F(SoftwareCursor, can_match_renderable)
+{
+    using namespace testing;
+
+    EXPECT_CALL(mock_input_scene,
+                add_input_visualization(testing::_))
+        .WillOnce(Invoke([&](auto const& renderable)
+        {
+            EXPECT_THAT(cursor.is(renderable), Eq(true));
+        }));
+
+    cursor.show(stub_cursor_image);
 }

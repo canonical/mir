@@ -641,6 +641,7 @@ global:
     mir::shell::InputTargeter::?InputTargeter*;
     mir::shell::InputTargeter::InputTargeter*;
     mir::shell::InputTargeter::operator*;
+    mir::shell::MagnificationManager::?MagnificationManager*;
     mir::shell::PersistentSurfaceStore::?PersistentSurfaceStore*;
     mir::shell::PersistentSurfaceStore::Id::Id*;
     mir::shell::PersistentSurfaceStore::Id::operator*;
@@ -1044,6 +1045,7 @@ global:
     non-virtual?thunk?to?mir::shell::IdleHandler::?IdleHandler*;
     non-virtual?thunk?to?mir::shell::IdleHandlerObserver::?IdleHandlerObserver*;
     non-virtual?thunk?to?mir::shell::InputTargeter::?InputTargeter*;
+    non-virtual?thunk?to?mir::shell::MagnificationManager::?MagnificationManager*;
     non-virtual?thunk?to?mir::shell::PersistentSurfaceStore::?PersistentSurfaceStore*;
     non-virtual?thunk?to?mir::shell::ShellReport::?ShellReport*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::add_display*;
@@ -1211,6 +1213,7 @@ global:
     typeinfo?for?mir::shell::IdleHandler;
     typeinfo?for?mir::shell::IdleHandlerObserver;
     typeinfo?for?mir::shell::InputTargeter;
+    typeinfo?for?mir::shell::MagnificationManager;
     typeinfo?for?mir::shell::PersistentSurfaceStore::Id;
     typeinfo?for?mir::shell::PersistentSurfaceStore;
     typeinfo?for?mir::shell::Shell;
@@ -1403,6 +1406,7 @@ global:
     vtable?for?mir::shell::IdleHandler;
     vtable?for?mir::shell::IdleHandlerObserver;
     vtable?for?mir::shell::InputTargeter;
+    vtable?for?mir::shell::MagnificationManager;
     vtable?for?mir::shell::PersistentSurfaceStore;
     vtable?for?mir::shell::Shell;
     vtable?for?mir::shell::ShellReport;

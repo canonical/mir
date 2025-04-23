@@ -126,6 +126,11 @@ public:
         return mapping->len();
     }
 
+    void mark_dirty() override
+    {
+        // No-op
+    }
+
 private:
     std::unique_ptr<mir::shm::Mapping<std::conditional_t<std::is_const_v<T>, std::byte const, std::byte>>> const mapping;
     ErrorNotifyingRWMappableBuffer const& parent;

@@ -239,3 +239,8 @@ void mir::graphics::SoftwareCursor::scale(float new_scale)
 
     show(current_cursor_image);
 }
+
+bool mir::graphics::SoftwareCursor::is(std::shared_ptr<Renderable> const& other) const
+{
+    return renderable == other;
+}

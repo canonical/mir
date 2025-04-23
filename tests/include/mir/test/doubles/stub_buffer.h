@@ -148,6 +148,10 @@ public:
         {
             return buffer->written_pixels.size();
         }
+
+        void mark_dirty() override
+        {
+        }
     private:
         StubBuffer* const buffer;
     };
