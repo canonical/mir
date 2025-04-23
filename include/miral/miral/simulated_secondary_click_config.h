@@ -40,10 +40,10 @@ public:
     void operator()(mir::Server& server);
 
     /// Enables simulated secondary click
-    void enable() const;
+    SimulatedSecondaryClickConfig& enable();
 
     /// Disables simulated secondary click
-    void disable() const;
+    SimulatedSecondaryClickConfig& disable();
 
     /// Configures the duration users have to keep the left mouse button down
     /// to dispatch a secondary click

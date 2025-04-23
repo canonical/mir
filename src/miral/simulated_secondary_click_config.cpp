@@ -41,18 +41,22 @@ miral::SimulatedSecondaryClickConfig::SimulatedSecondaryClickConfig(bool enabled
 {
 }
 
-void miral::SimulatedSecondaryClickConfig::enable() const
+miral::SimulatedSecondaryClickConfig& miral::SimulatedSecondaryClickConfig::enable()
 {
     self->enabled_by_default = true;
     if (auto const accessibility_manager = self->accessibility_manager.lock())
         accessibility_manager->simulated_secondary_click_enabled(true);
+
+    return *this;
 }
 
-void miral::SimulatedSecondaryClickConfig::disable() const
+miral::SimulatedSecondaryClickConfig& miral::SimulatedSecondaryClickConfig::disable()
 {
     self->enabled_by_default = false;
     if (auto const accessibility_manager = self->accessibility_manager.lock())
         accessibility_manager->simulated_secondary_click_enabled(false);
+
+    return *this;
 }
 
 miral::SimulatedSecondaryClickConfig& miral::SimulatedSecondaryClickConfig::hold_duration(
