@@ -15,28 +15,41 @@
  */
 
 #include "mir/input/mousekey_pointer.h"
+#include "mir/input/device.h"
+#include "mir/input/input_device_registry.h"
 #include "mir/input/input_sink.h"
-
 
 mir::input::MousekeyPointer::MousekeyPointer(
     std::shared_ptr<MainLoop> main_loop, std::shared_ptr<input::InputEventTransformer> iet) :
-    mir::input::VirtualInputDevice{"mousekey-pointer", mir::input::DeviceCapability::pointer},
     main_loop{std::move(main_loop)},
-    iet{std::move(iet)}
+    iet{std::move(iet)},
+    virtual_device{
+        std::make_shared<mir::input::VirtualInputDevice>("mousekey-pointer", mir::input::DeviceCapability::pointer)}
 {
 }
 
 bool mir::input::MousekeyPointer::handle(MirEvent const& event)
 {
     auto handled = false;
-    if_started_then(
+    virtual_device->if_started_then(
         [this, &event, &handled](auto* sink, auto* builder)
         {
             handled = iet->transform(
                 event,
                 builder,
-                [this, sink](auto event) { main_loop->spawn([sink, event] { sink->handle_input(event); }); });
+                [this, sink](auto event) { main_loop->spawn([sink, event] { sink->handle_input(event); }); },
+                device_id);
         });
     return handled;
 }
 
+void mir::input::MousekeyPointer::add_to_registry(std::shared_ptr<InputDeviceRegistry> const& registry)
+{
+   auto const weak_device = registry->add_device(virtual_device);
+   device_id = weak_device.lock()->id();
+}
+
+void mir::input::MousekeyPointer::remove_from_registry(std::shared_ptr<InputDeviceRegistry> const& registry)
+{
+    registry->remove_device(virtual_device);
+}

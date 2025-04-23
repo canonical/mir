@@ -64,7 +64,10 @@ struct MockMouseKeysTransformer : public mir::shell::MouseKeysTransformer
     MOCK_METHOD(
         bool,
         transform_input_event,
-        (mir::input::InputEventTransformer::EventDispatcher const&, mir::input::EventBuilder*, MirEvent const&),
+        (mir::input::InputEventTransformer::EventDispatcher const&,
+         mir::input::EventBuilder*,
+         MirEvent const&,
+         MirInputDeviceId),
         (override));
 };
 
@@ -77,7 +80,8 @@ struct MockSimulatedSecondaryClickTransformer : public mir::shell::SimulatedSeco
         transform_input_event,
         (mir::input::InputEventTransformer::EventDispatcher const& dispatcher,
          mir::input::EventBuilder*,
-         MirEvent const&),
+         MirEvent const&,
+         MirInputDeviceId),
         (override));
 
     MOCK_METHOD(void, hold_duration, (std::chrono::milliseconds delay), (override));
@@ -127,13 +131,20 @@ struct TestBasicAccessibilityManager : Test
         basic_accessibility_manager.register_keyboard_helper(mock_key_helper);
     }
 
-    mtd::StubInputDeviceRegistry input_device_registry;
     mtd::AdvanceableClock clock;
     mir::dispatch::MultiplexingDispatchable multiplexer;
     NiceMock<mtd::MockLedObserverRegistrar> led_observer_registrar;
     NiceMock<mtd::MockInputSeat> mock_seat;
     NiceMock<mtd::MockKeyMapper> mock_key_mapper;
     NiceMock<mtd::MockServerStatusListener> mock_server_status_listener;
+
+    mir::input::DefaultInputDeviceHub input_device_registry{
+        mt::fake_shared(mock_seat),
+        mt::fake_shared(multiplexer),
+        mt::fake_shared(clock),
+        mt::fake_shared(mock_key_mapper),
+        mt::fake_shared(mock_server_status_listener),
+        mt::fake_shared(led_observer_registrar)};
     std::shared_ptr<NiceMock<MockKeyboardHelper>> mock_key_helper{std::make_shared<NiceMock<MockKeyboardHelper>>()};
     std::shared_ptr<NiceMock<MockMouseKeysTransformer>> mock_mousekeys_transformer{
         std::make_shared<NiceMock<MockMouseKeysTransformer>>()};

@@ -42,7 +42,8 @@ public:
         // shouldn't be handled by later transformers, whether the transformer is
         // accumulating events for later dispatching or has immediately dispatched
         // an event is an implementation detail of the transformer
-        virtual bool transform_input_event(EventDispatcher const&, EventBuilder*,  MirEvent const&) = 0;
+        virtual bool transform_input_event(
+            EventDispatcher const&, EventBuilder*, MirEvent const&, MirInputDeviceId virtual_device_id) = 0;
     };
 
     InputEventTransformer();
@@ -51,7 +52,8 @@ public:
     bool transform(
         MirEvent const& event,
         EventBuilder* builder,
-        EventDispatcher const& dispatcher);
+        EventDispatcher const& dispatcher,
+        MirInputDeviceId virtual_device_id);
 
     bool append(std::weak_ptr<Transformer> const&);
     bool remove(std::shared_ptr<Transformer> const&);

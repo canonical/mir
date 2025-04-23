@@ -41,7 +41,6 @@ void click(
         mir::events::ScrollAxisH{},
         mir::events::ScrollAxisV{});
 
-    down->to_input()->set_synthesized(true);
     dispatcher(std::move(down));
 
     auto up = builder->pointer_event(
@@ -54,7 +53,6 @@ void click(
         mir::events::ScrollAxisH{},
         mir::events::ScrollAxisV{});
 
-    up->to_input()->set_synthesized(true);
     dispatcher(std::move(up));
 }
 } // namespace
@@ -68,7 +66,8 @@ mir::shell::BasicSimulatedSecondaryClickTransformer::BasicSimulatedSecondaryClic
 bool mir::shell::BasicSimulatedSecondaryClickTransformer::transform_input_event(
     input::InputEventTransformer::EventDispatcher const& dispatcher,
     input::EventBuilder* builder,
-    MirEvent const& event)
+    MirEvent const& event,
+    MirInputDeviceId virtual_device_id)
 {
     if (event.type() != mir_event_type_input)
         return false;
@@ -79,7 +78,7 @@ bool mir::shell::BasicSimulatedSecondaryClickTransformer::transform_input_event(
 
     auto const pointer_event = input_event->to_pointer();
 
-    if(pointer_event->is_synthesized())
+    if(input_event->device_id() == virtual_device_id)
         return false;
 
     auto const action = pointer_event->action();

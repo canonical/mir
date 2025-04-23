@@ -47,6 +47,8 @@ using namespace testing;
 
 struct TestInputEventTransformer : testing::Test
 {
+    static auto constexpr vid = 0;
+
     mir::dispatch::MultiplexingDispatchable multiplexer;
     NiceMock<mtd::MockLedObserverRegistrar> led_observer_registrar;
     NiceMock<mtd::MockInputSeat> mock_seat;
@@ -87,7 +89,7 @@ struct TestInputEventTransformer : testing::Test
     mir::EventUPtr make_key_event()
     {
         return mev::make_key_event(
-            MirInputDeviceId{0},
+            MirInputDeviceId{vid},
             clock.now().time_since_epoch(),
             mir_keyboard_action_up,
             XKB_KEY_W,
@@ -106,7 +108,10 @@ struct MockTransformer : public mir::input::InputEventTransformer::Transformer
     MOCK_METHOD(
         (bool),
         transform_input_event,
-        (mir::input::InputEventTransformer::EventDispatcher const&, mir::input::EventBuilder*, MirEvent const&),
+        (mir::input::InputEventTransformer::EventDispatcher const&,
+         mir::input::EventBuilder*,
+         MirEvent const&,
+         MirInputDeviceId),
         (override));
 };
 
@@ -147,17 +152,17 @@ TEST_F(TestInputEventTransformer, virtual_input_device_is_added_after_transforme
 TEST_F(TestInputEventTransformer, transformer_gets_called)
 {
     auto mock_transformer = std::make_shared<MockTransformer>();
-    EXPECT_CALL(*mock_transformer, transform_input_event(_, _,_));
+    EXPECT_CALL(*mock_transformer, transform_input_event(_, _, _, _));
 
     input_event_transformer.append(mock_transformer);
 
-    input_event_transformer.transform(*make_key_event(), nullptr, [](auto) {});
+    input_event_transformer.transform(*make_key_event(), nullptr, [](auto) {}, vid);
 }
 
 TEST_F(TestInputEventTransformer, events_block_correctly)
 {
     auto mock_transformer_1 = std::make_shared<MockTransformer>();
-    EXPECT_CALL(*mock_transformer_1, transform_input_event(_, _, _))
+    EXPECT_CALL(*mock_transformer_1, transform_input_event(_, _, _, _))
         .WillOnce(
             [](auto*...)
             {
@@ -165,18 +170,18 @@ TEST_F(TestInputEventTransformer, events_block_correctly)
             });
 
     auto mock_transformer_2 = std::make_shared<MockTransformer>();
-    EXPECT_CALL(*mock_transformer_2, transform_input_event(_, _, _)).Times(0);
+    EXPECT_CALL(*mock_transformer_2, transform_input_event(_, _, _, _)).Times(0);
 
     input_event_transformer.append(mock_transformer_1);
     input_event_transformer.append(mock_transformer_2);
 
-    input_event_transformer.transform(*make_key_event(), nullptr, [](auto) {});
+    input_event_transformer.transform(*make_key_event(), nullptr, [](auto) {}, vid);
 }
 
 TEST_F(TestInputEventTransformer, events_cascade_correctly)
 {
     auto mock_transformer_1 = std::make_shared<MockTransformer>();
-    EXPECT_CALL(*mock_transformer_1, transform_input_event(_, _, _))
+    EXPECT_CALL(*mock_transformer_1, transform_input_event(_, _, _, _))
         .WillOnce(
             [](auto*...)
             {
@@ -184,18 +189,18 @@ TEST_F(TestInputEventTransformer, events_cascade_correctly)
             });
 
     auto mock_transformer_2 = std::make_shared<MockTransformer>();
-    EXPECT_CALL(*mock_transformer_2, transform_input_event(_, _, _));
+    EXPECT_CALL(*mock_transformer_2, transform_input_event(_, _, _, _));
 
     input_event_transformer.append(mock_transformer_1);
     input_event_transformer.append(mock_transformer_2);
 
-    input_event_transformer.transform(*make_key_event(), nullptr, [](auto) {});
+    input_event_transformer.transform(*make_key_event(), nullptr, [](auto) {}, vid);
 }
 
 TEST_F(TestInputEventTransformer, transformer_not_called_after_removal)
 {
     auto mock_transformer = std::make_shared<MockTransformer>();
-    EXPECT_CALL(*mock_transformer, transform_input_event(_, _, _))
+    EXPECT_CALL(*mock_transformer, transform_input_event(_, _, _, _))
         .Times(1)
         .WillOnce(
             [](auto*...)
@@ -204,22 +209,22 @@ TEST_F(TestInputEventTransformer, transformer_not_called_after_removal)
             });
 
     input_event_transformer.append(mock_transformer);
-    input_event_transformer.transform(*make_key_event(), nullptr, [](auto) {});
+    input_event_transformer.transform(*make_key_event(), nullptr, [](auto) {}, vid);
     input_event_transformer.remove(mock_transformer);
-    input_event_transformer.transform(*make_key_event(), nullptr, [](auto) {});
+    input_event_transformer.transform(*make_key_event(), nullptr, [](auto) {}, vid);
 }
 
 TEST_F(TestInputEventTransformer, removing_a_valid_transformer_returns_true)
 {
     auto mock_transformer_1 = std::make_shared<MockTransformer>();
-    EXPECT_CALL(*mock_transformer_1, transform_input_event(_, _, _)).Times(0);
+    EXPECT_CALL(*mock_transformer_1, transform_input_event(_, _, _, _)).Times(0);
     auto mock_transformer_2 = std::make_shared<MockTransformer>();
-    EXPECT_CALL(*mock_transformer_2, transform_input_event(_, _, _));
+    EXPECT_CALL(*mock_transformer_2, transform_input_event(_, _, _, _));
 
     input_event_transformer.append(mock_transformer_1);
     input_event_transformer.append(mock_transformer_2);
     ASSERT_TRUE(input_event_transformer.remove(mock_transformer_1));
-    input_event_transformer.transform(*make_key_event(), nullptr, [](auto) {});
+    input_event_transformer.transform(*make_key_event(), nullptr, [](auto) {}, vid);
 }
 
 TEST_F(TestInputEventTransformer, removing_a_transformer_that_was_not_returns_false)
@@ -231,10 +236,10 @@ TEST_F(TestInputEventTransformer, removing_a_transformer_that_was_not_returns_fa
 TEST_F(TestInputEventTransformer, adding_transformer_twice_has_no_effect_on_expected_handling_of_events)
 {
     auto mock_transformer_1 = std::make_shared<MockTransformer>();
-    EXPECT_CALL(*mock_transformer_1, transform_input_event(_, _, _)).Times(1);
+    EXPECT_CALL(*mock_transformer_1, transform_input_event(_, _, _, _)).Times(1);
 
     input_event_transformer.append(mock_transformer_1);
     input_event_transformer.append(mock_transformer_1);
-    input_event_transformer.transform(*make_key_event(), nullptr, [](auto) {});
+    input_event_transformer.transform(*make_key_event(), nullptr, [](auto) {}, vid);
 }
 

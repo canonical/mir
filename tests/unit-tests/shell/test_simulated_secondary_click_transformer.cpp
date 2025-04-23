@@ -43,7 +43,7 @@ static auto constexpr test_displacement_threshold = 20.0f;
 
 struct TestSimulatedSecondaryClickTransformer : Test
 {
-    static auto constexpr virtual_event_builder_device_id = 1;
+    static auto constexpr vid = 1;
 
     TestSimulatedSecondaryClickTransformer() :
         main_loop{std::make_shared<mtd::QueuedAlarmStubMainLoop>(mt::fake_shared(clock))},
@@ -51,7 +51,7 @@ struct TestSimulatedSecondaryClickTransformer : Test
             std::make_shared<mir::shell::BasicSimulatedSecondaryClickTransformer>(main_loop),
         },
         real_event_builder{0, mt::fake_shared(clock)},
-        virtual_event_builder{virtual_event_builder_device_id, mt::fake_shared(clock)},
+        virtual_event_builder{vid, mt::fake_shared(clock)},
         dispatch{[&](std::shared_ptr<MirEvent> const& event)
                  {
                      this->on_dispatch(event);
@@ -130,10 +130,12 @@ TEST_P(
                 EXPECT_THAT(event->to_input()->to_pointer()->buttons() & expected_button, Eq(0));
             });
 
-    transformer->transform_input_event(dispatch, &virtual_event_builder, *pointer_down_event(mir_pointer_button_primary));
+    transformer->transform_input_event(
+        dispatch, &virtual_event_builder, *pointer_down_event(mir_pointer_button_primary), vid);
     clock.advance_by(release_delay);
     main_loop->call_queued();
-    transformer->transform_input_event(dispatch, &virtual_event_builder, *pointer_up_event(mir_pointer_button_primary));
+    transformer->transform_input_event(
+        dispatch, &virtual_event_builder, *pointer_up_event(mir_pointer_button_primary), vid);
     main_loop->call_queued();
 }
 
@@ -170,10 +172,12 @@ TEST_P(TestCallbacks, releasing_left_pointer_button_at_different_times_calls_the
 
     auto const [release_delay, start_called, cancel_called] = GetParam();
 
-    transformer->transform_input_event(dispatch, &virtual_event_builder, *pointer_down_event(mir_pointer_button_primary));
+    transformer->transform_input_event(
+        dispatch, &virtual_event_builder, *pointer_down_event(mir_pointer_button_primary), vid);
     clock.advance_by(release_delay);
     main_loop->call_queued();
-    transformer->transform_input_event(dispatch, &virtual_event_builder, *pointer_up_event(mir_pointer_button_primary));
+    transformer->transform_input_event(
+        dispatch, &virtual_event_builder, *pointer_up_event(mir_pointer_button_primary), vid);
     main_loop->call_queued();
 
     EXPECT_THAT(hold_start_called, Eq(start_called));
@@ -221,14 +225,16 @@ TEST_P(TestInterference, pressing_other_buttons_during_simulated_secondary_click
                 EXPECT_THAT(event->to_input()->to_pointer()->buttons() & expected_button, Eq(0));
             });
 
-    transformer->transform_input_event(dispatch, &virtual_event_builder, *pointer_down_event(mir_pointer_button_primary));
-    transformer->transform_input_event(dispatch, &virtual_event_builder, *pointer_down_event(interfering_button));
+    transformer->transform_input_event(
+        dispatch, &virtual_event_builder, *pointer_down_event(mir_pointer_button_primary), vid);
+    transformer->transform_input_event(dispatch, &virtual_event_builder, *pointer_down_event(interfering_button), vid);
 
     clock.advance_by(release_delay);
     main_loop->call_queued();
 
-    transformer->transform_input_event(dispatch, &virtual_event_builder, *pointer_up_event(interfering_button));
-    transformer->transform_input_event(dispatch, &virtual_event_builder, *pointer_up_event(mir_pointer_button_primary));
+    transformer->transform_input_event(dispatch, &virtual_event_builder, *pointer_up_event(interfering_button), vid);
+    transformer->transform_input_event(
+        dispatch, &virtual_event_builder, *pointer_up_event(mir_pointer_button_primary), vid);
 
     main_loop->call_queued();
 }
@@ -263,7 +269,7 @@ TEST_F(TestSimulatedSecondaryClickTransformer, low_displacement_doesnt_cancel_si
             });
 
     transformer->transform_input_event(
-        dispatch, &virtual_event_builder, *pointer_down_event(mir_pointer_button_primary));
+        dispatch, &virtual_event_builder, *pointer_down_event(mir_pointer_button_primary), vid);
 
     // Doesn't actually matter which axis we displace on as long as the displacement magnitude matches.
     // disp = sqrt(x*x + y*y) assuming initial_position = (0, 0)
@@ -284,12 +290,14 @@ TEST_F(TestSimulatedSecondaryClickTransformer, low_displacement_doesnt_cancel_si
             0.0f,
             0.0f,
             0.0f,
-            0.0f));
+            0.0f),
+        vid);
 
     clock.advance_by(test_hold_time);
     main_loop->call_queued();
 
-    transformer->transform_input_event(dispatch, &virtual_event_builder, *pointer_up_event(mir_pointer_button_primary));
+    transformer->transform_input_event(
+        dispatch, &virtual_event_builder, *pointer_up_event(mir_pointer_button_primary), vid);
     main_loop->call_queued();
 }
 
@@ -309,7 +317,7 @@ TEST_F(TestSimulatedSecondaryClickTransformer, high_displacement_cancels_simulat
             });
 
     transformer->transform_input_event(
-        dispatch, &virtual_event_builder, *pointer_down_event(mir_pointer_button_primary));
+        dispatch, &virtual_event_builder, *pointer_down_event(mir_pointer_button_primary), vid);
 
     // Doesn't actually matter which axis we displace on as long as the displacement magnitude matches.
     auto const displacement = std::sqrt(std::pow(test_displacement_threshold, 2) / 2.0f);
@@ -325,11 +333,13 @@ TEST_F(TestSimulatedSecondaryClickTransformer, high_displacement_cancels_simulat
             0.0f,
             0.0f,
             0.0f,
-            0.0f));
+            0.0f),
+        vid);
 
     clock.advance_by(test_hold_time);
     main_loop->call_queued();
 
-    transformer->transform_input_event(dispatch, &virtual_event_builder, *pointer_up_event(mir_pointer_button_primary));
+    transformer->transform_input_event(
+        dispatch, &virtual_event_builder, *pointer_up_event(mir_pointer_button_primary), vid);
     main_loop->call_queued();
 }

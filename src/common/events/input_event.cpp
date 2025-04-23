@@ -112,13 +112,3 @@ MirInputEvent::MirInputEvent(MirInputEventType input_type) :
     input_type_{input_type}
 {
 }
-
-bool MirInputEvent::is_synthesized() const
-{
-    return is_synthesized_;
-}
-
-void MirInputEvent::set_synthesized(bool synthesized)
-{
-    is_synthesized_ = synthesized;
-}

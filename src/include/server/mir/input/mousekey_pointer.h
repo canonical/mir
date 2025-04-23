@@ -27,15 +27,21 @@ namespace mir
 {
 namespace input
 {
-class MousekeyPointer : public VirtualInputDevice, public EventFilter
+class InputDeviceRegistry;
+class MousekeyPointer : public EventFilter
 {
 public:
     MousekeyPointer(std::shared_ptr<MainLoop> main_loop, std::shared_ptr<InputEventTransformer> iet);
     bool handle(MirEvent const& event) override;
 
+    void add_to_registry(std::shared_ptr<InputDeviceRegistry> const&);
+    void remove_from_registry(std::shared_ptr<InputDeviceRegistry> const&);
+
 private:
     std::shared_ptr<MainLoop> const main_loop;
     std::shared_ptr<input::InputEventTransformer> const iet;
+    std::shared_ptr<VirtualInputDevice> const virtual_device;
+    MirInputDeviceId device_id;
 };
 
 }

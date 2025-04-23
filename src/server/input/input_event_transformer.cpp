@@ -28,7 +28,8 @@ mi::InputEventTransformer::InputEventTransformer()
 
 mir::input::InputEventTransformer::~InputEventTransformer() = default;
 
-bool mi::InputEventTransformer::transform(MirEvent const& event, EventBuilder* builder, EventDispatcher const& dispatcher)
+bool mi::InputEventTransformer::transform(
+    MirEvent const& event, EventBuilder* builder, EventDispatcher const& dispatcher, MirInputDeviceId virtual_device_id)
 {
     std::lock_guard lock{mutex};
 
@@ -52,7 +53,7 @@ bool mi::InputEventTransformer::transform(MirEvent const& event, EventBuilder* b
     {
         auto const& t = it.lock();
 
-        if (t->transform_input_event(dispatcher, builder, event))
+        if (t->transform_input_event(dispatcher, builder, event, virtual_device_id))
         {
             handled = true;
             break;

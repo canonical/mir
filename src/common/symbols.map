@@ -715,7 +715,5 @@ MIR_COMMON_2.21 {
 global:
   extern "C++" {
     mir::graphics::Edid::serial_number*;
-    MirInputEvent::is_synthesized*;
-    MirInputEvent::set_synthesized*;
   };
 } MIR_COMMON_2.19;

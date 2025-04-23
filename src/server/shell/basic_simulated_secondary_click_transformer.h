@@ -42,7 +42,8 @@ public:
     bool transform_input_event(
         input::InputEventTransformer::EventDispatcher const& dispatcher,
         input::EventBuilder*,
-        MirEvent const&) override;
+        MirEvent const&,
+        MirInputDeviceId) override;
 
     void hold_duration(std::chrono::milliseconds delay) override;
     void displacement_threshold(float displacement) override;

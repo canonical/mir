@@ -44,12 +44,13 @@ using namespace std::chrono_literals;
 
 struct TestMouseKeysTransformer : testing::Test
 {
+    static auto constexpr vid = 0;
     TestMouseKeysTransformer() :
         main_loop{std::make_shared<mtd::QueuedAlarmStubMainLoop>(mt::fake_shared(clock))},
         transformer{
             std::make_shared<mir::shell::BasicMouseKeysTransformer>(main_loop, mt::fake_shared(clock)),
         },
-        default_event_builder{0, mt::fake_shared(clock)},
+        default_event_builder{vid, mt::fake_shared(clock)},
         dispatch{[&](std::shared_ptr<MirEvent> const& event)
         {
             this->on_dispatch(event);
@@ -126,7 +127,7 @@ TEST_P(TestOneAxisMovement, single_keyboard_event_to_single_pointer_motion_event
             });
 
     auto const button = GetParam();
-    transformer->transform_input_event(dispatch, &default_event_builder, *down_event(button));
+    transformer->transform_input_event(dispatch, &default_event_builder, *down_event(button), vid);
 
     for (auto i = 0; i < 3; i++)
     {
@@ -134,7 +135,7 @@ TEST_P(TestOneAxisMovement, single_keyboard_event_to_single_pointer_motion_event
         main_loop->call_queued();
     }
 
-    transformer->transform_input_event(dispatch, &default_event_builder, *up_event(button));
+    transformer->transform_input_event(dispatch, &default_event_builder, *up_event(button), vid);
 }
 
 INSTANTIATE_TEST_SUITE_P(
@@ -151,7 +152,7 @@ struct TestTwoKeyMovement :
         for (auto key : {key1, key2})
         {
             auto down = down_event(key);
-            transformer->transform_input_event(dispatch, &default_event_builder, *down);
+            transformer->transform_input_event(dispatch, &default_event_builder, *down, vid);
         }
     }
 
@@ -162,7 +163,7 @@ struct TestTwoKeyMovement :
         for (auto key : {key1, key2})
         {
             auto up = up_event(key);
-            transformer->transform_input_event(dispatch, &default_event_builder, *up);
+            transformer->transform_input_event(dispatch, &default_event_builder, *up, vid);
         }
     }
 };
@@ -277,7 +278,7 @@ TEST_F(TestMouseKeysTransformer, pressing_all_movement_buttons_generates_no_moti
     for (auto key : all_movement_keys)
     {
         auto down = down_event(key);
-        transformer->transform_input_event(dispatch, &default_event_builder, *down);
+        transformer->transform_input_event(dispatch, &default_event_builder, *down, vid);
     }
 
 
@@ -292,7 +293,7 @@ TEST_F(TestMouseKeysTransformer, pressing_all_movement_buttons_generates_no_moti
     for (auto key : all_movement_keys)
     {
         auto up = up_event(key);
-        transformer->transform_input_event(dispatch, &default_event_builder, *up);
+        transformer->transform_input_event(dispatch, &default_event_builder, *up, vid);
     }
 }
 
@@ -335,8 +336,8 @@ TEST_P(ClicksDispatchDownAndUpEvents, clicks_dispatch_pointer_down_and_up_events
                 check_up(event);
             });
 
-    transformer->transform_input_event(dispatch, &default_event_builder, *up_event(switching_button));
-    transformer->transform_input_event(dispatch, &default_event_builder, *up_event(XKB_KEY_KP_5));
+    transformer->transform_input_event(dispatch, &default_event_builder, *up_event(switching_button), vid);
+    transformer->transform_input_event(dispatch, &default_event_builder, *up_event(XKB_KEY_KP_5), vid);
 
     main_loop->call_queued();
 }
@@ -373,7 +374,7 @@ TEST_F(TestMouseKeysTransformer, double_click_dispatch_four_events)
         .WillOnce(expect_down)
         .WillOnce(expect_up);
 
-    transformer->transform_input_event(dispatch, &default_event_builder, *up_event(XKB_KEY_KP_Add));
+    transformer->transform_input_event(dispatch, &default_event_builder, *up_event(XKB_KEY_KP_Add), vid);
     main_loop->call_queued();
 }
 
@@ -396,8 +397,8 @@ TEST_F(TestMouseKeysTransformer, drag_start_and_end_dispatch_down_and_up_events)
                 EXPECT_EQ(pointer_buttons, 0);
             });
 
-    transformer->transform_input_event(dispatch, &default_event_builder, *up_event(XKB_KEY_KP_0));
-    transformer->transform_input_event(dispatch, &default_event_builder, *up_event(XKB_KEY_KP_Decimal));
+    transformer->transform_input_event(dispatch, &default_event_builder, *up_event(XKB_KEY_KP_0), vid);
+    transformer->transform_input_event(dispatch, &default_event_builder, *up_event(XKB_KEY_KP_Decimal), vid);
     main_loop->call_queued();
 }
 
@@ -420,7 +421,7 @@ TEST_F(TestMouseKeysTransformer, receiving_a_key_not_in_keymap_doesnt_dispatch_e
     test_keymap.for_each_key_action_pair(
         [&](auto key, auto)
         {
-            transformer->transform_input_event(dispatch, &default_event_builder, *down_event(key));
+            transformer->transform_input_event(dispatch, &default_event_builder, *down_event(key), vid);
             main_loop->call_queued();
         });
 }
@@ -453,12 +454,12 @@ TEST_P(TestAccelerationCurve, acceleration_curve_constants_evaluate_properly)
     transformer->max_speed(0, 0);
 
     transformer->acceleration_factors(curve.constant, curve.linear, curve.quadratic);
-    transformer->transform_input_event(dispatch, &default_event_builder, *down_event(XKB_KEY_KP_6));
+    transformer->transform_input_event(dispatch, &default_event_builder, *down_event(XKB_KEY_KP_6), vid);
 
     clock.advance_by(2ms);
     main_loop->call_queued();
 
-    transformer->transform_input_event(dispatch, &default_event_builder, *up_event(XKB_KEY_KP_6));
+    transformer->transform_input_event(dispatch, &default_event_builder, *up_event(XKB_KEY_KP_6), vid);
 }
 
 // Speed is computed as:
@@ -505,14 +506,14 @@ TEST_P(TestMaxSpeed, max_speed_caps_speed_properly)
     transformer->acceleration_factors(1000000, 1000000, 1000000);
 
     transformer->max_speed(max_speed.dx.as_value(), max_speed.dy.as_value());
-    transformer->transform_input_event(dispatch, &default_event_builder, *down_event(XKB_KEY_KP_6));
-    transformer->transform_input_event(dispatch, &default_event_builder, *down_event(XKB_KEY_KP_2));
+    transformer->transform_input_event(dispatch, &default_event_builder, *down_event(XKB_KEY_KP_6), vid);
+    transformer->transform_input_event(dispatch, &default_event_builder, *down_event(XKB_KEY_KP_2), vid);
 
     clock.advance_by(1s);
     main_loop->call_queued();
 
-    transformer->transform_input_event(dispatch, &default_event_builder, *up_event(XKB_KEY_KP_6));
-    transformer->transform_input_event(dispatch, &default_event_builder, *up_event(XKB_KEY_KP_2));
+    transformer->transform_input_event(dispatch, &default_event_builder, *up_event(XKB_KEY_KP_6), vid);
+    transformer->transform_input_event(dispatch, &default_event_builder, *up_event(XKB_KEY_KP_2), vid);
 }
 
 INSTANTIATE_TEST_SUITE_P(
