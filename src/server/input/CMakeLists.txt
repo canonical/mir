@@ -29,7 +29,7 @@ set(
   virtual_input_device.cpp
   xkb_mapper_registrar.cpp
   input_event_transformer.cpp
-  mousekey_pointer.cpp mousekey_pointer.h
+  mousekey_pointer.cpp ${PROJECT_SOURCE_DIR}/src/include/server/mir/input/mousekey_pointer.h
   ${PROJECT_SOURCE_DIR}/src/include/server/mir/input/seat_observer.h
   ${PROJECT_SOURCE_DIR}/src/include/server/mir/input/input_dispatcher.h
   ${PROJECT_SOURCE_DIR}/src/include/server/mir/input/seat.h
