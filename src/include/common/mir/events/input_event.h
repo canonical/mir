@@ -21,8 +21,6 @@
 
 struct MirInputEvent : MirEvent
 {
-    MirInputEvent(MirInputEvent&&) = delete;
-    MirInputEvent& operator=(MirInputEvent&&) = delete;
     MirInputEventType input_type() const;
 
     int window_id() const;
