@@ -21,7 +21,6 @@
 #include "mir/graphics/cursor.h"
 #include "mir/input/input_device_registry.h"
 #include "mir/input/mousekey_pointer.h"
-#include "mir/main_loop.h"
 #include "mir/shell/keyboard_helper.h"
 
 #include <xkbcommon/xkbcommon-keysyms.h>
@@ -87,7 +86,6 @@ void mir::shell::BasicAccessibilityManager::mousekeys_enabled(bool on)
 }
 
 mir::shell::BasicAccessibilityManager::BasicAccessibilityManager(
-    std::shared_ptr<MainLoop> main_loop,
     std::shared_ptr<input::InputEventTransformer> const& event_transformer,
     bool enable_key_repeat,
     std::shared_ptr<mir::graphics::Cursor> const& cursor,
@@ -95,7 +93,6 @@ mir::shell::BasicAccessibilityManager::BasicAccessibilityManager(
     std::shared_ptr<SimulatedSecondaryClickTransformer> const& simulated_secondary_click_transformer,
     std::shared_ptr<input::InputDeviceRegistry> const& input_device_registry,
     std::shared_ptr<input::MousekeyPointer> const& mousekey_pointer) :
-    main_loop{std::move(main_loop)},
     enable_key_repeat{enable_key_repeat},
     cursor{cursor},
     event_transformer{event_transformer},

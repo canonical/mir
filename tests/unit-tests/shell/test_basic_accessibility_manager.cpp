@@ -119,7 +119,6 @@ struct TestBasicAccessibilityManager : Test
 {
     TestBasicAccessibilityManager() :
         basic_accessibility_manager{
-            main_loop,
             input_event_transformer,
             true,
             std::make_shared<mir::test::doubles::StubCursor>(),

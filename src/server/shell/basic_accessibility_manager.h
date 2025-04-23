@@ -52,7 +52,6 @@ class BasicAccessibilityManager : public AccessibilityManager
 {
 public:
     BasicAccessibilityManager(
-        std::shared_ptr<MainLoop> main_loop,
         std::shared_ptr<input::InputEventTransformer> const& event_transformer,
         bool enable_key_repeat,
         std::shared_ptr<mir::graphics::Cursor> const& cursor,
@@ -93,7 +92,6 @@ private:
 
     Synchronised<MutableState> mutable_state;
 
-    std::shared_ptr<MainLoop> const main_loop;
     bool const enable_key_repeat;
     std::shared_ptr<graphics::Cursor> const cursor;
     std::shared_ptr<mir::input::InputEventTransformer> const event_transformer;
