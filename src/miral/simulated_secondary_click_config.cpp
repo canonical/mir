@@ -36,7 +36,7 @@ struct miral::SimulatedSecondaryClickConfig::Self
         bool enabled;
         std::chrono::milliseconds hold_duration{1000};
         float displacement_threshold{20.0f};
-        std::function<void()> on_enabled{[]{}}, on_disabled{[]{}}, on_hold_start{[]{}}, on_hold_cancel{[]{}}, on_secondary_click{[]{}};
+        std::function<void()> on_enabled, on_disabled, on_hold_start, on_hold_cancel, on_secondary_click;
     };
 
     mir::Synchronised<State> state;
