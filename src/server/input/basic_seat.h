@@ -19,10 +19,7 @@
 
 #include "seat_input_device_tracker.h"
 #include "mir/input/seat.h"
-#include "mir/frontend/event_sink.h"
 #include "mir/observer_registrar.h"
-
-#include <mutex>
 
 namespace mir
 {
@@ -41,7 +38,6 @@ class CursorListener;
 class InputDispatcher;
 class KeyMapper;
 class SeatObserver;
-class EventFilter;
 class MousekeyPointer;
 class BasicSeat : public Seat
 {
@@ -73,7 +69,7 @@ private:
     SeatInputDeviceTracker input_state_tracker;
     struct OutputTracker;
     std::shared_ptr<OutputTracker> const output_tracker;
-    std::shared_ptr<input::MousekeyPointer> const mousekey_pointer;
+    std::shared_ptr<MousekeyPointer> const mousekey_pointer;
 };
 }
 }

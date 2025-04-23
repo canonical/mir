@@ -26,7 +26,6 @@
 #include <map>
 
 namespace mi = mir::input;
-namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
