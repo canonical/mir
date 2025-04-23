@@ -103,11 +103,10 @@ void mir::shell::BasicAccessibilityManager::mousekeys_enabled(bool on)
         main_loop->spawn([this]
         {
             auto state = this->mutable_state.lock();
-            if (!transformer_registration)
+            if (!transformer.is_registered())
             {
                 state->mousekey_pointer = std::make_shared<MousekeyPointer>(main_loop, event_transformer);
-
-                transformer_registration.emplace(event_transformer->append(transformer));
+                transformer.add_registration();
                 input_device_registry->add_device(state->mousekey_pointer);
                 the_composite_event_filter->prepend(state->mousekey_pointer);
             }
@@ -118,10 +117,10 @@ void mir::shell::BasicAccessibilityManager::mousekeys_enabled(bool on)
         main_loop->spawn([this]
         {
             auto state = this->mutable_state.lock();
-            if (transformer_registration)
+            if (transformer.is_registered())
             {
                 input_device_registry->remove_device(state->mousekey_pointer);
-                transformer_registration.reset();
+                transformer.remove_registration();
                 state->mousekey_pointer.reset();
             }
         });
@@ -140,9 +139,9 @@ mir::shell::BasicAccessibilityManager::BasicAccessibilityManager(
     the_composite_event_filter{std::move(the_composite_event_filter)},
     enable_key_repeat{enable_key_repeat},
     cursor{cursor},
+    input_device_registry{input_device_registry},
     event_transformer{event_transformer},
-    transformer{mousekeys_transformer},
-    input_device_registry{input_device_registry}
+    transformer{mousekeys_transformer, event_transformer}
 {
 }
 

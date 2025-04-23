@@ -22,6 +22,7 @@
 
 #include "mir/input/mousekeys_keymap.h"
 #include "mir/synchronised.h"
+#include <cassert>
 
 namespace mir
 {
@@ -87,17 +88,63 @@ private:
         std::shared_ptr<MousekeyPointer> mousekey_pointer;
     };
 
+    template <typename Transformer> class Registration
+    {
+    public:
+        Registration(
+            std::shared_ptr<Transformer> const& transformer,
+            std::shared_ptr<input::InputEventTransformer> const& event_transformer) :
+            transformer{transformer},
+            event_transformer{event_transformer}
+        {
+        }
+
+        ~Registration()
+        {
+            remove_registration();
+        }
+
+        void add_registration()
+        {
+            assert(!registration.has_value());
+            assert(transformer);
+            registration.emplace(event_transformer->append(transformer));
+        }
+
+        void remove_registration()
+        {
+            registration.reset();
+        }
+
+        Transformer* operator->() const noexcept
+        {
+            return transformer.get();
+        }
+
+        bool is_registered() const noexcept
+        {
+            return registration.has_value();
+        }
+
+    private:
+        Registration(Registration const&) = delete;
+        Registration& operator=(Registration const&) = delete;
+
+        std::shared_ptr<Transformer> const transformer;
+        std::shared_ptr<input::InputEventTransformer> const event_transformer;
+        std::optional<input::InputEventTransformer::Registration> registration;
+    };
+
     Synchronised<MutableState> mutable_state;
 
     std::shared_ptr<MainLoop> const main_loop;
     std::shared_ptr<input::CompositeEventFilter> const the_composite_event_filter;
     bool const enable_key_repeat;
     std::shared_ptr<graphics::Cursor> const cursor;
-    std::shared_ptr<mir::input::InputEventTransformer> const event_transformer;
-    std::shared_ptr<mir::shell::MouseKeysTransformer> const transformer;
     std::shared_ptr<mir::input::InputDeviceRegistry> const input_device_registry;
+    std::shared_ptr<mir::input::InputEventTransformer> const event_transformer;
 
-    std::optional<input::InputEventTransformer::Registration> transformer_registration;
+    Registration<MouseKeysTransformer> transformer;
 };
 }
 }
