@@ -173,15 +173,15 @@ void miral::SimulatedSecondaryClickConfig::operator()(mir::Server& server)
             displacement_threshold(
                 server.get_options()->get<double>(simulated_secondary_click_displacement_threshold_opt));
 
-            if (auto on_enabled = self->state.lock()->on_enabled)
+            if (auto& on_enabled = self->state.lock()->on_enabled)
                 enabled(std::move(on_enabled));
-            if (auto on_disabled = self->state.lock()->on_disabled)
+            if (auto& on_disabled = self->state.lock()->on_disabled)
                 disabled(std::move(on_disabled));
-            if (auto on_hold_start = self->state.lock()->on_hold_start)
+            if (auto& on_hold_start = self->state.lock()->on_hold_start)
                 hold_start(std::move(on_hold_start));
-            if (auto on_hold_cancel = self->state.lock()->on_hold_cancel)
+            if (auto& on_hold_cancel = self->state.lock()->on_hold_cancel)
                 hold_cancel(std::move(on_hold_cancel));
-            if (auto on_secondary_click = self->state.lock()->on_secondary_click)
+            if (auto& on_secondary_click = self->state.lock()->on_secondary_click)
                 secondary_click(std::move(on_secondary_click));
 
             if(server.get_options()->get<bool>(enable_simulated_secondary_click_opt))
