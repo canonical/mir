@@ -19,10 +19,6 @@
 
 #include "mir/shell/accessibility_manager.h"
 
-#include "mir/input/event_filter.h"
-#include "mir/input/input_event_transformer.h"
-#include "mir/input/virtual_input_device.h"
-
 #include "mir/input/mousekeys_keymap.h"
 #include "mir/synchronised.h"
 
@@ -37,6 +33,7 @@ namespace input
 {
 class CompositeEventFilter;
 class InputDeviceRegistry;
+class InputEventTransformer;
 class MousekeyPointer;
 }
 namespace options
