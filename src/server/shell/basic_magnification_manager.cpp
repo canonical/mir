@@ -16,6 +16,7 @@
 
 #include "basic_magnification_manager.h"
 
+#include "mir/synchronised.h"
 #include "mir/compositor/scene_element.h"
 #include "mir/compositor/screen_shooter.h"
 #include "mir/events/event.h"
@@ -31,6 +32,8 @@
 #include "mir/scene/scene_change_notification.h"
 #include "mir/renderer/sw/pixel_source.h"
 
+#include <future>
+
 namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace mrs = mir::renderer::software;
@@ -40,11 +43,66 @@ namespace geom = mir::geometry;
 
 namespace
 {
+struct State
+{
+    geom::PointF cursor_position;
+    geom::Point capture_position;
+    bool enabled_ = false;
+};
+
+class DoubleBufferStream {
+public:
+    DoubleBufferStream(
+        std::shared_ptr<mg::GraphicBufferAllocator> const& allocator,
+        geom::Size const& size)
+        : allocator(allocator),
+          write_index(0),
+          read_index(1),
+          new_buffer_available(false)
+    {
+        buffers[0] = allocator->alloc_software_buffer(size, mir_pixel_format_argb_8888);
+        buffers[1] = allocator->alloc_software_buffer(size, mir_pixel_format_argb_8888);
+    }
+
+    std::shared_ptr<mg::Buffer> write() {
+        std::lock_guard<std::mutex> lock(mutex);
+        return buffers[write_index];
+    }
+
+    void set_available()
+    {
+        std::lock_guard<std::mutex> lock(mutex);
+        std::swap(write_index, read_index);
+    }
+
+    std::shared_ptr<mg::Buffer> read() {
+        std::lock_guard<std::mutex> lock(mutex);
+        return buffers[read_index];
+    }
+
+    void resize(geom::Size const& size)
+    {
+        std::lock_guard<std::mutex> lock(mutex);
+        buffers[0] = allocator->alloc_software_buffer(size, mir_pixel_format_argb_8888);
+        buffers[1] = allocator->alloc_software_buffer(size, mir_pixel_format_argb_8888);
+    }
+
+private:
+    std::shared_ptr<mg::GraphicBufferAllocator> allocator;
+    std::array<std::shared_ptr<mg::Buffer>, 2> buffers;
+    std::mutex mutex;
+    int write_index;
+    int read_index;
+
+    std::atomic<bool> new_buffer_available;
+};
+
 class MagnificationRenderable : public mg::Renderable
 {
 public:
-    explicit MagnificationRenderable(std::shared_ptr<mg::Buffer> const& buffer)
-        : buffer_(buffer) {}
+    explicit MagnificationRenderable(
+        std::shared_ptr<DoubleBufferStream> const& stream)
+        : stream(stream) {}
 
     ID id() const override
     {
@@ -53,20 +111,20 @@ public:
 
     std::shared_ptr<mg::Buffer> buffer() const override
     {
-        return buffer_;
+        return stream->read();
     }
 
     geom::Rectangle screen_position() const override
     {
         return {
             rendered_position,
-            buffer_->size() * magnification
+            stream->read()->size() * magnification
         };
     }
 
     geom::RectangleD src_bounds() const override
     {
-        return {{0, 0}, buffer_->size()};
+        return {{0, 0}, stream->read()->size()};
     }
 
     std::optional<geom::Rectangle> clip_area() const override
@@ -101,7 +159,7 @@ public:
 
     geom::Point rendered_position;
     float magnification = 2.f;
-    std::shared_ptr<mg::Buffer> buffer_;
+    std::shared_ptr<DoubleBufferStream> stream;
 };
 }
 
@@ -114,14 +172,19 @@ public:
         std::shared_ptr<frontend::SurfaceStack> const& surface_stack,
         std::shared_ptr<input::Seat> const& seat)
         : scene_change_notification(std::make_shared<ms::SceneChangeNotification>(
-            [this]{ update(); },
+            [this]
+            {
+                auto const locked = state.lock();
+                update(*locked);
+            },
             [this](geom::Rectangle const& damage)
             {
+                auto const locked = state.lock();
                 geom::Rectangle const r(
-                   capture_position,
-                   renderable->buffer()->size());
+                   locked->capture_position,
+                   stream->read()->size());
                 if (r.overlaps(damage))
-                    update();
+                    update(*locked);
             }
           )),
           scene(scene),
@@ -129,12 +192,14 @@ public:
           screen_shooter{screen_shooter},
           surface_stack{surface_stack},
           seat{seat},
-          buffer(allocator->alloc_software_buffer(geom::Size(400, 300), mir_pixel_format_argb_8888)),
-          write_buffer(mrs::as_write_mappable_buffer(buffer)),
-          renderable(std::make_shared<MagnificationRenderable>(buffer))
+          stream(std::make_shared<DoubleBufferStream>(
+              allocator,
+              geom::Size(400, 300))),
+          renderable(std::make_shared<MagnificationRenderable>(stream))
     {
+        auto const locked = state.lock();
         surface_stack->add_observer(scene_change_notification);
-        on_cursor_moved();
+        on_cursor_moved(*locked);
     }
 
     ~Self() override
@@ -159,46 +224,47 @@ public:
         if (!position_opt)
             return false;
 
-        cursor_position = position_opt.value();
-        on_cursor_moved();
-        update();
+        auto const locked = state.lock();
+        locked->cursor_position = position_opt.value();
+        on_cursor_moved(*locked);
+        update(*locked);
         return false;
     }
 
     bool enabled(bool next)
     {
-        if (next == enabled_)
+        if (next == state.lock()->enabled_)
             return false;
 
-        enabled_ = next;
-        if (enabled_)
+        state.lock()->enabled_ = next;
+        if (next)
             scene->prepend_input_visualization(renderable);
         else
             scene->remove_input_visualization(renderable);
 
-        update();
+        update(*state.lock());
         return true;
     }
 
     geom::Size size() const
     {
-        return buffer->size();
+        return stream->read()->size();
     }
 
     void resize(geom::Size const& size)
     {
-        buffer = allocator->alloc_software_buffer(size, mir_pixel_format_argb_8888);
-        write_buffer = mrs::as_write_mappable_buffer(buffer);
-        renderable->buffer_ = buffer;
-        on_cursor_moved();
-        update();
+        auto const locked = state.lock();
+        stream->resize(size);
+        on_cursor_moved(*locked);
+        update(*locked);
     }
 
     void magnification(float magnification)
     {
+        auto const locked = state.lock();
         renderable->magnification = magnification;
-        on_cursor_moved();
-        update();
+        on_cursor_moved(*locked);
+        update(*locked);
     }
 
     float magnification() const
@@ -207,35 +273,45 @@ public:
     }
 
 private:
-    void on_cursor_moved()
+    void on_cursor_moved(State& state) const
     {
-        float const margin_width = static_cast<float>(renderable->buffer()->size().width.as_int()) / 2.f;
-        float const margin_height = static_cast<float>(renderable->buffer()->size().height.as_int()) / 2.f;
-        capture_position = {
-            cursor_position.x.as_value() - margin_width,
-            cursor_position.y.as_value() - margin_height
+        auto const size = stream->read()->size();
+        float const margin_width = static_cast<float>(size.width.as_int()) / 2.f;
+        float const margin_height = static_cast<float>(size.height.as_int()) / 2.f;
+        state.capture_position = {
+            state.cursor_position.x.as_value() - margin_width,
+            state.cursor_position.y.as_value() - margin_height
         };
 
         float const magnified_margin_width = margin_width * renderable->magnification;
         float const magnified_margin_height = margin_height * renderable->magnification;
         renderable->rendered_position = {
-            cursor_position.x.as_value() - magnified_margin_width,
-            cursor_position.y.as_value() - magnified_margin_height
+            state.cursor_position.x.as_value() - magnified_margin_width,
+            state.cursor_position.y.as_value() - magnified_margin_height
         };
     }
 
-    void update()
+    void update(State& state)
     {
-        if (!enabled_)
+        if (!state.enabled_)
             return;
 
+        on_write(stream->write(), state);
+    }
+
+    void on_write(
+        std::shared_ptr<mg::Buffer> const& buffer,
+        State const& state)
+    {
         if (is_updating)
             return;
 
         is_updating = true;
         geom::Rectangle const r(
-            capture_position,
+            state.capture_position,
             renderable->buffer()->size());
+
+        auto const write_buffer = mrs::as_write_mappable_buffer(buffer);
         screen_shooter->capture_with_filter(
             write_buffer,
             r,
@@ -246,6 +322,7 @@ private:
             false,
             [&](auto const)
             {
+                stream->set_available();
                 scene->emit_scene_changed();
                 is_updating = false;
             });
@@ -257,14 +334,11 @@ private:
     std::shared_ptr<compositor::ScreenShooter> screen_shooter;
     std::shared_ptr<frontend::SurfaceStack> surface_stack;
     std::shared_ptr<input::Seat> seat;
-    std::shared_ptr<mg::Buffer> buffer;
-    std::shared_ptr<mrs::WriteMappableBuffer> write_buffer;
-    std::shared_ptr<MagnificationRenderable> renderable;
 
-    geom::PointF cursor_position;
-    geom::Point capture_position;
-    bool enabled_ = false;
-    bool is_updating = false;
+    Synchronised<State> state;
+    std::shared_ptr<DoubleBufferStream> stream;
+    std::shared_ptr<MagnificationRenderable> renderable;
+    std::atomic<bool> is_updating = false;
 };
 
 msh::BasicMagnificationManager::BasicMagnificationManager(
