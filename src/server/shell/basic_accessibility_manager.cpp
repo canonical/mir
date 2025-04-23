@@ -159,13 +159,12 @@ auto mir::shell::BasicAccessibilityManager::simulated_secondary_click()
 
 void mir::shell::BasicAccessibilityManager::ensure_mousekey_pointer_added()
 {
-    if (std::ranges::any_of(std::initializer_list<bool>{mousekeys_on, ssc_on}, std::identity{}))
+    if (mousekeys_on || ssc_on)
         mousekey_pointer->add_to_registry(input_device_registry);
 }
 
 void mir::shell::BasicAccessibilityManager::ensure_mousekey_pointer_removed()
 {
-    if (std::ranges::none_of(std::initializer_list<bool>{mousekeys_on, ssc_on}, std::identity{}))
+    if (!mousekeys_on && !ssc_on)
         mousekey_pointer->remove_from_registry(input_device_registry);
 }
-
