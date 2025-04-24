@@ -45,11 +45,11 @@ public:
 
     void enabled() override;
     void disabled() override;
-    void enabled(std::function<void()>&& on_enabled) override;
-    void disabled(std::function<void()>&& on_disabled) override;
-    void hold_start(std::function<void()>&& on_hold_start) override;
-    void hold_cancel(std::function<void()>&& on_hold_cancel) override;
-    void secondary_click(std::function<void()>&& on_secondary_click) override;
+    void on_enabled(std::function<void()>&& on_enabled) override;
+    void on_disabled(std::function<void()>&& on_disabled) override;
+    void on_hold_start(std::function<void()>&& on_hold_start) override;
+    void on_hold_cancel(std::function<void()>&& on_hold_cancel) override;
+    void on_secondary_click(std::function<void()>&& on_secondary_click) override;
 
 private:
     std::shared_ptr<mir::MainLoop> const main_loop;

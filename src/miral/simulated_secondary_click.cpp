@@ -89,56 +89,56 @@ miral::SimulatedSecondaryClick& miral::SimulatedSecondaryClick::displacement_thr
     return *this;
 }
 
-miral::SimulatedSecondaryClick& miral::SimulatedSecondaryClick::enabled(std::function<void()>&& on_enabled)
+miral::SimulatedSecondaryClick& miral::SimulatedSecondaryClick::on_enabled(std::function<void()>&& on_enabled)
 {
     auto const state = self->state.lock();
     state->on_enabled = std::move(on_enabled);
     if (auto const accessibility_manager = self->accessibility_manager.lock())
-        accessibility_manager->simulated_secondary_click().enabled(std::move(state->on_enabled));
+        accessibility_manager->simulated_secondary_click().on_enabled(std::move(state->on_enabled));
 
     return *this;
 }
 
-miral::SimulatedSecondaryClick& miral::SimulatedSecondaryClick::disabled(
+miral::SimulatedSecondaryClick& miral::SimulatedSecondaryClick::on_disabled(
     std::function<void()>&& on_disabled)
 {
     auto const state = self->state.lock();
     state->on_disabled = std::move(on_disabled);
     if (auto const accessibility_manager = self->accessibility_manager.lock())
-        accessibility_manager->simulated_secondary_click().disabled(std::move(state->on_disabled));
+        accessibility_manager->simulated_secondary_click().on_disabled(std::move(state->on_disabled));
 
     return *this;
 }
 
-miral::SimulatedSecondaryClick& miral::SimulatedSecondaryClick::hold_start(
+miral::SimulatedSecondaryClick& miral::SimulatedSecondaryClick::on_hold_start(
     std::function<void()>&& on_hold_start)
 {
     auto const state = self->state.lock();
     state->on_hold_start = std::move(on_hold_start);
     if (auto const accessibility_manager = self->accessibility_manager.lock())
-        accessibility_manager->simulated_secondary_click().hold_start(std::move(state->on_hold_start));
+        accessibility_manager->simulated_secondary_click().on_hold_start(std::move(state->on_hold_start));
 
     return *this;
 }
 
-miral::SimulatedSecondaryClick& miral::SimulatedSecondaryClick::hold_cancel(
+miral::SimulatedSecondaryClick& miral::SimulatedSecondaryClick::on_hold_cancel(
     std::function<void()>&& on_hold_cancel)
 {
     auto const state = self->state.lock();
     state->on_hold_cancel = std::move(on_hold_cancel);
     if (auto const accessibility_manager = self->accessibility_manager.lock())
-        accessibility_manager->simulated_secondary_click().hold_cancel(std::move(state->on_hold_cancel));
+        accessibility_manager->simulated_secondary_click().on_hold_cancel(std::move(state->on_hold_cancel));
 
     return *this;
 }
 
-miral::SimulatedSecondaryClick& miral::SimulatedSecondaryClick::secondary_click(
+miral::SimulatedSecondaryClick& miral::SimulatedSecondaryClick::on_secondary_click(
     std::function<void()>&& on_secondary_click)
 {
     auto const state = self->state.lock();
     state->on_secondary_click = std::move(on_secondary_click);
     if (auto const accessibility_manager = self->accessibility_manager.lock())
-        accessibility_manager->simulated_secondary_click().secondary_click(std::move(state->on_secondary_click));
+        accessibility_manager->simulated_secondary_click().on_secondary_click(std::move(state->on_secondary_click));
 
     return *this;
 }
@@ -178,16 +178,16 @@ void miral::SimulatedSecondaryClick::operator()(mir::Server& server)
             displacement_threshold(
                 server.get_options()->get<double>(simulated_secondary_click_displacement_threshold_opt));
 
-            if (auto& on_enabled = self->state.lock()->on_enabled)
-                enabled(std::move(on_enabled));
-            if (auto& on_disabled = self->state.lock()->on_disabled)
-                disabled(std::move(on_disabled));
-            if (auto& on_hold_start = self->state.lock()->on_hold_start)
-                hold_start(std::move(on_hold_start));
-            if (auto& on_hold_cancel = self->state.lock()->on_hold_cancel)
-                hold_cancel(std::move(on_hold_cancel));
-            if (auto& on_secondary_click = self->state.lock()->on_secondary_click)
-                secondary_click(std::move(on_secondary_click));
+            if (auto& on_enabled_ = self->state.lock()->on_enabled)
+                on_enabled(std::move(on_enabled_));
+            if (auto& on_disabled_ = self->state.lock()->on_disabled)
+                on_disabled(std::move(on_disabled_));
+            if (auto& on_hold_start_ = self->state.lock()->on_hold_start)
+                on_hold_start(std::move(on_hold_start_));
+            if (auto& on_hold_cancel_ = self->state.lock()->on_hold_cancel)
+                on_hold_cancel(std::move(on_hold_cancel_));
+            if (auto& on_secondary_click_ = self->state.lock()->on_secondary_click)
+                on_secondary_click(std::move(on_secondary_click_));
 
             if(server.get_options()->get<bool>(enable_simulated_secondary_click_opt))
                 enable();
