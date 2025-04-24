@@ -245,7 +245,7 @@ void mgc::ShmBuffer::update_texture(void const* pixels, geometry::Stride const& 
         glPixelStorei(GL_UNPACK_ROW_LENGTH_EXT, stride_in_px);
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
         glTexSubImage2D(
-        GL_TEXTURE_2D,
+            GL_TEXTURE_2D,
             0,
             0, 0,
             size().width.as_int(), size().height.as_int(),
