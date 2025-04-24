@@ -16,8 +16,8 @@
 
 #include "basic_seat.h"
 #include "mir/input/device.h"
+#include "mir/input/event_filter.h"
 #include "mir/input/input_sink.h"
-#include "mir/input/mousekey_pointer.h"
 #include "mir/graphics/display_configuration_observer.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir_toolkit/common.h"
@@ -170,7 +170,7 @@ mi::BasicSeat::BasicSeat(std::shared_ptr<mi::InputDispatcher> const& dispatcher,
                          std::shared_ptr<mi::KeyMapper> const& key_mapper,
                          std::shared_ptr<time::Clock> const& clock,
                          std::shared_ptr<mi::SeatObserver> const& observer,
-                         std::shared_ptr<input::MousekeyPointer> const& mousekey_pointer) :
+                         std::shared_ptr<mi::EventFilter> const& accessibility_filter) :
       input_state_tracker{dispatcher,
                           touch_visualizer,
                           cursor_listener,
@@ -178,7 +178,7 @@ mi::BasicSeat::BasicSeat(std::shared_ptr<mi::InputDispatcher> const& dispatcher,
                           clock,
                           observer},
       output_tracker{std::make_shared<OutputTracker>(input_state_tracker)},
-      mousekey_pointer{mousekey_pointer}
+      accessibility_filter{accessibility_filter}
 {
     registrar->register_interest(output_tracker);
 }
@@ -199,7 +199,7 @@ void mi::BasicSeat::remove_device(input::Device const& device)
 
 void mi::BasicSeat::dispatch_event(std::shared_ptr<MirEvent> const& event)
 {
-    if (!mousekey_pointer->handle(*event))
+    if (!accessibility_filter->handle(*event))
         input_state_tracker.dispatch(event);
 }
 
