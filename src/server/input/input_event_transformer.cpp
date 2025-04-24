@@ -176,10 +176,7 @@ bool mi::InputEventTransformer::remove(std::shared_ptr<mi::InputEventTransformer
         });
 
     if (remove_start == input_transformers.end())
-    {
-        mir::log_error("Attempted to remove a transformer that doesn't exist in `input_transformers`");
         return false;
-    }
 
     input_transformers.erase(remove_start, remove_end);
     return true;
