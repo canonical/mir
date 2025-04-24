@@ -209,8 +209,14 @@ public:
 
     bool handle(MirEvent const& event) override
     {
+        if (event.type() != mir_event_type_input)
+            return false;
+
         auto const* input_event = event.to_input();
         if (!input_event)
+            return false;
+
+        if (input_event->input_type() != mir_input_event_type_pointer)
             return false;
 
         auto const* pointer_event = input_event->to_pointer();
