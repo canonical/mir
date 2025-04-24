@@ -37,6 +37,13 @@
 #include "miral/output.h"
 #include "src/miral/window_manager_tools_implementation.h"
 
+// (mattkae) This include is here because miral::make_surface_spec
+// is in miral-internal, but it is used here. When projects try
+// to statically link to it, the symbol will be undefined unless
+// we provide it. I prefer this solution over exposing it in the
+// API, as "regular" users shouldn't be interacting with it.
+#include "src/miral/window_specification_internal.cpp"
+
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace mf = mir::frontend;
