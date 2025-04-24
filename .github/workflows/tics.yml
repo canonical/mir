@@ -110,6 +110,7 @@ jobs:
         installTics: true
         # FIXME: workaround for a TICS bug
         additionalFlags: ${{ contains(fromJSON('["pull_request", "merge_group"]'), github.event_name) && '-resultdir build' || '' }}
+        filelist: .
 
     - if: ${{ failure() && runner.debug }}
       name: Setup tmate session
