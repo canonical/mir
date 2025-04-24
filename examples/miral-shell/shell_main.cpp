@@ -15,7 +15,7 @@
  */
 
 #include "miral/minimal_window_manager.h"
-#include "miral/simulated_secondary_click_config.h"
+#include "miral/simulated_secondary_click.h"
 #include "tiling_window_manager.h"
 #include "floating_window_manager.h"
 #include "wallpaper_config.h"
@@ -203,7 +203,7 @@ int main(int argc, char const* argv[])
         return false;
     };
 
-    auto const ssc_config = miral::SimulatedSecondaryClickConfig{false}
+    auto const ssc_config = miral::SimulatedSecondaryClick{false}
                                 .displacement_threshold(30)
                                 .hold_duration(std::chrono::milliseconds{2000});
 

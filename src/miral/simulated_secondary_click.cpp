@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "miral/simulated_secondary_click_config.h"
+#include "miral/simulated_secondary_click.h"
 
 #include "mir/options/option.h"
 #include "mir/server.h"
@@ -22,7 +22,7 @@
 #include "mir/shell/simulated_secondary_click_transformer.h"
 #include "mir/synchronised.h"
 
-struct miral::SimulatedSecondaryClickConfig::Self
+struct miral::SimulatedSecondaryClick::Self
 {
     Self(bool enabled_by_default) :
         state{State{enabled_by_default}}
@@ -47,12 +47,12 @@ struct miral::SimulatedSecondaryClickConfig::Self
     mir::Synchronised<State> state;
 };
 
-miral::SimulatedSecondaryClickConfig::SimulatedSecondaryClickConfig(bool enabled_by_default) :
+miral::SimulatedSecondaryClick::SimulatedSecondaryClick(bool enabled_by_default) :
     self{std::make_shared<Self>(enabled_by_default)}
 {
 }
 
-miral::SimulatedSecondaryClickConfig& miral::SimulatedSecondaryClickConfig::enable()
+miral::SimulatedSecondaryClick& miral::SimulatedSecondaryClick::enable()
 {
     self->state.lock()->enabled = true;
     if (auto const accessibility_manager = self->accessibility_manager.lock())
@@ -61,7 +61,7 @@ miral::SimulatedSecondaryClickConfig& miral::SimulatedSecondaryClickConfig::enab
     return *this;
 }
 
-miral::SimulatedSecondaryClickConfig& miral::SimulatedSecondaryClickConfig::disable()
+miral::SimulatedSecondaryClick& miral::SimulatedSecondaryClick::disable()
 {
     self->state.lock()->enabled = false;
     if (auto const accessibility_manager = self->accessibility_manager.lock())
@@ -70,7 +70,7 @@ miral::SimulatedSecondaryClickConfig& miral::SimulatedSecondaryClickConfig::disa
     return *this;
 }
 
-miral::SimulatedSecondaryClickConfig& miral::SimulatedSecondaryClickConfig::hold_duration(
+miral::SimulatedSecondaryClick& miral::SimulatedSecondaryClick::hold_duration(
     std::chrono::milliseconds hold_duration)
 {
     self->state.lock()->hold_duration = hold_duration;
@@ -80,7 +80,7 @@ miral::SimulatedSecondaryClickConfig& miral::SimulatedSecondaryClickConfig::hold
     return *this;
 }
 
-miral::SimulatedSecondaryClickConfig& miral::SimulatedSecondaryClickConfig::displacement_threshold(float displacement)
+miral::SimulatedSecondaryClick& miral::SimulatedSecondaryClick::displacement_threshold(float displacement)
 {
     self->state.lock()->displacement_threshold = displacement;
     if (auto const accessibility_manager = self->accessibility_manager.lock())
@@ -89,7 +89,7 @@ miral::SimulatedSecondaryClickConfig& miral::SimulatedSecondaryClickConfig::disp
     return *this;
 }
 
-miral::SimulatedSecondaryClickConfig& miral::SimulatedSecondaryClickConfig::enabled(std::function<void()>&& on_enabled)
+miral::SimulatedSecondaryClick& miral::SimulatedSecondaryClick::enabled(std::function<void()>&& on_enabled)
 {
     auto const state = self->state.lock();
     state->on_enabled = std::move(on_enabled);
@@ -99,7 +99,7 @@ miral::SimulatedSecondaryClickConfig& miral::SimulatedSecondaryClickConfig::enab
     return *this;
 }
 
-miral::SimulatedSecondaryClickConfig& miral::SimulatedSecondaryClickConfig::disabled(
+miral::SimulatedSecondaryClick& miral::SimulatedSecondaryClick::disabled(
     std::function<void()>&& on_disabled)
 {
     auto const state = self->state.lock();
@@ -110,7 +110,7 @@ miral::SimulatedSecondaryClickConfig& miral::SimulatedSecondaryClickConfig::disa
     return *this;
 }
 
-miral::SimulatedSecondaryClickConfig& miral::SimulatedSecondaryClickConfig::hold_start(
+miral::SimulatedSecondaryClick& miral::SimulatedSecondaryClick::hold_start(
     std::function<void()>&& on_hold_start)
 {
     auto const state = self->state.lock();
@@ -121,7 +121,7 @@ miral::SimulatedSecondaryClickConfig& miral::SimulatedSecondaryClickConfig::hold
     return *this;
 }
 
-miral::SimulatedSecondaryClickConfig& miral::SimulatedSecondaryClickConfig::hold_cancel(
+miral::SimulatedSecondaryClick& miral::SimulatedSecondaryClick::hold_cancel(
     std::function<void()>&& on_hold_cancel)
 {
     auto const state = self->state.lock();
@@ -132,7 +132,7 @@ miral::SimulatedSecondaryClickConfig& miral::SimulatedSecondaryClickConfig::hold
     return *this;
 }
 
-miral::SimulatedSecondaryClickConfig& miral::SimulatedSecondaryClickConfig::secondary_click(
+miral::SimulatedSecondaryClick& miral::SimulatedSecondaryClick::secondary_click(
     std::function<void()>&& on_secondary_click)
 {
     auto const state = self->state.lock();
@@ -143,7 +143,7 @@ miral::SimulatedSecondaryClickConfig& miral::SimulatedSecondaryClickConfig::seco
     return *this;
 }
 
-void miral::SimulatedSecondaryClickConfig::operator()(mir::Server& server)
+void miral::SimulatedSecondaryClick::operator()(mir::Server& server)
 {
     constexpr auto* enable_simulated_secondary_click_opt = "enable-simulated-secondary-click";
     constexpr auto* simulated_secondary_click_delay_opt = "simulated-secondary-click-delay";
