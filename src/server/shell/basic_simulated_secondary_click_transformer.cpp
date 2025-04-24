@@ -203,27 +203,27 @@ void mir::shell::BasicSimulatedSecondaryClickTransformer::disabled()
     mutable_state.lock()->on_disabled();
 }
 
-void mir::shell::BasicSimulatedSecondaryClickTransformer::enabled(std::function<void()>&& on_enabled)
+void mir::shell::BasicSimulatedSecondaryClickTransformer::on_enabled(std::function<void()>&& on_enabled)
 {
     mutable_state.lock()->on_enabled = std::move(on_enabled);
 }
 
-void mir::shell::BasicSimulatedSecondaryClickTransformer::disabled(std::function<void()>&& on_disabled)
+void mir::shell::BasicSimulatedSecondaryClickTransformer::on_disabled(std::function<void()>&& on_disabled)
 {
     mutable_state.lock()->on_disabled = std::move(on_disabled);
 }
 
-void mir::shell::BasicSimulatedSecondaryClickTransformer::hold_start(std::function<void()>&& on_hold_start)
+void mir::shell::BasicSimulatedSecondaryClickTransformer::on_hold_start(std::function<void()>&& on_hold_start)
 {
     mutable_state.lock()->on_hold_start = std::move(on_hold_start);
 }
 
-void mir::shell::BasicSimulatedSecondaryClickTransformer::hold_cancel(std::function<void()>&& on_hold_cancel)
+void mir::shell::BasicSimulatedSecondaryClickTransformer::on_hold_cancel(std::function<void()>&& on_hold_cancel)
 {
     mutable_state.lock()->on_hold_cancel = std::move(on_hold_cancel);
 }
 
-void mir::shell::BasicSimulatedSecondaryClickTransformer::secondary_click(std::function<void()>&& on_secondary_click)
+void mir::shell::BasicSimulatedSecondaryClickTransformer::on_secondary_click(std::function<void()>&& on_secondary_click)
 {
     mutable_state.lock()->on_secondary_click = std::move(on_secondary_click);
 }

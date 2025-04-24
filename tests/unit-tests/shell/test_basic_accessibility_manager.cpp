@@ -74,11 +74,11 @@ struct MockSimulatedSecondaryClickTransformer : public mir::shell::SimulatedSeco
     MOCK_METHOD(void, displacement_threshold, (float), (override));
     MOCK_METHOD(void, enabled, (), (override));
     MOCK_METHOD(void, disabled, (), (override));
-    MOCK_METHOD(void, enabled, (std::function<void()>&& on_enabled), (override));
-    MOCK_METHOD(void, disabled, (std::function<void()>&& on_disabled), (override));
-    MOCK_METHOD(void, hold_start, (std::function<void()>&& on_hold_start), (override));
-    MOCK_METHOD(void, hold_cancel, (std::function<void()>&& on_hold_cancel), (override));
-    MOCK_METHOD(void, secondary_click, (std::function<void()>&& on_secondary_click), (override));
+    MOCK_METHOD(void, on_enabled, (std::function<void()>&& on_enabled), (override));
+    MOCK_METHOD(void, on_disabled, (std::function<void()>&& on_disabled), (override));
+    MOCK_METHOD(void, on_hold_start, (std::function<void()>&& on_hold_start), (override));
+    MOCK_METHOD(void, on_hold_cancel, (std::function<void()>&& on_hold_cancel), (override));
+    MOCK_METHOD(void, on_secondary_click, (std::function<void()>&& on_secondary_click), (override));
 };
 
 struct TestBasicAccessibilityManager : Test
@@ -255,8 +255,8 @@ TEST_F(TestBasicAccessibilityManager, setting_on_enabled_start_sets_it_on_transf
     {
     };
 
-    EXPECT_CALL(*mock_simulated_secondary_click_transformer, enabled(_));
-    basic_accessibility_manager.simulated_secondary_click().enabled(expected_on_enabled);
+    EXPECT_CALL(*mock_simulated_secondary_click_transformer, on_enabled(_));
+    basic_accessibility_manager.simulated_secondary_click().on_enabled(expected_on_enabled);
 }
 
 TEST_F(TestBasicAccessibilityManager, setting_on_disabled_start_sets_it_on_transformer)
@@ -265,8 +265,8 @@ TEST_F(TestBasicAccessibilityManager, setting_on_disabled_start_sets_it_on_trans
     {
     };
 
-    EXPECT_CALL(*mock_simulated_secondary_click_transformer, disabled(_));
-    basic_accessibility_manager.simulated_secondary_click().disabled(expected_on_disabled);
+    EXPECT_CALL(*mock_simulated_secondary_click_transformer, on_disabled(_));
+    basic_accessibility_manager.simulated_secondary_click().on_disabled(expected_on_disabled);
 }
 
 TEST_F(TestBasicAccessibilityManager, setting_on_hold_start_sets_it_on_transformer)
@@ -275,9 +275,9 @@ TEST_F(TestBasicAccessibilityManager, setting_on_hold_start_sets_it_on_transform
     {
     };
 
-    EXPECT_CALL(*mock_simulated_secondary_click_transformer, hold_start(_));
+    EXPECT_CALL(*mock_simulated_secondary_click_transformer, on_hold_start(_));
 
-    basic_accessibility_manager.simulated_secondary_click().hold_start(expected_on_hold_start);
+    basic_accessibility_manager.simulated_secondary_click().on_hold_start(expected_on_hold_start);
 }
 
 TEST_F(TestBasicAccessibilityManager, setting_on_hold_cancel_sets_it_on_transformer)
@@ -286,9 +286,9 @@ TEST_F(TestBasicAccessibilityManager, setting_on_hold_cancel_sets_it_on_transfor
     {
     };
 
-    EXPECT_CALL(*mock_simulated_secondary_click_transformer, hold_cancel(_));
+    EXPECT_CALL(*mock_simulated_secondary_click_transformer, on_hold_cancel(_));
 
-    basic_accessibility_manager.simulated_secondary_click().hold_cancel(expected_on_hold_cancel);
+    basic_accessibility_manager.simulated_secondary_click().on_hold_cancel(expected_on_hold_cancel);
 }
 
 TEST_F(TestBasicAccessibilityManager, setting_on_secondary_click_sets_it_on_transformer)
@@ -297,9 +297,9 @@ TEST_F(TestBasicAccessibilityManager, setting_on_secondary_click_sets_it_on_tran
     {
     };
 
-    EXPECT_CALL(*mock_simulated_secondary_click_transformer, secondary_click(_));
+    EXPECT_CALL(*mock_simulated_secondary_click_transformer, on_secondary_click(_));
 
-    basic_accessibility_manager.simulated_secondary_click().secondary_click(expected_on_secondary_click);
+    basic_accessibility_manager.simulated_secondary_click().on_secondary_click(expected_on_secondary_click);
 }
 
 

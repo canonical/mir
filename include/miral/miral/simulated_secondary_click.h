@@ -55,21 +55,21 @@ public:
 
     /// Configures the callbacks invoked when simulated secondary click is
     /// enabled or disabled
-    SimulatedSecondaryClick& enabled(std::function<void()>&& on_enabled);
-    SimulatedSecondaryClick& disabled(std::function<void()>&& on_disabled);
+    SimulatedSecondaryClick& on_enabled(std::function<void()>&& on_enabled);
+    SimulatedSecondaryClick& on_disabled(std::function<void()>&& on_disabled);
 
     /// Configures the callback to invoke when the user clicks _down_ the left
     /// mouse button
-    SimulatedSecondaryClick& hold_start(std::function<void()>&& on_hold_start);
+    SimulatedSecondaryClick& on_hold_start(std::function<void()>&& on_hold_start);
 
     /// Configures the callback to invoke when the user cancels a simulated
     /// secondary click either by letting go of the left button before the
     /// hold duration is up or moving the cursor
-    SimulatedSecondaryClick& hold_cancel(std::function<void()>&& on_hold_cancel);
+    SimulatedSecondaryClick& on_hold_cancel(std::function<void()>&& on_hold_cancel);
 
     /// Configures the callback to invoke when the user successfully
     /// dispatches a simulated secondary click
-    SimulatedSecondaryClick& secondary_click(std::function<void()>&& on_secondary_click);
+    SimulatedSecondaryClick& on_secondary_click(std::function<void()>&& on_secondary_click);
 
 private:
     struct Self;

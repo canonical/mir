@@ -179,7 +179,7 @@ int main(int argc, char const* argv[])
     auto const ssc_config = miral::SimulatedSecondaryClick{false}
                                 .displacement_threshold(30)
                                 .hold_duration(std::chrono::milliseconds{2000})
-                                .secondary_click([] { mir::log_info("Simulated secondary click dispatched!"); });
+                                .on_secondary_click([] { mir::log_info("Simulated secondary click dispatched!"); });
 
     return runner.run_with(
         {

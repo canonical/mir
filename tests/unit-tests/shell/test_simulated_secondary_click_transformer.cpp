@@ -164,9 +164,9 @@ TEST_P(TestCallbacks, releasing_left_pointer_button_at_different_times_calls_the
     bool hold_cancel_called = false;
     bool secondary_click_called = false;
 
-    transformer->hold_start([&hold_start_called] { hold_start_called = true; });
-    transformer->hold_cancel([&hold_cancel_called] { hold_cancel_called = true; });
-    transformer->secondary_click([&secondary_click_called] { secondary_click_called = true; });
+    transformer->on_hold_start([&hold_start_called] { hold_start_called = true; });
+    transformer->on_hold_cancel([&hold_cancel_called] { hold_cancel_called = true; });
+    transformer->on_secondary_click([&secondary_click_called] { secondary_click_called = true; });
 
     auto const [release_delay, start_called, cancel_called] = GetParam();
 
