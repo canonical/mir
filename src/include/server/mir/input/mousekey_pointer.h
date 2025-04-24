@@ -19,6 +19,7 @@
 #define MIR_INPUT_MOUSEKEY_POINTER
 
 #include "mir/input/event_filter.h"
+#include "mir/synchronised.h"
 
 #include <memory>
 
@@ -44,11 +45,15 @@ private:
     std::shared_ptr<MainLoop> const main_loop;
     std::shared_ptr<input::InputEventTransformer> const iet;
     std::shared_ptr<VirtualInputDevice> const virtual_device;
-    MirInputDeviceId device_id;
 
-    std::weak_ptr<Device> weak_device;
+    struct State 
+    {
+        MirInputDeviceId device_id;
+        std::weak_ptr<Device> weak_device;
+    };
+
+    Synchronised<State> state;
 };
-
 }
 }
 
