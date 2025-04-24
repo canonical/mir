@@ -48,7 +48,7 @@ class mg::CPUAddressableFB::Buffer : public mir::renderer::software::RWMappableB
         {
         }
 
-        ~Mapping()
+        ~Mapping() override
         {
             if (::munmap(const_cast<typename std::remove_const<T>::type *>(data_), len_) == -1)
             {
@@ -58,31 +58,31 @@ class mg::CPUAddressableFB::Buffer : public mir::renderer::software::RWMappableB
         }
 
         [[nodiscard]]
-        auto format() const -> MirPixelFormat
+        auto format() const -> MirPixelFormat override
         {
             return format_;
         }
 
         [[nodiscard]]
-        auto stride() const -> mir::geometry::Stride
+        auto stride() const -> mir::geometry::Stride override
         {
             return stride_;
         }
 
         [[nodiscard]]
-        auto size() const -> mir::geometry::Size
+        auto size() const -> mir::geometry::Size override
         {
             return size_;
         }
 
         [[nodiscard]]
-        auto data() -> T*
+        auto data() -> T* override
         {
             return data_;
         }
 
         [[nodiscard]]
-        auto len() const -> size_t
+        auto len() const -> size_t override
         {
             return len_;
         }
