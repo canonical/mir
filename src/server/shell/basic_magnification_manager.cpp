@@ -244,7 +244,7 @@ public:
 
         state.lock()->enabled_ = next;
         if (next)
-            scene->prepend_input_visualization(renderable);
+            scene->add_bottom_input_visualization(renderable);
         else
             scene->remove_input_visualization(renderable);
 

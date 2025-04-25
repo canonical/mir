@@ -43,7 +43,7 @@ class StubInputScene : public input::Scene
     {
     }
 
-    void prepend_input_visualization(std::shared_ptr<graphics::Renderable> const& /* overlay */) override
+    void add_bottom_input_visualization(std::shared_ptr<graphics::Renderable> const& /* overlay */) override
     {
     }
 

@@ -47,13 +47,18 @@ public:
     virtual void add_observer(std::shared_ptr<scene::Observer> const& observer) = 0;
     virtual void remove_observer(std::weak_ptr<scene::Observer> const& observer) = 0;
 
-    // An interface which the input stack can use to add certain non-interactive input visualizations
-    // in to the scene (i.e. cursors, touchspots). Overlay renderables will be rendered above all surfaces.
-    // Within the set of overlay renderables, rendering order is undefined.
+    /// An interface which the input stack can use to add certain non-interactive input visualizations
+    /// in to the scene (i.e. cursors, touchspots). Overlay renderables will be rendered above all surfaces.
+    /// Within the set of overlay renderables, the render order is such that the first-added will appear below
+    /// the second-added, the second-added will appear below the third-added, and so on. Renderables added
+    /// via [add_bottom_input_visualization] are guaranteed to be below any renderable added with
+    /// [add_input_visualization].
     virtual void add_input_visualization(std::shared_ptr<graphics::Renderable> const& overlay) = 0;
-    /// Like [add_input_visualization] except that the added renderable is guaranteed to be inserted
-    /// at the bottom of the overlay render order.
-    virtual void prepend_input_visualization(std::shared_ptr<graphics::Renderable> const& overlay) = 0;
+    /// Similar to [add_input_visualization] except that the added renderable is guaranteed to be rendered below
+    /// any other input visualization but above any non-input visualization renderable. If called more than once, the
+    /// renderables will be displayed such that the first-added is above the second-added, the second-added is above
+    /// the third-added, and so on.
+    virtual void add_bottom_input_visualization(std::shared_ptr<graphics::Renderable> const& overlay) = 0;
     virtual void remove_input_visualization(std::weak_ptr<graphics::Renderable> const& overlay) = 0;
     
     // As input visualizations added through the overlay system will not use the standard SurfaceObserver

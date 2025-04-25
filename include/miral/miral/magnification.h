@@ -27,24 +27,23 @@ namespace mir
 class Server;
 }
 
-/// Enables configuring the magnification accessibility feature.
-/// \remark Since MirAL 5.3
 namespace miral
 {
+/// Enables configuring the magnification accessibility feature.
+/// \remark Since MirAL 5.3
 class Magnification
 {
 public:
     explicit Magnification(bool enabled_by_default);
-    void operator()(mir::Server& server) const;
     bool enabled(bool enabled) const;
     void magnification(float magnification) const;
     float magnification() const;
     void size(mir::geometry::Size const& size) const;
     mir::geometry::Size size() const;
-
     Magnification& on_enabled(std::function<void()>&& callback);
     Magnification& on_disabled(std::function<void()>&& callback);
 
+    void operator()(mir::Server& server) const;
 private:
     class Self;
     std::shared_ptr<Self> self;

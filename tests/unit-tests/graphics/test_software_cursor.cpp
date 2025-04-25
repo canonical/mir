@@ -43,7 +43,7 @@ struct MockInputScene : mtd::StubInputScene
     MOCK_METHOD1(add_input_visualization,
                  void(std::shared_ptr<mg::Renderable> const&));
 
-    MOCK_METHOD1(prepend_input_visualization,
+    MOCK_METHOD1(add_bottom_input_visualization,
                  void(std::shared_ptr<mg::Renderable> const&));
 
     MOCK_METHOD1(remove_input_visualization,

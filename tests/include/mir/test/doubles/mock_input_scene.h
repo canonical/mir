@@ -37,7 +37,7 @@ public:
     MOCK_METHOD(void, add_input_visualization,
         (std::shared_ptr<graphics::Renderable> const& overlay), (override));
 
-    MOCK_METHOD(void, prepend_input_visualization,
+    MOCK_METHOD(void, add_bottom_input_visualization,
         (std::shared_ptr<graphics::Renderable> const& overlay), (override));
 
     MOCK_METHOD(void, remove_input_visualization,

@@ -59,7 +59,7 @@ struct TestBasicMagnificationManager : Test
 
 TEST_F(TestBasicMagnificationManager, enabling_adds_renderable_to_input_scene)
 {
-    EXPECT_CALL(*scene, prepend_input_visualization(testing::_));
+    EXPECT_CALL(*scene, add_bottom_input_visualization(testing::_));
     EXPECT_THAT(manager.enabled(true), Eq(true));
 }
 
@@ -71,7 +71,7 @@ TEST_F(TestBasicMagnificationManager, enabling_twice_returns_false_second_time)
 
 TEST_F(TestBasicMagnificationManager, enabling_prepends_input_visualization_to_the_scene)
 {
-    EXPECT_CALL(*scene, prepend_input_visualization(testing::_));
+    EXPECT_CALL(*scene, add_bottom_input_visualization(testing::_));
     manager.enabled(true);
 }
 
