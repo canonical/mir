@@ -22,7 +22,6 @@
 
 #include "mir/input/mousekeys_keymap.h"
 #include "mir/synchronised.h"
-#include <cassert>
 
 namespace mir
 {
@@ -106,8 +105,6 @@ private:
 
         void add_registration()
         {
-            assert(!registration.has_value());
-            assert(transformer);
             registration.emplace(event_transformer->append(transformer));
         }
 
