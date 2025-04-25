@@ -467,3 +467,8 @@ auto miral::WindowSpecification::userdata() -> mir::optional_value<std::shared_p
 {
     return self->userdata;
 }
+
+auto miral::WindowSpecification::to_surface_specification() const -> mir::shell::SurfaceSpecification
+{
+    return make_surface_spec(*this);
+}

@@ -182,6 +182,9 @@ public:
     auto visible_on_lock_screen() -> mir::optional_value<bool>&;
     ///@}
 
+    /// Create a [mir::shell::SurfaceSpecification] from this window spec.
+    /// \remark Since MirAL 5.3
+    auto to_surface_specification() const -> mir::shell::SurfaceSpecification;
 private:
     friend auto make_surface_spec(WindowSpecification const& miral_spec) -> mir::shell::SurfaceSpecification;
     struct Self;

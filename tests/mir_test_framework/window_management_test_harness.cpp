@@ -37,13 +37,6 @@
 #include "miral/output.h"
 #include "src/miral/window_manager_tools_implementation.h"
 
-// (mattkae) This include is here because miral::make_surface_spec
-// is in miral-internal, but it is used here. When projects try
-// to statically link to it, the symbol will be undefined unless
-// we provide it. I prefer this solution over exposing it in the
-// API, as "regular" users shouldn't be interacting with it.
-#include "src/miral/window_specification_internal.cpp"
-
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace mf = mir::frontend;
@@ -460,7 +453,7 @@ auto mir_test_framework::WindowManagementTestHarness::create_window(
     miral::Application const& session,
     miral::WindowSpecification const& window_spec) const -> miral::Window
 {
-    msh::SurfaceSpecification spec = make_surface_spec(window_spec);
+    msh::SurfaceSpecification spec = window_spec.to_surface_specification();
     auto const stream = std::make_shared<mir::test::doubles::StubBufferStream>();
     spec.streams = std::vector<msh::StreamSpecification>();
     spec.streams.value().push_back(msh::StreamSpecification{
@@ -511,7 +504,7 @@ void mir_test_framework::WindowManagementTestHarness::request_modify(
     server.the_shell()->modify_surface(
         window.application(),
         window.operator std::shared_ptr<ms::Surface>(),
-        make_surface_spec(spec));
+        spec.to_surface_specification());
 }
 
 auto mir_test_framework::WindowManagementTestHarness::focused(miral::Window const& window) const -> bool
