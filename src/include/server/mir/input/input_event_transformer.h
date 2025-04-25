@@ -45,8 +45,9 @@ public:
         virtual bool transform_input_event(EventDispatcher const&, EventBuilder*,  MirEvent const&) = 0;
     };
 
-    struct Registration
+    class Registration
     {
+    public:
         Registration(
             InputEventTransformer* event_transformer,
             std::shared_ptr<mir::input::InputEventTransformer::Transformer> transformer);
