@@ -32,7 +32,7 @@ bool mi::InputEventTransformer::transform(
 {
     std::lock_guard lock{mutex};
 
-    for (auto transformer : input_transformers)
+    for (auto const& transformer : input_transformers)
     {
         if (transformer->transform_input_event(dispatcher, builder, event))
             return true;
