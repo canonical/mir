@@ -32,6 +32,39 @@
 #include <memory>
 #include <optional>
 
+template <typename Transformer>
+inline bool mir::shell::BasicAccessibilityManager::Registration<Transformer>::is_registered() const noexcept
+{
+    return registration.has_value();
+}
+
+template <typename Transformer>
+inline Transformer* mir::shell::BasicAccessibilityManager::Registration<Transformer>::operator->() const noexcept
+{
+    return transformer.get();
+}
+
+template <typename Transformer>
+inline void mir::shell::BasicAccessibilityManager::Registration<Transformer>::remove_registration()
+{
+    registration.reset();
+}
+
+template <typename Transformer>
+inline void mir::shell::BasicAccessibilityManager::Registration<Transformer>::add_registration()
+{
+    registration.emplace(event_transformer->append(transformer));
+}
+
+template <typename Transformer>
+inline mir::shell::BasicAccessibilityManager::Registration<Transformer>::Registration(
+    std::shared_ptr<Transformer> const& transformer,
+    std::shared_ptr<input::InputEventTransformer> const& event_transformer) :
+    transformer{transformer},
+    event_transformer{event_transformer}
+{
+}
+
 class mir::shell::BasicAccessibilityManager::MousekeyPointer : public mir::input::VirtualInputDevice, public input::EventFilter
 {
 public:

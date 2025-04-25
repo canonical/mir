@@ -92,36 +92,14 @@ private:
     public:
         Registration(
             std::shared_ptr<Transformer> const& transformer,
-            std::shared_ptr<input::InputEventTransformer> const& event_transformer) :
-            transformer{transformer},
-            event_transformer{event_transformer}
-        {
-        }
+            std::shared_ptr<input::InputEventTransformer> const& event_transformer);
 
-        ~Registration()
-        {
-            remove_registration();
-        }
+        void add_registration();
+        void remove_registration();
 
-        void add_registration()
-        {
-            registration.emplace(event_transformer->append(transformer));
-        }
+        Transformer* operator->() const noexcept;
 
-        void remove_registration()
-        {
-            registration.reset();
-        }
-
-        Transformer* operator->() const noexcept
-        {
-            return transformer.get();
-        }
-
-        bool is_registered() const noexcept
-        {
-            return registration.has_value();
-        }
+        bool is_registered() const noexcept;
 
     private:
         Registration(Registration const&) = delete;
