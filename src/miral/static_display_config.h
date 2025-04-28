@@ -29,6 +29,7 @@
 #include <mutex>
 #include <optional>
 #include <set>
+#include <any>
 
 namespace YAML
 {
@@ -41,6 +42,8 @@ class MainLoop;
 class Server;
 namespace shell { class DisplayConfigurationController; }
 }
+
+namespace YAML { class Node; }
 
 namespace miral
 {
@@ -56,7 +59,13 @@ public:
 
     auto list_layouts() const -> std::vector<std::string>;
 
+    auto layout_userdata(std::string const& key) -> std::optional<std::any const>;
+
     void add_output_attribute(std::string const& key);
+
+    void layout_userdata_builder(
+        std::string const& key,
+        std::function<std::any(YAML::Node const&)> const& builder);
 
     static void serialize_configuration(std::ostream& out, mir::graphics::DisplayConfiguration& conf);
 
@@ -85,21 +94,32 @@ private:
         Product,
         Serial,
     };
+
     // Workaround for not allowing static initialization in class
     static std::map<Property, std::string const> const display_matching_properties();
 
     using Matchers = std::map<Property, std::string>;
     using Matchers2Config = std::vector<std::pair<Matchers, Config>>;
-    using Layout2Matchers2Config = std::map<std::string, Matchers2Config>;
-    Layout2Matchers2Config config;
+    struct LayoutConfig
+    {
+        Matchers2Config matchers2config;
+        std::map<std::string, std::any> userdata;
+    };
+
+    std::map<std::string, LayoutConfig> config;
 
     std::set<std::string> custom_output_attributes;
+
+    using LayoutUserDataBuilder = std::function<std::any(YAML::Node const& value)>;
+    std::map<std::string, LayoutUserDataBuilder> layout_userdata_builder_funcs;
 
     void parse_configuration(YAML::Node const& node, Config& config, std::string const& error_prefix, std::string const& identifier);
 
     static void apply_to_output(mir::graphics::UserDisplayConfigurationOutput& conf_output, Config const& conf);
 
     static void serialize_output_configuration(
+        std::ostream& out, mir::graphics::UserDisplayConfigurationOutput const& conf_output);
+    static void serialize_display_info(
         std::ostream& out, mir::graphics::UserDisplayConfigurationOutput const& conf_output);
 };
 

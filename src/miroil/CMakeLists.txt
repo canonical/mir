@@ -30,6 +30,7 @@ add_library(miroil SHARED
     surface.cpp ${miroil_include}/miroil/surface.h
     ${miroil_include}/miroil/display_configuration_storage.h
     ${miroil_include}/miroil/display_id.h
+    gesture_ender.cpp gesture_ender.h
 )
 
 target_include_directories(miroil

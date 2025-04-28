@@ -25,6 +25,7 @@
 
 namespace mir
 {
+class MainLoop;
 namespace options
 {
 class Option;

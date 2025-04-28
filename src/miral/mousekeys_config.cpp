@@ -49,47 +49,54 @@ miral::MouseKeysConfig::MouseKeysConfig(bool enabled_by_default) :
 
 void miral::MouseKeysConfig::enabled(bool enabled) const
 {
-    if(self->accessibility_manager.expired())
+    if (auto const accessibility_manager = self->accessibility_manager.lock())
+    {
+        accessibility_manager->mousekeys_enabled(enabled);
+    }
+    else
     {
         mir::log_error("AccessibilityManager not initialized. Will not toggle mousekeys.");
         return;
     }
-
-    self->accessibility_manager.lock()->mousekeys_enabled(enabled);
 }
 
 void miral::MouseKeysConfig::set_keymap(mir::input::MouseKeysKeymap const& new_keymap) const
 {
-    if (self->accessibility_manager.expired())
+    if (auto const accessibility_manager = self->accessibility_manager.lock())
+    {
+        accessibility_manager->mousekeys_keymap(new_keymap);
+    }
+    else
     {
         mir::log_error("AccessibilityManager not initialized. Will not update keymap.");
         return;
     }
-
-    self->accessibility_manager.lock()->mousekeys_keymap(new_keymap);
 }
 
 void miral::MouseKeysConfig::set_acceleration_factors(double constant, double linear, double quadratic) const
 {
-    if (self->accessibility_manager.expired())
+    if (auto const accessibility_manager = self->accessibility_manager.lock())
+    {
+        accessibility_manager->acceleration_factors(constant, linear, quadratic);
+    }
+    else
     {
         mir::log_error("AccessibilityManager not initialized. Will not set acceleration factors.");
         return;
     }
-
-    self->accessibility_manager.lock()->acceleration_factors(constant, linear, quadratic);
 }
-
 
 void miral::MouseKeysConfig::set_max_speed(double x_axis, double y_axis) const
 {
-    if (self->accessibility_manager.expired())
+    if (auto const accessibility_manager = self->accessibility_manager.lock())
+    {
+        accessibility_manager->max_speed(x_axis, y_axis);
+    }
+    else
     {
         mir::log_error("AccessibilityManager not initialized. Will not set max speed.");
         return;
     }
-
-    self->accessibility_manager.lock()->max_speed(x_axis, y_axis);
 }
 
 void miral::MouseKeysConfig::operator()(mir::Server& server) const

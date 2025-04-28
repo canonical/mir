@@ -22,6 +22,7 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include "yaml-cpp/yaml.h"
 
 using namespace testing;
 using namespace mir::geometry;
@@ -591,6 +592,38 @@ TEST_F(StaticDisplayConfig, given_no_custom_attributes_when_they_are_added_exist
     EXPECT_THAT(hdmi1.custom_attribute, ElementsAre());
 }
 
+TEST_F(StaticDisplayConfig, can_set_and_retrieve_custom_data_on_layouts)
+{
+    std::istringstream stream{
+        "layouts:\n"
+        "  another:\n"
+        "    cards:\n"
+        "    - VGA-1:\n"
+        "        state: disabled\n"
+        "    - HDMI-A-1:\n"
+        "        state: disabled\n"
+        "    custom_data: value\n"
+        "  expected:\n"
+        "    cards:\n"
+        "    - VGA-1:\n"
+        "        orientation: inverted\n"
+        "    - HDMI-A-1:\n"
+        "        position: [1280, 0]\n"};
+
+    sdc.layout_userdata_builder("custom_data",  [](YAML::Node const& node) -> std::any
+    {
+        EXPECT_THAT(node.Scalar(), Eq("value"));
+        return node.Scalar();
+    });
+
+    sdc.load_config(stream, "");
+    EXPECT_THAT(sdc.layout_userdata("custom_data"), Eq(std::nullopt));
+    sdc.select_layout("another");
+    auto const other_data = sdc.layout_userdata("custom_data");
+    EXPECT_THAT(other_data, Ne(std::nullopt));
+    EXPECT_THAT(std::any_cast<std::string>(other_data.value()), Eq("value"));
+}
+
 TEST_F(StaticDisplayConfig, empty_displays_is_error)
 {
     std::istringstream stream{
@@ -623,7 +656,7 @@ TEST_F(StaticDisplayConfig, empty_display_is_error)
     EXPECT_THROW((sdc.load_config(stream, "")), mir::AbnormalExit);
 }
 
-struct PropertyValueTest : public StaticDisplayConfig, public WithParamInterface<std::string>
+struct PropertyValueTest : public StaticDisplayConfig, public WithParamInterface<std::pair<std::string, std::string>>
 {
 };
 
@@ -633,7 +666,7 @@ TEST_P(PropertyValueTest, invalid_display_property_value_is_error)
         "layouts:\n"
         "  default:\n"
         "    displays:\n"
-        "    - " + GetParam() + ": null\n"};
+        "    - " + GetParam().first + ": null\n"};
 
     EXPECT_THROW((sdc.load_config(stream, "")), mir::AbnormalExit);
 }
@@ -644,15 +677,10 @@ TEST_P(PropertyValueTest, empty_display_property_value_is_error)
         "layouts:\n"
         "  default:\n"
         "    displays:\n"
-        "    - " + GetParam() + ": ""\n"};
+        "    - " + GetParam().first + ": ""\n"};
 
     EXPECT_THROW((sdc.load_config(stream, "")), mir::AbnormalExit);
 }
-
-INSTANTIATE_TEST_SUITE_P(
-    EDIDValues,
-    PropertyValueTest,
-    Values("vendor", "product", "model", "serial"));
 
 TEST_F(StaticDisplayConfig, no_matcher_matches_all)
 {
@@ -856,3 +884,34 @@ TEST_F(StaticDisplayConfig, cards_apply_on_unmatched_displays)
     EXPECT_THAT(hdmi1.orientation, Eq(mir_orientation_left));
     EXPECT_THAT(vga1.orientation, Eq(mir_orientation_right));
 }
+
+TEST_F(StaticDisplayConfig, serialize_output_with_no_edids)
+{
+    std::ostringstream out;
+
+    miral::YamlFileDisplayConfig::serialize_configuration(out, dc);
+
+    ASSERT_THAT(out.str(), HasSubstr("# No display properties could be determined."));
+}
+
+TEST_P(PropertyValueTest, serialize_properties_for_outputs)
+{
+    std::ostringstream out;
+
+    hdmi1.edid = basic_edid;
+
+    miral::YamlFileDisplayConfig::serialize_configuration(out, dc);
+
+    ASSERT_THAT(out.str(), ContainsRegex("# [ -] " + GetParam().first + ": " + GetParam().second));
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    EDIDValues,
+    PropertyValueTest,
+    Values(
+        std::make_pair("vendor", "APP"),
+        std::make_pair("model", "Color LCD"),
+        std::make_pair("product", "40178"),
+        std::make_pair("serial", "0")
+    )
+);

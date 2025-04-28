@@ -90,6 +90,7 @@ struct TemporaryCompositeEventFilter : public mi::CompositeEventFilter
     MACRO(input_dispatcher)\
     MACRO(input_targeter)\
     MACRO(logger)\
+    MACRO(pointer_input_dispatcher)\
     MACRO(prompt_session_listener)\
     MACRO(prompt_session_manager)\
     MACRO(server_status_listener)\
@@ -120,6 +121,7 @@ struct TemporaryCompositeEventFilter : public mi::CompositeEventFilter
     MACRO(the_session_coordinator)\
     MACRO(the_session_listener)\
     MACRO(the_surface_factory)\
+    MACRO(the_pointer_input_dispatcher)\
     MACRO(the_prompt_session_manager)\
     MACRO(the_shell)\
     MACRO(the_shell_display_layout)\
@@ -136,7 +138,8 @@ struct TemporaryCompositeEventFilter : public mi::CompositeEventFilter
     MACRO(the_input_device_registry)\
     MACRO(the_idle_handler)\
     MACRO(the_token_authority)\
-    MACRO(the_accessibility_manager)
+    MACRO(the_accessibility_manager)\
+    MACRO(the_display_configuration_observer)
 
 #define MIR_SERVER_BUILDER(name)\
     std::function<std::invoke_result_t<decltype(&mir::DefaultServerConfiguration::the_##name),mir::DefaultServerConfiguration*>()> name##_builder;

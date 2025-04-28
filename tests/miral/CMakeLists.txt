@@ -35,6 +35,7 @@ mir_add_wrapped_executable(miral-test-internal NOINSTALL
     modify_window_state.cpp
     modify_window_specification.cpp
     display_reconfiguration.cpp
+    display_configuration.cpp
     raise_tree.cpp
     static_display_config.cpp
     test_window_manager_tools.cpp           test_window_manager_tools.h
@@ -92,6 +93,11 @@ target_link_libraries(miral-test
 option(MIR_RUN_MIRAL_TESTS "Run miral tests as part of testsuite" ON)
 
 if(MIR_RUN_MIRAL_TESTS)
+    set(MIR_EXCLUDE_TESTS
+      TestConfigFile.with_reload_on_change_after_a_config_in_xdg_conf_dir0_is_loaded_a_new_config_in_xdg_conf_home_is_loaded
+    )
     mir_discover_tests_with_fd_leak_detection(miral-test)
+    
+    set(MIR_EXCLUDE_TESTS)
     mir_discover_tests_with_fd_leak_detection(miral-test-internal)
 endif()

@@ -173,6 +173,7 @@ global:
     mir::Server::override_the_input_targeter*;
     mir::Server::override_the_logger*;
     mir::Server::override_the_persistent_surface_store*;
+    mir::Server::override_the_pointer_input_dispatcher*;
     mir::Server::override_the_prompt_session_listener*;
     mir::Server::override_the_prompt_session_manager*;
     mir::Server::override_the_renderer_factory*;
@@ -203,6 +204,7 @@ global:
     mir::Server::the_decoration_strategy*;
     mir::Server::the_display*;
     mir::Server::the_display_configuration_controller*;
+    mir::Server::the_display_configuration_observer*;
     mir::Server::the_display_configuration_observer_registrar*;
     mir::Server::the_display_platforms*;
     mir::Server::the_focus_controller*;
@@ -214,6 +216,7 @@ global:
     mir::Server::the_logger*;
     mir::Server::the_main_loop*;
     mir::Server::the_persistent_surface_store*;
+    mir::Server::the_pointer_input_dispatcher*;
     mir::Server::the_prompt_session_listener*;
     mir::Server::the_prompt_session_manager*;
     mir::Server::the_renderer_factory*;
@@ -375,8 +378,8 @@ global:
     mir::input::InputEventTransformer::InputEventTransformer*;
     mir::input::InputEventTransformer::Transformer::?Transformer*;
     mir::input::InputEventTransformer::append*;
-    mir::input::InputEventTransformer::handle*;
     mir::input::InputEventTransformer::remove*;
+    mir::input::InputEventTransformer::transform*;
     mir::input::InputManager::?InputManager*;
     mir::input::InputManager::InputManager*;
     mir::input::InputManager::operator*;
@@ -882,7 +885,6 @@ global:
     non-virtual?thunk?to?mir::input::InputDispatcher::?InputDispatcher*;
     non-virtual?thunk?to?mir::input::InputEventTransformer::?InputEventTransformer*;
     non-virtual?thunk?to?mir::input::InputEventTransformer::Transformer::?Transformer*;
-    non-virtual?thunk?to?mir::input::InputEventTransformer::handle*;
     non-virtual?thunk?to?mir::input::InputManager::?InputManager*;
     non-virtual?thunk?to?mir::input::KeyboardObserver::?KeyboardObserver*;
     non-virtual?thunk?to?mir::input::Scene::?Scene*;
@@ -1414,3 +1416,4 @@ global:
   };
 local: *;
 };
+

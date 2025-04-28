@@ -20,7 +20,7 @@
 #include <miral/internal_client.h>
 #include <mir_test_framework/window_management_test_harness.h>
 
-#include <gmock/gmock-matchers.h>
+#include <gmock/gmock.h>
 
 #include <linux/input-event-codes.h>
 
@@ -58,12 +58,12 @@ public:
         };
     }
 
-    auto get_output_rectangles() -> std::vector<mir::geometry::Rectangle> override
+    auto get_initial_output_configs() -> std::vector<mir::graphics::DisplayConfigurationOutput> override
     {
-        return {
+        return output_configs_from_output_rectangles({
             mir::geometry::Rectangle{{0, 0}, {800, 600}},
             mir::geometry::Rectangle{{800, 0}, {800, 600}}
-        };
+        });
     }
 
 private:
