@@ -45,15 +45,7 @@ auto mi::InputEventTransformer::append(std::shared_ptr<mi::InputEventTransformer
     -> Registration
 {
     std::lock_guard lock{mutex};
-
-    auto const duplicate_iter = std::ranges::find(
-        input_transformers, transformer.get(), [](auto const& other_transformer) { return other_transformer.get(); });
-
-    if (duplicate_iter != input_transformers.end())
-        BOOST_THROW_EXCEPTION(std::runtime_error("Transformer already registered"));
-
     input_transformers.push_back(transformer);
-
     return Registration(this, transformer);
 }
 

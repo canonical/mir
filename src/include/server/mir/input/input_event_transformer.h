@@ -75,11 +75,8 @@ public:
         EventBuilder* builder,
         EventDispatcher const& dispatcher);
 
-    /// Appends the transformer to a list. It is assumed that only the only
-    /// owners of this transformer are the managing object, and the
-    /// `InputEventTransformer` that it's registered to.
-    ///
-    /// Duplicate appends will throw.
+    /// Appends the transformer to be used in `transform`
+    /// Precondition: Transformer isn't already registered.
     [[nodiscard]] auto append(std::shared_ptr<Transformer> const&) -> Registration;
 
 private:
