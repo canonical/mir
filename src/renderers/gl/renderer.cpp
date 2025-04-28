@@ -319,7 +319,7 @@ public:
         glBindTexture(GL_TEXTURE_2D, texture);
 
         // Draw a sigle right angle triangle that covers the whole output.
-        GLfloat vertices[] = {-1, -1, 4, -1, -1, 4};
+        GLfloat vertices[] = {-1, -1, 3, -1, -1, 3};
         GLfloat tex_coords[] = {0, 0, 2, 0, 0, 2};
         glEnableVertexAttribArray(position_attrib);
         glVertexAttribPointer(position_attrib, 2, GL_FLOAT, GL_FALSE, 0, vertices);
@@ -426,6 +426,8 @@ private:
                      NULL);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
         return tex;
     }
 
