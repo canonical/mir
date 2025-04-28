@@ -41,7 +41,7 @@ bool mir::input::MousekeyPointer::handle(MirEvent const& event)
                 event,
                 builder,
                 [this, sink](auto event) { main_loop->spawn([sink, event] { sink->handle_input(event); }); },
-                state.lock()->device_id);
+                state.lock()->weak_device.lock()->id());
         });
     return handled;
 }
@@ -52,7 +52,6 @@ void mir::input::MousekeyPointer::add_to_registry(std::shared_ptr<InputDeviceReg
     if(!mutable_state->weak_device.expired()) return; // Already registered
 
     mutable_state->weak_device = registry->add_device(virtual_device);
-    mutable_state->device_id = mutable_state->weak_device.lock()->id();
 }
 
 void mir::input::MousekeyPointer::remove_from_registry(std::shared_ptr<InputDeviceRegistry> const& registry)

@@ -46,9 +46,8 @@ private:
     std::shared_ptr<input::InputEventTransformer> const iet;
     std::shared_ptr<VirtualInputDevice> const virtual_device;
 
-    struct State 
+    struct State
     {
-        MirInputDeviceId device_id;
         std::weak_ptr<Device> weak_device;
     };
 
