@@ -27,9 +27,7 @@ mir::input::MousekeyPointer::MousekeyPointer(
     main_loop{std::move(main_loop)},
     iet{std::move(iet)},
     virtual_device{
-
         std::make_shared<mir::input::VirtualInputDevice>("mousekey-pointer", mir::input::DeviceCapability::pointer)}
-
 {
 }
 
