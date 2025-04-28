@@ -169,16 +169,14 @@ mi::BasicSeat::BasicSeat(std::shared_ptr<mi::InputDispatcher> const& dispatcher,
                          std::shared_ptr<Registrar> const& registrar,
                          std::shared_ptr<mi::KeyMapper> const& key_mapper,
                          std::shared_ptr<time::Clock> const& clock,
-                         std::shared_ptr<mi::SeatObserver> const& observer,
-                         std::shared_ptr<mi::EventFilter> const& accessibility_filter) :
+                         std::shared_ptr<mi::SeatObserver> const& observer) :
       input_state_tracker{dispatcher,
                           touch_visualizer,
                           cursor_listener,
                           key_mapper,
                           clock,
                           observer},
-      output_tracker{std::make_shared<OutputTracker>(input_state_tracker)},
-      accessibility_filter{accessibility_filter}
+      output_tracker{std::make_shared<OutputTracker>(input_state_tracker)}
 {
     registrar->register_interest(output_tracker);
 }
@@ -199,8 +197,7 @@ void mi::BasicSeat::remove_device(input::Device const& device)
 
 void mi::BasicSeat::dispatch_event(std::shared_ptr<MirEvent> const& event)
 {
-    if (!accessibility_filter->handle(*event))
-        input_state_tracker.dispatch(event);
+    input_state_tracker.dispatch(event);
 }
 
 geom::Rectangle mi::BasicSeat::bounding_rectangle() const

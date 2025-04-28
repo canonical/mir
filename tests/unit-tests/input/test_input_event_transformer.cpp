@@ -21,6 +21,7 @@
 #include "mir/input/input_device_registry.h"
 #include "mir/input/input_event_transformer.h"
 #include "mir/input/virtual_input_device.h"
+#include "mir/test/doubles/stub_main_loop.h"
 #include "src/server/input/default_input_device_hub.h"
 
 #include "mir/test/doubles/advanceable_clock.h"
@@ -55,6 +56,7 @@ struct TestInputEventTransformer : testing::Test
     NiceMock<mtd::MockKeyMapper> mock_key_mapper;
     NiceMock<mtd::MockServerStatusListener> mock_server_status_listener;
     mtd::AdvanceableClock clock;
+    mir::test::doubles::StubMainLoop main_loop;
 
     TestInputEventTransformer() :
         input_device_hub{std::make_shared<mir::input::DefaultInputDeviceHub>(
@@ -63,20 +65,19 @@ struct TestInputEventTransformer : testing::Test
             mt::fake_shared(clock),
             mt::fake_shared(mock_key_mapper),
             mt::fake_shared(mock_server_status_listener),
-            mt::fake_shared(led_observer_registrar))},
-        input_event_transformer{}
+            mt::fake_shared(led_observer_registrar),
+            mt::fake_shared(input_event_transformer))}
     {
     }
 
     void SetUp() override
     {
-        input_device_hub->add_device(virtual_input_device);
+        input_event_transformer.init(input_device_hub);
         expect_and_execute_multiplexer();
     }
 
     void TearDown() override
     {
-        input_device_hub->remove_device(virtual_input_device);
     }
 
     // Borrowed from `test_single_seat_setup.cpp`
@@ -98,9 +99,7 @@ struct TestInputEventTransformer : testing::Test
     }
 
     std::shared_ptr<mir::input::DefaultInputDeviceHub> const input_device_hub;
-    std::shared_ptr<mir::input::VirtualInputDevice> const virtual_input_device{
-        std::make_shared<mir::input::VirtualInputDevice>("mousekey-pointer", mir::input::DeviceCapability::pointer)};
-    mir::input::InputEventTransformer input_event_transformer;
+    mir::input::InputEventTransformer input_event_transformer{mt::fake_shared(mock_seat)};
 };
 
 struct MockTransformer : public mir::input::InputEventTransformer::Transformer

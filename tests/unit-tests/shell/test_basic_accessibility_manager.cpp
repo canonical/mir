@@ -24,7 +24,6 @@
 #include "mir/glib_main_loop.h"
 #include "mir/input/composite_event_filter.h"
 #include "mir/input/input_event_transformer.h"
-#include "mir/input/mousekey_pointer.h"
 #include "mir/input/mousekeys_keymap.h"
 #include "mir/test/fake_shared.h"
 
@@ -117,15 +116,15 @@ struct TestBasicAccessibilityManager : Test
 {
     TestBasicAccessibilityManager() :
         basic_accessibility_manager{
-            input_event_transformer,
+            mt::fake_shared(input_event_transformer),
             true,
             std::make_shared<mir::test::doubles::StubCursor>(),
             mock_mousekeys_transformer,
             mock_simulated_secondary_click_transformer,
-            mt::fake_shared(input_device_registry),
-            mt::fake_shared(mousekey_pointer)}
+            mt::fake_shared(input_device_registry)}
     {
         basic_accessibility_manager.register_keyboard_helper(mock_key_helper);
+        input_event_transformer.init(mt::fake_shared(input_device_registry));
     }
 
     mtd::AdvanceableClock clock;
@@ -141,7 +140,8 @@ struct TestBasicAccessibilityManager : Test
         mt::fake_shared(clock),
         mt::fake_shared(mock_key_mapper),
         mt::fake_shared(mock_server_status_listener),
-        mt::fake_shared(led_observer_registrar)};
+        mt::fake_shared(led_observer_registrar),
+        mt::fake_shared(input_event_transformer)};
     std::shared_ptr<NiceMock<MockKeyboardHelper>> mock_key_helper{std::make_shared<NiceMock<MockKeyboardHelper>>()};
     std::shared_ptr<NiceMock<MockMouseKeysTransformer>> mock_mousekeys_transformer{
         std::make_shared<NiceMock<MockMouseKeysTransformer>>()};
@@ -150,10 +150,7 @@ struct TestBasicAccessibilityManager : Test
 
     std::shared_ptr<mir::MainLoop> const main_loop{std::make_shared<mir::GLibMainLoop>(mt::fake_shared(clock))};
     std::shared_ptr<mir::input::CompositeEventFilter> const composite_filter{std::make_shared<StubCompositeEventFilter>()};
-    std::shared_ptr<mir::input::InputEventTransformer> const input_event_transformer
-        {std::make_shared<mir::input::InputEventTransformer>()};
-    mir::input::MousekeyPointer mousekey_pointer{main_loop, input_event_transformer};
-
+    mir::input::InputEventTransformer input_event_transformer{mt::fake_shared(mock_seat)};
     mir::shell::BasicAccessibilityManager basic_accessibility_manager;
 };
 

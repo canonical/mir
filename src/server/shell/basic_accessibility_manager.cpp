@@ -20,7 +20,6 @@
 
 #include "mir/graphics/cursor.h"
 #include "mir/input/input_device_registry.h"
-#include "mir/input/mousekey_pointer.h"
 #include "mir/shell/keyboard_helper.h"
 
 #include <xkbcommon/xkbcommon-keysyms.h>
@@ -72,7 +71,6 @@ void mir::shell::BasicAccessibilityManager::mousekeys_enabled(bool on)
         if (event_transformer->append(transformer))
         {
             mousekeys_on = true;
-            ensure_mousekey_pointer_added();
         }
     }
     else
@@ -80,7 +78,6 @@ void mir::shell::BasicAccessibilityManager::mousekeys_enabled(bool on)
         if (event_transformer->remove(transformer))
         {
             mousekeys_on = false;
-            ensure_mousekey_pointer_removed();
         }
     }
 }
@@ -91,13 +88,11 @@ mir::shell::BasicAccessibilityManager::BasicAccessibilityManager(
     std::shared_ptr<mir::graphics::Cursor> const& cursor,
     std::shared_ptr<shell::MouseKeysTransformer> const& mousekeys_transformer,
     std::shared_ptr<SimulatedSecondaryClickTransformer> const& simulated_secondary_click_transformer,
-    std::shared_ptr<input::InputDeviceRegistry> const& input_device_registry,
-    std::shared_ptr<input::MousekeyPointer> const& mousekey_pointer) :
+    std::shared_ptr<input::InputDeviceRegistry> const& input_device_registry) :
     enable_key_repeat{enable_key_repeat},
     cursor{cursor},
     event_transformer{event_transformer},
     input_device_registry{input_device_registry},
-    mousekey_pointer{mousekey_pointer},
     transformer{mousekeys_transformer},
     simulated_secondary_click_transformer{simulated_secondary_click_transformer}
 {
@@ -134,7 +129,6 @@ void mir::shell::BasicAccessibilityManager::simulated_secondary_click_enabled(bo
         if (event_transformer->append(simulated_secondary_click_transformer))
         {
             ssc_on = true;
-            ensure_mousekey_pointer_added();
 
             simulated_secondary_click_transformer->enabled();
         }
@@ -144,7 +138,6 @@ void mir::shell::BasicAccessibilityManager::simulated_secondary_click_enabled(bo
         if (event_transformer->remove(simulated_secondary_click_transformer))
         {
             ssc_on = false;
-            ensure_mousekey_pointer_removed();
 
             simulated_secondary_click_transformer->disabled();
         }
@@ -155,16 +148,4 @@ auto mir::shell::BasicAccessibilityManager::simulated_secondary_click()
     -> SimulatedSecondaryClickTransformer&
 {
     return *simulated_secondary_click_transformer;
-}
-
-void mir::shell::BasicAccessibilityManager::ensure_mousekey_pointer_added()
-{
-    if (mousekeys_on || ssc_on)
-        mousekey_pointer->add_to_registry(input_device_registry);
-}
-
-void mir::shell::BasicAccessibilityManager::ensure_mousekey_pointer_removed()
-{
-    if (!mousekeys_on && !ssc_on)
-        mousekey_pointer->remove_from_registry(input_device_registry);
 }

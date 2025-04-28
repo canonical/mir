@@ -50,7 +50,6 @@
 #include "mir/input/touch_visualizer.h"
 #include "mir/input/input_device_info.h"
 #include "mir/input/input_event_transformer.h"
-#include "mir/input/mousekey_pointer.h"
 #include "mir/geometry/rectangles.h"
 #include "mir/test/input_config_matchers.h"
 #include "mir/test/fd_utils.h"
@@ -86,14 +85,8 @@ MATCHER_P(DeviceMatches, device_info, "")
         arg.unique_id() == device_info.unique_id;
 }
 
-struct StubMouseKeyPointer : public mir::input::MousekeyPointer
+struct StubAccessibilityEventFilter : public mir::input::EventFilter
 {
-    StubMouseKeyPointer(
-        std::shared_ptr<mir::MainLoop> main_loop, std::shared_ptr<mir::input::InputEventTransformer> iet) :
-        MousekeyPointer(main_loop, iet)
-    {
-    }
-
     bool handle(MirEvent const&) override
     {
         return false;
@@ -115,18 +108,19 @@ struct SingleSeatInputDeviceHubSetup : ::testing::Test
     ms::BroadcastingSessionEventSink session_event_sink;
     mtd::FakeDisplayConfigurationObserverRegistrar display_config;
     NiceMock<mtd::MockLedObserverRegistrar> led_observer_registrar;
-    StubMouseKeyPointer stub_mousekey_pointer{std::make_shared<mir::test::doubles::StubMainLoop>(), std::make_shared<mir::input::InputEventTransformer>()};
+    mir::test::doubles::StubMainLoop main_loop;
     mi::BasicSeat seat{mt::fake_shared(mock_dispatcher),      mt::fake_shared(mock_visualizer),
                        mt::fake_shared(mock_cursor_listener), mt::fake_shared(display_config),
                        mt::fake_shared(key_mapper),           mt::fake_shared(clock),
-                       mt::fake_shared(mock_seat_observer),   mt::fake_shared(stub_mousekey_pointer)};
+                       mt::fake_shared(mock_seat_observer)};
     mi::DefaultInputDeviceHub hub{
         mt::fake_shared(seat),
         mt::fake_shared(multiplexer),
         mt::fake_shared(clock),
         mt::fake_shared(key_mapper),
         mt::fake_shared(mock_status_listener),
-        mt::fake_shared(led_observer_registrar)};
+        mt::fake_shared(led_observer_registrar),
+        std::make_shared<StubAccessibilityEventFilter>()};
     NiceMock<mtd::MockInputDeviceObserver> mock_observer;
     mi::ConfigChanger changer{
         mt::fake_shared(mock_input_manager),

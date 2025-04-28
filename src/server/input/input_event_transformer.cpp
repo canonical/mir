@@ -16,17 +16,42 @@
 
 #include "mir/input/input_event_transformer.h"
 
-#include "mir/log.h"
+#include "mir/events/event_builders.h"
+#include "mir/input/device.h"
+#include "mir/input/device_capability.h"
+#include "mir/input/input_device_registry.h"
+#include "mir/input/input_sink.h"
+#include "mir/input/seat.h"
+#include "mir/input/virtual_input_device.h"
+#include "mir/main_loop.h"
 
 #include <algorithm>
 
 namespace mi = mir::input;
 
-mi::InputEventTransformer::InputEventTransformer()
+mi::InputEventTransformer::InputEventTransformer(std::shared_ptr<Seat> const& seat) :
+    seat{seat},
+    virtual_device{
+        std::make_shared<mir::input::VirtualInputDevice>("mousekey-pointer", mir::input::DeviceCapability::pointer)}
 {
 }
 
 mir::input::InputEventTransformer::~InputEventTransformer() = default;
+
+bool mir::input::InputEventTransformer::handle(MirEvent const& event)
+{
+    auto handled = false;
+    virtual_device->if_started_then(
+        [this, &event, &handled](auto*, auto* builder)
+        {
+            handled = transform(
+                event,
+                builder,
+                [this](auto event) { seat->dispatch_event(event); },
+                weak_device.lock()->id());
+        });
+    return handled;
+}
 
 bool mi::InputEventTransformer::transform(
     MirEvent const& event, EventBuilder* builder, EventDispatcher const& dispatcher, MirInputDeviceId virtual_device_id)
@@ -79,6 +104,10 @@ bool mi::InputEventTransformer::append(std::weak_ptr<mi::InputEventTransformer::
         return false;
 
     input_transformers.push_back(transformer);
+
+    if(weak_device.expired())
+        weak_device = input_device_registry->add_device(virtual_device);
+
     return true;
 }
 
@@ -97,5 +126,17 @@ bool mi::InputEventTransformer::remove(std::shared_ptr<mi::InputEventTransformer
         return false;
 
     input_transformers.erase(remove_start, remove_end);
+
+    if(input_transformers.empty())
+    {
+        input_device_registry->remove_device(virtual_device);
+        weak_device.reset();
+    }
+
     return true;
+}
+
+void mir::input::InputEventTransformer::init(std::shared_ptr<InputDeviceRegistry> const& input_device_registry)
+{
+    this->input_device_registry = input_device_registry;
 }

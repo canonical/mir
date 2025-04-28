@@ -49,8 +49,7 @@ public:
               std::shared_ptr<Registrar> const& registrar,
               std::shared_ptr<KeyMapper> const& key_mapper,
               std::shared_ptr<time::Clock> const& clock,
-              std::shared_ptr<SeatObserver> const& observer,
-              std::shared_ptr<input::EventFilter> const& accessibility_filter);
+              std::shared_ptr<SeatObserver> const& observer);
     // Seat methods:
     void add_device(Device const& device) override;
     void remove_device(Device const& device) override;
@@ -69,7 +68,6 @@ private:
     SeatInputDeviceTracker input_state_tracker;
     struct OutputTracker;
     std::shared_ptr<OutputTracker> const output_tracker;
-    std::shared_ptr<EventFilter> const accessibility_filter;
 };
 }
 }
