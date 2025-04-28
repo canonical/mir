@@ -116,11 +116,13 @@ bool mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
 
     if (framebuffers.size() == renderable_list.size() && display_sink.overlay(framebuffers))
     {
+        mir::log_debug("Presented frame using direct client output");
         report->renderables_in_frame(this, renderable_list);
         renderer->suspend();
     }
     else
     {
+        mir::log_debug("Presented frame using GL composition");
         renderer->set_output_transform(display_sink.transformation());
         renderer->set_viewport(view_area);
 

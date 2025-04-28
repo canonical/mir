@@ -35,6 +35,7 @@
 #include <cstdint>
 #include <cstring>
 #include <stdexcept>
+#include <unordered_set>
 
 #define MIR_LOG_COMPONENT "linux-dmabuf-import"
 #include "mir/log.h"
@@ -1103,10 +1104,27 @@ public:
             for (auto j = 0u; j < modifiers.size(); ++j)
             {
                 auto const modifier = modifiers[j];
+                static const std::unordered_set<uint64_t> cludge{
+                        0x200000010463b04,
+                        0x200000010433b04,
+                        0x200000010467b04,
+                        0x200000010437b04,
+                        0x200000010401b04,
+                        0x200000010463f04,
+                        0x200000010433f04,
+                        0x200000010467f04,
+                        0x200000010437f04,
+                        0x200000010401f04,
+                        0x200000000000a04,
+                        0x0
+                };
+                if (cludge.count(modifier))
+                {
                 send_modifier_event_if_supported(
                     format,
                     modifier >> 32,
                     modifier & 0xFFFFFFFF);
+                }
             }
         }
     }

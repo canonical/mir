@@ -40,6 +40,7 @@
 #include <memory>
 #include <stdexcept>
 #include <chrono>
+#include <system_error>
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 
@@ -359,6 +360,8 @@ auto mga::DmaBufDisplayAllocator::framebuffer_for(std::shared_ptr<DMABufBuffer> 
     {
         return {};
     }
+
+    mir::log_debug("Directly imported dmabuf as framebuffer");
 
     struct AtomicKmsFbHandle : public mg::FBHandle
     {
