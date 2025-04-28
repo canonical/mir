@@ -53,8 +53,10 @@ void mi::InputEventTransformer::remove(std::shared_ptr<mi::InputEventTransformer
 {
     std::lock_guard lock{mutex};
 
-    auto [remove_start, remove_end] = std::ranges::remove(input_transformers, transformer);
-    input_transformers.erase(remove_start, remove_end);
+    if (auto pos = std::ranges::find(input_transformers, transformer); pos != input_transformers.end())
+    {
+        input_transformers.erase(pos);
+    }
 }
 
 mir::input::InputEventTransformer::Registration::Registration(
