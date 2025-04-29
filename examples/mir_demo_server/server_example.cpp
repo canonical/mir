@@ -28,6 +28,7 @@
 #include <miral/wayland_extensions.h>
 #include <miral/x11_support.h>
 #include <miral/cursor_scale.h>
+#include <miral/output_filter.h>
 
 #include "mir/abnormal_exit.h"
 #include "mir/main_loop.h"
@@ -148,6 +149,7 @@ public:
     {
         input_configuration(server);
         cursor_scale(server);
+        output_filter(server);
     }
 
 private:
@@ -157,6 +159,7 @@ private:
     miral::InputConfiguration::Keyboard keyboard = input_configuration.keyboard();
     std::mutex config_mutex;
     miral::CursorScale cursor_scale;
+    miral::OutputFilter output_filter;
     miral::ConfigFile config_file;
 
     void apply_config()
@@ -243,6 +246,11 @@ private:
                     auto const parsed = parse_and_validate_float(key, value);
                     if(parsed)
                         cursor_scale.scale(*parsed);
+                }
+
+                if(key == "output_filter")
+                {
+                    output_filter.filter(value);
                 }
             }
         }

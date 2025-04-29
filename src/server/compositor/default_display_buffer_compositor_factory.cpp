@@ -36,7 +36,7 @@ mc::DefaultDisplayBufferCompositorFactory::DefaultDisplayBufferCompositorFactory
     std::shared_ptr<mir::renderer::RendererFactory> const& renderer_factory,
     std::shared_ptr<mg::GraphicBufferAllocator> const& buffer_allocator,
     std::shared_ptr<mc::CompositorReport> const& report,
-    MirOutputFilter output_filter) :
+    std::shared_ptr<mg::OutputFilter> const& output_filter) :
         platforms{std::move(render_platforms)},
         gl_config{std::move(gl_config)},
         renderer_factory{renderer_factory},

@@ -210,7 +210,7 @@ struct SurfaceStackCompositor : public Test
         mt::fake_shared(renderer_factory),
         std::make_shared<mtd::StubBufferAllocator>(),
         null_comp_report,
-        mir_output_filter_none};
+        std::make_shared<mg::OutputFilter>()};
 };
 
 std::chrono::milliseconds const default_delay{-1};

@@ -136,7 +136,6 @@ MIR_PLATFORM_2.21 {
     mir::options::null_console;
     mir::options::off_opt_value*;
     mir::options::offscreen_opt*;
-    mir::options::output_filter_opt*;
     mir::options::platform_display_libs*;
     mir::options::platform_input_lib*;
     mir::options::platform_path*;

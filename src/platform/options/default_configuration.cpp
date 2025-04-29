@@ -37,7 +37,6 @@ char const* const mo::shared_library_prober_report_opt = "shared-library-prober-
 char const* const mo::shell_report_opt            = "shell-report";
 char const* const mo::touchspots_opt              = "enable-touchspots";
 char const* const mo::cursor_opt                  = "cursor";
-char const* const mo::output_filter_opt           = "output-filter";
 char const* const mo::fatal_except_opt            = "on-fatal-error-except";
 char const* const mo::debug_opt                   = "debug";
 char const* const mo::composite_delay_opt         = "composite-delay";
@@ -179,9 +178,6 @@ mo::DefaultConfiguration::DefaultConfiguration(
         (cursor_opt,
             po::value<std::string>()->default_value("auto"),
             "Cursor (mouse pointer) to use [{auto,null,software}]")
-        (output_filter_opt,
-            po::value<std::string>()->default_value("none"),
-            "Output filter to use [{none,grayscale,invert}]")
         (enable_key_repeat_opt, po::value<bool>()->default_value(true),
              "Enable server generated key repeat")
         (idle_timeout_opt, po::value<int>()->default_value(0),

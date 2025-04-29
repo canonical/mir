@@ -18,6 +18,8 @@ add_library(
   multiplexing_display.cpp
   multiplexing_hw_cursor.h
   multiplexing_hw_cursor.cpp
+  default_output_filter.h
+  default_output_filter.cpp
 )
 
 target_link_libraries(mirgraphics

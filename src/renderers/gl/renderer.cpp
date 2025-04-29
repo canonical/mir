@@ -876,21 +876,22 @@ const GLchar* invert_src =
     "   return vec4(1.0 - col[0], 1.0 - col[1], 1.0 - col[2], col[3]);\n"
     "}\n";
 
-void mrg::Renderer::set_output_filter(MirOutputFilter filter)
+void mrg::Renderer::set_output_filter(std::shared_ptr<mg::OutputFilter> filter)
 {
     GLchar const * filter_src;
-    switch (filter)
+    auto filter_name = filter->filter();
+    if (filter_name == "grayscale")
     {
-    default:
-    case mir_output_filter_none:
+        filter_src = grayscale_src;
+    }
+    else if (filter_name == "invert")
+    {
+        filter_src = invert_src;
+    }
+    else
+    {
         output_filter_shader = nullptr;
         return;
-    case mir_output_filter_grayscale:
-        filter_src = grayscale_src;
-        break;
-    case mir_output_filter_invert:
-        filter_src = invert_src;
-        break;
     }
     output_filter_shader = std::make_unique<OutputFilterShader>(output_surface->size().width.as_value(), output_surface->size().height.as_value(), filter_src);
 }

@@ -104,6 +104,7 @@ class GraphicBufferAllocator;
 class Cursor;
 class CursorImage;
 class GLConfig;
+class OutputFilter;
 }
 namespace input
 {
@@ -234,6 +235,7 @@ public:
     virtual std::shared_ptr<input::CursorImages> the_cursor_images();
     std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>>
         the_display_configuration_observer_registrar();
+    virtual std::shared_ptr<graphics::OutputFilter> the_output_filter();
 
     /** @} */
 
@@ -399,6 +401,7 @@ protected:
     CachedPtr<graphics::Cursor>       cursor;
     CachedPtr<graphics::CursorImage>  default_cursor_image;
     CachedPtr<input::CursorImages> cursor_images;
+    CachedPtr<graphics::OutputFilter> output_filter;
 
     CachedPtr<frontend::SessionAuthorizer> session_authorizer;
     CachedPtr<renderer::RendererFactory> renderer_factory;

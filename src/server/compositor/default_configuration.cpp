@@ -52,21 +52,9 @@ mir::DefaultServerConfiguration::the_display_buffer_compositor_factory()
                 BOOST_THROW_EXCEPTION((std::runtime_error{"Selected rendering platform does not support GL"}));
             }
 
-            std::string const output_filter_name(
-                the_options()->get<std::string>(options::output_filter_opt));
-            MirOutputFilter output_filter = mir_output_filter_none;
-            if (output_filter_name == "grayscale")
-            {
-                output_filter = mir_output_filter_grayscale;
-            }
-            else if (output_filter_name == "invert")
-            {
-                output_filter = mir_output_filter_invert;
-            }
-
             return wrap_display_buffer_compositor_factory(
                 std::make_shared<mc::DefaultDisplayBufferCompositorFactory>(
-                    std::move(providers), the_gl_config(), the_renderer_factory(), the_buffer_allocator(), the_compositor_report(), output_filter));
+                    std::move(providers), the_gl_config(), the_renderer_factory(), the_buffer_allocator(), the_compositor_report(), the_output_filter()));
         });
 }
 
