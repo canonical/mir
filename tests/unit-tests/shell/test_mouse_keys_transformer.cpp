@@ -22,8 +22,7 @@
 #include "src/server/input/default_event_builder.h"
 
 #include "mir/test/doubles/advanceable_clock.h"
-#include "mir/test/doubles/stub_main_loop.h"
-#include "mir/test/doubles/stub_alarm.h"
+#include "mir/test/doubles/queued_alarm_stub_main_loop.h"
 #include "mir/test/doubles/advanceable_clock.h"
 #include "mir/test/fake_shared.h"
 
@@ -33,7 +32,6 @@
 #include <xkbcommon/xkbcommon-keysyms.h>
 
 #include <chrono>
-#include <list>
 #include <memory>
 
 namespace mev = mir::events;
@@ -43,91 +41,11 @@ namespace mtd = mt::doubles;
 
 using namespace ::testing;
 
-namespace
-{
-/// When this alarm is scheduled or cancelled, it will notify the caller.
-/// All of other methods are provided a "stub" implementation.
-class StubNotifyingAlarm : public mtd::StubAlarm
-{
-public:
-    explicit StubNotifyingAlarm(
-        std::function<void(StubNotifyingAlarm const*)> const& on_rescheduled,
-        std::function<void(StubNotifyingAlarm const*)> const& on_cancelled) :
-        on_rescheduled{on_rescheduled},
-        on_cancelled{on_cancelled}
-    {
-    }
-
-    ~StubNotifyingAlarm() override
-    {
-        on_cancelled(this);
-    }
-
-    bool reschedule_in(std::chrono::milliseconds) override
-    {
-        on_rescheduled(this);
-        return true;
-    }
-
-    bool reschedule_for(mir::time::Timestamp) override
-    {
-        on_rescheduled(this);
-        return true;
-    }
-
-private:
-    std::function<void(StubNotifyingAlarm const*)> on_rescheduled;
-    std::function<void(StubNotifyingAlarm const*)> on_cancelled;
-};
-
-/// This MainLoop is a stub aside from the code that handles the creation of alarms.
-/// When an alarm is scheduled, this class will add it to a list of functions that
-/// need to be called. When an alarm is removed, this class will remove all functions
-/// queued on that alarm from the list so that they are not called.
-class QueuedAlarmStubMainLoop : public mtd::StubMainLoop
-{
-public:
-    std::unique_ptr<mir::time::Alarm> create_alarm(std::function<void()> const& f) override
-    {
-        return std::make_unique<StubNotifyingAlarm>(
-            [this, f=f](StubNotifyingAlarm const* alarm)
-            {
-                pending.push_back(std::make_shared<AlarmData>(alarm, f));
-            },
-            [this](StubNotifyingAlarm const* alarm)
-            {
-                pending.erase(std::remove_if(pending.begin(), pending.end(), [alarm](std::shared_ptr<AlarmData> const& data)
-                {
-                    return data->alarm == alarm;
-                }), pending.end());
-            }
-        );
-    }
-
-    bool call_queued()
-    {
-        if (pending.empty())
-            return false;
-
-        pending.front()->call();
-        pending.pop_front();
-        return true;
-    }
-
-private:
-    struct AlarmData
-    {
-        StubNotifyingAlarm const* alarm;
-        std::function<void()> call;
-    };
-    std::list<std::shared_ptr<AlarmData>> pending;
-};
-}
 
 struct TestMouseKeysTransformer : testing::Test
 {
     TestMouseKeysTransformer() :
-        main_loop{std::make_shared<QueuedAlarmStubMainLoop>()},
+        main_loop{std::make_shared<mtd::QueuedAlarmStubMainLoop>(mt::fake_shared(clock))},
         transformer{
             std::make_shared<mir::shell::BasicMouseKeysTransformer>(main_loop, mt::fake_shared(clock)),
         },
@@ -140,7 +58,7 @@ struct TestMouseKeysTransformer : testing::Test
     }
 
     mtd::AdvanceableClock clock;
-    std::shared_ptr<QueuedAlarmStubMainLoop> const main_loop;
+    std::shared_ptr<mtd::QueuedAlarmStubMainLoop> const main_loop;
     std::shared_ptr<mir::shell::MouseKeysTransformer> const transformer;
     mi::DefaultEventBuilder default_event_builder;
     std::function<void(std::shared_ptr<MirEvent> const& event)> dispatch;
