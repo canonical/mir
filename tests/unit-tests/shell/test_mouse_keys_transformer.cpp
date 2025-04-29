@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "transformer_common.h"
+#include "mir/test/doubles/queued_alarm_stub_main_loop.h"
 
 #include "mir/events/event_builders.h"
 #include "mir/events/pointer_event.h"
