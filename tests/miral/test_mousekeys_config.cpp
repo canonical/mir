@@ -14,9 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/input/mousekeys_keymap.h"
 #include "mir/server.h"
-#include "mir/shell/accessibility_manager.h"
+#include "mir/test/doubles/mock_accessibility_manager.h"
 
 #include "miral/mousekeys_config.h"
 #include "miral/test_server.h"
@@ -26,21 +25,6 @@
 #include <memory>
 
 using namespace testing;
-
-class MockAccessibilityManager: public mir::shell::AccessibilityManager
-{
-public:
-    MOCK_METHOD(void, register_keyboard_helper, (std::shared_ptr<mir::shell::KeyboardHelper> const&), (override));
-    MOCK_METHOD(std::optional<int>, repeat_rate, (), (const override));
-    MOCK_METHOD(int, repeat_delay, (), (const override));
-    MOCK_METHOD(void, repeat_rate_and_delay, (std::optional<int> new_rate, std::optional<int> new_delay), (override));
-    MOCK_METHOD(void, notify_helpers, (), (const override));
-    MOCK_METHOD(void, cursor_scale, (float), (override));
-    MOCK_METHOD(void, mousekeys_enabled, (bool on), (override));
-    MOCK_METHOD(void, mousekeys_keymap, (mir::input::MouseKeysKeymap const& new_keymap), (override));
-    MOCK_METHOD(void, acceleration_factors, (double constant, double linear, double quadratic), (override));
-    MOCK_METHOD(void, max_speed, (double x_axis, double y_axis), (override));
-};
 
 struct TestMouseKeysConfig : miral::TestServer
 {
