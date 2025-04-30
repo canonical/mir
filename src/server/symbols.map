@@ -767,6 +767,7 @@ global:
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_main_clipboard*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_main_loop*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_mediating_display_changer*;
+    non-virtual?thunk?to?mir::DefaultServerConfiguration::the_output_filter*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_persistent_surface_store*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_pointer_input_dispatcher*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_primary_selection_clipboard*;
