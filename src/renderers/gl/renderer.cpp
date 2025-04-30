@@ -876,7 +876,7 @@ const GLchar* invert_src =
     "   return vec4(1.0 - col[0], 1.0 - col[1], 1.0 - col[2], col[3]);\n"
     "}\n";
 
-void mrg::Renderer::set_output_filter(std::shared_ptr<mg::OutputFilter> filter)
+void mrg::Renderer::set_output_filter(std::shared_ptr<mg::OutputFilter> const& filter)
 {
     GLchar const * filter_src;
     auto filter_name = filter->filter();
