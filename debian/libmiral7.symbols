@@ -536,3 +536,4 @@ libmiral.so.7 libmiral7 #MINVER#
  (c++)"miral::MouseKeysConfig::set_acceleration_factors(double, double, double) const@MIRAL_5.3" 5.3.0
  (c++)"miral::MouseKeysConfig::set_keymap(mir::input::MouseKeysKeymap const&) const@MIRAL_5.3" 5.3.0
  (c++)"miral::MouseKeysConfig::set_max_speed(double, double) const@MIRAL_5.3" 5.3.0
+ (c++)"miral::WindowSpecification::to_surface_specification() const@MIRAL_5.3" 5.3.0
