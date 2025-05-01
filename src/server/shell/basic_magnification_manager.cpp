@@ -57,8 +57,7 @@ public:
         geom::Size const& size)
         : allocator(allocator),
           write_index(0),
-          read_index(1),
-          new_buffer_available(false)
+          read_index(1)
     {
         buffers[0] = allocator->alloc_software_buffer(size, mir_pixel_format_argb_8888);
         buffers[1] = allocator->alloc_software_buffer(size, mir_pixel_format_argb_8888);
@@ -93,8 +92,6 @@ private:
     std::mutex mutex;
     int write_index;
     int read_index;
-
-    std::atomic<bool> new_buffer_available;
 };
 
 class MagnificationRenderable : public mg::Renderable
@@ -239,16 +236,25 @@ public:
 
     bool enabled(bool next)
     {
-        if (next == state.lock()->enabled_)
-            return false;
+        {
+            auto const locked = state.lock();
+            if (next == locked->enabled_)
+                return false;
 
-        state.lock()->enabled_ = next;
+            locked->enabled_ = next;
+        }
+
+        // Note that we do not have to manually call 'update'
+        // after this, as adding a visualization will trigger a
+        // scene change notification, which will call 'update'.
+        // We make sure to give up the lock on the state before
+        // or else the lock may be retaken in the scene changed
+        // callback, causing a deadlock.
         if (next)
             scene->add_bottom_input_visualization(renderable);
         else
             scene->remove_input_visualization(renderable);
 
-        update(*state.lock());
         return true;
     }
 

@@ -67,8 +67,6 @@ protected:
     /// \note This must be called with a current GL context
     void upload_to_texture(void const* pixels, geometry::Stride const& stride);
 
-    /// \note This must be called with a current GL context
-    void update_texture(void const* pixels, geometry::Stride const& stride);
 private:
     geometry::Size const size_;
     MirPixelFormat const pixel_format_;
@@ -111,7 +109,6 @@ private:
     std::unique_ptr<unsigned char[]> const pixels;
     std::mutex uploaded_mutex;
     bool uploaded{false};
-    bool is_dirty{false};
 };
 
 class MappableBackedShmBuffer :
@@ -140,7 +137,6 @@ private:
     std::shared_ptr<renderer::software::RWMappableBuffer> const data;
     std::mutex uploaded_mutex;
     bool uploaded{false};
-    bool is_dirty{false};
 };
 
 class NotifyingMappableBackedShmBuffer : public MappableBackedShmBuffer

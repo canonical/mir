@@ -75,11 +75,6 @@ public:
     {
         return stride().as_uint32_t() * size().height.as_uint32_t();
     }
-
-    void mark_dirty() override
-    {
-        // No-op
-    }
 private:
     std::shared_ptr<BufferType> const buffer;
     std::unique_ptr<unsigned char[]> const bounce_buffer;

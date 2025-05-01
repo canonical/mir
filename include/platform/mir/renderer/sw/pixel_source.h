@@ -61,10 +61,6 @@ public:
 
     virtual T* data() = 0;
     virtual size_t len() const = 0;
-
-    /// Marks the underlying buffer as dirty, which will prompt the buffer to
-    /// be reuploaded on the next render.
-    virtual void mark_dirty() = 0;
 };
 
 /**

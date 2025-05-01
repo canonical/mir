@@ -25,41 +25,100 @@
 #include "mir/test/doubles/mock_screen_shooter.h"
 #include "mir/test/doubles/mock_frontend_surface_stack.h"
 #include "mir/test/doubles/mock_input_seat.h"
+#include "mir/test/doubles/mock_surface.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include "mir/scene/observer.h"
+
 using namespace testing;
 using namespace std::chrono_literals;
+namespace ms = mir::scene;
+namespace mg = mir::graphics;
 namespace mtd = mir::test::doubles;
 namespace mev = mir::events;
 namespace geom = mir::geometry;
 
+namespace
+{
+class MockInputSceneContainer
+{
+public:
+    MockInputSceneContainer()
+        : scene(std::make_shared<NiceMock<mtd::MockInputScene>>()),
+          surface_stack(std::make_shared<NiceMock<mtd::MockFrontendSurfaceStack>>()),
+          surface(std::make_shared<NiceMock<mtd::MockSurface>>())
+    {
+        ON_CALL(*surface_stack, add_observer(testing::_))
+            .WillByDefault(testing::Invoke([&](std::shared_ptr<ms::Observer> const& observer)
+            {
+                observers.push_back(observer);
+            }));
+        ON_CALL(*scene, add_bottom_input_visualization(testing::_))
+            .WillByDefault(testing::Invoke([&](auto const&)
+            {
+                surface_added();
+            }));
+        ON_CALL(*scene, add_bottom_input_visualization(testing::_))
+            .WillByDefault(testing::Invoke([&](auto const&)
+            {
+                surface_removed();
+            }));
+        ON_CALL(*surface, visible())
+            .WillByDefault(testing::Return(true));
+    }
+
+    std::shared_ptr<mtd::MockInputScene> const scene;
+    std::shared_ptr<mtd::MockFrontendSurfaceStack> surface_stack;
+private:
+    void surface_added() const
+    {
+        for (auto const& observer : observers)
+        {
+            if (auto const lock = observer.lock())
+                lock->surface_added(surface);
+        }
+    }
+
+    void surface_removed() const
+    {
+        for (auto const& observer : observers)
+        {
+            if (auto const lock = observer.lock())
+                lock->surface_removed(surface);
+        }
+    }
+
+    std::vector<std::weak_ptr<ms::Observer>> observers;
+    std::shared_ptr<mtd::MockSurface> surface;
+};
+}
+
 struct TestBasicMagnificationManager : Test
 {
     TestBasicMagnificationManager()
-        : scene(std::make_shared<NiceMock<mtd::MockInputScene>>()),
-          screen_shooter(std::make_shared<NiceMock<mtd::MockScreenShooter>>()),
+        : screen_shooter(std::make_shared<NiceMock<mtd::MockScreenShooter>>()),
           stub_composite_event_filter(std::make_shared<mtd::StubCompositeEventFilter>()),
           manager(
             stub_composite_event_filter,
-            scene,
+            scene_container.scene,
             std::make_shared<mtd::StubBufferAllocator>(),
             screen_shooter,
-            std::make_shared<NiceMock<mtd::MockFrontendSurfaceStack>>(),
+            scene_container.surface_stack,
             std::make_shared<NiceMock<mtd::MockInputSeat>>())
     {
     }
 
-    std::shared_ptr<mtd::MockInputScene> scene;
-    std::shared_ptr<mtd::MockScreenShooter> screen_shooter;
-    std::shared_ptr<mtd::StubCompositeEventFilter> stub_composite_event_filter;
+    MockInputSceneContainer const scene_container;
+    std::shared_ptr<mtd::MockScreenShooter> const screen_shooter;
+    std::shared_ptr<mtd::StubCompositeEventFilter> const stub_composite_event_filter;
     mir::shell::BasicMagnificationManager manager;
 };
 
 TEST_F(TestBasicMagnificationManager, enabling_adds_renderable_to_input_scene)
 {
-    EXPECT_CALL(*scene, add_bottom_input_visualization(testing::_));
+    EXPECT_CALL(*scene_container.scene, add_bottom_input_visualization(testing::_));
     EXPECT_THAT(manager.enabled(true), Eq(true));
 }
 
@@ -71,13 +130,13 @@ TEST_F(TestBasicMagnificationManager, enabling_twice_returns_false_second_time)
 
 TEST_F(TestBasicMagnificationManager, enabling_prepends_input_visualization_to_the_scene)
 {
-    EXPECT_CALL(*scene, add_bottom_input_visualization(testing::_));
+    EXPECT_CALL(*scene_container.scene, add_bottom_input_visualization(testing::_));
     manager.enabled(true);
 }
 
 TEST_F(TestBasicMagnificationManager, disabling_removes_input_visualization_to_the_scene)
 {
-    EXPECT_CALL(*scene, remove_input_visualization(testing::_));
+    EXPECT_CALL(*scene_container.scene, remove_input_visualization(testing::_));
     manager.enabled(true);
     manager.enabled(false);
 }
@@ -105,7 +164,7 @@ TEST_F(TestBasicMagnificationManager, enabling_causes_screen_shooter_to_capture)
 
 TEST_F(TestBasicMagnificationManager, enabling_removes_renderable_from_input_scene)
 {
-    EXPECT_CALL(*scene, remove_input_visualization(testing::_));
+    EXPECT_CALL(*scene_container.scene, remove_input_visualization(testing::_));
     EXPECT_THAT(manager.enabled(true), Eq(true));
     EXPECT_THAT(manager.enabled(false), Eq(true));
 }

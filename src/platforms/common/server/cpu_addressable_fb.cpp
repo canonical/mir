@@ -87,11 +87,6 @@ class mg::CPUAddressableFB::Buffer : public mir::renderer::software::RWMappableB
             return len_;
         }
 
-        void mark_dirty() override
-        {
-            // No-op
-        }
-
     private:
         mir::geometry::Size const size_;
         mir::geometry::Stride const stride_;

@@ -302,7 +302,6 @@ auto mgc::CPUCopyOutputSurface::Impl::commit() -> std::unique_ptr<mg::Framebuffe
             0, 0,
             fb->size().width.as_uint32_t(), fb->size().height.as_uint32_t(),
             pixel_layout, GL_UNSIGNED_BYTE, mapping->data());
-        mapping->mark_dirty();
     }
     return fb;
 }
