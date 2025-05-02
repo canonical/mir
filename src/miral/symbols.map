@@ -541,8 +541,6 @@ global:
     miral::DisplayConfiguration::layout_userdata_builder*;
     miral::InputConfiguration::Keyboard::merge*;
     miral::InputConfiguration::Keyboard::repeat_delay*;
-    miral::InputConfiguration::Keyboard::repeat_delay*;
-    miral::InputConfiguration::Keyboard::repeat_rate*;
     miral::InputConfiguration::Keyboard::repeat_rate*;
     miral::InputConfiguration::Mouse::merge*;
     miral::InputConfiguration::Touchpad::merge*;
