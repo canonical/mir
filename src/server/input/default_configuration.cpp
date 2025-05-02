@@ -319,10 +319,9 @@ std::shared_ptr<mi::DefaultInputDeviceHub> mir::DefaultServerConfiguration::the_
        {
            auto input_dispatcher = the_input_dispatcher();
            auto key_repeater = std::dynamic_pointer_cast<mi::KeyRepeatDispatcher>(input_dispatcher);
-           auto seat = the_seat();
            auto event_transformer = the_input_event_transformer();
            auto hub = std::make_shared<mi::DefaultInputDeviceHub>(
-               seat,
+               the_seat(),
                the_input_reading_multiplexer(),
                the_clock(),
                the_key_mapper(),
