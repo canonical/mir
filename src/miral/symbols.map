@@ -562,6 +562,7 @@ global:
     miral::SimulatedSecondaryClick::on_hold_start*;
     miral::SimulatedSecondaryClick::on_secondary_click*;
     miral::SimulatedSecondaryClick::operator*;
+    miral::WindowSpecification::to_surface_specification*;
     typeinfo?for?miral::CursorScale;
     typeinfo?for?miral::DisplayConfiguration::Node;
     typeinfo?for?miral::MouseKeysConfig;
