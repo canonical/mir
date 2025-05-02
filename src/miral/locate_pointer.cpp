@@ -64,19 +64,21 @@ struct miral::LocatePointer::Self
             switch (input_event->input_type())
             {
             case mir_input_event_type_key:
-                return handle_key_combination(input_event);
+                handle_key_combination(input_event);
+                break;
             case mir_input_event_type_pointer:
                 record_pointer_position(input_event);
-                return false;
+                break;
             default:
-                return false;
+                break;
             }
+            return false;
         }
 
-        auto handle_key_combination(MirInputEvent const* input_event) -> bool
+        void handle_key_combination(MirInputEvent const* input_event)
         {
             if (!state->lock()->key_combination(input_event))
-                return false;
+                return;
 
             auto const* keyboard_event = input_event->to_keyboard();
             switch (keyboard_event->action())
@@ -90,8 +92,6 @@ struct miral::LocatePointer::Self
             default:
                 break;
             }
-
-            return false;
         }
 
         void record_pointer_position(MirInputEvent const* input_event)
