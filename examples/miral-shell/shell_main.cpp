@@ -308,7 +308,7 @@ int main(int argc, char const* argv[])
     };
 
     auto locate_pointer = miral::LocatePointer{false}
-                              .on_locate_pointer([](auto, auto) { mir::log_debug("Locate pointer!"); })
+                              .on_locate_pointer([](auto, auto) { mir::log_info("Locate pointer!"); })
                               .delay(std::chrono::milliseconds{1000});
 
     return runner.run_with(
