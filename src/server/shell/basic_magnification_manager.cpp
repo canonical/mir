@@ -19,6 +19,7 @@
 #include "mir/synchronised.h"
 #include "mir/compositor/scene_element.h"
 #include "mir/compositor/screen_shooter.h"
+#include "mir/compositor/stream.h"
 #include "mir/events/event.h"
 #include "mir/events/input_event.h"
 #include "mir/events/pointer_event.h"
@@ -36,6 +37,7 @@
 
 namespace mg = mir::graphics;
 namespace mi = mir::input;
+namespace mc = mir::compositor;
 namespace mrs = mir::renderer::software;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
@@ -61,6 +63,13 @@ public:
     {
         buffers[0] = allocator->alloc_software_buffer(size, mir_pixel_format_argb_8888);
         buffers[1] = allocator->alloc_software_buffer(size, mir_pixel_format_argb_8888);
+        geom::RectangleD const r(
+            {0, 0},
+            buffers[read_index]->size());
+        stream.submit_buffer(
+            buffers[read_index],
+            buffers[read_index]->size(),
+            r);
     }
 
     std::shared_ptr<mg::Buffer> write() {
@@ -71,12 +80,19 @@ public:
     void set_available()
     {
         std::lock_guard<std::mutex> lock(mutex);
+        geom::RectangleD const r(
+            {0, 0},
+            buffers[write_index]->size());
+        stream.submit_buffer(
+            buffers[write_index],
+            buffers[write_index]->size(),
+            r);
+
         std::swap(write_index, read_index);
     }
 
     std::shared_ptr<mg::Buffer> read() {
-        std::lock_guard<std::mutex> lock(mutex);
-        return buffers[read_index];
+        return stream.next_submission_for_compositor(this)->claim_buffer();
     }
 
     void resize(geom::Size const& size)
@@ -89,6 +105,7 @@ public:
 private:
     std::shared_ptr<mg::GraphicBufferAllocator> allocator;
     std::array<std::shared_ptr<mg::Buffer>, 2> buffers;
+    mc::Stream stream;
     std::mutex mutex;
     int write_index;
     int read_index;
