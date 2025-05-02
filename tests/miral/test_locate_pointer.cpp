@@ -150,12 +150,11 @@ INSTANTIATE_TEST_SUITE_P(
 
 TEST_F(TestLocatePointer, enable_not_called_when_already_enabled)
 {
-    mir::test::Signal enable_called;
-    locate_pointer.on_enabled([&enable_called] { enable_called.raise(); });
+    locate_pointer_enabled.reset();
     locate_pointer.enable();
 
-    enable_called.wait_for(enable_or_disable_delay);
-    EXPECT_FALSE(enable_called.raised());
+    locate_pointer_enabled.wait_for(enable_or_disable_delay);
+    EXPECT_FALSE(locate_pointer_enabled.raised());
 }
 
 TEST_F(TestLocatePointer, disable_called_if_enabled)
