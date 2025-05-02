@@ -490,3 +490,9 @@ auto miral::WindowInfo::visible_on_lock_screen() const -> bool
     std::shared_ptr<mir::scene::Surface> const surface = self->window;
     return surface ? surface->visible_on_lock_screen() : false;
 }
+
+auto miral::WindowInfo::tiled_edges() const -> mir::Flags<MirTiledEdge>
+{
+    std::shared_ptr<mir::scene::Surface> const surface = self->window;
+    return surface ? surface->tiled_edges() : mir::Flags(mir_tiled_edge_none);
+}

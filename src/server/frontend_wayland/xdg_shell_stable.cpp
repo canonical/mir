@@ -598,6 +598,11 @@ void mf::XdgToplevelStable::handle_resize(
     send_toplevel_configure();
 }
 
+void mf::XdgToplevelStable::handle_tiled_edges(Flags<MirTiledEdge> /*tiled_edges*/)
+{
+    send_toplevel_configure();
+}
+
 void mf::XdgToplevelStable::handle_close_request()
 {
     send_close_event();
@@ -630,6 +635,28 @@ void mf::XdgToplevelStable::send_toplevel_configure()
         {
             if (uint32_t *state = static_cast<decltype(state)>(wl_array_add(&states, sizeof *state)))
                 *state = State::fullscreen;
+        }
+
+        auto tiled_edges = surface.value()->tiled_edges();
+        if (tiled_edges & mir_tiled_edge_north)
+        {
+            if (uint32_t *state = static_cast<decltype(state)>(wl_array_add(&states, sizeof *state)))
+                *state = State::tiled_top;
+        }
+        if (tiled_edges & mir_tiled_edge_east)
+        {
+            if (uint32_t *state = static_cast<decltype(state)>(wl_array_add(&states, sizeof *state)))
+                *state = State::tiled_right;
+        }
+        if (tiled_edges & mir_tiled_edge_south)
+        {
+            if (uint32_t *state = static_cast<decltype(state)>(wl_array_add(&states, sizeof *state)))
+                *state = State::tiled_bottom;
+        }
+        if (tiled_edges & mir_tiled_edge_west)
+        {
+            if (uint32_t *state = static_cast<decltype(state)>(wl_array_add(&states, sizeof *state)))
+                *state = State::tiled_left;
         }
 
         // TODO: plumb resizing state through Mir?

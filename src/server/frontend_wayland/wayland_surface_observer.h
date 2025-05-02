@@ -58,6 +58,7 @@ public:
     void entered_output(scene::Surface const*, graphics::DisplayConfigurationOutputId const& id) override;
     void left_output(scene::Surface const*, graphics::DisplayConfigurationOutputId const& id) override;
     void rescale_output(scene::Surface const*, graphics::DisplayConfigurationOutputId const& id) override;
+    void tiled_edges(scene::Surface const*, Flags<MirTiledEdge> edges) override;
     ///@}
 
     /// Should only be called from the Wayland thread
