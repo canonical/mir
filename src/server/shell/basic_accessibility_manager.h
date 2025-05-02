@@ -58,7 +58,7 @@ public:
         std::shared_ptr<SimulatedSecondaryClickTransformer> const& simulated_secondary_click_transformer,
         std::shared_ptr<input::InputDeviceRegistry> const& input_device_hub);
 
-    ~BasicAccessibilityManager();
+    ~BasicAccessibilityManager() override;
 
     void register_keyboard_helper(std::shared_ptr<shell::KeyboardHelper> const&) override;
 

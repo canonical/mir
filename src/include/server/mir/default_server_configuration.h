@@ -326,7 +326,6 @@ public:
     virtual std::shared_ptr<input::CursorListener> the_cursor_listener();
     virtual std::shared_ptr<input::TouchVisualizer> the_touch_visualizer();
     virtual std::shared_ptr<input::Seat> the_seat();
-
     virtual std::shared_ptr<input::KeyMapper> the_key_mapper();
     virtual std::shared_ptr<input::LedObserverRegistrar> the_led_observer_registrar();
 
