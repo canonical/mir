@@ -34,6 +34,7 @@
 #include <miral/x11_support.h>
 #include <miral/wayland_extensions.h>
 #include <miral/mousekeys_config.h>
+#include <miral/output_filter.h>
 
 #include <xkbcommon/xkbcommon-keysyms.h>
 
@@ -172,6 +173,35 @@ int main(int argc, char const* argv[])
         return false;
     };
 
+    miral::OutputFilter output_filter;
+    auto toggle_output_filter_filter = [invert_on = false, &output_filter](MirEvent const* event) mutable {
+        if(mir_event_get_type(event) != mir_event_type_input)
+            return false;
+
+        auto const* input_event = mir_event_get_input_event(event);
+        if(mir_input_event_get_type(input_event) != mir_input_event_type_key)
+            return false;
+
+        auto const* key_event = mir_input_event_get_keyboard_event(input_event);
+        auto const modifiers = mir_keyboard_event_modifiers(key_event);
+
+        if (mir_keyboard_event_action(key_event) != mir_keyboard_action_down)
+            return false;
+
+        if (modifiers & mir_input_event_modifier_ctrl)
+        {
+            switch (mir_keyboard_event_keysym(key_event))
+            {
+            case XKB_KEY_i:
+                invert_on = !invert_on;
+                output_filter.filter(invert_on ? "invert" : "");
+                return true;
+            }
+        }
+
+        return false;
+    };
+
     return runner.run_with(
         {
             CursorTheme{"default:DMZ-White"},
@@ -194,6 +224,8 @@ int main(int argc, char const* argv[])
             ConfigurationOption{[&](std::string const& cmd) { terminal_cmd = cmd; },
                                 "shell-terminal-emulator", "terminal emulator to use", terminal_cmd},
             mousekeys_config,
-            AppendEventFilter{toggle_mousekeys_filter}
+            AppendEventFilter{toggle_mousekeys_filter},
+            output_filter,
+            AppendEventFilter{toggle_output_filter_filter}
         });
 }
