@@ -52,7 +52,8 @@ struct State
     bool enabled_ = false;
 };
 
-class DoubleBufferStream {
+class DoubleBufferStream
+{
 public:
     DoubleBufferStream(
         std::shared_ptr<mg::GraphicBufferAllocator> const& allocator,
@@ -63,46 +64,47 @@ public:
     {
         buffers[0] = allocator->alloc_software_buffer(size, mir_pixel_format_argb_8888);
         buffers[1] = allocator->alloc_software_buffer(size, mir_pixel_format_argb_8888);
-        geom::RectangleD const r(
-            {0, 0},
-            buffers[read_index]->size());
-        stream.submit_buffer(
-            buffers[read_index],
-            buffers[read_index]->size(),
-            r);
+        _submit();
     }
 
-    std::shared_ptr<mg::Buffer> write() {
-        std::lock_guard<std::mutex> lock(mutex);
+    std::shared_ptr<mg::Buffer> write_buffer()
+    {
+        std::lock_guard lock(mutex);
         return buffers[write_index];
     }
 
-    void set_available()
+    void swap()
     {
-        std::lock_guard<std::mutex> lock(mutex);
-        geom::RectangleD const r(
-            {0, 0},
-            buffers[write_index]->size());
-        stream.submit_buffer(
-            buffers[write_index],
-            buffers[write_index]->size(),
-            r);
-
+        std::lock_guard lock(mutex);
         std::swap(write_index, read_index);
+        _submit();
     }
 
-    std::shared_ptr<mg::Buffer> read() {
+    std::shared_ptr<mg::Buffer> read()
+    {
+        std::lock_guard lock(mutex);
         return stream.next_submission_for_compositor(this)->claim_buffer();
     }
 
     void resize(geom::Size const& size)
     {
-        std::lock_guard<std::mutex> lock(mutex);
+        std::lock_guard lock(mutex);
         buffers[0] = allocator->alloc_software_buffer(size, mir_pixel_format_argb_8888);
         buffers[1] = allocator->alloc_software_buffer(size, mir_pixel_format_argb_8888);
+        _submit();
     }
 
 private:
+    void _submit()
+    {
+        stream.submit_buffer(
+            buffers[read_index],
+            buffers[read_index]->size(),
+            geom::RectangleD(
+                {0, 0},
+                buffers[read_index]->size()));
+    }
+
     std::shared_ptr<mg::GraphicBufferAllocator> allocator;
     std::array<std::shared_ptr<mg::Buffer>, 2> buffers;
     mc::Stream stream;
@@ -325,25 +327,22 @@ private:
         if (!state.enabled_)
             return;
 
-        on_write(stream->write(), state);
+        on_write(stream->write_buffer(), state);
     }
 
     void on_write(
         std::shared_ptr<mg::Buffer> const& buffer,
         State const& state)
     {
-        if (is_updating)
+        if (is_updating.exchange(true))
             return;
-
-        is_updating = true;
-        geom::Rectangle const r(
-            state.capture_position,
-            renderable->buffer()->size());
 
         auto const write_buffer = mrs::as_write_mappable_buffer(buffer);
         screen_shooter->capture_with_filter(
             write_buffer,
-            r,
+            geom::Rectangle(
+                state.capture_position,
+                renderable->buffer()->size()),
             [renderable=renderable](std::shared_ptr<compositor::SceneElement const> const& scene_element)
             {
                 return scene_element->renderable() != renderable;
@@ -351,7 +350,7 @@ private:
             false,
             [&](auto const)
             {
-                stream->set_available();
+                stream->swap();
                 scene->emit_scene_changed();
                 is_updating = false;
             });
