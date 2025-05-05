@@ -1393,6 +1393,7 @@ global:
     typeinfo?for?mir::shell::DisplayConfigurationController;
     typeinfo?for?mir::shell::DisplayLayout;
     typeinfo?for?mir::shell::FocusController;
+    typeinfo?for?mir::shell::HoverClickTransformer;
     typeinfo?for?mir::shell::IdleHandler;
     typeinfo?for?mir::shell::IdleHandlerObserver;
     typeinfo?for?mir::shell::InputTargeter;
@@ -1591,6 +1592,7 @@ global:
     vtable?for?mir::shell::DisplayConfigurationController;
     vtable?for?mir::shell::DisplayLayout;
     vtable?for?mir::shell::FocusController;
+    vtable?for?mir::shell::HoverClickTransformer;
     vtable?for?mir::shell::IdleHandler;
     vtable?for?mir::shell::IdleHandlerObserver;
     vtable?for?mir::shell::InputTargeter;
