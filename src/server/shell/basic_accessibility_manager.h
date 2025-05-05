@@ -38,6 +38,7 @@ class InputDeviceRegistry;
 namespace shell
 {
 class MouseKeysTransformer;
+class BasicHoverClickTransformer;
 }
 namespace options
 {
@@ -74,8 +75,12 @@ public:
     void acceleration_factors(double constant, double linear, double quadratic) override;
     void max_speed(double x_axis, double y_axis) override;
 
+    void hover_click_enabled(bool enabled) override;
+    auto hover_click() -> HoverClickTransformer& override;
 private:
     class MousekeyPointer;
+    void add_virtual_device();
+    void remove_virtual_device();
 
     struct MutableState {
         // 25 rate and 600 delay are the default in Weston and Sway
@@ -93,8 +98,12 @@ private:
     bool const enable_key_repeat;
     std::shared_ptr<graphics::Cursor> const cursor;
     std::shared_ptr<mir::input::InputEventTransformer> const event_transformer;
-    std::shared_ptr<mir::shell::MouseKeysTransformer> const transformer;
     std::shared_ptr<mir::input::InputDeviceRegistry> const input_device_registry;
+
+    std::shared_ptr<mir::shell::MouseKeysTransformer> const transformer;
+    std::shared_ptr<mir::shell::BasicHoverClickTransformer> const hover_click_transformer;
+
+    bool mousekeys_enabled_{false}, hover_click_enabled_{false};
 };
 }
 }
