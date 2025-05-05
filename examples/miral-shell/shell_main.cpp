@@ -308,8 +308,29 @@ int main(int argc, char const* argv[])
     };
 
     auto locate_pointer = miral::LocatePointer{false}
-                              .on_locate_pointer([](auto, auto) { mir::log_info("Locate pointer!"); })
+                              .on_locate_pointer_requested([](auto, auto) { mir::log_info("Locate pointer!"); })
                               .delay(std::chrono::milliseconds{1000});
+
+    auto const locate_pointer_filter = [&locate_pointer](auto const* keyboard_event)
+    {
+            auto const keysym = mir_keyboard_event_keysym(keyboard_event);
+            if (keysym != XKB_KEY_Control_R && keysym != XKB_KEY_Control_L)
+                return false;
+
+            switch (mir_keyboard_event_action(keyboard_event)) {
+                case mir_keyboard_action_down:
+                    locate_pointer.schedule_request();
+                    break;
+                case mir_keyboard_action_up:
+                    locate_pointer.cancel_request();
+                    break;
+
+                default:
+                    return false;
+            }
+
+            return true;
+    };
 
     return runner.run_with(
         {
@@ -342,6 +363,7 @@ int main(int argc, char const* argv[])
             magnifier,
             AppendKeyboardEventFilter{magnifier_filter},
             AppendKeyboardEventFilter{sticky_keys_filter},
-            locate_pointer
+            locate_pointer,
+            AppendKeyboardEventFilter{locate_pointer_filter}
         });
 }
