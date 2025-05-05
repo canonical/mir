@@ -159,7 +159,11 @@ void miral::LocatePointer::operator()(mir::Server& server)
             self->main_loop = server.the_main_loop();
             self->composite_event_filter = server.the_composite_event_filter();
 
-            if (server.get_options()->get<bool>(enable_locate_pointer_opt))
+            auto const options = server.get_options();
+
+            delay(std::chrono::milliseconds{options->get<int>(locate_pointer_delay_opt)});
+
+            if (options->get<bool>(enable_locate_pointer_opt))
                 enable();
             else
                 disable();
