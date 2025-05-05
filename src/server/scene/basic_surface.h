@@ -175,6 +175,9 @@ public:
     auto focus_mode() const -> MirFocusMode override;
     void set_focus_mode(MirFocusMode focus_mode) override;
 
+    Flags<MirTiledEdge> tiled_edges() const override;
+    void set_tiled_edges(Flags<MirTiledEdge> flags) override;
+
 private:
     struct State;
     class DisplayConfigurationEarlyListener;
@@ -228,6 +231,7 @@ private:
         } margins{};
 
         MirFocusMode focus_mode = mir_focus_mode_focusable;
+        Flags<MirTiledEdge> tiled_edges = Flags(mir_tiled_edge_none);
     };
     mir::Synchronised<State> synchronised_state;
 

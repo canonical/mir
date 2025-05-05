@@ -50,6 +50,7 @@ public:
     void entered_output(Surface const* surf, graphics::DisplayConfigurationOutputId const& id) override;
     void left_output(Surface const* surf, graphics::DisplayConfigurationOutputId const& id) override;
     void rescale_output(Surface const* surf, graphics::DisplayConfigurationOutputId const& id) override;
+    void tiled_edges(Surface const* surf, Flags<MirTiledEdge> edges) override;
 
 protected:
     NullSurfaceObserver(NullSurfaceObserver const&) = delete;
