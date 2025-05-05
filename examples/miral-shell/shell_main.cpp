@@ -36,6 +36,7 @@
 #include <miral/mousekeys_config.h>
 #include <miral/output_filter.h>
 #include <miral/simulated_secondary_click.h>
+#include <miral/hover_click.h>
 
 #include <xkbcommon/xkbcommon-keysyms.h>
 
@@ -207,6 +208,7 @@ int main(int argc, char const* argv[])
                                 .displacement_threshold(30)
                                 .hold_duration(std::chrono::milliseconds{2000});
 
+    miral::HoverClick hover_click_config{false};
 
     return runner.run_with(
         {
@@ -233,6 +235,7 @@ int main(int argc, char const* argv[])
             AppendEventFilter{toggle_mousekeys_filter},
             output_filter,
             AppendEventFilter{toggle_output_filter_filter},
-            ssc_config
+            ssc_config,
+            hover_click_config
         });
 }
