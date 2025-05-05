@@ -34,7 +34,7 @@ struct miral::LocatePointer::Self
     {
         struct State
         {
-            std::function<void(float, float)> on_locate_pointer{[](auto, auto) {}};
+            std::function<void(float, float)> on_locate_pointer_requested{[](auto, auto) {}};
             std::function<void()> on_enabled{[] {}}, on_disabled{[] {}};
             std::function<bool(MirInputEvent const*)> key_combination;
 
@@ -50,7 +50,7 @@ struct miral::LocatePointer::Self
                 [this]
                 {
                     auto const state = this->state->lock();
-                    state->on_locate_pointer(state->cursor_position.x.as_value(), state->cursor_position.y.as_value());
+                    state->on_locate_pointer_requested(state->cursor_position.x.as_value(), state->cursor_position.y.as_value());
                 })}
         {
         }
@@ -176,9 +176,9 @@ miral::LocatePointer& miral::LocatePointer::delay(std::chrono::milliseconds dela
     return *this;
 }
 
-miral::LocatePointer& miral::LocatePointer::on_locate_pointer(std::function<void(float x, float y)>&& on_locate_pointer)
+miral::LocatePointer& miral::LocatePointer::on_locate_pointer_requested(std::function<void(float x, float y)>&& on_locate_pointer_requested)
 {
-    self->filter_state->lock()->on_locate_pointer = std::move(on_locate_pointer);
+    self->filter_state->lock()->on_locate_pointer_requested = std::move(on_locate_pointer_requested);
     return *this;
 }
 
