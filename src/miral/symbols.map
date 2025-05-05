@@ -540,6 +540,17 @@ global:
     miral::DisplayConfiguration::Node::type*;
     miral::DisplayConfiguration::layout_userdata*;
     miral::DisplayConfiguration::layout_userdata_builder*;
+    miral::HoverClick::HoverClick*;
+    miral::HoverClick::cancel_displacement_threshold*;
+    miral::HoverClick::disable*;
+    miral::HoverClick::enable*;
+    miral::HoverClick::hover_duration*;
+    miral::HoverClick::on_click_dispatched*;
+    miral::HoverClick::on_disabled*;
+    miral::HoverClick::on_enabled*;
+    miral::HoverClick::on_hover_cancel*;
+    miral::HoverClick::on_hover_start*;
+    miral::HoverClick::operator*;
     miral::InputConfiguration::Keyboard::merge*;
     miral::InputConfiguration::Keyboard::repeat_delay*;
     miral::InputConfiguration::Keyboard::repeat_rate*;
@@ -571,6 +582,7 @@ global:
     miral::SimulatedSecondaryClick::operator*;
     typeinfo?for?miral::CursorScale;
     typeinfo?for?miral::DisplayConfiguration::Node;
+    typeinfo?for?miral::HoverClick;
     typeinfo?for?miral::MouseKeysConfig;
     typeinfo?for?miral::OutputFilter;
     typeinfo?for?miral::SimulatedSecondaryClick;
