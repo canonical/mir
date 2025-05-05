@@ -36,22 +36,13 @@ struct miral::LocatePointer::Self
         {
             std::function<void(float, float)> on_locate_pointer{[](auto, auto) {}};
             std::function<void()> on_enabled{[] {}}, on_disabled{[] {}};
-            std::function<bool(MirInputEvent const*)> key_combination;
 
             std::chrono::milliseconds delay{500};
             mir::geometry::PointF cursor_position{0.0f, 0.0f}; // Assumes the cursor always starts at (0, 0)
         };
 
-        LocatePointerFilter(
-            std::shared_ptr<mir::MainLoop> const main_loop,
-            std::shared_ptr<mir::Synchronised<State>> const initial_state) :
-            state{initial_state},
-            locate_pointer_alarm{main_loop->create_alarm(
-                [this]
-                {
-                    auto const state = this->state->lock();
-                    state->on_locate_pointer(state->cursor_position.x.as_value(), state->cursor_position.y.as_value());
-                })}
+        LocatePointerFilter(std::shared_ptr<mir::Synchronised<State>> const initial_state) :
+            state{initial_state}
         {
         }
 
@@ -61,37 +52,12 @@ struct miral::LocatePointer::Self
                 return false;
 
             auto const* input_event = event.to_input();
-            switch (input_event->input_type())
-            {
-            case mir_input_event_type_key:
-                handle_key_combination(input_event);
-                break;
-            case mir_input_event_type_pointer:
-                record_pointer_position(input_event);
-                break;
-            default:
-                break;
-            }
+            if (input_event->input_type() != mir_input_event_type_pointer)
+                return false;
+
+            record_pointer_position(input_event);
+
             return false;
-        }
-
-        void handle_key_combination(MirInputEvent const* input_event)
-        {
-            if (!state->lock()->key_combination(input_event))
-                return;
-
-            auto const* keyboard_event = input_event->to_keyboard();
-            switch (keyboard_event->action())
-            {
-            case mir_keyboard_action_down:
-                locate_pointer_alarm->reschedule_in(state->lock()->delay);
-                break;
-            case mir_keyboard_action_up:
-                locate_pointer_alarm->cancel();
-                break;
-            default:
-                break;
-            }
         }
 
         void record_pointer_position(MirInputEvent const* input_event)
@@ -101,24 +67,14 @@ struct miral::LocatePointer::Self
                 state->lock()->cursor_position = *position;
         }
 
+    private:
         std::shared_ptr<mir::Synchronised<State>> const state;
-        std::unique_ptr<mir::time::Alarm> const locate_pointer_alarm;
     };
 
     Self(bool enable_by_default) :
         filter_state{std::make_shared<mir::Synchronised<LocatePointerFilter::State>>()}
     {
         state.lock()->enabled = enable_by_default;
-        filter_state->lock()->key_combination = [](auto const* input_event)
-        {
-            auto const keyboard_event = mir_input_event_get_keyboard_event(input_event);
-            if (!keyboard_event)
-                return false;
-
-            if (keyboard_event->keysym() != XKB_KEY_Control_R && keyboard_event->keysym() != XKB_KEY_Control_L)
-                return false;
-            return true;
-        };
     }
 
     std::weak_ptr<mir::MainLoop> main_loop;
@@ -128,6 +84,7 @@ struct miral::LocatePointer::Self
     {
         bool enabled;
         std::shared_ptr<LocatePointerFilter> locate_pointer_filter;
+        std::unique_ptr<mir::time::Alarm> locate_pointer_alarm;
     };
 
     std::shared_ptr<mir::Synchronised<LocatePointerFilter::State>> const filter_state;
@@ -156,8 +113,17 @@ void miral::LocatePointer::operator()(mir::Server& server)
     server.add_init_callback(
         [this, &server]
         {
-            self->main_loop = server.the_main_loop();
+            auto const main_loop = server.the_main_loop();
+            self->main_loop = main_loop;
             self->composite_event_filter = server.the_composite_event_filter();
+
+            self->state.lock()->locate_pointer_alarm = main_loop->create_alarm(
+                [this]
+                {
+                    auto const state = this->self->filter_state->lock();
+                    state->on_locate_pointer(
+                        state->cursor_position.x.as_value(), state->cursor_position.y.as_value());
+                });
 
             auto const options = server.get_options();
 
@@ -207,7 +173,7 @@ miral::LocatePointer& miral::LocatePointer::enable()
             std::pair{self->composite_event_filter.lock(), self->main_loop.lock()};
         composite_filter && main_loop)
     {
-        state->locate_pointer_filter = std::make_shared<Self::LocatePointerFilter>(main_loop, self->filter_state);
+        state->locate_pointer_filter = std::make_shared<Self::LocatePointerFilter>(self->filter_state);
         // Need to account that this can be called from an event filter, which
         // when invoked has the composite filter's lock.
         main_loop->spawn(
@@ -235,10 +201,14 @@ miral::LocatePointer& miral::LocatePointer::disable()
     return *this;
 }
 
-miral::LocatePointer& miral::LocatePointer::key_combination(std::function<bool(MirInputEvent const*)> key_combination)
+void miral::LocatePointer::schedule_request()
 {
     auto const state = self->state.lock();
-    self->filter_state->lock()->key_combination = std::move(key_combination);
+    state->locate_pointer_alarm->reschedule_in(self->filter_state->lock()->delay);
+}
 
-    return *this;
+void miral::LocatePointer::cancel_request()
+{
+    auto const state = self->state.lock();
+    state->locate_pointer_alarm->cancel();
 }
