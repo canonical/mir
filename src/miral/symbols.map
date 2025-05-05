@@ -563,7 +563,7 @@ global:
     miral::LocatePointer::key_combination*;
     miral::LocatePointer::on_disabled*;
     miral::LocatePointer::on_enabled*;
-    miral::LocatePointer::on_locate_pointer*;
+    miral::LocatePointer::on_locate_pointer_requested*;
     miral::LocatePointer::operator*;
     miral::MouseKeysConfig::MouseKeysConfig*;
     miral::MouseKeysConfig::enabled*;
