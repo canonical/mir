@@ -176,8 +176,37 @@ int main(int argc, char const* argv[])
     };
 
     auto locate_pointer = miral::LocatePointer{false}
-                              .on_locate_pointer([](auto, auto) { mir::log_info("Locate pointer!"); })
+                              .on_locate_pointer_requested([](auto, auto) { mir::log_info("Locate pointer!"); })
                               .delay(std::chrono::milliseconds{1000});
+
+    auto const locate_pointer_filter = [&locate_pointer](auto const* event)
+    {
+            if(mir_event_get_type(event) != mir_event_type_input)
+                return false;
+            auto const input_event = mir_event_get_input_event(event);
+
+            if (mir_input_event_get_type(input_event) != mir_input_event_type_key)
+                return false;
+            auto const keyboard_event = mir_input_event_get_keyboard_event(input_event);
+
+            auto const keysym = mir_keyboard_event_keysym(keyboard_event);
+            if (keysym != XKB_KEY_Control_R && keysym != XKB_KEY_Control_L)
+                return false;
+
+            switch (mir_keyboard_event_action(keyboard_event)) {
+                case mir_keyboard_action_down:
+                    locate_pointer.schedule_request();
+                    break;
+                case mir_keyboard_action_up:
+                    locate_pointer.cancel_request();
+                    break;
+
+                default:
+                    return false;
+            }
+
+            return true;
+    };
 
     return runner.run_with(
         {
@@ -202,6 +231,7 @@ int main(int argc, char const* argv[])
                                 "shell-terminal-emulator", "terminal emulator to use", terminal_cmd},
             mousekeys_config,
             AppendEventFilter{toggle_mousekeys_filter},
-            locate_pointer
+            locate_pointer,
+            AppendEventFilter{locate_pointer_filter}
         });
 }
