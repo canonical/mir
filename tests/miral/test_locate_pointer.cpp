@@ -55,7 +55,7 @@ struct TestLocatePointer : miral::TestServer
 
         locate_pointer
             .delay(locate_pointer_delay)
-            .on_locate_pointer([this](auto...) { locate_pointer_invoked.raise(); })
+            .on_locate_pointer_requested([this](auto...) { locate_pointer_invoked.raise(); })
             .on_enabled([this](auto...){ locate_pointer_enabled.raise(); });
     }
 
@@ -115,7 +115,7 @@ TEST_P(TestPointerMovementTracking, cursor_location_is_tracked_on_movement)
     auto const final_pointer_position = GetParam();
 
     std::optional<float> locate_pointer_x = std::nullopt, locate_pointer_y = std::nullopt;
-    locate_pointer.on_locate_pointer(
+    locate_pointer.on_locate_pointer_requested(
         [this, &locate_pointer_x, &locate_pointer_y](auto x, auto y)
         {
             locate_pointer_x = x;
