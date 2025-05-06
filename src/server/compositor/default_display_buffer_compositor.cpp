@@ -34,9 +34,11 @@ mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
     mg::DisplaySink& display_sink,
     graphics::GLRenderingProvider& gl_provider,
     std::shared_ptr<mir::renderer::Renderer> const& renderer,
+    std::shared_ptr<mir::graphics::OutputFilter> const& output_filter,
     std::shared_ptr<CompositorReport> const& report) :
     display_sink(display_sink),
     renderer(renderer),
+    output_filter(output_filter),
     fb_adaptor{gl_provider.make_framebuffer_provider(display_sink)},
     report(report)
 {
@@ -117,6 +119,7 @@ bool mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
     {
         renderer->set_output_transform(display_sink.transformation());
         renderer->set_viewport(view_area);
+        renderer->set_output_filter(output_filter);
 
         display_sink.set_next_image(renderer->render(renderable_list));
 
