@@ -10,10 +10,10 @@ backends:
             - alpine-3.21
             - alpine-edge
             - ubuntu-24.04
-            - fedora-40
             - fedora-41
+            - fedora-42
             - fedora-rawhide:
-                image: images:fedora/41
+                image: images:fedora/42
 
 environment:
     ARCH: amd64
