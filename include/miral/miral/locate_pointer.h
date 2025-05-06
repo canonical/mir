@@ -45,7 +45,13 @@ public:
     LocatePointer& enable();
     LocatePointer& disable();
 
+    /// Schedules the callback provided to [on_locate_pointer] to be called
+    /// with the current mouse position at a point in the future specified by
+    /// [delay]. If [cancel_request] is called after this, then the callback
+    /// will not be called.
     void schedule_request();
+    /// Cancels the request established by [schedule_request]. If a request
+    /// is not pending, then nothing happens.
     void cancel_request();
 
 private:
