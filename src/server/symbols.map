@@ -497,6 +497,7 @@ global:
     mir::scene::NullSurfaceObserver::reception_mode_set_to*;
     mir::scene::NullSurfaceObserver::renamed*;
     mir::scene::NullSurfaceObserver::rescale_output*;
+    mir::scene::NullSurfaceObserver::tiled_edges*;
     mir::scene::NullSurfaceObserver::transformation_set_to*;
     mir::scene::NullSurfaceObserver::window_resized_to*;
     mir::scene::Observer::?Observer*;
@@ -962,6 +963,7 @@ global:
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::reception_mode_set_to*;
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::renamed*;
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::rescale_output*;
+    non-virtual?thunk?to?mir::scene::NullSurfaceObserver::tiled_edges*;
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::transformation_set_to*;
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::window_resized_to*;
     non-virtual?thunk?to?mir::scene::Observer::?Observer*;

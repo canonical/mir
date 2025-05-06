@@ -235,3 +235,9 @@ void miral::WindowInfo::visible_on_lock_screen(bool visible)
     if (std::shared_ptr<mir::scene::Surface> const surface = self->window)
         surface->set_visible_on_lock_screen(visible);
 }
+
+void miral::WindowInfo::tiled_edges(mir::Flags<MirTiledEdge> edges)
+{
+    if (std::shared_ptr<mir::scene::Surface> const surface = self->window)
+        surface->set_tiled_edges(edges);
+}

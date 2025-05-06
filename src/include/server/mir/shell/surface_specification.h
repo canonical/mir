@@ -17,6 +17,7 @@
 #ifndef MIR_SHELL_SURFACE_SPECIFICATION_H_
 #define MIR_SHELL_SURFACE_SPECIFICATION_H_
 
+#include "mir/flags.h"
 #include "mir/optional_value.h"
 #include "mir_toolkit/common.h"
 #include "mir/frontend/surface_id.h"
@@ -109,6 +110,9 @@ struct SurfaceSpecification
 
     /// How the surface should gain and lose focus
     optional_value<MirFocusMode> focus_mode;
+
+    /// Describes which edges are touching part of the tiling grid
+    optional_value<Flags<MirTiledEdge>> tiled_edges;
 };
 bool operator==(SurfaceSpecification const& lhs, SurfaceSpecification const& rhs);
 bool operator!=(SurfaceSpecification const& lhs, SurfaceSpecification const& rhs);
