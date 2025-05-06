@@ -41,28 +41,25 @@ msh::BasicHoverClickTransformer::BasicHoverClickTransformer(std::shared_ptr<Main
 {
 }
 
-#include <mir/log.h>
-
 bool msh::BasicHoverClickTransformer::transform_input_event(
     mir::input::InputEventTransformer::EventDispatcher const& dispatcher,
     mir::input::EventBuilder* builder,
     MirEvent const& event)
 {
-    auto* input_event = event.to_input();
+    auto const* input_event = event.to_input();
     if (!input_event)
         return false;
 
-    auto* pointer_event = input_event->to_pointer();
+    auto const* pointer_event = input_event->to_pointer();
     if(!pointer_event)
         return false;
 
-    initialize_alarms(dispatcher, *builder);
+    initialize_click_dispatcher(dispatcher, *builder);
 
+    // In GNOME, when hover click is enabled, it only starts
+    // "hover-clicking" after you move the pointer.
     if(pointer_event->action() == mir_pointer_action_motion)
     {
-        // In GNOME, when hover click is enabled, it only starts
-        // "hover-clicking" after you move the pointer.
-        //
         // If a click already occured in the past. Only start a new hover click if
         // the cursor moved "significantly" from the last position.
         auto const hover_click_origin = mutable_state.lock()->hover_click_origin;
@@ -74,20 +71,19 @@ bool msh::BasicHoverClickTransformer::transform_input_event(
                 return false;
         }
 
-        // Cancel and reschedule to give users a grace period before the hover
-        // click actually starts. This also saves us from calling the
-        // start/cancel callbacks erroneously.
-        auto const grace_period = std::chrono::duration_cast<std::chrono::milliseconds>(
-            mutable_state.lock()->hover_duration * grace_period_percentage);
-        {
-            hover_initializer->cancel();
-            if (auto position = pointer_event->position())
-                mutable_state.lock()->potential_position = *position;
-            hover_initializer->reschedule_in(grace_period);
-        }
-
         {
             auto const state = mutable_state.lock();
+
+            // Cancel and reschedule to give users a grace period before the hover
+            // click actually starts. This also saves us from calling the
+            // start/cancel callbacks erroneously.
+            hover_initializer->cancel();
+            if (auto const position = pointer_event->position())
+                state->potential_position = *position;
+            auto const grace_period =
+                std::chrono::duration_cast<std::chrono::milliseconds>(state->hover_duration * grace_period_percentage);
+            hover_initializer->reschedule_in(grace_period);
+            
             // Compute the distance from where the hover click "started", cancel if
             // we moved too far away.
             auto const origin = hover_click_origin.value_or(state->potential_position);
@@ -154,7 +150,7 @@ void mir::shell::BasicHoverClickTransformer::on_click_dispatched(std::function<v
     mutable_state.lock()->on_click_dispatched = std::move(on_click_dispatched);
 }
 
-void mir::shell::BasicHoverClickTransformer::initialize_alarms(
+void mir::shell::BasicHoverClickTransformer::initialize_click_dispatcher(
     mir::input::InputEventTransformer::EventDispatcher const& dispatcher, mir::input::EventBuilder& builder)
 {
     if (!mutable_state.lock()->click_dispatcher)
