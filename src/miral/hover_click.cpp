@@ -26,7 +26,7 @@ struct miral::HoverClick::Self
 {
     Self(bool enabled_by_default)
     {
-        state.lock()->enabled =enabled_by_default;
+        state.lock()->enabled = enabled_by_default;
     }
 
     struct State
