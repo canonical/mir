@@ -176,7 +176,7 @@ int main(int argc, char const* argv[])
     };
 
     auto locate_pointer = miral::LocatePointer{false}
-                              .on_locate_pointer_requested([](auto, auto) { mir::log_info("Locate pointer!"); })
+                              .on_locate_pointer([](auto, auto) { mir::log_info("Locate pointer!"); })
                               .delay(std::chrono::milliseconds{1000});
 
     auto const locate_pointer_filter = [&locate_pointer](auto const* event)
