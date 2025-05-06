@@ -97,7 +97,7 @@ mf::WlSurface::WlSurface(
     std::shared_ptr<Executor> const& wayland_executor,
     std::shared_ptr<Executor> const& frame_callback_executor,
     std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator)
-    : Surface(new_resource, Version<4>()),
+    : Surface(new_resource, Version<6>()),
         session{client->client_session()},
         stream{session->create_buffer_stream({{}, mir_pixel_format_invalid, graphics::BufferUsage::undefined})},
         allocator{allocator},
@@ -536,6 +536,11 @@ void mf::WlSurface::set_buffer_transform(int32_t transform)
 void mf::WlSurface::set_buffer_scale(int32_t scale)
 {
     pending.scale = scale;
+}
+
+void mir::frontend::WlSurface::offset(int32_t x, int32_t y)
+{
+    pending.offset = geom::Displacement{x, y};
 }
 
 auto mf::WlSurface::confine_pointer_state() const -> MirPointerConfinementState
