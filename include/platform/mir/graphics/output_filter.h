@@ -18,7 +18,7 @@
 #ifndef MIR_GRAPHICS_OUTPUT_FILTER_H_
 #define MIR_GRAPHICS_OUTPUT_FILTER_H_
 
-#include <string>
+#include "mir_toolkit/common.h"
 
 namespace mir
 {
@@ -27,8 +27,8 @@ namespace graphics
 class OutputFilter
 {
 public:
-    virtual std::string filter() = 0;
-    virtual void set_filter(std::string new_filter) = 0;
+    virtual MirOutputFilter filter() = 0;
+    virtual void set_filter(MirOutputFilter new_filter) = 0;
 protected:
     OutputFilter() = default;
     virtual ~OutputFilter() = default;

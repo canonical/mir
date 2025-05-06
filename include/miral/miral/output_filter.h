@@ -17,8 +17,9 @@
 #ifndef MIRAL_OUTPUT_FILTER_H
 #define MIRAL_OUTPUT_FILTER_H
 
+#include <mir_toolkit/common.h>
+
 #include <memory>
-#include <string>
 
 namespace mir { class Server; }
 
@@ -30,11 +31,11 @@ class OutputFilter
 {
 public:
     explicit OutputFilter();
-    explicit OutputFilter(std::string default_filter);
+    explicit OutputFilter(MirOutputFilter default_filter);
     ~OutputFilter();
 
     /// Applies the new filter. (Either immediately or when the server starts)
-    void filter(std::string new_filter) const;
+    void filter(MirOutputFilter new_filter) const;
 
     void operator()(mir::Server& server) const;
 private:

@@ -250,7 +250,17 @@ private:
 
                 if(key == "output_filter")
                 {
-                    output_filter.filter(value);
+                    auto filter_name = value;
+                    MirOutputFilter filter = mir_output_filter_none;
+                    if (filter_name == "grayscale")
+                    {
+                        filter = mir_output_filter_grayscale;
+                    }
+                    else if (filter_name == "invert")
+                    {
+                        filter = mir_output_filter_invert;
+                    }
+                    output_filter.filter(filter);
                 }
             }
         }

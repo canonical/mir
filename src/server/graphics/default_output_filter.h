@@ -31,12 +31,12 @@ public:
     DefaultOutputFilter(
         std::shared_ptr<input::Scene> const& scene);
 
-    std::string filter() override;
-    void set_filter(std::string) override;
+    MirOutputFilter filter() override;
+    void set_filter(MirOutputFilter) override;
 
 private:
     std::shared_ptr<input::Scene> const scene;
-    std::string filter_;
+    MirOutputFilter filter_;
 };
 
 }

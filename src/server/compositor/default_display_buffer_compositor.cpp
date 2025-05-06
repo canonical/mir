@@ -22,6 +22,7 @@
 #include "mir/graphics/renderable.h"
 #include "mir/graphics/display_sink.h"
 #include "mir/graphics/buffer.h"
+#include "mir/graphics/output_filter.h"
 #include "mir/graphics/platform.h"
 #include "mir/compositor/buffer_stream.h"
 #include "mir/renderer/renderer.h"
@@ -119,7 +120,7 @@ bool mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
     {
         renderer->set_output_transform(display_sink.transformation());
         renderer->set_viewport(view_area);
-        renderer->set_output_filter(output_filter);
+        renderer->set_output_filter(output_filter->filter());
 
         display_sink.set_next_image(renderer->render(renderable_list));
 

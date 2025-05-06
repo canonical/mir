@@ -194,7 +194,7 @@ int main(int argc, char const* argv[])
             {
             case XKB_KEY_i:
                 invert_on = !invert_on;
-                output_filter.filter(invert_on ? "invert" : "");
+                output_filter.filter(invert_on ? mir_output_filter_invert : mir_output_filter_none);
                 return true;
             }
         }

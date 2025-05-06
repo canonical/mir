@@ -24,12 +24,12 @@
 
 struct miral::OutputFilter::Self
 {
-    Self(std::string default_filter) :
+    Self(MirOutputFilter default_filter) :
         filter_(default_filter)
     {
     }
 
-    void filter(std::string new_filter)
+    void filter(MirOutputFilter new_filter)
     {
         filter_ = new_filter;
 
@@ -39,25 +39,25 @@ struct miral::OutputFilter::Self
         output_filter.lock()->set_filter(filter_);
     }
 
-    std::string filter_;
+    MirOutputFilter filter_;
 
     // output_filter is only updated during the single-threaded initialization phase of startup
     std::weak_ptr<mir::graphics::OutputFilter> output_filter;
 };
 
 miral::OutputFilter::OutputFilter()
-    : self{std::make_shared<Self>("")}
+    : self{std::make_shared<Self>(mir_output_filter_none)}
 {
 }
 
-miral::OutputFilter::OutputFilter(std::string default_filter)
+miral::OutputFilter::OutputFilter(MirOutputFilter default_filter)
     : self{std::make_shared<Self>(default_filter)}
 {
 }
 
 miral::OutputFilter::~OutputFilter() = default;
 
-void miral::OutputFilter::filter(std::string new_filter) const
+void miral::OutputFilter::filter(MirOutputFilter new_filter) const
 {
     self->filter(new_filter);
 }
@@ -65,16 +65,44 @@ void miral::OutputFilter::filter(std::string new_filter) const
 void miral::OutputFilter::operator()(mir::Server& server) const
 {
     auto const* const output_filter_opt = "output-filter";
+    const char* default_filter_name;
+    switch (self->filter_)
+    {
+    default:
+    case mir_output_filter_none:
+        default_filter_name = "none";
+        break;
+    case mir_output_filter_grayscale:
+        default_filter_name = "grayscale";
+        break;
+    case mir_output_filter_invert:
+        default_filter_name = "invert";
+        break;
+    }
     server.add_configuration_option(
-        output_filter_opt, "Output filter to use [{none,grayscale,invert}]", self->filter_);
+        output_filter_opt, "Output filter to use [{none,grayscale,invert}]", default_filter_name);
 
     server.add_init_callback(
         [&server, this, output_filter_opt]
         {
             auto const& options = server.get_options();
+            auto const filter_name = options->get<std::string>(output_filter_opt);
+
+            MirOutputFilter filter = mir_output_filter_none;
+            if (filter_name == "grayscale")
+            {
+                filter = mir_output_filter_grayscale;
+            }
+            else if (filter_name == "invert")
+            {
+                filter = mir_output_filter_invert;
+            }
+            else if (filter_name == "none")
+            {
+                filter = mir_output_filter_none;
+            }
 
             self->output_filter = server.the_output_filter();
-            auto const filter = options->get<std::string>(output_filter_opt);
 
             self->filter(filter);
         });
