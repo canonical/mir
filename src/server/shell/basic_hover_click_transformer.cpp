@@ -26,14 +26,14 @@ msh::BasicHoverClickTransformer::BasicHoverClickTransformer(std::shared_ptr<Main
     main_loop{main_loop},
     hover_initializer{[&main_loop, this]
                       {
-                          auto const grace_period = std::chrono::duration_cast<std::chrono::milliseconds>(
-                              mutable_state.lock()->hover_duration * grace_period_percentage);
-
                           return main_loop->create_alarm(
-                              [this, grace_period]
+                              [this]
                               {
                                   auto const state = mutable_state.lock();
                                   state->hover_click_origin = state->potential_position;
+                                  auto const grace_period = std::chrono::duration_cast<std::chrono::milliseconds>(
+                                      state->hover_duration * grace_period_percentage);
+
                                   state->click_dispatcher->reschedule_in(state->hover_duration - grace_period);
                                   state->on_hover_start();
                               });
