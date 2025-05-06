@@ -51,7 +51,7 @@ public:
     void on_click_dispatched(std::function<void()>&& on_click_dispatched) override;
 
 private:
-    void initialize_alarms(
+    void initialize_click_dispatcher(
         mir::input::InputEventTransformer::EventDispatcher const& dispatcher, mir::input::EventBuilder& builder);
 
     static constexpr auto grace_period_percentage = 0.1f;
