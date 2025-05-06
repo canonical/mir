@@ -107,6 +107,7 @@ private:
     class ProgramFactory;
     std::unique_ptr<ProgramFactory> const program_factory;
     class OutputFilterShader;
+    MirOutputFilter output_filter;
     std::unique_ptr<OutputFilterShader> output_filter_shader;
     geometry::Rectangle viewport;
     glm::mat4 screen_to_gl_coords;

@@ -878,6 +878,10 @@ const GLchar* invert_src =
 
 void mrg::Renderer::set_output_filter(MirOutputFilter filter)
 {
+    if (output_filter == filter)
+        return;
+    output_filter = filter;
+
     GLchar const * filter_src;
     switch (filter)
     {
