@@ -28,21 +28,12 @@
 
 struct miral::LocatePointer::Self
 {
-    struct LocatePointerFilter : public mir::input::EventFilter
+    struct PointerPositionRecorder : public mir::input::EventFilter
     {
         struct State
         {
-            std::function<void(float, float)> on_locate_pointer{[](auto, auto) {}};
-            std::function<void()> on_enabled{[] {}}, on_disabled{[] {}};
-
-            std::chrono::milliseconds delay{500};
             mir::geometry::PointF cursor_position{0.0f, 0.0f}; // Assumes the cursor always starts at (0, 0)
         };
-
-        LocatePointerFilter(std::shared_ptr<mir::Synchronised<State>> const initial_state) :
-            state{initial_state}
-        {
-        }
 
         auto handle(MirEvent const& event) -> bool override
         {
@@ -53,39 +44,51 @@ struct miral::LocatePointer::Self
             if (input_event->input_type() != mir_input_event_type_pointer)
                 return false;
 
-            record_pointer_position(input_event);
+            auto const* pointer_event = input_event->to_pointer();
+            if (auto position = pointer_event->position())
+                state.lock()->cursor_position = *position;
 
             return false;
         }
 
-        void record_pointer_position(MirInputEvent const* input_event)
-        {
-            auto const* pointer_event = input_event->to_pointer();
-            if (auto position = pointer_event->position())
-                state->lock()->cursor_position = *position;
-        }
-
-    private:
-        std::shared_ptr<mir::Synchronised<State>> const state;
+        mir::Synchronised<State> state;
     };
 
-    Self(bool enable_by_default) :
-        filter_state{std::make_shared<mir::Synchronised<LocatePointerFilter::State>>()}
+    Self(bool enable_by_default)
     {
-        state.lock()->enabled = enable_by_default;
+        auto const state_ = state.lock();
+        state_->enabled = enable_by_default;
+        state_->pointer_position_recorder = std::make_shared<Self::PointerPositionRecorder>();
     }
 
-    std::weak_ptr<mir::MainLoop> main_loop;
-    std::weak_ptr<mir::input::CompositeEventFilter> composite_event_filter;
+    void on_server_init(mir::Server& server)
+    {
+        auto const state_ = state.lock();
+        state_->locate_pointer_alarm = server.the_main_loop()->create_alarm(
+            [this]
+            {
+                auto const self_state = state.lock();
+                auto const filter_state = self_state->pointer_position_recorder->state.lock();
+
+                self_state->on_locate_pointer(
+                    filter_state->cursor_position.x.as_value(), filter_state->cursor_position.y.as_value());
+            });
+
+        server.the_composite_event_filter()->append(state_->pointer_position_recorder);
+    }
 
     struct State
     {
         bool enabled;
-        std::shared_ptr<LocatePointerFilter> locate_pointer_filter;
+        std::shared_ptr<PointerPositionRecorder> pointer_position_recorder;
         std::unique_ptr<mir::time::Alarm> locate_pointer_alarm;
+
+        std::function<void(float, float)> on_locate_pointer{[](auto, auto) {}};
+        std::function<void()> on_enabled{[] {}}, on_disabled{[] {}};
+
+        std::chrono::milliseconds delay{500};
     };
 
-    std::shared_ptr<mir::Synchronised<LocatePointerFilter::State>> const filter_state;
     mir::Synchronised<State> state;
 };
 
@@ -103,29 +106,16 @@ void miral::LocatePointer::operator()(mir::Server& server)
         auto const state = self->state.lock();
         server.add_configuration_option(enable_locate_pointer_opt, "Enable locate pointer", state->enabled);
         server.add_configuration_option(
-            locate_pointer_delay_opt,
-            "Locate pointer delay in milliseconds",
-            static_cast<int>(self->filter_state->lock()->delay.count()));
+            locate_pointer_delay_opt, "Locate pointer delay in milliseconds", static_cast<int>(state->delay.count()));
     }
 
     server.add_init_callback(
         [this, &server]
         {
-            auto const main_loop = server.the_main_loop();
-            self->main_loop = main_loop;
-            self->composite_event_filter = server.the_composite_event_filter();
-
-            self->state.lock()->locate_pointer_alarm = main_loop->create_alarm(
-                [this]
-                {
-                    auto const state = this->self->filter_state->lock();
-                    state->on_locate_pointer(state->cursor_position.x.as_value(), state->cursor_position.y.as_value());
-                });
+            self->on_server_init(server);
 
             auto const options = server.get_options();
-
             delay(std::chrono::milliseconds{options->get<int>(locate_pointer_delay_opt)});
-
             if (options->get<bool>(enable_locate_pointer_opt))
                 enable();
             else
@@ -135,52 +125,37 @@ void miral::LocatePointer::operator()(mir::Server& server)
 
 miral::LocatePointer& miral::LocatePointer::delay(std::chrono::milliseconds delay)
 {
-    self->filter_state->lock()->delay = delay;
+    self->state.lock()->delay = delay;
     return *this;
 }
 
 miral::LocatePointer& miral::LocatePointer::on_locate_pointer(std::function<void(float x, float y)>&& on_locate_pointer)
 {
-    self->filter_state->lock()->on_locate_pointer = std::move(on_locate_pointer);
+    self->state.lock()->on_locate_pointer = std::move(on_locate_pointer);
     return *this;
 }
 
 miral::LocatePointer& miral::LocatePointer::on_enabled(std::function<void()>&& on_enabled)
 {
-    self->filter_state->lock()->on_enabled = std::move(on_enabled);
+    self->state.lock()->on_enabled = std::move(on_enabled);
     return *this;
 }
 
 miral::LocatePointer& miral::LocatePointer::on_disabled(std::function<void()>&& on_disabled)
 {
-    self->filter_state->lock()->on_disabled = std::move(on_disabled);
+    self->state.lock()->on_disabled = std::move(on_disabled);
     return *this;
 }
 
 miral::LocatePointer& miral::LocatePointer::enable()
 {
     auto const state = self->state.lock();
-    state->enabled = true;
 
-    // Already enabled
-    if (state->locate_pointer_filter)
+    if (state->enabled)
         return *this;
 
-    if (auto const [composite_filter, main_loop] =
-            std::pair{self->composite_event_filter.lock(), self->main_loop.lock()};
-        composite_filter && main_loop)
-    {
-        state->locate_pointer_filter = std::make_shared<Self::LocatePointerFilter>(self->filter_state);
-        // Need to account that this can be called from an event filter, which
-        // when invoked has the composite filter's lock.
-        main_loop->spawn(
-            [composite_filter, self = this->self]
-            {
-                auto state = self->state.lock();
-                composite_filter->append(state->locate_pointer_filter);
-                self->filter_state->lock()->on_enabled();
-            });
-    }
+    state->enabled = true;
+    state->on_enabled();
 
     return *this;
 }
@@ -188,12 +163,13 @@ miral::LocatePointer& miral::LocatePointer::enable()
 miral::LocatePointer& miral::LocatePointer::disable()
 {
     auto const state = self->state.lock();
-    state->enabled = false;
-    if (!state->locate_pointer_filter)
+
+    if (!state->enabled)
         return *this;
 
-    state->locate_pointer_filter.reset();
-    self->filter_state->lock()->on_disabled();
+    state->enabled = false;
+    state->locate_pointer_alarm->cancel();
+    state->on_disabled();
 
     return *this;
 }
@@ -201,7 +177,10 @@ miral::LocatePointer& miral::LocatePointer::disable()
 void miral::LocatePointer::schedule_request()
 {
     auto const state = self->state.lock();
-    state->locate_pointer_alarm->reschedule_in(self->filter_state->lock()->delay);
+    if(!state->enabled)
+        return;
+
+    state->locate_pointer_alarm->reschedule_in(state->delay);
 }
 
 void miral::LocatePointer::cancel_request()

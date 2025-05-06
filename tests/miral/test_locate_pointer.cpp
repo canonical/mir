@@ -112,18 +112,16 @@ struct TestLocatePointer : miral::TestServer
 
         locate_pointer
             .delay(locate_pointer_delay)
-            .on_locate_pointer([this](auto...) { locate_pointer_invoked.raise(); })
-            .on_enabled([this](auto...){ locate_pointer_enabled.raise(); });
+            .on_locate_pointer([this](auto...) { locate_pointer_invoked.raise(); });
     }
 
     void SetUp() override
     {
         miral::TestServer::SetUp();
-        locate_pointer_enabled.wait();
     }
 
     miral::LocatePointer locate_pointer{true};
-    mir::test::Signal locate_pointer_invoked, locate_pointer_enabled;
+    mir::test::Signal locate_pointer_invoked;
 
     std::weak_ptr<mir::input::CompositeEventFilter> composite_event_filter;
     std::weak_ptr<mir::input::InputDeviceRegistry> input_device_registry;
@@ -195,7 +193,9 @@ INSTANTIATE_TEST_SUITE_P(
 
 TEST_F(TestLocatePointer, enable_not_called_when_already_enabled)
 {
-    locate_pointer_enabled.reset();
+    mir::test::Signal locate_pointer_enabled;
+    locate_pointer.on_enabled([&]{ locate_pointer_enabled.raise(); });
+
     locate_pointer.enable();
 
     locate_pointer_enabled.wait_for(enable_or_disable_delay);
