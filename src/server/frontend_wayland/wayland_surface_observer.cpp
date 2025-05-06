@@ -153,6 +153,15 @@ void mf::WaylandSurfaceObserver::rescale_output(ms::Surface const*, graphics::Di
         });
 }
 
+void mir::frontend::WaylandSurfaceObserver::tiled_edges(scene::Surface const*, Flags<MirTiledEdge> edges)
+{
+    run_on_wayland_thread_unless_window_destroyed(
+        [edges](Impl* impl, WindowWlSurfaceRole*)
+        {
+            impl->window.value().handle_tiled_edges(edges);
+        });
+}
+
 void mf::WaylandSurfaceObserver::run_on_wayland_thread_unless_window_destroyed(
     std::function<void(Impl* impl, WindowWlSurfaceRole* window)>&& work)
 {

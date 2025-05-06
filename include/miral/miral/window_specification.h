@@ -23,6 +23,7 @@
 #include <mir/geometry/rectangles.h>
 #include <mir/optional_value.h>
 #include <mir/int_wrapper.h>
+#include <mir/flags.h>
 
 #include <memory>
 
@@ -181,6 +182,17 @@ public:
     auto visible_on_lock_screen() const -> mir::optional_value<bool> const&;
     auto visible_on_lock_screen() -> mir::optional_value<bool>&;
     ///@}
+
+    /// Describes which edges are touching part of the tiling grid
+    /// \remark Since MirAL 5.3
+    ///@{
+    auto tiled_edges() const -> mir::optional_value<mir::Flags<MirTiledEdge>> const&;
+    auto tiled_edges() -> mir::optional_value<mir::Flags<MirTiledEdge>>&;
+    ///@}
+
+    /// Create a [mir::shell::SurfaceSpecification] from this window spec.
+    /// \remark Since MirAL 5.3
+    auto to_surface_specification() const -> mir::shell::SurfaceSpecification;
 
 private:
     friend auto make_surface_spec(WindowSpecification const& miral_spec) -> mir::shell::SurfaceSpecification;

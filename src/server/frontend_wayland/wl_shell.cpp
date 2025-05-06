@@ -97,6 +97,8 @@ protected:
         // It seems there is no way to request close of a wl_shell_surface
     }
 
+    void handle_tiled_edges(Flags<MirTiledEdge> /*tiled_edges*/) override {}
+
     void set_fullscreen(
         uint32_t /*method*/,
         uint32_t /*framerate*/,

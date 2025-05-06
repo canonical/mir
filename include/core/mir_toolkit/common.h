@@ -423,4 +423,17 @@ typedef enum MirFocusMode
                                       leaving it as long as it has this mode */
 } MirFocusMode;
 
+/**
+ * Hints describing which edges of a surface are considered adjacent
+ * to another part of the tiling grid.
+ */
+typedef enum MirTiledEdge
+{
+    mir_tiled_edge_none = 0,
+    mir_tiled_edge_north = 1 << 0,
+    mir_tiled_edge_east = 1 << 1,
+    mir_tiled_edge_south = 1 << 2,
+    mir_tiled_edge_west = 1 << 3
+} MirTiledEdge;
+
 #endif

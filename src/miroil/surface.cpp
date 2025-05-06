@@ -60,6 +60,7 @@ public:
   void entered_output(mir::scene::Surface const* surf, mir::graphics::DisplayConfigurationOutputId const& id) override;
   void left_output(mir::scene::Surface const* surf, mir::graphics::DisplayConfigurationOutputId const& id) override;
   void rescale_output(mir::scene::Surface const* surf, mir::graphics::DisplayConfigurationOutputId const& id) override;
+  void tiled_edges(mir::scene::Surface const* surf, mir::Flags<MirTiledEdge> edges) override;
 
 private:
   std::shared_ptr<miroil::SurfaceObserver> listener;
@@ -175,6 +176,12 @@ void miroil::SurfaceObserverImpl::left_output(
 void miroil::SurfaceObserverImpl::rescale_output(
     mir::scene::Surface const* /*surf*/,
     mir::graphics::DisplayConfigurationOutputId const& /*id*/)
+{
+}
+
+void miroil::SurfaceObserverImpl::tiled_edges(
+    mir::scene::Surface const* /*surf*/,
+    mir::Flags<MirTiledEdge> /*edges*/)
 {
 }
 

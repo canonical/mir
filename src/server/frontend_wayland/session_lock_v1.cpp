@@ -104,6 +104,7 @@ private:
     void handle_active_change(bool /*is_now_active*/) override {};
     void handle_resize(std::optional<geometry::Point> const&, geometry::Size const& new_size) override;
     void handle_close_request() override {};
+    void handle_tiled_edges(Flags<MirTiledEdge> /*tiled_edges*/) override {}
 
     void destroy_role() const override
     {

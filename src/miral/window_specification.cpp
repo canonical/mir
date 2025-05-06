@@ -56,7 +56,8 @@ miral::WindowSpecification::Self::Self(mir::shell::SurfaceSpecification const& s
     application_id(spec.application_id),
     server_side_decorated(spec.server_side_decorated),
     focus_mode(spec.focus_mode),
-    visible_on_lock_screen(spec.visible_on_lock_screen)
+    visible_on_lock_screen(spec.visible_on_lock_screen),
+    tiled_edges(spec.tiled_edges)
 {
     if (spec.aux_rect_placement_offset_x.is_set() && spec.aux_rect_placement_offset_y.is_set())
         aux_rect_placement_offset = Displacement{spec.aux_rect_placement_offset_x.value(), spec.aux_rect_placement_offset_y.value()};
@@ -463,7 +464,22 @@ auto miral::WindowSpecification::visible_on_lock_screen() -> mir::optional_value
     return self->visible_on_lock_screen;
 }
 
+auto miral::WindowSpecification::tiled_edges() const -> mir::optional_value<mir::Flags<MirTiledEdge>> const&
+{
+    return self->tiled_edges;
+}
+
+auto miral::WindowSpecification::tiled_edges() -> mir::optional_value<mir::Flags<MirTiledEdge>>&
+{
+    return self->tiled_edges;
+}
+
 auto miral::WindowSpecification::userdata() -> mir::optional_value<std::shared_ptr<void>>&
 {
     return self->userdata;
+}
+
+auto miral::WindowSpecification::to_surface_specification() const -> mir::shell::SurfaceSpecification
+{
+    return make_surface_spec(*this);
 }

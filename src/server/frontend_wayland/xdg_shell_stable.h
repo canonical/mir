@@ -81,6 +81,7 @@ public:
         std::optional<geometry::Point> const& new_top_left,
         geometry::Size const& new_size) override;
     void handle_close_request() override;
+    void handle_tiled_edges(Flags<MirTiledEdge> /*tiled_edges*/) override {}
 
     static auto from(wl_resource* resource) -> XdgPopupStable*;
 
@@ -128,6 +129,7 @@ public:
     void handle_active_change(bool /*is_now_active*/) override;
     void handle_resize(std::optional<geometry::Point> const& new_top_left, geometry::Size const& new_size) override;
     void handle_close_request() override;
+    void handle_tiled_edges(Flags<MirTiledEdge> tiled_edges) override;
 
     static XdgToplevelStable* from(wl_resource* surface);
 

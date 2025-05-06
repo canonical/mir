@@ -22,6 +22,7 @@
 
 #include <mir/geometry/rectangles.h>
 #include <mir/optional_value.h>
+#include <mir/flags.h>
 
 #include <algorithm>
 
@@ -143,6 +144,11 @@ struct WindowInfo
     /// \remark Since MirAL 3.9
     auto visible_on_lock_screen() const -> bool;
 
+    /// Used when the surface is in a tiled layout to describe the
+    /// edges that are touching another part of the tiling grid.
+    /// \remark Since MirAL 5.3
+    auto tiled_edges() const -> mir::Flags<MirTiledEdge>;
+
 private:
     friend class BasicWindowManager;
     void name(std::string const& name);
@@ -170,6 +176,7 @@ private:
     void application_id(std::string const& application_id);
     void focus_mode(MirFocusMode focus_mode);
     void visible_on_lock_screen(bool visible);
+    void tiled_edges(mir::Flags<MirTiledEdge> flags);
 
     struct Self;
     std::unique_ptr<Self> self;

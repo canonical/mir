@@ -20,6 +20,7 @@
 #include "output_manager.h"
 #include "wl_surface_role.h"
 
+#include "mir/flags.h"
 #include "mir/wayland/weak.h"
 #include "mir/wayland/lifetime_tracker.h"
 #include "mir/geometry/displacement.h"
@@ -114,6 +115,7 @@ public:
         std::optional<geometry::Point> const& new_top_left,
         geometry::Size const& new_size) = 0;
     virtual void handle_close_request() = 0;
+    virtual void handle_tiled_edges(Flags<MirTiledEdge> tiled_edges) = 0;
 
 protected:
     /// The size the window will be after the next commit

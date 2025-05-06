@@ -74,6 +74,7 @@ struct WindowSpecification::Self
     mir::optional_value<bool> server_side_decorated;
     mir::optional_value<MirFocusMode> focus_mode;
     mir::optional_value<bool> visible_on_lock_screen;
+    mir::optional_value<mir::Flags<MirTiledEdge>> tiled_edges;
     mir::optional_value<std::shared_ptr<void>> userdata;
 };
 

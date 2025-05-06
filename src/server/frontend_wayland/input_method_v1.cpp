@@ -471,6 +471,7 @@ private:
             std::optional<geometry::Point> const& /*new_top_left*/,
             geometry::Size const& /*new_size*/) override {};
         virtual void handle_close_request() override {};
+        virtual void handle_tiled_edges(Flags<MirTiledEdge> /*tiled_edges*/) override {}
         virtual void handle_commit() override
         {
             auto surface_opt = scene_surface();

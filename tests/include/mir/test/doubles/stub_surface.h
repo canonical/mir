@@ -91,6 +91,8 @@ struct StubSurface : scene::Surface
         geometry::DeltaX) override {}
     auto focus_mode() const -> MirFocusMode override { return mir_focus_mode_focusable; }
     void set_focus_mode(MirFocusMode) override {}
+    auto tiled_edges() const -> Flags<MirTiledEdge> { return Flags(mir_tiled_edge_none); }
+    void set_tiled_edges(Flags<MirTiledEdge>) {}
 };
 }
 }
