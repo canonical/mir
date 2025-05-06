@@ -550,7 +550,6 @@ global:
     miral::LocatePointer::delay*;
     miral::LocatePointer::disable*;
     miral::LocatePointer::enable*;
-    miral::LocatePointer::enabled*;
     miral::LocatePointer::on_disabled*;
     miral::LocatePointer::on_enabled*;
     miral::LocatePointer::on_locate_pointer*;
