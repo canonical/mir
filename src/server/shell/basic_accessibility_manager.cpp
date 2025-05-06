@@ -28,8 +28,6 @@
 #include "mir/main_loop.h"
 #include "mir/shell/keyboard_helper.h"
 
-#include <mir/log.h>
-
 #include <xkbcommon/xkbcommon-keysyms.h>
 
 #include <memory>
