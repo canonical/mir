@@ -80,7 +80,6 @@ bool msh::BasicHoverClickTransformer::transform_input_event(
         auto const grace_period = std::chrono::duration_cast<std::chrono::milliseconds>(
             mutable_state.lock()->hover_duration * grace_period_percentage);
         {
-
             hover_initializer->cancel();
             if (auto position = pointer_event->position())
                 mutable_state.lock()->potential_position = *position;
