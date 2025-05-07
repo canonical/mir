@@ -68,14 +68,14 @@ void mir::shell::BasicAccessibilityManager::mousekeys_enabled(bool on)
 {
     if (on)
     {
-        if (event_transformer->append(transformer))
+        if (event_transformer->append(mouse_keys_transformer))
         {
             mousekeys_on = true;
         }
     }
     else
     {
-        if (event_transformer->remove(transformer))
+        if (event_transformer->remove(mouse_keys_transformer))
         {
             mousekeys_on = false;
         }
@@ -93,7 +93,7 @@ mir::shell::BasicAccessibilityManager::BasicAccessibilityManager(
     cursor{cursor},
     event_transformer{event_transformer},
     input_device_registry{input_device_registry},
-    transformer{mousekeys_transformer},
+    mouse_keys_transformer{mousekeys_transformer},
     simulated_secondary_click_transformer{simulated_secondary_click_transformer}
 {
 }
@@ -109,17 +109,17 @@ void mir::shell::BasicAccessibilityManager::cursor_scale(float new_scale)
 
 void mir::shell::BasicAccessibilityManager::mousekeys_keymap(input::MouseKeysKeymap const& new_keymap)
 {
-    transformer->keymap(new_keymap);
+    mouse_keys_transformer->keymap(new_keymap);
 }
 
 void mir::shell::BasicAccessibilityManager::acceleration_factors(double constant, double linear, double quadratic)
 {
-    transformer->acceleration_factors(constant, linear, quadratic);
+    mouse_keys_transformer->acceleration_factors(constant, linear, quadratic);
 }
 
 void mir::shell::BasicAccessibilityManager::max_speed(double x_axis, double y_axis)
 {
-    transformer->max_speed(x_axis, y_axis);
+    mouse_keys_transformer->max_speed(x_axis, y_axis);
 }
 
 void mir::shell::BasicAccessibilityManager::simulated_secondary_click_enabled(bool enabled)

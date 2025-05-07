@@ -92,7 +92,7 @@ private:
     std::shared_ptr<mir::input::InputEventTransformer> const event_transformer;
     std::shared_ptr<mir::input::InputDeviceRegistry> const input_device_registry;
 
-    std::shared_ptr<mir::shell::MouseKeysTransformer> const transformer;
+    std::shared_ptr<mir::shell::MouseKeysTransformer> const mouse_keys_transformer;
     std::shared_ptr<SimulatedSecondaryClickTransformer> const simulated_secondary_click_transformer;
 
     bool mousekeys_on{false}, ssc_on{false};
