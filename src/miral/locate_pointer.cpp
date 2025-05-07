@@ -57,11 +57,9 @@ struct miral::LocatePointer::Self
         mir::Synchronised<State> state;
     };
 
-    Self(bool enable_by_default)
+    Self(bool enable_by_default) :
+        state{State{enable_by_default, std::make_shared<Self::PointerPositionRecorder>()}}
     {
-        auto const state_ = state.lock();
-        state_->enabled = enable_by_default;
-        state_->pointer_position_recorder = std::make_shared<Self::PointerPositionRecorder>();
     }
 
     void on_server_init(mir::Server& server)
@@ -82,13 +80,18 @@ struct miral::LocatePointer::Self
 
     struct State
     {
-        bool enabled;
-        std::shared_ptr<PointerPositionRecorder> pointer_position_recorder;
-        std::unique_ptr<mir::time::Alarm> locate_pointer_alarm;
+        State(bool enabled, std::shared_ptr<PointerPositionRecorder> const& position_recorder) :
+            enabled{enabled},
+            pointer_position_recorder{position_recorder}
+        {
+        }
 
+        bool enabled;
+        std::shared_ptr<PointerPositionRecorder> const pointer_position_recorder;
+
+        std::unique_ptr<mir::time::Alarm> locate_pointer_alarm;
         std::function<void(float, float)> on_locate_pointer{[](auto, auto) {}};
         std::function<void()> on_enabled{[] {}}, on_disabled{[] {}};
-
         std::chrono::milliseconds delay{500};
     };
 
