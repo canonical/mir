@@ -37,6 +37,7 @@
 #include <miral/output_filter.h>
 #include <miral/simulated_secondary_click.h>
 #include <miral/hover_click.h>
+#include <miral/bounce_keys.h>
 
 #include <xkbcommon/xkbcommon-keysyms.h>
 
@@ -210,6 +211,8 @@ int main(int argc, char const* argv[])
 
     miral::HoverClick hover_click_config{false};
 
+    miral::BounceKeys bounce_keys{true};
+
     return runner.run_with(
         {
             CursorTheme{"default:DMZ-White"},
@@ -236,6 +239,7 @@ int main(int argc, char const* argv[])
             output_filter,
             AppendEventFilter{toggle_output_filter_filter},
             ssc_config,
-            hover_click_config
+            hover_click_config,
+            bounce_keys
         });
 }
