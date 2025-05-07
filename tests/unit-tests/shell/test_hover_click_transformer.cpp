@@ -27,6 +27,9 @@
 #include "mir/events/pointer_event.h"
 #include "mir/geometry/displacement.h"
 
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
+
 using namespace ::testing;
 using namespace std::chrono_literals;
 
