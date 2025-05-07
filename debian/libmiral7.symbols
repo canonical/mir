@@ -530,14 +530,15 @@ libmiral.so.7 libmiral7 #MINVER#
  (c++)"miral::InputConfiguration::Touchpad::middle_mouse_button_emulation() const@MIRAL_5.3" 5.3.0
  (c++)"miral::InputConfiguration::Touchpad::middle_mouse_button_emulation(std::optional<bool> const&)@MIRAL_5.3" 5.3.0
  (c++)"miral::LocatePointer::LocatePointer(bool)@MIRAL_5.3" 5.3.0
+ (c++)"miral::LocatePointer::cancel_request()@MIRAL_5.3" 5.3.0
  (c++)"miral::LocatePointer::delay(std::chrono::duration<long, std::ratio<1l, 1000l> >)@MIRAL_5.3" 5.3.0
  (c++)"miral::LocatePointer::disable()@MIRAL_5.3" 5.3.0
  (c++)"miral::LocatePointer::enable()@MIRAL_5.3" 5.3.0
- (c++)"miral::LocatePointer::key_combination(std::function<bool (MirInputEvent const*)>)@MIRAL_5.3" 5.3.0
  (c++)"miral::LocatePointer::on_disabled(std::function<void ()>&&)@MIRAL_5.3" 5.3.0
  (c++)"miral::LocatePointer::on_enabled(std::function<void ()>&&)@MIRAL_5.3" 5.3.0
  (c++)"miral::LocatePointer::on_locate_pointer(std::function<void (float, float)>&&)@MIRAL_5.3" 5.3.0
  (c++)"miral::LocatePointer::operator()(mir::Server&)@MIRAL_5.3" 5.3.0
+ (c++)"miral::LocatePointer::schedule_request()@MIRAL_5.3" 5.3.0
  (c++)"miral::MouseKeysConfig::MouseKeysConfig(bool)@MIRAL_5.3" 5.3.0
  (c++)"miral::MouseKeysConfig::ToggleMouseKeys(bool)@MIRAL_5.3" 5.3.0
  (c++)"miral::MouseKeysConfig::enabled(bool) const@MIRAL_5.3" 5.3.0
