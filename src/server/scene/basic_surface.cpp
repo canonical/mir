@@ -174,6 +174,11 @@ public:
     {
         for_each_observer(&SurfaceObserver::rescale_output, surf, id);
     }
+
+    void tiled_edges(Surface const* surf, Flags<MirTiledEdge> edges) override
+    {
+        for_each_observer(&SurfaceObserver::tiled_edges, surf, edges);
+    }
 };
 
 namespace
@@ -957,6 +962,17 @@ auto mir::scene::BasicSurface::focus_mode() const -> MirFocusMode
 void mir::scene::BasicSurface::set_focus_mode(MirFocusMode focus_mode)
 {
     synchronised_state.lock()->focus_mode = focus_mode;
+}
+
+auto mir::scene::BasicSurface::tiled_edges() const -> Flags<MirTiledEdge>
+{
+    return synchronised_state.lock()->tiled_edges;
+}
+
+void mir::scene::BasicSurface::set_tiled_edges(Flags<MirTiledEdge> edges)
+{
+    synchronised_state.lock()->tiled_edges = edges;
+    observers->tiled_edges(this, edges);
 }
 
 void mir::scene::BasicSurface::clear_frame_posted_callbacks(State& state)

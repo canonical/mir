@@ -23,6 +23,7 @@
 #include "mir/input/input_reception_mode.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/display_configuration.h"
+#include "mir/flags.h"
 
 #include <glm/glm.hpp>
 #include <string>
@@ -65,6 +66,7 @@ public:
     virtual void entered_output(Surface const* surf, graphics::DisplayConfigurationOutputId const& id) = 0;
     virtual void left_output(Surface const* surf, graphics::DisplayConfigurationOutputId const& id) = 0;
     virtual void rescale_output(Surface const* surf, graphics::DisplayConfigurationOutputId const& id) = 0;
+    virtual void tiled_edges(Surface const* surf, Flags<MirTiledEdge> edges) = 0;
 
 protected:
     SurfaceObserver() = default;
