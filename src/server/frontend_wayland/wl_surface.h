@@ -203,6 +203,7 @@ private:
     void damage_buffer(int32_t x, int32_t y, int32_t width, int32_t height) override;
     void set_buffer_transform(int32_t transform) override;
     void set_buffer_scale(int32_t scale) override;
+    void offset(int32_t x, int32_t y) override;
 };
 }
 }

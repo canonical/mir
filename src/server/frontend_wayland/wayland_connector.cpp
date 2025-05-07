@@ -71,7 +71,7 @@ public:
         std::shared_ptr<mir::Executor> const& wayland_executor,
         std::shared_ptr<mir::Executor> const& frame_callback_executor,
         std::shared_ptr<mg::GraphicBufferAllocator> const& allocator)
-        : Global(display, Version<4>()),
+        : Global(display, Version<6>()),
           allocator{allocator},
           wayland_executor{wayland_executor},
           frame_callback_executor{frame_callback_executor}
@@ -90,7 +90,7 @@ private:
     {
     public:
         Instance(wl_resource* new_resource, WlCompositor* compositor)
-            : mw::Compositor{new_resource, Version<4>()},
+            : mw::Compositor{new_resource, Version<6>()},
               compositor{compositor}
         {
         }

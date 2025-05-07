@@ -171,6 +171,8 @@ private:
 
     shell::SurfaceSpecification& spec();
 
+    std::map<graphics::DisplayConfigurationOutputId, int> output_scales;
+    auto max_output_scale() const -> int;
     // Ask the derived class to destroy the wayland role object (as only it can do that)
     virtual void destroy_role() const = 0;
 
