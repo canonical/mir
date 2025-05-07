@@ -181,7 +181,7 @@ int main(int argc, char const* argv[])
 
     auto const locate_pointer_filter = [&locate_pointer](auto const* event)
     {
-            if(mir_event_get_type(event) != mir_event_type_input)
+            if (mir_event_get_type(event) != mir_event_type_input)
                 return false;
             auto const input_event = mir_event_get_input_event(event);
 
