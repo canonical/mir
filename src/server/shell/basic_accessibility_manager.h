@@ -89,7 +89,7 @@ private:
     bool const enable_key_repeat;
     std::shared_ptr<graphics::Cursor> const cursor;
     std::shared_ptr<mir::input::InputEventTransformer> const event_transformer;
-    std::shared_ptr<mir::shell::MouseKeysTransformer> const transformer;
+    std::shared_ptr<mir::shell::MouseKeysTransformer> const mouse_keys_transformer;
     std::shared_ptr<SimulatedSecondaryClickTransformer> const simulated_secondary_click_transformer;
 };
 }
