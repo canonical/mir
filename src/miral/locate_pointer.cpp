@@ -47,6 +47,9 @@ struct miral::LocatePointer::Self
                 return false;
 
             auto const* pointer_event = input_event->to_pointer();
+            
+            if (pointer_event->action() != mir_pointer_action_motion)
+                return false;
             if (auto position = pointer_event->position())
                 state.lock()->cursor_position = *position;
 
