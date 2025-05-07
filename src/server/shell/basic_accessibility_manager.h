@@ -35,6 +35,11 @@ class CompositeEventFilter;
 class InputEventTransformer;
 class InputDeviceRegistry;
 }
+namespace shell
+{
+class MouseKeysTransformer;
+class CompositeEventFilter;
+}
 namespace options
 {
 class Option;
