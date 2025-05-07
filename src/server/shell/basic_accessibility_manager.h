@@ -34,6 +34,11 @@ namespace input
 class CompositeEventFilter;
 class InputEventTransformer;
 }
+namespace shell
+{
+class MouseKeysTransformer;
+class CompositeEventFilter;
+}
 namespace options
 {
 class Option;
