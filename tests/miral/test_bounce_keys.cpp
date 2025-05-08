@@ -24,7 +24,6 @@
 #include "mir/input/input_device_registry.h"
 #include "mir/input/input_sink.h"
 #include "mir/server.h"
-#include "mir/test/signal.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -35,6 +34,12 @@ using namespace std::chrono_literals;
 namespace
 {
 static constexpr auto test_bounce_keys_delay = 20ms;
+
+void press(mir::input::InputSink* sink, mir::input::EventBuilder* builder, unsigned int keysym, unsigned int scancode)
+{
+    sink->handle_input(builder->key_event(std::nullopt, mir_keyboard_action_down, keysym, scancode));
+    sink->handle_input(builder->key_event(std::nullopt, mir_keyboard_action_up, keysym, scancode));
+}
 }
 
 struct TestBounceKeys : miral::TestServer
@@ -55,17 +60,10 @@ struct TestBounceKeys : miral::TestServer
                 bounce_keys(server);
             });
 
-        bounce_keys.delay(test_bounce_keys_delay)
-            .on_press_rejected([this](auto) { press_rejected.raise(); });
-    }
-
-    void SetUp() override
-    {
-        miral::TestServer::SetUp();
+        bounce_keys.delay(test_bounce_keys_delay);
     }
 
     miral::BounceKeys bounce_keys{true};
-    mir::test::Signal press_rejected;
 
     std::weak_ptr<mir::input::CompositeEventFilter> composite_event_filter;
     std::weak_ptr<mir::input::InputDeviceRegistry> input_device_registry;
@@ -79,6 +77,7 @@ struct TestDifferentDelays: public TestBounceKeys, public WithParamInterface<std
 TEST_P(TestDifferentDelays, subsequent_keys_rejected_if_in_within_delay)
 {
     auto const press_delay = GetParam();
+
     auto virtual_keyboard = miral::test::add_test_device(
         input_device_registry.lock(), input_device_hub.lock(), mir::input::DeviceCapability::keyboard);
 
@@ -86,28 +85,17 @@ TEST_P(TestDifferentDelays, subsequent_keys_rejected_if_in_within_delay)
         [this, press_delay](mir::input::InputSink* sink, mir::input::EventBuilder* builder)
         {
             auto rejection_counter = 0;
-            bounce_keys.on_press_rejected(
-                [&rejection_counter, this](auto)
-                {
-                    rejection_counter++;
-                    press_rejected.raise();
-                });
-
-            auto const press_d = [builder, sink]()
-            {
-                sink->handle_input(builder->key_event(std::nullopt, mir_keyboard_action_down, XKB_KEY_d, 32));
-                sink->handle_input(builder->key_event(std::nullopt, mir_keyboard_action_up, XKB_KEY_d, 32));
-            };
+            bounce_keys.on_press_rejected([&rejection_counter](auto) { rejection_counter++; });
 
             // Initial press, should pass
-            press_d();
+            press(sink, builder, XKB_KEY_d, 32);
 
             // Depending on the test parameter, subsequent presses should be all rejected or not
             auto const num_presses = 10;
             for (auto i = 0; i < num_presses; i++)
             {
                 std::this_thread::sleep_for(press_delay);
-                press_d();
+                press(sink, builder, XKB_KEY_d, 32);
             }
 
             auto const should_reject_all = press_delay < test_bounce_keys_delay;
@@ -116,3 +104,57 @@ TEST_P(TestDifferentDelays, subsequent_keys_rejected_if_in_within_delay)
 }
 
 INSTANTIATE_TEST_SUITE_P(TestBounceKeys, TestDifferentDelays, Values(test_bounce_keys_delay - 5ms, test_bounce_keys_delay + 5ms));
+
+TEST_F(TestBounceKeys, different_keys_are_not_rejected)
+{
+    auto virtual_keyboard = miral::test::add_test_device(
+        input_device_registry.lock(), input_device_hub.lock(), mir::input::DeviceCapability::keyboard);
+
+    virtual_keyboard->if_started_then(
+        [this](mir::input::InputSink* sink, mir::input::EventBuilder* builder)
+        {
+            auto rejection_counter = 0;
+            bounce_keys.on_press_rejected([&rejection_counter](auto) { rejection_counter++; });
+
+            // Initial press, should pass
+            press(sink, builder, XKB_KEY_d, 32);
+
+            auto const num_presses = 20;
+            for (auto i = 0; i < num_presses; i++)
+            {
+                // Would be rejected if the same key was being pressed
+                std::this_thread::sleep_for(test_bounce_keys_delay - 1ms);
+
+                if (i % 2 == 0)
+                    press(sink, builder, XKB_KEY_f, 33);
+                else
+                    press(sink, builder, XKB_KEY_d, 32);
+            }
+
+            EXPECT_THAT(rejection_counter, Eq(0));
+        });
+}
+
+TEST_F(TestBounceKeys, irregular_press_periods_are_properly_rejected)
+{
+    auto virtual_keyboard = miral::test::add_test_device(
+        input_device_registry.lock(), input_device_hub.lock(), mir::input::DeviceCapability::keyboard);
+
+    auto const tap_periods = std::array{ 15ms, 21ms, 27ms }; // reject, pass, pass
+
+    virtual_keyboard->if_started_then(
+        [this, &tap_periods](mir::input::InputSink* sink, mir::input::EventBuilder* builder)
+        {
+            auto rejection_counter = 0;
+            bounce_keys.on_press_rejected([&rejection_counter](auto) { rejection_counter++; });
+
+            auto const num_presses = 10;
+            for (auto i = 0; i < num_presses; i++)
+            {
+                press(sink, builder, XKB_KEY_d, 32);
+                std::this_thread::sleep_for(tap_periods[i % tap_periods.size()]);
+            }
+
+            EXPECT_THAT(rejection_counter, Eq(num_presses / tap_periods.size()));
+        });
+}
