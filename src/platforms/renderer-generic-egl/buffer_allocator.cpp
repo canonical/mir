@@ -309,15 +309,16 @@ auto mge::BufferAllocator::shared_egl_context() -> EGLContext
 
 auto mge::GLRenderingProvider::as_texture(std::shared_ptr<Buffer> buffer) -> std::shared_ptr<gl::Texture>
 {
+    std::shared_ptr<NativeBufferBase> native_buffer{buffer, buffer->native_buffer_base()};
     if (dmabuf_provider)
     {
-        if (auto tex = dmabuf_provider->as_texture(buffer))
+        if (auto tex = dmabuf_provider->as_texture(native_buffer))
         {
             return tex;
         }
     }
     // TODO: Should this be abstracted, like dmabuf_provider above?
-    return std::dynamic_pointer_cast<gl::Texture>(buffer);
+    return std::dynamic_pointer_cast<gl::Texture>(native_buffer);
 }
 
 namespace
