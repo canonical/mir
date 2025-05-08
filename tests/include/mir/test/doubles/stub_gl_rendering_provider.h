@@ -30,7 +30,8 @@ class StubGlRenderingProvider : public graphics::GLRenderingProvider
 public:
     auto as_texture(std::shared_ptr<graphics::Buffer> buffer) -> std::shared_ptr<graphics::gl::Texture> override
     {
-        if (auto existing_buf = std::dynamic_pointer_cast<graphics::gl::Texture>(std::move(buffer)))
+        std::shared_ptr<graphics::NativeBufferBase> native_buffer{buffer, buffer->native_buffer_base()};
+        if (auto existing_buf = std::dynamic_pointer_cast<graphics::gl::Texture>(std::move(native_buffer)))
         {
             return existing_buf;
         }
