@@ -83,7 +83,7 @@ public:
     void validate_import(DMABufBuffer const& dma_buf);
 
     auto as_texture(
-        std::shared_ptr<Buffer> buffer)
+        std::shared_ptr<NativeBufferBase> buffer)
         -> std::shared_ptr<gl::Texture>;
 
      auto supported_formats() const -> DmaBufFormatDescriptors const&;
