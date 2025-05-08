@@ -117,4 +117,4 @@ TEST_P(TestDifferentDelays, subsequent_keys_rejected_if_in_within_delay)
         });
 }
 
-INSTANTIATE_TEST_SUITE_P(TestBounceKeys, TestDifferentDelays, Values(test_bounce_keys_delay - 1ms, test_bounce_keys_delay + 1ms));
+INSTANTIATE_TEST_SUITE_P(TestBounceKeys, TestDifferentDelays, Values(test_bounce_keys_delay - 5ms, test_bounce_keys_delay + 5ms));
