@@ -99,11 +99,12 @@ public:
         geom::Size const& size)
         : allocator(allocator),
           write_index(0),
-          read_index(1)
+          read_index(1),
+          current_size(size)
     {
         buffers[0] = allocator->alloc_software_buffer(size, mir_pixel_format_argb_8888);
         buffers[1] = allocator->alloc_software_buffer(size, mir_pixel_format_argb_8888);
-        submit();
+        submit(buffers[read_index]);
     }
 
     /// Grabs the current write buffer. When the caller stops using the buffer,
@@ -117,15 +118,16 @@ public:
             return std::nullopt;
 
         is_writing = true;
+        auto to_write = buffers[write_index];
         return std::make_unique<NotifyingBuffer>(
-            buffers[write_index],
-            [this]
+            to_write,
+            [this, to_write=to_write]
             {
                 std::unique_lock lock(mutex);
                 is_writing = false;
                 cv.wait(lock, [this] { return !is_reading; });
                 std::swap(write_index, read_index);
-                submit();
+                submit(to_write);
                 lock.unlock();
             });
     }
@@ -161,39 +163,41 @@ public:
         return retval;
     }
 
+    geom::Size size()
+    {
+        std::unique_lock lock(mutex);
+        return current_size;
+    }
+
     void resize(geom::Size const& size)
     {
-        // We are either going to commit this resize:
-        // 1. Immediately because we are neither reading nor writing
-        // 2. After the next [write] has completed. At that point, we will
-        //    have rendered a new buffer and submitted it to the stream.
-        //    This means that the next read will return the previously-sized
-        //    buffer and we can start writing to our newly-sized buffers.
+        // When we resize, we need all new buffers to write into. There are two considerations
+        // here:
+        //   1. We're reading from a buffer that we're recreating. In this case, we're okay
+        //      to just set the new buffer. The NotifyingBuffer has its own reference to the
+        //      buffer that's being rendered so we won't invalidate it.
+        //   2. We're writing to a buffer but haven't yet swapped it. Again, we're okay to
+        //      set the new buffer, as we won't be invalidating the NotifyingBuffer's reference.
+        //      HOWEVER, the swap afterward could cause us to swap with an empty buffer if we
+        //      the following happens: (1) we start writing to the buffer, (2) we request a resize
+        //      (3) the write completes and the buffers are swapped - hence we swap with an empty
+        //      buffer. To get around this, we capture that buffer that we're writing to in the
+        //      swap and ensure that we always swap that exact buffer.
         std::unique_lock lock(mutex);
-        next_size = size;
-        if (!is_reading && !is_writing)
-            try_resize();
+        buffers[0] = allocator->alloc_software_buffer(size, mir_pixel_format_argb_8888);
+        buffers[1] = allocator->alloc_software_buffer(size, mir_pixel_format_argb_8888);
+        current_size = size;
     }
 
 private:
-    void try_resize()
-    {
-        if (!next_size)
-            return;
-
-        buffers[0] = allocator->alloc_software_buffer(next_size.value(), mir_pixel_format_argb_8888);
-        buffers[1] = allocator->alloc_software_buffer(next_size.value(), mir_pixel_format_argb_8888);
-        next_size.reset();
-    }
-
-    void submit()
+    void submit(std::shared_ptr<mg::Buffer> const& buffer)
     {
         stream.submit_buffer(
-            buffers[read_index],
-            buffers[read_index]->size(),
+            buffer,
+            buffer->size(),
             geom::RectangleD(
                 {0, 0},
-                buffers[read_index]->size()));
+                buffer->size()));
     }
 
     std::shared_ptr<mg::GraphicBufferAllocator> allocator;
@@ -206,7 +210,7 @@ private:
     std::weak_ptr<NotifyingBuffer> read_buffer;
     int write_index;
     int read_index;
-    std::optional<geom::Size> next_size;
+    geom::Size current_size;
 };
 
 class MagnificationRenderable : public mg::Renderable
@@ -230,13 +234,13 @@ public:
     {
         return {
             rendered_position,
-            stream->read()->size() * magnification
+            stream->size() * magnification
         };
     }
 
     geom::RectangleD src_bounds() const override
     {
-        return {{0, 0}, stream->read()->size()};
+        return {{0, 0}, stream->size()};
     }
 
     std::optional<geom::Rectangle> clip_area() const override
@@ -294,7 +298,7 @@ public:
                 auto const locked = state.lock();
                 geom::Rectangle const r(
                    locked->capture_position,
-                   stream->read()->size());
+                   stream->size());
                 if (r.overlaps(damage))
                     update(*locked);
             }
@@ -375,7 +379,7 @@ public:
 
     geom::Size size() const
     {
-        return stream->read()->size();
+        return stream->size();
     }
 
     void resize(geom::Size const& size)
@@ -409,7 +413,7 @@ private:
 
     void on_cursor_moved(State& state) const
     {
-        auto const size = stream->read()->size();
+        auto const size = stream->size();
         float const margin_width = static_cast<float>(size.width.as_int()) / 2.f;
         float const margin_height = static_cast<float>(size.height.as_int()) / 2.f;
         state.capture_position = {
@@ -449,7 +453,7 @@ private:
             write_buffer,
             geom::Rectangle(
                 state.capture_position,
-                renderable->buffer()->size()),
+                stream->size()),
             [renderable=renderable](std::shared_ptr<compositor::SceneElement const> const& scene_element)
             {
                 return scene_element->renderable() != renderable;
