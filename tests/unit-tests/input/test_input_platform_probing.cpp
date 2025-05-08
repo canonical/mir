@@ -26,6 +26,7 @@
 #include "mir_test_framework/udev_environment.h"
 #include "mir_test_framework/executable_path.h"
 #include "mir_test_framework/stub_input_platform.h"
+#include "mir/test/doubles/null_console_services.h"
 #include "mir/test/doubles/mock_x11.h"
 #include "mir/test/doubles/mock_libinput.h"
 #include "mir/test/doubles/mock_option.h"
@@ -96,6 +97,7 @@ struct InputPlatformProbe : ::testing::Test
     NiceMock<mtd::MockOption> mock_options;
     mtd::MockInputDeviceRegistry mock_registry;
     StubEmergencyCleanupRegistry stub_emergency;
+    std::shared_ptr<mir::ConsoleServices> null_console{std::make_shared<mtd::NullConsoleServices>()};
     std::shared_ptr<mir::SharedLibraryProberReport> stub_prober_report{mr::null_shared_library_prober_report()};
     std::string platform_path_value{mtf::server_platform_path()};
     boost::any platform_path_value_as_any{platform_path_value};
@@ -138,7 +140,7 @@ TEST_F(InputPlatformProbe, stub_platform_not_picked_up_by_default)
             mock_options,
             mt::fake_shared(stub_emergency),
             mt::fake_shared(mock_registry),
-            nullptr,
+            null_console,
             mr::null_input_report(),
             empty_loaded_module_list,
             *stub_prober_report);
@@ -157,7 +159,7 @@ TEST_F(InputPlatformProbe, x11_input_platform_not_used_when_vt_specified)
             mock_options,
             mt::fake_shared(stub_emergency),
             mt::fake_shared(mock_registry),
-            nullptr,
+            null_console,
             mr::null_input_report(),
             empty_loaded_module_list,
             *stub_prober_report);
@@ -177,7 +179,7 @@ TEST_F(InputPlatformProbe, allows_forcing_stub_input_platform)
             mock_options,
             mt::fake_shared(stub_emergency),
             mt::fake_shared(mock_registry),
-            nullptr,
+            null_console,
             mr::null_input_report(),
             empty_loaded_module_list,
             *stub_prober_report);
