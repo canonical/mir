@@ -87,12 +87,12 @@ struct InputPlatformProbe : ::testing::Test
 
     // replace with with mocks for udev and evdev to simulate root or non-root
     // access on evdev devices, and enable the disabled test case(s) below.
-    mtf::UdevEnvironment env;
+    mtf::UdevEnvironment env [[maybe_unused]];
 
 #ifdef MIR_BUILD_PLATFORM_X11
     NiceMock<mtd::MockX11> mock_x11;
 #endif
-    NiceMock<mtd::MockLibInput> mock_libinput;
+    NiceMock<mtd::MockLibInput> mock_libinput [[maybe_unused]];
     NiceMock<mtd::MockOption> mock_options;
     mtd::MockInputDeviceRegistry mock_registry;
     StubEmergencyCleanupRegistry stub_emergency;
