@@ -15,6 +15,7 @@
  */
 
 #include "basic_accessibility_manager.h"
+#include "basic_hover_click_transformer.h"
 #include "mouse_keys_transformer.h"
 
 #include "mir/graphics/cursor.h"
@@ -100,31 +101,23 @@ void mir::shell::BasicAccessibilityManager::mousekeys_enabled(bool on)
 {
     if (on)
     {
-        main_loop->spawn([this]
-        {
-            auto state = this->mutable_state.lock();
-            if (!state->mousekey_pointer)
-            {
-                state->mousekey_pointer = std::make_shared<MousekeyPointer>(main_loop, event_transformer);
+        add_virtual_device();
 
-                event_transformer->append(transformer);
-                input_device_registry->add_device(state->mousekey_pointer);
-                the_composite_event_filter->prepend(state->mousekey_pointer);
-            }
-        });
+        if (!mousekeys_enabled_)
+        {
+            mousekeys_enabled_ = true;
+            event_transformer->append(transformer);
+        }
     }
     else
     {
-        main_loop->spawn([this]
+        if (mousekeys_enabled_)
         {
-            auto state = this->mutable_state.lock();
-            if (state->mousekey_pointer)
-            {
-                input_device_registry->remove_device(state->mousekey_pointer);
-                event_transformer->remove(transformer);
-                state->mousekey_pointer.reset();
-            }
-        });
+            mousekeys_enabled_ = false;
+            event_transformer->remove(transformer);
+        }
+
+        remove_virtual_device();
     }
 }
 
@@ -141,8 +134,9 @@ mir::shell::BasicAccessibilityManager::BasicAccessibilityManager(
     enable_key_repeat{enable_key_repeat},
     cursor{cursor},
     event_transformer{event_transformer},
+    input_device_registry{input_device_registry},
     transformer{mousekeys_transformer},
-    input_device_registry{input_device_registry}
+    hover_click_transformer{std::make_shared<mir::shell::BasicHoverClickTransformer>(this->main_loop)}
 {
 }
 
@@ -165,3 +159,70 @@ void mir::shell::BasicAccessibilityManager::max_speed(double x_axis, double y_ax
 {
     transformer->max_speed(x_axis, y_axis);
 }
+
+void mir::shell::BasicAccessibilityManager::hover_click_enabled(bool enabled)
+{
+    if(enabled)
+    {
+        add_virtual_device();
+
+        if(!hover_click_enabled_)
+        {
+            hover_click_enabled_ = true;
+            event_transformer->append(hover_click_transformer);
+            hover_click_transformer->enabled();
+        }
+
+    }
+    else
+    {
+        if(hover_click_enabled_)
+        {
+            hover_click_enabled_ = false;
+            event_transformer->remove(hover_click_transformer);
+            hover_click_transformer->disabled();
+        }
+
+        remove_virtual_device();
+    }
+}
+
+auto mir::shell::BasicAccessibilityManager::hover_click() -> HoverClickTransformer&
+{
+    return *hover_click_transformer;
+}
+
+void mir::shell::BasicAccessibilityManager::add_virtual_device() {
+    if(mousekeys_enabled_ || hover_click_enabled_)
+        return;
+
+    if (!mutable_state.lock()->mousekey_pointer)
+    {
+        main_loop->spawn(
+            [this]
+            {
+                auto state = mutable_state.lock();
+                state->mousekey_pointer = std::make_shared<MousekeyPointer>(main_loop, event_transformer);
+                input_device_registry->add_device(state->mousekey_pointer);
+                the_composite_event_filter->prepend(state->mousekey_pointer);
+            });
+    }
+}
+
+void mir::shell::BasicAccessibilityManager::remove_virtual_device()
+{
+    if(!mousekeys_enabled_ && !hover_click_enabled_)
+        return;
+
+    if (mutable_state.lock()->mousekey_pointer)
+    {
+        main_loop->spawn(
+            [this]
+            {
+                auto state = this->mutable_state.lock();
+                input_device_registry->remove_device(state->mousekey_pointer);
+                state->mousekey_pointer.reset();
+            });
+    }
+}
+
