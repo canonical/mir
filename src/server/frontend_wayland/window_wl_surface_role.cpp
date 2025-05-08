@@ -447,6 +447,8 @@ auto mf::WindowWlSurfaceRole::output_config_changed(graphics::DisplayConfigurati
 {
     if (surface)
     {
+        auto const prev_scale = max_output_scale();
+
         if (auto id_it{std::ranges::find(pending_enter_events, config.id)}; id_it != pending_enter_events.end())
         {
             if (auto* global{output_manager->output_for(config.id).value_or(nullptr)})
@@ -459,6 +461,7 @@ auto mf::WindowWlSurfaceRole::output_config_changed(graphics::DisplayConfigurati
                             fractional_scale.value().output_entered(config);
                         surface.value().send_enter_event(instance->resource);
                         pending_enter_events.erase(id_it);
+                        output_scales[config.id] = std::ceil(config.scale);
                     });
             }
         }
@@ -468,6 +471,14 @@ auto mf::WindowWlSurfaceRole::output_config_changed(graphics::DisplayConfigurati
             if (auto const fractional_scale = surface.value().get_fractional_scale())
                 fractional_scale.value().scale_change_on_output(config);
             pending_rescale_events.erase(id_it);
+            output_scales[config.id] = std::ceil(config.scale);
+        }
+
+        auto const max_scale = max_output_scale();
+
+        if (prev_scale != max_scale)
+        {
+            surface.value().send_preferred_buffer_scale_event_if_supported(max_scale);
         }
     }
 
@@ -480,6 +491,18 @@ mir::shell::SurfaceSpecification& mf::WindowWlSurfaceRole::spec()
         pending_changes = std::make_unique<mir::shell::SurfaceSpecification>();
 
     return *pending_changes;
+}
+
+auto mir::frontend::WindowWlSurfaceRole::max_output_scale() const -> int
+{
+    int current_max = 1;
+    for (auto const& [_, scale] : output_scales)
+    {
+        if (scale > current_max)
+            current_max = scale;
+    }
+
+    return current_max;
 }
 
 void mf::WindowWlSurfaceRole::create_scene_surface()
@@ -522,11 +545,14 @@ void mf::WindowWlSurfaceRole::handle_enter_output(graphics::DisplayConfiguration
     bool event_sent{};
     if (surface)
     {
+        auto const prev_scale = max_output_scale();
+
         if (auto* global{output_manager->output_for(id).value_or(nullptr)})
         {
             auto const& config{global->current_config()};
             if (config.id == id)
             {
+                output_scales[config.id] = std::ceil(config.scale);
                 if (auto const fractional_scale = surface.value().get_fractional_scale())
                     fractional_scale.value().output_entered(config);
 
@@ -538,6 +564,13 @@ void mf::WindowWlSurfaceRole::handle_enter_output(graphics::DisplayConfiguration
                         event_sent = true;
                     });
             }
+        }
+
+        auto const max_scale = max_output_scale();
+
+        if (prev_scale != max_scale)
+        {
+            surface.value().send_preferred_buffer_scale_event_if_supported(max_scale);
         }
     }
     if (!event_sent)

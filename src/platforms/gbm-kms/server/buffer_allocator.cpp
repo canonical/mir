@@ -15,6 +15,7 @@
  */
 
 #include "buffer_allocator.h"
+#include "mir/graphics/buffer.h"
 #include "mir/graphics/gl_config.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/linux_dmabuf.h"
@@ -215,11 +216,12 @@ auto mgg::BufferAllocator::shared_egl_context() -> EGLContext
 
 auto mgg::GLRenderingProvider::as_texture(std::shared_ptr<Buffer> buffer) -> std::shared_ptr<gl::Texture>
 {
-    if (auto dmabuf_texture = dmabuf_provider->as_texture(buffer))
+    std::shared_ptr<NativeBufferBase> native_buffer{buffer, buffer->native_buffer_base()};
+    if (auto dmabuf_texture = dmabuf_provider->as_texture(native_buffer))
     {
         return dmabuf_texture;
     }
-    else if (auto tex = std::dynamic_pointer_cast<gl::Texture>(buffer))
+    else if (auto tex = std::dynamic_pointer_cast<gl::Texture>(native_buffer))
     {
         return tex;
     }
