@@ -45,6 +45,28 @@ public:
         virtual bool transform_input_event(EventDispatcher const&, EventBuilder*,  MirEvent const&) = 0;
     };
 
+    class Registration
+    {
+    public:
+        Registration(
+            InputEventTransformer* event_transformer,
+            std::shared_ptr<mir::input::InputEventTransformer::Transformer> transformer);
+
+        ~Registration();
+
+        Registration(Registration&& other);
+
+    private:
+        Registration();
+
+        Registration(Registration const&) = delete;
+        auto operator=(Registration const&) noexcept -> Registration& = delete;
+
+        void swap(Registration& other) noexcept;
+
+        std::function<void()> unregister;
+    };
+
     InputEventTransformer();
     ~InputEventTransformer();
 
@@ -53,12 +75,15 @@ public:
         EventBuilder* builder,
         EventDispatcher const& dispatcher);
 
-    void append(std::weak_ptr<Transformer> const&);
-    bool remove(std::shared_ptr<Transformer> const&);
+    /// Appends the transformer to be used in `transform`
+    /// Precondition: Transformer isn't already registered.
+    [[nodiscard]] auto append(std::shared_ptr<Transformer> const&) -> Registration;
 
 private:
+    void remove(std::shared_ptr<Transformer> const&);
+
     std::mutex mutex;
-    std::vector<std::weak_ptr<Transformer>> input_transformers;
+    std::vector<std::shared_ptr<Transformer>> input_transformers;
 };
 }
 }
