@@ -125,12 +125,7 @@ public:
                 is_writing = false;
                 cv.wait(lock, [this] { return !is_reading; });
                 std::swap(write_index, read_index);
-
                 submit();
-
-                // At this point, we are neither reading nor writing. This
-                // is the best time to see if we need to do a resize.
-                try_resize();
                 lock.unlock();
             });
     }
@@ -435,12 +430,18 @@ private:
         if (!state.enabled_)
             return;
 
+        if (is_updating.exchange(true))
+            return;
+
         // If we can grab the write buffer, then we can capture the next render.
         // Otherwise, we still have a render outstanding.
         if (auto buffer = stream->write_buffer())
             active_write_buffer = std::move(buffer.value());
         else
+        {
+            mir::log_error("Unexpectedly unable to grab a write buffer");
             return;
+        }
 
         auto const write_buffer = mrs::as_write_mappable_buffer(
             active_write_buffer->buffer());
@@ -459,7 +460,12 @@ private:
                 // By nullifying the write buffer, we lose a reference to it and thus
                 // trigger its destructor (and a swap!).
                 active_write_buffer = nullptr;
+
+                // After swapping, we emit the scene change. It is important that
+                // [is_updating] is set to false afterwards so that the magnification
+                // manager itself does not respond to this scene change.
                 scene->emit_scene_changed();
+                is_updating = false;
             });
     }
 
@@ -473,6 +479,7 @@ private:
     Synchronised<State> state;
     std::shared_ptr<DoubleBufferStream> stream;
     std::shared_ptr<MagnificationRenderable> renderable;
+    std::atomic<bool> is_updating = false;
     std::unique_ptr<NotifyingBuffer> active_write_buffer;
 };
 
