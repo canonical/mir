@@ -32,8 +32,9 @@
 #include "mir/input/seat.h"
 #include "mir/scene/scene_change_notification.h"
 #include "mir/renderer/sw/pixel_source.h"
+#include "mir/log.h"
 
-#include <future>
+#include <condition_variable>
 
 namespace mg = mir::graphics;
 namespace mi = mir::input;
@@ -45,11 +46,49 @@ namespace geom = mir::geometry;
 
 namespace
 {
-struct State
+class NotifyingBuffer : public mg::Buffer
 {
-    geom::PointF cursor_position;
-    geom::Point capture_position;
-    bool enabled_ = false;
+public:
+    NotifyingBuffer(
+        std::shared_ptr<Buffer> const& wrapped,
+        std::function<void()>&& on_release)
+        : wrapped(wrapped),
+          on_release(std::move(on_release))
+        {}
+
+    ~NotifyingBuffer() override
+    {
+        on_release();
+    }
+
+    mg::BufferID id() const override
+    {
+        return wrapped->id();
+    }
+
+    geom::Size size() const override
+    {
+        return wrapped->size();
+    }
+
+    MirPixelFormat pixel_format() const override
+    {
+        return wrapped->pixel_format();
+    }
+
+    mg::NativeBufferBase* native_buffer_base() override
+    {
+        return wrapped->native_buffer_base();
+    }
+
+    std::shared_ptr<Buffer> buffer() const
+    {
+        return wrapped;
+    }
+
+private:
+    std::shared_ptr<Buffer> const wrapped;
+    std::function<void()> on_release;
 };
 
 class DoubleBufferStream
@@ -64,38 +103,95 @@ public:
     {
         buffers[0] = allocator->alloc_software_buffer(size, mir_pixel_format_argb_8888);
         buffers[1] = allocator->alloc_software_buffer(size, mir_pixel_format_argb_8888);
-        _submit();
+        submit();
     }
 
-    std::shared_ptr<mg::Buffer> write_buffer()
+    /// Grabs the current write buffer. When the caller stops using the buffer,
+    /// the content of the buffer will be swapped with the current read buffer.
+    /// Callers may not have more than one reference to the active write buffer.
+    /// Asking for one will return std::nullopt.
+    std::optional<std::unique_ptr<NotifyingBuffer>> write_buffer()
     {
         std::lock_guard lock(mutex);
-        return buffers[write_index];
-    }
+        if (is_writing)
+            return std::nullopt;
 
-    void swap()
-    {
-        std::lock_guard lock(mutex);
-        std::swap(write_index, read_index);
-        _submit();
+        is_writing = true;
+        return std::make_unique<NotifyingBuffer>(
+            buffers[write_index],
+            [this]
+            {
+                std::unique_lock lock(mutex);
+                is_writing = false;
+                cv.wait(lock, [this] { return !is_reading; });
+                std::swap(write_index, read_index);
+
+                submit();
+
+                // At this point, we are neither reading nor writing. This
+                // is the best time to see if we need to do a resize.
+                try_resize();
+                lock.unlock();
+            });
     }
 
     std::shared_ptr<mg::Buffer> read()
     {
+        // We want to avoid writing to a buffer that we are currently reading from. To do
+        // this, we set a flag that tells us if that buffer is currently being read
+        // or not. We then return the buffer wrapped in a [NotifyingBuffer]. When the
+        // notifying buffer deconstructs, it will set the flag to false and notify anyone
+        // who was waiting on it. For example, the deconstructor of the write buffer
+        // may be waiting on the flag. Once the flag is triggered, the read/write indices
+        // are swapped and a new buffer is submitted to the stream.
         std::lock_guard lock(mutex);
-        return stream.next_submission_for_compositor(this)->claim_buffer();
+        if (is_reading)
+        {
+            if (auto locked_read_buffer = read_buffer.lock())
+                return read_buffer.lock();
+        }
+
+        is_reading = true;
+        auto next_submission = stream.next_submission_for_compositor(this)->claim_buffer();
+        auto retval = std::make_shared<NotifyingBuffer>(
+            next_submission,
+            [this]
+            {
+                std::lock_guard lock(mutex);
+                is_reading = false;
+                read_buffer.reset();
+                cv.notify_all();
+            });
+        read_buffer = retval;
+        return retval;
     }
 
     void resize(geom::Size const& size)
     {
-        std::lock_guard lock(mutex);
-        buffers[0] = allocator->alloc_software_buffer(size, mir_pixel_format_argb_8888);
-        buffers[1] = allocator->alloc_software_buffer(size, mir_pixel_format_argb_8888);
-        _submit();
+        // We are either going to commit this resize:
+        // 1. Immediately because we are neither reading nor writing
+        // 2. After the next [write] has completed. At that point, we will
+        //    have rendered a new buffer and submitted it to the stream.
+        //    This means that the next read will return the previously-sized
+        //    buffer and we can start writing to our newly-sized buffers.
+        std::unique_lock lock(mutex);
+        next_size = size;
+        if (!is_reading && !is_writing)
+            try_resize();
     }
 
 private:
-    void _submit()
+    void try_resize()
+    {
+        if (!next_size)
+            return;
+
+        buffers[0] = allocator->alloc_software_buffer(next_size.value(), mir_pixel_format_argb_8888);
+        buffers[1] = allocator->alloc_software_buffer(next_size.value(), mir_pixel_format_argb_8888);
+        next_size.reset();
+    }
+
+    void submit()
     {
         stream.submit_buffer(
             buffers[read_index],
@@ -109,8 +205,13 @@ private:
     std::array<std::shared_ptr<mg::Buffer>, 2> buffers;
     mc::Stream stream;
     std::mutex mutex;
+    std::condition_variable cv;
+    bool is_writing = false;
+    bool is_reading = false;
+    std::weak_ptr<NotifyingBuffer> read_buffer;
     int write_index;
     int read_index;
+    std::optional<geom::Size> next_size;
 };
 
 class MagnificationRenderable : public mg::Renderable
@@ -304,6 +405,13 @@ public:
     }
 
 private:
+    struct State
+    {
+        geom::PointF cursor_position;
+        geom::Point capture_position;
+        bool enabled_ = false;
+    };
+
     void on_cursor_moved(State& state) const
     {
         auto const size = stream->read()->size();
@@ -327,17 +435,15 @@ private:
         if (!state.enabled_)
             return;
 
-        on_write(stream->write_buffer(), state);
-    }
-
-    void on_write(
-        std::shared_ptr<mg::Buffer> const& buffer,
-        State const& state)
-    {
-        if (is_updating.exchange(true))
+        // If we can grab the write buffer, then we can capture the next render.
+        // Otherwise, we still have a render outstanding.
+        if (auto buffer = stream->write_buffer())
+            active_write_buffer = std::move(buffer.value());
+        else
             return;
 
-        auto const write_buffer = mrs::as_write_mappable_buffer(buffer);
+        auto const write_buffer = mrs::as_write_mappable_buffer(
+            active_write_buffer->buffer());
         screen_shooter->capture_with_filter(
             write_buffer,
             geom::Rectangle(
@@ -348,11 +454,12 @@ private:
                 return scene_element->renderable() != renderable;
             },
             false,
-            [&](auto const)
+            [this](auto const)
             {
-                stream->swap();
+                // By nullifying the write buffer, we lose a reference to it and thus
+                // trigger its destructor (and a swap!).
+                active_write_buffer = nullptr;
                 scene->emit_scene_changed();
-                is_updating = false;
             });
     }
 
@@ -366,7 +473,7 @@ private:
     Synchronised<State> state;
     std::shared_ptr<DoubleBufferStream> stream;
     std::shared_ptr<MagnificationRenderable> renderable;
-    std::atomic<bool> is_updating = false;
+    std::unique_ptr<NotifyingBuffer> active_write_buffer;
 };
 
 msh::BasicMagnificationManager::BasicMagnificationManager(
