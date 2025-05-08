@@ -376,6 +376,7 @@ void mgc::MappableBackedShmBuffer::bind()
 
 void mgc::MappableBackedShmBuffer::mark_dirty()
 {
+    std::lock_guard lock{uploaded_mutex};
     uploaded = false;
 }
 
