@@ -87,6 +87,7 @@ public:
         std::optional<geometry::Point> const& new_top_left,
         geometry::Size const& new_size) override;
     void handle_close_request() override;
+    void handle_tiled_edges(Flags<MirTiledEdge> /*tiled_edges*/) override {}
 
 private:
     std::optional<geom::Point> cached_top_left;
@@ -123,6 +124,7 @@ public:
         std::optional<geometry::Point> const& new_top_left,
         geometry::Size const& new_size) override;
     void handle_close_request() override;
+    void handle_tiled_edges(Flags<MirTiledEdge> /*tiled_edges*/) override;
 
 private:
     static XdgToplevelV6* from(wl_resource* surface);
@@ -515,6 +517,11 @@ void mf::XdgToplevelV6::handle_resize(
     geometry::Size const& /*new_size*/)
 {
     send_toplevel_configure();
+}
+
+void mf::XdgToplevelV6::handle_tiled_edges(Flags<MirTiledEdge> /*tiled_edges*/)
+{
+    // Tiled edges are not supported
 }
 
 void mf::XdgToplevelV6::handle_close_request()

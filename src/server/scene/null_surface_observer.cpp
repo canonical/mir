@@ -40,3 +40,5 @@ void ms::NullSurfaceObserver::application_id_set_to(Surface const*, std::string 
 void ms::NullSurfaceObserver::entered_output(Surface const*, graphics::DisplayConfigurationOutputId const&) {}
 void ms::NullSurfaceObserver::left_output(Surface const*, graphics::DisplayConfigurationOutputId const&) {}
 void ms::NullSurfaceObserver::rescale_output(Surface const*, graphics::DisplayConfigurationOutputId const&){}
+void ms::NullSurfaceObserver::tiled_edges(Surface const*, Flags<MirTiledEdge>) {}
+

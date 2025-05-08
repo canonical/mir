@@ -27,6 +27,8 @@ add_library(mir-protected-test-doubles OBJECT
   ${PROJECT_SOURCE_DIR}/tests/include/mir/test/doubles/stub_gl_rendering_provider.h
   ${PROJECT_SOURCE_DIR}/tests/include/mir/test/doubles/mock_gl_rendering_provider.h
   ${PROJECT_SOURCE_DIR}/tests/include/mir/test/doubles/mock_output_surface.h
+  stub_notifying_alarm.cpp
+  queued_alarm_stub_main_loop.cpp
 )
 
 target_link_libraries(mir-protected-test-doubles

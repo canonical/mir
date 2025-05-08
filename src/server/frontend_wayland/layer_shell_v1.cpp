@@ -189,6 +189,7 @@ private:
         std::optional<geometry::Point> const& /*new_top_left*/,
         geometry::Size const& /*new_size*/) override;
     void handle_close_request() override;
+    void handle_tiled_edges(Flags<MirTiledEdge> /*tiled_edges*/) override {}
     void surface_destroyed() override;
 
     void destroy_role() const override

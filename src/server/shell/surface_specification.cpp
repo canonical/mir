@@ -155,6 +155,8 @@ void msh::SurfaceSpecification::update_from(SurfaceSpecification const& that)
         focus_mode = that.focus_mode;
     if (that.visible_on_lock_screen.is_set())
         visible_on_lock_screen = that.visible_on_lock_screen;
+    if (that.tiled_edges.is_set())
+        tiled_edges = that.tiled_edges;
 }
 
 bool msh::operator==(
@@ -205,7 +207,8 @@ bool msh::operator==(
         lhs.application_id == rhs.application_id &&
         lhs.server_side_decorated == rhs.server_side_decorated &&
         lhs.focus_mode == rhs.focus_mode &&
-        lhs.visible_on_lock_screen == rhs.visible_on_lock_screen;
+        lhs.visible_on_lock_screen == rhs.visible_on_lock_screen &&
+        lhs.tiled_edges == rhs.tiled_edges;
 }
 
 bool msh::operator!=(
