@@ -366,9 +366,9 @@ void mgc::MappableBackedShmBuffer::bind()
 {
     mgc::ShmBuffer::bind();
     std::lock_guard lock{uploaded_mutex};
-    auto mapping = data->map_readable();
     if (!uploaded)
     {
+        auto mapping = data->map_readable();
         upload_to_texture(mapping->data(), mapping->stride());
         uploaded = true;
     }
