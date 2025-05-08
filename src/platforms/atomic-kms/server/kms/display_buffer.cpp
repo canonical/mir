@@ -320,7 +320,7 @@ auto drm_fb_id_from_dma_buffer(
     // Note that we capture `gbm_bo` so that its lifetime matches that of the fb_id
     auto fb_id = std::shared_ptr<uint32_t>{
         new uint32_t{0},
-        [drm_fd, gbm_bo](uint32_t* fb_id)
+        [drm_fd, gbm_bo, buffer](uint32_t* fb_id)
         {
             if (*fb_id)
                 drmModeRmFB(drm_fd, *fb_id);
