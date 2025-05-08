@@ -29,6 +29,7 @@
 #include <mir/compositor/buffer_stream.h>
 #include <mir/log.h>
 #include <mir/graphics/default_display_configuration_policy.h>
+#include <mir/graphics/null_display_configuration_observer.h>
 #include <mir/shell/shell.h>
 #include <linux/input.h>
 
@@ -119,18 +120,56 @@ CreateSurfaceSpecFunc create_bottom_attached()
         return spec;
     };
 }
+
+class DisplayConfigurationObserver : public mg::NullDisplayConfigurationObserver
+{
+public:
+    void initial_configuration(std::shared_ptr<mg::DisplayConfiguration const> const& /*config*/) override
+    {
+        std::lock_guard lock(mutex);
+        if (!is_ready)
+        {
+            is_ready = true;
+            condition_variable.notify_one();
+        }
+    }
+
+    void wait_for_ready()
+    {
+        std::unique_lock lock(mutex);
+        condition_variable.wait(lock, [this] { return is_ready; });
+    }
+
+private:
+    std::mutex mutex;
+    std::condition_variable condition_variable;
+    bool is_ready = false;
+};
 }
 
 class MinimalWindowManagerTest : public mir_test_framework::WindowManagementTestHarness
 {
 public:
-    MinimalWindowManagerTest() : WindowManagementTestHarness()
+    MinimalWindowManagerTest()
+        : WindowManagementTestHarness(),
+          display_configuration_observer(std::make_shared<DisplayConfigurationObserver>())
     {
         server.wrap_display_configuration_policy([&](std::shared_ptr<mg::DisplayConfigurationPolicy> const&)
             -> std::shared_ptr<mg::DisplayConfigurationPolicy>
         {
             return std::make_shared<mir::graphics::SideBySideDisplayConfigurationPolicy>();
         });
+
+        server.add_init_callback([&]
+        {
+            server.the_display_configuration_observer_registrar()->register_interest(display_configuration_observer);
+        });
+    }
+
+    void SetUp() override
+    {
+        WindowManagementTestHarness::SetUp();
+        display_configuration_observer->wait_for_ready();
     }
 
     auto get_builder() -> mir_test_framework::WindowManagementPolicyBuilder override
@@ -153,6 +192,8 @@ public:
     {
         return miral::FocusStealing::allow;
     }
+
+    std::shared_ptr<DisplayConfigurationObserver> display_configuration_observer;
 };
 
 TEST_F(MinimalWindowManagerTest, new_window_has_focus)
