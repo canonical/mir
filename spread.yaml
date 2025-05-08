@@ -24,7 +24,8 @@ environment:
     RELEASE: noble
     RELEASE/ubuntu: noble
     RELEASE/ubuntu_oracular: oracular
-    RELEASE/ubuntu_devel: plucky
+    RELEASE/ubuntu_plucky: plucky
+    RELEASE/ubuntu_devel: questing
     RELEASE/debian_sid: sid
     PROPOSED: false
     PROPOSED/ubuntu_proposed: true

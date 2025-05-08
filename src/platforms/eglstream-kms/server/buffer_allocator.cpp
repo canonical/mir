@@ -733,7 +733,8 @@ mge::GLRenderingProvider::~GLRenderingProvider() = default;
 auto mir::graphics::eglstream::GLRenderingProvider::as_texture(std::shared_ptr<Buffer> buffer)
     -> std::shared_ptr<gl::Texture>
 {
-    return std::dynamic_pointer_cast<gl::Texture>(std::move(buffer));
+    std::shared_ptr<NativeBufferBase> native_buffer{buffer, buffer->native_buffer_base()};
+    return std::dynamic_pointer_cast<gl::Texture>(std::move(native_buffer));
 }
 
 auto mge::GLRenderingProvider::surface_for_sink(

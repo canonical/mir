@@ -1204,7 +1204,7 @@ void mg::DMABufEGLProvider::validate_import(DMABufBuffer const& dma_buf)
     }
 }
 
-auto mg::DMABufEGLProvider::as_texture(std::shared_ptr<Buffer> buffer)
+auto mg::DMABufEGLProvider::as_texture(std::shared_ptr<NativeBufferBase> buffer)
     -> std::shared_ptr<gl::Texture>
 {
     if (auto dmabuf_tex = std::dynamic_pointer_cast<DmabufTexBuffer>(buffer))
