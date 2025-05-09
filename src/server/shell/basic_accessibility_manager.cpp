@@ -17,10 +17,12 @@
 #include "basic_accessibility_manager.h"
 #include "mouse_keys_transformer.h"
 #include "basic_simulated_secondary_click_transformer.h"
+#include "slow_keys_transformer.h"
 
 #include "mir/graphics/cursor.h"
 #include "mir/input/input_device_registry.h"
 #include "mir/shell/keyboard_helper.h"
+#include "mir/flags.h"
 
 #include <xkbcommon/xkbcommon-keysyms.h>
 
@@ -28,6 +30,7 @@
 #include <memory>
 #include <optional>
 
+#include "mir/log.h"
 void mir::shell::BasicAccessibilityManager::register_keyboard_helper(std::shared_ptr<KeyboardHelper> const& helper)
 {
     mutable_state.lock()->keyboard_helpers.push_back(helper);
@@ -88,14 +91,21 @@ mir::shell::BasicAccessibilityManager::BasicAccessibilityManager(
     std::shared_ptr<mir::graphics::Cursor> const& cursor,
     std::shared_ptr<shell::MouseKeysTransformer> const& mousekeys_transformer,
     std::shared_ptr<SimulatedSecondaryClickTransformer> const& simulated_secondary_click_transformer,
-    std::shared_ptr<input::InputDeviceRegistry> const& input_device_registry) :
+    std::shared_ptr<input::InputDeviceRegistry> const& input_device_registry,
+    std::shared_ptr<SlowKeysTransformer> const& slow_keys_transformer) :
     enable_key_repeat{enable_key_repeat},
     cursor{cursor},
     event_transformer{event_transformer},
     input_device_registry{input_device_registry},
     mouse_keys_transformer{mousekeys_transformer},
-    simulated_secondary_click_transformer{simulated_secondary_click_transformer}
+    simulated_secondary_click_transformer{simulated_secondary_click_transformer},
+    slow_keys_transformer{slow_keys_transformer}
 {
+    slow_keys_transformer->on_key_down([](auto keysym){ mir::log_debug("down: %d", keysym); });
+    slow_keys_transformer->on_key_rejected([](auto keysym){ mir::log_debug("rejected: %d", keysym); });
+    slow_keys_transformer->on_key_accepted([](auto keysym){ mir::log_debug("accepted: %d", keysym); });
+
+    event_transformer->append(slow_keys_transformer);
 }
 
 mir::shell::BasicAccessibilityManager::~BasicAccessibilityManager()
