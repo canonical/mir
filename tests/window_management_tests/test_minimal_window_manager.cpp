@@ -1438,6 +1438,9 @@ TEST_F(MinimalWindowManagerTest, maximized_window_respects_output_unused)
     auto const window = this->create_window(app, spec);
 
     auto new_output_configs = this->get_initial_output_configs();
+    EXPECT_THAT(window.top_left(), Eq(new_output_configs[0].extents().top_left));   // DEBUG
+    EXPECT_THAT(window.size(), Eq(new_output_configs[0].extents().size));           // DEBUG
+
     new_output_configs[0].used = false;
     update_outputs(new_output_configs);
     geom::Rectangle const window_rect(window.top_left(), window.size());
@@ -1454,6 +1457,9 @@ TEST_F(MinimalWindowManagerTest, maximized_window_respects_output_disconnected)
     auto const window = this->create_window(app, spec);
 
     auto new_output_configs = this->get_initial_output_configs();
+    EXPECT_THAT(window.top_left(), Eq(new_output_configs[0].extents().top_left));   // DEBUG
+    EXPECT_THAT(window.size(), Eq(new_output_configs[0].extents().size));           // DEBUG
+
     new_output_configs[0].connected = false;
     update_outputs(new_output_configs);
 
