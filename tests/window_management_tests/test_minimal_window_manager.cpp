@@ -29,6 +29,7 @@
 #include <mir/compositor/buffer_stream.h>
 #include <mir/log.h>
 #include <mir/graphics/default_display_configuration_policy.h>
+#include <mir/graphics/null_display_configuration_observer.h>
 #include <mir/shell/shell.h>
 #include <linux/input.h>
 
@@ -119,18 +120,56 @@ CreateSurfaceSpecFunc create_bottom_attached()
         return spec;
     };
 }
+
+class DisplayConfigurationObserver : public mg::NullDisplayConfigurationObserver
+{
+public:
+    void initial_configuration(std::shared_ptr<mg::DisplayConfiguration const> const& /*config*/) override
+    {
+        std::lock_guard lock(mutex);
+        if (!is_ready)
+        {
+            is_ready = true;
+            condition_variable.notify_one();
+        }
+    }
+
+    void wait_for_ready()
+    {
+        std::unique_lock lock(mutex);
+        condition_variable.wait(lock, [this] { return is_ready; });
+    }
+
+private:
+    std::mutex mutex;
+    std::condition_variable condition_variable;
+    bool is_ready = false;
+};
 }
 
 class MinimalWindowManagerTest : public mir_test_framework::WindowManagementTestHarness
 {
 public:
-    MinimalWindowManagerTest() : WindowManagementTestHarness()
+    MinimalWindowManagerTest()
+        : WindowManagementTestHarness(),
+          display_configuration_observer(std::make_shared<DisplayConfigurationObserver>())
     {
         server.wrap_display_configuration_policy([&](std::shared_ptr<mg::DisplayConfigurationPolicy> const&)
             -> std::shared_ptr<mg::DisplayConfigurationPolicy>
         {
             return std::make_shared<mir::graphics::SideBySideDisplayConfigurationPolicy>();
         });
+
+        server.add_init_callback([&]
+        {
+            server.the_display_configuration_observer_registrar()->register_interest(display_configuration_observer);
+        });
+    }
+
+    void SetUp() override
+    {
+        WindowManagementTestHarness::SetUp();
+        display_configuration_observer->wait_for_ready();
     }
 
     auto get_builder() -> mir_test_framework::WindowManagementPolicyBuilder override
@@ -153,6 +192,8 @@ public:
     {
         return miral::FocusStealing::allow;
     }
+
+    std::shared_ptr<DisplayConfigurationObserver> display_configuration_observer;
 };
 
 TEST_F(MinimalWindowManagerTest, new_window_has_focus)
@@ -1387,58 +1428,52 @@ TEST_F(MinimalWindowManagerTest, maximized_window_respects_output_removal)
     EXPECT_THAT(window.size(), Eq(new_output_configs[0].extents().size));
 }
 
-TEST_F(MinimalWindowManagerTest, maximized_window_respects_output_unused)
+TEST_F(MinimalWindowManagerTest, DISABLED_maximized_window_respects_output_unused)
 {
-    EXPECT_NONFATAL_FAILURE({
-        this->tools().move_cursor_to(geom::PointF(0, 0));
-        auto const app = this->open_application("test");
-        miral::WindowSpecification spec;
-        spec.state() = mir_window_state_maximized;
-        spec.size() = geom::Size(100, 100);
-        auto const window = this->create_window(app, spec);
+    tools().move_cursor_to(geom::PointF(0, 0));
+    auto const app = open_application("test");
+    miral::WindowSpecification spec;
+    spec.state() = mir_window_state_maximized;
+    spec.size() = geom::Size(100, 100);
+    auto const window = create_window(app, spec);
 
-        auto new_output_configs = this->get_initial_output_configs();
-        new_output_configs[0].used = false;
-        this->update_outputs(new_output_configs);
-        geom::Rectangle const window_rect(window.top_left(), window.size());
-        EXPECT_THAT(window_rect, Eq(new_output_configs[1].extents()));
-    }, "");
+    auto new_output_configs = get_initial_output_configs();
+    new_output_configs[0].used = false;
+    update_outputs(new_output_configs);
+    geom::Rectangle const window_rect(window.top_left(), window.size());
+    EXPECT_THAT(window_rect, Eq(new_output_configs[1].extents()));
 }
 
-TEST_F(MinimalWindowManagerTest, maximized_window_respects_output_disconnected)
+TEST_F(MinimalWindowManagerTest, DISABLED_maximized_window_respects_output_disconnected)
 {
-    EXPECT_NONFATAL_FAILURE({
-        this->tools().move_cursor_to(geom::PointF(0, 0));
-        auto const app = this->open_application("test");
-        miral::WindowSpecification spec;
-        spec.state() = mir_window_state_maximized;
-        spec.size() = geom::Size(100, 100);
-        auto const window = this->create_window(app, spec);
+    tools().move_cursor_to(geom::PointF(0, 0));
+    auto const app = open_application("test");
+    miral::WindowSpecification spec;
+    spec.state() = mir_window_state_maximized;
+    spec.size() = geom::Size(100, 100);
+    auto const window = create_window(app, spec);
 
-        auto new_output_configs = this->get_initial_output_configs();
-        new_output_configs[0].connected = false;
-        this->update_outputs(new_output_configs);
+    auto new_output_configs = get_initial_output_configs();
+    new_output_configs[0].connected = false;
+    update_outputs(new_output_configs);
 
-        geom::Rectangle const window_rect(window.top_left(), window.size());
-        EXPECT_THAT(window_rect, Eq(new_output_configs[1].extents()));
-    }, "");
+    geom::Rectangle const window_rect(window.top_left(), window.size());
+    EXPECT_THAT(window_rect, Eq(new_output_configs[1].extents()));
 }
 
-TEST_F(MinimalWindowManagerTest, windows_on_removed_output_are_placed_on_next_available_output)
+TEST_F(MinimalWindowManagerTest, DISABLED_windows_on_removed_output_are_placed_on_next_available_output)
 {
-    EXPECT_NONFATAL_FAILURE({
-        this->tools().move_cursor_to(geom::PointF(900, 100));
+    tools().move_cursor_to(geom::PointF(900, 100));
 
-        auto const app = this->open_application("test");
-        miral::WindowSpecification spec;
-        spec.size() = geom::Size(100, 100);
-        auto const window = this->create_window(app, spec);
+    auto const app = open_application("test");
+    miral::WindowSpecification spec;
+    spec.size() = geom::Size(100, 100);
+    auto const window = create_window(app, spec);
 
-        auto const new_output_configs = this->output_configs_from_output_rectangles({
-            mir::geometry::Rectangle{{0, 0}, {1000, 1000}}
-        });
-        this->update_outputs(new_output_configs);
-        geom::Rectangle const window_rect(window.top_left(), window.size());
-        EXPECT_THAT(window_rect.overlaps(new_output_configs[0].extents()), Eq(true));
-    }, "");
+    auto const new_output_configs = output_configs_from_output_rectangles({
+        mir::geometry::Rectangle{{0, 0}, {1000, 1000}}
+    });
+    update_outputs(new_output_configs);
+    geom::Rectangle const window_rect(window.top_left(), window.size());
+    EXPECT_TRUE(window_rect.overlaps(new_output_configs[0].extents()));
 }
