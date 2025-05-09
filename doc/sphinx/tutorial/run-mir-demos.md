@@ -1,33 +1,35 @@
-# Getting started with Mir
+# Run Mir Demos
 
-This tutorial will guide you through Mir's basic functionality. 
+This tutorial will guide you through installing Mir demos and running them
+in a variety of different contexts.
 
-By the end of the tutorial, you will install and run a demo application, learn how to use Mir in different environments, and learn about features that Mir provides for Mir-based compositors. 
+By the end of the tutorial, you will install and run a demo application, learn how to use Mir in different environments,
+and learn about features that Mir provides for Mir-based compositors. 
 
-If you are unfamiliar with Mir, start with this tutorial, and then proceed to a [developer tutorial](write-your-first-wayland-compositor.md) which will guide you through the process of writing a compositor.
-
+If you are unfamiliar with Mir, start with this tutorial and then proceed to a [developer tutorial](write-your-first-wayland-compositor.md)
+which will guide you through the process of writing a compositor.
 
 ## Installing demo applications
 Mir demos are available on Debian derivatives, Fedora, and Alpine. For distros
 that don't have pre-built binaries, examples can be built from source.
 
-### On Debian and its derivatives
+### Ubuntu/Debian
 
 ```sh
 sudo apt install mir-demos mir-graphics-drivers-desktop
 ```
 
-### On Fedora
+### Fedora
 ```sh
 sudo dnf install mir-demos
 ```
 
-### On Alpine
+### Alpine
 ```sh
 sudo apk add mir-demos mir
 ```
 
-### On Arch Linux (AUR)
+### Arch Linux (AUR)
 ```
 https://aur.archlinux.org/packages/mir
 ```
