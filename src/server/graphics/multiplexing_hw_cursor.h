@@ -34,6 +34,8 @@ public:
 
     void scale(float) override;
 
+    bool is(std::shared_ptr<Renderable> const& renderable) const override;
+
 private:
     std::vector<std::shared_ptr<Cursor>> const platform_cursors;
 };

@@ -65,6 +65,7 @@ add_library(miral-external OBJECT
     idle_listener.cpp                   ${miral_include}/miral/idle_listener.h
     input_configuration.cpp             ${miral_include}/miral/input_configuration.h
     keymap.cpp                          ${miral_include}/miral/keymap.h
+    magnification.cpp                   ${miral_include}/miral/magnification.h
     minimal_window_manager.cpp          ${miral_include}/miral/minimal_window_manager.h
     display_configuration_option.cpp    ${miral_include}/miral/display_configuration_option.h
     output.cpp                          ${miral_include}/miral/output.h

@@ -78,6 +78,8 @@ struct HiddenCursorWrapper : mg::Cursor
 
     void scale(float new_scale) override { wrapped->scale(new_scale); }
 
+    bool is(std::shared_ptr<mir::graphics::Renderable> const& renderable) const override { return wrapped->is(renderable); }
+
 private:
     std::shared_ptr<mg::Cursor> const wrapped;
 };

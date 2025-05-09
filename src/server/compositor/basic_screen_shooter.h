@@ -33,6 +33,10 @@ namespace renderer
 class Renderer;
 class RendererFactory;
 }
+namespace graphics
+{
+class Cursor;
+}
 namespace compositor
 {
 class Scene;
@@ -47,11 +51,25 @@ public:
         std::span<std::shared_ptr<graphics::GLRenderingProvider>> const& providers,
         std::shared_ptr<renderer::RendererFactory> render_factory,
         std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
-        std::shared_ptr<mir::graphics::GLConfig> const& config);
+        std::shared_ptr<mir::graphics::GLConfig> const& config,
+        std::shared_ptr<graphics::Cursor> const& cursor);
 
     void capture(
         std::shared_ptr<renderer::software::WriteMappableBuffer> const& buffer,
         geometry::Rectangle const& area,
+        std::function<void(std::optional<time::Timestamp>)>&& callback) override;
+
+    void capture_with_cursor(
+        std::shared_ptr<renderer::software::WriteMappableBuffer> const& buffer,
+        geometry::Rectangle const& area,
+        bool with_cursor,
+        std::function<void(std::optional<time::Timestamp>)>&& callback) override;
+
+    void capture_with_filter(
+        std::shared_ptr<renderer::software::WriteMappableBuffer> const& buffer,
+        geometry::Rectangle const& area,
+        std::function<bool(std::shared_ptr<SceneElement const> const&)> const& filter,
+        bool with_cursor,
         std::function<void(std::optional<time::Timestamp>)>&& callback) override;
 
 private:
@@ -64,11 +82,14 @@ private:
             std::shared_ptr<time::Clock> const& clock,
             std::shared_ptr<graphics::GLRenderingProvider> provider,
             std::shared_ptr<renderer::RendererFactory> render_factory,
-            std::shared_ptr<mir::graphics::GLConfig> const& config);
+            std::shared_ptr<mir::graphics::GLConfig> const& config,
+            std::shared_ptr<graphics::Cursor> const& cursor);
 
         auto render(
             std::shared_ptr<renderer::software::WriteMappableBuffer> const& buffer,
-            geometry::Rectangle const& area) -> time::Timestamp;
+            geometry::Rectangle const& area,
+            std::function<bool(std::shared_ptr<SceneElement const> const&)> const& filter,
+            bool with_cursor) -> time::Timestamp;
 
         auto renderer_for_buffer(std::shared_ptr<renderer::software::WriteMappableBuffer> buffer)
             -> renderer::Renderer&;
@@ -89,6 +110,7 @@ private:
         std::unique_ptr<graphics::DisplaySink> offscreen_sink;
         std::shared_ptr<OneShotBufferDisplayProvider> const output;
         std::shared_ptr<mir::graphics::GLConfig> config;
+        std::shared_ptr<graphics::Cursor> cursor;
     };
     std::shared_ptr<Self> const self;
     Executor& executor;

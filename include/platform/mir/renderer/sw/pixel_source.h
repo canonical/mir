@@ -145,6 +145,9 @@ public:
 auto as_read_mappable_buffer(
     std::shared_ptr<graphics::Buffer> const& buffer) -> std::shared_ptr<ReadMappableBuffer>;
 
+auto as_write_mappable_buffer(
+    std::shared_ptr<graphics::Buffer> const& buffer) -> std::shared_ptr<WriteMappableBuffer>;
+
 auto alloc_buffer_with_content(
     graphics::GraphicBufferAllocator& allocator,
     unsigned char const* content,

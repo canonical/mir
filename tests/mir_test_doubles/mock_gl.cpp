@@ -358,6 +358,14 @@ void glTexImage2D(GLenum target, GLint level, GLint internalformat,
     global_mock_gl->glTexImage2D(target, level, internalformat, width, height, border, format, type, pixels);
 }
 
+void glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
+                     GLsizei width, GLsizei height, GLenum format,
+                     GLenum type, const GLvoid* pixels)
+{
+    CHECK_GLOBAL_VOID_MOCK();
+    global_mock_gl->glTexSubImage2D(target, level, xoffset, yoffset, width, height, format, type, pixels);
+}
+
 void glGenFramebuffers(GLsizei n, GLuint *framebuffers)
 {
     CHECK_GLOBAL_VOID_MOCK();

@@ -73,3 +73,8 @@ void mir::graphics::MultiplexingCursor::scale(float new_scale)
         cursor->scale(new_scale);
 }
 
+bool mir::graphics::MultiplexingCursor::is(std::shared_ptr<Renderable> const&) const
+{
+    return false;
+}
+

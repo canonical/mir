@@ -40,6 +40,7 @@ public:
     MOCK_METHOD(void, mousekeys_keymap, (mir::input::MouseKeysKeymap const& new_keymap), (override));
     MOCK_METHOD(void, acceleration_factors, (double constant, double linear, double quadratic), (override));
     MOCK_METHOD(void, max_speed, (double x_axis, double y_axis), (override));
+    MOCK_METHOD(std::shared_ptr<mir::shell::MagnificationManager> const&, magnification_manager, (), (const override));
 };
 
 struct TestMouseKeysConfig : miral::TestServer
