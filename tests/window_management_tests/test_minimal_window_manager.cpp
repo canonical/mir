@@ -134,10 +134,20 @@ public:
         }
     }
 
+    void configuration_applied(const std::shared_ptr<mir::graphics::DisplayConfiguration const>&) override
+    {
+        std::lock_guard lock(mutex);
+        if (!is_ready)
+        {
+            is_ready = true;
+        }
+    }
+
     void wait_for_ready()
     {
         std::unique_lock lock(mutex);
         condition_variable.wait(lock, [this] { return is_ready; });
+        is_ready = false;
     }
 
 private:
@@ -154,6 +164,7 @@ public:
         : WindowManagementTestHarness(),
           display_configuration_observer(std::make_shared<DisplayConfigurationObserver>())
     {
+        add_to_environment("MIR_SERVER_WINDOW_MANAGEMENT_TRACE", "1");
         server.wrap_display_configuration_policy([&](std::shared_ptr<mg::DisplayConfigurationPolicy> const&)
             -> std::shared_ptr<mg::DisplayConfigurationPolicy>
         {
