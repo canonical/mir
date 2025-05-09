@@ -15,6 +15,7 @@
  */
 
 #include "miral/minimal_window_manager.h"
+#include "miral/simulated_secondary_click.h"
 #include "tiling_window_manager.h"
 #include "floating_window_manager.h"
 #include "wallpaper_config.h"
@@ -34,6 +35,9 @@
 #include <miral/x11_support.h>
 #include <miral/wayland_extensions.h>
 #include <miral/mousekeys_config.h>
+
+#define MIR_LOG_COMPONENT "miral-shell"
+#include <mir/log.h>
 
 #include <xkbcommon/xkbcommon-keysyms.h>
 
@@ -172,6 +176,11 @@ int main(int argc, char const* argv[])
         return false;
     };
 
+    auto const ssc_config = miral::SimulatedSecondaryClick{false}
+                                .displacement_threshold(30)
+                                .hold_duration(std::chrono::milliseconds{2000})
+                                .on_secondary_click([] { mir::log_info("Simulated secondary click dispatched!"); });
+
     return runner.run_with(
         {
             CursorTheme{"default:DMZ-White"},
@@ -194,6 +203,7 @@ int main(int argc, char const* argv[])
             ConfigurationOption{[&](std::string const& cmd) { terminal_cmd = cmd; },
                                 "shell-terminal-emulator", "terminal emulator to use", terminal_cmd},
             mousekeys_config,
-            AppendEventFilter{toggle_mousekeys_filter}
+            AppendEventFilter{toggle_mousekeys_filter},
+            ssc_config
         });
 }

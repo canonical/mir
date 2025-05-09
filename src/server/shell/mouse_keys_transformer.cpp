@@ -62,7 +62,8 @@ mir::shell::BasicMouseKeysTransformer::BasicMouseKeysTransformer(
 bool mir::shell::BasicMouseKeysTransformer::transform_input_event(
     mir::input::InputEventTransformer::EventDispatcher const& dispatcher,
     mir::input::EventBuilder* builder,
-    MirEvent const& event)
+    MirEvent const& event,
+    MirInputDeviceId)
 {
     if (mir_event_get_type(&event) != mir_event_type_input)
         return false;

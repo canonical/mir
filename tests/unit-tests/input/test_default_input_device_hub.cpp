@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "mir/input/event_filter.h"
 #include "src/server/input/default_input_device_hub.h"
 
 #include "mir/test/doubles/mock_input_device.h"
@@ -63,6 +64,14 @@ MATCHER_P(WithName, name,
 {
     return const_ref(arg).name() == name;
 }
+
+class StubAccessibilityFilter : public mir::input::EventFilter
+{
+    bool handle(MirEvent const&) override
+    {
+        return false;
+    }
+};
 }
 
 struct InputDeviceHubTest : ::testing::Test
@@ -79,7 +88,8 @@ struct InputDeviceHubTest : ::testing::Test
         mt::fake_shared(clock),
         mt::fake_shared(mock_key_mapper),
         mt::fake_shared(mock_server_status_listener),
-        mt::fake_shared(led_observer_registrar)};
+        mt::fake_shared(led_observer_registrar),
+        std::make_shared<StubAccessibilityFilter>()};
     NiceMock<mtd::MockInputDeviceObserver> mock_observer;
     NiceMock<mtd::MockInputDevice> device{"device","dev-1", mi::DeviceCapability::unknown};
     NiceMock<mtd::MockInputDevice> another_device{"another_device","dev-2", mi::DeviceCapability::keyboard};

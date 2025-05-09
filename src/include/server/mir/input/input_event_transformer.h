@@ -17,6 +17,8 @@
 #ifndef MIR_INPUT_INPUT_EVENT_TRANSFORMER_H_
 #define MIR_INPUT_INPUT_EVENT_TRANSFORMER_H_
 
+#include "mir/input/event_filter.h"
+#include "mir/input/seat.h"
 #include "mir_toolkit/events/event.h"
 
 #include <functional>
@@ -26,10 +28,15 @@
 
 namespace mir
 {
+class MainLoop;
 namespace input
 {
 class EventBuilder;
-class InputEventTransformer
+class VirtualInputDevice;
+class InputDeviceRegistry;
+class Device;
+class Seat;
+class InputEventTransformer : public EventFilter
 {
 public:
     using EventDispatcher = std::function<void(std::shared_ptr<MirEvent>)>;
@@ -42,23 +49,35 @@ public:
         // shouldn't be handled by later transformers, whether the transformer is
         // accumulating events for later dispatching or has immediately dispatched
         // an event is an implementation detail of the transformer
-        virtual bool transform_input_event(EventDispatcher const&, EventBuilder*,  MirEvent const&) = 0;
+        virtual bool transform_input_event(
+            EventDispatcher const&, EventBuilder*, MirEvent const&, MirInputDeviceId virtual_device_id) = 0;
     };
 
-    InputEventTransformer();
+    InputEventTransformer(std::shared_ptr<Seat> const &seat);
     ~InputEventTransformer();
+
+    void init(std::shared_ptr<InputDeviceRegistry> const& input_device_registry);
+
+    bool handle(MirEvent const& event) override;
 
     bool transform(
         MirEvent const& event,
         EventBuilder* builder,
-        EventDispatcher const& dispatcher);
+        EventDispatcher const& dispatcher,
+        MirInputDeviceId virtual_device_id);
 
-    void append(std::weak_ptr<Transformer> const&);
+    bool append(std::weak_ptr<Transformer> const&);
     bool remove(std::shared_ptr<Transformer> const&);
 
 private:
     std::mutex mutex;
     std::vector<std::weak_ptr<Transformer>> input_transformers;
+
+    std::shared_ptr<InputDeviceRegistry> input_device_registry{nullptr};
+    std::weak_ptr<Device> weak_device{};
+
+    std::shared_ptr<Seat> const seat;
+    std::shared_ptr<VirtualInputDevice> const virtual_device;
 };
 }
 }

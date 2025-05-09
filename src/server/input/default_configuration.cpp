@@ -106,9 +106,9 @@ mir::DefaultServerConfiguration::the_event_filter_chain_dispatcher()
 std::shared_ptr<mi::InputEventTransformer> mir::DefaultServerConfiguration::the_input_event_transformer()
 {
     return input_event_transformer(
-        []
+        [this]
         {
-            return std::make_shared<input::InputEventTransformer>();
+            return std::make_shared<input::InputEventTransformer>(the_seat());
         });
 }
 
@@ -287,13 +287,13 @@ std::shared_ptr<mi::Seat> mir::DefaultServerConfiguration::the_seat()
         [this]()
         {
             return std::make_shared<mi::BasicSeat>(
-                    the_input_dispatcher(),
-                    the_touch_visualizer(),
-                    the_cursor_listener(),
-                    the_display_configuration_observer_registrar(),
-                    the_key_mapper(),
-                    the_clock(),
-                    the_seat_observer());
+                the_input_dispatcher(),
+                the_touch_visualizer(),
+                the_cursor_listener(),
+                the_display_configuration_observer_registrar(),
+                the_key_mapper(),
+                the_clock(),
+                the_seat_observer());
         });
 }
 
@@ -319,18 +319,22 @@ std::shared_ptr<mi::DefaultInputDeviceHub> mir::DefaultServerConfiguration::the_
        {
            auto input_dispatcher = the_input_dispatcher();
            auto key_repeater = std::dynamic_pointer_cast<mi::KeyRepeatDispatcher>(input_dispatcher);
+           auto event_transformer = the_input_event_transformer();
            auto hub = std::make_shared<mi::DefaultInputDeviceHub>(
                the_seat(),
                the_input_reading_multiplexer(),
                the_clock(),
                the_key_mapper(),
                the_server_status_listener(),
-               the_led_observer_registrar());
+               the_led_observer_registrar(),
+               event_transformer);
 
            // lp:1675357: KeyRepeatDispatcher must be informed about removed input devices, otherwise
            // pressed keys get repeated indefinitely
            if (key_repeater)
                key_repeater->set_input_device_hub(hub);
+
+           event_transformer->init(hub);
            return hub;
        });
 }

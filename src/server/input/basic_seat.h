@@ -19,10 +19,7 @@
 
 #include "seat_input_device_tracker.h"
 #include "mir/input/seat.h"
-#include "mir/frontend/event_sink.h"
 #include "mir/observer_registrar.h"
-
-#include <mutex>
 
 namespace mir
 {
@@ -41,7 +38,7 @@ class CursorListener;
 class InputDispatcher;
 class KeyMapper;
 class SeatObserver;
-
+class EventFilter;
 class BasicSeat : public Seat
 {
 public:

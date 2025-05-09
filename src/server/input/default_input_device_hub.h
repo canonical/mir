@@ -59,6 +59,7 @@ class DefaultDevice;
 class Seat;
 class KeyMapper;
 class DefaultInputDeviceHub;
+class EventFilter;
 
 struct ExternalInputDeviceHub : InputDeviceHub
 {
@@ -88,7 +89,8 @@ public:
         std::shared_ptr<time::Clock> const& clock,
         std::shared_ptr<KeyMapper> const& key_mapper,
         std::shared_ptr<ServerStatusListener> const& server_status_listener,
-        std::shared_ptr<LedObserverRegistrar> led_observer_registrar);
+        std::shared_ptr<LedObserverRegistrar> led_observer_registrar,
+        std::shared_ptr<EventFilter> const& accessibility_event_filter);
 
     // InputDeviceRegistry - calls from mi::Platform
     auto add_device(std::shared_ptr<InputDevice> const& device) -> std::weak_ptr<Device> override;
@@ -121,6 +123,7 @@ private:
     std::shared_ptr<KeyMapper> const key_mapper;
     std::shared_ptr<ServerStatusListener> const server_status_listener;
     std::shared_ptr<LedObserverRegistrar> const led_observer_registrar;
+    std::shared_ptr<EventFilter> const accessibility_event_filter;
     ThreadSafeList<std::shared_ptr<InputDeviceObserver>> observers;
 
     /// Does not guarantee it's own threadsafety, non-const methods should not be called from multiple threads at once
@@ -132,7 +135,8 @@ private:
             MirInputDeviceId dev_id,
             std::shared_ptr<dispatch::ActionQueue> const& multiplexer,
             std::shared_ptr<time::Clock> const& clock,
-            std::shared_ptr<DefaultDevice> const& handle);
+            std::shared_ptr<DefaultDevice> const& handle,
+            std::shared_ptr<EventFilter> const& accessibility_event_filter);
         void handle_input(std::shared_ptr<MirEvent> const& event) override;
         geometry::Rectangle bounding_rectangle() const override;
         input::OutputInfo output_info(uint32_t output_id) const override;
@@ -150,6 +154,7 @@ private:
         std::unique_ptr<DefaultEventBuilder> builder;
         std::shared_ptr<time::Clock> const clock;
         std::shared_ptr<InputDevice> const device;
+        std::shared_ptr<EventFilter> const accessibility_event_filter;
         std::shared_ptr<dispatch::ActionQueue> queue;
     };
 

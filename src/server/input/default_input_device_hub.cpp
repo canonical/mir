@@ -17,6 +17,7 @@
 #include "default_input_device_hub.h"
 #include "default_device.h"
 
+#include "mir/input/event_filter.h"
 #include "mir/input/input_device.h"
 #include "mir/input/input_device_observer.h"
 #include "mir/input/mir_pointer_config.h"
@@ -202,7 +203,8 @@ mi::DefaultInputDeviceHub::DefaultInputDeviceHub(
     std::shared_ptr<time::Clock> const& clock,
     std::shared_ptr<mi::KeyMapper> const& key_mapper,
     std::shared_ptr<mir::ServerStatusListener> const& server_status_listener,
-    std::shared_ptr<LedObserverRegistrar> led_observer_registrar)
+    std::shared_ptr<LedObserverRegistrar> led_observer_registrar,
+    std::shared_ptr<EventFilter> const& accessibility_event_filter)
     : seat{seat},
       input_dispatchable{input_multiplexer},
       device_queue(std::make_shared<dispatch::ActionQueue>()),
@@ -210,6 +212,7 @@ mi::DefaultInputDeviceHub::DefaultInputDeviceHub(
       key_mapper(key_mapper),
       server_status_listener(server_status_listener),
       led_observer_registrar{std::move(led_observer_registrar)},
+      accessibility_event_filter{accessibility_event_filter},
       device_id_generator{0}
 {
     input_dispatchable->add_watch(device_queue);
@@ -488,7 +491,8 @@ auto mi::DefaultInputDeviceHub::add_device(std::shared_ptr<InputDevice> const& d
             handle->id(),
             queue,
             clock,
-            handle));
+            handle,
+            accessibility_event_filter));
 
         auto const& dev = devices.back();
         add_device_handle(lock, handle);
@@ -556,11 +560,13 @@ mi::DefaultInputDeviceHub::RegisteredDevice::RegisteredDevice(
     MirInputDeviceId device_id,
     std::shared_ptr<dispatch::ActionQueue> const& queue,
     std::shared_ptr<time::Clock> const& clock,
-    std::shared_ptr<mi::DefaultDevice> const& handle)
+    std::shared_ptr<mi::DefaultDevice> const& handle,
+    std::shared_ptr<mi::EventFilter> const& accessibility_event_filter)
     : handle(handle),
       device_id(device_id),
       clock(clock),
       device(dev),
+      accessibility_event_filter(accessibility_event_filter),
       queue(queue)
 {
 }
@@ -586,7 +592,8 @@ void mi::DefaultInputDeviceHub::RegisteredDevice::handle_input(std::shared_ptr<M
     if (!seat)
         return;
 
-    seat->dispatch_event(event);
+    if(!accessibility_event_filter->handle(*event))
+        seat->dispatch_event(event);
 }
 
 bool mi::DefaultInputDeviceHub::RegisteredDevice::device_matches(std::shared_ptr<InputDevice> const& dev) const

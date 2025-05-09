@@ -16,49 +16,17 @@
 
 #include "basic_accessibility_manager.h"
 #include "mouse_keys_transformer.h"
+#include "basic_simulated_secondary_click_transformer.h"
 
 #include "mir/graphics/cursor.h"
-#include "mir/input/composite_event_filter.h"
-#include "mir/input/event_filter.h"
 #include "mir/input/input_device_registry.h"
-#include "mir/input/input_event_transformer.h"
-#include "mir/input/input_sink.h"
-#include "mir/input/virtual_input_device.h"
-#include "mir/main_loop.h"
 #include "mir/shell/keyboard_helper.h"
 
 #include <xkbcommon/xkbcommon-keysyms.h>
 
+#include <algorithm>
 #include <memory>
 #include <optional>
-
-class mir::shell::BasicAccessibilityManager::MousekeyPointer : public mir::input::VirtualInputDevice, public input::EventFilter
-{
-public:
-    MousekeyPointer(std::shared_ptr<MainLoop> main_loop, std::shared_ptr<input::InputEventTransformer> iet) :
-        mir::input::VirtualInputDevice{"mousekey-pointer", mir::input::DeviceCapability::pointer},
-        main_loop{std::move(main_loop)},
-        iet{std::move(iet)}
-    {
-    }
-
-    bool handle(MirEvent const& event) override
-    {
-        auto handled = false;
-        if_started_then([this, &event, &handled](auto* sink, auto* builder)
-        {
-            handled = iet->transform(event, builder, [this, sink](auto event)
-                {
-                    main_loop->spawn([sink, event]{ sink->handle_input(event); });
-                });
-        });
-        return handled;
-    }
-
-private:
-    std::shared_ptr<MainLoop> const main_loop;
-    std::shared_ptr<input::InputEventTransformer> const iet;
-};
 
 void mir::shell::BasicAccessibilityManager::register_keyboard_helper(std::shared_ptr<KeyboardHelper> const& helper)
 {
@@ -100,49 +68,37 @@ void mir::shell::BasicAccessibilityManager::mousekeys_enabled(bool on)
 {
     if (on)
     {
-        main_loop->spawn([this]
+        if (event_transformer->append(mouse_keys_transformer))
         {
-            auto state = this->mutable_state.lock();
-            if (!state->mousekey_pointer)
-            {
-                state->mousekey_pointer = std::make_shared<MousekeyPointer>(main_loop, event_transformer);
-
-                event_transformer->append(transformer);
-                input_device_registry->add_device(state->mousekey_pointer);
-                the_composite_event_filter->prepend(state->mousekey_pointer);
-            }
-        });
+            mousekeys_on = true;
+        }
     }
     else
     {
-        main_loop->spawn([this]
+        if (event_transformer->remove(mouse_keys_transformer))
         {
-            auto state = this->mutable_state.lock();
-            if (state->mousekey_pointer)
-            {
-                input_device_registry->remove_device(state->mousekey_pointer);
-                event_transformer->remove(transformer);
-                state->mousekey_pointer.reset();
-            }
-        });
+            mousekeys_on = false;
+        }
     }
 }
 
 mir::shell::BasicAccessibilityManager::BasicAccessibilityManager(
-    std::shared_ptr<MainLoop> main_loop,
-    std::shared_ptr<input::CompositeEventFilter> the_composite_event_filter,
     std::shared_ptr<input::InputEventTransformer> const& event_transformer,
     bool enable_key_repeat,
     std::shared_ptr<mir::graphics::Cursor> const& cursor,
     std::shared_ptr<shell::MouseKeysTransformer> const& mousekeys_transformer,
+    std::shared_ptr<SimulatedSecondaryClickTransformer> const& simulated_secondary_click_transformer,
     std::shared_ptr<input::InputDeviceRegistry> const& input_device_registry) :
-    main_loop{std::move(main_loop)},
-    the_composite_event_filter{std::move(the_composite_event_filter)},
     enable_key_repeat{enable_key_repeat},
     cursor{cursor},
     event_transformer{event_transformer},
-    transformer{mousekeys_transformer},
-    input_device_registry{input_device_registry}
+    input_device_registry{input_device_registry},
+    mouse_keys_transformer{mousekeys_transformer},
+    simulated_secondary_click_transformer{simulated_secondary_click_transformer}
+{
+}
+
+mir::shell::BasicAccessibilityManager::~BasicAccessibilityManager()
 {
 }
 
@@ -153,15 +109,43 @@ void mir::shell::BasicAccessibilityManager::cursor_scale(float new_scale)
 
 void mir::shell::BasicAccessibilityManager::mousekeys_keymap(input::MouseKeysKeymap const& new_keymap)
 {
-    transformer->keymap(new_keymap);
+    mouse_keys_transformer->keymap(new_keymap);
 }
 
 void mir::shell::BasicAccessibilityManager::acceleration_factors(double constant, double linear, double quadratic)
 {
-    transformer->acceleration_factors(constant, linear, quadratic);
+    mouse_keys_transformer->acceleration_factors(constant, linear, quadratic);
 }
 
 void mir::shell::BasicAccessibilityManager::max_speed(double x_axis, double y_axis)
 {
-    transformer->max_speed(x_axis, y_axis);
+    mouse_keys_transformer->max_speed(x_axis, y_axis);
+}
+
+void mir::shell::BasicAccessibilityManager::simulated_secondary_click_enabled(bool enabled)
+{
+    if (enabled)
+    {
+        if (event_transformer->append(simulated_secondary_click_transformer))
+        {
+            ssc_on = true;
+
+            simulated_secondary_click_transformer->enabled();
+        }
+    }
+    else
+    {
+        if (event_transformer->remove(simulated_secondary_click_transformer))
+        {
+            ssc_on = false;
+
+            simulated_secondary_click_transformer->disabled();
+        }
+    }
+}
+
+auto mir::shell::BasicAccessibilityManager::simulated_secondary_click()
+    -> SimulatedSecondaryClickTransformer&
+{
+    return *simulated_secondary_click_transformer;
 }

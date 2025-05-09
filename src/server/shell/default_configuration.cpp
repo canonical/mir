@@ -16,13 +16,14 @@
 
 #include "mir/default_server_configuration.h"
 
+#include "basic_accessibility_manager.h"
 #include "basic_idle_handler.h"
 #include "decoration/basic_decoration.h"
 #include "decoration/basic_manager.h"
 #include "default_persistent_surface_store.h"
 #include "graphics_display_layout.h"
-#include "basic_accessibility_manager.h"
 #include "mouse_keys_transformer.h"
+#include "basic_simulated_secondary_click_transformer.h"
 
 #include "mir/abnormal_exit.h"
 #include "mir/input/composite_event_filter.h"
@@ -191,12 +192,11 @@ auto mir::DefaultServerConfiguration::the_accessibility_manager() -> std::shared
         [this]
         {
             return std::make_shared<shell::BasicAccessibilityManager>(
-                the_main_loop(),
-                the_composite_event_filter(),
                 the_input_event_transformer(),
                 the_options()->get<bool>(mir::options::enable_key_repeat_opt),
                 the_cursor(),
                 std::make_shared<shell::BasicMouseKeysTransformer>(the_main_loop(), the_clock()),
+                std::make_shared<shell::BasicSimulatedSecondaryClickTransformer>(the_main_loop()),
                 the_input_device_registry());
         });
 }
