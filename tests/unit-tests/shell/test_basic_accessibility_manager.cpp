@@ -121,7 +121,8 @@ struct TestBasicAccessibilityManager : Test
             std::make_shared<mir::test::doubles::StubCursor>(),
             mock_mousekeys_transformer,
             mock_simulated_secondary_click_transformer,
-            mt::fake_shared(input_device_registry)}
+            mt::fake_shared(input_device_registry),
+            nullptr}
     {
         basic_accessibility_manager.register_keyboard_helper(mock_key_helper);
         input_event_transformer.init(mt::fake_shared(input_device_registry));

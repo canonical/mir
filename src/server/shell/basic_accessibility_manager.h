@@ -46,7 +46,7 @@ class Clock;
 namespace shell
 {
 class MouseKeysTransformer;
-
+class SlowKeysTransformer;
 class BasicAccessibilityManager : public AccessibilityManager
 {
 public:
@@ -56,7 +56,8 @@ public:
         std::shared_ptr<mir::graphics::Cursor> const& cursor,
         std::shared_ptr<shell::MouseKeysTransformer> const& mousekeys_transformer,
         std::shared_ptr<SimulatedSecondaryClickTransformer> const& simulated_secondary_click_transformer,
-        std::shared_ptr<input::InputDeviceRegistry> const& input_device_hub);
+        std::shared_ptr<input::InputDeviceRegistry> const& input_device_hub,
+        std::shared_ptr<SlowKeysTransformer> const& slow_keys_transformer);
 
     ~BasicAccessibilityManager() override;
 
@@ -91,9 +92,9 @@ private:
     std::shared_ptr<graphics::Cursor> const cursor;
     std::shared_ptr<mir::input::InputEventTransformer> const event_transformer;
     std::shared_ptr<mir::input::InputDeviceRegistry> const input_device_registry;
-
     std::shared_ptr<mir::shell::MouseKeysTransformer> const mouse_keys_transformer;
     std::shared_ptr<SimulatedSecondaryClickTransformer> const simulated_secondary_click_transformer;
+    std::shared_ptr<SlowKeysTransformer> const slow_keys_transformer;
 
     bool mousekeys_on{false}, ssc_on{false};
 };
