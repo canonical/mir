@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "miral/bounce_keys.h"
 #include "miral/minimal_window_manager.h"
 #include "tiling_window_manager.h"
 #include "floating_window_manager.h"
@@ -34,6 +35,9 @@
 #include <miral/x11_support.h>
 #include <miral/wayland_extensions.h>
 #include <miral/mousekeys_config.h>
+
+#define MIR_LOG_COMPONENT "miral-shell"
+#include <mir/log.h>
 
 #include <xkbcommon/xkbcommon-keysyms.h>
 
@@ -172,6 +176,10 @@ int main(int argc, char const* argv[])
         return false;
     };
 
+    auto bounce_keys =
+        miral::BounceKeys{true}.on_press_rejected([](auto keysym) { mir::log_info("Keysym rejected: %d", keysym); });
+
+    bounce_keys.enable();
     return runner.run_with(
         {
             CursorTheme{"default:DMZ-White"},
@@ -194,6 +202,7 @@ int main(int argc, char const* argv[])
             ConfigurationOption{[&](std::string const& cmd) { terminal_cmd = cmd; },
                                 "shell-terminal-emulator", "terminal emulator to use", terminal_cmd},
             mousekeys_config,
-            AppendEventFilter{toggle_mousekeys_filter}
+            AppendEventFilter{toggle_mousekeys_filter},
+            bounce_keys
         });
 }
