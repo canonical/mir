@@ -32,6 +32,7 @@ struct MockRenderer : public renderer::Renderer
 {
     MOCK_METHOD(void, set_viewport, (geometry::Rectangle const&));
     MOCK_METHOD(void, set_output_transform, (glm::mat2 const&));
+    MOCK_METHOD(void, set_output_filter, (MirOutputFilter filter));
     MOCK_METHOD(std::unique_ptr<graphics::Framebuffer>, render, (graphics::RenderableList const&), (const override));
     MOCK_METHOD(void, suspend, ());
 
