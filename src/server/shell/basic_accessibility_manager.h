@@ -38,7 +38,6 @@ class InputDeviceRegistry;
 namespace shell
 {
 class MouseKeysTransformer;
-class CompositeEventFilter;
 }
 namespace options
 {
@@ -93,10 +92,7 @@ private:
     std::shared_ptr<input::CompositeEventFilter> const the_composite_event_filter;
     bool const enable_key_repeat;
     std::shared_ptr<graphics::Cursor> const cursor;
-
     std::shared_ptr<mir::input::InputEventTransformer> const event_transformer;
-    std::shared_ptr<input::CompositeEventFilter> const composite_filter;
-
     std::shared_ptr<mir::shell::MouseKeysTransformer> const transformer;
     std::shared_ptr<mir::input::InputDeviceRegistry> const input_device_registry;
 };
