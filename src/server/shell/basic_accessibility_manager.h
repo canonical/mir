@@ -39,7 +39,6 @@ class InputEventTransformer;
 namespace shell
 {
 class MouseKeysTransformer;
-class CompositeEventFilter;
 }
 namespace options
 {
@@ -110,7 +109,6 @@ private:
     Registration<MouseKeysTransformer> const transformer;
 
     std::shared_ptr<mir::input::InputEventTransformer> const event_transformer;
-    std::shared_ptr<input::CompositeEventFilter> const composite_filter;
 };
 }
 }
