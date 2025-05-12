@@ -50,8 +50,6 @@ class Clock;
 }
 namespace shell
 {
-class MouseKeysTransformer;
-class LocatePointerFilter;
 class BasicAccessibilityManager : public AccessibilityManager
 {
 public:
