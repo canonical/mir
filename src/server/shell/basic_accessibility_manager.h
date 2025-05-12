@@ -37,7 +37,6 @@ class InputEventTransformer;
 namespace shell
 {
 class MouseKeysTransformer;
-class CompositeEventFilter;
 }
 namespace options
 {
