@@ -89,8 +89,9 @@ by enabling component reports:
 ## Speeding up compilation
 
 Since *Mir* is a large C++ project it can take a long time to compile and make developing features slow to test.
-You can speed this up using [ccache](https://ccache.dev/) to cache compilation and choose to use a faster linker like [mold](https://github.com/rui314/mold):
+You can speed this up using [ccache](https://ccache.dev/) to cache compilation,
+disable precompiled headers (helps caching) and choose to use a faster linker like [mold](https://github.com/rui314/mold):
 
     $ sudo apt install ccache mold
     $ cd build
-    $ cmake -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DMIR_USE_LD=mold ..
+    $ cmake -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DMIR_USE_PRECOMPILED_HEADERS=OFF -DMIR_USE_LD=mold ..
