@@ -22,7 +22,7 @@ namespace mir::graphics::atomic
 class GBMDisplayAllocator : public graphics::GBMDisplayAllocator
 {
 public:
-    GBMDisplayAllocator(mir::Fd drm_fd, std::shared_ptr<struct gbm_device> atomic, geometry::Size size);
+    GBMDisplayAllocator(mir::Fd drm_fd, std::shared_ptr<struct gbm_device> gbm, geometry::Size size);
 
     auto supported_formats() const -> std::vector<DRMFormat> override;
 

@@ -10,10 +10,10 @@ backends:
             - alpine-3.21
             - alpine-edge
             - ubuntu-24.04
-            - fedora-40
             - fedora-41
+            - fedora-42
             - fedora-rawhide:
-                image: images:fedora/41
+                image: images:fedora/42
 
 environment:
     ARCH: amd64
@@ -24,7 +24,8 @@ environment:
     RELEASE: noble
     RELEASE/ubuntu: noble
     RELEASE/ubuntu_oracular: oracular
-    RELEASE/ubuntu_devel: plucky
+    RELEASE/ubuntu_plucky: plucky
+    RELEASE/ubuntu_devel: questing
     RELEASE/debian_sid: sid
     PROPOSED: false
     PROPOSED/ubuntu_proposed: true
