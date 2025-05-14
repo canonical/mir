@@ -289,30 +289,85 @@ private:
     std::mutex compilation_mutex;
 };
 
-class mrg::Renderer::OutputFilterShader
+// Shader that converts colors to grayscale.
+const GLchar* grayscale_src =
+    "uniform sampler2D tex;\n"
+    "vec4 sample_to_rgba(in vec2 texcoord) {\n"
+    "   vec4 col = texture2D(tex, texcoord);\n"
+    "   float s = (col[0] + col[1] + col[2]) / 3.0;\n"
+    "   return vec4(s, s, s, col[3]);\n"
+    "}\n";
+
+// Shader that inverts colors.
+const GLchar* invert_src =
+    "uniform sampler2D tex;\n"
+    "vec4 sample_to_rgba(in vec2 texcoord) {\n"
+    "   vec4 col = texture2D(tex, texcoord);\n"
+    "   return vec4(1.0 - col[0], 1.0 - col[1], 1.0 - col[2], col[3]);\n"
+    "}\n";
+
+class mrg::Renderer::OutputFilter : public mg::gl::OutputSurface
 {
 public:
     // NOTE: This must be called with a current GL context
-    OutputFilterShader(GLsizei width, GLsizei height, GLchar const* src)
-        : vertex_shader{compile_vertex_shader()},
-        fragment_shader{compile_fragment_shader(src)},
-        program{link_shader(vertex_shader, fragment_shader)},
-        texture{make_texture(width, height)},
+    OutputFilter(std::unique_ptr<mg::gl::OutputSurface> output)
+     : output{std::move(output)},
+        texture{make_texture(this->output->size())},
         framebuffer{make_framebuffer(texture)}
     {
-        position_attrib = glGetAttribLocation(program, "position");
-        texcoord_attrib = glGetAttribLocation(program, "texcoord");
-        tex_uniform = glGetUniformLocation(program, "tex");
     }
 
-    GLuint get_framebuffer()
+    void set_filter(MirOutputFilter filter)
     {
-        return framebuffer;
+        if (this->filter == filter)
+            return;
+        this->filter = filter;
+
+        // Clear existing filter
+        program = nullptr;
     }
 
-    void render()
+    void bind() override
     {
-        glUseProgram(program);
+        // Bypass if no filter.
+        if (filter == mir_output_filter_none)
+        {
+            output->bind();
+            return;
+        }
+
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebuffer);
+
+        if (program == nullptr)
+        {
+            program = std::make_unique<ProgramHandle>(compile_program(invert_src));
+            position_attrib = glGetAttribLocation(*program, "position");
+            texcoord_attrib = glGetAttribLocation(*program, "texcoord");
+            tex_uniform = glGetUniformLocation(*program, "tex");
+        }
+    }
+
+    void make_current() override
+    {
+        output->make_current();
+    }
+
+    void release_current() override
+    {
+        output->release_current();
+    }
+
+    auto commit() -> std::unique_ptr<mg::Framebuffer> override
+    {
+        // Bypass if no filter.
+        if (filter == mir_output_filter_none)
+            return output->commit();
+
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+
+        output->bind();
+
+        glUseProgram(*program);
         glUniform1i(tex_uniform, 0);
 
         glActiveTexture(GL_TEXTURE0);
@@ -326,43 +381,21 @@ public:
         glEnableVertexAttribArray(texcoord_attrib);
         glVertexAttribPointer(texcoord_attrib, 2, GL_FLOAT, GL_FALSE, 0, tex_coords);
         glDrawArrays(GL_TRIANGLES, 0, 3);
+
+        return output->commit();
+    }
+
+    auto size() const -> mir::geometry::Size override
+    {
+        return output->size();
+    }
+
+    auto layout() const -> Layout override
+    {
+        return output->layout();
     }
 
 private:
-    static GLuint compile_vertex_shader()
-    {
-        const GLchar* src =
-            "attribute vec2 position;\n"
-            "attribute vec2 texcoord;\n"
-            "varying vec2 v_texcoord;\n"
-            "void main() {\n"
-            "   gl_Position = vec4(position, 0, 1); \n"
-            "   v_texcoord = texcoord;\n"
-            "}\n";
-
-        return compile_shader(GL_VERTEX_SHADER, src);
-    }
-
-    static GLuint compile_fragment_shader(GLchar const* fragment)
-    {
-        std::stringstream src;
-        src
-            <<
-            "#ifdef GL_ES\n"
-            "precision mediump float;\n"
-            "#endif\n"
-            << "\n"
-            << fragment
-            << "\n"
-            <<
-            "varying vec2 v_texcoord;\n"
-            "void main() {\n"
-            "    gl_FragColor = sample_to_rgba(v_texcoord);\n"
-            "}\n";
-
-        return compile_shader(GL_FRAGMENT_SHADER, src.str().c_str());
-    }
-
     static GLuint compile_shader(GLenum type, GLchar const* src)
     {
         GLuint id = glCreateShader(type);
@@ -387,10 +420,36 @@ private:
         return id;
     }
 
-    static ProgramHandle link_shader(
-        ShaderHandle const& vertex_shader,
-        ShaderHandle const& fragment_shader)
+    static ProgramHandle compile_program(GLchar const* src)
     {
+        const GLchar* vertex_src =
+            "attribute vec2 position;\n"
+            "attribute vec2 texcoord;\n"
+            "varying vec2 v_texcoord;\n"
+            "void main() {\n"
+            "   gl_Position = vec4(position, 0, 1); \n"
+            "   v_texcoord = texcoord;\n"
+            "}\n";
+
+        ShaderHandle vertex_shader{compile_shader(GL_VERTEX_SHADER, vertex_src)};
+
+        std::stringstream fragment_src;
+        fragment_src
+            <<
+            "#ifdef GL_ES\n"
+            "precision mediump float;\n"
+            "#endif\n"
+            << "\n"
+            << src
+            << "\n"
+            <<
+            "varying vec2 v_texcoord;\n"
+            "void main() {\n"
+            "    gl_FragColor = sample_to_rgba(v_texcoord);\n"
+            "}\n";
+
+        ShaderHandle fragment_shader{compile_shader(GL_FRAGMENT_SHADER, fragment_src.str().c_str())};
+
         ProgramHandle program{glCreateProgram()};
         glAttachShader(program, fragment_shader);
         glAttachShader(program, vertex_shader);
@@ -410,7 +469,7 @@ private:
         return program;
     }
 
-    static GLuint make_texture(GLsizei width, GLsizei height)
+   static GLuint make_texture(mir::geometry::Size size)
     {
         GLuint tex;
         glGenTextures(1, &tex);
@@ -418,8 +477,8 @@ private:
         glBindTexture(GL_TEXTURE_2D, tex);
         glTexImage2D(GL_TEXTURE_2D, 0,
                      GL_RGBA,
-                     width,
-                     height,
+                     size.width.as_value(),
+                     size.height.as_value(),
                      0,
                      GL_RGBA,
                      GL_UNSIGNED_BYTE,
@@ -439,14 +498,14 @@ private:
         return fb;
     }
 
-    ShaderHandle const vertex_shader;
-    ShaderHandle const fragment_shader;
-    ProgramHandle const program;
+    std::unique_ptr<mg::gl::OutputSurface> output;
+    TextureHandle const texture;
+    FramebufferHandle const framebuffer;
+    MirOutputFilter filter;
+    std::unique_ptr<ProgramHandle> program;
     GLint position_attrib;
     GLint texcoord_attrib;
     GLint tex_uniform;
-    TextureHandle const texture;
-    FramebufferHandle const framebuffer;
 };
 
 mrg::Renderer::Program::Program(GLuint program_id)
@@ -481,7 +540,7 @@ auto make_output_current(std::unique_ptr<mg::gl::OutputSurface> output) -> std::
 mrg::Renderer::Renderer(
     std::shared_ptr<graphics::GLRenderingProvider> gl_interface,
     std::unique_ptr<graphics::gl::OutputSurface> output)
-    : output_surface{make_output_current(std::move(output))},
+: output_surface{std::make_unique<OutputFilter>(make_output_current(std::move(output)))},
       clear_color{0.0f, 0.0f, 0.0f, 1.0f},
       program_factory{std::make_unique<ProgramFactory>()},
       display_transform(1),
@@ -550,37 +609,9 @@ void mrg::Renderer::tessellate(std::vector<mgl::Primitive>& primitives,
 
 auto mrg::Renderer::render(mg::RenderableList const& renderables) const -> std::unique_ptr<mg::Framebuffer>
 {
-    if (output_filter_shader)
-    {
-        // Filter required, first render to a framebuffer...
-        output_surface->make_current();
-        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, output_filter_shader->get_framebuffer());
-        draw(renderables);
-        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+    output_surface->make_current();
+    output_surface->bind();
 
-        // ...then render to the output using the filter.
-        output_surface->bind();
-        output_filter_shader->render();
-    }
-    else
-    {
-        // No filter required, render directly to the output.
-        output_surface->make_current();
-        output_surface->bind();
-        draw(renderables);
-    }
-
-    auto output = output_surface->commit();
-
-    // Report any GL errors after commit, to catch any *during* commit
-    while (auto const gl_error = glGetError())
-        mir::log_debug("GL error: %d", gl_error);
-
-    return output;
-}
-
-void mrg::Renderer::draw(mg::RenderableList const& renderables) const
-{
     glClearColor(clear_color[0], clear_color[1], clear_color[2], clear_color[3]);
     glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -590,6 +621,14 @@ void mrg::Renderer::draw(mg::RenderableList const& renderables) const
     {
         draw(*r);
     }
+
+    auto output = output_surface->commit();
+
+    // Report any GL errors after commit, to catch any *during* commit
+    while (auto const gl_error = glGetError())
+        mir::log_debug("GL error: %d", gl_error);
+
+    return output;
 }
 
 void mrg::Renderer::draw(mg::Renderable const& renderable) const
@@ -859,43 +898,9 @@ void mrg::Renderer::set_output_transform(glm::mat2 const& t)
     }
 }
 
-// Shader that converts colors to grayscale.
-const GLchar* grayscale_src =
-    "uniform sampler2D tex;\n"
-    "vec4 sample_to_rgba(in vec2 texcoord) {\n"
-    "   vec4 col = texture2D(tex, texcoord);\n"
-    "   float s = (col[0] + col[1] + col[2]) / 3.0;\n"
-    "   return vec4(s, s, s, col[3]);\n"
-    "}\n";
-
-// Shader that inverts colors.
-const GLchar* invert_src =
-    "uniform sampler2D tex;\n"
-    "vec4 sample_to_rgba(in vec2 texcoord) {\n"
-    "   vec4 col = texture2D(tex, texcoord);\n"
-    "   return vec4(1.0 - col[0], 1.0 - col[1], 1.0 - col[2], col[3]);\n"
-    "}\n";
-
 void mrg::Renderer::set_output_filter(MirOutputFilter filter)
 {
-    if (output_filter == filter)
-        return;
-    output_filter = filter;
-
-    GLchar const * filter_src;
-    switch (filter)
-    {
-    case mir_output_filter_grayscale:
-        filter_src = grayscale_src;
-        break;
-    case mir_output_filter_invert:
-        filter_src = invert_src;
-        break;
-    default:
-        output_filter_shader = nullptr;
-        return;
-    }
-    output_filter_shader = std::make_unique<OutputFilterShader>(output_surface->size().width.as_value(), output_surface->size().height.as_value(), filter_src);
+    output_surface->set_filter(filter);
 }
 
 void mrg::Renderer::suspend()

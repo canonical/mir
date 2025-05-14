@@ -72,7 +72,8 @@ public:
         Program(GLuint program_id);
     };
 private:
-    std::unique_ptr<graphics::gl::OutputSurface> const output_surface;
+    class OutputFilter;
+    std::unique_ptr<OutputFilter> const output_surface;
 
 protected:
     /**
@@ -98,7 +99,6 @@ protected:
 
     mutable long long frameno = 0;
 
-    virtual void draw(graphics::RenderableList const& renderables) const;
     virtual void draw(graphics::Renderable const& renderable) const;
 
 private:
@@ -106,9 +106,7 @@ private:
 
     class ProgramFactory;
     std::unique_ptr<ProgramFactory> const program_factory;
-    class OutputFilterShader;
     MirOutputFilter output_filter;
-    std::unique_ptr<OutputFilterShader> output_filter_shader;
     geometry::Rectangle viewport;
     glm::mat4 screen_to_gl_coords;
     glm::mat4 display_transform;
