@@ -684,9 +684,15 @@ auto miral::BasicWindowManager::display_area_for(WindowInfo const& info) const -
     Rectangle window_rect{window.top_left(), window.size()};
 
     if (auto best_area = display_area_for(window_rect))
+    {
+        mir::log_info("Using best area!");
         return best_area.value();
+    }
     else
+    {
+        mir::log_info("Using NON-BEST area!");
         return std::make_shared<DisplayArea>(window_rect);
+    }
 }
 
 auto miral::BasicWindowManager::display_area_for(Rectangle const& rect) const
