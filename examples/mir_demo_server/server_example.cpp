@@ -241,14 +241,14 @@ private:
                         keyboard.set_repeat_delay(*parsed);
                 }
 
-                if(key == "cursor_scale")
+                if (key == "cursor_scale")
                 {
                     auto const parsed = parse_and_validate_float(key, value);
                     if(parsed)
                         cursor_scale.scale(*parsed);
                 }
 
-                if(key == "output_filter")
+                if (key == "output_filter")
                 {
                     auto filter_name = value;
                     MirOutputFilter filter = mir_output_filter_none;
