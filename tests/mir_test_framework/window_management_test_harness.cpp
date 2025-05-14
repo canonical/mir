@@ -290,6 +290,11 @@ public:
         on_change();
     }
 
+    auto cursor_location() const -> mir::geometry::Point override
+    {
+        return tools.cursor_location();
+    }
+
     void drag_window(
         miral::Window const& window, mir::geometry::Displacement& movement) override
     {

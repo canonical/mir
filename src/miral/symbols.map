@@ -552,6 +552,7 @@ global:
     miral::MouseKeysConfig::set_keymap*;
     miral::MouseKeysConfig::set_max_speed*;
     miral::WindowInfo::tiled_edges*;
+    miral::WindowManagerTools::cursor_location*;
     miral::WindowSpecification::tiled_edges*;
     miral::WindowSpecification::to_surface_specification*;
     typeinfo?for?miral::CursorScale;

@@ -3008,3 +3008,8 @@ void miral::BasicWindowManager::move_cursor_to(mir::geometry::PointF point)
         });
     });
 }
+
+auto miral::BasicWindowManager::cursor_location() const -> mir::geometry::Point
+{
+    return cursor;
+}

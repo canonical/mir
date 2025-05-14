@@ -950,3 +950,13 @@ try {
     wrapped.move_cursor_to(point);
 }
 MIRAL_TRACE_EXCEPTION
+
+auto miral::WindowManagementTrace::cursor_location() const -> mir::geometry::Point
+try {
+    log_input();
+    auto result = wrapped.cursor_location();
+    mir::log_info("%s cursor_location=%s", __func__, dump_of(result).c_str());
+    trace_count++;
+    return result;
+}
+MIRAL_TRACE_EXCEPTION

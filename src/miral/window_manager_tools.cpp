@@ -145,4 +145,9 @@ void miral::WindowManagerTools::for_each_window_in_workspace(
 { tools->for_each_window_in_workspace(workspace, callback); }
 
 void miral::WindowManagerTools::move_cursor_to(mir::geometry::PointF point)
-{ tools->move_cursor_to(point); }
+{ tools->move_cursor_to(point);
+}
+
+auto miral::WindowManagerTools::cursor_location() const -> mir::geometry::Point
+{ return tools->cursor_location(); }
+

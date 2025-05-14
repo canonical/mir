@@ -267,6 +267,12 @@ public:
      */
     void move_cursor_to(mir::geometry::PointF point);
 
+    /**
+     * Returns the current location of the cursor
+     * \remark Since MirAL 5.3
+     */
+    auto cursor_location() const -> mir::geometry::Point;
+
 private:
     WindowManagerToolsImplementation* tools;
 };
