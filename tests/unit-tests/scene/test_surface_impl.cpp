@@ -278,8 +278,6 @@ TEST_F(Surface, preferred_orientation_mode_defaults_to_any)
     using namespace testing;
 
     ms::BasicSurface surf(
-        nullptr /* session */,
-        {} /* wayland_surface */,
         std::string("stub"),
         geom::Rectangle{{},{}},
         mir_pointer_unconfined,

@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_SURFACE_H_
 #define MIR_TEST_DOUBLES_MOCK_SURFACE_H_
 
-#include "src/server/scene/basic_surface.h"
+#include "mir/scene/basic_surface.h"
 #include "src/server/report/null_report_factory.h"
 #include "mock_buffer_stream.h"
 #include "mir/test/doubles/fake_display_configuration_observer_registrar.h"
@@ -35,8 +35,6 @@ struct MockSurface : public scene::BasicSurface
 {
     MockSurface() :
         scene::BasicSurface(
-            {},
-            {},
             {},
             {{},{}},
             mir_pointer_unconfined,

@@ -138,8 +138,6 @@ TEST_F(BasicSurfaceTest, can_be_created_with_session)
 
     auto const session = std::make_shared<mtd::StubSession>();
     ms::BasicSurface surface{
-        session,
-        {} /* wayland_surface */,
         name,
         geom::Rectangle{{0,0}, {100,100}},
         mir_pointer_unconfined,
@@ -1341,8 +1339,6 @@ TEST_F(BasicSurfaceTest, registers_frame_callbacks_on_construction)
         .Times(AtLeast(1));
 
     ms::BasicSurface child{
-        nullptr /* session */,
-        {} /* wayland_surface */,
         name,
         geom::Rectangle{{0,0}, {100,100}},
         std::weak_ptr<ms::Surface>{},
