@@ -8,9 +8,10 @@ ADD_LIBRARY(
 
   application_session.cpp
   basic_surface.cpp
+  shell_surface.cpp
   broadcasting_session_event_sink.cpp
   default_configuration.cpp
-        session_container.cpp
+  session_container.cpp
   mediating_display_changer.cpp
   session_manager.cpp
   surface_allocator.cpp
@@ -24,7 +25,7 @@ ADD_LIBRARY(
   prompt_session_impl.cpp
   prompt_session_manager_impl.cpp
   rendering_tracker.cpp
-        timeout_application_not_responding_detector.cpp
+  timeout_application_not_responding_detector.cpp
   output_properties_cache.cpp
   application_not_responding_detector_wrapper.cpp
   basic_clipboard.cpp

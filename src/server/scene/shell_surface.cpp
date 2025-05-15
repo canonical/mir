@@ -142,6 +142,11 @@ public:
     {
         for_each_observer(&SurfaceObserver::rescale_output, surf, id);
     }
+
+    void tiled_edges(Surface const* surf, Flags<MirTiledEdge> edges) override
+    {
+        for_each_observer(&SurfaceObserver::tiled_edges, surf, edges);
+    }
 };
 
 ms::ShellSurface::ShellSurface(
@@ -263,11 +268,10 @@ geom::Rectangle ms::ShellSurface::input_bounds() const
 
 bool ms::ShellSurface::input_area_contains(geom::Point const& point) const
 {
-    auto state = synchronised_state.lock();
-
     if (!visible())
         return false;
 
+    auto state = synchronised_state.lock();
     auto const local_point = as_point(point - state->surface_rect.top_left);
     if (state->surface_rect.contains(local_point))
         return true;
@@ -779,4 +783,13 @@ auto mir::scene::ShellSurface::focus_mode() const -> MirFocusMode
 void mir::scene::ShellSurface::set_focus_mode(MirFocusMode focus_mode)
 {
     synchronised_state.lock()->focus_mode = focus_mode;
+}
+
+mir::Flags<MirTiledEdge> mir::scene::ShellSurface::tiled_edges() const
+{
+    return Flags{mir_tiled_edge_none};
+}
+
+void mir::scene::ShellSurface::set_tiled_edges(Flags<MirTiledEdge>)
+{
 }

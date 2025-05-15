@@ -33,7 +33,7 @@ template<class Observer>
 class ObserverRegistrar;
 
 namespace compositor { class Compositor; class DisplayBufferCompositorFactory; class CompositorReport; }
-namespace graphics { class Cursor; class DisplayPlatform; class RenderingPlatform; class Display; class GLConfig; class DisplayConfigurationPolicy; class DisplayConfigurationObserver; }
+namespace graphics { class Cursor; class DisplayPlatform; class RenderingPlatform; class Display; class GLConfig; class DisplayConfigurationPolicy; class DisplayConfigurationObserver; class GraphicBufferAllocator; }
 namespace input { class CompositeEventFilter; class InputDispatcher; class CursorListener; class CursorImages; class TouchVisualizer; class InputDeviceHub; class InputDeviceRegistry;}
 namespace logging { class Logger; }
 namespace options { class Option; }
@@ -501,6 +501,8 @@ public:
 
     auto the_decoration_strategy() const -> std::shared_ptr<DecorationStrategy>;
     void set_the_decoration_strategy(std::shared_ptr<DecorationStrategy> strategy);
+
+    auto the_buffer_allocator() const -> std::shared_ptr<graphics::GraphicBufferAllocator>;
 private:
     struct ServerConfiguration;
     struct Self;

@@ -31,6 +31,9 @@ namespace scene
 class ShellSurface : public Surface
 {
 public:
+    /// Creates a new surface with the provded [name], [area],
+    /// and [stream]. The stream is most likely a [mir::compositor::Stream]
+    /// that will be backed by [mir::graphics::Buffer]s.
     ShellSurface(
         std::string const& name,
         geometry::Rectangle area,
@@ -130,17 +133,20 @@ public:
     auto focus_mode() const -> MirFocusMode override;
     void set_focus_mode(MirFocusMode focus_mode) override;
 
+    Flags<MirTiledEdge> tiled_edges() const override;
+    void set_tiled_edges(Flags<MirTiledEdge> flags) override;
+
 private:
     class Multiplexer;
 
     struct State
     {
-        std::string surface_name;
-        geometry::Rectangle surface_rect;
-        glm::mat4 transformation_matrix;
-        float surface_alpha;
-        bool hidden;
-        input::InputReceptionMode input_mode;
+        std::string surface_name = "matt";
+        geometry::Rectangle surface_rect = mir::geometry::Rectangle({0, 0}, {200, 200});
+        glm::mat4 transformation_matrix = glm::mat4(1.f);
+        float surface_alpha = 1.f;
+        bool hidden = false;
+        input::InputReceptionMode input_mode = input::InputReceptionMode::normal;
         std::shared_ptr<graphics::CursorImage> cursor_image;
         MirWindowType type = mir_window_type_normal;
         SurfaceStateTracker state{mir_window_state_restored};

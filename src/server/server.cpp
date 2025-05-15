@@ -139,7 +139,8 @@ struct TemporaryCompositeEventFilter : public mi::CompositeEventFilter
     MACRO(the_idle_handler)\
     MACRO(the_token_authority)\
     MACRO(the_accessibility_manager)\
-    MACRO(the_display_configuration_observer)
+    MACRO(the_display_configuration_observer)\
+    MACRO(the_buffer_allocator)
 
 #define MIR_SERVER_BUILDER(name)\
     std::function<std::invoke_result_t<decltype(&mir::DefaultServerConfiguration::the_##name),mir::DefaultServerConfiguration*>()> name##_builder;
