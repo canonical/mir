@@ -16,6 +16,7 @@
 
 #include "mir/graphics/output_filter.h"
 
+#include <atomic>
 #include <memory>
 
 namespace mir
@@ -36,7 +37,7 @@ public:
 
 private:
     std::shared_ptr<input::Scene> const scene;
-    MirOutputFilter filter_;
+    std::atomic<MirOutputFilter> filter_;
 };
 
 }
