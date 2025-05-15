@@ -206,7 +206,6 @@ void mg::SoftwareCursor::hide()
 
     if (visible && renderable)
     {
-        scene_executor->spawn([scene = scene, to_remove = renderable]()
         scene_executor->spawn([weak_scene = std::weak_ptr{scene}, to_remove = std::weak_ptr{renderable}]()
             {
                 if (auto scene = weak_scene.lock())

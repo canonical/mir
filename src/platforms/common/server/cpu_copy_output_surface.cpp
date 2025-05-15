@@ -142,9 +142,33 @@ public:
     auto layout() const -> Layout;
 
 private:
+    class EGLContextHandle
+    {
+    public:
+        EGLContextHandle(EGLDisplay dpy, EGLContext ctx)
+            : dpy{dpy},
+              ctx{ctx}
+        {
+        }
+
+        ~EGLContextHandle()
+        {
+            eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+            eglDestroyContext(dpy, ctx);
+        }
+
+        operator EGLContext() const
+        {
+            return ctx;
+        }
+    private:
+        EGLDisplay const dpy;
+        EGLContext const ctx;
+    };
+    
     mg::CPUAddressableDisplayAllocator& allocator;
     EGLDisplay const dpy;
-    EGLContext const ctx;
+    EGLContextHandle const ctx;
     DRMFormat const format;
     RenderbufferHandle const colour_buffer;
     std::shared_ptr<RenderbufferHandle> depth_stencil_buffer;
@@ -199,7 +223,7 @@ mgc::CPUCopyOutputSurface::Impl::Impl(
     GLConfig const& config)
     : allocator{allocator},
       dpy{dpy},
-      ctx{create_current_context(dpy, share_ctx)},
+      ctx{dpy, create_current_context(dpy, share_ctx)},
       format{select_format_from(allocator)}
 {
     glBindRenderbuffer(GL_RENDERBUFFER, colour_buffer);
