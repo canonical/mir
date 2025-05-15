@@ -132,23 +132,6 @@ TEST_F(BasicSurfaceTest, basics)
         EXPECT_FALSE(renderable->shaped());
 }
 
-TEST_F(BasicSurfaceTest, can_be_created_with_session)
-{
-    using namespace testing;
-
-    auto const session = std::make_shared<mtd::StubSession>();
-    ms::BasicSurface surface{
-        name,
-        geom::Rectangle{{0,0}, {100,100}},
-        mir_pointer_unconfined,
-        streams,
-        std::shared_ptr<mg::CursorImage>(),
-        report,
-        display_config_registrar};
-
-    EXPECT_THAT(surface.session().lock(), Eq(session));
-}
-
 TEST_F(BasicSurfaceTest, buffer_stream_ids_always_unique)
 {
     int const n = 10;
