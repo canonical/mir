@@ -16,18 +16,16 @@
 
 #include "basic_seat.h"
 #include "mir/input/device.h"
+#include "mir/input/event_filter.h"
 #include "mir/input/input_sink.h"
 #include "mir/graphics/display_configuration_observer.h"
 #include "mir/graphics/display_configuration.h"
-#include "mir/geometry/rectangle.h"
 #include "mir_toolkit/common.h"
 
-#include <algorithm>
 #include <array>
 #include <map>
 
 namespace mi = mir::input;
-namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;

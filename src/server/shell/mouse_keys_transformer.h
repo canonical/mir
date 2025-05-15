@@ -54,7 +54,8 @@ public:
     bool transform_input_event(
         mir::input::InputEventTransformer::EventDispatcher const& dispatcher,
         mir::input::EventBuilder* builder,
-        MirEvent const& event) override;
+        MirEvent const& event,
+        MirInputDeviceId) override;
 
     void keymap(mir::input::MouseKeysKeymap const& new_keymap) override;
     void acceleration_factors(double constant, double linear, double quadratic) override;

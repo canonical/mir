@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "mir/test/doubles/stub_main_loop.h"
 #include "src/server/input/default_input_device_hub.h"
 #include "src/server/input/basic_seat.h"
 #include "src/server/input/config_changer.h"
@@ -48,6 +49,7 @@
 #include "mir/input/mir_touchpad_config.h"
 #include "mir/input/touch_visualizer.h"
 #include "mir/input/input_device_info.h"
+#include "mir/input/input_event_transformer.h"
 #include "mir/geometry/rectangles.h"
 #include "mir/test/input_config_matchers.h"
 #include "mir/test/fd_utils.h"
@@ -83,9 +85,16 @@ MATCHER_P(DeviceMatches, device_info, "")
         arg.unique_id() == device_info.unique_id;
 }
 
+struct StubAccessibilityEventFilter : public mir::input::EventFilter
+{
+    bool handle(MirEvent const&) override
+    {
+        return false;
+    }
+};
+
 struct SingleSeatInputDeviceHubSetup : ::testing::Test
 {
-    mtd::TriggeredMainLoop observer_loop;
     NiceMock<mtd::MockInputDispatcher> mock_dispatcher;
     NiceMock<mtd::MockCursorListener> mock_cursor_listener;
     NiceMock<mtd::MockTouchVisualizer> mock_visualizer;
@@ -99,6 +108,7 @@ struct SingleSeatInputDeviceHubSetup : ::testing::Test
     ms::BroadcastingSessionEventSink session_event_sink;
     mtd::FakeDisplayConfigurationObserverRegistrar display_config;
     NiceMock<mtd::MockLedObserverRegistrar> led_observer_registrar;
+    mir::test::doubles::StubMainLoop main_loop;
     mi::BasicSeat seat{mt::fake_shared(mock_dispatcher),      mt::fake_shared(mock_visualizer),
                        mt::fake_shared(mock_cursor_listener), mt::fake_shared(display_config),
                        mt::fake_shared(key_mapper),           mt::fake_shared(clock),
@@ -109,7 +119,8 @@ struct SingleSeatInputDeviceHubSetup : ::testing::Test
         mt::fake_shared(clock),
         mt::fake_shared(key_mapper),
         mt::fake_shared(mock_status_listener),
-        mt::fake_shared(led_observer_registrar)};
+        mt::fake_shared(led_observer_registrar),
+        std::make_shared<StubAccessibilityEventFilter>()};
     NiceMock<mtd::MockInputDeviceObserver> mock_observer;
     mi::ConfigChanger changer{
         mt::fake_shared(mock_input_manager),
