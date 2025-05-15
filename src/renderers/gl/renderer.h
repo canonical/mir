@@ -46,6 +46,7 @@ public:
     // These are called with a valid GL context:
     void set_viewport(geometry::Rectangle const& rect) override;
     void set_output_transform(glm::mat2 const&) override;
+    void set_output_filter(MirOutputFilter filter) override;
     auto render(graphics::RenderableList const&) const -> std::unique_ptr<graphics::Framebuffer> override;
 
     // This is called _without_ a GL context:
@@ -71,7 +72,8 @@ public:
         Program(GLuint program_id);
     };
 private:
-    std::unique_ptr<graphics::gl::OutputSurface> const output_surface;
+    class OutputFilter;
+    std::unique_ptr<OutputFilter> const output_surface;
 
 protected:
     /**
@@ -104,6 +106,7 @@ private:
 
     class ProgramFactory;
     std::unique_ptr<ProgramFactory> const program_factory;
+    MirOutputFilter output_filter;
     geometry::Rectangle viewport;
     glm::mat4 screen_to_gl_coords;
     glm::mat4 display_transform;

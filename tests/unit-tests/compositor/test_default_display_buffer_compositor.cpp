@@ -26,6 +26,7 @@
 #include "mir/test/doubles/mock_compositor_report.h"
 #include "mir/test/doubles/stub_scene_element.h"
 #include "mir/test/doubles/stub_gl_rendering_provider.h"
+#include "mir/test/doubles/stub_output_filter.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -111,6 +112,7 @@ TEST_F(DefaultDisplayBufferCompositor, composite_returns_false_when_scene_elemen
         display_sink,
         gl_provider,
         mt::fake_shared(mock_renderer),
+        std::make_shared<mtd::StubOutputFilter>(),
         mr::null_compositor_report());
     EXPECT_FALSE(compositor.composite(make_scene_elements({})));
 }
@@ -123,6 +125,7 @@ TEST_F(DefaultDisplayBufferCompositor, composite_returns_true_when_scene_element
         display_sink,
         gl_provider,
         mt::fake_shared(mock_renderer),
+        std::make_shared<mtd::StubOutputFilter>(),
         mr::null_compositor_report());
     EXPECT_TRUE(compositor.composite(make_scene_elements({big})));
 }
@@ -135,6 +138,7 @@ TEST_F(DefaultDisplayBufferCompositor, renderer_is_suspended_when_we_have_compos
         display_sink,
         gl_provider,
         mt::fake_shared(mock_renderer),
+        std::make_shared<mtd::StubOutputFilter>(),
         mr::null_compositor_report());
     compositor.composite(make_scene_elements({big}));
     compositor.composite(make_scene_elements({}));
@@ -165,6 +169,7 @@ TEST_F(DefaultDisplayBufferCompositor, all_expected_reports_are_received_during_
         display_sink,
         gl_provider,
         mt::fake_shared(mock_renderer),
+        std::make_shared<mtd::StubOutputFilter>(),
         report);
     compositor.composite(make_scene_elements({big}));
 }
@@ -179,6 +184,7 @@ TEST_F(DefaultDisplayBufferCompositor, elements_provided_to_composite_are_render
         display_sink,
         gl_provider,
         mt::fake_shared(mock_renderer),
+        std::make_shared<mtd::StubOutputFilter>(),
         mr::null_compositor_report());
 
     compositor.composite(make_scene_elements({
@@ -205,6 +211,7 @@ TEST_F(DefaultDisplayBufferCompositor, viewport_is_rotated_when_display_sink_vie
         display_sink,
         gl_provider,
         mt::fake_shared(mock_renderer),
+        std::make_shared<mtd::StubOutputFilter>(),
         mr::null_compositor_report());
 
     Sequence render_seq;
@@ -225,6 +232,7 @@ TEST_F(DefaultDisplayBufferCompositor, renderer_is_suspended_when_we_have_compos
         display_sink,
         gl_provider,
         mt::fake_shared(mock_renderer),
+        std::make_shared<mtd::StubOutputFilter>(),
         mr::null_compositor_report());
 
     compositor.composite(make_scene_elements({big}));
@@ -261,6 +269,7 @@ TEST_F(DefaultDisplayBufferCompositor, occluded_surfaces_are_not_rendered)
         display_sink,
         gl_provider,
         mt::fake_shared(mock_renderer),
+        std::make_shared<mtd::StubOutputFilter>(),
         mr::null_compositor_report());
     compositor.composite(make_scene_elements({
         window0, //not occluded
@@ -302,6 +311,7 @@ TEST_F(DefaultDisplayBufferCompositor, marks_rendered_scene_elements)
         display_sink,
         gl_provider,
         mt::fake_shared(mock_renderer),
+        std::make_shared<mtd::StubOutputFilter>(),
         mr::null_compositor_report());
 
     compositor.composite({element0_rendered, element1_rendered});
@@ -326,6 +336,7 @@ TEST_F(DefaultDisplayBufferCompositor, marks_occluded_scene_elements)
         display_sink,
         gl_provider,
         mt::fake_shared(mock_renderer),
+        std::make_shared<mtd::StubOutputFilter>(),
         mr::null_compositor_report());
 
     compositor.composite({element0_occluded, element1_rendered, element2_occluded});

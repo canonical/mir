@@ -30,6 +30,7 @@
 #include "mir/graphics/platform.h"
 #include "mir/graphics/cursor.h"
 #include "display_configuration_observer_multiplexer.h"
+#include "default_output_filter.h"
 
 #include "mir/shared_library.h"
 #include "mir/shared_library_prober.h"
@@ -461,5 +462,15 @@ mir::DefaultServerConfiguration::the_display_configuration_observer()
         [default_executor = the_main_loop()]
         {
             return std::make_shared<mg::DisplayConfigurationObserverMultiplexer>(default_executor);
+        });
+}
+
+std::shared_ptr<mg::OutputFilter>
+mir::DefaultServerConfiguration::the_output_filter()
+{
+    return output_filter(
+        [this]() -> std::shared_ptr<mg::OutputFilter>
+        {
+	   return std::make_shared<mg::DefaultOutputFilter>(the_input_scene());
         });
 }
