@@ -14,7 +14,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "basic_surface.h"
+#include "mir/scene/basic_surface.h"
 #include "mir/compositor/buffer_stream.h"
 #include "mir/frontend/event_sink.h"
 #include "mir/graphics/buffer.h"
@@ -196,8 +196,6 @@ std::shared_ptr<mc::BufferStream> default_stream(std::list<ms::StreamInfo> const
 }
 
 ms::BasicSurface::BasicSurface(
-    std::shared_ptr<Session> const& session,
-    mw::Weak<frontend::WlSurface> wayland_surface,
     std::string const& name,
     geometry::Rectangle rect,
     std::weak_ptr<Surface> const& parent,
@@ -220,11 +218,9 @@ ms::BasicSurface::BasicSurface(
         }
     },
     observers(std::make_shared<Multiplexer>()),
-    session_{session},
     surface_buffer_stream(default_stream(layers)),
     report(report),
     parent_(parent),
-    wayland_surface_{wayland_surface},
     display_config_registrar{display_config_registrar},
     display_config_monitor{std::make_shared<DisplayConfigurationEarlyListener>(this)}
 {
@@ -235,8 +231,6 @@ ms::BasicSurface::BasicSurface(
 }
 
 ms::BasicSurface::BasicSurface(
-    std::shared_ptr<Session> const& session,
-    mw::Weak<frontend::WlSurface> wayland_surface,
     std::string const& name,
     geometry::Rectangle rect,
     MirPointerConfinementState state,
@@ -245,8 +239,6 @@ ms::BasicSurface::BasicSurface(
     std::shared_ptr<SceneReport> const& report,
     std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> const& display_config_registrar) :
     BasicSurface(
-        session,
-        wayland_surface,
         name,
         rect,
         std::shared_ptr<Surface>{nullptr},
@@ -640,7 +632,7 @@ void ms::BasicSurface::set_cursor_from_buffer(
 
 auto ms::BasicSurface::wayland_surface() -> mw::Weak<mf::WlSurface> const&
 {
-    return wayland_surface_;
+    return weak_surface;
 }
 
 void ms::BasicSurface::request_client_surface_close()
@@ -919,7 +911,7 @@ void mir::scene::BasicSurface::set_application_id(std::string const& application
 
 auto mir::scene::BasicSurface::session() const -> std::weak_ptr<Session>
 {
-    return session_;
+    return {};
 }
 
 void mir::scene::BasicSurface::set_window_margins(

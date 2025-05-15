@@ -19,7 +19,6 @@
 
 #include "mir/graphics/display_configuration.h"
 #include "mir/scene/surface.h"
-#include "mir/proof_of_mutex_lock.h"
 #include "mir/wayland/weak.h"
 #include "mir/geometry/rectangle.h"
 #include "mir_toolkit/common.h"
@@ -29,9 +28,7 @@
 #include <vector>
 #include <list>
 #include <memory>
-#include <mutex>
 #include <string>
-#include <set>
 
 namespace mir
 {
@@ -58,8 +55,6 @@ class BasicSurface : public Surface
 {
 public:
     BasicSurface(
-        std::shared_ptr<Session> const& session,
-        wayland::Weak<frontend::WlSurface> wayland_surface,
         std::string const& name,
         geometry::Rectangle rect,
         MirPointerConfinementState state,
@@ -69,8 +64,6 @@ public:
         std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> const& display_config_registrar);
 
     BasicSurface(
-        std::shared_ptr<Session> const& session,
-        wayland::Weak<frontend::WlSurface> wayland_surface,
         std::string const& name,
         geometry::Rectangle rect,
         std::weak_ptr<Surface> const& parent,
@@ -236,15 +229,14 @@ private:
     mir::Synchronised<State> synchronised_state;
 
     std::shared_ptr<Multiplexer> const observers;
-    std::weak_ptr<Session> const session_;
     std::shared_ptr<compositor::BufferStream> const surface_buffer_stream;
     std::shared_ptr<SceneReport> const report;
     std::weak_ptr<Surface> const parent_;
-    wayland::Weak<frontend::WlSurface> const wayland_surface_;
     std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> display_config_registrar;
     std::shared_ptr<DisplayConfigurationEarlyListener> const display_config_monitor;
     std::shared_ptr<graphics::DisplayConfiguration const> display_config;
     std::unordered_map<graphics::DisplayConfigurationOutputId, float> tracked_output_scales;
+    wayland::Weak<frontend::WlSurface> weak_surface;
 };
 
 }
