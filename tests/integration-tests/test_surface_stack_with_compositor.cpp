@@ -19,7 +19,7 @@
 #include "mir/renderer/renderer_factory.h"
 #include "src/server/report/null_report_factory.h"
 #include "src/server/scene/surface_stack.h"
-#include "src/server/scene/basic_surface.h"
+#include "mir/scene/basic_surface.h"
 #include "src/server/compositor/default_display_buffer_compositor_factory.h"
 #include "src/server/compositor/multi_threaded_compositor.h"
 #include "mir/compositor/stream.h"
@@ -159,8 +159,6 @@ struct SurfaceStackCompositor : public Test
         streams({ { stream, {0,0}} }),
         display_config_registrar{std::make_shared<mtd::FakeDisplayConfigurationObserverRegistrar>()},
         stub_surface{std::make_shared<ms::BasicSurface>(
-            nullptr /* session */,
-            mw::Weak<mf::WlSurface>{},
             std::string("stub"),
             geom::Rectangle{{0,0},{1,1}},
             mir_pointer_unconfined,
@@ -172,8 +170,6 @@ struct SurfaceStackCompositor : public Test
         other_stream(std::make_shared<mc::Stream>()),
         other_streams({ { other_stream, {0,0}} }),
         other_stub_surface{std::make_shared<ms::BasicSurface>(
-            nullptr /* session */,
-            mw::Weak<mf::WlSurface>{},
             std::string("other_stub"),
             geom::Rectangle{{10,0},{1,1}},
             mir_pointer_unconfined,

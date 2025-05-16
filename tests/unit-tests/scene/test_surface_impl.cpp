@@ -16,7 +16,7 @@
 
 #include "mir/events/event_private.h"
 #include "mir/events/event_builders.h"
-#include "src/server/scene/basic_surface.h"
+#include "mir/scene/basic_surface.h"
 #include "mir/scene/surface_event_source.h"
 #include "src/server/report/null_report_factory.h"
 #include "mir/scene/output_properties_cache.h"
@@ -72,8 +72,6 @@ struct Surface : testing::Test
         using namespace testing;
 
         surface = std::make_shared<ms::BasicSurface>(
-            nullptr /* session */,
-            mw::Weak<mf::WlSurface>{},
             std::string("stub"),
             geom::Rectangle{{},{}},
             mir_pointer_unconfined,
@@ -280,8 +278,6 @@ TEST_F(Surface, preferred_orientation_mode_defaults_to_any)
     using namespace testing;
 
     ms::BasicSurface surf(
-        nullptr /* session */,
-        {} /* wayland_surface */,
         std::string("stub"),
         geom::Rectangle{{},{}},
         mir_pointer_unconfined,

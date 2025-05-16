@@ -16,7 +16,7 @@
 
 
 #include "mir/graphics/drm_formats.h"
-#include "src/server/scene/basic_surface.h"
+#include "mir/scene/basic_surface.h"
 #include "src/server/scene/surface_change_notification.h"
 
 #include "mir/events/event_private.h"
@@ -100,8 +100,6 @@ struct BasicSurfaceTest : public testing::Test
         std::make_shared<mtd::FakeDisplayConfigurationObserverRegistrar>();
 
     ms::BasicSurface surface{
-        nullptr /* session */,
-        {} /* wayland_surface */,
         name,
         rect,
         mir_pointer_unconfined,
@@ -134,25 +132,6 @@ TEST_F(BasicSurfaceTest, basics)
         EXPECT_FALSE(renderable->shaped());
 }
 
-TEST_F(BasicSurfaceTest, can_be_created_with_session)
-{
-    using namespace testing;
-
-    auto const session = std::make_shared<mtd::StubSession>();
-    ms::BasicSurface surface{
-        session,
-        {} /* wayland_surface */,
-        name,
-        geom::Rectangle{{0,0}, {100,100}},
-        mir_pointer_unconfined,
-        streams,
-        std::shared_ptr<mg::CursorImage>(),
-        report,
-        display_config_registrar};
-
-    EXPECT_THAT(surface.session().lock(), Eq(session));
-}
-
 TEST_F(BasicSurfaceTest, buffer_stream_ids_always_unique)
 {
     int const n = 10;
@@ -162,8 +141,6 @@ TEST_F(BasicSurfaceTest, buffer_stream_ids_always_unique)
     for (auto& surface : surfaces)
     {
         surface = std::make_unique<ms::BasicSurface>(
-                nullptr /* session */,
-                mw::Weak<mf::WlSurface>{},
                 name,
                 rect,
                 mir_pointer_unconfined,
@@ -188,8 +165,6 @@ TEST_F(BasicSurfaceTest, id_never_invalid)
     for (auto& surface : surfaces)
     {
         surface = std::make_unique<ms::BasicSurface>(
-                nullptr /* session */,
-                mw::Weak<mf::WlSurface>{},
                 name,
                 rect,
                 mir_pointer_unconfined,
@@ -451,8 +426,6 @@ TEST_F(BasicSurfaceTest, test_surface_visibility)
 
     // Must be a fresh surface to guarantee no frames posted yet...
     ms::BasicSurface surface{
-        nullptr /* session */,
-        {} /* wayland_surface */,
         name,
         rect,
         mir_pointer_unconfined,
@@ -492,8 +465,6 @@ TEST_F(BasicSurfaceTest, default_region_is_surface_rectangle)
     geom::Point pt(1,1);
     geom::Size one_by_one{geom::Width{1}, geom::Height{1}};
     ms::BasicSurface surface{
-        nullptr /* session */,
-        {} /* wayland_surface */,
         name,
         geom::Rectangle{pt, one_by_one},
         mir_pointer_unconfined,
@@ -530,8 +501,6 @@ TEST_F(BasicSurfaceTest, default_region_is_surface_rectangle)
 TEST_F(BasicSurfaceTest, default_invisible_surface_doesnt_get_input)
 {
     ms::BasicSurface surface{
-        nullptr /* session */,
-        {} /* wayland_surface */,
         name,
         geom::Rectangle{{0,0}, {100,100}},
         mir_pointer_unconfined,
@@ -551,8 +520,6 @@ TEST_F(BasicSurfaceTest, default_invisible_surface_doesnt_get_input)
 TEST_F(BasicSurfaceTest, surface_doesnt_get_input_outside_clip_area)
 {
     ms::BasicSurface surface{
-        nullptr /* session */,
-        {} /* wayland_surface */,
         name,
         geom::Rectangle{{0,0}, {100,100}},
         mir_pointer_unconfined,
@@ -776,8 +743,6 @@ TEST_F(BasicSurfaceTest, stores_parent)
 {
     auto parent = mt::fake_shared(surface);
     ms::BasicSurface child{
-        nullptr /* session */,
-        {} /* wayland_surface */,
         name,
         geom::Rectangle{{0,0}, {100,100}},
         parent,
@@ -1357,8 +1322,6 @@ TEST_F(BasicSurfaceTest, registers_frame_callbacks_on_construction)
         .Times(AtLeast(1));
 
     ms::BasicSurface child{
-        nullptr /* session */,
-        {} /* wayland_surface */,
         name,
         geom::Rectangle{{0,0}, {100,100}},
         std::weak_ptr<ms::Surface>{},
@@ -1552,8 +1515,6 @@ TEST_F(BasicSurfaceTest, buffer_can_be_submitted_to_original_stream_after_surfac
         .WillRepeatedly(SaveArg<0>(&callback));
 
     auto surface = std::make_unique<ms::BasicSurface>(
-        nullptr, // session
-        mw::Weak<mf::WlSurface>{},
         name,
         rect,
         mir_pointer_unconfined,
@@ -1579,8 +1540,6 @@ TEST_F(BasicSurfaceTest, buffer_can_be_submitted_to_set_stream_after_surface_des
         .WillRepeatedly(SaveArg<0>(&callback));
 
     auto surface = std::make_unique<ms::BasicSurface>(
-        nullptr, // session
-        mw::Weak<mf::WlSurface>{},
         name,
         rect,
         mir_pointer_unconfined,

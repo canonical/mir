@@ -22,7 +22,7 @@
 #include "mir/graphics/display_configuration_observer.h"
 #include "mir/compositor/buffer_stream.h"
 #include "mir/scene/null_surface_observer.h"
-#include "src/server/scene/basic_surface.h"
+#include "mir/scene/basic_surface.h"
 #include "src/include/server/mir/scene/session_event_sink.h"
 #include "src/server/report/null_report_factory.h"
 
@@ -65,8 +65,6 @@ struct MockSessionEventSink : public ms::SessionEventSink
 struct SessionManagerSetup : public testing::Test
 {
     std::shared_ptr<ms::Surface> dummy_surface = std::make_shared<ms::BasicSurface>(
-        nullptr /* session */,
-        mw::Weak<mf::WlSurface>{},
         std::string("stub"),
         geom::Rectangle{{},{}},
         mir_pointer_unconfined,
