@@ -16,7 +16,6 @@
 
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/events/event_builders.h"
-#include "mir/glib_main_loop.h"
 #include "mir/input/input_device_hub.h"
 #include "mir/input/input_device_registry.h"
 #include "mir/input/input_event_transformer.h"
@@ -32,11 +31,9 @@
 #include "mir/test/fd_utils.h"
 #include "mir/test/signal.h"
 
-#include <functional>
 #include <gtest/gtest.h>
 
 #include <memory>
-#include <stdexcept>
 #include <xkbcommon/xkbcommon-compat.h>
 
 namespace mt = mir::test;
@@ -138,7 +135,7 @@ TEST_F(TestInputEventTransformer, virtual_input_device_is_added_after_transforme
     expect_and_execute_multiplexer();
 
     auto mock_transformer = std::make_shared<MockTransformer>();
-    input_event_transformer.append(mock_transformer);
+    auto registration = input_event_transformer.append(mock_transformer);
 
     observer->mousekey_pointer_found.wait_for(std::chrono::seconds{5});
 
@@ -149,7 +146,7 @@ TEST_F(TestInputEventTransformer, transformer_gets_called)
     auto mock_transformer = std::make_shared<MockTransformer>();
     EXPECT_CALL(*mock_transformer, transform_input_event(_, _,_));
 
-    input_event_transformer.append(mock_transformer);
+    auto const registration = input_event_transformer.append(mock_transformer);
 
     input_event_transformer.transform(*make_key_event(), nullptr, [](auto) {});
 }
@@ -167,8 +164,8 @@ TEST_F(TestInputEventTransformer, events_block_correctly)
     auto mock_transformer_2 = std::make_shared<MockTransformer>();
     EXPECT_CALL(*mock_transformer_2, transform_input_event(_, _, _)).Times(0);
 
-    input_event_transformer.append(mock_transformer_1);
-    input_event_transformer.append(mock_transformer_2);
+    auto const reg1 = input_event_transformer.append(mock_transformer_1);
+    auto const reg2 = input_event_transformer.append(mock_transformer_2);
 
     input_event_transformer.transform(*make_key_event(), nullptr, [](auto) {});
 }
@@ -186,8 +183,8 @@ TEST_F(TestInputEventTransformer, events_cascade_correctly)
     auto mock_transformer_2 = std::make_shared<MockTransformer>();
     EXPECT_CALL(*mock_transformer_2, transform_input_event(_, _, _));
 
-    input_event_transformer.append(mock_transformer_1);
-    input_event_transformer.append(mock_transformer_2);
+    auto const reg1 = input_event_transformer.append(mock_transformer_1);
+    auto const reg2 = input_event_transformer.append(mock_transformer_2);
 
     input_event_transformer.transform(*make_key_event(), nullptr, [](auto) {});
 }
@@ -203,38 +200,9 @@ TEST_F(TestInputEventTransformer, transformer_not_called_after_removal)
                 return true;
             });
 
-    input_event_transformer.append(mock_transformer);
-    input_event_transformer.transform(*make_key_event(), nullptr, [](auto) {});
-    input_event_transformer.remove(mock_transformer);
-    input_event_transformer.transform(*make_key_event(), nullptr, [](auto) {});
+    {
+        auto const registration = input_event_transformer.append(mock_transformer);
+        input_event_transformer.transform(*make_key_event(), nullptr, [](auto){});
+    }  // mock_transformer_1 unregisters here
+    input_event_transformer.transform(*make_key_event(), nullptr, [](auto){});
 }
-
-TEST_F(TestInputEventTransformer, removing_a_valid_transformer_returns_true)
-{
-    auto mock_transformer_1 = std::make_shared<MockTransformer>();
-    EXPECT_CALL(*mock_transformer_1, transform_input_event(_, _, _)).Times(0);
-    auto mock_transformer_2 = std::make_shared<MockTransformer>();
-    EXPECT_CALL(*mock_transformer_2, transform_input_event(_, _, _));
-
-    input_event_transformer.append(mock_transformer_1);
-    input_event_transformer.append(mock_transformer_2);
-    ASSERT_TRUE(input_event_transformer.remove(mock_transformer_1));
-    input_event_transformer.transform(*make_key_event(), nullptr, [](auto) {});
-}
-
-TEST_F(TestInputEventTransformer, removing_a_transformer_that_was_not_returns_false)
-{
-    auto mock_transformer = std::make_shared<MockTransformer>();
-    ASSERT_FALSE(input_event_transformer.remove(mock_transformer));
-}
-
-TEST_F(TestInputEventTransformer, adding_transformer_twice_has_no_effect_on_expected_handling_of_events)
-{
-    auto mock_transformer_1 = std::make_shared<MockTransformer>();
-    EXPECT_CALL(*mock_transformer_1, transform_input_event(_, _, _)).Times(1);
-
-    input_event_transformer.append(mock_transformer_1);
-    input_event_transformer.append(mock_transformer_1);
-    input_event_transformer.transform(*make_key_event(), nullptr, [](auto) {});
-}
-

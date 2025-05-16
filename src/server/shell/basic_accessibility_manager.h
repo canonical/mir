@@ -17,6 +17,7 @@
 #ifndef MIR_SHELL_BASIC_ACCESSIBILITY_MANAGER_H
 #define MIR_SHELL_BASIC_ACCESSIBILITY_MANAGER_H
 
+#include "mir/input/input_event_transformer.h"
 #include "mir/shell/accessibility_manager.h"
 
 #include "mir/input/mousekeys_keymap.h"
@@ -75,26 +76,57 @@ public:
     void max_speed(double x_axis, double y_axis) override;
 
 private:
-    class MousekeyPointer;
+    std::shared_ptr<MainLoop> const main_loop;
+    std::shared_ptr<input::CompositeEventFilter> const the_composite_event_filter;
+    bool const enable_key_repeat;
+    std::shared_ptr<graphics::Cursor> const cursor;
+    std::shared_ptr<mir::input::InputDeviceRegistry> const input_device_registry;
+    std::shared_ptr<mir::input::InputEventTransformer> const event_transformer;
 
-    struct MutableState {
+    template <typename Transformer> class Registration
+    {
+    public:
+        Registration(
+            std::shared_ptr<Transformer> const& transformer,
+            std::shared_ptr<input::InputEventTransformer> const& event_transformer);
+
+        Registration(Registration&& other);
+
+        void add_registration();
+        void remove_registration();
+
+        Transformer* operator->() const noexcept;
+
+        bool is_registered() const noexcept;
+
+    private:
+        Registration(Registration const&) = delete;
+        Registration& operator=(Registration const&) = delete;
+
+        std::shared_ptr<Transformer> const transformer;
+        std::shared_ptr<input::InputEventTransformer> const event_transformer;
+        std::optional<input::InputEventTransformer::Registration> registration;
+    };
+
+    class MousekeyPointer;
+    struct MutableState
+    {
+        MutableState(
+            std::shared_ptr<shell::MouseKeysTransformer> const& mousekeys_transformer,
+            std::shared_ptr<input::InputEventTransformer> const& event_transformer);
+
+        MutableState(MutableState&& other);
+
         // 25 rate and 600 delay are the default in Weston and Sway
         int repeat_rate{25};
         int repeat_delay{600};
 
         std::vector<std::shared_ptr<shell::KeyboardHelper>> keyboard_helpers;
         std::shared_ptr<MousekeyPointer> mousekey_pointer;
+        Registration<MouseKeysTransformer> mousekeys_transformer;
     };
 
     Synchronised<MutableState> mutable_state;
-
-    std::shared_ptr<MainLoop> const main_loop;
-    std::shared_ptr<input::CompositeEventFilter> const the_composite_event_filter;
-    bool const enable_key_repeat;
-    std::shared_ptr<graphics::Cursor> const cursor;
-    std::shared_ptr<mir::input::InputEventTransformer> const event_transformer;
-    std::shared_ptr<mir::shell::MouseKeysTransformer> const transformer;
-    std::shared_ptr<mir::input::InputDeviceRegistry> const input_device_registry;
 };
 }
 }
