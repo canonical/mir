@@ -106,9 +106,9 @@ mir::DefaultServerConfiguration::the_event_filter_chain_dispatcher()
 std::shared_ptr<mi::InputEventTransformer> mir::DefaultServerConfiguration::the_input_event_transformer()
 {
     return input_event_transformer(
-        []
+        [this]
         {
-            return std::make_shared<input::InputEventTransformer>();
+            return std::make_shared<input::InputEventTransformer>(the_seat(), the_clock());
         });
 }
 
@@ -320,7 +320,7 @@ std::shared_ptr<mi::DefaultInputDeviceHub> mir::DefaultServerConfiguration::the_
            auto input_dispatcher = the_input_dispatcher();
            auto key_repeater = std::dynamic_pointer_cast<mi::KeyRepeatDispatcher>(input_dispatcher);
            auto hub = std::make_shared<mi::DefaultInputDeviceHub>(
-               the_seat(),
+               the_input_event_transformer(),
                the_input_reading_multiplexer(),
                the_clock(),
                the_key_mapper(),

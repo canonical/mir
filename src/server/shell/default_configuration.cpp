@@ -191,12 +191,9 @@ auto mir::DefaultServerConfiguration::the_accessibility_manager() -> std::shared
         [this]
         {
             return std::make_shared<shell::BasicAccessibilityManager>(
-                the_main_loop(),
-                the_composite_event_filter(),
                 the_input_event_transformer(),
                 the_options()->get<bool>(mir::options::enable_key_repeat_opt),
                 the_cursor(),
-                std::make_shared<shell::BasicMouseKeysTransformer>(the_main_loop(), the_clock()),
-                the_input_device_registry());
+                std::make_shared<shell::BasicMouseKeysTransformer>(the_main_loop(), the_clock()));
         });
 }
