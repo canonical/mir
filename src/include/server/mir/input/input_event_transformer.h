@@ -34,7 +34,7 @@ class Clock;
 namespace input
 {
 class EventBuilder;
-class InputEventTransformer : public input::Seat
+class InputEventTransformer : public Seat
 {
 public:
     using EventDispatcher = std::function<void(std::shared_ptr<MirEvent>)>;
@@ -52,7 +52,6 @@ public:
 
     InputEventTransformer(std::shared_ptr<Seat> const& seat, std::shared_ptr<time::Clock> const& clock);
     ~InputEventTransformer();
-
 
     bool transform(
         MirEvent const& event,
