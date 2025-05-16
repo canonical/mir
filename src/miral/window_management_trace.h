@@ -133,6 +133,7 @@ private:
         Rectangle const& new_placement) -> Rectangle override;
 
     void move_cursor_to(mir::geometry::PointF point) override;
+    auto cursor_location() const -> mir::geometry::Point override;
 
 public:
     virtual void advise_begin() override;

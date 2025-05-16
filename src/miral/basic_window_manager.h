@@ -189,6 +189,7 @@ public:
     void invoke_under_lock(std::function<void()> const& callback) override;
 
     void move_cursor_to(mir::geometry::PointF point) override;
+    auto cursor_location() const -> mir::geometry::Point override;
 
 private:
     /// An area for windows to be placed in
