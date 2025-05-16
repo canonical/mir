@@ -34,10 +34,14 @@
 #include <miral/x11_support.h>
 #include <miral/wayland_extensions.h>
 #include <miral/mousekeys_config.h>
+#include <miral/hover_click.h>
 
 #include <xkbcommon/xkbcommon-keysyms.h>
 
 #include <cstring>
+
+#define MIR_LOG_COMPONENT "miral-shell"
+#include "mir/log.h"
 
 namespace
 {
@@ -172,6 +176,11 @@ int main(int argc, char const* argv[])
         return false;
     };
 
+    auto hover_click_config = miral::HoverClick{false}
+                                  .on_hover_start([] { mir::log_info("Hover start"); })
+                                  .on_hover_cancel([] { mir::log_info("Hover cancelled"); })
+                                  .on_click_dispatched([] { mir::log_info("Click dispatched"); });
+
     return runner.run_with(
         {
             CursorTheme{"default:DMZ-White"},
@@ -194,6 +203,7 @@ int main(int argc, char const* argv[])
             ConfigurationOption{[&](std::string const& cmd) { terminal_cmd = cmd; },
                                 "shell-terminal-emulator", "terminal emulator to use", terminal_cmd},
             mousekeys_config,
-            AppendEventFilter{toggle_mousekeys_filter}
+            AppendEventFilter{toggle_mousekeys_filter},
+            hover_click_config
         });
 }
