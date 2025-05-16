@@ -148,6 +148,7 @@ public:
         {
             return buffer->written_pixels.size();
         }
+
     private:
         StubBuffer* const buffer;
     };

@@ -28,6 +28,7 @@ namespace mir
 namespace graphics
 {
 class CursorImage;
+class Renderable;
 class Cursor
 {
 public:
@@ -37,6 +38,8 @@ public:
     virtual void move_to(geometry::Point position) = 0;
 
     virtual void scale(float new_scale) = 0;
+
+    virtual bool is(std::shared_ptr<Renderable> const&) const = 0;
 protected:
     Cursor() = default;
     virtual ~Cursor() = default;

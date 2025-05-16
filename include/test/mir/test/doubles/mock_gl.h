@@ -95,6 +95,8 @@ public:
                 (GLuint, GLsizei, const GLchar * const *, const GLint *));
     MOCK_METHOD(void, glTexImage2D,
                 (GLenum, GLint, GLint, GLsizei, GLsizei, GLint, GLenum, GLenum,const GLvoid*));
+    MOCK_METHOD(void, glTexSubImage2D,
+                (GLenum, GLint, GLint, GLint, GLsizei, GLsizei, GLenum, GLenum,const GLvoid*));
     MOCK_METHOD(void, glTexParameteri, (GLenum, GLenum, GLenum));
     MOCK_METHOD(void, glUniform1f, (GLint, GLfloat));
     MOCK_METHOD(void, glUniform2f, (GLint, GLfloat, GLfloat));

@@ -1,5 +1,5 @@
 /*
- * Copyright © Canonical Ltd.
+* Copyright © Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3,
@@ -14,27 +14,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_GRAPHICS_NULL_CURSOR_H_
-#define MIR_GRAPHICS_NULL_CURSOR_H_
+#ifndef MIR_SHELL_MAGNIFICATION_MANAGER_H
+#define MIR_SHELL_MAGNIFICATION_MANAGER_H
 
-#include "mir/graphics/cursor.h"
+#include "mir/geometry/size.h"
 
 namespace mir
 {
-namespace graphics
+namespace shell
 {
-
-class NullCursor : public Cursor
+class MagnificationManager
 {
 public:
-    void show(std::shared_ptr<CursorImage> const&) override {}
-    void hide() override {}
-    void move_to(geometry::Point) override {}
-    void scale(float) override {}
-    bool is(std::shared_ptr<Renderable> const&) const override { return false; }
+    virtual ~MagnificationManager() = default;
+    virtual void magnification(float magnification) = 0;
+    virtual float magnification() const = 0;
+    virtual bool enabled(bool enabled) = 0;
+    virtual void size(geometry::Size const& size) = 0;
+    virtual geometry::Size size() const = 0;
 };
-
 }
 }
 
-#endif
+#endif //MIR_SHELL_MAGNIFICATION_MANAGER_H

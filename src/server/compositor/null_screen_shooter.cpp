@@ -38,3 +38,30 @@ void mc::NullScreenShooter::capture(
             callback(std::nullopt);
         });
 }
+
+void mc::NullScreenShooter::capture_with_cursor(
+    std::shared_ptr<mrs::WriteMappableBuffer> const&,
+    geom::Rectangle const&,
+    bool,
+    std::function<void(std::optional<time::Timestamp>)>&& callback)
+{
+    log_warning("Failed to capture screen because NullScreenShooter is in use");
+    executor.spawn([callback=std::move(callback)]
+        {
+            callback(std::nullopt);
+        });
+}
+
+void mc::NullScreenShooter::capture_with_filter(
+    std::shared_ptr<mrs::WriteMappableBuffer> const&,
+    geom::Rectangle const&,
+    std::function<bool(std::shared_ptr<SceneElement const> const&)> const&,
+    bool,
+    std::function<void(std::optional<time::Timestamp>)>&& callback)
+{
+    log_warning("Failed to capture screen because NullScreenShooter is in use");
+    executor.spawn([callback=std::move(callback)]
+        {
+            callback(std::nullopt);
+        });
+}

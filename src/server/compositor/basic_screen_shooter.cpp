@@ -17,6 +17,7 @@
 #include "basic_screen_shooter.h"
 #include "mir/graphics/drm_formats.h"
 #include "mir/graphics/gl_config.h"
+#include "mir/graphics/cursor.h"
 #include "mir/renderer/renderer.h"
 #include "mir/renderer/gl/gl_surface.h"
 #include "mir/compositor/scene_element.h"
@@ -156,20 +157,24 @@ mc::BasicScreenShooter::Self::Self(
     std::shared_ptr<time::Clock> const& clock,
     std::shared_ptr<mg::GLRenderingProvider> render_provider,
     std::shared_ptr<mr::RendererFactory> renderer_factory,
-    std::shared_ptr<mir::graphics::GLConfig> const& config)
+    std::shared_ptr<mir::graphics::GLConfig> const& config,
+    std::shared_ptr<graphics::Cursor> const& cursor)
     : scene{scene},
       clock{clock},
       render_provider{std::move(render_provider)},
       renderer_factory{std::move(renderer_factory)},
       last_rendered_size{0, 0},
       output{std::make_shared<OneShotBufferDisplayProvider>()},
-      config{config}
+      config{config},
+      cursor{cursor}
 {
 }
 
 auto mc::BasicScreenShooter::Self::render(
     std::shared_ptr<mrs::WriteMappableBuffer> const& buffer,
-    geom::Rectangle const& area) -> time::Timestamp
+    geom::Rectangle const& area,
+    std::function<bool(std::shared_ptr<SceneElement const> const&)> const& filter,
+    bool with_cursor) -> time::Timestamp
 {
     std::lock_guard lock{mutex};
 
@@ -179,6 +184,12 @@ auto mc::BasicScreenShooter::Self::render(
     renderable_list.reserve(scene_elements.size());
     for (auto const& element : scene_elements)
     {
+        if (!filter(element))
+            continue;
+
+        if (!with_cursor && cursor->is(element->renderable()))
+            continue;
+
         renderable_list.push_back(element->renderable());
     }
     scene_elements.clear();
@@ -257,8 +268,9 @@ mc::BasicScreenShooter::BasicScreenShooter(
     std::span<std::shared_ptr<mg::GLRenderingProvider>> const& providers,
     std::shared_ptr<mr::RendererFactory> render_factory,
     std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
-    std::shared_ptr<mir::graphics::GLConfig> const& config)
-    : self{std::make_shared<Self>(scene, clock, select_provider(providers, buffer_allocator), std::move(render_factory), config)},
+    std::shared_ptr<mir::graphics::GLConfig> const& config,
+    std::shared_ptr<graphics::Cursor> const& cursor)
+    : self{std::make_shared<Self>(scene, clock, select_provider(providers, buffer_allocator), std::move(render_factory), config, cursor)},
       executor{executor}
 {
 }
@@ -268,15 +280,42 @@ void mc::BasicScreenShooter::capture(
     geom::Rectangle const& area,
     std::function<void(std::optional<time::Timestamp>)>&& callback)
 {
+    capture_with_filter(buffer,
+        area,
+        [](std::shared_ptr<SceneElement const> const&) { return true; },
+        true,
+        std::move(callback));
+}
+
+void mc::BasicScreenShooter::capture_with_cursor(
+    std::shared_ptr<mrs::WriteMappableBuffer> const& buffer,
+    geom::Rectangle const& area,
+    bool with_cursor,
+    std::function<void(std::optional<time::Timestamp>)>&& callback)
+{
+    capture_with_filter(buffer,
+        area,
+        [](std::shared_ptr<SceneElement const> const&) { return true; },
+        with_cursor,
+        std::move(callback));
+}
+
+void mc::BasicScreenShooter::capture_with_filter(
+    std::shared_ptr<mrs::WriteMappableBuffer> const& buffer,
+    geom::Rectangle const& area,
+    std::function<bool(std::shared_ptr<SceneElement const> const&)> const& filter,
+    bool with_cursor,
+    std::function<void(std::optional<time::Timestamp>)>&& callback)
+{
     // TODO: use an atomic to keep track of number of in-flight captures, and error if it's too many
 
-    executor.spawn([weak_self=std::weak_ptr{self}, buffer, area, callback=std::move(callback)]
+    executor.spawn([weak_self=std::weak_ptr{self}, buffer, area, callback=std::move(callback), filter=std::move(filter), with_cursor]
         {
             if (auto const self = weak_self.lock())
             {
                 try
                 {
-                    callback(self->render(buffer, area));
+                    callback(self->render(buffer, area, filter, with_cursor));
                     return;
                 }
                 catch (...)

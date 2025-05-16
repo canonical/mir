@@ -22,6 +22,7 @@
 #include "mir_toolkit/client_types.h"
 #include "mir/geometry/displacement.h"
 
+#include <functional>
 #include <mutex>
 
 namespace mir
@@ -51,6 +52,7 @@ public:
     void hide() override;
     void move_to(geometry::Point position) override;
     void scale(float) override;
+    bool is(std::shared_ptr<Renderable> const&) const override;
 
 private:
     std::shared_ptr<detail::CursorRenderable> create_scaled_renderable_for(

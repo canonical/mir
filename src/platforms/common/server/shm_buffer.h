@@ -66,6 +66,7 @@ protected:
 
     /// \note This must be called with a current GL context
     void upload_to_texture(void const* pixels, geometry::Stride const& stride);
+
 private:
     geometry::Size const size_;
     MirPixelFormat const pixel_format_;
@@ -89,6 +90,7 @@ public:
     auto map_rw() -> std::unique_ptr<renderer::software::Mapping<unsigned char>> override;
 
     void bind() override;
+    void mark_dirty();
 
     auto format() const -> MirPixelFormat override { return ShmBuffer::pixel_format(); }
     auto stride() const -> geometry::Stride override { return stride_; }
@@ -123,6 +125,7 @@ public:
     auto map_rw() -> std::unique_ptr<renderer::software::Mapping<unsigned char>> override;
 
     void bind() override;
+    void mark_dirty();
 
     auto format() const -> MirPixelFormat override;
     auto stride() const -> geometry::Stride override;

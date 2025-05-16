@@ -452,3 +452,8 @@ void mir::graphics::gbm::Cursor::scale(float new_scale)
 
     show(current_cursor_image);
 }
+
+bool mir::graphics::gbm::Cursor::is(std::shared_ptr<Renderable> const&) const
+{
+    return false;
+}

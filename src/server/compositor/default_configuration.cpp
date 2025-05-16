@@ -121,7 +121,8 @@ auto mir::DefaultServerConfiguration::the_screen_shooter() -> std::shared_ptr<co
                     providers,
                     the_renderer_factory(),
                     the_buffer_allocator(),
-                    the_gl_config());
+                    the_gl_config(),
+                    the_cursor());
             }
             catch (...)
             {
