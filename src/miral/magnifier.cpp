@@ -20,6 +20,8 @@
 #include "mir/synchronised.h"
 #include "mir/compositor/scene.h"
 #include "mir/compositor/scene_element.h"
+#include "mir/events/pointer_event.h"
+#include "mir/input/composite_event_filter.h"
 #include "mir/scene/basic_surface.h"
 #include "mir/shell/surface_stack.h"
 
@@ -123,7 +125,7 @@ public:
             scene_display_configuration_observer_registrar),
             scene(scene)
     {
-        set_depth_layer(mir_depth_layer_always_on_top);
+        BasicSurface::set_depth_layer(mir_depth_layer_always_on_top);
         scene->register_compositor(this);
         state.lock()->rect = rect;
     }
@@ -160,6 +162,26 @@ public:
         return renderables;
     }
 
+    void set_visible(bool visible)
+    {
+        state.lock()->visible = visible;
+    }
+
+    void set_position(geom::Point const& position)
+    {
+        state.lock()->rect.top_left = position;
+    }
+
+    void set_size(geom::Size const& size)
+    {
+        state.lock()->rect.size = size;
+    }
+
+    void set_scale(float scale)
+    {
+        state.lock()->scale = scale;
+    }
+
 private:
     struct State
     {
@@ -180,7 +202,8 @@ public:
         std::shared_ptr<mc::Scene> const& scene,
         std::shared_ptr<mg::CursorImage> const& cursor_image,
         std::shared_ptr<ms::SceneReport> const& scene_report,
-        std::shared_ptr<mir::ObserverRegistrar<mg::DisplayConfigurationObserver>> const& scene_display_configuration_observer_registrar)
+        std::shared_ptr<mir::ObserverRegistrar<mg::DisplayConfigurationObserver>> const& scene_display_configuration_observer_registrar,
+        std::shared_ptr<mi::CompositeEventFilter> const& composite_event_filter)
         : surface_stack(surface_stack),
           magnifier_surface(std::make_shared<MagnifierSurface>(
               geom::Rectangle({0, 0}, {400, 300}),
@@ -188,9 +211,12 @@ public:
               cursor_image,
               scene_report,
               scene_display_configuration_observer_registrar
-          ))
+          )),
+          composite_event_filter(composite_event_filter),
+          filter(std::make_shared<Filter>(this))
     {
         surface_stack->add_surface(magnifier_surface, mi::InputReceptionMode::normal);
+        composite_event_filter->append(filter);
     }
 
     ~Self()
@@ -198,9 +224,50 @@ public:
         surface_stack->remove_surface(magnifier_surface);
     }
 
+    void on_event(MirEvent const* event) const
+    {
+        if (mir_event_get_type(event) != mir_event_type_input)
+            return;
+
+        auto const input_event = mir_event_get_input_event(event);
+        if (mir_input_event_get_type(input_event) != mir_input_event_type_pointer)
+            return;
+
+        auto const pointer_event = mir_input_event_get_pointer_event(input_event);
+        if (mir_pointer_event_action(pointer_event) != mir_pointer_action_motion)
+            return;
+
+        auto const rect = magnifier_surface->window_size();
+        if (auto const position = pointer_event->position())
+        {
+
+            magnifier_surface->set_position(geom::Point{
+                position->x.as_value() - rect.width.as_value() / 2.f,
+                position->y.as_value() - rect.height.as_value() / 2.f
+            });
+        }
+    }
+
 private:
+    class Filter : public mi::EventFilter
+    {
+    public:
+        explicit Filter(Self* self) : self(self) {}
+
+        bool handle(MirEvent const& event) override
+        {
+            self->on_event(&event);
+            return false;
+        }
+
+    private:
+        Self* self;
+    };
+
     std::shared_ptr<msh::SurfaceStack> const surface_stack;
     std::shared_ptr<MagnifierSurface> const magnifier_surface;
+    std::shared_ptr<mi::CompositeEventFilter> const composite_event_filter;
+    std::shared_ptr<Filter> filter;
 };
 
 miral::Magnifier::Magnifier() = default;
@@ -215,7 +282,8 @@ void miral::Magnifier::operator()(mir::Server& server)
             server.the_scene(),
             server.the_default_cursor_image(),
             server.the_scene_report(),
-            server.the_display_configuration_observer_registrar());
+            server.the_display_configuration_observer_registrar(),
+            server.the_composite_event_filter());
     });
 }
 
