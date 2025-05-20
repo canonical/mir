@@ -545,6 +545,9 @@ global:
     miral::InputConfiguration::Mouse::merge*;
     miral::InputConfiguration::Touchpad::merge*;
     miral::InputConfiguration::Touchpad::middle_mouse_button_emulation*;
+    miral::Magnifier::?Magnifier*;
+    miral::Magnifier::Magnifier*;
+    miral::Magnifier::operator*;
     miral::MouseKeysConfig::MouseKeysConfig*;
     miral::MouseKeysConfig::enabled*;
     miral::MouseKeysConfig::operator*;
@@ -559,6 +562,7 @@ global:
     miral::WindowSpecification::to_surface_specification*;
     typeinfo?for?miral::CursorScale;
     typeinfo?for?miral::DisplayConfiguration::Node;
+    typeinfo?for?miral::Magnifier;
     typeinfo?for?miral::MouseKeysConfig;
     typeinfo?for?miral::RenderSceneIntoWindow;
   };

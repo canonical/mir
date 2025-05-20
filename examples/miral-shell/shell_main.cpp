@@ -35,6 +35,7 @@
 #include <miral/wayland_extensions.h>
 #include <miral/mousekeys_config.h>
 #include <miral/render_scene_into_window.h>
+#include <miral/magnifier.h>
 
 #include <xkbcommon/xkbcommon-keysyms.h>
 
@@ -196,6 +197,7 @@ int main(int argc, char const* argv[])
                                 "shell-terminal-emulator", "terminal emulator to use", terminal_cmd},
             mousekeys_config,
             AppendEventFilter{toggle_mousekeys_filter},
-            RenderSceneIntoWindow()
+            RenderSceneIntoWindow(),
+            Magnifier()
         });
 }
