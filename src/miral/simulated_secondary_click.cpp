@@ -63,7 +63,7 @@ miral::SimulatedSecondaryClick& miral::SimulatedSecondaryClick::enable()
 
 miral::SimulatedSecondaryClick& miral::SimulatedSecondaryClick::disable()
 {
-    self->state.lock()->enabled= false;
+    self->state.lock()->enabled = false;
     if (auto const accessibility_manager = self->accessibility_manager.lock())
         accessibility_manager->simulated_secondary_click_enabled(false);
 
