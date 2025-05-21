@@ -181,20 +181,6 @@ public:
     }
 };
 
-namespace
-{
-//TODO: the concept of default stream is going away very soon.
-std::shared_ptr<mc::BufferStream> default_stream(std::list<ms::StreamInfo> const& layers)
-{
-    //There's not a good reason, other than soon-to-be-deprecated api to disallow contentless surfaces
-    if (layers.empty())
-        BOOST_THROW_EXCEPTION(std::logic_error("Surface must have content"));
-    else
-        return layers.front().stream;
-}
-
-}
-
 ms::BasicSurface::BasicSurface(
     std::string const& name,
     geometry::Rectangle rect,
@@ -218,7 +204,6 @@ ms::BasicSurface::BasicSurface(
         }
     },
     observers(std::make_shared<Multiplexer>()),
-    surface_buffer_stream(default_stream(layers)),
     report(report),
     parent_(parent),
     display_config_registrar{display_config_registrar},
@@ -319,8 +304,7 @@ mir::geometry::Size ms::BasicSurface::content_size() const
 
 std::shared_ptr<mf::BufferStream> ms::BasicSurface::primary_buffer_stream() const
 {
-    // Doesn't lock the mutex because surface_buffer_stream is const
-    return surface_buffer_stream;
+    return nullptr;
 }
 
 void ms::BasicSurface::set_input_region(std::vector<geom::Rectangle> const& input_rectangles)

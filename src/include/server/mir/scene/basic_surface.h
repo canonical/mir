@@ -229,7 +229,6 @@ private:
     mir::Synchronised<State> synchronised_state;
 
     std::shared_ptr<Multiplexer> const observers;
-    std::shared_ptr<compositor::BufferStream> const surface_buffer_stream;
     std::shared_ptr<SceneReport> const report;
     std::weak_ptr<Surface> const parent_;
     std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> display_config_registrar;

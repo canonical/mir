@@ -54,6 +54,7 @@ public:
     /// Size of the client area of the surface (excluding any decorations)
     virtual auto content_size() const -> geometry::Size = 0;
 
+    [[deprecated("This field is no longer used.")]]
     virtual auto primary_buffer_stream() const -> std::shared_ptr<frontend::BufferStream> = 0;
 
     virtual void set_cursor_image(std::shared_ptr<graphics::CursorImage> const& image) = 0;
