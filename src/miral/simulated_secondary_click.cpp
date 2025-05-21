@@ -24,15 +24,20 @@
 
 struct miral::SimulatedSecondaryClick::Self
 {
-    Self(bool enabled_by_default)
+    Self(bool enabled_by_default) :
+        state{State{enabled_by_default}}
     {
-        state.lock()->enabled = enabled_by_default;
     }
 
     std::weak_ptr<mir::shell::AccessibilityManager> accessibility_manager;
 
     struct State
     {
+        State(bool enabled) :
+            enabled{enabled}
+        {
+        }
+
         bool enabled;
         std::chrono::milliseconds hold_duration{1000};
         float displacement_threshold{20.0f};
