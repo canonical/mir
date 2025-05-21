@@ -79,6 +79,7 @@ global:
     mir::DefaultServerConfiguration::the_scene*;
     mir::DefaultServerConfiguration::the_scene_report*;
     mir::DefaultServerConfiguration::the_screen_shooter*;
+    mir::DefaultServerConfiguration::the_screen_shooter_factory*;
     mir::DefaultServerConfiguration::the_seat*;
     mir::DefaultServerConfiguration::the_seat_observer*;
     mir::DefaultServerConfiguration::the_seat_observer_registrar*;
@@ -279,6 +280,8 @@ global:
     mir::compositor::SceneElement::operator*;
     mir::compositor::ScreenShooter::?ScreenShooter*;
     mir::compositor::ScreenShooter::ScreenShooter*;
+    mir::compositor::ScreenShooterFactory::?ScreenShooterFactory*;
+    mir::compositor::ScreenShooterFactory::ScreenShooterFactory*;
     mir::compositor::Stream::?Stream*;
     mir::compositor::Stream::Stream*;
     mir::compositor::Stream::has_submitted_buffer*;
@@ -854,6 +857,7 @@ global:
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_scene*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_scene_report*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_screen_shooter*;
+    non-virtual?thunk?to?mir::DefaultServerConfiguration::the_screen_shooter_factory*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_seat*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_seat_observer_registrar*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_server_action_queue*;
@@ -924,6 +928,7 @@ global:
     non-virtual?thunk?to?mir::compositor::Scene::?Scene*;
     non-virtual?thunk?to?mir::compositor::SceneElement::?SceneElement*;
     non-virtual?thunk?to?mir::compositor::ScreenShooter::?ScreenShooter*;
+    non-virtual?thunk?to?mir::compositor::ScreenShooterFactory::?ScreenShooterFactory*;
     non-virtual?thunk?to?mir::compositor::Stream::?Stream*;
     non-virtual?thunk?to?mir::compositor::Stream::has_submitted_buffer*;
     non-virtual?thunk?to?mir::compositor::Stream::next_submission_for_compositor*;
@@ -1263,6 +1268,7 @@ global:
     typeinfo?for?mir::compositor::Scene;
     typeinfo?for?mir::compositor::SceneElement;
     typeinfo?for?mir::compositor::ScreenShooter;
+    typeinfo?for?mir::compositor::ScreenShooterFactory;
     typeinfo?for?mir::compositor::Stream;
     typeinfo?for?mir::detail::FdSources;
     typeinfo?for?mir::detail::GMainContextHandle;
@@ -1401,6 +1407,7 @@ global:
     virtual?thunk?to?mir::DefaultServerConfiguration::the_primary_selection_clipboard*;
     virtual?thunk?to?mir::DefaultServerConfiguration::the_rendering_platforms*;
     virtual?thunk?to?mir::DefaultServerConfiguration::the_screen_shooter*;
+    virtual?thunk?to?mir::DefaultServerConfiguration::the_screen_shooter_factory*;
     virtual?thunk?to?mir::DefaultServerConfiguration::the_server_status_listener*;
     virtual?thunk?to?mir::DefaultServerConfiguration::the_session_lock*;
     virtual?thunk?to?mir::DefaultServerConfiguration::the_stop_callback*;
@@ -1475,6 +1482,7 @@ global:
     vtable?for?mir::compositor::Scene;
     vtable?for?mir::compositor::SceneElement;
     vtable?for?mir::compositor::ScreenShooter;
+    vtable?for?mir::compositor::ScreenShooterFactory;
     vtable?for?mir::compositor::Stream;
     vtable?for?mir::frontend::BufferStream;
     vtable?for?mir::frontend::Connector;
