@@ -91,6 +91,7 @@ add_library(miral-external OBJECT
     cursor_scale.cpp                    ${miral_include}/miral/cursor_scale.h
     mousekeys_config.cpp                ${miral_include}/miral/mousekeys_config.h
     output_filter.cpp                   ${miral_include}/miral/output_filter.h
+    render_scene_into_window.cpp        ${miral_include}/miral/render_scene_into_window.h
 )
 
 add_library(miral SHARED

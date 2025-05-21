@@ -34,7 +34,11 @@
 #include <miral/x11_support.h>
 #include <miral/wayland_extensions.h>
 #include <miral/mousekeys_config.h>
+<<<<<<< HEAD
 #include <miral/output_filter.h>
+=======
+#include <miral/render_scene_into_window.h>
+>>>>>>> 6b81912086 (Breaking out scene rendering into a surface)
 
 #include <xkbcommon/xkbcommon-keysyms.h>
 
@@ -226,6 +230,7 @@ int main(int argc, char const* argv[])
             mousekeys_config,
             AppendEventFilter{toggle_mousekeys_filter},
             output_filter,
-            AppendEventFilter{toggle_output_filter_filter}
+            AppendEventFilter{toggle_output_filter_filter},
+            RenderSceneIntoWindow()
         });
 }

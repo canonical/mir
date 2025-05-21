@@ -244,11 +244,7 @@ void mgc::MemoryBackedShmBuffer::bind()
 {
     mgc::ShmBuffer::bind();
     std::lock_guard lock{uploaded_mutex};
-    if (!uploaded)
-    {
-        upload_to_texture(pixels.get(), stride_);
-        uploaded = true;
-    }
+    upload_to_texture(pixels.get(), stride_);
 }
 
 void mgc::MemoryBackedShmBuffer::mark_dirty()
@@ -367,12 +363,8 @@ void mgc::MappableBackedShmBuffer::bind()
 {
     mgc::ShmBuffer::bind();
     std::lock_guard lock{uploaded_mutex};
-    if (!uploaded)
-    {
-        auto mapping = data->map_readable();
-        upload_to_texture(mapping->data(), mapping->stride());
-        uploaded = true;
-    }
+    auto mapping = data->map_readable();
+    upload_to_texture(mapping->data(), mapping->stride());
 }
 
 auto mgc::MappableBackedShmBuffer::format() const -> MirPixelFormat

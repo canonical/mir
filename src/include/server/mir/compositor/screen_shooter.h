@@ -17,8 +17,9 @@
 #ifndef MIR_COMPOSITOR_SCREEN_SHOOTER_H_
 #define MIR_COMPOSITOR_SCREEN_SHOOTER_H_
 
-#include "mir/geometry/rectangle.h"
 #include "mir/time/types.h"
+#include "mir/compositor/compositor_id.h"
+#include "mir/geometry/rectangle.h"
 
 #include <functional>
 #include <memory>
@@ -48,6 +49,13 @@ public:
         std::shared_ptr<renderer::software::WriteMappableBuffer> const& buffer,
         mir::geometry::Rectangle const& area,
         std::function<void(std::optional<time::Timestamp>)>&& callback) = 0;
+
+    /// Captures the section of the scene in [area] immediately into the provided [buffer].
+    virtual void capture_blocking(
+        std::shared_ptr<renderer::software::WriteMappableBuffer> const& buffer,
+        mir::geometry::Rectangle const& area) = 0;
+
+    virtual CompositorID id() const = 0;
 
 private:
     ScreenShooter(ScreenShooter const&) = delete;

@@ -555,6 +555,9 @@ global:
     miral::OutputFilter::OutputFilter*;
     miral::OutputFilter::operator*;
     miral::OutputFilter::filter*;
+    miral::RenderSceneIntoWindow::?RenderSceneIntoWindow*;
+    miral::RenderSceneIntoWindow::RenderSceneIntoWindow*;
+    miral::RenderSceneIntoWindow::operator*;
     miral::WindowInfo::tiled_edges*;
     miral::WindowSpecification::tiled_edges*;
     miral::WindowSpecification::to_surface_specification*;
@@ -562,5 +565,6 @@ global:
     typeinfo?for?miral::DisplayConfiguration::Node;
     typeinfo?for?miral::MouseKeysConfig;
     typeinfo?for?miral::OutputFilter;
+    typeinfo?for?miral::RenderSceneIntoWindow;
   };
 } MIRAL_5.2;
