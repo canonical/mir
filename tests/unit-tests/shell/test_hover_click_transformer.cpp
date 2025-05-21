@@ -127,7 +127,7 @@ TEST_P(TestCancelCallback, cancel_called_if_pointer_moves_before_hover_delay)
     // Have to split into two because one alarm kicks off the other
     // By this point, the "real" hover click alarm should be enqueued
 
-    auto const remaining_percentage = std::clamp(0.0, 1.0, delay_percentage * (1.0 - grace_period_percentage));
+    auto const remaining_percentage = std::clamp(delay_percentage * (1.0 - grace_period_percentage), 0.0, 1.0);
     clock.advance_by(std::chrono::duration_cast<std::chrono::milliseconds>(remaining_percentage * test_hover_delay));
     main_loop.call_queued();
 
