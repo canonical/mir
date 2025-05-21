@@ -92,6 +92,7 @@ add_library(miral-external OBJECT
     mousekeys_config.cpp                ${miral_include}/miral/mousekeys_config.h
     render_scene_into_window.cpp        ${miral_include}/miral/render_scene_into_window.h
     magnifier.cpp                       ${miral_include}/miral/magnifier.h
+    render_scene_into_window.cpp             ${miral_include}/miral/render_scene_into_window.h
 )
 
 add_library(miral SHARED

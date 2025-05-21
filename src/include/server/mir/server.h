@@ -510,11 +510,8 @@ public:
     auto the_scene_report() const -> std::shared_ptr<scene::SceneReport>;
 
     auto the_scene() const -> std::shared_ptr<compositor::Scene>;
-<<<<<<< HEAD
 
     auto the_screen_shooter() const -> std::shared_ptr<compositor::ScreenShooter>;
-=======
->>>>>>> 98c5167b97 (Foundational implementation of creating the magnification surface)
 private:
     struct ServerConfiguration;
     struct Self;

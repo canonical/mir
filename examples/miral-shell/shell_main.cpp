@@ -36,6 +36,7 @@
 #include <miral/mousekeys_config.h>
 #include <miral/render_scene_into_window.h>
 #include <miral/magnifier.h>
+#include <miral/render_scene_into_window.h>
 
 #include <xkbcommon/xkbcommon-keysyms.h>
 
