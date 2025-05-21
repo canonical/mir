@@ -284,6 +284,7 @@ global:
     mir::compositor::ScreenShooter::ScreenShooter*;
     mir::compositor::ScreenShooterFactory::?ScreenShooterFactory*;
     mir::compositor::ScreenShooterFactory::ScreenShooterFactory*;
+    mir::compositor::ScreenShooter::capture_blocking*;
     mir::compositor::Stream::?Stream*;
     mir::compositor::Stream::Stream*;
     mir::compositor::Stream::has_submitted_buffer*;
@@ -930,7 +931,11 @@ global:
     non-virtual?thunk?to?mir::compositor::Scene::?Scene*;
     non-virtual?thunk?to?mir::compositor::SceneElement::?SceneElement*;
     non-virtual?thunk?to?mir::compositor::ScreenShooter::?ScreenShooter*;
+<<<<<<< HEAD
     non-virtual?thunk?to?mir::compositor::ScreenShooterFactory::?ScreenShooterFactory*;
+=======
+    non-virtual?thunk?to?mir::compositor::ScreenShooter::capture_blocking*;
+>>>>>>> 409de36327 (Breaking out scene rendering into a surface)
     non-virtual?thunk?to?mir::compositor::Stream::?Stream*;
     non-virtual?thunk?to?mir::compositor::Stream::has_submitted_buffer*;
     non-virtual?thunk?to?mir::compositor::Stream::next_submission_for_compositor*;
