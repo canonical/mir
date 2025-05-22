@@ -55,7 +55,7 @@ public:
         std::shared_ptr<input::InputEventTransformer> const& event_transformer,
         bool enable_key_repeat,
         std::shared_ptr<mir::graphics::Cursor> const& cursor,
-        std::shared_ptr<shell::MouseKeysTransformer> const& mousekeys_transformer,
+        std::shared_ptr<MouseKeysTransformer> const& mousekeys_transformer,
         std::shared_ptr<SimulatedSecondaryClickTransformer> const& simulated_secondary_click_transformer);
     ~BasicAccessibilityManager();
 

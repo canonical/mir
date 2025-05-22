@@ -35,7 +35,7 @@ class SimulatedSecondaryClick
 public:
     /// \note `--enable-simulated-secondary-click` has higher precedence than
     /// [enabled_by_default]
-    SimulatedSecondaryClick(bool enabled_by_default);
+    explicit SimulatedSecondaryClick(bool enabled_by_default);
 
     void operator()(mir::Server& server);
 
@@ -53,9 +53,12 @@ public:
     /// the simulated secondary click is cancelled.
     SimulatedSecondaryClick& displacement_threshold(float displacement);
 
-    /// Configures the callbacks invoked when simulated secondary click is
-    /// enabled or disabled
+    /// Configures the callback invoked when simulated secondary click is
+    /// enabled.
     SimulatedSecondaryClick& on_enabled(std::function<void()>&& on_enabled);
+    
+    /// Configures the callback invoked when simulated secondary click is
+    /// disabled.
     SimulatedSecondaryClick& on_disabled(std::function<void()>&& on_disabled);
 
     /// Configures the callback to invoke when the user clicks _down_ the left
@@ -67,7 +70,7 @@ public:
     /// hold duration is up or moving the cursor
     SimulatedSecondaryClick& on_hold_cancel(std::function<void()>&& on_hold_cancel);
 
-    /// Configures the callback to invoke when the user successfully
+    /// Configures the callback to invoke after the user successfully
     /// dispatches a simulated secondary click
     SimulatedSecondaryClick& on_secondary_click(std::function<void()>&& on_secondary_click);
 
