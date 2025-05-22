@@ -94,45 +94,50 @@ miral::HoverClick& miral::HoverClick::cancel_displacement_threshold(float displa
 
 miral::HoverClick& miral::HoverClick::on_enabled(std::function<void()> && on_enabled)
 {
-    self->state.lock()->on_enabled = std::move(on_enabled);
+    auto const state = self->state.lock();
+    state->on_enabled = std::move(on_enabled);
     if(auto const accessibility_manager = self->accessibility_manager.lock())
-        accessibility_manager->hover_click().on_enabled(std::move(self->state.lock()->on_enabled));
+        accessibility_manager->hover_click().on_enabled(std::move(state->on_enabled));
 
     return *this;
 }
 
 miral::HoverClick& miral::HoverClick::on_disabled(std::function<void()> && on_disabled)
 {
-    self->state.lock()->on_disabled = std::move(on_disabled);
+    auto const state = self->state.lock();
+    state->on_disabled = std::move(on_disabled);
     if(auto const accessibility_manager = self->accessibility_manager.lock())
-        accessibility_manager->hover_click().on_disabled(std::move(self->state.lock()->on_disabled));
+        accessibility_manager->hover_click().on_disabled(std::move(state->on_disabled));
 
     return *this;
 }
 
 miral::HoverClick& miral::HoverClick::on_hover_start(std::function<void()> && on_hover_start)
 {
-    self->state.lock()->on_hover_start = std::move(on_hover_start);
+    auto const state = self->state.lock();
+    state->on_hover_start = std::move(on_hover_start);
     if(auto const accessibility_manager = self->accessibility_manager.lock())
-        accessibility_manager->hover_click().on_hover_start(std::move(self->state.lock()->on_hover_start));
+        accessibility_manager->hover_click().on_hover_start(std::move(state->on_hover_start));
 
     return *this;
 }
 
 miral::HoverClick& miral::HoverClick::on_hover_cancel(std::function<void()> && on_hover_cancel)
 {
-    self->state.lock()->on_hover_cancel = std::move(on_hover_cancel);
+    auto const state = self->state.lock();
+    state->on_hover_cancel = std::move(on_hover_cancel);
     if(auto const accessibility_manager = self->accessibility_manager.lock())
-        accessibility_manager->hover_click().on_hover_cancel(std::move(self->state.lock()->on_hover_cancel));
+        accessibility_manager->hover_click().on_hover_cancel(std::move(state->on_hover_cancel));
 
     return *this;
 }
 
 miral::HoverClick& miral::HoverClick::on_click_dispatched(std::function<void()> && on_click_dispatched)
 {
-    self->state.lock()->on_click_dispatched = std::move(on_click_dispatched);
+    auto const state = self->state.lock();
+    state->on_click_dispatched = std::move(on_click_dispatched);
     if(auto const accessibility_manager = self->accessibility_manager.lock())
-        accessibility_manager->hover_click().on_click_dispatched(std::move(self->state.lock()->on_click_dispatched));
+        accessibility_manager->hover_click().on_click_dispatched(std::move(state->on_click_dispatched));
 
     return *this;
 }
