@@ -67,7 +67,7 @@ bool msh::BasicHoverClickTransformer::transform_input_event(
         {
             auto const distance_from_last_click = (*hover_click_origin - *pointer_event->position()).length_squared();
             auto const threshold = reclick_displacement_threshold;
-            if(distance_from_last_click <= threshold)
+            if(distance_from_last_click <= (threshold * threshold))
                 return false;
         }
 
