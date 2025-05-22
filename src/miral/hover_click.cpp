@@ -24,13 +24,18 @@
 
 struct miral::HoverClick::Self
 {
-    Self(bool enabled_by_default)
+    Self(bool enabled_by_default) :
+        state{enabled_by_default}
     {
-        state.lock()->enabled = enabled_by_default;
     }
 
     struct State
     {
+        State(bool enabled) :
+            enabled{enabled}
+        {
+        }
+
         bool enabled;
 
         std::chrono::milliseconds hover_duration{1000};
