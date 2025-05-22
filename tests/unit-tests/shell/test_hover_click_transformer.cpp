@@ -82,8 +82,8 @@ TEST_P(TestStartCallback, start_event_called_only_after_grace_period)
     // 0.1 is the hardcoded grace period in the basic transformer
     auto const expect_start_called = delay_percentage >= grace_period_percentage;
 
-    mt::Signal hover_start_signal;
-    transformer->on_hover_start([&hover_start_signal] { hover_start_signal.raise(); });
+    std::atomic<bool> hover_started;
+    transformer->on_hover_start([&hover_started] { hover_started = true; });
 
     auto initial_pointer_move_event = motion_event(mir::geometry::DisplacementF{10, 0});
     transformer->transform_input_event(dispatcher, &event_builder, *initial_pointer_move_event);
@@ -96,7 +96,7 @@ TEST_P(TestStartCallback, start_event_called_only_after_grace_period)
     clock.advance_by(std::chrono::duration_cast<std::chrono::milliseconds>(delay_percentage * test_hover_delay));
 
     main_loop.call_queued();
-    EXPECT_THAT(hover_start_signal.raised(), Eq(expect_start_called));
+    EXPECT_THAT(hover_started, Eq(expect_start_called));
 }
 
 INSTANTIATE_TEST_SUITE_P(
@@ -109,13 +109,13 @@ struct TestCancelCallback: public TestHoverClickTransformer, public WithParamInt
 TEST_P(TestCancelCallback, cancel_called_if_pointer_moves_before_hover_delay)
 {
     // How long to wait relative to the hover click delay 
-    auto const delay_percentage = GetParam(); 
+    auto const delay_percentage = GetParam();
 
-    mt::Signal hover_cancel_signal;
-    transformer->on_hover_cancel([&hover_cancel_signal]{ hover_cancel_signal.raise(); });
+    std::atomic<bool> hover_cancelled;
+    transformer->on_hover_cancel([&hover_cancelled] { hover_cancelled = true; });
 
-    mt::Signal click_dipatched_signal;
-    transformer->on_click_dispatched([&click_dipatched_signal]{ click_dipatched_signal.raise(); });
+    std::atomic<bool> click_dipatched;
+    transformer->on_click_dispatched([&click_dipatched] { click_dipatched = true; });
 
     // Invoke hover click
     auto initial_pointer_move_event = motion_event(mir::geometry::DisplacementF{10, 0});
@@ -137,8 +137,8 @@ TEST_P(TestCancelCallback, cancel_called_if_pointer_moves_before_hover_delay)
 
     main_loop.call_queued();
 
-    EXPECT_THAT(hover_cancel_signal.raised(), Eq(delay_percentage < 1.0));
-    EXPECT_THAT(click_dipatched_signal.raised(), Eq(delay_percentage >= 1.0));
+    EXPECT_THAT(hover_cancelled, Eq(delay_percentage < 1.0));
+    EXPECT_THAT(click_dipatched, Eq(delay_percentage >= 1.0));
 }
 
 INSTANTIATE_TEST_SUITE_P(TestHoverClickTransformer, TestCancelCallback, ::Values(0.95, 1.01, 1.1));
