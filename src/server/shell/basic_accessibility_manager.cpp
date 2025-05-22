@@ -86,9 +86,7 @@ mir::shell::BasicAccessibilityManager::BasicAccessibilityManager(
 {
 }
 
-mir::shell::BasicAccessibilityManager::~BasicAccessibilityManager()
-{
-}
+mir::shell::BasicAccessibilityManager::~BasicAccessibilityManager() = default;
 
 void mir::shell::BasicAccessibilityManager::cursor_scale(float new_scale)
 {
