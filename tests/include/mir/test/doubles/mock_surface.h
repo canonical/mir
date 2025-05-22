@@ -43,9 +43,6 @@ struct MockSurface : public scene::BasicSurface
             mir::report::null_scene_report(),
             std::make_shared<FakeDisplayConfigurationObserverRegistrar>())
     {
-        ON_CALL(*this, primary_buffer_stream())
-            .WillByDefault(testing::Invoke([this]
-                { return scene::BasicSurface::primary_buffer_stream(); }));
         ON_CALL(*this, parent())
             .WillByDefault(testing::Return(nullptr));
         ON_CALL(*this, set_focus_state(testing::_))
@@ -81,7 +78,7 @@ struct MockSurface : public scene::BasicSurface
     MOCK_METHOD(void, unregister_interest, (scene::SurfaceObserver const&));
     MOCK_METHOD(void, consume, (std::shared_ptr<MirEvent const> const& event));
 
-    MOCK_METHOD(std::shared_ptr<frontend::BufferStream>, primary_buffer_stream, (), (const));
+    MOCK_METHOD(std::list<scene::StreamInfo>, get_streams, (), (const));
     MOCK_METHOD(void, set_streams, (std::list<scene::StreamInfo> const&));
 
     MOCK_METHOD(void, set_focus_state, (MirWindowFocusState));

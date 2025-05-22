@@ -91,8 +91,8 @@ public:
     geometry::Displacement content_offset() const override;
     geometry::Size content_size() const override;
 
-    std::shared_ptr<frontend::BufferStream> primary_buffer_stream() const override;
-    void set_streams(std::list<scene::StreamInfo> const& streams) override;
+    std::list<StreamInfo> get_streams() const override;
+    void set_streams(std::list<StreamInfo> const& streams) override;
 
     input::InputReceptionMode reception_mode() const override;
     void set_reception_mode(input::InputReceptionMode mode) override;
@@ -229,7 +229,6 @@ private:
     mir::Synchronised<State> synchronised_state;
 
     std::shared_ptr<Multiplexer> const observers;
-    std::shared_ptr<compositor::BufferStream> const surface_buffer_stream;
     std::shared_ptr<SceneReport> const report;
     std::weak_ptr<Surface> const parent_;
     std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> display_config_registrar;

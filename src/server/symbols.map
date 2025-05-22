@@ -1,4 +1,4 @@
-MIR_SERVER_INTERNAL_2.21 {
+MIR_SERVER_INTERNAL_2.22 {
 global:
   extern "C++" {
     VTT?for?mir::DefaultServerConfiguration;
@@ -469,6 +469,7 @@ global:
     mir::scene::BasicSurface::focus_state*;
     mir::scene::BasicSurface::generate_renderables*;
     mir::scene::BasicSurface::get_input_region*;
+    mir::scene::BasicSurface::get_streams*;
     mir::scene::BasicSurface::hide*;
     mir::scene::BasicSurface::initial_placement_done*;
     mir::scene::BasicSurface::input_area_contains*;
@@ -477,7 +478,6 @@ global:
     mir::scene::BasicSurface::name*;
     mir::scene::BasicSurface::parent*;
     mir::scene::BasicSurface::placed_relative*;
-    mir::scene::BasicSurface::primary_buffer_stream*;
     mir::scene::BasicSurface::query*;
     mir::scene::BasicSurface::reception_mode*;
     mir::scene::BasicSurface::register_early_observer*;
@@ -1023,6 +1023,7 @@ global:
     non-virtual?thunk?to?mir::scene::BasicSurface::focus_state*;
     non-virtual?thunk?to?mir::scene::BasicSurface::generate_renderables*;
     non-virtual?thunk?to?mir::scene::BasicSurface::get_input_region*;
+    non-virtual?thunk?to?mir::scene::BasicSurface::get_streams*;
     non-virtual?thunk?to?mir::scene::BasicSurface::hide*;
     non-virtual?thunk?to?mir::scene::BasicSurface::initial_placement_done*;
     non-virtual?thunk?to?mir::scene::BasicSurface::input_area_contains*;
@@ -1031,7 +1032,6 @@ global:
     non-virtual?thunk?to?mir::scene::BasicSurface::name*;
     non-virtual?thunk?to?mir::scene::BasicSurface::parent*;
     non-virtual?thunk?to?mir::scene::BasicSurface::placed_relative*;
-    non-virtual?thunk?to?mir::scene::BasicSurface::primary_buffer_stream*;
     non-virtual?thunk?to?mir::scene::BasicSurface::query*;
     non-virtual?thunk?to?mir::scene::BasicSurface::reception_mode*;
     non-virtual?thunk?to?mir::scene::BasicSurface::register_early_observer*;
