@@ -26,12 +26,6 @@
 #include <optional>
 
 template <typename Transformer>
-inline bool mir::shell::BasicAccessibilityManager::Registration<Transformer>::is_registered() const noexcept
-{
-    return registered;
-}
-
-template <typename Transformer>
 inline Transformer* mir::shell::BasicAccessibilityManager::Registration<Transformer>::operator->() const noexcept
 {
     return transformer.get();
@@ -40,7 +34,7 @@ inline Transformer* mir::shell::BasicAccessibilityManager::Registration<Transfor
 template <typename Transformer>
 inline void mir::shell::BasicAccessibilityManager::Registration<Transformer>::remove_registration()
 {
-    if(registered)
+    if (registered)
     {
         event_transformer->remove(transformer);
         registered = false;
@@ -50,7 +44,7 @@ inline void mir::shell::BasicAccessibilityManager::Registration<Transformer>::re
 template <typename Transformer>
 inline void mir::shell::BasicAccessibilityManager::Registration<Transformer>::add_registration()
 {
-    if(!registered)
+    if (!registered)
     {
         event_transformer->append(transformer);
         registered = true;

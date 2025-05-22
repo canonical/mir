@@ -88,8 +88,6 @@ private:
 
         Transformer* operator->() const noexcept;
 
-        bool is_registered() const noexcept;
-
     private:
         Registration(Registration const&) = delete;
         Registration& operator=(Registration const&) = delete;
