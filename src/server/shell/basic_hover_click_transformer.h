@@ -60,8 +60,6 @@ private:
 
     struct MutableState 
     {
-        // Provides a grace period, cursor motion events during this grace period
-        // will not invoke the start/cancel callbacks.
         std::unique_ptr<time::Alarm> click_dispatcher;
 
         // We repeatedly record the most recent cursor position. Once the grace
@@ -85,6 +83,9 @@ private:
     mir::Synchronised<MutableState> mutable_state;
 
     std::shared_ptr<MainLoop> const main_loop;
+
+    // Provides a grace period, cursor motion events during this grace period
+    // will not invoke the start/cancel callbacks.
     std::unique_ptr<time::Alarm> const hover_initializer;
 };
 }
