@@ -74,5 +74,5 @@ public:
 
 TEST_F(BasicScreenShooterFactoryTest, creates_basic_screen_shooter)
 {
-    EXPECT_THAT(factory->create(), Ne(nullptr));
+    EXPECT_THAT(factory->create(), NotNull());
 }

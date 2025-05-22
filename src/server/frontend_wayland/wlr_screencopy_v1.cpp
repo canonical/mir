@@ -16,6 +16,7 @@
 
 #include "wlr_screencopy_v1.h"
 
+#include "mir/log.h"
 #include "mir/compositor/screen_shooter.h"
 #include "mir/compositor/screen_shooter_factory.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
@@ -423,15 +424,17 @@ void mf::WlrScreencopyFrameV1::capture(geom::Rectangle buffer_space_damage)
 {
     if (!target)
     {
-        fatal_error(
-            "WlrScreencopyFrameV1::capture() called without a target, copy %s been called",
+        log_error("WlrScreencopyFrameV1::capture() called without a target, copy %s been called",
             copy_has_been_called ? "has" : "has not");
+        report_result(std::nullopt, buffer_space_damage);
+        return;
     }
 
     if (!manager)
     {
-        fatal_error(
-            "WlrScreencopyFrameV1::capture() called without a manager");
+        log_error("WlrScreencopyFrameV1::capture() called without a manager");
+        report_result(std::nullopt, buffer_space_damage);
+        return;
     }
 
     manager.value().screen_shooter->capture(std::move(target), params.output_space_area,
