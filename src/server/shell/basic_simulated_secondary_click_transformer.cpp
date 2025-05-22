@@ -73,7 +73,8 @@ bool mir::shell::BasicSimulatedSecondaryClickTransformer::transform_input_event(
     auto const pointer_event = input_event->to_pointer();
 
     auto const action = pointer_event->action();
-    switch (mutable_state.lock()->state)
+    auto const state = mutable_state.lock();
+    switch (state->state)
     {
     case State::waiting_for_real_left_down:
         {
@@ -84,25 +85,21 @@ bool mir::shell::BasicSimulatedSecondaryClickTransformer::transform_input_event(
                     secondary_click_dispatcher = main_loop->create_alarm(
                         [dispatcher, builder, this]
                         {
-                            {
-                                auto const state = mutable_state.lock();
-                                state->on_secondary_click();
+                            auto const state = mutable_state.lock();
 
-                                // Consume the upcoming _real_ up event
-                                state->state = State::waiting_for_ssc_end_left_up;
-                            }
+                            // Consume the upcoming _real_ up event
+                            state->state = State::waiting_for_ssc_end_left_up;
                             click(dispatcher, builder, mir_pointer_button_secondary);
+
+                            state->on_secondary_click();
                         });
                 }
 
                 consumed_left_down = std::unique_ptr<MirPointerEvent>(pointer_event->clone());
-                secondary_click_dispatcher->reschedule_in(mutable_state.lock()->hold_duration);
+                secondary_click_dispatcher->reschedule_in(state->hold_duration);
                 initial_position = pointer_event->position().value_or(initial_position);
-                {
-                    auto const state = mutable_state.lock();
-                    state->state = State::waiting_for_motion_or_real_left_up;
-                    state->on_hold_start();
-                }
+                state->state = State::waiting_for_motion_or_real_left_up;
+                state->on_hold_start();
 
                 return true; // Consume event
             }
@@ -112,13 +109,12 @@ bool mir::shell::BasicSimulatedSecondaryClickTransformer::transform_input_event(
         {
             if (action == mir_pointer_action_motion)
             {
-                auto const motion_threshold_squared = std::pow(mutable_state.lock()->displacement_threshold, 2);
+                auto const motion_threshold_squared = std::pow(state->displacement_threshold, 2);
                 auto const displacement =
                     (pointer_event->position().value_or(initial_position) - initial_position).length_squared();
                 if (displacement <= motion_threshold_squared)
                     return true;
 
-                auto const state = mutable_state.lock();
                 if (secondary_click_dispatcher->cancel())
                     state->on_hold_cancel();
 
@@ -144,8 +140,6 @@ bool mir::shell::BasicSimulatedSecondaryClickTransformer::transform_input_event(
             // it's not pressed now.
             if (action == mir_pointer_action_button_up && !(pointer_event->buttons() & mir_pointer_button_primary))
             {
-                auto const state = mutable_state.lock();
-
                 // If we get an up event BEFORE the alarm is triggered, that means
                 // the user let go of the _left_ mouse button, we should cancel the
                 // pending right click and issue a left click.
@@ -164,7 +158,7 @@ bool mir::shell::BasicSimulatedSecondaryClickTransformer::transform_input_event(
         {
             if (action == mir_pointer_action_button_up)
             {
-                mutable_state.lock()->state = State::waiting_for_real_left_down;
+                state->state = State::waiting_for_real_left_down;
                 return true;
             }
         }
@@ -174,7 +168,7 @@ bool mir::shell::BasicSimulatedSecondaryClickTransformer::transform_input_event(
             // Let it through, just change state iff its an up event.
             // Motion events should stay in this state.
             if (action == mir_pointer_action_button_up)
-                mutable_state.lock()->state = State::waiting_for_real_left_down;
+                state->state = State::waiting_for_real_left_down;
         }
         break;
     }

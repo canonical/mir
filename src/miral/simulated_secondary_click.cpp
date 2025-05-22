@@ -24,7 +24,7 @@
 
 struct miral::SimulatedSecondaryClick::Self
 {
-    Self(bool enabled_by_default) :
+    explicit Self(bool enabled_by_default) :
         state{State{enabled_by_default}}
     {
     }
@@ -33,7 +33,7 @@ struct miral::SimulatedSecondaryClick::Self
 
     struct State
     {
-        State(bool enabled) :
+        explicit State(bool enabled) :
             enabled{enabled}
         {
         }
