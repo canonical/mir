@@ -142,39 +142,28 @@ auto mir::DefaultServerConfiguration::the_screen_shooter_factory() -> std::share
     return screen_shooter_factory(
         [this]() ->std::shared_ptr<compositor::ScreenShooterFactory>
         {
-            try
+            std::vector<std::shared_ptr<mg::GLRenderingProvider>> providers;
+            providers.reserve(the_rendering_platforms().size());
+            for (auto& platform : the_rendering_platforms())
             {
-                std::vector<std::shared_ptr<mg::GLRenderingProvider>> providers;
-                providers.reserve(the_rendering_platforms().size());
-                for (auto& platform : the_rendering_platforms())
+                if (auto gl_provider = mg::RenderingPlatform::acquire_provider<mg::GLRenderingProvider>(platform))
                 {
-                    if (auto gl_provider = mg::RenderingPlatform::acquire_provider<mg::GLRenderingProvider>(platform))
-                    {
-                        providers.push_back(gl_provider);
-                    }
+                    providers.push_back(gl_provider);
                 }
-                if (providers.empty())
-                {
-                    BOOST_THROW_EXCEPTION((std::runtime_error{"No platform provides GL rendering support"}));
-                }
-
-                return std::make_shared<compositor::BasicScreenShooterFactory>(
-                    the_scene(),
-                    the_clock(),
-                    thread_pool_executor,
-                    providers,
-                    the_renderer_factory(),
-                    the_buffer_allocator(),
-                    the_gl_config());
             }
-            catch (...)
+            if (providers.empty())
             {
-                mir::log(
-                    ::mir::logging::Severity::error,
-                    "",
-                    std::current_exception(),
-                    "failed to create BasicScreenShooter");
+                log_error("Failed to create screen shooter factory: No platform provides GL rendering support");
                 return std::make_shared<compositor::NullScreenShooterFactory>(thread_pool_executor);
             }
+
+            return std::make_shared<compositor::BasicScreenShooterFactory>(
+                the_scene(),
+                the_clock(),
+                thread_pool_executor,
+                providers,
+                the_renderer_factory(),
+                the_buffer_allocator(),
+                the_gl_config());
         });
 }
