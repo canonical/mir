@@ -554,7 +554,6 @@ global:
     miral::WindowInfo::tiled_edges*;
     miral::WindowSpecification::tiled_edges*;
     miral::WindowSpecification::to_surface_specification*;
-    miral::MouseKeysConfig::enabled*;
     miral::SimulatedSecondaryClick::SimulatedSecondaryClick*;
     miral::SimulatedSecondaryClick::disable*;
     miral::SimulatedSecondaryClick::displacement_threshold*;
