@@ -24,23 +24,51 @@ namespace mir { class Server; }
 
 namespace miral
 {
+/// Enable configuring hover click at runtime.
+/// \remark Since MirAL 5.3
 class HoverClick
 {
 public:
+    /// \note `--enable-hover-click` has higher precedence than
+    /// [enabled_by_default]
     HoverClick(bool enabled_by_default);
 
     void operator()(mir::Server& server);
 
+    /// Enables hover click.
+    ///
+    /// When already enabled, further calls have no effect.
     HoverClick& enable();
+
+    /// Disables hover click.
+    ///
+    /// When already disabled, further calls have no effect.
     HoverClick& disable();
 
+    /// Configures how long the pointer has to stay still to dispatch a left
+    /// click.
     HoverClick& hover_duration(std::chrono::milliseconds hover_duration);
+
+    // Configures how far the pointer has to move from the initial hover click
+    // position to cancel it.
     HoverClick& cancel_displacement_threshold(float displacement);
 
+    /// Called when hover click is enabled or disabled. Useful when other
+    /// things might be controll hover click (GUI, config file).
     HoverClick& on_enabled(std::function<void()>&&);
     HoverClick& on_disabled(std::function<void()>&&);
+
+    /// Called shortly after a hover click is scheduled. Should be used to
+    /// indicate to the user that a simulated secondary click has begun.
     HoverClick& on_hover_start(std::function<void()>&&);
+
+    // Called immediately when a hover click is cancelled. Should be used to
+    // indicate to the user that the simulated secondary click was cancelled.
     HoverClick& on_hover_cancel(std::function<void()>&&);
+
+    // Called immediately after a hover click is successfully dispatched.
+    // Should be used to indicate to the user that the simulated secondary
+    // click was successful.
     HoverClick& on_click_dispatched(std::function<void()>&&);
 
 private:
