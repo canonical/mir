@@ -80,6 +80,9 @@ public:
 
     void hover_click_enabled(bool enabled) override;
     auto hover_click() -> HoverClickTransformer& override;
+
+    void slow_keys_enabled(bool enabled) override;
+    auto slow_keys() -> SlowKeysTransformer& override;
 private:
     struct MutableState {
         // 25 rate and 600 delay are the default in Weston and Sway
@@ -88,7 +91,7 @@ private:
 
         std::vector<std::shared_ptr<shell::KeyboardHelper>> keyboard_helpers;
 
-        bool mousekeys_on{false}, ssc_on{false}, hover_click_on{false};
+        bool mousekeys_on{false}, ssc_on{false}, hover_click_on{false}, slow_keys_on{false};
     };
 
     Synchronised<MutableState> mutable_state;

@@ -155,3 +155,13 @@ auto mir::shell::BasicAccessibilityManager::hover_click() -> HoverClickTransform
     return *hover_click_transformer;
 }
 
+void mir::shell::BasicAccessibilityManager::slow_keys_enabled(bool enabled)
+{
+    auto const state = mutable_state.lock();
+    toggle_transformer(enabled, state->slow_keys_on, slow_keys_transformer, event_transformer);
+}
+
+auto mir::shell::BasicAccessibilityManager::slow_keys() -> SlowKeysTransformer&
+{
+    return *slow_keys_transformer;
+}
