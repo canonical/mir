@@ -47,6 +47,7 @@ class Clock;
 namespace shell
 {
 class MouseKeysTransformer;
+class BasicHoverClickTransformer;
 class BasicAccessibilityManager : public AccessibilityManager
 {
 public:
@@ -54,7 +55,8 @@ public:
         std::shared_ptr<input::InputEventTransformer> const& event_transformer,
         bool enable_key_repeat,
         std::shared_ptr<mir::graphics::Cursor> const& cursor,
-        std::shared_ptr<shell::MouseKeysTransformer> const& mousekeys_transformer);
+        std::shared_ptr<shell::MouseKeysTransformer> const& mousekeys_transformer,
+        std::shared_ptr<shell::HoverClickTransformer> const& hover_click_transformer);
 
     void register_keyboard_helper(std::shared_ptr<shell::KeyboardHelper> const&) override;
 
@@ -69,6 +71,8 @@ public:
     void acceleration_factors(double constant, double linear, double quadratic) override;
     void max_speed(double x_axis, double y_axis) override;
 
+    void hover_click_enabled(bool enabled) override;
+    auto hover_click() -> HoverClickTransformer& override;
 private:
     struct MutableState {
         // 25 rate and 600 delay are the default in Weston and Sway
@@ -85,8 +89,8 @@ private:
             std::shared_ptr<Transformer> const& transformer,
             std::shared_ptr<input::InputEventTransformer> const& event_transformer);
 
-        void add_registration() const;
-        void remove_registration() const;
+        bool add_registration() const;
+        bool remove_registration() const;
 
         Transformer* operator->() const noexcept;
 
@@ -103,7 +107,9 @@ private:
 
     bool const enable_key_repeat;
     std::shared_ptr<graphics::Cursor> const cursor;
+
     Registration<MouseKeysTransformer> const transformer;
+    Registration<HoverClickTransformer> const hover_click_transformer;
 };
 }
 }
