@@ -18,6 +18,7 @@
 #include "src/server/shell/basic_accessibility_manager.h"
 #include "src/server/shell/mouse_keys_transformer.h"
 #include "src/server/shell/basic_simulated_secondary_click_transformer.h"
+#include "src/server/shell/slow_keys_transformer.h"
 
 #include "mir/input/input_event_transformer.h"
 #include "mir/input/mousekeys_keymap.h"
@@ -81,6 +82,23 @@ struct MockSimulatedSecondaryClickTransformer : public mir::shell::SimulatedSeco
     MOCK_METHOD(void, on_secondary_click, (std::function<void()>&& on_secondary_click), (override));
 };
 
+struct MockSlowKeysTransformer : public mir::shell::SlowKeysTransformer
+{
+    MOCK_METHOD(
+        bool,
+        transform_input_event,
+        (mir::input::InputEventTransformer::EventDispatcher const&, mir::input::EventBuilder*, MirEvent const&),
+        (override));
+    MOCK_METHOD(void, enable, (), (override));
+    MOCK_METHOD(void, disable, (), (override));
+    MOCK_METHOD(void, on_enable, (std::function<void()>&&), (override));
+    MOCK_METHOD(void, on_disable, (std::function<void()>&&), (override));
+    MOCK_METHOD(void, on_key_down, (std::function<void(unsigned int)>&&), (override));
+    MOCK_METHOD(void, on_key_rejected, (std::function<void(unsigned int)>&&), (override));
+    MOCK_METHOD(void, on_key_accepted, (std::function<void(unsigned int)>&&), (override));
+    MOCK_METHOD(void, delay, (std::chrono::milliseconds), (override));
+};
+
 struct TestBasicAccessibilityManager : Test
 {
     TestBasicAccessibilityManager() :
@@ -90,7 +108,7 @@ struct TestBasicAccessibilityManager : Test
             std::make_shared<mir::test::doubles::StubCursor>(),
             mock_mousekeys_transformer,
             mock_simulated_secondary_click_transformer,
-            nullptr}
+            mock_slow_keys_transformer}
     {
         basic_accessibility_manager.register_keyboard_helper(mock_key_helper);
     }
@@ -103,6 +121,8 @@ struct TestBasicAccessibilityManager : Test
         std::make_shared<NiceMock<MockMouseKeysTransformer>>()};
     std::shared_ptr<NiceMock<MockSimulatedSecondaryClickTransformer>> mock_simulated_secondary_click_transformer{
         std::make_shared<NiceMock<MockSimulatedSecondaryClickTransformer>>()};
+    std::shared_ptr<NiceMock<MockSlowKeysTransformer>> mock_slow_keys_transformer{
+        std::make_shared<NiceMock<MockSlowKeysTransformer>>()};
 
     mir::input::InputEventTransformer input_event_transformer{mt::fake_shared(mock_seat), mt::fake_shared(clock)};
     mir::shell::BasicAccessibilityManager basic_accessibility_manager;
