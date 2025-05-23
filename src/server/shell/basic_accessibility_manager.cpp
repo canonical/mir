@@ -34,20 +34,24 @@ inline Transformer* mir::shell::BasicAccessibilityManager::Registration<Transfor
 template <typename Transformer>
 inline void mir::shell::BasicAccessibilityManager::Registration<Transformer>::remove_registration()
 {
-    if (registered)
+    // atomic::compare_exchange_strong(expected, desired) checks the atomic
+    // value against the "expected" value. If they're equal, it returns `true`
+    // and sets atomic = desired. If they're not equal, it returns `false` and
+    // sets expected = atomic which doesn't matter in the case below.
+    auto expected = true;
+    if (registered.compare_exchange_strong(expected, false))
     {
         event_transformer->remove(transformer);
-        registered = false;
     }
 }
 
 template <typename Transformer>
 inline void mir::shell::BasicAccessibilityManager::Registration<Transformer>::add_registration()
 {
-    if (!registered)
+    auto expected = false;
+    if (registered.compare_exchange_strong(expected, true))
     {
         event_transformer->append(transformer);
-        registered = true;
     }
 }
 

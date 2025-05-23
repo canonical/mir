@@ -22,6 +22,8 @@
 #include "mir/input/mousekeys_keymap.h"
 #include "mir/synchronised.h"
 
+#include <atomic>
+
 namespace mir
 {
 class MainLoop;
@@ -94,7 +96,7 @@ private:
 
         std::shared_ptr<Transformer> const transformer;
         std::shared_ptr<input::InputEventTransformer> const event_transformer;
-        bool registered{false};
+        std::atomic<bool> registered{false};
     };
 
     Synchronised<MutableState> mutable_state;
