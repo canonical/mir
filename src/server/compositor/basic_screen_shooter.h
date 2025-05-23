@@ -54,6 +54,12 @@ public:
         geometry::Rectangle const& area,
         std::function<void(std::optional<time::Timestamp>)>&& callback) override;
 
+    void capture_blocking(
+        std::shared_ptr<renderer::software::WriteMappableBuffer> const& buffer,
+        geometry::Rectangle const& area) override;
+
+    CompositorID id() const override;
+
 private:
     struct Self
     {

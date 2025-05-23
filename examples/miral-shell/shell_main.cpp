@@ -34,6 +34,7 @@
 #include <miral/x11_support.h>
 #include <miral/wayland_extensions.h>
 #include <miral/mousekeys_config.h>
+#include <miral/render_scene_into_window.h>
 
 #include <xkbcommon/xkbcommon-keysyms.h>
 
@@ -194,6 +195,7 @@ int main(int argc, char const* argv[])
             ConfigurationOption{[&](std::string const& cmd) { terminal_cmd = cmd; },
                                 "shell-terminal-emulator", "terminal emulator to use", terminal_cmd},
             mousekeys_config,
-            AppendEventFilter{toggle_mousekeys_filter}
+            AppendEventFilter{toggle_mousekeys_filter},
+            RenderSceneIntoWindow()
         });
 }
