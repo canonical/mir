@@ -128,7 +128,7 @@ public:
         // Caution: non-local state!
         // This works because standard-drm-devices contains a udev device with 226:0 and devnode /dev/dri/card0
         auto device = ctx.char_device_from_devnum(makedev(226, 0));
-       
+
         return std::make_shared<mgg::Platform>(
             *device,
             mir::report::null_display_report(),
@@ -228,6 +228,7 @@ TEST_F(MesaDisplayConfigurationTest, configuration_is_read_correctly)
     /* Set up DRM resources */
     uint32_t const invalid_id{0};
     uint32_t const crtc0_id{10};
+    uint32_t const crtc1_id{11};
     uint32_t const encoder0_id{20};
     uint32_t const encoder1_id{21};
     uint32_t const connector0_id{30};
@@ -236,8 +237,11 @@ TEST_F(MesaDisplayConfigurationTest, configuration_is_read_correctly)
     geom::Size const connector0_physical_size_mm{480, 270};
     geom::Size const connector1_physical_size_mm{};
     geom::Size const connector2_physical_size_mm{};
-    std::vector<uint32_t> possible_encoder_ids_empty;
-    uint32_t const possible_crtcs_mask_empty{0};
+    uint32_t const fb0_id{40};
+    uint32_t const plane0_id{50};
+    std::vector<uint32_t> all_encoder_ids{encoder0_id, encoder1_id};
+    uint32_t const all_crtcs_mask{0x3};
+    std::vector<uint32_t> plane_formats{0};
 
     mock_drm.reset(drm_device);
 
@@ -245,17 +249,21 @@ TEST_F(MesaDisplayConfigurationTest, configuration_is_read_correctly)
         drm_device,
         crtc0_id,
         modes0[1]);
+    mock_drm.add_crtc(
+        drm_device,
+        crtc1_id,
+        modes0[1]);
 
     mock_drm.add_encoder(
         drm_device,
         encoder0_id,
         crtc0_id,
-        possible_crtcs_mask_empty);
+        all_crtcs_mask);
     mock_drm.add_encoder(
         drm_device,
         encoder1_id,
         invalid_id,
-        possible_crtcs_mask_empty);
+        all_crtcs_mask);
 
     mock_drm.add_connector(
         drm_device,
@@ -264,7 +272,7 @@ TEST_F(MesaDisplayConfigurationTest, configuration_is_read_correctly)
         DRM_MODE_CONNECTED,
         encoder0_id,
         modes0,
-        possible_encoder_ids_empty,
+        all_encoder_ids,
         connector0_physical_size_mm);
     mock_drm.add_connector(
         drm_device,
@@ -273,7 +281,7 @@ TEST_F(MesaDisplayConfigurationTest, configuration_is_read_correctly)
         DRM_MODE_DISCONNECTED,
         invalid_id,
         modes_empty,
-        possible_encoder_ids_empty,
+        all_encoder_ids,
         connector1_physical_size_mm);
     mock_drm.add_connector(
         drm_device,
@@ -282,8 +290,20 @@ TEST_F(MesaDisplayConfigurationTest, configuration_is_read_correctly)
         DRM_MODE_DISCONNECTED,
         encoder1_id,
         modes_empty,
-        possible_encoder_ids_empty,
+        all_encoder_ids,
         connector2_physical_size_mm);
+
+    auto type_prop_id = mock_drm.add_property(drm_device, "type");
+    mock_drm.add_plane(
+        drm_device,
+        plane_formats,
+        plane0_id,
+        crtc0_id,
+        fb0_id,
+        0, 0, 0, 0,
+        all_crtcs_mask,
+        0,
+        { type_prop_id }, { DRM_PLANE_TYPE_PRIMARY });
 
     mock_drm.prepare(drm_device);
 
@@ -380,8 +400,11 @@ TEST_F(MesaDisplayConfigurationTest, reads_subpixel_information_correctly)
     uint32_t const encoder0_id{20};
     uint32_t const connector0_id{30};
     geom::Size const connector0_physical_size_mm{480, 270};
-    std::vector<uint32_t> possible_encoder_ids_empty;
-    uint32_t const possible_crtcs_mask_empty{0};
+    uint32_t const fb0_id{40};
+    uint32_t const plane0_id{50};
+    std::vector<uint32_t> all_encoder_ids{encoder0_id};
+    uint32_t const all_crtcs_mask{0x1};
+    std::vector<uint32_t> plane_formats{0};
 
     struct TestData
     {
@@ -411,7 +434,7 @@ TEST_F(MesaDisplayConfigurationTest, reads_subpixel_information_correctly)
             drm_device,
             encoder0_id,
             crtc0_id,
-            possible_crtcs_mask_empty);
+            all_crtcs_mask);
 
         mock_drm.add_connector(
             drm_device,
@@ -420,9 +443,21 @@ TEST_F(MesaDisplayConfigurationTest, reads_subpixel_information_correctly)
             DRM_MODE_CONNECTED,
             encoder0_id,
             modes0,
-            possible_encoder_ids_empty,
+            all_encoder_ids,
             connector0_physical_size_mm,
             data.drm_subpixel);
+
+        auto type_prop_id = mock_drm.add_property(drm_device, "type");
+        mock_drm.add_plane(
+            drm_device,
+            plane_formats,
+            plane0_id,
+            crtc0_id,
+            fb0_id,
+            0, 0, 0, 0,
+            all_crtcs_mask,
+            0,
+            { type_prop_id }, { DRM_PLANE_TYPE_PRIMARY });
 
         mock_drm.prepare(drm_device);
 
@@ -454,8 +489,11 @@ TEST_F(MesaDisplayConfigurationTest, reads_updated_subpixel_information)
     uint32_t const encoder0_id{20};
     uint32_t const connector0_id{30};
     geom::Size const connector0_physical_size_mm{480, 270};
-    std::vector<uint32_t> possible_encoder_ids_empty;
-    uint32_t const possible_crtcs_mask_empty{0};
+    uint32_t const fb0_id{40};
+    uint32_t const plane0_id{50};
+    std::vector<uint32_t> all_encoder_ids{encoder0_id};
+    uint32_t const all_crtcs_mask{0x1};
+    std::vector<uint32_t> plane_formats{0};
 
     mock_drm.reset(drm_device);
 
@@ -468,7 +506,7 @@ TEST_F(MesaDisplayConfigurationTest, reads_updated_subpixel_information)
         drm_device,
         encoder0_id,
         crtc0_id,
-        possible_crtcs_mask_empty);
+        all_crtcs_mask);
 
     mock_drm.add_connector(
         drm_device,
@@ -477,9 +515,21 @@ TEST_F(MesaDisplayConfigurationTest, reads_updated_subpixel_information)
         DRM_MODE_CONNECTED,
         encoder0_id,
         modes0,
-        possible_encoder_ids_empty,
+        all_encoder_ids,
         connector0_physical_size_mm,
         DRM_MODE_SUBPIXEL_NONE);
+
+    auto type_prop_id = mock_drm.add_property(drm_device, "type");
+    mock_drm.add_plane(
+        drm_device,
+        plane_formats,
+        plane0_id,
+        crtc0_id,
+        fb0_id,
+        0, 0, 0, 0,
+        all_crtcs_mask,
+        0,
+        { type_prop_id }, { DRM_PLANE_TYPE_PRIMARY });
 
     mock_drm.prepare(drm_device);
 
@@ -514,7 +564,7 @@ TEST_F(MesaDisplayConfigurationTest, reads_updated_subpixel_information)
             drm_device,
             encoder0_id,
             crtc0_id,
-            possible_crtcs_mask_empty);
+            all_crtcs_mask);
 
         mock_drm.add_connector(
             drm_device,
@@ -523,9 +573,21 @@ TEST_F(MesaDisplayConfigurationTest, reads_updated_subpixel_information)
             DRM_MODE_CONNECTED,
             encoder0_id,
             modes0,
-            possible_encoder_ids_empty,
+            all_encoder_ids,
             connector0_physical_size_mm,
             data.drm_subpixel);
+
+        auto type_prop_id = mock_drm.add_property(drm_device, "type");
+        mock_drm.add_plane(
+            drm_device,
+            plane_formats,
+            plane0_id,
+            crtc0_id,
+            fb0_id,
+            0, 0, 0, 0,
+            all_crtcs_mask,
+            0,
+            { type_prop_id }, { DRM_PLANE_TYPE_PRIMARY });
 
         mock_drm.prepare(drm_device);
 
@@ -567,8 +629,11 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
     std::vector<geom::Size> const connector_physical_sizes_mm_after{
         {}, {512, 642}
     };
-    std::vector<uint32_t> possible_encoder_ids_empty;
-    uint32_t const possible_crtcs_mask_empty{0};
+    uint32_t const fb0_id{40};
+    uint32_t const plane0_id{50};
+    std::vector<uint32_t> all_encoder_ids{20, 21};
+    uint32_t const all_crtcs_mask{0x3};
+    std::vector<uint32_t> plane_formats{0};
 
     std::vector<mg::DisplayConfigurationOutput> const expected_outputs_before =
     {
@@ -693,17 +758,21 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
         drm_device,
         crtc_ids[0],
         modes0[1]);
+    mock_drm.add_crtc(
+        drm_device,
+        crtc_ids[1],
+        modes0[1]);
 
     mock_drm.add_encoder(
         drm_device,
         encoder_ids[0],
         crtc_ids[0],
-        possible_crtcs_mask_empty);
+        all_crtcs_mask);
     mock_drm.add_encoder(
         drm_device,
         encoder_ids[1],
         invalid_id,
-        possible_crtcs_mask_empty);
+        all_crtcs_mask);
 
     mock_drm.add_connector(
         drm_device,
@@ -712,7 +781,7 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
         DRM_MODE_CONNECTED,
         encoder_ids[0],
         modes0,
-        possible_encoder_ids_empty,
+	all_encoder_ids,
         connector_physical_sizes_mm_before[0]);
     mock_drm.add_connector(
         drm_device,
@@ -721,8 +790,20 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
         DRM_MODE_DISCONNECTED,
         invalid_id,
         modes_empty,
-        possible_encoder_ids_empty,
+        all_encoder_ids,
         connector_physical_sizes_mm_before[1]);
+
+    auto type_prop_id = mock_drm.add_property(drm_device, "type");
+    mock_drm.add_plane(
+        drm_device,
+        plane_formats,
+        plane0_id,
+        crtc_ids[0],
+        fb0_id,
+        0, 0, 0, 0,
+        all_crtcs_mask,
+        0,
+        { type_prop_id }, { DRM_PLANE_TYPE_PRIMARY });
 
     mock_drm.prepare(drm_device);
 
@@ -737,6 +818,10 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
 
     mock_drm.add_crtc(
         drm_device,
+        crtc_ids[0],
+        modes0[1]);
+    mock_drm.add_crtc(
+        drm_device,
         crtc_ids[1],
         modes0[1]);
 
@@ -744,12 +829,12 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
         drm_device,
         encoder_ids[0],
         invalid_id,
-        possible_crtcs_mask_empty);
+        all_crtcs_mask);
     mock_drm.add_encoder(
         drm_device,
         encoder_ids[1],
         crtc_ids[1],
-        possible_crtcs_mask_empty);
+        all_crtcs_mask);
 
     mock_drm.add_connector(
         drm_device,
@@ -758,7 +843,7 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
         DRM_MODE_DISCONNECTED,
         invalid_id,
         modes_empty,
-        possible_encoder_ids_empty,
+        all_encoder_ids,
         connector_physical_sizes_mm_after[0]);
     mock_drm.add_connector(
         drm_device,
@@ -767,8 +852,20 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
         DRM_MODE_CONNECTED,
         encoder_ids[1],
         modes0,
-        possible_encoder_ids_empty,
+        all_encoder_ids,
         connector_physical_sizes_mm_after[1]);
+
+    type_prop_id = mock_drm.add_property(drm_device, "type");
+    mock_drm.add_plane(
+        drm_device,
+        plane_formats,
+        plane0_id,
+        crtc_ids[0],
+        fb0_id,
+        0, 0, 0, 0,
+        all_crtcs_mask,
+        0,
+        { type_prop_id }, { DRM_PLANE_TYPE_PRIMARY });
 
     mock_drm.prepare(drm_device);
 
@@ -794,8 +891,11 @@ TEST_F(MesaDisplayConfigurationTest, new_monitor_matches_hardware_state)
     uint32_t const connector_ids[1] = {30};
     geom::Size const connector_physical_sizes_mm_before{480, 270};
     geom::Size const connector_physical_sizes_mm_after{512, 642};
-    std::vector<uint32_t> possible_encoder_ids_empty;
-    uint32_t const possible_crtcs_mask_empty{0};
+    uint32_t const fb0_id{40};
+    uint32_t const plane0_id{50};
+    std::vector<uint32_t> all_encoder_ids{encoder_ids[0], encoder_ids[1]};
+    uint32_t const all_crtcs_mask{0x3};
+    std::vector<uint32_t> plane_formats{0};
 
     std::vector<mg::DisplayConfigurationOutput> const expected_outputs_before =
     {
@@ -876,7 +976,7 @@ TEST_F(MesaDisplayConfigurationTest, new_monitor_matches_hardware_state)
         drm_device,
         encoder_ids[0],
         crtc_ids[0],
-        possible_crtcs_mask_empty);
+        all_crtcs_mask);
     mock_drm.add_connector(
         drm_device,
         connector_ids[0],
@@ -884,8 +984,19 @@ TEST_F(MesaDisplayConfigurationTest, new_monitor_matches_hardware_state)
         DRM_MODE_CONNECTED,
         encoder_ids[0],
         modes0,
-        possible_encoder_ids_empty,
+        all_encoder_ids,
         connector_physical_sizes_mm_before);
+    auto type_prop_id = mock_drm.add_property(drm_device, "type");
+    mock_drm.add_plane(
+        drm_device,
+        plane_formats,
+        plane0_id,
+        crtc_ids[0],
+        fb0_id,
+        0, 0, 0, 0,
+        all_crtcs_mask,
+        0,
+        { type_prop_id }, { DRM_PLANE_TYPE_PRIMARY });
     mock_drm.prepare(drm_device);
 
     auto display = create_display(create_platform());
@@ -903,12 +1014,12 @@ TEST_F(MesaDisplayConfigurationTest, new_monitor_matches_hardware_state)
         drm_device,
         encoder_ids[0],
         crtc_ids[0],
-        possible_crtcs_mask_empty);
+        all_crtcs_mask);
     mock_drm.add_encoder(
         drm_device,
         encoder_ids[1],
         0,
-        possible_crtcs_mask_empty);
+        all_crtcs_mask);
     mock_drm.add_connector(
         drm_device,
         connector_ids[0],
@@ -916,8 +1027,19 @@ TEST_F(MesaDisplayConfigurationTest, new_monitor_matches_hardware_state)
         DRM_MODE_CONNECTED,
         encoder_ids[1],
         modes1,
-        possible_encoder_ids_empty,
+        all_encoder_ids,
         connector_physical_sizes_mm_after);
+    type_prop_id = mock_drm.add_property(drm_device, "type");
+    mock_drm.add_plane(
+        drm_device,
+        plane_formats,
+        plane0_id,
+        crtc_ids[0],
+        fb0_id,
+        0, 0, 0, 0,
+        all_crtcs_mask,
+        0,
+        { type_prop_id }, { DRM_PLANE_TYPE_PRIMARY });
     mock_drm.prepare(drm_device);
 
     MainLoop ml;
@@ -939,9 +1061,12 @@ TEST_F(MesaDisplayConfigurationTest, does_not_query_drm_unnecesarily)
     uint32_t const encoder_id{20};
     uint32_t const connector_id{30};
     geom::Size const connector_physical_sizes_mm{480, 270};
-    std::vector<uint32_t> possible_encoder_ids_empty;
+    uint32_t const fb0_id{40};
+    uint32_t const plane0_id{50};
+    std::vector<uint32_t> all_encoder_ids{encoder_id};
+    uint32_t const all_crtcs_mask{0x1};
+    std::vector<uint32_t> plane_formats{0};
 
-    uint32_t const possible_crtcs_mask_empty{0};
     mock_drm.reset(drm_device);
     mock_drm.add_crtc(
         drm_device,
@@ -951,7 +1076,7 @@ TEST_F(MesaDisplayConfigurationTest, does_not_query_drm_unnecesarily)
         drm_device,
         encoder_id,
         crtc_id,
-        possible_crtcs_mask_empty);
+        all_crtcs_mask);
     mock_drm.add_connector(
         drm_device,
         connector_id,
@@ -959,8 +1084,19 @@ TEST_F(MesaDisplayConfigurationTest, does_not_query_drm_unnecesarily)
         DRM_MODE_CONNECTED,
         encoder_id,
         modes0,
-        possible_encoder_ids_empty,
+        all_encoder_ids,
         connector_physical_sizes_mm);
+    auto type_prop_id = mock_drm.add_property(drm_device, "type");
+    mock_drm.add_plane(
+        drm_device,
+        plane_formats,
+        plane0_id,
+        crtc_id,
+        fb0_id,
+        0, 0, 0, 0,
+        all_crtcs_mask,
+        0,
+        { type_prop_id }, { DRM_PLANE_TYPE_PRIMARY });
     mock_drm.prepare(drm_device);
 
     auto const syspath = fake_devices.add_device(

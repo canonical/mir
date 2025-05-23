@@ -93,8 +93,12 @@ public:
             .WillByDefault(Invoke(this, &FakeDRMObjectsWithProperties::free_object_properties));
         ON_CALL(mock, drmModeGetProperty(_, _))
             .WillByDefault(Invoke(this, &FakeDRMObjectsWithProperties::get_property));
+        ON_CALL(mock, drmModeGetPropertyBlob(_, _))
+            .WillByDefault(Invoke(this, &FakeDRMObjectsWithProperties::get_property_blob));
         ON_CALL(mock, drmModeFreeProperty(_))
             .WillByDefault(Invoke(this, &FakeDRMObjectsWithProperties::free_property));
+        ON_CALL(mock, drmModeFreePropertyBlob(_))
+            .WillByDefault(Invoke(this, &FakeDRMObjectsWithProperties::free_property_blob));
     }
 
 private:
@@ -147,6 +151,23 @@ private:
         return prop.release();
     }
 
+    drmModePropertyBlobPtr get_property_blob(
+        int /*fd*/,
+        uint32_t id)
+    {
+        auto blob =
+            std::unique_ptr<drmModePropertyBlobRes, void (*)(drmModePropertyBlobPtr)>(new drmModePropertyBlobRes, &::drmModeFreePropertyBlob);
+
+        memset(blob.get(), 0, sizeof(*blob));
+
+        blob->id = id;
+        blob->length = 0;
+        blob->data = NULL;
+
+        allocated_prop_blobs.insert(blob.get());
+        return blob.release();
+    }
+
     void free_property(
         drmModePropertyPtr prop)
     {
@@ -157,10 +178,21 @@ private:
         delete prop;
     }
 
+    void free_property_blob(
+        drmModePropertyBlobPtr blob)
+    {
+        if (allocated_prop_blobs.count(blob) == 0)
+        {
+            BOOST_THROW_EXCEPTION(std::runtime_error{"Freeing invalid drmModePropertyBlobPtr"});
+        }
+        delete blob;
+    }
+
     std::unordered_map<uint32_t, DRMObjectWithProperties> objects;
     std::unordered_map<uint32_t, std::string> properties;
     std::unordered_set<drmModeObjectPropertiesPtr> allocated_obj_props;
     std::unordered_set<drmModePropertyPtr> allocated_props;
+    std::unordered_set<drmModePropertyBlobPtr> allocated_prop_blobs;
     uint32_t next_id{1};
 };
 }

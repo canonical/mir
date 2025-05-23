@@ -21,6 +21,8 @@
 #include "kms-utils/kms_connector.h"
 #include "mir/fatal.h"
 #include "mir/log.h"
+#include <drm_fourcc.h>
+#include <drm_mode.h>
 #include <string.h> // strcmp
 
 #include <boost/throw_exception.hpp>
@@ -49,6 +51,59 @@ bool kms_modes_are_equal(drmModeModeInfo const& info1, drmModeModeInfo const& in
             info1.vsync_end == info2.vsync_end &&
             info1.vtotal == info2.vtotal);
 }
+
+class PropertyBlobData
+{
+public:
+    PropertyBlobData(int drm_fd, uint32_t handle)
+        : ptr{drmModeGetPropertyBlob(drm_fd, handle)}
+    {
+        if (!ptr)
+        {
+            // drmModeGetPropertyBlob sets errno on failure, except on allocation failure
+            auto const err = errno ? errno : ENOMEM;
+            BOOST_THROW_EXCEPTION((
+                std::system_error{
+                    err,
+                    std::system_category(),
+                    "Failed to read DRM property blob"}));
+        }
+    }
+
+    ~PropertyBlobData()
+    {
+        drmModeFreePropertyBlob(ptr);
+    }
+
+    template<typename T>
+    auto data() const -> std::span<T const>
+    {
+        /* This is a precondition check, so technically unnecessary.
+         * That said, there are a bunch of moving parts here, so
+         * let's be nice and check what little we can.
+         */
+        if (ptr->length % sizeof(T) != 0)
+        {
+            BOOST_THROW_EXCEPTION((
+                std::runtime_error{
+                    std::format("DRM property size {} is not a multiple of expected object size {}",
+                        ptr->length,
+                        sizeof(T))}));
+        }
+
+        /* We don't have to care about alignment, at least; libdrm will
+         * have copied the data into a suitably-aligned allocation
+         */
+        return std::span{static_cast<T const*>(ptr->data), ptr->length / sizeof(T)};
+    }
+
+    auto raw() const -> drmModePropertyBlobRes const*
+    {
+        return ptr;
+    }
+private:
+    drmModePropertyBlobPtr const ptr;
+};
 }
 
 mgg::RealKMSOutput::RealKMSOutput(
@@ -528,6 +583,42 @@ std::vector<uint8_t> edid_for_connector(int drm_fd, uint32_t connector_id)
 
     return edid;
 }
+
+auto formats_for_output(int drm_fd, mgk::DRMModeConnectorUPtr const& connector) -> std::vector<mg::DRMFormat>
+{
+    auto [_, plane] = mgk::find_crtc_with_primary_plane(drm_fd, connector);
+
+    mgk::ObjectProperties plane_props{drm_fd, plane->plane_id, DRM_MODE_OBJECT_PLANE};
+
+    if (!plane_props.has_property("IN_FORMATS"))
+    {
+        return {mg::DRMFormat{DRM_FORMAT_ARGB8888}, mg::DRMFormat{DRM_FORMAT_XRGB8888} };
+    }
+
+    PropertyBlobData format_blob{drm_fd, static_cast<uint32_t>(plane_props["IN_FORMATS"])};
+    drmModeFormatModifierIterator iter{};
+
+    std::vector<mg::DRMFormat> supported_formats;
+    while (drmModeFormatModifierBlobIterNext(format_blob.raw(), &iter))
+    {
+        /* This will iterate over {format, modifier} pairs, with all the modifiers for a single
+         * format in a block. For example:
+         * {fmt1, mod1}
+         * {fmt1, mod2}
+         * {fmt1, mod3}
+         * {fmt2, mod2}
+         * {fmt2, mod4}
+         * ...
+         *
+         * We only care about the format, so we only add when we see a new format
+         */
+        if (supported_formats.empty() || supported_formats.back() != iter.fmt)
+        {
+            supported_formats.emplace_back(iter.fmt);
+        }
+    }
+    return supported_formats;
+}
 }
 
 void mgg::RealKMSOutput::update_from_hardware_state(
@@ -541,8 +632,17 @@ void mgg::RealKMSOutput::update_from_hardware_state(
     uint32_t current_mode_index{invalid_mode_index};
     uint32_t preferred_mode_index{invalid_mode_index};
     std::vector<DisplayConfigurationMode> modes;
-    std::vector<MirPixelFormat> formats{mir_pixel_format_argb_8888,
-                                        mir_pixel_format_xrgb_8888};
+    std::vector<MirPixelFormat> formats;
+
+    auto supported_formats = formats_for_output(drm_fd_, connector);
+    formats.reserve(supported_formats.size());
+    for (auto const& format : supported_formats)
+    {
+        if (auto mir_format = format.as_mir_format())
+        {
+            formats.push_back(*mir_format);
+        }
+    }
 
     std::vector<uint8_t> edid;
     if (connected) {

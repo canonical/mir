@@ -26,6 +26,7 @@
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 #include <unordered_map>
+#include <unordered_set>
 
 namespace mir
 {
@@ -43,14 +44,29 @@ public:
     int fd() const;
     int write_fd() const;
     drmModeRes* resources_ptr();
+    drmModePlaneRes* plane_resources_ptr();
+    drmModeObjectProperties* get_object_properties(uint32_t id, uint32_t type);
+    drmModePropertyRes* get_property(uint32_t prop_id);
+    drmModePropertyBlobRes* get_property_blob(uint32_t prop_id);
 
-    void add_crtc(uint32_t id, drmModeModeInfo mode);
-    void add_encoder(uint32_t encoder_id, uint32_t crtc_id, uint32_t possible_crtcs_mask);
+    uint32_t add_property(const char *name);
+    void add_crtc(uint32_t id, drmModeModeInfo mode,
+                  std::vector<uint32_t> prop_ids = {},
+                  std::vector<uint64_t> prop_values = {});
+    void add_encoder(uint32_t encoder_id, uint32_t crtc_id, uint32_t possible_crtcs_mask,
+                     std::vector<uint32_t> prop_ids = {},
+                     std::vector<uint64_t> prop_values = {});
     void add_connector(uint32_t connector_id, uint32_t type, drmModeConnection connection,
                        uint32_t encoder_id, std::vector<drmModeModeInfo>& modes,
                        std::vector<uint32_t>& possible_encoder_ids,
                        geometry::Size const& physical_size,
-                       drmModeSubPixel subpixel_arrangement = DRM_MODE_SUBPIXEL_UNKNOWN);
+                       drmModeSubPixel subpixel_arrangement = DRM_MODE_SUBPIXEL_UNKNOWN,
+                       std::vector<uint32_t> prop_ids = {},
+                       std::vector<uint64_t> prop_values = {});
+    void add_plane(std::vector<uint32_t>& formats, uint32_t plane_id, uint32_t crtc_id,
+                   uint32_t fb_id, uint32_t crtc_x, uint32_t crtc_y, uint32_t x,
+                   uint32_t y, uint32_t possible_crtcs_mask, uint32_t gamma_size,
+                   std::vector<uint32_t> prop_ids = {}, std::vector<uint64_t> prop_values = {});
 
     void prepare();
     void reset();
@@ -58,6 +74,7 @@ public:
     drmModeCrtc* find_crtc(uint32_t id);
     drmModeEncoder* find_encoder(uint32_t id);
     drmModeConnector* find_connector(uint32_t id);
+    drmModePlane* find_plane(uint32_t id);
 
     enum ModePreference {NormalMode, PreferredMode};
     static drmModeModeInfo create_mode(uint16_t hdisplay, uint16_t vdisplay,
@@ -66,20 +83,44 @@ public:
 
     bool drm_setversion_called{false};
 private:
+    struct DRMObjectWithProperties
+    {
+        uint32_t object_type;
+        std::vector<uint32_t> ids;
+        std::vector<uint64_t> values;
+    };
+
+    struct DRMProperty
+    {
+        uint32_t id;
+        char name[DRM_PROP_NAME_LEN];
+    };
+
     int pipe_fds[2];
 
     drmModeRes resources;
+    drmModePlaneRes plane_resources;
+    drmModePlane plane;
     std::vector<drmModeCrtc> crtcs;
     std::vector<drmModeEncoder> encoders;
     std::vector<drmModeConnector> connectors;
+    std::vector<drmModePlane> planes;
+    std::unordered_map<uint32_t, DRMObjectWithProperties> objects;
+    std::unordered_map<uint32_t, std::string> properties;
+    std::unordered_set<drmModeObjectPropertiesPtr> allocated_obj_props;
+    std::unordered_set<drmModePropertyPtr> allocated_props;
+    std::unordered_set<drmModePropertyBlobPtr> allocated_prop_blobs;
+    uint32_t next_prop_id{1};
 
     std::vector<uint32_t> crtc_ids;
     std::vector<uint32_t> encoder_ids;
     std::vector<uint32_t> connector_ids;
+    std::vector<uint32_t> plane_ids;
 
     std::vector<drmModeModeInfo> modes;
     std::vector<drmModeModeInfo> modes_empty;
     std::vector<uint32_t> connector_encoder_ids;
+    std::vector<uint32_t> plane_formats;
 };
 
 class MockDRM
@@ -130,7 +171,9 @@ public:
     MOCK_METHOD(int, drmGetCap, (int fd, uint64_t capability, uint64_t *value));
     MOCK_METHOD(int, drmSetClientCap, (int fd, uint64_t capability, uint64_t value));
     MOCK_METHOD(drmModePropertyPtr, drmModeGetProperty, (int fd, uint32_t propertyId));
+    MOCK_METHOD(drmModePropertyBlobPtr, drmModeGetPropertyBlob, (int fd, uint32_t blobId));
     MOCK_METHOD(void, drmModeFreeProperty, (drmModePropertyPtr));
+    MOCK_METHOD(void, drmModeFreePropertyBlob, (drmModePropertyBlobPtr));
     MOCK_METHOD(int, drmModeConnectorSetProperty, (int fd, uint32_t connector_id, uint32_t property_id, uint64_t value));
 
     MOCK_METHOD(int, drmGetMagic, (int fd, drm_magic_t *magic));
@@ -166,15 +209,20 @@ public:
     MOCK_METHOD(void*, mmap, (void* addr, size_t length, int prot, int flags, int fd, off_t offset));
     MOCK_METHOD(int, munmap, (void* addr, size_t length));
 
+    uint32_t add_property(char const* device, char const* name);
     void add_crtc(
         char const* device,
         uint32_t id,
-        drmModeModeInfo mode);
+        drmModeModeInfo mode,
+        std::vector<uint32_t> prop_ids = {},
+	std::vector<uint64_t> prop_values = {});
     void add_encoder(
         char const* device,
         uint32_t encoder_id,
         uint32_t crtc_id,
-        uint32_t possible_crtcs_mask);
+        uint32_t possible_crtcs_mask,
+        std::vector<uint32_t> prop_ids = {},
+	std::vector<uint64_t> prop_values = {});
     void add_connector(
         char const* device,
         uint32_t connector_id,
@@ -184,7 +232,23 @@ public:
         std::vector<drmModeModeInfo>& modes,
         std::vector<uint32_t>& possible_encoder_ids,
         geometry::Size const& physical_size,
-        drmModeSubPixel subpixel_arrangement = DRM_MODE_SUBPIXEL_UNKNOWN);
+        drmModeSubPixel subpixel_arrangement = DRM_MODE_SUBPIXEL_UNKNOWN,
+        std::vector<uint32_t> prop_ids = {},
+	std::vector<uint64_t> prop_values = {});
+    void add_plane(
+        char const* device,
+	std::vector<uint32_t>& formats,
+	uint32_t plane_id,
+	uint32_t crtc_id,
+        uint32_t fb_id,
+	uint32_t crtc_x,
+	uint32_t crtc_y,
+	uint32_t x,
+        uint32_t y,
+	uint32_t possible_crtcs_mask,
+	uint32_t gamma_size,
+        std::vector<uint32_t> prop_ids = {},
+	std::vector<uint64_t> prop_values = {});
 
     void prepare(char const* device);
     void reset(char const* device);
@@ -218,7 +282,6 @@ private:
     };
 
     std::map<std::unique_ptr<char[]>, size_t, TransparentUPtrComparator> mmapings;
-    drmModeObjectProperties empty_object_props;
     mir_test_framework::OpenHandlerHandle const open_interposer;
     mir_test_framework::MmapHandlerHandle const mmap_interposer;
     mir_test_framework::MunmapHandlerHandle const munmap_interposer;
