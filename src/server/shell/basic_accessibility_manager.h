@@ -91,8 +91,8 @@ private:
             std::shared_ptr<Transformer> const& transformer,
             std::shared_ptr<input::InputEventTransformer> const& event_transformer);
 
-        void add_registration() const;
-        void remove_registration() const;
+        bool add_registration() const;
+        bool remove_registration() const;
 
         Transformer* operator->() const noexcept;
 

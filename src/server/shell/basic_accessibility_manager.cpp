@@ -33,7 +33,7 @@ inline Transformer* mir::shell::BasicAccessibilityManager::Registration<Transfor
 }
 
 template <typename Transformer>
-inline void mir::shell::BasicAccessibilityManager::Registration<Transformer>::remove_registration() const
+inline bool mir::shell::BasicAccessibilityManager::Registration<Transformer>::remove_registration() const
 {
     // atomic::compare_exchange_strong(expected, desired) checks the atomic
     // value against the "expected" value. If they're equal, it returns `true`
@@ -43,17 +43,23 @@ inline void mir::shell::BasicAccessibilityManager::Registration<Transformer>::re
     if (registered.compare_exchange_strong(expected, false))
     {
         event_transformer->remove(transformer);
+        return true;
     }
+
+    return false;
 }
 
 template <typename Transformer>
-inline void mir::shell::BasicAccessibilityManager::Registration<Transformer>::add_registration() const
+inline bool mir::shell::BasicAccessibilityManager::Registration<Transformer>::add_registration() const
 {
     auto expected = false;
     if (registered.compare_exchange_strong(expected, true))
     {
         event_transformer->append(transformer);
+        return true;
     }
+
+    return false;
 }
 
 template <typename Transformer>
@@ -146,16 +152,10 @@ void mir::shell::BasicAccessibilityManager::max_speed(double x_axis, double y_ax
 
 void mir::shell::BasicAccessibilityManager::simulated_secondary_click_enabled(bool enabled)
 {
-    if(enabled)
-    {
-        simulated_secondary_click_transformer.add_registration();
+    if (enabled && simulated_secondary_click_transformer.add_registration())
         simulated_secondary_click_transformer->enabled();
-    }
-    else
-    {
-        simulated_secondary_click_transformer.remove_registration();
+    else if (!enabled && simulated_secondary_click_transformer.remove_registration())
         simulated_secondary_click_transformer->disabled();
-    }
 }
 
 auto mir::shell::BasicAccessibilityManager::simulated_secondary_click()
