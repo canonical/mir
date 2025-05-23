@@ -85,8 +85,8 @@ private:
             std::shared_ptr<Transformer> const& transformer,
             std::shared_ptr<input::InputEventTransformer> const& event_transformer);
 
-        void add_registration();
-        void remove_registration();
+        void add_registration() const;
+        void remove_registration() const;
 
         Transformer* operator->() const noexcept;
 
@@ -96,14 +96,14 @@ private:
 
         std::shared_ptr<Transformer> const transformer;
         std::shared_ptr<input::InputEventTransformer> const event_transformer;
-        std::atomic<bool> registered{false};
+        std::atomic<bool> mutable registered{false};
     };
 
     Synchronised<MutableState> mutable_state;
 
     bool const enable_key_repeat;
     std::shared_ptr<graphics::Cursor> const cursor;
-    Registration<MouseKeysTransformer> transformer;
+    Registration<MouseKeysTransformer> const transformer;
 };
 }
 }

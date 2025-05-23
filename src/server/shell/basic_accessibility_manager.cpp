@@ -32,7 +32,7 @@ inline Transformer* mir::shell::BasicAccessibilityManager::Registration<Transfor
 }
 
 template <typename Transformer>
-inline void mir::shell::BasicAccessibilityManager::Registration<Transformer>::remove_registration()
+inline void mir::shell::BasicAccessibilityManager::Registration<Transformer>::remove_registration() const
 {
     // atomic::compare_exchange_strong(expected, desired) checks the atomic
     // value against the "expected" value. If they're equal, it returns `true`
@@ -46,7 +46,7 @@ inline void mir::shell::BasicAccessibilityManager::Registration<Transformer>::re
 }
 
 template <typename Transformer>
-inline void mir::shell::BasicAccessibilityManager::Registration<Transformer>::add_registration()
+inline void mir::shell::BasicAccessibilityManager::Registration<Transformer>::add_registration() const
 {
     auto expected = false;
     if (registered.compare_exchange_strong(expected, true))
