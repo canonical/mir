@@ -16,6 +16,7 @@
 
 #include "basic_accessibility_manager.h"
 #include "mouse_keys_transformer.h"
+#include "basic_simulated_secondary_click_transformer.h"
 
 #include "mir/graphics/cursor.h"
 #include "mir/shell/keyboard_helper.h"
@@ -32,7 +33,7 @@ inline Transformer* mir::shell::BasicAccessibilityManager::Registration<Transfor
 }
 
 template <typename Transformer>
-inline void mir::shell::BasicAccessibilityManager::Registration<Transformer>::remove_registration() const
+inline bool mir::shell::BasicAccessibilityManager::Registration<Transformer>::remove_registration() const
 {
     // atomic::compare_exchange_strong(expected, desired) checks the atomic
     // value against the "expected" value. If they're equal, it returns `true`
@@ -42,17 +43,23 @@ inline void mir::shell::BasicAccessibilityManager::Registration<Transformer>::re
     if (registered.compare_exchange_strong(expected, false))
     {
         event_transformer->remove(transformer);
+        return true;
     }
+
+    return false;
 }
 
 template <typename Transformer>
-inline void mir::shell::BasicAccessibilityManager::Registration<Transformer>::add_registration() const
+inline bool mir::shell::BasicAccessibilityManager::Registration<Transformer>::add_registration() const
 {
     auto expected = false;
     if (registered.compare_exchange_strong(expected, true))
     {
         event_transformer->append(transformer);
+        return true;
     }
+
+    return false;
 }
 
 template <typename Transformer>
@@ -103,21 +110,25 @@ void mir::shell::BasicAccessibilityManager::repeat_rate_and_delay(
 void mir::shell::BasicAccessibilityManager::mousekeys_enabled(bool on)
 {
     if (on)
-        transformer.add_registration();
+        mouse_keys_transformer.add_registration();
     else
-        transformer.remove_registration();
+        mouse_keys_transformer.remove_registration();
 }
 
 mir::shell::BasicAccessibilityManager::BasicAccessibilityManager(
     std::shared_ptr<input::InputEventTransformer> const& event_transformer,
     bool enable_key_repeat,
     std::shared_ptr<mir::graphics::Cursor> const& cursor,
-    std::shared_ptr<shell::MouseKeysTransformer> const& mousekeys_transformer) :
+    std::shared_ptr<shell::MouseKeysTransformer> const& mousekeys_transformer,
+    std::shared_ptr<SimulatedSecondaryClickTransformer> const& simulated_secondary_click_transformer) :
     enable_key_repeat{enable_key_repeat},
     cursor{cursor},
-    transformer{mousekeys_transformer, event_transformer}
+    mouse_keys_transformer{mousekeys_transformer, event_transformer},
+    simulated_secondary_click_transformer{simulated_secondary_click_transformer, event_transformer}
 {
 }
+
+mir::shell::BasicAccessibilityManager::~BasicAccessibilityManager() = default;
 
 void mir::shell::BasicAccessibilityManager::cursor_scale(float new_scale)
 {
@@ -126,15 +137,29 @@ void mir::shell::BasicAccessibilityManager::cursor_scale(float new_scale)
 
 void mir::shell::BasicAccessibilityManager::mousekeys_keymap(input::MouseKeysKeymap const& new_keymap)
 {
-    transformer->keymap(new_keymap);
+    mouse_keys_transformer->keymap(new_keymap);
 }
 
 void mir::shell::BasicAccessibilityManager::acceleration_factors(double constant, double linear, double quadratic)
 {
-    transformer->acceleration_factors(constant, linear, quadratic);
+    mouse_keys_transformer->acceleration_factors(constant, linear, quadratic);
 }
 
 void mir::shell::BasicAccessibilityManager::max_speed(double x_axis, double y_axis)
 {
-    transformer->max_speed(x_axis, y_axis);
+    mouse_keys_transformer->max_speed(x_axis, y_axis);
+}
+
+void mir::shell::BasicAccessibilityManager::simulated_secondary_click_enabled(bool enabled)
+{
+    if (enabled && simulated_secondary_click_transformer.add_registration())
+        simulated_secondary_click_transformer->enabled();
+    else if (!enabled && simulated_secondary_click_transformer.remove_registration())
+        simulated_secondary_click_transformer->disabled();
+}
+
+auto mir::shell::BasicAccessibilityManager::simulated_secondary_click()
+    -> SimulatedSecondaryClickTransformer&
+{
+    return *simulated_secondary_click_transformer.operator->();
 }
