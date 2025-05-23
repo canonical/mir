@@ -15,6 +15,8 @@
  */
 
 #include "include/server/mir/shell/keyboard_helper.h"
+#include "mir/shell/hover_click_transformer.h"
+#include "src/server/input/default_input_device_hub.h"
 #include "src/server/shell/basic_accessibility_manager.h"
 #include "src/server/shell/mouse_keys_transformer.h"
 #include "src/server/shell/basic_simulated_secondary_click_transformer.h"
@@ -88,6 +90,25 @@ struct MockInputEventTransformer: public mir::input::InputEventTransformer
     MOCK_METHOD(void, remove, (std::shared_ptr<Transformer> const&), (override));
 };
 
+struct MockHoverClickTransformer : public mir::shell::HoverClickTransformer
+{
+    MockHoverClickTransformer() = default;
+    MOCK_METHOD(void, hover_duration,(std::chrono::milliseconds delay), (override));
+    MOCK_METHOD(void, cancel_displacement_threshold,(float displacement), (override));
+    MOCK_METHOD(void, enabled,(), (override));
+    MOCK_METHOD(void, disabled,(), (override));
+    MOCK_METHOD(void, on_enabled,(std::function<void()>&& on_enabled), (override));
+    MOCK_METHOD(void, on_disabled,(std::function<void()>&& on_disabled), (override));
+    MOCK_METHOD(void, on_hover_start,(std::function<void()>&& on_hover_start), (override));
+    MOCK_METHOD(void, on_hover_cancel,(std::function<void()>&& on_hover_cancelled), (override));
+    MOCK_METHOD(void, on_click_dispatched,(std::function<void()>&& on_click_dispatched), (override));
+    MOCK_METHOD(
+        bool,
+        transform_input_event,
+        (mir::input::InputEventTransformer::EventDispatcher const&, mir::input::EventBuilder*, MirEvent const&),
+        (override));
+};
+
 struct TestBasicAccessibilityManager : Test
 {
     TestBasicAccessibilityManager() :
@@ -96,7 +117,8 @@ struct TestBasicAccessibilityManager : Test
             true,
             std::make_shared<mir::test::doubles::StubCursor>(),
             mock_mousekeys_transformer,
-            mock_simulated_secondary_click_transformer}
+            mock_simulated_secondary_click_transformer,
+            std::make_shared<MockHoverClickTransformer>()}
     {
         basic_accessibility_manager.register_keyboard_helper(mock_key_helper);
     }
