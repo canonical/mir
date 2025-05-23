@@ -94,11 +94,6 @@ mir::shell::BasicAccessibilityManager::BasicAccessibilityManager(
     simulated_secondary_click_transformer{simulated_secondary_click_transformer},
     slow_keys_transformer{slow_keys_transformer}
 {
-    slow_keys_transformer->on_key_down([](auto keysym) { mir::log_debug("down: %d", keysym); });
-    slow_keys_transformer->on_key_rejected([](auto keysym) { mir::log_debug("rejected: %d", keysym); });
-    slow_keys_transformer->on_key_accepted([](auto keysym) { mir::log_debug("accepted: %d", keysym); });
-
-    event_transformer->append(slow_keys_transformer);
 }
 
 mir::shell::BasicAccessibilityManager::~BasicAccessibilityManager() = default;
@@ -141,4 +136,23 @@ auto mir::shell::BasicAccessibilityManager::simulated_secondary_click()
     -> SimulatedSecondaryClickTransformer&
 {
     return *simulated_secondary_click_transformer.operator->();
+}
+
+void mir::shell::BasicAccessibilityManager::slow_keys_enabled(bool enabled)
+{
+    if (enabled && !slow_keys_transformer->is_enabled())
+    {
+        event_transformer->append(slow_keys_transformer);
+        slow_keys_transformer->enabled();
+    }
+    else if (!enabled && slow_keys_transformer->is_enabled())
+    {
+        event_transformer->remove(slow_keys_transformer);
+        slow_keys_transformer->disabled();
+    }
+}
+
+auto mir::shell::BasicAccessibilityManager::slow_keys() -> SlowKeysTransformer&
+{
+    return *slow_keys_transformer;
 }

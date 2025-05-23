@@ -30,6 +30,7 @@ namespace shell
 {
 class KeyboardHelper;
 class SimulatedSecondaryClickTransformer;
+class SlowKeysTransformer;
 class AccessibilityManager
 {
 public:
@@ -51,6 +52,9 @@ public:
 
     virtual void simulated_secondary_click_enabled(bool enabled) = 0;
     virtual auto simulated_secondary_click() -> SimulatedSecondaryClickTransformer& = 0;
+
+    virtual void slow_keys_enabled(bool enabled) = 0;
+    virtual auto slow_keys() -> SlowKeysTransformer& = 0;
 };
 }
 }

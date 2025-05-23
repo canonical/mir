@@ -45,7 +45,6 @@ class Clock;
 namespace shell
 {
 class MouseKeysTransformer;
-class SlowKeysTransformer;
 class BasicAccessibilityManager : public AccessibilityManager
 {
 public:
@@ -75,6 +74,8 @@ public:
     void simulated_secondary_click_enabled(bool enabled) override;
     auto simulated_secondary_click() -> SimulatedSecondaryClickTransformer& override;
 
+    void slow_keys_enabled(bool enabled) override;
+    auto slow_keys() -> SlowKeysTransformer& override;
 private:
     struct MutableState {
         // 25 rate and 600 delay are the default in Weston and Sway
