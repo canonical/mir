@@ -492,7 +492,7 @@ mtd::MockDRM::MockDRM()
     ON_CALL(*this, drmModeFreeObjectProperties(_))
         .WillByDefault(
             Invoke(
-                [this](drmModeObjectPropertiesPtr props)
+                [](drmModeObjectPropertiesPtr props)
                 {
                     delete props;
                 }));
@@ -508,7 +508,7 @@ mtd::MockDRM::MockDRM()
     ON_CALL(*this, drmModeFreeProperty(_))
         .WillByDefault(
             Invoke(
-                [this](drmModePropertyPtr prop)
+                [](drmModePropertyPtr prop)
                 {
                     delete prop;
                 }));
@@ -524,7 +524,7 @@ mtd::MockDRM::MockDRM()
     ON_CALL(*this, drmModeFreePropertyBlob(_))
         .WillByDefault(
             Invoke(
-                [this](drmModePropertyBlobPtr prop)
+                [](drmModePropertyBlobPtr prop)
                 {
                     delete prop;
                 }));
