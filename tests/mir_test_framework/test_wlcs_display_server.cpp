@@ -25,6 +25,7 @@
 
 #include <mir/executor.h>
 #include <mir/fd.h>
+#include <mir/compositor/buffer_stream.h>
 #include <mir/input/cursor_listener.h>
 #include <mir/input/device.h>
 #include <mir/input/input_device_hub.h>
@@ -390,8 +391,12 @@ public:
                 BOOST_THROW_EXCEPTION((std::runtime_error{message}));
             }
 
-            auto stream = surface->primary_buffer_stream();
-            auto wl_surface = state_accessor->stream_map.at(stream);
+            auto const streams = surface->get_streams();
+            if (streams.empty())
+                BOOST_THROW_EXCEPTION(
+                    std::runtime_error{"Surface::get_streams() returned empty list"});
+
+            auto wl_surface = state_accessor->stream_map.at(streams.front().stream);
 
             state_accessor->surface_map[wl_surface] = surface;
         }

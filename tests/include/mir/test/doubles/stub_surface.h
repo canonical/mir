@@ -34,7 +34,7 @@ struct StubSurface : scene::Surface
     geometry::Size window_size() const override { return {}; }
     geometry::Displacement content_offset() const override { return {}; }
     geometry::Size content_size() const override { return {}; }
-    std::shared_ptr<frontend::BufferStream> primary_buffer_stream() const override { return nullptr; }
+    std::list<scene::StreamInfo> get_streams() const override { return {}; }
     void set_streams(std::list<scene::StreamInfo> const&) override {}
     input::InputReceptionMode reception_mode() const override { return input::InputReceptionMode::normal; }
     void set_reception_mode(input::InputReceptionMode) override {}
