@@ -30,6 +30,7 @@ namespace shell
 {
 class KeyboardHelper;
 class SimulatedSecondaryClickTransformer;
+class HoverClickTransformer;
 class AccessibilityManager
 {
 public:
@@ -49,8 +50,12 @@ public:
     virtual void acceleration_factors(double constant, double linear, double quadratic) = 0;
     virtual void max_speed(double x_axis, double y_axis) = 0;
 
+
     virtual void simulated_secondary_click_enabled(bool enabled) = 0;
     virtual auto simulated_secondary_click() -> SimulatedSecondaryClickTransformer& = 0;
+
+    virtual void hover_click_enabled(bool enabled) = 0;
+    virtual auto hover_click() -> HoverClickTransformer& = 0;
 };
 }
 }
