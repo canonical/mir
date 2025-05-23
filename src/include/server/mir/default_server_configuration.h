@@ -173,6 +173,7 @@ public:
     std::shared_ptr<graphics::Display>      the_display() override;
     std::shared_ptr<compositor::Compositor> the_compositor() override;
     std::shared_ptr<compositor::ScreenShooter> the_screen_shooter() override;
+    std::shared_ptr<compositor::ScreenShooterFactory> the_screen_shooter_factory() override;
     std::shared_ptr<input::InputManager>    the_input_manager() override;
     std::shared_ptr<MainLoop>               the_main_loop() override;
     std::shared_ptr<ServerStatusListener>   the_server_status_listener() override;
@@ -420,6 +421,7 @@ protected:
     CachedPtr<compositor::Compositor> compositor;
     CachedPtr<compositor::CompositorReport> compositor_report;
     CachedPtr<compositor::ScreenShooter> screen_shooter;
+    CachedPtr<compositor::ScreenShooterFactory> screen_shooter_factory;
     CachedPtr<logging::Logger> logger;
     CachedPtr<graphics::DisplayReport> display_report;
     CachedPtr<time::Clock> clock;

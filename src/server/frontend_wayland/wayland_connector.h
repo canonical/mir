@@ -41,7 +41,7 @@ class DecorationStrategy;
 
 namespace compositor
 {
-class ScreenShooter;
+class ScreenShooterFactory;
 }
 
 namespace input
@@ -111,7 +111,7 @@ public:
         std::shared_ptr<input::InputDeviceRegistry> input_device_registry;
         std::shared_ptr<input::CompositeEventFilter> composite_event_filter;
         std::shared_ptr<graphics::GraphicBufferAllocator> graphic_buffer_allocator;
-        std::shared_ptr<compositor::ScreenShooter> screen_shooter;
+        std::shared_ptr<compositor::ScreenShooterFactory> screen_shooter_factory;
         std::shared_ptr<MainLoop> main_loop;
         std::shared_ptr<DesktopFileManager> desktop_file_manager;
         std::shared_ptr<scene::SessionLock> session_lock;
@@ -164,7 +164,7 @@ public:
         std::shared_ptr<scene::Clipboard> const& primary_selection_clipboard,
         std::shared_ptr<scene::TextInputHub> const& text_input_hub,
         std::shared_ptr<scene::IdleHub> const& idle_hub,
-        std::shared_ptr<compositor::ScreenShooter> const& screen_shooter,
+        std::shared_ptr<compositor::ScreenShooterFactory> const& screen_shooter_factory,
         std::shared_ptr<MainLoop> const& main_loop,
         bool arw_socket,
         std::unique_ptr<WaylandExtensions> extensions,

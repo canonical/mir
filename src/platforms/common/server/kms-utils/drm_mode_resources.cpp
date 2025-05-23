@@ -224,7 +224,7 @@ mgk::DRMModePropertyUPtr get_property(int drm_fd, uint32_t id)
             // drmModeGetProperty either sets errno, or has failed in malloc()
             errno = ENOMEM;
         }
-        BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), "Failed to get DRM plane"}));
+        BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), "Failed to get DRM property"}));
     }
     return prop;
 }

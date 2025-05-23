@@ -17,6 +17,8 @@ set(
   multi_monitor_arbiter.cpp
   basic_screen_shooter.cpp
   null_screen_shooter.cpp
+  basic_screen_shooter_factory.cpp
+  null_screen_shooter_factory.cpp
 )
 
 ADD_LIBRARY(

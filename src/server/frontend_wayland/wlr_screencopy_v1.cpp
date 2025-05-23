@@ -16,7 +16,9 @@
 
 #include "wlr_screencopy_v1.h"
 
+#include "mir/log.h"
 #include "mir/compositor/screen_shooter.h"
+#include "mir/compositor/screen_shooter_factory.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/renderer/sw/pixel_source.h"
 #include "mir/graphics/buffer.h"
@@ -94,7 +96,7 @@ struct WlrScreencopyV1Ctx
 {
     std::shared_ptr<Executor> const wayland_executor;
     std::shared_ptr<graphics::GraphicBufferAllocator> const allocator;
-    std::shared_ptr<compositor::ScreenShooter> const screen_shooter;
+    std::shared_ptr<compositor::ScreenShooterFactory> const screen_shooter_factory;
     std::shared_ptr<SurfaceStack> const surface_stack;
 };
 
@@ -120,6 +122,7 @@ public:
 
     void capture_on_damage(WlrScreencopyV1DamageTracker::Frame* frame);
 
+    std::unique_ptr<compositor::ScreenShooter> const screen_shooter;
 private:
     /// From wayland::WlrScreencopyManagerV1
     /// @{
@@ -183,14 +186,14 @@ auto mf::create_wlr_screencopy_manager_unstable_v1(
     wl_display* display,
     std::shared_ptr<Executor> const& wayland_executor,
     std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
-    std::shared_ptr<compositor::ScreenShooter> const& screen_shooter,
+    std::shared_ptr<compositor::ScreenShooterFactory> const& screen_shooter_factory,
     std::shared_ptr<SurfaceStack> const& surface_stack)
 -> std::shared_ptr<wayland::WlrScreencopyManagerV1::Global>
 {
     auto ctx = std::shared_ptr<WlrScreencopyV1Ctx>{new WlrScreencopyV1Ctx{
         wayland_executor,
         allocator,
-        screen_shooter,
+        screen_shooter_factory,
         surface_stack}};
     return std::make_shared<WlrScreencopyManagerV1Global>(display, std::move(ctx));
 }
@@ -360,6 +363,7 @@ mf::WlrScreencopyManagerV1::WlrScreencopyManagerV1(
     wl_resource* resource,
     std::shared_ptr<WlrScreencopyV1Ctx> const& ctx)
     : wayland::WlrScreencopyManagerV1{resource, Version<3>()},
+      screen_shooter(ctx->screen_shooter_factory->create()),
       ctx{ctx},
       damage_tracker{*ctx->wayland_executor, *ctx->surface_stack}
 {
@@ -420,11 +424,20 @@ void mf::WlrScreencopyFrameV1::capture(geom::Rectangle buffer_space_damage)
 {
     if (!target)
     {
-        fatal_error(
-            "WlrScreencopyFrameV1::capture() called without a target, copy %s been called",
+        log_error("WlrScreencopyFrameV1::capture() called without a target, copy %s been called",
             copy_has_been_called ? "has" : "has not");
+        report_result(std::nullopt, buffer_space_damage);
+        return;
     }
-    ctx->screen_shooter->capture(std::move(target), params.output_space_area,
+
+    if (!manager)
+    {
+        log_error("WlrScreencopyFrameV1::capture() called without a manager");
+        report_result(std::nullopt, buffer_space_damage);
+        return;
+    }
+
+    manager.value().screen_shooter->capture(std::move(target), params.output_space_area,
         [wayland_executor=ctx->wayland_executor, buffer_space_damage, self=mw::make_weak(this)]
             (std::optional<time::Timestamp> captured_time)
         {

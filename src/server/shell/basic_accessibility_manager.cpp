@@ -19,14 +19,51 @@
 #include "basic_simulated_secondary_click_transformer.h"
 
 #include "mir/graphics/cursor.h"
-#include "mir/input/input_event_transformer.h"
-#include "mir/main_loop.h"
 #include "mir/shell/keyboard_helper.h"
 
 #include <xkbcommon/xkbcommon-keysyms.h>
 
 #include <memory>
 #include <optional>
+
+template <typename Transformer>
+inline Transformer* mir::shell::BasicAccessibilityManager::Registration<Transformer>::operator->() const noexcept
+{
+    return transformer.get();
+}
+
+template <typename Transformer>
+inline void mir::shell::BasicAccessibilityManager::Registration<Transformer>::remove_registration() const
+{
+    // atomic::compare_exchange_strong(expected, desired) checks the atomic
+    // value against the "expected" value. If they're equal, it returns `true`
+    // and sets atomic = desired. If they're not equal, it returns `false` and
+    // sets expected = atomic which doesn't matter in the case below.
+    auto expected = true;
+    if (registered.compare_exchange_strong(expected, false))
+    {
+        event_transformer->remove(transformer);
+    }
+}
+
+template <typename Transformer>
+inline void mir::shell::BasicAccessibilityManager::Registration<Transformer>::add_registration() const
+{
+    auto expected = false;
+    if (registered.compare_exchange_strong(expected, true))
+    {
+        event_transformer->append(transformer);
+    }
+}
+
+template <typename Transformer>
+inline mir::shell::BasicAccessibilityManager::Registration<Transformer>::Registration(
+    std::shared_ptr<Transformer> const& transformer,
+    std::shared_ptr<input::InputEventTransformer> const& event_transformer) :
+    transformer{transformer},
+    event_transformer{event_transformer}
+{
+}
 
 void mir::shell::BasicAccessibilityManager::register_keyboard_helper(std::shared_ptr<KeyboardHelper> const& helper)
 {
@@ -67,9 +104,9 @@ void mir::shell::BasicAccessibilityManager::repeat_rate_and_delay(
 void mir::shell::BasicAccessibilityManager::mousekeys_enabled(bool on)
 {
     if (on)
-        event_transformer->append(mouse_keys_transformer);
+        mouse_keys_transformer.add_registration();
     else
-        event_transformer->remove(mouse_keys_transformer);
+        mouse_keys_transformer.remove_registration();
 }
 
 mir::shell::BasicAccessibilityManager::BasicAccessibilityManager(
@@ -80,9 +117,8 @@ mir::shell::BasicAccessibilityManager::BasicAccessibilityManager(
     std::shared_ptr<SimulatedSecondaryClickTransformer> const& simulated_secondary_click_transformer) :
     enable_key_repeat{enable_key_repeat},
     cursor{cursor},
-    event_transformer{event_transformer},
-    mouse_keys_transformer{mousekeys_transformer},
-    simulated_secondary_click_transformer{simulated_secondary_click_transformer}
+    mouse_keys_transformer{mousekeys_transformer, event_transformer},
+    simulated_secondary_click_transformer{simulated_secondary_click_transformer, event_transformer}
 {
 }
 
@@ -111,19 +147,13 @@ void mir::shell::BasicAccessibilityManager::max_speed(double x_axis, double y_ax
 void mir::shell::BasicAccessibilityManager::simulated_secondary_click_enabled(bool enabled)
 {
     if (enabled)
-    {
-        if (event_transformer->append(simulated_secondary_click_transformer))
-            simulated_secondary_click_transformer->enabled();
-    }
+        simulated_secondary_click_transformer.add_registration();
     else
-    {
-        if (event_transformer->remove(simulated_secondary_click_transformer))
-            simulated_secondary_click_transformer->disabled();
-    }
+        simulated_secondary_click_transformer.remove_registration();
 }
 
 auto mir::shell::BasicAccessibilityManager::simulated_secondary_click()
     -> SimulatedSecondaryClickTransformer&
 {
-    return *simulated_secondary_click_transformer;
+    return *simulated_secondary_click_transformer.operator->();
 }

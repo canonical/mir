@@ -21,11 +21,10 @@
 #include "mir/test/doubles/stub_gl_rendering_provider.h"
 #include "src/server/compositor/basic_screen_shooter.h"
 
-#include "mir/renderer/renderer_factory.h"
 #include "mir/test/doubles/mock_scene.h"
 #include "mir/test/doubles/mock_renderer.h"
 #include "mir/test/doubles/mock_gl_rendering_provider.h"
-#include "mir/test/doubles/stub_gl_rendering_provider.h"
+#include "mir/test/doubles/mock_renderer_factory.h"
 #include "mir/test/doubles/advanceable_clock.h"
 #include "mir/test/doubles/explicit_executor.h"
 #include "mir/test/doubles/stub_buffer.h"
@@ -47,16 +46,6 @@ using namespace std::chrono_literals;
 
 namespace
 {
-class MockRendererFactory : public mr::RendererFactory
-{
-public:
-    MOCK_METHOD(
-        std::unique_ptr<mr::Renderer>,
-        create_renderer_for,
-        (std::unique_ptr<mg::gl::OutputSurface>, std::shared_ptr<mg::GLRenderingProvider>),
-        (const override));
-};
-
 struct BasicScreenShooter : Test
 {
     BasicScreenShooter()
@@ -138,7 +127,7 @@ struct BasicScreenShooter : Test
     mtd::StubGlRenderingProvider default_gl_behaviour_provider;
     std::shared_ptr<mtd::MockGlRenderingProvider> gl_provider{std::make_shared<testing::NiceMock<mtd::MockGlRenderingProvider>>()};
     std::vector<std::shared_ptr<mg::GLRenderingProvider>> gl_providers{gl_provider};
-    std::shared_ptr<MockRendererFactory> renderer_factory{std::make_shared<testing::NiceMock<MockRendererFactory>>()};
+    std::shared_ptr<mtd::MockRendererFactory> renderer_factory{std::make_shared<testing::NiceMock<mtd::MockRendererFactory>>()};
     std::shared_ptr<mtd::StubBufferAllocator> buffer_allocator;
     std::shared_ptr<mtd::AdvanceableClock> clock{std::make_shared<mtd::AdvanceableClock>()};
     mtd::ExplicitExecutor executor;
