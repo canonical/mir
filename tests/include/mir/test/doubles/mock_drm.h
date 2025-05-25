@@ -63,7 +63,7 @@ public:
                        drmModeSubPixel subpixel_arrangement = DRM_MODE_SUBPIXEL_UNKNOWN,
                        std::vector<uint32_t> prop_ids = {},
                        std::vector<uint64_t> prop_values = {});
-    void add_plane(std::vector<uint32_t>& formats, uint32_t plane_id, uint32_t crtc_id,
+    void add_plane(std::vector<uint32_t> formats, uint32_t plane_id, uint32_t crtc_id,
                    uint32_t fb_id, uint32_t crtc_x, uint32_t crtc_y, uint32_t x,
                    uint32_t y, uint32_t possible_crtcs_mask, uint32_t gamma_size,
                    std::vector<uint32_t> prop_ids = {}, std::vector<uint64_t> prop_values = {});
@@ -120,7 +120,6 @@ private:
     std::vector<drmModeModeInfo> modes;
     std::vector<drmModeModeInfo> modes_empty;
     std::vector<uint32_t> connector_encoder_ids;
-    std::vector<uint32_t> plane_formats;
 };
 
 class MockDRM
@@ -237,7 +236,7 @@ public:
 	std::vector<uint64_t> prop_values = {});
     void add_plane(
         char const* device,
-	std::vector<uint32_t>& formats,
+	std::vector<uint32_t> formats,
 	uint32_t plane_id,
 	uint32_t crtc_id,
         uint32_t fb_id,

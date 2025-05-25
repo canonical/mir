@@ -26,212 +26,35 @@
 
 #include <boost/throw_exception.hpp>
 
+#include <fcntl.h>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
 namespace mtd = mir::test::doubles;
 namespace mgk = mir::graphics::kms;
 
-namespace
-{
-struct DRMObjectWithProperties
-{
-    uint32_t object_type;
-    std::vector<uint32_t> ids;
-    std::vector<uint64_t> values;
-};
-
-struct DRMProperty
-{
-    uint32_t id;
-    char name[DRM_PROP_NAME_LEN];
-};
-
-class FakeDRMObjectsWithProperties
-{
-public:
-    FakeDRMObjectsWithProperties(
-        std::vector<DRMProperty> const& properties)
-    {
-        for (auto const& prop : properties)
-        {
-            bool inserted;
-            std::tie(std::ignore, inserted) = this->properties.insert({prop.id, prop.name});
-            if (!inserted)
-            {
-                BOOST_THROW_EXCEPTION(std::logic_error{"Found a property with duplicate id"});
-            }
-        }
-    }
-
-    uint32_t add_object(DRMObjectWithProperties const& object)
-    {
-        do
-        {
-            next_id++;
-        }
-        while (properties.count(next_id) > 0);
-
-        for (auto id : object.ids)
-        {
-            if (properties.count(id) == 0)
-            {
-                BOOST_THROW_EXCEPTION(std::logic_error{"Object has property ID not found in property set"});
-            }
-        }
-
-        objects[next_id] = object;
-        return next_id;
-    }
-
-    void setup_mock_drm(mtd::MockDRM& mock)
-    {
-        using namespace testing;
-        ON_CALL(mock, drmModeObjectGetProperties(_, _, _))
-            .WillByDefault(Invoke(this, &FakeDRMObjectsWithProperties::get_object_properties));
-        ON_CALL(mock, drmModeFreeObjectProperties(_))
-            .WillByDefault(Invoke(this, &FakeDRMObjectsWithProperties::free_object_properties));
-        ON_CALL(mock, drmModeGetProperty(_, _))
-            .WillByDefault(Invoke(this, &FakeDRMObjectsWithProperties::get_property));
-        ON_CALL(mock, drmModeGetPropertyBlob(_, _))
-            .WillByDefault(Invoke(this, &FakeDRMObjectsWithProperties::get_property_blob));
-        ON_CALL(mock, drmModeFreeProperty(_))
-            .WillByDefault(Invoke(this, &FakeDRMObjectsWithProperties::free_property));
-        ON_CALL(mock, drmModeFreePropertyBlob(_))
-            .WillByDefault(Invoke(this, &FakeDRMObjectsWithProperties::free_property_blob));
-    }
-
-private:
-    drmModeObjectPropertiesPtr get_object_properties(
-        int /*fd*/,
-        uint32_t id,
-        uint32_t type)
-    {
-        auto props =
-            std::unique_ptr<drmModeObjectProperties, void (*)(drmModeObjectProperties*)>(new drmModeObjectProperties, &::drmModeFreeObjectProperties);
-
-        auto const& object = objects.at(id);
-        if (object.object_type != type)
-        {
-            BOOST_THROW_EXCEPTION(std::runtime_error{"Attempt to look up DRM object with incorrect type"});
-        }
-
-        props->count_props = object.ids.size();
-        props->props = const_cast<uint32_t*>(object.ids.data());
-        props->prop_values = const_cast<uint64_t*>(object.values.data());
-
-        allocated_obj_props.insert(props.get());
-        return props.release();
-    }
-
-    void free_object_properties(drmModeObjectPropertiesPtr props)
-    {
-        if (allocated_obj_props.count(props) == 0)
-        {
-            BOOST_THROW_EXCEPTION(std::runtime_error{"Freeing invalid drmModeObjectPropertiesPtr"});
-        }
-        delete props;
-    }
-
-    drmModePropertyPtr get_property(
-        int /*fd*/,
-        uint32_t id)
-    {
-        auto const& property = properties.at(id);
-
-        auto prop =
-            std::unique_ptr<drmModePropertyRes, void (*)(drmModePropertyPtr)>(new drmModePropertyRes, &::drmModeFreeProperty);
-
-        memset(prop.get(), 0, sizeof(*prop));
-
-        prop->prop_id = id;
-        strncpy(prop->name, property.c_str(), sizeof(prop->name) - 1);
-
-        allocated_props.insert(prop.get());
-        return prop.release();
-    }
-
-    drmModePropertyBlobPtr get_property_blob(
-        int /*fd*/,
-        uint32_t id)
-    {
-        auto blob =
-            std::unique_ptr<drmModePropertyBlobRes, void (*)(drmModePropertyBlobPtr)>(new drmModePropertyBlobRes, &::drmModeFreePropertyBlob);
-
-        memset(blob.get(), 0, sizeof(*blob));
-
-        blob->id = id;
-        blob->length = 0;
-        blob->data = NULL;
-
-        allocated_prop_blobs.insert(blob.get());
-        return blob.release();
-    }
-
-    void free_property(
-        drmModePropertyPtr prop)
-    {
-        if (allocated_props.count(prop) == 0)
-        {
-            BOOST_THROW_EXCEPTION(std::runtime_error{"Freeing invalid drmModePropertyPtr"});
-        }
-        delete prop;
-    }
-
-    void free_property_blob(
-        drmModePropertyBlobPtr blob)
-    {
-        if (allocated_prop_blobs.count(blob) == 0)
-        {
-            BOOST_THROW_EXCEPTION(std::runtime_error{"Freeing invalid drmModePropertyBlobPtr"});
-        }
-        delete blob;
-    }
-
-    std::unordered_map<uint32_t, DRMObjectWithProperties> objects;
-    std::unordered_map<uint32_t, std::string> properties;
-    std::unordered_set<drmModeObjectPropertiesPtr> allocated_obj_props;
-    std::unordered_set<drmModePropertyPtr> allocated_props;
-    std::unordered_set<drmModePropertyBlobPtr> allocated_prop_blobs;
-    uint32_t next_id{1};
-};
-}
-
 TEST(DRMModeResources, can_access_plane_properties)
 {
     using namespace testing;
-    std::vector<DRMProperty> properties{
-        DRMProperty{1, "FOO"},
-        DRMProperty{2, "type"},
-        DRMProperty{99, "CRTC_ID"}
-    };
-
-    std::vector<DRMObjectWithProperties> plane_object{
-        {
-            DRM_MODE_OBJECT_PLANE,
-            {
-                properties[0].id,
-                properties[1].id,
-                properties[2].id
-            },
-            {
-                0xF00,
-                DRM_PLANE_TYPE_CURSOR,
-                29
-            }
-        }
-    };
 
     NiceMock<mtd::MockDRM> mock_drm;
 
-    FakeDRMObjectsWithProperties fake_objects{properties};
-    fake_objects.setup_mock_drm(mock_drm);
+    char const* const drm_device = "/dev/dri/card0";
+    uint32_t plane_id = 0x10;
+    uint32_t crtc_id = 0x20;
+    uint32_t fb_id = 0x30;
+    auto foo_prop_id = mock_drm.add_property(drm_device, "FOO");
+    auto type_prop_id = mock_drm.add_property(drm_device, "type");
+    auto crtc_id_prop_id = mock_drm.add_property(drm_device, "CRTC_ID");
+    mock_drm.add_plane(drm_device, {0}, plane_id, crtc_id, fb_id,
+                       0, 0, 0, 0, 0xff, 0,
+                       {foo_prop_id, type_prop_id, crtc_id_prop_id},
+                       {0xF00, DRM_PLANE_TYPE_CURSOR, 29});
 
-    auto const plane_id = fake_objects.add_object(plane_object[0]);
-
-    mgk::ObjectProperties plane_props{0, plane_id, DRM_MODE_OBJECT_PLANE};
+    auto const drm_fd = open(drm_device, 0, 0);
+    mgk::ObjectProperties plane_props{drm_fd, plane_id, DRM_MODE_OBJECT_PLANE};
 
     EXPECT_THAT(plane_props["type"],
                 Eq(static_cast<unsigned>(DRM_PLANE_TYPE_CURSOR)));
-    EXPECT_THAT(plane_props.id_for("CRTC_ID"), Eq(99u));
+    EXPECT_THAT(plane_props.id_for("CRTC_ID"), Eq(crtc_id_prop_id));
 }

@@ -75,8 +75,7 @@ mtd::FakeDRMResources::FakeDRMResources()
                   modes, connector_encoder_ids,
                   geom::Size{121, 144});
 
-    plane_formats.push_back(0);
-    add_plane(plane_formats, plane_id, crtc0_id, fb_id, 0, 0, 0, 0, all_crtcs_mask, gamma_size, { type_prop_id }, { DRM_PLANE_TYPE_PRIMARY });
+    add_plane({0}, plane_id, crtc0_id, fb_id, 0, 0, 0, 0, all_crtcs_mask, gamma_size, { type_prop_id }, { DRM_PLANE_TYPE_PRIMARY });
 
     prepare();
 }
@@ -270,7 +269,7 @@ void mtd::FakeDRMResources::add_connector(uint32_t connector_id,
     objects[connector_id] = {DRM_MODE_OBJECT_CONNECTOR, prop_ids, prop_values};
 }
 
-void mtd::FakeDRMResources::add_plane(std::vector<uint32_t>& formats,
+void mtd::FakeDRMResources::add_plane(std::vector<uint32_t> formats,
                                       uint32_t plane_id,
                                       uint32_t crtc_id,
                                       uint32_t fb_id,
@@ -704,7 +703,7 @@ void mtd::MockDRM::add_connector(
 
 void mtd::MockDRM::add_plane(
     char const *device,
-    std::vector<uint32_t>& formats,
+    std::vector<uint32_t> formats,
     uint32_t plane_id,
     uint32_t crtc_id,
     uint32_t fb_id,
