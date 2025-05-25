@@ -231,7 +231,7 @@ public:
                 0, 0, 0, 0,
                 0xffff,
                 0,
-                { type_prop_id }, { DRM_PLANE_TYPE_PRIMARY });
+                {{type_prop_id, DRM_PLANE_TYPE_PRIMARY}});
         }
 
         for (int i = 0; i < connected; i++)

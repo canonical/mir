@@ -48,8 +48,7 @@ TEST(DRMModeResources, can_access_plane_properties)
     auto crtc_id_prop_id = mock_drm.add_property(drm_device, "CRTC_ID");
     mock_drm.add_plane(drm_device, {0}, plane_id, crtc_id, fb_id,
                        0, 0, 0, 0, 0xff, 0,
-                       {foo_prop_id, type_prop_id, crtc_id_prop_id},
-                       {0xF00, DRM_PLANE_TYPE_CURSOR, 29});
+                       {{foo_prop_id, 0xF00}, {type_prop_id, DRM_PLANE_TYPE_CURSOR,}, {crtc_id_prop_id, 29}});
 
     auto const drm_fd = open(drm_device, 0, 0);
     mgk::ObjectProperties plane_props{drm_fd, plane_id, DRM_MODE_OBJECT_PLANE};

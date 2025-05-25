@@ -75,7 +75,7 @@ mtd::FakeDRMResources::FakeDRMResources()
                   modes, connector_encoder_ids,
                   geom::Size{121, 144});
 
-    add_plane({0}, plane_id, crtc0_id, fb_id, 0, 0, 0, 0, all_crtcs_mask, gamma_size, { type_prop_id }, { DRM_PLANE_TYPE_PRIMARY });
+    add_plane({0}, plane_id, crtc0_id, fb_id, 0, 0, 0, 0, all_crtcs_mask, gamma_size, {{ type_prop_id, DRM_PLANE_TYPE_PRIMARY }});
 
     prepare();
 }
@@ -209,9 +209,22 @@ uint32_t mtd::FakeDRMResources::add_property(char const* name)
     return next_prop_id++;
 }
 
+void mtd::FakeDRMResources::add_object(uint32_t id, uint32_t object_type, std::vector<FakeDRMPropertyValue> prop_values)
+{
+    std::vector<uint32_t> ids;
+    std::vector<uint64_t> values;
+
+    for (auto const& value : prop_values)
+    {
+        ids.push_back(value.id);
+        values.push_back(value.value);
+    }
+
+    objects[id] = {object_type, ids, values};
+}
+
 void mtd::FakeDRMResources::add_crtc(uint32_t id, drmModeModeInfo mode,
-                                     std::vector<uint32_t> prop_ids,
-                                     std::vector<uint64_t> prop_values)
+                                     std::vector<FakeDRMPropertyValue> prop_values)
 {
     drmModeCrtc crtc = drmModeCrtc();
 
@@ -220,13 +233,12 @@ void mtd::FakeDRMResources::add_crtc(uint32_t id, drmModeModeInfo mode,
 
     crtcs.push_back(crtc);
 
-    objects[id] = {DRM_MODE_OBJECT_CRTC, prop_ids, prop_values};
+    add_object(id, DRM_MODE_OBJECT_CRTC, prop_values);
 }
 
 void mtd::FakeDRMResources::add_encoder(uint32_t encoder_id, uint32_t crtc_id,
                                         uint32_t possible_crtcs_mask,
-                                        std::vector<uint32_t> prop_ids,
-                                        std::vector<uint64_t> prop_values)
+                                        std::vector<FakeDRMPropertyValue> prop_values)
 {
     drmModeEncoder encoder = drmModeEncoder();
 
@@ -236,7 +248,7 @@ void mtd::FakeDRMResources::add_encoder(uint32_t encoder_id, uint32_t crtc_id,
 
     encoders.push_back(encoder);
 
-    objects[encoder_id] = {DRM_MODE_OBJECT_ENCODER, prop_ids, prop_values};
+    add_object(encoder_id, DRM_MODE_OBJECT_ENCODER, prop_values);
 }
 
 void mtd::FakeDRMResources::add_connector(uint32_t connector_id,
@@ -247,8 +259,7 @@ void mtd::FakeDRMResources::add_connector(uint32_t connector_id,
                                           std::vector<uint32_t>& possible_encoder_ids,
                                           geom::Size const& physical_size,
                                           drmModeSubPixel subpixel_arrangement,
-                                          std::vector<uint32_t> prop_ids,
-                                          std::vector<uint64_t> prop_values)
+                                          std::vector<FakeDRMPropertyValue> prop_values)
 {
     drmModeConnector connector = drmModeConnector();
 
@@ -266,7 +277,7 @@ void mtd::FakeDRMResources::add_connector(uint32_t connector_id,
 
     connectors.push_back(connector);
 
-    objects[connector_id] = {DRM_MODE_OBJECT_CONNECTOR, prop_ids, prop_values};
+    add_object(connector_id, DRM_MODE_OBJECT_CONNECTOR, prop_values);
 }
 
 void mtd::FakeDRMResources::add_plane(std::vector<uint32_t> formats,
@@ -279,8 +290,7 @@ void mtd::FakeDRMResources::add_plane(std::vector<uint32_t> formats,
                                       uint32_t y,
                                       uint32_t possible_crtcs_mask,
                                       uint32_t gamma_size,
-                                      std::vector<uint32_t> prop_ids,
-                                      std::vector<uint64_t> prop_values)
+                                      std::vector<FakeDRMPropertyValue> prop_values)
 {
     drmModePlane plane = drmModePlane();
 
@@ -298,7 +308,7 @@ void mtd::FakeDRMResources::add_plane(std::vector<uint32_t> formats,
 
     planes.push_back(plane);
 
-    objects[plane_id] = {DRM_MODE_OBJECT_PLANE, prop_ids, prop_values};
+    add_object(plane_id, DRM_MODE_OBJECT_PLANE, prop_values);
 }
 
 drmModeCrtc* mtd::FakeDRMResources::find_crtc(uint32_t id)
@@ -625,10 +635,9 @@ void mtd::MockDRM::add_crtc(
     char const *device,
     uint32_t id,
     drmModeModeInfo mode,
-    std::vector<uint32_t> prop_ids,
-    std::vector<uint64_t> prop_values)
+    std::vector<FakeDRMPropertyValue> prop_values)
 {
-    fake_drms[device].add_crtc(id, mode, prop_ids, prop_values);
+    fake_drms[device].add_crtc(id, mode, prop_values);
 }
 
 void mtd::MockDRM::add_encoder(
@@ -636,10 +645,9 @@ void mtd::MockDRM::add_encoder(
     uint32_t encoder_id,
     uint32_t crtc_id,
     uint32_t possible_crtcs_mask,
-    std::vector<uint32_t> prop_ids,
-    std::vector<uint64_t> prop_values)
+    std::vector<FakeDRMPropertyValue> prop_values)
 {
-    fake_drms[device].add_encoder(encoder_id, crtc_id, possible_crtcs_mask, prop_ids, prop_values);
+    fake_drms[device].add_encoder(encoder_id, crtc_id, possible_crtcs_mask, prop_values);
 }
 
 void mtd::MockDRM::prepare(char const *device)
@@ -685,8 +693,7 @@ void mtd::MockDRM::add_connector(
     std::vector<uint32_t> &possible_encoder_ids,
     geometry::Size const &physical_size,
     drmModeSubPixel subpixel_arrangement,
-    std::vector<uint32_t> prop_ids,
-    std::vector<uint64_t> prop_values)
+    std::vector<FakeDRMPropertyValue> prop_values)
 {
     fake_drms[device].add_connector(
         connector_id,
@@ -697,7 +704,6 @@ void mtd::MockDRM::add_connector(
         possible_encoder_ids,
         physical_size,
         subpixel_arrangement,
-        prop_ids,
         prop_values);
 }
 
@@ -713,8 +719,7 @@ void mtd::MockDRM::add_plane(
     uint32_t y,
     uint32_t possible_crtcs_mask,
     uint32_t gamma_size,
-    std::vector<uint32_t> prop_ids,
-    std::vector<uint64_t> prop_values)
+    std::vector<FakeDRMPropertyValue> prop_values)
 {
     fake_drms[device].add_plane(
         formats,
@@ -727,7 +732,6 @@ void mtd::MockDRM::add_plane(
         y,
         possible_crtcs_mask,
         gamma_size,
-        prop_ids,
         prop_values);
 }
 

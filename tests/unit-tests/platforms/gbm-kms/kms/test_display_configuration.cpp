@@ -303,7 +303,7 @@ TEST_F(MesaDisplayConfigurationTest, configuration_is_read_correctly)
         0, 0, 0, 0,
         all_crtcs_mask,
         0,
-        { type_prop_id }, { DRM_PLANE_TYPE_PRIMARY });
+        {{type_prop_id, DRM_PLANE_TYPE_PRIMARY}});
 
     mock_drm.prepare(drm_device);
 
@@ -457,7 +457,7 @@ TEST_F(MesaDisplayConfigurationTest, reads_subpixel_information_correctly)
             0, 0, 0, 0,
             all_crtcs_mask,
             0,
-            { type_prop_id }, { DRM_PLANE_TYPE_PRIMARY });
+            {{type_prop_id, DRM_PLANE_TYPE_PRIMARY}});
 
         mock_drm.prepare(drm_device);
 
@@ -529,7 +529,7 @@ TEST_F(MesaDisplayConfigurationTest, reads_updated_subpixel_information)
         0, 0, 0, 0,
         all_crtcs_mask,
         0,
-        { type_prop_id }, { DRM_PLANE_TYPE_PRIMARY });
+        {{type_prop_id, DRM_PLANE_TYPE_PRIMARY}});
 
     mock_drm.prepare(drm_device);
 
@@ -587,7 +587,7 @@ TEST_F(MesaDisplayConfigurationTest, reads_updated_subpixel_information)
             0, 0, 0, 0,
             all_crtcs_mask,
             0,
-            { type_prop_id }, { DRM_PLANE_TYPE_PRIMARY });
+            {{type_prop_id, DRM_PLANE_TYPE_PRIMARY}});
 
         mock_drm.prepare(drm_device);
 
@@ -803,7 +803,7 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
         0, 0, 0, 0,
         all_crtcs_mask,
         0,
-        { type_prop_id }, { DRM_PLANE_TYPE_PRIMARY });
+        {{type_prop_id, DRM_PLANE_TYPE_PRIMARY}});
 
     mock_drm.prepare(drm_device);
 
@@ -865,7 +865,7 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
         0, 0, 0, 0,
         all_crtcs_mask,
         0,
-        { type_prop_id }, { DRM_PLANE_TYPE_PRIMARY });
+        {{type_prop_id, DRM_PLANE_TYPE_PRIMARY}});
 
     mock_drm.prepare(drm_device);
 
@@ -996,7 +996,7 @@ TEST_F(MesaDisplayConfigurationTest, new_monitor_matches_hardware_state)
         0, 0, 0, 0,
         all_crtcs_mask,
         0,
-        { type_prop_id }, { DRM_PLANE_TYPE_PRIMARY });
+        {{type_prop_id, DRM_PLANE_TYPE_PRIMARY}});
     mock_drm.prepare(drm_device);
 
     auto display = create_display(create_platform());
@@ -1039,7 +1039,7 @@ TEST_F(MesaDisplayConfigurationTest, new_monitor_matches_hardware_state)
         0, 0, 0, 0,
         all_crtcs_mask,
         0,
-        { type_prop_id }, { DRM_PLANE_TYPE_PRIMARY });
+        {{type_prop_id, DRM_PLANE_TYPE_PRIMARY}});
     mock_drm.prepare(drm_device);
 
     MainLoop ml;
@@ -1096,7 +1096,7 @@ TEST_F(MesaDisplayConfigurationTest, does_not_query_drm_unnecesarily)
         0, 0, 0, 0,
         all_crtcs_mask,
         0,
-        { type_prop_id }, { DRM_PLANE_TYPE_PRIMARY });
+        {{type_prop_id, DRM_PLANE_TYPE_PRIMARY}});
     mock_drm.prepare(drm_device);
 
     auto const syspath = fake_devices.add_device(

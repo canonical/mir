@@ -35,6 +35,12 @@ namespace test
 namespace doubles
 {
 
+struct FakeDRMPropertyValue
+{
+    uint32_t id;
+    uint64_t value;
+};
+
 class FakeDRMResources
 {
 public:
@@ -51,22 +57,19 @@ public:
 
     uint32_t add_property(const char *name);
     void add_crtc(uint32_t id, drmModeModeInfo mode,
-                  std::vector<uint32_t> prop_ids = {},
-                  std::vector<uint64_t> prop_values = {});
+                  std::vector<FakeDRMPropertyValue> prop_values = {});
     void add_encoder(uint32_t encoder_id, uint32_t crtc_id, uint32_t possible_crtcs_mask,
-                     std::vector<uint32_t> prop_ids = {},
-                     std::vector<uint64_t> prop_values = {});
+                     std::vector<FakeDRMPropertyValue> prop_values = {});
     void add_connector(uint32_t connector_id, uint32_t type, drmModeConnection connection,
                        uint32_t encoder_id, std::vector<drmModeModeInfo>& modes,
                        std::vector<uint32_t>& possible_encoder_ids,
                        geometry::Size const& physical_size,
                        drmModeSubPixel subpixel_arrangement = DRM_MODE_SUBPIXEL_UNKNOWN,
-                       std::vector<uint32_t> prop_ids = {},
-                       std::vector<uint64_t> prop_values = {});
+                       std::vector<FakeDRMPropertyValue> prop_values = {});
     void add_plane(std::vector<uint32_t> formats, uint32_t plane_id, uint32_t crtc_id,
                    uint32_t fb_id, uint32_t crtc_x, uint32_t crtc_y, uint32_t x,
                    uint32_t y, uint32_t possible_crtcs_mask, uint32_t gamma_size,
-                   std::vector<uint32_t> prop_ids = {}, std::vector<uint64_t> prop_values = {});
+                   std::vector<FakeDRMPropertyValue> prop_values = {});
 
     void prepare();
     void reset();
@@ -95,6 +98,10 @@ private:
         uint32_t id;
         char name[DRM_PROP_NAME_LEN];
     };
+
+    void add_object(
+        uint32_t id, uint32_t object_type,
+        std::vector<FakeDRMPropertyValue> prop_values = {});
 
     int pipe_fds[2];
 
@@ -213,15 +220,13 @@ public:
         char const* device,
         uint32_t id,
         drmModeModeInfo mode,
-        std::vector<uint32_t> prop_ids = {},
-	std::vector<uint64_t> prop_values = {});
+        std::vector<FakeDRMPropertyValue> prop_values = {});
     void add_encoder(
         char const* device,
         uint32_t encoder_id,
         uint32_t crtc_id,
         uint32_t possible_crtcs_mask,
-        std::vector<uint32_t> prop_ids = {},
-	std::vector<uint64_t> prop_values = {});
+        std::vector<FakeDRMPropertyValue> prop_values = {});
     void add_connector(
         char const* device,
         uint32_t connector_id,
@@ -232,22 +237,20 @@ public:
         std::vector<uint32_t>& possible_encoder_ids,
         geometry::Size const& physical_size,
         drmModeSubPixel subpixel_arrangement = DRM_MODE_SUBPIXEL_UNKNOWN,
-        std::vector<uint32_t> prop_ids = {},
-	std::vector<uint64_t> prop_values = {});
+        std::vector<FakeDRMPropertyValue> prop_values = {});
     void add_plane(
         char const* device,
-	std::vector<uint32_t> formats,
-	uint32_t plane_id,
-	uint32_t crtc_id,
+        std::vector<uint32_t> formats,
+        uint32_t plane_id,
+        uint32_t crtc_id,
         uint32_t fb_id,
-	uint32_t crtc_x,
-	uint32_t crtc_y,
-	uint32_t x,
+        uint32_t crtc_x,
+        uint32_t crtc_y,
+        uint32_t x,
         uint32_t y,
-	uint32_t possible_crtcs_mask,
-	uint32_t gamma_size,
-        std::vector<uint32_t> prop_ids = {},
-	std::vector<uint64_t> prop_values = {});
+        uint32_t possible_crtcs_mask,
+        uint32_t gamma_size,
+        std::vector<FakeDRMPropertyValue> prop_values = {});
 
     void prepare(char const* device);
     void reset(char const* device);
