@@ -18,7 +18,7 @@
 #define MIR_PLATFORM_GBM_KMS_LINUX_DMABUF_H_
 
 #include "egl_context_executor.h"
-#include "linux-dmabuf-unstable-v1_wrapper.h"
+#include "linux-dmabuf-stable-v1_wrapper.h"
 
 #include <EGL/egl.h>
 #include <memory>
@@ -60,6 +60,7 @@ public:
     using EGLImageAllocator =
         std::function<std::shared_ptr<DMABufBuffer>(DRMFormat, std::span<uint64_t const>, geometry::Size)>;
     DMABufEGLProvider(
+        dev_t devnum,
         EGLDisplay dpy,
         std::shared_ptr<EGLExtensions> egl_extensions,
         EGLExtensions::EXTImageDmaBufImportModifiers const& dmabuf_ext,
@@ -67,6 +68,8 @@ public:
         EGLImageAllocator allocate_importable_image);
 
     ~DMABufEGLProvider();
+
+    auto devnum() const -> dev_t;
 
     auto import_dma_buf(
         DMABufBuffer const& dma_buf,
@@ -88,6 +91,7 @@ public:
 
      auto supported_formats() const -> DmaBufFormatDescriptors const&;
 private:
+    dev_t const devnum_;
     EGLDisplay const dpy;
     std::shared_ptr<EGLExtensions> const egl_extensions;
     std::optional<EGLExtensions::MESADmaBufExport> const dmabuf_export_ext;
@@ -97,10 +101,10 @@ private:
     std::unique_ptr<EGLBufferCopier> const blitter;
 };
 
-class LinuxDmaBufUnstable : public mir::wayland::LinuxDmabufV1::Global
+class LinuxDmaBuf : public mir::wayland::LinuxDmabufV1::Global
 {
 public:
-    LinuxDmaBufUnstable(
+    LinuxDmaBuf(
         wl_display* display,
         std::shared_ptr<DMABufEGLProvider> provider);
 

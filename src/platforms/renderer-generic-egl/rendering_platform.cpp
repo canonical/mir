@@ -26,6 +26,7 @@
 
 #include <EGL/egl.h>
 #include <boost/throw_exception.hpp>
+#include <sys/stat.h>
 
 namespace mg = mir::graphics;
 namespace mgc = mir::graphics::common;
@@ -164,6 +165,7 @@ private:
 };
 
 auto maybe_make_dmabuf_provider(
+    dev_t devnum,
     EGLDisplay dpy,
     std::shared_ptr<mg::EGLExtensions> egl_extensions,
     std::shared_ptr<mgc::EGLContextExecutor> egl_delegate)
@@ -171,8 +173,25 @@ auto maybe_make_dmabuf_provider(
 {
     try
     {
+        if (devnum == 0)
+        {
+            mg::EGLExtensions::DeviceQuery device_query_ext;
+            EGLDeviceEXT device;
+            device_query_ext.eglQueryDisplayAttribEXT(dpy, EGL_DEVICE_EXT, reinterpret_cast<EGLAttrib*>(&device));
+            const char *device_path = device_query_ext.eglQueryDeviceStringEXT(device, EGL_DRM_DEVICE_FILE_EXT);
+            if (device_path != nullptr)
+            {
+                struct stat device_stat;
+                if (stat(device_path, &device_stat) == 0)
+                {
+                    devnum = device_stat.st_rdev;
+                }
+            }
+        }
+
         mg::EGLExtensions::EXTImageDmaBufImportModifiers modifier_ext{dpy};
         return std::make_shared<mg::DMABufEGLProvider>(
+            devnum,
             dpy,
             std::move(egl_extensions),
             modifier_ext,
@@ -196,16 +215,17 @@ auto maybe_make_dmabuf_provider(
 }
 }
 
-mge::RenderingPlatform::RenderingPlatform(std::vector<std::shared_ptr<DisplayPlatform>> const& displays)
-    : RenderingPlatform(egl_display_from_platforms(displays))
+mge::RenderingPlatform::RenderingPlatform(dev_t devnum, std::vector<std::shared_ptr<DisplayPlatform>> const& displays)
+    : RenderingPlatform(devnum, egl_display_from_platforms(displays))
 {
 }
 
-mge::RenderingPlatform::RenderingPlatform(std::tuple<EGLDisplay, bool> display)
+mge::RenderingPlatform::RenderingPlatform(dev_t devnum, std::tuple<EGLDisplay, bool> display)
     : dpy{std::get<0>(display), std::get<1>(display)},
       ctx{std::make_unique<SurfacelessEGLContext>(dpy)},
       dmabuf_provider{
           maybe_make_dmabuf_provider(
+              devnum,
               dpy,
               std::make_shared<mg::EGLExtensions>(),
               std::make_shared<mgc::EGLContextExecutor>(ctx->make_share_context()))},

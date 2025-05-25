@@ -363,6 +363,7 @@ auto alloc_dma_buf(
 }
 
 auto maybe_make_dmabuf_provider(
+    dev_t devnum,
     std::shared_ptr<gbm_device> gbm,
     EGLDisplay dpy,
     std::shared_ptr<mg::EGLExtensions> egl_extensions,
@@ -373,6 +374,7 @@ auto maybe_make_dmabuf_provider(
     {
         mg::EGLExtensions::EXTImageDmaBufImportModifiers modifier_ext{dpy};
         return std::make_shared<mg::DMABufEGLProvider>(
+            devnum,
             dpy,
             std::move(egl_extensions),
             modifier_ext,
@@ -400,18 +402,19 @@ auto maybe_make_dmabuf_provider(
 mgg::RenderingPlatform::RenderingPlatform(
     mir::udev::Device const& device,
     std::vector<std::shared_ptr<mg::DisplayPlatform>> const& platforms)
-    : RenderingPlatform(gbm_device_for_udev_device(device, platforms))
+    : RenderingPlatform(device.devnum(), gbm_device_for_udev_device(device, platforms))
 {
 }
 
 mgg::RenderingPlatform::RenderingPlatform(
+    dev_t devnum,
     std::variant<std::shared_ptr<mg::GBMDisplayProvider>, std::shared_ptr<gbm_device>> hw)
     : device{std::visit(gbm_device_from_hw{}, hw)},
       dpy{initialise_egl(dpy_for_gbm_device(device.get()), 1, 4)},
       bound_display{std::visit(display_provider_or_nothing{}, hw)},
       share_ctx{std::make_unique<SurfacelessEGLContext>(dpy)},
       egl_delegate{std::make_shared<mg::common::EGLContextExecutor>(share_ctx->make_share_context())},
-      dmabuf_provider{maybe_make_dmabuf_provider(device, share_ctx->egl_display(), std::make_shared<mg::EGLExtensions>(), egl_delegate)}
+      dmabuf_provider{maybe_make_dmabuf_provider(devnum, device, share_ctx->egl_display(), std::make_shared<mg::EGLExtensions>(), egl_delegate)}
 {
 }
 

@@ -104,6 +104,7 @@ protected:
 
 private:
     RenderingPlatform(
+        dev_t devnum,
         std::variant<std::shared_ptr<GBMDisplayProvider>, std::shared_ptr<gbm_device>> hw);
 
     class EGLDisplayHandle
