@@ -88,6 +88,12 @@ struct MockTransformer : public mir::input::InputEventTransformer::Transformer
         transform_input_event,
         (mir::input::InputEventTransformer::EventDispatcher const&, mir::input::EventBuilder*, MirEvent const&),
         (override));
+
+    MOCK_METHOD(bool, is_enabled, (), (const, override));
+    MOCK_METHOD(void, enabled, (), (override));
+    MOCK_METHOD(void, disabled, (), (override));
+    MOCK_METHOD(void, on_enabled, (std::function<void()>&& on_enabled), (override));
+    MOCK_METHOD(void, on_disabled, (std::function<void()>&& on_disabled), (override));
 };
 
 TEST_F(TestInputEventTransformer, transformer_gets_called)

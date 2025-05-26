@@ -43,8 +43,10 @@ public:
     void hold_duration(std::chrono::milliseconds delay) override;
     void displacement_threshold(float displacement) override;
 
+    bool is_enabled() const override;
     void enabled() override;
     void disabled() override;
+
     void on_enabled(std::function<void()>&& on_enabled) override;
     void on_disabled(std::function<void()>&& on_disabled) override;
     void on_hold_start(std::function<void()>&& on_hold_start) override;
@@ -68,6 +70,7 @@ private:
     struct MutableState
     {
         State state{State::waiting_for_real_left_down};
+        bool enabled{false};
 
         std::chrono::milliseconds hold_duration{1000};
         float displacement_threshold{20};

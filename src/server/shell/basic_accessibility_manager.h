@@ -23,8 +23,6 @@
 #include "mir/input/mousekeys_keymap.h"
 #include "mir/synchronised.h"
 
-#include <atomic>
-
 namespace mir
 {
 class MainLoop;
@@ -84,33 +82,13 @@ private:
         std::vector<std::shared_ptr<shell::KeyboardHelper>> keyboard_helpers;
     };
 
-    template <typename Transformer> class Registration
-    {
-    public:
-        Registration(
-            std::shared_ptr<Transformer> const& transformer,
-            std::shared_ptr<input::InputEventTransformer> const& event_transformer);
-
-        bool add_registration() const;
-        bool remove_registration() const;
-
-        Transformer* operator->() const noexcept;
-
-    private:
-        Registration(Registration const&) = delete;
-        Registration& operator=(Registration const&) = delete;
-
-        std::shared_ptr<Transformer> const transformer;
-        std::shared_ptr<input::InputEventTransformer> const event_transformer;
-        std::atomic<bool> mutable registered{false};
-    };
-
     Synchronised<MutableState> mutable_state;
 
     bool const enable_key_repeat;
     std::shared_ptr<graphics::Cursor> const cursor;
-    Registration<MouseKeysTransformer> const mouse_keys_transformer;
-    Registration<SimulatedSecondaryClickTransformer> const simulated_secondary_click_transformer;
+    std::shared_ptr<input::InputEventTransformer> const event_transformer;
+    std::shared_ptr<MouseKeysTransformer> const mouse_keys_transformer;
+    std::shared_ptr<SimulatedSecondaryClickTransformer> const simulated_secondary_click_transformer;
 };
 }
 }

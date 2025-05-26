@@ -48,6 +48,12 @@ struct MockMouseKeysTransformer : public mir::shell::MouseKeysTransformer
 {
     MockMouseKeysTransformer() = default;
 
+    MOCK_METHOD(bool, is_enabled, (), (const, override));
+    MOCK_METHOD(void, enabled, (), (override));
+    MOCK_METHOD(void, disabled, (), (override));
+    MOCK_METHOD(void, on_enabled, (std::function<void()>&& on_enabled), (override));
+    MOCK_METHOD(void, on_disabled, (std::function<void()>&& on_disabled), (override));
+
     MOCK_METHOD(void, keymap, (mir::input::MouseKeysKeymap const& new_keymap), (override));
     MOCK_METHOD(void, acceleration_factors, (double constant, double linear, double quadratic), (override));
     MOCK_METHOD(void, max_speed, (double x_axis, double y_axis), (override));
@@ -70,12 +76,14 @@ struct MockSimulatedSecondaryClickTransformer : public mir::shell::SimulatedSeco
          MirEvent const&),
         (override));
 
-    MOCK_METHOD(void, hold_duration, (std::chrono::milliseconds delay), (override));
-    MOCK_METHOD(void, displacement_threshold, (float), (override));
+    MOCK_METHOD(bool, is_enabled, (), (const, override));
     MOCK_METHOD(void, enabled, (), (override));
     MOCK_METHOD(void, disabled, (), (override));
     MOCK_METHOD(void, on_enabled, (std::function<void()>&& on_enabled), (override));
     MOCK_METHOD(void, on_disabled, (std::function<void()>&& on_disabled), (override));
+
+    MOCK_METHOD(void, hold_duration, (std::chrono::milliseconds delay), (override));
+    MOCK_METHOD(void, displacement_threshold, (float), (override));
     MOCK_METHOD(void, on_hold_start, (std::function<void()>&& on_hold_start), (override));
     MOCK_METHOD(void, on_hold_cancel, (std::function<void()>&& on_hold_cancel), (override));
     MOCK_METHOD(void, on_secondary_click, (std::function<void()>&& on_secondary_click), (override));
