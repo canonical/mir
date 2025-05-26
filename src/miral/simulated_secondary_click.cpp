@@ -171,6 +171,9 @@ void miral::SimulatedSecondaryClick::operator()(mir::Server& server)
         {
             self->accessibility_manager = server.the_accessibility_manager();
 
+            if(server.get_options()->get<bool>(enable_simulated_secondary_click_opt))
+                enable();
+
             // The default values for these options were set from `self->state`
             // when the options are added a few lines ago.
             hold_duration(
@@ -188,8 +191,5 @@ void miral::SimulatedSecondaryClick::operator()(mir::Server& server)
                 on_hold_cancel(std::move(on_hold_cancel_));
             if (auto& on_secondary_click_ = self->state.lock()->on_secondary_click)
                 on_secondary_click(std::move(on_secondary_click_));
-
-            if(server.get_options()->get<bool>(enable_simulated_secondary_click_opt))
-                enable();
         });
 }
