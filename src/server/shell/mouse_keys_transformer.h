@@ -56,6 +56,12 @@ public:
         mir::input::EventBuilder* builder,
         MirEvent const& event) override;
 
+    bool is_enabled() const override;
+    void enabled() override;
+    void disabled() override;
+    void on_enabled(std::function<void()>&&) override;
+    void on_disabled(std::function<void()>&&) override;
+
     void keymap(mir::input::MouseKeysKeymap const& new_keymap) override;
     void acceleration_factors(double constant, double linear, double quadratic) override;
     void max_speed(double x_axis, double y_axis) override;
@@ -122,6 +128,9 @@ private:
         AccelerationCurve acceleration_curve{30, 100, 100};
         geometry::DisplacementF max_speed_{400, 400};
         mir::input::MouseKeysKeymap keymap_;
+
+        bool enabled;
+        std::function<void()> on_enabled{[]{}}, on_disabled{[]{}};
     };
 
     mir::Synchronised<State> state;

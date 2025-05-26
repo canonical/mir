@@ -48,6 +48,12 @@ public:
         // accumulating events for later dispatching or has immediately dispatched
         // an event is an implementation detail of the transformer
         virtual bool transform_input_event(EventDispatcher const&, EventBuilder*,  MirEvent const&) = 0;
+
+        virtual bool is_enabled() const = 0;
+        virtual void enabled() = 0;
+        virtual void disabled() = 0;
+        virtual void on_disabled(std::function<void()>&&) = 0;
+        virtual void on_enabled(std::function<void()>&&) = 0;
     };
 
     InputEventTransformer(std::shared_ptr<Seat> const& seat, std::shared_ptr<time::Clock> const& clock);

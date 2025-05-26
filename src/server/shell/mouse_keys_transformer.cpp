@@ -377,6 +377,45 @@ void mir::shell::BasicMouseKeysTransformer::release_current_cursor_button(
     state.lock()->is_dragging = false;
 }
 
+bool mir::shell::BasicMouseKeysTransformer::is_enabled() const
+{
+    return state.lock()->enabled;
+}
+
+void mir::shell::BasicMouseKeysTransformer::enabled()
+{
+    auto const state_ = state.lock();
+    auto const should_notify = !state_->enabled;
+    state_->enabled = true;
+    if(should_notify)
+        state_->on_enabled();
+}
+
+void mir::shell::BasicMouseKeysTransformer::disabled()
+{
+    auto const state_ = state.lock();
+    auto const should_notify = state_->enabled;
+    state_->enabled = false;
+    if(should_notify)
+        state_->on_disabled();
+}
+
+void mir::shell::BasicMouseKeysTransformer::on_enabled(std::function<void()>&& on_enabled)
+{
+    auto const state_ = state.lock();
+    state_->on_enabled = std::move(on_enabled);
+    if(state_->enabled)
+        state_->on_enabled();
+}
+
+void mir::shell::BasicMouseKeysTransformer::on_disabled(std::function<void()>&& on_disabled)
+{
+    auto const state_ = state.lock();
+    state_->on_disabled = std::move(on_disabled);
+    if(!state_->enabled)
+        state_->on_disabled();
+}
+
 void mir::shell::BasicMouseKeysTransformer::keymap(input::MouseKeysKeymap const& new_keymap)
 {
     state.lock()->keymap_ = new_keymap;

@@ -187,24 +187,42 @@ void mir::shell::BasicSimulatedSecondaryClickTransformer::displacement_threshold
     mutable_state.lock()->displacement_threshold = displacement;
 }
 
+bool mir::shell::BasicSimulatedSecondaryClickTransformer::is_enabled() const
+{
+     return mutable_state.lock()->enabled;
+}
 void mir::shell::BasicSimulatedSecondaryClickTransformer::enabled()
 {
-    mutable_state.lock()->on_enabled();
+    auto const state = mutable_state.lock();
+    auto const should_notify = !state->enabled;
+    state->enabled = true;
+    if(should_notify)
+        state->on_enabled();
 }
 
 void mir::shell::BasicSimulatedSecondaryClickTransformer::disabled()
 {
-    mutable_state.lock()->on_disabled();
+    auto const state = mutable_state.lock();
+    auto const should_notify = state->enabled;
+    state->enabled = false;
+    if(should_notify)
+        state->on_disabled();
 }
 
 void mir::shell::BasicSimulatedSecondaryClickTransformer::on_enabled(std::function<void()>&& on_enabled)
 {
-    mutable_state.lock()->on_enabled = std::move(on_enabled);
+    auto const state = mutable_state.lock();
+    state->on_enabled = std::move(on_enabled);
+    if(state->enabled)
+        state->on_enabled();
 }
 
 void mir::shell::BasicSimulatedSecondaryClickTransformer::on_disabled(std::function<void()>&& on_disabled)
 {
-    mutable_state.lock()->on_disabled = std::move(on_disabled);
+    auto const state = mutable_state.lock();
+    state->on_disabled = std::move(on_disabled);
+    if(!state->enabled)
+        state->on_disabled();
 }
 
 void mir::shell::BasicSimulatedSecondaryClickTransformer::on_hold_start(std::function<void()>&& on_hold_start)
