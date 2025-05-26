@@ -36,9 +36,6 @@
 #include <miral/wayland_extensions.h>
 #include <miral/mousekeys_config.h>
 
-#define MIR_LOG_COMPONENT "miral-shell"
-#include <mir/log.h>
-
 #include <xkbcommon/xkbcommon-keysyms.h>
 
 #include <cstring>
@@ -178,8 +175,7 @@ int main(int argc, char const* argv[])
 
     auto const ssc_config = miral::SimulatedSecondaryClick{false}
                                 .displacement_threshold(30)
-                                .hold_duration(std::chrono::milliseconds{2000})
-                                .on_secondary_click([] { mir::log_info("Simulated secondary click dispatched!"); });
+                                .hold_duration(std::chrono::milliseconds{2000});
 
     return runner.run_with(
         {
