@@ -16,7 +16,7 @@
 
 #include "surface_allocator.h"
 #include "mir/shell/surface_specification.h"
-#include "basic_surface.h"
+#include "wayland_basic_surface.h"
 
 namespace geom=mir::geometry;
 namespace mc=mir::compositor;
@@ -47,7 +47,7 @@ std::shared_ptr<ms::Surface> ms::SurfaceAllocator::create_surface(
         params.top_left.value_or(geom::Point{}),
         {params.width.value_or(geom::Width{0}), params.height.value_or(geom::Height{0})}};
     auto const parent = params.parent.is_set() ? params.parent.value() : std::weak_ptr<scene::Surface>{};
-    auto const surface = std::make_shared<BasicSurface>(
+    auto const surface = std::make_shared<WaylandBasicSurface>(
         session,
         wayland_surface,
         name,

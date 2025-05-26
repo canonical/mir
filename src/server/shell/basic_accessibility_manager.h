@@ -22,6 +22,8 @@
 #include "mir/input/mousekeys_keymap.h"
 #include "mir/synchronised.h"
 
+#include <atomic>
+
 namespace mir
 {
 class MainLoop;
@@ -33,11 +35,6 @@ namespace input
 {
 class CompositeEventFilter;
 class InputEventTransformer;
-class InputDeviceRegistry;
-}
-namespace shell
-{
-class MouseKeysTransformer;
 }
 namespace options
 {
@@ -49,17 +46,15 @@ class Clock;
 }
 namespace shell
 {
+class MouseKeysTransformer;
 class BasicAccessibilityManager : public AccessibilityManager
 {
 public:
     BasicAccessibilityManager(
-        std::shared_ptr<MainLoop> main_loop,
-        std::shared_ptr<input::CompositeEventFilter> the_composite_event_filter,
         std::shared_ptr<input::InputEventTransformer> const& event_transformer,
         bool enable_key_repeat,
         std::shared_ptr<mir::graphics::Cursor> const& cursor,
-        std::shared_ptr<shell::MouseKeysTransformer> const& mousekeys_transformer,
-        std::shared_ptr<input::InputDeviceRegistry> const& input_device_registry);
+        std::shared_ptr<shell::MouseKeysTransformer> const& mousekeys_transformer);
 
     void register_keyboard_helper(std::shared_ptr<shell::KeyboardHelper> const&) override;
 
@@ -75,26 +70,40 @@ public:
     void max_speed(double x_axis, double y_axis) override;
 
 private:
-    class MousekeyPointer;
-
     struct MutableState {
         // 25 rate and 600 delay are the default in Weston and Sway
         int repeat_rate{25};
         int repeat_delay{600};
 
         std::vector<std::shared_ptr<shell::KeyboardHelper>> keyboard_helpers;
-        std::shared_ptr<MousekeyPointer> mousekey_pointer;
+    };
+
+    template <typename Transformer> class Registration
+    {
+    public:
+        Registration(
+            std::shared_ptr<Transformer> const& transformer,
+            std::shared_ptr<input::InputEventTransformer> const& event_transformer);
+
+        void add_registration() const;
+        void remove_registration() const;
+
+        Transformer* operator->() const noexcept;
+
+    private:
+        Registration(Registration const&) = delete;
+        Registration& operator=(Registration const&) = delete;
+
+        std::shared_ptr<Transformer> const transformer;
+        std::shared_ptr<input::InputEventTransformer> const event_transformer;
+        std::atomic<bool> mutable registered{false};
     };
 
     Synchronised<MutableState> mutable_state;
 
-    std::shared_ptr<MainLoop> const main_loop;
-    std::shared_ptr<input::CompositeEventFilter> const the_composite_event_filter;
     bool const enable_key_repeat;
     std::shared_ptr<graphics::Cursor> const cursor;
-    std::shared_ptr<mir::input::InputEventTransformer> const event_transformer;
-    std::shared_ptr<mir::shell::MouseKeysTransformer> const transformer;
-    std::shared_ptr<mir::input::InputDeviceRegistry> const input_device_registry;
+    Registration<MouseKeysTransformer> const transformer;
 };
 }
 }

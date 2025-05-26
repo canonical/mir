@@ -14,7 +14,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "basic_surface.h"
+#include "mir/scene/basic_surface.h"
 #include "mir/compositor/buffer_stream.h"
 #include "mir/frontend/event_sink.h"
 #include "mir/graphics/buffer.h"
@@ -181,23 +181,7 @@ public:
     }
 };
 
-namespace
-{
-//TODO: the concept of default stream is going away very soon.
-std::shared_ptr<mc::BufferStream> default_stream(std::list<ms::StreamInfo> const& layers)
-{
-    //There's not a good reason, other than soon-to-be-deprecated api to disallow contentless surfaces
-    if (layers.empty())
-        BOOST_THROW_EXCEPTION(std::logic_error("Surface must have content"));
-    else
-        return layers.front().stream;
-}
-
-}
-
 ms::BasicSurface::BasicSurface(
-    std::shared_ptr<Session> const& session,
-    mw::Weak<frontend::WlSurface> wayland_surface,
     std::string const& name,
     geometry::Rectangle rect,
     std::weak_ptr<Surface> const& parent,
@@ -220,11 +204,8 @@ ms::BasicSurface::BasicSurface(
         }
     },
     observers(std::make_shared<Multiplexer>()),
-    session_{session},
-    surface_buffer_stream(default_stream(layers)),
     report(report),
     parent_(parent),
-    wayland_surface_{wayland_surface},
     display_config_registrar{display_config_registrar},
     display_config_monitor{std::make_shared<DisplayConfigurationEarlyListener>(this)}
 {
@@ -235,8 +216,6 @@ ms::BasicSurface::BasicSurface(
 }
 
 ms::BasicSurface::BasicSurface(
-    std::shared_ptr<Session> const& session,
-    mw::Weak<frontend::WlSurface> wayland_surface,
     std::string const& name,
     geometry::Rectangle rect,
     MirPointerConfinementState state,
@@ -245,8 +224,6 @@ ms::BasicSurface::BasicSurface(
     std::shared_ptr<SceneReport> const& report,
     std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> const& display_config_registrar) :
     BasicSurface(
-        session,
-        wayland_surface,
         name,
         rect,
         std::shared_ptr<Surface>{nullptr},
@@ -323,12 +300,6 @@ mir::geometry::Displacement ms::BasicSurface::content_offset() const
 mir::geometry::Size ms::BasicSurface::content_size() const
 {
     return content_size(*synchronised_state.lock());
-}
-
-std::shared_ptr<mf::BufferStream> ms::BasicSurface::primary_buffer_stream() const
-{
-    // Doesn't lock the mutex because surface_buffer_stream is const
-    return surface_buffer_stream;
 }
 
 void ms::BasicSurface::set_input_region(std::vector<geom::Rectangle> const& input_rectangles)
@@ -640,7 +611,7 @@ void ms::BasicSurface::set_cursor_from_buffer(
 
 auto ms::BasicSurface::wayland_surface() -> mw::Weak<mf::WlSurface> const&
 {
-    return wayland_surface_;
+    return weak_surface;
 }
 
 void ms::BasicSurface::request_client_surface_close()
@@ -787,7 +758,12 @@ void ms::BasicSurface::rename(std::string const& title)
     }
 }
 
-void ms::BasicSurface::set_streams(std::list<scene::StreamInfo> const& s)
+std::list<ms::StreamInfo> ms::BasicSurface::get_streams() const
+{
+    return synchronised_state.lock()->layers;
+}
+
+void ms::BasicSurface::set_streams(std::list<StreamInfo> const& s)
 {
     geom::Point surface_top_left;
     {
@@ -919,7 +895,7 @@ void mir::scene::BasicSurface::set_application_id(std::string const& application
 
 auto mir::scene::BasicSurface::session() const -> std::weak_ptr<Session>
 {
-    return session_;
+    return {};
 }
 
 void mir::scene::BasicSurface::set_window_margins(

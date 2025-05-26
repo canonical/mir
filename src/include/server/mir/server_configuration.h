@@ -32,6 +32,7 @@ namespace compositor
 {
 class Compositor;
 class ScreenShooter;
+class ScreenShooterFactory;
 }
 namespace frontend
 {
@@ -84,7 +85,9 @@ public:
     virtual std::shared_ptr<frontend::Connector> the_xwayland_connector() = 0;
     virtual std::shared_ptr<graphics::Display> the_display() = 0;
     virtual std::shared_ptr<compositor::Compositor> the_compositor() = 0;
+    [[deprecated("Prefer using the_screen_shooter_factory to access a screen shooter.")]]
     virtual std::shared_ptr<compositor::ScreenShooter> the_screen_shooter() = 0;
+    virtual std::shared_ptr<compositor::ScreenShooterFactory> the_screen_shooter_factory() = 0;
     virtual std::shared_ptr<input::InputManager> the_input_manager() = 0;
     virtual std::shared_ptr<input::InputDispatcher> the_input_dispatcher() = 0;
     virtual std::shared_ptr<MainLoop> the_main_loop() = 0;

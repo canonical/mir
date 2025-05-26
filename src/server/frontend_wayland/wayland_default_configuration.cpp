@@ -198,7 +198,7 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
                 ctx.display,
                 ctx.wayland_executor,
                 ctx.graphic_buffer_allocator,
-                ctx.screen_shooter,
+                ctx.screen_shooter_factory,
                 ctx.surface_stack);
         }),
     make_extension_builder<mw::PrimarySelectionDeviceManagerV1>([](auto const& ctx)
@@ -387,7 +387,7 @@ std::shared_ptr<mf::Connector>
                 the_primary_selection_clipboard(),
                 the_text_input_hub(),
                 the_idle_hub(),
-                the_screen_shooter(),
+                the_screen_shooter_factory(),
                 the_main_loop(),
                 arw_socket,
                 configure_wayland_extensions(

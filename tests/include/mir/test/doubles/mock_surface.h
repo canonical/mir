@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_SURFACE_H_
 #define MIR_TEST_DOUBLES_MOCK_SURFACE_H_
 
-#include "src/server/scene/basic_surface.h"
+#include "mir/scene/basic_surface.h"
 #include "src/server/report/null_report_factory.h"
 #include "mock_buffer_stream.h"
 #include "mir/test/doubles/fake_display_configuration_observer_registrar.h"
@@ -36,8 +36,6 @@ struct MockSurface : public scene::BasicSurface
     MockSurface() :
         scene::BasicSurface(
             {},
-            {},
-            {},
             {{},{}},
             mir_pointer_unconfined,
             { { std::make_shared<testing::NiceMock<MockBufferStream>>(), {0, 0}} },
@@ -45,9 +43,6 @@ struct MockSurface : public scene::BasicSurface
             mir::report::null_scene_report(),
             std::make_shared<FakeDisplayConfigurationObserverRegistrar>())
     {
-        ON_CALL(*this, primary_buffer_stream())
-            .WillByDefault(testing::Invoke([this]
-                { return scene::BasicSurface::primary_buffer_stream(); }));
         ON_CALL(*this, parent())
             .WillByDefault(testing::Return(nullptr));
         ON_CALL(*this, set_focus_state(testing::_))
@@ -83,7 +78,7 @@ struct MockSurface : public scene::BasicSurface
     MOCK_METHOD(void, unregister_interest, (scene::SurfaceObserver const&));
     MOCK_METHOD(void, consume, (std::shared_ptr<MirEvent const> const& event));
 
-    MOCK_METHOD(std::shared_ptr<frontend::BufferStream>, primary_buffer_stream, (), (const));
+    MOCK_METHOD(std::list<scene::StreamInfo>, get_streams, (), (const));
     MOCK_METHOD(void, set_streams, (std::list<scene::StreamInfo> const&));
 
     MOCK_METHOD(void, set_focus_state, (MirWindowFocusState));

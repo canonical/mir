@@ -111,6 +111,7 @@ public:
     virtual int query(MirWindowAttrib attrib) const = 0;
 
     virtual void rename(std::string const& title) = 0;
+    virtual std::list<StreamInfo> get_streams() const = 0;
     virtual void set_streams(std::list<StreamInfo> const& streams) = 0;
 
     virtual void set_confine_pointer_state(MirPointerConfinementState state) = 0;

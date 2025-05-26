@@ -21,7 +21,7 @@
 #include "mir/scene/observer.h"
 #include "mir/compositor/scene_element.h"
 #include "src/server/report/null_report_factory.h"
-#include "src/server/scene/basic_surface.h"
+#include "mir/scene/basic_surface.h"
 #include "mir/test/fake_shared.h"
 #include "mir/test/doubles/fake_display_configuration_observer_registrar.h"
 #include "mir/test/doubles/stub_buffer_stream.h"
@@ -88,8 +88,6 @@ struct StubSurface : public ms::BasicSurface
 {
     StubSurface(std::shared_ptr<mc::BufferStream> stream, mir::Executor& executor) :
         ms::BasicSurface(
-            {},
-            {},
             "stub",
             {{-1, -1}, {2, 2}},
             mir_pointer_unconfined,
@@ -320,8 +318,6 @@ TEST_F(SurfaceStack, generate_elementelements)
     for(auto i = 0u; i < num_surfaces; i++)
     {
         auto const surface = std::make_shared<ms::BasicSurface>(
-            nullptr /* session */,
-            mw::Weak<mf::WlSurface>{},
             std::string("stub"),
             geom::Rectangle{geom::Point{3 * i, 4 * i},geom::Size{1 * i, 2 * i}},
             mir_pointer_unconfined,
@@ -519,8 +515,6 @@ TEST_F(SurfaceStack, scene_elements_hold_snapshot_of_positioning_info)
     for(auto i = 0u; i < num_surfaces; i++)
     {
         auto const surface = std::make_shared<ms::BasicSurface>(
-            nullptr /* session */,
-            mw::Weak<mf::WlSurface>{},
             std::string("stub"),
             geom::Rectangle{geom::Point{3 * i, 4 * i},geom::Size{1 * i, 2 * i}},
             mir_pointer_unconfined,
@@ -551,8 +545,6 @@ TEST_F(SurfaceStack, generates_scene_elements_that_delay_buffer_acquisition)
     auto mock_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
 
     auto const surface = std::make_shared<ms::BasicSurface>(
-        nullptr /* session */,
-        mw::Weak<mf::WlSurface>{},
         std::string("stub"),
         geom::Rectangle{geom::Point{3, 4},geom::Size{1, 2}},
         mir_pointer_unconfined,
@@ -576,8 +568,6 @@ TEST_F(SurfaceStack, generates_scene_elements_that_allow_only_one_buffer_acquisi
     auto mock_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
 
     auto const surface = std::make_shared<ms::BasicSurface>(
-        nullptr /* session */,
-        mw::Weak<mf::WlSurface>{},
         std::string("stub"),
         geom::Rectangle{geom::Point{3, 4},geom::Size{1, 2}},
         mir_pointer_unconfined,

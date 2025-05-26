@@ -16,7 +16,7 @@
 
 #include "mir/events/event_builders.h"
 #include "mir/scene/output_properties_cache.h"
-#include "src/server/scene/basic_surface.h"
+#include "mir/scene/basic_surface.h"
 #include "src/server/report/null_report_factory.h"
 #include "mir/scene/surface_event_source.h"
 
@@ -50,8 +50,6 @@ struct SurfaceCreation : public ::testing::Test
 {
     SurfaceCreation()
         : surface(
-            nullptr /* session */,
-            {} /* wayland_surface */,
             surface_name,
             rect,
             mir_pointer_unconfined,
