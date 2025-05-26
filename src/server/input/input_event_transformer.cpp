@@ -35,6 +35,21 @@
 
 namespace mi = mir::input;
 
+bool mi::InputEventTransformer::Transformer::is_enabled() const
+{
+    return enabled_;
+}
+
+void mi::InputEventTransformer::Transformer::enable()
+{
+    enabled_ = true;
+}
+
+void mi::InputEventTransformer::Transformer::disable()
+{
+    enabled_ = false;
+}
+
 mi::InputEventTransformer::InputEventTransformer(
     std::shared_ptr<Seat> const& seat, std::shared_ptr<time::Clock> const& clock) :
     seat{seat},
@@ -242,3 +257,4 @@ mir::input::OutputInfo mir::input::InputEventTransformer::output_info(uint32_t o
 {
     return seat->output_info(output_id);
 }
+

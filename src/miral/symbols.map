@@ -563,8 +563,6 @@ global:
     miral::SimulatedSecondaryClick::displacement_threshold*;
     miral::SimulatedSecondaryClick::enable*;
     miral::SimulatedSecondaryClick::hold_duration*;
-    miral::SimulatedSecondaryClick::on_disabled*;
-    miral::SimulatedSecondaryClick::on_enabled*;
     miral::SimulatedSecondaryClick::on_hold_cancel*;
     miral::SimulatedSecondaryClick::on_hold_start*;
     miral::SimulatedSecondaryClick::on_secondary_click*;

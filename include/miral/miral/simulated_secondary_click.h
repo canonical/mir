@@ -39,16 +39,12 @@ public:
 
     void operator()(mir::Server& server);
 
-    /// Enables simulated secondary click. If `on_enable` was supplied with a
-    /// callback, then it will be called when enabled from a disabled state, or
-    /// on assignment if already enabled. When already enabled, further calls
-    /// are idempotent.
+    /// Enables simulated secondary click.
+    /// When already enabled, further calls have no effect.
     SimulatedSecondaryClick& enable();
 
-    /// Disables simulated secondary click. If `on_disable` was supplied with a
-    /// callback, then it will be called when disabled from an enabled state,
-    /// or on assignment if already disabled. When already disabled, further
-    /// calls are idempotent.
+    /// Disables simulated secondary click.
+    /// When already disabled, further calls have no effect.
     SimulatedSecondaryClick& disable();
 
     /// Configures the duration users have to keep the left mouse button down
@@ -58,20 +54,6 @@ public:
     /// Configures the maximum displacement the mouse pointer can move before
     /// the simulated secondary click is cancelled.
     SimulatedSecondaryClick& displacement_threshold(float displacement);
-
-    /// Configures the callback invoked when simulated secondary click is
-    /// transitions from being disabled to being enabled. Will be called on
-    /// assignment if simulated secondary click is already enabled. After
-    /// assignment, if simulated secondary click is already enabled and
-    /// `enaable()` is called again, the supplied callback will not be invoked.
-    SimulatedSecondaryClick& on_enabled(std::function<void()>&& on_enabled);
-
-    /// Configures the callback invoked when simulated secondary click is
-    /// transitions from being enabled to being disabled. Will be called on
-    /// assignment if simulated secondary click is already disabled. After
-    /// assignment, if simulated secondary click is already disabled and
-    /// `disable()` is called again, the supplied callback will not be invoked.
-    SimulatedSecondaryClick& on_disabled(std::function<void()>&& on_disabled);
 
     /// Configures the callback to invoke when the user clicks _down_ the left
     /// mouse button. Can be used to initialize animations for graphical feedback.

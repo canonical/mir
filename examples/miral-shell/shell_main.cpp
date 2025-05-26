@@ -203,9 +203,10 @@ int main(int argc, char const* argv[])
         return false;
     };
 
-    auto const ssc_config = miral::SimulatedSecondaryClick{false}
+    auto ssc_config = miral::SimulatedSecondaryClick{false}
                                 .displacement_threshold(30)
                                 .hold_duration(std::chrono::milliseconds{2000});
+
 
     return runner.run_with(
         {

@@ -68,12 +68,12 @@ void mir::shell::BasicAccessibilityManager::mousekeys_enabled(bool on)
         
     {
         event_transformer->append(mouse_keys_transformer);
-        mouse_keys_transformer->enabled();
+        mouse_keys_transformer->enable();
     }
     else if (!on && mouse_keys_transformer->is_enabled())
     {
         event_transformer->remove(mouse_keys_transformer);
-        mouse_keys_transformer->disabled();
+        mouse_keys_transformer->disable();
     }
 }
 
@@ -118,12 +118,12 @@ void mir::shell::BasicAccessibilityManager::simulated_secondary_click_enabled(bo
     if (enabled && !simulated_secondary_click_transformer->is_enabled())
     {
         event_transformer->append(simulated_secondary_click_transformer);
-        simulated_secondary_click_transformer->enabled();
+        simulated_secondary_click_transformer->enable();
     }
     else if (!enabled && simulated_secondary_click_transformer->is_enabled())
     {
         event_transformer->remove(simulated_secondary_click_transformer);
-        simulated_secondary_click_transformer->disabled();
+        simulated_secondary_click_transformer->disable();
     }
 }
 

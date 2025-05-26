@@ -83,6 +83,14 @@ struct TestInputEventTransformer : testing::Test
 
 struct MockTransformer : public mir::input::InputEventTransformer::Transformer
 {
+    MockTransformer()
+    {
+        using Base = mir::input::InputEventTransformer::Transformer;
+        ON_CALL(*this, is_enabled()).WillByDefault([this] { return Base::is_enabled(); });
+        ON_CALL(*this, enable()).WillByDefault([this] { Base::enable(); });
+        ON_CALL(*this, disable()).WillByDefault([this] { Base::disable(); });
+    }
+
     MOCK_METHOD(
         (bool),
         transform_input_event,
@@ -90,10 +98,8 @@ struct MockTransformer : public mir::input::InputEventTransformer::Transformer
         (override));
 
     MOCK_METHOD(bool, is_enabled, (), (const, override));
-    MOCK_METHOD(void, enabled, (), (override));
-    MOCK_METHOD(void, disabled, (), (override));
-    MOCK_METHOD(void, on_enabled, (std::function<void()>&& on_enabled), (override));
-    MOCK_METHOD(void, on_disabled, (std::function<void()>&& on_disabled), (override));
+    MOCK_METHOD(void, enable, (), (override));
+    MOCK_METHOD(void, disable, (), (override));
 };
 
 TEST_F(TestInputEventTransformer, transformer_gets_called)

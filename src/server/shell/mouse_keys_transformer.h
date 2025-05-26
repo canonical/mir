@@ -56,12 +56,6 @@ public:
         mir::input::EventBuilder* builder,
         MirEvent const& event) override;
 
-    bool is_enabled() const override;
-    void enabled() override;
-    void disabled() override;
-    void on_enabled(std::function<void()>&&) override;
-    void on_disabled(std::function<void()>&&) override;
-
     void keymap(mir::input::MouseKeysKeymap const& new_keymap) override;
     void acceleration_factors(double constant, double linear, double quadratic) override;
     void max_speed(double x_axis, double y_axis) override;

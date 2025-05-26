@@ -48,12 +48,6 @@ struct MockMouseKeysTransformer : public mir::shell::MouseKeysTransformer
 {
     MockMouseKeysTransformer() = default;
 
-    MOCK_METHOD(bool, is_enabled, (), (const, override));
-    MOCK_METHOD(void, enabled, (), (override));
-    MOCK_METHOD(void, disabled, (), (override));
-    MOCK_METHOD(void, on_enabled, (std::function<void()>&& on_enabled), (override));
-    MOCK_METHOD(void, on_disabled, (std::function<void()>&& on_disabled), (override));
-
     MOCK_METHOD(void, keymap, (mir::input::MouseKeysKeymap const& new_keymap), (override));
     MOCK_METHOD(void, acceleration_factors, (double constant, double linear, double quadratic), (override));
     MOCK_METHOD(void, max_speed, (double x_axis, double y_axis), (override));
@@ -66,7 +60,13 @@ struct MockMouseKeysTransformer : public mir::shell::MouseKeysTransformer
 
 struct MockSimulatedSecondaryClickTransformer : public mir::shell::SimulatedSecondaryClickTransformer
 {
-    MockSimulatedSecondaryClickTransformer() = default;
+    MockSimulatedSecondaryClickTransformer()
+    {
+        using Base = mir::shell::SimulatedSecondaryClickTransformer;
+        ON_CALL(*this, is_enabled()).WillByDefault([this] { return Base::is_enabled(); });
+        ON_CALL(*this, enable()).WillByDefault([this] { Base::enable(); });
+        ON_CALL(*this, disable()).WillByDefault([this] { Base::disable(); });
+    }
 
     MOCK_METHOD(
         bool,
@@ -77,10 +77,8 @@ struct MockSimulatedSecondaryClickTransformer : public mir::shell::SimulatedSeco
         (override));
 
     MOCK_METHOD(bool, is_enabled, (), (const, override));
-    MOCK_METHOD(void, enabled, (), (override));
-    MOCK_METHOD(void, disabled, (), (override));
-    MOCK_METHOD(void, on_enabled, (std::function<void()>&& on_enabled), (override));
-    MOCK_METHOD(void, on_disabled, (std::function<void()>&& on_disabled), (override));
+    MOCK_METHOD(void, enable, (), (override));
+    MOCK_METHOD(void, disable, (), (override));
 
     MOCK_METHOD(void, hold_duration, (std::chrono::milliseconds delay), (override));
     MOCK_METHOD(void, displacement_threshold, (float), (override));
@@ -256,27 +254,6 @@ TEST_F(TestBasicAccessibilityManager, calling_simulated_secondary_click_hold_dur
     basic_accessibility_manager.simulated_secondary_click().hold_duration(expected_duration);
 }
 
-// There must be a better way than having five duplicated tests...
-TEST_F(TestBasicAccessibilityManager, setting_on_enabled_start_sets_it_on_transformer)
-{
-    auto const expected_on_enabled = []
-    {
-    };
-
-    EXPECT_CALL(*mock_simulated_secondary_click_transformer, on_enabled(_));
-    basic_accessibility_manager.simulated_secondary_click().on_enabled(expected_on_enabled);
-}
-
-TEST_F(TestBasicAccessibilityManager, setting_on_disabled_start_sets_it_on_transformer)
-{
-    auto const expected_on_disabled = []
-    {
-    };
-
-    EXPECT_CALL(*mock_simulated_secondary_click_transformer, on_disabled(_));
-    basic_accessibility_manager.simulated_secondary_click().on_disabled(expected_on_disabled);
-}
-
 TEST_F(TestBasicAccessibilityManager, setting_on_hold_start_sets_it_on_transformer)
 {
     auto const expected_on_hold_start = []
@@ -313,7 +290,7 @@ TEST_F(TestBasicAccessibilityManager, setting_on_secondary_click_sets_it_on_tran
 
 TEST_F(TestBasicAccessibilityManager, enabling_simulated_secondary_click_twice_calls_enabled_once)
 {
-    EXPECT_CALL(*mock_simulated_secondary_click_transformer, enabled()).Times(1);
+    EXPECT_CALL(*mock_simulated_secondary_click_transformer, enable()).Times(1);
 
     basic_accessibility_manager.simulated_secondary_click_enabled(true);
     basic_accessibility_manager.simulated_secondary_click_enabled(true);
@@ -322,7 +299,7 @@ TEST_F(TestBasicAccessibilityManager, enabling_simulated_secondary_click_twice_c
 TEST_F(
     TestBasicAccessibilityManager, enabling_simulated_secondary_click_then_disabling_then_enabling_calls_enabled_twice)
 {
-    EXPECT_CALL(*mock_simulated_secondary_click_transformer, enabled()).Times(2);
+    EXPECT_CALL(*mock_simulated_secondary_click_transformer, enable()).Times(2);
 
     basic_accessibility_manager.simulated_secondary_click_enabled(true);
     basic_accessibility_manager.simulated_secondary_click_enabled(false);
@@ -333,7 +310,7 @@ TEST_F(
 
 TEST_F(TestBasicAccessibilityManager, disabling_simulated_secondary_click_twice_calls_disabled_once)
 {
-    EXPECT_CALL(*mock_simulated_secondary_click_transformer, disabled()).Times(1);
+    EXPECT_CALL(*mock_simulated_secondary_click_transformer, disable()).Times(1);
 
     basic_accessibility_manager.simulated_secondary_click_enabled(true); // Have to enable to be able to disable
     basic_accessibility_manager.simulated_secondary_click_enabled(false);
@@ -343,7 +320,7 @@ TEST_F(TestBasicAccessibilityManager, disabling_simulated_secondary_click_twice_
 TEST_F(
     TestBasicAccessibilityManager, disabling_simulated_secondary_click_then_enabling_then_disabling_calls_disabled_twice)
 {
-    EXPECT_CALL(*mock_simulated_secondary_click_transformer, disabled()).Times(2);
+    EXPECT_CALL(*mock_simulated_secondary_click_transformer, disable()).Times(2);
 
     basic_accessibility_manager.simulated_secondary_click_enabled(true); // Have to enable to be able to disable
     basic_accessibility_manager.simulated_secondary_click_enabled(false);
@@ -354,6 +331,6 @@ TEST_F(
 TEST_F(
     TestBasicAccessibilityManager, disabling_simulated_secondary_click_before_enabling_it_doesnt_call_disabled)
 {
-    EXPECT_CALL(*mock_simulated_secondary_click_transformer, disabled()).Times(0);
+    EXPECT_CALL(*mock_simulated_secondary_click_transformer, disable()).Times(0);
     basic_accessibility_manager.simulated_secondary_click_enabled(false);
 }
