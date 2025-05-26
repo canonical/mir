@@ -333,7 +333,7 @@ TEST_F(
 }
 
 
-TEST_F(TestBasicAccessibilityManager, disabling_simulated_secondary_click_twice_calls_enabled_once)
+TEST_F(TestBasicAccessibilityManager, disabling_simulated_secondary_click_twice_calls_disabled_once)
 {
     EXPECT_CALL(*mock_simulated_secondary_click_transformer, disabled()).Times(1);
 
