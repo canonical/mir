@@ -35,6 +35,39 @@
 
 namespace mi = mir::input;
 
+bool mi::InputEventTransformer::Transformer::is_enabled() const
+{
+    return mutable_state.lock()->enabled;
+}
+
+void mi::InputEventTransformer::Transformer::enabled()
+{
+    auto const state_ = mutable_state.lock();
+    auto const should_notify = !state_->enabled;
+    state_->enabled = true;
+    if (should_notify)
+        state_->on_enabled();
+}
+
+void mi::InputEventTransformer::Transformer::disabled()
+{
+    auto const state_ = mutable_state.lock();
+    auto const should_notify = state_->enabled;
+    state_->enabled = false;
+    if (should_notify)
+        state_->on_disabled();
+}
+
+void mi::InputEventTransformer::Transformer::on_enabled(std::function<void()>&& on_enabled)
+{
+    mutable_state.lock()->on_enabled = std::move(on_enabled);
+}
+
+void mi::InputEventTransformer::Transformer::on_disabled(std::function<void()>&& on_disabled)
+{
+    mutable_state.lock()->on_disabled = std::move(on_disabled);
+}
+
 mi::InputEventTransformer::InputEventTransformer(
     std::shared_ptr<Seat> const& seat, std::shared_ptr<time::Clock> const& clock) :
     seat{seat},
@@ -242,3 +275,4 @@ mir::input::OutputInfo mir::input::InputEventTransformer::output_info(uint32_t o
 {
     return seat->output_info(output_id);
 }
+

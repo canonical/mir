@@ -383,6 +383,11 @@ global:
     mir::input::InputEventTransformer::?InputEventTransformer*;
     mir::input::InputEventTransformer::InputEventTransformer*;
     mir::input::InputEventTransformer::Transformer::?Transformer*;
+    mir::input::InputEventTransformer::Transformer::disabled*;
+    mir::input::InputEventTransformer::Transformer::enabled*;
+    mir::input::InputEventTransformer::Transformer::is_enabled*;
+    mir::input::InputEventTransformer::Transformer::on_disabled*;
+    mir::input::InputEventTransformer::Transformer::on_enabled*;
     mir::input::InputEventTransformer::add_device*;
     mir::input::InputEventTransformer::append*;
     mir::input::InputEventTransformer::bounding_rectangle*;

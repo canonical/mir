@@ -18,6 +18,7 @@
 #define MIR_INPUT_INPUT_EVENT_TRANSFORMER_H_
 
 #include "mir/input/seat.h"
+#include "mir/synchronised.h"
 #include "mir_toolkit/events/event.h"
 
 #include <functional>
@@ -49,11 +50,20 @@ public:
         // an event is an implementation detail of the transformer
         virtual bool transform_input_event(EventDispatcher const&, EventBuilder*,  MirEvent const&) = 0;
 
-        virtual bool is_enabled() const = 0;
-        virtual void enabled() = 0;
-        virtual void disabled() = 0;
-        virtual void on_disabled(std::function<void()>&&) = 0;
-        virtual void on_enabled(std::function<void()>&&) = 0;
+        virtual bool is_enabled() const;
+        virtual void enabled();
+        virtual void disabled();
+        virtual void on_enabled(std::function<void()>&& on_enabled);
+        virtual void on_disabled(std::function<void()>&& on_disabled);
+
+    private:
+        struct State
+        {
+            bool enabled{false};
+            std::function<void()> on_enabled{[]{}}, on_disabled{[]{}};
+        };
+
+        mir::Synchronised<State> mutable_state;
     };
 
     InputEventTransformer(std::shared_ptr<Seat> const& seat, std::shared_ptr<time::Clock> const& clock);
