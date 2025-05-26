@@ -132,11 +132,13 @@ void miral::MouseKeysConfig::operator()(mir::Server& server) const
             if (options->is_set(enable_mouse_keys_opt))
                 enable = options->get<bool>(enable_mouse_keys_opt);
 
+            enabled(enable);
+
             set_acceleration_factors(
                 options->get<double>(mouse_keys_acceleration_constant_factor),
                 options->get<double>(mouse_keys_acceleration_linear_factor),
                 options->get<double>(mouse_keys_acceleration_quadratic_factor));
+
             set_max_speed(options->get<double>(mouse_keys_max_speed_x), options->get<double>(mouse_keys_max_speed_y));
-            enabled(enable);
         });
 }
