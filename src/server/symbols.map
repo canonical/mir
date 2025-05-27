@@ -974,6 +974,11 @@ global:
     non-virtual?thunk?to?mir::input::InputDispatcher::?InputDispatcher*;
     non-virtual?thunk?to?mir::input::InputEventTransformer::?InputEventTransformer*;
     non-virtual?thunk?to?mir::input::InputEventTransformer::Transformer::?Transformer*;
+    non-virtual?thunk?to?mir::input::InputEventTransformer::Transformer::disabled*;
+    non-virtual?thunk?to?mir::input::InputEventTransformer::Transformer::enabled*;
+    non-virtual?thunk?to?mir::input::InputEventTransformer::Transformer::is_enabled*;
+    non-virtual?thunk?to?mir::input::InputEventTransformer::Transformer::on_disabled*;
+    non-virtual?thunk?to?mir::input::InputEventTransformer::Transformer::on_enabled*;
     non-virtual?thunk?to?mir::input::InputEventTransformer::add_device*;
     non-virtual?thunk?to?mir::input::InputEventTransformer::bounding_rectangle*;
     non-virtual?thunk?to?mir::input::InputEventTransformer::create_device_state*;
