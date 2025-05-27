@@ -107,7 +107,6 @@ private:
 
     drmModeRes resources;
     drmModePlaneRes plane_resources;
-    drmModePlane plane;
     std::vector<drmModeCrtc> crtcs;
     std::vector<drmModeEncoder> encoders;
     std::vector<drmModeConnector> connectors;
