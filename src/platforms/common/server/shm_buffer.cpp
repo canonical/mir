@@ -251,6 +251,12 @@ void mgc::MemoryBackedShmBuffer::bind()
     }
 }
 
+void mgc::MemoryBackedShmBuffer::mark_dirty()
+{
+    std::lock_guard lock{uploaded_mutex};
+    uploaded = false;
+}
+
 template<typename T>
 class mgc::MemoryBackedShmBuffer::Mapping : public mir::renderer::software::Mapping<T>
 {
@@ -258,6 +264,14 @@ public:
     Mapping(std::conditional_t<std::is_const_v<T>, MemoryBackedShmBuffer const*, MemoryBackedShmBuffer*> buffer)
         : buffer{buffer}
     {
+    }
+
+    ~Mapping() override
+    {
+        if constexpr (!std::is_const_v<T>)
+        {
+            buffer->mark_dirty();
+        }
     }
 
     auto format() const -> MirPixelFormat override
