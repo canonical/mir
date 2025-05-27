@@ -39,10 +39,11 @@ public:
 
     void operator()(mir::Server& server);
 
-    /// Enables simulated secondary click. If `on_enable` was supplied with a
-    /// callback, then it will be called when enabled from a disabled state, or
-    /// on assignment if already enabled. When already enabled, further calls
-    /// are idempotent.
+    /// Enables simulated secondary click.
+    /// When enabled from a disabled state, the callback most recently set by
+    /// `on_enable` (if any) is called. 
+    /// When already enabled, further calls have no effect (and no `on_enable`
+    /// callback is called).
     SimulatedSecondaryClick& enable();
 
     /// Disables simulated secondary click. If `on_disable` was supplied with a
@@ -60,10 +61,8 @@ public:
     SimulatedSecondaryClick& displacement_threshold(float displacement);
 
     /// Configures the callback invoked when simulated secondary click is
-    /// transitions from being disabled to being enabled. Will be called on
-    /// assignment if simulated secondary click is already enabled. After
-    /// assignment, if simulated secondary click is already enabled and
-    /// `enaable()` is called again, the supplied callback will not be invoked.
+    /// transitions from disabled to enabled. 
+    /// If already enabled, the callback will be invoked immediately.
     SimulatedSecondaryClick& on_enabled(std::function<void()>&& on_enabled);
 
     /// Configures the callback invoked when simulated secondary click is
