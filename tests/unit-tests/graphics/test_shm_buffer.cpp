@@ -186,6 +186,44 @@ TEST_P(UploadTest, uploads_correctly)
 
 }
 
+TEST_P(UploadTest, reuploads_after_mapping)
+{
+    auto const desc = GetParam();
+
+    PlatformlessShmBuffer buf(
+        desc.size, desc.format, egl_delegate);
+
+    Expectation gl_use = EXPECT_CALL(
+        mock_gl,
+        glTexImage2D(
+            GL_TEXTURE_2D, 0,
+            desc.gl_format,
+            desc.size.width.as_int(), desc.size.height.as_int(),
+            0,
+            desc.gl_format, desc.gl_type,
+            buf.pixel_buffer())).Times(1);
+
+    buf.bind();
+
+    // Mapping is in its own scope so that destruction happens
+    {
+        auto const write_mapping = buf.map_writeable();
+    }
+
+    EXPECT_CALL(
+        mock_gl,
+        glTexImage2D(
+            GL_TEXTURE_2D, 0,
+            desc.gl_format,
+            desc.size.width.as_int(), desc.size.height.as_int(),
+            0,
+            desc.gl_format, desc.gl_type,
+            buf.pixel_buffer()))
+        .Times(1)
+        .After(gl_use);
+    buf.bind();
+}
+
 namespace
 {
 geom::Size const default_size{245, 553};
