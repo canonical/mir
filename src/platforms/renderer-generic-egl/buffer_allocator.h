@@ -88,7 +88,8 @@ public:
     GLRenderingProvider(
          EGLDisplay dpy,
          EGLContext ctx,
-         std::shared_ptr<DMABufEGLProvider> dmabuf_provider);
+         std::shared_ptr<DMABufEGLProvider> dmabuf_provider,
+         std::shared_ptr<common::EGLContextExecutor> egl_delegate);
 
     auto make_framebuffer_provider(DisplaySink& sink)
         -> std::unique_ptr<FramebufferProvider> override;
@@ -107,6 +108,7 @@ private:
     EGLDisplay const dpy;
     EGLContext const ctx;
     std::shared_ptr<DMABufEGLProvider> const dmabuf_provider;
+    std::shared_ptr<common::EGLContextExecutor> const egl_delegate;
 };
 }
 }

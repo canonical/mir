@@ -85,7 +85,7 @@ std::shared_ptr<mg::Buffer> mgg::BufferAllocator::alloc_software_buffer(
                 "Trying to create SHM buffer with unsupported pixel format"));
     }
 
-    return std::make_shared<mgc::MemoryBackedShmBuffer>(size, format, egl_delegate);
+    return std::make_shared<mgc::MemoryBackedShmBuffer>(size, format);
 }
 
 std::vector<MirPixelFormat> mgg::BufferAllocator::supported_pixel_formats()
@@ -204,7 +204,6 @@ auto mgg::BufferAllocator::buffer_from_shm(
 {
     return std::make_shared<mgc::NotifyingMappableBackedShmBuffer>(
         std::move(data),
-        egl_delegate,
         std::move(on_consumed),
         std::move(on_release));
 }
@@ -220,6 +219,10 @@ auto mgg::GLRenderingProvider::as_texture(std::shared_ptr<Buffer> buffer) -> std
     if (auto dmabuf_texture = dmabuf_provider->as_texture(native_buffer))
     {
         return dmabuf_texture;
+    }
+    else if (auto shm = std::dynamic_pointer_cast<mgc::ShmBuffer>(native_buffer))
+    {
+        return shm->texture_for_provider(egl_delegate, this);
     }
     else if (auto tex = std::dynamic_pointer_cast<gl::Texture>(native_buffer))
     {
