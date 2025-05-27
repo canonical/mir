@@ -56,7 +56,7 @@ public:
 private:
     graphics::DisplaySink& display_sink;
     std::shared_ptr<renderer::Renderer> const renderer;
-    std::shared_ptr<graphics::OutputFilter> const& output_filter;
+    std::shared_ptr<graphics::OutputFilter> const output_filter;
     std::unique_ptr<graphics::RenderingProvider::FramebufferProvider> const fb_adaptor;
     std::shared_ptr<compositor::CompositorReport> const report;
     bool completed_first_render = false;
