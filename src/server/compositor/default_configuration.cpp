@@ -154,13 +154,12 @@ auto mir::DefaultServerConfiguration::the_screen_shooter_factory() -> std::share
             if (providers.empty())
             {
                 log_error("Failed to create screen shooter factory: No platform provides GL rendering support");
-                return std::make_shared<compositor::NullScreenShooterFactory>(thread_pool_executor);
+                return std::make_shared<compositor::NullScreenShooterFactory>();
             }
 
             return std::make_shared<compositor::BasicScreenShooterFactory>(
                 the_scene(),
                 the_clock(),
-                thread_pool_executor,
                 providers,
                 the_renderer_factory(),
                 the_buffer_allocator(),

@@ -44,17 +44,15 @@ public:
     BasicScreenShooterFactory(
         std::shared_ptr<Scene> const& scene,
         std::shared_ptr<time::Clock> const& clock,
-        Executor& executor,
         std::vector<std::shared_ptr<graphics::GLRenderingProvider>> const& providers,
         std::shared_ptr<renderer::RendererFactory> const& render_factory,
         std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
         std::shared_ptr<graphics::GLConfig> const& config);
-    auto create() -> std::unique_ptr<ScreenShooter> override;
+    auto create(Executor& executor) -> std::unique_ptr<ScreenShooter> override;
 
 private:
     std::shared_ptr<Scene> const scene;
     std::shared_ptr<time::Clock> const clock;
-    Executor& executor;
     std::vector<std::shared_ptr<graphics::GLRenderingProvider>> providers;
     std::shared_ptr<renderer::RendererFactory> const renderer_factory;
     std::shared_ptr<graphics::GraphicBufferAllocator> buffer_allocator;

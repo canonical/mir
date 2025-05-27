@@ -55,7 +55,6 @@ public:
         factory = std::make_unique<mc::BasicScreenShooterFactory>(
             scene,
             clock,
-            executor,
             gl_providers,
             renderer_factory,
             buffer_allocator,
@@ -74,5 +73,5 @@ public:
 
 TEST_F(BasicScreenShooterFactoryTest, creates_basic_screen_shooter)
 {
-    EXPECT_THAT(factory->create(), NotNull());
+    EXPECT_THAT(factory->create(executor), NotNull());
 }
