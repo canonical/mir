@@ -124,7 +124,8 @@ public:
             scene(scene),
           rect(rect),
           screen_shooter(screen_shooter),
-          allocator(allocator)
+          allocator(allocator),
+          buffer(allocator->alloc_software_buffer(rect.size, mir_pixel_format_argb_8888))
     {
     }
 
@@ -142,7 +143,6 @@ public:
         if (id == screen_shooter->id())
             return {};
 
-        auto buffer = allocator->alloc_software_buffer(rect.size, mir_pixel_format_argb_8888);
         auto const mapping = mrs::as_write_mappable_buffer(buffer);
         screen_shooter->capture_blocking(
             mapping,
@@ -157,6 +157,7 @@ private:
     geom::Rectangle rect;
     std::shared_ptr<mc::ScreenShooter> screen_shooter;
     std::shared_ptr<mg::GraphicBufferAllocator> allocator;
+    std::shared_ptr<mg::Buffer> buffer;
 };
 }
 
