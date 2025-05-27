@@ -540,3 +540,9 @@ libmiral.so.7 libmiral7 #MINVER#
  (c++)"miral::WindowSpecification::tiled_edges() const@MIRAL_5.3" 5.3.0
  (c++)"miral::WindowSpecification::tiled_edges()@MIRAL_5.3" 5.3.0
  (c++)"miral::WindowSpecification::to_surface_specification() const@MIRAL_5.3" 5.3.0
+ MIRAL_5.4@MIRAL_5.4 5.4.0
+ (c++)"miral::OutputFilter::OutputFilter()@MIRAL_5.4" 5.4.0
+ (c++)"miral::OutputFilter::OutputFilter(MirOutputFilter)@MIRAL_5.4" 5.4.0
+ (c++)"miral::OutputFilter::~OutputFilter()@MIRAL_5.4 5.4.0" 5.4.0
+ (c++)"miral::OutputFilter::filter(MirOutputFilter) const@MIRAL_5.4" 5.4.0
+ (c++)"miral::OutputFilter::operator()(mir::Server&) const@MIRAL_5.4" 5.4.0
