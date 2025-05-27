@@ -53,7 +53,9 @@ public:
         bool enable_key_repeat,
         std::shared_ptr<mir::graphics::Cursor> const& cursor,
         std::shared_ptr<MouseKeysTransformer> const& mousekeys_transformer,
-        std::shared_ptr<SimulatedSecondaryClickTransformer> const& simulated_secondary_click_transformer);
+        std::shared_ptr<SimulatedSecondaryClickTransformer> const& simulated_secondary_click_transformer,
+        std::shared_ptr<SlowKeysTransformer> const& slow_keys_transformer);
+
     ~BasicAccessibilityManager();
 
     void register_keyboard_helper(std::shared_ptr<shell::KeyboardHelper> const&) override;
@@ -72,6 +74,8 @@ public:
     void simulated_secondary_click_enabled(bool enabled) override;
     auto simulated_secondary_click() -> SimulatedSecondaryClickTransformer& override;
 
+    void slow_keys_enabled(bool enabled) override;
+    auto slow_keys() -> SlowKeysTransformer& override;
 private:
     struct MutableState {
         // 25 rate and 600 delay are the default in Weston and Sway
@@ -85,9 +89,11 @@ private:
 
     bool const enable_key_repeat;
     std::shared_ptr<graphics::Cursor> const cursor;
+
     std::shared_ptr<input::InputEventTransformer> const event_transformer;
     std::shared_ptr<MouseKeysTransformer> const mouse_keys_transformer;
     std::shared_ptr<SimulatedSecondaryClickTransformer> const simulated_secondary_click_transformer;
+    std::shared_ptr<SlowKeysTransformer> const slow_keys_transformer;
 };
 }
 }

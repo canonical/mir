@@ -91,6 +91,7 @@ add_library(miral-external OBJECT
     cursor_scale.cpp                    ${miral_include}/miral/cursor_scale.h
     mousekeys_config.cpp                ${miral_include}/miral/mousekeys_config.h
     simulated_secondary_click.cpp       ${miral_include}/miral/simulated_secondary_click.h
+    slow_keys.cpp                       ${miral_include}/miral/slow_keys.h
 )
 
 add_library(miral SHARED

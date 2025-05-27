@@ -17,15 +17,18 @@
 #include "basic_accessibility_manager.h"
 #include "mouse_keys_transformer.h"
 #include "basic_simulated_secondary_click_transformer.h"
+#include "basic_slow_keys_transformer.h"
 
 #include "mir/graphics/cursor.h"
 #include "mir/shell/keyboard_helper.h"
+#include "mir/flags.h"
 
 #include <xkbcommon/xkbcommon-keysyms.h>
 
 #include <memory>
 #include <optional>
 
+#include "mir/log.h"
 void mir::shell::BasicAccessibilityManager::register_keyboard_helper(std::shared_ptr<KeyboardHelper> const& helper)
 {
     mutable_state.lock()->keyboard_helpers.push_back(helper);
@@ -82,12 +85,14 @@ mir::shell::BasicAccessibilityManager::BasicAccessibilityManager(
     bool enable_key_repeat,
     std::shared_ptr<mir::graphics::Cursor> const& cursor,
     std::shared_ptr<shell::MouseKeysTransformer> const& mousekeys_transformer,
-    std::shared_ptr<SimulatedSecondaryClickTransformer> const& simulated_secondary_click_transformer) :
+    std::shared_ptr<SimulatedSecondaryClickTransformer> const& simulated_secondary_click_transformer,
+    std::shared_ptr<SlowKeysTransformer> const& slow_keys_transformer) :
     enable_key_repeat{enable_key_repeat},
     cursor{cursor},
     event_transformer{event_transformer},
     mouse_keys_transformer{mousekeys_transformer},
-    simulated_secondary_click_transformer{simulated_secondary_click_transformer}
+    simulated_secondary_click_transformer{simulated_secondary_click_transformer},
+    slow_keys_transformer{slow_keys_transformer}
 {
 }
 
@@ -131,4 +136,23 @@ auto mir::shell::BasicAccessibilityManager::simulated_secondary_click()
     -> SimulatedSecondaryClickTransformer&
 {
     return *simulated_secondary_click_transformer.operator->();
+}
+
+void mir::shell::BasicAccessibilityManager::slow_keys_enabled(bool enabled)
+{
+    if (enabled && !slow_keys_transformer->is_enabled())
+    {
+        event_transformer->append(slow_keys_transformer);
+        slow_keys_transformer->enabled();
+    }
+    else if (!enabled && slow_keys_transformer->is_enabled())
+    {
+        event_transformer->remove(slow_keys_transformer);
+        slow_keys_transformer->disabled();
+    }
+}
+
+auto mir::shell::BasicAccessibilityManager::slow_keys() -> SlowKeysTransformer&
+{
+    return *slow_keys_transformer;
 }
