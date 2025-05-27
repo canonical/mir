@@ -527,6 +527,7 @@ libmiral.so.7 libmiral7 #MINVER#
  (c++)"miral::HoverClick::disable()@MIRAL_5.3" 5.3.0
  (c++)"miral::HoverClick::enable()@MIRAL_5.3" 5.3.0
  (c++)"miral::HoverClick::hover_duration(std::chrono::duration<long, std::ratio<1l, 1000l> >)@MIRAL_5.3" 5.3.0
+ (c++)"miral::HoverClick::hover_duration(std::chrono::duration<long long, std::ratio<1ll, 1000ll> >)@MIRAL_5.3" 5.3.0
  (c++)"miral::HoverClick::on_click_dispatched(std::function<void ()>&&)@MIRAL_5.3" 5.3.0
  (c++)"miral::HoverClick::on_disabled(std::function<void ()>&&)@MIRAL_5.3" 5.3.0
  (c++)"miral::HoverClick::on_enabled(std::function<void ()>&&)@MIRAL_5.3" 5.3.0

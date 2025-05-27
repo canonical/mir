@@ -15,6 +15,7 @@
  */
 
 #include "basic_accessibility_manager.h"
+#include "basic_hover_click_transformer.h"
 #include "mouse_keys_transformer.h"
 
 #include "mir/graphics/cursor.h"
@@ -32,7 +33,7 @@ inline Transformer* mir::shell::BasicAccessibilityManager::Registration<Transfor
 }
 
 template <typename Transformer>
-inline void mir::shell::BasicAccessibilityManager::Registration<Transformer>::remove_registration() const
+inline bool mir::shell::BasicAccessibilityManager::Registration<Transformer>::remove_registration() const
 {
     // atomic::compare_exchange_strong(expected, desired) checks the atomic
     // value against the "expected" value. If they're equal, it returns `true`
@@ -42,17 +43,23 @@ inline void mir::shell::BasicAccessibilityManager::Registration<Transformer>::re
     if (registered.compare_exchange_strong(expected, false))
     {
         event_transformer->remove(transformer);
+        return true;
     }
+
+    return false;
 }
 
 template <typename Transformer>
-inline void mir::shell::BasicAccessibilityManager::Registration<Transformer>::add_registration() const
+inline bool mir::shell::BasicAccessibilityManager::Registration<Transformer>::add_registration() const
 {
     auto expected = false;
     if (registered.compare_exchange_strong(expected, true))
     {
         event_transformer->append(transformer);
+        return true;
     }
+
+    return false;
 }
 
 template <typename Transformer>
@@ -112,10 +119,12 @@ mir::shell::BasicAccessibilityManager::BasicAccessibilityManager(
     std::shared_ptr<input::InputEventTransformer> const& event_transformer,
     bool enable_key_repeat,
     std::shared_ptr<mir::graphics::Cursor> const& cursor,
-    std::shared_ptr<shell::MouseKeysTransformer> const& mousekeys_transformer) :
+    std::shared_ptr<shell::MouseKeysTransformer> const& mousekeys_transformer,
+    std::shared_ptr<shell::HoverClickTransformer> const& hover_click_transformer) :
     enable_key_repeat{enable_key_repeat},
     cursor{cursor},
-    transformer{mousekeys_transformer, event_transformer}
+    transformer{mousekeys_transformer, event_transformer},
+    hover_click_transformer{hover_click_transformer, event_transformer}
 {
 }
 
@@ -137,4 +146,17 @@ void mir::shell::BasicAccessibilityManager::acceleration_factors(double constant
 void mir::shell::BasicAccessibilityManager::max_speed(double x_axis, double y_axis)
 {
     transformer->max_speed(x_axis, y_axis);
+}
+
+void mir::shell::BasicAccessibilityManager::hover_click_enabled(bool enabled)
+{
+    if (enabled && hover_click_transformer.add_registration())
+        hover_click_transformer->enabled();
+    else if (!enabled && hover_click_transformer.remove_registration())
+        hover_click_transformer->disabled();
+}
+
+auto mir::shell::BasicAccessibilityManager::hover_click() -> HoverClickTransformer&
+{
+    return *hover_click_transformer.operator->();
 }
