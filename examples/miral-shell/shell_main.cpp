@@ -15,7 +15,6 @@
  */
 
 #include "miral/minimal_window_manager.h"
-#include "miral/simulated_secondary_click.h"
 #include "tiling_window_manager.h"
 #include "floating_window_manager.h"
 #include "wallpaper_config.h"
@@ -36,6 +35,7 @@
 #include <miral/wayland_extensions.h>
 #include <miral/mousekeys_config.h>
 #include <miral/output_filter.h>
+#include <miral/simulated_secondary_click.h>
 
 #include <xkbcommon/xkbcommon-keysyms.h>
 

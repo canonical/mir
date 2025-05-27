@@ -122,9 +122,6 @@ private:
         AccelerationCurve acceleration_curve{30, 100, 100};
         geometry::DisplacementF max_speed_{400, 400};
         mir::input::MouseKeysKeymap keymap_;
-
-        bool enabled;
-        std::function<void()> on_enabled{[]{}}, on_disabled{[]{}};
     };
 
     mir::Synchronised<State> state;

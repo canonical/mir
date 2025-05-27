@@ -63,7 +63,6 @@ private:
     struct MutableState
     {
         State state{State::waiting_for_real_left_down};
-        bool enabled{false};
 
         std::chrono::milliseconds hold_duration{1000};
         float displacement_threshold{20};
