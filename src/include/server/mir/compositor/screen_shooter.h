@@ -50,11 +50,6 @@ public:
         mir::geometry::Rectangle const& area,
         std::function<void(std::optional<time::Timestamp>)>&& callback) = 0;
 
-    /// Captures the section of the scene in [area] immediately into the provided [buffer].
-    virtual void capture_blocking(
-        std::shared_ptr<renderer::software::WriteMappableBuffer> const& buffer,
-        mir::geometry::Rectangle const& area) = 0;
-
     virtual CompositorID id() const = 0;
 
 private:

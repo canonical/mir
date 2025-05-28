@@ -298,24 +298,6 @@ void mc::BasicScreenShooter::capture(
         });
 }
 
-void mc::BasicScreenShooter::capture_blocking(
-    std::shared_ptr<mrs::WriteMappableBuffer> const& buffer,
-    geom::Rectangle const& area)
-{
-    try
-    {
-        self->render(buffer, area);
-    }
-    catch (...)
-    {
-        mir::log(
-            ::mir::logging::Severity::error,
-            "BasicScreenShooter",
-            std::current_exception(),
-            "failed to capture screen");
-    }
-}
-
 mc::CompositorID mc::BasicScreenShooter::id() const
 {
     return self.get();

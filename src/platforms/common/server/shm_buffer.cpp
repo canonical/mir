@@ -257,12 +257,6 @@ void mgc::MemoryBackedShmBuffer::mark_dirty()
     uploaded = false;
 }
 
-void mgc::MemoryBackedShmBuffer::mark_dirty()
-{
-    std::lock_guard lock{uploaded_mutex};
-    uploaded = false;
-}
-
 template<typename T>
 class mgc::MemoryBackedShmBuffer::Mapping : public mir::renderer::software::Mapping<T>
 {

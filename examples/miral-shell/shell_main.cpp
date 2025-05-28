@@ -34,11 +34,8 @@
 #include <miral/x11_support.h>
 #include <miral/wayland_extensions.h>
 #include <miral/mousekeys_config.h>
-<<<<<<< HEAD
 #include <miral/output_filter.h>
-=======
 #include <miral/render_scene_into_window.h>
->>>>>>> 6b81912086 (Breaking out scene rendering into a surface)
 
 #include <xkbcommon/xkbcommon-keysyms.h>
 

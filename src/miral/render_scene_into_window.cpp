@@ -15,9 +15,12 @@
  */
 
 #include "miral/render_scene_into_window.h"
+
+#include "mir/executor.h"
 #include "mir/server.h"
 #include "mir/compositor/scene.h"
 #include "mir/compositor/screen_shooter.h"
+#include "mir/compositor/screen_shooter_factory.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/scene/basic_surface.h"
 #include "mir/shell/surface_stack.h"
@@ -144,9 +147,10 @@ public:
             return {};
 
         auto const mapping = mrs::as_write_mappable_buffer(buffer);
-        screen_shooter->capture_blocking(
+        screen_shooter->capture(
             mapping,
-            rect);
+            rect,
+            [](auto const&) {});
         return mg::RenderableList{
             std::make_shared<SceneRenderingRenderable>(this, buffer, geom::Rectangle({0, 0}, rect.size))
         };
@@ -209,7 +213,7 @@ void miral::RenderSceneIntoWindow::operator()(mir::Server& server)
             server.the_default_cursor_image(),
             server.the_scene_report(),
             server.the_display_configuration_observer_registrar(),
-            server.the_screen_shooter(),
+            server.the_screen_shooter_factory()->create(mir::immediate_executor),
             server.the_buffer_allocator(),
             server.the_surface_stack());
     });

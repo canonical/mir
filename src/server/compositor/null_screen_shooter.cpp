@@ -39,12 +39,6 @@ void mc::NullScreenShooter::capture(
         });
 }
 
-void mc::NullScreenShooter::capture_blocking(
-    std::shared_ptr<mrs::WriteMappableBuffer> const&,
-    geom::Rectangle const&)
-{
-}
-
 mc::CompositorID mc::NullScreenShooter::id() const
 {
     return this;

@@ -553,11 +553,8 @@ global:
     miral::MouseKeysConfig::set_max_speed*;
     miral::OutputFilter::?OutputFilter*;
     miral::OutputFilter::OutputFilter*;
-    miral::OutputFilter::operator*;
     miral::OutputFilter::filter*;
-    miral::RenderSceneIntoWindow::?RenderSceneIntoWindow*;
-    miral::RenderSceneIntoWindow::RenderSceneIntoWindow*;
-    miral::RenderSceneIntoWindow::operator*;
+    miral::OutputFilter::operator*;
     miral::WindowInfo::tiled_edges*;
     miral::WindowSpecification::tiled_edges*;
     miral::WindowSpecification::to_surface_specification*;
@@ -565,6 +562,16 @@ global:
     typeinfo?for?miral::DisplayConfiguration::Node;
     typeinfo?for?miral::MouseKeysConfig;
     typeinfo?for?miral::OutputFilter;
-    typeinfo?for?miral::RenderSceneIntoWindow;
   };
 } MIRAL_5.2;
+
+MIRAL_5.4 {
+global:
+  extern "C++" {
+    miral::RenderSceneIntoWindow::?RenderSceneIntoWindow*;
+    miral::RenderSceneIntoWindow::RenderSceneIntoWindow*;
+    miral::RenderSceneIntoWindow::operator*;
+    typeinfo?for?miral::RenderSceneIntoWindow;
+  };
+} MIRAL_5.3;
+
