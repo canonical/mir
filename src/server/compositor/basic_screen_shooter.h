@@ -33,6 +33,10 @@ namespace renderer
 class Renderer;
 class RendererFactory;
 }
+namespace graphics
+{
+class OutputFilter;
+}
 namespace compositor
 {
 class Scene;
@@ -47,7 +51,8 @@ public:
         std::span<std::shared_ptr<graphics::GLRenderingProvider>> const& providers,
         std::shared_ptr<renderer::RendererFactory> render_factory,
         std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
-        std::shared_ptr<mir::graphics::GLConfig> const& config);
+        std::shared_ptr<mir::graphics::GLConfig> const& config,
+        std::shared_ptr<graphics::OutputFilter> const& output_filter);
 
     void capture(
         std::shared_ptr<renderer::software::WriteMappableBuffer> const& buffer,
@@ -64,7 +69,8 @@ private:
             std::shared_ptr<time::Clock> const& clock,
             std::shared_ptr<graphics::GLRenderingProvider> provider,
             std::shared_ptr<renderer::RendererFactory> render_factory,
-            std::shared_ptr<mir::graphics::GLConfig> const& config);
+            std::shared_ptr<mir::graphics::GLConfig> const& config,
+            std::shared_ptr<graphics::OutputFilter> const& output_filter);
 
         auto render(
             std::shared_ptr<renderer::software::WriteMappableBuffer> const& buffer,
@@ -89,6 +95,7 @@ private:
         std::unique_ptr<graphics::DisplaySink> offscreen_sink;
         std::shared_ptr<OneShotBufferDisplayProvider> const output;
         std::shared_ptr<mir::graphics::GLConfig> config;
+        std::shared_ptr<graphics::OutputFilter> const output_filter;
     };
     std::shared_ptr<Self> const self;
     Executor& executor;
