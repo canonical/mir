@@ -22,6 +22,8 @@
 
 namespace mir
 {
+class Executor;
+
 namespace compositor
 {
 class ScreenShooterFactory
@@ -30,7 +32,10 @@ public:
     ScreenShooterFactory() = default;
     virtual ~ScreenShooterFactory() = default;
 
-    virtual auto create() -> std::unique_ptr<ScreenShooter> = 0;
+    /// Creates a new screen shooter
+    /// \param executor responsible for queuing the screenshot request
+    /// \return a new screen shooter
+    virtual auto create(Executor& executor) -> std::unique_ptr<ScreenShooter> = 0;
 };
 }
 }
