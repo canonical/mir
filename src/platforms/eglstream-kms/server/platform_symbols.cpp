@@ -535,7 +535,7 @@ auto probe_display_platform(
                             version->major,
                             version->minor);
                         mir::log_warning(
-                            "This driver is known to interact badly with Mir. See https://github.com/MirServer/mir/issues/650");
+                            "This driver is known to interact badly with Mir. See https://github.com/canonical/mir/issues/650");
                         mir::log_warning(
                             "Mir will not auto-load the eglstream-kms platform on this driver. To proceed anyway, manually specify the platform library.");
                         continue;

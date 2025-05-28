@@ -389,7 +389,7 @@ TEST_F(MultiMonitorArbiter, will_release_buffer_in_nbuffers_2_starvation_scenari
 
 /**
  * Tests a bug that was never observed, but determined to be in MultiMonitorArbiter before
- * https://github.com/MirServer/mir/pull/862. What was happening was the current_buffer_users set was getting cleared
+ * https://github.com/canonical/mir/pull/862. What was happening was the current_buffer_users set was getting cleared
  * even if the schedule wasn't advancing. To insure this is no longer happening, we follow the specific series of
  * actions that expose the problem:
  * 1. Compositor A acquires a buffer (A gets added to current_buffer_users)

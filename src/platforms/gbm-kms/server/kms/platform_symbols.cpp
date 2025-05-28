@@ -287,7 +287,7 @@ auto probe_display_platform(
                         mir::log_warning("Unexpected error from drmCheckModesettingSupported(): %s (%i), "
                                          "but continuing anyway", strerror(err), err);
                         mir::log_warning("Please file a bug at "
-                                         "https://github.com/MirServer/mir/issues containing this message");
+                                         "https://github.com/canonical/mir/issues containing this message");
                         supported_devices.back().support_level = mg::probe::supported;
                     }
                 }

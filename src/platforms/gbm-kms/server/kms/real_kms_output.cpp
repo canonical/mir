@@ -379,7 +379,7 @@ bool mgg::RealKMSOutput::ensure_crtc()
         return false;
 
     // Update the connector as we may unexpectedly fail in find_crtc_and_index_for_connector()
-    // https://github.com/MirServer/mir/issues/2661
+    // https://github.com/canonical/mir/issues/2661
     connector = kms::get_connector(drm_fd_, connector->connector_id);
     current_crtc = mgk::find_crtc_for_connector(drm_fd_, connector);
 

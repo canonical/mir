@@ -97,7 +97,7 @@ public:
     mir::Fd watch_fd() const override
     {
         // The mu::Monitor owns the file descriptor; don't close it
-        // (cf: https://github.com/MirServer/mir/issues/684 )
+        // (cf: https://github.com/canonical/mir/issues/684 )
         return mir::Fd{mir::IntOwnedFd{monitor.fd()}};
     }
 

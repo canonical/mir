@@ -47,7 +47,7 @@ private:
     // continues to use take_fd() to access the fd after resume!
     // As a workaround, we remember the last removed fd and reinstate
     // it if asked for.
-    //                  https://github.com/MirServer/mir/issues/1612
+    //                  https://github.com/canonical/mir/issues/1612
     std::pair<std::string, mir::Fd> removed;
 };
 
