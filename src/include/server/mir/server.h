@@ -33,7 +33,7 @@ template<class Observer>
 class ObserverRegistrar;
 
 namespace compositor { class Compositor; class DisplayBufferCompositorFactory; class CompositorReport; }
-namespace graphics { class Cursor; class DisplayPlatform; class RenderingPlatform; class Display; class GLConfig; class DisplayConfigurationPolicy; class DisplayConfigurationObserver; class GraphicBufferAllocator; class CursorImage; }
+namespace graphics { class Cursor; class DisplayPlatform; class RenderingPlatform; class Display; class GLConfig; class DisplayConfigurationPolicy; class DisplayConfigurationObserver; class GraphicBufferAllocator; class CursorImage; class OutputFilter; }
 namespace input { class CompositeEventFilter; class InputDispatcher; class CursorListener; class CursorImages; class TouchVisualizer; class InputDeviceHub; class InputDeviceRegistry;}
 namespace logging { class Logger; }
 namespace options { class Option; }
@@ -357,6 +357,9 @@ public:
 
     /// \return the cursor
     auto the_cursor() const -> std::shared_ptr<graphics::Cursor>;
+
+    /// \return the output filter.
+    auto the_output_filter() const -> std::shared_ptr<graphics::OutputFilter>;
 
     /// \return the focus controller.
     auto the_focus_controller() const -> std::shared_ptr<shell::FocusController>;

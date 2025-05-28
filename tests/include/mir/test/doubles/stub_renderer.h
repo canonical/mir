@@ -34,6 +34,7 @@ class StubRenderer : public renderer::Renderer
 public:
     void set_viewport(geometry::Rectangle const&) override {}
     void set_output_transform(glm::mat2 const&) override {}
+    void set_output_filter(MirOutputFilter) override {};
     void suspend() override {}
 
     auto render(graphics::RenderableList const& renderables) const -> std::unique_ptr<graphics::Framebuffer> override

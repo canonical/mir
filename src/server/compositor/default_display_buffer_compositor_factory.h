@@ -25,6 +25,7 @@ namespace mir
 namespace graphics
 {
 class RenderingPlatform;
+class OutputFilter;
 }
 namespace renderer
 {
@@ -49,7 +50,8 @@ public:
         std::shared_ptr<graphics::GLConfig> gl_config,
         std::shared_ptr<renderer::RendererFactory> const& renderer_factory,
         std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
-        std::shared_ptr<CompositorReport> const& report);
+        std::shared_ptr<CompositorReport> const& report,
+        std::shared_ptr<graphics::OutputFilter> const& output_filter);
 
     std::unique_ptr<DisplayBufferCompositor> create_compositor_for(graphics::DisplaySink& display_sink) override;
 
@@ -59,6 +61,7 @@ private:
     std::shared_ptr<renderer::RendererFactory> const renderer_factory;
     std::shared_ptr<graphics::GraphicBufferAllocator> const buffer_allocator;
     std::shared_ptr<CompositorReport> const report;
+    std::shared_ptr<graphics::OutputFilter> const output_filter;
 };
 
 }

@@ -13,13 +13,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef MIR_TEST_DOUBLES_MOCK_RENDERER_H_
-#define MIR_TEST_DOUBLES_MOCK_RENDERER_H_
 
-#include "mir/renderer/renderer.h"
-#include "mir/graphics/platform.h"
+#ifndef MIR_TEST_DOUBLES_STUB_OUTPUT_FILTER_H_
+#define MIR_TEST_DOUBLES_STUB_OUTPUT_FILTER_H_
 
-#include <gmock/gmock.h>
+#include "mir/graphics/output_filter.h"
 
 namespace mir
 {
@@ -28,18 +26,16 @@ namespace test
 namespace doubles
 {
 
-struct MockRenderer : public renderer::Renderer
+class StubOutputFilter : public graphics::OutputFilter
 {
-    MOCK_METHOD(void, set_viewport, (geometry::Rectangle const&));
-    MOCK_METHOD(void, set_output_transform, (glm::mat2 const&));
-    MOCK_METHOD(void, set_output_filter, (MirOutputFilter filter));
-    MOCK_METHOD(std::unique_ptr<graphics::Framebuffer>, render, (graphics::RenderableList const&), (const override));
-    MOCK_METHOD(void, suspend, ());
+public:
+    MirOutputFilter filter() { return mir_output_filter_none; }
 
-    ~MockRenderer() noexcept {}
+    void filter(MirOutputFilter) override {}
 };
 
 }
 }
 }
-#endif /* MIR_TEST_DOUBLES_MOCK_RENDERER_H_ */
+
+#endif // MIR_TEST_DOUBLES_STUB_OUTPUT_FILTER_H_

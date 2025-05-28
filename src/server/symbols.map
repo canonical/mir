@@ -69,6 +69,7 @@ global:
     mir::DefaultServerConfiguration::the_mediating_display_changer*;
     mir::DefaultServerConfiguration::the_options*;
     mir::DefaultServerConfiguration::the_options_provider*;
+    mir::DefaultServerConfiguration::the_output_filter*;
     mir::DefaultServerConfiguration::the_persistent_surface_store*;
     mir::DefaultServerConfiguration::the_pointer_input_dispatcher*;
     mir::DefaultServerConfiguration::the_primary_selection_clipboard*;
@@ -218,6 +219,7 @@ global:
     mir::Server::the_input_targeter*;
     mir::Server::the_logger*;
     mir::Server::the_main_loop*;
+    mir::Server::the_output_filter*;
     mir::Server::the_persistent_surface_store*;
     mir::Server::the_pointer_input_dispatcher*;
     mir::Server::the_prompt_session_listener*;
@@ -847,6 +849,7 @@ global:
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_main_clipboard*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_main_loop*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_mediating_display_changer*;
+    non-virtual?thunk?to?mir::DefaultServerConfiguration::the_output_filter*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_persistent_surface_store*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_pointer_input_dispatcher*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_primary_selection_clipboard*;
