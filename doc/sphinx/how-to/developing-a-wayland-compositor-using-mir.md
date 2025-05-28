@@ -25,6 +25,7 @@ Compositor|Description
 [miral-kiosk](https://github.com/canonical/mir/tree/main/examples/miral-kiosk)|Runs an app (or apps) maximized
 [miral-shell](https://github.com/canonical/mir/tree/main/examples/miral-shell)|Options for "floating" or "tiling" window management and a limited "desktop" experience with workspaces and a keyboard shortcut for launching a terminal
 [mir_demo_server](https://github.com/canonical/mir/tree/main/examples/mir_demo_server)|"floating" window management, enables by default all the Wayland extensions Mir supports
+[mir_x11_kiosk](https://github.com/canonical/mir/tree/main/examples/mir-x11-kiosk)|Minimal compositor to support fullscreen X11 applications
 [miral-system-compositor](https://github.com/canonical/mir/tree/main/examples/miral-system-compositor)|Owns the display and input hardware and supports a nested shell with fewer permissions
 [mirco](https://github.com/wmww/mirco)|The basis of experiments moving MATE shell components to Wayland
 
