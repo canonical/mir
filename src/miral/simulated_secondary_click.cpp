@@ -126,42 +126,20 @@ miral::SimulatedSecondaryClick& miral::SimulatedSecondaryClick::on_secondary_cli
 
 void miral::SimulatedSecondaryClick::operator()(mir::Server& server)
 {
-    constexpr auto* enable_simulated_secondary_click_opt = "enable-simulated-secondary-click";
-    constexpr auto* simulated_secondary_click_delay_opt = "simulated-secondary-click-delay";
-    constexpr auto* simulated_secondary_click_displacement_threshold_opt =
-        "simulated-secondary-click-displacement-threshold";
-
-    {
-        auto const state = self->state.lock();
-        server.add_configuration_option(
-            enable_simulated_secondary_click_opt,
-            "Enable simulated secondary click (holding the left button to simulate a right click)",
-            state->enabled);
-        server.add_configuration_option(
-            simulated_secondary_click_delay_opt,
-            "delay required before a left click hold registers as a right click in milliseconds",
-            static_cast<int>(state->hold_duration.count()));
-        server.add_configuration_option(
-            simulated_secondary_click_displacement_threshold_opt,
-            "The displacement the cursor pointer is allowed before the simulated secondary click is cancelled",
-            state->displacement_threshold);
-    }
-
     server.add_init_callback(
         [&server, this]
         {
             self->accessibility_manager = server.the_accessibility_manager();
             if (auto accessibility_manager = server.the_accessibility_manager())
             {
-                if (server.get_options()->get<bool>(enable_simulated_secondary_click_opt))
+                auto const state = self->state.lock();
+
+                if (state->enabled)
                     accessibility_manager->simulated_secondary_click_enabled(true);
 
-                auto const state = self->state.lock();
                 auto& ssc = accessibility_manager->simulated_secondary_click();
-                ssc.hold_duration(
-                    std::chrono::milliseconds(server.get_options()->get<int>(simulated_secondary_click_delay_opt)));
-                ssc.displacement_threshold(
-                    server.get_options()->get<double>(simulated_secondary_click_displacement_threshold_opt));
+                ssc.hold_duration(state->hold_duration);
+                ssc.displacement_threshold(state->displacement_threshold);
                 ssc.on_hold_start(std::move(state->on_hold_start));
                 ssc.on_hold_cancel(std::move(state->on_hold_cancel));
                 ssc.on_secondary_click(std::move(state->on_secondary_click));
