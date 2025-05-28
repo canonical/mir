@@ -314,7 +314,11 @@ public:
      : output{std::move(output)},
         texture{make_texture(this->output->size())},
         framebuffer{make_framebuffer(texture)},
-        filter{mir_output_filter_none}
+        filter{mir_output_filter_none},
+        program{nullptr},
+        position_attrib{0},
+        texcoord_attrib{0},
+        tex_uniform{0}
     {
     }
 
