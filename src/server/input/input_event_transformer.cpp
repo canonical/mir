@@ -160,7 +160,7 @@ bool mi::InputEventTransformer::transform(
     return handled;
 }
 
-bool mi::InputEventTransformer::append(std::weak_ptr<mi::InputEventTransformer::Transformer> const& transformer)
+void mi::InputEventTransformer::append(std::weak_ptr<mi::InputEventTransformer::Transformer> const& transformer)
 {
     std::lock_guard lock{mutex};
 
@@ -173,13 +173,12 @@ bool mi::InputEventTransformer::append(std::weak_ptr<mi::InputEventTransformer::
             });
 
     if (duplicate_iter != input_transformers.end())
-        return false;
+        return;
 
     input_transformers.push_back(transformer);
-    return true;
 }
 
-bool mi::InputEventTransformer::remove(std::shared_ptr<mi::InputEventTransformer::Transformer> const& transformer)
+void mi::InputEventTransformer::remove(std::shared_ptr<mi::InputEventTransformer::Transformer> const& transformer)
 {
     std::lock_guard lock{mutex};
     auto [remove_start, remove_end] = std::ranges::remove(
@@ -191,10 +190,9 @@ bool mi::InputEventTransformer::remove(std::shared_ptr<mi::InputEventTransformer
         });
 
     if (remove_start == input_transformers.end())
-        return false;
+        return;
 
     input_transformers.erase(remove_start, remove_end);
-    return true;
 }
 
 void mir::input::InputEventTransformer::add_device(Device const& device)

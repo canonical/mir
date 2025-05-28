@@ -189,15 +189,18 @@ void mir::shell::BasicSimulatedSecondaryClickTransformer::displacement_threshold
 
 void mir::shell::BasicSimulatedSecondaryClickTransformer::on_hold_start(std::function<void()>&& on_hold_start)
 {
-    mutable_state.lock()->on_hold_start = std::move(on_hold_start);
+    if(on_hold_start)
+        mutable_state.lock()->on_hold_start = std::move(on_hold_start);
 }
 
 void mir::shell::BasicSimulatedSecondaryClickTransformer::on_hold_cancel(std::function<void()>&& on_hold_cancel)
 {
-    mutable_state.lock()->on_hold_cancel = std::move(on_hold_cancel);
+    if(on_hold_cancel)
+        mutable_state.lock()->on_hold_cancel = std::move(on_hold_cancel);
 }
 
 void mir::shell::BasicSimulatedSecondaryClickTransformer::on_secondary_click(std::function<void()>&& on_secondary_click)
 {
-    mutable_state.lock()->on_secondary_click = std::move(on_secondary_click);
+    if(on_secondary_click)
+        mutable_state.lock()->on_secondary_click = std::move(on_secondary_click);
 }

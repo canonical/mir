@@ -167,25 +167,6 @@ TEST_F(TestInputEventTransformer, transformer_not_called_after_removal)
     input_event_transformer.transform(*make_key_event(), nullptr, [](auto) {});
 }
 
-TEST_F(TestInputEventTransformer, removing_a_valid_transformer_returns_true)
-{
-    auto mock_transformer_1 = std::make_shared<MockTransformer>();
-    EXPECT_CALL(*mock_transformer_1, transform_input_event(_, _, _)).Times(0);
-    auto mock_transformer_2 = std::make_shared<MockTransformer>();
-    EXPECT_CALL(*mock_transformer_2, transform_input_event(_, _, _));
-
-    input_event_transformer.append(mock_transformer_1);
-    input_event_transformer.append(mock_transformer_2);
-    ASSERT_TRUE(input_event_transformer.remove(mock_transformer_1));
-    input_event_transformer.transform(*make_key_event(), nullptr, [](auto) {});
-}
-
-TEST_F(TestInputEventTransformer, removing_a_transformer_that_was_not_returns_false)
-{
-    auto mock_transformer = std::make_shared<MockTransformer>();
-    ASSERT_FALSE(input_event_transformer.remove(mock_transformer));
-}
-
 TEST_F(TestInputEventTransformer, adding_transformer_twice_has_no_effect_on_expected_handling_of_events)
 {
     auto mock_transformer_1 = std::make_shared<MockTransformer>();

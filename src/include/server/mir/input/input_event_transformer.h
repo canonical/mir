@@ -66,8 +66,8 @@ public:
         EventBuilder* builder,
         EventDispatcher const& dispatcher);
 
-    bool append(std::weak_ptr<Transformer> const&);
-    bool remove(std::shared_ptr<Transformer> const&);
+    void append(std::weak_ptr<Transformer> const&);
+    void remove(std::shared_ptr<Transformer> const&);
 
     virtual void add_device(Device const& device) override;
     virtual void remove_device(Device const& device) override;
