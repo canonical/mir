@@ -197,14 +197,16 @@ void miral::LocatePointer::operator()(mir::Server& server)
                         auto const center = mir::geometry::Point{max_radius, max_radius};
                         for (size_t i = 0; i < w->len(); i += 4)
                         {
-                            w->data()[i + 0] = 0xFF; // r
-                            w->data()[i + 1] = 0xFF; // g
-                            w->data()[i + 2] = 0xFF; // b
-
                             auto index = i / 4;
                             auto p = mir::geometry::Point{index % (2 * max_radius), index / (2 * max_radius)};
                             auto dist = (p - center).length_squared();
-                            w->data()[i + 3] = dist < radius * radius ? 0xFF : 0;
+
+                            auto circle = [dist, this](auto value) { return dist < radius * radius? value: 0; };
+
+                            w->data()[i + 0] = circle(0xAA); // r
+                            w->data()[i + 1] = circle(0xAA); // g
+                            w->data()[i + 2] = circle(0xAA); // b
+                            w->data()[i + 3] = circle(0xFF);
                         }
 
                         stream->submit_buffer(
@@ -220,7 +222,7 @@ void miral::LocatePointer::operator()(mir::Server& server)
 
                 stream->submit_buffer(buffer, buffer->size(), mir::geometry::RectangleD{{0, 0}, buffer->size()});
                 surface_stack->add_surface(shell_surface, mir::input::InputReceptionMode::normal);
-                shell_surface->set_alpha(0.5f);
+                shell_surface->set_alpha(0.99f);
 
                 self->observer = observer;
                 self->shell_surface = shell_surface;
