@@ -28,7 +28,7 @@ class OutputFilter
 {
 public:
     virtual MirOutputFilter filter() = 0;
-    virtual void set_filter(MirOutputFilter new_filter) = 0;
+    virtual void filter(MirOutputFilter new_filter) = 0;
 protected:
     OutputFilter() = default;
     virtual ~OutputFilter() = default;

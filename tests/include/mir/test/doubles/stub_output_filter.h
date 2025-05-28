@@ -31,7 +31,7 @@ class StubOutputFilter : public graphics::OutputFilter
 public:
     MirOutputFilter filter() { return mir_output_filter_none; }
 
-    void set_filter(MirOutputFilter) override {}
+    void filter(MirOutputFilter) override {}
 };
 
 }

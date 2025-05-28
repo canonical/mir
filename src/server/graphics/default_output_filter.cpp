@@ -33,7 +33,7 @@ MirOutputFilter mg::DefaultOutputFilter::filter()
     return filter_;
 }
 
-void mg::DefaultOutputFilter::set_filter(MirOutputFilter new_filter)
+void mg::DefaultOutputFilter::filter(MirOutputFilter new_filter)
 {
     filter_ = new_filter;
     scene->emit_scene_changed();

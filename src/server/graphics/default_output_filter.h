@@ -33,7 +33,7 @@ public:
         std::shared_ptr<input::Scene> const& scene);
 
     MirOutputFilter filter() override;
-    void set_filter(MirOutputFilter) override;
+    void filter(MirOutputFilter) override;
 
 private:
     std::shared_ptr<input::Scene> const scene;

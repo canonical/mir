@@ -36,7 +36,7 @@ struct miral::OutputFilter::Self
         if(output_filter.expired())
             return;
 
-        output_filter.lock()->set_filter(filter_);
+        output_filter.lock()->filter(filter_);
     }
 
     MirOutputFilter filter_;
