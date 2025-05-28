@@ -1,7 +1,7 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: Mir
 Upstream-Contact: Alan Griffiths <alan.griffiths@canonical.com>
-Source: https://github.com/MirServer/mir
+Source: https://github.com/canonical/mir
 
 Files: *
 Copyright: 2012-2022 Canonical Ltd.

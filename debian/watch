@@ -1,4 +1,4 @@
 version=4
 opts="pgpsigurlmangle=s/$/.asc/" \
-  https://github.com/MirServer/mir/releases \
-  https://github.com/MirServer/mir/releases/download/v.*/mir-@ANY_VERSION@@ARCHIVE_EXT@
+  https://github.com/canonical/mir/releases \
+  https://github.com/canonical/mir/releases/download/v.*/mir-@ANY_VERSION@@ARCHIVE_EXT@

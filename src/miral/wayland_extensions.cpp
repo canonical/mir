@@ -55,7 +55,7 @@ auto vec2set(std::vector<std::string> vec) -> std::set<std::string>
 // If a user inadvertently supplies more than one miral::WaylandExtensions to
 // MirRunner::run_with() then the implementation here would quietly break.
 // To avoid this we track the extensions against all servers in the process.
-// See: https://github.com/MirServer/mir/issues/875
+// See: https://github.com/canonical/mir/issues/875
 struct StaticExtensionTracker
 {
     static void add_server_extension(mir::Server* server, void* extension)

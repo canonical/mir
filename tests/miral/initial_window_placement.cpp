@@ -53,7 +53,7 @@ struct InitialWindowPlacement : mt::TestWindowManagerTools
 };
 }
 
-/// Regression test for https://github.com/MirServer/mir/issues/899
+/// Regression test for https://github.com/canonical/mir/issues/899
 TEST_F(InitialWindowPlacement, window_is_not_placed_off_screen_when_existing_window_is_close_to_edge)
 {
     Size first_size{40, 35};

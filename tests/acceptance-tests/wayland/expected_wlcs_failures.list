@@ -54,19 +54,19 @@ XdgToplevelStableTest.pointer_leaves_surface_during_interactive_resize
 XdgToplevelV6Test.pointer_leaves_surface_during_interactive_move
 XdgToplevelV6Test.pointer_leaves_surface_during_interactive_resize
 
-AllSurfaceTypes/TouchTest.sends_touch_up_on_surface_destroy/4 # Fixed by https://github.com/MirServer/wlcs/pull/199
-AllSurfaceTypes/TouchTest.sends_touch_up_on_surface_destroy/5 # Fixed by https://github.com/MirServer/wlcs/pull/199
+AllSurfaceTypes/TouchTest.sends_touch_up_on_surface_destroy/4 # Fixed by https://github.com/canonical/wlcs/pull/199
+AllSurfaceTypes/TouchTest.sends_touch_up_on_surface_destroy/5 # Fixed by https://github.com/canonical/wlcs/pull/199
 
-ForeignToplevelHandleTest.can_maximize_foreign_while_fullscreen # https://github.com/MirServer/mir/issues/2164
+ForeignToplevelHandleTest.can_maximize_foreign_while_fullscreen # https://github.com/canonical/mir/issues/2164
 
-# See https://github.com/MirServer/mir/issues/2324
+# See https://github.com/canonical/mir/issues/2324
 TextInputV3WithInputMethodV2Test.text_input_enters_parent_surface_after_child_destroyed
 TextInputV3WithInputMethodV2Test.text_input_enters_grabbing_popup
 XdgPopupUnstableV6/XdgPopupTest.grabbed_popup_gets_keyboard_focus/0
 XdgPopupStable/XdgPopupTest.grabbed_popup_gets_keyboard_focus/0
 LayerShellPopup/XdgPopupTest.grabbed_popup_gets_keyboard_focus/0
 
-# Not yet implemented, see https://github.com/MirServer/mir/issues/2861
+# Not yet implemented, see https://github.com/canonical/mir/issues/2861
 XdgPopupTest.when_parent_surface_is_moved_a_reactive_popup_is_moved
 
 # Should report an `orphaned` protocol error/violation , but we log instead

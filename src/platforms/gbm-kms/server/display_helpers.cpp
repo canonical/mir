@@ -97,7 +97,7 @@ mgmh::DRMHelper::open_all_devices(
                 "Opening the DRM device %s succeeded, but provided an invalid descriptor!",
                 device.devnode());
             mir::log_critical(
-                "This is probably a logic error in Mir, please report to https://github.com/MirServer/mir/issues");
+                "This is probably a logic error in Mir, please report to https://github.com/canonical/mir/issues");
             continue;
         }
 
@@ -152,7 +152,7 @@ mgmh::DRMHelper::open_all_devices(
             default:
                 mir::log_warning("Unexpected error from drmCheckModesettingSupported(): %s (%i), but continuing anyway",
                     strerror(err), err);
-                mir::log_warning("Please file a bug at https://github.com/MirServer/mir/issues containing this message");
+                mir::log_warning("Please file a bug at https://github.com/canonical/mir/issues containing this message");
             }
         }
 

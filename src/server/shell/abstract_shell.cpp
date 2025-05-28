@@ -508,7 +508,7 @@ void msh::AbstractShell::set_focus_to(
         /// HACK: Grabbing popups (menus, in Mir terminology) should be given keyboard focus according to xdg-shell,
         /// however, giving menus keyboard focus breaks Qt submenus. As of February 2022 Weston and other compositors
         /// disobey the protocol by not giving keyboard focus to grabbing popups, so we do the same thing. The behavior
-        /// is subject change. See: https://github.com/MirServer/mir/issues/2324.
+        /// is subject change. See: https://github.com/canonical/mir/issues/2324.
         auto const new_keyboard_focus_surface = get_non_popup_parent(focus_surface);
 
         notify_active_surfaces(lock, new_keyboard_focus_surface, std::move(new_active_surfaces));

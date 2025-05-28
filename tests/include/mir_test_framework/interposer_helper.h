@@ -66,7 +66,7 @@ public:
 
 private:
     // We want to ensure that run() doesn't call instance() too early (e.g. during coverage setup)
-    // as that leads to destruction order issues. (https://github.com/MirServer/mir/issues/2387)
+    // as that leads to destruction order issues. (https://github.com/canonical/mir/issues/2387)
     static std::atomic<bool> handlers_added;
 
     static auto instance() -> InterposerHandlers&

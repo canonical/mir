@@ -1035,7 +1035,7 @@ TEST_F(AbstractShell, popup_grab_tree_can_be_set_based_on_child)
     focus_controller.set_popup_grab_tree(surface_tip);
 }
 
-// Regression test for https://github.com/MirServer/mir/issues/2279
+// Regression test for https://github.com/canonical/mir/issues/2279
 TEST_F(AbstractShell, focus_next_session_allows_later_focusing_same_window)
 {
     EXPECT_CALL(surface_factory, create_surface(_, _, _, _)).Times(AnyNumber())

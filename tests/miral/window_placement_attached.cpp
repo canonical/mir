@@ -680,7 +680,7 @@ TEST_P(WindowPlacementAttached, window_placed_correctly_when_output_id_changes)
     EXPECT_THAT(window.size(), Eq(placement.size));
 }
 
-// Regression test for https://github.com/MirServer/mir/issues/2580
+// Regression test for https://github.com/canonical/mir/issues/2580
 TEST_P(WindowPlacementAttached, exclusive_zone_remains_after_removing_and_readding_only_output)
 {
     AttachedEdges const edges = GetParam();

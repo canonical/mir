@@ -60,8 +60,8 @@ Build-Depends: cmake,
                libpixman-1-dev
 Standards-Version: 4.6.1
 Homepage: https://mir-server.io/
-Vcs-Browser: https://github.com/MirServer/mir/
-Vcs-Git: https://github.com/MirServer/mir
+Vcs-Browser: https://github.com/canonical/mir/
+Vcs-Git: https://github.com/canonical/mir
 
 #TODO: Packaging infrastructure for better dependency generation,
 #      ala pkg-xorg's xviddriver:Provides and ABI detection.

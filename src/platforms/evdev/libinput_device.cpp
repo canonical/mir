@@ -471,7 +471,7 @@ void mie::LibInputDevice::update_device_info()
         touchscreen = mi::TouchscreenSettings{};
 
         // FIXME: We need a way to populate output_id sensibly. {alan_g}
-        // https://github.com/MirServer/mir/issues/611
+        // https://github.com/canonical/mir/issues/611
         touchscreen.value().mapping_mode = mir_touchscreen_mapping_mode_to_output;
     }
 
