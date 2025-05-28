@@ -20,6 +20,7 @@
 #include "mir/server.h"
 #include "mir/graphics/output_filter.h"
 
+#include <atomic>
 #include <string>
 
 struct miral::OutputFilter::Self
@@ -39,7 +40,7 @@ struct miral::OutputFilter::Self
         output_filter.lock()->filter(filter_);
     }
 
-    MirOutputFilter filter_;
+    std::atomic<MirOutputFilter> filter_;
 
     // output_filter is only updated during the single-threaded initialization phase of startup
     std::weak_ptr<mir::graphics::OutputFilter> output_filter;
