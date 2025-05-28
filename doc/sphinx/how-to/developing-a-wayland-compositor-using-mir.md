@@ -21,7 +21,6 @@ Compositor|Description
 [Ubuntu Frame](https://github.com/canonical/ubuntu-frame/tree/main/src)|Runs an app (or apps) fullscreen, intended for embedded/IoT use
 [Miracle](https://github.com/miracle-wm-org/miracle-wm)| A tiling window manager much like i3/sway
 [egmde](https://github.com/AlanGriffiths/egmde)|An example desktop environment used to write tutorials about writing Mir compositors
-[mir_kiosk_x11](https://github.com/MirServer/mir_kiosk_x11)|Minimal compositor to support fullscreen X11 applications
 [lomiri-system-compositor](https://gitlab.com/ubports/development/core/lomiri-system-compositor/)|Owns the display and input hardware and supports a nested shell with fewer permissions
 [miral-kiosk](https://github.com/canonical/mir/tree/main/examples/miral-kiosk)|Runs an app (or apps) maximized
 [miral-shell](https://github.com/canonical/mir/tree/main/examples/miral-shell)|Options for "floating" or "tiling" window management and a limited "desktop" experience with workspaces and a keyboard shortcut for launching a terminal
