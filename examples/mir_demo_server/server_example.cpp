@@ -179,20 +179,6 @@ private:
         {
             std::cout << line << std::endl;
 
-            if (line == "mir_pointer_handedness_right")
-                mouse.handedness(mir_pointer_handedness_right);
-            if (line == "mir_pointer_handedness_left")
-                mouse.handedness(mir_pointer_handedness_left);
-
-            if (line == "mir_touchpad_scroll_mode_none")
-                touchpad.scroll_mode(mir_touchpad_scroll_mode_none);
-            if (line == "mir_touchpad_scroll_mode_two_finger_scroll")
-                touchpad.scroll_mode(mir_touchpad_scroll_mode_two_finger_scroll);
-            if (line == "mir_touchpad_scroll_mode_edge_scroll")
-                touchpad.scroll_mode(mir_touchpad_scroll_mode_edge_scroll);
-            if (line == "mir_touchpad_scroll_mode_button_down_scroll")
-                touchpad.scroll_mode(mir_touchpad_scroll_mode_button_down_scroll);
-
             if (line.contains("="))
             {
                 auto const eq = line.find_first_of("=");
@@ -227,6 +213,31 @@ private:
 
                     return float_val;
                 };
+
+                if (key == "pointer_handedness")
+                {
+                    if (value == "right")
+                        mouse.handedness(mir_pointer_handedness_right);
+                    else if (value == "left")
+                        mouse.handedness(mir_pointer_handedness_left);
+                    else
+                        mir::log_warning("Config key %s does not support value: '%s'", key.c_str(), value.c_str());
+                }
+
+                if (key == "touchpad_scroll_mode")
+                {
+                    if (value == "none")
+                        touchpad.scroll_mode(mir_touchpad_scroll_mode_none);
+                    else if (value == "two_finger_scroll")
+                        touchpad.scroll_mode(mir_touchpad_scroll_mode_two_finger_scroll);
+                    else if (value == "edge_scroll")
+                        touchpad.scroll_mode(mir_touchpad_scroll_mode_edge_scroll);
+                    else if (value == "button_down_scroll")
+                        touchpad.scroll_mode(mir_touchpad_scroll_mode_button_down_scroll);
+                    else
+                        mir::log_warning("Config key %s does not support value: '%s'", key.c_str(), value.c_str());
+                }
+
                 if (key == "repeat_rate")
                 {
                     auto const parsed = parse_and_validate_int(key, value);
