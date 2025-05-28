@@ -26,7 +26,7 @@ namespace mir { class Server; }
 namespace miral
 {
 /// Allows for the configuration of the output filter at runtime.
-/// \remark Since MirAL 5.4
+/// \remark Since MirAL 5.3
 class OutputFilter
 {
 public:
