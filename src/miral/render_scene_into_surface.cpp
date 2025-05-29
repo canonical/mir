@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "render_scene_into_window.h"
+#include "render_scene_into_surface.h"
 
 #include "mir/executor.h"
 #include "mir/server.h"

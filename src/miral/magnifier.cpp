@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "render_scene_into_window.h"
+#include "render_scene_into_surface.h"
 #include "miral/magnifier.h"
 #include "mir/server.h"
 #include "mir/events/pointer_event.h"
@@ -69,8 +69,9 @@ private:
                     position->y.as_value() - window_size.height.as_value() / 2.f
                 };
                 self->surface->move_to(capture_position);
+                self->render_scene_into_surface.capture_area(
+                    geom::Rectangle{capture_position, window_size});
             }
-
 
             return false;
         }
