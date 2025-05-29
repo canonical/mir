@@ -117,7 +117,29 @@ catch (...)
 {
 }
 
-class DemoConfigFile
+/// Interface for adding attributes to a configuration tool.
+///
+/// The handlers should be called when the configuration is updated. There is
+/// no requirement to check the previous value has changed.
+///
+/// The key is passed to the handler as it can be useful (e.g. for diagnostics)
+///
+/// This could be supported by various backends (an ini file, a YAML node, etc)
+class AttributeHandler
+{
+public:
+    using HandleInt = std::function<void(std::string_view key, std::optional<int> value)>;
+    using HandleFloat = std::function<void(std::string_view key, std::optional<float> value)>;
+    using HandleString = std::function<void(std::string_view key, std::optional<std::string_view> value)>;
+
+    virtual void add_attribute(std::string_view key, HandleInt handler) = 0;
+    virtual void add_attribute(std::string_view key, HandleFloat handler) = 0;
+    virtual void add_attribute(std::string_view key, HandleString handler) = 0;
+
+    virtual ~AttributeHandler() = default;
+};
+
+class DemoConfigFile : public AttributeHandler
 {
 public:
     DemoConfigFile(miral::MirRunner& runner, std::filesystem::path file) :
@@ -149,17 +171,21 @@ public:
     {
         input_configuration(server);
         cursor_scale(server);
-        output_filter(server);
     }
 
+    void add_attribute(std::string_view key, HandleInt handler) override;
+    void add_attribute(std::string_view key, HandleFloat handler) override;
+    void add_attribute(std::string_view key, HandleString handler) override;
+
 private:
+    std::map<std::string, HandleString> attribute_handlers;
+
     miral::InputConfiguration input_configuration;
     miral::InputConfiguration::Mouse mouse = input_configuration.mouse();
     miral::InputConfiguration::Touchpad touchpad = input_configuration.touchpad();
     miral::InputConfiguration::Keyboard keyboard = input_configuration.keyboard();
     std::mutex config_mutex;
     miral::CursorScale cursor_scale;
-    miral::OutputFilter output_filter;
     miral::ConfigFile config_file;
 
     void apply_config()
@@ -184,6 +210,11 @@ private:
                 auto const eq = line.find_first_of("=");
                 auto const key = line.substr(0, eq);
                 auto const value = line.substr(eq+1);
+
+                if (auto const handler = attribute_handlers.find(key); handler != attribute_handlers.end())
+                {
+                    handler->second(key, value);
+                }
 
                 auto const parse_and_validate_int = [](std::string const& key, std::string_view val) -> std::optional<int>
                 {
@@ -258,27 +289,77 @@ private:
                     if(parsed)
                         cursor_scale.scale(*parsed);
                 }
-
-                if (key == "output_filter")
-                {
-                    auto filter_name = value;
-                    MirOutputFilter filter = mir_output_filter_none;
-                    if (filter_name == "grayscale")
-                    {
-                        filter = mir_output_filter_grayscale;
-                    }
-                    else if (filter_name == "invert")
-                    {
-                        filter = mir_output_filter_invert;
-                    }
-                    output_filter.filter(filter);
-                }
             }
         }
 
         apply_config();
     }
 };
+
+void DemoConfigFile::add_attribute(std::string_view key, HandleInt handler)
+{
+    add_attribute(key, [handler](std::string_view key, std::optional<std::string_view> val)
+    {
+        if (val)
+        {
+            int parsed_val = 0;
+
+            auto const [_, err] = std::from_chars(val->data(), val->data() + val->size(), parsed_val);
+
+            if (err == std::errc{})
+            {
+                handler(key, parsed_val);
+            }
+            else
+            {
+                mir::log_warning(
+                    "Config key '%s' has invalid floating point value: %s",
+                    key.data(),
+                    val->data());
+                    handler(key, std::nullopt);
+            }
+        }
+        else
+        {
+            handler(key, std::nullopt);
+        }
+    });
+}
+
+void DemoConfigFile::add_attribute(std::string_view key, HandleFloat handler)
+{
+    add_attribute(key, [handler](std::string_view key, std::optional<std::string_view> val)
+    {
+        if (val)
+        {
+            float parsed_val = 0;
+
+            auto const [_, err] = std::from_chars(val->data(), val->data() + val->size(), parsed_val);
+
+            if (err == std::errc{})
+            {
+                handler(key, parsed_val);
+            }
+            else
+            {
+                mir::log_warning(
+                    "Config key '%s' has invalid floating point value: %s",
+                    key.data(),
+                    val->data());
+                    handler(key, std::nullopt);
+            }
+        }
+        else
+        {
+            handler(key, std::nullopt);
+        }
+    });
+}
+
+void DemoConfigFile::add_attribute(std::string_view key, HandleString handler)
+{
+    attribute_handlers[std::string{key}] = handler;
+}
 }
 
 int main(int argc, char const* argv[])
@@ -288,6 +369,35 @@ try
 
     DemoConfigFile demo_configuration{runner, "mir_demo_server.live-config"};
     runner.set_exception_handler(exception_handler);
+
+    miral::OutputFilter output_filter;
+
+    // IRL this would be a `register_options(AttributeHandler&)` method on output_filter
+    demo_configuration.add_attribute("output_filter",
+        [&output_filter](std::string_view key, std::optional<std::string_view> val)
+        {
+            MirOutputFilter filter = mir_output_filter_none;
+            if (val)
+            {
+                auto filter_name = *val;
+                if (filter_name == "grayscale")
+                {
+                    filter = mir_output_filter_grayscale;
+                }
+                else if (filter_name == "invert")
+                {
+                    filter = mir_output_filter_invert;
+                }
+                else
+                {
+                    mir::log_warning(
+                        "Config key '%s' has invalid value: %s",
+                        key.data(),
+                        val->data());
+                }
+            }
+            output_filter.filter(filter);
+        });
 
     std::function<void()> shutdown_hook{[]{}};
     runner.add_stop_callback([&] { shutdown_hook(); });
@@ -311,6 +421,7 @@ try
         input_filters,
         test_runner,
         std::ref(demo_configuration),
+        output_filter,
     });
 
     // Propagate any test failure
