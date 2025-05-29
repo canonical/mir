@@ -145,140 +145,6 @@ public:
     virtual ~AttributeHandler() = default;
 };
 
-class DemoConfigFile : public AttributeHandler
-{
-public:
-    DemoConfigFile(miral::MirRunner& runner, std::filesystem::path file) :
-        config_file{
-            runner,
-            file,
-            miral::ConfigFile::Mode::reload_on_change,
-            [this](std::istream& istream, std::filesystem::path const& path) {loader(istream, path); }}
-    {
-        runner.add_start_callback([this]
-            {
-                std::lock_guard lock{config_mutex};
-                apply_config();
-            });
-    }
-
-    void add_int_attribute(std::string_view key, HandleInt handler) override;
-    void add_float_attribute(std::string_view key, HandleFloat handler) override;
-    void add_string_attribute(std::string_view key, HandleString handler) override;
-    void on_done(HandleDone handler) override;
-
-private:
-    std::map<std::string, HandleString> attribute_handlers;
-    std::list<HandleDone> done_handlers;
-
-    std::mutex config_mutex;
-    miral::ConfigFile config_file;
-
-    void apply_config()
-    {
-        for (auto const& handler : done_handlers)
-            handler();
-    };
-
-    void loader(std::istream& in, std::filesystem::path const& path)
-    {
-        std::cout << "** Reloading: " << path << std::endl;
-
-        std::lock_guard lock{config_mutex};
-
-        for (std::string line; std::getline(in, line);)
-        {
-            std::cout << line << std::endl;
-
-            if (line.contains("="))
-            {
-                auto const eq = line.find_first_of("=");
-                auto const key = line.substr(0, eq);
-                auto const value = line.substr(eq+1);
-
-                if (auto const handler = attribute_handlers.find(key); handler != attribute_handlers.end())
-                {
-                    handler->second(key, value);
-                }
-            }
-        }
-
-        apply_config();
-    }
-};
-
-void DemoConfigFile::on_done(HandleDone handler)
-{
-    std::lock_guard lock{config_mutex};
-    done_handlers.emplace_back(std::move(handler));
-}
-
-void DemoConfigFile::add_int_attribute(std::string_view key, HandleInt handler)
-{
-    add_string_attribute(key, [handler](std::string_view key, std::optional<std::string_view> val)
-    {
-        if (val)
-        {
-            int parsed_val = 0;
-
-            auto const [_, err] = std::from_chars(val->data(), val->data() + val->size(), parsed_val);
-
-            if (err == std::errc{})
-            {
-                handler(key, parsed_val);
-            }
-            else
-            {
-                mir::log_warning(
-                    "Config key '%s' has invalid floating point value: %s",
-                    key.data(),
-                    val->data());
-                    handler(key, std::nullopt);
-            }
-        }
-        else
-        {
-            handler(key, std::nullopt);
-        }
-    });
-}
-
-void DemoConfigFile::add_float_attribute(std::string_view key, HandleFloat handler)
-{
-    add_string_attribute(key, [handler](std::string_view key, std::optional<std::string_view> val)
-    {
-        if (val)
-        {
-            float parsed_val = 0;
-
-            auto const [_, err] = std::from_chars(val->data(), val->data() + val->size(), parsed_val);
-
-            if (err == std::errc{})
-            {
-                handler(key, parsed_val);
-            }
-            else
-            {
-                mir::log_warning(
-                    "Config key '%s' has invalid floating point value: %s",
-                    key.data(),
-                    val->data());
-                    handler(key, std::nullopt);
-            }
-        }
-        else
-        {
-            handler(key, std::nullopt);
-        }
-    });
-}
-
-void DemoConfigFile::add_string_attribute(std::string_view key, HandleString handler)
-{
-    std::lock_guard lock{config_mutex};
-    attribute_handlers[std::string{key}] = handler;
-}
-
 // Struct for illustrative purposes, this would be rolled into miral::OutputFilter
 struct OutputFilter : miral::OutputFilter
 {
@@ -463,6 +329,140 @@ struct CursorScale : miral::CursorScale
             });
     }
 };
+
+class DemoConfigFile : public AttributeHandler
+{
+public:
+    DemoConfigFile(miral::MirRunner& runner, std::filesystem::path file) :
+        config_file{
+            runner,
+            file,
+            miral::ConfigFile::Mode::reload_on_change,
+            [this](std::istream& istream, std::filesystem::path const& path) {loader(istream, path); }}
+    {
+        runner.add_start_callback([this]
+            {
+                std::lock_guard lock{config_mutex};
+                apply_config();
+            });
+    }
+
+    void add_int_attribute(std::string_view key, HandleInt handler) override;
+    void add_float_attribute(std::string_view key, HandleFloat handler) override;
+    void add_string_attribute(std::string_view key, HandleString handler) override;
+    void on_done(HandleDone handler) override;
+
+private:
+    std::map<std::string, HandleString> attribute_handlers;
+    std::list<HandleDone> done_handlers;
+
+    std::mutex config_mutex;
+    miral::ConfigFile config_file;
+
+    void apply_config()
+    {
+        for (auto const& handler : done_handlers)
+            handler();
+    };
+
+    void loader(std::istream& in, std::filesystem::path const& path)
+    {
+        std::cout << "** Reloading: " << path << std::endl;
+
+        std::lock_guard lock{config_mutex};
+
+        for (std::string line; std::getline(in, line);)
+        {
+            std::cout << line << std::endl;
+
+            if (line.contains("="))
+            {
+                auto const eq = line.find_first_of("=");
+                auto const key = line.substr(0, eq);
+                auto const value = line.substr(eq+1);
+
+                if (auto const handler = attribute_handlers.find(key); handler != attribute_handlers.end())
+                {
+                    handler->second(key, value);
+                }
+            }
+        }
+
+        apply_config();
+    }
+};
+
+void DemoConfigFile::on_done(HandleDone handler)
+{
+    std::lock_guard lock{config_mutex};
+    done_handlers.emplace_back(std::move(handler));
+}
+
+void DemoConfigFile::add_int_attribute(std::string_view key, HandleInt handler)
+{
+    add_string_attribute(key, [handler](std::string_view key, std::optional<std::string_view> val)
+    {
+        if (val)
+        {
+            int parsed_val = 0;
+
+            auto const [_, err] = std::from_chars(val->data(), val->data() + val->size(), parsed_val);
+
+            if (err == std::errc{})
+            {
+                handler(key, parsed_val);
+            }
+            else
+            {
+                mir::log_warning(
+                    "Config key '%s' has invalid floating point value: %s",
+                    key.data(),
+                    val->data());
+                    handler(key, std::nullopt);
+            }
+        }
+        else
+        {
+            handler(key, std::nullopt);
+        }
+    });
+}
+
+void DemoConfigFile::add_float_attribute(std::string_view key, HandleFloat handler)
+{
+    add_string_attribute(key, [handler](std::string_view key, std::optional<std::string_view> val)
+    {
+        if (val)
+        {
+            float parsed_val = 0;
+
+            auto const [_, err] = std::from_chars(val->data(), val->data() + val->size(), parsed_val);
+
+            if (err == std::errc{})
+            {
+                handler(key, parsed_val);
+            }
+            else
+            {
+                mir::log_warning(
+                    "Config key '%s' has invalid floating point value: %s",
+                    key.data(),
+                    val->data());
+                    handler(key, std::nullopt);
+            }
+        }
+        else
+        {
+            handler(key, std::nullopt);
+        }
+    });
+}
+
+void DemoConfigFile::add_string_attribute(std::string_view key, HandleString handler)
+{
+    std::lock_guard lock{config_mutex};
+    attribute_handlers[std::string{key}] = handler;
+}
 }
 
 int main(int argc, char const* argv[])
