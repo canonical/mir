@@ -28,6 +28,11 @@ namespace geom = mir::geometry;
 class miral::Magnifier::Self
 {
 public:
+    Self()
+    {
+        render_scene_into_surface.capture_area(geom::Rectangle{{300, 300}, geom::Size(400, 300)});
+    }
+
     void operator()(mir::Server& server)
     {
         composite_event_filter = server.the_composite_event_filter();

@@ -27,6 +27,8 @@
 #include "mir/shell/surface_stack.h"
 #include "mir/renderer/sw/pixel_source.h"
 
+#include <mutex>
+
 namespace geom = mir::geometry;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
@@ -102,21 +104,28 @@ public:
         if (id == screen_shooter->id())
             return {};
 
+        std::lock_guard lock{mutex};
         auto const mapping = mrs::as_write_mappable_buffer(buffer);
         screen_shooter->capture(
             mapping,
             capture_rect,
             [](auto const&) {});
-        get_streams().begin()->stream->submit_buffer(buffer, capture_rect.size, geom::RectangleD({0, 0}, capture_rect.size));
+        get_streams().begin()->stream->submit_buffer(
+            buffer, capture_rect.size, geom::RectangleD({0, 0}, capture_rect.size));
         return BasicSurface::generate_renderables(id);
     }
 
     void set_capture_area(geom::Rectangle const& area)
     {
-        capture_rect = area;
+        std::lock_guard lock{mutex};
+        capture_rect.top_left = area.top_left;
+
+        if (capture_rect.size != buffer->size())
+            buffer = allocator->alloc_software_buffer(capture_rect.size, mir_pixel_format_argb_8888);
     }
 
 private:
+    std::mutex mutable mutex;
     std::shared_ptr<mc::Scene> const scene;
     geom::Rectangle capture_rect;
     std::shared_ptr<mc::ScreenShooter> screen_shooter;
