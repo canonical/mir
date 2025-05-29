@@ -569,6 +569,9 @@ MIRAL_5.4 {
 global:
   extern "C++" {
     miral::Magnifier::Magnifier*;
+    miral::Magnifier::capture_size*;
+    miral::Magnifier::enable*;
+    miral::Magnifier::magnification*;
     miral::Magnifier::operator*;
     typeinfo?for?miral::Magnifier;
   };

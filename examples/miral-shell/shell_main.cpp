@@ -229,5 +229,8 @@ int main(int argc, char const* argv[])
             output_filter,
             AppendEventFilter{toggle_output_filter_filter},
             Magnifier()
+                .magnification(5.f)
+                .capture_size(Size(100, 100))
+                .enable(true)
         });
 }

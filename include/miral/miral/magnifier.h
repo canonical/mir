@@ -23,12 +23,17 @@ namespace mir { class Server; }
 
 namespace miral
 {
-/// Enable the magnifier.
-/// magnifier will be enabled if and only if the server is configured to support it.
+/// Renders a magnified region of the scene at the cursor position.
+/// By default, the magnifier will magnify a 400x300 region below
+/// the cursor my a 2x magnitude.
 class Magnifier
 {
 public:
     Magnifier();
+
+    Magnifier& enable(bool enabled);
+    Magnifier& magnification(float magnification);
+    Magnifier& capture_size(mir::geometry::Size const& size);
 
     void operator()(mir::Server& server);
 

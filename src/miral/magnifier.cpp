@@ -21,6 +21,8 @@
 #include "mir/input/composite_event_filter.h"
 #include "mir/scene/surface.h"
 
+#include <glm/gtc/matrix_transform.hpp>
+
 namespace mi = mir::input;
 namespace ms = mir::scene;
 namespace geom = mir::geometry;
@@ -42,9 +44,40 @@ public:
         render_scene_into_surface.on_surface_ready([this](auto const& surf)
         {
             surface = surf;
+            surface->set_transformation(glm::scale(glm::mat4(1.0), glm::vec3(magnification, magnification, 1)));
+
+            if (default_enabled)
+                surface->show();
+            else
+                surface->hide();
         });
 
         render_scene_into_surface(server);
+    }
+
+    void set_enable(bool enable)
+    {
+        default_enabled = enable;
+        if (surface)
+        {
+            if (enable)
+                surface->show();
+            else
+                surface->hide();
+        }
+    }
+
+    void set_magnification(float new_magnification)
+    {
+        magnification = new_magnification;
+    }
+
+    void set_capture_size(geom::Size const& size)
+    {
+        render_scene_into_surface.capture_area({
+            surface ? surface->top_left() : geom::Point{0, 0},
+            size
+        });
     }
 
 private:
@@ -91,11 +124,31 @@ private:
     std::shared_ptr<mi::CompositeEventFilter> composite_event_filter;
     std::shared_ptr<Filter> filter;
     std::shared_ptr<ms::Surface> surface;
+    float magnification = 2.f;
+    bool default_enabled = true;
 };
 
 miral::Magnifier::Magnifier()
     : self(std::make_shared<Self>())
 {
+}
+
+miral::Magnifier& miral::Magnifier::enable(bool enabled)
+{
+    self->set_enable(enabled);
+    return *this;
+}
+
+miral::Magnifier& miral::Magnifier::magnification(float magnification)
+{
+    self->set_magnification(magnification);
+    return *this;
+}
+
+miral::Magnifier& miral::Magnifier::capture_size(mir::geometry::Size const& size)
+{
+    self->set_capture_size(size);
+    return *this;
 }
 
 void miral::Magnifier::operator()(mir::Server& server)
