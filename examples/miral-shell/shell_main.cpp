@@ -36,6 +36,7 @@
 #include <miral/mousekeys_config.h>
 #include <miral/output_filter.h>
 #include <miral/simulated_secondary_click.h>
+#include <miral/magnifier.h>
 
 #include <xkbcommon/xkbcommon-keysyms.h>
 
@@ -233,6 +234,10 @@ int main(int argc, char const* argv[])
             AppendEventFilter{toggle_mousekeys_filter},
             output_filter,
             AppendEventFilter{toggle_output_filter_filter},
-            ssc_config
+            ssc_config,
+            Magnifier()
+                .magnification(5.f)
+                .capture_size(Size(100, 100))
+                .enable(true)
         });
 }

@@ -557,6 +557,7 @@ global:
     "miral::OutputFilter::OutputFilter(MirOutputFilter)";
     miral::OutputFilter::operator*;
     miral::OutputFilter::filter*;
+    miral::OutputFilter::operator*;
     miral::WindowInfo::tiled_edges*;
     miral::WindowSpecification::tiled_edges*;
     miral::WindowSpecification::to_surface_specification*;
@@ -616,5 +617,11 @@ global:
     typeinfo?for?miral::live_config::Store;
     vtable?for?miral::live_config::IniFile;
     vtable?for?miral::live_config::Store;
+    miral::Magnifier::Magnifier*;
+    miral::Magnifier::capture_size*;
+    miral::Magnifier::enable*;
+    miral::Magnifier::magnification*;
+    miral::Magnifier::operator*;
+    typeinfo?for?miral::Magnifier;
   };
 } MIRAL_5.3;
