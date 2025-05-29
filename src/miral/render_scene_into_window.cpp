@@ -44,6 +44,25 @@ constexpr auto DEFAULT_TRANSFORMATION = glm::mat4{
     0.0, 0.0, 0.0, 1.0
 };
 
+class AlwaysHasSubmittedBufferStream : public mc::Stream
+{
+public:
+    bool has_submitted_buffer() const override
+    {
+        return true;
+    }
+};
+
+std::list<ms::StreamInfo> create_stream_info()
+{
+    std::list<ms::StreamInfo> result;
+    result.push_back({
+        std::make_shared<AlwaysHasSubmittedBufferStream>(),
+        geom::Displacement{}
+    });
+    return result;
+}
+
 class SceneRenderingSurface : public ms::BasicSurface
 {
 public:
@@ -99,16 +118,6 @@ private:
     std::shared_ptr<mg::GraphicBufferAllocator> allocator;
     std::shared_ptr<mg::Buffer> buffer;
 };
-
-std::list<ms::StreamInfo> create_stream_info()
-{
-    std::list<ms::StreamInfo> result;
-    result.push_back({
-        std::make_shared<mc::Stream>(),
-        geom::Displacement{}
-    });
-    return result;
-}
 }
 
 class miral::RenderSceneIntoWindow::Self
