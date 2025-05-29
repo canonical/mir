@@ -21,6 +21,7 @@
 #include "mir/compositor/scene.h"
 #include "mir/compositor/screen_shooter.h"
 #include "mir/compositor/screen_shooter_factory.h"
+#include "mir/compositor/stream.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/scene/basic_surface.h"
 #include "mir/shell/surface_stack.h"
@@ -36,74 +37,11 @@ namespace mi = mir::input;
 
 namespace
 {
-class SceneRenderingRenderable : public mg::Renderable
-{
-public:
-    SceneRenderingRenderable(
-        ms::Surface const* surface,
-        std::shared_ptr<mg::Buffer> const& buffer,
-        geom::Rectangle const& screen_position)
-        : surface(surface),
-          buffer_(buffer),
-          screen_position_(screen_position)
-    {
-    }
-
-    ID id() const override
-    {
-        return this;
-    }
-
-    std::shared_ptr<mg::Buffer> buffer() const override
-    {
-        return buffer_;
-    }
-
-    geom::Rectangle screen_position() const override
-    {
-        return screen_position_;
-    }
-
-    geom::RectangleD src_bounds() const override
-    {
-        return geom::RectangleD{{0, 0}, buffer_->size()};
-    }
-
-    std::optional<geom::Rectangle> clip_area() const override
-    {
-        return std::nullopt;
-    }
-
-    float alpha() const override
-    {
-        return 1.f;
-    }
-
-    glm::mat4 transformation() const override
-    {
-        // The transformation must always invert the Y as this is a GL texture.
-        return glm::mat4{
-            1, 0.0, 0.0, 0.0,
-            0.0, -1, 0.0, 0.0,
-            0.0, 0.0, 1, 0.0,
-            0.0, 0.0, 0.0, 1.0
-        };
-    }
-
-    bool shaped() const override
-    {
-        return true;
-    }
-
-    auto surface_if_any() const -> std::optional<mir::scene::Surface const*> override
-    {
-        return surface;
-    }
-
-private:
-    ms::Surface const* surface;
-    std::shared_ptr<mg::Buffer> const buffer_;
-    geom::Rectangle const screen_position_;
+constexpr auto DEFAULT_TRANSFORMATION = glm::mat4{
+    1, 0.0, 0.0, 0.0,
+    0.0, -1, 0.0, 0.0,
+    0.0, 0.0, 1, 0.0,
+    0.0, 0.0, 0.0, 1.0
 };
 
 class SceneRenderingSurface : public ms::BasicSurface
@@ -111,6 +49,7 @@ class SceneRenderingSurface : public ms::BasicSurface
 public:
     explicit SceneRenderingSurface(
         geom::Rectangle const& rect,
+        std::list<ms::StreamInfo> const& stream_info,
         std::shared_ptr<mc::Scene> const& scene,
         std::shared_ptr<mg::CursorImage> const& cursor_image,
         std::shared_ptr<ms::SceneReport> const& scene_report,
@@ -118,10 +57,10 @@ public:
         std::shared_ptr<mc::ScreenShooter> const& screen_shooter,
         std::shared_ptr<mg::GraphicBufferAllocator> const& allocator)
         : BasicSurface(
-            "magnifier",
+            "internal-scene-render",
             rect,
             mir_pointer_unconfined,
-            {},
+            stream_info,
             cursor_image,
             scene_report,
             scene_display_configuration_observer_registrar),
@@ -131,15 +70,12 @@ public:
           allocator(allocator),
           buffer(allocator->alloc_software_buffer(rect.size, mir_pixel_format_argb_8888))
     {
+        BasicSurface::set_transformation(DEFAULT_TRANSFORMATION);
     }
 
-    ~SceneRenderingSurface() override
+    void set_transformation(glm::mat4 const& t) override
     {
-    }
-
-    bool visible() const override
-    {
-        return true;
+        BasicSurface::set_transformation(t * DEFAULT_TRANSFORMATION);
     }
 
     mg::RenderableList generate_renderables(mc::CompositorID id) const override
@@ -152,9 +88,8 @@ public:
             mapping,
             rect,
             [](auto const&) {});
-        return mg::RenderableList{
-            std::make_shared<SceneRenderingRenderable>(this, buffer, geom::Rectangle({0, 0}, rect.size))
-        };
+        get_streams().begin()->stream->submit_buffer(buffer, rect.size, geom::RectangleD({0, 0}, rect.size));
+        return BasicSurface::generate_renderables(id);
     }
 
 private:
@@ -164,6 +99,16 @@ private:
     std::shared_ptr<mg::GraphicBufferAllocator> allocator;
     std::shared_ptr<mg::Buffer> buffer;
 };
+
+std::list<ms::StreamInfo> create_stream_info()
+{
+    std::list<ms::StreamInfo> result;
+    result.push_back({
+        std::make_shared<mc::Stream>(),
+        geom::Displacement{}
+    });
+    return result;
+}
 }
 
 class miral::RenderSceneIntoWindow::Self
@@ -178,14 +123,16 @@ public:
         std::shared_ptr<mc::ScreenShooter> const& screen_shooter,
         std::shared_ptr<mg::GraphicBufferAllocator> const& allocator,
         std::shared_ptr<msh::SurfaceStack> const& surface_stack)
-        : surface(std::make_shared<SceneRenderingSurface>(
-            rect,
-            scene,
-            cursor_image,
-            scene_report,
-            scene_display_configuration_observer_registrar,
-            screen_shooter,
-            allocator)),
+        :  stream_info(create_stream_info()),
+           surface(std::make_shared<SceneRenderingSurface>(
+               rect,
+               stream_info,
+               scene,
+               cursor_image,
+               scene_report,
+               scene_display_configuration_observer_registrar,
+               screen_shooter,
+               allocator)),
           surface_stack(surface_stack)
     {
         surface_stack->add_surface(surface, mi::InputReceptionMode::normal);
@@ -197,6 +144,7 @@ public:
     }
 
 private:
+    std::list<ms::StreamInfo> stream_info;
     std::shared_ptr<SceneRenderingSurface> surface;
     std::shared_ptr<msh::SurfaceStack> surface_stack;
 };
