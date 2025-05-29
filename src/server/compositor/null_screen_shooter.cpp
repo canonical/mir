@@ -38,3 +38,8 @@ void mc::NullScreenShooter::capture(
             callback(std::nullopt);
         });
 }
+
+mc::CompositorID mc::NullScreenShooter::id() const
+{
+    return this;
+}
