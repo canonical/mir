@@ -860,6 +860,8 @@ void mrg::Renderer::update_gl_viewport()
      * the logical viewport aspect ratio doesn't match the display aspect.
      * This keeps pixels square. Note "black"-bars are really glClearColor.
      */
+    output_surface->make_current();
+    output_surface->bind();
     auto transformed_viewport = display_transform *
                                 glm::vec4(viewport.size.width.as_int(),
                                           viewport.size.height.as_int(), 0, 1);
