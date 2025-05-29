@@ -134,9 +134,9 @@ public:
     using HandleString = std::function<void(std::string_view key, std::optional<std::string_view> value)>;
     using HandleDone = std::function<void()>;
 
-    virtual void add_attribute(std::string_view key, HandleInt handler) = 0;
-    virtual void add_attribute(std::string_view key, HandleFloat handler) = 0;
-    virtual void add_attribute(std::string_view key, HandleString handler) = 0;
+    virtual void add_int_attribute(std::string_view key, HandleInt handler) = 0;
+    virtual void add_float_attribute(std::string_view key, HandleFloat handler) = 0;
+    virtual void add_string_attribute(std::string_view key, HandleString handler) = 0;
 
     /// Called following a set of related updates (e.g. a file reload) to allow
     /// multiple attributes to be updated transactionally
@@ -167,9 +167,9 @@ public:
         cursor_scale(server);
     }
 
-    void add_attribute(std::string_view key, HandleInt handler) override;
-    void add_attribute(std::string_view key, HandleFloat handler) override;
-    void add_attribute(std::string_view key, HandleString handler) override;
+    void add_int_attribute(std::string_view key, HandleInt handler) override;
+    void add_float_attribute(std::string_view key, HandleFloat handler) override;
+    void add_string_attribute(std::string_view key, HandleString handler) override;
     void on_done(HandleDone handler) override;
 
 private:
@@ -241,9 +241,9 @@ void DemoConfigFile::on_done(HandleDone handler)
     done_handlers.emplace_back(std::move(handler));
 }
 
-void DemoConfigFile::add_attribute(std::string_view key, HandleInt handler)
+void DemoConfigFile::add_int_attribute(std::string_view key, HandleInt handler)
 {
-    add_attribute(key, [handler](std::string_view key, std::optional<std::string_view> val)
+    add_string_attribute(key, [handler](std::string_view key, std::optional<std::string_view> val)
     {
         if (val)
         {
@@ -271,9 +271,9 @@ void DemoConfigFile::add_attribute(std::string_view key, HandleInt handler)
     });
 }
 
-void DemoConfigFile::add_attribute(std::string_view key, HandleFloat handler)
+void DemoConfigFile::add_float_attribute(std::string_view key, HandleFloat handler)
 {
-    add_attribute(key, [handler](std::string_view key, std::optional<std::string_view> val)
+    add_string_attribute(key, [handler](std::string_view key, std::optional<std::string_view> val)
     {
         if (val)
         {
@@ -301,7 +301,7 @@ void DemoConfigFile::add_attribute(std::string_view key, HandleFloat handler)
     });
 }
 
-void DemoConfigFile::add_attribute(std::string_view key, HandleString handler)
+void DemoConfigFile::add_string_attribute(std::string_view key, HandleString handler)
 {
     std::lock_guard lock{config_mutex};
     attribute_handlers[std::string{key}] = handler;
@@ -312,7 +312,7 @@ struct OutputFilter : miral::OutputFilter
 {
     explicit OutputFilter(AttributeHandler& config_handler)
     {
-        config_handler.add_attribute("output_filter",
+        config_handler.add_string_attribute("output_filter",
             [this](std::string_view key, std::optional<std::string_view> val)
             {
                 MirOutputFilter new_filter = mir_output_filter_none;
@@ -349,7 +349,7 @@ struct InputConfiguration : miral::InputConfiguration
 
     explicit InputConfiguration(AttributeHandler& config_handler) : miral::InputConfiguration{}
     {
-        config_handler.add_attribute("pointer_handedness",
+        config_handler.add_string_attribute("pointer_handedness",
             [this](std::string_view key, std::optional<std::string_view> val)
             {
                 if (val)
@@ -367,7 +367,7 @@ struct InputConfiguration : miral::InputConfiguration
                 }
             });
 
-        config_handler.add_attribute("touchpad_scroll_mode",
+        config_handler.add_string_attribute("touchpad_scroll_mode",
             [this](std::string_view key, std::optional<std::string_view> val)
             {
                 if (val)
@@ -389,7 +389,7 @@ struct InputConfiguration : miral::InputConfiguration
                 }
             });
 
-        config_handler.add_attribute("repeat_rate", AttributeHandler::HandleInt{
+        config_handler.add_int_attribute("repeat_rate",
             [this](std::string_view key, std::optional<int> val)
             {
                 if (val)
@@ -405,9 +405,9 @@ struct InputConfiguration : miral::InputConfiguration
                             key.data(), *val);
                     }
                 }
-            }});
+            });
 
-        config_handler.add_attribute("repeat_delay", AttributeHandler::HandleInt{
+        config_handler.add_int_attribute("repeat_delay",
             [this](std::string_view key, std::optional<int> val)
             {
                 if (val)
@@ -423,7 +423,7 @@ struct InputConfiguration : miral::InputConfiguration
                             key.data(), *val);
                     }
                 }
-            }});
+            });
 
         config_handler.on_done([this]
         {
