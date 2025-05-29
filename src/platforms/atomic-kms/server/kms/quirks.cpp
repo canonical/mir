@@ -163,7 +163,7 @@ private:
      * https://bugs.launchpad.net/ubuntu/+source/linux/+bug/2084046
      * https://github.com/canonical/mir/issues/3710
      */
-    std::unordered_set<std::string> drivers_to_skip = { "nvidia", "ast", "simple-framebuffer"};
+    std::unordered_set<std::string> drivers_to_skip = { "ast", "simple-framebuffer"};
     std::unordered_set<std::string> devnodes_to_skip;
     // We know this is currently useful for virtio_gpu, vc4-drm and v3d
     std::unordered_set<std::string> skip_modesetting_support = { "virtio_gpu", "vc4-drm", "v3d" };
