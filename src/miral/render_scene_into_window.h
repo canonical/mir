@@ -17,21 +17,33 @@
 #ifndef MIRAL_SCENE_SURFACE_H
 #define MIRAL_SCENE_SURFACE_H
 
+#include <functional>
 #include <memory>
-#include <miral/window_specification.h>
 #include <mir/geometry/rectangle.h>
 
-namespace mir { class Server; }
+namespace mir
+{
+class Server;
+namespace scene
+{
+class Surface;
+}
+}
 
 namespace miral
 {
-/// Renders a part of the scene into a window with the provided specification.
-/// The window will always render the most up-to-date contents of the scene.
-class RenderSceneIntoWindow
+/// Renders a part of the scene into a surface.
+/// The surface will always render the most up-to-date contents of the scene.
+class RenderSceneIntoSurface
 {
 public:
-    RenderSceneIntoWindow();
-    ~RenderSceneIntoWindow();
+    RenderSceneIntoSurface();
+    ~RenderSceneIntoSurface();
+
+    /// Sets the capture area of the scene.
+    RenderSceneIntoSurface& capture_area(mir::geometry::Rectangle const& area);
+
+    RenderSceneIntoSurface& on_surface_ready(std::function<void(std::shared_ptr<mir::scene::Surface> const&)>&& callback);
 
     void operator()(mir::Server& server);
 

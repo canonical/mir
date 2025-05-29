@@ -22,6 +22,7 @@ add_library(miral-internal STATIC
     fd_manager.cpp                       fd_manager.h
     input_device_config.cpp              input_device_configuration_options.h input_device_config.h
     launch_app.cpp                       launch_app.h
+    render_scene_into_window.cpp         render_scene_into_window.h
     mru_window_list.cpp                  mru_window_list.h
     open_desktop_entry.cpp               open_desktop_entry.h
     static_display_config.cpp            static_display_config.h
@@ -91,7 +92,7 @@ add_library(miral-external OBJECT
     cursor_scale.cpp                    ${miral_include}/miral/cursor_scale.h
     mousekeys_config.cpp                ${miral_include}/miral/mousekeys_config.h
     output_filter.cpp                   ${miral_include}/miral/output_filter.h
-    render_scene_into_window.cpp        ${miral_include}/miral/render_scene_into_window.h
+    magnifier.cpp                       ${miral_include}/miral/magnifier.h
 )
 
 add_library(miral SHARED

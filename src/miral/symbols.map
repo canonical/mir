@@ -568,10 +568,9 @@ global:
 MIRAL_5.4 {
 global:
   extern "C++" {
-    miral::RenderSceneIntoWindow::?RenderSceneIntoWindow*;
-    miral::RenderSceneIntoWindow::RenderSceneIntoWindow*;
-    miral::RenderSceneIntoWindow::operator*;
-    typeinfo?for?miral::RenderSceneIntoWindow;
+    miral::Magnifier::Magnifier*;
+    miral::Magnifier::operator*;
+    typeinfo?for?miral::Magnifier;
   };
 } MIRAL_5.3;
 
