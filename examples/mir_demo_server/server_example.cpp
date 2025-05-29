@@ -162,11 +162,6 @@ public:
             });
     }
 
-    void operator()(mir::Server& server)
-    {
-        cursor_scale(server);
-    }
-
     void add_int_attribute(std::string_view key, HandleInt handler) override;
     void add_float_attribute(std::string_view key, HandleFloat handler) override;
     void add_string_attribute(std::string_view key, HandleString handler) override;
@@ -177,7 +172,6 @@ private:
     std::list<HandleDone> done_handlers;
 
     std::mutex config_mutex;
-    miral::CursorScale cursor_scale;
     miral::ConfigFile config_file;
 
     void apply_config()
@@ -205,28 +199,6 @@ private:
                 if (auto const handler = attribute_handlers.find(key); handler != attribute_handlers.end())
                 {
                     handler->second(key, value);
-                }
-
-                auto const parse_and_validate_float = [](std::string const& key, std::string_view val) -> std::optional<float>
-                {
-                    auto const float_val = std::atof(val.data());
-                    if (float_val < 0)
-                    {
-                        mir::log_warning(
-                            "Config value %s does not support negative values. Ignoring the supplied value (%f)...",
-                            key.c_str(),
-                            float_val);
-                        return std::nullopt;
-                    }
-
-                    return float_val;
-                };
-
-                if (key == "cursor_scale")
-                {
-                    auto const parsed = parse_and_validate_float(key, value);
-                    if(parsed)
-                        cursor_scale.scale(*parsed);
                 }
             }
         }
@@ -466,6 +438,31 @@ struct InputConfiguration : miral::InputConfiguration
         state->touchpad.merge(touchpad());
     }
 };
+
+// Struct for illustrative purposes, this would be rolled into miral::InputConfiguration
+struct CursorScale : miral::CursorScale
+{
+    explicit CursorScale(AttributeHandler& config_handler) : miral::CursorScale{}
+    {
+        config_handler.add_float_attribute("cursor_scale",
+            [this](std::string_view key, std::optional<float> val)
+            {
+                if (val)
+                {
+                    if (*val >= 0.0)
+                    {
+                        scale(*val);
+                    }
+                    else
+                    {
+                        mir::log_warning(
+                            "Config value %s does not support negative values. Ignoring the supplied value (%f)...",
+                            key.data(), *val);
+                    }
+                }
+            });
+    }
+};
 }
 
 int main(int argc, char const* argv[])
@@ -476,6 +473,7 @@ try
     DemoConfigFile demo_configuration{runner, "mir_demo_server.live-config"};
     runner.set_exception_handler(exception_handler);
 
+    CursorScale cursor_scale{demo_configuration};
     OutputFilter output_filter{demo_configuration};
     InputConfiguration input_configuration{demo_configuration};
     runner.add_start_callback([&input_configuration] { input_configuration.start_callback(); });
@@ -501,9 +499,9 @@ try
         miral::CursorTheme{"default:DMZ-White"},
         input_filters,
         test_runner,
-        std::ref(demo_configuration),
         output_filter,
         input_configuration,
+        cursor_scale,
     });
 
     // Propagate any test failure
