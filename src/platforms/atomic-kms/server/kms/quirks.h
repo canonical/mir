@@ -33,6 +33,14 @@ class Device;
 
 namespace graphics::atomic
 {
+class RuntimeQuirks
+{
+public:
+    virtual ~RuntimeQuirks() = default;
+    virtual auto gbm_create_surface_flags_broken() -> bool = 0;
+    virtual auto gbm_surface_has_free_buffers_broken() -> bool = 0;
+};
+
 /**
  * Interface for querying device-specific quirks
  */
@@ -55,6 +63,9 @@ public:
     auto require_modesetting_support(udev::Device const& device) const -> bool;
 
     static void add_quirks_option(boost::program_options::options_description& config);
+
+    [[nodiscard]]
+    auto runtime_quirks_for(udev::Device const& device) -> std::optional<std::shared_ptr<RuntimeQuirks>>;
 
 private:
     class Impl;
