@@ -19,10 +19,15 @@
 
 namespace mir::graphics::atomic
 {
+class RuntimeQuirks;
 class GBMDisplayAllocator : public graphics::GBMDisplayAllocator
 {
 public:
-    GBMDisplayAllocator(mir::Fd drm_fd, std::shared_ptr<struct gbm_device> gbm, geometry::Size size);
+    GBMDisplayAllocator(
+        mir::Fd drm_fd,
+        std::shared_ptr<struct gbm_device> gbm,
+        geometry::Size size,
+        std::optional<std::shared_ptr<RuntimeQuirks>> runtime_quirks);
 
     auto supported_formats() const -> std::vector<DRMFormat> override;
 
@@ -33,5 +38,6 @@ private:
     mir::Fd const fd;
     std::shared_ptr<struct gbm_device> const gbm;
     geometry::Size const size;
+    std::optional<std::shared_ptr<RuntimeQuirks>> const runtime_quirks;
 };
 }

@@ -16,6 +16,7 @@
 
 #include "gbm_display_allocator.h"
 #include "kms_framebuffer.h"
+#include "kms/quirks.h"
 
 #include <drm_fourcc.h>
 #include <xf86drmMode.h>
@@ -25,10 +26,15 @@ namespace mg = mir::graphics;
 namespace mga = mir::graphics::atomic;
 namespace geom = mir::geometry;
 
-mga::GBMDisplayAllocator::GBMDisplayAllocator(mir::Fd drm_fd, std::shared_ptr<struct gbm_device> gbm, geom::Size size)
-    : fd{std::move(drm_fd)},
-      gbm{std::move(gbm)},
-      size{size}
+mga::GBMDisplayAllocator::GBMDisplayAllocator(
+    mir::Fd drm_fd,
+    std::shared_ptr<struct gbm_device> gbm,
+    geom::Size size,
+    std::optional<std::shared_ptr<RuntimeQuirks>> runtime_quirks) :
+    fd{std::move(drm_fd)},
+    gbm{std::move(gbm)},
+    size{size},
+    runtime_quirks{runtime_quirks}
 {
 }
 
@@ -115,9 +121,20 @@ private:
 
 namespace
 {
-auto create_gbm_surface(gbm_device* gbm, geom::Size size, mg::DRMFormat format, std::span<uint64_t> modifiers)
-    -> std::shared_ptr<gbm_surface>
+auto create_gbm_surface(
+    gbm_device* gbm,
+    geom::Size size,
+    mg::DRMFormat format,
+    std::span<uint64_t> modifiers,
+    std::optional<std::shared_ptr<mga::RuntimeQuirks>> runtime_quirks) -> std::shared_ptr<gbm_surface>
 {
+    assert(*runtime_quirks != nullptr);
+    auto const flags =
+        *runtime_quirks
+             .transform([](auto& rtq)
+                        { return rtq->gbm_create_surface_flags_broken() ? std::optional{0} : std::nullopt; })
+             .value_or(GBM_BO_USE_RENDERING | GBM_BO_USE_SCANOUT);
+
     auto const surface =
         [&]()
         {
@@ -128,7 +145,7 @@ auto create_gbm_surface(gbm_device* gbm, geom::Size size, mg::DRMFormat format, 
                     gbm,
                     size.width.as_uint32_t(), size.height.as_uint32_t(),
                     format,
-                    GBM_BO_USE_RENDERING | GBM_BO_USE_SCANOUT);
+                    flags);
             }
             else
             {
@@ -138,7 +155,7 @@ auto create_gbm_surface(gbm_device* gbm, geom::Size size, mg::DRMFormat format, 
                     format,
                     modifiers.data(),
                     modifiers.size(),
-                    GBM_BO_USE_RENDERING | GBM_BO_USE_SCANOUT);
+                    flags);
             }
         }();
 
@@ -160,9 +177,16 @@ auto create_gbm_surface(gbm_device* gbm, geom::Size size, mg::DRMFormat format, 
 class GBMSurfaceImpl : public mga::GBMDisplayAllocator::GBMSurface
 {
 public:
-    GBMSurfaceImpl(mir::Fd drm_fd, gbm_device* gbm, geom::Size size, mg::DRMFormat const format, std::span<uint64_t> modifiers)
-        : drm_fd{std::move(drm_fd)},
-          surface{create_gbm_surface(gbm, size, format, modifiers)}
+    GBMSurfaceImpl(
+        mir::Fd drm_fd,
+        gbm_device* gbm,
+        geom::Size size,
+        mg::DRMFormat const format,
+        std::span<uint64_t> modifiers,
+        std::optional<std::shared_ptr<mga::RuntimeQuirks>> runtime_quirks) :
+        drm_fd{std::move(drm_fd)},
+        runtime_quirks{runtime_quirks},
+        surface{create_gbm_surface(gbm, size, format, modifiers, runtime_quirks)}
     {
     }
 
@@ -176,7 +200,11 @@ public:
 
     auto claim_framebuffer() -> std::unique_ptr<mg::Framebuffer> override
     {
-        if (!gbm_surface_has_free_buffers(surface.get()))
+        auto const skip_surface_free_buffers_check =
+            runtime_quirks.transform([](auto& rtq) { return rtq->gbm_surface_has_free_buffers_broken(); })
+                .value_or(false);
+
+        if (!skip_surface_free_buffers_check && !gbm_surface_has_free_buffers(surface.get()))
         {
             BOOST_THROW_EXCEPTION((
                 std::system_error{
@@ -203,6 +231,7 @@ public:
     }
 private:
     mir::Fd const drm_fd;
+    std::optional<std::shared_ptr<mga::RuntimeQuirks>> const runtime_quirks;
     std::shared_ptr<gbm_surface> const surface;
 };
 }
@@ -210,6 +239,6 @@ private:
 auto mga::GBMDisplayAllocator::make_surface(DRMFormat format, std::span<uint64_t> modifiers)
     -> std::unique_ptr<GBMSurface>
 {
-    return std::make_unique<GBMSurfaceImpl>(fd, gbm.get(), size, format, modifiers);
+    return std::make_unique<GBMSurfaceImpl>(fd, gbm.get(), size, format, modifiers, runtime_quirks);
 }
 

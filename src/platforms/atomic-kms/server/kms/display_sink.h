@@ -48,6 +48,7 @@ namespace atomic
 
 class Platform;
 class KMSOutput;
+class RuntimeQuirks;
 
 class DisplaySink : public graphics::DisplaySink,
                     public graphics::DisplaySyncGroup
@@ -60,7 +61,8 @@ public:
         std::shared_ptr<DisplayReport> const& listener,
         std::shared_ptr<KMSOutput> output,
         geometry::Rectangle const& area,
-        glm::mat2 const& transformation);
+        glm::mat2 const& transformation,
+        std::optional<std::shared_ptr<RuntimeQuirks>> runtime_quirks);
     ~DisplaySink();
 
     geometry::Rectangle view_area() const override;
@@ -108,6 +110,7 @@ private:
     glm::mat2 transform;
     std::atomic<bool> needs_set_crtc;
     std::chrono::milliseconds recommend_sleep{0};
+    std::optional<std::shared_ptr<RuntimeQuirks>> const runtime_quirks;
 };
 
 }
