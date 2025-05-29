@@ -310,3 +310,8 @@ void mc::BasicScreenShooter::capture(
             callback(std::nullopt);
         });
 }
+
+mc::CompositorID mc::BasicScreenShooter::id() const
+{
+    return self.get();
+}
