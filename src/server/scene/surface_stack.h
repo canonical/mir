@@ -120,6 +120,9 @@ public:
     void add_input_visualization(std::shared_ptr<graphics::Renderable> const& overlay) override;
     void remove_input_visualization(std::weak_ptr<graphics::Renderable> const& overlay) override;
 
+    void add_cursor(std::shared_ptr<graphics::Renderable> const& cursor) override;
+    void remove_cursor(std::weak_ptr<graphics::Renderable> const& cursor) override;
+
     void emit_scene_changed() override;
     void lock() override;
     void unlock() override;
@@ -158,6 +161,7 @@ private:
     std::set<compositor::CompositorID> registered_compositors;
 
     std::vector<std::shared_ptr<graphics::Renderable>> overlays;
+    std::vector<std::shared_ptr<graphics::Renderable>> cursors;
 
     Observers observers;
     /// If not expired the screen is locked (and only surfaces that appear on the lock screen should be shown)

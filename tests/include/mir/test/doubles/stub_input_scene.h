@@ -45,6 +45,13 @@ class StubInputScene : public input::Scene
     void remove_input_visualization(std::weak_ptr<graphics::Renderable> const& /* overlay */) override
     {
     }
+
+    void add_cursor(std::shared_ptr<graphics::Renderable> const& /* cursor */) override
+    {
+    }
+    void remove_cursor(std::weak_ptr<graphics::Renderable> const& /* cursor */) override
+    {
+    }
     
     void emit_scene_changed() override
     {

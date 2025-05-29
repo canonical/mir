@@ -48,10 +48,16 @@ public:
     virtual void remove_observer(std::weak_ptr<scene::Observer> const& observer) = 0;
 
     // An interface which the input stack can use to add certain non-interactive input visualizations
-    // in to the scene (i.e. cursors, touchspots). Overlay renderables will be rendered above all surfaces.
+    // in to the scene (i.e. touchspots). Overlay renderables will be rendered above all surfaces.
     // Within the set of overlay renderables, rendering order is undefined.
     virtual void add_input_visualization(std::shared_ptr<graphics::Renderable> const& overlay) = 0;
     virtual void remove_input_visualization(std::weak_ptr<graphics::Renderable> const& overlay) = 0;
+
+    /// An interface for adding a cursor renderable to the scene. The cursor is guaranteed to appear
+    /// above any other input visualization. Callers may add multiple cursors, primarily to avoid
+    /// any visual blips. Within the set of cursors, rendering or is undefined.
+    virtual void add_cursor(std::shared_ptr<graphics::Renderable> const& cursor) = 0;
+    virtual void remove_cursor(std::weak_ptr<graphics::Renderable> const& cursor) = 0;
     
     // As input visualizations added through the overlay system will not use the standard SurfaceObserver
     // mechanism, we require this method to trigger recomposition.

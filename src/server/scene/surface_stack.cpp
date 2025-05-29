@@ -174,6 +174,10 @@ mc::SceneElementSequence ms::SurfaceStack::scene_elements_for(mc::CompositorID i
     {
         elements.emplace_back(std::make_shared<OverlaySceneElement>(renderable));
     }
+    for (auto const& cursor : cursors)
+    {
+        elements.emplace_back(std::make_shared<OverlaySceneElement>(cursor));
+    }
     return elements;
 }
 
@@ -217,6 +221,33 @@ void ms::SurfaceStack::remove_input_visualization(
             BOOST_THROW_EXCEPTION(std::runtime_error("Attempt to remove an overlay which was never added or which has been previously removed"));
         }
         overlays.erase(p);
+    }
+
+    emit_scene_changed();
+}
+
+void ms::SurfaceStack::add_cursor(
+    std::shared_ptr<mg::Renderable> const& cursor)
+{
+    {
+        RecursiveWriteLock lg(guard);
+        cursors.push_back(cursor);
+    }
+    emit_scene_changed();
+}
+
+void ms::SurfaceStack::remove_cursor(
+    std::weak_ptr<mg::Renderable> const& weak_cursor)
+{
+    auto cursor = weak_cursor.lock();
+    {
+        RecursiveWriteLock lg(guard);
+        auto const p = std::find(cursors.begin(), cursors.end(), cursor);
+        if (p == cursors.end())
+        {
+            BOOST_THROW_EXCEPTION(std::runtime_error("Attempt to remove a cursor which was never added or which has been previously removed"));
+        }
+        cursors.erase(p);
     }
 
     emit_scene_changed();

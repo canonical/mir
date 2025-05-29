@@ -167,11 +167,11 @@ void mg::SoftwareCursor::show(std::shared_ptr<CursorImage> const& cursor_image)
         [scene = scene, to_remove = to_remove, to_add = renderable]()
         {
             // Add the new renderable first, then remove the old one to avoid visual glitches
-            scene->add_input_visualization(to_add);
+            scene->add_cursor(to_add);
 
             if (to_remove)
             {
-                scene->remove_input_visualization(to_remove);
+                scene->remove_cursor(to_remove);
             }
         });
 }

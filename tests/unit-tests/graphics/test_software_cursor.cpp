@@ -40,10 +40,10 @@ namespace
 
 struct MockInputScene : mtd::StubInputScene
 {
-    MOCK_METHOD1(add_input_visualization,
+    MOCK_METHOD1(add_cursor,
                  void(std::shared_ptr<mg::Renderable> const&));
 
-    MOCK_METHOD1(remove_input_visualization,
+    MOCK_METHOD1(remove_cursor,
                  void(std::weak_ptr<mg::Renderable> const&));
 
     MOCK_METHOD0(emit_scene_changed, void());
@@ -172,7 +172,7 @@ TEST_F(SoftwareCursor, is_added_to_scene_when_shown)
 {
     using namespace testing;
 
-    EXPECT_CALL(mock_input_scene, add_input_visualization(_));
+    EXPECT_CALL(mock_input_scene, add_cursor(_));
 
     cursor.show(stub_cursor_image);
 }
@@ -182,12 +182,12 @@ TEST_F(SoftwareCursor, tolerates_being_hidden_while_being_shown)
     using namespace testing;
 
     InSequence s;
-    EXPECT_CALL(mock_input_scene, add_input_visualization(_))
+    EXPECT_CALL(mock_input_scene, add_cursor(_))
         .WillOnce(Invoke([&](auto)
             {
                 cursor.hide();
             }));
-    EXPECT_CALL(mock_input_scene, remove_input_visualization(_)).Times(AnyNumber());
+    EXPECT_CALL(mock_input_scene, remove_cursor(_)).Times(AnyNumber());
 
     cursor.show(stub_cursor_image);
     executor.execute();
@@ -200,14 +200,14 @@ TEST_F(SoftwareCursor, tolerates_being_hidden_while_being_reshown)
     using namespace testing;
 
     InSequence s;
-    EXPECT_CALL(mock_input_scene, add_input_visualization(_));
-    EXPECT_CALL(mock_input_scene, remove_input_visualization(_));
-    EXPECT_CALL(mock_input_scene, add_input_visualization(_))
+    EXPECT_CALL(mock_input_scene, add_cursor(_));
+    EXPECT_CALL(mock_input_scene, remove_cursor(_));
+    EXPECT_CALL(mock_input_scene, add_cursor(_))
         .WillOnce(Invoke([&](auto)
             {
                 cursor.hide();
             }));
-    EXPECT_CALL(mock_input_scene, remove_input_visualization(_)).Times(AnyNumber());
+    EXPECT_CALL(mock_input_scene, remove_cursor(_)).Times(AnyNumber());
 
     cursor.show(stub_cursor_image);
     executor.execute();
@@ -224,8 +224,8 @@ TEST_F(SoftwareCursor, is_removed_from_scene_when_hidden)
     using namespace testing;
 
     InSequence s;
-    EXPECT_CALL(mock_input_scene, add_input_visualization(_));
-    EXPECT_CALL(mock_input_scene, remove_input_visualization(_));
+    EXPECT_CALL(mock_input_scene, add_cursor(_));
+    EXPECT_CALL(mock_input_scene, remove_cursor(_));
 
     cursor.show(stub_cursor_image);
     executor.execute();
@@ -240,7 +240,7 @@ TEST_F(SoftwareCursor, renderable_has_cursor_size)
     using namespace testing;
 
     EXPECT_CALL(mock_input_scene,
-                add_input_visualization(
+                add_cursor(
                     RenderableWithSize(stub_cursor_image->size())));
 
     cursor.show(stub_cursor_image);
@@ -253,7 +253,7 @@ TEST_F(SoftwareCursor, places_renderable_at_origin_offset_by_hotspot)
     auto const pos = geom::Point{0,0} - stub_cursor_image->hotspot();
 
     EXPECT_CALL(mock_input_scene,
-                add_input_visualization(RenderableWithPosition(pos)));
+                add_cursor(RenderableWithPosition(pos)));
 
     cursor.show(stub_cursor_image);
 }
@@ -264,7 +264,7 @@ TEST_F(SoftwareCursor, moves_scene_renderable_offset_by_hotspot_when_moved)
 
     std::shared_ptr<mg::Renderable> cursor_renderable;
 
-    EXPECT_CALL(mock_input_scene, add_input_visualization(_))
+    EXPECT_CALL(mock_input_scene, add_cursor(_))
         .WillOnce(SaveArg<0>(&cursor_renderable));
 
     cursor.show(stub_cursor_image);
@@ -301,7 +301,7 @@ TEST_F(SoftwareCursor, creates_renderable_with_filled_buffer)
 
     std::shared_ptr<mg::Renderable> cursor_renderable;
 
-    EXPECT_CALL(mock_input_scene, add_input_visualization(_)).
+    EXPECT_CALL(mock_input_scene, add_cursor(_)).
         WillOnce(SaveArg<0>(&cursor_renderable));
 
     cursor.show(stub_cursor_image);
@@ -316,7 +316,7 @@ TEST_F(SoftwareCursor, does_not_hide_or_move_when_already_hidden)
 {
     using namespace testing;
 
-    EXPECT_CALL(mock_input_scene, remove_input_visualization(_)).Times(0);
+    EXPECT_CALL(mock_input_scene, remove_cursor(_)).Times(0);
     EXPECT_CALL(mock_input_scene, emit_scene_changed()).Times(0);
 
     // Already hidden, nothing should happen
@@ -332,7 +332,7 @@ TEST_F(SoftwareCursor, creates_new_renderable_for_new_cursor_image)
 
     std::shared_ptr<mg::Renderable> first_cursor_renderable;
 
-    EXPECT_CALL(mock_input_scene, add_input_visualization(_)).
+    EXPECT_CALL(mock_input_scene, add_cursor(_)).
         WillOnce(SaveArg<0>(&first_cursor_renderable));
 
     cursor.show(stub_cursor_image);
@@ -341,8 +341,8 @@ TEST_F(SoftwareCursor, creates_new_renderable_for_new_cursor_image)
     Mock::VerifyAndClearExpectations(&mock_input_scene);
 
     EXPECT_CALL(mock_input_scene,
-                remove_input_visualization(WeakPtrEq(first_cursor_renderable)));
-    EXPECT_CALL(mock_input_scene, add_input_visualization(Ne(first_cursor_renderable)));
+                remove_cursor(WeakPtrEq(first_cursor_renderable)));
+    EXPECT_CALL(mock_input_scene, add_cursor(Ne(first_cursor_renderable)));
 
     cursor.show(another_stub_cursor_image);
     executor.execute();
@@ -366,7 +366,7 @@ TEST_F(SoftwareCursor, places_new_cursor_renderable_at_correct_position)
     auto const renderable_position =
         cursor_position - another_stub_cursor_image->hotspot();
     EXPECT_CALL(mock_input_scene,
-                add_input_visualization(RenderableWithPosition(renderable_position)));
+                add_cursor(RenderableWithPosition(renderable_position)));
 
     cursor.show(another_stub_cursor_image);
 }
@@ -391,11 +391,11 @@ TEST_F(SoftwareCursor, doesnt_try_to_remove_after_hiding)
     using namespace testing;
 
     Sequence seq;
-    EXPECT_CALL(mock_input_scene, add_input_visualization(_))
+    EXPECT_CALL(mock_input_scene, add_cursor(_))
         .InSequence(seq);
-    EXPECT_CALL(mock_input_scene, remove_input_visualization(_))
+    EXPECT_CALL(mock_input_scene, remove_cursor(_))
         .InSequence(seq);
-    EXPECT_CALL(mock_input_scene, add_input_visualization(_))
+    EXPECT_CALL(mock_input_scene, add_cursor(_))
         .InSequence(seq);
     cursor.show(stub_cursor_image);
     executor.execute();
