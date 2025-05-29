@@ -65,7 +65,6 @@ void mir::shell::BasicAccessibilityManager::repeat_rate_and_delay(
 void mir::shell::BasicAccessibilityManager::mousekeys_enabled(bool on)
 {
     if (on && !mouse_keys_transformer->is_enabled())
-        
     {
         event_transformer->append(mouse_keys_transformer);
         mouse_keys_transformer->enable();
