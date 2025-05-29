@@ -558,9 +558,17 @@ global:
     miral::WindowInfo::tiled_edges*;
     miral::WindowSpecification::tiled_edges*;
     miral::WindowSpecification::to_surface_specification*;
+    miral::SimulatedSecondaryClickConfig::SimulatedSecondaryClickConfig*;
+    miral::SimulatedSecondaryClickConfig::enabled*;
+    miral::SimulatedSecondaryClickConfig::hold_cancel*;
+    miral::SimulatedSecondaryClickConfig::hold_duration*;
+    miral::SimulatedSecondaryClickConfig::hold_start*;
+    miral::SimulatedSecondaryClickConfig::operator*;
+    miral::SimulatedSecondaryClickConfig::secondary_click*;
     typeinfo?for?miral::CursorScale;
     typeinfo?for?miral::DisplayConfiguration::Node;
     typeinfo?for?miral::MouseKeysConfig;
     typeinfo?for?miral::OutputFilter;
+    typeinfo?for?miral::SimulatedSecondaryClickConfig;
   };
 } MIRAL_5.2;
