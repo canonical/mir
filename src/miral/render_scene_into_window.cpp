@@ -81,9 +81,10 @@ public:
 
     glm::mat4 transformation() const override
     {
+        // The transformation must always invert the Y as this is a GL texture.
         return glm::mat4{
             1, 0.0, 0.0, 0.0,
-            0.0, 1, 0.0, 0.0,
+            0.0, -1, 0.0, 0.0,
             0.0, 0.0, 1, 0.0,
             0.0, 0.0, 0.0, 1.0
         };
