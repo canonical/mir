@@ -104,16 +104,7 @@ public:
     {
         auto const devnode = value_or(device.devnode(), "");
         auto const parent_device = device.parent();
-        auto const driver =
-            [&]()
-            {
-                if (parent_device)
-                {
-                    return value_or(parent_device->driver(), "");
-                }
-                mir::log_warning("udev device has no parent! Unable to determine driver for quirks.");
-                return "<UNKNOWN>";
-            }();
+        auto const driver = get_device_driver(parent_device.get());
         mir::log_debug("Quirks: checking device with devnode: %s, driver %s", device.devnode(), driver);
         bool const should_skip_driver = drivers_to_skip.count(driver);
         bool const should_skip_devnode = devnodes_to_skip.count(devnode);
@@ -132,16 +123,7 @@ public:
     {
         auto const devnode = value_or(device.devnode(), "");
         auto const parent_device = device.parent();
-        auto const driver =
-            [&]()
-            {
-                if (parent_device)
-                {
-                    return value_or(parent_device->driver(), "");
-                }
-                mir::log_warning("udev device has no parent! Unable to determine driver for quirks.");
-                return "<UNKNOWN>";
-            }();
+        auto const driver = get_device_driver(parent_device.get());
         mir::log_debug("Quirks: checking device with devnode: %s, driver %s", device.devnode(), driver);
 
         bool const should_skip_modesetting_support = skip_modesetting_support.count(driver);
@@ -152,7 +134,52 @@ public:
         return !should_skip_modesetting_support;
     }
 
+    auto runtime_quirks_for(udev::Device const& device) -> std::shared_ptr<RuntimeQuirks>
+    {
+        auto const driver = get_device_driver(device.parent().get());
+        if(std::strcmp(driver, "nvidia") == 0)
+        {
+            class NvidiaRuntimeQuirks : public RuntimeQuirks
+            {
+                auto gbm_create_surface_flags_broken() -> bool override
+                {
+                    return true;
+                }
+                auto gbm_surface_has_free_buffers_broken() -> bool override
+                {
+                    return true;
+                }
+            };
+
+            return std::make_shared<NvidiaRuntimeQuirks>();
+        }
+
+        class DefaultRuntimeQuirks : public RuntimeQuirks
+        {
+            auto gbm_create_surface_flags_broken() -> bool override
+            {
+                return false;
+            }
+            auto gbm_surface_has_free_buffers_broken() -> bool override
+            {
+                return false;
+            }
+        };
+
+        return std::make_shared<DefaultRuntimeQuirks>();
+    }
+
 private:
+    auto get_device_driver(mir::udev::Device const* parent_device) const -> const char*
+    {
+        if (parent_device)
+        {
+            return value_or(parent_device->driver(), "");
+        }
+        mir::log_warning("udev device has no parent! Unable to determine driver for quirks.");
+        return "<UNKNOWN>";
+    }
+
     /* AST is a simple 2D output device, built into some motherboards.
      * They do not have any 3D engine associated, so were quirked off to avoid https://github.com/canonical/mir/issues/2678
      *
@@ -163,7 +190,7 @@ private:
      * https://bugs.launchpad.net/ubuntu/+source/linux/+bug/2084046
      * https://github.com/canonical/mir/issues/3710
      */
-    std::unordered_set<std::string> drivers_to_skip = { "nvidia", "ast", "simple-framebuffer"};
+    std::unordered_set<std::string> drivers_to_skip = { "ast", "simple-framebuffer"};
     std::unordered_set<std::string> devnodes_to_skip;
     // We know this is currently useful for virtio_gpu, vc4-drm and v3d
     std::unordered_set<std::string> skip_modesetting_support = { "virtio_gpu", "vc4-drm", "v3d" };
@@ -206,3 +233,9 @@ auto mir::graphics::atomic::Quirks::require_modesetting_support(mir::udev::Devic
         return impl->require_modesetting_support(device);
     }
 }
+auto mir::graphics::atomic::Quirks::runtime_quirks_for(udev::Device const& device)
+    -> std::shared_ptr<RuntimeQuirks>
+{
+    return impl->runtime_quirks_for(device);
+}
+
