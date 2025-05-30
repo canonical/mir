@@ -83,14 +83,11 @@ struct TestInputEventTransformer : testing::Test
 
 struct MockTransformer : public mir::input::InputEventTransformer::Transformer
 {
-    MockTransformer() = default;
-
     MOCK_METHOD(
         (bool),
         transform_input_event,
         (mir::input::InputEventTransformer::EventDispatcher const&, mir::input::EventBuilder*, MirEvent const&),
         (override));
-
 };
 
 TEST_F(TestInputEventTransformer, transformer_gets_called)
