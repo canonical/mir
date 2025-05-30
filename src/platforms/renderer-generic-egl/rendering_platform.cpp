@@ -208,7 +208,8 @@ mge::RenderingPlatform::RenderingPlatform(std::tuple<EGLDisplay, bool> display)
           maybe_make_dmabuf_provider(
               dpy,
               std::make_shared<mg::EGLExtensions>(),
-              std::make_shared<mgc::EGLContextExecutor>(ctx->make_share_context()))}
+              std::make_shared<mgc::EGLContextExecutor>(ctx->make_share_context()))},
+      egl_delegate{std::make_shared<mg::common::EGLContextExecutor>(ctx->make_share_context())}
 {
 }
 
@@ -225,7 +226,11 @@ auto mge::RenderingPlatform::maybe_create_provider(RenderingProvider::Tag const&
 {
     if (dynamic_cast<GLRenderingProvider::Tag const*>(&tag))
     {
-        return std::make_shared<mge::GLRenderingProvider>(dpy, static_cast<EGLContext>(*ctx), dmabuf_provider);
+        return std::make_shared<mge::GLRenderingProvider>(
+            dpy,
+            static_cast<EGLContext>(*ctx),
+            dmabuf_provider,
+            egl_delegate);
     }
     return nullptr;
 }

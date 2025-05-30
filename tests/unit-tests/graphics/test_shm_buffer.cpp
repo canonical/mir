@@ -20,6 +20,7 @@
 
 #include "mir/test/doubles/mock_gl.h"
 #include "mir/test/doubles/mock_egl.h"
+#include "mir/test/doubles/stub_gl_rendering_provider.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -74,12 +75,10 @@ struct PlatformlessShmBuffer : mgc::MemoryBackedShmBuffer
 {
     PlatformlessShmBuffer(
         geom::Size const& size,
-        MirPixelFormat const& pixel_format,
-        std::shared_ptr<mgc::EGLContextExecutor> egl_delegate)
+        MirPixelFormat const& pixel_format)
         : MemoryBackedShmBuffer(
             size,
-            pixel_format,
-            std::move(egl_delegate))
+            pixel_format)
     {
     }
 
@@ -109,6 +108,8 @@ struct ShmBufferTest : public testing::Test
     MirPixelFormat const pixel_format;
     EGLContext const dummy{reinterpret_cast<void*>(0x0011223344)};
     std::shared_ptr<mgc::EGLContextExecutor> const egl_delegate;
+    std::unique_ptr<mtd::StubGlRenderingProvider> rendering_provider
+        = std::make_unique<mtd::StubGlRenderingProvider>();
 };
 
 }
@@ -118,7 +119,7 @@ TEST_F(ShmBufferTest, has_correct_properties)
     size_t const bytes_per_pixel = MIR_BYTES_PER_PIXEL(pixel_format);
     size_t const expected_stride{bytes_per_pixel * size.width.as_uint32_t()};
 
-    PlatformlessShmBuffer shm_buffer(size, pixel_format, egl_delegate);
+    PlatformlessShmBuffer shm_buffer(size, pixel_format);
 
     EXPECT_EQ(size, shm_buffer.size());
     EXPECT_EQ(geom::Stride{expected_stride}, shm_buffer.map_readable()->stride());
@@ -127,14 +128,15 @@ TEST_F(ShmBufferTest, has_correct_properties)
 
 TEST_F(ShmBufferTest, cant_upload_bgr_888)
 {
-    PlatformlessShmBuffer buf(size, mir_pixel_format_bgr_888, egl_delegate);
+    PlatformlessShmBuffer buf(size, mir_pixel_format_bgr_888);
     EXPECT_CALL(mock_gl, glTexImage2D(GL_TEXTURE_2D, 0, _,
                                       size.width.as_int(), size.height.as_int(),
                                       0, _, _,
                                       buf.pixel_buffer()))
                 .Times(0);
 
-    buf.bind();
+    auto const texture = buf.texture_for_provider(egl_delegate, rendering_provider.get());
+    texture->bind();
 }
 
 struct BufferUploadDesc
@@ -157,8 +159,7 @@ TEST_P(UploadTest, uploads_correctly)
 {
     auto const desc = GetParam();
 
-    PlatformlessShmBuffer buf(
-        desc.size, desc.format, egl_delegate);
+    PlatformlessShmBuffer buf(desc.size, desc.format);
 
     ExpectationSet gl_setup;
     gl_setup +=
@@ -182,7 +183,8 @@ TEST_P(UploadTest, uploads_correctly)
     EXPECT_CALL(mock_gl, glPixelStorei(GL_UNPACK_ROW_LENGTH_EXT, 0))
         .After(gl_use);
 
-    buf.bind();
+    auto const texture = buf.texture_for_provider(egl_delegate, rendering_provider.get());
+    texture->bind();
 
 }
 
@@ -190,8 +192,7 @@ TEST_P(UploadTest, reuploads_after_mapping)
 {
     auto const desc = GetParam();
 
-    PlatformlessShmBuffer buf(
-        desc.size, desc.format, egl_delegate);
+    PlatformlessShmBuffer buf(desc.size, desc.format);
 
     Expectation gl_use = EXPECT_CALL(
         mock_gl,
@@ -203,7 +204,8 @@ TEST_P(UploadTest, reuploads_after_mapping)
             desc.gl_format, desc.gl_type,
             buf.pixel_buffer())).Times(1);
 
-    buf.bind();
+    auto const texture = buf.texture_for_provider(egl_delegate, rendering_provider.get());
+    texture->bind();
 
     // Mapping is in its own scope so that destruction happens
     {
@@ -221,7 +223,7 @@ TEST_P(UploadTest, reuploads_after_mapping)
             buf.pixel_buffer()))
         .Times(1)
         .After(gl_use);
-    buf.bind();
+    texture->bind();
 }
 
 namespace
@@ -376,9 +378,10 @@ TEST_F(ShmBufferTest, texture_is_destroyed_on_thread_with_current_context)
         // Ensure we have a “context” current for creation and bind
         eglMakeCurrent(dummy_dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, dummy_ctx);
 
-        PlatformlessShmBuffer buffer{size, pixel_format, egl_delegate};
+        PlatformlessShmBuffer buffer{size, pixel_format};
 
-        buffer.bind();
+        auto const texture = buffer.texture_for_provider(egl_delegate, rendering_provider.get());
+        texture->bind();
 
         // Ensure this thread does *not* have a “context” current for destruction
         eglMakeCurrent(dummy_dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
@@ -407,11 +410,12 @@ TEST_F(ShmBufferTest, tex_id_is_generated_on_thread_with_current_egl_context)
     auto egl_delegate = std::make_shared<mgc::EGLContextExecutor>(
         std::make_unique<DumbGLContext>(dummy_ctx));
 
-    // Ensure we do not have a “context” current for creation
-    eglMakeCurrent(dummy_dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+    // The correct context should be current before callign texture_for_provider
+    eglMakeCurrent(dummy_dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, dummy_ctx);
 
-    PlatformlessShmBuffer buffer{size, pixel_format, egl_delegate};
+    PlatformlessShmBuffer buffer{size, pixel_format};
 
     // Ensure that the texture ID has been resolved, and to the value we expect
-    EXPECT_THAT(buffer.tex_id(), Eq(tex_id));
+    auto const texture = buffer.texture_for_provider(egl_delegate, rendering_provider.get());
+    EXPECT_THAT(texture->tex_id(), Eq(tex_id));
 }

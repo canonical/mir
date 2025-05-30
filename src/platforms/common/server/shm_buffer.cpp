@@ -29,13 +29,27 @@
 
 #include <boost/throw_exception.hpp>
 
-#include <string.h>
-#include <endian.h>
-
 namespace mg=mir::graphics;
 namespace mgc = mir::graphics::common;
 namespace geom = mir::geometry;
 namespace mrs = mir::renderer::software;
+
+namespace
+{
+GLuint new_texture()
+{
+    GLuint tex;
+    glGenTextures(1, &tex);
+
+    glBindTexture(GL_TEXTURE_2D, tex);
+    // The ShmBuffer *should* be immutable, so we can just set up the properties once
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    return tex;
+}
+}
 
 bool mg::get_gl_pixel_format(MirPixelFormat mir_format,
                          GLenum& gl_format, GLenum& gl_type)
@@ -85,110 +99,68 @@ bool mg::get_gl_pixel_format(MirPixelFormat mir_format,
     return gl_format != GL_INVALID_ENUM && gl_type != GL_INVALID_ENUM;
 }
 
-bool mgc::ShmBuffer::supports(MirPixelFormat mir_format)
+mgc::ShmBuffer::ShmBufferTexture::ShmBufferTexture(std::shared_ptr<EGLContextExecutor> const& egl_delegate)
+    : egl_delegate(egl_delegate),
+      tex_id_(new_texture())
 {
-    GLenum gl_format, gl_type;
-    return mg::get_gl_pixel_format(mir_format, gl_format, gl_type);
 }
 
-namespace
+mgc::ShmBuffer::ShmBufferTexture::~ShmBufferTexture()
 {
-auto get_tex_id_on_context(mgc::EGLContextExecutor& egl_executor) -> std::shared_future<GLuint>
-{
-    auto tex_promise = std::make_shared<std::promise<GLuint>>();
-    /* We don't guarantee that the ShmBuffer constructor will be called on a thread with
-     * an EGL context current, but allocating a GL texture ID and tex parameter setup
-     * requires a current context.
-     *
-     * We do have a *way* of running code with an EGL context current: the EGLContextExecutor.
-     * Delegate this setup there.
-     */
-    egl_executor.spawn(
-        [tex_promise]()
+    egl_delegate->spawn(
+        [id=tex_id()]
         {
-            GLuint tex;
-            glGenTextures(1, &tex);
-
-            // Paranoia: Save the current value for the GL state that we're modifying...
-            GLint previous_texture;
-            glGetIntegerv(GL_TEXTURE_BINDING_2D, &previous_texture);
-
-            glBindTexture(GL_TEXTURE_2D, tex);
-            // The ShmBuffer *should* be immutable, so we can just set up the properties once
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-            // ...and then restore the previous GL state.
-            glBindTexture(GL_TEXTURE_2D, static_cast<GLuint>(previous_texture));
-
-            /* We need these commands to be in the driver command stream before
-             * anything which uses them can be executed (which will likely be
-             * on another thread, in another EGLContext).
-             *
-             * glFlush() before the promise synchronisation point will ensure
-             * those commands are visible to the driver before we try and use
-             * their results.
-             */
-            glFlush();
-            tex_promise->set_value(tex);
+            glDeleteTextures(1, &id);
         });
-    return tex_promise->get_future();
-}
 }
 
-mgc::ShmBuffer::ShmBuffer(
-    geom::Size const& size,
-    MirPixelFormat const& format,
-    std::shared_ptr<EGLContextExecutor> egl_delegate)
-    : size_{size},
-      pixel_format_{format},
-      egl_delegate{std::move(egl_delegate)},
-      tex{get_tex_id_on_context(*this->egl_delegate)}
+void mgc::ShmBuffer::ShmBufferTexture::bind()
+{
+    glBindTexture(GL_TEXTURE_2D, tex_id());
+}
+
+auto mgc::ShmBuffer::ShmBufferTexture::tex_id() const -> GLuint
+{
+    return tex_id_;
+}
+
+mg::gl::Program const& mgc::ShmBuffer::ShmBufferTexture::shader(mg::gl::ProgramFactory& cache) const
+{
+    static int argb_shader{0};
+    return cache.compile_fragment_shader(
+        &argb_shader,
+        "",
+        "uniform sampler2D tex;\n"
+        "vec4 sample_to_rgba(in vec2 texcoord)\n"
+        "{\n"
+        "    return texture2D(tex, texcoord);\n"
+        "}\n");
+}
+
+mg::gl::Texture::Layout mgc::ShmBuffer::ShmBufferTexture::layout() const
+{
+    return Layout::GL;
+}
+
+void mgc::ShmBuffer::ShmBufferTexture::add_syncpoint()
 {
 }
 
-mgc::MemoryBackedShmBuffer::MemoryBackedShmBuffer(
-    geom::Size const& size,
-    MirPixelFormat const& pixel_format,
-    std::shared_ptr<EGLContextExecutor> egl_delegate)
-    : ShmBuffer(size, pixel_format, std::move(egl_delegate)),
-      stride_{MIR_BYTES_PER_PIXEL(pixel_format) * size.width.as_uint32_t()},
-      pixels{new unsigned char[stride_.as_int() * size.height.as_int()]}
+void mgc::ShmBuffer::ShmBufferTexture::try_upload_to_texture(
+    BufferID id, void const* pixels, geometry::Size const& size,
+    geom::Stride const& stride, MirPixelFormat pixel_format)
 {
-}
+    std::lock_guard lock{uploaded_mutex};
+    if (uploaded)
+        return;
 
-mgc::ShmBuffer::~ShmBuffer() noexcept
-{
-    if (auto id = tex_id())
-    {
-        egl_delegate->spawn(
-            [id]()
-            {
-                glDeleteTextures(1, &id);
-            });
-    }
-}
-
-geom::Size mgc::ShmBuffer::size() const
-{
-    return size_;
-}
-
-MirPixelFormat mgc::ShmBuffer::pixel_format() const
-{
-    return pixel_format_;
-}
-
-void mgc::ShmBuffer::upload_to_texture(void const* pixels, geom::Stride const& stride)
-{
+    bind();
     GLenum format, type;
 
-    if (mg::get_gl_pixel_format(pixel_format_, format, type))
+    if (mg::get_gl_pixel_format(pixel_format, format, type))
     {
         auto const stride_in_px =
-            stride.as_int() / MIR_BYTES_PER_PIXEL(pixel_format());
+            stride.as_int() / MIR_BYTES_PER_PIXEL(pixel_format);
         /*
          * We assume (as does Weston, AFAICT) that stride is
          * a multiple of whole pixels, but it need not be.
@@ -205,7 +177,7 @@ void mgc::ShmBuffer::upload_to_texture(void const* pixels, geom::Stride const& s
             GL_TEXTURE_2D,
             0,
             format,
-            size().width.as_int(), size().height.as_int(),
+            size.width.as_int(), size.height.as_int(),
             0,
             format,
             type,
@@ -220,9 +192,45 @@ void mgc::ShmBuffer::upload_to_texture(void const* pixels, geom::Stride const& s
     {
         mir::log_error(
             "Buffer %i has non-GL-compatible pixel format %i; rendering will be incomplete",
-            id().as_value(),
-            pixel_format());
+            id.as_value(),
+            pixel_format);
     }
+
+    uploaded = true;
+}
+
+void mgc::ShmBuffer::ShmBufferTexture::mark_dirty()
+{
+    std::lock_guard lock{uploaded_mutex};
+    uploaded = false;
+}
+
+bool mgc::ShmBuffer::supports(MirPixelFormat mir_format)
+{
+    GLenum gl_format, gl_type;
+    return mg::get_gl_pixel_format(mir_format, gl_format, gl_type);
+}
+
+mgc::ShmBuffer::ShmBuffer(
+    geom::Size const& size,
+    MirPixelFormat const& format)
+    : size_{size},
+      pixel_format_{format}
+{
+}
+
+mgc::ShmBuffer::~ShmBuffer() noexcept
+{
+}
+
+geom::Size mgc::ShmBuffer::size() const
+{
+    return size_;
+}
+
+MirPixelFormat mgc::ShmBuffer::pixel_format() const
+{
+    return pixel_format_;
 }
 
 mg::NativeBufferBase* mgc::ShmBuffer::native_buffer_base()
@@ -230,31 +238,49 @@ mg::NativeBufferBase* mgc::ShmBuffer::native_buffer_base()
     return this;
 }
 
-void mgc::ShmBuffer::bind()
+auto mgc::ShmBuffer::texture_for_provider(
+    std::shared_ptr<EGLContextExecutor> const& egl_delegate,
+    RenderingProvider* provider) -> std::shared_ptr<gl::Texture>
 {
-    glBindTexture(GL_TEXTURE_2D, tex_id());
+    std::lock_guard lock(tex_mutex);
+
+    // This method is called from the renderer where the egl context is current.
+    // Hence, we do not need to spawn texture creation the egl_delegate.
+    if (!provider_to_texture_map.contains(provider))
+        provider_to_texture_map.emplace(provider, std::make_shared<ShmBufferTexture>(egl_delegate));
+
+    auto texture = provider_to_texture_map.at(provider);
+    on_texture_accessed(texture);
+    return texture;
 }
 
-auto mgc::ShmBuffer::tex_id() const -> GLuint
+void mgc::ShmBuffer::on_texture_accessed(std::shared_ptr<ShmBufferTexture> const&)
 {
-    return tex.get();
 }
 
-void mgc::MemoryBackedShmBuffer::bind()
+mgc::MemoryBackedShmBuffer::MemoryBackedShmBuffer(
+    geom::Size const& size,
+    MirPixelFormat const& pixel_format)
+    : ShmBuffer(size, pixel_format),
+      stride_{MIR_BYTES_PER_PIXEL(pixel_format) * size.width.as_uint32_t()},
+      pixels{new unsigned char[stride_.as_int() * size.height.as_int()]}
 {
-    mgc::ShmBuffer::bind();
-    std::lock_guard lock{uploaded_mutex};
-    if (!uploaded)
-    {
-        upload_to_texture(pixels.get(), stride_);
-        uploaded = true;
-    }
+}
+
+void mgc::MemoryBackedShmBuffer::on_texture_accessed(std::shared_ptr<ShmBufferTexture> const& texture)
+{
+    texture->try_upload_to_texture(
+        id(),
+        pixels.get(),
+        size(),
+        stride_,
+        pixel_format());
 }
 
 void mgc::MemoryBackedShmBuffer::mark_dirty()
 {
-    std::lock_guard lock{uploaded_mutex};
-    uploaded = false;
+    for (auto const& [provider, texture] : provider_to_texture_map)
+        texture->mark_dirty();
 }
 
 template<typename T>
@@ -318,32 +344,9 @@ auto mgc::MemoryBackedShmBuffer::map_rw() -> std::unique_ptr<mrs::Mapping<unsign
     return std::make_unique<Mapping<unsigned char>>(this);
 }
 
-mg::gl::Program const& mgc::ShmBuffer::shader(mg::gl::ProgramFactory& cache) const
-{
-    static int argb_shader{0};
-    return cache.compile_fragment_shader(
-        &argb_shader,
-        "",
-        "uniform sampler2D tex;\n"
-        "vec4 sample_to_rgba(in vec2 texcoord)\n"
-        "{\n"
-        "    return texture2D(tex, texcoord);\n"
-        "}\n");
-}
-
-auto mgc::ShmBuffer::layout() const -> Layout
-{
-    return Layout::GL;
-}
-
-void mgc::ShmBuffer::add_syncpoint()
-{
-}
-
 mgc::MappableBackedShmBuffer::MappableBackedShmBuffer(
-    std::shared_ptr<mrs::RWMappableBuffer> data,
-    std::shared_ptr<EGLContextExecutor> egl_delegate)
-    : ShmBuffer(data->size(), data->format(), std::move(egl_delegate)),
+    std::shared_ptr<mrs::RWMappableBuffer> data)
+    : ShmBuffer(data->size(), data->format()),
       data{std::move(data)}
 {
 }
@@ -363,16 +366,15 @@ auto mgc::MappableBackedShmBuffer::map_rw() -> std::unique_ptr<mrs::Mapping<unsi
     return data->map_rw();
 }
 
-void mgc::MappableBackedShmBuffer::bind()
+void mgc::MappableBackedShmBuffer::on_texture_accessed(std::shared_ptr<ShmBufferTexture> const& texture)
 {
-    mgc::ShmBuffer::bind();
-    std::lock_guard lock{uploaded_mutex};
-    if (!uploaded)
-    {
-        auto mapping = data->map_readable();
-        upload_to_texture(mapping->data(), mapping->stride());
-        uploaded = true;
-    }
+    auto const mapping = data->map_readable();
+    texture->try_upload_to_texture(
+        id(),
+        mapping->data(),
+        size(),
+        mapping->stride(),
+        pixel_format());
 }
 
 auto mgc::MappableBackedShmBuffer::format() const -> MirPixelFormat
@@ -392,10 +394,9 @@ auto mgc::MappableBackedShmBuffer::size() const -> geometry::Size
 
 mgc::NotifyingMappableBackedShmBuffer::NotifyingMappableBackedShmBuffer(
     std::shared_ptr<mrs::RWMappableBuffer> data,
-    std::shared_ptr<mgc::EGLContextExecutor> egl_delegate,
     std::function<void()>&& on_consumed,
     std::function<void()>&& on_release)
-    :  MappableBackedShmBuffer(std::move(data), std::move(egl_delegate)),
+    :  MappableBackedShmBuffer(std::move(data)),
        on_consumed{std::move(on_consumed)},
        on_release{std::move(on_release)}
 {
@@ -411,12 +412,6 @@ void mgc::NotifyingMappableBackedShmBuffer::notify_consumed()
     std::lock_guard lock{consumed_mutex};
     on_consumed();
     on_consumed = [](){};
-}
-
-void mgc::NotifyingMappableBackedShmBuffer::bind()
-{
-    MappableBackedShmBuffer::bind();
-    notify_consumed();
 }
 
 auto mgc::NotifyingMappableBackedShmBuffer::map_readable() -> std::unique_ptr<mrs::Mapping<unsigned char const>>
@@ -435,4 +430,10 @@ auto mgc::NotifyingMappableBackedShmBuffer::map_rw() -> std::unique_ptr<mrs::Map
 {
     notify_consumed();
     return MappableBackedShmBuffer::map_rw();
+}
+
+void mgc::NotifyingMappableBackedShmBuffer::on_texture_accessed(std::shared_ptr<ShmBufferTexture> const& texture)
+{
+    MappableBackedShmBuffer::on_texture_accessed(texture);
+    notify_consumed();
 }

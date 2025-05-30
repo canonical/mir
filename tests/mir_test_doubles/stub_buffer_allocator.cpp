@@ -93,7 +93,6 @@ auto mtd::StubBufferAllocator::buffer_from_shm(
 {
     auto buffer = std::make_shared<mg::common::NotifyingMappableBackedShmBuffer>(
         std::move(data),
-        std::make_shared<mg::common::EGLContextExecutor>(std::make_unique<mtd::NullGLContext>()),
         std::move(on_consumed),
         std::move(on_release));
 
