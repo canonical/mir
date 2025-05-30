@@ -65,46 +65,11 @@ void miral::OutputFilter::filter(MirOutputFilter new_filter) const
 
 void miral::OutputFilter::operator()(mir::Server& server) const
 {
-    auto const* const output_filter_opt = "output-filter";
-    const char* default_filter_name;
-    switch (self->filter_)
-    {
-    default:
-    case mir_output_filter_none:
-        default_filter_name = "none";
-        break;
-    case mir_output_filter_grayscale:
-        default_filter_name = "grayscale";
-        break;
-    case mir_output_filter_invert:
-        default_filter_name = "invert";
-        break;
-    }
-    server.add_configuration_option(
-        output_filter_opt, "Output filter to use [{none,grayscale,invert}]", default_filter_name);
-
     server.add_init_callback(
-        [&server, this, output_filter_opt]
+        [&server, self=self]
         {
-            auto const& options = server.get_options();
-            auto const filter_name = options->get<std::string>(output_filter_opt);
-
-            MirOutputFilter filter = mir_output_filter_none;
-            if (filter_name == "grayscale")
-            {
-                filter = mir_output_filter_grayscale;
-            }
-            else if (filter_name == "invert")
-            {
-                filter = mir_output_filter_invert;
-            }
-            else if (filter_name == "none")
-            {
-                filter = mir_output_filter_none;
-            }
-
-            self->output_filter = server.the_output_filter();
-
-            self->filter(filter);
+            auto output_filter = server.the_output_filter();
+            output_filter->filter(self->filter_);
+            self->output_filter = output_filter;
         });
 }
