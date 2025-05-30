@@ -65,7 +65,7 @@ public:
     static void add_quirks_option(boost::program_options::options_description& config);
 
     [[nodiscard]]
-    auto runtime_quirks_for(udev::Device const& device) -> std::optional<std::shared_ptr<RuntimeQuirks>>;
+    auto runtime_quirks_for(udev::Device const& device) -> std::shared_ptr<RuntimeQuirks>;
 
 private:
     class Impl;

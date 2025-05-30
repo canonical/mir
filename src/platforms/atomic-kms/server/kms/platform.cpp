@@ -87,7 +87,7 @@ mga::Platform::Platform(
     ConsoleServices& vt,
     EmergencyCleanupRegistry& registry,
     BypassOption bypass_option,
-    std::optional<std::shared_ptr<RuntimeQuirks>> runtime_quirks)
+    std::shared_ptr<RuntimeQuirks> runtime_quirks)
     : Platform(master_fd_for_device(device, vt), listener, registry, bypass_option, runtime_quirks)
 {
 }
@@ -97,7 +97,7 @@ mga::Platform::Platform(
     std::shared_ptr<DisplayReport> const& listener,
     EmergencyCleanupRegistry&,
     BypassOption bypass_option,
-    std::optional<std::shared_ptr<RuntimeQuirks>> runtime_quirks)
+    std::shared_ptr<RuntimeQuirks> runtime_quirks)
     : udev{std::make_shared<mir::udev::Context>()},
       listener{listener},
       device_handle{std::move(std::get<0>(drm))},

@@ -62,7 +62,7 @@ public:
         BypassOption bypass_option,
         std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
         std::shared_ptr<DisplayReport> const& listener,
-        std::optional<std::shared_ptr<RuntimeQuirks>> quirks);
+        std::shared_ptr<RuntimeQuirks> quirks);
     ~Display();
 
     geometry::Rectangle view_area() const;
@@ -101,7 +101,7 @@ private:
 
     BypassOption bypass_option;
     std::weak_ptr<Cursor> cursor;
-    std::optional<std::shared_ptr<RuntimeQuirks>> const runtime_quirks;
+    std::shared_ptr<RuntimeQuirks> const runtime_quirks;
 };
 
 class GBMDisplayProvider : public graphics::GBMDisplayProvider

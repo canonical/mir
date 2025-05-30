@@ -62,7 +62,7 @@ public:
         std::shared_ptr<KMSOutput> output,
         geometry::Rectangle const& area,
         glm::mat2 const& transformation,
-        std::optional<std::shared_ptr<RuntimeQuirks>> runtime_quirks);
+        std::shared_ptr<RuntimeQuirks> runtime_quirks);
     ~DisplaySink();
 
     geometry::Rectangle view_area() const override;
@@ -110,7 +110,7 @@ private:
     glm::mat2 transform;
     std::atomic<bool> needs_set_crtc;
     std::chrono::milliseconds recommend_sleep{0};
-    std::optional<std::shared_ptr<RuntimeQuirks>> const runtime_quirks;
+    std::shared_ptr<RuntimeQuirks> const runtime_quirks;
 };
 
 }
