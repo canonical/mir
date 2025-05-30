@@ -42,6 +42,7 @@
 #include <chrono>
 #include <cstdlib>
 #include <iostream>
+#include <list>
 #include <mutex>
 
 namespace mir { class AbnormalExit; }
@@ -117,7 +118,186 @@ catch (...)
 {
 }
 
-class DemoConfigFile
+/// Interface for adding attributes to a configuration tool.
+///
+/// The handlers should be called when the configuration is updated. There is
+/// no requirement to check the previous value has changed.
+///
+/// The key is passed to the handler as it can be useful (e.g. for diagnostics)
+///
+/// This could be supported by various backends (an ini file, a YAML node, etc)
+class AttributeHandler
+{
+public:
+    using HandleInt = std::function<void(std::string_view key, std::optional<int> value)>;
+    using HandleFloat = std::function<void(std::string_view key, std::optional<float> value)>;
+    using HandleString = std::function<void(std::string_view key, std::optional<std::string_view> value)>;
+    using HandleDone = std::function<void()>;
+
+    virtual void add_int_attribute(std::string_view key, HandleInt handler) = 0;
+    virtual void add_float_attribute(std::string_view key, HandleFloat handler) = 0;
+    virtual void add_string_attribute(std::string_view key, HandleString handler) = 0;
+
+    /// Called following a set of related updates (e.g. a file reload) to allow
+    /// multiple attributes to be updated transactionally
+    virtual void on_done(HandleDone handler) = 0;
+
+    virtual ~AttributeHandler() = default;
+};
+
+// Struct for illustrative purposes, this would be rolled into miral::InputConfiguration
+struct InputConfiguration : miral::InputConfiguration
+{
+    struct State
+    {
+        State(miral::InputConfiguration::Mouse mouse,
+        miral::InputConfiguration::Touchpad touchpad,
+        miral::InputConfiguration::Keyboard keyboard) :
+        mouse{mouse},
+        touchpad{touchpad},
+        keyboard{keyboard}
+        {}
+
+        std::mutex mutex;
+        miral::InputConfiguration::Mouse mouse;
+        miral::InputConfiguration::Touchpad touchpad;
+        miral::InputConfiguration::Keyboard keyboard;
+    };
+
+    std::shared_ptr<State> const state = std::make_shared<State>(mouse(), touchpad(), keyboard());
+
+    explicit InputConfiguration(AttributeHandler& config_handler) : miral::InputConfiguration{}
+    {
+        config_handler.add_string_attribute("pointer_handedness",
+            [this](std::string_view key, std::optional<std::string_view> val)
+            {
+                if (val)
+                {
+                    std::lock_guard lock{state->mutex};
+                    auto const& value = *val;
+                    if (value == "right")
+                        state->mouse.handedness(mir_pointer_handedness_right);
+                    else if (value == "left")
+                        state->mouse.handedness(mir_pointer_handedness_left);
+                    else
+                        mir::log_warning(
+                            "Config key '%s' has invalid value: %s",
+                            key.data(),
+                            val->data());
+                }
+            });
+
+        config_handler.add_string_attribute("touchpad_scroll_mode",
+            [this](std::string_view key, std::optional<std::string_view> val)
+            {
+                if (val)
+                {
+                    std::lock_guard lock{state->mutex};
+                    auto const& value = *val;
+                    if (value == "none")
+                        state->touchpad.scroll_mode(mir_touchpad_scroll_mode_none);
+                    else if (value == "two_finger_scroll")
+                        state->touchpad.scroll_mode(mir_touchpad_scroll_mode_two_finger_scroll);
+                    else if (value == "edge_scroll")
+                        state->touchpad.scroll_mode(mir_touchpad_scroll_mode_edge_scroll);
+                    else if (value == "button_down_scroll")
+                        state->touchpad.scroll_mode(mir_touchpad_scroll_mode_button_down_scroll);
+                    else
+                        mir::log_warning(
+                            "Config key '%s' has invalid value: %s",
+                            key.data(),
+                            val->data());
+                }
+            });
+
+        config_handler.add_int_attribute("repeat_rate",
+            [this](std::string_view key, std::optional<int> val)
+            {
+                if (val)
+                {
+                    if (val >= 0)
+                    {
+                        std::lock_guard lock{state->mutex};
+                        state->keyboard.set_repeat_rate(*val);
+                    }
+                    else
+                    {
+                        mir::log_warning(
+                            "Config value %s does not support negative values. Ignoring the supplied value (%d)...",
+                            key.data(), *val);
+                    }
+                }
+            });
+
+        config_handler.add_int_attribute("repeat_delay",
+            [this](std::string_view key, std::optional<int> val)
+            {
+                if (val)
+                {
+                    if (val >= 0)
+                    {
+                        std::lock_guard lock{state->mutex};
+                        state->keyboard.set_repeat_delay(*val);
+                    }
+                    else
+                    {
+                        mir::log_warning(
+                            "Config value %s does not support negative values. Ignoring the supplied value (%d)...",
+                            key.data(), *val);
+                    }
+                }
+            });
+
+        config_handler.on_done([this]
+        {
+            std::lock_guard lock{state->mutex};
+            mouse(state->mouse);
+            touchpad(state->touchpad);
+            keyboard(state->keyboard);
+        });
+    }
+
+    void start_callback()
+    {
+        // Merge the input options collected from the command line,
+        // environment, and default `.config` file with the options we
+        // read from the `.input` file.
+        //
+        // In this case, the `.input` file takes precedence. You can
+        // reverse the arguments to de-prioritize it.
+        std::lock_guard lock{state->mutex};
+        state->mouse.merge(mouse());
+        state->keyboard.merge(keyboard());
+        state->touchpad.merge(touchpad());
+    }
+};
+
+// Struct for illustrative purposes, this would be rolled into miral::InputConfiguration
+struct CursorScale : miral::CursorScale
+{
+    explicit CursorScale(AttributeHandler& config_handler) : miral::CursorScale{}
+    {
+        config_handler.add_float_attribute("cursor_scale",
+            [this](std::string_view key, std::optional<float> val)
+            {
+                if (val)
+                {
+                    if (*val >= 0.0)
+                    {
+                        scale(*val);
+                    }
+                    else
+                    {
+                        mir::log_warning(
+                            "Config value %s does not support negative values. Ignoring the supplied value (%f)...",
+                            key.data(), *val);
+                    }
+                }
+            });
+    }
+};
+
+class DemoConfigFile : public AttributeHandler
 {
 public:
     DemoConfigFile(miral::MirRunner& runner, std::filesystem::path file) :
@@ -130,43 +310,26 @@ public:
         runner.add_start_callback([this]
             {
                 std::lock_guard lock{config_mutex};
-
-                // Merge the input options collected from the command line,
-                // environment, and default `.config` file with the options we
-                // read from the `.input` file.
-                //
-                // In this case, the `.input` file takes precedence. You can
-                // reverse the arguments to de-prioritize it.
-                mouse.merge(input_configuration.mouse());
-                keyboard.merge(input_configuration.keyboard());
-                touchpad.merge(input_configuration.touchpad());
-
                 apply_config();
             });
     }
 
-    void operator()(mir::Server& server)
-    {
-        input_configuration(server);
-        cursor_scale(server);
-        output_filter(server);
-    }
+    void add_int_attribute(std::string_view key, HandleInt handler) override;
+    void add_float_attribute(std::string_view key, HandleFloat handler) override;
+    void add_string_attribute(std::string_view key, HandleString handler) override;
+    void on_done(HandleDone handler) override;
 
 private:
-    miral::InputConfiguration input_configuration;
-    miral::InputConfiguration::Mouse mouse = input_configuration.mouse();
-    miral::InputConfiguration::Touchpad touchpad = input_configuration.touchpad();
-    miral::InputConfiguration::Keyboard keyboard = input_configuration.keyboard();
+    std::map<std::string, HandleString> attribute_handlers;
+    std::list<HandleDone> done_handlers;
+
     std::mutex config_mutex;
-    miral::CursorScale cursor_scale;
-    miral::OutputFilter output_filter;
     miral::ConfigFile config_file;
 
     void apply_config()
     {
-        input_configuration.mouse(mouse);
-        input_configuration.touchpad(touchpad);
-        input_configuration.keyboard(keyboard);
+        for (auto const& handler : done_handlers)
+            handler();
     };
 
     void loader(std::istream& in, std::filesystem::path const& path)
@@ -185,98 +348,119 @@ private:
                 auto const key = line.substr(0, eq);
                 auto const value = line.substr(eq+1);
 
-                auto const parse_and_validate_int = [](std::string const& key, std::string_view val) -> std::optional<int>
+                if (auto const handler = attribute_handlers.find(key); handler != attribute_handlers.end())
                 {
-                    auto const int_val = std::atoi(val.data());
-                    if (int_val < 0)
-                    {
-                        mir::log_warning(
-                            "Config value %s does not support negative values. Ignoring the supplied value (%d)...",
-                            key.c_str(), int_val);
-                        return std::nullopt;
-                    }
-
-                    return int_val;
-                };
-
-                auto const parse_and_validate_float = [](std::string const& key, std::string_view val) -> std::optional<float>
-                {
-                    auto const float_val = std::atof(val.data());
-                    if (float_val < 0)
-                    {
-                        mir::log_warning(
-                            "Config value %s does not support negative values. Ignoring the supplied value (%f)...",
-                            key.c_str(),
-                            float_val);
-                        return std::nullopt;
-                    }
-
-                    return float_val;
-                };
-
-                if (key == "pointer_handedness")
-                {
-                    if (value == "right")
-                        mouse.handedness(mir_pointer_handedness_right);
-                    else if (value == "left")
-                        mouse.handedness(mir_pointer_handedness_left);
-                    else
-                        mir::log_warning("Config key %s does not support value: '%s'", key.c_str(), value.c_str());
-                }
-
-                if (key == "touchpad_scroll_mode")
-                {
-                    if (value == "none")
-                        touchpad.scroll_mode(mir_touchpad_scroll_mode_none);
-                    else if (value == "two_finger_scroll")
-                        touchpad.scroll_mode(mir_touchpad_scroll_mode_two_finger_scroll);
-                    else if (value == "edge_scroll")
-                        touchpad.scroll_mode(mir_touchpad_scroll_mode_edge_scroll);
-                    else if (value == "button_down_scroll")
-                        touchpad.scroll_mode(mir_touchpad_scroll_mode_button_down_scroll);
-                    else
-                        mir::log_warning("Config key %s does not support value: '%s'", key.c_str(), value.c_str());
-                }
-
-                if (key == "repeat_rate")
-                {
-                    auto const parsed = parse_and_validate_int(key, value);
-                    if (parsed)
-                        keyboard.set_repeat_rate(*parsed);
-                }
-
-                if (key == "repeat_delay")
-                {
-                    auto const parsed = parse_and_validate_int(key, value);
-                    if (parsed)
-                        keyboard.set_repeat_delay(*parsed);
-                }
-
-                if (key == "cursor_scale")
-                {
-                    auto const parsed = parse_and_validate_float(key, value);
-                    if(parsed)
-                        cursor_scale.scale(*parsed);
-                }
-
-                if (key == "output_filter")
-                {
-                    auto filter_name = value;
-                    MirOutputFilter filter = mir_output_filter_none;
-                    if (filter_name == "grayscale")
-                    {
-                        filter = mir_output_filter_grayscale;
-                    }
-                    else if (filter_name == "invert")
-                    {
-                        filter = mir_output_filter_invert;
-                    }
-                    output_filter.filter(filter);
+                    handler->second(key, value);
                 }
             }
         }
 
         apply_config();
+    }
+};
+
+void DemoConfigFile::on_done(HandleDone handler)
+{
+    std::lock_guard lock{config_mutex};
+    done_handlers.emplace_back(std::move(handler));
+}
+
+void DemoConfigFile::add_int_attribute(std::string_view key, HandleInt handler)
+{
+    add_string_attribute(key, [handler](std::string_view key, std::optional<std::string_view> val)
+    {
+        if (val)
+        {
+            int parsed_val = 0;
+
+            auto const [_, err] = std::from_chars(val->data(), val->data() + val->size(), parsed_val);
+
+            if (err == std::errc{})
+            {
+                handler(key, parsed_val);
+            }
+            else
+            {
+                mir::log_warning(
+                    "Config key '%s' has invalid floating point value: %s",
+                    key.data(),
+                    val->data());
+                    handler(key, std::nullopt);
+            }
+        }
+        else
+        {
+            handler(key, std::nullopt);
+        }
+    });
+}
+
+void DemoConfigFile::add_float_attribute(std::string_view key, HandleFloat handler)
+{
+    add_string_attribute(key, [handler](std::string_view key, std::optional<std::string_view> val)
+    {
+        if (val)
+        {
+            float parsed_val = 0;
+
+            auto const [_, err] = std::from_chars(val->data(), val->data() + val->size(), parsed_val);
+
+            if (err == std::errc{})
+            {
+                handler(key, parsed_val);
+            }
+            else
+            {
+                mir::log_warning(
+                    "Config key '%s' has invalid floating point value: %s",
+                    key.data(),
+                    val->data());
+                    handler(key, std::nullopt);
+            }
+        }
+        else
+        {
+            handler(key, std::nullopt);
+        }
+    });
+}
+
+void DemoConfigFile::add_string_attribute(std::string_view key, HandleString handler)
+{
+    std::lock_guard lock{config_mutex};
+    attribute_handlers[std::string{key}] = handler;
+}
+
+// Struct for illustrative purposes, this would be rolled into miral::OutputFilter
+struct OutputFilter : miral::OutputFilter
+{
+    explicit OutputFilter(AttributeHandler& config_handler)
+    {
+        config_handler.add_string_attribute("output_filter",
+            [this](std::string_view key, std::optional<std::string_view> val)
+            {
+                MirOutputFilter new_filter = mir_output_filter_none;
+                if (val)
+                {
+                    auto filter_name = *val;
+                    if (filter_name == "grayscale")
+                    {
+                        new_filter = mir_output_filter_grayscale;
+                    }
+                    else if (filter_name == "invert")
+                    {
+                        new_filter = mir_output_filter_invert;
+                    }
+                    else
+                    {
+                        mir::log_warning(
+                            "Config key '%s' has invalid value: %s",
+                            key.data(),
+                            val->data());
+                    }
+                }
+                filter(new_filter);
+            });
     }
 };
 }
@@ -288,6 +472,11 @@ try
 
     DemoConfigFile demo_configuration{runner, "mir_demo_server.live-config"};
     runner.set_exception_handler(exception_handler);
+
+    CursorScale cursor_scale{demo_configuration};
+    OutputFilter output_filter{demo_configuration};
+    InputConfiguration input_configuration{demo_configuration};
+    runner.add_start_callback([&input_configuration] { input_configuration.start_callback(); });
 
     std::function<void()> shutdown_hook{[]{}};
     runner.add_stop_callback([&] { shutdown_hook(); });
@@ -310,7 +499,9 @@ try
         miral::CursorTheme{"default:DMZ-White"},
         input_filters,
         test_runner,
-        std::ref(demo_configuration),
+        output_filter,
+        input_configuration,
+        cursor_scale,
     });
 
     // Propagate any test failure
