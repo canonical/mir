@@ -64,6 +64,7 @@ public:
             auto const skip_driver = "skip:driver:";
             auto const allow_devnode = "allow:devnode:";
             auto const allow_driver = "allow:driver:";
+            auto const force_runtime_quirk = "force-runtime-quirk:";
 
             if (quirk.starts_with(skip_devnode))
             {
@@ -90,12 +91,21 @@ public:
                 // Quirk format is disable-kms-probe:value
                 skip_modesetting_support.emplace(quirk.substr(strlen(disable_kms_probe)));
                 continue;
+            } 
+            else if (quirk.starts_with(force_runtime_quirk))
+            {
+                auto const runtime_quirk = quirk.substr(strlen(force_runtime_quirk));
+                if (runtime_quirks.contains(runtime_quirk))
+                {
+                    forced_quirk = runtime_quirk;
+                    continue;
+                }
             }
 
             // If we didn't `continue` above, we're ignoring...
             mir::log_warning(
                 "Ignoring unexpected value for %s option: %s "
-                "(expects value of the form “skip:<type>:<value>”, “allow:<type>:<value>” or ”disable-kms-probe:<value>”)",
+                "(expects value of the form “skip:<type>:<value>”, “allow:<type>:<value>” or ”disable-kms-probe:<value>” or or “force-runtime-quirk:<value>”)",
                 quirks_option_name,
                 quirk.c_str());
         }
@@ -137,23 +147,17 @@ public:
 
     auto runtime_quirks_for(udev::Device const& device) -> std::shared_ptr<GbmQuirks>
     {
-        auto const driver = get_device_driver(device.parent().get());
-        if(std::strcmp(driver, "nvidia") == 0)
+        class NvidiaGbmQuirks : public GbmQuirks
         {
-            class NvidiaGbmQuirks : public GbmQuirks
+            auto gbm_create_surface_flags() const -> uint32_t override
             {
-                auto gbm_create_surface_flags() const -> uint32_t override
-                {
-                    return 0;
-                }
-                auto gbm_surface_has_free_buffers(gbm_surface*) const -> int override
-                {
-                    return 1;
-                }
-            };
-
-            return std::make_shared<NvidiaGbmQuirks>();
-        }
+                return 0;
+            }
+            auto gbm_surface_has_free_buffers(gbm_surface*) const -> int override
+            {
+                return 1;
+            }
+        };
 
         class DefaultGbmQuirks : public GbmQuirks
         {
@@ -166,6 +170,26 @@ public:
                 return ::gbm_surface_has_free_buffers(gbm_surface);
             }
         };
+
+        auto const driver = get_device_driver(device.parent().get());
+        mir::log_debug("Quirks: checking device with devnode: %s, driver %s", device.devnode(), driver);
+
+        auto const chosen_quirk = forced_quirk
+                                      .transform(
+                                          [](auto fq)
+                                          {
+                                              mir::log_debug("Quirks: forcing runtime quirk %s", fq.c_str());
+                                              return fq;
+                                          })
+                                      .or_else(
+                                          [&driver] -> std::optional<std::string>
+                                          {
+                                              mir::log_debug("Quirks: using runtime quirk for “%s” driver", driver);
+                                              return {driver};
+                                          });
+
+        if (chosen_quirk == "nvidia")
+            return std::make_shared<NvidiaGbmQuirks>();
 
         return std::make_shared<DefaultGbmQuirks>();
     }
@@ -195,6 +219,9 @@ private:
     std::unordered_set<std::string> devnodes_to_skip;
     // We know this is currently useful for virtio_gpu, vc4-drm and v3d
     std::unordered_set<std::string> skip_modesetting_support = { "virtio_gpu", "vc4-drm", "v3d" };
+
+    std::unordered_set<std::string> runtime_quirks { "default", "nvidia" };
+    std::optional<std::string> forced_quirk;
 };
 
 mga::Quirks::Quirks(const options::Option& options)
