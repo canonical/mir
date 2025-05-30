@@ -105,6 +105,20 @@ mgg::Platform::Platform(
     {
         BOOST_THROW_EXCEPTION((std::logic_error{"Invalid DRM device FD"}));
     }
+
+    /*
+     * This is required to pull the list of output colour formats available,
+     * and universal planes support was unconditionally enabled in the 3.16 kernel.
+     * That's long enough ago to just unconditionally enable this.
+     */
+    if (auto err = drmSetClientCap(drm_fd, DRM_CLIENT_CAP_UNIVERSAL_PLANES, 1))
+    {
+        BOOST_THROW_EXCEPTION((
+            std::system_error{
+                -err,
+                std::system_category(),
+                "Failed to enable DRM Universal Planes support"}));
+    }
 }
 
 mgg::Platform::~Platform() = default;
