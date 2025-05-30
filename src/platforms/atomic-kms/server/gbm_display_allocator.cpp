@@ -128,7 +128,6 @@ auto create_gbm_surface(
     std::span<uint64_t> modifiers,
     std::optional<std::shared_ptr<mga::RuntimeQuirks>> runtime_quirks) -> std::shared_ptr<gbm_surface>
 {
-    assert(*runtime_quirks != nullptr);
     auto const flags =
         *runtime_quirks
              .transform([](auto& rtq)
