@@ -16,6 +16,7 @@
 
 #include "basic_accessibility_manager.h"
 #include "mouse_keys_transformer.h"
+#include "basic_simulated_secondary_click_transformer.h"
 
 #include "mir/graphics/cursor.h"
 #include "mir/shell/keyboard_helper.h"
@@ -24,45 +25,6 @@
 
 #include <memory>
 #include <optional>
-
-template <typename Transformer>
-inline Transformer* mir::shell::BasicAccessibilityManager::Registration<Transformer>::operator->() const noexcept
-{
-    return transformer.get();
-}
-
-template <typename Transformer>
-inline void mir::shell::BasicAccessibilityManager::Registration<Transformer>::remove_registration() const
-{
-    // atomic::compare_exchange_strong(expected, desired) checks the atomic
-    // value against the "expected" value. If they're equal, it returns `true`
-    // and sets atomic = desired. If they're not equal, it returns `false` and
-    // sets expected = atomic which doesn't matter in the case below.
-    auto expected = true;
-    if (registered.compare_exchange_strong(expected, false))
-    {
-        event_transformer->remove(transformer);
-    }
-}
-
-template <typename Transformer>
-inline void mir::shell::BasicAccessibilityManager::Registration<Transformer>::add_registration() const
-{
-    auto expected = false;
-    if (registered.compare_exchange_strong(expected, true))
-    {
-        event_transformer->append(transformer);
-    }
-}
-
-template <typename Transformer>
-inline mir::shell::BasicAccessibilityManager::Registration<Transformer>::Registration(
-    std::shared_ptr<Transformer> const& transformer,
-    std::shared_ptr<input::InputEventTransformer> const& event_transformer) :
-    transformer{transformer},
-    event_transformer{event_transformer}
-{
-}
 
 void mir::shell::BasicAccessibilityManager::register_keyboard_helper(std::shared_ptr<KeyboardHelper> const& helper)
 {
@@ -102,22 +64,35 @@ void mir::shell::BasicAccessibilityManager::repeat_rate_and_delay(
 
 void mir::shell::BasicAccessibilityManager::mousekeys_enabled(bool on)
 {
-    if (on)
-        transformer.add_registration();
-    else
-        transformer.remove_registration();
+    auto const state = mutable_state.lock();
+
+    if (on && !state->mousekeys_on)
+    {
+        event_transformer->append(mouse_keys_transformer);
+        state->mousekeys_on = true;
+    }
+    else if (!on && state->mousekeys_on)
+    {
+        event_transformer->remove(mouse_keys_transformer);
+        state->mousekeys_on = false;
+    }
 }
 
 mir::shell::BasicAccessibilityManager::BasicAccessibilityManager(
     std::shared_ptr<input::InputEventTransformer> const& event_transformer,
     bool enable_key_repeat,
     std::shared_ptr<mir::graphics::Cursor> const& cursor,
-    std::shared_ptr<shell::MouseKeysTransformer> const& mousekeys_transformer) :
+    std::shared_ptr<shell::MouseKeysTransformer> const& mousekeys_transformer,
+    std::shared_ptr<SimulatedSecondaryClickTransformer> const& simulated_secondary_click_transformer) :
     enable_key_repeat{enable_key_repeat},
     cursor{cursor},
-    transformer{mousekeys_transformer, event_transformer}
+    event_transformer{event_transformer},
+    mouse_keys_transformer{mousekeys_transformer},
+    simulated_secondary_click_transformer{simulated_secondary_click_transformer}
 {
 }
+
+mir::shell::BasicAccessibilityManager::~BasicAccessibilityManager() = default;
 
 void mir::shell::BasicAccessibilityManager::cursor_scale(float new_scale)
 {
@@ -126,15 +101,37 @@ void mir::shell::BasicAccessibilityManager::cursor_scale(float new_scale)
 
 void mir::shell::BasicAccessibilityManager::mousekeys_keymap(input::MouseKeysKeymap const& new_keymap)
 {
-    transformer->keymap(new_keymap);
+    mouse_keys_transformer->keymap(new_keymap);
 }
 
 void mir::shell::BasicAccessibilityManager::acceleration_factors(double constant, double linear, double quadratic)
 {
-    transformer->acceleration_factors(constant, linear, quadratic);
+    mouse_keys_transformer->acceleration_factors(constant, linear, quadratic);
 }
 
 void mir::shell::BasicAccessibilityManager::max_speed(double x_axis, double y_axis)
 {
-    transformer->max_speed(x_axis, y_axis);
+    mouse_keys_transformer->max_speed(x_axis, y_axis);
+}
+
+void mir::shell::BasicAccessibilityManager::simulated_secondary_click_enabled(bool enabled)
+{
+    auto const state = mutable_state.lock();
+
+    if (enabled && !state->ssc_on)
+    {
+        event_transformer->append(simulated_secondary_click_transformer);
+        state->ssc_on = true;
+    }
+    else if (!enabled && state->ssc_on)
+    {
+        event_transformer->remove(simulated_secondary_click_transformer);
+        state->ssc_on = false;
+    }
+}
+
+auto mir::shell::BasicAccessibilityManager::simulated_secondary_click()
+    -> SimulatedSecondaryClickTransformer&
+{
+    return *simulated_secondary_click_transformer.operator->();
 }
