@@ -80,6 +80,8 @@ private:
         int repeat_delay{600};
 
         std::vector<std::shared_ptr<shell::KeyboardHelper>> keyboard_helpers;
+
+        bool mousekeys_on{false}, ssc_on{false};
     };
 
     Synchronised<MutableState> mutable_state;

@@ -20,7 +20,6 @@
 #include "mir/input/seat.h"
 #include "mir_toolkit/events/event.h"
 
-#include <atomic>
 #include <functional>
 #include <mutex>
 #include <vector>
@@ -49,13 +48,6 @@ public:
         // accumulating events for later dispatching or has immediately dispatched
         // an event is an implementation detail of the transformer
         virtual bool transform_input_event(EventDispatcher const&, EventBuilder*,  MirEvent const&) = 0;
-
-        virtual bool is_enabled() const;
-        virtual void enable();
-        virtual void disable();
-
-    private:
-        std::atomic<bool> enabled_;
     };
 
     InputEventTransformer(std::shared_ptr<Seat> const& seat, std::shared_ptr<time::Clock> const& clock);
@@ -66,8 +58,8 @@ public:
         EventBuilder* builder,
         EventDispatcher const& dispatcher);
 
-    void append(std::weak_ptr<Transformer> const&);
-    void remove(std::shared_ptr<Transformer> const&);
+    virtual void append(std::weak_ptr<Transformer> const&);
+    virtual void remove(std::shared_ptr<Transformer> const&);
 
     virtual void add_device(Device const& device) override;
     virtual void remove_device(Device const& device) override;

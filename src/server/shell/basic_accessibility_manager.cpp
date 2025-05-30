@@ -64,15 +64,17 @@ void mir::shell::BasicAccessibilityManager::repeat_rate_and_delay(
 
 void mir::shell::BasicAccessibilityManager::mousekeys_enabled(bool on)
 {
-    if (on && !mouse_keys_transformer->is_enabled())
+    auto const state = mutable_state.lock();
+
+    if (on && !state->mousekeys_on)
     {
         event_transformer->append(mouse_keys_transformer);
-        mouse_keys_transformer->enable();
+        state->mousekeys_on = true;
     }
-    else if (!on && mouse_keys_transformer->is_enabled())
+    else if (!on && state->mousekeys_on)
     {
         event_transformer->remove(mouse_keys_transformer);
-        mouse_keys_transformer->disable();
+        state->mousekeys_on = false;
     }
 }
 
@@ -114,15 +116,17 @@ void mir::shell::BasicAccessibilityManager::max_speed(double x_axis, double y_ax
 
 void mir::shell::BasicAccessibilityManager::simulated_secondary_click_enabled(bool enabled)
 {
-    if (enabled && !simulated_secondary_click_transformer->is_enabled())
+    auto const state = mutable_state.lock();
+
+    if (enabled && !state->ssc_on)
     {
         event_transformer->append(simulated_secondary_click_transformer);
-        simulated_secondary_click_transformer->enable();
+        state->ssc_on = true;
     }
-    else if (!enabled && simulated_secondary_click_transformer->is_enabled())
+    else if (!enabled && state->ssc_on)
     {
         event_transformer->remove(simulated_secondary_click_transformer);
-        simulated_secondary_click_transformer->disable();
+        state->ssc_on = false;
     }
 }
 

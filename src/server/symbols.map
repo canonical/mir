@@ -385,9 +385,6 @@ global:
     mir::input::InputEventTransformer::?InputEventTransformer*;
     mir::input::InputEventTransformer::InputEventTransformer*;
     mir::input::InputEventTransformer::Transformer::?Transformer*;
-    mir::input::InputEventTransformer::Transformer::disable*;
-    mir::input::InputEventTransformer::Transformer::enable*;
-    mir::input::InputEventTransformer::Transformer::is_enabled*;
     mir::input::InputEventTransformer::add_device*;
     mir::input::InputEventTransformer::append*;
     mir::input::InputEventTransformer::bounding_rectangle*;
@@ -975,14 +972,13 @@ global:
     non-virtual?thunk?to?mir::input::InputDispatcher::?InputDispatcher*;
     non-virtual?thunk?to?mir::input::InputEventTransformer::?InputEventTransformer*;
     non-virtual?thunk?to?mir::input::InputEventTransformer::Transformer::?Transformer*;
-    non-virtual?thunk?to?mir::input::InputEventTransformer::Transformer::disable*;
-    non-virtual?thunk?to?mir::input::InputEventTransformer::Transformer::enable*;
-    non-virtual?thunk?to?mir::input::InputEventTransformer::Transformer::is_enabled*;
     non-virtual?thunk?to?mir::input::InputEventTransformer::add_device*;
+    non-virtual?thunk?to?mir::input::InputEventTransformer::append*;
     non-virtual?thunk?to?mir::input::InputEventTransformer::bounding_rectangle*;
     non-virtual?thunk?to?mir::input::InputEventTransformer::create_device_state*;
     non-virtual?thunk?to?mir::input::InputEventTransformer::dispatch_event*;
     non-virtual?thunk?to?mir::input::InputEventTransformer::output_info*;
+    non-virtual?thunk?to?mir::input::InputEventTransformer::remove*;
     non-virtual?thunk?to?mir::input::InputEventTransformer::remove_device*;
     non-virtual?thunk?to?mir::input::InputEventTransformer::reset_confinement_regions*;
     non-virtual?thunk?to?mir::input::InputEventTransformer::set_confinement_regions*;
