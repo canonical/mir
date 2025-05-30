@@ -100,6 +100,7 @@ struct MockCursor : public mg::Cursor
 
     MOCK_METHOD1(move_to, void(geom::Point));
     MOCK_METHOD1(scale, void(float));
+    MOCK_METHOD0(renderable, std::shared_ptr<mg::Renderable>());
 };
 
 // TODO: This should only inherit from mi::Surface but to use the Scene observer we need an

@@ -82,6 +82,7 @@ mir::DefaultServerConfiguration::the_compositor()
                 the_scene(),
                 the_shell(),
                 the_compositor_report(),
+                the_cursor(),
                 composite_delay,
                 true);
         });

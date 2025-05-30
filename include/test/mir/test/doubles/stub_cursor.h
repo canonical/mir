@@ -33,6 +33,7 @@ struct StubCursor : public graphics::Cursor
     void hide() override {}
     void move_to(geometry::Point) override {}
     void scale(float) override {}
+    auto renderable() -> std::shared_ptr<graphics::Renderable> override { return nullptr; }
 };
 
 }

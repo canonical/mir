@@ -128,16 +128,15 @@ private:
     std::shared_ptr<mg::Buffer> const buffer_;
     mutable std::mutex position_mutex;
     geom::Point position;
-    float scale;
+    float scale = 1.f;
 };
 
 mg::SoftwareCursor::SoftwareCursor(
-    std::shared_ptr<mg::GraphicBufferAllocator> const& allocator,
-    std::shared_ptr<Executor> const& scene_executor,
-    std::shared_ptr<mi::Scene> const& scene)
-    : allocator{allocator}, scene{scene},
+    std::shared_ptr<GraphicBufferAllocator> const& allocator,
+    std::shared_ptr<input::Scene> const& scene)
+    : allocator{allocator},
+      scene{scene},
       format{get_8888_format(allocator->supported_pixel_formats())},
-      scene_executor{scene_executor},
       visible(false),
       hotspot{0,0}
 {
@@ -147,35 +146,23 @@ mg::SoftwareCursor::~SoftwareCursor() = default;
 
 void mg::SoftwareCursor::show(std::shared_ptr<CursorImage> const& cursor_image)
 {
-    std::lock_guard lg{guard};
+    {
+        std::lock_guard lg{guard};
 
-    // Store the cursor image for later use with `set_scale`
-    current_cursor_image = cursor_image;
+        // Store the cursor image for later use with `set_scale`
+        current_cursor_image = cursor_image;
 
-    auto const to_remove = visible ? renderable : nullptr;
+        geom::Point position{0, 0};
+        if (renderable_)
+            position = renderable_->screen_position().top_left;
 
-    geom::Point position{0, 0};
-    if (renderable)
-        position = renderable->screen_position().top_left;
+        renderable_ = create_scaled_renderable_for(*current_cursor_image, position);
 
-    renderable = create_scaled_renderable_for(*current_cursor_image, position);
-
-    hotspot = current_cursor_image->hotspot() * current_scale;
-    visible = true;
-
-    scene_executor->spawn(
-        [scene = scene, to_remove = to_remove, to_add = renderable]()
-        {
-            // Add the new renderable first, then remove the old one to avoid visual glitches
-            scene->add_input_visualization(to_add);
-
-            if (to_remove)
-            {
-                scene->remove_input_visualization(to_remove);
-            }
-        });
+        hotspot = current_cursor_image->hotspot() * current_scale;
+        visible = true;
+    }
+    scene->emit_scene_changed();
 }
-
 
 std::shared_ptr<mg::detail::CursorRenderable>
 mg::SoftwareCursor::create_scaled_renderable_for(CursorImage const& cursor_image, geom::Point position)
@@ -202,31 +189,24 @@ mg::SoftwareCursor::create_scaled_renderable_for(CursorImage const& cursor_image
 
 void mg::SoftwareCursor::hide()
 {
-    std::lock_guard lg{guard};
-
-    if (visible && renderable)
     {
-        scene_executor->spawn([weak_scene = std::weak_ptr{scene}, to_remove = std::weak_ptr{renderable}]()
-            {
-                if (auto scene = weak_scene.lock())
-                {
-                    scene->remove_input_visualization(to_remove);
-                }
-            });
-    }
+        std::lock_guard lg{guard};
+        if (!visible)
+            return;
 
-    visible = false;
+        visible = false;
+    }
+    scene->emit_scene_changed();
 }
 
 void mg::SoftwareCursor::move_to(geometry::Point position)
 {
     {
         std::lock_guard lg{guard};
-
-        if (!renderable)
+        if (!renderable_)
             return;
 
-        renderable->move_to(position - hotspot);
+        renderable_->move_to(position - hotspot);
     }
 
     // This doesn't need to be called in a specific order with other potential calls, so it doesn't go on the executor
@@ -241,4 +221,13 @@ void mir::graphics::SoftwareCursor::scale(float new_scale)
     }
 
     show(current_cursor_image);
+}
+
+auto mg::SoftwareCursor::renderable() -> std::shared_ptr<Renderable>
+{
+    std::lock_guard lg{guard};
+    if (!visible)
+        return nullptr;
+
+    return renderable_;
 }

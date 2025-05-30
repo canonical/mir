@@ -43,7 +43,6 @@ class SoftwareCursor : public Cursor
 public:
     SoftwareCursor(
         std::shared_ptr<GraphicBufferAllocator> const& allocator,
-        std::shared_ptr<Executor> const& scene_executor,
         std::shared_ptr<input::Scene> const& scene);
     ~SoftwareCursor();
 
@@ -51,6 +50,7 @@ public:
     void hide() override;
     void move_to(geometry::Point position) override;
     void scale(float) override;
+    auto renderable() -> std::shared_ptr<Renderable> override;
 
 private:
     std::shared_ptr<detail::CursorRenderable> create_scaled_renderable_for(
@@ -60,12 +60,8 @@ private:
     std::shared_ptr<input::Scene> const scene;
     MirPixelFormat const format;
 
-    /// If input visualisations are removed from the scene before they are added, the scene throws and Mir crashes
-    /// We don't want to call into the scene under lock, so we make these calls on with an executor
-    std::shared_ptr<Executor> const scene_executor;
-
     std::mutex guard;
-    std::shared_ptr<detail::CursorRenderable> renderable;
+    std::shared_ptr<detail::CursorRenderable> renderable_;
     bool visible;
     geometry::Displacement hotspot;
 
