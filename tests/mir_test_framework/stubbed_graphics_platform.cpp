@@ -100,9 +100,16 @@ auto mtf::StubGraphicPlatform::maybe_create_provider(
     return nullptr;
 }
 
-auto mtf::StubGraphicPlatform::maybe_create_provider(mg::DisplayProvider::Tag const&)
+auto mtf::StubGraphicPlatform::maybe_create_provider(mg::DisplayProvider::Tag const& tag)
     -> std::shared_ptr<mg::DisplayProvider>
 {
+    class NullCPUAddressableDisplayProvider : public mg::CPUAddressableDisplayProvider
+    {
+    };
+    if (dynamic_cast<mg::CPUAddressableDisplayProvider::Tag const*>(&tag))
+    {
+        return std::make_shared<NullCPUAddressableDisplayProvider>();
+    }
     return nullptr;
 }
 
