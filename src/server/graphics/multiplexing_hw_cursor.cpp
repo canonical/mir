@@ -73,3 +73,8 @@ void mir::graphics::MultiplexingCursor::scale(float new_scale)
         cursor->scale(new_scale);
 }
 
+auto mg::MultiplexingCursor::renderable() -> std::shared_ptr<Renderable>
+{
+    return nullptr;
+}
+
