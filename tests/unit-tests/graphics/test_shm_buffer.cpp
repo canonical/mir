@@ -204,7 +204,7 @@ TEST_P(UploadTest, reuploads_after_mapping)
             desc.gl_format, desc.gl_type,
             buf.pixel_buffer())).Times(1);
 
-    auto const texture = buf.texture_for_provider(egl_delegate, rendering_provider.get());
+    auto texture = buf.texture_for_provider(egl_delegate, rendering_provider.get());
     texture->bind();
 
     // Mapping is in its own scope so that destruction happens
@@ -223,6 +223,7 @@ TEST_P(UploadTest, reuploads_after_mapping)
             buf.pixel_buffer()))
         .Times(1)
         .After(gl_use);
+    texture = buf.texture_for_provider(egl_delegate, rendering_provider.get());
     texture->bind();
 }
 
