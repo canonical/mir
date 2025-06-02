@@ -118,6 +118,38 @@ catch (...)
 {
 }
 
+class ConfigurationKey
+{
+public:
+    ConfigurationKey(std::initializer_list<std::string_view> key) :
+        self(std::make_unique<std::vector<std::string>>(key.begin(), key.end()))
+    {
+    }
+
+    auto as_path() const -> std::vector<std::string>
+    {
+        return *self;
+    }
+
+    auto to_string() const -> std::string
+    {
+        std::string result;
+        for (auto const& element : *self)
+        {
+            if (!result.empty())
+                result += '_';
+
+            result += element;
+        }
+
+        return result;
+    }
+
+    auto operator<=>(ConfigurationKey const& that) const { return *self <=> *that.self; }
+
+private:
+    std::shared_ptr<std::vector<std::string>> self;
+};
 /// Interface for adding attributes to a configuration tool.
 ///
 /// The handlers should be called when the configuration is updated. There is
@@ -129,14 +161,14 @@ catch (...)
 class AttributeHandler
 {
 public:
-    using HandleInt = std::function<void(std::string_view key, std::optional<int> value)>;
-    using HandleFloat = std::function<void(std::string_view key, std::optional<float> value)>;
-    using HandleString = std::function<void(std::string_view key, std::optional<std::string_view> value)>;
+    using HandleInt = std::function<void(ConfigurationKey const& key, std::optional<int> value)>;
+    using HandleFloat = std::function<void(ConfigurationKey const& key, std::optional<float> value)>;
+    using HandleString = std::function<void(ConfigurationKey const& key, std::optional<std::string_view> value)>;
     using HandleDone = std::function<void()>;
 
-    virtual void add_int_attribute(std::string_view key, HandleInt handler) = 0;
-    virtual void add_float_attribute(std::string_view key, HandleFloat handler) = 0;
-    virtual void add_string_attribute(std::string_view key, HandleString handler) = 0;
+    virtual void add_int_attribute(ConfigurationKey const& key, HandleInt handler) = 0;
+    virtual void add_float_attribute(ConfigurationKey const& key, HandleFloat handler) = 0;
+    virtual void add_string_attribute(ConfigurationKey const& key, HandleString handler) = 0;
 
     /// Called following a set of related updates (e.g. a file reload) to allow
     /// multiple attributes to be updated transactionally
@@ -150,8 +182,8 @@ struct OutputFilter : miral::OutputFilter
 {
     explicit OutputFilter(AttributeHandler& config_handler)
     {
-        config_handler.add_string_attribute("output_filter",
-            [this](std::string_view key, std::optional<std::string_view> val)
+        config_handler.add_string_attribute({"output_filter"},
+                                            [this](ConfigurationKey const& key, std::optional<std::string_view> val)
             {
                 MirOutputFilter new_filter = mir_output_filter_none;
                 if (val)
@@ -169,7 +201,7 @@ struct OutputFilter : miral::OutputFilter
                     {
                         mir::log_warning(
                             "Config key '%s' has invalid value: %s",
-                            key.data(),
+                            key.to_string().c_str(),
                             val->data());
                     }
                 }
@@ -201,8 +233,8 @@ struct InputConfiguration : miral::InputConfiguration
 
     explicit InputConfiguration(AttributeHandler& config_handler) : miral::InputConfiguration{}
     {
-        config_handler.add_string_attribute("pointer_handedness",
-            [this](std::string_view key, std::optional<std::string_view> val)
+        config_handler.add_string_attribute({"pointer", "handedness"},
+                                            [this](ConfigurationKey const& key, std::optional<std::string_view> val)
             {
                 if (val)
                 {
@@ -215,13 +247,13 @@ struct InputConfiguration : miral::InputConfiguration
                     else
                         mir::log_warning(
                             "Config key '%s' has invalid value: %s",
-                            key.data(),
+                            key.to_string().c_str(),
                             val->data());
                 }
             });
 
-        config_handler.add_string_attribute("touchpad_scroll_mode",
-            [this](std::string_view key, std::optional<std::string_view> val)
+        config_handler.add_string_attribute({"touchpad", "scroll_mode"},
+                                            [this](ConfigurationKey const& key, std::optional<std::string_view> val)
             {
                 if (val)
                 {
@@ -238,13 +270,13 @@ struct InputConfiguration : miral::InputConfiguration
                     else
                         mir::log_warning(
                             "Config key '%s' has invalid value: %s",
-                            key.data(),
+                            key.to_string().c_str(),
                             val->data());
                 }
             });
 
-        config_handler.add_int_attribute("repeat_rate",
-            [this](std::string_view key, std::optional<int> val)
+        config_handler.add_int_attribute({"repeat_rate"},
+                                         [this](ConfigurationKey const& key, std::optional<int> val)
             {
                 if (val)
                 {
@@ -257,13 +289,13 @@ struct InputConfiguration : miral::InputConfiguration
                     {
                         mir::log_warning(
                             "Config value %s does not support negative values. Ignoring the supplied value (%d)...",
-                            key.data(), *val);
+                            key.to_string().c_str(), *val);
                     }
                 }
             });
 
-        config_handler.add_int_attribute("repeat_delay",
-            [this](std::string_view key, std::optional<int> val)
+        config_handler.add_int_attribute({"repeat_delay"},
+                                         [this](ConfigurationKey const& key, std::optional<int> val)
             {
                 if (val)
                 {
@@ -276,7 +308,7 @@ struct InputConfiguration : miral::InputConfiguration
                     {
                         mir::log_warning(
                             "Config value %s does not support negative values. Ignoring the supplied value (%d)...",
-                            key.data(), *val);
+                            key.to_string().c_str(), *val);
                     }
                 }
             });
@@ -310,8 +342,8 @@ struct CursorScale : miral::CursorScale
 {
     explicit CursorScale(AttributeHandler& config_handler) : miral::CursorScale{}
     {
-        config_handler.add_float_attribute("cursor_scale",
-            [this](std::string_view key, std::optional<float> val)
+        config_handler.add_float_attribute({"cursor", "scale"},
+                                           [this](ConfigurationKey const& key, std::optional<float> val)
             {
                 if (val)
                 {
@@ -323,7 +355,7 @@ struct CursorScale : miral::CursorScale
                     {
                         mir::log_warning(
                             "Config value %s does not support negative values. Ignoring the supplied value (%f)...",
-                            key.data(), *val);
+                            key.to_string().c_str(), *val);
                     }
                 }
             });
@@ -347,13 +379,15 @@ public:
             });
     }
 
-    void add_int_attribute(std::string_view key, HandleInt handler) override;
-    void add_float_attribute(std::string_view key, HandleFloat handler) override;
-    void add_string_attribute(std::string_view key, HandleString handler) override;
+    void add_int_attribute(ConfigurationKey const& key, HandleInt handler) override;
+    void add_float_attribute(ConfigurationKey const& key, HandleFloat handler) override;
+    void add_string_attribute(ConfigurationKey const& key, HandleString handler) override;
     void on_done(HandleDone handler) override;
 
 private:
-    std::map<std::string, HandleString> attribute_handlers;
+
+    using MyLess = decltype([](ConfigurationKey const& l, ConfigurationKey const& r) { return l.to_string() < r.to_string(); });
+    std::map<ConfigurationKey, HandleString, MyLess> attribute_handlers;
     std::list<HandleDone> done_handlers;
 
     std::mutex config_mutex;
@@ -378,12 +412,12 @@ private:
             if (line.contains("="))
             {
                 auto const eq = line.find_first_of("=");
-                auto const key = line.substr(0, eq);
+                auto const key = ConfigurationKey{line.substr(0, eq)};
                 auto const value = line.substr(eq+1);
 
                 if (auto const handler = attribute_handlers.find(key); handler != attribute_handlers.end())
                 {
-                    handler->second(key, value);
+                    handler->second(handler->first, value);
                 }
             }
         }
@@ -398,9 +432,9 @@ void DemoConfigFile::on_done(HandleDone handler)
     done_handlers.emplace_back(std::move(handler));
 }
 
-void DemoConfigFile::add_int_attribute(std::string_view key, HandleInt handler)
+void DemoConfigFile::add_int_attribute(ConfigurationKey const& key, HandleInt handler)
 {
-    add_string_attribute(key, [handler](std::string_view key, std::optional<std::string_view> val)
+    add_string_attribute(key, [handler](ConfigurationKey const& key, std::optional<std::string_view> val)
     {
         if (val)
         {
@@ -416,7 +450,7 @@ void DemoConfigFile::add_int_attribute(std::string_view key, HandleInt handler)
             {
                 mir::log_warning(
                     "Config key '%s' has invalid floating point value: %s",
-                    key.data(),
+                    key.to_string().c_str(),
                     val->data());
                     handler(key, std::nullopt);
             }
@@ -428,9 +462,9 @@ void DemoConfigFile::add_int_attribute(std::string_view key, HandleInt handler)
     });
 }
 
-void DemoConfigFile::add_float_attribute(std::string_view key, HandleFloat handler)
+void DemoConfigFile::add_float_attribute(ConfigurationKey const& key, HandleFloat handler)
 {
-    add_string_attribute(key, [handler](std::string_view key, std::optional<std::string_view> val)
+    add_string_attribute(key, [handler](ConfigurationKey const& key, std::optional<std::string_view> val)
     {
         if (val)
         {
@@ -446,7 +480,7 @@ void DemoConfigFile::add_float_attribute(std::string_view key, HandleFloat handl
             {
                 mir::log_warning(
                     "Config key '%s' has invalid floating point value: %s",
-                    key.data(),
+                    key.to_string().c_str(),
                     val->data());
                     handler(key, std::nullopt);
             }
@@ -458,10 +492,10 @@ void DemoConfigFile::add_float_attribute(std::string_view key, HandleFloat handl
     });
 }
 
-void DemoConfigFile::add_string_attribute(std::string_view key, HandleString handler)
+void DemoConfigFile::add_string_attribute(ConfigurationKey const& key, HandleString handler)
 {
     std::lock_guard lock{config_mutex};
-    attribute_handlers[std::string{key}] = handler;
+    attribute_handlers[key] = handler;
 }
 }
 
