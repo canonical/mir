@@ -55,7 +55,7 @@ mga::DisplaySink::DisplaySink(
     std::shared_ptr<KMSOutput> output,
     geom::Rectangle const& area,
     glm::mat2 const& transformation,
-    std::shared_ptr<RuntimeQuirks> runtime_quirks)
+    std::shared_ptr<GbmWorkarounds> runtime_quirks)
     : gbm{std::move(gbm)},
       listener(listener),
       output{std::move(output)},

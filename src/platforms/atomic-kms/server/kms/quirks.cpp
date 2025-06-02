@@ -134,12 +134,12 @@ public:
         return !should_skip_modesetting_support;
     }
 
-    auto runtime_quirks_for(udev::Device const& device) -> std::shared_ptr<RuntimeQuirks>
+    auto runtime_quirks_for(udev::Device const& device) -> std::shared_ptr<GbmWorkarounds>
     {
         auto const driver = get_device_driver(device.parent().get());
         if(std::strcmp(driver, "nvidia") == 0)
         {
-            class NvidiaRuntimeQuirks : public RuntimeQuirks
+            class NvidiaGbmWorkarounds : public GbmWorkarounds
             {
                 auto gbm_create_surface_flags_broken() -> bool override
                 {
@@ -154,7 +154,7 @@ public:
             return std::make_shared<NvidiaRuntimeQuirks>();
         }
 
-        class DefaultRuntimeQuirks : public RuntimeQuirks
+        class DefaultGbmWorkarounds : public GbmWorkarounds
         {
             auto gbm_create_surface_flags_broken() -> bool override
             {
@@ -234,7 +234,7 @@ auto mir::graphics::atomic::Quirks::require_modesetting_support(mir::udev::Devic
     }
 }
 auto mir::graphics::atomic::Quirks::runtime_quirks_for(udev::Device const& device)
-    -> std::shared_ptr<RuntimeQuirks>
+    -> std::shared_ptr<GbmWorkarounds>
 {
     return impl->runtime_quirks_for(device);
 }

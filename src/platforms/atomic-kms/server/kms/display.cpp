@@ -137,7 +137,7 @@ mga::Display::Display(
     mga::BypassOption bypass_option,
     std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
     std::shared_ptr<DisplayReport> const& listener,
-    std::shared_ptr<RuntimeQuirks> runtime_quirks)
+    std::shared_ptr<GbmWorkarounds> runtime_quirks)
     : drm_fd{std::move(drm_fd)},
       gbm{std::move(gbm)},
       listener(listener),

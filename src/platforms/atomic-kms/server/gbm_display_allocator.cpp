@@ -30,7 +30,7 @@ mga::GBMDisplayAllocator::GBMDisplayAllocator(
     mir::Fd drm_fd,
     std::shared_ptr<struct gbm_device> gbm,
     geom::Size size,
-    std::shared_ptr<RuntimeQuirks> runtime_quirks) :
+    std::shared_ptr<GbmWorkarounds> runtime_quirks) :
     fd{std::move(drm_fd)},
     gbm{std::move(gbm)},
     size{size},
@@ -126,7 +126,7 @@ auto create_gbm_surface(
     geom::Size size,
     mg::DRMFormat format,
     std::span<uint64_t> modifiers,
-    std::shared_ptr<mga::RuntimeQuirks> runtime_quirks) -> std::shared_ptr<gbm_surface>
+    std::shared_ptr<mga::GbmWorkarounds> runtime_quirks) -> std::shared_ptr<gbm_surface>
 {
     auto const flags =
         runtime_quirks->gbm_create_surface_flags_broken() ? 0 : GBM_BO_USE_RENDERING | GBM_BO_USE_SCANOUT;
@@ -179,7 +179,7 @@ public:
         geom::Size size,
         mg::DRMFormat const format,
         std::span<uint64_t> modifiers,
-        std::shared_ptr<mga::RuntimeQuirks> runtime_quirks) :
+        std::shared_ptr<mga::GbmWorkarounds> runtime_quirks) :
         drm_fd{std::move(drm_fd)},
         runtime_quirks{runtime_quirks},
         surface{create_gbm_surface(gbm, size, format, modifiers, runtime_quirks)}
@@ -224,7 +224,7 @@ public:
     }
 private:
     mir::Fd const drm_fd;
-    std::shared_ptr<mga::RuntimeQuirks> const runtime_quirks;
+    std::shared_ptr<mga::GbmWorkarounds> const runtime_quirks;
     std::shared_ptr<gbm_surface> const surface;
 };
 }
