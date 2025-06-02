@@ -105,7 +105,7 @@ public:
             // If we didn't `continue` above, we're ignoring...
             mir::log_warning(
                 "Ignoring unexpected value for %s option: %s "
-                "(expects value of the form “skip:<type>:<value>”, “allow:<type>:<value>” or ”disable-kms-probe:<value>” or or “force-runtime-quirk:<value>”)",
+                "(expects value of the form “skip:<type>:<value>”, “allow:<type>:<value>” or ”disable-kms-probe:<value>” or “force-runtime-quirk:<value>”)",
                 quirks_option_name,
                 quirk.c_str());
         }
