@@ -140,9 +140,7 @@ auto mrs::as_read_mappable_buffer(
     BOOST_THROW_EXCEPTION((std::runtime_error{"Buffer does not support CPU access"}));
 }
 
-namespace
-{
-auto as_write_mappable_buffer(
+auto mrs::as_write_mappable_buffer(
     std::shared_ptr<mg::Buffer> const& buffer) -> std::shared_ptr<mrs::WriteMappableBuffer>
 {
     class CopyingWrapper : public mrs::WriteMappableBuffer
@@ -181,7 +179,6 @@ auto as_write_mappable_buffer(
             std::shared_ptr<mrs::WriteTransferableBuffer>{buffer, transferable_buffer});
     }
     BOOST_THROW_EXCEPTION((std::runtime_error{"Buffer does not support CPU access"}));
-}
 }
 
 auto mrs::alloc_buffer_with_content(

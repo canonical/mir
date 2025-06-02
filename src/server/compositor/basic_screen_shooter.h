@@ -59,6 +59,8 @@ public:
         geometry::Rectangle const& area,
         std::function<void(std::optional<time::Timestamp>)>&& callback) override;
 
+    CompositorID id() const override;
+
 private:
     struct Self
     {
