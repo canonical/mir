@@ -17,11 +17,11 @@
 #ifndef MIR_GRAPHICS_GBM_SHM_BUFFER_H_
 #define MIR_GRAPHICS_GBM_SHM_BUFFER_H_
 
+#include "mir/synchronised.h"
 #include "mir/graphics/buffer_basic.h"
 #include "mir/geometry/dimensions.h"
 #include "mir/geometry/size.h"
 #include "mir_toolkit/common.h"
-#include "mir_toolkit/mir_native_buffer.h"
 #include "mir/renderer/sw/pixel_source.h"
 #include "mir/graphics/texture.h"
 
@@ -63,36 +63,11 @@ protected:
     ShmBuffer(
         geometry::Size const& size,
         MirPixelFormat const& format);
-
-    class ShmBufferTexture : public gl::Texture
-    {
-    public:
-        explicit ShmBufferTexture(std::shared_ptr<EGLContextExecutor> const& egl_delegate);
-        ~ShmBufferTexture() override;
-        void bind() override;
-        auto tex_id() const -> GLuint override;
-        gl::Program const& shader(gl::ProgramFactory& factory) const override;
-        Layout layout() const override;
-        void add_syncpoint() override;
-        void try_upload_to_texture(
-            BufferID id,
-            void const* pixels,
-            geometry::Size const& size,
-            geometry::Stride const& stride,
-            MirPixelFormat pixel_format);
-        void mark_dirty();
-
-    private:
-        std::shared_ptr<EGLContextExecutor> egl_delegate;
-        GLuint tex_id_;
-        std::mutex uploaded_mutex;
-        bool uploaded = false;
-    };
+    class ShmBufferTexture;
 
     virtual void on_texture_accessed(std::shared_ptr<ShmBufferTexture> const&) = 0;
 
-    std::mutex tex_mutex;
-    std::map<RenderingProvider*, std::shared_ptr<ShmBufferTexture>> provider_to_texture_map;
+    Synchronised<std::map<RenderingProvider*, std::shared_ptr<ShmBufferTexture>>> provider_to_texture_map;
 private:
     geometry::Size const size_;
     MirPixelFormat const pixel_format_;

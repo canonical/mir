@@ -99,111 +99,122 @@ bool mg::get_gl_pixel_format(MirPixelFormat mir_format,
     return gl_format != GL_INVALID_ENUM && gl_type != GL_INVALID_ENUM;
 }
 
-mgc::ShmBuffer::ShmBufferTexture::ShmBufferTexture(std::shared_ptr<EGLContextExecutor> const& egl_delegate)
-    : egl_delegate(egl_delegate),
-      tex_id_(new_texture())
+class mgc::ShmBuffer::ShmBufferTexture : public gl::Texture
 {
-}
+public:
+    explicit ShmBufferTexture(std::shared_ptr<EGLContextExecutor> const& egl_delegate)
+        : egl_delegate(egl_delegate),
+          tex_id_(new_texture())
+    {
+    }
 
-mgc::ShmBuffer::ShmBufferTexture::~ShmBufferTexture()
-{
-    egl_delegate->spawn(
-        [id=tex_id()]
+    ~ShmBufferTexture() override
+    {
+        egl_delegate->spawn(
+            [id=tex_id()]
+            {
+                glDeleteTextures(1, &id);
+            });
+    }
+
+    void bind() override
+    {
+        glBindTexture(GL_TEXTURE_2D, tex_id());
+    }
+
+    auto tex_id() const -> GLuint override
+    {
+        return tex_id_;
+    }
+
+    gl::Program const& shader(mg::gl::ProgramFactory& cache) const override
+    {
+        static int argb_shader{0};
+        return cache.compile_fragment_shader(
+            &argb_shader,
+            "",
+            "uniform sampler2D tex;\n"
+            "vec4 sample_to_rgba(in vec2 texcoord)\n"
+            "{\n"
+            "    return texture2D(tex, texcoord);\n"
+            "}\n");
+    }
+
+    Layout layout() const override
+    {
+        return Layout::GL;
+    }
+
+    void add_syncpoint() override
+    {
+    }
+
+    void try_upload_to_texture(
+        BufferID id, void const* pixels, geometry::Size const& size,
+        geom::Stride const& stride, MirPixelFormat pixel_format)
+    {
+        std::lock_guard lock{uploaded_mutex};
+        if (uploaded)
+            return;
+
+        bind();
+        GLenum format, type;
+
+        if (mg::get_gl_pixel_format(pixel_format, format, type))
         {
-            glDeleteTextures(1, &id);
-        });
-}
+            auto const stride_in_px =
+                stride.as_int() / MIR_BYTES_PER_PIXEL(pixel_format);
+            /*
+             * We assume (as does Weston, AFAICT) that stride is
+             * a multiple of whole pixels, but it need not be.
+             *
+             * TODO: Handle non-pixel-multiple strides.
+             * This should be possible by calculating GL_UNPACK_ALIGNMENT
+             * to match the size of the partial-pixel-stride().
+             */
 
-void mgc::ShmBuffer::ShmBufferTexture::bind()
-{
-    glBindTexture(GL_TEXTURE_2D, tex_id());
-}
+            glPixelStorei(GL_UNPACK_ROW_LENGTH_EXT, stride_in_px);
+            glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-auto mgc::ShmBuffer::ShmBufferTexture::tex_id() const -> GLuint
-{
-    return tex_id_;
-}
+            glTexImage2D(
+                GL_TEXTURE_2D,
+                0,
+                format,
+                size.width.as_int(), size.height.as_int(),
+                0,
+                format,
+                type,
+                pixels);
 
-mg::gl::Program const& mgc::ShmBuffer::ShmBufferTexture::shader(mg::gl::ProgramFactory& cache) const
-{
-    static int argb_shader{0};
-    return cache.compile_fragment_shader(
-        &argb_shader,
-        "",
-        "uniform sampler2D tex;\n"
-        "vec4 sample_to_rgba(in vec2 texcoord)\n"
-        "{\n"
-        "    return texture2D(tex, texcoord);\n"
-        "}\n");
-}
+            // Be nice to other users of the GL context by reverting our changes to shared state
+            glPixelStorei(GL_UNPACK_ROW_LENGTH_EXT, 0);     // 0 is default, meaning “use width”
+            glPixelStorei(GL_UNPACK_ALIGNMENT, 4);          // 4 is default; word alignment.
+            glFinish();
+        }
+        else
+        {
+            mir::log_error(
+                "Buffer %i has non-GL-compatible pixel format %i; rendering will be incomplete",
+                id.as_value(),
+                pixel_format);
+        }
 
-mg::gl::Texture::Layout mgc::ShmBuffer::ShmBufferTexture::layout() const
-{
-    return Layout::GL;
-}
-
-void mgc::ShmBuffer::ShmBufferTexture::add_syncpoint()
-{
-}
-
-void mgc::ShmBuffer::ShmBufferTexture::try_upload_to_texture(
-    BufferID id, void const* pixels, geometry::Size const& size,
-    geom::Stride const& stride, MirPixelFormat pixel_format)
-{
-    std::lock_guard lock{uploaded_mutex};
-    if (uploaded)
-        return;
-
-    bind();
-    GLenum format, type;
-
-    if (mg::get_gl_pixel_format(pixel_format, format, type))
-    {
-        auto const stride_in_px =
-            stride.as_int() / MIR_BYTES_PER_PIXEL(pixel_format);
-        /*
-         * We assume (as does Weston, AFAICT) that stride is
-         * a multiple of whole pixels, but it need not be.
-         *
-         * TODO: Handle non-pixel-multiple strides.
-         * This should be possible by calculating GL_UNPACK_ALIGNMENT
-         * to match the size of the partial-pixel-stride().
-         */
-
-        glPixelStorei(GL_UNPACK_ROW_LENGTH_EXT, stride_in_px);
-        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-
-        glTexImage2D(
-            GL_TEXTURE_2D,
-            0,
-            format,
-            size.width.as_int(), size.height.as_int(),
-            0,
-            format,
-            type,
-            pixels);
-
-        // Be nice to other users of the GL context by reverting our changes to shared state
-        glPixelStorei(GL_UNPACK_ROW_LENGTH_EXT, 0);     // 0 is default, meaning “use width”
-        glPixelStorei(GL_UNPACK_ALIGNMENT, 4);          // 4 is default; word alignment.
-        glFinish();
-    }
-    else
-    {
-        mir::log_error(
-            "Buffer %i has non-GL-compatible pixel format %i; rendering will be incomplete",
-            id.as_value(),
-            pixel_format);
+        uploaded = true;
     }
 
-    uploaded = true;
-}
+    void mark_dirty()
+    {
+        std::lock_guard lock{uploaded_mutex};
+        uploaded = false;
+    }
 
-void mgc::ShmBuffer::ShmBufferTexture::mark_dirty()
-{
-    std::lock_guard lock{uploaded_mutex};
-    uploaded = false;
-}
+private:
+    std::shared_ptr<EGLContextExecutor> egl_delegate;
+    GLuint tex_id_;
+    std::mutex uploaded_mutex;
+    bool uploaded = false;
+};
+
 
 bool mgc::ShmBuffer::supports(MirPixelFormat mir_format)
 {
@@ -242,14 +253,13 @@ auto mgc::ShmBuffer::texture_for_provider(
     std::shared_ptr<EGLContextExecutor> const& egl_delegate,
     RenderingProvider* provider) -> std::shared_ptr<gl::Texture>
 {
-    std::lock_guard lock(tex_mutex);
-
+    auto const locked_provider_to_texture_map = provider_to_texture_map.lock();
     // This method is called from the renderer where the egl context is current.
     // Hence, we do not need to spawn texture creation the egl_delegate.
-    if (!provider_to_texture_map.contains(provider))
-        provider_to_texture_map.emplace(provider, std::make_shared<ShmBufferTexture>(egl_delegate));
+    if (!locked_provider_to_texture_map->contains(provider))
+        locked_provider_to_texture_map->emplace(provider, std::make_shared<ShmBufferTexture>(egl_delegate));
 
-    auto texture = provider_to_texture_map.at(provider);
+    auto texture = locked_provider_to_texture_map->at(provider);
     on_texture_accessed(texture);
     return texture;
 }
@@ -279,7 +289,8 @@ void mgc::MemoryBackedShmBuffer::on_texture_accessed(std::shared_ptr<ShmBufferTe
 
 void mgc::MemoryBackedShmBuffer::mark_dirty()
 {
-    for (auto const& [provider, texture] : provider_to_texture_map)
+    auto const locked_provider_to_texture_map = provider_to_texture_map.lock();
+    for (auto const& [provider, texture] : *locked_provider_to_texture_map)
         texture->mark_dirty();
 }
 
