@@ -122,7 +122,12 @@ class ConfigurationKey
 {
 public:
     ConfigurationKey(std::initializer_list<std::string_view> key) :
-        self(std::make_unique<State>(key))
+        self{std::make_unique<State>(key)}
+    {
+    }
+
+    ConfigurationKey(std::initializer_list<std::string_view> key, std::string_view description) :
+        self{std::make_unique<State>(key, description)}
     {
     }
 
@@ -136,15 +141,26 @@ public:
         return self->key;
     }
 
+    auto description() const -> std::optional<std::string>
+    {
+        return self->description;
+    }
+
 private:
     struct State
     {
         std::vector<std::string> const path;
-        std::string const key;
+        std::string const key{to_string()};
+        std::optional<std::string> const description;
 
         State(std::initializer_list<std::string_view> key) :
+            path{key.begin(), key.end()}
+        {
+        }
+
+        State(std::initializer_list<std::string_view> key, std::string_view description) :
             path{key.begin(), key.end()},
-            key{to_string()}
+            description{description}
         {
         }
 
