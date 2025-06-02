@@ -37,7 +37,7 @@ class GbmWorkarounds
 {
 public:
     virtual ~GbmWorkarounds() = default;
-    virtual auto gbm_create_surface_flags_broken() -> bool = 0;
+    virtual auto adjust_gbm_create_surface_flags(uint32_t) -> uint32_t = 0;
     virtual auto gbm_surface_has_free_buffers_broken() -> bool = 0;
 };
 

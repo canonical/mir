@@ -128,9 +128,7 @@ auto create_gbm_surface(
     std::span<uint64_t> modifiers,
     std::shared_ptr<mga::GbmWorkarounds> runtime_quirks) -> std::shared_ptr<gbm_surface>
 {
-    auto const flags =
-        runtime_quirks->gbm_create_surface_flags_broken() ? 0 : GBM_BO_USE_RENDERING | GBM_BO_USE_SCANOUT;
-
+    auto const flags = runtime_quirks->adjust_gbm_create_surface_flags(GBM_BO_USE_RENDERING | GBM_BO_USE_SCANOUT);
     auto const surface =
         [&]()
         {

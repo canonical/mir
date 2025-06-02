@@ -141,9 +141,9 @@ public:
         {
             class NvidiaGbmWorkarounds : public GbmWorkarounds
             {
-                auto gbm_create_surface_flags_broken() -> bool override
+                auto adjust_gbm_create_surface_flags(uint32_t) -> uint32_t override
                 {
-                    return true;
+                    return 0;
                 }
                 auto gbm_surface_has_free_buffers_broken() -> bool override
                 {
@@ -151,14 +151,14 @@ public:
                 }
             };
 
-            return std::make_shared<NvidiaRuntimeQuirks>();
+            return std::make_shared<NvidiaGbmWorkarounds>();
         }
 
         class DefaultGbmWorkarounds : public GbmWorkarounds
         {
-            auto gbm_create_surface_flags_broken() -> bool override
+            auto adjust_gbm_create_surface_flags(uint32_t flags) -> uint32_t override
             {
-                return false;
+                return flags;
             }
             auto gbm_surface_has_free_buffers_broken() -> bool override
             {
@@ -166,7 +166,7 @@ public:
             }
         };
 
-        return std::make_shared<DefaultRuntimeQuirks>();
+        return std::make_shared<DefaultGbmWorkarounds>();
     }
 
 private:
