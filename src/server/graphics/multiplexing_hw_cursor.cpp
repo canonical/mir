@@ -78,3 +78,7 @@ auto mg::MultiplexingCursor::renderable() -> std::shared_ptr<Renderable>
     return nullptr;
 }
 
+auto mg::MultiplexingCursor::needs_compositing() -> bool
+{
+    return false;
+}

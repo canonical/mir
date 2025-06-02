@@ -41,6 +41,8 @@ public:
     virtual void scale(float new_scale) = 0;
 
     virtual auto renderable() -> std::shared_ptr<Renderable> = 0;
+
+    virtual auto needs_compositing() -> bool = 0;
 protected:
     Cursor() = default;
     virtual ~Cursor() = default;

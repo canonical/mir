@@ -14,11 +14,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_TEST_DOUBLES_STUB_CURSOR_H_
-#define MIR_TEST_DOUBLES_STUB_CURSOR_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_CURSOR_H
+#define MIR_TEST_DOUBLES_MOCK_CURSOR_H
 
 #include "mir/graphics/cursor.h"
-#include <memory>
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
 
 namespace mir
 {
@@ -26,19 +27,19 @@ namespace test
 {
 namespace doubles
 {
-
-struct StubCursor : public graphics::Cursor
+struct MockCursor : public mir::graphics::Cursor
 {
-    void show(std::shared_ptr<graphics::CursorImage> const&) override {}
-    void hide() override {}
-    void move_to(geometry::Point) override {}
-    void scale(float) override {}
-    auto renderable() -> std::shared_ptr<graphics::Renderable> override { return nullptr; }
-    auto needs_compositing() -> bool override { return false; }
+    MOCK_METHOD0(show, void());
+    MOCK_METHOD1(show, void(std::shared_ptr<mir::graphics::CursorImage> const&));
+    MOCK_METHOD0(hide, void());
+
+    MOCK_METHOD1(move_to, void(mir::geometry::Point));
+    MOCK_METHOD1(scale, void(float));
+    MOCK_METHOD0(renderable, std::shared_ptr<mir::graphics::Renderable>());
+    MOCK_METHOD0(needs_compositing, bool());
 };
-
 }
 }
-} // namespace mir
+}
 
-#endif /* MIR_TEST_DOUBLES_STUB_CURSOR_H_ */
+#endif //MIR_TEST_DOUBLES_MOCK_CURSOR_H

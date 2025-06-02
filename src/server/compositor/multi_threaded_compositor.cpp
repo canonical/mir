@@ -31,6 +31,7 @@
 #include "mir/thread_name.h"
 #include "mir/executor.h"
 #include "mir/signal.h"
+#include "mir/log.h"
 
 #include <atomic>
 #include <thread>
@@ -182,8 +183,14 @@ public:
                     {
                         auto& compositor = std::get<1>(tuple);
                         auto scene_elements = scene->scene_elements_for(compositor.get());
-                        if (auto const cursor_renderable = cursor->renderable())
-                            scene_elements.push_back(std::make_shared<CursorSceneElement>(cursor_renderable));
+                        if (cursor->needs_compositing())
+                        {
+                            if (auto const cursor_renderable = cursor->renderable())
+                                scene_elements.push_back(std::make_shared<CursorSceneElement>(cursor_renderable));
+                            else
+                                log_error("Cursor needs compositing by the renderable is unavailable");
+                        }
+
                         if (compositor->composite(std::move(scene_elements)))
                             needs_post = true;
                     }
