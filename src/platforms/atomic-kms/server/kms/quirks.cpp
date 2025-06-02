@@ -278,7 +278,7 @@ private:
         auto const specifier = tokens[1];
         auto const specifier_value = tokens[2];
 
-        if (specifier != "driver" || specifier != "devnode")
+        if (specifier != "driver" && specifier != "devnode")
             return {};
 
         return {{option, specifier, specifier_value}};
