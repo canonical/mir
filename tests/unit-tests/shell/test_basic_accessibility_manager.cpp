@@ -15,22 +15,15 @@
  */
 
 #include "include/server/mir/shell/keyboard_helper.h"
-#include "src/server/input/default_input_device_hub.h"
 #include "src/server/shell/basic_accessibility_manager.h"
 #include "src/server/shell/mouse_keys_transformer.h"
+#include "src/server/shell/basic_simulated_secondary_click_transformer.h"
 
-#include "mir/dispatch/multiplexing_dispatchable.h"
-#include "mir/glib_main_loop.h"
-#include "mir/input/composite_event_filter.h"
 #include "mir/input/input_event_transformer.h"
 #include "mir/input/mousekeys_keymap.h"
-#include "mir/input/virtual_input_device.h"
 #include "mir/test/fake_shared.h"
 
 #include "mir/test/doubles/mock_input_seat.h"
-#include "mir/test/doubles/mock_key_mapper.h"
-#include "mir/test/doubles/mock_led_observer_registrar.h"
-#include "mir/test/doubles/mock_server_status_listener.h"
 #include "mir/test/doubles/advanceable_clock.h"
 #include "mir/test/doubles/stub_cursor.h"
 
@@ -65,25 +58,35 @@ struct MockMouseKeysTransformer : public mir::shell::MouseKeysTransformer
         (override));
 };
 
-struct StubCompositeEventFilter : mir::input::CompositeEventFilter
+struct MockSimulatedSecondaryClickTransformer : public mir::shell::SimulatedSecondaryClickTransformer
 {
-    bool handle(const MirEvent& event) override;
-    void append(const std::weak_ptr<EventFilter>& filter) override;
-    void prepend(const std::weak_ptr<EventFilter>& filter) override;
+    MockSimulatedSecondaryClickTransformer() = default;
+
+    MOCK_METHOD(
+        bool,
+        transform_input_event,
+        (mir::input::InputEventTransformer::EventDispatcher const& dispatcher,
+         mir::input::EventBuilder*,
+         MirEvent const&),
+        (override));
+
+    MOCK_METHOD(void, hold_duration, (std::chrono::milliseconds delay), (override));
+    MOCK_METHOD(void, displacement_threshold, (float), (override));
+    MOCK_METHOD(void, on_hold_start, (std::function<void()>&& on_hold_start), (override));
+    MOCK_METHOD(void, on_hold_cancel, (std::function<void()>&& on_hold_cancel), (override));
+    MOCK_METHOD(void, on_secondary_click, (std::function<void()>&& on_secondary_click), (override));
 };
 
-bool StubCompositeEventFilter::handle(const MirEvent& /*event*/)
+struct MockInputEventTransformer: public mir::input::InputEventTransformer
 {
-    return false;
-}
+    MockInputEventTransformer(std::shared_ptr<Seat> const& seat, std::shared_ptr<mir::time::Clock> const& clock)
+        : mir::input::InputEventTransformer(seat, clock)
+    {
+    }
 
-void StubCompositeEventFilter::append(const std::weak_ptr<EventFilter>& /*filter*/)
-{
-}
-
-void StubCompositeEventFilter::prepend(const std::weak_ptr<EventFilter>& /*filter*/)
-{
-}
+    MOCK_METHOD(void, append, (std::weak_ptr<Transformer> const&), (override));
+    MOCK_METHOD(void, remove, (std::shared_ptr<Transformer> const&), (override));
+};
 
 struct TestBasicAccessibilityManager : Test
 {
@@ -92,25 +95,23 @@ struct TestBasicAccessibilityManager : Test
             mt::fake_shared(input_event_transformer),
             true,
             std::make_shared<mir::test::doubles::StubCursor>(),
-            mock_mousekeys_transformer}
+            mock_mousekeys_transformer,
+            mock_simulated_secondary_click_transformer}
     {
         basic_accessibility_manager.register_keyboard_helper(mock_key_helper);
     }
 
     mtd::AdvanceableClock clock;
-    mir::dispatch::MultiplexingDispatchable multiplexer;
-    NiceMock<mtd::MockLedObserverRegistrar> led_observer_registrar;
     NiceMock<mtd::MockInputSeat> mock_seat;
-    NiceMock<mtd::MockKeyMapper> mock_key_mapper;
-    NiceMock<mtd::MockServerStatusListener> mock_server_status_listener;
 
     std::shared_ptr<NiceMock<MockKeyboardHelper>> mock_key_helper{std::make_shared<NiceMock<MockKeyboardHelper>>()};
     std::shared_ptr<NiceMock<MockMouseKeysTransformer>> mock_mousekeys_transformer{
         std::make_shared<NiceMock<MockMouseKeysTransformer>>()};
+    std::shared_ptr<NiceMock<MockSimulatedSecondaryClickTransformer>> mock_simulated_secondary_click_transformer{
+        std::make_shared<NiceMock<MockSimulatedSecondaryClickTransformer>>()};
 
-    std::shared_ptr<mir::MainLoop> const main_loop{std::make_shared<mir::GLibMainLoop>(mt::fake_shared(clock))};
-    std::shared_ptr<mir::input::CompositeEventFilter> const composite_filter{std::make_shared<StubCompositeEventFilter>()};
-    mir::input::InputEventTransformer input_event_transformer{mt::fake_shared(mock_seat), mt::fake_shared(clock)};
+    NiceMock<MockInputEventTransformer> input_event_transformer{mt::fake_shared(mock_seat), mt::fake_shared(clock)};
+
     mir::shell::BasicAccessibilityManager basic_accessibility_manager;
 };
 
@@ -244,4 +245,94 @@ TEST_F(TestBasicAccessibilityManager, calling_set_max_speed_calls_set_max_speed_
 
     basic_accessibility_manager.mousekeys_enabled(true);
     basic_accessibility_manager.max_speed(max_x, max_y);
+}
+
+TEST_F(TestBasicAccessibilityManager, calling_simulated_secondary_click_hold_duration_calls_the_corresponding_method_on_transformer)
+{
+    auto const expected_duration = std::chrono::milliseconds{333};
+    EXPECT_CALL(*mock_simulated_secondary_click_transformer, hold_duration(expected_duration));
+
+    basic_accessibility_manager.simulated_secondary_click_enabled(true);
+    basic_accessibility_manager.simulated_secondary_click().hold_duration(expected_duration);
+}
+
+TEST_F(TestBasicAccessibilityManager, setting_on_hold_start_sets_it_on_transformer)
+{
+    auto const expected_on_hold_start = []
+    {
+    };
+
+    EXPECT_CALL(*mock_simulated_secondary_click_transformer, on_hold_start(_));
+
+    basic_accessibility_manager.simulated_secondary_click().on_hold_start(expected_on_hold_start);
+}
+
+TEST_F(TestBasicAccessibilityManager, setting_on_hold_cancel_sets_it_on_transformer)
+{
+    auto const expected_on_hold_cancel = []
+    {
+    };
+
+    EXPECT_CALL(*mock_simulated_secondary_click_transformer, on_hold_cancel(_));
+
+    basic_accessibility_manager.simulated_secondary_click().on_hold_cancel(expected_on_hold_cancel);
+}
+
+TEST_F(TestBasicAccessibilityManager, setting_on_secondary_click_sets_it_on_transformer)
+{
+    auto const expected_on_secondary_click = []
+    {
+    };
+
+    EXPECT_CALL(*mock_simulated_secondary_click_transformer, on_secondary_click(_));
+
+    basic_accessibility_manager.simulated_secondary_click().on_secondary_click(expected_on_secondary_click);
+}
+
+
+TEST_F(TestBasicAccessibilityManager, enabling_simulated_secondary_click_twice_calls_enabled_once)
+{
+    EXPECT_CALL(input_event_transformer, append(_)).Times(1);
+
+    basic_accessibility_manager.simulated_secondary_click_enabled(true);
+    basic_accessibility_manager.simulated_secondary_click_enabled(true);
+}
+
+TEST_F(
+    TestBasicAccessibilityManager, enabling_simulated_secondary_click_then_disabling_then_enabling_calls_enabled_twice)
+{
+    EXPECT_CALL(input_event_transformer, append(_)).Times(2);
+
+    basic_accessibility_manager.simulated_secondary_click_enabled(true);
+    basic_accessibility_manager.simulated_secondary_click_enabled(false);
+    basic_accessibility_manager.simulated_secondary_click_enabled(true);
+    basic_accessibility_manager.simulated_secondary_click_enabled(false);
+}
+
+
+TEST_F(TestBasicAccessibilityManager, disabling_simulated_secondary_click_twice_calls_disabled_once)
+{
+    EXPECT_CALL(input_event_transformer, append(_)).Times(1);
+
+    basic_accessibility_manager.simulated_secondary_click_enabled(true); // Have to enable to be able to disable
+    basic_accessibility_manager.simulated_secondary_click_enabled(false);
+    basic_accessibility_manager.simulated_secondary_click_enabled(false);
+}
+
+TEST_F(
+    TestBasicAccessibilityManager, disabling_simulated_secondary_click_then_enabling_then_disabling_calls_disabled_twice)
+{
+    EXPECT_CALL(input_event_transformer, append(_)).Times(2);
+
+    basic_accessibility_manager.simulated_secondary_click_enabled(true); // Have to enable to be able to disable
+    basic_accessibility_manager.simulated_secondary_click_enabled(false);
+    basic_accessibility_manager.simulated_secondary_click_enabled(true);
+    basic_accessibility_manager.simulated_secondary_click_enabled(false);
+}
+
+TEST_F(
+    TestBasicAccessibilityManager, disabling_simulated_secondary_click_before_enabling_it_doesnt_call_disabled)
+{
+    EXPECT_CALL(input_event_transformer, remove(_)).Times(0);
+    basic_accessibility_manager.simulated_secondary_click_enabled(false);
 }

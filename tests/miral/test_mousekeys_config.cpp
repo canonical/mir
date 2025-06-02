@@ -40,6 +40,8 @@ public:
     MOCK_METHOD(void, mousekeys_keymap, (mir::input::MouseKeysKeymap const& new_keymap), (override));
     MOCK_METHOD(void, acceleration_factors, (double constant, double linear, double quadratic), (override));
     MOCK_METHOD(void, max_speed, (double x_axis, double y_axis), (override));
+    MOCK_METHOD(void, simulated_secondary_click_enabled, (bool enabled), (override));
+    MOCK_METHOD(mir::shell::SimulatedSecondaryClickTransformer&, simulated_secondary_click, (), (override));
 };
 
 struct TestMouseKeysConfig : miral::TestServer

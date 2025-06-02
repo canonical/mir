@@ -29,6 +29,7 @@ class MouseKeysKeymap;
 namespace shell
 {
 class KeyboardHelper;
+class SimulatedSecondaryClickTransformer;
 class AccessibilityManager
 {
 public:
@@ -47,6 +48,9 @@ public:
     virtual void mousekeys_keymap(input::MouseKeysKeymap const& new_keymap) = 0;
     virtual void acceleration_factors(double constant, double linear, double quadratic) = 0;
     virtual void max_speed(double x_axis, double y_axis) = 0;
+
+    virtual void simulated_secondary_click_enabled(bool enabled) = 0;
+    virtual auto simulated_secondary_click() -> SimulatedSecondaryClickTransformer& = 0;
 };
 }
 }
