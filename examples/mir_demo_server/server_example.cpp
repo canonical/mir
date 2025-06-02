@@ -122,33 +122,52 @@ class ConfigurationKey
 {
 public:
     ConfigurationKey(std::initializer_list<std::string_view> key) :
-        self(std::make_unique<std::vector<std::string>>(key.begin(), key.end()))
+        self(std::make_unique<State>(key))
     {
     }
 
     auto as_path() const -> std::vector<std::string>
     {
-        return *self;
+        return self->path;
     }
 
     auto to_string() const -> std::string
     {
-        std::string result;
-        for (auto const& element : *self)
-        {
-            if (!result.empty())
-                result += '_';
-
-            result += element;
-        }
-
-        return result;
+        return self->key;
     }
 
-    auto operator<=>(ConfigurationKey const& that) const { return *self <=> *that.self; }
-
 private:
-    std::shared_ptr<std::vector<std::string>> self;
+    struct State
+    {
+        std::vector<std::string> const path;
+        std::string const key;
+
+        State(std::initializer_list<std::string_view> key) :
+            path{key.begin(), key.end()},
+            key{to_string()}
+        {
+        }
+
+        auto operator<=>(State const& that) const { return key <=> that.key; }
+
+        auto to_string() const -> std::string
+        {
+            std::string result;
+            for (auto const& element : path)
+            {
+                if (!result.empty())
+                    result += '_';
+
+                result += element;
+            }
+
+            return result;
+        }
+    };
+    std::shared_ptr<State> self;
+
+public:
+    auto operator<=>(ConfigurationKey const& that) const { return *self <=> *that.self; }
 };
 /// Interface for adding attributes to a configuration tool.
 ///
@@ -167,10 +186,10 @@ public:
     using HandleString = std::function<void(ConfigurationKey const& key, std::optional<std::string_view> value)>;
     using HandleDone = std::function<void()>;
 
-    virtual void add_int_attribute(ConfigurationKey const& key, HandleInt handler) = 0;
-    virtual void add_bool_attribute(ConfigurationKey const& key, HandleBool handler) = 0;
-    virtual void add_float_attribute(ConfigurationKey const& key, HandleFloat handler) = 0;
-    virtual void add_string_attribute(ConfigurationKey const& key, HandleString handler) = 0;
+    virtual void add_int_attribute(HandleInt handler, ConfigurationKey const& key) = 0;
+    virtual void add_bool_attribute(HandleBool handler, ConfigurationKey const& key) = 0;
+    virtual void add_float_attribute(HandleFloat handler, ConfigurationKey const& key) = 0;
+    virtual void add_string_attribute(HandleString handler, ConfigurationKey const& key) = 0;
 
     /// Called following a set of related updates (e.g. a file reload) to allow
     /// multiple attributes to be updated transactionally
@@ -184,31 +203,31 @@ struct OutputFilter : miral::OutputFilter
 {
     explicit OutputFilter(AttributeHandler& config_handler)
     {
-        config_handler.add_string_attribute({"output_filter"},
-                                            [this](ConfigurationKey const& key, std::optional<std::string_view> val)
-            {
-                MirOutputFilter new_filter = mir_output_filter_none;
-                if (val)
-                {
-                    auto filter_name = *val;
-                    if (filter_name == "grayscale")
-                    {
-                        new_filter = mir_output_filter_grayscale;
-                    }
-                    else if (filter_name == "invert")
-                    {
-                        new_filter = mir_output_filter_invert;
-                    }
-                    else
-                    {
-                        mir::log_warning(
-                            "Config key '%s' has invalid value: %s",
-                            key.to_string().c_str(),
-                            val->data());
-                    }
-                }
-                filter(new_filter);
-            });
+        config_handler.add_string_attribute([this](ConfigurationKey const& key, std::optional<std::string_view> val)
+                                            {
+                                                MirOutputFilter new_filter = mir_output_filter_none;
+                                                if (val)
+                                                {
+                                                    auto filter_name = *val;
+                                                    if (filter_name == "grayscale")
+                                                    {
+                                                        new_filter = mir_output_filter_grayscale;
+                                                    }
+                                                    else if (filter_name == "invert")
+                                                    {
+                                                        new_filter = mir_output_filter_invert;
+                                                    }
+                                                    else
+                                                    {
+                                                        mir::log_warning(
+                                                            "Config key '%s' has invalid value: %s",
+                                                            key.to_string().c_str(),
+                                                            val->data());
+                                                    }
+                                                }
+                                                filter(new_filter);
+                                            },
+                                            {"output_filter"});
     }
 };
 
@@ -235,85 +254,85 @@ struct InputConfiguration : miral::InputConfiguration
 
     explicit InputConfiguration(AttributeHandler& config_handler) : miral::InputConfiguration{}
     {
-        config_handler.add_string_attribute({"pointer", "handedness"},
-                                            [this](ConfigurationKey const& key, std::optional<std::string_view> val)
-            {
-                if (val)
-                {
-                    std::lock_guard lock{state->mutex};
-                    auto const& value = *val;
-                    if (value == "right")
-                        state->mouse.handedness(mir_pointer_handedness_right);
-                    else if (value == "left")
-                        state->mouse.handedness(mir_pointer_handedness_left);
-                    else
-                        mir::log_warning(
-                            "Config key '%s' has invalid value: %s",
-                            key.to_string().c_str(),
-                            val->data());
-                }
-            });
+        config_handler.add_string_attribute([this](ConfigurationKey const& key, std::optional<std::string_view> val)
+                                            {
+                                                if (val)
+                                                {
+                                                    std::lock_guard lock{state->mutex};
+                                                    auto const& value = *val;
+                                                    if (value == "right")
+                                                        state->mouse.handedness(mir_pointer_handedness_right);
+                                                    else if (value == "left")
+                                                        state->mouse.handedness(mir_pointer_handedness_left);
+                                                    else
+                                                        mir::log_warning(
+                                                            "Config key '%s' has invalid value: %s",
+                                                            key.to_string().c_str(),
+                                                            val->data());
+                                                }
+                                            },
+                                            {"pointer", "handedness"});
 
-        config_handler.add_string_attribute({"touchpad", "scroll_mode"},
-                                            [this](ConfigurationKey const& key, std::optional<std::string_view> val)
-            {
-                if (val)
-                {
-                    std::lock_guard lock{state->mutex};
-                    auto const& value = *val;
-                    if (value == "none")
-                        state->touchpad.scroll_mode(mir_touchpad_scroll_mode_none);
-                    else if (value == "two_finger_scroll")
-                        state->touchpad.scroll_mode(mir_touchpad_scroll_mode_two_finger_scroll);
-                    else if (value == "edge_scroll")
-                        state->touchpad.scroll_mode(mir_touchpad_scroll_mode_edge_scroll);
-                    else if (value == "button_down_scroll")
-                        state->touchpad.scroll_mode(mir_touchpad_scroll_mode_button_down_scroll);
-                    else
-                        mir::log_warning(
-                            "Config key '%s' has invalid value: %s",
-                            key.to_string().c_str(),
-                            val->data());
-                }
-            });
+        config_handler.add_string_attribute([this](ConfigurationKey const& key, std::optional<std::string_view> val)
+                                            {
+                                                if (val)
+                                                {
+                                                    std::lock_guard lock{state->mutex};
+                                                    auto const& value = *val;
+                                                    if (value == "none")
+                                                        state->touchpad.scroll_mode(mir_touchpad_scroll_mode_none);
+                                                    else if (value == "two_finger_scroll")
+                                                        state->touchpad.scroll_mode(mir_touchpad_scroll_mode_two_finger_scroll);
+                                                    else if (value == "edge_scroll")
+                                                        state->touchpad.scroll_mode(mir_touchpad_scroll_mode_edge_scroll);
+                                                    else if (value == "button_down_scroll")
+                                                        state->touchpad.scroll_mode(mir_touchpad_scroll_mode_button_down_scroll);
+                                                    else
+                                                        mir::log_warning(
+                                                            "Config key '%s' has invalid value: %s",
+                                                            key.to_string().c_str(),
+                                                            val->data());
+                                                }
+                                            },
+                                            {"touchpad", "scroll_mode"});
 
-        config_handler.add_int_attribute({"repeat_rate"},
-                                         [this](ConfigurationKey const& key, std::optional<int> val)
-            {
-                if (val)
-                {
-                    if (val >= 0)
-                    {
-                        std::lock_guard lock{state->mutex};
-                        state->keyboard.set_repeat_rate(*val);
-                    }
-                    else
-                    {
-                        mir::log_warning(
-                            "Config value %s does not support negative values. Ignoring the supplied value (%d)...",
-                            key.to_string().c_str(), *val);
-                    }
-                }
-            });
+        config_handler.add_int_attribute([this](ConfigurationKey const& key, std::optional<int> val)
+                                         {
+                                             if (val)
+                                             {
+                                                 if (val >= 0)
+                                                 {
+                                                     std::lock_guard lock{state->mutex};
+                                                     state->keyboard.set_repeat_rate(*val);
+                                                 }
+                                                 else
+                                                 {
+                                                     mir::log_warning(
+                                                         "Config value %s does not support negative values. Ignoring the supplied value (%d)...",
+                                                         key.to_string().c_str(), *val);
+                                                 }
+                                             }
+                                         },
+                                         {"repeat_rate"});
 
-        config_handler.add_int_attribute({"repeat_delay"},
-                                         [this](ConfigurationKey const& key, std::optional<int> val)
-            {
-                if (val)
-                {
-                    if (val >= 0)
-                    {
-                        std::lock_guard lock{state->mutex};
-                        state->keyboard.set_repeat_delay(*val);
-                    }
-                    else
-                    {
-                        mir::log_warning(
-                            "Config value %s does not support negative values. Ignoring the supplied value (%d)...",
-                            key.to_string().c_str(), *val);
-                    }
-                }
-            });
+        config_handler.add_int_attribute([this](ConfigurationKey const& key, std::optional<int> val)
+                                         {
+                                             if (val)
+                                             {
+                                                 if (val >= 0)
+                                                 {
+                                                     std::lock_guard lock{state->mutex};
+                                                     state->keyboard.set_repeat_delay(*val);
+                                                 }
+                                                 else
+                                                 {
+                                                     mir::log_warning(
+                                                         "Config value %s does not support negative values. Ignoring the supplied value (%d)...",
+                                                         key.to_string().c_str(), *val);
+                                                 }
+                                             }
+                                         },
+                                         {"repeat_delay"});
 
         config_handler.on_done([this]
         {
@@ -344,23 +363,23 @@ struct CursorScale : miral::CursorScale
 {
     explicit CursorScale(AttributeHandler& config_handler) : miral::CursorScale{}
     {
-        config_handler.add_float_attribute({"cursor", "scale"},
-                                           [this](ConfigurationKey const& key, std::optional<float> val)
-            {
-                if (val)
-                {
-                    if (*val >= 0.0)
-                    {
-                        scale(*val);
-                    }
-                    else
-                    {
-                        mir::log_warning(
-                            "Config value %s does not support negative values. Ignoring the supplied value (%f)...",
-                            key.to_string().c_str(), *val);
-                    }
-                }
-            });
+        config_handler.add_float_attribute([this](ConfigurationKey const& key, std::optional<float> val)
+                                           {
+                                               if (val)
+                                               {
+                                                   if (*val >= 0.0)
+                                                   {
+                                                       scale(*val);
+                                                   }
+                                                   else
+                                                   {
+                                                       mir::log_warning(
+                                                           "Config value %s does not support negative values. Ignoring the supplied value (%f)...",
+                                                           key.to_string().c_str(), *val);
+                                                   }
+                                               }
+                                           },
+                                           {"cursor", "scale"});
     }
 };
 
@@ -381,16 +400,15 @@ public:
             });
     }
 
-    void add_int_attribute(ConfigurationKey const& key, HandleInt handler) override;
-    void add_bool_attribute(const ConfigurationKey& key, HandleBool handler) override;
-    void add_float_attribute(ConfigurationKey const& key, HandleFloat handler) override;
-    void add_string_attribute(ConfigurationKey const& key, HandleString handler) override;
+    void add_int_attribute(HandleInt handler, ConfigurationKey const& key) override;
+    void add_bool_attribute(HandleBool handler, const ConfigurationKey& key) override;
+    void add_float_attribute(HandleFloat handler, ConfigurationKey const& key) override;
+    void add_string_attribute(HandleString handler, ConfigurationKey const& key) override;
     void on_done(HandleDone handler) override;
 
 private:
 
-    using MyLess = decltype([](ConfigurationKey const& l, ConfigurationKey const& r) { return l.to_string() < r.to_string(); });
-    std::map<ConfigurationKey, HandleString, MyLess> attribute_handlers;
+    std::map<ConfigurationKey, HandleString> attribute_handlers;
     std::list<HandleDone> done_handlers;
 
     std::mutex config_mutex;
@@ -435,9 +453,9 @@ void DemoConfigFile::on_done(HandleDone handler)
     done_handlers.emplace_back(std::move(handler));
 }
 
-void DemoConfigFile::add_int_attribute(ConfigurationKey const& key, HandleInt handler)
+void DemoConfigFile::add_int_attribute(HandleInt handler, ConfigurationKey const& key)
 {
-    add_string_attribute(key, [handler](ConfigurationKey const& key, std::optional<std::string_view> val)
+    add_string_attribute([handler](ConfigurationKey const& key, std::optional<std::string_view> val)
     {
         if (val)
         {
@@ -455,19 +473,19 @@ void DemoConfigFile::add_int_attribute(ConfigurationKey const& key, HandleInt ha
                     "Config key '%s' has invalid integer value: %s",
                     key.to_string().c_str(),
                     val->data());
-                    handler(key, std::nullopt);
+                handler(key, std::nullopt);
             }
         }
         else
         {
             handler(key, std::nullopt);
         }
-    });
+    }, key);
 }
 
-void DemoConfigFile::add_bool_attribute(const ConfigurationKey& key, HandleBool handler)
+void DemoConfigFile::add_bool_attribute(HandleBool handler, const ConfigurationKey& key)
 {
-    add_string_attribute(key, [handler](ConfigurationKey const& key, std::optional<std::string_view> val)
+    add_string_attribute([handler](ConfigurationKey const& key, std::optional<std::string_view> val)
     {
         if (val)
         {
@@ -492,12 +510,12 @@ void DemoConfigFile::add_bool_attribute(const ConfigurationKey& key, HandleBool 
         {
             handler(key, std::nullopt);
         }
-    });
+    }, key);
 }
 
-void DemoConfigFile::add_float_attribute(ConfigurationKey const& key, HandleFloat handler)
+void DemoConfigFile::add_float_attribute(HandleFloat handler, ConfigurationKey const& key)
 {
-    add_string_attribute(key, [handler](ConfigurationKey const& key, std::optional<std::string_view> val)
+    add_string_attribute([handler](ConfigurationKey const& key, std::optional<std::string_view> val)
     {
         if (val)
         {
@@ -515,17 +533,17 @@ void DemoConfigFile::add_float_attribute(ConfigurationKey const& key, HandleFloa
                     "Config key '%s' has invalid floating point value: %s",
                     key.to_string().c_str(),
                     val->data());
-                    handler(key, std::nullopt);
+                handler(key, std::nullopt);
             }
         }
         else
         {
             handler(key, std::nullopt);
         }
-    });
+    }, key);
 }
 
-void DemoConfigFile::add_string_attribute(ConfigurationKey const& key, HandleString handler)
+void DemoConfigFile::add_string_attribute(HandleString handler, ConfigurationKey const& key)
 {
     std::lock_guard lock{config_mutex};
     attribute_handlers[key] = handler;
