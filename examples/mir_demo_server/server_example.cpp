@@ -162,11 +162,13 @@ class AttributeHandler
 {
 public:
     using HandleInt = std::function<void(ConfigurationKey const& key, std::optional<int> value)>;
+    using HandleBool = std::function<void(ConfigurationKey const& key, std::optional<bool> value)>;
     using HandleFloat = std::function<void(ConfigurationKey const& key, std::optional<float> value)>;
     using HandleString = std::function<void(ConfigurationKey const& key, std::optional<std::string_view> value)>;
     using HandleDone = std::function<void()>;
 
     virtual void add_int_attribute(ConfigurationKey const& key, HandleInt handler) = 0;
+    virtual void add_bool_attribute(ConfigurationKey const& key, HandleBool handler) = 0;
     virtual void add_float_attribute(ConfigurationKey const& key, HandleFloat handler) = 0;
     virtual void add_string_attribute(ConfigurationKey const& key, HandleString handler) = 0;
 
@@ -380,6 +382,7 @@ public:
     }
 
     void add_int_attribute(ConfigurationKey const& key, HandleInt handler) override;
+    void add_bool_attribute(const ConfigurationKey& key, HandleBool handler) override;
     void add_float_attribute(ConfigurationKey const& key, HandleFloat handler) override;
     void add_string_attribute(ConfigurationKey const& key, HandleString handler) override;
     void on_done(HandleDone handler) override;
@@ -449,10 +452,40 @@ void DemoConfigFile::add_int_attribute(ConfigurationKey const& key, HandleInt ha
             else
             {
                 mir::log_warning(
-                    "Config key '%s' has invalid floating point value: %s",
+                    "Config key '%s' has invalid integer value: %s",
                     key.to_string().c_str(),
                     val->data());
                     handler(key, std::nullopt);
+            }
+        }
+        else
+        {
+            handler(key, std::nullopt);
+        }
+    });
+}
+
+void DemoConfigFile::add_bool_attribute(const ConfigurationKey& key, HandleBool handler)
+{
+    add_string_attribute(key, [handler](ConfigurationKey const& key, std::optional<std::string_view> val)
+    {
+        if (val)
+        {
+            if (*val == "true")
+            {
+                handler(key, true);
+            }
+            else if (*val == "false")
+            {
+                handler(key, false);
+            }
+            else
+            {
+                mir::log_warning(
+                    "Config key '%s' has invalid boolean value: %s",
+                    key.to_string().c_str(),
+                    val->data());
+                handler(key, std::nullopt);
             }
         }
         else
