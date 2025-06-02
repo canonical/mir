@@ -20,6 +20,7 @@
 #include "mir/options/option.h"
 #include "mir/udev/wrapper.h"
 
+#include <boost/algorithm/string.hpp>
 
 #include <vector>
 #include <unordered_set>
@@ -57,57 +58,67 @@ public:
             return;
         }
 
-        for (auto const& quirk : options.get<std::vector<std::string>>(quirks_option_name))
+        auto const process_one_option = [&](auto option_value)
         {
-            auto const disable_kms_probe = "disable-kms-probe:";
-            auto const skip_devnode = "skip:devnode:";
-            auto const skip_driver = "skip:driver:";
-            auto const allow_devnode = "allow:devnode:";
-            auto const allow_driver = "allow:driver:";
-            auto const force_runtime_quirk = "force-runtime-quirk:";
+            std::vector<std::string> tokens;
+            boost::split(tokens, option_value, boost::is_any_of(":"));
 
-            if (quirk.starts_with(skip_devnode))
+            // <option>:{devnode,driver}:<specifier value>
+            auto const structure = validate_structure(tokens);
+            if(!structure)
+                return false;
+
+            auto const [option, specifier, specifier_value] = *structure;
+
+            if (option == "skip")
             {
-                devnodes_to_skip.insert(quirk.substr(strlen(skip_devnode)));
-                continue;
+                completely_skip.skip(specifier, specifier_value);
+                return true;
             }
-            else if (quirk.starts_with(skip_driver))
+            else if (option == "allow")
             {
-                drivers_to_skip.insert(quirk.substr(strlen(skip_driver)));
-                continue;
+                completely_skip.allow(specifier, specifier_value);
+                return true;
             }
-            else if (quirk.starts_with(allow_devnode))
+            else if (option == "disable-kms-probe")
             {
-                devnodes_to_skip.erase(quirk.substr(strlen(allow_devnode)));
-                continue;
+                disable_kms_probe.skip(specifier, specifier_value);
+                return true;
             }
-            else if (quirk.starts_with(allow_driver))
+            else if (option == "force-runtime-quirk")
             {
-                drivers_to_skip.erase(quirk.substr(strlen(allow_driver)));
-                continue;
-            }
-            else if (quirk.starts_with(disable_kms_probe))
-            {
-                // Quirk format is disable-kms-probe:value
-                skip_modesetting_support.emplace(quirk.substr(strlen(disable_kms_probe)));
-                continue;
-            } 
-            else if (quirk.starts_with(force_runtime_quirk))
-            {
-                auto const runtime_quirk = quirk.substr(strlen(force_runtime_quirk));
-                if (runtime_quirks.contains(runtime_quirk))
+                if (tokens.size() < 4)
+                    return false;
+
+                auto const runtime_quirk = tokens[3];
+                if (runtime_quirk == "default" || runtime_quirk == "nvidia")
                 {
-                    forced_quirk = runtime_quirk;
-                    continue;
+                    if (specifier == "devnode")
+                        force_runtime_quirk.add_devnode(specifier_value, runtime_quirk);
+                    else if (specifier == "driver")
+                        force_runtime_quirk.add_driver(specifier_value, runtime_quirk);
+
+                    return true;
                 }
             }
 
-            // If we didn't `continue` above, we're ignoring...
-            mir::log_warning(
-                "Ignoring unexpected value for %s option: %s "
-                "(expects value of the form “skip:<type>:<value>”, “allow:<type>:<value>” or ”disable-kms-probe:<value>” or “force-runtime-quirk:<value>”)",
-                quirks_option_name,
-                quirk.c_str());
+            return false;
+        };
+
+        for (auto const& quirk : options.get<std::vector<std::string>>(quirks_option_name))
+        {
+            if (!process_one_option(quirk))
+            {
+                // If we didn't process above, we're ignoring...
+                // clangd really can't format this...
+                mir::log_warning(
+                    "Ignoring unexpected value for %s option: %s "
+                    "(expects value of the form “{skip, allow}:{driver,devnode}:<driver or devnode>”"
+                    ", “disable-kms-probe:{driver,devnode}:<driver or devnode>” "
+                    "or “force-runtime-quirk:{driver,devnode}:<driver or devnode>:{default,nvidia}”)",
+                    quirks_option_name,
+                    quirk.c_str());
+            }
         }
     }
 
@@ -116,17 +127,39 @@ public:
         auto const devnode = value_or(device.devnode(), "");
         auto const parent_device = device.parent();
         auto const driver = get_device_driver(parent_device.get());
-        mir::log_debug("Quirks: checking device with devnode: %s, driver %s", device.devnode(), driver);
-        bool const should_skip_driver = drivers_to_skip.count(driver);
-        bool const should_skip_devnode = devnodes_to_skip.count(devnode);
-        if (should_skip_driver)
-        {
-            mir::log_info("Quirks: skipping device %s (matches driver quirk %s)", devnode, driver);
-        }
+
+        mir::log_debug("Quirks(skip/allow): checking device with devnode: %s, driver %s", device.devnode(), driver);
+
+        // Devnodes have higher precedence
+        //
+        //  ? = unspecified
+        //
+        //  devnode driver  outcome
+        //  0: ?       skip    skip
+        //  1: ?       ?       no skip
+        //  2: ?       allow   no skip
+        //
+        //  3: skip    ?       skip
+        //  4: skip    skip    skip
+        //  5: skip    allow   skip
+        //
+        //  6: allow   ?       no skip
+        //  7: allow   skip    no skip
+        //  8: allow   allow   no skip
+        //
+        //  Cases 3-5 are the complete opposite of cases 6-8
+        bool const should_skip_devnode = completely_skip.skipped_devnodes.contains(devnode);
         if (should_skip_devnode)
         {
-            mir::log_info("Quirks: skipping device %s (matches devnode quirk %s)", devnode, devnode);
+            mir::log_info("Quirks(skip/allow): skipping device %s (matches devnode quirk %s)", devnode, devnode);
         }
+
+        bool const should_skip_driver = completely_skip.skipped_drivers.contains(driver);
+        if (should_skip_driver)
+        {
+            mir::log_info("Quirks(skip/allow): skipping device %s (matches driver quirk %s)", devnode, driver);
+        }
+
         return should_skip_driver || should_skip_devnode;
     }
 
@@ -135,14 +168,22 @@ public:
         auto const devnode = value_or(device.devnode(), "");
         auto const parent_device = device.parent();
         auto const driver = get_device_driver(parent_device.get());
-        mir::log_debug("Quirks: checking device with devnode: %s, driver %s", device.devnode(), driver);
+        mir::log_debug(
+            "Quirks(disable-kms-probe): checking device with devnode: %s, driver %s", device.devnode(), driver);
 
-        bool const should_skip_modesetting_support = skip_modesetting_support.count(driver);
-        if (should_skip_modesetting_support)
+        bool const should_skip_devnode = disable_kms_probe.skipped_devnodes.contains(devnode);
+        if (should_skip_devnode)
         {
-            mir::log_info("Quirks: skipping modesetting check %s (matches driver quirk %s)", devnode, driver);
+            mir::log_info("Quirks(disable-kms-probe): skipping device %s (matches devnode quirk %s)", devnode, devnode);
         }
-        return !should_skip_modesetting_support;
+
+        bool const should_skip_driver = disable_kms_probe.skipped_drivers.contains(driver);
+        if (should_skip_driver)
+        {
+            mir::log_info("Quirks(disable-kms-probe): skipping device %s (matches driver quirk %s)", devnode, driver);
+        }
+
+        return !(should_skip_driver || should_skip_devnode);
     }
 
     auto runtime_quirks_for(udev::Device const& device) -> std::shared_ptr<GbmQuirks>
@@ -172,21 +213,37 @@ public:
         };
 
         auto const driver = get_device_driver(device.parent().get());
-        mir::log_debug("Quirks: checking device with devnode: %s, driver %s", device.devnode(), driver);
+        auto const devnode = device.devnode();
+        mir::log_debug("Quirks(force-runtime-quirk): checking device with devnode: %s, driver %s", devnode, driver);
 
-        auto const chosen_quirk = forced_quirk
-                                      .transform(
-                                          [](auto fq)
-                                          {
-                                              mir::log_debug("Quirks: forcing runtime quirk %s", fq.c_str());
-                                              return fq;
-                                          })
-                                      .or_else(
-                                          [&driver] -> std::optional<std::string>
-                                          {
-                                              mir::log_debug("Quirks: using runtime quirk for “%s” driver", driver);
-                                              return {driver};
-                                          });
+        auto const chosen_quirk = [&] -> std::optional<std::string>
+        {
+            if (auto const iter = force_runtime_quirk.devnodes.find(devnode); iter != force_runtime_quirk.devnodes.end())
+            {
+                return {iter->second};
+            }
+
+            if (auto const iter = force_runtime_quirk.drivers.find(driver); iter != force_runtime_quirk.drivers.end())
+            {
+                return {iter->second};
+            }
+
+            return std::nullopt;
+        }();
+
+        chosen_quirk
+            .transform(
+                [](auto fq)
+                {
+                    mir::log_debug("Quirks(force-runtime-quirk): forcing runtime quirk %s", fq.c_str());
+                    return fq;
+                })
+            .or_else(
+                [&driver] -> std::optional<std::string>
+                {
+                    mir::log_debug("Quirks(force-runtime-quirk): using runtime quirk for “%s” driver", driver);
+                    return {driver};
+                });
 
         if (chosen_quirk == "nvidia")
             return std::make_shared<NvidiaGbmQuirks>();
@@ -195,7 +252,7 @@ public:
     }
 
 private:
-    auto get_device_driver(mir::udev::Device const* parent_device) const -> const char*
+    static auto get_device_driver(mir::udev::Device const* parent_device) -> const char*
     {
         if (parent_device)
         {
@@ -204,6 +261,55 @@ private:
         mir::log_warning("udev device has no parent! Unable to determine driver for quirks.");
         return "<UNKNOWN>";
     }
+
+    static auto validate_structure(std::vector<std::string> const& tokens) -> std::optional<std::tuple<std::string, std::string, std::string>>
+    {
+        if (tokens.size() < 1)
+            return {};
+        auto const option = tokens[0];
+
+        auto const available_options =
+            std::set<std::string>{"skip", "allow", "disable-kms-probe", "force-runtime-quirk"};
+        if (!available_options.contains(option))
+            return {};
+
+        if (tokens.size() < 3)
+            return {};
+        auto const specifier = tokens[1];
+        auto const specifier_value = tokens[2];
+
+        if (specifier != "driver" || specifier != "devnode")
+            return {};
+
+        return {{option, specifier, specifier_value}};
+    }
+
+    struct AllowList
+    {
+        AllowList(std::unordered_set<std::string>&& drivers_to_skip) :
+            skipped_drivers{drivers_to_skip}
+        {
+        }
+
+        void allow(std::string specifier, std::string specifier_value)
+        {
+            if (specifier == "devnode")
+                skipped_devnodes.erase(specifier_value);
+            else if (specifier == "driver")
+                skipped_drivers.erase(specifier_value);
+        }
+
+        void skip(std::string specifier, std::string specifier_value)
+        {
+            if (specifier == "devnode")
+                skipped_devnodes.insert(specifier_value);
+            else if (specifier == "driver")
+                skipped_drivers.insert(specifier_value);
+        }
+
+        std::unordered_set<std::string> skipped_drivers;
+        std::unordered_set<std::string> skipped_devnodes;
+    };
 
     /* AST is a simple 2D output device, built into some motherboards.
      * They do not have any 3D engine associated, so were quirked off to avoid https://github.com/canonical/mir/issues/2678
@@ -215,13 +321,27 @@ private:
      * https://bugs.launchpad.net/ubuntu/+source/linux/+bug/2084046
      * https://github.com/canonical/mir/issues/3710
      */
-    std::unordered_set<std::string> drivers_to_skip = { "ast", "simple-framebuffer"};
-    std::unordered_set<std::string> devnodes_to_skip;
-    // We know this is currently useful for virtio_gpu, vc4-drm and v3d
-    std::unordered_set<std::string> skip_modesetting_support = { "virtio_gpu", "vc4-drm", "v3d" };
+    AllowList completely_skip{{"ast", "simple-framebuffer"}};
 
-    std::unordered_set<std::string> runtime_quirks { "default", "nvidia" };
-    std::optional<std::string> forced_quirk;
+    // We know this is currently useful for virtio_gpu, vc4-drm and v3d
+    AllowList disable_kms_probe{{"virtio_gpu", "vc4-drm", "v3d"}};
+
+    struct ValuedOption
+    {
+        void add_devnode(std::string const& devnode, std::string const& quirk)
+        {
+            devnodes.insert_or_assign(devnode, quirk);
+        }
+        void add_driver(std::string const& driver, std::string const& quirk)
+        {
+            drivers.insert_or_assign(driver, quirk);
+        }
+
+        std::unordered_map<std::string, std::string> drivers;
+        std::unordered_map<std::string, std::string> devnodes;
+    };
+
+    ValuedOption force_runtime_quirk;
 };
 
 mga::Quirks::Quirks(const options::Option& options)
@@ -238,10 +358,10 @@ auto mga::Quirks::should_skip(udev::Device const& device) const -> bool
 
 void mga::Quirks::add_quirks_option(boost::program_options::options_description& config)
 {
-    config.add_options()
-        (quirks_option_name,
-         boost::program_options::value<std::vector<std::string>>(),
-         "[platform-specific] Driver quirks to apply (may be specified multiple times; multiple quirks are combined)");
+    config.add_options()(
+        quirks_option_name,
+        boost::program_options::value<std::vector<std::string>>(),
+        "[platform-specific] Driver quirks to apply (may be specified multiple times; multiple quirks are combined)");
 }
 
 auto mir::graphics::atomic::Quirks::require_modesetting_support(mir::udev::Device const& device) const -> bool
