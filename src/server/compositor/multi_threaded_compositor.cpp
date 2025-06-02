@@ -16,6 +16,7 @@
 
 #include "multi_threaded_compositor.h"
 #include "mir/compositor/scene_element.h"
+#include "mir/graphics/cursor.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_sink.h"
 #include "mir/compositor/display_buffer_compositor.h"
@@ -43,6 +44,34 @@ namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace ms = mir::scene;
 
+namespace
+{
+class CursorSceneElement : public mc::SceneElement
+{
+public:
+    explicit CursorSceneElement(std::shared_ptr<mg::Renderable> renderable)
+        : renderable_{std::move(renderable)}
+    {
+    }
+
+    std::shared_ptr<mg::Renderable> renderable() const override
+    {
+        return renderable_;
+    }
+
+    void rendered() override
+    {
+    }
+
+    void occluded() override
+    {
+    }
+
+private:
+    std::shared_ptr<mg::Renderable> const renderable_;
+};
+}
+
 namespace mir
 {
 namespace compositor
@@ -57,7 +86,8 @@ public:
         std::shared_ptr<mc::Scene> const& scene,
         std::shared_ptr<DisplayListener> const& display_listener,
         std::chrono::milliseconds fixed_composite_delay,
-        std::shared_ptr<CompositorReport> const& report) :
+        std::shared_ptr<CompositorReport> const& report,
+        std::shared_ptr<mg::Cursor> const& cursor) :
         compositor_factory{db_compositor_factory},
         group(group),
         scene(scene),
@@ -65,6 +95,7 @@ public:
         force_sleep{fixed_composite_delay},
         display_listener{display_listener},
         report{report},
+        cursor{cursor},
         started_future{started.get_future()},
         stopped_future{stopped.get_future()}
     {
@@ -150,7 +181,10 @@ public:
                     for (auto& tuple : compositors)
                     {
                         auto& compositor = std::get<1>(tuple);
-                        if (compositor->composite(scene->scene_elements_for(compositor.get())))
+                        auto scene_elements = scene->scene_elements_for(compositor.get());
+                        if (auto const cursor_renderable = cursor->renderable())
+                            scene_elements.push_back(std::make_shared<CursorSceneElement>(cursor_renderable));
+                        if (compositor->composite(std::move(scene_elements)))
                             needs_post = true;
                     }
 
@@ -230,6 +264,7 @@ private:
     std::chrono::milliseconds force_sleep{-1};
     std::shared_ptr<DisplayListener> const display_listener;
     std::shared_ptr<CompositorReport> const report;
+    std::shared_ptr<mg::Cursor> const cursor;
     std::promise<void> started;
     std::future<void> started_future;
     std::promise<void> stopped;
@@ -245,6 +280,7 @@ mc::MultiThreadedCompositor::MultiThreadedCompositor(
     std::shared_ptr<mc::Scene> const& scene,
     std::shared_ptr<DisplayListener> const& display_listener,
     std::shared_ptr<CompositorReport> const& compositor_report,
+    std::shared_ptr<mg::Cursor> const& cursor,
     std::chrono::milliseconds fixed_composite_delay,
     bool compose_on_start)
     : display{display},
@@ -252,6 +288,7 @@ mc::MultiThreadedCompositor::MultiThreadedCompositor(
       scene{scene},
       display_listener{display_listener},
       report{compositor_report},
+      cursor{cursor},
       state{CompositorState::stopped},
       fixed_composite_delay{fixed_composite_delay},
       compose_on_start{compose_on_start}
@@ -348,7 +385,7 @@ void mc::MultiThreadedCompositor::create_compositing_threads()
     {
         auto thread_functor = std::make_unique<mc::CompositingFunctor>(
             display_buffer_compositor_factory, group, scene, display_listener,
-            fixed_composite_delay, report);
+            fixed_composite_delay, report, cursor);
 
         mir::thread_pool_executor.spawn(std::ref(*thread_functor));
         thread_functors.push_back(std::move(thread_functor));

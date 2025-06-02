@@ -20,6 +20,7 @@
 
 #include "mir/geometry/size.h"
 #include "mir/geometry/point.h"
+#include "mir/graphics/renderable.h"
 
 #include <memory>
 
@@ -28,6 +29,7 @@ namespace mir
 namespace graphics
 {
 class CursorImage;
+class Renderable;
 class Cursor
 {
 public:
@@ -37,6 +39,8 @@ public:
     virtual void move_to(geometry::Point position) = 0;
 
     virtual void scale(float new_scale) = 0;
+
+    virtual auto renderable() -> std::shared_ptr<Renderable> = 0;
 protected:
     Cursor() = default;
     virtual ~Cursor() = default;

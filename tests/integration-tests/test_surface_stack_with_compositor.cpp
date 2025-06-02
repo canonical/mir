@@ -40,6 +40,7 @@
 #include "mir/test/doubles/stub_buffer_allocator.h"
 #include "mir/test/doubles/stub_main_loop.h"
 #include "mir/test/doubles/stub_output_filter.h"
+#include "mir/test/doubles/stub_cursor.h"
 
 #include <condition_variable>
 #include <mutex>
@@ -200,6 +201,7 @@ struct SurfaceStackCompositor : public Test
     CountingDisplaySyncGroup stub_secondary_db;
     StubDisplay stub_display{stub_primary_db, stub_secondary_db};
     StubDisplayListener stub_display_listener;
+    std::shared_ptr<mtd::StubCursor> stub_cursor{std::make_shared<mtd::StubCursor>()};
 
     mc::DefaultDisplayBufferCompositorFactory dbc_factory{
         std::vector<std::shared_ptr<mg::GLRenderingProvider>>{std::make_shared<mtd::StubGlRenderingProvider>()},
@@ -224,7 +226,7 @@ TEST_F(SurfaceStackCompositor, composes_on_start_if_told_to_in_constructor_when_
         mt::fake_shared(dbc_factory),
         mt::fake_shared(stack),
         mt::fake_shared(stub_display_listener),
-        null_comp_report, default_delay, true);
+        null_comp_report, stub_cursor, default_delay, true);
     mt_compositor.start();
 
     EXPECT_TRUE(stub_primary_db.has_posted_at_least(1, timeout));
@@ -238,7 +240,7 @@ TEST_F(SurfaceStackCompositor, does_not_compose_on_start_if_told_to_in_construct
         mt::fake_shared(dbc_factory),
         mt::fake_shared(stack),
         mt::fake_shared(stub_display_listener),
-        null_comp_report, default_delay, true);
+        null_comp_report, stub_cursor, default_delay, true);
     mt_compositor.start();
 
     EXPECT_TRUE(stub_primary_db.has_posted_at_least(0, timeout));
@@ -252,7 +254,7 @@ TEST_F(SurfaceStackCompositor, does_not_composes_on_start_if_told_not_to_in_cons
         mt::fake_shared(dbc_factory),
         mt::fake_shared(stack),
         mt::fake_shared(stub_display_listener),
-        null_comp_report, default_delay, false);
+        null_comp_report, stub_cursor, default_delay, false);
     mt_compositor.start();
 
     EXPECT_TRUE(stub_primary_db.has_posted_at_least(0, timeout));
@@ -266,7 +268,7 @@ TEST_F(SurfaceStackCompositor, swapping_a_surface_that_has_been_added_triggers_a
         mt::fake_shared(dbc_factory),
         mt::fake_shared(stack),
         mt::fake_shared(stub_display_listener),
-        null_comp_report, default_delay, false);
+        null_comp_report, stub_cursor, default_delay, false);
     mt_compositor.start();
 
     stack.add_surface(stub_surface, mi::InputReceptionMode::normal);
@@ -283,7 +285,7 @@ TEST_F(SurfaceStackCompositor, an_empty_scene_retriggers)
         mt::fake_shared(dbc_factory),
         mt::fake_shared(stack),
         mt::fake_shared(stub_display_listener),
-        null_comp_report, default_delay, false);
+        null_comp_report, stub_cursor, default_delay, false);
     mt_compositor.start();
 
     stack.add_surface(stub_surface, mi::InputReceptionMode::normal);
@@ -308,7 +310,7 @@ TEST_F(SurfaceStackCompositor, moving_a_surface_triggers_composition)
         mt::fake_shared(dbc_factory),
         mt::fake_shared(stack),
         mt::fake_shared(stub_display_listener),
-        null_comp_report, default_delay, false);
+        null_comp_report, stub_cursor, default_delay, false);
 
     mt_compositor.start();
     stub_surface->move_to(geom::Point{1,1});
@@ -330,7 +332,7 @@ TEST_F(SurfaceStackCompositor, removing_a_surface_triggers_composition)
         mt::fake_shared(dbc_factory),
         mt::fake_shared(stack),
         mt::fake_shared(stub_display_listener),
-        null_comp_report, default_delay, false);
+        null_comp_report, stub_cursor, default_delay, false);
 
     mt_compositor.start();
     stack.remove_surface(stub_surface);
@@ -349,7 +351,7 @@ TEST_F(SurfaceStackCompositor, buffer_updates_trigger_composition)
         mt::fake_shared(dbc_factory),
         mt::fake_shared(stack),
         mt::fake_shared(stub_display_listener),
-        null_comp_report, default_delay, false);
+        null_comp_report, stub_cursor, default_delay, false);
 
     mt_compositor.start();
     streams.front().stream->submit_buffer(stub_buffer, stub_buffer->size(), {{0, 0}, geom::SizeD{stub_buffer->size()}});
