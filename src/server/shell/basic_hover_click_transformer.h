@@ -41,11 +41,6 @@ public:
     void hover_duration(std::chrono::milliseconds delay) override;
     void cancel_displacement_threshold(float displacement) override;
 
-    void enabled() override;
-    void disabled() override;
-    void on_enabled(std::function<void()>&& on_enabled) override;
-    void on_disabled(std::function<void()>&& on_disabled) override;
-
     void on_hover_start(std::function<void()>&& on_hover_start) override;
     void on_hover_cancel(std::function<void()>&& on_hover_cancelled) override;
     void on_click_dispatched(std::function<void()>&& on_click_dispatched) override;
@@ -71,8 +66,6 @@ private:
 
         std::chrono::milliseconds hover_duration{1000};
         float cancel_displacement_threshold{10};
-        std::function<void()> on_enabled{[] {}};
-        std::function<void()> on_disabled{[] {}};
         std::function<void()> on_hover_start{[] {}};
         std::function<void()> on_hover_cancel{[] {}};
         std::function<void()> on_click_dispatched{[] {}};

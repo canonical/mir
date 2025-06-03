@@ -115,26 +115,6 @@ void mir::shell::BasicHoverClickTransformer::cancel_displacement_threshold(float
     mutable_state.lock()->cancel_displacement_threshold = displacement;
 }
 
-void mir::shell::BasicHoverClickTransformer::enabled()
-{
-    mutable_state.lock()->on_enabled();
-}
-
-void mir::shell::BasicHoverClickTransformer::disabled()
-{
-    mutable_state.lock()->on_disabled();
-}
-
-void mir::shell::BasicHoverClickTransformer::on_enabled(std::function<void()>&& on_enabled)
-{
-    mutable_state.lock()->on_enabled = std::move(on_enabled);
-}
-
-void mir::shell::BasicHoverClickTransformer::on_disabled(std::function<void()>&& on_disabled)
-{
-    mutable_state.lock()->on_disabled = std::move(on_disabled);
-}
-
 void mir::shell::BasicHoverClickTransformer::on_hover_start(std::function<void()>&& on_hover_start)
 {
     mutable_state.lock()->on_hover_start = std::move(on_hover_start);
