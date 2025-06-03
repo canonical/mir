@@ -113,7 +113,7 @@ struct TestBasicAccessibilityManager : Test
             std::make_shared<mir::test::doubles::StubCursor>(),
             mock_mousekeys_transformer,
             mock_simulated_secondary_click_transformer,
-            std::make_shared<MockHoverClickTransformer>()}
+            mock_hover_click_transformer}
     {
         basic_accessibility_manager.register_keyboard_helper(mock_key_helper);
     }
@@ -126,6 +126,8 @@ struct TestBasicAccessibilityManager : Test
         std::make_shared<NiceMock<MockMouseKeysTransformer>>()};
     std::shared_ptr<NiceMock<MockSimulatedSecondaryClickTransformer>> mock_simulated_secondary_click_transformer{
         std::make_shared<NiceMock<MockSimulatedSecondaryClickTransformer>>()};
+    std::shared_ptr<NiceMock<MockHoverClickTransformer>> mock_hover_click_transformer{
+        std::make_shared<NiceMock<MockHoverClickTransformer>>()};
 
     NiceMock<MockInputEventTransformer> input_event_transformer{mt::fake_shared(mock_seat), mt::fake_shared(clock)};
 
@@ -306,49 +308,149 @@ TEST_F(TestBasicAccessibilityManager, setting_on_secondary_click_sets_it_on_tran
     basic_accessibility_manager.simulated_secondary_click().on_secondary_click(expected_on_secondary_click);
 }
 
-
-TEST_F(TestBasicAccessibilityManager, enabling_simulated_secondary_click_twice_calls_append_once)
+MATCHER_P(WeakPtrEqSharedPtr, transformer_shared_ptr, "")
 {
-    EXPECT_CALL(input_event_transformer, append(_)).Times(1);
-
-    basic_accessibility_manager.simulated_secondary_click_enabled(true);
-    basic_accessibility_manager.simulated_secondary_click_enabled(true);
+    return arg.lock() == transformer_shared_ptr;
 }
 
-TEST_F(
-    TestBasicAccessibilityManager, enabling_simulated_secondary_click_then_disabling_then_enabling_calls_append_once)
+enum class TransformerToTest
 {
-    EXPECT_CALL(input_event_transformer, append(_)).Times(2);
+    MouseKeys,
+    SSC,
+    HoverClick
+};
 
-    basic_accessibility_manager.simulated_secondary_click_enabled(true);
-    basic_accessibility_manager.simulated_secondary_click_enabled(false);
-    basic_accessibility_manager.simulated_secondary_click_enabled(true);
-    basic_accessibility_manager.simulated_secondary_click_enabled(false);
+struct TestArbitraryEnablesAndDisables :
+    public TestBasicAccessibilityManager,
+    public WithParamInterface<TransformerToTest>
+{
+    auto get_transformer() -> std::shared_ptr<mir::input::InputEventTransformer::Transformer>
+    {
+        switch (GetParam())
+        {
+        case TransformerToTest::MouseKeys:
+            return mock_mousekeys_transformer;
+        case TransformerToTest::SSC:
+            return mock_simulated_secondary_click_transformer;
+        case TransformerToTest::HoverClick:
+            return mock_hover_click_transformer;
+        }
+    }
+
+    auto toggle_transformer(bool on)
+    {
+        switch (GetParam())
+        {
+        case TransformerToTest::MouseKeys:
+            basic_accessibility_manager.mousekeys_enabled(on);
+            break;
+        case TransformerToTest::SSC:
+            basic_accessibility_manager.simulated_secondary_click_enabled(on);
+            break;
+        case TransformerToTest::HoverClick:
+            basic_accessibility_manager.hover_click_enabled(on);
+            break;
+        }
+    }
+
+    void enable_transformer()
+    {
+        return toggle_transformer(true);
+    }
+
+    void disable_transformer()
+    {
+        return toggle_transformer(false);
+    }
+};
+
+struct TestDoubleTransformerEnable : public TestArbitraryEnablesAndDisables
+{
+};
+
+TEST_P(TestDoubleTransformerEnable, enabling_accessibility_transformer_twice_calls_append_once)
+{
+    EXPECT_CALL(input_event_transformer, append(WeakPtrEqSharedPtr(get_transformer()))).Times(1);
+
+    enable_transformer();
+    enable_transformer();
 }
 
+INSTANTIATE_TEST_SUITE_P(
+    TestBasicAccessibilityManager,
+    TestDoubleTransformerEnable,
+    Values(TransformerToTest::MouseKeys, TransformerToTest::SSC, TransformerToTest::HoverClick));
 
-TEST_F(TestBasicAccessibilityManager, disabling_simulated_secondary_click_twice_calls_remove_once)
+struct TestDoubleEnableWithDisableInBetween : public TestArbitraryEnablesAndDisables
 {
-    EXPECT_CALL(input_event_transformer, remove(_)).Times(1);
+};
 
-    basic_accessibility_manager.simulated_secondary_click_enabled(true); // Have to enable to be able to disable
-    basic_accessibility_manager.simulated_secondary_click_enabled(false);
-    basic_accessibility_manager.simulated_secondary_click_enabled(false);
+TEST_P(
+    TestDoubleEnableWithDisableInBetween,
+    enabling_accessibility_transformer_then_disabling_then_enabling_calls_append_once)
+{
+    EXPECT_CALL(input_event_transformer, append(WeakPtrEqSharedPtr(get_transformer()))).Times(2);
+
+    enable_transformer();
+    disable_transformer();
+    enable_transformer();
 }
 
-TEST_F(
-    TestBasicAccessibilityManager, disabling_simulated_secondary_click_then_enabling_then_disabling_calls_remove_twice)
-{
-    EXPECT_CALL(input_event_transformer, remove(_)).Times(2);
+INSTANTIATE_TEST_SUITE_P(
+    TestBasicAccessibilityManager,
+    TestDoubleEnableWithDisableInBetween,
+    Values(TransformerToTest::MouseKeys, TransformerToTest::SSC, TransformerToTest::HoverClick));
 
-    basic_accessibility_manager.simulated_secondary_click_enabled(true); // Have to enable to be able to disable
-    basic_accessibility_manager.simulated_secondary_click_enabled(false);
-    basic_accessibility_manager.simulated_secondary_click_enabled(true);
-    basic_accessibility_manager.simulated_secondary_click_enabled(false);
+struct TestDoubleDisable : public TestArbitraryEnablesAndDisables
+{
+};
+
+TEST_P(TestDoubleDisable, disabling_accessibility_transformer_twice_calls_remove_once)
+{
+    EXPECT_CALL(input_event_transformer, remove(get_transformer())).Times(1);
+
+    enable_transformer(); // Have to enable to be able to disable
+    disable_transformer();
+    disable_transformer();
 }
 
-TEST_F(TestBasicAccessibilityManager, disabling_simulated_secondary_click_before_enabling_it_doesnt_call_remove)
+INSTANTIATE_TEST_SUITE_P(
+    TestBasicAccessibilityManager,
+    TestDoubleDisable,
+    Values(TransformerToTest::MouseKeys, TransformerToTest::SSC, TransformerToTest::HoverClick));
+
+struct TestDoubleDisableWithEnableInBetween : public TestArbitraryEnablesAndDisables
 {
-    EXPECT_CALL(input_event_transformer, remove(_)).Times(0);
-    basic_accessibility_manager.simulated_secondary_click_enabled(false);
+};
+
+TEST_P(
+    TestDoubleDisableWithEnableInBetween,
+    disabling_accessibility_transformer_then_enabling_then_disabling_calls_remove_twice)
+{
+    EXPECT_CALL(input_event_transformer, remove(get_transformer())).Times(2);
+
+    enable_transformer(); // Have to enable to be able to disable
+    disable_transformer();
+    enable_transformer();
+    disable_transformer();
 }
+
+INSTANTIATE_TEST_SUITE_P(
+    TestBasicAccessibilityManager,
+    TestDoubleDisableWithEnableInBetween,
+    Values(TransformerToTest::MouseKeys, TransformerToTest::SSC, TransformerToTest::HoverClick));
+
+struct TestDisableWithoutEnable : public TestArbitraryEnablesAndDisables
+{
+};
+
+TEST_P(TestDisableWithoutEnable, disabling_accessibility_transformer_before_enabling_it_doesnt_call_remove)
+{
+    EXPECT_CALL(input_event_transformer, remove(get_transformer())).Times(0);
+    disable_transformer();
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    TestBasicAccessibilityManager,
+    TestDisableWithoutEnable,
+    Values(TransformerToTest::MouseKeys, TransformerToTest::SSC, TransformerToTest::HoverClick));
