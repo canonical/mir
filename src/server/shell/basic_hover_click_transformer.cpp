@@ -133,9 +133,10 @@ void mir::shell::BasicHoverClickTransformer::on_click_dispatched(std::function<v
 void mir::shell::BasicHoverClickTransformer::initialize_click_dispatcher(
     mir::input::InputEventTransformer::EventDispatcher const& dispatcher, mir::input::EventBuilder& builder)
 {
-    if (!mutable_state.lock()->click_dispatcher)
+    auto state = mutable_state.lock();
+    if (!state->click_dispatcher)
     {
-        mutable_state.lock()->click_dispatcher = main_loop->create_alarm(
+        state->click_dispatcher = main_loop->create_alarm(
             [dispatcher, &builder, this]
             {
                 auto down = builder.pointer_event(
