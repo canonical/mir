@@ -307,7 +307,7 @@ TEST_F(TestBasicAccessibilityManager, setting_on_secondary_click_sets_it_on_tran
 }
 
 
-TEST_F(TestBasicAccessibilityManager, enabling_simulated_secondary_click_twice_calls_enabled_once)
+TEST_F(TestBasicAccessibilityManager, enabling_simulated_secondary_click_twice_calls_append_once)
 {
     EXPECT_CALL(input_event_transformer, append(_)).Times(1);
 
@@ -316,7 +316,7 @@ TEST_F(TestBasicAccessibilityManager, enabling_simulated_secondary_click_twice_c
 }
 
 TEST_F(
-    TestBasicAccessibilityManager, enabling_simulated_secondary_click_then_disabling_then_enabling_calls_enabled_twice)
+    TestBasicAccessibilityManager, enabling_simulated_secondary_click_then_disabling_then_enabling_calls_append_once)
 {
     EXPECT_CALL(input_event_transformer, append(_)).Times(2);
 
@@ -327,9 +327,9 @@ TEST_F(
 }
 
 
-TEST_F(TestBasicAccessibilityManager, disabling_simulated_secondary_click_twice_calls_disabled_once)
+TEST_F(TestBasicAccessibilityManager, disabling_simulated_secondary_click_twice_calls_remove_once)
 {
-    EXPECT_CALL(input_event_transformer, append(_)).Times(1);
+    EXPECT_CALL(input_event_transformer, remove(_)).Times(1);
 
     basic_accessibility_manager.simulated_secondary_click_enabled(true); // Have to enable to be able to disable
     basic_accessibility_manager.simulated_secondary_click_enabled(false);
@@ -337,9 +337,9 @@ TEST_F(TestBasicAccessibilityManager, disabling_simulated_secondary_click_twice_
 }
 
 TEST_F(
-    TestBasicAccessibilityManager, disabling_simulated_secondary_click_then_enabling_then_disabling_calls_disabled_twice)
+    TestBasicAccessibilityManager, disabling_simulated_secondary_click_then_enabling_then_disabling_calls_remove_twice)
 {
-    EXPECT_CALL(input_event_transformer, append(_)).Times(2);
+    EXPECT_CALL(input_event_transformer, remove(_)).Times(2);
 
     basic_accessibility_manager.simulated_secondary_click_enabled(true); // Have to enable to be able to disable
     basic_accessibility_manager.simulated_secondary_click_enabled(false);
@@ -347,8 +347,7 @@ TEST_F(
     basic_accessibility_manager.simulated_secondary_click_enabled(false);
 }
 
-TEST_F(
-    TestBasicAccessibilityManager, disabling_simulated_secondary_click_before_enabling_it_doesnt_call_disabled)
+TEST_F(TestBasicAccessibilityManager, disabling_simulated_secondary_click_before_enabling_it_doesnt_call_remove)
 {
     EXPECT_CALL(input_event_transformer, remove(_)).Times(0);
     basic_accessibility_manager.simulated_secondary_click_enabled(false);
