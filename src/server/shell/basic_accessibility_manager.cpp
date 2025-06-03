@@ -149,6 +149,6 @@ void mir::shell::BasicAccessibilityManager::hover_click_enabled(bool enabled)
 
 auto mir::shell::BasicAccessibilityManager::hover_click() -> HoverClickTransformer&
 {
-    return *hover_click_transformer.operator->();
+    return *hover_click_transformer;
 }
 
