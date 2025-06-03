@@ -128,7 +128,7 @@ auto create_gbm_surface(
     std::span<uint64_t> modifiers,
     std::shared_ptr<mga::GbmQuirks> runtime_quirks) -> std::shared_ptr<gbm_surface>
 {
-    auto const flags = runtime_quirks->adjust_gbm_create_surface_flags(GBM_BO_USE_RENDERING | GBM_BO_USE_SCANOUT);
+    auto const flags = runtime_quirks->gbm_create_surface_flags();
     auto const surface =
         [&]()
         {
@@ -194,8 +194,7 @@ public:
 
     auto claim_framebuffer() -> std::unique_ptr<mg::Framebuffer> override
     {
-        auto const skip_surface_free_buffers_check = runtime_quirks->gbm_surface_has_free_buffers_broken();
-        if (!skip_surface_free_buffers_check && !gbm_surface_has_free_buffers(surface.get()))
+        if (!runtime_quirks->gbm_surface_has_free_buffers(surface.get()))
         {
             BOOST_THROW_EXCEPTION((
                 std::system_error{

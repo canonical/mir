@@ -20,6 +20,8 @@
 #include <memory>
 #include <boost/program_options.hpp>
 
+#include <gbm.h>
+
 namespace mir
 {
 namespace options
@@ -37,8 +39,8 @@ class GbmQuirks
 {
 public:
     virtual ~GbmQuirks() = default;
-    virtual auto adjust_gbm_create_surface_flags(uint32_t) -> uint32_t = 0;
-    virtual auto gbm_surface_has_free_buffers_broken() -> bool = 0;
+    virtual auto gbm_create_surface_flags() const -> uint32_t = 0;
+    virtual auto gbm_surface_has_free_buffers(gbm_surface* gbm_surface) const -> int = 0;
 };
 
 /**

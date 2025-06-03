@@ -20,6 +20,7 @@
 #include "mir/options/option.h"
 #include "mir/udev/wrapper.h"
 
+
 #include <vector>
 #include <unordered_set>
 
@@ -141,13 +142,13 @@ public:
         {
             class NvidiaGbmQuirks : public GbmQuirks
             {
-                auto adjust_gbm_create_surface_flags(uint32_t) -> uint32_t override
+                auto gbm_create_surface_flags() const -> uint32_t override
                 {
                     return 0;
                 }
-                auto gbm_surface_has_free_buffers_broken() -> bool override
+                auto gbm_surface_has_free_buffers(gbm_surface*) const -> int override
                 {
-                    return true;
+                    return 1;
                 }
             };
 
@@ -156,13 +157,13 @@ public:
 
         class DefaultGbmQuirks : public GbmQuirks
         {
-            auto adjust_gbm_create_surface_flags(uint32_t flags) -> uint32_t override
+            auto gbm_create_surface_flags() const -> uint32_t override
             {
-                return flags;
+                return GBM_BO_USE_RENDERING | GBM_BO_USE_SCANOUT;
             }
-            auto gbm_surface_has_free_buffers_broken() -> bool override
+            auto gbm_surface_has_free_buffers(gbm_surface* gbm_surface) const -> int override
             {
-                return false;
+                return ::gbm_surface_has_free_buffers(gbm_surface);
             }
         };
 
