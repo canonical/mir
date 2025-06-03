@@ -127,6 +127,7 @@ void miral::TestDisplayServer::start_server()
                                 return default_impl;
                             }
                         });
+
                     server.override_the_logger([&]()
                         {
                             std::shared_ptr<ml::Logger> result{};
