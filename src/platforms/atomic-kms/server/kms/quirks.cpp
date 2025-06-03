@@ -334,7 +334,7 @@ private:
     struct AllowList
     {
         AllowList(std::unordered_set<std::string>&& drivers_to_skip) :
-            skipped_drivers{drivers_to_skip}
+            skipped_drivers{std::move(drivers_to_skip)}
         {
         }
 
