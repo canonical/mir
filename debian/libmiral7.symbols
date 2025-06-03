@@ -545,7 +545,8 @@ libmiral.so.7 libmiral7 #MINVER#
  (c++)"miral::SimulatedSecondaryClick::disable()@MIRAL_5.3" 5.3.0
  (c++)"miral::SimulatedSecondaryClick::displacement_threshold(float)@MIRAL_5.3" 5.3.0
  (c++)"miral::SimulatedSecondaryClick::enable()@MIRAL_5.3" 5.3.0
- (c++)"miral::SimulatedSecondaryClick::hold_duration(std::chrono::duration<long, std::ratio<1l, 1000l> >)@MIRAL_5.3" 5.3.0
+ (c++|arch-bits=64)"miral::SimulatedSecondaryClick::hold_duration(std::chrono::duration<long, std::ratio<1l, 1000l> >)@MIRAL_5.3" 5.3.0
+ (c++|arch-bits=32)"miral::SimulatedSecondaryClick::hold_duration(std::chrono::duration<long long, std::ratio<1ll, 1000ll> >)@MIRAL_5.3" 5.3.0
  (c++)"miral::SimulatedSecondaryClick::on_hold_cancel(std::function<void ()>&&)@MIRAL_5.3" 5.3.0
  (c++)"miral::SimulatedSecondaryClick::on_hold_start(std::function<void ()>&&)@MIRAL_5.3" 5.3.0
  (c++)"miral::SimulatedSecondaryClick::on_secondary_click(std::function<void ()>&&)@MIRAL_5.3" 5.3.0
