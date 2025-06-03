@@ -546,8 +546,6 @@ global:
     miral::HoverClick::enable*;
     miral::HoverClick::hover_duration*;
     miral::HoverClick::on_click_dispatched*;
-    miral::HoverClick::on_disabled*;
-    miral::HoverClick::on_enabled*;
     miral::HoverClick::on_hover_cancel*;
     miral::HoverClick::on_hover_start*;
     miral::HoverClick::operator*;

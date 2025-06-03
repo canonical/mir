@@ -40,8 +40,6 @@ struct miral::HoverClick::Self
 
         std::chrono::milliseconds hover_duration{1000};
         float cancel_displacement_threshold{10};
-        std::function<void()> on_enabled{[] {}};
-        std::function<void()> on_disabled{[] {}};
         std::function<void()> on_hover_start{[] {}};
         std::function<void()> on_hover_cancel{[] {}};
         std::function<void()> on_click_dispatched{[] {}};
@@ -88,26 +86,6 @@ miral::HoverClick& miral::HoverClick::cancel_displacement_threshold(float displa
     self->state.lock()->cancel_displacement_threshold = displacement;
     if(auto const accessibility_manager = self->accessibility_manager.lock())
         accessibility_manager->hover_click().cancel_displacement_threshold(displacement);
-
-    return *this;
-}
-
-miral::HoverClick& miral::HoverClick::on_enabled(std::function<void()> && on_enabled)
-{
-    auto const state = self->state.lock();
-    state->on_enabled = std::move(on_enabled);
-    if(auto const accessibility_manager = self->accessibility_manager.lock())
-        accessibility_manager->hover_click().on_enabled(std::move(state->on_enabled));
-
-    return *this;
-}
-
-miral::HoverClick& miral::HoverClick::on_disabled(std::function<void()> && on_disabled)
-{
-    auto const state = self->state.lock();
-    state->on_disabled = std::move(on_disabled);
-    if(auto const accessibility_manager = self->accessibility_manager.lock())
-        accessibility_manager->hover_click().on_disabled(std::move(state->on_disabled));
 
     return *this;
 }
@@ -174,10 +152,6 @@ void miral::HoverClick::operator()(mir::Server& server)
             hover_duration(std::chrono::milliseconds{options->get<int>(hover_click_duration_opt)});
             cancel_displacement_threshold(options->get<double>(hover_click_cancel_displacement_threshold));
 
-            if(auto& on_enabled_ = self->state.lock()->on_enabled)
-                on_enabled(std::move(on_enabled_));
-            if(auto& on_disabled_ = self->state.lock()->on_disabled)
-                on_disabled(std::move(on_disabled_));
             if(auto& on_hover_start_ = self->state.lock()->on_hover_start)
                 on_hover_start(std::move(on_hover_start_));
             if(auto& on_hover_cancel_ = self->state.lock()->on_hover_cancel)

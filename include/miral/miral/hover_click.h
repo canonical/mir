@@ -53,11 +53,6 @@ public:
     // position to cancel it.
     HoverClick& cancel_displacement_threshold(float displacement);
 
-    /// Called when hover click is enabled or disabled. Useful when other
-    /// things might be controll hover click (GUI, config file).
-    HoverClick& on_enabled(std::function<void()>&&);
-    HoverClick& on_disabled(std::function<void()>&&);
-
     /// Called shortly after a hover click is scheduled. Should be used to
     /// indicate to the user that a simulated secondary click has begun.
     HoverClick& on_hover_start(std::function<void()>&&);

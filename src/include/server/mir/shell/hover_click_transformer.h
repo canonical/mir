@@ -29,11 +29,6 @@ public:
     virtual void hover_duration(std::chrono::milliseconds delay) = 0;
     virtual void cancel_displacement_threshold(float displacement) = 0;
 
-    virtual void enabled() = 0;
-    virtual void disabled() = 0;
-    virtual void on_enabled(std::function<void()>&& on_enabled) = 0;
-    virtual void on_disabled(std::function<void()>&& on_disabled) = 0;
-
     virtual void on_hover_start(std::function<void()>&& on_hover_start) = 0;
     virtual void on_hover_cancel(std::function<void()>&& on_hover_cancelled) = 0;
     virtual void on_click_dispatched(std::function<void()>&& on_click_dispatched) = 0;
