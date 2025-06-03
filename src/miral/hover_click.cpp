@@ -123,44 +123,23 @@ miral::HoverClick& miral::HoverClick::on_click_dispatched(std::function<void()> 
 
 void miral::HoverClick::operator()(mir::Server& server)
 {
-    constexpr auto* enable_hover_click_opt = "enable-hover-click";
-    constexpr auto* hover_click_duration_opt = "hover-click-duration";
-    constexpr auto* hover_click_cancel_displacement_threshold = "hover-click-cancel-displacement-threshold";
-
-    {
-        auto const state = self->state.lock();
-        server.add_configuration_option(
-            enable_hover_click_opt,
-            "Enable hover click (hovering the pointer to simulate a click)",
-            state->enabled);
-        server.add_configuration_option(
-            hover_click_duration_opt,
-            "How long the pointer has to stay still to dispatch a left click in milliseconds",
-            static_cast<int>(state->hover_duration.count()));
-        server.add_configuration_option(
-            hover_click_cancel_displacement_threshold,
-            "How far the pointer is allowed to move from the original hover click position before its cancelled in "
-            "pixels",
-            state->cancel_displacement_threshold);
-    }
-
     server.add_init_callback(
         [&server, this]
         {
             self->accessibility_manager = server.the_accessibility_manager();
-            auto const options = server.get_options();
+            if(auto accessibility_manager = server.the_accessibility_manager())
+            {
+                auto state = self->state.lock();
 
-            hover_duration(std::chrono::milliseconds{options->get<int>(hover_click_duration_opt)});
-            cancel_displacement_threshold(options->get<double>(hover_click_cancel_displacement_threshold));
+                if (state->enabled)
+                    accessibility_manager->hover_click_enabled(true);
 
-            if(auto& on_hover_start_ = self->state.lock()->on_hover_start)
-                on_hover_start(std::move(on_hover_start_));
-            if(auto& on_hover_cancel_ = self->state.lock()->on_hover_cancel)
-                on_hover_cancel(std::move(on_hover_cancel_));
-            if(auto& on_click_dispatched_ = self->state.lock()->on_click_dispatched)
-                on_click_dispatched(std::move(on_click_dispatched_));
-
-            if(options->get<bool>(enable_hover_click_opt))
-                enable();
+                auto& hc = accessibility_manager->hover_click();
+                hc.hover_duration(state->hover_duration);
+                hc.cancel_displacement_threshold(state->cancel_displacement_threshold);
+                hc.on_hover_start(std::move(state->on_hover_start));
+                hc.on_hover_cancel(std::move(state->on_hover_cancel));
+                hc.on_click_dispatched(std::move(state->on_click_dispatched));
+            }
         });
 }
