@@ -33,7 +33,7 @@ namespace graphics
 namespace atomic
 {
 
-class GbmWorkarounds;
+class GbmQuirks;
 
 class Platform : public graphics::DisplayPlatform
 {
@@ -44,7 +44,7 @@ public:
         ConsoleServices& vt,
         EmergencyCleanupRegistry& emergency_cleanup_registry,
         BypassOption bypass_option,
-        std::shared_ptr<GbmWorkarounds> runtime_quirks);
+        std::shared_ptr<GbmQuirks> runtime_quirks);
 
     ~Platform() override;
 
@@ -69,7 +69,7 @@ private:
         std::shared_ptr<DisplayReport> const& reporter,
         EmergencyCleanupRegistry& emergency_cleanup_registry,
         BypassOption bypass_option,
-        std::shared_ptr<GbmWorkarounds> runtime_quirks);
+        std::shared_ptr<GbmQuirks> runtime_quirks);
 
     std::unique_ptr<Device> const device_handle;
     mir::Fd const drm_fd;
@@ -77,7 +77,7 @@ private:
     std::shared_ptr<GBMDisplayProvider> gbm_display_provider;
 
     BypassOption const bypass_option_;
-    std::shared_ptr<GbmWorkarounds> const runtime_quirks;
+    std::shared_ptr<GbmQuirks> const runtime_quirks;
 };
 }
 }

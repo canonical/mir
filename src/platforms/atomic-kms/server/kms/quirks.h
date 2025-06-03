@@ -33,10 +33,10 @@ class Device;
 
 namespace graphics::atomic
 {
-class GbmWorkarounds
+class GbmQuirks
 {
 public:
-    virtual ~GbmWorkarounds() = default;
+    virtual ~GbmQuirks() = default;
     virtual auto adjust_gbm_create_surface_flags(uint32_t) -> uint32_t = 0;
     virtual auto gbm_surface_has_free_buffers_broken() -> bool = 0;
 };
@@ -65,7 +65,7 @@ public:
     static void add_quirks_option(boost::program_options::options_description& config);
 
     [[nodiscard]]
-    auto runtime_quirks_for(udev::Device const& device) -> std::shared_ptr<GbmWorkarounds>;
+    auto runtime_quirks_for(udev::Device const& device) -> std::shared_ptr<GbmQuirks>;
 
 private:
     class Impl;
