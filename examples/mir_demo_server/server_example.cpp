@@ -197,15 +197,23 @@ class AttributeHandler
 {
 public:
     using HandleInt = std::function<void(ConfigurationKey const& key, std::optional<int> value)>;
+    using HandleInts = std::function<void(ConfigurationKey const& key, std::optional<std::span<int>> value)>;
     using HandleBool = std::function<void(ConfigurationKey const& key, std::optional<bool> value)>;
+    using HandleBools = std::function<void(ConfigurationKey const& key, std::optional<std::span<bool>> value)>;
     using HandleFloat = std::function<void(ConfigurationKey const& key, std::optional<float> value)>;
+    using HandleFloats = std::function<void(ConfigurationKey const& key, std::optional<std::span<float>> value)>;
     using HandleString = std::function<void(ConfigurationKey const& key, std::optional<std::string_view> value)>;
+    using HandleStrings = std::function<void(ConfigurationKey const& key, std::optional<std::span<std::string_view>> value)>;
     using HandleDone = std::function<void()>;
 
     virtual void add_int_attribute(HandleInt handler, ConfigurationKey const& key) = 0;
+    virtual void add_ints_attribute(HandleInts handler, ConfigurationKey const& key) = 0;
     virtual void add_bool_attribute(HandleBool handler, ConfigurationKey const& key) = 0;
+    virtual void add_bools_attribute(HandleBools handler, ConfigurationKey const& key) = 0;
     virtual void add_float_attribute(HandleFloat handler, ConfigurationKey const& key) = 0;
+    virtual void add_floats_attribute(HandleFloats handler, ConfigurationKey const& key) = 0;
     virtual void add_string_attribute(HandleString handler, ConfigurationKey const& key) = 0;
+    virtual void add_strings_attribute(HandleStrings handler, ConfigurationKey const& key) = 0;
 
     /// Called following a set of related updates (e.g. a file reload) to allow
     /// multiple attributes to be updated transactionally
@@ -375,30 +383,6 @@ struct InputConfiguration : miral::InputConfiguration
 };
 
 // Struct for illustrative purposes, this would be rolled into miral::InputConfiguration
-struct CursorScale : miral::CursorScale
-{
-    explicit CursorScale(AttributeHandler& config_handler) : miral::CursorScale{}
-    {
-        config_handler.add_float_attribute([this](ConfigurationKey const& key, std::optional<float> val)
-                                           {
-                                               if (val)
-                                               {
-                                                   if (*val >= 0.0)
-                                                   {
-                                                       scale(*val);
-                                                   }
-                                                   else
-                                                   {
-                                                       mir::log_warning(
-                                                           "Config value %s does not support negative values. Ignoring the supplied value (%f)...",
-                                                           key.to_string().c_str(), *val);
-                                                   }
-                                               }
-                                           },
-                                           {"cursor", "scale"});
-    }
-};
-
 class DemoConfigFile : public AttributeHandler
 {
 public:
@@ -410,16 +394,20 @@ public:
             [this](std::istream& istream, std::filesystem::path const& path) {loader(istream, path); }}
     {
         runner.add_start_callback([this]
-            {
-                std::lock_guard lock{config_mutex};
-                apply_config();
-            });
+        {
+            std::lock_guard lock{config_mutex};
+            apply_config();
+        });
     }
 
     void add_int_attribute(HandleInt handler, ConfigurationKey const& key) override;
+    void add_ints_attribute(HandleInts handler, const ConfigurationKey& key) override;
     void add_bool_attribute(HandleBool handler, const ConfigurationKey& key) override;
+    void add_bools_attribute(HandleBools handler, const ConfigurationKey& key) override;
     void add_float_attribute(HandleFloat handler, ConfigurationKey const& key) override;
+    void add_floats_attribute(HandleFloats handler, const ConfigurationKey& key) override;
     void add_string_attribute(HandleString handler, ConfigurationKey const& key) override;
+    void add_strings_attribute(HandleStrings handler, const ConfigurationKey& key) override;
     void on_done(HandleDone handler) override;
 
 private:
@@ -460,6 +448,54 @@ private:
         }
 
         apply_config();
+    }
+};
+
+void DemoConfigFile::add_ints_attribute(HandleInts handler, const ConfigurationKey& key)
+{
+    // Not implemented: not needed for discussion
+    (void)handler; (void)key;
+}
+
+void DemoConfigFile::add_bools_attribute(HandleBools handler, const ConfigurationKey& key)
+{
+    // Not implemented: not needed for discussion
+    (void)handler; (void)key;
+}
+
+void DemoConfigFile::add_floats_attribute(HandleFloats handler, const ConfigurationKey& key)
+{
+    // Not implemented: not needed for discussion
+    (void)handler; (void)key;
+}
+
+void DemoConfigFile::add_strings_attribute(HandleStrings handler, const ConfigurationKey& key)
+{
+    // Not implemented: not needed for discussion
+    (void)handler; (void)key;
+}
+
+struct CursorScale : miral::CursorScale
+{
+    explicit CursorScale(AttributeHandler& config_handler) : miral::CursorScale{}
+    {
+        config_handler.add_float_attribute([this](ConfigurationKey const& key, std::optional<float> val)
+                                           {
+                                               if (val)
+                                               {
+                                                   if (*val >= 0.0)
+                                                   {
+                                                       scale(*val);
+                                                   }
+                                                   else
+                                                   {
+                                                       mir::log_warning(
+                                                           "Config value %s does not support negative values. Ignoring the supplied value (%f)...",
+                                                           key.to_string().c_str(), *val);
+                                                   }
+                                               }
+                                           },
+                                           {"cursor", "scale"});
     }
 };
 
