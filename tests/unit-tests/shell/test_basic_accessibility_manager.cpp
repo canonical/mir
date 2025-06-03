@@ -16,7 +16,6 @@
 
 #include "include/server/mir/shell/keyboard_helper.h"
 #include "mir/shell/hover_click_transformer.h"
-#include "src/server/input/default_input_device_hub.h"
 #include "src/server/shell/basic_accessibility_manager.h"
 #include "src/server/shell/mouse_keys_transformer.h"
 #include "src/server/shell/basic_simulated_secondary_click_transformer.h"
