@@ -92,30 +92,31 @@ miral::HoverClick& miral::HoverClick::cancel_displacement_threshold(float displa
 
 miral::HoverClick& miral::HoverClick::on_hover_start(std::function<void()> && on_hover_start)
 {
-    auto const state = self->state.lock();
-    state->on_hover_start = std::move(on_hover_start);
     if(auto const accessibility_manager = self->accessibility_manager.lock())
-        accessibility_manager->hover_click().on_hover_start(std::move(state->on_hover_start));
+        accessibility_manager->hover_click().on_hover_start(std::move(on_hover_start));
+    else
+        self->state.lock()->on_hover_start = std::move(on_hover_start);
+
 
     return *this;
 }
 
-miral::HoverClick& miral::HoverClick::on_hover_cancel(std::function<void()> && on_hover_cancel)
+miral::HoverClick& miral::HoverClick::on_hover_cancel(std::function<void()>&& on_hover_cancel)
 {
-    auto const state = self->state.lock();
-    state->on_hover_cancel = std::move(on_hover_cancel);
-    if(auto const accessibility_manager = self->accessibility_manager.lock())
-        accessibility_manager->hover_click().on_hover_cancel(std::move(state->on_hover_cancel));
+    if (auto const accessibility_manager = self->accessibility_manager.lock())
+        accessibility_manager->hover_click().on_hover_cancel(std::move(on_hover_cancel));
+    else
+        self->state.lock()->on_hover_cancel = std::move(on_hover_cancel);
 
     return *this;
 }
 
 miral::HoverClick& miral::HoverClick::on_click_dispatched(std::function<void()> && on_click_dispatched)
 {
-    auto const state = self->state.lock();
-    state->on_click_dispatched = std::move(on_click_dispatched);
     if(auto const accessibility_manager = self->accessibility_manager.lock())
-        accessibility_manager->hover_click().on_click_dispatched(std::move(state->on_click_dispatched));
+        accessibility_manager->hover_click().on_click_dispatched(std::move(on_click_dispatched));
+    else
+        self->state.lock()->on_click_dispatched = std::move(on_click_dispatched);
 
     return *this;
 }
