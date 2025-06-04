@@ -38,6 +38,7 @@ namespace graphics
 {
 class CursorImage;
 class DisplayConfigurationOutput;
+class GraphicBufferAllocator;
 
 namespace gbm
 {
@@ -65,7 +66,8 @@ class Cursor : public graphics::Cursor
 public:
     Cursor(
         KMSOutputContainer& output_container,
-        std::shared_ptr<CurrentConfiguration> const& current_configuration);
+        std::shared_ptr<CurrentConfiguration> const& current_configuration,
+        std::shared_ptr<GraphicBufferAllocator> const& graphics_buffer_allocator);
 
     ~Cursor() noexcept;
 
@@ -138,9 +140,14 @@ private:
     uint32_t min_buffer_height;
 
     std::shared_ptr<CurrentConfiguration> const current_configuration;
+    std::shared_ptr<GraphicBufferAllocator> graphics_buffer_allocator;
 
     std::shared_ptr<CursorImage> current_cursor_image;
     float current_scale{1.0};
+
+    /// A backing buffer is optional for the cursor and is only
+    /// created when [renderable] is accessed.
+    std::optional<std::shared_ptr<Buffer>> buffer;
 };
 }
 }

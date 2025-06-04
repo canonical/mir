@@ -26,6 +26,7 @@
 
 #include "mir/test/doubles/mock_gbm.h"
 #include "mir/test/doubles/mock_drm.h"
+#include "mir/test/doubles/stub_buffer_allocator.h"
 #include "mir/test/doubles/stub_display_configuration.h"
 #include "mir/test/fake_shared.h"
 #include "mir_test_framework/temporary_environment_value.h"
@@ -303,7 +304,8 @@ struct MesaCursorTest : ::testing::Test
     size_t const cursor_side{64};
     MesaCursorTest()
         : cursor{output_container,
-            mt::fake_shared(current_configuration)}
+            mt::fake_shared(current_configuration),
+            std::make_shared<mtd::StubBufferAllocator>()}
     {
         using namespace ::testing;
         ON_CALL(mock_drm, drmGetCap(_, DRM_CAP_CURSOR_WIDTH, _))
@@ -354,7 +356,8 @@ TEST_F(MesaCursorTest, creates_cursor_bo_image)
                                         GBM_BO_USE_CURSOR | GBM_BO_USE_WRITE));
 
     mgg::Cursor cursor_tmp{output_container,
-        std::make_shared<StubCurrentConfiguration>(output_container)};
+        std::make_shared<StubCurrentConfiguration>(output_container),
+        std::make_shared<mtd::StubBufferAllocator>()};
 }
 
 TEST_F(MesaCursorTest, queries_received_cursor_size)
@@ -366,7 +369,8 @@ TEST_F(MesaCursorTest, queries_received_cursor_size)
     EXPECT_CALL(mock_gbm, gbm_bo_get_height(_)).Times(2);
 
     mgg::Cursor cursor_tmp{output_container,
-        std::make_shared<StubCurrentConfiguration>(output_container)};
+        std::make_shared<StubCurrentConfiguration>(output_container),
+        std::make_shared<mtd::StubBufferAllocator>()};
 }
 
 TEST_F(MesaCursorTest, respects_drm_cap_cursor)
@@ -381,7 +385,8 @@ TEST_F(MesaCursorTest, respects_drm_cap_cursor)
     EXPECT_CALL(mock_gbm, gbm_bo_create(_, drm_buffer_size, drm_buffer_size, _, _));
 
     mgg::Cursor cursor_tmp{output_container,
-                           std::make_shared<StubCurrentConfiguration>(output_container)};
+        std::make_shared<StubCurrentConfiguration>(output_container),
+        std::make_shared<mtd::StubBufferAllocator>()};
 }
 
 TEST_F(MesaCursorTest, show_cursor_writes_to_bo)
@@ -445,7 +450,8 @@ TEST_F(MesaCursorTest, pads_missing_data_when_buffer_size_differs)
     EXPECT_CALL(mock_gbm, gbm_bo_write(mock_gbm.fake_gbm.bo, ContainsASingleWhitePixel(width*height), buffer_size_bytes));
 
     mgg::Cursor cursor_tmp{output_container,
-        std::make_shared<StubCurrentConfiguration>(output_container)};
+        std::make_shared<StubCurrentConfiguration>(output_container),
+        std::make_shared<mtd::StubBufferAllocator>()};
     cursor_tmp.show(std::make_shared<SinglePixelCursorImage>());
 }
 
@@ -480,7 +486,8 @@ TEST_F(MesaCursorTest, clears_cursor_state_on_construction)
     EXPECT_CALL(*output_container.outputs[2], has_cursor_image()).Times(0);
 
     mgg::Cursor cursor_tmp{output_container,
-       std::make_shared<StubCurrentConfiguration>(output_container)};
+        std::make_shared<StubCurrentConfiguration>(output_container),
+        std::make_shared<mtd::StubBufferAllocator>()};
 
     output_container.verify_and_clear_expectations();
 }
@@ -498,7 +505,8 @@ TEST_F(MesaCursorTest, construction_fails_if_initial_set_fails)
 
     EXPECT_THROW(
         mgg::Cursor cursor_tmp(output_container,
-           std::make_shared<StubCurrentConfiguration>(output_container));
+            std::make_shared<StubCurrentConfiguration>(output_container),
+            std::make_shared<mtd::StubBufferAllocator>());
     , std::runtime_error);
 }
 

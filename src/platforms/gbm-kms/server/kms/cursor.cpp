@@ -22,6 +22,8 @@
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/cursor_image.h"
 #include "mir/graphics/pixman_image_scaling.h"
+#include "mir/graphics/graphic_buffer_allocator.h"
+#include "mir/renderer/sw/pixel_source.h"
 
 #include <mutex>
 #include <xf86drm.h>
@@ -34,6 +36,7 @@
 namespace mg = mir::graphics;
 namespace mgg = mg::gbm;
 namespace geom = mir::geometry;
+namespace mrs = mir::renderer::software;
 
 namespace
 {
@@ -126,13 +129,15 @@ auto mir::graphics::gbm::Cursor::GBMBOWrapper::change_orientation(MirOrientation
 
 mgg::Cursor::Cursor(
     KMSOutputContainer& output_container,
-    std::shared_ptr<CurrentConfiguration> const& current_configuration) :
+    std::shared_ptr<CurrentConfiguration> const& current_configuration,
+    std::shared_ptr<GraphicBufferAllocator> const& graphics_buffer_allocator) :
         output_container(output_container),
         current_position(),
         last_set_failed(false),
         min_buffer_width{std::numeric_limits<uint32_t>::max()},
         min_buffer_height{std::numeric_limits<uint32_t>::max()},
-        current_configuration(current_configuration)
+        current_configuration(current_configuration),
+        graphics_buffer_allocator(graphics_buffer_allocator)
 {
     // Generate the buffers for the initial configuration.
     current_configuration->with_current_configuration_do(
@@ -280,6 +285,7 @@ void mgg::Cursor::show(std::shared_ptr<CursorImage> const& cursor_image)
     // Writing the data could throw an exception so let's
     // hold off on setting visible until after we have succeeded.
     visible = true;
+    buffer = std::nullopt;
     place_cursor_at_locked(lg, current_position, ForceState);
 }
 
@@ -458,14 +464,92 @@ auto mir::graphics::gbm::Cursor::renderable() -> std::shared_ptr<Renderable>
     class CursorRenderable : public Renderable
     {
     public:
+        CursorRenderable(
+            std::shared_ptr<Buffer> const& buffer,
+            geom::Point const& position)
+            : buffer_(buffer),
+              position(position)
+        {
+        }
+
         ID id() const override
         {
             return this;
         }
 
+        std::shared_ptr<Buffer> buffer() const override
+        {
+            return buffer_;
+        }
 
+        geom::Rectangle screen_position() const override
+        {
+            return geom::Rectangle{
+                position,
+                buffer_->size()
+            };
+        }
+
+        geom::RectangleD src_bounds() const override
+        {
+            return geom::RectangleD{
+                {0, 0},
+                buffer_->size()
+            };
+        }
+
+        std::optional<geometry::Rectangle> clip_area() const override
+        {
+            return std::nullopt;
+        }
+
+        float alpha() const override
+        {
+            return 1;
+        }
+
+        glm::mat4 transformation() const override
+        {
+            return glm::mat4(1.f);
+        }
+
+        bool shaped() const override
+        {
+            return true;
+        }
+
+        auto surface_if_any() const -> std::optional<mir::scene::Surface const*> override
+        {
+            return std::nullopt;
+        }
+
+        void set_position(geom::Point const& new_pos)
+        {
+            position = new_pos;
+        }
+
+    private:
+        std::shared_ptr<Buffer> buffer_;
+        geom::Point position;
     };
-    return nullptr;
+
+    std::lock_guard lg(guard);
+    if (!visible)
+        return nullptr;
+
+    if (!buffer)
+    {
+        buffer = mrs::alloc_buffer_with_content(
+            *graphics_buffer_allocator,
+            argb8888.data(),
+            size,
+            geom::Stride(size.width.as_uint32_t() * MIR_BYTES_PER_PIXEL(mir_pixel_format_argb_8888)),
+            mir_pixel_format_argb_8888);
+    }
+
+    return std::make_shared<CursorRenderable>(
+        buffer.value(),
+        current_position);
 }
 
 auto mir::graphics::gbm::Cursor::needs_compositing() const -> bool
