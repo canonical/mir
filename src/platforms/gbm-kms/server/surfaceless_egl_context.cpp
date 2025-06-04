@@ -71,6 +71,7 @@ mg::gbm::SurfacelessEGLContext::SurfacelessEGLContext(EGLDisplay dpy, EGLContext
 
 mg::gbm::SurfacelessEGLContext::~SurfacelessEGLContext()
 {
+    release_current();
     eglDestroyContext(dpy, ctx);
 }
 

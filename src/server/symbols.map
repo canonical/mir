@@ -973,10 +973,12 @@ global:
     non-virtual?thunk?to?mir::input::InputEventTransformer::?InputEventTransformer*;
     non-virtual?thunk?to?mir::input::InputEventTransformer::Transformer::?Transformer*;
     non-virtual?thunk?to?mir::input::InputEventTransformer::add_device*;
+    non-virtual?thunk?to?mir::input::InputEventTransformer::append*;
     non-virtual?thunk?to?mir::input::InputEventTransformer::bounding_rectangle*;
     non-virtual?thunk?to?mir::input::InputEventTransformer::create_device_state*;
     non-virtual?thunk?to?mir::input::InputEventTransformer::dispatch_event*;
     non-virtual?thunk?to?mir::input::InputEventTransformer::output_info*;
+    non-virtual?thunk?to?mir::input::InputEventTransformer::remove*;
     non-virtual?thunk?to?mir::input::InputEventTransformer::remove_device*;
     non-virtual?thunk?to?mir::input::InputEventTransformer::reset_confinement_regions*;
     non-virtual?thunk?to?mir::input::InputEventTransformer::set_confinement_regions*;
@@ -1376,6 +1378,7 @@ global:
     typeinfo?for?mir::shell::Shell;
     typeinfo?for?mir::shell::ShellReport;
     typeinfo?for?mir::shell::ShellWrapper;
+    typeinfo?for?mir::shell::SimulatedSecondaryClickTransformer;
     typeinfo?for?mir::shell::StreamSpecification;
     typeinfo?for?mir::shell::SurfaceAspectRatio;
     typeinfo?for?mir::shell::SurfaceSpecification;
@@ -1570,6 +1573,7 @@ global:
     vtable?for?mir::shell::Shell;
     vtable?for?mir::shell::ShellReport;
     vtable?for?mir::shell::ShellWrapper;
+    vtable?for?mir::shell::SimulatedSecondaryClickTransformer;
     vtable?for?mir::shell::SurfaceStack;
     vtable?for?mir::shell::SurfaceStackWrapper;
     vtable?for?mir::shell::SystemCompositorWindowManager;

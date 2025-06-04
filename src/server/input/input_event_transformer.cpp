@@ -163,7 +163,7 @@ void mi::InputEventTransformer::append(std::weak_ptr<mi::InputEventTransformer::
     input_transformers.push_back(transformer);
 }
 
-bool mi::InputEventTransformer::remove(std::shared_ptr<mi::InputEventTransformer::Transformer> const& transformer)
+void mi::InputEventTransformer::remove(std::shared_ptr<mi::InputEventTransformer::Transformer> const& transformer)
 {
     std::lock_guard lock{mutex};
     auto [remove_start, remove_end] = std::ranges::remove(
@@ -175,13 +175,9 @@ bool mi::InputEventTransformer::remove(std::shared_ptr<mi::InputEventTransformer
         });
 
     if (remove_start == input_transformers.end())
-    {
-        mir::log_error("Attempted to remove a transformer that doesn't exist in `input_transformers`");
-        return false;
-    }
+        return;
 
     input_transformers.erase(remove_start, remove_end);
-    return true;
 }
 
 void mir::input::InputEventTransformer::add_device(Device const& device)
@@ -244,3 +240,4 @@ mir::input::OutputInfo mir::input::InputEventTransformer::output_info(uint32_t o
 {
     return seat->output_info(output_id);
 }
+

@@ -38,6 +38,7 @@
 #include "mir/graphics/egl_error.h"
 #include "cpu_copy_output_surface.h"
 #include "surfaceless_egl_context.h"
+#include "mir/graphics/drm_syncobj.h"
 
 #include <boost/throw_exception.hpp>
 #include <boost/exception/errinfo_errno.hpp>
@@ -531,6 +532,21 @@ auto mgg::GLRenderingProvider::surface_for_sink(
         config);
 }
 
+auto mgg::GLRenderingProvider::import_syncobj(Fd const& syncobj_fd)
+    -> std::unique_ptr<drm::Syncobj>
+{
+    uint32_t handle;
+    if (auto err = drmSyncobjFDToHandle(drm_fd, syncobj_fd, &handle))
+    {
+        BOOST_THROW_EXCEPTION((
+            std::system_error{
+                -err,
+                std::system_category(),
+                "Failed to import DRM syncobj"}));
+    }
+    return std::make_unique<drm::Syncobj>(drm_fd, handle);
+}
+
 auto mgg::GLRenderingProvider::make_framebuffer_provider(DisplaySink& /*sink*/)
     -> std::unique_ptr<FramebufferProvider>
 {
@@ -549,12 +565,14 @@ auto mgg::GLRenderingProvider::make_framebuffer_provider(DisplaySink& /*sink*/)
 }
 
 mgg::GLRenderingProvider::GLRenderingProvider(
+    Fd drm_fd,
     std::shared_ptr<mg::GBMDisplayProvider> associated_display,
     std::shared_ptr<mgc::EGLContextExecutor> egl_delegate,
     std::shared_ptr<mg::DMABufEGLProvider> dmabuf_provider,
     EGLDisplay dpy,
     EGLContext ctx)
-    : bound_display{std::move(associated_display)},
+    : drm_fd{std::move(drm_fd)},
+      bound_display{std::move(associated_display)},
       dpy{dpy},
       ctx{ctx},
       dmabuf_provider{std::move(dmabuf_provider)},

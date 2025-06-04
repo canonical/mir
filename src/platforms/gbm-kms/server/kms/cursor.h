@@ -79,6 +79,8 @@ public:
 
     void scale(float) override;
 
+    auto renderable() -> std::shared_ptr<Renderable> override;
+
 private:
     enum ForceCursorState { UpdateState, ForceState };
     struct GBMBOWrapper;

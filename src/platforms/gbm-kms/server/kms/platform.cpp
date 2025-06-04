@@ -19,6 +19,7 @@
 #include "display.h"
 #include "mir/console_services.h"
 #include "mir/emergency_cleanup_registry.h"
+#include "mir/fd.h"
 #include "mir/graphics/dmabuf_buffer.h"
 #include "mir/graphics/drm_formats.h"
 #include "mir/graphics/egl_context_executor.h"
@@ -30,12 +31,14 @@
 #include "one_shot_device_observer.h"
 #include "mir/graphics/linux_dmabuf.h"
 #include "mir/graphics/egl_context_executor.h"
+#include "mir/graphics/drm_syncobj.h"
 #include "kms_cpu_addressable_display_provider.h"
 #include "surfaceless_egl_context.h"
 #include <boost/throw_exception.hpp>
 #include <drm_fourcc.h>
 #include <gbm.h>
 #include <system_error>
+#include <xf86drm.h>
 
 #define MIR_LOG_COMPONENT "platform-graphics-gbm-kms"
 #include "mir/log.h"
@@ -104,6 +107,20 @@ mgg::Platform::Platform(
     if (drm_fd == mir::Fd::invalid)
     {
         BOOST_THROW_EXCEPTION((std::logic_error{"Invalid DRM device FD"}));
+    }
+
+    /*
+     * This is required to pull the list of output colour formats available,
+     * and universal planes support was unconditionally enabled in the 3.16 kernel.
+     * That's long enough ago to just unconditionally enable this.
+     */
+    if (auto err = drmSetClientCap(drm_fd, DRM_CLIENT_CAP_UNIVERSAL_PLANES, 1))
+    {
+        BOOST_THROW_EXCEPTION((
+            std::system_error{
+                -err,
+                std::system_category(),
+                "Failed to enable DRM Universal Planes support"}));
     }
 }
 
@@ -390,8 +407,9 @@ mgg::RenderingPlatform::RenderingPlatform(
 mgg::RenderingPlatform::RenderingPlatform(
     std::variant<std::shared_ptr<mg::GBMDisplayProvider>, std::shared_ptr<gbm_device>> hw)
     : device{std::visit(gbm_device_from_hw{}, hw)},
+      dpy{initialise_egl(dpy_for_gbm_device(device.get()), 1, 4)},
       bound_display{std::visit(display_provider_or_nothing{}, hw)},
-      share_ctx{std::make_unique<SurfacelessEGLContext>(initialise_egl(dpy_for_gbm_device(device.get()), 1, 4))},
+      share_ctx{std::make_unique<SurfacelessEGLContext>(dpy)},
       egl_delegate{std::make_shared<mg::common::EGLContextExecutor>(share_ctx->make_share_context())},
       dmabuf_provider{maybe_make_dmabuf_provider(device, share_ctx->egl_display(), std::make_shared<mg::EGLExtensions>(), egl_delegate)}
 {
@@ -409,11 +427,13 @@ mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgg::RenderingPlatform::create_
 }
 
 auto mgg::RenderingPlatform::maybe_create_provider(
-    RenderingProvider::Tag const& type_tag) -> std::shared_ptr<RenderingProvider>
+    RenderingProvider::Tag const& type_tag) -> std::shared_ptr<graphics::RenderingProvider>
 {
-    if (dynamic_cast<GLRenderingProvider::Tag const*>(&type_tag))
+    if (dynamic_cast<mg::GLRenderingProvider::Tag const*>(&type_tag) ||
+        dynamic_cast<mg::DRMRenderingProvider::Tag const*>(&type_tag))
     {
         return std::make_shared<mgg::GLRenderingProvider>(
+            Fd{IntOwnedFd{gbm_device_get_fd(device.get())}},
             bound_display,
             egl_delegate,
             dmabuf_provider,

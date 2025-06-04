@@ -313,7 +313,12 @@ public:
     OutputFilter(std::unique_ptr<mg::gl::OutputSurface> output)
      : output{std::move(output)},
         texture{make_texture(this->output->size())},
-        framebuffer{make_framebuffer(texture)}
+        framebuffer{make_framebuffer(texture)},
+        filter{mir_output_filter_none},
+        program{nullptr},
+        position_attrib{0},
+        texcoord_attrib{0},
+        tex_uniform{0}
     {
     }
 
@@ -329,8 +334,19 @@ public:
 
     void bind() override
     {
+        const GLchar* src = nullptr;
+        switch (filter) {
+        case mir_output_filter_none:
+            break;
+        case mir_output_filter_grayscale:
+            src = grayscale_src;
+            break;
+        case mir_output_filter_invert:
+            src = invert_src;
+            break;
+        }
         // Bypass if no filter.
-        if (filter == mir_output_filter_none)
+        if (src == nullptr)
         {
             output->bind();
             return;
@@ -340,7 +356,7 @@ public:
 
         if (program == nullptr)
         {
-            program = std::make_unique<ProgramHandle>(compile_program(invert_src));
+            program = std::make_unique<ProgramHandle>(compile_program(src));
             position_attrib = glGetAttribLocation(*program, "position");
             texcoord_attrib = glGetAttribLocation(*program, "texcoord");
             tex_uniform = glGetUniformLocation(*program, "tex");
