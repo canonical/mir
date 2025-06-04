@@ -790,3 +790,24 @@ TEST_F(MesaCursorTest, does_not_need_compositing)
 {
     EXPECT_THAT(cursor.needs_compositing(), Eq(false));
 }
+
+TEST_F(MesaCursorTest, if_shown_cursor_renderable_is_not_null)
+{
+    using namespace testing;
+
+    auto image = std::make_shared<StubCursorImage>();
+    cursor.show(image);
+
+    EXPECT_THAT(cursor.renderable(), NotNull());
+}
+
+TEST_F(MesaCursorTest, if_hidden_cursor_renderable_is_null)
+{
+    using namespace testing;
+
+    auto image = std::make_shared<StubCursorImage>();
+    cursor.show(image);
+    cursor.hide();
+
+    EXPECT_THAT(cursor.renderable(), IsNull());
+}
