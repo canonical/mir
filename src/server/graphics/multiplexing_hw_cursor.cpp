@@ -23,12 +23,14 @@ namespace mg = mir::graphics;
 
 namespace
 {
-auto construct_platform_cursors(std::span<mg::Display*> platform_displays) -> std::vector<std::shared_ptr<mg::Cursor>>
+auto construct_platform_cursors(
+    std::span<mg::Display*> platform_displays,
+    std::shared_ptr<mg::GraphicBufferAllocator> const& buffer_allocator) -> std::vector<std::shared_ptr<mg::Cursor>>
 {
     std::vector<std::shared_ptr<mg::Cursor>> cursors;
     for (auto display : platform_displays)
     {
-        cursors.push_back(display->create_hardware_cursor());
+        cursors.push_back(display->create_hardware_cursor(buffer_allocator));
         if (cursors.back() == nullptr)
         {
             BOOST_THROW_EXCEPTION((std::runtime_error{"Platform failed to create hardware cursor"}));
@@ -38,8 +40,10 @@ auto construct_platform_cursors(std::span<mg::Display*> platform_displays) -> st
 }
 }
 
-mg::MultiplexingCursor::MultiplexingCursor(std::span<Display*> platform_displays)
-    : platform_cursors{construct_platform_cursors(platform_displays)}
+mg::MultiplexingCursor::MultiplexingCursor(
+    std::span<Display*> platform_displays,
+    std::shared_ptr<GraphicBufferAllocator> const& buffer_allocator)
+    : platform_cursors{construct_platform_cursors(platform_displays, buffer_allocator)}
 {
 }
 

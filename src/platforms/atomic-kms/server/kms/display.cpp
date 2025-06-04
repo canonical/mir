@@ -242,7 +242,8 @@ void mga::Display::resume()
     }
 }
 
-auto mga::Display::create_hardware_cursor() -> std::shared_ptr<graphics::Cursor>
+auto mga::Display::create_hardware_cursor(
+    std::shared_ptr<GraphicBufferAllocator> const&) -> std::shared_ptr<graphics::Cursor>
 {
     std::shared_ptr<mga::Cursor> locked_cursor = cursor.lock();
     if (!locked_cursor)

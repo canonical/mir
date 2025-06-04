@@ -261,7 +261,8 @@ void mgg::Display::resume()
     if (auto c = cursor.lock()) c->resume();
 }
 
-auto mgg::Display::create_hardware_cursor() -> std::shared_ptr<graphics::Cursor>
+auto mgg::Display::create_hardware_cursor(
+    std::shared_ptr<GraphicBufferAllocator> const&) -> std::shared_ptr<graphics::Cursor>
 {
     // There is only one hardware cursor. We do not keep a strong reference to it in the display though,
     // if no other component of Mir is interested (i.e. the input stack does not keep a reference to send

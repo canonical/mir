@@ -455,6 +455,16 @@ void mir::graphics::gbm::Cursor::scale(float new_scale)
 
 auto mir::graphics::gbm::Cursor::renderable() -> std::shared_ptr<Renderable>
 {
+    class CursorRenderable : public Renderable
+    {
+    public:
+        ID id() const override
+        {
+            return this;
+        }
+
+
+    };
     return nullptr;
 }
 

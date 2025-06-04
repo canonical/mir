@@ -46,7 +46,8 @@ public:
 
     void resume() override;
 
-    auto create_hardware_cursor() -> std::shared_ptr<Cursor> override;
+    auto create_hardware_cursor(
+        std::shared_ptr<GraphicBufferAllocator> const& buffer_allocator) -> std::shared_ptr<Cursor> override;
 private:
     std::vector<std::unique_ptr<Display>> const displays;
 };

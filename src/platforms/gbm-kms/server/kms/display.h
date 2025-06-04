@@ -79,7 +79,8 @@ public:
     void pause() override;
     void resume() override;
 
-    std::shared_ptr<graphics::Cursor> create_hardware_cursor() override;
+    std::shared_ptr<graphics::Cursor> create_hardware_cursor(
+        std::shared_ptr<GraphicBufferAllocator> const& buffer_allocator) override;
 
 private:
     void clear_connected_unused_outputs();

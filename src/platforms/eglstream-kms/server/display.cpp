@@ -570,7 +570,7 @@ void mge::Display::resume()
     }
 }
 
-std::shared_ptr<mg::Cursor> mge::Display::create_hardware_cursor()
+std::shared_ptr<mg::Cursor> mge::Display::create_hardware_cursor(std::shared_ptr<GraphicBufferAllocator> const&)
 {
     // TODO: Find the cursor plane, and use it.
     return nullptr;

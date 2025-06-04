@@ -86,7 +86,8 @@ public:
     void pause() override;
     void resume() override;
 
-    std::shared_ptr<Cursor> create_hardware_cursor() override;
+    std::shared_ptr<Cursor> create_hardware_cursor(
+        std::shared_ptr<GraphicBufferAllocator> const& buffer_allocator) override;
 
 private:
     struct OutputInfo : ::mir::X::X11Resources::VirtualOutput

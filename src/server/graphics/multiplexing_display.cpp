@@ -320,7 +320,8 @@ void mg::MultiplexingDisplay::resume()
     }
 }
 
-auto mg::MultiplexingDisplay::create_hardware_cursor() -> std::shared_ptr<Cursor>
+auto mg::MultiplexingDisplay::create_hardware_cursor(
+    std::shared_ptr<GraphicBufferAllocator> const& buffer_allocator) -> std::shared_ptr<Cursor>
 {
     std::vector<Display*> platform_displays;
     for (auto& display : displays)
@@ -329,7 +330,7 @@ auto mg::MultiplexingDisplay::create_hardware_cursor() -> std::shared_ptr<Cursor
     }
     try
     {
-        return std::make_shared<MultiplexingCursor>(platform_displays);
+        return std::make_shared<MultiplexingCursor>(platform_displays, buffer_allocator);
     }
     catch (std::exception const&)
     {
