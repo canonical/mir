@@ -338,7 +338,7 @@ struct TestArbitraryEnablesAndDisables :
         std::unreachable();
     }
 
-    auto toggle_transformer(bool on)
+    void toggle_transformer(bool on)
     {
         switch (GetParam())
         {
@@ -352,7 +352,6 @@ struct TestArbitraryEnablesAndDisables :
             basic_accessibility_manager.hover_click_enabled(on);
             break;
         }
-        std::unreachable();
     }
 
     void enable_transformer()
