@@ -19,12 +19,14 @@
 #include "fractional_scale_v1.h"
 #include "mir/wayland/weak.h"
 #include "viewporter_wrapper.h"
+#include "wayland_connector.h"
 #include "wayland_utils.h"
 #include "wl_surface_role.h"
 #include "wl_subcompositor.h"
 #include "wl_region.h"
 #include "shm.h"
 #include "resource_lifetime_tracker.h"
+#include "linux_drm_syncobj.h"
 
 #include "wayland_wrapper.h"
 
@@ -48,12 +50,20 @@
 #include <cmath>
 #include <limits>
 #include <optional>
+#include <wayland-server-core.h>
 #include <wayland-server-protocol.h>
 
 namespace mf = mir::frontend;
 namespace geom = mir::geometry;
 namespace mw = mir::wayland;
 namespace msh = mir::shell;
+
+struct mf::WlSurface::PendingBufferState
+{
+    WlSurface* surf;
+    Fd eventfd;
+    mf::SyncPoint release;
+};
 
 mf::WlSurfaceState::Callback::Callback(wl_resource* new_resource)
     : mw::Callback{new_resource, Version<1>()}
@@ -83,6 +93,9 @@ void mf::WlSurfaceState::update_from(WlSurfaceState const& source)
 
     if (source.surface_data_invalidated)
         surface_data_invalidated = true;
+
+    if (source.release_fence)
+        release_fence = source.release_fence;
 }
 
 bool mf::WlSurfaceState::surface_data_needs_refresh() const
@@ -367,7 +380,18 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
         }
         else
         {
-            auto release_buffer = [executor = wayland_executor, weak_buffer]()
+            std::function<void()> release_buffer;
+
+            if (state.release_fence)
+            {
+                release_buffer = [release = *state.release_fence]() mutable
+                    {
+                        release.signal();
+                    };
+            }
+            else
+            {
+                release_buffer = [executor = wayland_executor, weak_buffer]()
                 {
                     executor->spawn([weak_buffer]()
                         {
@@ -377,6 +401,8 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
                             }
                         });
                 };
+            }
+
             auto executor_send_frame_callbacks = [executor = wayland_executor, weak_self = mw::make_weak(this)]()
                 {
                     executor->spawn([weak_self]()
@@ -419,6 +445,14 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
     }
     else
     {
+        if (state.release_fence)
+        {
+            throw wayland::ProtocolError{
+                sync_timeline.value().resource,
+                SyncTimeline::Error::no_buffer,
+            "Timeline release sync point set, but no buffer committed"};
+        }
+
         /*
          * Frame request committed with no associated buffer.
          * The Wayland protocol says that
@@ -465,6 +499,7 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
                 }
             );
         }
+
     }
 
     if (needs_buffer_submission && current_buffer)
@@ -509,20 +544,115 @@ void mf::WlSurface::commit()
     if (pending.input_shape && *pending.input_shape == input_shape)
         pending.input_shape = std::nullopt;
 
-    // order is important
-    auto const state = std::move(pending);
-    pending = WlSurfaceState();
-    role->commit(state);
-
-    if (scene_surface_created_callbacks.size())
-    {
-        if (auto const surface = scene_surface(); surface && surface.value())
+    auto const [acquire_syncpoint, release_syncpoint] = [&]() -> std::pair<std::optional<SyncPoint>, std::optional<SyncPoint>>
         {
-            for (auto const& callback : scene_surface_created_callbacks)
+            if (sync_timeline && sync_timeline.value().timeline_set())
+            {
+                auto [acquire, release] = sync_timeline.value().claim_timeline();
+                return std::make_pair(acquire, release);
+            }
+            return std::make_pair(std::nullopt, std::nullopt);
+        }();
+
+    /* Any previously committed, but not yet ready, buffer is now superceded
+     */
+    if (buffer_ready_source)
+    {
+        // We don't need to handle the buffer becoming ready anymore...
+        wl_event_source_remove(buffer_ready_source);
+        // ...and the client is now free to reuse it
+        pending_context->release.signal();
+        // Now clean up our context handling.
+        pending_context.reset();
+        buffer_ready_source = nullptr;
+    }
+
+    if (acquire_syncpoint && release_syncpoint)
+    {
+        /* If we have an acquire syncpoint then we need to wait for the buffer to be ready
+         * before we actually commit.
+         *
+         * In future we might want to push this further into the pipeline, but for now,
+         * waiting before doing any of the commit is sufficient.
+         */
+
+        if (!pending.buffer || !(*pending.buffer))
+        {
+            throw wayland::ProtocolError{
+                sync_timeline.value().resource,
+                SyncTimeline::Error::no_buffer,
+                "Timeline acquire sync point set, but no buffer committed"};
+        }
+
+        pending_context = std::make_unique<PendingBufferState>(PendingBufferState{
+            this,
+            acquire_syncpoint->to_eventfd(),
+            *release_syncpoint});
+
+        wl_event_loop_fd_func_t handle_buffer_ready =
+            [](int /*fd*/, uint32_t /*mask*/, void* data)
+            {
+                /* Because we are dispatched from the Wayland event loop we do not
+                 * need locking here; either data is valid, or we should have been
+                 * removed from the run queue.
+                 */
+                auto& state = *static_cast<PendingBufferState*>(data);
+
+                state.surf->pending.release_fence = state.release;
+
+                try
+                {
+                    complete_commit(state.surf);
+                }
+                catch (wayland::ProtocolError const& err)
+                {
+                    wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
+                }
+                catch (...)
+                {
+                    wayland::internal_error_processing_request(state.surf->client->raw_client(), "Surface::commit()");
+                }
+
+                wl_event_source_remove(state.surf->buffer_ready_source);
+                state.surf->buffer_ready_source = nullptr;
+                state.surf->pending_context.reset();
+
+                return 0;
+            };
+
+        auto client = wl_resource_get_client(resource);
+        auto display = wl_client_get_display(client);
+        auto event_loop = wl_display_get_event_loop(display);
+
+        buffer_ready_source = wl_event_loop_add_fd(
+            event_loop,
+            pending_context->eventfd,
+            WL_EVENT_READABLE,
+            handle_buffer_ready,
+            pending_context.get());
+    }
+    else
+    {
+        complete_commit(this);
+    }
+}
+
+void mf::WlSurface::complete_commit(WlSurface* surf)
+{
+    // order is important
+    auto const state = std::move(surf->pending);
+    surf->pending = WlSurfaceState();
+    surf->role->commit(state);
+
+    if (surf->scene_surface_created_callbacks.size())
+    {
+        if (auto const surface = surf->scene_surface(); surface && surface.value())
+        {
+            for (auto const& callback : surf->scene_surface_created_callbacks)
             {
                 callback(surface.value());
             }
-            scene_surface_created_callbacks.clear();
+            surf->scene_surface_created_callbacks.clear();
         }
     }
 }
@@ -563,6 +693,15 @@ void mf::WlSurface::associate_viewport(wayland::Weak<Viewport> viewport)
         BOOST_THROW_EXCEPTION((std::logic_error{"Cannot associate a viewport to a window with an existing viewport"}));
     }
     pending.viewport = viewport;
+}
+
+void mf::WlSurface::associate_sync_timeline(wayland::Weak<SyncTimeline> timeline)
+{
+    if (this->sync_timeline)
+    {
+        BOOST_THROW_EXCEPTION(TimelineAlreadyAssociated{});
+    }
+    sync_timeline = timeline;
 }
 
 void mir::frontend::WlSurface::update_surface_spec(shell::SurfaceSpecification const& spec)
