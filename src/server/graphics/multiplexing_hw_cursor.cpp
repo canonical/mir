@@ -75,10 +75,16 @@ void mir::graphics::MultiplexingCursor::scale(float new_scale)
 
 auto mg::MultiplexingCursor::renderable() -> std::shared_ptr<Renderable>
 {
-    return nullptr;
+    if (platform_cursors.empty())
+        return nullptr;
+
+    return platform_cursors[0]->renderable();
 }
 
 auto mg::MultiplexingCursor::needs_compositing() -> bool
 {
-    return false;
+    if (platform_cursors.empty())
+        return false;
+
+    return platform_cursors[0]->needs_compositing();
 }
