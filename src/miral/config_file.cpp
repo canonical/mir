@@ -80,6 +80,7 @@ public:
     std::optional<int> const directory_watch_descriptor;
 
     void register_handler(miral::MirRunner& runner);
+    void load_file() const;
     void handler(int) const;
 
     std::unique_ptr<miral::FdHandle> fd_handle;
@@ -91,9 +92,15 @@ class miral::ConfigFile::Self
 public:
     Self(MirRunner& runner, path file, Mode mode, Loader load_config);
 
+    void load_file() const;
 private:
     std::shared_ptr<Watcher> watcher;
 };
+
+void miral::ConfigFile::Self::load_file() const
+{
+    watcher->load_file();
+}
 
 Watcher::Watcher(path file, miral::ConfigFile::Loader load_config) :
     inotify_fd{inotify_init1(IN_CLOEXEC)},
@@ -166,6 +173,11 @@ miral::ConfigFile::ConfigFile(MirRunner& runner, path file, Mode mode, Loader lo
 
 miral::ConfigFile::~ConfigFile() = default;
 
+void miral::ConfigFile::force_load() const
+{
+    self->load_file();
+}
+
 void Watcher::register_handler(miral::MirRunner& runner)
 {
     if (directory_watch_descriptor)
@@ -182,6 +194,21 @@ void Watcher::register_handler(miral::MirRunner& runner)
                 mir::log_debug("Watcher has been removed, but handler invoked");
             }
         });
+    }
+}
+
+void Watcher::load_file() const
+{
+    auto const& file = directory.value() / filename;
+
+    if (std::ifstream config_file{file})
+    {
+        load_config(config_file, file);
+        mir::log_debug("(Re)loaded %s", file.c_str());
+    }
+    else
+    {
+        mir::log_debug("Failed to open %s", file.c_str());
     }
 }
 
@@ -207,17 +234,7 @@ void Watcher::handler(int) const
             {
                 if (event.name == filename)
                 {
-                    auto const& file = directory.value() / filename;
-
-                    if (std::ifstream config_file{file})
-                    {
-                        load_config(config_file, file);
-                        mir::log_debug("(Re)loaded %s", file.c_str());
-                    }
-                    else
-                    {
-                        mir::log_debug("Failed to open %s", file.c_str());
-                    }
+                    load_file();
                 }
             }
         catch (...)
