@@ -184,12 +184,7 @@ public:
                         auto& compositor = std::get<1>(tuple);
                         auto scene_elements = scene->scene_elements_for(compositor.get());
                         if (cursor->needs_compositing())
-                        {
-                            if (auto const cursor_renderable = cursor->renderable())
-                                scene_elements.push_back(std::make_shared<CursorSceneElement>(cursor_renderable));
-                            else
-                                log_error("Cursor needs compositing by the renderable is unavailable");
-                        }
+                            scene_elements.push_back(std::make_shared<CursorSceneElement>(cursor->renderable()));
 
                         if (compositor->composite(std::move(scene_elements)))
                             needs_post = true;
