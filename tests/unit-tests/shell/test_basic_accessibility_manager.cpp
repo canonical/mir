@@ -335,6 +335,7 @@ struct TestArbitraryEnablesAndDisables :
         case TransformerToTest::HoverClick:
             return mock_hover_click_transformer;
         }
+        std::unreachable();
     }
 
     auto toggle_transformer(bool on)
@@ -351,6 +352,7 @@ struct TestArbitraryEnablesAndDisables :
             basic_accessibility_manager.hover_click_enabled(on);
             break;
         }
+        std::unreachable();
     }
 
     void enable_transformer()
