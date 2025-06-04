@@ -440,3 +440,9 @@ TEST_F(SoftwareCursor, handles_argb_8888_buffer_with_stride)
         EXPECT_THAT(line, Each(Eq(expected_pixel)));
     }
 }
+
+TEST_F(SoftwareCursor, renderable_has_normal_orientation)
+{
+    cursor.show(stub_cursor_image);
+    EXPECT_THAT(cursor.renderable()->orientation(), testing::Eq(mir_orientation_normal));
+}
