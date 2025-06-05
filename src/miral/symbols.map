@@ -574,3 +574,13 @@ global:
     typeinfo?for?miral::SimulatedSecondaryClick;
   };
 } MIRAL_5.2;
+
+MIRAL_5.4 {
+global:
+  extern "C++" {
+    "miral::live_config::Key::Key(std::initializer_list<std::basic_string_view<char, std::char_traits<char> > const>)";
+    "miral::live_config::Key::as_path[abi:cxx11]() const";
+    "miral::live_config::Key::to_string[abi:cxx11]() const";
+    "miral::live_config::Key::operator<=>(miral::live_config::Key const&) const";
+  };
+} MIRAL_5.3;
