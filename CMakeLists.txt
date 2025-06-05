@@ -43,6 +43,9 @@ execute_process(
   OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 
+# Enable generation of compile_commands.json, for use by the clangd LSP
+set(CMAKE_EXPORT_COMPILE_COMMANDS on)
+
 option(use_debflags "Use build flags from dpkg-buildflags." OFF)
 if(use_debflags)
   include (cmake/Debian.cmake)
