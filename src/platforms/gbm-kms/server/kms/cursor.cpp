@@ -521,11 +521,6 @@ auto mir::graphics::gbm::Cursor::renderable() -> std::shared_ptr<Renderable>
             return std::nullopt;
         }
 
-        void set_position(geom::Point const& new_pos)
-        {
-            position = new_pos;
-        }
-
     private:
         std::shared_ptr<Buffer> buffer_;
         geom::Point position;

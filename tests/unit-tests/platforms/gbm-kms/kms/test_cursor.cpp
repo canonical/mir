@@ -793,6 +793,100 @@ TEST_F(MesaCursorTest, if_shown_cursor_renderable_is_not_null)
     EXPECT_THAT(cursor.renderable(), NotNull());
 }
 
+TEST_F(MesaCursorTest, cursor_renderable_buffer_is_not_null)
+{
+    using namespace testing;
+
+    auto image = std::make_shared<StubCursorImage>();
+    cursor.show(image);
+
+    EXPECT_THAT(cursor.renderable()->buffer(), NotNull());
+}
+
+TEST_F(MesaCursorTest, cursor_renderable_id_is_not_null)
+{
+    using namespace testing;
+
+    auto image = std::make_shared<StubCursorImage>();
+    cursor.show(image);
+
+    EXPECT_THAT(cursor.renderable()->id(), NotNull());
+}
+
+TEST_F(MesaCursorTest, cursor_renderable_screen_position_is_expected)
+{
+    using namespace testing;
+
+    auto image = std::make_shared<StubCursorImage>();
+    cursor.move_to(geom::Point{50, 50});
+    cursor.show(image);
+
+    EXPECT_THAT(cursor.renderable()->screen_position(), Eq(
+        geom::Rectangle({50, 50}, {image->size()})));
+}
+
+TEST_F(MesaCursorTest, cursor_renderable_src_bounds_is_expected)
+{
+    using namespace testing;
+
+    auto image = std::make_shared<StubCursorImage>();
+    cursor.move_to(geom::Point{50, 50});
+    cursor.show(image);
+
+    EXPECT_THAT(cursor.renderable()->src_bounds(), Eq(
+        geom::RectangleD({0, 0}, image->size())));
+}
+
+TEST_F(MesaCursorTest, cursor_renderable_clip_area_is_unset)
+{
+    using namespace testing;
+
+    auto image = std::make_shared<StubCursorImage>();
+    cursor.show(image);
+
+    EXPECT_THAT(cursor.renderable()->clip_area(), Eq(std::nullopt));
+}
+
+TEST_F(MesaCursorTest, cursor_renderable_alpha_is_one)
+{
+    using namespace testing;
+
+    auto image = std::make_shared<StubCursorImage>();
+    cursor.show(image);
+
+    EXPECT_THAT(cursor.renderable()->alpha(), Eq(1));
+}
+
+TEST_F(MesaCursorTest, cursor_renderable_transformation_is_identity)
+{
+    using namespace testing;
+
+    auto image = std::make_shared<StubCursorImage>();
+    cursor.show(image);
+
+    EXPECT_THAT(cursor.renderable()->transformation(), Eq(glm::mat4(1.f)));
+}
+
+TEST_F(MesaCursorTest, cursor_renderable_shaped_is_true)
+{
+    using namespace testing;
+
+    auto image = std::make_shared<StubCursorImage>();
+    cursor.show(image);
+
+    EXPECT_THAT(cursor.renderable()->shaped(), Eq(true));
+}
+
+TEST_F(MesaCursorTest, cursor_renderable_surface_is_nullopt)
+{
+    using namespace testing;
+
+    auto image = std::make_shared<StubCursorImage>();
+    cursor.show(image);
+
+    EXPECT_THAT(cursor.renderable()->surface_if_any(), Eq(std::nullopt));
+}
+
 TEST_F(MesaCursorTest, if_hidden_cursor_renderable_is_null)
 {
     using namespace testing;
