@@ -23,7 +23,6 @@
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/cursor_image.h"
 #include "mir/graphics/pixman_image_scaling.h"
-#include "mir/renderer/sw/pixel_source.h"
 
 #include <mutex>
 #include <xf86drm.h>
@@ -37,7 +36,6 @@ namespace mg = mir::graphics;
 namespace mgc = mir::graphics::common;
 namespace mgg = mg::gbm;
 namespace geom = mir::geometry;
-namespace mrs = mir::renderer::software;
 
 namespace
 {
@@ -544,6 +542,6 @@ auto mir::graphics::gbm::Cursor::renderable() -> std::shared_ptr<Renderable>
 
 auto mir::graphics::gbm::Cursor::needs_compositing() const -> bool
 {
-    return true;
+    return false;
 }
 

@@ -305,7 +305,6 @@ auto mgg::Display::create_hardware_cursor() -> std::shared_ptr<graphics::Cursor>
     return locked_cursor;
 }
 
-
 void mgg::Display::clear_connected_unused_outputs()
 {
     current_display_configuration.for_each_output([&](DisplayConfigurationOutput const& conf_output)
