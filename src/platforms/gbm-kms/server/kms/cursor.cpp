@@ -176,9 +176,9 @@ void mgg::Cursor::write_buffer_data_locked(
 
 void mgg::Cursor::pad_and_write_image_data_locked(
     std::lock_guard<std::mutex> const& lg,
-    GBMBOWrapper& buffer)
+    GBMBOWrapper& gbm_buffer)
 {
-    auto const orientation = buffer.orientation();
+    auto const orientation = gbm_buffer.orientation();
     bool const sideways = orientation == mir_orientation_left || orientation == mir_orientation_right;
 
     auto const min_width  = sideways ? min_buffer_width : min_buffer_height;
@@ -188,15 +188,15 @@ void mgg::Cursor::pad_and_write_image_data_locked(
     auto const image_height = std::min(min_height, size.height.as_uint32_t());
     auto const image_stride = size.width.as_uint32_t() * 4;
 
-    auto const buffer_stride = std::max(min_width*4, gbm_bo_get_stride(buffer));  // in bytes
-    auto const buffer_height = std::max(min_height, gbm_bo_get_height(buffer));
+    auto const buffer_stride = std::max(min_width*4, gbm_bo_get_stride(gbm_buffer));  // in bytes
+    auto const buffer_height = std::max(min_height, gbm_bo_get_height(gbm_buffer));
     size_t const padded_size = buffer_stride * buffer_height;
 
     auto padded = std::unique_ptr<uint8_t[]>(new uint8_t[padded_size]);
     size_t rhs_padding = buffer_stride - 4*image_width;
 
     auto const filler = 0; // 0x3f; is useful to make buffer visible for debugging
-    uint8_t const* src = argb8888.data();
+    uint8_t const* src = buffer->map_readable()->data();
     uint8_t* dest = &padded[0];
 
     switch (orientation)
@@ -256,7 +256,7 @@ void mgg::Cursor::pad_and_write_image_data_locked(
         break;
     }
 
-    write_buffer_data_locked(lg, buffer, &padded[0], padded_size);
+    write_buffer_data_locked(lg, gbm_buffer, &padded[0], padded_size);
 }
 
 void mgg::Cursor::show(std::shared_ptr<CursorImage> const& cursor_image)
@@ -269,8 +269,10 @@ void mgg::Cursor::show(std::shared_ptr<CursorImage> const& cursor_image)
     auto const scaled_cursor_buf = mg::scale_cursor_image(*current_cursor_image, current_scale);
     auto const buf_size_bytes = scaled_cursor_buf.size.width.as_value() * scaled_cursor_buf.size.height.as_value() * 4;
 
-    argb8888.resize(buf_size_bytes);
-    memcpy(argb8888.data(), scaled_cursor_buf.data.get(), buf_size_bytes);
+    buffer = std::make_shared<mgc::MemoryBackedShmBuffer>(
+        size,
+        mir_pixel_format_argb_8888);
+    memcpy(buffer->map_writeable()->data(), scaled_cursor_buf.data.get(), buf_size_bytes);
 
     hotspot = current_cursor_image->hotspot() * current_scale;
     {
@@ -284,7 +286,6 @@ void mgg::Cursor::show(std::shared_ptr<CursorImage> const& cursor_image)
     // Writing the data could throw an exception so let's
     // hold off on setting visible until after we have succeeded.
     visible = true;
-    buffer = std::nullopt;
     place_cursor_at_locked(lg, current_position, ForceState);
 }
 
@@ -536,23 +537,13 @@ auto mir::graphics::gbm::Cursor::renderable() -> std::shared_ptr<Renderable>
     if (!visible)
         return nullptr;
 
-    if (!buffer)
-    {
-        buffer = mrs::alloc_buffer_with_content(
-            *graphics_buffer_allocator,
-            argb8888.data(),
-            size,
-            geom::Stride(size.width.as_uint32_t() * MIR_BYTES_PER_PIXEL(mir_pixel_format_argb_8888)),
-            mir_pixel_format_argb_8888);
-    }
-
     return std::make_shared<CursorRenderable>(
-        buffer.value(),
+        buffer,
         current_position);
 }
 
 auto mir::graphics::gbm::Cursor::needs_compositing() const -> bool
 {
-    return false;
+    return true;
 }
 

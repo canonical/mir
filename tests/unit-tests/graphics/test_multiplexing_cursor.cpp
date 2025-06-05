@@ -21,7 +21,6 @@
 #include "mir/test/doubles/mock_cursor.h"
 #include "mir/test/doubles/stub_cursor_image.h"
 #include "mir/test/doubles/stub_renderable.h"
-#include "mir/test/doubles/stub_buffer_allocator.h"
 #include "src/server/graphics/multiplexing_hw_cursor.h"
 
 using namespace testing;
@@ -43,7 +42,7 @@ TEST_F(MultiplexingCursorTest, can_show_cursors)
     EXPECT_CALL(*cursor, show(Eq(cursor_image)));
 
     std::vector<mg::Display*> displays = { display.get() };
-    mg::MultiplexingCursor multiplexing_cursor(displays, std::make_shared<mtd::StubBufferAllocator>());
+    mg::MultiplexingCursor multiplexing_cursor(displays);
     multiplexing_cursor.show(cursor_image);
 }
 
@@ -56,7 +55,7 @@ TEST_F(MultiplexingCursorTest, can_hide_cursors)
     EXPECT_CALL(*cursor, hide());
 
     std::vector<mg::Display*> displays = { display.get() };
-    mg::MultiplexingCursor multiplexing_cursor(displays, std::make_shared<mtd::StubBufferAllocator>());
+    mg::MultiplexingCursor multiplexing_cursor(displays);
     multiplexing_cursor.hide();
 }
 
@@ -70,7 +69,7 @@ TEST_F(MultiplexingCursorTest, can_move_cursors)
     EXPECT_CALL(*cursor, move_to(Eq(position)));
 
     std::vector<mg::Display*> displays = { display.get() };
-    mg::MultiplexingCursor multiplexing_cursor(displays, std::make_shared<mtd::StubBufferAllocator>());
+    mg::MultiplexingCursor multiplexing_cursor(displays);
     multiplexing_cursor.move_to(position);
 }
 
@@ -84,7 +83,7 @@ TEST_F(MultiplexingCursorTest, can_scale_cursors)
     EXPECT_CALL(*cursor, scale(Eq(scale)));
 
     std::vector<mg::Display*> displays = { display.get() };
-    mg::MultiplexingCursor multiplexing_cursor(displays, std::make_shared<mtd::StubBufferAllocator>());
+    mg::MultiplexingCursor multiplexing_cursor(displays);
     multiplexing_cursor.scale(scale);
 }
 
@@ -98,7 +97,7 @@ TEST_F(MultiplexingCursorTest, renderable_is_not_null_with_cursors)
         .WillOnce(Return(std::make_shared<mtd::StubRenderable>()));
 
     std::vector<mg::Display*> displays = { display.get() };
-    mg::MultiplexingCursor multiplexing_cursor(displays, std::make_shared<mtd::StubBufferAllocator>());
+    mg::MultiplexingCursor multiplexing_cursor(displays);
     EXPECT_THAT(multiplexing_cursor.renderable(), NotNull());
 }
 
@@ -112,6 +111,6 @@ TEST_F(MultiplexingCursorTest, needs_compositing_is_first_cursor_value_with_curs
         .WillOnce(Return(true));
 
     std::vector<mg::Display*> displays = { display.get() };
-    mg::MultiplexingCursor multiplexing_cursor(displays, std::make_shared<mtd::StubBufferAllocator>());
+    mg::MultiplexingCursor multiplexing_cursor(displays);
     EXPECT_THAT(multiplexing_cursor.needs_compositing(), Eq(true));
 }
