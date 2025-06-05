@@ -87,13 +87,6 @@ TEST_F(MultiplexingCursorTest, can_scale_cursors)
     multiplexing_cursor.scale(scale);
 }
 
-TEST_F(MultiplexingCursorTest, renderable_is_null_without_any_cursors)
-{
-    std::vector<mg::Display*> displays;
-    mg::MultiplexingCursor multiplexing_cursor(displays);
-    EXPECT_THAT(multiplexing_cursor.renderable(), IsNull());
-}
-
 TEST_F(MultiplexingCursorTest, renderable_is_not_null_with_cursors)
 {
     auto const display = std::make_unique<mtd::MockDisplay>();
@@ -106,13 +99,6 @@ TEST_F(MultiplexingCursorTest, renderable_is_not_null_with_cursors)
     std::vector<mg::Display*> displays = { display.get() };
     mg::MultiplexingCursor multiplexing_cursor(displays);
     EXPECT_THAT(multiplexing_cursor.renderable(), NotNull());
-}
-
-TEST_F(MultiplexingCursorTest, needs_compositing_false_without_any_cursors)
-{
-    std::vector<mg::Display*> displays;
-    mg::MultiplexingCursor multiplexing_cursor(displays);
-    EXPECT_THAT(multiplexing_cursor.needs_compositing(), Eq(false));
 }
 
 TEST_F(MultiplexingCursorTest, needs_compositing_is_first_cursor_value_with_cursors)
