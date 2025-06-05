@@ -22,14 +22,11 @@
 namespace mir::graphics
 {
 class Display;
-class GraphicBufferAllocator;
 
 class MultiplexingCursor : public Cursor
 {
 public:
-    explicit MultiplexingCursor(
-        std::span<Display*> platform_displays,
-        std::shared_ptr<GraphicBufferAllocator> const& buffer_allocator);
+    explicit MultiplexingCursor(std::span<Display*> platform_displays);
 
     void show(std::shared_ptr<CursorImage> const& image) override;
     void hide() override;

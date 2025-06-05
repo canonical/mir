@@ -28,7 +28,6 @@ namespace mir
 namespace graphics
 {
 
-class GraphicBufferAllocator;
 class DisplaySink;
 class DisplayConfiguration;
 class Cursor;
@@ -163,8 +162,7 @@ public:
     /**
      * Create a hardware cursor object.
      */
-    virtual std::shared_ptr<Cursor> create_hardware_cursor(
-        std::shared_ptr<GraphicBufferAllocator> const& buffer_allocator) = 0;
+    virtual std::shared_ptr<Cursor> create_hardware_cursor() = 0;
 
     Display() = default;
     virtual ~Display() = default;

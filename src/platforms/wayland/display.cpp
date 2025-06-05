@@ -142,7 +142,7 @@ void mgw::Display::resume()
     BOOST_THROW_EXCEPTION(std::runtime_error("'Display::resume()' not yet supported on wayland platform"));
 }
 
-auto mgw::Display::create_hardware_cursor(std::shared_ptr<GraphicBufferAllocator> const&) -> std::shared_ptr<Cursor>
+auto mgw::Display::create_hardware_cursor() -> std::shared_ptr<Cursor>
 {
     cursor = std::make_shared<platform::wayland::Cursor>(compositor, shm, [this]{ flush_wl(); });
     return cursor;

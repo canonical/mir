@@ -406,7 +406,7 @@ mir::DefaultServerConfiguration::the_cursor()
                 primary_cursor = std::make_shared<mg::NullCursor>();
             }
             else if (cursor_choice != "software" &&
-                     (primary_cursor = the_display()->create_hardware_cursor(the_buffer_allocator())))
+                     (primary_cursor = the_display()->create_hardware_cursor()))
             {
                 mir::log_info("Using hardware cursor");
             }

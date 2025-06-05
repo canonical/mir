@@ -19,10 +19,10 @@
 #include "kms_output.h"
 #include "kms_output_container.h"
 #include "kms_display_configuration.h"
+#include "shm_buffer.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/cursor_image.h"
 #include "mir/graphics/pixman_image_scaling.h"
-#include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/renderer/sw/pixel_source.h"
 
 #include <mutex>
@@ -34,6 +34,7 @@
 #include <vector>
 
 namespace mg = mir::graphics;
+namespace mgc = mir::graphics::common;
 namespace mgg = mg::gbm;
 namespace geom = mir::geometry;
 namespace mrs = mir::renderer::software;
@@ -129,15 +130,13 @@ auto mir::graphics::gbm::Cursor::GBMBOWrapper::change_orientation(MirOrientation
 
 mgg::Cursor::Cursor(
     KMSOutputContainer& output_container,
-    std::shared_ptr<CurrentConfiguration> const& current_configuration,
-    std::shared_ptr<GraphicBufferAllocator> const& graphics_buffer_allocator) :
+    std::shared_ptr<CurrentConfiguration> const& current_configuration) :
         output_container(output_container),
         current_position(),
         last_set_failed(false),
         min_buffer_width{std::numeric_limits<uint32_t>::max()},
         min_buffer_height{std::numeric_limits<uint32_t>::max()},
-        current_configuration(current_configuration),
-        graphics_buffer_allocator(graphics_buffer_allocator)
+        current_configuration(current_configuration)
 {
     // Generate the buffers for the initial configuration.
     current_configuration->with_current_configuration_do(

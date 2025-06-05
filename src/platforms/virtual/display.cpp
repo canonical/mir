@@ -81,7 +81,7 @@ void mgv::Display::resume()
 {
 }
 
-std::shared_ptr<mg::Cursor> mgv::Display::create_hardware_cursor(std::shared_ptr<GraphicBufferAllocator> const&)
+std::shared_ptr<mg::Cursor> mgv::Display::create_hardware_cursor()
 {
     return nullptr;
 }

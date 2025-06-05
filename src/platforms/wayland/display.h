@@ -87,7 +87,7 @@ public:
 
     void resume() override;
 
-    auto create_hardware_cursor(std::shared_ptr<GraphicBufferAllocator> const&) -> std::shared_ptr<Cursor> override;
+    auto create_hardware_cursor() -> std::shared_ptr<Cursor>override;
 
 private:
 
