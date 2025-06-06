@@ -27,6 +27,8 @@ namespace mir { class Server; }
 
 namespace miral
 {
+namespace live_config { class Store; }
+
 /** Input configuration.
  * Allow servers to make input configuration changes at runtime
  * \remark Since MirAL 5.1
@@ -35,6 +37,11 @@ class InputConfiguration
 {
 public:
     InputConfiguration();
+
+    /// Construct registering with a configuration store
+    /// \remark Since Miral 5.4
+    explicit InputConfiguration(live_config::Store& config_store);
+
     ~InputConfiguration();
     void operator()(mir::Server& server);
 

@@ -123,9 +123,9 @@ catch (...)
 // Struct for illustrative purposes, this would be rolled into miral::OutputFilter
 struct OutputFilter : miral::OutputFilter
 {
-    explicit OutputFilter(mlc::Store& config_handler)
+    explicit OutputFilter(mlc::Store& config_store)
     {
-        config_handler.add_string_attribute({"output_filter"}, "Output filter to use [{none,grayscale,invert}]",
+        config_store.add_string_attribute({"output_filter"}, "Output filter to use [{none,grayscale,invert}]",
                                             [this](mlc::Key const& key, std::optional<std::string_view> val)
                                             {
                                                 MirOutputFilter new_filter = mir_output_filter_none;
@@ -153,138 +153,11 @@ struct OutputFilter : miral::OutputFilter
     }
 };
 
-// Struct for illustrative purposes, this would be rolled into miral::InputConfiguration
-struct InputConfiguration : miral::InputConfiguration
-{
-    struct State
-    {
-        State(miral::InputConfiguration::Mouse mouse,
-        miral::InputConfiguration::Touchpad touchpad,
-        miral::InputConfiguration::Keyboard keyboard) :
-        mouse{mouse},
-        touchpad{touchpad},
-        keyboard{keyboard}
-        {}
-
-        std::mutex mutex;
-        miral::InputConfiguration::Mouse mouse;
-        miral::InputConfiguration::Touchpad touchpad;
-        miral::InputConfiguration::Keyboard keyboard;
-    };
-
-    std::shared_ptr<State> const state = std::make_shared<State>(mouse(), touchpad(), keyboard());
-
-    explicit InputConfiguration(mlc::Store& config_handler) : miral::InputConfiguration{}
-    {
-        config_handler.add_string_attribute({"pointer", "handedness"}, "Pointer handedness [{right, left}]",
-                                            [this](mlc::Key const& key, std::optional<std::string_view> val)
-                                            {
-                                                if (val)
-                                                {
-                                                    std::lock_guard lock{state->mutex};
-                                                    auto const& value = *val;
-                                                    if (value == "right")
-                                                        state->mouse.handedness(mir_pointer_handedness_right);
-                                                    else if (value == "left")
-                                                        state->mouse.handedness(mir_pointer_handedness_left);
-                                                    else
-                                                        mir::log_warning(
-                                                            "Config key '%s' has invalid value: %s",
-                                                            key.to_string().c_str(),
-                                                            val->data());
-                                                }
-                                            });
-
-        config_handler.add_string_attribute({"touchpad", "scroll_mode"}, "Touchpad scroll mode [{none, two_finger_scroll, edge_scroll, button_down_scroll}]",
-                                            [this](mlc::Key const& key, std::optional<std::string_view> val)
-                                            {
-                                                if (val)
-                                                {
-                                                    std::lock_guard lock{state->mutex};
-                                                    auto const& value = *val;
-                                                    if (value == "none")
-                                                        state->touchpad.scroll_mode(mir_touchpad_scroll_mode_none);
-                                                    else if (value == "two_finger_scroll")
-                                                        state->touchpad.scroll_mode(mir_touchpad_scroll_mode_two_finger_scroll);
-                                                    else if (value == "edge_scroll")
-                                                        state->touchpad.scroll_mode(mir_touchpad_scroll_mode_edge_scroll);
-                                                    else if (value == "button_down_scroll")
-                                                        state->touchpad.scroll_mode(mir_touchpad_scroll_mode_button_down_scroll);
-                                                    else
-                                                        mir::log_warning(
-                                                            "Config key '%s' has invalid value: %s",
-                                                            key.to_string().c_str(),
-                                                            val->data());
-                                                }
-                                            });
-
-        config_handler.add_int_attribute({"keyboard", "repeat_rate"}, "Keyboard repeat rate",
-                                         [this](mlc::Key const& key, std::optional<int> val)
-                                         {
-                                             if (val)
-                                             {
-                                                 if (val >= 0)
-                                                 {
-                                                     std::lock_guard lock{state->mutex};
-                                                     state->keyboard.set_repeat_rate(*val);
-                                                 }
-                                                 else
-                                                 {
-                                                     mir::log_warning(
-                                                         "Config value %s does not support negative values. Ignoring the supplied value (%d)...",
-                                                         key.to_string().c_str(), *val);
-                                                 }
-                                             }
-                                         });
-
-        config_handler.add_int_attribute({"keyboard", "repeat_delay"}, "Keyboard repeat delay",
-                                         [this](mlc::Key const& key, std::optional<int> val)
-                                         {
-                                             if (val)
-                                             {
-                                                 if (val >= 0)
-                                                 {
-                                                     std::lock_guard lock{state->mutex};
-                                                     state->keyboard.set_repeat_delay(*val);
-                                                 }
-                                                 else
-                                                 {
-                                                     mir::log_warning(
-                                                         "Config value %s does not support negative values. Ignoring the supplied value (%d)...",
-                                                         key.to_string().c_str(), *val);
-                                                 }
-                                             }
-                                         });
-
-        config_handler.on_done([this]
-        {
-            std::lock_guard lock{state->mutex};
-            mouse(state->mouse);
-            touchpad(state->touchpad);
-            keyboard(state->keyboard);
-        });
-    }
-
-    void start_callback()
-    {
-        // Merge the input options collected from the command line,
-        // environment, and default `.config` file with the options we
-        // read from the `.input` file.
-        //
-        // In this case, the `.input` file takes precedence. You can
-        // reverse the arguments to de-prioritize it.
-        std::lock_guard lock{state->mutex};
-        state->mouse.merge(mouse());
-        state->keyboard.merge(keyboard());
-        state->touchpad.merge(touchpad());
-    }
-};
-
 struct CursorScale : miral::CursorScale
 {
-    explicit CursorScale(mlc::Store& config_handler) : miral::CursorScale{}
+    explicit CursorScale(mlc::Store& config_store) : miral::CursorScale{}
     {
-        config_handler.add_float_attribute({"cursor", "scale"}, "Cursor scale",
+        config_store.add_float_attribute({"cursor", "scale"}, "Cursor scale",
                                            [this](mlc::Key const& key, std::optional<float> val)
                                            {
                                                if (val)
@@ -305,7 +178,7 @@ struct CursorScale : miral::CursorScale
         // {arg} Just a demo that should turn into a test
         std::string_view constexpr preset[]{"foo", "bar", "baz"};
 
-        config_handler.add_strings_attribute({"foo", "bar"}, "Foobar", std::span{preset},
+        config_store.add_strings_attribute({"foo", "bar"}, "Foobar", std::span{preset},
                                              [](mlc::Key, std::optional<std::span<std::string_view const>>){});
     }
 };
@@ -600,8 +473,7 @@ try
 
     CursorScale cursor_scale{demo_configuration};
     OutputFilter output_filter{demo_configuration};
-    InputConfiguration input_configuration{demo_configuration};
-    runner.add_start_callback([&input_configuration] { input_configuration.start_callback(); });
+    miral::InputConfiguration input_configuration{demo_configuration};
     demo_configuration.handle_initial_config();
 
     std::function<void()> shutdown_hook{[]{}};
