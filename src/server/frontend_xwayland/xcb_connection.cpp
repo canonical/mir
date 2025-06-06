@@ -24,6 +24,7 @@
 
 #include "boost/throw_exception.hpp"
 #include <sstream>
+#include <xcb/res.h>
 
 namespace mf = mir::frontend;
 namespace geom = mir::geometry;
@@ -420,6 +421,61 @@ void mf::XCBConnection::configure_window(
     {
         xcb_configure_window(xcb_connection, window, mask, values.data());
     }
+}
+
+auto mf::XCBConnection::query_client_pid(
+    xcb_window_t window,
+    Handler<uint32_t> handler) const -> std::function<void()>
+{
+    xcb_res_client_id_spec_t spec = {
+	.client = window,
+	.mask = XCB_RES_CLIENT_ID_MASK_LOCAL_CLIENT_PID,
+    };
+    xcb_res_query_client_ids_cookie_t cookie = xcb_res_query_client_ids(
+	xcb_connection,
+	1,
+	&spec);
+
+    return [this, cookie, handler=std::move(handler), window]()
+        {
+            try
+            {
+                Error error;
+		auto const reply = make_unique_cptr(xcb_res_query_client_ids_reply(xcb_connection, cookie, &error.ptr));
+		if (reply)
+		{
+		    for (auto i = xcb_res_query_client_ids_ids_iterator(reply.get()); i.rem; xcb_res_client_id_value_next(&i))
+		    {
+			if (i.data->spec.mask & XCB_RES_CLIENT_ID_MASK_LOCAL_CLIENT_PID)
+			{
+			    uint32_t *pid = xcb_res_client_id_value_value(i.data);
+			    handler.on_success(*pid);
+			    return;
+			}
+		    }
+		    // No returned local client pid
+		    std::string message = "client is not local";
+		    handler.on_error(message);
+		}
+                else
+                {
+                    std::string message = "error querying client pid: ";
+                    if (verbose_xwayland_logging_enabled())
+                    {
+                        message = "error querying client pid for " + window_debug_string(window) + ": ";
+                    }
+                    handler.on_error(message + error_debug_string(error.ptr));
+                }
+            }
+            catch (...)
+            {
+                log(
+                    logging::Severity::warning,
+                    MIR_LOG_COMPONENT,
+                    "Exception thrown processing reply for querying pid of " +
+                    window_debug_string(window));
+            }
+        };
 }
 
 auto mf::XCBConnection::reply_debug_string(xcb_get_property_reply_t* reply) const -> std::string
