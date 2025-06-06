@@ -440,3 +440,16 @@ TEST_F(SoftwareCursor, handles_argb_8888_buffer_with_stride)
         EXPECT_THAT(line, Each(Eq(expected_pixel)));
     }
 }
+
+TEST_F(SoftwareCursor, does_not_need_compositing_when_not_shown)
+{
+    using namespace testing;
+    EXPECT_THAT(cursor.needs_compositing(), Eq(false));
+}
+
+TEST_F(SoftwareCursor, does_need_compositing_when_shown)
+{
+    using namespace testing;
+    cursor.show(stub_cursor_image);
+    EXPECT_THAT(cursor.needs_compositing(), Eq(true));
+}

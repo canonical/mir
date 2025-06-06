@@ -778,3 +778,7 @@ TEST_F(MesaCursorTest, show_cursor_sets_cursor_with_hotspot)
     cursor.move_to(cursor_location_2);
 }
 
+TEST_F(MesaCursorTest, does_not_need_compositing)
+{
+    EXPECT_THAT(cursor.needs_compositing(), Eq(false));
+}

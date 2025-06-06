@@ -457,3 +457,8 @@ auto mir::graphics::atomic::Cursor::renderable() -> std::shared_ptr<Renderable>
 {
     return nullptr;
 }
+
+auto mir::graphics::atomic::Cursor::needs_compositing() const -> bool
+{
+    return false;
+}
