@@ -30,6 +30,7 @@ build:
   - libwayland-dev
   - libxcb-composite0-dev
   - libxcb-randr0-dev
+  - libxcb-res0-dev
   - libxcursor-dev
   - libxkbcommon-dev
   - libxml++2.6-dev

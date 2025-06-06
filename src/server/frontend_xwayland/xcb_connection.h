@@ -242,6 +242,11 @@ public:
         std::optional<xcb_window_t> sibling,
         std::optional<xcb_stack_mode_t> stack_mode) const;
 
+    /// Query the process ID of the client that created the given window
+    auto query_client_pid(
+	xcb_window_t window,
+	Handler<uint32_t> handler) const -> std::function<void()>;
+
     /// Send client message
     /// @{
     template<XCBType type, typename T, size_t length>
@@ -277,7 +282,6 @@ public:
     DECLARE_ATOM(WM_S0);
     DECLARE_ATOM(_NET_WM_CM_S0);
     DECLARE_ATOM(_NET_WM_NAME);
-    DECLARE_ATOM(_NET_WM_PID);
     DECLARE_ATOM(_NET_WM_STATE);
     DECLARE_ATOM(_NET_WM_STATE_MAXIMIZED_VERT);
     DECLARE_ATOM(_NET_WM_STATE_MAXIMIZED_HORZ);
