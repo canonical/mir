@@ -67,9 +67,9 @@ miral::live_config::Key::Key(std::initializer_list<std::string_view const> key) 
 {
 }
 
-auto miral::live_config::Key::as_path() const -> std::vector<std::string>
+void miral::live_config::Key::with_key(std::function<void(std::vector<std::string> const& key)> const& f) const
 {
-    return self->path;
+    f(self->path);
 }
 
 auto miral::live_config::Key::to_string() const -> std::string
