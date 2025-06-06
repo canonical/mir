@@ -36,7 +36,7 @@ struct MockCursor : public mir::graphics::Cursor
     MOCK_METHOD1(move_to, void(mir::geometry::Point));
     MOCK_METHOD1(scale, void(float));
     MOCK_METHOD0(renderable, std::shared_ptr<mir::graphics::Renderable>());
-    MOCK_CONST_METHOD0(needs_compositing, bool());
+    MOCK_METHOD(bool, needs_compositing, (), (const, override));
 };
 }
 }
