@@ -120,40 +120,7 @@ catch (...)
 {
 }
 
-// Struct for illustrative purposes, this would be rolled into miral::OutputFilter
-struct OutputFilter : miral::OutputFilter
-{
-    explicit OutputFilter(live_config::Store& config_store)
-    {
-        config_store.add_string_attribute({"output_filter"}, "Output filter to use [{none,grayscale,invert}]",
-                                            [this](live_config::Key const& key, std::optional<std::string_view> val)
-                                            {
-                                                MirOutputFilter new_filter = mir_output_filter_none;
-                                                if (val)
-                                                {
-                                                    auto filter_name = *val;
-                                                    if (filter_name == "grayscale")
-                                                    {
-                                                        new_filter = mir_output_filter_grayscale;
-                                                    }
-                                                    else if (filter_name == "invert")
-                                                    {
-                                                        new_filter = mir_output_filter_invert;
-                                                    }
-                                                    else
-                                                    {
-                                                        mir::log_warning(
-                                                            "Config key '%s' has invalid value: %s",
-                                                            key.to_string().c_str(),
-                                                            val->data());
-                                                    }
-                                                }
-                                                filter(new_filter);
-                                            });
-    }
-};
-
-// Struct for illustrative purposes, this would be rolled into miral::InputConfiguration
+// for illustrative purposes
 class DemoConfigFile : public live_config::Store
 {
 public:
@@ -442,7 +409,7 @@ try
     runner.set_exception_handler(exception_handler);
 
     miral::CursorScale cursor_scale{demo_configuration};
-    OutputFilter output_filter{demo_configuration};
+    miral::OutputFilter output_filter{demo_configuration};
     miral::InputConfiguration input_configuration{demo_configuration};
     demo_configuration.handle_initial_config();
 
