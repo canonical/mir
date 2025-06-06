@@ -1,5 +1,5 @@
 /*
-* Copyright © Canonical Ltd.
+ * Copyright © Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -16,6 +16,9 @@
 
 #include "miral/live_config.h"
 
+#include <format>
+#include <stdexcept>
+
 struct miral::live_config::Key::State
 {
     std::vector<std::string> const path;
@@ -24,6 +27,21 @@ struct miral::live_config::Key::State
     State(std::initializer_list<std::string_view const> key) :
         path{key.begin(), key.end()}
     {
+        if (key.begin() == key.end())
+            throw std::invalid_argument{std::format("Invalid (empty) live config key")};
+
+        for (auto const &element : key)
+        {
+            if (element.empty())
+                throw std::invalid_argument{std::format("Invalid config key element: {}", element)};
+
+            if (!islower(element[0]))
+                throw std::invalid_argument{std::format("Invalid config key element: {}", element)};
+
+            for (auto const &c : element)
+                if (!islower(c) && !isdigit(c) && c != '_')
+                    throw std::invalid_argument{std::format("Invalid config key element: {}", element)};
+        }
     }
 
     auto operator<=>(State const& that) const { return key <=> that.key; }

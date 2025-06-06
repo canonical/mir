@@ -25,6 +25,10 @@
 
 namespace miral::live_config
 {
+/// Registration key for a configuration property. The key is essentially a tuple of
+/// identifiers.
+/// To simplify mapping these identifiers to multiple configuration backends, each identifier
+/// is non-empty, starts with [a..z], and contains only [a..z,0..9,_]
 class Key
 {
 public:
