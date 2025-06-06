@@ -56,6 +56,9 @@ public:
     ConfigFile(MirRunner& runner, std::filesystem::path file, Mode mode, Loader load_config);
     ~ConfigFile();
 
+    /// (Re)load the file synchronously
+    /// \remark Since MirAL 5.4
+    void force_load() const;
 private:
 
     class Self;
