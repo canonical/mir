@@ -15,8 +15,10 @@
  */
 
 #include "miral/cursor_scale.h"
+#include "miral/live_config.h"
 
 #include "mir/options/option.h"
+#include "mir/log.h"
 #include "mir/server.h"
 #include "mir/shell/accessibility_manager.h"
 
@@ -49,6 +51,29 @@ struct miral::CursorScale::Self
 miral::CursorScale::CursorScale()
     : self{std::make_shared<Self>(1.0)}
 {
+}
+
+miral::CursorScale::CursorScale(live_config::Store& config_store) : miral::CursorScale{}
+{
+    config_store.add_float_attribute(
+        {"cursor", "scale"},
+        "Cursor scale",
+       [this](live_config::Key const& key, std::optional<float> val)
+        {
+            if (val)
+            {
+                if (*val >= 0.0)
+                {
+                    scale(*val);
+                }
+                else
+                {
+                    mir::log_warning(
+                        "Config value %s does not support negative values. Ignoring the supplied value (%f)...",
+                        key.to_string().c_str(), *val);
+                }
+            }
+        });
 }
 
 miral::CursorScale::CursorScale(float default_scale)

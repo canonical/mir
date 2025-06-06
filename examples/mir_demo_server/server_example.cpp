@@ -49,7 +49,7 @@
 namespace mir { class AbnormalExit; }
 
 namespace me = mir::examples;
-namespace mlc = miral::live_config;
+namespace live_config = miral::live_config;
 
 ///\example server_example.cpp
 /// A simple server illustrating several customisations
@@ -123,10 +123,10 @@ catch (...)
 // Struct for illustrative purposes, this would be rolled into miral::OutputFilter
 struct OutputFilter : miral::OutputFilter
 {
-    explicit OutputFilter(mlc::Store& config_store)
+    explicit OutputFilter(live_config::Store& config_store)
     {
         config_store.add_string_attribute({"output_filter"}, "Output filter to use [{none,grayscale,invert}]",
-                                            [this](mlc::Key const& key, std::optional<std::string_view> val)
+                                            [this](live_config::Key const& key, std::optional<std::string_view> val)
                                             {
                                                 MirOutputFilter new_filter = mir_output_filter_none;
                                                 if (val)
@@ -153,38 +153,8 @@ struct OutputFilter : miral::OutputFilter
     }
 };
 
-struct CursorScale : miral::CursorScale
-{
-    explicit CursorScale(mlc::Store& config_store) : miral::CursorScale{}
-    {
-        config_store.add_float_attribute({"cursor", "scale"}, "Cursor scale",
-                                           [this](mlc::Key const& key, std::optional<float> val)
-                                           {
-                                               if (val)
-                                               {
-                                                   if (*val >= 0.0)
-                                                   {
-                                                       scale(*val);
-                                                   }
-                                                   else
-                                                   {
-                                                       mir::log_warning(
-                                                           "Config value %s does not support negative values. Ignoring the supplied value (%f)...",
-                                                           key.to_string().c_str(), *val);
-                                                   }
-                                               }
-                                           });
-
-        // {arg} Just a demo that should turn into a test
-        std::string_view constexpr preset[]{"foo", "bar", "baz"};
-
-        config_store.add_strings_attribute({"foo", "bar"}, "Foobar", std::span{preset},
-                                             [](mlc::Key, std::optional<std::span<std::string_view const>>){});
-    }
-};
-
 // Struct for illustrative purposes, this would be rolled into miral::InputConfiguration
-class DemoConfigFile : public mlc::Store
+class DemoConfigFile : public live_config::Store
 {
 public:
     DemoConfigFile(miral::MirRunner& runner, std::filesystem::path file) :
@@ -210,37 +180,37 @@ public:
         init_part2();
     }
 
-    void add_int_attribute(mlc::Key const& key, std::string_view description, HandleInt handler) override;
-    void add_ints_attribute(mlc::Key const& key, std::string_view description, HandleInts handler) override;
-    void add_bool_attribute(mlc::Key const& key, std::string_view description, HandleBool handler) override;
-    void add_bools_attribute(mlc::Key const& key, std::string_view description, HandleBools handler) override;
-    void add_float_attribute(mlc::Key const& key, std::string_view description, HandleFloat handler) override;
-    void add_floats_attribute(mlc::Key const& key, std::string_view description, HandleFloats handler) override;
-    void add_string_attribute(mlc::Key const& key, std::string_view description, HandleString handler) override;
-    void add_strings_attribute(mlc::Key const& key, std::string_view description, HandleStrings handler) override;
+    void add_int_attribute(live_config::Key const& key, std::string_view description, HandleInt handler) override;
+    void add_ints_attribute(live_config::Key const& key, std::string_view description, HandleInts handler) override;
+    void add_bool_attribute(live_config::Key const& key, std::string_view description, HandleBool handler) override;
+    void add_bools_attribute(live_config::Key const& key, std::string_view description, HandleBools handler) override;
+    void add_float_attribute(live_config::Key const& key, std::string_view description, HandleFloat handler) override;
+    void add_floats_attribute(live_config::Key const& key, std::string_view description, HandleFloats handler) override;
+    void add_string_attribute(live_config::Key const& key, std::string_view description, HandleString handler) override;
+    void add_strings_attribute(live_config::Key const& key, std::string_view description, HandleStrings handler) override;
 
-    void add_int_attribute(mlc::Key const& key, std::string_view description, int preset,
+    void add_int_attribute(live_config::Key const& key, std::string_view description, int preset,
         HandleInt handler) override;
-    void add_ints_attribute(mlc::Key const& key, std::string_view description, std::span<int const> preset,
+    void add_ints_attribute(live_config::Key const& key, std::string_view description, std::span<int const> preset,
                             HandleInts handler) override;
-    void add_bool_attribute(mlc::Key const& key, std::string_view description, bool preset,
+    void add_bool_attribute(live_config::Key const& key, std::string_view description, bool preset,
         HandleBool handler) override;
-    void add_bools_attribute(mlc::Key const& key, std::string_view description, std::span<bool const> preset,
+    void add_bools_attribute(live_config::Key const& key, std::string_view description, std::span<bool const> preset,
                              HandleBools handler) override;
-    void add_float_attribute(mlc::Key const& key, std::string_view description, float preset,
+    void add_float_attribute(live_config::Key const& key, std::string_view description, float preset,
         HandleFloat handler) override;
-    void add_floats_attribute(mlc::Key const& key, std::string_view description, std::span<float const> preset,
+    void add_floats_attribute(live_config::Key const& key, std::string_view description, std::span<float const> preset,
                               HandleFloats handler) override;
-    void add_string_attribute(mlc::Key const& key, std::string_view description, std::string_view preset,
+    void add_string_attribute(live_config::Key const& key, std::string_view description, std::string_view preset,
         HandleString handler) override;
-    void add_strings_attribute(mlc::Key const& key, std::string_view description,
+    void add_strings_attribute(live_config::Key const& key, std::string_view description,
         std::span<std::string_view const> preset, HandleStrings handler) override;
 
     void on_done(HandleDone handler) override;
 
 private:
 
-    std::map<mlc::Key, HandleString> attribute_handlers;
+    std::map<live_config::Key, HandleString> attribute_handlers;
     std::list<HandleDone> done_handlers;
 
     std::mutex config_mutex;
@@ -266,7 +236,7 @@ private:
             if (line.contains("="))
             {
                 auto const eq = line.find_first_of("=");
-                auto const key = mlc::Key{line.substr(0, eq)};
+                auto const key = live_config::Key{line.substr(0, eq)};
                 auto const value = line.substr(eq+1);
 
                 if (auto const handler = attribute_handlers.find(key); handler != attribute_handlers.end())
@@ -280,80 +250,80 @@ private:
     }
 };
 
-void DemoConfigFile::add_ints_attribute(mlc::Key const& key, std::string_view, HandleInts handler)
+void DemoConfigFile::add_ints_attribute(live_config::Key const& key, std::string_view, HandleInts handler)
 {
     // Not implemented: not needed for discussion
     (void)handler; (void)key;
 }
 
-void DemoConfigFile::add_bools_attribute(mlc::Key const& key, std::string_view, HandleBools handler)
+void DemoConfigFile::add_bools_attribute(live_config::Key const& key, std::string_view, HandleBools handler)
 {
     // Not implemented: not needed for discussion
     (void)handler; (void)key;
 }
 
-void DemoConfigFile::add_floats_attribute(mlc::Key const& key, std::string_view, HandleFloats handler)
+void DemoConfigFile::add_floats_attribute(live_config::Key const& key, std::string_view, HandleFloats handler)
 {
     // Not implemented: not needed for discussion
     (void)handler; (void)key;
 }
 
-void DemoConfigFile::add_strings_attribute(mlc::Key const& key, std::string_view, HandleStrings handler)
+void DemoConfigFile::add_strings_attribute(live_config::Key const& key, std::string_view, HandleStrings handler)
 {
     // Not implemented: not needed for discussion
     (void)handler; (void)key;
 }
 
-void DemoConfigFile::add_int_attribute(mlc::Key const& key, std::string_view description, int preset,
+void DemoConfigFile::add_int_attribute(live_config::Key const& key, std::string_view description, int preset,
     HandleInt handler)
 {
     // Not implemented: not needed for discussion
     (void)handler; (void)description; (void)key; (void)preset;
 }
 
-void DemoConfigFile::add_ints_attribute(mlc::Key const& key, std::string_view description,
+void DemoConfigFile::add_ints_attribute(live_config::Key const& key, std::string_view description,
                                         std::span<int const> preset, HandleInts handler)
 {
     // Not implemented: not needed for discussion
     (void)handler; (void)description; (void)key; (void)preset;
 }
 
-void DemoConfigFile::add_bool_attribute(mlc::Key const& key, std::string_view description, bool preset,
+void DemoConfigFile::add_bool_attribute(live_config::Key const& key, std::string_view description, bool preset,
     HandleBool handler)
 {
     // Not implemented: not needed for discussion
     (void)handler; (void)description; (void)key; (void)preset;
 }
 
-void DemoConfigFile::add_bools_attribute(mlc::Key const& key, std::string_view description,
+void DemoConfigFile::add_bools_attribute(live_config::Key const& key, std::string_view description,
                                          std::span<bool const> preset, HandleBools handler)
 {
     // Not implemented: not needed for discussion
     (void)handler; (void)description; (void)key; (void)preset;
 }
 
-void DemoConfigFile::add_float_attribute(mlc::Key const& key, std::string_view description, float preset,
+void DemoConfigFile::add_float_attribute(live_config::Key const& key, std::string_view description, float preset,
     HandleFloat handler)
 {
     // Not implemented: not needed for discussion
     (void)handler; (void)description; (void)key; (void)preset;
 }
 
-void DemoConfigFile::add_floats_attribute(mlc::Key const& key, std::string_view description,
+void DemoConfigFile::add_floats_attribute(live_config::Key const& key, std::string_view description,
                                           std::span<float const> preset, HandleFloats handler)
 {
     // Not implemented: not needed for discussion
     (void)handler; (void)description; (void)key; (void)preset;
 }
 
-void DemoConfigFile::add_string_attribute(mlc::Key const& key, std::string_view description,
+void DemoConfigFile::add_string_attribute(live_config::Key const& key, std::string_view description,
     std::string_view preset, HandleString handler)
 {
     // Not implemented: not needed for discussion
     (void)handler; (void)description; (void)key; (void)preset;
 }
 
-void DemoConfigFile::add_strings_attribute(mlc::Key const& key, std::string_view description,
+void DemoConfigFile::add_strings_attribute(live_config::Key const& key, std::string_view description,
     std::span<std::string_view const> preset, HandleStrings handler)
 {
     // Not implemented: not needed for discussion
@@ -366,9 +336,9 @@ void DemoConfigFile::on_done(HandleDone handler)
     done_handlers.emplace_back(std::move(handler));
 }
 
-void DemoConfigFile::add_int_attribute(mlc::Key const& key, std::string_view description, HandleInt handler)
+void DemoConfigFile::add_int_attribute(live_config::Key const& key, std::string_view description, HandleInt handler)
 {
-    add_string_attribute(key, description, [handler](mlc::Key const& key, std::optional<std::string_view> val)
+    add_string_attribute(key, description, [handler](live_config::Key const& key, std::optional<std::string_view> val)
     {
         if (val)
         {
@@ -396,9 +366,9 @@ void DemoConfigFile::add_int_attribute(mlc::Key const& key, std::string_view des
     });
 }
 
-void DemoConfigFile::add_bool_attribute(mlc::Key const& key, std::string_view description, HandleBool handler)
+void DemoConfigFile::add_bool_attribute(live_config::Key const& key, std::string_view description, HandleBool handler)
 {
-    add_string_attribute(key, description, [handler](mlc::Key const& key, std::optional<std::string_view> val)
+    add_string_attribute(key, description, [handler](live_config::Key const& key, std::optional<std::string_view> val)
     {
         if (val)
         {
@@ -426,9 +396,9 @@ void DemoConfigFile::add_bool_attribute(mlc::Key const& key, std::string_view de
     });
 }
 
-void DemoConfigFile::add_float_attribute(mlc::Key const& key, std::string_view description, HandleFloat handler)
+void DemoConfigFile::add_float_attribute(live_config::Key const& key, std::string_view description, HandleFloat handler)
 {
-    add_string_attribute(key, description, [handler](mlc::Key const& key, std::optional<std::string_view> val)
+    add_string_attribute(key, description, [handler](live_config::Key const& key, std::optional<std::string_view> val)
     {
         if (val)
         {
@@ -456,7 +426,7 @@ void DemoConfigFile::add_float_attribute(mlc::Key const& key, std::string_view d
     });
 }
 
-void DemoConfigFile::add_string_attribute(mlc::Key const& key, std::string_view, HandleString handler)
+void DemoConfigFile::add_string_attribute(live_config::Key const& key, std::string_view, HandleString handler)
 {
     std::lock_guard lock{config_mutex};
     attribute_handlers[key] = handler;
@@ -471,7 +441,7 @@ try
     DemoConfigFile demo_configuration{runner, "mir_demo_server.live-config"};
     runner.set_exception_handler(exception_handler);
 
-    CursorScale cursor_scale{demo_configuration};
+    miral::CursorScale cursor_scale{demo_configuration};
     OutputFilter output_filter{demo_configuration};
     miral::InputConfiguration input_configuration{demo_configuration};
     demo_configuration.handle_initial_config();
