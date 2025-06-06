@@ -23,12 +23,18 @@ namespace mir { class Server; }
 
 namespace miral
 {
+namespace live_config { class Store; }
+
 /// Allows for the configuration of the cursor's scale at runtime.
 /// \remark Since MirAL 5.3
 class CursorScale
 {
 public:
     explicit CursorScale();
+
+    /// Construct registering with a configuration store
+    /// \remark Since Miral 5.4
+    explicit CursorScale(live_config::Store& config_store);
     explicit CursorScale(float default_scale);
     ~CursorScale();
 
