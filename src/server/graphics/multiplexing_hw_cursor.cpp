@@ -78,7 +78,7 @@ auto mg::MultiplexingCursor::renderable() -> std::shared_ptr<Renderable>
     return platform_cursors[0]->renderable();
 }
 
-auto mg::MultiplexingCursor::needs_compositing() -> bool
+auto mg::MultiplexingCursor::needs_compositing() const -> bool
 {
     return platform_cursors[0]->needs_compositing();
 }

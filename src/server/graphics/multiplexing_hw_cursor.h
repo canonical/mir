@@ -36,7 +36,7 @@ public:
 
     auto renderable() -> std::shared_ptr<Renderable> override;
 
-    auto needs_compositing() -> bool override;
+    auto needs_compositing() const -> bool override;
 
 private:
     std::vector<std::shared_ptr<Cursor>> const platform_cursors;

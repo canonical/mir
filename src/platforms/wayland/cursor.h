@@ -52,7 +52,7 @@ public:
 
     auto renderable() -> std::shared_ptr<graphics::Renderable> override;
 
-    auto needs_compositing() -> bool override;
+    auto needs_compositing() const -> bool override;
 
 private:
     wl_shm* const shm;

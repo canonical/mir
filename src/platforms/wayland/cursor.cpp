@@ -144,7 +144,7 @@ auto mir::platform::wayland::Cursor::renderable() -> std::shared_ptr<graphics::R
     return nullptr;
 }
 
-auto mir::platform::wayland::Cursor::needs_compositing() -> bool
+auto mir::platform::wayland::Cursor::needs_compositing() const -> bool
 {
     return false;
 }

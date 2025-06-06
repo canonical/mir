@@ -80,7 +80,7 @@ struct HiddenCursorWrapper : mg::Cursor
 
     auto renderable() -> std::shared_ptr<mir::graphics::Renderable> override { return wrapped->renderable(); }
 
-    auto needs_compositing() -> bool override { return wrapped->needs_compositing(); }
+    auto needs_compositing() const -> bool override { return wrapped->needs_compositing(); }
 
 private:
     std::shared_ptr<mg::Cursor> const wrapped;

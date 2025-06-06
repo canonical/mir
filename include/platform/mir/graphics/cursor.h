@@ -42,7 +42,7 @@ public:
 
     virtual auto renderable() -> std::shared_ptr<Renderable> = 0;
 
-    virtual auto needs_compositing() -> bool = 0;
+    virtual auto needs_compositing() const -> bool = 0;
 protected:
     Cursor() = default;
     virtual ~Cursor() = default;

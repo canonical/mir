@@ -232,7 +232,7 @@ auto mg::SoftwareCursor::renderable() -> std::shared_ptr<Renderable>
     return renderable_;
 }
 
-auto mg::SoftwareCursor::needs_compositing() -> bool
+auto mg::SoftwareCursor::needs_compositing() const -> bool
 {
     std::lock_guard lg{guard};
     return visible;
