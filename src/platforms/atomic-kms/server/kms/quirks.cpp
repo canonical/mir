@@ -20,6 +20,8 @@
 #include "mir/options/option.h"
 #include "mir/udev/wrapper.h"
 
+#include <boost/algorithm/string.hpp>
+
 #include <vector>
 #include <unordered_set>
 
@@ -56,47 +58,88 @@ public:
             return;
         }
 
+        auto const matches = [](std::vector<std::string> tokens,
+                                std::string option_name,
+                                std::initializer_list<std::string> valid_values)
+        {
+            if (tokens.size() < 1 || tokens[0] != option_name)
+                return false;
+
+            // Specifier and its value are already checked with `validate_structure`
+
+            if (tokens.size() < 4 ||
+                std::ranges::none_of(valid_values, [&tokens](auto valid_value) { return tokens[3] == valid_value; }))
+                return false;
+
+            return true;
+        };
+
+        auto const process_one_option = [&](auto option_value)
+        {
+            std::vector<std::string> tokens;
+            boost::split(tokens, option_value, boost::is_any_of(":"));
+
+            // <option>:{devnode,driver}:<specifier value>
+            auto const structure = validate_structure(tokens);
+            if(!structure)
+                return false;
+
+            auto const [option, specifier, specifier_value] = *structure;
+
+            if (option == "skip")
+            {
+                completely_skip.skip(specifier, specifier_value);
+                return true;
+            }
+            else if (option == "allow")
+            {
+                completely_skip.allow(specifier, specifier_value);
+                return true;
+            }
+            else if (option == "disable-kms-probe")
+            {
+                disable_kms_probe.skip(specifier, specifier_value);
+                return true;
+            }
+            else if (matches(tokens, "gbm-create-surface-flags", {"default", "no-flags"}))
+            {
+                auto const chosen_value = tokens[3];
+                if (specifier == "devnode")
+                    gbm_create_surface_flags.add_devnode(specifier_value, chosen_value);
+                else if (specifier == "driver")
+                    gbm_create_surface_flags.add_driver(specifier_value, chosen_value);
+
+                return true;
+            }
+            else if (matches(tokens, "gbm-surface-has-free-buffers", {"default", "skip"}))
+            {
+                auto const chosen_value = tokens[3];
+                if (specifier == "devnode")
+                    gbm_surface_has_free_buffers.add_devnode(specifier_value, chosen_value);
+                else if (specifier == "driver")
+                    gbm_surface_has_free_buffers.add_driver(specifier_value, chosen_value);
+
+                return true;
+            }
+
+            return false;
+        };
+
         for (auto const& quirk : options.get<std::vector<std::string>>(quirks_option_name))
         {
-            auto const disable_kms_probe = "disable-kms-probe:";
-            auto const skip_devnode = "skip:devnode:";
-            auto const skip_driver = "skip:driver:";
-            auto const allow_devnode = "allow:devnode:";
-            auto const allow_driver = "allow:driver:";
-
-            if (quirk.starts_with(skip_devnode))
+            if (!process_one_option(quirk))
             {
-                devnodes_to_skip.insert(quirk.substr(strlen(skip_devnode)));
-                continue;
+                // If we didn't process above, we're ignoring...
+                // clangd really can't format this...
+                mir::log_warning(
+                    "Ignoring unexpected value for %s option: %s "
+                    "(expects value of the form “{skip, allow}:{driver,devnode}:<driver or devnode>”"
+                    ", “disable-kms-probe:{driver,devnode}:<driver or devnode>” "
+                    "or “{gbm-create-surface-flags}:{driver,devnode}:<driver or devnode>:{default,no-flags}” or "
+                    "“{gbm-surface-has-free-buffers}:{driver,devnode}:<driver or devnode>:{default,skip}”)",
+                    quirks_option_name,
+                    quirk.c_str());
             }
-            else if (quirk.starts_with(skip_driver))
-            {
-                drivers_to_skip.insert(quirk.substr(strlen(skip_driver)));
-                continue;
-            }
-            else if (quirk.starts_with(allow_devnode))
-            {
-                devnodes_to_skip.erase(quirk.substr(strlen(allow_devnode)));
-                continue;
-            }
-            else if (quirk.starts_with(allow_driver))
-            {
-                drivers_to_skip.erase(quirk.substr(strlen(allow_driver)));
-                continue;
-            }
-            else if (quirk.starts_with(disable_kms_probe))
-            {
-                // Quirk format is disable-kms-probe:value
-                skip_modesetting_support.emplace(quirk.substr(strlen(disable_kms_probe)));
-                continue;
-            }
-
-            // If we didn't `continue` above, we're ignoring...
-            mir::log_warning(
-                "Ignoring unexpected value for %s option: %s "
-                "(expects value of the form “skip:<type>:<value>”, “allow:<type>:<value>” or ”disable-kms-probe:<value>”)",
-                quirks_option_name,
-                quirk.c_str());
         }
     }
 
@@ -104,27 +147,22 @@ public:
     {
         auto const devnode = value_or(device.devnode(), "");
         auto const parent_device = device.parent();
-        auto const driver =
-            [&]()
-            {
-                if (parent_device)
-                {
-                    return value_or(parent_device->driver(), "");
-                }
-                mir::log_warning("udev device has no parent! Unable to determine driver for quirks.");
-                return "<UNKNOWN>";
-            }();
-        mir::log_debug("Quirks: checking device with devnode: %s, driver %s", device.devnode(), driver);
-        bool const should_skip_driver = drivers_to_skip.count(driver);
-        bool const should_skip_devnode = devnodes_to_skip.count(devnode);
-        if (should_skip_driver)
-        {
-            mir::log_info("Quirks: skipping device %s (matches driver quirk %s)", devnode, driver);
-        }
+        auto const driver = get_device_driver(parent_device.get());
+
+        mir::log_debug("Quirks(skip/allow): checking device with devnode: %s, driver %s", device.devnode(), driver);
+
+        bool const should_skip_devnode = completely_skip.skipped_devnodes.contains(devnode);
         if (should_skip_devnode)
         {
-            mir::log_info("Quirks: skipping device %s (matches devnode quirk %s)", devnode, devnode);
+            mir::log_info("Quirks(skip/allow): skipping device %s (matches devnode quirk %s)", devnode, devnode);
         }
+
+        bool const should_skip_driver = completely_skip.skipped_drivers.contains(driver);
+        if (should_skip_driver)
+        {
+            mir::log_info("Quirks(skip/allow): skipping device %s (matches driver quirk %s)", devnode, driver);
+        }
+
         return should_skip_driver || should_skip_devnode;
     }
 
@@ -132,27 +170,194 @@ public:
     {
         auto const devnode = value_or(device.devnode(), "");
         auto const parent_device = device.parent();
-        auto const driver =
-            [&]()
-            {
-                if (parent_device)
-                {
-                    return value_or(parent_device->driver(), "");
-                }
-                mir::log_warning("udev device has no parent! Unable to determine driver for quirks.");
-                return "<UNKNOWN>";
-            }();
-        mir::log_debug("Quirks: checking device with devnode: %s, driver %s", device.devnode(), driver);
+        auto const driver = get_device_driver(parent_device.get());
+        mir::log_debug(
+            "Quirks(disable-kms-probe): checking device with devnode: %s, driver %s", device.devnode(), driver);
 
-        bool const should_skip_modesetting_support = skip_modesetting_support.count(driver);
-        if (should_skip_modesetting_support)
+        bool const should_skip_devnode = disable_kms_probe.skipped_devnodes.contains(devnode);
+        if (should_skip_devnode)
         {
-            mir::log_info("Quirks: skipping modesetting check %s (matches driver quirk %s)", devnode, driver);
+            mir::log_info("Quirks(disable-kms-probe): skipping device %s (matches devnode quirk %s)", devnode, devnode);
         }
-        return !should_skip_modesetting_support;
+
+        bool const should_skip_driver = disable_kms_probe.skipped_drivers.contains(driver);
+        if (should_skip_driver)
+        {
+            mir::log_info("Quirks(disable-kms-probe): skipping device %s (matches driver quirk %s)", devnode, driver);
+        }
+
+        return !(should_skip_driver || should_skip_devnode);
+    }
+
+    auto runtime_quirks_for(udev::Device const& device) -> std::shared_ptr<GbmQuirks>
+    {
+        class GbmCreateSurfaceNoFlags : public GbmQuirks::CreateSurfaceFlagsQuirk
+        {
+            auto gbm_create_surface_flags() const -> uint32_t override
+            {
+                return 0;
+            }
+        };
+
+        class GbmSurfaceHasFreeBuffersAlwaysTrue : public GbmQuirks::SurfaceHasFreeBuffersQuirk
+        {
+            auto gbm_surface_has_free_buffers(gbm_surface*) const -> int override
+            {
+                return 1;
+            }
+        };
+
+        class DefaultGbmCreateSurfaceFlags : public GbmQuirks::CreateSurfaceFlagsQuirk
+        {
+            auto gbm_create_surface_flags() const -> uint32_t override
+            {
+                return GBM_BO_USE_RENDERING | GBM_BO_USE_SCANOUT;
+            }
+        };
+
+        class DefaultGbmSurfaceHasFreeBuffers : public GbmQuirks::SurfaceHasFreeBuffersQuirk
+        {
+            auto gbm_surface_has_free_buffers(gbm_surface* gbm_surface) const -> int override
+            {
+                return ::gbm_surface_has_free_buffers(gbm_surface);
+            }
+        };
+
+        auto const driver = get_device_driver(device.parent().get());
+        auto const devnode = device.devnode();
+        mir::log_debug("Quirks(gbm-create-surface-flags + gbm-surface-has-free-buffers): checking device with devnode: %s, driver %s", devnode, driver);
+
+        auto const devnode_or_driver =
+            [](auto devnode, auto driver, auto devnodes, auto drivers) -> std::optional<std::string>
+        {
+            if (devnodes.contains(devnode))
+                return devnodes.at(devnode);
+
+            if (drivers.contains(driver))
+                return drivers.at(driver);
+
+            return std::nullopt;
+        };
+
+        auto create_surface_impl_name =
+            devnode_or_driver(devnode, driver, gbm_create_surface_flags.devnodes, gbm_create_surface_flags.drivers)
+                .transform(
+                    [](auto impl_name)
+                    {
+                        mir::log_debug(
+                            "Quirks(gbm-create-surface-flags): forcing %s implementation", impl_name.c_str());
+                        return impl_name;
+                    })
+                .or_else(
+                    [&driver] -> std::optional<std::string>
+
+                    {
+                        mir::log_debug(
+                            "Quirks(gbm-create-surface-flags): using default implementation for %s driver", driver);
+                        // Not specified
+                        return driver;
+                    })
+                .value();
+
+        auto create_surface_impl = [&]() -> std::unique_ptr<GbmQuirks::CreateSurfaceFlagsQuirk>
+        {
+            if (create_surface_impl_name == "no-flags" || create_surface_impl_name == "nvidia")
+                return std::make_unique<GbmCreateSurfaceNoFlags>();
+
+            return std::make_unique<DefaultGbmCreateSurfaceFlags>();
+        }();
+
+        auto surface_has_free_buffers_impl_name =
+            devnode_or_driver(
+                devnode, driver, gbm_surface_has_free_buffers.devnodes, gbm_surface_has_free_buffers.drivers)
+                .transform(
+                    [](auto impl_name)
+                    {
+                        mir::log_debug(
+                            "Quirks(gbm-surface-has-free-buffers): forcing %s implementation", impl_name.c_str());
+                        return impl_name;
+                    })
+                .or_else(
+                    [&driver] -> std::optional<std::string>
+
+                    {
+                        mir::log_debug(
+                            "Quirks(gbm-surface-has-free-buffers): using default implementation for %s driver", driver);
+                        // Not specified
+                        return driver;
+                    })
+                .value();
+
+        auto surface_has_free_buffers_impl = [&]() -> std::unique_ptr<GbmQuirks::SurfaceHasFreeBuffersQuirk>
+        {
+            if (surface_has_free_buffers_impl_name == "skip" || surface_has_free_buffers_impl_name == "nvidia")
+                return std::make_unique<GbmSurfaceHasFreeBuffersAlwaysTrue>();
+            return std::make_unique<DefaultGbmSurfaceHasFreeBuffers>();
+        }();
+
+        return std::make_shared<GbmQuirks>(std::move(create_surface_impl), std::move(surface_has_free_buffers_impl));
     }
 
 private:
+    static auto get_device_driver(mir::udev::Device const* parent_device) -> const char*
+    {
+        if (parent_device)
+        {
+            return value_or(parent_device->driver(), "");
+        }
+        mir::log_warning("udev device has no parent! Unable to determine driver for quirks.");
+        return "<UNKNOWN>";
+    }
+
+    static auto validate_structure(std::vector<std::string> const& tokens) -> std::optional<std::tuple<std::string, std::string, std::string>>
+    {
+        if (tokens.size() < 1)
+            return {};
+        auto const option = tokens[0];
+
+        auto const available_options = std::set<std::string>{
+            "skip", "allow", "disable-kms-probe", "gbm-create-surface-flags", "gbm-surface-has-free-buffers"};
+        if (!available_options.contains(option))
+            return {};
+
+        if (tokens.size() < 3)
+            return {};
+        auto const specifier = tokens[1];
+        auto const specifier_value = tokens[2];
+
+        if (specifier != "driver" && specifier != "devnode")
+            return {};
+
+        return {{option, specifier, specifier_value}};
+    }
+
+    struct AllowList
+    {
+        AllowList(std::unordered_set<std::string>&& drivers_to_skip) :
+            skipped_drivers{std::move(drivers_to_skip)}
+        {
+        }
+
+        void allow(std::string specifier, std::string specifier_value)
+        {
+            if (specifier == "devnode")
+                skipped_devnodes.erase(specifier_value);
+            else if (specifier == "driver")
+                skipped_drivers.erase(specifier_value);
+        }
+
+        void skip(std::string specifier, std::string specifier_value)
+        {
+            if (specifier == "devnode")
+                skipped_devnodes.insert(specifier_value);
+            else if (specifier == "driver")
+                skipped_drivers.insert(specifier_value);
+        }
+
+        std::unordered_set<std::string> skipped_drivers;
+        std::unordered_set<std::string> skipped_devnodes;
+    };
+
     /* AST is a simple 2D output device, built into some motherboards.
      * They do not have any 3D engine associated, so were quirked off to avoid https://github.com/canonical/mir/issues/2678
      *
@@ -163,10 +368,28 @@ private:
      * https://bugs.launchpad.net/ubuntu/+source/linux/+bug/2084046
      * https://github.com/canonical/mir/issues/3710
      */
-    std::unordered_set<std::string> drivers_to_skip = { "nvidia", "ast", "simple-framebuffer"};
-    std::unordered_set<std::string> devnodes_to_skip;
+    AllowList completely_skip{{"ast", "simple-framebuffer"}};
+
     // We know this is currently useful for virtio_gpu, vc4-drm and v3d
-    std::unordered_set<std::string> skip_modesetting_support = { "virtio_gpu", "vc4-drm", "v3d" };
+    AllowList disable_kms_probe{{"virtio_gpu", "vc4-drm", "v3d"}};
+
+    struct ValuedOption
+    {
+        void add_devnode(std::string const& devnode, std::string const& quirk)
+        {
+            devnodes.insert_or_assign(devnode, quirk);
+        }
+        void add_driver(std::string const& driver, std::string const& quirk)
+        {
+            drivers.insert_or_assign(driver, quirk);
+        }
+
+        std::unordered_map<std::string, std::string> drivers;
+        std::unordered_map<std::string, std::string> devnodes;
+    };
+
+    ValuedOption gbm_create_surface_flags;
+    ValuedOption gbm_surface_has_free_buffers;
 };
 
 mga::Quirks::Quirks(const options::Option& options)
@@ -183,10 +406,10 @@ auto mga::Quirks::should_skip(udev::Device const& device) const -> bool
 
 void mga::Quirks::add_quirks_option(boost::program_options::options_description& config)
 {
-    config.add_options()
-        (quirks_option_name,
-         boost::program_options::value<std::vector<std::string>>(),
-         "[platform-specific] Driver quirks to apply (may be specified multiple times; multiple quirks are combined)");
+    config.add_options()(
+        quirks_option_name,
+        boost::program_options::value<std::vector<std::string>>(),
+        "[platform-specific] Driver quirks to apply (may be specified multiple times; multiple quirks are combined)");
 }
 
 auto mir::graphics::atomic::Quirks::require_modesetting_support(mir::udev::Device const& device) const -> bool
@@ -206,3 +429,27 @@ auto mir::graphics::atomic::Quirks::require_modesetting_support(mir::udev::Devic
         return impl->require_modesetting_support(device);
     }
 }
+auto mir::graphics::atomic::Quirks::runtime_quirks_for(udev::Device const& device)
+    -> std::shared_ptr<GbmQuirks>
+{
+    return impl->runtime_quirks_for(device);
+}
+
+mir::graphics::atomic::GbmQuirks::GbmQuirks(
+    std::unique_ptr<CreateSurfaceFlagsQuirk> create_surface_flags,
+    std::unique_ptr<SurfaceHasFreeBuffersQuirk> surface_has_free_buffers) :
+    create_surface_flags{std::move(create_surface_flags)},
+    surface_has_free_buffers{std::move(surface_has_free_buffers)}
+{
+}
+
+auto mir::graphics::atomic::GbmQuirks::gbm_create_surface_flags() const -> uint32_t
+{
+    return create_surface_flags->gbm_create_surface_flags();
+}
+
+auto mir::graphics::atomic::GbmQuirks::gbm_surface_has_free_buffers(gbm_surface* gbm_surface) const -> int
+{
+    return surface_has_free_buffers->gbm_surface_has_free_buffers(gbm_surface);
+}
+
