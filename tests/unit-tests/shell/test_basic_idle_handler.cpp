@@ -17,7 +17,7 @@
 #include "src/server/shell/basic_idle_handler.h"
 #include "mir/executor.h"
 #include "mir/test/doubles/mock_idle_hub.h"
-#include "mir/test/doubles/stub_input_scene.h"
+#include "mir/test/doubles/mock_input_scene.h"
 #include "mir/test/doubles/stub_buffer_allocator.h"
 #include "mir/test/doubles/stub_session_lock.h"
 #include "mir/shell/display_configuration_controller.h"
@@ -27,6 +27,8 @@
 #include <gtest/gtest.h>
 #include <map>
 #include <boost/throw_exception.hpp>
+
+#include "mir/graphics/renderable.h"
 
 using namespace testing;
 namespace ms = mir::scene;
@@ -88,13 +90,13 @@ private:
 struct BasicIdleHandler: Test
 {
     NiceMock<mtd::MockIdleHub> idle_hub;
-    mtd::StubInputScene input_scene;
+    std::shared_ptr<mtd::MockInputScene> input_scene = std::make_shared<NiceMock<mtd::MockInputScene>>();
     mtd::StubBufferAllocator allocator;
     NiceMock<MockDisplayConfigurationController> display;
     FakeSessionLock session_lock;
     msh::BasicIdleHandler handler{
         mt::fake_shared(idle_hub),
-        mt::fake_shared(input_scene),
+        input_scene,
         mt::fake_shared(allocator),
         mt::fake_shared(display),
         mt::fake_shared(session_lock)};
@@ -135,7 +137,7 @@ TEST_F(BasicIdleHandler, does_not_register_observers_by_default)
     mtd::StubSessionLock session_lock;
     msh::BasicIdleHandler local_handler{
         mt::fake_shared(idle_hub),
-        mt::fake_shared(input_scene),
+        input_scene,
         mt::fake_shared(allocator),
         mt::fake_shared(display),
         mt::fake_shared(session_lock)};
@@ -314,3 +316,33 @@ TEST_F(BasicIdleHandler, display_turned_back_on_when_off_timeout_disabled)
     handler.set_display_off_timeout(std::nullopt);
     Mock::VerifyAndClearExpectations(&display);
 }
+
+TEST_F(BasicIdleHandler, renderable_added_to_scene_on_idle)
+{
+    handler.set_display_off_timeout(30s);
+    auto const observer = observer_for(20s);
+    EXPECT_CALL(*input_scene, add_input_visualization(testing::_));
+    observer->idle();
+}
+
+TEST_F(BasicIdleHandler, renderable_added_to_has_normal_orientation)
+{
+    handler.set_display_off_timeout(30s);
+    auto const observer = observer_for(20s);
+    std::shared_ptr<mg::Renderable> renderable;
+    EXPECT_CALL(*input_scene, add_input_visualization(testing::_))
+        .WillOnce(SaveArg<0>(&renderable));
+    observer->idle();
+    EXPECT_THAT(renderable->orientation(), Eq(mir_orientation_normal));
+}
+
+TEST_F(BasicIdleHandler, renderable_removed_from_scene_on_active)
+{
+    handler.set_display_off_timeout(30s);
+    auto const observer = observer_for(20s);
+    observer->idle();
+    EXPECT_CALL(*input_scene, remove_input_visualization(testing::_));
+    observer->active();
+}
+
+

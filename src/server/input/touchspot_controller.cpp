@@ -83,6 +83,11 @@ public:
         return glm::mat4();
     }
 
+    MirOrientation orientation() const override
+    {
+        return mir_orientation_normal;
+    }
+
     bool shaped() const override
     {
         return true;
