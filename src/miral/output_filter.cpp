@@ -15,12 +15,15 @@
  */
 
 #include "miral/output_filter.h"
+#include "miral/live_config.h"
 
+#include "mir/graphics/output_filter.h"
+#include "mir/log.h"
 #include "mir/options/option.h"
 #include "mir/server.h"
-#include "mir/graphics/output_filter.h"
 
 #include <atomic>
+#include <format>
 #include <string>
 
 struct miral::OutputFilter::Self
@@ -49,6 +52,37 @@ struct miral::OutputFilter::Self
 miral::OutputFilter::OutputFilter()
     : self{std::make_shared<Self>(mir_output_filter_none)}
 {
+}
+
+miral::OutputFilter::OutputFilter(live_config::Store& config_store) : OutputFilter{}
+{
+    config_store.add_string_attribute(
+        {"output_filter"},
+        "Output filter to use [{none,grayscale,invert}]",
+        [this](live_config::Key const& key, std::optional<std::string_view> val)
+        {
+            MirOutputFilter new_filter = mir_output_filter_none;
+            if (val)
+            {
+                auto filter_name = *val;
+                if (filter_name == "grayscale")
+                {
+                    new_filter = mir_output_filter_grayscale;
+                }
+                else if (filter_name == "invert")
+                {
+                    new_filter = mir_output_filter_invert;
+                }
+                else
+                {
+                    mir::log_warning(
+                        "Config key '%s' has invalid integer value: %s",
+                        key.to_string().c_str(),
+                        std::format("{}",*val).c_str());
+                }
+            }
+            filter(new_filter);
+        });
 }
 
 miral::OutputFilter::OutputFilter(MirOutputFilter default_filter)

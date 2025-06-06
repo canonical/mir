@@ -25,6 +25,7 @@
 #include "mir/shell/accessibility_manager.h"
 
 #include <algorithm>
+#include <format>
 #include <memory>
 
 class miral::InputConfiguration::Mouse::Self : public MouseInputConfiguration
@@ -96,18 +97,16 @@ public:
 
     struct Config
     {
-        Config(miral::InputConfiguration::Mouse mouse,
-        miral::InputConfiguration::Touchpad touchpad,
-        miral::InputConfiguration::Keyboard keyboard) :
-        mouse{mouse},
-        touchpad{touchpad},
-        keyboard{keyboard}
+        Config(Mouse mouse, Touchpad touchpad, Keyboard keyboard) :
+            mouse{mouse},
+            touchpad{touchpad},
+            keyboard{keyboard}
         {}
 
         std::mutex config_mutex;
-        miral::InputConfiguration::Mouse mouse;
-        miral::InputConfiguration::Touchpad touchpad;
-        miral::InputConfiguration::Keyboard keyboard;
+        Mouse mouse;
+        Touchpad touchpad;
+        Keyboard keyboard;
     } config{mouse(), touchpad(), keyboard()};
 
     void start_callback()
@@ -200,9 +199,9 @@ miral::InputConfiguration::InputConfiguration(live_config::Store& config_store) 
                             self->config.mouse.handedness(mir_pointer_handedness_left);
                         else
                             mir::log_warning(
-                                "Config key '%s' has invalid value: %s",
+                                "Config key '%s' has invalid integer value: %s",
                                 key.to_string().c_str(),
-                                val->data());
+                                std::format("{}",*val).c_str());
                     }
                 });
 
@@ -225,9 +224,9 @@ miral::InputConfiguration::InputConfiguration(live_config::Store& config_store) 
                         self->config.touchpad.scroll_mode(mir_touchpad_scroll_mode_button_down_scroll);
                     else
                         mir::log_warning(
-                            "Config key '%s' has invalid value: %s",
+                            "Config key '%s' has invalid integer value: %s",
                             key.to_string().c_str(),
-                            val->data());
+                            std::format("{}",*val).c_str());
                 }
             });
 
