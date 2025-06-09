@@ -56,6 +56,9 @@ private:
 /// The handlers should be called when the configuration is updated. There is
 /// no requirement to check the previous value has changed.
 ///
+/// The `value` provided to the Handlers is `optional` to support values being
+/// explicitly unset. Store implementations default absent keys to `preset`.
+///
 /// The key is passed to the handler as it can be useful (e.g. for diagnostics)
 ///
 /// This could be supported by various backends (an ini file, a YAML node, etc)
