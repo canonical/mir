@@ -23,6 +23,7 @@
 #include "mir/input/device.h"
 #include "mir/input/input_device_hub.h"
 #include "mir/input/input_device_observer.h"
+#include "mir/input/null_input_device_observer.h"
 #include "mir/input/input_manager.h"
 #include "mir/input/mir_pointer_config.h"
 #include "mir/input/mir_touchpad_config.h"
@@ -102,7 +103,7 @@ MirInputDevice get_device_config(mi::Device const& device)
     return cfg;
 }
 
-struct DeviceChangeTracker : mi::InputDeviceObserver
+struct DeviceChangeTracker : mi::NullInputDeviceObserver
 {
     DeviceChangeTracker(mi::ConfigChanger& changer)
         : config_changer(changer)
@@ -112,9 +113,6 @@ struct DeviceChangeTracker : mi::InputDeviceObserver
     void device_added(std::shared_ptr<mi::Device> const& device) override
     {
         added.push_back(device);
-    }
-    void device_changed(std::shared_ptr<mi::Device> const&) override
-    {
     }
 
     void device_removed(std::shared_ptr<mi::Device> const& device) override

@@ -24,6 +24,7 @@
 #include <mir/scene/prompt_session_listener.h>
 #include <mir/input/input_device_hub.h>
 #include <mir/input/input_device_observer.h>
+#include "mir/input/null_input_device_observer.h"
 #include <mir/input/cursor_images.h>
 #include <mir/version.h>
 
@@ -53,15 +54,13 @@ private:
     std::shared_ptr<miroil::PromptSessionListener> const listener;
 };
 
-struct MirInputDeviceObserverImpl : mir::input::InputDeviceObserver
+struct MirInputDeviceObserverImpl : mir::input::NullInputDeviceObserver
 {
 public:    
     MirInputDeviceObserverImpl(std::shared_ptr<miroil::InputDeviceObserver> & observer) : observer(observer) {};
     
     void device_added(std::shared_ptr<mir::input::Device> const& device) override;
-    void device_changed(std::shared_ptr<mir::input::Device> const& /*device*/) override {}
     void device_removed(std::shared_ptr<mir::input::Device> const& device) override;
-    void changes_complete() override {}
     
 private:    
     std::shared_ptr<miroil::InputDeviceObserver> observer;

@@ -18,6 +18,7 @@
 #define MIRAL_INPUT_DEVICE_CONFIG_H_
 
 #include <mir/input/input_device_observer.h>
+#include "mir/input/null_input_device_observer.h"
 #include <mir/options/option.h>
 #include <mir_toolkit/mir_input_device_types.h>
 
@@ -64,16 +65,13 @@ public:
     std::optional<int> repeat_delay;
 };
 
-class InputDeviceConfig : public mir::input::InputDeviceObserver
+class InputDeviceConfig : public mir::input::NullInputDeviceObserver
 {
 public:
     auto static the_input_configuration(std::shared_ptr<mir::options::Option> const& options)
         -> std::shared_ptr<InputDeviceConfig>;
 
     void device_added(std::shared_ptr<mir::input::Device> const& device) override;
-    void device_changed(std::shared_ptr<mir::input::Device> const&) override {}
-    void device_removed(std::shared_ptr<mir::input::Device> const&) override {}
-    void changes_complete() override {}
 
     auto mouse() const -> MouseInputConfiguration;
     auto touchpad() const -> TouchpadInputConfiguration;

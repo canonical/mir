@@ -18,6 +18,7 @@
 
 #include "mir/input/device.h"
 #include "mir/input/input_device_hub.h"
+#include "mir/input/null_input_device_observer.h"
 #include "mir/time/alarm_factory.h"
 #include "mir/time/alarm.h"
 #include "mir/events/event_builders.h"
@@ -34,7 +35,7 @@ namespace mev = mir::events;
 
 namespace
 {
-struct DeviceRemovalFilter : mi::InputDeviceObserver
+struct DeviceRemovalFilter : mi::NullInputDeviceObserver
 {
     DeviceRemovalFilter(mi::KeyRepeatDispatcher* dispatcher)
         : dispatcher{dispatcher} {}
@@ -48,18 +49,11 @@ struct DeviceRemovalFilter : mi::InputDeviceObserver
 
     }
 
-    void device_changed(std::shared_ptr<mi::Device> const&) override
-    {
-    }
-
     void device_removed(std::shared_ptr<mi::Device> const& device) override
     {
         dispatcher->remove_device(device->id());
     }
 
-    void changes_complete() override
-    {
-    }
     mi::KeyRepeatDispatcher* dispatcher;
 };
 

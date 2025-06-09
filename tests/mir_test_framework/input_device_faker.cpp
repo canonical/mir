@@ -22,6 +22,7 @@
 
 #include <mir/input/input_device_hub.h>
 #include <mir/input/input_device_observer.h>
+#include "mir/input/null_input_device_observer.h"
 #include <mir/raii.h>
 #include <mir/server.h>
 
@@ -42,14 +43,13 @@ void mir_test_framework::InputDeviceFaker::wait_for_input_devices_added_to(mir::
     using namespace std::chrono_literals;
     using namespace testing;
 
-    struct DeviceCounter : mir::input::InputDeviceObserver
+    struct DeviceCounter : mir::input::NullInputDeviceObserver
     {
         DeviceCounter(std::function<void(size_t)> const& callback)
             : callback{callback}
         {}
 
         void device_added(std::shared_ptr<mir::input::Device> const&)   override { ++count_devices; }
-        void device_changed(std::shared_ptr<mir::input::Device> const&) override {}
         void device_removed(std::shared_ptr<mir::input::Device> const&) override { --count_devices; }
         void changes_complete()                                         override { callback(count_devices); }
         std::function<void(size_t)> const callback;
