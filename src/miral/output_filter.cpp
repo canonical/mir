@@ -29,7 +29,8 @@
 struct miral::OutputFilter::Self
 {
     Self(MirOutputFilter default_filter) :
-        filter_(default_filter)
+        default_filter{default_filter},
+        filter_{default_filter}
     {
     }
 
@@ -43,6 +44,7 @@ struct miral::OutputFilter::Self
         output_filter.lock()->filter(filter_);
     }
 
+    MirOutputFilter const default_filter;
     std::atomic<MirOutputFilter> filter_;
 
     // output_filter is only updated during the single-threaded initialization phase of startup
@@ -61,7 +63,7 @@ miral::OutputFilter::OutputFilter(live_config::Store& config_store) : OutputFilt
         "Output filter to use [{none,grayscale,invert}]",
         [this](live_config::Key const& key, std::optional<std::string_view> val)
         {
-            MirOutputFilter new_filter = mir_output_filter_none;
+            MirOutputFilter new_filter = self->default_filter;
             if (val)
             {
                 auto filter_name = *val;

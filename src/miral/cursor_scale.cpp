@@ -28,6 +28,7 @@
 struct miral::CursorScale::Self
 {
     Self(float default_scale) :
+        default_scale{default_scale},
         scale_(default_scale)
     {
     }
@@ -42,6 +43,7 @@ struct miral::CursorScale::Self
         accessibility_manager.lock()->cursor_scale(scale_);
     }
 
+    float const default_scale;
     std::atomic<float> scale_;
 
     // accessibility_manager is only updated during the single-threaded initialization phase of startup
@@ -72,6 +74,10 @@ miral::CursorScale::CursorScale(live_config::Store& config_store) : miral::Curso
                         "Config value %s does not support negative values. Ignoring the supplied value (%f)...",
                         key.to_string().c_str(), *val);
                 }
+            }
+            else
+            {
+                scale(self->default_scale);
             }
         });
 }
