@@ -108,6 +108,6 @@ void miral::CursorScale::operator()(mir::Server& server) const
             self->accessibility_manager = server.the_accessibility_manager();
             auto const scale = options->get<double>(cursor_scale_opt);
 
-            self->scale(scale);
+            self->scale(static_cast<float>(scale));
         });
 }
