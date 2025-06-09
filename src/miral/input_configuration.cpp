@@ -111,12 +111,9 @@ public:
 
     void start_callback()
     {
-        // Merge the input options collected from the command line,
+        // Merge the any input options collected from the command line,
         // environment, and default `.config` file with the options we
-        // read from the `.input` file.
-        //
-        // In this case, the `.input` file takes precedence. You can
-        // reverse the arguments to de-prioritize it.
+        // read from the live configuration file.
         std::lock_guard lock{config.config_mutex};
         config.mouse.merge(mouse());
         config.keyboard.merge(keyboard());
