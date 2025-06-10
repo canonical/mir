@@ -29,12 +29,12 @@
 
 namespace
 {
-using IET = mir::input::InputEventTransformer;
+using miet = mir::input::InputEventTransformer;
 void toggle_transformer(
     bool should_turn_on,
     bool& is_enabled,
-    std::shared_ptr<IET::Transformer> const& transformer,
-    std::shared_ptr<IET> const& event_transformer)
+    std::shared_ptr<miet::Transformer> const& transformer,
+    std::shared_ptr<miet> const& event_transformer)
 {
     if (should_turn_on && !is_enabled)
     {
