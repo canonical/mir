@@ -56,36 +56,40 @@ miral::HoverClick::HoverClick(bool enabled_by_default)
 
 miral::HoverClick& miral::HoverClick::enable()
 {
-    self->state.lock()->enabled = true;
     if(auto const accessibility_manager = self->accessibility_manager.lock())
         accessibility_manager->hover_click_enabled(true);
+    else
+        self->state.lock()->enabled = true;
 
     return *this;
 }
 
 miral::HoverClick& miral::HoverClick::disable()
 {
-    self->state.lock()->enabled = false;
     if(auto const accessibility_manager = self->accessibility_manager.lock())
         accessibility_manager->hover_click_enabled(false);
+    else
+        self->state.lock()->enabled = false;
 
     return *this;
 }
 
 miral::HoverClick& miral::HoverClick::hover_duration(std::chrono::milliseconds hover_duration)
 {
-    self->state.lock()->hover_duration = hover_duration;
     if(auto const accessibility_manager = self->accessibility_manager.lock())
         accessibility_manager->hover_click().hover_duration(hover_duration);
+    else
+        self->state.lock()->hover_duration = hover_duration;
 
     return *this;
 }
 
 miral::HoverClick& miral::HoverClick::cancel_displacement_threshold(float displacement)
 {
-    self->state.lock()->cancel_displacement_threshold = displacement;
     if(auto const accessibility_manager = self->accessibility_manager.lock())
         accessibility_manager->hover_click().cancel_displacement_threshold(displacement);
+    else
+        self->state.lock()->cancel_displacement_threshold = displacement;
 
     return *this;
 }
