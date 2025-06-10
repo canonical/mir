@@ -78,7 +78,7 @@ mir::UniqueModulePtr<mg::DisplayPlatform> create_display_platform(
         *console,
         *emergency_cleanup_registry,
         bypass_option,
-        mir::graphics::atomic::Quirks{*options}.runtime_quirks_for(*device.device));
+        mir::graphics::atomic::Quirks{*options}.gbm_quirks_for(*device.device));
 }
 
 void add_graphics_platform_options(boost::program_options::options_description& config)

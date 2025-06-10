@@ -88,7 +88,7 @@ public:
     static void add_quirks_option(boost::program_options::options_description& config);
 
     [[nodiscard]]
-    auto runtime_quirks_for(udev::Device const& device) -> std::shared_ptr<GbmQuirks>;
+    auto gbm_quirks_for(udev::Device const& device) -> std::shared_ptr<GbmQuirks>;
 
 private:
     class Impl;

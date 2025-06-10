@@ -137,7 +137,7 @@ mga::Display::Display(
     mga::BypassOption bypass_option,
     std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
     std::shared_ptr<DisplayReport> const& listener,
-    std::shared_ptr<GbmQuirks> runtime_quirks)
+    std::shared_ptr<GbmQuirks> const& gbm_quirks)
     : drm_fd{std::move(drm_fd)},
       gbm{std::move(gbm)},
       listener(listener),
@@ -148,7 +148,7 @@ mga::Display::Display(
       current_display_configuration{output_container},
       dirty_configuration{false},
       bypass_option(bypass_option),
-      runtime_quirks{runtime_quirks}
+      gbm_quirks{gbm_quirks}
 {
     monitor.filter_by_subsystem_and_type("drm", "drm_minor");
     monitor.enable();
@@ -396,7 +396,7 @@ void mga::Display::configure_locked(
                     std::move(kms_output),
                     out.extents(),
                     transform, 
-                    runtime_quirks);
+                    gbm_quirks);
 
                 display_buffers_new.push_back(std::move(db));
             }

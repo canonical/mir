@@ -44,7 +44,7 @@ public:
         ConsoleServices& vt,
         EmergencyCleanupRegistry& emergency_cleanup_registry,
         BypassOption bypass_option,
-        std::shared_ptr<GbmQuirks> runtime_quirks);
+        std::shared_ptr<GbmQuirks> gbm_quirks);
 
     ~Platform() override;
 
@@ -69,7 +69,7 @@ private:
         std::shared_ptr<DisplayReport> const& reporter,
         EmergencyCleanupRegistry& emergency_cleanup_registry,
         BypassOption bypass_option,
-        std::shared_ptr<GbmQuirks> runtime_quirks);
+        std::shared_ptr<GbmQuirks> gbm_quirks);
 
     std::unique_ptr<Device> const device_handle;
     mir::Fd const drm_fd;
@@ -77,7 +77,7 @@ private:
     std::shared_ptr<GBMDisplayProvider> gbm_display_provider;
 
     BypassOption const bypass_option_;
-    std::shared_ptr<GbmQuirks> const runtime_quirks;
+    std::shared_ptr<GbmQuirks> const gbm_quirks;
 };
 }
 }

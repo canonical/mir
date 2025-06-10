@@ -27,7 +27,7 @@ public:
         mir::Fd drm_fd,
         std::shared_ptr<struct gbm_device> gbm,
         geometry::Size size,
-        std::shared_ptr<GbmQuirks> runtime_quirks);
+        std::shared_ptr<GbmQuirks> const& gbm_quirks);
 
     auto supported_formats() const -> std::vector<DRMFormat> override;
 
@@ -38,6 +38,6 @@ private:
     mir::Fd const fd;
     std::shared_ptr<struct gbm_device> const gbm;
     geometry::Size const size;
-    std::shared_ptr<GbmQuirks> const runtime_quirks;
+    std::shared_ptr<GbmQuirks> const gbm_quirks;
 };
 }

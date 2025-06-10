@@ -189,7 +189,7 @@ public:
         return !(should_skip_driver || should_skip_devnode);
     }
 
-    auto runtime_quirks_for(udev::Device const& device) -> std::shared_ptr<GbmQuirks>
+    auto gbm_quirks_for(udev::Device const& device) -> std::shared_ptr<GbmQuirks>
     {
         class GbmCreateSurfaceNoFlags : public GbmQuirks::CreateSurfaceFlagsQuirk
         {
@@ -429,10 +429,10 @@ auto mir::graphics::atomic::Quirks::require_modesetting_support(mir::udev::Devic
         return impl->require_modesetting_support(device);
     }
 }
-auto mir::graphics::atomic::Quirks::runtime_quirks_for(udev::Device const& device)
+auto mir::graphics::atomic::Quirks::gbm_quirks_for(udev::Device const& device)
     -> std::shared_ptr<GbmQuirks>
 {
-    return impl->runtime_quirks_for(device);
+    return impl->gbm_quirks_for(device);
 }
 
 mir::graphics::atomic::GbmQuirks::GbmQuirks(
