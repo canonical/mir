@@ -150,7 +150,7 @@ auto mf::SyncTimeline::claim_timeline() -> Points
 
 auto mf::SyncTimeline::timeline_set() const -> bool
 {
-    return true;
+    return acquire_point || release_point;
 }
 
 void mf::SyncTimeline::set_acquire_point(struct wl_resource* timeline, uint32_t point_hi, uint32_t point_lo)
