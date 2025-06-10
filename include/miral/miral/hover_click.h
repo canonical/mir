@@ -54,16 +54,16 @@ public:
     HoverClick& cancel_displacement_threshold(float displacement);
 
     /// Called shortly after a hover click is scheduled. Should be used to
-    /// indicate to the user that a simulated secondary click has begun.
+    /// indicate to the user that a hover click has begun.
     HoverClick& on_hover_start(std::function<void()>&&);
 
     // Called immediately when a hover click is cancelled. Should be used to
-    // indicate to the user that the simulated secondary click was cancelled.
+    // indicate to the user that the hover click was cancelled.
     HoverClick& on_hover_cancel(std::function<void()>&&);
 
     // Called immediately after a hover click is successfully dispatched.
-    // Should be used to indicate to the user that the simulated secondary
-    // click was successful.
+    // Should be used to indicate to the user that the hover click was
+    // successful.
     HoverClick& on_click_dispatched(std::function<void()>&&);
 
 private:
