@@ -22,6 +22,7 @@
 #include "mir/test/doubles/stub_buffer.h"
 #include "mir/test/doubles/stub_input_scene.h"
 #include "mir/test/doubles/explicit_executor.h"
+#include "mir/test/doubles/mock_input_scene.h"
 
 #include "mir/test/fake_shared.h"
 
@@ -37,19 +38,6 @@ namespace mrs = mir::renderer::software;
 
 namespace
 {
-
-struct MockInputScene : mtd::StubInputScene
-{
-    MOCK_METHOD1(add_input_visualization,
-                 void(std::shared_ptr<mg::Renderable> const&));
-
-    MOCK_METHOD1(remove_input_visualization,
-                 void(std::weak_ptr<mg::Renderable> const&));
-
-    MOCK_METHOD0(emit_scene_changed, void());
-
-    MOCK_CONST_METHOD0(screen_is_locked, bool());
-};
 
 struct StubCursorImage : mg::CursorImage
 {
@@ -135,7 +123,7 @@ struct SoftwareCursor : testing::Test
     std::shared_ptr<StubCursorImage> stub_cursor_image = std::make_shared<StubCursorImage>(geom::Displacement{3, 4});
     std::shared_ptr<StubCursorImage> another_stub_cursor_image = std::make_shared<StubCursorImage>(geom::Displacement{10, 9});
     testing::NiceMock<MockBufferAllocator> mock_buffer_allocator;
-    testing::NiceMock<MockInputScene> mock_input_scene;
+    testing::NiceMock<mtd::MockInputScene> mock_input_scene;
 
     mg::SoftwareCursor cursor{
         mt::fake_shared(mock_buffer_allocator),
@@ -439,6 +427,12 @@ TEST_F(SoftwareCursor, handles_argb_8888_buffer_with_stride)
             reinterpret_cast<uint32_t const*>(mapping->data() + (stride * y) + mapping->size().width.as_uint32_t())};
         EXPECT_THAT(line, Each(Eq(expected_pixel)));
     }
+}
+
+TEST_F(SoftwareCursor, renderable_has_normal_orientation)
+{
+    cursor.show(stub_cursor_image);
+    EXPECT_THAT(cursor.renderable()->orientation(), testing::Eq(mir_orientation_normal));
 }
 
 TEST_F(SoftwareCursor, does_not_need_compositing_when_not_shown)

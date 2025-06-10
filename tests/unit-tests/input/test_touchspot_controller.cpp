@@ -263,3 +263,24 @@ TEST_F(TestTouchspotControllerSceneUpdates, emits_scene_damage)
     controller.visualize_touches({ {{0,0}, 1} });
     controller.visualize_touches({ {{1,1}, 1}});
 }
+
+TEST_F(TestTouchspotController, renderable_has_normal_orientation)
+{
+    using namespace ::testing;
+
+    ON_CALL(*allocator, alloc_software_buffer(_, _))
+        .WillByDefault(
+            Invoke(
+                [](auto size, auto pf)
+                {
+                    mg::BufferProperties properties{size, pf, mg::BufferUsage::software};
+                    return std::make_shared<mtd::StubBuffer>(
+                        properties,
+                        geom::Stride{size.width.as_uint32_t() * MIR_BYTES_PER_PIXEL(pf) + 29}); // Return a stride != width
+                }));
+
+    mi::TouchspotController controller{allocator, scene};
+    controller.enable();
+    controller.visualize_touches({ {{0, 0}, 1} });
+    EXPECT_THAT(scene->overlays[0]->orientation(), Eq(mir_orientation_normal));
+}
