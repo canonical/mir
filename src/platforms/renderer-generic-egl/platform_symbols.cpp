@@ -36,15 +36,14 @@ namespace mo = mir::options;
 namespace mge = mg::egl::generic;
 
 auto create_rendering_platform(
-    mg::SupportedDevice const& device,
+    mg::SupportedDevice const&,
     std::vector<std::shared_ptr<mg::DisplayPlatform>> const& displays,
     mo::Option const&,
     mir::EmergencyCleanupRegistry&) -> mir::UniqueModulePtr<mg::RenderingPlatform>
 {
-    mir::assert_entry_point_signature<mg::CreateRenderPlatform>(&create_rendering_platform);
+   mir::assert_entry_point_signature<mg::CreateRenderPlatform>(&create_rendering_platform);
 
-    dev_t devnum = device.device ? device.device->devnum() : 0;
-    return mir::make_module_ptr<mge::RenderingPlatform>(devnum, displays);
+    return mir::make_module_ptr<mge::RenderingPlatform>(displays);
 }
 
 void add_graphics_platform_options(boost::program_options::options_description&)

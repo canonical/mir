@@ -36,6 +36,7 @@
 #include <cstdint>
 #include <cstring>
 #include <stdexcept>
+#include <sys/stat.h>
 
 #define MIR_LOG_COMPONENT "linux-dmabuf-import"
 #include "mir/log.h"
@@ -1235,17 +1236,51 @@ void mg::LinuxDmaBuf::bind(wl_resource* new_resource)
     new LinuxDmaBuf::Instance{new_resource, provider};
 }
 
+namespace
+{
+dev_t get_devnum(EGLDisplay dpy)
+{
+    try
+    {
+        mg::EGLExtensions::DeviceQuery device_query_ext;
+        EGLDeviceEXT device;
+        device_query_ext.eglQueryDisplayAttribEXT(dpy, EGL_DEVICE_EXT, reinterpret_cast<EGLAttrib*>(&device));
+        const char *device_path = device_query_ext.eglQueryDeviceStringEXT(device, EGL_DRM_DEVICE_FILE_EXT);
+        if (device_path == nullptr)
+        {
+            mir::log_info(
+                "Unable to determine linux-dmabuf device: no device path returned from EGL");
+            return 0;
+        }
+        struct stat device_stat;
+        if (stat(device_path, &device_stat) == -1)
+        {
+            mir::log_info(
+                "Unable to determine linux-dmabuf device: unable to stat device path: %s", strerror(errno));
+            return 0;
+        }
+
+        return device_stat.st_rdev;
+    }
+    catch (std::runtime_error const& error)
+    {
+        mir::log_info(
+            "Unable to determine linux-dmabuf device: %s", error.what());
+        return 0;
+    }
+}
+}
+
 mg::DMABufEGLProvider::DMABufEGLProvider(
-    dev_t devnum,
     EGLDisplay dpy,
     std::shared_ptr<EGLExtensions> egl_extensions,
     mg::EGLExtensions::EXTImageDmaBufImportModifiers const& dmabuf_ext,
     std::shared_ptr<mgc::EGLContextExecutor> egl_delegate,
     EGLImageAllocator allocate_importable_image)
-    : devnum_{devnum},
-      dpy{dpy},
+    : dpy{dpy},
       egl_extensions{std::move(egl_extensions)},
       dmabuf_export_ext{mg::EGLExtensions::MESADmaBufExport::extension_if_supported(dpy)},
+      devnum_{get_devnum(dpy)},
       formats{std::make_unique<DmaBufFormatDescriptors>(dpy, dmabuf_ext)},
       egl_delegate{std::move(egl_delegate)},
       allocate_importable_image{std::move(allocate_importable_image)},

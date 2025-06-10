@@ -60,7 +60,6 @@ public:
     using EGLImageAllocator =
         std::function<std::shared_ptr<DMABufBuffer>(DRMFormat, std::span<uint64_t const>, geometry::Size)>;
     DMABufEGLProvider(
-        dev_t devnum,
         EGLDisplay dpy,
         std::shared_ptr<EGLExtensions> egl_extensions,
         EGLExtensions::EXTImageDmaBufImportModifiers const& dmabuf_ext,
@@ -91,10 +90,10 @@ public:
 
      auto supported_formats() const -> DmaBufFormatDescriptors const&;
 private:
-    dev_t const devnum_;
     EGLDisplay const dpy;
     std::shared_ptr<EGLExtensions> const egl_extensions;
     std::optional<EGLExtensions::MESADmaBufExport> const dmabuf_export_ext;
+    dev_t const devnum_;
     std::unique_ptr<DmaBufFormatDescriptors> const formats;
     std::shared_ptr<common::EGLContextExecutor> const egl_delegate;
     EGLImageAllocator allocate_importable_image;

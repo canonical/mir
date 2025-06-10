@@ -35,7 +35,7 @@ namespace graphics::egl::generic
 class RenderingPlatform : public graphics::RenderingPlatform
 {
 public:
-    explicit RenderingPlatform(dev_t devnum, std::vector<std::shared_ptr<DisplayPlatform>> const& displays);
+    explicit RenderingPlatform(std::vector<std::shared_ptr<DisplayPlatform>> const& displays);
 
     ~RenderingPlatform();
 
@@ -47,7 +47,7 @@ protected:
         RenderingProvider::Tag const& type_tag) -> std::shared_ptr<RenderingProvider> override;
 
 private:
-    explicit RenderingPlatform(dev_t devnum, std::tuple<EGLDisplay, bool> dpy);
+    explicit RenderingPlatform(std::tuple<EGLDisplay, bool> dpy);
 
     /* 
      * We (sometimes) need to clean up the EGLDisplay with eglTerminate,
