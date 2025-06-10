@@ -56,8 +56,7 @@ bool msh::BasicHoverClickTransformer::transform_input_event(
 
     initialize_click_dispatcher(dispatcher, *builder);
 
-    // In GNOME, when hover click is enabled, it only starts
-    // "hover-clicking" after you move the pointer.
+    // Hover-clicking only begins after the pointer is moved
     if(pointer_event->action() == mir_pointer_action_motion)
     {
         // If a click already occured in the past. Only start a new hover click if
@@ -92,7 +91,7 @@ bool msh::BasicHoverClickTransformer::transform_input_event(
             if (distance_squared > threshold * threshold)
             {
                 // Possibly can have the click dispatcher execute between our check and
-                // cancelling, but I don't think there's another way ¯\_(ツ)_/¯
+                // cancelling
                 if (state->click_dispatcher->state() == time::Alarm::State::pending)
                 {
                     state->click_dispatcher->cancel();
