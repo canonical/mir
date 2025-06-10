@@ -194,6 +194,7 @@ private:
         std::string surface_name;
         geometry::Rectangle surface_rect;
         glm::mat4 transformation_matrix;
+        MirOrientation orientation = mir_orientation_normal;
         float surface_alpha;
         bool hidden;
         input::InputReceptionMode input_mode;
