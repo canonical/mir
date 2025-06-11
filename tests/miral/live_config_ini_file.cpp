@@ -124,7 +124,6 @@ void process_as(std::function<void(mlc::Key const&, std::optional<Type>)> const&
 template<>
 void process_as<bool>(std::function<void(mlc::Key const&, std::optional<bool>)> const& handler, mlc::Key const& key, std::optional<std::string_view> val)
 {
-    puts(__PRETTY_FUNCTION__);
     if (val)
     {
         if (*val == "true")
@@ -195,7 +194,7 @@ void mlc::IniFile::add_floats_attribute(Key const& key, std::string_view descrip
 
 void mlc::IniFile::add_string_attribute(Key const& key, std::string_view description, HandleString handler)
 {
-    (void)key; (void)description; (void)handler;
+    self->add_key(key, description, std::nullopt, handler);
 }
 
 void mlc::IniFile::add_strings_attribute(Key const& key, std::string_view description, HandleStrings handler) 
@@ -243,7 +242,7 @@ void mlc::IniFile::add_floats_attribute(Key const& key, std::string_view descrip
 
 void mlc::IniFile::add_string_attribute(Key const& key, std::string_view description, std::string_view preset, HandleString handler)
 {
-    (void)key; (void)description; (void)preset; (void)handler;
+    self->add_key(key, description, std::string{preset}, handler);
 }
 
 void mlc::IniFile::add_strings_attribute(Key const& key, std::string_view description, std::span<std::string const> preset, HandleStrings handler)
@@ -275,17 +274,22 @@ struct LiveConfigIniFile : Test
 
     MOCK_METHOD(void, int_handler, (mlc::Key const& key, std::optional<int> value));
     MOCK_METHOD(void, bool_handler, (mlc::Key const& key, std::optional<bool> value));
+    MOCK_METHOD(void, string_handler, (mlc::Key const& key, std::optional<std::string_view const> value));
 
     mlc::Key const a_key{"a_scope", "an_int"};
     mlc::Key const another_key{"another_scope", "an_int"};
     mlc::Key const a_true_key{"a_scope", "a_bool"};
     mlc::Key const a_false_key{"a_scope", "another_bool"};
+    mlc::Key const a_string_key{"a_string"};
+    mlc::Key const another_string_key{"another_string"};
 
     std::istringstream istream{
         a_key.to_string()+"=42\n" +
         another_key.to_string()+"=64\n" +
         a_true_key.to_string()+"=true\n" +
-        a_false_key.to_string()+"=false\n"
+        a_false_key.to_string()+"=false\n" +
+        a_string_key.to_string()+"=foo\n" +
+        another_string_key.to_string()+"=bar baz\n"
     };
 };
 
@@ -361,6 +365,29 @@ TEST_F(LiveConfigIniFile, a_bool_preset_is_handled)
 
     EXPECT_CALL(*this, bool_handler(a_true_key, std::optional<bool>{true}));
     EXPECT_CALL(*this, bool_handler(my_key, std::optional<bool>{false}));
+
+    ini_file.load_file(istream, std::filesystem::path{});
+}
+
+TEST_F(LiveConfigIniFile, a_string_value_is_handled)
+{
+    ini_file.add_string_attribute(a_string_key, "a scoped string", [this](auto... args) { string_handler(args...); });
+    ini_file.add_string_attribute(another_string_key, "a scoped string", [this](auto... args) { string_handler(args...); });
+
+    EXPECT_CALL(*this, string_handler(a_string_key, std::optional<std::string_view const>{"foo"}));
+    EXPECT_CALL(*this, string_handler(another_string_key, std::optional<std::string_view const>{"bar baz"}));
+
+    ini_file.load_file(istream, std::filesystem::path{});
+}
+
+TEST_F(LiveConfigIniFile, a_string_preset_is_handled)
+{
+    mlc::Key const my_key{"foo"};
+    ini_file.add_string_attribute(a_string_key, "a scoped string", "ignored", [this](auto... args) { string_handler(args...); });
+    ini_file.add_string_attribute(my_key, "a scoped string", "(none)", [this](auto... args) { string_handler(args...); });
+
+    EXPECT_CALL(*this, string_handler(a_string_key, std::optional<std::string_view const>{"foo"}));
+    EXPECT_CALL(*this, string_handler(my_key, std::optional<std::string_view const>{"(none)"}));
 
     ini_file.load_file(istream, std::filesystem::path{});
 }
