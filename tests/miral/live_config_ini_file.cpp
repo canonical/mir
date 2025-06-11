@@ -225,16 +225,43 @@ struct LiveConfigIniFile : Test
     mlc::IniFile ini_file;
 
     MOCK_METHOD(void, int_handler, (mlc::Key const& key, std::optional<int> value));
+
+    mlc::Key const a_key{"a_scope", "an_int"};
+    mlc::Key const another_key{"another_scope", "an_int"};
+    std::istringstream istream{
+        a_key.to_string()+"=42\n" +
+        another_key.to_string()+"=64"};
 };
 
-TEST_F(LiveConfigIniFile, can_load_an_integer)
+TEST_F(LiveConfigIniFile, an_integer_value_is_handled)
 {
-    mlc::Key const a_key{"a_scope", "an_int"};
     ini_file.add_int_attribute(a_key, "a scoped int", [this](auto... args) { int_handler(args...); });
 
     EXPECT_CALL(*this, int_handler(a_key, std::optional<int>{42}));
 
-
-    std::istringstream istream{a_key.to_string()+"=42"};
     ini_file.load_file(istream, std::filesystem::path{});
 }
+
+TEST_F(LiveConfigIniFile, another_integer_value_is_handled)
+{
+    ini_file.add_int_attribute(a_key, "a scoped int", [this](auto... args) { int_handler(args...); });
+    ini_file.add_int_attribute(another_key, "another scoped int", [this](auto... args) { int_handler(args...); });
+
+    EXPECT_CALL(*this, int_handler(a_key, std::optional<int>{42}));
+    EXPECT_CALL(*this, int_handler(another_key, std::optional<int>{64}));
+
+    ini_file.load_file(istream, std::filesystem::path{});
+}
+
+TEST_F(LiveConfigIniFile, a_bad_integer_value_is_handled_as_nullopt)
+{
+    std::istringstream bad_istream{
+        a_key.to_string()+"=42x"};
+
+    ini_file.add_int_attribute(a_key, "a scoped int", [this](auto... args) { int_handler(args...); });
+
+    EXPECT_CALL(*this, int_handler(a_key, {std::nullopt}));
+
+    ini_file.load_file(bad_istream, std::filesystem::path{});
+}
+
