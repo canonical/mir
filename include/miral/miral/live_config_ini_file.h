@@ -19,6 +19,8 @@
 
 #include <miral/live_config.h>
 
+#include <filesystem>
+
 namespace miral::live_config
 {
 /// "ini file" implementation of a live configuration store.
@@ -49,6 +51,8 @@ public:
     void add_strings_attribute(Key const& key, std::string_view description, std::span<std::string const> preset, HandleStrings handler) override;
 
     void on_done(HandleDone handler) override;
+
+    void load_file(std::istream& istream, std::filesystem::path const& path);
 
 private:
     class Self;

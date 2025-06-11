@@ -45,6 +45,7 @@ public:
     auto to_string() const -> std::string;
 
     auto operator<=>(Key const& that) const -> std::strong_ordering;
+    auto operator==(Key const& that) const -> bool;
 
 private:
    struct State;
