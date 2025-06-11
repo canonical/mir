@@ -725,7 +725,7 @@ TEST_F(MinimalWindowManagerWithThreeWindows, minimizing_an_inactive_window_moves
 }
 
 TEST_F(MinimalWindowManagerWithThreeWindows,
-    minimizing_the_active_window_selects_a_new_window_and_moves_it_to_the_back_of_the_z_order)
+    minimizing_the_active_window_moves_it_to_the_back_of_the_z_order_and_selects_a_new_window)
 {
     miral::WindowSpecification spec;
     spec.state() = mir_window_state_minimized;
