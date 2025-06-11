@@ -35,6 +35,11 @@ inline glm::mat2 transformation(MirOrientation ori)
     return glm::mat2(cos, sin, -sin, cos);  // column-major order, GL-style
 }
 
+inline glm::mat2 inverse_transformation(MirOrientation ori)
+{
+    return glm::inverse(transformation(ori));
+}
+
 inline glm::mat2 transformation(MirMirrorMode mode)
 {
     glm::mat2 mat(1);

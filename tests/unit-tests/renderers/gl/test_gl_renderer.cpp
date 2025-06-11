@@ -28,6 +28,8 @@
 #include <mir/test/doubles/stub_gl_rendering_provider.h>
 #include <mir/test/doubles/mock_output_surface.h>
 
+#include "mir/graphics/transformation.h"
+
 using testing::SetArgPointee;
 using testing::InSequence;
 using testing::Return;
@@ -120,6 +122,8 @@ public:
         mock_buffer = std::make_shared<testing::NiceMock<mtd::MockTextureBuffer>>();
         EXPECT_CALL(*mock_buffer, id())
             .WillRepeatedly(Return(mir::graphics::BufferID(789)));
+        EXPECT_CALL(*mock_buffer, layout())
+            .WillRepeatedly(Return(mir::graphics::gl::Texture::Layout::GL));
         EXPECT_CALL(*mock_buffer, size())
             .WillRepeatedly(Return(mir::geometry::Size{123, 456}));
         ON_CALL(*mock_buffer, shader(_))
@@ -136,6 +140,7 @@ public:
         EXPECT_CALL(*renderable, shaped()).WillRepeatedly(Return(false));
         EXPECT_CALL(*renderable, alpha()).WillRepeatedly(Return(1.0f));
         EXPECT_CALL(*renderable, transformation()).WillRepeatedly(Return(trans));
+        EXPECT_CALL(*renderable, orientation()).WillRepeatedly(Return(mir_orientation_normal));
         EXPECT_CALL(*renderable, screen_position())
             .WillRepeatedly(Return(mir::geometry::Rectangle{{1,2},{3,4}}));
         EXPECT_CALL(*renderable, clip_area())
@@ -156,7 +161,7 @@ public:
     std::shared_ptr<mtd::MockTextureBuffer> mock_buffer;
     std::shared_ptr<testing::NiceMock<mtd::MockRenderable>> renderable;
     mg::RenderableList renderable_list;
-    glm::mat4 trans;
+    glm::mat4 trans{1.f};
     std::shared_ptr<mtd::StubGlRenderingProvider> const gl_platform{std::make_shared<mtd::StubGlRenderingProvider>()};
 
     class StubProgram : public mg::gl::Program
@@ -225,6 +230,41 @@ TEST_F(GLRenderer, avoids_src_alpha_for_rgbx_blending)  // LP: #1423462
     EXPECT_CALL(mock_gl,
                 glBlendFuncSeparate(GL_ONE, GL_ONE_MINUS_CONSTANT_ALPHA,
                                     GL_ZERO, GL_ONE));
+
+    mrg::Renderer renderer(gl_platform, make_output_surface());
+    renderer.render(renderable_list);
+}
+
+TEST_F(GLRenderer, applies_inverse_orientation_matrix)
+{
+    InSequence seq;
+    EXPECT_CALL(mock_gl, glUniformMatrix4fv(_, _, _, _))
+        .Times(2); // Display transform
+    EXPECT_CALL(*renderable, orientation())
+        .WillOnce(Return(mir_orientation_left));
+    EXPECT_CALL(mock_gl, glUniformMatrix4fv(
+        _, _, _, testing::Truly([trans=trans](float const* ptr)
+        {
+            glm::mat4 mat;
+            for (size_t i = 0; i < 4; i++)
+            {
+                for (size_t j = 0; j < 4; j++)
+                {
+                    mat[i][j] = ptr[i * 4 + j];
+                }
+            }
+            glm::mat4 const expected = trans
+                * glm::mat4(mir::graphics::inverse_transformation(mir_orientation_left));
+            for (size_t i = 0; i < 4; i++)
+            {
+                for (size_t j = 0; j < 4; j++)
+                {
+                    printf("%f, %f\n", mat[i][j], expected[i][j]);
+                }
+            }
+
+            return mat == expected;
+        }))).Times(1);
 
     mrg::Renderer renderer(gl_platform, make_output_surface());
     renderer.render(renderable_list);
