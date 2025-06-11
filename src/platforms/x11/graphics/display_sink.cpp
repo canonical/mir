@@ -52,13 +52,16 @@ mgx::DisplaySink::DisplaySink(
     xcb_connection_t* connection,
     xcb_window_t win,
     std::shared_ptr<helpers::EGLHelper> egl,
-    geometry::Rectangle const& view_area)
+    geometry::Rectangle const& view_area,
+    std::shared_ptr<DisplayReport> const& report)
     : area{view_area},
       transform(1),
       egl{std::move(egl)},
       x11_connection{connection},
-      x_win{win}
+      x_win{win},
+      report{report}
 {
+
 }
 
 mgx::DisplaySink::~DisplaySink() = default;
@@ -120,6 +123,9 @@ void mgx::DisplaySink::post()
 {
     next_frame->swap_buffers();
     next_frame.reset();
+
+    // TODO: fill out the frame info
+    report->report_vsync(x_win, Frame{});
 }
 
 std::chrono::milliseconds mgx::DisplaySink::recommended_sleep() const

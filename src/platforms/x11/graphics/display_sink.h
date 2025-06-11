@@ -47,7 +47,8 @@ public:
             xcb_connection_t* connection,
             xcb_window_t win,
             std::shared_ptr<helpers::EGLHelper> egl,
-            geometry::Rectangle const& view_area);
+            geometry::Rectangle const& view_area,
+            std::shared_ptr<DisplayReport> const& report);
 
     ~DisplaySink();
 
@@ -83,6 +84,7 @@ private:
     std::shared_ptr<helpers::EGLHelper> egl;
     xcb_connection_t* const x11_connection;
     xcb_window_t const x_win;
+    std::shared_ptr<DisplayReport> const report;
 };
 
 }
