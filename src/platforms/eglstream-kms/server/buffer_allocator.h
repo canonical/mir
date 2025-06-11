@@ -111,6 +111,7 @@ public:
         GLConfig const& gl_config) -> std::unique_ptr<gl::OutputSurface> override;
 private:
     EGLDisplay dpy;
+    std::shared_ptr<common::EGLContextExecutor> const egl_delegate;
     std::unique_ptr<renderer::gl::Context> const ctx;
 };
 
