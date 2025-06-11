@@ -26,6 +26,7 @@ namespace mlc = miral::live_config;
 #include <charconv>
 #include <list>
 #include <map>
+#include <set>
 
 class mlc::IniFile::Self
 {
@@ -61,6 +62,7 @@ void miral::live_config::IniFile::Self::add_key(
 
 void mlc::IniFile::Self::load_file(std::istream& istream)
 {
+    std::set<Key> keys_seen;
     std::lock_guard lock{config_mutex};
 
     for (std::string line; std::getline(istream, line);)
@@ -71,12 +73,21 @@ void mlc::IniFile::Self::load_file(std::istream& istream)
         {
             auto const eq = line.find_first_of("=");
             auto const key = live_config::Key{line.substr(0, eq)};
+            keys_seen.insert(key);
             auto const value = line.substr(eq+1);
 
             if (auto const details = attribute_handlers.find(key); details != attribute_handlers.end())
             {
                 details->second.handler(details->first, value);
             }
+        }
+    }
+
+    for (auto const& [key, details] : attribute_handlers)
+    {
+        if (keys_seen.find(key) == keys_seen.end())
+        {
+            details.handler(key, details.preset);
         }
     }
 
@@ -164,7 +175,11 @@ void mlc::IniFile::add_strings_attribute(Key const& key, std::string_view descri
 
 void mlc::IniFile::add_int_attribute(Key const& key, std::string_view description, int preset, HandleInt handler) 
 {
-    (void)key; (void)description; (void)preset; (void)handler;
+    self->add_key(key, description, std::to_string(preset),
+        [handler](live_config::Key const& key, std::optional<std::string_view> val)
+        {
+            process_as<int>(handler, key, val);
+        });
 }
 
 void mlc::IniFile::add_ints_attribute(Key const& key, std::string_view description, std::span<int const> preset, HandleInts handler)
@@ -265,3 +280,13 @@ TEST_F(LiveConfigIniFile, a_bad_integer_value_is_handled_as_nullopt)
     ini_file.load_file(bad_istream, std::filesystem::path{});
 }
 
+TEST_F(LiveConfigIniFile, a_preset_integer_value_is_handled)
+{
+    mlc::Key const my_key{"my_scope", "thirteen"};
+
+    ini_file.add_int_attribute(my_key, "a scoped int", 13, [this](auto... args) { int_handler(args...); });
+
+    EXPECT_CALL(*this, int_handler(my_key, std::optional<int>{13}));
+
+    ini_file.load_file(istream, std::filesystem::path{});
+}
