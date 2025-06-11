@@ -199,6 +199,7 @@ global:
     mir::Server::stop*;
     mir::Server::supported_pixel_formats*;
     mir::Server::the_accessibility_manager*;
+    mir::Server::the_animation_driver*;
     mir::Server::the_application_not_responding_detector*;
     mir::Server::the_buffer_allocator*;
     mir::Server::the_composite_event_filter*;
