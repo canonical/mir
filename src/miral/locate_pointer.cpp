@@ -20,6 +20,7 @@
 #include "mir/events/keyboard_event.h"
 #include "mir/events/pointer_event.h"
 #include "mir/geometry/forward.h"
+#include "mir/graphics/animation_driver.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/input/composite_event_filter.h"
 #include "mir/input/event_filter.h"
@@ -27,16 +28,13 @@
 #include "mir/options/option.h"
 #include "mir/renderer/sw/pixel_source.h"
 #include "mir/scene/basic_surface.h"
-#include "mir/scene/null_surface_observer.h"
 #include "mir/scene/surface.h"
-#include "mir/scene/surface_observer.h"
 #include "mir/server.h"
 #include "mir/shell/surface_stack.h"
 #include "mir/synchronised.h"
 #include "mir/time/alarm.h"
-#include <iostream>
+
 #include <list>
-#include <thread>
 
 namespace ms = mir::scene;
 
@@ -84,7 +82,13 @@ struct miral::LocatePointer::Self
     };
 
     Self(bool enable_by_default) :
-        state{State{enable_by_default, std::make_shared<Self::PointerPositionRecorder>()}}
+        state{State{
+            enable_by_default,
+            std::make_shared<Self::PointerPositionRecorder>(),
+            [this](auto, auto)
+            {
+                this->observer->start_animation();
+            }}}
     {
     }
 
@@ -106,9 +110,13 @@ struct miral::LocatePointer::Self
 
     struct State
     {
-        State(bool enabled, std::shared_ptr<PointerPositionRecorder> const& position_recorder) :
+        State(
+            bool enabled,
+            std::shared_ptr<PointerPositionRecorder> const& position_recorder,
+            std::function<void(float, float)> on_locate_pointer) :
             enabled{enabled},
-            pointer_position_recorder{position_recorder}
+            pointer_position_recorder{position_recorder},
+            on_locate_pointer{on_locate_pointer}
         {
         }
 
@@ -116,14 +124,119 @@ struct miral::LocatePointer::Self
         std::shared_ptr<PointerPositionRecorder> const pointer_position_recorder;
 
         std::unique_ptr<mir::time::Alarm> locate_pointer_alarm;
-        std::function<void(float, float)> on_locate_pointer{[](auto, auto) {}};
+        std::function<void(float, float)> on_locate_pointer;
         std::function<void()> on_enabled{[] {}}, on_disabled{[] {}};
         std::chrono::milliseconds delay{500};
     };
 
+    struct CircleDrawingObserver : public mir::graphics::AnimationObserver
+    {
+        std::weak_ptr<mir::compositor::Stream> const stream;
+        std::shared_ptr<mir::graphics::Buffer> const buffer;
+        std::shared_ptr<mir::scene::BasicSurface> const shell_surface;
+        std::shared_ptr<mir::shell::SurfaceStack> const surface_stack;
+
+        struct State 
+        {
+            bool active{false};
+            float t{0};
+            uint32_t radius{0};
+        };
+
+        mir::Synchronised<State> state;
+
+        uint32_t const max_radius;
+        auto static constexpr animation_length = std::chrono::milliseconds{1500};
+
+        CircleDrawingObserver(
+            std::weak_ptr<mir::compositor::Stream> stream,
+            std::shared_ptr<mir::graphics::Buffer> buffer,
+            std::shared_ptr<mir::scene::BasicSurface> shell_surface,
+            std::shared_ptr<mir::shell::SurfaceStack> surface_stack) :
+            stream{std::move(stream)},
+            buffer{std::move(buffer)},
+            shell_surface{std::move(shell_surface)},
+            surface_stack{std::move(surface_stack)},
+            max_radius{static_cast<uint32_t>(
+                std::min(this->buffer->size().width.as_value(), this->buffer->size().height.as_value()) / 2)}
+        {
+        }
+
+        void on_vsync(std::chrono::milliseconds dt) override
+        {
+            auto s = state.lock();
+
+            // Don't submit any frames if we're not active
+            if(!s->active)
+                return;
+
+            if (s->t > 1.0f)
+            {
+                s->active = false;
+                surface_stack->remove_surface(shell_surface);
+                return;
+            }
+
+            draw_circle(0xAA, 0xAA, 0xAA, 0x99, s->radius);
+
+            // Force the maximum frametime to be 16ms. This is to account for
+            // when rendering idles (which would result in a huge dt)
+            s->t += static_cast<float>(std::clamp(dt.count(), 0l, 16l)) / animation_length.count();
+
+            // Sawtooth 3 times
+            s->radius = static_cast<uint32_t>((std::lerp(0u, max_radius * 3, s->t))) % max_radius;
+        }
+
+        void draw_circle(uint8_t r, uint8_t g, uint8_t b, uint8_t a, int radius)
+        {
+            auto w = std::dynamic_pointer_cast<mir::renderer::software::RWMappableBuffer>(buffer)->map_writeable();
+            auto const center = mir::geometry::Point{max_radius, max_radius};
+            for (size_t i = 0; i < w->len(); i += 4)
+            {
+                auto index = i / 4;
+                auto p = mir::geometry::Point{index % (2 * max_radius), index / (2 * max_radius)};
+                auto dist = (p - center).length_squared();
+
+                auto circle = [dist, radius](auto value)
+                {
+                    return dist < radius * radius ? value : 0;
+                };
+
+                w->data()[i + 0] = circle(r); // r
+                w->data()[i + 1] = circle(g); // g
+                w->data()[i + 2] = circle(b); // b
+                w->data()[i + 3] = circle(a);
+            }
+
+            if (auto const stream_ = stream.lock())
+                stream_->submit_buffer(buffer, buffer->size(), mir::geometry::RectangleD{{0, 0}, buffer->size()});
+        }
+
+        void start_animation()
+        {
+            auto s = state.lock();
+            s->t = 0;
+            s->radius = 0;
+
+            if (!s->active)
+            {
+                // Clear the buffer before adding it. Otherwise, it will
+                // momentarily show the last drawn into it.
+                {
+                    auto w =
+                        std::dynamic_pointer_cast<mir::renderer::software::RWMappableBuffer>(buffer)->map_writeable();
+                    std::memset(w->data(), 0, w->len());
+                }
+                surface_stack->add_surface(shell_surface, mir::input::InputReceptionMode::normal);
+            }
+
+            s->active = true;
+            draw_circle(0, 0, 0, 0, s->radius);
+        }
+    };
+
     mir::Synchronised<State> state;
-    std::shared_ptr<ms::SurfaceObserver> observer;
-    std::shared_ptr<ms::BasicSurface> shell_surface;
+    std::shared_ptr<CircleDrawingObserver> observer;
 };
 
 miral::LocatePointer::LocatePointer(bool enabled_by_default) :
@@ -133,109 +246,39 @@ miral::LocatePointer::LocatePointer(bool enabled_by_default) :
 
 void miral::LocatePointer::operator()(mir::Server& server)
 {
-    constexpr auto* enable_locate_pointer_opt = "enable-locate-pointer";
-    constexpr auto* locate_pointer_delay_opt = "locate-pointer-delay";
-
-    {
-        auto const state = self->state.lock();
-        server.add_configuration_option(enable_locate_pointer_opt, "Enable locate pointer", state->enabled);
-        server.add_configuration_option(
-            locate_pointer_delay_opt, "Locate pointer delay in milliseconds", static_cast<int>(state->delay.count()));
-    }
-
     server.add_init_callback(
         [this, &server]
         {
             self->on_server_init(server);
             {
-                auto buffer = server.the_buffer_allocator()->alloc_software_buffer(
-                    mir::geometry::Size(200, 200), mir_pixel_format_abgr_8888);
-
-                auto w = std::dynamic_pointer_cast<mir::renderer::software::RWMappableBuffer>(buffer)->map_writeable();
-                for (size_t i = 0; i < w->len(); i += 4)
-                {
-                    w->data()[i + 0] = 0xAA; // r
-                    w->data()[i + 1] = 0x00; // g
-                    w->data()[i + 2] = 0xAA; // b
-
-                    w->data()[i + 3] = 0xFF;
-                }
-
-                auto surface_stack = server.the_surface_stack();
+                auto const size = mir::geometry::Size(100, 100);
                 auto stream = std::make_shared<mir::compositor::Stream>();
 
                 auto shell_surface = std::make_shared<ms::BasicSurface>(
-                    "matt",
-                    mir::geometry::Rectangle{{0, 0}, buffer->size()},
+                    "locate-pointer-graphical-feedback",
+                    mir::geometry::Rectangle{{-size.width.as_int() / 2, -size.height.as_int() / 2}, size},
                     mir_pointer_unconfined,
                     std::list{ms::StreamInfo(stream, mir::geometry::Displacement(0, 0))},
                     server.the_default_cursor_image(),
                     server.the_scene_report(),
                     server.the_display_configuration_observer_registrar());
 
-                struct FooObserver : public ms::NullSurfaceObserver
-                {
-                    std::shared_ptr<mir::compositor::Stream> const stream;
-                    std::shared_ptr<mir::graphics::Buffer> const buffer;
-
-                    uint32_t b = 0;
-                    uint32_t radius = 0;
-                    uint32_t max_radius = 100;
-
-                    FooObserver(
-                        std::shared_ptr<mir::compositor::Stream> stream,
-                        std::shared_ptr<mir::graphics::Buffer> buffer) :
-                        stream{stream},
-                        buffer{buffer}
-                    {
-                    }
-
-                    void frame_posted(ms::Surface const*, mir::geometry::Rectangle const&) override
-                    {
-                        auto w = std::dynamic_pointer_cast<mir::renderer::software::RWMappableBuffer>(buffer)
-                                     ->map_writeable();
-                        auto const center = mir::geometry::Point{max_radius, max_radius};
-                        for (size_t i = 0; i < w->len(); i += 4)
-                        {
-                            auto index = i / 4;
-                            auto p = mir::geometry::Point{index % (2 * max_radius), index / (2 * max_radius)};
-                            auto dist = (p - center).length_squared();
-
-                            auto circle = [dist, this](auto value) { return dist < radius * radius? value: 0; };
-
-                            w->data()[i + 0] = circle(0xAA); // r
-                            w->data()[i + 1] = circle(0xAA); // g
-                            w->data()[i + 2] = circle(0xAA); // b
-                            w->data()[i + 3] = circle(0xFF);
-                        }
-
-                        stream->submit_buffer(
-                            buffer, buffer->size(), mir::geometry::RectangleD{{0, 0}, buffer->size()});
-
-                        radius = (radius + 1) % 100;
-                        b = (b + 1) % 255;
-                    }
-                };
-
-                auto observer = std::make_shared<FooObserver>(stream, buffer);
-                shell_surface->register_interest(observer);
-
-                stream->submit_buffer(buffer, buffer->size(), mir::geometry::RectangleD{{0, 0}, buffer->size()});
-                surface_stack->add_surface(shell_surface, mir::input::InputReceptionMode::normal);
-                shell_surface->set_alpha(0.99f);
-
-                self->observer = observer;
-                self->shell_surface = shell_surface;
+                auto buffer = server.the_buffer_allocator()->alloc_software_buffer(size, mir_pixel_format_abgr_8888);
+                self->observer = std::make_shared<Self::CircleDrawingObserver>(
+                    stream, buffer, shell_surface, server.the_surface_stack());
                 self->state.lock()->pointer_position_recorder->state.lock()->surface = shell_surface;
+
+                server.the_animation_driver()->register_interest(self->observer);
             }
 
-            auto const options = server.get_options();
-            delay(std::chrono::milliseconds{options->get<int>(locate_pointer_delay_opt)});
-            if (options->get<bool>(enable_locate_pointer_opt))
+            if (self->state.lock()->enabled)
                 enable();
             else
                 disable();
         });
+
+    // Free the observer to free the buffer it holds a reference to
+    server.add_stop_callback([this] { self->observer.reset(); });
 }
 
 miral::LocatePointer& miral::LocatePointer::delay(std::chrono::milliseconds delay)
@@ -246,7 +289,11 @@ miral::LocatePointer& miral::LocatePointer::delay(std::chrono::milliseconds dela
 
 miral::LocatePointer& miral::LocatePointer::on_locate_pointer(std::function<void(float x, float y)>&& on_locate_pointer)
 {
-    self->state.lock()->on_locate_pointer = std::move(on_locate_pointer);
+    self->state.lock()->on_locate_pointer = [on_locate_pointer = std::move(on_locate_pointer), this](auto x, auto y)
+    {
+        self->observer->start_animation();
+        on_locate_pointer(x, y);
+    };
     return *this;
 }
 
