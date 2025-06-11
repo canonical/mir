@@ -101,13 +101,39 @@ void process_as(std::function<void(mlc::Key const&, std::optional<Type>)> const&
 {
     if (val)
     {
-        Type parsed_val = 0;
+        Type parsed_val{};
 
         auto const [end, err] = std::from_chars(val->data(), val->data() + val->size(), parsed_val);
 
         if ((err == std::errc{}) && (end ==val->data() + val->size()))
         {
             handler(key, parsed_val);
+        }
+        else
+        {
+            mir::log_warning("Config key '%s' has invalid value: %s", key.to_string().c_str(), std::string(*val).c_str());
+            handler(key, std::nullopt);
+        }
+    }
+    else
+    {
+        handler(key, std::nullopt);
+    }
+}
+
+template<>
+void process_as<bool>(std::function<void(mlc::Key const&, std::optional<bool>)> const& handler, mlc::Key const& key, std::optional<std::string_view> val)
+{
+    puts(__PRETTY_FUNCTION__);
+    if (val)
+    {
+        if (*val == "true")
+        {
+            handler(key, true);
+        }
+        else if (*val == "false")
+        {
+            handler(key, false);
         }
         else
         {
@@ -145,7 +171,11 @@ void mlc::IniFile::add_ints_attribute(Key const& key, std::string_view descripti
 
 void mlc::IniFile::add_bool_attribute(Key const& key, std::string_view description, HandleBool handler)
 {
-    (void)key; (void)description; (void)handler;
+    self->add_key(key, description, std::nullopt,
+        [handler](live_config::Key const& key, std::optional<std::string_view> val)
+    {
+        process_as<bool>(handler, key, val);
+    });
 }
 
 void mlc::IniFile::add_bools_attribute(Key const& key, std::string_view description, HandleBools handler)
@@ -189,7 +219,11 @@ void mlc::IniFile::add_ints_attribute(Key const& key, std::string_view descripti
 
 void mlc::IniFile::add_bool_attribute(Key const& key, std::string_view description, bool preset, HandleBool handler)
 {
-    (void)key; (void)description; (void)preset; (void)handler;
+    self->add_key(key, description, (preset ? "true" : "false"),
+        [handler](live_config::Key const& key, std::optional<std::string_view> val)
+        {
+            process_as<bool>(handler, key, val);
+        });
 }
 
 void mlc::IniFile::add_bools_attribute(Key const& key, std::string_view description, std::span<bool const> preset, HandleBools handler)
@@ -240,12 +274,19 @@ struct LiveConfigIniFile : Test
     mlc::IniFile ini_file;
 
     MOCK_METHOD(void, int_handler, (mlc::Key const& key, std::optional<int> value));
+    MOCK_METHOD(void, bool_handler, (mlc::Key const& key, std::optional<bool> value));
 
     mlc::Key const a_key{"a_scope", "an_int"};
     mlc::Key const another_key{"another_scope", "an_int"};
+    mlc::Key const a_true_key{"a_scope", "a_bool"};
+    mlc::Key const a_false_key{"a_scope", "another_bool"};
+
     std::istringstream istream{
         a_key.to_string()+"=42\n" +
-        another_key.to_string()+"=64"};
+        another_key.to_string()+"=64\n" +
+        a_true_key.to_string()+"=true\n" +
+        a_false_key.to_string()+"=false\n"
+    };
 };
 
 TEST_F(LiveConfigIniFile, an_integer_value_is_handled)
@@ -287,6 +328,39 @@ TEST_F(LiveConfigIniFile, a_preset_integer_value_is_handled)
     ini_file.add_int_attribute(my_key, "a scoped int", 13, [this](auto... args) { int_handler(args...); });
 
     EXPECT_CALL(*this, int_handler(my_key, std::optional<int>{13}));
+
+    ini_file.load_file(istream, std::filesystem::path{});
+}
+
+TEST_F(LiveConfigIniFile, a_preset_integer_value_handles_value_from_file)
+{
+    ini_file.add_int_attribute(a_key, "a scoped int", 13, [this](auto... args) { int_handler(args...); });
+
+    EXPECT_CALL(*this, int_handler(a_key, std::optional<int>{42}));
+
+    ini_file.load_file(istream, std::filesystem::path{});
+}
+
+TEST_F(LiveConfigIniFile, a_bool_value_is_handled)
+{
+    mlc::Key const my_key{"foo"};
+    ini_file.add_bool_attribute(a_true_key, "a scoped bool", [this](auto... args) { bool_handler(args...); });
+    ini_file.add_bool_attribute(a_false_key, "a scoped bool", [this](auto... args) { bool_handler(args...); });
+
+    EXPECT_CALL(*this, bool_handler(a_true_key, std::optional<bool>{true}));
+    EXPECT_CALL(*this, bool_handler(a_false_key, std::optional<bool>{false}));
+
+    ini_file.load_file(istream, std::filesystem::path{});
+}
+
+TEST_F(LiveConfigIniFile, a_bool_preset_is_handled)
+{
+    mlc::Key const my_key{"foo"};
+    ini_file.add_bool_attribute(a_true_key, "a scoped bool", false, [this](auto... args) { bool_handler(args...); });
+    ini_file.add_bool_attribute(my_key, "a scoped bool", false, [this](auto... args) { bool_handler(args...); });
+
+    EXPECT_CALL(*this, bool_handler(a_true_key, std::optional<bool>{true}));
+    EXPECT_CALL(*this, bool_handler(my_key, std::optional<bool>{false}));
 
     ini_file.load_file(istream, std::filesystem::path{});
 }
