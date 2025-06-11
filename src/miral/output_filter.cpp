@@ -15,18 +15,22 @@
  */
 
 #include "miral/output_filter.h"
+#include "miral/live_config.h"
 
+#include "mir/graphics/output_filter.h"
+#include "mir/log.h"
 #include "mir/options/option.h"
 #include "mir/server.h"
-#include "mir/graphics/output_filter.h"
 
 #include <atomic>
+#include <format>
 #include <string>
 
 struct miral::OutputFilter::Self
 {
     Self(MirOutputFilter default_filter) :
-        filter_(default_filter)
+        default_filter{default_filter},
+        filter_{default_filter}
     {
     }
 
@@ -40,6 +44,7 @@ struct miral::OutputFilter::Self
         output_filter.lock()->filter(filter_);
     }
 
+    MirOutputFilter const default_filter;
     std::atomic<MirOutputFilter> filter_;
 
     // output_filter is only updated during the single-threaded initialization phase of startup
@@ -49,6 +54,37 @@ struct miral::OutputFilter::Self
 miral::OutputFilter::OutputFilter()
     : self{std::make_shared<Self>(mir_output_filter_none)}
 {
+}
+
+miral::OutputFilter::OutputFilter(live_config::Store& config_store) : OutputFilter{}
+{
+    config_store.add_string_attribute(
+        {"output_filter"},
+        "Output filter to use [{none,grayscale,invert}]",
+        [this](live_config::Key const& key, std::optional<std::string_view> val)
+        {
+            MirOutputFilter new_filter = self->default_filter;
+            if (val)
+            {
+                auto filter_name = *val;
+                if (filter_name == "grayscale")
+                {
+                    new_filter = mir_output_filter_grayscale;
+                }
+                else if (filter_name == "invert")
+                {
+                    new_filter = mir_output_filter_invert;
+                }
+                else
+                {
+                    mir::log_warning(
+                        "Config key '%s' has invalid integer value: %s",
+                        key.to_string().c_str(),
+                        std::format("{}",*val).c_str());
+                }
+            }
+            filter(new_filter);
+        });
 }
 
 miral::OutputFilter::OutputFilter(MirOutputFilter default_filter)
