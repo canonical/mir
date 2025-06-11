@@ -27,11 +27,13 @@
 #include "mir/test/current_thread_name.h"
 #include "mir/test/doubles/null_display.h"
 #include "mir/test/doubles/null_display_sink.h"
+#include "mir/test/doubles/mock_cursor.h"
 #include "mir/test/doubles/mock_display_sink.h"
 #include "mir/test/doubles/mock_compositor_report.h"
 #include "mir/test/doubles/mock_scene.h"
 #include "mir/test/doubles/stub_scene.h"
 #include "mir/test/doubles/stub_display.h"
+#include "mir/test/doubles/stub_renderable.h"
 #include "mir/test/doubles/null_display_buffer_compositor_factory.h"
 #include "mir/test/doubles/stub_cursor.h"
 
@@ -890,4 +892,45 @@ TEST(MultiThreadedCompositor, can_schedule_from_display_observer_when_removing_d
     mc::MultiThreadedCompositor compositor{
         display, db_compositor_factory, stub_scene, mock_display_listener, mock_report, stub_cursor, default_delay, true};
     compositor.start();
+}
+
+TEST(MultiThreadedCompositor, checks_if_cursor_needs_compositing)
+{
+    using namespace testing;
+    using namespace std::literals::chrono_literals;
+
+    unsigned int const nbuffers = 1;
+
+    auto display = std::make_shared<mtd::StubDisplay>(nbuffers);
+    auto scene = std::make_shared<StubScene>();
+    auto db_compositor_factory = std::make_shared<RecordingDisplayBufferCompositorFactory>();
+    auto const mock_cursor = std::make_shared<mtd::MockCursor>();
+    mc::MultiThreadedCompositor compositor{display, db_compositor_factory, scene, null_display_listener, null_report, mock_cursor, default_delay, true};
+
+    EXPECT_CALL(*mock_cursor, needs_compositing()).Times(1).WillOnce(Return(false));
+    compositor.start();
+    std::this_thread::sleep_for(100ms);
+
+    compositor.stop();
+}
+
+TEST(MultiThreadedCompositor, gets_renderable_if_cursor_needs_compositing)
+{
+    using namespace testing;
+    using namespace std::literals::chrono_literals;
+
+    unsigned int const nbuffers = 1;
+
+    auto display = std::make_shared<mtd::StubDisplay>(nbuffers);
+    auto scene = std::make_shared<StubScene>();
+    auto db_compositor_factory = std::make_shared<RecordingDisplayBufferCompositorFactory>();
+    auto const mock_cursor = std::make_shared<mtd::MockCursor>();
+    mc::MultiThreadedCompositor compositor{display, db_compositor_factory, scene, null_display_listener, null_report, mock_cursor, default_delay, true};
+
+    EXPECT_CALL(*mock_cursor, needs_compositing()).Times(1).WillOnce(Return(true));
+    EXPECT_CALL(*mock_cursor, renderable()).Times(1).WillOnce(Return(std::make_shared<mtd::StubRenderable>()));
+    compositor.start();
+    std::this_thread::sleep_for(100ms);
+
+    compositor.stop();
 }

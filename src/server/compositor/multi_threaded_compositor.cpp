@@ -31,6 +31,7 @@
 #include "mir/thread_name.h"
 #include "mir/executor.h"
 #include "mir/signal.h"
+#include "mir/log.h"
 
 #include <atomic>
 #include <thread>
@@ -182,8 +183,12 @@ public:
                     {
                         auto& compositor = std::get<1>(tuple);
                         auto scene_elements = scene->scene_elements_for(compositor.get());
-                        if (auto const cursor_renderable = cursor->renderable())
-                            scene_elements.push_back(std::make_shared<CursorSceneElement>(cursor_renderable));
+                        if (cursor->needs_compositing())
+                        {
+                            if (auto const cursor_renderable = cursor->renderable())
+                                scene_elements.push_back(std::make_shared<CursorSceneElement>(cursor_renderable));
+                        }
+
                         if (compositor->composite(std::move(scene_elements)))
                             needs_post = true;
                     }
@@ -249,7 +254,7 @@ public:
     void wait_until_stopped()
     {
         stop();
-        if (stopped_future.wait_for(10s) != std::future_status::ready)
+        if (stopped_future.wait_for(10h) != std::future_status::ready)
             BOOST_THROW_EXCEPTION(std::runtime_error("Compositor thread failed to stop"));
 
         stopped_future.get();

@@ -15,8 +15,10 @@
  */
 
 #include "miral/cursor_scale.h"
+#include "miral/live_config.h"
 
 #include "mir/options/option.h"
+#include "mir/log.h"
 #include "mir/server.h"
 #include "mir/shell/accessibility_manager.h"
 
@@ -26,6 +28,7 @@
 struct miral::CursorScale::Self
 {
     Self(float default_scale) :
+        default_scale{default_scale},
         scale_(default_scale)
     {
     }
@@ -40,6 +43,7 @@ struct miral::CursorScale::Self
         accessibility_manager.lock()->cursor_scale(scale_);
     }
 
+    float const default_scale;
     std::atomic<float> scale_;
 
     // accessibility_manager is only updated during the single-threaded initialization phase of startup
@@ -49,6 +53,33 @@ struct miral::CursorScale::Self
 miral::CursorScale::CursorScale()
     : self{std::make_shared<Self>(1.0)}
 {
+}
+
+miral::CursorScale::CursorScale(live_config::Store& config_store) : miral::CursorScale{}
+{
+    config_store.add_float_attribute(
+        {"cursor", "scale"},
+        "Cursor scale",
+       [this](live_config::Key const& key, std::optional<float> val)
+        {
+            if (val)
+            {
+                if (*val >= 0.0)
+                {
+                    scale(*val);
+                }
+                else
+                {
+                    mir::log_warning(
+                        "Config value %s does not support negative values. Ignoring the supplied value (%f)...",
+                        key.to_string().c_str(), *val);
+                }
+            }
+            else
+            {
+                scale(self->default_scale);
+            }
+        });
 }
 
 miral::CursorScale::CursorScale(float default_scale)
@@ -77,6 +108,6 @@ void miral::CursorScale::operator()(mir::Server& server) const
             self->accessibility_manager = server.the_accessibility_manager();
             auto const scale = options->get<double>(cursor_scale_opt);
 
-            self->scale(scale);
+            self->scale(static_cast<float>(scale));
         });
 }

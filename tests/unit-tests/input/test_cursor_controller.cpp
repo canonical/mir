@@ -22,12 +22,12 @@
 #include "mir/scene/observer.h"
 #include "mir/scene/surface_observer.h"
 #include "mir/graphics/cursor_image.h"
-#include "mir/graphics/cursor.h"
 
 #include "mir_toolkit/cursors.h"
 
 #include "mir/test/fake_shared.h"
 #include "mir/test/doubles/stub_surface.h"
+#include "mir/test/doubles/mock_cursor.h"
 #include "mir/test/doubles/mock_surface.h"
 #include "mir/test/doubles/stub_input_scene.h"
 
@@ -91,17 +91,6 @@ MATCHER_P(CursorNamed, name, "")
 {
     return cursor_is_named(arg, name);
 }
-
-struct MockCursor : public mg::Cursor
-{
-    MOCK_METHOD0(show, void());
-    MOCK_METHOD1(show, void(std::shared_ptr<mg::CursorImage> const&));
-    MOCK_METHOD0(hide, void());
-
-    MOCK_METHOD1(move_to, void(geom::Point));
-    MOCK_METHOD1(scale, void(float));
-    MOCK_METHOD0(renderable, std::shared_ptr<mg::Renderable>());
-};
 
 // TODO: This should only inherit from mi::Surface but to use the Scene observer we need an
 // ms::Surface base class.
@@ -269,7 +258,7 @@ struct TestCursorController : public testing::Test
     std::string const cursor_name_1 = "test-cursor-1";
     std::string const cursor_name_2 = "test-cursor-2";
 
-    MockCursor cursor;
+    mtd::MockCursor cursor;
     std::shared_ptr<mg::CursorImage> const default_cursor_image;
 
     geom::Point const initial_cursor_position{0, 0};
@@ -335,7 +324,7 @@ struct TestController : mi::CursorController
 {
     TestController(
         mi::Scene& targets,
-        MockCursor& cursor,
+        mtd::MockCursor& cursor,
         std::shared_ptr<mg::CursorImage> const& default_cursor_image) :
         CursorController(
             (EXPECT_CALL(cursor, hide()).Times(AnyNumber()), mt::fake_shared(targets)),
@@ -514,7 +503,7 @@ TEST_F(TestCursorController, zero_sized_image_hides_cursor)
 
 struct TestCursorControllerDragIcon : public TestCursorController
 {
-    NiceMock<MockCursor> cursor;
+    NiceMock<mtd::MockCursor> cursor;
     StubScene targets{};
     TestController controller{targets, cursor, default_cursor_image};
 };

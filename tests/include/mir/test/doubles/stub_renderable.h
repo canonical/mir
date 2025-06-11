@@ -88,6 +88,10 @@ public:
     {
         return trans;
     }
+    MirOrientation orientation() const override
+    {
+        return mir_orientation_normal;
+    }
     bool shaped() const override
     {
         return false;

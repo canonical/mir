@@ -15,15 +15,18 @@
  */
 
 #include "miral/input_configuration.h"
+#include "miral/live_config.h"
 
 #include "input_device_config.h"
+
+#include <mir/input/input_device_hub.h>
+#include <mir/log.h>
+#include <mir/server.h>
 #include "mir/shell/accessibility_manager.h"
 
-#include <memory>
-#include <mir/server.h>
-#include <mir/input/input_device_hub.h>
-
 #include <algorithm>
+#include <format>
+#include <memory>
 
 class miral::InputConfiguration::Mouse::Self : public MouseInputConfiguration
 {
@@ -91,6 +94,31 @@ public:
         }
         keyboard(k);
     }
+
+    struct Config
+    {
+        Config(Mouse mouse, Touchpad touchpad, Keyboard keyboard) :
+            mouse{mouse},
+            touchpad{touchpad},
+            keyboard{keyboard}
+        {}
+
+        std::mutex config_mutex;
+        Mouse mouse;
+        Touchpad touchpad;
+        Keyboard keyboard;
+    } config{mouse(), touchpad(), keyboard()};
+
+    void start_callback()
+    {
+        // Merge the any input options collected from the command line,
+        // environment, and default `.config` file with the options we
+        // read from the live configuration file.
+        std::lock_guard lock{config.config_mutex};
+        config.mouse.merge(mouse());
+        config.keyboard.merge(keyboard());
+        config.touchpad.merge(touchpad());
+    }
 };
 
 auto miral::InputConfiguration::Self::mouse() -> Mouse
@@ -151,6 +179,105 @@ miral::InputConfiguration::InputConfiguration() :
 {
 }
 
+miral::InputConfiguration::InputConfiguration(live_config::Store& config_store) : InputConfiguration{}
+{
+        config_store.add_string_attribute(
+            {"pointer", "handedness"},
+            "Pointer handedness [{right, left}]",
+                [this](live_config::Key const& key, std::optional<std::string_view> val)
+                {
+                    if (val)
+                    {
+                        std::lock_guard lock{self->config.config_mutex};
+                        auto const& value = *val;
+                        if (value == "right")
+                            self->config.mouse.handedness(mir_pointer_handedness_right);
+                        else if (value == "left")
+                            self->config.mouse.handedness(mir_pointer_handedness_left);
+                        else
+                            mir::log_warning(
+                                "Config key '%s' has invalid integer value: %s",
+                                key.to_string().c_str(),
+                                std::format("{}",*val).c_str());
+                    }
+                });
+
+        config_store.add_string_attribute(
+            {"touchpad", "scroll_mode"},
+            "Touchpad scroll mode [{none, two_finger_scroll, edge_scroll, button_down_scroll}]",
+            [this](live_config::Key const& key, std::optional<std::string_view> val)
+            {
+                if (val)
+                {
+                    std::lock_guard lock{self->config.config_mutex};
+                    auto const& value = *val;
+                    if (value == "none")
+                        self->config.touchpad.scroll_mode(mir_touchpad_scroll_mode_none);
+                    else if (value == "two_finger_scroll")
+                        self->config.touchpad.scroll_mode(mir_touchpad_scroll_mode_two_finger_scroll);
+                    else if (value == "edge_scroll")
+                        self->config.touchpad.scroll_mode(mir_touchpad_scroll_mode_edge_scroll);
+                    else if (value == "button_down_scroll")
+                        self->config.touchpad.scroll_mode(mir_touchpad_scroll_mode_button_down_scroll);
+                    else
+                        mir::log_warning(
+                            "Config key '%s' has invalid integer value: %s",
+                            key.to_string().c_str(),
+                            std::format("{}",*val).c_str());
+                }
+            });
+
+        config_store.add_int_attribute(
+            {"keyboard", "repeat_rate"},
+            "Keyboard repeat rate",
+            [this](live_config::Key const& key, std::optional<int> val)
+            {
+                if (val)
+                {
+                    if (val >= 0)
+                    {
+                        std::lock_guard lock{self->config.config_mutex};
+                        self->config.keyboard.set_repeat_rate(*val);
+                    }
+                    else
+                    {
+                        mir::log_warning(
+                            "Config value %s does not support negative values. Ignoring the supplied value (%d)...",
+                            key.to_string().c_str(), *val);
+                    }
+                }
+            });
+
+        config_store.add_int_attribute(
+            {"keyboard", "repeat_delay"},
+            "Keyboard repeat delay",
+            [this](live_config::Key const& key, std::optional<int> val)
+            {
+                if (val)
+                {
+                    if (val >= 0)
+                    {
+                        std::lock_guard lock{self->config.config_mutex};
+                        self->config.keyboard.set_repeat_delay(*val);
+                    }
+                    else
+                    {
+                        mir::log_warning(
+                            "Config value %s does not support negative values. Ignoring the supplied value (%d)...",
+                            key.to_string().c_str(), *val);
+                    }
+                }
+            });
+
+        config_store.on_done([this]
+            {
+                std::lock_guard lock{self->config.config_mutex};
+                mouse(self->config.mouse);
+                touchpad(self->config.touchpad);
+                keyboard(self->config.keyboard);
+            });
+}
+
 void miral::InputConfiguration::mouse(Mouse const& m)
 {
     self->apply(m);
@@ -165,6 +292,7 @@ void miral::InputConfiguration::operator()(mir::Server& server)
         self->input_device_hub = server.the_input_device_hub();
         self->input_device_config = InputDeviceConfig::the_input_configuration(server.get_options());
         self->accessibility_manager = server.the_accessibility_manager();
+        self->start_callback();
     });
 }
 

@@ -81,6 +81,8 @@ public:
 
     auto renderable() -> std::shared_ptr<Renderable> override;
 
+    auto needs_compositing() const -> bool override;
+
 private:
     enum ForceCursorState { UpdateState, ForceState };
     struct GBMBOWrapper;

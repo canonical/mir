@@ -736,8 +736,8 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
     std::shared_ptr<XWaylandClientManager::Session> local_client_session;
     std::shared_ptr<ms::Session> session;
     bool rejected = false;
-    reply_functions.push_back(connection->read_property(
-        window, connection->_NET_WM_PID,
+    reply_functions.push_back(connection->query_client_pid(
+        window,
         XCBConnection::Handler<uint32_t>{
             [&](uint32_t pid)
             {
@@ -751,7 +751,7 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
             },
             [&](std::string const&)
             {
-                log_warning("X11 app did not set _NET_WM_PID, grouping it under the default XWayland application");
+                log_warning("X11 app is not local, grouping it under the default XWayland application");
                 session = get_session(wl_surface->resource);
             }
         }));

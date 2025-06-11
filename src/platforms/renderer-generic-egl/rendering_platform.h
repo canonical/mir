@@ -72,6 +72,7 @@ private:
     EGLDisplayHandle dpy;
     std::unique_ptr<renderer::gl::Context> const ctx;
     std::shared_ptr<DMABufEGLProvider> const dmabuf_provider;
+    std::shared_ptr<common::EGLContextExecutor> const egl_delegate;
 };
 
 }
