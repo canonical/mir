@@ -210,10 +210,7 @@ int main(int argc, char const* argv[])
                                 .displacement_threshold(30)
                                 .hold_duration(std::chrono::milliseconds{2000});
 
-
-    auto locate_pointer = miral::LocatePointer{false}
-                              .on_locate_pointer([](auto, auto) { mir::log_info("Locate pointer!"); })
-                              .delay(std::chrono::milliseconds{1000});
+    auto locate_pointer = miral::LocatePointer{true}.delay(std::chrono::milliseconds{1000});
 
     auto const locate_pointer_filter = [&locate_pointer](auto const* event)
     {
