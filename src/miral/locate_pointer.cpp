@@ -19,6 +19,7 @@
 #include "mir/events/input_event.h"
 #include "mir/events/pointer_event.h"
 #include "mir/geometry/forward.h"
+#include "mir/graphics/animation_driver.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/input/composite_event_filter.h"
 #include "mir/input/event_filter.h"
@@ -121,8 +122,7 @@ struct miral::LocatePointer::Self
     };
 
     mir::Synchronised<State> state;
-    std::shared_ptr<ms::SurfaceObserver> observer;
-    std::shared_ptr<ms::BasicSurface> shell_surface;
+    std::shared_ptr<mir::graphics::AnimationObserver> observer;
 };
 
 miral::LocatePointer::LocatePointer(bool enabled_by_default) :
@@ -160,7 +160,6 @@ void miral::LocatePointer::operator()(mir::Server& server)
                     w->data()[i + 3] = 0xFF;
                 }
 
-                auto surface_stack = server.the_surface_stack();
                 auto stream = std::make_shared<mir::compositor::Stream>();
 
                 auto shell_surface = std::make_shared<ms::BasicSurface>(
@@ -172,10 +171,10 @@ void miral::LocatePointer::operator()(mir::Server& server)
                     server.the_scene_report(),
                     server.the_display_configuration_observer_registrar());
 
-                struct FooObserver : public ms::NullSurfaceObserver
+                struct FooObserver : public mir::graphics::AnimationObserver
                 {
-                    std::shared_ptr<mir::compositor::Stream> const stream;
                     std::shared_ptr<mir::graphics::Buffer> const buffer;
+                    std::shared_ptr<mir::compositor::Stream> const stream;
 
                     uint32_t b = 0;
                     uint32_t radius = 0;
@@ -184,12 +183,13 @@ void miral::LocatePointer::operator()(mir::Server& server)
                     FooObserver(
                         std::shared_ptr<mir::compositor::Stream> stream,
                         std::shared_ptr<mir::graphics::Buffer> buffer) :
-                        stream{stream},
-                        buffer{buffer}
+                        buffer{std::move(buffer)},
+                        stream{std::move(stream)}
                     {
+                        kickoff();
                     }
 
-                    void frame_posted(ms::Surface const*, mir::geometry::Rectangle const&) override
+                    void on_vsync(std::chrono::milliseconds) override
                     {
                         auto w = std::dynamic_pointer_cast<mir::renderer::software::RWMappableBuffer>(buffer)
                                      ->map_writeable();
@@ -205,7 +205,7 @@ void miral::LocatePointer::operator()(mir::Server& server)
                             w->data()[i + 0] = circle(0xAA); // r
                             w->data()[i + 1] = circle(0xAA); // g
                             w->data()[i + 2] = circle(0xAA); // b
-                            w->data()[i + 3] = circle(0xFF);
+                            w->data()[i + 3] = circle(0x99);
                         }
 
                         stream->submit_buffer(
@@ -214,17 +214,21 @@ void miral::LocatePointer::operator()(mir::Server& server)
                         radius = (radius + 1) % 100;
                         b = (b + 1) % 255;
                     }
+
+                    void kickoff() 
+                    {
+                        stream->submit_buffer(
+                            buffer, buffer->size(), mir::geometry::RectangleD{{0, 0}, buffer->size()});
+                    }
                 };
 
-                auto observer = std::make_shared<FooObserver>(stream, buffer);
-                shell_surface->register_interest(observer);
-
-                stream->submit_buffer(buffer, buffer->size(), mir::geometry::RectangleD{{0, 0}, buffer->size()});
-                surface_stack->add_surface(shell_surface, mir::input::InputReceptionMode::normal);
+                auto observer = std::make_shared<FooObserver>(std::move(stream), std::move(buffer));
+                shell_surface->set_input_region({});
+                server.the_surface_stack()->add_surface(shell_surface, mir::input::InputReceptionMode::normal);
+                server.the_animation_driver()->register_interest(observer);
                 shell_surface->set_alpha(0.99f);
 
                 self->observer = observer;
-                self->shell_surface = shell_surface;
                 self->state.lock()->pointer_position_recorder->state.lock()->surface = shell_surface;
             }
 
