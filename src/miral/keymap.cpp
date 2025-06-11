@@ -18,7 +18,6 @@
 
 #include <mir/fd.h>
 #include <mir/input/input_device_observer.h>
-#include "mir/input/null_input_device_observer.h"
 #include <mir/input/input_device_hub.h>
 #include <mir/input/device.h>
 #include <mir/options/option.h>
@@ -85,7 +84,7 @@ std::string keymap_default()
 char const* const keymap_option = "keymap";
 }
 
-struct miral::Keymap::Self : mir::input::NullInputDeviceObserver
+struct miral::Keymap::Self : mir::input::InputDeviceObserver
 {
     Self(std::string const& keymap) : layout{}, variant{}
     {
@@ -176,6 +175,10 @@ struct miral::Keymap::Self : mir::input::NullInputDeviceObserver
     {
         mir::log(mir::logging::Severity::warning, MIR_LOG_COMPONENT, std::current_exception(),
             "problem removing device (" + device->name() + ")");
+    }
+
+    void changes_complete() override
+    {
     }
 
     std::mutex mutable mutex;

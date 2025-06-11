@@ -29,7 +29,6 @@
 #include "mir/wayland/client.h"
 #include "mir/observer_registrar.h"
 #include "mir/input/input_device_observer.h"
-#include "mir/input/null_input_device_observer.h"
 #include "mir/input/input_device_hub.h"
 #include "mir/input/device.h"
 #include "mir/input/parameter_keymap.h"
@@ -86,7 +85,7 @@ private:
     std::unordered_map<mw::Client*, std::vector<T*>> listeners;
 };
 
-class mf::WlSeat::ConfigObserver : public mi::NullInputDeviceObserver
+class mf::WlSeat::ConfigObserver : public mi::InputDeviceObserver
 {
 public:
     ConfigObserver(
@@ -100,6 +99,7 @@ public:
 
     void device_added(std::shared_ptr<input::Device> const& device) override;
     void device_changed(std::shared_ptr<input::Device> const& device) override;
+    void device_removed(std::shared_ptr<input::Device> const& device) override;
     void changes_complete() override;
 
 private:
@@ -122,6 +122,10 @@ void mf::WlSeat::ConfigObserver::device_changed(std::shared_ptr<input::Device> c
     {
         pending_keymap = keyboard_config.value().device_keymap();
     }
+}
+
+void mf::WlSeat::ConfigObserver::device_removed(std::shared_ptr<input::Device> const& /*device*/)
+{
 }
 
 void mf::WlSeat::ConfigObserver::changes_complete()

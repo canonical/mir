@@ -404,11 +404,6 @@ global:
     mir::input::KeyboardObserver::?KeyboardObserver*;
     mir::input::KeyboardObserver::KeyboardObserver*;
     mir::input::KeyboardObserver::operator*;
-    mir::input::NullInputDeviceObserver::?NullInputDeviceObserver*;
-    mir::input::NullInputDeviceObserver::changes_complete*;
-    mir::input::NullInputDeviceObserver::device_added*;
-    mir::input::NullInputDeviceObserver::device_changed*;
-    mir::input::NullInputDeviceObserver::device_removed*;
     mir::input::Scene::?Scene*;
     mir::input::Scene::Scene*;
     mir::input::Scene::operator*;
@@ -988,11 +983,6 @@ global:
     non-virtual?thunk?to?mir::input::InputEventTransformer::xkb_modifiers*;
     non-virtual?thunk?to?mir::input::InputManager::?InputManager*;
     non-virtual?thunk?to?mir::input::KeyboardObserver::?KeyboardObserver*;
-    non-virtual?thunk?to?mir::input::NullInputDeviceObserver::?NullInputDeviceObserver*;
-    non-virtual?thunk?to?mir::input::NullInputDeviceObserver::changes_complete*;
-    non-virtual?thunk?to?mir::input::NullInputDeviceObserver::device_added*;
-    non-virtual?thunk?to?mir::input::NullInputDeviceObserver::device_changed*;
-    non-virtual?thunk?to?mir::input::NullInputDeviceObserver::device_removed*;
     non-virtual?thunk?to?mir::input::Scene::?Scene*;
     non-virtual?thunk?to?mir::input::Seat::?Seat*;
     non-virtual?thunk?to?mir::input::SeatObserver::?SeatObserver*;
@@ -1313,7 +1303,6 @@ global:
     typeinfo?for?mir::input::InputEventTransformer;
     typeinfo?for?mir::input::InputManager;
     typeinfo?for?mir::input::KeyboardObserver;
-    typeinfo?for?mir::input::NullInputDeviceObserver;
     typeinfo?for?mir::input::Scene;
     typeinfo?for?mir::input::Seat;
     typeinfo?for?mir::input::SeatObserver;
@@ -1523,7 +1512,6 @@ global:
     vtable?for?mir::input::InputEventTransformer;
     vtable?for?mir::input::InputManager;
     vtable?for?mir::input::KeyboardObserver;
-    vtable?for?mir::input::NullInputDeviceObserver;
     vtable?for?mir::input::Scene;
     vtable?for?mir::input::Seat;
     vtable?for?mir::input::SeatObserver;

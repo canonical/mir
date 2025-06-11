@@ -19,10 +19,10 @@
 #include "mir_test_framework/fake_input_device.h"
 
 #include "mir/test/signal_actions.h"
+#include "mir/test/null_input_device_observer.h"
 
 #include <mir/input/input_device_hub.h>
 #include <mir/input/input_device_observer.h>
-#include "mir/input/null_input_device_observer.h"
 #include <mir/raii.h>
 #include <mir/server.h>
 
