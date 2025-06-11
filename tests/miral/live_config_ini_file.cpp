@@ -184,7 +184,11 @@ void mlc::IniFile::add_bools_attribute(Key const& key, std::string_view descript
 
 void mlc::IniFile::add_float_attribute(Key const& key, std::string_view description, HandleFloat handler)
 {
-    (void)key; (void)description; (void)handler;
+    self->add_key(key, description, std::nullopt,
+        [handler](live_config::Key const& key, std::optional<std::string_view> val)
+    {
+        process_as<float>(handler, key, val);
+    });
 }
 
 void mlc::IniFile::add_floats_attribute(Key const& key, std::string_view description, HandleFloats handler)
@@ -232,7 +236,11 @@ void mlc::IniFile::add_bools_attribute(Key const& key, std::string_view descript
 
 void mlc::IniFile::add_float_attribute(Key const& key, std::string_view description, float preset, HandleFloat handler)
 {
-    (void)key; (void)description; (void)preset; (void)handler;
+    self->add_key(key, description, std::to_string(preset),
+        [handler](live_config::Key const& key, std::optional<std::string_view> val)
+    {
+        process_as<float>(handler, key, val);
+    });
 }
 
 void mlc::IniFile::add_floats_attribute(Key const& key, std::string_view description, std::span<float const> preset, HandleFloats handler)
@@ -274,6 +282,7 @@ struct LiveConfigIniFile : Test
 
     MOCK_METHOD(void, int_handler, (mlc::Key const& key, std::optional<int> value));
     MOCK_METHOD(void, bool_handler, (mlc::Key const& key, std::optional<bool> value));
+    MOCK_METHOD(void, float_handler, (mlc::Key const& key, std::optional<float> value));
     MOCK_METHOD(void, string_handler, (mlc::Key const& key, std::optional<std::string_view const> value));
 
     mlc::Key const a_key{"a_scope", "an_int"};
@@ -282,6 +291,8 @@ struct LiveConfigIniFile : Test
     mlc::Key const a_false_key{"a_scope", "another_bool"};
     mlc::Key const a_string_key{"a_string"};
     mlc::Key const another_string_key{"another_string"};
+    mlc::Key const a_real_key{"a_float"};
+    mlc::Key const another_real_key{"another_float"};
 
     std::istringstream istream{
         a_key.to_string()+"=42\n" +
@@ -289,7 +300,9 @@ struct LiveConfigIniFile : Test
         a_true_key.to_string()+"=true\n" +
         a_false_key.to_string()+"=false\n" +
         a_string_key.to_string()+"=foo\n" +
-        another_string_key.to_string()+"=bar baz\n"
+        another_string_key.to_string()+"=bar baz\n" +
+        a_real_key.to_string()+"=3.5\n" +
+        another_real_key.to_string()+"=1e2\n"
     };
 };
 
@@ -388,6 +401,29 @@ TEST_F(LiveConfigIniFile, a_string_preset_is_handled)
 
     EXPECT_CALL(*this, string_handler(a_string_key, std::optional<std::string_view const>{"foo"}));
     EXPECT_CALL(*this, string_handler(my_key, std::optional<std::string_view const>{"(none)"}));
+
+    ini_file.load_file(istream, std::filesystem::path{});
+}
+
+TEST_F(LiveConfigIniFile, a_float_value_is_handled)
+{
+    ini_file.add_float_attribute(a_real_key, "a float", [this](auto... args) { float_handler(args...); });
+    ini_file.add_float_attribute(another_real_key, "another float", [this](auto... args) { float_handler(args...); });
+
+    EXPECT_CALL(*this, float_handler(a_real_key, {3.5}));
+    EXPECT_CALL(*this, float_handler(another_real_key, {100.0}));
+
+    ini_file.load_file(istream, std::filesystem::path{});
+}
+
+TEST_F(LiveConfigIniFile, a_float_preset_is_handled)
+{
+    mlc::Key const my_key{"foo"};
+    ini_file.add_float_attribute(a_real_key, "a float", -7.0, [this](auto... args) { float_handler(args...); });
+    ini_file.add_float_attribute(my_key, "a scoped bool", 23.0, [this](auto... args) { float_handler(args...); });
+
+    EXPECT_CALL(*this, float_handler(a_real_key, {3.5}));
+    EXPECT_CALL(*this, float_handler(my_key, {23}));
 
     ini_file.load_file(istream, std::filesystem::path{});
 }
