@@ -167,6 +167,8 @@ void Printer::printhelp(BackgroundInfo const& region)
             "  o Switch workspace: Meta-Alt-[F1|F2|F3|F4]",
             "  o Switch workspace taking active window: Meta-Ctrl-[F1|F2|F3|F4]",
             "",
+            "  o Invert colors: Ctrl-I",
+            "",
             "  o To exit: Ctrl-Alt-BkSp",
         };
 

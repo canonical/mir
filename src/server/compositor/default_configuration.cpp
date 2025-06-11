@@ -53,9 +53,10 @@ mir::DefaultServerConfiguration::the_display_buffer_compositor_factory()
             {
                 BOOST_THROW_EXCEPTION((std::runtime_error{"Selected rendering platform does not support GL"}));
             }
+
             return wrap_display_buffer_compositor_factory(
                 std::make_shared<mc::DefaultDisplayBufferCompositorFactory>(
-                    std::move(providers), the_gl_config(), the_renderer_factory(), the_buffer_allocator(), the_compositor_report()));
+                    std::move(providers), the_gl_config(), the_renderer_factory(), the_buffer_allocator(), the_compositor_report(), the_output_filter()));
         });
 }
 
@@ -81,6 +82,7 @@ mir::DefaultServerConfiguration::the_compositor()
                 the_scene(),
                 the_shell(),
                 the_compositor_report(),
+                the_cursor(),
                 composite_delay,
                 true);
         });
@@ -123,7 +125,8 @@ auto mir::DefaultServerConfiguration::the_screen_shooter() -> std::shared_ptr<co
                     providers,
                     the_renderer_factory(),
                     the_buffer_allocator(),
-                    the_gl_config());
+                    the_gl_config(),
+                    the_output_filter());
             }
             catch (...)
             {
@@ -154,16 +157,16 @@ auto mir::DefaultServerConfiguration::the_screen_shooter_factory() -> std::share
             if (providers.empty())
             {
                 log_error("Failed to create screen shooter factory: No platform provides GL rendering support");
-                return std::make_shared<compositor::NullScreenShooterFactory>(thread_pool_executor);
+                return std::make_shared<compositor::NullScreenShooterFactory>();
             }
 
             return std::make_shared<compositor::BasicScreenShooterFactory>(
                 the_scene(),
                 the_clock(),
-                thread_pool_executor,
                 providers,
                 the_renderer_factory(),
                 the_buffer_allocator(),
-                the_gl_config());
+                the_gl_config(),
+                the_output_filter());
         });
 }

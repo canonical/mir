@@ -18,6 +18,10 @@ add_library(
   multiplexing_display.cpp
   multiplexing_hw_cursor.h
   multiplexing_hw_cursor.cpp
+  default_output_filter.h
+  default_output_filter.cpp
+  ${PROJECT_SOURCE_DIR}/src/include/server/mir/graphics/animation_driver.h
+  animation_driver.cpp
 )
 
 target_link_libraries(mirgraphics

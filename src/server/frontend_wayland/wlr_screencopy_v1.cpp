@@ -363,7 +363,7 @@ mf::WlrScreencopyManagerV1::WlrScreencopyManagerV1(
     wl_resource* resource,
     std::shared_ptr<WlrScreencopyV1Ctx> const& ctx)
     : wayland::WlrScreencopyManagerV1{resource, Version<3>()},
-      screen_shooter(ctx->screen_shooter_factory->create()),
+      screen_shooter(ctx->screen_shooter_factory->create(thread_pool_executor)),
       ctx{ctx},
       damage_tracker{*ctx->wayland_executor, *ctx->surface_stack}
 {

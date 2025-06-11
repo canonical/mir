@@ -19,12 +19,7 @@
 
 namespace mc = mir::compositor;
 
-mc::NullScreenShooterFactory::NullScreenShooterFactory(Executor& executor)
-    : executor(executor)
-{
-}
-
-auto mc::NullScreenShooterFactory::create() -> std::unique_ptr<ScreenShooter>
+auto mc::NullScreenShooterFactory::create(Executor& executor) -> std::unique_ptr<ScreenShooter>
 {
     return std::make_unique<NullScreenShooter>(executor);
 }

@@ -25,22 +25,22 @@ namespace mt = mir::time;
 mc::BasicScreenShooterFactory::BasicScreenShooterFactory(
     std::shared_ptr<Scene> const& scene,
     std::shared_ptr<mt::Clock> const& clock,
-    Executor& executor,
     std::vector<std::shared_ptr<mg::GLRenderingProvider>> const& providers,
     std::shared_ptr<mr::RendererFactory> const& render_factory,
     std::shared_ptr<mg::GraphicBufferAllocator> const& buffer_allocator,
-    std::shared_ptr<mg::GLConfig> const& config)
+    std::shared_ptr<mg::GLConfig> const& config,
+    std::shared_ptr<mg::OutputFilter> const& output_filter)
     : scene(scene),
       clock(clock),
-      executor(executor),
       providers(providers),
       renderer_factory(render_factory),
       buffer_allocator(buffer_allocator),
-      config(config)
+      config(config),
+      output_filter(output_filter)
 {}
 
-auto mc::BasicScreenShooterFactory::create() -> std::unique_ptr<ScreenShooter>
+auto mc::BasicScreenShooterFactory::create(Executor& executor) -> std::unique_ptr<ScreenShooter>
 {
     return std::make_unique<BasicScreenShooter>(
-        scene, clock, executor, providers, renderer_factory, buffer_allocator, config);
+        scene, clock, executor, providers, renderer_factory, buffer_allocator, config, output_filter);
 }

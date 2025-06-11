@@ -32,6 +32,7 @@
 #include "mir/test/doubles/stub_renderable.h"
 #include "mir/test/doubles/stub_gl_config.h"
 #include "mir/test/doubles/stub_buffer_allocator.h"
+#include "mir/test/doubles/stub_output_filter.h"
 
 #include <gtest/gtest.h>
 
@@ -100,7 +101,8 @@ struct BasicScreenShooter : Test
             gl_providers,
             renderer_factory,
             buffer_allocator,
-            std::make_shared<mtd::StubGLConfig>());
+            std::make_shared<mtd::StubGLConfig>(),
+            std::make_shared<mtd::StubOutputFilter>());
     }
 
     std::unique_ptr<mtd::MockRenderer> next_renderer{std::make_unique<testing::NiceMock<mtd::MockRenderer>>()};
@@ -244,7 +246,8 @@ TEST_F(BasicScreenShooter, ensures_renderer_is_current_on_only_one_thread)
         gl_providers,
         renderer_factory,
         buffer_allocator,
-        std::make_shared<mtd::StubGLConfig>());
+        std::make_shared<mtd::StubGLConfig>(),
+        std::make_shared<mtd::StubOutputFilter>());
 
     ON_CALL(*next_renderer, render(_))
         .WillByDefault(

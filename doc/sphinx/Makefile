@@ -19,8 +19,9 @@ DEPS	      = cmake doxygen libboost-dev libboost-iostreams-dev \
 		libboost-system-dev libdrm-dev libegl-dev libepoxy-dev \
 		libfreetype-dev libglib2.0-dev libgles2-mesa-dev \
 		libglm-dev libinput-dev liblttng-ust-dev libwayland-dev \
-		libxcb-composite0-dev libxcb-randr0-dev libxcursor-dev \
-		libxkbcommon-dev libxml++2.6-dev libyaml-cpp-dev xsltproc
+		libxcb-composite0-dev libxcb-randr0-dev libxcb-res0-dev \
+		libxcursor-dev libxkbcommon-dev libxml++2.6-dev \
+		libyaml-cpp-dev xsltproc
 
 # If the environment variable `GITHUB_WORKFLOW` is empty, then we're running
 # locally and shouldn't depend on `_build/index.html` to build HTML (so even if

@@ -18,7 +18,6 @@
 #include "mir/graphics/platform.h"
 #include "mir/graphics/display_sink.h"
 #include "mir/renderer/gl/gl_surface.h"
-#include "mir/test/doubles/stub_gl_rendering_provider.h"
 #include "src/server/compositor/basic_screen_shooter_factory.h"
 
 #include "mir/test/doubles/mock_scene.h"
@@ -28,8 +27,7 @@
 #include "mir/test/doubles/advanceable_clock.h"
 #include "mir/test/doubles/explicit_executor.h"
 #include "mir/test/doubles/stub_buffer.h"
-#include "mir/test/doubles/stub_scene_element.h"
-#include "mir/test/doubles/stub_renderable.h"
+#include "mir/test/doubles/stub_output_filter.h"
 #include "mir/test/doubles/stub_gl_config.h"
 #include "mir/test/doubles/stub_buffer_allocator.h"
 
@@ -55,11 +53,11 @@ public:
         factory = std::make_unique<mc::BasicScreenShooterFactory>(
             scene,
             clock,
-            executor,
             gl_providers,
             renderer_factory,
             buffer_allocator,
-            std::make_shared<mtd::StubGLConfig>());
+            std::make_shared<mtd::StubGLConfig>(),
+            std::make_shared<mtd::StubOutputFilter>());
     }
 
     std::shared_ptr<mtd::MockScene> scene{std::make_shared<NiceMock<mtd::MockScene>>()};
@@ -74,5 +72,5 @@ public:
 
 TEST_F(BasicScreenShooterFactoryTest, creates_basic_screen_shooter)
 {
-    EXPECT_THAT(factory->create(), NotNull());
+    EXPECT_THAT(factory->create(executor), NotNull());
 }

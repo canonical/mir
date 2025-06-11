@@ -21,6 +21,7 @@
 #include <miral/cursor_theme.h>
 #include <miral/display_configuration_option.h>
 #include <miral/input_configuration.h>
+#include <miral/live_config.h>
 #include <miral/minimal_window_manager.h>
 #include <miral/config_file.h>
 #include <miral/runner.h>
@@ -28,6 +29,7 @@
 #include <miral/wayland_extensions.h>
 #include <miral/x11_support.h>
 #include <miral/cursor_scale.h>
+#include <miral/output_filter.h>
 
 #include "mir/abnormal_exit.h"
 #include "mir/main_loop.h"
@@ -41,11 +43,13 @@
 #include <chrono>
 #include <cstdlib>
 #include <iostream>
+#include <list>
 #include <mutex>
 
 namespace mir { class AbnormalExit; }
 
 namespace me = mir::examples;
+namespace live_config = miral::live_config;
 
 ///\example server_example.cpp
 /// A simple server illustrating several customisations
@@ -116,54 +120,74 @@ catch (...)
 {
 }
 
-class DemoConfigFile
+// for illustrative purposes
+class DemoConfigFile : public live_config::Store
 {
 public:
     DemoConfigFile(miral::MirRunner& runner, std::filesystem::path file) :
-        config_file{
-            runner,
-            file,
-            miral::ConfigFile::Mode::reload_on_change,
-            [this](std::istream& istream, std::filesystem::path const& path) {loader(istream, path); }}
-    {
-        runner.add_start_callback([this]
+        init_part2{[&runner, file, this]
+        {
+            miral::ConfigFile temp
             {
-                std::lock_guard lock{config_mutex};
+                runner,
+                file,
+                miral::ConfigFile::Mode::reload_on_change,
+                [this](std::istream& istream, std::filesystem::path const& path) {loader(istream, path); }
+            };
 
-                // Merge the input options collected from the command line,
-                // environment, and default `.config` file with the options we
-                // read from the `.input` file.
-                //
-                // In this case, the `.input` file takes precedence. You can
-                // reverse the arguments to de-prioritize it.
-                mouse.merge(input_configuration.mouse());
-                keyboard.merge(input_configuration.keyboard());
-                touchpad.merge(input_configuration.touchpad());
-
-                apply_config();
-            });
-    }
-
-    void operator()(mir::Server& server)
+            std::lock_guard lock{config_mutex};
+            config_file = temp;
+        }}
     {
-        input_configuration(server);
-        cursor_scale(server);
     }
+
+    // Allows the configuration to be processed after the handlers are registered
+    void handle_initial_config() const
+    {
+        init_part2();
+    }
+
+    void add_int_attribute(live_config::Key const& key, std::string_view description, HandleInt handler) override;
+    void add_ints_attribute(live_config::Key const& key, std::string_view description, HandleInts handler) override;
+    void add_bool_attribute(live_config::Key const& key, std::string_view description, HandleBool handler) override;
+    void add_bools_attribute(live_config::Key const& key, std::string_view description, HandleBools handler) override;
+    void add_float_attribute(live_config::Key const& key, std::string_view description, HandleFloat handler) override;
+    void add_floats_attribute(live_config::Key const& key, std::string_view description, HandleFloats handler) override;
+    void add_string_attribute(live_config::Key const& key, std::string_view description, HandleString handler) override;
+    void add_strings_attribute(live_config::Key const& key, std::string_view description, HandleStrings handler) override;
+
+    void add_int_attribute(live_config::Key const& key, std::string_view description, int preset,
+        HandleInt handler) override;
+    void add_ints_attribute(live_config::Key const& key, std::string_view description, std::span<int const> preset,
+                            HandleInts handler) override;
+    void add_bool_attribute(live_config::Key const& key, std::string_view description, bool preset,
+        HandleBool handler) override;
+    void add_bools_attribute(live_config::Key const& key, std::string_view description, std::span<bool const> preset,
+                             HandleBools handler) override;
+    void add_float_attribute(live_config::Key const& key, std::string_view description, float preset,
+        HandleFloat handler) override;
+    void add_floats_attribute(live_config::Key const& key, std::string_view description, std::span<float const> preset,
+                              HandleFloats handler) override;
+    void add_string_attribute(live_config::Key const& key, std::string_view description, std::string_view preset,
+        HandleString handler) override;
+    void add_strings_attribute(live_config::Key const& key, std::string_view description,
+        std::span<std::string_view const> preset, HandleStrings handler) override;
+
+    void on_done(HandleDone handler) override;
 
 private:
-    miral::InputConfiguration input_configuration;
-    miral::InputConfiguration::Mouse mouse = input_configuration.mouse();
-    miral::InputConfiguration::Touchpad touchpad = input_configuration.touchpad();
-    miral::InputConfiguration::Keyboard keyboard = input_configuration.keyboard();
+
+    std::map<live_config::Key, HandleString> attribute_handlers;
+    std::list<HandleDone> done_handlers;
+
     std::mutex config_mutex;
-    miral::CursorScale cursor_scale;
-    miral::ConfigFile config_file;
+    std::optional<miral::ConfigFile> config_file;
+    std::function<void()> const init_part2;
 
     void apply_config()
     {
-        input_configuration.mouse(mouse);
-        input_configuration.touchpad(touchpad);
-        input_configuration.keyboard(keyboard);
+        for (auto const& handler : done_handlers)
+            handler();
     };
 
     void loader(std::istream& in, std::filesystem::path const& path)
@@ -176,73 +200,15 @@ private:
         {
             std::cout << line << std::endl;
 
-            if (line == "mir_pointer_handedness_right")
-                mouse.handedness(mir_pointer_handedness_right);
-            if (line == "mir_pointer_handedness_left")
-                mouse.handedness(mir_pointer_handedness_left);
-
-            if (line == "mir_touchpad_scroll_mode_none")
-                touchpad.scroll_mode(mir_touchpad_scroll_mode_none);
-            if (line == "mir_touchpad_scroll_mode_two_finger_scroll")
-                touchpad.scroll_mode(mir_touchpad_scroll_mode_two_finger_scroll);
-            if (line == "mir_touchpad_scroll_mode_edge_scroll")
-                touchpad.scroll_mode(mir_touchpad_scroll_mode_edge_scroll);
-            if (line == "mir_touchpad_scroll_mode_button_down_scroll")
-                touchpad.scroll_mode(mir_touchpad_scroll_mode_button_down_scroll);
-
             if (line.contains("="))
             {
                 auto const eq = line.find_first_of("=");
-                auto const key = line.substr(0, eq);
+                auto const key = live_config::Key{line.substr(0, eq)};
                 auto const value = line.substr(eq+1);
 
-                auto const parse_and_validate_int = [](std::string const& key, std::string_view val) -> std::optional<int>
+                if (auto const handler = attribute_handlers.find(key); handler != attribute_handlers.end())
                 {
-                    auto const int_val = std::atoi(val.data());
-                    if (int_val < 0)
-                    {
-                        mir::log_warning(
-                            "Config value %s does not support negative values. Ignoring the supplied value (%d)...",
-                            key.c_str(), int_val);
-                        return std::nullopt;
-                    }
-
-                    return int_val;
-                };
-
-                auto const parse_and_validate_float = [](std::string const& key, std::string_view val) -> std::optional<float>
-                {
-                    auto const float_val = std::atof(val.data());
-                    if (float_val < 0)
-                    {
-                        mir::log_warning(
-                            "Config value %s does not support negative values. Ignoring the supplied value (%f)...",
-                            key.c_str(),
-                            float_val);
-                        return std::nullopt;
-                    }
-
-                    return float_val;
-                };
-                if (key == "repeat_rate")
-                {
-                    auto const parsed = parse_and_validate_int(key, value);
-                    if (parsed)
-                        keyboard.set_repeat_rate(*parsed);
-                }
-
-                if (key == "repeat_delay")
-                {
-                    auto const parsed = parse_and_validate_int(key, value);
-                    if (parsed)
-                        keyboard.set_repeat_delay(*parsed);
-                }
-
-                if(key == "cursor_scale")
-                {
-                    auto const parsed = parse_and_validate_float(key, value);
-                    if(parsed)
-                        cursor_scale.scale(*parsed);
+                    handler->second(handler->first, value);
                 }
             }
         }
@@ -250,6 +216,188 @@ private:
         apply_config();
     }
 };
+
+void DemoConfigFile::add_ints_attribute(live_config::Key const& key, std::string_view, HandleInts handler)
+{
+    // Not implemented: not needed for discussion
+    (void)handler; (void)key;
+}
+
+void DemoConfigFile::add_bools_attribute(live_config::Key const& key, std::string_view, HandleBools handler)
+{
+    // Not implemented: not needed for discussion
+    (void)handler; (void)key;
+}
+
+void DemoConfigFile::add_floats_attribute(live_config::Key const& key, std::string_view, HandleFloats handler)
+{
+    // Not implemented: not needed for discussion
+    (void)handler; (void)key;
+}
+
+void DemoConfigFile::add_strings_attribute(live_config::Key const& key, std::string_view, HandleStrings handler)
+{
+    // Not implemented: not needed for discussion
+    (void)handler; (void)key;
+}
+
+void DemoConfigFile::add_int_attribute(live_config::Key const& key, std::string_view description, int preset,
+    HandleInt handler)
+{
+    // Not implemented: not needed for discussion
+    (void)handler; (void)description; (void)key; (void)preset;
+}
+
+void DemoConfigFile::add_ints_attribute(live_config::Key const& key, std::string_view description,
+                                        std::span<int const> preset, HandleInts handler)
+{
+    // Not implemented: not needed for discussion
+    (void)handler; (void)description; (void)key; (void)preset;
+}
+
+void DemoConfigFile::add_bool_attribute(live_config::Key const& key, std::string_view description, bool preset,
+    HandleBool handler)
+{
+    // Not implemented: not needed for discussion
+    (void)handler; (void)description; (void)key; (void)preset;
+}
+
+void DemoConfigFile::add_bools_attribute(live_config::Key const& key, std::string_view description,
+                                         std::span<bool const> preset, HandleBools handler)
+{
+    // Not implemented: not needed for discussion
+    (void)handler; (void)description; (void)key; (void)preset;
+}
+
+void DemoConfigFile::add_float_attribute(live_config::Key const& key, std::string_view description, float preset,
+    HandleFloat handler)
+{
+    // Not implemented: not needed for discussion
+    (void)handler; (void)description; (void)key; (void)preset;
+}
+
+void DemoConfigFile::add_floats_attribute(live_config::Key const& key, std::string_view description,
+                                          std::span<float const> preset, HandleFloats handler)
+{
+    // Not implemented: not needed for discussion
+    (void)handler; (void)description; (void)key; (void)preset;
+}
+
+void DemoConfigFile::add_string_attribute(live_config::Key const& key, std::string_view description,
+    std::string_view preset, HandleString handler)
+{
+    // Not implemented: not needed for discussion
+    (void)handler; (void)description; (void)key; (void)preset;
+}
+
+void DemoConfigFile::add_strings_attribute(live_config::Key const& key, std::string_view description,
+    std::span<std::string_view const> preset, HandleStrings handler)
+{
+    // Not implemented: not needed for discussion
+    (void)handler; (void)description; (void)key; (void)preset;
+}
+
+void DemoConfigFile::on_done(HandleDone handler)
+{
+    std::lock_guard lock{config_mutex};
+    done_handlers.emplace_back(std::move(handler));
+}
+
+void DemoConfigFile::add_int_attribute(live_config::Key const& key, std::string_view description, HandleInt handler)
+{
+    add_string_attribute(key, description, [handler](live_config::Key const& key, std::optional<std::string_view> val)
+    {
+        if (val)
+        {
+            int parsed_val = 0;
+
+            auto const [_, err] = std::from_chars(val->data(), val->data() + val->size(), parsed_val);
+
+            if (err == std::errc{})
+            {
+                handler(key, parsed_val);
+            }
+            else
+            {
+                mir::log_warning(
+                    "Config key '%s' has invalid integer value: %s",
+                    key.to_string().c_str(),
+                    std::format("{}",*val).c_str());
+                handler(key, std::nullopt);
+            }
+        }
+        else
+        {
+            handler(key, std::nullopt);
+        }
+    });
+}
+
+void DemoConfigFile::add_bool_attribute(live_config::Key const& key, std::string_view description, HandleBool handler)
+{
+    add_string_attribute(key, description, [handler](live_config::Key const& key, std::optional<std::string_view> val)
+    {
+        if (val)
+        {
+            if (*val == "true")
+            {
+                handler(key, true);
+            }
+            else if (*val == "false")
+            {
+                handler(key, false);
+            }
+            else
+            {
+                mir::log_warning(
+                    "Config key '%s' has invalid integer value: %s",
+                    key.to_string().c_str(),
+                    std::format("{}",*val).c_str());
+                handler(key, std::nullopt);
+            }
+        }
+        else
+        {
+            handler(key, std::nullopt);
+        }
+    });
+}
+
+void DemoConfigFile::add_float_attribute(live_config::Key const& key, std::string_view description, HandleFloat handler)
+{
+    add_string_attribute(key, description, [handler](live_config::Key const& key, std::optional<std::string_view> val)
+    {
+        if (val)
+        {
+            float parsed_val = 0;
+
+            auto const [_, err] = std::from_chars(val->data(), val->data() + val->size(), parsed_val);
+
+            if (err == std::errc{})
+            {
+                handler(key, parsed_val);
+            }
+            else
+            {
+                mir::log_warning(
+                    "Config key '%s' has invalid integer value: %s",
+                    key.to_string().c_str(),
+                    std::format("{}",*val).c_str());
+                handler(key, std::nullopt);
+            }
+        }
+        else
+        {
+            handler(key, std::nullopt);
+        }
+    });
+}
+
+void DemoConfigFile::add_string_attribute(live_config::Key const& key, std::string_view, HandleString handler)
+{
+    std::lock_guard lock{config_mutex};
+    attribute_handlers[key] = handler;
+}
 }
 
 int main(int argc, char const* argv[])
@@ -259,6 +407,11 @@ try
 
     DemoConfigFile demo_configuration{runner, "mir_demo_server.live-config"};
     runner.set_exception_handler(exception_handler);
+
+    miral::CursorScale cursor_scale{demo_configuration};
+    miral::OutputFilter output_filter{demo_configuration};
+    miral::InputConfiguration input_configuration{demo_configuration};
+    demo_configuration.handle_initial_config();
 
     std::function<void()> shutdown_hook{[]{}};
     runner.add_stop_callback([&] { shutdown_hook(); });
@@ -281,7 +434,9 @@ try
         miral::CursorTheme{"default:DMZ-White"},
         input_filters,
         test_runner,
-        std::ref(demo_configuration),
+        output_filter,
+        input_configuration,
+        cursor_scale,
     });
 
     // Propagate any test failure

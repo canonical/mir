@@ -50,6 +50,10 @@ public:
 
     void scale(float) override;
 
+    auto renderable() -> std::shared_ptr<graphics::Renderable> override;
+
+    auto needs_compositing() const -> bool override;
+
 private:
     wl_shm* const shm;
     std::function<void()> const flush_wl;

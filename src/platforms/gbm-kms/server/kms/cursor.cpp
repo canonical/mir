@@ -452,3 +452,14 @@ void mir::graphics::gbm::Cursor::scale(float new_scale)
 
     show(current_cursor_image);
 }
+
+auto mir::graphics::gbm::Cursor::renderable() -> std::shared_ptr<Renderable>
+{
+    return nullptr;
+}
+
+auto mir::graphics::gbm::Cursor::needs_compositing() const -> bool
+{
+    return false;
+}
+

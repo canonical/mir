@@ -74,6 +74,7 @@ target_link_libraries(miral-test-internal
 mir_add_wrapped_executable(miral-test NOINSTALL
     external_client.cpp
     config_file.cpp
+    live_config.cpp
     runner.cpp
     wayland_extensions.cpp
     zone.cpp

@@ -38,6 +38,7 @@
 #include "mir/graphics/egl_error.h"
 #include "cpu_copy_output_surface.h"
 #include "surfaceless_egl_context.h"
+#include "mir/graphics/drm_syncobj.h"
 
 #include <boost/throw_exception.hpp>
 #include <boost/exception/errinfo_errno.hpp>
@@ -47,6 +48,7 @@
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 
+#include <memory>
 #include <optional>
 #include <stdexcept>
 #include <cassert>
@@ -85,7 +87,7 @@ std::shared_ptr<mg::Buffer> mgg::BufferAllocator::alloc_software_buffer(
                 "Trying to create SHM buffer with unsupported pixel format"));
     }
 
-    return std::make_shared<mgc::MemoryBackedShmBuffer>(size, format, egl_delegate);
+    return std::make_shared<mgc::MemoryBackedShmBuffer>(size, format);
 }
 
 std::vector<MirPixelFormat> mgg::BufferAllocator::supported_pixel_formats()
@@ -204,7 +206,6 @@ auto mgg::BufferAllocator::buffer_from_shm(
 {
     return std::make_shared<mgc::NotifyingMappableBackedShmBuffer>(
         std::move(data),
-        egl_delegate,
         std::move(on_consumed),
         std::move(on_release));
 }
@@ -220,6 +221,10 @@ auto mgg::GLRenderingProvider::as_texture(std::shared_ptr<Buffer> buffer) -> std
     if (auto dmabuf_texture = dmabuf_provider->as_texture(native_buffer))
     {
         return dmabuf_texture;
+    }
+    else if (auto shm = std::dynamic_pointer_cast<mgc::ShmBuffer>(native_buffer))
+    {
+        return shm->texture_for_provider(egl_delegate, this);
     }
     else if (auto tex = std::dynamic_pointer_cast<gl::Texture>(native_buffer))
     {
@@ -531,9 +536,50 @@ auto mgg::GLRenderingProvider::surface_for_sink(
         config);
 }
 
-auto mgg::GLRenderingProvider::make_framebuffer_provider(DisplaySink& /*sink*/)
+auto mgg::GLRenderingProvider::import_syncobj(Fd const& syncobj_fd)
+    -> std::unique_ptr<drm::Syncobj>
+{
+    uint32_t handle;
+    if (auto err = drmSyncobjFDToHandle(drm_fd, syncobj_fd, &handle))
+    {
+        BOOST_THROW_EXCEPTION((
+            std::system_error{
+                -err,
+                std::system_category(),
+                "Failed to import DRM syncobj"}));
+    }
+    return std::make_unique<drm::Syncobj>(drm_fd, handle);
+}
+
+auto mgg::GLRenderingProvider::make_framebuffer_provider(DisplaySink& sink)
     -> std::unique_ptr<FramebufferProvider>
 {
+    if(auto* allocator = sink.acquire_compatible_allocator<DmaBufDisplayAllocator>())
+    {
+        struct FooFramebufferProvider: public FramebufferProvider
+        {
+        public:
+            FooFramebufferProvider(DmaBufDisplayAllocator* allocator) : allocator{allocator}
+            {
+            }
+
+            auto buffer_to_framebuffer(std::shared_ptr<Buffer> buffer) -> std::unique_ptr<Framebuffer> override
+            {
+                if(auto dma_buf = std::dynamic_pointer_cast<mir::graphics::DMABufBuffer>(buffer))
+                {
+                    return allocator->framebuffer_for(dma_buf);
+                }
+
+                return {};
+            }
+
+        private:
+            DmaBufDisplayAllocator* allocator;
+        };
+
+        return std::make_unique<FooFramebufferProvider>(allocator);
+    }
+
     // TODO: Make this not a null implementation, so bypass/overlays can work again
     class NullFramebufferProvider : public FramebufferProvider
     {
@@ -549,12 +595,14 @@ auto mgg::GLRenderingProvider::make_framebuffer_provider(DisplaySink& /*sink*/)
 }
 
 mgg::GLRenderingProvider::GLRenderingProvider(
+    Fd drm_fd,
     std::shared_ptr<mg::GBMDisplayProvider> associated_display,
     std::shared_ptr<mgc::EGLContextExecutor> egl_delegate,
     std::shared_ptr<mg::DMABufEGLProvider> dmabuf_provider,
     EGLDisplay dpy,
     EGLContext ctx)
-    : bound_display{std::move(associated_display)},
+    : drm_fd{std::move(drm_fd)},
+      bound_display{std::move(associated_display)},
       dpy{dpy},
       ctx{ctx},
       dmabuf_provider{std::move(dmabuf_provider)},

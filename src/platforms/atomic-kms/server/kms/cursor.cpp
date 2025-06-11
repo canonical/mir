@@ -452,3 +452,13 @@ void mir::graphics::atomic::Cursor::scale(float new_scale)
 
     show(current_cursor_image);
 }
+
+auto mir::graphics::atomic::Cursor::renderable() -> std::shared_ptr<Renderable>
+{
+    return nullptr;
+}
+
+auto mir::graphics::atomic::Cursor::needs_compositing() const -> bool
+{
+    return false;
+}

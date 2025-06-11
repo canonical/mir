@@ -31,6 +31,9 @@ HIDDEN_SYMBOLS = {
     "miral::WaylandExtensions::Context::Context*;",
     "vtable?for?miral::WaylandExtensions::Context;",
     "mir::DefaultServerConfiguration::pointer_input_dispatcher*;",
+    "miral::CursorScale::CursorScale*;",
+    "miral::InputConfiguration::InputConfiguration*;",
+    "miral::OutputFilter::OutputFilter*;",
 }
 
 class HeaderDirectory(TypedDict):

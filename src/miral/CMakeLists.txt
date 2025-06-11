@@ -90,6 +90,9 @@ add_library(miral-external OBJECT
     decorations.cpp                     ${miral_include}/miral/decorations.h
     cursor_scale.cpp                    ${miral_include}/miral/cursor_scale.h
     mousekeys_config.cpp                ${miral_include}/miral/mousekeys_config.h
+    output_filter.cpp                   ${miral_include}/miral/output_filter.h
+    simulated_secondary_click.cpp       ${miral_include}/miral/simulated_secondary_click.h
+    live_config.cpp                     ${miral_include}/miral/live_config.h
     locate_pointer.cpp                  ${miral_include}/miral/locate_pointer.h
 )
 

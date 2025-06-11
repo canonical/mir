@@ -19,24 +19,33 @@
 #include "mir/compositor/compositor_report.h"
 #include "mir/compositor/scene.h"
 #include "mir/compositor/scene_element.h"
+#include "mir/graphics/dmabuf_buffer.h"
 #include "mir/graphics/renderable.h"
 #include "mir/graphics/display_sink.h"
 #include "mir/graphics/buffer.h"
+#include "mir/graphics/output_filter.h"
 #include "mir/graphics/platform.h"
 #include "mir/compositor/buffer_stream.h"
 #include "mir/renderer/renderer.h"
 #include "occlusion.h"
+#include <memory>
+
+#define MIR_LOG_COMPONENT "compositor"
+#include "mir/log.h"
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
+
 
 mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
     mg::DisplaySink& display_sink,
     graphics::GLRenderingProvider& gl_provider,
     std::shared_ptr<mir::renderer::Renderer> const& renderer,
+    std::shared_ptr<mir::graphics::OutputFilter> const& output_filter,
     std::shared_ptr<CompositorReport> const& report) :
     display_sink(display_sink),
     renderer(renderer),
+    output_filter(output_filter),
     fb_adaptor{gl_provider.make_framebuffer_provider(display_sink)},
     report(report)
 {
@@ -117,6 +126,7 @@ bool mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
     {
         renderer->set_output_transform(display_sink.transformation());
         renderer->set_viewport(view_area);
+        renderer->set_output_filter(output_filter->filter());
 
         display_sink.set_next_image(renderer->render(renderable_list));
 

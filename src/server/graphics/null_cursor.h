@@ -31,6 +31,8 @@ public:
     void hide() override {}
     void move_to(geometry::Point) override {}
     void scale(float) override {}
+    auto renderable() -> std::shared_ptr<Renderable> override { return nullptr; }
+    auto needs_compositing() const -> bool override { return false; }
 };
 
 }

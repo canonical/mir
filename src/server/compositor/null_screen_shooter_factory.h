@@ -28,11 +28,7 @@ namespace compositor
 class NullScreenShooterFactory : public ScreenShooterFactory
 {
 public:
-    explicit NullScreenShooterFactory(Executor& executor);
-    auto create() -> std::unique_ptr<ScreenShooter> override;
-
-private:
-    Executor& executor;
+    auto create(Executor& executor) -> std::unique_ptr<ScreenShooter> override;
 };
 }
 }

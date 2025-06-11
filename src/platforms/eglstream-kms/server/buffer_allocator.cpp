@@ -83,7 +83,7 @@ std::shared_ptr<mg::Buffer> mge::BufferAllocator::alloc_software_buffer(geom::Si
                 "Trying to create SHM buffer with unsupported pixel format"));
     }
 
-    return std::make_shared<mgc::MemoryBackedShmBuffer>(size, format, egl_delegate);
+    return std::make_shared<mgc::MemoryBackedShmBuffer>(size, format);
 }
 
 std::vector<MirPixelFormat> mge::BufferAllocator::supported_pixel_formats()
@@ -550,7 +550,6 @@ auto mge::BufferAllocator::buffer_from_shm(
 {
     return std::make_shared<mgc::NotifyingMappableBackedShmBuffer>(
         std::move(data),
-        egl_delegate,
         std::move(on_consumed),
         std::move(on_release));
 }

@@ -104,6 +104,8 @@ class GraphicBufferAllocator;
 class Cursor;
 class CursorImage;
 class GLConfig;
+class OutputFilter;
+class AnimationDriver;
 }
 namespace input
 {
@@ -229,12 +231,14 @@ public:
      * dependencies of graphics on the rest of the Mir
      *  @{ */
     virtual std::shared_ptr<graphics::DisplayReport> the_display_report();
+    virtual std::shared_ptr<graphics::AnimationDriver> the_animation_driver();
     virtual std::shared_ptr<graphics::Cursor> the_cursor();
     virtual std::shared_ptr<graphics::Cursor> wrap_cursor(std::shared_ptr<graphics::Cursor> const& wrapped);
     virtual std::shared_ptr<graphics::CursorImage> the_default_cursor_image();
     virtual std::shared_ptr<input::CursorImages> the_cursor_images();
     std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>>
         the_display_configuration_observer_registrar();
+    virtual std::shared_ptr<graphics::OutputFilter> the_output_filter();
 
     /** @} */
 
@@ -400,6 +404,7 @@ protected:
     CachedPtr<graphics::Cursor>       cursor;
     CachedPtr<graphics::CursorImage>  default_cursor_image;
     CachedPtr<input::CursorImages> cursor_images;
+    CachedPtr<graphics::OutputFilter> output_filter;
 
     CachedPtr<frontend::SessionAuthorizer> session_authorizer;
     CachedPtr<renderer::RendererFactory> renderer_factory;
@@ -424,6 +429,7 @@ protected:
     CachedPtr<compositor::ScreenShooterFactory> screen_shooter_factory;
     CachedPtr<logging::Logger> logger;
     CachedPtr<graphics::DisplayReport> display_report;
+    CachedPtr<graphics::AnimationDriver> animation_driver;
     CachedPtr<time::Clock> clock;
     CachedPtr<MainLoop> main_loop;
     CachedPtr<ServerStatusListener> server_status_listener;

@@ -27,6 +27,7 @@
 #include "mir/renderer/renderer_factory.h"
 #include "mir/renderer/sw/pixel_source.h"
 #include "mir/graphics/display_sink.h"
+#include "mir/graphics/output_filter.h"
 
 namespace mc = mir::compositor;
 namespace mr = mir::renderer;
@@ -156,14 +157,16 @@ mc::BasicScreenShooter::Self::Self(
     std::shared_ptr<time::Clock> const& clock,
     std::shared_ptr<mg::GLRenderingProvider> render_provider,
     std::shared_ptr<mr::RendererFactory> renderer_factory,
-    std::shared_ptr<mir::graphics::GLConfig> const& config)
+    std::shared_ptr<mir::graphics::GLConfig> const& config,
+    std::shared_ptr<graphics::OutputFilter> const& output_filter)
     : scene{scene},
       clock{clock},
       render_provider{std::move(render_provider)},
       renderer_factory{std::move(renderer_factory)},
       last_rendered_size{0, 0},
       output{std::make_shared<OneShotBufferDisplayProvider>()},
-      config{config}
+      config{config},
+      output_filter{output_filter}
 {
 }
 
@@ -185,6 +188,7 @@ auto mc::BasicScreenShooter::Self::render(
 
     auto& renderer = renderer_for_buffer(buffer);
     renderer.set_viewport(area);
+    renderer.set_output_filter(output_filter->filter());
     /* We don't need the result of this `render` call, as we know it's
      * going into the buffer we just set
      */
@@ -257,8 +261,9 @@ mc::BasicScreenShooter::BasicScreenShooter(
     std::span<std::shared_ptr<mg::GLRenderingProvider>> const& providers,
     std::shared_ptr<mr::RendererFactory> render_factory,
     std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
-    std::shared_ptr<mir::graphics::GLConfig> const& config)
-    : self{std::make_shared<Self>(scene, clock, select_provider(providers, buffer_allocator), std::move(render_factory), config)},
+    std::shared_ptr<mir::graphics::GLConfig> const& config,
+    std::shared_ptr<graphics::OutputFilter> const& output_filter)
+    : self{std::make_shared<Self>(scene, clock, select_provider(providers, buffer_allocator), std::move(render_factory), config, output_filter)},
       executor{executor}
 {
 }
