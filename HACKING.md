@@ -107,11 +107,12 @@ be signficantly easier to work with.
 
 To make such a debug build,
 
-    $ cd $A_TEMPORARY_DIRECTORY
+    $ . /etc/os-release                   # Get release information
+    $ cd $A_TEMPORARY_DIRECTORY           # e.g. ~/mesa-build
     $ apt source mesa                     # Pull the mesa source package
-    $ cd mesa-$UPSTREAM_VERSION
+    $ cd mesa-$UPSTREAM_VERSION           # e.g. mesa-25.0.3
     $ <edit debian/rules; find the line -Db_ndebug=true and change it to =false>
-    $ DEB_BUILD_OPTIONS="noopt nostrip" sbuild -d $UBUNTU_RELEASE -j 32
+    $ DEB_BUILD_OPTIONS="noopt nostrip" sbuild -d $UBUNTU_CODENAME -j 32
     $ sudo dpkg --install --force-overwrite ../*.deb
 
 The important components here are:
