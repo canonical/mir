@@ -31,11 +31,16 @@ namespace mlc = miral::live_config;
 class mlc::IniFile::Self
 {
 public:
-    void add_key(live_config::Key const& key, std::string_view description, std::optional<std::string> preset, HandleString handler);
+    Self() = default;
+    
+    void add_key(Key const& key, std::string_view description, std::optional<std::string> preset, HandleString handler);
 
     void load_file(std::istream& istream);
 
 private:
+    Self(Self const&) = delete;
+    Self& operator=(Self const&) = delete;
+
     struct KeyDetails
     {
         HandleString const handler;
@@ -43,10 +48,9 @@ private:
         std::optional<std::string> const preset;
     };
 
-    std::map<live_config::Key, KeyDetails> attribute_handlers;
+    std::mutex mutex;
+    std::map<Key, KeyDetails> attribute_handlers;
     std::list<HandleDone> done_handlers;
-
-    std::mutex config_mutex;
 };
 
 void miral::live_config::IniFile::Self::add_key(
@@ -55,7 +59,7 @@ void miral::live_config::IniFile::Self::add_key(
     std::optional<std::string> preset,
     HandleString handler)
 {
-    std::lock_guard lock{config_mutex};
+    std::lock_guard lock{mutex};
     attribute_handlers.emplace(key, KeyDetails{handler, std::string{description}, preset});
 }
 
@@ -63,7 +67,7 @@ void miral::live_config::IniFile::Self::add_key(
 void mlc::IniFile::Self::load_file(std::istream& istream)
 {
     std::set<Key> keys_seen;
-    std::lock_guard lock{config_mutex};
+    std::lock_guard lock{mutex};
 
     for (std::string line; std::getline(istream, line);)
     {
