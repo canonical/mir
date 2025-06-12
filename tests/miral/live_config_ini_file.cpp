@@ -298,7 +298,7 @@ void mlc::IniFile::add_string_attribute(Key const& key, std::string_view descrip
 
 void mlc::IniFile::add_strings_attribute(Key const& key, std::string_view description, std::span<std::string const> preset, HandleStrings handler)
 {
-    (void)key; (void)description; (void)preset; (void)handler;
+    self->add_key(key, description, std::vector<std::string>{preset.begin(), preset.end()}, handler);
 }
 
 void mlc::IniFile::on_done(HandleDone handler) 
@@ -318,6 +318,7 @@ void mlc::IniFile::load_file(std::istream& istream, std::filesystem::path const&
 #include <gmock/gmock.h>
 
 using namespace testing;
+using namespace std::string_literals;
 
 struct LiveConfigIniFile : Test
 {
@@ -485,6 +486,18 @@ TEST_F(LiveConfigIniFile, a_strings_value_is_handled)
 
     EXPECT_CALL(*this, strings_handler(a_strings_key, Optional(ElementsAre("foo", "bar"))));
     EXPECT_CALL(*this, strings_handler(another_strings_key, Optional(ElementsAre("foo bar", "baz"))));
+
+    ini_file.load_file(istream, std::filesystem::path{});
+}
+
+TEST_F(LiveConfigIniFile, a_strings_preset_is_handled)
+{
+    mlc::Key const my_key{"foo"};
+    ini_file.add_strings_attribute(a_strings_key, "strings", {{"ignored"s}}, [this](auto... args) { strings_handler(args...); });
+    ini_file.add_strings_attribute(my_key, "a scoped string", {{"(none)"s}}, [this](auto... args) { strings_handler(args...); });
+
+    EXPECT_CALL(*this, strings_handler(a_strings_key, Optional(ElementsAre("foo", "bar"))));
+    EXPECT_CALL(*this, strings_handler(my_key, Optional(ElementsAre("(none)"))));
 
     ini_file.load_file(istream, std::filesystem::path{});
 }
