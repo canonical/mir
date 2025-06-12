@@ -74,7 +74,7 @@ public:
     using HandleFloat = std::function<void(Key const& key, std::optional<float> value)>;
     using HandleFloats = std::function<void(Key const& key, std::optional<std::span<float const>> value)>;
     using HandleString = std::function<void(Key const& key, std::optional<std::string_view> value)>;
-    using HandleStrings = std::function<void(Key const& key, std::optional<std::span<std::string_view const>> value)>;
+    using HandleStrings = std::function<void(Key const& key, std::optional<std::span<std::string const>> value)>;
     using HandleDone = std::function<void()>;
 
     virtual void add_int_attribute(Key const& key, std::string_view description, HandleInt handler) = 0;
@@ -93,7 +93,7 @@ public:
     virtual void add_float_attribute(Key const& key, std::string_view description, float preset, HandleFloat handler) = 0;
     virtual void add_floats_attribute(Key const& key, std::string_view description, std::span<float const> preset, HandleFloats handler) = 0;
     virtual void add_string_attribute(Key const& key, std::string_view description, std::string_view preset, HandleString handler) = 0;
-    virtual void add_strings_attribute(Key const& key, std::string_view description, std::span<std::string_view const> preset, HandleStrings handler) = 0;
+    virtual void add_strings_attribute(Key const& key, std::string_view description, std::span<std::string const> preset, HandleStrings handler) = 0;
 
     /// Called following a set of related updates (e.g. a file reload) to allow
     /// multiple attributes to be updated transactionally
