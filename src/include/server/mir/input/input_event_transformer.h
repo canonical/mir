@@ -55,7 +55,7 @@ public:
 
     bool transform(
         MirEvent const& event,
-        EventBuilder* builder,
+        EventBuilder& builder,
         EventDispatcher const& dispatcher);
 
     virtual void append(std::weak_ptr<Transformer> const&);
@@ -82,6 +82,7 @@ private:
     std::shared_ptr<Seat> const seat;
     std::shared_ptr<time::Clock> const clock;
     std::unique_ptr<EventBuilder> const builder;
+    std::function<void(std::shared_ptr<MirEvent>)> const dispatcher;
 };
 }
 }
