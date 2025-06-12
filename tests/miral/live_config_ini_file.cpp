@@ -294,7 +294,17 @@ void mlc::IniFile::add_int_attribute(Key const& key, std::string_view descriptio
 
 void mlc::IniFile::add_ints_attribute(Key const& key, std::string_view description, std::span<int const> preset, HandleInts handler)
 {
-    (void)key; (void)description; (void)preset; (void)handler;
+    std::vector<std::string> str_preset;
+    str_preset.reserve(preset.size());
+    for (auto const& p : preset)
+    {
+        str_preset.emplace_back(std::to_string(p));
+    }
+
+    self->add_key(key, description, std::move(str_preset), [handler](Key const& key, std::optional<std::span<std::string const>> val)
+    {
+        process_as<int>(handler, key, val);
+    });
 }
 
 void mlc::IniFile::add_bool_attribute(Key const& key, std::string_view description, bool preset, HandleBool handler)
@@ -550,6 +560,18 @@ TEST_F(LiveConfigIniFile, an_ints_value_is_handled)
 
     EXPECT_CALL(*this, ints_handler(an_ints_key, Optional(ElementsAre(1, 2))));
     EXPECT_CALL(*this, ints_handler(another_ints_key, Optional(ElementsAre(3, 5))));
+
+    ini_file.load_file(istream, std::filesystem::path{});
+}
+
+TEST_F(LiveConfigIniFile, an_ints_preset_is_handled)
+{
+    mlc::Key const my_key{"foo"};
+    ini_file.add_ints_attribute(an_ints_key, "ints", {{42}}, [this](auto... args) { ints_handler(args...); });
+    ini_file.add_ints_attribute(my_key, "more ints", {{42, 64}}, [this](auto... args) { ints_handler(args...); });
+
+    EXPECT_CALL(*this, ints_handler(an_ints_key, Optional(ElementsAre(1, 2))));
+    EXPECT_CALL(*this, ints_handler(my_key, Optional(ElementsAre(42, 64))));
 
     ini_file.load_file(istream, std::filesystem::path{});
 }
