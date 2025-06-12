@@ -15,6 +15,7 @@
  */
 
 #include <stdexcept>
+#include <glm/ext/matrix_transform.hpp>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <mir/geometry/rectangle.h>
@@ -253,17 +254,7 @@ TEST_F(GLRenderer, applies_inverse_orientation_matrix)
                     mat[i][j] = ptr[i * 4 + j];
                 }
             }
-            glm::mat4 const expected = trans
-                * glm::mat4(mir::graphics::inverse_transformation(mir_orientation_left));
-            for (size_t i = 0; i < 4; i++)
-            {
-                for (size_t j = 0; j < 4; j++)
-                {
-                    printf("%f, %f\n", mat[i][j], expected[i][j]);
-                }
-            }
-
-            return mat == expected;
+            return mat * glm::mat4(mir::graphics::transformation(mir_orientation_left)) == glm::mat4(1.f);
         }))).Times(1);
 
     mrg::Renderer renderer(gl_platform, make_output_surface());
