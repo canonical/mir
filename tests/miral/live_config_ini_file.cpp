@@ -37,6 +37,7 @@ public:
     void add_key(Key const& key, std::string_view description, std::optional<std::vector<std::string>> preset, HandleStrings handler);
 
     void load_file(std::istream& istream, std::filesystem::path const& path);
+    void on_done(HandleDone handler);
 
 private:
     Self(Self const&) = delete;
@@ -63,6 +64,12 @@ private:
     std::map<Key, ArrayAttributeDetails> array_attribute_handlers;
     std::list<HandleDone> done_handlers;
 };
+
+void miral::live_config::IniFile::Self::on_done(HandleDone handler)
+{
+    std::lock_guard lock{mutex};
+    done_handlers.emplace_back(std::move(handler));
+}
 
 void mlc::IniFile::Self::add_key(
     Key const& key,
@@ -137,7 +144,6 @@ void mlc::IniFile::Self::load_file(std::istream& istream, std::filesystem::path 
         mir::log_warning("Error processing '%s': %s", path.c_str(), e.what());
     }
 
-
     for (auto const& [key, details] : array_attribute_handlers)
     try
     {
@@ -148,7 +154,15 @@ void mlc::IniFile::Self::load_file(std::istream& istream, std::filesystem::path 
         mir::log_warning("Error processing '%s': %s", path.c_str(), e.what());
     }
 
-    // apply_config();
+    for (auto const& h : done_handlers)
+    try
+    {
+        h();
+    }
+    catch (const std::exception& e)
+    {
+        mir::log_warning("Error processing '%s': %s", path.c_str(), e.what());
+    }
 }
 
 namespace
@@ -362,7 +376,7 @@ void mlc::IniFile::add_strings_attribute(Key const& key, std::string_view descri
 
 void mlc::IniFile::on_done(HandleDone handler) 
 {
-    (void)handler;
+    self->on_done(handler);
 }
 
 void mlc::IniFile::load_file(std::istream& istream, std::filesystem::path const& path)
@@ -477,7 +491,6 @@ TEST_F(LiveConfigIniFile, a_preset_integer_value_handles_value_from_file)
 
 TEST_F(LiveConfigIniFile, a_bool_value_is_handled)
 {
-    mlc::Key const my_key{"foo"};
     ini_file.add_bool_attribute(a_true_key, "a scoped bool", [this](auto... args) { bool_handler(args...); });
     ini_file.add_bool_attribute(a_false_key, "a scoped bool", [this](auto... args) { bool_handler(args...); });
 
@@ -648,4 +661,44 @@ TEST_F(LiveConfigIniFile, a_bad_bool_value_is_ignored)
     EXPECT_CALL(*this, bool_handler(a_key, _)).Times(0);
 
     ini_file.load_file(bad_istream, fake_filename());
+}
+
+TEST_F(LiveConfigIniFile, done_handlers_run_last)
+{
+    ini_file.add_strings_attribute(a_strings_key, "strings", [this](auto... args) { strings_handler(args...); });
+    ini_file.add_strings_attribute(another_strings_key, "more strings", [this](auto... args) { strings_handler(args...); });
+
+    ini_file.add_ints_attribute(an_ints_key, "ints", [this](auto... args) { ints_handler(args...); });
+    ini_file.add_ints_attribute(another_ints_key, "more ints", [this](auto... args) { ints_handler(args...); });
+
+    ini_file.add_floats_attribute(a_floats_key, "floats", [this](auto... args) { floats_handler(args...); });
+    ini_file.add_floats_attribute(another_floats_key, "more floats", [this](auto... args) { floats_handler(args...); });
+
+    ini_file.add_string_attribute(a_string_key, "a scoped string", [this](auto... args) { string_handler(args...); });
+    ini_file.add_string_attribute(another_string_key, "a scoped string", [this](auto... args) { string_handler(args...); });
+
+    ini_file.add_int_attribute(a_key, "a scoped int", [this](auto... args) { int_handler(args...); });
+    ini_file.add_int_attribute(another_key, "another scoped int", [this](auto... args) { int_handler(args...); });
+
+    ini_file.add_float_attribute(a_real_key, "a float", [this](auto... args) { float_handler(args...); });
+    ini_file.add_float_attribute(another_real_key, "another float", [this](auto... args) { float_handler(args...); });
+
+    ini_file.add_bool_attribute(a_true_key, "a scoped bool", [this](auto... args) { bool_handler(args...); });
+    ini_file.add_bool_attribute(a_false_key, "a scoped bool", [this](auto... args) { bool_handler(args...); });
+
+    bool done_called = false;
+
+    ini_file.on_done([&] { done_called = true;});
+
+    EXPECT_CALL(*this, strings_handler(_, _)).Times(AnyNumber()).WillRepeatedly([&]{ EXPECT_THAT(done_called, IsFalse()); });
+    EXPECT_CALL(*this, ints_handler(_, _)).Times(AnyNumber()).WillRepeatedly([&]{ EXPECT_THAT(done_called, IsFalse()); });
+    EXPECT_CALL(*this, floats_handler(_, _)).Times(AnyNumber()).WillRepeatedly([&]{ EXPECT_THAT(done_called, IsFalse()); });
+    EXPECT_CALL(*this, string_handler(_, _)).Times(AnyNumber()).WillRepeatedly([&]{ EXPECT_THAT(done_called, IsFalse()); });
+    EXPECT_CALL(*this, int_handler(_, _)).Times(AnyNumber()).WillRepeatedly([&]{ EXPECT_THAT(done_called, IsFalse()); });
+    EXPECT_CALL(*this, float_handler(_, _)).Times(AnyNumber()).WillRepeatedly([&]{ EXPECT_THAT(done_called, IsFalse()); });
+    EXPECT_CALL(*this, bool_handler(_, _)).Times(AnyNumber()).WillRepeatedly([&]{ EXPECT_THAT(done_called, IsFalse()); });
+
+    ini_file.load_file(istream, fake_filename());
+
+    EXPECT_THAT(done_called, IsTrue());
 }
