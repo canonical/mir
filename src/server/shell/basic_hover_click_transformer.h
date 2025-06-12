@@ -39,7 +39,7 @@ public:
         MirEvent const& event) override;
 
     void hover_duration(std::chrono::milliseconds delay) override;
-    void cancel_displacement_threshold(float displacement) override;
+    void cancel_displacement_threshold(int displacement) override;
 
     void on_hover_start(std::function<void()>&& on_hover_start) override;
     void on_hover_cancel(std::function<void()>&& on_hover_cancelled) override;
@@ -65,7 +65,7 @@ private:
         std::optional<mir::geometry::PointF> hover_click_origin;
 
         std::chrono::milliseconds hover_duration{1000};
-        float cancel_displacement_threshold{10};
+        int cancel_displacement_threshold{10};
         std::function<void()> on_hover_start{[] {}};
         std::function<void()> on_hover_cancel{[] {}};
         std::function<void()> on_click_dispatched{[] {}};

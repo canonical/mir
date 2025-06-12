@@ -39,7 +39,7 @@ struct miral::HoverClick::Self
         bool enabled;
 
         std::chrono::milliseconds hover_duration{1000};
-        float cancel_displacement_threshold{10};
+        int cancel_displacement_threshold{10};
         std::function<void()> on_hover_start{[] {}};
         std::function<void()> on_hover_cancel{[] {}};
         std::function<void()> on_click_dispatched{[] {}};
@@ -84,7 +84,7 @@ miral::HoverClick& miral::HoverClick::hover_duration(std::chrono::milliseconds h
     return *this;
 }
 
-miral::HoverClick& miral::HoverClick::cancel_displacement_threshold(float displacement)
+miral::HoverClick& miral::HoverClick::cancel_displacement_threshold(int displacement)
 {
     if(auto const accessibility_manager = self->accessibility_manager.lock())
         accessibility_manager->hover_click().cancel_displacement_threshold(displacement);
