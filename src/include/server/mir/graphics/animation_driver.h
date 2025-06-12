@@ -63,7 +63,6 @@ private:
     std::shared_ptr<time::Clock> const clock;
 
     time::Timestamp last_vsync;
-    std::shared_ptr<AnimationObserver> const test_observer;
 };
 }
 }
