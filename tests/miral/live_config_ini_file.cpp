@@ -26,7 +26,6 @@ namespace mlc = miral::live_config;
 #include <charconv>
 #include <list>
 #include <map>
-#include <set>
 
 class mlc::IniFile::Self
 {
@@ -41,15 +40,16 @@ private:
     Self(Self const&) = delete;
     Self& operator=(Self const&) = delete;
 
-    struct KeyDetails
+    struct AttributeDetails
     {
         HandleString const handler;
         std::string const description;
         std::optional<std::string> const preset;
+        std::optional<std::string> value;
     };
 
     std::mutex mutex;
-    std::map<Key, KeyDetails> attribute_handlers;
+    std::map<Key, AttributeDetails> attribute_handlers;
     std::list<HandleDone> done_handlers;
 };
 
@@ -60,14 +60,18 @@ void miral::live_config::IniFile::Self::add_key(
     HandleString handler)
 {
     std::lock_guard lock{mutex};
-    attribute_handlers.emplace(key, KeyDetails{handler, std::string{description}, preset});
+    attribute_handlers.emplace(key, AttributeDetails{handler, std::string{description}, preset, std::nullopt});
 }
 
 
 void mlc::IniFile::Self::load_file(std::istream& istream)
 {
-    std::set<Key> keys_seen;
     std::lock_guard lock{mutex};
+
+    for (auto& [key, details] : attribute_handlers)
+    {
+        details.value = std::nullopt;
+    }
 
     for (std::string line; std::getline(istream, line);)
     {
@@ -76,23 +80,19 @@ void mlc::IniFile::Self::load_file(std::istream& istream)
         if (line.contains("="))
         {
             auto const eq = line.find_first_of("=");
-            auto const key = live_config::Key{line.substr(0, eq)};
-            keys_seen.insert(key);
+            auto const key = Key{line.substr(0, eq)};
             auto const value = line.substr(eq+1);
 
             if (auto const details = attribute_handlers.find(key); details != attribute_handlers.end())
             {
-                details->second.handler(details->first, value);
+                details->second.value = value;
             }
         }
     }
 
     for (auto const& [key, details] : attribute_handlers)
     {
-        if (keys_seen.find(key) == keys_seen.end())
-        {
-            details.handler(key, details.preset);
-        }
+        details.handler(key, (details.value ? details.value : details.preset));
     }
 
     // apply_config();
