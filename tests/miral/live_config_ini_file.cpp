@@ -270,7 +270,10 @@ void mlc::IniFile::add_float_attribute(Key const& key, std::string_view descript
 
 void mlc::IniFile::add_floats_attribute(Key const& key, std::string_view description, HandleFloats handler)
 {
-    (void)key; (void)description; (void)handler;
+    self->add_key(key, description, std::nullopt, [handler](Key const& key, std::optional<std::span<std::string const>> val)
+    {
+        process_as<float>(handler, key, val);
+    });
 }
 
 void mlc::IniFile::add_string_attribute(Key const& key, std::string_view description, HandleString handler)
@@ -332,7 +335,17 @@ void mlc::IniFile::add_float_attribute(Key const& key, std::string_view descript
 
 void mlc::IniFile::add_floats_attribute(Key const& key, std::string_view description, std::span<float const> preset, HandleFloats handler)
 {
-    (void)key; (void)description; (void)preset; (void)handler;
+    std::vector<std::string> str_preset;
+    str_preset.reserve(preset.size());
+    for (auto const& p : preset)
+    {
+        str_preset.emplace_back(std::to_string(p));
+    }
+
+    self->add_key(key, description, std::move(str_preset), [handler](Key const& key, std::optional<std::span<std::string const>> val)
+    {
+        process_as<float>(handler, key, val);
+    });
 }
 
 void mlc::IniFile::add_string_attribute(Key const& key, std::string_view description, std::string_view preset, HandleString handler)
@@ -374,6 +387,7 @@ struct LiveConfigIniFile : Test
     MOCK_METHOD(void, string_handler, (mlc::Key const& key, std::optional<std::string_view const> value));
     MOCK_METHOD(void, strings_handler, (mlc::Key const& key, std::optional<std::span<std::string const>> value));
     MOCK_METHOD(void, ints_handler, (mlc::Key const& key, std::optional<std::span<int const>> value));
+    MOCK_METHOD(void, floats_handler, (mlc::Key const& key, std::optional<std::span<float const>> value));
 
     mlc::Key const a_key{"a_scope", "an_int"};
     mlc::Key const another_key{"another_scope", "an_int"};
@@ -387,6 +401,8 @@ struct LiveConfigIniFile : Test
     mlc::Key const another_strings_key{"more_strings"};
     mlc::Key const an_ints_key{"ints"};
     mlc::Key const another_ints_key{"more_ints"};
+    mlc::Key const a_floats_key{"floats"};
+    mlc::Key const another_floats_key{"more_floats"};
 
     std::istringstream istream{
         a_key.to_string()+"=42\n" +
@@ -404,7 +420,11 @@ struct LiveConfigIniFile : Test
         an_ints_key.to_string()+"=1\n" +
         an_ints_key.to_string()+"=2\n" +
         another_ints_key.to_string()+"=3\n" +
-        another_ints_key.to_string()+"=5\n"
+        another_ints_key.to_string()+"=5\n" +
+        a_floats_key.to_string()+"=1\n" +
+        a_floats_key.to_string()+"=2\n" +
+        another_floats_key.to_string()+"=3\n" +
+        another_floats_key.to_string()+"=5\n"
     };
 };
 
@@ -572,6 +592,29 @@ TEST_F(LiveConfigIniFile, an_ints_preset_is_handled)
 
     EXPECT_CALL(*this, ints_handler(an_ints_key, Optional(ElementsAre(1, 2))));
     EXPECT_CALL(*this, ints_handler(my_key, Optional(ElementsAre(42, 64))));
+
+    ini_file.load_file(istream, std::filesystem::path{});
+}
+
+TEST_F(LiveConfigIniFile, a_floats_value_is_handled)
+{
+    ini_file.add_floats_attribute(a_floats_key, "floats", [this](auto... args) { floats_handler(args...); });
+    ini_file.add_floats_attribute(another_floats_key, "more floats", [this](auto... args) { floats_handler(args...); });
+
+    EXPECT_CALL(*this, floats_handler(a_floats_key, Optional(ElementsAre(1, 2))));
+    EXPECT_CALL(*this, floats_handler(another_floats_key, Optional(ElementsAre(3, 5))));
+
+    ini_file.load_file(istream, std::filesystem::path{});
+}
+
+TEST_F(LiveConfigIniFile, a_floats_preset_is_handled)
+{
+    mlc::Key const my_key{"foo"};
+    ini_file.add_floats_attribute(a_floats_key, "floats", {{42}}, [this](auto... args) { floats_handler(args...); });
+    ini_file.add_floats_attribute(my_key, "more floats", {{42, 64}}, [this](auto... args) { floats_handler(args...); });
+
+    EXPECT_CALL(*this, floats_handler(a_floats_key, Optional(ElementsAre(1, 2))));
+    EXPECT_CALL(*this, floats_handler(my_key, Optional(ElementsAre(42, 64))));
 
     ini_file.load_file(istream, std::filesystem::path{});
 }
