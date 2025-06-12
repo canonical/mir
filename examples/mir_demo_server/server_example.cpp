@@ -150,7 +150,6 @@ public:
     void add_int_attribute(live_config::Key const& key, std::string_view description, HandleInt handler) override;
     void add_ints_attribute(live_config::Key const& key, std::string_view description, HandleInts handler) override;
     void add_bool_attribute(live_config::Key const& key, std::string_view description, HandleBool handler) override;
-    void add_bools_attribute(live_config::Key const& key, std::string_view description, HandleBools handler) override;
     void add_float_attribute(live_config::Key const& key, std::string_view description, HandleFloat handler) override;
     void add_floats_attribute(live_config::Key const& key, std::string_view description, HandleFloats handler) override;
     void add_string_attribute(live_config::Key const& key, std::string_view description, HandleString handler) override;
@@ -162,10 +161,8 @@ public:
                             HandleInts handler) override;
     void add_bool_attribute(live_config::Key const& key, std::string_view description, bool preset,
         HandleBool handler) override;
-    void add_bools_attribute(live_config::Key const& key, std::string_view description, std::span<bool const> preset,
-                             HandleBools handler) override;
     void add_float_attribute(live_config::Key const& key, std::string_view description, float preset,
-        HandleFloat handler) override;
+                             HandleFloat handler) override;
     void add_floats_attribute(live_config::Key const& key, std::string_view description, std::span<float const> preset,
                               HandleFloats handler) override;
     void add_string_attribute(live_config::Key const& key, std::string_view description, std::string_view preset,
@@ -223,12 +220,6 @@ void DemoConfigFile::add_ints_attribute(live_config::Key const& key, std::string
     (void)handler; (void)key;
 }
 
-void DemoConfigFile::add_bools_attribute(live_config::Key const& key, std::string_view, HandleBools handler)
-{
-    // Not implemented: not needed for discussion
-    (void)handler; (void)key;
-}
-
 void DemoConfigFile::add_floats_attribute(live_config::Key const& key, std::string_view, HandleFloats handler)
 {
     // Not implemented: not needed for discussion
@@ -262,15 +253,8 @@ void DemoConfigFile::add_bool_attribute(live_config::Key const& key, std::string
     (void)handler; (void)description; (void)key; (void)preset;
 }
 
-void DemoConfigFile::add_bools_attribute(live_config::Key const& key, std::string_view description,
-                                         std::span<bool const> preset, HandleBools handler)
-{
-    // Not implemented: not needed for discussion
-    (void)handler; (void)description; (void)key; (void)preset;
-}
-
 void DemoConfigFile::add_float_attribute(live_config::Key const& key, std::string_view description, float preset,
-    HandleFloat handler)
+                                         HandleFloat handler)
 {
     // Not implemented: not needed for discussion
     (void)handler; (void)description; (void)key; (void)preset;

@@ -254,11 +254,6 @@ void mlc::IniFile::add_bool_attribute(Key const& key, std::string_view descripti
     });
 }
 
-void mlc::IniFile::add_bools_attribute(Key const& key, std::string_view description, HandleBools handler)
-{
-    (void)key; (void)description; (void)handler;
-}
-
 void mlc::IniFile::add_float_attribute(Key const& key, std::string_view description, HandleFloat handler)
 {
     self->add_key(key, description, std::nullopt,
@@ -317,11 +312,6 @@ void mlc::IniFile::add_bool_attribute(Key const& key, std::string_view descripti
         {
             process_as<bool>(handler, key, val);
         });
-}
-
-void mlc::IniFile::add_bools_attribute(Key const& key, std::string_view description, std::span<bool const> preset, HandleBools handler)
-{
-    (void)key; (void)description; (void)preset; (void)handler;
 }
 
 void mlc::IniFile::add_float_attribute(Key const& key, std::string_view description, float preset, HandleFloat handler)
