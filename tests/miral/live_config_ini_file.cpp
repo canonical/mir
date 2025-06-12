@@ -33,6 +33,7 @@ public:
     Self() = default;
     
     void add_key(Key const& key, std::string_view description, std::optional<std::string> preset, HandleString handler);
+    void add_key(Key const& key, std::string_view description, std::optional<std::vector<std::string>> preset, HandleStrings handler);
 
     void load_file(std::istream& istream);
 
@@ -48,12 +49,21 @@ private:
         std::optional<std::string> value;
     };
 
+    struct ArrayAttributeDetails
+    {
+        HandleStrings const handler;
+        std::string const description;
+        std::optional<std::vector<std::string>> const preset;
+        std::optional<std::vector<std::string>> value;
+    };
+
     std::mutex mutex;
     std::map<Key, AttributeDetails> attribute_handlers;
+    std::map<Key, ArrayAttributeDetails> array_attribute_handlers;
     std::list<HandleDone> done_handlers;
 };
 
-void miral::live_config::IniFile::Self::add_key(
+void mlc::IniFile::Self::add_key(
     Key const& key,
     std::string_view description,
     std::optional<std::string> preset,
@@ -63,12 +73,23 @@ void miral::live_config::IniFile::Self::add_key(
     attribute_handlers.emplace(key, AttributeDetails{handler, std::string{description}, preset, std::nullopt});
 }
 
+void mlc::IniFile::Self::add_key(Key const& key, std::string_view description,
+    std::optional<std::vector<std::string>> preset, HandleStrings handler)
+{
+    std::lock_guard lock{mutex};
+    array_attribute_handlers.emplace(key, ArrayAttributeDetails{handler, std::string{description}, preset, std::nullopt});
+}
 
 void mlc::IniFile::Self::load_file(std::istream& istream)
 {
     std::lock_guard lock{mutex};
 
     for (auto& [key, details] : attribute_handlers)
+    {
+        details.value = std::nullopt;
+    }
+
+    for (auto& [key, details] : array_attribute_handlers)
     {
         details.value = std::nullopt;
     }
@@ -87,10 +108,28 @@ void mlc::IniFile::Self::load_file(std::istream& istream)
             {
                 details->second.value = value;
             }
+
+            if (auto const details = array_attribute_handlers.find(key); details != array_attribute_handlers.end())
+            {
+                if (details->second.value)
+                {
+                    details->second.value.value().push_back(value);
+                }
+                else
+                {
+                    details->second.value = std::vector<std::string>{value};
+                }
+            }
         }
     }
 
     for (auto const& [key, details] : attribute_handlers)
+    {
+        details.handler(key, (details.value ? details.value : details.preset));
+    }
+
+
+    for (auto const& [key, details] : array_attribute_handlers)
     {
         details.handler(key, (details.value ? details.value : details.preset));
     }
@@ -207,7 +246,7 @@ void mlc::IniFile::add_string_attribute(Key const& key, std::string_view descrip
 
 void mlc::IniFile::add_strings_attribute(Key const& key, std::string_view description, HandleStrings handler) 
 {
-    (void)key; (void)description; (void)handler;
+    self->add_key(key, description, std::nullopt, handler);
 }
 
 void mlc::IniFile::add_int_attribute(Key const& key, std::string_view description, int preset, HandleInt handler) 
@@ -288,6 +327,7 @@ struct LiveConfigIniFile : Test
     MOCK_METHOD(void, bool_handler, (mlc::Key const& key, std::optional<bool> value));
     MOCK_METHOD(void, float_handler, (mlc::Key const& key, std::optional<float> value));
     MOCK_METHOD(void, string_handler, (mlc::Key const& key, std::optional<std::string_view const> value));
+    MOCK_METHOD(void, strings_handler, (mlc::Key const& key, std::optional<std::span<std::string const>> value));
 
     mlc::Key const a_key{"a_scope", "an_int"};
     mlc::Key const another_key{"another_scope", "an_int"};
@@ -297,6 +337,8 @@ struct LiveConfigIniFile : Test
     mlc::Key const another_string_key{"another_string"};
     mlc::Key const a_real_key{"a_float"};
     mlc::Key const another_real_key{"another_float"};
+    mlc::Key const a_strings_key{"strings"};
+    mlc::Key const another_strings_key{"more_strings"};
 
     std::istringstream istream{
         a_key.to_string()+"=42\n" +
@@ -306,7 +348,11 @@ struct LiveConfigIniFile : Test
         a_string_key.to_string()+"=foo\n" +
         another_string_key.to_string()+"=bar baz\n" +
         a_real_key.to_string()+"=3.5\n" +
-        another_real_key.to_string()+"=1e2\n"
+        another_real_key.to_string()+"=1e2\n" +
+        a_strings_key.to_string()+"=foo\n" +
+        a_strings_key.to_string()+"=bar\n" +
+        another_strings_key.to_string()+"=foo bar\n" +
+        another_strings_key.to_string()+"=baz\n"
     };
 };
 
@@ -428,6 +474,17 @@ TEST_F(LiveConfigIniFile, a_float_preset_is_handled)
 
     EXPECT_CALL(*this, float_handler(a_real_key, {3.5}));
     EXPECT_CALL(*this, float_handler(my_key, {23}));
+
+    ini_file.load_file(istream, std::filesystem::path{});
+}
+
+TEST_F(LiveConfigIniFile, a_strings_value_is_handled)
+{
+    ini_file.add_strings_attribute(a_strings_key, "strings", [this](auto... args) { strings_handler(args...); });
+    ini_file.add_strings_attribute(another_strings_key, "more strings", [this](auto... args) { strings_handler(args...); });
+
+    EXPECT_CALL(*this, strings_handler(a_strings_key, Optional(ElementsAre("foo", "bar"))));
+    EXPECT_CALL(*this, strings_handler(another_strings_key, Optional(ElementsAre("foo bar", "baz"))));
 
     ini_file.load_file(istream, std::filesystem::path{});
 }
