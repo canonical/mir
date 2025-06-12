@@ -74,7 +74,6 @@ void add_timeout_option_to(mir::Server& server)
     });
 }
 
-
 // Create some input filters (we need to keep them or they deactivate)
 struct InputFilters
 {
