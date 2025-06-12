@@ -49,8 +49,8 @@ public:
     /// click.
     HoverClick& hover_duration(std::chrono::milliseconds hover_duration);
 
-    // Configures how far the pointer has to move from the initial hover click
-    // position to cancel it.
+    // Configures the distance in pixels the pointer has to move from the
+    // initial hover click position to cancel it.
     HoverClick& cancel_displacement_threshold(float displacement);
 
     /// Called shortly after a hover click is scheduled. Should be used to
