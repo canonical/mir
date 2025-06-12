@@ -244,7 +244,7 @@ TEST_F(GLRenderer, applies_inverse_orientation_matrix)
     EXPECT_CALL(*renderable, orientation())
         .WillOnce(Return(mir_orientation_left));
     EXPECT_CALL(mock_gl, glUniformMatrix4fv(
-        _, _, _, testing::Truly([trans=trans](float const* ptr)
+        _, _, _, testing::Truly([](float const* ptr)
         {
             glm::mat4 mat;
             for (size_t i = 0; i < 4; i++)
