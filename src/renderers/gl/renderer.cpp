@@ -711,6 +711,10 @@ void mrg::Renderer::draw(mg::Renderable const& renderable) const
                       rect.size.height.as_int() / 2.0f;
     glUniform2f(prog->centre_uniform, centrex, centrey);
 
+    // Wayland surfaces may specify an orientation that matches the output
+    // orientation. However, the surface is already rotated by the output's
+    // orientation when we render it. To solve this, we need to unrotate the
+    // surface using the inverse of its transform so that it appears upright.
     glm::mat4 transform = renderable.transformation() * glm::mat4(
         mg::inverse_transformation(renderable.orientation()));
     if (texture->layout() == mg::gl::Texture::Layout::TopRowFirst)
