@@ -171,7 +171,7 @@ public:
     void add_string_attribute(live_config::Key const& key, std::string_view description, std::string_view preset,
         HandleString handler) override;
     void add_strings_attribute(live_config::Key const& key, std::string_view description,
-        std::span<std::string_view const> preset, HandleStrings handler) override;
+        std::span<std::string const> preset, HandleStrings handler) override;
 
     void on_done(HandleDone handler) override;
 
@@ -291,7 +291,7 @@ void DemoConfigFile::add_string_attribute(live_config::Key const& key, std::stri
 }
 
 void DemoConfigFile::add_strings_attribute(live_config::Key const& key, std::string_view description,
-    std::span<std::string_view const> preset, HandleStrings handler)
+    std::span<std::string const> preset, HandleStrings handler)
 {
     // Not implemented: not needed for discussion
     (void)handler; (void)description; (void)key; (void)preset;
