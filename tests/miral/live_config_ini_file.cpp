@@ -188,6 +188,37 @@ void process_as<bool>(std::function<void(mlc::Key const&, std::optional<bool>)> 
         handler(key, std::nullopt);
     }
 }
+
+template<typename Type>
+void process_as(std::function<void(mlc::Key const&, std::optional<std::span<Type>>)> const& handler, mlc::Key const& key,
+    std::optional<std::span<std::string const>> val)
+{
+    if (val)
+    {
+        std::vector<Type> parsed_vals;
+
+        for (auto const& v : *val)
+        {
+            Type parsed_val{};
+            auto const [end, err] = std::from_chars(v.data(), v.data() + v.size(), parsed_val);
+
+            if ((err == std::errc{}) && (end == v.data() + v.size()))
+            {
+                parsed_vals.push_back(parsed_val);
+            }
+            else
+            {
+                mir::log_warning("Config key '%s' has invalid value: %s", key.to_string().c_str(), v.c_str());
+            }
+        }
+
+        handler(key, parsed_vals);
+    }
+    else
+    {
+        handler(key, std::nullopt);
+    }
+}
 }
 
 mlc::IniFile::IniFile() :
@@ -208,7 +239,10 @@ void mlc::IniFile::add_int_attribute(Key const& key, std::string_view descriptio
 
 void mlc::IniFile::add_ints_attribute(Key const& key, std::string_view description, HandleInts handler) 
 {
-    (void)key; (void)description; (void)handler;
+    self->add_key(key, description, std::nullopt, [handler](Key const& key, std::optional<std::span<std::string const>> val)
+    {
+        process_as<int>(handler, key, val);
+    });
 }
 
 void mlc::IniFile::add_bool_attribute(Key const& key, std::string_view description, HandleBool handler)
@@ -329,6 +363,7 @@ struct LiveConfigIniFile : Test
     MOCK_METHOD(void, float_handler, (mlc::Key const& key, std::optional<float> value));
     MOCK_METHOD(void, string_handler, (mlc::Key const& key, std::optional<std::string_view const> value));
     MOCK_METHOD(void, strings_handler, (mlc::Key const& key, std::optional<std::span<std::string const>> value));
+    MOCK_METHOD(void, ints_handler, (mlc::Key const& key, std::optional<std::span<int const>> value));
 
     mlc::Key const a_key{"a_scope", "an_int"};
     mlc::Key const another_key{"another_scope", "an_int"};
@@ -340,6 +375,8 @@ struct LiveConfigIniFile : Test
     mlc::Key const another_real_key{"another_float"};
     mlc::Key const a_strings_key{"strings"};
     mlc::Key const another_strings_key{"more_strings"};
+    mlc::Key const an_ints_key{"ints"};
+    mlc::Key const another_ints_key{"more_ints"};
 
     std::istringstream istream{
         a_key.to_string()+"=42\n" +
@@ -353,7 +390,11 @@ struct LiveConfigIniFile : Test
         a_strings_key.to_string()+"=foo\n" +
         a_strings_key.to_string()+"=bar\n" +
         another_strings_key.to_string()+"=foo bar\n" +
-        another_strings_key.to_string()+"=baz\n"
+        another_strings_key.to_string()+"=baz\n" +
+        an_ints_key.to_string()+"=1\n" +
+        an_ints_key.to_string()+"=2\n" +
+        another_ints_key.to_string()+"=3\n" +
+        another_ints_key.to_string()+"=5\n"
     };
 };
 
@@ -498,6 +539,17 @@ TEST_F(LiveConfigIniFile, a_strings_preset_is_handled)
 
     EXPECT_CALL(*this, strings_handler(a_strings_key, Optional(ElementsAre("foo", "bar"))));
     EXPECT_CALL(*this, strings_handler(my_key, Optional(ElementsAre("(none)"))));
+
+    ini_file.load_file(istream, std::filesystem::path{});
+}
+
+TEST_F(LiveConfigIniFile, an_ints_value_is_handled)
+{
+    ini_file.add_ints_attribute(an_ints_key, "ints", [this](auto... args) { ints_handler(args...); });
+    ini_file.add_ints_attribute(another_ints_key, "more ints", [this](auto... args) { ints_handler(args...); });
+
+    EXPECT_CALL(*this, ints_handler(an_ints_key, Optional(ElementsAre(1, 2))));
+    EXPECT_CALL(*this, ints_handler(another_ints_key, Optional(ElementsAre(3, 5))));
 
     ini_file.load_file(istream, std::filesystem::path{});
 }
