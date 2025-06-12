@@ -53,10 +53,7 @@ public:
     InputEventTransformer(std::shared_ptr<Seat> const& seat, std::shared_ptr<time::Clock> const& clock);
     ~InputEventTransformer();
 
-    bool transform(
-        MirEvent const& event,
-        EventBuilder& builder,
-        EventDispatcher const& dispatcher);
+    bool transform(MirEvent const& event);
 
     virtual void append(std::weak_ptr<Transformer> const&);
     virtual void remove(std::shared_ptr<Transformer> const&);

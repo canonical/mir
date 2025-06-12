@@ -114,8 +114,7 @@ mi::InputEventTransformer::InputEventTransformer(
 
 mir::input::InputEventTransformer::~InputEventTransformer() = default;
 
-bool mi::InputEventTransformer::transform(
-    MirEvent const& event, EventBuilder& builder, EventDispatcher const& dispatcher)
+bool mi::InputEventTransformer::transform(MirEvent const& event)
 {
     std::lock_guard lock{mutex};
 
@@ -139,7 +138,7 @@ bool mi::InputEventTransformer::transform(
     {
         auto const& t = it.lock();
 
-        if (t->transform_input_event(dispatcher, &builder, event))
+        if (t->transform_input_event(dispatcher, builder.get(), event))
         {
             handled = true;
             break;
@@ -196,7 +195,7 @@ void mir::input::InputEventTransformer::remove_device(Device const& device)
 
 void mir::input::InputEventTransformer::dispatch_event(std::shared_ptr<MirEvent> const& event)
 {
-    if(!transform(*event, *builder, dispatcher))
+    if(!transform(*event))
         seat->dispatch_event(event); 
 }
 

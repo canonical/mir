@@ -97,7 +97,7 @@ TEST_F(TestInputEventTransformer, transformer_gets_called)
 
     input_event_transformer.append(mock_transformer);
 
-    input_event_transformer.transform(*make_key_event(), nullptr, [](auto) {});
+    input_event_transformer.transform(*make_key_event());
 }
 
 TEST_F(TestInputEventTransformer, events_block_correctly)
@@ -116,7 +116,7 @@ TEST_F(TestInputEventTransformer, events_block_correctly)
     input_event_transformer.append(mock_transformer_1);
     input_event_transformer.append(mock_transformer_2);
 
-    input_event_transformer.transform(*make_key_event(), nullptr, [](auto) {});
+    input_event_transformer.transform(*make_key_event());
 }
 
 TEST_F(TestInputEventTransformer, events_cascade_correctly)
@@ -135,7 +135,7 @@ TEST_F(TestInputEventTransformer, events_cascade_correctly)
     input_event_transformer.append(mock_transformer_1);
     input_event_transformer.append(mock_transformer_2);
 
-    input_event_transformer.transform(*make_key_event(), nullptr, [](auto) {});
+    input_event_transformer.transform(*make_key_event());
 }
 
 TEST_F(TestInputEventTransformer, transformer_not_called_after_removal)
@@ -150,9 +150,9 @@ TEST_F(TestInputEventTransformer, transformer_not_called_after_removal)
             });
 
     input_event_transformer.append(mock_transformer);
-    input_event_transformer.transform(*make_key_event(), nullptr, [](auto) {});
+    input_event_transformer.transform(*make_key_event());
     input_event_transformer.remove(mock_transformer);
-    input_event_transformer.transform(*make_key_event(), nullptr, [](auto) {});
+    input_event_transformer.transform(*make_key_event());
 }
 
 TEST_F(TestInputEventTransformer, adding_transformer_twice_has_no_effect_on_expected_handling_of_events)
@@ -162,6 +162,6 @@ TEST_F(TestInputEventTransformer, adding_transformer_twice_has_no_effect_on_expe
 
     input_event_transformer.append(mock_transformer_1);
     input_event_transformer.append(mock_transformer_1);
-    input_event_transformer.transform(*make_key_event(), nullptr, [](auto) {});
+    input_event_transformer.transform(*make_key_event());
 }
 
