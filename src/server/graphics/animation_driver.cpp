@@ -17,25 +17,14 @@
 #include "mir/graphics/animation_driver.h"
 #include "mir/time/clock.h"
 #include <chrono>
-#include <iostream>
 
-struct StubListener : public mir::graphics::AnimationObserver
-{
-    virtual void on_vsync(std::chrono::milliseconds) override
-    {
-        std::cerr << "Bleep bloop\n";
-    }
-};
 mir::graphics::AnimationDriver::AnimationDriver(
     std::shared_ptr<DisplayReport> const& to_wrap, std::shared_ptr<time::Clock> const& clock) :
     ObserverMultiplexer<AnimationObserver>{mir::linearising_executor},
     wrapped_report{to_wrap},
     clock{clock},
-    last_vsync{clock->now()},
-    test_observer{std::make_shared<StubListener>()}
+    last_vsync{clock->now()}
 {
-
-    this->register_interest(test_observer);
 }
 
 void mir::graphics::AnimationDriver::on_vsync(std::chrono::milliseconds dt)
