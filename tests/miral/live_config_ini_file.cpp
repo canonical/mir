@@ -24,6 +24,7 @@ namespace mlc = miral::live_config;
 #include <mir/log.h>
 
 #include <charconv>
+#include <format>
 #include <list>
 #include <map>
 
@@ -35,7 +36,7 @@ public:
     void add_key(Key const& key, std::string_view description, std::optional<std::string> preset, HandleString handler);
     void add_key(Key const& key, std::string_view description, std::optional<std::vector<std::string>> preset, HandleStrings handler);
 
-    void load_file(std::istream& istream);
+    void load_file(std::istream& istream, std::filesystem::path const& path);
 
 private:
     Self(Self const&) = delete;
@@ -80,7 +81,7 @@ void mlc::IniFile::Self::add_key(Key const& key, std::string_view description,
     array_attribute_handlers.emplace(key, ArrayAttributeDetails{handler, std::string{description}, preset, std::nullopt});
 }
 
-void mlc::IniFile::Self::load_file(std::istream& istream)
+void mlc::IniFile::Self::load_file(std::istream& istream, std::filesystem::path const& path)
 {
     std::lock_guard lock{mutex};
 
@@ -96,9 +97,8 @@ void mlc::IniFile::Self::load_file(std::istream& istream)
 
     for (std::string line; std::getline(istream, line);)
     {
-        puts(line.c_str()); // TODO remove printf debugging
-
-        if (line.contains("="))
+        if (!line.starts_with('#') && line.contains("="))
+        try
         {
             auto const eq = line.find_first_of("=");
             auto const key = Key{line.substr(0, eq)};
@@ -121,17 +121,31 @@ void mlc::IniFile::Self::load_file(std::istream& istream)
                 }
             }
         }
+        catch (const std::exception& e)
+        {
+            mir::log_warning("Error processing '%s': %s", path.c_str(), e.what());
+        }
     }
 
     for (auto const& [key, details] : attribute_handlers)
+    try
     {
         details.handler(key, (details.value ? details.value : details.preset));
+    }
+    catch (const std::exception& e)
+    {
+        mir::log_warning("Error processing '%s': %s", path.c_str(), e.what());
     }
 
 
     for (auto const& [key, details] : array_attribute_handlers)
+    try
     {
         details.handler(key, (details.value ? details.value : details.preset));
+    }
+    catch (const std::exception& e)
+    {
+        mir::log_warning("Error processing '%s': %s", path.c_str(), e.what());
     }
 
     // apply_config();
@@ -154,8 +168,7 @@ void process_as(std::function<void(mlc::Key const&, std::optional<Type>)> const&
         }
         else
         {
-            mir::log_warning("Config key '%s' has invalid value: %s", key.to_string().c_str(), std::string(*val).c_str());
-            handler(key, std::nullopt);
+            throw std::runtime_error(std::format("Config key '{}' has invalid value: {}", key.to_string(), *val));
         }
     }
     else
@@ -179,8 +192,7 @@ void process_as<bool>(std::function<void(mlc::Key const&, std::optional<bool>)> 
         }
         else
         {
-            mir::log_warning("Config key '%s' has invalid value: %s", key.to_string().c_str(), std::string(*val).c_str());
-            handler(key, std::nullopt);
+            throw std::runtime_error(std::format("Config key '{}' has invalid value: {}", key.to_string(), *val));
         }
     }
     else
@@ -353,9 +365,9 @@ void mlc::IniFile::on_done(HandleDone handler)
     (void)handler;
 }
 
-void mlc::IniFile::load_file(std::istream& istream, std::filesystem::path const& /*path*/)
+void mlc::IniFile::load_file(std::istream& istream, std::filesystem::path const& path)
 {
-    self->load_file(istream);
+    self->load_file(istream, path);
 }
 
 // TODO mlc::IniFile implementation here temporarily (needs to move)
@@ -416,6 +428,11 @@ struct LiveConfigIniFile : Test
         another_floats_key.to_string()+"=3\n" +
         another_floats_key.to_string()+"=5\n"
     };
+
+    auto fake_filename() const
+    {
+        return UnitTest::GetInstance()->current_test_info()->name();
+    }
 };
 
 TEST_F(LiveConfigIniFile, an_integer_value_is_handled)
@@ -424,7 +441,7 @@ TEST_F(LiveConfigIniFile, an_integer_value_is_handled)
 
     EXPECT_CALL(*this, int_handler(a_key, std::optional<int>{42}));
 
-    ini_file.load_file(istream, std::filesystem::path{});
+    ini_file.load_file(istream, fake_filename());
 }
 
 TEST_F(LiveConfigIniFile, another_integer_value_is_handled)
@@ -435,19 +452,7 @@ TEST_F(LiveConfigIniFile, another_integer_value_is_handled)
     EXPECT_CALL(*this, int_handler(a_key, std::optional<int>{42}));
     EXPECT_CALL(*this, int_handler(another_key, std::optional<int>{64}));
 
-    ini_file.load_file(istream, std::filesystem::path{});
-}
-
-TEST_F(LiveConfigIniFile, a_bad_integer_value_is_handled_as_nullopt)
-{
-    std::istringstream bad_istream{
-        a_key.to_string()+"=42x"};
-
-    ini_file.add_int_attribute(a_key, "a scoped int", [this](auto... args) { int_handler(args...); });
-
-    EXPECT_CALL(*this, int_handler(a_key, {std::nullopt}));
-
-    ini_file.load_file(bad_istream, std::filesystem::path{});
+    ini_file.load_file(istream, fake_filename());
 }
 
 TEST_F(LiveConfigIniFile, a_preset_integer_value_is_handled)
@@ -458,7 +463,7 @@ TEST_F(LiveConfigIniFile, a_preset_integer_value_is_handled)
 
     EXPECT_CALL(*this, int_handler(my_key, std::optional<int>{13}));
 
-    ini_file.load_file(istream, std::filesystem::path{});
+    ini_file.load_file(istream, fake_filename());
 }
 
 TEST_F(LiveConfigIniFile, a_preset_integer_value_handles_value_from_file)
@@ -467,7 +472,7 @@ TEST_F(LiveConfigIniFile, a_preset_integer_value_handles_value_from_file)
 
     EXPECT_CALL(*this, int_handler(a_key, std::optional<int>{42}));
 
-    ini_file.load_file(istream, std::filesystem::path{});
+    ini_file.load_file(istream, fake_filename());
 }
 
 TEST_F(LiveConfigIniFile, a_bool_value_is_handled)
@@ -479,7 +484,7 @@ TEST_F(LiveConfigIniFile, a_bool_value_is_handled)
     EXPECT_CALL(*this, bool_handler(a_true_key, std::optional<bool>{true}));
     EXPECT_CALL(*this, bool_handler(a_false_key, std::optional<bool>{false}));
 
-    ini_file.load_file(istream, std::filesystem::path{});
+    ini_file.load_file(istream, fake_filename());
 }
 
 TEST_F(LiveConfigIniFile, a_bool_preset_is_handled)
@@ -491,7 +496,7 @@ TEST_F(LiveConfigIniFile, a_bool_preset_is_handled)
     EXPECT_CALL(*this, bool_handler(a_true_key, std::optional<bool>{true}));
     EXPECT_CALL(*this, bool_handler(my_key, std::optional<bool>{false}));
 
-    ini_file.load_file(istream, std::filesystem::path{});
+    ini_file.load_file(istream, fake_filename());
 }
 
 TEST_F(LiveConfigIniFile, a_string_value_is_handled)
@@ -502,7 +507,7 @@ TEST_F(LiveConfigIniFile, a_string_value_is_handled)
     EXPECT_CALL(*this, string_handler(a_string_key, std::optional<std::string_view const>{"foo"}));
     EXPECT_CALL(*this, string_handler(another_string_key, std::optional<std::string_view const>{"bar baz"}));
 
-    ini_file.load_file(istream, std::filesystem::path{});
+    ini_file.load_file(istream, fake_filename());
 }
 
 TEST_F(LiveConfigIniFile, a_string_preset_is_handled)
@@ -514,7 +519,7 @@ TEST_F(LiveConfigIniFile, a_string_preset_is_handled)
     EXPECT_CALL(*this, string_handler(a_string_key, std::optional<std::string_view const>{"foo"}));
     EXPECT_CALL(*this, string_handler(my_key, std::optional<std::string_view const>{"(none)"}));
 
-    ini_file.load_file(istream, std::filesystem::path{});
+    ini_file.load_file(istream, fake_filename());
 }
 
 TEST_F(LiveConfigIniFile, a_float_value_is_handled)
@@ -525,7 +530,7 @@ TEST_F(LiveConfigIniFile, a_float_value_is_handled)
     EXPECT_CALL(*this, float_handler(a_real_key, {3.5}));
     EXPECT_CALL(*this, float_handler(another_real_key, {100.0}));
 
-    ini_file.load_file(istream, std::filesystem::path{});
+    ini_file.load_file(istream, fake_filename());
 }
 
 TEST_F(LiveConfigIniFile, a_float_preset_is_handled)
@@ -537,7 +542,7 @@ TEST_F(LiveConfigIniFile, a_float_preset_is_handled)
     EXPECT_CALL(*this, float_handler(a_real_key, {3.5}));
     EXPECT_CALL(*this, float_handler(my_key, {23}));
 
-    ini_file.load_file(istream, std::filesystem::path{});
+    ini_file.load_file(istream, fake_filename());
 }
 
 TEST_F(LiveConfigIniFile, a_strings_value_is_handled)
@@ -548,7 +553,7 @@ TEST_F(LiveConfigIniFile, a_strings_value_is_handled)
     EXPECT_CALL(*this, strings_handler(a_strings_key, Optional(ElementsAre("foo", "bar"))));
     EXPECT_CALL(*this, strings_handler(another_strings_key, Optional(ElementsAre("foo bar", "baz"))));
 
-    ini_file.load_file(istream, std::filesystem::path{});
+    ini_file.load_file(istream, fake_filename());
 }
 
 TEST_F(LiveConfigIniFile, a_strings_preset_is_handled)
@@ -560,7 +565,7 @@ TEST_F(LiveConfigIniFile, a_strings_preset_is_handled)
     EXPECT_CALL(*this, strings_handler(a_strings_key, Optional(ElementsAre("foo", "bar"))));
     EXPECT_CALL(*this, strings_handler(my_key, Optional(ElementsAre("(none)"))));
 
-    ini_file.load_file(istream, std::filesystem::path{});
+    ini_file.load_file(istream, fake_filename());
 }
 
 TEST_F(LiveConfigIniFile, an_ints_value_is_handled)
@@ -571,7 +576,7 @@ TEST_F(LiveConfigIniFile, an_ints_value_is_handled)
     EXPECT_CALL(*this, ints_handler(an_ints_key, Optional(ElementsAre(1, 2))));
     EXPECT_CALL(*this, ints_handler(another_ints_key, Optional(ElementsAre(3, 5))));
 
-    ini_file.load_file(istream, std::filesystem::path{});
+    ini_file.load_file(istream, fake_filename());
 }
 
 TEST_F(LiveConfigIniFile, an_ints_preset_is_handled)
@@ -583,7 +588,7 @@ TEST_F(LiveConfigIniFile, an_ints_preset_is_handled)
     EXPECT_CALL(*this, ints_handler(an_ints_key, Optional(ElementsAre(1, 2))));
     EXPECT_CALL(*this, ints_handler(my_key, Optional(ElementsAre(42, 64))));
 
-    ini_file.load_file(istream, std::filesystem::path{});
+    ini_file.load_file(istream, fake_filename());
 }
 
 TEST_F(LiveConfigIniFile, a_floats_value_is_handled)
@@ -594,7 +599,7 @@ TEST_F(LiveConfigIniFile, a_floats_value_is_handled)
     EXPECT_CALL(*this, floats_handler(a_floats_key, Optional(ElementsAre(1, 2))));
     EXPECT_CALL(*this, floats_handler(another_floats_key, Optional(ElementsAre(3, 5))));
 
-    ini_file.load_file(istream, std::filesystem::path{});
+    ini_file.load_file(istream, fake_filename());
 }
 
 TEST_F(LiveConfigIniFile, a_floats_preset_is_handled)
@@ -606,5 +611,41 @@ TEST_F(LiveConfigIniFile, a_floats_preset_is_handled)
     EXPECT_CALL(*this, floats_handler(a_floats_key, Optional(ElementsAre(1, 2))));
     EXPECT_CALL(*this, floats_handler(my_key, Optional(ElementsAre(42, 64))));
 
-    ini_file.load_file(istream, std::filesystem::path{});
+    ini_file.load_file(istream, fake_filename());
+}
+
+TEST_F(LiveConfigIniFile, a_bad_integer_value_is_ignored)
+{
+    std::istringstream bad_istream{
+        a_key.to_string()+"=42x"};
+
+    ini_file.add_int_attribute(a_key, "a scoped int", [this](auto... args) { int_handler(args...); });
+
+    EXPECT_CALL(*this, int_handler(a_key, _)).Times(0);
+
+    ini_file.load_file(bad_istream, fake_filename());
+}
+
+TEST_F(LiveConfigIniFile, a_bad_float_value_is_ignored)
+{
+    std::istringstream bad_istream{
+        a_key.to_string()+"=42x"};
+
+    ini_file.add_float_attribute(a_key, "bad float", [this](auto... args) { float_handler(args...); });
+
+    EXPECT_CALL(*this, float_handler(a_key, _)).Times(0);
+
+    ini_file.load_file(bad_istream, fake_filename());
+}
+
+TEST_F(LiveConfigIniFile, a_bad_bool_value_is_ignored)
+{
+    std::istringstream bad_istream{
+        a_key.to_string()+"=42x"};
+
+    ini_file.add_bool_attribute(a_key, "bad bool", [this](auto... args) { bool_handler(args...); });
+
+    EXPECT_CALL(*this, bool_handler(a_key, _)).Times(0);
+
+    ini_file.load_file(bad_istream, fake_filename());
 }
