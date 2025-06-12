@@ -109,7 +109,7 @@ void mir::shell::BasicHoverClickTransformer::hover_duration(std::chrono::millise
     mutable_state.lock()->hover_duration = delay;
 }
 
-void mir::shell::BasicHoverClickTransformer::cancel_displacement_threshold(float displacement)
+void mir::shell::BasicHoverClickTransformer::cancel_displacement_threshold(int displacement)
 {
     mutable_state.lock()->cancel_displacement_threshold = displacement;
 }
