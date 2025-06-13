@@ -20,6 +20,8 @@
 #include <memory>
 #include <boost/program_options.hpp>
 
+#include <gbm.h>
+
 namespace mir
 {
 namespace options
@@ -33,6 +35,35 @@ class Device;
 
 namespace graphics::atomic
 {
+class GbmQuirks
+{
+public:
+    class CreateSurfaceFlagsQuirk
+    {
+    public:
+        virtual ~CreateSurfaceFlagsQuirk() = default;
+        virtual auto gbm_create_surface_flags() const -> uint32_t = 0;
+    };
+
+    class SurfaceHasFreeBuffersQuirk
+    {
+    public:
+        virtual ~SurfaceHasFreeBuffersQuirk() = default;
+        virtual auto gbm_surface_has_free_buffers(gbm_surface* gbm_surface) const -> int = 0;
+    };
+
+    GbmQuirks(
+        std::unique_ptr<CreateSurfaceFlagsQuirk> create_surface_flags,
+        std::unique_ptr<SurfaceHasFreeBuffersQuirk> surface_has_free_buffers);
+
+    auto gbm_create_surface_flags() const -> uint32_t;
+    auto gbm_surface_has_free_buffers(gbm_surface* gbm_surface) const -> int;
+
+private:
+    std::unique_ptr<CreateSurfaceFlagsQuirk> const create_surface_flags;
+    std::unique_ptr<SurfaceHasFreeBuffersQuirk> const surface_has_free_buffers;
+};
+
 /**
  * Interface for querying device-specific quirks
  */
@@ -55,6 +86,9 @@ public:
     auto require_modesetting_support(udev::Device const& device) const -> bool;
 
     static void add_quirks_option(boost::program_options::options_description& config);
+
+    [[nodiscard]]
+    auto gbm_quirks_for(udev::Device const& device) -> std::shared_ptr<GbmQuirks>;
 
 private:
     class Impl;

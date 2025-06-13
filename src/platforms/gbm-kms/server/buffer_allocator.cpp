@@ -15,6 +15,7 @@
  */
 
 #include "buffer_allocator.h"
+#include "kms/quirks.h"
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/gl_config.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
@@ -243,16 +244,18 @@ public:
         EGLContext share_context,
         mg::GLConfig const& config,
         mg::GBMDisplayAllocator& display,
-        mg::DRMFormat format)
+        mg::DRMFormat format,
+        std::shared_ptr<mgg::GbmQuirks> const& quirks)
         : GBMOutputSurface(
               dpy,
-              create_renderable(dpy, share_context, format, config, display))
+              create_renderable(dpy, share_context, format, config, display),
+              quirks)
     {
     }
 
     ~GBMOutputSurface()
     {
-        eglDestroySurface(dpy, egl_surf);
+        quirks->egl_destroy_surface(dpy, egl_surf);
         eglDestroyContext(dpy, ctx);
     }
 
@@ -457,11 +460,13 @@ private:
 
     GBMOutputSurface(
         EGLDisplay dpy,
-        std::tuple<std::unique_ptr<mg::GBMDisplayAllocator::GBMSurface>, EGLContext, EGLSurface> renderables)
+        std::tuple<std::unique_ptr<mg::GBMDisplayAllocator::GBMSurface>, EGLContext, EGLSurface> renderables,
+        std::shared_ptr<mgg::GbmQuirks> const& quirks)
         : surface{std::move(std::get<0>(renderables))},
           egl_surf{std::get<2>(renderables)},
           dpy{dpy},
-          ctx{std::get<1>(renderables)}
+          ctx{std::get<1>(renderables)},
+          quirks{quirks}
     {
     }
 
@@ -469,6 +474,7 @@ private:
     EGLSurface const egl_surf;
     EGLDisplay const dpy;
     EGLContext const ctx;
+    std::shared_ptr<mgg::GbmQuirks> const quirks;
 };
 }
 
@@ -523,7 +529,8 @@ auto mgg::GLRenderingProvider::surface_for_sink(
                     ctx,
                     config,
                     *gbm_allocator,
-                    DRMFormat{DRM_FORMAT_XRGB8888});
+                    DRMFormat{DRM_FORMAT_XRGB8888},
+                    quirks);
             }
         }
     }
@@ -600,12 +607,14 @@ mgg::GLRenderingProvider::GLRenderingProvider(
     std::shared_ptr<mgc::EGLContextExecutor> egl_delegate,
     std::shared_ptr<mg::DMABufEGLProvider> dmabuf_provider,
     EGLDisplay dpy,
-    EGLContext ctx)
+    EGLContext ctx,
+    std::shared_ptr<GbmQuirks> const& quirks)
     : drm_fd{std::move(drm_fd)},
       bound_display{std::move(associated_display)},
       dpy{dpy},
       ctx{ctx},
       dmabuf_provider{std::move(dmabuf_provider)},
-      egl_delegate{std::move(egl_delegate)}
+      egl_delegate{std::move(egl_delegate)},
+      quirks{quirks}
 {
 }

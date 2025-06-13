@@ -86,8 +86,9 @@ mga::Platform::Platform(
     std::shared_ptr<DisplayReport> const& listener,
     ConsoleServices& vt,
     EmergencyCleanupRegistry& registry,
-    BypassOption bypass_option)
-    : Platform(master_fd_for_device(device, vt), listener, registry, bypass_option)
+    BypassOption bypass_option,
+    std::shared_ptr<GbmQuirks> gbm_quirks)
+    : Platform(master_fd_for_device(device, vt), listener, registry, bypass_option, std::move(gbm_quirks))
 {
 }
 
@@ -95,13 +96,15 @@ mga::Platform::Platform(
     std::tuple<std::unique_ptr<Device>, mir::Fd> drm,
     std::shared_ptr<DisplayReport> const& listener,
     EmergencyCleanupRegistry&,
-    BypassOption bypass_option)
+    BypassOption bypass_option,
+    std::shared_ptr<GbmQuirks> gbm_quirks)
     : udev{std::make_shared<mir::udev::Context>()},
       listener{listener},
       device_handle{std::move(std::get<0>(drm))},
       drm_fd{std::move(std::get<1>(drm))},
       gbm_display_provider{maybe_make_gbm_provider(drm_fd)},
-      bypass_option_{bypass_option}
+      bypass_option_{bypass_option},
+      gbm_quirks{std::move(gbm_quirks)}
 {
     if (drm_fd == mir::Fd::invalid)
     {
@@ -132,7 +135,8 @@ mir::UniqueModulePtr<mg::Display> mga::Platform::create_display(
         gbm_device_from_provider(gbm_display_provider),
         bypass_option_,
         initial_conf_policy,
-        listener);
+        listener,
+        gbm_quirks);
 }
 
 auto mga::Platform::maybe_create_provider(DisplayProvider::Tag const& type_tag)

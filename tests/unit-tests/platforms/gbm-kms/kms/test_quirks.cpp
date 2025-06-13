@@ -288,7 +288,7 @@ TEST_F(Quirks, default_requires_modesetting_support)
 TEST_F(Quirks, disable_kms_probe_selectively_disables_modesetting_support)
 {
     mgg::Quirks::add_quirks_option(description);
-    mgg::Quirks quirks{*parsed_options_from_args({"--driver-quirks=disable-kms-probe:amdgpu"})};
+    mgg::Quirks quirks{*parsed_options_from_args({"--driver-quirks=disable-kms-probe:driver:amdgpu"})};
 
     auto const enumerator = make_drm_device_enumerator();
 

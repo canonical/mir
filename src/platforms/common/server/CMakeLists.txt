@@ -17,6 +17,8 @@ add_library(server_platform_common STATIC
   kms_framebuffer.h
   options_parsing_helpers.h
   options_parsing_helpers.cpp
+  quirk_common.h
+  quirk_common.cpp
 )
 
 target_include_directories(

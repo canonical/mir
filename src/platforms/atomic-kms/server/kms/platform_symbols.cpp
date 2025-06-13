@@ -73,7 +73,12 @@ mir::UniqueModulePtr<mg::DisplayPlatform> create_display_platform(
         bypass_option = mga::BypassOption::prohibited;
 
     return mir::make_module_ptr<mga::Platform>(
-        *device.device, report, *console, *emergency_cleanup_registry, bypass_option);
+        *device.device,
+        report,
+        *console,
+        *emergency_cleanup_registry,
+        bypass_option,
+        mir::graphics::atomic::Quirks{*options}.gbm_quirks_for(*device.device));
 }
 
 void add_graphics_platform_options(boost::program_options::options_description& config)
