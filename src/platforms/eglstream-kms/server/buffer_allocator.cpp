@@ -22,6 +22,7 @@
 #include "mir/anonymous_shm_file.h"
 #include "mir/graphics/display_sink.h"
 #include "mir/graphics/drm_formats.h"
+#include "mir/graphics/egl_context_executor.h"
 #include "mir/graphics/egl_resources.h"
 #include "mir/graphics/gl_config.h"
 #include "mir/graphics/platform.h"
@@ -83,7 +84,7 @@ std::shared_ptr<mg::Buffer> mge::BufferAllocator::alloc_software_buffer(geom::Si
                 "Trying to create SHM buffer with unsupported pixel format"));
     }
 
-    return std::make_shared<mgc::MemoryBackedShmBuffer>(size, format, egl_delegate);
+    return std::make_shared<mgc::MemoryBackedShmBuffer>(size, format);
 }
 
 std::vector<MirPixelFormat> mge::BufferAllocator::supported_pixel_formats()
@@ -550,7 +551,6 @@ auto mge::BufferAllocator::buffer_from_shm(
 {
     return std::make_shared<mgc::NotifyingMappableBackedShmBuffer>(
         std::move(data),
-        egl_delegate,
         std::move(on_consumed),
         std::move(on_release));
 }
@@ -722,8 +722,11 @@ auto pick_stream_surface_config(EGLDisplay dpy, mg::GLConfig const& gl_config) -
 }
 }
 
-mge::GLRenderingProvider::GLRenderingProvider(EGLDisplay dpy, std::unique_ptr<mir::renderer::gl::Context> ctx)
+mge::GLRenderingProvider::GLRenderingProvider(
+    EGLDisplay dpy,
+    std::unique_ptr<mir::renderer::gl::Context> ctx)
     : dpy{dpy},
+      egl_delegate{std::make_shared<mgc::EGLContextExecutor>(ctx->make_share_context())},
       ctx{std::move(ctx)}
 {
 }
@@ -734,6 +737,10 @@ auto mir::graphics::eglstream::GLRenderingProvider::as_texture(std::shared_ptr<B
     -> std::shared_ptr<gl::Texture>
 {
     std::shared_ptr<NativeBufferBase> native_buffer{buffer, buffer->native_buffer_base()};
+    if (auto shm = std::dynamic_pointer_cast<mgc::ShmBuffer>(native_buffer))
+    {
+        return shm->texture_for_provider(egl_delegate, this);
+    }
     return std::dynamic_pointer_cast<gl::Texture>(std::move(native_buffer));
 }
 

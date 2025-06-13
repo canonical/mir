@@ -14,31 +14,32 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <vector>
-#include <span>
+#ifndef MIR_TEST_DOUBLES_MOCK_CURSOR_H
+#define MIR_TEST_DOUBLES_MOCK_CURSOR_H
 
 #include "mir/graphics/cursor.h"
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
 
-namespace mir::graphics
+namespace mir
 {
-class Display;
-
-class MultiplexingCursor : public Cursor
+namespace test
 {
-public:
-    explicit MultiplexingCursor(std::span<Display*> platform_displays);
+namespace doubles
+{
+struct MockCursor : public mir::graphics::Cursor
+{
+    MOCK_METHOD0(show, void());
+    MOCK_METHOD1(show, void(std::shared_ptr<mir::graphics::CursorImage> const&));
+    MOCK_METHOD0(hide, void());
 
-    void show(std::shared_ptr<CursorImage> const& image) override;
-    void hide() override;
-    void move_to(geometry::Point position) override;
-
-    void scale(float) override;
-
-    auto renderable() -> std::shared_ptr<Renderable> override;
-
-    auto needs_compositing() const -> bool override;
-
-private:
-    std::vector<std::shared_ptr<Cursor>> const platform_cursors;
+    MOCK_METHOD1(move_to, void(mir::geometry::Point));
+    MOCK_METHOD1(scale, void(float));
+    MOCK_METHOD0(renderable, std::shared_ptr<mir::graphics::Renderable>());
+    MOCK_METHOD(bool, needs_compositing, (), (const, override));
 };
 }
+}
+}
+
+#endif //MIR_TEST_DOUBLES_MOCK_CURSOR_H

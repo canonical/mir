@@ -381,7 +381,7 @@ TEST_F(MesaCursorTest, respects_drm_cap_cursor)
     EXPECT_CALL(mock_gbm, gbm_bo_create(_, drm_buffer_size, drm_buffer_size, _, _));
 
     mgg::Cursor cursor_tmp{output_container,
-                           std::make_shared<StubCurrentConfiguration>(output_container)};
+        std::make_shared<StubCurrentConfiguration>(output_container)};
 }
 
 TEST_F(MesaCursorTest, show_cursor_writes_to_bo)
@@ -480,7 +480,7 @@ TEST_F(MesaCursorTest, clears_cursor_state_on_construction)
     EXPECT_CALL(*output_container.outputs[2], has_cursor_image()).Times(0);
 
     mgg::Cursor cursor_tmp{output_container,
-       std::make_shared<StubCurrentConfiguration>(output_container)};
+        std::make_shared<StubCurrentConfiguration>(output_container)};
 
     output_container.verify_and_clear_expectations();
 }
@@ -498,7 +498,7 @@ TEST_F(MesaCursorTest, construction_fails_if_initial_set_fails)
 
     EXPECT_THROW(
         mgg::Cursor cursor_tmp(output_container,
-           std::make_shared<StubCurrentConfiguration>(output_container));
+            std::make_shared<StubCurrentConfiguration>(output_container));
     , std::runtime_error);
 }
 
@@ -778,3 +778,122 @@ TEST_F(MesaCursorTest, show_cursor_sets_cursor_with_hotspot)
     cursor.move_to(cursor_location_2);
 }
 
+TEST_F(MesaCursorTest, does_not_need_compositing)
+{
+    EXPECT_THAT(cursor.needs_compositing(), Eq(false));
+}
+
+TEST_F(MesaCursorTest, if_shown_cursor_renderable_is_not_null)
+{
+    using namespace testing;
+
+    auto image = std::make_shared<StubCursorImage>();
+    cursor.show(image);
+
+    EXPECT_THAT(cursor.renderable(), NotNull());
+}
+
+TEST_F(MesaCursorTest, cursor_renderable_buffer_is_not_null)
+{
+    using namespace testing;
+
+    auto image = std::make_shared<StubCursorImage>();
+    cursor.show(image);
+
+    EXPECT_THAT(cursor.renderable()->buffer(), NotNull());
+}
+
+TEST_F(MesaCursorTest, cursor_renderable_id_is_not_null)
+{
+    using namespace testing;
+
+    auto image = std::make_shared<StubCursorImage>();
+    cursor.show(image);
+
+    EXPECT_THAT(cursor.renderable()->id(), NotNull());
+}
+
+TEST_F(MesaCursorTest, cursor_renderable_screen_position_is_expected)
+{
+    using namespace testing;
+
+    auto image = std::make_shared<StubCursorImage>();
+    cursor.move_to(geom::Point{50, 50});
+    cursor.show(image);
+
+    EXPECT_THAT(cursor.renderable()->screen_position(), Eq(
+        geom::Rectangle({50, 50}, {image->size()})));
+}
+
+TEST_F(MesaCursorTest, cursor_renderable_src_bounds_is_expected)
+{
+    using namespace testing;
+
+    auto image = std::make_shared<StubCursorImage>();
+    cursor.move_to(geom::Point{50, 50});
+    cursor.show(image);
+
+    EXPECT_THAT(cursor.renderable()->src_bounds(), Eq(
+        geom::RectangleD({0, 0}, image->size())));
+}
+
+TEST_F(MesaCursorTest, cursor_renderable_clip_area_is_unset)
+{
+    using namespace testing;
+
+    auto image = std::make_shared<StubCursorImage>();
+    cursor.show(image);
+
+    EXPECT_THAT(cursor.renderable()->clip_area(), Eq(std::nullopt));
+}
+
+TEST_F(MesaCursorTest, cursor_renderable_alpha_is_one)
+{
+    using namespace testing;
+
+    auto image = std::make_shared<StubCursorImage>();
+    cursor.show(image);
+
+    EXPECT_THAT(cursor.renderable()->alpha(), Eq(1));
+}
+
+TEST_F(MesaCursorTest, cursor_renderable_transformation_is_identity)
+{
+    using namespace testing;
+
+    auto image = std::make_shared<StubCursorImage>();
+    cursor.show(image);
+
+    EXPECT_THAT(cursor.renderable()->transformation(), Eq(glm::mat4(1.f)));
+}
+
+TEST_F(MesaCursorTest, cursor_renderable_shaped_is_true)
+{
+    using namespace testing;
+
+    auto image = std::make_shared<StubCursorImage>();
+    cursor.show(image);
+
+    EXPECT_THAT(cursor.renderable()->shaped(), Eq(true));
+}
+
+TEST_F(MesaCursorTest, cursor_renderable_surface_is_nullopt)
+{
+    using namespace testing;
+
+    auto image = std::make_shared<StubCursorImage>();
+    cursor.show(image);
+
+    EXPECT_THAT(cursor.renderable()->surface_if_any(), Eq(std::nullopt));
+}
+
+TEST_F(MesaCursorTest, if_hidden_cursor_renderable_is_null)
+{
+    using namespace testing;
+
+    auto image = std::make_shared<StubCursorImage>();
+    cursor.show(image);
+    cursor.hide();
+
+    EXPECT_THAT(cursor.renderable(), IsNull());
+}

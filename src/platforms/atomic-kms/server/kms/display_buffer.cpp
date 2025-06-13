@@ -21,26 +21,27 @@
 #include "gbm_display_allocator.h"
 #include "mir/fd.h"
 #include "mir/graphics/display_report.h"
+#include "mir/graphics/drm_formats.h"
 #include "mir/graphics/platform.h"
-#include "mir/graphics/transformation.h"
-#include "bypass.h"
-#include "mir/fatal.h"
 #include "mir/log.h"
-#include "display_helpers.h"
-#include "egl_helper.h"
-#include "mir/graphics/egl_error.h"
-#include "mir/graphics/gl_config.h"
 #include "mir/graphics/dmabuf_buffer.h"
 
+#include <algorithm>
 #include <boost/throw_exception.hpp>
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
+#include <cstdint>
 #include <drm_fourcc.h>
 
+#include <drm_mode.h>
+#include <gbm.h>
+#include <memory>
 #include <stdexcept>
 #include <chrono>
+#include <xf86drm.h>
+#include <xf86drmMode.h>
 
 namespace mg = mir::graphics;
 namespace mga = mir::graphics::atomic;
@@ -56,7 +57,8 @@ mga::DisplaySink::DisplaySink(
     geom::Rectangle const& area,
     glm::mat2 const& transformation,
     std::shared_ptr<GbmQuirks> const& gbm_quirks)
-    : gbm{std::move(gbm)},
+    : DmaBufDisplayAllocator(gbm, drm_fd),
+      gbm{std::move(gbm)},
       listener(listener),
       output{std::move(output)},
       area(area),
@@ -241,6 +243,153 @@ void mga::DisplaySink::set_next_image(std::unique_ptr<Framebuffer> content)
     }
 }
 
+namespace {
+auto const MAX_PLANES = 4zu;
+
+auto get_import_buffers(std::shared_ptr<mg::DMABufBuffer> buffer)
+    -> std::tuple<std::array<int, 4>, std::array<int, 4>, std::array<int, 4>, std::array<uint64_t, 4>>
+{
+    auto const plane_descriptors = buffer->planes();
+    assert(plane_descriptors.size() <= MAX_PLANES);
+
+    // std::array becuase we can't really return int[4]
+    std::array<int, 4> dmabuf_fds = {0};
+    std::array<int, 4> pitches = {0};
+    std::array<int, 4> offsets = {0};
+    std::array<uint64_t, 4> modifiers = {0};
+
+    for (std::size_t i = 0; i < std::min(MAX_PLANES, plane_descriptors.size()); i++)
+    {
+        dmabuf_fds[i] = plane_descriptors[i].dma_buf;
+        pitches[i] = plane_descriptors[i].stride;
+        offsets[i] = plane_descriptors[i].offset;
+        modifiers[i] = buffer->modifier().value_or(DRM_FORMAT_MOD_INVALID);
+    }
+
+    return std::make_tuple(dmabuf_fds, pitches, offsets, modifiers);
+}
+
+auto import_gbm_bo(
+    std::shared_ptr<struct gbm_device> gbm,
+    std::shared_ptr<mg::DMABufBuffer> buffer,
+    std::array<int, 4> dmabuf_fds,
+    std::array<int, 4> pitches,
+    std::array<int, 4> offsets) -> std::shared_ptr<struct gbm_bo>
+{
+    auto const plane_descriptors = buffer->planes();
+
+    gbm_import_fd_modifier_data import_data = {
+        .width = buffer->size().width.as_uint32_t(),
+        .height = buffer->size().height.as_uint32_t(),
+        .format = buffer->format(),
+        .num_fds = static_cast<uint32_t>(std::min(plane_descriptors.size(), MAX_PLANES)),
+        .fds = {dmabuf_fds[0], dmabuf_fds[1], dmabuf_fds[2], dmabuf_fds[3]},
+        .strides = {pitches[0], pitches[1], pitches[2], pitches[3]},
+        .offsets = {offsets[0], offsets[1], offsets[2], offsets[3]},
+        .modifier = buffer->modifier().value_or(DRM_FORMAT_MOD_NONE),
+    };
+
+    auto* gbm_bo = gbm_bo_import(gbm.get(), GBM_BO_IMPORT_FD_MODIFIER, (void*)&import_data, GBM_BO_USE_SCANOUT);
+    if (!gbm_bo)
+    {
+        mir::log_debug(
+            "Failed to import buffer type %s:%s (%s [%i])",
+            buffer->format().name(),
+            mg::drm_modifier_to_string(buffer->modifier().value_or(DRM_FORMAT_MOD_INVALID)).c_str(),
+            strerror(errno),
+            errno);
+        return {};
+    }
+    return std::shared_ptr<struct gbm_bo>(gbm_bo, &gbm_bo_destroy);
+}
+
+auto drm_fb_id_from_dma_buffer(
+    mir::Fd drm_fd, std::shared_ptr<struct gbm_device> const gbm, std::shared_ptr<mg::DMABufBuffer> buffer)
+    -> std::shared_ptr<uint32_t>
+{
+    auto [dmabuf_fds, pitches, offsets, modifiers] = get_import_buffers(buffer);
+    auto gbm_bo = import_gbm_bo(gbm, buffer, dmabuf_fds, pitches, offsets);
+    if (!gbm_bo)
+    {
+        return {};
+    }
+
+    auto const plane_descriptors = buffer->planes();
+    uint32_t gem_handles[MAX_PLANES] = {0};
+    for (std::size_t i = 0; i < std::min(MAX_PLANES, plane_descriptors.size()); i++)
+        gem_handles[i] = gbm_bo_get_handle_for_plane(gbm_bo.get(), i).u32;
+
+    // Note that we capture `gbm_bo` so that its lifetime matches that of the fb_id
+    auto fb_id = std::shared_ptr<uint32_t>{
+        new uint32_t{0},
+        [drm_fd, gbm_bo, buffer](uint32_t* fb_id)
+        {
+            if (*fb_id)
+                drmModeRmFB(drm_fd, *fb_id);
+
+            delete fb_id;
+        }};
+
+    auto [width, height] = buffer->size();
+    int ret = drmModeAddFB2WithModifiers(
+        drm_fd,
+        width.as_uint32_t(),
+        height.as_uint32_t(),
+        buffer->format(),
+        gem_handles,
+        reinterpret_cast<uint32_t*>(pitches.data()),
+        reinterpret_cast<uint32_t*>(offsets.data()),
+        modifiers.data(),
+        fb_id.get(),
+        DRM_MODE_FB_MODIFIERS);
+
+    if (ret)
+    {
+        mir::log_warning("drmModeAddFB2WithModifiers returned an error: %d", ret);
+        return {};
+    }
+
+    return fb_id;
+}
+}
+
+auto mga::DmaBufDisplayAllocator::framebuffer_for(std::shared_ptr<DMABufBuffer> buffer) -> std::unique_ptr<Framebuffer>
+{
+    auto fb_id = drm_fb_id_from_dma_buffer(drm_fd(), gbm, buffer);
+
+    if (!fb_id)
+    {
+        return {};
+    }
+
+    struct AtomicKmsFbHandle : public mg::FBHandle
+    {
+        AtomicKmsFbHandle(std::shared_ptr<uint32_t> fb_handle, geometry::Size size) :
+            kms_fb_id{fb_handle},
+            size_{size}
+        {
+        }
+
+        virtual auto size() const -> geometry::Size override
+        {
+            return size_;
+        }
+
+        virtual operator uint32_t() const override
+        {
+            return *kms_fb_id;
+        }
+
+    private:
+        std::shared_ptr<uint32_t> kms_fb_id;
+        geometry::Size size_;
+    };
+
+    buffer->on_consumed();
+
+    return std::make_unique<AtomicKmsFbHandle>(fb_id, buffer->size());
+}
+
 auto mga::DisplaySink::maybe_create_allocator(DisplayAllocator::Tag const& type_tag)
     -> DisplayAllocator*
 {
@@ -259,6 +408,14 @@ auto mga::DisplaySink::maybe_create_allocator(DisplayAllocator::Tag const& type_
             gbm_allocator = std::make_unique<GBMDisplayAllocator>(drm_fd(), gbm, output->size(), gbm_quirks);
         }
         return gbm_allocator.get();
+    }
+    if(dynamic_cast<DmaBufDisplayAllocator::Tag const*>(&type_tag))
+    {
+        if (!bypass_allocator)
+        {
+           bypass_allocator = std::make_shared<DmaBufDisplayAllocator>(gbm, drm_fd());
+        }
+        return bypass_allocator.get();
     }
     return nullptr;
 }

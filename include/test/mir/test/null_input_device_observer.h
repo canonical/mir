@@ -14,31 +14,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <vector>
-#include <span>
+#ifndef MIR_INPUT_NULL_INPUT_DEVICE_OBSERVER_H_
+#define MIR_INPUT_NULL_INPUT_DEVICE_OBSERVER_H_
 
-#include "mir/graphics/cursor.h"
+#include "mir/input/input_device_observer.h"
 
-namespace mir::graphics
+namespace mir
 {
-class Display;
+namespace input
+{
 
-class MultiplexingCursor : public Cursor
+class NullInputDeviceObserver : public InputDeviceObserver
 {
 public:
-    explicit MultiplexingCursor(std::span<Display*> platform_displays);
+    void device_added(std::shared_ptr<Device> const&) override {}
+    void device_changed(std::shared_ptr<Device> const&) override {}
+    void device_removed(std::shared_ptr<Device> const&) override {}
+    void changes_complete() override {}
 
-    void show(std::shared_ptr<CursorImage> const& image) override;
-    void hide() override;
-    void move_to(geometry::Point position) override;
-
-    void scale(float) override;
-
-    auto renderable() -> std::shared_ptr<Renderable> override;
-
-    auto needs_compositing() const -> bool override;
-
-private:
-    std::vector<std::shared_ptr<Cursor>> const platform_cursors;
+    ~NullInputDeviceObserver() override = default;
 };
+
 }
+}
+
+#endif
