@@ -45,6 +45,7 @@ struct miral::live_config::Key::State
     }
 
     auto operator<=>(State const& that) const { return key <=> that.key; }
+    auto operator==(State const& that) const -> bool = default;
 
     auto to_string() const -> std::string
     {
@@ -80,5 +81,10 @@ auto miral::live_config::Key::to_string() const -> std::string
 auto miral::live_config::Key::operator<=>(Key const& that) const -> std::strong_ordering
 {
     return *self <=> *that.self;
+}
+
+auto miral::live_config::Key::operator==(Key const& that) const -> bool
+{
+    return *self == *that.self;
 }
 
