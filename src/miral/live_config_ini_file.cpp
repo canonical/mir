@@ -62,12 +62,6 @@ private:
     std::list<HandleDone> done_handlers;
 };
 
-void miral::live_config::IniFile::Self::on_done(HandleDone handler)
-{
-    std::lock_guard lock{mutex};
-    done_handlers.emplace_back(std::move(handler));
-}
-
 void mlc::IniFile::Self::add_key(
     Key const& key,
     std::string_view description,
@@ -75,13 +69,33 @@ void mlc::IniFile::Self::add_key(
     HandleString handler)
 {
     std::lock_guard lock{mutex};
+
+    if (attribute_handlers.erase(key) || array_attribute_handlers.erase(key))
+    {
+        // if a key is registered multiple times, the last time is used: drop existing earlier registrations
+        mir::log_warning("Config attribute handler for '%s' overwritten", key.to_string().c_str());
+    }
+
     attribute_handlers.emplace(key, AttributeDetails{handler, std::string{description}, preset, std::nullopt});
+}
+
+void miral::live_config::IniFile::Self::on_done(HandleDone handler)
+{
+    std::lock_guard lock{mutex};
+    done_handlers.emplace_back(std::move(handler));
 }
 
 void mlc::IniFile::Self::add_key(Key const& key, std::string_view description,
     std::optional<std::vector<std::string>> preset, HandleStrings handler)
 {
     std::lock_guard lock{mutex};
+
+    if (attribute_handlers.erase(key) || array_attribute_handlers.erase(key))
+    {
+        // if a key is registered multiple times, the last time is used: drop existing earlier registrations
+        mir::log_warning("Config attribute handler for '%s' overwritten", key.to_string().c_str());
+    }
+
     array_attribute_handlers.emplace(key, ArrayAttributeDetails{handler, std::string{description}, preset, std::nullopt});
 }
 
@@ -112,8 +126,7 @@ void mlc::IniFile::Self::load_file(std::istream& istream, std::filesystem::path 
             {
                 details->second.value = value;
             }
-
-            if (auto const details = array_attribute_handlers.find(key); details != array_attribute_handlers.end())
+            else if (auto const details = array_attribute_handlers.find(key); details != array_attribute_handlers.end())
             {
                 if (details->second.value)
                 {

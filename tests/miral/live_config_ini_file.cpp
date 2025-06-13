@@ -333,3 +333,32 @@ TEST_F(LiveConfigIniFile, done_handlers_run_last)
 
     EXPECT_THAT(done_called, IsTrue());
 }
+
+TEST_F(LiveConfigIniFile, the_last_registration_of_a_key_is_used)
+{
+    ini_file.add_string_attribute(a_key, "strings", [this](auto... args) { string_handler(args...); });
+    ini_file.add_strings_attribute(a_key, "strings", [this](auto... args) { strings_handler(args...); });
+    ini_file.add_float_attribute(a_key, "a float", [this](auto... args) { float_handler(args...); });
+    ini_file.add_floats_attribute(a_key, "floats", [this](auto... args) { floats_handler(args...); });
+    ini_file.add_int_attribute(a_key, "a scoped int", [this](auto... args) { int_handler(args...); });
+
+    EXPECT_CALL(*this, string_handler(a_key, _)).Times(0);
+    EXPECT_CALL(*this, strings_handler(a_key, _)).Times(0);
+    EXPECT_CALL(*this, float_handler(a_key, _)).Times(0);
+    EXPECT_CALL(*this, floats_handler(a_key, _)).Times(0);
+    EXPECT_CALL(*this, int_handler(a_key, _)).Times(1);
+
+    ini_file.add_string_attribute(another_key, "strings", [this](auto... args) { string_handler(args...); });
+    ini_file.add_strings_attribute(another_key, "strings", [this](auto... args) { strings_handler(args...); });
+    ini_file.add_float_attribute(another_key, "a float", [this](auto... args) { float_handler(args...); });
+    ini_file.add_floats_attribute(another_key, "floats", [this](auto... args) { floats_handler(args...); });
+    ini_file.add_ints_attribute(another_key, "a scoped int", [this](auto... args) { ints_handler(args...); });
+
+    EXPECT_CALL(*this, string_handler(another_key, _)).Times(0);
+    EXPECT_CALL(*this, strings_handler(another_key, _)).Times(0);
+    EXPECT_CALL(*this, float_handler(another_key, _)).Times(0);
+    EXPECT_CALL(*this, floats_handler(another_key, _)).Times(0);
+    EXPECT_CALL(*this, ints_handler(another_key, _)).Times(1);
+
+    ini_file.load_file(istream, fake_filename());
+}
