@@ -75,6 +75,11 @@ public:
                 disable_kms_probe.skip(specifier, specifier_value);
                 return true;
             }
+            else if (mgc::matches(tokens, "egl-destroy-surface", {"default", "leak"}))
+            {
+                egl_destroy_surface.add(specifier, specifier_value, tokens[3]);
+                return true;
+            }
 
             return false;
         };
@@ -141,6 +146,68 @@ public:
         return !(should_skip_driver || should_skip_devnode);
     }
 
+    auto gbm_quirks_for(udev::Device const& device) -> std::shared_ptr<GbmQuirks>
+    {
+        class DefaultEglDestroySurface : public GbmQuirks::EglDestroySurfaceQuirk
+        {
+            void egl_destroy_surface(EGLDisplay dpy, EGLSurface surf) const override
+            {
+                eglDestroySurface(dpy, surf);
+            }
+        };
+
+        class LeakSurface : public GbmQuirks::EglDestroySurfaceQuirk
+        {
+            void egl_destroy_surface(EGLDisplay, EGLSurface) const override
+            {
+            }
+        };
+
+        auto const driver = mgc::get_device_driver(device.parent().get());
+        auto const devnode = device.devnode();
+        mir::log_debug("Quirks(egl-destroy-surface): checking device with devnode: %s, driver %s", devnode, driver);
+        
+        auto const devnode_or_driver =
+            [](auto devnode, auto driver, auto devnodes, auto drivers) -> std::optional<std::string>
+        {
+            if (devnodes.contains(devnode))
+                return devnodes.at(devnode);
+        
+            if (drivers.contains(driver))
+                return drivers.at(driver);
+        
+            return std::nullopt;
+        };
+        
+        auto egl_destroy_surface_impl_name =
+            devnode_or_driver(devnode, driver, egl_destroy_surface.devnodes, egl_destroy_surface.drivers)
+                .transform(
+                    [](auto impl_name)
+                    {
+                        mir::log_debug(
+                            "Quirks(egl-destroy-surface): forcing %s implementation", impl_name.c_str());
+                        return impl_name;
+                    })
+                .or_else(
+                    [&driver] -> std::optional<std::string>
+                    {
+                        mir::log_debug(
+                            "Quirks(egl-destroy-surface): using default implementation for %s driver", driver);
+                        // Not specified
+                        return driver;
+                    })
+                .value();
+        
+        auto egl_destroy_surface_impl = [&]() -> std::unique_ptr<GbmQuirks::EglDestroySurfaceQuirk>
+        {
+            if (egl_destroy_surface_impl_name == "leak" || egl_destroy_surface_impl_name == "nvidia")
+                return std::make_unique<LeakSurface>();
+        
+            return std::make_unique<DefaultEglDestroySurface>();
+        }();
+        
+        return std::make_shared<GbmQuirks>(std::move(egl_destroy_surface_impl));
+    }
 private:
     /* AST is a simple 2D output device, built into some motherboards.
      * They do not have any 3D engine associated, so were quirked off to avoid https://github.com/canonical/mir/issues/2678
@@ -155,6 +222,8 @@ private:
     mgc::AllowList completely_skip{{"ast", "simple-framebuffer"}};
     // We know this is currently useful for virtio_gpu, vc4-drm and v3d
     mgc::AllowList disable_kms_probe{{"virtio_gpu", "vc4-drm", "v3d"}};
+
+    mgc::ValuedOption egl_destroy_surface;
 };
 
 mgg::Quirks::Quirks(const options::Option& options)
@@ -194,3 +263,19 @@ auto mir::graphics::gbm::Quirks::require_modesetting_support(mir::udev::Device c
         return impl->require_modesetting_support(device);
     }
 }
+
+auto mir::graphics::gbm::Quirks::gbm_quirks_for(udev::Device const& device) -> std::shared_ptr<GbmQuirks>
+{
+    return impl->gbm_quirks_for(device);
+}
+
+mir::graphics::gbm::GbmQuirks::GbmQuirks(std::unique_ptr<EglDestroySurfaceQuirk> egl_destroy_surface) :
+    egl_destroy_surface_{std::move(egl_destroy_surface)}
+{
+}
+
+void mir::graphics::gbm::GbmQuirks::egl_destroy_surface(EGLDisplay dpy, EGLSurface surf) const
+{
+    egl_destroy_surface_->egl_destroy_surface(dpy, surf);
+}
+
