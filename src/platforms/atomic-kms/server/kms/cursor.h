@@ -38,6 +38,11 @@ namespace graphics
 class CursorImage;
 class DisplayConfigurationOutput;
 
+namespace common
+{
+class MemoryBackedShmBuffer;
+}
+
 namespace atomic
 {
 class KMSOutputContainer;
@@ -95,7 +100,7 @@ private:
         size_t count);
     void pad_and_write_image_data_locked(
         std::lock_guard<std::mutex> const&,
-        GBMBOWrapper& buffer);
+        GBMBOWrapper& gbm_buffer);
     void clear(std::lock_guard<std::mutex> const&);
 
     GBMBOWrapper& buffer_for_output(KMSOutput const& output);
@@ -106,7 +111,7 @@ private:
     geometry::Point current_position;
     geometry::Displacement hotspot;
     geometry::Size size;
-    std::vector<uint8_t> argb8888;
+    std::shared_ptr<common::MemoryBackedShmBuffer> buffer;
 
     bool visible;
     bool last_set_failed;
