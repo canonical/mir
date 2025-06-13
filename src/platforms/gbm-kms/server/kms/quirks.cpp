@@ -160,6 +160,8 @@ public:
         {
             void egl_destroy_surface(EGLDisplay, EGLSurface) const override
             {
+                // https://github.com/canonical/mir/pull/3979#issuecomment-2970797208
+                mir::log_warning("egl_destroy_surface called on the leak implementation. Will not destroy surface.");
             }
         };
 
