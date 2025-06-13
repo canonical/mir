@@ -92,22 +92,12 @@ public:
             }
             else if (mgc::matches(tokens, "gbm-create-surface-flags", {"default", "no-flags"}))
             {
-                auto const chosen_value = tokens[3];
-                if (specifier == "devnode")
-                    gbm_create_surface_flags.add_devnode(specifier_value, chosen_value);
-                else if (specifier == "driver")
-                    gbm_create_surface_flags.add_driver(specifier_value, chosen_value);
-
+                gbm_create_surface_flags.add(specifier, specifier_value, tokens[3]);
                 return true;
             }
             else if (mgc::matches(tokens, "gbm-surface-has-free-buffers", {"default", "skip"}))
             {
-                auto const chosen_value = tokens[3];
-                if (specifier == "devnode")
-                    gbm_surface_has_free_buffers.add_devnode(specifier_value, chosen_value);
-                else if (specifier == "driver")
-                    gbm_surface_has_free_buffers.add_driver(specifier_value, chosen_value);
-
+                gbm_surface_has_free_buffers.add(specifier, specifier_value, tokens[3]);
                 return true;
             }
 

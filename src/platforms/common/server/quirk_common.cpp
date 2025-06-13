@@ -37,15 +37,15 @@ void mir::graphics::common::AllowList::skip(std::string specifier, std::string s
         skipped_drivers.insert(specifier_value);
 }
 
-void mir::graphics::common::ValuedOption::add_devnode(std::string const& devnode, std::string const& quirk)
+void mir::graphics::common::ValuedOption::add(
+    std::string_view specifier, std::string const& specifier_value, std::string const& chosen_value)
 {
-    devnodes.insert_or_assign(devnode, quirk);
+    if (specifier == "devnode")
+        devnodes.insert_or_assign(specifier_value, chosen_value);
+    else if (specifier == "driver")
+        drivers.insert_or_assign(specifier_value, chosen_value);
 }
 
-void mir::graphics::common::ValuedOption::add_driver(std::string const& driver, std::string const& quirk)
-{
-    drivers.insert_or_assign(driver, quirk);
-}
 
 auto mir::graphics::common::validate_structure(
     std::vector<std::string> const& tokens, std::set<std::string> const& available_options)

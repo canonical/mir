@@ -48,8 +48,7 @@ struct AllowList
 
 struct ValuedOption
 {
-    void add_devnode(std::string const& devnode, std::string const& quirk);
-    void add_driver(std::string const& driver, std::string const& quirk);
+    void add(std::string_view specifier, std::string const& specifier_value, std::string const& chosen_value);
 
     std::unordered_map<std::string, std::string> drivers;
     std::unordered_map<std::string, std::string> devnodes;
