@@ -30,7 +30,7 @@ class IniFile : public Store
 {
 public:
     IniFile();
-    ~IniFile();
+    ~IniFile() override;
 
     void add_int_attribute(Key const& key, std::string_view description, HandleInt handler) override;
     void add_ints_attribute(Key const& key, std::string_view description, HandleInts handler) override;
