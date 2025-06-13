@@ -31,6 +31,7 @@ class RendererFactory;
 
 namespace graphics
 {
+class Cursor;
 class OutputFilter;
 }
 
@@ -53,7 +54,8 @@ public:
         std::shared_ptr<renderer::RendererFactory> const& render_factory,
         std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
         std::shared_ptr<graphics::GLConfig> const& config,
-        std::shared_ptr<graphics::OutputFilter> const& output_filter);
+        std::shared_ptr<graphics::OutputFilter> const& output_filter,
+        std::shared_ptr<graphics::Cursor> const& cursor);
     auto create(Executor& executor) -> std::unique_ptr<ScreenShooter> override;
 
 private:
@@ -64,6 +66,7 @@ private:
     std::shared_ptr<graphics::GraphicBufferAllocator> buffer_allocator;
     std::shared_ptr<graphics::GLConfig> config;
     std::shared_ptr<graphics::OutputFilter> const output_filter;
+    std::shared_ptr<graphics::Cursor> cursor;
 };
 }
 }

@@ -126,7 +126,8 @@ auto mir::DefaultServerConfiguration::the_screen_shooter() -> std::shared_ptr<co
                     the_renderer_factory(),
                     the_buffer_allocator(),
                     the_gl_config(),
-                    the_output_filter());
+                    the_output_filter(),
+                    the_cursor());
             }
             catch (...)
             {
@@ -167,6 +168,7 @@ auto mir::DefaultServerConfiguration::the_screen_shooter_factory() -> std::share
                 the_renderer_factory(),
                 the_buffer_allocator(),
                 the_gl_config(),
-                the_output_filter());
+                the_output_filter(),
+                the_cursor());
         });
 }

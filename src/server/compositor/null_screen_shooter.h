@@ -34,6 +34,7 @@ public:
     void capture(
         std::shared_ptr<renderer::software::WriteMappableBuffer> const& buffer,
         geometry::Rectangle const& area,
+        bool overlay_cursor,
         std::function<void(std::optional<time::Timestamp>)>&& callback) override;
 
 private:
