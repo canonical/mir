@@ -599,6 +599,8 @@ global:
     miral::live_config::Key::to_string*;
     miral::live_config::Key::operator*;
     miral::live_config::Store::?Store*;
+    miral::live_config::Store::Store*;
+    miral::live_config::Store::operator*;
     non-virtual?thunk?to?miral::live_config::IniFile::?IniFile*;
     non-virtual?thunk?to?miral::live_config::IniFile::add_bool_attribute*;
     non-virtual?thunk?to?miral::live_config::IniFile::add_float_attribute*;
