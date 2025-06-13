@@ -59,6 +59,7 @@ public:
         wl_resource* output;
         geometry::Rectangle output_space_area;
         geometry::Size buffer_size;
+        bool overlay_cursor;
 
         auto operator==(FrameParams const& other) const -> bool
         {

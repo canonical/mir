@@ -15,6 +15,7 @@
  */
 
 #include "basic_screen_shooter.h"
+#include "mir/graphics/cursor.h"
 #include "mir/graphics/drm_formats.h"
 #include "mir/graphics/gl_config.h"
 #include "mir/renderer/renderer.h"
@@ -158,7 +159,8 @@ mc::BasicScreenShooter::Self::Self(
     std::shared_ptr<mg::GLRenderingProvider> render_provider,
     std::shared_ptr<mr::RendererFactory> renderer_factory,
     std::shared_ptr<mir::graphics::GLConfig> const& config,
-    std::shared_ptr<graphics::OutputFilter> const& output_filter)
+    std::shared_ptr<graphics::OutputFilter> const& output_filter,
+    std::shared_ptr<graphics::Cursor> const& cursor)
     : scene{scene},
       clock{clock},
       render_provider{std::move(render_provider)},
@@ -166,13 +168,15 @@ mc::BasicScreenShooter::Self::Self(
       last_rendered_size{0, 0},
       output{std::make_shared<OneShotBufferDisplayProvider>()},
       config{config},
-      output_filter{output_filter}
+      output_filter{output_filter},
+      cursor{cursor}
 {
 }
 
 auto mc::BasicScreenShooter::Self::render(
     std::shared_ptr<mrs::WriteMappableBuffer> const& buffer,
-    geom::Rectangle const& area) -> time::Timestamp
+    geom::Rectangle const& area,
+    bool overlay_cursor) -> time::Timestamp
 {
     std::lock_guard lock{mutex};
 
@@ -184,6 +188,13 @@ auto mc::BasicScreenShooter::Self::render(
     {
         renderable_list.push_back(element->renderable());
     }
+
+    if (overlay_cursor)
+    {
+        if (auto const cursor_renderable = cursor->renderable())
+            renderable_list.push_back(cursor_renderable);
+    }
+
     scene_elements.clear();
 
     auto& renderer = renderer_for_buffer(buffer);
@@ -262,8 +273,9 @@ mc::BasicScreenShooter::BasicScreenShooter(
     std::shared_ptr<mr::RendererFactory> render_factory,
     std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
     std::shared_ptr<mir::graphics::GLConfig> const& config,
-    std::shared_ptr<graphics::OutputFilter> const& output_filter)
-    : self{std::make_shared<Self>(scene, clock, select_provider(providers, buffer_allocator), std::move(render_factory), config, output_filter)},
+    std::shared_ptr<graphics::OutputFilter> const& output_filter,
+    std::shared_ptr<graphics::Cursor> const& cursor)
+    : self{std::make_shared<Self>(scene, clock, select_provider(providers, buffer_allocator), std::move(render_factory), config, output_filter, cursor)},
       executor{executor}
 {
 }
@@ -271,17 +283,18 @@ mc::BasicScreenShooter::BasicScreenShooter(
 void mc::BasicScreenShooter::capture(
     std::shared_ptr<mrs::WriteMappableBuffer> const& buffer,
     geom::Rectangle const& area,
+    bool overlay_cursor,
     std::function<void(std::optional<time::Timestamp>)>&& callback)
 {
     // TODO: use an atomic to keep track of number of in-flight captures, and error if it's too many
 
-    executor.spawn([weak_self=std::weak_ptr{self}, buffer, area, callback=std::move(callback)]
+    executor.spawn([weak_self=std::weak_ptr{self}, buffer, area, overlay_cursor, callback=std::move(callback)]
         {
             if (auto const self = weak_self.lock())
             {
                 try
                 {
-                    callback(self->render(buffer, area));
+                    callback(self->render(buffer, area, overlay_cursor));
                     return;
                 }
                 catch (...)

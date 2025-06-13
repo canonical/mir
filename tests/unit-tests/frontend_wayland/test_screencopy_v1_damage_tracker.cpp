@@ -40,12 +40,12 @@ struct MockFrame : mf::WlrScreencopyV1DamageTracker::Frame, mw::LifetimeTracker
 {
 public:
     MockFrame(geom::Rectangle output_space_area)
-        : params{nullptr, output_space_area, output_space_area.size}
+        : params{nullptr, output_space_area, output_space_area.size, false}
     {
     }
 
     MockFrame(geom::Rectangle output_space_area, geom::Size buffer_size)
-        : params{nullptr, output_space_area, buffer_size}
+        : params{nullptr, output_space_area, buffer_size, false}
     {
     }
 
