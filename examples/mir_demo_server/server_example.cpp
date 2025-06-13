@@ -22,6 +22,7 @@
 #include <miral/display_configuration_option.h>
 #include <miral/input_configuration.h>
 #include <miral/live_config.h>
+#include <miral/live_config_ini_file.h>
 #include <miral/minimal_window_manager.h>
 #include <miral/config_file.h>
 #include <miral/runner.h>
@@ -118,269 +119,6 @@ catch (std::exception const& error)
 catch (...)
 {
 }
-
-// for illustrative purposes
-class DemoConfigFile : public live_config::Store
-{
-public:
-    DemoConfigFile(miral::MirRunner& runner, std::filesystem::path file) :
-        init_part2{[&runner, file, this]
-        {
-            miral::ConfigFile temp
-            {
-                runner,
-                file,
-                miral::ConfigFile::Mode::reload_on_change,
-                [this](std::istream& istream, std::filesystem::path const& path) {loader(istream, path); }
-            };
-
-            std::lock_guard lock{config_mutex};
-            config_file = temp;
-        }}
-    {
-    }
-
-    // Allows the configuration to be processed after the handlers are registered
-    void handle_initial_config() const
-    {
-        init_part2();
-    }
-
-    void add_int_attribute(live_config::Key const& key, std::string_view description, HandleInt handler) override;
-    void add_ints_attribute(live_config::Key const& key, std::string_view description, HandleInts handler) override;
-    void add_bool_attribute(live_config::Key const& key, std::string_view description, HandleBool handler) override;
-    void add_float_attribute(live_config::Key const& key, std::string_view description, HandleFloat handler) override;
-    void add_floats_attribute(live_config::Key const& key, std::string_view description, HandleFloats handler) override;
-    void add_string_attribute(live_config::Key const& key, std::string_view description, HandleString handler) override;
-    void add_strings_attribute(live_config::Key const& key, std::string_view description, HandleStrings handler) override;
-
-    void add_int_attribute(live_config::Key const& key, std::string_view description, int preset,
-        HandleInt handler) override;
-    void add_ints_attribute(live_config::Key const& key, std::string_view description, std::span<int const> preset,
-                            HandleInts handler) override;
-    void add_bool_attribute(live_config::Key const& key, std::string_view description, bool preset,
-        HandleBool handler) override;
-    void add_float_attribute(live_config::Key const& key, std::string_view description, float preset,
-                             HandleFloat handler) override;
-    void add_floats_attribute(live_config::Key const& key, std::string_view description, std::span<float const> preset,
-                              HandleFloats handler) override;
-    void add_string_attribute(live_config::Key const& key, std::string_view description, std::string_view preset,
-        HandleString handler) override;
-    void add_strings_attribute(live_config::Key const& key, std::string_view description,
-        std::span<std::string const> preset, HandleStrings handler) override;
-
-    void on_done(HandleDone handler) override;
-
-private:
-
-    std::map<live_config::Key, HandleString> attribute_handlers;
-    std::list<HandleDone> done_handlers;
-
-    std::mutex config_mutex;
-    std::optional<miral::ConfigFile> config_file;
-    std::function<void()> const init_part2;
-
-    void apply_config()
-    {
-        for (auto const& handler : done_handlers)
-            handler();
-    };
-
-    void loader(std::istream& in, std::filesystem::path const& path)
-    {
-        std::cout << "** Reloading: " << path << std::endl;
-
-        std::lock_guard lock{config_mutex};
-
-        for (std::string line; std::getline(in, line);)
-        {
-            std::cout << line << std::endl;
-
-            if (line.contains("="))
-            {
-                auto const eq = line.find_first_of("=");
-                auto const key = live_config::Key{line.substr(0, eq)};
-                auto const value = line.substr(eq+1);
-
-                if (auto const handler = attribute_handlers.find(key); handler != attribute_handlers.end())
-                {
-                    handler->second(handler->first, value);
-                }
-            }
-        }
-
-        apply_config();
-    }
-};
-
-void DemoConfigFile::add_ints_attribute(live_config::Key const& key, std::string_view, HandleInts handler)
-{
-    // Not implemented: not needed for discussion
-    (void)handler; (void)key;
-}
-
-void DemoConfigFile::add_floats_attribute(live_config::Key const& key, std::string_view, HandleFloats handler)
-{
-    // Not implemented: not needed for discussion
-    (void)handler; (void)key;
-}
-
-void DemoConfigFile::add_strings_attribute(live_config::Key const& key, std::string_view, HandleStrings handler)
-{
-    // Not implemented: not needed for discussion
-    (void)handler; (void)key;
-}
-
-void DemoConfigFile::add_int_attribute(live_config::Key const& key, std::string_view description, int preset,
-    HandleInt handler)
-{
-    // Not implemented: not needed for discussion
-    (void)handler; (void)description; (void)key; (void)preset;
-}
-
-void DemoConfigFile::add_ints_attribute(live_config::Key const& key, std::string_view description,
-                                        std::span<int const> preset, HandleInts handler)
-{
-    // Not implemented: not needed for discussion
-    (void)handler; (void)description; (void)key; (void)preset;
-}
-
-void DemoConfigFile::add_bool_attribute(live_config::Key const& key, std::string_view description, bool preset,
-    HandleBool handler)
-{
-    // Not implemented: not needed for discussion
-    (void)handler; (void)description; (void)key; (void)preset;
-}
-
-void DemoConfigFile::add_float_attribute(live_config::Key const& key, std::string_view description, float preset,
-                                         HandleFloat handler)
-{
-    // Not implemented: not needed for discussion
-    (void)handler; (void)description; (void)key; (void)preset;
-}
-
-void DemoConfigFile::add_floats_attribute(live_config::Key const& key, std::string_view description,
-                                          std::span<float const> preset, HandleFloats handler)
-{
-    // Not implemented: not needed for discussion
-    (void)handler; (void)description; (void)key; (void)preset;
-}
-
-void DemoConfigFile::add_string_attribute(live_config::Key const& key, std::string_view description,
-    std::string_view preset, HandleString handler)
-{
-    // Not implemented: not needed for discussion
-    (void)handler; (void)description; (void)key; (void)preset;
-}
-
-void DemoConfigFile::add_strings_attribute(live_config::Key const& key, std::string_view description,
-    std::span<std::string const> preset, HandleStrings handler)
-{
-    // Not implemented: not needed for discussion
-    (void)handler; (void)description; (void)key; (void)preset;
-}
-
-void DemoConfigFile::on_done(HandleDone handler)
-{
-    std::lock_guard lock{config_mutex};
-    done_handlers.emplace_back(std::move(handler));
-}
-
-void DemoConfigFile::add_int_attribute(live_config::Key const& key, std::string_view description, HandleInt handler)
-{
-    add_string_attribute(key, description, [handler](live_config::Key const& key, std::optional<std::string_view> val)
-    {
-        if (val)
-        {
-            int parsed_val = 0;
-
-            auto const [_, err] = std::from_chars(val->data(), val->data() + val->size(), parsed_val);
-
-            if (err == std::errc{})
-            {
-                handler(key, parsed_val);
-            }
-            else
-            {
-                mir::log_warning(
-                    "Config key '%s' has invalid integer value: %s",
-                    key.to_string().c_str(),
-                    std::format("{}",*val).c_str());
-                handler(key, std::nullopt);
-            }
-        }
-        else
-        {
-            handler(key, std::nullopt);
-        }
-    });
-}
-
-void DemoConfigFile::add_bool_attribute(live_config::Key const& key, std::string_view description, HandleBool handler)
-{
-    add_string_attribute(key, description, [handler](live_config::Key const& key, std::optional<std::string_view> val)
-    {
-        if (val)
-        {
-            if (*val == "true")
-            {
-                handler(key, true);
-            }
-            else if (*val == "false")
-            {
-                handler(key, false);
-            }
-            else
-            {
-                mir::log_warning(
-                    "Config key '%s' has invalid integer value: %s",
-                    key.to_string().c_str(),
-                    std::format("{}",*val).c_str());
-                handler(key, std::nullopt);
-            }
-        }
-        else
-        {
-            handler(key, std::nullopt);
-        }
-    });
-}
-
-void DemoConfigFile::add_float_attribute(live_config::Key const& key, std::string_view description, HandleFloat handler)
-{
-    add_string_attribute(key, description, [handler](live_config::Key const& key, std::optional<std::string_view> val)
-    {
-        if (val)
-        {
-            float parsed_val = 0;
-
-            auto const [_, err] = std::from_chars(val->data(), val->data() + val->size(), parsed_val);
-
-            if (err == std::errc{})
-            {
-                handler(key, parsed_val);
-            }
-            else
-            {
-                mir::log_warning(
-                    "Config key '%s' has invalid integer value: %s",
-                    key.to_string().c_str(),
-                    std::format("{}",*val).c_str());
-                handler(key, std::nullopt);
-            }
-        }
-        else
-        {
-            handler(key, std::nullopt);
-        }
-    });
-}
-
-void DemoConfigFile::add_string_attribute(live_config::Key const& key, std::string_view, HandleString handler)
-{
-    std::lock_guard lock{config_mutex};
-    attribute_handlers[key] = handler;
-}
 }
 
 int main(int argc, char const* argv[])
@@ -388,13 +126,18 @@ try
 {
     miral::MirRunner runner{argc, argv, "mir/mir_demo_server.config"};
 
-    DemoConfigFile demo_configuration{runner, "mir_demo_server.live-config"};
+    miral::live_config::IniFile config_store;
     runner.set_exception_handler(exception_handler);
 
-    miral::CursorScale cursor_scale{demo_configuration};
-    miral::OutputFilter output_filter{demo_configuration};
-    miral::InputConfiguration input_configuration{demo_configuration};
-    demo_configuration.handle_initial_config();
+    miral::CursorScale cursor_scale{config_store};
+    miral::OutputFilter output_filter{config_store};
+    miral::InputConfiguration input_configuration{config_store};
+
+    miral::ConfigFile config_file{
+        runner,
+        "mir_demo_server.live-config",
+        miral::ConfigFile::Mode::reload_on_change,
+        [&config_store](auto&... args){ config_store.load_file(args...); }};
 
     std::function<void()> shutdown_hook{[]{}};
     runner.add_stop_callback([&] { shutdown_hook(); });
