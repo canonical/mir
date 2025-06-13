@@ -18,7 +18,7 @@
 #include "renderer.h"
 #include "mir/compositor/buffer_stream.h"
 #include "mir/graphics/renderable.h"
-#include "mir/graphics/buffer.h"
+#include "mir/graphics/transformation.h"
 #include "mir/graphics/display_sink.h"
 #include "mir/gl/tessellation_helpers.h"
 #include "mir/log.h"
@@ -556,7 +556,7 @@ auto make_output_current(std::unique_ptr<mg::gl::OutputSurface> output) -> std::
 mrg::Renderer::Renderer(
     std::shared_ptr<graphics::GLRenderingProvider> gl_interface,
     std::unique_ptr<graphics::gl::OutputSurface> output)
-: output_surface{std::make_unique<OutputFilter>(make_output_current(std::move(output)))},
+    : output_surface{std::make_unique<OutputFilter>(make_output_current(std::move(output)))},
       clear_color{0.0f, 0.0f, 0.0f, 1.0f},
       program_factory{std::make_unique<ProgramFactory>()},
       display_transform(1),
@@ -711,7 +711,12 @@ void mrg::Renderer::draw(mg::Renderable const& renderable) const
                       rect.size.height.as_int() / 2.0f;
     glUniform2f(prog->centre_uniform, centrex, centrey);
 
-    glm::mat4 transform = renderable.transformation();
+    // Wayland surfaces may specify an orientation that matches the output
+    // orientation. However, the surface is already rotated by the output's
+    // orientation when we render it. To solve this, we need to unrotate the
+    // surface using the inverse of its transform so that it appears upright.
+    glm::mat4 transform = renderable.transformation() * glm::mat4(
+        mg::inverse_transformation(renderable.orientation()));
     if (texture->layout() == mg::gl::Texture::Layout::TopRowFirst)
     {
         // GL textures have (0,0) at bottom-left rather than top-left
