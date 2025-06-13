@@ -964,9 +964,6 @@ void miral::BasicWindowManager::send_tree_to_back(Window const& root)
 {
     auto const& info = info_for(root);
 
-    if (auto parent = info.parent())
-        raise_tree(parent);
-
     focus_controller->send_to_back(collect_windows(info));
 }
 
