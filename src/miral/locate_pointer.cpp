@@ -122,7 +122,16 @@ struct miral::LocatePointer::Self
     };
 
     mir::Synchronised<State> state;
-    std::shared_ptr<mir::graphics::AnimationObserver> observer;
+
+    struct FooObserver
+    {
+        std::shared_ptr<mir::graphics::Buffer> const buffer;
+        FooObserver(std::shared_ptr<mir::graphics::Buffer> buffer) :
+            buffer{std::move(buffer)}
+        {
+        }
+    };
+    std::shared_ptr<FooObserver> observer;
 };
 
 miral::LocatePointer::LocatePointer(bool enabled_by_default) :
@@ -132,126 +141,12 @@ miral::LocatePointer::LocatePointer(bool enabled_by_default) :
 
 void miral::LocatePointer::operator()(mir::Server& server)
 {
-    constexpr auto* enable_locate_pointer_opt = "enable-locate-pointer";
-    constexpr auto* locate_pointer_delay_opt = "locate-pointer-delay";
-
-    {
-        auto const state = self->state.lock();
-        server.add_configuration_option(enable_locate_pointer_opt, "Enable locate pointer", state->enabled);
-        server.add_configuration_option(
-            locate_pointer_delay_opt, "Locate pointer delay in milliseconds", static_cast<int>(state->delay.count()));
-    }
-
     server.add_init_callback(
         [this, &server]
         {
-            self->on_server_init(server);
-            {
-                auto const size = mir::geometry::Size(200, 200);
-
-                struct FooObserver : public mir::graphics::AnimationObserver
-                {
-                    std::weak_ptr<mir::compositor::Stream> const stream;
-                    std::shared_ptr<mir::graphics::Buffer> const buffer;
-
-                    uint32_t b = 0;
-                    uint32_t radius = 0;
-                    uint32_t max_radius = 100;
-
-                    FooObserver(
-                        std::weak_ptr<mir::compositor::Stream> stream,
-                        std::shared_ptr<mir::graphics::Buffer> buffer) :
-                        stream{std::move(stream)},
-                        buffer{std::move(buffer)}
-                    {
-                        kickoff();
-                    }
-
-                    void on_vsync(std::chrono::milliseconds) override
-                    {
-                        auto w = std::dynamic_pointer_cast<mir::renderer::software::RWMappableBuffer>(buffer)
-                                     ->map_writeable();
-                        auto const center = mir::geometry::Point{max_radius, max_radius};
-                        for (size_t i = 0; i < w->len(); i += 4)
-                        {
-                            auto index = i / 4;
-                            auto p = mir::geometry::Point{index % (2 * max_radius), index / (2 * max_radius)};
-                            auto dist = (p - center).length_squared();
-                        
-                            auto circle = [dist, this](auto value)
-                            {
-                                return dist < radius * radius ? value : 0;
-                            };
-                        
-                            w->data()[i + 0] = circle(0xAA); // r
-                            w->data()[i + 1] = circle(0xAA); // g
-                            w->data()[i + 2] = circle(0xAA); // b
-                            w->data()[i + 3] = circle(0x99);
-                        }
-
-                        if (auto const stream_ = stream.lock())
-                            stream_->submit_buffer(
-                                buffer, buffer->size(), mir::geometry::RectangleD{{0, 0}, buffer->size()});
-
-                        radius = (radius + 1) % 100;
-                        b = (b + 1) % 255;
-                    }
-
-                    void kickoff() 
-                    {
-                        if (auto const stream_ = stream.lock())
-                            stream_->submit_buffer(
-                                buffer, buffer->size(), mir::geometry::RectangleD{{0, 0}, buffer->size()});
-                    }
-                };
-
-                
-                auto stream = std::make_shared<mir::compositor::Stream>();
-
-                self->observer = [&]
-                {
-                    auto buffer =
-                        server.the_buffer_allocator()->alloc_software_buffer(size, mir_pixel_format_abgr_8888);
-                    {
-                        auto w = std::dynamic_pointer_cast<mir::renderer::software::RWMappableBuffer>(buffer)
-                                     ->map_writeable();
-                        for (size_t i = 0; i < w->len(); i += 4)
-                        {
-                            w->data()[i + 0] = 0xAA; // r
-                            w->data()[i + 1] = 0x00; // g
-                            w->data()[i + 2] = 0xAA; // b
-                    
-                            w->data()[i + 3] = 0xFF;
-                        }
-                    }
-
-                    return std::make_shared<FooObserver>(stream, std::move(buffer));
-                }();
-
-                {
-                    auto shell_surface = std::make_shared<ms::BasicSurface>(
-                        "matt",
-                        mir::geometry::Rectangle{{0, 0}, size},
-                        mir_pointer_unconfined,
-                        std::list{ms::StreamInfo(stream, mir::geometry::Displacement(0, 0))},
-                        server.the_default_cursor_image(),
-                        server.the_scene_report(),
-                        server.the_display_configuration_observer_registrar());
-                    shell_surface->set_input_region({});
-                    server.the_surface_stack()->add_surface(shell_surface, mir::input::InputReceptionMode::normal);
-                    shell_surface->set_alpha(0.99f);
-                    self->state.lock()->pointer_position_recorder->state.lock()->surface = shell_surface;
-                }
-                
-                server.the_animation_driver()->register_interest(self->observer);
-            }
-
-            auto const options = server.get_options();
-            delay(std::chrono::milliseconds{options->get<int>(locate_pointer_delay_opt)});
-            if (options->get<bool>(enable_locate_pointer_opt))
-                enable();
-            else
-                disable();
+            // self->on_server_init(server);
+            self->observer = std::make_shared<Self::FooObserver>(server.the_buffer_allocator()->alloc_software_buffer(
+                mir::geometry::Size(200, 200), mir_pixel_format_abgr_8888));
         });
 }
 
