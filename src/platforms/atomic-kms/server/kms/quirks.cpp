@@ -15,6 +15,7 @@
  */
 
 #include "quirks.h"
+#include "quirk_common.h"
 
 #include "mir/log.h"
 #include "mir/options/option.h"
@@ -27,6 +28,7 @@
 
 namespace mga = mir::graphics::atomic;
 namespace mo = mir::options;
+namespace mgc = mir::graphics::common;
 
 namespace
 {
@@ -58,29 +60,16 @@ public:
             return;
         }
 
-        auto const matches = [](std::vector<std::string> tokens,
-                                std::string option_name,
-                                std::initializer_list<std::string> valid_values)
-        {
-            if (tokens.size() < 1 || tokens[0] != option_name)
-                return false;
-
-            // Specifier and its value are already checked with `validate_structure`
-
-            if (tokens.size() < 4 ||
-                std::ranges::none_of(valid_values, [&tokens](auto valid_value) { return tokens[3] == valid_value; }))
-                return false;
-
-            return true;
-        };
-
         auto const process_one_option = [&](auto option_value)
         {
             std::vector<std::string> tokens;
             boost::split(tokens, option_value, boost::is_any_of(":"));
 
             // <option>:{devnode,driver}:<specifier value>
-            auto const structure = validate_structure(tokens);
+
+            auto static const available_options = std::set<std::string>{
+                "skip", "allow", "disable-kms-probe", "gbm-create-surface-flags", "gbm-surface-has-free-buffers"};
+            auto const structure = mgc::validate_structure(tokens, available_options);
             if(!structure)
                 return false;
 
@@ -101,7 +90,7 @@ public:
                 disable_kms_probe.skip(specifier, specifier_value);
                 return true;
             }
-            else if (matches(tokens, "gbm-create-surface-flags", {"default", "no-flags"}))
+            else if (mgc::matches(tokens, "gbm-create-surface-flags", {"default", "no-flags"}))
             {
                 auto const chosen_value = tokens[3];
                 if (specifier == "devnode")
@@ -111,7 +100,7 @@ public:
 
                 return true;
             }
-            else if (matches(tokens, "gbm-surface-has-free-buffers", {"default", "skip"}))
+            else if (mgc::matches(tokens, "gbm-surface-has-free-buffers", {"default", "skip"}))
             {
                 auto const chosen_value = tokens[3];
                 if (specifier == "devnode")
@@ -147,7 +136,7 @@ public:
     {
         auto const devnode = value_or(device.devnode(), "");
         auto const parent_device = device.parent();
-        auto const driver = get_device_driver(parent_device.get());
+        auto const driver = mgc::get_device_driver(parent_device.get());
 
         mir::log_debug("Quirks(skip/allow): checking device with devnode: %s, driver %s", device.devnode(), driver);
 
@@ -170,7 +159,7 @@ public:
     {
         auto const devnode = value_or(device.devnode(), "");
         auto const parent_device = device.parent();
-        auto const driver = get_device_driver(parent_device.get());
+        auto const driver = mgc::get_device_driver(parent_device.get());
         mir::log_debug(
             "Quirks(disable-kms-probe): checking device with devnode: %s, driver %s", device.devnode(), driver);
 
@@ -223,7 +212,7 @@ public:
             }
         };
 
-        auto const driver = get_device_driver(device.parent().get());
+        auto const driver = mgc::get_device_driver(device.parent().get());
         auto const devnode = device.devnode();
         mir::log_debug("Quirks(gbm-create-surface-flags + gbm-surface-has-free-buffers): checking device with devnode: %s, driver %s", devnode, driver);
 
@@ -299,65 +288,6 @@ public:
     }
 
 private:
-    static auto get_device_driver(mir::udev::Device const* parent_device) -> const char*
-    {
-        if (parent_device)
-        {
-            return value_or(parent_device->driver(), "");
-        }
-        mir::log_warning("udev device has no parent! Unable to determine driver for quirks.");
-        return "<UNKNOWN>";
-    }
-
-    static auto validate_structure(std::vector<std::string> const& tokens) -> std::optional<std::tuple<std::string, std::string, std::string>>
-    {
-        if (tokens.size() < 1)
-            return {};
-        auto const option = tokens[0];
-
-        auto const available_options = std::set<std::string>{
-            "skip", "allow", "disable-kms-probe", "gbm-create-surface-flags", "gbm-surface-has-free-buffers"};
-        if (!available_options.contains(option))
-            return {};
-
-        if (tokens.size() < 3)
-            return {};
-        auto const specifier = tokens[1];
-        auto const specifier_value = tokens[2];
-
-        if (specifier != "driver" && specifier != "devnode")
-            return {};
-
-        return {{option, specifier, specifier_value}};
-    }
-
-    struct AllowList
-    {
-        AllowList(std::unordered_set<std::string>&& drivers_to_skip) :
-            skipped_drivers{std::move(drivers_to_skip)}
-        {
-        }
-
-        void allow(std::string specifier, std::string specifier_value)
-        {
-            if (specifier == "devnode")
-                skipped_devnodes.erase(specifier_value);
-            else if (specifier == "driver")
-                skipped_drivers.erase(specifier_value);
-        }
-
-        void skip(std::string specifier, std::string specifier_value)
-        {
-            if (specifier == "devnode")
-                skipped_devnodes.insert(specifier_value);
-            else if (specifier == "driver")
-                skipped_drivers.insert(specifier_value);
-        }
-
-        std::unordered_set<std::string> skipped_drivers;
-        std::unordered_set<std::string> skipped_devnodes;
-    };
-
     /* AST is a simple 2D output device, built into some motherboards.
      * They do not have any 3D engine associated, so were quirked off to avoid https://github.com/canonical/mir/issues/2678
      *
@@ -368,28 +298,14 @@ private:
      * https://bugs.launchpad.net/ubuntu/+source/linux/+bug/2084046
      * https://github.com/canonical/mir/issues/3710
      */
-    AllowList completely_skip{{"ast", "simple-framebuffer"}};
+    mgc::AllowList completely_skip{{"ast", "simple-framebuffer"}};
 
     // We know this is currently useful for virtio_gpu, vc4-drm and v3d
-    AllowList disable_kms_probe{{"virtio_gpu", "vc4-drm", "v3d"}};
+    mgc::AllowList disable_kms_probe{{"virtio_gpu", "vc4-drm", "v3d"}};
 
-    struct ValuedOption
-    {
-        void add_devnode(std::string const& devnode, std::string const& quirk)
-        {
-            devnodes.insert_or_assign(devnode, quirk);
-        }
-        void add_driver(std::string const& driver, std::string const& quirk)
-        {
-            drivers.insert_or_assign(driver, quirk);
-        }
 
-        std::unordered_map<std::string, std::string> drivers;
-        std::unordered_map<std::string, std::string> devnodes;
-    };
-
-    ValuedOption gbm_create_surface_flags;
-    ValuedOption gbm_surface_has_free_buffers;
+    mgc::ValuedOption gbm_create_surface_flags;
+    mgc::ValuedOption gbm_surface_has_free_buffers;
 };
 
 mga::Quirks::Quirks(const options::Option& options)
