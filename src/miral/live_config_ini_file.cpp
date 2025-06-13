@@ -53,7 +53,7 @@ private:
         HandleStrings const handler;
         std::string const description;
         std::optional<std::vector<std::string>> const preset;
-        std::optional<std::vector<std::string>> value;
+        std::vector<std::string> parsed_values;
     };
 
     std::mutex mutex;
@@ -96,7 +96,7 @@ void mlc::IniFile::Self::add_key(Key const& key, std::string_view description,
         mir::log_warning("Config attribute handler for '%s' overwritten", key.to_string().c_str());
     }
 
-    array_attribute_handlers.emplace(key, ArrayAttributeDetails{handler, std::string{description}, preset, std::nullopt});
+    array_attribute_handlers.emplace(key, ArrayAttributeDetails{handler, std::string{description}, preset, std::vector<std::string>{}});
 }
 
 void mlc::IniFile::Self::load_file(std::istream& istream, std::filesystem::path const& path)
@@ -110,7 +110,7 @@ void mlc::IniFile::Self::load_file(std::istream& istream, std::filesystem::path 
 
     for (auto& [key, details] : array_attribute_handlers)
     {
-        details.value = std::nullopt;
+        details.parsed_values.resize(0);
     }
 
     for (std::string line; std::getline(istream, line);)
@@ -128,14 +128,7 @@ void mlc::IniFile::Self::load_file(std::istream& istream, std::filesystem::path 
             }
             else if (auto const details = array_attribute_handlers.find(key); details != array_attribute_handlers.end())
             {
-                if (details->second.value)
-                {
-                    details->second.value.value().push_back(value);
-                }
-                else
-                {
-                    details->second.value = std::vector<std::string>{value};
-                }
+                details->second.parsed_values.push_back(value);
             }
         }
         catch (const std::exception& e)
@@ -157,7 +150,7 @@ void mlc::IniFile::Self::load_file(std::istream& istream, std::filesystem::path 
     for (auto const& [key, details] : array_attribute_handlers)
     try
     {
-        details.handler(key, (details.value ? details.value : details.preset));
+        details.handler(key, (details.parsed_values.empty() ? details.preset : details.parsed_values));
     }
     catch (const std::exception& e)
     {
