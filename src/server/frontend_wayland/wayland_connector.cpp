@@ -578,9 +578,10 @@ void mir::frontend::WaylandConnector::for_each_output_binding(
     graphics::DisplayConfigurationOutputId output,
     std::function<void(wl_resource* output)> const& callback)
 {
-    (void)client;
-    (void)output;
-    (void)callback;
+    if (auto const& og = output_manager->output_for(output))
+    {
+        (*og)->for_each_output_bound_by(client, [&](OutputInstance* o) { callback(o->resource); });
+    }
 }
 
 bool mf::WaylandConnector::wl_display_global_filter_func_thunk(wl_client const* client, wl_global const* global, void *data)
