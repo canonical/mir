@@ -23,6 +23,7 @@
 #include "mir/fd.h"
 #include "mir/frontend/connector.h"
 #include "mir/frontend/drag_icon_controller.h"
+#include <mir/frontend/wayland.h>
 #include "mir/optional_value.h"
 
 #include <wayland-server-core.h>
@@ -143,7 +144,7 @@ private:
     std::unordered_map<std::string, std::shared_ptr<void>> extension_protocols;
 };
 
-class WaylandConnector : public Connector
+class WaylandConnector : public Connector, public WaylandTools
 {
 public:
     using WaylandProtocolExtensionFilter = std::function<bool(std::shared_ptr<scene::Session> const&, char const*)>;
@@ -199,6 +200,11 @@ public:
     auto get_extension(std::string const& name) const -> std::shared_ptr<void>;
 
 private:
+    void for_each_output_binding(
+        wayland::Client* client,
+        graphics::DisplayConfigurationOutputId output,
+        std::function<void(wl_resource* output)> const& callback) override;
+
     bool wl_display_global_filter_func(wl_client const* client, wl_global const* global) const;
     static bool wl_display_global_filter_func_thunk(wl_client const* client, wl_global const* global, void* data);
 

@@ -573,6 +573,16 @@ auto mf::WaylandConnector::get_extension(std::string const& name) const -> std::
     return extensions->get_extension(name);
 }
 
+void mir::frontend::WaylandConnector::for_each_output_binding(
+    wayland::Client* client,
+    graphics::DisplayConfigurationOutputId output,
+    std::function<void(wl_resource* output)> const& callback)
+{
+    (void)client;
+    (void)output;
+    (void)callback;
+}
+
 bool mf::WaylandConnector::wl_display_global_filter_func_thunk(wl_client const* client, wl_global const* global, void *data)
 {
     return static_cast<WaylandConnector*>(data)->wl_display_global_filter_func(client, global);
