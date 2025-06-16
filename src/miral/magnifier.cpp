@@ -32,7 +32,9 @@ class miral::Magnifier::Self
 public:
     Self()
     {
-        render_scene_into_surface.capture_area(geom::Rectangle{{300, 300}, geom::Size(400, 300)});
+        render_scene_into_surface
+            .capture_area(geom::Rectangle{{300, 300}, geom::Size(400, 300)})
+            .overlay_cursor(false);
     }
 
     void operator()(mir::Server& server)
@@ -45,6 +47,8 @@ public:
         {
             surface = surf;
             surface->set_transformation(glm::scale(glm::mat4(1.0), glm::vec3(magnification, magnification, 1)));
+            surface->set_depth_layer(mir_depth_layer_always_on_top);
+            surface->set_focus_mode(mir_focus_mode_disabled);
 
             if (default_enabled)
                 surface->show();
