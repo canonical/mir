@@ -109,6 +109,7 @@ public:
         screen_shooter->capture(
             mapping,
             capture_rect,
+            overlay_cursor,
             [](auto const&) {});
         get_streams().begin()->stream->submit_buffer(
             buffer, capture_rect.size, geom::RectangleD({0, 0}, capture_rect.size));
@@ -124,10 +125,17 @@ public:
             buffer = allocator->alloc_software_buffer(capture_rect.size, mir_pixel_format_argb_8888);
     }
 
+    void set_overlay_cursor(bool next_overlay_cursor)
+    {
+        std::lock_guard lock{mutex};
+        overlay_cursor = next_overlay_cursor;
+    }
+
 private:
     std::mutex mutable mutex;
     std::shared_ptr<mc::Scene> const scene;
     geom::Rectangle capture_rect;
+    bool overlay_cursor = false;
     std::shared_ptr<mc::ScreenShooter> screen_shooter;
     std::shared_ptr<mg::GraphicBufferAllocator> allocator;
     std::shared_ptr<mg::Buffer> buffer;
@@ -172,6 +180,13 @@ public:
             surface->set_capture_area(area);
     }
 
+    void set_overlay_cursor(bool overlay_cursor)
+    {
+        initial_overlay_cursor = overlay_cursor;
+        if (surface)
+            surface->set_overlay_cursor(overlay_cursor);
+    }
+
     void set_surface_ready_callback(std::function<void(std::shared_ptr<mir::scene::Surface> const&)>&& callback)
     {
         on_surface_ready = std::move(callback);
@@ -182,6 +197,7 @@ public:
 private:
     std::function<void(std::shared_ptr<mir::scene::Surface> const&)> on_surface_ready;
     geom::Rectangle initial_capture_area;
+    bool initial_overlay_cursor = false;
     std::shared_ptr<SceneRenderingSurface> surface;
     std::shared_ptr<msh::SurfaceStack> surface_stack;
 };
@@ -198,6 +214,13 @@ miral::RenderSceneIntoSurface& miral::RenderSceneIntoSurface::capture_area(geom:
     self->set_capture_area(area);
     return *this;
 }
+
+miral::RenderSceneIntoSurface& miral::RenderSceneIntoSurface::overlay_cursor(bool overlay_cursor)
+{
+    self->set_overlay_cursor(overlay_cursor);
+    return *this;
+}
+
 
 miral::RenderSceneIntoSurface& miral::RenderSceneIntoSurface::on_surface_ready(
     std::function<void(std::shared_ptr<mir::scene::Surface> const&)>&& callback)
