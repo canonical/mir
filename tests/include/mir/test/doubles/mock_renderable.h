@@ -53,6 +53,7 @@ struct MockRenderable : public graphics::Renderable
     MOCK_CONST_METHOD0(alpha, float());
     MOCK_CONST_METHOD0(transformation, glm::mat4());
     MOCK_CONST_METHOD0(orientation, MirOrientation());
+    MOCK_CONST_METHOD0(mirror_mode, MirMirrorMode());
     MOCK_CONST_METHOD0(visible, bool());
     MOCK_CONST_METHOD0(shaped, bool());
     MOCK_CONST_METHOD0(surface_if_any, std::optional<mir::scene::Surface const*>());

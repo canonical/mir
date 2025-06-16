@@ -410,3 +410,14 @@ TEST_F(AtomicKmsCursorTest, does_not_need_compositing)
 {
     EXPECT_THAT(cursor.needs_compositing(), Eq(false));
 }
+
+
+TEST_F(AtomicKmsCursorTest, renderable_has_mirror_mode_none)
+{
+    using namespace testing;
+
+    auto image = std::make_shared<StubCursorImage>();
+    cursor.show(image);
+
+    EXPECT_THAT(cursor.renderable()->mirror_mode(), Eq(mir_mirror_mode_none));
+}

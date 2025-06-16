@@ -336,6 +336,17 @@ TEST_F(BasicIdleHandler, renderable_added_to_has_normal_orientation)
     EXPECT_THAT(renderable->orientation(), Eq(mir_orientation_normal));
 }
 
+TEST_F(BasicIdleHandler, renderable_added_to_has_none_mirror_mode)
+{
+    handler.set_display_off_timeout(30s);
+    auto const observer = observer_for(20s);
+    std::shared_ptr<mg::Renderable> renderable;
+    EXPECT_CALL(*input_scene, add_input_visualization(testing::_))
+        .WillOnce(SaveArg<0>(&renderable));
+    observer->idle();
+    EXPECT_THAT(renderable->mirror_mode(), Eq(mir_mirror_mode_none));
+}
+
 TEST_F(BasicIdleHandler, renderable_removed_from_scene_on_active)
 {
     handler.set_display_off_timeout(30s);

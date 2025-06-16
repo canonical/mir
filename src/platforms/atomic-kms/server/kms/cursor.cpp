@@ -527,6 +527,11 @@ auto mir::graphics::atomic::Cursor::renderable() -> std::shared_ptr<Renderable>
             return mir_orientation_normal;
         }
 
+        MirMirrorMode mirror_mode() const override
+        {
+            return mir_mirror_mode_none;
+        }
+
     private:
         std::shared_ptr<Buffer> buffer_;
         geom::Point position;

@@ -184,7 +184,8 @@ typedef enum MirPixelFormat
                                 (f) == mir_pixel_format_rgba_4444 ? 2 : \
                                                                     4)
 
-/** Direction relative to the "natural" orientation of the display */
+/// Describes transformations applied to both outputs and client surfaces.
+/// Rotations are counter-clockwise.
 typedef enum MirOrientation
 {
     mir_orientation_normal = 0,
@@ -193,7 +194,7 @@ typedef enum MirOrientation
     mir_orientation_right = 270
 } MirOrientation;
 
-/** Mirroring axis relative to the "natural" orientation of the display */
+/// Describes a mirror transformation that is applied to client surfaces.
 typedef enum MirMirrorMode
 {
     mir_mirror_mode_none,

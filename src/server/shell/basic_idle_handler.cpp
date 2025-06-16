@@ -91,6 +91,11 @@ public:
         return mir_orientation_normal;
     }
 
+    auto mirror_mode() const -> MirMirrorMode override
+    {
+        return mir_mirror_mode_none;
+    }
+
     auto shaped() const -> bool override
     {
         return false;

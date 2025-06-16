@@ -85,6 +85,11 @@ public:
      */
     virtual MirOrientation orientation() const = 0;
 
+    /**
+     * The mirror mode of the buffer.
+     */
+    virtual MirMirrorMode mirror_mode() const = 0;
+
     virtual bool shaped() const = 0;  // meaning the pixel format has alpha
 
     virtual auto surface_if_any() const
