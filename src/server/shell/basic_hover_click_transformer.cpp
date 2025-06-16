@@ -65,9 +65,12 @@ bool msh::BasicHoverClickTransformer::transform_input_event(
         // the cursor moved "significantly" from the last position.
         auto const hover_click_origin = state->hover_click_origin;
         auto const cancel_displacement = state->cancel_displacement_threshold;
-        if(hover_click_origin && pointer_event->position())
+
+        state->potential_position += pointer_event->motion();
+
+        if(hover_click_origin)
         {
-            auto const distance_from_last_click = (*hover_click_origin - *pointer_event->position()).length_squared();
+            auto const distance_from_last_click = (*hover_click_origin - state->potential_position).length_squared();
             auto const reclick_threshold = reclick_displacement_threshold;
 
             // If we've moved too far, cancel the click.
