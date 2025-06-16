@@ -61,7 +61,7 @@ private:
         // period is up, we "pin" this position into `hover_click_origin`, which is
         // used later on to cancel the hover click if the pointer moves too far
         // away.
-        mir::geometry::PointF potential_position;
+        mir::geometry::PointF potential_position{0, 0};
         std::optional<mir::geometry::PointF> hover_click_origin;
 
         std::chrono::milliseconds hover_duration{1000};
