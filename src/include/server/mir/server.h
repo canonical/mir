@@ -472,11 +472,6 @@ public:
     /// \param connect_handler callback to be invoked when the client connects
     auto open_client_wayland(ConnectHandler const& connect_handler) -> int;
 
-    /// Get a file descriptor that can be used to connect a prompt provider
-    /// It can be passed to another process, or used directly with mir_connect()
-    /// using the format "fd://%d".
-    auto open_prompt_socket() -> Fd;
-
     /// Get a file descriptor that can be used to connect a Wayland client
     /// It can be passed to another process, or used with wl_display_connect_to_fd()
     auto open_wayland_client_socket() -> Fd;
