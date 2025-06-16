@@ -116,6 +116,11 @@ public:
         return BasicSurface::generate_renderables(id);
     }
 
+    bool input_area_contains(mir::geometry::Point const&) const override
+    {
+        return false;
+    }
+
     void set_capture_area(geom::Rectangle const& area)
     {
         std::lock_guard lock{mutex};
@@ -152,7 +157,7 @@ public:
 
     ~Self()
     {
-        if (surface&& surface_stack)
+        if (surface && surface_stack)
             surface_stack->remove_surface(surface);
     }
 
