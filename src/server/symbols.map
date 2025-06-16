@@ -1583,3 +1583,9 @@ global:
 local: *;
 };
 
+MIR_SERVER_INTERNAL_2.22 {
+global:
+    extern "C++" {
+    "mir::Server::for_each_output_binding(mir::wayland::Client*, mir::IntWrapper<mir::graphics::detail::GraphicsConfOutputIdTag, int>, std::function<void (wl_resource*)> const&)";
+    };
+} MIR_SERVER_INTERNAL_2.21;
