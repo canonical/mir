@@ -56,6 +56,8 @@ private:
     void initialize_click_dispatcher(
         mir::input::InputEventTransformer::EventDispatcher const& dispatcher, mir::input::EventBuilder& builder);
 
+    auto initialize_hover_initializer(std::shared_ptr<mir::MainLoop> const& main_loop) -> std::unique_ptr<mir::time::Alarm>;
+
     static constexpr auto grace_period_percentage = 0.1f;
     static constexpr auto hover_delay_percentage = 1.0f - grace_period_percentage;
     static constexpr auto reclick_displacement_threshold{10};
