@@ -17,6 +17,8 @@
 #ifndef MIR_INPUT_CURSOR_LISTENER_H_
 #define MIR_INPUT_CURSOR_LISTENER_H_
 
+#include "mir/observer_multiplexer.h"
+
 namespace mir
 {
 namespace input
@@ -28,17 +30,40 @@ class CursorListener
 {
 public:
     virtual ~CursorListener() = default;
-
     virtual void cursor_moved_to(float abs_x, float abs_y) = 0;
     virtual void pointer_usable() = 0;
     virtual void pointer_unusable() = 0;
-
-protected:
-    CursorListener() = default;
-    CursorListener(CursorListener const&) = delete;
-    CursorListener& operator=(CursorListener const&) = delete;
 };
 
+class CursorListenerMultiplexer : public ObserverMultiplexer<CursorListener>
+{
+public:
+    explicit CursorListenerMultiplexer(Executor& default_executor) :
+        mir::ObserverMultiplexer<CursorListener>{default_executor}
+    {
+    }
+
+    virtual ~CursorListenerMultiplexer() = default;
+
+    virtual void cursor_moved_to(float abs_x, float abs_y) override
+    {
+        for_each_observer(&CursorListener::cursor_moved_to, abs_x, abs_y);
+    }
+
+    virtual void pointer_usable() override
+    {
+        for_each_observer(&CursorListener::pointer_usable);
+    }
+
+    virtual void pointer_unusable() override
+    {
+        for_each_observer(&CursorListener::pointer_unusable);
+    }
+
+protected:
+    CursorListenerMultiplexer(CursorListenerMultiplexer const&) = delete;
+    CursorListenerMultiplexer& operator=(CursorListenerMultiplexer const&) = delete;
+};
 }
 }
 

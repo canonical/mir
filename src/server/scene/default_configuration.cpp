@@ -20,6 +20,7 @@
 #include "mir/graphics/display.h"
 #include "mir/input/cursor_listener.h"
 #include "mir/input/scene.h"
+#include "mir/input/cursor_controller.h"
 #include "mir/main_loop.h"
 #include "mir/renderer/gl/context.h"
 #include "mir/scene/session.h"
@@ -157,7 +158,7 @@ mir::DefaultServerConfiguration::the_frontend_display_changer()
 std::shared_ptr<mf::DragIconController> mir::DefaultServerConfiguration::the_drag_icon_controller()
 {
     return drag_icon_controller(
-        [this] { return std::dynamic_pointer_cast<mf::DragIconController>(the_cursor_listener()); });
+        [this] { return std::dynamic_pointer_cast<mf::DragIconController>(the_cursor_controller()); });
 }
 
 std::shared_ptr<mir::DisplayChanger>

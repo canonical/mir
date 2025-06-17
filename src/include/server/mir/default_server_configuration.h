@@ -119,7 +119,8 @@ class InputDeviceHub;
 class DefaultInputDeviceHub;
 class CompositeEventFilter;
 class EventFilterChainDispatcher;
-class CursorListener;
+class CursorController;
+class CursorListenerMultiplexer;
 class TouchVisualizer;
 class CursorImages;
 class Seat;
@@ -326,7 +327,8 @@ public:
     virtual std::shared_ptr<shell::InputTargeter> the_input_targeter();
     virtual std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> the_keyboard_observer_registrar();
     virtual std::shared_ptr<input::Scene>  the_input_scene();
-    virtual std::shared_ptr<input::CursorListener> the_cursor_listener();
+    virtual std::shared_ptr<input::CursorController> the_cursor_controller();
+    virtual std::shared_ptr<input::CursorListenerMultiplexer> the_cursor_listener_multiplexer();
     virtual std::shared_ptr<input::TouchVisualizer> the_touch_visualizer();
     virtual std::shared_ptr<input::Seat> the_seat();
     virtual std::shared_ptr<input::KeyMapper> the_key_mapper();
@@ -373,8 +375,8 @@ protected:
     virtual std::shared_ptr<shell::Shell>  wrap_shell(
         std::shared_ptr<shell::Shell> const& wrapped);
 
-    virtual std::shared_ptr<input::CursorListener>  wrap_cursor_listener(
-        std::shared_ptr<input::CursorListener> const& wrapped);
+    virtual std::shared_ptr<input::CursorListenerMultiplexer>  wrap_cursor_listener_multiplexer(
+        std::shared_ptr<input::CursorListenerMultiplexer> const& wrapped);
 /** @} */
 
     CachedPtr<frontend::Connector>   connector;
@@ -394,7 +396,8 @@ protected:
     CachedPtr<dispatch::MultiplexingDispatchable> input_reading_multiplexer;
     CachedPtr<input::InputDispatcher> input_dispatcher;
     CachedPtr<shell::InputTargeter> input_targeter;
-    CachedPtr<input::CursorListener> cursor_listener;
+    CachedPtr<input::CursorController> cursor_controller;
+    CachedPtr<input::CursorListenerMultiplexer> cursor_listener_multiplexer;
     CachedPtr<input::TouchVisualizer> touch_visualizer;
     CachedPtr<input::Seat> seat;
     CachedPtr<graphics::GraphicBufferAllocator> buffer_allocator;
