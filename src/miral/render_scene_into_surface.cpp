@@ -25,9 +25,12 @@
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/scene/basic_surface.h"
 #include "mir/shell/surface_stack.h"
+#include "mir/shell/surface_specification.h"
 #include "mir/renderer/sw/pixel_source.h"
 
 #include <mutex>
+
+#include "mir/shell/shell.h"
 
 namespace geom = mir::geometry;
 namespace ms = mir::scene;
@@ -157,23 +160,37 @@ public:
 
     ~Self()
     {
-        if (surface && surface_stack)
-            surface_stack->remove_surface(surface);
+        if (surface && shell && session)
+            shell->destroy_surface(session, surface);
     }
 
     void operator()(mir::Server& server)
     {
-        surface_stack = server.the_surface_stack();
-        surface = std::make_shared<SceneRenderingSurface>(
-            initial_capture_area,
-            create_stream_info(),
-            server.the_scene(),
-            server.the_default_cursor_image(),
-            server.the_scene_report(),
-            server.the_display_configuration_observer_registrar(),
-            server.the_screen_shooter_factory()->create(mir::immediate_executor),
-            server.the_buffer_allocator());
-        surface_stack->add_surface(surface, mi::InputReceptionMode::normal);
+        shell = server.the_shell();
+        msh::SurfaceSpecification spec;
+        spec.type = mir_window_type_freestyle;
+        spec.depth_layer = mir_depth_layer_always_on_top;
+        spec.set_size(initial_capture_area.size);
+        spec.top_left = geom::Point(0, 0);
+        spec.name = "magnifier";
+        spec.focus_mode = mir_focus_mode_disabled;
+        shell->add_internal_surface(
+            spec,
+            [&](std::shared_ptr<ms::Session> const& surf_session,
+                msh::SurfaceSpecification const& /* params */)
+            {
+                session = surf_session;
+                surface = std::make_shared<SceneRenderingSurface>(
+                    initial_capture_area,
+                    create_stream_info(),
+                    server.the_scene(),
+                    server.the_default_cursor_image(),
+                    server.the_scene_report(),
+                    server.the_display_configuration_observer_registrar(),
+                    server.the_screen_shooter_factory()->create(mir::immediate_executor),
+                    server.the_buffer_allocator());
+                return surface;
+            });
         on_surface_ready(surface);
     }
 
@@ -203,8 +220,9 @@ private:
     std::function<void(std::shared_ptr<mir::scene::Surface> const&)> on_surface_ready;
     geom::Rectangle initial_capture_area;
     bool initial_overlay_cursor = false;
+    std::shared_ptr<msh::Shell> shell;
+    std::shared_ptr<ms::Session> session;
     std::shared_ptr<SceneRenderingSurface> surface;
-    std::shared_ptr<msh::SurfaceStack> surface_stack;
 };
 
 miral::RenderSceneIntoSurface::RenderSceneIntoSurface()

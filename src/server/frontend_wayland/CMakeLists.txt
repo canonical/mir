@@ -12,7 +12,7 @@ set(
   wayland_connector.cpp         wayland_connector.h
   wl_client.cpp                 wl_client.h
   wayland_executor.cpp          wayland_executor.h
-  null_event_sink.cpp           null_event_sink.h
+  null_event_sink.cpp
   wayland_surface_observer.cpp  wayland_surface_observer.h
   wayland_input_dispatcher.cpp  wayland_input_dispatcher.h
   wl_data_device_manager.cpp    wl_data_device_manager.h
