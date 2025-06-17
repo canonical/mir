@@ -200,7 +200,7 @@ public:
     }
 
 private:
-    std::function<void(std::shared_ptr<mir::scene::Surface> const&)> on_surface_ready;
+    std::function<void(std::shared_ptr<mir::scene::Surface> const&)> on_surface_ready{[](auto const&){}};
     geom::Rectangle initial_capture_area;
     bool initial_overlay_cursor = false;
     std::shared_ptr<SceneRenderingSurface> surface;
