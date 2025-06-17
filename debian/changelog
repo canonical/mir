@@ -8,7 +8,7 @@ mir (2.21.0) UNRELEASED; urgency=medium
       . mircore ABI unchanged at 2
       . miroil ABI unchanged at 7
       . mirplatform ABI bumped to 31
-      . mirserver ABI unchanged at 64
+      . mirserver ABI bumped to 64
       . mirwayland ABI unchanged at 5
       . mirplatformgraphics ABI unchanged at 23
       . mirinputplatform ABI unchanged at 10
@@ -24,6 +24,9 @@ mir (2.21.0) UNRELEASED; urgency=medium
       . feature: refactor `BasicSurface` so that it can be used internally by shell authors (#3948)
       . Check DRM for supported formats (#3950)
       . Add an output filter for the purposes of accessibility (#3911)
+
+    - Bugs fixed:
+      . Texture allocation happens with an incorrect context for the renderer that needs it (#3933)
 
     - Documentation:
       . Screencasting how-to (#3874)
