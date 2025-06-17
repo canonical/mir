@@ -14,18 +14,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "mir/input/cursor_observer.h"
+#include "mir/test/doubles/immediately_spawning_stub_main_loop.h"
 #include "src/server/input/default_event_builder.h"
 #include "src/server/shell/basic_hover_click_transformer.h"
 
 #include "mir/test/doubles/advanceable_clock.h"
 #include "mir/test/doubles/queued_alarm_stub_main_loop.h"
 #include "mir/test/fake_shared.h"
-#include "mir/test/signal.h"
 
-#include "mir/events/event.h"
-#include "mir/events/input_event.h"
-#include "mir/events/pointer_event.h"
-#include "mir/input/cursor_observer.h"
 #include "mir/geometry/displacement.h"
 
 #include <gmock/gmock.h>
@@ -44,6 +41,15 @@ namespace
     constexpr static auto grace_period_percentage = 0.1f;
 }
 
+// ObserverMultiplexers require `spawn` to actually be implemented...
+struct ImmediatelySpawningQueuedAlarmStubMainLoop : public virtual mtd::QueuedAlarmStubMainLoop
+{
+    // Deleage to the other ctor, we should use this more...
+    using mtd::QueuedAlarmStubMainLoop::QueuedAlarmStubMainLoop;
+
+    void spawn(std::function<void()>&& work) override { work(); }
+};
+
 struct TestHoverClickTransformer : Test
 {
     TestHoverClickTransformer()
@@ -53,11 +59,11 @@ struct TestHoverClickTransformer : Test
     }
 
     mtd::AdvanceableClock clock;
-    mtd::QueuedAlarmStubMainLoop main_loop{mt::fake_shared(clock)};
-    mir::input::CursorObserverMultiplexer cursor_listener_multiplexer{main_loop};
+    ImmediatelySpawningQueuedAlarmStubMainLoop main_loop{mt::fake_shared(clock)};
+    mir::input::CursorObserverMultiplexer cursor_observer_multiplexer{main_loop};
     std::shared_ptr<mir::shell::HoverClickTransformer> const transformer{
         std::make_shared<mir::shell::BasicHoverClickTransformer>(
-            mt::fake_shared(main_loop), mt::fake_shared(cursor_listener_multiplexer))};
+            mt::fake_shared(main_loop), mt::fake_shared(cursor_observer_multiplexer))};
     mir::input::DefaultEventBuilder event_builder{0, mt::fake_shared(clock)};
     std::function<void(std::shared_ptr<MirEvent> const&)> dispatcher{[](auto) { }};
 
@@ -76,6 +82,18 @@ struct TestHoverClickTransformer : Test
             mir::events::ScrollAxisV1H{},
             mir::events::ScrollAxisV1V{});
     }
+
+    // If the event is not handled by the transformer, we need to pass it on.
+    // In this case, it's enough to pass it to the cursor listener multiplexer
+    // so it notifies that cursor listener inside the hover click transformer,
+    // which helps track the cursor position for cancellation.
+    void seat_event_dispatch_mock(auto event)
+    {
+        if (!transformer->transform_input_event(dispatcher, &event_builder, *event))
+        {
+            cursor_observer_multiplexer.cursor_moved_to(pointer_location.x.as_value(), pointer_location.y.as_value());
+        }
+    }
 };
 
 struct TestStartCallback: public TestHoverClickTransformer, public WithParamInterface<float>
@@ -93,7 +111,7 @@ TEST_P(TestStartCallback, start_event_called_only_after_grace_period)
     transformer->on_hover_start([&hover_started] { hover_started = true; });
 
     auto initial_pointer_move_event = motion_event(mir::geometry::DisplacementF{10, 0});
-    transformer->transform_input_event(dispatcher, &event_builder, *initial_pointer_move_event);
+    seat_event_dispatch_mock(std::move(initial_pointer_move_event));
     
     // Hover click is active now
     // If we move before the grace period, no start callback will be called
@@ -118,15 +136,15 @@ TEST_P(TestCancelCallback, cancel_called_if_pointer_moves_before_hover_delay)
     // How long to wait relative to the hover click delay 
     auto const delay_percentage = GetParam();
 
-    std::atomic<bool> hover_cancelled;
+    std::atomic<bool> hover_cancelled{false};
     transformer->on_hover_cancel([&hover_cancelled] { hover_cancelled = true; });
 
-    std::atomic<bool> click_dipatched;
+    std::atomic<bool> click_dipatched{false};
     transformer->on_click_dispatched([&click_dipatched] { click_dipatched = true; });
 
     // Invoke hover click
     auto initial_pointer_move_event = motion_event(mir::geometry::DisplacementF{10, 0});
-    transformer->transform_input_event(dispatcher, &event_builder, *initial_pointer_move_event);
+    seat_event_dispatch_mock(std::move(initial_pointer_move_event));
 
     clock.advance_by(std::chrono::duration_cast<std::chrono::milliseconds>(grace_period_percentage * test_hover_delay));
     main_loop.call_queued();
@@ -140,7 +158,7 @@ TEST_P(TestCancelCallback, cancel_called_if_pointer_moves_before_hover_delay)
 
     auto potentially_cancelling_motion_event =
         motion_event(mir::geometry::DisplacementF{test_cancel_displacement_threshold + 1, 0});
-    transformer->transform_input_event(dispatcher, &event_builder, *potentially_cancelling_motion_event);
+    seat_event_dispatch_mock(std::move(potentially_cancelling_motion_event));
 
     main_loop.call_queued();
 
