@@ -310,3 +310,8 @@ TEST_F(BasicScreenShooter, ensures_renderer_is_current_on_only_one_thread)
     mir::ThreadPoolExecutor::quiesce();
     EXPECT_THAT(call_count, Eq(expected_call_count));
 }
+
+TEST_F(BasicScreenShooter, compositor_id_is_not_null)
+{
+    EXPECT_THAT(shooter->id(), NotNull());
+}
