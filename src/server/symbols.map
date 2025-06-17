@@ -1585,7 +1585,13 @@ local: *;
 
 MIR_SERVER_INTERNAL_2.22 {
 global:
-    extern "C++" {
-    "mir::Server::for_each_output_binding(mir::wayland::Client*, mir::IntWrapper<mir::graphics::detail::GraphicsConfOutputIdTag, int>, std::function<void (wl_resource*)> const&)";
-    };
+  extern "C++" {
+    mir::Server::for_each_output_binding*;
+    mir::frontend::WaylandTools::?WaylandTools*;
+    mir::frontend::WaylandTools::WaylandTools*;
+    mir::frontend::WaylandTools::operator*;
+    non-virtual?thunk?to?mir::frontend::WaylandTools::?WaylandTools*;
+    typeinfo?for?mir::frontend::WaylandTools;
+    vtable?for?mir::frontend::WaylandTools;
+  };
 } MIR_SERVER_INTERNAL_2.21;
