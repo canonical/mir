@@ -40,6 +40,7 @@ class Clock;
 namespace input
 {
 class CursorListener;
+class CursorListenerMultiplexer;
 class InputDispatcher;
 class KeyMapper;
 class SeatObserver;
@@ -57,6 +58,7 @@ public:
     SeatInputDeviceTracker(std::shared_ptr<InputDispatcher> const& dispatcher,
                            std::shared_ptr<TouchVisualizer> const& touch_visualizer,
                            std::shared_ptr<CursorListener> const& cursor_listener,
+                           std::shared_ptr<CursorListenerMultiplexer> const& cursor_listener_multiplexer,
                            std::shared_ptr<KeyMapper> const& key_mapper,
                            std::shared_ptr<time::Clock> const& clock,
                            std::shared_ptr<SeatObserver> const& observer);
@@ -91,6 +93,7 @@ private:
     std::shared_ptr<InputDispatcher> const dispatcher;
     std::shared_ptr<TouchVisualizer> const touch_visualizer;
     std::shared_ptr<CursorListener> const cursor_listener;
+    std::shared_ptr<CursorListenerMultiplexer> const cursor_listener_multiplexer;
     std::shared_ptr<KeyMapper> const key_mapper;
     std::shared_ptr<time::Clock> const clock;
     std::shared_ptr<SeatObserver> const observer;

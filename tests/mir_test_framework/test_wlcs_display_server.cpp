@@ -349,6 +349,27 @@ void emit_mir_event(miral::TestWlcsDisplayServer* runner,
 
 /// end of anon
 
+class miral::TestWlcsDisplayServer::RunnerCursorListener : public mir::input::CursorListener
+{
+public:
+    RunnerCursorListener(TestWlcsDisplayServer* runner) :
+        runner{runner}
+    {
+    }
+
+    void cursor_moved_to(float abs_x, float abs_y) override
+    {
+        runner->cursor_x = abs_x;
+        runner->cursor_y = abs_y;
+    }
+
+    void pointer_usable() override {}
+    void pointer_unusable() override {}
+
+private:
+    TestWlcsDisplayServer* const runner;
+};
+
 class miral::TestWlcsDisplayServer::ResourceMapper : public mir::scene::SessionListener
 {
 public:
@@ -830,36 +851,8 @@ miral::TestWlcsDisplayServer::TestWlcsDisplayServer(int argc, char const** argv)
                     return resource_mapper;
                 });
 
-            server.wrap_cursor_listener(
-                [this](auto const& wrappee)
-                {
-                    class ListenerWrapper : public mir::input::CursorListener
-                    {
-                    public:
-                        ListenerWrapper(
-                            TestWlcsDisplayServer* runner,
-                            std::shared_ptr<mir::input::CursorListener> const& wrapped)
-                            : runner{runner},
-                            wrapped{wrapped}
-                        {
-                        }
-
-                        void cursor_moved_to(float abs_x, float abs_y) override
-                        {
-                            runner->cursor_x = abs_x;
-                            runner->cursor_y = abs_y;
-                            wrapped->cursor_moved_to(abs_x, abs_y);
-                        }
-
-                        void pointer_usable() override { wrapped->pointer_usable(); }
-                        void pointer_unusable() override { wrapped->pointer_unusable(); }
-
-                    private:
-                        TestWlcsDisplayServer* const runner;
-                        std::shared_ptr<mir::input::CursorListener> const wrapped;
-                    };
-                    return std::make_shared<ListenerWrapper>(this, wrappee);
-                });
+            cursor_listener = std::make_shared<RunnerCursorListener>(this);
+            server.the_cursor_listener_multiplexer()->register_interest(cursor_listener);
 
             mir_server = &server;
         });

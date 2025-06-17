@@ -99,10 +99,11 @@ struct SingleSeatInputDeviceHubSetup : ::testing::Test
     ms::BroadcastingSessionEventSink session_event_sink;
     mtd::FakeDisplayConfigurationObserverRegistrar display_config;
     NiceMock<mtd::MockLedObserverRegistrar> led_observer_registrar;
+    mi::CursorListenerMultiplexer cursor_listener_multiplexer{observer_loop};
     mi::BasicSeat seat{mt::fake_shared(mock_dispatcher),      mt::fake_shared(mock_visualizer),
-                       mt::fake_shared(mock_cursor_listener), mt::fake_shared(display_config),
-                       mt::fake_shared(key_mapper),           mt::fake_shared(clock),
-                       mt::fake_shared(mock_seat_observer)};
+                       mt::fake_shared(mock_cursor_listener), mt::fake_shared(cursor_listener_multiplexer),
+                       mt::fake_shared(display_config),       mt::fake_shared(key_mapper),
+                       mt::fake_shared(clock),                mt::fake_shared(mock_seat_observer)};
     mi::DefaultInputDeviceHub hub{
         mt::fake_shared(seat),
         mt::fake_shared(multiplexer),
@@ -132,6 +133,7 @@ struct SingleSeatInputDeviceHubSetup : ::testing::Test
     {
         // execute registration of ConfigChanger
         expect_and_execute_multiplexer();
+        cursor_listener_multiplexer.register_interest(mt::fake_shared(mock_cursor_listener));
     }
 
     void expect_and_execute_multiplexer(int count = 1)

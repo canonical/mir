@@ -61,17 +61,15 @@ struct CursorListenerIntegrationTest : testing::Test, mtf::FakeInputServerConfig
     mtf::TemporaryEnvironmentValue real_input{"MIR_SERVER_TESTS_USE_REAL_INPUT", "1"};
     mtf::TemporaryEnvironmentValue no_key_repeat{"MIR_SERVER_ENABLE_KEY_REPEAT", "0"};
 
-    std::shared_ptr<mi::CursorListener> the_cursor_listener() override
-    {
-        return mt::fake_shared(cursor_listener);
-    }
-
     void SetUp() override
     {
         input_manager = the_input_manager();
         input_manager->start();
         input_dispatcher = the_input_dispatcher();
         input_dispatcher->start();
+
+        cursor_listener_multiplexer = the_cursor_listener_multiplexer();
+        cursor_listener_multiplexer->register_interest(mt::fake_shared(cursor_listener));
     }
 
     void TearDown() override
@@ -80,6 +78,7 @@ struct CursorListenerIntegrationTest : testing::Test, mtf::FakeInputServerConfig
         input_manager->stop();
     }
 
+    std::shared_ptr<mi::CursorListenerMultiplexer> cursor_listener_multiplexer;
     MockCursorListener cursor_listener;
     std::shared_ptr<mi::InputManager> input_manager;
     std::shared_ptr<mi::InputDispatcher> input_dispatcher;

@@ -42,12 +42,15 @@ namespace geom = mir::geometry;
 mi::SeatInputDeviceTracker::SeatInputDeviceTracker(std::shared_ptr<InputDispatcher> const& dispatcher,
                                                    std::shared_ptr<TouchVisualizer> const& touch_visualizer,
                                                    std::shared_ptr<CursorListener> const& cursor_listener,
+                                                   std::shared_ptr<CursorListenerMultiplexer> const& cursor_listener_multiplexer,
                                                    std::shared_ptr<KeyMapper> const& key_mapper,
                                                    std::shared_ptr<time::Clock> const& clock,
                                                    std::shared_ptr<SeatObserver> const& observer)
     : dispatcher{dispatcher}, touch_visualizer{touch_visualizer}, cursor_listener{cursor_listener},
-      key_mapper{key_mapper}, clock{clock}, observer{observer}, buttons{0}
+      cursor_listener_multiplexer{cursor_listener_multiplexer}, key_mapper{key_mapper}, clock{clock},
+      observer{observer}, buttons{0}
 {
+    cursor_listener_multiplexer->register_interest(cursor_listener);
 }
 
 void mi::SeatInputDeviceTracker::add_device(MirInputDeviceId id)
@@ -258,7 +261,7 @@ void mi::SeatInputDeviceTracker::update_cursor(MirPointerEvent const* event)
 
     confine_pointer();
 
-    cursor_listener->cursor_moved_to(cursor_x, cursor_y);
+    cursor_listener_multiplexer->cursor_moved_to(cursor_x, cursor_y);
 }
 
 mir::EventUPtr mi::SeatInputDeviceTracker::create_device_state() const
@@ -374,7 +377,7 @@ void mir::input::SeatInputDeviceTracker::add_pointing_device()
 {
     if (!num_pointing_devices++)
     {
-        cursor_listener->pointer_usable();
+        cursor_listener_multiplexer->pointer_usable();
     }
 }
 
@@ -382,7 +385,7 @@ void mir::input::SeatInputDeviceTracker::remove_pointing_device()
 {
     if (!--num_pointing_devices)
     {
-        cursor_listener->pointer_unusable();
+        cursor_listener_multiplexer->pointer_unusable();
     }
 }
 
