@@ -198,6 +198,6 @@ auto mir::DefaultServerConfiguration::the_accessibility_manager() -> std::shared
                 the_cursor(),
                 std::make_shared<shell::BasicMouseKeysTransformer>(the_main_loop(), the_clock()),
                 std::make_shared<shell::BasicSimulatedSecondaryClickTransformer>(the_main_loop()),
-                std::make_shared<shell::BasicHoverClickTransformer>(the_main_loop()));
+                std::make_shared<shell::BasicHoverClickTransformer>(the_main_loop(), the_cursor_observer_multiplexer()));
         });
 }
