@@ -573,7 +573,7 @@ auto mf::WaylandConnector::get_extension(std::string const& name) const -> std::
     return extensions->get_extension(name);
 }
 
-void mir::frontend::WaylandConnector::for_each_output_binding(
+void mf::WaylandConnector::for_each_output_binding(
     wayland::Client* client,
     graphics::DisplayConfigurationOutputId output,
     std::function<void(wl_resource* output)> const& callback)
