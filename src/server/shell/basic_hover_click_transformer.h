@@ -25,13 +25,20 @@
 
 namespace mir
 {
+namespace input
+{
+class CursorObserverMultiplexer;
+class CursorObserver;
+}
 class MainLoop;
 namespace shell
 {
 class BasicHoverClickTransformer : public HoverClickTransformer
 {
 public:
-    BasicHoverClickTransformer(std::shared_ptr<MainLoop> const& main_loop);
+    BasicHoverClickTransformer(
+        std::shared_ptr<MainLoop> const& main_loop,
+        std::shared_ptr<input::CursorObserverMultiplexer> const& cursor_observer_multiplexer);
 
     bool transform_input_event(
         mir::input::InputEventTransformer::EventDispatcher const& dispatcher,
@@ -80,6 +87,8 @@ private:
     // Provides a grace period, cursor motion events during this grace period
     // will not invoke the start/cancel callbacks.
     std::unique_ptr<time::Alarm> const hover_initializer;
+
+    std::shared_ptr<input::CursorObserver> const cursor_observer;
 };
 }
 }

@@ -22,6 +22,7 @@
 #include "mir/test/fake_shared.h"
 #include "mir/test/signal.h"
 
+#include "mir/input/cursor_observer_multiplexer.h"
 #include "mir/geometry/displacement.h"
 
 #include <gmock/gmock.h>
@@ -50,7 +51,10 @@ struct TestHoverClickTransformer : Test
 
     mtd::AdvanceableClock clock;
     mtd::QueuedAlarmStubMainLoop main_loop{mt::fake_shared(clock)};
-    std::shared_ptr<mir::shell::HoverClickTransformer> const transformer{std::make_shared<mir::shell::BasicHoverClickTransformer>(mt::fake_shared(main_loop))};
+    mir::input::CursorObserverMultiplexer cursor_observer_multiplexer{main_loop};
+    std::shared_ptr<mir::shell::HoverClickTransformer> const transformer{
+        std::make_shared<mir::shell::BasicHoverClickTransformer>(
+            mt::fake_shared(main_loop), mt::fake_shared(cursor_observer_multiplexer))};
     mir::input::DefaultEventBuilder event_builder{0, mt::fake_shared(clock)};
     std::function<void(std::shared_ptr<MirEvent> const&)> dispatcher{[](auto) { }};
 

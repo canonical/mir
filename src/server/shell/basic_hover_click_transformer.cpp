@@ -15,14 +15,19 @@
  */
 
 #include "basic_hover_click_transformer.h"
+
 #include "mir/events/input_event.h"
 #include "mir/events/pointer_event.h"
+#include "mir/input/cursor_observer.h"
+#include "mir/input/cursor_observer_multiplexer.h"
 #include "mir/input/event_builder.h"
 #include "mir/main_loop.h"
 
 namespace msh = mir::shell;
 
-msh::BasicHoverClickTransformer::BasicHoverClickTransformer(std::shared_ptr<MainLoop> const& main_loop) :
+msh::BasicHoverClickTransformer::BasicHoverClickTransformer(
+    std::shared_ptr<MainLoop> const& main_loop,
+    std::shared_ptr<input::CursorObserverMultiplexer> const& cursor_observer_multiplexer) :
     main_loop{main_loop},
     hover_initializer{[&main_loop, this]
                       {
@@ -37,8 +42,37 @@ msh::BasicHoverClickTransformer::BasicHoverClickTransformer(std::shared_ptr<Main
                                   state->click_dispatcher->reschedule_in(state->hover_duration - grace_period);
                                   state->on_hover_start();
                               });
-                      }()}
+                      }()},
+    cursor_observer{[&]
+                    {
+                        struct CursorObserver : public input::CursorObserver
+                        {
+                            explicit CursorObserver(mir::Synchronised<MutableState>& mutable_state) :
+                                mutable_state(mutable_state)
+                            {
+                            }
+
+                            void cursor_moved_to(float abs_x, float abs_y) override
+                            {
+                                auto const state = mutable_state.lock();
+                                state->potential_position = {abs_x, abs_y};
+                            }
+
+                            void pointer_usable() override
+                            {
+                            }
+
+                            void pointer_unusable() override
+                            {
+                            }
+
+                            mir::Synchronised<MutableState>& mutable_state;
+                        };
+
+                        return std::make_shared<CursorObserver>(mutable_state);
+                    }()}
 {
+    cursor_observer_multiplexer->register_interest(cursor_observer);
 }
 
 bool msh::BasicHoverClickTransformer::transform_input_event(
@@ -66,8 +100,6 @@ bool msh::BasicHoverClickTransformer::transform_input_event(
         auto const hover_click_origin = state->hover_click_origin;
         auto const cancel_displacement = state->cancel_displacement_threshold;
 
-        state->potential_position += pointer_event->motion();
-
         if(hover_click_origin)
         {
             auto const distance_from_last_click = (*hover_click_origin - state->potential_position).length_squared();
@@ -91,8 +123,6 @@ bool msh::BasicHoverClickTransformer::transform_input_event(
         // click actually starts. This also saves us from calling the
         // start/cancel callbacks erroneously.
         hover_initializer->cancel();
-        if (auto const position = pointer_event->position())
-            state->potential_position = *position;
         auto const grace_period =
             std::chrono::duration_cast<std::chrono::milliseconds>(state->hover_duration * grace_period_percentage);
         hover_initializer->reschedule_in(grace_period);
