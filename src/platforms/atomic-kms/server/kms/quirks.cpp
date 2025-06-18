@@ -206,70 +206,31 @@ public:
         auto const devnode = device.devnode();
         mir::log_debug("Quirks(gbm-create-surface-flags + gbm-surface-has-free-buffers): checking device with devnode: %s, driver %s", devnode, driver);
 
-        auto const devnode_or_driver =
-            [](auto devnode, auto driver, auto devnodes, auto drivers) -> std::optional<std::string>
-        {
-            if (devnodes.contains(devnode))
-                return devnodes.at(devnode);
-
-            if (drivers.contains(driver))
-                return drivers.at(driver);
-
-            return std::nullopt;
-        };
-
-        auto create_surface_impl_name =
-            devnode_or_driver(devnode, driver, gbm_create_surface_flags.devnodes, gbm_create_surface_flags.drivers)
-                .transform(
-                    [](auto impl_name)
-                    {
-                        mir::log_debug(
-                            "Quirks(gbm-create-surface-flags): forcing %s implementation", impl_name.c_str());
-                        return impl_name;
-                    })
-                .or_else(
-                    [&driver] -> std::optional<std::string>
-
-                    {
-                        mir::log_debug(
-                            "Quirks(gbm-create-surface-flags): using default implementation for %s driver", driver);
-                        // Not specified
-                        return driver;
-                    })
-                .value();
+        auto create_surface_impl_name = mgc::apply_quirk(
+            devnode,
+            driver,
+            gbm_create_surface_flags.devnodes,
+            gbm_create_surface_flags.drivers,
+            "gbm-create-surface-flags");
 
         auto create_surface_impl = [&]() -> std::unique_ptr<GbmQuirks::CreateSurfaceFlagsQuirk>
         {
-            if (create_surface_impl_name == "no-flags" || create_surface_impl_name == "nvidia")
+            if (gbm_create_surface_no_flags_options.contains(create_surface_impl_name))
                 return std::make_unique<GbmCreateSurfaceNoFlags>();
 
             return std::make_unique<DefaultGbmCreateSurfaceFlags>();
         }();
 
-        auto surface_has_free_buffers_impl_name =
-            devnode_or_driver(
-                devnode, driver, gbm_surface_has_free_buffers.devnodes, gbm_surface_has_free_buffers.drivers)
-                .transform(
-                    [](auto impl_name)
-                    {
-                        mir::log_debug(
-                            "Quirks(gbm-surface-has-free-buffers): forcing %s implementation", impl_name.c_str());
-                        return impl_name;
-                    })
-                .or_else(
-                    [&driver] -> std::optional<std::string>
-
-                    {
-                        mir::log_debug(
-                            "Quirks(gbm-surface-has-free-buffers): using default implementation for %s driver", driver);
-                        // Not specified
-                        return driver;
-                    })
-                .value();
+        auto surface_has_free_buffers_impl_name = mgc::apply_quirk(
+            devnode,
+            driver,
+            gbm_surface_has_free_buffers.devnodes,
+            gbm_surface_has_free_buffers.drivers,
+            "gbm-surface-has-free-buffers");
 
         auto surface_has_free_buffers_impl = [&]() -> std::unique_ptr<GbmQuirks::SurfaceHasFreeBuffersQuirk>
         {
-            if (surface_has_free_buffers_impl_name == "skip" || surface_has_free_buffers_impl_name == "nvidia")
+            if (gbm_surface_has_free_buffers_always_true_options.contains(surface_has_free_buffers_impl_name))
                 return std::make_unique<GbmSurfaceHasFreeBuffersAlwaysTrue>();
             return std::make_unique<DefaultGbmSurfaceHasFreeBuffers>();
         }();
@@ -293,8 +254,10 @@ private:
     // We know this is currently useful for virtio_gpu, vc4-drm and v3d
     mgc::AllowList disable_kms_probe{{"virtio_gpu", "vc4-drm", "v3d"}};
 
-
+    inline static std::set<std::string_view> const gbm_create_surface_no_flags_options{"no-flags", "nvidia"};
     mgc::ValuedOption gbm_create_surface_flags;
+
+    inline static std::set<std::string_view> const gbm_surface_has_free_buffers_always_true_options{"skip", "nvidia"};
     mgc::ValuedOption gbm_surface_has_free_buffers;
 };
 
