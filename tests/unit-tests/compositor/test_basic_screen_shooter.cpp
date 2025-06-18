@@ -21,6 +21,7 @@
 #include "mir/test/doubles/stub_gl_rendering_provider.h"
 #include "src/server/compositor/basic_screen_shooter.h"
 
+#include "mir/test/doubles/mock_cursor.h"
 #include "mir/test/doubles/mock_scene.h"
 #include "mir/test/doubles/mock_renderer.h"
 #include "mir/test/doubles/mock_gl_rendering_provider.h"
@@ -102,7 +103,8 @@ struct BasicScreenShooter : Test
             renderer_factory,
             buffer_allocator,
             std::make_shared<mtd::StubGLConfig>(),
-            std::make_shared<mtd::StubOutputFilter>());
+            std::make_shared<mtd::StubOutputFilter>(),
+            cursor);
     }
 
     std::unique_ptr<mtd::MockRenderer> next_renderer{std::make_unique<testing::NiceMock<mtd::MockRenderer>>()};
@@ -132,6 +134,7 @@ struct BasicScreenShooter : Test
     std::shared_ptr<mtd::MockRendererFactory> renderer_factory{std::make_shared<testing::NiceMock<mtd::MockRendererFactory>>()};
     std::shared_ptr<mtd::StubBufferAllocator> buffer_allocator;
     std::shared_ptr<mtd::AdvanceableClock> clock{std::make_shared<mtd::AdvanceableClock>()};
+    std::shared_ptr<mtd::MockCursor> cursor{std::make_shared<mtd::MockCursor>()};
     mtd::ExplicitExecutor executor;
     std::unique_ptr<mc::BasicScreenShooter> shooter;
     std::shared_ptr<mtd::StubBuffer> buffer{std::make_shared<mtd::StubBuffer>(geom::Size{800, 600})};
@@ -144,7 +147,7 @@ struct BasicScreenShooter : Test
 
 TEST_F(BasicScreenShooter, calls_callback_from_executor)
 {
-    shooter->capture(buffer, viewport_rect, [&](auto time)
+    shooter->capture(buffer, viewport_rect, false, [&](auto time)
         {
             callback.Call(time);
         });
@@ -155,7 +158,7 @@ TEST_F(BasicScreenShooter, calls_callback_from_executor)
 
 TEST_F(BasicScreenShooter, renders_scene_elements)
 {
-    shooter->capture(buffer, viewport_rect, [&](auto time)
+    shooter->capture(buffer, viewport_rect, false, [&](auto time)
         {
             callback.Call(time);
         });
@@ -167,9 +170,26 @@ TEST_F(BasicScreenShooter, renders_scene_elements)
     executor.execute();
 }
 
+TEST_F(BasicScreenShooter, render_curor_when_overlay_cursor_is_true)
+{
+    shooter->capture(buffer, viewport_rect, true, [&](auto time)
+        {
+            callback.Call(time);
+        });
+    InSequence seq;
+    EXPECT_CALL(*scene, scene_elements_for(_)).WillOnce(Return(scene_elements));
+    auto const cursor_renderable = std::make_shared<mtd::StubRenderable>();
+    EXPECT_CALL(*cursor, renderable()).WillOnce(Return(cursor_renderable));
+    auto renderables_with_cursor = renderables;
+    renderables_with_cursor.push_back(cursor_renderable);
+    EXPECT_CALL(*next_renderer, render(Eq(renderables_with_cursor)));
+    EXPECT_CALL(callback, Call(std::make_optional(clock->now())));
+    executor.execute();
+}
+
 TEST_F(BasicScreenShooter, sets_viewport_correctly_before_render)
 {
-    shooter->capture(buffer, viewport_rect, [&](auto time)
+    shooter->capture(buffer, viewport_rect, false, [&](auto time)
         {
             callback.Call(time);
         });
@@ -183,7 +203,7 @@ TEST_F(BasicScreenShooter, sets_viewport_correctly_before_render)
 TEST_F(BasicScreenShooter, graceful_failure_on_zero_sized_buffer)
 {
     auto broken_buffer = std::make_shared<mtd::StubBuffer>(geom::Size{0, 0});
-    shooter->capture(broken_buffer, viewport_rect, [&](auto time)
+    shooter->capture(broken_buffer, viewport_rect, false, [&](auto time)
         {
             callback.Call(time);
         });
@@ -197,7 +217,7 @@ TEST_F(BasicScreenShooter, throw_in_scene_elements_for_causes_graceful_failure)
         {
             throw std::runtime_error{"throw in scene_elements_for()!"};
         }));
-    shooter->capture(buffer, viewport_rect, [&](auto time)
+    shooter->capture(buffer, viewport_rect, false, [&](auto time)
         {
             callback.Call(time);
         });
@@ -212,7 +232,7 @@ TEST_F(BasicScreenShooter, throw_in_surface_for_output_handled_gracefully)
         {
             BOOST_THROW_EXCEPTION((std::runtime_error{"Throw in surface_for_sink"}));
         });
-    shooter->capture(buffer, viewport_rect, [&](auto time)
+    shooter->capture(buffer, viewport_rect, false, [&](auto time)
         {
             callback.Call(time);
         });
@@ -226,7 +246,7 @@ TEST_F(BasicScreenShooter, throw_in_render_causes_graceful_failure)
         {
             throw std::runtime_error{"throw in render()!"};
         });
-    shooter->capture(buffer, viewport_rect, [&](auto time)
+    shooter->capture(buffer, viewport_rect, false, [&](auto time)
         {
             callback.Call(time);
         });
@@ -247,7 +267,8 @@ TEST_F(BasicScreenShooter, ensures_renderer_is_current_on_only_one_thread)
         renderer_factory,
         buffer_allocator,
         std::make_shared<mtd::StubGLConfig>(),
-        std::make_shared<mtd::StubOutputFilter>());
+        std::make_shared<mtd::StubOutputFilter>(),
+        cursor);
 
     ON_CALL(*next_renderer, render(_))
         .WillByDefault(
@@ -277,7 +298,7 @@ TEST_F(BasicScreenShooter, ensures_renderer_is_current_on_only_one_thread)
     auto const spawn_a_capture =
         [&]()
         {
-            shooter->capture(buffer, viewport_rect, [&](auto) { call_count++; });
+            shooter->capture(buffer, viewport_rect, false, [&](auto) { call_count++; });
         };
 
     auto const expected_call_count = 20;

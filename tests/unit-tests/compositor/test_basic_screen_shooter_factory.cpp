@@ -30,6 +30,7 @@
 #include "mir/test/doubles/stub_output_filter.h"
 #include "mir/test/doubles/stub_gl_config.h"
 #include "mir/test/doubles/stub_buffer_allocator.h"
+#include "mir/test/doubles/stub_cursor.h"
 
 #include <gtest/gtest.h>
 
@@ -57,7 +58,8 @@ public:
             renderer_factory,
             buffer_allocator,
             std::make_shared<mtd::StubGLConfig>(),
-            std::make_shared<mtd::StubOutputFilter>());
+            std::make_shared<mtd::StubOutputFilter>(),
+            std::make_shared<mtd::StubCursor>());
     }
 
     std::shared_ptr<mtd::MockScene> scene{std::make_shared<NiceMock<mtd::MockScene>>()};

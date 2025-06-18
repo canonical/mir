@@ -51,6 +51,7 @@ public:
     void move_to(geometry::Point position) override;
     void scale(float) override;
     auto renderable() -> std::shared_ptr<Renderable> override;
+    auto needs_compositing() const -> bool override;
 
 private:
     std::shared_ptr<detail::CursorRenderable> create_scaled_renderable_for(
@@ -60,7 +61,7 @@ private:
     std::shared_ptr<input::Scene> const scene;
     MirPixelFormat const format;
 
-    std::mutex guard;
+    std::mutex mutable guard;
     std::shared_ptr<detail::CursorRenderable> renderable_;
     bool visible;
     geometry::Displacement hotspot;

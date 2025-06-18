@@ -92,6 +92,8 @@ add_library(miral-external OBJECT
     mousekeys_config.cpp                ${miral_include}/miral/mousekeys_config.h
     output_filter.cpp                   ${miral_include}/miral/output_filter.h
     simulated_secondary_click.cpp       ${miral_include}/miral/simulated_secondary_click.h
+    live_config.cpp                     ${miral_include}/miral/live_config.h
+    live_config_ini_file.cpp            ${miral_include}/miral/live_config_ini_file.h
 )
 
 add_library(miral SHARED

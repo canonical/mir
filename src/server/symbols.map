@@ -163,7 +163,6 @@ global:
     mir::Server::get_activation_token*;
     mir::Server::get_options*;
     mir::Server::open_client_wayland*;
-    mir::Server::open_prompt_socket*;
     mir::Server::open_wayland_client_socket*;
     mir::Server::override_the_accessibility_manager*;
     mir::Server::override_the_application_not_responding_detector*;

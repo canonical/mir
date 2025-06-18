@@ -714,25 +714,25 @@ TEST_F(MinimalWindowManagerWithOneWindow, restoring_a_minimized_window_with_no_a
     EXPECT_THAT(focused(windows[0]), Eq(true));
 }
 
-TEST_F(MinimalWindowManagerWithThreeWindows, minimizing_an_inactive_window_maintains_its_place_in_the_z_order)
+TEST_F(MinimalWindowManagerWithThreeWindows, minimizing_an_inactive_window_moves_it_to_the_back_of_the_z_order)
 {
     miral::WindowSpecification spec;
     spec.state() = mir_window_state_minimized;
     request_modify(windows[1], spec);
 
     EXPECT_THAT(is_above(windows[2], windows[1]), Eq(true));
-    EXPECT_THAT(is_above(windows[1], windows[0]), Eq(true));
+    EXPECT_THAT(is_above(windows[0], windows[1]), Eq(true));
 }
 
 TEST_F(MinimalWindowManagerWithThreeWindows,
-    minimizing_the_active_window_selects_a_new_window_and_moves_the_minimized_down_in_the_z_order)
+    minimizing_the_active_window_moves_it_to_the_back_of_the_z_order_and_selects_a_new_window)
 {
     miral::WindowSpecification spec;
     spec.state() = mir_window_state_minimized;
     request_modify(windows[2], spec);
 
     EXPECT_THAT(is_above(windows[1], windows[2]), Eq(true));
-    EXPECT_THAT(is_above(windows[2], windows[0]), Eq(true));
+    EXPECT_THAT(is_above(windows[0], windows[2]), Eq(true));
 }
 
 TEST_F(MinimalWindowManagerWithThreeWindows,

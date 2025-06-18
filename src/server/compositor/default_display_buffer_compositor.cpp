@@ -19,6 +19,7 @@
 #include "mir/compositor/compositor_report.h"
 #include "mir/compositor/scene.h"
 #include "mir/compositor/scene_element.h"
+#include "mir/graphics/dmabuf_buffer.h"
 #include "mir/graphics/renderable.h"
 #include "mir/graphics/display_sink.h"
 #include "mir/graphics/buffer.h"
@@ -27,9 +28,14 @@
 #include "mir/compositor/buffer_stream.h"
 #include "mir/renderer/renderer.h"
 #include "occlusion.h"
+#include <memory>
+
+#define MIR_LOG_COMPONENT "compositor"
+#include "mir/log.h"
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
+
 
 mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
     mg::DisplaySink& display_sink,

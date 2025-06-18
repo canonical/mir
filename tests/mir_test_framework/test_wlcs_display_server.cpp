@@ -22,6 +22,7 @@
 #include <mir_test_framework/fake_input_device.h>
 #include <mir_test_framework/stub_server_platform_factory.h>
 #include <mir/test/signal.h>
+#include "mir/test/null_input_device_observer.h"
 
 #include <mir/executor.h>
 #include <mir/fd.h>
@@ -933,7 +934,7 @@ WlcsPointer* miral::TestWlcsDisplayServer::create_pointer()
 {
     auto constexpr uid = "mouse-uid";
 
-    class DeviceObserver : public mir::input::InputDeviceObserver
+    class DeviceObserver : public mir::input::NullInputDeviceObserver
     {
     public:
         DeviceObserver(std::shared_ptr<mir::test::Signal> const& done)
@@ -945,14 +946,6 @@ WlcsPointer* miral::TestWlcsDisplayServer::create_pointer()
         {
             if (device->unique_id() == uid)
                 seen_device = true;
-        }
-
-        void device_changed(std::shared_ptr<mir::input::Device> const&) override
-        {
-        }
-
-        void device_removed(std::shared_ptr<mir::input::Device> const&) override
-        {
         }
 
         void changes_complete() override
@@ -989,7 +982,7 @@ WlcsTouch* miral::TestWlcsDisplayServer::create_touch()
 {
     auto constexpr uid = "touch-uid";
 
-    class DeviceObserver : public mir::input::InputDeviceObserver
+    class DeviceObserver : public mir::input::NullInputDeviceObserver
     {
     public:
         DeviceObserver(std::shared_ptr<mir::test::Signal> const& done)
@@ -1001,14 +994,6 @@ WlcsTouch* miral::TestWlcsDisplayServer::create_touch()
         {
             if (device->unique_id() == uid)
                 seen_device = true;
-        }
-
-        void device_changed(std::shared_ptr<mir::input::Device> const&) override
-        {
-        }
-
-        void device_removed(std::shared_ptr<mir::input::Device> const&) override
-        {
         }
 
         void changes_complete() override

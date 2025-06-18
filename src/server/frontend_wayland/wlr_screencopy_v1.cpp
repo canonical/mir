@@ -379,11 +379,10 @@ void mf::WlrScreencopyManagerV1::capture_output(
     int32_t overlay_cursor,
     wl_resource* output)
 {
-    (void)overlay_cursor;
     auto const& output_config = OutputGlobal::from_or_throw(output).current_config();
     auto const output_area = output_config.extents();
     auto const buffer_size = output_config.modes[output_config.current_mode_index].size;
-    new WlrScreencopyFrameV1{frame, this, ctx, {output, output_area, buffer_size}};
+    new WlrScreencopyFrameV1{frame, this, ctx, {output, output_area, buffer_size, overlay_cursor == 1}};
 }
 
 void mf::WlrScreencopyManagerV1::capture_output_region(
@@ -393,12 +392,11 @@ void mf::WlrScreencopyManagerV1::capture_output_region(
     int32_t x, int32_t y,
     int32_t width, int32_t height)
 {
-    (void)overlay_cursor;
     auto const& output_config = OutputGlobal::from_or_throw(output).current_config();
     auto const extents = output_config.extents();
     auto const intersection = intersection_of({{x, y}, {width, height}}, extents);
     auto const buffer_size = translate_and_scale(intersection, extents, {{}, extents.size}).size;
-    new WlrScreencopyFrameV1{frame, this, ctx, {output, intersection, buffer_size}};
+    new WlrScreencopyFrameV1{frame, this, ctx, {output, intersection, buffer_size, overlay_cursor == 1}};
 }
 
 mf::WlrScreencopyFrameV1::WlrScreencopyFrameV1(
@@ -437,7 +435,7 @@ void mf::WlrScreencopyFrameV1::capture(geom::Rectangle buffer_space_damage)
         return;
     }
 
-    manager.value().screen_shooter->capture(std::move(target), params.output_space_area,
+    manager.value().screen_shooter->capture(std::move(target), params.output_space_area, params.overlay_cursor,
         [wayland_executor=ctx->wayland_executor, buffer_space_damage, self=mw::make_weak(this)]
             (std::optional<time::Timestamp> captured_time)
         {

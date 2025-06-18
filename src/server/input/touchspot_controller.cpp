@@ -46,8 +46,6 @@ public:
     {
     }
 
-// mg::Renderable
-
     mg::Renderable::ID id() const override
     {
         return this;
@@ -81,6 +79,16 @@ public:
     glm::mat4 transformation() const override
     {
         return glm::mat4();
+    }
+
+    MirOrientation orientation() const override
+    {
+        return mir_orientation_normal;
+    }
+
+    MirMirrorMode mirror_mode() const override
+    {
+        return mir_mirror_mode_none;
     }
 
     bool shaped() const override
