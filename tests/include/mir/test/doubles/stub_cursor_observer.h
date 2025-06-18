@@ -14,10 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_TEST_DOUBLES_STUB_CURSOR_LISTENER_H_
-#define MIR_TEST_DOUBLES_STUB_CURSOR_LISTENER_H_
+#ifndef MIR_TEST_DOUBLES_STUB_CURSOR_OBSERVER_H_
+#define MIR_TEST_DOUBLES_STUB_CURSOR_OBSERVER_H_
 
-#include "mir/input/cursor_listener.h"
+#include "mir/input/cursor_observer.h"
 
 namespace mir
 {
@@ -26,7 +26,7 @@ namespace test
 namespace doubles
 {
 
-struct StubCursorListener : public input::CursorListener
+struct StubCursorObserver : public input::CursorObserver
 {
     void cursor_moved_to(float, float) override {}
 };
@@ -35,4 +35,4 @@ struct StubCursorListener : public input::CursorListener
 }
 } // namespace mir
 
-#endif /* MIR_TEST_DOUBLES_STUB_CURSOR_LISTENER_H_ */
+#endif /* MIR_TEST_DOUBLES_STUB_CURSOR_OBSERVER_H_ */

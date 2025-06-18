@@ -50,13 +50,13 @@ struct TestWlcsDisplayServer : TestDisplayServer, public WlcsDisplayServer
 private:
     class InputEventListener;
     class ResourceMapper;
-    class RunnerCursorListener;
+    class RunnerCursorObserver;
 
     std::shared_ptr<ResourceMapper> const resource_mapper;
     std::shared_ptr<InputEventListener> const event_listener;
     std::shared_ptr<mir::Executor> executor;
     std::atomic<double> cursor_x{0}, cursor_y{0};
-    std::shared_ptr<RunnerCursorListener> cursor_listener;
+    std::shared_ptr<RunnerCursorObserver> cursor_observer;
 
     mir::Server* mir_server = nullptr;
 };

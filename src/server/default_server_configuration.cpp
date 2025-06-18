@@ -30,7 +30,7 @@
 #include "mir/graphics/cursor.h"
 #include "mir/scene/null_session_listener.h"
 #include "mir/graphics/display.h"
-#include "mir/input/cursor_listener.h"
+#include "mir/input/cursor_observer.h"
 #include "mir/input/vt_filter.h"
 #include "mir/input/input_manager.h"
 #include "mir/time/steady_clock.h"

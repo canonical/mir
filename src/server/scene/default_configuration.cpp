@@ -18,7 +18,7 @@
 
 #include "mir/frontend/drag_icon_controller.h"
 #include "mir/graphics/display.h"
-#include "mir/input/cursor_listener.h"
+#include "mir/input/cursor_observer.h"
 #include "mir/input/scene.h"
 #include "mir/input/cursor_controller.h"
 #include "mir/main_loop.h"
