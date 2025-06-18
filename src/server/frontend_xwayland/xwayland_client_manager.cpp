@@ -16,7 +16,7 @@
 
 #include "xwayland_client_manager.h"
 #include "xwayland_log.h"
-#include "null_event_sink.h"
+#include "../../include/server/mir/frontend/null_event_sink.h"
 #include "mir/shell/shell.h"
 #include "mir/scene/session.h"
 #include "mir/log.h"

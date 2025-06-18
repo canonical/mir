@@ -29,6 +29,7 @@
 #include "mir/scene/surface.h"
 #include "mir/input/seat.h"
 #include "mir/wayland/weak.h"
+#include "mir/frontend/null_event_sink.h"
 #include "decoration/manager.h"
 
 #include <algorithm>
@@ -43,6 +44,8 @@ namespace geom = mir::geometry;
 
 namespace
 {
+constexpr std::string internal_session_name = "mir";
+
 auto get_toplevel(std::shared_ptr<ms::Surface> surface) -> std::shared_ptr<ms::Surface>
 {
     std::shared_ptr<ms::Surface> prev;
@@ -268,6 +271,93 @@ auto msh::AbstractShell::create_surface(
     }
 
     result->initial_placement_done();
+    return result;
+}
+
+auto msh::AbstractShell::add_internal_surface(
+    SurfaceSpecification const& params,
+    std::function<std::shared_ptr<ms::Surface>(
+        std::shared_ptr<ms::Session> const& session,
+        SurfaceSpecification const& params)> const& build)
+    -> std::shared_ptr<scene::Surface>
+{
+    if (!internal_surface_session)
+    {
+        internal_surface_session = open_session(
+            getpid(),
+            Fd(),
+            internal_session_name,
+            std::make_shared<mf::NullEventSink>());
+    }
+
+    auto wm_visible_spec{params};
+
+    // When adding decorations we need to resize the window for WM
+    if (wm_visible_spec.server_side_decorated.value_or(false))
+    {
+        // If there's no size we fake and only use it to adjust constraints
+        geom::Size const content_size{
+            wm_visible_spec.width.value_or(geom::Width{640}),
+            wm_visible_spec.height.value_or(geom::Height{480})};
+        auto const size = decoration_manager->compute_size_with_decorations(
+            content_size,
+            wm_visible_spec.type.value_or(mir_window_type_normal),
+            wm_visible_spec.state.value_or(mir_window_state_restored));
+
+        adjust_size_constraints_for_ssd(wm_visible_spec, size, content_size);
+    }
+
+    // Instead of a shared pointer, a local variable could be used and the lambda could capture a reference to it
+    // This should be safe, but could be the source of nasty bugs and crashes if the wm did something unexpected
+    auto const should_decorate = std::make_shared<bool>(false);
+    auto const build_wrapper = [build=build, should_decorate, surface_stack=surface_stack](
+        std::shared_ptr<ms::Session> const& session,
+        SurfaceSpecification const& placed_params)
+    {
+        if (placed_params.server_side_decorated.is_set() && placed_params.server_side_decorated.value())
+        {
+            *should_decorate = true;
+        }
+
+        // TODO: This bit is taken directly from [ApplicationSession], but that
+        //  is a weird place to have it anyway!
+        auto const input_mode = placed_params.input_mode.is_set()
+            ? placed_params.input_mode.value()
+            : input::InputReceptionMode::normal;
+        auto result = build(session, placed_params);
+        surface_stack->add_surface(result, input_mode);
+        if (placed_params.state.is_set())
+            result->configure(mir_window_attrib_state, placed_params.state.value());
+        if (placed_params.type.is_set())
+            result->configure(mir_window_attrib_type, placed_params.type.value());
+        if (placed_params.preferred_orientation.is_set())
+            result->configure(mir_window_attrib_preferred_orientation, placed_params.preferred_orientation.value());
+        if (placed_params.input_shape.is_set())
+            result->set_input_region(placed_params.input_shape.value());
+        if (placed_params.depth_layer.is_set())
+            result->set_depth_layer(placed_params.depth_layer.value());
+        if (placed_params.application_id.is_set())
+            result->set_application_id(placed_params.application_id.value());
+        if (placed_params.focus_mode.is_set())
+            result->set_focus_mode(placed_params.focus_mode.value());
+        if (placed_params.visible_on_lock_screen.is_set())
+            result->set_visible_on_lock_screen(placed_params.visible_on_lock_screen.value());
+        if (placed_params.tiled_edges.is_set())
+            result->set_tiled_edges(placed_params.tiled_edges.value());
+
+        return result;
+    };
+
+    auto const result = window_manager->add_surface(internal_surface_session, wm_visible_spec, build_wrapper);
+    report->created_surface(*internal_surface_session, *result);
+
+    if (*should_decorate)
+    {
+        decoration_manager->decorate(result);
+    }
+
+    result->initial_placement_done();
+    surface_ready(result);
     return result;
 }
 

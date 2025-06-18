@@ -23,6 +23,8 @@
 
 #include <mutex>
 
+#include "surface_specification.h"
+
 namespace mir
 {
 namespace input
@@ -68,6 +70,12 @@ public:
         SurfaceSpecification const& params,
         std::shared_ptr<scene::SurfaceObserver> const& observer,
         Executor* observer_executor) -> std::shared_ptr<scene::Surface> override;
+
+    auto add_internal_surface(
+        SurfaceSpecification const& params,
+        std::function<std::shared_ptr<scene::Surface>(
+            std::shared_ptr<scene::Session> const& session,
+            SurfaceSpecification const& params)> const& build) -> std::shared_ptr<scene::Surface> override;
 
     void surface_ready(std::shared_ptr<scene::Surface> const& surface) override;
 
@@ -162,6 +170,7 @@ private:
     std::weak_ptr<scene::Surface> popup_parent;
     std::vector<std::weak_ptr<scene::Surface>> grabbing_popups;
     std::shared_ptr<SurfaceConfinementUpdater> const surface_confinement_updater;
+    std::shared_ptr<scene::Session> internal_surface_session;
 
     void notify_active_surfaces(
         std::unique_lock<std::mutex> const&,

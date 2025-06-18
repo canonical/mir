@@ -35,6 +35,15 @@ auto msh::ShellWrapper::open_session(
     return wrapped->open_session(client_pid, socket_fd, name, sink);
 }
 
+auto msh::ShellWrapper::add_internal_surface(
+    SurfaceSpecification const& params,
+    std::function<std::shared_ptr<scene::Surface>(
+        std::shared_ptr<scene::Session> const& session,
+        SurfaceSpecification const& params)> const& build) -> std::shared_ptr<scene::Surface>
+{
+    return wrapped->add_internal_surface(params, build);
+}
+
 void msh::ShellWrapper::close_session(std::shared_ptr<ms::Session> const& session)
 {
     wrapped->close_session(session);

@@ -17,7 +17,7 @@
 #include "wl_client.h"
 #include "std_layout_uptr.h"
 
-#include "null_event_sink.h"
+#include "../../include/server/mir/frontend/null_event_sink.h"
 #include "mir/frontend/session_authorizer.h"
 #include "mir/frontend/session_credentials.h"
 #include "mir/shell/shell.h"

@@ -144,6 +144,15 @@ struct StubShell : public shell::Shell
         return std::make_shared<StubSurface>();
     }
 
+    auto add_internal_surface(
+        shell::SurfaceSpecification const& /* params */,
+        std::function<std::shared_ptr<scene::Surface>(
+            std::shared_ptr<scene::Session> const& /* session */,
+            shell::SurfaceSpecification const& /* params */)> const& /* build */) -> std::shared_ptr<scene::Surface>
+    {
+        return std::make_shared<StubSurface>();
+    }
+
     void surface_ready(std::shared_ptr<scene::Surface> const& /*surface*/) override
     {
     }

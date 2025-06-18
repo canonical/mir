@@ -326,6 +326,13 @@ global:
     mir::frontend::InputConfigurationChanger::?InputConfigurationChanger*;
     mir::frontend::InputConfigurationChanger::InputConfigurationChanger*;
     mir::frontend::InputConfigurationChanger::operator*;
+    mir::frontend::NullEventSink::NullEventSink*;
+    mir::frontend::NullEventSink::handle_display_config_change*;
+    mir::frontend::NullEventSink::handle_error*;
+    mir::frontend::NullEventSink::handle_event*;
+    mir::frontend::NullEventSink::handle_input_config_change*;
+    mir::frontend::NullEventSink::handle_lifecycle_event*;
+    mir::frontend::NullEventSink::send_ping*;
     mir::frontend::PointerInputDispatcher::?PointerInputDispatcher*;
     mir::frontend::PointerInputDispatcher::PointerInputDispatcher*;
     mir::frontend::PointerInputDispatcher::operator*;
@@ -683,6 +690,7 @@ global:
     mir::shell::AbstractShell::?AbstractShell*;
     mir::shell::AbstractShell::AbstractShell*;
     mir::shell::AbstractShell::add_display*;
+    mir::shell::AbstractShell::add_internal_surface*;
     mir::shell::AbstractShell::add_prompt_provider_for*;
     mir::shell::AbstractShell::close_session*;
     mir::shell::AbstractShell::create_surface*;
@@ -735,6 +743,7 @@ global:
     mir::shell::ShellReport::operator*;
     mir::shell::ShellWrapper::ShellWrapper*;
     mir::shell::ShellWrapper::add_display*;
+    mir::shell::ShellWrapper::add_internal_surface*;
     mir::shell::ShellWrapper::add_prompt_provider_for*;
     mir::shell::ShellWrapper::close_session*;
     mir::shell::ShellWrapper::create_surface*;
@@ -944,6 +953,12 @@ global:
     non-virtual?thunk?to?mir::frontend::DragIconController::?DragIconController*;
     non-virtual?thunk?to?mir::frontend::EventSink::?EventSink*;
     non-virtual?thunk?to?mir::frontend::InputConfigurationChanger::?InputConfigurationChanger*;
+    non-virtual?thunk?to?mir::frontend::NullEventSink::handle_display_config_change*;
+    non-virtual?thunk?to?mir::frontend::NullEventSink::handle_error*;
+    non-virtual?thunk?to?mir::frontend::NullEventSink::handle_event*;
+    non-virtual?thunk?to?mir::frontend::NullEventSink::handle_input_config_change*;
+    non-virtual?thunk?to?mir::frontend::NullEventSink::handle_lifecycle_event*;
+    non-virtual?thunk?to?mir::frontend::NullEventSink::send_ping*;
     non-virtual?thunk?to?mir::frontend::PointerInputDispatcher::?PointerInputDispatcher*;
     non-virtual?thunk?to?mir::frontend::PromptSession::?PromptSession*;
     non-virtual?thunk?to?mir::frontend::SessionAuthorizer::?SessionAuthorizer*;
@@ -1172,6 +1187,7 @@ global:
     non-virtual?thunk?to?mir::scene::TextInputStateObserver::?TextInputStateObserver*;
     non-virtual?thunk?to?mir::shell::AbstractShell::?AbstractShell*;
     non-virtual?thunk?to?mir::shell::AbstractShell::add_display*;
+    non-virtual?thunk?to?mir::shell::AbstractShell::add_internal_surface*;
     non-virtual?thunk?to?mir::shell::AbstractShell::add_prompt_provider_for*;
     non-virtual?thunk?to?mir::shell::AbstractShell::close_session*;
     non-virtual?thunk?to?mir::shell::AbstractShell::create_surface*;
@@ -1208,6 +1224,7 @@ global:
     non-virtual?thunk?to?mir::shell::PersistentSurfaceStore::?PersistentSurfaceStore*;
     non-virtual?thunk?to?mir::shell::ShellReport::?ShellReport*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::add_display*;
+    non-virtual?thunk?to?mir::shell::ShellWrapper::add_internal_surface*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::add_prompt_provider_for*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::close_session*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::create_surface*;
@@ -1286,6 +1303,7 @@ global:
     typeinfo?for?mir::frontend::DragIconController;
     typeinfo?for?mir::frontend::EventSink;
     typeinfo?for?mir::frontend::InputConfigurationChanger;
+    typeinfo?for?mir::frontend::NullEventSink;
     typeinfo?for?mir::frontend::PointerInputDispatcher;
     typeinfo?for?mir::frontend::PromptSession;
     typeinfo?for?mir::frontend::SessionAuthorizer;
@@ -1428,6 +1446,7 @@ global:
     virtual?thunk?to?mir::DefaultServerStatusListener::started*;
     virtual?thunk?to?mir::DefaultServerStatusListener::stop_receiving_input*;
     virtual?thunk?to?mir::shell::AbstractShell::add_display*;
+    virtual?thunk?to?mir::shell::AbstractShell::add_internal_surface*;
     virtual?thunk?to?mir::shell::AbstractShell::add_prompt_provider_for*;
     virtual?thunk?to?mir::shell::AbstractShell::close_session*;
     virtual?thunk?to?mir::shell::AbstractShell::create_surface*;
@@ -1497,6 +1516,7 @@ global:
     vtable?for?mir::frontend::DragIconController;
     vtable?for?mir::frontend::EventSink;
     vtable?for?mir::frontend::InputConfigurationChanger;
+    vtable?for?mir::frontend::NullEventSink;
     vtable?for?mir::frontend::PointerInputDispatcher;
     vtable?for?mir::frontend::PromptSession;
     vtable?for?mir::frontend::SessionAuthorizer;

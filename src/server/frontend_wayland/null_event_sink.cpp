@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "null_event_sink.h"
+#include "mir/frontend/null_event_sink.h"
 
 namespace mf = mir::frontend;
 

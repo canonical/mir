@@ -24,9 +24,8 @@
 
 #include "mir_toolkit/common.h"
 
-#include <unistd.h>
-
 #include <memory>
+#include <functional>
 
 namespace mir
 {
@@ -89,6 +88,12 @@ public:
         SurfaceSpecification const& params,
         std::shared_ptr<scene::SurfaceObserver> const& observer,
         Executor* observer_executor) -> std::shared_ptr<scene::Surface> = 0;
+
+    virtual auto add_internal_surface(
+        SurfaceSpecification const& params,
+        std::function<std::shared_ptr<scene::Surface>(
+            std::shared_ptr<scene::Session> const& session,
+            SurfaceSpecification const& params)> const& build) -> std::shared_ptr<scene::Surface> = 0;
 
     virtual void surface_ready(std::shared_ptr<scene::Surface> const& surface) = 0;
 
