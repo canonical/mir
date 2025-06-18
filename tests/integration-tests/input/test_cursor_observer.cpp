@@ -14,14 +14,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/events/event_private.h"
-
-#include "mir/test/fake_shared.h"
+#include "mir/main_loop.h"
+#include "mir/test/auto_unblock_thread.h"
 #include "mir_test_framework/fake_input_device.h"
 #include "mir_test_framework/fake_input_server_configuration.h"
 #include "mir_test_framework/stub_server_platform_factory.h"
 #include "mir_test_framework/temporary_environment_value.h"
-#include "mir/test/doubles/stub_touch_visualizer.h"
 #include "mir/test/signal_actions.h"
 #include "mir/test/event_factory.h"
 
@@ -29,12 +27,9 @@
 #include "mir/input/input_dispatcher.h"
 #include "mir/input/input_manager.h"
 #include "mir/input/input_device_info.h"
-#include "mir_test_framework/executable_path.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-
-#include <thread>
 
 namespace mi = mir::input;
 namespace mis = mir::input::synthesis;
@@ -63,13 +58,10 @@ struct CursorObserverIntegrationTest : testing::Test, mtf::FakeInputServerConfig
 
     void SetUp() override
     {
-        input_manager = the_input_manager();
         input_manager->start();
-        input_dispatcher = the_input_dispatcher();
         input_dispatcher->start();
 
-        cursor_observer_multiplexer = the_cursor_observer_multiplexer();
-        cursor_observer_multiplexer->register_interest(mt::fake_shared(cursor_observer));
+        cursor_observer_multiplexer->register_interest(cursor_observer);
     }
 
     void TearDown() override
@@ -78,14 +70,22 @@ struct CursorObserverIntegrationTest : testing::Test, mtf::FakeInputServerConfig
         input_manager->stop();
     }
 
-    std::shared_ptr<mi::CursorObserverMultiplexer> cursor_observer_multiplexer;
-    MockCursorObserver cursor_observer;
-    std::shared_ptr<mi::InputManager> input_manager;
-    std::shared_ptr<mi::InputDispatcher> input_dispatcher;
+    std::shared_ptr<mi::CursorObserverMultiplexer> cursor_observer_multiplexer{the_cursor_observer_multiplexer()};
+    std::shared_ptr<MockCursorObserver> cursor_observer{std::make_shared<MockCursorObserver>()};
+    std::shared_ptr<mi::InputManager> input_manager{the_input_manager()};
+    std::shared_ptr<mi::InputDispatcher> const input_dispatcher{the_input_dispatcher()};
+    std::shared_ptr<mir::MainLoop> const main_loop{the_main_loop()};
 
     std::unique_ptr<mtf::FakeInputDevice> fake_mouse{
         mtf::add_fake_input_device(mi::InputDeviceInfo{"mouse", "mouse-uid" , mi::DeviceCapability::pointer})
         };
+
+    mir::test::AutoUnblockThread main_thread{
+        [this] { main_loop->stop(); },
+        [this]
+        {
+            main_loop->run();
+        }};
 };
 
 }
@@ -99,7 +99,7 @@ TEST_F(CursorObserverIntegrationTest, cursor_observer_receives_motion)
     static const float x = 100.f;
     static const float y = 100.f;
 
-    EXPECT_CALL(cursor_observer, cursor_moved_to(x, y)).Times(1).WillOnce(mt::WakeUp(signal));
+    EXPECT_CALL(*cursor_observer, cursor_moved_to(x, y)).Times(1).WillOnce(mt::WakeUp(signal));
 
     fake_mouse->emit_event(mis::a_pointer_event().with_movement(x, y));
 

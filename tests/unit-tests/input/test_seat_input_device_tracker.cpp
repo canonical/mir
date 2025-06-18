@@ -14,18 +14,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/test/auto_unblock_thread.h"
+#include "mir/test/doubles/immediately_spawning_stub_main_loop.h"
 #include "src/server/input/seat_input_device_tracker.h"
 #include "src/server/input/default_event_builder.h"
 
 #include "mir/input/xkb_mapper_registrar.h"
-#include "mir/glib_main_loop.h"
 #include "mir/test/doubles/mock_input_dispatcher.h"
 #include "mir/test/doubles/mock_cursor_observer.h"
 #include "mir/test/doubles/mock_touch_visualizer.h"
 #include "mir/test/doubles/mock_seat_report.h"
 #include "mir/test/doubles/advanceable_clock.h"
-#include "mir/test/doubles/stub_main_loop.h"
 #include "mir/test/event_matchers.h"
 #include "mir/test/fake_shared.h"
 
@@ -60,13 +58,7 @@ struct SeatInputDeviceTracker : ::testing::Test
     mtd::AdvanceableClock clock;
 
     Nice<mtd::MockCursorObserver> mock_cursor_observer;
-    struct ImmediatelySpawningMainLoop : public mtd::StubMainLoop
-    {
-        void spawn(std::function<void()>&& work) override
-        {
-            work();
-        }
-    } main_loop;
+    mtd::ImmediatelySpawningMainLoop main_loop;
     mi::CursorObserverMultiplexer cursor_observer_multiplexer{main_loop};
 
     mi::DefaultEventBuilder some_device_builder{
