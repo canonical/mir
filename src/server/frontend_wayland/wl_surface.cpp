@@ -670,7 +670,10 @@ void mf::WlSurface::set_buffer_scale(int32_t scale)
 
 void mir::frontend::WlSurface::offset(int32_t x, int32_t y)
 {
-    pending.offset = geom::Displacement{x, y};
+    if (x != 0 || y != 0)
+    {
+        mir::log_warning("Client requested unimplemented non-zero offset. Rendering will be incorrect.");
+    }
 }
 
 auto mf::WlSurface::confine_pointer_state() const -> MirPointerConfinementState
