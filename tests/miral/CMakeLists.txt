@@ -76,6 +76,7 @@ mir_add_wrapped_executable(miral-test NOINSTALL
     config_file.cpp
     live_config.cpp
     live_config_ini_file.cpp
+    magnifier.cpp
     runner.cpp
     wayland_extensions.cpp
     zone.cpp

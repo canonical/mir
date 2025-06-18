@@ -129,7 +129,7 @@ private:
     std::shared_ptr<Filter> filter;
     std::shared_ptr<ms::Surface> surface;
     float magnification = 2.f;
-    bool default_enabled = true;
+    bool default_enabled = false;
 };
 
 miral::Magnifier::Magnifier()
