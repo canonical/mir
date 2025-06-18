@@ -681,6 +681,7 @@ public:
         std::optional<geom::Rectangle> const& clip_area,
         glm::mat4 const& transform,
         MirOrientation orientation,
+        MirMirrorMode mirror_mode,
         float alpha,
         mg::Renderable::ID id,
         ms::Surface const* surface)
@@ -690,6 +691,7 @@ public:
       clip_area_{clip_area},
       transformation_{transform},
       orientation_{orientation},
+      mirror_mode_{mirror_mode},
       id_{id},
       surface{surface}
     {
@@ -722,6 +724,9 @@ public:
     MirOrientation orientation() const override
     { return orientation_; }
 
+    MirMirrorMode mirror_mode() const override
+    { return mirror_mode_; }
+
     bool shaped() const override
     {
         return entry->pixel_format().info().transform([](auto info) { return info.has_alpha();}).value_or(true);
@@ -741,6 +746,7 @@ private:
     std::optional<geom::Rectangle> const clip_area_;
     glm::mat4 const transformation_;
     MirOrientation orientation_;
+    MirMirrorMode mirror_mode_;
     mg::Renderable::ID const id_;
     ms::Surface const* surface;
 };
@@ -805,6 +811,7 @@ mg::RenderableList ms::BasicSurface::generate_renderables(mc::CompositorID id) c
                 state->clip_area,
                 state->transformation_matrix,
                 state->orientation,
+                state->mirror_mode,
                 state->surface_alpha,
                 info.stream.get(),
                 this));

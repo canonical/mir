@@ -715,8 +715,11 @@ void mrg::Renderer::draw(mg::Renderable const& renderable) const
     // orientation. However, the surface is already rotated by the output's
     // orientation when we render it. To solve this, we need to unrotate the
     // surface using the inverse of its transform so that it appears upright.
-    glm::mat4 transform = renderable.transformation() * glm::mat4(
-        mg::inverse_transformation(renderable.orientation()));
+    auto const mirror_mode = renderable.mirror_mode();
+    auto const orientation = renderable.orientation();
+    glm::mat4 transform = renderable.transformation()
+        * glm::mat4(mg::transformation(mirror_mode))          // Unflip the buffer
+        * glm::mat4(mg::inverse_transformation(orientation)); // Unrotate the buffer
     if (texture->layout() == mg::gl::Texture::Layout::TopRowFirst)
     {
         // GL textures have (0,0) at bottom-left rather than top-left

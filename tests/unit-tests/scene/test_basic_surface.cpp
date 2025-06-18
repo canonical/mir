@@ -1477,6 +1477,25 @@ TEST_F(BasicSurfaceTest, renderables_of_new_buffers_are_normal)
     EXPECT_THAT(renderables[0]->orientation(), mir_orientation_normal);
 }
 
+TEST_F(BasicSurfaceTest, renderables_of_new_buffers_have_none_mirror_mode)
+{
+    using namespace testing;
+    auto buffer_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
+    geom::Displacement const d0{0,0};
+
+    ON_CALL(*buffer_stream->submission, pixel_format)
+        .WillByDefault(Return(mg::DRMFormat{DRM_FORMAT_ARGB8888}));
+
+    std::list<ms::StreamInfo> streams = {
+        { buffer_stream, d0}
+    };
+    surface.set_streams(streams);
+
+    auto renderables = surface.generate_renderables(this);
+    ASSERT_THAT(renderables.size(), Eq(1));
+    EXPECT_THAT(renderables[0]->mirror_mode(), mir_mirror_mode_none);
+}
+
 namespace
 {
 struct VisibilityObserver : ms::NullSurfaceObserver

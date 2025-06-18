@@ -435,6 +435,12 @@ TEST_F(SoftwareCursor, renderable_has_normal_orientation)
     EXPECT_THAT(cursor.renderable()->orientation(), testing::Eq(mir_orientation_normal));
 }
 
+TEST_F(SoftwareCursor, renderable_has_nonone_mirror_mode)
+{
+    cursor.show(stub_cursor_image);
+    EXPECT_THAT(cursor.renderable()->mirror_mode(), testing::Eq(mir_mirror_mode_none));
+}
+
 TEST_F(SoftwareCursor, does_not_need_compositing_when_not_shown)
 {
     using namespace testing;
