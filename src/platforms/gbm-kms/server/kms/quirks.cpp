@@ -168,46 +168,18 @@ public:
         auto const driver = mgc::get_device_driver(device.parent().get());
         auto const devnode = device.devnode();
         mir::log_debug("Quirks(egl-destroy-surface): checking device with devnode: %s, driver %s", devnode, driver);
-        
-        auto const devnode_or_driver =
-            [](auto devnode, auto driver, auto devnodes, auto drivers) -> std::optional<std::string>
-        {
-            if (devnodes.contains(devnode))
-                return devnodes.at(devnode);
-        
-            if (drivers.contains(driver))
-                return drivers.at(driver);
-        
-            return std::nullopt;
-        };
-        
-        auto egl_destroy_surface_impl_name =
-            devnode_or_driver(devnode, driver, egl_destroy_surface.devnodes, egl_destroy_surface.drivers)
-                .transform(
-                    [](auto impl_name)
-                    {
-                        mir::log_debug(
-                            "Quirks(egl-destroy-surface): forcing %s implementation", impl_name.c_str());
-                        return impl_name;
-                    })
-                .or_else(
-                    [&driver] -> std::optional<std::string>
-                    {
-                        mir::log_debug(
-                            "Quirks(egl-destroy-surface): using default implementation for %s driver", driver);
-                        // Not specified
-                        return driver;
-                    })
-                .value();
-        
+
+        auto egl_destroy_surface_impl_name = mgc::apply_quirk(
+            devnode, driver, egl_destroy_surface.devnodes, egl_destroy_surface.drivers, "egl-destroy-surface");
+
         auto egl_destroy_surface_impl = [&]() -> std::unique_ptr<GbmQuirks::EglDestroySurfaceQuirk>
         {
-            if (egl_destroy_surface_impl_name == "leak" || egl_destroy_surface_impl_name == "nvidia")
+            if (egl_destroy_surface_leaking_options.contains(egl_destroy_surface_impl_name))
                 return std::make_unique<LeakSurface>();
-        
+
             return std::make_unique<DefaultEglDestroySurface>();
         }();
-        
+
         return std::make_shared<GbmQuirks>(std::move(egl_destroy_surface_impl));
     }
 private:
@@ -225,6 +197,7 @@ private:
     // We know this is currently useful for virtio_gpu, vc4-drm and v3d
     mgc::AllowList disable_kms_probe{{"virtio_gpu", "vc4-drm", "v3d"}};
 
+    inline static std::set<std::string_view> const egl_destroy_surface_leaking_options{"leak", "nvidia"};
     mgc::ValuedOption egl_destroy_surface;
 };
 

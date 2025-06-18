@@ -63,6 +63,13 @@ auto matches(std::vector<std::string> tokens, std::string option_name, std::init
 auto value_or(char const* maybe_null_string, char const* value_if_null) -> char const*;
 
 auto get_device_driver(mir::udev::Device const* parent_device) -> char const*;
+
+auto apply_quirk(
+    std::string_view devnode,
+    std::string_view driver,
+    std::unordered_map<std::string, std::string> const& devnode_quirks,
+    std::unordered_map<std::string, std::string> const& driver_quirks,
+    std::string_view message) -> std::string;
 }
 }
 }
