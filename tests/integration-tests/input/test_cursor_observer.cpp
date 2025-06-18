@@ -25,7 +25,7 @@
 #include "mir/test/signal_actions.h"
 #include "mir/test/event_factory.h"
 
-#include "mir/input/cursor_listener.h"
+#include "mir/input/cursor_observer.h"
 #include "mir/input/input_dispatcher.h"
 #include "mir/input/input_manager.h"
 #include "mir/input/input_device_info.h"
@@ -45,17 +45,17 @@ namespace
 {
 using namespace ::testing;
 
-struct MockCursorListener : public mi::CursorListener
+struct MockCursorObserver : public mi::CursorObserver
 {
     MOCK_METHOD2(cursor_moved_to, void(float, float));
 
-    ~MockCursorListener() noexcept {}
+    ~MockCursorObserver() noexcept {}
 
     void pointer_usable() {}
     void pointer_unusable() {}
 };
 
-struct CursorListenerIntegrationTest : testing::Test, mtf::FakeInputServerConfiguration
+struct CursorObserverIntegrationTest : testing::Test, mtf::FakeInputServerConfiguration
 {
     mtf::TemporaryEnvironmentValue input_lib{"MIR_SERVER_PLATFORM_INPUT_LIB", "mir:stub-input"};
     mtf::TemporaryEnvironmentValue real_input{"MIR_SERVER_TESTS_USE_REAL_INPUT", "1"};
@@ -68,8 +68,8 @@ struct CursorListenerIntegrationTest : testing::Test, mtf::FakeInputServerConfig
         input_dispatcher = the_input_dispatcher();
         input_dispatcher->start();
 
-        cursor_listener_multiplexer = the_cursor_listener_multiplexer();
-        cursor_listener_multiplexer->register_interest(mt::fake_shared(cursor_listener));
+        cursor_observer_multiplexer = the_cursor_observer_multiplexer();
+        cursor_observer_multiplexer->register_interest(mt::fake_shared(cursor_observer));
     }
 
     void TearDown() override
@@ -78,8 +78,8 @@ struct CursorListenerIntegrationTest : testing::Test, mtf::FakeInputServerConfig
         input_manager->stop();
     }
 
-    std::shared_ptr<mi::CursorListenerMultiplexer> cursor_listener_multiplexer;
-    MockCursorListener cursor_listener;
+    std::shared_ptr<mi::CursorObserverMultiplexer> cursor_observer_multiplexer;
+    MockCursorObserver cursor_observer;
     std::shared_ptr<mi::InputManager> input_manager;
     std::shared_ptr<mi::InputDispatcher> input_dispatcher;
 
@@ -90,7 +90,7 @@ struct CursorListenerIntegrationTest : testing::Test, mtf::FakeInputServerConfig
 
 }
 
-TEST_F(CursorListenerIntegrationTest, cursor_listener_receives_motion)
+TEST_F(CursorObserverIntegrationTest, cursor_observer_receives_motion)
 {
     using namespace ::testing;
 
@@ -99,7 +99,7 @@ TEST_F(CursorListenerIntegrationTest, cursor_listener_receives_motion)
     static const float x = 100.f;
     static const float y = 100.f;
 
-    EXPECT_CALL(cursor_listener, cursor_moved_to(x, y)).Times(1).WillOnce(mt::WakeUp(signal));
+    EXPECT_CALL(cursor_observer, cursor_moved_to(x, y)).Times(1).WillOnce(mt::WakeUp(signal));
 
     fake_mouse->emit_event(mis::a_pointer_event().with_movement(x, y));
 

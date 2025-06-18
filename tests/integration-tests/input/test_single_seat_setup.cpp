@@ -20,12 +20,12 @@
 #include "src/server/scene/broadcasting_session_event_sink.h"
 
 #include "mir/test/doubles/fake_display_configuration_observer_registrar.h"
-#include "mir/test/doubles/mock_cursor_listener.h"
+#include "mir/test/doubles/mock_cursor_observer.h"
 #include "mir/test/doubles/mock_input_device.h"
 #include "mir/test/doubles/mock_input_device_observer.h"
 #include "mir/test/doubles/mock_input_dispatcher.h"
 #include "mir/test/doubles/mock_touch_visualizer.h"
-#include "mir/test/doubles/mock_cursor_listener.h"
+#include "mir/test/doubles/mock_cursor_observer.h"
 #include "mir/test/doubles/mock_input_manager.h"
 #include "mir/test/doubles/mock_led_observer_registrar.h"
 #include "mir/test/doubles/mock_seat_report.h"
@@ -87,7 +87,7 @@ MATCHER_P(DeviceMatches, device_info, "")
 struct SingleSeatInputDeviceHubSetup : ::testing::Test
 {
     NiceMock<mtd::MockInputDispatcher> mock_dispatcher;
-    NiceMock<mtd::MockCursorListener> mock_cursor_listener;
+    NiceMock<mtd::MockCursorObserver> mock_cursor_observer;
     NiceMock<mtd::MockTouchVisualizer> mock_visualizer;
     NiceMock<mtd::MockSeatObserver> mock_seat_observer;
     NiceMock<mtd::MockServerStatusListener> mock_status_listener;
@@ -99,9 +99,9 @@ struct SingleSeatInputDeviceHubSetup : ::testing::Test
     ms::BroadcastingSessionEventSink session_event_sink;
     mtd::FakeDisplayConfigurationObserverRegistrar display_config;
     NiceMock<mtd::MockLedObserverRegistrar> led_observer_registrar;
-    mi::CursorListenerMultiplexer cursor_listener_multiplexer{mir::immediate_executor};
+    mi::CursorObserverMultiplexer cursor_observer_multiplexer{mir::immediate_executor};
     mi::BasicSeat seat{mt::fake_shared(mock_dispatcher),      mt::fake_shared(mock_visualizer),
-                       mt::fake_shared(mock_cursor_listener), mt::fake_shared(cursor_listener_multiplexer),
+                       mt::fake_shared(mock_cursor_observer), mt::fake_shared(cursor_observer_multiplexer),
                        mt::fake_shared(display_config),       mt::fake_shared(key_mapper),
                        mt::fake_shared(clock),                mt::fake_shared(mock_seat_observer)};
     mi::DefaultInputDeviceHub hub{
@@ -133,7 +133,7 @@ struct SingleSeatInputDeviceHubSetup : ::testing::Test
     {
         // execute registration of ConfigChanger
         expect_and_execute_multiplexer();
-        cursor_listener_multiplexer.register_interest(mt::fake_shared(mock_cursor_listener));
+        cursor_observer_multiplexer.register_interest(mt::fake_shared(mock_cursor_observer));
     }
 
     void expect_and_execute_multiplexer(int count = 1)
@@ -253,9 +253,9 @@ TEST_F(SingleSeatInputDeviceHubSetup, forwards_touch_spots_to_visualizer)
 TEST_F(SingleSeatInputDeviceHubSetup, tracks_pointer_position)
 {
     geom::Point first{10,10}, second{20,20}, third{10,30};
-    EXPECT_CALL(mock_cursor_listener, cursor_moved_to(first.x.as_int(), first.y.as_int()));
-    EXPECT_CALL(mock_cursor_listener, cursor_moved_to(second.x.as_int(), second.y.as_int()));
-    EXPECT_CALL(mock_cursor_listener, cursor_moved_to(third.x.as_int(), third.y.as_int()));
+    EXPECT_CALL(mock_cursor_observer, cursor_moved_to(first.x.as_int(), first.y.as_int()));
+    EXPECT_CALL(mock_cursor_observer, cursor_moved_to(second.x.as_int(), second.y.as_int()));
+    EXPECT_CALL(mock_cursor_observer, cursor_moved_to(third.x.as_int(), third.y.as_int()));
 
     mi::InputSink* sink;
     mi::EventBuilder* builder;
@@ -272,7 +272,7 @@ TEST_F(SingleSeatInputDeviceHubSetup, confines_pointer_movement)
     geom::Point confined_pos{10, 18};
     display_config.resize_output(0, geom::Size{confined_pos.x.as_int() + 1, confined_pos.y.as_int() + 1});
 
-    EXPECT_CALL(mock_cursor_listener, cursor_moved_to(confined_pos.x.as_int(), confined_pos.y.as_int())).Times(2);
+    EXPECT_CALL(mock_cursor_observer, cursor_moved_to(confined_pos.x.as_int(), confined_pos.y.as_int())).Times(2);
 
     mi::InputSink* sink;
     mi::EventBuilder* builder;
@@ -283,7 +283,7 @@ TEST_F(SingleSeatInputDeviceHubSetup, confines_pointer_movement)
     sink->handle_input(motion_event(*builder, 10.0f, 10.0f));
 }
 
-TEST_F(SingleSeatInputDeviceHubSetup, forwards_pointer_updates_to_cursor_listener)
+TEST_F(SingleSeatInputDeviceHubSetup, forwards_pointer_updates_to_cursor_observer)
 {
     auto move_x = 12.0f, move_y = 14.0f;
 
@@ -294,7 +294,7 @@ TEST_F(SingleSeatInputDeviceHubSetup, forwards_pointer_updates_to_cursor_listene
 
     auto event = motion_event(*builder, move_x, move_y);
 
-    EXPECT_CALL(mock_cursor_listener, cursor_moved_to(move_x, move_y)).Times(1);
+    EXPECT_CALL(mock_cursor_observer, cursor_moved_to(move_x, move_y)).Times(1);
 
     sink->handle_input(std::move(event));
 }
@@ -471,9 +471,9 @@ TEST_F(SingleSeatInputDeviceHubSetup, tracks_a_single_cursor_position_from_multi
     auto motion_2 = motion_event(*mouse_event_builder_2, 18, -10);
     auto motion_3 = motion_event(*mouse_event_builder_2, 2, 10);
 
-    EXPECT_CALL(mock_cursor_listener, cursor_moved_to(23, 20));
-    EXPECT_CALL(mock_cursor_listener, cursor_moved_to(41, 10));
-    EXPECT_CALL(mock_cursor_listener, cursor_moved_to(43, 20));
+    EXPECT_CALL(mock_cursor_observer, cursor_moved_to(23, 20));
+    EXPECT_CALL(mock_cursor_observer, cursor_moved_to(41, 10));
+    EXPECT_CALL(mock_cursor_observer, cursor_moved_to(43, 20));
 
     mouse_sink_1->handle_input(std::move(motion_1));
     mouse_sink_2->handle_input(std::move(motion_2));

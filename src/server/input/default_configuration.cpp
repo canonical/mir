@@ -39,7 +39,7 @@
 #include "mir/input/vt_filter.h"
 #include "mir/input/device.h"
 #include "mir/input/input_event_transformer.h"
-#include "mir/input/cursor_listener.h"
+#include "mir/input/cursor_observer.h"
 #include "mir/input/cursor_controller.h"
 #include "mir/options/configuration.h"
 #include "mir/options/option.h"
@@ -184,19 +184,19 @@ std::shared_ptr<mi::CursorController> mir::DefaultServerConfiguration::the_curso
         });
 }
 
-std::shared_ptr<mi::CursorListenerMultiplexer>
-mir::DefaultServerConfiguration::the_cursor_listener_multiplexer()
+std::shared_ptr<mi::CursorObserverMultiplexer>
+mir::DefaultServerConfiguration::the_cursor_observer_multiplexer()
 {
-    return cursor_listener_multiplexer(
-        [this]() -> std::shared_ptr<mi::CursorListenerMultiplexer>
+    return cursor_observer_multiplexer(
+        [this]() -> std::shared_ptr<mi::CursorObserverMultiplexer>
         {
-            return wrap_cursor_listener_multiplexer(std::make_shared<mi::CursorListenerMultiplexer>(*the_main_loop()));
+            return wrap_cursor_observer_multiplexer(std::make_shared<mi::CursorObserverMultiplexer>(*the_main_loop()));
         });
 }
 
-std::shared_ptr<mi::CursorListenerMultiplexer>
-mir::DefaultServerConfiguration::wrap_cursor_listener_multiplexer(
-    std::shared_ptr<mi::CursorListenerMultiplexer> const& wrapped)
+std::shared_ptr<mi::CursorObserverMultiplexer>
+mir::DefaultServerConfiguration::wrap_cursor_observer_multiplexer(
+    std::shared_ptr<mi::CursorObserverMultiplexer> const& wrapped)
 {
     return wrapped;
 }
@@ -296,7 +296,7 @@ std::shared_ptr<mi::Seat> mir::DefaultServerConfiguration::the_seat()
                     the_input_dispatcher(),
                     the_touch_visualizer(),
                     the_cursor_controller(),
-                    the_cursor_listener_multiplexer(),
+                    the_cursor_observer_multiplexer(),
                     the_display_configuration_observer_registrar(),
                     the_key_mapper(),
                     the_clock(),

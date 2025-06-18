@@ -34,7 +34,7 @@ class ObserverRegistrar;
 
 namespace compositor { class Compositor; class DisplayBufferCompositorFactory; class CompositorReport; }
 namespace graphics { class Cursor; class DisplayPlatform; class RenderingPlatform; class Display; class GLConfig; class DisplayConfigurationPolicy; class DisplayConfigurationObserver; class GraphicBufferAllocator; class CursorImage; class OutputFilter; }
-namespace input { class CompositeEventFilter; class InputDispatcher; class CursorListenerMultiplexer; class CursorImages; class TouchVisualizer; class InputDeviceHub; class InputDeviceRegistry;}
+namespace input { class CompositeEventFilter; class InputDispatcher; class CursorObserverMultiplexer; class CursorImages; class TouchVisualizer; class InputDeviceHub; class InputDeviceRegistry;}
 namespace logging { class Logger; }
 namespace options { class Option; }
 namespace frontend
@@ -317,8 +317,8 @@ public:
     /// Sets a wrapper functor for creating the cursor.
     void wrap_cursor(Wrapper<graphics::Cursor> const& cursor_builder);
 
-    /// Sets a wrapper functor for creating the cursor listener multiplexer.
-    void wrap_cursor_listener_multiplexer(Wrapper<input::CursorListenerMultiplexer> const& wrapper);
+    /// Sets a wrapper functor for creating the cursor observer multiplexer.
+    void wrap_cursor_observer_multiplexer(Wrapper<input::CursorObserverMultiplexer> const& wrapper);
 
     /// Sets a wrapper functor for creating the per-display rendering code.
     void wrap_display_buffer_compositor_factory(
@@ -352,8 +352,8 @@ public:
     /// \return the composite event filter.
     auto the_composite_event_filter() const -> std::shared_ptr<input::CompositeEventFilter>;
 
-    /// \return the cursor listener multiplexer.
-    auto the_cursor_listener_multiplexer() const -> std::shared_ptr<input::CursorListenerMultiplexer>;
+    /// \return the cursor observer multiplexer.
+    auto the_cursor_observer_multiplexer() const -> std::shared_ptr<input::CursorObserverMultiplexer>;
 
     /// \return the cursor
     auto the_cursor() const -> std::shared_ptr<graphics::Cursor>;

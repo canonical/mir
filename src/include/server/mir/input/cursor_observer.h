@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_INPUT_CURSOR_LISTENER_H_
-#define MIR_INPUT_CURSOR_LISTENER_H_
+#ifndef MIR_INPUT_CURSOR_OBSERVER_H_
+#define MIR_INPUT_CURSOR_OBSERVER_H_
 
 #include "mir/observer_multiplexer.h"
 
@@ -26,45 +26,45 @@ namespace input
 
 /// An interface for listening to absolute cursor events (without context): For example to update
 /// the position of the visible cursor.
-class CursorListener
+class CursorObserver
 {
 public:
-    virtual ~CursorListener() = default;
+    virtual ~CursorObserver() = default;
     virtual void cursor_moved_to(float abs_x, float abs_y) = 0;
     virtual void pointer_usable() = 0;
     virtual void pointer_unusable() = 0;
 };
 
-class CursorListenerMultiplexer : public ObserverMultiplexer<CursorListener>
+class CursorObserverMultiplexer : public ObserverMultiplexer<CursorObserver>
 {
 public:
-    explicit CursorListenerMultiplexer(Executor& default_executor) :
-        mir::ObserverMultiplexer<CursorListener>{default_executor}
+    explicit CursorObserverMultiplexer(Executor& default_executor) :
+        mir::ObserverMultiplexer<CursorObserver>{default_executor}
     {
     }
 
-    virtual ~CursorListenerMultiplexer() = default;
+    virtual ~CursorObserverMultiplexer() = default;
 
     virtual void cursor_moved_to(float abs_x, float abs_y) override
     {
-        for_each_observer(&CursorListener::cursor_moved_to, abs_x, abs_y);
+        for_each_observer(&CursorObserver::cursor_moved_to, abs_x, abs_y);
     }
 
     virtual void pointer_usable() override
     {
-        for_each_observer(&CursorListener::pointer_usable);
+        for_each_observer(&CursorObserver::pointer_usable);
     }
 
     virtual void pointer_unusable() override
     {
-        for_each_observer(&CursorListener::pointer_unusable);
+        for_each_observer(&CursorObserver::pointer_unusable);
     }
 
 protected:
-    CursorListenerMultiplexer(CursorListenerMultiplexer const&) = delete;
-    CursorListenerMultiplexer& operator=(CursorListenerMultiplexer const&) = delete;
+    CursorObserverMultiplexer(CursorObserverMultiplexer const&) = delete;
+    CursorObserverMultiplexer& operator=(CursorObserverMultiplexer const&) = delete;
 };
 }
 }
 
-#endif // MIR_INPUT_CURSOR_LISTENER_H_
+#endif // MIR_INPUT_CURSOR_OBSERVER_H_

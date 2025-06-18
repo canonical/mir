@@ -27,7 +27,7 @@
 #include <mir/executor.h>
 #include <mir/fd.h>
 #include <mir/compositor/buffer_stream.h>
-#include <mir/input/cursor_listener.h>
+#include <mir/input/cursor_observer.h>
 #include <mir/input/device.h>
 #include <mir/input/input_device_hub.h>
 #include <mir/input/input_device_info.h>
@@ -349,10 +349,10 @@ void emit_mir_event(miral::TestWlcsDisplayServer* runner,
 
 /// end of anon
 
-class miral::TestWlcsDisplayServer::RunnerCursorListener : public mir::input::CursorListener
+class miral::TestWlcsDisplayServer::RunnerCursorObserver : public mir::input::CursorObserver
 {
 public:
-    RunnerCursorListener(TestWlcsDisplayServer* runner) :
+    RunnerCursorObserver(TestWlcsDisplayServer* runner) :
         runner{runner}
     {
     }
@@ -851,8 +851,8 @@ miral::TestWlcsDisplayServer::TestWlcsDisplayServer(int argc, char const** argv)
                     return resource_mapper;
                 });
 
-            cursor_listener = std::make_shared<RunnerCursorListener>(this);
-            server.the_cursor_listener_multiplexer()->register_interest(cursor_listener);
+            cursor_observer = std::make_shared<RunnerCursorObserver>(this);
+            server.the_cursor_observer_multiplexer()->register_interest(cursor_observer);
 
             mir_server = &server;
         });
