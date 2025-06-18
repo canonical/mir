@@ -19,40 +19,34 @@
 #include "src/server/input/config_changer.h"
 #include "src/server/scene/broadcasting_session_event_sink.h"
 
+#include "mir/test/doubles/advanceable_clock.h"
 #include "mir/test/doubles/fake_display_configuration_observer_registrar.h"
 #include "mir/test/doubles/mock_cursor_observer.h"
 #include "mir/test/doubles/mock_input_device.h"
 #include "mir/test/doubles/mock_input_device_observer.h"
 #include "mir/test/doubles/mock_input_dispatcher.h"
-#include "mir/test/doubles/mock_touch_visualizer.h"
-#include "mir/test/doubles/mock_cursor_observer.h"
 #include "mir/test/doubles/mock_input_manager.h"
 #include "mir/test/doubles/mock_led_observer_registrar.h"
+#include "mir/test/doubles/mock_scene_session.h"
 #include "mir/test/doubles/mock_seat_report.h"
 #include "mir/test/doubles/mock_server_status_listener.h"
-#include "mir/test/doubles/mock_scene_session.h"
-#include "mir/test/doubles/triggered_main_loop.h"
+#include "mir/test/doubles/mock_touch_visualizer.h"
 #include "mir/test/event_matchers.h"
-#include "mir/test/doubles/advanceable_clock.h"
 #include "mir/test/fake_shared.h"
-#include "mir/test/doubles/stub_display_configuration.h"
+#include "mir/test/fd_utils.h"
+#include "mir/test/input_config_matchers.h"
 
 #include "mir/dispatch/multiplexing_dispatchable.h"
-#include "mir/graphics/buffer.h"
-#include "mir/graphics/display_configuration_observer.h"
 #include "mir/scene/session_container.h"
 
 #include "mir/input/cursor_observer_multiplexer.h"
 #include "mir/input/device.h"
-#include "mir/input/xkb_mapper_registrar.h"
 #include "mir/input/device_capability.h"
+#include "mir/input/input_device_info.h"
 #include "mir/input/mir_pointer_config.h"
 #include "mir/input/mir_touchpad_config.h"
 #include "mir/input/touch_visualizer.h"
-#include "mir/input/input_device_info.h"
-#include "mir/geometry/rectangles.h"
-#include "mir/test/input_config_matchers.h"
-#include "mir/test/fd_utils.h"
+#include "mir/input/xkb_mapper_registrar.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -134,7 +128,6 @@ struct SingleSeatInputDeviceHubSetup : ::testing::Test
     {
         // execute registration of ConfigChanger
         expect_and_execute_multiplexer();
-        cursor_observer_multiplexer.register_interest(mt::fake_shared(mock_cursor_observer));
     }
 
     void expect_and_execute_multiplexer(int count = 1)
