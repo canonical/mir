@@ -29,7 +29,7 @@ msh::BasicHoverClickTransformer::BasicHoverClickTransformer(
                     {
                         struct CursorListener : public input::CursorObserver
                         {
-                            explicit CursorListener(
+                            CursorListener(
                                 mir::Synchronised<MutableState>& mutable_state,
                                 std::unique_ptr<time::Alarm> hover_initializer) :
                                 mutable_state{mutable_state},
