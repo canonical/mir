@@ -18,6 +18,7 @@
 #define MIRAL_MAGNIFIER_H
 
 #include <memory>
+#include <mir/geometry/rectangle.h>
 
 namespace mir { class Server; }
 
