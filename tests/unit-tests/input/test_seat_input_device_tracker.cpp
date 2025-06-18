@@ -14,7 +14,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/test/doubles/immediately_spawning_stub_main_loop.h"
 #include "src/server/input/seat_input_device_tracker.h"
 #include "src/server/input/default_event_builder.h"
 
@@ -58,8 +57,7 @@ struct SeatInputDeviceTracker : ::testing::Test
     mtd::AdvanceableClock clock;
 
     Nice<mtd::MockCursorObserver> mock_cursor_observer;
-    mtd::ImmediatelySpawningMainLoop main_loop;
-    mi::CursorObserverMultiplexer cursor_observer_multiplexer{main_loop};
+    mi::CursorObserverMultiplexer cursor_observer_multiplexer{mir::immediate_executor};
 
     mi::DefaultEventBuilder some_device_builder{
         some_device,

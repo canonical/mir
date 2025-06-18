@@ -21,7 +21,6 @@
 
 #include "mir/test/doubles/advanceable_clock.h"
 #include "mir/test/doubles/fake_display_configuration_observer_registrar.h"
-#include "mir/test/doubles/immediately_spawning_stub_main_loop.h"
 #include "mir/test/doubles/mock_cursor_observer.h"
 #include "mir/test/doubles/mock_input_device.h"
 #include "mir/test/doubles/mock_input_device_observer.h"
@@ -81,7 +80,6 @@ MATCHER_P(DeviceMatches, device_info, "")
 
 struct SingleSeatInputDeviceHubSetup : ::testing::Test
 {
-    mtd::ImmediatelySpawningMainLoop observer_loop;
     NiceMock<mtd::MockInputDispatcher> mock_dispatcher;
     NiceMock<mtd::MockCursorObserver> mock_cursor_observer;
     NiceMock<mtd::MockTouchVisualizer> mock_visualizer;
@@ -95,7 +93,7 @@ struct SingleSeatInputDeviceHubSetup : ::testing::Test
     ms::BroadcastingSessionEventSink session_event_sink;
     mtd::FakeDisplayConfigurationObserverRegistrar display_config;
     NiceMock<mtd::MockLedObserverRegistrar> led_observer_registrar;
-    mi::CursorObserverMultiplexer cursor_observer_multiplexer{observer_loop};
+    mi::CursorObserverMultiplexer cursor_observer_multiplexer{mir::immediate_executor};
     mi::BasicSeat seat{mt::fake_shared(mock_dispatcher),      mt::fake_shared(mock_visualizer),
                        mt::fake_shared(mock_cursor_observer), mt::fake_shared(cursor_observer_multiplexer),
                        mt::fake_shared(display_config),       mt::fake_shared(key_mapper),
