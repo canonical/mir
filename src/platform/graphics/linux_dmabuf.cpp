@@ -55,6 +55,17 @@ namespace mw = mir::wayland;
 namespace geom = mir::geometry;
 
 
+namespace
+{
+    template <typename T>
+    void wl_array_add(wl_array *array, T value)
+    {
+        if (auto d = static_cast<T*>(wl_array_add(array, sizeof(T))))
+            *d = value;
+    }
+}
+
+
 class mg::DmaBufFormatDescriptors
 {
 public:
@@ -902,15 +913,13 @@ public:
         send_format_table_event(mir::Fd{mir::IntOwnedFd{shm_buffer.fd()}}, format_table_length * sizeof(Format));
         wl_array main_device;
         wl_array_init(&main_device);
-        auto d = static_cast<dev_t*>(wl_array_add(&main_device, sizeof(dev_t)));
-        *d = this->provider->devnum();
+        wl_array_add<dev_t>(&main_device, this->provider->devnum());
         send_main_device_event(&main_device);
 
         // We only currently support one device, which accessess all formats.
         wl_array device;
         wl_array_init(&device);
-        d = static_cast<dev_t*>(wl_array_add(&device, sizeof(dev_t)));
-        *d = this->provider->devnum();
+        wl_array_add<dev_t>(&device, this->provider->devnum());
         send_tranche_target_device_event(&device);
         send_tranche_flags_event(0);
         wl_array indicies;
