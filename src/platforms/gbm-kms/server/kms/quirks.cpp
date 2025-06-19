@@ -93,7 +93,8 @@ public:
                 mir::log_warning(
                     "Ignoring unexpected value for %s option: %s "
                     "(expects value of the form “{skip, allow}:{driver,devnode}:<driver or devnode>”"
-                    ", “disable-kms-probe:{driver,devnode}:<driver or devnode>”)",
+                    ", “disable-kms-probe:{driver,devnode}:<driver or devnode>”, "
+                    "“egl-destroy-surface:{driver,devnode}:{default:leak}”)",
                     quirks_option_name,
                     quirk.c_str());
             }
