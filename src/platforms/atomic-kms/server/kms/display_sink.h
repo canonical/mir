@@ -49,6 +49,7 @@ namespace atomic
 
 class Platform;
 class KMSOutput;
+class GbmQuirks;
 
 class DmaBufDisplayAllocator : public graphics::DmaBufDisplayAllocator
 {
@@ -84,7 +85,8 @@ public:
         std::shared_ptr<DisplayReport> const& listener,
         std::shared_ptr<KMSOutput> output,
         geometry::Rectangle const& area,
-        glm::mat2 const& transformation);
+        glm::mat2 const& transformation,
+        std::shared_ptr<GbmQuirks> const& gbm_quirks);
     ~DisplaySink();
 
     geometry::Rectangle view_area() const override;
@@ -133,6 +135,7 @@ private:
     glm::mat2 transform;
     std::atomic<bool> needs_set_crtc;
     std::chrono::milliseconds recommend_sleep{0};
+    std::shared_ptr<GbmQuirks> const gbm_quirks;
 };
 
 }
