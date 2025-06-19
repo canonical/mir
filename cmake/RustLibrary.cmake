@@ -39,6 +39,12 @@ function(add_rust_cxx_library target)
 
   add_library(${target}-cxxbridge
     ${cxxbridge_source} ${cxxbridge_header})
+  # rust-cxx generates symbols named like "cxxbridge1$foo", which
+  # triggers a warning in Clang.
+  if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(${target}-cxxbridge
+      PRIVATE -Wno-error=dollar-in-identifier-extension)
+  endif()
 
   add_library(${target} INTERFACE)
   target_include_directories(${target} INTERFACE ${cxxbridge_include_dir})
