@@ -65,8 +65,6 @@ public:
             std::vector<std::string> tokens;
             boost::split(tokens, option_value, boost::is_any_of(":"));
 
-            // <option>:{devnode,driver}:<specifier value>
-
             auto static const available_options = std::set<std::string>{
                 "skip", "allow", "disable-kms-probe", "gbm-create-surface-flags", "gbm-surface-has-free-buffers"};
             auto const structure = mgc::validate_structure(tokens, available_options);
