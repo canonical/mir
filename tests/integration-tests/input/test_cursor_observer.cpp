@@ -70,11 +70,11 @@ struct CursorObserverIntegrationTest : testing::Test, mtf::FakeInputServerConfig
         input_manager->stop();
     }
 
-    std::shared_ptr<mi::CursorObserverMultiplexer> cursor_observer_multiplexer{the_cursor_observer_multiplexer()};
     std::shared_ptr<MockCursorObserver> cursor_observer{std::make_shared<MockCursorObserver>()};
     std::shared_ptr<mi::InputManager> input_manager{the_input_manager()};
     std::shared_ptr<mi::InputDispatcher> const input_dispatcher{the_input_dispatcher()};
     std::shared_ptr<mir::MainLoop> const main_loop{the_main_loop()};
+    std::shared_ptr<mi::CursorObserverMultiplexer> cursor_observer_multiplexer{the_cursor_observer_multiplexer()};
 
     std::unique_ptr<mtf::FakeInputDevice> fake_mouse{
         mtf::add_fake_input_device(mi::InputDeviceInfo{"mouse", "mouse-uid" , mi::DeviceCapability::pointer})
