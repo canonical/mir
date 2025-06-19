@@ -41,14 +41,24 @@ public:
     class CreateSurfaceFlagsQuirk
     {
     public:
+        CreateSurfaceFlagsQuirk() = default;
         virtual ~CreateSurfaceFlagsQuirk() = default;
+
+        CreateSurfaceFlagsQuirk(CreateSurfaceFlagsQuirk const&) = delete;
+        CreateSurfaceFlagsQuirk& operator=(CreateSurfaceFlagsQuirk const&) = delete;
+
         virtual auto gbm_create_surface_flags() const -> uint32_t = 0;
     };
 
     class SurfaceHasFreeBuffersQuirk
     {
     public:
+        SurfaceHasFreeBuffersQuirk() = default;
         virtual ~SurfaceHasFreeBuffersQuirk() = default;
+
+        SurfaceHasFreeBuffersQuirk(SurfaceHasFreeBuffersQuirk const&) = delete;
+        SurfaceHasFreeBuffersQuirk& operator=(SurfaceHasFreeBuffersQuirk const&) = delete;
+
         virtual auto gbm_surface_has_free_buffers(gbm_surface* gbm_surface) const -> int = 0;
     };
 
