@@ -83,7 +83,6 @@ auto create_rendering_platform(
 {
     mir::assert_entry_point_signature<mg::CreateRenderPlatform>(&create_rendering_platform);
 
-    // TODO: modify the ctor to accept the options, create the gbm quirks and pass them to the rendering provider
     return mir::make_module_ptr<mgg::RenderingPlatform>(
         *device.device, platforms, mgg::Quirks{options}.gbm_quirks_for(*device.device));
 }
