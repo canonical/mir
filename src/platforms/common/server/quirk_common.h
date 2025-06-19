@@ -65,11 +65,11 @@ auto value_or(char const* maybe_null_string, char const* value_if_null) -> char 
 auto get_device_driver(mir::udev::Device const* parent_device) -> char const*;
 
 auto apply_quirk(
-    std::string_view devnode,
-    std::string_view driver,
+    char const* devnode,
+    char const* driver,
     std::unordered_map<std::string, std::string> const& devnode_quirks,
     std::unordered_map<std::string, std::string> const& driver_quirks,
-    std::string_view message) -> std::string;
+    char const* message) -> std::string;
 }
 }
 }

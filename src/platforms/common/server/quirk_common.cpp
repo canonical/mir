@@ -107,25 +107,25 @@ auto mir::graphics::common::get_device_driver(mir::udev::Device const* parent_de
 }
 
 auto mir::graphics::common::apply_quirk(
-    std::string_view devnode,
-    std::string_view driver,
+    char const* devnode,
+    char const* driver,
     std::unordered_map<std::string, std::string> const& devnode_quirks,
     std::unordered_map<std::string, std::string> const& driver_quirks,
-    std::string_view message) -> std::string
+    char const* message) -> std::string
 {
     if (auto p = devnode_quirks.find(std::string{devnode}); p != devnode_quirks.end())
     {
-        mir::log_debug("Quirks(%s): forcing %s implementation", message.data(), p->second.c_str());
+        mir::log_debug("Quirks(%s): forcing %s implementation", message, p->second.c_str());
         return p->second;
     }
 
     if (auto p = driver_quirks.find(std::string{driver}); p != driver_quirks.end())
     {
-        mir::log_debug("Quirks(%s): forcing %s implementation", message.data(), p->second.c_str());
+        mir::log_debug("Quirks(%s): forcing %s implementation", message, p->second.c_str());
         return p->second;
     }
 
-    log_debug("Quirks(%s): using default implementation for %s driver", message.data(), driver.data());
+    log_debug("Quirks(%s): using default implementation for %s driver", message, driver);
 
     // Not specified
     return std::string{driver};
