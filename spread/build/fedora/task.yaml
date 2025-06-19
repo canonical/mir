@@ -49,7 +49,9 @@ execute: |
         libdrm-devel \
         wlcs-devel \
         gmp-devel \
-        pixman-devel
+        pixman-devel \
+        cargo \
+        rust
 
     BUILD_DIR=$PWD/../build
     cmake \
