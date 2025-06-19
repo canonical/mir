@@ -43,7 +43,12 @@ public:
     class EglDestroySurfaceQuirk
     {
     public:
+        EglDestroySurfaceQuirk() = default;
         virtual ~EglDestroySurfaceQuirk() = default;
+
+        EglDestroySurfaceQuirk(EglDestroySurfaceQuirk const&) = delete;
+        EglDestroySurfaceQuirk& operator=(EglDestroySurfaceQuirk const&) = delete;
+
         virtual void egl_destroy_surface(EGLDisplay dpy, EGLSurface surf) const = 0;
     };
 
