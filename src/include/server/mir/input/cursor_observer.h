@@ -38,9 +38,8 @@ public:
 class CursorObserverMultiplexer : public ObserverMultiplexer<CursorObserver>
 {
 public:
-    explicit CursorObserverMultiplexer(std::shared_ptr<Executor> executor) :
-        mir::ObserverMultiplexer<CursorObserver>{*executor},
-        executor{std::move(executor)}
+    explicit CursorObserverMultiplexer(Executor& default_executor) :
+        mir::ObserverMultiplexer<CursorObserver>{default_executor}
     {
     }
 
@@ -64,9 +63,6 @@ public:
 protected:
     CursorObserverMultiplexer(CursorObserverMultiplexer const&) = delete;
     CursorObserverMultiplexer& operator=(CursorObserverMultiplexer const&) = delete;
-
-private:
-    std::shared_ptr<Executor> const executor;
 };
 }
 }

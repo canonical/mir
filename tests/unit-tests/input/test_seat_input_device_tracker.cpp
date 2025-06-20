@@ -57,7 +57,7 @@ struct SeatInputDeviceTracker : ::testing::Test
     mtd::AdvanceableClock clock;
 
     Nice<mtd::MockCursorObserver> mock_cursor_observer;
-    mi::CursorObserverMultiplexer cursor_observer_multiplexer{mt::fake_shared(mir::immediate_executor)};
+    mi::CursorObserverMultiplexer cursor_observer_multiplexer{mir::immediate_executor};
 
     mi::DefaultEventBuilder some_device_builder{
         some_device,
