@@ -12,6 +12,7 @@ print_help_and_exit()
     echo "      --gtest-executable EXECUTABLE the command to run to execute the GTest tests to discover"
     echo "                                    if not specified, the last element of \`cmds\` is used."
     echo "      --env=ENV                     add ENV to the environment of the tests"
+    echo "      --props=PROPS                 add PROPS to the properties of the tests"
     echo "      --gtest-exclude FILTER        Exclude tests matching FILTER (may be specified multiple times)"
     echo "      --gtest-include FILTER        Include only tests matching FILTER (may be specified multiple times)"
     echo "  -h, --help                        display this help and exit"
@@ -39,6 +40,11 @@ add_env()
     env="$env ENVIRONMENT \"$1\""
 }
 
+add_props()
+{
+    props="$props \"$1\""
+}
+
 add_cmd()
 {
     cmd="$cmd \"$1\""
@@ -59,6 +65,7 @@ do
     case "$1" in
         --test-name) shift; testname="$1";;
         --env) shift; add_env "$1";;
+        --props) shift; add_props "$1";;
         --help|-h) print_help_and_exit;;
         --gtest-executable) shift; test_binary="$1";;
         --gtest-exclude) shift; add_exclude "$1";;
@@ -98,5 +105,5 @@ tests=$($test_binary --gtest_list_tests --gtest_filter=$discover_filter | grep -
 for t in $tests;
 do
     echo "add_test($testname.$t $cmd \"--gtest_filter=$t:-$excludes\")"
-    echo "set_tests_properties($testname.$t PROPERTIES $env)"
+    echo "set_tests_properties($testname.$t PROPERTIES $env $props)"
 done

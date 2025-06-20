@@ -197,10 +197,11 @@ function (mir_discover_external_gtests)
 
   if (TEST_TIMEOUT)
     set_tests_properties(${TEST_NAME} PROPERTIES TIMEOUT ${TEST_TIMEOUT})
+    set(TEST_PROPS "--props TIMEOUT --props ${TEST_TIMEOUT}")
   endif()
 
   file(APPEND ${CMAKE_BINARY_DIR}/discover_all_tests.sh
-    "sh ${CMAKE_SOURCE_DIR}/tools/discover_gtests.sh --test-name ${TEST_NAME} --gtest-executable \"${TEST_COMMAND} ${TEST_ARGS_STRING}\" --gtest-exclude ${EXCLUDED_TESTS} -- ${TEST_COMMAND} ${TEST_ARGS_STRING} \n")
+    "sh ${CMAKE_SOURCE_DIR}/tools/discover_gtests.sh --test-name ${TEST_NAME} --gtest-executable \"${TEST_COMMAND} ${TEST_ARGS_STRING}\" --gtest-exclude ${EXCLUDED_TESTS} ${TEST_PROPS} -- ${TEST_COMMAND} ${TEST_ARGS_STRING} \n")
 
   foreach (xfail IN LISTS TEST_EXPECTED_FAILURES)
     # Add a test verifying that the expected failures really do fail
