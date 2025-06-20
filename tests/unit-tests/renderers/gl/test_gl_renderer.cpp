@@ -526,3 +526,17 @@ TEST_F(GLRenderer, sets_viewport_downscaled_wide)
     mrg::Renderer renderer(gl_platform, std::move(output_surface));
     renderer.set_viewport(view_area);
 }
+
+TEST_F(GLRenderer, binds_surface_on_set_viewport)
+{
+    auto output_surface = make_output_surface();
+    InSequence seq;
+    EXPECT_CALL(*output_surface, make_current())
+        .Times(2);  // Once during construction, and once when we update the viewport
+    EXPECT_CALL(*output_surface, bind())
+        .Times(1);  // Once when we update the viewport
+
+    mir::geometry::Rectangle constexpr view_area{{0,0}, {1920,1080}};
+    mrg::Renderer renderer(gl_platform, std::move(output_surface));
+    renderer.set_viewport(view_area);
+}

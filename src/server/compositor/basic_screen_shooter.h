@@ -62,6 +62,8 @@ public:
         bool overlay_cursor,
         std::function<void(std::optional<time::Timestamp>)>&& callback) override;
 
+    CompositorID id() const override;
+
 private:
     struct Self
     {
