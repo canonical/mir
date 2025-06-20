@@ -22,6 +22,7 @@
 #include <mir_test_framework/fake_input_device.h>
 #include <mir_test_framework/stub_server_platform_factory.h>
 #include <mir/test/signal.h>
+#include "mir/test/fake_shared.h"
 #include "mir/test/null_input_device_observer.h"
 
 #include <mir/executor.h>
@@ -350,11 +351,14 @@ void emit_mir_event(miral::TestWlcsDisplayServer* runner,
 
 /// end of anon
 
-class miral::TestWlcsDisplayServer::RunnerCursorObserver : public mir::input::CursorObserver
+class miral::TestWlcsDisplayServer::RunnerCursorObserver : public mir::input::CursorObserverMultiplexer
 {
 public:
-    RunnerCursorObserver(TestWlcsDisplayServer* runner) :
-        runner{runner}
+    RunnerCursorObserver(
+        TestWlcsDisplayServer* runner, std::shared_ptr<mir::input::CursorObserverMultiplexer> wrapped) :
+        mi::CursorObserverMultiplexer{mir::immediate_executor},
+        runner{runner},
+        wrapped{std::move(wrapped)}
     {
     }
 
@@ -362,13 +366,23 @@ public:
     {
         runner->cursor_x = abs_x;
         runner->cursor_y = abs_y;
+        
+        wrapped->cursor_moved_to(abs_x, abs_y);
     }
 
-    void pointer_usable() override {}
-    void pointer_unusable() override {}
+    void pointer_usable() override
+    {
+        wrapped->pointer_usable();
+    }
+
+    void pointer_unusable() override
+    {
+        wrapped->pointer_unusable();
+    }
 
 private:
     TestWlcsDisplayServer* const runner;
+    std::shared_ptr<mi::CursorObserverMultiplexer> const wrapped;
 };
 
 class miral::TestWlcsDisplayServer::ResourceMapper : public mir::scene::SessionListener
@@ -852,8 +866,12 @@ miral::TestWlcsDisplayServer::TestWlcsDisplayServer(int argc, char const** argv)
                     return resource_mapper;
                 });
 
-            cursor_observer = std::make_shared<RunnerCursorObserver>(this);
-            server.the_cursor_observer_multiplexer()->register_interest(cursor_observer);
+            server.wrap_cursor_observer_multiplexer(
+                [this](auto existing_cursor_multiplexer)
+                {
+                    cursor_observer = std::make_shared<RunnerCursorObserver>(this, existing_cursor_multiplexer);
+                    return cursor_observer;
+                });
 
             mir_server = &server;
         });
