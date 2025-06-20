@@ -851,10 +851,14 @@ miral::TestWlcsDisplayServer::TestWlcsDisplayServer(int argc, char const** argv)
                     return resource_mapper;
                 });
 
-            cursor_observer = std::make_shared<RunnerCursorObserver>(this);
-            server.the_cursor_observer_multiplexer()->register_interest(cursor_observer);
-
             mir_server = &server;
+        });
+
+    add_start_callback(
+        [this]
+        {
+            cursor_observer = std::make_shared<RunnerCursorObserver>(this);
+            mir_server->the_cursor_observer_multiplexer()->register_interest(cursor_observer);
         });
 }
 
