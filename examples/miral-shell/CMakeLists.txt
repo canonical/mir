@@ -19,6 +19,7 @@ install(PROGRAMS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/miral-terminal
 
 mir_add_wrapped_executable(miral-shell
     shell_main.cpp
+    wasm_window_manager.cpp
 )
 set(WASMER_INCLUDE_DIR "/usr/local/include")
 set(WASMER_LIBRARY "/usr/local/lib/libwasmer.so")
