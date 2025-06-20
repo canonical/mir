@@ -14,10 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_CURSOR_LISTENER_H
-#define MIR_TEST_DOUBLES_MOCK_CURSOR_LISTENER_H
+#ifndef MIR_TEST_DOUBLES_MOCK_CURSOR_OBSERVER_H
+#define MIR_TEST_DOUBLES_MOCK_CURSOR_OBSERVER_H
 
-#include "mir/input/cursor_listener.h"
+#include "mir/input/cursor_observer.h"
 
 #include <gmock/gmock.h>
 
@@ -28,10 +28,10 @@ namespace test
 namespace doubles
 {
 
-struct MockCursorListener : public input::CursorListener
+struct MockCursorObserver : public input::CursorObserver
 {
     MOCK_METHOD(void, cursor_moved_to, (float, float), (override));
-    ~MockCursorListener() noexcept {}
+    ~MockCursorObserver() noexcept {}
     void pointer_usable() {}
     void pointer_unusable() {}
 };
