@@ -1583,3 +1583,13 @@ global:
 local: *;
 };
 
+MIR_SERVER_INTERNAL_2.22 {
+global:
+  extern "C++" {
+    mir::scene::BasicSurface::set_mirror_mode*;
+    mir::scene::NullSurfaceObserver::mirror_mode_set_to*;
+    non-virtual?thunk?to?mir::scene::BasicSurface::set_mirror_mode*;
+    non-virtual?thunk?to?mir::scene::NullSurfaceObserver::mirror_mode_set_to*;
+  };
+} MIR_SERVER_INTERNAL_2.21;
+

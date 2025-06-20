@@ -110,6 +110,11 @@ public:
         for_each_observer(&SurfaceObserver::orientation_set_to, surf, orientation);
     }
 
+    void mirror_mode_set_to(Surface const* surf, MirMirrorMode mirror_mode) override
+    {
+        for_each_observer(&SurfaceObserver::mirror_mode_set_to, surf, mirror_mode);
+    }
+
     void transformation_set_to(Surface const* surf, glm::mat4 const& t) override
     {
         for_each_observer(&SurfaceObserver::transformation_set_to, surf, t);
@@ -384,7 +389,14 @@ void ms::BasicSurface::set_alpha(float alpha)
 
 void ms::BasicSurface::set_orientation(MirOrientation orientation)
 {
+    synchronised_state.lock()->orientation = orientation;
     observers->orientation_set_to(this, orientation);
+}
+
+void ms::BasicSurface::set_mirror_mode(MirMirrorMode mirror_mode)
+{
+    synchronised_state.lock()->mirror_mode = mirror_mode;
+    observers->mirror_mode_set_to(this, mirror_mode);
 }
 
 void ms::BasicSurface::set_transformation(glm::mat4 const& t)
