@@ -107,6 +107,7 @@ public:
     void consume(std::shared_ptr<MirEvent const> const& event) override;
     void set_alpha(float alpha) override;
     void set_orientation(MirOrientation orientation) override;
+    void set_mirror_mode(MirMirrorMode mirror_mode) override;
     void set_transformation(glm::mat4 const&) override;
 
     bool visible() const override;
