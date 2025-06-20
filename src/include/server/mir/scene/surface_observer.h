@@ -53,6 +53,7 @@ public:
     virtual void frame_posted(Surface const* surf, geometry::Rectangle const& damage) = 0;
     virtual void alpha_set_to(Surface const* surf, float alpha) = 0;
     virtual void orientation_set_to(Surface const* surf, MirOrientation orientation) = 0;
+    virtual void mirror_mode_set_to(Surface const* surf, MirMirrorMode mirror_mode) = 0;
     virtual void transformation_set_to(Surface const* surf, glm::mat4 const& t) = 0;
     virtual void reception_mode_set_to(Surface const* surf, input::InputReceptionMode mode) = 0;
     virtual void cursor_image_set_to(Surface const* surf, std::weak_ptr<mir::graphics::CursorImage> const& image) = 0;

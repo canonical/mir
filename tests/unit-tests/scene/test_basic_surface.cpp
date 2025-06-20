@@ -1591,3 +1591,21 @@ TEST_F(BasicSurfaceTest, buffer_can_be_submitted_to_set_stream_after_surface_des
     surface.reset();
     callback({10, 10});
 }
+
+TEST_F(BasicSurfaceTest, setting_orientation_results_in_renderable_with_same_orientation)
+{
+    using namespace testing;
+    surface.set_orientation(mir_orientation_inverted);
+    auto renderables = surface.generate_renderables(this);
+    EXPECT_THAT(renderables.size(), Eq(1));
+    EXPECT_THAT(renderables[0]->orientation(), mir_orientation_inverted);
+}
+
+TEST_F(BasicSurfaceTest, setting_mirror_mode_results_in_renderable_with_same_mirror_mode)
+{
+    using namespace testing;
+    surface.set_mirror_mode(mir_mirror_mode_horizontal);
+    auto renderables = surface.generate_renderables(this);
+    EXPECT_THAT(renderables.size(), Eq(1));
+    EXPECT_THAT(renderables[0]->mirror_mode(), mir_mirror_mode_horizontal);
+}
