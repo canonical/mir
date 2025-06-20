@@ -866,9 +866,9 @@ miral::TestWlcsDisplayServer::TestWlcsDisplayServer(int argc, char const** argv)
                 });
 
             server.wrap_cursor_observer_multiplexer(
-                [this](auto existing_cursor_mulitplexer)
+                [this](auto existing_cursor_multiplexer)
                 {
-                    cursor_observer = std::make_shared<RunnerCursorObserver>(this, existing_cursor_mulitplexer);
+                    cursor_observer = std::make_shared<RunnerCursorObserver>(this, existing_cursor_multiplexer);
                     return cursor_observer;
                 });
 
