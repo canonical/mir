@@ -19,6 +19,7 @@
 #include "floating_window_manager.h"
 #include "wallpaper_config.h"
 #include "spinner/splash.h"
+#include "wasm_window_manager.h"
 
 #include <miral/display_configuration_option.h>
 #include <miral/external_client.h>
@@ -63,6 +64,7 @@ struct ConfigureDecorations
 };
 }
 
+#include <iostream>
 int main(int argc, char const* argv[])
 {
     using namespace miral;
@@ -75,8 +77,7 @@ int main(int argc, char const* argv[])
     auto focus_stealing_prevention = FocusStealing::allow;
     WindowManagerOptions window_managers
         {
-            add_window_manager_policy<FloatingWindowManagerPolicy>("floating", spinner, launcher, shutdown_hook, focus_stealing_prevention),
-            add_window_manager_policy<TilingWindowManagerPolicy>("tiling", spinner, launcher),
+            add_window_manager_policy<experimental::WasmWindowManager>("wasm"),
         };
 
     MirRunner runner{argc, argv};
