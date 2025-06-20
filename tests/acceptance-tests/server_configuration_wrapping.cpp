@@ -47,8 +47,8 @@ struct MyShell : msh::ShellWrapper
 struct MyCursorObserverMultiplexer : mi::CursorObserverMultiplexer
 {
     MyCursorObserverMultiplexer(
-        std::shared_ptr<mi::CursorObserverMultiplexer> const& wrapped, mir::Executor& default_executor) :
-        mi::CursorObserverMultiplexer{default_executor},
+        std::shared_ptr<mi::CursorObserverMultiplexer> const& wrapped, std::shared_ptr<mir::Executor> default_executor) :
+        mi::CursorObserverMultiplexer{std::move(default_executor)},
         wrapped{wrapped}
     {
     }
@@ -84,7 +84,7 @@ struct ServerConfigurationWrapping : mir_test_framework::HeadlessTest
         server.wrap_cursor_observer_multiplexer([this]
             (std::shared_ptr<mi::CursorObserverMultiplexer> const& wrapped)
             {
-                return std::make_shared<MyCursorObserverMultiplexer>(wrapped, *server.the_main_loop());
+                return std::make_shared<MyCursorObserverMultiplexer>(wrapped, server.the_main_loop());
             });
 
         server.wrap_surface_stack([]

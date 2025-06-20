@@ -190,7 +190,7 @@ mir::DefaultServerConfiguration::the_cursor_observer_multiplexer()
     return cursor_observer_multiplexer(
         [this]() -> std::shared_ptr<mi::CursorObserverMultiplexer>
         {
-            return wrap_cursor_observer_multiplexer(std::make_shared<mi::CursorObserverMultiplexer>(*the_main_loop()));
+            return wrap_cursor_observer_multiplexer(std::make_shared<mi::CursorObserverMultiplexer>(the_main_loop()));
         });
 }
 
