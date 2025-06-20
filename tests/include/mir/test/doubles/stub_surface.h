@@ -47,6 +47,7 @@ struct StubSurface : scene::Surface
     void consume(std::shared_ptr<MirEvent const> const&) override {}
     void set_alpha(float) override {}
     void set_orientation(MirOrientation) override {}
+    void set_mirror_mode(MirMirrorMode) override {}
     void set_transformation(glm::mat4 const&) override {}
     bool visible() const override { return false; }
     graphics::RenderableList generate_renderables(compositor::CompositorID) const override { return {}; }

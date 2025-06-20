@@ -15,7 +15,7 @@
  */
 
 #include "wl_surface.h"
-
+#include "output_manager.h"
 #include "fractional_scale_v1.h"
 #include "mir/wayland/weak.h"
 #include "viewporter_wrapper.h"
@@ -77,6 +77,12 @@ void mf::WlSurfaceState::update_from(WlSurfaceState const& source)
 
     if (source.scale)
         scale = source.scale;
+
+    if (source.orientation)
+        orientation = source.orientation;
+
+    if (source.mirror_mode)
+        mirror_mode = source.mirror_mode;
 
     if (source.offset)
         offset = source.offset;
@@ -358,10 +364,22 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
     bool needs_buffer_submission =
         state.scale ||                                               // If the scale has changed, or...
         state.viewport ||                                            // ...we've added a viewport, or...
+        state.orientation ||                                         // ...we've changed orientation, or...
+        state.mirror_mode ||                                         // ...we've change mirror mode, or...
         (viewport && viewport.value().changed_since_last_resolve()); // ...the viewport has changed...
                                                                      // ...then we'll need to submit a new frame, even if the client hasn't
                                                                      // attached a new buffer.
 
+    if (role)
+    {
+        if (auto const scene_surface = role->scene_surface())
+        {
+            if (state.orientation)
+                scene_surface.value()->set_orientation(state.orientation.value());
+            if (state.mirror_mode)
+                scene_surface.value()->set_mirror_mode(state.mirror_mode.value());
+        }
+     }
 
     if (state.buffer)
     {
@@ -659,8 +677,20 @@ void mf::WlSurface::complete_commit(WlSurface* surf)
 
 void mf::WlSurface::set_buffer_transform(int32_t transform)
 {
-    (void)transform;
-    // TODO
+    try
+    {
+        auto const result = OutputManager::from_output_transform(transform);
+        pending.orientation = std::get<0>(result);
+        pending.mirror_mode = std::get<1>(result);
+    }
+    catch (std::out_of_range const&)
+    {
+        throw wayland::ProtocolError{
+            resource,
+            Error::invalid_transform,
+            "Invalid transform"};
+    }
+
 }
 
 void mf::WlSurface::set_buffer_scale(int32_t scale)

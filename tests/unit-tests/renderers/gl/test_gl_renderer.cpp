@@ -266,7 +266,7 @@ TEST_F(GLRenderer, applies_mirror_mode)
 {
     InSequence seq;
     EXPECT_CALL(mock_gl, glUniformMatrix4fv(_, _, _, _))
-        .Times(2); // Display transform
+        .Times(3); // Display transform + orientation transform
     EXPECT_CALL(*renderable, mirror_mode())
         .WillOnce(Return(mir_mirror_mode_vertical));
     EXPECT_CALL(mock_gl, glUniformMatrix4fv(

@@ -144,11 +144,15 @@ const GLchar* const vertex_shader_src =
     "uniform mat4 screen_to_gl_coords;\n"
     "uniform mat4 display_transform;\n"
     "uniform mat4 transform;\n"
+    "uniform mat4 orientation_transform;\n"
     "uniform vec2 centre;\n"
+    "uniform vec2 oriented_centre;\n"
     "varying vec2 v_texcoord;\n"
     "void main() {\n"
     "   vec4 mid = vec4(centre, 0.0, 0.0);\n"
-    "   vec4 transformed = (transform * (vec4(position, 1.0) - mid)) + mid;\n"
+    "   vec4 oriented_mid = vec4(oriented_centre, 0.0, 0.0);"
+    "   vec4 transformed = (orientation_transform * (vec4(position, 1.0) - mid)) + oriented_mid;\n"
+    "   transformed = (transform * (transformed - oriented_mid)) + oriented_mid;\n"
     "   gl_Position = display_transform * screen_to_gl_coords * transformed;\n"
     "   v_texcoord = texcoord;\n"
     "}\n"
@@ -538,7 +542,9 @@ mrg::Renderer::Program::Program(GLuint program_id)
         tex_uniforms[i] = glGetUniformLocation(id, uniform_name.c_str());
     }
     centre_uniform = glGetUniformLocation(id, "centre");
+    oriented_centre = glGetUniformLocation(id, "oriented_centre");
     display_transform_uniform = glGetUniformLocation(id, "display_transform");
+    orientation_transform_uniform = glGetUniformLocation(id, "orientation_transform");
     transform_uniform = glGetUniformLocation(id, "transform");
     screen_to_gl_coords_uniform = glGetUniformLocation(id, "screen_to_gl_coords");
     alpha_uniform = glGetUniformLocation(id, "alpha");
@@ -715,11 +721,32 @@ void mrg::Renderer::draw(mg::Renderable const& renderable) const
     // orientation. However, the surface is already rotated by the output's
     // orientation when we render it. To solve this, we need to unrotate the
     // surface using the inverse of its transform so that it appears upright.
-    auto const mirror_mode = renderable.mirror_mode();
+    //
+    // The inverse transformation is applied around the center of the rotated
+    // buffer (e.g. if we have a 500x100 buffer that is rotated to the left,
+    // then the renderable's dimensions will be 100x500 so we're rotating around
+    // [50, 250]). Applying the inverse transformation unrotates the buffer,
+    // but it fails to place it at the right position. Hence, we also need to
+    // provid the "oriented centre" which represents the new centre after rotation.
     auto const orientation = renderable.orientation();
+    if (orientation == mir_orientation_left || orientation == mir_orientation_right)
+    {
+        centrex = rect.top_left.x.as_int() +
+                        rect.size.height.as_int() / 2.0f;
+        centrey = rect.top_left.y.as_int() +
+                        rect.size.width.as_int() / 2.0f;
+    }
+    glUniform2f(prog->oriented_centre, centrex, centrey);
+
+    auto orientation_transform = glm::mat4(mg::inverse_transformation(orientation));
+    glUniformMatrix4fv(prog->orientation_transform_uniform,
+        1,
+        GL_FALSE,
+        glm::value_ptr(orientation_transform));
+
+    auto const mirror_mode = renderable.mirror_mode();
     glm::mat4 transform = renderable.transformation()
-        * glm::mat4(mg::transformation(mirror_mode))          // Unflip the buffer
-        * glm::mat4(mg::inverse_transformation(orientation)); // Unrotate the buffer
+        * glm::mat4(mg::transformation(mirror_mode)); // Unflip the buffer
     if (texture->layout() == mg::gl::Texture::Layout::TopRowFirst)
     {
         // GL textures have (0,0) at bottom-left rather than top-left

@@ -88,6 +88,8 @@ struct WlSurfaceState
     std::optional<float> scale;
     std::optional<geometry::Displacement> offset;
     std::optional<std::optional<std::vector<geometry::Rectangle>>> input_shape;
+    std::optional<MirOrientation> orientation;
+    std::optional<MirMirrorMode> mirror_mode;
     std::vector<wayland::Weak<Callback>> frame_callbacks;
     wayland::Weak<Viewport> viewport;
 
