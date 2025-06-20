@@ -14,14 +14,6 @@ VENV          = $(VENVDIR)/bin/activate
 WORKDIR	      = ../build_doc
 WORKSPHINX    = $(WORKDIR)/doc/sphinx
 PROJROOT      = ../..
-DEPS	      = cmake doxygen libboost-dev libboost-iostreams-dev \
-		libboost-filesystem-dev libboost-program-options-dev \
-		libboost-system-dev libdrm-dev libegl-dev libepoxy-dev \
-		libfreetype-dev libglib2.0-dev libgles2-mesa-dev \
-		libglm-dev libinput-dev liblttng-ust-dev libwayland-dev \
-		libxcb-composite0-dev libxcb-randr0-dev libxcb-res0-dev \
-		libxcursor-dev libxkbcommon-dev libxml++2.6-dev \
-		libyaml-cpp-dev xsltproc
 
 # If the environment variable `GITHUB_WORKFLOW` is empty, then we're running
 # locally and shouldn't depend on `_build/index.html` to build HTML (so even if
@@ -94,7 +86,7 @@ pa11y-install:
 
 install: $(VENVDIR)
 	sudo apt update
-	sudo apt install -y $(DEPS)
+	sudo apt build-dep -y $(PROJROOT)
 
 run: install configure
 	. $(VENV); cd $(WORKSPHINX); sphinx-autobuild -b dirhtml "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS)
