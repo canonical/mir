@@ -6,7 +6,7 @@ terminal, and a status bar. Doing so manually like what we've do would be
 immensely annoying, so let's add an option for users to specify startup apps.
 
 **Note**: [Write Your First Wayland
-Compositor](../write-your-first-wayland-compositor.md) is a prerequisite for
+Compositor](../tutorial/write-your-first-wayland-compositor.md) is a prerequisite for
 this how-to.
 
 ---
