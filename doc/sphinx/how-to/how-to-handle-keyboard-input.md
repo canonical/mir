@@ -16,7 +16,7 @@ For ease of reading (and copying), we'll split the changes into three parts:
 headers, code, and options.
 
 **Note**: [Write Your First Wayland
-Compositor](../write-your-first-wayland-compositor.md) is a prerequisite for
+Compositor](../tutorial/write-your-first-wayland-compositor.md) is a prerequisite for
 this how-to.
 
 ### Header changes
