@@ -25,7 +25,7 @@ class Executor;
 namespace compositor
 {
 
-/// An implementation of ScreenShooter than always calls the callback with an error
+/// An implementation of ScreenShooter that always calls the callback with an error
 class NullScreenShooter: public ScreenShooter
 {
 public:
@@ -36,6 +36,8 @@ public:
         geometry::Rectangle const& area,
         bool overlay_cursor,
         std::function<void(std::optional<time::Timestamp>)>&& callback) override;
+
+    CompositorID id() const override;
 
 private:
     Executor& executor;

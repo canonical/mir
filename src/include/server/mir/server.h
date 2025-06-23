@@ -32,7 +32,7 @@ namespace mir
 template<class Observer>
 class ObserverRegistrar;
 
-namespace compositor { class Compositor; class DisplayBufferCompositorFactory; class CompositorReport; }
+namespace compositor { class Compositor; class DisplayBufferCompositorFactory; class CompositorReport; class ScreenShooterFactory; class Scene; }
 namespace graphics { class Cursor; class DisplayPlatform; class RenderingPlatform; class Display; class GLConfig; class DisplayConfigurationPolicy; class DisplayConfigurationObserver; class GraphicBufferAllocator; class CursorImage; class OutputFilter; }
 namespace input { class CompositeEventFilter; class InputDispatcher; class CursorObserverMultiplexer; class CursorImages; class TouchVisualizer; class InputDeviceHub; class InputDeviceRegistry;}
 namespace logging { class Logger; }
@@ -506,6 +506,10 @@ public:
     auto the_default_cursor_image() const -> std::shared_ptr<graphics::CursorImage>;
 
     auto the_scene_report() const -> std::shared_ptr<scene::SceneReport>;
+
+    auto the_scene() const -> std::shared_ptr<compositor::Scene>;
+
+    auto the_screen_shooter_factory() const -> std::shared_ptr<compositor::ScreenShooterFactory>;
 private:
     struct ServerConfiguration;
     struct Self;
