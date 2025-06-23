@@ -415,19 +415,17 @@ mf::WaylandConnector::WaylandConnector(
 namespace
 {
 void unbind_display(mg::GraphicBufferAllocator& allocator, wl_display* display) noexcept
+try
 {
-    try
-    {   
-        allocator.unbind_display(display);
-    }
-    catch (...)
-    {
-        mir::log(
-            mir::logging::Severity::warning,
-            MIR_LOG_COMPONENT,
-            std::current_exception(),
-            "Failed to unbind EGL display");
-    }
+    allocator.unbind_display(display);
+}
+catch (...)
+{
+    mir::log(
+        mir::logging::Severity::warning,
+        MIR_LOG_COMPONENT,
+        std::current_exception(),
+        "Failed to unbind EGL display");
 }
 }
 
@@ -471,10 +469,7 @@ void mf::WaylandConnector::stop()
 {
     if (eventfd_write(pause_signal, 1) < 0)
     {
-        BOOST_THROW_EXCEPTION((std::system_error{
-            errno,
-            std::system_category(),
-            "Failed to send IPC eventloop pause signal"}));
+        log_error("WaylandConnector::stop() failed to send IPC eventloop pause signal: %s (%i)", strerror(errno), errno);
     }
     if (dispatch_thread.joinable())
     {

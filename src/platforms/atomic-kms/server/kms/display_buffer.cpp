@@ -55,14 +55,16 @@ mga::DisplaySink::DisplaySink(
     std::shared_ptr<DisplayReport> const& listener,
     std::shared_ptr<KMSOutput> output,
     geom::Rectangle const& area,
-    glm::mat2 const& transformation)
+    glm::mat2 const& transformation,
+    std::shared_ptr<GbmQuirks> const& gbm_quirks)
     : DmaBufDisplayAllocator(gbm, drm_fd),
       gbm{std::move(gbm)},
       listener(listener),
       output{std::move(output)},
       area(area),
       transform{transformation},
-      needs_set_crtc{false}
+      needs_set_crtc{false},
+      gbm_quirks{gbm_quirks}
 {
     listener->report_successful_setup_of_native_resources();
 
@@ -403,7 +405,7 @@ auto mga::DisplaySink::maybe_create_allocator(DisplayAllocator::Tag const& type_
     {
         if (!gbm_allocator)
         {
-            gbm_allocator = std::make_unique<GBMDisplayAllocator>(drm_fd(), gbm, output->size());
+            gbm_allocator = std::make_unique<GBMDisplayAllocator>(drm_fd(), gbm, output->size(), gbm_quirks);
         }
         return gbm_allocator.get();
     }

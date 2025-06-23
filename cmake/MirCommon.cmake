@@ -177,7 +177,7 @@ function (mir_discover_tests_with_fd_leak_detection EXECUTABLE)
 endfunction()
 
 function (mir_discover_external_gtests)
-  set(one_value_args NAME COMMAND WORKING_DIRECTORY)
+  set(one_value_args NAME COMMAND WORKING_DIRECTORY TIMEOUT)
   set(multi_value_args EXPECTED_FAILURES ARGS BROKEN_TESTS)
   cmake_parse_arguments(TEST "" "${one_value_args}" "${multi_value_args}" ${ARGN})
 
@@ -193,6 +193,10 @@ function (mir_discover_external_gtests)
   add_test(NAME ${TEST_NAME} COMMAND ${TEST_COMMAND} "--gtest_filter=-${EXCLUDED_TESTS}" ${TEST_ARGS})
   if (TEST_WORKING_DIRECTORY)
     set_tests_properties(${TEST_NAME} PROPERTIES WORKING_DIRECTORY ${TEST_WORKING_DIRECTORY})
+  endif()
+
+  if (TEST_TIMEOUT)
+    set_tests_properties(${TEST_NAME} PROPERTIES TIMEOUT ${TEST_TIMEOUT})
   endif()
 
   file(APPEND ${CMAKE_BINARY_DIR}/discover_all_tests.sh
