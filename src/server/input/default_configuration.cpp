@@ -39,7 +39,7 @@
 #include "mir/input/vt_filter.h"
 #include "mir/input/device.h"
 #include "mir/input/input_event_transformer.h"
-#include "mir/input/cursor_observer.h"
+#include "mir/input/cursor_observer_multiplexer.h"
 #include "mir/input/cursor_controller.h"
 #include "mir/options/configuration.h"
 #include "mir/options/option.h"

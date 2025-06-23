@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/input/cursor_observer.h"
+#include "mir/input/cursor_observer_multiplexer.h"
 #include "mir/shell/shell_wrapper.h"
 #include "mir/shell/surface_stack_wrapper.h"
 #include "mir/scene/application_not_responding_detector_wrapper.h"

@@ -26,6 +26,7 @@
 #include "mir/test/event_matchers.h"
 #include "mir/test/fake_shared.h"
 
+#include "mir/input/cursor_observer_multiplexer.h"
 #include "mir/geometry/rectangles.h"
 
 #include <gmock/gmock.h>

@@ -17,8 +17,6 @@
 #ifndef MIR_INPUT_CURSOR_OBSERVER_H_
 #define MIR_INPUT_CURSOR_OBSERVER_H_
 
-#include "mir/observer_multiplexer.h"
-
 namespace mir
 {
 namespace input
@@ -35,35 +33,6 @@ public:
     virtual void pointer_unusable() = 0;
 };
 
-class CursorObserverMultiplexer : public ObserverMultiplexer<CursorObserver>
-{
-public:
-    explicit CursorObserverMultiplexer(Executor& default_executor) :
-        mir::ObserverMultiplexer<CursorObserver>{default_executor}
-    {
-    }
-
-    virtual ~CursorObserverMultiplexer() = default;
-
-    virtual void cursor_moved_to(float abs_x, float abs_y) override
-    {
-        for_each_observer(&CursorObserver::cursor_moved_to, abs_x, abs_y);
-    }
-
-    virtual void pointer_usable() override
-    {
-        for_each_observer(&CursorObserver::pointer_usable);
-    }
-
-    virtual void pointer_unusable() override
-    {
-        for_each_observer(&CursorObserver::pointer_unusable);
-    }
-
-protected:
-    CursorObserverMultiplexer(CursorObserverMultiplexer const&) = delete;
-    CursorObserverMultiplexer& operator=(CursorObserverMultiplexer const&) = delete;
-};
 }
 }
 

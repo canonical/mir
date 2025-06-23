@@ -17,6 +17,7 @@
 #include "seat_input_device_tracker.h"
 #include "mir/input/device.h"
 #include "mir/input/cursor_observer.h"
+#include "mir/input/cursor_observer_multiplexer.h"
 #include "mir/input/input_dispatcher.h"
 #include "mir/input/key_mapper.h"
 #include "mir/input/seat_observer.h"

@@ -28,6 +28,7 @@
 #include <mir/fd.h>
 #include <mir/compositor/buffer_stream.h>
 #include <mir/input/cursor_observer.h>
+#include <mir/input/cursor_observer_multiplexer.h>
 #include <mir/input/device.h>
 #include <mir/input/input_device_hub.h>
 #include <mir/input/input_device_info.h>

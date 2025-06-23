@@ -42,6 +42,7 @@
 #include "mir/graphics/display_configuration_observer.h"
 #include "mir/scene/session_container.h"
 
+#include "mir/input/cursor_observer_multiplexer.h"
 #include "mir/input/device.h"
 #include "mir/input/xkb_mapper_registrar.h"
 #include "mir/input/device_capability.h"

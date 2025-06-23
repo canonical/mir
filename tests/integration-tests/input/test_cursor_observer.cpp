@@ -26,6 +26,7 @@
 #include "mir/test/event_factory.h"
 
 #include "mir/input/cursor_observer.h"
+#include "mir/input/cursor_observer_multiplexer.h"
 #include "mir/input/input_dispatcher.h"
 #include "mir/input/input_manager.h"
 #include "mir/input/input_device_info.h"
