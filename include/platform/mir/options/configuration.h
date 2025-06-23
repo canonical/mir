@@ -67,6 +67,7 @@ extern char const* const null_console;
 extern char const* const auto_console;
 
 extern char const* const vt_option_name;
+extern char const* const vt_switching_option_name;
 
 class Configuration
 {

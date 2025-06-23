@@ -81,6 +81,12 @@ mir::DefaultServerConfiguration::the_event_filter_chain_dispatcher()
             auto const make_default_filter_list =
                 [this]() -> std::vector<std::weak_ptr<mi::EventFilter>>
                 {
+                    auto const options = the_options();
+                    if (!options->get<bool>(options::vt_switching_option_name))
+                    {
+                        return {};
+                    }
+
                     try
                     {
                         default_filter = std::make_shared<mi::VTFilter>(
