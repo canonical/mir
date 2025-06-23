@@ -19,13 +19,14 @@
 
 #include "mir/input/xkb_mapper_registrar.h"
 #include "mir/test/doubles/mock_input_dispatcher.h"
-#include "mir/test/doubles/mock_cursor_listener.h"
+#include "mir/test/doubles/mock_cursor_observer.h"
 #include "mir/test/doubles/mock_touch_visualizer.h"
 #include "mir/test/doubles/mock_seat_report.h"
 #include "mir/test/doubles/advanceable_clock.h"
 #include "mir/test/event_matchers.h"
 #include "mir/test/fake_shared.h"
 
+#include "mir/input/cursor_observer_multiplexer.h"
 #include "mir/geometry/rectangles.h"
 
 #include <gmock/gmock.h>
@@ -46,15 +47,18 @@ using namespace ::testing;
 
 struct SeatInputDeviceTracker : ::testing::Test
 {
+
     mi::EventBuilder* builder;
     Nice<mtd::MockInputDispatcher> mock_dispatcher;
-    Nice<mtd::MockCursorListener> mock_cursor_listener;
     Nice<mtd::MockTouchVisualizer> mock_visualizer;
     Nice<mtd::MockSeatObserver> mock_seat_report;
     MirInputDeviceId some_device{8712};
     MirInputDeviceId another_device{1246};
     MirInputDeviceId third_device{86};
     mtd::AdvanceableClock clock;
+
+    Nice<mtd::MockCursorObserver> mock_cursor_observer;
+    mi::CursorObserverMultiplexer cursor_observer_multiplexer{mir::immediate_executor};
 
     mi::DefaultEventBuilder some_device_builder{
         some_device,
@@ -67,8 +71,9 @@ struct SeatInputDeviceTracker : ::testing::Test
         mt::fake_shared(clock)};
     mi::receiver::XKBMapperRegistrar mapper{mir::immediate_executor};
     mi::SeatInputDeviceTracker tracker{
-        mt::fake_shared(mock_dispatcher), mt::fake_shared(mock_visualizer), mt::fake_shared(mock_cursor_listener),
-        mt::fake_shared(mapper),          mt::fake_shared(clock),           mt::fake_shared(mock_seat_report)};
+        mt::fake_shared(mock_dispatcher), mt::fake_shared(mock_visualizer), mt::fake_shared(mock_cursor_observer),
+        mt::fake_shared(cursor_observer_multiplexer), mt::fake_shared(mapper), mt::fake_shared(clock),
+        mt::fake_shared(mock_seat_report)};
 
     std::chrono::nanoseconds arbitrary_timestamp;
 };
@@ -174,7 +179,7 @@ TEST_F(SeatInputDeviceTracker, removal_of_touch_device_removes_spots)
 TEST_F(SeatInputDeviceTracker, pointer_movement_updates_cursor)
 {
     auto const move_x = 20.0f, move_y = 40.0f;
-    EXPECT_CALL(mock_cursor_listener, cursor_moved_to(move_x, move_y)).Times(1);
+    EXPECT_CALL(mock_cursor_observer, cursor_moved_to(move_x, move_y)).Times(1);
 
     tracker.add_device(some_device);
     tracker.dispatch(motion_event(some_device_builder, move_x, move_y));
@@ -186,7 +191,7 @@ TEST_F(SeatInputDeviceTracker, slow_pointer_movement_updates_cursor)
     float const target = 3.0f;
 
     for (float x = step; x <= target; x += step)
-        EXPECT_CALL(mock_cursor_listener,
+        EXPECT_CALL(mock_cursor_observer,
                     cursor_moved_to(FloatEq(x), FloatEq(x))).Times(1);
 
     tracker.add_device(some_device);
@@ -200,9 +205,9 @@ TEST_F(SeatInputDeviceTracker, slow_pointer_movement_updates_cursor)
 TEST_F(SeatInputDeviceTracker, pointer_movement_from_different_devices_change_cursor_position)
 {
     InSequence seq;
-    EXPECT_CALL(mock_cursor_listener, cursor_moved_to(23, 20));
-    EXPECT_CALL(mock_cursor_listener, cursor_moved_to(41, 10));
-    EXPECT_CALL(mock_cursor_listener, cursor_moved_to(43, 20));
+    EXPECT_CALL(mock_cursor_observer, cursor_moved_to(23, 20));
+    EXPECT_CALL(mock_cursor_observer, cursor_moved_to(41, 10));
+    EXPECT_CALL(mock_cursor_observer, cursor_moved_to(43, 20));
 
     tracker.add_device(some_device);
     tracker.add_device(another_device);
@@ -281,8 +286,8 @@ TEST_F(SeatInputDeviceTracker, pointer_confinement_bounds_mouse_inside)
 {
     auto const move_x = 20.0f, move_y = 40.0f;
     auto const max_w_h = 100;
-    EXPECT_CALL(mock_cursor_listener, cursor_moved_to(move_x, move_y)).Times(1);
-    EXPECT_CALL(mock_cursor_listener, cursor_moved_to(max_w_h - 1, max_w_h - 1)).Times(1);
+    EXPECT_CALL(mock_cursor_observer, cursor_moved_to(move_x, move_y)).Times(1);
+    EXPECT_CALL(mock_cursor_observer, cursor_moved_to(max_w_h - 1, max_w_h - 1)).Times(1);
    
     geom::Rectangle rec{{0, 0}, {max_w_h, max_w_h}}; 
     tracker.set_confinement_regions({rec});
@@ -295,8 +300,8 @@ TEST_F(SeatInputDeviceTracker, reset_pointer_confinement_allows_movement_past)
 {
     auto const move_x = 20.0f, move_y = 40.0f;
     auto const max_w_h = 100;
-    EXPECT_CALL(mock_cursor_listener, cursor_moved_to(move_x, move_y)).Times(1);
-    EXPECT_CALL(mock_cursor_listener, cursor_moved_to(move_x + max_w_h * 2,
+    EXPECT_CALL(mock_cursor_observer, cursor_moved_to(move_x, move_y)).Times(1);
+    EXPECT_CALL(mock_cursor_observer, cursor_moved_to(move_x + max_w_h * 2,
                                                       move_y + max_w_h * 2)).Times(1);
 
     geom::Rectangle rec{{0, 0}, {max_w_h, max_w_h}}; 

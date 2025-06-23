@@ -22,12 +22,14 @@
 #include <mir_test_framework/fake_input_device.h>
 #include <mir_test_framework/stub_server_platform_factory.h>
 #include <mir/test/signal.h>
+#include "mir/test/fake_shared.h"
 #include "mir/test/null_input_device_observer.h"
 
 #include <mir/executor.h>
 #include <mir/fd.h>
 #include <mir/compositor/buffer_stream.h>
-#include <mir/input/cursor_listener.h>
+#include <mir/input/cursor_observer.h>
+#include <mir/input/cursor_observer_multiplexer.h>
 #include <mir/input/device.h>
 #include <mir/input/input_device_hub.h>
 #include <mir/input/input_device_info.h>
@@ -348,6 +350,40 @@ void emit_mir_event(miral::TestWlcsDisplayServer* runner,
 
 
 /// end of anon
+
+class miral::TestWlcsDisplayServer::RunnerCursorObserver : public mir::input::CursorObserverMultiplexer
+{
+public:
+    RunnerCursorObserver(
+        TestWlcsDisplayServer* runner, std::shared_ptr<mir::input::CursorObserverMultiplexer> wrapped) :
+        mi::CursorObserverMultiplexer{mir::immediate_executor},
+        runner{runner},
+        wrapped{std::move(wrapped)}
+    {
+    }
+
+    void cursor_moved_to(float abs_x, float abs_y) override
+    {
+        runner->cursor_x = abs_x;
+        runner->cursor_y = abs_y;
+        
+        wrapped->cursor_moved_to(abs_x, abs_y);
+    }
+
+    void pointer_usable() override
+    {
+        wrapped->pointer_usable();
+    }
+
+    void pointer_unusable() override
+    {
+        wrapped->pointer_unusable();
+    }
+
+private:
+    TestWlcsDisplayServer* const runner;
+    std::shared_ptr<mi::CursorObserverMultiplexer> const wrapped;
+};
 
 class miral::TestWlcsDisplayServer::ResourceMapper : public mir::scene::SessionListener
 {
@@ -830,35 +866,11 @@ miral::TestWlcsDisplayServer::TestWlcsDisplayServer(int argc, char const** argv)
                     return resource_mapper;
                 });
 
-            server.wrap_cursor_listener(
-                [this](auto const& wrappee)
+            server.wrap_cursor_observer_multiplexer(
+                [this](auto existing_cursor_multiplexer)
                 {
-                    class ListenerWrapper : public mir::input::CursorListener
-                    {
-                    public:
-                        ListenerWrapper(
-                            TestWlcsDisplayServer* runner,
-                            std::shared_ptr<mir::input::CursorListener> const& wrapped)
-                            : runner{runner},
-                            wrapped{wrapped}
-                        {
-                        }
-
-                        void cursor_moved_to(float abs_x, float abs_y) override
-                        {
-                            runner->cursor_x = abs_x;
-                            runner->cursor_y = abs_y;
-                            wrapped->cursor_moved_to(abs_x, abs_y);
-                        }
-
-                        void pointer_usable() override { wrapped->pointer_usable(); }
-                        void pointer_unusable() override { wrapped->pointer_unusable(); }
-
-                    private:
-                        TestWlcsDisplayServer* const runner;
-                        std::shared_ptr<mir::input::CursorListener> const wrapped;
-                    };
-                    return std::make_shared<ListenerWrapper>(this, wrappee);
+                    cursor_observer = std::make_shared<RunnerCursorObserver>(this, existing_cursor_multiplexer);
+                    return cursor_observer;
                 });
 
             mir_server = &server;
