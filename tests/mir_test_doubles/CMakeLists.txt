@@ -110,10 +110,7 @@ target_link_libraries(mir-public-test-doubles
     mircore
 )
 
-add_library(mir-test-doubles-static STATIC
-  $<TARGET_OBJECTS:mir-public-test-doubles>
-  $<TARGET_OBJECTS:mir-protected-test-doubles>
-)
+add_library(mir-test-doubles-static STATIC)
 
 target_include_directories(
   mir-test-doubles-static
@@ -127,6 +124,8 @@ target_link_libraries(mir-test-doubles-static
 
   mirserver
 
+  mir-public-test-doubles
+  mir-protected-test-doubles
   mir-test-framework-static
 
   Boost::system
@@ -147,14 +146,12 @@ target_link_libraries(mir-public-test-doubles-platform
     PkgConfig::DRM
 )
 
-add_library(
-  mir-test-doubles-platform-static STATIC
-  $<TARGET_OBJECTS:mir-public-test-doubles-platform>
-)
+add_library(mir-test-doubles-platform-static STATIC)
 
 target_link_libraries(
   mir-test-doubles-platform-static
 
+  mir-public-test-doubles-platform
   -ldl
   ${GMOCK_LIBRARIES}
   ${GMOCK_MAIN_LIBRARY}

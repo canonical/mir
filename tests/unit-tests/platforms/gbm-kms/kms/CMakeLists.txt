@@ -11,8 +11,6 @@ mir_add_wrapped_executable(mir_unit_tests_gbm-kms NOINSTALL
   ${CMAKE_CURRENT_SOURCE_DIR}/test_drm_helper.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_quirks.cpp
   ${MIR_SERVER_OBJECTS}
-  $<TARGET_OBJECTS:mirplatformgraphicsgbmkmsobjects>
-  $<TARGET_OBJECTS:mir-umock-test-framework>
 )
 
 set_property(
@@ -32,6 +30,8 @@ set_target_properties(
 target_link_libraries(
   mir_unit_tests_gbm-kms
 
+  mirplatformgraphicsgbmkmsobjects
+  mir-umock-test-framework
   mir-test-static
   mir-test-framework-static
   mir-test-doubles-static

@@ -78,6 +78,9 @@ set(
   test_signal.cpp
 )
 
+set(UNIT_TEST_REFERENCES)
+set(UMOCK_UNIT_TEST_REFERENCES)
+
 if (HAVE_PTHREAD_GETNAME_NP)
   list(APPEND UNIT_TEST_SOURCES test_thread_name.cpp)
 else()
@@ -128,8 +131,6 @@ link_directories(${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 
 mir_add_wrapped_executable(mir_unit_tests NOINSTALL
   ${UNIT_TEST_SOURCES}
-  $<TARGET_OBJECTS:mir-libinput-test-framework>
-  $<TARGET_OBJECTS:mir-test-doubles-udev>
 
   ${MIR_SERVER_OBJECTS}
   ${MIR_PLATFORM_OBJECTS}
@@ -174,12 +175,15 @@ set_target_properties(
 target_link_libraries(
   mir_unit_tests
 
+  ${UNIT_TEST_REFERENCES}
   exampleserverconfig
   mircommon
   server_platform_common
 
   mir-test-static
   mir-test-framework-static
+  mir-libinput-test-framework
+  mir-test-doubles-udev
 
   mircommon
 
@@ -193,7 +197,6 @@ target_link_libraries(
 
 mir_add_wrapped_executable(mir_umock_unit_tests NOINSTALL
   ${UMOCK_UNIT_TEST_SOURCES}
-  $<TARGET_OBJECTS:mir-umock-test-framework>
   ${MIR_SERVER_OBJECTS}
   ${MIR_PLATFORM_OBJECTS}
 )
@@ -212,11 +215,13 @@ set_target_properties(
 target_link_libraries(
   mir_umock_unit_tests
 
+  ${UMOCK_UNIT_TEST_REFERENCES}
   exampleserverconfig
   mircommon
 
   mir-test-static
   mir-test-framework-static
+  mir-umock-test-framework
 
   Boost::system
   PkgConfig::UMOCKDEV
