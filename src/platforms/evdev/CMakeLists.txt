@@ -33,8 +33,6 @@ target_link_libraries(mirplatforminputevdevobjects
 
 add_library(mirplatforminputevdev MODULE
   platform_factory.cpp
-  $<TARGET_OBJECTS:mirplatforminputevdevobjects>
-  $<TARGET_OBJECTS:mirevdevutilsobjects>
 )
 
 set_target_properties(
@@ -48,9 +46,13 @@ set_target_properties(
 )
 
 target_link_libraries(mirplatforminputevdev
-  mirplatform # udev wrapper
-  Boost::program_options
-  PkgConfig::LIBINPUT
+  PUBLIC
+    mirplatform # udev wrapper
+    mirevdevutilsobjects
+    Boost::program_options
+    PkgConfig::LIBINPUT
+  PRIVATE
+    mirplatforminputevdevobjects
 )
 
 install(TARGETS mirplatforminputevdev LIBRARY DESTINATION ${MIR_SERVER_PLATFORM_PATH})

@@ -15,18 +15,17 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/symbols.map.in
     ${CMAKE_CURRENT_BINARY_DIR}/symbols.map)
 set(symbol_map ${CMAKE_CURRENT_BINARY_DIR}/symbols.map)
 
-add_library(mirplatformserverx11 MODULE
-  $<TARGET_OBJECTS:mirplatformserverx11sharedresources>
-  $<TARGET_OBJECTS:mirplatformgraphicsx11objects>
-  $<TARGET_OBJECTS:mirplatformgraphicsx11objects-symbols>
-  $<TARGET_OBJECTS:mirplatforminputx11objects>
-  $<TARGET_OBJECTS:mirplatforminputx11objects-symbols>
-)
+add_library(mirplatformserverx11 MODULE)
 
 
 target_link_libraries(
   mirplatformserverx11
   PRIVATE
+  mirplatformserverx11sharedresources
+  mirplatformgraphicsx11objects
+  mirplatformgraphicsx11objects-symbols
+  mirplatforminputx11objects
+  mirplatforminputx11objects-symbols
   mirplatform
   PkgConfig::EGL
   PkgConfig::GLESv2
