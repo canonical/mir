@@ -25,7 +25,6 @@
 #include "mir/input/composite_event_filter.h"
 #include "mir/input/event_filter.h"
 #include "mir/main_loop.h"
-#include "mir/options/option.h"
 #include "mir/renderer/sw/pixel_source.h"
 #include "mir/scene/basic_surface.h"
 #include "mir/scene/surface.h"
@@ -37,6 +36,36 @@
 #include <list>
 
 namespace ms = mir::scene;
+namespace mc = mir::compositor;
+namespace mg = mir::graphics;
+namespace geom = mir::geometry;
+
+class BasicSurfaceClickCrashBandAid : public ms::BasicSurface
+{
+public:
+    BasicSurfaceClickCrashBandAid(
+        geom::Size size,
+        std::shared_ptr<mc::Stream> stream,
+        std::shared_ptr<mg::CursorImage> default_cursor_image,
+        std::shared_ptr<ms::SceneReport> scene_report,
+        std::shared_ptr<ObserverRegistrar<mg::DisplayConfigurationObserver>>
+            display_configuration_observer_registrar) :
+        ms::BasicSurface{
+            "locate-pointer-graphical-feedback",
+            geom::Rectangle{{-size.width.as_int() / 2, -size.height.as_int() / 2}, size},
+            mir_pointer_unconfined,
+            std::list{ms::StreamInfo(stream, geom::Displacement(0, 0))},
+            std::move(default_cursor_image),
+            std::move(scene_report),
+            std::move(display_configuration_observer_registrar)}
+    {
+    }
+
+    bool input_area_contains(geom::Point const&) const override
+    {
+        return false;
+    }
+};
 
 struct miral::LocatePointer::Self
 {
@@ -44,7 +73,7 @@ struct miral::LocatePointer::Self
     {
         struct State
         {
-            mir::geometry::PointF cursor_position{0.0f, 0.0f}; // Assumes the cursor always starts at (0, 0)
+            geom::PointF cursor_position{0.0f, 0.0f}; // Assumes the cursor always starts at (0, 0)
 
             std::weak_ptr<ms::BasicSurface> surface;
         };
@@ -70,7 +99,7 @@ struct miral::LocatePointer::Self
                 if(auto surface = s->surface.lock())
                 {
                     auto const r = surface->content_size().width.as_value() / 2;
-                    mir::geometry::Point p = {position->x.as_value() - r, position->y.as_value() - r};
+                    geom::Point p = {position->x.as_value() - r, position->y.as_value() - r};
                     surface->move_to(p);
                 }
             }
@@ -129,11 +158,11 @@ struct miral::LocatePointer::Self
         std::chrono::milliseconds delay{500};
     };
 
-    struct CircleDrawingObserver : public mir::graphics::AnimationObserver
+    struct CircleDrawingObserver : public mg::AnimationObserver
     {
-        std::weak_ptr<mir::compositor::Stream> const stream;
-        std::shared_ptr<mir::graphics::Buffer> const buffer;
-        std::shared_ptr<mir::scene::BasicSurface> const shell_surface;
+        std::shared_ptr<mir::compositor::Stream> const stream;
+        std::shared_ptr<mg::Buffer> const buffer;
+        std::shared_ptr<BasicSurfaceClickCrashBandAid> const shell_surface;
         std::shared_ptr<mir::shell::SurfaceStack> const surface_stack;
 
         struct State 
@@ -149,9 +178,9 @@ struct miral::LocatePointer::Self
         auto static constexpr animation_length = std::chrono::milliseconds{1500};
 
         CircleDrawingObserver(
-            std::weak_ptr<mir::compositor::Stream> stream,
-            std::shared_ptr<mir::graphics::Buffer> buffer,
-            std::shared_ptr<mir::scene::BasicSurface> shell_surface,
+            std::shared_ptr<mir::compositor::Stream> stream,
+            std::shared_ptr<mg::Buffer> buffer,
+            std::shared_ptr<BasicSurfaceClickCrashBandAid> shell_surface,
             std::shared_ptr<mir::shell::SurfaceStack> surface_stack) :
             stream{std::move(stream)},
             buffer{std::move(buffer)},
@@ -190,11 +219,11 @@ struct miral::LocatePointer::Self
         void draw_circle(uint8_t r, uint8_t g, uint8_t b, uint8_t a, int radius)
         {
             auto w = std::dynamic_pointer_cast<mir::renderer::software::RWMappableBuffer>(buffer)->map_writeable();
-            auto const center = mir::geometry::Point{max_radius, max_radius};
+            auto const center = geom::Point{max_radius, max_radius};
             for (size_t i = 0; i < w->len(); i += 4)
             {
                 auto index = i / 4;
-                auto p = mir::geometry::Point{index % (2 * max_radius), index / (2 * max_radius)};
+                auto p = geom::Point{index % (2 * max_radius), index / (2 * max_radius)};
                 auto dist = (p - center).length_squared();
 
                 auto circle = [dist, radius](auto value)
@@ -208,8 +237,7 @@ struct miral::LocatePointer::Self
                 w->data()[i + 3] = circle(a);
             }
 
-            if (auto const stream_ = stream.lock())
-                stream_->submit_buffer(buffer, buffer->size(), mir::geometry::RectangleD{{0, 0}, buffer->size()});
+            stream->submit_buffer(buffer, buffer->size(), geom::RectangleD{{0, 0}, buffer->size()});
         }
 
         void start_animation()
@@ -251,21 +279,18 @@ void miral::LocatePointer::operator()(mir::Server& server)
         {
             self->on_server_init(server);
             {
-                auto const size = mir::geometry::Size(100, 100);
-                auto stream = std::make_shared<mir::compositor::Stream>();
+                auto const size = geom::Size(100, 100);
+                auto stream = std::make_shared<mc::Stream>();
 
-                auto shell_surface = std::make_shared<ms::BasicSurface>(
-                    "locate-pointer-graphical-feedback",
-                    mir::geometry::Rectangle{{-size.width.as_int() / 2, -size.height.as_int() / 2}, size},
-                    mir_pointer_unconfined,
-                    std::list{ms::StreamInfo(stream, mir::geometry::Displacement(0, 0))},
+                auto shell_surface = std::make_shared<BasicSurfaceClickCrashBandAid>(
+                    size,
+                    stream,
                     server.the_default_cursor_image(),
                     server.the_scene_report(),
                     server.the_display_configuration_observer_registrar());
 
                 auto buffer = server.the_buffer_allocator()->alloc_software_buffer(size, mir_pixel_format_abgr_8888);
-                self->observer = std::make_shared<Self::CircleDrawingObserver>(
-                    stream, buffer, shell_surface, server.the_surface_stack());
+                self->observer = std::make_shared<Self::CircleDrawingObserver>(stream, buffer, shell_surface, server.the_surface_stack());
                 self->state.lock()->pointer_position_recorder->state.lock()->surface = shell_surface;
 
                 server.the_animation_driver()->register_interest(self->observer);
