@@ -62,9 +62,10 @@ private:
     static constexpr auto grace_period_percentage = 0.1f;
     static constexpr auto hover_delay_percentage = 1.0f - grace_period_percentage;
 
+    class CursorObserver;
     struct MutableState 
     {
-        std::unique_ptr<time::Alarm> click_dispatcher;
+        std::optional<std::unique_ptr<time::Alarm>> click_dispatcher;
 
         // We repeatedly record the most recent cursor position. Once the grace
         // period is up, we "pin" this position into `hover_click_origin`, which is

@@ -47,7 +47,7 @@ public:
         // shouldn't be handled by later transformers, whether the transformer is
         // accumulating events for later dispatching or has immediately dispatched
         // an event is an implementation detail of the transformer
-        virtual bool transform_input_event(EventDispatcher const&, EventBuilder*,  MirEvent const&) = 0;
+        virtual bool transform_input_event(EventDispatcher const&, EventBuilder*, MirEvent const&) = 0;
     };
 
     InputEventTransformer(std::shared_ptr<Seat> const& seat, std::shared_ptr<time::Clock> const& clock);
