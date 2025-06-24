@@ -11,6 +11,7 @@ behavior
 Binutils
 Broadcom
 buf
+chroot
 cgroup
 ci
 classDiagram
@@ -114,6 +115,7 @@ lp
 lttng
 LTTng
 LWN
+LXD
 maintainer's
 maximize
 minimizing
@@ -185,6 +187,7 @@ Sanitizer
 sanitizers
 Sanitizers
 SBCs
+Sbuild
 SceneChangeNotifiers
 screencast
 screencasting
@@ -203,6 +206,8 @@ sys
 testflinger
 Testflinger
 TilingWindowManagerPolicy
+tmate
+tmate’s
 toolchain
 toolchains
 toolkits
