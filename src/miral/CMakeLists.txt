@@ -94,6 +94,7 @@ add_library(miral-external OBJECT
     simulated_secondary_click.cpp       ${miral_include}/miral/simulated_secondary_click.h
     live_config.cpp                     ${miral_include}/miral/live_config.h
     live_config_ini_file.cpp            ${miral_include}/miral/live_config_ini_file.h
+    hover_click.cpp                     ${miral_include}/miral/hover_click.h
 )
 
 add_library(miral SHARED

@@ -39,7 +39,11 @@ mi::InputEventTransformer::InputEventTransformer(
     std::shared_ptr<Seat> const& seat, std::shared_ptr<time::Clock> const& clock) :
     seat{seat},
     clock{clock},
-    builder{std::make_unique<DefaultEventBuilder>(id, clock)}
+    builder{std::make_unique<DefaultEventBuilder>(id, clock)},
+    dispatcher{[this](auto event)
+               {
+                   this->seat->dispatch_event(event);
+               }}
 {
     struct StubDevice : public Device
     {
@@ -110,8 +114,7 @@ mi::InputEventTransformer::InputEventTransformer(
 
 mir::input::InputEventTransformer::~InputEventTransformer() = default;
 
-bool mi::InputEventTransformer::transform(
-    MirEvent const& event, EventBuilder* builder, EventDispatcher const& dispatcher)
+bool mi::InputEventTransformer::transform(MirEvent const& event)
 {
     std::lock_guard lock{mutex};
 
@@ -135,7 +138,7 @@ bool mi::InputEventTransformer::transform(
     {
         auto const& t = it.lock();
 
-        if (t->transform_input_event(dispatcher, builder, event))
+        if (t->transform_input_event(dispatcher, builder.get(), event))
         {
             handled = true;
             break;
@@ -192,7 +195,7 @@ void mir::input::InputEventTransformer::remove_device(Device const& device)
 
 void mir::input::InputEventTransformer::dispatch_event(std::shared_ptr<MirEvent> const& event)
 {
-    if(!transform(*event, builder.get(), [this](auto event) { seat->dispatch_event(event); }))
+    if(!transform(*event))
         seat->dispatch_event(event); 
 }
 

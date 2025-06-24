@@ -46,6 +46,7 @@ class Clock;
 namespace shell
 {
 class MouseKeysTransformer;
+class BasicHoverClickTransformer;
 class BasicAccessibilityManager : public AccessibilityManager
 {
 public:
@@ -54,7 +55,8 @@ public:
         bool enable_key_repeat,
         std::shared_ptr<mir::graphics::Cursor> const& cursor,
         std::shared_ptr<MouseKeysTransformer> const& mousekeys_transformer,
-        std::shared_ptr<SimulatedSecondaryClickTransformer> const& simulated_secondary_click_transformer);
+        std::shared_ptr<SimulatedSecondaryClickTransformer> const& simulated_secondary_click_transformer,
+        std::shared_ptr<shell::HoverClickTransformer> const& hover_click_transformer);
     ~BasicAccessibilityManager();
 
     void register_keyboard_helper(std::shared_ptr<shell::KeyboardHelper> const&) override;
@@ -73,6 +75,8 @@ public:
     void simulated_secondary_click_enabled(bool enabled) override;
     auto simulated_secondary_click() -> SimulatedSecondaryClickTransformer& override;
 
+    void hover_click_enabled(bool enabled) override;
+    auto hover_click() -> HoverClickTransformer& override;
 private:
     struct MutableState {
         // 25 rate and 600 delay are the default in Weston and Sway
@@ -81,7 +85,7 @@ private:
 
         std::vector<std::shared_ptr<shell::KeyboardHelper>> keyboard_helpers;
 
-        bool mousekeys_on{false}, ssc_on{false};
+        bool mousekeys_on{false}, ssc_on{false}, hover_click_on{false};
     };
 
     Synchronised<MutableState> mutable_state;
@@ -91,6 +95,7 @@ private:
     std::shared_ptr<input::InputEventTransformer> const event_transformer;
     std::shared_ptr<MouseKeysTransformer> const mouse_keys_transformer;
     std::shared_ptr<SimulatedSecondaryClickTransformer> const simulated_secondary_click_transformer;
+    std::shared_ptr<HoverClickTransformer> const hover_click_transformer;
 };
 }
 }
