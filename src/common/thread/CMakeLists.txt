@@ -18,8 +18,8 @@ add_library(mirsharedthread OBJECT
   signal_blocker.cpp
 )
 
-list(APPEND MIR_COMMON_SOURCES
-  $<TARGET_OBJECTS:mirsharedthread>
+list(APPEND MIR_COMMON_REFERENCES
+  mirsharedthread
 )
 
-set(MIR_COMMON_SOURCES ${MIR_COMMON_SOURCES} PARENT_SCOPE)
+set(MIR_COMMON_REFERENCES ${MIR_COMMON_REFERENCES} PARENT_SCOPE)

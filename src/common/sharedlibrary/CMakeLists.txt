@@ -45,14 +45,14 @@ add_library(mirsharedsharedlibrary OBJECT
   shared_library_prober.cpp
 )
 
-list(APPEND MIR_COMMON_SOURCES
-  $<TARGET_OBJECTS:mirsharedsharedlibrary>
+target_link_libraries(mirsharedsharedlibrary
+  PUBLIC
+    Boost::filesystem
+    dl
 )
 
 list(APPEND MIR_COMMON_REFERENCES
-  Boost::filesystem
-  dl
+  mirsharedsharedlibrary
 )
 
-set(MIR_COMMON_SOURCES ${MIR_COMMON_SOURCES} PARENT_SCOPE)
 set(MIR_COMMON_REFERENCES ${MIR_COMMON_REFERENCES} PARENT_SCOPE)
