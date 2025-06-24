@@ -153,6 +153,28 @@ and at runtime, [testflinger](https://github.com/canonical/testflinger) dispatch
 device under test, while [test-observer](https://github.com/canonical/test_observer) collects the
 results.
 
+## Debugging
+
+### GitHub Actions
+
+When in need of hands-on debugging, our GitHub workflows have a ["Setup tmate" step](https://github.com/canonical/mir/blob/92fc772bc32f921c3a1cde7f17abb43a3d482f55/.github/workflows/spread.yml#L123-L127).
+It allows for SSH access to the runner on failed runs. To use it, restart a failing job **with debug logging** enabled and wait for the step to fail. The [tmate action](https://github.com/marketplace/actions/debugging-with-tmate) will then repeatedly log:
+
+```
+SSH: ssh <id>@<host>
+or: ssh -i <path-to-private-SSH-key> <id>@<host>
+```
+
+Use the provided `ssh` command to access the runner. You'll be dropped in the default working directory and environment. Use "Ctrl+B", "c" to create a new window within the tmate session - see [tmate's man page](https://manpages.ubuntu.com/manpages/noble/man1/tmate.1.html#key%20bindings) for more key bindings.
+
+#### Spread
+
+When Spread is used, the actual build runs in LXD containers, use `lxc ls` and `lxc shell <container>` to get inside.
+
+#### Sbuild
+
+Sbuild adds another layer, a chroot environment. Use `schroot --list --all-sessions` to list the available sessions and `schroot --run --chroot session:<id>` to access it. The build is in `/build`. To run many Mir tests you'll need to `export XDG_RUNTIME_DIR=/tmp`.
+
 ## Summary
 
 As shown above, Mir is being tested quite extensively on a large number of environments. We're
