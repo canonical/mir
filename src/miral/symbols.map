@@ -6,6 +6,8 @@ global:
     miral::AddInitCallback::operator*;
     miral::AppendEventFilter::AppendEventFilter*;
     miral::AppendEventFilter::operator*;
+    miral::AppendKeyboardEventFilter::AppendKeyboardEventFilter*;
+    miral::AppendKeyboardEventFilter::operator*;
     miral::ApplicationAuthorizer::?ApplicationAuthorizer*;
     miral::ApplicationAuthorizer::ApplicationAuthorizer*;
     miral::ApplicationAuthorizer::operator*;
