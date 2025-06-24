@@ -21,121 +21,125 @@
 #include "mir/main_loop.h"
 
 namespace msh = mir::shell;
+namespace mi = mir::input;
+namespace mt = mir::time;
+namespace mev = mir::events;
+
+class msh::BasicHoverClickTransformer::CursorObserver : public mi::CursorObserver
+{
+public:
+    CursorObserver(
+        Synchronised<MutableState>& mutable_state,
+        std::unique_ptr<time::Alarm> hover_initializer) :
+        mutable_state{mutable_state},
+        hover_initializer{std::move(hover_initializer)}
+    {
+    }
+
+    void cursor_moved_to(float abs_x, float abs_y) override
+    {
+        auto const state = mutable_state.lock();
+        state->potential_position = {abs_x, abs_y};
+
+        // If a click already occured in the past. Only start a new hover click if
+        // the cursor moved "significantly" from the last position.
+        auto const hover_click_origin = state->hover_click_origin;
+        auto const cancel_displacement = state->cancel_displacement_threshold;
+
+        if (hover_click_origin)
+        {
+            auto const distance_from_last_click =
+                (*hover_click_origin - state->potential_position).length_squared();
+            auto const reclick_threshold = state->reclick_displacement_threshold;
+
+            // If we've moved too far, cancel the click.
+            if (distance_from_last_click >= cancel_displacement * cancel_displacement &&
+                state->click_dispatcher.value()->state() == time::Alarm::State::pending)
+            {
+                state->click_dispatcher.value()->cancel();
+                state->on_hover_cancel();
+                return;
+            }
+
+            // If we've moved too little, don't dispatch a new click
+            if (distance_from_last_click <= (reclick_threshold * reclick_threshold))
+                return;
+        }
+
+        // Cancel and reschedule to give users a grace period before the hover
+        // click actually starts. This also saves us from calling the
+        // start/cancel callbacks erroneously.
+        if (state->click_dispatcher)
+        {
+            hover_initializer->cancel();
+            auto const grace_period = std::chrono::duration_cast<std::chrono::milliseconds>(
+                state->hover_duration * grace_period_percentage);
+            hover_initializer->reschedule_in(grace_period);
+        }
+    }
+
+    void pointer_usable() override
+    {
+    }
+
+    void pointer_unusable() override
+    {
+    }
+
+    Synchronised<MutableState>& mutable_state;
+    std::unique_ptr<mt::Alarm> const hover_initializer;
+};
 
 msh::BasicHoverClickTransformer::BasicHoverClickTransformer(
     std::shared_ptr<MainLoop> const& main_loop,
     std::shared_ptr<input::CursorObserverMultiplexer> const& cursor_observer_multiplexer) :
     main_loop{main_loop},
-    cursor_observer{[&]
-                    {
-                        struct CursorObserver : public input::CursorObserver
-                        {
-                            CursorObserver(
-                                mir::Synchronised<MutableState>& mutable_state,
-                                std::unique_ptr<time::Alarm> hover_initializer) :
-                                mutable_state{mutable_state},
-                                hover_initializer{std::move(hover_initializer)}
-                            {
-                            }
-
-                            void cursor_moved_to(float abs_x, float abs_y) override
-                            {
-                                auto const state = mutable_state.lock();
-                                state->potential_position = {abs_x, abs_y};
-
-                                // If a click already occured in the past. Only start a new hover click if
-                                // the cursor moved "significantly" from the last position.
-                                auto const hover_click_origin = state->hover_click_origin;
-                                auto const cancel_displacement = state->cancel_displacement_threshold;
-
-                                if (hover_click_origin)
-                                {
-                                    auto const distance_from_last_click =
-                                        (*hover_click_origin - state->potential_position).length_squared();
-                                    auto const reclick_threshold = state->reclick_displacement_threshold;
-
-                                    // If we've moved too far, cancel the click.
-                                    if (distance_from_last_click >= cancel_displacement * cancel_displacement &&
-                                        state->click_dispatcher->state() == time::Alarm::State::pending)
-                                    {
-                                        state->click_dispatcher->cancel();
-                                        state->on_hover_cancel();
-                                        return;
-                                    }
-
-                                    // If we've moved too little, don't dispatch a new click
-                                    if (distance_from_last_click <= (reclick_threshold * reclick_threshold))
-                                        return;
-                                }
-
-                                // Cancel and reschedule to give users a grace period before the hover
-                                // click actually starts. This also saves us from calling the
-                                // start/cancel callbacks erroneously.
-                                hover_initializer->cancel();
-                                auto const grace_period = std::chrono::duration_cast<std::chrono::milliseconds>(
-                                    state->hover_duration * grace_period_percentage);
-                                hover_initializer->reschedule_in(grace_period);
-                            }
-
-                            void pointer_usable() override
-                            {
-                            }
-
-                            void pointer_unusable() override
-                            {
-                            }
-
-                            mir::Synchronised<MutableState>& mutable_state;
-                            std::unique_ptr<time::Alarm> const hover_initializer;
-                        };
-
-                        return std::make_shared<CursorObserver>(mutable_state, initialize_hover_initializer(main_loop));
-                    }()}
+    cursor_observer{std::make_shared<CursorObserver>(mutable_state, initialize_hover_initializer(main_loop))}
 {
     cursor_observer_multiplexer->register_interest(cursor_observer);
 }
 
 bool msh::BasicHoverClickTransformer::transform_input_event(
-    mir::input::InputEventTransformer::EventDispatcher const& dispatcher,
-    mir::input::EventBuilder* builder,
+    mi::InputEventTransformer::EventDispatcher const& dispatcher,
+    mi::EventBuilder* builder,
     MirEvent const&)
 {
     initialize_click_dispatcher(dispatcher, *builder);
     return false;
 }
 
-void mir::shell::BasicHoverClickTransformer::hover_duration(std::chrono::milliseconds delay)
+void msh::BasicHoverClickTransformer::hover_duration(std::chrono::milliseconds delay)
 {
     mutable_state.lock()->hover_duration = delay;
 }
 
-void mir::shell::BasicHoverClickTransformer::cancel_displacement_threshold(int displacement)
+void msh::BasicHoverClickTransformer::cancel_displacement_threshold(int displacement)
 {
     mutable_state.lock()->cancel_displacement_threshold = displacement;
 }
 
-void mir::shell::BasicHoverClickTransformer::reclick_displacement_threshold(int displacement)
+void msh::BasicHoverClickTransformer::reclick_displacement_threshold(int displacement)
 {
     mutable_state.lock()->reclick_displacement_threshold = displacement;
 }
 
-void mir::shell::BasicHoverClickTransformer::on_hover_start(std::function<void()>&& on_hover_start)
+void msh::BasicHoverClickTransformer::on_hover_start(std::function<void()>&& on_hover_start)
 {
     mutable_state.lock()->on_hover_start = std::move(on_hover_start);
 }
 
-void mir::shell::BasicHoverClickTransformer::on_hover_cancel(std::function<void()>&& on_hover_cancelled)
+void msh::BasicHoverClickTransformer::on_hover_cancel(std::function<void()>&& on_hover_cancelled)
 {
     mutable_state.lock()->on_hover_cancel = std::move(on_hover_cancelled);
 }
 
-void mir::shell::BasicHoverClickTransformer::on_click_dispatched(std::function<void()>&& on_click_dispatched)
+void msh::BasicHoverClickTransformer::on_click_dispatched(std::function<void()>&& on_click_dispatched)
 {
     mutable_state.lock()->on_click_dispatched = std::move(on_click_dispatched);
 }
 
-void mir::shell::BasicHoverClickTransformer::initialize_click_dispatcher(
-    mir::input::InputEventTransformer::EventDispatcher const& dispatcher, mir::input::EventBuilder& builder)
+void msh::BasicHoverClickTransformer::initialize_click_dispatcher(
+    mi::InputEventTransformer::EventDispatcher const& dispatcher, mi::EventBuilder& builder)
 {
     auto state = mutable_state.lock();
     if (!state->click_dispatcher)
@@ -150,8 +154,8 @@ void mir::shell::BasicHoverClickTransformer::initialize_click_dispatcher(
                     std::nullopt,
                     {0, 0},
                     mir_pointer_axis_source_none,
-                    mir::events::ScrollAxisH{},
-                    mir::events::ScrollAxisV{});
+                    mev::ScrollAxisH{},
+                    mev::ScrollAxisV{});
 
                 auto up = builder.pointer_event(
                     std::nullopt,
@@ -160,8 +164,8 @@ void mir::shell::BasicHoverClickTransformer::initialize_click_dispatcher(
                     std::nullopt,
                     {0, 0},
                     mir_pointer_axis_source_none,
-                    mir::events::ScrollAxisH{},
-                    mir::events::ScrollAxisV{});
+                    mev::ScrollAxisH{},
+                    mev::ScrollAxisV{});
 
                 dispatcher(std::move(down));
                 dispatcher(std::move(up));
@@ -173,8 +177,8 @@ void mir::shell::BasicHoverClickTransformer::initialize_click_dispatcher(
     }
 }
 
-auto mir::shell::BasicHoverClickTransformer::initialize_hover_initializer(std::shared_ptr<mir::MainLoop> const& main_loop)
-    -> std::unique_ptr<mir::time::Alarm>
+auto msh::BasicHoverClickTransformer::initialize_hover_initializer(std::shared_ptr<MainLoop> const& main_loop)
+    -> std::unique_ptr<mt::Alarm>
 {
     return main_loop->create_alarm(
         [&]
@@ -184,7 +188,7 @@ auto mir::shell::BasicHoverClickTransformer::initialize_hover_initializer(std::s
             auto const grace_period =
                 std::chrono::duration_cast<std::chrono::milliseconds>(state->hover_duration * grace_period_percentage);
 
-            state->click_dispatcher->reschedule_in(state->hover_duration - grace_period);
+            state->click_dispatcher.value()->reschedule_in(state->hover_duration - grace_period);
             state->on_hover_start();
         });
 }

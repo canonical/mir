@@ -148,7 +148,7 @@ bool mi::InputEventTransformer::transform(MirEvent const& event)
     return handled;
 }
 
-void mi::InputEventTransformer::append(std::weak_ptr<mi::InputEventTransformer::Transformer> const& transformer)
+void mi::InputEventTransformer::append(std::weak_ptr<Transformer> const& transformer)
 {
     std::lock_guard lock{mutex};
 
@@ -166,7 +166,7 @@ void mi::InputEventTransformer::append(std::weak_ptr<mi::InputEventTransformer::
     input_transformers.push_back(transformer);
 }
 
-void mi::InputEventTransformer::remove(std::shared_ptr<mi::InputEventTransformer::Transformer> const& transformer)
+void mi::InputEventTransformer::remove(std::shared_ptr<Transformer> const& transformer)
 {
     std::lock_guard lock{mutex};
     auto [remove_start, remove_end] = std::ranges::remove(
