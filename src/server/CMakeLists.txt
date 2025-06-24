@@ -84,26 +84,27 @@ set_property(
     PROPERTY COMPILE_OPTIONS -Wno-variadic-macros)
 
 set(MIR_SERVER_OBJECTS
-  $<TARGET_OBJECTS:mirserverobjects>
-  $<TARGET_OBJECTS:mirinput>
-  $<TARGET_OBJECTS:mirscene>
-  $<TARGET_OBJECTS:mircompositor>
-  $<TARGET_OBJECTS:mirgraphics>
-  $<TARGET_OBJECTS:mirfrontend-wayland>
-  $<TARGET_OBJECTS:mirfrontend-xwayland>
-  $<TARGET_OBJECTS:mirshell>
-  $<TARGET_OBJECTS:mirshelldecoration>
-  $<TARGET_OBJECTS:mirlttng>
-  $<TARGET_OBJECTS:mirreport>
-  $<TARGET_OBJECTS:mirlogging>
-  $<TARGET_OBJECTS:mirnullreport>
-  $<TARGET_OBJECTS:mirconsole>
-
-  $<TARGET_OBJECTS:mirrenderergl>
-  $<TARGET_OBJECTS:mirgl>
 )
 
 set(MIR_SERVER_REFERENCES
+  mirserverobjects
+  mirinput
+  mirscene
+  mircompositor
+  mirgraphics
+  mirfrontend-wayland
+  mirfrontend-xwayland
+  mirshell
+  mirshelldecoration
+  mirlttng
+  mirreport
+  mirlogging
+  mirnullreport
+  mirconsole
+
+  mirrenderergl
+  mirgl
+
   PkgConfig::DRM
   PkgConfig::EGL
   PkgConfig::GLESv2
@@ -117,9 +118,7 @@ set(MIR_SERVER_REFERENCES
 set(MIR_SERVER_OBJECTS ${MIR_SERVER_OBJECTS} PARENT_SCOPE)
 set(MIR_SERVER_REFERENCES ${MIR_SERVER_REFERENCES} PARENT_SCOPE)
 
-add_library(mirserver SHARED
-  ${MIR_SERVER_OBJECTS}
-)
+add_library(mirserver SHARED)
 
 target_link_libraries(mirserver
   PUBLIC
@@ -128,6 +127,8 @@ target_link_libraries(mirserver
     mirplatform
     mircommon
     mirwayland
+
+    ${MIR_SERVER_REFERENCES}
 
     server_platform_common
     Boost::iostreams
