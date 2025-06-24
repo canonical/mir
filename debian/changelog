@@ -1,3 +1,46 @@
+mir (2.21.0) UNRELEASED; urgency=medium
+
+  * New upstream release 2.21.0
+
+    - ABI summary:
+      . miral ABI unchanged at 7
+      . mircommon ABI unchanged at 11
+      . mircore ABI unchanged at 2
+      . miroil ABI unchanged at 7
+      . mirplatform ABI bumped to 31
+      . mirserver ABI bumped to 64
+      . mirwayland ABI unchanged at 5
+      . mirplatformgraphics ABI unchanged at 23
+      . mirinputplatform ABI unchanged at 10
+
+    - Enhancements:
+      . Cursor Scaling Support (#3735)
+      . Implement mousekeys (#3757)
+      . Add key repeat rate/delay config options and properly merge config settings (#3830)
+      . feature: add the ability to associate a layout with custom user data (#3869)
+      . static_display_config: add display properties to output (#3903)
+      . feature: implement xdg toplevel tiled states (#3920)
+      . Update of core wayland extensions (#3927)
+      . feature: refactor `BasicSurface` so that it can be used internally by shell authors (#3948)
+      . Check DRM for supported formats (#3950)
+      . Add an output filter for the purposes of accessibility (#3911)
+
+    - Bugs fixed:
+      . Texture allocation happens with an incorrect context for the renderer that needs it (#3933)
+
+    - Documentation:
+      . Screencasting how-to (#3874)
+      . How to speed up compilation using ccache and mold (#3946)
+
+    - Testing:
+      . add tests for `FloatingWindowManagementPolicy` and expose externally
+        (#3840 #3848 #3878 #3879 #3913)
+
+    - Deprecations:
+      . Deprecate "persistent" surface IDs (#3852)
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Thu, 29 May 2025 12:30:00 +0000
+
 mir (2.20.2) UNRELEASED; urgency=medium
 
   * New upstream release 2.20.2

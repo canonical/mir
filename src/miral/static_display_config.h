@@ -119,8 +119,6 @@ private:
 
     static void serialize_output_configuration(
         std::ostream& out, mir::graphics::UserDisplayConfigurationOutput const& conf_output);
-    static void serialize_display_info(
-        std::ostream& out, mir::graphics::UserDisplayConfigurationOutput const& conf_output);
 };
 
 class ReloadingYamlFileDisplayConfig : public YamlFileDisplayConfig
