@@ -37,6 +37,7 @@ target_link_libraries(
   mir-test-doubles-static
   mir-test-doubles-platform-static
   mirsharedgbmservercommon-static
+  ${MIR_SERVER_REFERENCES}
 
   PkgConfig::DRM
   PkgConfig::GBM
