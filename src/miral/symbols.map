@@ -409,6 +409,7 @@ global:
     non-virtual?thunk?to?miral::WindowManagementPolicy::advise_state_change*;
     typeinfo?for?miral::AddInitCallback;
     typeinfo?for?miral::AppendEventFilter;
+    typeinfo?for?miral::AppendKeyboardEventFilter;
     typeinfo?for?miral::ApplicationAuthorizer;
     typeinfo?for?miral::ApplicationCredentials;
     typeinfo?for?miral::ApplicationInfo;
