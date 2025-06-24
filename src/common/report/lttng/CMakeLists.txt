@@ -6,8 +6,8 @@ add_library(mirsharedlttng OBJECT
   tracepoint_provider.cpp
 )
 
-list(APPEND MIR_COMMON_SOURCES
-  $<TARGET_OBJECTS:mirsharedlttng>
+list(APPEND MIR_COMMON_REFERENCES
+  mirsharedlttng
 )
 
-set(MIR_COMMON_SOURCES ${MIR_COMMON_SOURCES} PARENT_SCOPE)
+set(MIR_COMMON_REFERENCES ${MIR_COMMON_REFERENCES} PARENT_SCOPE)
