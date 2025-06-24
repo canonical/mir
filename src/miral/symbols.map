@@ -542,6 +542,7 @@ global:
     miral::DisplayConfiguration::layout_userdata_builder*;
     miral::HoverClick::HoverClick*;
     miral::HoverClick::cancel_displacement_threshold*;
+    miral::HoverClick::reclick_displacement_threshold*;
     miral::HoverClick::disable*;
     miral::HoverClick::enable*;
     miral::HoverClick::hover_duration*;

@@ -47,6 +47,7 @@ public:
 
     void hover_duration(std::chrono::milliseconds delay) override;
     void cancel_displacement_threshold(int displacement) override;
+    void reclick_displacement_threshold(int displacement) override;
 
     void on_hover_start(std::function<void()>&& on_hover_start) override;
     void on_hover_cancel(std::function<void()>&& on_hover_cancelled) override;
@@ -60,7 +61,6 @@ private:
 
     static constexpr auto grace_period_percentage = 0.1f;
     static constexpr auto hover_delay_percentage = 1.0f - grace_period_percentage;
-    static constexpr auto reclick_displacement_threshold{10};
 
     struct MutableState 
     {
@@ -75,6 +75,7 @@ private:
 
         std::chrono::milliseconds hover_duration{1000};
         int cancel_displacement_threshold{10};
+        int reclick_displacement_threshold{5};
         std::function<void()> on_hover_start{[] {}};
         std::function<void()> on_hover_cancel{[] {}};
         std::function<void()> on_click_dispatched{[] {}};

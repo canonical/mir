@@ -94,6 +94,7 @@ struct MockHoverClickTransformer : public mir::shell::HoverClickTransformer
     MockHoverClickTransformer() = default;
     MOCK_METHOD(void, hover_duration,(std::chrono::milliseconds delay), (override));
     MOCK_METHOD(void, cancel_displacement_threshold,(int displacement), (override));
+    MOCK_METHOD(void, reclick_displacement_threshold,(int displacement), (override));
     MOCK_METHOD(void, on_hover_start,(std::function<void()>&& on_hover_start), (override));
     MOCK_METHOD(void, on_hover_cancel,(std::function<void()>&& on_hover_cancelled), (override));
     MOCK_METHOD(void, on_click_dispatched,(std::function<void()>&& on_click_dispatched), (override));

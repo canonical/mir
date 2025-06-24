@@ -28,6 +28,7 @@ class HoverClickTransformer : public input::InputEventTransformer::Transformer
 public:
     virtual void hover_duration(std::chrono::milliseconds delay) = 0;
     virtual void cancel_displacement_threshold(int displacement) = 0;
+    virtual void reclick_displacement_threshold(int displacement) = 0;
 
     virtual void on_hover_start(std::function<void()>&& on_hover_start) = 0;
     virtual void on_hover_cancel(std::function<void()>&& on_hover_cancelled) = 0;

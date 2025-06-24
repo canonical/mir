@@ -52,6 +52,11 @@ public:
     // Configures the distance in pixels the pointer has to move from the
     // initial hover click position to cancel it.
     HoverClick& cancel_displacement_threshold(int displacement);
+    
+    // Configures the distance in pixels the pointer has to move from the the
+    // last hover click or hover click cancel position to initiate a new hover
+    // click
+    HoverClick& reclick_displacement_threshold(int displacement);
 
     /// Called shortly after a hover click is scheduled. Should be used to
     /// indicate to the user that a hover click has begun.

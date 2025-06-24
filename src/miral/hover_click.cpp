@@ -40,6 +40,7 @@ struct miral::HoverClick::Self
 
         std::chrono::milliseconds hover_duration{1000};
         int cancel_displacement_threshold{10};
+        int reclick_displacement_threshold{5};
         std::function<void()> on_hover_start{[] {}};
         std::function<void()> on_hover_cancel{[] {}};
         std::function<void()> on_click_dispatched{[] {}};
@@ -94,6 +95,16 @@ miral::HoverClick& miral::HoverClick::cancel_displacement_threshold(int displace
     return *this;
 }
 
+miral::HoverClick& miral::HoverClick::reclick_displacement_threshold(int displacement)
+{
+    if(auto const accessibility_manager = self->accessibility_manager.lock())
+        accessibility_manager->hover_click().reclick_displacement_threshold(displacement);
+    else
+        self->state.lock()->reclick_displacement_threshold = displacement;
+
+    return *this;
+}
+
 miral::HoverClick& miral::HoverClick::on_hover_start(std::function<void()> && on_hover_start)
 {
     if(auto const accessibility_manager = self->accessibility_manager.lock())
@@ -141,6 +152,7 @@ void miral::HoverClick::operator()(mir::Server& server)
                 auto& hc = accessibility_manager->hover_click();
                 hc.hover_duration(state->hover_duration);
                 hc.cancel_displacement_threshold(state->cancel_displacement_threshold);
+                hc.reclick_displacement_threshold(state->reclick_displacement_threshold);
                 hc.on_hover_start(std::move(state->on_hover_start));
                 hc.on_hover_cancel(std::move(state->on_hover_cancel));
                 hc.on_click_dispatched(std::move(state->on_click_dispatched));

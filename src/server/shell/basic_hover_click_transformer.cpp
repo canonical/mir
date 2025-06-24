@@ -52,7 +52,7 @@ msh::BasicHoverClickTransformer::BasicHoverClickTransformer(
                                 {
                                     auto const distance_from_last_click =
                                         (*hover_click_origin - state->potential_position).length_squared();
-                                    auto const reclick_threshold = reclick_displacement_threshold;
+                                    auto const reclick_threshold = state->reclick_displacement_threshold;
 
                                     // If we've moved too far, cancel the click.
                                     if (distance_from_last_click >= cancel_displacement * cancel_displacement &&
@@ -112,6 +112,11 @@ void mir::shell::BasicHoverClickTransformer::hover_duration(std::chrono::millise
 void mir::shell::BasicHoverClickTransformer::cancel_displacement_threshold(int displacement)
 {
     mutable_state.lock()->cancel_displacement_threshold = displacement;
+}
+
+void mir::shell::BasicHoverClickTransformer::reclick_displacement_threshold(int displacement)
+{
+    mutable_state.lock()->reclick_displacement_threshold = displacement;
 }
 
 void mir::shell::BasicHoverClickTransformer::on_hover_start(std::function<void()>&& on_hover_start)
