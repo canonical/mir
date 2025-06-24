@@ -2,8 +2,6 @@ add_subdirectory("server")
 
 mir_add_wrapped_executable(mir_unit_tests_eglstream-kms NOINSTALL
   ${EGLSTREAM_KMS_UNIT_TEST_SOURCES}
-  ${MIR_PLATFORM_OBJECTS}
-  ${MIR_SERVER_OBJECTS}
 )
 
 target_link_libraries(

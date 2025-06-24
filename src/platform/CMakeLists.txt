@@ -11,9 +11,6 @@ set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 add_compile_definitions(MIR_SERVER_PLATFORM_PATH="${MIR_SERVER_PLATFORM_PATH}")
 add_compile_definitions(MIR_SERVER_GRAPHICS_PLATFORM_VERSION="${MIR_SERVER_GRAPHICS_PLATFORM_VERSION}")
 
-set(MIR_PLATFORM_OBJECTS
-)
-
 set(MIR_PLATFORM_REFERENCES
   PkgConfig::EGL
   PkgConfig::GLESv2
@@ -27,7 +24,6 @@ add_subdirectory(graphics/)
 add_subdirectory(options)
 add_subdirectory(udev)
 
-set(MIR_PLATFORM_OBJECTS ${MIR_PLATFORM_OBJECTS} PARENT_SCOPE)
 set(MIR_PLATFORM_REFERENCES ${MIR_PLATFORM_REFERENCES} PARENT_SCOPE)
 
 add_library(mirplatform SHARED
