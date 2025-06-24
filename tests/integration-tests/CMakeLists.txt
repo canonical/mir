@@ -28,8 +28,6 @@ add_subdirectory(input/)
 link_directories(${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 mir_add_wrapped_executable(mir_integration_tests NOINSTALL
   ${INTEGRATION_TESTS_SRCS}
-  ${MIR_SERVER_OBJECTS}
-  ${MIR_PLATFORM_OBJECTS}
 )
 
 if (MIR_USE_PRECOMPILED_HEADERS)

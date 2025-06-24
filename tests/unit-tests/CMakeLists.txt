@@ -132,9 +132,6 @@ link_directories(${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 
 mir_add_wrapped_executable(mir_unit_tests NOINSTALL
   ${UNIT_TEST_SOURCES}
-
-  ${MIR_SERVER_OBJECTS}
-  ${MIR_PLATFORM_OBJECTS}
 )
 
 set_property(
@@ -198,8 +195,6 @@ target_link_libraries(
 
 mir_add_wrapped_executable(mir_umock_unit_tests NOINSTALL
   ${UMOCK_UNIT_TEST_SOURCES}
-  ${MIR_SERVER_OBJECTS}
-  ${MIR_PLATFORM_OBJECTS}
 )
 
 string(REGEX MATCH "^[0-9]*\.[0-9]*" UMOCKDEV_VERSION_MINOR ${UMOCKDEV_VERSION})

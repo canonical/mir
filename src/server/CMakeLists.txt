@@ -83,9 +83,6 @@ set_property(
     SOURCE glib_main_loop.cpp glib_main_loop_sources.cpp default_server_configuration.cpp
     PROPERTY COMPILE_OPTIONS -Wno-variadic-macros)
 
-set(MIR_SERVER_OBJECTS
-)
-
 set(MIR_SERVER_REFERENCES
   mirserverobjects
   mirinput
@@ -115,7 +112,6 @@ set(MIR_SERVER_REFERENCES
   PkgConfig::LTTNG_UST
 )
 
-set(MIR_SERVER_OBJECTS ${MIR_SERVER_OBJECTS} PARENT_SCOPE)
 set(MIR_SERVER_REFERENCES ${MIR_SERVER_REFERENCES} PARENT_SCOPE)
 
 add_library(mirserver SHARED)
