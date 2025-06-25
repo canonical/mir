@@ -207,7 +207,7 @@ testflinger
 Testflinger
 TilingWindowManagerPolicy
 tmate
-tmate’s
+tmate's
 toolchain
 toolchains
 toolkits
