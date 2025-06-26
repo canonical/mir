@@ -407,7 +407,6 @@ global:
     non-virtual?thunk?to?miral::WindowManagementPolicy::advise_state_change*;
     typeinfo?for?miral::AddInitCallback;
     typeinfo?for?miral::AppendEventFilter;
-    typeinfo?for?miral::AppendKeyboardEventFilter;
     typeinfo?for?miral::ApplicationAuthorizer;
     typeinfo?for?miral::ApplicationCredentials;
     typeinfo?for?miral::ApplicationInfo;
@@ -625,6 +624,7 @@ global:
     non-virtual?thunk?to?miral::live_config::IniFile::add_strings_attribute*;
     non-virtual?thunk?to?miral::live_config::IniFile::on_done*;
     non-virtual?thunk?to?miral::live_config::Store::?Store*;
+    typeinfo?for?miral::AppendKeyboardEventFilter;
     typeinfo?for?miral::live_config::IniFile;
     typeinfo?for?miral::live_config::Key;
     typeinfo?for?miral::live_config::Store;
