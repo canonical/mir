@@ -65,6 +65,7 @@ char const* const mo::null_console = "none";
 char const* const mo::auto_console = "auto";
 
 char const* const mo::vt_option_name = "vt";
+char const* const mo::vt_switching_option_name = "vt-switching";
 
 
 namespace
@@ -202,7 +203,10 @@ mo::DefaultConfiguration::DefaultConfiguration(
             "auto: detect the appropriate provider.")
         (vt_option_name,
             boost::program_options::value<int>()->default_value(0),
-            "[requires --console-provider=vt] VT to run on or 0 to use current.");
+            "[requires --console-provider=vt] VT to run on or 0 to use current.")
+        (vt_switching_option_name,
+            boost::program_options::value<bool>()->default_value(true),
+            "[requires --console-provider=(vt|logind)] Enable VT switching on Ctrl+Alt+F*.");
 
         add_platform_options();
 }
