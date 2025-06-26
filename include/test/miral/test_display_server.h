@@ -101,14 +101,15 @@ struct TestDisplayServer : private TestRuntimeEnvironment
     /// \note call after start_server()
     void invoke_runner(std::function<void(MirRunner& runner)> const& f);
 
+    mir::Server& server() const { return *server_running; }
 private:
     MirRunner runner;
+    mir::Server* server_running{nullptr};
 
     WindowManagerTools tools{nullptr};
     mir::test::AutoJoinThread server_thread;
     std::mutex mutex;
     std::condition_variable started;
-    mir::Server* server_running{nullptr};
     std::function<void(mir::Server&)> init_server = [](auto&){};
 };
 }
