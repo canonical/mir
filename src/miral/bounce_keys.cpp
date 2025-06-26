@@ -30,11 +30,13 @@
 #include <chrono>
 #include <optional>
 
+namespace mi = mir::input;
+
 struct miral::BounceKeys::Self
 {
     struct Config
     {
-        Config(bool enabled_by_default) :
+        explicit Config(bool enabled_by_default) :
             enabled{enabled_by_default}
         {
         }
@@ -44,11 +46,11 @@ struct miral::BounceKeys::Self
         std::function<void(unsigned int keysym)> on_press_rejected{[](auto) {}};
     };
 
-    struct BounceKeysFilter : public mir::input::EventFilter
+    struct BounceKeysFilter : public mi::EventFilter
     {
         struct RuntimeState
         {
-            std::optional<mir::input::XkbSymkey> last_key;
+            std::optional<mi::XkbSymkey> last_key;
         };
 
         BounceKeysFilter(
@@ -71,7 +73,7 @@ struct miral::BounceKeys::Self
 
             // Only consume "down" events
             auto const action = key_event->action();
-            if (action == mir_keyboard_action_up || action == mir_keyboard_action_repeat)
+            if (action != mir_keyboard_action_down)
                 return false;
 
             auto const keysym = mir_keyboard_event_keysym(key_event);
@@ -107,8 +109,8 @@ struct miral::BounceKeys::Self
         }
     }
 
-    Self(bool enabled_by_default) :
-        config{std::make_shared<mir::Synchronised<Config>>(enabled_by_default)}
+    explicit Self(bool enabled_by_default) :
+        config{std::make_shared<mir::Synchronised<Config>>(Config{enabled_by_default})}
     {
     }
 
@@ -116,7 +118,7 @@ struct miral::BounceKeys::Self
     std::shared_ptr<BounceKeysFilter> bounce_keys_filter;
 
     std::weak_ptr<mir::MainLoop> main_loop;
-    std::weak_ptr<mir::input::CompositeEventFilter> composite_event_filter;
+    std::weak_ptr<mi::CompositeEventFilter> composite_event_filter;
 };
 
 miral::BounceKeys::BounceKeys(bool enable_by_default)

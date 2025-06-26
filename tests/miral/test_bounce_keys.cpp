@@ -31,11 +31,13 @@
 using namespace ::testing;
 using namespace std::chrono_literals;
 
+namespace mi = mir::input;
+
 namespace
 {
 static constexpr auto test_bounce_keys_delay = 20ms;
 
-void press(mir::input::InputSink* sink, mir::input::EventBuilder* builder, unsigned int keysym, unsigned int scancode)
+void press(mi::InputSink* sink, mi::EventBuilder* builder, unsigned int keysym, unsigned int scancode)
 {
     sink->handle_input(builder->key_event(std::nullopt, mir_keyboard_action_down, keysym, scancode));
     sink->handle_input(builder->key_event(std::nullopt, mir_keyboard_action_up, keysym, scancode));
@@ -65,9 +67,9 @@ struct TestBounceKeys : miral::TestServer
 
     miral::BounceKeys bounce_keys{true};
 
-    std::weak_ptr<mir::input::CompositeEventFilter> composite_event_filter;
-    std::weak_ptr<mir::input::InputDeviceRegistry> input_device_registry;
-    std::weak_ptr<mir::input::InputDeviceHub> input_device_hub;
+    std::weak_ptr<mi::CompositeEventFilter> composite_event_filter;
+    std::weak_ptr<mi::InputDeviceRegistry> input_device_registry;
+    std::weak_ptr<mi::InputDeviceHub> input_device_hub;
 };
 
 struct TestDifferentDelays: public TestBounceKeys, public WithParamInterface<std::chrono::milliseconds>
@@ -79,10 +81,10 @@ TEST_P(TestDifferentDelays, subsequent_keys_rejected_if_in_within_delay)
     auto const press_delay = GetParam();
 
     auto virtual_keyboard = miral::test::add_test_device(
-        input_device_registry.lock(), input_device_hub.lock(), mir::input::DeviceCapability::keyboard);
+        input_device_registry.lock(), input_device_hub.lock(), mi::DeviceCapability::keyboard);
 
     virtual_keyboard->if_started_then(
-        [this, press_delay](mir::input::InputSink* sink, mir::input::EventBuilder* builder)
+        [this, press_delay](mi::InputSink* sink, mi::EventBuilder* builder)
         {
             auto rejection_counter = 0;
             bounce_keys.on_press_rejected([&rejection_counter](auto) { rejection_counter++; });
@@ -108,10 +110,10 @@ INSTANTIATE_TEST_SUITE_P(TestBounceKeys, TestDifferentDelays, Values(test_bounce
 TEST_F(TestBounceKeys, different_keys_are_not_rejected)
 {
     auto virtual_keyboard = miral::test::add_test_device(
-        input_device_registry.lock(), input_device_hub.lock(), mir::input::DeviceCapability::keyboard);
+        input_device_registry.lock(), input_device_hub.lock(), mi::DeviceCapability::keyboard);
 
     virtual_keyboard->if_started_then(
-        [this](mir::input::InputSink* sink, mir::input::EventBuilder* builder)
+        [this](mi::InputSink* sink, mi::EventBuilder* builder)
         {
             auto rejection_counter = 0;
             bounce_keys.on_press_rejected([&rejection_counter](auto) { rejection_counter++; });
@@ -138,12 +140,12 @@ TEST_F(TestBounceKeys, different_keys_are_not_rejected)
 TEST_F(TestBounceKeys, irregular_press_periods_are_properly_rejected)
 {
     auto virtual_keyboard = miral::test::add_test_device(
-        input_device_registry.lock(), input_device_hub.lock(), mir::input::DeviceCapability::keyboard);
+        input_device_registry.lock(), input_device_hub.lock(), mi::DeviceCapability::keyboard);
 
     auto const tap_periods = std::array{ 15ms, 21ms, 27ms }; // reject, pass, pass
 
     virtual_keyboard->if_started_then(
-        [this, &tap_periods](mir::input::InputSink* sink, mir::input::EventBuilder* builder)
+        [this, &tap_periods](mi::InputSink* sink, mi::EventBuilder* builder)
         {
             auto rejection_counter = 0;
             bounce_keys.on_press_rejected([&rejection_counter](auto) { rejection_counter++; });

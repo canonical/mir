@@ -41,7 +41,6 @@ public:
     /// When already disabled, further calls have no effect.
     BounceKeys& disable();
 
-
     /// Configures the duration users have to hold a key down for the press to register.
     BounceKeys& delay(std::chrono::milliseconds);
 
