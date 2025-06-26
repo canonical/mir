@@ -34,9 +34,8 @@ namespace miral
 class MouseKeysConfig
 {
 public:
-    /// \note `--enable-mouse-keys` has higher precedence than
-    /// [enabled_by_default]
     explicit MouseKeysConfig(bool enabled_by_default);
+
     void operator()(mir::Server& server) const;
 
     /// Enables or disables mousekeys depending on the passed parameter.

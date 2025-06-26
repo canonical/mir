@@ -14,12 +14,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/input/cursor_listener.h"
+#include "mir/input/cursor_observer_multiplexer.h"
 #include "mir/shell/shell_wrapper.h"
 #include "mir/shell/surface_stack_wrapper.h"
 #include "mir/scene/application_not_responding_detector_wrapper.h"
 
 #include "mir/geometry/point.h"
+#include "mir/main_loop.h"
 
 #include "mir_test_framework/headless_test.h"
 
@@ -43,17 +44,21 @@ struct MyShell : msh::ShellWrapper
     MOCK_METHOD0(focus_next_session, void());
 };
 
-struct MyCursorListener : mi::CursorListener
+struct MyCursorObserverMultiplexer : mi::CursorObserverMultiplexer
 {
-    MyCursorListener(std::shared_ptr<mi::CursorListener> const& wrapped) :
-        wrapped{wrapped} {}
+    MyCursorObserverMultiplexer(
+        std::shared_ptr<mi::CursorObserverMultiplexer> const& wrapped, mir::Executor& default_executor) :
+        mi::CursorObserverMultiplexer{default_executor},
+        wrapped{wrapped}
+    {
+    }
 
     MOCK_METHOD2(cursor_moved_to, void(float abs_x, float abs_y));
 
     void pointer_usable() { wrapped->pointer_usable(); }
     void pointer_unusable() { wrapped->pointer_unusable(); }
 
-    std::shared_ptr<mi::CursorListener> const wrapped;
+    std::shared_ptr<mi::CursorObserverMultiplexer> const wrapped;
 };
 
 struct MySurfaceStack : msh::SurfaceStackWrapper
@@ -76,10 +81,10 @@ struct ServerConfigurationWrapping : mir_test_framework::HeadlessTest
                 return std::make_shared<MyShell>(wrapped);
             });
 
-        server.wrap_cursor_listener([]
-            (std::shared_ptr<mi::CursorListener> const& wrapped)
+        server.wrap_cursor_observer_multiplexer([this]
+            (std::shared_ptr<mi::CursorObserverMultiplexer> const& wrapped)
             {
-                return std::make_shared<MyCursorListener>(wrapped);
+                return std::make_shared<MyCursorObserverMultiplexer>(wrapped, *server.the_main_loop());
             });
 
         server.wrap_surface_stack([]
@@ -98,12 +103,12 @@ struct ServerConfigurationWrapping : mir_test_framework::HeadlessTest
         server.apply_settings();
 
         shell = server.the_shell();
-        cursor_listener = server.the_cursor_listener();
+        cursor_observer_multiplexer = server.the_cursor_observer_multiplexer();
         surface_stack = server.the_surface_stack();
     }
 
     std::shared_ptr<msh::Shell> shell;
-    std::shared_ptr<mi::CursorListener> cursor_listener;
+    std::shared_ptr<mi::CursorObserverMultiplexer> cursor_observer_multiplexer;
     std::shared_ptr<msh::SurfaceStack> surface_stack;
 };
 }
@@ -128,27 +133,27 @@ TEST_F(ServerConfigurationWrapping, returns_same_shell_from_cache)
     ASSERT_THAT(server.the_shell(), Eq(shell));
 }
 
-TEST_F(ServerConfigurationWrapping, cursor_listener_is_of_wrapper_type)
+TEST_F(ServerConfigurationWrapping, cursor_observer_multiplexer_is_of_wrapper_type)
 {
-    auto const my_cursor_listener = std::dynamic_pointer_cast<MyCursorListener>(cursor_listener);
+    auto const my_cursor_observer_multiplexer = std::dynamic_pointer_cast<MyCursorObserverMultiplexer>(cursor_observer_multiplexer);
 
-    EXPECT_THAT(my_cursor_listener, Ne(nullptr));
+    EXPECT_THAT(my_cursor_observer_multiplexer, Ne(nullptr));
 }
 
-TEST_F(ServerConfigurationWrapping, can_override_cursor_listener_methods)
+TEST_F(ServerConfigurationWrapping, can_override_cursor_observer_methods)
 {
     float const abs_x{1};
     float const abs_y(2);
 
-    auto const my_cursor_listener = std::dynamic_pointer_cast<MyCursorListener>(cursor_listener);
+    auto const my_cursor_observer_multiplexer = std::dynamic_pointer_cast<MyCursorObserverMultiplexer>(cursor_observer_multiplexer);
 
-    EXPECT_CALL(*my_cursor_listener, cursor_moved_to(abs_x, abs_y)).Times(1);
-    cursor_listener->cursor_moved_to(abs_x, abs_y);
+    EXPECT_CALL(*my_cursor_observer_multiplexer, cursor_moved_to(abs_x, abs_y)).Times(1);
+    cursor_observer_multiplexer->cursor_moved_to(abs_x, abs_y);
 }
 
-TEST_F(ServerConfigurationWrapping, returns_same_cursor_listener_from_cache)
+TEST_F(ServerConfigurationWrapping, returns_same_cursor_observer_multiplexer_from_cache)
 {
-    ASSERT_THAT(server.the_cursor_listener(), Eq(cursor_listener));
+    ASSERT_THAT(server.the_cursor_observer_multiplexer(), Eq(cursor_observer_multiplexer));
 }
 
 TEST_F(ServerConfigurationWrapping, surface_stack_is_of_wrapper_type)

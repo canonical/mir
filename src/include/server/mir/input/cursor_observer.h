@@ -14,25 +14,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_TEST_DOUBLES_STUB_CURSOR_LISTENER_H_
-#define MIR_TEST_DOUBLES_STUB_CURSOR_LISTENER_H_
-
-#include "mir/input/cursor_listener.h"
+#ifndef MIR_INPUT_CURSOR_OBSERVER_H_
+#define MIR_INPUT_CURSOR_OBSERVER_H_
 
 namespace mir
 {
-namespace test
-{
-namespace doubles
+namespace input
 {
 
-struct StubCursorListener : public input::CursorListener
+/// An interface for listening to absolute cursor events (without context): For example to update
+/// the position of the visible cursor.
+class CursorObserver
 {
-    void cursor_moved_to(float, float) override {}
+public:
+    virtual ~CursorObserver() = default;
+    virtual void cursor_moved_to(float abs_x, float abs_y) = 0;
+    virtual void pointer_usable() = 0;
+    virtual void pointer_unusable() = 0;
 };
 
 }
 }
-} // namespace mir
 
-#endif /* MIR_TEST_DOUBLES_STUB_CURSOR_LISTENER_H_ */
+#endif // MIR_INPUT_CURSOR_OBSERVER_H_

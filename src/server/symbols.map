@@ -1,4 +1,4 @@
-MIR_SERVER_INTERNAL_2.21 {
+MIR_SERVER_INTERNAL_2.22 {
 global:
   extern "C++" {
     VTT?for?mir::DefaultServerConfiguration;
@@ -26,8 +26,9 @@ global:
     mir::DefaultServerConfiguration::the_compositor_report*;
     mir::DefaultServerConfiguration::the_console_services*;
     mir::DefaultServerConfiguration::the_cursor*;
+    mir::DefaultServerConfiguration::the_cursor_controller*;
     mir::DefaultServerConfiguration::the_cursor_images*;
-    mir::DefaultServerConfiguration::the_cursor_listener*;
+    mir::DefaultServerConfiguration::the_cursor_observer_multiplexer*;
     mir::DefaultServerConfiguration::the_decoration_manager*;
     mir::DefaultServerConfiguration::the_decoration_strategy*;
     mir::DefaultServerConfiguration::the_default_cursor_image*;
@@ -109,7 +110,7 @@ global:
     mir::DefaultServerConfiguration::the_xwayland_connector*;
     mir::DefaultServerConfiguration::wrap_application_not_responding_detector*;
     mir::DefaultServerConfiguration::wrap_cursor*;
-    mir::DefaultServerConfiguration::wrap_cursor_listener*;
+    mir::DefaultServerConfiguration::wrap_cursor_observer_multiplexer*;
     mir::DefaultServerConfiguration::wrap_display_buffer_compositor_factory*;
     mir::DefaultServerConfiguration::wrap_display_configuration_policy*;
     mir::DefaultServerConfiguration::wrap_shell*;
@@ -202,7 +203,7 @@ global:
     mir::Server::the_compositor*;
     mir::Server::the_compositor_report*;
     mir::Server::the_cursor*;
-    mir::Server::the_cursor_listener*;
+    mir::Server::the_cursor_observer_multiplexer*;
     mir::Server::the_decoration_strategy*;
     mir::Server::the_default_cursor_image*;
     mir::Server::the_display*;
@@ -240,7 +241,7 @@ global:
     mir::Server::wayland_display*;
     mir::Server::wrap_application_not_responding_detector*;
     mir::Server::wrap_cursor*;
-    mir::Server::wrap_cursor_listener*;
+    mir::Server::wrap_cursor_observer_multiplexer*;
     mir::Server::wrap_display_buffer_compositor_factory*;
     mir::Server::wrap_display_configuration_policy*;
     mir::Server::wrap_shell*;
@@ -363,12 +364,23 @@ global:
     mir::graphics::SideBySideDisplayConfigurationPolicy::confirm*;
     mir::graphics::SingleDisplayConfigurationPolicy::apply_to*;
     mir::graphics::SingleDisplayConfigurationPolicy::confirm*;
+    mir::input::CursorController::?CursorController*;
+    mir::input::CursorController::CursorController*;
+    mir::input::CursorController::cursor_moved_to*;
+    mir::input::CursorController::pointer_unusable*;
+    mir::input::CursorController::pointer_usable*;
+    mir::input::CursorController::set_drag_icon*;
+    mir::input::CursorController::update_cursor_image*;
     mir::input::CursorImages::?CursorImages*;
     mir::input::CursorImages::CursorImages*;
     mir::input::CursorImages::operator*;
-    mir::input::CursorListener::?CursorListener*;
-    mir::input::CursorListener::CursorListener*;
-    mir::input::CursorListener::operator*;
+    mir::input::CursorObserver::?CursorObserver*;
+    mir::input::CursorObserverMultiplexer::?CursorObserverMultiplexer*;
+    mir::input::CursorObserverMultiplexer::CursorObserverMultiplexer*;
+    mir::input::CursorObserverMultiplexer::cursor_moved_to*;
+    mir::input::CursorObserverMultiplexer::operator*;
+    mir::input::CursorObserverMultiplexer::pointer_unusable*;
+    mir::input::CursorObserverMultiplexer::pointer_usable*;
     mir::input::Device::?Device*;
     mir::input::Device::Device*;
     mir::input::EventFilter::?EventFilter*;
@@ -811,8 +823,9 @@ global:
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_compositor_report*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_console_services*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_cursor*;
+    non-virtual?thunk?to?mir::DefaultServerConfiguration::the_cursor_controller*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_cursor_images*;
-    non-virtual?thunk?to?mir::DefaultServerConfiguration::the_cursor_listener*;
+    non-virtual?thunk?to?mir::DefaultServerConfiguration::the_cursor_observer_multiplexer*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_decoration_manager*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_decoration_strategy*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_default_cursor_image*;
@@ -887,7 +900,7 @@ global:
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_xwayland_connector*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::wrap_application_not_responding_detector*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::wrap_cursor*;
-    non-virtual?thunk?to?mir::DefaultServerConfiguration::wrap_cursor_listener*;
+    non-virtual?thunk?to?mir::DefaultServerConfiguration::wrap_cursor_observer_multiplexer*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::wrap_display_buffer_compositor_factory*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::wrap_display_configuration_policy*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::wrap_shell*;
@@ -962,8 +975,17 @@ global:
     non-virtual?thunk?to?mir::graphics::SideBySideDisplayConfigurationPolicy::confirm*;
     non-virtual?thunk?to?mir::graphics::SingleDisplayConfigurationPolicy::apply_to*;
     non-virtual?thunk?to?mir::graphics::SingleDisplayConfigurationPolicy::confirm*;
+    non-virtual?thunk?to?mir::input::CursorController::?CursorController*;
+    non-virtual?thunk?to?mir::input::CursorController::cursor_moved_to*;
+    non-virtual?thunk?to?mir::input::CursorController::pointer_unusable*;
+    non-virtual?thunk?to?mir::input::CursorController::pointer_usable*;
+    non-virtual?thunk?to?mir::input::CursorController::set_drag_icon*;
     non-virtual?thunk?to?mir::input::CursorImages::?CursorImages*;
-    non-virtual?thunk?to?mir::input::CursorListener::?CursorListener*;
+    non-virtual?thunk?to?mir::input::CursorObserver::?CursorObserver*;
+    non-virtual?thunk?to?mir::input::CursorObserverMultiplexer::?CursorObserverMultiplexer*;
+    non-virtual?thunk?to?mir::input::CursorObserverMultiplexer::cursor_moved_to*;
+    non-virtual?thunk?to?mir::input::CursorObserverMultiplexer::pointer_unusable*;
+    non-virtual?thunk?to?mir::input::CursorObserverMultiplexer::pointer_usable*;
     non-virtual?thunk?to?mir::input::Device::?Device*;
     non-virtual?thunk?to?mir::input::EventFilter::?EventFilter*;
     non-virtual?thunk?to?mir::input::InputDeviceHub::?InputDeviceHub*;
@@ -1296,8 +1318,10 @@ global:
     typeinfo?for?mir::graphics::SideBySideDisplayConfigurationPolicy;
     typeinfo?for?mir::graphics::SingleDisplayConfigurationPolicy;
     typeinfo?for?mir::input::CompositeEventFilter;
+    typeinfo?for?mir::input::CursorController;
     typeinfo?for?mir::input::CursorImages;
-    typeinfo?for?mir::input::CursorListener;
+    typeinfo?for?mir::input::CursorObserver;
+    typeinfo?for?mir::input::CursorObserverMultiplexer;
     typeinfo?for?mir::input::Device;
     typeinfo?for?mir::input::EventFilter;
     typeinfo?for?mir::input::InputDeviceHub;
@@ -1369,6 +1393,7 @@ global:
     typeinfo?for?mir::shell::DisplayConfigurationController;
     typeinfo?for?mir::shell::DisplayLayout;
     typeinfo?for?mir::shell::FocusController;
+    typeinfo?for?mir::shell::HoverClickTransformer;
     typeinfo?for?mir::shell::IdleHandler;
     typeinfo?for?mir::shell::IdleHandlerObserver;
     typeinfo?for?mir::shell::InputTargeter;
@@ -1506,8 +1531,10 @@ global:
     vtable?for?mir::graphics::SideBySideDisplayConfigurationPolicy;
     vtable?for?mir::graphics::SingleDisplayConfigurationPolicy;
     vtable?for?mir::input::CompositeEventFilter;
+    vtable?for?mir::input::CursorController;
     vtable?for?mir::input::CursorImages;
-    vtable?for?mir::input::CursorListener;
+    vtable?for?mir::input::CursorObserver;
+    vtable?for?mir::input::CursorObserverMultiplexer;
     vtable?for?mir::input::Device;
     vtable?for?mir::input::EventFilter;
     vtable?for?mir::input::InputDeviceHub;
@@ -1565,6 +1592,7 @@ global:
     vtable?for?mir::shell::DisplayConfigurationController;
     vtable?for?mir::shell::DisplayLayout;
     vtable?for?mir::shell::FocusController;
+    vtable?for?mir::shell::HoverClickTransformer;
     vtable?for?mir::shell::IdleHandler;
     vtable?for?mir::shell::IdleHandlerObserver;
     vtable?for?mir::shell::InputTargeter;

@@ -29,11 +29,13 @@ set(
   virtual_input_device.cpp
   xkb_mapper_registrar.cpp
   input_event_transformer.cpp
+  cursor_observer_multiplexer.cpp
   ${PROJECT_SOURCE_DIR}/src/include/server/mir/input/seat_observer.h
   ${PROJECT_SOURCE_DIR}/src/include/server/mir/input/input_dispatcher.h
   ${PROJECT_SOURCE_DIR}/src/include/server/mir/input/seat.h
   ${PROJECT_SOURCE_DIR}/src/include/server/mir/input/input_probe.h
   ${PROJECT_SOURCE_DIR}/src/include/server/mir/input/input_event_transformer.h
+  ${PROJECT_SOURCE_DIR}/src/include/server/mir/input/cursor_observer_multiplexer.h
 )
 
 set_property(

@@ -211,3 +211,11 @@ MIR_PLATFORM_2.21 {
  };
  local: *;
 };
+
+MIR_PLATFORM_2.22 {
+ global:
+  extern "C++" {
+    mir::options::vt_switching_option_name*;
+  };
+ local: *;
+} MIR_PLATFORM_2.21;

@@ -75,7 +75,7 @@ struct TemporaryCompositeEventFilter : public mi::CompositeEventFilter
 
 #define FOREACH_WRAPPER(MACRO)\
     MACRO(cursor)\
-    MACRO(cursor_listener)\
+    MACRO(cursor_observer_multiplexer)\
     MACRO(display_buffer_compositor_factory)\
     MACRO(display_configuration_policy)\
     MACRO(shell)\
@@ -105,7 +105,7 @@ struct TemporaryCompositeEventFilter : public mi::CompositeEventFilter
 #define FOREACH_ACCESSOR(MACRO)\
     MACRO(the_compositor)\
     MACRO(the_compositor_report)\
-    MACRO(the_cursor_listener)\
+    MACRO(the_cursor_observer_multiplexer)\
     MACRO(the_cursor)\
     MACRO(the_display)\
     MACRO(the_display_configuration_controller)\

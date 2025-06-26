@@ -15,6 +15,7 @@
  */
 
 #include "basic_accessibility_manager.h"
+#include "basic_hover_click_transformer.h"
 #include "mouse_keys_transformer.h"
 #include "basic_simulated_secondary_click_transformer.h"
 
@@ -25,6 +26,28 @@
 
 #include <memory>
 #include <optional>
+
+namespace
+{
+using miet = mir::input::InputEventTransformer;
+void toggle_transformer(
+    bool should_turn_on,
+    bool& is_enabled,
+    std::shared_ptr<miet::Transformer> const& transformer,
+    std::shared_ptr<miet> const& event_transformer)
+{
+    if (should_turn_on && !is_enabled)
+    {
+        event_transformer->append(transformer);
+        is_enabled = true;
+    }
+    else if (!should_turn_on && is_enabled)
+    {
+        event_transformer->remove(transformer);
+        is_enabled = false;
+    }
+}
+}
 
 void mir::shell::BasicAccessibilityManager::register_keyboard_helper(std::shared_ptr<KeyboardHelper> const& helper)
 {
@@ -65,17 +88,7 @@ void mir::shell::BasicAccessibilityManager::repeat_rate_and_delay(
 void mir::shell::BasicAccessibilityManager::mousekeys_enabled(bool on)
 {
     auto const state = mutable_state.lock();
-
-    if (on && !state->mousekeys_on)
-    {
-        event_transformer->append(mouse_keys_transformer);
-        state->mousekeys_on = true;
-    }
-    else if (!on && state->mousekeys_on)
-    {
-        event_transformer->remove(mouse_keys_transformer);
-        state->mousekeys_on = false;
-    }
+    toggle_transformer(on, state->mousekeys_on, mouse_keys_transformer, event_transformer);
 }
 
 mir::shell::BasicAccessibilityManager::BasicAccessibilityManager(
@@ -83,12 +96,14 @@ mir::shell::BasicAccessibilityManager::BasicAccessibilityManager(
     bool enable_key_repeat,
     std::shared_ptr<mir::graphics::Cursor> const& cursor,
     std::shared_ptr<shell::MouseKeysTransformer> const& mousekeys_transformer,
-    std::shared_ptr<SimulatedSecondaryClickTransformer> const& simulated_secondary_click_transformer) :
+    std::shared_ptr<SimulatedSecondaryClickTransformer> const& simulated_secondary_click_transformer,
+    std::shared_ptr<HoverClickTransformer> const& hover_click_transformer) :
     enable_key_repeat{enable_key_repeat},
     cursor{cursor},
     event_transformer{event_transformer},
     mouse_keys_transformer{mousekeys_transformer},
-    simulated_secondary_click_transformer{simulated_secondary_click_transformer}
+    simulated_secondary_click_transformer{simulated_secondary_click_transformer},
+    hover_click_transformer{hover_click_transformer}
 {
 }
 
@@ -117,17 +132,7 @@ void mir::shell::BasicAccessibilityManager::max_speed(double x_axis, double y_ax
 void mir::shell::BasicAccessibilityManager::simulated_secondary_click_enabled(bool enabled)
 {
     auto const state = mutable_state.lock();
-
-    if (enabled && !state->ssc_on)
-    {
-        event_transformer->append(simulated_secondary_click_transformer);
-        state->ssc_on = true;
-    }
-    else if (!enabled && state->ssc_on)
-    {
-        event_transformer->remove(simulated_secondary_click_transformer);
-        state->ssc_on = false;
-    }
+    toggle_transformer(enabled, state->ssc_on, simulated_secondary_click_transformer, event_transformer);
 }
 
 auto mir::shell::BasicAccessibilityManager::simulated_secondary_click()
@@ -135,3 +140,15 @@ auto mir::shell::BasicAccessibilityManager::simulated_secondary_click()
 {
     return *simulated_secondary_click_transformer.operator->();
 }
+
+void mir::shell::BasicAccessibilityManager::hover_click_enabled(bool enabled)
+{
+    auto const state = mutable_state.lock();
+    toggle_transformer(enabled, state->hover_click_on, hover_click_transformer, event_transformer);
+}
+
+auto mir::shell::BasicAccessibilityManager::hover_click() -> HoverClickTransformer&
+{
+    return *hover_click_transformer;
+}
+

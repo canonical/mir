@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "src/server/input/cursor_controller.h"
+#include "mir/input/cursor_controller.h"
 
 #include "mir/thread_safe_list.h"
 #include "mir/input/surface.h"
