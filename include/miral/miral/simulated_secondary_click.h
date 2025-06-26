@@ -33,8 +33,6 @@ namespace miral
 class SimulatedSecondaryClick
 {
 public:
-    /// \note `--enable-simulated-secondary-click` has higher precedence than
-    /// [enabled_by_default]
     explicit SimulatedSecondaryClick(bool enabled_by_default);
 
     void operator()(mir::Server& server);
