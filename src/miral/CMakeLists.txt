@@ -9,6 +9,7 @@ set(miral_include ${PROJECT_SOURCE_DIR}/include/miral)
 
 pkg_check_modules(YAML REQUIRED IMPORTED_TARGET yaml-cpp)
 pkg_check_modules(GIO REQUIRED IMPORTED_TARGET gio-2.0 gio-unix-2.0)
+find_library(WASMER_LIB wasmer REQUIRED)
 
 add_compile_definitions(MIR_LOG_COMPONENT_FALLBACK="miral" MIRAL_ENABLE_DEPRECATIONS=0)
 
