@@ -134,7 +134,7 @@ struct SingleSeatInputDeviceHubSetup : ::testing::Test
     {
         for (int i = 0; i != count; ++i)
         {
-            mt::fd_becomes_readable(multiplexer.watch_fd(), 5s);
+            EXPECT_TRUE(mt::fd_becomes_readable(multiplexer.watch_fd(), 5s));
             multiplexer.dispatch(mir::dispatch::FdEvent::readable);
         }
     }

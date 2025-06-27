@@ -63,7 +63,7 @@ struct TestInputEventTransformer : testing::Test
     // Borrowed from `test_single_seat_setup.cpp`
     void expect_and_execute_multiplexer()
     {
-        mt::fd_becomes_readable(multiplexer.watch_fd(), std::chrono::milliseconds(100));
+        EXPECT_TRUE(mt::fd_becomes_readable(multiplexer.watch_fd(), std::chrono::milliseconds(100)));
         multiplexer.dispatch(mir::dispatch::FdEvent::readable);
     }
 

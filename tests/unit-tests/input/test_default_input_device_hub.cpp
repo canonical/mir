@@ -100,7 +100,7 @@ struct InputDeviceHubTest : ::testing::Test
 
     void expect_and_execute_multiplexer()
     {
-        mt::fd_becomes_readable(multiplexer.watch_fd(), 2s);
+        EXPECT_TRUE(mt::fd_becomes_readable(multiplexer.watch_fd(), 2s));
         multiplexer.dispatch(mir::dispatch::FdEvent::readable);
     }
 };
