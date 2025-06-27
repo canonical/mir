@@ -30,14 +30,13 @@ target_link_libraries(mirplatformgraphicseglstreamkmsobjects
     mircore
 )
 
-add_library(mirplatformgraphicseglstreamkms MODULE
-  $<TARGET_OBJECTS:mirplatformgraphicseglstreamkmsobjects>
-)
+add_library(mirplatformgraphicseglstreamkms MODULE)
 
 target_link_libraries(
   mirplatformgraphicseglstreamkms
 
   PRIVATE
+  mirplatformgraphicseglstreamkmsobjects
   mirplatform
   server_platform_common
   kms_utils

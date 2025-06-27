@@ -9,7 +9,6 @@ include_directories(
 mir_add_wrapped_executable(mir_umock_acceptance_tests NOINSTALL
 
   test_libinput.cpp
-  $<TARGET_OBJECTS:mir-umock-test-framework>
   )
 
 set_property(
@@ -22,6 +21,7 @@ target_link_libraries(mir_umock_acceptance_tests
   mir-test-assist
   mir-test-framework-static
   mir-test-doubles-static
+  mir-umock-test-framework
 
   PkgConfig::UMOCKDEV
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.

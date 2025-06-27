@@ -1,9 +1,6 @@
 mir_add_wrapped_executable(mir_unit_tests_x11 NOINSTALL
   ${CMAKE_CURRENT_SOURCE_DIR}/test_platform.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_display.cpp
-  $<TARGET_OBJECTS:mirplatformserverx11sharedresources>
-  $<TARGET_OBJECTS:mirplatformgraphicsx11objects>
-  $<TARGET_OBJECTS:mirnullreport>  # Sub-optimal. We really want to link a lib
 )
 
 set_property(
@@ -21,6 +18,9 @@ set_target_properties(
 target_link_libraries(
   mir_unit_tests_x11
 
+  mirplatformserverx11sharedresources
+  mirplatformgraphicsx11objects
+  mirnullreport
   mir-test-static
   mir-test-doubles-static
   mir-test-doubles-platform-static

@@ -24,19 +24,25 @@ list(APPEND UNIT_TEST_SOURCES
 )
 
 list(APPEND UMOCK_UNIT_TEST_SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/test_input_platform_probing.cpp
-    $<TARGET_OBJECTS:mirplatforminputevdevobjects>
-    $<TARGET_OBJECTS:mirevdevutilsobjects>
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_input_platform_probing.cpp
+)
+list(APPEND UMOCK_UNIT_TEST_REFERENCES
+    mirplatforminputevdevobjects
+    mirevdevutilsobjects
 )
 if (MIR_BUILD_PLATFORM_X11)
 list(APPEND UMOCK_UNIT_TEST_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/test_x11_platform.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/test_x11_module.cpp
-    $<TARGET_OBJECTS:mirplatformserverx11sharedresources>
-    $<TARGET_OBJECTS:mirplatforminputx11objects>
+)
+list(APPEND UMOCK_UNIT_TEST_REFERENCES
+    mirplatformserverx11sharedresources
+    mirplatforminputx11objects
 )
 endif()
 
 set(UNIT_TEST_SOURCES ${UNIT_TEST_SOURCES} PARENT_SCOPE)
+set(UNIT_TEST_REFERENCES ${UNIT_TEST_REFERENCES} PARENT_SCOPE)
 
 set(UMOCK_UNIT_TEST_SOURCES ${UMOCK_UNIT_TEST_SOURCES} PARENT_SCOPE)
+set(UMOCK_UNIT_TEST_REFERENCES ${UMOCK_UNIT_TEST_REFERENCES} PARENT_SCOPE)

@@ -19,8 +19,6 @@ add_subdirectory(time)
 add_subdirectory(dispatch)
 
 list(APPEND MIR_COMMON_SOURCES
-  $<TARGET_OBJECTS:mirevents>
-  $<TARGET_OBJECTS:mirtime>
   ${CMAKE_CURRENT_SOURCE_DIR}/output_type_names.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/log.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/libname.cpp
@@ -36,6 +34,11 @@ list(APPEND MIR_COMMON_SOURCES
   immediate_executor.cpp
   ${PROJECT_SOURCE_DIR}/include/common/mir/signal.h
   signal.cpp
+)
+
+list(APPEND MIR_COMMON_REFERENCES
+  mirevents
+  mirtime
 )
 
 set(
