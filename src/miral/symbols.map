@@ -524,6 +524,12 @@ global:
 MIRAL_5.3 {
 global:
   extern "C++" {
+    miral::BounceKeys::BounceKeys*;
+    miral::BounceKeys::delay*;
+    miral::BounceKeys::disable*;
+    miral::BounceKeys::enable*;
+    miral::BounceKeys::on_press_rejected*;
+    miral::BounceKeys::operator*;
     miral::CursorScale::?CursorScale*;
     "miral::CursorScale::CursorScale()";
     "miral::CursorScale::CursorScale(float)";
@@ -579,6 +585,7 @@ global:
     miral::SimulatedSecondaryClick::on_hold_start*;
     miral::SimulatedSecondaryClick::on_secondary_click*;
     miral::SimulatedSecondaryClick::operator*;
+    typeinfo?for?miral::BounceKeys;
     typeinfo?for?miral::CursorScale;
     typeinfo?for?miral::DisplayConfiguration::Node;
     typeinfo?for?miral::HoverClick;
