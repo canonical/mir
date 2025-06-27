@@ -55,6 +55,7 @@
 #include "mir/console_services.h"
 
 #include "mir_toolkit/cursors.h"
+#include "mir_server_input/src/lib.rs.h"
 
 namespace mi = mir::input;
 namespace mr = mir::report;
@@ -251,6 +252,7 @@ mir::DefaultServerConfiguration::the_cursor_images()
 std::shared_ptr<mi::InputManager>
 mir::DefaultServerConfiguration::the_input_manager()
 {
+    rust_println("C++ string");
     return input_manager(
         [this]() -> std::shared_ptr<mi::InputManager>
         {

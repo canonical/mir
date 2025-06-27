@@ -183,6 +183,7 @@ target_link_libraries(
   mir-test-framework-static
 
   mircommon
+  mirinput_rust
 
   Boost::system
   PkgConfig::LIBINPUT
@@ -213,6 +214,7 @@ target_link_libraries(
 
   exampleserverconfig
   mircommon
+  mirinput_rust
 
   mir-test-static
   mir-test-framework-static

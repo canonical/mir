@@ -55,6 +55,7 @@ target_link_libraries(
   mir-test-doubles-static
 
   mircommon
+  mirinput_rust
 
   ${MIR_PLATFORM_REFERENCES}
   ${MIR_SERVER_REFERENCES}

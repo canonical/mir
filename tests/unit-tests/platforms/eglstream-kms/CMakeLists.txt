@@ -14,6 +14,7 @@ target_link_libraries(
   mir-test-framework-static
   mir-test-doubles-static
   mir-test-doubles-platform-static
+  mirinput_rust
 
   server_platform_common
   PkgConfig::EPOXY

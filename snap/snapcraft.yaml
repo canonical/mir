@@ -55,6 +55,8 @@ parts:
     - libapparmor-dev
     - wlcs
     - libpixman-1-dev
+    - cargo
+    - rustc
     stage-packages:
     - libboost-filesystem1.83.0
     - libboost-iostreams1.83.0

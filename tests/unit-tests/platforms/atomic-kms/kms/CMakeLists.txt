@@ -22,6 +22,7 @@ target_link_libraries(
   mir-test-doubles-static
   mir-test-doubles-platform-static
   mirsharedgbmservercommon-static
+  mirinput_rust
 
   PkgConfig::DRM
   PkgConfig::GBM

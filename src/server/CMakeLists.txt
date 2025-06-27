@@ -148,6 +148,9 @@ target_link_libraries(mirserver
     PkgConfig::LTTNG_UST
     PkgConfig::FREETYPE
     atomic
+
+  PRIVATE
+    mirinput_rust
 )
 
 if (MIR_USE_APPARMOR)

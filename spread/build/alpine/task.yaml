@@ -34,7 +34,9 @@ execute: |
         yaml-cpp-dev \
         libapparmor-dev \
         wlcs-dev \
-        pixman-dev
+        pixman-dev \
+        cargo \
+        rust
 
     BUILD_DIR=$PWD/../build
     cmake \
