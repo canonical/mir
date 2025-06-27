@@ -27,6 +27,7 @@
 #include <memory>
 #include <vector>
 #include <unordered_map>
+#include <tuple>
 
 namespace mir
 {
@@ -118,6 +119,8 @@ public:
 
     void add_listener(OutputManagerListener* listener);
     void remove_listener(OutputManagerListener* listener);
+
+    static auto from_output_transform(int32_t transform) -> std::tuple<MirOrientation, MirMirrorMode>;
 
 private:
     void handle_configuration_change(std::shared_ptr<graphics::DisplayConfiguration const> const& config);

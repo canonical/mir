@@ -27,6 +27,7 @@ void ms::NullSurfaceObserver::hidden_set_to(Surface const*, bool) {}
 void ms::NullSurfaceObserver::frame_posted(Surface const*, geometry::Rectangle const&) {}
 void ms::NullSurfaceObserver::alpha_set_to(Surface const*, float) {}
 void ms::NullSurfaceObserver::orientation_set_to(Surface const*, MirOrientation) {}
+void ms::NullSurfaceObserver::mirror_mode_set_to(Surface const*, MirMirrorMode) {}
 void ms::NullSurfaceObserver::transformation_set_to(Surface const*, glm::mat4 const&) {}
 void ms::NullSurfaceObserver::reception_mode_set_to(Surface const*, input::InputReceptionMode) {}
 void ms::NullSurfaceObserver::cursor_image_set_to(Surface const*, std::weak_ptr<mg::CursorImage> const&) {}
