@@ -72,7 +72,6 @@ jobs:
           mesa-utils \
           ninja-build \
           pylint \
-          python3-clang \
           xwayland
 
         sudo --preserve-env apt-get build-dep --yes ./
