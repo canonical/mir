@@ -161,6 +161,7 @@ global:
     mir::Server::add_wayland_extension*;
     mir::Server::apply_settings*;
     mir::Server::exited_normally*;
+    mir::Server::for_each_output_binding*;
     mir::Server::get_activation_token*;
     mir::Server::get_options*;
     mir::Server::open_client_wayland*;
@@ -343,6 +344,9 @@ global:
     mir::frontend::Surface::operator*;
     mir::frontend::SurfaceStack::?SurfaceStack*;
     mir::frontend::SurfaceStack::SurfaceStack*;
+    mir::frontend::WaylandTools::?WaylandTools*;
+    mir::frontend::WaylandTools::WaylandTools*;
+    mir::frontend::WaylandTools::operator*;
     mir::frontend::get_session*;
     mir::frontend::get_standard_extensions*;
     mir::frontend::get_supported_extensions*;
@@ -960,6 +964,7 @@ global:
     non-virtual?thunk?to?mir::frontend::SessionAuthorizer::?SessionAuthorizer*;
     non-virtual?thunk?to?mir::frontend::Surface::?Surface*;
     non-virtual?thunk?to?mir::frontend::SurfaceStack::?SurfaceStack*;
+    non-virtual?thunk?to?mir::frontend::WaylandTools::?WaylandTools*;
     non-virtual?thunk?to?mir::graphics::CloneDisplayConfigurationPolicy::apply_to*;
     non-virtual?thunk?to?mir::graphics::CloneDisplayConfigurationPolicy::confirm*;
     non-virtual?thunk?to?mir::graphics::DisplayConfigurationObserver::?DisplayConfigurationObserver*;
@@ -1312,6 +1317,7 @@ global:
     typeinfo?for?mir::frontend::SessionCredentials;
     typeinfo?for?mir::frontend::Surface;
     typeinfo?for?mir::frontend::SurfaceStack;
+    typeinfo?for?mir::frontend::WaylandTools;
     typeinfo?for?mir::graphics::CloneDisplayConfigurationPolicy;
     typeinfo?for?mir::graphics::DisplayConfigurationObserver;
     typeinfo?for?mir::graphics::NullDisplayConfigurationObserver;
@@ -1525,6 +1531,7 @@ global:
     vtable?for?mir::frontend::SessionAuthorizer;
     vtable?for?mir::frontend::Surface;
     vtable?for?mir::frontend::SurfaceStack;
+    vtable?for?mir::frontend::WaylandTools;
     vtable?for?mir::graphics::CloneDisplayConfigurationPolicy;
     vtable?for?mir::graphics::DisplayConfigurationObserver;
     vtable?for?mir::graphics::NullDisplayConfigurationObserver;
@@ -1610,4 +1617,3 @@ global:
   };
 local: *;
 };
-
