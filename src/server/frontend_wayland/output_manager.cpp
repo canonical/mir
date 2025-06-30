@@ -334,20 +334,20 @@ auto mf::OutputManager::from_output_transform(int32_t transform) -> std::tuple<M
         case mw::Output::Transform::normal:
             break;
         case mw::Output::Transform::_90:
-            orientation = mir_orientation_left;
+            orientation = mir_orientation_right;
             break;
         case mw::Output::Transform::_180:
             orientation = mir_orientation_inverted;
             break;
         case mw::Output::Transform::_270:
-            orientation = mir_orientation_right;
+            orientation = mir_orientation_left;
             break;
         case mw::Output::Transform::flipped:
             orientation = mir_orientation_normal;
             mirror_mode = mir_mirror_mode_horizontal;
             break;
         case mw::Output::Transform::flipped_90:
-            orientation = mir_orientation_left;
+            orientation = mir_orientation_right;
             mirror_mode = mir_mirror_mode_horizontal;
             break;
         case mw::Output::Transform::flipped_180:
@@ -355,7 +355,7 @@ auto mf::OutputManager::from_output_transform(int32_t transform) -> std::tuple<M
             mirror_mode = mir_mirror_mode_horizontal;
             break;
         case mw::Output::Transform::flipped_270:
-            orientation = mir_orientation_right;
+            orientation = mir_orientation_left;
             mirror_mode = mir_mirror_mode_horizontal;
             break;
         default:
