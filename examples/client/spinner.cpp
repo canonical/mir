@@ -26,7 +26,7 @@ static void shutdown(int)
 
 int main()
 {
-    struct sigaction action = {};
+    struct sigaction action{};
     action.sa_handler = shutdown;
     sigemptyset(&action.sa_mask);
     action.sa_flags = 0;
