@@ -69,6 +69,7 @@ add_library(miral-external OBJECT
     display_configuration_option.cpp    ${miral_include}/miral/display_configuration_option.h
     output.cpp                          ${miral_include}/miral/output.h
     append_event_filter.cpp             ${miral_include}/miral/append_event_filter.h
+    append_keyboard_event_filter.cpp    ${miral_include}/miral/append_keyboard_event_filter.h
     wayland_extensions.cpp              ${miral_include}/miral/wayland_extensions.h
     window.cpp                          ${miral_include}/miral/window.h
     window_info.cpp                     ${miral_include}/miral/window_info.h

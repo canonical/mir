@@ -20,14 +20,14 @@ Compositor](../tutorial/write-your-first-wayland-compositor.md) is a prerequisit
 this how-to.
 
 ### Header changes
-Here we just include `append_event_filter.h` for the declaration of
-`AppendEventFilter` and `toolkit_event` to get definitions for event types and
+Here we just include `append_keyboard_event_filter.h` for the declaration of
+`AppendKeyboardEventFilter` and `toolkit_event` to get definitions for event types and
 functions. We import everything from `miral::toolkit` to make the code a bit
 easier to read.
 ```diff
 @@ -1,10 +1,15 @@
  #include <miral/runner.h>
-+#include <miral/append_event_filter.h>
++#include <miral/append_keyboard_event_filter.h>
  #include <miral/minimal_window_manager.h>
  #include <miral/set_window_management_policy.h>
 +#include <miral/toolkit_event.h>
@@ -47,28 +47,18 @@ This big block of code can be broken down into three parts:
 +    std::string terminal_cmd{"kgx"};
 +    miral::ExternalClientLauncher external_client_launcher;
 +
-+    auto const builtin_keybinds = [&](MirEvent const* event)
++    auto const builtin_keybinds = [&](MirKeyboardEvent const* event)
 +        {
-+            // Skip non-input events
-+            if (mir_event_get_type(event) != mir_event_type_input)
-+                return false;
-+
-+            // Skip non-key input events
-+            MirInputEvent const* input_event = mir_event_get_input_event(event);
-+            if (mir_input_event_get_type(input_event) != mir_input_event_type_key)
-+                return false;
-+
 +            // Skip anything but down presses
-+            MirKeyboardEvent const* kev = mir_input_event_get_keyboard_event(input_event);
-+            if (mir_keyboard_event_action(kev) != mir_keyboard_action_down)
++            if (mir_keyboard_event_action(event) != mir_keyboard_action_down)
 +                return false;
 +
 +            // CTRL + ALT must be pressed
-+            MirInputEventModifiers mods = mir_keyboard_event_modifiers(kev);
++            MirInputEventModifiers mods = mir_keyboard_event_modifiers(event);
 +            if (!(mods & mir_input_event_modifier_alt) || !(mods & mir_input_event_modifier_ctrl))
 +                return false;
 +
-+            switch (mir_keyboard_event_keysym(kev))
++            switch (mir_keyboard_event_keysym(event))
 +            {
 +            // Exit program
 +            case XKB_KEY_BackSpace:
@@ -98,7 +88,7 @@ subsection.
          {
              set_window_management_policy<MinimalWindowManager>(),
 +            external_client_launcher,
-+            miral::AppendEventFilter{builtin_keybinds}
++            miral::AppendKeyboardEventFilter{builtin_keybinds}
          });
  }
 ```

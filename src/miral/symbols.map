@@ -591,6 +591,8 @@ global:
 MIRAL_5.4 {
 global:
   extern "C++" {
+    miral::AppendKeyboardEventFilter::AppendKeyboardEventFilter*;
+    miral::AppendKeyboardEventFilter::operator*;
     "miral::CursorScale::CursorScale(miral::live_config::Store&)";
     "miral::InputConfiguration::InputConfiguration(miral::live_config::Store&)";
     "miral::OutputFilter::OutputFilter(miral::live_config::Store&)";
@@ -622,6 +624,7 @@ global:
     non-virtual?thunk?to?miral::live_config::IniFile::add_strings_attribute*;
     non-virtual?thunk?to?miral::live_config::IniFile::on_done*;
     non-virtual?thunk?to?miral::live_config::Store::?Store*;
+    typeinfo?for?miral::AppendKeyboardEventFilter;
     typeinfo?for?miral::live_config::IniFile;
     typeinfo?for?miral::live_config::Key;
     typeinfo?for?miral::live_config::Store;
