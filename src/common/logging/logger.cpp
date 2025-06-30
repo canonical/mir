@@ -81,7 +81,7 @@ void ml::format_message(std::ostream& out, Severity severity, std::string const&
         "< - debug - > "
     };
 
-    struct timespec ts = {};
+    timespec ts{};
     clock_gettime(CLOCK_REALTIME, &ts);
     char now[32];
     auto offset = strftime(now, sizeof(now), "%F %T", localtime(&ts.tv_sec));
