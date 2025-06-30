@@ -138,7 +138,7 @@ auto create_socket(std::vector<mir::Fd>& fds, struct sockaddr_un *addr, size_t p
 auto create_sockets(int xdisplay) -> std::vector<mir::Fd>
 {
     std::vector<mir::Fd> result;
-    struct sockaddr_un addr;
+    struct sockaddr_un addr = {};
     size_t path_size;
 
     addr.sun_family = AF_UNIX;

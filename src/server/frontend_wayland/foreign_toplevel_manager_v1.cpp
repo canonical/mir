@@ -690,7 +690,7 @@ mf::ForeignToplevelHandleV1::ForeignToplevelHandleV1(
 
 void mf::ForeignToplevelHandleV1::send_state(MirWindowFocusState focused, ms::SurfaceStateTracker state)
 {
-    wl_array states;
+    wl_array states = {};
     wl_array_init(&states);
 
     if (focused == mir_window_focus_state_focused)

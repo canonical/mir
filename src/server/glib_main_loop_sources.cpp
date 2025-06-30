@@ -622,8 +622,8 @@ void md::SignalSources::ensure_signal_is_handled(int sig)
     if (handled_signals.find(sig) != handled_signals.end())
         return;
 
-    struct sigaction old_action;
-    struct sigaction new_action;
+    struct sigaction old_action = {};
+    struct sigaction new_action = {};
 
     new_action.sa_sigaction = SourceRegistration::notify_sources_of_signal;
     sigfillset(&new_action.sa_mask);

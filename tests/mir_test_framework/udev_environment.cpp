@@ -175,7 +175,7 @@ void mtf::UdevEnvironment::add_standard_device(std::string const& name)
     }
 
     auto ioctls_filename = recordings_path + "/" + name + ".ioctl";
-    struct stat sb;
+    struct stat sb = {};
     if (stat(ioctls_filename.c_str(), &sb) == 0)
     {
         if (S_ISREG(sb.st_mode) || S_ISLNK(sb.st_mode))
