@@ -402,9 +402,7 @@ TEST_F(UdevWrapperTest, UdevMonitorFdIsReadableWhenEventsAvailable)
 
     udev_environment.add_device("drm", "card0", NULL, {}, {});
 
-    struct pollfd fds = {};
-    fds.fd = monitor.fd();
-    fds.events = POLLIN;
+    pollfd fds{ .fd = monitor.fd(), .events = POLLIN, .revents = {} };
 
     ASSERT_GT(poll(&fds, 1, 0), 0);
 
