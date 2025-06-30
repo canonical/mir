@@ -317,7 +317,7 @@ mir::LinuxVirtualTerminal::LinuxVirtualTerminal(
       prev_tcattr(),
       active{true}
 {
-    struct termios tcattr;
+    struct termios tcattr = {};
     if (fops->ioctl(vt_fd.fd(), KDGETMODE, &prev_kd_mode) < 0)
     {
         BOOST_THROW_EXCEPTION(
@@ -534,7 +534,7 @@ int mir::LinuxVirtualTerminal::find_active_vt_number()
 
         if (fd >= 0)
         {
-            struct vt_stat vts;
+            struct vt_stat vts = {};
             auto status = fops->ioctl(fd, VT_GETSTATE, &vts);
             fops->close(fd);
 

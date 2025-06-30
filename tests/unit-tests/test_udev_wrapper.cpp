@@ -402,7 +402,7 @@ TEST_F(UdevWrapperTest, UdevMonitorFdIsReadableWhenEventsAvailable)
 
     udev_environment.add_device("drm", "card0", NULL, {}, {});
 
-    struct pollfd fds;
+    struct pollfd fds = {};
     fds.fd = monitor.fd();
     fds.events = POLLIN;
 
@@ -421,7 +421,7 @@ TEST_F(UdevWrapperTest, UdevMonitorFdIsUnreadableAfterProcessingEvents)
     udev_environment.add_device("drm", "card1", NULL, {}, {});
     udev_environment.add_device("usb", "mightymouse", NULL, {}, {});
 
-    struct pollfd fds;
+    struct pollfd fds = {};
     fds.fd = monitor.fd();
     fds.events = POLLIN;
 
