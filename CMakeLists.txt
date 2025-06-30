@@ -25,7 +25,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 set(MIR_VERSION_MAJOR 2)
-set(MIR_VERSION_MINOR 21)
+set(MIR_VERSION_MINOR 22)
 set(MIR_VERSION_PATCH 0)
 
 add_compile_definitions(MIR_VERSION_MAJOR=${MIR_VERSION_MAJOR})
@@ -42,6 +42,9 @@ execute_process(
   OUTPUT_VARIABLE TARGET_ARCH
   OUTPUT_STRIP_TRAILING_WHITESPACE
 )
+
+# Enable generation of compile_commands.json, for use by the clangd LSP
+set(CMAKE_EXPORT_COMPILE_COMMANDS on)
 
 option(use_debflags "Use build flags from dpkg-buildflags." OFF)
 if(use_debflags)
@@ -257,6 +260,7 @@ pkg_check_modules(XCB REQUIRED IMPORTED_TARGET xcb)
 pkg_check_modules(XCB_COMPOSITE REQUIRED IMPORTED_TARGET xcb-composite)
 pkg_check_modules(XCB_RANDR REQUIRED IMPORTED_TARGET xcb-randr)
 pkg_check_modules(XCB_RENDER REQUIRED IMPORTED_TARGET xcb-render)
+pkg_check_modules(XCB_RES REQUIRED IMPORTED_TARGET xcb-res)
 pkg_check_modules(XCB_XFIXES REQUIRED IMPORTED_TARGET xcb-xfixes)
 
 include(CheckCXXSymbolExists)

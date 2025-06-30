@@ -95,3 +95,40 @@ disable precompiled headers (helps caching) and choose to use a faster linker li
     $ sudo apt install ccache mold
     $ cd build
     $ cmake -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DMIR_USE_PRECOMPILED_HEADERS=OFF -DMIR_USE_LD=mold ..
+
+## Mesa/GBM debugging
+
+*Mir* interacts heavily with GL, GBM, and KMS, and sometimes debugging is
+easier if you can trace calls down into those layers.
+
+The GL library is particularly performance-sensitive, so the *Mesa*
+implementation is aggressively optimised; a debugging build of *Mesa* can
+be signficantly easier to work with.
+
+To make such a debug build,
+
+    $ . /etc/os-release                   # Get release information
+    $ cd $A_TEMPORARY_DIRECTORY           # e.g. ~/mesa-build
+    $ apt source mesa                     # Pull the mesa source package
+    $ cd mesa-$UPSTREAM_VERSION           # e.g. mesa-25.0.3
+    $ <edit debian/rules; find the line -Db_ndebug=true and change it to =false>
+    $ DEB_BUILD_OPTIONS="noopt nostrip" sbuild -d $UBUNTU_CODENAME -j 32
+    $ sudo dpkg --install --force-overwrite ../*.deb
+
+The important components here are:
+1. editing the `debian/rules` file to disable
+   `ndebug`; when this is enabled *Mesa* disables various codepaths useful in
+   debugging.
+2. Building with the `noopt` and `nostrip` `DEB_BUILD_OPTIONS`; this turns off
+   optimisation (making stacks easier to debug) and turns off stripping the
+   debug symbols from the binaries.
+3. `--force-overwrite` in the `dpkg --install` command; this is needed because
+   you will almost certainly have the `:i386` versions of mesa packages installed
+   as well, and these share some files that `dpkg` requires match exactly,
+   which will not happen for your local build.
+
+Due to a quirk in the *Mesa* build process, getting `gdb` to find the
+corresponding source requires manually specifying a directory to find
+them in. Following these instructions,
+`directory $A_TEMPORARY_DIRECTORY/mesa-$UPSTREAM_VERSION/build`
+will direct `gdb` to find the source files correctly.

@@ -102,6 +102,16 @@ public:
         return glm::mat4(1);
     }
 
+    MirOrientation orientation() const override
+    {
+        return mir_orientation_normal;
+    }
+
+    MirMirrorMode mirror_mode() const override
+    {
+        return mir_mirror_mode_none;
+    }
+
     bool shaped() const override
     {
         return true;
@@ -230,4 +240,10 @@ auto mg::SoftwareCursor::renderable() -> std::shared_ptr<Renderable>
         return nullptr;
 
     return renderable_;
+}
+
+auto mg::SoftwareCursor::needs_compositing() const -> bool
+{
+    std::lock_guard lg{guard};
+    return visible;
 }

@@ -42,6 +42,7 @@ parts:
     - libwayland-dev
     - libxcb-composite0-dev
     - libxcb-randr0-dev
+    - libxcb-res0-dev
     - libx11-xcb-dev
     - libxcursor-dev
     - libxkbcommon-dev
@@ -87,6 +88,7 @@ parts:
     - libxcb-composite0
     - libxcb-randr0
     - libxcb-render0
+    - libxcb-res0
     - libxcb-xfixes0
     - libxcb1
     - libx11-xcb1

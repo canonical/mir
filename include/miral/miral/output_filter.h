@@ -25,12 +25,18 @@ namespace mir { class Server; }
 
 namespace miral
 {
+namespace live_config { class Store; }
+
 /// Allows for the configuration of the output filter at runtime.
 /// \remark Since MirAL 5.3
 class OutputFilter
 {
 public:
     explicit OutputFilter();
+
+    /// Construct registering with a configuration store
+    /// \remark Since Miral 5.4
+    explicit OutputFilter(live_config::Store& config_store);
     explicit OutputFilter(MirOutputFilter default_filter);
     ~OutputFilter();
 

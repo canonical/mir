@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_INPUT_CURSOR_LISTENER_H_
-#define MIR_INPUT_CURSOR_LISTENER_H_
+#ifndef MIR_INPUT_CURSOR_OBSERVER_H_
+#define MIR_INPUT_CURSOR_OBSERVER_H_
 
 namespace mir
 {
@@ -24,22 +24,16 @@ namespace input
 
 /// An interface for listening to absolute cursor events (without context): For example to update
 /// the position of the visible cursor.
-class CursorListener
+class CursorObserver
 {
 public:
-    virtual ~CursorListener() = default;
-
+    virtual ~CursorObserver() = default;
     virtual void cursor_moved_to(float abs_x, float abs_y) = 0;
     virtual void pointer_usable() = 0;
     virtual void pointer_unusable() = 0;
-
-protected:
-    CursorListener() = default;
-    CursorListener(CursorListener const&) = delete;
-    CursorListener& operator=(CursorListener const&) = delete;
 };
 
 }
 }
 
-#endif // MIR_INPUT_CURSOR_LISTENER_H_
+#endif // MIR_INPUT_CURSOR_OBSERVER_H_

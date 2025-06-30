@@ -42,6 +42,7 @@ namespace gbm
 {
 
 class Quirks;
+class GbmQuirks;
 class SurfacelessEGLContext;
 
 class Platform : public graphics::DisplayPlatform
@@ -91,7 +92,8 @@ class RenderingPlatform : public graphics::RenderingPlatform
 public:
     RenderingPlatform(
         udev::Device const& device,
-        std::vector<std::shared_ptr<graphics::DisplayPlatform>> const& platforms);
+        std::vector<std::shared_ptr<graphics::DisplayPlatform>> const& platforms,
+        std::shared_ptr<GbmQuirks> quirks);
 
     ~RenderingPlatform() override;
 
@@ -104,13 +106,37 @@ protected:
 
 private:
     RenderingPlatform(
-        std::variant<std::shared_ptr<GBMDisplayProvider>, std::shared_ptr<gbm_device>> hw);
+        std::variant<std::shared_ptr<GBMDisplayProvider>, std::shared_ptr<gbm_device>> hw,
+        std::shared_ptr<GbmQuirks> quirks);
+
+    class EGLDisplayHandle
+    {
+    public:
+        explicit EGLDisplayHandle(EGLDisplay dpy)
+            : dpy{dpy}
+        {
+        }
+
+        ~EGLDisplayHandle()
+        {
+            eglTerminate(dpy);
+        }
+
+        operator EGLDisplay() const
+        {
+            return dpy;
+        }
+    private:
+        EGLDisplay const dpy;
+    };
     
     std::shared_ptr<gbm_device> const device;                   ///< gbm_device this platform is created on, always valid.
+    EGLDisplayHandle dpy;
     std::shared_ptr<GBMDisplayProvider> const bound_display;    ///< Associated Display, if any (nullptr is valid)
     std::unique_ptr<SurfacelessEGLContext> const share_ctx;
     std::shared_ptr<common::EGLContextExecutor> const egl_delegate;
     std::shared_ptr<DMABufEGLProvider> const dmabuf_provider;
+    std::shared_ptr<GbmQuirks> const quirks;
 };
 }
 }

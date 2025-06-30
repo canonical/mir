@@ -715,5 +715,8 @@ MIR_COMMON_2.21 {
 global:
   extern "C++" {
     mir::graphics::Edid::serial_number*;
+    mir::time::clock_gettime_checked*;
+    mir::time::is_steady_specialisation::is_steady*;
+    typeinfo?for?mir::time::is_steady_specialisation;
   };
 } MIR_COMMON_2.19;

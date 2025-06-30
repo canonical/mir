@@ -89,6 +89,11 @@ MIR_PLATFORM_2.21 {
     mir::graphics::wayland::bind_display*;
     mir::graphics::wayland::buffer_from_resource*;
     mir::graphics::wayland::unbind_display*;
+    mir::graphics::drm::Syncobj::Syncobj*;
+    mir::graphics::drm::Syncobj::?Syncobj*;
+    mir::graphics::drm::Syncobj::signal*;
+    mir::graphics::drm::Syncobj::to_eventfd*;
+    mir::graphics::drm::Syncobj::wait*;
     mir::options::Configuration::?Configuration*;
     mir::options::Configuration::Configuration*;
     mir::options::Configuration::operator*;
@@ -205,3 +210,11 @@ MIR_PLATFORM_2.21 {
  };
  local: *;
 };
+
+MIR_PLATFORM_2.22 {
+ global:
+  extern "C++" {
+    mir::options::vt_switching_option_name*;
+  };
+ local: *;
+} MIR_PLATFORM_2.21;

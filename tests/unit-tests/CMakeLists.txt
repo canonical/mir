@@ -76,6 +76,7 @@ set(
   test_linearising_executor.cpp
   test_shm_backing.cpp
   test_signal.cpp
+  test_default_server_configuration.cpp
 )
 
 if (HAVE_PTHREAD_GETNAME_NP)

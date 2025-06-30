@@ -1215,6 +1215,11 @@ void miral::BasicWindowManager::modify_window(WindowInfo& window_info, WindowSpe
     if (modifications.state().is_set())
     {
         set_state(window_info, modifications.state().value());
+
+        if (modifications.state().value() == mir_window_state_minimized)
+        {
+            send_tree_to_back(window_info.window());
+        }
     }
     else if (modifications.output_id().is_set())
     {

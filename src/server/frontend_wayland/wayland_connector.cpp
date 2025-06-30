@@ -17,6 +17,7 @@
 #include "wayland_connector.h"
 
 #include "mir/shell/token_authority.h"
+#include "mir/graphics/platform.h"
 #include "wl_client.h"
 #include "wl_data_device_manager.h"
 #include "wayland_utils.h"
@@ -30,6 +31,7 @@
 #include "desktop_file_manager.h"
 #include "foreign_toplevel_manager_v1.h"
 #include "wp_viewporter.h"
+#include "linux_drm_syncobj.h"
 
 #include "mir/main_loop.h"
 #include "mir/thread_name.h"
@@ -246,7 +248,8 @@ mf::WaylandConnector::WaylandConnector(
     std::shared_ptr<scene::SessionLock> const& session_lock,
     std::shared_ptr<mir::DecorationStrategy> const& decoration_strategy,
     std::shared_ptr<scene::SessionCoordinator> const& session_coordinator,
-    std::shared_ptr<shell::TokenAuthority> const& token_authority)
+    std::shared_ptr<shell::TokenAuthority> const& token_authority,
+    std::vector<std::shared_ptr<mg::RenderingPlatform>> const& render_platforms)
     : extension_filter{extension_filter},
       display{wl_display_create(), &cleanup_display},
       pause_signal{eventfd(0, EFD_CLOEXEC | EFD_SEMAPHORE)},
@@ -342,6 +345,22 @@ mf::WaylandConnector::WaylandConnector(
 
     viewporter = std::make_unique<WpViewporter>(display.get());
 
+    {
+        std::vector<std::shared_ptr<mg::DRMRenderingProvider>> providers;
+        for (auto platform : render_platforms)
+        {
+            if (auto provider = mg::RenderingPlatform::acquire_provider<mg::DRMRenderingProvider>(platform))
+            {
+                providers.push_back(std::move(provider));
+            }
+        }
+        if (!providers.empty())
+        {
+            mir::log_debug("Detected DRM Syncobj capable rendering platform. Enabling linux_drm_syncobj_v1 explicit sync support.");
+            drm_syncobj = std::make_unique<LinuxDRMSyncobjManager>(display.get(), providers);
+        }
+    }
+
     char const* wayland_display = nullptr;
 
     if (auto const display_name = getenv("WAYLAND_DISPLAY"))
@@ -396,19 +415,17 @@ mf::WaylandConnector::WaylandConnector(
 namespace
 {
 void unbind_display(mg::GraphicBufferAllocator& allocator, wl_display* display) noexcept
+try
 {
-    try
-    {   
-        allocator.unbind_display(display);
-    }
-    catch (...)
-    {
-        mir::log(
-            mir::logging::Severity::warning,
-            MIR_LOG_COMPONENT,
-            std::current_exception(),
-            "Failed to unbind EGL display");
-    }
+    allocator.unbind_display(display);
+}
+catch (...)
+{
+    mir::log(
+        mir::logging::Severity::warning,
+        MIR_LOG_COMPONENT,
+        std::current_exception(),
+        "Failed to unbind EGL display");
 }
 }
 
@@ -452,10 +469,7 @@ void mf::WaylandConnector::stop()
 {
     if (eventfd_write(pause_signal, 1) < 0)
     {
-        BOOST_THROW_EXCEPTION((std::system_error{
-            errno,
-            std::system_category(),
-            "Failed to send IPC eventloop pause signal"}));
+        log_error("WaylandConnector::stop() failed to send IPC eventloop pause signal: %s (%i)", strerror(errno), errno);
     }
     if (dispatch_thread.joinable())
     {

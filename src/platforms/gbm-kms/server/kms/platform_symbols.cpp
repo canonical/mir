@@ -78,12 +78,13 @@ mir::UniqueModulePtr<mg::DisplayPlatform> create_display_platform(
 auto create_rendering_platform(
     mg::SupportedDevice const& device,
     std::vector<std::shared_ptr<mg::DisplayPlatform>> const& platforms,
-    mo::Option const&,
+    mo::Option const& options,
     mir::EmergencyCleanupRegistry&) -> mir::UniqueModulePtr<mg::RenderingPlatform>
 {
     mir::assert_entry_point_signature<mg::CreateRenderPlatform>(&create_rendering_platform);
 
-    return mir::make_module_ptr<mgg::RenderingPlatform>(*device.device, platforms);
+    return mir::make_module_ptr<mgg::RenderingPlatform>(
+        *device.device, platforms, mgg::Quirks{options}.gbm_quirks_for(*device.device));
 }
 
 void add_graphics_platform_options(boost::program_options::options_description& config)

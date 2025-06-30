@@ -121,6 +121,8 @@ public:
 
     ~SurfacelessEGLContext() override
     {
+        make_current();
+        release_current();
         eglDestroyContext(dpy, ctx);
     }
 

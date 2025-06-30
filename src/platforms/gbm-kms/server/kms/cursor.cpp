@@ -19,6 +19,7 @@
 #include "kms_output.h"
 #include "kms_output_container.h"
 #include "kms_display_configuration.h"
+#include "shm_buffer.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/cursor_image.h"
 #include "mir/graphics/pixman_image_scaling.h"
@@ -32,6 +33,7 @@
 #include <vector>
 
 namespace mg = mir::graphics;
+namespace mgc = mir::graphics::common;
 namespace mgg = mg::gbm;
 namespace geom = mir::geometry;
 
@@ -172,9 +174,9 @@ void mgg::Cursor::write_buffer_data_locked(
 
 void mgg::Cursor::pad_and_write_image_data_locked(
     std::lock_guard<std::mutex> const& lg,
-    GBMBOWrapper& buffer)
+    GBMBOWrapper& gbm_buffer)
 {
-    auto const orientation = buffer.orientation();
+    auto const orientation = gbm_buffer.orientation();
     bool const sideways = orientation == mir_orientation_left || orientation == mir_orientation_right;
 
     auto const min_width  = sideways ? min_buffer_width : min_buffer_height;
@@ -184,15 +186,16 @@ void mgg::Cursor::pad_and_write_image_data_locked(
     auto const image_height = std::min(min_height, size.height.as_uint32_t());
     auto const image_stride = size.width.as_uint32_t() * 4;
 
-    auto const buffer_stride = std::max(min_width*4, gbm_bo_get_stride(buffer));  // in bytes
-    auto const buffer_height = std::max(min_height, gbm_bo_get_height(buffer));
+    auto const buffer_stride = std::max(min_width*4, gbm_bo_get_stride(gbm_buffer));  // in bytes
+    auto const buffer_height = std::max(min_height, gbm_bo_get_height(gbm_buffer));
     size_t const padded_size = buffer_stride * buffer_height;
 
     auto padded = std::unique_ptr<uint8_t[]>(new uint8_t[padded_size]);
     size_t rhs_padding = buffer_stride - 4*image_width;
 
     auto const filler = 0; // 0x3f; is useful to make buffer visible for debugging
-    uint8_t const* src = argb8888.data();
+    auto const mapping = buffer->map_readable();
+    uint8_t const* src = mapping->data();
     uint8_t* dest = &padded[0];
 
     switch (orientation)
@@ -252,7 +255,7 @@ void mgg::Cursor::pad_and_write_image_data_locked(
         break;
     }
 
-    write_buffer_data_locked(lg, buffer, &padded[0], padded_size);
+    write_buffer_data_locked(lg, gbm_buffer, &padded[0], padded_size);
 }
 
 void mgg::Cursor::show(std::shared_ptr<CursorImage> const& cursor_image)
@@ -265,8 +268,10 @@ void mgg::Cursor::show(std::shared_ptr<CursorImage> const& cursor_image)
     auto const scaled_cursor_buf = mg::scale_cursor_image(*current_cursor_image, current_scale);
     auto const buf_size_bytes = scaled_cursor_buf.size.width.as_value() * scaled_cursor_buf.size.height.as_value() * 4;
 
-    argb8888.resize(buf_size_bytes);
-    memcpy(argb8888.data(), scaled_cursor_buf.data.get(), buf_size_bytes);
+    buffer = std::make_shared<mgc::MemoryBackedShmBuffer>(
+        size,
+        mir_pixel_format_argb_8888);
+    memcpy(buffer->map_writeable()->data(), scaled_cursor_buf.data.get(), buf_size_bytes);
 
     hotspot = current_cursor_image->hotspot() * current_scale;
     {
@@ -455,6 +460,94 @@ void mir::graphics::gbm::Cursor::scale(float new_scale)
 
 auto mir::graphics::gbm::Cursor::renderable() -> std::shared_ptr<Renderable>
 {
-    return nullptr;
+    class CursorRenderable : public Renderable
+    {
+    public:
+        CursorRenderable(
+            std::shared_ptr<Buffer> const& buffer,
+            geom::Point const& position)
+            : buffer_(buffer),
+              position(position)
+        {
+        }
+
+        ID id() const override
+        {
+            return this;
+        }
+
+        std::shared_ptr<Buffer> buffer() const override
+        {
+            return buffer_;
+        }
+
+        geom::Rectangle screen_position() const override
+        {
+            return geom::Rectangle{
+                position,
+                buffer_->size()
+            };
+        }
+
+        geom::RectangleD src_bounds() const override
+        {
+            return geom::RectangleD{
+                {0, 0},
+                buffer_->size()
+            };
+        }
+
+        std::optional<geometry::Rectangle> clip_area() const override
+        {
+            return std::nullopt;
+        }
+
+        float alpha() const override
+        {
+            return 1;
+        }
+
+        glm::mat4 transformation() const override
+        {
+            return glm::mat4(1.f);
+        }
+
+        bool shaped() const override
+        {
+            return true;
+        }
+
+        auto surface_if_any() const -> std::optional<mir::scene::Surface const*> override
+        {
+            return std::nullopt;
+        }
+
+        MirOrientation orientation() const override
+        {
+            return mir_orientation_normal;
+        }
+
+        MirMirrorMode mirror_mode() const override
+        {
+            return mir_mirror_mode_none;
+        }
+
+    private:
+        std::shared_ptr<Buffer> buffer_;
+        geom::Point position;
+    };
+
+    std::lock_guard lg(guard);
+    if (!visible)
+        return nullptr;
+
+    return std::make_shared<CursorRenderable>(
+        buffer,
+        current_position);
+}
+
+auto mir::graphics::gbm::Cursor::needs_compositing() const -> bool
+{
+    return false;
 }
 

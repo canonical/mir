@@ -17,12 +17,16 @@ concurrency:
 
 jobs:
   TICS:
+    # Only run if we have access to secrets.
+    if: github.event_name != 'pull_request' || github.repository == github.event.pull_request.head.repo.full_name
+
     runs-on: [self-hosted, reactive, amd64, 2xlarge-tiobe, noble]
 
     env:
       CCACHE_DIR: "/tmp/ccache"
       NEEDRESTART_SUSPEND: yes
       DEBIAN_FRONTEND: noninteractive
+      TICS_CHANGED_LIST: tics_changed.list
 
     timeout-minutes: 360
     steps:
@@ -68,6 +72,7 @@ jobs:
           mesa-utils \
           ninja-build \
           pylint \
+          python3-clang \
           xwayland
 
         sudo --preserve-env apt-get build-dep --yes ./
@@ -100,6 +105,12 @@ jobs:
       timeout-minutes: 20
       run: cmake --build build --target coverage
 
+    - name: Get changed files
+      if: github.event_name == 'merge_group'
+      run: |
+        # Every merge_group event runs for one pull request, so we can diff against parent
+        git diff --name-only ${{ github.sha }}~1 ${{ github.sha }} >> $TICS_CHANGED_LIST
+
     - name: Run TICS analysis
       uses: tiobe/tics-github-action@v3
       with:
@@ -108,6 +119,7 @@ jobs:
         viewerUrl: https://canonical.tiobe.com/tiobeweb/TICS/api/cfg?name=default
         ticsAuthToken: ${{ secrets.TICSAUTHTOKEN }}
         installTics: true
+        filelist: ${{ github.event_name == 'merge_group' && env.TICS_CHANGED_LIST || '' }}
         # FIXME: workaround for a TICS bug
         additionalFlags: ${{ contains(fromJSON('["pull_request", "merge_group"]'), github.event_name) && '-resultdir build' || '' }}
 

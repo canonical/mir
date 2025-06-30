@@ -21,6 +21,8 @@
 #include <miral/cursor_theme.h>
 #include <miral/display_configuration_option.h>
 #include <miral/input_configuration.h>
+#include <miral/live_config.h>
+#include <miral/live_config_ini_file.h>
 #include <miral/minimal_window_manager.h>
 #include <miral/config_file.h>
 #include <miral/runner.h>
@@ -42,11 +44,13 @@
 #include <chrono>
 #include <cstdlib>
 #include <iostream>
+#include <list>
 #include <mutex>
 
 namespace mir { class AbnormalExit; }
 
 namespace me = mir::examples;
+namespace live_config = miral::live_config;
 
 ///\example server_example.cpp
 /// A simple server illustrating several customisations
@@ -70,7 +74,6 @@ void add_timeout_option_to(mir::Server& server)
         }
     });
 }
-
 
 // Create some input filters (we need to keep them or they deactivate)
 struct InputFilters
@@ -116,169 +119,6 @@ catch (std::exception const& error)
 catch (...)
 {
 }
-
-class DemoConfigFile
-{
-public:
-    DemoConfigFile(miral::MirRunner& runner, std::filesystem::path file) :
-        config_file{
-            runner,
-            file,
-            miral::ConfigFile::Mode::reload_on_change,
-            [this](std::istream& istream, std::filesystem::path const& path) {loader(istream, path); }}
-    {
-        runner.add_start_callback([this]
-            {
-                std::lock_guard lock{config_mutex};
-
-                // Merge the input options collected from the command line,
-                // environment, and default `.config` file with the options we
-                // read from the `.input` file.
-                //
-                // In this case, the `.input` file takes precedence. You can
-                // reverse the arguments to de-prioritize it.
-                mouse.merge(input_configuration.mouse());
-                keyboard.merge(input_configuration.keyboard());
-                touchpad.merge(input_configuration.touchpad());
-
-                apply_config();
-            });
-    }
-
-    void operator()(mir::Server& server)
-    {
-        input_configuration(server);
-        cursor_scale(server);
-        output_filter(server);
-    }
-
-private:
-    miral::InputConfiguration input_configuration;
-    miral::InputConfiguration::Mouse mouse = input_configuration.mouse();
-    miral::InputConfiguration::Touchpad touchpad = input_configuration.touchpad();
-    miral::InputConfiguration::Keyboard keyboard = input_configuration.keyboard();
-    std::mutex config_mutex;
-    miral::CursorScale cursor_scale;
-    miral::OutputFilter output_filter;
-    miral::ConfigFile config_file;
-
-    void apply_config()
-    {
-        input_configuration.mouse(mouse);
-        input_configuration.touchpad(touchpad);
-        input_configuration.keyboard(keyboard);
-    };
-
-    void loader(std::istream& in, std::filesystem::path const& path)
-    {
-        std::cout << "** Reloading: " << path << std::endl;
-
-        std::lock_guard lock{config_mutex};
-
-        for (std::string line; std::getline(in, line);)
-        {
-            std::cout << line << std::endl;
-
-            if (line.contains("="))
-            {
-                auto const eq = line.find_first_of("=");
-                auto const key = line.substr(0, eq);
-                auto const value = line.substr(eq+1);
-
-                auto const parse_and_validate_int = [](std::string const& key, std::string_view val) -> std::optional<int>
-                {
-                    auto const int_val = std::atoi(val.data());
-                    if (int_val < 0)
-                    {
-                        mir::log_warning(
-                            "Config value %s does not support negative values. Ignoring the supplied value (%d)...",
-                            key.c_str(), int_val);
-                        return std::nullopt;
-                    }
-
-                    return int_val;
-                };
-
-                auto const parse_and_validate_float = [](std::string const& key, std::string_view val) -> std::optional<float>
-                {
-                    auto const float_val = std::atof(val.data());
-                    if (float_val < 0)
-                    {
-                        mir::log_warning(
-                            "Config value %s does not support negative values. Ignoring the supplied value (%f)...",
-                            key.c_str(),
-                            float_val);
-                        return std::nullopt;
-                    }
-
-                    return float_val;
-                };
-
-                if (key == "pointer_handedness")
-                {
-                    if (value == "right")
-                        mouse.handedness(mir_pointer_handedness_right);
-                    else if (value == "left")
-                        mouse.handedness(mir_pointer_handedness_left);
-                    else
-                        mir::log_warning("Config key %s does not support value: '%s'", key.c_str(), value.c_str());
-                }
-
-                if (key == "touchpad_scroll_mode")
-                {
-                    if (value == "none")
-                        touchpad.scroll_mode(mir_touchpad_scroll_mode_none);
-                    else if (value == "two_finger_scroll")
-                        touchpad.scroll_mode(mir_touchpad_scroll_mode_two_finger_scroll);
-                    else if (value == "edge_scroll")
-                        touchpad.scroll_mode(mir_touchpad_scroll_mode_edge_scroll);
-                    else if (value == "button_down_scroll")
-                        touchpad.scroll_mode(mir_touchpad_scroll_mode_button_down_scroll);
-                    else
-                        mir::log_warning("Config key %s does not support value: '%s'", key.c_str(), value.c_str());
-                }
-
-                if (key == "repeat_rate")
-                {
-                    auto const parsed = parse_and_validate_int(key, value);
-                    if (parsed)
-                        keyboard.set_repeat_rate(*parsed);
-                }
-
-                if (key == "repeat_delay")
-                {
-                    auto const parsed = parse_and_validate_int(key, value);
-                    if (parsed)
-                        keyboard.set_repeat_delay(*parsed);
-                }
-
-                if (key == "cursor_scale")
-                {
-                    auto const parsed = parse_and_validate_float(key, value);
-                    if(parsed)
-                        cursor_scale.scale(*parsed);
-                }
-
-                if (key == "output_filter")
-                {
-                    auto filter_name = value;
-                    MirOutputFilter filter = mir_output_filter_none;
-                    if (filter_name == "grayscale")
-                    {
-                        filter = mir_output_filter_grayscale;
-                    }
-                    else if (filter_name == "invert")
-                    {
-                        filter = mir_output_filter_invert;
-                    }
-                    output_filter.filter(filter);
-                }
-            }
-        }
-
-        apply_config();
-    }
-};
 }
 
 int main(int argc, char const* argv[])
@@ -286,8 +126,18 @@ try
 {
     miral::MirRunner runner{argc, argv, "mir/mir_demo_server.config"};
 
-    DemoConfigFile demo_configuration{runner, "mir_demo_server.live-config"};
+    miral::live_config::IniFile config_store;
     runner.set_exception_handler(exception_handler);
+
+    miral::CursorScale cursor_scale{config_store};
+    miral::OutputFilter output_filter{config_store};
+    miral::InputConfiguration input_configuration{config_store};
+
+    miral::ConfigFile config_file{
+        runner,
+        "mir_demo_server.live-config",
+        miral::ConfigFile::Mode::reload_on_change,
+        [&config_store](auto&... args){ config_store.load_file(args...); }};
 
     std::function<void()> shutdown_hook{[]{}};
     runner.add_stop_callback([&] { shutdown_hook(); });
@@ -310,7 +160,9 @@ try
         miral::CursorTheme{"default:DMZ-White"},
         input_filters,
         test_runner,
-        std::ref(demo_configuration),
+        output_filter,
+        input_configuration,
+        cursor_scale,
     });
 
     // Propagate any test failure

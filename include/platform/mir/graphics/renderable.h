@@ -23,6 +23,8 @@
 #include <memory>
 #include <vector>
 
+#include "mir_toolkit/common.h"
+
 namespace mir
 {
 
@@ -77,6 +79,16 @@ public:
      *          the surface itself).
      */
     virtual glm::mat4 transformation() const = 0;
+
+    /**
+     * The orientation of the buffer.
+     */
+    virtual MirOrientation orientation() const = 0;
+
+    /**
+     * The mirror mode of the buffer.
+     */
+    virtual MirMirrorMode mirror_mode() const = 0;
 
     virtual bool shaped() const = 0;  // meaning the pixel format has alpha
 

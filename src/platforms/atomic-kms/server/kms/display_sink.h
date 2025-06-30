@@ -25,6 +25,7 @@
 #include "platform_common.h"
 #include "kms_framebuffer.h"
 
+#include <boost/iostreams/detail/buffer.hpp>
 #include <future>
 #include <vector>
 #include <memory>
@@ -48,9 +49,33 @@ namespace atomic
 
 class Platform;
 class KMSOutput;
+class GbmQuirks;
 
-class DisplaySink : public graphics::DisplaySink,
-                    public graphics::DisplaySyncGroup
+class DmaBufDisplayAllocator : public graphics::DmaBufDisplayAllocator
+{
+    public:
+        DmaBufDisplayAllocator(std::shared_ptr<struct gbm_device> const gbm, mir::Fd drm_fd) :
+            drm_fd_{drm_fd},
+            gbm{gbm}
+        {
+        }
+
+        virtual auto framebuffer_for(std::shared_ptr<DMABufBuffer> buffer) -> std::unique_ptr<Framebuffer> override;
+
+        auto drm_fd() -> mir::Fd const
+        {
+            return drm_fd_;
+        }
+
+    private:
+        mir::Fd const drm_fd_;
+        std::shared_ptr<struct gbm_device> const gbm;
+};
+
+class DisplaySink :
+    public graphics::DisplaySink,
+    public graphics::DisplaySyncGroup,
+    public DmaBufDisplayAllocator
 {
 public:
     DisplaySink(
@@ -60,7 +85,8 @@ public:
         std::shared_ptr<DisplayReport> const& listener,
         std::shared_ptr<KMSOutput> output,
         geometry::Rectangle const& area,
-        glm::mat2 const& transformation);
+        glm::mat2 const& transformation,
+        std::shared_ptr<GbmQuirks> const& gbm_quirks);
     ~DisplaySink();
 
     geometry::Rectangle view_area() const override;
@@ -94,6 +120,7 @@ private:
 
     std::shared_ptr<KMSOutput> const output;
 
+    std::shared_ptr<DmaBufDisplayAllocator> bypass_allocator;
     std::shared_ptr<CPUAddressableDisplayAllocator> kms_allocator;
     std::unique_ptr<GBMDisplayAllocator> gbm_allocator;
 
@@ -108,6 +135,7 @@ private:
     glm::mat2 transform;
     std::atomic<bool> needs_set_crtc;
     std::chrono::milliseconds recommend_sleep{0};
+    std::shared_ptr<GbmQuirks> const gbm_quirks;
 };
 
 }

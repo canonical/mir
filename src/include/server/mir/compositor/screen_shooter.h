@@ -47,6 +47,7 @@ public:
     virtual void capture(
         std::shared_ptr<renderer::software::WriteMappableBuffer> const& buffer,
         mir::geometry::Rectangle const& area,
+        bool overlay_cursor,
         std::function<void(std::optional<time::Timestamp>)>&& callback) = 0;
 
 private:

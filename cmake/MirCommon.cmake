@@ -177,7 +177,7 @@ function (mir_discover_tests_with_fd_leak_detection EXECUTABLE)
 endfunction()
 
 function (mir_discover_external_gtests)
-  set(one_value_args NAME COMMAND WORKING_DIRECTORY)
+  set(one_value_args NAME COMMAND WORKING_DIRECTORY TIMEOUT)
   set(multi_value_args EXPECTED_FAILURES ARGS BROKEN_TESTS)
   cmake_parse_arguments(TEST "" "${one_value_args}" "${multi_value_args}" ${ARGN})
 
@@ -195,8 +195,13 @@ function (mir_discover_external_gtests)
     set_tests_properties(${TEST_NAME} PROPERTIES WORKING_DIRECTORY ${TEST_WORKING_DIRECTORY})
   endif()
 
+  if (TEST_TIMEOUT)
+    set_tests_properties(${TEST_NAME} PROPERTIES TIMEOUT ${TEST_TIMEOUT})
+    set(TEST_PROPS "--props TIMEOUT --props ${TEST_TIMEOUT}")
+  endif()
+
   file(APPEND ${CMAKE_BINARY_DIR}/discover_all_tests.sh
-    "sh ${CMAKE_SOURCE_DIR}/tools/discover_gtests.sh --test-name ${TEST_NAME} --gtest-executable \"${TEST_COMMAND} ${TEST_ARGS_STRING}\" --gtest-exclude ${EXCLUDED_TESTS} -- ${TEST_COMMAND} ${TEST_ARGS_STRING} \n")
+    "sh ${CMAKE_SOURCE_DIR}/tools/discover_gtests.sh --test-name ${TEST_NAME} --gtest-executable \"${TEST_COMMAND} ${TEST_ARGS_STRING}\" --gtest-exclude ${EXCLUDED_TESTS} ${TEST_PROPS} -- ${TEST_COMMAND} ${TEST_ARGS_STRING} \n")
 
   foreach (xfail IN LISTS TEST_EXPECTED_FAILURES)
     # Add a test verifying that the expected failures really do fail

@@ -72,12 +72,23 @@ set(BROKEN_TESTS
 )
 
 if (MIR_RUN_WLCS_TESTS)
+  set(TIMEOUT 600)
+  if (CMAKE_SYSTEM_PROCESSOR MATCHES "riscv64")
+    # The Launchpad riscv builders are sufficiently slow that some of our tests hit
+    # the default 600sec timeout.
+    #
+    # Bump this up to 3600 for riscv only; for other architectures, leave the lower
+    # threshold so that real deadlocks can fail faster.
+    set(TIMEOUT 3600)
+  endif()
+  
   mir_discover_external_gtests(
     NAME wlcs
     COMMAND ${WLCS_BINARY}
     ARGS ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/miral_wlcs_integration.so
     EXPECTED_FAILURES ${EXPECTED_FAILURES}
     BROKEN_TESTS ${BROKEN_TESTS}
+    TIMEOUT ${TIMEOUT}
   )
 endif()
 

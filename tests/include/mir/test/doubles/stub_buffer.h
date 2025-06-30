@@ -55,7 +55,7 @@ public:
                   size,
                   mir_pixel_format_abgr_8888,
                   graphics::BufferUsage::hardware},
-              geometry::Stride{}}
+              geometry::Stride{size.width.as_uint32_t() * MIR_BYTES_PER_PIXEL(mir_pixel_format_abgr_8888)}}
 
     {
     }
@@ -66,8 +66,7 @@ public:
                   size,
                   pixel_format,
                   graphics::BufferUsage::hardware},
-                  geometry::Stride{}}
-
+                  geometry::Stride{size.width.as_uint32_t() * MIR_BYTES_PER_PIXEL(pixel_format)}}
     {
     }
 

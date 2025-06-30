@@ -17,7 +17,7 @@
 #ifndef MIR_INPUT_CURSOR_CONTROLLER_H_
 #define MIR_INPUT_CURSOR_CONTROLLER_H_
 
-#include "mir/input/cursor_listener.h"
+#include "mir/input/cursor_observer.h"
 #include "mir/frontend/drag_icon_controller.h"
 #include "mir/geometry/point.h"
 
@@ -40,7 +40,7 @@ namespace input
 {
 class Scene;
 
-class CursorController : public CursorListener, public frontend::DragIconController
+class CursorController : public CursorObserver, public frontend::DragIconController
 {
 public:
     CursorController(std::shared_ptr<Scene> const& input_targets,

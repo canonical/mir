@@ -34,7 +34,7 @@ class ObserverRegistrar;
 
 namespace compositor { class Compositor; class DisplayBufferCompositorFactory; class CompositorReport; }
 namespace graphics { class Cursor; class DisplayPlatform; class RenderingPlatform; class Display; class GLConfig; class DisplayConfigurationPolicy; class DisplayConfigurationObserver; class GraphicBufferAllocator; class CursorImage; class OutputFilter; }
-namespace input { class CompositeEventFilter; class InputDispatcher; class CursorListener; class CursorImages; class TouchVisualizer; class InputDeviceHub; class InputDeviceRegistry;}
+namespace input { class CompositeEventFilter; class InputDispatcher; class CursorObserverMultiplexer; class CursorImages; class TouchVisualizer; class InputDeviceHub; class InputDeviceRegistry;}
 namespace logging { class Logger; }
 namespace options { class Option; }
 namespace frontend
@@ -317,8 +317,8 @@ public:
     /// Sets a wrapper functor for creating the cursor.
     void wrap_cursor(Wrapper<graphics::Cursor> const& cursor_builder);
 
-    /// Sets a wrapper functor for creating the cursor listener.
-    void wrap_cursor_listener(Wrapper<input::CursorListener> const& wrapper);
+    /// Sets a wrapper functor for creating the cursor observer multiplexer.
+    void wrap_cursor_observer_multiplexer(Wrapper<input::CursorObserverMultiplexer> const& wrapper);
 
     /// Sets a wrapper functor for creating the per-display rendering code.
     void wrap_display_buffer_compositor_factory(
@@ -352,8 +352,8 @@ public:
     /// \return the composite event filter.
     auto the_composite_event_filter() const -> std::shared_ptr<input::CompositeEventFilter>;
 
-    /// \return the cursor listener.
-    auto the_cursor_listener() const -> std::shared_ptr<input::CursorListener>;
+    /// \return the cursor observer multiplexer.
+    auto the_cursor_observer_multiplexer() const -> std::shared_ptr<input::CursorObserverMultiplexer>;
 
     /// \return the cursor
     auto the_cursor() const -> std::shared_ptr<graphics::Cursor>;
@@ -471,11 +471,6 @@ public:
     /// Get a file descriptor that can be used to connect a Wayland client
     /// \param connect_handler callback to be invoked when the client connects
     auto open_client_wayland(ConnectHandler const& connect_handler) -> int;
-
-    /// Get a file descriptor that can be used to connect a prompt provider
-    /// It can be passed to another process, or used directly with mir_connect()
-    /// using the format "fd://%d".
-    auto open_prompt_socket() -> Fd;
 
     /// Get a file descriptor that can be used to connect a Wayland client
     /// It can be passed to another process, or used with wl_display_connect_to_fd()

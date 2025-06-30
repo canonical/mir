@@ -14,25 +14,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_TEST_DOUBLES_STUB_CURSOR_LISTENER_H_
-#define MIR_TEST_DOUBLES_STUB_CURSOR_LISTENER_H_
+#ifndef MIR_INPUT_NULL_INPUT_DEVICE_OBSERVER_H_
+#define MIR_INPUT_NULL_INPUT_DEVICE_OBSERVER_H_
 
-#include "mir/input/cursor_listener.h"
+#include "mir/input/input_device_observer.h"
 
 namespace mir
 {
-namespace test
-{
-namespace doubles
+namespace input
 {
 
-struct StubCursorListener : public input::CursorListener
+class NullInputDeviceObserver : public InputDeviceObserver
 {
-    void cursor_moved_to(float, float) override {}
+public:
+    void device_added(std::shared_ptr<Device> const&) override {}
+    void device_changed(std::shared_ptr<Device> const&) override {}
+    void device_removed(std::shared_ptr<Device> const&) override {}
+    void changes_complete() override {}
+
+    ~NullInputDeviceObserver() override = default;
 };
 
 }
 }
-} // namespace mir
 
-#endif /* MIR_TEST_DOUBLES_STUB_CURSOR_LISTENER_H_ */
+#endif

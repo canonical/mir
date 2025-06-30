@@ -424,6 +424,16 @@ void basic_software_buffer_drawing(
             return glm::mat4(1);
         }
 
+        MirOrientation orientation() const override
+        {
+            return mir_orientation_normal;
+        }
+
+        MirMirrorMode mirror_mode() const override
+        {
+            return mir_mirror_mode_none;
+        }
+
         bool shaped() const override
         {
             return mg::contains_alpha(buffer_->pixel_format());

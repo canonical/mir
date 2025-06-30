@@ -14,30 +14,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_CURSOR_LISTENER_H
-#define MIR_TEST_DOUBLES_MOCK_CURSOR_LISTENER_H
-
-#include "mir/input/cursor_listener.h"
-
+#include "mir/graphics/transformation.h"
+#include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-namespace mir
-{
-namespace test
-{
-namespace doubles
-{
+namespace mg = mir::graphics;
+using namespace testing;
 
-struct MockCursorListener : public input::CursorListener
+class TransformationTest : public Test, public WithParamInterface<MirOrientation>
 {
-    MOCK_METHOD(void, cursor_moved_to, (float, float), (override));
-    ~MockCursorListener() noexcept {}
-    void pointer_usable() {}
-    void pointer_unusable() {}
 };
 
-}
-}
+TEST_P(TransformationTest, InverseTransformIsInverseOfTransformation)
+{
+    auto const orientation = GetParam();
+    EXPECT_THAT(
+        mg::transformation(orientation) * mg::inverse_transformation(orientation),
+        Eq(glm::mat2(1.f)));
 }
 
-#endif
+INSTANTIATE_TEST_SUITE_P(TransformationTest, TransformationTest, ::testing::Values(
+    mir_orientation_normal,
+    mir_orientation_left,
+    mir_orientation_inverted,
+    mir_orientation_right
+));

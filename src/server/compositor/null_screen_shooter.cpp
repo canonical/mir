@@ -30,6 +30,7 @@ mc::NullScreenShooter::NullScreenShooter(Executor& executor)
 void mc::NullScreenShooter::capture(
     std::shared_ptr<mrs::WriteMappableBuffer> const&,
     geom::Rectangle const&,
+    bool,
     std::function<void(std::optional<time::Timestamp>)>&& callback)
 {
     log_warning("Failed to capture screen because NullScreenShooter is in use");

@@ -19,6 +19,8 @@ set(
   ${CMAKE_SOURCE_DIR}/src/include/server/mir/shell/accessibility_manager.h
   basic_accessibility_manager.cpp basic_accessibility_manager.h
   mouse_keys_transformer.cpp mouse_keys_transformer.h
+  basic_simulated_secondary_click_transformer.cpp basic_simulated_secondary_click_transformer.h
+  basic_hover_click_transformer.cpp basic_hover_click_transformer.h
 )
 
 add_library(
