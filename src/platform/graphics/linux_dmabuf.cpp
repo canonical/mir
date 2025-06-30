@@ -911,18 +911,18 @@ public:
         }
 
         send_format_table_event(mir::Fd{mir::IntOwnedFd{shm_buffer.fd()}}, format_table_length * sizeof(Format));
-        wl_array main_device;
+        wl_array main_device = {};
         wl_array_init(&main_device);
         wl_array_add<dev_t>(&main_device, this->provider->devnum());
         send_main_device_event(&main_device);
 
         // We only currently support one device, which accessess all formats.
-        wl_array device;
+        wl_array device = {};
         wl_array_init(&device);
         wl_array_add<dev_t>(&device, this->provider->devnum());
         send_tranche_target_device_event(&device);
         send_tranche_flags_event(0);
-        wl_array indicies;
+        wl_array indicies = {};
         wl_array_init(&indicies);
         for (auto i = 0u; i < format_table_length; ++i)
         {
@@ -1266,7 +1266,7 @@ dev_t get_devnum(EGLDisplay dpy)
                 "Unable to determine linux-dmabuf device: no device path returned from EGL");
             return 0;
         }
-        struct stat device_stat;
+        struct stat device_stat = {};
         if (stat(device_path, &device_stat) == -1)
         {
             mir::log_info(
