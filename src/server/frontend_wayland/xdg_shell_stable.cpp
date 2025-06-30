@@ -436,7 +436,7 @@ mf::XdgToplevelStable::XdgToplevelStable(wl_resource* new_resource, XdgSurfaceSt
             WmCapabilities::minimize,
             WmCapabilities::fullscreen,
         };
-        wl_array capability_array = {};
+        wl_array capability_array{};
         wl_array_init(&capability_array);
         for (auto& capability : capabilities)
         {
@@ -449,7 +449,7 @@ mf::XdgToplevelStable::XdgToplevelStable(wl_resource* new_resource, XdgSurfaceSt
         wl_array_release(&capability_array);
     }
 
-    wl_array states = {};
+    wl_array states{};
     wl_array_init(&states);
     send_configure_event(0, 0, &states);
     wl_array_release(&states);
@@ -610,7 +610,7 @@ void mf::XdgToplevelStable::handle_close_request()
 
 void mf::XdgToplevelStable::send_toplevel_configure()
 {
-    wl_array states = {};
+    wl_array states{};
     wl_array_init(&states);
 
     if (is_active())

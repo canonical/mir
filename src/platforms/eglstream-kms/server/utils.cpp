@@ -35,7 +35,7 @@ dev_t mg::eglstream::devnum_for_device(EGLDeviceEXT device)
             mg::egl_error("Failed to determine DRM device node path from EGLDevice"));
     }
 
-    struct stat info = {};
+    struct stat info{};
     if (stat(device_path, &info) == -1)
     {
         BOOST_THROW_EXCEPTION((

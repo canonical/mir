@@ -419,9 +419,7 @@ TEST_F(UdevWrapperTest, UdevMonitorFdIsUnreadableAfterProcessingEvents)
     udev_environment.add_device("drm", "card1", NULL, {}, {});
     udev_environment.add_device("usb", "mightymouse", NULL, {}, {});
 
-    struct pollfd fds = {};
-    fds.fd = monitor.fd();
-    fds.events = POLLIN;
+    struct pollfd fds{ .fd = monitor.fd(), .events = POLLIN, .revents = {} };
 
     ASSERT_GT(poll(&fds, 1, 0), 0);
     ASSERT_TRUE(fds.revents & POLLIN);

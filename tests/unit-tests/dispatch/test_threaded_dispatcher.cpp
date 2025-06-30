@@ -342,7 +342,7 @@ TEST(ThreadedDispatcherSignalTest, keeps_dispatching_after_signal_interruption)
                  * When there's a signal handler for SIGCONT installed then
                  * any blocked syscall will (correctly) return EINTR, so install one.
                  */
-                struct sigaction sig_handler_new = {};
+                struct sigaction sig_handler_new{};
                 sigfillset(&sig_handler_new.sa_mask);
                 sig_handler_new.sa_flags = 0;
                 sig_handler_new.sa_handler = [](auto) {};

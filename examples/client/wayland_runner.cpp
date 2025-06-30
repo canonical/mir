@@ -133,7 +133,7 @@ State::State()
 {
     shutdown_fd = eventfd(0, EFD_CLOEXEC);
 
-    struct sigaction sig_handler_new = {};
+    struct sigaction sig_handler_new{};
     sigfillset(&sig_handler_new.sa_mask);
     sig_handler_new.sa_flags = 0;
     sig_handler_new.sa_handler = signal_shutdown;

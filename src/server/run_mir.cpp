@@ -210,7 +210,7 @@ void mir::run_mir(
           server_ptr->stop();
         };
 
-    struct sigaction old_action = {};
+    struct sigaction old_action{};
     if ((sigaction(SIGHUP, nullptr, &old_action) == 0) && (old_action.sa_handler == SIG_IGN))
     {
         // If our parent process is ignoring SIGHUP (e.g. is nohup) then we do the same
@@ -237,7 +237,7 @@ void mir::run_mir(
             {
                 for (auto sig : fatal_error_signals)
                 {
-                    struct sigaction sig_handler_desc = {};
+                    struct sigaction sig_handler_desc{};
                     sigfillset(&sig_handler_desc.sa_mask);
                     sig_handler_desc.sa_flags = SA_SIGINFO;
                     sig_handler_desc.sa_sigaction = &fatal_signal_cleanup;

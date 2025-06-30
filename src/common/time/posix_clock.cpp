@@ -24,7 +24,7 @@ namespace mt = mir::time;
 
 auto mt::clock_gettime_checked(clockid_t clock_id) -> std::chrono::nanoseconds
 {
-    struct timespec ts = {};
+    struct timespec ts{};
     if (auto err = clock_gettime(clock_id, &ts))
     {
         BOOST_THROW_EXCEPTION((
