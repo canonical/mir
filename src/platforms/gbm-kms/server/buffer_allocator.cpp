@@ -143,7 +143,7 @@ void mgg::BufferAllocator::bind_display(wl_display* display, std::shared_ptr<Exe
         if (dmabuf_provider)
         {
             mg::EGLExtensions::EXTImageDmaBufImportModifiers modifier_ext{dpy};
-            dmabuf_extension = std::make_unique<LinuxDmaBufUnstable>(display, dmabuf_provider);
+            dmabuf_extension = std::make_unique<LinuxDmaBuf>(display, dmabuf_provider);
             mir::log_info("Enabled linux-dmabuf import support");
         }
     }

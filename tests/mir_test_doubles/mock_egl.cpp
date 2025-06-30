@@ -195,7 +195,8 @@ void mtd::MockEGL::provide_egl_extensions()
         "GL_OES_EGL_image "
         "EGL_EXT_image_dma_buf_import "
         "EGL_WL_bind_wayland_display "
-        "EGL_EXT_platform_base";
+        "EGL_EXT_platform_base "
+        "EGL_EXT_device_query";
     ON_CALL(*this, eglQueryString(_,EGL_EXTENSIONS))
         .WillByDefault(Return(egl_exts));
 }

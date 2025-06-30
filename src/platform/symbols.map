@@ -36,6 +36,7 @@ MIR_PLATFORM_2.21 {
     mir::graphics::EGLExtensions::DebugKHR::DebugKHR*;
     mir::graphics::EGLExtensions::DebugKHR::extension_or_null_object*;
     mir::graphics::EGLExtensions::DebugKHR::maybe_debug_khr*;
+    mir::graphics::EGLExtensions::DeviceQuery::DeviceQuery*;
     mir::graphics::EGLExtensions::EGLExtensions*;
     mir::graphics::EGLExtensions::EXTImageDmaBufImportModifiers::EXTImageDmaBufImportModifiers*;
     mir::graphics::EGLExtensions::NVStreamAttribExtensions::NVStreamAttribExtensions*;
@@ -55,9 +56,9 @@ MIR_PLATFORM_2.21 {
     mir::graphics::has_egl_extension*;
     mir::graphics::has_egl_client_extension*;
     mir::graphics::LinearGammaLUTs::LinearGammaLUTs*;
-    mir::graphics::LinuxDmaBufUnstable::?LinuxDmaBufUnstable*;
-    mir::graphics::LinuxDmaBufUnstable::LinuxDmaBufUnstable*;
-    mir::graphics::LinuxDmaBufUnstable::buffer_from_resource*;
+    mir::graphics::LinuxDmaBuf::?LinuxDmaBuf*;
+    mir::graphics::LinuxDmaBuf::LinuxDmaBuf*;
+    mir::graphics::LinuxDmaBuf::buffer_from_resource*;
     mir::graphics::OverlappingOutputGroup::bounding_rectangle*;
     mir::graphics::OverlappingOutputGroup::for_each_output*;
     mir::graphics::OverlappingOutputGrouping::OverlappingOutputGrouping*;

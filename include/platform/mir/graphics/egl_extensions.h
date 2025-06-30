@@ -326,6 +326,15 @@ struct EGLExtensions
         PFNEGLEXPORTDMABUFIMAGEMESAPROC const eglExportDMABUFImageMESA;
         PFNEGLEXPORTDMABUFIMAGEQUERYMESAPROC const eglExportDMABUFImageQueryMESA;
     };
+
+    struct DeviceQuery
+    {
+        DeviceQuery();
+
+        PFNEGLQUERYDEVICEATTRIBEXTPROC const eglQueryDeviceAttribEXT;
+        PFNEGLQUERYDEVICESTRINGEXTPROC const eglQueryDeviceStringEXT;
+        PFNEGLQUERYDISPLAYATTRIBEXTPROC const eglQueryDisplayAttribEXT;
+    };
 };
 }
 }

@@ -253,3 +253,19 @@ auto mg::EGLExtensions::MESADmaBufExport::extension_if_supported(EGLDisplay dpy)
     }
 }
 
+mg::EGLExtensions::DeviceQuery::DeviceQuery()
+    : eglQueryDeviceAttribEXT{
+          reinterpret_cast<PFNEGLQUERYDEVICEATTRIBEXTPROC>(
+              eglGetProcAddress("eglQueryDeviceAttribEXT"))},
+      eglQueryDeviceStringEXT{
+          reinterpret_cast<PFNEGLQUERYDEVICESTRINGEXTPROC>(
+              eglGetProcAddress("eglQueryDeviceStringEXT"))},
+     eglQueryDisplayAttribEXT {
+          reinterpret_cast<PFNEGLQUERYDISPLAYATTRIBEXTPROC>(
+              eglGetProcAddress("eglQueryDisplayAttribEXT"))}
+{
+    if (!strstr(eglQueryString(EGL_NO_DISPLAY, EGL_EXTENSIONS), "EGL_EXT_device_query"))
+    {
+        BOOST_THROW_EXCEPTION((std::runtime_error{"Missing required EGL_EXT_device_query extension"}));
+    }
+}
