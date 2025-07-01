@@ -596,7 +596,9 @@ global:
     miral::BounceKeys::BounceKeys*;
     miral::BounceKeys::delay*;
     miral::BounceKeys::disable*;
+    miral::BounceKeys::disabled*;
     miral::BounceKeys::enable*;
+    miral::BounceKeys::enabled*;
     miral::BounceKeys::on_press_rejected*;
     miral::BounceKeys::operator*;
     "miral::CursorScale::CursorScale(miral::live_config::Store&)";
@@ -644,3 +646,4 @@ global:
     vtable?for?miral::live_config::Store;
   };
 } MIRAL_5.3;
+
