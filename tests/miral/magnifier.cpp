@@ -36,18 +36,7 @@ public:
     MagnifierTest()
     {
         start_server_in_setup = false;
-        add_start_callback([&]()
-        {
-            platforms = server().the_rendering_platforms();
-            displays = server().the_display_platforms();
-        });
     }
-
-    // TODO (mattkae): The platforms are captured here so that the libraries
-    //  do not get released before we hit deconstruction, specifically for the
-    //  output surface in the basic screen shooter.
-    std::vector<std::shared_ptr<mir::graphics::RenderingPlatform>> platforms;
-    std::vector<std::shared_ptr<mir::graphics::DisplayPlatform>> displays;
 };
 
 TEST_F(MagnifierTest, magnifier_disabled_by_default)
