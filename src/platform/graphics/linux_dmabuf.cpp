@@ -15,6 +15,7 @@
  */
 
 #include "mir/graphics/linux_dmabuf.h"
+#include "mir/anonymous_shm_file.h"
 #include "mir/fd.h"
 #include "mir/graphics/drm_formats.h"
 #include "egl_buffer_copy.h"
@@ -35,6 +36,7 @@
 #include <cstdint>
 #include <cstring>
 #include <stdexcept>
+#include <sys/stat.h>
 
 #define MIR_LOG_COMPONENT "linux-dmabuf-import"
 #include "mir/log.h"
@@ -51,6 +53,17 @@ namespace mg = mir::graphics;
 namespace mgc = mg::common;
 namespace mw = mir::wayland;
 namespace geom = mir::geometry;
+
+
+namespace
+{
+    template <typename T>
+    void wl_array_add(wl_array *array, T value)
+    {
+        if (auto d = static_cast<T*>(wl_array_add(array, sizeof(T))))
+            *d = value;
+    }
+}
 
 
 class mg::DmaBufFormatDescriptors
@@ -608,7 +621,7 @@ public:
     LinuxDmaBufParams(
         wl_resource* new_resource,
         std::shared_ptr<mg::DMABufEGLProvider> provider)
-        : mir::wayland::LinuxBufferParamsV1(new_resource, Version<3>{}),
+        : mir::wayland::LinuxBufferParamsV1(new_resource, Version<5>{}),
           consumed{false},
           provider{std::move(provider)}
     {
@@ -856,6 +869,76 @@ private:
     }
 };
 
+class LinuxDmaBufFeedback : public mir::wayland::LinuxDmabufFeedbackV1
+{
+public:
+    LinuxDmaBufFeedback(
+        wl_resource* new_resource,
+        struct wl_resource* surface,
+        std::shared_ptr<mg::DMABufEGLProvider> provider)
+        : mir::wayland::LinuxDmabufFeedbackV1(new_resource, Version<5>{}),
+          provider{std::move(provider)}
+    {
+        // We have the same feedback regardless of surface.
+        (void)surface;
+
+        // Build table in shared memory.
+        struct Format
+        {
+            uint32_t format;
+            uint32_t padding; /* unused */
+            uint64_t modifier;
+        };
+        auto const& formats = this->provider->supported_formats();
+        size_t format_table_length = 0;
+        for (auto i = 0u; i < formats.num_formats(); ++i)
+        {
+            format_table_length += formats[i].modifiers.size();
+        }
+        mir::AnonymousShmFile shm_buffer{format_table_length * sizeof(Format)};
+        Format *data = static_cast<Format*>(shm_buffer.base_ptr());
+        size_t k = 0;
+        for (auto i = 0u; i < formats.num_formats(); ++i)
+        {
+            auto format = formats[i];
+            for (auto j = 0u; j < format.modifiers.size(); ++j)
+            {
+                data[k].format = format.format;
+                data[k].padding = 0;
+                data[k].modifier = format.modifiers[j];
+                k++;
+            }
+        }
+
+        send_format_table_event(mir::Fd{mir::IntOwnedFd{shm_buffer.fd()}}, format_table_length * sizeof(Format));
+        wl_array main_device = {};
+        wl_array_init(&main_device);
+        wl_array_add<dev_t>(&main_device, this->provider->devnum());
+        send_main_device_event(&main_device);
+
+        // We only currently support one device, which accessess all formats.
+        wl_array device = {};
+        wl_array_init(&device);
+        wl_array_add<dev_t>(&device, this->provider->devnum());
+        send_tranche_target_device_event(&device);
+        send_tranche_flags_event(0);
+        wl_array indicies = {};
+        wl_array_init(&indicies);
+        for (auto i = 0u; i < format_table_length; ++i)
+        {
+            uint32_t *index = static_cast<uint32_t*>(wl_array_add(&indicies, sizeof(uint32_t)));
+            *index = i;
+        }
+        send_tranche_formats_event(&indicies);
+        send_tranche_done_event();
+
+        send_done_event();
+    }
+
+private:
+    std::shared_ptr<mg::DMABufEGLProvider> const provider;
+};
+
 GLuint get_tex_id()
 {
     GLuint tex;
@@ -1085,14 +1168,22 @@ private:
 
 }
 
-class mg::LinuxDmaBufUnstable::Instance : public mir::wayland::LinuxDmabufV1
+class mg::LinuxDmaBuf::Instance : public mir::wayland::LinuxDmabufV1
 {
 public:
     Instance(
         wl_resource* new_resource,
         std::shared_ptr<mg::DMABufEGLProvider> provider)
-        : mir::wayland::LinuxDmabufV1(new_resource, Version<3>{}),
+        : mir::wayland::LinuxDmabufV1(new_resource, Version<5>{}),
           provider{std::move(provider)}
+    {
+        if (wl_resource_get_version(new_resource) < 4)
+        {
+            send_formats();
+        }
+    }
+private:
+    void send_formats()
     {
         auto const& formats = this->provider->supported_formats();
         for (auto i = 0u; i < formats.num_formats(); ++i)
@@ -1110,24 +1201,34 @@ public:
             }
         }
     }
-private:
+
     void create_params(struct wl_resource* params_id) override
     {
         new LinuxDmaBufParams{params_id, provider};
     }
 
+    void get_default_feedback(struct wl_resource* params_id) override
+    {
+        new LinuxDmaBufFeedback{params_id, nullptr, provider};
+    }
+
+    void get_surface_feedback(struct wl_resource* params_id, struct wl_resource* surface) override
+    {
+        new LinuxDmaBufFeedback{params_id, surface, provider};
+    }
+
     std::shared_ptr<mg::DMABufEGLProvider> const provider;
 };
 
-mg::LinuxDmaBufUnstable::LinuxDmaBufUnstable(
+mg::LinuxDmaBuf::LinuxDmaBuf(
     wl_display* display,
     std::shared_ptr<mg::DMABufEGLProvider> provider)
-    : mir::wayland::LinuxDmabufV1::Global(display, Version<3>{}),
+    : mir::wayland::LinuxDmabufV1::Global(display, Version<5>{}),
       provider{std::move(provider)}
 {
 }
 
-auto mg::LinuxDmaBufUnstable::buffer_from_resource(
+auto mg::LinuxDmaBuf::buffer_from_resource(
     wl_resource* buffer,
     std::function<void()>&& on_consumed,
     std::function<void()>&& on_release,
@@ -1144,9 +1245,44 @@ auto mg::LinuxDmaBufUnstable::buffer_from_resource(
     return nullptr;
 }
 
-void mg::LinuxDmaBufUnstable::bind(wl_resource* new_resource)
+void mg::LinuxDmaBuf::bind(wl_resource* new_resource)
 {
-    new LinuxDmaBufUnstable::Instance{new_resource, provider};
+    new LinuxDmaBuf::Instance{new_resource, provider};
+}
+
+namespace
+{
+dev_t get_devnum(EGLDisplay dpy)
+{
+    try
+    {
+        mg::EGLExtensions::DeviceQuery device_query_ext;
+        EGLDeviceEXT device;
+        device_query_ext.eglQueryDisplayAttribEXT(dpy, EGL_DEVICE_EXT, reinterpret_cast<EGLAttrib*>(&device));
+        const char *device_path = device_query_ext.eglQueryDeviceStringEXT(device, EGL_DRM_DEVICE_FILE_EXT);
+        if (device_path == nullptr)
+        {
+            mir::log_info(
+                "Unable to determine linux-dmabuf device: no device path returned from EGL");
+            return 0;
+        }
+        struct stat device_stat = {};
+        if (stat(device_path, &device_stat) == -1)
+        {
+            mir::log_info(
+                "Unable to determine linux-dmabuf device: unable to stat device path: %s", strerror(errno));
+            return 0;
+        }
+
+        return device_stat.st_rdev;
+    }
+    catch (std::runtime_error const& error)
+    {
+        mir::log_info(
+            "Unable to determine linux-dmabuf device: %s", error.what());
+        return 0;
+    }
+}
 }
 
 mg::DMABufEGLProvider::DMABufEGLProvider(
@@ -1158,6 +1294,7 @@ mg::DMABufEGLProvider::DMABufEGLProvider(
     : dpy{dpy},
       egl_extensions{std::move(egl_extensions)},
       dmabuf_export_ext{mg::EGLExtensions::MESADmaBufExport::extension_if_supported(dpy)},
+      devnum_{get_devnum(dpy)},
       formats{std::make_unique<DmaBufFormatDescriptors>(dpy, dmabuf_ext)},
       egl_delegate{std::move(egl_delegate)},
       allocate_importable_image{std::move(allocate_importable_image)},
@@ -1166,6 +1303,11 @@ mg::DMABufEGLProvider::DMABufEGLProvider(
 }
 
 mg::DMABufEGLProvider::~DMABufEGLProvider() = default;
+
+auto mg::DMABufEGLProvider::devnum() const -> dev_t
+{
+    return devnum_;
+}
 
 auto mg::DMABufEGLProvider::supported_formats() const -> mg::DmaBufFormatDescriptors const&
 {
