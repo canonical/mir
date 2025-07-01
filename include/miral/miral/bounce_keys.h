@@ -26,6 +26,12 @@ namespace mir { class Server; }
 namespace miral
 {
 /// Enables configuring bounce keys at runtime.
+///
+/// Bounce keys is an accessibility feature that enables rejection of
+/// keypresses of the same key that occur within a certain delay of each other.
+/// Optionally, you (the shell author) can attach a rejection handler to
+/// provide feedback to users.
+///
 /// \remark Since MirAL 5.4
 class BounceKeys
 {
