@@ -1,9 +1,5 @@
 mir_add_wrapped_executable(mir_unit_tests_atomic-kms NOINSTALL
   ${CMAKE_CURRENT_SOURCE_DIR}/test_cursor.cpp
-  ${MIR_SERVER_OBJECTS}
-  $<TARGET_OBJECTS:mirplatformgraphicsatomickmsobjects>
-  $<TARGET_OBJECTS:mirsharedatomickmscommon-static>
-  $<TARGET_OBJECTS:mir-umock-test-framework>
 )
 
 add_dependencies(mir_unit_tests_atomic-kms GMock)
@@ -17,11 +13,15 @@ set_target_properties(
 target_link_libraries(
   mir_unit_tests_atomic-kms
 
+  mirplatformgraphicsatomickmsobjects
+  mirsharedatomickmscommon-static
+  mirsharedgbmservercommon-static
+  server_platform_common # force this to be linked before the test doubles
+  mir-umock-test-framework
   mir-test-static
   mir-test-framework-static
   mir-test-doubles-static
   mir-test-doubles-platform-static
-  mirsharedgbmservercommon-static
 
   PkgConfig::DRM
   PkgConfig::GBM

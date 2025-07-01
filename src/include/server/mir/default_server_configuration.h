@@ -379,7 +379,6 @@ protected:
         std::shared_ptr<input::CursorObserverMultiplexer> const& wrapped);
 /** @} */
 
-    CachedPtr<frontend::Connector>   connector;
     CachedPtr<frontend::Connector>   wayland_connector;
     CachedPtr<frontend::Connector>   xwayland_connector;
     CachedPtr<frontend::DragIconController> drag_icon_controller;

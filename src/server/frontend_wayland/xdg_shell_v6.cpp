@@ -379,7 +379,7 @@ mf::XdgToplevelV6::XdgToplevelV6(struct wl_resource* new_resource, XdgSurfaceV6*
           xdg_surface->xdg_shell.output_manager),
       xdg_surface{xdg_surface}
 {
-    wl_array states;
+    wl_array states{};
     wl_array_init(&states);
     send_configure_event(0, 0, &states);
     wl_array_release(&states);
@@ -531,7 +531,7 @@ void mf::XdgToplevelV6::handle_close_request()
 
 void mf::XdgToplevelV6::send_toplevel_configure()
 {
-    wl_array states;
+    wl_array states{};
     wl_array_init(&states);
 
     if (is_active())

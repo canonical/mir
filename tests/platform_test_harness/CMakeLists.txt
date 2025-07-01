@@ -24,4 +24,6 @@ target_link_libraries(
       # We pull in mirserver here not to actually link it, but to use the
       # list of library dependencies associated with the target
       mirserver
+      PkgConfig::EGL
+      PkgConfig::GLESv2
 )

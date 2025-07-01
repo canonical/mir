@@ -28,7 +28,6 @@ target_link_libraries(mirplatformgraphicsvirtualobjects
 )
 
 add_library(mirplatformvirtual MODULE
-    $<TARGET_OBJECTS:mirplatformgraphicsvirtualobjects>
 )
 
 target_link_libraries(
@@ -37,6 +36,7 @@ target_link_libraries(
     PRIVATE
     mirplatform
     server_platform_common
+    mirplatformgraphicsvirtualobjects
 )
 
 set_target_properties(

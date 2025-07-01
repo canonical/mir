@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <miral/append_event_filter.h>
+#include <miral/append_keyboard_event_filter.h>
 #include <miral/command_line_option.h>
 #include <miral/display_configuration_option.h>
 #include <miral/runner.h>
@@ -38,19 +38,11 @@ int main(int argc, char const* argv[])
         "disable-quit",
         "Disable Ctrl-Alt-Shift-BkSp to quit"};
 
-    AppendEventFilter quit_on_ctrl_alt_bksp{[&](MirEvent const* event)
+    AppendKeyboardEventFilter quit_on_ctrl_alt_bksp{[&](MirKeyboardEvent const* kev)
         {
             if (!allow_quit)
                 return false;
 
-            if (mir_event_get_type(event) != mir_event_type_input)
-                return false;
-
-            MirInputEvent const* input_event = mir_event_get_input_event(event);
-            if (mir_input_event_get_type(input_event) != mir_input_event_type_key)
-                return false;
-
-            MirKeyboardEvent const* kev = mir_input_event_get_keyboard_event(input_event);
             if (mir_keyboard_event_action(kev) != mir_keyboard_action_down)
                 return false;
 
