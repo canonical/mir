@@ -121,8 +121,18 @@ struct miral::BounceKeys::Self
     std::weak_ptr<mi::CompositeEventFilter> composite_event_filter;
 };
 
-miral::BounceKeys::BounceKeys(bool enable_by_default)
-    : self{std::make_shared<Self>(enable_by_default)}
+auto miral::BounceKeys::enabled() -> BounceKeys
+{
+    return BounceKeys{std::make_shared<Self>(true)};
+}
+
+auto miral::BounceKeys::disabled() -> BounceKeys
+{
+    return BounceKeys{std::make_shared<Self>(false)};
+}
+
+miral::BounceKeys::BounceKeys(std::shared_ptr<Self> self) :
+    self{std::move(self)}
 {
 }
 

@@ -30,7 +30,12 @@ namespace miral
 class BounceKeys
 {
 public:
-    explicit BounceKeys(bool enable_by_default);
+    /// Creates a `BounceKeys` instance that's enabled by default.
+    static auto enabled() -> BounceKeys;
+
+    /// Creates a `BounceKeys` instance that's disabled by default.
+    static auto disabled() -> BounceKeys;
+
     void operator()(mir::Server&);
 
     /// Enables bounce keys.
@@ -51,6 +56,7 @@ public:
 
 private:
     struct Self;
+    BounceKeys(std::shared_ptr<Self> self);
     std::shared_ptr<Self> const self;
 };
 }

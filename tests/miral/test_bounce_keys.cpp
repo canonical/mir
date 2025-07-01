@@ -65,7 +65,7 @@ struct TestBounceKeys : miral::TestServer
         bounce_keys.delay(test_bounce_keys_delay);
     }
 
-    miral::BounceKeys bounce_keys{true};
+    miral::BounceKeys bounce_keys{miral::BounceKeys::enabled()};
 
     std::weak_ptr<mi::CompositeEventFilter> composite_event_filter;
     std::weak_ptr<mi::InputDeviceRegistry> input_device_registry;

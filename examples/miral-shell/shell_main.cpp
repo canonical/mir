@@ -211,7 +211,7 @@ int main(int argc, char const* argv[])
 
     miral::HoverClick hover_click_config{false};
 
-    miral::BounceKeys bounce_keys{true};
+    auto bounce_keys = BounceKeys::disabled();
 
     return runner.run_with(
         {
