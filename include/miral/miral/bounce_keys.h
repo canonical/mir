@@ -26,7 +26,7 @@ namespace mir { class Server; }
 namespace miral
 {
 /// Enables configuring bounce keys at runtime.
-/// \remark Since MirAL 5.3
+/// \remark Since MirAL 5.4
 class BounceKeys
 {
 public:

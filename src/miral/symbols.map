@@ -524,12 +524,6 @@ global:
 MIRAL_5.3 {
 global:
   extern "C++" {
-    miral::BounceKeys::BounceKeys*;
-    miral::BounceKeys::delay*;
-    miral::BounceKeys::disable*;
-    miral::BounceKeys::enable*;
-    miral::BounceKeys::on_press_rejected*;
-    miral::BounceKeys::operator*;
     miral::CursorScale::?CursorScale*;
     "miral::CursorScale::CursorScale()";
     "miral::CursorScale::CursorScale(float)";
@@ -585,7 +579,6 @@ global:
     miral::SimulatedSecondaryClick::on_hold_start*;
     miral::SimulatedSecondaryClick::on_secondary_click*;
     miral::SimulatedSecondaryClick::operator*;
-    typeinfo?for?miral::BounceKeys;
     typeinfo?for?miral::CursorScale;
     typeinfo?for?miral::DisplayConfiguration::Node;
     typeinfo?for?miral::HoverClick;
@@ -598,6 +591,12 @@ global:
 MIRAL_5.4 {
 global:
   extern "C++" {
+    miral::BounceKeys::BounceKeys*;
+    miral::BounceKeys::delay*;
+    miral::BounceKeys::disable*;
+    miral::BounceKeys::enable*;
+    miral::BounceKeys::on_press_rejected*;
+    miral::BounceKeys::operator*;
     "miral::CursorScale::CursorScale(miral::live_config::Store&)";
     "miral::InputConfiguration::InputConfiguration(miral::live_config::Store&)";
     "miral::OutputFilter::OutputFilter(miral::live_config::Store&)";
@@ -629,6 +628,7 @@ global:
     non-virtual?thunk?to?miral::live_config::IniFile::add_strings_attribute*;
     non-virtual?thunk?to?miral::live_config::IniFile::on_done*;
     non-virtual?thunk?to?miral::live_config::Store::?Store*;
+    typeinfo?for?miral::BounceKeys;
     typeinfo?for?miral::live_config::IniFile;
     typeinfo?for?miral::live_config::Key;
     typeinfo?for?miral::live_config::Store;
