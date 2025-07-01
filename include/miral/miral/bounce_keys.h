@@ -25,6 +25,7 @@ namespace mir { class Server; }
 
 namespace miral
 {
+namespace live_config { class Store; }
 /// Enables configuring bounce keys at runtime.
 ///
 /// Bounce keys is an accessibility feature that enables rejection of
@@ -41,6 +42,9 @@ public:
 
     /// Creates a `BounceKeys` instance that's disabled by default.
     static auto disabled() -> BounceKeys;
+
+    /// Construct a `BounceKeys` instance with access to a live config store.
+    explicit BounceKeys(live_config::Store& config_store);
 
     void operator()(mir::Server&);
 
