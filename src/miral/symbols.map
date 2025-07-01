@@ -544,7 +544,6 @@ global:
     miral::DisplayConfiguration::layout_userdata_builder*;
     miral::HoverClick::HoverClick*;
     miral::HoverClick::cancel_displacement_threshold*;
-    miral::HoverClick::reclick_displacement_threshold*;
     miral::HoverClick::disable*;
     miral::HoverClick::enable*;
     miral::HoverClick::hover_duration*;
@@ -552,6 +551,7 @@ global:
     miral::HoverClick::on_hover_cancel*;
     miral::HoverClick::on_hover_start*;
     miral::HoverClick::operator*;
+    miral::HoverClick::reclick_displacement_threshold*;
     miral::InputConfiguration::Keyboard::merge*;
     miral::InputConfiguration::Keyboard::repeat_delay*;
     miral::InputConfiguration::Keyboard::repeat_rate*;
@@ -594,11 +594,17 @@ global:
     "miral::CursorScale::CursorScale(miral::live_config::Store&)";
     "miral::InputConfiguration::InputConfiguration(miral::live_config::Store&)";
     "miral::OutputFilter::OutputFilter(miral::live_config::Store&)";
+    miral::AppendKeyboardEventFilter::AppendKeyboardEventFilter*;
+    miral::AppendKeyboardEventFilter::operator*;
     miral::Magnifier::Magnifier*;
     miral::Magnifier::capture_size*;
     miral::Magnifier::enable*;
     miral::Magnifier::magnification*;
     miral::Magnifier::operator*;
+    miral::WaylandTools::?WaylandTools*;
+    miral::WaylandTools::WaylandTools*;
+    miral::WaylandTools::for_each_binding*;
+    miral::WaylandTools::operator*;
     miral::live_config::IniFile::?IniFile*;
     miral::live_config::IniFile::IniFile*;
     miral::live_config::IniFile::add_bool_attribute*;
@@ -627,7 +633,9 @@ global:
     non-virtual?thunk?to?miral::live_config::IniFile::add_strings_attribute*;
     non-virtual?thunk?to?miral::live_config::IniFile::on_done*;
     non-virtual?thunk?to?miral::live_config::Store::?Store*;
+    typeinfo?for?miral::AppendKeyboardEventFilter;
     typeinfo?for?miral::Magnifier;
+    typeinfo?for?miral::WaylandTools;
     typeinfo?for?miral::live_config::IniFile;
     typeinfo?for?miral::live_config::Key;
     typeinfo?for?miral::live_config::Store;

@@ -1436,3 +1436,19 @@ TEST_F(MinimalWindowManagerTest, DISABLED_windows_on_removed_output_are_placed_o
     geom::Rectangle const window_rect(window.top_left(), window.size());
     EXPECT_TRUE(window_rect.overlaps(new_output_configs[0].extents()));
 }
+
+TEST_F(MinimalWindowManagerTest, raising_tree_changes_z_order)
+{
+    auto const app1 = open_application("app1");
+    auto const app2 = open_application("app2");
+
+    miral::WindowSpecification spec;
+    spec.size() = geom::Size(100, 100);
+    auto const window1 = create_window(app1, spec);
+    auto const window2 = create_window(app2, spec);
+
+    ASSERT_TRUE(is_above(window2, window1));
+
+    tools().raise_tree(window1);
+    EXPECT_TRUE(is_above(window1, window2));
+}

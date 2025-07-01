@@ -17,6 +17,7 @@
 #ifndef MIR_SERVER_H_
 #define MIR_SERVER_H_
 
+#include <mir/graphics/display_configuration.h>
 #include "mir/shell/window_manager_builder.h"
 #include "mir_toolkit/common.h"
 
@@ -26,6 +27,8 @@
 #include <vector>
 
 struct wl_display;
+struct wl_resource;
+namespace mir::wayland { class Client; }
 
 namespace mir
 {
@@ -510,6 +513,18 @@ public:
     auto the_scene() const -> std::shared_ptr<compositor::Scene>;
 
     auto the_screen_shooter_factory() const -> std::shared_ptr<compositor::ScreenShooterFactory>;
+
+    /** @name Wayland tools
+     * These facilitate shells implementing Wayland protocol extensions.
+     * They should be called while the server is running (i.e. run() has been called and
+     * not exited) otherwise they throw a std::logic_error.
+     * @{ */
+    void for_each_output_binding(
+        wayland::Client* client,
+        graphics::DisplayConfigurationOutputId output,
+        std::function<void(wl_resource* output)> const& callback);
+    /** @} */
+
 private:
     struct ServerConfiguration;
     struct Self;

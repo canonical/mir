@@ -29,8 +29,6 @@ namespace miral
 class HoverClick
 {
 public:
-    /// \note `--enable-hover-click` has higher precedence than
-    /// [enabled_by_default]
     explicit HoverClick(bool enabled_by_default);
 
     void operator()(mir::Server& server);

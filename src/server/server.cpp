@@ -19,6 +19,7 @@
 #include "mir/emergency_cleanup.h"
 #include "mir/fd.h"
 #include "mir/frontend/connector.h"
+#include "mir/frontend/wayland.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/display_sink.h"
 #include "mir/input/composite_event_filter.h"
@@ -786,4 +787,13 @@ void mir::Server::add_configuration_option(
 void mir::Server::set_the_decoration_strategy(std::shared_ptr<DecorationStrategy> strategy)
 {
     self->server_config->set_the_decoration_strategy(strategy);
+}
+
+void mir::Server::for_each_output_binding(wayland::Client* client, graphics::DisplayConfigurationOutputId output,
+    std::function<void(wl_resource* output)> const& callback)
+{
+    if (auto const wc = dynamic_pointer_cast<frontend::WaylandTools>(self->server_config->the_wayland_connector()))
+    {
+        wc ->for_each_output_binding(client, output, callback);
+    }
 }

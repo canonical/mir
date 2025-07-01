@@ -126,21 +126,17 @@ add_subdirectory(mir_test/)
 add_subdirectory(mir_test_framework/)
 add_subdirectory(mir_test_doubles/)
 
-add_library(mir-test-assist STATIC
-  $<TARGET_OBJECTS:mir-public-test>
-  $<TARGET_OBJECTS:mir-public-test-doubles>
-  $<TARGET_OBJECTS:mir-public-test-framework>
-)
+add_library(mir-test-assist STATIC)
 
-add_library(mir-test-assist-internal STATIC
-  $<TARGET_OBJECTS:mir-protected-test-framework>
-  $<TARGET_OBJECTS:mir-protected-test-doubles>
-)
+add_library(mir-test-assist-internal STATIC)
 
 target_link_libraries(mir-test-assist
 PUBLIC
   miral
   mirserver
+  mir-public-test
+  mir-public-test-doubles
+  mir-public-test-framework
 
   Boost::system
   ${GTEST_BOTH_LIBRARIES}
@@ -153,6 +149,8 @@ PRIVATE
 target_link_libraries(mir-test-assist-internal
 PUBLIC
   mirserver
+  mir-protected-test-framework
+  mir-protected-test-doubles
 
   Boost::system
   ${GTEST_BOTH_LIBRARIES}

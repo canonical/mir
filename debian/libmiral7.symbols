@@ -563,6 +563,8 @@ libmiral.so.7 libmiral7 #MINVER#
  (c++)"miral::SimulatedSecondaryClick::on_secondary_click(std::function<void ()>&&)@MIRAL_5.3" 5.3.0
  (c++)"miral::SimulatedSecondaryClick::operator()(mir::Server&)@MIRAL_5.3" 5.3.0
  MIRAL_5.4@MIRAL_5.4 5.4.0
+ (c++)"miral::AppendKeyboardEventFilter::AppendKeyboardEventFilter(std::function<bool (MirKeyboardEvent const*)> const&)@MIRAL_5.4" 5.4.0
+ (c++)"miral::AppendKeyboardEventFilter::operator()(mir::Server&)@MIRAL_5.4" 5.4.0
  (c++)"miral::CursorScale::CursorScale(miral::live_config::Store&)@MIRAL_5.4" 5.4.0
  (c++)"miral::DisplayConfiguration::Node::Node(miral::DisplayConfiguration::Node&&)@MIRAL_5.3" 5.4.0
  (c++)"miral::InputConfiguration::InputConfiguration(miral::live_config::Store&)@MIRAL_5.4" 5.4.0
@@ -572,6 +574,12 @@ libmiral.so.7 libmiral7 #MINVER#
  (c++)"miral::Magnifier::magnification(float)@MIRAL_5.4" 5.4.0
  (c++)"miral::Magnifier::operator()(mir::Server&)@MIRAL_5.4" 5.4.0
  (c++)"miral::OutputFilter::OutputFilter(miral::live_config::Store&)@MIRAL_5.4" 5.4.0
+ (c++)"miral::WaylandTools::WaylandTools()@MIRAL_5.4" 5.4.0
+ (c++)"miral::WaylandTools::WaylandTools(miral::WaylandTools const&)@MIRAL_5.4" 5.4.0
+ (c++)"miral::WaylandTools::for_each_binding(mir::wayland::Client*, miral::Output const&, std::function<void (wl_resource*)> const&) const@MIRAL_5.4" 5.4.0
+ (c++)"miral::WaylandTools::operator()(mir::Server&) const@MIRAL_5.4" 5.4.0
+ (c++)"miral::WaylandTools::operator=(miral::WaylandTools const&)@MIRAL_5.4" 5.4.0
+ (c++)"miral::WaylandTools::~WaylandTools()@MIRAL_5.4" 5.4.0
  (c++)"miral::live_config::IniFile::IniFile()@MIRAL_5.4" 5.4.0
  (c++)"miral::live_config::IniFile::add_bool_attribute(miral::live_config::Key const&, std::basic_string_view<char, std::char_traits<char> >, bool, std::function<void (miral::live_config::Key const&, std::optional<bool>)>)@MIRAL_5.4" 5.4.0
  (c++)"miral::live_config::IniFile::add_bool_attribute(miral::live_config::Key const&, std::basic_string_view<char, std::char_traits<char> >, std::function<void (miral::live_config::Key const&, std::optional<bool>)>)@MIRAL_5.4" 5.4.0

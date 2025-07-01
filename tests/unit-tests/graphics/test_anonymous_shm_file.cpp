@@ -32,7 +32,7 @@ TEST(AnonymousShmFile, has_correct_size)
 
     mir::AnonymousShmFile shm_file{file_size};
 
-    struct stat stat;
+    struct stat stat{};
     fstat(shm_file.fd(), &stat);
 
     EXPECT_EQ(static_cast<off_t>(file_size), stat.st_size);

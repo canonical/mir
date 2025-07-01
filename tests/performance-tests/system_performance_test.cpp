@@ -141,7 +141,7 @@ pid_t spawn(std::string const& cmd)
 
 bool wait_for_file(char const* path, std::chrono::seconds timeout)
 {
-    struct stat s;
+    struct stat s{};
     int count = 0, max = timeout.count();
     int ret;
     while ((ret = stat(path, &s)) < 0 && errno == ENOENT && count < max)

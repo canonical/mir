@@ -26,13 +26,13 @@ target_link_libraries(mir-public-test
 add_library(mir-test-static STATIC
   fd_utils.cpp
   test_dispatchable.cpp
-  $<TARGET_OBJECTS:mir-public-test>
 )
 
 target_link_libraries(mir-test-static
   PUBLIC
     mircommon
     mircore
+    mir-public-test
 )
 
 if (NOT HAVE_PTHREAD_GETNAME_NP)

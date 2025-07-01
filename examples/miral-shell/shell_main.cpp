@@ -24,7 +24,7 @@
 #include <miral/external_client.h>
 #include <miral/runner.h>
 #include <miral/window_management_options.h>
-#include <miral/append_event_filter.h>
+#include <miral/append_keyboard_event_filter.h>
 #include <miral/internal_client.h>
 #include <miral/command_line_option.h>
 #include <miral/cursor_theme.h>
@@ -88,16 +88,8 @@ int main(int argc, char const* argv[])
 
     std::string terminal_cmd{"miral-terminal"};
 
-    auto const quit_on_ctrl_alt_bksp = [&](MirEvent const* event)
+    auto const quit_on_ctrl_alt_bksp = [&](MirKeyboardEvent const* kev)
         {
-            if (mir_event_get_type(event) != mir_event_type_input)
-                return false;
-
-            MirInputEvent const* input_event = mir_event_get_input_event(event);
-            if (mir_input_event_get_type(input_event) != mir_input_event_type_key)
-                return false;
-
-            MirKeyboardEvent const* kev = mir_input_event_get_keyboard_event(input_event);
             if (mir_keyboard_event_action(kev) != mir_keyboard_action_down)
                 return false;
 
@@ -149,15 +141,7 @@ int main(int argc, char const* argv[])
     auto const initial_mousekeys_state = false;
     miral::MouseKeysConfig mousekeys_config{initial_mousekeys_state};
 
-    auto toggle_mousekeys_filter = [mousekeys_on = initial_mousekeys_state, &mousekeys_config](MirEvent const* event) mutable {
-        if(mir_event_get_type(event) != mir_event_type_input)
-            return false;
-
-        auto const* input_event = mir_event_get_input_event(event);
-        if(mir_input_event_get_type(input_event) != mir_input_event_type_key)
-            return false;
-
-        auto const* key_event = mir_input_event_get_keyboard_event(input_event);
+    auto toggle_mousekeys_filter = [mousekeys_on = initial_mousekeys_state, &mousekeys_config](MirKeyboardEvent const* key_event) mutable {
         auto const modifiers = mir_keyboard_event_modifiers(key_event);
 
         if ((modifiers & mir_input_event_modifier_ctrl) && (modifiers & mir_input_event_modifier_shift) &&
@@ -176,15 +160,7 @@ int main(int argc, char const* argv[])
     };
 
     miral::OutputFilter output_filter;
-    auto toggle_output_filter_filter = [invert_on = false, &output_filter](MirEvent const* event) mutable {
-        if(mir_event_get_type(event) != mir_event_type_input)
-            return false;
-
-        auto const* input_event = mir_event_get_input_event(event);
-        if(mir_input_event_get_type(input_event) != mir_input_event_type_key)
-            return false;
-
-        auto const* key_event = mir_input_event_get_keyboard_event(input_event);
+    auto toggle_output_filter_filter = [invert_on = false, &output_filter](MirKeyboardEvent const* key_event) mutable {
         auto const modifiers = mir_keyboard_event_modifiers(key_event);
 
         if (mir_keyboard_event_action(key_event) != mir_keyboard_action_down)
@@ -317,7 +293,7 @@ int main(int argc, char const* argv[])
             external_client_launcher,
             launcher,
             config_keymap,
-            AppendEventFilter{quit_on_ctrl_alt_bksp},
+            AppendKeyboardEventFilter{quit_on_ctrl_alt_bksp},
             StartupInternalClient{spinner},
             ConfigurationOption{run_startup_apps, "startup-apps", "Colon separated list of startup apps", ""},
             pre_init(ConfigurationOption{[&](std::string const& typeface) { ::wallpaper::font_file(typeface); },
@@ -325,9 +301,9 @@ int main(int argc, char const* argv[])
             ConfigurationOption{[&](std::string const& cmd) { terminal_cmd = cmd; },
                                 "shell-terminal-emulator", "terminal emulator to use", terminal_cmd},
             mousekeys_config,
-            AppendEventFilter{toggle_mousekeys_filter},
+            AppendKeyboardEventFilter{toggle_mousekeys_filter},
             output_filter,
-            AppendEventFilter{toggle_output_filter_filter},
+            AppendKeyboardEventFilter{toggle_output_filter_filter},
             ssc_config,
             hover_click_config,
             magnifier,
