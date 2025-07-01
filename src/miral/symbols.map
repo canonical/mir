@@ -593,6 +593,14 @@ global:
   extern "C++" {
     miral::AppendKeyboardEventFilter::AppendKeyboardEventFilter*;
     miral::AppendKeyboardEventFilter::operator*;
+    miral::BounceKeys::BounceKeys*;
+    miral::BounceKeys::delay*;
+    miral::BounceKeys::disable*;
+    miral::BounceKeys::disabled*;
+    miral::BounceKeys::enable*;
+    miral::BounceKeys::enabled*;
+    miral::BounceKeys::on_press_rejected*;
+    miral::BounceKeys::operator*;
     "miral::CursorScale::CursorScale(miral::live_config::Store&)";
     "miral::InputConfiguration::InputConfiguration(miral::live_config::Store&)";
     "miral::OutputFilter::OutputFilter(miral::live_config::Store&)";
@@ -629,6 +637,7 @@ global:
     non-virtual?thunk?to?miral::live_config::IniFile::on_done*;
     non-virtual?thunk?to?miral::live_config::Store::?Store*;
     typeinfo?for?miral::AppendKeyboardEventFilter;
+    typeinfo?for?miral::BounceKeys;
     typeinfo?for?miral::WaylandTools;
     typeinfo?for?miral::live_config::IniFile;
     typeinfo?for?miral::live_config::Key;
@@ -637,3 +646,4 @@ global:
     vtable?for?miral::live_config::Store;
   };
 } MIRAL_5.3;
+

@@ -212,6 +212,6 @@ int main(int argc, char const* argv[])
             output_filter,
             AppendKeyboardEventFilter{toggle_output_filter_filter},
             ssc_config,
-            hover_click_config
+            hover_click_config,
         });
 }
