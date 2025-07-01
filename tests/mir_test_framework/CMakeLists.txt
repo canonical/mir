@@ -103,18 +103,17 @@ target_link_libraries(mir-umock-test-framework
   PRIVATE PkgConfig::UMOCKDEV
 )
 
-add_library(mir-test-framework-static STATIC
-  $<TARGET_OBJECTS:mir-public-test-framework>
-  $<TARGET_OBJECTS:mir-stub-input-platform>
-  $<TARGET_OBJECTS:mir-protected-test-framework>
-  $<TARGET_OBJECTS:mir-public-test>
-)
+add_library(mir-test-framework-static STATIC)
 
 add_dependencies(mir-test-framework-static GMock)
 
 target_link_libraries(mir-test-framework-static
 
   mirserver
+  mir-public-test-framework
+  mir-stub-input-platform
+  mir-protected-test-framework
+  mir-public-test
   Boost::system
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARIES}
@@ -140,11 +139,13 @@ target_link_libraries(mir-test-input-framework
 )
 
 add_library(
-  mirplatforminputstub MODULE
-  $<TARGET_OBJECTS:mir-test-input-framework>
-  $<TARGET_OBJECTS:mirevdevutilsobjects>
-  $<TARGET_OBJECTS:mir-stub-input-platform>)
-target_link_libraries(mirplatforminputstub mircommon)
+  mirplatforminputstub MODULE)
+target_link_libraries(mirplatforminputstub
+  mir-test-input-framework
+  mirevdevutilsobjects
+  mir-stub-input-platform
+  mircommon
+)
 
 set_target_properties(
   mirplatforminputstub PROPERTIES
