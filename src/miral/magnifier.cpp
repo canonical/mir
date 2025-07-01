@@ -16,6 +16,12 @@
 
 #include "render_scene_into_surface.h"
 #include "miral/magnifier.h"
+
+#include <input-method-unstable-v2_wrapper.h>
+#include <wayland_wrapper.h>
+
+#include "miral/live_config.h"
+#include "mir/log.h"
 #include "mir/server.h"
 #include "mir/input/cursor_observer.h"
 #include "mir/input/cursor_observer_multiplexer.h"
@@ -37,23 +43,19 @@ public:
             .overlay_cursor(false);
     }
 
-    ~Self()
-    {
-        if (observer && cursor_multiplexer)
-            cursor_multiplexer->unregister_interest(*observer);
-    }
-
-    void operator()(mir::Server& server)
+    void init(mir::Server& server)
     {
         server.add_init_callback([&]
         {
-            cursor_multiplexer = server.the_cursor_observer_multiplexer();
             observer = std::make_shared<Observer>(this);
-            cursor_multiplexer->register_interest(observer);
+            server.the_cursor_observer_multiplexer()->register_interest(observer);
+            cursor_multiplexer = server.the_cursor_observer_multiplexer();
         });
 
         server.add_stop_callback([&]
         {
+            if (auto const locked = cursor_multiplexer.lock())
+                locked->unregister_interest(*observer);
             surface = nullptr;
         });
 
@@ -102,6 +104,11 @@ public:
         render_scene_into_surface.capture_area({ capture_position, size });
     }
 
+    geom::Size current_size() const
+    {
+        return render_scene_into_surface.capture_area().size;
+    }
+
 private:
     class Observer : public mi::CursorObserver
     {
@@ -144,7 +151,7 @@ private:
 
     std::mutex mutex;
     RenderSceneIntoSurface render_scene_into_surface;
-    std::shared_ptr<mi::CursorObserverMultiplexer> cursor_multiplexer;
+    std::weak_ptr<mi::CursorObserverMultiplexer> cursor_multiplexer;
     std::shared_ptr<Observer> observer;
     std::shared_ptr<ms::Surface> surface;
     geom::Point cursor_pos;
@@ -157,6 +164,73 @@ miral::Magnifier::Magnifier()
 {
 }
 
+miral::Magnifier::Magnifier(live_config::Store& config_store)
+    : Magnifier()
+{
+    config_store.add_bool_attribute(
+        {"magnifier", "enable"},
+        "Whether the magnifier is enabled",
+        [this](live_config::Key const&, std::optional<bool> val)
+        {
+            enable(val.value_or(false));
+        });
+    config_store.add_float_attribute(
+        {"magnifier", "magnification"},
+        "The magnification scale ",
+        [this](live_config::Key const& key, std::optional<float> val)
+        {
+            if (val.has_value() && *val <= 1.f)
+            {
+                mir::log_warning(
+                    "Config key '%s' should be greater than or equal to 1",
+                    key.to_string().c_str());
+                return;
+            }
+
+            magnification(val.value_or(2.f));
+        });
+    config_store.add_int_attribute(
+        {"magnifier", "capture_size", "width"},
+        "The width of the rectangular region that will be magnified",
+        [this](live_config::Key const& key, std::optional<int> val)
+        {
+            if (val.has_value() && *val <= 0)
+            {
+                mir::log_warning(
+                    "Config key '%s' should be greater than 0",
+                    key.to_string().c_str());
+                return;
+            }
+
+            if (!val.has_value())
+                return;
+
+            auto size = self->current_size();
+            size.width = geom::Width(*val);
+            capture_size(size);
+        });
+    config_store.add_int_attribute(
+        {"magnifier", "capture_size", "height"},
+        "The height of the rectangular region that will be magnified",
+        [this](live_config::Key const& key, std::optional<int> val)
+        {
+            if (val.has_value() && *val <= 0)
+            {
+                mir::log_warning(
+                    "Config key '%s' should be greater than 0",
+                    key.to_string().c_str());
+                return;
+            }
+
+            if (!val.has_value())
+                return;
+
+            auto size = self->current_size();
+            size.height = geom::Height(*val);
+            capture_size(size);
+        });
+}
+
 miral::Magnifier& miral::Magnifier::enable(bool enabled)
 {
     self->set_enable(enabled);
@@ -165,6 +239,13 @@ miral::Magnifier& miral::Magnifier::enable(bool enabled)
 
 miral::Magnifier& miral::Magnifier::magnification(float magnification)
 {
+    if (magnification <= 1.f)
+    {
+        mir::log_warning(
+            "Magnification should be greater than or equal to 1");
+        return *this;
+    }
+
     self->set_magnification(magnification);
     return *this;
 }
@@ -177,6 +258,6 @@ miral::Magnifier& miral::Magnifier::capture_size(mir::geometry::Size const& size
 
 void miral::Magnifier::operator()(mir::Server& server)
 {
-    self->operator()(server);
+    self->init(server);
 }
 

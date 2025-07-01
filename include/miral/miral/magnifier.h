@@ -24,13 +24,17 @@ namespace mir { class Server; }
 
 namespace miral
 {
+namespace live_config { class Store; }
+
 /// Renders a magnified region of the scene at the cursor position.
 /// By default, the magnifier will magnify a 400x300 region below
 /// the cursor by a 2x magnitude.
+/// \remark Since MirAL 5.4
 class Magnifier
 {
 public:
     Magnifier();
+    explicit Magnifier(live_config::Store& config_store);
 
     Magnifier& enable(bool enabled);
     Magnifier& magnification(float magnification);

@@ -30,12 +30,6 @@ namespace mtf = mir_test_framework;
 using namespace testing;
 using namespace miral;
 
-// TODO (mattkae): The platforms are captured here so that the libraries
-//  do not get released before we hit deconstruction, specifically for the
-//  output surface in the basic screen shooter.
-std::vector<std::shared_ptr<mir::graphics::RenderingPlatform>> platforms;
-std::vector<std::shared_ptr<mir::graphics::DisplayPlatform>> displays;
-
 class MagnifierTest : public TestServer
 {
 public:
@@ -48,6 +42,12 @@ public:
             displays = server().the_display_platforms();
         });
     }
+
+    // TODO (mattkae): The platforms are captured here so that the libraries
+    //  do not get released before we hit deconstruction, specifically for the
+    //  output surface in the basic screen shooter.
+    std::vector<std::shared_ptr<mir::graphics::RenderingPlatform>> platforms;
+    std::vector<std::shared_ptr<mir::graphics::DisplayPlatform>> displays;
 };
 
 TEST_F(MagnifierTest, magnifier_disabled_by_default)

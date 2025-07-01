@@ -158,16 +158,9 @@ public:
     {
     }
 
-    ~Self()
-    {
-        if (surface && surface_stack)
-            surface_stack->remove_surface(surface);
-    }
-
-    void operator()(mir::Server& server)
+    void init(mir::Server& server)
     {
         std::lock_guard lock{mutex};
-        surface_stack = server.the_surface_stack();
         surface = std::make_shared<SceneRenderingSurface>(
             initial_capture_area,
             create_stream_info(),
@@ -177,12 +170,15 @@ public:
             server.the_display_configuration_observer_registrar(),
             server.the_screen_shooter_factory()->create(mir::immediate_executor),
             server.the_buffer_allocator());
-        surface_stack->add_surface(surface, mi::InputReceptionMode::normal);
+        server.the_surface_stack()->add_surface(surface, mi::InputReceptionMode::normal);
         on_surface_ready(surface);
+        surface_stack = server.the_surface_stack();
 
-        server.add_stop_callback([&]
+        server.add_stop_callback([this]
         {
-            surface_stack->remove_surface(surface);
+            std::lock_guard lock{mutex};
+            if (auto const locked = surface_stack.lock())
+                locked->remove_surface(surface);
             surface = nullptr;
         });
     }
@@ -194,6 +190,12 @@ public:
 
         if (surface)
             surface->set_capture_area(area);
+    }
+
+    geom::Rectangle capture_area()
+    {
+        std::lock_guard lock{mutex};
+        return initial_capture_area;
     }
 
     void set_overlay_cursor(bool overlay_cursor)
@@ -218,7 +220,7 @@ private:
     geom::Rectangle initial_capture_area;
     bool initial_overlay_cursor = false;
     std::shared_ptr<SceneRenderingSurface> surface;
-    std::shared_ptr<msh::SurfaceStack> surface_stack;
+    std::weak_ptr<msh::SurfaceStack> surface_stack;
 };
 
 miral::RenderSceneIntoSurface::RenderSceneIntoSurface()
@@ -234,12 +236,16 @@ miral::RenderSceneIntoSurface& miral::RenderSceneIntoSurface::capture_area(geom:
     return *this;
 }
 
+geom::Rectangle miral::RenderSceneIntoSurface::capture_area() const
+{
+    return self->capture_area();
+}
+
 miral::RenderSceneIntoSurface& miral::RenderSceneIntoSurface::overlay_cursor(bool overlay_cursor)
 {
     self->set_overlay_cursor(overlay_cursor);
     return *this;
 }
-
 
 miral::RenderSceneIntoSurface& miral::RenderSceneIntoSurface::on_surface_ready(
     std::function<void(std::shared_ptr<mir::scene::Surface> const&)>&& callback)
@@ -252,7 +258,7 @@ void miral::RenderSceneIntoSurface::operator()(mir::Server& server)
 {
     server.add_init_callback([&]
     {
-        self->operator()(server);
+        self->init(server);
     });
 }
 

@@ -31,11 +31,6 @@ namespace mtf = mir_test_framework;
 using namespace testing;
 using namespace miral;
 
-// TODO (mattkae): The platforms are captured here so that the libraries
-//  do not get released before we hit deconstruction, specifically for the
-//  output surface in the basic screen shooter.
-std::vector<std::shared_ptr<mir::graphics::RenderingPlatform>> platforms;
-std::vector<std::shared_ptr<mir::graphics::DisplayPlatform>> displays;
 
 class RenderSceneIntoSurfaceTest : public TestServer
 {
@@ -43,11 +38,6 @@ public:
     RenderSceneIntoSurfaceTest()
     {
         start_server_in_setup = false;
-        add_start_callback([&]()
-        {
-            platforms = server().the_rendering_platforms();
-            displays = server().the_display_platforms();
-        });
     }
 };
 
@@ -89,7 +79,7 @@ TEST_F(RenderSceneIntoSurfaceTest, set_capture_area_after_starting)
         EXPECT_THAT(elements.size(), Eq(1));
         auto const element = elements.at(0);
         EXPECT_THAT(element->renderable()->screen_position(), Eq(Rectangle(
-            Point(0, 0),
+            Point(100, 100),
             Size(200, 200)
         )));
     });

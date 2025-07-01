@@ -45,6 +45,9 @@ public:
     /// Sets the capture area of the scene.
     RenderSceneIntoSurface& capture_area(mir::geometry::Rectangle const& area);
 
+    /// Retrieve the current capture area.
+    mir::geometry::Rectangle capture_area() const;
+
     /// Set to true if the the cursor should be included in the scene capture.
     RenderSceneIntoSurface& overlay_cursor(bool overlay_cursor);
 
