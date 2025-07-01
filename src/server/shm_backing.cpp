@@ -143,7 +143,7 @@ private:
 
     static void install_sigbus_handler()
     {
-        struct sigaction sig_handler_desc;
+        struct sigaction sig_handler_desc{};
         sigfillset(&sig_handler_desc.sa_mask);
         sig_handler_desc.sa_flags = SA_SIGINFO;
         sig_handler_desc.sa_sigaction = &sigbus_handler;
@@ -353,7 +353,7 @@ auto backing_size_is_guaranteed_at_least(mir::Fd const& backing_store, size_t si
          * usefully check to see if it's big enough now, and if so, we don't have to do the SIGBUS
          * dance
          */
-        struct stat file_info;
+        struct stat file_info{};
         if (fstat(backing_store, &file_info) >= 0)
         {
             return static_cast<size_t>(file_info.st_size) >= size;

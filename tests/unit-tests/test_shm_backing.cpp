@@ -392,7 +392,7 @@ TEST(ShmBacking, doesnt_install_sigbus_handler_when_backing_is_safe)
     }
 
     // Store the initial SIGBUS handler
-    struct sigaction initial_sigbus_handler;
+    struct sigaction initial_sigbus_handler{};
     sigaction(SIGBUS, nullptr, &initial_sigbus_handler);
 
     // Construct a backing, a range from it, and map from the range.
@@ -401,7 +401,7 @@ TEST(ShmBacking, doesnt_install_sigbus_handler_when_backing_is_safe)
     auto range = backing->get_rw_range(0, shm_size);
     auto map = range->map_rw();
 
-    struct sigaction new_sigbus_handler;
+    struct sigaction new_sigbus_handler{};
     sigaction(SIGBUS, nullptr, &new_sigbus_handler);
 
     EXPECT_THAT(new_sigbus_handler, SignalHandlerIsEqual(initial_sigbus_handler));
@@ -560,7 +560,7 @@ TEST(ShmBacking, resize_doesnt_install_sigbus_handler_when_safe)
     }
 
     // Store the initial SIGBUS handler
-    struct sigaction initial_sigbus_handler;
+    struct sigaction initial_sigbus_handler{};
     sigaction(SIGBUS, nullptr, &initial_sigbus_handler);
 
     // Construct a backing, a range from it, and map from the range.
@@ -569,7 +569,7 @@ TEST(ShmBacking, resize_doesnt_install_sigbus_handler_when_safe)
     auto range = backing->get_rw_range(0, shm_size);
     auto map = range->map_rw();
 
-    struct sigaction new_sigbus_handler;
+    struct sigaction new_sigbus_handler{};
     sigaction(SIGBUS, nullptr, &new_sigbus_handler);
 
     ASSERT_THAT(new_sigbus_handler, SignalHandlerIsEqual(initial_sigbus_handler));

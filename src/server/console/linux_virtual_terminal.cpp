@@ -317,7 +317,6 @@ mir::LinuxVirtualTerminal::LinuxVirtualTerminal(
       prev_tcattr(),
       active{true}
 {
-    struct termios tcattr;
     if (fops->ioctl(vt_fd.fd(), KDGETMODE, &prev_kd_mode) < 0)
     {
         BOOST_THROW_EXCEPTION(
@@ -350,7 +349,7 @@ mir::LinuxVirtualTerminal::LinuxVirtualTerminal(
     }
 
     fops->tcgetattr(vt_fd.fd(), &prev_tcattr);
-    tcattr = prev_tcattr;
+    auto tcattr = prev_tcattr;
     tcattr.c_iflag = IGNPAR | IGNBRK;
     cfsetispeed(&tcattr, B9600);
     tcattr.c_oflag = 0;
@@ -534,7 +533,7 @@ int mir::LinuxVirtualTerminal::find_active_vt_number()
 
         if (fd >= 0)
         {
-            struct vt_stat vts;
+            struct vt_stat vts{};
             auto status = fops->ioctl(fd, VT_GETSTATE, &vts);
             fops->close(fd);
 
