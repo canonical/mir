@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "miral/bounce_keys.h"
 #include "server_example_input_event_filter.h"
 #include "server_example_input_filter.h"
 #include "server_example_test_client.h"
@@ -132,6 +133,7 @@ try
     miral::CursorScale cursor_scale{config_store};
     miral::OutputFilter output_filter{config_store};
     miral::InputConfiguration input_configuration{config_store};
+    miral::BounceKeys bounce_keys{config_store};
 
     miral::ConfigFile config_file{
         runner,
@@ -163,6 +165,7 @@ try
         output_filter,
         input_configuration,
         cursor_scale,
+        bounce_keys,
     });
 
     // Propagate any test failure

@@ -26,6 +26,7 @@
 #include "mir/server.h"
 #include "mir/synchronised.h"
 #include "mir/time/alarm.h"
+#include "miral/live_config.h"
 
 #include <chrono>
 #include <optional>
@@ -134,6 +135,44 @@ auto miral::BounceKeys::disabled() -> BounceKeys
 miral::BounceKeys::BounceKeys(std::shared_ptr<Self> self) :
     self{std::move(self)}
 {
+}
+
+miral::BounceKeys::BounceKeys(live_config::Store& config_store) :
+    self{std::make_shared<Self>(false)}
+{
+    config_store.add_bool_attribute(
+        {"bounce_keys", "enable"},
+        "Whether or not to start the compositor with bounce keys enabled",
+        [this](live_config::Key const&, std::optional<bool> val) {
+            if(val)
+            {
+                if(*val)
+                    this->enable();
+                else
+                    this->disable();
+            }
+        });
+
+    config_store.add_int_attribute(
+        {"bounce_keys", "delay"},
+        "How much time in milliseconds must pass between keypresses to not be rejected.",
+        [this](live_config::Key const& key, std::optional<int> val)
+        {
+            if (val)
+            {
+                if (*val >= 0)
+                {
+                    this->delay(std::chrono::milliseconds{*val});
+                }
+                else
+                {
+                    mir::log_warning(
+                        "Config value %s does not support negative values. Ignoring the supplied value (%d)...",
+                        key.to_string().c_str(),
+                        *val);
+                }
+            }
+        });
 }
 
 void miral::BounceKeys::operator()(mir::Server& server)
