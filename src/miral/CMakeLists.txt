@@ -99,6 +99,7 @@ add_library(miral-external OBJECT
     live_config_ini_file.cpp            ${miral_include}/miral/live_config_ini_file.h
     hover_click.cpp                     ${miral_include}/miral/hover_click.h
     magnifier.cpp                       ${miral_include}/miral/magnifier.h
+    bounce_keys.cpp                     ${miral_include}/miral/bounce_keys.h
 )
 
 add_library(miral SHARED
