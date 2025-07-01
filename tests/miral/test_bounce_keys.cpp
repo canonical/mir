@@ -35,7 +35,7 @@ namespace mi = mir::input;
 
 namespace
 {
-static constexpr auto test_bounce_keys_delay = 20ms;
+static constexpr auto test_bounce_keys_delay = 40ms;
 
 void press(mi::InputSink* sink, mi::EventBuilder* builder, unsigned int keysym, unsigned int scancode)
 {
@@ -142,7 +142,10 @@ TEST_F(TestBounceKeys, irregular_press_periods_are_properly_rejected)
     auto virtual_keyboard = miral::test::add_test_device(
         input_device_registry.lock(), input_device_hub.lock(), mi::DeviceCapability::keyboard);
 
-    auto const tap_periods = std::array{ 15ms, 21ms, 27ms }; // reject, pass, pass
+    auto const tap_periods = std::array{
+        0.75 * test_bounce_keys_delay,
+        1.1 * test_bounce_keys_delay,
+        1.35 * test_bounce_keys_delay}; // reject, pass, pass
 
     virtual_keyboard->if_started_then(
         [this, &tap_periods](mi::InputSink* sink, mi::EventBuilder* builder)
