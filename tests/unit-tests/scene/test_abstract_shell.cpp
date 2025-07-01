@@ -37,7 +37,6 @@
 #include "mir/test/doubles/null_prompt_session_manager.h"
 #include "mir/test/doubles/stub_input_targeter.h"
 #include "mir/test/doubles/stub_buffer_allocator.h"
-#include "mir/test/doubles/null_application_not_responding_detector.h"
 #include "mir/test/doubles/stub_display.h"
 #include "mir/test/doubles/mock_input_seat.h"
 #include "mir/test/doubles/stub_observer_registrar.h"
@@ -106,7 +105,6 @@ struct MockSessionManager : ms::SessionManager
               session_event_sink,
               std::make_shared<ms::NullSessionListener>(),
               display,
-              std::make_shared<mtd::NullANRDetector>(),
               std::make_shared<mtd::StubBufferAllocator>(),
               std::make_shared<mtd::StubObserverRegistrar<mir::graphics::DisplayConfigurationObserver>>()}
     {

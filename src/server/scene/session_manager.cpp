@@ -87,7 +87,6 @@ ms::SessionManager::SessionManager(
     std::shared_ptr<SessionEventSink> const& session_event_sink,
     std::shared_ptr<SessionListener> const& session_listener,
     std::shared_ptr<graphics::Display const> const& display,
-    std::shared_ptr<ApplicationNotRespondingDetector> const& anr_detector,
     std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
     std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> const& display_config_registrar) :
     observers(std::make_shared<SessionObservers>()),
@@ -97,7 +96,6 @@ ms::SessionManager::SessionManager(
     session_event_sink(session_event_sink),
     session_listener(session_listener),
     display{display},
-    anr_detector{anr_detector},
     allocator{allocator},
     display_config_registrar{display_config_registrar}
 {
@@ -144,11 +142,6 @@ std::shared_ptr<ms::Session> ms::SessionManager::open_session(
 
     observers->starting(new_session);
 
-    anr_detector->register_session(new_session.get(), [sender]()
-    {
-        sender->send_ping(0);
-    });
-
     return new_session;
 }
 
@@ -166,8 +159,6 @@ void ms::SessionManager::unset_focus()
 
 void ms::SessionManager::close_session(std::shared_ptr<Session> const& session)
 {
-    anr_detector->unregister_session(session.get());
-
     session_event_sink->handle_session_stopping(session);
 
     observers->stopping(session);
