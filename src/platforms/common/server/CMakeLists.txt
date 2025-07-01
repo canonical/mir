@@ -35,5 +35,4 @@ target_link_libraries(server_platform_common
     ${KMS_UTILS_STATIC_LIBRARY}
     Boost::system
     PkgConfig::WAYLAND_SERVER
-    PkgConfig::GLESv2
 )

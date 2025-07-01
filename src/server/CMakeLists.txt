@@ -124,8 +124,6 @@ target_link_libraries(mirserver
     mircommon
     mirwayland
 
-    ${MIR_SERVER_REFERENCES}
-
     server_platform_common
     Boost::iostreams
     PkgConfig::DRM
@@ -145,6 +143,9 @@ target_link_libraries(mirserver
     PkgConfig::LTTNG_UST
     PkgConfig::FREETYPE
     atomic
+
+  PRIVATE
+    ${MIR_SERVER_REFERENCES}
 )
 
 if (MIR_USE_APPARMOR)

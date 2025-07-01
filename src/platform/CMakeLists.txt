@@ -39,8 +39,12 @@ target_include_directories(mirplatform
 target_link_libraries(mirplatform
   PRIVATE
     mircommon
-  PUBLIC
     ${MIR_PLATFORM_REFERENCES}
+  PUBLIC
+    mirwayland
+    mirplatformgraphicscommon
+    miroptions
+    mirudev
     PkgConfig::EPOXY
 )
 

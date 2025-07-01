@@ -8,13 +8,13 @@ target_link_libraries(
   mir_unit_tests_eglstream-kms
 
   ${EGLSTREAM_KMS_UNIT_TEST_REFERENCES}
+  server_platform_common
   mir-test-doubles-udev
   mir-test-static
   mir-test-framework-static
   mir-test-doubles-static
   mir-test-doubles-platform-static
 
-  server_platform_common
   PkgConfig::EPOXY
   PkgConfig::WAYLAND_EGLSTREAM
 )
