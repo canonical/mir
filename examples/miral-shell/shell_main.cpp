@@ -192,15 +192,7 @@ int main(int argc, char const* argv[])
         .magnification(magnification)
         .capture_size(capture_size)
         .enable(false);
-    auto magnifier_filter = [magnifier=magnifier, &magnification, &capture_size](MirEvent const* event) mutable {
-        if(mir_event_get_type(event) != mir_event_type_input)
-            return false;
-
-        auto const* input_event = mir_event_get_input_event(event);
-        if(mir_input_event_get_type(input_event) != mir_input_event_type_key)
-            return false;
-
-        auto const* key_event = mir_input_event_get_keyboard_event(input_event);
+    auto magnifier_filter = [magnifier=magnifier, &magnification, &capture_size](MirKeyboardEvent const* key_event) mutable {
         auto const modifiers = mir_keyboard_event_modifiers(key_event);
 
         if (mir_keyboard_event_action(key_event) != mir_keyboard_action_down)
@@ -307,6 +299,6 @@ int main(int argc, char const* argv[])
             ssc_config,
             hover_click_config,
             magnifier,
-            AppendEventFilter{magnifier_filter}
+            AppendKeyboardEventFilter{magnifier_filter}
         });
 }
