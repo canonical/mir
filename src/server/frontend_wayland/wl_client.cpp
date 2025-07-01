@@ -17,7 +17,6 @@
 #include "wl_client.h"
 #include "std_layout_uptr.h"
 
-#include "null_event_sink.h"
 #include "mir/frontend/session_authorizer.h"
 #include "mir/frontend/session_credentials.h"
 #include "mir/shell/shell.h"
@@ -152,8 +151,7 @@ void mf::WlClient::handle_client_created(wl_listener* listener, void* data)
     auto session = construction_context->shell->open_session(
         client_pid,
         Fd{IntOwnedFd{wl_client_get_fd(client)}},
-        "",
-        std::make_shared<mf::NullEventSink>());
+        "");
 
     // Can't use std::make_shared because WlClient constructor is private
     auto shared = std::shared_ptr<mf::WlClient>{
