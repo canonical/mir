@@ -1,4 +1,4 @@
-MIR_PLATFORM_2.21 {
+MIR_PLATFORM_2.22 {
  global:
   extern "C++" {
     mir::graphics::AtomicFrame::increment*;
@@ -11,14 +11,14 @@ MIR_PLATFORM_2.21 {
     mir::graphics::DMABufEGLProvider::as_texture*;
     mir::graphics::DRMFormat::DRMFormat*;
     mir::graphics::DRMFormat::Info::alpha_equivalent*;
-    mir::graphics::DRMFormat::as_mir_format*;
     mir::graphics::DRMFormat::Info::components*;
-    mir::graphics::DRMFormat::from_mir_format*;
     mir::graphics::DRMFormat::Info::has_alpha*;
-    mir::graphics::DRMFormat::name*;
     mir::graphics::DRMFormat::Info::opaque_equivalent*;
-    mir::graphics::DRMFormat::operator?unsigned?int*; /* Is actually operator uint32_t(), but 🤷 */
+    mir::graphics::DRMFormat::as_mir_format*;
+    mir::graphics::DRMFormat::from_mir_format*;
     mir::graphics::DRMFormat::info*;
+    mir::graphics::DRMFormat::name*;
+    mir::graphics::DRMFormat::operator?unsigned?int*; /* Is actually operator uint32_t(), but 🤷 */
     mir::graphics::DisplayConfiguration::operator*;
     mir::graphics::DisplayConfiguration::valid*;
     mir::graphics::DisplayConfigurationOutput::extents*;
@@ -36,6 +36,7 @@ MIR_PLATFORM_2.21 {
     mir::graphics::EGLExtensions::DebugKHR::DebugKHR*;
     mir::graphics::EGLExtensions::DebugKHR::extension_or_null_object*;
     mir::graphics::EGLExtensions::DebugKHR::maybe_debug_khr*;
+    mir::graphics::EGLExtensions::DeviceQuery::DeviceQuery*;
     mir::graphics::EGLExtensions::EGLExtensions*;
     mir::graphics::EGLExtensions::EXTImageDmaBufImportModifiers::EXTImageDmaBufImportModifiers*;
     mir::graphics::EGLExtensions::NVStreamAttribExtensions::NVStreamAttribExtensions*;
@@ -52,9 +53,10 @@ MIR_PLATFORM_2.21 {
     mir::graphics::EventHandlerRegister::register_signal_handler*;
     mir::graphics::EventHandlerRegister::unregister_fd_handler*;
     mir::graphics::GammaCurves::GammaCurves*;
-    mir::graphics::has_egl_extension*;
-    mir::graphics::has_egl_client_extension*;
     mir::graphics::LinearGammaLUTs::LinearGammaLUTs*;
+    mir::graphics::LinuxDmaBuf::?LinuxDmaBuf*;
+    mir::graphics::LinuxDmaBuf::LinuxDmaBuf*;
+    mir::graphics::LinuxDmaBuf::buffer_from_resource*;
     mir::graphics::OverlappingOutputGroup::bounding_rectangle*;
     mir::graphics::OverlappingOutputGroup::for_each_output*;
     mir::graphics::OverlappingOutputGrouping::OverlappingOutputGrouping*;
@@ -67,8 +69,13 @@ MIR_PLATFORM_2.21 {
     mir::graphics::common::EGLContextExecutor::EGLContextExecutor*;
     mir::graphics::common::EGLContextExecutor::spawn*;
     mir::graphics::contains_alpha*;
-    mir::graphics::drm_modifier_to_string*;
+    mir::graphics::drm::Syncobj::?Syncobj*;
+    mir::graphics::drm::Syncobj::Syncobj*;
+    mir::graphics::drm::Syncobj::signal*;
+    mir::graphics::drm::Syncobj::to_eventfd*;
+    mir::graphics::drm::Syncobj::wait*;
     mir::graphics::drm_format_to_string*;
+    mir::graphics::drm_modifier_to_string*;
     mir::graphics::egl_category*;
     mir::graphics::gl::Program::?Program*;
     mir::graphics::gl::ProgramFactory::?ProgramFactory*;
@@ -78,6 +85,8 @@ MIR_PLATFORM_2.21 {
     mir::graphics::gl_category*;
     mir::graphics::gl_error*;
     mir::graphics::green_channel_depth*;
+    mir::graphics::has_egl_client_extension*;
+    mir::graphics::has_egl_extension*;
     mir::graphics::initialise_egl_logger*;
     mir::graphics::operator*;
     mir::graphics::red_channel_depth*;
@@ -86,11 +95,6 @@ MIR_PLATFORM_2.21 {
     mir::graphics::wayland::bind_display*;
     mir::graphics::wayland::buffer_from_resource*;
     mir::graphics::wayland::unbind_display*;
-    mir::graphics::drm::Syncobj::Syncobj*;
-    mir::graphics::drm::Syncobj::?Syncobj*;
-    mir::graphics::drm::Syncobj::signal*;
-    mir::graphics::drm::Syncobj::to_eventfd*;
-    mir::graphics::drm::Syncobj::wait*;
     mir::options::Configuration::?Configuration*;
     mir::options::Configuration::Configuration*;
     mir::options::Configuration::operator*;
@@ -149,6 +153,7 @@ MIR_PLATFORM_2.21 {
     mir::options::touchspots_opt*;
     mir::options::vt_console;
     mir::options::vt_option_name*;
+    mir::options::vt_switching_option_name*;
     mir::options::wayland_extensions_opt;
     mir::options::x11_display_opt;
     mir::options::x11_scale_opt;
@@ -207,15 +212,3 @@ MIR_PLATFORM_2.21 {
  };
  local: *;
 };
-
-MIR_PLATFORM_2.22 {
- global:
-  extern "C++" {
-    mir::graphics::EGLExtensions::DeviceQuery::DeviceQuery*;
-    mir::graphics::LinuxDmaBuf::?LinuxDmaBuf*;
-    mir::graphics::LinuxDmaBuf::LinuxDmaBuf*;
-    mir::graphics::LinuxDmaBuf::buffer_from_resource*;
-    mir::options::vt_switching_option_name*;
-  };
- local: *;
-} MIR_PLATFORM_2.21;
