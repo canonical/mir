@@ -41,18 +41,18 @@ public:
 private:
     std::shared_ptr<MainLoop> const main_loop;
 
-    struct MutableState
-    {
-        // Runtime state
-        std::unordered_map<unsigned int, std::pair<std::unique_ptr<mir::time::Alarm>, bool>> keys_in_flight;
+    using KeysInFlight = std::unordered_map<unsigned int, std::pair<std::unique_ptr<mir::time::Alarm>, bool>>;
 
-        // Configuration state.
+    struct ConfigState
+    {
         std::chrono::milliseconds delay{1000};
-        std::function<void(unsigned int)> on_key_down{[](auto) {}}, on_key_rejected{[](auto) {}},
-            on_key_accepted{[](auto) {}};
+        std::function<void(unsigned int)> on_key_down{[](auto) {}};
+        std::function<void(unsigned int)> on_key_rejected{[](auto) {}};
+        std::function<void(unsigned int)> on_key_accepted{[](auto) {}};
     };
 
-    mir::Synchronised<MutableState> mutable_state;
+    mir::Synchronised<KeysInFlight> keys_in_flight;
+    mir::Synchronised<ConfigState> config;
 };
 }
 }

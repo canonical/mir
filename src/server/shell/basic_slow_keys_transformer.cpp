@@ -38,7 +38,7 @@ bool mir::shell::BasicSlowKeysTransformer::transform_input_event(
 
     auto* const key_event = input_event->to_keyboard();
     auto const keysym = key_event->keysym();
-    auto const state = mutable_state.lock();
+    auto const kif = keys_in_flight.lock();
     switch (key_event->action())
     {
     case mir_keyboard_action_down:
@@ -46,28 +46,29 @@ bool mir::shell::BasicSlowKeysTransformer::transform_input_event(
             auto alarm = main_loop->create_alarm(
                 [this, dispatcher, event_clone = std::shared_ptr<MirEvent>(event.clone()), keysym]
                 {
-                    auto const state = mutable_state.lock();
-                    auto iter = state->keys_in_flight.find(keysym);
-                    if (iter == state->keys_in_flight.end())
+                    auto const kif = keys_in_flight.lock();
+                    auto iter = kif->find(keysym);
+                    if (iter == kif->end())
                         return;
 
                     auto& [_, data] = *iter;
                     data.second = true;
 
                     dispatcher(event_clone);
-                    state->on_key_accepted(keysym);
+                    config.lock()->on_key_accepted(keysym);
                 });
-            alarm->reschedule_in(state->delay);
-            state->keys_in_flight.insert_or_assign(keysym, std::pair{std::move(alarm), false});
-            state->on_key_down(keysym);
+
+            auto const config_ = config.lock();
+            alarm->reschedule_in(config_->delay);
+            kif->insert_or_assign(keysym, std::pair{std::move(alarm), false});
+            config_->on_key_down(keysym);
 
             return true;
         }
     case mir_keyboard_action_up:
         {
-            auto iter = state->keys_in_flight.find(keysym);
-
-            if (iter == state->keys_in_flight.end())
+            auto iter = kif->find(keysym);
+            if (iter == kif->end())
                 return false;
 
             auto& [_, data] = *iter;
@@ -77,7 +78,7 @@ bool mir::shell::BasicSlowKeysTransformer::transform_input_event(
                 return false;
 
             alarm->cancel();
-            state->on_key_rejected(keysym);
+            config.lock()->on_key_rejected(keysym);
 
             return true;
         }
@@ -93,20 +94,20 @@ bool mir::shell::BasicSlowKeysTransformer::transform_input_event(
 
 void mir::shell::BasicSlowKeysTransformer::on_key_down(std::function<void(unsigned int)>&& okd)
 {
-    mutable_state.lock()->on_key_down = std::move(okd);
+    config.lock()->on_key_down = std::move(okd);
 }
 
 void mir::shell::BasicSlowKeysTransformer::on_key_rejected(std::function<void(unsigned int)>&& okr)
 {
-    mutable_state.lock()->on_key_rejected = std::move(okr);
+    config.lock()->on_key_rejected = std::move(okr);
 }
 
 void mir::shell::BasicSlowKeysTransformer::on_key_accepted(std::function<void(unsigned int)>&& oka)
 {
-    mutable_state.lock()->on_key_accepted = std::move(oka);
+    config.lock()->on_key_accepted = std::move(oka);
 }
 
 void mir::shell::BasicSlowKeysTransformer::delay(std::chrono::milliseconds delay)
 {
-    mutable_state.lock()->delay = delay;
+    config.lock()->delay = delay;
 }
