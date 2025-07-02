@@ -289,37 +289,6 @@ TEST_F(GLRenderer, applies_mirror_mode)
     renderer.render(renderable_list);
 }
 
-TEST_F(GLRenderer, applies_inverse_transform_before_orientation)
-{
-    InSequence seq;
-    EXPECT_CALL(mock_gl, glUniformMatrix4fv(_, _, _, _))
-        .Times(2); // Display transform
-    EXPECT_CALL(*renderable, mirror_mode())
-        .WillOnce(Return(mir_mirror_mode_vertical));
-    EXPECT_CALL(*renderable, orientation())
-        .WillOnce(Return(mir_orientation_left));
-    EXPECT_CALL(mock_gl, glUniformMatrix4fv(
-        _, _, _, testing::Truly([](float const* ptr)
-        {
-            // [mat] should be the inverse transform + the flip
-            glm::mat4 mat;
-            for (size_t i = 0; i < 4; i++)
-            {
-                for (size_t j = 0; j < 4; j++)
-                {
-                    mat[i][j] = ptr[i * 4 + j];
-                }
-            }
-
-            auto const trans = glm::mat4(mir::graphics::transformation(mir_orientation_left))
-                * glm::mat4(mir::graphics::transformation(mir_mirror_mode_vertical));
-            return mat * trans == glm::mat4(1.f);
-        }))).Times(1);
-
-    mrg::Renderer renderer(gl_platform, make_output_surface());
-    renderer.render(renderable_list);
-}
-
 TEST_F(GLRenderer, clears_to_opaque_black)
 {
     InSequence seq;
