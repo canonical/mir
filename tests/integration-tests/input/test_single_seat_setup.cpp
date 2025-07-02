@@ -16,7 +16,6 @@
 
 #include "src/server/input/default_input_device_hub.h"
 #include "src/server/input/basic_seat.h"
-#include "src/server/input/config_changer.h"
 #include "src/server/scene/broadcasting_session_event_sink.h"
 
 #include "mir/test/doubles/advanceable_clock.h"
@@ -107,13 +106,6 @@ struct SingleSeatInputDeviceHubSetup : ::testing::Test
         mt::fake_shared(mock_status_listener),
         mt::fake_shared(led_observer_registrar)};
     NiceMock<mtd::MockInputDeviceObserver> mock_observer;
-    mi::ConfigChanger changer{
-        mt::fake_shared(mock_input_manager),
-            mt::fake_shared(hub),
-            mt::fake_shared(session_container),
-            mt::fake_shared(session_event_sink),
-            mt::fake_shared(hub)
-    };
 
     mi::DeviceCapabilities const keyboard_caps = mi::DeviceCapability::keyboard | mi::DeviceCapability::alpha_numeric;
     mi::DeviceCapabilities const touchpad_caps = mi::DeviceCapability::touchpad | mi::DeviceCapability::pointer;
@@ -504,38 +496,4 @@ TEST_F(SingleSeatInputDeviceHubSetup, tracks_a_single_button_state_from_multiple
     mouse_sink_2->handle_input(std::move(motion_2));
     mouse_sink_1->handle_input(std::move(motion_3));
     mouse_sink_1->handle_input(std::move(motion_4));
-}
-
-TEST_F(SingleSeatInputDeviceHubSetup, input_device_changes_sent_to_session)
-{
-    NiceMock<mtd::MockSceneSession> session;
-    session_container.insert_session(mt::fake_shared(session));
-
-    EXPECT_CALL(session, send_input_config(UnorderedElementsAre(DeviceMatches(device.get_device_info()))));
-    hub.add_device(mt::fake_shared(device));
-}
-
-TEST_F(SingleSeatInputDeviceHubSetup, input_device_changes_sent_to_session_multiple_devices)
-{
-    NiceMock<mtd::MockSceneSession> session;
-    session_container.insert_session(mt::fake_shared(session));
-
-    hub.add_device(mt::fake_shared(device));
-
-    EXPECT_CALL(session,
-                send_input_config(UnorderedElementsAre(DeviceMatches(device.get_device_info()),
-                                                       DeviceMatches(another_device.get_device_info()))));
-    hub.add_device(mt::fake_shared(another_device));
-}
-
-TEST_F(SingleSeatInputDeviceHubSetup, input_device_changes_sent_to_sink_removal)
-{
-    hub.add_device(mt::fake_shared(device));
-    hub.add_device(mt::fake_shared(another_device));
-
-    NiceMock<mtd::MockSceneSession> session;
-    session_container.insert_session(mt::fake_shared(session));
-    EXPECT_CALL(session,
-                send_input_config(UnorderedElementsAre(DeviceMatches(another_device.get_device_info()))));
-    hub.remove_device(mt::fake_shared(device));
 }

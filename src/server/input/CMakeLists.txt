@@ -4,9 +4,7 @@ set(
 
   basic_seat.cpp
   builtin_cursor_images.cpp
-  config_changer.cpp
-  config_changer.h
-  cursor_controller.cpp
+        cursor_controller.cpp
   default_configuration.cpp
   default_device.cpp
   default_event_builder.cpp
