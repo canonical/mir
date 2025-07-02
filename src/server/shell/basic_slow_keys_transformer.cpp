@@ -47,15 +47,14 @@ bool mir::shell::BasicSlowKeysTransformer::transform_input_event(
                 [this, dispatcher, event_clone = std::shared_ptr<MirEvent>(event.clone()), keysym]
                 {
                     auto const kif = keys_in_flight.lock();
-                    auto iter = kif->find(keysym);
-                    if (iter == kif->end())
-                        return;
+                    if (auto iter = kif->find(keysym); iter != kif->end())
+                    {
+                        auto& [_, data] = *iter;
+                        data.second = true;
 
-                    auto& [_, data] = *iter;
-                    data.second = true;
-
-                    dispatcher(event_clone);
-                    config.lock()->on_key_accepted(keysym);
+                        dispatcher(event_clone);
+                        config.lock()->on_key_accepted(keysym);
+                    }
                 });
 
             auto const config_ = config.lock();
@@ -67,20 +66,19 @@ bool mir::shell::BasicSlowKeysTransformer::transform_input_event(
         }
     case mir_keyboard_action_up:
         {
-            auto iter = kif->find(keysym);
-            if (iter == kif->end())
-                return false;
+            if (auto iter = kif->find(keysym); iter != kif->end())
+            {
+                auto& [_, data] = *iter;
+                auto& [alarm, dispatched] = data;
 
-            auto& [_, data] = *iter;
-            auto& [alarm, dispatched] = data;
+                if (dispatched)
+                    return false;
 
-            if (dispatched)
-                return false;
+                alarm->cancel();
+                config.lock()->on_key_rejected(keysym);
 
-            alarm->cancel();
-            config.lock()->on_key_rejected(keysym);
-
-            return true;
+                return true;
+            }
         }
 
     case mir_keyboard_action_repeat:
