@@ -566,8 +566,6 @@ libmiral.so.7 libmiral7 #MINVER#
  (c++)"miral::AppendKeyboardEventFilter::AppendKeyboardEventFilter(std::function<bool (MirKeyboardEvent const*)> const&)@MIRAL_5.4" 5.4.0
  (c++)"miral::AppendKeyboardEventFilter::operator()(mir::Server&)@MIRAL_5.4" 5.4.0
  (c++)"miral::BounceKeys::BounceKeys(bool)@MIRAL_5.4" 5.4.0
- (c++|arch-bits=64)"miral::BounceKeys::delay(std::chrono::duration<long, std::ratio<1l, 1000l> >)@MIRAL_5.4" 5.4.0
- (c++|arch-bits=32)"miral::BounceKeys::delay(std::chrono::duration<long long, std::ratio<1ll, 1000ll> >)@MIRAL_5.4" 5.4.0
  (c++)"miral::BounceKeys::BounceKeys(miral::live_config::Store&)@MIRAL_5.4" 5.4.0
  (c++)"miral::BounceKeys::BounceKeys(std::shared_ptr<miral::BounceKeys::Self>)@MIRAL_5.4" 5.4.0
  (c++)"miral::BounceKeys::disable()@MIRAL_5.4" 5.4.0
@@ -580,6 +578,7 @@ libmiral.so.7 libmiral7 #MINVER#
  (c++)"miral::DisplayConfiguration::Node::Node(miral::DisplayConfiguration::Node&&)@MIRAL_5.3" 5.4.0
  (c++)"miral::InputConfiguration::InputConfiguration(miral::live_config::Store&)@MIRAL_5.4" 5.4.0
  (c++)"miral::Magnifier::Magnifier()@MIRAL_5.4" 5.4.0
+ (c++)"miral::Magnifier::Magnifier(miral::live_config::Store&)@MIRAL_5.4" 5.4.0
  (c++)"miral::Magnifier::capture_size(mir::geometry::generic::Size<int> const&)@MIRAL_5.4" 5.4.0
  (c++)"miral::Magnifier::enable(bool)@MIRAL_5.4" 5.4.0
  (c++)"miral::Magnifier::magnification(float)@MIRAL_5.4" 5.4.0
@@ -615,12 +614,14 @@ libmiral.so.7 libmiral7 #MINVER#
  (c++)"typeinfo for miral::live_config::Store@MIRAL_5.4" 5.4.0
  (c++)"vtable for miral::live_config::IniFile@MIRAL_5.4" 5.4.0
  (c++)"vtable for miral::live_config::Store@MIRAL_5.4" 5.4.0
+ (c++|arch-bits=32)"miral::BounceKeys::delay(std::chrono::duration<long long, std::ratio<1ll, 1000ll> >)@MIRAL_5.4" 5.4.0
  (c++|arch-bits=32)"miral::live_config::IniFile::add_floats_attribute(miral::live_config::Key const&, std::basic_string_view<char, std::char_traits<char> >, std::function<void (miral::live_config::Key const&, std::optional<std::span<float const, 4294967295u> >)>)@MIRAL_5.4" 5.4.0
  (c++|arch-bits=32)"miral::live_config::IniFile::add_floats_attribute(miral::live_config::Key const&, std::basic_string_view<char, std::char_traits<char> >, std::span<float const, 4294967295u>, std::function<void (miral::live_config::Key const&, std::optional<std::span<float const, 4294967295u> >)>)@MIRAL_5.4" 5.4.0
  (c++|arch-bits=32)"miral::live_config::IniFile::add_ints_attribute(miral::live_config::Key const&, std::basic_string_view<char, std::char_traits<char> >, std::function<void (miral::live_config::Key const&, std::optional<std::span<int const, 4294967295u> >)>)@MIRAL_5.4" 5.4.0
  (c++|arch-bits=32)"miral::live_config::IniFile::add_ints_attribute(miral::live_config::Key const&, std::basic_string_view<char, std::char_traits<char> >, std::span<int const, 4294967295u>, std::function<void (miral::live_config::Key const&, std::optional<std::span<int const, 4294967295u> >)>)@MIRAL_5.4" 5.4.0
  (c++|arch-bits=32)"miral::live_config::IniFile::add_strings_attribute(miral::live_config::Key const&, std::basic_string_view<char, std::char_traits<char> >, std::function<void (miral::live_config::Key const&, std::optional<std::span<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const, 4294967295u> >)>)@MIRAL_5.4" 5.4.0
  (c++|arch-bits=32)"miral::live_config::IniFile::add_strings_attribute(miral::live_config::Key const&, std::basic_string_view<char, std::char_traits<char> >, std::span<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const, 4294967295u>, std::function<void (miral::live_config::Key const&, std::optional<std::span<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const, 4294967295u> >)>)@MIRAL_5.4" 5.4.0
+ (c++|arch-bits=64)"miral::BounceKeys::delay(std::chrono::duration<long, std::ratio<1l, 1000l> >)@MIRAL_5.4" 5.4.0
  (c++|arch-bits=64)"miral::live_config::IniFile::add_floats_attribute(miral::live_config::Key const&, std::basic_string_view<char, std::char_traits<char> >, std::function<void (miral::live_config::Key const&, std::optional<std::span<float const, 18446744073709551615ul> >)>)@MIRAL_5.4" 5.4.0
  (c++|arch-bits=64)"miral::live_config::IniFile::add_floats_attribute(miral::live_config::Key const&, std::basic_string_view<char, std::char_traits<char> >, std::span<float const, 18446744073709551615ul>, std::function<void (miral::live_config::Key const&, std::optional<std::span<float const, 18446744073709551615ul> >)>)@MIRAL_5.4" 5.4.0
  (c++|arch-bits=64)"miral::live_config::IniFile::add_ints_attribute(miral::live_config::Key const&, std::basic_string_view<char, std::char_traits<char> >, std::function<void (miral::live_config::Key const&, std::optional<std::span<int const, 18446744073709551615ul> >)>)@MIRAL_5.4" 5.4.0
