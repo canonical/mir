@@ -64,57 +64,60 @@ miral::SlowKeys::SlowKeys(std::shared_ptr<Self> s) :
 
 miral::SlowKeys& miral::SlowKeys::enable()
 {
-    self->state.lock()->enabled = true;
     if (auto const accessibility_manager = self->accessibility_manager.lock())
         accessibility_manager->slow_keys_enabled(true);
+    else
+        self->state.lock()->enabled = true;
 
     return *this;
 }
 
 miral::SlowKeys& miral::SlowKeys::disable()
 {
-    self->state.lock()->enabled = false;
     if (auto const accessibility_manager = self->accessibility_manager.lock())
         accessibility_manager->slow_keys_enabled(false);
+    else
+        self->state.lock()->enabled = false;
 
     return *this;
 }
 
 miral::SlowKeys& miral::SlowKeys::hold_delay(std::chrono::milliseconds hold_delay)
 {
-    self->state.lock()->hold_delay = hold_delay;
     if (auto const accessibility_manager = self->accessibility_manager.lock())
         accessibility_manager->slow_keys().delay(hold_delay);
+    else
+        self->state.lock()->hold_delay = hold_delay;
 
     return *this;
 }
 
 miral::SlowKeys& miral::SlowKeys::on_key_down(std::function<void(unsigned int)>&& on_key_down)
 {
-    auto const state = self->state.lock();
-    state->on_key_down = std::move(on_key_down);
     if (auto const accessibility_manager = self->accessibility_manager.lock())
-        accessibility_manager->slow_keys().on_key_down(std::move(state->on_key_down));
+        accessibility_manager->slow_keys().on_key_down(std::move(on_key_down));
+    else
+        self->state.lock()->on_key_down = std::move(on_key_down);
 
     return *this;
 }
 
 miral::SlowKeys& miral::SlowKeys::on_key_rejected(std::function<void(unsigned int)>&& on_key_rejected)
 {
-    auto const state = self->state.lock();
-    state->on_key_rejected = std::move(on_key_rejected);
     if (auto const accessibility_manager = self->accessibility_manager.lock())
-        accessibility_manager->slow_keys().on_key_rejected(std::move(state->on_key_rejected));
+        accessibility_manager->slow_keys().on_key_rejected(std::move(on_key_rejected));
+    else
+        self->state.lock()->on_key_rejected = std::move(on_key_rejected);
 
     return *this;
 }
 
 miral::SlowKeys& miral::SlowKeys::on_key_accepted(std::function<void(unsigned int)>&& on_key_accepted)
 {
-    auto const state = self->state.lock();
-    state->on_key_accepted = std::move(on_key_accepted);
     if (auto const accessibility_manager = self->accessibility_manager.lock())
-        accessibility_manager->slow_keys().on_key_accepted(std::move(state->on_key_accepted));
+        accessibility_manager->slow_keys().on_key_accepted(std::move(on_key_accepted));
+    else
+        self->state.lock()->on_key_accepted = std::move(on_key_accepted);
 
     return *this;
 }
