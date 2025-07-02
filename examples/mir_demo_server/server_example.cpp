@@ -32,6 +32,7 @@
 #include <miral/cursor_scale.h>
 #include <miral/output_filter.h>
 #include <miral/bounce_keys.h>
+#include <miral/slow_keys.h>
 
 #include "mir/abnormal_exit.h"
 #include "mir/main_loop.h"
@@ -129,6 +130,7 @@ try
     miral::OutputFilter output_filter{config_store};
     miral::InputConfiguration input_configuration{config_store};
     miral::BounceKeys bounce_keys{config_store};
+    miral::SlowKeys slow_keys{config_store};
 
     miral::ConfigFile config_file{
         runner,
@@ -161,6 +163,7 @@ try
         input_configuration,
         cursor_scale,
         bounce_keys,
+        slow_keys
     });
 
     // Propagate any test failure

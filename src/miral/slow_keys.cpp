@@ -15,12 +15,14 @@
  */
 
 #include "miral/slow_keys.h"
-#include "mir/options/option.h"
+
 #include "mir/server.h"
 #include "mir/shell/accessibility_manager.h"
 #include "mir/shell/slow_keys_transformer.h"
+#include "mir/log.h"
 
 #include "mir/synchronised.h"
+#include "miral/live_config.h"
 
 struct miral::SlowKeys::Self
 {
@@ -62,6 +64,44 @@ miral::SlowKeys::SlowKeys(std::shared_ptr<Self> s) :
 {
 }
 
+miral::SlowKeys::SlowKeys(miral::live_config::Store& config_store) :
+    self{std::make_shared<Self>(false)}
+{
+    config_store.add_bool_attribute(
+        {"slow_keys", "enable"},
+        "Whether or not to start the compositor with slow keys enabled",
+        [this](live_config::Key const&, std::optional<bool> val)
+        {
+            if (val)
+            {
+                if (*val)
+                    this->enable();
+                else
+                    this->disable();
+            }
+        });
+
+    config_store.add_int_attribute(
+        {"slow_keys", "hold_delay"},
+        "How much time in milliseconds must pass between keypresses to not be rejected.",
+        [this](live_config::Key const& key, std::optional<int> val)
+        {
+            if (val)
+            {
+                if (*val >= 0)
+                {
+                    this->hold_delay(std::chrono::milliseconds{*val});
+                }
+                else
+                {
+                    mir::log_warning(
+                        "Config value %s does not support negative values. Ignoring the supplied value (%d)...",
+                        key.to_string().c_str(),
+                        *val);
+                }
+            }
+        });
+}
 miral::SlowKeys& miral::SlowKeys::enable()
 {
     if (auto const accessibility_manager = self->accessibility_manager.lock())
@@ -124,21 +164,6 @@ miral::SlowKeys& miral::SlowKeys::on_key_accepted(std::function<void(unsigned in
 
 void miral::SlowKeys::operator()(mir::Server& server)
 {
-    constexpr auto* enable_slow_keys_opt = "enable-slow-keys";
-    constexpr auto* slow_keys_hold_delay = "slow-keys-hold-delay";
-
-    {
-        auto const state = self->state.lock();
-        server.add_configuration_option(
-            enable_slow_keys_opt,
-            "Enable slow keys (presses not registering unless keys are held for a certain period)",
-            state->enabled);
-        server.add_configuration_option(
-            slow_keys_hold_delay,
-            "delay required before a press registers",
-            static_cast<int>(state->hold_delay.count()));
-    }
-
     server.add_init_callback(
         [&server, this]
         {

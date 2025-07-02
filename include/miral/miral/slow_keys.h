@@ -27,11 +27,13 @@ class Server;
 
 namespace miral
 {
+namespace live_config { class Store; }
 class SlowKeys
 {
 public:
     static auto enabled() -> SlowKeys;
     static auto disabled() -> SlowKeys;
+    explicit SlowKeys(miral::live_config::Store& config_store);
 
     void operator()(mir::Server& server);
 
