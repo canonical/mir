@@ -30,7 +30,8 @@ namespace miral
 class SlowKeys
 {
 public:
-    explicit SlowKeys(bool enabled_by_default);
+    static auto enabled() -> SlowKeys;
+    static auto disabled() -> SlowKeys;
 
     void operator()(mir::Server& server);
 
@@ -43,6 +44,7 @@ public:
 
 private:
     struct Self;
+    explicit SlowKeys(std::shared_ptr<Self>);
     std::shared_ptr<Self> self;
 };
 }

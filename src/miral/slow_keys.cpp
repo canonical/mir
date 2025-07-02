@@ -45,8 +45,18 @@ struct miral::SlowKeys::Self
     std::weak_ptr<mir::shell::AccessibilityManager> accessibility_manager;
 };
 
-miral::SlowKeys::SlowKeys(bool enabled_by_default) :
-    self{std::make_shared<Self>(enabled_by_default)}
+auto miral::SlowKeys::enabled() -> SlowKeys
+{
+    return SlowKeys{std::make_shared<Self>(true)};
+}
+
+auto miral::SlowKeys::disabled() -> SlowKeys
+{
+    return SlowKeys{std::make_shared<Self>(false)};
+}
+
+miral::SlowKeys::SlowKeys(std::shared_ptr<Self> s) :
+    self{std::move(s)}
 {
 }
 
