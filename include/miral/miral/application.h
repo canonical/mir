@@ -32,7 +32,9 @@ namespace miral
 {
 using Application = std::shared_ptr<mir::scene::Session>;
 
-void apply_lifecycle_state_to(Application const& application, MirLifecycleState state) [[deprecated("No longer supported")]];
+[[deprecated("Not meaningful: legacy of mirclient API")]]
+void apply_lifecycle_state_to(Application const& application, MirLifecycleState state);
+
 void kill(Application const& application, int sig);
 auto name_of(Application const& application) -> std::string;
 auto pid_of(Application const& application) -> pid_t;
