@@ -38,7 +38,9 @@ struct miral::SlowKeys::Self
 
         bool enabled;
         std::chrono::milliseconds hold_delay{200};
-        std::function<void(unsigned int)> on_key_down, on_key_rejected, on_key_accepted;
+        std::function<void(unsigned int)> on_key_down{[](auto){}};
+        std::function<void(unsigned int)> on_key_rejected{[](auto){}};
+        std::function<void(unsigned int)> on_key_accepted{[](auto){}};
     };
 
     mir::Synchronised<State> state;
