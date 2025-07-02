@@ -242,8 +242,8 @@ int main(int argc, char const* argv[])
                         return true;
                     }
                     case XKB_KEY_minus:
-                        capture_size.width = Width(std::max(0, capture_size.width.as_int() - 100));
-                        capture_size.height = Height(std::max(0, capture_size.height.as_int() - 100));
+                        capture_size.width = Width(std::max(100, capture_size.width.as_int() - 100));
+                        capture_size.height = Height(std::max(100, capture_size.height.as_int() - 100));
                         magnifier.capture_size(capture_size);
                         return true;
                     default:

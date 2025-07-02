@@ -46,6 +46,104 @@ constexpr auto DEFAULT_TRANSFORMATION = glm::mat4{
     0.0, 0.0, 0.0, 1.0
 };
 
+class ClaimableBuffer : public mg::Buffer
+{
+public:
+    explicit ClaimableBuffer(
+        std::shared_ptr<Buffer> const& buffer,
+        std::function<void()>&& release_callback)
+        : buffer(buffer), release_callback(std::move(release_callback))
+    {
+    }
+
+    ~ClaimableBuffer() override
+    {
+        release_callback();
+    }
+
+    mg::BufferID id() const override { return buffer->id(); }
+    geom::Size size() const override { return buffer->size(); }
+    MirPixelFormat pixel_format() const override { return buffer->pixel_format(); }
+    mg::NativeBufferBase* native_buffer_base() override { return buffer->native_buffer_base(); }
+
+private:
+    std::shared_ptr<Buffer> buffer;
+    std::function<void()> release_callback;
+};
+
+/// A simple buffer pool. Users provide the buffers that back the pool.
+/// These buffers may be claimed later.
+class BufferPool
+{
+public:
+    using BufferBuilder = std::function<std::shared_ptr<mg::Buffer>()>;
+
+    BufferPool(BufferBuilder&& builder_func, size_t default_size)
+        : builder(std::move(builder_func))
+    {
+        for (size_t i = 0; i < default_size; ++i)
+            buffers.push_back(builder());
+
+        claimed.resize(default_size, false);
+    }
+
+    /// Claims the next free buffer from the pool. This may resize the buffer pool
+    /// if that is required to claim a buffer.
+    /// \returns A buffer from the pool
+    std::shared_ptr<mg::Buffer> claim()
+    {
+        std::lock_guard lock{mutex};
+        for (size_t i = 0; i < buffers.size(); ++i)
+        {
+            if (!claimed[i])
+            {
+                claimed[i] = true;
+                return std::make_shared<ClaimableBuffer>(buffers[i], [this, i]
+                {
+                    std::lock_guard lock{mutex};
+                    claimed[i] = false;
+                });
+            }
+        }
+
+        buffers.push_back(builder());
+        claimed.push_back(true);
+        size_t i = buffers.size() - 1;
+        return std::make_shared<ClaimableBuffer>(buffers[i], [this, i]
+        {
+            std::lock_guard lock{mutex};
+            claimed[i] = false;
+        });
+    }
+
+    void set_builder(BufferBuilder&& in_builder)
+    {
+        std::lock_guard lock{mutex};
+        builder = std::move(in_builder);
+        size_t old_size = buffers.size();
+        buffers.clear();
+        for (size_t i = 0; i < old_size; ++i)
+            buffers.push_back(builder());
+
+        auto last_claimed = claimed;
+        claimed.resize(buffers.size(), false);
+
+        // We keep the previously claimed buffers the same so that the release callback
+        // of the ClaimableBuffer correctly unclaims it.
+        for (size_t i = 0; i < last_claimed.size(); ++i)
+        {
+            if (last_claimed[i])
+                claimed[i] = true;
+        }
+    }
+
+private:
+    std::mutex mutex;
+    BufferBuilder builder;
+    std::vector<std::shared_ptr<mg::Buffer>> buffers;
+    std::vector<bool> claimed;
+};
+
 class AlwaysHasSubmittedBufferStream : public mc::Stream
 {
 public:
@@ -89,7 +187,10 @@ public:
           capture_rect(capture_rect),
           screen_shooter(screen_shooter),
           allocator(allocator),
-          buffer(allocator->alloc_software_buffer(capture_rect.size, mir_pixel_format_argb_8888))
+          pool([allocator, capture_rect=capture_rect]
+          {
+              return allocator->alloc_software_buffer(capture_rect.size, mir_pixel_format_argb_8888);
+          }, 2)
     {
         BasicSurface::set_transformation(DEFAULT_TRANSFORMATION);
     }
@@ -105,6 +206,7 @@ public:
             return {};
 
         std::lock_guard lock{mutex};
+        auto buffer = pool.claim();
         auto const mapping = mrs::as_write_mappable_buffer(buffer);
         screen_shooter->capture(
             mapping,
@@ -121,16 +223,21 @@ public:
         return false;
     }
 
-    void set_capture_area(geom::Rectangle const& area)
+    void set_capture_area(geom::Rectangle const& next_capture_rect)
     {
         std::lock_guard lock{mutex};
-        capture_rect = area;
 
-        if (capture_rect.size != buffer->size())
-            buffer = allocator->alloc_software_buffer(capture_rect.size, mir_pixel_format_argb_8888);
+        if (capture_rect.size != next_capture_rect.size)
+        {
+            pool.set_builder([allocator=allocator, next_capture_rect=next_capture_rect]
+            {
+                return allocator->alloc_software_buffer(next_capture_rect.size, mir_pixel_format_argb_8888);
+            });
+        }
 
-        move_to(area.top_left);
-        resize(area.size);
+        move_to(next_capture_rect.top_left);
+        resize(next_capture_rect.size);
+        capture_rect = next_capture_rect;
     }
 
     void set_overlay_cursor(bool next_overlay_cursor)
@@ -146,7 +253,7 @@ private:
     bool overlay_cursor = false;
     std::shared_ptr<mc::ScreenShooter> screen_shooter;
     std::shared_ptr<mg::GraphicBufferAllocator> allocator;
-    std::shared_ptr<mg::Buffer> buffer;
+    BufferPool mutable pool;
 };
 }
 
