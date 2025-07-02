@@ -75,8 +75,6 @@ struct StubSession : scene::Session
         scene::Surface& surface,
         std::vector<shell::StreamSpecification> const& config) override;
 
-    void send_input_config(MirInputConfig const& config) override;
-
     pid_t pid;
 };
 }

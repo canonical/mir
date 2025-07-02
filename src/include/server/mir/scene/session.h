@@ -75,7 +75,6 @@ public:
     virtual auto name() const -> std::string = 0;
 
     virtual void send_error(ClientVisibleError const&) = 0;
-    virtual void send_input_config(MirInputConfig const& config) = 0;
 
     virtual auto default_surface() const -> std::shared_ptr<Surface> = 0;
     virtual void set_lifecycle_state(MirLifecycleState state) = 0;
