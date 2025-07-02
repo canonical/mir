@@ -138,9 +138,9 @@ private:
             geom::Point const& cursor_pos)
         {
             return geom::Point{
-                cursor_pos.x.as_value() - window_size.width.as_value() / 2.f,
-                cursor_pos.y.as_value() - window_size.height.as_value() / 2.f
-            };;
+                cursor_pos.x.as_value() - window_size.width.as_value() / 2,
+                cursor_pos.y.as_value() - window_size.height.as_value() / 2
+            };
         }
 
     private:
