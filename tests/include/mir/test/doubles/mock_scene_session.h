@@ -57,8 +57,6 @@ struct MockSceneSession : public scene::Session
 
     MOCK_METHOD(void, send_error, (ClientVisibleError const&), (override));
 
-    MOCK_METHOD(void, set_lifecycle_state, (MirLifecycleState state), (override));
-
     MOCK_METHOD(void, start_prompt_session, (), (override));
     MOCK_METHOD(void, stop_prompt_session, (), (override));
     MOCK_METHOD(void, suspend_prompt_session, (), (override));

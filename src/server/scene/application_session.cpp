@@ -258,11 +258,6 @@ void ms::ApplicationSession::show()
     }
 }
 
-void ms::ApplicationSession::set_lifecycle_state(MirLifecycleState state)
-{
-    event_sink->handle_lifecycle_event(state);
-}
-
 void ms::ApplicationSession::start_prompt_session()
 {
     // All sessions which are part of the prompt session get this event.

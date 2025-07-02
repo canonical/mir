@@ -43,10 +43,6 @@ std::shared_ptr<mir::scene::Surface> mtd::StubSession::default_surface() const
     return {};
 }
 
-void mtd::StubSession::set_lifecycle_state(MirLifecycleState /*state*/)
-{
-}
-
 void mtd::StubSession::send_error(
     mir::ClientVisibleError const& /*error*/)
 {

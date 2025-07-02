@@ -74,8 +74,6 @@ public:
 
     void send_error(ClientVisibleError const& error) override;
 
-    void set_lifecycle_state(MirLifecycleState state) override;
-
     void start_prompt_session() override;
     void stop_prompt_session() override;
     void suspend_prompt_session() override;

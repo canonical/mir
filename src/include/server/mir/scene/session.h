@@ -77,7 +77,6 @@ public:
     virtual void send_error(ClientVisibleError const&) = 0;
 
     virtual auto default_surface() const -> std::shared_ptr<Surface> = 0;
-    virtual void set_lifecycle_state(MirLifecycleState state) = 0;
 
     virtual void hide() = 0;
     virtual void show() = 0;
