@@ -34,7 +34,6 @@
 #include <algorithm>
 #include <iterator>
 #include <vector>
-#include <mir/frontend/event_sink.h>
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
