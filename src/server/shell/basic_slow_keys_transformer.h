@@ -41,7 +41,7 @@ public:
 private:
     std::shared_ptr<MainLoop> const main_loop;
 
-    using KeysInFlight = std::unordered_map<unsigned int, std::pair<std::unique_ptr<mir::time::Alarm>, bool>>;
+    using KeysInFlight = std::unordered_map<unsigned int, std::unique_ptr<mir::time::Alarm>>;
 
     struct ConfigState
     {

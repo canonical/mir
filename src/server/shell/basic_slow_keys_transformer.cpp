@@ -49,9 +49,6 @@ bool mir::shell::BasicSlowKeysTransformer::transform_input_event(
                     auto const kif = keys_in_flight.lock();
                     if (auto iter = kif->find(keysym); iter != kif->end())
                     {
-                        auto& [_, data] = *iter;
-                        data.second = true;
-
                         dispatcher(event_clone);
                         config.lock()->on_key_accepted(keysym);
                     }
@@ -59,7 +56,7 @@ bool mir::shell::BasicSlowKeysTransformer::transform_input_event(
 
             auto const config_ = config.lock();
             alarm->reschedule_in(config_->delay);
-            kif->insert_or_assign(keysym, std::pair{std::move(alarm), false});
+            kif->insert_or_assign(keysym, std::move(alarm));
             config_->on_key_down(keysym);
 
             return true;
@@ -68,10 +65,9 @@ bool mir::shell::BasicSlowKeysTransformer::transform_input_event(
         {
             if (auto iter = kif->find(keysym); iter != kif->end())
             {
-                auto& [_, data] = *iter;
-                auto& [alarm, dispatched] = data;
+                auto& [_, alarm] = *iter;
 
-                if (dispatched)
+                if (alarm->state() == time::Alarm::State::triggered)
                     return false;
 
                 alarm->cancel();
