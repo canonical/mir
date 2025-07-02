@@ -190,26 +190,7 @@ std::shared_ptr<ms::Session> msh::AbstractShell::open_session(
     Fd socket_fd,
     std::string const& name)
 {
-
-    class NullEventSink : public mir::frontend::EventSink
-    {
-    public:
-        NullEventSink() {}
-
-        void handle_event(EventUPtr&&) override {}
-
-        void handle_lifecycle_event(MirLifecycleState) override {}
-
-        void handle_display_config_change(graphics::DisplayConfiguration const&) override {}
-
-        void send_ping(int32_t) override {}
-
-        void handle_input_config_change(MirInputConfig const&) override {}
-
-        void handle_error(ClientVisibleError const&) override {}
-    };
-
-    auto const result = session_coordinator->open_session(client_pid, socket_fd, name, std::make_shared<NullEventSink>());
+    auto const result = session_coordinator->open_session(client_pid, socket_fd, name);
     window_manager->add_session(result);
     report->opened_session(*result);
     return result;
