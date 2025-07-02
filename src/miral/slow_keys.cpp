@@ -137,18 +137,17 @@ void miral::SlowKeys::operator()(mir::Server& server)
     server.add_init_callback(
         [&server, this]
         {
-            self->accessibility_manager = server.the_accessibility_manager();
+            auto const am = server.the_accessibility_manager();
+            self->accessibility_manager = am;
 
-            if (server.get_options()->get<bool>(enable_slow_keys_opt))
-                enable();
+            if (self->state.lock()->enabled)
+                am->slow_keys_enabled(true);
 
-            hold_delay(std::chrono::milliseconds(server.get_options()->get<int>(slow_keys_hold_delay)));
-
-            if (auto& on_key_down_ = self->state.lock()->on_key_down)
-                on_key_down(std::move(on_key_down_));
-            if (auto& on_key_rejected_ = self->state.lock()->on_key_rejected)
-                on_key_rejected(std::move(on_key_rejected_));
-            if (auto& on_key_accepted_ = self->state.lock()->on_key_accepted)
-                on_key_accepted(std::move(on_key_accepted_));
+            auto& sk = am->slow_keys();
+            auto const state = self->state.lock();
+            sk.delay(state->hold_delay);
+            sk.on_key_accepted(std::move(state->on_key_accepted));
+            sk.on_key_rejected(std::move(state->on_key_rejected));
+            sk.on_key_down(std::move(state->on_key_down));
         });
 }
