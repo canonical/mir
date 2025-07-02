@@ -360,16 +360,31 @@ bool ms::BasicSurface::input_area_contains(geom::Point const& point) const
 
     if (state->custom_input_rectangles.empty())
     {
-        // no custom input, restrict to bounding rectangle
+        // The surface has no custom input, so it is restricted to its bounding rectangle.
+        // Note that the "content_size" returned here is already oriented properly, so the
+        // width and height do NOT need to be swapped, ujnlike the custom input rectangles
+        // case.
         auto const input_rect = geom::Rectangle{content_top_left(*state), content_size(*state)};
         return input_rect.contains(point);
     }
     else
     {
-        auto local_point = as_point(point - content_top_left(*state));
+        auto const local_point = as_point(point - content_top_left(*state));
         for (auto const& rectangle : state->custom_input_rectangles)
         {
-            if (rectangle.contains(local_point))
+            // When a surface is rendered with an orientation, it is unrotated so that it appears
+            // upright. The input region that the surface provides is also rotated according to the
+            // same rules. Hence, we need to swap the width and height of the input region if the
+            // surface is rotated 90 or 270 degrees.
+            if (state->orientation == mir_orientation_right || state->orientation == mir_orientation_left)
+            {
+                auto rotated_rect = rectangle;
+                rotated_rect.size.width = geom::Width(rectangle.size.height.as_value());
+                rotated_rect.size.height = geom::Height(rectangle.size.width.as_value());
+                if (rotated_rect.contains(local_point))
+                    return true;
+            }
+            else if (rectangle.contains(local_point))
                 return true;
         }
     }
