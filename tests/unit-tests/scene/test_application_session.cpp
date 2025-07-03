@@ -537,16 +537,6 @@ TEST_F(ApplicationSessionSender, error_sender)
     app_session.send_error(error);
 }
 
-TEST_F(ApplicationSessionSender, lifecycle_event_sender)
-{
-    using namespace ::testing;
-
-    MirLifecycleState exp_state = mir_lifecycle_state_will_suspend;
-
-    EXPECT_CALL(sender, handle_lifecycle_event(exp_state)).Times(1);
-    app_session.set_lifecycle_state(mir_lifecycle_state_will_suspend);
-}
-
 TEST_F(ApplicationSessionSender, start_prompt_session)
 {
     using namespace ::testing;

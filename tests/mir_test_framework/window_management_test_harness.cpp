@@ -445,8 +445,7 @@ auto mir_test_framework::WindowManagementTestHarness::open_application(
     return server.the_shell()->open_session(
         __LINE__,
         mir::Fd{mir::Fd::invalid},
-        name,
-        std::shared_ptr<mir::frontend::EventSink>());
+        name);
 }
 
 auto mir_test_framework::WindowManagementTestHarness::create_window(

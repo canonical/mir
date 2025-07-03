@@ -18,7 +18,6 @@ global:
     mir::DefaultServerConfiguration::set_the_decoration_strategy*;
     mir::DefaultServerConfiguration::set_wayland_extension_filter*;
     mir::DefaultServerConfiguration::the_accessibility_manager*;
-    mir::DefaultServerConfiguration::the_application_not_responding_detector*;
     mir::DefaultServerConfiguration::the_buffer_allocator*;
     mir::DefaultServerConfiguration::the_clock*;
     mir::DefaultServerConfiguration::the_composite_event_filter*;
@@ -108,7 +107,6 @@ global:
     mir::DefaultServerConfiguration::the_wayland_connector*;
     mir::DefaultServerConfiguration::the_window_manager_builder*;
     mir::DefaultServerConfiguration::the_xwayland_connector*;
-    mir::DefaultServerConfiguration::wrap_application_not_responding_detector*;
     mir::DefaultServerConfiguration::wrap_cursor*;
     mir::DefaultServerConfiguration::wrap_cursor_observer_multiplexer*;
     mir::DefaultServerConfiguration::wrap_display_buffer_compositor_factory*;
@@ -242,7 +240,6 @@ global:
     mir::Server::the_token_authority*;
     mir::Server::the_touch_visualizer*;
     mir::Server::wayland_display*;
-    mir::Server::wrap_application_not_responding_detector*;
     mir::Server::wrap_cursor*;
     mir::Server::wrap_cursor_observer_multiplexer*;
     mir::Server::wrap_display_buffer_compositor_factory*;
@@ -904,7 +901,6 @@ global:
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_wayland_connector*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_window_manager_builder*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_xwayland_connector*;
-    non-virtual?thunk?to?mir::DefaultServerConfiguration::wrap_application_not_responding_detector*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::wrap_cursor*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::wrap_cursor_observer_multiplexer*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::wrap_display_buffer_compositor_factory*;

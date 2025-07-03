@@ -73,9 +73,6 @@ public:
     void show() override;
 
     void send_error(ClientVisibleError const& error) override;
-    void send_input_config(MirInputConfig const& devices) override;
-
-    void set_lifecycle_state(MirLifecycleState state) override;
 
     void start_prompt_session() override;
     void stop_prompt_session() override;

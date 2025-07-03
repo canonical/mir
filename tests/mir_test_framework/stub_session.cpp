@@ -43,10 +43,6 @@ std::shared_ptr<mir::scene::Surface> mtd::StubSession::default_surface() const
     return {};
 }
 
-void mtd::StubSession::set_lifecycle_state(MirLifecycleState /*state*/)
-{
-}
-
 void mtd::StubSession::send_error(
     mir::ClientVisibleError const& /*error*/)
 {
@@ -109,10 +105,6 @@ void mtd::StubSession::destroy_buffer_stream(std::shared_ptr<frontend::BufferStr
 void mtd::StubSession::configure_streams(
     mir::scene::Surface& /*surface*/,
     std::vector<mir::shell::StreamSpecification> const& /*config*/)
-{
-}
-
-void mtd::StubSession::send_input_config(MirInputConfig const& /*config*/)
 {
 }
 

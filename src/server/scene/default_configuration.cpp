@@ -33,7 +33,6 @@
 #include "surface_allocator.h"
 #include "surface_stack.h"
 #include "prompt_session_manager_impl.h"
-#include "timeout_application_not_responding_detector.h"
 #include "basic_clipboard.h"
 #include "basic_text_input_hub.h"
 #include "basic_idle_hub.h"
@@ -180,7 +179,6 @@ mir::DefaultServerConfiguration::the_session_coordinator()
                 the_session_event_sink(),
                 the_session_listener(),
                 the_display(),
-                the_application_not_responding_detector(),
                 the_buffer_allocator(),
                 the_display_configuration_observer_registrar());
         });
@@ -236,26 +234,6 @@ auto mir::DefaultServerConfiguration::the_idle_hub()
         {
             return std::make_shared<ms::BasicIdleHub>(the_clock(), *the_main_loop());
         });
-}
-
-auto mir::DefaultServerConfiguration::the_application_not_responding_detector()
--> std::shared_ptr<scene::ApplicationNotRespondingDetector>
-{
-    return application_not_responding_detector(
-        [this]() -> std::shared_ptr<scene::ApplicationNotRespondingDetector>
-        {
-            using namespace std::literals::chrono_literals;
-            return wrap_application_not_responding_detector(
-                std::make_shared<ms::TimeoutApplicationNotRespondingDetector>(
-                    *the_main_loop(), 1s));
-        });
-}
-
-auto mir::DefaultServerConfiguration::wrap_application_not_responding_detector(
-    std::shared_ptr<scene::ApplicationNotRespondingDetector> const& wrapped)
-        -> std::shared_ptr<scene::ApplicationNotRespondingDetector>
-{
-    return wrapped;
 }
 
 std::shared_ptr<msh::DisplayConfigurationController>

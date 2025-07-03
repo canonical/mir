@@ -25,9 +25,7 @@ ADD_LIBRARY(
   prompt_session_impl.cpp
   prompt_session_manager_impl.cpp
   rendering_tracker.cpp
-  timeout_application_not_responding_detector.cpp
   output_properties_cache.cpp
-  application_not_responding_detector_wrapper.cpp
   basic_clipboard.cpp
   surface_state_tracker.cpp
   basic_text_input_hub.cpp
