@@ -28,20 +28,51 @@ class Server;
 namespace miral
 {
 namespace live_config { class Store; }
+/// Enables configuring slow keys at runtime.
+///
+/// Slow keys is an accessibility feature that enables the rejection of
+/// keypresses that don't last long enough. It can be useful in cases where the
+/// user has issues that cause them to press buttons accidentally.
+///
+/// You can optionally assign handlers for when the key is pressed down, is
+/// rejected, or when the press is accepted.
+///
+/// \remark  Since MirAL 5.4
 class SlowKeys
 {
 public:
+    /// Creates a `SlowKeys` instance that's enabled by default.
     static auto enabled() -> SlowKeys;
+
+    /// Creates a `SlowKeys` instance that's disabled by default.
     static auto disabled() -> SlowKeys;
+
+    /// Construct a `SlowKeys` instance with access to a live config store.
     explicit SlowKeys(miral::live_config::Store& config_store);
 
     void operator()(mir::Server& server);
 
+    // Enables slow keys.
+    // When already enabled, further calls have no effect.
     SlowKeys& enable();
+    
+    // Disables slow keys.
+    // When already disabled, further calls have no effect.
     SlowKeys& disable();
+
+    /// Configures the duration a key has to be pressed down for to register as a key press.
     SlowKeys& hold_delay(std::chrono::milliseconds hold_delay);
+
+    /// Configures the callback that's invoked when the key is pressed down.
+    /// Useful for providing feedback to users.
     SlowKeys& on_key_down(std::function<void(unsigned int)>&& on_key_down);
+    
+    /// Configures the callback that's invoked when a press is rejected.
+    /// Useful for providing feedback to users.
     SlowKeys& on_key_rejected(std::function<void(unsigned int)>&& on_key_rejected);
+    
+    /// Configures the callback that's invoked when a press is accepted.
+    /// Useful for providing feedback to users.
     SlowKeys& on_key_accepted(std::function<void(unsigned int)>&& on_key_accepted);
 
 private:
