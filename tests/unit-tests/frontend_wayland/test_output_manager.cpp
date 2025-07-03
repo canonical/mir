@@ -51,6 +51,13 @@ TEST_P(OutputManagerTransformTest, output_transform_to_orientation_and_mirror_mo
     EXPECT_THAT(std::get<1>(result), Eq(mirror_mode));
 }
 
+TEST_P(OutputManagerTransformTest, orientation_and_mirror_mode_to_output_transform)
+{
+    const auto [transform, orientation, mirror_mode] = GetParam();
+    auto const result = mf::OutputManager::to_output_transform(orientation, mirror_mode);
+    EXPECT_THAT(result, Eq(transform));
+}
+
 INSTANTIATE_TEST_SUITE_P(OutputManagerTransformTest, OutputManagerTransformTest, ::testing::Values(
     TransformTestParams(mw::Output::Transform::normal, mir_orientation_normal, mir_mirror_mode_none),
     TransformTestParams(mw::Output::Transform::_90, mir_orientation_right, mir_mirror_mode_none),
