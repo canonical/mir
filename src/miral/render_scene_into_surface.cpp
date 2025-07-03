@@ -28,6 +28,8 @@
 #include "mir/renderer/sw/pixel_source.h"
 
 #include <mutex>
+#include <utility>
+#include <boost/mpl/pair.hpp>
 
 namespace geom = mir::geometry;
 namespace ms = mir::scene;
@@ -46,17 +48,17 @@ constexpr auto DEFAULT_TRANSFORMATION = glm::mat4{
     0.0, 0.0, 0.0, 1.0
 };
 
-class ClaimableBuffer : public mg::Buffer
+class ClaimedBuffer : public mg::Buffer
 {
 public:
-    explicit ClaimableBuffer(
+    explicit ClaimedBuffer(
         std::shared_ptr<Buffer> const& buffer,
         std::function<void()>&& release_callback)
         : buffer(buffer), release_callback(std::move(release_callback))
     {
     }
 
-    ~ClaimableBuffer() override
+    ~ClaimedBuffer() override
     {
         release_callback();
     }
@@ -67,8 +69,8 @@ public:
     mg::NativeBufferBase* native_buffer_base() override { return buffer->native_buffer_base(); }
 
 private:
-    std::shared_ptr<Buffer> buffer;
-    std::function<void()> release_callback;
+    std::shared_ptr<Buffer> const buffer;
+    std::function<void()> const release_callback;
 };
 
 /// A simple buffer pool. Users provide the buffers that back the pool.
@@ -82,9 +84,7 @@ public:
         : builder(std::move(builder_func))
     {
         for (size_t i = 0; i < default_size; ++i)
-            buffers.push_back(builder());
-
-        claimed.resize(default_size, false);
+            buffers.emplace_back(false, builder());
     }
 
     /// Claims the next free buffer from the pool. This may resize the buffer pool
@@ -95,24 +95,24 @@ public:
         std::lock_guard lock{mutex};
         for (size_t i = 0; i < buffers.size(); ++i)
         {
-            if (!claimed[i])
+            auto& pair = buffers[i];
+            if (!pair.first)
             {
-                claimed[i] = true;
-                return std::make_shared<ClaimableBuffer>(buffers[i], [this, i]
+                pair.first = true;
+                return std::make_shared<ClaimedBuffer>(pair.second, [this, i]
                 {
                     std::lock_guard lock{mutex};
-                    claimed[i] = false;
+                    buffers[i].first = false;
                 });
             }
         }
 
-        buffers.push_back(builder());
-        claimed.push_back(true);
+        buffers.emplace_back(true, builder());
         size_t i = buffers.size() - 1;
-        return std::make_shared<ClaimableBuffer>(buffers[i], [this, i]
+        return std::make_shared<ClaimedBuffer>(buffers[i].second, [this, i]
         {
             std::lock_guard lock{mutex};
-            claimed[i] = false;
+            buffers[i].first = false;
         });
     }
 
@@ -120,28 +120,16 @@ public:
     {
         std::lock_guard lock{mutex};
         builder = std::move(in_builder);
-        size_t old_size = buffers.size();
-        buffers.clear();
-        for (size_t i = 0; i < old_size; ++i)
-            buffers.push_back(builder());
-
-        auto last_claimed = claimed;
-        claimed.resize(buffers.size(), false);
-
-        // We keep the previously claimed buffers the same so that the release callback
-        // of the ClaimableBuffer correctly unclaims it.
-        for (size_t i = 0; i < last_claimed.size(); ++i)
-        {
-            if (last_claimed[i])
-                claimed[i] = true;
-        }
+        for (auto& b: buffers)
+            b = { b.first, builder() };
     }
 
 private:
     std::mutex mutex;
     BufferBuilder builder;
-    std::vector<std::shared_ptr<mg::Buffer>> buffers;
-    std::vector<bool> claimed;
+
+    /// List of available buffers along with their "claimed" status.
+    std::vector<std::pair<bool, std::shared_ptr<mg::Buffer>>> buffers;
 };
 
 class AlwaysHasSubmittedBufferStream : public mc::Stream
