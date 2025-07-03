@@ -14,6 +14,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef MIR_SHELL_SLOW_KEYS_TRANSFORMER
+#define MIR_SHELL_SLOW_KEYS_TRANSFORMER
+
 #include "mir/input/input_event_transformer.h"
 
 
@@ -34,3 +37,4 @@ public:
 }
 }
 
+#endif // MIR_SHELL_SLOW_KEYS_TRANSFORMER
