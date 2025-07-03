@@ -57,7 +57,6 @@ public:
         std::shared_ptr<SessionEventSink> const& session_event_sink,
         std::shared_ptr<SessionListener> const& session_listener,
         std::shared_ptr<graphics::Display const> const& display,
-        std::shared_ptr<ApplicationNotRespondingDetector> const& anr_detector,
         std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
         std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> const& display_config_registrar);
 
@@ -66,8 +65,7 @@ public:
     auto open_session(
         pid_t client_pid,
         Fd socket_fd,
-        std::string const& name,
-        std::shared_ptr<frontend::EventSink> const& sink) -> std::shared_ptr<Session> override;
+        std::string const& name) -> std::shared_ptr<Session> override;
 
     void close_session(std::shared_ptr<Session> const& session) override;
 
@@ -93,7 +91,6 @@ private:
     std::shared_ptr<SessionEventSink> const session_event_sink;
     std::shared_ptr<SessionListener> const session_listener;
     std::shared_ptr<graphics::Display const> const display;
-    std::shared_ptr<ApplicationNotRespondingDetector> const anr_detector;
     std::shared_ptr<graphics::GraphicBufferAllocator> const allocator;
     std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> display_config_registrar;
 };

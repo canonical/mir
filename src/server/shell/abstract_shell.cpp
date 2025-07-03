@@ -187,10 +187,9 @@ msh::AbstractShell::~AbstractShell() noexcept
 std::shared_ptr<ms::Session> msh::AbstractShell::open_session(
     pid_t client_pid,
     Fd socket_fd,
-    std::string const& name,
-    std::shared_ptr<mf::EventSink> const& sink)
+    std::string const& name)
 {
-    auto const result = session_coordinator->open_session(client_pid, socket_fd, name, sink);
+    auto const result = session_coordinator->open_session(client_pid, socket_fd, name);
     window_manager->add_session(result);
     report->opened_session(*result);
     return result;

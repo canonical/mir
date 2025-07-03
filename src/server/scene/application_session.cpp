@@ -258,16 +258,6 @@ void ms::ApplicationSession::show()
     }
 }
 
-void ms::ApplicationSession::send_input_config(MirInputConfig const& config)
-{
-    event_sink->handle_input_config_change(config);
-}
-
-void ms::ApplicationSession::set_lifecycle_state(MirLifecycleState state)
-{
-    event_sink->handle_lifecycle_event(state);
-}
-
 void ms::ApplicationSession::start_prompt_session()
 {
     // All sessions which are part of the prompt session get this event.

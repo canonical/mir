@@ -21,8 +21,6 @@
 #include "wl_surface.h"
 #include "wayland_surface_observer.h"
 #include "wl_seat.h"
-#include "null_event_sink.h"
-
 #include "mir/frontend/wayland.h"
 #include "mir/wayland/client.h"
 #include "mir/shell/surface_specification.h"

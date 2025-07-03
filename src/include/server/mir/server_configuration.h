@@ -98,7 +98,6 @@ public:
     virtual auto the_rendering_platforms() -> std::vector<std::shared_ptr<graphics::RenderingPlatform>> const& = 0;
     virtual std::shared_ptr<EmergencyCleanup> the_emergency_cleanup() = 0;
     virtual auto the_fatal_error_strategy() -> void (*)(char const* reason, ...) = 0;
-    virtual std::shared_ptr<scene::ApplicationNotRespondingDetector> the_application_not_responding_detector() = 0;
     virtual std::shared_ptr<scene::Clipboard> the_main_clipboard() = 0;
     virtual std::shared_ptr<scene::Clipboard> the_primary_selection_clipboard() = 0;
     virtual std::shared_ptr<scene::TextInputHub> the_text_input_hub() = 0;
