@@ -579,12 +579,23 @@ global:
     miral::SimulatedSecondaryClick::on_hold_start*;
     miral::SimulatedSecondaryClick::on_secondary_click*;
     miral::SimulatedSecondaryClick::operator*;
+    miral::SlowKeys::SlowKeys*;
+    miral::SlowKeys::disable*;
+    miral::SlowKeys::enable*;
+    miral::SlowKeys::hold_delay*;
+    miral::SlowKeys::on_disabled*;
+    miral::SlowKeys::on_enabled*;
+    miral::SlowKeys::on_key_accepted*;
+    miral::SlowKeys::on_key_down*;
+    miral::SlowKeys::on_key_rejected*;
+    miral::SlowKeys::operator*;
     typeinfo?for?miral::CursorScale;
     typeinfo?for?miral::DisplayConfiguration::Node;
     typeinfo?for?miral::HoverClick;
     typeinfo?for?miral::MouseKeysConfig;
     typeinfo?for?miral::OutputFilter;
     typeinfo?for?miral::SimulatedSecondaryClick;
+    typeinfo?for?miral::SlowKeys;
   };
 } MIRAL_5.2;
 
