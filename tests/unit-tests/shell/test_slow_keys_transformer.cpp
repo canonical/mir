@@ -98,3 +98,47 @@ TEST_P(TestDifferentPressDelays, only_presses_held_for_slow_keys_delay_are_accep
 
 INSTANTIATE_TEST_SUITE_P(
     TestSlowKeysTransformer, TestDifferentPressDelays, Values(test_slow_keys_delay - 1ms, test_slow_keys_delay + 1ms));
+
+
+struct TestKeyInterference: public TestSlowKeysTransformer, public WithParamInterface<std::chrono::milliseconds>
+{
+};
+
+TEST_P(TestKeyInterference, different_buttons_dont_interfere_with_each_other)
+{
+    auto const press_delay = GetParam();
+
+    auto accepted = 0, rejected = 0, down = 0;
+    transformer->on_key_accepted([&accepted](auto) { accepted += 1; });
+    transformer->on_key_rejected([&rejected](auto) { rejected += 1; });
+    transformer->on_key_down([&down](auto) { down += 1; });
+
+    auto const attempts = 5;
+    for(auto i = 0; i < attempts; i++)
+    {
+        transformer->transform_input_event(dispatch, &event_builder, *key_down(XKB_KEY_d, 32));
+        transformer->transform_input_event(dispatch, &event_builder, *key_down(XKB_KEY_f, 33));
+
+        clock.advance_by(press_delay);
+        main_loop->call_queued();
+
+        transformer->transform_input_event(dispatch, &event_builder, *key_up(XKB_KEY_d, 32));
+        transformer->transform_input_event(dispatch, &event_builder, *key_up(XKB_KEY_f, 33));
+    }
+
+    EXPECT_THAT(down, Eq(attempts * 2));
+
+    if (press_delay < test_slow_keys_delay)
+    {
+        EXPECT_THAT(accepted, Eq(0));
+        EXPECT_THAT(rejected, Eq(attempts * 2));
+    }
+    else
+    {
+        EXPECT_THAT(accepted, Eq(attempts * 2));
+        EXPECT_THAT(rejected, Eq(0));
+    }
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    TestSlowKeysTransformer, TestKeyInterference, Values(test_slow_keys_delay - 1ms, test_slow_keys_delay + 1ms));
