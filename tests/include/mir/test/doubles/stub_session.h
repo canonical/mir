@@ -38,8 +38,6 @@ struct StubSession : scene::Session
 
     std::shared_ptr<scene::Surface> default_surface() const override;
 
-    void set_lifecycle_state(MirLifecycleState state) override;
-
     void send_error(ClientVisibleError const&) override;
 
     void hide() override;
@@ -74,8 +72,6 @@ struct StubSession : scene::Session
     void configure_streams(
         scene::Surface& surface,
         std::vector<shell::StreamSpecification> const& config) override;
-
-    void send_input_config(MirInputConfig const& config) override;
 
     pid_t pid;
 };

@@ -68,8 +68,7 @@ public:
     virtual auto open_session(
         pid_t client_pid,
         Fd socket_fd,
-        std::string const& name,
-        std::shared_ptr<frontend::EventSink> const& sink) -> std::shared_ptr<scene::Session> = 0;
+        std::string const& name) -> std::shared_ptr<scene::Session> = 0;
 
     virtual void close_session(std::shared_ptr<scene::Session> const& session) = 0;
 

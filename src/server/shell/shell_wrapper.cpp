@@ -29,10 +29,9 @@ msh::ShellWrapper::ShellWrapper(std::shared_ptr<Shell> const& wrapped) :
 auto msh::ShellWrapper::open_session(
     pid_t client_pid,
     Fd socket_fd,
-    std::string const& name,
-    std::shared_ptr<mf::EventSink> const& sink) -> std::shared_ptr<ms::Session>
+    std::string const& name) -> std::shared_ptr<ms::Session>
 {
-    return wrapped->open_session(client_pid, socket_fd, name, sink);
+    return wrapped->open_session(client_pid, socket_fd, name);
 }
 
 void msh::ShellWrapper::close_session(std::shared_ptr<ms::Session> const& session)

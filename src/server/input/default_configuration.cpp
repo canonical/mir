@@ -19,7 +19,6 @@
 #include "key_repeat_dispatcher.h"
 #include "keyboard_resync_dispatcher.h"
 #include "event_filter_chain_dispatcher.h"
-#include "config_changer.h"
 #include "touchspot_controller.h"
 #include "null_input_manager.h"
 #include "null_input_dispatcher.h"

@@ -17,6 +17,7 @@
 #include "miral/application.h"
 
 #include <mir/scene/session.h>
+#include <mir/log.h>
 
 #include <unistd.h>
 
@@ -48,7 +49,7 @@ auto miral::socket_fd_of(Application const& application) -> int
     return application->socket_fd();
 }
 
-void miral::apply_lifecycle_state_to(Application const& application, MirLifecycleState state)
+void miral::apply_lifecycle_state_to(Application const& /*application*/, MirLifecycleState /*state*/)
 {
-    application->set_lifecycle_state(state);
+    mir::log_warning("Use of unimplemented function: miral::apply_lifecycle_state_to()");
 }

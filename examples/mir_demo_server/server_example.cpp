@@ -14,7 +14,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "miral/bounce_keys.h"
 #include "server_example_input_event_filter.h"
 #include "server_example_input_filter.h"
 #include "server_example_test_client.h"
@@ -32,26 +31,22 @@
 #include <miral/x11_support.h>
 #include <miral/cursor_scale.h>
 #include <miral/output_filter.h>
+#include <miral/bounce_keys.h>
 
 #include "mir/abnormal_exit.h"
 #include "mir/main_loop.h"
 #include "mir/options/option.h"
 #include "mir/report_exception.h"
 #include "mir/server.h"
-#include "mir/log.h"
 
 #include <boost/exception/diagnostic_information.hpp>
 
 #include <chrono>
 #include <cstdlib>
-#include <iostream>
-#include <list>
-#include <mutex>
 
 namespace mir { class AbnormalExit; }
 
 namespace me = mir::examples;
-namespace live_config = miral::live_config;
 
 ///\example server_example.cpp
 /// A simple server illustrating several customisations

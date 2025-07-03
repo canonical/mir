@@ -80,8 +80,7 @@ struct TemporaryCompositeEventFilter : public mi::CompositeEventFilter
     MACRO(display_buffer_compositor_factory)\
     MACRO(display_configuration_policy)\
     MACRO(shell)\
-    MACRO(surface_stack)\
-    MACRO(application_not_responding_detector)
+    MACRO(surface_stack)
 
 #define FOREACH_OVERRIDE(MACRO)\
     MACRO(compositor)\
@@ -98,7 +97,6 @@ struct TemporaryCompositeEventFilter : public mi::CompositeEventFilter
     MACRO(session_authorizer)\
     MACRO(session_listener)\
     MACRO(shell)\
-    MACRO(application_not_responding_detector)\
     MACRO(persistent_surface_store)\
     MACRO(renderer_factory)\
     MACRO(accessibility_manager)
@@ -130,7 +128,6 @@ struct TemporaryCompositeEventFilter : public mi::CompositeEventFilter
     MACRO(the_surface_stack)\
     MACRO(the_touch_visualizer)\
     MACRO(the_input_device_hub)\
-    MACRO(the_application_not_responding_detector)\
     MACRO(the_persistent_surface_store)\
     MACRO(the_display_configuration_observer_registrar)\
     MACRO(the_seat_observer_registrar)\

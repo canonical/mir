@@ -107,8 +107,7 @@ struct StubShell : public shell::Shell
     auto open_session(
         pid_t client_pid,
         Fd /*socket_fd*/,
-        std::string const& /*name*/,
-        std::shared_ptr<frontend::EventSink> const& /*sink*/) -> std::shared_ptr<scene::Session> override
+        std::string const& /*name*/) -> std::shared_ptr<scene::Session> override
     {
         return std::make_shared<StubSession>(client_pid);
     }

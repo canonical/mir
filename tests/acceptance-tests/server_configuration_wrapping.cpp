@@ -17,7 +17,6 @@
 #include "mir/input/cursor_observer_multiplexer.h"
 #include "mir/shell/shell_wrapper.h"
 #include "mir/shell/surface_stack_wrapper.h"
-#include "mir/scene/application_not_responding_detector_wrapper.h"
 
 #include "mir/geometry/point.h"
 #include "mir/main_loop.h"
@@ -66,11 +65,6 @@ struct MySurfaceStack : msh::SurfaceStackWrapper
     using msh::SurfaceStackWrapper::SurfaceStackWrapper;
 };
 
-struct MyApplicationNotRespondingDetector : ms::ApplicationNotRespondingDetectorWrapper
-{
-    using ms::ApplicationNotRespondingDetectorWrapper::ApplicationNotRespondingDetectorWrapper;
-};
-
 struct ServerConfigurationWrapping : mir_test_framework::HeadlessTest
 {
     void SetUp() override
@@ -91,13 +85,6 @@ struct ServerConfigurationWrapping : mir_test_framework::HeadlessTest
             (std::shared_ptr<msh::SurfaceStack> const& wrapped)
             {
                 return std::make_shared<MySurfaceStack>(wrapped);
-            });
-
-        server.wrap_application_not_responding_detector([]
-            (std::shared_ptr<ms::ApplicationNotRespondingDetector> const& wrapped)
-            {
-                return std::make_shared<MyApplicationNotRespondingDetector>(wrapped);
-
             });
 
         server.apply_settings();

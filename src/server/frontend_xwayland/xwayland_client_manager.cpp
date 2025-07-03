@@ -16,7 +16,6 @@
 
 #include "xwayland_client_manager.h"
 #include "xwayland_log.h"
-#include "null_event_sink.h"
 #include "mir/shell/shell.h"
 #include "mir/scene/session.h"
 #include "mir/log.h"
@@ -33,7 +32,7 @@ namespace ms = mir::scene;
 mf::XWaylandClientManager::Session::Session(XWaylandClientManager* manager, pid_t client_pid)
     : manager{manager},
       client_pid{client_pid},
-      _session{manager->shell->open_session(client_pid, Fd{Fd::invalid}, "", std::make_shared<NullEventSink>())}
+      _session{manager->shell->open_session(client_pid, Fd{Fd::invalid}, "")}
 {
 }
 
