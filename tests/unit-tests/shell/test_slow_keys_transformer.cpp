@@ -50,6 +50,16 @@ struct TestSlowKeysTransformer : Test
         transformer->delay(test_slow_keys_delay);
     }
 
+    auto key_down(unsigned int keysym, unsigned int scancode) -> mir::EventUPtr
+    {
+        return event_builder.key_event(std::nullopt, mir_keyboard_action_down, keysym, scancode);
+    }
+
+    auto key_up(unsigned int keysym, unsigned int scancode) -> mir::EventUPtr
+    {
+        return event_builder.key_event(std::nullopt, mir_keyboard_action_up, keysym, scancode);
+    }
+
     mtd::AdvanceableClock clock;
     std::shared_ptr<mtd::QueuedAlarmStubMainLoop> const main_loop;
     std::shared_ptr<mir::shell::SlowKeysTransformer> const transformer;
@@ -74,14 +84,12 @@ TEST_P(TestDifferentPressDelays, only_presses_held_for_slow_keys_delay_are_accep
     auto const attempts = 5;
     for(auto i = 0; i < attempts; i++)
     {
-        transformer->transform_input_event(
-            dispatch, &event_builder, *event_builder.key_event(std::nullopt, mir_keyboard_action_down, XKB_KEY_d, 32));
+        transformer->transform_input_event(dispatch, &event_builder, *key_down(XKB_KEY_d, 32));
 
         clock.advance_by(press_delay);
         main_loop->call_queued();
 
-        transformer->transform_input_event(
-            dispatch, &event_builder, *event_builder.key_event(std::nullopt, mir_keyboard_action_up, XKB_KEY_d, 32));
+        transformer->transform_input_event(dispatch, &event_builder, *key_up(XKB_KEY_d, 32));
     }
 
     EXPECT_THAT(down, Eq(attempts));
