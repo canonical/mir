@@ -337,7 +337,8 @@ enum class TransformerToTest
 {
     MouseKeys,
     SSC,
-    HoverClick
+    HoverClick,
+    SlowKeys
 };
 
 struct TestArbitraryEnablesAndDisables :
@@ -354,6 +355,8 @@ struct TestArbitraryEnablesAndDisables :
             return mock_simulated_secondary_click_transformer;
         case TransformerToTest::HoverClick:
             return mock_hover_click_transformer;
+        case TransformerToTest::SlowKeys:
+            return mock_slow_keys_transformer;
         }
         std::unreachable();
     }
@@ -370,6 +373,9 @@ struct TestArbitraryEnablesAndDisables :
             break;
         case TransformerToTest::HoverClick:
             basic_accessibility_manager.hover_click_enabled(on);
+            break;
+        case TransformerToTest::SlowKeys:
+            basic_accessibility_manager.slow_keys_enabled(on);
             break;
         }
     }
