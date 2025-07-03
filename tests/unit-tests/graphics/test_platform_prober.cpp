@@ -1078,7 +1078,7 @@ TEST_F(FullProbeStack, manually_selecting_only_virtual_platform_with_required_op
     EXPECT_THAT(devices.front(), Pair(_, ModuleNameMatches(StrEq("mir:virtual"))));
 }
 
-TEST_F(FullProbeStack, gbm_kms_is_selected_for_nvidia_driver_by_default)
+TEST_F(FullProbeStack, gbm_kms_is_not_selected_for_nvidia_driver_by_default)
 {
     using namespace testing;
 
@@ -1100,11 +1100,11 @@ TEST_F(FullProbeStack, gbm_kms_is_selected_for_nvidia_driver_by_default)
     EXPECT_THAT(devices, UnorderedElementsAre(
         Pair(IsPlatformForDevice(nouveau_device.get()), ModuleNameMatches(StrEq("mir:gbm-kms"))),
         Pair(IsPlatformForDevice(amd_device.get()), ModuleNameMatches(StrEq("mir:gbm-kms"))),
-        Pair(IsPlatformForDevice(nvidia_device.get()), ModuleNameMatches(StrEq("mir:gbm-kms")))
+        Pair(IsPlatformForDevice(nvidia_device.get()), ModuleNameMatches(StrEq("mir:atomic-kms")))
         ));
 }
 
-TEST_F(FullProbeStack, gbm_kms_is_selected_for_nvidia_driver_when_quirk_is_allowed)
+TEST_F(FullProbeStack, gbm_kms_is_not_selected_for_nvidia_driver_when_quirk_is_allowed)
 {
     using namespace testing;
 
@@ -1126,9 +1126,9 @@ TEST_F(FullProbeStack, gbm_kms_is_selected_for_nvidia_driver_when_quirk_is_allow
     auto devices = mg::select_display_modules(the_options_provider(), the_console_services(), *the_library_prober_report());
 
     EXPECT_THAT(devices, UnorderedElementsAre(
-        Pair(IsPlatformForDevice(nvidia_device.get()), ModuleNameMatches(StrEq("mir:gbm-kms"))),
         Pair(IsPlatformForDevice(nouveau_device.get()), ModuleNameMatches(StrEq("mir:gbm-kms"))),
-        Pair(IsPlatformForDevice(amd_device.get()), ModuleNameMatches(StrEq("mir:gbm-kms")))
+        Pair(IsPlatformForDevice(amd_device.get()), ModuleNameMatches(StrEq("mir:gbm-kms"))),
+        Pair(IsPlatformForDevice(nvidia_device.get()), ModuleNameMatches(StrEq("mir:atomic-kms")))
         ));
 }
 
