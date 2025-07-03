@@ -49,6 +49,7 @@ public:
     
     bool is_confined_to_window();
     void set_orientation(MirOrientation orientation);
+    void set_mirror_mode(MirMirrorMode mirror_mode);
 
     void set_confine_pointer_state(MirPointerConfinementState state);                        
     std::shared_ptr<mir::scene::Surface> parent() const;
