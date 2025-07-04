@@ -80,9 +80,7 @@ bool msh::BasicSlowKeysTransformer::transform_input_event(
             }
         }
 
-    case mir_keyboard_action_repeat:
-    case mir_keyboard_action_modifiers:
-    case mir_keyboard_actions:
+    default:
         break;
     }
 
