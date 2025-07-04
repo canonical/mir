@@ -31,36 +31,6 @@
 namespace mtd = mir::test::doubles;
 namespace mg = mir::graphics;
 
-namespace
-{
-/*
- * Oh, no.
- *
- * Testing that we correctly handle bad Shm buffers sent from clients requires that
- * we *actually read* from the buffer so that the kernel can generate an access fault.
- * To that end, we `memcpy` from the submitted buffer to a bit of scratch memory in
- * order to read every byte of the submitted buffer.
- *
- * Unfortunately, the optimiser can now see that we don't *do anything* with the
- * scratch memory, and so is now deciding to optimise out the memcpy.
- *
- * Rather than try to obfuscate the code enough that the optimiser can't prove that
- * we don't do anything with the contents of `buffer`, just annotate the function
- * with a “kindly don't optimise this” attribute.
- *
- * Of course, this isn't a standardised attribute, so apply the gcc *and* the clang
- * one. And if we need to build with another compiler...
- */
-[[clang::optnone, gnu::optimize(0)]]
-inline void memcpy_from_mapping(mir::renderer::software::ReadMappableBuffer& buffer)
-{
-    auto const mapping = buffer.map_readable();
-    auto dummy_destination = std::make_unique<unsigned char[]>(mapping->len());
-
-    memcpy(dummy_destination.get(), mapping->data(), mapping->len());
-}
-}
-
 auto mtd::StubBufferAllocator::alloc_software_buffer(geometry::Size sz, MirPixelFormat pf) -> std::shared_ptr<mg::Buffer>
 {
     graphics::BufferProperties properties{sz, pf, graphics::BufferUsage::software};
@@ -95,11 +65,6 @@ auto mtd::StubBufferAllocator::buffer_from_shm(
         std::move(data),
         std::move(on_consumed),
         std::move(on_release));
-
-    // Temporary(?!) hack to actually use the buffer, for WLCS test
-    // Transitioning the StubGraphicsPlatform to use the MESA surfaceless GL platform would
-    // allow us to test more of Mir, and drop this hack
-    memcpy_from_mapping(*buffer);
 
     return buffer;
 }
