@@ -19,14 +19,17 @@
 #include "mir/events/keyboard_event.h"
 #include "mir/main_loop.h"
 
-mir::shell::BasicSlowKeysTransformer::BasicSlowKeysTransformer(std::shared_ptr<MainLoop> const& main_loop) :
+namespace msh = mir::shell;
+namespace mi = mir::input;
+
+msh::BasicSlowKeysTransformer::BasicSlowKeysTransformer(std::shared_ptr<MainLoop> const& main_loop) :
     main_loop{main_loop}
 {
 }
 
-bool mir::shell::BasicSlowKeysTransformer::transform_input_event(
-    mir::input::InputEventTransformer::EventDispatcher const& dispatcher,
-    mir::input::EventBuilder*,
+bool msh::BasicSlowKeysTransformer::transform_input_event(
+    mi::InputEventTransformer::EventDispatcher const& dispatcher,
+    mi::EventBuilder*,
     MirEvent const& event)
 {
     if (event.type() != mir_event_type_input)
@@ -86,22 +89,22 @@ bool mir::shell::BasicSlowKeysTransformer::transform_input_event(
     return false;
 }
 
-void mir::shell::BasicSlowKeysTransformer::on_key_down(std::function<void(unsigned int)>&& okd)
+void msh::BasicSlowKeysTransformer::on_key_down(std::function<void(unsigned int)>&& okd)
 {
     config.lock()->on_key_down = std::move(okd);
 }
 
-void mir::shell::BasicSlowKeysTransformer::on_key_rejected(std::function<void(unsigned int)>&& okr)
+void msh::BasicSlowKeysTransformer::on_key_rejected(std::function<void(unsigned int)>&& okr)
 {
     config.lock()->on_key_rejected = std::move(okr);
 }
 
-void mir::shell::BasicSlowKeysTransformer::on_key_accepted(std::function<void(unsigned int)>&& oka)
+void msh::BasicSlowKeysTransformer::on_key_accepted(std::function<void(unsigned int)>&& oka)
 {
     config.lock()->on_key_accepted = std::move(oka);
 }
 
-void mir::shell::BasicSlowKeysTransformer::delay(std::chrono::milliseconds delay)
+void msh::BasicSlowKeysTransformer::delay(std::chrono::milliseconds delay)
 {
     config.lock()->delay = delay;
 }
