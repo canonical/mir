@@ -39,8 +39,6 @@ public:
 
     LocatePointer& delay(std::chrono::milliseconds delay);
     LocatePointer& on_locate_pointer(std::function<void(float x, float y)>&&);
-    LocatePointer& on_enabled(std::function<void()>&&);
-    LocatePointer& on_disabled(std::function<void()>&&);
 
     LocatePointer& enable();
     LocatePointer& disable();
