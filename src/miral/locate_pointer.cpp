@@ -17,7 +17,6 @@
 #include "miral/locate_pointer.h"
 #include "mir/compositor/stream.h"
 #include "mir/events/input_event.h"
-#include "mir/events/keyboard_event.h"
 #include "mir/events/pointer_event.h"
 #include "mir/geometry/forward.h"
 #include "mir/graphics/animation_driver.h"
@@ -154,7 +153,6 @@ struct miral::LocatePointer::Self
 
         std::unique_ptr<mir::time::Alarm> locate_pointer_alarm;
         std::function<void(float, float)> on_locate_pointer;
-        std::function<void()> on_enabled{[] {}}, on_disabled{[] {}};
         std::chrono::milliseconds delay{500};
     };
 
@@ -322,18 +320,6 @@ miral::LocatePointer& miral::LocatePointer::on_locate_pointer(std::function<void
     return *this;
 }
 
-miral::LocatePointer& miral::LocatePointer::on_enabled(std::function<void()>&& on_enabled)
-{
-    self->state.lock()->on_enabled = std::move(on_enabled);
-    return *this;
-}
-
-miral::LocatePointer& miral::LocatePointer::on_disabled(std::function<void()>&& on_disabled)
-{
-    self->state.lock()->on_disabled = std::move(on_disabled);
-    return *this;
-}
-
 miral::LocatePointer& miral::LocatePointer::enable()
 {
     auto const state = self->state.lock();
@@ -342,7 +328,6 @@ miral::LocatePointer& miral::LocatePointer::enable()
         return *this;
 
     state->enabled = true;
-    state->on_enabled();
 
     return *this;
 }
@@ -356,7 +341,6 @@ miral::LocatePointer& miral::LocatePointer::disable()
 
     state->enabled = false;
     state->locate_pointer_alarm->cancel();
-    state->on_disabled();
 
     return *this;
 }
