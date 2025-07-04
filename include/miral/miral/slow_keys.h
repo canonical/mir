@@ -28,6 +28,7 @@ class Server;
 namespace miral
 {
 namespace live_config { class Store; }
+
 /// Enables configuring slow keys at runtime.
 ///
 /// Slow keys is an accessibility feature that enables the rejection of
