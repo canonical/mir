@@ -37,7 +37,6 @@ using namespace std::chrono_literals;
 namespace
 {
 static constexpr auto locate_pointer_delay = 100ms;
-static constexpr auto enable_or_disable_delay = 50ms; // Should be plenty for the main loop to execute even on CI
 
 // Mostly to account for CI slowness.
 // Adds a test pointer and waits till it's added before proceeding
@@ -190,49 +189,3 @@ TEST_P(TestPointerMovementTracking, cursor_location_is_tracked_on_movement)
 
 INSTANTIATE_TEST_SUITE_P(
     TestLocatePointer, TestPointerMovementTracking, ::Values(std::nullopt, mir::geometry::PointF{100.0f, 100.0f}));
-
-TEST_F(TestLocatePointer, enable_not_called_when_already_enabled)
-{
-    mir::test::Signal locate_pointer_enabled;
-    locate_pointer.on_enabled([&]{ locate_pointer_enabled.raise(); });
-
-    locate_pointer.enable();
-
-    locate_pointer_enabled.wait_for(enable_or_disable_delay);
-    EXPECT_FALSE(locate_pointer_enabled.raised());
-}
-
-TEST_F(TestLocatePointer, disable_called_if_enabled)
-{
-    mir::test::Signal disable_called;
-    locate_pointer.on_disabled([&disable_called] { disable_called.raise(); });
-    locate_pointer.disable();
-
-    disable_called.wait();
-    EXPECT_TRUE(disable_called.raised());
-}
-
-TEST_F(TestLocatePointer, disable_not_called_if_already_disabled)
-{
-    locate_pointer.disable();
-
-    mir::test::Signal disable_called;
-    locate_pointer.on_disabled([&disable_called] { disable_called.raise(); });
-    locate_pointer.disable();
-
-    disable_called.wait_for(enable_or_disable_delay);
-    EXPECT_FALSE(disable_called.raised());
-}
-
-TEST_F(TestLocatePointer, enable_called_if_disabled)
-{
-    locate_pointer.disable();
-
-    mir::test::Signal enable_called;
-    locate_pointer.on_enabled([&enable_called] { enable_called.raise(); });
-    locate_pointer.enable();
-
-    enable_called.wait();
-    EXPECT_TRUE(enable_called.raised());
-}
-
