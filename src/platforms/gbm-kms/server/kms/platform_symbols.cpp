@@ -34,6 +34,7 @@
 #include "mir/graphics/egl_error.h"
 #include "mir/graphics/gl_config.h"
 #include "mir/graphics/egl_logger.h"
+#include "quirk_common.h"
 
 #include <EGL/egl.h>
 #include <GLES2/gl2.h>
@@ -164,6 +165,13 @@ auto probe_display_platform(
         if (quirks.should_skip(device))
         {
             mir::log_info("Not probing device %s due to specified quirk", device.devnode());
+            continue;
+        }
+
+        auto driver_name = mg::common::get_device_driver(device.parent().get());
+        if(std::strcmp(driver_name, "nvidia") == 0)
+        {
+            mir::log_info("Not probing device %s due to the GBM display platform being incompatible with Nvidia", device.devnode());
             continue;
         }
 
