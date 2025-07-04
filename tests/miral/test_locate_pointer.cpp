@@ -127,23 +127,21 @@ struct TestLocatePointer : miral::TestServer
     std::weak_ptr<mir::input::InputDeviceHub> input_device_hub;
 };
 
-struct TestDifferentDelays : public TestLocatePointer, public WithParamInterface<std::pair<std::chrono::milliseconds, bool>>{};
+struct TestDifferentCtrlHoldDurations : public TestLocatePointer, public WithParamInterface<std::chrono::milliseconds>{};
 
-TEST_P(TestDifferentDelays, responding_to_ctrl_down_with_different_delays)
+TEST_P(TestDifferentCtrlHoldDurations, responding_to_ctrl_down_with_different_delays)
 {
-    auto [delay, on_pointer_locate_called] = GetParam();
+    auto delay = GetParam();
 
     locate_pointer.schedule_request();
     locate_pointer_invoked.wait_for(delay);
     locate_pointer.cancel_request();
 
-    EXPECT_THAT(locate_pointer_invoked.raised(), Eq(on_pointer_locate_called));
+    EXPECT_THAT(locate_pointer_invoked.raised(), Eq(delay < locate_pointer_delay? false : true));
 }
 
 INSTANTIATE_TEST_SUITE_P(
-    TestLocatePointer,
-    TestDifferentDelays,
-    ::Values(std::pair{locate_pointer_delay + 10ms, true}, std::pair{locate_pointer_delay - 10ms, false}));
+    TestLocatePointer, TestDifferentCtrlHoldDurations, ::Values(locate_pointer_delay + 10ms, locate_pointer_delay - 10ms));
 
 struct TestPointerMovementTracking :
     public TestLocatePointer,
