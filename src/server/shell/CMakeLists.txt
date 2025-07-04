@@ -21,6 +21,7 @@ set(
   mouse_keys_transformer.cpp mouse_keys_transformer.h
   basic_simulated_secondary_click_transformer.cpp basic_simulated_secondary_click_transformer.h
   basic_hover_click_transformer.cpp basic_hover_click_transformer.h
+  basic_slow_keys_transformer.cpp basic_slow_keys_transformer.h
 )
 
 add_library(

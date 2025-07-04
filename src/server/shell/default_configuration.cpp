@@ -25,6 +25,7 @@
 #include "mouse_keys_transformer.h"
 #include "basic_simulated_secondary_click_transformer.h"
 #include "basic_hover_click_transformer.h"
+#include "basic_slow_keys_transformer.h"
 
 #include "mir/abnormal_exit.h"
 #include "mir/input/composite_event_filter.h"
@@ -198,6 +199,7 @@ auto mir::DefaultServerConfiguration::the_accessibility_manager() -> std::shared
                 the_cursor(),
                 std::make_shared<shell::BasicMouseKeysTransformer>(the_main_loop(), the_clock()),
                 std::make_shared<shell::BasicSimulatedSecondaryClickTransformer>(the_main_loop()),
-                std::make_shared<shell::BasicHoverClickTransformer>(the_main_loop(), the_cursor_observer_multiplexer()));
+                std::make_shared<shell::BasicHoverClickTransformer>(the_main_loop(), the_cursor_observer_multiplexer()),
+                std::make_shared<shell::BasicSlowKeysTransformer>(the_main_loop()));
         });
 }

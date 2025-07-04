@@ -604,6 +604,16 @@ global:
     "miral::CursorScale::CursorScale(miral::live_config::Store&)";
     "miral::InputConfiguration::InputConfiguration(miral::live_config::Store&)";
     "miral::OutputFilter::OutputFilter(miral::live_config::Store&)";
+    miral::SlowKeys::SlowKeys*;
+    miral::SlowKeys::disable*;
+    miral::SlowKeys::disabled*;
+    miral::SlowKeys::enable*;
+    miral::SlowKeys::enabled*;
+    miral::SlowKeys::hold_delay*;
+    miral::SlowKeys::on_key_accepted*;
+    miral::SlowKeys::on_key_down*;
+    miral::SlowKeys::on_key_rejected*;
+    miral::SlowKeys::operator*;
     miral::WaylandTools::?WaylandTools*;
     miral::WaylandTools::WaylandTools*;
     miral::WaylandTools::for_each_binding*;
@@ -638,6 +648,7 @@ global:
     non-virtual?thunk?to?miral::live_config::Store::?Store*;
     typeinfo?for?miral::AppendKeyboardEventFilter;
     typeinfo?for?miral::BounceKeys;
+    typeinfo?for?miral::SlowKeys;
     typeinfo?for?miral::WaylandTools;
     typeinfo?for?miral::live_config::IniFile;
     typeinfo?for?miral::live_config::Key;

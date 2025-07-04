@@ -31,6 +31,7 @@ namespace shell
 class KeyboardHelper;
 class SimulatedSecondaryClickTransformer;
 class HoverClickTransformer;
+class SlowKeysTransformer;
 class AccessibilityManager
 {
 public:
@@ -55,6 +56,9 @@ public:
 
     virtual void hover_click_enabled(bool enabled) = 0;
     virtual auto hover_click() -> HoverClickTransformer& = 0;
+
+    virtual void slow_keys_enabled(bool enabled) = 0;
+    virtual auto slow_keys() -> SlowKeysTransformer& = 0;
 };
 }
 }
