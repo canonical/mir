@@ -1,4 +1,4 @@
-MIROIL_7.0 {
+MIROIL_8.0 {
 global:
   extern "C++" {
     miroil::Compositor::?Compositor*;
@@ -80,6 +80,7 @@ global:
     miroil::Surface::remove_observer*;
     miroil::Surface::set_confine_pointer_state*;
     miroil::Surface::set_keymap*;
+    miroil::Surface::set_mirror_mode*;
     miroil::Surface::set_orientation*;
     miroil::Surface::top_left*;
     miroil::Surface::visible*;

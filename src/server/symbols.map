@@ -512,6 +512,7 @@ global:
     mir::scene::BasicSurface::set_focus_state*;
     mir::scene::BasicSurface::set_hidden*;
     mir::scene::BasicSurface::set_input_region*;
+    mir::scene::BasicSurface::set_mirror_mode*;
     mir::scene::BasicSurface::set_orientation*;
     mir::scene::BasicSurface::set_reception_mode*;
     mir::scene::BasicSurface::set_streams*;
@@ -583,6 +584,7 @@ global:
     mir::scene::NullSurfaceObserver::hidden_set_to*;
     mir::scene::NullSurfaceObserver::input_consumed*;
     mir::scene::NullSurfaceObserver::left_output*;
+    mir::scene::NullSurfaceObserver::mirror_mode_set_to*;
     mir::scene::NullSurfaceObserver::moved_to*;
     mir::scene::NullSurfaceObserver::operator*;
     mir::scene::NullSurfaceObserver::orientation_set_to*;
@@ -1076,6 +1078,7 @@ global:
     non-virtual?thunk?to?mir::scene::BasicSurface::set_focus_mode*;
     non-virtual?thunk?to?mir::scene::BasicSurface::set_focus_state*;
     non-virtual?thunk?to?mir::scene::BasicSurface::set_input_region*;
+    non-virtual?thunk?to?mir::scene::BasicSurface::set_mirror_mode*;
     non-virtual?thunk?to?mir::scene::BasicSurface::set_orientation*;
     non-virtual?thunk?to?mir::scene::BasicSurface::set_reception_mode*;
     non-virtual?thunk?to?mir::scene::BasicSurface::set_streams*;
@@ -1134,6 +1137,7 @@ global:
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::hidden_set_to*;
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::input_consumed*;
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::left_output*;
+    non-virtual?thunk?to?mir::scene::NullSurfaceObserver::mirror_mode_set_to*;
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::moved_to*;
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::orientation_set_to*;
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::placed_relative*;

@@ -47,6 +47,7 @@ public:
                 mir::geometry::Point const &top_left) override;
   void orientation_set_to(mir::scene::Surface const *surf,
                           MirOrientation orientation) override;
+  void mirror_mode_set_to(mir::scene::Surface const* surf, MirMirrorMode mirror_mode) override;
   void placed_relative(mir::scene::Surface const *surf,
                        mir::geometry::Rectangle const &placement) override;
   void
@@ -141,6 +142,11 @@ void miroil::SurfaceObserverImpl::orientation_set_to(mir::scene::Surface const* 
     listener->orientation_set_to(surf, orientation);
 }
 
+void miroil::SurfaceObserverImpl::mirror_mode_set_to(mir::scene::Surface const* surf, MirMirrorMode mirror_mode)
+{
+    listener->mirror_mode_set_to(surf, mirror_mode);
+}
+
 void miroil::SurfaceObserverImpl::placed_relative(mir::scene::Surface const* surf, mir::geometry::Rectangle const& placement)
 {
     listener->placed_relative(surf, placement);
@@ -229,6 +235,11 @@ mir::graphics::RenderableList miroil::Surface::generate_renderables(miroil::Comp
 void miroil::Surface::set_orientation(MirOrientation orientation)
 {
     wrapped->set_orientation(orientation);
+}
+
+void miroil::Surface::set_mirror_mode(MirMirrorMode mirror_mode)
+{
+    wrapped->set_mirror_mode(mirror_mode);
 }
 
 void miroil::Surface::set_confine_pointer_state(MirPointerConfinementState state)

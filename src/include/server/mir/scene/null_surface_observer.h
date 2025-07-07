@@ -37,6 +37,7 @@ public:
     void frame_posted(Surface const* surf, geometry::Rectangle const& damage) override;
     void alpha_set_to(Surface const* surf, float alpha) override;
     void orientation_set_to(Surface const* surf, MirOrientation orientation) override;
+    void mirror_mode_set_to(Surface const* surf, MirMirrorMode mirror_mode) override;
     void transformation_set_to(Surface const* surf, glm::mat4 const& t) override;
     void cursor_image_set_to(Surface const* surf, std::weak_ptr<mir::graphics::CursorImage> const& image) override;
     void reception_mode_set_to(Surface const* surf, input::InputReceptionMode mode) override;

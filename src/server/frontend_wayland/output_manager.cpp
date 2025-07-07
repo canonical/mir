@@ -325,6 +325,46 @@ void mf::OutputManager::remove_listener(OutputManagerListener* listener)
     std::erase_if(listeners, [&](auto candidate) { return candidate == listener; });
 }
 
+auto mf::OutputManager::from_output_transform(int32_t transform) -> std::tuple<MirOrientation, MirMirrorMode>
+{
+    MirOrientation orientation = mir_orientation_normal;
+    MirMirrorMode mirror_mode = mir_mirror_mode_none;
+    switch (transform)
+    {
+        case mw::Output::Transform::normal:
+            break;
+        case mw::Output::Transform::_90:
+            orientation = mir_orientation_right;
+            break;
+        case mw::Output::Transform::_180:
+            orientation = mir_orientation_inverted;
+            break;
+        case mw::Output::Transform::_270:
+            orientation = mir_orientation_left;
+            break;
+        case mw::Output::Transform::flipped:
+            orientation = mir_orientation_normal;
+            mirror_mode = mir_mirror_mode_horizontal;
+            break;
+        case mw::Output::Transform::flipped_90:
+            orientation = mir_orientation_right;
+            mirror_mode = mir_mirror_mode_horizontal;
+            break;
+        case mw::Output::Transform::flipped_180:
+            orientation = mir_orientation_inverted;
+            mirror_mode = mir_mirror_mode_horizontal;
+            break;
+        case mw::Output::Transform::flipped_270:
+            orientation = mir_orientation_left;
+            mirror_mode = mir_mirror_mode_horizontal;
+            break;
+        default:
+            throw std::out_of_range("Unknown transform");
+    }
+
+    return std::make_tuple(orientation, mirror_mode);
+}
+
 void mf::OutputManager::handle_configuration_change(std::shared_ptr<mg::DisplayConfiguration const> const& config)
 {
     display_config = config;
