@@ -121,7 +121,7 @@ public:
     void remove_listener(OutputManagerListener* listener);
 
     static auto from_output_transform(int32_t transform) -> std::tuple<MirOrientation, MirMirrorMode>;
-
+    static auto to_output_transform(MirOrientation orientation, MirMirrorMode mirror_mode) -> int32_t;
 private:
     void handle_configuration_change(std::shared_ptr<graphics::DisplayConfiguration const> const& config);
 
