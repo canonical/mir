@@ -208,7 +208,7 @@ struct miral::LocatePointer::Self
 
             // Force the maximum frametime to be 16ms. This is to account for
             // when rendering idles (which would result in a huge dt)
-            s->t += static_cast<float>(std::clamp(dt.count(), 0l, 16l)) / animation_length.count();
+            s->t += static_cast<float>(std::clamp(static_cast<int>(dt.count()), 0, 16)) / animation_length.count();
 
             // Sawtooth 3 times
             s->radius = static_cast<uint32_t>((std::lerp(0u, max_radius * 3, s->t))) % max_radius;
