@@ -742,17 +742,26 @@ MATCHER_P(IsPlatformForDevice, udev_device, "")
     return *arg.device == *udev_device;
 }
 
-MATCHER(NoGbmForNvidia,  "")
+MATCHER(NoGbmForNvidia, "")
 {
-    for (auto const& [device, lib] : arg)
-    {
-        if (std::strcmp(mg::common::get_device_driver(device.device->parent().get()), "nvidia") != 0)
-            continue;
+    // Make sure none of the nvidia cards don't use gbm-kms
+    auto nvidia_libs = arg |
+        std::ranges::views::filter(
+            [](auto const& device_lib)
+            {
+                auto const& [device, _] = device_lib;
+                // Don't care about non-nvidia devices
+                return std::strcmp(mg::common::get_device_driver(device.device->parent().get()), "nvidia") == 0;
+            }) |
+        std::ranges::views::transform([](auto const& device_lib) { return device_lib.second; });
 
-        auto describe = lib->template load_function<mir::graphics::DescribeModule>("describe_graphics_module");
-        return std::strcmp(describe()->name, "mir:gbm-kms") != 0;
-    }
-    return true;
+    return std::ranges::all_of(
+        nvidia_libs,
+        [](auto const& lib)
+        {
+            auto describe = lib->template load_function<mir::graphics::DescribeModule>("describe_graphics_module");
+            return std::strcmp(describe()->name, "mir:gbm-kms") != 0;
+        });
 }
 
 namespace mir::graphics
