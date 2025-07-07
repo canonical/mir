@@ -746,7 +746,7 @@ MATCHER(NoGbmForNvidia,  "")
 {
     for (auto const& [device, lib] : arg)
     {
-        if (std::strcmp(mg::common::get_device_driver(device.device->parent().get()), "nividia") != 0)
+        if (std::strcmp(mg::common::get_device_driver(device.device->parent().get()), "nvidia") != 0)
             continue;
 
         auto describe = lib->template load_function<mir::graphics::DescribeModule>("describe_graphics_module");
