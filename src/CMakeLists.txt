@@ -6,6 +6,12 @@ set(MIRAL_VERSION_MINOR 4)
 set(MIRAL_VERSION_PATCH 0)
 set(MIRAL_VERSION ${MIRAL_VERSION_MAJOR}.${MIRAL_VERSION_MINOR}.${MIRAL_VERSION_PATCH})
 
+execute_process(
+    COMMAND sh -c "head -n 1 ${PROJECT_SOURCE_DIR}/src/platform/symbols.map | cut -f 1 -d' ' | cut -f 3 -d_"
+    OUTPUT_VARIABLE MIR_SERVER_GRAPHICS_PLATFORM_STANZA_VERSION
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
 # Add the core and platform implementations before exposing any private APIs
 add_subdirectory(core)
 add_subdirectory(platforms/)
