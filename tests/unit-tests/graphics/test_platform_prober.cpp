@@ -25,6 +25,7 @@
 
 #include "mir/console_services.h"
 #include "mir/graphics/platform.h"
+#include "quirk_common.h"
 #include "mir/options/configuration.h"
 #include "mir/options/default_configuration.h"
 #include "mir/options/option.h"
@@ -741,6 +742,19 @@ MATCHER_P(IsPlatformForDevice, udev_device, "")
     return *arg.device == *udev_device;
 }
 
+MATCHER(NoGbmForNvidia,  "")
+{
+    for (auto const& [device, lib] : arg)
+    {
+        if (std::strcmp(mg::common::get_device_driver(device.device->parent().get()), "nividia") != 0)
+            continue;
+
+        auto describe = lib->template load_function<mir::graphics::DescribeModule>("describe_graphics_module");
+        return std::strcmp(describe()->name, "mir:gbm-kms") != 0;
+    }
+    return true;
+}
+
 namespace mir::graphics
 {
 void PrintTo(std::pair<SupportedDevice, std::shared_ptr<SharedLibrary>> const& device, std::ostream* os)
@@ -1097,11 +1111,16 @@ TEST_F(FullProbeStack, gbm_kms_is_not_selected_for_nvidia_driver_by_default)
 
     auto devices = mg::select_display_modules(the_options_provider(), the_console_services(), *the_library_prober_report());
 
-    EXPECT_THAT(devices, UnorderedElementsAre(
+    // Make sure other devices have the proper platform
+    EXPECT_THAT(devices, IsSupersetOf({
         Pair(IsPlatformForDevice(nouveau_device.get()), ModuleNameMatches(StrEq("mir:gbm-kms"))),
-        Pair(IsPlatformForDevice(amd_device.get()), ModuleNameMatches(StrEq("mir:gbm-kms"))),
-        Pair(IsPlatformForDevice(nvidia_device.get()), ModuleNameMatches(StrEq("mir:atomic-kms")))
-        ));
+        Pair(IsPlatformForDevice(amd_device.get()), ModuleNameMatches(StrEq("mir:gbm-kms")))
+        }));
+
+
+    // If we have an nvidia device, then it must not use gbm-kms (for display at least)
+    EXPECT_THAT(devices, NoGbmForNvidia());
+
 }
 
 TEST_F(FullProbeStack, gbm_kms_is_not_selected_for_nvidia_driver_when_quirk_is_allowed)
@@ -1125,11 +1144,12 @@ TEST_F(FullProbeStack, gbm_kms_is_not_selected_for_nvidia_driver_when_quirk_is_a
 
     auto devices = mg::select_display_modules(the_options_provider(), the_console_services(), *the_library_prober_report());
 
-    EXPECT_THAT(devices, UnorderedElementsAre(
+    EXPECT_THAT(devices, IsSupersetOf({
         Pair(IsPlatformForDevice(nouveau_device.get()), ModuleNameMatches(StrEq("mir:gbm-kms"))),
         Pair(IsPlatformForDevice(amd_device.get()), ModuleNameMatches(StrEq("mir:gbm-kms"))),
-        Pair(IsPlatformForDevice(nvidia_device.get()), ModuleNameMatches(StrEq("mir:atomic-kms")))
-        ));
+        }));
+
+    EXPECT_THAT(devices, NoGbmForNvidia());
 }
 
 namespace
