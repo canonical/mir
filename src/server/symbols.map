@@ -1402,6 +1402,7 @@ global:
     typeinfo?for?mir::shell::IdleHandler;
     typeinfo?for?mir::shell::IdleHandlerObserver;
     typeinfo?for?mir::shell::InputTargeter;
+    typeinfo?for?mir::shell::MouseKeysTransformer;
     typeinfo?for?mir::shell::PersistentSurfaceStore::Id;
     typeinfo?for?mir::shell::PersistentSurfaceStore;
     typeinfo?for?mir::shell::Shell;
@@ -1603,6 +1604,7 @@ global:
     vtable?for?mir::shell::IdleHandler;
     vtable?for?mir::shell::IdleHandlerObserver;
     vtable?for?mir::shell::InputTargeter;
+    vtable?for?mir::shell::MouseKeysTransformer;
     vtable?for?mir::shell::PersistentSurfaceStore;
     vtable?for?mir::shell::Shell;
     vtable?for?mir::shell::ShellReport;

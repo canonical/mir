@@ -16,7 +16,7 @@
 
 #include "basic_accessibility_manager.h"
 #include "basic_hover_click_transformer.h"
-#include "mouse_keys_transformer.h"
+#include "mir/shell/mousekeys_transformer.h"
 #include "basic_simulated_secondary_click_transformer.h"
 #include "basic_slow_keys_transformer.h"
 #include "basic_sticky_keys_transformer.h"

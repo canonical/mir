@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mouse_keys_transformer.h"
+#include "basic_mousekeys_transformer.h"
 
 #include "mir/geometry/forward.h"
 #include "mir/input/event_builder.h"
@@ -29,7 +29,6 @@
 #include <cmath>
 #include <cstdint>
 #include <memory>
-#include <mutex>
 #include <utility>
 
 using enum mir::input::MouseKeysKeymap::Action;

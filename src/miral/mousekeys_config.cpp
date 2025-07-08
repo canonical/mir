@@ -15,6 +15,7 @@
  */
 
 #include "miral/mousekeys_config.h"
+#include "mir/shell/mousekeys_transformer.h"
 #include "mir/options/configuration.h"
 
 #include <mir/server.h>

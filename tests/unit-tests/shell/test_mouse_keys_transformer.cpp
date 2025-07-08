@@ -20,8 +20,9 @@
 #include "mir/events/pointer_event.h"
 #include "mir/geometry/forward.h"
 #include "mir/input/input_event_transformer.h"
-#include "src/server/shell/mouse_keys_transformer.h"
+#include "mir/shell/mousekeys_transformer.h"
 #include "src/server/input/default_event_builder.h"
+#include "src/server/shell/basic_mousekeys_transformer.h"
 
 #include "mir/test/doubles/advanceable_clock.h"
 #include "mir/test/fake_shared.h"
