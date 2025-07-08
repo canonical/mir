@@ -66,7 +66,7 @@ struct TestMouseKeysConfig : miral::TestServer
             });
     }
 
-    miral::MouseKeysConfig config{true};
+    miral::MouseKeysConfig config{miral::MouseKeysConfig::enabled()};
     std::shared_ptr<testing::NiceMock<MockAccessibilityManager>> accessibility_manager =
         std::make_shared<testing::NiceMock<MockAccessibilityManager>>();
 };
