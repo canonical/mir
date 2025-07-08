@@ -614,6 +614,7 @@ global:
     miral::SlowKeys::on_key_down*;
     miral::SlowKeys::on_key_rejected*;
     miral::SlowKeys::operator*;
+    miral::MouseKeysConfig::disabled*;
     miral::WaylandTools::?WaylandTools*;
     miral::WaylandTools::WaylandTools*;
     miral::WaylandTools::for_each_binding*;

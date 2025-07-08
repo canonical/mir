@@ -34,7 +34,17 @@ namespace miral
 class MouseKeysConfig
 {
 public:
+    [[deprecated(
+        "MouseKeysConfig(bool) is deprecated. Please use MouseKeysConfig::enabled or MouseKeysConfig::disabled")]]
     explicit MouseKeysConfig(bool enabled_by_default);
+
+    /// Creates a `MouseKeys` instance that's enabled by default.
+    /// \remark Since MirAL 5.4
+    auto static enabled() -> MouseKeysConfig;
+
+    /// Creates a `MouseKeys` instance that's disabled by default.
+    /// \remark Since MirAL 5.4
+    auto static disabled() -> MouseKeysConfig;
 
     void operator()(mir::Server& server) const;
 
@@ -57,6 +67,7 @@ public:
 
 private:
     struct Self;
+    MouseKeysConfig(std::shared_ptr<Self>);
     std::shared_ptr<Self> self;
 };
 }

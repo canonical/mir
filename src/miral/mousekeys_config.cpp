@@ -47,6 +47,21 @@ miral::MouseKeysConfig::MouseKeysConfig(bool enabled_by_default) :
 {
 }
 
+miral::MouseKeysConfig::MouseKeysConfig(std::shared_ptr<Self> self) :
+    self{std::move(self)}
+{
+}
+
+auto miral::MouseKeysConfig::enabled() -> MouseKeysConfig 
+{
+    return MouseKeysConfig{std::make_shared<Self>(true)};
+}
+
+auto miral::MouseKeysConfig::disabled() -> MouseKeysConfig 
+{
+    return MouseKeysConfig{std::make_shared<Self>(false)};
+}
+
 void miral::MouseKeysConfig::enabled(bool enabled) const
 {
     if (auto const accessibility_manager = self->accessibility_manager.lock())
