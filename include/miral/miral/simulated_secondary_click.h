@@ -29,6 +29,12 @@ class Server;
 namespace miral
 {
 /// Enables configuring simulated secondary click at runtime.
+/// 
+/// Simulated secondary click is an accessibility method that allows users to
+/// simulate secondary clicks by holding the left mouse button. The pointer is
+/// allowed to move slightly during the hold to accomodate users with
+/// disabilities.
+///
 /// \remark Since MirAL 5.3
 class SimulatedSecondaryClick
 {
