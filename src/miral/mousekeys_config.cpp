@@ -92,7 +92,7 @@ void miral::MouseKeysConfig::set_keymap(mir::input::MouseKeysKeymap const& new_k
 {
     if (auto const accessibility_manager = self->accessibility_manager.lock())
     {
-        accessibility_manager->mousekeys_keymap(new_keymap);
+        accessibility_manager->mousekeys().keymap(new_keymap);
     }
     else
     {
@@ -105,7 +105,7 @@ void miral::MouseKeysConfig::set_acceleration_factors(double constant, double li
 {
     if (auto const accessibility_manager = self->accessibility_manager.lock())
     {
-        accessibility_manager->acceleration_factors(constant, linear, quadratic);
+        accessibility_manager->mousekeys().acceleration_factors(constant, linear, quadratic);
     }
     else
     {
@@ -118,7 +118,7 @@ void miral::MouseKeysConfig::set_max_speed(double x_axis, double y_axis) const
 {
     if (auto const accessibility_manager = self->accessibility_manager.lock())
     {
-        accessibility_manager->max_speed(x_axis, y_axis);
+        accessibility_manager->mousekeys().max_speed(x_axis, y_axis);
     }
     else
     {

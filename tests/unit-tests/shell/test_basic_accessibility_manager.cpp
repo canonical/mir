@@ -282,7 +282,7 @@ TEST_F(TestBasicAccessibilityManager, calling_set_mousekeys_keymap_calls_set_key
     EXPECT_CALL(*mock_mousekeys_transformer, keymap(KeymapMatches(keymap)));
 
     basic_accessibility_manager.mousekeys_enabled(true);
-    basic_accessibility_manager.mousekeys_keymap(keymap);
+    basic_accessibility_manager.mousekeys().keymap(keymap);
 }
 
 TEST_F(TestBasicAccessibilityManager, calling_set_acceleration_factors_calls_set_acceleration_factors_on_transformer)
@@ -291,7 +291,7 @@ TEST_F(TestBasicAccessibilityManager, calling_set_acceleration_factors_calls_set
     EXPECT_CALL(*mock_mousekeys_transformer, acceleration_factors(constant, linear, quadratic));
 
     basic_accessibility_manager.mousekeys_enabled(true);
-    basic_accessibility_manager.acceleration_factors(constant, linear, quadratic);
+    basic_accessibility_manager.mousekeys().acceleration_factors(constant, linear, quadratic);
 }
 
 TEST_F(TestBasicAccessibilityManager, calling_set_max_speed_calls_set_max_speed_on_transformer)
@@ -300,7 +300,7 @@ TEST_F(TestBasicAccessibilityManager, calling_set_max_speed_calls_set_max_speed_
     EXPECT_CALL(*mock_mousekeys_transformer, max_speed(max_x, max_y));
 
     basic_accessibility_manager.mousekeys_enabled(true);
-    basic_accessibility_manager.max_speed(max_x, max_y);
+    basic_accessibility_manager.mousekeys().max_speed(max_x, max_y);
 }
 
 TEST_F(TestBasicAccessibilityManager, calling_simulated_secondary_click_hold_duration_calls_the_corresponding_method_on_transformer)

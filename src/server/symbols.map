@@ -723,6 +723,7 @@ global:
     mir::shell::AbstractShell::surface_ready*;
     mir::shell::AbstractShell::swap_z_order*;
     mir::shell::AccessibilityManager::?AccessibilityManager*;
+    mir::shell::AccessibilityManager::mousekeys*;
     mir::shell::DefaultWindowManager::handle_keyboard_event*;
     mir::shell::DisplayConfigurationController::?DisplayConfigurationController*;
     mir::shell::DisplayConfigurationController::DisplayConfigurationController*;
@@ -1223,6 +1224,7 @@ global:
     non-virtual?thunk?to?mir::shell::AbstractShell::surface_ready*;
     non-virtual?thunk?to?mir::shell::AbstractShell::swap_z_order*;
     non-virtual?thunk?to?mir::shell::AccessibilityManager::?AccessibilityManager*;
+    non-virtual?thunk?to?mir::shell::AccessibilityManager::mousekeys*;
     non-virtual?thunk?to?mir::shell::DefaultWindowManager::handle_keyboard_event*;
     non-virtual?thunk?to?mir::shell::DisplayConfigurationController::?DisplayConfigurationController*;
     non-virtual?thunk?to?mir::shell::DisplayLayout::?DisplayLayout*;
