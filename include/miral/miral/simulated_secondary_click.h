@@ -33,7 +33,18 @@ namespace miral
 class SimulatedSecondaryClick
 {
 public:
+    [[deprecated(
+        "SimulatedSecondaryClick(bool) is deprecated, please use SimulatedSecondaryClick::enabled or "
+        "SimulatedSecondaryClick::disabled")]]
     explicit SimulatedSecondaryClick(bool enabled_by_default);
+
+    /// Creates a `SimulatedSecondaryClick` instance that's enabled by default.
+    /// \remark Since MirAL 5.4
+    auto static enabled() -> SimulatedSecondaryClick;
+
+    /// Creates a `SimulatedSecondaryClick` instance that's disabled by default.
+    /// \remark Since MirAL 5.4
+    auto static disabled() -> SimulatedSecondaryClick;
 
     void operator()(mir::Server& server);
 
@@ -70,6 +81,7 @@ public:
 
 private:
     struct Self;
+    SimulatedSecondaryClick(std::shared_ptr<Self> self);
     std::shared_ptr<Self> self;
 };
 }

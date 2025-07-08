@@ -54,6 +54,21 @@ miral::SimulatedSecondaryClick::SimulatedSecondaryClick(bool enabled_by_default)
 {
 }
 
+miral::SimulatedSecondaryClick::SimulatedSecondaryClick(std::shared_ptr<Self> self) :
+    self{std::move(self)}
+{
+}
+
+auto miral::SimulatedSecondaryClick::enabled() -> SimulatedSecondaryClick
+{
+    return SimulatedSecondaryClick{std::make_shared<Self>(true)};
+}
+
+auto miral::SimulatedSecondaryClick::disabled() -> SimulatedSecondaryClick
+{
+    return SimulatedSecondaryClick{std::make_shared<Self>(false)};
+}
+
 miral::SimulatedSecondaryClick& miral::SimulatedSecondaryClick::enable()
 {
     self->state.lock()->enabled = true;
