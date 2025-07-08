@@ -68,11 +68,11 @@ struct TestSlowKeysTransformer : Test
     std::function<void(std::shared_ptr<MirEvent> const& event)> dispatch;
 };
 
-struct TestDifferentPressDelays: public TestSlowKeysTransformer, public WithParamInterface<std::chrono::milliseconds>
+struct TestSlowKeysTransformerPressDelays: public TestSlowKeysTransformer, public WithParamInterface<std::chrono::milliseconds>
 {
 };
 
-TEST_P(TestDifferentPressDelays, only_presses_held_for_slow_keys_delay_are_accepted)
+TEST_P(TestSlowKeysTransformerPressDelays, only_presses_held_for_slow_keys_delay_are_accepted)
 {
     auto const press_delay = GetParam();
 
@@ -97,14 +97,14 @@ TEST_P(TestDifferentPressDelays, only_presses_held_for_slow_keys_delay_are_accep
 }
 
 INSTANTIATE_TEST_SUITE_P(
-    TestSlowKeysTransformer, TestDifferentPressDelays, Values(test_slow_keys_delay - 1ms, test_slow_keys_delay + 1ms));
+    TestSlowKeysTransformer, TestSlowKeysTransformerPressDelays, Values(test_slow_keys_delay - 1ms, test_slow_keys_delay + 1ms));
 
 
-struct TestKeyInterference: public TestSlowKeysTransformer, public WithParamInterface<std::chrono::milliseconds>
+struct TestSlowKeysTransformerWithKeyInterference: public TestSlowKeysTransformer, public WithParamInterface<std::chrono::milliseconds>
 {
 };
 
-TEST_P(TestKeyInterference, different_buttons_dont_interfere_with_each_other)
+TEST_P(TestSlowKeysTransformerWithKeyInterference, different_buttons_dont_interfere_with_each_other)
 {
     auto const press_delay = GetParam();
 
@@ -141,4 +141,4 @@ TEST_P(TestKeyInterference, different_buttons_dont_interfere_with_each_other)
 }
 
 INSTANTIATE_TEST_SUITE_P(
-    TestSlowKeysTransformer, TestKeyInterference, Values(test_slow_keys_delay - 1ms, test_slow_keys_delay + 1ms));
+    TestSlowKeysTransformer, TestSlowKeysTransformerWithKeyInterference, Values(test_slow_keys_delay - 1ms, test_slow_keys_delay + 1ms));
