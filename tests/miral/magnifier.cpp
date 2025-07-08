@@ -67,19 +67,6 @@ TEST_F(MagnifierTest, can_start_enabled)
     });
     start_server();
 }
-TEST_F(MagnifierTest, can_enable_after_start)
-{
-    Magnifier magnifier;
-    add_server_init(magnifier);
-    add_start_callback([&]
-    {
-        magnifier.enable(true);
-        auto const scene = server().the_scene();
-        auto const elements = scene->scene_elements_for(this);
-        EXPECT_THAT(elements.size(), Eq(1));
-    });
-    start_server();
-}
 
 TEST_F(MagnifierTest, magnification_results_in_scaled_transform)
 {

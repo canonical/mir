@@ -45,6 +45,23 @@ public:
 
     void init(mir::Server& server)
     {
+        render_scene_into_surface.on_surface_ready([this](auto const& surf)
+        {
+            surf->set_transformation(glm::scale(glm::mat4(1.0), glm::vec3(magnification, magnification, 1)));
+            surf->set_depth_layer(mir_depth_layer_always_on_top);
+            surf->set_focus_mode(mir_focus_mode_disabled);
+
+            if (default_enabled)
+                surf->show();
+            else
+                surf->hide();
+
+            std::lock_guard lock(mutex);
+            surface = surf;
+        });
+
+        render_scene_into_surface(server);
+
         server.add_init_callback([&]
         {
             observer = std::make_shared<Observer>(this);
@@ -54,38 +71,22 @@ public:
 
         server.add_stop_callback([&]
         {
+            std::lock_guard lock(mutex);
             if (auto const locked = cursor_multiplexer.lock())
                 locked->unregister_interest(*observer);
-            surface = nullptr;
         });
-
-        render_scene_into_surface.on_surface_ready([this](auto const& surf)
-        {
-            std::lock_guard lock(mutex);
-            surface = surf;
-            surface->set_transformation(glm::scale(glm::mat4(1.0), glm::vec3(magnification, magnification, 1)));
-            surface->set_depth_layer(mir_depth_layer_always_on_top);
-            surface->set_focus_mode(mir_focus_mode_disabled);
-
-            if (default_enabled)
-                surface->show();
-            else
-                surface->hide();
-        });
-
-        render_scene_into_surface(server);
     }
 
     void set_enable(bool enable)
     {
         std::lock_guard lock(mutex);
         default_enabled = enable;
-        if (surface)
+        if (auto const surf = surface.lock())
         {
             if (enable)
-                surface->show();
+                surf->show();
             else
-                surface->hide();
+                surf->hide();
         }
     }
 
@@ -93,8 +94,8 @@ public:
     {
         std::lock_guard lock(mutex);
         magnification = new_magnification;
-        if (surface)
-            surface->set_transformation(glm::scale(glm::mat4(1.0), glm::vec3(magnification, magnification, 1)));
+        if (auto const surf = surface.lock())
+            surf->set_transformation(glm::scale(glm::mat4(1.0), glm::vec3(magnification, magnification, 1)));
     }
 
     void set_capture_size(geom::Size const& size)
@@ -119,15 +120,16 @@ private:
         {
             std::lock_guard lock(self->mutex);
             self->cursor_pos = geom::Point{abs_x, abs_y};
-            if (!self->surface)
+            auto const surf = self->surface.lock();
+            if (!surf)
                 return;
 
             auto const capture_position = cursor_position_to_capture_position(
-                self->surface->window_size(),
+                surf->window_size(),
                 self->cursor_pos);
-            self->surface->move_to(capture_position);
+            surf->move_to(capture_position);
             self->render_scene_into_surface.capture_area(
-                geom::Rectangle{capture_position, self->surface->window_size()});
+                geom::Rectangle{capture_position, surf->window_size()});
         }
 
         void pointer_usable() override {}
@@ -153,7 +155,7 @@ private:
     RenderSceneIntoSurface render_scene_into_surface;
     std::weak_ptr<mi::CursorObserverMultiplexer> cursor_multiplexer;
     std::shared_ptr<Observer> observer;
-    std::shared_ptr<ms::Surface> surface;
+    std::weak_ptr<ms::Surface> surface;
     geom::Point cursor_pos;
     float magnification = 2.f;
     bool default_enabled = false;
