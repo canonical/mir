@@ -18,6 +18,9 @@
 #include "kms_framebuffer.h"
 #include "kms/quirks.h"
 
+#define MIR_LOG_COMPONENT "atomic-kms:gbm-display-allocator"
+#include "mir/log.h"
+
 #include <drm_fourcc.h>
 #include <xf86drmMode.h>
 #include <gbm.h>
@@ -125,12 +128,9 @@ auto create_gbm_surface(
     gbm_device* gbm,
     geom::Size size,
     mg::DRMFormat format,
-    std::span<uint64_t> modifiers,
-    mga::GbmQuirks const& gbm_quirks) -> std::shared_ptr<gbm_surface>
+    std::span<uint64_t> modifiers) -> std::shared_ptr<gbm_surface>
 {
-    auto const flags = gbm_quirks.gbm_create_surface_flags();
-    auto const surface =
-        [&]()
+    auto const try_create_surface = [&](auto flags)
         {
             if (modifiers.empty())
             {
@@ -151,9 +151,21 @@ auto create_gbm_surface(
                     modifiers.size(),
                     flags);
             }
-        }();
+        };
+
+    // Try allocating with flags first
+    // Covers Nvidia cards with 575 drivers and later
+    auto surface = try_create_surface(GBM_BO_USE_RENDERING | GBM_BO_USE_SCANOUT);
 
     if (!surface)
+    {
+        mir::log_warning("Failed to create surface with flags. Attempting to create one without flags");
+        // Try allocating without flags
+        // Covers Nvidia cards before 575
+        surface = try_create_surface(0);
+    }
+
+    if(!surface)
     {
         BOOST_THROW_EXCEPTION((
             std::system_error{
@@ -180,7 +192,7 @@ public:
         std::shared_ptr<mga::GbmQuirks> const& gbm_quirks) :
         drm_fd{std::move(drm_fd)},
         gbm_quirks{gbm_quirks},
-        surface{create_gbm_surface(gbm, size, format, modifiers, *gbm_quirks)}
+        surface{create_gbm_surface(gbm, size, format, modifiers)}
     {
     }
 
