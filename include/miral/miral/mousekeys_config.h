@@ -39,6 +39,10 @@ class Server;
 /// \note All methods can only be called after the server is initialized.
 namespace miral
 {
+namespace live_config
+{
+    class Store;
+}
 class MouseKeysConfig
 {
 public:
@@ -53,6 +57,9 @@ public:
     /// Creates a `MouseKeys` instance that's disabled by default.
     /// \remark Since MirAL 5.4
     auto static disabled() -> MouseKeysConfig;
+
+    /// Construct a `MouseKeysConfig` instance with access to a live config store.
+    explicit MouseKeysConfig(live_config::Store& config_store);
 
     void operator()(mir::Server& server) const;
 
