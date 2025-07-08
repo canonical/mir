@@ -95,11 +95,10 @@ public:
         std::lock_guard lock{mutex};
         for (size_t i = 0; i < buffers.size(); ++i)
         {
-            auto& pair = buffers[i];
-            if (!pair.first)
+            if (auto& [used, buffer] = buffers[i]; !used)
             {
-                pair.first = true;
-                return std::make_shared<ClaimedBuffer>(pair.second, [this, i]
+                used = true;
+                return std::make_shared<ClaimedBuffer>(buffer, [this, i]
                 {
                     std::lock_guard lock{mutex};
                     buffers[i].first = false;
