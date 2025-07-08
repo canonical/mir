@@ -27,6 +27,14 @@ class Server;
 }
 
 /// Enables configuring mousekeys at runtime.
+///
+/// Mousekeys is an accessibility feature that allows users to control the
+/// pointer with their keyboard. The default keymap uses numpad `8`, `2`, `4`,
+/// `6` for up, down, left, and right repsectively. Single clicks can be
+/// dispatched with `5`, and double clicks with `+`. Holds can be initiated
+/// with `0`, and releases with `.`. Users can switch between left, middle, and
+/// right click with `/`, `*`, and `-` respectively.
+///
 /// \remark Since MirAL 5.3
 /// \note All methods can only be called after the server is initialized.
 namespace miral
