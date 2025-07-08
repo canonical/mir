@@ -583,6 +583,7 @@ libmiral.so.7 libmiral7 #MINVER#
  (c++)"miral::MouseKeysConfig::disabled()@MIRAL_5.3" 5.4.0
  (c++)"miral::MouseKeysConfig::enable() const@MIRAL_5.3" 5.4.0
  (c++)"miral::MouseKeysConfig::enabled()@MIRAL_5.3" 5.4.0
+ (c++)"miral::MouseKeysConfig::MouseKeysConfig(miral::live_config::Store&)@MIRAL_5.3" 5.4.0
  (c++)"miral::OutputFilter::OutputFilter(miral::live_config::Store&)@MIRAL_5.4" 5.4.0
  (c++)"miral::SlowKeys::SlowKeys(miral::live_config::Store&)@MIRAL_5.4" 5.4.0
  (c++)"miral::SlowKeys::SlowKeys(std::shared_ptr<miral::SlowKeys::Self>)@MIRAL_5.4" 5.4.0
