@@ -15,10 +15,11 @@
  */
 
 #include "include/server/mir/shell/keyboard_helper.h"
+#include "mir/shell/accessibility_manager.h"
 #include "mir/shell/hover_click_transformer.h"
+#include "mir/shell/mousekeys_transformer.h"
+#include "mir/shell/simulated_secondary_click_transformer.h"
 #include "src/server/shell/basic_accessibility_manager.h"
-#include "src/server/shell/mouse_keys_transformer.h"
-#include "src/server/shell/basic_simulated_secondary_click_transformer.h"
 
 #include "mir/input/input_event_transformer.h"
 #include "mir/input/mousekeys_keymap.h"
