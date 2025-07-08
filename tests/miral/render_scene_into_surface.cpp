@@ -38,6 +38,14 @@ public:
     RenderSceneIntoSurfaceTest()
     {
         start_server_in_setup = false;
+        setenv("MIR_PLATFORM_DISPLAY_LIBS", "mir-virtual", 1);
+        setenv("MIR_VIRTUAL_OUTPUT", "800x600", 1);
+    }
+
+    ~RenderSceneIntoSurfaceTest() override
+    {
+        unsetenv("MIR_PLATFORM_DISPLAY_LIBS");
+        unsetenv("MIR_VIRTUAL_OUTPUT");
     }
 };
 
