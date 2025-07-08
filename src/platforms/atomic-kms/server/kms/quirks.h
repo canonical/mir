@@ -38,18 +38,6 @@ namespace graphics::atomic
 class GbmQuirks
 {
 public:
-    class CreateSurfaceFlagsQuirk
-    {
-    public:
-        CreateSurfaceFlagsQuirk() = default;
-        virtual ~CreateSurfaceFlagsQuirk() = default;
-
-        CreateSurfaceFlagsQuirk(CreateSurfaceFlagsQuirk const&) = delete;
-        CreateSurfaceFlagsQuirk& operator=(CreateSurfaceFlagsQuirk const&) = delete;
-
-        virtual auto gbm_create_surface_flags() const -> uint32_t = 0;
-    };
-
     class SurfaceHasFreeBuffersQuirk
     {
     public:
@@ -62,15 +50,12 @@ public:
         virtual auto gbm_surface_has_free_buffers(gbm_surface* gbm_surface) const -> int = 0;
     };
 
-    GbmQuirks(
-        std::unique_ptr<CreateSurfaceFlagsQuirk> create_surface_flags,
-        std::unique_ptr<SurfaceHasFreeBuffersQuirk> surface_has_free_buffers);
+    GbmQuirks(std::unique_ptr<SurfaceHasFreeBuffersQuirk> surface_has_free_buffers);
 
     auto gbm_create_surface_flags() const -> uint32_t;
     auto gbm_surface_has_free_buffers(gbm_surface* gbm_surface) const -> int;
 
 private:
-    std::unique_ptr<CreateSurfaceFlagsQuirk> const create_surface_flags;
     std::unique_ptr<SurfaceHasFreeBuffersQuirk> const surface_has_free_buffers;
 };
 
