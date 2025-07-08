@@ -157,7 +157,11 @@ int main(int argc, char const* argv[])
                 return true;
 
             mousekeys_on = !mousekeys_on;
-            mousekeys_config.enabled(mousekeys_on);
+            if(mousekeys_on)
+                mousekeys_config.enable();
+            else
+                mousekeys_config.disable();
+
             return true;
         }
 

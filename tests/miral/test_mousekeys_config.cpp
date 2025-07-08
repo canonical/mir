@@ -81,8 +81,8 @@ TEST_F(TestMouseKeysConfig, mousekeys_config_enabled_calls_accessibility_manager
 
     add_server_init(config);
     start_server();
-    config.enabled(true);
-    config.enabled(false);
+    config.enable();
+    config.disable();
 }
 
 TEST_F(TestMouseKeysConfig, mousekeys_config_set_keymap_calls_accessibility_manager_set_mousekeys_keymap)

@@ -629,7 +629,9 @@ global:
     miral::StickyKeys::on_modifier_clicked*;
     miral::StickyKeys::operator*;
     miral::StickyKeys::should_disable_if_two_keys_are_pressed_together*;
+    miral::MouseKeysConfig::disable*;
     miral::MouseKeysConfig::disabled*;
+    miral::MouseKeysConfig::enable*;
     miral::WaylandTools::?WaylandTools*;
     miral::WaylandTools::WaylandTools*;
     miral::WaylandTools::for_each_binding*;

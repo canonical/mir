@@ -57,7 +57,19 @@ public:
     void operator()(mir::Server& server) const;
 
     /// Enables or disables mousekeys depending on the passed parameter.
+    [[deprecated(
+        "MouseKeysConfig::enabled(bool) is deprecated. Please use MouseKeysConfig::enable or MouseKeysConfig::disable")]]
     void enabled(bool enabled) const;
+
+    /// Enables mousekeys.
+    /// When already enabled, further calls have no effect.
+    /// \remark Since MirAL 5.4
+    void enable() const;
+    
+    /// Disables mousekeys.
+    /// When already disabled, further calls have no effect.
+    /// \remark Since MirAL 5.4
+    void disable() const;
 
     /// Changes the keymap for the various mousekeys actions defined in
     /// [MouseKeysKeymap::Action]
