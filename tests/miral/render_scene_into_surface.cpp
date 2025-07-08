@@ -38,14 +38,8 @@ public:
     RenderSceneIntoSurfaceTest()
     {
         start_server_in_setup = false;
-        setenv("MIR_PLATFORM_DISPLAY_LIBS", "mir-virtual", 1);
-        setenv("MIR_VIRTUAL_OUTPUT", "800x600", 1);
-    }
-
-    ~RenderSceneIntoSurfaceTest() override
-    {
-        unsetenv("MIR_PLATFORM_DISPLAY_LIBS");
-        unsetenv("MIR_VIRTUAL_OUTPUT");
+        add_to_environment("MIR_PLATFORM_DISPLAY_LIBS", "mir-virtual");
+        add_to_environment("MIR_VIRTUAL_OUTPUT", "800x600");
     }
 };
 
@@ -57,18 +51,16 @@ TEST_F(RenderSceneIntoSurfaceTest, set_capture_area_before_starting)
         Point(100, 100),
         Size(200, 200)
     ));
-    add_start_callback([&]
-    {
-        auto const scene = server().the_scene();
-        auto const elements = scene->scene_elements_for(this);
-        EXPECT_THAT(elements.size(), Eq(1));
-        auto const element = elements.at(0);
-        EXPECT_THAT(element->renderable()->screen_position(), Eq(Rectangle(
-            Point(0, 0),
-            Size(200, 200)
-        )));
-    });
+
     start_server();
+    auto const scene = server().the_scene();
+    auto const elements = scene->scene_elements_for(this);
+    EXPECT_THAT(elements.size(), Eq(1));
+    auto const& element = elements.at(0);
+    EXPECT_THAT(element->renderable()->screen_position(), Eq(Rectangle(
+        Point(0, 0),
+        Size(200, 200)
+    )));
 }
 
 TEST_F(RenderSceneIntoSurfaceTest, set_capture_area_after_starting)
@@ -76,22 +68,19 @@ TEST_F(RenderSceneIntoSurfaceTest, set_capture_area_after_starting)
     RenderSceneIntoSurface render_scene_into_surface;
     add_server_init(render_scene_into_surface);
 
-    add_start_callback([&]
-    {
-        render_scene_into_surface.capture_area(Rectangle(
-            Point(100, 100),
-            Size(200, 200)
-        ));
-        auto const scene = server().the_scene();
-        auto const elements = scene->scene_elements_for(this);
-        EXPECT_THAT(elements.size(), Eq(1));
-        auto const element = elements.at(0);
-        EXPECT_THAT(element->renderable()->screen_position(), Eq(Rectangle(
-            Point(100, 100),
-            Size(200, 200)
-        )));
-    });
     start_server();
+    render_scene_into_surface.capture_area(Rectangle(
+        Point(100, 100),
+        Size(200, 200)
+    ));
+    auto const scene = server().the_scene();
+    auto const elements = scene->scene_elements_for(this);
+    EXPECT_THAT(elements.size(), Eq(1));
+    auto const& element = elements.at(0);
+    EXPECT_THAT(element->renderable()->screen_position(), Eq(Rectangle(
+        Point(100, 100),
+        Size(200, 200)
+    )));
 }
 
 TEST_F(RenderSceneIntoSurfaceTest, set_overlay_cursor_before_starting)

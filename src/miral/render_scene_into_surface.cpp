@@ -30,6 +30,7 @@
 #include <mutex>
 #include <utility>
 #include <boost/mpl/pair.hpp>
+#include <boost/system/detail/mutex.hpp>
 
 namespace geom = mir::geometry;
 namespace ms = mir::scene;
@@ -81,10 +82,8 @@ public:
     using BufferBuilder = std::function<std::shared_ptr<mg::Buffer>()>;
 
     BufferPool(BufferBuilder&& builder_func, size_t default_size)
-        : builder(std::move(builder_func))
+        : data(std::make_shared<Self>(std::move(builder_func), default_size))
     {
-        for (size_t i = 0; i < default_size; ++i)
-            buffers.emplace_back(false, builder());
     }
 
     /// Claims the next free buffer from the pool. This may resize the buffer pool
@@ -92,43 +91,64 @@ public:
     /// \returns A buffer from the pool
     std::shared_ptr<mg::Buffer> claim()
     {
-        std::lock_guard lock{mutex};
-        for (size_t i = 0; i < buffers.size(); ++i)
+        std::lock_guard lock{data->mutex};
+        for (size_t i = 0; i < data->buffers.size(); ++i)
         {
-            if (auto& [used, buffer] = buffers[i]; !used)
+            if (auto& [used, buffer] = data->buffers[i]; !used)
             {
                 used = true;
-                return std::make_shared<ClaimedBuffer>(buffer, [this, i]
+                std::weak_ptr weak_data = data;
+                return std::make_shared<ClaimedBuffer>(buffer, [weak_data=weak_data, i]
                 {
-                    std::lock_guard lock{mutex};
-                    buffers[i].first = false;
+                    if (auto const locked = weak_data.lock())
+                    {
+                        std::lock_guard lock{locked->mutex};
+                        locked->buffers[i].first = false;
+                    }
                 });
             }
         }
 
-        buffers.emplace_back(true, builder());
-        size_t i = buffers.size() - 1;
-        return std::make_shared<ClaimedBuffer>(buffers[i].second, [this, i]
+        data->buffers.emplace_back(true, data->builder());
+        size_t i = data->buffers.size() - 1;
+
+        std::weak_ptr weak_data = data;
+        return std::make_shared<ClaimedBuffer>(data->buffers[i].second, [weak_data=weak_data, i]
         {
-            std::lock_guard lock{mutex};
-            buffers[i].first = false;
+            if (auto const locked = weak_data.lock())
+            {
+                std::lock_guard lock{locked->mutex};
+                locked->buffers[i].first = false;
+            }
         });
     }
 
     void set_builder(BufferBuilder&& in_builder)
     {
-        std::lock_guard lock{mutex};
-        builder = std::move(in_builder);
-        for (auto& b: buffers)
-            b = { b.first, builder() };
+        std::lock_guard lock{data->mutex};
+        data->builder = std::move(in_builder);
+        for (auto& b: data->buffers)
+            b = { b.first, data->builder() };
     }
 
 private:
-    std::mutex mutex;
-    BufferBuilder builder;
+    struct Self
+    {
+        Self(BufferBuilder&& builder_func, size_t default_size)
+            : builder(std::move(builder_func))
+        {
+            for (size_t i = 0; i < default_size; ++i)
+                buffers.emplace_back(false, builder());
+        }
 
-    /// List of available buffers along with their "claimed" status.
-    std::vector<std::pair<bool, std::shared_ptr<mg::Buffer>>> buffers;
+        std::mutex mutex;
+        BufferBuilder builder;
+
+        /// List of available buffers along with their "claimed" status.
+        std::vector<std::pair<bool, std::shared_ptr<mg::Buffer>>> buffers;
+    };
+
+    std::shared_ptr<Self> data;
 };
 
 class AlwaysHasSubmittedBufferStream : public mc::Stream
