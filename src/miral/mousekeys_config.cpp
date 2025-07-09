@@ -298,7 +298,7 @@ void miral::MouseKeysConfig::operator()(mir::Server& server) const
             mouse_keys_max_speed_y,
             "The maximum speed in pixels/second the mousekeys pointer can "
             "reach on the y axis. Pass zero to disable the speed limit",
-            current_value_or_default(s->max_speed_x, defaults::max_speed_x));
+            current_value_or_default(s->max_speed_y, defaults::max_speed_y));
     }
 
     server.add_init_callback(
