@@ -46,6 +46,7 @@ public:
     virtual void frame_posted(mir::scene::Surface const* surf, int frames_available, mir::geometry::Size const& size) = 0;
     virtual void alpha_set_to(mir::scene::Surface const* surf, float alpha) = 0;
     virtual void orientation_set_to(mir::scene::Surface const* surf, MirOrientation orientation) = 0;
+    virtual void mirror_mode_set_to(mir::scene::Surface const* surf, MirMirrorMode mirror_mode) = 0;
     virtual void transformation_set_to(mir::scene::Surface const* surf, glm::mat4 const& t) = 0;
     virtual void cursor_image_set_to(mir::scene::Surface const* surf, mir::graphics::CursorImage const& image) = 0;
     virtual void client_surface_close_requested(mir::scene::Surface const* surf) = 0;

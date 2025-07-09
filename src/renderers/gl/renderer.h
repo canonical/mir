@@ -63,7 +63,9 @@ public:
         GLint position_attr = -1;
         GLint texcoord_attr = -1;
         GLint centre_uniform = -1;
+        GLint oriented_centre = -1;
         GLint display_transform_uniform = -1;
+        GLint orientation_transform_uniform = -1;
         GLint transform_uniform = -1;
         GLint screen_to_gl_coords_uniform = -1;
         GLint alpha_uniform = -1;

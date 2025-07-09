@@ -514,6 +514,7 @@ global:
     mir::scene::BasicSurface::set_focus_state*;
     mir::scene::BasicSurface::set_hidden*;
     mir::scene::BasicSurface::set_input_region*;
+    mir::scene::BasicSurface::set_mirror_mode*;
     mir::scene::BasicSurface::set_orientation*;
     mir::scene::BasicSurface::set_reception_mode*;
     mir::scene::BasicSurface::set_streams*;
@@ -585,6 +586,7 @@ global:
     mir::scene::NullSurfaceObserver::hidden_set_to*;
     mir::scene::NullSurfaceObserver::input_consumed*;
     mir::scene::NullSurfaceObserver::left_output*;
+    mir::scene::NullSurfaceObserver::mirror_mode_set_to*;
     mir::scene::NullSurfaceObserver::moved_to*;
     mir::scene::NullSurfaceObserver::operator*;
     mir::scene::NullSurfaceObserver::orientation_set_to*;
@@ -1078,6 +1080,7 @@ global:
     non-virtual?thunk?to?mir::scene::BasicSurface::set_focus_mode*;
     non-virtual?thunk?to?mir::scene::BasicSurface::set_focus_state*;
     non-virtual?thunk?to?mir::scene::BasicSurface::set_input_region*;
+    non-virtual?thunk?to?mir::scene::BasicSurface::set_mirror_mode*;
     non-virtual?thunk?to?mir::scene::BasicSurface::set_orientation*;
     non-virtual?thunk?to?mir::scene::BasicSurface::set_reception_mode*;
     non-virtual?thunk?to?mir::scene::BasicSurface::set_streams*;
@@ -1136,6 +1139,7 @@ global:
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::hidden_set_to*;
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::input_consumed*;
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::left_output*;
+    non-virtual?thunk?to?mir::scene::NullSurfaceObserver::mirror_mode_set_to*;
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::moved_to*;
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::orientation_set_to*;
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::placed_relative*;
@@ -1407,6 +1411,7 @@ global:
     typeinfo?for?mir::shell::ShellReport;
     typeinfo?for?mir::shell::ShellWrapper;
     typeinfo?for?mir::shell::SimulatedSecondaryClickTransformer;
+    typeinfo?for?mir::shell::SlowKeysTransformer;
     typeinfo?for?mir::shell::StreamSpecification;
     typeinfo?for?mir::shell::SurfaceAspectRatio;
     typeinfo?for?mir::shell::SurfaceSpecification;
@@ -1606,6 +1611,7 @@ global:
     vtable?for?mir::shell::ShellReport;
     vtable?for?mir::shell::ShellWrapper;
     vtable?for?mir::shell::SimulatedSecondaryClickTransformer;
+    vtable?for?mir::shell::SlowKeysTransformer;
     vtable?for?mir::shell::SurfaceStack;
     vtable?for?mir::shell::SurfaceStackWrapper;
     vtable?for?mir::shell::SystemCompositorWindowManager;

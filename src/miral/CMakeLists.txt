@@ -100,6 +100,7 @@ add_library(miral-external OBJECT
     hover_click.cpp                     ${miral_include}/miral/hover_click.h
     magnifier.cpp                       ${miral_include}/miral/magnifier.h
     bounce_keys.cpp                     ${miral_include}/miral/bounce_keys.h
+    slow_keys.cpp                       ${miral_include}/miral/slow_keys.h
 )
 
 add_library(miral SHARED

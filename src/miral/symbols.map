@@ -609,6 +609,16 @@ global:
     miral::Magnifier::enable*;
     miral::Magnifier::magnification*;
     miral::Magnifier::operator*;
+    miral::SlowKeys::SlowKeys*;
+    miral::SlowKeys::disable*;
+    miral::SlowKeys::disabled*;
+    miral::SlowKeys::enable*;
+    miral::SlowKeys::enabled*;
+    miral::SlowKeys::hold_delay*;
+    miral::SlowKeys::on_key_accepted*;
+    miral::SlowKeys::on_key_down*;
+    miral::SlowKeys::on_key_rejected*;
+    miral::SlowKeys::operator*;
     miral::WaylandTools::?WaylandTools*;
     miral::WaylandTools::WaylandTools*;
     miral::WaylandTools::for_each_binding*;
@@ -644,6 +654,7 @@ global:
     typeinfo?for?miral::AppendKeyboardEventFilter;
     typeinfo?for?miral::BounceKeys;
     typeinfo?for?miral::Magnifier;
+    typeinfo?for?miral::SlowKeys;
     typeinfo?for?miral::WaylandTools;
     typeinfo?for?miral::live_config::IniFile;
     typeinfo?for?miral::live_config::Key;

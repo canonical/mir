@@ -79,10 +79,10 @@ struct miral::BounceKeys::Self
 
             auto const keysym = mir_keyboard_event_keysym(key_event);
 
+            last_key_clearer->cancel();
             auto state = runtime_state.lock();
             auto config_ = config->lock();
 
-            last_key_clearer->cancel();
             last_key_clearer->reschedule_in(config_->delay);
 
             if(!state->last_key || *state->last_key != keysym)

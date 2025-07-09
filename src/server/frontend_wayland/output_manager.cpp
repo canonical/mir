@@ -54,21 +54,6 @@ auto as_subpixel_arrangement(MirSubpixelArrangement arrangement) -> uint32_t
     }
 }
 
-auto transform_size(Size const& size, MirOrientation orientation) -> Size
-{
-    switch (orientation)
-    {
-    case mir_orientation_normal:
-    case mir_orientation_inverted:
-        return size;
-
-    case mir_orientation_left:
-    case mir_orientation_right:
-        return {size.height.as_uint32_t(), size.width.as_uint32_t()};
-    }
-
-    return size;
-}
 }
 
 mf::OutputInstance::OutputInstance(wl_resource* resource, OutputGlobal* global)
@@ -95,8 +80,6 @@ auto mf::OutputInstance::from(wl_resource* output) -> OutputInstance*
 
 auto mf::OutputInstance::output_config_changed(mg::DisplayConfigurationOutput const& config) -> bool
 {
-    // TODO: send correct output transform
-    //       this will cause some clients to send transformed buffers, which we must be able to deal with
     send_geometry_event(
         config.top_left.x.as_int(),
         config.top_left.y.as_int(),
@@ -105,20 +88,17 @@ auto mf::OutputInstance::output_config_changed(mg::DisplayConfigurationOutput co
         as_subpixel_arrangement(config.subpixel_arrangement),
         "Fake manufacturer",
         "Fake model",
-        mw::Output::Transform::normal);
+        OutputManager::to_output_transform(config.orientation, mir_mirror_mode_none));
 
     for (size_t i = 0; i < config.modes.size(); ++i)
     {
         auto const& mode = config.modes[i];
 
-        // As we are not sending the display orientation as a transform (see above),
-        // we doctor the size of each mode to match the extents
-        auto const size = transform_size(mode.size, config.orientation);
         send_mode_event(
             ((i == config.preferred_mode_index ? mw::Output::Mode::preferred : 0) |
              (i == config.current_mode_index ? mw::Output::Mode::current : 0)),
-             size.width.as_int(),
-             size.height.as_int(),
+             mode.size.width.as_int(),
+             mode.size.height.as_int(),
             mode.vrefresh_hz * 1000);
     }
 
@@ -323,6 +303,82 @@ void mf::OutputManager::add_listener(OutputManagerListener* listener)
 void mf::OutputManager::remove_listener(OutputManagerListener* listener)
 {
     std::erase_if(listeners, [&](auto candidate) { return candidate == listener; });
+}
+
+auto mf::OutputManager::from_output_transform(int32_t transform) -> std::tuple<MirOrientation, MirMirrorMode>
+{
+    MirOrientation orientation = mir_orientation_normal;
+    MirMirrorMode mirror_mode = mir_mirror_mode_none;
+    switch (transform)
+    {
+        case mw::Output::Transform::normal:
+            break;
+        case mw::Output::Transform::_90:
+            orientation = mir_orientation_right;
+            break;
+        case mw::Output::Transform::_180:
+            orientation = mir_orientation_inverted;
+            break;
+        case mw::Output::Transform::_270:
+            orientation = mir_orientation_left;
+            break;
+        case mw::Output::Transform::flipped:
+            orientation = mir_orientation_normal;
+            mirror_mode = mir_mirror_mode_horizontal;
+            break;
+        case mw::Output::Transform::flipped_90:
+            orientation = mir_orientation_right;
+            mirror_mode = mir_mirror_mode_horizontal;
+            break;
+        case mw::Output::Transform::flipped_180:
+            orientation = mir_orientation_inverted;
+            mirror_mode = mir_mirror_mode_horizontal;
+            break;
+        case mw::Output::Transform::flipped_270:
+            orientation = mir_orientation_left;
+            mirror_mode = mir_mirror_mode_horizontal;
+            break;
+        default:
+            throw std::out_of_range("Unknown transform");
+    }
+
+    return std::make_tuple(orientation, mirror_mode);
+}
+
+auto mir::frontend::OutputManager::to_output_transform(MirOrientation orientation, MirMirrorMode mirror_mode) -> int32_t
+{
+    int orientation_index;
+    switch (orientation)
+    {
+        case mir_orientation_normal:
+            orientation_index = 0;
+            break;
+        case mir_orientation_left:
+            orientation_index = 1;
+            break;
+        case mir_orientation_inverted:
+            orientation_index = 2;
+            break;
+        case mir_orientation_right:
+            orientation_index = 3;
+            break;
+        default:
+            return mw::Output::Transform::normal;
+    }
+
+    // Lookup table: [orientation_index][mirror_mode]
+    static constexpr int32_t transform_table[4][3] = {
+        // mir_orientation_normal
+        { mw::Output::Transform::normal, mw::Output::Transform::normal, mw::Output::Transform::flipped },
+        // mir_orientation_left
+        { mw::Output::Transform::_270, mw::Output::Transform::_270, mw::Output::Transform::flipped_270 },
+        // mir_orientation_inverted
+        { mw::Output::Transform::_180,mw::Output::Transform::_180, mw::Output::Transform::flipped_180 },
+        // mir_orientation_right
+        { mw::Output::Transform::_90, mw::Output::Transform::_90, mw::Output::Transform::flipped_90 },
+    };
+
+    return transform_table[orientation_index][mirror_mode];
 }
 
 void mf::OutputManager::handle_configuration_change(std::shared_ptr<mg::DisplayConfiguration const> const& config)

@@ -10,6 +10,7 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_basic_accessibility_manager.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_simulated_secondary_click_transformer.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_hover_click_transformer.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_slow_keys_transformer.cpp
 )
 
 set(

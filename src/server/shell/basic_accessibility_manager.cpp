@@ -18,6 +18,7 @@
 #include "basic_hover_click_transformer.h"
 #include "mouse_keys_transformer.h"
 #include "basic_simulated_secondary_click_transformer.h"
+#include "basic_slow_keys_transformer.h"
 
 #include "mir/graphics/cursor.h"
 #include "mir/shell/keyboard_helper.h"
@@ -97,13 +98,15 @@ mir::shell::BasicAccessibilityManager::BasicAccessibilityManager(
     std::shared_ptr<mir::graphics::Cursor> const& cursor,
     std::shared_ptr<shell::MouseKeysTransformer> const& mousekeys_transformer,
     std::shared_ptr<SimulatedSecondaryClickTransformer> const& simulated_secondary_click_transformer,
-    std::shared_ptr<HoverClickTransformer> const& hover_click_transformer) :
+    std::shared_ptr<HoverClickTransformer> const& hover_click_transformer,
+    std::shared_ptr<SlowKeysTransformer> const& slow_keys_transformer) :
     enable_key_repeat{enable_key_repeat},
     cursor{cursor},
     event_transformer{event_transformer},
     mouse_keys_transformer{mousekeys_transformer},
     simulated_secondary_click_transformer{simulated_secondary_click_transformer},
-    hover_click_transformer{hover_click_transformer}
+    hover_click_transformer{hover_click_transformer},
+    slow_keys_transformer{slow_keys_transformer}
 {
 }
 
@@ -152,3 +155,13 @@ auto mir::shell::BasicAccessibilityManager::hover_click() -> HoverClickTransform
     return *hover_click_transformer;
 }
 
+void mir::shell::BasicAccessibilityManager::slow_keys_enabled(bool enabled)
+{
+    auto const state = mutable_state.lock();
+    toggle_transformer(enabled, state->slow_keys_on, slow_keys_transformer, event_transformer);
+}
+
+auto mir::shell::BasicAccessibilityManager::slow_keys() -> SlowKeysTransformer&
+{
+    return *slow_keys_transformer;
+}
