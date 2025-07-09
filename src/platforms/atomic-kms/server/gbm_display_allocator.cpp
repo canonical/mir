@@ -18,7 +18,6 @@
 #include "kms_framebuffer.h"
 #include "kms/quirks.h"
 
-#define MIR_LOG_COMPONENT "atomic-kms:gbm-display-allocator"
 #include "mir/log.h"
 
 #include <drm_fourcc.h>
@@ -153,13 +152,12 @@ auto create_gbm_surface(
             }
         };
 
-    // Try allocating with flags first
-    // Covers Nvidia cards with 575 drivers and later
     auto surface = try_create_surface(GBM_BO_USE_RENDERING | GBM_BO_USE_SCANOUT);
 
     if (!surface)
     {
-        mir::log_warning("Failed to create surface with flags. Attempting to create one without flags");
+        mir::log_info(
+            "Failed to create display buffer surface with correct flags. Attempting to create one without flags");
         // Try allocating without flags
         // Covers Nvidia cards before 575
         surface = try_create_surface(0);
