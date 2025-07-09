@@ -50,7 +50,7 @@ auto constexpr max_speed_y = 400.0;
 template <typename T>
 auto maybe_option(std::shared_ptr<mir::options::Option> const& options, char const* const option_name) -> std::optional<T>
 {
-    return options->is_set(option_name) ? options->get<bool>(option_name) : std::optional<T>{};
+    return options->is_set(option_name) ? options->get<T>(option_name) : std::optional<T>{};
 }
 
 template <typename T> auto current_value_or_default(std::optional<T> current_value, T default_value) -> T
