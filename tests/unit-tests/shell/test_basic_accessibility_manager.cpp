@@ -22,6 +22,7 @@
 
 #include "mir/input/input_event_transformer.h"
 #include "mir/input/mousekeys_keymap.h"
+#include "mir/shell/slow_keys_transformer.h"
 #include "mir/test/fake_shared.h"
 
 #include "mir/test/doubles/mock_input_seat.h"
@@ -92,17 +93,33 @@ struct MockInputEventTransformer: public mir::input::InputEventTransformer
 struct MockHoverClickTransformer : public mir::shell::HoverClickTransformer
 {
     MockHoverClickTransformer() = default;
+
+    MOCK_METHOD(
+        bool,
+        transform_input_event,
+        (mir::input::InputEventTransformer::EventDispatcher const&, mir::input::EventBuilder*, MirEvent const&),
+        (override));
+
     MOCK_METHOD(void, hover_duration,(std::chrono::milliseconds delay), (override));
     MOCK_METHOD(void, cancel_displacement_threshold,(int displacement), (override));
     MOCK_METHOD(void, reclick_displacement_threshold,(int displacement), (override));
     MOCK_METHOD(void, on_hover_start,(std::function<void()>&& on_hover_start), (override));
     MOCK_METHOD(void, on_hover_cancel,(std::function<void()>&& on_hover_cancelled), (override));
     MOCK_METHOD(void, on_click_dispatched,(std::function<void()>&& on_click_dispatched), (override));
+};
+
+struct MockSlowKeysTransformer : public mir::shell::SlowKeysTransformer
+{
     MOCK_METHOD(
         bool,
         transform_input_event,
         (mir::input::InputEventTransformer::EventDispatcher const&, mir::input::EventBuilder*, MirEvent const&),
         (override));
+
+    MOCK_METHOD(void, on_key_down, (std::function<void(unsigned int)>&&), (override));
+    MOCK_METHOD(void, on_key_rejected, (std::function<void(unsigned int)>&&), (override));
+    MOCK_METHOD(void, on_key_accepted, (std::function<void(unsigned int)>&&), (override));
+    MOCK_METHOD(void, delay, (std::chrono::milliseconds), (override));
 };
 
 struct TestBasicAccessibilityManager : Test
@@ -114,7 +131,8 @@ struct TestBasicAccessibilityManager : Test
             std::make_shared<mir::test::doubles::StubCursor>(),
             mock_mousekeys_transformer,
             mock_simulated_secondary_click_transformer,
-            mock_hover_click_transformer}
+            mock_hover_click_transformer,
+            mock_slow_keys_transformer}
     {
         basic_accessibility_manager.register_keyboard_helper(mock_key_helper);
     }
@@ -129,7 +147,8 @@ struct TestBasicAccessibilityManager : Test
         std::make_shared<NiceMock<MockSimulatedSecondaryClickTransformer>>()};
     std::shared_ptr<NiceMock<MockHoverClickTransformer>> mock_hover_click_transformer{
         std::make_shared<NiceMock<MockHoverClickTransformer>>()};
-
+    std::shared_ptr<NiceMock<MockSlowKeysTransformer>> mock_slow_keys_transformer{
+        std::make_shared<NiceMock<MockSlowKeysTransformer>>()};
     NiceMock<MockInputEventTransformer> input_event_transformer{mt::fake_shared(mock_seat), mt::fake_shared(clock)};
 
     mir::shell::BasicAccessibilityManager basic_accessibility_manager;
@@ -318,7 +337,8 @@ enum class TransformerToTest
 {
     MouseKeys,
     SSC,
-    HoverClick
+    HoverClick,
+    SlowKeys
 };
 
 struct TestArbitraryEnablesAndDisables :
@@ -335,6 +355,8 @@ struct TestArbitraryEnablesAndDisables :
             return mock_simulated_secondary_click_transformer;
         case TransformerToTest::HoverClick:
             return mock_hover_click_transformer;
+        case TransformerToTest::SlowKeys:
+            return mock_slow_keys_transformer;
         }
         std::unreachable();
     }
@@ -351,6 +373,9 @@ struct TestArbitraryEnablesAndDisables :
             break;
         case TransformerToTest::HoverClick:
             basic_accessibility_manager.hover_click_enabled(on);
+            break;
+        case TransformerToTest::SlowKeys:
+            basic_accessibility_manager.slow_keys_enabled(on);
             break;
         }
     }
