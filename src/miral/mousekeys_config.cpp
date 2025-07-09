@@ -135,7 +135,8 @@ miral::MouseKeysConfig::MouseKeysConfig(live_config::Store& config_store)
              
         });
 
-    auto const ensure_non_negative = [](auto key, auto val, auto do_the_thing)
+    auto const ensure_non_negative =
+        [](live_config::Key const& key, std::optional<float> val, std::function<void(float)> do_the_thing)
     {
         if (!val)
             return;
