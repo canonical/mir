@@ -72,10 +72,10 @@ TEST_F(MagnifierTest, magnification_results_in_scaled_transform)
 {
     Magnifier magnifier;
     magnifier.magnification(2.f);
+    magnifier.enable(true);
     add_server_init(magnifier);
     add_start_callback([&]
     {
-        magnifier.enable(true);
         auto const scene = server().the_scene();
         auto const elements = scene->scene_elements_for(this);
         EXPECT_THAT(elements.size(), Eq(1));
@@ -95,10 +95,10 @@ TEST_F(MagnifierTest, can_set_capture_size)
 {
     Magnifier magnifier;
     magnifier.capture_size(Size(500, 500));
+    magnifier.enable(true);
     add_server_init(magnifier);
     add_start_callback([&]
     {
-        magnifier.enable(true);
         auto const scene = server().the_scene();
         auto const elements = scene->scene_elements_for(this);
         EXPECT_THAT(elements.size(), Eq(1));
