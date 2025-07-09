@@ -155,75 +155,41 @@ miral::MouseKeysConfig::MouseKeysConfig(live_config::Store& config_store)
         }
     };
 
-    config_store.add_float_attribute(
-        {"mouse_keys", "acceleration", "constant_factor"},
-        "The base speed for mousekey pointer motion",
-        [ensure_non_negative, this](live_config::Key const& key, std::optional<float> val)
-        {
-            ensure_non_negative(
-                key,
-                val,
-                [this](auto v)
-                {
-                    self->state.lock()->acceleration_constant = v;
-                });
-        });
+    std::initializer_list<std::tuple<live_config::Key, std::string_view, std::optional<double> Self::State::*>>
+        float_attribs = {
+            {{"mouse_keys", "acceleration", "constant_factor"},
+             "The base speed for mousekey pointer motion",
+             &Self::State::acceleration_constant},
+            {{"mouse_keys", "acceleration", "linear_factor"},
+             "The linear speed increase for mousekey pointer motion",
+             &Self::State::acceleration_linear},
+            {{"mouse_keys", "acceleration", "quadratic_factor"},
+             "The quadratic speed increase for mousekey pointer motion",
+             &Self::State::acceleration_quadratic},
+            {{"mouse_keys", "max_speed_x"},
+             "The quadratic speed increase for mousekey pointer motion",
+             &Self::State::max_speed_x},
+            {{"mouse_keys", "max_speed_y"},
+             "The quadratic speed increase for mousekey pointer motion",
+             &Self::State::max_speed_y}};
 
-    config_store.add_float_attribute(
-        {"mouse_keys", "acceleration", "linear_factor"},
-        "The linear speed increase for mousekey pointer motion",
-        [ensure_non_negative, this](live_config::Key const& key, std::optional<float> val)
-        {
-            ensure_non_negative(
-                key,
-                val,
-                [this](auto v)
-                {
-                    self->state.lock()->acceleration_linear = v;
-                });
-        });
-
-    config_store.add_float_attribute(
-        {"mouse_keys", "acceleration", "quadratic_factor"},
-        "The quadratic speed increase for mousekey pointer motion",
-        [ensure_non_negative,this](live_config::Key const& key, std::optional<float> val)
-        {
-            ensure_non_negative(
-                key,
-                val,
-                [this](auto v)
-                {
-                    self->state.lock()->acceleration_quadratic = v;
-                });
-        });
-
-    config_store.add_float_attribute(
-        {"mouse_keys", "max_speed_x"},
-        "The quadratic speed increase for mousekey pointer motion",
-        [ensure_non_negative, this](live_config::Key const& key, std::optional<float> val)
-        {
-            ensure_non_negative(
-                key,
-                val,
-                [this](auto v)
-                {
-                    self->state.lock()->max_speed_x = v;
-                });
-        });
-
-    config_store.add_float_attribute(
-        {"mouse_keys", "max_speed_y"},
-        "The quadratic speed increase for mousekey pointer motion",
-        [ensure_non_negative, this](live_config::Key const& key, std::optional<float> val)
-        {
-            ensure_non_negative(
-                key,
-                val,
-                [this](auto v)
-                {
-                    self->state.lock()->max_speed_y = v;
-                });
-        });
+    for (auto const& [key, desc, setter] : float_attribs)
+    {
+        config_store.add_float_attribute(
+            key,
+            desc,
+            [ensure_non_negative, this, &setter](live_config::Key const& key, std::optional<float> val)
+            {
+                ensure_non_negative(
+                    key,
+                    val,
+                    [this, &setter](float v)
+                    {
+                        auto s = self->state.lock();
+                        *s.*setter = v;
+                    });
+            });
+    }
 
     config_store.on_done(
         [this]
