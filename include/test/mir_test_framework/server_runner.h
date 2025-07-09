@@ -19,13 +19,9 @@
 
 #include <gtest/gtest.h>
 
-#include "mir_test_framework/temporary_environment_value.h"
-
-#include <string>
 #include <thread>
 #include <memory>
 #include <mutex>
-#include <list>
 
 namespace mir
 {
@@ -53,7 +49,6 @@ private:
     std::shared_ptr<mir::MainLoop> start_mir_server();
     virtual mir::DefaultServerConfiguration& server_config() = 0;
 
-    std::list<TemporaryEnvironmentValue> env;
     std::thread server_thread;
     std::mutex main_loop_mutex;
     std::shared_ptr<mir::MainLoop> main_loop;
