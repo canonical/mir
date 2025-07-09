@@ -18,12 +18,13 @@
 #define MIR_SHELL_MOUSEKEYS_TRANSFORMER_H
 
 #include "mir/input/transformer.h"
-#include "mir/input/mousekeys_keymap.h"
-
-#include <xkbcommon/xkbcommon-keysyms.h>
 
 namespace mir
 {
+namespace input
+{
+class MouseKeysKeymap;
+}
 namespace shell
 {
 class MouseKeysTransformer: public mir::input::Transformer::Transformer
