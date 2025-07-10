@@ -59,7 +59,7 @@ miral::SimulatedSecondaryClick::SimulatedSecondaryClick(live_config::Store& conf
 {
     config_store.add_bool_attribute(
         {"simulated_secondary_click", "enable"},
-        "Whether or not to start the compositor with simulated secondary click enabled",
+        "Whether or not simulated secondary click is enabled",
         [this](live_config::Key const&, std::optional<bool> val)
         {
             if (!val)
