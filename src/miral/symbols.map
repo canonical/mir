@@ -456,6 +456,7 @@ local: *;
 MIRAL_5.1 {
 global:
   extern "C++" {
+    "miral::InputConfiguration::InputConfiguration()";
     miral::ConfigFile::?ConfigFile*;
     miral::ConfigFile::ConfigFile*;
     miral::Decorations::Decorations*;
@@ -471,7 +472,6 @@ global:
     miral::IdleListener::on_wake*;
     miral::IdleListener::operator*;
     miral::InputConfiguration::?InputConfiguration*;
-    "miral::InputConfiguration::InputConfiguration()";
     miral::InputConfiguration::Mouse::?Mouse*;
     miral::InputConfiguration::Mouse::Mouse*;
     miral::InputConfiguration::Mouse::acceleration*;
@@ -524,9 +524,11 @@ global:
 MIRAL_5.3 {
 global:
   extern "C++" {
-    miral::CursorScale::?CursorScale*;
     "miral::CursorScale::CursorScale()";
     "miral::CursorScale::CursorScale(float)";
+    "miral::OutputFilter::OutputFilter()";
+    "miral::OutputFilter::OutputFilter(MirOutputFilter)";
+    miral::CursorScale::?CursorScale*;
     miral::CursorScale::operator*;
     miral::CursorScale::scale*;
     miral::DisplayConfiguration::Node::?Node*;
@@ -542,7 +544,6 @@ global:
     miral::DisplayConfiguration::layout_userdata_builder*;
     miral::HoverClick::HoverClick*;
     miral::HoverClick::cancel_displacement_threshold*;
-    miral::HoverClick::reclick_displacement_threshold*;
     miral::HoverClick::disable*;
     miral::HoverClick::enable*;
     miral::HoverClick::hover_duration*;
@@ -550,6 +551,7 @@ global:
     miral::HoverClick::on_hover_cancel*;
     miral::HoverClick::on_hover_start*;
     miral::HoverClick::operator*;
+    miral::HoverClick::reclick_displacement_threshold*;
     miral::InputConfiguration::Keyboard::merge*;
     miral::InputConfiguration::Keyboard::repeat_delay*;
     miral::InputConfiguration::Keyboard::repeat_rate*;
@@ -563,13 +565,8 @@ global:
     miral::MouseKeysConfig::set_keymap*;
     miral::MouseKeysConfig::set_max_speed*;
     miral::OutputFilter::?OutputFilter*;
-    "miral::OutputFilter::OutputFilter()";
-    "miral::OutputFilter::OutputFilter(MirOutputFilter)";
-    miral::OutputFilter::operator*;
     miral::OutputFilter::filter*;
-    miral::WindowInfo::tiled_edges*;
-    miral::WindowSpecification::tiled_edges*;
-    miral::WindowSpecification::to_surface_specification*;
+    miral::OutputFilter::operator*;
     miral::SimulatedSecondaryClick::SimulatedSecondaryClick*;
     miral::SimulatedSecondaryClick::disable*;
     miral::SimulatedSecondaryClick::displacement_threshold*;
@@ -579,6 +576,9 @@ global:
     miral::SimulatedSecondaryClick::on_hold_start*;
     miral::SimulatedSecondaryClick::on_secondary_click*;
     miral::SimulatedSecondaryClick::operator*;
+    miral::WindowInfo::tiled_edges*;
+    miral::WindowSpecification::tiled_edges*;
+    miral::WindowSpecification::to_surface_specification*;
     typeinfo?for?miral::CursorScale;
     typeinfo?for?miral::DisplayConfiguration::Node;
     typeinfo?for?miral::HoverClick;
@@ -591,6 +591,9 @@ global:
 MIRAL_5.4 {
 global:
   extern "C++" {
+    "miral::CursorScale::CursorScale(miral::live_config::Store&)";
+    "miral::InputConfiguration::InputConfiguration(miral::live_config::Store&)";
+    "miral::OutputFilter::OutputFilter(miral::live_config::Store&)";
     miral::AppendKeyboardEventFilter::AppendKeyboardEventFilter*;
     miral::AppendKeyboardEventFilter::operator*;
     miral::BounceKeys::BounceKeys*;
@@ -601,9 +604,11 @@ global:
     miral::BounceKeys::enabled*;
     miral::BounceKeys::on_press_rejected*;
     miral::BounceKeys::operator*;
-    "miral::CursorScale::CursorScale(miral::live_config::Store&)";
-    "miral::InputConfiguration::InputConfiguration(miral::live_config::Store&)";
-    "miral::OutputFilter::OutputFilter(miral::live_config::Store&)";
+    miral::Magnifier::Magnifier*;
+    miral::Magnifier::capture_size*;
+    miral::Magnifier::enable*;
+    miral::Magnifier::magnification*;
+    miral::Magnifier::operator*;
     miral::SlowKeys::SlowKeys*;
     miral::SlowKeys::disable*;
     miral::SlowKeys::disabled*;
@@ -630,9 +635,9 @@ global:
     miral::live_config::IniFile::load_file*;
     miral::live_config::IniFile::on_done*;
     miral::live_config::Key::Key*;
-    miral::live_config::Key::with_key*;
-    miral::live_config::Key::to_string*;
     miral::live_config::Key::operator*;
+    miral::live_config::Key::to_string*;
+    miral::live_config::Key::with_key*;
     miral::live_config::Store::?Store*;
     miral::live_config::Store::Store*;
     miral::live_config::Store::operator*;
@@ -648,6 +653,7 @@ global:
     non-virtual?thunk?to?miral::live_config::Store::?Store*;
     typeinfo?for?miral::AppendKeyboardEventFilter;
     typeinfo?for?miral::BounceKeys;
+    typeinfo?for?miral::Magnifier;
     typeinfo?for?miral::SlowKeys;
     typeinfo?for?miral::WaylandTools;
     typeinfo?for?miral::live_config::IniFile;

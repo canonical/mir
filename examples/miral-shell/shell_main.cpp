@@ -37,7 +37,7 @@
 #include <miral/output_filter.h>
 #include <miral/simulated_secondary_click.h>
 #include <miral/hover_click.h>
-
+#include <miral/magnifier.h>
 #include <xkbcommon/xkbcommon-keysyms.h>
 
 #include <cstring>
@@ -186,6 +186,91 @@ int main(int argc, char const* argv[])
 
     miral::HoverClick hover_click_config{false};
 
+    float magnification = 2.f;
+    Size capture_size{100, 100};
+    auto magnifier = Magnifier()
+        .magnification(magnification)
+        .capture_size(capture_size)
+        .enable(false);
+    auto magnifier_filter = [magnifier=magnifier, &magnification, &capture_size](MirKeyboardEvent const* key_event) mutable {
+        auto const modifiers = mir_keyboard_event_modifiers(key_event);
+
+        if (mir_keyboard_event_action(key_event) != mir_keyboard_action_down)
+            return false;
+
+        if (modifiers & mir_input_event_modifier_ctrl)
+        {
+            if (modifiers & mir_input_event_modifier_shift)
+            {
+                // Zoom the magnifier in/out on ctrl shift +/-
+                switch (mir_keyboard_event_keysym(key_event))
+                {
+                    case XKB_KEY_plus:
+                        magnification += 0.5f;
+                        if (magnification >= 5)
+                        {
+                            magnification = 5;
+                            break;
+                        }
+
+                        magnifier.magnification(magnification);
+                        return true;
+                    case XKB_KEY_underscore:
+                        magnification -= 0.5f;
+                        if (magnification <= 1)
+                        {
+                            magnification = 1;
+                            break;
+                        }
+
+                        magnifier.magnification(magnification);
+                        return true;
+                    default:
+                        break;
+                }
+            }
+            else if (modifiers & mir_input_event_modifier_alt)
+            {
+                // Grow area on ctrl alt +/-
+                switch (mir_keyboard_event_keysym(key_event))
+                {
+                    case XKB_KEY_equal:
+                    {
+                        capture_size.width = Width(std::min(1000, capture_size.width.as_int() + 100));
+                        capture_size.height = Height(std::min(1000, capture_size.height.as_int() + 100));
+                        magnifier.capture_size(capture_size);
+                        return true;
+                    }
+                    case XKB_KEY_minus:
+                        capture_size.width = Width(std::max(100, capture_size.width.as_int() - 100));
+                        capture_size.height = Height(std::max(100, capture_size.height.as_int() - 100));
+                        magnifier.capture_size(capture_size);
+                        return true;
+                    default:
+                        break;
+                }
+            }
+            else
+            {
+                // Turn on/off the magnifier on ctrl +/-
+                switch (mir_keyboard_event_keysym(key_event))
+                {
+                    case XKB_KEY_equal:
+                        magnifier.enable(true);
+                        return true;
+                    case XKB_KEY_minus:
+                        magnifier.enable(false);
+                        return true;
+                    default:
+                        break;
+                }
+            }
+        }
+
+        return false;
+    };
+
+
     return runner.run_with(
         {
             CursorTheme{"default:DMZ-White"},
@@ -213,5 +298,7 @@ int main(int argc, char const* argv[])
             AppendKeyboardEventFilter{toggle_output_filter_filter},
             ssc_config,
             hover_click_config,
+            magnifier,
+            AppendKeyboardEventFilter{magnifier_filter}
         });
 }
