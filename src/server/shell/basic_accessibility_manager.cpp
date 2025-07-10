@@ -16,7 +16,7 @@
 
 #include "basic_accessibility_manager.h"
 #include "basic_hover_click_transformer.h"
-#include "mouse_keys_transformer.h"
+#include "mir/shell/mousekeys_transformer.h"
 #include "basic_simulated_secondary_click_transformer.h"
 #include "basic_slow_keys_transformer.h"
 
@@ -92,6 +92,11 @@ void mir::shell::BasicAccessibilityManager::mousekeys_enabled(bool on)
     toggle_transformer(on, state->mousekeys_on, mouse_keys_transformer, event_transformer);
 }
 
+auto mir::shell::BasicAccessibilityManager::mousekeys() -> MouseKeysTransformer&
+{
+    return *mouse_keys_transformer;
+}
+
 mir::shell::BasicAccessibilityManager::BasicAccessibilityManager(
     std::shared_ptr<input::InputEventTransformer> const& event_transformer,
     bool enable_key_repeat,
@@ -115,21 +120,6 @@ mir::shell::BasicAccessibilityManager::~BasicAccessibilityManager() = default;
 void mir::shell::BasicAccessibilityManager::cursor_scale(float new_scale)
 {
     cursor->scale(std::clamp(0.0f, 100.0f, new_scale));
-}
-
-void mir::shell::BasicAccessibilityManager::mousekeys_keymap(input::MouseKeysKeymap const& new_keymap)
-{
-    mouse_keys_transformer->keymap(new_keymap);
-}
-
-void mir::shell::BasicAccessibilityManager::acceleration_factors(double constant, double linear, double quadratic)
-{
-    mouse_keys_transformer->acceleration_factors(constant, linear, quadratic);
-}
-
-void mir::shell::BasicAccessibilityManager::max_speed(double x_axis, double y_axis)
-{
-    mouse_keys_transformer->max_speed(x_axis, y_axis);
 }
 
 void mir::shell::BasicAccessibilityManager::simulated_secondary_click_enabled(bool enabled)

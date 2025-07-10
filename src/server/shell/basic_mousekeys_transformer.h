@@ -14,14 +14,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/input/input_event_transformer.h"
+#ifndef MIR_SHELL_BASIC_MOUSEKEYS_TRANSFORMER_H
+#define MIR_SHELL_BASIC_MOUSEKEYS_TRANSFORMER_H
+
+#include "mir/shell/mousekeys_transformer.h"
 
 #include "mir/geometry/displacement.h"
 #include "mir/input/mousekeys_keymap.h"
 #include "mir/synchronised.h"
 
 #include <memory>
-#include <xkbcommon/xkbcommon-keysyms.h>
 
 namespace mir
 {
@@ -37,13 +39,6 @@ class Clock;
 }
 namespace shell
 {
-class MouseKeysTransformer: public mir::input::InputEventTransformer::Transformer
-{
-public:
-    virtual void keymap(mir::input::MouseKeysKeymap const& new_keymap) = 0;
-    virtual void acceleration_factors(double constant, double linear, double quadratic) = 0;
-    virtual void max_speed(double x_axis, double y_axis) = 0;
-};
 
 class BasicMouseKeysTransformer: public MouseKeysTransformer
 {
@@ -128,3 +123,5 @@ private:
 };
 }
 }
+
+#endif // MIR_SHELL_BASIC_MOUSEKEYS_TRANSFORMER_H

@@ -34,6 +34,15 @@ HIDDEN_SYMBOLS = {
     "miral::CursorScale::CursorScale*;",
     "miral::InputConfiguration::InputConfiguration*;",
     "miral::OutputFilter::OutputFilter*;",
+    "miral::MouseKeysConfig::MouseKeysConfig*;",
+    "miral::MouseKeysConfig::disable*;",
+    "miral::MouseKeysConfig::disabled*;",
+    "miral::MouseKeysConfig::enable*;",
+    "miral::MouseKeysConfig::enabled*;",
+    "miral::MouseKeysConfig::operator*;",
+    "miral::MouseKeysConfig::set_acceleration_factors*;",
+    "miral::MouseKeysConfig::set_keymap*;",
+    "miral::MouseKeysConfig::set_max_speed*;",
 }
 
 class HeaderDirectory(TypedDict):
