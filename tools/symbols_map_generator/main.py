@@ -34,6 +34,10 @@ HIDDEN_SYMBOLS = {
     "miral::CursorScale::CursorScale*;",
     "miral::InputConfiguration::InputConfiguration*;",
     "miral::OutputFilter::OutputFilter*;",
+    "mir::input::Transformer::?Transformer*;",
+    "non-virtual?thunk?to?mir::input::Transformer::?Transformer*;",
+    "typeinfo?for?mir::input::Transformer;",
+    "vtable?for?mir::input::Transformer;",
 }
 
 class HeaderDirectory(TypedDict):
