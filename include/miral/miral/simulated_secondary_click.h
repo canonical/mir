@@ -28,6 +28,10 @@ class Server;
 
 namespace miral
 {
+namespace live_config
+{
+class Store;
+}
 /// Enables configuring simulated secondary click at runtime.
 /// 
 /// Simulated secondary click is an accessibility method that allows users to
@@ -43,6 +47,10 @@ public:
         "SimulatedSecondaryClick(bool) is deprecated, please use SimulatedSecondaryClick::enabled or "
         "SimulatedSecondaryClick::disabled")]]
     explicit SimulatedSecondaryClick(bool enabled_by_default);
+
+    /// Construct a `SimulatedSecondaryClick` instance with access to a live config store.
+    /// \remark Since MirAL 5.4
+    explicit SimulatedSecondaryClick(live_config::Store& config_store);
 
     /// Creates a `SimulatedSecondaryClick` instance that's enabled by default.
     /// \remark Since MirAL 5.4
