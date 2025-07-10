@@ -40,12 +40,17 @@ public:
         add_to_environment("MIR_SERVER_VIRTUAL_OUTPUT", "800x600");
     }
 
+    void SetUp() override
+    {
+        TestServer::SetUp();
+        add_server_init(magnifier);
+    }
+
     Magnifier magnifier;
 };
 
 TEST_F(MagnifierTest, magnifier_disabled_by_default)
 {
-    add_server_init(magnifier);
     add_start_callback([&]
     {
         auto const scene = server().the_scene();
@@ -58,7 +63,6 @@ TEST_F(MagnifierTest, magnifier_disabled_by_default)
 TEST_F(MagnifierTest, can_start_enabled)
 {
     magnifier.enable(true);
-    add_server_init(magnifier);
     add_start_callback([&]
     {
         auto const scene = server().the_scene();
@@ -72,7 +76,6 @@ TEST_F(MagnifierTest, magnification_results_in_scaled_transform)
 {
     magnifier.magnification(2.f);
     magnifier.enable(true);
-    add_server_init(magnifier);
     add_start_callback([&]
     {
         auto const scene = server().the_scene();
@@ -94,7 +97,6 @@ TEST_F(MagnifierTest, can_set_capture_size)
 {
     magnifier.capture_size(Size(500, 500));
     magnifier.enable(true);
-    add_server_init(magnifier);
     add_start_callback([&]
     {
         auto const scene = server().the_scene();

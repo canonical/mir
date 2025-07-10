@@ -42,13 +42,18 @@ public:
         add_to_environment("MIR_SERVER_VIRTUAL_OUTPUT", "800x600");
     }
 
+    void SetUp() override
+    {
+        TestServer::SetUp();
+        add_server_init(render_scene_into_surface);
+    }
+
     RenderSceneIntoSurface render_scene_into_surface;
 
 };
 
 TEST_F(RenderSceneIntoSurfaceTest, set_capture_area_before_starting)
 {
-    add_server_init(render_scene_into_surface);
     render_scene_into_surface.capture_area(Rectangle(
         Point(100, 100),
         Size(200, 200)
@@ -67,8 +72,6 @@ TEST_F(RenderSceneIntoSurfaceTest, set_capture_area_before_starting)
 
 TEST_F(RenderSceneIntoSurfaceTest, set_capture_area_after_starting)
 {
-    add_server_init(render_scene_into_surface);
-
     start_server();
     render_scene_into_surface.capture_area(Rectangle(
         Point(100, 100),
@@ -87,14 +90,11 @@ TEST_F(RenderSceneIntoSurfaceTest, set_capture_area_after_starting)
 TEST_F(RenderSceneIntoSurfaceTest, set_overlay_cursor_before_starting)
 {
     render_scene_into_surface.overlay_cursor(true);
-    add_server_init(render_scene_into_surface);
     start_server();
 }
 
 TEST_F(RenderSceneIntoSurfaceTest, set_overlay_cursor_after_starting)
 {
-    add_server_init(render_scene_into_surface);
-
     add_start_callback([&]
     {
         render_scene_into_surface.overlay_cursor(true);
@@ -105,7 +105,6 @@ TEST_F(RenderSceneIntoSurfaceTest, set_overlay_cursor_after_starting)
 TEST_F(RenderSceneIntoSurfaceTest, on_surface_ready_callback_called)
 {
     bool called = false;
-    add_server_init(render_scene_into_surface);
     render_scene_into_surface.on_surface_ready([&](auto const&)
     {
         called = true;
@@ -116,7 +115,6 @@ TEST_F(RenderSceneIntoSurfaceTest, on_surface_ready_callback_called)
 
 TEST_F(RenderSceneIntoSurfaceTest, surface_never_contains_point)
 {
-    add_server_init(render_scene_into_surface);
     render_scene_into_surface.on_surface_ready([&](std::shared_ptr<mir::scene::Surface> const&surface)
     {
        EXPECT_THAT(surface->input_area_contains(Point(0, 0)), Eq(false));
