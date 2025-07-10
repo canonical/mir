@@ -574,10 +574,10 @@ global:
     "miral::SimulatedSecondaryClick::disable()";
     "miral::SimulatedSecondaryClick::displacement_threshold(float)";
     "miral::SimulatedSecondaryClick::enable()";
-    "miral::SimulatedSecondaryClick::hold_duration(std::chrono::duration<*>)";
-    "miral::SimulatedSecondaryClick::on_hold_cancel(std::function<void()>&&)";
-    "miral::SimulatedSecondaryClick::on_hold_start(std::function<void()>&&)";
-    "miral::SimulatedSecondaryClick::on_secondary_click(std::function<void()>&&)";
+    miral::SimulatedSecondaryClick::hold_duration*;
+    miral::SimulatedSecondaryClick::on_hold_cancel*;
+    miral::SimulatedSecondaryClick::on_hold_start*;
+    miral::SimulatedSecondaryClick::on_secondary_click*;
     "miral::SimulatedSecondaryClick::operator()(mir::Server&)";
     typeinfo?for?miral::CursorScale;
     typeinfo?for?miral::DisplayConfiguration::Node;

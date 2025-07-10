@@ -41,10 +41,6 @@ HIDDEN_SYMBOLS = {
     "miral::SimulatedSecondaryClick::displacement_threshold*;",
     "miral::SimulatedSecondaryClick::enable*;",
     "miral::SimulatedSecondaryClick::enabled*;",
-    "miral::SimulatedSecondaryClick::hold_duration*;",
-    "miral::SimulatedSecondaryClick::on_hold_cancel*;",
-    "miral::SimulatedSecondaryClick::on_hold_start*;",
-    "miral::SimulatedSecondaryClick::on_secondary_click*;",
     "miral::SimulatedSecondaryClick::operator*;",
 }
 
