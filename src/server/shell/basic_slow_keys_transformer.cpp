@@ -28,7 +28,7 @@ msh::BasicSlowKeysTransformer::BasicSlowKeysTransformer(std::shared_ptr<MainLoop
 }
 
 bool msh::BasicSlowKeysTransformer::transform_input_event(
-    mi::InputEventTransformer::EventDispatcher const& dispatcher,
+    mi::Transformer::EventDispatcher const& dispatcher,
     mi::EventBuilder*,
     MirEvent const& event)
 {

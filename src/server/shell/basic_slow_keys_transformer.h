@@ -35,7 +35,7 @@ public:
     BasicSlowKeysTransformer(std::shared_ptr<MainLoop> const& main_loop);
 
     virtual bool transform_input_event(
-        input::InputEventTransformer::EventDispatcher const&, input::EventBuilder*, MirEvent const&) override;
+        input::Transformer::EventDispatcher const&, input::EventBuilder*, MirEvent const&) override;
 
     void on_key_down(std::function<void(unsigned int)>&& okd) override;
     void on_key_rejected(std::function<void(unsigned int)>&& okr) override;
