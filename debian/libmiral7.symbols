@@ -579,10 +579,10 @@ libmiral.so.7 libmiral7 #MINVER#
  (c++)"miral::CursorScale::CursorScale(miral::live_config::Store&)@MIRAL_5.4" 5.4.0
  (c++)"miral::InputConfiguration::InputConfiguration(miral::live_config::Store&)@MIRAL_5.4" 5.4.0
  (c++)"miral::OutputFilter::OutputFilter(miral::live_config::Store&)@MIRAL_5.4" 5.4.0
- (c++)"miral::SimulatedSecondaryClick::SimulatedSecondaryClick(miral::live_config::Store&)@MIRAL_5.3" 5.4.0
- (c++)"miral::SimulatedSecondaryClick::SimulatedSecondaryClick(std::shared_ptr<miral::SimulatedSecondaryClick::Self>)@MIRAL_5.3" 5.4.0
- (c++)"miral::SimulatedSecondaryClick::disabled()@MIRAL_5.3" 5.4.0
- (c++)"miral::SimulatedSecondaryClick::enabled()@MIRAL_5.3" 5.4.0
+ (c++)"miral::SimulatedSecondaryClick::SimulatedSecondaryClick(miral::live_config::Store&)@MIRAL_5.4" 5.4.0
+ (c++)"miral::SimulatedSecondaryClick::SimulatedSecondaryClick(std::shared_ptr<miral::SimulatedSecondaryClick::Self>)@MIRAL_5.4" 5.4.0
+ (c++)"miral::SimulatedSecondaryClick::disabled()@MIRAL_5.4" 5.4.0
+ (c++)"miral::SimulatedSecondaryClick::enabled()@MIRAL_5.4" 5.4.0
  (c++)"miral::SlowKeys::SlowKeys(miral::live_config::Store&)@MIRAL_5.4" 5.4.0
  (c++)"miral::SlowKeys::SlowKeys(std::shared_ptr<miral::SlowKeys::Self>)@MIRAL_5.4" 5.4.0
  (c++)"miral::SlowKeys::disable()@MIRAL_5.4" 5.4.0
