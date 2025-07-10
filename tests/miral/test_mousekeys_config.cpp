@@ -46,6 +46,8 @@ public:
     MOCK_METHOD(mir::shell::HoverClickTransformer&, hover_click, (), (override));
     MOCK_METHOD(void, slow_keys_enabled, (bool enabled), (override));
     MOCK_METHOD(mir::shell::SlowKeysTransformer&, slow_keys, (), (override));
+    MOCK_METHOD(void, sticky_keys_enabled, (bool), (override));
+    MOCK_METHOD(mir::shell::StickyKeysTransformer&, sticky_keys, (), (override));
 };
 
 struct TestMouseKeysConfig : miral::TestServer
