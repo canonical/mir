@@ -42,6 +42,10 @@ HIDDEN_SYMBOLS = {
     "miral::SimulatedSecondaryClick::enable*;",
     "miral::SimulatedSecondaryClick::enabled*;",
     "miral::SimulatedSecondaryClick::operator*;",
+    "mir::input::Transformer::?Transformer*;",
+    "non-virtual?thunk?to?mir::input::Transformer::?Transformer*;",
+    "typeinfo?for?mir::input::Transformer;",
+    "vtable?for?mir::input::Transformer;",
 }
 
 class HeaderDirectory(TypedDict):
