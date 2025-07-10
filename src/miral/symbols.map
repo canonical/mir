@@ -571,10 +571,10 @@ global:
     miral::WindowSpecification::tiled_edges*;
     miral::WindowSpecification::to_surface_specification*;
     "miral::SimulatedSecondaryClick::SimulatedSecondaryClick(bool)";
-    "miral::SimulatedSecondaryClick::disable() const";
+    "miral::SimulatedSecondaryClick::disable()";
     "miral::SimulatedSecondaryClick::displacement_threshold(float)";
-    "miral::SimulatedSecondaryClick::enable() const";
-    "miral::SimulatedSecondaryClick::hold_duration(std::chrono::duration<long, std::ratio<1l, 1000l> >)";
+    "miral::SimulatedSecondaryClick::enable()";
+    "miral::SimulatedSecondaryClick::hold_duration(std::chrono::duration<*>)";
     "miral::SimulatedSecondaryClick::on_hold_cancel(std::function<void()>&&)";
     "miral::SimulatedSecondaryClick::on_hold_start(std::function<void()>&&)";
     "miral::SimulatedSecondaryClick::on_secondary_click(std::function<void()>&&)";

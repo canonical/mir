@@ -34,6 +34,18 @@ HIDDEN_SYMBOLS = {
     "miral::CursorScale::CursorScale*;",
     "miral::InputConfiguration::InputConfiguration*;",
     "miral::OutputFilter::OutputFilter*;",
+    
+    "miral::SimulatedSecondaryClick::SimulatedSecondaryClick*;",
+    "miral::SimulatedSecondaryClick::disable*;",
+    "miral::SimulatedSecondaryClick::disabled*;",
+    "miral::SimulatedSecondaryClick::displacement_threshold*;",
+    "miral::SimulatedSecondaryClick::enable*;",
+    "miral::SimulatedSecondaryClick::enabled*;",
+    "miral::SimulatedSecondaryClick::hold_duration*;",
+    "miral::SimulatedSecondaryClick::on_hold_cancel*;",
+    "miral::SimulatedSecondaryClick::on_hold_start*;",
+    "miral::SimulatedSecondaryClick::on_secondary_click*;",
+    "miral::SimulatedSecondaryClick::operator*;",
 }
 
 class HeaderDirectory(TypedDict):
