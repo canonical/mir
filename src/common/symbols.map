@@ -721,13 +721,3 @@ global:
   };
 } MIR_COMMON_2.19;
 
-MIR_COMMON_2.22 {
-global:
-  extern "C++" {
-    mir::input::Transformer::?Transformer*;
-    non-virtual?thunk?to?mir::input::Transformer::?Transformer*;
-    typeinfo?for?mir::input::Transformer;
-    vtable?for?mir::input::Transformer;
-  };
-} MIR_COMMON_2.21;
-
