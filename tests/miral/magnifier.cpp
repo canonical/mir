@@ -39,11 +39,12 @@ public:
         add_to_environment("MIR_SERVER_PLATFORM_DISPLAY_LIBS", "mir:virtual");
         add_to_environment("MIR_SERVER_VIRTUAL_OUTPUT", "800x600");
     }
+
+    Magnifier magnifier;
 };
 
 TEST_F(MagnifierTest, magnifier_disabled_by_default)
 {
-    Magnifier magnifier;
     add_server_init(magnifier);
     add_start_callback([&]
     {
@@ -56,7 +57,6 @@ TEST_F(MagnifierTest, magnifier_disabled_by_default)
 
 TEST_F(MagnifierTest, can_start_enabled)
 {
-    Magnifier magnifier;
     magnifier.enable(true);
     add_server_init(magnifier);
     add_start_callback([&]
@@ -70,7 +70,6 @@ TEST_F(MagnifierTest, can_start_enabled)
 
 TEST_F(MagnifierTest, magnification_results_in_scaled_transform)
 {
-    Magnifier magnifier;
     magnifier.magnification(2.f);
     magnifier.enable(true);
     add_server_init(magnifier);
@@ -93,7 +92,6 @@ TEST_F(MagnifierTest, magnification_results_in_scaled_transform)
 
 TEST_F(MagnifierTest, can_set_capture_size)
 {
-    Magnifier magnifier;
     magnifier.capture_size(Size(500, 500));
     magnifier.enable(true);
     add_server_init(magnifier);

@@ -41,11 +41,13 @@ public:
         add_to_environment("MIR_SERVER_PLATFORM_DISPLAY_LIBS", "mir:virtual");
         add_to_environment("MIR_SERVER_VIRTUAL_OUTPUT", "800x600");
     }
+
+    RenderSceneIntoSurface render_scene_into_surface;
+
 };
 
 TEST_F(RenderSceneIntoSurfaceTest, set_capture_area_before_starting)
 {
-    RenderSceneIntoSurface render_scene_into_surface;
     add_server_init(render_scene_into_surface);
     render_scene_into_surface.capture_area(Rectangle(
         Point(100, 100),
@@ -65,7 +67,6 @@ TEST_F(RenderSceneIntoSurfaceTest, set_capture_area_before_starting)
 
 TEST_F(RenderSceneIntoSurfaceTest, set_capture_area_after_starting)
 {
-    RenderSceneIntoSurface render_scene_into_surface;
     add_server_init(render_scene_into_surface);
 
     start_server();
@@ -85,7 +86,6 @@ TEST_F(RenderSceneIntoSurfaceTest, set_capture_area_after_starting)
 
 TEST_F(RenderSceneIntoSurfaceTest, set_overlay_cursor_before_starting)
 {
-    RenderSceneIntoSurface render_scene_into_surface;
     render_scene_into_surface.overlay_cursor(true);
     add_server_init(render_scene_into_surface);
     start_server();
@@ -93,7 +93,6 @@ TEST_F(RenderSceneIntoSurfaceTest, set_overlay_cursor_before_starting)
 
 TEST_F(RenderSceneIntoSurfaceTest, set_overlay_cursor_after_starting)
 {
-    RenderSceneIntoSurface render_scene_into_surface;
     add_server_init(render_scene_into_surface);
 
     add_start_callback([&]
@@ -106,7 +105,6 @@ TEST_F(RenderSceneIntoSurfaceTest, set_overlay_cursor_after_starting)
 TEST_F(RenderSceneIntoSurfaceTest, on_surface_ready_callback_called)
 {
     bool called = false;
-    RenderSceneIntoSurface render_scene_into_surface;
     add_server_init(render_scene_into_surface);
     render_scene_into_surface.on_surface_ready([&](auto const&)
     {
@@ -118,7 +116,6 @@ TEST_F(RenderSceneIntoSurfaceTest, on_surface_ready_callback_called)
 
 TEST_F(RenderSceneIntoSurfaceTest, surface_never_contains_point)
 {
-    RenderSceneIntoSurface render_scene_into_surface;
     add_server_init(render_scene_into_surface);
     render_scene_into_surface.on_surface_ready([&](std::shared_ptr<mir::scene::Surface> const&surface)
     {
