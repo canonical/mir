@@ -203,19 +203,18 @@ void miral::SimulatedSecondaryClick::operator()(mir::Server& server)
         [&server, this]
         {
             self->accessibility_manager = server.the_accessibility_manager();
-            if (auto accessibility_manager = server.the_accessibility_manager())
-            {
-                auto const state = self->state.lock();
+            auto accessibility_manager = server.the_accessibility_manager();
 
-                if (state->enabled)
-                    accessibility_manager->simulated_secondary_click_enabled(true);
+            auto const state = self->state.lock();
 
-                auto& ssc = accessibility_manager->simulated_secondary_click();
-                ssc.hold_duration(state->hold_duration);
-                ssc.displacement_threshold(state->displacement_threshold);
-                ssc.on_hold_start(std::move(state->on_hold_start));
-                ssc.on_hold_cancel(std::move(state->on_hold_cancel));
-                ssc.on_secondary_click(std::move(state->on_secondary_click));
-            }
+            if (state->enabled)
+                accessibility_manager->simulated_secondary_click_enabled(true);
+
+            auto& ssc = accessibility_manager->simulated_secondary_click();
+            ssc.hold_duration(state->hold_duration);
+            ssc.displacement_threshold(state->displacement_threshold);
+            ssc.on_hold_start(std::move(state->on_hold_start));
+            ssc.on_hold_cancel(std::move(state->on_hold_cancel));
+            ssc.on_secondary_click(std::move(state->on_secondary_click));
         });
 }
