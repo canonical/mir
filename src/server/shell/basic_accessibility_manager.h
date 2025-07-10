@@ -48,6 +48,7 @@ namespace shell
 class MouseKeysTransformer;
 class BasicHoverClickTransformer;
 class SlowKeysTransformer;
+class StickyKeysTransformer;
 class BasicAccessibilityManager : public AccessibilityManager
 {
 public:
@@ -58,9 +59,10 @@ public:
         std::shared_ptr<MouseKeysTransformer> const& mousekeys_transformer,
         std::shared_ptr<SimulatedSecondaryClickTransformer> const& simulated_secondary_click_transformer,
         std::shared_ptr<shell::HoverClickTransformer> const& hover_click_transformer,
-        std::shared_ptr<SlowKeysTransformer> const& slow_keys_transformer);
+        std::shared_ptr<SlowKeysTransformer> const& slow_keys_transformer,
+        std::shared_ptr<StickyKeysTransformer> const& sticky_keys_transformer);
 
-    ~BasicAccessibilityManager();
+    ~BasicAccessibilityManager() override;
 
     void register_keyboard_helper(std::shared_ptr<shell::KeyboardHelper> const&) override;
 
@@ -83,6 +85,9 @@ public:
 
     void slow_keys_enabled(bool enabled) override;
     auto slow_keys() -> SlowKeysTransformer& override;
+
+    void sticky_keys_enabled(bool enabled) override;
+    auto sticky_keys() -> StickyKeysTransformer& override;
 private:
     struct MutableState {
         // 25 rate and 600 delay are the default in Weston and Sway
@@ -91,7 +96,7 @@ private:
 
         std::vector<std::shared_ptr<shell::KeyboardHelper>> keyboard_helpers;
 
-        bool mousekeys_on{false}, ssc_on{false}, hover_click_on{false}, slow_keys_on{false};
+        bool mousekeys_on{false}, ssc_on{false}, hover_click_on{false}, slow_keys_on{false}, sticky_keys_on{false};
     };
 
     Synchronised<MutableState> mutable_state;
@@ -104,6 +109,7 @@ private:
     std::shared_ptr<SimulatedSecondaryClickTransformer> const simulated_secondary_click_transformer;
     std::shared_ptr<HoverClickTransformer> const hover_click_transformer;
     std::shared_ptr<SlowKeysTransformer> const slow_keys_transformer;
+    std::shared_ptr<StickyKeysTransformer> const sticky_keys_transformer;
 };
 }
 }

@@ -32,6 +32,7 @@ class KeyboardHelper;
 class SimulatedSecondaryClickTransformer;
 class HoverClickTransformer;
 class SlowKeysTransformer;
+class StickyKeysTransformer;
 class AccessibilityManager
 {
 public:
@@ -59,6 +60,9 @@ public:
 
     virtual void slow_keys_enabled(bool enabled) = 0;
     virtual auto slow_keys() -> SlowKeysTransformer& = 0;
+
+    virtual void sticky_keys_enabled(bool enabled) = 0;
+    virtual auto sticky_keys() -> StickyKeysTransformer& = 0;
 };
 }
 }
