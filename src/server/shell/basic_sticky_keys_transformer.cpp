@@ -71,7 +71,7 @@ struct msh::BasicStickyKeysTransformer::Self
     bool try_dispatch_pending(
         MirEvent const& event,
         bool is_up_event,
-        mi::InputEventTransformer::EventDispatcher const& dispatcher)
+        mi::Transformer::EventDispatcher const& dispatcher)
     {
         if (!is_up_event)
             return false;
@@ -93,7 +93,7 @@ msh::BasicStickyKeysTransformer::BasicStickyKeysTransformer()
 }
 
 bool msh::BasicStickyKeysTransformer::transform_input_event(
-    mi::InputEventTransformer::EventDispatcher const& dispatcher,
+    mi::Transformer::EventDispatcher const& dispatcher,
     input::EventBuilder*,
     MirEvent const& event)
 {

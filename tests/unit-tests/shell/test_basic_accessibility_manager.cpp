@@ -58,7 +58,7 @@ struct MockMouseKeysTransformer : public mir::shell::MouseKeysTransformer
     MOCK_METHOD(
         bool,
         transform_input_event,
-        (mir::input::InputEventTransformer::EventDispatcher const&, mir::input::EventBuilder*, MirEvent const&),
+        (mir::input::Transformer::EventDispatcher const&, mir::input::EventBuilder*, MirEvent const&),
         (override));
 };
 
@@ -69,7 +69,7 @@ struct MockSimulatedSecondaryClickTransformer : public mir::shell::SimulatedSeco
     MOCK_METHOD(
         bool,
         transform_input_event,
-        (mir::input::InputEventTransformer::EventDispatcher const& dispatcher,
+        (mir::input::Transformer::EventDispatcher const& dispatcher,
          mir::input::EventBuilder*,
          MirEvent const&),
         (override));
@@ -88,8 +88,8 @@ struct MockInputEventTransformer: public mir::input::InputEventTransformer
     {
     }
 
-    MOCK_METHOD(void, append, (std::weak_ptr<Transformer> const&), (override));
-    MOCK_METHOD(void, remove, (std::shared_ptr<Transformer> const&), (override));
+    MOCK_METHOD(void, append, (std::weak_ptr<mir::input::Transformer> const&), (override));
+    MOCK_METHOD(void, remove, (std::shared_ptr<mir::input::Transformer> const&), (override));
 };
 
 struct MockHoverClickTransformer : public mir::shell::HoverClickTransformer
@@ -99,7 +99,7 @@ struct MockHoverClickTransformer : public mir::shell::HoverClickTransformer
     MOCK_METHOD(
         bool,
         transform_input_event,
-        (mir::input::InputEventTransformer::EventDispatcher const&, mir::input::EventBuilder*, MirEvent const&),
+        (mir::input::Transformer::EventDispatcher const&, mir::input::EventBuilder*, MirEvent const&),
         (override));
 
     MOCK_METHOD(void, hover_duration,(std::chrono::milliseconds delay), (override));
@@ -115,7 +115,7 @@ struct MockSlowKeysTransformer : public mir::shell::SlowKeysTransformer
     MOCK_METHOD(
         bool,
         transform_input_event,
-        (mir::input::InputEventTransformer::EventDispatcher const&, mir::input::EventBuilder*, MirEvent const&),
+        (mir::input::Transformer::EventDispatcher const&, mir::input::EventBuilder*, MirEvent const&),
         (override));
 
     MOCK_METHOD(void, on_key_down, (std::function<void(unsigned int)>&&), (override));
@@ -129,7 +129,7 @@ struct MockStickyKeysTransformer : mir::shell::StickyKeysTransformer
     MOCK_METHOD(
         bool,
         transform_input_event,
-        (mir::input::InputEventTransformer::EventDispatcher const&, mir::input::EventBuilder*, MirEvent const&),
+        (mir::input::Transformer::EventDispatcher const&, mir::input::EventBuilder*, MirEvent const&),
         (override));
     MOCK_METHOD(void, should_disable_if_two_keys_are_pressed_together, (bool), (override));
     MOCK_METHOD(void, on_modifier_clicked, (std::function<void(int32_t)>&&), (override));
@@ -362,7 +362,7 @@ struct TestArbitraryEnablesAndDisables :
     public TestBasicAccessibilityManager,
     public WithParamInterface<TransformerToTest>
 {
-    auto get_transformer() -> std::shared_ptr<mir::input::InputEventTransformer::Transformer>
+    auto get_transformer() -> std::shared_ptr<mir::input::Transformer>
     {
         switch (GetParam())
         {

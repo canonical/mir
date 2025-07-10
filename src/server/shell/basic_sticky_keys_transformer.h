@@ -27,7 +27,7 @@ class BasicStickyKeysTransformer : public StickyKeysTransformer
 public:
     BasicStickyKeysTransformer();
     bool transform_input_event(
-       input::InputEventTransformer::EventDispatcher const&,
+       input::Transformer::EventDispatcher const&,
        input::EventBuilder*,
        MirEvent const&) override;
     void should_disable_if_two_keys_are_pressed_together(bool on) override;

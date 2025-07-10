@@ -398,7 +398,6 @@ global:
     mir::input::InputDispatcher::?InputDispatcher*;
     mir::input::InputEventTransformer::?InputEventTransformer*;
     mir::input::InputEventTransformer::InputEventTransformer*;
-    mir::input::InputEventTransformer::Transformer::?Transformer*;
     mir::input::InputEventTransformer::add_device*;
     mir::input::InputEventTransformer::append*;
     mir::input::InputEventTransformer::bounding_rectangle*;
@@ -997,7 +996,6 @@ global:
     non-virtual?thunk?to?mir::input::InputDeviceObserver::?InputDeviceObserver*;
     non-virtual?thunk?to?mir::input::InputDispatcher::?InputDispatcher*;
     non-virtual?thunk?to?mir::input::InputEventTransformer::?InputEventTransformer*;
-    non-virtual?thunk?to?mir::input::InputEventTransformer::Transformer::?Transformer*;
     non-virtual?thunk?to?mir::input::InputEventTransformer::add_device*;
     non-virtual?thunk?to?mir::input::InputEventTransformer::append*;
     non-virtual?thunk?to?mir::input::InputEventTransformer::bounding_rectangle*;
@@ -1335,7 +1333,6 @@ global:
     typeinfo?for?mir::input::InputDeviceHub;
     typeinfo?for?mir::input::InputDeviceObserver;
     typeinfo?for?mir::input::InputDispatcher;
-    typeinfo?for?mir::input::InputEventTransformer::Transformer;
     typeinfo?for?mir::input::InputEventTransformer;
     typeinfo?for?mir::input::InputManager;
     typeinfo?for?mir::input::KeyboardObserver;
@@ -1551,7 +1548,6 @@ global:
     vtable?for?mir::input::InputDeviceHub;
     vtable?for?mir::input::InputDeviceObserver;
     vtable?for?mir::input::InputDispatcher;
-    vtable?for?mir::input::InputEventTransformer::Transformer;
     vtable?for?mir::input::InputEventTransformer;
     vtable?for?mir::input::InputManager;
     vtable?for?mir::input::KeyboardObserver;
