@@ -27,7 +27,7 @@
 namespace
 {
 void click(
-    mir::input::InputEventTransformer::EventDispatcher const& dispatcher,
+    mir::input::Transformer::EventDispatcher const& dispatcher,
     mir::input::EventBuilder* builder,
     MirPointerButton button)
 {
@@ -59,7 +59,7 @@ mir::shell::BasicSimulatedSecondaryClickTransformer::BasicSimulatedSecondaryClic
 }
 
 bool mir::shell::BasicSimulatedSecondaryClickTransformer::transform_input_event(
-    input::InputEventTransformer::EventDispatcher const& dispatcher,
+    input::Transformer::EventDispatcher const& dispatcher,
     input::EventBuilder* builder,
     MirEvent const& event)
 {

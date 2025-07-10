@@ -36,7 +36,7 @@ public:
     BasicSimulatedSecondaryClickTransformer(std::shared_ptr<mir::MainLoop> const& main_loop);
 
     bool transform_input_event(
-        input::InputEventTransformer::EventDispatcher const& dispatcher,
+        input::Transformer::EventDispatcher const& dispatcher,
         input::EventBuilder*,
         MirEvent const&) override;
 
