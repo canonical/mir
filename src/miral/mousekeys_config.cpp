@@ -123,7 +123,7 @@ miral::MouseKeysConfig::MouseKeysConfig(live_config::Store& config_store)
 {
     config_store.add_bool_attribute(
         {"mouse_keys", "enable"},
-        "Whether or not to start the compositor with mousekeys enabled",
+        "Whether or not mousekeys is enabled",
         [this](live_config::Key const&, std::optional<bool> value)
         {
             if (!value) return;
