@@ -365,17 +365,63 @@ bool ms::BasicSurface::input_area_contains(geom::Point const& point) const
 
     if (state->custom_input_rectangles.empty())
     {
-        // no custom input, restrict to bounding rectangle
+        // The surface has no custom input, so it is restricted to its bounding rectangle.
+        // Note that the "content_size" returned here is already oriented properly, so the
+        // width and height do NOT need to be swapped, unlike the custom input rectangles
+        // case.
         auto const input_rect = geom::Rectangle{content_top_left(*state), content_size(*state)};
         return input_rect.contains(point);
     }
     else
     {
-        auto local_point = as_point(point - content_top_left(*state));
+        auto const local_point = as_point(point - content_top_left(*state));
         for (auto const& rectangle : state->custom_input_rectangles)
         {
-            if (rectangle.contains(local_point))
-                return true;
+            // Note that this size is already rotated according to the orientation, so the
+            // width and height do not need to be swapped.
+            auto const& surface_size = state->surface_rect.size;
+
+            // When a surface is rendered with an orientation, it is unrotated so that it appears
+            // upright. The input region that the surface provides is given in surface-local coordinates
+            // meaning that it will need to be rotated to match up with the surface.
+            switch (state->orientation)
+            {
+            case mir_orientation_left:
+            {
+                auto rotated_rect = rectangle;
+                rotated_rect.top_left.x = geom::X(rectangle.top_left.y.as_value());
+                rotated_rect.top_left.y = geom::Y(surface_size.height.as_value() - rectangle.top_left.x.as_value() - rectangle.size.width.as_value());
+                rotated_rect.size.width = geom::Width(rectangle.size.height.as_value());
+                rotated_rect.size.height = geom::Height(rectangle.size.width.as_value());
+                if (rotated_rect.contains(local_point))
+                    return true;
+                break;
+            }
+            case mir_orientation_right:
+            {
+                auto rotated_rect = rectangle;
+                rotated_rect.top_left.x = geom::X(surface_size.width.as_value() - rectangle.top_left.y.as_value() - rectangle.size.height.as_value());
+                rotated_rect.top_left.y = geom::Y(rectangle.top_left.x.as_value());
+                rotated_rect.size.width = geom::Width(rectangle.size.height.as_value());
+                rotated_rect.size.height = geom::Height(rectangle.size.width.as_value());
+                if (rotated_rect.contains(local_point))
+                    return true;
+                break;
+            }
+            case mir_orientation_inverted:
+            {
+                auto rotated_rect = rectangle;
+                rotated_rect.top_left.x = geom::X(surface_size.width.as_value() - rectangle.top_left.x.as_value() - rectangle.size.width.as_value());
+                rotated_rect.top_left.y = geom::Y(surface_size.height.as_value() - rectangle.top_left.y.as_value() - rectangle.size.height.as_value());
+                if (rotated_rect.contains(local_point))
+                    return true;
+                break;
+            }
+            default:
+                if (rectangle.contains(local_point))
+                    return true;
+                break;
+            }
         }
     }
     return false;

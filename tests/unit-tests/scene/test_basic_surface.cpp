@@ -575,6 +575,35 @@ TEST_F(BasicSurfaceTest, set_input_region)
     }
 }
 
+struct InputRegionData
+{
+    MirOrientation orientation;
+    geom::Rectangle rect;
+};
+
+class BasicSurfaceOrientationTest : public BasicSurfaceTest, public testing::WithParamInterface<InputRegionData>
+{};
+
+TEST_P(BasicSurfaceOrientationTest, set_input_region_on_rotated_surface)
+{
+    auto const& param = GetParam();
+    std::vector<geom::Rectangle> const rectangles = {
+        param.rect
+    };
+
+    surface.set_orientation(param.orientation);
+    surface.set_input_region(rectangles);
+
+    auto const test_pt = rect.top_left + geom::Displacement{4, 1};
+    EXPECT_THAT(surface.input_area_contains(test_pt), testing::Eq(true));
+}
+
+INSTANTIATE_TEST_SUITE_P(BasicSurfaceOrientationTest, BasicSurfaceOrientationTest, ::testing::Values(
+    InputRegionData{mir_orientation_right, geom::Rectangle({ 0, 7 }, { 2, 2 })},
+    InputRegionData{mir_orientation_left, geom::Rectangle({ 13, 3 }, { 2, 2 })},
+    InputRegionData{mir_orientation_inverted, geom::Rectangle({ 6, 13 }, { 2, 2 })}
+));
+
 TEST_F(BasicSurfaceTest, updates_default_input_region_when_surface_is_resized_to_larger_size)
 {
     geom::Rectangle const new_rect{rect.top_left,{20,20}};
