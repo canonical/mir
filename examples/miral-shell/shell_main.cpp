@@ -37,7 +37,9 @@
 #include <miral/output_filter.h>
 #include <miral/simulated_secondary_click.h>
 #include <miral/hover_click.h>
+#include <miral/sticky_keys.h>
 #include <miral/magnifier.h>
+
 #include <xkbcommon/xkbcommon-keysyms.h>
 
 #include <cstring>
@@ -185,6 +187,7 @@ int main(int argc, char const* argv[])
                                 .hold_duration(std::chrono::milliseconds{2000});
 
     miral::HoverClick hover_click_config{false};
+    StickyKeys sticky_keys = StickyKeys::enabled();
 
     float magnification = 2.f;
     Size capture_size{100, 100};
@@ -298,6 +301,7 @@ int main(int argc, char const* argv[])
             AppendKeyboardEventFilter{toggle_output_filter_filter},
             ssc_config,
             hover_click_config,
+            sticky_keys,
             magnifier,
             AppendKeyboardEventFilter{magnifier_filter}
         });
