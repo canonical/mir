@@ -52,6 +52,7 @@ if(use_debflags)
 endif()
 include (cmake/EnableCoverageReport.cmake)
 include (cmake/MirCommon.cmake)
+include (cmake/RustLibrary.cmake)
 include (GNUInstallDirs)
 add_subdirectory(doc)
 

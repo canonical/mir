@@ -40,6 +40,10 @@ set_property(
     SOURCE default_configuration.cpp
     PROPERTY COMPILE_OPTIONS -Wno-variadic-macros)
 
+add_rust_cxx_library(mirinput_rust
+  CRATE mir_server_input
+  DEPENDS Cargo.toml src/lib.rs)
+
 add_library(
   mirinput OBJECT
 
@@ -53,4 +57,5 @@ target_link_libraries(mirinput
     mircore
   PRIVATE
     PkgConfig::GLIB
+    mirinput_rust
 )
