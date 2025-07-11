@@ -15,12 +15,13 @@
  */
 
 #include "miral/simulated_secondary_click.h"
+#include "miral/live_config.h"
 
-#include "mir/options/option.h"
 #include "mir/server.h"
 #include "mir/shell/accessibility_manager.h"
 #include "mir/shell/simulated_secondary_click_transformer.h"
 #include "mir/synchronised.h"
+#include "mir/log.h"
 
 struct miral::SimulatedSecondaryClick::Self
 {
@@ -52,6 +53,78 @@ struct miral::SimulatedSecondaryClick::Self
 miral::SimulatedSecondaryClick::SimulatedSecondaryClick(bool enabled_by_default) :
     self{std::make_shared<Self>(enabled_by_default)}
 {
+}
+
+miral::SimulatedSecondaryClick::SimulatedSecondaryClick(live_config::Store& config_store)
+{
+    config_store.add_bool_attribute(
+        {"simulated_secondary_click", "enable"},
+        "Whether or not simulated secondary click is enabled",
+        [this](live_config::Key const&, std::optional<bool> val)
+        {
+            if (!val)
+                return;
+
+            if (*val)
+                this->enable();
+            else
+                this->disable();
+        });
+
+    config_store.add_float_attribute(
+        {"simulated_secondary_click", "displacement_threshold"},
+        "How much pointer displacement in pixels is allowed before a simulated secondary click is cancelled",
+        [this](live_config::Key const& key, std::optional<float> val)
+        {
+            if (!val)
+                return;
+
+            if (*val < 0)
+            {
+                mir::log_warning(
+                    "Config value %s does not support negative values. Ignoring the supplied value (%f)...",
+                    key.to_string().c_str(),
+                    *val);
+                return;
+            }
+
+            this->displacement_threshold(*val);
+        });
+
+    config_store.add_int_attribute(
+        {"simulated_secondary_click", "delay"},
+        "The delay in milliseconds between the cursor starting a simulated secondary click and the click being "
+        "dispatched.",
+        [this](live_config::Key const& key, std::optional<int> val) {
+            if (!val)
+                return;
+
+            if (*val < 0)
+            {
+                mir::log_warning(
+                    "Config value %s does not support negative values. Ignoring the supplied value (%d)...",
+                    key.to_string().c_str(),
+                    *val);
+                return;
+            }
+
+            this->hold_duration(std::chrono::milliseconds{*val});
+        });
+}
+
+miral::SimulatedSecondaryClick::SimulatedSecondaryClick(std::shared_ptr<Self> self) :
+    self{std::move(self)}
+{
+}
+
+auto miral::SimulatedSecondaryClick::enabled() -> SimulatedSecondaryClick
+{
+    return SimulatedSecondaryClick{std::make_shared<Self>(true)};
+}
+
+auto miral::SimulatedSecondaryClick::disabled() -> SimulatedSecondaryClick
+{
+    return SimulatedSecondaryClick{std::make_shared<Self>(false)};
 }
 
 miral::SimulatedSecondaryClick& miral::SimulatedSecondaryClick::enable()
@@ -130,19 +203,18 @@ void miral::SimulatedSecondaryClick::operator()(mir::Server& server)
         [&server, this]
         {
             self->accessibility_manager = server.the_accessibility_manager();
-            if (auto accessibility_manager = server.the_accessibility_manager())
-            {
-                auto const state = self->state.lock();
+            auto accessibility_manager = server.the_accessibility_manager();
 
-                if (state->enabled)
-                    accessibility_manager->simulated_secondary_click_enabled(true);
+            auto const state = self->state.lock();
 
-                auto& ssc = accessibility_manager->simulated_secondary_click();
-                ssc.hold_duration(state->hold_duration);
-                ssc.displacement_threshold(state->displacement_threshold);
-                ssc.on_hold_start(std::move(state->on_hold_start));
-                ssc.on_hold_cancel(std::move(state->on_hold_cancel));
-                ssc.on_secondary_click(std::move(state->on_secondary_click));
-            }
+            if (state->enabled)
+                accessibility_manager->simulated_secondary_click_enabled(true);
+
+            auto& ssc = accessibility_manager->simulated_secondary_click();
+            ssc.hold_duration(state->hold_duration);
+            ssc.displacement_threshold(state->displacement_threshold);
+            ssc.on_hold_start(std::move(state->on_hold_start));
+            ssc.on_hold_cancel(std::move(state->on_hold_cancel));
+            ssc.on_secondary_click(std::move(state->on_secondary_click));
         });
 }

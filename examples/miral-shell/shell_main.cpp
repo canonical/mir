@@ -180,7 +180,7 @@ int main(int argc, char const* argv[])
         return false;
     };
 
-    auto ssc_config = miral::SimulatedSecondaryClick{false}
+    auto ssc_config = miral::SimulatedSecondaryClick::disabled()
                                 .displacement_threshold(30)
                                 .hold_duration(std::chrono::milliseconds{2000});
 
