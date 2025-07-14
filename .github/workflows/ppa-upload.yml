@@ -15,7 +15,6 @@ jobs:
       matrix:
         release:
         - "24.04"
-        - "24.10"
         - "25.04"
         - "devel"
 

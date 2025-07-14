@@ -23,7 +23,6 @@ environment:
     DISTRO/debian_sid: debian
     RELEASE: noble
     RELEASE/ubuntu: noble
-    RELEASE/ubuntu_oracular: oracular
     RELEASE/ubuntu_plucky: plucky
     RELEASE/ubuntu_devel: questing
     RELEASE/debian_sid: sid

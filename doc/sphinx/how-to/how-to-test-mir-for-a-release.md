@@ -22,7 +22,7 @@ Each test must be performed across a combination of different display
 platforms and Ubuntu releases. The following matrix provides the environments
 in which we need to test:
 
-|                                | 24.04    | 24.10      |
+|                                | 24.04    | 25.04      |
 |--------------------------------|----------|------------|
 | gbm-kms                        |          |            |
 | eglstream-kms                  |          |            |
@@ -145,7 +145,7 @@ For each empty box in the matrix above, ensure that the following applications c
 ## Mir Console Providers
 For each Ubuntu release ensure that the compositor can start with each of the console providers:
 
-|         | 24.04    | 24.10      |
+|         | 24.04    | 25.04      |
 |---------|----------|------------|
 | vt      |          |            |
 | logind  |          |            |
