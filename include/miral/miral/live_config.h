@@ -30,7 +30,7 @@ namespace miral::live_config
 /// Registration key for a configuration attribute. The key is essentially a tuple of
 /// identifiers
 ///
-/// \remark Since MirAL 5.4
+/// \remark Since MirAL 5.5
 class Key
 {
 public:

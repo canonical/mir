@@ -26,6 +26,7 @@ namespace mir { class Server; }
 
 namespace miral
 {
+/// \remark Since MirAL 5.5
 class AppendKeyboardEventFilter
 {
 public:

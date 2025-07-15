@@ -34,6 +34,9 @@ namespace miral
 {
 class Output;
 
+/// Tools for implementors of Wayland extension protocols
+///
+/// \remark Since MirAL 5.5
 class WaylandTools
 {
 public:
