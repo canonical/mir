@@ -50,11 +50,6 @@ struct miral::SimulatedSecondaryClick::Self
     mir::Synchronised<State> state;
 };
 
-miral::SimulatedSecondaryClick::SimulatedSecondaryClick(bool enabled_by_default) :
-    self{std::make_shared<Self>(enabled_by_default)}
-{
-}
-
 miral::SimulatedSecondaryClick::SimulatedSecondaryClick(live_config::Store& config_store)
 {
     config_store.add_bool_attribute(
