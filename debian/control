@@ -201,6 +201,8 @@ Depends: libmircommon-dev (= ${binary:Version}),
          libmirplatform-dev (= ${binary:Version}),
          libmirserver-dev (= ${binary:Version}),
          mir-renderer-gl-dev (= ${binary:Version}),
+         mir-platform-graphics-stub,
+         mir-platform-input-stub,
          libboost-filesystem-dev,
          libboost-system-dev,
          ${misc:Depends},
@@ -269,6 +271,8 @@ Breaks: mir-test-tools (<< 2.0.0.0+dev148~)
 Replaces: mir-test-tools (<< 2.0.0.0+dev148~)
 Depends: ${misc:Depends},
          ${shlibs:Depends},
+         mir-platform-graphics-stub,
+         mir-platform-input-stub,
 Description: Display Server for Ubuntu - wlcs integration
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
@@ -402,6 +406,32 @@ Description: Display server for Ubuntu - virtual display platform
  Contains the shared libraries required for the Mir server to provide virtual
  output support.
 
+Package: mir-platform-graphics-stub23
+Section: libs
+Architecture: linux-any
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${misc:Depends},
+         ${shlibs:Depends},
+Description: Display server for Ubuntu - stub driver metapackage
+ Mir is a display server running on linux systems, with a focus on efficiency,
+ robust operation and a well-defined driver model.
+ .
+ This package depends on nothing.
+
+Package: mir-platform-input-stub10
+Section: libs
+Architecture: linux-any
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${misc:Depends},
+         ${shlibs:Depends},
+Description: Display server for Ubuntu - stub input platform library
+ Mir is a display server running on linux systems, with a focus on efficiency,
+ robust operation and a well-defined driver model.
+ .
+ This package depends on nothing.
+
 Package: mir-graphics-drivers-nvidia
 Section: libs
 Architecture: linux-any
@@ -431,6 +461,18 @@ Description: Display server for Ubuntu - input platform library
  .
  Contains the shared libraries required for the Mir server to interact with
  the input hardware using the evdev interface.
+
+Package: mir-platform-input-stub
+Section: libs
+Architecture: linux-any
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
+Depends: mir-platform-input-stub10
+Description: Display server for Ubuntu - stub input platform library
+ Mir is a display server running on linux systems, with a focus on efficiency,
+ robust operation and a well-defined driver model.
+ .
+ This package depends on nothing.
 
 Package: mir-graphics-drivers-desktop
 Section: libs
@@ -552,6 +594,18 @@ Description: Display server for Ubuntu - x driver metapackage
  .
  This package depends on a full set of graphics and input drivers for X
  systems.
+
+Package: mir-platform-graphics-stub
+Section: libs
+Architecture: linux-any
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
+Depends: mir-platform-graphics-stub23
+Description: Display server for Ubuntu - stub driver metapackage
+ Mir is a display server running on linux systems, with a focus on efficiency,
+ robust operation and a well-defined driver model.
+ .
+ This package depends on nothing.
 
 Package: libmirrenderer-dev
 Section: libdevel

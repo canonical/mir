@@ -152,6 +152,7 @@ set_target_properties(
   LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/server-modules
   OUTPUT_NAME input-stub
   PREFIX ""
+  SUFFIX ".so.${MIR_SERVER_INPUT_PLATFORM_ABI}"
   LINK_FLAGS "-Wl,--version-script,${MIR_INPUT_PLATFORM_VERSION_SCRIPT}"
 )
 
@@ -181,6 +182,7 @@ set_target_properties(
   LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/server-modules
   OUTPUT_NAME graphics-dummy
   PREFIX ""
+  SUFFIX ".so.${MIR_SERVER_GRAPHICS_PLATFORM_ABI}"
   LINK_FLAGS "-Wl,--version-script,${server_symbol_map}"
 )
 
