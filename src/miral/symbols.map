@@ -588,7 +588,7 @@ global:
   };
 } MIRAL_5.2;
 
-MIRAL_5.4 {
+MIRAL_5.5 {
 global:
   extern "C++" {
     "miral::CursorScale::CursorScale(miral::live_config::Store&)";
