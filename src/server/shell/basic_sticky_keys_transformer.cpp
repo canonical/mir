@@ -68,7 +68,7 @@ struct msh::BasicStickyKeysTransformer::Self
     bool is_temporarily_disabled = false;
     std::vector<std::shared_ptr<MirKeyboardEvent>> pending;
 
-    bool process_event(
+    bool try_dispatch_pending(
         MirEvent const& event,
         bool is_up_event,
         mi::InputEventTransformer::EventDispatcher const& dispatcher)
@@ -88,7 +88,7 @@ struct msh::BasicStickyKeysTransformer::Self
 };
 
 msh::BasicStickyKeysTransformer::BasicStickyKeysTransformer()
-    : self(std::make_shared<Self>())
+    : self{std::make_shared<Self>()}
 {
 }
 
@@ -108,7 +108,7 @@ bool msh::BasicStickyKeysTransformer::transform_input_event(
         auto const scan_code = key_event->scan_code();
         if (!is_modifier(scan_code))
         {
-            return self->process_event(
+            return self->try_dispatch_pending(
                 event,
                 key_event->action() == mir_keyboard_action_up,
                 dispatcher);
@@ -155,7 +155,7 @@ bool msh::BasicStickyKeysTransformer::transform_input_event(
     else if (input_type == mir_input_event_type_pointer)
     {
         auto const pointer_event = input_event->to_pointer();
-        return self->process_event(
+        return self->try_dispatch_pending(
             event,
             pointer_event->action() == mir_pointer_action_button_up,
             dispatcher);
@@ -164,7 +164,7 @@ bool msh::BasicStickyKeysTransformer::transform_input_event(
     {
         auto const touch_event = input_event->to_touch();
         auto const pointer_count = touch_event->pointer_count();
-        return self->process_event(
+        return self->try_dispatch_pending(
             event,
             pointer_count == 1 && touch_event->action(0) == mir_touch_action_up,
             dispatcher);

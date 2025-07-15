@@ -428,7 +428,7 @@ TEST_P(TestDoubleTransformerEnable, enabling_accessibility_transformer_twice_cal
 INSTANTIATE_TEST_SUITE_P(
     TestBasicAccessibilityManager,
     TestDoubleTransformerEnable,
-    Values(TransformerToTest::MouseKeys, TransformerToTest::SSC, TransformerToTest::HoverClick));
+    Values(TransformerToTest::MouseKeys, TransformerToTest::SSC, TransformerToTest::HoverClick, TransformerToTest::StickyKeys));
 
 struct TestDoubleEnableWithDisableInBetween : public TestArbitraryEnablesAndDisables
 {
@@ -448,7 +448,7 @@ TEST_P(
 INSTANTIATE_TEST_SUITE_P(
     TestBasicAccessibilityManager,
     TestDoubleEnableWithDisableInBetween,
-    Values(TransformerToTest::MouseKeys, TransformerToTest::SSC, TransformerToTest::HoverClick));
+    Values(TransformerToTest::MouseKeys, TransformerToTest::SSC, TransformerToTest::HoverClick, TransformerToTest::StickyKeys));
 
 struct TestDoubleDisable : public TestArbitraryEnablesAndDisables
 {
@@ -466,7 +466,7 @@ TEST_P(TestDoubleDisable, disabling_accessibility_transformer_twice_calls_remove
 INSTANTIATE_TEST_SUITE_P(
     TestBasicAccessibilityManager,
     TestDoubleDisable,
-    Values(TransformerToTest::MouseKeys, TransformerToTest::SSC, TransformerToTest::HoverClick));
+    Values(TransformerToTest::MouseKeys, TransformerToTest::SSC, TransformerToTest::HoverClick, TransformerToTest::StickyKeys));
 
 struct TestDoubleDisableWithEnableInBetween : public TestArbitraryEnablesAndDisables
 {
@@ -502,4 +502,4 @@ TEST_P(TestDisableWithoutEnable, disabling_accessibility_transformer_before_enab
 INSTANTIATE_TEST_SUITE_P(
     TestBasicAccessibilityManager,
     TestDisableWithoutEnable,
-    Values(TransformerToTest::MouseKeys, TransformerToTest::SSC, TransformerToTest::HoverClick));
+    Values(TransformerToTest::MouseKeys, TransformerToTest::SSC, TransformerToTest::HoverClick, TransformerToTest::StickyKeys));

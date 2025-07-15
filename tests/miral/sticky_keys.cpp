@@ -68,8 +68,9 @@ public:
 TEST_F(TestStickyKeys, when_enabled_clicking_modifier_results_in_callback)
 {
     int count = 0;
-    sticky_keys.on_modifier_clicked([&](int32_t)
+    sticky_keys.on_modifier_clicked([&](int32_t scan_code)
     {
+        EXPECT_THAT(scan_code, Eq(KEY_LEFTSHIFT));
         count++;
     });
 

@@ -60,16 +60,17 @@ TEST_F(TestStickyKeysTransformer, non_modifier_events_are_passed_through_when_no
     EXPECT_THAT(transformer.transform_input_event(dispatch, &event_builder, *event.get()), Eq(false));
 }
 
-class TestStickyKeysTransformerWithModifiers : public TestStickyKeysTransformer, public WithParamInterface<int32_t>
+using KeyParam = std::pair<xkb_keysym_t, int32_t>;
+class TestStickyKeysTransformerWithModifiers : public TestStickyKeysTransformer, public WithParamInterface<KeyParam>
 {};
 
 TEST_P(TestStickyKeysTransformerWithModifiers, modifier_keyboard_up_events_are_consumed)
 {
-    auto const modifier_key = GetParam();
-    auto const down_event = event_builder.key_event(std::nullopt, mir_keyboard_action_down, modifier_key, modifier_key);
+    auto const [keysym, scan_code] = GetParam();
+    auto const down_event = event_builder.key_event(std::nullopt, mir_keyboard_action_down, keysym, scan_code);
     EXPECT_THAT(transformer.transform_input_event(dispatch, &event_builder, *down_event.get()), Eq(false));
 
-    auto const up_event = event_builder.key_event(std::nullopt, mir_keyboard_action_up, modifier_key, modifier_key);
+    auto const up_event = event_builder.key_event(std::nullopt, mir_keyboard_action_up, keysym, scan_code);
     EXPECT_THAT(transformer.transform_input_event(dispatch, &event_builder, *up_event.get()), Eq(true));
 }
 
@@ -78,14 +79,14 @@ TEST_P(TestStickyKeysTransformerWithModifiers, callback_triggered_on_modifier_ke
     int count = 0;
     transformer.on_modifier_clicked([&](auto const& key)
     {
-        EXPECT_THAT(key, Eq(GetParam()));
+        EXPECT_THAT(key, Eq(GetParam().second));
         count++;
     });
 
-    auto const modifier_key = GetParam();
-    auto const down_event = event_builder.key_event(std::nullopt, mir_keyboard_action_down, modifier_key, modifier_key);
+    auto const [keysym, scan_code] = GetParam();
+    auto const down_event = event_builder.key_event(std::nullopt, mir_keyboard_action_down, keysym, scan_code);
     transformer.transform_input_event(dispatch, &event_builder, *down_event.get());
-    auto const up_event = event_builder.key_event(std::nullopt, mir_keyboard_action_up, modifier_key, modifier_key);
+    auto const up_event = event_builder.key_event(std::nullopt, mir_keyboard_action_up, keysym, scan_code);
     transformer.transform_input_event(dispatch, &event_builder, *up_event.get());
     EXPECT_THAT(count, Eq(1));
 }
@@ -95,10 +96,10 @@ TEST_P(TestStickyKeysTransformerWithModifiers, up_events_are_dispatched_followin
     EXPECT_CALL(*dispatcher, dispatcher(_)).Times(2); // Once for the redispatch of the key event, once for the modifier up
 
     // Setup: "Click" the modifier key
-    auto const modifier_key = GetParam();
-    auto const down_event = event_builder.key_event(std::nullopt, mir_keyboard_action_down, modifier_key, modifier_key);
+    auto const [keysym, scan_code] = GetParam();
+    auto const down_event = event_builder.key_event(std::nullopt, mir_keyboard_action_down, keysym, scan_code);
     transformer.transform_input_event(dispatch, &event_builder, *down_event.get());
-    auto const up_event = event_builder.key_event(std::nullopt, mir_keyboard_action_up, modifier_key, modifier_key);
+    auto const up_event = event_builder.key_event(std::nullopt, mir_keyboard_action_up, keysym, scan_code);
     transformer.transform_input_event(dispatch, &event_builder, *up_event.get());
 
     // Action: "Click" a non-modifier key
@@ -114,10 +115,10 @@ TEST_P(TestStickyKeysTransformerWithModifiers, up_events_are_dispatched_followin
     EXPECT_CALL(*dispatcher, dispatcher(_)).Times(2); // Once for the redispatch of the mouse up event, once for the modifier up
 
     // Setup: "Click" the modifier key
-    auto const modifier_key = GetParam();
-    auto const down_event = event_builder.key_event(std::nullopt, mir_keyboard_action_down, modifier_key, modifier_key);
+    auto const [keysym, scan_code] = GetParam();
+    auto const down_event = event_builder.key_event(std::nullopt, mir_keyboard_action_down, keysym, scan_code);
     transformer.transform_input_event(dispatch, &event_builder, *down_event.get());
-    auto const up_event = event_builder.key_event(std::nullopt, mir_keyboard_action_up, modifier_key, modifier_key);
+    auto const up_event = event_builder.key_event(std::nullopt, mir_keyboard_action_up, keysym, scan_code);
     transformer.transform_input_event(dispatch, &event_builder, *up_event.get());
 
     // Action: "Click" a mouse button
@@ -135,10 +136,10 @@ TEST_P(TestStickyKeysTransformerWithModifiers, up_events_are_dispatched_followin
     EXPECT_CALL(*dispatcher, dispatcher(_)).Times(2); // Once for the redispatch of the touch up event, once for the modifier up
 
     // Setup: "Click" the modifier key
-    auto const modifier_key = GetParam();
-    auto const down_event = event_builder.key_event(std::nullopt, mir_keyboard_action_down, modifier_key, modifier_key);
+    auto const [keysym, scan_code] = GetParam();
+    auto const down_event = event_builder.key_event(std::nullopt, mir_keyboard_action_down, keysym, scan_code);
     transformer.transform_input_event(dispatch, &event_builder, *down_event.get());
-    auto const up_event = event_builder.key_event(std::nullopt, mir_keyboard_action_up, modifier_key, modifier_key);
+    auto const up_event = event_builder.key_event(std::nullopt, mir_keyboard_action_up, keysym, scan_code);
     transformer.transform_input_event(dispatch, &event_builder, *up_event.get());
 
     // Action: "Tap" on the screen
@@ -153,19 +154,23 @@ TEST_P(TestStickyKeysTransformerWithModifiers, up_events_are_dispatched_followin
     transformer.transform_input_event(dispatch, &event_builder, *touch_up_event.get());
 }
 
-INSTANTIATE_TEST_SUITE_P(TestStickyKeysTransformerWithModifiers, TestStickyKeysTransformerWithModifiers, Values(
-    KEY_RIGHTSHIFT,
-    KEY_LEFTSHIFT,
-    KEY_RIGHTALT,
-    KEY_LEFTALT,
-    KEY_RIGHTCTRL,
-    KEY_LEFTCTRL,
-    KEY_RIGHTMETA,
-    KEY_LEFTMETA,
-    KEY_CAPSLOCK,
-    KEY_SCREENLOCK,
-    KEY_NUMLOCK
-));
+INSTANTIATE_TEST_SUITE_P(
+    TestStickyKeysTransformerWithModifiers,
+    TestStickyKeysTransformerWithModifiers,
+    Values(
+        KeyParam{XKB_KEY_Shift_R, KEY_RIGHTSHIFT},
+        KeyParam{XKB_KEY_Shift_L, KEY_LEFTSHIFT},
+        KeyParam{XKB_KEY_Alt_R, KEY_RIGHTALT},
+        KeyParam{XKB_KEY_Alt_L, KEY_LEFTALT},
+        KeyParam{XKB_KEY_Control_R, KEY_RIGHTCTRL},
+        KeyParam{XKB_KEY_Control_L, KEY_LEFTCTRL},
+        KeyParam{XKB_KEY_Meta_R, KEY_RIGHTMETA},
+        KeyParam{XKB_KEY_Meta_L, KEY_LEFTMETA},
+        KeyParam{XKB_KEY_Caps_Lock, KEY_CAPSLOCK},
+        KeyParam{XKB_KEY_Scroll_Lock, KEY_SCREENLOCK},
+        KeyParam{XKB_KEY_Num_Lock, KEY_NUMLOCK}
+    )
+);
 
 TEST_F(TestStickyKeysTransformer, holding_two_modifiers_simultaneously_disables_sticky_keys_transformer)
 {

@@ -29,7 +29,7 @@ class miral::StickyKeys::Self
 {
 public:
     explicit Self(bool enabled)
-        : state(State{enabled})
+        : state{State{enabled}}
     {
     }
 
@@ -99,7 +99,7 @@ private:
     struct State
     {
         explicit State(bool enabled)
-            : enabled(enabled)
+            : enabled{enabled}
         {}
 
         bool enabled;
@@ -144,17 +144,12 @@ miral::StickyKeys::StickyKeys(live_config::Store& config_store)
         [this](live_config::Key const&, std::optional<bool> val)
         {
             if (val)
-            {
-                if (*val)
-                    this->should_disable_if_two_keys_are_pressed_together(true);
-                else
-                    this->should_disable_if_two_keys_are_pressed_together(false);
-            }
+                this->should_disable_if_two_keys_are_pressed_together(*val);
         });
 }
 
 miral::StickyKeys::StickyKeys(std::shared_ptr<Self> self)
-    : self(std::move(self))
+    : self{std::move(self)}
 {}
 
 void miral::StickyKeys::operator()(mir::Server& server)

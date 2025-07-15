@@ -29,6 +29,8 @@ namespace miral
 {
 namespace live_config { class Store; }
 
+/// Sticky keys is an accessibility feature that enables the user to
+/// click a modifier key and have it "stick" until the keyboard shortcut is complete.
 class StickyKeys
 {
 public:
@@ -43,19 +45,21 @@ public:
 
     void operator()(mir::Server& server);
 
-    /// Enables sticky keys.
+    /// Enables sticky keys. Enabling while already enabled is idempotent.
     StickyKeys& enable();
 
-    /// Disables sticky keys
+    /// Disables sticky keys. Disabling while already disabled is idempotent.
     StickyKeys& disable();
 
-    /// When set to true, clicking two modifier keys are once will result
+    /// When set to true, depressing two modifier keys simultaneously will result
     /// in sticky keys being temporarily disabled until all keys are released.
     /// Defaults to true.
     StickyKeys& should_disable_if_two_keys_are_pressed_together(bool on);
 
     /// Configure a callback to be invoked whenever a modifier key is clicked
     /// and is now sticky pending an action that will release it.
+    /// The integer argument is the scan code of the modifier, which you may
+    /// match against those found in <linux/input-event-codes.h>.
     StickyKeys& on_modifier_clicked(std::function<void(int32_t)>&&);
 
 private:

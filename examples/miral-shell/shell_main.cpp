@@ -273,8 +273,7 @@ int main(int argc, char const* argv[])
     };
 
     StickyKeys sticky_keys = StickyKeys::disabled();
-    bool sticky_keys_enabled = false;
-    auto const sticky_keys_filter = [sticky_keys=sticky_keys, &sticky_keys_enabled](MirKeyboardEvent const* key_event) mutable
+    auto const sticky_keys_filter = [sticky_keys=sticky_keys, sticky_keys_enabled=false](MirKeyboardEvent const* key_event) mutable
     {
         if (mir_keyboard_event_action(key_event) != mir_keyboard_action_up)
             return false;
