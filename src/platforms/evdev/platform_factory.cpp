@@ -19,7 +19,9 @@
 #include "mir/fd.h"
 #include "mir/assert_module_entry_point.h"
 #include "mir/libname.h"
+#ifdef MIR_ENABLE_RUST
 #include "mir_platforms_evdev/src/lib.rs.h"
+#endif
 
 #include <memory>
 #include <string>
@@ -48,7 +50,9 @@ mir::UniqueModulePtr<mi::Platform> create_input_platform(
     std::shared_ptr<mi::InputReport> const& report)
 {
     mir::assert_entry_point_signature<mi::CreatePlatform>(&create_input_platform);
+#ifdef MIR_ENABLE_RUST
     rust_println("C++ string");
+#endif
     return mir::make_module_ptr<mie::Platform>(
         input_device_registry,
         report,
