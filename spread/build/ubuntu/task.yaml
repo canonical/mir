@@ -45,6 +45,12 @@ execute: |
       echo "OVERRIDE_CONFIGURE_OPTIONS += -DENABLE_MEMCHECK_OPTION=ON" >> debian/opts.mk
     fi
 
+    # enable Rust support
+    if [ "${ENABLE_RUST}" -eq 1 ]; then
+      echo "OVERRIDE_CONFIGURE_OPTIONS += -DMIR_ENABLE_RUST=ON" >> debian/opts.mk
+      apt-get install --yes cargo rustc
+    fi
+
     # change the build type
     echo "OVERRIDE_CONFIGURE_OPTIONS += -DCMAKE_BUILD_TYPE=${BUILD_TYPE}" >> debian/opts.mk
 
