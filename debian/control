@@ -98,7 +98,7 @@ Section: libdevel
 Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmircore2 (= ${libmircore2:Version}),
+Depends: libmircore2 (= ${binary:Version}),
 Description: Display server for Ubuntu - development headers
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
