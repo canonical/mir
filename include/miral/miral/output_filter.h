@@ -35,7 +35,7 @@ public:
     explicit OutputFilter();
 
     /// Construct registering with a configuration store
-    /// \remark Since Miral 5.4
+    /// \remark Since Miral 5.5
     explicit OutputFilter(live_config::Store& config_store);
     explicit OutputFilter(MirOutputFilter default_filter);
     ~OutputFilter();

@@ -39,25 +39,17 @@ class Store;
 /// allowed to move slightly during the hold to accomodate users with
 /// disabilities.
 ///
-/// \remark Since MirAL 5.3
+/// \remark Since MirAL 5.5
 class SimulatedSecondaryClick
 {
 public:
-    [[deprecated(
-        "SimulatedSecondaryClick(bool) is deprecated, please use SimulatedSecondaryClick::enabled or "
-        "SimulatedSecondaryClick::disabled")]]
-    explicit SimulatedSecondaryClick(bool enabled_by_default);
-
     /// Construct a `SimulatedSecondaryClick` instance with access to a live config store.
-    /// \remark Since MirAL 5.4
     explicit SimulatedSecondaryClick(live_config::Store& config_store);
 
     /// Creates a `SimulatedSecondaryClick` instance that's enabled by default.
-    /// \remark Since MirAL 5.4
     auto static enabled() -> SimulatedSecondaryClick;
 
     /// Creates a `SimulatedSecondaryClick` instance that's disabled by default.
-    /// \remark Since MirAL 5.4
     auto static disabled() -> SimulatedSecondaryClick;
 
     void operator()(mir::Server& server);

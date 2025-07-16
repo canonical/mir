@@ -38,7 +38,7 @@ namespace live_config { class Store; }
 /// You can optionally assign handlers for when the key is pressed down, is
 /// rejected, or when the press is accepted.
 ///
-/// \remark  Since MirAL 5.4
+/// \remark  Since MirAL 5.5
 class SlowKeys
 {
 public:

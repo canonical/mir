@@ -25,7 +25,7 @@ namespace miral::live_config
 {
 /// "ini file" implementation of a live configuration store.
 ///
-/// \remark Since MirAL 5.4
+/// \remark Since MirAL 5.5
 class IniFile : public Store
 {
 public:

@@ -33,7 +33,7 @@ public:
     explicit CursorScale();
 
     /// Construct registering with a configuration store
-    /// \remark Since Miral 5.4
+    /// \remark Since Miral 5.5
     explicit CursorScale(live_config::Store& config_store);
     explicit CursorScale(float default_scale);
     ~CursorScale();

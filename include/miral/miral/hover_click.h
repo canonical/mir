@@ -25,7 +25,7 @@ namespace mir { class Server; }
 namespace miral
 {
 /// Enable configuring hover click at runtime.
-/// \remark Since MirAL 5.3
+/// \remark Since MirAL 5.5
 class HoverClick
 {
 public:

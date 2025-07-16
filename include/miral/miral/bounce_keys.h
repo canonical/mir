@@ -33,7 +33,7 @@ namespace live_config { class Store; }
 /// Optionally, you (the shell author) can attach a rejection handler to
 /// provide feedback to users.
 ///
-/// \remark Since MirAL 5.4
+/// \remark Since MirAL 5.5
 class BounceKeys
 {
 public:
