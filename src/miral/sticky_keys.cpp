@@ -126,14 +126,14 @@ miral::StickyKeys::StickyKeys(live_config::Store& config_store)
     config_store.add_bool_attribute(
         {"sticky_keys", "enable"},
         "Whether or not sticky keys are enabled",
-        [this](live_config::Key const&, std::optional<bool> val)
+        [self=self](live_config::Key const&, std::optional<bool> val)
         {
             if (val)
             {
                 if (*val)
-                    this->enable();
+                    self->enable();
                 else
-                    this->disable();
+                    self->disable();
             }
         });
 
@@ -141,10 +141,10 @@ miral::StickyKeys::StickyKeys(live_config::Store& config_store)
         {"sticky_keys", "disable_if_two_keys_are_pressed_together"},
         "When set to true, clicking two modifier keys are once will result "
         "in sticky keys being temporarily disabled until all keys are released",
-        [this](live_config::Key const&, std::optional<bool> val)
+        [self=self](live_config::Key const&, std::optional<bool> val)
         {
             if (val)
-                this->should_disable_if_two_keys_are_pressed_together(*val);
+                self->should_disable_if_two_keys_are_pressed_together(*val);
         });
 }
 

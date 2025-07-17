@@ -121,9 +121,9 @@ bool mi::InputEventTransformer::transform(MirEvent const& event)
     // click that removes the transformer itself). As a result, we cannot be holding the
     // lock to the transformer while it is trying to remove itself.
     std::vector<std::shared_ptr<Transformer>> transformers_cache;
-    transformers_cache.reserve(input_transformers.size());
     {
         std::lock_guard lock{mutex};
+        transformers_cache.reserve(input_transformers.size());
 
         for (auto it = input_transformers.begin(); it != input_transformers.end();)
         {
