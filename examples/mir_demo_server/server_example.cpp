@@ -45,6 +45,8 @@
 #include <chrono>
 #include <cstdlib>
 
+#include "miral/sticky_keys.h"
+
 namespace mir { class AbnormalExit; }
 
 namespace me = mir::examples;
@@ -131,6 +133,7 @@ try
     miral::InputConfiguration input_configuration{config_store};
     miral::BounceKeys bounce_keys{config_store};
     miral::SlowKeys slow_keys{config_store};
+    miral::StickyKeys sticky_keys{config_store};
 
     miral::ConfigFile config_file{
         runner,
@@ -163,7 +166,8 @@ try
         input_configuration,
         cursor_scale,
         bounce_keys,
-        slow_keys
+        slow_keys,
+        sticky_keys
     });
 
     // Propagate any test failure
