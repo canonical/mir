@@ -91,12 +91,12 @@ char const* const keymap_option = "keymap";
 
 struct miral::Keymap::Self : mir::input::InputDeviceObserver
 {
-    Self(std::string const& keymap) : layout{}, variant{}
+    Self(std::string_view const& keymap) : layout{}, variant{}
     {
         set_keymap(keymap);
     }
 
-    void set_keymap(std::string const& keymap)
+    void set_keymap(std::string_view const& keymap)
     {
         std::lock_guard lock{mutex};
         auto get_next_token = [km = keymap]() mutable
@@ -213,7 +213,7 @@ miral::Keymap::Keymap(live_config::Store& config_store)
             {
                 if(val)
                 {
-                    self->set_keymap(val->data());
+                    self->set_keymap(*val);
                 }
             });
 }
