@@ -1412,6 +1412,7 @@ global:
     typeinfo?for?mir::shell::ShellWrapper;
     typeinfo?for?mir::shell::SimulatedSecondaryClickTransformer;
     typeinfo?for?mir::shell::SlowKeysTransformer;
+    typeinfo?for?mir::shell::StickyKeysTransformer;
     typeinfo?for?mir::shell::StreamSpecification;
     typeinfo?for?mir::shell::SurfaceAspectRatio;
     typeinfo?for?mir::shell::SurfaceSpecification;
@@ -1612,6 +1613,7 @@ global:
     vtable?for?mir::shell::ShellWrapper;
     vtable?for?mir::shell::SimulatedSecondaryClickTransformer;
     vtable?for?mir::shell::SlowKeysTransformer;
+    vtable?for?mir::shell::StickyKeysTransformer;
     vtable?for?mir::shell::SurfaceStack;
     vtable?for?mir::shell::SurfaceStackWrapper;
     vtable?for?mir::shell::SystemCompositorWindowManager;
@@ -1621,3 +1623,4 @@ global:
   };
 local: *;
 };
+

@@ -571,6 +571,8 @@ MIRAL_5.5 {
 global:
   extern "C++" {
     "miral::CursorScale::CursorScale(miral::live_config::Store&)";
+    "miral::CursorScale::CursorScale(miral::live_config::Store&)";
+    "miral::InputConfiguration::InputConfiguration(miral::live_config::Store&)";
     "miral::InputConfiguration::InputConfiguration(miral::live_config::Store&)";
     "miral::OutputFilter::OutputFilter(miral::live_config::Store&)";
     miral::AppendKeyboardEventFilter::AppendKeyboardEventFilter*;
@@ -583,7 +585,6 @@ global:
     miral::BounceKeys::enabled*;
     miral::BounceKeys::on_press_rejected*;
     miral::BounceKeys::operator*;
-    "miral::CursorScale::CursorScale(miral::live_config::Store&)";
     miral::HoverClick::HoverClick*;
     miral::HoverClick::cancel_displacement_threshold*;
     miral::HoverClick::disable*;
@@ -594,24 +595,22 @@ global:
     miral::HoverClick::on_hover_start*;
     miral::HoverClick::operator*;
     miral::HoverClick::reclick_displacement_threshold*;
-    "miral::InputConfiguration::InputConfiguration(miral::live_config::Store&)";
-    "miral::OutputFilter::OutputFilter(miral::live_config::Store&)";
-    miral::SimulatedSecondaryClick::SimulatedSecondaryClick*;
-    miral::SimulatedSecondaryClick::disabled*;
-    miral::SimulatedSecondaryClick::enabled*;
-    miral::SimulatedSecondaryClick::disable*;
-    miral::SimulatedSecondaryClick::displacement_threshold*;
-    miral::SimulatedSecondaryClick::enable*;
-    miral::SimulatedSecondaryClick::hold_duration*;
-    miral::SimulatedSecondaryClick::on_hold_cancel*;
-    miral::SimulatedSecondaryClick::on_hold_start*;
-    miral::SimulatedSecondaryClick::on_secondary_click*;
-    miral::SimulatedSecondaryClick::operator*;
     miral::Magnifier::Magnifier*;
     miral::Magnifier::capture_size*;
     miral::Magnifier::enable*;
     miral::Magnifier::magnification*;
     miral::Magnifier::operator*;
+    miral::SimulatedSecondaryClick::SimulatedSecondaryClick*;
+    miral::SimulatedSecondaryClick::disable*;
+    miral::SimulatedSecondaryClick::disabled*;
+    miral::SimulatedSecondaryClick::displacement_threshold*;
+    miral::SimulatedSecondaryClick::enable*;
+    miral::SimulatedSecondaryClick::enabled*;
+    miral::SimulatedSecondaryClick::hold_duration*;
+    miral::SimulatedSecondaryClick::on_hold_cancel*;
+    miral::SimulatedSecondaryClick::on_hold_start*;
+    miral::SimulatedSecondaryClick::on_secondary_click*;
+    miral::SimulatedSecondaryClick::operator*;
     miral::SlowKeys::SlowKeys*;
     miral::SlowKeys::disable*;
     miral::SlowKeys::disabled*;
@@ -622,6 +621,14 @@ global:
     miral::SlowKeys::on_key_down*;
     miral::SlowKeys::on_key_rejected*;
     miral::SlowKeys::operator*;
+    miral::StickyKeys::StickyKeys*;
+    miral::StickyKeys::disable*;
+    miral::StickyKeys::disabled*;
+    miral::StickyKeys::enable*;
+    miral::StickyKeys::enabled*;
+    miral::StickyKeys::on_modifier_clicked*;
+    miral::StickyKeys::operator*;
+    miral::StickyKeys::should_disable_if_two_keys_are_pressed_together*;
     miral::WaylandTools::?WaylandTools*;
     miral::WaylandTools::WaylandTools*;
     miral::WaylandTools::for_each_binding*;
@@ -660,6 +667,7 @@ global:
     typeinfo?for?miral::Magnifier;
     typeinfo?for?miral::SimulatedSecondaryClick;
     typeinfo?for?miral::SlowKeys;
+    typeinfo?for?miral::StickyKeys;
     typeinfo?for?miral::WaylandTools;
     typeinfo?for?miral::live_config::IniFile;
     typeinfo?for?miral::live_config::Key;

@@ -37,7 +37,9 @@
 #include <miral/output_filter.h>
 #include <miral/simulated_secondary_click.h>
 #include <miral/hover_click.h>
+#include <miral/sticky_keys.h>
 #include <miral/magnifier.h>
+
 #include <xkbcommon/xkbcommon-keysyms.h>
 
 #include <cstring>
@@ -270,6 +272,29 @@ int main(int argc, char const* argv[])
         return false;
     };
 
+    StickyKeys sticky_keys = StickyKeys::disabled();
+    auto const sticky_keys_filter = [sticky_keys=sticky_keys, sticky_keys_enabled=false](MirKeyboardEvent const* key_event) mutable
+    {
+        if (mir_keyboard_event_action(key_event) != mir_keyboard_action_up)
+            return false;
+
+        auto const modifiers = mir_keyboard_event_modifiers(key_event);
+        if (modifiers & mir_input_event_modifier_ctrl && modifiers & mir_input_event_modifier_alt)
+        {
+            if (auto const keysym = mir_keyboard_event_keysym(key_event); keysym == XKB_KEY_s)
+            {
+                if (!sticky_keys_enabled)
+                    sticky_keys.enable();
+                else
+                    sticky_keys.disable();
+
+                sticky_keys_enabled = !sticky_keys_enabled;
+                return true;
+            }
+        }
+
+        return false;
+    };
 
     return runner.run_with(
         {
@@ -298,7 +323,9 @@ int main(int argc, char const* argv[])
             AppendKeyboardEventFilter{toggle_output_filter_filter},
             ssc_config,
             hover_click_config,
+            sticky_keys,
             magnifier,
-            AppendKeyboardEventFilter{magnifier_filter}
+            AppendKeyboardEventFilter{magnifier_filter},
+            AppendKeyboardEventFilter{sticky_keys_filter}
         });
 }

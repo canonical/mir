@@ -116,28 +116,34 @@ mir::input::InputEventTransformer::~InputEventTransformer() = default;
 
 bool mi::InputEventTransformer::transform(MirEvent const& event)
 {
-    std::lock_guard lock{mutex};
-
-    for (auto it = input_transformers.begin(); it != input_transformers.end();)
+    // This cache needs to be introduced because a transformer may be removed in response
+    // to one of its own dispatched events (e.g. a transformer may dispatch some sort of
+    // click that removes the transformer itself). As a result, we cannot be holding the
+    // lock to the transformer while it is trying to remove itself.
+    std::vector<std::shared_ptr<Transformer>> transformers_cache;
     {
-        if (it->expired())
-        {
-            it = input_transformers.erase(it);
-        }
-        else
-        {
-            ++it;
-        }
-    }
+        std::lock_guard lock{mutex};
+        transformers_cache.reserve(input_transformers.size());
 
-    input_transformers.shrink_to_fit();
+        for (auto it = input_transformers.begin(); it != input_transformers.end();)
+        {
+            if (it->expired())
+            {
+                it = input_transformers.erase(it);
+            }
+            else
+            {
+                transformers_cache.push_back(it->lock());
+                ++it;
+            }
+        }
+        input_transformers.shrink_to_fit();
+    }
 
     auto handled = false;
 
-    for (auto it : input_transformers)
+    for (auto const& t : transformers_cache)
     {
-        auto const& t = it.lock();
-
         if (t->transform_input_event(dispatcher, builder.get(), event))
         {
             handled = true;

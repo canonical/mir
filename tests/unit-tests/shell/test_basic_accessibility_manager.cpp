@@ -34,6 +34,8 @@
 
 #include <memory>
 
+#include "mir/shell/sticky_keys_transformer.h"
+
 
 using namespace testing;
 namespace mt = mir::test;
@@ -122,6 +124,17 @@ struct MockSlowKeysTransformer : public mir::shell::SlowKeysTransformer
     MOCK_METHOD(void, delay, (std::chrono::milliseconds), (override));
 };
 
+struct MockStickyKeysTransformer : mir::shell::StickyKeysTransformer
+{
+    MOCK_METHOD(
+        bool,
+        transform_input_event,
+        (mir::input::InputEventTransformer::EventDispatcher const&, mir::input::EventBuilder*, MirEvent const&),
+        (override));
+    MOCK_METHOD(void, should_disable_if_two_keys_are_pressed_together, (bool), (override));
+    MOCK_METHOD(void, on_modifier_clicked, (std::function<void(int32_t)>&&), (override));
+};
+
 struct TestBasicAccessibilityManager : Test
 {
     TestBasicAccessibilityManager() :
@@ -132,7 +145,8 @@ struct TestBasicAccessibilityManager : Test
             mock_mousekeys_transformer,
             mock_simulated_secondary_click_transformer,
             mock_hover_click_transformer,
-            mock_slow_keys_transformer}
+            mock_slow_keys_transformer,
+            mock_sticky_keys_transformer}
     {
         basic_accessibility_manager.register_keyboard_helper(mock_key_helper);
     }
@@ -149,6 +163,8 @@ struct TestBasicAccessibilityManager : Test
         std::make_shared<NiceMock<MockHoverClickTransformer>>()};
     std::shared_ptr<NiceMock<MockSlowKeysTransformer>> mock_slow_keys_transformer{
         std::make_shared<NiceMock<MockSlowKeysTransformer>>()};
+    std::shared_ptr<NiceMock<MockStickyKeysTransformer>> mock_sticky_keys_transformer{
+        std::make_shared<NiceMock<MockStickyKeysTransformer>>()};
     NiceMock<MockInputEventTransformer> input_event_transformer{mt::fake_shared(mock_seat), mt::fake_shared(clock)};
 
     mir::shell::BasicAccessibilityManager basic_accessibility_manager;
@@ -338,7 +354,8 @@ enum class TransformerToTest
     MouseKeys,
     SSC,
     HoverClick,
-    SlowKeys
+    SlowKeys,
+    StickyKeys
 };
 
 struct TestArbitraryEnablesAndDisables :
@@ -357,6 +374,8 @@ struct TestArbitraryEnablesAndDisables :
             return mock_hover_click_transformer;
         case TransformerToTest::SlowKeys:
             return mock_slow_keys_transformer;
+        case TransformerToTest::StickyKeys:
+            return mock_sticky_keys_transformer;
         }
         std::unreachable();
     }
@@ -376,6 +395,9 @@ struct TestArbitraryEnablesAndDisables :
             break;
         case TransformerToTest::SlowKeys:
             basic_accessibility_manager.slow_keys_enabled(on);
+            break;
+        case TransformerToTest::StickyKeys:
+            basic_accessibility_manager.sticky_keys_enabled(on);
             break;
         }
     }
@@ -406,7 +428,7 @@ TEST_P(TestDoubleTransformerEnable, enabling_accessibility_transformer_twice_cal
 INSTANTIATE_TEST_SUITE_P(
     TestBasicAccessibilityManager,
     TestDoubleTransformerEnable,
-    Values(TransformerToTest::MouseKeys, TransformerToTest::SSC, TransformerToTest::HoverClick));
+    Values(TransformerToTest::MouseKeys, TransformerToTest::SSC, TransformerToTest::HoverClick, TransformerToTest::StickyKeys));
 
 struct TestDoubleEnableWithDisableInBetween : public TestArbitraryEnablesAndDisables
 {
@@ -426,7 +448,7 @@ TEST_P(
 INSTANTIATE_TEST_SUITE_P(
     TestBasicAccessibilityManager,
     TestDoubleEnableWithDisableInBetween,
-    Values(TransformerToTest::MouseKeys, TransformerToTest::SSC, TransformerToTest::HoverClick));
+    Values(TransformerToTest::MouseKeys, TransformerToTest::SSC, TransformerToTest::HoverClick, TransformerToTest::StickyKeys));
 
 struct TestDoubleDisable : public TestArbitraryEnablesAndDisables
 {
@@ -444,7 +466,7 @@ TEST_P(TestDoubleDisable, disabling_accessibility_transformer_twice_calls_remove
 INSTANTIATE_TEST_SUITE_P(
     TestBasicAccessibilityManager,
     TestDoubleDisable,
-    Values(TransformerToTest::MouseKeys, TransformerToTest::SSC, TransformerToTest::HoverClick));
+    Values(TransformerToTest::MouseKeys, TransformerToTest::SSC, TransformerToTest::HoverClick, TransformerToTest::StickyKeys));
 
 struct TestDoubleDisableWithEnableInBetween : public TestArbitraryEnablesAndDisables
 {
@@ -480,4 +502,4 @@ TEST_P(TestDisableWithoutEnable, disabling_accessibility_transformer_before_enab
 INSTANTIATE_TEST_SUITE_P(
     TestBasicAccessibilityManager,
     TestDisableWithoutEnable,
-    Values(TransformerToTest::MouseKeys, TransformerToTest::SSC, TransformerToTest::HoverClick));
+    Values(TransformerToTest::MouseKeys, TransformerToTest::SSC, TransformerToTest::HoverClick, TransformerToTest::StickyKeys));

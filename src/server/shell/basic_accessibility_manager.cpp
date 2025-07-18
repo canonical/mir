@@ -19,14 +19,15 @@
 #include "mouse_keys_transformer.h"
 #include "basic_simulated_secondary_click_transformer.h"
 #include "basic_slow_keys_transformer.h"
+#include "basic_sticky_keys_transformer.h"
 
 #include "mir/graphics/cursor.h"
 #include "mir/shell/keyboard_helper.h"
 
-#include <xkbcommon/xkbcommon-keysyms.h>
-
 #include <memory>
 #include <optional>
+
+namespace msh = mir::shell;
 
 namespace
 {
@@ -50,22 +51,22 @@ void toggle_transformer(
 }
 }
 
-void mir::shell::BasicAccessibilityManager::register_keyboard_helper(std::shared_ptr<KeyboardHelper> const& helper)
+void msh::BasicAccessibilityManager::register_keyboard_helper(std::shared_ptr<KeyboardHelper> const& helper)
 {
     mutable_state.lock()->keyboard_helpers.push_back(helper);
 }
 
-std::optional<int> mir::shell::BasicAccessibilityManager::repeat_rate() const {
+std::optional<int> msh::BasicAccessibilityManager::repeat_rate() const {
     if (!enable_key_repeat)
         return {};
     return mutable_state.lock()->repeat_rate;
 }
 
-int mir::shell::BasicAccessibilityManager::repeat_delay() const {
+int msh::BasicAccessibilityManager::repeat_delay() const {
     return mutable_state.lock()->repeat_delay;
 }
 
-void mir::shell::BasicAccessibilityManager::repeat_rate_and_delay(
+void msh::BasicAccessibilityManager::repeat_rate_and_delay(
     std::optional<int> new_rate, std::optional<int> new_delay)
 {
     auto const state = mutable_state.lock();
@@ -86,82 +87,95 @@ void mir::shell::BasicAccessibilityManager::repeat_rate_and_delay(
     }
 }
 
-void mir::shell::BasicAccessibilityManager::mousekeys_enabled(bool on)
+void msh::BasicAccessibilityManager::mousekeys_enabled(bool on)
 {
     auto const state = mutable_state.lock();
     toggle_transformer(on, state->mousekeys_on, mouse_keys_transformer, event_transformer);
 }
 
-mir::shell::BasicAccessibilityManager::BasicAccessibilityManager(
+msh::BasicAccessibilityManager::BasicAccessibilityManager(
     std::shared_ptr<input::InputEventTransformer> const& event_transformer,
     bool enable_key_repeat,
-    std::shared_ptr<mir::graphics::Cursor> const& cursor,
-    std::shared_ptr<shell::MouseKeysTransformer> const& mousekeys_transformer,
+    std::shared_ptr<graphics::Cursor> const& cursor,
+    std::shared_ptr<MouseKeysTransformer> const& mousekeys_transformer,
     std::shared_ptr<SimulatedSecondaryClickTransformer> const& simulated_secondary_click_transformer,
     std::shared_ptr<HoverClickTransformer> const& hover_click_transformer,
-    std::shared_ptr<SlowKeysTransformer> const& slow_keys_transformer) :
+    std::shared_ptr<SlowKeysTransformer> const& slow_keys_transformer,
+    std::shared_ptr<StickyKeysTransformer> const& sticky_keys_transformer) :
     enable_key_repeat{enable_key_repeat},
     cursor{cursor},
     event_transformer{event_transformer},
     mouse_keys_transformer{mousekeys_transformer},
     simulated_secondary_click_transformer{simulated_secondary_click_transformer},
     hover_click_transformer{hover_click_transformer},
-    slow_keys_transformer{slow_keys_transformer}
+    slow_keys_transformer{slow_keys_transformer},
+    sticky_keys_transformer{sticky_keys_transformer}
 {
 }
 
-mir::shell::BasicAccessibilityManager::~BasicAccessibilityManager() = default;
+msh::BasicAccessibilityManager::~BasicAccessibilityManager() = default;
 
-void mir::shell::BasicAccessibilityManager::cursor_scale(float new_scale)
+void msh::BasicAccessibilityManager::cursor_scale(float new_scale)
 {
     cursor->scale(std::clamp(0.0f, 100.0f, new_scale));
 }
 
-void mir::shell::BasicAccessibilityManager::mousekeys_keymap(input::MouseKeysKeymap const& new_keymap)
+void msh::BasicAccessibilityManager::mousekeys_keymap(input::MouseKeysKeymap const& new_keymap)
 {
     mouse_keys_transformer->keymap(new_keymap);
 }
 
-void mir::shell::BasicAccessibilityManager::acceleration_factors(double constant, double linear, double quadratic)
+void msh::BasicAccessibilityManager::acceleration_factors(double constant, double linear, double quadratic)
 {
     mouse_keys_transformer->acceleration_factors(constant, linear, quadratic);
 }
 
-void mir::shell::BasicAccessibilityManager::max_speed(double x_axis, double y_axis)
+void msh::BasicAccessibilityManager::max_speed(double x_axis, double y_axis)
 {
     mouse_keys_transformer->max_speed(x_axis, y_axis);
 }
 
-void mir::shell::BasicAccessibilityManager::simulated_secondary_click_enabled(bool enabled)
+void msh::BasicAccessibilityManager::simulated_secondary_click_enabled(bool enabled)
 {
     auto const state = mutable_state.lock();
     toggle_transformer(enabled, state->ssc_on, simulated_secondary_click_transformer, event_transformer);
 }
 
-auto mir::shell::BasicAccessibilityManager::simulated_secondary_click()
+auto msh::BasicAccessibilityManager::simulated_secondary_click()
     -> SimulatedSecondaryClickTransformer&
 {
     return *simulated_secondary_click_transformer.operator->();
 }
 
-void mir::shell::BasicAccessibilityManager::hover_click_enabled(bool enabled)
+void msh::BasicAccessibilityManager::hover_click_enabled(bool enabled)
 {
     auto const state = mutable_state.lock();
     toggle_transformer(enabled, state->hover_click_on, hover_click_transformer, event_transformer);
 }
 
-auto mir::shell::BasicAccessibilityManager::hover_click() -> HoverClickTransformer&
+auto msh::BasicAccessibilityManager::hover_click() -> HoverClickTransformer&
 {
     return *hover_click_transformer;
 }
 
-void mir::shell::BasicAccessibilityManager::slow_keys_enabled(bool enabled)
+void msh::BasicAccessibilityManager::slow_keys_enabled(bool enabled)
 {
     auto const state = mutable_state.lock();
     toggle_transformer(enabled, state->slow_keys_on, slow_keys_transformer, event_transformer);
 }
 
-auto mir::shell::BasicAccessibilityManager::slow_keys() -> SlowKeysTransformer&
+auto msh::BasicAccessibilityManager::slow_keys() -> SlowKeysTransformer&
 {
     return *slow_keys_transformer;
+}
+
+auto msh::BasicAccessibilityManager::sticky_keys() -> StickyKeysTransformer&
+{
+    return *sticky_keys_transformer;
+}
+
+void msh::BasicAccessibilityManager::sticky_keys_enabled(bool enabled)
+{
+    auto const state = mutable_state.lock();
+    toggle_transformer(enabled, state->sticky_keys_on, sticky_keys_transformer, event_transformer);
 }
