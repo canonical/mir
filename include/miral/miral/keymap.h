@@ -24,6 +24,8 @@ namespace mir { class Server; }
 
 namespace miral
 {
+namespace live_config { class Store; }
+
 /// Load a keymap
 class Keymap
 {
@@ -38,6 +40,11 @@ public:
     /// Options is a comma separated list.
     /// e.g. "gb" or "us+dvorak"
     explicit Keymap(std::string const& keymap);
+
+    /// Construct a `Keymap` instance with access to a live config store.
+    /// \remark Since MirAL 5.5
+    explicit Keymap(live_config::Store& config_store);
+
     ~Keymap();
     Keymap(Keymap const& that);
     auto operator=(Keymap const& rhs) -> Keymap&;
