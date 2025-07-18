@@ -26,7 +26,7 @@ namespace miral
 {
 namespace live_config { class Store; }
 
-    /// Load a keymap
+/// Load a keymap
 class Keymap
 {
 public:
