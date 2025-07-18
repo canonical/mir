@@ -23,6 +23,7 @@
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/filesystem.hpp>
 #include <dlfcn.h>
+#include <format>
 
 std::string mir_test_framework::executable_path()
 {
@@ -93,7 +94,7 @@ std::string mir_test_framework::server_platform(std::string const& name)
             return path_to_test;
     }
 
-    BOOST_THROW_EXCEPTION(std::runtime_error("Failed to find server platform in standard search locations"));
+    BOOST_THROW_EXCEPTION(std::runtime_error(std::format("Failed to find graphics platform '{}' in standard search locations", name)));
 }
 
 std::string mir_test_framework::server_input_platform(std::string const& name)
@@ -111,5 +112,5 @@ std::string mir_test_framework::server_input_platform(std::string const& name)
             return path_to_test;
     }
 
-    BOOST_THROW_EXCEPTION(std::runtime_error("Failed to find server input platform in standard search locations"));
+    BOOST_THROW_EXCEPTION(std::runtime_error(std::format("Failed to find input platform '{}' in standard search locations", name)));
 }

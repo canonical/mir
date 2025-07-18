@@ -41,11 +41,11 @@ void ensure_platform_library()
 {
     if (!platform_graphics_lib)
     {
-        platform_graphics_lib = new mir::SharedLibrary{mtf::server_platform("graphics-dummy.so")};
+        platform_graphics_lib = new mir::SharedLibrary{mtf::server_platform("graphics-dummy")};
     }
     if (!platform_input_lib)
     {
-        platform_input_lib = new mir::SharedLibrary{mtf::server_platform("input-stub.so")};
+        platform_input_lib = new mir::SharedLibrary{mtf::server_input_platform("input-stub")};
     }
 }
 }

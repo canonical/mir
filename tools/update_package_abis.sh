@@ -24,7 +24,9 @@ packages="\
     libmirwayland:MIRWAYLAND_ABI\
     mir-platform-graphics-wayland:MIR_SERVER_GRAPHICS_PLATFORM_ABI\
     mir-platform-rendering-egl-generic:MIR_SERVER_GRAPHICS_PLATFORM_ABI\
-    mir-platform-graphics-virtual:MIR_SERVER_GRAPHICS_PLATFORM_ABI"
+    mir-platform-graphics-virtual:MIR_SERVER_GRAPHICS_PLATFORM_ABI\
+    mir-platform-graphics-stub:MIR_SERVER_GRAPHICS_PLATFORM_ABI\
+    mir-platform-input-stub:MIR_SERVER_INPUT_PLATFORM_ABI"
 
 package_name()
 {

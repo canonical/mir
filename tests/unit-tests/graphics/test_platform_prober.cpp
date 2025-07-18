@@ -80,7 +80,7 @@ std::vector<std::shared_ptr<mir::SharedLibrary>> available_platforms()
 
 void add_dummy_platform(std::vector<std::shared_ptr<mir::SharedLibrary>>& modules)
 {
-    modules.insert(modules.begin(), std::make_shared<mir::SharedLibrary>(mtf::server_platform("graphics-dummy.so")));
+    modules.insert(modules.begin(), std::make_shared<mir::SharedLibrary>(mtf::server_platform("graphics-dummy")));
 }
 
 void add_broken_platform(std::vector<std::shared_ptr<mir::SharedLibrary>>& modules)
