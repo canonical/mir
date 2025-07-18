@@ -211,7 +211,7 @@ miral::Keymap::Keymap(live_config::Store& config_store)
         keymap_default(),
         [self=self](live_config::Key const&, std::optional<std::string_view> val)
             {
-                if(val)
+                if (val)
                 {
                     self->set_keymap(*val);
                 }
