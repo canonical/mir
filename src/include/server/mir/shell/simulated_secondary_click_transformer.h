@@ -17,13 +17,15 @@
 #ifndef MIR_SHELL_SIMULATED_SECONDARY_CLICK_TRANSFORMER_H
 #define MIR_SHELL_SIMULATED_SECONDARY_CLICK_TRANSFORMER_H
 
-#include "mir/input/input_event_transformer.h"
+#include "mir/input/transformer.h"
+
+#include <chrono>
 
 namespace mir
 {
 namespace shell
 {
-class SimulatedSecondaryClickTransformer : public mir::input::InputEventTransformer::Transformer
+class SimulatedSecondaryClickTransformer : public mir::input::Transformer
 {
 public:
     virtual void hold_duration(std::chrono::milliseconds delay) = 0;

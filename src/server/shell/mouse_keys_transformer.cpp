@@ -60,7 +60,7 @@ mir::shell::BasicMouseKeysTransformer::BasicMouseKeysTransformer(
 }
 
 bool mir::shell::BasicMouseKeysTransformer::transform_input_event(
-    mir::input::InputEventTransformer::EventDispatcher const& dispatcher,
+    mir::input::Transformer::EventDispatcher const& dispatcher,
     mir::input::EventBuilder* builder,
     MirEvent const& event)
 {

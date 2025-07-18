@@ -31,12 +31,11 @@ namespace msh = mir::shell;
 
 namespace
 {
-using miet = mir::input::InputEventTransformer;
 void toggle_transformer(
     bool should_turn_on,
     bool& is_enabled,
-    std::shared_ptr<miet::Transformer> const& transformer,
-    std::shared_ptr<miet> const& event_transformer)
+    std::shared_ptr<mir::input::Transformer> const& transformer,
+    std::shared_ptr<mir::input::InputEventTransformer> const& event_transformer)
 {
     if (should_turn_on && !is_enabled)
     {

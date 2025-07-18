@@ -17,15 +17,16 @@
 #ifndef MIR_SHELL_SLOW_KEYS_TRANSFORMER
 #define MIR_SHELL_SLOW_KEYS_TRANSFORMER
 
-#include "mir/input/input_event_transformer.h"
+#include "mir/input/transformer.h"
 
+#include <chrono>
 
 namespace mir
 {
 class MainLoop;
 namespace shell
 {
-class SlowKeysTransformer : public mir::input::InputEventTransformer::Transformer
+class SlowKeysTransformer : public mir::input::Transformer
 {
 public:
     virtual void on_key_down(std::function<void(unsigned int)>&&) = 0;
