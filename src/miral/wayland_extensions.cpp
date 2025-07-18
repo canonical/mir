@@ -223,7 +223,6 @@ struct miral::WaylandExtensions::Self
         }
         wayland_extension_hooks.push_back(builder);
         supported_extensions.insert(builder.name);
-        printf("%s = %s\n", __PRETTY_FUNCTION__, builder.name.c_str());
     }
 
     void enable_extension(std::string name)
