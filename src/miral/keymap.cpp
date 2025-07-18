@@ -203,7 +203,7 @@ miral::Keymap::Keymap(std::string const& keymap) :
 {
 }
 
-miral::Keymap::Keymap(live_config::Store& config_store)
+miral::Keymap::Keymap(live_config::Store& config_store) : Keymap{keymap_default()}
 {
     config_store.add_string_attribute(
         {keymap_option},

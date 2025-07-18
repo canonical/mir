@@ -165,7 +165,8 @@ try
         input_configuration,
         cursor_scale,
         bounce_keys,
-        slow_keys
+        slow_keys,
+        keymap,
     });
 
     // Propagate any test failure
