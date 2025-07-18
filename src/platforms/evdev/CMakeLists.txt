@@ -55,4 +55,15 @@ target_link_libraries(mirplatforminputevdev
     mirplatforminputevdevobjects
 )
 
+if (MIR_ENABLE_RUST)
+  add_rust_cxx_library(mirplatforminputevdev_rust
+    CRATE mir_platforms_evdev
+    DEPENDS Cargo.toml src/lib.rs)
+
+  target_link_libraries(mirplatforminputevdev
+    PRIVATE
+      mirplatforminputevdev_rust
+  )
+endif()
+
 install(TARGETS mirplatforminputevdev LIBRARY DESTINATION ${MIR_SERVER_PLATFORM_PATH})

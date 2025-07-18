@@ -239,6 +239,12 @@ foreach(platform IN LISTS MIR_PLATFORM)
   endif()
 endforeach(platform)
 
+set(MIR_ENABLE_RUST OFF CACHE BOOL "Enable Rust support")
+if (MIR_ENABLE_RUST)
+  include(cmake/RustLibrary.cmake)
+  add_compile_definitions(MIR_ENABLE_RUST)
+endif()
+
 pkg_check_modules(GLM glm)
 if(NOT GLM_FOUND)
   find_package(glm REQUIRED)  # There's no glm.pc on Fedora, but find_package(glm) fails on Ubuntu...
