@@ -21,6 +21,7 @@
 #include <miral/cursor_theme.h>
 #include <miral/display_configuration_option.h>
 #include <miral/input_configuration.h>
+#include <miral/keymap.h>
 #include <miral/live_config.h>
 #include <miral/live_config_ini_file.h>
 #include <miral/minimal_window_manager.h>
@@ -131,6 +132,7 @@ try
     miral::InputConfiguration input_configuration{config_store};
     miral::BounceKeys bounce_keys{config_store};
     miral::SlowKeys slow_keys{config_store};
+    miral::Keymap keymap{config_store};
 
     miral::ConfigFile config_file{
         runner,
