@@ -87,7 +87,7 @@ struct TestMouseKeysConfig : miral::TestServer
         std::make_shared<testing::NiceMock<MockAccessibilityManager>>();
 };
 
-TEST_F(TestMouseKeysConfig, mousekeys_config_enabled_calls_accessibility_manager_set_mousekeys_enabled)
+TEST_F(TestMouseKeysConfig, enabling_mousekeys_from_miral_enables_it_in_the_accessibility_manager)
 {
     // Once at startup, and twice when we call `set_keymap` below
     InSequence seq;
