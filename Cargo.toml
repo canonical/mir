@@ -1,0 +1,15 @@
+[workspace]
+members = [
+  "src/platforms/evdev",
+]
+resolver = "2"
+
+[workspace.package]
+name = "mir"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.75.0"
+
+[workspace.dependencies]
+cxx = "1.0"
+cxx-build = "1.0"

@@ -41,6 +41,8 @@ environment:
     DEB_BUILD_EXTRA/tsan,tsan_clang: nostrip nocheck
     DEBOOTSTRAP_OPTS:
     DEBOOTSTRAP_OPTS/debian_sid,ubuntu_devel: --no-merged-usr
+    ENABLE_RUST: 0
+    ENABLE_RUST/rust: 1
     CTEST_OUTPUT_ON_FAILURE: 1
     CCACHE_DIR: /root/.ccache
     # Needed for precompiled headers (https://ccache.dev/manual/latest.html#_precompiled_headers)
