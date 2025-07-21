@@ -18,6 +18,7 @@
 #include "mir/server.h"
 #include "mir/shell/accessibility_manager.h"
 
+#include "mir/shell/mousekeys_transformer.h"
 #include "miral/mousekeys_config.h"
 #include "miral/test_server.h"
 
@@ -27,9 +28,24 @@
 
 using namespace testing;
 
+class MockMouseKeysTransformer: public mir::shell::MouseKeysTransformer
+{
+public:
+    MockMouseKeysTransformer() = default;
+    MOCK_METHOD(void, keymap, (mir::input::MouseKeysKeymap const& new_keymap), (override));
+    MOCK_METHOD(void, acceleration_factors, (double constant, double linear, double quadratic), (override));
+    MOCK_METHOD(void, max_speed, (double x_axis, double y_axis), (override));
+    MOCK_METHOD(bool, transform_input_event, (EventDispatcher const&, mir::input::EventBuilder*, MirEvent const&), (override));
+};
+
 class MockAccessibilityManager: public mir::shell::AccessibilityManager
 {
 public:
+    MockAccessibilityManager()
+    {
+        ON_CALL(*this, mousekeys()).WillByDefault(ReturnRef(mousekeys_transformer));
+    }
+
     MOCK_METHOD(void, register_keyboard_helper, (std::shared_ptr<mir::shell::KeyboardHelper> const&), (override));
     MOCK_METHOD(std::optional<int>, repeat_rate, (), (const override));
     MOCK_METHOD(int, repeat_delay, (), (const override));
@@ -46,6 +62,8 @@ public:
     MOCK_METHOD(mir::shell::SlowKeysTransformer&, slow_keys, (), (override));
     MOCK_METHOD(void, sticky_keys_enabled, (bool), (override));
     MOCK_METHOD(mir::shell::StickyKeysTransformer&, sticky_keys, (), (override));
+
+    testing::NiceMock<MockMouseKeysTransformer> mousekeys_transformer;
 };
 
 struct TestMouseKeysConfig : miral::TestServer
@@ -83,36 +101,62 @@ TEST_F(TestMouseKeysConfig, mousekeys_config_enabled_calls_accessibility_manager
     config.disable();
 }
 
-
-// TODO: Maybe we should remove these tests?
-TEST_F(TestMouseKeysConfig, mousekeys_config_set_keymap_calls_accessibility_manager_set_mousekeys_keymap)
+MATCHER_P(KeymapEq, keymap, "")
 {
+    auto const keymap_to_unordered_map =
+        [](mir::input::MouseKeysKeymap const& keymap)
+    {
+        std::unordered_map<mir::input::XkbSymkey, mir::input::MouseKeysKeymap::Action> key_action_map;
+        keymap.for_each_key_action_pair([&](auto const key, auto const action)
+                                     { key_action_map.insert({key, action}); });
+
+        return key_action_map;
+    };
+
+    auto const arg_key_action_map = keymap_to_unordered_map(arg);
+    auto const keymap_key_action_map = keymap_to_unordered_map(keymap);
+
+    return arg_key_action_map == keymap_key_action_map;
+}
+
+TEST_F(TestMouseKeysConfig, mousekeys_config_set_keymap_sets_transformer_keymap)
+{
+    auto const test_keymap = mir::input::MouseKeysKeymap{};
+
     // We don't call `set_keymap` at startup
-    EXPECT_CALL(*accessibility_manager, mousekeys());
+    EXPECT_CALL(accessibility_manager->mousekeys_transformer, keymap(KeymapEq(test_keymap)));
 
     add_server_init(config);
     start_server();
-    config.set_keymap(mir::input::MouseKeysKeymap{});
+    config.set_keymap(test_keymap);
 }
 
-TEST_F(TestMouseKeysConfig, mousekeys_config_set_acceleration_factors_calls_accessibility_manager_set_acceleration_factors)
+TEST_F(TestMouseKeysConfig, mousekeys_config_set_acceleration_factors_sets_mousekeys_acceleration_factors)
 {
+    auto const [default_constant, default_linear, default_quadratic] = std::tuple{100.0, 100.0, 30.0};
+    auto const [constant, linear, quadratic] = std::tuple{1.0, 1.0, 1.0};
     InSequence seq;
-    EXPECT_CALL(*accessibility_manager, mousekeys()); // Defaults, called on server init
-    EXPECT_CALL(*accessibility_manager, mousekeys()); 
+    // Defaults, called on server init
+    EXPECT_CALL(
+        accessibility_manager->mousekeys_transformer,
+        acceleration_factors(default_constant, default_linear, default_quadratic));
+    EXPECT_CALL(accessibility_manager->mousekeys_transformer, acceleration_factors(constant, linear, quadratic));
 
     add_server_init(config);
     start_server();
-    config.set_acceleration_factors(1.0, 1.0, 1.0);
+    config.set_acceleration_factors(constant, linear, quadratic);
 }
 
-TEST_F(TestMouseKeysConfig, mousekeys_config_set_max_speed_calls_accessibility_manager_set_max_speed)
+TEST_F(TestMouseKeysConfig, mousekeys_config_set_max_speed_sets_mousekeys_max_speed)
 {
+    auto const [default_max_x, default_max_y] = std::pair{400.0, 400.0};
+    auto const [max_x, max_y] = std::pair{1.0, 1.0};
+
     InSequence seq;
-    EXPECT_CALL(*accessibility_manager, mousekeys());
-    EXPECT_CALL(*accessibility_manager, mousekeys());
+    EXPECT_CALL(accessibility_manager->mousekeys_transformer, max_speed(default_max_x, default_max_y));
+    EXPECT_CALL(accessibility_manager->mousekeys_transformer, max_speed(max_x, max_y));
 
     add_server_init(config);
     start_server();
-    config.set_max_speed(1.0, 1.0);
+    config.set_max_speed(max_x, max_y);
 }

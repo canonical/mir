@@ -55,6 +55,7 @@ mir_add_wrapped_executable(miral-test-internal NOINSTALL
     application_selector.cpp
     test_input_configuration.cpp
     test_bounce_keys.cpp
+    test_mousekeys_config.cpp
     ${MIRAL_TEST_SOURCES}
 )
 
