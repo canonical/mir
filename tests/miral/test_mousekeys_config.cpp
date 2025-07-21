@@ -160,3 +160,42 @@ TEST_F(TestMouseKeysConfig, mousekeys_config_set_max_speed_sets_mousekeys_max_sp
     start_server();
     config.set_max_speed(max_x, max_y);
 }
+
+struct EnableMouseKeysOptionTest : public TestMouseKeysConfig, public WithParamInterface<bool>
+{
+};
+
+TEST_P(EnableMouseKeysOptionTest, enable_mouse_keys_option_overrides_mousekeys_default_enabled_state)
+{
+    auto const enabled = GetParam();
+    add_to_environment("MIR_SERVER_ENABLE_MOUSE_KEYS", enabled?  "1": "0");
+
+    if(enabled)
+        EXPECT_CALL(*accessibility_manager, mousekeys_enabled(true));
+    else
+        EXPECT_CALL(*accessibility_manager, mousekeys_enabled(_)).Times(0);
+
+
+    add_server_init(config);
+    start_server();
+}
+
+TEST_P(EnableMouseKeysOptionTest, mouse_keys_is_enabled_on_config_state_if_option_is_not_specified)
+{
+    auto const enabled = GetParam();
+
+    if(enabled)
+    {
+        EXPECT_CALL(*accessibility_manager, mousekeys_enabled(true));
+        add_server_init(miral::MouseKeysConfig::enabled());
+    }
+    else
+    {
+        EXPECT_CALL(*accessibility_manager, mousekeys_enabled(_)).Times(0);
+        add_server_init(miral::MouseKeysConfig::disabled());
+    }
+
+    start_server();
+}
+
+INSTANTIATE_TEST_SUITE_P(TestMouseKeysConfig, EnableMouseKeysOptionTest, ::Values(false, true));
