@@ -39,6 +39,29 @@ namespace graphics
 {
 
 /**
+ * Storage for image content
+ *
+ * BufferStorage is (possibly a handle to) a place to store
+ * image content.
+ *
+ * This has a visible destructor 
+ */
+class BufferStorage
+{
+public:
+    ~BufferStorage() = default;    
+    BufferStorage(BufferStorage&&) = default;
+    auto operator=(BufferStorage&&) -> BufferStorage& = default;
+
+protected:
+    BufferStorage() = default;
+
+private:
+    class Impl;
+    std::unique_ptr<Impl> impl; 
+};
+
+/**
  * Interface to graphic buffer allocation.
  */
 class GraphicBufferAllocator
