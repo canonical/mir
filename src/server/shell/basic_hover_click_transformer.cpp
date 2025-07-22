@@ -15,6 +15,7 @@
  */
 
 #include "basic_hover_click_transformer.h"
+#include "mir/geometry/displacement.h"
 #include "mir/input/cursor_observer.h"
 #include "mir/input/cursor_observer_multiplexer.h"
 #include "mir/input/event_builder.h"
@@ -100,7 +101,7 @@ msh::BasicHoverClickTransformer::BasicHoverClickTransformer(
 }
 
 bool msh::BasicHoverClickTransformer::transform_input_event(
-    mi::InputEventTransformer::EventDispatcher const& dispatcher,
+    mi::Transformer::EventDispatcher const& dispatcher,
     mi::EventBuilder* builder,
     MirEvent const&)
 {
@@ -139,7 +140,7 @@ void msh::BasicHoverClickTransformer::on_click_dispatched(std::function<void()>&
 }
 
 void msh::BasicHoverClickTransformer::initialize_click_dispatcher(
-    mi::InputEventTransformer::EventDispatcher const& dispatcher, mi::EventBuilder& builder)
+    mi::Transformer::EventDispatcher const& dispatcher, mi::EventBuilder& builder)
 {
     auto state = mutable_state.lock();
     if (!state->click_dispatcher)

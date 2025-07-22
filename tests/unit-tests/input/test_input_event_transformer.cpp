@@ -20,6 +20,7 @@
 #include "mir/input/input_device_hub.h"
 #include "mir/input/input_device_registry.h"
 #include "mir/input/input_event_transformer.h"
+#include "mir/input/transformer.h"
 #include "mir/input/virtual_input_device.h"
 #include "src/server/input/default_input_device_hub.h"
 
@@ -81,12 +82,12 @@ struct TestInputEventTransformer : testing::Test
     mir::input::InputEventTransformer input_event_transformer{mt::fake_shared(mock_seat), mt::fake_shared(clock)};
 };
 
-struct MockTransformer : public mir::input::InputEventTransformer::Transformer
+struct MockTransformer : public mir::input::Transformer
 {
     MOCK_METHOD(
         (bool),
         transform_input_event,
-        (mir::input::InputEventTransformer::EventDispatcher const&, mir::input::EventBuilder*, MirEvent const&),
+        (mir::input::Transformer::EventDispatcher const&, mir::input::EventBuilder*, MirEvent const&),
         (override));
 };
 

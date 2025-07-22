@@ -14,11 +14,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/input/input_event_transformer.h"
+#include "mir/input/transformer.h"
 
 #include "mir/geometry/displacement.h"
 #include "mir/input/mousekeys_keymap.h"
 #include "mir/synchronised.h"
+#include "mir_toolkit/events/enums.h"
 
 #include <memory>
 #include <xkbcommon/xkbcommon-keysyms.h>
@@ -37,7 +38,7 @@ class Clock;
 }
 namespace shell
 {
-class MouseKeysTransformer: public mir::input::InputEventTransformer::Transformer
+class MouseKeysTransformer: public mir::input::Transformer
 {
 public:
     virtual void keymap(mir::input::MouseKeysKeymap const& new_keymap) = 0;
@@ -52,7 +53,7 @@ public:
         std::shared_ptr<mir::MainLoop> const& main_loop, std::shared_ptr<time::Clock> const& clock);
 
     bool transform_input_event(
-        mir::input::InputEventTransformer::EventDispatcher const& dispatcher,
+        mir::input::Transformer::EventDispatcher const& dispatcher,
         mir::input::EventBuilder* builder,
         MirEvent const& event) override;
 
@@ -61,7 +62,7 @@ public:
     void max_speed(double x_axis, double y_axis) override;
 
 private:
-    using Dispatcher = mir::input::InputEventTransformer::EventDispatcher;
+    using Dispatcher = mir::input::Transformer::EventDispatcher;
 
     bool handle_motion(
         MirKeyboardAction keyboard_action,

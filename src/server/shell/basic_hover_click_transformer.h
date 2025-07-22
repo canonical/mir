@@ -41,7 +41,7 @@ public:
         std::shared_ptr<input::CursorObserverMultiplexer> const& cursor_observer_multiplexer);
 
     bool transform_input_event(
-        mir::input::InputEventTransformer::EventDispatcher const& dispatcher,
+        mir::input::Transformer::EventDispatcher const& dispatcher,
         mir::input::EventBuilder* builder,
         MirEvent const& event) override;
 
@@ -55,7 +55,7 @@ public:
 
 private:
     void initialize_click_dispatcher(
-        mir::input::InputEventTransformer::EventDispatcher const& dispatcher, mir::input::EventBuilder& builder);
+        mir::input::Transformer::EventDispatcher const& dispatcher, mir::input::EventBuilder& builder);
 
     auto initialize_hover_initializer(std::shared_ptr<mir::MainLoop> const& main_loop) -> std::unique_ptr<mir::time::Alarm>;
 

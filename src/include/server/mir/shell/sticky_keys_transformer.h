@@ -17,13 +17,13 @@
 #ifndef MIR_SHELL_STICKY_KEYS_TRANSFORMER_H
 #define MIR_SHELL_STICKY_KEYS_TRANSFORMER_H
 
-#include "mir/input/input_event_transformer.h"
+#include "mir/input/transformer.h"
 #include <functional>
 
 namespace mir::shell
 {
 
-class StickyKeysTransformer : public input::InputEventTransformer::Transformer
+class StickyKeysTransformer : public input::Transformer
 {
 public:
     virtual void should_disable_if_two_keys_are_pressed_together(bool) = 0;

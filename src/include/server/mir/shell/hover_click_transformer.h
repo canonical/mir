@@ -17,13 +17,15 @@
 #ifndef MIR_SHELL_HOVER_CLICK_TRANSFORMER_H_
 #define MIR_SHELL_HOVER_CLICK_TRANSFORMER_H_
 
-#include "mir/input/input_event_transformer.h"
+#include <mir/input/transformer.h>
+
+#include <chrono>
 
 namespace mir
 {
 namespace shell
 {
-class HoverClickTransformer : public input::InputEventTransformer::Transformer
+class HoverClickTransformer : public input::Transformer
 {
 public:
     virtual void hover_duration(std::chrono::milliseconds delay) = 0;
