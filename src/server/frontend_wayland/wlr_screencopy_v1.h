@@ -21,6 +21,7 @@
 #include "mir/geometry/rectangle.h"
 
 #include <memory>
+#include <glm/glm.hpp>
 
 namespace mir
 {
@@ -59,13 +60,15 @@ public:
         wl_resource* output;
         geometry::Rectangle output_space_area;
         geometry::Size buffer_size;
+        glm::mat2 transform;
         bool overlay_cursor;
 
         auto operator==(FrameParams const& other) const -> bool
         {
             return output == other.output &&
                    output_space_area == other.output_space_area &&
-                   buffer_size == other.buffer_size;
+                   buffer_size == other.buffer_size &&
+                   transform == other.transform;
         }
 
         auto full_buffer_space_damage() const -> geometry::Rectangle

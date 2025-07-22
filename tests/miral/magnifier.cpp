@@ -81,12 +81,7 @@ TEST_F(MagnifierTest, magnification_results_in_scaled_transform)
         auto const scene = server().the_scene();
         auto const elements = scene->scene_elements_for(this);
         EXPECT_THAT(elements.size(), Eq(1));
-        auto const expected = glm::mat4{
-            1, 0.0, 0.0, 0.0,
-            0.0, -1, 0.0, 0.0,
-            0.0, 0.0, 1, 0.0,
-            0.0, 0.0, 0.0, 1.0
-        } * glm::scale(glm::mat4(1.0), glm::vec3(2, 2, 1));
+        auto const expected = glm::scale(glm::mat4(1.0), glm::vec3(2, 2, 1));
 
         EXPECT_THAT(elements.at(0)->renderable()->transformation(), Eq(expected));
     });

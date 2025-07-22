@@ -42,13 +42,6 @@ namespace mi = mir::input;
 
 namespace
 {
-constexpr auto DEFAULT_TRANSFORMATION = glm::mat4{
-    1, 0.0, 0.0, 0.0,
-    0.0, -1, 0.0, 0.0,
-    0.0, 0.0, 1, 0.0,
-    0.0, 0.0, 0.0, 1.0
-};
-
 class ClaimedBuffer : public mg::Buffer
 {
 public:
@@ -199,12 +192,6 @@ public:
               return allocator->alloc_software_buffer(capture_rect.size, mir_pixel_format_argb_8888);
           }, 2)
     {
-        BasicSurface::set_transformation(DEFAULT_TRANSFORMATION);
-    }
-
-    void set_transformation(glm::mat4 const& t) override
-    {
-        BasicSurface::set_transformation(t * DEFAULT_TRANSFORMATION);
     }
 
     mg::RenderableList generate_renderables(mc::CompositorID id) const override
@@ -218,6 +205,7 @@ public:
         screen_shooter->capture(
             mapping,
             capture_rect,
+            glm::mat2(1.f),
             overlay_cursor,
             [](auto const&) {});
         get_streams().begin()->stream->submit_buffer(

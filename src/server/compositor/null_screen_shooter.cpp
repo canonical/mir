@@ -30,6 +30,7 @@ mc::NullScreenShooter::NullScreenShooter(Executor& executor)
 void mc::NullScreenShooter::capture(
     std::shared_ptr<mrs::WriteMappableBuffer> const&,
     geom::Rectangle const&,
+    glm::mat2 const&,
     bool,
     std::function<void(std::optional<time::Timestamp>)>&& callback)
 {
