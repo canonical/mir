@@ -26,7 +26,7 @@
 #include <mir/log.h>
 
 #include <memory>
-
+#include <algorithm>
 
 namespace
 {
@@ -36,6 +36,14 @@ char const* const mouse_keys_acceleration_linear_factor = "mouse-keys-accelerati
 char const* const mouse_keys_acceleration_quadratic_factor = "mouse-keys-acceleration-quadratic-factor";
 char const* const mouse_keys_max_speed_x = "mouse-keys-max-speed-x";
 char const* const mouse_keys_max_speed_y = "mouse-keys-max-speed-y";
+auto const old_options = std::array{
+    enable_mouse_keys_opt,
+    mouse_keys_acceleration_constant_factor,
+    mouse_keys_acceleration_linear_factor,
+    mouse_keys_acceleration_quadratic_factor,
+    mouse_keys_max_speed_x,
+    mouse_keys_max_speed_y,
+};
 
 namespace defaults
 {
@@ -280,25 +288,25 @@ void miral::MouseKeysConfig::operator()(mir::Server& server) const
         server.add_configuration_option(
             mouse_keys_acceleration_constant_factor,
             "The base speed for mousekey pointer motion",
-            current_value_or_default(s->acceleration_constant, defaults::acceleration_constant));
+            mir::OptionType::real);
         server.add_configuration_option(
             mouse_keys_acceleration_linear_factor,
             "The linear speed increase for mousekey pointer motion",
-            current_value_or_default(s->acceleration_linear, defaults::acceleration_linear));
+            mir::OptionType::real);
         server.add_configuration_option(
             mouse_keys_acceleration_quadratic_factor,
             "The quadratic speed increase for mousekey pointer motion",
-            current_value_or_default(s->acceleration_quadratic, defaults::acceleration_quadratic));
+            mir::OptionType::real);
         server.add_configuration_option(
             mouse_keys_max_speed_x,
             "The maximum speed in pixels/second the mousekeys pointer can "
             "reach on the x axis. Pass zero to disable the speed limit",
-            current_value_or_default(s->max_speed_x, defaults::max_speed_x));
+            mir::OptionType::real);
         server.add_configuration_option(
             mouse_keys_max_speed_y,
             "The maximum speed in pixels/second the mousekeys pointer can "
             "reach on the y axis. Pass zero to disable the speed limit",
-            current_value_or_default(s->max_speed_y, defaults::max_speed_y));
+            mir::OptionType::real);
     }
 
     server.add_init_callback(
@@ -306,6 +314,13 @@ void miral::MouseKeysConfig::operator()(mir::Server& server) const
         {
             self->accessibility_manager = server.the_accessibility_manager();
             auto options = server.get_options();
+
+            if (std::ranges::any_of(old_options, [&options](auto option) { return options->is_set(option); }))
+            {
+                mir::log_warning(
+                    "Old mousekeys CLI/environment based options are being phased out in favor of live config options "
+                    "and will be removed in a future release.");
+            }
 
             auto const state = self->state.lock();
             auto enable = option_or_current_value_or_default(
