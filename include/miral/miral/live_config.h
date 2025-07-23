@@ -64,7 +64,7 @@ private:
 ///
 /// This could be supported by various backends (an ini file, a YAML node, etc)
 ///
-/// \remark Since MirAL 5.4
+/// \remark Since MirAL 5.5
 class Store
 {
 public:
