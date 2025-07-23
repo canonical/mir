@@ -27,7 +27,7 @@ class MouseKeysKeymap;
 }
 namespace shell
 {
-class MouseKeysTransformer: public mir::input::Transformer::Transformer
+class MouseKeysTransformer: public mir::input::Transformer
 {
 public:
     virtual void keymap(mir::input::MouseKeysKeymap const& new_keymap) = 0;
