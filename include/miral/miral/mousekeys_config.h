@@ -51,11 +51,11 @@ public:
     explicit MouseKeysConfig(bool enabled_by_default);
 
     /// Creates a `MouseKeysConfig` instance that's enabled by default.
-    /// \remark Since MirAL 5.4
+    /// \remark Since MirAL 5.5
     auto static enabled() -> MouseKeysConfig;
 
     /// Creates a `MouseKeysConfig` instance that's disabled by default.
-    /// \remark Since MirAL 5.4
+    /// \remark Since MirAL 5.5
     auto static disabled() -> MouseKeysConfig;
 
     /// Construct a `MouseKeysConfig` instance with access to a live config store.
@@ -70,12 +70,12 @@ public:
 
     /// Enables mousekeys.
     /// When already enabled, further calls have no effect.
-    /// \remark Since MirAL 5.4
+    /// \remark Since MirAL 5.5
     void enable() const;
     
     /// Disables mousekeys.
     /// When already disabled, further calls have no effect.
-    /// \remark Since MirAL 5.4
+    /// \remark Since MirAL 5.5
     void disable() const;
 
     /// Changes the keymap for the various mousekeys actions defined in
