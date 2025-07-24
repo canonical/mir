@@ -38,6 +38,11 @@ class HoverClick
 {
 public:
     explicit HoverClick(bool enabled_by_default);
+    /// Creates a `HoverClick` instance that's enabled by default.
+    auto static enabled() -> HoverClick;
+
+    /// Creates a `HoverClick` instance that's disabled by default.
+    auto static disabled() -> HoverClick;
 
     void operator()(mir::Server& server);
 
@@ -79,6 +84,7 @@ public:
 
 private:
     struct Self;
+    HoverClick(std::shared_ptr<Self> self);
     std::shared_ptr<Self> const self;
 };
 }

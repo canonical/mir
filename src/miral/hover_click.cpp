@@ -50,9 +50,19 @@ struct miral::HoverClick::Self
     std::weak_ptr<mir::shell::AccessibilityManager> accessibility_manager;
 };
 
-miral::HoverClick::HoverClick(bool enabled_by_default)
-    : self{std::make_shared<Self>(enabled_by_default)}
+miral::HoverClick::HoverClick(std::shared_ptr<Self> self)
+    : self{std::move(self)}
 {
+}
+
+miral::HoverClick miral::HoverClick::enabled()
+{
+    return HoverClick{std::make_shared<Self>(true)};
+}
+
+miral::HoverClick miral::HoverClick::disabled()
+{
+    return HoverClick{std::make_shared<Self>(false)};
 }
 
 miral::HoverClick& miral::HoverClick::enable()
