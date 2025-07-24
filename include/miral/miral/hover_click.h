@@ -24,7 +24,15 @@ namespace mir { class Server; }
 
 namespace miral
 {
-/// Enable configuring hover click at runtime.
+/// Enables configuring hover click at runtime.
+///
+/// Hover click is an accessibility feature that allows users to dispatch primary
+/// clicks by holding the pointer still for some configurable period of time.
+/// The pointer may move by a configurable distance to accommodate users with
+/// disabilities. After a hover click, no further clicks are dispatched until
+/// the cursor moves by a configurable distance from the position of the
+/// previous click.
+/// 
 /// \remark Since MirAL 5.5
 class HoverClick
 {
