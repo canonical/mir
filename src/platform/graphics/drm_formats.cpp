@@ -70,6 +70,7 @@ auto mg::drm_format_to_string(uint32_t format) -> char const*
 struct mg::DRMFormat::FormatInfo
 {
     uint32_t format;
+    std::optional<uint32_t> bits_per_pixel;    //< Only makes sense for single-plane packed formats; unset elsewhere
     bool has_alpha;
     std::optional<uint32_t> opaque_equivalent;
     std::optional<uint32_t> alpha_equivalent;
@@ -81,6 +82,7 @@ namespace
 constexpr std::array const formats = {
     mg::DRMFormat::FormatInfo{
         DRM_FORMAT_XRGB4444,
+        16,
         false,
         DRM_FORMAT_XRGB4444,
         DRM_FORMAT_ARGB4444,
@@ -90,6 +92,7 @@ constexpr std::array const formats = {
     },
     mg::DRMFormat::FormatInfo{
         DRM_FORMAT_XBGR4444,
+        16,
         false,
         DRM_FORMAT_XBGR4444,
         DRM_FORMAT_ABGR4444,
@@ -99,6 +102,7 @@ constexpr std::array const formats = {
     },
     mg::DRMFormat::FormatInfo{
         DRM_FORMAT_RGBX4444,
+        16,
         false,
         DRM_FORMAT_RGBX4444,
         DRM_FORMAT_RGBA4444,
@@ -108,6 +112,7 @@ constexpr std::array const formats = {
     },
     mg::DRMFormat::FormatInfo{
         DRM_FORMAT_BGRX4444,
+        16,
         false,
         DRM_FORMAT_BGRX4444,
         DRM_FORMAT_BGRA4444,
@@ -117,6 +122,7 @@ constexpr std::array const formats = {
     },
     mg::DRMFormat::FormatInfo{
         DRM_FORMAT_ARGB4444,
+        16,
         true,
         DRM_FORMAT_XRGB4444,
         DRM_FORMAT_ARGB4444,
@@ -126,6 +132,7 @@ constexpr std::array const formats = {
     },
     mg::DRMFormat::FormatInfo{
         DRM_FORMAT_ABGR4444,
+        16,
         true,
         DRM_FORMAT_XBGR4444,
         DRM_FORMAT_ABGR4444,
@@ -135,6 +142,7 @@ constexpr std::array const formats = {
     },
     mg::DRMFormat::FormatInfo{
         DRM_FORMAT_RGBA4444,
+        16,
         true,
         DRM_FORMAT_RGBX4444,
         DRM_FORMAT_RGBA4444,
@@ -144,6 +152,7 @@ constexpr std::array const formats = {
     },
     mg::DRMFormat::FormatInfo{
         DRM_FORMAT_BGRA4444,
+        16,
         true,
         DRM_FORMAT_BGRX4444,
         DRM_FORMAT_BGRA4444,
@@ -153,6 +162,7 @@ constexpr std::array const formats = {
     },
     mg::DRMFormat::FormatInfo{
         DRM_FORMAT_XRGB1555,
+        16,
         false,
         DRM_FORMAT_XRGB1555,
         DRM_FORMAT_ARGB1555,
@@ -162,6 +172,7 @@ constexpr std::array const formats = {
     },
     mg::DRMFormat::FormatInfo{
         DRM_FORMAT_XBGR1555,
+        16,
         false,
         DRM_FORMAT_XBGR1555,
         DRM_FORMAT_ABGR1555,
@@ -171,6 +182,7 @@ constexpr std::array const formats = {
     },
     mg::DRMFormat::FormatInfo{
         DRM_FORMAT_RGBX5551,
+        16,
         false,
         DRM_FORMAT_RGBX5551,
         DRM_FORMAT_RGBA5551,
@@ -180,6 +192,7 @@ constexpr std::array const formats = {
     },
     mg::DRMFormat::FormatInfo{
         DRM_FORMAT_BGRX5551,
+        16,
         false,
         DRM_FORMAT_BGRX5551,
         DRM_FORMAT_BGRA5551,
@@ -189,6 +202,7 @@ constexpr std::array const formats = {
     },
     mg::DRMFormat::FormatInfo{
         DRM_FORMAT_ARGB1555,
+        16,
         true,
         DRM_FORMAT_XRGB1555,
         DRM_FORMAT_ARGB1555,
@@ -198,6 +212,7 @@ constexpr std::array const formats = {
     },
     mg::DRMFormat::FormatInfo{
         DRM_FORMAT_ABGR1555,
+        16,
         true,
         DRM_FORMAT_XBGR1555,
         DRM_FORMAT_ABGR1555,
@@ -207,6 +222,7 @@ constexpr std::array const formats = {
     },
     mg::DRMFormat::FormatInfo{
         DRM_FORMAT_RGBA5551,
+        16,
         true,
         DRM_FORMAT_RGBX5551,
         DRM_FORMAT_RGBA5551,
@@ -216,6 +232,7 @@ constexpr std::array const formats = {
     },
     mg::DRMFormat::FormatInfo{
         DRM_FORMAT_BGRA5551,
+        16,
         true,
         DRM_FORMAT_BGRX5551,
         DRM_FORMAT_BGRA5551,
@@ -225,6 +242,7 @@ constexpr std::array const formats = {
     },
     mg::DRMFormat::FormatInfo{
         DRM_FORMAT_RGB565,
+        16,
         false,
         DRM_FORMAT_RGB565,
         {},
@@ -234,6 +252,7 @@ constexpr std::array const formats = {
     },
     mg::DRMFormat::FormatInfo{
         DRM_FORMAT_BGR565,
+        16,
         false,
         DRM_FORMAT_BGR565,
         {},
@@ -243,6 +262,7 @@ constexpr std::array const formats = {
     },
     mg::DRMFormat::FormatInfo{
         DRM_FORMAT_RGB888,
+        24,
         false,
         DRM_FORMAT_RGB888,
         {},
@@ -252,6 +272,7 @@ constexpr std::array const formats = {
     },
     mg::DRMFormat::FormatInfo{
         DRM_FORMAT_BGR888,
+        24,
         false,
         DRM_FORMAT_BGR888,
         {},
@@ -261,6 +282,7 @@ constexpr std::array const formats = {
     },
     mg::DRMFormat::FormatInfo{
         DRM_FORMAT_XRGB8888,
+        32,
         false,
         DRM_FORMAT_XRGB8888,
         DRM_FORMAT_ARGB8888,
@@ -270,6 +292,7 @@ constexpr std::array const formats = {
     },
     mg::DRMFormat::FormatInfo{
         DRM_FORMAT_XBGR8888,
+        32,
         false,
         DRM_FORMAT_XBGR8888,
         DRM_FORMAT_ABGR8888,
@@ -279,6 +302,7 @@ constexpr std::array const formats = {
     },
     mg::DRMFormat::FormatInfo{
         DRM_FORMAT_RGBX8888,
+        32,
         false,
         DRM_FORMAT_RGBX8888,
         DRM_FORMAT_RGBA8888,
@@ -288,6 +312,7 @@ constexpr std::array const formats = {
     },
     mg::DRMFormat::FormatInfo{
         DRM_FORMAT_BGRX8888,
+        32,
         false,
         DRM_FORMAT_BGRX8888,
         DRM_FORMAT_BGRA8888,
@@ -297,6 +322,7 @@ constexpr std::array const formats = {
     },
     mg::DRMFormat::FormatInfo{
         DRM_FORMAT_ARGB8888,
+        32,
         true,
         DRM_FORMAT_XRGB8888,
         DRM_FORMAT_ARGB8888,
@@ -306,6 +332,7 @@ constexpr std::array const formats = {
     },
     mg::DRMFormat::FormatInfo{
         DRM_FORMAT_ABGR8888,
+        32,
         true,
         DRM_FORMAT_XBGR8888,
         DRM_FORMAT_ABGR8888,
@@ -315,6 +342,7 @@ constexpr std::array const formats = {
     },
     mg::DRMFormat::FormatInfo{
         DRM_FORMAT_RGBA8888,
+        32,
         true,
         DRM_FORMAT_RGBX8888,
         DRM_FORMAT_RGBA8888,
@@ -324,6 +352,7 @@ constexpr std::array const formats = {
     },
     mg::DRMFormat::FormatInfo{
         DRM_FORMAT_BGRA8888,
+        32,
         true,
         DRM_FORMAT_BGRX8888,
         DRM_FORMAT_BGRA8888,
@@ -333,6 +362,7 @@ constexpr std::array const formats = {
     },
     mg::DRMFormat::FormatInfo{
         DRM_FORMAT_XRGB2101010,
+        32,
         false,
         DRM_FORMAT_XRGB2101010,
         DRM_FORMAT_ARGB2101010,
@@ -342,6 +372,7 @@ constexpr std::array const formats = {
     },
     mg::DRMFormat::FormatInfo{
         DRM_FORMAT_XBGR2101010,
+        32,
         false,
         DRM_FORMAT_XBGR2101010,
         DRM_FORMAT_ABGR2101010,
@@ -351,6 +382,7 @@ constexpr std::array const formats = {
     },
     mg::DRMFormat::FormatInfo{
         DRM_FORMAT_RGBX1010102,
+        32,
         false,
         DRM_FORMAT_RGBX1010102,
         DRM_FORMAT_RGBA1010102,
@@ -360,6 +392,7 @@ constexpr std::array const formats = {
     },
     mg::DRMFormat::FormatInfo{
         DRM_FORMAT_BGRX1010102,
+        32,
         false,
         DRM_FORMAT_BGRX1010102,
         DRM_FORMAT_BGRA1010102,
@@ -369,6 +402,7 @@ constexpr std::array const formats = {
     },
     mg::DRMFormat::FormatInfo{
         DRM_FORMAT_ARGB2101010,
+        32,
         true,
         DRM_FORMAT_XRGB2101010,
         DRM_FORMAT_ARGB2101010,
@@ -378,6 +412,7 @@ constexpr std::array const formats = {
     },
     mg::DRMFormat::FormatInfo{
         DRM_FORMAT_ABGR2101010,
+        32,
         true,
         DRM_FORMAT_XBGR2101010,
         DRM_FORMAT_ABGR2101010,
@@ -387,6 +422,7 @@ constexpr std::array const formats = {
     },
     mg::DRMFormat::FormatInfo{
         DRM_FORMAT_RGBA1010102,
+        32,
         true,
         DRM_FORMAT_RGBX1010102,
         DRM_FORMAT_RGBA1010102,
@@ -396,6 +432,7 @@ constexpr std::array const formats = {
     },
     mg::DRMFormat::FormatInfo{
         DRM_FORMAT_BGRA1010102,
+        32,
         true,
         DRM_FORMAT_BGRX1010102,
         DRM_FORMAT_BGRA1010102,
@@ -471,6 +508,11 @@ bool mg::DRMFormat::Info::has_alpha() const
 auto mg::DRMFormat::Info::components() const -> std::optional<Info::RGBComponentInfo> const&
 {
     return info->components;
+}
+
+auto mg::DRMFormat::Info::bits_per_pixel() const -> std::optional<uint32_t>
+{
+    return info->bits_per_pixel;
 }
 
 mg::DRMFormat::Info::Info(FormatInfo const* info)

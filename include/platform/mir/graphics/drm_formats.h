@@ -45,6 +45,7 @@ public:
         bool has_alpha() const;
 
         auto components() const -> std::optional<RGBComponentInfo> const&;
+        auto bits_per_pixel() const -> std::optional<uint32_t>;
     private:
         friend class DRMFormat;
         Info(FormatInfo const* info);
