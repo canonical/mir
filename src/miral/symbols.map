@@ -526,6 +526,8 @@ global:
   extern "C++" {
     "miral::CursorScale::CursorScale()";
     "miral::CursorScale::CursorScale(float)";
+    "miral::MouseKeysConfig::MouseKeysConfig(bool)";
+    "miral::MouseKeysConfig::enabled(bool) const";
     "miral::OutputFilter::OutputFilter()";
     "miral::OutputFilter::OutputFilter(MirOutputFilter)";
     miral::CursorScale::?CursorScale*;
@@ -548,12 +550,10 @@ global:
     miral::InputConfiguration::Mouse::merge*;
     miral::InputConfiguration::Touchpad::merge*;
     miral::InputConfiguration::Touchpad::middle_mouse_button_emulation*;
-    "miral::MouseKeysConfig::MouseKeysConfig(bool)";
-    "miral::MouseKeysConfig::enabled(bool) const";
-    "miral::MouseKeysConfig::operator()(mir::Server&) const";
-    "miral::MouseKeysConfig::set_acceleration_factors(double, double, double) const";
-    "miral::MouseKeysConfig::set_keymap(mir::input::MouseKeysKeymap const&) const";
-    "miral::MouseKeysConfig::set_max_speed(double, double) const";
+    miral::MouseKeysConfig::operator*;
+    miral::MouseKeysConfig::set_acceleration_factors*;
+    miral::MouseKeysConfig::set_keymap*;
+    miral::MouseKeysConfig::set_max_speed*;
     miral::OutputFilter::?OutputFilter*;
     miral::OutputFilter::filter*;
     miral::OutputFilter::operator*;
@@ -574,6 +574,12 @@ global:
     "miral::CursorScale::CursorScale(miral::live_config::Store&)";
     "miral::InputConfiguration::InputConfiguration(miral::live_config::Store&)";
     "miral::InputConfiguration::InputConfiguration(miral::live_config::Store&)";
+    "miral::MouseKeysConfig::MouseKeysConfig(miral::live_config::Store&)";
+    "miral::MouseKeysConfig::MouseKeysConfig(std::shared_ptr<miral::MouseKeysConfig::Self>)";
+    "miral::MouseKeysConfig::disable() const";
+    "miral::MouseKeysConfig::disabled()";
+    "miral::MouseKeysConfig::enable() const";
+    "miral::MouseKeysConfig::enabled()";
     "miral::OutputFilter::OutputFilter(miral::live_config::Store&)";
     miral::AppendKeyboardEventFilter::AppendKeyboardEventFilter*;
     miral::AppendKeyboardEventFilter::operator*;
@@ -629,12 +635,6 @@ global:
     miral::StickyKeys::on_modifier_clicked*;
     miral::StickyKeys::operator*;
     miral::StickyKeys::should_disable_if_two_keys_are_pressed_together*;
-    "miral::MouseKeysConfig::MouseKeysConfig(miral::live_config::Store&)";
-    "miral::MouseKeysConfig::MouseKeysConfig(std::shared_ptr<miral::MouseKeysConfig::Self>)";
-    "miral::MouseKeysConfig::disable() const";
-    "miral::MouseKeysConfig::disabled()";
-    "miral::MouseKeysConfig::enable() const";
-    "miral::MouseKeysConfig::enabled()";
     miral::WaylandTools::?WaylandTools*;
     miral::WaylandTools::WaylandTools*;
     miral::WaylandTools::for_each_binding*;
