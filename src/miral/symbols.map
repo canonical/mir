@@ -526,6 +526,8 @@ global:
   extern "C++" {
     "miral::CursorScale::CursorScale()";
     "miral::CursorScale::CursorScale(float)";
+    "miral::MouseKeysConfig::MouseKeysConfig(bool)";
+    "miral::MouseKeysConfig::enabled(bool) const";
     "miral::OutputFilter::OutputFilter()";
     "miral::OutputFilter::OutputFilter(MirOutputFilter)";
     miral::CursorScale::?CursorScale*;
@@ -548,8 +550,6 @@ global:
     miral::InputConfiguration::Mouse::merge*;
     miral::InputConfiguration::Touchpad::merge*;
     miral::InputConfiguration::Touchpad::middle_mouse_button_emulation*;
-    miral::MouseKeysConfig::MouseKeysConfig*;
-    miral::MouseKeysConfig::enabled*;
     miral::MouseKeysConfig::operator*;
     miral::MouseKeysConfig::set_acceleration_factors*;
     miral::MouseKeysConfig::set_keymap*;
@@ -574,6 +574,12 @@ global:
     "miral::CursorScale::CursorScale(miral::live_config::Store&)";
     "miral::InputConfiguration::InputConfiguration(miral::live_config::Store&)";
     "miral::InputConfiguration::InputConfiguration(miral::live_config::Store&)";
+    "miral::MouseKeysConfig::MouseKeysConfig(miral::live_config::Store&)";
+    "miral::MouseKeysConfig::MouseKeysConfig(std::shared_ptr<miral::MouseKeysConfig::Self>)";
+    "miral::MouseKeysConfig::disable() const";
+    "miral::MouseKeysConfig::disabled()";
+    "miral::MouseKeysConfig::enable() const";
+    "miral::MouseKeysConfig::enabled()";
     "miral::OutputFilter::OutputFilter(miral::live_config::Store&)";
     miral::AppendKeyboardEventFilter::AppendKeyboardEventFilter*;
     miral::AppendKeyboardEventFilter::operator*;

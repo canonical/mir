@@ -46,6 +46,11 @@ HIDDEN_SYMBOLS = {
     "non-virtual?thunk?to?mir::input::Transformer::?Transformer*;",
     "typeinfo?for?mir::input::Transformer;",
     "vtable?for?mir::input::Transformer;",
+    "miral::MouseKeysConfig::MouseKeysConfig*;",
+    "miral::MouseKeysConfig::disable*;",
+    "miral::MouseKeysConfig::disabled*;",
+    "miral::MouseKeysConfig::enable*;",
+    "miral::MouseKeysConfig::enabled*;",
 }
 
 class HeaderDirectory(TypedDict):

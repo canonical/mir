@@ -15,10 +15,11 @@
  */
 
 #include "include/server/mir/shell/keyboard_helper.h"
+#include "mir/shell/accessibility_manager.h"
 #include "mir/shell/hover_click_transformer.h"
+#include "mir/shell/mousekeys_transformer.h"
+#include "mir/shell/simulated_secondary_click_transformer.h"
 #include "src/server/shell/basic_accessibility_manager.h"
-#include "src/server/shell/mouse_keys_transformer.h"
-#include "src/server/shell/basic_simulated_secondary_click_transformer.h"
 
 #include "mir/input/input_event_transformer.h"
 #include "mir/input/mousekeys_keymap.h"
@@ -281,7 +282,7 @@ TEST_F(TestBasicAccessibilityManager, calling_set_mousekeys_keymap_calls_set_key
     EXPECT_CALL(*mock_mousekeys_transformer, keymap(KeymapMatches(keymap)));
 
     basic_accessibility_manager.mousekeys_enabled(true);
-    basic_accessibility_manager.mousekeys_keymap(keymap);
+    basic_accessibility_manager.mousekeys().keymap(keymap);
 }
 
 TEST_F(TestBasicAccessibilityManager, calling_set_acceleration_factors_calls_set_acceleration_factors_on_transformer)
@@ -290,7 +291,7 @@ TEST_F(TestBasicAccessibilityManager, calling_set_acceleration_factors_calls_set
     EXPECT_CALL(*mock_mousekeys_transformer, acceleration_factors(constant, linear, quadratic));
 
     basic_accessibility_manager.mousekeys_enabled(true);
-    basic_accessibility_manager.acceleration_factors(constant, linear, quadratic);
+    basic_accessibility_manager.mousekeys().acceleration_factors(constant, linear, quadratic);
 }
 
 TEST_F(TestBasicAccessibilityManager, calling_set_max_speed_calls_set_max_speed_on_transformer)
@@ -299,7 +300,7 @@ TEST_F(TestBasicAccessibilityManager, calling_set_max_speed_calls_set_max_speed_
     EXPECT_CALL(*mock_mousekeys_transformer, max_speed(max_x, max_y));
 
     basic_accessibility_manager.mousekeys_enabled(true);
-    basic_accessibility_manager.max_speed(max_x, max_y);
+    basic_accessibility_manager.mousekeys().max_speed(max_x, max_y);
 }
 
 TEST_F(TestBasicAccessibilityManager, calling_simulated_secondary_click_hold_duration_calls_the_corresponding_method_on_transformer)

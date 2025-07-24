@@ -22,7 +22,7 @@
 #include "decoration/basic_manager.h"
 #include "default_persistent_surface_store.h"
 #include "graphics_display_layout.h"
-#include "mouse_keys_transformer.h"
+#include "basic_mousekeys_transformer.h"
 #include "basic_simulated_secondary_click_transformer.h"
 #include "basic_hover_click_transformer.h"
 #include "basic_slow_keys_transformer.h"

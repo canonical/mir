@@ -73,9 +73,7 @@ public:
     void cursor_scale(float new_scale) override;
 
     void mousekeys_enabled(bool on) override;
-    void mousekeys_keymap(input::MouseKeysKeymap const& new_keymap) override;
-    void acceleration_factors(double constant, double linear, double quadratic) override;
-    void max_speed(double x_axis, double y_axis) override;
+    auto mousekeys() -> MouseKeysTransformer& override;
 
     void simulated_secondary_click_enabled(bool enabled) override;
     auto simulated_secondary_click() -> SimulatedSecondaryClickTransformer& override;
