@@ -56,6 +56,18 @@ public:
     BufferAllocator(std::unique_ptr<renderer::gl::Context> ctx);
     ~BufferAllocator();
 
+    auto alloc_buffer_storage(BufferParams const& parameters) -> std::unique_ptr<BufferStorage> override;
+
+    auto map_rw(std::unique_ptr<BufferStorage> storage) -> std::unique_ptr<MappedStorage> override;
+
+    auto map_writeable(std::unique_ptr<BufferStorage> storage) -> std::unique_ptr<MappedStorage> override;
+
+    auto commit(std::unique_ptr<MappedStorage> mapping) -> std::unique_ptr<BufferStorage> override;
+
+    auto into_buffer(
+        std::unique_ptr<BufferStorage> storage,
+        std::function<void(std::unique_ptr<BufferStorage>)> on_return) -> std::shared_ptr<Buffer> override;
+
     std::shared_ptr<Buffer> alloc_software_buffer(geometry::Size size, MirPixelFormat format) override;
     std::vector<MirPixelFormat> supported_pixel_formats() override;
 

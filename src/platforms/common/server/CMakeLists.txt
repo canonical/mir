@@ -19,6 +19,8 @@ add_library(server_platform_common STATIC
   options_parsing_helpers.cpp
   quirk_common.h
   quirk_common.cpp
+  shm.h
+  shm.cpp
 )
 
 target_include_directories(

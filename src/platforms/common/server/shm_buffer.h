@@ -82,6 +82,11 @@ public:
         geometry::Size const& size,
         MirPixelFormat const& pixel_format);
 
+    MemoryBackedShmBuffer(
+        geometry::Size const& size,
+        MirPixelFormat pixel_format,
+        geometry::Stride stride);
+
     auto map_writeable() -> std::unique_ptr<renderer::software::Mapping<unsigned char>> override;
     auto map_readable() -> std::unique_ptr<renderer::software::Mapping<unsigned char const>> override;
     auto map_rw() -> std::unique_ptr<renderer::software::Mapping<unsigned char>> override;

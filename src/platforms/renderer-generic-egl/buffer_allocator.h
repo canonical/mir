@@ -57,6 +57,17 @@ public:
     BufferAllocator(EGLDisplay dpy, EGLContext share_with, std::shared_ptr<DMABufEGLProvider> dmabuf_provider);
     ~BufferAllocator() override;
     
+    auto alloc_buffer_storage(BufferParams const& params) -> std::unique_ptr<BufferStorage> override;
+
+    auto map_rw(std::unique_ptr<BufferStorage> storage) -> std::unique_ptr<MappedStorage> override;
+    auto map_writeable(std::unique_ptr<BufferStorage> storage) -> std::unique_ptr<MappedStorage> override;
+
+    auto commit(std::unique_ptr<MappedStorage> mapping) -> std::unique_ptr<BufferStorage> override;
+
+    auto into_buffer(
+        std::unique_ptr<BufferStorage> storage,
+        std::function<void(std::unique_ptr<BufferStorage>)> on_return) -> std::shared_ptr<Buffer> override;
+    
     std::shared_ptr<Buffer> alloc_software_buffer(geometry::Size size, MirPixelFormat) override;
     std::vector<MirPixelFormat> supported_pixel_formats() override;
 

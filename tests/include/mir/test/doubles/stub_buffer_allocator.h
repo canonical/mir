@@ -18,6 +18,7 @@
 #define MIR_TEST_DOUBLES_STUB_BUFFER_ALLOCATOR_H_
 
 #include "mir/graphics/graphic_buffer_allocator.h"
+#include <memory>
 #include <wayland-server.h>
 
 namespace mir
@@ -30,6 +31,23 @@ namespace doubles
 class StubBufferAllocator : public graphics::GraphicBufferAllocator
 {
 public:
+    auto alloc_buffer_storage(graphics::BufferParams const& parameters)
+        -> std::unique_ptr<graphics::BufferStorage> override;
+
+    auto map_rw(std::unique_ptr<graphics::BufferStorage> storage)
+        -> std::unique_ptr<MappedStorage> override;
+
+    auto map_writeable(std::unique_ptr<graphics::BufferStorage> storage)
+        -> std::unique_ptr<MappedStorage> override;
+
+    auto commit(std::unique_ptr<MappedStorage> storage)
+        -> std::unique_ptr<graphics::BufferStorage> override;
+
+    auto into_buffer(
+        std::unique_ptr<graphics::BufferStorage> storage,
+        std::function<void(std::unique_ptr<graphics::BufferStorage>)> on_return)
+        -> std::shared_ptr<graphics::Buffer> override;
+    
     auto alloc_software_buffer(geometry::Size sz, MirPixelFormat pf) -> std::shared_ptr<graphics::Buffer> override;
 
     auto supported_pixel_formats() -> std::vector<MirPixelFormat> override;

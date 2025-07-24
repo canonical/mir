@@ -21,6 +21,7 @@
 #include "mir/renderer/sw/pixel_source.h"
 #include "mir/graphics/platform.h"
 #include "shm_buffer.h"
+#include "shm.h"
 #include "mir/graphics/egl_context_executor.h"
 #include "mir/graphics/egl_extensions.h"
 #include "mir/graphics/egl_error.h"
@@ -170,6 +171,52 @@ mge::BufferAllocator::BufferAllocator(
 }
 
 mge::BufferAllocator::~BufferAllocator() = default;
+
+namespace
+{
+template<typename To, typename From>
+auto unique_ptr_cast(std::unique_ptr<From> ptr) -> std::unique_ptr<To>
+{
+    From* unowned_src = ptr.release();
+    if (auto to_src = dynamic_cast<To*>(unowned_src))
+    {
+        return std::unique_ptr<To>{to_src};
+    }
+    delete unowned_src;
+    BOOST_THROW_EXCEPTION((
+        std::bad_cast()));
+}
+}
+
+auto mge::BufferAllocator::alloc_buffer_storage(BufferParams const& params)
+    -> std::unique_ptr<BufferStorage>
+{
+    return shm::alloc_buffer_storage(params);
+}
+
+auto mge::BufferAllocator::map_rw(std::unique_ptr<BufferStorage> storage) -> std::unique_ptr<MappedStorage>
+{
+    return shm::map_rw(unique_ptr_cast<shm::ShmBufferStorage>(std::move(storage)));
+}
+
+auto mge::BufferAllocator::map_writeable(std::unique_ptr<BufferStorage> storage) -> std::unique_ptr<MappedStorage>
+{
+    return shm::map_writeable(unique_ptr_cast<shm::ShmBufferStorage>(std::move(storage)));
+}
+
+auto mge::BufferAllocator::commit(std::unique_ptr<MappedStorage> mapping) -> std::unique_ptr<BufferStorage>
+{
+    return shm::commit(unique_ptr_cast<shm::ShmBufferStorage::Mapped>(std::move(mapping)));
+}
+
+auto mge::BufferAllocator::into_buffer(
+    std::unique_ptr<BufferStorage> storage,
+    std::function<void(std::unique_ptr<BufferStorage>)> on_return) -> std::shared_ptr<Buffer>
+{
+    return shm::into_buffer(
+        unique_ptr_cast<shm::ShmBufferStorage>(std::move(storage)),
+        std::move(on_return));
+}
 
 std::shared_ptr<mg::Buffer> mge::BufferAllocator::alloc_software_buffer(
     geom::Size size, MirPixelFormat format)

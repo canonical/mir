@@ -211,5 +211,20 @@ MIR_PLATFORM_2.22 {
     vtable?for?mir::options::Option;
     vtable?for?mir::options::ProgramOption;
  };
+};
+
+MIR_PLATFORM_2.23
+{
+ global:
+  extern "C++" {
+    mir::graphics::BufferParams::BufferParams*;
+    mir::graphics::BufferParams::?BufferParams;
+    mir::graphics::BufferParams::with_format*;
+    mir::graphics::BufferParams::with_stride*;
+    mir::graphics::BufferParams::size*;
+    mir::graphics::BufferParams::format*;
+    mir::graphics::BufferParams::stride*;
+    mir::graphics::DRMFormat::Info::bits_per_pixel*;
+  };
  local: *;
 };

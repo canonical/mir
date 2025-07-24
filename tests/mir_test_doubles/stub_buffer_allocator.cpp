@@ -18,6 +18,7 @@
 #include "mir/test/doubles/stub_buffer_allocator.h"
 #include "mir/test/doubles/stub_buffer.h"
 #include "src/platforms/common/server/shm_buffer.h"
+#include "src/platforms/common/server/shm.h"
 #include "mir/graphics/egl_context_executor.h"
 #include "mir/test/doubles/null_gl_context.h"
 #include "mir/renderer/sw/pixel_source.h"
@@ -30,6 +31,52 @@
 
 namespace mtd = mir::test::doubles;
 namespace mg = mir::graphics;
+
+namespace
+{
+template<typename To, typename From>
+auto unique_ptr_cast(std::unique_ptr<From> ptr) -> std::unique_ptr<To>
+{
+    From* unowned_src = ptr.release();
+    if (auto to_src = dynamic_cast<To*>(unowned_src))
+    {
+        return std::unique_ptr<To>{to_src};
+    }
+    delete unowned_src;
+    BOOST_THROW_EXCEPTION((
+        std::bad_cast()));
+}
+}
+
+auto mtd::StubBufferAllocator::alloc_buffer_storage(mg::BufferParams const& params)
+    -> std::unique_ptr<mg::BufferStorage>
+{
+    return mg::shm::alloc_buffer_storage(params);
+}
+
+auto mtd::StubBufferAllocator::map_rw(std::unique_ptr<mg::BufferStorage> storage) -> std::unique_ptr<MappedStorage>
+{
+    return mg::shm::map_rw(unique_ptr_cast<mg::shm::ShmBufferStorage>(std::move(storage)));
+}
+
+auto mtd::StubBufferAllocator::map_writeable(std::unique_ptr<mg::BufferStorage> storage) -> std::unique_ptr<MappedStorage>
+{
+    return mg::shm::map_writeable(unique_ptr_cast<mg::shm::ShmBufferStorage>(std::move(storage)));
+}
+
+auto mtd::StubBufferAllocator::commit(std::unique_ptr<MappedStorage> mapping) -> std::unique_ptr<mg::BufferStorage>
+{
+    return mg::shm::commit(unique_ptr_cast<mg::shm::ShmBufferStorage::Mapped>(std::move(mapping)));
+}
+
+auto mtd::StubBufferAllocator::into_buffer(
+    std::unique_ptr<mg::BufferStorage> storage,
+    std::function<void(std::unique_ptr<mg::BufferStorage>)> on_return) -> std::shared_ptr<mg::Buffer>
+{
+    return mg::shm::into_buffer(
+        unique_ptr_cast<mg::shm::ShmBufferStorage>(std::move(storage)),
+        std::move(on_return));
+}
 
 auto mtd::StubBufferAllocator::alloc_software_buffer(geometry::Size sz, MirPixelFormat pf) -> std::shared_ptr<mg::Buffer>
 {

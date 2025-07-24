@@ -18,6 +18,9 @@
 #define MIR_GRAPHICS_GRAPHIC_BUFFER_ALLOCATOR_H_
 
 #include "mir/graphics/buffer.h"
+#include "mir/graphics/drm_formats.h"
+
+#include "mir/renderer/sw/pixel_source.h"
 
 #include <vector>
 #include <memory>
@@ -30,35 +33,44 @@ namespace mir
 {
 class Executor;
 
-namespace renderer::software
-{
-class RWMappableBuffer;
-}
-
 namespace graphics
 {
+class RenderingPlatform;
 
 /**
  * Storage for image content
  *
  * BufferStorage is (possibly a handle to) a place to store
  * image content.
- *
- * This has a visible destructor 
  */
 class BufferStorage
 {
 public:
-    ~BufferStorage() = default;    
-    BufferStorage(BufferStorage&&) = default;
-    auto operator=(BufferStorage&&) -> BufferStorage& = default;
+    virtual ~BufferStorage() = default;
+
+    BufferStorage(BufferStorage const&) = delete;
+    auto operator=(BufferStorage const&) -> BufferStorage& = delete;
 
 protected:
     BufferStorage() = default;
+};
 
+class BufferParams
+{
+public:
+    // Constructors
+    BufferParams(geometry::Size size);
+
+    auto with_format(DRMFormat format) -> BufferParams&;
+    auto with_stride(geometry::Stride stride) -> BufferParams&;
+
+    // Accessors
+    auto size() const -> geometry::Size;
+    auto format() const -> std::optional<DRMFormat>;
+    auto stride() const -> std::optional<geometry::Stride>;
 private:
     class Impl;
-    std::unique_ptr<Impl> impl; 
+    std::unique_ptr<Impl> impl;
 };
 
 /**
@@ -68,6 +80,22 @@ class GraphicBufferAllocator
 {
 public:
     virtual ~GraphicBufferAllocator() = default;
+
+    class MappedStorage : public renderer::software::Mapping<std::byte>
+    { 
+    };
+
+    virtual auto alloc_buffer_storage(BufferParams const& parameters) -> std::unique_ptr<BufferStorage> = 0;
+
+    virtual auto map_rw(std::unique_ptr<BufferStorage> storage) -> std::unique_ptr<MappedStorage> = 0;
+
+    virtual auto map_writeable(std::unique_ptr<BufferStorage> storage) -> std::unique_ptr<MappedStorage> = 0;
+
+    virtual auto commit(std::unique_ptr<MappedStorage>) -> std::unique_ptr<BufferStorage> = 0;
+
+    virtual auto into_buffer(
+        std::unique_ptr<BufferStorage> storage,
+        std::function<void(std::unique_ptr<BufferStorage> returned_storage)> on_return) -> std::shared_ptr<Buffer> = 0;
 
     /**
      * The supported CPU-accessible buffer pixel formats.

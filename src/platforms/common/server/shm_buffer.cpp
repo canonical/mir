@@ -271,8 +271,19 @@ void mgc::ShmBuffer::on_texture_accessed(std::shared_ptr<ShmBufferTexture> const
 mgc::MemoryBackedShmBuffer::MemoryBackedShmBuffer(
     geom::Size const& size,
     MirPixelFormat const& pixel_format)
+    : MemoryBackedShmBuffer(
+        size,
+        pixel_format,
+        geom::Stride{MIR_BYTES_PER_PIXEL(pixel_format) * size.width.as_uint32_t()})
+{
+}
+
+mgc::MemoryBackedShmBuffer::MemoryBackedShmBuffer(
+    geom::Size const& size,
+    MirPixelFormat pixel_format,
+    geom::Stride stride)
     : ShmBuffer(size, pixel_format),
-      stride_{MIR_BYTES_PER_PIXEL(pixel_format) * size.width.as_uint32_t()},
+      stride_{stride},
       pixels{new unsigned char[stride_.as_int() * size.height.as_int()]}
 {
 }

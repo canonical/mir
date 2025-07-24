@@ -37,6 +37,8 @@ add_library(mirplatformgraphicscommon OBJECT
   pixman_image_scaling.cpp
   ${PROJECT_SOURCE_DIR}/include/platform/mir/graphics/drm_syncobj.h
   drm_syncobj.cpp
+  ${PROJECT_SOURCE_DIR}/include/platform/mir/graphics/graphic_buffer_allocator.h
+  graphic_buffer_allocator.cpp
 )
 
 mir_generate_protocol_wrapper(mirplatformgraphicscommon "zwp_" linux-dmabuf-stable-v1.xml)
