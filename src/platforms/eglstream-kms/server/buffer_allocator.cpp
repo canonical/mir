@@ -23,7 +23,6 @@
 #include "mir/graphics/display_sink.h"
 #include "mir/graphics/drm_formats.h"
 #include "mir/graphics/egl_context_executor.h"
-#include "mir/graphics/egl_resources.h"
 #include "mir/graphics/gl_config.h"
 #include "mir/graphics/platform.h"
 #include "shm_buffer.h"

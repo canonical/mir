@@ -4,7 +4,6 @@ set(DRM_FORMATS_BIG_ENDIAN_FILE ${CMAKE_CURRENT_BINARY_DIR}/drm-formats-big-endi
 add_library(mirplatformgraphicscommon OBJECT
 
   egl_extensions.cpp
-  egl_resources.cpp
   egl_error.cpp
   display_configuration.cpp
   gamma_curves.cpp
