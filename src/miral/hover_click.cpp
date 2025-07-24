@@ -21,6 +21,9 @@
 #include "mir/shell/accessibility_manager.h"
 #include "mir/shell/hover_click_transformer.h"
 #include "mir/synchronised.h"
+#include "miral/live_config.h"
+
+#include <mir/log.h>
 
 struct miral::HoverClick::Self
 {
@@ -49,6 +52,62 @@ struct miral::HoverClick::Self
     mir::Synchronised<State> state;
     std::weak_ptr<mir::shell::AccessibilityManager> accessibility_manager;
 };
+
+miral::HoverClick::HoverClick(miral::live_config::Store& config_store)
+    : self{std::make_shared<Self>(false)}
+{
+    config_store.add_bool_attribute(
+        {"hover_click", "enable"},
+        "Whether hover click is disabled or not",
+        [this](live_config::Key const&, std::optional<bool> val)
+        {
+            if (!val)
+                return;
+
+            if (*val)
+                enable();
+            else
+                disable();
+        });
+
+    auto const add_int_attribute =
+        [&config_store](
+            std::string_view option_name, std::string_view option_description, std::function<void(int)> on_valid_option)
+    {
+        config_store.add_int_attribute(
+            {"hover_click", option_name},
+            option_description,
+            [ovo = std::move(on_valid_option)](live_config::Key const& key, std::optional<int> val)
+            {
+                if (!val)
+                    return;
+
+                if (*val < 0)
+                    mir::log_warning(
+                        "Config value %s does not support negative values. Ignoring the supplied value (%d)...",
+                        key.to_string().c_str(),
+                        *val);
+
+                ovo(*val);
+            });
+    };
+
+    add_int_attribute(
+        "hover_duration",
+        "How long in milliseconds the pointer has to stay still to dispatch a left click",
+        [this](int val) { hover_duration(std::chrono::milliseconds{val}); });
+
+    add_int_attribute(
+        "cancel_displacement",
+        "The distance in pixels the pointer has to move from the initial hover click position to cancel it.",
+        [this](int val) { cancel_displacement_threshold(val); });
+
+    add_int_attribute(
+        "reclick_displacement",
+        "the distance in pixels the pointer has to move from the the last hover click or hover click cancel position "
+        "to initiate a new hover click ",
+        [this](int val) { reclick_displacement_threshold(val); });
+}
 
 miral::HoverClick::HoverClick(std::shared_ptr<Self> self)
     : self{std::move(self)}

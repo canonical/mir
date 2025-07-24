@@ -24,6 +24,7 @@ namespace mir { class Server; }
 
 namespace miral
 {
+namespace live_config { class Store; }
 /// Enables configuring hover click at runtime.
 ///
 /// Hover click is an accessibility feature that allows users to dispatch primary
@@ -37,7 +38,9 @@ namespace miral
 class HoverClick
 {
 public:
-    explicit HoverClick(bool enabled_by_default);
+    /// Construct a `HoverClick` instance with access to a live config store.
+    explicit HoverClick(live_config::Store& config_store);
+
     /// Creates a `HoverClick` instance that's enabled by default.
     auto static enabled() -> HoverClick;
 
