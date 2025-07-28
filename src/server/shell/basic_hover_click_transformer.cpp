@@ -45,14 +45,14 @@ public:
         // If a click already occured in the past. Only start a new hover click if
         // the cursor moved "significantly" from the last position.
         auto const hover_click_origin = state->hover_click_origin;
-        auto const cancel_displacement = state->cancel_displacement_threshold;
 
         if (hover_click_origin)
         {
             auto const distance_from_last_click =
                 (*hover_click_origin - state->potential_position).length_squared();
-            auto const reclick_threshold = state->reclick_displacement_threshold;
 
+
+            auto const cancel_displacement = state->cancel_displacement_threshold;
             // If we've moved too far, cancel the click.
             if (distance_from_last_click >= cancel_displacement * cancel_displacement &&
                 state->click_dispatcher.value()->state() == time::Alarm::State::pending)
@@ -62,6 +62,7 @@ public:
                 return;
             }
 
+            auto const reclick_threshold = state->reclick_displacement_threshold;
             // If we've moved too little, don't dispatch a new click
             if (distance_from_last_click <= (reclick_threshold * reclick_threshold))
                 return;
