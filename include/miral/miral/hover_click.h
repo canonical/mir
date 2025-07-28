@@ -24,12 +24,28 @@ namespace mir { class Server; }
 
 namespace miral
 {
-/// Enable configuring hover click at runtime.
+namespace live_config { class Store; }
+/// Enables configuring hover click at runtime.
+///
+/// Hover click is an accessibility feature that allows users to dispatch primary
+/// clicks by holding the pointer still for some configurable period of time.
+/// The pointer may move by a configurable distance to accommodate users with
+/// disabilities. After a hover click, no further clicks are dispatched until
+/// the cursor moves by a configurable distance from the position of the
+/// previous click.
+/// 
 /// \remark Since MirAL 5.5
 class HoverClick
 {
 public:
-    explicit HoverClick(bool enabled_by_default);
+    /// Construct a `HoverClick` instance with access to a live config store.
+    explicit HoverClick(live_config::Store& config_store);
+
+    /// Creates a `HoverClick` instance that's enabled by default.
+    auto static enabled() -> HoverClick;
+
+    /// Creates a `HoverClick` instance that's disabled by default.
+    auto static disabled() -> HoverClick;
 
     void operator()(mir::Server& server);
 
@@ -71,6 +87,7 @@ public:
 
 private:
     struct Self;
+    HoverClick(std::shared_ptr<Self> self);
     std::shared_ptr<Self> const self;
 };
 }

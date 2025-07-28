@@ -33,6 +33,7 @@
 #include <miral/output_filter.h>
 #include <miral/bounce_keys.h>
 #include <miral/slow_keys.h>
+#include <miral/hover_click.h>
 
 #include "mir/abnormal_exit.h"
 #include "mir/main_loop.h"
@@ -134,6 +135,7 @@ try
     miral::BounceKeys bounce_keys{config_store};
     miral::SlowKeys slow_keys{config_store};
     miral::StickyKeys sticky_keys{config_store};
+    miral::HoverClick hover_click{config_store};
 
     miral::ConfigFile config_file{
         runner,
@@ -167,7 +169,8 @@ try
         cursor_scale,
         bounce_keys,
         slow_keys,
-        sticky_keys
+        sticky_keys,
+        hover_click
     });
 
     // Propagate any test failure
