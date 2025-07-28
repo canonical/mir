@@ -9,47 +9,7 @@ execute: |
       dnf --refresh --assumeyes --enablerepo=rawhide distro-sync
     fi
 
-    dnf install --assumeyes --allowerasing \
-        cmake \
-        make \
-        gcc-c++ \
-        ccache \
-        boost-devel \
-        mesa-libEGL-devel \
-        mesa-libGLES-devel \
-        glm-devel \
-        systemd-devel \
-        glib2-devel \
-        wayland-devel \
-        mesa-libgbm-devel \
-        libepoxy-devel \
-        nettle-devel \
-        libinput-devel \
-        libxml++-devel \
-        libuuid-devel \
-        libX11-devel \
-        libxkbcommon-x11-devel \
-        libxkbcommon-devel \
-        freetype-devel \
-        lttng-ust-devel \
-        libatomic \
-        python3-pillow \
-        libevdev-devel \
-        umockdev-devel \
-        gtest-devel \
-        gmock-devel \
-        dbus \
-        python3-dbusmock \
-        python3-gobject-base \
-        python3-dbus \
-        libXcursor-devel \
-        yaml-cpp-devel\
-        egl-wayland-devel \
-        systemtap-sdt-devel \
-        libdrm-devel \
-        wlcs-devel \
-        gmp-devel \
-        pixman-devel
+    dnf --assumeyes builddep --allowerasing rpm/mir.spec
 
     BUILD_DIR=$PWD/../build
     cmake \
