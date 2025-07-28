@@ -65,6 +65,8 @@ public:
             // If we've moved too little, don't dispatch a new click
             if (distance_from_last_click <= (reclick_threshold * reclick_threshold))
                 return;
+
+            state->hover_click_origin.reset();
         }
 
         // Cancel and reschedule to give users a grace period before the hover
@@ -173,7 +175,6 @@ void msh::BasicHoverClickTransformer::initialize_click_dispatcher(
 
                 auto const state = mutable_state.lock();
                 state->on_click_dispatched();
-                state->hover_click_origin.reset();
             });
     }
 }
