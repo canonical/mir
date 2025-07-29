@@ -154,9 +154,6 @@ struct DisplayConfigurationOutput
     GammaCurves gamma;
     MirOutputGammaSupported gamma_supported;
 
-    /** EDID of the display, if non-empty */
-    std::vector<uint8_t> edid;
-
     mir::optional_value<geometry::Size> custom_logical_size;
 
     /** The output's displayable name. */
@@ -211,7 +208,6 @@ struct UserDisplayConfigurationOutput
     MirSubpixelArrangement& subpixel_arrangement;
     GammaCurves& gamma;
     MirOutputGammaSupported const& gamma_supported;
-    std::vector<uint8_t> const& edid;
     mir::optional_value<geometry::Size>& custom_logical_size;
     std::string const& name;
     /// Custom attributes (typically set by the .display configuration file

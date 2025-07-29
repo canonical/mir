@@ -359,7 +359,6 @@ mg::UserDisplayConfigurationOutput::UserDisplayConfigurationOutput(
         subpixel_arrangement(main.subpixel_arrangement),
         gamma(main.gamma),
         gamma_supported(main.gamma_supported),
-        edid(main.display_info.raw_edid),
         custom_logical_size(main.custom_logical_size),
         name(main.name),
         custom_attribute{main.custom_attribute},

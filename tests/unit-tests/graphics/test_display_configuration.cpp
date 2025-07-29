@@ -67,7 +67,6 @@ mg::DisplayConfigurationOutput const tmpl_output
     {},
     {},
     {},
-    {},
     mg::DisplayInfo{basic_edid}
 };
 
