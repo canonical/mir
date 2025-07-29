@@ -27,6 +27,7 @@ parts:
     - libboost-filesystem-dev
     - libboost-iostreams-dev
     - libboost-program-options-dev
+    - libdisplay-info-dev
     - libdrm-dev
     - libegl1-mesa-dev
     - libepoxy-dev
@@ -60,6 +61,7 @@ parts:
     - libboost-iostreams1.83.0
     - libboost-program-options1.83.0
     - libdrm2
+    - libdisplay-info1
     - libegl1
     - libepoxy0
     - libevdev2

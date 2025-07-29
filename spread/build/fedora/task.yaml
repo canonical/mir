@@ -25,6 +25,7 @@ execute: |
         libepoxy-devel \
         nettle-devel \
         libinput-devel \
+        libdisplay-info-devel \
         libxml++-devel \
         libuuid-devel \
         libX11-devel \
