@@ -193,7 +193,7 @@ int main(int argc, char const* argv[])
                                 .displacement_threshold(30)
                                 .hold_duration(std::chrono::milliseconds{2000});
 
-    miral::HoverClick hover_click_config{false};
+    auto hover_click_config = miral::HoverClick::disabled();
 
     float magnification = 2.f;
     Size capture_size{100, 100};
