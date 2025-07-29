@@ -164,7 +164,7 @@ struct DisplayConfigurationOutput
     std::map<std::string, std::optional<std::string>> custom_attribute = {};
 
     /// Display information for this output, if available.
-    DisplayInfo display_info = {};
+    DisplayInfo display_info{};
 
     /** The logical rectangle occupied by the output, based on its position,
         current mode and orientation (rotation) */
