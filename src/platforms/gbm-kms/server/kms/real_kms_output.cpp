@@ -705,7 +705,7 @@ void mgg::RealKMSOutput::update_from_hardware_state(
     output.current_mode_index = current_mode_index;
     output.subpixel_arrangement = kms_subpixel_to_mir_subpixel(connector->subpixel);
     output.gamma = gamma;
-    output.edid = edid;
+    output.display_info = DisplayInfo{edid};
 }
 
 int mgg::RealKMSOutput::drm_fd() const

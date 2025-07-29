@@ -28,6 +28,10 @@ MIR_PLATFORM_2.22 {
     mir::graphics::DisplayConfigurationPolicy::DisplayConfigurationPolicy*;
     mir::graphics::DisplayConfigurationPolicy::apply_to*;
     mir::graphics::DisplayConfigurationPolicy::operator*;
+    mir::graphics::DisplayInfo::?DisplayInfo*;
+    mir::graphics::DisplayInfo::DisplayInfo*;
+    mir::graphics::DisplayInfo::DisplayInfo;
+    mir::graphics::DisplayInfo::operator*;
     mir::graphics::EGLContextStore::?EGLContextStore*;
     mir::graphics::EGLContextStore::EGLContextStore*;
     mir::graphics::EGLContextStore::EGLContextStore*;

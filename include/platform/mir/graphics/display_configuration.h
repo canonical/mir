@@ -92,6 +92,22 @@ struct DisplayConfigurationMode
 };
 
 /**
+ * Hardware information for a display output.
+ */
+struct DisplayInfo
+{
+    DisplayInfo() = default;
+    explicit DisplayInfo(std::vector<uint8_t> const& edid);
+    DisplayInfo& operator=(std::vector<uint8_t> const& edid);
+
+    std::vector<uint8_t> raw_edid;
+    std::optional<std::string> vendor;
+    std::optional<std::string> model;
+    std::optional<std::string> serial;
+    std::optional<uint16_t> product_code;
+};
+
+/**
  * Configuration information for a display output.
  */
 struct DisplayConfigurationOutput
@@ -138,9 +154,6 @@ struct DisplayConfigurationOutput
     GammaCurves gamma;
     MirOutputGammaSupported gamma_supported;
 
-    /** EDID of the display, if non-empty */
-    std::vector<uint8_t> edid;
-
     mir::optional_value<geometry::Size> custom_logical_size;
 
     /** The output's displayable name. */
@@ -149,6 +162,9 @@ struct DisplayConfigurationOutput
 
     /// Custom attributes (typically set via the .display configuration file
     std::map<std::string, std::optional<std::string>> custom_attribute = {};
+
+    /// Display information for this output, if available.
+    DisplayInfo display_info{};
 
     /** The logical rectangle occupied by the output, based on its position,
         current mode and orientation (rotation) */
@@ -192,11 +208,11 @@ struct UserDisplayConfigurationOutput
     MirSubpixelArrangement& subpixel_arrangement;
     GammaCurves& gamma;
     MirOutputGammaSupported const& gamma_supported;
-    std::vector<uint8_t> const& edid;
     mir::optional_value<geometry::Size>& custom_logical_size;
     std::string const& name;
     /// Custom attributes (typically set by the .display configuration file
     std::map<std::string, std::optional<std::string>>& custom_attribute;
+    DisplayInfo const& display_info;
 
     UserDisplayConfigurationOutput(DisplayConfigurationOutput& main);
     geometry::Rectangle extents() const;

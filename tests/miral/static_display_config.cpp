@@ -92,6 +92,7 @@ struct StaticDisplayConfig : Test
         hdmi1.power_mode = mir_power_mode_on;
         hdmi1.orientation = mir_orientation_normal;
         hdmi1.name = "HDMI-A-1";
+        hdmi1.display_info = mg::DisplayInfo{basic_edid};
 
         EXPECT_CALL(dc, for_each_output(_)).WillRepeatedly(DoAll(
             InvokeArgument<0>(mg::UserDisplayConfigurationOutput{vga1}),
@@ -733,8 +734,6 @@ TEST_F(StaticDisplayConfig, displays_are_matched_by_vendor)
         "    - vendor: APP\n"
         "      group: 1\n"};
 
-    hdmi1.edid = basic_edid;
-
     sdc.load_config(stream, "");
 
     sdc.apply_to(dc);
@@ -751,8 +750,6 @@ TEST_F(StaticDisplayConfig, displays_are_matched_by_model)
         "    displays:\n"
         "    - model: Color LCD\n"
         "      orientation: left\n"};
-
-    hdmi1.edid = basic_edid;
 
     sdc.load_config(stream, "");
 
@@ -771,8 +768,6 @@ TEST_F(StaticDisplayConfig, displays_are_matched_by_product)
         "    - product: 40178\n"
         "      position: [100, 100]\n"};
 
-    hdmi1.edid = basic_edid;
-
     sdc.load_config(stream, "");
 
     sdc.apply_to(dc);
@@ -789,8 +784,6 @@ TEST_F(StaticDisplayConfig, displays_are_matched_by_serial)
         "    displays:\n"
         "    - serial: 0\n"
         "      state: disabled\n"};
-
-    hdmi1.edid = basic_edid;
 
     sdc.load_config(stream, "");
 
@@ -814,8 +807,6 @@ TEST_F(StaticDisplayConfig, displays_are_matched_by_multiple_properties)
         "      serial: 0\n"
         "      orientation: left\n"};
 
-    hdmi1.edid = basic_edid;
-
     sdc.load_config(stream, "");
 
     sdc.apply_to(dc);
@@ -835,8 +826,6 @@ TEST_F(StaticDisplayConfig, displays_need_full_match)
         "      product: 40178\n"
         "      serial: 1\n"  // incorrect serial
         "      orientation: left\n"};
-
-    hdmi1.edid = basic_edid;
 
     sdc.load_config(stream, "");
 
@@ -858,8 +847,6 @@ TEST_F(StaticDisplayConfig, displays_precede_cards)
         "    - vendor: APP\n"
         "      orientation: left\n"};
 
-    hdmi1.edid = basic_edid;
-
     sdc.load_config(stream, "");
 
     sdc.apply_to(dc);
@@ -879,8 +866,6 @@ TEST_F(StaticDisplayConfig, cards_apply_on_unmatched_displays)
         "    displays:\n"
         "    - vendor: APP\n"
         "      orientation: left\n"};
-
-    hdmi1.edid = basic_edid;
 
     sdc.load_config(stream, "");
 
