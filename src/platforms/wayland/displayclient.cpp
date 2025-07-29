@@ -164,12 +164,14 @@ void mgw::DisplayClient::Output::geometry(
     int32_t physical_width,
     int32_t physical_height,
     int32_t subpixel,
-    const char */*make*/,
-    const char */*model*/,
+    const char *make,
+    const char *model,
     int32_t transform)
 {
     dcout.top_left = {x, y};
     dcout.physical_size_mm = {physical_width, physical_height};
+    dcout.display_info.vendor = make;
+    dcout.display_info.model = model;
 
     switch (subpixel)
     {
