@@ -108,9 +108,9 @@ void mrl::DisplayConfigurationReport::log_configuration(
         if (out.connected)
         {
             using mir::graphics::Edid;
-            if (out.edid.size() >= Edid::minimum_size)
+            if (out.display_info.raw_edid.size() >= Edid::minimum_size)
             {
-                auto edid = reinterpret_cast<Edid const*>(out.edid.data());
+                auto edid = reinterpret_cast<Edid const*>(out.display_info.raw_edid.data());
                 Edid::MonitorName name;
                 if (edid->get_monitor_name(name))
                     logger->log(component, severity,

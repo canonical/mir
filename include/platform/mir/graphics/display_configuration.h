@@ -92,6 +92,22 @@ struct DisplayConfigurationMode
 };
 
 /**
+ * Hardware information for a display output.
+ */
+struct DisplayInfo
+{
+    DisplayInfo() = default;
+    explicit DisplayInfo(std::vector<uint8_t> const& edid);
+    DisplayInfo& operator=(std::vector<uint8_t> const& edid);
+
+    std::vector<uint8_t> raw_edid;
+    std::optional<std::string> vendor;
+    std::optional<std::string> model;
+    std::optional<std::string> serial;
+    std::optional<uint16_t> product_code;
+};
+
+/**
  * Configuration information for a display output.
  */
 struct DisplayConfigurationOutput
@@ -150,6 +166,9 @@ struct DisplayConfigurationOutput
     /// Custom attributes (typically set via the .display configuration file
     std::map<std::string, std::optional<std::string>> custom_attribute = {};
 
+    /// Display information for this output, if available.
+    DisplayInfo display_info = {};
+
     /** The logical rectangle occupied by the output, based on its position,
         current mode and orientation (rotation) */
     geometry::Rectangle extents() const;
@@ -197,6 +216,7 @@ struct UserDisplayConfigurationOutput
     std::string const& name;
     /// Custom attributes (typically set by the .display configuration file
     std::map<std::string, std::optional<std::string>>& custom_attribute;
+    DisplayInfo const& display_info;
 
     UserDisplayConfigurationOutput(DisplayConfigurationOutput& main);
     geometry::Rectangle extents() const;
