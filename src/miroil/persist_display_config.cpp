@@ -193,7 +193,7 @@ void PersistDisplayConfigPolicy::apply_to(
         try {
             miroil::DisplayId display_id;
             // FIXME - output.edid should be std::vector<uint8_t>, not std::vector<uint8_t const>
-            display_id.edid.parse_data(reinterpret_cast<std::vector<uint8_t> const&>(output.edid));
+            display_id.edid.parse_data(reinterpret_cast<std::vector<uint8_t> const&>(output.display_info.raw_edid));
             display_id.output_id = output.id;
 
             // TODO if the h/w profile (by some definition) has changed, then apply corresponding saved config (if any).
@@ -246,7 +246,7 @@ void PersistDisplayConfigPolicy::save_config(mg::DisplayConfiguration const& con
         try {
             miroil::DisplayId display_id;
             // FIXME - output.edid should be std::vector<uint8_t>, not std::vector<uint8_t const>
-            display_id.edid.parse_data(reinterpret_cast<std::vector<uint8_t> const&>(output.edid));
+            display_id.edid.parse_data(reinterpret_cast<std::vector<uint8_t> const&>(output.display_info.raw_edid));
             display_id.output_id = output.id;
 
             miroil::DisplayConfigurationOptions config;

@@ -25,6 +25,16 @@ using namespace testing;
 
 namespace
 {
+static const std::vector<uint8_t> basic_edid{
+    0x00, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x00, 0x59, 0x96, 0x01, 0x30, 0x01, 0x00, 0x00, 0x00,
+    0x1e, 0x1c, 0x01, 0x04, 0xa5, 0x0a, 0x0f, 0x78, 0x16, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x01, 0x00, 0x01, 0x00, 0x01, 0x00,
+    0x01, 0x00, 0x01, 0x00, 0x01, 0x00, 0x0f, 0x1b, 0x20, 0x48, 0x30, 0x00, 0x2c, 0x50, 0x20, 0x14,
+    0x02, 0x04, 0x3c, 0x3c, 0x00, 0x00, 0x00, 0x1e, 0x00, 0x00, 0x00, 0xfc, 0x00, 0x41, 0x4e, 0x58,
+    0x37, 0x35, 0x33, 0x30, 0x20, 0x55, 0x0a, 0x20, 0x20, 0x20, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x93,
+};
 
 mg::DisplayConfigurationOutput const tmpl_output
 {
@@ -55,7 +65,10 @@ mg::DisplayConfigurationOutput const tmpl_output
     {},
     mir_output_gamma_unsupported,
     {},
-    {}
+    {},
+    {},
+    {},
+    mg::DisplayInfo{basic_edid}
 };
 
 }
@@ -415,6 +428,63 @@ TEST(DisplayConfiguration, output_extents_are_scaled_fractionally)
     EXPECT_THAT(out.extents().size, Eq(geom::Size{
         roundf(out.modes[out.current_mode_index].size.width.as_int() * 1.25),
         roundf(out.modes[out.current_mode_index].size.height.as_int() * 1.25)}));
+}
+
+TEST(DisplayConfiguration, edid_vendor_parsed)
+{
+    mg::DisplayConfigurationOutput out = tmpl_output;
+
+    EXPECT_THAT(out.display_info.vendor, Optional(Eq("Valve Corporation")));
+}
+
+TEST(DisplayConfiguration, edid_model_parsed)
+{
+    mg::DisplayConfigurationOutput out = tmpl_output;
+
+    EXPECT_THAT(out.display_info.model, Optional(Eq("ANX7530 U")));
+}
+
+TEST(DisplayConfiguration, edid_serial_parsed)
+{
+    mg::DisplayConfigurationOutput out = tmpl_output;
+
+    EXPECT_THAT(out.display_info.serial, Optional(Eq("0x00000001")));
+}
+
+TEST(DisplayConfiguration, edid_product_parsed)
+{
+    mg::DisplayConfigurationOutput out = tmpl_output;
+
+    EXPECT_THAT(out.display_info.product_code, Optional(Eq(12289)));
+}
+
+TEST(DisplayConfiguration, raw_edid_available)
+{
+    mg::DisplayConfigurationOutput out = tmpl_output;
+
+    EXPECT_THAT(out.display_info.raw_edid, Eq(basic_edid));
+}
+
+TEST(DisplayConfiguration, invalid_edid_results_in_empty_display_info)
+{
+    mg::DisplayConfigurationOutput out = tmpl_output;
+    out.display_info = mg::DisplayInfo{{0x00, 0x01, 0x02, 0x03}};
+
+    EXPECT_THAT(out.display_info.vendor, Eq(std::nullopt));
+    EXPECT_THAT(out.display_info.model, Eq(std::nullopt));
+    EXPECT_THAT(out.display_info.serial, Eq(std::nullopt));
+    EXPECT_THAT(out.display_info.product_code, Eq(std::nullopt));
+}
+
+TEST(DisplayConfiguration, empty_edid_results_in_empty_display_info)
+{
+    mg::DisplayConfigurationOutput out = tmpl_output;
+    out.display_info = mg::DisplayInfo{{}};
+
+    EXPECT_THAT(out.display_info.vendor, Eq(std::nullopt));
+    EXPECT_THAT(out.display_info.model, Eq(std::nullopt));
+    EXPECT_THAT(out.display_info.serial, Eq(std::nullopt));
+    EXPECT_THAT(out.display_info.product_code, Eq(std::nullopt));
 }
 
 TEST(DisplayConfiguration, user_display_configuration_output_extents_are_scaled)
