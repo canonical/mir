@@ -14,86 +14,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/server.h"
-#include "mir/shell/slow_keys_transformer.h"
-#include "mir/shell/accessibility_manager.h"
 #include "miral/slow_keys.h"
-#include "miral/test_server.h"
+#include "miral/accessibility_test_server.h"
 
-#include "gmock/gmock.h"
+#include <gmock/gmock.h>
 
 using namespace testing;
 
-class MockSlowKeysTransformer: public mir::shell::SlowKeysTransformer
+class TestSlowKeys : public miral::TestAccessibilityManager
 {
 public:
-    MockSlowKeysTransformer()
-    {
-        ON_CALL(*this, on_key_down(_)).WillByDefault([](auto okd) { okd(0); });
-        ON_CALL(*this, on_key_rejected(_)).WillByDefault([](auto okr) { okr(0); });
-        ON_CALL(*this, on_key_accepted(_)).WillByDefault([](auto oka) { oka(0); });
-    }
-
-    MOCK_METHOD(void, on_key_down,(std::function<void(unsigned int)>&&), (override));
-    MOCK_METHOD(void, on_key_rejected,(std::function<void(unsigned int)>&&), (override));
-    MOCK_METHOD(void, on_key_accepted,(std::function<void(unsigned int)>&&), (override));
-    MOCK_METHOD(void, delay,(std::chrono::milliseconds), (override));
-    MOCK_METHOD(bool, transform_input_event, (EventDispatcher const&, mir::input::EventBuilder*, MirEvent const&), (override));
-};
-
-// TODO: this is yanked from the mousekeys config test, we should pull these into mtd
-// FIXME: Symbol name collision with the original from the mousekeys test
-class FooBarBaz: public mir::shell::AccessibilityManager
-{
-public:
-    FooBarBaz()
-    {
-        ON_CALL(*this, slow_keys()).WillByDefault(ReturnRef(slow_keys_transformer));
-    }
-
-    MOCK_METHOD(void, register_keyboard_helper, (std::shared_ptr<mir::shell::KeyboardHelper> const&), (override));
-    MOCK_METHOD(std::optional<int>, repeat_rate, (), (const override));
-    MOCK_METHOD(int, repeat_delay, (), (const override));
-    MOCK_METHOD(void, repeat_rate_and_delay, (std::optional<int> new_rate, std::optional<int> new_delay), (override));
-    MOCK_METHOD(void, notify_helpers, (), (const override));
-    MOCK_METHOD(void, cursor_scale, (float), (override));
-    MOCK_METHOD(void, mousekeys_enabled, (bool on), (override));
-    MOCK_METHOD(mir::shell::MouseKeysTransformer&, mousekeys, (), (override));
-    MOCK_METHOD(void, simulated_secondary_click_enabled, (bool enabled), (override));
-    MOCK_METHOD(mir::shell::SimulatedSecondaryClickTransformer&, simulated_secondary_click, (), (override));
-    MOCK_METHOD(void, hover_click_enabled, (bool), (override));
-    MOCK_METHOD(mir::shell::HoverClickTransformer&, hover_click, (), (override));
-    MOCK_METHOD(void, slow_keys_enabled, (bool enabled), (override));
-    MOCK_METHOD(mir::shell::SlowKeysTransformer&, slow_keys, (), (override));
-    MOCK_METHOD(void, sticky_keys_enabled, (bool), (override));
-    MOCK_METHOD(mir::shell::StickyKeysTransformer&, sticky_keys, (), (override));
-
-    testing::NiceMock<MockSlowKeysTransformer> slow_keys_transformer;
-};
-
-
-class TestSlowKeys : public miral::TestServer
-{
-public:
-    TestSlowKeys()
-    {
-        // TODO: Dedup this, maybe create AccessibilityTestServer?
-        start_server_in_setup = false;
-        add_server_init(
-            [this](mir::Server& server)
-            {
-                server.override_the_accessibility_manager(
-                    [&, this]
-                    {
-                        return accessibility_manager;
-                    });
-            });
-
-    }
-
     miral::SlowKeys slow_keys{miral::SlowKeys::enabled()};
-    std::shared_ptr<testing::NiceMock<FooBarBaz>> accessibility_manager =
-        std::make_shared<testing::NiceMock<FooBarBaz>>();
 };
 
 TEST_F(TestSlowKeys, enabling_slow_keys_from_miral_enables_it_in_the_accessibility_manager)
