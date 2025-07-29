@@ -18,6 +18,12 @@
 #include "mir/output_type_names.h"
 #include "mir/graphics/transformation.h"
 
+extern "C"
+{
+#include <libdisplay-info/edid.h>
+#include <libdisplay-info/info.h>
+}
+
 #include <ostream>
 #include <algorithm>
 
@@ -251,6 +257,38 @@ mir::geometry::Rectangle extents_of(
 
 }
 
+mg::DisplayInfo::DisplayInfo(std::vector<uint8_t> const& edid)
+{
+    if (edid.empty())
+    {
+        return;
+    }
+
+    raw_edid = edid;
+
+    if (std::unique_ptr<di_info, decltype(&di_info_destroy)> const info{
+                                di_info_parse_edid(edid.data(), edid.size()),
+                                &di_info_destroy})
+    {
+        if (auto const di_make = di_info_get_make(info.get()))
+        {
+            vendor = di_make;
+        }
+        if (auto const di_model = di_info_get_model(info.get()))
+        {
+            model = di_model;
+        }
+        if (auto const di_serial = di_info_get_serial(info.get()))
+        {
+            serial = di_serial;
+        }
+        if (auto const vendor_product = di_edid_get_vendor_product(di_info_get_edid(info.get())); vendor_product && vendor_product->product)
+        {
+            product_code = vendor_product->product;
+        }
+    }
+}
+
 mir::geometry::Rectangle mg::DisplayConfigurationOutput::extents() const
 {
     return custom_logical_size.is_set() ?
@@ -321,10 +359,11 @@ mg::UserDisplayConfigurationOutput::UserDisplayConfigurationOutput(
         subpixel_arrangement(main.subpixel_arrangement),
         gamma(main.gamma),
         gamma_supported(main.gamma_supported),
-        edid(main.edid),
+        edid(main.display_info.raw_edid),
         custom_logical_size(main.custom_logical_size),
         name(main.name),
-        custom_attribute{main.custom_attribute}
+        custom_attribute{main.custom_attribute},
+        display_info(main.display_info)
 {
 }
 

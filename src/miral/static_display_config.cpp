@@ -374,9 +374,9 @@ void miral::YamlFileDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
                 {
                     using mir::graphics::Edid;
                     std::optional<Edid const*> edid;
-                    if (conf_output.edid.size() >= Edid::minimum_size)
+                    if (conf_output.display_info.raw_edid.size() >= Edid::minimum_size)
                     {
-                        edid = reinterpret_cast<Edid const*>(conf_output.edid.data());
+                        edid = reinterpret_cast<Edid const*>(conf_output.display_info.raw_edid.data());
                     }
 
                     for (auto const& [property, value] : matchers)
