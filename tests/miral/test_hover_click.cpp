@@ -103,22 +103,19 @@ TEST_F(TestHoverClick, setting_reclick_displacement_threshold_sets_transformer_r
 TEST_F(TestHoverClick, setting_on_hover_start_sets_transformer_on_hover_start)
 {
     auto calls = 0;
-    auto const on_hover_start = [&calls] mutable
-    {
-        calls += 1;
-    };
-
-    InSequence seq;
-    EXPECT_CALL(accessibility_manager->hover_click_transformer, on_hover_start(_)).Times(2);
+    auto const on_hover_start = [&calls] { calls += 1; };
 
     add_server_init(hover_click);
     
+    EXPECT_CALL(accessibility_manager->hover_click_transformer, on_hover_start(_)).Times(0);
     hover_click.on_hover_start(on_hover_start);
     EXPECT_THAT(calls, Eq(0));
 
+    EXPECT_CALL(accessibility_manager->hover_click_transformer, on_hover_start(_)).Times(1);
     start_server();
     EXPECT_THAT(calls, Eq(1));
     
+    EXPECT_CALL(accessibility_manager->hover_click_transformer, on_hover_start(_)).Times(1);
     hover_click.on_hover_start(on_hover_start);
     EXPECT_THAT(calls, Eq(2));
 }
@@ -126,22 +123,21 @@ TEST_F(TestHoverClick, setting_on_hover_start_sets_transformer_on_hover_start)
 TEST_F(TestHoverClick, setting_on_hover_cancel_sets_transformer_on_hover_cancel)
 {
     auto calls = 0;
-    auto const on_hover_cancel = [&calls] mutable
-    {
-        calls += 1;
-    };
-
-    InSequence seq;
-    EXPECT_CALL(accessibility_manager->hover_click_transformer, on_hover_cancel(_)).Times(2);
+    auto const on_hover_cancel = [&calls] { calls += 1; };
 
     add_server_init(hover_click);
-    
+
+    InSequence seq;
+
+    EXPECT_CALL(accessibility_manager->hover_click_transformer, on_hover_cancel(_)).Times(0);
     hover_click.on_hover_cancel(on_hover_cancel);
     EXPECT_THAT(calls, Eq(0));
 
+    EXPECT_CALL(accessibility_manager->hover_click_transformer, on_hover_cancel(_)).Times(1);
     start_server();
     EXPECT_THAT(calls, Eq(1));
     
+    EXPECT_CALL(accessibility_manager->hover_click_transformer, on_hover_cancel(_)).Times(1);
     hover_click.on_hover_cancel(on_hover_cancel);
     EXPECT_THAT(calls, Eq(2));
 }
@@ -149,22 +145,21 @@ TEST_F(TestHoverClick, setting_on_hover_cancel_sets_transformer_on_hover_cancel)
 TEST_F(TestHoverClick, setting_on_click_dispatched_sets_transformer_on_click_dispatched)
 {
     auto calls = 0;
-    auto const on_click_dispatched = [&calls] mutable
-    {
-        calls += 1;
-    };
-
-    InSequence seq;
-    EXPECT_CALL(accessibility_manager->hover_click_transformer, on_click_dispatched(_)).Times(2);
+    auto const on_click_dispatched = [&calls] { calls += 1; };
 
     add_server_init(hover_click);
-    
+
+    InSequence seq;
+
+    EXPECT_CALL(accessibility_manager->hover_click_transformer, on_click_dispatched(_)).Times(0);
     hover_click.on_click_dispatched(on_click_dispatched);
     EXPECT_THAT(calls, Eq(0));
 
+    EXPECT_CALL(accessibility_manager->hover_click_transformer, on_click_dispatched(_)).Times(1);
     start_server();
     EXPECT_THAT(calls, Eq(1));
     
+    EXPECT_CALL(accessibility_manager->hover_click_transformer, on_click_dispatched(_)).Times(1);
     hover_click.on_click_dispatched(on_click_dispatched);
     EXPECT_THAT(calls, Eq(2));
 }
