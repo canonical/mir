@@ -18,6 +18,7 @@
 #define MIR_TEST_DOUBLES_MOCK_ACCESSIBILITY_MANAGER_H
 
 #include "mir/shell/accessibility_manager.h"
+#include "mir/test/doubles/mock_hover_click_transformer.h"
 #include "mir/test/doubles/mock_mousekeys_transformer.h"
 #include "mir/test/doubles/mock_slow_keys_transformer.h"
 
@@ -36,6 +37,7 @@ public:
     {
         ON_CALL(*this, mousekeys()).WillByDefault(testing::ReturnRef(mousekeys_transformer));
         ON_CALL(*this, slow_keys()).WillByDefault(ReturnRef(slow_keys_transformer));
+        ON_CALL(*this, hover_click()).WillByDefault(ReturnRef(hover_click_transformer));
     }
 
     MOCK_METHOD(void, register_keyboard_helper, (std::shared_ptr<mir::shell::KeyboardHelper> const&), (override));
@@ -56,6 +58,7 @@ public:
 
     testing::NiceMock<MockMouseKeysTransformer> mousekeys_transformer;
     testing::NiceMock<MockSlowKeysTransformer> slow_keys_transformer;
+    testing::NiceMock<MockHoverClickTransformer> hover_click_transformer;
 };
 }
 }
