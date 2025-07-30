@@ -27,7 +27,7 @@ public:
     miral::SlowKeys slow_keys{miral::SlowKeys::enabled()};
 };
 
-TEST_F(TestSlowKeys, enabling_slow_keys_from_miral_enables_it_in_the_accessibility_manager)
+TEST_F(TestSlowKeys, enabling_from_miral_enables_it_in_the_accessibility_manager)
 {
 
     InSequence seq;
@@ -45,7 +45,7 @@ TEST_F(TestSlowKeys, enabling_slow_keys_from_miral_enables_it_in_the_accessibili
     slow_keys.disable();
 }
 
-TEST_F(TestSlowKeys, slow_keys_setting_on_key_down_sets_transformer_on_key_down)
+TEST_F(TestSlowKeys, setting_on_key_down_sets_transformer_on_key_down)
 {
     auto calls = 0;
     auto on_key_down = [&calls](auto) mutable
@@ -71,7 +71,7 @@ TEST_F(TestSlowKeys, slow_keys_setting_on_key_down_sets_transformer_on_key_down)
     EXPECT_THAT(calls, Eq(2));
 }
 
-TEST_F(TestSlowKeys, slow_keys_setting_on_key_rejected_sets_transformer_on_key_rejected)
+TEST_F(TestSlowKeys, setting_on_key_rejected_sets_transformer_on_key_rejected)
 {
     auto calls = 0;
     auto on_key_rejected = [&calls](auto) mutable
@@ -94,7 +94,7 @@ TEST_F(TestSlowKeys, slow_keys_setting_on_key_rejected_sets_transformer_on_key_r
     EXPECT_THAT(calls, Eq(2));
 }
 
-TEST_F(TestSlowKeys, slow_keys_setting_on_key_accepted_sets_transformer_on_key_accepted)
+TEST_F(TestSlowKeys, setting_on_key_accepted_sets_transformer_on_key_accepted)
 {
     auto calls = 0;
     auto on_key_accepted = [&calls](auto) mutable
@@ -117,7 +117,7 @@ TEST_F(TestSlowKeys, slow_keys_setting_on_key_accepted_sets_transformer_on_key_a
     EXPECT_THAT(calls, Eq(2));
 }
 
-TEST_F(TestSlowKeys, slow_keys_setting_delay_sets_transformer_delay)
+TEST_F(TestSlowKeys, setting_delay_sets_transformer_delay)
 {
     auto delay1 = std::chrono::milliseconds{1337};
     auto delay2 = std::chrono::milliseconds{0xF00F};
