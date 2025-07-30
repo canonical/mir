@@ -24,6 +24,16 @@ using namespace testing;
 class TestSlowKeys : public miral::TestAccessibilityManager
 {
 public:
+    TestSlowKeys()
+    {
+        ON_CALL(accessibility_manager->slow_keys_transformer, on_key_down(_))
+            .WillByDefault([](auto okd_cb) { okd_cb(0); });
+        ON_CALL(accessibility_manager->slow_keys_transformer, on_key_rejected(_))
+            .WillByDefault([](auto okr_cb) { okr_cb(0); });
+        ON_CALL(accessibility_manager->slow_keys_transformer, on_key_accepted(_))
+            .WillByDefault([](auto oka_cb) { oka_cb(0); });
+    }
+
     miral::SlowKeys slow_keys{miral::SlowKeys::enabled()};
 };
 

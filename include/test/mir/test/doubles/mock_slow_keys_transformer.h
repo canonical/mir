@@ -26,14 +26,6 @@ namespace mir::test::doubles
 class MockSlowKeysTransformer: public mir::shell::SlowKeysTransformer
 {
 public:
-    MockSlowKeysTransformer()
-    {
-        using testing::_;
-        ON_CALL(*this, on_key_down(_)).WillByDefault([](auto okd) { okd(0); });
-        ON_CALL(*this, on_key_rejected(_)).WillByDefault([](auto okr) { okr(0); });
-        ON_CALL(*this, on_key_accepted(_)).WillByDefault([](auto oka) { oka(0); });
-    }
-
     MOCK_METHOD(void, on_key_down,(std::function<void(unsigned int)>&&), (override));
     MOCK_METHOD(void, on_key_rejected,(std::function<void(unsigned int)>&&), (override));
     MOCK_METHOD(void, on_key_accepted,(std::function<void(unsigned int)>&&), (override));
