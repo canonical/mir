@@ -48,72 +48,70 @@ TEST_F(TestSlowKeys, enabling_from_miral_enables_it_in_the_accessibility_manager
 TEST_F(TestSlowKeys, setting_on_key_down_sets_transformer_on_key_down)
 {
     auto calls = 0;
-    auto on_key_down = [&calls](auto) mutable
-    {
-        calls += 1;
-    };
-
-    InSequence seq;
-    // First call is the default empty callback, and the second one is the callback pass.
-    // Unfortunately we can't check the equality of the callbacks.
-    EXPECT_CALL(accessibility_manager->slow_keys_transformer, on_key_down(_)).Times(2);
-
+    auto okd = [&calls](auto){ calls += 1; };
     add_server_init(slow_keys);
 
-    // Gets stored in `SlowKeys` and is set when the server starts
-    slow_keys.on_key_down(on_key_down);
+    InSequence seq;
+
+    // The server hasn't started, so the transformer is unavailable. The
+    // callback is stored in `miral::SlowKeys` until the server starts.
+    EXPECT_CALL(accessibility_manager->slow_keys_transformer, on_key_down(_)).Times(0);
+    slow_keys.on_key_down(okd);
     EXPECT_THAT(calls, Eq(0));
 
+    // When the server starts, all data is transferred from the miral side to
+    // the transformer. So `on_key_down` should get called
+    EXPECT_CALL(accessibility_manager->slow_keys_transformer, on_key_down(_)).Times(1);
     start_server();
     EXPECT_THAT(calls, Eq(1));
-
-    slow_keys.on_key_down(on_key_down);
+    
+    // After the server starts, all modifications from miral get relayed
+    // directly to the transformer. So `on_key_down` will get called once
+    // again.
+    EXPECT_CALL(accessibility_manager->slow_keys_transformer, on_key_down(_)).Times(1);
+    slow_keys.on_key_down(okd);
     EXPECT_THAT(calls, Eq(2));
 }
 
 TEST_F(TestSlowKeys, setting_on_key_rejected_sets_transformer_on_key_rejected)
 {
     auto calls = 0;
-    auto on_key_rejected = [&calls](auto) mutable
-    {
-        calls += 1;
-    };
-
-    InSequence seq;
-    EXPECT_CALL(accessibility_manager->slow_keys_transformer, on_key_rejected(_)).Times(2);
-
+    auto okr = [&calls](auto){ calls += 1; };
     add_server_init(slow_keys);
 
-    slow_keys.on_key_rejected(on_key_rejected);
+    InSequence seq;
+
+    EXPECT_CALL(accessibility_manager->slow_keys_transformer, on_key_rejected(_)).Times(0);
+    slow_keys.on_key_rejected(std::move(okr));
     EXPECT_THAT(calls, Eq(0));
 
+    EXPECT_CALL(accessibility_manager->slow_keys_transformer, on_key_rejected(_)).Times(1);
     start_server();
     EXPECT_THAT(calls, Eq(1));
     
-    slow_keys.on_key_rejected(on_key_rejected);
+    EXPECT_CALL(accessibility_manager->slow_keys_transformer, on_key_rejected(_)).Times(1);
+    slow_keys.on_key_rejected(std::move(okr));
     EXPECT_THAT(calls, Eq(2));
 }
 
 TEST_F(TestSlowKeys, setting_on_key_accepted_sets_transformer_on_key_accepted)
 {
     auto calls = 0;
-    auto on_key_accepted = [&calls](auto) mutable
-    {
-        calls += 1;
-    };
-    
-    InSequence seq;
-    EXPECT_CALL(accessibility_manager->slow_keys_transformer, on_key_accepted(_)).Times(2);
-
+    auto oka = [&calls](auto){ calls += 1; };
     add_server_init(slow_keys);
-    
-    slow_keys.on_key_accepted(on_key_accepted);
+
+    InSequence seq;
+
+    EXPECT_CALL(accessibility_manager->slow_keys_transformer, on_key_accepted(_)).Times(0);
+    slow_keys.on_key_accepted(std::move(oka));
     EXPECT_THAT(calls, Eq(0));
 
+    EXPECT_CALL(accessibility_manager->slow_keys_transformer, on_key_accepted(_)).Times(1);
     start_server();
     EXPECT_THAT(calls, Eq(1));
     
-    slow_keys.on_key_accepted(on_key_accepted);
+    EXPECT_CALL(accessibility_manager->slow_keys_transformer, on_key_accepted(_)).Times(1);
+    slow_keys.on_key_accepted(std::move(oka));
     EXPECT_THAT(calls, Eq(2));
 }
 
