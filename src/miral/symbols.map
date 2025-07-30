@@ -61,7 +61,9 @@ global:
     miral::InternalClientLauncher::launch*;
     miral::InternalClientLauncher::operator*;
     miral::Keymap::?Keymap*;
-    miral::Keymap::Keymap*;
+    "miral::Keymap::Keymap()";
+    "miral::Keymap::Keymap(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)";
+    "miral::Keymap::Keymap(miral::Keymap const&)";
     miral::Keymap::operator*;
     miral::Keymap::set_keymap*;
     miral::MinimalWindowManager::?MinimalWindowManager*;
@@ -574,6 +576,7 @@ global:
     "miral::CursorScale::CursorScale(miral::live_config::Store&)";
     "miral::InputConfiguration::InputConfiguration(miral::live_config::Store&)";
     "miral::InputConfiguration::InputConfiguration(miral::live_config::Store&)";
+    "miral::Keymap::Keymap(miral::live_config::Store&)";
     "miral::MouseKeysConfig::MouseKeysConfig(miral::live_config::Store&)";
     "miral::MouseKeysConfig::MouseKeysConfig(std::shared_ptr<miral::MouseKeysConfig::Self>)";
     "miral::MouseKeysConfig::disable() const";

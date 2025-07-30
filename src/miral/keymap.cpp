@@ -16,6 +16,8 @@
 
 #include "miral/keymap.h"
 
+#include "miral/live_config.h"
+
 #include <mir/fd.h>
 #include <mir/input/input_device_observer.h>
 #include <mir/input/input_device_hub.h>
@@ -34,11 +36,14 @@
 #include <mutex>
 #include <string>
 #include <vector>
+#include <boost/program_options/options_description.hpp>
 
 namespace mi = mir::input;
 
 namespace
 {
+auto constexpr keymap_description = "keymap <layout>[+<variant>[+<options>]], e,g, \"gb\" or \"cz+qwerty\" or \"de++compose:caps\"";
+
 std::string keymap_default()
 {
     static auto const default_keymap = "us";
@@ -86,12 +91,12 @@ char const* const keymap_option = "keymap";
 
 struct miral::Keymap::Self : mir::input::InputDeviceObserver
 {
-    Self(std::string const& keymap) : layout{}, variant{}
+    Self(std::string_view keymap) : layout{}, variant{}
     {
         set_keymap(keymap);
     }
 
-    void set_keymap(std::string const& keymap)
+    void set_keymap(std::string_view keymap)
     {
         std::lock_guard lock{mutex};
         auto get_next_token = [km = keymap]() mutable
@@ -198,6 +203,21 @@ miral::Keymap::Keymap(std::string const& keymap) :
 {
 }
 
+miral::Keymap::Keymap(live_config::Store& config_store) : Keymap{keymap_default()}
+{
+    config_store.add_string_attribute(
+        {keymap_option},
+        keymap_description,
+        keymap_default(),
+        [self=self](live_config::Key const&, std::optional<std::string_view> val)
+            {
+                if (val)
+                {
+                    self->set_keymap(*val);
+                }
+            });
+}
+
 miral::Keymap::~Keymap() = default;
 
 miral::Keymap::Keymap(Keymap const&) = default;
@@ -207,7 +227,9 @@ auto miral::Keymap::operator=(Keymap const& rhs) -> Keymap& = default;
 void miral::Keymap::operator()(mir::Server& server) const
 {
     if (self->layout.empty())
-        server.add_configuration_option(keymap_option, "keymap <layout>[+<variant>[+<options>]], e,g, \"gb\" or \"cz+qwerty\" or \"de++compose:caps\"", keymap_default());
+    {
+        server.add_configuration_option(keymap_option, keymap_description, keymap_default());
+    }
 
     server.add_init_callback([this, &server]
         {

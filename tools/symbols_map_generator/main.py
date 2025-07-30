@@ -32,6 +32,7 @@ HIDDEN_SYMBOLS = {
     "vtable?for?miral::WaylandExtensions::Context;",
     "mir::DefaultServerConfiguration::pointer_input_dispatcher*;",
     "miral::CursorScale::CursorScale*;",
+    "miral::Keymap::Keymap*;",
     "miral::InputConfiguration::InputConfiguration*;",
     "miral::OutputFilter::OutputFilter*;",
     
