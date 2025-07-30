@@ -60,13 +60,13 @@ TEST_P(OutputManagerTransformTest, orientation_and_mirror_mode_to_output_transfo
 
 INSTANTIATE_TEST_SUITE_P(OutputManagerTransformTest, OutputManagerTransformTest, ::testing::Values(
     TransformTestParams(mw::Output::Transform::normal, mir_orientation_normal, mir_mirror_mode_none),
-    TransformTestParams(mw::Output::Transform::_90, mir_orientation_right, mir_mirror_mode_none),
+    TransformTestParams(mw::Output::Transform::_90, mir_orientation_left, mir_mirror_mode_none),
     TransformTestParams(mw::Output::Transform::_180, mir_orientation_inverted, mir_mirror_mode_none),
-    TransformTestParams(mw::Output::Transform::_270, mir_orientation_left, mir_mirror_mode_none),
+    TransformTestParams(mw::Output::Transform::_270, mir_orientation_right, mir_mirror_mode_none),
     TransformTestParams(mw::Output::Transform::flipped, mir_orientation_normal, mir_mirror_mode_horizontal),
-    TransformTestParams(mw::Output::Transform::flipped_90, mir_orientation_right, mir_mirror_mode_horizontal),
+    TransformTestParams(mw::Output::Transform::flipped_90, mir_orientation_left, mir_mirror_mode_horizontal),
     TransformTestParams(mw::Output::Transform::flipped_180, mir_orientation_inverted, mir_mirror_mode_horizontal),
-    TransformTestParams(mw::Output::Transform::flipped_270, mir_orientation_left, mir_mirror_mode_horizontal)
+    TransformTestParams(mw::Output::Transform::flipped_270, mir_orientation_right, mir_mirror_mode_horizontal)
 ));
 
 TEST_F(OutputManagerTest, output_transform_throws_when_invalid)

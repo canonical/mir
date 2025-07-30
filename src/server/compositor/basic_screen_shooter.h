@@ -24,6 +24,7 @@
 #include "mir/time/clock.h"
 
 #include <mutex>
+#include <glm/glm.hpp>
 
 namespace mir
 {
@@ -59,6 +60,7 @@ public:
     void capture(
         std::shared_ptr<renderer::software::WriteMappableBuffer> const& buffer,
         geometry::Rectangle const& area,
+        glm::mat2 const& transform,
         bool overlay_cursor,
         std::function<void(std::optional<time::Timestamp>)>&& callback) override;
 
@@ -81,6 +83,7 @@ std::shared_ptr<graphics::Cursor> const& cursor);
         auto render(
             std::shared_ptr<renderer::software::WriteMappableBuffer> const& buffer,
             geometry::Rectangle const& area,
+            glm::mat2 const& transform,
             bool overlay_cursor) -> time::Timestamp;
 
         auto renderer_for_buffer(std::shared_ptr<renderer::software::WriteMappableBuffer> buffer)

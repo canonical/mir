@@ -176,6 +176,7 @@ mc::BasicScreenShooter::Self::Self(
 auto mc::BasicScreenShooter::Self::render(
     std::shared_ptr<mrs::WriteMappableBuffer> const& buffer,
     geom::Rectangle const& area,
+    glm::mat2 const& transform,
     bool overlay_cursor) -> time::Timestamp
 {
     std::lock_guard lock{mutex};
@@ -198,6 +199,7 @@ auto mc::BasicScreenShooter::Self::render(
     scene_elements.clear();
 
     auto& renderer = renderer_for_buffer(buffer);
+    renderer.set_output_transform(transform);
     renderer.set_viewport(area);
     renderer.set_output_filter(output_filter->filter());
     /* We don't need the result of this `render` call, as we know it's
@@ -283,18 +285,19 @@ mc::BasicScreenShooter::BasicScreenShooter(
 void mc::BasicScreenShooter::capture(
     std::shared_ptr<mrs::WriteMappableBuffer> const& buffer,
     geom::Rectangle const& area,
+    glm::mat2 const& transform,
     bool overlay_cursor,
     std::function<void(std::optional<time::Timestamp>)>&& callback)
 {
     // TODO: use an atomic to keep track of number of in-flight captures, and error if it's too many
 
-    executor.spawn([weak_self=std::weak_ptr{self}, buffer, area, overlay_cursor, callback=std::move(callback)]
+    executor.spawn([weak_self=std::weak_ptr{self}, buffer, area, transform, overlay_cursor, callback=std::move(callback)]
         {
             if (auto const self = weak_self.lock())
             {
                 try
                 {
-                    callback(self->render(buffer, area, overlay_cursor));
+                    callback(self->render(buffer, area, transform, overlay_cursor));
                     return;
                 }
                 catch (...)

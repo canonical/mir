@@ -17,6 +17,8 @@
 #ifndef MIR_COMPOSITOR_NULL_SCREEN_SHOOTER_H_
 #define MIR_COMPOSITOR_NULL_SCREEN_SHOOTER_H_
 
+#include <glm/fwd.hpp>
+
 #include "mir/compositor/screen_shooter.h"
 
 namespace mir
@@ -34,6 +36,7 @@ public:
     void capture(
         std::shared_ptr<renderer::software::WriteMappableBuffer> const& buffer,
         geometry::Rectangle const& area,
+        glm::mat2 const& transform,
         bool overlay_cursor,
         std::function<void(std::optional<time::Timestamp>)>&& callback) override;
 
