@@ -1,5 +1,8 @@
 MIRAL_5.0 {
 global:
+  # ld likes  "miral::Keymap::Keymap(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)"
+  # lld likes "miral::Keymap::Keymap(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&)"
+  _ZN5miral6KeymapC2ERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE;
   extern "C++" {
     miral::AddInitCallback::?AddInitCallback*;
     miral::AddInitCallback::AddInitCallback*;
@@ -62,7 +65,6 @@ global:
     miral::InternalClientLauncher::operator*;
     miral::Keymap::?Keymap*;
     "miral::Keymap::Keymap()";
-    "miral::Keymap::Keymap(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&)";
     "miral::Keymap::Keymap(miral::Keymap const&)";
     miral::Keymap::operator*;
     miral::Keymap::set_keymap*;
