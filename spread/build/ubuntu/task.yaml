@@ -40,6 +40,12 @@ execute: |
       echo "OVERRIDE_CONFIGURE_OPTIONS += -DCMAKE_CXX_FLAGS=-fpch-validate-input-files-content" >> debian/opts.mk
     fi
 
+    # Set up linker
+    if [ "${LINKER}" -eq "lld" ]; then
+      apt-get install --yes --no-install-recommends lld
+    fi
+    echo "OVERRIDE_CONFIGURE_OPTIONS += -DMIR_USE_LD=${LINKER}"
+
     # enable valgrind
     if [ "${VALGRIND}" -eq 1 ]; then
       echo "OVERRIDE_CONFIGURE_OPTIONS += -DENABLE_MEMCHECK_OPTION=ON" >> debian/opts.mk
