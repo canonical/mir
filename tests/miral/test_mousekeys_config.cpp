@@ -15,76 +15,20 @@
  */
 
 #include "mir/input/mousekeys_keymap.h"
-#include "mir/server.h"
 #include "mir/shell/accessibility_manager.h"
 
 #include "mir/shell/mousekeys_transformer.h"
 #include "miral/mousekeys_config.h"
-#include "miral/test_server.h"
+#include "miral/accessibility_test_server.h"
 
-#include "gmock/gmock.h"
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <memory>
 
 using namespace testing;
 
-class MockMouseKeysTransformer: public mir::shell::MouseKeysTransformer
+struct TestMouseKeysConfig : miral::TestAccessibilityManager
 {
-public:
-    MockMouseKeysTransformer() = default;
-    MOCK_METHOD(void, keymap, (mir::input::MouseKeysKeymap const& new_keymap), (override));
-    MOCK_METHOD(void, acceleration_factors, (double constant, double linear, double quadratic), (override));
-    MOCK_METHOD(void, max_speed, (double x_axis, double y_axis), (override));
-    MOCK_METHOD(bool, transform_input_event, (EventDispatcher const&, mir::input::EventBuilder*, MirEvent const&), (override));
-};
-
-class MockAccessibilityManager: public mir::shell::AccessibilityManager
-{
-public:
-    MockAccessibilityManager()
-    {
-        ON_CALL(*this, mousekeys()).WillByDefault(ReturnRef(mousekeys_transformer));
-    }
-
-    MOCK_METHOD(void, register_keyboard_helper, (std::shared_ptr<mir::shell::KeyboardHelper> const&), (override));
-    MOCK_METHOD(std::optional<int>, repeat_rate, (), (const override));
-    MOCK_METHOD(int, repeat_delay, (), (const override));
-    MOCK_METHOD(void, repeat_rate_and_delay, (std::optional<int> new_rate, std::optional<int> new_delay), (override));
-    MOCK_METHOD(void, notify_helpers, (), (const override));
-    MOCK_METHOD(void, cursor_scale, (float), (override));
-    MOCK_METHOD(void, mousekeys_enabled, (bool on), (override));
-    MOCK_METHOD(mir::shell::MouseKeysTransformer&, mousekeys, (), (override));
-    MOCK_METHOD(void, simulated_secondary_click_enabled, (bool enabled), (override));
-    MOCK_METHOD(mir::shell::SimulatedSecondaryClickTransformer&, simulated_secondary_click, (), (override));
-    MOCK_METHOD(void, hover_click_enabled, (bool), (override));
-    MOCK_METHOD(mir::shell::HoverClickTransformer&, hover_click, (), (override));
-    MOCK_METHOD(void, slow_keys_enabled, (bool enabled), (override));
-    MOCK_METHOD(mir::shell::SlowKeysTransformer&, slow_keys, (), (override));
-    MOCK_METHOD(void, sticky_keys_enabled, (bool), (override));
-    MOCK_METHOD(mir::shell::StickyKeysTransformer&, sticky_keys, (), (override));
-
-    testing::NiceMock<MockMouseKeysTransformer> mousekeys_transformer;
-};
-
-struct TestMouseKeysConfig : miral::TestServer
-{
-    TestMouseKeysConfig()
-    {
-        start_server_in_setup = false;
-        add_server_init(
-            [this](mir::Server& server)
-            {
-                server.override_the_accessibility_manager(
-                    [&, this]
-                    {
-                        return accessibility_manager;
-                    });
-            });
-    }
-
     miral::MouseKeysConfig config{miral::MouseKeysConfig::enabled()};
-    std::shared_ptr<testing::NiceMock<MockAccessibilityManager>> accessibility_manager =
-        std::make_shared<testing::NiceMock<MockAccessibilityManager>>();
 };
 
 TEST_F(TestMouseKeysConfig, enabling_mousekeys_from_miral_enables_it_in_the_accessibility_manager)
