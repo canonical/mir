@@ -24,16 +24,6 @@ using namespace testing;
 class TestSlowKeys : public miral::TestAccessibilityManager
 {
 public:
-    TestSlowKeys()
-    {
-        ON_CALL(accessibility_manager->slow_keys_transformer, on_key_down(_))
-            .WillByDefault([](auto okd_cb) { okd_cb(0); });
-        ON_CALL(accessibility_manager->slow_keys_transformer, on_key_rejected(_))
-            .WillByDefault([](auto okr_cb) { okr_cb(0); });
-        ON_CALL(accessibility_manager->slow_keys_transformer, on_key_accepted(_))
-            .WillByDefault([](auto oka_cb) { oka_cb(0); });
-    }
-
     miral::SlowKeys slow_keys{miral::SlowKeys::enabled()};
 };
 
@@ -57,6 +47,8 @@ TEST_F(TestSlowKeys, enabling_from_miral_enables_it_in_the_accessibility_manager
 
 TEST_F(TestSlowKeys, setting_on_key_down_sets_transformer_on_key_down)
 {
+    ON_CALL(accessibility_manager->slow_keys_transformer, on_key_down(_)).WillByDefault([](auto okd_cb) { okd_cb(0); });
+
     auto calls = 0;
     auto okd = [&calls](auto){ calls += 1; };
     add_server_init(slow_keys);
@@ -85,6 +77,9 @@ TEST_F(TestSlowKeys, setting_on_key_down_sets_transformer_on_key_down)
 
 TEST_F(TestSlowKeys, setting_on_key_rejected_sets_transformer_on_key_rejected)
 {
+    ON_CALL(accessibility_manager->slow_keys_transformer, on_key_rejected(_))
+        .WillByDefault([](auto okr_cb) { okr_cb(0); });
+
     auto calls = 0;
     auto okr = [&calls](auto){ calls += 1; };
     add_server_init(slow_keys);
@@ -106,6 +101,9 @@ TEST_F(TestSlowKeys, setting_on_key_rejected_sets_transformer_on_key_rejected)
 
 TEST_F(TestSlowKeys, setting_on_key_accepted_sets_transformer_on_key_accepted)
 {
+    ON_CALL(accessibility_manager->slow_keys_transformer, on_key_accepted(_))
+        .WillByDefault([](auto oka_cb) { oka_cb(0); });
+
     auto calls = 0;
     auto oka = [&calls](auto){ calls += 1; };
     add_server_init(slow_keys);
