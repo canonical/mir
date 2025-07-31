@@ -24,17 +24,6 @@ using namespace testing;
 class TestHoverClick: public miral::TestAccessibilityManager
 {
 public:
-    TestHoverClick()
-    {
-        using testing::_;
-        ON_CALL(accessibility_manager->hover_click_transformer, on_hover_start(_))
-            .WillByDefault([](auto ohs) { ohs(); });
-        ON_CALL(accessibility_manager->hover_click_transformer, on_hover_cancel(_))
-            .WillByDefault([](auto ohc) { ohc(); });
-        ON_CALL(accessibility_manager->hover_click_transformer, on_click_dispatched(_))
-            .WillByDefault([](auto ocd) { ocd(); });
-    }
-
     miral::HoverClick hover_click{miral::HoverClick::enabled()};
 };
 
@@ -102,6 +91,8 @@ TEST_F(TestHoverClick, setting_reclick_displacement_threshold_sets_transformer_r
 
 TEST_F(TestHoverClick, setting_on_hover_start_sets_transformer_on_hover_start)
 {
+    ON_CALL(accessibility_manager->hover_click_transformer, on_hover_start(_)).WillByDefault([](auto ohs) { ohs(); });
+
     auto calls = 0;
     auto const on_hover_start = [&calls] { calls += 1; };
 
@@ -122,6 +113,8 @@ TEST_F(TestHoverClick, setting_on_hover_start_sets_transformer_on_hover_start)
 
 TEST_F(TestHoverClick, setting_on_hover_cancel_sets_transformer_on_hover_cancel)
 {
+    ON_CALL(accessibility_manager->hover_click_transformer, on_hover_cancel(_)).WillByDefault([](auto ohc) { ohc(); });
+
     auto calls = 0;
     auto const on_hover_cancel = [&calls] { calls += 1; };
 
@@ -144,6 +137,9 @@ TEST_F(TestHoverClick, setting_on_hover_cancel_sets_transformer_on_hover_cancel)
 
 TEST_F(TestHoverClick, setting_on_click_dispatched_sets_transformer_on_click_dispatched)
 {
+    ON_CALL(accessibility_manager->hover_click_transformer, on_click_dispatched(_))
+        .WillByDefault([](auto ocd) { ocd(); });
+
     auto calls = 0;
     auto const on_click_dispatched = [&calls] { calls += 1; };
 
