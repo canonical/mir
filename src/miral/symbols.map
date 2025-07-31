@@ -62,7 +62,7 @@ global:
     miral::InternalClientLauncher::operator*;
     miral::Keymap::?Keymap*;
     "miral::Keymap::Keymap()";
-    "miral::Keymap::Keymap(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)";
+    "miral::Keymap::Keymap(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&)";
     "miral::Keymap::Keymap(miral::Keymap const&)";
     miral::Keymap::operator*;
     miral::Keymap::set_keymap*;
