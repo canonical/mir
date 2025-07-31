@@ -44,7 +44,7 @@ execute: |
     if [ "${LINKER}" -eq "lld" ]; then
       apt-get install --yes --no-install-recommends lld
     fi
-    echo "OVERRIDE_CONFIGURE_OPTIONS += -DMIR_USE_LD=${LINKER}"
+    echo "OVERRIDE_CONFIGURE_OPTIONS += -DMIR_USE_LD=${LINKER}" >> debian/opts.mk
 
     # enable valgrind
     if [ "${VALGRIND}" -eq 1 ]; then
