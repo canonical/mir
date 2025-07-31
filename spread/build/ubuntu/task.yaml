@@ -41,7 +41,7 @@ execute: |
     fi
 
     # Set up linker
-    if [ "${LINKER}" -eq "lld" ]; then
+    if [ "${LINKER}" == "lld" ]; then
       apt-get install --yes --no-install-recommends lld
     fi
     echo "OVERRIDE_CONFIGURE_OPTIONS += -DMIR_USE_LD=${LINKER}" >> debian/opts.mk
