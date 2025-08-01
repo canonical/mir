@@ -1,4 +1,4 @@
-MIR_COMMON_2.17 {
+MIR_COMMON_2.22 {
 global:
   mir_arrow_cursor_name;
   mir_busy_cursor_name;
@@ -267,6 +267,7 @@ global:
     MirTouchpadConfig::button_down_scroll_button*;
     MirTouchpadConfig::click_mode*;
     MirTouchpadConfig::disable_while_typing*;
+    MirTouchpadConfig::disable_with_external_mouse*;
     MirTouchpadConfig::disable_with_mouse*;
     MirTouchpadConfig::middle_mouse_button_emulation*;
     MirTouchpadConfig::operator*;
@@ -323,7 +324,11 @@ global:
     mir::RecursiveReadWriteMutex::write_lock*;
     mir::RecursiveReadWriteMutex::write_unlock*;
     mir::SharedLibrary::?SharedLibrary*;
+    mir::SharedLibrary::Handle::?Handle*;
+    mir::SharedLibrary::Handle::HandleHash::operator*;
+    mir::SharedLibrary::Handle::operator*;
     mir::SharedLibrary::SharedLibrary*;
+    mir::SharedLibrary::get_handle*;
     mir::SharedLibrary::load_symbol*;
     mir::SharedLibraryProberReport::?SharedLibraryProberReport*;
     mir::SharedLibraryProberReport::SharedLibraryProberReport*;
@@ -368,6 +373,7 @@ global:
     mir::dispatch::ThreadedDispatcher::remove_thread*;
     mir::dispatch::epoll_to_fd_event*;
     mir::dispatch::fd_event_to_epoll*;
+    mir::event_type_to_c_str*;
     mir::event_type_to_string*;
     mir::events::TouchContactV2::TouchContactV2*;
     mir::events::TouchContactV2::operator*;
@@ -398,7 +404,6 @@ global:
     mir::events::set_window_id*;
     mir::events::transform_positions*;
     mir::fd_reception_error::fd_reception_error*;
-    mir::graphics::Edid::*;
     mir::graphics::NativeBuffer::?NativeBuffer*;
     mir::graphics::NativeBuffer::NativeBuffer*;
     mir::graphics::NativeBuffer::operator*;
@@ -457,6 +462,8 @@ global:
     mir::time::PosixTimestamp::now*;
     mir::time::SteadyClock::min_wait_until*;
     mir::time::SteadyClock::now*;
+    mir::time::clock_gettime_checked*;
+    mir::time::is_steady_specialisation::is_steady*;
     non-virtual?thunk?to?mir::Executor::?Executor*;
     non-virtual?thunk?to?mir::SharedLibraryProberReport::?SharedLibraryProberReport*;
     non-virtual?thunk?to?mir::ThreadPoolExecutor::spawn*;
@@ -485,6 +492,7 @@ global:
     non-virtual?thunk?to?mir::logging::Logger::log*;
     non-virtual?thunk?to?mir::logging::MultiLogger::log*;
     operator*;
+    std::hash?mir::SharedLibrary::Handle?::operator*;
     typeinfo?for?MirInputConfig;
     typeinfo?for?MirInputDevice;
     typeinfo?for?MirKeyboardConfig;
@@ -499,6 +507,8 @@ global:
     typeinfo?for?mir::IntOwnedFd;
     typeinfo?for?mir::NonBlockingExecutor;
     typeinfo?for?mir::PosixRWMutex;
+    typeinfo?for?mir::SharedLibrary::Handle::HandleHash;
+    typeinfo?for?mir::SharedLibrary::Handle;
     typeinfo?for?mir::SharedLibrary;
     typeinfo?for?mir::SharedLibraryProberReport;
     typeinfo?for?mir::Signal;
@@ -527,6 +537,7 @@ global:
     typeinfo?for?mir::socket_error;
     typeinfo?for?mir::time::PosixTimestamp;
     typeinfo?for?mir::time::SteadyClock;
+    typeinfo?for?mir::time::is_steady_specialisation;
     vtable?for?MirCloseWindowEvent;
     vtable?for?MirKeyboardEvent;
     vtable?for?MirPointerEvent;
@@ -562,7 +573,7 @@ global:
 local: *;
 };
 
-MIR_COMMON_INTERNAL_2.17 {
+MIR_COMMON_INTERNAL_2.22 {
 global:
   extern "C++" {
     MirCloseWindowEvent::clone*;
@@ -589,10 +600,6 @@ global:
     mir::ThreadSafeList::for_each*;
     mir::ThreadSafeList::remove*;
     mir::ThreadSafeList::remove_all*;
-    mir::graphics::Edid::Edid*;
-    mir::graphics::Edid::get_manufacturer*;
-    mir::graphics::Edid::get_monitor_name*;
-    mir::graphics::Edid::product_code*;
     mir::input::KeyMapper::?KeyMapper*;
     mir::input::KeyMapper::KeyMapper*;
     mir::input::KeyMapper::operator*;
@@ -670,7 +677,6 @@ global:
     typeinfo?for?mir::RecursiveReadWriteMutex;
     typeinfo?for?mir::RecursiveWriteLock;
     typeinfo?for?mir::SignalBlocker;
-    typeinfo?for?mir::graphics::Edid;
     typeinfo?for?mir::input::KeyMapper;
     typeinfo?for?mir::input::receiver::XKBMapper;
     typeinfo?for?mir::report::lttng::TracepointProvider;
@@ -689,34 +695,3 @@ global:
     vtable?for?mir::logging::SharedLibraryProberReport;
   };
 };
-
-MIR_COMMON_2.18 {
-global:
-  extern "C++" {
-    MirTouchpadConfig::disable_with_external_mouse*;
-    mir::event_type_to_c_str*;
-  };
-} MIR_COMMON_2.17;
-
-MIR_COMMON_2.19 {
-global:
-  extern "C++" {
-    mir::SharedLibrary::Handle::?Handle*;
-    mir::SharedLibrary::Handle::operator*;
-    mir::SharedLibrary::get_handle*;
-    mir::SharedLibrary::Handle::HandleHash::operator*;
-    std::hash?mir::SharedLibrary::Handle?::operator*;
-    typeinfo?for?mir::SharedLibrary::Handle;
-    typeinfo?for?mir::SharedLibrary::Handle::HandleHash;
-  };
-} MIR_COMMON_2.18;
-
-MIR_COMMON_2.21 {
-global:
-  extern "C++" {
-    mir::graphics::Edid::serial_number*;
-    mir::time::clock_gettime_checked*;
-    mir::time::is_steady_specialisation::is_steady*;
-    typeinfo?for?mir::time::is_steady_specialisation;
-  };
-} MIR_COMMON_2.19;
