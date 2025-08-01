@@ -70,7 +70,6 @@ set(
     test_posix_rw_mutex.cpp
   test_posix_timestamp.cpp
   test_observer_multiplexer.cpp
-  test_edid.cpp
   test_report_exception.cpp
   test_thread_pool_executor.cpp
   test_linearising_executor.cpp

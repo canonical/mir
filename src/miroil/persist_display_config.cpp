@@ -190,48 +190,46 @@ void PersistDisplayConfigPolicy::apply_to(
     conf.for_each_output([this, &conf](mg::UserDisplayConfigurationOutput& output) {
         if (!output.connected) return;
 
-        try {
-            miroil::DisplayId display_id;
-            // FIXME - output.edid should be std::vector<uint8_t>, not std::vector<uint8_t const>
-            display_id.edid.parse_data(reinterpret_cast<std::vector<uint8_t> const&>(output.display_info.raw_edid));
-            display_id.output_id = output.id;
+        miroil::DisplayId display_id;
+        display_id.edid.vendor = output.display_info.vendor.value_or("");
+        display_id.edid.product_code = output.display_info.product_code.value_or(0);
+        display_id.edid.serial_number = output.display_info.serial_number.value_or(0);
+        display_id.edid.size = {output.physical_size_mm.width.as_int(), output.physical_size_mm.height.as_int()};
+        display_id.output_id = output.id;
 
-            // TODO if the h/w profile (by some definition) has changed, then apply corresponding saved config (if any).
-            // TODO Otherwise...
+        // TODO if the h/w profile (by some definition) has changed, then apply corresponding saved config (if any).
+        // TODO Otherwise...
 
-            miroil::DisplayConfigurationOptions config;
-            if (storage->load(display_id, config)) {
+        miroil::DisplayConfigurationOptions config;
+        if (storage->load(display_id, config)) {
 
-                if (config.mode.is_set()) {
-                    int mode_index = output.current_mode_index;
-                    int i = 0;
-                    // Find the mode index which supports the saved size.
-                    for (auto iter = output.modes.cbegin(); iter != output.modes.cend(); ++iter, i++) {
-                        auto const& mode = *iter;
-                        auto const& newMode = config.mode.value();
-                        if (mode.size == newMode.size && qFuzzyCompare(mode.vrefresh_hz, newMode.refresh_rate)) {
-                            mode_index = i;
-                            break;
-                        }
+            if (config.mode.is_set()) {
+                int mode_index = output.current_mode_index;
+                int i = 0;
+                // Find the mode index which supports the saved size.
+                for (auto iter = output.modes.cbegin(); iter != output.modes.cend(); ++iter, i++) {
+                    auto const& mode = *iter;
+                    auto const& newMode = config.mode.value();
+                    if (mode.size == newMode.size && qFuzzyCompare(mode.vrefresh_hz, newMode.refresh_rate)) {
+                        mode_index = i;
+                        break;
                     }
-                    output.current_mode_index = mode_index;
                 }
-
-                uint output_index = 0;
-                conf.for_each_output([&output, config, &output_index](mg::DisplayConfigurationOutput const& find_output) {
-                    if (output_index == config.clone_output_index.value()) {
-                        output.top_left = find_output.top_left;
-                    }
-                    output_index++;
-                });
-
-                if (config.orientation.is_set()) {output.orientation = config.orientation.value(); }
-                if (config.used.is_set()) {output.used = config.used.value(); }
-                if (config.form_factor.is_set()) {output.form_factor = config.form_factor.value(); }
-                if (config.scale.is_set()) {output.scale = config.scale.value(); }
+                output.current_mode_index = mode_index;
             }
-        } catch (std::runtime_error const& e) {
-            mir::log_info("Failed to parse EDID - %s\n", e.what());
+
+            uint output_index = 0;
+            conf.for_each_output([&output, config, &output_index](mg::DisplayConfigurationOutput const& find_output) {
+                if (output_index == config.clone_output_index.value()) {
+                    output.top_left = find_output.top_left;
+                }
+                output_index++;
+            });
+
+            if (config.orientation.is_set()) {output.orientation = config.orientation.value(); }
+            if (config.used.is_set()) {output.used = config.used.value(); }
+            if (config.form_factor.is_set()) {output.form_factor = config.form_factor.value(); }
+            if (config.scale.is_set()) {output.scale = config.scale.value(); }
         }
     });
 }
@@ -243,31 +241,29 @@ void PersistDisplayConfigPolicy::save_config(mg::DisplayConfiguration const& con
     conf.for_each_output([this, &conf](mg::DisplayConfigurationOutput const& output) {
         if (!output.connected) return;
 
-        try {
-            miroil::DisplayId display_id;
-            // FIXME - output.edid should be std::vector<uint8_t>, not std::vector<uint8_t const>
-            display_id.edid.parse_data(reinterpret_cast<std::vector<uint8_t> const&>(output.display_info.raw_edid));
-            display_id.output_id = output.id;
+        miroil::DisplayId display_id;
+        display_id.edid.vendor = output.display_info.vendor.value_or("");
+        display_id.edid.product_code = output.display_info.product_code.value_or(0);
+        display_id.edid.serial_number = output.display_info.serial_number.value_or(0);
+        display_id.edid.size = {output.physical_size_mm.width.as_int(), output.physical_size_mm.height.as_int()};
+        display_id.output_id = output.id;
 
-            miroil::DisplayConfigurationOptions config;
+        miroil::DisplayConfigurationOptions config;
 
-            uint output_index = 0;
-            conf.for_each_output([output, &config, &output_index](mg::DisplayConfigurationOutput const& find_output) {
-                if (!config.clone_output_index.is_set() && output.top_left == find_output.top_left) {
-                    config.clone_output_index = output_index;
-                }
-                output_index++;
-            });
+        uint output_index = 0;
+        conf.for_each_output([output, &config, &output_index](mg::DisplayConfigurationOutput const& find_output) {
+            if (!config.clone_output_index.is_set() && output.top_left == find_output.top_left) {
+                config.clone_output_index = output_index;
+            }
+            output_index++;
+        });
 
-            config.mode = current_mode_of(output);
-            config.form_factor = output.form_factor;
-            config.orientation = output.orientation;
-            config.scale = output.scale;
-            config.used = output.used;
+        config.mode = current_mode_of(output);
+        config.form_factor = output.form_factor;
+        config.orientation = output.orientation;
+        config.scale = output.scale;
+        config.used = output.used;
 
-            storage->save(display_id, config);
-        } catch (std::runtime_error const& e) {
-            mir::log_info("Failed to parse EDID - %s\n", e.what());
-        }
+        storage->save(display_id, config);
     });
 }

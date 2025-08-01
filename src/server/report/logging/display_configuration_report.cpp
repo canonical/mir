@@ -18,7 +18,6 @@
 #include "mir/graphics/display_configuration.h"
 #include "mir/output_type_names.h"
 #include "mir/logging/logger.h"
-#include "mir/graphics/edid.h"
 #include "mir/scene/session.h"
 
 #include <boost/exception/diagnostic_information.hpp>
@@ -107,22 +106,25 @@ void mrl::DisplayConfigurationReport::log_configuration(
                     );
         if (out.connected)
         {
-            using mir::graphics::Edid;
-            if (out.display_info.raw_edid.size() >= Edid::minimum_size)
+            if (out.display_info.model)
             {
-                auto edid = reinterpret_cast<Edid const*>(out.display_info.raw_edid.data());
-                Edid::MonitorName name;
-                if (edid->get_monitor_name(name))
-                    logger->log(component, severity,
-                                "%sEDID monitor name: %s", indent, name);
-                Edid::Manufacturer man;
-                edid->get_manufacturer(man);
                 logger->log(component, severity,
-                            "%sEDID manufacturer: %s", indent, man);
+                            "%sEDID monitor name: %s", indent, out.display_info.model->c_str());
+            }
+            if (out.display_info.vendor)
+            {
                 logger->log(component, severity,
-                            "%sEDID product code: %hu", indent, edid->product_code());
+                            "%sEDID manufacturer: %s", indent, out.display_info.vendor->c_str());
+            }
+            if (out.display_info.product_code)
+            {
                 logger->log(component, severity,
-                            "%sEDID serial number: %hu", indent, edid->serial_number());
+                            "%sEDID product code: %hu", indent, *out.display_info.product_code);
+            }
+            if (out.display_info.serial)
+            {
+                logger->log(component, severity,
+                            "%sEDID serial number: %s", indent, out.display_info.serial->c_str());
             }
 
             int width_mm = out.physical_size_mm.width.as_int();

@@ -105,6 +105,7 @@ struct DisplayInfo
     std::optional<std::string> model;
     std::optional<std::string> serial;
     std::optional<uint16_t> product_code;
+    std::optional<uint32_t> serial_number;
 };
 
 /**

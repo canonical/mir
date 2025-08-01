@@ -25,7 +25,6 @@ list(APPEND MIR_COMMON_SOURCES
   ${PROJECT_SOURCE_DIR}/include/common/mir/libname.h
   ${PROJECT_SOURCE_DIR}/include/common/mir/posix_rw_mutex.h
   posix_rw_mutex.cpp
-  edid.cpp
   event.cpp
   event_printer.cpp
   mir_cursor_api.cpp
