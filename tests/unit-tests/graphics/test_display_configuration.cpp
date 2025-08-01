@@ -457,6 +457,13 @@ TEST(DisplayConfiguration, edid_product_parsed)
     EXPECT_THAT(out.display_info.product_code, Optional(Eq(12289)));
 }
 
+TEST(DisplayConfiguration, edid_serial_number_parsed)
+{
+    mg::DisplayConfigurationOutput out = tmpl_output;
+
+    EXPECT_THAT(out.display_info.serial_number, Optional(Eq(1)));
+}
+
 TEST(DisplayConfiguration, raw_edid_available)
 {
     mg::DisplayConfigurationOutput out = tmpl_output;
@@ -472,6 +479,7 @@ TEST(DisplayConfiguration, invalid_edid_results_in_empty_display_info)
     EXPECT_THAT(display_info.model, Eq(std::nullopt));
     EXPECT_THAT(display_info.serial, Eq(std::nullopt));
     EXPECT_THAT(display_info.product_code, Eq(std::nullopt));
+    EXPECT_THAT(display_info.serial_number, Eq(std::nullopt));
 }
 
 TEST(DisplayConfiguration, empty_edid_results_in_empty_display_info)
@@ -482,6 +490,7 @@ TEST(DisplayConfiguration, empty_edid_results_in_empty_display_info)
     EXPECT_THAT(display_info.model, Eq(std::nullopt));
     EXPECT_THAT(display_info.serial, Eq(std::nullopt));
     EXPECT_THAT(display_info.product_code, Eq(std::nullopt));
+    EXPECT_THAT(display_info.serial_number, Eq(std::nullopt));
 }
 
 TEST(DisplayConfiguration, user_display_configuration_output_extents_are_scaled)

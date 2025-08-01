@@ -282,9 +282,16 @@ mg::DisplayInfo::DisplayInfo(std::vector<uint8_t> const& edid)
         {
             serial = di_serial;
         }
-        if (auto const vendor_product = di_edid_get_vendor_product(di_info_get_edid(info.get())); vendor_product && vendor_product->product)
+        if (auto const vendor_product = di_edid_get_vendor_product(di_info_get_edid(info.get())))
         {
-            product_code = vendor_product->product;
+            if (vendor_product->product)
+            {
+                product_code = vendor_product->product;
+            }
+            if (vendor_product->serial)
+            {
+                serial_number = vendor_product->serial;
+            }
         }
     }
 }
