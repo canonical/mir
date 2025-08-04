@@ -48,6 +48,11 @@ public:
     UniqueModulePtr<GraphicBufferAllocator>
         create_buffer_allocator(Display const& output) override;
 
+    auto driver_name() -> std::string const& override
+    {
+        static std::string name = "eglstream-kms";
+        return name;
+    }
 protected:
     auto maybe_create_provider(
         RenderingProvider::Tag const& type_tag) -> std::shared_ptr<RenderingProvider> override;

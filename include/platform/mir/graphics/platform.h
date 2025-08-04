@@ -239,6 +239,12 @@ public:
         return nullptr;
     }
 
+    virtual auto driver_name() -> std::string const&
+    {
+        static std::string unimpl = "unimplemented";
+        return unimpl;
+    }
+
 protected:
     /**
      * Acquire a specific rendering interface

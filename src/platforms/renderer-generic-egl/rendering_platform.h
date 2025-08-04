@@ -42,6 +42,12 @@ public:
     auto create_buffer_allocator(
         graphics::Display const& output) -> UniqueModulePtr<graphics::GraphicBufferAllocator> override;
 
+    auto driver_name() -> std::string const& override
+    {
+        static std::string egl_generic = "egl-generic";
+        return egl_generic;
+    }
+
 protected:
     auto maybe_create_provider(
         RenderingProvider::Tag const& type_tag) -> std::shared_ptr<RenderingProvider> override;

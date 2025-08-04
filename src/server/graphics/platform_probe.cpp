@@ -567,8 +567,11 @@ auto mg::select_buffer_allocating_renderer(
     std::vector<PlatformData> providers;
     providers.reserve(rendering_platforms.size());
 
-    for (auto const& platform : rendering_platforms)
+    for (auto i = 0u; i < rendering_platforms.size(); i++)
+
     {
+        auto const& platform = rendering_platforms[i];
+        mir::log_debug("Platform %d: %s", i, platform->driver_name().c_str());
         providers.push_back({
                 platform,
                 platform->acquire_provider<mg::GLRenderingProvider>(platform),

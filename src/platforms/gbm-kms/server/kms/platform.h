@@ -100,6 +100,8 @@ public:
     auto create_buffer_allocator(
         graphics::Display const&) -> UniqueModulePtr<graphics::GraphicBufferAllocator> override;
 
+    virtual auto driver_name() -> std::string const& override;
+
 protected:
     auto maybe_create_provider(
         RenderingProvider::Tag const& type_tag) -> std::shared_ptr<RenderingProvider> override;
@@ -107,7 +109,7 @@ protected:
 private:
     RenderingPlatform(
         std::variant<std::shared_ptr<GBMDisplayProvider>, std::shared_ptr<gbm_device>> hw,
-        std::shared_ptr<GbmQuirks> quirks);
+        std::shared_ptr<GbmQuirks> quirks, std::string_view driver_name);
 
     class EGLDisplayHandle
     {
@@ -137,6 +139,7 @@ private:
     std::shared_ptr<common::EGLContextExecutor> const egl_delegate;
     std::shared_ptr<DMABufEGLProvider> const dmabuf_provider;
     std::shared_ptr<GbmQuirks> const quirks;
+    std::string const driver_name_;
 };
 }
 }
