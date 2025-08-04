@@ -61,6 +61,8 @@ public:
 private:
     struct Self;
     std::shared_ptr<Self> self;
+
+    Keymap(std::unique_ptr<Self>&& self);
 };
 }
 

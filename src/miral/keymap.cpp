@@ -247,6 +247,11 @@ void miral::Keymap::set_keymap(std::string const& keymap)
     self->set_keymap(keymap);
 }
 
+miral::Keymap::Keymap(std::unique_ptr<Self>&& self) :
+    self{std::move(self)}
+{
+}
+
 namespace
 {
 class Connection : std::shared_ptr<GDBusConnection>
@@ -313,21 +318,33 @@ auto read_entry(Connection const& connection, char const* entry)-> std::optional
 
     return std::nullopt;
 }
-}
 
-auto miral::Keymap::system_locale1() -> Keymap
+auto read_keymap(Connection const& connection)-> std::optional<std::string>
 {
-    Connection const connection{g_bus_get_sync(G_BUS_TYPE_SYSTEM, nullptr, nullptr)};
-
     if (auto const layout  = read_entry(connection, "X11Layout"))
     {
         auto const options = read_entry(connection, "X11Options");
         auto const variant = read_entry(connection, "X11Variant");
 
-        std::string keymap{*layout + '+' + variant.value_or("") + '+' + options.value_or("")};
-
-        return Keymap{keymap};
+        return *layout + '+' + variant.value_or("") + '+' + options.value_or("");
     }
 
-    mir::fatal_error_abort("Cannot read system locale1");
+    return std::nullopt;
+}
+}
+
+auto miral::Keymap::system_locale1() -> Keymap
+{
+    struct SystemLocalSelf : Self
+    {
+        explicit SystemLocalSelf(Connection const&& connection) :
+            Self{read_keymap(connection).value_or("us")},
+            connection{std::move(connection)}
+        {
+        }
+
+        Connection const connection;
+    };
+
+    return Keymap{std::make_unique<SystemLocalSelf>(Connection{g_bus_get_sync(G_BUS_TYPE_SYSTEM, nullptr, nullptr)})};
 }
