@@ -609,6 +609,7 @@ global:
     miral::HoverClick::on_hover_start*;
     miral::HoverClick::operator*;
     miral::HoverClick::reclick_displacement_threshold*;
+    miral::Keymap::system_locale1*;
     miral::Magnifier::Magnifier*;
     miral::Magnifier::capture_size*;
     miral::Magnifier::enable*;
@@ -690,11 +691,4 @@ global:
     vtable?for?miral::live_config::Store;
   };
 } MIRAL_5.3;
-
-MIRAL_5.6 {
-global:
-  extern "C++" {
-    miral::Keymap::system_locale1*;
-  };
-} MIRAL_5.5;
 
