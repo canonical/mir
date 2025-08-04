@@ -37,6 +37,7 @@
 #include <algorithm>
 #include <mutex>
 #include <string>
+#include <thread>
 #include <vector>
 #include <boost/program_options/options_description.hpp>
 
@@ -276,6 +277,20 @@ private:
     friend void g_variant_unref(GVariant*) = delete;
 };
 
+class MainLoop
+{
+public:
+    ~MainLoop()
+    {
+        g_main_loop_quit(loop);
+        g_main_loop_unref(loop);
+    }
+
+private:
+    GMainLoop* loop = g_main_loop_new(NULL, FALSE);
+    std::jthread t{[this](){ g_main_loop_run(loop); }};
+};
+
 char const* const interface_name = "org.freedesktop.locale1";
 char const* const bus_name = interface_name;
 char const* const sender = interface_name;
@@ -283,7 +298,7 @@ char const* const object_path = "/org/freedesktop/locale1";
 char const* const properties_interface = "org.freedesktop.DBus.Properties";
 char const* const signal_name = "PropertiesChanged";
 
-auto read_entry(Connection const& connection, char const* entry)-> std::optional<std::string>
+auto read_entry(Connection const& connection, char const* entry) -> std::optional<std::string>
 {
     static char const* const method_name = "Get";
 
@@ -321,9 +336,9 @@ auto read_entry(Connection const& connection, char const* entry)-> std::optional
     return std::nullopt;
 }
 
-auto read_keymap(Connection const& connection)-> std::optional<std::string>
+auto read_keymap(Connection const& connection) -> std::optional<std::string>
 {
-    if (auto const layout  = read_entry(connection, "X11Layout"))
+    if (auto const layout = read_entry(connection, "X11Layout"))
     {
         auto const variant = read_entry(connection, "X11Variant");
         auto const options = read_entry(connection, "X11Options");
@@ -357,7 +372,7 @@ auto miral::Keymap::system_locale1() -> Keymap
                 nullptr,
                 G_DBUS_SIGNAL_FLAGS_NONE,
                 callback_thunk<SystemLocalSelf>,
-                nullptr,
+                this,
                 nullptr)},
             connection{std::move(connection)}
         {
@@ -370,6 +385,7 @@ auto miral::Keymap::system_locale1() -> Keymap
 
         guint watch_id = 0;
         Connection const connection;
+        MainLoop main_loop;
 
         void callback(GVariant* parameters)
         {
