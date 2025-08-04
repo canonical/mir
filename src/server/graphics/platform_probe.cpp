@@ -24,6 +24,7 @@
 #include "mir/shared_library_prober.h"
 #include "mir/shared_library_prober_report.h"
 #include "mir/udev/wrapper.h"
+#include "src/platforms/eglstream-kms/server/platform.h"
 
 #include <algorithm>
 #include <boost/throw_exception.hpp>
@@ -596,6 +597,10 @@ auto mg::select_buffer_allocating_renderer(
                     }
                 });
         });
+
+    // HACK: Remove eglstream and nvidia (gbm)
+    providers.erase(providers.begin() + 1);
+    providers.erase(providers.begin());
 
     // providers.size() is guaranteed to be ≥ 1, as we're guaranteed to have at least one rendering platform
 
