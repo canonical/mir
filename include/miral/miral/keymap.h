@@ -45,6 +45,10 @@ public:
     /// \remark Since MirAL 5.5
     explicit Keymap(live_config::Store& config_store);
 
+    /// Construct a `Keymap` instance that tracks the system locale1 dbus node
+    /// \remark Since MirAL 5.6
+    static auto system_locale1() -> Keymap;
+
     ~Keymap();
     Keymap(Keymap const& that);
     auto operator=(Keymap const& rhs) -> Keymap&;

@@ -32,6 +32,8 @@
 #define MIR_LOG_COMPONENT "miral::Keymap"
 #include <mir/log.h>
 
+#include <gio/gio.h>
+
 #include <algorithm>
 #include <mutex>
 #include <string>
@@ -243,4 +245,89 @@ void miral::Keymap::operator()(mir::Server& server) const
 void miral::Keymap::set_keymap(std::string const& keymap)
 {
     self->set_keymap(keymap);
+}
+
+namespace
+{
+class Connection : std::shared_ptr<GDBusConnection>
+{
+public:
+    explicit Connection(GDBusConnection* connection) : std::shared_ptr<GDBusConnection>{connection, &g_object_unref} {}
+
+    operator GDBusConnection*() const { return get(); }
+
+private:
+    friend void g_object_unref(GDBusConnection*) = delete;
+};
+
+class Variant : std::shared_ptr<GVariant>
+{
+public:
+    explicit Variant(GVariant* variant) : std::shared_ptr<GVariant>{variant, &g_variant_unref} {}
+
+    operator GVariant*() const { return get(); }
+    using std::shared_ptr<GVariant>::operator bool;
+private:
+    friend void g_variant_unref(GVariant*) = delete;
+};
+
+char const* const bus_name = "org.freedesktop.locale1";
+char const* const object_path = "/org/freedesktop/locale1";
+char const* const properties_interface = "org.freedesktop.DBus.Properties";
+char const* const interface_name = "org.freedesktop.locale1";
+
+auto read_entry(Connection const& connection, char const* entry)-> std::optional<std::string>
+{
+    static char const* const method_name = "Get";
+
+    GError* error = nullptr;
+
+    if (Variant const result{g_dbus_connection_call_sync(connection,
+                                                        bus_name,
+                                                        object_path,
+                                                        properties_interface,
+                                                        method_name,
+                                                        g_variant_new("(ss)", interface_name, entry),
+                                                        nullptr,
+                                                        G_DBUS_CALL_FLAGS_NONE,
+                                                        G_MAXINT,
+                                                        nullptr,
+                                                        &error)})
+    {
+        Variant const unwrap{g_variant_get_child_value(result, 0)};
+        Variant const unwrap2{g_variant_get_child_value(unwrap, 0)};
+
+        if (g_variant_is_of_type(unwrap2, G_VARIANT_TYPE_STRING))
+        {
+            gsize len = 0;
+            return g_variant_get_string(unwrap2, &len);
+        }
+    }
+
+    if (error)
+    {
+        mir::log_info("Dbus error=%s, dest=%s, object_path=%s, properties_interface=%s, method_name=%s, interface_name=%s",
+                      error->message, bus_name, object_path, properties_interface, method_name, interface_name);
+        g_error_free(error);
+    }
+
+    return std::nullopt;
+}
+}
+
+auto miral::Keymap::system_locale1() -> Keymap
+{
+    Connection const connection{g_bus_get_sync(G_BUS_TYPE_SYSTEM, nullptr, nullptr)};
+
+    if (auto const layout  = read_entry(connection, "X11Layout"))
+    {
+        auto const options = read_entry(connection, "X11Options");
+        auto const variant = read_entry(connection, "X11Variant");
+
+        std::string keymap{*layout + '+' + variant.value_or("") + '+' + options.value_or("")};
+
+        return Keymap{keymap};
+    }
+
+    mir::fatal_error_abort("Cannot read system locale1");
 }
