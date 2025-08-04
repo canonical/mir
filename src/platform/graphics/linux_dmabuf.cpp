@@ -1427,10 +1427,12 @@ auto mg::DMABufEGLProvider::as_texture(std::shared_ptr<NativeBufferBase> buffer)
                 BOOST_THROW_EXCEPTION((std::runtime_error{"Platform doesn't support ARGB8888?!"}));
             }();
 
+        auto kludge = dmabuf_tex->size();
+        kludge.width = geom::Width{(kludge.width.as_int() / 8 ) * 8}; // Round to the closest multiple of 8
         auto importable_buf = importing_provider->allocate_importable_image(
             mg::DRMFormat{DRM_FORMAT_ARGB8888},
             std::span<uint64_t const>{modifiers.data(), modifiers.size()},
-            dmabuf_tex->size());
+            kludge);
 
         if (!importable_buf)
         {
@@ -1458,12 +1460,12 @@ auto mg::DMABufEGLProvider::as_texture(std::shared_ptr<NativeBufferBase> buffer)
             importable_buf->planes(),
             importing_provider->dpy,
             *importing_provider->egl_extensions);
-        auto sync = importing_provider->blitter->blit(src_image, importable_image, dmabuf_tex->size());
+        auto sync = importing_provider->blitter->blit(src_image, importable_image, kludge);
         if (sync)
         {
             BOOST_THROW_EXCEPTION((std::logic_error{"EGL_ANDROID_native_fence_sync support not implemented yet"}));
         }
-        auto importable_dmabuf = export_egl_image(*importing_provider->dmabuf_export_ext, importing_provider->dpy, importable_image, dmabuf_tex->size());
+        auto importable_dmabuf = export_egl_image(*importing_provider->dmabuf_export_ext, importing_provider->dpy, importable_image, kludge);
 
         auto base_extension = importing_provider->egl_extensions->base(importing_provider->dpy);
         base_extension.eglDestroyImageKHR(importing_provider->dpy, src_image);
