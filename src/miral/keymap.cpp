@@ -276,10 +276,12 @@ private:
     friend void g_variant_unref(GVariant*) = delete;
 };
 
-char const* const bus_name = "org.freedesktop.locale1";
+char const* const interface_name = "org.freedesktop.locale1";
+char const* const bus_name = interface_name;
+char const* const sender = interface_name;
 char const* const object_path = "/org/freedesktop/locale1";
 char const* const properties_interface = "org.freedesktop.DBus.Properties";
-char const* const interface_name = "org.freedesktop.locale1";
+char const* const signal_name = "PropertiesChanged";
 
 auto read_entry(Connection const& connection, char const* entry)-> std::optional<std::string>
 {
@@ -323,13 +325,20 @@ auto read_keymap(Connection const& connection)-> std::optional<std::string>
 {
     if (auto const layout  = read_entry(connection, "X11Layout"))
     {
-        auto const options = read_entry(connection, "X11Options");
         auto const variant = read_entry(connection, "X11Variant");
+        auto const options = read_entry(connection, "X11Options");
 
         return *layout + '+' + variant.value_or("") + '+' + options.value_or("");
     }
 
     return std::nullopt;
+}
+
+template<typename T>
+void callback_thunk(GDBusConnection*, const gchar*, const gchar*, const gchar*, const gchar*, GVariant *parameters, gpointer self)
+{
+    auto const self_ptr = static_cast<T*>(self);
+    self_ptr->callback(parameters);
 }
 }
 
@@ -339,11 +348,81 @@ auto miral::Keymap::system_locale1() -> Keymap
     {
         explicit SystemLocalSelf(Connection const&& connection) :
             Self{read_keymap(connection).value_or("us")},
+            watch_id{g_dbus_connection_signal_subscribe(
+                connection,
+                sender,
+                properties_interface,
+                signal_name,
+                object_path,
+                nullptr,
+                G_DBUS_SIGNAL_FLAGS_NONE,
+                callback_thunk<SystemLocalSelf>,
+                nullptr,
+                nullptr)},
             connection{std::move(connection)}
         {
         }
 
+        ~SystemLocalSelf() override
+        {
+            g_dbus_connection_signal_unsubscribe(connection, watch_id);
+        }
+
+        guint watch_id = 0;
         Connection const connection;
+
+        void callback(GVariant* parameters)
+        {
+            std::optional<std::string> layout;
+            std::optional<std::string> options;
+            std::optional<std::string> variant;
+
+            const char* _;
+            GVariant* changed_properties;
+            GVariant* invalidated_properties;
+            g_variant_get(parameters, "(&s@a{sv}@as)",
+                         &_,
+                         &changed_properties,
+                         &invalidated_properties);
+
+            GVariantIter iter;
+            const char* key;
+            GVariant* value;
+            g_variant_iter_init(&iter, changed_properties);
+            while (g_variant_iter_loop(&iter, "{&sv}", &key, &value))
+            {
+                if (g_variant_is_of_type(value, G_VARIANT_TYPE_STRING))
+                {
+                    using namespace std::string_literals;
+
+                    if (key == "X11Layout"s)
+                    {
+                        gsize len = 0;
+                        layout = g_variant_get_string(value, &len);
+                    }
+
+                    if (key == "X11Variant"s)
+                    {
+                        gsize len = 0;
+                        variant = g_variant_get_string(value, &len);
+                    }
+
+                    if (key == "X11Options"s)
+                    {
+                        gsize len = 0;
+                        options = g_variant_get_string(value, &len);
+                    }
+                }
+            }
+
+            if (layout)
+            {
+                set_keymap(*layout + '+' + variant.value_or("") + '+' + options.value_or(""));
+            }
+
+            g_variant_unref(changed_properties);
+            g_variant_unref(invalidated_properties);
+        }
     };
 
     return Keymap{std::make_unique<SystemLocalSelf>(Connection{g_bus_get_sync(G_BUS_TYPE_SYSTEM, nullptr, nullptr)})};
