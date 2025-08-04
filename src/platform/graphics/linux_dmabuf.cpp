@@ -48,6 +48,7 @@
 #include <algorithm>
 #include <drm_fourcc.h>
 #include <wayland-server.h>
+#include <sstream>
 
 namespace mg = mir::graphics;
 namespace mgc = mg::common;
@@ -446,6 +447,21 @@ auto import_egl_image(
     EGLDisplay dpy,
     mg::EGLExtensions const& egl_extensions) -> EGLImageKHR
 {
+    auto const print_plane_strides = [](auto planes)
+    {
+        std::stringstream ss;
+        for (auto i = 0u; i < planes.size(); i++)
+        {
+            ss << "stride " << i << ": " << planes[i].stride;
+            if (i < planes.size() - 1)
+                ss << ", ";
+        }
+
+        return ss.str();
+    };
+
+    mir::log_debug("width: %d, %s", width, print_plane_strides(planes).c_str());
+
     std::vector<EGLint> attributes;
 
     attributes.push_back(EGL_WIDTH);
@@ -1421,6 +1437,12 @@ auto mg::DMABufEGLProvider::as_texture(std::shared_ptr<NativeBufferBase> buffer)
             mir::log_warning("Failed to allocate common-format buffer for cross-GPU buffer import");
             return nullptr;
         }
+
+        if (auto const modifier = dmabuf_tex->modifier())
+            mir::log_debug("source modifier: %s", mg::drm_modifier_to_string(*modifier).c_str());
+        else
+            mir::log_debug("No modifier!");
+
 
         auto src_image = import_egl_image(
             dmabuf_tex->size().width.as_int(), dmabuf_tex->size().height.as_int(),
