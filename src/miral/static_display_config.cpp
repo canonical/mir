@@ -473,10 +473,12 @@ void miral::YamlFileDisplayConfig::serialize_configuration(std::ostream& out, mg
            "\n    # a list of cards (currently matched by card-id)";
 
     std::map<mg::DisplayConfigurationCardId, std::ostringstream> card_map;
+    std::ostringstream displays;
 
-    conf.for_each_output([&card_map](mg::UserDisplayConfigurationOutput const& conf_output)
+    conf.for_each_output([&card_map, &displays](mg::UserDisplayConfigurationOutput const& conf_output)
         {
             serialize_output_configuration(card_map[conf_output.card_id], conf_output);
+            serialize_display_info(displays, conf_output);
         });
 
     for (auto const& co : card_map)
@@ -484,6 +486,24 @@ void miral::YamlFileDisplayConfig::serialize_configuration(std::ostream& out, mg
         out << "\n"
                "\n    - card-id: " << co.first.as_value()
             << co.second.str();
+    }
+
+    out << "\n"
+           "\n    # displays:"
+           "\n    # A list of display configurations matched by the displays' properties"
+           "\n    #"
+           "\n    # These take the same display options as above,"
+           "\n    # and take precedence over the port-based configuration."
+           "\n    #";
+
+    if (displays.str().empty())
+    {
+        out << "\n    # No display properties could be determined."
+               "\n";
+    }
+    else
+    {
+        out << displays.str() << "\n";
     }
 }
 
@@ -536,6 +556,16 @@ void miral::YamlFileDisplayConfig::serialize_output_configuration(
     }
 
     out << "\n";
+}
+
+void miral::YamlFileDisplayConfig::serialize_display_info(
+    std::ostream& out, mg::UserDisplayConfigurationOutput const& conf_output)
+{
+    out << "\n    # - vendor: " << conf_output.display_info.vendor.value_or("")
+        << "\n    #   model: " << conf_output.display_info.model.value_or("")
+        << "\n    #   product: " << conf_output.display_info.product_code.value_or(0)
+        << "\n    #   serial: " << conf_output.display_info.serial.value_or("")
+        << "\n    #";
 }
 
 void miral::YamlFileDisplayConfig::apply_to_output(mg::UserDisplayConfigurationOutput& conf_output, Config const& conf)

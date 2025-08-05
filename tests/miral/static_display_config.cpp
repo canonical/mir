@@ -657,7 +657,7 @@ TEST_F(StaticDisplayConfig, empty_display_is_error)
     EXPECT_THROW((sdc.load_config(stream, "")), mir::AbnormalExit);
 }
 
-struct PropertyValueTest : public StaticDisplayConfig, public WithParamInterface<std::string>
+struct PropertyValueTest : public StaticDisplayConfig, public WithParamInterface<std::pair<std::string, std::string>>
 {
 };
 
@@ -667,7 +667,7 @@ TEST_P(PropertyValueTest, invalid_display_property_value_is_error)
         "layouts:\n"
         "  default:\n"
         "    displays:\n"
-        "    - " + GetParam() + ": null\n"};
+        "    - " + GetParam().first + ": null\n"};
 
     EXPECT_THROW((sdc.load_config(stream, "")), mir::AbnormalExit);
 }
@@ -678,15 +678,10 @@ TEST_P(PropertyValueTest, empty_display_property_value_is_error)
         "layouts:\n"
         "  default:\n"
         "    displays:\n"
-        "    - " + GetParam() + ": ""\n"};
+        "    - " + GetParam().first + ": ""\n"};
 
     EXPECT_THROW((sdc.load_config(stream, "")), mir::AbnormalExit);
 }
-
-INSTANTIATE_TEST_SUITE_P(
-    EDIDValues,
-    PropertyValueTest,
-    Values("vendor", "product", "model", "serial"));
 
 TEST_F(StaticDisplayConfig, no_matcher_matches_all)
 {
@@ -874,3 +869,23 @@ TEST_F(StaticDisplayConfig, cards_apply_on_unmatched_displays)
     EXPECT_THAT(hdmi1.orientation, Eq(mir_orientation_left));
     EXPECT_THAT(vga1.orientation, Eq(mir_orientation_right));
 }
+
+TEST_P(PropertyValueTest, serialize_properties_for_outputs)
+{
+    std::ostringstream out;
+
+    miral::YamlFileDisplayConfig::serialize_configuration(out, dc);
+
+    ASSERT_THAT(out.str(), ContainsRegex("# [ -] " + GetParam().first + ": " + GetParam().second));
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    EDIDValues,
+    PropertyValueTest,
+    Values(
+        std::make_pair("vendor", "Valve Corporation"),
+        std::make_pair("model", "ANX7530 U"),
+        std::make_pair("product", "12289"),
+        std::make_pair("serial", "0x00000001")
+    )
+);
