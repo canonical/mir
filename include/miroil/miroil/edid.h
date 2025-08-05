@@ -32,15 +32,6 @@ struct Edid
 
     struct PhysicalSizeMM { int width; int height; };
     PhysicalSizeMM size{0,0};
-
-    struct Descriptor {
-        std::string string_value() const { return {}; };
-    };
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpedantic"
-    Descriptor descriptors[0];
-#pragma GCC diagnostic pop
 };
 
 }

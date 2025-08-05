@@ -13,10 +13,7 @@ using OutputId = mir::IntWrapper<mir::graphics::detail::GraphicsConfOutputIdTag>
 
 struct DisplayId
 {
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpedantic"
     Edid edid;
-#pragma GCC diagnostic pop
     OutputId output_id; // helps to identify a monitor if we have two of the same.
 };
 
