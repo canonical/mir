@@ -15,3 +15,35 @@
  */
 
 #include "gdbus.h"
+
+#include <mutex>
+
+auto miral::gdbus::MainLoop::the_main_loop() -> std::shared_ptr<MainLoop>
+{
+    static std::weak_ptr<MainLoop> weak_loop;
+    static std::mutex mutex;
+
+    std::lock_guard lock{mutex};
+    if (auto loop = weak_loop.lock())
+    {
+        return loop;
+    }
+    else
+    {
+        loop.reset(new MainLoop);
+        weak_loop = loop;
+        return loop;
+    }
+}
+
+miral::gdbus::MainLoop::MainLoop() :
+    loop{g_main_loop_new(NULL, FALSE)},
+    t{[this](){ g_main_loop_run(loop); }}
+{
+}
+
+miral::gdbus::MainLoop::~MainLoop()
+{
+    g_main_loop_quit(loop);
+    g_main_loop_unref(loop);
+}
