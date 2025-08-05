@@ -20,6 +20,7 @@ mir (2.22.0) UNRELEASED; urgency=medium
       . mirinputplatform ABI unchanged at 10
 
     - Enhancements:
+      . static_config_display: add property-based display config support (#3872)
       . Implement Simulated Secondary Click (#3873)
       . DRM: Explicit synchorisation support (#3717)
       . live configuration facilities (#3995)
