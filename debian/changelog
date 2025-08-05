@@ -6,6 +6,7 @@ mir (2.22.0) UNRELEASED; urgency=medium
       . Consolidation of EDID parsing
         - `User...` and `DisplayConfigurationOutput::edid` replaced with `::display_info`
         - `mir::graphics::Edid` removed
+        - `miroil::Edid::Descriptor` removed
 
     - ABI summary:
       . miral ABI unchanged at 7

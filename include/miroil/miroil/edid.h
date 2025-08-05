@@ -32,33 +32,6 @@ struct Edid
 
     struct PhysicalSizeMM { int width; int height; };
     PhysicalSizeMM size{0,0};
-
-    struct Descriptor {
-        enum class Type : uint8_t {
-            timing_identifiers = 0xfa,
-            white_point_data = 0xfb,
-            monitor_name = 0xfc,
-            monitor_limits = 0xfd,
-            unspecified_text = 0xfe,
-            serial_number = 0xff,
-
-            undefined = 0x00,
-        };
-
-        union Value {
-            char monitor_name[13];
-            char unspecified_text[13];
-            char serial_number[13];
-        };
-
-        Type type{Type::undefined};
-        Value value{{0}};
-
-        std::string string_value() const;
-    };
-    Descriptor descriptors[4];
-
-    Edid& parse_data(std::vector<uint8_t> const&);
 };
 
 }
