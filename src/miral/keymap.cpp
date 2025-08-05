@@ -16,6 +16,7 @@
 
 #include "miral/keymap.h"
 
+#include "gdbus.h"
 #include "miral/live_config.h"
 
 #include <mir/fd.h>
@@ -32,12 +33,9 @@
 #define MIR_LOG_COMPONENT "miral::Keymap"
 #include <mir/log.h>
 
-#include <gio/gio.h>
-
 #include <algorithm>
 #include <mutex>
 #include <string>
-#include <thread>
 #include <vector>
 #include <boost/program_options/options_description.hpp>
 
@@ -255,61 +253,7 @@ miral::Keymap::Keymap(std::unique_ptr<Self>&& self) :
 
 namespace
 {
-class Connection : std::shared_ptr<GDBusConnection>
-{
-public:
-    explicit Connection(GDBusConnection* connection) : std::shared_ptr<GDBusConnection>{connection, &g_object_unref} {}
-
-    operator GDBusConnection*() const { return get(); }
-
-private:
-    friend void g_object_unref(GDBusConnection*) = delete;
-};
-
-class Variant : std::shared_ptr<GVariant>
-{
-public:
-    explicit Variant(GVariant* variant) : std::shared_ptr<GVariant>{variant, &g_variant_unref} {}
-
-    operator GVariant*() const { return get(); }
-    using std::shared_ptr<GVariant>::operator bool;
-private:
-    friend void g_variant_unref(GVariant*) = delete;
-};
-
-class MainLoop
-{
-public:
-
-    static auto the_main_loop() -> std::shared_ptr<MainLoop>
-    {
-        static std::weak_ptr<MainLoop> weak_loop;
-        static std::mutex mutex;
-
-        std::lock_guard lock{mutex};
-        if (auto loop = weak_loop.lock())
-        {
-            return loop;
-        }
-        else
-        {
-            loop.reset(new MainLoop);
-            weak_loop = loop;
-            return loop;
-        }
-    }
-
-    ~MainLoop()
-    {
-        g_main_loop_quit(loop);
-        g_main_loop_unref(loop);
-    }
-
-private:
-    MainLoop() = default;
-    GMainLoop* loop = g_main_loop_new(NULL, FALSE);
-    std::jthread t{[this](){ g_main_loop_run(loop); }};
-};
+using namespace miral::gdbus;
 
 char const* const interface_name = "org.freedesktop.locale1";
 char const* const bus_name = interface_name;
