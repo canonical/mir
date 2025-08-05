@@ -16,7 +16,6 @@ global:
     miroil::DisplayListenerWrapper::add_display*;
     miroil::DisplayListenerWrapper::remove_display*;
     miroil::Edid::Descriptor::string_value*;
-    miroil::Edid::parse_data*;
     miroil::EventBuilder::?EventBuilder*;
     miroil::EventBuilder::EventBuilder*;
     miroil::EventBuilder::EventInfo::store*;

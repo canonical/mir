@@ -16,7 +16,6 @@
 
 #include "static_display_config.h"
 
-#include <mir/graphics/edid.h>
 #include <mir/output_type_names.h>
 #include <mir/log.h>
 #include <mir/main_loop.h>
@@ -372,20 +371,9 @@ void miral::YamlFileDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
             {
                 for (auto const& [matchers, conf] : config)
                 {
-                    using mir::graphics::Edid;
-                    std::optional<Edid const*> edid;
-                    if (conf_output.display_info.raw_edid.size() >= Edid::minimum_size)
-                    {
-                        edid = reinterpret_cast<Edid const*>(conf_output.display_info.raw_edid.data());
-                    }
-
                     for (auto const& [property, value] : matchers)
                     {
                         static auto const props = StaticDisplayConfig::display_matching_properties();
-                        if (!edid && props.find(property) != props.end())
-                        {
-                            goto failed_match;
-                        }
 
                         switch (property)
                         {
@@ -397,32 +385,28 @@ void miral::YamlFileDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
                                 break;
 
                             case Property::Vendor:
-                                Edid::Manufacturer man;
-                                edid.value()->get_manufacturer(man);
-                                if (man != value)
+                                if (auto const vendor = conf_output.display_info.vendor; !vendor || vendor.value() != value)
                                 {
                                     goto failed_match;
                                 }
                                 break;
 
                             case Property::Model:
-                                Edid::MonitorName name;
-                                edid.value()->get_monitor_name(name);
-                                if (name != value)
+                                if (auto const model = conf_output.display_info.model; !model || model.value() != value)
                                 {
                                     goto failed_match;
                                 }
                                 break;
 
                             case Property::Product:
-                                if (std::to_string(edid.value()->product_code()) != value)
+                                if (auto const product_code = conf_output.display_info.product_code; !product_code || std::to_string(product_code.value()) != value)
                                 {
                                     goto failed_match;
                                 }
                                 break;
 
                             case Property::Serial:
-                                if (std::to_string(edid.value()->serial_number()) != value)
+                                if (auto const serial = conf_output.display_info.serial; !serial || serial.value() != value)
                                 {
                                     goto failed_match;
                                 }
