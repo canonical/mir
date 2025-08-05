@@ -280,6 +280,25 @@ private:
 class MainLoop
 {
 public:
+
+    static auto the_main_loop() -> std::shared_ptr<MainLoop>
+    {
+        static std::weak_ptr<MainLoop> weak_loop;
+        static std::mutex mutex;
+
+        std::lock_guard lock{mutex};
+        if (auto loop = weak_loop.lock())
+        {
+            return loop;
+        }
+        else
+        {
+            loop.reset(new MainLoop);
+            weak_loop = loop;
+            return loop;
+        }
+    }
+
     ~MainLoop()
     {
         g_main_loop_quit(loop);
@@ -287,6 +306,7 @@ public:
     }
 
 private:
+    MainLoop() = default;
     GMainLoop* loop = g_main_loop_new(NULL, FALSE);
     std::jthread t{[this](){ g_main_loop_run(loop); }};
 };
@@ -374,7 +394,8 @@ auto miral::Keymap::system_locale1() -> Keymap
                 callback_thunk<SystemLocalSelf>,
                 this,
                 nullptr)},
-            connection{std::move(connection)}
+            connection{std::move(connection)},
+            main_loop{MainLoop::the_main_loop()}
         {
         }
 
@@ -385,7 +406,7 @@ auto miral::Keymap::system_locale1() -> Keymap
 
         guint watch_id = 0;
         Connection const connection;
-        MainLoop main_loop;
+        std::shared_ptr<MainLoop> const main_loop;
 
         void callback(GVariant* parameters)
         {
