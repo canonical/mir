@@ -561,21 +561,11 @@ void miral::YamlFileDisplayConfig::serialize_output_configuration(
 void miral::YamlFileDisplayConfig::serialize_display_info(
     std::ostream& out, mg::UserDisplayConfigurationOutput const& conf_output)
 {
-    using mir::graphics::Edid;
-    if (conf_output.edid.size() >= Edid::minimum_size)
-    {
-        auto const edid = reinterpret_cast<Edid const*>(conf_output.edid.data());
-        Edid::Manufacturer man;
-        edid->get_manufacturer(man);
-        Edid::MonitorName name;
-        edid->get_monitor_name(name);
-
-        out << "\n    # - vendor: " << man
-            << "\n    #   model: " << name
-            << "\n    #   product: " << edid->product_code()
-            << "\n    #   serial: " << edid->serial_number()
-            << "\n    #";
-    }
+    out << "\n    # - vendor: " << conf_output.display_info.vendor.value_or("")
+        << "\n    #   model: " << conf_output.display_info.model.value_or("")
+        << "\n    #   product: " << conf_output.display_info.product_code.value_or(0)
+        << "\n    #   serial: " << conf_output.display_info.serial.value_or("")
+        << "\n    #";
 }
 
 void miral::YamlFileDisplayConfig::apply_to_output(mg::UserDisplayConfigurationOutput& conf_output, Config const& conf)

@@ -870,20 +870,9 @@ TEST_F(StaticDisplayConfig, cards_apply_on_unmatched_displays)
     EXPECT_THAT(vga1.orientation, Eq(mir_orientation_right));
 }
 
-TEST_F(StaticDisplayConfig, serialize_output_with_no_edids)
-{
-    std::ostringstream out;
-
-    miral::YamlFileDisplayConfig::serialize_configuration(out, dc);
-
-    ASSERT_THAT(out.str(), HasSubstr("# No display properties could be determined."));
-}
-
 TEST_P(PropertyValueTest, serialize_properties_for_outputs)
 {
     std::ostringstream out;
-
-    hdmi1.edid = basic_edid;
 
     miral::YamlFileDisplayConfig::serialize_configuration(out, dc);
 
@@ -894,9 +883,9 @@ INSTANTIATE_TEST_SUITE_P(
     EDIDValues,
     PropertyValueTest,
     Values(
-        std::make_pair("vendor", "APP"),
-        std::make_pair("model", "Color LCD"),
-        std::make_pair("product", "40178"),
-        std::make_pair("serial", "0")
+        std::make_pair("vendor", "Valve Corporation"),
+        std::make_pair("model", "ANX7530 U"),
+        std::make_pair("product", "12289"),
+        std::make_pair("serial", "0x00000001")
     )
 );
