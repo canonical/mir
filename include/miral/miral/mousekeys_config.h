@@ -92,7 +92,7 @@ public:
     void disable() const;
 
     /// Changes the keymap for the various mousekeys actions defined in
-    /// [MouseKeysKeymap::Action]
+    /// `mir::input::MouseKeysKeymap::Action`.
     /// \note If a certain action not mapped to any key, it will be disabled.
     void set_keymap(mir::input::MouseKeysKeymap const& new_keymap) const;
 
