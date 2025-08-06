@@ -266,7 +266,7 @@ auto read_entry(Connection const& connection, char const* entry) -> std::optiona
 {
     static char const* const method_name = "Get";
 
-    GError* error = nullptr;
+    g_autoptr(GError) error = nullptr;
 
     if (Variant const result{g_dbus_connection_call_sync(connection,
                                                         bus_name,
@@ -293,7 +293,6 @@ auto read_entry(Connection const& connection, char const* entry) -> std::optiona
     {
         mir::log_info("Dbus error=%s, dest=%s, object_path=%s, properties_interface=%s, method_name=%s, interface_name=%s",
                       error->message, bus_name, object_path, properties_interface, method_name, interface_name);
-        g_error_free(error);
     }
 
     return std::nullopt;
@@ -357,7 +356,7 @@ auto miral::Keymap::system_locale1() -> Keymap
             std::optional<std::string> options;
             std::optional<std::string> variant;
 
-            GVariant* changed_properties;
+            g_autoptr(GVariant) changed_properties;
             g_variant_get(parameters, "(&s@a{sv}@as)",
                          nullptr,
                          &changed_properties,
@@ -394,8 +393,6 @@ auto miral::Keymap::system_locale1() -> Keymap
             {
                 set_keymap(*layout + '+' + variant.value_or("") + '+' + options.value_or(""));
             }
-
-            g_variant_unref(changed_properties);
         }
     };
 
