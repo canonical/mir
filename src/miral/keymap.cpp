@@ -274,7 +274,7 @@ auto read_entry(Connection const& connection, char const* entry) -> std::optiona
                                                         properties_interface,
                                                         method_name,
                                                         g_variant_new("(ss)", interface_name, entry),
-                                                        nullptr,
+                                                        G_VARIANT_TYPE("(v)"),
                                                         G_DBUS_CALL_FLAGS_NONE,
                                                         G_MAXINT,
                                                         nullptr,
@@ -356,17 +356,15 @@ auto miral::Keymap::system_locale1() -> Keymap
             std::optional<std::string> options;
             std::optional<std::string> variant;
 
-            g_autoptr(GVariant) changed_properties;
-            g_variant_get(parameters, "(&s@a{sv}@as)",
+            g_autoptr(GVariantIter) changed_properties = nullptr;
+            g_variant_get(parameters, "(sa{sv}as)",
                          nullptr,
                          &changed_properties,
                          nullptr);
 
-            GVariantIter iter;
             const char* key;
             GVariant* value;
-            g_variant_iter_init(&iter, changed_properties);
-            while (g_variant_iter_loop(&iter, "{&sv}", &key, &value))
+            while (g_variant_iter_loop(changed_properties, "{&sv}", &key, &value))
             {
                 if (g_variant_is_of_type(value, G_VARIANT_TYPE_STRING))
                 {
