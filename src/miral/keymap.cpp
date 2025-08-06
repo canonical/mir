@@ -20,26 +20,23 @@
 #include "miral/live_config.h"
 
 #include <mir/fd.h>
-#include <mir/input/input_device_observer.h>
-#include <mir/input/input_device_hub.h>
+#include <mir/glib_main_loop.h>
 #include <mir/input/device.h>
+#include <mir/input/input_device_hub.h>
+#include <mir/input/input_device_observer.h>
+#include <mir/input/mir_keyboard_config.h>
+#include <mir/input/parameter_keymap.h>
+#include <mir/log.h>
+#include <mir/main_loop.h>
 #include <mir/options/option.h>
 #include <mir/server.h>
 #include <mir/udev/wrapper.h>
-
-#include <mir/input/parameter_keymap.h>
-#include <mir/input/mir_keyboard_config.h>
-
-#define MIR_LOG_COMPONENT "miral::Keymap"
-#include <mir/log.h>
 
 #include <algorithm>
 #include <mutex>
 #include <string>
 #include <vector>
 #include <boost/program_options/options_description.hpp>
-#include <mir/glib_main_loop.h>
-#include <mir/main_loop.h>
 
 namespace mi = mir::input;
 
