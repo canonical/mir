@@ -17,8 +17,6 @@
 #include <EGL/egl.h>
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
-#include <GLES3/gl32.h>
-#include <GL/gl.h>
 
 #include "egl_buffer_copy.h"
 #include "mir/graphics/egl_context_executor.h"
@@ -273,71 +271,43 @@ public:
             {
                 glUseProgram(state->prog);
 
-                TextureHandle src_tex;
-                FramebufferHandle src_fbo;
-                glBindTexture(GL_TEXTURE_2D, src_tex);
-                state->glEGLImageTargetRenderbufferStorageOES(GL_TEXTURE_2D, from);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-                glBindFramebuffer(GL_READ_FRAMEBUFFER, src_fbo);
-                glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, src_tex, 0);
+                TextureHandle tex;
+                RenderbufferHandle renderbuffer;
+                FramebufferHandle fbo;
 
-                TextureHandle dst_tex;
-                FramebufferHandle dst_fbo;
-                glBindTexture(GL_TEXTURE_2D, dst_tex);
-                state->glEGLImageTargetRenderbufferStorageOES(GL_TEXTURE_2D, to);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-                glBindFramebuffer(GL_DRAW_FRAMEBUFFER, dst_fbo);
-                glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, dst_tex, 0);
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, tex);
+                state->glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, from);
 
-                auto const log_variables = [&]
-                {
-                    auto glstatus = glGetError();
-                    if (glstatus != GL_NO_ERROR)
-                    {
-                        mir::log_critical("glstatus: %d\n", glstatus);
-                        mir::log_critical("src_tex: %d, dst_tex: %d, src_fbo: %d, dst_fbo: %d, from: %p, to: %p, size: %dx%d", 
-                                (GLuint)src_tex, (GLuint)dst_tex, (GLuint)src_fbo, (GLuint)dst_fbo, from, to, size.width.as_int(), size.height.as_int());
-                    }
-                };
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-                auto framebuffer_status = glCheckFramebufferStatus(GL_READ_FRAMEBUFFER);
-                if (framebuffer_status != GL_FRAMEBUFFER_COMPLETE)
-                {
-                    mir::log_critical("Read framebuffer is not complete: %d", framebuffer_status);
-                    log_variables();
+                glBindRenderbuffer(GL_RENDERBUFFER, renderbuffer);
+                state->glEGLImageTargetRenderbufferStorageOES(GL_RENDERBUFFER, to);
 
-                    return;
-                }
+                glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+                glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, renderbuffer);
 
-                framebuffer_status = glCheckFramebufferStatus(GL_READ_FRAMEBUFFER);
-                if (framebuffer_status != GL_FRAMEBUFFER_COMPLETE)
-                {
-                    mir::log_critical("Draw framebuffer is not complete");
-                    log_variables();
-                    return;
-                }
+                glBindBuffer(GL_ARRAY_BUFFER, state->vert_data);
+                glVertexAttribPointer (state->attrpos, 2, GL_FLOAT, GL_FALSE, 0, 0);
 
-                glBlitFramebuffer(
-                    0,
-                    0,
-                    size.width.as_value(),
-                    size.height.as_value(),
-                    0,
-                    0,
-                    size.width.as_value(),
-                    size.height.as_value(),
-                    GL_COLOR_BUFFER_BIT,
-                    GL_NEAREST);
+                glBindBuffer(GL_ARRAY_BUFFER, state->tex_data);
+                glVertexAttribPointer (state->attrtex, 2, GL_FLOAT, GL_FALSE, 0, 0);
+
+                glEnableVertexAttribArray(state->attrpos);
+                glEnableVertexAttribArray(state->attrtex);
+
+                glViewport(0, 0, size.width.as_int(), size.height.as_int());
+                GLubyte const idx[] = { 0, 1, 3, 2 };
+                glDrawElements (GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_BYTE, idx);
 
                 // TODO: Actually use the sync
                 glFinish();
                 sync->set_value({});
 
                 // Unbind all our resources
-                glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-                glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
                 glBindTexture(GL_TEXTURE_2D, 0);
                 glBindFramebuffer(GL_FRAMEBUFFER, 0);
                 glBindRenderbuffer(GL_RENDERBUFFER, 0);
