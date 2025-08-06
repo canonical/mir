@@ -20,7 +20,7 @@ add_library(miral-internal STATIC
     system_compositor_window_manager.cpp system_compositor_window_manager.h
     display_configuration_listeners.cpp  display_configuration_listeners.h
     fd_manager.cpp                       fd_manager.h
-    gdbus.cpp                            gdbus.h
+                                         gdbus.h
     input_device_config.cpp              input_device_configuration_options.h input_device_config.h
     launch_app.cpp                       launch_app.h
     render_scene_into_surface.cpp        render_scene_into_surface.h
