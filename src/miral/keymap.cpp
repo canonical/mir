@@ -38,6 +38,8 @@
 #include <string>
 #include <vector>
 #include <boost/program_options/options_description.hpp>
+#include <mir/glib_main_loop.h>
+#include <mir/main_loop.h>
 
 namespace mi = mir::input;
 
@@ -95,6 +97,12 @@ struct miral::Keymap::Self : mir::input::InputDeviceObserver
     Self(std::string_view keymap) : layout{}, variant{}
     {
         set_keymap(keymap);
+    }
+
+    virtual void on_init(mir::Server& server)
+    {
+        if (layout.empty())
+            set_keymap(server.get_options()->get<std::string>(keymap_option));
     }
 
     void set_keymap(std::string_view keymap)
@@ -234,8 +242,7 @@ void miral::Keymap::operator()(mir::Server& server) const
 
     server.add_init_callback([this, &server]
         {
-            if (self->layout.empty())
-                self->set_keymap(server.get_options()->get<std::string>(keymap_option));
+            self->on_init(server);
 
             server.the_input_device_hub()->add_observer(self);
         });
@@ -342,7 +349,16 @@ auto miral::Keymap::system_locale1() -> Keymap
     {
         explicit SystemLocalSelf(Connection const&& connection) :
             Self{read_keymap(connection).value_or("us")},
-            watch_id{g_dbus_connection_signal_subscribe(
+            watch_id{},
+            connection{std::move(connection)}
+        {
+        }
+
+        void on_init(mir::Server& server) override
+        {
+            std::dynamic_pointer_cast<mir::GLibMainLoop>(server.the_main_loop())->run_with_context_as_thread_default([this]
+            {
+                watch_id = g_dbus_connection_signal_subscribe(
                 connection,
                 sender,
                 properties_interface,
@@ -352,10 +368,8 @@ auto miral::Keymap::system_locale1() -> Keymap
                 G_DBUS_SIGNAL_FLAGS_NONE,
                 callback_thunk<SystemLocalSelf>,
                 this,
-                nullptr)},
-            connection{std::move(connection)},
-            main_loop{MainLoop::the_main_loop()}
-        {
+                nullptr);
+            });
         }
 
         ~SystemLocalSelf() override
@@ -365,15 +379,11 @@ auto miral::Keymap::system_locale1() -> Keymap
 
         guint watch_id = 0;
         Connection const connection;
-        std::shared_ptr<MainLoop> const main_loop;
 
         void callback(GVariant* parameters)
         {
             g_autoptr(GVariantIter) changed_properties = nullptr;
-            g_variant_get(parameters, "(sa{sv}as)",
-                         nullptr,
-                         &changed_properties,
-                         nullptr);
+            g_variant_get(parameters, "(sa{sv}as)", nullptr, &changed_properties, nullptr);
 
             if (auto const keymap = extract_keymap(changed_properties))
             {

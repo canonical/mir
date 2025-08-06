@@ -46,20 +46,6 @@ public:
 private:
     friend void g_variant_unref(GVariant*) = delete;
 };
-
-class MainLoop
-{
-public:
-
-    static auto the_main_loop() -> std::shared_ptr<MainLoop>;
-
-    ~MainLoop();
-
-private:
-    MainLoop();
-    GMainLoop* const loop;
-    std::jthread const t;
-};
 }
 
 #endif //MIRAL_GDBUS_H_

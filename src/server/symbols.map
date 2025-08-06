@@ -129,6 +129,7 @@ global:
     mir::GLibMainLoop::create_alarm*;
     mir::GLibMainLoop::enqueue*;
     mir::GLibMainLoop::enqueue_with_guaranteed_execution*;
+    mir::GLibMainLoop::execute_with_context_as_thread_default*;
     mir::GLibMainLoop::pause_processing_for*;
     mir::GLibMainLoop::register_fd_handler*;
     mir::GLibMainLoop::register_signal_handler*;
