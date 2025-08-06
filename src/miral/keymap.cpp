@@ -296,9 +296,9 @@ auto extract_keymap(GVariantIter* properties) -> std::optional<std::string>
         { return l + '+' + variant.value_or("") + '+' + options.value_or(""); });
 }
 
-auto read_entry(Connection const& connection, char const* entry) -> std::optional<std::string>
+auto read_keymap(Connection const& connection) -> std::optional<std::string>
 {
-    static char const* const method_name = "Get";
+    static char const* const method_name = "GetAll";
 
     g_autoptr(GError) error = nullptr;
 
@@ -307,39 +307,22 @@ auto read_entry(Connection const& connection, char const* entry) -> std::optiona
                                                         object_path,
                                                         properties_interface,
                                                         method_name,
-                                                        g_variant_new("(ss)", interface_name, entry),
-                                                        G_VARIANT_TYPE("(v)"),
+                                                        g_variant_new("(s)", interface_name),
+                                                        G_VARIANT_TYPE("(a{sv})"),
                                                         G_DBUS_CALL_FLAGS_NONE,
                                                         G_MAXINT,
                                                         nullptr,
                                                         &error)})
     {
         Variant const unwrap{g_variant_get_child_value(result, 0)};
-        Variant const unwrap2{g_variant_get_child_value(unwrap, 0)};
-
-        if (g_variant_is_of_type(unwrap2, G_VARIANT_TYPE_STRING))
-        {
-            return g_variant_get_string(unwrap2, nullptr);
-        }
+        g_autoptr(GVariantIter) properties{g_variant_iter_new(unwrap)};
+        return extract_keymap(properties);
     }
 
     if (error)
     {
         mir::log_info("Dbus error=%s, dest=%s, object_path=%s, properties_interface=%s, method_name=%s, interface_name=%s",
                       error->message, bus_name, object_path, properties_interface, method_name, interface_name);
-    }
-
-    return std::nullopt;
-}
-
-auto read_keymap(Connection const& connection) -> std::optional<std::string>
-{
-    if (auto const layout = read_entry(connection, "X11Layout"))
-    {
-        auto const variant = read_entry(connection, "X11Variant");
-        auto const options = read_entry(connection, "X11Options");
-
-        return *layout + '+' + variant.value_or("") + '+' + options.value_or("");
     }
 
     return std::nullopt;
