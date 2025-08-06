@@ -16,7 +16,6 @@
 
 #include "miral/keymap.h"
 
-#include "gdbus.h"
 #include "miral/live_config.h"
 
 #include <mir/fd.h>
@@ -31,6 +30,8 @@
 #include <mir/options/option.h>
 #include <mir/server.h>
 #include <mir/udev/wrapper.h>
+
+#include <gio/gio.h>
 
 #include <algorithm>
 #include <mutex>
@@ -257,7 +258,16 @@ miral::Keymap::Keymap(std::unique_ptr<Self>&& self) :
 
 namespace
 {
-using namespace miral::gdbus;
+class Connection : std::shared_ptr<GDBusConnection>
+{
+public:
+    explicit Connection(GDBusConnection* connection) : std::shared_ptr<GDBusConnection>{connection, &g_object_unref} {}
+
+    operator GDBusConnection*() const { return get(); }
+
+private:
+    friend void g_object_unref(GDBusConnection*) = delete;
+};
 
 char const* const interface_name = "org.freedesktop.locale1";
 char const* const bus_name = interface_name;
@@ -306,7 +316,7 @@ auto read_keymap(Connection const& connection) -> std::optional<std::string>
 
     g_autoptr(GError) error = nullptr;
 
-    if (Variant const result{g_dbus_connection_call_sync(connection,
+    if (g_autoptr(GVariant) result{g_dbus_connection_call_sync(connection,
                                                         bus_name,
                                                         object_path,
                                                         properties_interface,
@@ -318,7 +328,7 @@ auto read_keymap(Connection const& connection) -> std::optional<std::string>
                                                         nullptr,
                                                         &error)})
     {
-        Variant const unwrap{g_variant_get_child_value(result, 0)};
+        g_autoptr(GVariant) unwrap{g_variant_get_child_value(result, 0)};
         g_autoptr(GVariantIter) properties{g_variant_iter_new(unwrap)};
         return extract_keymap(properties);
     }
