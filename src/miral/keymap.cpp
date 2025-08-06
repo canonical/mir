@@ -285,8 +285,7 @@ auto read_entry(Connection const& connection, char const* entry) -> std::optiona
 
         if (g_variant_is_of_type(unwrap2, G_VARIANT_TYPE_STRING))
         {
-            gsize len = 0;
-            return g_variant_get_string(unwrap2, &len);
+            return g_variant_get_string(unwrap2, nullptr);
         }
     }
 
@@ -358,13 +357,11 @@ auto miral::Keymap::system_locale1() -> Keymap
             std::optional<std::string> options;
             std::optional<std::string> variant;
 
-            const char* _;
             GVariant* changed_properties;
-            GVariant* invalidated_properties;
             g_variant_get(parameters, "(&s@a{sv}@as)",
-                         &_,
+                         nullptr,
                          &changed_properties,
-                         &invalidated_properties);
+                         nullptr);
 
             GVariantIter iter;
             const char* key;
@@ -378,20 +375,17 @@ auto miral::Keymap::system_locale1() -> Keymap
 
                     if (key == "X11Layout"s)
                     {
-                        gsize len = 0;
-                        layout = g_variant_get_string(value, &len);
+                        layout = g_variant_get_string(value, nullptr);
                     }
 
                     if (key == "X11Variant"s)
                     {
-                        gsize len = 0;
-                        variant = g_variant_get_string(value, &len);
+                        variant = g_variant_get_string(value, nullptr);
                     }
 
                     if (key == "X11Options"s)
                     {
-                        gsize len = 0;
-                        options = g_variant_get_string(value, &len);
+                        options = g_variant_get_string(value, nullptr);
                     }
                 }
             }
@@ -402,7 +396,6 @@ auto miral::Keymap::system_locale1() -> Keymap
             }
 
             g_variant_unref(changed_properties);
-            g_variant_unref(invalidated_properties);
         }
     };
 
