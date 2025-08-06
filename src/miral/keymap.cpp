@@ -262,6 +262,40 @@ char const* const object_path = "/org/freedesktop/locale1";
 char const* const properties_interface = "org.freedesktop.DBus.Properties";
 char const* const signal_name = "PropertiesChanged";
 
+auto extract_keymap(GVariantIter* properties) -> std::optional<std::string>
+{
+    std::optional<std::string> layout;
+    std::optional<std::string> options;
+    std::optional<std::string> variant;
+
+    const char* key;
+    GVariant* value;
+    while (g_variant_iter_loop(properties, "{&sv}", &key, &value))
+    {
+        if (g_variant_is_of_type(value, G_VARIANT_TYPE_STRING))
+        {
+            using namespace std::string_literals;
+
+            if (key == "X11Layout"s)
+            {
+                layout = g_variant_get_string(value, nullptr);
+            }
+
+            if (key == "X11Variant"s)
+            {
+                variant = g_variant_get_string(value, nullptr);
+            }
+
+            if (key == "X11Options"s)
+            {
+                options = g_variant_get_string(value, nullptr);
+            }
+        }
+    }
+    return layout.transform([&](auto const& l)
+        { return l + '+' + variant.value_or("") + '+' + options.value_or(""); });
+}
+
 auto read_entry(Connection const& connection, char const* entry) -> std::optional<std::string>
 {
     static char const* const method_name = "Get";
@@ -352,44 +386,15 @@ auto miral::Keymap::system_locale1() -> Keymap
 
         void callback(GVariant* parameters)
         {
-            std::optional<std::string> layout;
-            std::optional<std::string> options;
-            std::optional<std::string> variant;
-
             g_autoptr(GVariantIter) changed_properties = nullptr;
             g_variant_get(parameters, "(sa{sv}as)",
                          nullptr,
                          &changed_properties,
                          nullptr);
 
-            const char* key;
-            GVariant* value;
-            while (g_variant_iter_loop(changed_properties, "{&sv}", &key, &value))
+            if (auto const keymap = extract_keymap(changed_properties))
             {
-                if (g_variant_is_of_type(value, G_VARIANT_TYPE_STRING))
-                {
-                    using namespace std::string_literals;
-
-                    if (key == "X11Layout"s)
-                    {
-                        layout = g_variant_get_string(value, nullptr);
-                    }
-
-                    if (key == "X11Variant"s)
-                    {
-                        variant = g_variant_get_string(value, nullptr);
-                    }
-
-                    if (key == "X11Options"s)
-                    {
-                        options = g_variant_get_string(value, nullptr);
-                    }
-                }
-            }
-
-            if (layout)
-            {
-                set_keymap(*layout + '+' + variant.value_or("") + '+' + options.value_or(""));
+                set_keymap(*keymap);
             }
         }
     };
