@@ -391,6 +391,23 @@ auto export_egl_image(
         BOOST_THROW_EXCEPTION((mg::egl_error("Failed to export EGLImage to dma-buf(s)")));
     }
 
+#if 0
+    auto const print_strides = [&](auto strides)
+    {
+        std::stringstream ss;
+        for (auto i = 0; i < num_planes; i++)
+        {
+            ss << "stride " << i << ": " << strides[i];
+            if (static_cast<unsigned int>(i) < strides.size() - 1)
+                ss << ", ";
+        }
+
+        return ss.str();
+    };
+
+    mir::log_debug("export_egl_image: width=%d, strides=%s", size.width.as_int(), print_strides(strides).c_str());
+#endif
+
     std::vector<PlaneInfo> planes;
     planes.reserve(num_planes);
     for (int i = 0; i < num_planes; ++i)
@@ -429,6 +446,19 @@ auto export_egl_image(
         size);
 }
 
+auto const print_plane_strides = [](auto planes)
+{
+    std::stringstream ss;
+    for (auto i = 0u; i < planes.size(); i++)
+    {
+        ss << "stride " << i << ": " << planes[i].stride;
+        if (i < planes.size() - 1)
+            ss << ", ";
+    }
+
+    return ss.str();
+};
+
 /**
  * Reimport dmabufs into EGL
  *
@@ -447,21 +477,6 @@ auto import_egl_image(
     EGLDisplay dpy,
     mg::EGLExtensions const& egl_extensions) -> EGLImageKHR
 {
-    auto const print_plane_strides = [](auto planes)
-    {
-        std::stringstream ss;
-        for (auto i = 0u; i < planes.size(); i++)
-        {
-            ss << "stride " << i << ": " << planes[i].stride;
-            if (i < planes.size() - 1)
-                ss << ", ";
-        }
-
-        return ss.str();
-    };
-
-    mir::log_debug("width: %d, %s", width, print_plane_strides(planes).c_str());
-
     std::vector<EGLint> attributes;
 
     attributes.push_back(EGL_WIDTH);
@@ -1428,7 +1443,7 @@ auto mg::DMABufEGLProvider::as_texture(std::shared_ptr<NativeBufferBase> buffer)
             }();
 
         auto kludge = dmabuf_tex->size();
-        kludge.width = geom::Width{(kludge.width.as_int() / 8 ) * 8}; // Round to the closest multiple of 8
+        // kludge.width = geom::Width{(kludge.width.as_int() / 8 ) * 8}; // Round to the closest multiple of 8
         auto importable_buf = importing_provider->allocate_importable_image(
             mg::DRMFormat{DRM_FORMAT_ARGB8888},
             std::span<uint64_t const>{modifiers.data(), modifiers.size()},
@@ -1439,12 +1454,28 @@ auto mg::DMABufEGLProvider::as_texture(std::shared_ptr<NativeBufferBase> buffer)
             mir::log_warning("Failed to allocate common-format buffer for cross-GPU buffer import");
             return nullptr;
         }
-
-        if (auto const modifier = dmabuf_tex->modifier())
-            mir::log_debug("source modifier: %s", mg::drm_modifier_to_string(*modifier).c_str());
-        else
-            mir::log_debug("No modifier!");
-
+        
+        // if (auto const modifier = dmabuf_tex->modifier())
+        //     mir::log_debug("source modifier: %s", mg::drm_modifier_to_string(*modifier).c_str());
+        // else
+        //     mir::log_debug("No modifier!");
+        //
+        // {
+        //     auto const print_modifiers = [](auto modifiers)
+        //     {
+        //         std::stringstream ss;
+        //         for (auto i = 0u; i < modifiers.size(); i++)
+        //         {
+        //             ss << mg::drm_modifier_to_string(modifiers[i]);
+        //             if (i < modifiers.size() - 1)
+        //                 ss << ", ";
+        //         }
+        //
+        //         return ss.str();
+        //     };
+        //
+        //     mir::log_debug("Requested modifiers: %s", print_modifiers(modifiers).c_str());
+        // }
 
         auto src_image = import_egl_image(
             dmabuf_tex->size().width.as_int(), dmabuf_tex->size().height.as_int(),
@@ -1453,6 +1484,8 @@ auto mg::DMABufEGLProvider::as_texture(std::shared_ptr<NativeBufferBase> buffer)
             dmabuf_tex->planes(),
             importing_provider->dpy,
             *importing_provider->egl_extensions);
+        mir::log_debug("src_image import_egl_image params: width=%d, strides=%s", dmabuf_tex->size().width.as_value(), print_plane_strides(dmabuf_tex->planes()).c_str());
+
         auto importable_image = import_egl_image(
             importable_buf->size().width.as_int(), importable_buf->size().height.as_int(),
             importable_buf->format(),
@@ -1460,12 +1493,15 @@ auto mg::DMABufEGLProvider::as_texture(std::shared_ptr<NativeBufferBase> buffer)
             importable_buf->planes(),
             importing_provider->dpy,
             *importing_provider->egl_extensions);
+        mir::log_debug("importable_image import_egl_image params: width=%d, strides=%s", importable_buf->size().width.as_value(), print_plane_strides(importable_buf->planes()).c_str());
+
         auto sync = importing_provider->blitter->blit(src_image, importable_image, kludge);
         if (sync)
         {
             BOOST_THROW_EXCEPTION((std::logic_error{"EGL_ANDROID_native_fence_sync support not implemented yet"}));
         }
         auto importable_dmabuf = export_egl_image(*importing_provider->dmabuf_export_ext, importing_provider->dpy, importable_image, kludge);
+        mir::log_debug("importable_dmabuf export_egl_image params: width=%d, strides=%s", importable_dmabuf->size().width.as_value(), print_plane_strides(importable_dmabuf->planes()).c_str());
 
         auto base_extension = importing_provider->egl_extensions->base(importing_provider->dpy);
         base_extension.eglDestroyImageKHR(importing_provider->dpy, src_image);
