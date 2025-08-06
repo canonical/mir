@@ -271,37 +271,33 @@ public:
             {
                 glUseProgram(state->prog);
 
-                TextureHandle tex;
-                RenderbufferHandle renderbuffer;
-                FramebufferHandle fbo;
 
-                glActiveTexture(GL_TEXTURE0);
-                glBindTexture(GL_TEXTURE_2D, tex);
+                TextureHandle source_tex;
+                glBindTexture(GL_TEXTURE_2D, source_tex);
                 state->glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, from);
-
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-                glBindRenderbuffer(GL_RENDERBUFFER, renderbuffer);
                 state->glEGLImageTargetRenderbufferStorageOES(GL_RENDERBUFFER, to);
 
+                TextureHandle dest_tex;
+                glBindTexture(GL_TEXTURE_2D, dest_tex);
+                state->glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, to);
+                state->glEGLImageTargetRenderbufferStorageOES(GL_RENDERBUFFER, to);
+
+                FramebufferHandle fbo;
                 glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-                glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, renderbuffer);
+                glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, source_tex, 0);
 
-                glBindBuffer(GL_ARRAY_BUFFER, state->vert_data);
-                glVertexAttribPointer (state->attrpos, 2, GL_FLOAT, GL_FALSE, 0, 0);
+                if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+                {
+                    mir::log_critical("OpenGL framebuffer error");
+                    return;
+                }
 
-                glBindBuffer(GL_ARRAY_BUFFER, state->tex_data);
-                glVertexAttribPointer (state->attrtex, 2, GL_FLOAT, GL_FALSE, 0, 0);
-
-                glEnableVertexAttribArray(state->attrpos);
-                glEnableVertexAttribArray(state->attrtex);
-
-                glViewport(0, 0, size.width.as_int(), size.height.as_int());
-                GLubyte const idx[] = { 0, 1, 3, 2 };
-                glDrawElements (GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_BYTE, idx);
+                glBindTexture(GL_TEXTURE_2D, dest_tex);
+                glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, size.width.as_value(), size.height.as_value());
 
                 // TODO: Actually use the sync
                 glFinish();
