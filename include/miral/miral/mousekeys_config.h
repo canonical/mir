@@ -86,10 +86,13 @@ public:
     /// Sets the factors used to accelerate the pointer during motion. Follows
     /// the equation: constant + linear * time + quadratic * time^2. Where time
     /// is the time since the cursor has started moving.
+    /// \note The default acceleration factors are constant=100, linear=100,
+    /// and quadratic=30
     void set_acceleration_factors(double constant, double linear, double quadratic) const;
 
     /// Sets the maximum speed in pixels/s for the pointer on the x and y axes
     /// respectively.
+    /// \note The default maximum speed is x_axis=400 and y_axis=400
     void set_max_speed(double x_axis, double y_axis) const;
 
 private:
