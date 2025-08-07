@@ -19,18 +19,19 @@
 #include "miral/live_config.h"
 
 #include <mir/fd.h>
-#include <mir/input/input_device_observer.h>
-#include <mir/input/input_device_hub.h>
+#include <mir/glib_main_loop.h>
 #include <mir/input/device.h>
+#include <mir/input/input_device_hub.h>
+#include <mir/input/input_device_observer.h>
+#include <mir/input/mir_keyboard_config.h>
+#include <mir/input/parameter_keymap.h>
+#include <mir/log.h>
+#include <mir/main_loop.h>
 #include <mir/options/option.h>
 #include <mir/server.h>
 #include <mir/udev/wrapper.h>
 
-#include <mir/input/parameter_keymap.h>
-#include <mir/input/mir_keyboard_config.h>
-
-#define MIR_LOG_COMPONENT "miral::Keymap"
-#include <mir/log.h>
+#include <gio/gio.h>
 
 #include <algorithm>
 #include <mutex>
@@ -94,6 +95,12 @@ struct miral::Keymap::Self : mir::input::InputDeviceObserver
     Self(std::string_view keymap) : layout{}, variant{}
     {
         set_keymap(keymap);
+    }
+
+    virtual void on_init(mir::Server& server)
+    {
+        if (layout.empty())
+            set_keymap(server.get_options()->get<std::string>(keymap_option));
     }
 
     void set_keymap(std::string_view keymap)
@@ -233,8 +240,7 @@ void miral::Keymap::operator()(mir::Server& server) const
 
     server.add_init_callback([this, &server]
         {
-            if (self->layout.empty())
-                self->set_keymap(server.get_options()->get<std::string>(keymap_option));
+            self->on_init(server);
 
             server.the_input_device_hub()->add_observer(self);
         });
@@ -243,4 +249,155 @@ void miral::Keymap::operator()(mir::Server& server) const
 void miral::Keymap::set_keymap(std::string const& keymap)
 {
     self->set_keymap(keymap);
+}
+
+miral::Keymap::Keymap(std::unique_ptr<Self>&& self) :
+    self{std::move(self)}
+{
+}
+
+namespace
+{
+class Connection : std::shared_ptr<GDBusConnection>
+{
+public:
+    explicit Connection(GDBusConnection* connection) : std::shared_ptr<GDBusConnection>{connection, &g_object_unref} {}
+
+    operator GDBusConnection*() const { return get(); }
+
+private:
+    friend void g_object_unref(GDBusConnection*) = delete;
+};
+
+char const* const interface_name = "org.freedesktop.locale1";
+char const* const bus_name = interface_name;
+char const* const sender = interface_name;
+char const* const object_path = "/org/freedesktop/locale1";
+char const* const properties_interface = "org.freedesktop.DBus.Properties";
+char const* const signal_name = "PropertiesChanged";
+
+auto extract_keymap(GVariantIter* properties) -> std::optional<std::string>
+{
+    std::optional<std::string> layout;
+    std::optional<std::string> options;
+    std::optional<std::string> variant;
+
+    const char* key;
+    GVariant* value;
+    while (g_variant_iter_loop(properties, "{&sv}", &key, &value))
+    {
+        if (g_variant_is_of_type(value, G_VARIANT_TYPE_STRING))
+        {
+            using namespace std::string_literals;
+
+            if (key == "X11Layout"s)
+            {
+                layout = g_variant_get_string(value, nullptr);
+            }
+
+            if (key == "X11Variant"s)
+            {
+                variant = g_variant_get_string(value, nullptr);
+            }
+
+            if (key == "X11Options"s)
+            {
+                options = g_variant_get_string(value, nullptr);
+            }
+        }
+    }
+    return layout.transform([&](auto const& l)
+        { return l + '+' + variant.value_or("") + '+' + options.value_or(""); });
+}
+
+auto read_keymap(Connection const& connection) -> std::optional<std::string>
+{
+    static char const* const method_name = "GetAll";
+
+    g_autoptr(GError) error = nullptr;
+
+    if (g_autoptr(GVariant) result{g_dbus_connection_call_sync(connection,
+                                                        bus_name,
+                                                        object_path,
+                                                        properties_interface,
+                                                        method_name,
+                                                        g_variant_new("(s)", interface_name),
+                                                        G_VARIANT_TYPE("(a{sv})"),
+                                                        G_DBUS_CALL_FLAGS_NONE,
+                                                        G_MAXINT,
+                                                        nullptr,
+                                                        &error)})
+    {
+        g_autoptr(GVariant) unwrap{g_variant_get_child_value(result, 0)};
+        g_autoptr(GVariantIter) properties{g_variant_iter_new(unwrap)};
+        return extract_keymap(properties);
+    }
+
+    if (error)
+    {
+        mir::log_info("Dbus error=%s, dest=%s, object_path=%s, properties_interface=%s, method_name=%s, interface_name=%s",
+                      error->message, bus_name, object_path, properties_interface, method_name, interface_name);
+    }
+
+    return std::nullopt;
+}
+
+template<typename T>
+void callback_thunk(GDBusConnection*, const gchar*, const gchar*, const gchar*, const gchar*, GVariant *parameters, gpointer self)
+{
+    auto const self_ptr = static_cast<T*>(self);
+    self_ptr->callback(parameters);
+}
+}
+
+auto miral::Keymap::system_locale1() -> Keymap
+{
+    struct SystemLocalSelf : Self
+    {
+        explicit SystemLocalSelf(Connection const&& connection) :
+            Self{read_keymap(connection).value_or("us")},
+            watch_id{},
+            connection{std::move(connection)}
+        {
+        }
+
+        void on_init(mir::Server& server) override
+        {
+            std::dynamic_pointer_cast<mir::GLibMainLoop>(server.the_main_loop())->run_with_context_as_thread_default([this]
+            {
+                watch_id = g_dbus_connection_signal_subscribe(
+                connection,
+                sender,
+                properties_interface,
+                signal_name,
+                object_path,
+                nullptr,
+                G_DBUS_SIGNAL_FLAGS_NONE,
+                callback_thunk<SystemLocalSelf>,
+                this,
+                nullptr);
+            });
+        }
+
+        ~SystemLocalSelf() override
+        {
+            g_dbus_connection_signal_unsubscribe(connection, watch_id);
+        }
+
+        guint watch_id = 0;
+        Connection const connection;
+
+        void callback(GVariant* parameters)
+        {
+            g_autoptr(GVariantIter) changed_properties = nullptr;
+            g_variant_get(parameters, "(sa{sv}as)", nullptr, &changed_properties, nullptr);
+
+            if (auto const keymap = extract_keymap(changed_properties))
+            {
+                set_keymap(*keymap);
+            }
+        }
+    };
+
+    return Keymap{std::make_unique<SystemLocalSelf>(Connection{g_bus_get_sync(G_BUS_TYPE_SYSTEM, nullptr, nullptr)})};
 }
