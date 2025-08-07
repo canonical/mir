@@ -175,10 +175,10 @@ miral::MouseKeysConfig::MouseKeysConfig(live_config::Store& config_store)
              "The quadratic speed increase for mousekey pointer motion",
              &Self::State::acceleration_quadratic},
             {{"mouse_keys", "max_speed_x"},
-             "The quadratic speed increase for mousekey pointer motion",
+             "The maximum mousekeys speed on the x axis",
              &Self::State::max_speed_x},
             {{"mouse_keys", "max_speed_y"},
-             "The quadratic speed increase for mousekey pointer motion",
+             "The maximum mousekeys speed on the y axis",
              &Self::State::max_speed_y}};
 
     for (auto const& [key, desc, setter] : float_attribs)
