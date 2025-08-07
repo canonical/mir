@@ -26,7 +26,7 @@ slightly move from the position the simulated secondary click started from to
 further accommodate users. 
 
 Mir additionally provides callbacks that are triggered when the click starts,
-when it's cancelled, and when it successfully dispatches a click. These
+when it's cancelled, and when it's successfully dispatched. These
 callbacks can be used to provide custom visual and audio feedback.
 
 For a more detailed look at the API and usage of simulated secondary click,
