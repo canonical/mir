@@ -570,6 +570,7 @@ libmiral.so.7 libmiral7 #MINVER#
  (c++)"miral::HoverClick::reclick_displacement_threshold(int)@MIRAL_5.5" 5.5.0
  (c++)"miral::InputConfiguration::InputConfiguration(miral::live_config::Store&)@MIRAL_5.5" 5.5.0
  (c++)"miral::Keymap::Keymap(miral::live_config::Store&)@MIRAL_5.5" 5.5.0
+ (c++)"miral::Keymap::system_locale1()@MIRAL_5.5" 5.5.0
  (c++)"miral::Magnifier::Magnifier()@MIRAL_5.5" 5.5.0
  (c++)"miral::Magnifier::Magnifier(miral::live_config::Store&)@MIRAL_5.5" 5.5.0
  (c++)"miral::Magnifier::capture_size(mir::geometry::generic::Size<int> const&)@MIRAL_5.5" 5.5.0

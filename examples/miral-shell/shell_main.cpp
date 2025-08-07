@@ -120,7 +120,7 @@ int main(int argc, char const* argv[])
             };
         };
 
-    Keymap config_keymap;
+    Keymap config_keymap = getenv("MIRAL_SHELL_SYSTEM_LOCALE1") ? Keymap::system_locale1() : Keymap{};
 
     auto run_startup_apps = [&](std::string const& apps)
     {
