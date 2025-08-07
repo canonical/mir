@@ -61,7 +61,9 @@ public:
     // When already disabled, further calls have no effect.
     SlowKeys& disable();
 
-    /// Configures the duration a key has to be pressed down for to register as a key press.
+    /// Configures the duration a key has to be pressed down for to register as
+    /// a key press.
+    /// \note The default hold delay is 200 milliseconds.
     SlowKeys& hold_delay(std::chrono::milliseconds hold_delay);
 
     /// Configures the callback that's invoked when the key is pressed down.
