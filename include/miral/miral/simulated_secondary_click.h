@@ -64,10 +64,12 @@ public:
 
     /// Configures the duration users have to keep the left mouse button down
     /// to dispatch a secondary click.
+    /// \note The default hold duration is 1000 milliseconds.
     SimulatedSecondaryClick& hold_duration(std::chrono::milliseconds hold_duration);
 
     /// Configures the maximum displacement the mouse pointer can move before
     /// the simulated secondary click is cancelled.
+    /// \note The default displacement threshold is 20 pixels.
     SimulatedSecondaryClick& displacement_threshold(float displacement);
 
     /// Configures the callback to invoke when the user clicks _down_ the left
