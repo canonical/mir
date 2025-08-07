@@ -61,15 +61,18 @@ public:
 
     /// Configures how long the pointer has to stay still to dispatch a left
     /// click.
+    /// \note The default hover duration is 1000 milliseconds.
     HoverClick& hover_duration(std::chrono::milliseconds hover_duration);
 
     // Configures the distance in pixels the pointer has to move from the
     // initial hover click position to cancel it.
+    // \note The default cancel displacement threshold is 10 pixels.
     HoverClick& cancel_displacement_threshold(int displacement);
     
     // Configures the distance in pixels the pointer has to move from the last
     // hover click or hover click cancel position to initiate a new hover
     // click.
+    // \note The default reclick displacement threshold is 5 pixels.
     HoverClick& reclick_displacement_threshold(int displacement);
 
     /// Called shortly after a hover click is scheduled. Should be used to
