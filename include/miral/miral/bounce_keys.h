@@ -56,12 +56,16 @@ public:
     /// When already disabled, further calls have no effect.
     BounceKeys& disable();
 
-    /// Configures the duration users have to hold a key down for the press to register.
+    /// Configures the duration users have to hold a key down for the press to
+    /// register.
+    /// \note The default delay period is 200 milliseconds.
     BounceKeys& delay(std::chrono::milliseconds);
 
     /// Configures the callback to invoke when a keypress is rejected. Can be
     /// used to provide audio feedback or to initialize animations for
     /// graphical feedback.
+    /// \note The integer argument is the keysym of the key, which you may
+    /// match against those found in <xkbcommon/xkbcommon-keysyms.h>.
     BounceKeys& on_press_rejected(std::function<void(unsigned int keysym)>&&);
 
 private:
