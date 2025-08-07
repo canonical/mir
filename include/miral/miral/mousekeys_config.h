@@ -26,6 +26,12 @@ namespace mir
 class Server;
 }
 
+namespace miral
+{
+namespace live_config
+{
+    class Store;
+}
 /// Enables configuring mousekeys at runtime.
 ///
 /// Mousekeys is an accessibility feature that allows users to control the
@@ -36,13 +42,6 @@ class Server;
 /// right click with `/`, `*`, and `-` respectively.
 ///
 /// \remark Since MirAL 5.3
-/// \note All methods can only be called after the server is initialized.
-namespace miral
-{
-namespace live_config
-{
-    class Store;
-}
 class MouseKeysConfig
 {
 public:
