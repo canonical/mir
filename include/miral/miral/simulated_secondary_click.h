@@ -44,6 +44,16 @@ class SimulatedSecondaryClick
 {
 public:
     /// Construct a `SimulatedSecondaryClick` instance with access to a live config store.
+    ///
+    /// Available options:
+    ///     - {simulated_secondary_click, enable}: Enable or disable simulated
+    ///     secondary click.
+    ///     - {simulated_secondary_click, displacement_threshold}: How much
+    ///     pointer displacement in pixels is allowed before a simulated
+    ///     secondary click is cancelled
+    ///     - {simulated_secondary_click, delay}: The delay in milliseconds
+    ///     between the cursor starting a simulated secondary click and the
+    ///     click being  dispatched.
     explicit SimulatedSecondaryClick(live_config::Store& config_store);
 
     /// Creates a `SimulatedSecondaryClick` instance that's enabled by default.

@@ -44,6 +44,11 @@ public:
     static auto disabled() -> BounceKeys;
 
     /// Construct a `BounceKeys` instance with access to a live config store.
+    ///
+    /// Available options:
+    ///     - {bounce_keys, enable}: Enable or disable bounce keys.
+    ///     - {bounce_keys, delay}: How much time in milliseconds must pass
+    ///     between keypresses to not be rejected.
     explicit BounceKeys(live_config::Store& config_store);
 
     void operator()(mir::Server&);

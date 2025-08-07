@@ -39,6 +39,17 @@ class HoverClick
 {
 public:
     /// Construct a `HoverClick` instance with access to a live config store.
+    ///
+    /// Available options:
+    ///     - {hover_click, enable}: Enable or disable hover click.
+    ///     - {hover_click, hover_duration}: How long in milliseconds the
+    ///     pointer has to stay still to dispatch a left click.
+    ///     - {hover_click, cancel_displacement}: The distance in pixels the
+    ///     pointer has to move from the initial hover click position to cancel
+    ///     it.
+    ///     - {hover_click, reclick_displacement}: the distance in pixels the
+    ///     pointer has to move from the the last hover click or hover click
+    ///     cancel position to initiate a new hover click 
     explicit HoverClick(live_config::Store& config_store);
 
     /// Creates a `HoverClick` instance that's enabled by default.

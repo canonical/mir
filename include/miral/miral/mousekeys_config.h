@@ -59,6 +59,19 @@ public:
     auto static disabled() -> MouseKeysConfig;
 
     /// Construct a `MouseKeysConfig` instance with access to a live config store.
+    ///
+    /// Available options:
+    ///     - {mouse_keys, enable}: Enable or disable mousekeys.
+    ///     - {mouse_keys, acceleration, constant_factor}: The base speed for
+    ///     mousekey pointer motion
+    ///     - {mouse_keys, acceleration, linear_factor}: The linear speed
+    ///     increase for mousekey pointer motion
+    ///     - {mouse_keys, acceleration, quadratic_factor}: The quadratic speed
+    ///     increase for mousekey pointer motion
+    ///     - {mouse_keys, max_speed_x}: The maximum mousekeys speed on the x
+    ///     axis
+    ///     - {mouse_keys, max_speed_x}: The maximum mousekeys speed on the y
+    ///     axis
     explicit MouseKeysConfig(live_config::Store& config_store);
 
     void operator()(mir::Server& server) const;

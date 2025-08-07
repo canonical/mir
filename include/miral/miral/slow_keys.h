@@ -49,6 +49,11 @@ public:
     static auto disabled() -> SlowKeys;
 
     /// Construct a `SlowKeys` instance with access to a live config store.
+    ///
+    /// Available options:
+    ///     - {slow_keys, enable}: Enable or disable slow keys.
+    ///     - {slow_keys, hold_delay}: How much time in milliseconds must pass
+    ///     between keypresses to not be rejected.
     explicit SlowKeys(miral::live_config::Store& config_store);
 
     void operator()(mir::Server& server);
