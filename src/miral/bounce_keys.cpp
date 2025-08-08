@@ -142,7 +142,7 @@ miral::BounceKeys::BounceKeys(live_config::Store& config_store) :
 {
     config_store.add_bool_attribute(
         {"bounce_keys", "enable"},
-        "Whether or not to start the compositor with bounce keys enabled",
+        "Enable or disable bounce keys",
         [this](live_config::Key const&, std::optional<bool> val) {
             if(val)
             {

@@ -69,7 +69,7 @@ miral::SlowKeys::SlowKeys(miral::live_config::Store& config_store) :
 {
     config_store.add_bool_attribute(
         {"slow_keys", "enable"},
-        "Whether or not to start the compositor with slow keys enabled",
+        "Enable or disable slow keys",
         [this](live_config::Key const&, std::optional<bool> val)
         {
             if (val)
