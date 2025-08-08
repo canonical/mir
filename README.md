@@ -22,6 +22,10 @@ API.
 - For announcements and other discussions on Mir see [Ubuntu Discourse](https://discourse.ubuntu.com/c/mir) or join
 [the matrix channel](https://matrix.to/#/#mir-server:matrix.org) to get in touch with the team.
 
+## Packaging status
+
+[![Packaging status](https://repology.org/badge/vertical-allrepos/mir.svg)](https://repology.org/project/mir/versions)
+
 ## Copyright and License
 Copyright © Canonical Ltd.
 
