@@ -44,6 +44,16 @@ class SimulatedSecondaryClick
 {
 public:
     /// Construct a `SimulatedSecondaryClick` instance with access to a live config store.
+    ///
+    /// Available options:
+    ///     - {simulated_secondary_click, enable}: Enable or disable simulated
+    ///     secondary click.
+    ///     - {simulated_secondary_click, displacement_threshold}: How much
+    ///     pointer displacement in pixels is allowed before a simulated
+    ///     secondary click is cancelled
+    ///     - {simulated_secondary_click, delay}: The delay in milliseconds
+    ///     between the cursor starting a simulated secondary click and the
+    ///     click being  dispatched.
     explicit SimulatedSecondaryClick(live_config::Store& config_store);
 
     /// Creates a `SimulatedSecondaryClick` instance that's enabled by default.
@@ -64,10 +74,12 @@ public:
 
     /// Configures the duration users have to keep the left mouse button down
     /// to dispatch a secondary click.
+    /// \note The default hold duration is 1000 milliseconds.
     SimulatedSecondaryClick& hold_duration(std::chrono::milliseconds hold_duration);
 
     /// Configures the maximum displacement the mouse pointer can move before
     /// the simulated secondary click is cancelled.
+    /// \note The default displacement threshold is 20 pixels.
     SimulatedSecondaryClick& displacement_threshold(float displacement);
 
     /// Configures the callback to invoke when the user clicks _down_ the left

@@ -34,7 +34,11 @@ class OutputFilter
 public:
     explicit OutputFilter();
 
-    /// Construct registering with a configuration store
+    /// Constructor registering with a configuration store
+    ///
+    /// Available options:
+    ///     - {output_filter}: Output filter to use [{none,grayscale,invert}],
+    ///
     /// \remark Since Miral 5.5
     explicit OutputFilter(live_config::Store& config_store);
     explicit OutputFilter(MirOutputFilter default_filter);

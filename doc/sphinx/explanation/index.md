@@ -10,6 +10,7 @@ These pages provide additional detail about a number of aspects related to using
 - [What is Wayland anyway?](ok-so-what-is-this-wayland-thing-anyway.md): so what is it?
 - [Windowing paradigms](window-positions-under-wayland.md): how are windows managed?
 - [Component reports](component_reports.md): information on Mir's debug and performance reporting infrastructure
+- [Accessibility Methods](accessibility-methods.md): An overview of Mir's accessibility methods
 
 ```{toctree}
 :hidden:
@@ -23,4 +24,5 @@ energy-efficiency.md
 ok-so-what-is-this-wayland-thing-anyway.md
 window-positions-under-wayland.md
 component_reports.md
+accessibility-methods.md
 ```

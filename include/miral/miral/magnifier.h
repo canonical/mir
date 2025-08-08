@@ -34,6 +34,15 @@ class Magnifier
 {
 public:
     Magnifier();
+    /// Construct a `Magnifier` instance with access to a live config store.
+    ///
+    /// Available options:
+    ///     - {magnifier, enable}: Whether the magnifier is enabled.
+    ///     - {magnifier, magnification}: The magnification scale.
+    ///     - {magnifier, capture_size, width}: The width of the rectangular
+    ///     region that will be magnified.
+    ///     - {magnifier, capture_size, height}: The height of the rectangular
+    ///     region that will be magnified.
     explicit Magnifier(live_config::Store& config_store);
 
     Magnifier& enable(bool enabled);
