@@ -14,6 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "./egl_debug.h"
+
 #include <EGL/egl.h>
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
@@ -28,10 +30,11 @@
 #include <exception>
 #include <utility>
 #include <stdexcept>
+
 #include <boost/throw_exception.hpp>
 
-#define MIR_LOG_COMPONENT "egl-buffer-copy"
-#include "mir/log.h"
+// #define MIR_LOG_COMPONENT "egl-buffer-copy"
+// #include "mir/log.h"
 
 namespace mg = mir::graphics;
 
@@ -60,42 +63,6 @@ const GLchar* const fshader =
         "}\n"
     };
 
-template<void (*allocator)(GLsizei, GLuint*), void (* deleter)(GLsizei, GLuint const*)>
-class GLBulkHandle
-{
-public:
-    GLBulkHandle()
-    {
-        allocator(1, &id);
-    }
-
-    ~GLBulkHandle()
-    {
-        if (id)
-            deleter(1, &id);
-    }
-
-    GLBulkHandle(GLBulkHandle const&) = delete;
-    GLBulkHandle& operator=(GLBulkHandle const&) = delete;
-    GLBulkHandle& operator=(GLBulkHandle&& rhs)
-    {
-        std::swap(id, rhs.id);
-        return *this;
-    }
-
-    GLBulkHandle(GLBulkHandle&& from)
-        : id{std::exchange(from.id, 0)}
-    {
-    }
-
-    operator GLuint() const
-    {
-        return id;
-    }
-
-private:
-    GLuint id;
-};
 
 template<GLuint (*allocator)(GLenum), void (* deleter)(GLuint)>
 class GLTypedHandle
@@ -134,50 +101,6 @@ private:
     GLuint id;
 };
 
-template<GLuint (*allocator)(void), void (*deleter)(GLuint)>
-class GLHandle
-{
-public:
-    GLHandle()
-        : id{allocator()}
-    {
-    }
-
-    ~GLHandle()
-    {
-        if (id)
-            deleter(id);
-    }
-
-    GLHandle(GLHandle const&) = delete;
-    GLHandle& operator=(GLHandle const&) = delete;
-    GLHandle& operator=(GLHandle&& rhs)
-    {
-        std::swap(id, rhs.id);
-        return *this;
-    }
-
-    GLHandle(GLHandle&& from)
-        : id{std::exchange(from.id, 0)}
-    {
-    }
-
-    operator GLuint() const
-    {
-        return id;
-    }
-
-private:
-    GLuint id;
-};
-
-using TextureHandle = GLBulkHandle<&glGenTextures, &glDeleteTextures>;
-using GLBufferHandle = GLBulkHandle<&glGenBuffers, &glDeleteBuffers>;
-
-using RenderbufferHandle = GLBulkHandle<&glGenRenderbuffers, &glDeleteRenderbuffers>;
-using FramebufferHandle = GLBulkHandle<&glGenFramebuffers, &glDeleteFramebuffers>;
-
-using ProgramHandle = GLHandle<&glCreateProgram, &glDeleteProgram>;
 using ShaderHandle = GLTypedHandle<&glCreateShader, &glDeleteShader>;
 
 ShaderHandle compile_shader(GLenum type, GLchar const* src)
@@ -226,6 +149,7 @@ ProgramHandle link_shader(
 
     return program;
 }
+
 }
 
 class mg::EGLBufferCopier::Impl
@@ -287,6 +211,7 @@ public:
                 glBindRenderbuffer(GL_RENDERBUFFER, renderbuffer);
                 state->glEGLImageTargetRenderbufferStorageOES(GL_RENDERBUFFER, to);
 
+
                 glBindFramebuffer(GL_FRAMEBUFFER, fbo);
                 glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, renderbuffer);
 
@@ -302,6 +227,20 @@ public:
                 glViewport(0, 0, size.width.as_int(), size.height.as_int());
                 GLubyte const idx[] = { 0, 1, 3, 2 };
                 glDrawElements (GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_BYTE, idx);
+
+                static int blit_count = 0;
+
+                if(blit_count % 60 == 0)
+                {
+                    auto _glEGLImageTargetTexture2DOES = [&state](auto target, auto egl_image)
+                    {
+                        state->glEGLImageTargetTexture2DOES(target, egl_image);
+                    };
+                    eglimage_to_ppm(_glEGLImageTargetTexture2DOES, from, size.width.as_int(), size.height.as_int(), GL_RGBA, std::format("from-{}.ppm", blit_count));
+                    eglimage_to_ppm(_glEGLImageTargetTexture2DOES, to, size.width.as_int(), size.height.as_int(), GL_RGBA, std::format("to-{}.ppm", blit_count));
+                }
+
+                blit_count++;
 
                 // TODO: Actually use the sync
                 glFinish();
