@@ -15,6 +15,7 @@
  */
 
 #include "mir/graphics/linux_dmabuf.h"
+#include "egl_debug.h"
 #include "mir/anonymous_shm_file.h"
 #include "mir/fd.h"
 #include "mir/graphics/drm_formats.h"
@@ -38,7 +39,7 @@
 #include <stdexcept>
 #include <sys/stat.h>
 
-#define MIR_LOG_COMPONENT "linux-dmabuf-import"
+// #define MIR_LOG_COMPONENT "linux-dmabuf-import"
 #include "mir/log.h"
 
 #include <mutex>
@@ -1006,6 +1007,21 @@ public:
 
         glBindTexture(target, tex);
         extensions.base(dpy).glEGLImageTargetTexture2DOES(target, image);
+
+        static int blit_count2 = 0;
+        auto _glEGLImageTargetTexture2DOES = [&](auto target, auto egl_image)
+        {
+            extensions.base(dpy).glEGLImageTargetTexture2DOES(target, egl_image);
+        };
+        if(blit_count2 % 60 == 0)
+            eglimage_to_ppm(
+                _glEGLImageTargetTexture2DOES,
+                image,
+                dma_buf.size().width.as_int(),
+                dma_buf.size().height.as_int(),
+                GL_RGBA,
+                std::format("imported-{}-{}.ppm", (void*)this, blit_count2));
+        blit_count2++;
 
         // tex is now an EGLImage sibling, so we can free the EGLImage without
         // freeing the backing data.
