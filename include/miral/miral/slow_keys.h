@@ -49,6 +49,11 @@ public:
     static auto disabled() -> SlowKeys;
 
     /// Construct a `SlowKeys` instance with access to a live config store.
+    ///
+    /// Available options:
+    ///     - {slow_keys, enable}: Enable or disable slow keys.
+    ///     - {slow_keys, hold_delay}: How much time in milliseconds must pass
+    ///     between keypresses to not be rejected.
     explicit SlowKeys(miral::live_config::Store& config_store);
 
     void operator()(mir::Server& server);
@@ -61,19 +66,27 @@ public:
     // When already disabled, further calls have no effect.
     SlowKeys& disable();
 
-    /// Configures the duration a key has to be pressed down for to register as a key press.
+    /// Configures the duration a key has to be pressed down for to register as
+    /// a key press.
+    /// \note The default hold delay is 200 milliseconds.
     SlowKeys& hold_delay(std::chrono::milliseconds hold_delay);
 
     /// Configures the callback that's invoked when the key is pressed down.
     /// Useful for providing feedback to users.
+    /// \note The integer argument is the keysym of the key, which you may
+    /// match against those found in <xkbcommon/xkbcommon-keysyms.h>.
     SlowKeys& on_key_down(std::function<void(unsigned int)>&& on_key_down);
     
     /// Configures the callback that's invoked when a press is rejected.
     /// Useful for providing feedback to users.
+    /// \note The integer argument is the keysym of the key, which you may
+    /// match against those found in <xkbcommon/xkbcommon-keysyms.h>.
     SlowKeys& on_key_rejected(std::function<void(unsigned int)>&& on_key_rejected);
     
     /// Configures the callback that's invoked when a press is accepted.
     /// Useful for providing feedback to users.
+    /// \note The integer argument is the keysym of the key, which you may
+    /// match against those found in <xkbcommon/xkbcommon-keysyms.h>.
     SlowKeys& on_key_accepted(std::function<void(unsigned int)>&& on_key_accepted);
 
 private:
