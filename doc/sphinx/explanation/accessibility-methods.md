@@ -1,5 +1,5 @@
 # Accessibility Methods
-Accessibility methods are options which change the behavior of Mir to
+Accessibility methods are options which
 accommodate users with disabilities. Mir offers a variety of accessibility
 methods which can be broadly categorised into: Pointer accessibility, typing
 accessibility, and visual accessibility methods. 
