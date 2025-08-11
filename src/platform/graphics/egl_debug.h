@@ -140,6 +140,46 @@ std::optional<std::vector<unsigned char>> read_eglimage(auto _glEGLImageTargetTe
     return pixelBuffer;
 }
 
+void write_eglimage(
+    auto _glEGLImageTargetTexture2DOES, std::vector<unsigned char> const& buffer, EGLImage image, int width, int height)
+{
+    auto check_gl_error = [](auto const* str)
+    {
+        GLenum gl_error = glGetError();
+        if (gl_error != GL_NO_ERROR)
+        {
+            mir::log_error("Error: OpenGL error after %s: %X", str, gl_error);
+            return false;
+        }
+        
+        return true;
+    };
+
+    // 1. Create a temporary texture ID.
+    TextureHandle tex;
+
+    // 2. Bind the temporary texture.
+    glBindTexture(GL_TEXTURE_2D, tex);
+
+    // 3. Attach the EGLImage to the bound texture.
+    // This makes the texture's data store point to the EGLImage's buffer.
+    _glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, image);
+    if(!check_gl_error("glEGLImageTargetTexture2DOES")) return;
+
+    // 4. Upload the CPU buffer data to the texture (and thus to the EGLImage).
+    // We use glTexSubImage2D because the storage is already allocated by the EGLImage.
+    // Assuming an RGBA format for the data. Adjust GL_RGBA if your data is different (e.g., GL_RGB).
+    // The size of cpuBuffer must be at least width * height * 4.
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, buffer.data());
+    check_gl_error("glTexSubImage2D");
+
+    // 5. Unbind and clean up the temporary texture.
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    // Ensure all commands are sent to the GPU.
+    glFinish();
+}
+
 bool eglimage_to_ppm(auto _glEGLImageTargetTexture2DOES, EGLImageKHR image, int width, int height, std::string const& filename)
 {
     auto pixelBuffer = read_eglimage(_glEGLImageTargetTexture2DOES, image, width, height);
