@@ -17,6 +17,8 @@
 #ifndef MIRAL_BOUNCE_KEYS_H
 #define MIRAL_BOUNCE_KEYS_H
 
+#include <mir_toolkit/events/event.h>
+
 #include <chrono>
 #include <functional>
 #include <memory>
@@ -69,9 +71,7 @@ public:
     /// Configures the callback to invoke when a keypress is rejected. Can be
     /// used to provide audio feedback or to initialize animations for
     /// graphical feedback.
-    /// \note The integer argument is the keysym of the key, which you may
-    /// match against those found in <xkbcommon/xkbcommon-keysyms.h>.
-    BounceKeys& on_press_rejected(std::function<void(unsigned int keysym)>&&);
+    BounceKeys& on_press_rejected(std::function<void(MirKeyboardEvent const*)>&&);
 
 private:
     struct Self;
