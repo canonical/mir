@@ -24,7 +24,7 @@ down the primary click button for a short duration. The pointer is allowed to
 slightly move from the position the simulated secondary click started from to
 further accommodate users. 
 
-Mir additionally provides callbacks that are triggered when the click starts,
+Callbacks are available and trigger when the click starts,
 when it's cancelled, and when it's successfully dispatched. These
 callbacks can be used to provide custom visual and audio feedback.
 
@@ -38,7 +38,7 @@ initiated, the pointer is allowed to slightly move.
 After a click is successfully dispatched, no further clicks will be initiated
 unless the pointer moves a short distance from the position of the last click.
 
-Mir allows you to provide callbacks for when clicks are initiated, cancelled,
+Callbacks are available and trigger when clicks are initiated, cancelled,
 or dispatched. They can be used to provide visual and audio feedback.
 
 API details: {cpp:class}`miral::HoverClick`
@@ -58,7 +58,7 @@ simultaneously. This is useful for users who can press some keyboard shortcuts
 that require keys next to each other, but not more complicated shortcuts, for
 example.
 
-You can provide a callback to trigger when modifier keys are pressed and become
+Callbacks are available and trigger when modifier keys are pressed and become
 sticky. This can be used to provide feedback to users.
 
 API details: {cpp:class}`miral::StickyKeys`
@@ -67,7 +67,7 @@ API details: {cpp:class}`miral::StickyKeys`
 Slow keys allows users with motor disabilities to configure Mir to ignore key
 presses lasting less than a specific period.
 
-Mir allows you to provide callbacks which are invoked when a key is depressed,
+Callbacks are available and trigger when a key is depressed,
 when a key press is rejected, and when a key press is accepted.
 
 API details: {cpp:class}`miral::SlowKeys`
