@@ -1019,7 +1019,6 @@ public:
                 image,
                 dma_buf.size().width.as_int(),
                 dma_buf.size().height.as_int(),
-                GL_RGBA,
                 std::format("imported-{}-{}.ppm", (void*)this, blit_count2));
         blit_count2++;
 

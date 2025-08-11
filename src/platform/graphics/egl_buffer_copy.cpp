@@ -236,8 +236,8 @@ public:
                     {
                         state->glEGLImageTargetTexture2DOES(target, egl_image);
                     };
-                    eglimage_to_ppm(_glEGLImageTargetTexture2DOES, from, size.width.as_int(), size.height.as_int(), GL_RGBA, std::format("from-{}.ppm", blit_count));
-                    eglimage_to_ppm(_glEGLImageTargetTexture2DOES, to, size.width.as_int(), size.height.as_int(), GL_RGBA, std::format("to-{}.ppm", blit_count));
+                    eglimage_to_ppm(_glEGLImageTargetTexture2DOES, from, size.width.as_int(), size.height.as_int(), std::format("from-{}.ppm", blit_count));
+                    eglimage_to_ppm(_glEGLImageTargetTexture2DOES, to, size.width.as_int(), size.height.as_int(), std::format("to-{}.ppm", blit_count));
                 }
 
                 blit_count++;
