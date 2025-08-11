@@ -3,6 +3,14 @@ name: Snap
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
+    paths-ignore:
+    - '.github/**'
+    - 'debian/**'
+    - 'doc/**'
+    - 'spread**'
+    - 'tests/**'
+    - 'tools/**'
+    - '!.github/workflows/snap.yml'
 
 concurrency:
   group: ${{ github.workflow }}-pr${{ github.event.number }}
