@@ -33,6 +33,11 @@ public:
     explicit CursorScale();
 
     /// Construct registering with a configuration store
+    ///
+    /// Available options:
+    ///     - {cursor, scale}: Scales the cursor by the provided scale. Must be
+    ///     between 0 and 100 inclusive.
+    ///
     /// \remark Since Miral 5.5
     explicit CursorScale(live_config::Store& config_store);
     explicit CursorScale(float default_scale);

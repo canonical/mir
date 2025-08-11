@@ -26,6 +26,12 @@ namespace mir
 class Server;
 }
 
+namespace miral
+{
+namespace live_config
+{
+    class Store;
+}
 /// Enables configuring mousekeys at runtime.
 ///
 /// Mousekeys is an accessibility feature that allows users to control the
@@ -36,13 +42,6 @@ class Server;
 /// right click with `/`, `*`, and `-` respectively.
 ///
 /// \remark Since MirAL 5.3
-/// \note All methods can only be called after the server is initialized.
-namespace miral
-{
-namespace live_config
-{
-    class Store;
-}
 class MouseKeysConfig
 {
 public:
@@ -59,6 +58,19 @@ public:
     auto static disabled() -> MouseKeysConfig;
 
     /// Construct a `MouseKeysConfig` instance with access to a live config store.
+    ///
+    /// Available options:
+    ///     - {mouse_keys, enable}: Enable or disable mousekeys.
+    ///     - {mouse_keys, acceleration, constant_factor}: The base speed for
+    ///     mousekey pointer motion
+    ///     - {mouse_keys, acceleration, linear_factor}: The linear speed
+    ///     increase for mousekey pointer motion
+    ///     - {mouse_keys, acceleration, quadratic_factor}: The quadratic speed
+    ///     increase for mousekey pointer motion
+    ///     - {mouse_keys, max_speed_x}: The maximum mousekeys speed on the x
+    ///     axis
+    ///     - {mouse_keys, max_speed_x}: The maximum mousekeys speed on the y
+    ///     axis
     explicit MouseKeysConfig(live_config::Store& config_store);
 
     void operator()(mir::Server& server) const;
@@ -79,17 +91,20 @@ public:
     void disable() const;
 
     /// Changes the keymap for the various mousekeys actions defined in
-    /// [MouseKeysKeymap::Action]
+    /// `mir::input::MouseKeysKeymap::Action`.
     /// \note If a certain action not mapped to any key, it will be disabled.
     void set_keymap(mir::input::MouseKeysKeymap const& new_keymap) const;
 
     /// Sets the factors used to accelerate the pointer during motion. Follows
     /// the equation: constant + linear * time + quadratic * time^2. Where time
     /// is the time since the cursor has started moving.
+    /// \note The default acceleration factors are constant=100, linear=100,
+    /// and quadratic=30
     void set_acceleration_factors(double constant, double linear, double quadratic) const;
 
     /// Sets the maximum speed in pixels/s for the pointer on the x and y axes
     /// respectively.
+    /// \note The default maximum speed is x_axis=400 and y_axis=400
     void set_max_speed(double x_axis, double y_axis) const;
 
 private:

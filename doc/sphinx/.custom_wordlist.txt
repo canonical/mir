@@ -9,6 +9,7 @@ backends
 barebones
 behavior
 Binutils
+BounceKeys
 Broadcom
 buf
 chroot
@@ -26,6 +27,7 @@ CRTC
 csd
 CSD
 Ctrl
+CursorScale
 customize
 customization
 customizing
@@ -78,10 +80,12 @@ gl
 GLib
 glibc
 GPUs
+grayscale
 GTK
 hoc
 href
 https
+HoverClick
 IdleHub
 Igalia
 IMX
@@ -143,6 +147,7 @@ modularity
 mousekeys
 Mousekeys
 MouseKeys
+MouseKeysConfig
 Multiarch
 MX
 natively
@@ -161,6 +166,7 @@ OMX
 optimizations
 orchestrator
 organized
+OutputFilter
 paltform
 ppa
 PPAs
@@ -193,13 +199,16 @@ screencast
 screencasting
 Screencasting
 SDL
+SimulatedSecondaryClick
 SHM
+SlowKeys
 snapcraft
 snapd
 SONAME
 SpinnerSplash
 ssd
 SSD
+StickyKeys
 subgraph
 subprocess
 sys

@@ -41,6 +41,12 @@ public:
     static auto disabled() -> StickyKeys;
 
     /// Construct a 'StickyKeys' instance with access to a live config store.
+    ///
+    /// Available options:
+    ///     - {sticky_keys, enable}: Enable or disable sticky keys
+    ///     - {sticky_keys, disable_if_two_keys_are_pressed_together}: When set
+    ///     to true, clicking two modifier keys are once will result in sticky
+    ///     keys being temporarily disabled until all keys are released.
     explicit StickyKeys(live_config::Store& config_store);
 
     void operator()(mir::Server& server);

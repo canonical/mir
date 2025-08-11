@@ -39,6 +39,17 @@ class HoverClick
 {
 public:
     /// Construct a `HoverClick` instance with access to a live config store.
+    ///
+    /// Available options:
+    ///     - {hover_click, enable}: Enable or disable hover click.
+    ///     - {hover_click, hover_duration}: How long in milliseconds the
+    ///     pointer has to stay still to dispatch a left click.
+    ///     - {hover_click, cancel_displacement}: The distance in pixels the
+    ///     pointer has to move from the initial hover click position to cancel
+    ///     it.
+    ///     - {hover_click, reclick_displacement}: the distance in pixels the
+    ///     pointer has to move from the the last hover click or hover click
+    ///     cancel position to initiate a new hover click 
     explicit HoverClick(live_config::Store& config_store);
 
     /// Creates a `HoverClick` instance that's enabled by default.
@@ -61,15 +72,18 @@ public:
 
     /// Configures how long the pointer has to stay still to dispatch a left
     /// click.
+    /// \note The default hover duration is 1000 milliseconds.
     HoverClick& hover_duration(std::chrono::milliseconds hover_duration);
 
     // Configures the distance in pixels the pointer has to move from the
     // initial hover click position to cancel it.
+    // \note The default cancel displacement threshold is 10 pixels.
     HoverClick& cancel_displacement_threshold(int displacement);
     
-    // Configures the distance in pixels the pointer has to move from the the
-    // last hover click or hover click cancel position to initiate a new hover
-    // click
+    // Configures the distance in pixels the pointer has to move from the last
+    // hover click or hover click cancel position to initiate a new hover
+    // click.
+    // \note The default reclick displacement threshold is 5 pixels.
     HoverClick& reclick_displacement_threshold(int displacement);
 
     /// Called shortly after a hover click is scheduled. Should be used to
