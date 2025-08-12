@@ -182,6 +182,9 @@ void write_eglimage(
 
 bool eglimage_to_ppm(auto _glEGLImageTargetTexture2DOES, EGLImageKHR image, int width, int height, std::string const& filename)
 {
+    if(!getenv("MIR_EGLIMAGE_TO_PPM"))
+        return false;
+
     auto pixelBuffer = read_eglimage(_glEGLImageTargetTexture2DOES, image, width, height);
 
     if(!pixelBuffer)
