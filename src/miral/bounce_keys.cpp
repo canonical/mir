@@ -44,7 +44,7 @@ struct miral::BounceKeys::Self
 
         bool enabled;
         std::chrono::milliseconds delay{200};
-        std::function<void(unsigned int keysym)> on_press_rejected{[](auto) {}};
+        std::function<void(const MirKeyboardEvent*)> on_press_rejected{[](auto) {}};
     };
 
     struct BounceKeysFilter : public mi::EventFilter
@@ -91,7 +91,7 @@ struct miral::BounceKeys::Self
                 return false;
             }
 
-            config_->on_press_rejected(keysym);
+            config_->on_press_rejected(key_event);
 
             return true;
         }
@@ -197,7 +197,7 @@ miral::BounceKeys& miral::BounceKeys::delay(std::chrono::milliseconds delay)
     return *this;
 }
 
-miral::BounceKeys& miral::BounceKeys::on_press_rejected(std::function<void(unsigned int keysym)>&& on_press_rejected)
+miral::BounceKeys& miral::BounceKeys::on_press_rejected(std::function<void(const MirKeyboardEvent*)>&& on_press_rejected)
 {
     self->config->lock()->on_press_rejected = std::move(on_press_rejected);
     return *this;

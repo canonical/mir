@@ -37,9 +37,9 @@ public:
     virtual bool transform_input_event(
         input::Transformer::EventDispatcher const&, input::EventBuilder*, MirEvent const&) override;
 
-    void on_key_down(std::function<void(unsigned int)>&& okd) override;
-    void on_key_rejected(std::function<void(unsigned int)>&& okr) override;
-    void on_key_accepted(std::function<void(unsigned int)>&& oka) override;
+    void on_key_down(std::function<void(MirKeyboardEvent const*)>&& okd) override;
+    void on_key_rejected(std::function<void(MirKeyboardEvent const*)>&& okr) override;
+    void on_key_accepted(std::function<void(MirKeyboardEvent const*)>&& oka) override;
     void delay(std::chrono::milliseconds) override;
 
 private:
@@ -50,9 +50,9 @@ private:
     struct ConfigState
     {
         std::chrono::milliseconds delay{1000};
-        std::function<void(unsigned int)> on_key_down{[](auto) {}};
-        std::function<void(unsigned int)> on_key_rejected{[](auto) {}};
-        std::function<void(unsigned int)> on_key_accepted{[](auto) {}};
+        std::function<void(MirKeyboardEvent const*)> on_key_down{[](auto) {}};
+        std::function<void(MirKeyboardEvent const*)> on_key_rejected{[](auto) {}};
+        std::function<void(MirKeyboardEvent const*)> on_key_accepted{[](auto) {}};
     };
 
     mir::Synchronised<KeysInFlight> keys_in_flight;

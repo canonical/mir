@@ -119,9 +119,9 @@ struct MockSlowKeysTransformer : public mir::shell::SlowKeysTransformer
         (mir::input::Transformer::EventDispatcher const&, mir::input::EventBuilder*, MirEvent const&),
         (override));
 
-    MOCK_METHOD(void, on_key_down, (std::function<void(unsigned int)>&&), (override));
-    MOCK_METHOD(void, on_key_rejected, (std::function<void(unsigned int)>&&), (override));
-    MOCK_METHOD(void, on_key_accepted, (std::function<void(unsigned int)>&&), (override));
+    MOCK_METHOD(void, on_key_down, (std::function<void(MirKeyboardEvent const*)>&&), (override));
+    MOCK_METHOD(void, on_key_rejected, (std::function<void(MirKeyboardEvent const*)>&&), (override));
+    MOCK_METHOD(void, on_key_accepted, (std::function<void(MirKeyboardEvent const*)>&&), (override));
     MOCK_METHOD(void, delay, (std::chrono::milliseconds), (override));
 };
 

@@ -53,14 +53,14 @@ bool msh::BasicSlowKeysTransformer::transform_input_event(
                     if (auto iter = kif->find(keysym); iter != kif->end())
                     {
                         dispatcher(event_clone);
-                        config.lock()->on_key_accepted(keysym);
+                        config.lock()->on_key_accepted(event_clone->to_input()->to_keyboard());
                     }
                 });
 
             auto const config_ = config.lock();
             alarm->reschedule_in(config_->delay);
             kif->insert_or_assign(keysym, std::move(alarm));
-            config_->on_key_down(keysym);
+            config_->on_key_down(key_event);
 
             return true;
         }
@@ -74,7 +74,7 @@ bool msh::BasicSlowKeysTransformer::transform_input_event(
                     return false;
 
                 alarm->cancel();
-                config.lock()->on_key_rejected(keysym);
+                config.lock()->on_key_rejected(key_event);
 
                 return true;
             }
@@ -87,17 +87,17 @@ bool msh::BasicSlowKeysTransformer::transform_input_event(
     return false;
 }
 
-void msh::BasicSlowKeysTransformer::on_key_down(std::function<void(unsigned int)>&& okd)
+void msh::BasicSlowKeysTransformer::on_key_down(std::function<void(MirKeyboardEvent const*)>&& okd)
 {
     config.lock()->on_key_down = std::move(okd);
 }
 
-void msh::BasicSlowKeysTransformer::on_key_rejected(std::function<void(unsigned int)>&& okr)
+void msh::BasicSlowKeysTransformer::on_key_rejected(std::function<void(MirKeyboardEvent const*)>&& okr)
 {
     config.lock()->on_key_rejected = std::move(okr);
 }
 
-void msh::BasicSlowKeysTransformer::on_key_accepted(std::function<void(unsigned int)>&& oka)
+void msh::BasicSlowKeysTransformer::on_key_accepted(std::function<void(MirKeyboardEvent const*)>&& oka)
 {
     config.lock()->on_key_accepted = std::move(oka);
 }
