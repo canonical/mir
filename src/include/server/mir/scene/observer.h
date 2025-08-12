@@ -50,6 +50,9 @@ public:
     virtual void scene_changed() = 0;
 
     /// Called at observer registration to notify of already existing surfaces.
+    /// This method is guaranteed to be called in focus order, with the most
+    /// recently focused surface being presented first and the least recently
+    /// focused surface being presented last.
     virtual void surface_exists(std::shared_ptr<Surface> const& surface) = 0;
 
     /// Called when observer is unregistered, for example, to provide a place to

@@ -264,6 +264,11 @@ void ms::SurfaceStack::remove_surface(std::weak_ptr<Surface> const& surface)
                 break;
             }
         }
+
+        std::erase_if(focus_order, [&](auto const& s)
+        {
+            return s.lock() == keep_alive;
+        });
     }
 
     if (found_surface)
@@ -541,6 +546,9 @@ void ms::SurfaceStack::insert_surface_at_top_of_depth_layer(std::shared_ptr<Surf
     if (surface_layers.size() <= depth_index)
         surface_layers.resize(depth_index + 1);
     surface_layers[depth_index].push_back(surface);
+
+    std::erase_if(focus_order, [&](auto const& s) { return s.lock() == surface; });
+    focus_order.insert(focus_order.begin(), surface);
 }
 
 auto ms::SurfaceStack::surface_can_be_shown(std::shared_ptr<Surface> const& surface) const -> bool
@@ -554,12 +562,10 @@ void ms::SurfaceStack::add_observer(std::shared_ptr<ms::Observer> const& observe
 
     // Notify observer of existing surfaces
     RecursiveReadLock lk(guard);
-    for (auto const& layer : surface_layers)
+    for (auto const& surface : focus_order)
     {
-        for (auto const& surface : layer)
-        {
-            observer->surface_exists(surface);
-        }
+        if (auto const locked = surface.lock())
+            observer->surface_exists(locked);
     }
 }
 
