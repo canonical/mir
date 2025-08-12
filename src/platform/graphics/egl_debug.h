@@ -91,6 +91,31 @@ using RenderbufferHandle = GLBulkHandle<&glGenRenderbuffers, &glDeleteRenderbuff
 using FramebufferHandle = GLBulkHandle<&glGenFramebuffers, &glDeleteFramebuffers>;
 using ProgramHandle = GLHandle<&glCreateProgram, &glDeleteProgram>;
 
+inline auto read_bound_texture(GLuint texture_id, int width, int height) -> std::optional<std::vector<unsigned char>>
+{
+    // 2. Create a Framebuffer Object (FBO) to read from the texture.
+    FramebufferHandle fbo_id;
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
+
+    // Attach the texture to the FBO's color attachment point.
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture_id, 0);
+
+    // Check FBO completeness status.
+    GLenum fb_status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    if (fb_status != GL_FRAMEBUFFER_COMPLETE)
+    {
+        mir::log_error("Error: Framebuffer incomplete! Status: %X", fb_status);
+        return {};
+    }
+
+    // 3. Read pixels into a CPU buffer.
+    // The GL_UNSIGNED_BYTE type is commonly used for 8-bit per channel images.
+    std::vector<unsigned char> pixelBuffer(width * height * 4);
+    glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixelBuffer.data());
+
+    return pixelBuffer;
+}
+
 std::optional<std::vector<unsigned char>> read_eglimage(auto _glEGLImageTargetTexture2DOES, EGLImageKHR image, int width, int height)
 {
     // 1. Create an OpenGL texture and bind the EGL image to it.
@@ -117,27 +142,7 @@ std::optional<std::vector<unsigned char>> read_eglimage(auto _glEGLImageTargetTe
         return {};
     }
 
-    // 2. Create a Framebuffer Object (FBO) to read from the texture.
-    FramebufferHandle fbo_id;
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
-
-    // Attach the texture to the FBO's color attachment point.
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture_id, 0);
-
-    // Check FBO completeness status.
-    GLenum fb_status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-    if (fb_status != GL_FRAMEBUFFER_COMPLETE)
-    {
-        mir::log_error("Error: Framebuffer incomplete! Status: %X", fb_status);
-        return {};
-    }
-
-    // 3. Read pixels into a CPU buffer.
-    // The GL_UNSIGNED_BYTE type is commonly used for 8-bit per channel images.
-    std::vector<unsigned char> pixelBuffer(width * height * 4);
-    glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixelBuffer.data());
-
-    return pixelBuffer;
+    return read_bound_texture(texture_id, width, height);
 }
 
 void write_eglimage(
@@ -180,32 +185,14 @@ void write_eglimage(
     glFinish();
 }
 
-bool eglimage_to_ppm(auto _glEGLImageTargetTexture2DOES, EGLImageKHR image, int width, int height, std::string const& filename)
+inline void buffer_to_ppm(std::vector<unsigned char> const& pixelBuffer, int width, int height, std::string const& filename)
 {
-    if(!getenv("MIR_EGLIMAGE_TO_PPM"))
-        return false;
-
-    auto pixelBuffer = read_eglimage(_glEGLImageTargetTexture2DOES, image, width, height);
-
-    if(!pixelBuffer)
-    {
-        mir::log_error("Error: Failed to read source EGLImage");
-        return false;
-    }
-
-    auto gl_error = glGetError();
-    if (gl_error != GL_NO_ERROR)
-    {
-        mir::log_error("Error: OpenGL error after glReadPixels: %X", gl_error);
-        return false;
-    }
-
     // 4. Write the CPU buffer to a PPM file (P6 format for binary RGB).
     std::ofstream ofs{filename, std::ios::binary};
     if (!ofs.is_open())
     {
         mir::log_error("Error: Could not open file %s for writing", filename.c_str());
-        return false;
+        return;
     }
 
     // Write PPM header
@@ -222,9 +209,9 @@ bool eglimage_to_ppm(auto _glEGLImageTargetTexture2DOES, EGLImageKHR image, int 
         for (int x = 0; x < width; ++x)
         {
             int index = (y * width + x) * 4;
-            ofs.put((*pixelBuffer)[index]);     // Red
-            ofs.put((*pixelBuffer)[index + 1]); // Green
-            ofs.put((*pixelBuffer)[index + 2]); // Blue
+            ofs.put(pixelBuffer[index]);     // Red
+            ofs.put(pixelBuffer[index + 1]); // Green
+            ofs.put(pixelBuffer[index + 2]); // Blue
 
             // If it's RGBA, skip the alpha channel for RGB PPM.
             // If you need alpha, you'd save to a different format (e.g., PNG).
@@ -234,7 +221,22 @@ bool eglimage_to_ppm(auto _glEGLImageTargetTexture2DOES, EGLImageKHR image, int 
     ofs.close();
 
     mir::log_debug("Successfully saved EGL image to %s", filename.c_str());
-    return true;
+}
+
+void eglimage_to_ppm(auto _glEGLImageTargetTexture2DOES, EGLImageKHR image, int width, int height, std::string const& filename)
+{
+    if(!getenv("MIR_EGLIMAGE_TO_PPM"))
+        return;
+
+    auto pixelBuffer = read_eglimage(_glEGLImageTargetTexture2DOES, image, width, height);
+
+    if(!pixelBuffer)
+    {
+        mir::log_error("Error: Failed to read source EGLImage");
+        return;
+    }
+
+    buffer_to_ppm(*pixelBuffer, width, height, filename);
 }
 
 #endif // PLATFORM_GRAPHICS_EGL_DEBUG_H

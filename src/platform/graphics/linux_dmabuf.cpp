@@ -983,35 +983,38 @@ class DMABufTex : public mg::gl::Texture
 public:
     DMABufTex(
         EGLDisplay dpy,
-        mg::EGLExtensions const& extensions,
+        std::shared_ptr<mg::EGLExtensions> extensions,
         mg::DMABufBuffer const& dma_buf,
         BufferGLDescription const& descriptor,
         std::shared_ptr<mgc::EGLContextExecutor> egl_delegate)
         : tex{get_tex_id()},
           desc{descriptor},
           layout_{dma_buf.layout()},
-          egl_delegate{std::move(egl_delegate)}
+          egl_delegate{std::move(egl_delegate)},
+          dpy{dpy},
+          extensions{extensions}
+
     {
         eglBindAPI(EGL_OPENGL_ES_API);
 
         auto const target = descriptor.target;
 
-        EGLImage image = import_egl_image(
+       image = import_egl_image(
             dma_buf.size().width.as_int(),
             dma_buf.size().height.as_int(),
             dma_buf.format(),
             dma_buf.modifier(),
             dma_buf.planes(),
             dpy,
-            extensions);
+            *extensions);
 
         glBindTexture(target, tex);
-        extensions.base(dpy).glEGLImageTargetTexture2DOES(target, image);
+        extensions->base(dpy).glEGLImageTargetTexture2DOES(target, image);
 
         static int blit_count2 = 0;
         auto _glEGLImageTargetTexture2DOES = [&](auto target, auto egl_image)
         {
-            extensions.base(dpy).glEGLImageTargetTexture2DOES(target, egl_image);
+            extensions->base(dpy).glEGLImageTargetTexture2DOES(target, egl_image);
         };
         if(blit_count2 % 60 == 0)
             eglimage_to_ppm(
@@ -1020,23 +1023,32 @@ public:
                 dma_buf.size().width.as_int(),
                 dma_buf.size().height.as_int(),
                 std::format("imported-{}-{}.ppm", (void*)this, blit_count2));
-        blit_count2++;
-
-        // tex is now an EGLImage sibling, so we can free the EGLImage without
-        // freeing the backing data.
-        extensions.base(dpy).eglDestroyImageKHR(dpy, image);
 
         glTexParameteri(target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        if (getenv("MIR_DMABUF_TEXTURE_TO_PPM"))
+        {
+            auto const [w, h] = std::tuple{dma_buf.size().width.as_int(), dma_buf.size().height.as_int()};
+            auto const pixels = read_bound_texture(tex, w, h);
+            if(pixels)
+                buffer_to_ppm(*pixels, w, h, std::format("imported-texture-{}-{}.ppm", (void*)this, blit_count2));
+        }
+
+        blit_count2++;
     }
 
     ~DMABufTex() override
     {
         egl_delegate->spawn(
-            [tex = tex]()
+            [tex = tex, extensions = extensions, dpy = dpy, image = image]()
             {
+                // tex is now an EGLImage sibling, so we can free the EGLImage without
+                // freeing the backing data.
+                extensions->base(dpy).eglDestroyImageKHR(dpy, image);
+
                 glDeleteTextures(1, &tex);
             });
     }
@@ -1076,6 +1088,9 @@ private:
     BufferGLDescription const& desc;
     Layout const layout_;
     std::shared_ptr<mgc::EGLContextExecutor> const egl_delegate;
+    EGLDisplay dpy;
+    std::shared_ptr<mg::EGLExtensions> extensions;
+    EGLImage image;
 };
 
 namespace
@@ -1094,7 +1109,7 @@ public:
     // Note: Must be called with a current EGL context
     DmabufTexBuffer(
         EGLDisplay dpy,
-        mg::EGLExtensions const& extensions,
+        std::shared_ptr<mg::EGLExtensions>  extensions,
         mg::DMABufBuffer const& dma_buf,
         BufferGLDescription const& descriptor,
         std::shared_ptr<mg::DMABufEGLProvider> provider,
@@ -1372,7 +1387,7 @@ auto mg::DMABufEGLProvider::import_dma_buf(
         *this);
     return std::make_shared<DmabufTexBuffer>(
         dpy,
-        *egl_extensions,
+        egl_extensions,
         dma_buf,
         *descriptor,
         shared_from_this(),
@@ -1421,7 +1436,7 @@ auto mg::DMABufEGLProvider::as_texture(std::shared_ptr<NativeBufferBase> buffer)
                 dmabuf_tex->as_texture();
                 return std::make_shared<DMABufTex>(
                     dpy,
-                    *egl_extensions,
+                    egl_extensions,
                     *dmabuf_tex,
                     *descriptor,
                     egl_delegate);
@@ -1533,7 +1548,7 @@ auto mg::DMABufEGLProvider::as_texture(std::shared_ptr<NativeBufferBase> buffer)
             dmabuf_tex->as_texture();
             return std::make_shared<DMABufTex>(
                 dpy,
-                *egl_extensions,
+                egl_extensions,
                 *importable_dmabuf,
                 *descriptor,
                 egl_delegate);
