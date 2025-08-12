@@ -18,6 +18,7 @@
 #define MIR_SHELL_SLOW_KEYS_TRANSFORMER
 
 #include "mir/input/transformer.h"
+#include <mir_toolkit/events/event.h>
 
 #include <chrono>
 
@@ -29,9 +30,9 @@ namespace shell
 class SlowKeysTransformer : public mir::input::Transformer
 {
 public:
-    virtual void on_key_down(std::function<void(unsigned int)>&&) = 0;
-    virtual void on_key_rejected(std::function<void(unsigned int)>&&) = 0;
-    virtual void on_key_accepted(std::function<void(unsigned int)>&&) = 0;
+    virtual void on_key_down(std::function<void(MirKeyboardEvent const*)>&&) = 0;
+    virtual void on_key_rejected(std::function<void(MirKeyboardEvent const*)>&&) = 0;
+    virtual void on_key_accepted(std::function<void(MirKeyboardEvent const*)>&&) = 0;
 
     virtual void delay(std::chrono::milliseconds) = 0;
 };
