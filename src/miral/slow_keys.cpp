@@ -40,9 +40,9 @@ struct miral::SlowKeys::Self
 
         bool enabled;
         std::chrono::milliseconds hold_delay{200};
-        std::function<void(unsigned int)> on_key_down{[](auto){}};
-        std::function<void(unsigned int)> on_key_rejected{[](auto){}};
-        std::function<void(unsigned int)> on_key_accepted{[](auto){}};
+        std::function<void(MirKeyboardEvent const*)> on_key_down{[](auto){}};
+        std::function<void(MirKeyboardEvent const*)> on_key_rejected{[](auto){}};
+        std::function<void(MirKeyboardEvent const*)> on_key_accepted{[](auto){}};
     };
 
     mir::Synchronised<State> state;
@@ -132,7 +132,7 @@ miral::SlowKeys& miral::SlowKeys::hold_delay(std::chrono::milliseconds hold_dela
     return *this;
 }
 
-miral::SlowKeys& miral::SlowKeys::on_key_down(std::function<void(unsigned int)>&& on_key_down)
+miral::SlowKeys& miral::SlowKeys::on_key_down(std::function<void(MirKeyboardEvent const*)>&& on_key_down)
 {
     if (auto const accessibility_manager = self->accessibility_manager.lock())
         accessibility_manager->slow_keys().on_key_down(std::move(on_key_down));
@@ -142,7 +142,7 @@ miral::SlowKeys& miral::SlowKeys::on_key_down(std::function<void(unsigned int)>&
     return *this;
 }
 
-miral::SlowKeys& miral::SlowKeys::on_key_rejected(std::function<void(unsigned int)>&& on_key_rejected)
+miral::SlowKeys& miral::SlowKeys::on_key_rejected(std::function<void(MirKeyboardEvent const*)>&& on_key_rejected)
 {
     if (auto const accessibility_manager = self->accessibility_manager.lock())
         accessibility_manager->slow_keys().on_key_rejected(std::move(on_key_rejected));
@@ -152,7 +152,7 @@ miral::SlowKeys& miral::SlowKeys::on_key_rejected(std::function<void(unsigned in
     return *this;
 }
 
-miral::SlowKeys& miral::SlowKeys::on_key_accepted(std::function<void(unsigned int)>&& on_key_accepted)
+miral::SlowKeys& miral::SlowKeys::on_key_accepted(std::function<void(MirKeyboardEvent const*)>&& on_key_accepted)
 {
     if (auto const accessibility_manager = self->accessibility_manager.lock())
         accessibility_manager->slow_keys().on_key_accepted(std::move(on_key_accepted));

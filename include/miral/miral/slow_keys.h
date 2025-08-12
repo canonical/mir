@@ -17,6 +17,8 @@
 #ifndef MIRAL_SLOW_KEYS_H
 #define MIRAL_SLOW_KEYS_H
 
+#include <mir_toolkit/events/event.h>
+
 #include <chrono>
 #include <functional>
 
@@ -73,21 +75,15 @@ public:
 
     /// Configures the callback that's invoked when the key is pressed down.
     /// Useful for providing feedback to users.
-    /// \note The integer argument is the keysym of the key, which you may
-    /// match against those found in <xkbcommon/xkbcommon-keysyms.h>.
-    SlowKeys& on_key_down(std::function<void(unsigned int)>&& on_key_down);
+    SlowKeys& on_key_down(std::function<void(MirKeyboardEvent const*)>&& on_key_down);
     
     /// Configures the callback that's invoked when a press is rejected.
     /// Useful for providing feedback to users.
-    /// \note The integer argument is the keysym of the key, which you may
-    /// match against those found in <xkbcommon/xkbcommon-keysyms.h>.
-    SlowKeys& on_key_rejected(std::function<void(unsigned int)>&& on_key_rejected);
-    
+    SlowKeys& on_key_rejected(std::function<void(MirKeyboardEvent const*)>&& on_key_rejected);
+
     /// Configures the callback that's invoked when a press is accepted.
     /// Useful for providing feedback to users.
-    /// \note The integer argument is the keysym of the key, which you may
-    /// match against those found in <xkbcommon/xkbcommon-keysyms.h>.
-    SlowKeys& on_key_accepted(std::function<void(unsigned int)>&& on_key_accepted);
+    SlowKeys& on_key_accepted(std::function<void(MirKeyboardEvent const*)>&& on_key_accepted);
 
 private:
     struct Self;
