@@ -32,7 +32,9 @@
       letting them request certain actions on them, like maximizing, etc.
 
       After a client binds the zwlr_foreign_toplevel_manager_v1, each opened
-      toplevel window will be sent via the toplevel event
+      toplevel window will be sent via the toplevel event. Toplevels are sent
+      in their focus order, with the most recently focused toplevel sent first
+      and the least recently focused toplevel send last.
     </description>
 
     <event name="toplevel">
