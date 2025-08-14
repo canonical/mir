@@ -57,7 +57,7 @@ Build-Depends: cmake,
                libnvidia-egl-wayland-dev,
                eglexternalplatform-dev,
                systemtap-sdt-dev,
-               wlcs,
+               wlcs (>= 1.8~),
                libapparmor-dev,
                libpixman-1-dev
 Standards-Version: 4.6.1
