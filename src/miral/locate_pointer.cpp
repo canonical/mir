@@ -161,7 +161,6 @@ struct miral::LocatePointer::Self
     struct CircleDrawingObserver : public mg::AnimationObserver
     {
         std::shared_ptr<mir::compositor::Stream> const stream;
-        std::unique_ptr<mg::BufferStorage> buffer;
         geom::Size const buffer_size;
         std::shared_ptr<BasicSurfaceClickCrashBandAid> const shell_surface;
         std::shared_ptr<mir::shell::SurfaceStack> const surface_stack;
@@ -172,6 +171,7 @@ struct miral::LocatePointer::Self
             bool active{false};
             float t{0};
             uint32_t radius{0};
+            std::unique_ptr<mg::BufferStorage> buffer;
         };
 
         mir::Synchronised<State> state;
@@ -187,11 +187,11 @@ struct miral::LocatePointer::Self
             std::shared_ptr<mir::shell::SurfaceStack> surface_stack,
             std::shared_ptr<mg::GraphicBufferAllocator> buffer_allocator) :
             stream{std::move(stream)},
-            buffer{std::move(buffer)},
             buffer_size{buffer_size},
             shell_surface{std::move(shell_surface)},
             surface_stack{std::move(surface_stack)},
             buffer_allocator{buffer_allocator},
+            state{State{.buffer = std::move(buffer)}},
             max_radius{static_cast<uint32_t>(std::min(buffer_size.width.as_value(), buffer_size.height.as_value()) / 2)}
         {
         }
@@ -200,7 +200,6 @@ struct miral::LocatePointer::Self
         {
             auto s = state.lock();
             
-
             // Don't submit any frames if we're not active
             if(!s->active)
                 return;
@@ -214,7 +213,7 @@ struct miral::LocatePointer::Self
 
             mir::log_debug("t=%f", s->t);
 
-            draw_circle(0xAA, 0xAA, 0xAA, 0x99, s->radius);
+            draw_circle(std::move(s->buffer), 0xAA, 0xAA, 0xAA, 0x99, s->radius);
 
             // Force the maximum frametime to be 16ms. This is to account for
             // when rendering idles (which would result in a huge dt)
@@ -224,7 +223,17 @@ struct miral::LocatePointer::Self
             s->radius = static_cast<uint32_t>((std::lerp(0u, max_radius * 3, s->t))) % max_radius;
         }
 
-        void draw_circle(uint8_t r, uint8_t g, uint8_t b, uint8_t a, int radius)
+        void submit_buffer(std::unique_ptr<mir::graphics::GraphicBufferAllocator::MappedStorage> w, auto on_return)
+        {
+            stream->submit_buffer(
+                buffer_allocator->into_buffer(
+                    buffer_allocator->commit(std::move(w)),
+                    on_return),
+                buffer_size,
+                geom::RectangleD{{0, 0}, buffer_size});
+        }
+
+        void draw_circle(auto buffer, uint8_t r, uint8_t g, uint8_t b, uint8_t a, int radius)
         {
             // Buffer not returned yet
             if (!buffer)
@@ -255,12 +264,7 @@ struct miral::LocatePointer::Self
                 ptr[i + 3] = circle(a);
             }
 
-            stream->submit_buffer(
-                buffer_allocator->into_buffer(
-                    buffer_allocator->commit(std::move(w)),
-                    [this](auto returned_buffer) { buffer = std::move(returned_buffer); }),
-                buffer_size,
-                geom::RectangleD{{0, 0}, buffer_size});
+            submit_buffer(std::move(w), [this](auto returned) { state.lock()->buffer = std::move(returned); });
         }
 
         void start_animation()
@@ -274,18 +278,23 @@ struct miral::LocatePointer::Self
             {
                 // Clear the buffer before adding it. Otherwise, it will
                 // momentarily show the last drawn into it.
-                {
-                    auto w = buffer_allocator->map_writeable(std::move(buffer));
-                    std::memset(w->data(), 0, w->len());
-                    buffer_allocator->into_buffer(
-                            buffer_allocator->commit(std::move(w)),
-                            [this](auto returned_buffer) { buffer = std::move(returned_buffer); });
-                }
+                auto w = buffer_allocator->map_writeable(std::move(s->buffer));
+                auto* start = reinterpret_cast<uint32_t*>(w->data());
+                auto* end = reinterpret_cast<uint32_t*>(w->data() + w->len());
+                std::fill(start, end, 0xFFFF00FF);
+                submit_buffer(
+                    std::move(w),
+                    [this](auto returned_buffer)
+                    {
+                        mir::log_debug("buffer returned");
+                        auto s = state.lock();
+                        s->buffer = std::move(returned_buffer);
+
+                        s->active = true;
+                        draw_circle(std::move(s->buffer), 0, 0, 0, 0, s->radius);
+                    });
                 surface_stack->add_surface(shell_surface, mir::input::InputReceptionMode::normal);
             }
-
-            s->active = true;
-            draw_circle(0, 0, 0, 0, s->radius);
         }
     };
 
