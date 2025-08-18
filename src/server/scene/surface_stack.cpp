@@ -548,7 +548,7 @@ void ms::SurfaceStack::insert_surface_at_top_of_depth_layer(std::shared_ptr<Surf
     surface_layers[depth_index].push_back(surface);
 
     std::erase_if(focus_order, [&](auto const& s) { return s.lock() == surface; });
-    focus_order.insert(focus_order.begin(), surface);
+    focus_order.push_back(surface);
 }
 
 auto ms::SurfaceStack::surface_can_be_shown(std::shared_ptr<Surface> const& surface) const -> bool
