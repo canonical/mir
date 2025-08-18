@@ -297,7 +297,7 @@ int main(int argc, char const* argv[])
         return false;
     };
 
-    auto locate_pointer = miral::LocatePointer{false}.delay(std::chrono::milliseconds{1000});
+    auto locate_pointer = miral::LocatePointer{true}.delay(std::chrono::milliseconds{1000});
 
     auto const locate_pointer_filter = [&locate_pointer](auto const* keyboard_event)
     {
