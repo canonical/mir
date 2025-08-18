@@ -48,10 +48,41 @@ if (HAS_W_STRINGOP_TRUNCATION)
     )
 endif()
 
+set(PROTOCOLS_DIR ${CMAKE_SOURCE_DIR}/wayland-protocols)
+set(WLR_FOREIGN_TOPLEVEL_MANAGEMENT_V1_XML ${PROTOCOLS_DIR}/wlr-foreign-toplevel-management-unstable-v1.xml)
+set(GENERATED_DIR ${CMAKE_BINARY_DIR}/miral-generated)
+set(WLR_FOREIGN_TOPLEVEL_MANAGEMENT_V1_HEADER ${GENERATED_DIR}/wlr-foreign-toplevel-management-unstable-v1.h)
+set(WLR_FOREIGN_TOPLEVEL_MANAGEMENT_V1_CODE   ${GENERATED_DIR}/wlr-foreign-toplevel-management-unstable-v1.c)
+
+add_custom_command(
+  OUTPUT ${WLR_FOREIGN_TOPLEVEL_MANAGEMENT_V1_HEADER}
+  COMMAND wayland-scanner client-header
+  ${WLR_FOREIGN_TOPLEVEL_MANAGEMENT_V1_XML} ${WLR_FOREIGN_TOPLEVEL_MANAGEMENT_V1_HEADER}
+  DEPENDS ${WLR_FOREIGN_TOPLEVEL_MANAGEMENT_V1_XML}
+  VERBATIM
+)
+
+add_custom_command(
+  OUTPUT ${WLR_FOREIGN_TOPLEVEL_MANAGEMENT_V1_CODE}
+  COMMAND wayland-scanner private-code
+  ${WLR_FOREIGN_TOPLEVEL_MANAGEMENT_V1_XML} ${WLR_FOREIGN_TOPLEVEL_MANAGEMENT_V1_CODE}
+  DEPENDS ${WLR_FOREIGN_TOPLEVEL_MANAGEMENT_V1_XML}
+  VERBATIM
+)
+
+add_library(protocols STATIC
+  ${WLR_FOREIGN_TOPLEVEL_MANAGEMENT_V1_HEADER}
+  ${WLR_FOREIGN_TOPLEVEL_MANAGEMENT_V1_CODE}
+)
+
+target_include_directories(protocols PUBLIC ${GENERATED_DIR})
+target_link_libraries(protocols PUBLIC PkgConfig::WAYLAND_CLIENT)
+
 add_library(miral-external OBJECT
     add_init_callback.cpp               ${miral_include}/miral/add_init_callback.h
     application.cpp                     ${miral_include}/miral/application.h
     add_init_callback.cpp               ${miral_include}/miral/add_init_callback.h
+    application_switcher.cpp            ${miral_include}/miral/application_switcher.h
     application.cpp                     ${miral_include}/miral/application.h
     application_authorizer.cpp          ${miral_include}/miral/application_authorizer.h
     application_info.cpp                ${miral_include}/miral/application_info.h
@@ -149,6 +180,7 @@ target_link_libraries(miral-external
     PRIVATE
         miral-internal
         mirserver
+        protocols
 )
 
 target_link_libraries(miral
