@@ -31,6 +31,7 @@
 #include <cassert>
 #include <functional>
 #include <memory>
+#include <ranges>
 #include <stdexcept>
 
 namespace ms = mir::scene;
@@ -560,11 +561,14 @@ void ms::SurfaceStack::add_observer(std::shared_ptr<ms::Observer> const& observe
 {
     observers.add(observer);
 
-    // Notify observer of existing surfaces
+    // Notify observer of existing surfaces.
+    //
+    // The surfaces are sent with the most-recently focused first and the
+    // least-recently focused last.
     RecursiveReadLock lk(guard);
-    for (auto const& surface : focus_order)
+    for (auto const& it : std::ranges::reverse_view(focus_order))
     {
-        if (auto const locked = surface.lock())
+        if (auto const locked = it.lock())
             observer->surface_exists(locked);
     }
 }
