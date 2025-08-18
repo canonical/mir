@@ -31,8 +31,10 @@
 #include "mir/shell/surface_stack.h"
 #include "mir/synchronised.h"
 #include "mir/time/alarm.h"
+#include "mir/log.h"
 
 #include <list>
+#include <drm_fourcc.h>
 
 namespace ms = mir::scene;
 namespace mc = mir::compositor;
@@ -159,9 +161,11 @@ struct miral::LocatePointer::Self
     struct CircleDrawingObserver : public mg::AnimationObserver
     {
         std::shared_ptr<mir::compositor::Stream> const stream;
-        std::shared_ptr<mg::Buffer> const buffer;
+        std::unique_ptr<mg::BufferStorage> buffer;
+        geom::Size const buffer_size;
         std::shared_ptr<BasicSurfaceClickCrashBandAid> const shell_surface;
         std::shared_ptr<mir::shell::SurfaceStack> const surface_stack;
+        std::shared_ptr<mg::GraphicBufferAllocator> const buffer_allocator;
 
         struct State 
         {
@@ -177,21 +181,25 @@ struct miral::LocatePointer::Self
 
         CircleDrawingObserver(
             std::shared_ptr<mir::compositor::Stream> stream,
-            std::shared_ptr<mg::Buffer> buffer,
+            std::unique_ptr<mg::BufferStorage> buffer,
+            geom::Size buffer_size,
             std::shared_ptr<BasicSurfaceClickCrashBandAid> shell_surface,
-            std::shared_ptr<mir::shell::SurfaceStack> surface_stack) :
+            std::shared_ptr<mir::shell::SurfaceStack> surface_stack,
+            std::shared_ptr<mg::GraphicBufferAllocator> buffer_allocator) :
             stream{std::move(stream)},
             buffer{std::move(buffer)},
+            buffer_size{buffer_size},
             shell_surface{std::move(shell_surface)},
             surface_stack{std::move(surface_stack)},
-            max_radius{static_cast<uint32_t>(
-                std::min(this->buffer->size().width.as_value(), this->buffer->size().height.as_value()) / 2)}
+            buffer_allocator{buffer_allocator},
+            max_radius{static_cast<uint32_t>(std::min(buffer_size.width.as_value(), buffer_size.height.as_value()) / 2)}
         {
         }
 
         void on_vsync(std::chrono::milliseconds dt) override
         {
             auto s = state.lock();
+            
 
             // Don't submit any frames if we're not active
             if(!s->active)
@@ -203,6 +211,8 @@ struct miral::LocatePointer::Self
                 surface_stack->remove_surface(shell_surface);
                 return;
             }
+
+            mir::log_debug("t=%f", s->t);
 
             draw_circle(0xAA, 0xAA, 0xAA, 0x99, s->radius);
 
@@ -216,7 +226,14 @@ struct miral::LocatePointer::Self
 
         void draw_circle(uint8_t r, uint8_t g, uint8_t b, uint8_t a, int radius)
         {
-            auto w = std::dynamic_pointer_cast<mir::renderer::software::RWMappableBuffer>(buffer)->map_writeable();
+            // Buffer not returned yet
+            if (!buffer)
+            {
+                mir::log_warning("Attempting to draw before buffer is returned");
+                return;
+            }
+
+            auto w = buffer_allocator->map_writeable(std::move(buffer));
             auto const center = geom::Point{max_radius, max_radius};
             for (size_t i = 0; i < w->len(); i += 4)
             {
@@ -229,18 +246,27 @@ struct miral::LocatePointer::Self
                     return dist < radius * radius ? value : 0;
                 };
 
-                w->data()[i + 0] = circle(r); // r
-                w->data()[i + 1] = circle(g); // g
-                w->data()[i + 2] = circle(b); // b
-                w->data()[i + 3] = circle(a);
+                auto ptr = reinterpret_cast<uint8_t*>(w->data());
+
+
+                ptr[i + 0] = circle(r); // r
+                ptr[i + 1] = circle(g); // g
+                ptr[i + 2] = circle(b); // b
+                ptr[i + 3] = circle(a);
             }
 
-            stream->submit_buffer(buffer, buffer->size(), geom::RectangleD{{0, 0}, buffer->size()});
+            stream->submit_buffer(
+                buffer_allocator->into_buffer(
+                    buffer_allocator->commit(std::move(w)),
+                    [this](auto returned_buffer) { buffer = std::move(returned_buffer); }),
+                buffer_size,
+                geom::RectangleD{{0, 0}, buffer_size});
         }
 
         void start_animation()
         {
             auto s = state.lock();
+            mir::log_debug("Starting locate pointer animation");
             s->t = 0;
             s->radius = 0;
 
@@ -249,9 +275,11 @@ struct miral::LocatePointer::Self
                 // Clear the buffer before adding it. Otherwise, it will
                 // momentarily show the last drawn into it.
                 {
-                    auto w =
-                        std::dynamic_pointer_cast<mir::renderer::software::RWMappableBuffer>(buffer)->map_writeable();
+                    auto w = buffer_allocator->map_writeable(std::move(buffer));
                     std::memset(w->data(), 0, w->len());
+                    buffer_allocator->into_buffer(
+                            buffer_allocator->commit(std::move(w)),
+                            [this](auto returned_buffer) { buffer = std::move(returned_buffer); });
                 }
                 surface_stack->add_surface(shell_surface, mir::input::InputReceptionMode::normal);
             }
@@ -287,8 +315,15 @@ void miral::LocatePointer::operator()(mir::Server& server)
                     server.the_scene_report(),
                     server.the_display_configuration_observer_registrar());
 
-                auto buffer = server.the_buffer_allocator()->alloc_software_buffer(size, mir_pixel_format_abgr_8888);
-                self->observer = std::make_shared<Self::CircleDrawingObserver>(stream, buffer, shell_surface, server.the_surface_stack());
+                auto buffer = server.the_buffer_allocator()->alloc_buffer_storage(
+                    mg::BufferParams(size).with_format(mg::DRMFormat{DRM_FORMAT_ARGB8888}));
+                self->observer = std::make_shared<Self::CircleDrawingObserver>(
+                    stream,
+                    std::move(buffer),
+                    size,
+                    shell_surface,
+                    server.the_surface_stack(),
+                    server.the_buffer_allocator());
                 self->state.lock()->pointer_position_recorder->state.lock()->surface = shell_surface;
 
                 server.the_animation_driver()->register_interest(self->observer);
