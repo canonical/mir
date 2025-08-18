@@ -70,8 +70,9 @@ public:
     auto stride() const -> std::optional<geometry::Stride>;
 private:
     class Impl;
-    std::unique_ptr<Impl> impl;
+    std::shared_ptr<Impl> impl;
 };
+
 
 /**
  * Interface to graphic buffer allocation.

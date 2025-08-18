@@ -30,7 +30,7 @@ public:
 };
 
 mg::BufferParams::BufferParams(geom::Size size)
-    : impl{std::make_unique<Impl>()}
+    : impl{std::make_shared<Impl>()}
 {
     impl->size = size;
 }
