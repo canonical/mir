@@ -64,6 +64,7 @@ namespace mg  = mir::graphics;
 namespace mge = mg::egl::generic;
 namespace mgc = mg::common;
 namespace geom = mir::geometry;
+namespace mgs = mg::shm;
 
 namespace
 {
@@ -368,6 +369,10 @@ auto mge::GLRenderingProvider::as_texture(std::shared_ptr<Buffer> buffer) -> std
     if (auto shm = std::dynamic_pointer_cast<mgc::ShmBuffer>(native_buffer))
     {
         return shm->texture_for_provider(egl_delegate, this);
+    }
+    if(auto foo = mgs::as_texture(buffer, egl_delegate, this))
+    {
+        return foo;
     }
 
     // TODO: Should this be abstracted, like dmabuf_provider above?
