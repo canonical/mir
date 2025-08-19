@@ -1025,42 +1025,80 @@ void mir::scene::BasicSurface::set_tiled_edges(Flags<MirTiledEdge> edges)
 
 auto mir::scene::BasicSurface::min_width() const -> geometry::Width
 {
-    return synchronised_state.lock()->min_width;
+    auto state = synchronised_state.lock();
+    return state->min_width + state->margins.left + state->margins.right;
 }
 
 auto mir::scene::BasicSurface::max_width() const -> geometry::Width
 {
-    return synchronised_state.lock()->max_width;
+    auto state = synchronised_state.lock();
+    if (state->max_width < geom::Width{std::numeric_limits<int>::max()} - state->margins.left - state->margins.right)
+    {
+        return state->max_width + state->margins.left + state->margins.right;
+    }
+    else
+    {
+        return geom::Width{std::numeric_limits<int>::max()};
+    }
 }
 
 auto mir::scene::BasicSurface::min_height() const -> geometry::Height
 {
-    return synchronised_state.lock()->min_height;
+    auto state = synchronised_state.lock();
+    return state->min_height + state->margins.top + state->margins.bottom;
 }
 
 auto mir::scene::BasicSurface::max_height() const -> geometry::Height
 {
-    return synchronised_state.lock()->max_height;
+    auto state = synchronised_state.lock();
+    if (state->max_height < geom::Height{std::numeric_limits<int>::max()} - state->margins.top - state->margins.bottom)
+    {
+        return state->max_height + state->margins.top + state->margins.bottom;
+    }
+    else
+    {
+        return geom::Height{std::numeric_limits<int>::max()};
+    }
 }
 
 void mir::scene::BasicSurface::set_min_width(geometry::Width width)
 {
-    synchronised_state.lock()->min_width = width;
+    auto state = synchronised_state.lock();
+    state->min_width = std::max(geom::Width{0}, width - state->margins.left - state->margins.right);
 }
 
 void mir::scene::BasicSurface::set_max_width(geometry::Width width)
 {
-    synchronised_state.lock()->max_width = width;
+    auto state = synchronised_state.lock();
+
+    if (width < geom::Width{std::numeric_limits<int>::max()} - state->margins.left - state->margins.right)
+    {
+        state->max_width = width - state->margins.left - state->margins.right;
+    }
+    else
+    {
+        state->max_width = geom::Width{std::numeric_limits<int>::max()};
+    }
 }
 
 void mir::scene::BasicSurface::set_min_height(geometry::Height height)
 {
-    synchronised_state.lock()->min_height = height;
+    auto state = synchronised_state.lock();
+    state->min_height = std::max(geom::Height{0}, height - state->margins.top - state->margins.bottom);
 }
 
 void mir::scene::BasicSurface::set_max_height(geometry::Height height)
 {
-    synchronised_state.lock()->max_height = height;
+    auto state = synchronised_state.lock();
+
+    if (height < geom::Height{std::numeric_limits<int>::max()} - state->margins.top - state->margins.bottom)
+    {
+        state->max_height = height - state->margins.top - state->margins.bottom;
+    }
+    else
+    {
+        state->max_height = geom::Height{std::numeric_limits<int>::max()};
+    }
 }
 
 void mir::scene::BasicSurface::clear_frame_posted_callbacks(State& state)
