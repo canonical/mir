@@ -1023,6 +1023,46 @@ void mir::scene::BasicSurface::set_tiled_edges(Flags<MirTiledEdge> edges)
     observers->tiled_edges(this, edges);
 }
 
+auto mir::scene::BasicSurface::min_width() const -> geometry::Width
+{
+    return synchronised_state.lock()->min_width;
+}
+
+auto mir::scene::BasicSurface::max_width() const -> geometry::Width
+{
+    return synchronised_state.lock()->max_width;
+}
+
+auto mir::scene::BasicSurface::min_height() const -> geometry::Height
+{
+    return synchronised_state.lock()->min_height;
+}
+
+auto mir::scene::BasicSurface::max_height() const -> geometry::Height
+{
+    return synchronised_state.lock()->max_height;
+}
+
+void mir::scene::BasicSurface::set_min_width(geometry::Width width)
+{
+    synchronised_state.lock()->min_width = width;
+}
+
+void mir::scene::BasicSurface::set_max_width(geometry::Width width)
+{
+    synchronised_state.lock()->max_width = width;
+}
+
+void mir::scene::BasicSurface::set_min_height(geometry::Height height)
+{
+    synchronised_state.lock()->min_height = height;
+}
+
+void mir::scene::BasicSurface::set_max_height(geometry::Height height)
+{
+    synchronised_state.lock()->max_height = height;
+}
+
 void mir::scene::BasicSurface::clear_frame_posted_callbacks(State& state)
 {
     for (auto& layer : state.layers)

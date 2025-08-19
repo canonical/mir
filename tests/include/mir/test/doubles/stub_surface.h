@@ -94,6 +94,14 @@ struct StubSurface : scene::Surface
     void set_focus_mode(MirFocusMode) override {}
     auto tiled_edges() const -> Flags<MirTiledEdge> { return Flags(mir_tiled_edge_none); }
     void set_tiled_edges(Flags<MirTiledEdge>) {}
+    auto min_width() const -> geometry::Width { return {}; }
+    auto max_width() const -> geometry::Width { return geometry::Width{std::numeric_limits<int>::max()}; }
+    auto min_height() const -> geometry::Height { return {}; }
+    auto max_height() const -> geometry::Height { return geometry::Height{std::numeric_limits<int>::max()}; }
+    void set_min_width(geometry::Width) {}
+    void set_max_width(geometry::Width) {}
+    void set_min_height(geometry::Height) {}
+    void set_max_height(geometry::Height) {}
 };
 }
 }

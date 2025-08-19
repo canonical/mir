@@ -490,6 +490,10 @@ global:
     mir::scene::BasicSurface::initial_placement_done*;
     mir::scene::BasicSurface::input_area_contains*;
     mir::scene::BasicSurface::input_bounds*;
+    mir::scene::BasicSurface::max_height*;
+    mir::scene::BasicSurface::max_width*;
+    mir::scene::BasicSurface::min_height*;
+    mir::scene::BasicSurface::min_width*;
     mir::scene::BasicSurface::move_to*;
     mir::scene::BasicSurface::name*;
     mir::scene::BasicSurface::parent*;
@@ -514,6 +518,10 @@ global:
     mir::scene::BasicSurface::set_focus_state*;
     mir::scene::BasicSurface::set_hidden*;
     mir::scene::BasicSurface::set_input_region*;
+    mir::scene::BasicSurface::set_max_height*;
+    mir::scene::BasicSurface::set_max_width*;
+    mir::scene::BasicSurface::set_min_height*;
+    mir::scene::BasicSurface::set_min_width*;
     mir::scene::BasicSurface::set_mirror_mode*;
     mir::scene::BasicSurface::set_orientation*;
     mir::scene::BasicSurface::set_reception_mode*;
