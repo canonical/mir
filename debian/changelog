@@ -48,6 +48,7 @@ mir (2.22.0) UNRELEASED; urgency=medium
       . `BasicScreenshooter` does not take the output transformation into account (#4086)
       . Screenshots wrong when display rotated (again) (#3909)
       . Docking kgx left/right in miriway is misplaced (#4023)
+      . Fix window size constraints with ssd (#4139)
 
     - Documentation:
       . HACKING.md: Add some intructions for MESA debugging (#3992)

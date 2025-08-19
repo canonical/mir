@@ -303,7 +303,8 @@ auto miral::WindowInfo::restore_rect() const -> mir::geometry::Rectangle
         }
 
         // Halfway between current size and min size is reasonable for a maximized/fullscreen window
-        auto const min_size_disp = Displacement{as_delta(self->min_width), as_delta(self->min_height)};
+        std::shared_ptr<mir::scene::Surface> const surface{self->window};
+        auto const min_size_disp = Displacement{as_delta(surface->min_width()), as_delta(surface->min_height())};
         Size const reasonable_size{as_size(
             (as_displacement(self->window.size()) - min_size_disp) * 0.5
             + min_size_disp)};
@@ -341,22 +342,26 @@ auto miral::WindowInfo::children() const -> std::vector <Window> const&
 
 auto miral::WindowInfo::min_width() const -> mir::geometry::Width
 {
-    return self->min_width;
+    std::shared_ptr<mir::scene::Surface> const surface{self->window};
+    return surface->min_width();
 }
 
 auto miral::WindowInfo::min_height() const -> mir::geometry::Height
 {
-    return self->min_height;
+    std::shared_ptr<mir::scene::Surface> const surface{self->window};
+    return surface->min_height();
 }
 
 auto miral::WindowInfo::max_width() const -> mir::geometry::Width
 {
-    return self->max_width;
+    std::shared_ptr<mir::scene::Surface> const surface{self->window};
+    return surface->max_width();
 }
 
 auto miral::WindowInfo::max_height() const -> mir::geometry::Height
 {
-    return self->max_height;
+    std::shared_ptr<mir::scene::Surface> const surface{self->window};
+    return surface->max_height();
 }
 
 auto miral::WindowInfo::userdata() const -> std::shared_ptr<void>
