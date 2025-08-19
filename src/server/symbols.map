@@ -490,6 +490,10 @@ global:
     mir::scene::BasicSurface::initial_placement_done*;
     mir::scene::BasicSurface::input_area_contains*;
     mir::scene::BasicSurface::input_bounds*;
+    mir::scene::BasicSurface::max_height*;
+    mir::scene::BasicSurface::max_width*;
+    mir::scene::BasicSurface::min_height*;
+    mir::scene::BasicSurface::min_width*;
     mir::scene::BasicSurface::move_to*;
     mir::scene::BasicSurface::name*;
     mir::scene::BasicSurface::parent*;
@@ -514,6 +518,10 @@ global:
     mir::scene::BasicSurface::set_focus_state*;
     mir::scene::BasicSurface::set_hidden*;
     mir::scene::BasicSurface::set_input_region*;
+    mir::scene::BasicSurface::set_max_height*;
+    mir::scene::BasicSurface::set_max_width*;
+    mir::scene::BasicSurface::set_min_height*;
+    mir::scene::BasicSurface::set_min_width*;
     mir::scene::BasicSurface::set_mirror_mode*;
     mir::scene::BasicSurface::set_orientation*;
     mir::scene::BasicSurface::set_reception_mode*;
@@ -1059,6 +1067,10 @@ global:
     non-virtual?thunk?to?mir::scene::BasicSurface::initial_placement_done*;
     non-virtual?thunk?to?mir::scene::BasicSurface::input_area_contains*;
     non-virtual?thunk?to?mir::scene::BasicSurface::input_bounds*;
+    non-virtual?thunk?to?mir::scene::BasicSurface::max_height*;
+    non-virtual?thunk?to?mir::scene::BasicSurface::max_width*;
+    non-virtual?thunk?to?mir::scene::BasicSurface::min_height*;
+    non-virtual?thunk?to?mir::scene::BasicSurface::min_width*;
     non-virtual?thunk?to?mir::scene::BasicSurface::move_to*;
     non-virtual?thunk?to?mir::scene::BasicSurface::name*;
     non-virtual?thunk?to?mir::scene::BasicSurface::parent*;
@@ -1080,6 +1092,10 @@ global:
     non-virtual?thunk?to?mir::scene::BasicSurface::set_focus_mode*;
     non-virtual?thunk?to?mir::scene::BasicSurface::set_focus_state*;
     non-virtual?thunk?to?mir::scene::BasicSurface::set_input_region*;
+    non-virtual?thunk?to?mir::scene::BasicSurface::set_max_height*;
+    non-virtual?thunk?to?mir::scene::BasicSurface::set_max_width*;
+    non-virtual?thunk?to?mir::scene::BasicSurface::set_min_height*;
+    non-virtual?thunk?to?mir::scene::BasicSurface::set_min_width*;
     non-virtual?thunk?to?mir::scene::BasicSurface::set_mirror_mode*;
     non-virtual?thunk?to?mir::scene::BasicSurface::set_orientation*;
     non-virtual?thunk?to?mir::scene::BasicSurface::set_reception_mode*;

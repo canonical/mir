@@ -33,10 +33,6 @@ struct miral::WindowInfo::Self
     std::optional<mir::geometry::Rectangle> restore_rect;
     Window parent;
     std::vector <Window> children;
-    mir::geometry::Width min_width;
-    mir::geometry::Height min_height;
-    mir::geometry::Width max_width;
-    mir::geometry::Height max_height;
     MirOrientationMode preferred_orientation;
     MirPointerConfinementState confine_pointer;
 

@@ -172,6 +172,15 @@ public:
     Flags<MirTiledEdge> tiled_edges() const override;
     void set_tiled_edges(Flags<MirTiledEdge> flags) override;
 
+    auto min_width() const -> geometry::Width override;
+    auto max_width() const -> geometry::Width override;
+    auto min_height() const -> geometry::Height override;
+    auto max_height() const -> geometry::Height override;
+    void set_min_width(geometry::Width width) override;
+    void set_max_width(geometry::Width width) override;
+    void set_min_height(geometry::Height height) override;
+    void set_max_height(geometry::Height height) override;
+
 private:
     struct State;
     class DisplayConfigurationEarlyListener;
@@ -228,6 +237,11 @@ private:
 
         MirFocusMode focus_mode = mir_focus_mode_focusable;
         Flags<MirTiledEdge> tiled_edges = Flags(mir_tiled_edge_none);
+
+        mir::geometry::Width min_width{0};
+        mir::geometry::Height min_height{0};
+        mir::geometry::Width max_width{std::numeric_limits<int>::max()};
+        mir::geometry::Height max_height{std::numeric_limits<int>::max()};
     };
     mir::Synchronised<State> synchronised_state;
 
