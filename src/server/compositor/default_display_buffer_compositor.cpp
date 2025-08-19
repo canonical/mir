@@ -128,7 +128,11 @@ bool mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
         renderer->set_viewport(view_area);
         renderer->set_output_filter(output_filter->filter());
 
-        display_sink.set_next_image(fb_adaptor->buffer_to_framebuffer(renderer->render(renderable_list)));
+        auto buffer = renderer->render(renderable_list);
+        assert(buffer!=nullptr);
+        auto framebuffer = fb_adaptor->buffer_to_framebuffer(std::move(buffer));
+        assert(framebuffer!=nullptr);
+        display_sink.set_next_image(std::move(framebuffer));
 
         report->renderables_in_frame(this, renderable_list);
         report->rendered_frame(this);

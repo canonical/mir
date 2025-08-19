@@ -330,6 +330,39 @@ auto mge::GLRenderingProvider::as_texture(std::shared_ptr<Buffer> buffer) -> std
 namespace
 {
 
+class FramebufferAdapter : public mg::Buffer, public mg::NativeBufferBase
+{
+    using EGLFramebuffer = mir::graphics::GenericEGLDisplayAllocator::EGLFramebuffer;
+
+public:
+    FramebufferAdapter(std::unique_ptr<EGLFramebuffer> framebuffer) :
+        framebuffer{std::move(framebuffer)}
+    {
+    }
+
+    mg::BufferID id() const override
+    {
+        return mg::BufferID{0u};
+    }
+
+    geom::Size size() const override
+    {
+        return framebuffer->size();
+    }
+
+    MirPixelFormat pixel_format() const override
+    {
+        return framebuffer->format();
+    }
+
+    NativeBufferBase* native_buffer_base() override
+    {
+        return this;
+    }
+
+
+    std::unique_ptr<EGLFramebuffer> framebuffer;
+};
 class EGLOutputSurface : public mg::gl::OutputSurface
 {
 public:
@@ -355,42 +388,6 @@ public:
 
     auto commit() -> std::unique_ptr<mg::Buffer> override
     {
-        class FramebufferAdapter : 
-            public mg::Buffer,
-            public mg::NativeBufferBase
-        {
-            using EGLFramebuffer = mir::graphics::GenericEGLDisplayAllocator::EGLFramebuffer;
-
-        public:
-            FramebufferAdapter(std::unique_ptr<EGLFramebuffer> framebuffer) :
-                framebuffer{std::move(framebuffer)}
-            {
-            }
-
-            mg::BufferID id() const override
-            {
-                return mg::BufferID{0u};
-            }
-
-            geom::Size size() const override
-            {
-                return framebuffer->size();
-            }
-
-            MirPixelFormat pixel_format() const override
-            {
-                return framebuffer->format();
-            }
-
-            NativeBufferBase* native_buffer_base() override
-            {
-                return this;
-            }
-
-        private:
-            std::unique_ptr<EGLFramebuffer> const framebuffer;
-        };
-
         return std::make_unique<FramebufferAdapter>(fb->clone_handle());
     }
 
@@ -470,10 +467,14 @@ auto mge::GLRenderingProvider::make_framebuffer_provider(DisplaySink& /*sink*/)
     class NullFramebufferProvider : public FramebufferProvider
     {
     public:
-        auto buffer_to_framebuffer(std::shared_ptr<Buffer>) -> std::unique_ptr<Framebuffer> override
+        auto buffer_to_framebuffer(std::shared_ptr<Buffer> buf) -> std::unique_ptr<Framebuffer> override
         {
             // It is safe to return nullptr; this will be treated as “this buffer cannot be used as
             // a framebuffer”.
+            if (auto fb = std::dynamic_pointer_cast<FramebufferAdapter>(buf))
+            {
+                return std::move(fb->framebuffer);
+            }
             return {};
         }
     };
