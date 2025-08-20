@@ -31,6 +31,7 @@
 #include <cassert>
 #include <functional>
 #include <memory>
+#include <ranges>
 #include <stdexcept>
 
 namespace ms = mir::scene;
@@ -264,6 +265,11 @@ void ms::SurfaceStack::remove_surface(std::weak_ptr<Surface> const& surface)
                 break;
             }
         }
+
+        std::erase_if(focus_order, [&](auto const& s)
+        {
+            return s.lock() == keep_alive;
+        });
     }
 
     if (found_surface)
@@ -541,6 +547,16 @@ void ms::SurfaceStack::insert_surface_at_top_of_depth_layer(std::shared_ptr<Surf
     if (surface_layers.size() <= depth_index)
         surface_layers.resize(depth_index + 1);
     surface_layers[depth_index].push_back(surface);
+
+    for (auto it = focus_order.begin(); it != focus_order.end();)
+    {
+        if (it->expired() || it->lock() == surface)
+            it = focus_order.erase(it);
+        else
+            ++it;
+    }
+
+    focus_order.push_back(surface);
 }
 
 auto ms::SurfaceStack::surface_can_be_shown(std::shared_ptr<Surface> const& surface) const -> bool
@@ -552,14 +568,15 @@ void ms::SurfaceStack::add_observer(std::shared_ptr<ms::Observer> const& observe
 {
     observers.add(observer);
 
-    // Notify observer of existing surfaces
+    // Notify observer of existing surfaces.
+    //
+    // The surfaces are sent with the most-recently focused first and the
+    // least-recently focused last.
     RecursiveReadLock lk(guard);
-    for (auto const& layer : surface_layers)
+    for (auto const& surface : std::ranges::reverse_view(focus_order))
     {
-        for (auto const& surface : layer)
-        {
-            observer->surface_exists(surface);
-        }
+        if (auto const locked = surface.lock())
+            observer->surface_exists(locked);
     }
 }
 

@@ -409,8 +409,8 @@ TEST_F(SurfaceStack, scene_observer_informed_of_existing_surfaces)
     MockSceneObserver observer;
 
     InSequence seq;
-    EXPECT_CALL(observer, surface_exists(stub_surface1)).Times(1);
     EXPECT_CALL(observer, surface_exists(stub_surface2)).Times(1);
+    EXPECT_CALL(observer, surface_exists(stub_surface1)).Times(1);
 
     stack.add_surface(stub_surface1, mi::InputReceptionMode::normal);
     stack.add_surface(stub_surface2, mi::InputReceptionMode::normal);

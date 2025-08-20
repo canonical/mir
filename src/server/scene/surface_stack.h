@@ -154,6 +154,13 @@ private:
      * The inner vectors contain the list of surfaces on each layer (bottom to top)
      */
     std::vector<std::vector<std::shared_ptr<Surface>>> surface_layers;
+
+    /// Surface focus order that's maintained parallel to [surface_layers]. Whereas [surface_layers]
+    /// provides a model of how the surface will be rendered into a scene, this list provides
+    /// the relative focus order of surfaces, with the most-recently focused surfaces appearing at
+    /// the front of the list, and the least-recently focused surfaces appearing at the back of the
+    /// list.
+    std::vector<std::weak_ptr<Surface>> focus_order;
     std::map<Surface*,std::shared_ptr<RenderingTracker>> rendering_trackers;
     std::set<compositor::CompositorID> registered_compositors;
 
