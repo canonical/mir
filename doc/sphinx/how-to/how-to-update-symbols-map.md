@@ -81,7 +81,7 @@ export MIR_SYMBOLS_MAP_GENERATOR_CLANG_LIBRARY_PATH=/usr/lib/llvm-19/lib
 It is recommended that you put those `export ...` commands in your `.bashrc`
 so that you don't have to think about it in the future.
 
-One final set up step, you need to set up a venv environment and install the
+One final set up step, you need to install the
 corresponding python clang library:
 ```
 sudo apt install python3-clang-19
