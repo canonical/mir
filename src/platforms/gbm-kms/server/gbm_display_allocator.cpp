@@ -51,45 +51,6 @@ using LockedFrontBuffer = std::unique_ptr<gbm_bo, std::function<void(gbm_bo*)>>;
 class GBMBoFramebuffer : public mg::FBHandle
 {
 public:
-    static auto framebuffer_for_frontbuffer(mir::Fd const& drm_fd, LockedFrontBuffer bo) -> std::unique_ptr<GBMBoFramebuffer>
-    {
-        if (auto cached_fb = static_cast<std::shared_ptr<uint32_t const>*>(gbm_bo_get_user_data(bo.get())))
-        {
-            return std::make_unique<GBMBoFramebuffer>(std::move(bo), *cached_fb);
-        }
-
-        auto fb_id = std::shared_ptr<uint32_t>{
-            new uint32_t{0},
-            [drm_fd](uint32_t* fb_id)
-            {
-                if (*fb_id)
-                {
-                    drmModeRmFB(drm_fd, *fb_id);
-                }
-                delete fb_id;
-            }};
-        uint32_t handles[4] = {gbm_bo_get_handle(bo.get()).u32, 0, 0, 0};
-        uint32_t strides[4] = {gbm_bo_get_stride(bo.get()), 0, 0, 0};
-        uint32_t offsets[4] = {gbm_bo_get_offset(bo.get(), 0), 0, 0, 0};
-
-        auto format = gbm_bo_get_format(bo.get());
-
-        auto const width = gbm_bo_get_width(bo.get());
-        auto const height = gbm_bo_get_height(bo.get());
-
-        /* Create a KMS FB object with the gbm_bo attached to it. */
-        auto ret = drmModeAddFB2(drm_fd, width, height, format,
-                                 handles, strides, offsets, fb_id.get(), 0);
-        if (ret)
-            return nullptr;
-
-        // It is weird allocating a smart pointer on the heap, but we delete it
-        // via gbm_bo_set_user_data()'s destroy_user_data parameter.
-        gbm_bo_set_user_data(bo.get(), new std::shared_ptr<uint32_t>(fb_id), [](gbm_bo*, void* fb_ptr) { delete static_cast<std::shared_ptr<uint32_t const>*>(fb_ptr); });
-
-        return std::make_unique<GBMBoFramebuffer>(std::move(bo), std::move(fb_id));
-    }
-
     operator uint32_t() const override
     {
         return *fb_id;
