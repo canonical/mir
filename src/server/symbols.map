@@ -1641,3 +1641,10 @@ global:
 local: *;
 };
 
+MIR_SERVER_INTERNAL_2.23 {
+global:
+  extern "C++" {
+    mir::time::AlarmFactory::create_repeating_alarm*;
+  };
+local: *;
+} MIR_SERVER_INTERNAL_2.22;

@@ -21,8 +21,8 @@
 #include "mir/input/mousekeys_keymap.h"
 #include "mir/log.h"
 #include "mir/main_loop.h"
-#include "mir/time/alarm.h"
 #include "mir/time/clock.h"
+
 #include "mir_toolkit/events/enums.h"
 #include "mir_toolkit/events/input/keyboard_event.h"
 
@@ -152,90 +152,84 @@ bool mir::shell::BasicMouseKeysTransformer::handle_motion(
         {
             if (!motion_event_generator)
             {
-                auto const shared_weak_alarm = std::make_shared<std::weak_ptr<mir::time::Alarm>>();
-                motion_event_generator = main_loop->create_alarm(
-                    [dispatcher,
-                     this,
-                     builder,
-                     motion_start_time = clock->now(),
-                     weak_self = shared_weak_alarm,
-                     motion_direction = mir::geometry::DisplacementF{0, 0}] mutable
+                auto constexpr repeat_delay = std::chrono::milliseconds(2); // 500 Hz rate
+                auto motion_generator = [dispatcher,
+                                         this,
+                                         builder,
+                                         motion_start_time = clock->now(),
+                                         motion_direction = mir::geometry::DisplacementF{0, 0},
+                                         repeat_delay] mutable
+                {
+                    using SecondF = std::chrono::duration<float>;
+
+                    auto const motion_step_time = clock->now();
+                    auto const t = std::chrono::duration_cast<SecondF>(motion_step_time - motion_start_time);
+
+                    // duration_cast is not constexpr yet
+                    float const dt = std::chrono::duration_cast<SecondF>(repeat_delay).count();
+
+                    auto const state_copy = *state.lock();
+
+                    // Normalize the speed so it's in
+                    // pixels/alarm_invocation, and not pixels/second
+                    auto const speed = state_copy.acceleration_curve.evaluate(t.count()) * dt;
+
+                    motion_direction = {0, 0};
+                    auto const buttons_down = state_copy.buttons_down;
+                    if (buttons_down & directional_buttons_up)
+                        motion_direction.dy += geom::DeltaYF{-speed};
+                    if (buttons_down & directional_buttons_down)
+                        motion_direction.dy += geom::DeltaYF{speed};
+                    if (buttons_down & directional_buttons_left)
+                        motion_direction.dx += geom::DeltaXF{-speed};
+                    if (buttons_down & directional_buttons_right)
+                        motion_direction.dx += geom::DeltaXF{speed};
+
+                    // Handle two opposite buttons being pressed
+                    if (buttons_down & directional_buttons_left && buttons_down & directional_buttons_right)
+                        motion_direction.dx = geom::DeltaXF{0};
+
+                    if (buttons_down & directional_buttons_up && buttons_down & directional_buttons_down)
+                        motion_direction.dy = geom::DeltaYF{0};
+
+                    auto const fabs = [](auto delta)
                     {
-                        using SecondF = std::chrono::duration<float>;
-                        auto constexpr repeat_delay = std::chrono::milliseconds(2); // 500 Hz rate
+                        return decltype(delta){std::fabs(delta.as_value())};
+                    };
 
-                        auto const motion_step_time = clock->now();
-                        auto const t = std::chrono::duration_cast<SecondF>(motion_step_time - motion_start_time);
+                    auto const sign = [](auto delta)
+                    {
+                        return delta.as_value() > 0 ? 1 : -1;
+                    };
 
-                        // duration_cast is not constexpr yet
-                        float const dt = std::chrono::duration_cast<SecondF>(repeat_delay).count();
+                    auto const max_speed_ = state_copy.max_speed_;
+                    if (max_speed_.dx.as_value() > 0)
+                        motion_direction.dx =
+                            sign(motion_direction.dx) * std::min(fabs(motion_direction.dx), max_speed_.dx * dt);
 
-                        auto const state_copy = *state.lock();
+                    if (max_speed_.dy.as_value() > 0)
+                        motion_direction.dy =
+                            sign(motion_direction.dy) * std::min(fabs(motion_direction.dy), max_speed_.dy * dt);
 
-                        // Normalize the speed so it's in
-                        // pixels/alarm_invocation, and not pixels/second
-                        auto const speed = state_copy.acceleration_curve.evaluate(t.count()) * dt;
+                    // If the cursor stops moving without releasing
+                    // all buttons (if for example you press two
+                    // opposite directions), reset the time for
+                    // acceleration.
+                    if (motion_direction.length_squared() == 0)
+                        motion_start_time = motion_step_time;
 
-                        motion_direction = {0, 0};
-                        auto const buttons_down = state_copy.buttons_down;
-                        if (buttons_down & directional_buttons_up)
-                            motion_direction.dy += geom::DeltaYF{-speed};
-                        if (buttons_down & directional_buttons_down)
-                            motion_direction.dy += geom::DeltaYF{speed};
-                        if (buttons_down & directional_buttons_left)
-                            motion_direction.dx += geom::DeltaXF{-speed};
-                        if (buttons_down & directional_buttons_right)
-                            motion_direction.dx += geom::DeltaXF{speed};
+                    dispatcher(builder->pointer_event(
+                        std::nullopt,
+                        mir_pointer_action_motion,
+                        state_copy.is_dragging ? state_copy.current_button : 0,
+                        std::nullopt,
+                        motion_direction,
+                        mir_pointer_axis_source_none,
+                        mir::events::ScrollAxisH{},
+                        mir::events::ScrollAxisV{}));
+                };
 
-
-                        // Handle two opposite buttons being pressed
-                        if(buttons_down & directional_buttons_left && buttons_down & directional_buttons_right)
-                            motion_direction.dx = geom::DeltaXF{0};
-
-                        if (buttons_down & directional_buttons_up && buttons_down & directional_buttons_down)
-                            motion_direction.dy = geom::DeltaYF{0};
-
-                        auto const fabs = [](auto delta)
-                        {
-                            return decltype(delta){std::fabs(delta.as_value())};
-                        };
-
-                        auto const sign = [](auto delta)
-                        {
-                            return delta.as_value() > 0 ? 1 : -1;
-                        };
-
-                        auto const max_speed_ = state_copy.max_speed_;
-                        if(max_speed_.dx.as_value() > 0)
-                            motion_direction.dx =
-                                sign(motion_direction.dx) * std::min(fabs(motion_direction.dx), max_speed_.dx * dt);
-
-                        if(max_speed_.dy.as_value() > 0)
-                            motion_direction.dy =
-                                sign(motion_direction.dy) * std::min(fabs(motion_direction.dy), max_speed_.dy * dt);
-
-                        // If the cursor stops moving without releasing
-                        // all buttons (if for example you press two
-                        // opposite directions), reset the time for
-                        // acceleration.
-                        if (motion_direction.length_squared() == 0)
-                            motion_start_time = motion_step_time;
-
-                        dispatcher(builder->pointer_event(
-                            std::nullopt,
-                            mir_pointer_action_motion,
-                            state_copy.is_dragging ? state_copy.current_button : 0,
-                            std::nullopt,
-                            motion_direction,
-                            mir_pointer_axis_source_none,
-                            mir::events::ScrollAxisH{},
-                            mir::events::ScrollAxisV{}));
-
-                        if (auto const& repeat_alarm = weak_self->lock())
-                            repeat_alarm->reschedule_in(repeat_delay);
-                    });
-
-                *shared_weak_alarm = motion_event_generator;
+                motion_event_generator = main_loop->create_repeating_alarm(motion_generator, repeat_delay);
                 motion_event_generator->reschedule_in(std::chrono::milliseconds(0));
             }
         }
