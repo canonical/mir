@@ -18,6 +18,7 @@
 #include <epoxy/gl.h>
 
 #include "buffer_allocator.h"
+#include "cpu_addressable_fb.h"
 #include "cpu_copy_output_surface.h"
 #include "mir/anonymous_shm_file.h"
 #include "mir/graphics/display_sink.h"
@@ -811,10 +812,33 @@ auto mge::GLRenderingProvider::make_framebuffer_provider(DisplaySink& /*sink*/)
     class NullFramebufferProvider : public FramebufferProvider
     {
     public:
-        auto buffer_to_framebuffer(std::shared_ptr<Buffer>) -> std::unique_ptr<Framebuffer> override
+        auto buffer_to_framebuffer(std::shared_ptr<Buffer> buffer) -> std::unique_ptr<Framebuffer> override
         {
             // It is safe to return nullptr; this will be treated as “this buffer cannot be used as
             // a framebuffer”.
+            if(auto cpu_buffer = std::dynamic_pointer_cast<CPUAddressableBuffer>(buffer))
+            {
+                struct Wrapper :  public FBHandle
+                {
+                    Wrapper(std::shared_ptr<FBHandle> fb) :
+                        wrapped{fb}
+                    {
+                    }
+
+                    auto size() const -> geom::Size override
+                    {
+                        return wrapped->size();
+                    }
+
+                    operator uint32_t() const override
+                    {
+                        return wrapped->operator uint32_t();
+                    }
+
+                    std::shared_ptr<FBHandle> const wrapped;
+                };
+                return make_unique<Wrapper>(cpu_buffer);
+            }
             return {};
         }
     };
