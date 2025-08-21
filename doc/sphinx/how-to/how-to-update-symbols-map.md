@@ -87,9 +87,6 @@ corresponding python clang library:
 sudo apt install python3-clang-19
 ```
 
-You'll have to run `. tools/symbols_map_generator/venv/bin/activate` before
-invoking the symbols map generator in a new terminal session.
-
 And that's it! Now we are ready to update our symbols automatically.
 
 ## How to update miral symbols
