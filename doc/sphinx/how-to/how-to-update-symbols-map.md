@@ -87,15 +87,6 @@ corresponding python clang library:
 sudo apt install python3-clang-19
 ```
 
-If you want to use a virtual environment, you can do so as follows, note that
-you might have to pass `--break-system-packages`:
-```
-cd tools/symbols_map_generator/
-python -m venv venv
-. ./venv/bin/activate
-pip install clang
-```
-
 You'll have to run `. tools/symbols_map_generator/venv/bin/activate` before
 invoking the symbols map generator in a new terminal session.
 
