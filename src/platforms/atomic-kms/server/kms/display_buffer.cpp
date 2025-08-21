@@ -72,7 +72,7 @@ mga::DisplaySink::DisplaySink(
     {
         mir::log_info("Clearing screen due to differing encountered and target modes");
         // TODO: Pull a supported format out of KMS rather than assuming XRGB8888
-        auto initial_fb = std::make_shared<graphics::CPUAddressableFB>(
+        auto initial_fb = std::make_shared<graphics::CPUAddressableBuffer>(
             std::move(drm_fd),
             false,
             DRMFormat{DRM_FORMAT_XRGB8888},

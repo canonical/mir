@@ -283,13 +283,13 @@ public:
         }
     }
 
-    auto commit() -> std::unique_ptr<mg::Framebuffer> override
+    auto commit() -> std::unique_ptr<mg::Buffer> override
     {
         if (eglSwapBuffers(dpy, egl_surf) != EGL_TRUE)
         {
             BOOST_THROW_EXCEPTION(mg::egl_error("eglSwapBuffers failed"));
         }
-        return surface->claim_framebuffer();
+        return surface->claim_buffer();
     }
 
     auto size() const -> geom::Size override

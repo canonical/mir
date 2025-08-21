@@ -128,7 +128,7 @@ bool mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
         renderer->set_viewport(view_area);
         renderer->set_output_filter(output_filter->filter());
 
-        display_sink.set_next_image(renderer->render(renderable_list));
+        display_sink.set_next_image(fb_adaptor->buffer_to_framebuffer(renderer->render(renderable_list)));
 
         report->renderables_in_frame(this, renderable_list);
         report->rendered_frame(this);

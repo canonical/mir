@@ -670,7 +670,7 @@ public:
         }
     }
 
-    auto commit() -> std::unique_ptr<mg::Framebuffer> override
+    auto commit() -> std::unique_ptr<mg::Buffer> override
     {
         if (eglSwapBuffers(dpy, surface) != EGL_TRUE)
         {

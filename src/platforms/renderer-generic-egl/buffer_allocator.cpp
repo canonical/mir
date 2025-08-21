@@ -353,9 +353,45 @@ public:
         fb->release_current();
     }
 
-    auto commit() -> std::unique_ptr<mg::Framebuffer> override
+    auto commit() -> std::unique_ptr<mg::Buffer> override
     {
-        return fb->clone_handle();
+        class FramebufferAdapter : 
+            public mg::Buffer,
+            public mg::NativeBufferBase
+        {
+            using EGLFramebuffer = mir::graphics::GenericEGLDisplayAllocator::EGLFramebuffer;
+
+        public:
+            FramebufferAdapter(std::unique_ptr<EGLFramebuffer> framebuffer) :
+                framebuffer{std::move(framebuffer)}
+            {
+            }
+
+            mg::BufferID id() const override
+            {
+                return mg::BufferID{0u};
+            }
+
+            geom::Size size() const override
+            {
+                return framebuffer->size();
+            }
+
+            MirPixelFormat pixel_format() const override
+            {
+                return framebuffer->format();
+            }
+
+            NativeBufferBase* native_buffer_base() override
+            {
+                return this;
+            }
+
+        private:
+            std::unique_ptr<EGLFramebuffer> const framebuffer;
+        };
+
+        return std::make_unique<FramebufferAdapter>(fb->clone_handle());
     }
 
     auto size() const -> geom::Size override

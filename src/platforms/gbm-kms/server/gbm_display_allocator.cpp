@@ -175,7 +175,7 @@ public:
         return surface.get();
     }
 
-    auto claim_framebuffer() -> std::unique_ptr<mg::Framebuffer> override
+    auto claim_buffer() -> std::unique_ptr<mg::Buffer> override
     {
         if (!gbm_surface_has_free_buffers(surface.get()))
         {
@@ -195,12 +195,57 @@ public:
             BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to acquire GBM front buffer"}));
         }
 
-        auto fb = GBMBoFramebuffer::framebuffer_for_frontbuffer(drm_fd, std::move(bo));
-        if (!fb)
+        // TODO: Dedup this
+        class GBMBuffer : public mg::Buffer, public mg::NativeBufferBase
         {
-            BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), "Failed to make DRM FB"}));
-        }
-        return fb;
+        public:
+            GBMBuffer(LockedFrontBuffer front_buffer)
+                : front_buffer{std::move(front_buffer)}
+            {
+            }
+
+            mg::BufferID id() const override
+            {
+                // https://stackoverflow.com/a/21574751
+                return mg::BufferID{static_cast<uint32_t>(reinterpret_cast<uintptr_t>(front_buffer.get()))};
+            }
+
+            geom::Size size() const override
+            {
+                return geom::Size{gbm_bo_get_width(front_buffer.get()), gbm_bo_get_height(front_buffer.get())};
+            }
+
+            MirPixelFormat pixel_format() const override
+            {
+                auto const mapping = std::unordered_map<uint32_t, MirPixelFormat>{
+                    {GBM_FORMAT_ABGR8888, mir_pixel_format_abgr_8888},
+                    {GBM_FORMAT_XBGR8888, mir_pixel_format_xbgr_8888},
+                    {GBM_FORMAT_ARGB8888, mir_pixel_format_argb_8888},
+                    {GBM_FORMAT_XRGB8888, mir_pixel_format_xrgb_8888},
+                    {GBM_FORMAT_BGR888, mir_pixel_format_bgr_888},
+                    {GBM_FORMAT_RGB888, mir_pixel_format_rgb_888},
+                    {GBM_FORMAT_RGB565, mir_pixel_format_rgb_565},
+                    {GBM_FORMAT_RGBA5551, mir_pixel_format_rgba_5551},
+                    {GBM_FORMAT_RGBA4444, mir_pixel_format_rgba_4444},
+                };
+
+                auto const gbm_format = gbm_bo_get_format(front_buffer.get());
+                if(auto iter = mapping.find(gbm_format); iter != mapping.end())
+                    return iter->second;
+
+                return mir_pixel_format_invalid;
+            }
+
+            mg::NativeBufferBase* native_buffer_base() override
+            {
+                return this;
+            }
+
+        private:
+            LockedFrontBuffer const front_buffer;
+        };
+
+        return std::make_unique<GBMBuffer>(std::move(bo));
     }
 private:
     mir::Fd const drm_fd;

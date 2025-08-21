@@ -41,10 +41,12 @@ class mc::BasicScreenShooter::Self::OneShotBufferDisplayProvider : public mg::CP
 public:
     OneShotBufferDisplayProvider() = default;
 
-    class FB : public mg::CPUAddressableDisplayAllocator::MappableFB
+    class Buffer : 
+        public mg::CPUAddressableDisplayAllocator::MappableBuffer, 
+        public graphics::NativeBufferBase
     {
     public:
-        FB(std::shared_ptr<mrs::WriteMappableBuffer> buffer)
+        Buffer(std::shared_ptr<mrs::WriteMappableBuffer> buffer)
             : buffer{std::move(buffer)}
         {
         }
@@ -65,6 +67,22 @@ public:
         {
             return buffer->stride();
         }
+
+        mg::BufferID id() const override
+        {
+            return mg::BufferID{static_cast<uint32_t>(reinterpret_cast<uintptr_t>(buffer.get()))};
+        }
+
+        MirPixelFormat pixel_format() const override
+        {
+            return format();
+        }
+
+        NativeBufferBase* native_buffer_base() override
+        {
+            return this;
+        }
+
     private:
         std::shared_ptr<mrs::WriteMappableBuffer> const buffer;
     };
@@ -78,13 +96,13 @@ public:
         return {mg::DRMFormat::from_mir_format(next_buffer->format())};
     }
 
-    auto alloc_fb(mg::DRMFormat format) -> std::unique_ptr<MappableFB> override
+    auto alloc_buffer(mg::DRMFormat format) -> std::unique_ptr<MappableBuffer> override
     {
         if (format.as_mir_format().value_or(mir_pixel_format_invalid) != next_buffer->format())
         {
             BOOST_THROW_EXCEPTION((std::runtime_error{"Mismatched pixel formats"}));
         }
-        return std::make_unique<FB>(std::exchange(next_buffer, nullptr));
+        return std::make_unique<Buffer>(std::exchange(next_buffer, nullptr));
     }
 
     auto output_size() const -> geom::Size override

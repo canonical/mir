@@ -315,13 +315,13 @@ public:
     {
     };
 
-    class MappableFB :
-        public Framebuffer,
+    class MappableBuffer : 
+        public Buffer, 
         public mir::renderer::software::WriteMappableBuffer
     {
     public:
-        MappableFB() = default;
-        virtual ~MappableFB() override = default;
+        MappableBuffer() = default;
+        virtual ~MappableBuffer() override = default;
 
         using renderer::software::WriteMappableBuffer::size;
     };
@@ -329,8 +329,8 @@ public:
     virtual auto supported_formats() const
         -> std::vector<DRMFormat> = 0;
 
-    virtual auto alloc_fb(DRMFormat format)
-        -> std::unique_ptr<MappableFB> = 0;
+    virtual auto alloc_buffer(DRMFormat format) 
+        -> std::unique_ptr<MappableBuffer> = 0;
 
     virtual auto output_size() const -> geometry::Size = 0;
 };
@@ -397,7 +397,7 @@ public:
          * of buffers available and attempting to claim a framebuffer when no buffers
          * are free will result in an EBUSY std::system_error being raised.
          */
-        virtual auto claim_framebuffer() -> std::unique_ptr<Framebuffer> = 0;
+        virtual auto claim_buffer() -> std::unique_ptr<Buffer> = 0;
     };
 
     virtual auto make_surface(DRMFormat format, std::span<uint64_t> modifiers) -> std::unique_ptr<GBMSurface> = 0;
@@ -464,6 +464,7 @@ public:
         virtual void make_current() = 0;
         virtual void release_current() = 0;
         virtual auto clone_handle() -> std::unique_ptr<EGLFramebuffer> = 0;
+        virtual auto format() const -> MirPixelFormat = 0;
     };
 
     virtual auto alloc_framebuffer(GLConfig const& config, EGLContext share_context) -> std::unique_ptr<EGLFramebuffer> = 0;

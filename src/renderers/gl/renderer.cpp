@@ -377,7 +377,7 @@ public:
         output->release_current();
     }
 
-    auto commit() -> std::unique_ptr<mg::Framebuffer> override
+    auto commit() -> std::unique_ptr<mg::Buffer> override
     {
         // Bypass if no filter.
         if (filter == mir_output_filter_none)
@@ -629,7 +629,7 @@ void mrg::Renderer::tessellate(std::vector<mgl::Primitive>& primitives,
     primitives[0] = mgl::tessellate_renderable_into_rectangle(renderable, geom::Displacement{0,0});
 }
 
-auto mrg::Renderer::render(mg::RenderableList const& renderables) const -> std::unique_ptr<mg::Framebuffer>
+auto mrg::Renderer::render(mg::RenderableList const& renderables) const -> std::unique_ptr<mg::Buffer>
 {
     output_surface->make_current();
     output_surface->bind();

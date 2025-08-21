@@ -136,7 +136,7 @@ public:
     void make_current();
     void release_current();
 
-    auto commit() -> std::unique_ptr<mg::Framebuffer>;
+    auto commit() -> std::unique_ptr<mg::Buffer>;
 
     auto size() const -> geom::Size;
     auto layout() const -> Layout;
@@ -201,7 +201,7 @@ void mgc::CPUCopyOutputSurface::release_current()
     impl->release_current();
 }
 
-auto mgc::CPUCopyOutputSurface::commit() -> std::unique_ptr<mg::Framebuffer>
+auto mgc::CPUCopyOutputSurface::commit() -> std::unique_ptr<mg::Buffer>
 {
     return impl->commit();
 }
@@ -298,9 +298,9 @@ void mgc::CPUCopyOutputSurface::Impl::release_current()
     }
 }
 
-auto mgc::CPUCopyOutputSurface::Impl::commit() -> std::unique_ptr<mg::Framebuffer>
+auto mgc::CPUCopyOutputSurface::Impl::commit() -> std::unique_ptr<mg::Buffer>
 {
-    auto fb = allocator.alloc_fb(format);
+    auto buffer = allocator.alloc_buffer(format);
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
     {
         /* TODO: We can usefully put this *into* DRMFormat */
@@ -313,7 +313,7 @@ auto mgc::CPUCopyOutputSurface::Impl::commit() -> std::unique_ptr<mg::Framebuffe
         {
             pixel_layout = GL_RGBA;
         }
-        auto mapping = fb->map_writeable();
+        auto mapping = buffer->map_writeable();
         /*
          * TODO: This introduces a pipeline stall; GL must wait for all previous rendering commands
          * to complete before glReadPixels returns. We could instead do something fancy with
@@ -324,10 +324,10 @@ auto mgc::CPUCopyOutputSurface::Impl::commit() -> std::unique_ptr<mg::Framebuffe
          */
         glReadPixels(
             0, 0,
-            fb->size().width.as_uint32_t(), fb->size().height.as_uint32_t(),
+            buffer->size().width.as_uint32_t(), buffer->size().height.as_uint32_t(),
             pixel_layout, GL_UNSIGNED_BYTE, mapping->data());
     }
-    return fb;
+    return buffer;
 }
 
 auto mgc::CPUCopyOutputSurface::Impl::size() const -> geom::Size
