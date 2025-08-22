@@ -304,7 +304,9 @@ auto miral::WindowInfo::restore_rect() const -> mir::geometry::Rectangle
 
         // Halfway between current size and min size is reasonable for a maximized/fullscreen window
         std::shared_ptr<mir::scene::Surface> const surface{self->window};
-        auto const min_size_disp = Displacement{as_delta(surface->min_width()), as_delta(surface->min_height())};
+        auto const min_size_disp = surface ?
+            Displacement{as_delta(surface->min_width()), as_delta(surface->min_height())} :
+            Displacement{};
         Size const reasonable_size{as_size(
             (as_displacement(self->window.size()) - min_size_disp) * 0.5
             + min_size_disp)};
