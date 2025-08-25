@@ -60,9 +60,9 @@ has changes. Such changes will need to be moved to a new stanza manually.
 Before we can update the symbols of Mir's libraries, we'll want to set
 up our environment so that the our tools can work correctly.
 
-To do this, you will first want to install **clang-19**. Note that it is
-very important that you have the most recent version of clang, as that
-works the best.
+To do this, you will first want to install **clang-19** or newer. Note that it
+is very important that you have the most recent version of clang, as that works
+the best.
 
 ```sh
 sudo apt install clang-19
@@ -81,8 +81,13 @@ export MIR_SYMBOLS_MAP_GENERATOR_CLANG_LIBRARY_PATH=/usr/lib/llvm-19/lib
 It is recommended that you put those `export ...` commands in your `.bashrc`
 so that you don't have to think about it in the future.
 
-And that's it! Now we are ready to update our symbols automatically.
+One final set up step, you need to install the
+corresponding python clang library:
+```
+sudo apt install python3-clang-19
+```
 
+And that's it! Now we are ready to update our symbols automatically.
 
 ## How to update miral symbols
 
