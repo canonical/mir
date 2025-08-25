@@ -10,15 +10,19 @@ following entrypoints using C linkage (i.e. no symbol name mangling):
 mir::ModuleProperties const* describe_input_module();
 ```
 
-Returns a structure describing the module.
+Describes the module: the name, version, and shared object file that
+implements it.
+
 
 ```c++
 void add_input_platform_options(boost::program_options::options_description& config);
 ```
 
-Add command line options specific to this platform. This seems like it
-should be called from
-`src/platform/options/default_configuration.cpp`, but isn't.
+Adds command line options specific to this platform to the provided
+options description object.
+
+This is not currently called, as detailed in
+[mir #4109](https://github.com/canonical/mir/issues/4109).
 
 
 ```c++
@@ -27,9 +31,10 @@ mir::input::PlatformPriority probe_input_platform(
     mir::ConsoleServices& console);
 ```
 
-Makes a decision on whether this input platform module should be
-used. The return value can range from saying the module is unsupported
-all the way to being the best choice for the system.
+Report how suitable this input platform module for to the runtime
+environment.  The return value can range from saying the module is
+unsupported all the way to being the best choice for the system.
+
 
 ```c++
 mir::UniqueModulePtr<mir::input::Platform> create_input_platform(
