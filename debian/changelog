@@ -1,3 +1,61 @@
+mir (2.22.0) UNRELEASED; urgency=medium
+
+  * New upstream release 2.22.0
+
+    - Breaking changes:
+      . Consolidation of EDID parsing
+        - `User...` and `DisplayConfigurationOutput::edid` replaced with `::display_info`
+        - `mir::graphics::Edid` removed
+        - `miroil::Edid::Descriptor` removed
+
+    - ABI summary:
+      . miral ABI unchanged at 7
+      . mircommon ABI unchanged at 11
+      . mircore ABI unchanged at 2
+      . miroil ABI bumped to 8
+      . mirplatform ABI bumped to 32
+      . mirserver ABI bumped to 65
+      . mirwayland ABI unchanged at 5
+      . mirplatformgraphics ABI unchanged at 23
+      . mirinputplatform ABI unchanged at 10
+
+    - Enhancements:
+      . static_config_display: add property-based display config support (#3872)
+      . Implement Simulated Secondary Click (#3873)
+      . DRM: Explicit synchorisation support (#3717)
+      . live configuration facilities (#3995)
+      . Atomic KMS: enable bypass (#3595)
+      . fix: move minimized windows to the back of the Z stack (#4000)
+      . Implement the 'overlay_cursor' flag for WlrScreencopy (#4013)
+      . Support Nvidia through the atomic-kms/gbm platforms (#3979, #4060, #4070)
+      . Implement hover click (#3928)
+      . server: add `--vt-switching` option (#4033)
+      . Improve support for bespoke Wayland extensions (#4018)
+      . Update linux_dmabuf_v1 to version 5. (#4001)
+      . Implement bounce keys  (#3934)
+      . Implement slow keys (#3945)
+      . Implement magnifier accessibility feature (#3976)
+      . feature: implement sticky keys accessibility feature (#4076)
+      . Integrate some Rust code into the Mir build (#4022)
+      . (#4078) package mir-platform-graphics-stub and mir-platform-input-stub (#4080)
+      . graphics: introduce EDID parsing in `DisplayConfigurationOutput` (#4099)
+      . Add live_config support to miral::Keymap (#4088)
+      - Add tracking keymap from locale1 (#4111)
+
+    - Bugs fixed:
+      . Don't raise the parent of windows sent to the back (#4008)
+      . Update wl_output::geometry to include the correct transformation (#4062)
+      . `BasicScreenshooter` does not take the output transformation into account (#4086)
+      . Screenshots wrong when display rotated (again) (#3909)
+      . Docking kgx left/right in miriway is misplaced (#4023)
+      . Fix window size constraints with ssd (#4139)
+
+    - Documentation:
+      . HACKING.md: Add some intructions for MESA debugging (#3992)
+      . doc: add Debugging section to CI docs (#4034)
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Fri, 01 Aug 2025 10:12:26 +0200
+
 mir (2.21.1) UNRELEASED; urgency=medium
 
   * New upstream release 2.21.1
