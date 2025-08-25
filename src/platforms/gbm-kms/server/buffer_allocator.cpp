@@ -40,6 +40,7 @@
 #include "cpu_copy_output_surface.h"
 #include "surfaceless_egl_context.h"
 #include "mir/graphics/drm_syncobj.h"
+#include "gbm_display_allocator.h"
 
 #include <boost/throw_exception.hpp>
 #include <boost/exception/errinfo_errno.hpp>
@@ -283,13 +284,13 @@ public:
         }
     }
 
-    auto commit() -> std::unique_ptr<mg::Framebuffer> override
+    auto commit() -> std::unique_ptr<mg::Buffer> override
     {
         if (eglSwapBuffers(dpy, egl_surf) != EGL_TRUE)
         {
             BOOST_THROW_EXCEPTION(mg::egl_error("eglSwapBuffers failed"));
         }
-        return surface->claim_framebuffer();
+        return surface->claim_buffer();
     }
 
     auto size() const -> geom::Size override
@@ -520,7 +521,7 @@ auto mgg::GLRenderingProvider::surface_for_sink(
 {
     if (bound_display)
     {
-        if (auto gbm_allocator = sink.acquire_compatible_allocator<GBMDisplayAllocator>())
+        if (auto gbm_allocator = sink.acquire_compatible_allocator<mg::GBMDisplayAllocator>())
         {
             if (bound_display->on_this_sink(sink))
             {
@@ -573,9 +574,10 @@ auto mgg::GLRenderingProvider::make_framebuffer_provider(DisplaySink& sink)
             auto buffer_to_framebuffer(std::shared_ptr<Buffer> buffer) -> std::unique_ptr<Framebuffer> override
             {
                 if(auto dma_buf = std::dynamic_pointer_cast<mir::graphics::DMABufBuffer>(buffer))
-                {
                     return allocator->framebuffer_for(dma_buf);
-                }
+
+                if(auto framebuffer = buffer->to_framebuffer())
+                    return framebuffer;
 
                 return {};
             }
@@ -591,10 +593,13 @@ auto mgg::GLRenderingProvider::make_framebuffer_provider(DisplaySink& sink)
     class NullFramebufferProvider : public FramebufferProvider
     {
     public:
-        auto buffer_to_framebuffer(std::shared_ptr<Buffer>) -> std::unique_ptr<Framebuffer> override
+        auto buffer_to_framebuffer(std::shared_ptr<Buffer> buf) -> std::unique_ptr<Framebuffer> override
         {
             // It is safe to return nullptr; this will be treated as “this buffer cannot be used as
             // a framebuffer”.
+            if (auto mgg_gbm_buffer = std::dynamic_pointer_cast<mgg::GBMBuffer>(buf))
+                return mgg_gbm_buffer->to_framebuffer();
+
             return {};
         }
     };

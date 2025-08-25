@@ -26,7 +26,7 @@
 
 namespace mg = mir::graphics;
 
-class mg::CPUAddressableFB::Buffer : public mir::renderer::software::RWMappableBuffer
+class mg::CPUAddressableBuffer::Buffer : public mir::renderer::software::RWMappableBuffer
 {
     template<typename T>
     class Mapping : public mir::renderer::software::Mapping<T>
@@ -246,21 +246,21 @@ private:
     size_t const size_;
 };
 
-mg::CPUAddressableFB::CPUAddressableFB(
+mg::CPUAddressableBuffer::CPUAddressableBuffer(
     mir::Fd const& drm_fd,
     bool supports_modifiers,
     DRMFormat format,
     mir::geometry::Size const& size)
-    : CPUAddressableFB(drm_fd, supports_modifiers, format, Buffer::create_kms_dumb_buffer(drm_fd, format, size))
+    : CPUAddressableBuffer(drm_fd, supports_modifiers, format, Buffer::create_kms_dumb_buffer(drm_fd, format, size))
 {
 }
 
-mg::CPUAddressableFB::~CPUAddressableFB()
+mg::CPUAddressableBuffer::~CPUAddressableBuffer()
 {
     drmModeRmFB(drm_fd, fb_id);
 }
 
-mg::CPUAddressableFB::CPUAddressableFB(
+mg::CPUAddressableBuffer::CPUAddressableBuffer(
     mir::Fd drm_fd,
     bool supports_modifiers,
     DRMFormat format,
@@ -271,32 +271,47 @@ mg::CPUAddressableFB::CPUAddressableFB(
 {
 }
 
-auto mg::CPUAddressableFB::map_writeable() -> std::unique_ptr<mir::renderer::software::Mapping<unsigned char>>
+auto mg::CPUAddressableBuffer::map_writeable() -> std::unique_ptr<mir::renderer::software::Mapping<unsigned char>>
 {
     return buffer->map_writeable();
 }
 
-auto mg::CPUAddressableFB::format() const -> MirPixelFormat
+auto mg::CPUAddressableBuffer::format() const -> MirPixelFormat
 {
     return buffer->format();
 }
 
-auto mg::CPUAddressableFB::stride() const -> geometry::Stride
+auto mg::CPUAddressableBuffer::stride() const -> geometry::Stride
 {
     return buffer->stride();
 }
 
-auto mg::CPUAddressableFB::size() const -> geometry::Size
+auto mg::CPUAddressableBuffer::size() const -> geometry::Size
 {
     return buffer->size();
 }
 
-mg::CPUAddressableFB::operator uint32_t() const
+mg::CPUAddressableBuffer::operator uint32_t() const
 {
     return fb_id;
 }
 
-auto mg::CPUAddressableFB::fb_id_for_buffer(
+mir::graphics::BufferID mir::graphics::CPUAddressableBuffer::id() const
+{
+    return BufferID{operator uint32_t()};
+}
+
+MirPixelFormat mir::graphics::CPUAddressableBuffer::pixel_format() const
+{
+    return format();
+}
+
+mir::graphics::NativeBufferBase* mir::graphics::CPUAddressableBuffer::native_buffer_base()
+{
+    return this;
+}
+
+auto mg::CPUAddressableBuffer::fb_id_for_buffer(
     mir::Fd const &drm_fd,
     bool supports_modifiers,
     DRMFormat format,

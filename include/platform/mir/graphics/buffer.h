@@ -20,12 +20,13 @@
 #include "mir/graphics/buffer_id.h"
 #include "mir/geometry/size.h"
 #include "mir_toolkit/common.h"
+#include <memory>
 
 namespace mir
 {
 namespace graphics
 {
-
+class Framebuffer;
 class NativeBufferBase
 {
 protected:
@@ -45,6 +46,8 @@ public:
     virtual MirPixelFormat pixel_format() const = 0;
 
     virtual NativeBufferBase* native_buffer_base() = 0;
+
+    virtual auto to_framebuffer() -> std::unique_ptr<Framebuffer> { return nullptr; }
 
 protected:
     Buffer() = default;

@@ -119,6 +119,22 @@ public:
             BOOST_THROW_EXCEPTION((mg::egl_error("eglSwapBuffers failed")));
         }
     }
+    
+    MirPixelFormat format() const
+    {
+        EGLint texture_format = -1;
+        eglQuerySurface(dpy, surf, EGL_TEXTURE_FORMAT, &texture_format);
+        
+        switch(texture_format)
+        {
+            case EGL_TEXTURE_RGB:
+                return mir_pixel_format_rgb_888;
+            case EGL_TEXTURE_RGBA:
+                return mir_pixel_format_argb_8888;
+            default:
+                return mir_pixel_format_invalid;
+        }
+    }
 
     EGLDisplay const dpy;
     EGLContext const ctx;
@@ -146,6 +162,11 @@ mgw::WlDisplayAllocator::Framebuffer::Framebuffer(Framebuffer const& that)
 auto mgw::WlDisplayAllocator::Framebuffer::size() const -> geom::Size
 {
     return size_;
+}
+
+auto mgw::WlDisplayAllocator::Framebuffer::format() const -> MirPixelFormat
+{
+    return state->format();
 }
 
 void mgw::WlDisplayAllocator::Framebuffer::make_current()

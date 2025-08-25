@@ -24,34 +24,42 @@
 
 namespace mir::graphics
 {
-class CPUAddressableFB : public FBHandle, public CPUAddressableDisplayAllocator::MappableFB
+class CPUAddressableBuffer : 
+    public FBHandle,
+    public CPUAddressableDisplayAllocator::MappableBuffer,
+    public NativeBufferBase
 {
 public:
-    CPUAddressableFB(
+    CPUAddressableBuffer(
         mir::Fd const& drm_fd,
         bool supports_modifiers,
         DRMFormat format,
         mir::geometry::Size const& size);
-    ~CPUAddressableFB() override;
+    ~CPUAddressableBuffer() override;
 
     auto map_writeable() -> std::unique_ptr<mir::renderer::software::Mapping<unsigned char>> override;
 
     auto format() const -> MirPixelFormat override;
     auto stride() const -> geometry::Stride override;
-    auto size() const -> geometry::Size override; 
+    auto size() const -> geometry::Size override;
 
     operator uint32_t() const override;
+
+    BufferID id() const override;
+    MirPixelFormat pixel_format() const override;
+    NativeBufferBase* native_buffer_base() override;
     
-    CPUAddressableFB(CPUAddressableFB const&) = delete;
-    CPUAddressableFB& operator=(CPUAddressableFB const&) = delete;
+    CPUAddressableBuffer(CPUAddressableBuffer const&) = delete;
+    CPUAddressableBuffer& operator=(CPUAddressableBuffer const&) = delete;
 private:
     class Buffer;
 
-    CPUAddressableFB(
+    CPUAddressableBuffer(
         mir::Fd drm_fd,
         bool supports_modifiers,
         DRMFormat format,
         std::unique_ptr<Buffer> buffer);
+
     static auto fb_id_for_buffer(
         mir::Fd const& drm_fd,
         bool supports_modifiers,

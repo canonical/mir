@@ -54,50 +54,10 @@ auto mga::GBMDisplayAllocator::modifiers_for_format(DRMFormat /*format*/) const 
 
 namespace
 {
-using LockedFrontBuffer = std::unique_ptr<gbm_bo, std::function<void(gbm_bo*)>>;
 
 class GBMBoFramebuffer : public mg::FBHandle
 {
 public:
-    static auto framebuffer_for_frontbuffer(mir::Fd const& drm_fd, LockedFrontBuffer bo) -> std::unique_ptr<GBMBoFramebuffer>
-    {
-        if (auto cached_fb = static_cast<std::shared_ptr<uint32_t const>*>(gbm_bo_get_user_data(bo.get())))
-        {
-            return std::unique_ptr<GBMBoFramebuffer>{new GBMBoFramebuffer{std::move(bo), *cached_fb}};
-        }
-
-        auto fb_id = std::shared_ptr<uint32_t>{
-            new uint32_t{0},
-            [drm_fd](uint32_t* fb_id)
-            {
-                if (*fb_id)
-                {
-                    drmModeRmFB(drm_fd, *fb_id);
-                }
-                delete fb_id;
-            }};
-        uint32_t handles[4] = {gbm_bo_get_handle(bo.get()).u32, 0, 0, 0};
-        uint32_t strides[4] = {gbm_bo_get_stride(bo.get()), 0, 0, 0};
-        uint32_t offsets[4] = {gbm_bo_get_offset(bo.get(), 0), 0, 0, 0};
-
-        auto format = gbm_bo_get_format(bo.get());
-
-        auto const width = gbm_bo_get_width(bo.get());
-        auto const height = gbm_bo_get_height(bo.get());
-
-        /* Create a KMS FB object with the gbm_bo attached to it. */
-        auto ret = drmModeAddFB2(drm_fd, width, height, format,
-                                 handles, strides, offsets, fb_id.get(), 0);
-        if (ret)
-            return nullptr;
-
-        // It is weird allocating a smart pointer on the heap, but we delete it
-        // via gbm_bo_set_user_data()'s destroy_user_data parameter.
-        gbm_bo_set_user_data(bo.get(), new std::shared_ptr<uint32_t>(fb_id), [](gbm_bo*, void* fb_ptr) { delete static_cast<std::shared_ptr<uint32_t const>*>(fb_ptr); });
-
-        return std::make_unique<GBMBoFramebuffer>(std::move(bo), std::move(fb_id));
-    }
-
     operator uint32_t() const override
     {
         return *fb_id;
@@ -111,13 +71,13 @@ public:
                 gbm_bo_get_height(bo.get())};
     }
 
-    GBMBoFramebuffer(LockedFrontBuffer bo, std::shared_ptr<uint32_t const> fb)
+    GBMBoFramebuffer(mga::LockedFrontBuffer bo, std::shared_ptr<uint32_t const> fb)
         : bo{std::move(bo)},
           fb_id{std::move(fb)}
     {
     }
 private:
-    LockedFrontBuffer const bo;
+    mga::LockedFrontBuffer const bo;
     std::shared_ptr<uint32_t const> const fb_id;
 };
 
@@ -202,7 +162,7 @@ public:
         return surface.get();
     }
 
-    auto claim_framebuffer() -> std::unique_ptr<mg::Framebuffer> override
+    auto claim_buffer() -> std::unique_ptr<mg::Buffer> override
     {
         if (!gbm_quirks->gbm_surface_has_free_buffers(surface.get()))
         {
@@ -213,7 +173,7 @@ public:
                     "Too many buffers consumed from GBM surface"}));
         }
 
-        LockedFrontBuffer bo{
+        mga::LockedFrontBuffer bo{
             gbm_surface_lock_front_buffer(surface.get()),
             [shared_surface = surface](gbm_bo* bo) { gbm_surface_release_buffer(shared_surface.get(), bo); }};
 
@@ -222,12 +182,7 @@ public:
             BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to acquire GBM front buffer"}));
         }
 
-        auto fb = GBMBoFramebuffer::framebuffer_for_frontbuffer(drm_fd, std::move(bo));
-        if (!fb)
-        {
-            BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), "Failed to make DRM FB"}));
-        }
-        return fb;
+        return std::make_unique<mga::GBMBuffer>(drm_fd, std::move(bo));
     }
 private:
     mir::Fd const drm_fd;
@@ -242,3 +197,84 @@ auto mga::GBMDisplayAllocator::make_surface(DRMFormat format, std::span<uint64_t
     return std::make_unique<GBMSurfaceImpl>(fd, gbm.get(), size, format, modifiers, gbm_quirks);
 }
 
+mir::graphics::atomic::GBMBuffer::GBMBuffer(mir::Fd drm_fd, LockedFrontBuffer front_buffer) :
+    front_buffer{std::move(front_buffer)},
+    drm_fd{drm_fd}
+{
+}
+
+mir::graphics::BufferID mir::graphics::atomic::GBMBuffer::id() const
+{
+    // https://stackoverflow.com/a/21574751
+    return mir::graphics::BufferID{static_cast<uint32_t>(reinterpret_cast<uintptr_t>(front_buffer.get()))};
+}
+
+mir::geometry::Size mir::graphics::atomic::GBMBuffer::size() const
+{
+    return geometry::Size{gbm_bo_get_width(front_buffer.get()), gbm_bo_get_height(front_buffer.get())};
+}
+
+MirPixelFormat mir::graphics::atomic::GBMBuffer::pixel_format() const
+{
+    auto const mapping = std::unordered_map<uint32_t, MirPixelFormat>{
+        {GBM_FORMAT_ABGR8888, mir_pixel_format_abgr_8888},
+        {GBM_FORMAT_XBGR8888, mir_pixel_format_xbgr_8888},
+        {GBM_FORMAT_ARGB8888, mir_pixel_format_argb_8888},
+        {GBM_FORMAT_XRGB8888, mir_pixel_format_xrgb_8888},
+        {GBM_FORMAT_BGR888, mir_pixel_format_bgr_888},
+        {GBM_FORMAT_RGB888, mir_pixel_format_rgb_888},
+        {GBM_FORMAT_RGB565, mir_pixel_format_rgb_565},
+        {GBM_FORMAT_RGBA5551, mir_pixel_format_rgba_5551},
+        {GBM_FORMAT_RGBA4444, mir_pixel_format_rgba_4444},
+    };
+
+    auto const gbm_format = gbm_bo_get_format(front_buffer.get());
+    if (auto iter = mapping.find(gbm_format); iter != mapping.end())
+        return iter->second;
+
+    return mir_pixel_format_invalid;
+}
+
+mir::graphics::NativeBufferBase* mir::graphics::atomic::GBMBuffer::native_buffer_base()
+{
+    return this;
+}
+
+auto mga::GBMBuffer::to_framebuffer() -> std::unique_ptr<Framebuffer>
+{
+    if (auto cached_fb = static_cast<std::shared_ptr<uint32_t const>*>(gbm_bo_get_user_data(front_buffer.get())))
+    {
+        return std::unique_ptr<GBMBoFramebuffer>{new GBMBoFramebuffer{std::move(front_buffer), *cached_fb}};
+    }
+
+    auto fb_id = std::shared_ptr<uint32_t>{
+        new uint32_t{0},
+        [this](uint32_t* fb_id)
+        {
+            if (*fb_id)
+            {
+                drmModeRmFB(drm_fd, *fb_id);
+            }
+            delete fb_id;
+        }};
+    uint32_t handles[4] = {gbm_bo_get_handle(front_buffer.get()).u32, 0, 0, 0};
+    uint32_t strides[4] = {gbm_bo_get_stride(front_buffer.get()), 0, 0, 0};
+    uint32_t offsets[4] = {gbm_bo_get_offset(front_buffer.get(), 0), 0, 0, 0};
+
+    auto format = gbm_bo_get_format(front_buffer.get());
+
+    auto const width = gbm_bo_get_width(front_buffer.get());
+    auto const height = gbm_bo_get_height(front_buffer.get());
+
+    /* Create a KMS FB object with the gbm_bo attached to it. */
+    auto ret = drmModeAddFB2(drm_fd, width, height, format,
+                             handles, strides, offsets, fb_id.get(), 0);
+    if (ret)
+        return nullptr;
+
+    // It is weird allocating a smart pointer on the heap, but we delete it
+    // via gbm_bo_set_user_data()'s destroy_user_data parameter.
+    gbm_bo_set_user_data(front_buffer.get(), new std::shared_ptr<uint32_t>(fb_id), [](gbm_bo*, void* fb_ptr) { delete static_cast<std::shared_ptr<uint32_t const>*>(fb_ptr); });
+
+    return std::make_unique<GBMBoFramebuffer>(std::move(front_buffer), std::move(fb_id));
+}

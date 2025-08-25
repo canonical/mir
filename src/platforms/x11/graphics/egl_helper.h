@@ -51,6 +51,7 @@ public:
     Framebuffer(EGLDisplay dpy, EGLContext ctx, EGLSurface surf, geometry::Size size);
 
     auto size() const -> geometry::Size override;
+    auto format() const -> MirPixelFormat override;
 
     void make_current() override;
     void release_current() override;

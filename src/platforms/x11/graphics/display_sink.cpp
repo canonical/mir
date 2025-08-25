@@ -14,13 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/fatal.h"
 #include "platform.h"
 #include "display_sink.h"
-#include "display_configuration.h"
-#include "mir/graphics/display_report.h"
-#include "mir/graphics/transformation.h"
-#include "../x11_resources.h"
 #include <cstring>
 
 namespace mg=mir::graphics;

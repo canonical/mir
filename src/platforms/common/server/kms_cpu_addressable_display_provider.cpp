@@ -53,9 +53,10 @@ auto mg::kms::CPUAddressableDisplayAllocator::supported_formats() const
     return {mg::DRMFormat{DRM_FORMAT_XRGB8888}, mg::DRMFormat{DRM_FORMAT_ARGB8888}};
 }
 
-auto mg::kms::CPUAddressableDisplayAllocator::alloc_fb(DRMFormat format) -> std::unique_ptr<MappableFB>
+auto mg::kms::CPUAddressableDisplayAllocator::alloc_buffer(DRMFormat format) 
+-> std::unique_ptr<MappableBuffer>
 {
-    return std::make_unique<mg::CPUAddressableFB>(drm_fd, supports_modifiers, format, size);
+    return std::make_unique<mg::CPUAddressableBuffer>(drm_fd, supports_modifiers, format, size);
 }
 
 auto mg::kms::CPUAddressableDisplayAllocator::output_size() const -> geom::Size
