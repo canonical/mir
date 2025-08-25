@@ -521,7 +521,7 @@ auto mgg::GLRenderingProvider::surface_for_sink(
 {
     if (bound_display)
     {
-        if (auto gbm_allocator = sink.acquire_compatible_allocator<GBMDisplayAllocator>())
+        if (auto gbm_allocator = sink.acquire_compatible_allocator<mg::GBMDisplayAllocator>())
         {
             if (bound_display->on_this_sink(sink))
             {
@@ -574,9 +574,10 @@ auto mgg::GLRenderingProvider::make_framebuffer_provider(DisplaySink& sink)
             auto buffer_to_framebuffer(std::shared_ptr<Buffer> buffer) -> std::unique_ptr<Framebuffer> override
             {
                 if(auto dma_buf = std::dynamic_pointer_cast<mir::graphics::DMABufBuffer>(buffer))
-                {
                     return allocator->framebuffer_for(dma_buf);
-                }
+
+                if(auto framebuffer = buffer->to_framebuffer())
+                    return framebuffer;
 
                 return {};
             }
@@ -596,21 +597,8 @@ auto mgg::GLRenderingProvider::make_framebuffer_provider(DisplaySink& sink)
         {
             // It is safe to return nullptr; this will be treated as “this buffer cannot be used as
             // a framebuffer”.
-            if (auto gbm_buffer = std::dynamic_pointer_cast<mgg::GBMBuffer>(buf))
-            {
-                // TODO: Given an mgg::GBMSurfaceImpl::GBMBuffer, need to
-                // call `GBMBoFramebuffer::framebuffer_for_frontbuffer`
-                // (which is now deleted) on the data it contains.
-                //
-                // Which means we need to expose GBMSurfaceImpl::GBMBuffer,
-                // and add some method on it that calls the above function
-                // to convert it to a framebuffer
-                //
-                // Also, we'll need it to carry the drm_fd from GBMSurface
-                // impl just for this.
-
-                return gbm_buffer->to_framebuffer();
-            }
+            if (auto mgg_gbm_buffer = std::dynamic_pointer_cast<mgg::GBMBuffer>(buf))
+                return mgg_gbm_buffer->to_framebuffer();
 
             return {};
         }

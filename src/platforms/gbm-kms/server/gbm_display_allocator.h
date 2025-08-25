@@ -51,7 +51,7 @@ public:
 
     NativeBufferBase* native_buffer_base() override;
 
-    auto to_framebuffer() -> std::unique_ptr<Framebuffer>;
+    auto to_framebuffer() -> std::unique_ptr<Framebuffer> override;
 
 private:
     LockedFrontBuffer front_buffer;
