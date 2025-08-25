@@ -40,6 +40,7 @@
 #include "cpu_copy_output_surface.h"
 #include "surfaceless_egl_context.h"
 #include "mir/graphics/drm_syncobj.h"
+#include "gbm_display_allocator.h"
 
 #include <boost/throw_exception.hpp>
 #include <boost/exception/errinfo_errno.hpp>
@@ -591,10 +592,26 @@ auto mgg::GLRenderingProvider::make_framebuffer_provider(DisplaySink& sink)
     class NullFramebufferProvider : public FramebufferProvider
     {
     public:
-        auto buffer_to_framebuffer(std::shared_ptr<Buffer>) -> std::unique_ptr<Framebuffer> override
+        auto buffer_to_framebuffer(std::shared_ptr<Buffer> buf) -> std::unique_ptr<Framebuffer> override
         {
             // It is safe to return nullptr; this will be treated as “this buffer cannot be used as
             // a framebuffer”.
+            if (auto gbm_buffer = std::dynamic_pointer_cast<mgg::GBMBuffer>(buf))
+            {
+                // TODO: Given an mgg::GBMSurfaceImpl::GBMBuffer, need to
+                // call `GBMBoFramebuffer::framebuffer_for_frontbuffer`
+                // (which is now deleted) on the data it contains.
+                //
+                // Which means we need to expose GBMSurfaceImpl::GBMBuffer,
+                // and add some method on it that calls the above function
+                // to convert it to a framebuffer
+                //
+                // Also, we'll need it to carry the drm_fd from GBMSurface
+                // impl just for this.
+
+                return gbm_buffer->to_framebuffer();
+            }
+
             return {};
         }
     };

@@ -34,4 +34,27 @@ private:
     std::shared_ptr<struct gbm_device> const gbm;
     geometry::Size const size;
 };
+
+using LockedFrontBuffer = std::unique_ptr<gbm_bo, std::function<void(gbm_bo*)>>;
+
+// TODO: Dedup this
+class GBMBuffer : public Buffer, public NativeBufferBase
+{
+public:
+    GBMBuffer(mir::Fd drm_fd, LockedFrontBuffer front_buffer);
+
+    BufferID id() const override;
+
+    geometry::Size size() const override;
+
+    MirPixelFormat pixel_format() const override;
+
+    NativeBufferBase* native_buffer_base() override;
+
+    auto to_framebuffer() -> std::unique_ptr<Framebuffer>;
+
+private:
+    LockedFrontBuffer front_buffer;
+    mir::Fd const drm_fd;
+};
 }
