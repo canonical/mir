@@ -564,10 +564,10 @@ auto mgg::GLRenderingProvider::make_framebuffer_provider(DisplaySink& sink)
 {
     if(auto* allocator = sink.acquire_compatible_allocator<DmaBufDisplayAllocator>())
     {
-        struct FooFramebufferProvider: public FramebufferProvider
+        struct DmaBufFramebufferProvider: public FramebufferProvider
         {
         public:
-            FooFramebufferProvider(DmaBufDisplayAllocator* allocator) : allocator{allocator}
+            DmaBufFramebufferProvider(DmaBufDisplayAllocator* allocator) : allocator{allocator}
             {
             }
 
@@ -586,7 +586,7 @@ auto mgg::GLRenderingProvider::make_framebuffer_provider(DisplaySink& sink)
             DmaBufDisplayAllocator* allocator;
         };
 
-        return std::make_unique<FooFramebufferProvider>(allocator);
+        return std::make_unique<DmaBufFramebufferProvider>(allocator);
     }
 
     // TODO: Make this not a null implementation, so bypass/overlays can work again
