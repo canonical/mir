@@ -89,7 +89,7 @@ mgg::DisplaySink::DisplaySink(
         auto mapping = initial_fb->map_writeable();
         ::memset(mapping->data(), 24, mapping->len());
 
-        visible_fb = std::move(initial_fb);
+        visible_fb = CPUAddressableBuffer::to_fb_handle(initial_fb);
         for (auto &output: outputs) {
             output->set_crtc(*visible_fb);
         }

@@ -81,7 +81,7 @@ mga::DisplaySink::DisplaySink(
         auto mapping = initial_fb->map_writeable();
         ::memset(mapping->data(), 24, mapping->len());
 
-        visible_fb = std::move(initial_fb);
+        visible_fb = CPUAddressableBuffer::to_fb_handle(initial_fb);
         this->output->set_crtc(*visible_fb);
         listener->report_successful_drm_mode_set_crtc_on_construction();
     }

@@ -818,26 +818,7 @@ auto mge::GLRenderingProvider::make_framebuffer_provider(DisplaySink& /*sink*/)
             // a framebuffer”.
             if(auto cpu_buffer = std::dynamic_pointer_cast<CPUAddressableBuffer>(buffer))
             {
-                struct Wrapper :  public FBHandle
-                {
-                    Wrapper(std::shared_ptr<FBHandle> fb) :
-                        wrapped{fb}
-                    {
-                    }
-
-                    auto size() const -> geom::Size override
-                    {
-                        return wrapped->size();
-                    }
-
-                    operator uint32_t() const override
-                    {
-                        return wrapped->operator uint32_t();
-                    }
-
-                    std::shared_ptr<FBHandle> const wrapped;
-                };
-                return make_unique<Wrapper>(cpu_buffer);
+                return CPUAddressableBuffer::to_framebuffer(cpu_buffer);
             }
             return {};
         }

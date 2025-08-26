@@ -291,19 +291,59 @@ auto mg::CPUAddressableBuffer::size() const -> geometry::Size
     return buffer->size();
 }
 
-mg::CPUAddressableBuffer::operator uint32_t() const
-{
-    return fb_id;
-}
-
 mir::graphics::BufferID mir::graphics::CPUAddressableBuffer::id() const
 {
-    return BufferID{operator uint32_t()};
+    return BufferID{fb_id};
 }
 
 MirPixelFormat mir::graphics::CPUAddressableBuffer::pixel_format() const
 {
     return format();
+}
+
+auto mir::graphics::CPUAddressableBuffer::to_framebuffer(std::shared_ptr<CPUAddressableBuffer> buf)
+    -> std::unique_ptr<Framebuffer>
+{
+    struct CPUAddressableFramebuffer : public Framebuffer
+    {
+        CPUAddressableFramebuffer(std::shared_ptr<CPUAddressableBuffer> const buf) :
+            wrapped{buf}
+        {
+        }
+
+        auto size() const -> geometry::Size override
+        {
+            return wrapped->size();
+        }
+
+        std::shared_ptr<CPUAddressableBuffer> const wrapped;
+    };
+    return make_unique<CPUAddressableFramebuffer>(std::move(buf));
+}
+
+auto mir::graphics::CPUAddressableBuffer::to_fb_handle(std::shared_ptr<CPUAddressableBuffer> buf)
+    -> std::unique_ptr<FBHandle>
+{
+    struct CPUAddressableFBHandle : public FBHandle
+    {
+        CPUAddressableFBHandle(std::shared_ptr<CPUAddressableBuffer> const buf) :
+            wrapped{buf}
+        {
+        }
+
+        auto size() const -> geometry::Size override
+        {
+            return wrapped->size();
+        }
+
+        operator uint32_t() const override
+        {
+            return wrapped->fb_id;
+        }
+
+        std::shared_ptr<CPUAddressableBuffer> const wrapped;
+    };
+    return make_unique<CPUAddressableFBHandle>(std::move(buf));
 }
 
 auto mg::CPUAddressableBuffer::fb_id_for_buffer(

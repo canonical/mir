@@ -25,7 +25,6 @@
 namespace mir::graphics
 {
 class CPUAddressableBuffer : 
-    public FBHandle,
     public CPUAddressableDisplayAllocator::MappableBuffer
 {
 public:
@@ -42,11 +41,12 @@ public:
     auto stride() const -> geometry::Stride override;
     auto size() const -> geometry::Size override;
 
-    operator uint32_t() const override;
-
     BufferID id() const override;
     MirPixelFormat pixel_format() const override;
-    
+
+    static auto to_framebuffer(std::shared_ptr<CPUAddressableBuffer> buf) -> std::unique_ptr<Framebuffer>;
+    static auto to_fb_handle(std::shared_ptr<CPUAddressableBuffer> buf) -> std::unique_ptr<FBHandle>;
+
     CPUAddressableBuffer(CPUAddressableBuffer const&) = delete;
     CPUAddressableBuffer& operator=(CPUAddressableBuffer const&) = delete;
 private:
@@ -66,7 +66,7 @@ private:
 
     mir::Fd const drm_fd;
     uint32_t const fb_id;
-    std::unique_ptr<Buffer> const buffer;
+    std::unique_ptr<Buffer> buffer;
 };
 
 }
