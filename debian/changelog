@@ -1,3 +1,10 @@
+mir (2.22.1) UNRELEASED; urgency=medium
+
+  * Hotfix release 2.22.1
+    . clear removed symbol
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Tue, 26 Aug 2025 13:59:16 +0200
+
 mir (2.22.0) UNRELEASED; urgency=medium
 
   * New upstream release 2.22.0
