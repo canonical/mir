@@ -30,7 +30,7 @@ namespace miral
 /// defined in this class to custom keybinds. For example, a shell  bind "alt + tab"
 /// to trigger [ApplicationSwitcher::next_app].
 ///
-/// Instances of this class should be provided to [miral::InternalClientLauncher::launch].
+/// Instances of this class should be provided to [miral::StartupInternalClient].
 ///
 /// This class relies on the wlr foreign toplevel management being available in your
 /// shell.
@@ -39,6 +39,14 @@ class ApplicationSwitcher
 public:
     /// Creates a new application switcher.
     ApplicationSwitcher();
+
+    /// When set to true, the client will include a default user interface.
+    ///
+    /// This interface is useful as a temporary placeholder until the shell
+    /// provides a GUI with the help of a graphics toolkit, or otherwise.
+    ///
+    /// Defaults to false.
+    ApplicationSwitcher& with_default_gui(bool with_gui);
 
     void operator()(wl_display* display);
     void operator()(std::weak_ptr<mir::scene::Session> const& session) const;

@@ -16,6 +16,7 @@
 
 #include "miral/application_switcher.h"
 #include "wayland_app.h"
+#include "wayland_shm.h"
 #include "wlr-foreign-toplevel-management-unstable-v1.h"
 
 #include <memory>
@@ -24,6 +25,11 @@
 #include <mutex>
 #include <sys/eventfd.h>
 #include <poll.h>
+#include <string.h>
+
+#include "wayland_surface.h"
+
+namespace geom = mir::geometry;
 
 namespace
 {
@@ -47,6 +53,16 @@ public:
     {
         if (toplevel_manager)
             zwlr_foreign_toplevel_manager_v1_destroy(toplevel_manager);
+    }
+
+    void init(wl_display* display)
+    {
+        wayland_init(display);
+        shm_ = std::make_shared<WaylandShm>(shm());
+        surface_ = std::make_shared<WaylandSurface>(this);
+        surface_->set_fullscreen(nullptr);
+        surface_->commit();
+        roundtrip();
     }
 
     void add(zwlr_foreign_toplevel_handle_v1* toplevel)
@@ -116,7 +132,7 @@ public:
 
     void run_client(wl_display* display)
     {
-        wayland_init(display);
+        init(display);
 
         enum FdIndices {
             display_fd = 0,
@@ -136,7 +152,7 @@ public:
                     mir::log_error("Failed to dispatch Wayland events");
             }
 
-            // self.events_dispatched();
+            draw();
 
             if (poll(fds, indices, -1) == -1)
                 mir::log_error("Failed to wait for Wayland events");
@@ -204,6 +220,43 @@ public:
 
         } while (start_index != *tentative_focus_index &&
             toplevels_in_focus_order[*tentative_focus_index].app_id == app_id);
+    }
+
+    void draw()
+    {
+        Size const size{surface_->configured_size()};
+        auto const width = size.width.as_int();
+        auto const height = size.height.as_int();
+        auto const stride = 4*width;
+        auto const buffer = shm_->get_buffer(geom::Size(width, height), geom::Stride(stride));
+
+        uint8_t const bottom_colour[] = { 0xff, 0xff, 0xff };   // Ubuntu orange
+        uint8_t const top_colour[] =    { 0xff, 0xff, 0xff };   // Cool grey
+
+        char* row = static_cast<decltype(row)>(buffer->data());
+
+        for (int j = 0; j < height; j++)
+        {
+            uint8_t pattern[4];
+
+            for (auto i = 0; i != 3; ++i)
+                pattern[i] = (j*bottom_colour[i] + (height-j)*top_colour[i])/height;
+            pattern[3] = 0xff;
+
+            uint32_t* pixel = (uint32_t*)row;
+            for (int i = 0; i < width; i++)
+                mempcpy(pixel + i, pattern, sizeof pixel[i]);
+
+            row += stride;
+        }
+
+        surface_->add_frame_callback([this]
+        {
+            draw();
+        });
+        surface_->attach_buffer(buffer->use(), 1);
+        surface_->commit();
+
     }
 
 protected:
@@ -278,6 +331,8 @@ private:
     zwlr_foreign_toplevel_manager_v1* toplevel_manager = nullptr;
     std::vector<ToplevelInfo> toplevels_in_focus_order;
     std::optional<size_t> tentative_focus_index;
+    std::shared_ptr<WaylandShm> shm_;
+    std::shared_ptr<WaylandSurface> surface_;
 };
 
 void miral::ApplicationSwitcher::Self::handle_toplevel(void* data, zwlr_foreign_toplevel_manager_v1*, zwlr_foreign_toplevel_handle_v1* toplevel)
@@ -290,6 +345,13 @@ void miral::ApplicationSwitcher::Self::handle_toplevel(void* data, zwlr_foreign_
 miral::ApplicationSwitcher::ApplicationSwitcher()
     : self(std::make_shared<Self>())
 {
+}
+
+miral::ApplicationSwitcher& miral::ApplicationSwitcher::with_default_gui(bool with_gui)
+{
+    // TODO
+    (void)with_gui;
+    return *this;
 }
 
 void miral::ApplicationSwitcher::operator()(wl_display* display)

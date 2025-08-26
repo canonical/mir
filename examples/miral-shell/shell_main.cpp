@@ -39,6 +39,7 @@
 #include <miral/hover_click.h>
 #include <miral/sticky_keys.h>
 #include <miral/magnifier.h>
+#include <miral/application_switcher.h>
 
 #include <xkbcommon/xkbcommon-keysyms.h>
 
@@ -74,6 +75,7 @@ int main(int argc, char const* argv[])
     std::function<void()> shutdown_hook{[]{}};
 
     SpinnerSplash spinner;
+    ApplicationSwitcher application_switcher;
     InternalClientLauncher launcher;
     auto focus_stealing_prevention = FocusStealing::allow;
     WindowManagerOptions window_managers
@@ -319,6 +321,7 @@ int main(int argc, char const* argv[])
             config_keymap,
             AppendKeyboardEventFilter{quit_on_ctrl_alt_bksp},
             StartupInternalClient{spinner},
+            StartupInternalClient{application_switcher},
             ConfigurationOption{run_startup_apps, "startup-apps", "Colon separated list of startup apps", ""},
             pre_init(ConfigurationOption{[&](std::string const& typeface) { ::wallpaper::font_file(typeface); },
                                          "shell-wallpaper-font", "font file to use for wallpaper", ::wallpaper::font_file()}),

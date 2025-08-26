@@ -62,11 +62,9 @@ FloatingWindowManagerPolicy::FloatingWindowManagerPolicy(
     FocusStealing focus_stealing) :
     MinimalWindowManager(tools, focus_stealing),
     spinner{spinner},
-    application_switcher(std::make_unique<ApplicationSwitcher>()),
     decoration_provider{std::make_unique<DecorationProvider>()}
 {
-    launcher.launch(*application_switcher);
-    // launcher.launch(*decoration_provider);
+    launcher.launch(*decoration_provider);
     shutdown_hook = [this] { decoration_provider->stop(); };
 
     for (auto key : {KEY_F1, KEY_F2, KEY_F3, KEY_F4})

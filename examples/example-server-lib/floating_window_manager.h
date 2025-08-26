@@ -26,8 +26,6 @@
 #include <chrono>
 #include <map>
 
-#include "miral/application_switcher.h"
-
 namespace miral { class InternalClientLauncher; }
 
 using namespace mir::geometry;
@@ -99,7 +97,6 @@ private:
 
     std::shared_ptr<SplashSession> const spinner;
 
-    std::unique_ptr<miral::ApplicationSwitcher> const application_switcher;
     std::unique_ptr<DecorationProvider> const decoration_provider;
 
     void keep_window_within_constraints(
