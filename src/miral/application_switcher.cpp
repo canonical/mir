@@ -256,7 +256,7 @@ public:
         });
         surface_->attach_buffer(buffer->use(), 1);
         surface_->commit();
-
+        wl_display_flush(display());
     }
 
 protected:
