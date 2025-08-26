@@ -342,7 +342,7 @@ public:
 
     mg::BufferID id() const override
     {
-        return mg::BufferID{0u};
+        return mg::BufferID{static_cast<uint32_t>(reinterpret_cast<uintptr_t>(framebuffer.get()))};
     }
 
     geom::Size size() const override
