@@ -113,7 +113,6 @@ class WaylandApp
 {
 public:
     WaylandApp();
-    explicit WaylandApp(wl_display* display);
     virtual ~WaylandApp() = default;
 
     /// Needs to be two-step initialized to virtual methods are called

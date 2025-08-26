@@ -40,7 +40,7 @@ public:
     /// Creates a new application switcher.
     ApplicationSwitcher();
 
-    void operator()(struct wl_display* display);
+    void operator()(wl_display* display);
     void operator()(std::weak_ptr<mir::scene::Session> const& session) const;
 
     /// Tentatively select the next application in the focus list.
@@ -48,14 +48,14 @@ public:
     /// The application will not be focused until [confirm] is called.
     /// If [stop] is called before [confirm], no application will be
     /// focused.
-    void next_app();
+    void next_app() const;
 
     /// Tentatively select the previous application in the focus list.
     ///
     /// The application will not be focused until [confirm] is called.
     /// If [stop] is called before [confirm], no application will be
     /// focused.
-    void prev_app();
+    void prev_app() const;
 
     /// Focus the tentatively selected application and stop the application
     /// switcher.
@@ -65,7 +65,7 @@ public:
     void stop() const;
 
 private:
-    struct Self;
+    class Self;
     std::shared_ptr<Self> self;
 };
 }

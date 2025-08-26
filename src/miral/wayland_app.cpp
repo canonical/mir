@@ -129,12 +129,6 @@ WaylandApp::WaylandApp()
 {
 }
 
-WaylandApp::WaylandApp(wl_display* display)
-    : WaylandApp{}
-{
-    wayland_init(display);
-}
-
 void WaylandApp::wayland_init(wl_display* display)
 {
     display_ = {display, wl_display_roundtrip};
@@ -204,6 +198,8 @@ void WaylandApp::handle_new_global(
                 self->output_gone(output.get());
             };
     }
+
+    self->new_global(registry, id, interface, version);
 }
 
 void WaylandApp::handle_global_remove(void* data, struct wl_registry* /*registry*/, uint32_t id)
