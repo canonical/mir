@@ -809,7 +809,7 @@ auto mge::GLRenderingProvider::make_framebuffer_provider(DisplaySink& /*sink*/)
     -> std::unique_ptr<FramebufferProvider>
 {
     // TODO: *Can* we provide overlay support?
-    class NullFramebufferProvider : public FramebufferProvider
+    class DefaultFramebufferProvider : public FramebufferProvider
     {
     public:
         auto buffer_to_framebuffer(std::shared_ptr<Buffer> buffer) -> std::unique_ptr<Framebuffer> override
@@ -823,5 +823,5 @@ auto mge::GLRenderingProvider::make_framebuffer_provider(DisplaySink& /*sink*/)
             return {};
         }
     };
-    return std::make_unique<NullFramebufferProvider>();
+    return std::make_unique<DefaultFramebufferProvider>();
 }

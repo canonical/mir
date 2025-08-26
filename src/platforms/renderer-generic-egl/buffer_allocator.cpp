@@ -458,7 +458,7 @@ auto mge::GLRenderingProvider::make_framebuffer_provider(DisplaySink& /*sink*/)
     -> std::unique_ptr<FramebufferProvider>
 {
     // TODO: Work out under what circumstances the EGL renderer *can* provide overlayable framebuffers
-    class NullFramebufferProvider : public FramebufferProvider
+    class DefaultFramebufferProvider : public FramebufferProvider
     {
     public:
         auto buffer_to_framebuffer(std::shared_ptr<Buffer> buf) -> std::unique_ptr<Framebuffer> override
@@ -472,7 +472,7 @@ auto mge::GLRenderingProvider::make_framebuffer_provider(DisplaySink& /*sink*/)
             return {};
         }
     };
-    return std::make_unique<NullFramebufferProvider>();
+    return std::make_unique<DefaultFramebufferProvider>();
 }
 
 mge::GLRenderingProvider::GLRenderingProvider(

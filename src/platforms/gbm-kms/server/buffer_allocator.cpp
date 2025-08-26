@@ -590,7 +590,7 @@ auto mgg::GLRenderingProvider::make_framebuffer_provider(DisplaySink& sink)
     }
 
     // TODO: Make this not a null implementation, so bypass/overlays can work again
-    class NullFramebufferProvider : public FramebufferProvider
+    class DefaultFramebufferProvider : public FramebufferProvider
     {
     public:
         auto buffer_to_framebuffer(std::shared_ptr<Buffer> buf) -> std::unique_ptr<Framebuffer> override
@@ -603,7 +603,7 @@ auto mgg::GLRenderingProvider::make_framebuffer_provider(DisplaySink& sink)
             return {};
         }
     };
-    return std::make_unique<NullFramebufferProvider>();
+    return std::make_unique<DefaultFramebufferProvider>();
 }
 
 mgg::GLRenderingProvider::GLRenderingProvider(
