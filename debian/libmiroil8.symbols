@@ -9,7 +9,6 @@ libmiroil.so.8 libmiroil8 #MINVER#
  (c++)"miroil::DisplayListenerWrapper::add_display(mir::geometry::generic::Rectangle<int> const&)@MIROIL_8.0" 2.22.0
  (c++)"miroil::DisplayListenerWrapper::remove_display(mir::geometry::generic::Rectangle<int> const&)@MIROIL_8.0" 2.22.0
  (c++)"miroil::DisplayListenerWrapper::~DisplayListenerWrapper()@MIROIL_8.0" 2.22.0
- (c++)"miroil::Edid::Descriptor::string_value[abi:cxx11]() const@MIROIL_8.0" 2.22.0
  (c++)"miroil::EventBuilder::EventBuilder()@MIROIL_8.0" 2.22.0
  (c++)"miroil::EventBuilder::EventInfo::store(MirInputEvent const*, unsigned long)@MIROIL_8.0" 2.22.0
  (c++)"miroil::EventBuilder::add_touch(MirEvent&, int, MirTouchAction, MirTouchTooltype, float, float, float, float, float, float)@MIROIL_8.0" 2.22.0
