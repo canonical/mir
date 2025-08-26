@@ -32,8 +32,8 @@ public:
     {
     }
 
-    auto alloc_framebuffer(mg::GLConfig const& config, EGLContext share_context)
-    -> std::unique_ptr<EGLFramebuffer> override
+    auto alloc_buffer(mg::GLConfig const& config, EGLContext share_context)
+    -> std::unique_ptr<EGLBuffer> override
     {
         return egl->framebuffer_for_window(config, x11_connection, x11_win, share_context);
     }
@@ -88,7 +88,8 @@ auto unique_ptr_cast(std::unique_ptr<From> ptr) -> std::unique_ptr<To>
 
 void mgx::DisplaySink::set_next_image(std::unique_ptr<Framebuffer> content)
 {
-    next_frame = unique_ptr_cast<helpers::Framebuffer>(std::move(content));
+    auto helper_framebuffer = unique_ptr_cast<mgx::helpers::Framebuffer>(std::move(content));
+    next_frame = std::move(helper_framebuffer->wrapped);
 }
 
 glm::mat2 mgx::DisplaySink::transformation() const

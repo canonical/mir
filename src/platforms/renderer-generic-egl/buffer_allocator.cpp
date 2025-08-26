@@ -330,38 +330,11 @@ auto mge::GLRenderingProvider::as_texture(std::shared_ptr<Buffer> buffer) -> std
 namespace
 {
 
-class FramebufferAdapter : public mg::Buffer, public mg::NativeBufferBase
-{
-    using EGLFramebuffer = mir::graphics::GenericEGLDisplayAllocator::EGLFramebuffer;
-
-public:
-    FramebufferAdapter(std::unique_ptr<EGLFramebuffer> framebuffer) :
-        framebuffer{std::move(framebuffer)}
-    {
-    }
-
-    mg::BufferID id() const override
-    {
-        return mg::BufferID{static_cast<uint32_t>(reinterpret_cast<uintptr_t>(framebuffer.get()))};
-    }
-
-    geom::Size size() const override
-    {
-        return framebuffer->size();
-    }
-
-    MirPixelFormat pixel_format() const override
-    {
-        return framebuffer->format();
-    }
-
-    std::unique_ptr<EGLFramebuffer> framebuffer;
-};
 class EGLOutputSurface : public mg::gl::OutputSurface
 {
 public:
     EGLOutputSurface(
-        std::unique_ptr<mg::GenericEGLDisplayAllocator::EGLFramebuffer> fb)
+        std::unique_ptr<mg::GenericEGLDisplayAllocator::EGLBuffer> fb)
         : fb{std::move(fb)}
     {
     }
@@ -382,7 +355,7 @@ public:
 
     auto commit() -> std::unique_ptr<mg::Buffer> override
     {
-        return std::make_unique<FramebufferAdapter>(fb->clone_handle());
+        return fb->clone_handle();
     }
 
     auto size() const -> geom::Size override
@@ -396,7 +369,7 @@ public:
     }
 
 private:
-    std::unique_ptr<mg::GenericEGLDisplayAllocator::EGLFramebuffer> const fb;
+    std::unique_ptr<mg::GenericEGLDisplayAllocator::EGLBuffer> const fb;
 };
 }
 
@@ -443,7 +416,7 @@ auto mge::GLRenderingProvider::surface_for_sink(
 {
     if (auto egl_display = sink.acquire_compatible_allocator<GenericEGLDisplayAllocator>())
     {
-        return std::make_unique<EGLOutputSurface>(egl_display->alloc_framebuffer(config, ctx));
+        return std::make_unique<EGLOutputSurface>(egl_display->alloc_buffer(config, ctx));
     }
     auto cpu_provider = sink.acquire_compatible_allocator<CPUAddressableDisplayAllocator>();
 
@@ -465,9 +438,10 @@ auto mge::GLRenderingProvider::make_framebuffer_provider(DisplaySink& /*sink*/)
         {
             // It is safe to return nullptr; this will be treated as “this buffer cannot be used as
             // a framebuffer”.
-            if (auto fb = std::dynamic_pointer_cast<FramebufferAdapter>(buf))
+            if (auto fb = std::dynamic_pointer_cast<mg::GenericEGLDisplayAllocator::EGLBuffer>(buf))
             {
-                return std::move(fb->framebuffer);
+                // TODO
+                return fb->to_framebuffer();
             }
             return {};
         }

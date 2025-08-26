@@ -42,11 +42,11 @@ public:
     WlDisplayAllocator(EGLDisplay dpy, struct wl_surface* surface, geometry::Size size);
     ~WlDisplayAllocator();
 
-    auto alloc_framebuffer(GLConfig const& config, EGLContext share_context)
-        -> std::unique_ptr<EGLFramebuffer> override;
+    auto alloc_buffer(GLConfig const& config, EGLContext share_context)
+        -> std::unique_ptr<EGLBuffer> override;
 
     struct SurfaceState;
-    class Framebuffer : public GenericEGLDisplayAllocator::EGLFramebuffer
+    class Buffer : public GenericEGLDisplayAllocator::EGLBuffer
     {
     public:
         /**
@@ -56,23 +56,40 @@ public:
          *          final handle generated from this Framebuffer is released,
          *          the EGL resources \param ctx and \param surff will be freed.
          */
-        Framebuffer(EGLDisplay dpy, EGLContext ctx, EGLSurface surf, std::shared_ptr<SurfaceState> ss, geometry::Size size);
+        Buffer(EGLDisplay dpy, EGLContext ctx, EGLSurface surf, std::shared_ptr<SurfaceState> ss, geometry::Size size);
 
+        auto id() const -> BufferID override;
         auto size() const -> geometry::Size override;
-        auto format() const -> MirPixelFormat override;
+        auto pixel_format() const -> MirPixelFormat override;
 
         void make_current() override;
         void release_current() override;
-        auto clone_handle() -> std::unique_ptr<GenericEGLDisplayAllocator::EGLFramebuffer> override;
+        auto clone_handle() -> std::unique_ptr<GenericEGLDisplayAllocator::EGLBuffer> override;
+        auto to_framebuffer() -> std::unique_ptr<Framebuffer> override;
 
         void swap_buffers();
     private:
         class EGLState;
-        Framebuffer(std::shared_ptr<EGLState const> state, geometry::Size size);
-        Framebuffer(Framebuffer const& that);
+        Buffer(std::shared_ptr<EGLState const> state, geometry::Size size);
+        Buffer(Buffer const& that);
 
         std::shared_ptr<EGLState const> const state;
         geometry::Size const size_;
+    };
+
+    struct Framebuffer : public mir::graphics::Framebuffer
+    {
+        Framebuffer(Buffer* buf) :
+            wrapped{std::unique_ptr<Buffer>{buf}}
+        {
+        }
+
+        geometry::Size size() const override
+        {
+            return wrapped->size();
+        }
+
+        std::unique_ptr<Buffer> wrapped;
     };
 private:
     EGLDisplay const dpy;

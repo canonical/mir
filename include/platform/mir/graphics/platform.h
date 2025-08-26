@@ -458,16 +458,15 @@ public:
     {
     };
 
-    class EGLFramebuffer : public graphics::Framebuffer
+    class EGLBuffer : public graphics::Buffer
     {
     public:
         virtual void make_current() = 0;
         virtual void release_current() = 0;
-        virtual auto clone_handle() -> std::unique_ptr<EGLFramebuffer> = 0;
-        virtual auto format() const -> MirPixelFormat = 0;
+        virtual auto clone_handle() -> std::unique_ptr<EGLBuffer> = 0;
     };
 
-    virtual auto alloc_framebuffer(GLConfig const& config, EGLContext share_context) -> std::unique_ptr<EGLFramebuffer> = 0;
+    virtual auto alloc_buffer(GLConfig const& config, EGLContext share_context) -> std::unique_ptr<EGLBuffer> = 0;
 };
 
 class DisplayPlatform

@@ -101,7 +101,7 @@ public:
 
 private:
     std::mutex mutex;
-    std::unique_ptr<WlDisplayAllocator::Framebuffer> next_frame;
+    std::unique_ptr<WlDisplayAllocator::Buffer> next_frame;
     std::shared_ptr<WlDisplayAllocator> provider;
 };
 
@@ -440,7 +440,8 @@ auto unique_ptr_cast(std::unique_ptr<From> ptr) -> std::unique_ptr<To>
 
 void mgw::DisplayClient::Output::set_next_image(std::unique_ptr<Framebuffer> content)
 {
-    if (auto wl_content = unique_ptr_cast<WlDisplayAllocator::Framebuffer>(std::move(content)))
+    auto framebuffer = unique_ptr_cast<WlDisplayAllocator::Framebuffer>(std::move(content));
+    if (auto wl_content = std::move(framebuffer->wrapped))
     {
         std::lock_guard lock{mutex};
         next_frame = std::move(wl_content);

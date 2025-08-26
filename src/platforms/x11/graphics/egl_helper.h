@@ -38,7 +38,7 @@ namespace X
 
 namespace helpers
 {
-class Framebuffer : public GenericEGLDisplayAllocator::EGLFramebuffer
+class Buffer : public GenericEGLDisplayAllocator::EGLBuffer
 {
 public:
     /**
@@ -48,22 +48,39 @@ public:
      *          final handle generated from this Framebuffer is released,
      *          the EGL resources \param ctx and \param surff will be freed.
      */
-    Framebuffer(EGLDisplay dpy, EGLContext ctx, EGLSurface surf, geometry::Size size);
+    Buffer(EGLDisplay dpy, EGLContext ctx, EGLSurface surf, geometry::Size size);
 
+    auto id() const -> BufferID override;
     auto size() const -> geometry::Size override;
-    auto format() const -> MirPixelFormat override;
+    auto pixel_format() const -> MirPixelFormat override;
 
     void make_current() override;
     void release_current() override;
-    auto clone_handle() -> std::unique_ptr<GenericEGLDisplayAllocator::EGLFramebuffer> override;
+    auto clone_handle() -> std::unique_ptr<GenericEGLDisplayAllocator::EGLBuffer> override;
+    auto to_framebuffer() -> std::unique_ptr<Framebuffer> override;
 
     void swap_buffers();
 private:
     class EGLState;
-    Framebuffer(std::shared_ptr<EGLState const> surf, geometry::Size size);
+    Buffer(std::shared_ptr<EGLState const> surf, geometry::Size size);
 
     std::shared_ptr<EGLState const> const state;
     geometry::Size const size_;
+};
+
+struct Framebuffer : public mir::graphics::Framebuffer
+{
+    Framebuffer(Buffer* buf) :
+        wrapped{std::unique_ptr<Buffer>{buf}}
+    {
+    }
+
+    geometry::Size size() const override
+    {
+        return wrapped->size();
+    }
+
+    std::unique_ptr<Buffer> wrapped;
 };
 
 class EGLHelper
@@ -84,7 +101,7 @@ public:
         xcb_connection_t* xcb_conn,
         xcb_window_t win,
         EGLContext shared_context)
-        -> std::unique_ptr<Framebuffer>;
+        -> std::unique_ptr<Buffer>;
 
     EGLDisplay display() const { return egl_display; }
     EGLConfig config() const { return egl_config; }

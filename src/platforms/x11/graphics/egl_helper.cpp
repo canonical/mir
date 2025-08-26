@@ -26,7 +26,7 @@ namespace mg = mir::graphics;
 namespace mgx = mg::X;
 namespace mgxh = mgx::helpers;
 
-class mgxh::Framebuffer::EGLState
+class mgxh::Buffer::EGLState
 {
 public:
     EGLState(EGLDisplay dpy, EGLContext ctx, EGLSurface surf)
@@ -64,28 +64,33 @@ public:
     EGLSurface const surf;
 };
 
-mgxh::Framebuffer::Framebuffer(EGLDisplay dpy, EGLContext ctx, EGLSurface surf, geometry::Size size)
-    : Framebuffer(std::make_shared<EGLState>(dpy, ctx, surf), size)
+mgxh::Buffer::Buffer(EGLDisplay dpy, EGLContext ctx, EGLSurface surf, geometry::Size size)
+    : Buffer(std::make_shared<EGLState>(dpy, ctx, surf), size)
 {
 }
 
-mgxh::Framebuffer::Framebuffer(std::shared_ptr<EGLState const> state, geometry::Size size)
+mgxh::Buffer::Buffer(std::shared_ptr<EGLState const> state, geometry::Size size)
     : state{std::move(state)},
       size_{size}
 {
 }
 
-auto mgxh::Framebuffer::size() const -> geometry::Size
+auto mgxh::Buffer::id() const -> BufferID
+{
+    return BufferID{static_cast<uint32_t>(reinterpret_cast<uintptr_t>(state->surf))};
+}
+
+auto mgxh::Buffer::size() const -> geometry::Size
 {
     return size_;
 }
 
-auto mgxh::Framebuffer::format() const -> MirPixelFormat
+auto mgxh::Buffer::pixel_format() const -> MirPixelFormat
 {
     return state->format();
 }
 
-void mgxh::Framebuffer::make_current()
+void mgxh::Buffer::make_current()
 {
     if (eglMakeCurrent(state->dpy, state->surf, state->surf, state->ctx) != EGL_TRUE)
     {
@@ -93,7 +98,7 @@ void mgxh::Framebuffer::make_current()
     }
 }
 
-void mgxh::Framebuffer::release_current()
+void mgxh::Buffer::release_current()
 {
     if (eglMakeCurrent(state->dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT) != EGL_TRUE)
     {
@@ -101,7 +106,7 @@ void mgxh::Framebuffer::release_current()
     }
 }
 
-void mgxh::Framebuffer::swap_buffers()
+void mgxh::Buffer::swap_buffers()
 {
     if (eglSwapBuffers(state->dpy, state->surf) != EGL_TRUE)
     {
@@ -109,9 +114,14 @@ void mgxh::Framebuffer::swap_buffers()
     }
 }
 
-auto mgxh::Framebuffer::clone_handle() -> std::unique_ptr<mg::GenericEGLDisplayAllocator::EGLFramebuffer>
+auto mgxh::Buffer::clone_handle() -> std::unique_ptr<mg::GenericEGLDisplayAllocator::EGLBuffer>
 {
-    return std::unique_ptr<mg::GenericEGLDisplayAllocator::EGLFramebuffer>{new Framebuffer(state, size_)};
+    return std::unique_ptr<mg::GenericEGLDisplayAllocator::EGLBuffer>{new Buffer(state, size_)};
+}
+
+auto mgxh::Buffer::to_framebuffer() -> std::unique_ptr<mg::Framebuffer>
+{
+    return std::make_unique<mgxh::Framebuffer>(new Buffer(*this));
 }
 
 mgxh::EGLHelper::EGLHelper(::Display* const x_dpy)
@@ -207,7 +217,7 @@ auto mgxh::EGLHelper::framebuffer_for_window(
     GLConfig const& conf,
     xcb_connection_t* xcb_conn,
     xcb_window_t win,
-    EGLContext shared_context) -> std::unique_ptr<Framebuffer>
+    EGLContext shared_context) -> std::unique_ptr<Buffer>
 {
     EGLint const config_attr[] = {
         EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
@@ -243,7 +253,7 @@ auto mgxh::EGLHelper::framebuffer_for_window(
     if (egl_context == EGL_NO_CONTEXT)
         BOOST_THROW_EXCEPTION(mg::egl_error("Failed to create EGL context"));
 
-    return std::make_unique<Framebuffer>(
+    return std::make_unique<Buffer>(
         egl_display,
         egl_context,
         egl_surface,
