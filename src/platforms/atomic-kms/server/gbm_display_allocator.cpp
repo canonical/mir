@@ -235,11 +235,6 @@ MirPixelFormat mir::graphics::atomic::GBMBuffer::pixel_format() const
     return mir_pixel_format_invalid;
 }
 
-mir::graphics::NativeBufferBase* mir::graphics::atomic::GBMBuffer::native_buffer_base()
-{
-    return this;
-}
-
 auto mga::GBMBuffer::to_framebuffer() -> std::unique_ptr<Framebuffer>
 {
     if (auto cached_fb = static_cast<std::shared_ptr<uint32_t const>*>(gbm_bo_get_user_data(front_buffer.get())))

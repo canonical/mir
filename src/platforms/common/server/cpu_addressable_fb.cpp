@@ -306,11 +306,6 @@ MirPixelFormat mir::graphics::CPUAddressableBuffer::pixel_format() const
     return format();
 }
 
-mir::graphics::NativeBufferBase* mir::graphics::CPUAddressableBuffer::native_buffer_base()
-{
-    return this;
-}
-
 auto mg::CPUAddressableBuffer::fb_id_for_buffer(
     mir::Fd const &drm_fd,
     bool supports_modifiers,

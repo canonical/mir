@@ -49,8 +49,6 @@ public:
 
     MirPixelFormat pixel_format() const override;
 
-    NativeBufferBase* native_buffer_base() override;
-
     auto to_framebuffer() -> std::unique_ptr<Framebuffer> override;
 
 private:

@@ -26,8 +26,7 @@ namespace mir::graphics
 {
 class CPUAddressableBuffer : 
     public FBHandle,
-    public CPUAddressableDisplayAllocator::MappableBuffer,
-    public NativeBufferBase
+    public CPUAddressableDisplayAllocator::MappableBuffer
 {
 public:
     CPUAddressableBuffer(
@@ -47,7 +46,6 @@ public:
 
     BufferID id() const override;
     MirPixelFormat pixel_format() const override;
-    NativeBufferBase* native_buffer_base() override;
     
     CPUAddressableBuffer(CPUAddressableBuffer const&) = delete;
     CPUAddressableBuffer& operator=(CPUAddressableBuffer const&) = delete;

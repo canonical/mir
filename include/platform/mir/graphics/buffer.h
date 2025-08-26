@@ -45,7 +45,7 @@ public:
     virtual geometry::Size size() const = 0;
     virtual MirPixelFormat pixel_format() const = 0;
 
-    virtual NativeBufferBase* native_buffer_base() = 0;
+    virtual NativeBufferBase* native_buffer_base() { return nullptr; }
 
     virtual auto to_framebuffer() -> std::unique_ptr<Framebuffer> { return nullptr; }
 

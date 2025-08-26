@@ -43,7 +43,7 @@ private:
 
 using LockedFrontBuffer = std::unique_ptr<gbm_bo, std::function<void(gbm_bo*)>>;
 
-class GBMBuffer : public mir::graphics::Buffer, public mir::graphics::NativeBufferBase
+class GBMBuffer : public mir::graphics::Buffer
 {
 public:
     GBMBuffer(mir::Fd drm_fd, LockedFrontBuffer front_buffer);
@@ -53,8 +53,6 @@ public:
     geometry::Size size() const override;
 
     MirPixelFormat pixel_format() const override;
-
-    mir::graphics::NativeBufferBase* native_buffer_base() override;
 
     auto to_framebuffer() -> std::unique_ptr<Framebuffer> override;
 

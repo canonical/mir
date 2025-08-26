@@ -355,12 +355,6 @@ public:
         return framebuffer->format();
     }
 
-    NativeBufferBase* native_buffer_base() override
-    {
-        return this;
-    }
-
-
     std::unique_ptr<EGLFramebuffer> framebuffer;
 };
 class EGLOutputSurface : public mg::gl::OutputSurface

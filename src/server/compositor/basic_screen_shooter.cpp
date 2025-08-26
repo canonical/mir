@@ -42,8 +42,7 @@ public:
     OneShotBufferDisplayProvider() = default;
 
     class Buffer : 
-        public mg::CPUAddressableDisplayAllocator::MappableBuffer, 
-        public graphics::NativeBufferBase
+        public mg::CPUAddressableDisplayAllocator::MappableBuffer
     {
     public:
         Buffer(std::shared_ptr<mrs::WriteMappableBuffer> buffer)
@@ -76,11 +75,6 @@ public:
         MirPixelFormat pixel_format() const override
         {
             return format();
-        }
-
-        NativeBufferBase* native_buffer_base() override
-        {
-            return this;
         }
 
     private:
