@@ -65,10 +65,6 @@ miral::WindowInfo::Self::Self(Window window, WindowSpecification const& params) 
     type{params.type().value_or(mir_window_type_normal)},
     state{params.state().value_or(mir_window_state_restored)},
     restore_rect{},
-    min_width{params.min_width().value_or(miral::default_min_width)},
-    min_height{params.min_height().value_or(miral::default_min_height)},
-    max_width{params.max_width().value_or(miral::default_max_width)},
-    max_height{params.max_height().value_or(miral::default_max_height)},
     preferred_orientation{params.preferred_orientation().value_or(mir_orientation_mode_any)},
     confine_pointer(params.confine_pointer().value_or(mir_pointer_unconfined)),
     width_inc{params.width_inc().value_or(default_width_inc)},
@@ -88,6 +84,12 @@ miral::WindowInfo::Self::Self(Window window, WindowSpecification const& params) 
 
     if (params.userdata().is_set())
         userdata = params.userdata().value();
+
+    std::shared_ptr<mir::scene::Surface> const surface{window};
+    surface->set_min_width(params.min_width().value_or(miral::default_min_width));
+    surface->set_min_height(params.min_height().value_or(miral::default_min_height));
+    surface->set_max_width(params.max_width().value_or(miral::default_max_width));
+    surface->set_max_height(params.max_height().value_or(miral::default_max_height));
 }
 
 miral::WindowInfo::Self::Self() :
@@ -144,22 +146,26 @@ void miral::WindowInfo::remove_child(Window const& child)
 
 void miral::WindowInfo::min_width(mir::geometry::Width min_width)
 {
-    self->min_width = clamp(min_width);
+    std::shared_ptr<mir::scene::Surface> const surface{self->window};
+    surface->set_min_width(clamp(min_width));
 }
 
 void miral::WindowInfo::min_height(mir::geometry::Height min_height)
 {
-    self->min_height = clamp(min_height);
+    std::shared_ptr<mir::scene::Surface> const surface{self->window};
+    surface->set_min_height(clamp(min_height));
 }
 
 void miral::WindowInfo::max_width(mir::geometry::Width max_width)
 {
-    self->max_width = clamp(max_width);
+    std::shared_ptr<mir::scene::Surface> const surface{self->window};
+    surface->set_max_width(clamp(max_width));
 }
 
 void miral::WindowInfo::max_height(mir::geometry::Height max_height)
 {
-    self->max_height = clamp(max_height);
+    std::shared_ptr<mir::scene::Surface> const surface{self->window};
+    surface->set_max_height(clamp(max_height));
 }
 
 void miral::WindowInfo::width_inc(DeltaX width_inc)

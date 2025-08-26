@@ -55,6 +55,10 @@ miral-app -kiosk
 
 Mir compositors support running "natively" by launching them from a virtual terminal or a login screen.
 
+***Do note that while, like many other Wayland compositors, Mir supports Nvidia
+graphics cards they can cause stability issues due to quirks on the driver side.***
+
+
 ### Launching from a virtual terminal
 
 1. Switch to a virtual terminal by pressing CTRL+ALT+F\<Number\> and log in.
@@ -132,3 +136,23 @@ wayvnc
 A `wayvnc` server will start and will listen to `localhost`. 
 
 5. Run your VNC client and connect to `localhost`. You will see the exact same view in both the Mir compositor and the VNC viewer.
+
+## Shell Component Support
+
+Generally, Mir supports standard Wayland protocol extensions. So it should work
+with shell components that also use standard protocol extensions. Some shell components
+from KDE, GNOME, or other ecosystems might have issues due to their dependence on
+non-standard protocol extensions.
+
+Some examples of shell components that work well with Mir are: wofi, waybar,
+synapse, sway-notification-center, swaybg, swaylock, xfce-appfinder, and
+xfce-panel.
+
+## Want more Mir?
+
+If you want to play around with a pre-made setup suitable for daily use, you
+can check out [Miriway](https://github.com/Miriway/Miriway/) and
+[Miracle](https://github.com/miracle-wm-org/miracle-wm), which are used daily
+by Mir developers. A list of all known Mir-based compositors can be found at
+[Developing A Wayland Compositor Using
+Mir](../how-to/developing-a-wayland-compositor-using-mir.md)

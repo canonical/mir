@@ -85,7 +85,7 @@ pa11y-install:
 		}
 
 install: $(VENVDIR)
-	sudo apt update
+	sudo apt-add-repository --yes --update ppa:mir-team/dev
 	sudo apt build-dep -y $(PROJROOT)
 
 run: install configure

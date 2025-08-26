@@ -220,7 +220,7 @@ void PersistDisplayConfigPolicy::apply_to(
 
             uint output_index = 0;
             conf.for_each_output([&output, config, &output_index](mg::DisplayConfigurationOutput const& find_output) {
-                if (output_index == config.clone_output_index.value()) {
+                if (config.clone_output_index.is_set() && output_index == config.clone_output_index.value()) {
                     output.top_left = find_output.top_left;
                 }
                 output_index++;

@@ -211,7 +211,7 @@ private:
      * https://bugs.launchpad.net/ubuntu/+source/linux/+bug/2084046
      * https://github.com/canonical/mir/issues/3710
      */
-    mgc::AllowList completely_skip{{"ast", "simple-framebuffer"}};
+    mgc::AllowList completely_skip{{"nvidia", "ast", "simple-framebuffer"}};
 
     // We know this is currently useful for virtio_gpu, vc4-drm and v3d
     mgc::AllowList disable_kms_probe{{"virtio_gpu", "vc4-drm", "v3d"}};

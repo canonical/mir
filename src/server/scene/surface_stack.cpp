@@ -548,7 +548,14 @@ void ms::SurfaceStack::insert_surface_at_top_of_depth_layer(std::shared_ptr<Surf
         surface_layers.resize(depth_index + 1);
     surface_layers[depth_index].push_back(surface);
 
-    std::erase_if(focus_order, [&](auto const& s) { return s.lock() == surface; });
+    for (auto it = focus_order.begin(); it != focus_order.end();)
+    {
+        if (it->expired() || it->lock() == surface)
+            it = focus_order.erase(it);
+        else
+            ++it;
+    }
+
     focus_order.push_back(surface);
 }
 
@@ -566,9 +573,9 @@ void ms::SurfaceStack::add_observer(std::shared_ptr<ms::Observer> const& observe
     // The surfaces are sent with the most-recently focused first and the
     // least-recently focused last.
     RecursiveReadLock lk(guard);
-    for (auto const& it : std::ranges::reverse_view(focus_order))
+    for (auto const& surface : std::ranges::reverse_view(focus_order))
     {
-        if (auto const locked = it.lock())
+        if (auto const locked = surface.lock())
             observer->surface_exists(locked);
     }
 }

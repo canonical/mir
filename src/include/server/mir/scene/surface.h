@@ -167,6 +167,18 @@ public:
     virtual auto tiled_edges() const -> Flags<MirTiledEdge> = 0;
     virtual void set_tiled_edges(Flags<MirTiledEdge> flags) = 0;
     ///@}
+
+    /// Manage the size bounds
+    /// @{
+    virtual auto min_width() const -> geometry::Width = 0;
+    virtual auto max_width() const -> geometry::Width = 0;
+    virtual auto min_height() const -> geometry::Height = 0;
+    virtual auto max_height() const -> geometry::Height = 0;
+    virtual void set_min_width(geometry::Width width) = 0;
+    virtual void set_max_width(geometry::Width width) = 0;
+    virtual void set_min_height(geometry::Height height) = 0;
+    virtual void set_max_height(geometry::Height height) = 0;
+    ///@}
 };
 }
 }

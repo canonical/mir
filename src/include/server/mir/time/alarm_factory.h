@@ -61,6 +61,17 @@ public:
      */
     virtual std::unique_ptr<Alarm> create_alarm(std::unique_ptr<LockableCallback> callback) = 0;
 
+    /**
+     * \brief Create an Alarm that will not fire until scheduled and repeats
+     * itself with a certain delay.
+     *
+     * \param callback Function to call when the Alarm signals
+     * \param repeat_delay The delay between self-invocations
+     * \return A handle to an Alarm that can later be scheduled
+     */
+    auto create_repeating_alarm(std::function<void()> const& callback, std::chrono::milliseconds repeat_delay)
+        -> std::shared_ptr<Alarm>;
+
 protected:
     AlarmFactory() = default;
     AlarmFactory(AlarmFactory const&) = delete;

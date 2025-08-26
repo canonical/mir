@@ -2,6 +2,7 @@ abi
 ABI
 adapter
 AppArmor
+appfinder
 appications
 AUR
 backend
@@ -12,6 +13,7 @@ Binutils
 BounceKeys
 Broadcom
 buf
+center
 chroot
 cgroup
 ci
@@ -97,6 +99,7 @@ IoT
 IPC
 ish
 jenkins
+KDE
 KDE's
 KDE’s
 keybinds
@@ -211,6 +214,8 @@ SSD
 StickyKeys
 subgraph
 subprocess
+swaybg
+swaylock
 sys
 testflinger
 Testflinger
@@ -243,6 +248,7 @@ VNC
 vt
 vtable
 Vulkan
+waybar
 wayland
 Wayland
 webkit
@@ -252,9 +258,11 @@ WL
 wlcs
 WLCS
 wlr
+wofi
 workspaces
 XCB
 xdg
+xfce
 Xlib
 XLib
 Xorg
