@@ -15,6 +15,7 @@
  */
 
 #include "miral/application_switcher.h"
+#include "wayland_app.h"
 #include "wlr-foreign-toplevel-management-unstable-v1.h"
 
 #include <memory>
@@ -26,21 +27,9 @@
 
 namespace
 {
-void handle_new_global(
-    void* data,
-    struct wl_registry* registry,
-    uint32_t id,
-    char const* interface,
-    uint32_t version);
-void handle_global_remove(void* data, wl_registry* registry, uint32_t id);
-wl_registry_listener const registry_listener = {
-    handle_new_global,
-    handle_global_remove
-};
-
 void handle_toplevel(void*, zwlr_foreign_toplevel_manager_v1*, zwlr_foreign_toplevel_handle_v1*);
 void handle_finished(void*, zwlr_foreign_toplevel_manager_v1*);
-zwlr_foreign_toplevel_manager_v1_listener const toplevel_manager_listener = {
+zwlr_foreign_toplevel_manager_v1_listener constexpr toplevel_manager_listener = {
     handle_toplevel,
     handle_finished
 };
@@ -52,7 +41,7 @@ void handle_output_leave(void*, zwlr_foreign_toplevel_handle_v1*, wl_output*) {}
 void handle_state(void*, zwlr_foreign_toplevel_handle_v1*, wl_array*);
 void handle_toplevel_done(void*, zwlr_foreign_toplevel_handle_v1*) {}
 void handle_closed(void*, zwlr_foreign_toplevel_handle_v1*);
-zwlr_foreign_toplevel_handle_v1_listener const toplevel_handle_listener = {
+zwlr_foreign_toplevel_handle_v1_listener constexpr toplevel_handle_listener = {
     .title = handle_title,
     .app_id = handle_app_id,
     .output_enter = handle_output_enter,
@@ -68,41 +57,18 @@ struct ToplevelInfo
     std::optional<std::string> app_id;
 };
 
-class ApplicationSwitcherClient
+class ApplicationSwitcherClient : public WaylandApp
 {
 public:
     explicit ApplicationSwitcherClient(wl_display* display)
-        : display{display},
-          registry(wl_display_get_registry(display))
+        : WaylandApp(display)
     {
-        wl_registry_add_listener(registry, &registry_listener, this);
-
-        // Populate globals
-        roundtrip();
-
-        // Populate properties for outputs and other globals created in the first pass
-        roundtrip();
     }
 
-    void roundtrip() const
+    ~ApplicationSwitcherClient() override
     {
-        wl_display_roundtrip(display);
-    }
-
-    ~ApplicationSwitcherClient()
-    {
-        wl_registry_destroy(registry);
-        if (seat)
-            wl_seat_destroy(seat);
         if (toplevel_manager)
             zwlr_foreign_toplevel_manager_v1_destroy(toplevel_manager);
-        wl_display_roundtrip(display);
-        wl_display_disconnect(display);
-    }
-
-    void set_seat(wl_seat* new_seat)
-    {
-        seat = new_seat;
     }
 
     void set_toplevel_manager(zwlr_foreign_toplevel_manager_v1* new_toplevel_manager)
@@ -162,40 +128,25 @@ public:
         }
     }
 
+protected:
+    void new_global(
+        wl_registry* registry,
+        uint32_t id,
+        char const* interface,
+        uint32_t) override
+    {
+        if (std::string_view(interface) == "zwlr_foreign_toplevel_manager_v1")
+        {
+            set_toplevel_manager(
+                static_cast<zwlr_foreign_toplevel_manager_v1*>(wl_registry_bind(registry, id, &zwlr_foreign_toplevel_manager_v1_interface, 2)));
+        }
+    }
+
 private:
-    wl_display* display;
-    wl_registry* registry;
-    wl_seat* seat = nullptr;
     zwlr_foreign_toplevel_manager_v1* toplevel_manager = nullptr;
     std::mutex mutex;
     std::vector<ToplevelInfo> toplevels_in_focus_order;
 };
-
-void handle_new_global(
-    void* data,
-    wl_registry* registry,
-    uint32_t id,
-    char const* interface,
-    uint32_t)
-{
-    auto const self = static_cast<ApplicationSwitcherClient*>(data);
-    std::string_view const interface_view{interface};
-
-    if (interface_view == "wl_seat")
-    {
-        self->set_seat(static_cast<wl_seat*>(wl_registry_bind(registry, id, &wl_seat_interface, 4)));
-    }
-    else if (interface_view == "zwlr_foreign_toplevel_manager_v1")
-    {
-        self->set_toplevel_manager(
-            static_cast<zwlr_foreign_toplevel_manager_v1*>(wl_registry_bind(registry, id, &zwlr_foreign_toplevel_manager_v1_interface, 2)));
-    }
-}
-
-void handle_global_remove(void*, wl_registry*, uint32_t)
-{
-
-}
 
 void handle_toplevel(void* data, zwlr_foreign_toplevel_manager_v1*, zwlr_foreign_toplevel_handle_v1* toplevel)
 {
@@ -308,6 +259,10 @@ void miral::ApplicationSwitcher::next_app()
 }
 
 void miral::ApplicationSwitcher::prev_app()
+{
+}
+
+void miral::ApplicationSwitcher::confirm() const
 {
 }
 

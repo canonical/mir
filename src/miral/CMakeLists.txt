@@ -26,6 +26,9 @@ add_library(miral-internal STATIC
     mru_window_list.cpp                  mru_window_list.h
     open_desktop_entry.cpp               open_desktop_entry.h
     static_display_config.cpp            static_display_config.h
+    wayland_app.cpp                      wayland_app.h
+    wayland_surface.cpp                  wayland_surface.h
+    wayland_shm.cpp                      wayland_shm.h
     window_info_internal.cpp             window_info_internal.h
     window_management_trace.cpp          window_management_trace.h
     xcursor_loader.cpp                   xcursor_loader.h

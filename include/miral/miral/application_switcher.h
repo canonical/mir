@@ -27,7 +27,7 @@ namespace miral
 /// A headless application switcher.
 ///
 /// This class spawns an internal wayland client. Shells can bind the methods
-/// defined in this class to custom keybinds. For example, a shell mayb bind "alt + tab"
+/// defined in this class to custom keybinds. For example, a shell  bind "alt + tab"
 /// to trigger [ApplicationSwitcher::next_app].
 ///
 /// Instances of this class should be provided to [miral::InternalClientLauncher::launch].
@@ -43,9 +43,25 @@ public:
     void operator()(struct wl_display* display);
     void operator()(std::weak_ptr<mir::scene::Session> const& session) const;
 
+    /// Tentatively select the next application in the focus list.
+    ///
+    /// The application will not be focused until [confirm] is called.
+    /// If [stop] is called before [confirm], no application will be
+    /// focused.
     void next_app();
+
+    /// Tentatively select the previous application in the focus list.
+    ///
+    /// The application will not be focused until [confirm] is called.
+    /// If [stop] is called before [confirm], no application will be
+    /// focused.
     void prev_app();
 
+    /// Focus the tentatively selected application and stop the application
+    /// switcher.
+    void confirm() const;
+
+    /// Stops the application switcher, resulting in no change in focus.
     void stop() const;
 
 private:
