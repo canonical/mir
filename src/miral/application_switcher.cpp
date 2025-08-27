@@ -22,10 +22,17 @@
 #include <memory>
 #include <mir/fd.h>
 #include <mir/log.h>
+#include <mir/geometry/displacement.h>
 #include <mutex>
 #include <sys/eventfd.h>
 #include <poll.h>
-#include <string.h>
+#include <string>
+#include <cstring>
+#include <ft2build.h>
+#include FT_FREETYPE_H
+#include <codecvt>
+#include <filesystem>
+#include <locale>
 
 #include "wayland_surface.h"
 
@@ -37,6 +44,240 @@ struct ToplevelInfo
 {
     zwlr_foreign_toplevel_handle_v1* handle;
     std::optional<std::string> app_id;
+};
+
+struct preferred_codecvt : std::codecvt_byname<wchar_t, char, std::mbstate_t>
+{
+    preferred_codecvt() : std::codecvt_byname<wchar_t, char, std::mbstate_t>("C") {}
+    ~preferred_codecvt() override = default;
+};
+
+struct Printer
+{
+    Printer()
+    {
+        if (FT_Init_FreeType(&lib))
+            return;
+
+        if (FT_New_Face(lib, default_font().c_str(), 0, &face))
+        {
+            mir::log_error("Failed to load find: %s", default_font().c_str());
+            FT_Done_FreeType(lib);
+            return;
+        }
+
+        FT_Set_Pixel_Sizes(face, 0, 10);
+        working = true;
+    }
+
+    ~Printer()
+    {
+        if (working)
+        {
+            FT_Done_Face(face);
+            FT_Done_FreeType(lib);
+        }
+    }
+
+    Printer(Printer const&) = delete;
+    Printer& operator=(Printer const&) = delete;
+
+    void printhelp(std::shared_ptr<WaylandShmBuffer> const& buffer)
+    {
+        if (!working)
+            return;
+
+        auto const region_size = buffer->size();
+
+        if (region_size.width <= geom::Width{} || region_size.height <= geom::Height{})
+            return;
+
+        static char const* const helptext[] =
+            {
+                "Welcome to miral-shell",
+                "",
+                "Keyboard shortcuts:",
+                "",
+                "  o Terminal: Ctrl-Alt-T/Ctrl-Alt-Shift-T",
+                "  o X Terminal: Ctrl-Alt-X (if X11 is enabled)",
+                "",
+                "  o Switch apps: Alt-Tab, tap or click on the corresponding window",
+                "  o Next (previous) app window: Alt-` (Alt-Shift-`)",
+                "",
+                "  o Move window: Alt-leftmousebutton drag (three finger drag)",
+                "  o Resize window: Alt-middle_button drag (three finger pinch)",
+                "",
+                "  o Maximize/restore current window (to display size). : Alt-F11",
+                "  o Maximize/restore current window (to display height): Shift-F11",
+                "  o Maximize/restore current window (to display width) : Ctrl-F11",
+                "",
+                "  o Switch workspace: Meta-Alt-[F1|F2|F3|F4]",
+                "  o Switch workspace taking active window: Meta-Ctrl-[F1|F2|F3|F4]",
+                "",
+                "  o Invert colors: Ctrl-I",
+                "",
+                "  o To exit: Ctrl-Alt-BkSp",
+            };
+
+        auto const min_char_width = std::min({region_size.width.as_int()/60, region_size.height.as_int()/35, 20});
+        FT_Set_Pixel_Sizes(face, min_char_width, 0);
+        geom::Width help_width;
+        geom::Height help_height;
+        geom::DeltaY line_height;
+
+        for (char const* rawline : helptext)
+        {
+            auto const line_text = converter.from_bytes(rawline);
+            auto line_width = geom::Width{};
+
+            for (auto const& character : line_text)
+            {
+                FT_Load_Glyph(face, FT_Get_Char_Index(face, character), FT_LOAD_DEFAULT);
+                auto const glyph = face->glyph;
+                FT_Render_Glyph(glyph, FT_RENDER_MODE_NORMAL);
+
+                line_width = line_width + geom::DeltaX{glyph->advance.x >> 6};
+                line_height = std::max(line_height, geom::DeltaY{glyph->bitmap.rows * 1.5});
+            }
+
+            help_width = std::max(help_width, line_width);
+            help_height = help_height + line_height;
+        }
+
+        auto base_pos_y = 0.5*(region_size.height - help_height);
+        static auto constexpr region_pixel_bytes = 4;
+        unsigned char* const region_buffer = static_cast<char unsigned*>(buffer->data());
+
+        for (auto const* rawline : helptext)
+        {
+            auto base_pos_x = 0.5*(region_size.width - help_width);
+            auto const line_text = converter.from_bytes(rawline);
+
+            for (auto const& character : line_text)
+            {
+                FT_Load_Glyph(face, FT_Get_Char_Index(face, character), FT_LOAD_DEFAULT);
+                auto const glyph = face->glyph;
+                FT_Render_Glyph(glyph, FT_RENDER_MODE_NORMAL);
+
+                auto const glyph_size = geom::Size{glyph->bitmap.width, glyph->bitmap.rows};
+                auto const pos = geom::Point{glyph->bitmap_left, -glyph->bitmap_top} + geom::Displacement{base_pos_x, base_pos_y};
+                auto const region_top_left_in_glyph_space = geom::Point{} + (pos - geom::Point{}) * -1; // literally just -pos
+                auto const region_lower_right_in_glyph_space = region_top_left_in_glyph_space + as_displacement(region_size);
+                auto const clipped_glyph_upper_left = geom::Point{
+                        std::max(geom::X{}, region_top_left_in_glyph_space.x),
+                        std::max(geom::Y{}, region_top_left_in_glyph_space.y)};
+                auto const clipped_glyph_lower_right = geom::Point{
+                        std::min(geom::X{} + geom::generic::as_displacement(glyph_size).dx, region_lower_right_in_glyph_space.x),
+                        std::min(geom::Y{} + geom::generic::as_displacement(glyph_size).dy, region_lower_right_in_glyph_space.y)};
+
+                unsigned char* const glyph_buffer = glyph->bitmap.buffer;
+                auto glyph_pixel = geom::Point{};
+                auto region_pixel = geom::Point{};
+                for (
+                    glyph_pixel.y = clipped_glyph_upper_left.y;
+                    glyph_pixel.y < clipped_glyph_lower_right.y;
+                    glyph_pixel.y += geom::DeltaY{1})
+                {
+                    region_pixel.y = glyph_pixel.y + (pos.y - geom::Y{});
+                    unsigned char* glyph_buffer_row = glyph_buffer + glyph_pixel.y.as_int() * glyph->bitmap.pitch;
+                    unsigned char* const region_buffer_row =
+                        region_buffer + (static_cast<long>(region_pixel.y.as_int()) * static_cast<long>(region_size.width.as_int()) * region_pixel_bytes);
+                    for (
+                        glyph_pixel.x = clipped_glyph_upper_left.x;
+                        glyph_pixel.x < clipped_glyph_lower_right.x;
+                        glyph_pixel.x += geom::DeltaX{1})
+                    {
+                        region_pixel.x = glyph_pixel.x + (pos.x - geom::X{});
+                        double const source_value = glyph_buffer_row[glyph_pixel.x.as_int()] / 255.0;
+                        (void)source_value;
+                        unsigned char* const region_buffer_offset =
+                            region_buffer_row + (static_cast<long long>(region_pixel.x.as_value()) * region_pixel_bytes);
+                        for (
+                            unsigned char* region_ptr = region_buffer_offset;
+                            region_ptr < region_buffer_offset + region_pixel_bytes;
+                            region_ptr++)
+                        {
+                            *region_ptr = 0xff - (int)((0xff - *region_ptr) * (1 - source_value));
+                        }
+                    }
+                }
+                base_pos_x = base_pos_x + geom::DeltaX{glyph->advance.x >> 6};
+            }
+            base_pos_y = base_pos_y + line_height;
+        }
+    }
+
+private:
+    // Font search logic should be kept in sync with src/server/shell/decoration/renderer.cpp
+    static auto default_font() -> std::string
+    {
+        struct FontPath
+        {
+            char const* filename;
+            std::vector<char const*> prefixes;
+        };
+
+        FontPath const font_paths[]{
+            FontPath{"Ubuntu-B.ttf", {
+                "ubuntu-font-family",   // Ubuntu < 18.04
+                "ubuntu",               // Ubuntu >= 18.04/Arch
+            }},
+            FontPath{"FreeSansBold.ttf", {
+                "freefont",             // Debian/Ubuntu
+                "gnu-free",             // Fedora/Arch
+            }},
+            FontPath{"DejaVuSans-Bold.ttf", {
+                "dejavu",               // Ubuntu (others?)
+                "",                     // Arch
+            }},
+            FontPath{"LiberationSans-Bold.ttf", {
+                "liberation-sans",      // Fedora
+                "liberation-sans-fonts",// Fedora >= 42
+                "liberation",           // Arch/Ubuntu
+            }},
+            FontPath{"OpenSans-Bold.ttf", {
+                "open-sans",            // Fedora/Ubuntu
+            }},
+        };
+
+        char const* const font_path_search_paths[]{
+            "/usr/share/fonts/truetype",    // Ubuntu/Debian
+            "/usr/share/fonts/TTF",         // Arch
+            "/usr/share/fonts",             // Fedora/Arch
+        };
+
+        std::vector<std::string> usable_search_paths;
+        for (auto const& path : font_path_search_paths)
+        {
+            if (std::filesystem::exists(path))
+                usable_search_paths.emplace_back(path);
+        }
+
+        for (auto const& font : font_paths)
+        {
+            for (auto const& prefix : font.prefixes)
+            {
+                for (auto const& path : usable_search_paths)
+                {
+                    auto const full_font_path = path + '/' + prefix + '/' + font.filename;
+                    if (std::filesystem::exists(full_font_path))
+                        return full_font_path;
+                }
+            }
+        }
+
+        return "";
+    }
+
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+    std::wstring_convert<preferred_codecvt> converter;
+#pragma GCC diagnostic pop
+
+    bool working = false;
+    FT_Library lib;
+    FT_Face face;
 };
 }
 
@@ -230,8 +471,8 @@ public:
         auto const stride = 4*width;
         auto const buffer = shm_->get_buffer(geom::Size(width, height), geom::Stride(stride));
 
-        uint8_t const bottom_colour[] = { 0xff, 0xff, 0xff };   // Ubuntu orange
-        uint8_t const top_colour[] =    { 0xff, 0xff, 0xff };   // Cool grey
+        uint8_t const bottom_colour[] = { 0x00, 0x00, 0x00 };   // Ubuntu orange
+        uint8_t const top_colour[] =    { 0x00, 0x00, 0x00 };   // Cool grey
 
         char* row = static_cast<decltype(row)>(buffer->data());
 
@@ -250,6 +491,7 @@ public:
             row += stride;
         }
 
+        printer.printhelp(buffer);
         surface_->add_frame_callback([this]
         {
             draw();
@@ -333,6 +575,7 @@ private:
     std::optional<size_t> tentative_focus_index;
     std::shared_ptr<WaylandShm> shm_;
     std::shared_ptr<WaylandSurface> surface_;
+    Printer printer;
 };
 
 void miral::ApplicationSwitcher::Self::handle_toplevel(void* data, zwlr_foreign_toplevel_manager_v1*, zwlr_foreign_toplevel_handle_v1* toplevel)
