@@ -53,31 +53,48 @@ if (HAS_W_STRINGOP_TRUNCATION)
 endif()
 
 set(PROTOCOLS_DIR ${CMAKE_SOURCE_DIR}/wayland-protocols)
-set(WLR_FOREIGN_TOPLEVEL_MANAGEMENT_V1_XML ${PROTOCOLS_DIR}/wlr-foreign-toplevel-management-unstable-v1.xml)
 set(GENERATED_DIR ${CMAKE_BINARY_DIR}/miral-generated)
-set(WLR_FOREIGN_TOPLEVEL_MANAGEMENT_V1_HEADER ${GENERATED_DIR}/wlr-foreign-toplevel-management-unstable-v1.h)
-set(WLR_FOREIGN_TOPLEVEL_MANAGEMENT_V1_CODE   ${GENERATED_DIR}/wlr-foreign-toplevel-management-unstable-v1.c)
 
-add_custom_command(
-  OUTPUT ${WLR_FOREIGN_TOPLEVEL_MANAGEMENT_V1_HEADER}
-  COMMAND wayland-scanner client-header
-  ${WLR_FOREIGN_TOPLEVEL_MANAGEMENT_V1_XML} ${WLR_FOREIGN_TOPLEVEL_MANAGEMENT_V1_HEADER}
-  DEPENDS ${WLR_FOREIGN_TOPLEVEL_MANAGEMENT_V1_XML}
-  VERBATIM
+function(add_wayland_protocol xml_file out_var)
+    get_filename_component(name ${xml_file} NAME_WE)
+    set(header ${GENERATED_DIR}/${name}.h)
+    set(code   ${GENERATED_DIR}/${name}.c)
+
+    add_custom_command(
+      OUTPUT ${header}
+      COMMAND wayland-scanner client-header ${xml_file} ${header}.tmp
+      COMMAND ${CMAKE_COMMAND} -E copy ${header}.tmp ${header}
+      COMMAND ${CMAKE_COMMAND} -E rm ${header}.tmp
+      COMMAND sed -i s/\\<namespace\\>/namespace_/g ${header}
+      DEPENDS ${xml_file}
+      VERBATIM
+    )
+
+    add_custom_command(
+      OUTPUT ${code}
+      COMMAND wayland-scanner private-code ${xml_file} ${code}.tmp
+      COMMAND ${CMAKE_COMMAND} -E copy ${code}.tmp ${code}
+      COMMAND ${CMAKE_COMMAND} -E rm ${code}.tmp
+      COMMAND sed -i s/\\<namespace\\>/namespace_/g ${code}
+      DEPENDS ${xml_file}
+      VERBATIM
+    )
+
+    set(${out_var} ${${out_var}} ${header} ${code} PARENT_SCOPE)
+endfunction()
+
+set(PROTOCOL_XMLS
+  ${PROTOCOLS_DIR}/wlr-foreign-toplevel-management-unstable-v1.xml
+  ${PROTOCOLS_DIR}/wlr-layer-shell-unstable-v1.xml
+  ${PROTOCOLS_DIR}/xdg-shell.xml
 )
 
-add_custom_command(
-  OUTPUT ${WLR_FOREIGN_TOPLEVEL_MANAGEMENT_V1_CODE}
-  COMMAND wayland-scanner private-code
-  ${WLR_FOREIGN_TOPLEVEL_MANAGEMENT_V1_XML} ${WLR_FOREIGN_TOPLEVEL_MANAGEMENT_V1_CODE}
-  DEPENDS ${WLR_FOREIGN_TOPLEVEL_MANAGEMENT_V1_XML}
-  VERBATIM
-)
+set(GENERATED_PROTOCOL_SOURCES "")
+foreach(xml ${PROTOCOL_XMLS})
+    add_wayland_protocol(${xml} GENERATED_PROTOCOL_SOURCES)
+endforeach()
 
-add_library(protocols STATIC
-  ${WLR_FOREIGN_TOPLEVEL_MANAGEMENT_V1_HEADER}
-  ${WLR_FOREIGN_TOPLEVEL_MANAGEMENT_V1_CODE}
-)
+add_library(protocols STATIC ${GENERATED_PROTOCOL_SOURCES})
 
 target_include_directories(protocols PUBLIC ${GENERATED_DIR})
 target_link_libraries(protocols PUBLIC PkgConfig::WAYLAND_CLIENT)
@@ -168,6 +185,7 @@ target_link_libraries(miral-internal
         PkgConfig::WAYLAND_CLIENT
         PkgConfig::YAML
         PkgConfig::GIO
+        protocols
 )
 
 target_include_directories(miral-external

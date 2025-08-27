@@ -15,9 +15,9 @@
  */
 
 #include "wayland_app.h"
-
 #include <cstring>
 #include <algorithm>
+
 
 // If building against newer Wayland protocol definitions we may miss trailing fields
 #pragma GCC diagnostic push
@@ -197,6 +197,13 @@ void WaylandApp::handle_new_global(
             {
                 self->output_gone(output.get());
             };
+    }
+    else if (strcmp(interface, "zwlr_layer_shell_v1") == 0)
+    {
+        self->layer_shell_ = {
+            static_cast<zwlr_layer_shell_v1*>(wl_registry_bind(registry, id, &zwlr_layer_shell_v1_interface, 1)),
+            zwlr_layer_shell_v1_destroy
+        };
     }
 
     self->new_global(registry, id, interface, version);

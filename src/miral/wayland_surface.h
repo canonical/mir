@@ -62,5 +62,4 @@ private:
     int buffer_scale{1};
 };
 
-
 #endif // MIRAL_WAYLAND_SURFACE_H

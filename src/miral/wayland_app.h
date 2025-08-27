@@ -18,6 +18,7 @@
 #define MIRAL_WAYLAND_APP_H
 
 #include <wayland-client.h>
+#include "wlr-layer-shell-unstable-v1.h"
 #include <memory>
 #include <map>
 #include <functional>
@@ -131,6 +132,7 @@ protected:
     virtual void output_changed(WaylandOutput const*) {};
     virtual void output_gone(WaylandOutput const*) {}
     virtual void new_global(wl_registry*, uint32_t, char const*, uint32_t) {}
+    auto layer_shell() const -> zwlr_layer_shell_v1* { return layer_shell_; };
 
 private:
     /// Doesn't disconnect the display, instead roundtrips it to make sure everything is cleaned up
@@ -141,6 +143,7 @@ private:
     WaylandObject<wl_shm> shm_;
     WaylandObject<wl_seat> seat_;
     WaylandObject<wl_shell> shell_;
+    WaylandObject<zwlr_layer_shell_v1> layer_shell_;
 
     static void handle_new_global(
         void* data,

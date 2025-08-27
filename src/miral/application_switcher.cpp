@@ -481,8 +481,8 @@ public:
         auto const stride = 4 * width;
         auto const buffer = shm_->get_buffer(geom::Size(width, height), geom::Stride(stride));
 
-        uint8_t const bottom_colour[] = { 0x00, 0x00, 0x00 };   // Ubuntu orange
-        uint8_t const top_colour[] =    { 0x00, 0x00, 0x00 };   // Cool grey
+        uint8_t const bottom_colour[] = { 0x11, 0x11, 0x11 };   // Dark gray
+        uint8_t const top_colour[] =    { 0x33, 0x33, 0x33 };   // Cool gray
 
         char* row = static_cast<decltype(row)>(buffer->data());
 
