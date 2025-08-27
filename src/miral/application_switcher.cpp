@@ -87,106 +87,58 @@ struct Printer
     Printer& operator=(Printer const&) = delete;
 
     void print(std::shared_ptr<WaylandShmBuffer> const& buffer,
-        std::vector<ToplevelInfo> const& info_list)
+        std::vector<ToplevelInfo> const& info_list,
+        std::optional<std::string> const& selected_app_id)
     {
         if (!initialized)
             return;
 
         auto const region_size = buffer->size();
         FT_Set_Pixel_Sizes(face, 20, 0);
-        geom::Width rendered_width;
-        geom::Height rendered_height;
-        geom::DeltaY line_height;
 
-        std::string last_app_id;
-        std::vector<std::string> lines;
-        for (auto const& info : info_list)
+        auto const metrics = compute_text_metrics(info_list);
+        auto base_pos_y = 0.5 * (region_size.height - metrics.height);
+        static constexpr int region_pixel_bytes = 4;
+        auto const region_buffer = static_cast<unsigned char*>(buffer->data());
+
+        for (auto const& line : metrics.lines)
         {
-            auto const next_app_id = info.app_id ? info.app_id.value() : "Unknown";
-            if (next_app_id == last_app_id)
-                continue;
+            auto base_pos_x = 0.5 * (region_size.width - metrics.width);
+            auto line_text = converter.from_bytes(line);
+            Color color = (selected_app_id && *selected_app_id == line) ? yellow : white;
 
-            lines.push_back(next_app_id);
-            auto const line_text = converter.from_bytes(next_app_id);
-            auto line_width = geom::Width{};
-
-            for (auto const& character : line_text)
+            for (auto const ch : line_text)
             {
-                FT_Load_Glyph(face, FT_Get_Char_Index(face, character), FT_LOAD_DEFAULT);
-                auto const glyph = face->glyph;
+                FT_Load_Glyph(face, FT_Get_Char_Index(face, ch), FT_LOAD_DEFAULT);
+                auto glyph = face->glyph;
                 FT_Render_Glyph(glyph, FT_RENDER_MODE_NORMAL);
 
-                line_width = line_width + geom::DeltaX{glyph->advance.x >> 6};
-                line_height = std::max(line_height, geom::DeltaY{glyph->bitmap.rows * 1.5});
-            }
+                geom::Point pos{glyph->bitmap_left, -glyph->bitmap_top};
+                pos = pos + geom::Displacement{base_pos_x, base_pos_y};
 
-            rendered_width = std::max(rendered_width, line_width);
-            rendered_height = rendered_height + line_height;
-        }
+                blend_glyph_into_region(glyph, pos, region_size, region_buffer, region_pixel_bytes, color);
 
-        auto base_pos_y = 0.5 * (region_size.height - rendered_height);
-        static auto constexpr region_pixel_bytes = 4;
-        auto const region_buffer = static_cast<char unsigned*>(buffer->data());
-
-        for (auto const& line : lines)
-        {
-            auto base_pos_x = 0.5 * (region_size.width - rendered_width);
-            auto const line_text = converter.from_bytes(line);
-
-            for (auto const& character : line_text)
-            {
-                FT_Load_Glyph(face, FT_Get_Char_Index(face, character), FT_LOAD_DEFAULT);
-                auto const glyph = face->glyph;
-                FT_Render_Glyph(glyph, FT_RENDER_MODE_NORMAL);
-
-                auto const glyph_size = geom::Size{glyph->bitmap.width, glyph->bitmap.rows};
-                auto const pos = geom::Point{glyph->bitmap_left, -glyph->bitmap_top} + geom::Displacement{base_pos_x, base_pos_y};
-                auto const region_top_left_in_glyph_space = geom::Point{} + (pos - geom::Point{}) * -1; // literally just -pos
-                auto const region_lower_right_in_glyph_space = region_top_left_in_glyph_space + as_displacement(region_size);
-                auto const clipped_glyph_upper_left = geom::Point{
-                        std::max(geom::X{}, region_top_left_in_glyph_space.x),
-                        std::max(geom::Y{}, region_top_left_in_glyph_space.y)};
-                auto const clipped_glyph_lower_right = geom::Point{
-                        std::min(geom::X{} + geom::generic::as_displacement(glyph_size).dx, region_lower_right_in_glyph_space.x),
-                        std::min(geom::Y{} + geom::generic::as_displacement(glyph_size).dy, region_lower_right_in_glyph_space.y)};
-
-                unsigned char* const glyph_buffer = glyph->bitmap.buffer;
-                auto glyph_pixel = geom::Point{};
-                auto region_pixel = geom::Point{};
-                for (
-                    glyph_pixel.y = clipped_glyph_upper_left.y;
-                    glyph_pixel.y < clipped_glyph_lower_right.y;
-                    glyph_pixel.y += geom::DeltaY{1})
-                {
-                    region_pixel.y = glyph_pixel.y + (pos.y - geom::Y{});
-                    unsigned char* glyph_buffer_row = glyph_buffer + glyph_pixel.y.as_int() * glyph->bitmap.pitch;
-                    unsigned char* const region_buffer_row =
-                        region_buffer + (static_cast<long>(region_pixel.y.as_int()) * static_cast<long>(region_size.width.as_int()) * region_pixel_bytes);
-                    for (
-                        glyph_pixel.x = clipped_glyph_upper_left.x;
-                        glyph_pixel.x < clipped_glyph_lower_right.x;
-                        glyph_pixel.x += geom::DeltaX{1})
-                    {
-                        region_pixel.x = glyph_pixel.x + (pos.x - geom::X{});
-                        double const source_value = glyph_buffer_row[glyph_pixel.x.as_int()] / 255.0;
-                        unsigned char* const region_buffer_offset =
-                            region_buffer_row + (static_cast<long long>(region_pixel.x.as_value()) * region_pixel_bytes);
-                        for (
-                            unsigned char* region_ptr = region_buffer_offset;
-                            region_ptr < region_buffer_offset + region_pixel_bytes;
-                            region_ptr++)
-                        {
-                            *region_ptr = 0xff - static_cast<int>((0xff - *region_ptr) * (1 - source_value));
-                        }
-                    }
-                }
                 base_pos_x = base_pos_x + geom::DeltaX{glyph->advance.x >> 6};
             }
-            base_pos_y = base_pos_y + line_height;
+            base_pos_y = base_pos_y + metrics.line_height;
         }
     }
 
 private:
+    struct TextMetrics {
+        geom::Width width{};
+        geom::Height height{};
+        geom::DeltaY line_height{};
+        std::vector<std::string> lines;
+    };
+
+    struct Color {
+        uint8_t r, g, b, a;
+    };
+
+    static constexpr Color white{255, 255, 255, 255};
+    static constexpr Color yellow{255, 255, 0, 255};
+
     // Font search logic should be kept in sync with src/server/shell/decoration/renderer.cpp
     static auto default_font() -> std::string
     {
@@ -248,6 +200,85 @@ private:
         return "";
     }
 
+    TextMetrics compute_text_metrics(std::vector<ToplevelInfo> const& info_list)
+    {
+        TextMetrics metrics;
+
+        for (auto const& info : info_list)
+        {
+            auto app_id = info.app_id ? info.app_id.value() : "Unknown";
+            if (std::ranges::find(metrics.lines, app_id) != metrics.lines.end())
+                continue;
+
+            metrics.lines.push_back(app_id);
+            auto line_text = converter.from_bytes(app_id);
+            geom::Width line_width{};
+
+            for (auto const ch : line_text)
+            {
+                FT_Load_Glyph(face, FT_Get_Char_Index(face, ch), FT_LOAD_DEFAULT);
+                auto const glyph = face->glyph;
+                FT_Render_Glyph(glyph, FT_RENDER_MODE_NORMAL);
+
+                line_width = line_width + geom::DeltaX{glyph->advance.x >> 6};
+                metrics.line_height = std::max(metrics.line_height, geom::DeltaY{glyph->bitmap.rows * 1.5});
+            }
+
+            metrics.width = std::max(metrics.width, line_width);
+            metrics.height = metrics.height + metrics.line_height;
+        }
+        return metrics;
+    }
+
+    void blend_glyph_into_region(
+        FT_GlyphSlot const& glyph,
+        geom::Point const& pos,
+        geom::Size const& region_size,
+        unsigned char* region_buffer,
+        int const region_pixel_bytes,
+        Color const& color)
+    {
+        auto const glyph_size = geom::Size{glyph->bitmap.width, glyph->bitmap.rows};
+        auto const region_top_left = geom::Point{-pos.x.as_value(), -pos.y.as_value()};
+        auto const region_lower_right = region_top_left + as_displacement(region_size);
+
+        auto const clipped_upper_left = geom::Point{
+            std::max(geom::X{}, region_top_left.x),
+            std::max(geom::Y{}, region_top_left.y)};
+        auto const clipped_lower_right = geom::Point{
+            std::min(geom::X{} + as_displacement(glyph_size).dx, region_lower_right.x),
+            std::min(geom::Y{} + as_displacement(glyph_size).dy, region_lower_right.y)};
+
+        unsigned char* glyph_buffer = glyph->bitmap.buffer;
+
+        for (auto gy = clipped_upper_left.y; gy < clipped_lower_right.y; gy += geom::DeltaY{1})
+        {
+            auto ry = gy + (pos.y - geom::Y{});
+            unsigned char* glyph_row = glyph_buffer + gy.as_int() * glyph->bitmap.pitch;
+            unsigned char* region_row =
+                region_buffer + static_cast<long>(ry.as_int()) * static_cast<long>(region_size.width.as_int()) * region_pixel_bytes;
+
+            for (auto gx = clipped_upper_left.x; gx < clipped_lower_right.x; gx += geom::DeltaX{1})
+            {
+                auto rx = gx + (pos.x - geom::X{});
+                double src_value = glyph_row[gx.as_int()] / 255.0;
+
+                unsigned char* pixel = region_row + static_cast<long long>(rx.as_value()) * region_pixel_bytes;
+
+                for (int c = 0; c < 3; c++)
+                {
+                    uint8_t const src_component =
+                        (c == 0 ? color.b :   // blue goes in byte 0
+                         c == 1 ? color.g :   // green in byte 1
+                                  color.r);   // red in byte 2
+
+                    pixel[c] = static_cast<uint8_t>(
+                        src_component * src_value + pixel[c] * (1.0 - src_value));
+                }
+                pixel[3] = 255; // alpha
+            }
+        }
+    }
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
@@ -472,7 +503,10 @@ public:
 
         {
             std::lock_guard lock{mutex};
-            printer.print(buffer, toplevels_in_focus_order);
+            printer.print(
+                buffer,
+                toplevels_in_focus_order,
+                tentative_focus_index ? toplevels_in_focus_order[*tentative_focus_index].app_id : std::nullopt);
         }
 
         surface_->attach_buffer(buffer->use(), 1);
