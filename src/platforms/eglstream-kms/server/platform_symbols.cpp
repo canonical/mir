@@ -320,7 +320,7 @@ auto probe_display_platform(
     for (char const* extension : {
         "EGL_EXT_platform_base",
         "EGL_EXT_platform_device",
-        "EGL_EXT_device_base",})
+        "EGL_EXT_device_base"})
     {
         if (!epoxy_has_egl_extension(EGL_NO_DISPLAY, extension))
         {
@@ -540,6 +540,12 @@ auto probe_display_platform(
                             "Mir will not auto-load the eglstream-kms platform on this driver. To proceed anyway, manually specify the platform library.");
                         continue;
                     }
+                }
+
+                if(!epoxy_has_egl_extension(display, "EGL_WL_bind_wayland_display"))
+                {
+                    mir::log_warning("Display does not support EGL_WL_bind_wayland_display. Will skip this device.");
+                    continue;
                 }
 
                 if (epoxy_has_egl_extension(display, "EGL_EXT_output_base"))
