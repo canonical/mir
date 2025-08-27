@@ -576,10 +576,7 @@ auto mgg::GLRenderingProvider::make_framebuffer_provider(DisplaySink& sink)
                 if(auto dma_buf = std::dynamic_pointer_cast<mir::graphics::DMABufBuffer>(buffer))
                     return allocator->framebuffer_for(dma_buf);
 
-                if(auto framebuffer = buffer->to_framebuffer())
-                    return framebuffer;
-
-                return {};
+                return buffer->to_framebuffer();
             }
 
         private:

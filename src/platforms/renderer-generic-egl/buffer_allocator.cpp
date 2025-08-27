@@ -438,12 +438,7 @@ auto mge::GLRenderingProvider::make_framebuffer_provider(DisplaySink& /*sink*/)
         {
             // It is safe to return nullptr; this will be treated as “this buffer cannot be used as
             // a framebuffer”.
-            if (auto fb = std::dynamic_pointer_cast<mg::GenericEGLDisplayAllocator::EGLBuffer>(buf))
-            {
-                // TODO
-                return fb->to_framebuffer();
-            }
-            return {};
+            return buf->to_framebuffer();
         }
     };
     return std::make_unique<DefaultFramebufferProvider>();
