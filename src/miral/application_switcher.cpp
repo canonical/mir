@@ -71,12 +71,12 @@ struct Printer
         }
 
         FT_Set_Pixel_Sizes(face, 0, 10);
-        working = true;
+        initialized = true;
     }
 
     ~Printer()
     {
-        if (working)
+        if (initialized)
         {
             FT_Done_Face(face);
             FT_Done_FreeType(lib);
@@ -86,9 +86,10 @@ struct Printer
     Printer(Printer const&) = delete;
     Printer& operator=(Printer const&) = delete;
 
-    void printhelp(std::shared_ptr<WaylandShmBuffer> const& buffer)
+    void print(std::shared_ptr<WaylandShmBuffer> const& buffer,
+        std::vector<ToplevelInfo> const& info_list)
     {
-        if (!working)
+        if (!initialized)
             return;
 
         auto const region_size = buffer->size();
@@ -96,42 +97,22 @@ struct Printer
         if (region_size.width <= geom::Width{} || region_size.height <= geom::Height{})
             return;
 
-        static char const* const helptext[] =
-            {
-                "Welcome to miral-shell",
-                "",
-                "Keyboard shortcuts:",
-                "",
-                "  o Terminal: Ctrl-Alt-T/Ctrl-Alt-Shift-T",
-                "  o X Terminal: Ctrl-Alt-X (if X11 is enabled)",
-                "",
-                "  o Switch apps: Alt-Tab, tap or click on the corresponding window",
-                "  o Next (previous) app window: Alt-` (Alt-Shift-`)",
-                "",
-                "  o Move window: Alt-leftmousebutton drag (three finger drag)",
-                "  o Resize window: Alt-middle_button drag (three finger pinch)",
-                "",
-                "  o Maximize/restore current window (to display size). : Alt-F11",
-                "  o Maximize/restore current window (to display height): Shift-F11",
-                "  o Maximize/restore current window (to display width) : Ctrl-F11",
-                "",
-                "  o Switch workspace: Meta-Alt-[F1|F2|F3|F4]",
-                "  o Switch workspace taking active window: Meta-Ctrl-[F1|F2|F3|F4]",
-                "",
-                "  o Invert colors: Ctrl-I",
-                "",
-                "  o To exit: Ctrl-Alt-BkSp",
-            };
-
         auto const min_char_width = std::min({region_size.width.as_int()/60, region_size.height.as_int()/35, 20});
         FT_Set_Pixel_Sizes(face, min_char_width, 0);
         geom::Width help_width;
         geom::Height help_height;
         geom::DeltaY line_height;
 
-        for (char const* rawline : helptext)
+        std::string last_app_id = "";
+        std::vector<std::string> lines;
+        for (auto const& info : info_list)
         {
-            auto const line_text = converter.from_bytes(rawline);
+            auto const next_app_id = info.app_id ? info.app_id.value() : "Unknown";
+            if (next_app_id == last_app_id)
+                continue;
+
+            lines.push_back(next_app_id);
+            auto const line_text = converter.from_bytes(next_app_id);
             auto line_width = geom::Width{};
 
             for (auto const& character : line_text)
@@ -148,14 +129,14 @@ struct Printer
             help_height = help_height + line_height;
         }
 
-        auto base_pos_y = 0.5*(region_size.height - help_height);
+        auto base_pos_y = 0.5 * (region_size.height - help_height);
         static auto constexpr region_pixel_bytes = 4;
-        unsigned char* const region_buffer = static_cast<char unsigned*>(buffer->data());
+        auto const region_buffer = static_cast<char unsigned*>(buffer->data());
 
-        for (auto const* rawline : helptext)
+        for (auto const& line : lines)
         {
             auto base_pos_x = 0.5*(region_size.width - help_width);
-            auto const line_text = converter.from_bytes(rawline);
+            auto const line_text = converter.from_bytes(line);
 
             for (auto const& character : line_text)
             {
@@ -201,7 +182,7 @@ struct Printer
                             region_ptr < region_buffer_offset + region_pixel_bytes;
                             region_ptr++)
                         {
-                            *region_ptr = 0xff - (int)((0xff - *region_ptr) * (1 - source_value));
+                            *region_ptr = 0xff - static_cast<int>((0xff - *region_ptr) * (1 - source_value));
                         }
                     }
                 }
@@ -279,7 +260,7 @@ private:
     std::wstring_convert<preferred_codecvt> converter;
 #pragma GCC diagnostic pop
 
-    bool working = false;
+    bool initialized = false;
     FT_Library lib;
     FT_Face face;
 };
@@ -495,7 +476,10 @@ public:
             row += stride;
         }
 
-        printer.printhelp(buffer);
+        {
+            std::lock_guard lock{mutex};
+            printer.print(buffer, toplevels_in_focus_order);
+        }
         surface_->add_frame_callback([this]
         {
             draw();
