@@ -244,7 +244,8 @@ auto probe_rendering_platform(
             std::vector<char const*> missing_extensions;
             for (char const* extension : {
                 "EGL_KHR_stream_consumer_gltexture",
-                "EGL_NV_stream_attrib"})
+                "EGL_NV_stream_attrib",
+                "EGL_WL_bind_wayland_display"})
             {
                 if (!epoxy_has_egl_extension(display, extension))
                 {
