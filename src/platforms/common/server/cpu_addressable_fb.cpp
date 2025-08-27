@@ -255,45 +255,36 @@ mg::CPUAddressableBuffer::CPUAddressableBuffer(
 {
 }
 
-mg::CPUAddressableBuffer::~CPUAddressableBuffer()
-{
-    drmModeRmFB(drm_fd, fb_id);
-}
-
 mg::CPUAddressableBuffer::CPUAddressableBuffer(
-    mir::Fd drm_fd,
-    bool supports_modifiers,
-    DRMFormat format,
-    std::unique_ptr<Buffer> buffer)
-    : drm_fd{std::move(drm_fd)},
-      fb_id{fb_id_for_buffer(this->drm_fd, supports_modifiers, format, *buffer)},
-      buffer{std::move(buffer)}
+    mir::Fd drm_fd, bool supports_modifiers, DRMFormat format, std::unique_ptr<Buffer> buffer) :
+    state{std::make_shared<State>(
+        fb_id_for_buffer(drm_fd, supports_modifiers, format, *buffer), std::move(drm_fd), std::move(buffer))}
 {
 }
 
 auto mg::CPUAddressableBuffer::map_writeable() -> std::unique_ptr<mir::renderer::software::Mapping<unsigned char>>
 {
-    return buffer->map_writeable();
+    return state->buffer->map_writeable();
 }
 
 auto mg::CPUAddressableBuffer::format() const -> MirPixelFormat
 {
-    return buffer->format();
+    return state->buffer->format();
 }
 
 auto mg::CPUAddressableBuffer::stride() const -> geometry::Stride
 {
-    return buffer->stride();
+    return state->buffer->stride();
 }
 
 auto mg::CPUAddressableBuffer::size() const -> geometry::Size
 {
-    return buffer->size();
+    return state->buffer->size();
 }
 
 mir::graphics::BufferID mir::graphics::CPUAddressableBuffer::id() const
 {
-    return BufferID{fb_id};
+    return BufferID{state->fb_id};
 }
 
 MirPixelFormat mir::graphics::CPUAddressableBuffer::pixel_format() const
@@ -301,49 +292,47 @@ MirPixelFormat mir::graphics::CPUAddressableBuffer::pixel_format() const
     return format();
 }
 
-auto mir::graphics::CPUAddressableBuffer::to_framebuffer(std::shared_ptr<CPUAddressableBuffer> buf)
-    -> std::unique_ptr<Framebuffer>
+auto mir::graphics::CPUAddressableBuffer::to_framebuffer() -> std::unique_ptr<Framebuffer>
 {
     struct CPUAddressableFramebuffer : public Framebuffer
     {
-        CPUAddressableFramebuffer(std::shared_ptr<CPUAddressableBuffer> const buf) :
-            wrapped{buf}
+        CPUAddressableFramebuffer(std::shared_ptr<State> state) :
+            state{state}
         {
         }
 
         auto size() const -> geometry::Size override
         {
-            return wrapped->size();
+            return state->buffer->size();
         }
 
-        std::shared_ptr<CPUAddressableBuffer> const wrapped;
+        std::shared_ptr<State> const state;
     };
-    return make_unique<CPUAddressableFramebuffer>(std::move(buf));
+    return make_unique<CPUAddressableFramebuffer>(state);
 }
 
-auto mir::graphics::CPUAddressableBuffer::to_fb_handle(std::shared_ptr<CPUAddressableBuffer> buf)
-    -> std::unique_ptr<FBHandle>
+auto mir::graphics::CPUAddressableBuffer::to_fb_handle() -> std::unique_ptr<FBHandle>
 {
     struct CPUAddressableFBHandle : public FBHandle
     {
-        CPUAddressableFBHandle(std::shared_ptr<CPUAddressableBuffer> const buf) :
-            wrapped{buf}
+        CPUAddressableFBHandle(std::shared_ptr<State> state) :
+            state{state}
         {
         }
 
         auto size() const -> geometry::Size override
         {
-            return wrapped->size();
+            return state->buffer->size();
         }
 
         operator uint32_t() const override
         {
-            return wrapped->fb_id;
+            return state->fb_id;
         }
 
-        std::shared_ptr<CPUAddressableBuffer> const wrapped;
+        std::shared_ptr<State> const state;
     };
-    return make_unique<CPUAddressableFBHandle>(std::move(buf));
+    return make_unique<CPUAddressableFBHandle>(state);
 }
 
 auto mg::CPUAddressableBuffer::fb_id_for_buffer(
@@ -400,3 +389,9 @@ auto mg::CPUAddressableBuffer::fb_id_for_buffer(
     }
     return fb_id;
 }
+
+mir::graphics::CPUAddressableBuffer::State::~State()
+{
+    drmModeRmFB(drm_fd, fb_id);
+}
+

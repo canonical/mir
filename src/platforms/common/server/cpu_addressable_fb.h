@@ -33,7 +33,6 @@ public:
         bool supports_modifiers,
         DRMFormat format,
         mir::geometry::Size const& size);
-    ~CPUAddressableBuffer() override;
 
     auto map_writeable() -> std::unique_ptr<mir::renderer::software::Mapping<unsigned char>> override;
 
@@ -44,8 +43,8 @@ public:
     BufferID id() const override;
     MirPixelFormat pixel_format() const override;
 
-    static auto to_framebuffer(std::shared_ptr<CPUAddressableBuffer> buf) -> std::unique_ptr<Framebuffer>;
-    static auto to_fb_handle(std::shared_ptr<CPUAddressableBuffer> buf) -> std::unique_ptr<FBHandle>;
+    auto to_framebuffer() -> std::unique_ptr<Framebuffer> override;
+    auto to_fb_handle() -> std::unique_ptr<FBHandle>;
 
     CPUAddressableBuffer(CPUAddressableBuffer const&) = delete;
     CPUAddressableBuffer& operator=(CPUAddressableBuffer const&) = delete;
@@ -64,9 +63,15 @@ private:
         DRMFormat format,
         Buffer const& buf) -> uint32_t;
 
-    mir::Fd const drm_fd;
-    uint32_t const fb_id;
-    std::unique_ptr<Buffer> buffer;
+    struct State
+    {
+        uint32_t const fb_id;
+        mir::Fd const drm_fd;
+        std::unique_ptr<Buffer> buffer;
+        ~State();
+    };
+
+    std::shared_ptr<State> const state;
 };
 
 }

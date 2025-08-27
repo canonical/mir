@@ -72,7 +72,7 @@ mga::DisplaySink::DisplaySink(
     {
         mir::log_info("Clearing screen due to differing encountered and target modes");
         // TODO: Pull a supported format out of KMS rather than assuming XRGB8888
-        auto initial_fb = std::make_shared<graphics::CPUAddressableBuffer>(
+        auto initial_fb = std::make_unique<graphics::CPUAddressableBuffer>(
             std::move(drm_fd),
             false,
             DRMFormat{DRM_FORMAT_XRGB8888},
@@ -81,7 +81,7 @@ mga::DisplaySink::DisplaySink(
         auto mapping = initial_fb->map_writeable();
         ::memset(mapping->data(), 24, mapping->len());
 
-        visible_fb = CPUAddressableBuffer::to_fb_handle(initial_fb);
+        visible_fb = initial_fb->to_fb_handle();
         this->output->set_crtc(*visible_fb);
         listener->report_successful_drm_mode_set_crtc_on_construction();
     }

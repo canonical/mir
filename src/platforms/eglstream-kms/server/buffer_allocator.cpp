@@ -816,11 +816,8 @@ auto mge::GLRenderingProvider::make_framebuffer_provider(DisplaySink& /*sink*/)
         {
             // It is safe to return nullptr; this will be treated as “this buffer cannot be used as
             // a framebuffer”.
-            if(auto cpu_buffer = std::dynamic_pointer_cast<CPUAddressableBuffer>(buffer))
-            {
-                return CPUAddressableBuffer::to_framebuffer(cpu_buffer);
-            }
-            return {};
+
+            return buffer->to_framebuffer();
         }
     };
     return std::make_unique<DefaultFramebufferProvider>();
