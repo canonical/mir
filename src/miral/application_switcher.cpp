@@ -70,7 +70,7 @@ struct Printer
             return;
         }
 
-        FT_Set_Pixel_Sizes(face, 0, 10);
+        FT_Set_Pixel_Sizes(face, 0, 20);
         initialized = true;
     }
 
@@ -93,17 +93,12 @@ struct Printer
             return;
 
         auto const region_size = buffer->size();
-
-        if (region_size.width <= geom::Width{} || region_size.height <= geom::Height{})
-            return;
-
-        auto const min_char_width = std::min({region_size.width.as_int()/60, region_size.height.as_int()/35, 20});
-        FT_Set_Pixel_Sizes(face, min_char_width, 0);
-        geom::Width help_width;
-        geom::Height help_height;
+        FT_Set_Pixel_Sizes(face, 20, 0);
+        geom::Width rendered_width;
+        geom::Height rendered_height;
         geom::DeltaY line_height;
 
-        std::string last_app_id = "";
+        std::string last_app_id;
         std::vector<std::string> lines;
         for (auto const& info : info_list)
         {
@@ -125,17 +120,17 @@ struct Printer
                 line_height = std::max(line_height, geom::DeltaY{glyph->bitmap.rows * 1.5});
             }
 
-            help_width = std::max(help_width, line_width);
-            help_height = help_height + line_height;
+            rendered_width = std::max(rendered_width, line_width);
+            rendered_height = rendered_height + line_height;
         }
 
-        auto base_pos_y = 0.5 * (region_size.height - help_height);
+        auto base_pos_y = 0.5 * (region_size.height - rendered_height);
         static auto constexpr region_pixel_bytes = 4;
         auto const region_buffer = static_cast<char unsigned*>(buffer->data());
 
         for (auto const& line : lines)
         {
-            auto base_pos_x = 0.5*(region_size.width - help_width);
+            auto base_pos_x = 0.5 * (region_size.width - rendered_width);
             auto const line_text = converter.from_bytes(line);
 
             for (auto const& character : line_text)
@@ -174,7 +169,6 @@ struct Printer
                     {
                         region_pixel.x = glyph_pixel.x + (pos.x - geom::X{});
                         double const source_value = glyph_buffer_row[glyph_pixel.x.as_int()] / 255.0;
-                        (void)source_value;
                         unsigned char* const region_buffer_offset =
                             region_buffer_row + (static_cast<long long>(region_pixel.x.as_value()) * region_pixel_bytes);
                         for (
@@ -286,7 +280,7 @@ public:
         wayland_init(display);
         shm_ = std::make_shared<WaylandShm>(shm());
         surface_ = std::make_shared<WaylandSurface>(this);
-        surface_->set_fullscreen(nullptr);
+        // surface_->set_fullscreen(nullptr);
         surface_->commit();
         roundtrip();
     }
@@ -450,10 +444,10 @@ public:
 
     void draw()
     {
-        Size const size{surface_->configured_size()};
+        Size const size{400, 400};
         auto const width = size.width.as_int();
         auto const height = size.height.as_int();
-        auto const stride = 4*width;
+        auto const stride = 4 * width;
         auto const buffer = shm_->get_buffer(geom::Size(width, height), geom::Stride(stride));
 
         uint8_t const bottom_colour[] = { 0x00, 0x00, 0x00 };   // Ubuntu orange
@@ -480,10 +474,7 @@ public:
             std::lock_guard lock{mutex};
             printer.print(buffer, toplevels_in_focus_order);
         }
-        surface_->add_frame_callback([this]
-        {
-            draw();
-        });
+
         surface_->attach_buffer(buffer->use(), 1);
         surface_->commit();
         wl_display_flush(display());
