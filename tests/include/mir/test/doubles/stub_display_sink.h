@@ -34,12 +34,44 @@ namespace doubles
 
 class DummyCPUAddressableDisplayAllocator : public graphics::CPUAddressableDisplayAllocator
 {
-    class MappableFB : public graphics::CPUAddressableDisplayAllocator::MappableFB
+    class MappableBuffer : public graphics::CPUAddressableDisplayAllocator::MappableBuffer
     {
     public:
-        MappableFB(geometry::Size size, graphics::DRMFormat format)
+        MappableBuffer(geometry::Size size, graphics::DRMFormat format)
             : buffer{std::make_unique<StubBuffer>(size, format.as_mir_format().value())}
         {
+        }
+
+        auto id() const -> graphics::BufferID override
+        {
+            return graphics::BufferID{0};
+        }
+
+        auto pixel_format() const -> MirPixelFormat override
+        {
+            return format();
+        }
+
+        auto to_framebuffer() -> std::unique_ptr<graphics::Framebuffer>
+        {
+            class StubFramebuffer : public graphics::Framebuffer
+            {
+            public:
+                StubFramebuffer(std::unique_ptr<StubBuffer> buf) :
+                    buf{std::move(buf)}
+                {
+                }
+
+                auto size() const -> geometry::Size
+                {
+                    return buf->size();
+                }
+
+            private:
+                std::unique_ptr<StubBuffer> const buf;
+            };
+
+            return std::make_unique<StubFramebuffer>(std::move(buffer));
         }
 
         auto map_writeable() -> std::unique_ptr<renderer::software::Mapping<unsigned char>> override
@@ -61,7 +93,7 @@ class DummyCPUAddressableDisplayAllocator : public graphics::CPUAddressableDispl
             return buffer->size();
         }
     private:
-        std::unique_ptr<StubBuffer> const buffer;
+        std::unique_ptr<StubBuffer> buffer;
     };
 
 public:
@@ -74,9 +106,9 @@ public:
     {
         return {graphics::DRMFormat{DRM_FORMAT_ARGB8888}};
     }
-    auto alloc_fb(graphics::DRMFormat format) -> std::unique_ptr<graphics::CPUAddressableDisplayAllocator::MappableFB> override
+    auto alloc_buffer(graphics::DRMFormat format) -> std::unique_ptr<graphics::CPUAddressableDisplayAllocator::MappableBuffer> override
     {
-        return std::make_unique<MappableFB>(size, format);
+        return std::make_unique<MappableBuffer>(size, format);
     }
     auto output_size() const -> geometry::Size override
     {

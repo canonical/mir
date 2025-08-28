@@ -84,7 +84,7 @@ struct BasicScreenShooter : Test
                             .WillByDefault(
                                 [cpu_provider, format]()
                                 {
-                                    return cpu_provider->alloc_fb(format);
+                                    return cpu_provider->alloc_buffer(format);
                                 });
                         return surface;
                     }
@@ -243,7 +243,7 @@ TEST_F(BasicScreenShooter, throw_in_surface_for_output_handled_gracefully)
 
 TEST_F(BasicScreenShooter, throw_in_render_causes_graceful_failure)
 {
-    EXPECT_CALL(*next_renderer, render(_)).WillOnce([](auto) -> std::unique_ptr<mg::Framebuffer>
+    EXPECT_CALL(*next_renderer, render(_)).WillOnce([](auto) -> std::unique_ptr<mg::Buffer>
         {
             throw std::runtime_error{"throw in render()!"};
         });
@@ -273,7 +273,7 @@ TEST_F(BasicScreenShooter, ensures_renderer_is_current_on_only_one_thread)
 
     ON_CALL(*next_renderer, render(_))
         .WillByDefault(
-            [&](auto) -> std::unique_ptr<mg::Framebuffer>
+            [&](auto) -> std::unique_ptr<mg::Buffer>
             {
                 /* It's OK if we're being made current again on the same thread
                  * without having been released previously.
