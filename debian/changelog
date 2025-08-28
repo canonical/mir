@@ -5,6 +5,7 @@ mir (2.22.1) UNRELEASED; urgency=medium
       . debian: drop extra symbol (#4153)
       . Fix some memory leaks (#4158)
       . Fix use of std::clamp (#4161)
+      . Fix wlr-screencopy (#4162)
 
  -- Michał Sawicz <michal.sawicz@canonical.com>  Thu, 28 Aug 2025 18:05:06 +0200
 

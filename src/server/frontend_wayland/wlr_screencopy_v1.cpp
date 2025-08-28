@@ -531,6 +531,7 @@ void mf::WlrScreencopyFrameV1::report_result(
                 buffer_space_damage.size.height.as_uint32_t());
         }
 
+        send_flags_event(0);
         WaylandTimespec const timespec{captured_time.value()};
         send_ready_event(
             timespec.tv_sec_hi,
