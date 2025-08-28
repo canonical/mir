@@ -594,10 +594,7 @@ auto mgg::GLRenderingProvider::make_framebuffer_provider(DisplaySink& sink)
         {
             // It is safe to return nullptr; this will be treated as “this buffer cannot be used as
             // a framebuffer”.
-            if (auto mgg_gbm_buffer = std::dynamic_pointer_cast<mgg::GBMBuffer>(buf))
-                return mgg_gbm_buffer->to_framebuffer();
-
-            return {};
+            return buf->to_framebuffer();
         }
     };
     return std::make_unique<DefaultFramebufferProvider>();
