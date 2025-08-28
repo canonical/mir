@@ -129,8 +129,11 @@ bool mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
         renderer->set_output_filter(output_filter->filter());
 
         auto buffer = renderer->render(renderable_list);
-        if(auto framebuffer = fb_adaptor->buffer_to_framebuffer(std::move(buffer)))
-            display_sink.set_next_image(std::move(framebuffer));
+
+        // Account for EGLStream returning nullptr
+        if(buffer != nullptr)
+            if(auto framebuffer = fb_adaptor->buffer_to_framebuffer(std::move(buffer)))
+                display_sink.set_next_image(std::move(framebuffer));
 
         report->renderables_in_frame(this, renderable_list);
         report->rendered_frame(this);
