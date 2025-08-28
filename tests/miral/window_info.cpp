@@ -18,6 +18,8 @@
 
 #include "mir_test_framework/process.h"
 
+#include <mir/test/doubles/stub_surface.h>
+
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
@@ -37,7 +39,8 @@ TEST(WindowInfo, negative_window_size_does_not_divide_by_zero)
 {
     auto p = mtf::fork_and_run_in_a_different_process(
         [] {
-            Window window;
+            auto const surface = std::make_shared<mir::test::doubles::StubSurface>();
+            Window window{Application{}, surface};
             WindowSpecification params;
 
             Point p{0, 0};

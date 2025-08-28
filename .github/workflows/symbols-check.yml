@@ -24,7 +24,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          sudo apt-get update
+          sudo --preserve-env apt-add-repository --yes ppa:mir-team/dev
           sudo apt-get install --yes libclang1-18 python3-clang-18
           echo "MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH=/usr/lib/llvm-18/lib/libclang-18.so.1" >> $GITHUB_ENV
           echo "MIR_SYMBOLS_MAP_GENERATOR_CLANG_LIBRARY_PATH=/usr/lib/llvm-18/lib" >> $GITHUB_ENV

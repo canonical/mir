@@ -29,6 +29,7 @@ add_subdirectory(frontend_wayland/)
 add_subdirectory(frontend_xwayland/)
 add_subdirectory(shell/)
 add_subdirectory(console/)
+add_subdirectory(time/)
 
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/mirserver.pc.in
@@ -109,6 +110,7 @@ set(MIR_SERVER_REFERENCES
   mirlogging
   mirnullreport
   mirconsole
+  mirservertime
 
   mirrenderergl
   mirgl
