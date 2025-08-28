@@ -121,7 +121,7 @@ msh::BasicAccessibilityManager::~BasicAccessibilityManager() = default;
 
 void msh::BasicAccessibilityManager::cursor_scale(float new_scale)
 {
-    cursor->scale(std::clamp(0.0f, 100.0f, new_scale));
+    cursor->scale(std::clamp(new_scale, 0.0f, 100.0f));
 }
 
 void msh::BasicAccessibilityManager::simulated_secondary_click_enabled(bool enabled)
