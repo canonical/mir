@@ -26,7 +26,18 @@ namespace mir
 {
 namespace graphics
 {
-class Framebuffer;
+class Framebuffer
+{
+public:
+    Framebuffer() = default;
+    virtual ~Framebuffer() = default;
+
+    /**
+     * The size of this framebuffer, in pixels
+     */
+    virtual auto size() const -> geometry::Size = 0;
+};
+
 class NativeBufferBase
 {
 protected:
