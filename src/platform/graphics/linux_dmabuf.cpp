@@ -910,26 +910,36 @@ public:
             }
         }
 
-        send_format_table_event(mir::Fd{mir::IntOwnedFd{shm_buffer.fd()}}, format_table_length * sizeof(Format));
-        wl_array main_device = {};
-        wl_array_init(&main_device);
-        wl_array_add<dev_t>(&main_device, this->provider->devnum());
-        send_main_device_event(&main_device);
-
-        // We only currently support one device, which accessess all formats.
-        wl_array device = {};
-        wl_array_init(&device);
-        wl_array_add<dev_t>(&device, this->provider->devnum());
-        send_tranche_target_device_event(&device);
-        send_tranche_flags_event(0);
-        wl_array indicies = {};
-        wl_array_init(&indicies);
-        for (auto i = 0u; i < format_table_length; ++i)
         {
-            uint32_t *index = static_cast<uint32_t*>(wl_array_add(&indicies, sizeof(uint32_t)));
-            *index = i;
+            send_format_table_event(mir::Fd{mir::IntOwnedFd{shm_buffer.fd()}}, format_table_length * sizeof(Format));
+            wl_array main_device = {};
+            wl_array_init(&main_device);
+            wl_array_add<dev_t>(&main_device, this->provider->devnum());
+            send_main_device_event(&main_device);
+            wl_array_release(&main_device);
         }
-        send_tranche_formats_event(&indicies);
+
+        {
+            // We only currently support one device, which accessess all formats.
+            wl_array device = {};
+            wl_array_init(&device);
+            wl_array_add<dev_t>(&device, this->provider->devnum());
+            send_tranche_target_device_event(&device);
+            wl_array_release(&device);
+        }
+        send_tranche_flags_event(0);
+
+        {
+            wl_array indicies = {};
+            wl_array_init(&indicies);
+            for (auto i = 0u; i < format_table_length; ++i)
+            {
+                uint32_t *index = static_cast<uint32_t*>(wl_array_add(&indicies, sizeof(uint32_t)));
+                *index = i;
+            }
+            send_tranche_formats_event(&indicies);
+            wl_array_release(&indicies);
+        }
         send_tranche_done_event();
 
         send_done_event();
