@@ -1,3 +1,13 @@
+mir (2.22.1) UNRELEASED; urgency=medium
+
+  * Bugfix release 2.22.1
+    - Bugs fixed:
+      . debian: drop extra symbol (#4153)
+      . Fix some memory leaks (#4158)
+      . Fix use of std::clamp (#4161)
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Thu, 28 Aug 2025 18:05:06 +0200
+
 mir (2.22.0) UNRELEASED; urgency=medium
 
   * New upstream release 2.22.0
