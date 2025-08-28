@@ -246,6 +246,26 @@ private:
     size_t const size_;
 };
 
+struct mg::CPUAddressableBuffer::FBHandle : public mg::FBHandle
+{
+    FBHandle(std::shared_ptr<State> state) :
+        state{state}
+    {
+    }
+
+    auto size() const -> geometry::Size override
+    {
+        return state->buffer->size();
+    }
+
+    operator uint32_t() const override
+    {
+        return state->fb_id;
+    }
+
+    std::shared_ptr<State> const state;
+};
+
 mg::CPUAddressableBuffer::CPUAddressableBuffer(
     mir::Fd const& drm_fd,
     bool supports_modifiers,
@@ -294,45 +314,14 @@ MirPixelFormat mir::graphics::CPUAddressableBuffer::pixel_format() const
 
 auto mir::graphics::CPUAddressableBuffer::to_framebuffer() -> std::unique_ptr<Framebuffer>
 {
-    struct CPUAddressableFramebuffer : public Framebuffer
-    {
-        CPUAddressableFramebuffer(std::shared_ptr<State> state) :
-            state{state}
-        {
-        }
-
-        auto size() const -> geometry::Size override
-        {
-            return state->buffer->size();
-        }
-
-        std::shared_ptr<State> const state;
-    };
-    return make_unique<CPUAddressableFramebuffer>(state);
+    // The buffer is later casted down to `mg::FBHandle` in the various
+    // implementations of `DisplaySink::overlay`
+    return make_unique<FBHandle>(state);
 }
 
-auto mir::graphics::CPUAddressableBuffer::to_fb_handle() -> std::unique_ptr<FBHandle>
+auto mir::graphics::CPUAddressableBuffer::to_fb_handle() -> std::unique_ptr<mg::FBHandle>
 {
-    struct CPUAddressableFBHandle : public FBHandle
-    {
-        CPUAddressableFBHandle(std::shared_ptr<State> state) :
-            state{state}
-        {
-        }
-
-        auto size() const -> geometry::Size override
-        {
-            return state->buffer->size();
-        }
-
-        operator uint32_t() const override
-        {
-            return state->fb_id;
-        }
-
-        std::shared_ptr<State> const state;
-    };
-    return make_unique<CPUAddressableFBHandle>(state);
+    return make_unique<FBHandle>(state);
 }
 
 auto mg::CPUAddressableBuffer::fb_id_for_buffer(

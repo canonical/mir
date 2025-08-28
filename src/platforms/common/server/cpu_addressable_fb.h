@@ -50,6 +50,7 @@ public:
     CPUAddressableBuffer& operator=(CPUAddressableBuffer const&) = delete;
 private:
     class Buffer;
+    class FBHandle;
 
     CPUAddressableBuffer(
         mir::Fd drm_fd,
