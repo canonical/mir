@@ -45,7 +45,7 @@ public:
 
     void release_current() override;
 
-    auto commit() -> std::unique_ptr<Framebuffer> override;
+    auto commit() -> std::unique_ptr<Buffer> override;
 
     auto size() const -> geometry::Size override;
 

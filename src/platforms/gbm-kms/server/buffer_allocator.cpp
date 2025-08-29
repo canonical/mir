@@ -40,6 +40,7 @@
 #include "cpu_copy_output_surface.h"
 #include "surfaceless_egl_context.h"
 #include "mir/graphics/drm_syncobj.h"
+#include "gbm_display_allocator.h"
 
 #include <boost/throw_exception.hpp>
 #include <boost/exception/errinfo_errno.hpp>
@@ -283,13 +284,13 @@ public:
         }
     }
 
-    auto commit() -> std::unique_ptr<mg::Framebuffer> override
+    auto commit() -> std::unique_ptr<mg::Buffer> override
     {
         if (eglSwapBuffers(dpy, egl_surf) != EGL_TRUE)
         {
             BOOST_THROW_EXCEPTION(mg::egl_error("eglSwapBuffers failed"));
         }
-        return surface->claim_framebuffer();
+        return surface->claim_buffer();
     }
 
     auto size() const -> geom::Size override
@@ -520,7 +521,7 @@ auto mgg::GLRenderingProvider::surface_for_sink(
 {
     if (bound_display)
     {
-        if (auto gbm_allocator = sink.acquire_compatible_allocator<GBMDisplayAllocator>())
+        if (auto gbm_allocator = sink.acquire_compatible_allocator<mg::GBMDisplayAllocator>())
         {
             if (bound_display->on_this_sink(sink))
             {
@@ -563,42 +564,40 @@ auto mgg::GLRenderingProvider::make_framebuffer_provider(DisplaySink& sink)
 {
     if(auto* allocator = sink.acquire_compatible_allocator<DmaBufDisplayAllocator>())
     {
-        struct FooFramebufferProvider: public FramebufferProvider
+        struct DmaBufFramebufferProvider: public FramebufferProvider
         {
         public:
-            FooFramebufferProvider(DmaBufDisplayAllocator* allocator) : allocator{allocator}
+            DmaBufFramebufferProvider(DmaBufDisplayAllocator* allocator) : allocator{allocator}
             {
             }
 
             auto buffer_to_framebuffer(std::shared_ptr<Buffer> buffer) -> std::unique_ptr<Framebuffer> override
             {
                 if(auto dma_buf = std::dynamic_pointer_cast<mir::graphics::DMABufBuffer>(buffer))
-                {
                     return allocator->framebuffer_for(dma_buf);
-                }
 
-                return {};
+                return buffer->to_framebuffer();
             }
 
         private:
             DmaBufDisplayAllocator* allocator;
         };
 
-        return std::make_unique<FooFramebufferProvider>(allocator);
+        return std::make_unique<DmaBufFramebufferProvider>(allocator);
     }
 
     // TODO: Make this not a null implementation, so bypass/overlays can work again
-    class NullFramebufferProvider : public FramebufferProvider
+    class DefaultFramebufferProvider : public FramebufferProvider
     {
     public:
-        auto buffer_to_framebuffer(std::shared_ptr<Buffer>) -> std::unique_ptr<Framebuffer> override
+        auto buffer_to_framebuffer(std::shared_ptr<Buffer> buf) -> std::unique_ptr<Framebuffer> override
         {
             // It is safe to return nullptr; this will be treated as “this buffer cannot be used as
             // a framebuffer”.
-            return {};
+            return buf->to_framebuffer();
         }
     };
-    return std::make_unique<NullFramebufferProvider>();
+    return std::make_unique<DefaultFramebufferProvider>();
 }
 
 mgg::GLRenderingProvider::GLRenderingProvider(

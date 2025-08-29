@@ -37,8 +37,8 @@ public:
     auto supported_formats() const
         -> std::vector<DRMFormat> override;
 
-    auto alloc_fb(DRMFormat format)
-        -> std::unique_ptr<MappableFB> override;
+    auto alloc_buffer(DRMFormat format) 
+        -> std::unique_ptr<MappableBuffer> override;
 
     auto output_size() const -> geometry::Size override;
 private:

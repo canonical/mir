@@ -37,7 +37,7 @@ public:
     void set_output_filter(MirOutputFilter) override {};
     void suspend() override {}
 
-    auto render(graphics::RenderableList const& renderables) const -> std::unique_ptr<graphics::Framebuffer> override
+    auto render(graphics::RenderableList const& renderables) const -> std::unique_ptr<graphics::Buffer> override
     {
         for (auto const& r : renderables)
             r->buffer(); // We need to consume a buffer to unblock client tests

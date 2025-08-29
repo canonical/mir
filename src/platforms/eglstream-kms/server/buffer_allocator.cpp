@@ -18,6 +18,7 @@
 #include <epoxy/gl.h>
 
 #include "buffer_allocator.h"
+#include "cpu_addressable_fb.h"
 #include "cpu_copy_output_surface.h"
 #include "mir/anonymous_shm_file.h"
 #include "mir/graphics/display_sink.h"
@@ -670,7 +671,7 @@ public:
         }
     }
 
-    auto commit() -> std::unique_ptr<mg::Framebuffer> override
+    auto commit() -> std::unique_ptr<mg::Buffer> override
     {
         if (eglSwapBuffers(dpy, surface) != EGL_TRUE)
         {
@@ -808,15 +809,16 @@ auto mge::GLRenderingProvider::make_framebuffer_provider(DisplaySink& /*sink*/)
     -> std::unique_ptr<FramebufferProvider>
 {
     // TODO: *Can* we provide overlay support?
-    class NullFramebufferProvider : public FramebufferProvider
+    class DefaultFramebufferProvider : public FramebufferProvider
     {
     public:
-        auto buffer_to_framebuffer(std::shared_ptr<Buffer>) -> std::unique_ptr<Framebuffer> override
+        auto buffer_to_framebuffer(std::shared_ptr<Buffer> buffer) -> std::unique_ptr<Framebuffer> override
         {
             // It is safe to return nullptr; this will be treated as “this buffer cannot be used as
             // a framebuffer”.
-            return {};
+
+            return buffer->to_framebuffer();
         }
     };
-    return std::make_unique<NullFramebufferProvider>();
+    return std::make_unique<DefaultFramebufferProvider>();
 }
