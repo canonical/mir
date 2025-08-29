@@ -35,7 +35,8 @@ execute: |
         yaml-cpp-dev \
         libapparmor-dev \
         wlcs-dev \
-        pixman-dev
+        pixman-dev \
+        xwayland
 
     BUILD_DIR=$PWD/../build
     cmake \
