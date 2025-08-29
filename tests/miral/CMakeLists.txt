@@ -74,6 +74,8 @@ target_link_libraries(miral-test-internal
     ${GMOCK_LIBRARIES}
 )
 
+find_program(XWAYLAND_EXECUTABLE Xwayland REQUIRED)
+
 mir_add_wrapped_executable(miral-test NOINSTALL
     external_client.cpp
     config_file.cpp
