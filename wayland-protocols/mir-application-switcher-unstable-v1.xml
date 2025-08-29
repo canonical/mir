@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<protocol name="mir_application_switcher_unstable_v1">
+  <copyright>
+    Copyright © 2025 Canonical Limited
+
+    Permission to use, copy, modify, distribute, and sell this
+    software and its documentation for any purpose is hereby granted
+    without fee, provided that the above copyright notice appear in
+    all copies and that both that copyright notice and this permission
+    notice appear in supporting documentation, and that the name of
+    the copyright holders not be used in advertising or publicity
+    pertaining to distribution of the software without specific,
+    written prior permission.  The copyright holders make no
+    representations about the suitability of this software for any
+    purpose.  It is provided "as is" without express or implied
+    warranty.
+
+    THE COPYRIGHT HOLDERS DISCLAIM ALL WARRANTIES WITH REGARD TO THIS
+    SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+    FITNESS, IN NO EVENT SHALL THE COPYRIGHT HOLDERS BE LIABLE FOR ANY
+    SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+    WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
+    AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
+    ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
+    THIS SOFTWARE.
+  </copyright>
+
+  <interface name="mir_application_switcher_v1" version="1">
+    <description summary="application switcher client responsibilities">
+      Clients may use this interface to declare themselves as the application
+      switcher. An "application switcher" is a client that is responsible for
+      cycling through applications or windows that need focus, typically on the
+      "alt + tab" and "alt + tick" keybinds.
+
+      As an application switcher, the client is notified when it should display
+      itself and in what state it should do so.
+
+      It is the responsibility of the client to use other protocols (e.g.
+      wlr foreign toplevel management) to list the available windows and applications
+      and request activation on them when appropriate.
+
+      Only one application switcher may be registered at any time.
+    </description>
+
+    <request name="create">
+      <description summary="create a new mir_application_switcher_handle_v1">
+        Request to become the application switcher.
+
+        Attempting to register an application switcher while another mir_application_switcher_handle_v1
+        client is valid is a client error.
+      </description>
+
+      <arg name="id" type="new_id" interface="mir_application_switcher_handle_v1"/>
+    </request>
+
+    <enum name="error">
+      <entry name="already_set" value="0" summary="application switcher already set"/>
+    </enum>
+  </interface>
+
+  <interface name="mir_application_switcher_handle_v1" version="1">
+    <event name="activate">
+      Requests that the application switcher client activates.
+
+      The client may choose to respond to this event however they deem fit.
+      For example, they may display an overlay layer shell surface and begin
+      submitting visible buffers to it while waiting on further key events.
+
+      If the application switcher is already active, then nothing happens.
+
+      This request may be sent in response to a keystroke or anything else that the shell
+      decides.
+
+      The initial state argument provides the client with information about the type of
+      focus switching that is currently happening. Focus switching may happen either across
+      all applications or within an application. The focus switching direction may be forwards
+      or backwards. The client may choose to do whatever it deems necessary in response to
+      this argument.
+
+      <arg name="initial_state" type="uint" enum="state" summary="initial state of the application switcher"/>
+    </event>
+
+    <event name="deactivate">
+      Requests that the application switcher deactivates.
+
+      The client may choose to respond to this event however they deem fit.
+      For example, they may hide their surfaces and stop listening on keystrokes.
+
+      If the application switcher is already inactive, then nothing happens.
+    </event>
+
+    <event name="state">
+      Informs the client that the type of focus switching has changed.
+
+      This event may be sent in response to a keystroke or anything else that the shell
+      decides.
+
+      The client may choose to do whatever it deems necessary in response.
+
+      <arg name="state" type="uint" enum="state" summary="new state of the application switcher"/>
+    </event>
+
+    <event name="next">
+      Informs the client that it should tentatively focus the next item in the focus order.
+      The "next" item is up to the client to decide, but it is often the next window or application
+      given in the focus order per the current state.
+
+      The client may choose to do whatever it deems necessary in response.
+    </event>
+
+    <event name="confirm">
+      Informs the client that it should focus the tentatively selected item.
+    </event>
+
+    <request name="destroy" type="destructor">
+      <description summary="destroy the mir_application_switcher_handle_v1 object">
+        Notify the compositor that the mir_application_switcher_handle_v1 will no longer
+        be used.
+
+        Once received by the compositor, the compositor should be able to register a new
+        mir_application_switcher_handle_v1 without throwing an error.
+      </description>
+    </request>
+
+    <enum name="state">
+      <entry name="all_forward" value="0" summary="cycling across applications going forward"/>
+      <entry name="all_backward" value="1" summary="cycling across applications going backward"/>
+      <entry name="within_forward" value="2" summary="cycling within the current application going forward"/>
+      <entry name="within_backward" value="3" summary="cycling within the current application going backward"/>
+    </enum>
+  </interface>
+
+</protocol>

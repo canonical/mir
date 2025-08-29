@@ -18,6 +18,7 @@ global:
     mir::DefaultServerConfiguration::set_the_decoration_strategy*;
     mir::DefaultServerConfiguration::set_wayland_extension_filter*;
     mir::DefaultServerConfiguration::the_accessibility_manager*;
+    mir::DefaultServerConfiguration::the_application_switcher*;
     mir::DefaultServerConfiguration::the_buffer_allocator*;
     mir::DefaultServerConfiguration::the_clock*;
     mir::DefaultServerConfiguration::the_composite_event_filter*;
@@ -198,6 +199,7 @@ global:
     mir::Server::supported_pixel_formats*;
     mir::Server::the_accessibility_manager*;
     mir::Server::the_application_not_responding_detector*;
+    mir::Server::the_application_switcher*;
     mir::Server::the_buffer_allocator*;
     mir::Server::the_composite_event_filter*;
     mir::Server::the_compositor*;
@@ -733,6 +735,8 @@ global:
     mir::shell::AbstractShell::swap_z_order*;
     mir::shell::AccessibilityManager::?AccessibilityManager*;
     mir::shell::AccessibilityManager::mousekeys*;
+    mir::shell::ApplicationSwitcher::ApplicationSwitcher*;
+    mir::shell::ApplicationSwitcherObserver::?ApplicationSwitcherObserver*;
     mir::shell::DefaultWindowManager::handle_keyboard_event*;
     mir::shell::DisplayConfigurationController::?DisplayConfigurationController*;
     mir::shell::DisplayConfigurationController::DisplayConfigurationController*;
@@ -830,6 +834,7 @@ global:
     non-virtual?thunk?to?mir::DefaultServerConfiguration::set_wayland_extension_filter*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_accessibility_manager*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_application_not_responding_detector*;
+    non-virtual?thunk?to?mir::DefaultServerConfiguration::the_application_switcher*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_buffer_allocator*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_clock*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_composite_event_filter*;
@@ -1242,6 +1247,7 @@ global:
     non-virtual?thunk?to?mir::shell::AbstractShell::swap_z_order*;
     non-virtual?thunk?to?mir::shell::AccessibilityManager::?AccessibilityManager*;
     non-virtual?thunk?to?mir::shell::AccessibilityManager::mousekeys*;
+    non-virtual?thunk?to?mir::shell::ApplicationSwitcherObserver::?ApplicationSwitcherObserver*;
     non-virtual?thunk?to?mir::shell::DefaultWindowManager::handle_keyboard_event*;
     non-virtual?thunk?to?mir::shell::DisplayConfigurationController::?DisplayConfigurationController*;
     non-virtual?thunk?to?mir::shell::DisplayLayout::?DisplayLayout*;
@@ -1413,6 +1419,8 @@ global:
     typeinfo?for?mir::scene::TextInputStateObserver;
     typeinfo?for?mir::shell::AbstractShell;
     typeinfo?for?mir::shell::AccessibilityManager;
+    typeinfo?for?mir::shell::ApplicationSwitcher;
+    typeinfo?for?mir::shell::ApplicationSwitcherObserver;
     typeinfo?for?mir::shell::DefaultWindowManager;
     typeinfo?for?mir::shell::DisplayConfigurationController;
     typeinfo?for?mir::shell::DisplayLayout;
@@ -1615,6 +1623,7 @@ global:
     vtable?for?mir::scene::TextInputStateObserver;
     vtable?for?mir::shell::AbstractShell;
     vtable?for?mir::shell::AccessibilityManager;
+    vtable?for?mir::shell::ApplicationSwitcherObserver;
     vtable?for?mir::shell::DefaultWindowManager;
     vtable?for?mir::shell::DisplayConfigurationController;
     vtable?for?mir::shell::DisplayLayout;
@@ -1646,5 +1655,5 @@ global:
   extern "C++" {
     mir::time::AlarmFactory::create_repeating_alarm*;
   };
-local: *;
 } MIR_SERVER_INTERNAL_2.22;
+

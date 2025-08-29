@@ -31,6 +31,7 @@
 #include "layer_shell_v1.h"
 #include "mir/shell/accessibility_manager.h"
 #include "mir_shell.h"
+#include "mir_application_switcher_v1.h"
 #include "pointer_constraints_unstable_v1.h"
 #include "primary_selection_v1.h"
 #include "relative_pointer_unstable_v1.h"
@@ -220,6 +221,10 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
         {
             return mf::create_mir_shell_v1(ctx.display);
         }),
+    make_extension_builder<mw::MirApplicationSwitcherV1>([](auto const& ctx)
+        {
+            return mf::create_mir_application_switcher(ctx.display, ctx.application_switcher);
+        }),
     make_extension_builder<mw::XdgDecorationManagerV1>([](auto const& ctx)
         {
             return mf::create_xdg_decoration_unstable_v1(ctx.display, ctx.decoration_strategy);
@@ -400,6 +405,7 @@ std::shared_ptr<mf::Connector>
                 the_decoration_strategy(),
                 the_session_coordinator(),
                 the_token_authority(),
+                the_application_switcher(),
                 the_rendering_platforms());
         });
 }

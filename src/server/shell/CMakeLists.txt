@@ -23,6 +23,7 @@ set(
   basic_hover_click_transformer.cpp basic_hover_click_transformer.h
   basic_slow_keys_transformer.cpp basic_slow_keys_transformer.h
   basic_sticky_keys_transformer.cpp basic_sticky_keys_transformer.h
+  basic_application_switcher.cpp basic_application_switcher.h
 )
 
 add_library(

@@ -34,6 +34,7 @@ set(
   xdg_shell_stable.cpp          xdg_shell_stable.h
   xdg_output_v1.cpp             xdg_output_v1.h
   layer_shell_v1.cpp            layer_shell_v1.h
+  mir_application_switcher_v1.cpp mir_application_switcher_v1.h
   mir_shell.cpp                 mir_shell.h
   resource_lifetime_tracker.cpp resource_lifetime_tracker.h
   wl_region.cpp                 wl_region.h

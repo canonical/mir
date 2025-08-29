@@ -589,6 +589,12 @@ global:
     "miral::OutputFilter::OutputFilter(miral::live_config::Store&)";
     miral::AppendKeyboardEventFilter::AppendKeyboardEventFilter*;
     miral::AppendKeyboardEventFilter::operator*;
+    miral::ApplicationSwitcher::ApplicationSwitcher*;
+    miral::ApplicationSwitcher::activate*;
+    miral::ApplicationSwitcher::deactivate*;
+    miral::ApplicationSwitcher::next*;
+    miral::ApplicationSwitcher::operator*;
+    miral::ApplicationSwitcher::set_state*;
     miral::BounceKeys::BounceKeys*;
     miral::BounceKeys::delay*;
     miral::BounceKeys::disable*;
@@ -677,6 +683,7 @@ global:
     non-virtual?thunk?to?miral::live_config::IniFile::on_done*;
     non-virtual?thunk?to?miral::live_config::Store::?Store*;
     typeinfo?for?miral::AppendKeyboardEventFilter;
+    typeinfo?for?miral::ApplicationSwitcher;
     typeinfo?for?miral::BounceKeys;
     typeinfo?for?miral::HoverClick;
     typeinfo?for?miral::Magnifier;

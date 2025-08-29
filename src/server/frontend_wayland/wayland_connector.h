@@ -63,6 +63,7 @@ namespace shell
 {
 class Shell;
 class AccessibilityManager;
+class ApplicationSwitcher;
 }
 namespace scene
 {
@@ -122,6 +123,7 @@ public:
         std::shared_ptr<scene::SessionCoordinator> session_coordinator;
         std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> keyboard_observer_registrar;
         std::shared_ptr<shell::TokenAuthority> token_authority;
+        std::shared_ptr<shell::ApplicationSwitcher> application_switcher;
     };
 
     WaylandExtensions() = default;
@@ -177,6 +179,7 @@ public:
         std::shared_ptr<DecorationStrategy> const& decoration_strategy,
         std::shared_ptr<scene::SessionCoordinator> const& session_coordinator,
         std::shared_ptr<shell::TokenAuthority> const& token_authority,
+        std::shared_ptr<shell::ApplicationSwitcher> const& application_switcher,
         std::vector<std::shared_ptr<graphics::RenderingPlatform>> const& render_platforms);
 
     ~WaylandConnector() override;

@@ -143,7 +143,8 @@ struct TemporaryCompositeEventFilter : public mi::CompositeEventFilter
     MACRO(the_default_cursor_image)\
     MACRO(the_scene_report)\
     MACRO(the_scene)\
-    MACRO(the_screen_shooter_factory)
+    MACRO(the_screen_shooter_factory)\
+    MACRO(the_application_switcher)
 
 #define MIR_SERVER_BUILDER(name)\
     std::function<std::invoke_result_t<decltype(&mir::DefaultServerConfiguration::the_##name),mir::DefaultServerConfiguration*>()> name##_builder;

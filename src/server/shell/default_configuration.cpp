@@ -17,6 +17,7 @@
 #include "mir/default_server_configuration.h"
 
 #include "basic_accessibility_manager.h"
+#include "basic_application_switcher.h"
 #include "basic_idle_handler.h"
 #include "decoration/basic_decoration.h"
 #include "decoration/basic_manager.h"
@@ -205,3 +206,12 @@ auto mir::DefaultServerConfiguration::the_accessibility_manager() -> std::shared
                 std::make_shared<shell::BasicStickyKeysTransformer>());
         });
 }
+
+auto mir::DefaultServerConfiguration::the_application_switcher() -> std::shared_ptr<shell::ApplicationSwitcher>
+{
+    return application_switcher([this]
+    {
+        return std::make_shared<shell::BasicApplicationSwitcher>(*the_main_loop());
+    });
+}
+

@@ -249,6 +249,7 @@ mf::WaylandConnector::WaylandConnector(
     std::shared_ptr<mir::DecorationStrategy> const& decoration_strategy,
     std::shared_ptr<scene::SessionCoordinator> const& session_coordinator,
     std::shared_ptr<shell::TokenAuthority> const& token_authority,
+    std::shared_ptr<shell::ApplicationSwitcher> const& application_switcher,
     std::vector<std::shared_ptr<mg::RenderingPlatform>> const& render_platforms)
     : extension_filter{extension_filter},
       display{wl_display_create(), &cleanup_display},
@@ -339,7 +340,8 @@ mf::WaylandConnector::WaylandConnector(
         decoration_strategy,
         session_coordinator,
         keyboard_observer_registrar,
-        token_authority});
+        token_authority,
+        application_switcher});
 
     shm_global = std::make_unique<WlShm>(display.get(), executor);
 

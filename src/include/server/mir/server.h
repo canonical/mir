@@ -48,6 +48,7 @@ class PointerInputDispatcher;
 namespace shell
 {
 class AccessibilityManager;
+class ApplicationSwitcher;
 class DisplayLayout;
 class DisplayConfigurationController;
 class FocusController;
@@ -510,6 +511,8 @@ public:
     auto the_scene() const -> std::shared_ptr<compositor::Scene>;
 
     auto the_screen_shooter_factory() const -> std::shared_ptr<compositor::ScreenShooterFactory>;
+
+    auto the_application_switcher() const -> std::shared_ptr<shell::ApplicationSwitcher>;
 
     /** @name Wayland tools
      * These facilitate shells implementing Wayland protocol extensions.
