@@ -266,6 +266,7 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/miral-shell.desktop
 %{_libdir}/libmirserver.so.%{mirserver_sover}
 %{_libdir}/libmirwayland.so.%{mirwayland_sover}
 %dir %{_libdir}/%{name}/server-platform
+%{_libdir}/%{name}/server-platform/graphics-atomic-kms.so.%{mirplatformgraphics_sover}
 %{_libdir}/%{name}/server-platform/graphics-gbm-kms.so.%{mirplatformgraphics_sover}
 %{_libdir}/%{name}/server-platform/graphics-wayland.so.%{mirplatformgraphics_sover}
 %{_libdir}/%{name}/server-platform/input-evdev.so.%{mirplatforminput_sover}
