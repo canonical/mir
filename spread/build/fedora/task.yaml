@@ -1,6 +1,7 @@
-summary: Build (on Fedora)
+summary: Build Fedora packages
 systems: [fedora-*]
 variants: [amd64]
+kill-timeout: 60m
 
 execute: |
     if [[ "${SPREAD_SYSTEM}" == "fedora-rawhide" ]]; then
@@ -9,61 +10,20 @@ execute: |
       dnf --refresh --assumeyes --enablerepo=rawhide distro-sync
     fi
 
-    dnf install --assumeyes --allowerasing \
-        cmake \
-        make \
-        gcc-c++ \
-        ccache \
-        boost-devel \
-        mesa-libEGL-devel \
-        mesa-libGLES-devel \
-        glm-devel \
-        systemd-devel \
-        glib2-devel \
-        wayland-devel \
-        mesa-libgbm-devel \
-        libepoxy-devel \
-        nettle-devel \
-        libinput-devel \
-        libdisplay-info-devel \
-        libxml++-devel \
-        libuuid-devel \
-        libX11-devel \
-        libxkbcommon-x11-devel \
-        libxkbcommon-devel \
-        freetype-devel \
-        lttng-ust-devel \
-        libatomic \
-        python3-pillow \
-        libevdev-devel \
-        umockdev-devel \
-        gtest-devel \
-        gmock-devel \
-        dbus \
-        python3-dbusmock \
-        python3-gobject-base \
-        python3-dbus \
-        libXcursor-devel \
-        yaml-cpp-devel\
-        egl-wayland-devel \
-        systemtap-sdt-devel \
-        libdrm-devel \
-        wlcs-devel \
-        gmp-devel \
-        pixman-devel
+    dnf --assumeyes install @buildsys-build ccache 'dnf5-command(builddep)'
+    if [ "${CLANG}" -eq 1 ]; then
+        dnf --assumeyes install clang
+    fi
 
-    BUILD_DIR=$PWD/../build
-    cmake \
-        -H$SPREAD_PATH -B$BUILD_DIR \
-        -DCMAKE_BUILD_TYPE=Debug \
-        -DMIR_ENABLE_WLCS_TESTS=OFF \
-        -DCMAKE_C_COMPILER_LAUNCHER=ccache \
-        -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-    # Run cmake again to pick up wlcs?!?!?!?!
-    cmake $BUILD_DIR
-    export VERBOSE=1
-    cmake --build $BUILD_DIR -- -j`nproc`
-    export XDG_RUNTIME_DIR=/tmp
-    cmake --build $BUILD_DIR -- ptest
+    dnf --assumeyes builddep --allowerasing ${SPREAD_PATH}/rpm/mir.spec
+
+    pushd ${SPREAD_PATH}
+    rpmbuild --build-in-place \
+             --with ccache \
+             --with debug \
+             --with run_tests \
+             --define "_vpath_builddir $SPREAD_PATH/../build" \
+             -bb rpm/mir.spec
+    popd
 
     ccache --show-stats --zero-stats > ${CCACHE_DIR}/ccache.stats
