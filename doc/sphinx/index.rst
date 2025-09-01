@@ -5,13 +5,15 @@
 Mir
 ===
 
-Mir is a next generation display server.
+Mir is an advanced display server designed to operate across a variety of Linux-based
+devices, including traditional desktops, IoT and embedded systems.
 
-It runs on a range of Linux powered devices including traditional desktops,
-IoT and embedded products. Mir is a replacement for the X window server system,
-commonly used on Linux desktop devices. It allows device makers and desktop
-users to have a well-defined, efficient, flexible, and secure platform for
-their graphical environment.
+As a library, Mir helps to build Wayland compositors that are commonly used in Linux
+desktop environments.
+
+Mir can be considered a modern alternative to the X window server system, providing
+a well-defined, efficient, flexible and secure platform for graphical environments
+that makes it an ideal choice for both device manufacturers and desktop users.
 
 ---------
 
