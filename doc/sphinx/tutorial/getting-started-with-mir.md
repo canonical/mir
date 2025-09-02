@@ -1,3 +1,4 @@
+(tutorial-getting-started)=
 # Getting started with Mir
 
 This tutorial will guide you through Mir's basic functionality. 

@@ -1,7 +1,4 @@
----
-discourse: 30112
----
-
+(howto-develop-wayland-compositor)=
 # Developing a Wayland Compositor using Mir
 
 ## Overview
