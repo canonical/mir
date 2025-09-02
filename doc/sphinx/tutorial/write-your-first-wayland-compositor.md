@@ -39,7 +39,7 @@ sudo apk add mir-dev
 ```
 
 ## Create the Compositor
-Now that we have the depdencies installed, we are ready to begin progoramming
+Now that we have the dependencies installed, we are ready to begin programming
 the compositor.
 
 First let's create a new folder called `demo-mir-compositor`:
@@ -138,7 +138,7 @@ WAYLAND_DISPLAY=wayland-99 bomber
 ```
 
 An window displaying the `bomber` application should appear in the compositor.
-You may try moving the window around the screeen, maximizing it or restoring it.
+You may try moving the window around the screen, maximizing it or restoring it.
 
 ## Next steps
 Now that you have your base compositor working, check out these guides on how to
