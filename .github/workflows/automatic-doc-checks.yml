@@ -14,4 +14,3 @@ jobs:
     uses: canonical/documentation-workflows/.github/workflows/documentation-checks.yaml@main
     with:
       working-directory: doc/sphinx
-      linkcheck-target: ${{ github.event_name == 'workflow_dispatch' && 'linkcheck' || 'noop-target' }}
