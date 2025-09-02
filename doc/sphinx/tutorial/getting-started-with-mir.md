@@ -1,14 +1,17 @@
 (tutorial-getting-started)=
 # Getting started with Mir
 
-This tutorial will guide you through Mir's basic functionality. 
+This tutorial will introduce you to the basic functionality of Mir by running a demo compositor. By the end of
+the tutorial, you will install and run a demo compositor, learn how to use Mir in different environments,
+and learn about features that Mir provides.
 
-By the end of the tutorial, you will install and run a demo application, learn how to use Mir in different environments, and learn about features that Mir provides for Mir-based compositors. 
+If you are unfamiliar with Mir, start with this tutorial. Afterward, proceed to the
+[developer tutorial](write-your-first-wayland-compositor.md) where you will develop
+your first compositor with Mir.
 
-If you are unfamiliar with Mir, start with this tutorial, and then proceed to a [developer tutorial](write-your-first-wayland-compositor.md) which will guide you through the process of writing a compositor.
+## Install
+First, we will install the Mir demo compositors.
 
-
-## Installing demo applications
 Mir demos are available on Debian derivatives, Fedora, and Alpine. For distros
 that don't have pre-built binaries, examples can be built from source.
 
@@ -33,123 +36,92 @@ sudo apk add mir-demos mir
 https://aur.archlinux.org/packages/mir
 ```
 
-## Running applications on X11 or Wayland
+## Running a Mir compositor nested in Wayland or X11
+Next, we will run one of the demo compositors that we just installed, namely `miral-app`.
+`miral-app` is a simple, standalone demo compositor that provides a floating window manager.
 
-We'll work with `miral-app`, a script that handles running a Mir shell with a basic GUI.
+Within your current graphical session, run:
 
-Mir allows you to run a graphical shell in *desktop mode* or in *kiosk mode*.
-
-Desktop mode means that application windows that are opened are floating, you can move them around the screen, maximize, or minimize them.
-Kiosk mode means that the application is opened in fullscreen mode. You are unable to move or resize it.
-
-To run the script in desktop mode:
 ```sh
 miral-app
 ```
 
-To run the script in kiosk mode:
+You should see an X11 window on your desktop. This is a full Wayland compositor
+running nested inside your current session.
+
+## Running a Mir compositor natively
+Now that we've run `miral-app` in a nested session, let's run it natively. There are two ways to do this:
+1. Launch the compositor from a virtual terminal
+2. Launch the compositor from a login screen
+
+### Launching from a virtual terminal
+Let's begin by launching the compositor from a virtual terminal.
+
+To do this, you can "vt-switch" from your current graphical session to a virtual terminal.
+This is typically done by pressing `CTRL+ALT+F\<Number\>` and logging in.
+
+Once logged in, run:
+
 ```sh
-miral-app -kiosk
+miral-app
 ```
 
-## Running shells natively
-
-Mir compositors support running "natively" by launching them from a virtual terminal or a login screen.
+The compositor should appear across your outputs.
 
 ***Do note that while, like many other Wayland compositors, Mir supports Nvidia
 graphics cards they can cause stability issues due to quirks on the driver side.***
 
-
-### Launching from a virtual terminal
-
-1. Switch to a virtual terminal by pressing CTRL+ALT+F\<Number\> and log in.
-
-2. Run the script:
-```sh
-miral-app
-```
-
 ### Launching from a login screen
+Next, let's launch `miral-app` from the login screen. In either gdm or lightdm,
+you will find a dropdown list that contains the list of available Wayland compositors.
+Open this list and choose **Mir Shell**. Log in, and `miral-shell` will be running.
 
-Open the window manager list, choose **Mir Shell**, log in, and `miral-shell` will be running fullscreen.
+## Running Clients in `miral-app`
+Whether you're running Mir nested in your current session, from a VT or from
+the login screen, you will be able to run Wayland clients in your current
+session.
 
-## Using on-screen keyboards
-Mir-based compositors support on-screen keyboards. 
+### Wayland Applications
+To start, let's open up a terminal using `CTRL+ALT+T`. This will open up a
+Wayland terminal client.
 
-**Note**: Due to security reasons, some Wayland extensions needed by on-screen keyboards are disabled by default. In this tutorial, we override this setting by passing `--add-wayland-extensions all` when launching `miral-app`.
-passing a `--add-wayland-extensions all` flag when launching an example application.
+### X11 Applications
+Next, rerun `miral-app` with the following flags:
 
-You can use any Wayland compatible on-screen keyboard but as an example, we'll use `ubuntu-frame-osk`. 
-
-1. Install `ubuntu-frame-osk`:
-```sh
-sudo snap install ubuntu-frame-osk
-sudo snap connect ubuntu-frame-osk:wayland
-```
-
-2. Start `miral-app`:
-```sh
-miral-app --add-wayland-extensions all
-```
-
-3. Once the shell loads, start the terminal (with `Ctrl-Alt-Shift-T`) and start your on-screen keyboard:
-```sh
-ubuntu-frame-osk&
-```
-An on-screen keyboard will pop up.
-
-
-## Mixing Wayland and X11 clients
-
-You can run X11 applications inside Mir-based compositors. As an example, let's run `xclock` - an X11 application that displays the time.
-
-1. Enable X11 support in `miral-shell`:
 ```sh
 miral-app --enable-x11 true
 ```
 
-2. Once the shell loads, run `xclock`:
-```sh
-xclock
-``` 
-A window with a clock will pop up.
+Afterward, you may open an X11 client using `CTRL+ALT+X`. You should see an
+xterm session open if it is available on your system.
 
-## Remote desktop
-Mir supports remote desktops via the VNC protocol. To demo this, you'll use `wayvnc` - a VNC server. 
+At this point, you may experiment opening other applications as well.
 
-1. Install `wayvnc`:
-
-```sh
-sudo apt install wayvnc
-```
-
-2. Install your preferred [VNC client](https://help.ubuntu.com/community/VNC/Clients). 
-
-3. Start the shell with all extensions enabled:
-```sh
-miral-app --add-wayland-extensions all
-```
-
-4. In the shell, open the terminal and run `wayvnc`:
-```sh
-wayvnc
-```
-A `wayvnc` server will start and will listen to `localhost`. 
-
-5. Run your VNC client and connect to `localhost`. You will see the exact same view in both the Mir compositor and the VNC viewer.
-
-## Shell Component Support
-
-Generally, Mir supports standard Wayland protocol extensions. So it should work
-with shell components that also use standard protocol extensions. Some shell components
-from KDE, GNOME, or other ecosystems might have issues due to their dependence on
-non-standard protocol extensions.
+### Shell Component Applications
+In addition to traditional applications, Mir provides the facilities for you to
+run applications which are actually shell components, such as backgrounds, bars,
+panels, lockscreens and more.
 
 Some examples of shell components that work well with Mir are: wofi, waybar,
 synapse, sway-notification-center, swaybg, swaylock, xfce-appfinder, and
 xfce-panel.
 
-## Want more Mir?
+As an example, we will demonstrate running `waybar`.
+
+First, install `waybar` on your system.
+
+Next, rerun `miral-app` with the following:
+
+```sh
+miral-app --add-wayland-extensions all
+```
+
+Finally, run `waybar` from within your compositor session. You should see a bar
+appear at the top of your compositor.
+
+## Conclusion
+This tutorial has provided you with a brief introduction in running Mir-based
+compositors on your system and launching applications inside of them.
 
 If you want to play around with a pre-made setup suitable for daily use, you
 can check out [Miriway](https://github.com/Miriway/Miriway/) and
