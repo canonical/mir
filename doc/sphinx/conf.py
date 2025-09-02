@@ -176,11 +176,19 @@ redirects = {}
 # A regex list of URLs that are ignored by 'make linkcheck'
 linkcheck_ignore = [
     "http://127.0.0.1:8000",
+    "how-to/getting_involved_in_mir"
     ]
 
 
 # A regex list of URLs where anchors are ignored by 'make linkcheck'
-linkcheck_anchors_ignore_for_url = []
+linkcheck_anchors_ignore_for_url = [
+    "https://github.com/canonical/mesa-core22/blob/9d64e64fb06f7052f9e6f8a8899cac763f5fad7e/snap/snapcraft.yaml*",
+    "https://manpages.ubuntu.com/manpages/noble/man1/tmate.1.html*",
+    "https://matrix.to*",
+    "https://github.com/google/googletest/blob/main/docs/advanced.md*",
+    "https://docs.google.com/spreadsheets/d/1kUbTSt4zWVpTtgZNJvvxCdugsRUv6C5PK9Xw5dxppCc/edit*",
+    "https://github.com/canonical/mir/blob/92fc772bc32f921c3a1cde7f17abb43a3d482f55/.github/workflows/spread.yml*",
+]
 
 # give linkcheck multiple tries on failure
 # linkcheck_timeout = 30
