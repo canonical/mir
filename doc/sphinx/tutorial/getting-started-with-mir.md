@@ -9,7 +9,7 @@ If you are unfamiliar with Mir, start with this tutorial. Afterward, proceed to 
 [developer tutorial](write-your-first-wayland-compositor.md) where you will develop
 your first compositor with Mir.
 
-## Install
+## Install Mir Demos
 First, we will install the Mir demo compositors.
 
 Mir demos are available on Debian derivatives, Fedora, and Alpine. For distros
@@ -36,7 +36,7 @@ sudo apk add mir-demos mir
 https://aur.archlinux.org/packages/mir
 ```
 
-## Running a Mir compositor nested in Wayland or X11
+## Run a Mir compositor nested in Wayland or X11
 Next, we will run one of the demo compositors that we just installed, namely `miral-app`.
 `miral-app` is a simple, standalone demo compositor that provides a floating window manager.
 
@@ -49,7 +49,7 @@ miral-app
 You should see an X11 window on your desktop. This is a full Wayland compositor
 running nested inside your current session.
 
-## Running a Mir compositor natively
+## Run a Mir compositor natively
 Now that we've run `miral-app` in a nested session, let's run it natively. There are two ways to do this:
 1. Launch the compositor from a virtual terminal
 2. Launch the compositor from a login screen
@@ -76,16 +76,16 @@ Next, let's launch `miral-app` from the login screen. In either gdm or lightdm,
 you will find a dropdown list that contains the list of available Wayland compositors.
 Open this list and choose **Mir Shell**. Log in, and `miral-shell` will be running.
 
-## Running Clients in `miral-app`
+## Run Clients
 Whether you're running Mir nested in your current session, from a VT or from
 the login screen, you will be able to run Wayland clients in your current
 session.
 
-### Wayland Applications
+### Run Wayland Applications
 To start, let's open up a terminal using `CTRL+ALT+T`. This will open up a
 Wayland terminal client.
 
-### X11 Applications
+### Run X11 Applications
 Next, rerun `miral-app` with the following flags:
 
 ```sh
@@ -97,7 +97,7 @@ xterm session open if it is available on your system.
 
 At this point, you may experiment opening other applications as well.
 
-### Shell Component Applications
+### Run Shell Component Applications
 In addition to traditional applications, Mir provides the facilities for you to
 run applications which are actually shell components, such as backgrounds, bars,
 panels, lockscreens and more.
