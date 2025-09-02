@@ -1,5 +1,6 @@
 abi
 ABI
+adapter
 AppArmor
 appfinder
 AUR
@@ -27,7 +28,6 @@ csd
 CSD
 Ctrl
 CursorScale
-debian
 deps
 devel
 DisplayLink's
@@ -130,6 +130,7 @@ natively
 Natively
 nouveau
 Nvidia's
+Nvidia’s
 nxp
 offscreen
 OMX
@@ -150,6 +151,7 @@ recomposition
 renderables
 renderer
 RenderingPlatform
+replug
 RPi
 runtime
 sanitizer
@@ -184,6 +186,7 @@ tmate's
 toolchain
 toolchains
 toolkits
+Tooltip
 tracepoint
 tracepoints
 TSan
@@ -196,6 +199,7 @@ userland
 userspace
 UST
 vaapi
+VC
 VDPAU
 VideoCore
 Vivante
@@ -209,7 +213,9 @@ Wayland
 webkit
 WindowManagementPolicy
 WindowManagerTools
+WL
 wlcs
+WLCS
 wlr
 wofi
 workspaces
@@ -220,3 +226,4 @@ Xlib
 Xwayland
 XWayland
 yaml
+zwp
