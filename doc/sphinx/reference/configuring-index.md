@@ -1,5 +1,5 @@
 # Reference
-These pages provide detailed reference to the Mir's programming and other interfaces.
+These pages provide detailed reference to the Mir configuration options.
 
 
 ```{toctree}

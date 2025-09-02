@@ -1,5 +1,5 @@
 # Reference
-These pages provide detailed reference to the Mir's programming and other interfaces.
+These pages provide detailed reference to Mir APIs and other interfaces.
 
 - [API](/api/library_root): Mir API reference
 - [Introducing the MirAL API](introducing_the_miral_api.md): The primary external interface for compositor authors
