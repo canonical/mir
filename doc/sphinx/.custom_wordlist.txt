@@ -103,10 +103,6 @@ lttng
 LTTng
 LXD
 maintainer's
-maximise
-maximising
-maximised
-maximising
 Miaspects
 minimalistic
 mir
