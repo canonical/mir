@@ -35,7 +35,7 @@ For example, if the application software uses 3D or video acceleration, then tha
 
 There’s a further complication in that Mir expects applications to use Wayland and some features on some drivers don’t work with Wayland. (An example is that the  intel-vaapi-driver for Ubuntu 18.04 doesn’t work with Wayland. That is fixed in more recent versions, but may need to be addressed for core18 snaps.)
 
-Also, there are applications that do not support Wayland directly. These can be supported with Xwayland - a program that translates from X11 to Wayland for the application. But that leads to further limitations as the GL acceleration support through Xwayland depends upon the graphics drivers. It works with Intel on Mesa, but beyond that it is patchy.
+Also, there are applications that do not support Wayland directly. These can be supported with XWayland - a program that translates from X11 to Wayland for the application. But that leads to further limitations as the GL acceleration support through XWayland depends upon the graphics drivers. It works with Intel on Mesa, but beyond that it is patchy.
 
 ## Some hardware examples
 

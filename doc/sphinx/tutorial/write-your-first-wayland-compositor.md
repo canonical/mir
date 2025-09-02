@@ -17,7 +17,7 @@ This tutorial assumes that:
 ## Installing dependencies
 This section will cover the needed dependencies and how to install them.
 The example program requires 
-* `libmiral` - short for "Mir Abstraction Layer". Provides a high level interface to interact with and customize Mir compositors.
+* `libmiral` - short for "Mir Abstraction Layer". Provides a high level interface to interact with and customise Mir compositors.
 * `mir-graphics-drivers-desktop` - provides drivers so Mir can talk with different graphics drivers
 
 ### Install dependencies on Debian or derivatives:
@@ -59,9 +59,9 @@ int main(int argc, char const* argv[])
 
 `MirRunner` is a class from `libmiral` that acts as the "entry point" of your compositor.
 
-`MirRunner runner` creates a `runner` object that can be used to configure your compositor.  To run the compositor you call `runner.run_with(...)`, passing in different components to customize the behavior of the compositor. In this example, `run_with()` is passed a function `set_window_management_policy` that applies a `MinimalWindowManager` policy to the compositor. The compositor is therefore created with basic window management capabilities such as controlling multiple windows, minimizing and maximizing, and handling mouse input. 
+`MirRunner runner` creates a `runner` object that can be used to configure your compositor.  To run the compositor you call `runner.run_with(...)`, passing in different components to customise the behaviour of the compositor. In this example, `run_with()` is passed a function `set_window_management_policy` that applies a `MinimalWindowManager` policy to the compositor. The compositor is therefore created with basic window management capabilities such as controlling multiple windows, minimizing and maximizing, and handling mouse input. 
 
-The runner allows for even more customization: enabling onscreen keyboards, screen capture, pointer confinement, and so on. 
+The runner allows for even more customisation: enabling onscreen keyboards, screen capture, pointer confinement, and so on. 
 
 ## Building a Mir compositor
 

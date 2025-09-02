@@ -3,7 +3,7 @@
 
 ## Overview
 
-The Mir project provides libraries for creating Wayland compositors. The design is intended to make it easy build something simple and easy to customize the compositor in a number of ways.
+The Mir project provides libraries for creating Wayland compositors. The design is intended to make it easy build something simple and easy to customise the compositor in a number of ways.
 
 Within the Mir codebase there are four different Wayland compositors each demonstrating a different behaviour. There are additional compositors maintained and written by the Mir team in a number of Snaps. Most notably, Ubuntu Frame.
 
@@ -116,7 +116,7 @@ WAYLAND_DISPLAY=wayland-99 gedit
 
 ![image|690x572](compositor.png)
 
-Of course, this is a very minimalistic example and most compositors will be running as part of an ecosystem that launches appications without typing in these incantations.
+Of course, this is a very minimalistic example and most compositors will be running as part of an ecosystem that launches applications without typing in these incantations.
 
 ## An advanced example: Miriway
 

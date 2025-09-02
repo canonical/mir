@@ -1,14 +1,11 @@
 abi
 ABI
-adapter
 AppArmor
 appfinder
-appications
 AUR
 backend
 backends
 barebones
-behavior
 Binutils
 BounceKeys
 Broadcom
@@ -30,12 +27,8 @@ csd
 CSD
 Ctrl
 CursorScale
-customize
-customization
-customizing
-customized
-customization
-customizability
+customise
+customisation
 debian
 deps
 devel
@@ -254,7 +247,6 @@ Wayland
 webkit
 WindowManagementPolicy
 WindowManagerTools
-WL
 wlcs
 WLCS
 wlr
@@ -265,9 +257,6 @@ xdg
 xfce
 Xlib
 XLib
-Xorg
 Xwayland
 XWayland
 yaml
-Yay
-zwp
