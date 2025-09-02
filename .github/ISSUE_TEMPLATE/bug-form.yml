@@ -1,7 +1,5 @@
 name: Bug Report
 description: File a bug report.
-title: "[Bug]: "
-labels: ["bug", "triage"]
 body:
   - type: markdown
     attributes:
@@ -21,7 +19,7 @@ body:
     attributes:
       label: Environment
       description: |
-        What environment are you running Mir in? Please mention your hardware specifications, OS, Mesa (or nvidia driver) version.
+        What environment are you running Mir in? Please mention your hardware specifications, OS, Mesa, or Nvidia driver version.
       placeholder: |
         OS: Ubuntu 25.10 
         CPU: Intel Core i7 9750H
@@ -34,9 +32,9 @@ body:
     id: what-happened-vs-expected
     attributes:
       label: What happened? What did you expect to happen?
-      description: Also tell us, what happened, and did you expect to happen?
+      description: Also tell us what happened, and did you expect to happen?
       placeholder: Tell us what you see!
-      value: "A bug happened!"
+      value: "..."
     validations:
       required: true
   - type: textarea
@@ -53,5 +51,5 @@ body:
       label: Relevant log output
       description: |
         Please copy and paste any relevant log output. This will be automatically formatted into code, so no need for backticks.
-        (hint: You can run your compositor with `<compositor launch command> 2&>1 | tee <log_file_name>` if you're having issues capturing logs)
+        (hint: You can run your compositor with `<compositor launch command> 2>&1 | tee <log_file_name>` if you're having issues capturing logs)
       render: shell

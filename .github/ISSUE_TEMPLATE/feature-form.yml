@@ -1,7 +1,5 @@
 name: Feature Request
 description: File a feature request
-title: "[Feature]: "
-labels: ["enhancement", "triage"]
 body:
   - type: markdown
     attributes:
@@ -13,7 +11,6 @@ body:
       label: Summary
       description: An overview of the feature.
       placeholder: Tell us what you want!
-      value: "I would like Mir to do this cool thing."
     validations:
       required: true
   - type: textarea
@@ -22,7 +19,6 @@ body:
       label: Details
       description: More details about how the feature should behave, how the user would interact with it, and its interactions with other parts of Mir.
       placeholder: Tell us more.
-      value: "The feature should be enabled through.... If feature Foo is enabled, they should interact in this way: ..."
     validations:
       required: false
   - type: textarea
@@ -31,6 +27,5 @@ body:
       label: Prior Art
       description: Does any Wayland compositor / software implement a similar feature? Please describe how it works there (if any different), and provide links (documentation, code, etc..) if applicable.
       placeholder: Tell us if anyone else has a similar feature.
-      value: "A compositor I used before, KNOME, implements this feature as..."
     validations:
       required: false
