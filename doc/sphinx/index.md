@@ -12,6 +12,7 @@ that makes it an ideal choice for both device manufacturers and desktop users.
 
 ## In this documentation
 
+These pages cover the key aspects of developing a compositor using Mir
 
 ````{grid} 1 1 2 2
 ```{grid-item-card} [Tutorials](/tutorial/index.md)
@@ -53,6 +54,6 @@ tutorial/index
 how-to/index
 explanation/index
 reference/index
-contributing-index
 configuring-index
+contributing-index
 ```
