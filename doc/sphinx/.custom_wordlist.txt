@@ -28,6 +28,7 @@ csd
 CSD
 Ctrl
 CursorScale
+debian
 deps
 devel
 DisplayLink's
@@ -130,7 +131,7 @@ natively
 Natively
 nouveau
 Nvidia's
-Nvidia’s
+Nvidia
 nxp
 offscreen
 OMX
