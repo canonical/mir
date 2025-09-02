@@ -49,13 +49,7 @@ mkdir demo-mir-compositor
 cd demo-mir-compositor
 ```
 
-Next, create a new file called `CMakeLists.txt`:
-
-```sh
-touch CMakeLists.txt
-```
-
-Next, add the following content to `CMakeLists.txt`:
+Next, create `CMakeLists.txt` with the following content:
 
 ```cmake
 # CMakeLists.txt
@@ -76,12 +70,7 @@ target_link_libraries(     demo-mir-compositor               ${MIRAL_LDFLAGS})
 target_link_libraries(     demo-mir-compositor               ${XKBCOMMON_LIBRARIES})
 ```
 
-After, create another file and call it `main.cpp`:
-
-```sh
-touch main.cpp
-```
-Then add the following content to it:
+Next, create `main.cpp` with the following content:
 
 ```cpp
 /// main.cpp
