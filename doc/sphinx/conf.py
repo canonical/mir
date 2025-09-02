@@ -94,7 +94,7 @@ html_context = {
     'product_tag': '_static/tag.png',
 
     # Your Discourse instance URL
-    "discourse": "https://discourse.ubuntu.com",
+    'discourse': 'https://discourse.ubuntu.com/c/project/mir/15',
 
     # Your Mattermost channel URL
     "mattermost": '',
