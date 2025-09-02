@@ -14,7 +14,7 @@ These pages cover the key aspects of developing a compositor using Mir
 ````{grid} 1 1 2 2
 ```{grid-item-card} [Tutorials](/tutorial/index.md)
 **Start here**
-- {ref}`Getting started with Mir <tutorial-getting-started>`
+- [Write Your First Wayland Compositor](/tutorial/write-your-first-wayland-compositor.md): A guide through writing a simple compositor
 ```
 
 ```{grid-item-card} [How-to guides](/howto/index.md)
