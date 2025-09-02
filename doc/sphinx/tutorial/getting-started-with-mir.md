@@ -73,13 +73,13 @@ To start, let's open up a terminal using `CTRL+ALT+T`. This will open up a
 Wayland terminal client.
 
 ### Run X11 Applications
-Next, rerun `miral-app` with the following flags:
+Rerun `miral-app` with the following flags:
 
 ```sh
 miral-app --enable-x11 true
 ```
 
-Afterward, you may open an X11 client using `CTRL+ALT+X`. You should see an
+Next, you may open an X11 client using `CTRL+ALT+X`. You should see an
 xterm session open if it is available on your system.
 
 At this point, you may experiment opening other applications as well.
@@ -87,7 +87,7 @@ At this point, you may experiment opening other applications as well.
 ### Run Shell Component Applications
 In addition to traditional applications, Mir provides the facilities for you to
 run applications which are actually shell components, such as backgrounds, bars,
-panels, lockscreens and more.
+panels and more.
 
 Some examples of shell components that work well with Mir are: wofi, waybar,
 synapse, sway-notification-center, swaybg, swaylock, xfce-appfinder, and
