@@ -51,7 +51,7 @@ these assert the functionality of individual components in isolation, as is usua
 run more high-level tests, ensuring we maintain the contracts with external components as well as
 our own loadable modules' interfaces.
 
-One major part of this is [WLCS](https://github.com/canonical/wlcs) - asserting the behaviour
+One major part of this is [wlcs](https://github.com/canonical/wlcs) - asserting the behaviour
 of Mir's Wayland frontend is to specification of the protocol.
 
 ### Integration tests

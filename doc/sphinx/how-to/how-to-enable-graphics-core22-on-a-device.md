@@ -97,7 +97,7 @@ installed on the system, namely:
 - `GBM` (`libgbm.so.1`)
 
 While *Mir* can be enabled on platforms that do not support `GBM/KMS`, this
-requires a paltform implementation to be written in *Mir*. This work is out
+requires a platform implementation to be written in *Mir*. This work is out
 of the scope of this guide.
 
 ## How to assemble a `graphics-core22` provider snap
@@ -291,7 +291,7 @@ slots:
 ### How to supply the remaining libraries
 As mentioned before, you should be able to get the remaining libraries from
 the Ubuntu archive. The part below can supply these libraries, and they may be
-organized into any directory, in this case they are in the same path as would
+organised into any directory, in this case they are in the same path as would
 be found in a classic Ubuntu system. Here is an example from the `mesa-core22`
 [snapcraft.yaml](https://github.com/canonical/mesa-core22/blob/main/snap/snapcraft.yaml).
 
@@ -570,7 +570,7 @@ apparmor="DENIED" operation="open" profile="snap.ubuntu-frame.ubuntu-frame" name
 ```
 
 You can find the AppArmor profile at `/var/lib/snapd/apparmor/profiles/snap.ubuntu-frame.ubuntu-frame`.
-Make modifications to the profile using your favorite text editor. Finally, apply the change to replace
+Make modifications to the profile using your favourite text editor. Finally, apply the change to replace
 the default confinement:
 
 ```shell

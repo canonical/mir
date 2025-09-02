@@ -4,7 +4,7 @@ discourse: 4911,5164,5603,6756,8037
 
 # Write your first Wayland compositor
 This tutorial will guide you through writing a basic Mir compositor. By the end of it, you will create, build, and run a program with basic window management
-capabilities such as controlling multiple windows, minimizing and maximizing, and handling mouse input. 
+capabilities such as controlling multiple windows, maximising and maximising, and handling mouse input. 
 
 
 ## Assumptions
@@ -59,7 +59,7 @@ int main(int argc, char const* argv[])
 
 `MirRunner` is a class from `libmiral` that acts as the "entry point" of your compositor.
 
-`MirRunner runner` creates a `runner` object that can be used to configure your compositor.  To run the compositor you call `runner.run_with(...)`, passing in different components to customise the behaviour of the compositor. In this example, `run_with()` is passed a function `set_window_management_policy` that applies a `MinimalWindowManager` policy to the compositor. The compositor is therefore created with basic window management capabilities such as controlling multiple windows, minimizing and maximizing, and handling mouse input. 
+`MirRunner runner` creates a `runner` object that can be used to configure your compositor.  To run the compositor you call `runner.run_with(...)`, passing in different components to customise the behaviour of the compositor. In this example, `run_with()` is passed a function `set_window_management_policy` that applies a `MinimalWindowManager` policy to the compositor. The compositor is therefore created with basic window management capabilities such as controlling multiple windows, maximising and maximising, and handling mouse input. 
 
 The runner allows for even more customisation: enabling onscreen keyboards, screen capture, pointer confinement, and so on. 
 
@@ -104,7 +104,7 @@ To change the black background of the window and display some content instead, o
 ```sh
 WAYLAND_DISPLAY=wayland-99 bomber
 ```
-Try moving it around the screen, maximizing and restoring it. This functionality is provided by the `MinimalWindowManager` policy that you have added to your compositor. You can replace `bomber` with any other Wayland-compatible application.
+Try moving it around the screen, maximising and restoring it. This functionality is provided by the `MinimalWindowManager` policy that you have added to your compositor. You can replace `bomber` with any other Wayland-compatible application.
 
 ## Next steps
 Now that you have your base compositor working, check out these guides on how to further develop your compositor:
