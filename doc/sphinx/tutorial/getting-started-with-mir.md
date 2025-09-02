@@ -5,10 +5,6 @@ This tutorial will introduce you to the basic functionality of Mir by running a 
 the tutorial, you will install and run a demo compositor, learn how to use Mir in different environments,
 and learn about features that Mir provides.
 
-If you are unfamiliar with Mir, start with this tutorial. Afterward, proceed to the
-[developer tutorial](write-your-first-wayland-compositor.md) where you will develop
-your first compositor with Mir.
-
 ## Install Mir Demos
 First, we will install the Mir demo compositors.
 
@@ -37,8 +33,8 @@ https://aur.archlinux.org/packages/mir
 ```
 
 ## Run a Mir compositor nested in Wayland or X11
-Next, we will run one of the demo compositors that we just installed, namely `miral-app`.
-`miral-app` is a simple, standalone demo compositor that provides a floating window manager.
+Next, we will run one of the demos  that we just installed, namely `miral-app`.
+`miral-app` is a a script that handles running a Mir shell with a basic GUI.
 
 Within your current graphical session, run:
 
@@ -50,15 +46,12 @@ You should see an X11 window on your desktop. This is a full Wayland compositor
 running nested inside your current session.
 
 ## Run a Mir compositor natively
-Now that we've run `miral-app` in a nested session, let's run it natively. There are two ways to do this:
-1. Launch the compositor from a virtual terminal
-2. Launch the compositor from a login screen
+Now that we've run `miral-app` in a nested session, let's run it natively from a
+virtual terminal.
 
-### Launching from a virtual terminal
-Let's begin by launching the compositor from a virtual terminal.
-
-To do this, you can "vt-switch" from your current graphical session to a virtual terminal.
-This is typically done by pressing `CTRL+ALT+F\<Number\>` and logging in.
+To do this, you can "vt-switch" from your current graphical session to a virtual
+terminal. This is typically done by pressing `CTRL+ALT+F\<Number\>` and logging
+in.
 
 Once logged in, run:
 
@@ -68,18 +61,12 @@ miral-app
 
 The compositor should appear across your outputs.
 
-***Do note that while, like many other Wayland compositors, Mir supports Nvidia
-graphics cards they can cause stability issues due to quirks on the driver side.***
-
-### Launching from a login screen
-Next, let's launch `miral-app` from the login screen. In either gdm or lightdm,
-you will find a dropdown list that contains the list of available Wayland compositors.
-Open this list and choose **Mir Shell**. Log in, and `miral-shell` will be running.
+Note: Mir supports NVIDIA graphics cards but they can cause stability issues due
+to quirks on the driver side.
 
 ## Run Clients
-Whether you're running Mir nested in your current session, from a VT or from
-the login screen, you will be able to run Wayland clients in your current
-session.
+Whether you're running Mir nested in your current session or from a virtual
+terminal, you will be able to run Wayland clients in your current session.
 
 ### Run Wayland Applications
 To start, let's open up a terminal using `CTRL+ALT+T`. This will open up a
@@ -119,13 +106,6 @@ miral-app --add-wayland-extensions all
 Finally, run `waybar` from within your compositor session. You should see a bar
 appear at the top of your compositor.
 
-## Conclusion
-This tutorial has provided you with a brief introduction in running Mir-based
-compositors on your system and launching applications inside of them.
-
-If you want to play around with a pre-made setup suitable for daily use, you
-can check out [Miriway](https://github.com/Miriway/Miriway/) and
-[Miracle](https://github.com/miracle-wm-org/miracle-wm), which are used daily
-by Mir developers. A list of all known Mir-based compositors can be found at
-[Developing A Wayland Compositor Using
-Mir](../how-to/developing-a-wayland-compositor-using-mir.md)
+## Next steps
+Check out the [developer tutorial](write-your-first-wayland-compositor.md) to
+build your first compositor with Mir.
