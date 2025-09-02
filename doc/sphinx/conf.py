@@ -342,7 +342,7 @@ exhale_args = {
     "rootFileTitle": "Mir API",
     # Suggested optional arguments
     "createTreeView": False,
-    "exhaleExecutesDoxygen": True,
+    "exhaleExecutesDoxygen": False,
     "exhaleUseDoxyfile": False,
     "contentsDirectives": False,
     "exhaleDoxygenStdin": doxyfile_contents
