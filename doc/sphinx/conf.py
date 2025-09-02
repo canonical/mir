@@ -1,167 +1,368 @@
-import sys
+import datetime
 import os
+import yaml
 
-sys.path.append('./')
-from custom_conf import *
-sys.path.append('.sphinx/')
-from build_requirements import *
+import subprocess
+import re
+from pathlib import Path
 
-# Configuration file for the Sphinx documentation builder.
-# You should not do any modifications to this file. Put your custom
-# configuration into the custom_conf.py file.
-# If you need to change this file, contribute the changes upstream.
+# Configuration for the Sphinx documentation builder.
+# All configuration specific to your project should be done in this file.
 #
-# For the full list of built-in configuration values, see the documentation:
+# If you're new to Sphinx and don't want any advanced or custom features,
+# just go through the items marked 'TODO'.
+#
+# A complete list of built-in Sphinx configuration values:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
+#
+# Our starter pack uses the custom Canonical Sphinx extension
+# to keep all documentation based on it consistent and on brand:
+# https://github.com/canonical/canonical-sphinx
 
-############################################################
-### Extensions
-############################################################
+
+#######################
+# Project information #
+#######################
+
+# Project name
+
+project = "Mir"
+author = "Canonical Ltd."
+
+
+# Sidebar documentation title; best kept reasonably short
+#
+# The title you want to display for the documentation in the sidebar.
+# You might want to include a version number here.
+# To not display any title, set this option to an empty string.
+try:
+    release = subprocess.check_output(["git", "describe", "--always"], encoding="utf-8").strip()
+except (FileNotFoundError, subprocess.CalledProcessError):
+    with open(Path(__file__).parents[2] / "CMakeLists.txt", encoding="utf-8") as cmake:
+        matches = re.findall(r"set\(MIR_VERSION_(MAJOR|MINOR|PATCH) (\d+)\)", cmake.read())
+    release = "v{MAJOR}.{MINOR}.{PATCH}".format(**dict(matches))
+html_title = f'{project} {release} documentation'
+
+
+# Copyright string; shown at the bottom of the page
+#
+# Now, the starter pack uses CC-BY-SA as the license
+# and the current year as the copyright year.
+#
+# NOTE: For static works, it is common to provide the first publication year.
+#       Another option is to provide both the first year of publication
+#       and the current year, especially for docs that frequently change,
+#       e.g. 2022–2023 (note the en-dash).
+#
+#       A way to check a repo's creation date is to get a classic GitHub token
+#       with 'repo' permissions; see https://github.com/settings/tokens
+#       Next, use 'curl' and 'jq' to extract the date from the API's output:
+#
+#       curl -H 'Authorization: token <TOKEN>' \
+#         -H 'Accept: application/vnd.github.v3.raw' \
+#         https://api.github.com/repos/canonical/<REPO> | jq '.created_at'
+copyright = '%s, %s' % (datetime.date.today().year, author)
+
+
+# Documentation website URL
+#
+# NOTE: The Open Graph Protocol (OGP) enhances page display in a social graph
+#       and is used by social media platforms; see https://ogp.me/
+ogp_site_url = "https://canonical-mir.readthedocs-hosted.com/"
+
+
+# Preview name of the documentation website
+ogp_site_name = project
+
+
+# Preview image URL
+ogp_image = "https://assets.ubuntu.com/v1/253da317-image-document-ubuntudocs.svg"
+
+
+# Product favicon; shown in bookmarks, browser tabs, etc.
+html_favicon = '.sphinx/_static/favicon.png'
+
+
+# Dictionary of values to pass into the Sphinx context for all pages:
+# https://www.sphinx-doc.org/en/master/usage/configuration.html#confval-html_context
+
+html_context = {
+    # Product page URL; can be different from product docs URL
+    "product_page": "https://canonical.com/mir",
+
+    # Product tag image; the orange part of your logo, shown in the page header
+    'product_tag': '_static/tag.png',
+
+    # Your Discourse instance URL
+    "discourse": "https://discourse.ubuntu.com",
+
+    # Your Mattermost channel URL
+    "mattermost": '',
+
+    # Your Matrix channel URL
+    "matrix": "https://matrix.to/#/#mir-server:matrix.org",
+
+    # Your documentation GitHub repository URL
+    "github_url": "https://github.com/canonical/mir",
+
+    # Docs branch in the repo; used in links for viewing the source files
+    'repo_default_branch': 'main',
+
+    # Docs location in the repo; used in links for viewing the source files
+    "repo_folder": "/doc/sphinx/",
+
+    # To enable or disable the Previous / Next buttons at the bottom of pages
+    # Valid options: none, prev, next, both
+    # "sequential_nav": "both",
+    "display_contributors": False,
+
+    # Required for feedback button    
+    'github_issues': 'enabled',
+}
+
+html_theme_options = {
+    'source_edit_link': 'https://github.com/canonical/mir',
+}
+
+# Project slug; see https://meta.discourse.org/t/what-is-category-slug/87897
+slug = ''
+
+#######################
+# Sitemap configuration: https://sphinx-sitemap.readthedocs.io/
+#######################
+
+# Base URL of RTD hosted project
+
+html_baseurl = 'https://canonical-starter-pack.readthedocs-hosted.com/'
+
+# URL scheme. Add language and version scheme elements.
+# When configured with RTD variables, check for RTD environment so manual runs succeed:
+
+if 'READTHEDOCS_VERSION' in os.environ:
+    version = os.environ["READTHEDOCS_VERSION"]
+    sitemap_url_scheme = '{version}{link}'
+else:
+    sitemap_url_scheme = 'MANUAL/{link}'
+
+# Include `lastmod` dates in the sitemap:
+
+sitemap_show_lastmod = True
+
+#######################
+# Template and asset locations
+#######################
+
+#html_static_path = ["_static"]
+#templates_path = ["_templates"]
+
+
+#############
+# Redirects #
+#############
+
+# To set up redirects: https://documatt.gitlab.io/sphinx-reredirects/usage.html
+# For example: 'explanation/old-name.html': '../how-to/prettify.html',
+# To set up redirects in the Read the Docs project dashboard:
+# https://docs.readthedocs.io/en/stable/guides/redirects.html
+# NOTE: If undefined, set to None, or empty,
+#       the sphinx_reredirects extension will be disabled.
+redirects = {}
+
+
+###########################
+# Link checker exceptions #
+###########################
+
+# A regex list of URLs that are ignored by 'make linkcheck'
+linkcheck_ignore = [
+    "http://127.0.0.1:8000",
+    ]
+
+
+# A regex list of URLs where anchors are ignored by 'make linkcheck'
+linkcheck_anchors_ignore_for_url = []
+
+# give linkcheck multiple tries on failure
+# linkcheck_timeout = 30
+linkcheck_retries = 3
+
+########################
+# Configuration extras #
+########################
+
+# Custom MyST syntax extensions; see
+# https://myst-parser.readthedocs.io/en/latest/syntax/optional.html
+#
+# NOTE: By default, the following MyST extensions are enabled:
+#       substitution, deflist, linkify
+myst_enable_extensions = set()
+
+
+# Custom Sphinx extensions; see
+# https://www.sphinx-doc.org/en/master/usage/extensions/index.html
+# NOTE: The canonical_sphinx extension is required for the starter pack.
+#       It automatically enables the following extensions:
+#       - custom-rst-roles
+#       - myst_parser
+#       - notfound.extension
+#       - related-links
+#       - sphinx_copybutton
+#       - sphinx_design
+#       - sphinx_reredirects
+#       - sphinx_tabs.tabs
+#       - sphinxcontrib.jquery
+#       - sphinxext.opengraph
+#       - terminal-output
+#       - youtube-links
 
 extensions = [
-    'sphinx_design',
-    'sphinx_copybutton',
-    'sphinxcontrib.jquery',
+    "canonical_sphinx",
+    "sphinxcontrib.cairosvgconverter",
+    "sphinx_last_updated_by_git",
+    "sphinx.ext.intersphinx",
+    "sphinx_sitemap",
+    'sphinx.ext.autodoc',
+    'sphinx.ext.doctest',
+    'sphinx.ext.mathjax',
+    'sphinx.ext.viewcode',
+    'sphinx.ext.imgmath',
+    'sphinx.ext.todo',
+    'breathe',
+    'exhale',
+    'sphinx.ext.graphviz',
+    'sphinxcontrib.mermaid'
 ]
 
-# Only add redirects extension if any redirects are specified.
-if AreRedirectsDefined():
-    extensions.append('sphinx_reredirects')
-
-# Only add myst extensions if any configuration is present.
-if IsMyStParserUsed():
-    extensions.append('myst_parser')
-
-    # Additional MyST syntax
-    myst_enable_extensions = [
-        'substitution',
-        'deflist',
-        'linkify'
-    ]
-    myst_enable_extensions.extend(custom_myst_extensions)
-
-# Only add Open Graph extension if any configuration is present.
-if IsOpenGraphConfigured():
-    extensions.append('sphinxext.opengraph')
-
-extensions.extend(custom_extensions)
-extensions = DeduplicateExtensions(extensions)
-
-### Configuration for extensions
-
-# Used for related links
-if not 'discourse_prefix' in html_context and 'discourse' in html_context:
-    html_context['discourse_prefix'] = html_context['discourse'] + '/t/'
-
-# The URL prefix for the notfound extension depends on whether the documentation uses versions.
-# For documentation on documentation.ubuntu.com, we also must add the slug.
-url_version = ''
-url_lang = ''
-
-# Determine if the URL uses versions and language
-if 'READTHEDOCS_CANONICAL_URL' in os.environ and os.environ['READTHEDOCS_CANONICAL_URL']:
-    url_parts = os.environ['READTHEDOCS_CANONICAL_URL'].split('/')
-
-    if len(url_parts) >= 2 and 'READTHEDOCS_VERSION' in os.environ and os.environ['READTHEDOCS_VERSION'] == url_parts[-2]:
-        url_version = url_parts[-2] + '/'
-
-    if len(url_parts) >= 3 and 'READTHEDOCS_LANGUAGE' in os.environ and os.environ['READTHEDOCS_LANGUAGE'] == url_parts[-3]:
-        url_lang = url_parts[-3] + '/'
-
-# Set notfound_urls_prefix to the slug (if defined) and the version/language affix
-if slug:
-    notfound_urls_prefix = '/' + slug  + '/' + url_lang + url_version
-elif len(url_lang + url_version) > 0:
-    notfound_urls_prefix = '/' + url_lang + url_version
-else:
-    notfound_urls_prefix = ''
-
-notfound_context = {
-    'title': 'Page not found',
-    'body': '<p><strong>Sorry, but the documentation page that you are looking for was not found.</strong></p>\n\n<p>Documentation changes over time, and pages are moved around. We try to redirect you to the updated content where possible, but unfortunately, that didn\'t work this time (maybe because the content you were looking for does not exist in this version of the documentation).</p>\n<p>You can try to use the navigation to locate the content you\'re looking for, or search for a similar page.</p>\n',
-}
-
-notfound_template = '404.html'
-
-# Default image for OGP (to prevent font errors, see
-# https://github.com/canonical/sphinx-docs-starter-pack/pull/54 )
-if not 'ogp_image' in locals():
-    ogp_image = 'https://assets.ubuntu.com/v1/253da317-image-document-ubuntudocs.svg'
-
-############################################################
-### General configuration
-############################################################
+# Excludes files or directories from processing
 
 exclude_patterns = [
-    '_build',
-    'Thumbs.db',
-    '.DS_Store',
-    '.sphinx',
+    "doc-cheat-sheet*",
 ]
-exclude_patterns.extend(custom_excludes)
 
-rst_epilog = '''
+# Adds custom CSS files, located under 'html_static_path'
+html_css_files = []
+
+
+# Adds custom JavaScript files, located under 'html_static_path'
+html_js_files = []
+
+
+# Specifies a reST snippet to be appended to each .rst file
+
+# TODO: Add ".. include:: /reuse/substitutions.txt" once we set that up
+rst_epilog = """
 .. include:: /reuse/links.txt
-'''
-if 'custom_rst_epilog' in locals():
-    rst_epilog = custom_rst_epilog
+"""
 
-source_suffix = {
-    '.rst': 'restructuredtext',
-    '.md': 'markdown',
+# Feedback button at the top; enabled by default
+disable_feedback_button = False
+
+
+# Specifies a reST snippet to be prepended to each .rst file
+# This defines a :center: role that centers table cell content.
+# This defines a :h2: role that styles content for use with PDF generation.
+
+rst_prolog = """
+.. role:: center
+   :class: align-center
+.. role:: h2
+    :class: hclass2
+.. role:: woke-ignore
+    :class: woke-ignore
+.. role:: vale-ignore
+    :class: vale-ignore
+"""
+
+# Workaround for https://github.com/canonical/canonical-sphinx/issues/34
+
+if "discourse_prefix" not in html_context and "discourse" in html_context:
+    html_context["discourse_prefix"] = html_context["discourse"] + "/t/"
+
+# Workaround for substitutions.yaml
+
+if os.path.exists('./reuse/substitutions.yaml'):
+    with open('./reuse/substitutions.yaml', 'r') as fd:
+        myst_substitutions = yaml.safe_load(fd.read())
+
+# Add configuration for intersphinx mapping
+
+intersphinx_mapping = {
+    'starter-pack': ('https://canonical-example-product-documentation.readthedocs-hosted.com/en/latest', None)
 }
 
-if not 'conf_py_path' in html_context and 'github_folder' in html_context:
-    html_context['conf_py_path'] = html_context['github_folder']
+############################################################
+### Additional configuration
+############################################################
+cmake_build_dir = Path('../../')  # Leave doc/sphinx
+sphinx_dir = cmake_build_dir / 'doc/sphinx'
 
-# For ignoring specific links
-linkcheck_anchors_ignore_for_url = [
-    r'https://github\.com/.*'
+primary_domain = 'cpp'
+
+highlight_language = 'cpp'
+
+cppguide_dir = sphinx_dir / '.sphinx/_static/cppguide/'
+html_extra_path = [
+    str(cppguide_dir / 'favicon.ico'),
+    str(cppguide_dir / 'index.html'),
+    str(cppguide_dir / 'styleguide.css'),
 ]
-linkcheck_anchors_ignore_for_url.extend(custom_linkcheck_anchors_ignore_for_url)
 
-# Tags cannot be added directly in custom_conf.py, so add them here
-for tag in custom_tags:
-    tags.add(tag)
+def remove_options_that_anger_exhale(doxyfile_content):
+    # If we run exhale with these options, it will error out because it handles
+    # them itself.
+    options_that_anger_exhale = {'OUTPUT_DIRECTORY', 'STRIP_FROM_PATH'}
+    
+    def line_starts_with_any(line, options):
+        match line.split():
+            case []:
+                return False
+            case [option, *_]:
+                return option in options
 
-############################################################
-### Styling
-############################################################
+    filtered_doxyfile = ''.join(
+        line for line in open(sphinx_dir / 'Doxyfile').readlines() 
+        if not line_starts_with_any(line, options_that_anger_exhale)
+    )
+    
+    return filtered_doxyfile
 
-# Find the current builder
-builder = 'dirhtml'
-if '-b' in sys.argv:
-    builder = sys.argv[sys.argv.index('-b')+1]
 
-# Setting templates_path for epub makes the build fail
-if builder == 'dirhtml' or builder == 'html':
-    templates_path = ['.sphinx/_templates']
+# Instead of configuring Mir again to get the doxyfile, we assume the user
+# already has configured it and grab the file from there.
+try:
+    with open(cmake_build_dir / 'doc/sphinx/Doxyfile') as doxyfile_file:
+        # Read the doxyfile from the build directory
+        doxyfile_contents = remove_options_that_anger_exhale(doxyfile_file)
+except IOError as e:
+    print(f"IOError: {e.errno}, {e.strerror}")
+    print("Hint: Have you configured the cmake project and changed `cmake_build_dir` to point at it?")
 
-# Theme configuration
-html_theme = 'furo'
-html_last_updated_fmt = ''
-html_permalinks_icon = '¶'
 
-if html_title == '':
-    html_theme_options = {
-        'sidebar_hide_name': True
-        }
+# Setup the exhale extension
+exhale_args = {
+    # These arguments are required
+    "containmentFolder": "./api",
+    "rootFileName": "library_root.rst",
+    "doxygenStripFromPath": "..",
+    # Heavily encouraged optional argument (see docs)
+    "rootFileTitle": "Mir API",
+    # Suggested optional arguments
+    "createTreeView": False,
+    "exhaleExecutesDoxygen": True,
+    "exhaleUseDoxyfile": False,
+    "contentsDirectives": False,
+    "exhaleDoxygenStdin": doxyfile_contents
+}
 
-############################################################
-### Additional files
-############################################################
+# Setup the breathe extension
+breathe_projects = {"Mir": "./xml/"}
+breathe_default_project = "Mir"
+breathe_default_members = ('members', 'undoc-members')
+breathe_order_parameters_first = True
 
-html_static_path = ['.sphinx/_static']
+# Mermaid
+mermaid_version = "10.5.0"
+mermaid_d3_zoom = True
 
-html_css_files = [
-    'custom.css',
-    'header.css',
-    'github_issue_links.css',
-    'furo_colors.css'
-]
-html_css_files.extend(custom_html_css_files)
-
-html_js_files = ['header-nav.js']
-if 'github_issues' in html_context and html_context['github_issues'] and not disable_feedback_button:
-    html_js_files.append('github_issue_links.js')
-html_js_files.extend(custom_html_js_files)
+# MyST
+myst_heading_anchors = 3
