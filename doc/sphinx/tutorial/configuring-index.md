@@ -1,5 +1,5 @@
 # Tutorials
-These pages provide first-time introductions to Mir development
+These pages provide first-time introductions to configuring Mir based compositors.
 
 
 ```{toctree}
