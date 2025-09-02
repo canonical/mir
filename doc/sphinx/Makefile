@@ -180,7 +180,7 @@ update: install
 
 # TODO: Make sure that the rest of the PR works, then remove this and the linkcheck workflow workaround!
 noop-target:
-
+	exit 0
 
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
