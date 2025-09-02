@@ -11,46 +11,48 @@ endif()
 find_package(Doxygen 1.8.0 ${REQUIRED})
 
 if(DOXYGEN_FOUND)
-  cmake_path(RELATIVE_PATH CMAKE_SOURCE_DIR BASE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} OUTPUT_VARIABLE MIR_SOURCE_RELATIVE_PATH)
-  if(NOT ${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
-    file(
-        COPY ${CMAKE_CURRENT_SOURCE_DIR}/sphinx/
-        DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/sphinx/
-        PATTERN *.in EXCLUDE
-    )
-  endif()
-
+  # TODO: Do we even need Doxyfile.in? 
+  # TODO: It's probably not a best practice to write files outside the build
+  # dir. But, the other alternative would be jumping between to documentation
+  # files outside and inside the build dir.
   configure_file(
-      ${CMAKE_CURRENT_SOURCE_DIR}/sphinx/Doxyfile.in
-      ${CMAKE_CURRENT_BINARY_DIR}/sphinx/Doxyfile @ONLY IMMEDIATE
+      ${CMAKE_SOURCE_DIR}/doc/sphinx/Doxyfile.in
+      ${CMAKE_SOURCE_DIR}/doc/sphinx/Doxyfile @ONLY IMMEDIATE
   )
 
   configure_file(
-      ${CMAKE_CURRENT_SOURCE_DIR}/sphinx/reference/introducing_the_miral_api.md.in
-      ${CMAKE_CURRENT_BINARY_DIR}/sphinx/reference/introducing_the_miral_api.md @ONLY IMMEDIATE
-  )
-
-  # use the starter pack Makefile
-  add_custom_command(
-      OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/sphinx/.sphinx/venv
-      COMMAND make -C ${CMAKE_CURRENT_BINARY_DIR}/sphinx install
+      ${CMAKE_SOURCE_DIR}/doc/sphinx/reference/introducing_the_miral_api.md.in
+      ${CMAKE_SOURCE_DIR}/doc/sphinx/reference/introducing_the_miral_api.md @ONLY IMMEDIATE
   )
 
   if(BUILD_DOXYGEN)
     set(ALL "ALL")
   endif()
 
-  add_custom_target(doc ${ALL}
-      COMMAND make -C ${CMAKE_CURRENT_BINARY_DIR}/sphinx html
-      DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/sphinx/.sphinx/venv
-              guides
-      BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/sphinx/_build
-                 ${CMAKE_CURRENT_BINARY_DIR}/sphinx/xml
+  add_custom_target(doxygen ${ALL}
+      COMMAND doxygen ${CMAKE_SOURCE_DIR}/doc/sphinx/Doxyfile
+      DEPENDS guides
+      BYPRODUCTS ${CMAKE_SOURCE_DIR}/doc/sphinx/xml 
+                 ${CMAKE_SOURCE_DIR}/doc/sphinx/api
   )
 
   install(
-      DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/sphinx/_build/
+      DIRECTORY ${CMAKE_SOURCE_DIR}/doc/sphinx/_build/
       DESTINATION ${CMAKE_INSTALL_PREFIX}/share/doc/mir-doc
       OPTIONAL
   )
 endif()
+
+add_custom_target(doc ${ALL}
+    COMMAND make -C ${CMAKE_SOURCE_DIR}/sphinx html
+    DEPENDS ${CMAKE_SOURCE_DIR}/sphinx/.sphinx/venv
+            guides
+    BYPRODUCTS ${CMAKE_SOURCE_DIR}/sphinx/_build
+)
+
+add_custom_target(doc-serve ${ALL}
+    COMMAND make -C ${CMAKE_SOURCE_DIR}/sphinx run
+    DEPENDS ${CMAKE_SOURCE_DIR}/sphinx/.sphinx/venv
+            guides
+    BYPRODUCTS ${CMAKE_SOURCE_DIR}/sphinx/_build
+)
