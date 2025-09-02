@@ -1,12 +1,12 @@
 # Mir documentation
 
-Mir is an advanced display server designed to operate across a variety of Linux-based
+Mir is a compositor library designed to operate across a variety of Linux-based
 devices, including traditional desktops, IoT and embedded systems.
 
 As a library, Mir helps to build Wayland compositors that are commonly used in Linux
 desktop environments.
 
-Mir can be considered a modern alternative to the X window server system, providing
+Mir is a modern way to build Wayland compositors, providing
 a well-defined, efficient, flexible and secure platform for graphical environments
 that makes it an ideal choice for both device manufacturers and desktop users.
 
