@@ -1,5 +1,5 @@
 # Explanation
-These pages provide additional detail about a number of aspects related to using Mir.
+These pages provide additional detail about contributing to Mir.
 
 - [Architecture](architecture.md): an overview of Mir's architecture for contributors
 - [Libraries](libraries.md): an overview of Mir's libraries and how they depend on one another
