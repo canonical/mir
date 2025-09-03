@@ -66,4 +66,4 @@ formats:
 # Optionally declare the Python requirements required to build your docs
 python:
    install:
-   - requirements: doc/sphinx/.sphinx/requirements.txt
+   - requirements: doc/sphinx/requirements.txt
