@@ -338,16 +338,19 @@ def remove_options_that_anger_exhale(doxyfile_content):
     return filtered_doxyfile
 
 
-# Instead of configuring Mir again to get the doxyfile, we assume the user
-# already has configured it and grab the file from there.
-try:
-    with open(cmake_build_dir / 'doc/sphinx/Doxyfile') as doxyfile_file:
-        # Read the doxyfile from the build directory
-        doxyfile_contents = remove_options_that_anger_exhale(doxyfile_file)
-except IOError as e:
-    print(f"IOError: {e.errno}, {e.strerror}")
-    print("Hint: Have you configured the cmake project and changed `cmake_build_dir` to point at it?")
+def read_doxyfile(path):
+    # Instead of configuring Mir again to get the doxyfile, we assume the user
+    # already has configured it and grab the file from there.
+    try:
+        with open(path) as doxyfile_file:
+            # Read the doxyfile from the build directory
+            return remove_options_that_anger_exhale(doxyfile_file)
+    except IOError as e:
+        raise Exception(f"""IOError: {e.errno}, {e.strerror}
+                        \rHint: Have you configured the cmake project and changed `cmake_build_dir` to point at it?""")
 
+
+doxyfile_contents = read_doxyfile(cmake_build_dir / 'doc/sphinx/Doxyfile')
 
 # Setup the exhale extension
 exhale_args = {
