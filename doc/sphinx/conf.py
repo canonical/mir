@@ -329,7 +329,7 @@ if build_api_docs:
     # Setup the exhale extension
     exhale_args = {
         # These arguments are required
-        "containmentFolder": "./api",
+        "containmentFolder": './api',
         "rootFileName": "library_root.rst",
         "doxygenStripFromPath": "..",
         # Heavily encouraged optional argument (see docs)
@@ -342,7 +342,7 @@ if build_api_docs:
     }
 
     # Setup the breathe extension
-    breathe_projects = {"Mir": "./xml/"}
+    breathe_projects = {"Mir": str(sphinx_dir / "doxygen_output/xml")}
     breathe_default_project = "Mir"
     breathe_default_members = ('members', 'undoc-members')
     breathe_order_parameters_first = True

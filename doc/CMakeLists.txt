@@ -41,18 +41,16 @@ find_package(Doxygen 1.8.0 ${REQUIRED})
 
 
 if(DOXYGEN_FOUND)
-  # TODO: Do we even need Doxyfile.in? 
-  # TODO: It's probably not a best practice to write files outside the build
-  # dir. But, the other alternative would be jumping between to documentation
-  # files outside and inside the build dir.
+    set(WORKING_DIR ${CMAKE_CURRENT_BINARY_DIR}/sphinx)
+
   configure_file(
-      ${CMAKE_SOURCE_DIR}/doc/sphinx/Doxyfile.in
-      ${CMAKE_SOURCE_DIR}/doc/sphinx/Doxyfile @ONLY IMMEDIATE
+      ${CMAKE_CURRENT_SOURCE_DIR}/sphinx/Doxyfile.in
+      ${WORKING_DIR}/Doxyfile @ONLY IMMEDIATE
   )
 
   configure_file(
-      ${CMAKE_SOURCE_DIR}/doc/sphinx/reference/introducing_the_miral_api.md.in
-      ${CMAKE_SOURCE_DIR}/doc/sphinx/reference/introducing_the_miral_api.md @ONLY IMMEDIATE
+      ${CMAKE_CURRENT_SOURCE_DIR}/sphinx/reference/introducing_the_miral_api.md.in
+      ${CMAKE_CURRENT_SOURCE_DIR}/sphinx/reference/introducing_the_miral_api.md @ONLY IMMEDIATE
   )
 
   if(BUILD_DOXYGEN)
@@ -60,14 +58,12 @@ if(DOXYGEN_FOUND)
   endif()
 
   add_custom_target(doxygen ${ALL}
-      COMMAND doxygen ${CMAKE_SOURCE_DIR}/doc/sphinx/Doxyfile
-      DEPENDS guides
-      BYPRODUCTS ${CMAKE_SOURCE_DIR}/doc/sphinx/xml 
-                 ${CMAKE_SOURCE_DIR}/doc/sphinx/api
+      COMMAND doxygen ${WORKING_DIR}/Doxyfile
+      BYPRODUCTS ${WORKING_DIR}/doxygen_output/xml 
   )
 
   add_custom_target(doxygen-clean
-      COMMAND rm -r ${CMAKE_SOURCE_DIR}/doc/sphinx/xml
+      COMMAND rm -r ${WORKING_DIR}/doxygen_output/xml
   ) 
   add_dependencies(doc-clean-all doxygen-clean)
 
