@@ -14,7 +14,6 @@ These pages cover the key aspects of working on Mir
 ````{grid} 1 1 2 2
 ```{grid-item-card} [Tutorials](/tutorial/contributing-index.md)
 **Start here**
-- {ref}`Getting started with Mir <tutorial-getting-started>`
 ```
 
 ```{grid-item-card} [How-to guides](/howto/contributing-index.md)
