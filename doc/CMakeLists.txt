@@ -12,7 +12,6 @@ add_custom_target(doc ${ALL}
 add_custom_target(doc-serve
     COMMAND ${CMAKE_COMMAND} -E env "MIR_CMAKE_BUILD_DIR=${CMAKE_BINARY_DIR}" make -C ${CMAKE_SOURCE_DIR}/doc/sphinx serve
 )
-add_dependencies(doc-serve doc)
 
 add_custom_target(doc-clean
     COMMAND make -C ${CMAKE_SOURCE_DIR}/doc/sphinx clean
