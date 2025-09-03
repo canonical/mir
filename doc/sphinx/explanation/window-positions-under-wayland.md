@@ -12,9 +12,9 @@ A [recent thread](https://www.mail-archive.com/wayland-devel@lists.freedesktop.o
 
 ## The designers
 
-For the designer of a server it is clear that applications ought to be "well behaved" and not be allowed to place windows in arbitrary positions. There are even security concerns about placing windows to intercept input such as passwords. And only the server can provide consistent window behaviours across multiple applications and toolkits.
+For the designer of a server it is clear that applications ought to be "well behaved" and not be allowed to place windows in arbitrary positions. There are even security concerns about placing windows to intercept input such as passwords. And only the server can provide consistent window behaviors across multiple applications and toolkits.
 
-For the designer of a client it is clear that the toolkit is best placed to decide where windows are best placed. And only the client can provide consistent window behaviours across multiple servers and operating systems.
+For the designer of a client it is clear that the toolkit is best placed to decide where windows are best placed. And only the client can provide consistent window behaviors across multiple servers and operating systems.
 
 ## The conflict
 
@@ -28,7 +28,7 @@ Obviously, that approach leads to frustration on the part of designers of client
 
 ## The balance
 
-Although a lot of freedom is indeed being lost, when looking at applications in the real world they only use a small fraction of that and for some specific cases. That's not surprising, as they are supporting some visual "idioms" that users recognise because they are shared across applications.
+Although a lot of freedom is indeed being lost, when looking at applications in the real world they only use a small fraction of that and for some specific cases. That's not surprising, as they are supporting some visual "idioms" that users recognize because they are shared across applications.
 
 1. Regular or "top level" windows
 ![regular_540p|690x388](regular_540p.gif)
@@ -57,4 +57,4 @@ While client developers (of applications and toolkits) may be surprised that the
 2. allowing for how the shell is laid out (docs, multi-screen display walls, etc);
 3. no need for application to know how its own windows are laid out
 
-The approach taken by Wayland supports most of the windowing idioms recognised by users and can be extended to cover more without allowing clients complete freedom.
+The approach taken by Wayland supports most of the windowing idioms recognized by users and can be extended to cover more without allowing clients complete freedom.

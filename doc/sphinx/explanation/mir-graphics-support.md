@@ -45,11 +45,11 @@ GPU: VideoCore IV
 
 Mesa open-source graphics stack|Proprietary driver
 --|--
-VC4 - open source kernel/mesa stack.|Dispmanx - Broadcom proprietary(ish) stack.
+VC4 - open source kernel/mesa stack.|Dispmanx - Broadcom semi-proprietary stack.
 Mir works, and is tested on this.|Mir works, not yet incorporated into CI lab testing
 Supports GL.|Requires out-of-tree patches to https://github.com/raspberrypi/userland to enable 3D and video decode clients.
 Does not support OMX.<br/>May support some video encode/decode via mmal interface. This is apparently slower than OMX.|Potentially higher performance (particularly OMX for video decode)
-As a mesa/gbm-based platform, would expect 3D to work in XWayland.<br/>Mmal may work in XWayland.|As a non-mesa/gbm platform would likely not have 3D (or video decode) in XWayland.
+As a mesa/gbm-based platform, would expect 3D to work in Xwayland.<br/>Mmal may work in Xwayland.|As a non-mesa/gbm platform would likely not have 3D (or video decode) in Xwayland.
 
 ### i.MX6
 GPU: Vivante GC something ([varies by model](https://en.wikipedia.org/wiki/I.MX#i.MX_6_series))
@@ -57,17 +57,17 @@ GPU: Vivante GC something ([varies by model](https://en.wikipedia.org/wiki/I.MX#
 Mesa open-source graphics stack|Proprietary driver
 --|--
 Etnaviv - Full open-source stack, using standard KMS/dma-buf/gbm interfaces. Reverse-engineered.<br/>_As it’s using a full open-source stack, this would be easiest to support._|Vivante - proprietary driver.
-Mir would use same platform as on the desktop - gbm-kms.<br/> _We've tested the Boundary Devices i.MX6 on classic Ubuntu. Ubuntu Core would require some enablement work (adding the etnaviv driver)._|Would require writing a Mir platform (this is clearly possible; there are patches for Weston to support vivante)
+Mir would use same platform as on the desktop - gbm-kms.<br/> _We've tested the Boundary Devices i.MX6 on classic Ubuntu. Ubuntu Core would require some enablement work (adding the etnaviv driver)._|Would require writing a Mir platform (this is clearly possible; there are patches for Weston to support Vivante)
 Supports 3D (mesa GL) + video decoding (CODA v4l2)|Supports 3D + video decoding
 Performance may be an issue (for example, https://github.com/Igalia/meta-webkit/issues/13)|Performance may be better; supported by downstream projects (again, cf: https://github.com/Igalia/meta-webkit/wiki/i.MX6)
-Notably - the open source stack should provide 3D acceleration (and potentially video acceleration) in XWayland.|Support for 3D in XWayland is unknown; would likely require significant out-of-tree patches.
+Notably - the open source stack should provide 3D acceleration (and potentially video acceleration) in Xwayland.|Support for 3D in Xwayland is unknown; would likely require significant out-of-tree patches.
 
 ### i.MX8
 GPU: Vivante GC7000
 Mesa open-source graphics stack|Proprietary driver
 --|--
 Etnaviv - Full open-source stack, using standard KMS/dma-buf/gbm interfaces. Reverse-engineered.|Vivante - proprietary driver.
-Same comments as etnaviv on i.MX6 apply, but the GPU is newer and the driver support is likewise newer; there may be more missing features/bugs than i.MX6 support.|same comments as i.MX6. <br/>_It’s likely that a Mir vivante platform would work on both i.MX6 and i.MX8; likewise, there is apparently Weston support (again, in the form of out-of-tree patches)_
+Same comments as etnaviv on i.MX6 apply, but the GPU is newer and the driver support is likewise newer; there may be more missing features/bugs than i.MX6 support.|same comments as i.MX6. <br/>_It’s likely that a Mir Vivante platform would work on both i.MX6 and i.MX8; likewise, there is apparently Weston support (again, in the form of out-of-tree patches)_
 Looks like there might not be open-source video decode support (https://community.nxp.com/t5/i-MX-Processors/i-MX8-Linux-video-decode-support/m-p/796955/highlight/true#M123321). Unknown whether we could interface the IMX bits with the etnaviv DRM bits.|Proprietary video decode solution.
 
 ## Driver requirements
