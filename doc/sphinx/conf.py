@@ -316,7 +316,7 @@ def read_doxyfile(path):
     try:
         # Read the doxyfile from the build directory
         with open(path) as doxyfile_file:
-            return doxyfile_file
+            return doxyfile_file.read()
     except IOError as e:
         raise Exception(f"""IOError: {e.errno}, {e.strerror}
                         \rHint: Have you configured the cmake project and changed `cmake_build_dir` to point at it?""")
