@@ -42,7 +42,7 @@ As stated previously, the `Shell` handles requests from the system and updates t
 
 **Frontend Wayland**: Responsible for connecting the Wayland protocol with the rest of *Mir*. The `WaylandConnector` class connects requests made via the Wayland protocol to the core state of the compositor.
 
-**Frontend XWayland**: Responsible for connecting requests sent by an `XWayland` server to the rest of *Mir*. The `XWaylandConnector` establishes this connection. This frontend spawns an `XWayland` server as a subprocess.
+**Frontend Xwayland**: Responsible for connecting requests sent by an `Xwayland` server to the rest of *Mir*. The `XWaylandConnector` establishes this connection. This frontend spawns an `Xwayland` server as a subprocess.
 
 **Input**: Handles everything having to do with input, including mouse, keyboard, touch, and more. This system interacts with the specific [input platform](#platforms) and bubbles up events through a list of `InputDispatcher`s, which enables different pieces of the software to react to events.
 

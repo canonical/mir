@@ -1,7 +1,7 @@
 # Accessibility Methods
 Accessibility methods are options which
 accommodate users with disabilities. Mir offers a variety of accessibility
-methods which can be broadly categorised into: Pointer accessibility, typing
+methods which can be broadly categorized into: Pointer accessibility, typing
 accessibility, and visual accessibility methods. 
 
 ## Pointer Accessibility
@@ -25,7 +25,7 @@ slightly move from the position the simulated secondary click started from to
 further accommodate users. 
 
 Callbacks are available and trigger when the click starts,
-when it's cancelled, and when it's successfully dispatched. These
+when it's canceled, and when it's successfully dispatched. These
 callbacks can be used to provide custom visual and audio feedback.
 
 API details: {cpp:class}`miral::SimulatedSecondaryClick`
@@ -38,7 +38,7 @@ initiated, the pointer is allowed to slightly move.
 After a click is successfully dispatched, no further clicks will be initiated
 unless the pointer moves a short distance from the position of the last click.
 
-Callbacks are available and trigger when clicks are initiated, cancelled,
+Callbacks are available and trigger when clicks are initiated, canceled,
 or dispatched. They can be used to provide visual and audio feedback.
 
 API details: {cpp:class}`miral::HoverClick`
@@ -84,7 +84,7 @@ API details: {cpp:class}`miral::BounceKeys`
 ## Visual Accessibility
 Mir includes the following visual accessibility methods:
 1. Cursor scaling
-2. Colour filters
+2. Color filters
 3. Zooming/Magnification
 
 ### Cursor Scaling
@@ -93,8 +93,8 @@ Cursor scaling allows users to scale the cursor at runtime to any value between
 
 API details: {cpp:class}`miral::CursorScale`
 
-### Colour Filters
-Mir provides two colour filters by default, a grayscale filter, and a colour
+### Color Filters
+Mir provides two color filters by default, a grayscale filter, and a color
 inversion filter. At the moment, it's not possible to implement your own custom
 filter.
 

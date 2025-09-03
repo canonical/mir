@@ -51,7 +51,7 @@ these assert the functionality of individual components in isolation, as is usua
 run more high-level tests, ensuring we maintain the contracts with external components as well as
 our own loadable modules' interfaces.
 
-One major part of this is [WLCS](https://github.com/canonical/wlcs) - asserting the behaviour
+One major part of this is [wlcs](https://github.com/canonical/wlcs) - asserting the behavior
 of Mir's Wayland frontend is to specification of the protocol.
 
 ### Integration tests
@@ -72,8 +72,8 @@ We also run these on a number of hardware platforms in our testing lab for every
 In addition to the above, for every merge to `main` we build and run the tests using the following
 sanitizers:
 
-- **Undefined Behaviour**
-  Building with UndefinedBehaviourSanitizer enabled reports no undefined behaviour, it would be a
+- **Undefined Behavior**
+  Building with UndefinedBehaviourSanitizer enabled reports no undefined behavior, it would be a
   CI failure otherwise.
 - **Address Sanitizer**
   As we have some fixing to do here, we run those builds - but don't enforce the problems reported.
@@ -130,7 +130,7 @@ multi-GPU (usually hybrid) ones. We maintain a matrix of test coverage
 [in this spreadsheet](https://docs.google.com/spreadsheets/d/1kUbTSt4zWVpTtgZNJvvxCdugsRUv6C5PK9Xw5dxppCc/edit#gid=893560997).
 
 These tests ultimately verify the full story end-to-end, installing the snaps on a range of
-Ubuntu versions (Core and classic alike) and verify behaviours and visuals through a number of
+Ubuntu versions (Core and classic alike) and verify behaviors and visuals through a number of
 scenarios.
 
 It's a somewhat complex web of things happening, so again a diagram might help

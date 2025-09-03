@@ -5,7 +5,7 @@
 
 The Mir project provides libraries for creating Wayland compositors. The design is intended to make it easy build something simple and easy to customize the compositor in a number of ways.
 
-Within the Mir codebase there are four different Wayland compositors each demonstrating a different behaviour. There are additional compositors maintained and written by the Mir team in a number of Snaps. Most notably, Ubuntu Frame.
+Within the Mir codebase there are four different Wayland compositors each demonstrating a different behavior. There are additional compositors maintained and written by the Mir team in a number of Snaps. Most notably, Ubuntu Frame.
 
 Outside the Mir codebase there are at least four compositors based on Mir that support different uses.
 
@@ -28,7 +28,7 @@ Compositor|Description
 
 For all of these examples Mir provides the code and logic connecting the display and input hardware, and the Wayland protocols connecting to the client. Mir also separates out the concerns such as Window Management,  abstracts the graphics  stack, and manages Wayland extensions:
 
-* For Window management it provides a default "floating window" strategy, but also provides enough customisation points to support "fullscreen" and "tiling" strategies to be written in high level code;
+* For Window management it provides a default "floating window" strategy, but also provides enough customization points to support "fullscreen" and "tiling" strategies to be written in high level code;
 * For the graphics stack Mir dynamically loads one of several backends (there are five supported by Mir and one more supported by UBports); and,
 * Mir implements a range of Wayland extensions (and compositors can add more), some of these are disabled by default (e.g. for security) but can be enabled by compositors either globally or for specific applications.
 
@@ -116,7 +116,7 @@ WAYLAND_DISPLAY=wayland-99 gedit
 
 ![image|690x572](compositor.png)
 
-Of course, this is a very minimalistic example and most compositors will be running as part of an ecosystem that launches appications without typing in these incantations.
+Of course, this is a very minimalistic example and most compositors will be running as part of an ecosystem that launches applications without typing in these incantations.
 
 ## An advanced example: Miriway
 
