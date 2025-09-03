@@ -35,7 +35,7 @@ For example, if the application software uses 3D or video acceleration, then tha
 
 There’s a further complication in that Mir expects applications to use Wayland and some features on some drivers don’t work with Wayland. (An example is that the  intel-vaapi-driver for Ubuntu 18.04 doesn’t work with Wayland. That is fixed in more recent versions, but may need to be addressed for core18 snaps.)
 
-Also, there are applications that do not support Wayland directly. These can be supported with XWayland - a program that translates from X11 to Wayland for the application. But that leads to further limitations as the GL acceleration support through XWayland depends upon the graphics drivers. It works with Intel on Mesa, but beyond that it is patchy.
+Also, there are applications that do not support Wayland directly. These can be supported with Xwayland - a program that translates from X11 to Wayland for the application. But that leads to further limitations as the GL acceleration support through Xwayland depends upon the graphics drivers. It works with Intel on Mesa, but beyond that it is patchy.
 
 ## Some hardware examples
 
@@ -49,7 +49,7 @@ VC4 - open source kernel/mesa stack.|Dispmanx - Broadcom semi-proprietary stack.
 Mir works, and is tested on this.|Mir works, not yet incorporated into CI lab testing
 Supports GL.|Requires out-of-tree patches to https://github.com/raspberrypi/userland to enable 3D and video decode clients.
 Does not support OMX.<br/>May support some video encode/decode via mmal interface. This is apparently slower than OMX.|Potentially higher performance (particularly OMX for video decode)
-As a mesa/gbm-based platform, would expect 3D to work in XWayland.<br/>Mmal may work in XWayland.|As a non-mesa/gbm platform would likely not have 3D (or video decode) in XWayland.
+As a mesa/gbm-based platform, would expect 3D to work in Xwayland.<br/>Mmal may work in Xwayland.|As a non-mesa/gbm platform would likely not have 3D (or video decode) in Xwayland.
 
 ### i.MX6
 GPU: Vivante GC something ([varies by model](https://en.wikipedia.org/wiki/I.MX#i.MX_6_series))
@@ -60,7 +60,7 @@ Etnaviv - Full open-source stack, using standard KMS/dma-buf/gbm interfaces. Rev
 Mir would use same platform as on the desktop - gbm-kms.<br/> _We've tested the Boundary Devices i.MX6 on classic Ubuntu. Ubuntu Core would require some enablement work (adding the etnaviv driver)._|Would require writing a Mir platform (this is clearly possible; there are patches for Weston to support Vivante)
 Supports 3D (mesa GL) + video decoding (CODA v4l2)|Supports 3D + video decoding
 Performance may be an issue (for example, https://github.com/Igalia/meta-webkit/issues/13)|Performance may be better; supported by downstream projects (again, cf: https://github.com/Igalia/meta-webkit/wiki/i.MX6)
-Notably - the open source stack should provide 3D acceleration (and potentially video acceleration) in XWayland.|Support for 3D in XWayland is unknown; would likely require significant out-of-tree patches.
+Notably - the open source stack should provide 3D acceleration (and potentially video acceleration) in Xwayland.|Support for 3D in Xwayland is unknown; would likely require significant out-of-tree patches.
 
 ### i.MX8
 GPU: Vivante GC7000
