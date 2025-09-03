@@ -41,7 +41,7 @@ Mir is a member of the Ubuntu family. It’s an open source project that warmly 
 * [Get support](https://discourse.ubuntu.com/c/mir/15)
 * [Join our online chat](https://matrix.to/#/#mir-server:matrix.org)
 * {ref}`Contribute <howto-contribute>`
-* Thinking about using Mir for your next project? [Get in touch](https://canonical.com/)!
+* Thinking about using Mir for your next project? [Get in touch](https://canonical.com/mir)!
 
 
 ```{toctree}
