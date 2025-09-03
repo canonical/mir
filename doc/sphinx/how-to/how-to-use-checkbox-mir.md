@@ -10,7 +10,7 @@ This document explains how to use checkbox-mir to validate the graphical environ
 
 To support graphics on Linux on a given piece of hardware, usually a kernel and userspace driver is required. When using snaps, the kernel driver is managed by the operating system, but the userspace driver needs to be available to your application.
 
-The recommended approach for this is using a content snap, through the `graphics-coreXX` interface. The current iteration is `graphics-core22`, see here for more information on that setup: [The graphics-core22 interface](https://mir-server.io/docs/the-graphics-core22-snap-interface).
+The recommended approach for this is using a content snap, through the appropriate content interface. The current iteration is `gpu-2404`, see here for more information on that setup: [The gpu-2404 interface](https://canonical.com/mir/docs/the-gpu-2404-snap-interface).
 
 ## Checkbox
 
@@ -66,7 +66,7 @@ Depending on the test being ran, there are different requirements for it to star
 Here's a list of the different requirements:
 1. [`graphics-test-tools`](https://snapcraft.io/graphics-test-tools) installed,
 2. [`mir-test-tools`](https://snapcraft.io/mir-test-tools) installed,
-3. a `graphics-coreXX` provider snap installed (by default that's [mesa-core20](https://snapcraft.io/mesa-core20) or [mesa-core22](https://snapcraft.io/mesa-core22), depending on which track of the above you install), and the above snaps, and `checkbox-mir` itself connected to it,
+3. the graphics userspace provider snaps installed (by default that's [mesa-2404](https://snapcraft.io/mesa-2404) providing `gpu-2404`, depending on which track of the above you install), and the above snaps, and `checkbox-mir` itself connected to them,
 4. to run as a non-privileged user and confirm Mir interactions with the display manager, a local user session needs to be active,
 
 ### `checkbox-mir.checkbox-cli`
@@ -186,12 +186,12 @@ This test plan is primarily intended for the Mir team, allowing us to test updat
 │[X]    snaps/mir-kiosk-scummvm-edge                                    │
 │[X]    snaps/mir-test-tools-20-beta                                    │
 │[X]    snaps/mir-test-tools-22-beta                                    │
+│[X]    snaps/mir-test-tools-24-beta                                    │
 │[X]    snaps/mircade-beta                                              │
 │[X]    snaps/miriway-beta                                              │
 │[X]    snaps/ubuntu-frame-osk-20-beta                                  │
 │[X]    snaps/ubuntu-frame-osk-22-beta                                  │
-│                                                                       │
-│                                                                       │
+│[X]    snaps/ubuntu-frame-osk-24-beta                                  │
 └───────────────────────────────────────────────────────────────────────┘
  Press (T) to start Testing                                     (H) Help
 ```
