@@ -53,13 +53,6 @@ PROJECT_BRIEF          =
 
 PROJECT_LOGO           =
 
-# The OUTPUT_DIRECTORY tag is used to specify the (relative or absolute) path
-# into which the generated documentation will be written. If a relative path is
-# entered, it will be relative to the location where doxygen was started. If
-# left blank the current directory will be used.
-
-OUTPUT_DIRECTORY       = @CMAKE_SOURCE_DIR@/doc/sphinx
-
 # If the CREATE_SUBDIRS tag is set to YES then doxygen will create 4096 sub-
 # directories (in 2 levels) under the output directory of each output format and
 # will distribute the generated files over these directories. Enabling this
@@ -159,18 +152,6 @@ INLINE_INHERITED_MEMB  = NO
 # The default value is: YES.
 
 FULL_PATH_NAMES        = YES
-
-# The STRIP_FROM_PATH tag can be used to strip a user-defined part of the path.
-# Stripping is only done if one of the specified strings matches the left-hand
-# part of the path. The tag can be used to show relative paths in the file list.
-# If left blank the directory from which doxygen is run is used as the path to
-# strip.
-#
-# Note that you can specify absolute paths here, but also relative paths, which
-# will be relative from the directory where doxygen is started.
-# This tag requires that the tag FULL_PATH_NAMES is set to YES.
-
-STRIP_FROM_PATH        = @CMAKE_SOURCE_DIR@
 
 # The STRIP_FROM_INC_PATH tag can be used to strip a user-defined part of the
 # path mentioned in the documentation of a class, which tells the reader which

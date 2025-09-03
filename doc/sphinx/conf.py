@@ -318,33 +318,13 @@ html_extra_path = [
     str(cppguide_dir / 'styleguide.css'),
 ]
 
-def remove_options_that_anger_exhale(doxyfile_content):
-    # If we run exhale with these options, it will error out because it handles
-    # them itself.
-    options_that_anger_exhale = {'OUTPUT_DIRECTORY', 'STRIP_FROM_PATH'}
-    
-    def line_starts_with_any(line, options):
-        match line.split():
-            case []:
-                return False
-            case [option, *_]:
-                return option in options
-
-    filtered_doxyfile = ''.join(
-        line for line in open(sphinx_dir / 'Doxyfile').readlines() 
-        if not line_starts_with_any(line, options_that_anger_exhale)
-    )
-    
-    return filtered_doxyfile
-
-
 def read_doxyfile(path):
     # Instead of configuring Mir again to get the doxyfile, we assume the user
     # already has configured it and grab the file from there.
     try:
+        # Read the doxyfile from the build directory
         with open(path) as doxyfile_file:
-            # Read the doxyfile from the build directory
-            return remove_options_that_anger_exhale(doxyfile_file)
+            return doxyfile_file
     except IOError as e:
         raise Exception(f"""IOError: {e.errno}, {e.strerror}
                         \rHint: Have you configured the cmake project and changed `cmake_build_dir` to point at it?""")
