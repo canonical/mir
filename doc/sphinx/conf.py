@@ -242,16 +242,6 @@ extensions = [
     'sphinxcontrib.mermaid'
 ]
 
-build_api_docs = os.getenv('MIR_BUILD_API_DOCS')
-doxygen_outputs_exist = os.path.exists('./xml')
-
-if build_api_docs and not doxygen_outputs_exist:
-    raise Exception("Doxygen outputs at doc/sphinx/xml don't exist\nPlease run the `doxygen` target first")
-
-# Only add breathe if the user ran doxygen (which produces both ./api and ./xml)
-if build_api_docs:
-    extensions.extend(['exhale', 'breathe'])
-
 # Excludes files or directories from processing
 
 exclude_patterns = [
@@ -304,11 +294,11 @@ intersphinx_mapping = {
 ############################################################
 ### Additional configuration
 ############################################################
-cmake_build_dir = Path('../../')  # Leave doc/sphinx
+cmake_build_dir = Path(os.getenv('MIR_CMAKE_BUILD_DIR') or '../../')  # Default for CI
+
 sphinx_dir = cmake_build_dir / 'doc/sphinx'
 
 primary_domain = 'cpp'
-
 highlight_language = 'cpp'
 
 cppguide_dir = Path('../../guides')
@@ -325,7 +315,17 @@ cppguide_files = [
 if all(os.path.exists(file) for file in cppguide_files):
     html_extra_path.extend(str(file) for file in cppguide_files)
 
+build_api_docs = os.getenv('MIR_BUILD_API_DOCS') == '1'
+doxygen_output_dir = sphinx_dir / "doxygen_output"
+doxygen_outputs_exist = os.path.exists(doxygen_output_dir)
+
+if build_api_docs and not doxygen_outputs_exist:
+    raise Exception("Doxygen outputs at doc/sphinx/xml don't exist\nPlease run the `doxygen` target first")
+
+# Only add exhale and breathe if the user ran doxygen (which produces `<build_dir>/doc/sphinx/doxygen_output/xml`)
 if build_api_docs:
+    extensions.extend(['exhale', 'breathe'])
+
     # Setup the exhale extension
     exhale_args = {
         # These arguments are required
@@ -342,7 +342,7 @@ if build_api_docs:
     }
 
     # Setup the breathe extension
-    breathe_projects = {"Mir": str(sphinx_dir / "doxygen_output/xml")}
+    breathe_projects = {"Mir": str(doxygen_output_dir / 'xml')}
     breathe_default_project = "Mir"
     breathe_default_members = ('members', 'undoc-members')
     breathe_order_parameters_first = True
