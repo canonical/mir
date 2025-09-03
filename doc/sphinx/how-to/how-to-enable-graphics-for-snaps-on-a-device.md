@@ -1,12 +1,12 @@
-# How to enable graphics-core22 on a device
-This document will guide you through the process of assembling a 
-`graphics-core22` snap. With this snap, your device will be ready
+# How to enable gpu-2404 on a device
+This document will guide you through the process of assembling a
+`gpu-2404` snap. With this snap, your device will be ready
 to run graphical snaps like `ubuntu-frame` or any other *Mir*-based
 compositor in a snapped environment.
 
 To this end, we will accomplish the following in order:
-- How to assemble a `graphics-core22` provider snap
-- How to test a `graphics-core22` provider snap
+- How to assemble a `gpu-2404` provider snap
+- How to test a `gpu-2404` provider snap
 - How to test the confinement of your *Mir*-based snap that relies on the provider snap
 
 ## Prerequisites
@@ -19,13 +19,13 @@ For starters, make sure that you have some sort of development board on hand.
 Next, make sure that this board runs a `snapd`-enabled Ubuntu image with
 a kernel that includes GPU support. To do this, we'll run a series of checks.
 
-First, you should ensure that *at least* `/dev/dri/card0` exists, but you 
+First, you should ensure that *at least* `/dev/dri/card0` exists, but you
 may have more depending on your setup. You may check this from the command line.
 
 Next, install the [graphics-test-tools](https://snapcraft.io/graphics-test-tools) snap:
 
 ```shell
-sudo snap install graphics-test-tools --channel 22/stable
+sudo snap install graphics-test-tools --channel 24/stable
 ```
 
 This snap will provide you with `graphics-test-tools.drm-info`. Run it and you
@@ -49,8 +49,8 @@ Node: /dev/dri/card1
 │   ├───Subpixel: unknown
 │   ├───Encoders: {3}
 │   ├───Modes
-│   │   ├───1920x1080@60.00 preferred driver phsync pvsync 
-│   │   ├───1920x1080@60.00 driver phsync pvsync 16:9 
+│   │   ├───1920x1080@60.00 preferred driver phsync pvsync
+│   │   ├───1920x1080@60.00 driver phsync pvsync 16:9
 │   │   ├───...
 |   |   ...
 ├───Encoders
@@ -64,7 +64,7 @@ Node: /dev/dri/card1
 │   ├───CRTC 0
 │   │   ├───Object ID: 72
 │   │   ├───Legacy info
-│   │   │   ├───Mode: 1920x1080@60.00 preferred driver phsync pvsync 
+│   │   │   ├───Mode: 1920x1080@60.00 preferred driver phsync pvsync
 │   │   │   └───Gamma size: 256
 |   |   ...
 └───Planes
@@ -93,18 +93,18 @@ means that kernel enablement is required before Ubuntu Frame can be enabled.
 Finally, we will need to check that you have the proper userspace drivers
 installed on the system, namely:
 - `EGL` (`libEGL.so.1`)
-- `GLES` (`libGLESv2.so.2`) 
+- `GLES` (`libGLESv2.so.2`)
 - `GBM` (`libgbm.so.1`)
 
 While *Mir* can be enabled on platforms that do not support `GBM/KMS`, this
 requires a platform implementation to be written in *Mir*. This work is out
 of the scope of this guide.
 
-## How to assemble a `graphics-core22` provider snap
-With the prerequisites out of the way, it is time to assemble a `graphics-core22` snap.
+## How to assemble a `gpu-2404` provider snap
+With the prerequisites out of the way, it is time to assemble a `gpu-2404` snap.
 
-The snap itself must provide the libraries described in 
-[this document](https://mir-server.io/docs/the-graphics-core22-snap-interface#heading--lists--supported-apis).
+The snap itself must provide the libraries described in
+[this document](https://mir-server.io/docs/the-gpu-2404-snap-interface#heading--lists--supported-apis).
 Unless you are incredibly space-constrained or in an unusual circumstance, it is a good idea to
 provide **all** of these libraries. Even if your board doesn’t support these libraries, a failure to include
 them will result in applications that would otherwise fall back to a supported API failing to start.
@@ -116,56 +116,30 @@ The remaining packages should be available in the Ubuntu archive.
 Most of these libraries do **NOT** need to be in a fixed location in the snap.
 However, the following paths **MUST** be provided in a fixed location by your snap:
 
-1. `libdrm`:
-    ```yaml
-    parts:
-      drm:
-        # DRM userspace
-        ...
-        organize:
-          # Expected at /libdrm by the `graphics-core22` interface
-          usr/share/libdrm: libdrm
-        ...
-    ```
-
-
-2. `drirc.d` (optional, if your vendor drivers supply `drirc` configuration):
-    ```yaml
-    parts:
-      dri:
-        # Userspace drivers
-        ...
-        organize:
-          # Expected at /drirc.d by the `graphics-core22` interface
-          usr/share/drirc.d: drirc.d
-        ...
-    ```
-
-
-3. `X11`:
+1. `X11`:
     ```yaml
     parts:
       x11:
         ...
         organize:
-          # Expected at /X11 by the `graphics-core22` interface
+          # Expected at /X11 by the `gpu-2404` interface
           usr/share/X11: X11
         ...
     ```
 
 The remainder of the paths will be established using the required script at the location
-`bin/graphics-core22-provider-wrapper`. This script will be invoked with 
-`graphics-core22-provider-wrapper $EXECUTABLE $ARGS...`. This script does the 
+`bin/gpu-2404-provider-wrapper`. This script will be invoked with
+`gpu-2404-provider-wrapper $EXECUTABLE $ARGS...`. This script does the
 following:
-1. It exports any environment variables that are required for the binary 
+1. It exports any environment variables that are required for the binary
 to find and use the vendor drivers
 2. It then executes the provided `$EXECUTABLE` with `$ARGS…`.
 
-An example of a script that provides `mesa-core22` is as follows:
+An example of a script that provides `mesa-2404` is as follows:
 
 ```sh
-# Dervied from:
-# https://github.com/canonical/mesa-core22/blob/main/scripts/bin/graphics-core22-provider-wrapper.in
+# Derived from:
+# https://github.com/canonical/mesa-2404/blob/main/scripts/bin/gpu-2404-provider-wrapper.in
 
 
 #!/bin/bash
@@ -191,8 +165,10 @@ done
 
 __EGL_VENDOR_LIBRARY_DIRS=${__EGL_VENDOR_LIBRARY_DIRS:+$__EGL_VENDOR_LIBRARY_DIRS:}${SELF}/share/glvnd/egl_vendor.d
 __EGL_EXTERNAL_PLATFORM_CONFIG_DIRS=${__EGL_EXTERNAL_PLATFORM_CONFIG_DIRS:+$__EGL_EXTERNAL_PLATFORM_CONFIG_DIRS:}${SELF}/share/egl/egl_external_platform.d
+DRIRC_CONFIGDIR=$( cd -- "$(dirname "$0")/../drirc.d" ; pwd -P )
 VK_LAYER_PATH=${VK_LAYER_PATH:+$VK_LAYER_PATH:}${SELF}/share/vulkan/implicit_layer.d/:${SELF}/share/vulkan/explicit_layer.d/
 XDG_DATA_DIRS=${XDG_DATA_DIRS:+$XDG_DATA_DIRS:}${SELF}/share
+XLOCALEDIR=${SELF}/share/X11/locale
 
 
 # These are in the default LD_LIBRARY_PATH, but in case the snap dropped it inadvertently
@@ -213,6 +189,7 @@ if [ -d "/var/lib/snapd/lib/gl/vdpau" ]; then
   LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/var/lib/snapd/lib/gl/vdpau
 fi
 
+export GBM_BACKENDS_PATH
 export LD_LIBRARY_PATH
 # Mesa-specific environment variable pointing to directory containing $VENDOR_dri.so files
 export LIBGL_DRIVERS_PATH
@@ -221,8 +198,10 @@ export LIBVA_DRIVERS_PATH
 export __EGL_VENDOR_LIBRARY_DIRS
 # EGL external platform interface specific environment
 export __EGL_EXTERNAL_PLATFORM_CONFIG_DIRS
+export DRIRC_CONFIGDIR
 export VK_LAYER_PATH
 export XDG_DATA_DIRS
+export XLOCALEDIR
 
 exec "$@"
 ```
@@ -232,11 +211,11 @@ any snap that connects to our provider snap can properly resolve these
 libraries.
 
 ### Multiarch Support
-If the vendor drivers provide libraries for multiple sub-architectures (for example, 32-bit and 64-bit ARM) your provider snap can supply both. In this case, you will need to include all provided arch triples in the `ARCH_TRIPLETS` array in the above script (for example: `ARCH_TRIPLETS=( armhf-linux-gnu arm64-linux-gnu )`), and will need to set a few more environment variables in the `graphics-core22-provider-wrapper`.
-An example from `mesa-core22` (which provides both `x86_64-linux-gnu` and `i386-linux-gnu`) adds these lines:
+If the vendor drivers provide libraries for multiple sub-architectures (for example, 32-bit and 64-bit ARM) your provider snap can supply both. In this case, you will need to include all provided arch triples in the `ARCH_TRIPLETS` array in the above script (for example: `ARCH_TRIPLETS=( armhf-linux-gnu arm64-linux-gnu )`), and will need to set a few more environment variables in the `gpu-2404-provider-wrapper`.
+An example from `mesa-2404` (which provides both `x86_64-linux-gnu` and `i386-linux-gnu`) adds these lines:
 
 ```sh
-# /bin/graphics-core22-provider-wrapper
+# /bin/gpu-2404-provider-wrapper
 
 ...
 if [ "$SNAP_ARCH" == "amd64" ]; then
@@ -257,8 +236,8 @@ fi
 ```
 
 The `snapcraft.yaml` file will also need to be updated to point at the 32 bit paths.
-You may find an example of using `i386` in 
-[mesa-core22](https://github.com/canonical/mesa-core22/blob/9d64e64fb06f7052f9e6f8a8899cac763f5fad7e/snap/snapcraft.yaml#L176).
+You may find an example of using `i386` in
+[mesa-2404](https://github.com/canonical/mesa-2404/blob/9d64e64fb06f7052f9e6f8a8899cac763f5fad7e/snap/snapcraft.yaml#L176).
 
 
 ### How to supply the vendor libraries
@@ -281,7 +260,7 @@ parts:
 
 ...
 slots:
- graphics-core22:
+ gpu-2404:
    interface: content
    read:
      - [$SNAP]
@@ -291,9 +270,9 @@ slots:
 ### How to supply the remaining libraries
 As mentioned before, you should be able to get the remaining libraries from
 the Ubuntu archive. The part below can supply these libraries, and they may be
-organised into any directory, in this case they are in the same path as would
-be found in a classic Ubuntu system. Here is an example from the `mesa-core22`
-[snapcraft.yaml](https://github.com/canonical/mesa-core22/blob/main/snap/snapcraft.yaml).
+organized into any directory, in this case they are in the same path as would
+be found in a classic Ubuntu system. Here is an example from the `mesa-2404`
+[snapcraft.yaml](https://github.com/canonical/mesa-2404/blob/main/snap/snapcraft.yaml).
 
 
 ```yaml
@@ -306,7 +285,7 @@ parts:
       - libdrm2
       - libdrm-common
     organize:
-      # Expected at /libdrm by the `graphics-core22` interface
+      # Expected at /libdrm by the `gpu-2404` interface
       usr/share/libdrm: libdrm
     prime:
       - usr/lib
@@ -337,7 +316,7 @@ parts:
       - mesa-vulkan-drivers
       - libglx-mesa0
     organize:
-      # Expected at /drirc.d by the `graphics-core22` interface
+      # Expected at /drirc.d by the `gpu-2404` interface
       usr/share/drirc.d: drirc.d
     prime:
       - usr/lib
@@ -347,7 +326,7 @@ parts:
     override-stage: |
       # Strip any absolute paths out of the Vulkan ICD driver manifests;
       # the driver `.so` files will not be in a fixed location, so must use
-      # relative paths and rely on `LD_LIBRARY_PATH` (set by the graphics-core22-proivder-wrapper script)
+      # relative paths and rely on `LD_LIBRARY_PATH` (set by the gpu-2404-proivder-wrapper script)
       # to find the driver `.so`s
       sed -i 's@/usr/lib/[a-z0-9_-]\+/@@' ${CRAFT_PART_INSTALL}/usr/share/vulkan/*/*.json
       craftctl default
@@ -371,7 +350,7 @@ parts:
       - libxdmcp6
       - libxshmfence1
     organize:
-      # Expected at /X11 by the `graphics-core22` interface
+      # Expected at /X11 by the `gpu-2404` interface
       usr/share/X11: X11
     prime:
       - usr/lib
@@ -400,10 +379,10 @@ When you're ready, build your snap using `snapcraft`.
 ### Troubleshooting
 
 
-#### Vendor drivers require libraries newer than core22 provides
+#### Vendor drivers require libraries newer than 2404 provides
 Some vendor driver binaries might be built against newer libraries than are provided in the
-Ubuntu 22.04 repositories. Particularly, the core `libwayland` libraries may introduce new
-features since 22.04 that vendor binaries might require. This will manifest as missing
+Ubuntu 24.04 repositories. Particularly, the core `libwayland` libraries may introduce new
+features since 24.04 that vendor binaries might require. This will manifest as missing
 symbol errors at runtime.
 
 
@@ -435,24 +414,24 @@ parts:
 ```
 
 
-## How to test a `graphics-core22` provider snap
-Now we have our `graphics-core22` provider snap built. However, we don't yet know if it works
+## How to test a `gpu-2404` provider snap
+Now we have our `gpu-2404` provider snap built. However, we don't yet know if it works
 properly. Testing this snap is our next task.
 
 Assuming that you have already installed the `graphics-test-tools` snap,
 connect the snap that you've built to `graphics-test-tools`:
 
 ```shell
-sudo snap disconnect graphics-test-tools:graphics-core22
-sudo snap connect graphics-test-tools:graphics-core22 <your-snap>:graphics-core22
+sudo snap disconnect graphics-test-tools:gpu-2404
+sudo snap connect graphics-test-tools:gpu-2404 <your-snap>:gpu-2404
 ```
 
 With that installed, we can begin testing.
 
 ### Use `eglinfo` to test
 This is the most basic test that can be performed, and is a good indication of baseline GPU
-driver setup. This should list _at least_ a GBM platform with the expected vendor and 
-`OpenGL_ES` client API. An abbreviated example (on a `mesa-core22` system):
+driver setup. This should list _at least_ a GBM platform with the expected vendor and
+`OpenGL_ES` client API. An abbreviated example (on a `mesa-2404` system):
 
 ```
 $ graphics-test-tools.eglinfo
@@ -512,12 +491,12 @@ sudo snap install ubuntu-frame --devmode
 
 Next, disconnect it from the default graphics interface:
 ```shell
-sudo snap disconnect ubuntu-frame:graphics-core22
+sudo snap disconnect ubuntu-frame:gpu-2404
 ```
 
 Then, connect it to your new provider snap:
 ```shell
-sudo snap connect ubuntu-frame:graphics-core22 <your-snap>:graphics-core22
+sudo snap connect ubuntu-frame:gpu-2404 <your-snap>:gpu-2404
 ```
 
 Finally, run `ubuntu-frame`:
@@ -529,7 +508,7 @@ If everything previously has gone correctly this should result in `ubuntu-frame`
 up on the connected outputs. If not, the log messages will hopefully help identify issues.
 
 ## How to test the confinement of your *Mir*-based snap
-Once you have your `graphics-core22` provider snap setup, and you are confident that it works
+Once you have your `gpu-2404` provider snap setup, and you are confident that it works
 well, you'll want to make sure that you can run the snap that *depends on* your provider snap
 in a confined mode. Since we already have `ubuntu-frame` setup, we will use it as an example.
 However, you should be able to run these tests on any *Mir*-based snap.
@@ -541,11 +520,11 @@ sudo snap remove ubuntu-frame
 ```
 
 Next, we can install `ubuntu-frame` without the `--devmode` flag and
-connect it to the `graphics-core22` slot of your provider snap:
+connect it to the `gpu-2404` slot of your provider snap:
 ```shell
 sudo snap install ubuntu-frame
-sudo snap disconnect ubuntu-frame:graphics-core22
-sudo snap connect ubuntu-frame:graphics-core22 <your-snap>:graphics-core22
+sudo snap disconnect ubuntu-frame:gpu-2404
+sudo snap connect ubuntu-frame:gpu-2404 <your-snap>:gpu-2404
 ```
 
 Finally, we will run `ubuntu-frame` like before:
@@ -611,7 +590,7 @@ c 137:* rwm
 c 138:* rwm
 ```
 
-You now need to give the cgroup permission to access the necessary devices, for which you need 
+You now need to give the cgroup permission to access the necessary devices, for which you need
 the `major:minor` of the device nodes. You can find that with ls:
 ```
 $ ls -la /sys/fs/cgroup/devices/snap.ubuntu-frame.ubuntu-frame

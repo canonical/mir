@@ -69,6 +69,7 @@ Github
 gl
 GLib
 glibc
+gpu
 GPUs
 grayscale
 href

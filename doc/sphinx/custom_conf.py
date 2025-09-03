@@ -127,7 +127,10 @@ slug = ""
 # (see https://docs.readthedocs.io/en/stable/guides/redirects.html).
 # NOTE: If this variable is not defined, set to None, or the dictionary is empty,
 # the sphinx_reredirects extension will be disabled.
-redirects = {}
+redirects = {
+    'how-to/how-to-enable-graphics-core22-on-a-device*': '/how-to/how-to-enable-graphics-for-snaps-on-a-device',
+    'explanation/ok-so-what-is-this-wayland-thing-anyway*': '/how-to/developing-a-wayland-compositor-using-mir'
+}
 
 ############################################################
 ### Link checker exceptions
