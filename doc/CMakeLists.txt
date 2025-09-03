@@ -4,17 +4,13 @@ add_custom_target(doc-setup
 )
 
 add_custom_target(doc ${ALL}
-    # We pass `-i` (ignore errors) because if exhale and breathe are not run
-    # (when doxygen is not run), some warnings pop up. Make treats warnings as
-    # errors and stops. 
-    COMMAND make -C ${CMAKE_SOURCE_DIR}/doc/sphinx html
+    COMMAND ${CMAKE_COMMAND} -E env "MIR_CMAKE_BUILD_DIR=${CMAKE_BINARY_DIR}" make -C ${CMAKE_SOURCE_DIR}/doc/sphinx html
     DEPENDS ${CMAKE_SOURCE_DIR}/doc/sphinx/.sphinx/venv
-            guides
     BYPRODUCTS ${CMAKE_SOURCE_DIR}/doc/sphinx/_build
 )
 
 add_custom_target(doc-serve
-    COMMAND make -C ${CMAKE_SOURCE_DIR}/doc/sphinx serve
+    COMMAND ${CMAKE_COMMAND} -E env "MIR_CMAKE_BUILD_DIR=${CMAKE_BINARY_DIR}" make -C ${CMAKE_SOURCE_DIR}/doc/sphinx serve
 )
 add_dependencies(doc-serve doc)
 
