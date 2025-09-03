@@ -1,0 +1,8 @@
+# Key/value substitutions to use within the Sphinx doc.
+{
+  canonical_website: "https://canonical.com/",
+  code_of_conduct: "https://ubuntu.com/community/ethos/code-of-conduct",
+  get_support: "https://discourse.ubuntu.com/c/mir/15",
+  join_online_chat: "https://matrix.to/#/#mir-server:matrix.org",
+  contribute: "how-to/getting_involved_in_mir"
+}

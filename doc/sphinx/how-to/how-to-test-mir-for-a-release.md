@@ -167,7 +167,7 @@ The following describes how to select each console provider:
     ```sh
     miral-app --console-provider=logind
     ```
-   - This requires running from a logged-in VT where `logind` can provide DRM master
+   - This requires running from a logged-in VT where `logind` can provide DRM :woke-ignore:`master`
    - So, first switch to vt4 and sign in
    - This can be used by 
      - the "hardware" platforms: `gbm-kms`, `eglstream-kms`, and `atomic-kms`; and,
