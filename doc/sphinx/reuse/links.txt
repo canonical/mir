@@ -1,6 +1,0 @@
-.. _Canonical website: https://canonical.com/
-
-.. _Code of conduct: https://ubuntu.com/community/ethos/code-of-conduct
-.. _Get support: https://discourse.ubuntu.com/c/mir/15
-.. _Join our online chat: https://matrix.to/#/#mir-server:matrix.org
-.. _Contribute: how-to/getting_involved_in_mir

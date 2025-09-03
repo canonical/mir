@@ -45,11 +45,13 @@ DRM
 DSO
 DSOs
 EGL
+EGL_WL_bind_wayland_display
 eglinfo
 eglstream
 EGLStreams
 egmde
 EndToEnd
+enablement
 etnaviv
 Etnaviv
 evdi
@@ -119,6 +121,7 @@ mir's
 mirserver
 mirserverlttng
 mirwayland
+mir_demo_server
 mmal
 Mousekeys
 MouseKeysConfig
