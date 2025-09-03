@@ -1,4 +1,4 @@
-# Mir documentation
+# Contributing to Mir
 
 Mir is a compositor library designed to operate across a variety of Linux-based
 devices, including traditional desktops, IoT and embedded systems.
@@ -9,27 +9,25 @@ that makes it an ideal choice for both device manufacturers and desktop users.
 
 ## In this documentation
 
-These pages cover the key aspects of developing a compositor using Mir
+These pages cover the key aspects of working on Mir
 
 ````{grid} 1 1 2 2
-```{grid-item-card} [Tutorials](/tutorial/index.md)
+```{grid-item-card} [Tutorials](/tutorial/contributing-index.md)
 **Start here**
-- [Write Your First Wayland Compositor](/tutorial/write-your-first-wayland-compositor.md): A guide through writing a simple compositor
 ```
 
-```{grid-item-card} [How-to guides](/howto/index.md)
+```{grid-item-card} [How-to guides](/howto/contributing-index.md)
 **Key operations and common tasks**
-- {ref}`Develop a Wayland compositor <howto-develop-wayland-compositor>`
+- {ref}`Getting Involved in Mir <howto-contribute>`
 ```
 ````
 ````{grid} 1 1 2 2
 :reverse:
-```{grid-item-card} [Reference](/reference/index.md)
+```{grid-item-card} [Reference](/reference/configuring-index.md)
  **Technical information** - specifications, APIs, architecture
-- [Introducing the MirAL API](introducing_the_miral_api.md): The primary external interface for compositor authors
 ```
 
-```{grid-item-card} [Explanation](/explanation/index.md)
+```{grid-item-card} [Explanation](/explanation/configuring-index.md)
  **Discussion and clarification** of key topics
 ```
 ````
@@ -48,10 +46,8 @@ Mir is a member of the Ubuntu family. It’s an open source project that warmly 
 ```{toctree}
 :hidden:
 
-tutorial/index
-how-to/index
-explanation/index
-reference/index
-configuring-index
-contributing-index
+tutorial/contributing-index
+how-to/contributing-index
+explanation/contributing-index
+reference/contributing-index
 ```
