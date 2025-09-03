@@ -21,6 +21,7 @@
 #include "mir/geometry/rectangle.h"
 #include "mir/geometry/point.h"
 
+#include <memory>
 #include <vector>
 #include <array>
 
