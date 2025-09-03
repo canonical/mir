@@ -1,3 +1,32 @@
+add_custom_target(doc-setup
+    COMMAND make -C ${CMAKE_SOURCE_DIR}/doc/sphinx install
+    BYPRODUCTS ${CMAKE_SOURCE_DIR}/doc/sphinx/.sphinx/venv
+)
+
+add_custom_target(doc ${ALL}
+    # We pass `-i` (ignore errors) because if exhale and breathe are not run
+    # (when doxygen is not run), some warnings pop up. Make treats warnings as
+    # errors and stops. 
+    COMMAND make -C ${CMAKE_SOURCE_DIR}/doc/sphinx html
+    DEPENDS ${CMAKE_SOURCE_DIR}/doc/sphinx/.sphinx/venv
+            guides
+    BYPRODUCTS ${CMAKE_SOURCE_DIR}/doc/sphinx/_build
+)
+
+add_custom_target(doc-serve
+    COMMAND make -C ${CMAKE_SOURCE_DIR}/doc/sphinx serve
+)
+add_dependencies(doc-serve doc)
+
+add_custom_target(doc-clean
+    COMMAND make -C ${CMAKE_SOURCE_DIR}/doc/sphinx clean
+)
+
+add_custom_target(doc-clean-all
+    COMMAND rm -r ${CMAKE_SOURCE_DIR}/doc/sphinx/api
+)
+add_dependencies(doc-clean-all doc-clean)
+
 option(
   BUILD_DOXYGEN
   "Build Doxygen documentation as part of the default build"
@@ -9,6 +38,7 @@ if(BUILD_DOXYGEN)
 endif()
 
 find_package(Doxygen 1.8.0 ${REQUIRED})
+
 
 if(DOXYGEN_FOUND)
   # TODO: Do we even need Doxyfile.in? 
@@ -36,6 +66,11 @@ if(DOXYGEN_FOUND)
                  ${CMAKE_SOURCE_DIR}/doc/sphinx/api
   )
 
+  add_custom_target(doxygen-clean
+      COMMAND rm -r ${CMAKE_SOURCE_DIR}/doc/sphinx/xml
+  ) 
+  add_dependencies(doc-clean-all doxygen-clean)
+
   install(
       DIRECTORY ${CMAKE_SOURCE_DIR}/doc/sphinx/_build/
       DESTINATION ${CMAKE_INSTALL_PREFIX}/share/doc/mir-doc
@@ -43,16 +78,3 @@ if(DOXYGEN_FOUND)
   )
 endif()
 
-add_custom_target(doc ${ALL}
-    COMMAND make -C ${CMAKE_SOURCE_DIR}/sphinx html
-    DEPENDS ${CMAKE_SOURCE_DIR}/sphinx/.sphinx/venv
-            guides
-    BYPRODUCTS ${CMAKE_SOURCE_DIR}/sphinx/_build
-)
-
-add_custom_target(doc-serve ${ALL}
-    COMMAND make -C ${CMAKE_SOURCE_DIR}/sphinx run
-    DEPENDS ${CMAKE_SOURCE_DIR}/sphinx/.sphinx/venv
-            guides
-    BYPRODUCTS ${CMAKE_SOURCE_DIR}/sphinx/_build
-)
