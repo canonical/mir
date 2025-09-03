@@ -18,7 +18,7 @@ on different software or graphics stacks.
 Mir provides an `idle-timeout` configuration option for setting the time (in 
 seconds) the compositor will remain idle before turning off the display.
 
-## Compositor optimisations
+## Compositor optimizations
 
 ### Occlusion
 

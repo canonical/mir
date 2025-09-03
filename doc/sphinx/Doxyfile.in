@@ -590,7 +590,7 @@ INTERNAL_DOCS          = NO
 # classes, one named CLASS and the other named Class, and to also support
 # references to files without having to specify the exact matching casing. On
 # Windows (including Cygwin) and MacOS, users should typically set this option
-# to NO, whereas on Linux or other Unix flavours it should typically be set to
+# to NO, whereas on Linux or other Unix flavors it should typically be set to
 # YES.
 # The default value is: system dependent.
 
@@ -1722,7 +1722,7 @@ SEARCHENGINE           = YES
 
 # When the SERVER_BASED_SEARCH tag is enabled the search engine will be
 # implemented using a web server instead of a web client using JavaScript. There
-# are two flavours of web server based searching depending on the EXTERNAL_SEARCH
+# are two flavors of web server based searching depending on the EXTERNAL_SEARCH
 # setting. When disabled, doxygen will generate a PHP script for searching and
 # an index file used by the script. When EXTERNAL_SEARCH is enabled the indexing
 # and searching needs to be provided by external tools. See the section

@@ -39,7 +39,7 @@ We'll work with `miral-app`, a script that handles running a Mir shell with a ba
 
 Mir allows you to run a graphical shell in *desktop mode* or in *kiosk mode*.
 
-Desktop mode means that application windows that are opened are floating, you can move them around the screen, maximise, or minimise them.
+Desktop mode means that application windows that are opened are floating, you can move them around the screen, maximize, or minimize them.
 Kiosk mode means that the application is opened in fullscreen mode. You are unable to move or resize it.
 
 To run the script in desktop mode:

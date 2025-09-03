@@ -51,7 +51,7 @@ these assert the functionality of individual components in isolation, as is usua
 run more high-level tests, ensuring we maintain the contracts with external components as well as
 our own loadable modules' interfaces.
 
-One major part of this is [wlcs](https://github.com/canonical/wlcs) - asserting the behaviour
+One major part of this is [wlcs](https://github.com/canonical/wlcs) - asserting the behavior
 of Mir's Wayland frontend is to specification of the protocol.
 
 ### Integration tests
@@ -73,7 +73,7 @@ In addition to the above, for every merge to `main` we build and run the tests u
 sanitizers:
 
 - **Undefined Behaviour**
-  Building with UndefinedBehaviourSanitizer enabled reports no undefined behaviour, it would be a
+  Building with UndefinedBehaviourSanitizer enabled reports no undefined behavior, it would be a
   CI failure otherwise.
 - **Address Sanitizer**
   As we have some fixing to do here, we run those builds - but don't enforce the problems reported.

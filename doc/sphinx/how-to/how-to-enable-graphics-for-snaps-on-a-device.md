@@ -549,7 +549,7 @@ apparmor="DENIED" operation="open" profile="snap.ubuntu-frame.ubuntu-frame" name
 ```
 
 You can find the AppArmor profile at `/var/lib/snapd/apparmor/profiles/snap.ubuntu-frame.ubuntu-frame`.
-Make modifications to the profile using your favourite text editor. Finally, apply the change to replace
+Make modifications to the profile using your favorite text editor. Finally, apply the change to replace
 the default confinement:
 
 ```shell

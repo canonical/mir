@@ -9,7 +9,7 @@ There are more detailed descriptions below, but as a general rule:
  - If you add a new symbol, add it to a `*_NEXTSERIES` version stanza,
    like `MIR_CLIENT_0.22`, `MIR_PLATFORM_0.22`, etc representing the
    next future Mir series in which the new symbol will first be released.
- - If you change the behaviour or signature of a symbol _and_ wish to preserve
+ - If you change the behavior or signature of a symbol _and_ wish to preserve
    backward compatibility, see "Change symbols without breaking ABI" below.
 
 Can I have some details?
@@ -28,7 +28,7 @@ Mir uses the ELF symbol versioning support. This provides three advantages:
 
  - Consumers of the Mir libraries can know at load time rather than symbol
    resolution time whether the library exposes all the symbols they expect.
- - We can drop or change the behaviour of symbols without breaking ABI by
+ - We can drop or change the behavior of symbols without breaking ABI by
    exposing multiple different implementations under different versions, and
  - We can safely load multiple different versions of Mir libraries into the
    same process.
@@ -39,7 +39,7 @@ When should I bump SONAME?
 There are varying standards for when to bump SONAME. In Mir we choose to bump
 the SONAME of a library whenever we make a change that could cause a binary
 linked to the library to fail _as long as_ the binary is using only public
-interfaces and (where applicable) relying on documented behaviour. In general,
+interfaces and (where applicable) relying on documented behavior. In general,
 changes that make an interface work as described by its documentation will not
 result in SONAME bumps.
 
@@ -48,10 +48,10 @@ With that explanation, you _should_ bump SONAME when:
  - You remove a public symbol from a library
  - You change the signature of a public symbol _without_ retaining the previous
    signature exposed under the old versioning.
- - You change the behaviour of a public symbol _without_ retaining the previous
-   behaviour exposed with the old versioning.
+ - You change the behavior of a public symbol _without_ retaining the previous
+   behavior exposed with the old versioning.
 
-If you are changing the behaviour of an interface, think about whether it's easy
+If you are changing the behavior of an interface, think about whether it's easy
 to maintain the old interface in parallel. If it is, you should consider
 providing both under different versions. This should become easier over time as
 the Mir ABI becomes more stable and also more valuable over time as the Mir
@@ -107,8 +107,8 @@ Change symbols without breaking ABI
 -----------------------------------
 
 ELF DSOs can have multiple implementations for the same symbol with different
-versions. This means that you can change the signature or behaviour of a symbol
-without breaking dependants that use the old behaviour. While there can be as
+versions. This means that you can change the signature or behavior of a symbol
+without breaking dependants that use the old behavior. While there can be as
 many different implementations with different versions as you want, there can
 only be one default implementation - this is what the linker will resolve to
 when building a dependant project.
