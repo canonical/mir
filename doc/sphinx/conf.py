@@ -238,11 +238,19 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.imgmath',
     'sphinx.ext.todo',
-    'breathe',
-    'exhale',
     'sphinx.ext.graphviz',
     'sphinxcontrib.mermaid'
 ]
+
+build_api_docs = os.getenv('MIR_BUILD_API_DOCS')
+doxygen_outputs_exist = os.path.exists('./xml')
+
+if build_api_docs and not doxygen_outputs_exist:
+    raise Exception("Doxygen outputs at doc/sphinx/xml don't exist\nPlease run the `doxygen` target first")
+
+# Only add breathe if the user ran doxygen (which produces both ./api and ./xml)
+if build_api_docs:
+    extensions.extend(['exhale', 'breathe'])
 
 # Excludes files or directories from processing
 
@@ -317,42 +325,27 @@ cppguide_files = [
 if all(os.path.exists(file) for file in cppguide_files):
     html_extra_path.extend(str(file) for file in cppguide_files)
 
+if build_api_docs:
+    # Setup the exhale extension
+    exhale_args = {
+        # These arguments are required
+        "containmentFolder": "./api",
+        "rootFileName": "library_root.rst",
+        "doxygenStripFromPath": "..",
+        # Heavily encouraged optional argument (see docs)
+        "rootFileTitle": "Mir API",
+        # Suggested optional arguments
+        "createTreeView": False,
+        "exhaleExecutesDoxygen": False,
+        "exhaleUseDoxyfile": False,
+        "contentsDirectives": False,
+    }
 
-def read_doxyfile(path):
-    # Instead of configuring Mir again to get the doxyfile, we assume the user
-    # already has configured it and grab the file from there.
-    try:
-        # Read the doxyfile from the build directory
-        with open(path) as doxyfile_file:
-            return doxyfile_file.read()
-    except IOError as e:
-        raise Exception(f"""IOError: {e.errno}, {e.strerror}
-                        \rHint: Have you configured the cmake project and changed `cmake_build_dir` to point at it?""")
-
-
-doxyfile_contents = read_doxyfile(cmake_build_dir / 'doc/sphinx/Doxyfile')
-
-# Setup the exhale extension
-exhale_args = {
-    # These arguments are required
-    "containmentFolder": "./api",
-    "rootFileName": "library_root.rst",
-    "doxygenStripFromPath": "..",
-    # Heavily encouraged optional argument (see docs)
-    "rootFileTitle": "Mir API",
-    # Suggested optional arguments
-    "createTreeView": False,
-    "exhaleExecutesDoxygen": False,
-    "exhaleUseDoxyfile": False,
-    "contentsDirectives": False,
-    "exhaleDoxygenStdin": doxyfile_contents
-}
-
-# Setup the breathe extension
-breathe_projects = {"Mir": "./xml/"}
-breathe_default_project = "Mir"
-breathe_default_members = ('members', 'undoc-members')
-breathe_order_parameters_first = True
+    # Setup the breathe extension
+    breathe_projects = {"Mir": "./xml/"}
+    breathe_default_project = "Mir"
+    breathe_default_members = ('members', 'undoc-members')
+    breathe_order_parameters_first = True
 
 # Mermaid
 mermaid_version = "10.5.0"
