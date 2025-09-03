@@ -26,6 +26,7 @@ These pages cover the key aspects of developing a compositor using Mir
 :reverse:
 ```{grid-item-card} [Reference](/reference/index.md)
  **Technical information** - specifications, APIs, architecture
+- [Introducing the MirAL API](introducing_the_miral_api.md): The primary external interface for compositor authors
 ```
 
 ```{grid-item-card} [Explanation](/explanation/index.md)
