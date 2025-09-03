@@ -296,7 +296,10 @@ intersphinx_mapping = {
 ############################################################
 cmake_build_dir = Path(os.getenv('MIR_CMAKE_BUILD_DIR') or '../../')  # Default for CI
 
+
 sphinx_dir = cmake_build_dir / 'doc/sphinx'
+if not os.path.exists(sphinx_dir):
+    raise Exception(f"Cannot find '{sphinx_dir}'.\nHint: Set MIR_CMAKE_BUILD_DIR to the path of the configured Mir cmake project relative to `doc/sphin/conf.py`, or an absolute path")
 
 primary_domain = 'cpp'
 highlight_language = 'cpp'
@@ -316,11 +319,13 @@ if all(os.path.exists(file) for file in cppguide_files):
     html_extra_path.extend(str(file) for file in cppguide_files)
 
 build_api_docs = os.getenv('MIR_BUILD_API_DOCS') == '1'
-doxygen_output_dir = sphinx_dir / "doxygen_output"
-doxygen_outputs_exist = os.path.exists(doxygen_output_dir)
+doxygen_xml_output_dir = sphinx_dir / "doxygen_output/xml"
+doxygen_xml_exists = os.path.exists(doxygen_xml_output_dir)
 
-if build_api_docs and not doxygen_outputs_exist:
-    raise Exception("Doxygen outputs at doc/sphinx/xml don't exist\nPlease run the `doxygen` target first")
+if build_api_docs and not doxygen_xml_exists:
+    raise Exception(f""" Doxygen outputs at {doxygen_xml_output_dir} don't exist
+Hint: Make sure MIR_CMAKE_BUILD_DIR points at the the configured Mir cmake project correctly
+If you've already ran doxygen, it should have `doxygen_output` somewhere inside""")
 
 # Only add exhale and breathe if the user ran doxygen (which produces `<build_dir>/doc/sphinx/doxygen_output/xml`)
 if build_api_docs:
@@ -342,7 +347,7 @@ if build_api_docs:
     }
 
     # Setup the breathe extension
-    breathe_projects = {"Mir": str(doxygen_output_dir / 'xml')}
+    breathe_projects = {"Mir": str(doxygen_xml_output_dir)}
     breathe_default_project = "Mir"
     breathe_default_members = ('members', 'undoc-members')
     breathe_order_parameters_first = True
