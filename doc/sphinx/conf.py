@@ -257,14 +257,6 @@ html_css_files = []
 # Adds custom JavaScript files, located under 'html_static_path'
 html_js_files = []
 
-
-# Specifies a reST snippet to be appended to each .rst file
-
-# TODO: Add ".. include:: /reuse/substitutions.txt" once we set that up
-rst_epilog = """
-.. include:: /reuse/links.txt
-"""
-
 # Feedback button at the top; enabled by default
 disable_feedback_button = False
 
