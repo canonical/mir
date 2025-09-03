@@ -1,0 +1,7 @@
+.. |version_number| replace:: 0.1.0
+
+.. |rest_text| replace:: *Multi-line* text
+                         that uses basic **markup**.
+
+.. |site_link| replace:: Website link
+.. _site_link: https://example.com

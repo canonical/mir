@@ -1,0 +1,4 @@
+# Key/value substitutions to use within the Sphinx doc.
+{version_number: "0.1.0",
+ formatted_text: "*Multi-line* text\n that uses basic **markup**.",
+ site_link: "[Website link](https://example.com)"}
