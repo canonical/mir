@@ -50,7 +50,7 @@ Damage tracking involves passing information about which parts of buffers have
 been updated. That can avoid the need to regenerate parts of the display that
 have not changed.
 
-Mir has not implemented this optimisation yet.
+Mir has not implemented this optimization yet.
 
 ## Metrics
 

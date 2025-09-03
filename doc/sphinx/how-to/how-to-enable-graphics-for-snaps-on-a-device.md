@@ -574,7 +574,7 @@ We can get around this by running:
 ```shell
 snap run --shell ubuntu-frame
 ```
-This command will get snapd to do all the initialisation and drop us into a shell.
+This command will get snapd to do all the initialization and drop us into a shell.
 Once the shell exists, there will be two(?!) cgroup folders found under `/sys/fs/cgroup/devices`:
 1. /sys/fs/cgroup/devices/system.slice/snap.ubuntu-frame.ubuntu-frame.${UUID}.scope, and
 2. /sys/fs/cgroup/devices/snap.ubuntu-frame.ubuntu-frame

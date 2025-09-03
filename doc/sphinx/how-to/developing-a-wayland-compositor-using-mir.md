@@ -19,7 +19,7 @@ Compositor|Description
 [Miracle](https://github.com/miracle-wm-org/miracle-wm)| A tiling window manager much like i3/sway
 [egmde](https://github.com/AlanGriffiths/egmde)|An example desktop environment used to write tutorials about writing Mir compositors
 [lomiri-system-compositor](https://gitlab.com/ubports/development/core/lomiri-system-compositor/)|Owns the display and input hardware and supports a nested shell with fewer permissions
-[miral-kiosk](https://github.com/canonical/mir/tree/main/examples/miral-kiosk)|Runs an app (or apps) maximised
+[miral-kiosk](https://github.com/canonical/mir/tree/main/examples/miral-kiosk)|Runs an app (or apps) maximized
 [miral-shell](https://github.com/canonical/mir/tree/main/examples/miral-shell)|Options for "floating" or "tiling" window management and a limited "desktop" experience with workspaces and a keyboard shortcut for launching a terminal
 [mir_demo_server](https://github.com/canonical/mir/tree/main/examples/mir_demo_server)|"floating" window management, enables by default all the Wayland extensions Mir supports
 [mir_x11_kiosk](https://github.com/canonical/mir/tree/main/examples/mir-x11-kiosk)|Minimal compositor to support fullscreen X11 applications
@@ -28,7 +28,7 @@ Compositor|Description
 
 For all of these examples Mir provides the code and logic connecting the display and input hardware, and the Wayland protocols connecting to the client. Mir also separates out the concerns such as Window Management,  abstracts the graphics  stack, and manages Wayland extensions:
 
-* For Window management it provides a default "floating window" strategy, but also provides enough customisation points to support "fullscreen" and "tiling" strategies to be written in high level code;
+* For Window management it provides a default "floating window" strategy, but also provides enough customization points to support "fullscreen" and "tiling" strategies to be written in high level code;
 * For the graphics stack Mir dynamically loads one of several backends (there are five supported by Mir and one more supported by UBports); and,
 * Mir implements a range of Wayland extensions (and compositors can add more), some of these are disabled by default (e.g. for security) but can be enabled by compositors either globally or for specific applications.
 

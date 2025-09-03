@@ -108,10 +108,10 @@ Change symbols without breaking ABI
 
 ELF DSOs can have multiple implementations for the same symbol with different
 versions. This means that you can change the signature or behavior of a symbol
-without breaking dependants that use the old behavior. While there can be as
+without breaking dependents that use the old behavior. While there can be as
 many different implementations with different versions as you want, there can
 only be one default implementation - this is what the linker will resolve to
-when building a dependant project.
+when building a dependent project.
 
 Binding different implementations to the versioned symbol is done with `__asm__`
 directives in the relevant source file(s). The default implementation is
