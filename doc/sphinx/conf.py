@@ -192,7 +192,7 @@ linkcheck_anchors_ignore_for_url = [
 ]
 
 # give linkcheck multiple tries on failure
-# linkcheck_timeout = 30
+linkcheck_timeout = 60
 linkcheck_retries = 3
 
 ########################
