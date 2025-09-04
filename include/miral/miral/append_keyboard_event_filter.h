@@ -26,13 +26,29 @@ namespace mir { class Server; }
 
 namespace miral
 {
+/// Appends a keyboard event filter to the Mir server event pipeline.
+///
+/// Filters are processed in order. This filter is appended **after** any existing filters,
+/// including those provided by `miral::WindowManagementPolicy`.
+///
+/// An event is passed to this filter only if no earlier filter has already handled it.
+///
+/// See also:
+/// - WindowManagementPolicy::handle_keyboard_event - the keyboard event handler for the
+///   window management policy.
+/// - AppendEventFilter - add a filter for any event, not just keyboards
+///
+/// \sa miral::WindowManagementPolicy
+/// \sa AppendEventFilter -
+///
 /// \remark Since MirAL 5.5
 class AppendKeyboardEventFilter
 {
 public:
-    /// Append a keyboard event filter (after any existing filters, including the window manager).
-    /// The supplied filter should return true if and only if it handles the keyboard event as filters
-    /// later in the list will not be called.
+    // Constructs a new keyboard filter wrapper using the provided `filter` function.
+    ///
+    /// \param filter A function that returns `true` if it handled the keyboard event.
+    ///               Returning `true` prevents later filters from seeing the event.
     explicit AppendKeyboardEventFilter(std::function<bool(MirKeyboardEvent const* event)> const& filter);
 
     void operator()(mir::Server& server);
