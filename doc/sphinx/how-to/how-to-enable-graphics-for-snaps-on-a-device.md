@@ -104,7 +104,7 @@ of the scope of this guide.
 With the prerequisites out of the way, it is time to assemble a `gpu-2404` snap.
 
 The snap itself must provide the libraries described in
-[this document](https://mir-server.io/docs/the-gpu-2404-snap-interface#heading--lists--supported-apis).
+[this document](https://canonical.com/mir/docs/the-gpu-2404-snap-interface#heading--lists--supported-apis).
 Unless you are incredibly space-constrained or in an unusual circumstance, it is a good idea to
 provide **all** of these libraries. Even if your board doesn’t support these libraries, a failure to include
 them will result in applications that would otherwise fall back to a supported API failing to start.

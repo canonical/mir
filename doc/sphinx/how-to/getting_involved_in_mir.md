@@ -3,11 +3,11 @@
 
 ## Getting involved
 
-The Mir project website is <https://mir-server.io/>,
+The Mir project website is <https://canonical.com/mir>,
 the code is [hosted on GitHub](https://github.com/canonical/mir)
 
 For announcements and other discussions on Mir see:
-[Mir on discourse.ubuntu](https://discourse.ubuntu.com/c/mir/15)
+[Mir on discourse.ubuntu](https://discourse.ubuntu.com/c/project/mir/15)
 
 For other questions and discussion about the Mir project, feel free to join the
 [Matrix channel](https://matrix.to/#/#mir-server:matrix.org).
@@ -65,7 +65,7 @@ You can install the Mir examples, headers and libraries you've built with:
 
 Please file bug reports at: [https://github.com/canonical/mir/issues](https://github.com/canonical/mir/issues).
 
-The Mir Discourse category can be found at: [https://discourse.ubuntu.com/c/mir/15](https://discourse.ubuntu.com/c/mir/15).
+The Mir Discourse category can be found at: [https://discourse.ubuntu.com/c/project/mir/15](https://discourse.ubuntu.com/c/project/mir/15).
 
 ```{raw} html
 The Mir coding guidelines are <a href=../../_static/cppguide/>here</a>.
