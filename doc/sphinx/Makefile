@@ -20,6 +20,7 @@ CONFIRM_SUDO    ?= N
 VALE_CONFIG     = $(SPHINXDIR)/vale.ini
 SPHINX_HOST     ?= 127.0.0.1
 SPHINX_PORT     ?= 8000
+PROJECT_ROOT    ?= $(shell readlink -f ../../)
 
 # Put it first so that "make" without argument is like "make help".
 help:
@@ -104,6 +105,12 @@ clean-doc:
 linkcheck: install
 	. $(VENV) ; $(SPHINXBUILD) -b linkcheck "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) || { grep --color -F "[broken]" "$(BUILDDIR)/output.txt"; exit 1; }
 	exit 0
+
+linkcheck-with-dependencies: install
+	sudo add-apt-repository --yes ppa:mir-team/dev
+	sudo apt-get --yes build-dep $(PROJECT_ROOT)
+	. $(VENV); cmake -DMIR_ENABLE_TESTS=NO -DMIR_PLATFORM=x11 "$(PROJECT_ROOT)" -B "$(PROJECT_ROOT)"
+	@$(MAKE) linkcheck
 
 pa11y: pa11y-install html
 	find $(BUILDDIR) -name *.html -print0 | xargs -n 1 -0 $(PA11Y)
