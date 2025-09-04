@@ -49,7 +49,7 @@ void miral::CursorTheme::operator()(mir::Server& server) const
 {
     static char const* const option = "cursor-theme";
 
-    server.add_configuration_option(option, "Colon separated cursor theme list (e.g. \"DMZ-Black\")", theme);
+    server.add_configuration_option(option, "Colon separated cursor theme list, e.g. default:DMZ-Black.", theme);
 
     server.override_the_cursor_images([&]
         {

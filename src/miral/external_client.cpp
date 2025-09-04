@@ -78,17 +78,19 @@ void miral::ExternalClientLauncher::operator()(mir::Server& server)
 
     server.add_configuration_option(
         app_env,
-        "Base environment for launched apps",
+        "Colon separated list of environment variables set when launching applications.",
         default_env);
 
     server.add_configuration_option(
             app_env_amend,
-            "Amendments to environment for launched apps (may be repeated)",
+            "Colon separated list of additional environment variables added to --app-env. "
+            "Multiple additions may be specified by providing the argument multiple times.",
             mir::OptionType::strings);
 
     server.add_configuration_option(
         app_x11_env,
-        "X11 changes to --app-env for launched apps",
+        "Colon separated list of additional environment variables set when launching X11 applications. "
+        "Adds to --app-env and --app-env-amend.",
         default_x11_env);
 
     server.add_init_callback([self=self, &server]

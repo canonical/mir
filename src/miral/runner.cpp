@@ -93,7 +93,7 @@ auto const env_hacks = "env-hacks";
 void enable_env_hacks(::mir::Server& server)
 {
     server.add_configuration_option(
-        env_hacks, "Colon separated list of environment variable settings", mir::OptionType::string);
+        env_hacks, "Colon separated list of environment variable settings.", mir::OptionType::string);
 }
 
 void apply_env_hacks(::mir::Server& server)

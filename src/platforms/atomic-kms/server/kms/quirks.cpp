@@ -237,7 +237,9 @@ void mga::Quirks::add_quirks_option(boost::program_options::options_description&
     config.add_options()
         (quirks_option_name,
          boost::program_options::value<std::vector<std::string>>(),
-         "[platform-specific] Driver quirks to apply (may be specified multiple times; multiple quirks are combined)");
+         "Driver quirks to apply. "
+         "May be specified multiple times; multiple quirks are combined. "
+         "Only applicable when using the mir:atomic-kms platform.");
 }
 
 auto mir::graphics::atomic::Quirks::require_modesetting_support(mir::udev::Device const& device) const -> bool

@@ -61,8 +61,9 @@ void add_graphics_platform_options(boost::program_options::options_description& 
         (virtual_displays_option_name,
          boost::program_options::value<std::vector<std::string>>()
             ->multitoken(),
-         "[mir-on-virtual specific] Colon separated list of WIDTHxHEIGHT sizes for the \"output\" size."
-         " Multiple outputs may be specified by providing the argument multiple times.");
+         "Colon separated list of outputs to use. "
+         "Dimensions are in the form WIDTHxHEIGHT, e.g. 1920x1080:3840x2160. "
+         "Only applicable when using the mir:virtual platform.");
 }
 
 auto probe_display_platform(

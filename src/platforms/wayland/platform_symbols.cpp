@@ -41,10 +41,12 @@ mir::ModuleProperties const description = {
 };
 
 const char* const wayland_surface_app_id_option{"wayland-surface-app-id"};
-const char* const wayland_surface_app_id_option_description{"Defines the XdgToplevel app id on the surface created by the wayland platform"};
+const char* const wayland_surface_app_id_option_description{"Application ID for the window containing the Mir output. "
+                                                            "Only applicable when using the mir:wayland platform."};
 
 const char* const wayland_surface_title_option{"wayland-surface-title"};
-const char* const wayland_surface_title_option_description{"Defines the XdgTopLevel title on the surface created by the wayland platform"};
+const char* const wayland_surface_title_option_description{"Title of the window containing the Mir output. "
+                                                           "Only applicable when using the mir:wayland platform."};
 }
 
 mir::UniqueModulePtr<mg::DisplayPlatform> create_display_platform(

@@ -75,13 +75,15 @@ void add_graphics_platform_options(boost::program_options::options_description& 
     config.add_options()
         (x11_displays_option_name,
          boost::program_options::value<std::string>()->default_value("1280x1024"),
-         "[mir-on-X specific] Colon separated list of WIDTHxHEIGHT sizes for \"output\" windows."
-         " ^SCALE may also be appended to any output");
+         "Colon separated list of outputs to use. "
+         "Dimensions are in the form WIDTHxHEIGHT[^SCALE], e.g. 1920x1080:3840x2160^2. "
+         "Only applicable when using the mir:x11 platform.");
 
     config.add_options()
         (x11_window_title_option_name,
          boost::program_options::value<std::string>()->default_value("Mir on X"),
-         "[mir-on-X specific] Title for the banner of the generated X11 window");
+         "Title of the window containing the Mir output. "
+         "Only applicable when using the mir:x11 platform.");
 }
 
 auto probe_graphics_platform() -> std::optional<mg::SupportedDevice>

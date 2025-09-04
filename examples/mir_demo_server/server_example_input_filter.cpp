@@ -215,7 +215,7 @@ auto me::make_printing_input_filter_for(mir::Server& server)
 -> std::shared_ptr<mi::EventFilter>
 {
     static const char* const print_input_events = "print-input-events";
-    static const char* const print_input_events_descr = "List input events on std::cout";
+    static const char* const print_input_events_descr = "List input events on stdout.";
 
     server.add_configuration_option(print_input_events, print_input_events_descr, mir::OptionType::null);
 
@@ -235,7 +235,7 @@ auto me::make_screen_rotation_filter_for(mir::Server& server)
 -> std::shared_ptr<input::EventFilter>
 {
     static const char* const screen_rotation = "screen-rotation";
-    static const char* const screen_rotation_descr = "Rotate screen on Ctrl-Alt-<Arrow>";
+    static const char* const screen_rotation_descr = "Rotate screen on Ctrl-Alt-<Arrow>.";
 
     server.add_configuration_option(screen_rotation, screen_rotation_descr, mir::OptionType::null);
 
