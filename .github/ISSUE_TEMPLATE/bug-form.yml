@@ -1,0 +1,60 @@
+name: Bug Report
+description: File a bug report.
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: "What version of Mir are you running? (hint: you can launch Mir inside an existing session with the `--version` flag)"
+      placeholder: Tell us what version of Mir you are running.
+      value: "v2.22.0"
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: |
+        What environment are you running Mir in? Please mention your hardware specifications, OS, Mesa, or Nvidia driver version, e.g.:
+        OS: Ubuntu 25.10 
+        CPU: Intel Core i7 9750H
+        GPU 1: nVidia GTX 1660Ti, nVidia proprietary drivers 570.169
+        GPU 2: Intel UHD Graphics 630, Mesa 25.0.7
+        Monitor Setup: One 1920x1080 monitor connected to the nvidia GPU via HDMI, built-in 1920x1080 laptop monitor connected to the intel GPU via DisplayPort.
+      value: |
+        OS: 
+        CPU: 
+        GPU 1: 
+        GPU 2: 
+        Monitor Setup: 
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened-vs-expected
+    attributes:
+      label: What happened? What did you expect to happen?
+      description: Also tell us what happened, and did you expect to happen?
+      placeholder: Tell us what you see!
+      value: "..."
+    validations:
+      required: true
+  - type: textarea
+    id: repro-steps
+    attributes:
+      label: Reproduction steps
+      description: What did you do to encounter the bug?
+      placeholder: Tell us what you did!
+    validations:
+      required: false
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log output
+      description: |
+        Please copy and paste any relevant log output. This will be automatically formatted into code, so no need for backticks.
+        (hint: You can run your compositor with `<compositor launch command> 2>&1 | tee <log_file_name>` if you're having issues capturing logs)
+      render: shell
