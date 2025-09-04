@@ -5,6 +5,8 @@ This document introduces the architecture of *Mir* at a high-level.
 This document is intended to provide contributors to *Mir* an overview of *Mir*'s systems. It is *not* intended to guide compositor authors.
 
 ## APIs for compositor authors
+**Diagram**: A diagram showing the relationships between the different libraries in Mir.
+
 ```{mermaid} high_level_diagram.mmd
 ```
 
@@ -23,6 +25,8 @@ The most commonly used library is **miral**. `miral` (the "*Mir* Abstraction Lay
 Compositor authors may want to define their own wayland protocol extensions in addition to the ones that the core *Mir* implementation defines. The `mirwayland` library satisfies this requirement. This library may be used in conjunction with either `miral` or `miroil`.
 
 ## The Mir engine
+**Diagram**: A class diagram showing the relationships between the different components of Mir server.
+
 ```{mermaid} mirserver.mmd
 ```
 

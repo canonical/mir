@@ -37,6 +37,8 @@ input hardware of that platform. The libraries that Mir provides are:
 In the following diagram, each arrow denotes that the library at the start of
 the arrow depends on the library at the end of the arrow.
 
+**Diagram**: A flow chart depicting how the libraries of Mir relate to one another.
+
 ```{mermaid} libraries.mmd
 ```
 
