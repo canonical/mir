@@ -80,7 +80,7 @@ ogp_image = "https://assets.ubuntu.com/v1/253da317-image-document-ubuntudocs.svg
 
 
 # Product favicon; shown in bookmarks, browser tabs, etc.
-html_favicon = '../../guides/favicon.ico'
+html_favicon = 'favicon.ico'
 
 
 # Dictionary of values to pass into the Sphinx context for all pages:
@@ -301,19 +301,6 @@ primary_domain = 'cpp'
 
 highlight_language = 'cpp'
 
-cppguide_dir = Path('../../guides')
-html_extra_path = [
-    str(cppguide_dir / 'favicon.ico'),
-]
-
-# These files are build via the `guides` cmake target
-cppguide_files = [
-    cppguide_dir / 'index.html',
-    cppguide_dir / 'styleguide.css',
-]
-
-if all(os.path.exists(file) for file in cppguide_files):
-    html_extra_path.extend(str(file) for file in cppguide_files)
 
 
 def read_doxyfile(path):
