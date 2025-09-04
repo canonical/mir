@@ -2,9 +2,7 @@
 
 # Compositors Built with Mir
 
-This page is intended as a showcase of active projects that are using Mir.
-
-Here is the full list, linking to the source code:
+Here is a list of active projects that are using Mir:
 
 Compositor|Description
 --|--
