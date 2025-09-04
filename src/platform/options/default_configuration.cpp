@@ -347,6 +347,8 @@ void mo::DefaultConfiguration::parse_arguments(
         desc.add_options()
             ("help,h", "Show command line help");
         desc.add_options()
+            ("help-markdown", "Show command line help in markdown format");
+        desc.add_options()
             ("version,V", "Display Mir version and exit");
 
         options.parse_arguments(desc, argc, argv);
@@ -395,6 +397,21 @@ void mo::DefaultConfiguration::parse_arguments(
                 {
                     help_text << module_desc;
                 }
+            }
+            BOOST_THROW_EXCEPTION(mir::ExitWithOutput(help_text.str()));
+        }
+
+        if (options.is_set("help-markdown"))
+        {
+            std::ostringstream help_text;
+            help_text << "### Options" << std::endl;
+            help_text << std::endl;
+            for (auto& o: desc.options())
+            {
+               help_text << "## `" << o->format_name() << "`" << std::endl;
+               help_text << std::endl;
+               help_text << o->description() << std::endl;
+               help_text << std::endl;
             }
             BOOST_THROW_EXCEPTION(mir::ExitWithOutput(help_text.str()));
         }
