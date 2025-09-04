@@ -91,7 +91,7 @@ Here's a list of the different requirements:
  Press <Enter> to continue                                      (H) Help
 ```
 
-See [Checkbox documentation](https://canonical-checkbox.readthedocs-hosted.com/en/latest/) for more information on the framework itself and how to interact with it.
+See [Checkbox documentation](https://canonical-checkbox.readthedocs-hosted.com/latest/) for more information on the framework itself and how to interact with it.
 
 ### The graphics-core test plan
 
@@ -202,13 +202,13 @@ We provide a couple of launchers for automated runs:
 - `checkbox-mir.graphics`: runs the graphics-core test plan
 - `checkbox-mir.mir`: runs the Mir test plan
 
-If you want to integrate checkbox-mir into your CI, these are likely what you want to run after having set your device up. You may also create a custom launcher, see the [Checkbox launchers tutorial](https://canonical-checkbox.readthedocs-hosted.com/en/latest/reference/launcher.html).
+If you want to integrate checkbox-mir into your CI, these are likely what you want to run after having set your device up. You may also create a custom launcher, see the [Checkbox launchers tutorial](https://canonical-checkbox.readthedocs-hosted.com/latest/reference/launcher.html).
 
 `checkbox-mir.snaps` preselects the Snap test plan, but lets you choose which snaps to test.
 
 ### Running remotely
 
-The recommended way to run Checkbox tests is over the network - and using Checkbox itself, rather than a SSH connection (see [Checkbox Remote](https://canonical-checkbox.readthedocs-hosted.com/en/latest/explanation/remote.html) for more information).
+The recommended way to run Checkbox tests is over the network - and using Checkbox itself, rather than a SSH connection (see [Checkbox Remote](https://canonical-checkbox.readthedocs-hosted.com/latest/explanation/remote.html) for more information).
 
 To do this, install checkbox-mir and dependencies on the target device as you would normally, but rather than running the tests there, install Checkbox on your host and issue `checkbox remote <ip.address>`, pointing at the device you want to test.
 
