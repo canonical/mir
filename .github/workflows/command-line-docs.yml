@@ -1,0 +1,42 @@
+name: Generate command line documentation
+
+on:
+  push:
+    branches:
+      - main
+  merge_group:
+    types: [checks_requested]
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.number && format('pr{0}', github.event.number) || github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  CheckSymbols:
+    runs-on: ubuntu-24.04
+
+    timeout-minutes: 10
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo --preserve-env apt-add-repository --yes ppa:mir-team/dev
+          sudo apt-get install --yes libclang1-18 python3-clang-18
+          echo "MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH=/usr/lib/llvm-18/lib/libclang-18.so.1" >> $GITHUB_ENV
+          echo "MIR_SYMBOLS_MAP_GENERATOR_CLANG_LIBRARY_PATH=/usr/lib/llvm-18/lib" >> $GITHUB_ENV
+          sudo apt-get build-dep ./
+
+      - name: Configure
+        run: >
+          cmake -B build ${{ github.workspace }}
+
+      - name: Check for documentation updates
+        run: |
+          ./build/bin/miral-shell --help-markdown > .command-line-options.md
+          diff .command-line-options.md doc/sphinx/reference/command-line-options.md
+          if [ $? != 0 ]; then exit 1; fi
+          rm .command-line-options.md
