@@ -404,11 +404,11 @@ void mo::DefaultConfiguration::parse_arguments(
         if (options.is_set("help-markdown"))
         {
             std::ostringstream help_text;
-            help_text << "### Options" << std::endl;
+            help_text << "## Command line options" << std::endl;
             help_text << std::endl;
             for (auto& o: desc.options())
             {
-               help_text << "## `" << o->format_name() << "`" << std::endl;
+               help_text << "### `" << o->format_name() << "`" << std::endl;
                help_text << std::endl;
                help_text << o->description() << std::endl;
                help_text << std::endl;
