@@ -3,6 +3,7 @@ These pages provide additional detail about a number of aspects related to using
 
 - [Libraries](libraries.md): an overview of Mir's libraries and how they depend on one another
 - [Graphics support](mir-graphics-support.md): what's required to run Mir compositors
+- [Command line options](mi-command-line.md): command line options for Mir compositors
 - [Security](security.md): a deep dive into the security aspects of Mir compositors
 - [Performance](performance.md): a discussion of the performance aspects of Mir compositors
 - [Energy efficiency](energy-efficiency.md): a deep dive into the security aspects of Mir compositors
@@ -14,6 +15,7 @@ These pages provide additional detail about a number of aspects related to using
 :hidden:
 
 libraries.md
+mir-command-line.md
 mir-graphics-support.md
 security.md
 performance.md
