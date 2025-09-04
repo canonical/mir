@@ -7,12 +7,7 @@ First, have a Wayland protocol XML on hand. As an example, we will use
 the ["ext-workspace-v1"](https://wayland.app/protocols/ext-workspace-v1)
 protocol.
 
-Next, install the `mirwayland` library. On Debian and its derivatives, this
-can be installed from the mir-team ppa:
-
-```sh
-sudo apt install libmirwayland-dev
-```
+Next, install the `mirwayland` library.
 
 Afterwards, let's integrate our Wayland protocol XML into our project's build.
 To do this, we place `ext-workspace-v1.xml` into the `wayland-protocols`
