@@ -849,9 +849,6 @@ INPUT                  = @CMAKE_SOURCE_DIR@/README.md \
                          @CMAKE_SOURCE_DIR@/HACKING.md \
                          @CMAKE_SOURCE_DIR@/doc \
                          @CMAKE_SOURCE_DIR@/guides \
-                         @CMAKE_SOURCE_DIR@/examples/miral-kiosk \
-                         @CMAKE_SOURCE_DIR@/examples/miral-shell \
-                         @CMAKE_SOURCE_DIR@/examples/example-server-lib \
                          @CMAKE_SOURCE_DIR@/include/core \
                          @CMAKE_SOURCE_DIR@/include/miral \
                          @CMAKE_SOURCE_DIR@/include/miroil \
