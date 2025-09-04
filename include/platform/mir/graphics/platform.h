@@ -93,9 +93,23 @@ namespace probe
                                       */
 }
 
+/**
+ * Base class for rendering support
+ *
+ * A RenderingProvider primarily provides integration between [Mir buffers](#Buffer)
+ * and a rendering API (such as OpenGL, for the [GLRenderingProvider](#GLRenderingProvider))
+ * and the ouptut system.
+ */
 class RenderingProvider
 {
 public:
+    /**
+     * Tag type used internally to select a concrete RenderingProvider interface
+     *
+     * Each concrete RenderingProvider interface provides a unique Tag subclass,
+     * and RenderingPlatform::maybe_create_provider() uses this to select which
+     * interface to construct.
+     */
     class Tag
     {
     public:
@@ -105,6 +119,13 @@ public:
 
     virtual ~RenderingProvider() = default;
 
+    /**
+     * Translate between `Buffer`s on this RenderingPlatform and
+     * `Framebuffer`s for a `DisplaySink`.
+     *
+     * A `FramebufferProvider` instance is tied to a specific
+     * `DisplaySink`.
+     */
     class FramebufferProvider
     {
     public:
@@ -117,10 +138,9 @@ public:
         /**
          * Get a directly-displayable handle for a buffer, if cheaply possible
          *
-         * Some buffer types can be passed as-is to the display hardware. If this
-         * buffer can be used in this way (on the DisplayInterfaceProvider associated
-         * with this FramebufferProvider), this method creates a handle that can be
-         * passed to the overlay method of an associated DisplaySink.
+         * Some buffer types can be passed as-is to the display hardware.
+         * This method creates a Framebuffer handle that can be passed to the overlay
+         * method of an associated DisplaySink.
          *
          * \note    The returned Framebuffer may share ownership of the provided Buffer.
          *          It is not necessary for calling code to retain a reference to the Buffer.
@@ -144,6 +164,15 @@ public:
     virtual auto suitability_for_allocator(std::shared_ptr<GraphicBufferAllocator> const& target)
         -> probe::Result = 0;
 
+    /**
+     * Create a FramebufferProvider associated with the given DisplaySink
+     *
+     * \param [in] sink  DisplaySink this provider should be associated with
+     * \returns  A FramebufferProvider. [Framebuffer](#Framebuffer)s returned from
+     *           this FramebufferProvider will be displayable on *sink*.
+     *           In particular, [sink.set_next_image(fb)](DisplaySink::set_next_image()) is
+     *           guaranteed to succeed if *fb* has been acquired via this FramebufferProvider.           
+     */
     virtual auto make_framebuffer_provider(DisplaySink& sink)
         -> std::unique_ptr<FramebufferProvider> = 0;
 };
@@ -154,6 +183,9 @@ class Texture;
 class OutputSurface;
 }
 
+/**
+ * Provides integration with the OpenGL rendering API
+ */
 class GLRenderingProvider : public RenderingProvider
 {
 public:
@@ -161,8 +193,24 @@ public:
     {
     };
 
+    /**
+     * Get a GL texture as a view onto the Mir Buffer
+     *
+     * \param [in] buffer
+     * \returns  A gl::Texture with the content of *buffer*.
+     *           The returned texture may share ownership of *buffer*; it is not necessary
+     *           for calling code to maintain a reference to *buffer*.
+     *           If *buffer* is modified while the returned gl::Texture is live, results
+     *           are undefined
+     */
     virtual auto as_texture(std::shared_ptr<Buffer> buffer) -> std::shared_ptr<gl::Texture> = 0;
 
+    /**
+     * Create a rendering surface that can be output on DisplaySink
+     *
+     * \param [in] sink    The DisplaySink associated with this surface
+     * \param [in] config  The config values that will be used for the EGL context
+     */
     virtual auto surface_for_sink(
         DisplaySink& sink,
         GLConfig const& config) -> std::unique_ptr<gl::OutputSurface> = 0;
@@ -173,6 +221,12 @@ namespace drm
 class Syncobj;
 }
 
+/**
+ * Provides integration with DRM sync objects
+ *
+ * A DRMRenderingProvider is a GLRendering provider that can additionally import
+ * client-provided DRM syncobj fds for explicit buffer synchronisation.
+ */
 class DRMRenderingProvider : public GLRenderingProvider
 {
 public:
@@ -180,6 +234,18 @@ public:
     {
     };
 
+    /**
+     * Import a DRM syncobj from a file descriptor
+     *
+     * \param [in] syncobj_fd
+     *     The syncobj fd to import. The caller does not need to keep the
+     *     imported fd opened; the Mir object holds a reference to the necessary
+     *     kernel resources.
+     * \returns
+     *     The imported drm::Syncobj.
+     * \throws
+     *     std::system_error on any underlying failure.
+     */
     virtual auto import_syncobj(mir::Fd const& syncobj_fd) -> std::unique_ptr<drm::Syncobj> = 0;
 };
 
