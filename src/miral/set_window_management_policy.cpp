@@ -37,7 +37,7 @@ miral::SetWindowManagementPolicy::~SetWindowManagementPolicy() = default;
 
 void miral::SetWindowManagementPolicy::operator()(mir::Server& server) const
 {
-    server.add_configuration_option(trace_option, "log trace message", mir::OptionType::null);
+    server.add_configuration_option(trace_option, "Log trace message", mir::OptionType::null);
 
     server.override_the_window_manager_builder([this, &server](msh::FocusController* focus_controller)
         -> std::shared_ptr<msh::WindowManager>

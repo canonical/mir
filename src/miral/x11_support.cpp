@@ -65,7 +65,7 @@ void miral::X11Support::operator()(mir::Server& server) const
 
     server.add_configuration_option(
         x11_displayfd_opt,
-        "file descriptor to write X11 DISPLAY number to when ready to connect", mir::OptionType::integer);
+        "File descriptor to write X11 DISPLAY number to when ready to connect", mir::OptionType::integer);
 
     server.add_init_callback([this, &server]
         {

@@ -1,0 +1,31 @@
+name: Feature Request
+description: File a feature request
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this feature request!
+  - type: textarea
+    id: feature-summary
+    attributes:
+      label: Summary
+      description: An overview of the feature.
+      placeholder: Tell us what you want!
+    validations:
+      required: true
+  - type: textarea
+    id: feature-details
+    attributes:
+      label: Details
+      description: More details about how the feature should behave, how the user would interact with it, and its interactions with other parts of Mir.
+      placeholder: Tell us more.
+    validations:
+      required: false
+  - type: textarea
+    id: prior-art
+    attributes:
+      label: Prior Art
+      description: Does any Wayland compositor / software implement a similar feature? Please describe how it works there (if any different), and provide links (documentation, code, etc..) if applicable.
+      placeholder: Tell us if anyone else has a similar feature.
+    validations:
+      required: false
