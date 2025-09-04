@@ -167,8 +167,8 @@ sitemap_show_lastmod = True
 # NOTE: If undefined, set to None, or empty,
 #       the sphinx_reredirects extension will be disabled.
 redirects = {
-    'how-to/how-to-enable-graphics-core22-on-a-device*': '/how-to/how-to-enable-graphics-for-snaps-on-a-device',
-    'explanation/ok-so-what-is-this-wayland-thing-anyway*': '/how-to/developing-a-wayland-compositor-using-mir'
+    'how-to/how-to-enable-graphics-core22-on-a-device': '../how-to-enable-graphics-for-snaps-on-a-device',
+    'explanation/ok-so-what-is-this-wayland-thing-anyway': '../../how-to/developing-a-wayland-compositor-using-mir'
 }
 
 
