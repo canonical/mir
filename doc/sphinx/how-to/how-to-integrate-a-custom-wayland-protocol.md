@@ -3,6 +3,12 @@
 Mir enables shells to add custom Wayland protocols to their Mir-based
 compositors.
 
+**Note**: [Write Your First Wayland
+Compositor](../tutorial/write-your-first-wayland-compositor.md) is a prerequisite for
+this how-to.
+
+---
+
 First, have a Wayland protocol XML on hand. As an example, we will use
 the ["ext-workspace-v1"](https://wayland.app/protocols/ext-workspace-v1)
 protocol.
