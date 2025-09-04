@@ -1,11 +1,6 @@
----
-discourse: 11993
----
-
 # How to integrate a custom Wayland protocol
 
-With the [Mir 1.3 release](https://discourse.ubuntu.com/t/mir-1-3-0-release/11638/2)
-we smoothed the way for shells to add custom Wayland protocols to their Mir-based
+Mir enables shells to add custom Wayland protocols to their Mir-based
 compositors.
 
 First, have a Wayland protocol XML on hand. As an example, we will use
@@ -16,7 +11,6 @@ Next, install the `mirwayland` library. On Debian and its derivatives, this
 can be installed from the mir-team ppa:
 
 ```sh
-sudo add-apt-repository --update ppa:mir-team/release
 sudo apt install libmirwayland-dev
 ```
 
