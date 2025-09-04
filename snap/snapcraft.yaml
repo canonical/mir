@@ -51,11 +51,13 @@ parts:
     - libxml++2.6-dev
     - libyaml-cpp-dev
     - nettle-dev
+    - python3-dbusmock
     - python3-pil
     - systemtap-sdt-dev
     - libapparmor-dev
     - wlcs
     - libpixman-1-dev
+    - xwayland
     stage-packages:
     - libboost-filesystem1.83.0
     - libboost-iostreams1.83.0
