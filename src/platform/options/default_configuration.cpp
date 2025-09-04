@@ -345,9 +345,9 @@ void mo::DefaultConfiguration::parse_arguments(
     try
     {
         desc.add_options()
-            ("help,h", "this help text");
+            ("help,h", "Show command line help");
         desc.add_options()
-            ("version,V", "display Mir version and exit");
+            ("version,V", "Display Mir version and exit");
 
         options.parse_arguments(desc, argc, argv);
 
