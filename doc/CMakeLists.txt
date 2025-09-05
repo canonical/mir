@@ -9,6 +9,10 @@ add_custom_target(doc
     BYPRODUCTS ${CMAKE_SOURCE_DIR}/doc/sphinx/_build
 )
 
+add_custom_target(doc-with-api
+    COMMAND ${CMAKE_COMMAND} -E env "MIR_BUILD_API_DOCS=1" ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target doc
+)
+
 add_custom_target(doc-serve
     COMMAND ${CMAKE_COMMAND} -E env "MIR_CMAKE_BUILD_DIR=${CMAKE_BINARY_DIR}" make -C ${CMAKE_SOURCE_DIR}/doc/sphinx serve
     USES_TERMINAL
