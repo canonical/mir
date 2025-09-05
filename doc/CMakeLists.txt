@@ -36,7 +36,7 @@ find_package(Doxygen 1.8.0 ${REQUIRED})
 
 
 if(DOXYGEN_FOUND)
-    set(WORKING_DIR ${CMAKE_CURRENT_BINARY_DIR}/sphinx)
+  set(WORKING_DIR ${CMAKE_CURRENT_BINARY_DIR}/sphinx)
 
   configure_file(
       ${CMAKE_CURRENT_SOURCE_DIR}/sphinx/Doxyfile.in
