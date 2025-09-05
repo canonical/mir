@@ -296,4 +296,44 @@ Show command line help in markdown format
 
 Display Mir version and exit
 
+### `--bypass`
+
+[platform-specific] Utilize the bypass optimization for fullscreen surfaces.
+
+### `--driver-quirks`
+
+[platform-specific] Driver quirks to apply (may be specified multiple times; multiple quirks are combined)
+
+### `--x11-output`
+
+[mir-on-X specific] Colon separated list of WIDTHxHEIGHT sizes for "output" windows. ^SCALE may also be appended to any output
+
+### `--x11-window-title`
+
+[mir-on-X specific] Title for the banner of the generated X11 window
+
+### `--virtual-output`
+
+[mir-on-virtual specific] Colon separated list of WIDTHxHEIGHT sizes for the "output" size. Multiple outputs may be specified by providing the argument multiple times.
+
+### `--wayland-host`
+
+Socket name for host compositor
+
+### `--wayland-surface-app-id`
+
+Defines the XdgToplevel app id on the surface created by the wayland platform
+
+### `--wayland-surface-title`
+
+Defines the XdgTopLevel title on the surface created by the wayland platform
+
+### `--bypass`
+
+[platform-specific] Utilize the bypass optimization for fullscreen surfaces.
+
+### `--driver-quirks`
+
+[platform-specific] Driver quirks to apply (may be specified multiple times; multiple quirks are combined)
+
 

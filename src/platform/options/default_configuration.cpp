@@ -408,10 +408,20 @@ void mo::DefaultConfiguration::parse_arguments(
             help_text << std::endl;
             for (auto& o: desc.options())
             {
-               help_text << "### `" << o->format_name() << "`" << std::endl;
-               help_text << std::endl;
-               help_text << o->description() << std::endl;
-               help_text << std::endl;
+                help_text << "### `" << o->format_name() << "`" << std::endl;
+                help_text << std::endl;
+                help_text << o->description() << std::endl;
+                help_text << std::endl;
+            }
+            for (auto& [_, module_desc] : module_options_desc)
+            {
+                for (auto& o: module_desc.options())
+                {
+                    help_text << "### `" << o->format_name() << "`" << std::endl;
+                    help_text << std::endl;
+                    help_text << o->description() << std::endl;
+                    help_text << std::endl;
+                }
             }
             BOOST_THROW_EXCEPTION(mir::ExitWithOutput(help_text.str()));
         }
