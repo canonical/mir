@@ -1,3 +1,4 @@
+(explanation-libraries)=
 # Libraries
 The Mir project is a collection of C++ libraries for writing Wayland
 compositors. This document describes what those libraries are and how they
