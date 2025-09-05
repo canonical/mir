@@ -3,7 +3,7 @@ add_custom_target(doc-setup
     BYPRODUCTS ${CMAKE_SOURCE_DIR}/doc/sphinx/.sphinx/venv
 )
 
-add_custom_target(doc ${ALL}
+add_custom_target(doc
     COMMAND ${CMAKE_COMMAND} -E env "MIR_CMAKE_BUILD_DIR=${CMAKE_BINARY_DIR}" make -C ${CMAKE_SOURCE_DIR}/doc/sphinx html
     DEPENDS ${CMAKE_SOURCE_DIR}/doc/sphinx/.sphinx/venv
     BYPRODUCTS ${CMAKE_SOURCE_DIR}/doc/sphinx/_build
@@ -48,11 +48,8 @@ if(DOXYGEN_FOUND)
       ${CMAKE_CURRENT_SOURCE_DIR}/sphinx/reference/introducing_the_miral_api.md @ONLY IMMEDIATE
   )
 
-  if(BUILD_DOXYGEN)
-    set(ALL "ALL")
-  endif()
 
-  add_custom_target(doxygen ${ALL}
+  add_custom_target(doxygen
       COMMAND doxygen ${WORKING_DIR}/Doxyfile
       BYPRODUCTS ${WORKING_DIR}/doxygen_output/xml 
   )
