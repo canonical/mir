@@ -6,8 +6,8 @@ classDiagram
         class InputPlatform
     }
 
-    DisplayPlatform --> mirplatform
     RenderingPlatform --> mirplatform
+    DisplayPlatform --> mirplatform
     InputPlatform --> mirplatform
 
     Seat <-- InputDispatcher: Sends events to
@@ -15,9 +15,10 @@ classDiagram
     FrontendWayland --> Shell: Makes requests to
     Seat --> Shell: Sends events to
 
-    Compositor --> Display: Get outputs
+    Shell --> Display: Subscribe
+    Compositor --> Display: Subscribe
     Shell --> Scene: Updates
-    Compositor --> Scene: Get renderables
+    Compositor --> Scene: Subscribe/get renderables
 
     InputDispatcher <-- InputPlatform: Sends events to
     Compositor --> RenderingPlatform: Handles rendering
@@ -28,4 +29,4 @@ classDiagram
     <<View>> Compositor
 
     Shell o-- WindowManagementStrategy
-    class WindowManagementStrategy["WindowManagementStrategy\n (supplied by miral)"]
+    note for WindowManagementStrategy "supplied by miral"
