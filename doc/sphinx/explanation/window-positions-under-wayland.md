@@ -31,23 +31,23 @@ Obviously, that approach leads to frustration on the part of designers of client
 Although a lot of freedom is indeed being lost, when looking at applications in the real world they only use a small fraction of that and for some specific cases. That's not surprising, as they are supporting some visual "idioms" that users recognize because they are shared across applications.
 
 1. Regular or "top level" windows
-![regular_540p|690x388](regular_540p.gif)
+![A GIF demonstrating the behavior of regular windows](regular_540p.gif)
 These are handled by `xdg-shell`'s `xdg_toplevel`.
 
 2. Dialog windows
-![dialog_540p|690x388](dialog_540p.gif)
+![A GIF demonstrating the behavior of dialog windows](dialog_540p.gif)
 These are handled by `xdg-shell`'s `xdg_toplevel` with the "parent" set.
 
 3. Menu and Popup windows
-![popup_540p|690x388](popup_540p.gif)
+![A GIF demonstrating the behavior of popup windows](popup_540p.gif)
 These are handled by `xdg-shell`'s `xdg_popup` with a "grab"
 
 4. Tooltip and hover windows
-![tip_540p|690x388](tip_540p.gif)
+![A GIF demonstrating the behavior of tooltip windows](tip_540p.gif)
 These are handled by `xdg-shell`'s `xdg_popup`.
 
 5. Satellite and toolbox windows
-![sattelite_540p|690x388](satellite_540p.gif)
+![A GIF demonstrating the behavior of staellite windows](satellite_540p.gif)
 These are not currently handled by a Wayland extension, but could be added in a way consistent with the support for other window types.
 
 ## Conclusion
