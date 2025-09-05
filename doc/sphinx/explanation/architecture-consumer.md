@@ -1,4 +1,4 @@
-# Architecture
+# Architecture from the outside
 This document introduces the architecture of *Mir* at a high-level.
 
 ## Audience
