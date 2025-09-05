@@ -22,3 +22,7 @@ classDiagram
     InputDispatcher <-- InputPlatform: Sends events to
     Compositor --> RenderingPlatform: Handles rendering
     Compositor --> DisplayPlatform: Outputs image to
+
+    <<Controller>> Shell
+    <<Model>> Scene
+    <<View>> Compositor
