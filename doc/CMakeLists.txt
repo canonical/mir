@@ -22,6 +22,12 @@ add_custom_target(doc-clean-all
 )
 add_dependencies(doc-clean-all doc-clean)
 
+install(
+  DIRECTORY ${CMAKE_SOURCE_DIR}/doc/sphinx/_build/
+  DESTINATION ${CMAKE_INSTALL_PREFIX}/share/doc/mir-doc
+  OPTIONAL
+)
+
 option(
   BUILD_DOXYGEN
   "Build Doxygen documentation as part of the default build"
@@ -58,11 +64,5 @@ if(DOXYGEN_FOUND)
       COMMAND rm -r ${WORKING_DIR}/doxygen_output/xml
   ) 
   add_dependencies(doc-clean-all doxygen-clean)
-
-  install(
-      DIRECTORY ${CMAKE_SOURCE_DIR}/doc/sphinx/_build/
-      DESTINATION ${CMAKE_INSTALL_PREFIX}/share/doc/mir-doc
-      OPTIONAL
-  )
 endif()
 
