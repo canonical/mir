@@ -18,7 +18,7 @@ execute: |
     # (Currently: a newer version of WLCS)
     add-apt-repository ppa:mir-team/dev --component "main $( $NODBG || echo main/debug )"
 
-    # to get dpkg-architecture and mk-build-deps
+    # to get dpkg-architecture and debchange
     apt-get install \
       --yes \
       ccache \
