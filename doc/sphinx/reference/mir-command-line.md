@@ -78,7 +78,7 @@ Time (in seconds) Mir will remain idle before turning off the display when the s
 
 ### `--on-fatal-error-except`
 
-On "fatal error" conditions [e.g. drivers behaving in unexpected ways] throw an exception (instead of a core dump)
+On &quot;fatal error&quot; conditions [e.g. drivers behaving in unexpected ways] throw an exception (instead of a core dump)
 
 ### `--debug`
 
@@ -91,7 +91,7 @@ How Mir handles console-related tasks (device handling, VT switching, etc)
 Options:
 logind: use logind
 vt: use the Linux VT subsystem. Requires root.
-none: support no console-related tasks. Useful for nested platforms which do not need raw device access and which don't have a VT concept
+none: support no console-related tasks. Useful for nested platforms which do not need raw device access and which don&apos;t have a VT concept
 auto: detect the appropriate provider.
 
 ### `--vt`
@@ -184,7 +184,7 @@ The repeat delay for key presses
 
 ### `--display-config`
 
-Display configuration [{clone,sidebyside,single,static=<filename>}]
+Display configuration [{clone,sidebyside,single,static=&lt;filename&gt;}]
 
 ### `--translucent`
 
@@ -262,7 +262,7 @@ Seconds to run before exiting
 
 ### `--cursor-theme`
 
-Colon separated cursor theme list (e.g. "DMZ-Black")
+Colon separated cursor theme list (e.g. &quot;DMZ-Black&quot;)
 
 ### `--print-input-events`
 
@@ -270,11 +270,11 @@ List input events on std::cout
 
 ### `--screen-rotation`
 
-Rotate screen on Ctrl-Alt-<Arrow>
+Rotate screen on Ctrl-Alt-&lt;Arrow&gt;
 
 ### `--test-client`
 
-client executable
+Client executable
 
 ### `--test-timeout`
 
@@ -306,7 +306,7 @@ Display Mir version and exit
 
 ### `--x11-output`
 
-[mir-on-X specific] Colon separated list of WIDTHxHEIGHT sizes for "output" windows. ^SCALE may also be appended to any output
+[mir-on-X specific] Colon separated list of WIDTHxHEIGHT sizes for &quot;output&quot; windows. ^SCALE may also be appended to any output
 
 ### `--x11-window-title`
 
@@ -314,7 +314,7 @@ Display Mir version and exit
 
 ### `--virtual-output`
 
-[mir-on-virtual specific] Colon separated list of WIDTHxHEIGHT sizes for the "output" size. Multiple outputs may be specified by providing the argument multiple times.
+[mir-on-virtual specific] Colon separated list of WIDTHxHEIGHT sizes for the &quot;output&quot; size. Multiple outputs may be specified by providing the argument multiple times.
 
 ### `--wayland-host`
 

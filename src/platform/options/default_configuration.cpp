@@ -126,6 +126,38 @@ std::string description_text(char const* program, std::string const& config_file
 
     return result + "user options";
 }
+
+std::string markdown_escape(std::string const& text)
+{
+    std::string escaped_text;
+
+    for (char const c : text)
+    {
+        switch(c)
+        {
+        case '&':
+            escaped_text += "&amp;";
+            break;
+        case '<':
+            escaped_text += "&lt;";
+            break;
+        case '>':
+            escaped_text += "&gt;";
+            break;
+        case '\"':
+            escaped_text += "&quot;";
+            break;
+        case '\'':
+            escaped_text += "&apos;";
+            break;
+        default:
+            escaped_text += c;
+            break;
+        }
+    }
+
+    return escaped_text;
+}
 }
 
 mo::DefaultConfiguration::DefaultConfiguration(
@@ -410,7 +442,7 @@ void mo::DefaultConfiguration::parse_arguments(
             {
                 help_text << "### `" << o->format_name() << "`" << std::endl;
                 help_text << std::endl;
-                help_text << o->description() << std::endl;
+                help_text << markdown_escape(o->description()) << std::endl;
                 help_text << std::endl;
             }
             for (auto& [_, module_desc] : module_options_desc)
@@ -419,7 +451,7 @@ void mo::DefaultConfiguration::parse_arguments(
                 {
                     help_text << "### `" << o->format_name() << "`" << std::endl;
                     help_text << std::endl;
-                    help_text << o->description() << std::endl;
+                    help_text << markdown_escape(o->description()) << std::endl;
                     help_text << std::endl;
                 }
             }
