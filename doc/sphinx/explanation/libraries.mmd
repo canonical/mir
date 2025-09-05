@@ -1,19 +1,37 @@
-flowchart
-    miral ---> mirserver
-    miral ---> mircommon
-    miral ---> mircore
-    miroil ---> mirserver
-    miroil --> mircommon
-    mirserver --> mirplatform
-    mirserver --> mircommon
-    mirserver --> mirserverlttng
-    mirserver --> mircore
-    mirserver --->|dynamically loads|graphics_X
-    mirserver --->|dynamically loads|input_X
+classDiagram
+    mircommon --> mircore
     mirwayland --> mircore
-    graphics_X --> mirplatform
-    graphics_X --> mircommon
-    graphics_X --> mircore
-    input_X --> mirplatform
-    input_X --> mircommon
+    miral --> mircore
+    miroil --> mircore
+    mirserver --> mircore
     input_X --> mircore
+    display_X --> mircore
+    rendering_X --> mircore
+
+    mirserver --> mirplatform
+    input_X --> mirplatform
+    display_X --> mirplatform
+    rendering_X --> mirplatform
+
+    mirwayland --> mircommon
+    mirserver --> mircommon
+    miral --> mircommon
+    miroil --> mircommon
+    input_X --> mircommon
+    display_X --> mircommon
+    rendering_X --> mircommon
+
+    mirserver --> mirwayland
+
+    mirserver --> input_X: dynamically loads
+    mirserver --> display_X: dynamically loads
+    mirserver --> rendering_X: dynamically loads
+
+    miral --> mirserver
+    miroil --> mirserver
+
+    namespace platform {
+        class input_X
+        class display_X
+        class rendering_X
+    }
