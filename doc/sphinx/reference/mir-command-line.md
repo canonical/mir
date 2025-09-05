@@ -256,29 +256,9 @@ Wayland extensions to disable.
 
 Log trace message
 
-### `--timeout`
-
-Seconds to run before exiting
-
 ### `--cursor-theme`
 
 Colon separated cursor theme list (e.g. &quot;DMZ-Black&quot;)
-
-### `--print-input-events`
-
-List input events on std::cout
-
-### `--screen-rotation`
-
-Rotate screen on Ctrl-Alt-&lt;Arrow&gt;
-
-### `--test-client`
-
-Client executable
-
-### `--test-timeout`
-
-Seconds to run before sending SIGTERM to client
 
 ### `--cursor-scale`
 
@@ -296,13 +276,9 @@ Show command line help in markdown format
 
 Display Mir version and exit
 
-### `--bypass`
+### `--virtual-output`
 
-[platform-specific] Utilize the bypass optimization for fullscreen surfaces.
-
-### `--driver-quirks`
-
-[platform-specific] Driver quirks to apply (may be specified multiple times; multiple quirks are combined)
+[mir-on-virtual specific] Colon separated list of WIDTHxHEIGHT sizes for the &quot;output&quot; size. Multiple outputs may be specified by providing the argument multiple times.
 
 ### `--x11-output`
 
@@ -312,9 +288,13 @@ Display Mir version and exit
 
 [mir-on-X specific] Title for the banner of the generated X11 window
 
-### `--virtual-output`
+### `--bypass`
 
-[mir-on-virtual specific] Colon separated list of WIDTHxHEIGHT sizes for the &quot;output&quot; size. Multiple outputs may be specified by providing the argument multiple times.
+[platform-specific] Utilize the bypass optimization for fullscreen surfaces.
+
+### `--driver-quirks`
+
+[platform-specific] Driver quirks to apply (may be specified multiple times; multiple quirks are combined)
 
 ### `--wayland-host`
 
