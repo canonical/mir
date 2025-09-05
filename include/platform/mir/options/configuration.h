@@ -28,7 +28,6 @@ class SharedLibrary;
 namespace options
 {
 extern char const* const arw_server_socket_opt;
-extern char const* const enable_input_opt;
 extern char const* const shared_library_prober_report_opt;
 extern char const* const shell_report_opt;
 extern char const* const compositor_report_opt;

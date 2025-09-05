@@ -37,7 +37,7 @@ struct CommandLineHandling : mir_test_framework::HeadlessTest
 TEST_F(CommandLineHandling, valid_options_are_accepted_by_default_callback)
 {
     char const* argv[] =
-     { "dummy-exe-name", "--enable-input", "off"};
+     { "dummy-exe-name", "--compositor-report", "off"};
 
     int const argc = std::distance(std::begin(argv), std::end(argv));
 
@@ -49,7 +49,7 @@ TEST_F(CommandLineHandling, valid_options_are_accepted_by_default_callback)
 TEST_F(CommandLineHandling, unrecognised_tokens_cause_default_callback_to_throw)
 {
     char const* argv[] =
-     { "dummy-exe-name", "--file", "test", "--hello", "world", "--enable-input", "off"};
+     { "dummy-exe-name", "--file", "test", "--hello", "world", "--compositor-report", "off"};
 
     int const argc = std::distance(std::begin(argv), std::end(argv));
 
@@ -61,7 +61,7 @@ TEST_F(CommandLineHandling, unrecognised_tokens_cause_default_callback_to_throw)
 TEST_F(CommandLineHandling, valid_options_are_not_passed_to_callback)
 {
     char const* argv[] =
-     { "dummy-exe-name", "--enable-input", "off"};
+     { "dummy-exe-name", "--compositor-report", "off"};
 
     int const argc = std::distance(std::begin(argv), std::end(argv));
 
@@ -76,7 +76,7 @@ TEST_F(CommandLineHandling, valid_options_are_not_passed_to_callback)
 TEST_F(CommandLineHandling, unrecognised_tokens_are_passed_to_callback)
 {
     char const* argv[] =
-     { "dummy-exe-name", "--hello", "world", "--enable-input", "off"};
+     { "dummy-exe-name", "--hello", "world", "--compositor-report", "off"};
 
     int const argc = std::distance(std::begin(argv), std::end(argv));
 
