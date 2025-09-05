@@ -294,7 +294,7 @@ intersphinx_mapping = {
 ############################################################
 ### Additional configuration
 ############################################################
-cmake_build_dir = Path(os.getenv('MIR_CMAKE_BUILD_DIR') or '../../')  # Default for CI
+cmake_build_dir = Path(os.getenv('MIR_CMAKE_BUILD_DIR', '../../'))  # Default for CI
 
 
 sphinx_dir = cmake_build_dir / 'doc/sphinx'
