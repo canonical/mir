@@ -23,3 +23,4 @@ repos:
     - mdformat-beautysh
     - mdformat-gfm
     - mdformat-myst
+    - setuptools # Necessary until beautysh fix their stuff, see: https://github.com/hukkin/mdformat/issues/442
