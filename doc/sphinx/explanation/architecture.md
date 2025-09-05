@@ -62,3 +62,4 @@ Library | Description
 *mircore*|Fundamental data concepts, like file descriptors and rectangles. These data structures tend not to be *Mir*-specific.
 *mircommon*|*Mir*-specific data concepts like *Mir* event building, logging, and timing utilities.
 
+There is a full list of Mir libraries in {ref}`Libraries <explanation-libraries>`
