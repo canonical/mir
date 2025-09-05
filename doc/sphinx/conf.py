@@ -237,8 +237,6 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.imgmath',
     'sphinx.ext.todo',
-    'breathe',
-    'exhale',
     'sphinx.ext.graphviz',
     'sphinxcontrib.mermaid'
 ]
@@ -295,11 +293,14 @@ intersphinx_mapping = {
 ############################################################
 ### Additional configuration
 ############################################################
-cmake_build_dir = Path('../../')  # Leave doc/sphinx
+cmake_build_dir = Path(os.getenv('MIR_CMAKE_BUILD_DIR', '../../'))  # Default for CI
+
+
 sphinx_dir = cmake_build_dir / 'doc/sphinx'
+if not os.path.exists(sphinx_dir):
+    raise Exception(f"Cannot find '{sphinx_dir}'.\nHint: Set MIR_CMAKE_BUILD_DIR to the path of the configured Mir cmake project relative to `doc/sphin/conf.py`, or an absolute path")
 
 primary_domain = 'cpp'
-
 highlight_language = 'cpp'
 
 cppguide_dir = Path('../../guides')
@@ -316,42 +317,39 @@ cppguide_files = [
 if all(os.path.exists(file) for file in cppguide_files):
     html_extra_path.extend(str(file) for file in cppguide_files)
 
+build_api_docs = os.getenv('MIR_BUILD_API_DOCS') == '1'
+doxygen_xml_output_dir = sphinx_dir / "doxygen_output/xml"
+doxygen_xml_exists = os.path.exists(doxygen_xml_output_dir)
 
-def read_doxyfile(path):
-    # Instead of configuring Mir again to get the doxyfile, we assume the user
-    # already has configured it and grab the file from there.
-    try:
-        # Read the doxyfile from the build directory
-        with open(path) as doxyfile_file:
-            return doxyfile_file.read()
-    except IOError as e:
-        raise Exception(f"""IOError: {e.errno}, {e.strerror}
-                        \rHint: Have you configured the cmake project and changed `cmake_build_dir` to point at it?""")
+if build_api_docs and not doxygen_xml_exists:
+    raise Exception(f""" Doxygen outputs at {doxygen_xml_output_dir} don't exist
+Hint: Make sure MIR_CMAKE_BUILD_DIR points at the the configured Mir cmake project correctly
+If you've already ran doxygen, it should have `doxygen_output` somewhere inside""")
 
+# Only add exhale and breathe if the user ran doxygen (which produces `<build_dir>/doc/sphinx/doxygen_output/xml`)
+if build_api_docs:
+    extensions.extend(['exhale', 'breathe'])
 
-doxyfile_contents = read_doxyfile(cmake_build_dir / 'doc/sphinx/Doxyfile')
+    # Setup the exhale extension
+    exhale_args = {
+        # These arguments are required
+        "containmentFolder": './api',
+        "rootFileName": "library_root.rst",
+        "doxygenStripFromPath": "..",
+        # Heavily encouraged optional argument (see docs)
+        "rootFileTitle": "Mir API",
+        # Suggested optional arguments
+        "createTreeView": False,
+        "exhaleExecutesDoxygen": False,
+        "exhaleUseDoxyfile": False,
+        "contentsDirectives": False,
+    }
 
-# Setup the exhale extension
-exhale_args = {
-    # These arguments are required
-    "containmentFolder": "./api",
-    "rootFileName": "library_root.rst",
-    "doxygenStripFromPath": "..",
-    # Heavily encouraged optional argument (see docs)
-    "rootFileTitle": "Mir API",
-    # Suggested optional arguments
-    "createTreeView": False,
-    "exhaleExecutesDoxygen": True,
-    "exhaleUseDoxyfile": False,
-    "contentsDirectives": False,
-    "exhaleDoxygenStdin": doxyfile_contents
-}
-
-# Setup the breathe extension
-breathe_projects = {"Mir": "./xml/"}
-breathe_default_project = "Mir"
-breathe_default_members = ('members', 'undoc-members')
-breathe_order_parameters_first = True
+    # Setup the breathe extension
+    breathe_projects = {"Mir": str(doxygen_xml_output_dir)}
+    breathe_default_project = "Mir"
+    breathe_default_members = ('members', 'undoc-members')
+    breathe_order_parameters_first = True
 
 # Mermaid
 mermaid_version = "10.5.0"
