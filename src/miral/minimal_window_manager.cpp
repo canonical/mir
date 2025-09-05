@@ -17,7 +17,6 @@
 #include <miral/minimal_window_manager.h>
 #include <miral/toolkit_event.h>
 #include <miral/application_info.h>
-#include "application_selector.h"
 #include <linux/input.h>
 #include <gmpxx.h>
 
@@ -69,7 +68,6 @@ struct miral::MinimalWindowManager::Impl
 {
     Impl(WindowManagerTools const& tools, MirInputEventModifier pointer_drag_modifier, FocusStealing focus_stealing) :
         tools{tools},
-        application_selector(tools),
         pointer_drag_modifier{pointer_drag_modifier},
         focus_stealing{focus_stealing}
     {
@@ -86,9 +84,6 @@ struct miral::MinimalWindowManager::Impl
     Size resize_size;
     Point old_cursor{};
     Point old_touch{};
-
-    /// Responsible for managing Alt + Tab behavior.
-    ApplicationSelector application_selector;
 
     bool prepare_for_gesture(WindowInfo& window_info, Point input_pos, Gesture gesture);
 
@@ -189,43 +184,7 @@ bool miral::MinimalWindowManager::handle_keyboard_event(MirKeyboardEvent const* 
             tools.ask_client_to_close(tools.active_window());
             return true;
 
-        case KEY_TAB:
-            self->application_selector.next(false);
-            return true;
-
-        case KEY_GRAVE:
-            self->application_selector.next(true);
-            return true;
-
         default:;
-        }
-    }
-
-    if (action == mir_keyboard_action_down &&
-        shift_state == (mir_input_event_modifier_alt | mir_input_event_modifier_shift))
-    {
-        switch (mir_keyboard_event_scan_code(event))
-        {
-        case KEY_TAB:
-            self->application_selector.prev(false);
-            return true;
-
-        case KEY_GRAVE:
-            self->application_selector.prev(true);
-            return true;
-
-        default:;
-        }
-    }
-
-    if (action == mir_keyboard_action_up)
-    {
-        switch (mir_keyboard_event_scan_code(event))
-        {
-            case KEY_LEFTALT:
-                self->application_selector.complete();
-                [[fallthrough]];
-            default:;
         }
     }
 
@@ -316,20 +275,17 @@ void miral::MinimalWindowManager::advise_new_window(miral::WindowInfo const& win
 void miral::MinimalWindowManager::advise_focus_gained(WindowInfo const& window_info)
 {
     tools.raise_tree(window_info.window());
-    self->application_selector.advise_focus_gained(window_info);
 }
 
 void miral::MinimalWindowManager::advise_new_app(miral::ApplicationInfo&){}
 void miral::MinimalWindowManager::advise_delete_app(miral::ApplicationInfo const&){}
 
-void  miral::MinimalWindowManager::advise_focus_lost(const miral::WindowInfo &window_info)
+void  miral::MinimalWindowManager::advise_focus_lost(const miral::WindowInfo &)
 {
-    self->application_selector.advise_focus_lost(window_info);
 }
 
-void miral::MinimalWindowManager::advise_delete_window(miral::WindowInfo const& window_info)
+void miral::MinimalWindowManager::advise_delete_window(miral::WindowInfo const&)
 {
-    self->application_selector.advise_delete_window(window_info);
 }
 
 bool miral::MinimalWindowManager::Impl::prepare_for_gesture(
@@ -650,8 +606,5 @@ bool miral::MinimalWindowManager::Impl::should_prevent_focus(miral::WindowInfo c
 
 bool miral::MinimalWindowManager::Impl::advise_new_window(WindowInfo const& info)
 {
-    auto should_receive_focus = !should_prevent_focus(info);
-    application_selector.advise_new_window(info, should_receive_focus);
-
-    return should_receive_focus;
+    return !should_prevent_focus(info);
 }
