@@ -169,7 +169,7 @@ sitemap_show_lastmod = True
 redirects = {
     'how-to/how-to-enable-graphics-core22-on-a-device': '../how-to-enable-graphics-for-snaps-on-a-device',
     'explanation/ok-so-what-is-this-wayland-thing-anyway': '../../tutorial/write-your-first-wayland-compositor',
-    'how-to/developing-a-wayland-compositor-using-mir.md*': '../../tutorial/write-your-first-wayland-compositor'
+    'how-to/developing-a-wayland-compositor-using-mir': '../../tutorial/write-your-first-wayland-compositor'
 }
 
 
