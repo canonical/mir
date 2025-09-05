@@ -12,7 +12,6 @@ The following libraries are intended for published for public consumption:
 - `miroil`
 - `mirplatform`
 - `mirserver`
-- `mirserverlttng`
 - `mirwayland`
 
 When you build the project, these libraries are found in
@@ -23,6 +22,7 @@ These can be found in `<build_directory>/lib/server-modules`. These libraries
 are loaded at runtime by Mir and provide access to the underlying graphics and
 input hardware of that platform. The libraries that Mir provides are:
 
+- `graphics-atomic-kms`
 - `graphics-gbm-kms`
 - `graphics-eglstream-kms`
 - `graphics-wayland`
