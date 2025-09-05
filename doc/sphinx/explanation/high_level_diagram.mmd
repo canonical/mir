@@ -1,14 +1,34 @@
 
 classDiagram
-    CompositorAuthor --> miral: Uses
-    CompositorAuthor --> miroil: Uses
-    CompositorAuthor --> mirwayland: Uses
+    mirserver --> mircore
+    mircommon --> mircore
+    mirplatform --> mircore
+    mirwayland --> mircore
+    miral --> mircore
 
-    miral --> mirserver: Uses
-    miroil --> mirserver: Uses
-    mirwayland --> mirserver: Uses
+    mirserver --> mirplatform
+    mirplatform --> mircommon
+    miral --> mircommon
+    mirserver --> mircommon
+    mirwayland --> mircommon
 
-    note for core "Universal"
-    note for common "Universal"
-    class core
-    class common
+
+    miral --> mirserver
+    mirwayland --> mirserver
+    miroil --> mirserver
+
+    Compositor --> miral
+    Compositor --> mirwayland
+    Compositor --> miroil
+
+    Compositor --> mircore
+
+    miroil --> mircore
+    class miroil["miroil (for Lomiri)"]
+    style miroil color:#aaa
+    namespace MirEngine {
+        class mirserver
+        class mircommon
+        class mirplatform
+    }
+
