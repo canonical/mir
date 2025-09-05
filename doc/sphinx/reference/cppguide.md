@@ -2,11 +2,11 @@
 
 Revision 4.2
 
-Tim Penhey  
-Neil J. Patel  
+Tim Penhey
+Neil J. Patel
 Thomas Voss
 
-## Background {#Background}
+## Background
 
 As every C++ programmer knows, the language has many powerful features,
 but this power brings with it complexity, which in turn can make code
@@ -41,7 +41,7 @@ restricted.
 Note that this guide is not a C++ tutorial: we assume that the reader is
 familiar with the language.
 
-## Header Files {#Header_Files}
+## Header Files
 
 In general, every `.cpp` file should have an associated `.h` file. There
 are some common exceptions, such as unit tests and small `.cpp` files
@@ -53,7 +53,7 @@ readability, size and performance of your code.
 The following rules will guide you through the various pitfalls of using
 header files.
 
-### The \#define Guard {#The__define_Guard}
+### The \#define Guard
 
 All header files should have `#define` guards to prevent multiple
 inclusion. The format of the symbol name should be
@@ -72,7 +72,7 @@ project `foo` should have the following guard:
 #endif  // FOO_BAR_BAZ_H_
 ```
 
-### Header File Dependencies {#Header_File_Dependencies}
+### Header File Dependencies
 
 Don\'t use an `#include` when a forward declaration would suffice.
 
@@ -121,7 +121,7 @@ transitively via headers not directly included. One exception is if
 `Foo` is used in `myfile.cpp`, it\'s ok to \#include (or
 forward-declare) `Foo` in `myfile.h`, instead of `myfile.cpp`.
 
-### Inline Functions {#Inline_Functions}
+### Inline Functions
 
 Define functions inline only when they are small, say, 10 lines or less.
 
@@ -163,7 +163,7 @@ inline. The main reason for making a virtual function inline is to place
 its definition in the class, either for convenience or to document its
 behavior, e.g., for accessors and mutators.
 
-### The -inl.h Files {#The_-inl.h_Files}
+### The -inl.h Files
 
 You may use file names with a `-inl.h` suffix to define complex inline
 functions when needed.
@@ -188,9 +188,9 @@ Another use of `-inl.h` files is for definitions of function templates.
 This can be used to keep your template definitions easy to read.
 
 Do not forget that a `-inl.h` file requires a [`#define`
-guard](#The__define_Guard) just like any other header file.
+guard](#the-define-guard) just like any other header file.
 
-### Function Parameter Ordering {#Function_Parameter_Ordering}
+### Function Parameter Ordering
 
 When defining a function, parameter order is: outputs, then inputs.
 
@@ -207,7 +207,7 @@ This is not a hard-and-fast rule. Parameters that are both input and
 output (often classes/structs) muddy the waters, and, as always,
 consistency with related functions may require you to bend the rule.
 
-### Names and Order of Includes {#Names_and_Order_of_Includes}
+### Names and Order of Includes
 
 Use standard order for readability and to avoid hidden dependencies:
 your project\'s public `.h`, your project\'s private `.h`, other
@@ -263,9 +263,9 @@ this:
         #include <vector>
 ```
 
-## Scoping {#Scoping}
+## Scoping
 
-### Namespaces {#Namespaces}
+### Namespaces
 
 Unnamed namespaces in `.cpp` files are encouraged. With named
 namespaces, choose the name based on the project, and possibly its path.
@@ -431,10 +431,10 @@ Named namespaces should be used as follows:
   aliases, as part of the general goal of keeping public APIs as small
   as possible.
 
-### Nested Classes {#Nested_Classes}
+### Nested Classes
 
 Although you may use public nested classes when they are part of an
-interface, consider a [namespace](#Namespaces) to keep declarations out
+interface, consider a [namespace](#namespaces) to keep declarations out
 of the global scope.
 
 **Definition:**
@@ -476,7 +476,7 @@ pointer will have to include the full class declaration for `Foo`.
 Do not make nested classes public unless they are actually part of the
 interface, e.g., a class that holds a set of options for some method.
 
-### Nonmember, Static Member, and Global Functions {#Nonmember,_Static_Member,_and_Global_Functions}
+### Nonmember, Static Member, and Global Functions
 
 Prefer nonmember functions within a namespace or static member functions
 to global functions; use completely global functions rarely.
@@ -500,7 +500,7 @@ bound to a class instance. Such a function can be either a static member
 or a nonmember function. Nonmember functions should not depend on
 external variables, and should nearly always exist in a namespace.
 Rather than creating classes only to group static member functions which
-do not share static data, use [namespaces](#Namespaces) instead.
+do not share static data, use [namespaces](#namespaces) instead.
 
 Functions defined in the same compilation unit as production classes may
 introduce unnecessary coupling and link-time dependencies when directly
@@ -509,10 +509,10 @@ particularly susceptible to this. Consider extracting a new class, or
 placing the functions in a namespace possibly in a separate library.
 
 If you must define a nonmember function and it is only needed in its
-`.cpp` file, use an unnamed [namespace](#Namespaces) or `static` linkage
+`.cpp` file, use an unnamed [namespace](#namespaces) or `static` linkage
 (eg `static int foo() {...}`) to limit its scope.
 
-### Local Variables {#Local_Variables}
+### Local Variables
 
 Place a function\'s variables in the narrowest scope possible, and
 initialize variables in the declaration.
@@ -524,7 +524,8 @@ declaration and see what type the variable is and what it was
 initialized to. In particular, initialization should be used instead of
 declaration and assignment, e.g.
 
-``` {.c++ .badcode}
+<!-- badcode -->
+```.c++
 int i;
 i = f();      // Bad -- initialization separate from declaration.
 ```
@@ -546,7 +547,8 @@ There is one caveat: if the variable is an object, its constructor is
 invoked every time it enters scope and is created, and its destructor is
 invoked every time it goes out of scope.
 
-``` {.c++ .badcode}
+<!-- badcode -->
+``` c++
 // Inefficient implementation:
 for (int i = 0; i < 1000000; ++i)
 {
@@ -566,13 +568,13 @@ for (int i = 0; i < 1000000; ++i)
 }
 ```
 
-## Classes {#Classes}
+## Classes
 
 Classes are the fundamental unit of code in C++. Naturally, we use them
 extensively. This section lists the main dos and don\'ts you should
 follow when writing a class.
 
-### Constructors {#Constructors}
+### Constructors
 
 The purpose of a constructor is to initialise a class so that its
 invariants hold. For value classes it is worth having a cheap default
@@ -605,7 +607,7 @@ The problems with doing work in constructors are:
 Constructors should not make virtual calls to functions, access
 potentially uninitialized global variables, etc.
 
-### Default Constructors {#Default_Constructors}
+### Default Constructors
 
 You must define a default constructor if your class defines member
 variables of POD types and has no other constructors. Otherwise the
@@ -644,7 +646,7 @@ If your class has value semantics then consider making the class
 invariants such that the default constructor is cheap. For example,
 initialising member pointers to `nullptr` and allocating on first use.
 
-### Explicit Constructors {#Explicit_Constructors}
+### Explicit Constructors
 
 Use the C++ keyword `explicit` for constructors with one argument.
 
@@ -678,7 +680,7 @@ allow them, should probably not be `explicit`. Classes that are intended
 to be transparent wrappers around other classes are also exceptions.
 Such exceptions should be clearly marked with comments.
 
-### Copy Constructors {#Copy_Constructors}
+### Copy Constructors
 
 Provide a copy constructor and assignment operator only when necessary.
 Otherwise, disable them with the help of `= delete;`.
@@ -723,7 +725,7 @@ both a copy constructor and assignment operator.
 If your class does not need a copy constructor or assignment operator,
 you must explicitly disable them.
 
-### Structs vs. Classes {#Structs_vs._Classes}
+### Structs vs. Classes
 
 Use a `struct` only for passive objects that carry data; everything else
 is a `class`.
@@ -746,7 +748,7 @@ doubt, make it a `class`.
 For consistency with STL, you can use `struct` instead of `class` for
 functors and traits.
 
-### Inheritance {#Inheritance}
+### Inheritance
 
 Composition is often more appropriate than inheritance. When using
 inheritance, make it `public`.
@@ -757,7 +759,7 @@ When a sub-class inherits from a base class, it includes the definitions
 of all the data and operations that the parent base class defines. In
 practice, inheritance is used in two major ways in C++: implementation
 inheritance, in which actual code is inherited by the child, and
-[interface inheritance](#Interfaces), in which only method names are
+[interface inheritance](#interfaces), in which only method names are
 inherited.
 
 **Pros:**
@@ -795,7 +797,7 @@ methods, its destructor should be virtual.
 
 Limit the use of `protected` to those member functions that might need
 to be accessed from subclasses. Note that [data members should be
-private](#Access_Control).
+private](#access-control).
 
 When redefining an inherited virtual method (both pure and non-pure),
 explicitly declare it `override` in the declaration of the derived
@@ -804,12 +806,12 @@ detect attempts to override methods that have been changed or completely
 removed. It also makes it straightforward for a reader to determine if a
 method is virtual or not.
 
-### Multiple Inheritance {#Multiple_Inheritance}
+### Multiple Inheritance
 
 Only very rarely is multiple inheritance of implementation actually
 useful. We allow multiple inheritance only when at most one of the base
 classes has an implementation; all other base classes must be
-[interface](#Interfaces) classes.
+[interface](#interfaces) classes.
 
 **Definition:**
 
@@ -820,7 +822,7 @@ those that have an *implementation*.
 **Pros:**
 
 Multiple implementation inheritance may let you re-use even more code
-than single inheritance (see [Inheritance](#Inheritance)).
+than single inheritance (see [Inheritance](#inheritance)).
 
 **Cons:**
 
@@ -832,9 +834,9 @@ solution.
 **Decision:**
 
 Multiple inheritance is allowed only when all superclasses, with the
-possible exception of the first one, are [interfaces](#Interfaces).
+possible exception of the first one, are [interfaces](#interfaces).
 
-### Interfaces {#Interfaces}
+### Interfaces
 
 Classes that satisfy certain conditions are interfaces.
 
@@ -857,7 +859,7 @@ virtual, or protected, destructor (in an exception to the first rule,
 this should not be pure). See Stroustrup, The C++ Programming Language,
 3rd edition, section 12.4 for details.
 
-### Operator Overloading {#Operator_Overloading}
+### Operator Overloading
 
 Overload operators where appropriate.
 
@@ -896,10 +898,10 @@ overloads unary `operator&`, it cannot safely be forward-declared.
 
 In general, do overload operators where appropriate.
 
-See also [Copy Constructors](#Copy_Constructors) and [Function
-Overloading](#Function_Overloading).
+See also [Copy Constructors](#copy-constructors) and [Function
+Overloading](#function-overloading).
 
-### Access Control {#Access_Control}
+### Access Control
 
 Make data members `private`, and provide access to them through accessor
 functions as needed (for technical reasons, we allow data members of a
@@ -911,10 +913,10 @@ need not be `private`.
 
 The definitions of accessors are usually inlined in the header file.
 
-See also [Inheritance](#Inheritance) and [Function
-Names](#Function_Names).
+See also [Inheritance](#inheritance) and [Function
+Names](#function-names).
 
-### Declaration Order {#Declaration_Order}
+### Declaration Order
 
 Use the specified order of declarations within a class: `public:` before
 `private:`, methods before data members (variables), etc.
@@ -936,17 +938,17 @@ following order:
 Friend declarations should always be in the private section, and the
 `DISALLOW_COPY_AND_ASSIGN` macro invocation should be at the end of the
 `private:` section. It should be the last thing in the class. See [Copy
-Constructors](#Copy_Constructors).
+Constructors](#copy-constructors).
 
 Method definitions in the corresponding `.cpp` file should be the same
 as the declaration order, as much as possible.
 
 Do not put large method definitions inline in the class definition.
 Usually, only trivial or performance-critical, and very short, methods
-may be defined inline. See [Inline Functions](#Inline_Functions) for
+may be defined inline. See [Inline Functions](#inline-functions) for
 more details.
 
-### Write Short Functions {#Write_Short_Functions}
+### Write Short Functions
 
 Prefer small and focused functions.
 
@@ -967,9 +969,9 @@ debug, or you want to use a piece of it in several different contexts,
 consider breaking up the function into smaller and more manageable
 pieces.
 
-## Other C++ Features {#Other_C++_Features}
+## Other C++ Features
 
-### Reference Arguments {#Reference_Arguments}
+### Reference Arguments
 
 Most parameters passed by reference should be labeled `const`.
 
@@ -1011,7 +1013,7 @@ this in comments as well. STL adapters such as `bind2nd` and `mem_fun`
 do not permit reference parameters, so you must declare functions with
 pointer parameters in these cases, too.
 
-### Function Overloading {#Function_Overloading}
+### Function Overloading
 
 Use overloaded functions (including constructors) only if a reader
 looking at a call site can get a good idea of what is happening without
@@ -1050,7 +1052,7 @@ If you want to overload a function, consider qualifying the name with
 some information about the arguments, e.g., `append_string()`,
 `AppendInt()` rather than just `append()`.
 
-### Default Arguments {#Default_Arguments}
+### Default Arguments
 
 We do not allow default function parameters, except in a few uncommon
 situations explained below.
@@ -1088,7 +1090,7 @@ string str_cat(AlphaNum const& a,
                AlphaNum const& d = gEmptyAlphaNum);
 ```
 
-### Variable-Length Arrays and alloca() {#Variable-Length_Arrays_and_alloca__}
+### Variable-Length Arrays and alloca()
 
 We do not allow variable-length arrays or `alloca()`.
 
@@ -1108,7 +1110,7 @@ my machine, but dies mysteriously in production\".
 
 Use a safe allocator instead, such as `unique_ptr`.
 
-### Friends {#Friends}
+### Friends
 
 We allow use of `friend` classes and functions, within reason.
 
@@ -1125,7 +1127,7 @@ In some cases this is better than making a member public when you want
 to give only one other class access to it. However, most classes should
 interact with other classes solely through their public members.
 
-### Casting {#Casting}
+### Casting
 
 Use C++ casts like `static_cast<>()`. Do not use other cast formats like
 `int y = (int)x;` or `int y = int(x);`.
@@ -1154,15 +1156,15 @@ Do not use C-style casts. Instead, use these C++-style casts.
   conversion, or when you need to explicitly up-cast a pointer from a
   class to its superclass.
 - Use `const_cast` to remove the `const` qualifier (see
-  [const](#Use_of_const)).
+  [const](#use-of-const)).
 - Use `reinterpret_cast` to do unsafe conversions of pointer types to
   and from integer and other pointer types. Use this only if you know
   what you are doing and you understand the aliasing issues.
 - Do not use `dynamic_cast` except in test code. If you need to know
   type information at runtime in this way outside of a unit test, you
-  probably have a [design flaw](#Run-Time_Type_Information__RTTI_).
+  probably have a [design flaw](#run-time-type-information-rtti).
 
-### Streams {#Streams}
+### Streams
 
 Use streams only for logging.
 
@@ -1246,7 +1248,7 @@ there is not a clearly superior solution. The simplicity doctrine
 mandates we settle on one of them though, and the majority decision was
 on `printf` + `read`/`write`.
 
-### Preincrement and Predecrement {#Preincrement_and_Predecrement}
+### Preincrement and Predecrement
 
 Use prefix form (`++i`) of the increment and decrement operators with
 iterators and other template objects.
@@ -1280,7 +1282,7 @@ For simple scalar (non-object) values there is no reason to prefer one
 form and we allow either. For iterators and other template types, use
 pre-increment.
 
-### Use of const {#Use_of_const}
+### Use of const
 
 We strongly recommend that you use `const` whenever it makes sense to do
 so.
@@ -1342,7 +1344,7 @@ We favor the form `int const* foo` to `const int* foo`. This keeps the
 That said, while we encourage putting `const` after the type, we do not
 require it. But be consistent with the code around you!
 
-### Integer Types {#Integer_Types}
+### Integer Types
 
 Use built-in C++ integer types, both signed and unsigned int. Use more
 specific types like `size_t` where appropriate. If a program needs a
@@ -1374,7 +1376,7 @@ like `size_t` and `ptrdiff_t`.
 
 For integers we know can be \"big\", use `int64_t`.
 
-### 64-bit Portability {#64-bit_Portability}
+### 64-bit Portability
 
 Code should be 64-bit and 32-bit friendly. Bear in mind problems of
 printing, comparisons, and structure alignment.
@@ -1448,7 +1450,7 @@ printing, comparisons, and structure alignment.
   `#ifdef _LP64` to choose between the code variants. (But please avoid
   this if possible, and keep any such changes localized.)
 
-### Preprocessor Macros {#Preprocessor_Macros}
+### Preprocessor Macros
 
 Be very cautious with macros. Prefer inline functions, enums, and
 `const` variables to macros.
@@ -1485,7 +1487,7 @@ use macros, follow it whenever possible:
   least document that behavior well.
 - Prefer not using `##` to generate function/class/variable names.
 
-### 0 and NULL {#0_and_NULL}
+### 0 and NULL
 
 Use `0` for integers, `0.0` for reals, `nullptr` for pointers, and
 `'\0'` for chars.
@@ -1515,7 +1517,8 @@ Struct data;
 memset(&data, 0, sizeof(data));
 ```
 
-``` {.c++ .badcode}
+<!-- badcode -->
+``` c++
 memset(&data, 0, sizeof(Struct));
 ```
 
@@ -1529,7 +1532,7 @@ C++11 is the current ISO C++ standard. It contains [significant
 changes](http://en.wikipedia.org/wiki/C%2B%2B0x) both to the language
 and libraries from the older standard.
 
-## Naming {#Naming}
+## Naming
 
 The most important consistency rules are those that govern naming. The
 style of a name immediately informs us what sort of thing the named
@@ -1542,7 +1545,7 @@ Naming rules are pretty arbitrary, but we feel that consistency is more
 important than individual preferences in this area, so regardless of
 whether you find them sensible or not, the rules are the rules.
 
-### General Naming Rules {#General_Naming_Rules}
+### General Naming Rules
 
 Function names, variable names, and filenames should be descriptive;
 eschew abbreviation. Types and variables should be nouns, while
@@ -1563,7 +1566,8 @@ int num_completed_connections;   // Good.
 Poorly-chosen names use ambiguous abbreviations or arbitrary characters
 that do not convey meaning:
 
-``` {.c++ .badcode}
+<!-- badcode -->
+``` c++
 int n;                           // Bad - meaningless.
 int nerr;                        // Bad - ambiguous abbreviation.
 int n_comp_conns;                // Bad - ambiguous abbreviation.
@@ -1575,7 +1579,7 @@ Type and variable names should typically be nouns: e.g., `FileOpener`,
 Function names should typically be imperative (that is they should be
 commands): e.g., `open_file()`, `set_num_errors()`. There is an
 exception for accessors, which, described more completely in [Function
-Names](#Function_Names), should be named the same as the variable they
+Names](#function-names), should be named the same as the variable they
 access.
 
 **Abbreviations**
@@ -1590,7 +1594,8 @@ int num_dns_connections;  // Most people know what "DNS" stands for.
 int price_count_reader;   // OK, price count. Makes sense.
 ```
 
-``` {.c++ .badcode}
+<!-- badcode -->
+``` c++
 // Bad!
 // Abbreviations can be confusing or ambiguous outside a small group.
 int wgc_connections;  // Only your group knows what this stands for.
@@ -1603,11 +1608,12 @@ Never abbreviate by leaving out letters:
 int error_count;  // Good.
 ```
 
-``` {.c++ .badcode}
+<!-- badcode -->
+``` c++
 int error_cnt;    // Bad.
 ```
 
-### File Names {#File_Names}
+### File Names
 
 Filenames should be all lowercase and can include underscores (`_`) or
 dashes (`-`). Follow the convention that your project uses. If there is
@@ -1642,9 +1648,9 @@ url_table.cpp     // The class definition.
 url_table-inl.h  // Inline functions that include lots of code.
 ```
 
-See also the section [-inl.h Files](#The_-inl.h_Files)
+See also the section [-inl.h Files](#the-inl-h-files)
 
-### Type Names {#Type_Names}
+### Type Names
 
 Type names start with a capital letter and have a capital letter for
 each new word, with no underscores: `MyExcitingClass`, `MyExcitingEnum`.
@@ -1667,7 +1673,7 @@ typedef hash_map<UrlTableProperties*, string> PropertiesMap;
 enum UrlTableErrors ...
 ```
 
-### Variable Names {#Variable_Names}
+### Variable Names
 
 Variable names are all lowercase, with underscores between words. Class
 member variables follow this convention. For instance:
@@ -1682,7 +1688,8 @@ string table_name;  // OK - uses underscore.
 string tablename;   // OK - all lowercase.
 ```
 
-``` {.c++ .badcode}
+<!-- badcode -->
+``` c++
 string tableName;   // Bad - mixed case.
 ```
 
@@ -1708,7 +1715,7 @@ struct UrlTableProperties
 }
 ```
 
-See [Structs vs. Classes](#Structs_vs._Classes) for a discussion of when
+See [Structs vs. Classes](#structs-vs-classes) for a discussion of when
 to use a struct versus a class.
 
 **Global Variables**
@@ -1717,7 +1724,7 @@ There are no special requirements for global variables, which should be
 rare in any case, but if you use one, consider prefixing it with `g_` or
 some other marker to easily distinguish it from local variables.
 
-### Constant Names {#Constant_Names}
+### Constant Names
 
 Name constants like other variables, using all lowercase, with
 underscores between words. `default_width`.
@@ -1730,7 +1737,7 @@ int const width{1024};
 int height{900};
 ```
 
-### Function Names {#Function_Names}
+### Function Names
 
 Regular functions, accessors, and mutators are all lowercase, with
 underscores between words.
@@ -1769,22 +1776,22 @@ private:
 };
 ```
 
-### Namespace Names {#Namespace_Names}
+### Namespace Names
 
 Namespace names are all lower-case, and based on project names and
 possibly their directory structure: `my_awesome_project`.
 
-See [Namespaces](#Namespaces) for a discussion of namespaces and how to
+See [Namespaces](#namespaces) for a discussion of namespaces and how to
 name them.
 
-### Enumerator Names {#Enumerator_Names}
+### Enumerator Names
 
 Enumerators should be named like [member
-variables](#Class_Data_Members): `out_of_memory`, enclosed within an
+variables](#class-data-members): `out_of_memory`, enclosed within an
 enum class.
 
 Preferably, the individual enumerators should be named like [class data
-members](#Class_Data_Members). The enumeration name, `UrlTableErrors`,
+members](#class-data-members). The enumeration name, `UrlTableErrors`,
 is a type, and therefore mixed case.
 
 ``` c++
@@ -1796,13 +1803,13 @@ enum class UrlTableErrors
 };
 ```
 
-### Macro Names {#Macro_Names}
+### Macro Names
 
-You\'re not really going to [define a macro](#Preprocessor_Macros), are
+You\'re not really going to [define a macro](#preprocessor-macros), are
 you? If you do, they\'re like this:
 `MY_MACRO_THAT_SCARES_SMALL_CHILDREN`.
 
-Please see the [description of macros](#Preprocessor_Macros); in general
+Please see the [description of macros](#preprocessor-macros); in general
 macros should *not* be used. However, if they are absolutely needed,
 then they should be named with all capitals and underscores.
 
@@ -1811,7 +1818,7 @@ then they should be named with all capitals and underscores.
 #define PI_ROUNDED 3.0
 ```
 
-### Exceptions to Naming Rules {#Exceptions_to_Naming_Rules}
+### Exceptions to Naming Rules
 
 If you are naming something that is analogous to an existing C or C++
 entity then you can follow the existing naming convention scheme.
@@ -1831,7 +1838,7 @@ entity then you can follow the existing naming convention scheme.
 `LONGLONG_MAX`
 :   a constant, as in `INT_MAX`
 
-## Comments {#Comments}
+## Comments
 
 Though a pain to write, comments are absolutely vital to keeping our
 code readable. The following rules describe what you should comment and
@@ -1844,7 +1851,7 @@ When writing your comments, write for your audience: the next
 contributor who will need to understand your code. Be generous --- the
 next one may be you!
 
-### Comment Style {#Comment_Style}
+### Comment Style
 
 Use either the `//` or `/* */` syntax, as long as you are consistent.
 
@@ -1852,7 +1859,7 @@ You can use either the `//` or the `/* */` syntax; however, `//` is
 *much* more common. Be consistent with how you comment and what style
 you use where.
 
-### File Comments {#File_Comments}
+### File Comments
 
 Start each file with a copyright notice, followed by a description of
 the contents of the file.
@@ -1889,7 +1896,7 @@ reading the `.h`, feel free to put it there instead, but mention in the
 Do not duplicate comments in both the `.h` and the `.cpp`. Duplicated
 comments diverge.
 
-### Class Comments {#Class_Comments}
+### Class Comments
 
 Every class definition should have an accompanying comment that
 describes what it is for and how it should be used.
@@ -1916,7 +1923,7 @@ Document the synchronization assumptions the class makes, if any. If an
 instance of the class can be accessed by multiple threads, take extra
 care to document the rules and invariants surrounding multithreaded use.
 
-### Function Comments {#Function_Comments}
+### Function Comments
 
 Declaration comments describe use of the function; comments at the
 definition of a function describe operation.
@@ -1996,7 +2003,7 @@ declaration, in the `.h` file or wherever. It\'s okay to recapitulate
 briefly what the function does, but the focus of the comments should be
 on how it does it.
 
-### Variable Comments {#Variable_Comments}
+### Variable Comments
 
 In general the actual name of the variable should be descriptive enough
 to give a good idea of what the variable is used for. In certain cases,
@@ -2027,7 +2034,7 @@ describing what they are and what they are used for. For example:
 const int number_of_test_cases = 6;
 ```
 
-### Implementation Comments {#Implementation_Comments}
+### Implementation Comments
 
 In your implementation you should have comments in tricky, non-obvious,
 interesting, or important parts of your code.
@@ -2085,7 +2092,8 @@ functions, you should consider adding a comment about what they are, or
 make your code self-documenting by using constants. For example,
 compare:
 
-``` {.c++ .badcode}
+<!-- badcode -->
+``` c++
 bool success = calculate_something(interesting_value,
                                    10,
                                    false,
@@ -2119,13 +2127,14 @@ Note that you should *never* describe the code itself. Assume that the
 person reading the code knows C++ better than you do, even though he or
 she does not know what you are trying to do:
 
-``` {.c++ .badcode}
+<!-- badcode -->
+``` c++
 // Now go through the b array and make sure that if i occurs,
 // the next element is i+1.
 ...        // Geez.  What a useless comment.
 ```
 
-### Punctuation, Spelling and Grammar {#Punctuation,_Spelling_and_Grammar}
+### Punctuation, Spelling and Grammar
 
 Pay attention to punctuation, spelling, and grammar; it is easier to
 read well-written comments than badly written ones.
@@ -2143,7 +2152,7 @@ important that source code maintain a high level of clarity and
 readability. Proper punctuation, spelling, and grammar help with that
 goal.
 
-### TODO Comments {#TODO_Comments}
+### TODO Comments
 
 Use `TODO` comments for code that is temporary, a short-term solution,
 or good-enough but not perfect.
@@ -2167,7 +2176,7 @@ sure that you either include a very specific date (\"Fix by November
 2005\") or a very specific event (\"Remove this code when all clients
 can handle XML responses.\").
 
-### Deprecation Comments {#Deprecation_Comments}
+### Deprecation Comments
 
 Mark deprecated interface points with `DEPRECATED` comments.
 
@@ -2192,7 +2201,7 @@ the new interface point instead. If you cannot understand the
 directions, find the person who created the deprecation and ask them for
 help using the new interface point.
 
-## Formatting {#Formatting}
+## Formatting
 
 Coding style and formatting are pretty arbitrary, but a project is much
 easier to follow if everyone uses the same style. Individuals may not
@@ -2201,7 +2210,7 @@ may take some getting used to, but it is important that all project
 contributors follow the style rules so that they can all read and
 understand everyone\'s code easily.
 
-### Line Length {#Line_Length}
+### Line Length
 
 Each line of text in your code should be at most 120 characters long.
 
@@ -2230,7 +2239,7 @@ longer lines.
 
 120 characters is the maximum.
 
-### Non-ASCII Characters {#Non-ASCII_Characters}
+### Non-ASCII Characters
 
 Non-ASCII characters should be rare, and must use UTF-8 formatting.
 
@@ -2247,14 +2256,14 @@ where it enhances readability --- for example, `"\xEF\xBB\xBF"` is the
 Unicode zero-width no-break space character, which would be invisible if
 included in the source as straight UTF-8.
 
-### Spaces vs. Tabs {#Spaces_vs._Tabs}
+### Spaces vs. Tabs
 
 Use only spaces, and indent 4 spaces at a time.
 
 We use spaces for indentation. Do not use tabs in your code. You should
 set your editor to emit spaces when you hit the tab key.
 
-### Function Declarations and Definitions {#Function_Declarations_and_Definitions}
+### Function Declarations and Definitions
 
 `void` or `auto` on the same line as function name, parameters and
 return type on the same line if they fit.
@@ -2355,13 +2364,14 @@ public:
 void Circle::rotate(double /*radians*/) {}
 ```
 
-``` {.c++ .badcode}
+<!-- badcode -->
+``` c++
 // Bad - if someone wants to implement later, it's not clear what the
 // variable means.
 void Circle::rotate(double) {}
 ```
 
-### Function Calls {#Function_Calls}
+### Function Calls
 
 On one line if it fits; otherwise, wrap arguments at the parenthesis.
 
@@ -2392,7 +2402,7 @@ bool retval = do_something(
     argument4);
 ```
 
-### Conditionals {#Conditionals}
+### Conditionals
 
 Prefer no spaces inside parentheses. The `else` keyword belongs on a new
 line.
@@ -2411,7 +2421,8 @@ else  // The else goes on a new line.
 Note that in all cases you must have a space between the `if` and the
 open parenthesis.
 
-``` {.c++ .badcode}
+<!-- badcode -->
+``` c++
 if(condition)     // Bad - space missing after IF.
 ```
 
@@ -2430,7 +2441,8 @@ if (x == bar) return new Bar();
 
 This is not allowed when the if statement has an `else`:
 
-``` {.c++ .badcode}
+<!-- badcode -->
+``` c++
 // Not allowed - IF statement on one line when there is an ELSE clause
 if (x) do_this();
 else do_that();
@@ -2446,7 +2458,8 @@ if (condition)
 }
 ```
 
-``` {.c++ .badcode}
+<!-- badcode -->
+``` c++
 // Not allowed - single line IF statements without curly braces
 if (condition)
     foo;
@@ -2457,7 +2470,7 @@ else
     bar;
 ```
 
-### Loops and Switch Statements {#Loops_and_Switch_Statements}
+### Loops and Switch Statements
 
 Switch statements may use braces for blocks. Empty loop bodies should
 use `{}` or `continue`.
@@ -2499,11 +2512,12 @@ for (int i = 0; i < some_number_with_descriptive_name; ++i) {}  // Good - empty 
 while (condition) continue;  // Good - continue indicates no logic.
 ```
 
-``` {.c++ .badcode}
+<!-- badcode -->
+``` c++
 while (condition);  // Bad - looks like part of do/while loop.
 ```
 
-### Pointer and Reference Expressions {#Pointer_and_Reference_Expressions}
+### Pointer and Reference Expressions
 
 No spaces around period or arrow. Pointer operators do not have trailing
 spaces.
@@ -2533,7 +2547,8 @@ char* c;
 string const& str;
 ```
 
-``` {.c++ .badcode}
+<!-- badcode -->
+``` c++
 char * c;  // Bad - spaces on both sides of *
 char *c ;  // Bad - * next to variable name
 string const & str;  // Bad - spaces on both sides of &
@@ -2542,10 +2557,10 @@ string const & str;  // Bad - spaces on both sides of &
 You should do this consistently within a single file, so, when modifying
 an existing file, use the style in that file.
 
-### Boolean Expressions {#Boolean_Expressions}
+### Boolean Expressions
 
 When you have a boolean expression that is longer than the [standard
-line length](#Line_Length), be consistent in how you break up the lines.
+line length](#line-length), be consistent in how you break up the lines.
 
 In this example, the logical AND operator is always at the end of the
 lines:
@@ -2566,7 +2581,7 @@ readability when used appropriately. Also note that you should always
 use the punctuation operators, such as `&&` and `~`, rather than the
 word operators, such as `and` and `compl`.
 
-### Return Values {#Return_Values}
+### Return Values
 
 Do not needlessly surround the `return` expression with parentheses.
 
@@ -2579,12 +2594,13 @@ return (some_long_condition &&  // Parentheses ok to make a complex
         another_condition);     //     expression more readable.
 ```
 
-``` {.c++ .badcode}
+<!-- badcode -->
+``` c++
 return (value);                // You wouldn't write var = (value);
 return(result);                // return is not a function!
 ```
 
-### Variable and Array Initialization {#Variable_and_Array_Initialization}
+### Variable and Array Initialization
 
 Use `{}`.
 
@@ -2601,7 +2617,7 @@ You may choose between `=` and `()`; the following are all correct:
     char* p=new char [5]{}; // all five chars are initialized to '\0'   
 ```
 
-### Preprocessor Directives {#Preprocessor_Directives}
+### Preprocessor Directives
 
 The hash mark that starts a preprocessor directive should always be at
 the beginning of the line.
@@ -2623,7 +2639,8 @@ if (lopsided_score)
 }
 ```
 
-``` {.c++ .badcode}
+<!-- badcode -->
+``` c++
 // Bad - indented directives
 if (lopsided_score) 
 {
@@ -2634,12 +2651,12 @@ if (lopsided_score)
 }
 ```
 
-### Class Format {#Class_Format}
+### Class Format
 
 Sections in `public`, `protected` and `private` order.
 
 The basic format for a class declaration (lacking the comments, see
-[Class Comments](#Class_Comments) for a discussion of what comments are
+[Class Comments](#class-comments) for a discussion of what comments are
 needed) is:
 
 ``` c++
@@ -2676,10 +2693,10 @@ Things to note:
 - Do not leave a blank line after these keywords.
 - The `public` section should be first, followed by the `protected` and
   finally the `private` section.
-- See [Declaration Order](#Declaration_Order) for rules on ordering
+- See [Declaration Order](#declaration-order) for rules on ordering
   declarations within each of these sections.
 
-### Constructor Initializer Lists {#Constructor_Initializer_Lists}
+### Constructor Initializer Lists
 
 Constructor initializer lists can be all on one line or with subsequent
 lines indented four spaces.
@@ -2721,11 +2738,11 @@ MyClass::MyClass(int var)
 }
 ```
 
-### Namespace Formatting {#Namespace_Formatting}
+### Namespace Formatting
 
 The contents of namespaces are not indented.
 
-[Namespaces](#Namespaces) do not add an extra level of indentation. For
+[Namespaces](#namespaces) do not add an extra level of indentation. For
 example, use:
 
 ``` c++
@@ -2742,7 +2759,8 @@ void foo()  // Correct.  No extra indentation within namespace.
 
 Do not indent within a namespace:
 
-``` {.c++ .badcode}
+<!-- badcode -->
+``` c++
 namespace
 {
 
@@ -2765,7 +2783,7 @@ namespace bar
 {
 ```
 
-### Horizontal Whitespace {#Horizontal_Whitespace}
+### Horizontal Whitespace
 
 Use of horizontal whitespace depends on location. Never put trailing
 whitespace at the end of a line.
@@ -2820,7 +2838,7 @@ set<list<string>> x;        // C++11 now allows >> to close templates.
 set<list<string> > x;       // Older C++ requiree a space in > >, and is allowed.
 ```
 
-### Vertical Whitespace {#Vertical_Whitespace}
+### Vertical Whitespace
 
 Minimize use of vertical whitespace but apply it to enhance readability.
 
@@ -2843,12 +2861,12 @@ Some rules of thumb to help when blank lines may be useful:
 - Blank lines inside a chain of if-else blocks may well help
   readability.
 
-## Exceptions to the Rules {#Exceptions_to_the_Rules}
+## Exceptions to the Rules
 
 The coding conventions described above are mandatory. However, like all
 good rules, these sometimes have exceptions, which we discuss here.
 
-### Existing Non-conformant Code {#Existing_Non-conformant_Code}
+### Existing Non-conformant Code
 
 You may diverge from the rules when dealing with code that does not
 conform to this style guide.
