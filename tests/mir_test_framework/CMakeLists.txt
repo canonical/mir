@@ -68,6 +68,7 @@ target_link_libraries(mir-public-test-framework
     mircore
   PRIVATE
     PkgConfig::UMOCKDEV
+    PkgConfig::LIBINPUT
 )
 
 set_property(

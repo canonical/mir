@@ -36,6 +36,8 @@ target_link_libraries(mir-protected-test-doubles
     mirplatform
     mircommon
     mircore
+
+    PkgConfig::LIBINPUT
 )
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
