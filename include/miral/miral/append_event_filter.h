@@ -29,18 +29,15 @@ namespace miral
 /// Appends an event filter to the Mir server event pipeline.
 ///
 /// Filters are processed in order. This filter is appended **after** any existing filters,
-/// including those provided by [miral::WindowManagementPolicy].
+/// including those provided by `miral::WindowManagementPolicy`.
 ///
 /// An event is passed to this filter only if no earlier filter has already handled it.
 ///
-/// See also:
-/// - AppendKeyboardEventFilter - a specialized event filter which only filters keyboard events
-///
-/// \sa AppendKeyboardEventFilter
+/// \sa AppendKeyboardEventFilter- a specialized event filter which only filters keyboard events
 class AppendEventFilter
 {
 public:
-    /// Constructs a new filter wrapper using the provided `filter` function.
+    /// Constructs a new event filter wrapper using the provided `filter` function.
     ///
     /// \param filter A function that returns `true` if it handled the event.
     ///               Returning `true` prevents later filters from seeing the event.
