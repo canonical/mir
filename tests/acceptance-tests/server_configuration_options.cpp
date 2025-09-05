@@ -119,7 +119,7 @@ TEST_F(ServerConfigurationOptions, unknown_command_line_options_are_passed_to_ha
     const int argc = 7;
     char const* argv[argc] = {
         __PRETTY_FUNCTION__,
-        "--enable-input", "no",
+        "--compositor-report", "off",
         "--hello",
         "world",
         "--answer", "42"

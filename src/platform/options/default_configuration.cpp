@@ -27,7 +27,6 @@
 namespace mo = mir::options;
 
 char const* const mo::arw_server_socket_opt       = "arw-file";
-char const* const mo::enable_input_opt            = "enable-input,i";
 char const* const mo::compositor_report_opt       = "compositor-report";
 char const* const mo::display_report_opt          = "display-report";
 char const* const mo::scene_report_opt            = "scene-report";
@@ -67,11 +66,6 @@ char const* const mo::auto_console = "auto";
 char const* const mo::vt_option_name = "vt";
 char const* const mo::vt_switching_option_name = "vt-switching";
 
-
-namespace
-{
-bool const enable_input_default        = true;
-}
 
 mo::DefaultConfiguration::DefaultConfiguration(int argc, char const* argv[]) :
     DefaultConfiguration(argc, argv, std::string{})
@@ -153,8 +147,6 @@ mo::DefaultConfiguration::DefaultConfiguration(
             "Library to use for platform input support (default: input-stub.so)")
         (platform_path, po::value<std::string>()->default_value(MIR_SERVER_PLATFORM_PATH),
             "Directory to look for platform libraries (default: " MIR_SERVER_PLATFORM_PATH ")")
-        (enable_input_opt, po::value<bool>()->default_value(enable_input_default),
-            "Enable input.")
         (compositor_report_opt, po::value<std::string>()->default_value(off_opt_value),
             "Compositor reporting [{log,lttng,off}]")
         (display_report_opt, po::value<std::string>()->default_value(off_opt_value),

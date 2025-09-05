@@ -124,11 +124,7 @@ mir::DefaultServerConfiguration::the_input_targeter()
     return input_targeter(
         [this]() -> std::shared_ptr<msh::InputTargeter>
         {
-            auto const options = the_options();
-            if (!options->get<bool>(options::enable_input_opt))
-                return std::make_shared<mi::NullInputTargeter>();
-            else
-                return the_surface_input_dispatcher();
+            return the_surface_input_dispatcher();
         });
 }
 
@@ -254,29 +250,20 @@ mir::DefaultServerConfiguration::the_input_manager()
         [this]() -> std::shared_ptr<mi::InputManager>
         {
             auto const options = the_options();
-            bool input_opt = options->get<bool>(options::enable_input_opt);
+            auto const emergency_cleanup = the_emergency_cleanup();
+            auto const device_registry = the_input_device_registry();
+            auto const input_report = the_input_report();
 
-            if (!input_opt)
-            {
-                return std::make_shared<mi::NullInputManager>();
-            }
-            else
-            {
-                auto const emergency_cleanup = the_emergency_cleanup();
-                auto const device_registry = the_input_device_registry();
-                auto const input_report = the_input_report();
+            auto platform = probe_input_platforms(
+                *options,
+                emergency_cleanup,
+                device_registry,
+                the_console_services(),
+                input_report,
+                the_platform_libaries(),
+                *the_shared_library_prober_report());
 
-                auto platform = probe_input_platforms(
-                    *options,
-                    emergency_cleanup,
-                    device_registry,
-                    the_console_services(),
-                    input_report,
-                    the_platform_libaries(),
-                    *the_shared_library_prober_report());
-
-                return std::make_shared<mi::DefaultInputManager>(the_input_reading_multiplexer(), std::move(platform));
-            }
+            return std::make_shared<mi::DefaultInputManager>(the_input_reading_multiplexer(), std::move(platform));
         }
     );
 }
