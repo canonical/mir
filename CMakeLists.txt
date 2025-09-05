@@ -301,7 +301,6 @@ add_subdirectory(src/)
 include_directories(${MIR_GENERATED_INCLUDE_DIRECTORIES})
 
 add_subdirectory(examples/)
-add_subdirectory(guides/)
 add_subdirectory(cmake/)
 
 if (MIR_ENABLE_TESTS)

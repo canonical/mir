@@ -51,7 +51,6 @@ build:
       fi
     post_install:
     - cmake -DMIR_ENABLE_TESTS=NO -DMIR_PLATFORM=x11 .
-    - cmake --build . --target guides
 
 # Build documentation in the docs/ directory with Sphinx
 sphinx:
