@@ -1,20 +1,24 @@
 
 classDiagram
-    Compositor --> Scene: Get renderables
+    namespace platforms {
+        class DisplayPlatform
+        class RenderingPlatform
+        class InputPlatform
+    }
+
+    DisplayPlatform --> mirplatform
+    RenderingPlatform --> mirplatform
+    InputPlatform --> mirplatform
+
+    Seat <-- InputDispatcher: Sends events to
+    FrontendXWayland --> Shell: Makes request to
+    FrontendWayland --> Shell: Makes requests to
+    Seat --> Shell: Sends events to
+
     Compositor --> Display: Get outputs
+    Shell --> Scene: Updates
+    Compositor --> Scene: Get renderables
+
+    InputDispatcher <-- InputPlatform: Sends events to
     Compositor --> RenderingPlatform: Handles rendering
     Compositor --> DisplayPlatform: Outputs image to
-    Shell --> miral: Get shell behavior
-    Shell --> Scene: Updates
-    InputDispatcher <-- InputPlatform: Sends events to
-    Seat <-- InputDispatcher: Sends events to
-    Seat --> Shell: Sends events to
-    FrontendWayland --> Shell: Makes requests to
-    FrontendXWayland --> Shell: Makes request to
-    Scene o-- IdleHub
-    Scene o-- Clipboard
-    Scene o-- SceneChangeNotifiers
-
-
-    %%Server --> Core
-    %%Server --> Common
