@@ -36,7 +36,7 @@ template<class Observer>
 class ObserverRegistrar;
 
 namespace compositor { class Compositor; class DisplayBufferCompositorFactory; class CompositorReport; class ScreenShooterFactory; class Scene; }
-namespace graphics { class Cursor; class DisplayPlatform; class RenderingPlatform; class Display; class GLConfig; class DisplayConfigurationPolicy; class DisplayConfigurationObserver; class GraphicBufferAllocator; class CursorImage; class OutputFilter; }
+namespace graphics { class Cursor; class DisplayPlatform; class RenderingPlatform; class Display; class GLConfig; class DisplayConfigurationPolicy; class DisplayConfigurationObserver; class GraphicBufferAllocator; class CursorImage; class OutputFilter; class AnimationDriver; }
 namespace input { class CompositeEventFilter; class InputDispatcher; class CursorObserverMultiplexer; class CursorImages; class TouchVisualizer; class InputDeviceHub; class InputDeviceRegistry;}
 namespace logging { class Logger; }
 namespace options { class Option; }
@@ -459,6 +459,9 @@ public:
 
     auto the_accessibility_manager() const ->
         std::shared_ptr<shell::AccessibilityManager>;
+
+    auto the_animation_driver() const ->
+        std::shared_ptr<graphics::AnimationDriver>;
 /** @} */
 
 /** @name Client side support

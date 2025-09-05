@@ -139,7 +139,8 @@ mgx::Display::Display(
             x11_resources->conn->connection(),
             *window,
             this->egl,
-            configuration->extents());
+            configuration->extents(),
+            report);
         top_left.x += as_delta(configuration->extents().size.width);
         outputs.push_back(std::make_unique<OutputInfo>(
             this,
