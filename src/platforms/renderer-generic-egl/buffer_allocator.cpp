@@ -334,7 +334,7 @@ class EGLOutputSurface : public mg::gl::OutputSurface
 {
 public:
     EGLOutputSurface(
-        std::unique_ptr<mg::GenericEGLDisplayAllocator::EGLFramebuffer> fb)
+        std::unique_ptr<mg::GenericEGLDisplayAllocator::EGLBuffer> fb)
         : fb{std::move(fb)}
     {
     }
@@ -353,7 +353,7 @@ public:
         fb->release_current();
     }
 
-    auto commit() -> std::unique_ptr<mg::Framebuffer> override
+    auto commit() -> std::unique_ptr<mg::Buffer> override
     {
         return fb->clone_handle();
     }
@@ -369,7 +369,7 @@ public:
     }
 
 private:
-    std::unique_ptr<mg::GenericEGLDisplayAllocator::EGLFramebuffer> const fb;
+    std::unique_ptr<mg::GenericEGLDisplayAllocator::EGLBuffer> const fb;
 };
 }
 
@@ -416,7 +416,7 @@ auto mge::GLRenderingProvider::surface_for_sink(
 {
     if (auto egl_display = sink.acquire_compatible_allocator<GenericEGLDisplayAllocator>())
     {
-        return std::make_unique<EGLOutputSurface>(egl_display->alloc_framebuffer(config, ctx));
+        return std::make_unique<EGLOutputSurface>(egl_display->alloc_buffer(config, ctx));
     }
     auto cpu_provider = sink.acquire_compatible_allocator<CPUAddressableDisplayAllocator>();
 
@@ -431,17 +431,17 @@ auto mge::GLRenderingProvider::make_framebuffer_provider(DisplaySink& /*sink*/)
     -> std::unique_ptr<FramebufferProvider>
 {
     // TODO: Work out under what circumstances the EGL renderer *can* provide overlayable framebuffers
-    class NullFramebufferProvider : public FramebufferProvider
+    class DefaultFramebufferProvider : public FramebufferProvider
     {
     public:
-        auto buffer_to_framebuffer(std::shared_ptr<Buffer>) -> std::unique_ptr<Framebuffer> override
+        auto buffer_to_framebuffer(std::shared_ptr<Buffer> buf) -> std::unique_ptr<Framebuffer> override
         {
             // It is safe to return nullptr; this will be treated as “this buffer cannot be used as
             // a framebuffer”.
-            return {};
+            return buf->to_framebuffer();
         }
     };
-    return std::make_unique<NullFramebufferProvider>();
+    return std::make_unique<DefaultFramebufferProvider>();
 }
 
 mge::GLRenderingProvider::GLRenderingProvider(

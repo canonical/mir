@@ -76,7 +76,7 @@ private:
     class Allocator;
     std::unique_ptr<Allocator> egl_allocator;
 
-    std::shared_ptr<helpers::Framebuffer> next_frame;
+    std::shared_ptr<helpers::Buffer> next_frame;
     geometry::Rectangle area;
     geometry::Size in_pixels;
     glm::mat2 transform;

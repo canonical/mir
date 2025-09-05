@@ -70,7 +70,7 @@ private:
     EGLSurface egl_surface{EGL_NO_SURFACE};
 };
 
-class mgw::WlDisplayAllocator::Framebuffer::EGLState
+class mgw::WlDisplayAllocator::Buffer::EGLState
 {
 public:
     EGLState(EGLDisplay dpy, EGLContext ctx, EGLSurface surf, std::shared_ptr<SurfaceState> ss)
@@ -119,6 +119,22 @@ public:
             BOOST_THROW_EXCEPTION((mg::egl_error("eglSwapBuffers failed")));
         }
     }
+    
+    MirPixelFormat format() const
+    {
+        EGLint texture_format = -1;
+        eglQuerySurface(dpy, surf, EGL_TEXTURE_FORMAT, &texture_format);
+        
+        switch(texture_format)
+        {
+            case EGL_TEXTURE_RGB:
+                return mir_pixel_format_rgb_888;
+            case EGL_TEXTURE_RGBA:
+                return mir_pixel_format_argb_8888;
+            default:
+                return mir_pixel_format_invalid;
+        }
+    }
 
     EGLDisplay const dpy;
     EGLContext const ctx;
@@ -126,46 +142,61 @@ public:
     std::shared_ptr<SurfaceState> const ss;
 };
 
-mgw::WlDisplayAllocator::Framebuffer::Framebuffer(
+mgw::WlDisplayAllocator::Buffer::Buffer(
     EGLDisplay dpy, EGLContext ctx, EGLSurface surf, std::shared_ptr<SurfaceState> ss, mir::geometry::Size size) :
-    Framebuffer{std::make_shared<EGLState>(dpy, ctx, surf, ss), size}
+    Buffer{std::make_shared<EGLState>(dpy, ctx, surf, ss), size}
 {
 }
 
-mgw::WlDisplayAllocator::Framebuffer::Framebuffer(std::shared_ptr<EGLState const> state, geom::Size size)
+mgw::WlDisplayAllocator::Buffer::Buffer(std::shared_ptr<EGLState const> state, geom::Size size)
     : state{std::move(state)}, size_{size}
 {
 }
 
-mgw::WlDisplayAllocator::Framebuffer::Framebuffer(Framebuffer const& that)
+mgw::WlDisplayAllocator::Buffer::Buffer(Buffer const& that)
     : state{that.state},
       size_{that.size_}
 {
 }
 
-auto mgw::WlDisplayAllocator::Framebuffer::size() const -> geom::Size
+auto mgw::WlDisplayAllocator::Buffer::id() const -> BufferID
+{
+    return BufferID{static_cast<uint32_t>(reinterpret_cast<uintptr_t>(state->surf))};
+}
+
+auto mgw::WlDisplayAllocator::Buffer::size() const -> geom::Size
 {
     return size_;
 }
 
-void mgw::WlDisplayAllocator::Framebuffer::make_current()
+auto mgw::WlDisplayAllocator::Buffer::pixel_format() const -> MirPixelFormat
+{
+    return state->format();
+}
+
+void mgw::WlDisplayAllocator::Buffer::make_current()
 {
     state->make_current();
 }
 
-void mgw::WlDisplayAllocator::Framebuffer::release_current()
+void mgw::WlDisplayAllocator::Buffer::release_current()
 {
     state->release_current();
 }
 
-void mgw::WlDisplayAllocator::Framebuffer::swap_buffers()
+void mgw::WlDisplayAllocator::Buffer::swap_buffers()
 {
     state->swap_buffers();
 }
 
-auto mgw::WlDisplayAllocator::Framebuffer::clone_handle() -> std::unique_ptr<mg::GenericEGLDisplayAllocator::EGLFramebuffer>
+auto mgw::WlDisplayAllocator::Buffer::clone_handle() -> std::unique_ptr<mg::GenericEGLDisplayAllocator::EGLBuffer>
 {
-    return std::unique_ptr<mg::GenericEGLDisplayAllocator::EGLFramebuffer>{new Framebuffer(*this)};
+    return std::unique_ptr<mg::GenericEGLDisplayAllocator::EGLBuffer>{new Buffer(*this)};
+}
+
+auto mgw::WlDisplayAllocator::Buffer::to_framebuffer() -> std::unique_ptr<mg::Framebuffer>
+{
+    return std::make_unique<mgw::WlDisplayAllocator::Framebuffer>(new Buffer(*this));
 }
 
 mgw::WlDisplayAllocator::WlDisplayAllocator(
@@ -182,9 +213,9 @@ mgw::WlDisplayAllocator::~WlDisplayAllocator()
 {
 }
 
-auto mgw::WlDisplayAllocator::alloc_framebuffer(
+auto mgw::WlDisplayAllocator::alloc_buffer(
     GLConfig const& config,
-    EGLContext share_context) -> std::unique_ptr<EGLFramebuffer>
+    EGLContext share_context) -> std::unique_ptr<EGLBuffer>
 {
     EGLint const config_attr[] = {
         EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
@@ -221,7 +252,7 @@ auto mgw::WlDisplayAllocator::alloc_framebuffer(
 
     auto surface = surface_state->surface(egl_config);
 
-    return std::make_unique<Framebuffer>(dpy, egl_context, surface, surface_state, size);
+    return std::make_unique<Buffer>(dpy, egl_context, surface, surface_state, size);
 }
 
 mgw::WlDisplayProvider::WlDisplayProvider(EGLDisplay dpy)

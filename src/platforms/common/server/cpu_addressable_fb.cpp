@@ -26,7 +26,7 @@
 
 namespace mg = mir::graphics;
 
-class mg::CPUAddressableFB::Buffer : public mir::renderer::software::RWMappableBuffer
+class mg::CPUAddressableBuffer::Buffer : public mir::renderer::software::RWMappableBuffer
 {
     template<typename T>
     class Mapping : public mir::renderer::software::Mapping<T>
@@ -246,57 +246,85 @@ private:
     size_t const size_;
 };
 
-mg::CPUAddressableFB::CPUAddressableFB(
+struct mg::CPUAddressableBuffer::FBHandle : public mg::FBHandle
+{
+    FBHandle(std::shared_ptr<State> state) :
+        state{state}
+    {
+    }
+
+    auto size() const -> geometry::Size override
+    {
+        return state->buffer->size();
+    }
+
+    operator uint32_t() const override
+    {
+        return state->fb_id;
+    }
+
+    std::shared_ptr<State> const state;
+};
+
+mg::CPUAddressableBuffer::CPUAddressableBuffer(
     mir::Fd const& drm_fd,
     bool supports_modifiers,
     DRMFormat format,
     mir::geometry::Size const& size)
-    : CPUAddressableFB(drm_fd, supports_modifiers, format, Buffer::create_kms_dumb_buffer(drm_fd, format, size))
+    : CPUAddressableBuffer(drm_fd, supports_modifiers, format, Buffer::create_kms_dumb_buffer(drm_fd, format, size))
 {
 }
 
-mg::CPUAddressableFB::~CPUAddressableFB()
-{
-    drmModeRmFB(drm_fd, fb_id);
-}
-
-mg::CPUAddressableFB::CPUAddressableFB(
-    mir::Fd drm_fd,
-    bool supports_modifiers,
-    DRMFormat format,
-    std::unique_ptr<Buffer> buffer)
-    : drm_fd{std::move(drm_fd)},
-      fb_id{fb_id_for_buffer(this->drm_fd, supports_modifiers, format, *buffer)},
-      buffer{std::move(buffer)}
+mg::CPUAddressableBuffer::CPUAddressableBuffer(
+    mir::Fd drm_fd, bool supports_modifiers, DRMFormat format, std::unique_ptr<Buffer> buffer) :
+    state{std::make_shared<State>(
+        fb_id_for_buffer(drm_fd, supports_modifiers, format, *buffer), std::move(drm_fd), std::move(buffer))}
 {
 }
 
-auto mg::CPUAddressableFB::map_writeable() -> std::unique_ptr<mir::renderer::software::Mapping<unsigned char>>
+auto mg::CPUAddressableBuffer::map_writeable() -> std::unique_ptr<mir::renderer::software::Mapping<unsigned char>>
 {
-    return buffer->map_writeable();
+    return state->buffer->map_writeable();
 }
 
-auto mg::CPUAddressableFB::format() const -> MirPixelFormat
+auto mg::CPUAddressableBuffer::format() const -> MirPixelFormat
 {
-    return buffer->format();
+    return state->buffer->format();
 }
 
-auto mg::CPUAddressableFB::stride() const -> geometry::Stride
+auto mg::CPUAddressableBuffer::stride() const -> geometry::Stride
 {
-    return buffer->stride();
+    return state->buffer->stride();
 }
 
-auto mg::CPUAddressableFB::size() const -> geometry::Size
+auto mg::CPUAddressableBuffer::size() const -> geometry::Size
 {
-    return buffer->size();
+    return state->buffer->size();
 }
 
-mg::CPUAddressableFB::operator uint32_t() const
+mir::graphics::BufferID mir::graphics::CPUAddressableBuffer::id() const
 {
-    return fb_id;
+    return BufferID{state->fb_id};
 }
 
-auto mg::CPUAddressableFB::fb_id_for_buffer(
+MirPixelFormat mir::graphics::CPUAddressableBuffer::pixel_format() const
+{
+    return format();
+}
+
+auto mir::graphics::CPUAddressableBuffer::to_framebuffer() -> std::unique_ptr<Framebuffer>
+{
+    // The buffer is later casted down to `mg::FBHandle` in the various
+    // implementations of `DisplaySink::overlay`
+    return make_unique<FBHandle>(state);
+}
+
+auto mir::graphics::CPUAddressableBuffer::to_fb_handle() -> std::unique_ptr<mg::FBHandle>
+{
+    return make_unique<FBHandle>(state);
+}
+
+auto mg::CPUAddressableBuffer::fb_id_for_buffer(
     mir::Fd const &drm_fd,
     bool supports_modifiers,
     DRMFormat format,
@@ -350,3 +378,9 @@ auto mg::CPUAddressableFB::fb_id_for_buffer(
     }
     return fb_id;
 }
+
+mir::graphics::CPUAddressableBuffer::State::~State()
+{
+    drmModeRmFB(drm_fd, fb_id);
+}
+
