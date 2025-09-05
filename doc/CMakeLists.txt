@@ -3,8 +3,15 @@ add_custom_target(doc-setup
     BYPRODUCTS ${CMAKE_SOURCE_DIR}/doc/sphinx/.sphinx/venv
 )
 
+# The difference between the `VAR=<value> make <target>` and `make <target>
+# VAR=<value>` is the the former passes the variable down to child processes of
+# make. In this case, sphinx. Which is then read back when `conf.py` is
+# executed to determine where the build directory is to read doxygen's output.
+# The later only overrides variables in the makefile.
 add_custom_target(doc
-    COMMAND ${CMAKE_COMMAND} -E env "MIR_CMAKE_BUILD_DIR=${CMAKE_BINARY_DIR}" make -C ${CMAKE_SOURCE_DIR}/doc/sphinx html
+    COMMAND ${CMAKE_COMMAND} -E env "MIR_CMAKE_BUILD_DIR=${CMAKE_BINARY_DIR}" 
+            make -C ${CMAKE_SOURCE_DIR}/doc/sphinx html 
+            BUILDDIR=${CMAKE_CURRENT_BINARY_DIR}/sphinx/_build
     DEPENDS ${CMAKE_SOURCE_DIR}/doc/sphinx/.sphinx/venv
     BYPRODUCTS ${CMAKE_SOURCE_DIR}/doc/sphinx/_build
 )
@@ -14,7 +21,9 @@ add_custom_target(doc-with-api
 )
 
 add_custom_target(doc-serve
-    COMMAND ${CMAKE_COMMAND} -E env "MIR_CMAKE_BUILD_DIR=${CMAKE_BINARY_DIR}" make -C ${CMAKE_SOURCE_DIR}/doc/sphinx serve
+    COMMAND ${CMAKE_COMMAND} -E env "MIR_CMAKE_BUILD_DIR=${CMAKE_BINARY_DIR}" 
+            make -C ${CMAKE_SOURCE_DIR}/doc/sphinx serve
+            BUILDDIR=${CMAKE_CURRENT_BINARY_DIR}/sphinx/_build
     USES_TERMINAL
 )
 
