@@ -31,7 +31,7 @@ jobs:
         gpg_private_key: ${{ secrets.MIR_BOT_GPG_PRIVATE_KEY }}
 
     - name: Check out code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       with:
         # Need full history for version determination
         fetch-depth: 0
