@@ -336,7 +336,7 @@ doxyfile_contents = read_doxyfile(cmake_build_dir / 'doc/sphinx/Doxyfile')
 exhale_args = {
     # These arguments are required
     "containmentFolder": "./api",
-    "rootFileName": "library_root.rst",
+    "rootFileName": "EXCLUDE",
     "doxygenStripFromPath": "..",
     # Heavily encouraged optional argument (see docs)
     "rootFileTitle": "Mir API",
