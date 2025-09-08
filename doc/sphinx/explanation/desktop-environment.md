@@ -11,8 +11,9 @@ In the following, example implementations are taken from downstream projects:
 
 Project | Description
    --   |   --
-[Miriway](https://github.com/Miriway/Miriway)|Miriway is a generic compositor using Mir that can be customised to serve the needs of a range of desktop environments
+[miracle-wm](https://github.com/miracle-wm-org/miracle-wm)|a Wayland compositor based on Mir. It features a tiling window manager at its core, very much in the style of i3 and sway
 [Ubuntu Frame](https://github.com/canonical/ubuntu-frame)|A simple fullscreen shell used for kiosks, industrial displays, digital signage, smart mirrors, etc.
+[Miriway](https://github.com/Miriway/Miriway)|Miriway is a generic compositor using Mir that can be customised to serve the needs of a range of desktop environments
 
 ## Wayland extensions
 
@@ -35,41 +36,18 @@ intended for clients that meet some trust criteria.
 
 In your compositor you can enable access to the privileged Wayland 
 extensions using the `miral::WaylandExtensions` APIs. There is an example
-of this in _Miriway_.
+of this in miracle-wm.
 
 ```c++
-    // Change the default Wayland extensions to:
-    //  1. to enable screen capture; and,
-    //  2. to allow pointer confinement (used by, for example, games)
-    // Because we prioritise `user_preference()` these can be disabled by the configuration
-    WaylandExtensions extensions;
-    for (auto const& protocol : {
-        WaylandExtensions::zwlr_screencopy_manager_v1,
-        WaylandExtensions::zxdg_output_manager_v1,
-        "zwp_idle_inhibit_manager_v1",
-        "zwp_pointer_constraints_v1",
-        "zwp_relative_pointer_manager_v1"})
-    {
-        extensions.conditionally_enable(protocol, [&](WaylandExtensions::EnableInfo const& info)
-            {
-                return info.user_preference().value_or(true);
-            });
-    }
-...
-    // Protocols we're reserving for shell components_option
-    for (auto const& protocol : {
-        WaylandExtensions::zwlr_layer_shell_v1,
-        WaylandExtensions::zwlr_foreign_toplevel_manager_v1})
-    {
-        child_control.enable_for_shell(extensions, protocol);
-    }
-
-    ConfigurationOption shell_extension{
-        [&](std::vector<std::string> const& protocols)
-        { for (auto const& protocol : protocols) child_control.enable_for_shell(extensions, protocol); },
-    "shell-add-wayland-extension",
-    "Additional Wayland extension to allow shell processes (may be specified multiple times)"};
-
+    WaylandExtensions wayland_extensions = WaylandExtensions {}
+                                               .enable(WaylandExtensions::zwlr_layer_shell_v1)
+                                               .enable(WaylandExtensions::zwlr_foreign_toplevel_manager_v1)
+                                               .enable(WaylandExtensions::zxdg_output_manager_v1)
+                                               .enable(WaylandExtensions::zwp_virtual_keyboard_manager_v1)
+                                               .enable(WaylandExtensions::zwlr_virtual_pointer_manager_v1)
+                                               .enable(WaylandExtensions::zwp_input_method_manager_v2)
+                                               .enable(WaylandExtensions::zwlr_screencopy_manager_v1)
+                                               .enable(WaylandExtensions::ext_session_lock_manager_v1);
 ```
 
 ### Identifying clients to "qualify" them to use privileged extensions
@@ -77,6 +55,7 @@ of this in _Miriway_.
 It is up to you how you identify the clients with access to Privileged Wayland 
 extensions. But there is prior art:
 
+#### In Ubuntu Frame
 In Ubuntu Frame, AppArmor is queried to identify the snap that contains the 
 client and checks that against a list of trusted snaps:
 
@@ -86,7 +65,17 @@ client and checks that against a list of trusted snaps:
         ...
 ```
 
+#### In Miriway
 In Miriway, trusted "shell components" have to be `fork()/exec()`d 
-by Miriway, and are identified by PID. There's a `shell-component` 
-configuration option to allow these to be specified by the Desktop
-Environment using Miriway.
+by Miriway, and are identified by PID, this is handled by 
+`miriway::ChildControl`:  
+
+```c++
+void miriway::ChildControl::enable_for_shell(WaylandExtensions& extensions, std::string const& protocol)
+{
+    extensions.conditionally_enable(protocol, self->enable_for_shell_pids);
+}
+```
+
+In addition, There's a `shell-component` configuration option to allow 
+these programs to be specified by a Desktop Environment using Miriway.
