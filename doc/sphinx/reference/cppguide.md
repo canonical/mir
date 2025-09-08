@@ -1518,7 +1518,7 @@ memset(&data, 0, sizeof(data));
 memset(&data, 0, sizeof(Struct));
 ```
 
-### 
+### C++11
 
 Use C++11 features wherever appropriate.
 
