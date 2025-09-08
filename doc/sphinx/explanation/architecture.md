@@ -7,24 +7,24 @@ This document is intended to provide contributors to *Mir* an overview of *Mir*'
 ## APIs for compositor authors
 **Diagram**: A diagram showing the relationships between the different libraries in Mir.
 
-```{mermaid} high_level_diagram.mmd
+```{mermaid} architecture.mmd
 ```
 
 *Mir* provides compositor authors with a set of libraries that they can use to build Wayland based shells. These libraries are:
 
 Library | Description
 --      | --
-*miral*|The most commonly used library is **miral**. `miral` (the "*Mir* Abstraction Layer") is an API that makes *Mir* easy for compositor authors to work with. It provides core window management concepts and an interface that is more ABI stable than Mir's internal API. While `miral` is built on the [*Mir* engine](#the-mir-engine), compositor authors are encouraged to only interact with the high-level `miral` library.
-*mirwayland*|Compositor authors may want to define their own wayland protocol extensions in addition to the ones that the core *Mir* implementation defines. The `mirwayland` library satisfies this requirement. This library may be used in conjunction with either `miral` or `miroil`.
-*miroil*|a custom library for the [Lomiri](https://lomiri.com/) folks. It is like `miral` in that it provides an abstraction over the [*Mir* engine](#the-mir-engine). However, most compositor authors will not interact with `miroil`.
+*miral*|The most commonly used library is **miral** (the "*Mir* Abstraction Layer"). This provides an API that makes *Mir* easy for compositor authors to work with. It provides core window management concepts and an interface that is more ABI stable than Mir's internal APIs.
+*mirwayland*|Compositor authors may want to define their own wayland protocol extensions in addition to the ones that the core *Mir* implementation defines. The **mirwayland** library satisfies this requirement. This library may be used in conjunction with either `miral` or `miroil`.
+*miroil*|A custom library for the [Lomiri](https://lomiri.com/) folks. It is like **miral** in that it provides an abstraction over Mir's internal APIs. _Other compositor authors should not need to interact with **miroil**._
 
-## The Mir engine
-**Diagram**: A class diagram showing the relationships between the different components of Mir server.
+## The "engine" - mirserver 
+The **mirserver** library is the core implementation of *Mir*. It serves as the engine for both `miral` and `miroil`. This library does the heavy-lifting for the compositor and, as a result, is the largest piece of *Mir*. This section will explain the primary concepts that drive the engine.
+
+**Diagram**: A class diagram showing the relationships between the different components of **mirserver**.
 
 ```{mermaid} mirserver.mmd
 ```
-
-The **mirserver** library is the core implementation of *Mir*. It serves as the engine for both `miral` and `miroil`. This library does the heavy-lifting for the compositor and, as a result, is the largest piece of *Mir*. This section will explain the primary concepts that drive the engine.
 
 ### Core Concepts
 At the heart of `mirserver` are two interfaces: the **Shell** and the **Scene**. The `Shell` is responsible for fielding requests from the rest system. The `Shell` modifies the state of the `Scene` to reflect the requested changes.
@@ -61,5 +61,6 @@ Library | Description
 --      | --
 *mircore*|Fundamental data concepts, like file descriptors and rectangles. These data structures tend not to be *Mir*-specific.
 *mircommon*|*Mir*-specific data concepts like *Mir* event building, logging, and timing utilities.
+*mirplatform*|*Mir* platform-specific data concepts
 
 There is a full list of Mir libraries in {ref}`Libraries <explanation-libraries>`
