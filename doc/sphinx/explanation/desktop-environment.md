@@ -5,7 +5,19 @@ Environment typically has launchers, panels, integration with the system
 greeter and other services.
 
 Mir can help you build a compositor, but these other elements need to come
-from elsewhere. And they need to be integrated with your compositor.
+from elsewhere. And they need to be integrated with your compositor:
+
+* Most of the integration with visible elements of the Desktop Environment will
+be done using Wayland extension protocols, and that is covered in the next 
+section.
+
+* To some extent integration with XDG desktop portals is also based on Wayland
+protocol extensions. But running a portal implementation as part of your 
+Desktop environment needs some "magic".
+(See: [How To Enable Screencasting](../how-to/how-to-enable-screencasting.md))
+
+* For your Desktop Environment to show up in the greeter at login it needs to
+be listed in a `.desktop` file under `/usr/share/wayland-sessions/`.
 
 In the following, example implementations are taken from downstream projects:
 
@@ -20,7 +32,11 @@ Project | Description
 The communication between the compositor and other programs is substantially
 through Wayland extension protocols. Each extension protocol addresses a 
 specific interaction: drawing a window, cut-and-paste, panel placement, 
-and so on.  
+and so on.
+
+If, for example, you have a panel that docks to one edge of the screen, then it
+should use the `zwlr_layer_shell_v1` Wayland extension. But you also need to 
+ensure that your compositor allows the panel client to use that extension.
 
 ### Bespoke Wayland extensions
 
