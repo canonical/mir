@@ -29,11 +29,10 @@ class Window;
 /// Provides information about a #miral::Application and its associated
 /// list of #miral::Window objects.
 ///
-/// An instance of this class may be obtained from
-/// #miral::WindowManagerTools::info_for(Application).
+/// An instance of this class may be obtained from #miral::WindowManagerTools::info_for(std::weak_ptr<mir::scene::Session> const&) .
 ///
 /// \sa miral::Application - the class for which this class provides information
-/// \sa miral::WindowManagerTools::info_for(Application) - the function to obtain an instance of this class
+/// \sa miral::WindowManagerTools::info_for(std::weak_ptr<mir::scene::Session> const&) - the function to obtain an instance of this class
 struct ApplicationInfo
 {
     /// Constructs a new application info without a backing #miral::Application.
@@ -65,7 +64,7 @@ struct ApplicationInfo
 
     /// Retrieve the user data set for this application.
     ///
-    /// Window manager authors may set this payload with
+    /// Compositor authors may set this payload with
     /// #miral::ApplicationInfo::userdata(std::shared_ptr<void>).
     ///
     /// \returns The user data set by the compositor author, and nullptr
@@ -74,7 +73,7 @@ struct ApplicationInfo
 
     /// Set the arbitrary user data payload for this application.
     ///
-    /// This can be used by the window manager author to store information
+    /// This can be used by the compositor author to store information
     /// specific to their use case.
     ///
     /// This payload can be retrieved later via #miral::ApplicationInfo::userdata().
