@@ -28,6 +28,7 @@ csd
 CSD
 Ctrl
 CursorScale
+dbgsym
 debian
 deps
 devel

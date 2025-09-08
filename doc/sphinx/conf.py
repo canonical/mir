@@ -116,7 +116,7 @@ html_context = {
     # "sequential_nav": "both",
     "display_contributors": False,
 
-    # Required for feedback button    
+    # Required for feedback button
     'github_issues': 'enabled',
 }
 
@@ -291,6 +291,8 @@ if os.path.exists('./reuse/substitutions.yaml'):
 intersphinx_mapping = {
     'starter-pack': ('https://canonical-example-product-documentation.readthedocs-hosted.com/en/latest', None),
     'checkbox': ("https://canonical-checkbox.readthedocs-hosted.com/latest/", None),
+    'server': ('https://documentation.ubuntu.com/server/', None),
+    'snapcraft': ('https://documentation.ubuntu.com/snapcraft/stable/', None),
 }
 
 ############################################################
