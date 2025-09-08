@@ -62,8 +62,7 @@ void add_graphics_platform_options(boost::program_options::options_description& 
          boost::program_options::value<std::vector<std::string>>()
             ->multitoken(),
          "Colon separated list of outputs to use. "
-         "Dimensions are in the form WIDTHxHEIGHT, e.g. 1920x1080:3840x2160. "
-         "Only applicable when using the mir:virtual platform.");
+         "Dimensions are in the form WIDTHxHEIGHT, e.g. 1920x1080:3840x2160.");
 }
 
 auto probe_display_platform(

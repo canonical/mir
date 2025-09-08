@@ -87,8 +87,7 @@ void add_graphics_platform_options(boost::program_options::options_description& 
     config.add_options()
         (bypass_option_name,
          boost::program_options::value<bool>()->default_value(false),
-         "Enable bypass optimization for fullscreen surfaces. "
-         "Only applicable when using the mir:atomic-kms platform.");
+         "Enable bypass optimization for fullscreen surfaces.");
     mga::Quirks::add_quirks_option(config);
 }
 
