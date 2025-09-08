@@ -311,7 +311,7 @@ int main(int argc, char const* argv[])
             ConfigureDecorations{},
             pre_init(ConfigurationOption{[&](bool is_set)
                     { focus_stealing_prevention = to_focus_stealing(is_set); },
-                    "focus-stealing-prevention", "Prevent focus stealing.", false}),
+                    "focus-stealing-prevention", "Prevent newly opened windows from taking keyboard focus from an active window.", false}),
             window_managers,
             display_configuration_options,
             external_client_launcher,
