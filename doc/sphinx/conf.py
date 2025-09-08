@@ -289,7 +289,8 @@ if os.path.exists('./reuse/substitutions.yaml'):
 # Add configuration for intersphinx mapping
 
 intersphinx_mapping = {
-    'starter-pack': ('https://canonical-example-product-documentation.readthedocs-hosted.com/en/latest', None)
+    'starter-pack': ('https://canonical-example-product-documentation.readthedocs-hosted.com/en/latest', None),
+    'checkbox': ("https://canonical-checkbox.readthedocs-hosted.com/latest/", None),
 }
 
 ############################################################
