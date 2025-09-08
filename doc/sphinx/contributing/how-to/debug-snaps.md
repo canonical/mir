@@ -7,7 +7,7 @@ This document describes the steps required to supply the debugger with the neces
 
 ## Debuginfod
 
-The biggest help is provided by Debuginfod, a service that hosts all the debug info stripped from Ubuntu packages.
+The biggest help is provided by Debuginfod, a service that hosts the debug info stripped from Ubuntu packages.
 Debuggers can retrieve those by `build-id` embedded in the executables and libraries on demand.
 In modern Ubuntu it's done by default, but to enable it, you just need to export the right environment:
 
