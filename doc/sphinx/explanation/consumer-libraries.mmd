@@ -1,0 +1,12 @@
+classDiagram
+    miral --> mircore
+    mircommon --> mircore
+    mirwayland --> mircore
+    miral -->mircommon
+    mirwayland --> mircommon
+
+    Compositor --> miral
+    Compositor --> mirwayland
+
+    class miral["miral (main APIs)"]
+    class mirwayland["mirwayland (Extension APIs)"]
