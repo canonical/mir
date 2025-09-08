@@ -181,7 +181,8 @@ redirects = {
 # A regex list of URLs that are ignored by 'make linkcheck'
 linkcheck_ignore = [
     "http://127.0.0.1:8000",
-    "how-to/getting_involved_in_mir"
+    "how-to/getting_involved_in_mir",
+    "https://www.mail-archive.com",
     ]
 
 
