@@ -1,5 +1,6 @@
 abi
 ABI
+Accessors
 adapter
 AppArmor
 appfinder
@@ -22,6 +23,7 @@ codebase
 Codecov
 CompositorAuthor
 config
+const
 coreXX
 CRTC
 csd
@@ -52,6 +54,7 @@ EGLStreams
 egmde
 EndToEnd
 enablement
+Enums
 etnaviv
 Etnaviv
 evdi
@@ -66,6 +69,7 @@ fullscreen
 gbm
 GC
 gcc
+gflags
 github
 Github
 gl
@@ -139,6 +143,7 @@ orchestrator
 OutputFilter
 ppa
 PPAs
+pre
 preload
 preselects
 prober
@@ -174,6 +179,7 @@ SpinnerSplash
 ssd
 SSD
 StickyKeys
+subclassed
 subgraph
 subprocess
 swaybg
@@ -191,6 +197,7 @@ Tooltip
 tracepoint
 tracepoints
 TSan
+Typedefs
 UBports
 ubuntu
 udev
