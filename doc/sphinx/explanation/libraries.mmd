@@ -4,34 +4,32 @@ classDiagram
     miral --> mircore
     miroil --> mircore
     mirserver --> mircore
-    input_X --> mircore
-    display_X --> mircore
-    rendering_X --> mircore
-
-    mirserver --> mirplatform
-    input_X --> mirplatform
-    display_X --> mirplatform
-    rendering_X --> mirplatform
+    input~X~ --> mircore
+    display~X~ --> mircore
+    rendering~X~ --> mircore
 
     mirwayland --> mircommon
     mirserver --> mircommon
     miral --> mircommon
     miroil --> mircommon
-    input_X --> mircommon
-    display_X --> mircommon
-    rendering_X --> mircommon
+    mirplatform --> mircommon
 
     mirserver --> mirwayland
 
-    mirserver --> input_X: dynamically loads
-    mirserver --> display_X: dynamically loads
-    mirserver --> rendering_X: dynamically loads
+    mirserver --> mirplatform
+    input~X~ --> mirplatform
+    display~X~ --> mirplatform
+    rendering~X~ --> mirplatform
+
+    mirserver --> input~X~: dynamically loads
+    mirserver --> display~X~: dynamically loads
+    mirserver --> rendering~X~: dynamically loads
 
     miral --> mirserver
     miroil --> mirserver
 
     namespace platform {
-        class input_X
-        class display_X
-        class rendering_X
+        class input~X~
+        class display~X~
+        class rendering~X~
     }
