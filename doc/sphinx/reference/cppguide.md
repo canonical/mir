@@ -326,9 +326,8 @@ Use namespaces according to the policy described below.
 Named namespaces should be used as follows:
 
 - Namespaces wrap the entire source file after includes,
-  [gflags](http://google-gflags.googlecode.com/)
-  definitions/declarations, and forward declarations of classes from
-  other namespaces:
+  [gflags](https://github.com/gflags/gflags) definitions/declarations,
+  and forward declarations of classes from other namespaces:
 
   ``` c++
   // In the .h file
@@ -905,7 +904,7 @@ Overloading](#function-overloading).
 Make data members `private`, and provide access to them through accessor
 functions as needed (for technical reasons, we allow data members of a
 test fixture class to be `protected` when using [Google
-Test](http://code.google.com/p/googletest/)). Typically a variable would
+Test](https://github.com/google/googletest)). Typically a variable would
 be called `foo` and the accessor function `get_foo()`. You may also want
 a mutator function `set_foo()`. Exception: `static const` data members
 need not be `private`.
@@ -1526,7 +1525,7 @@ Use C++11 features wherever appropriate.
 **Definition:**
 
 C++11 is the current ISO C++ standard. It contains [significant
-changes](http://en.wikipedia.org/wiki/C%2B%2B0x) both to the language
+changes](https://en.wikipedia.org/wiki/C%2B%2B11) both to the language
 and libraries from the older standard.
 
 ## Naming
