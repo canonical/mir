@@ -1,0 +1,26 @@
+# Recommended workflow:
+# - `git add --verbose --patch` to stage changes
+# - `git commit` to commit them
+# - rinse and repeat, if pre-commit wants / applied changes
+
+files: ^doc/sphinx
+exclude: ^doc/sphinx/(\..*|Makefile|conf\.py)
+
+repos:
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v6.0.0
+  hooks:
+  - id: trailing-whitespace
+  - id: end-of-file-fixer
+  - id: check-added-large-files
+
+- repo: https://github.com/executablebooks/mdformat
+  rev: 0.7.22
+  hooks:
+  - id: mdformat
+    additional_dependencies:
+    - mdformat-black
+    - mdformat-beautysh
+    - mdformat-gfm
+    - mdformat-myst
+    - setuptools # Necessary until beautysh fix their stuff, see: https://github.com/hukkin/mdformat/issues/442

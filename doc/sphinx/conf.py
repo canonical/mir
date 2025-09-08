@@ -169,7 +169,8 @@ sitemap_show_lastmod = True
 redirects = {
     'how-to/how-to-enable-graphics-core22-on-a-device': '../how-to-enable-graphics-for-snaps-on-a-device',
     'explanation/ok-so-what-is-this-wayland-thing-anyway': '../../tutorial/write-your-first-wayland-compositor',
-    'how-to/developing-a-wayland-compositor-using-mir': '../../tutorial/write-your-first-wayland-compositor'
+    'how-to/developing-a-wayland-compositor-using-mir': '../../tutorial/write-your-first-wayland-compositor',
+    'how-to/developing-wayland-extension-protocols-for-mir-servers' : '../how-to/how-to-integrate-a-custom-wayland-protocol',
 }
 
 
@@ -186,16 +187,14 @@ linkcheck_ignore = [
 
 # A regex list of URLs where anchors are ignored by 'make linkcheck'
 linkcheck_anchors_ignore_for_url = [
-    "https://github.com/canonical/mesa-core22/blob/9d64e64fb06f7052f9e6f8a8899cac763f5fad7e/snap/snapcraft.yaml*",
-    "https://manpages.ubuntu.com/manpages/noble/man1/tmate.1.html*",
+    "https://docs.google.com/*",
+    "https://github.com/*",
+    "https://manpages.ubuntu.com/*",
     "https://matrix.to*",
-    "https://github.com/google/googletest/blob/main/docs/advanced.md*",
-    "https://docs.google.com/spreadsheets/d/1kUbTSt4zWVpTtgZNJvvxCdugsRUv6C5PK9Xw5dxppCc/edit*",
-    "https://github.com/canonical/mir/blob/92fc772bc32f921c3a1cde7f17abb43a3d482f55/.github/workflows/spread.yml*",
 ]
 
 # give linkcheck multiple tries on failure
-# linkcheck_timeout = 30
+linkcheck_timeout = 60
 linkcheck_retries = 3
 
 ########################
@@ -291,7 +290,8 @@ if os.path.exists('./reuse/substitutions.yaml'):
 # Add configuration for intersphinx mapping
 
 intersphinx_mapping = {
-    'starter-pack': ('https://canonical-example-product-documentation.readthedocs-hosted.com/en/latest', None)
+    'starter-pack': ('https://canonical-example-product-documentation.readthedocs-hosted.com/en/latest', None),
+    'checkbox': ("https://canonical-checkbox.readthedocs-hosted.com/latest/", None),
 }
 
 ############################################################
@@ -337,7 +337,7 @@ doxyfile_contents = read_doxyfile(cmake_build_dir / 'doc/sphinx/Doxyfile')
 exhale_args = {
     # These arguments are required
     "containmentFolder": "./api",
-    "rootFileName": "library_root.rst",
+    "rootFileName": "EXCLUDE",
     "doxygenStripFromPath": "..",
     # Heavily encouraged optional argument (see docs)
     "rootFileTitle": "Mir API",

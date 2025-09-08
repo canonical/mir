@@ -5,7 +5,7 @@ pipeline.
 
 ## Overview
 
-There are a number of components to this story, and a diagram might make for a good overview:
+**Diagram**: A flowchart depicting the steps in the Mir continuous integration process.
 
 ```{mermaid} continuous-integration.mmd
 ```
@@ -133,7 +133,7 @@ These tests ultimately verify the full story end-to-end, installing the snaps on
 Ubuntu versions (Core and classic alike) and verify behaviors and visuals through a number of
 scenarios.
 
-It's a somewhat complex web of things happening, so again a diagram might help
+**Diagram**: A flowchart depicting the end-to-end testing process for Mir.
 
 ```{mermaid} end-to-end-testing.mmd
 ```

@@ -20,6 +20,7 @@ CONFIRM_SUDO    ?= N
 VALE_CONFIG     = $(SPHINXDIR)/vale.ini
 SPHINX_HOST     ?= 127.0.0.1
 SPHINX_PORT     ?= 8000
+PROJECT_ROOT    ?= $(shell readlink -f ../../)
 
 # Put it first so that "make" without argument is like "make help".
 help:
@@ -105,6 +106,12 @@ linkcheck: install
 	. $(VENV) ; $(SPHINXBUILD) -b linkcheck "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) || { grep --color -F "[broken]" "$(BUILDDIR)/output.txt"; exit 1; }
 	exit 0
 
+linkcheck-with-dependencies: install
+	sudo add-apt-repository --yes ppa:mir-team/dev
+	sudo apt-get --yes build-dep $(PROJECT_ROOT)
+	. $(VENV); cmake -DMIR_ENABLE_TESTS=NO -DMIR_PLATFORM=x11 "$(PROJECT_ROOT)" -B "$(PROJECT_ROOT)"
+	@$(MAKE) linkcheck
+
 pa11y: pa11y-install html
 	find $(BUILDDIR) -name *.html -print0 | xargs -n 1 -0 $(PA11Y)
 
@@ -177,10 +184,6 @@ allmetrics: html
 
 update: install
 	@. $(VENV); .sphinx/update_sp.py
-
-# TODO: Make sure that the rest of the PR works, then remove this and the linkcheck workflow workaround!
-noop-target:
-	exit 0
 
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
