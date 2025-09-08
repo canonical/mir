@@ -29,10 +29,10 @@ class Window;
 /// Provides information about a #miral::Application and its associated
 /// list of #miral::Window objects.
 ///
-/// An instance of this class may be obtained from #miral::WindowManagerTools::info_for(std::weak_ptr<mir::scene::Session> const&) .
+/// An instance of this class may be obtained from #miral::WindowManagerTools::info_for.
 ///
 /// \sa miral::Application - the class for which this class provides information
-/// \sa miral::WindowManagerTools::info_for(std::weak_ptr<mir::scene::Session> const&) - the function to obtain an instance of this class
+/// \sa miral::WindowManagerTools::info_for - the method to obtain an instance of this class
 struct ApplicationInfo
 {
     /// Constructs a new application info without a backing #miral::Application.
