@@ -222,12 +222,11 @@ project\'s source directory without use of UNIX directory shortcuts `.`
 #include "base/logging.h"
 ```
 
-In `dir/foo`{.variable}`.cpp` or `dir/foo_test`{.variable}`.cpp`, whose
-main purpose is to implement or test the stuff in
-`dir2/foo2`{.variable}`.h`, order your includes as follows:
+In `dir/foo.cpp` or `dir/foo_test.cpp`, whose main purpose is to
+implement or test the stuff in `dir2/foo2.h`, order your includes as
+follows:
 
-1.  `dir2/foo2`{.variable}`.h` (preferred location --- see details
-    below).
+1.  `dir2/foo2.h` (preferred location --- see details below).
 2.  Your project\'s public `.h` files.
 3.  Your project\'s private `.h` files.
 4.  Other libraries\' `.h` files.
@@ -239,9 +238,9 @@ file to be compilable on its own. The easiest way to achieve this is to
 make sure that every one of them is the first `.h` file `#include`d in
 some `.cpp`.
 
-`dir/foo`{.variable}`.cpp` and `dir2/foo2`{.variable}`.h` are often in
-the same directory (e.g. `base/test_basictypes.cpp` and
-`base/basictypes.h`), but can be in different directories too.
+`dir/foo.cpp` and `dir2/foo2.h` are often in the same directory (e.g.
+`base/test_basictypes.cpp` and `base/basictypes.h`), but can be in
+different directories too.
 
 Within each section it is nice to order the includes alphabetically.
 
@@ -525,7 +524,7 @@ initialized to. In particular, initialization should be used instead of
 declaration and assignment, e.g.
 
 <!-- badcode -->
-```.c++
+``` c++
 int i;
 i = f();      // Bad -- initialization separate from declaration.
 ```
@@ -1503,14 +1502,12 @@ readable.
 
 ### sizeof
 
-Use `sizeof(``varname`{.variable}`)` instead of
-`sizeof(``type`{.variable}`)` whenever possible.
+Use `sizeof(varname)` instead of `sizeof(type)` whenever possible.
 
-Use `sizeof(``varname`{.variable}`)` because it will update
-appropriately if the type of the variable changes.
-`sizeof(``type`{.variable}`)` may make sense in some cases, but should
-generally be avoided because it can fall out of sync if the variable\'s
-type changes.
+Use `sizeof(varname)` because it will update appropriately if the type
+of the variable changes. `sizeof(type)` may make sense in some cases,
+but should generally be avoided because it can fall out of sync if the
+variable\'s type changes.
 
 ``` c++
 Struct data;
