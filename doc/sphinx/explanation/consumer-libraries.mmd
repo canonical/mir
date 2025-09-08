@@ -2,16 +2,11 @@ classDiagram
     miral --> mircore
     mircommon --> mircore
     mirwayland --> mircore
-    miroil --> mircore
     miral -->mircommon
     mirwayland --> mircommon
-    miroil --> mircommon
 
     Compositor --> miral
     Compositor --> mirwayland
-    Compositor --> miroil
 
     class miral["miral (main APIs)"]
     class mirwayland["mirwayland (Extension APIs)"]
-    class miroil["(miroil)"]
-    note for miroil "Compatibility library for Lomiri (only)"
