@@ -249,17 +249,17 @@ For example, the includes in
 this:
 
 ``` c++
-        #include "foo/public/fooserver.h"  // Preferred location.
+#include "foo/public/fooserver.h"  // Preferred location.
 
-    #include "base/basictypes.h"
-        #include "base/commandlineflags.h"
-        #include "foo/public/bar.h"
+#include "base/basictypes.h"
+#include "base/commandlineflags.h"
+#include "foo/public/bar.h"
 
-        #include <sys/types.h>
-        #include <unistd.h>
+#include <sys/types.h>
+#include <unistd.h>
 
-        #include <hash_map>
-        #include <vector>
+#include <hash_map>
+#include <vector>
 ```
 
 ## Scoping
