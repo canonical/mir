@@ -21,7 +21,6 @@ are prefixed with `MIR_SERVER_` and contain underscores ('_') instead of dashes
 |MIR_SERVER_COMPOSITOR_REPORT            | --compositor-report            | log,lttng |
 |MIR_SERVER_DISPLAY_REPORT               | --display-report               | log,lttng |
 |MIR_SERVER_INPUT_REPORT                 | --input-report                 | log,lttng |
-|MIR_SERVER_LEGACY_INPUT_REPORT          | --legacy-input-report          | log       |
 |MIR_SERVER_SEAT_REPORT                  | --seat-report                  | log       |
 |MIR_SERVER_SCENE_REPORT                 | --scene-report                 | log,lttng |
 |MIR_SERVER_SHARED_LIBRARY_PROBER_REPORT | --shared-library-prober-report | log,lttng |
