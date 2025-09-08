@@ -33,7 +33,7 @@ namespace miral
 ///
 /// An event is passed to this filter only if no earlier filter has already handled it.
 ///
-/// \sa #AppendKeyboardEventFilter - a specialized event filter which only filters keyboard events
+/// \sa AppendKeyboardEventFilter - a specialized event filter which only filters keyboard events
 class AppendEventFilter
 {
 public:

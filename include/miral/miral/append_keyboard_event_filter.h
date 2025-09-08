@@ -33,8 +33,8 @@ namespace miral
 ///
 /// An event is passed to this filter only if no earlier filter has already handled it.
 ///
-/// \sa #miral::WindowManagementPolicy - the keyboard event handler for the window management policy.
-/// \sa #AppendEventFilter - add a filter for any event, not just keyboards
+/// \sa miral::WindowManagementPolicy - the keyboard event handler for the window management policy.
+/// \sa AppendEventFilter - add a filter for any event, not just keyboards
 ///
 /// \remark Since MirAL 5.5
 class AppendKeyboardEventFilter
