@@ -74,7 +74,7 @@ pa11y-install:
 		}
 
 pymarkdownlnt-install:
-	@. $(VENV); test -d $(SPHINXDIR)/venv/lib/python*/site-packages/pymarkdown || pip install pymarkdownlnt
+	@. $(VENV); test -d $(VENVDIR)/lib/python*/site-packages/pymarkdown || pip install pymarkdownlnt
 
 install: $(VENVDIR)
 
@@ -119,12 +119,12 @@ lint-md: pymarkdownlnt-install
 	@. $(VENV); pymarkdownlnt --config $(SPHINXDIR)/.pymarkdown.json scan --recurse --exclude=./$(SPHINXDIR)/** $(SOURCEDIR)
 
 vale-install: install
-	@. $(VENV); test -d $(SPHINXDIR)/venv/lib/python*/site-packages/vale || pip install rst2html vale
+	@. $(VENV); test -d $(VENVDIR)/lib/python*/site-packages/vale || pip install rst2html vale
 	@. $(VENV); test -f $(VALE_CONFIG) || python3 $(SPHINXDIR)/get_vale_conf.py
 	@echo '.Name=="Canonical.400-Enforce-inclusive-terms"' > $(SPHINXDIR)/styles/woke.filter
 	@echo '.Level=="error" and .Name!="Canonical.500-Repeated-words" and .Name!="Canonical.000-US-spellcheck"' > $(SPHINXDIR)/styles/error.filter
 	@echo '.Name=="Canonical.000-US-spellcheck"' > $(SPHINXDIR)/styles/spelling.filter
-	@. $(VENV); find $(SPHINXDIR)/venv/lib/python*/site-packages/vale/vale_bin -size 195c -exec vale --version \;
+	@. $(VENV); find $(VENVDIR)/lib/python*/site-packages/vale/vale_bin -size 195c -exec vale --version \;
 
 woke: vale-install
 	@cat $(SPHINXDIR)/styles/config/vocabularies/Canonical/accept.txt > $(SPHINXDIR)/styles/config/vocabularies/Canonical/accept_backup.txt
@@ -176,9 +176,9 @@ allmetrics: html
 	@echo "Recording documentation metrics..."
 	@echo "Checking for existence of vale..."
 	. $(VENV)
-	@. $(VENV); test -d $(SPHINXDIR)/venv/lib/python*/site-packages/vale || pip install vale
+	@. $(VENV); test -d $(VENVDIR)/lib/python*/site-packages/vale || pip install vale
 	@. $(VENV); test -f $(VALE_CONFIG) || python3 $(SPHINXDIR)/get_vale_conf.py
-	@. $(VENV); find $(SPHINXDIR)/venv/lib/python*/site-packages/vale/vale_bin -size 195c -exec vale --config "$(VALE_CONFIG)" $(TARGET) > /dev/null \;
+	@. $(VENV); find $(VENVDIR)/lib/python*/site-packages/vale/vale_bin -size 195c -exec vale --config "$(VALE_CONFIG)" $(TARGET) > /dev/null \;
 	@eval '$(METRICSDIR)/source_metrics.sh $(PWD)'
 	@eval '$(METRICSDIR)/build_metrics.sh $(PWD) $(METRICSDIR)'
 
