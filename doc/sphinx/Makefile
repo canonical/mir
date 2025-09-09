@@ -23,6 +23,7 @@ SPHINX_HOST     ?= 127.0.0.1
 SPHINX_PORT     ?= 8000
 PROJECT_ROOT    ?= $(shell readlink -f ../../)
 
+export MIR_BUILD_API_DOCS
 # Put it first so that "make" without argument is like "make help".
 help:
 	@echo

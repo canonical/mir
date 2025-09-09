@@ -7,6 +7,22 @@ set(MAKEOPTS
 )
 set(SPHINXDIR ${CMAKE_CURRENT_SOURCE_DIR}/sphinx)
 
+option(
+  BUILD_DOXYGEN
+  "Build Doxygen documentation as part of the default build"
+  OFF
+)
+
+# Modifications to `MAKEOPTS` have to be made before targets are generated
+# below.
+if(BUILD_DOXYGEN)
+  find_package(Doxygen 1.8.0 "REQUIRED")
+  set(MAKEOPTS
+    ${MAKEOPTS}
+    MIR_BUILD_API_DOCS=1
+  )
+endif()
+
 add_custom_command(
   COMMAND make -C ${SPHINXDIR} install
           VENVDIR=${VENVDIR}
@@ -48,22 +64,9 @@ add_custom_target(
           doc-woke
 )
 
-option(
-  BUILD_DOXYGEN
-  "Build Doxygen documentation as part of the default build"
-  OFF
-)
-
 if(BUILD_DOXYGEN)
-  find_package(Doxygen 1.8.0 "REQUIRED")
-
   set(WORKING_DIR ${CMAKE_CURRENT_BINARY_DIR}/sphinx)
   set(DOXYGEN_OUTPUT_DIR ${WORKING_DIR}/doxygen_output)
-
-  set(MAKEOPTS
-    ${MAKEOPTS}
-    MIR_BUILD_API_DOCS=1
-  )
 
   configure_file(
     ${SPHINXDIR}/Doxyfile.in
