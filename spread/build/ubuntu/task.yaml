@@ -54,7 +54,7 @@ execute: |
     # enable Rust support
     if [ "${ENABLE_RUST}" -eq 1 ]; then
       echo "OVERRIDE_CONFIGURE_OPTIONS += -DMIR_ENABLE_RUST=ON" >> debian/opts.mk
-      apt-get install --yes cargo rustc
+      apt-get install --yes cargo rustc-1.82
     fi
 
     # change the build type
