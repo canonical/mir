@@ -1,8 +1,8 @@
 # Using Mir to build a Desktop Environment
 
-A Desktop Environment comprises a lot more than a compositor. A Desktop
-Environment typically has launchers, panels, integration with the system 
-greeter and other services.
+A Desktop Environment comprises much more than a compositor. A Desktop
+Environment has launchers, panels, integration with the system
+greeter and other services, and more.
 
 Mir can help you build a compositor, but these other elements need to come
 from elsewhere. And they need to be integrated with your compositor:
@@ -11,10 +11,10 @@ from elsewhere. And they need to be integrated with your compositor:
 be done using Wayland extension protocols, and that is covered in the next 
 section.
 
-* To some extent integration with XDG desktop portals is also based on Wayland
-protocol extensions. But running a portal implementation as part of your 
-Desktop environment needs some "magic".
-(See: [How To Enable Screencasting](../how-to/how-to-enable-screencasting.md))
+* XDG desktop portals will also integrate based off of Wayland extensions
+  combined with some "magic" to incorporate a portal implementation into
+your Desktop Environment. (See: 
+[How To Enable Screencasting](../how-to/how-to-enable-screencasting.md) for an example)
 
 * For your Desktop Environment to show up in the greeter at login it needs to
 be listed in a `.desktop` file under `/usr/share/wayland-sessions/`.
@@ -38,7 +38,7 @@ If, for example, you have a panel that docks to one edge of the screen, then it
 should use the `zwlr_layer_shell_v1` Wayland extension. But you also need to 
 ensure that your compositor allows the panel client to use that extension.
 
-### Bespoke Wayland extensions
+### Adding additional Wayland extensions
 
 It may be necessary to implement Wayland extensions that are not directly
 supported by Mir. These could be extensions that are specific to your Desktop
