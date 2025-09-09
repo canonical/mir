@@ -86,16 +86,14 @@ public:
 
     /// Resize the window to the given \p size.
     ///
-    /// Not for external use, use #WindowManagerTools::modify_window instead.
-    ///
     /// \param size the new size
+    /// \note Not for external use, use #WindowManagerTools::modify_window instead.
     void resize(mir::geometry::Size const& size);
 
     /// Move the window to the point given by \p top_left.
     ///
-    /// Not for external use, use #WindowManagerTools::modify_window instead/
-    ///
     /// \param top_left point to move to
+    /// \note Not for external use, use #WindowManagerTools::modify_window instead/
     void move_to(mir::geometry::Point top_left);
 
     /// Access the surface backing this window as a weak pointer.
