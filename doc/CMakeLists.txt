@@ -1,8 +1,7 @@
-set(VENVDIR ${CMAKE_CURRENT_BINARY_DIR}/sphinx/venv)
 set(BUILDDIR ${CMAKE_CURRENT_BINARY_DIR}/sphinx/_build)
 set(MAKEOPTS
-  VENVDIR=${VENVDIR}
   BUILDDIR=${BUILDDIR}
+  VENVDIR=${CMAKE_CURRENT_BINARY_DIR}/sphinx/venv
   DOCTREESDIR=${CMAKE_CURRENT_BINARY_DIR}/sphinx/.doctrees
 )
 set(SPHINXDIR ${CMAKE_CURRENT_SOURCE_DIR}/sphinx)
@@ -22,12 +21,6 @@ if(BUILD_DOXYGEN)
     MIR_BUILD_API_DOCS=1
   )
 endif()
-
-add_custom_command(
-  COMMAND make -C ${SPHINXDIR} install
-          VENVDIR=${VENVDIR}
-  OUTPUT ${VENVDIR}
-)
 
 set(SPHINX_TARGETS
   clean
@@ -49,7 +42,6 @@ foreach(target IN LISTS SPHINX_TARGETS)
     # `make`'s children, `VAR2` only applies within `make`.
     COMMAND ${CMAKE_COMMAND} -E env "MIR_BUILD_DIR=${CMAKE_BINARY_DIR}"
             make -C ${SPHINXDIR} ${target} ${MAKEOPTS}
-    DEPENDS ${VENVDIR}
     USES_TERMINAL
   )
 endforeach()
