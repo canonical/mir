@@ -848,7 +848,6 @@ WARN_LOGFILE           =
 INPUT                  = @CMAKE_SOURCE_DIR@/README.md \
                          @CMAKE_SOURCE_DIR@/HACKING.md \
                          @CMAKE_SOURCE_DIR@/doc \
-                         @CMAKE_SOURCE_DIR@/guides \
                          @CMAKE_SOURCE_DIR@/include/core \
                          @CMAKE_SOURCE_DIR@/include/miral \
                          @CMAKE_SOURCE_DIR@/include/miroil \
