@@ -17,6 +17,8 @@
 #ifndef MIR_COMMON_XKB_MODIFIERS_H_
 #define MIR_COMMON_XKB_MODIFIERS_H_
 
+#include <cstdint>
+
 struct MirXkbModifiers
 {
     uint32_t depressed{0};
