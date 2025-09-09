@@ -23,20 +23,35 @@ The example program requires
 * `mir-graphics-drivers-desktop` - provides drivers so Mir can talk with
   different graphics drivers
 
-### Install dependencies on Debian or derivatives:
+
+`````{tab-set}
+
+````{tab-item} Debian or derivatives
+:sync: debian
+
 ```sh
 sudo apt install libmiral-dev mir-graphics-drivers-desktop
 ```
+````
 
-### Install dependencies on Fedora:
+````{tab-item} Fedora
+:sync: fedora
+
+The files in `mir-graphics-drivers-desktop` are installed as a part of mir-devel
 ```sh
 sudo dnf install mir-devel libxkbcommon
 ```
+````
 
-### Install dependencies on Alpine:
+````{tab-item} Alpine
+:sync: alpine
+
+The files in `mir-graphics-drivers-desktop` are installed as a part of mir-dev
 ```sh
 sudo apk add mir-dev
 ```
+
+`````
 
 ## Create the Compositor
 Now that we have the dependencies installed, we are ready to begin programming
