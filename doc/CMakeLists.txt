@@ -31,7 +31,7 @@ foreach(target IN LISTS SPHINX_TARGETS)
   add_custom_target(doc-${target}
     # In `VAR1=<value> make <target> VAR2=<value>, only `VAR1` is inherited by
     # `make`'s children, `VAR2` only applies within `make`.
-    COMMAND ${CMAKE_COMMAND} -E env "MIR_CMAKE_BUILD_DIR=${CMAKE_BINARY_DIR}"
+    COMMAND ${CMAKE_COMMAND} -E env "MIR_BUILD_DIR=${CMAKE_BINARY_DIR}"
             make -C ${SPHINXDIR} ${target} ${MAKEOPTS}
     DEPENDS ${VENVDIR}
     USES_TERMINAL
