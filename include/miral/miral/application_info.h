@@ -46,23 +46,23 @@ struct ApplicationInfo
     ApplicationInfo(ApplicationInfo const& that);
     auto operator=(ApplicationInfo const& that) -> miral::ApplicationInfo&;
 
-    /// Retrieve the name of the application.
+    /// Return the name of the application.
     ///
     /// \returns The name of the application.
     auto name() const -> std::string;
 
-    /// Retrieve the backing #miral::Application for this info.
+    /// Return the backing #miral::Application for this info.
     ///
     /// \returns The backing application.
     auto application()  const -> Application;
 
-    /// Retrieve the list of #miral::Window instances that are associated with this
+    /// Return the list of #miral::Window instances that are associated with this
     /// #miral::Application.
     ///
     /// \returns The list of windows associated with the application.
     auto windows() const -> std::vector <Window>&;
 
-    /// Retrieve the user data set for this application.
+    /// Return the user data set for this application.
     ///
     /// Compositor authors may set this payload with
     /// #miral::ApplicationInfo::userdata(std::shared_ptr<void>).
