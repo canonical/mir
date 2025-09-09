@@ -6,7 +6,7 @@ discourse: 4911,5164,5603,6756,8037
 This tutorial will guide you through writing a basic Mir compositor. By the end
 of it, you will create, build, and run a program with basic window management
 capabilities such as controlling multiple windows, minimizing and maximizing,
-and handling mouse input. 
+and handling mouse input.
 
 ## Assumptions
 This tutorial assumes that:
@@ -17,26 +17,39 @@ This tutorial assumes that:
 ## Install Dependencies
 Let's start by installing the dependencies required by our compositor.
 
-The example program requires 
-* `libmiral` - short for "Mir Abstraction Layer". Provides a high level
+`````{tab-set}
+
+````{tab-item} Debian or derivatives
+:sync: debian
+
+For Debian and its derivatives, we only need two small packages:
+
+* `libmiral-dev` - short for "Mir Abstraction Layer". Provides a high level
   interface to interact with and customize Mir compositors.
 * `mir-graphics-drivers-desktop` - provides drivers so Mir can talk with
   different graphics drivers
 
-### Install dependencies on Debian or derivatives:
 ```sh
 sudo apt install libmiral-dev mir-graphics-drivers-desktop
 ```
+````
 
-### Install dependencies on Fedora:
+````{tab-item} Fedora
+:sync: fedora
+
 ```sh
 sudo dnf install mir-devel libxkbcommon
 ```
+````
 
-### Install dependencies on Alpine:
+````{tab-item} Alpine
+:sync: alpine
+
 ```sh
 sudo apk add mir-dev
 ```
+
+`````
 
 ## Create the Compositor
 Now that we have the dependencies installed, we are ready to begin programming
@@ -102,10 +115,10 @@ different components to customize the behavior of the compositor. In this
 example, `run_with()` is passed a function `set_window_management_policy` that
 applies a `MinimalWindowManager` policy to the compositor. The compositor is
 therefore created with basic window management capabilities such as controlling
-multiple windows, minimizing and maximizing, and handling mouse input. 
+multiple windows, minimizing and maximizing, and handling mouse input.
 
 The runner allows for even more customization: enabling onscreen keyboards,
-screen capture, pointer confinement, and so on. 
+screen capture, pointer confinement, and so on.
 
 
 Finally, build the cmake project:
@@ -118,7 +131,7 @@ cmake --build build
 ## Run the compositor
 You can run a compositor nested in an X or Wayland session, or from a virtual
 terminal, just like the demo applications in [Getting started with
-Mir](getting-started-with-mir.md). 
+Mir](getting-started-with-mir.md).
 
 For development, it is very useful to run your compositor within an existing
 Wayland session, so let's do that first. To do this, run:
