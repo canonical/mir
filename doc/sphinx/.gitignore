@@ -15,6 +15,7 @@
 
 # Build outputs
 _build
+api
 
 # Node.js
 package*.json
