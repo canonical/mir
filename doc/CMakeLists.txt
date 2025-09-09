@@ -1,3 +1,53 @@
+set(VENVDIR ${CMAKE_CURRENT_BINARY_DIR}/sphinx/venv)
+set(BUILDDIR ${CMAKE_CURRENT_BINARY_DIR}/sphinx/_build)
+set(MAKEOPTS
+  VENVDIR=${VENVDIR}
+  BUILDDIR=${BUILDDIR}
+  DOCTREESDIR=${BUILDDIR}/../.doctrees
+)
+set(SPHINXDIR ${CMAKE_CURRENT_SOURCE_DIR}/sphinx)
+
+add_custom_command(
+  COMMAND make -C ${SPHINXDIR} install
+          VENVDIR=${VENVDIR}
+  OUTPUT ${VENVDIR}
+)
+
+set(SPHINX_TARGETS
+  clean
+  clean-doc
+  html
+  linkcheck
+  lint-md
+  pa11y
+  run
+  serve
+  spelling
+  vale
+  woke
+)
+
+foreach(target IN LISTS SPHINX_TARGETS)
+  add_custom_target(doc-${target}
+    # In `VAR1=<value> make <target> VAR2=<value>, only `VAR1` is inherited by
+    # `make`'s children, `VAR2` only applies within `make`.
+    COMMAND ${CMAKE_COMMAND} -E env "MIR_CMAKE_BUILD_DIR=${CMAKE_BINARY_DIR}"
+            make -C ${SPHINXDIR} ${target} ${MAKEOPTS}
+    DEPENDS ${VENVDIR}
+    USES_TERMINAL
+  )
+endforeach()
+
+add_custom_target(doc DEPENDS doc-html)
+add_custom_target(
+  doc-checks
+  DEPENDS doc-linkcheck
+          doc-lint-md
+          doc-spelling
+          doc-vale
+          doc-woke
+)
+
 option(
   BUILD_DOXYGEN
   "Build Doxygen documentation as part of the default build"
@@ -10,46 +60,37 @@ endif()
 
 find_package(Doxygen 1.8.0 ${REQUIRED})
 
-if(DOXYGEN_FOUND)
-  cmake_path(RELATIVE_PATH CMAKE_SOURCE_DIR BASE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} OUTPUT_VARIABLE MIR_SOURCE_RELATIVE_PATH)
-  if(NOT ${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
-    file(
-        COPY ${CMAKE_CURRENT_SOURCE_DIR}/sphinx/
-        DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/sphinx/
-        PATTERN *.in EXCLUDE
-    )
-  endif()
+if(BUILD_DOXYGEN)
+  set(WORKING_DIR ${CMAKE_CURRENT_BINARY_DIR}/sphinx)
+  set(DOXYGEN_OUTPUT_DIR ${WORKING_DIR}/doxygen_output)
 
-  configure_file(
-      ${CMAKE_CURRENT_SOURCE_DIR}/sphinx/Doxyfile.in
-      ${CMAKE_CURRENT_BINARY_DIR}/sphinx/Doxyfile @ONLY IMMEDIATE
+  set(MAKEOPTS
+    ${MAKEOPTS}
+    MIR_BUILD_API_DOCS=1
   )
 
   configure_file(
-      ${CMAKE_CURRENT_SOURCE_DIR}/sphinx/reference/introducing_the_miral_api.md.in
-      ${CMAKE_CURRENT_BINARY_DIR}/sphinx/reference/introducing_the_miral_api.md @ONLY IMMEDIATE
+    ${SPHINXDIR}/Doxyfile.in
+    ${WORKING_DIR}/Doxyfile @ONLY IMMEDIATE
   )
 
-  # use the starter pack Makefile
-  add_custom_command(
-      OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/sphinx/.sphinx/venv
-      COMMAND make -C ${CMAKE_CURRENT_BINARY_DIR}/sphinx install
+  add_custom_target(doxygen
+    COMMAND doxygen ${WORKING_DIR}/Doxyfile
+    BYPRODUCT ${DOXYGEN_OUTPUT_DIR}
   )
 
-  if(BUILD_DOXYGEN)
-    set(ALL "ALL")
-  endif()
-
-  add_custom_target(doc ${ALL}
-      COMMAND make -C ${CMAKE_CURRENT_BINARY_DIR}/sphinx html
-      DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/sphinx/.sphinx/venv
-      BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/sphinx/_build
-                 ${CMAKE_CURRENT_BINARY_DIR}/sphinx/xml
+  add_custom_target(doxygen-clean
+    COMMAND ${CMAKE_COMMAND} -E rm -rf ${DOXYGEN_OUTPUT_DIR} ${SPHINXDIR}/api
   )
 
-  install(
-      DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/sphinx/_build/
-      DESTINATION ${CMAKE_INSTALL_PREFIX}/share/doc/mir-doc
-      OPTIONAL
-  )
+  add_dependencies(doc-html doxygen)
+  add_dependencies(doc-run doxygen)
+  add_dependencies(doc-clean doxygen-clean)
 endif()
+
+install(
+  DIRECTORY ${BUILDDIR}
+  DESTINATION ${CMAKE_INSTALL_PREFIX}/share/doc/mir-doc
+  OPTIONAL
+)
+
