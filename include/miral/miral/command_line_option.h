@@ -21,6 +21,10 @@
 
 namespace miral
 {
+/// A command line option that can be added to Mir's internal option
+/// handling.
+///
+/// \deprecated Prefer using #miral::ConfigurationOption instead.
 using CommandLineOption = ConfigurationOption;
 }
 

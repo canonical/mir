@@ -29,72 +29,134 @@ namespace mir { class Server; }
 namespace miral
 {
 /// Add a user configuration option to Mir's option handling.
-/// By default the callback will be invoked following Mir initialisation but
+///
+/// By default, the callback will be invoked following Mir initialization but
 /// prior to the server starting. The value supplied to the callback will come
 /// from the command line, environment variable, config file or the default.
 ///
-/// \note Except for re-ordering implied by "pre_init()" the callbacks will be
-/// invoked in the order supplied.
-/// \Remark: Renamed (from CommandLineOption) in MirAL 3.6
+/// \note Except for re-ordering implied by #miral::ConfigurationOption::pre_init()
+/// the callbacks will be  invoked in the order supplied.
+/// \remark Renamed from #miral::CommandLineOption in MirAL 3.6
 class ConfigurationOption
 {
 public:
+    /// Construct a configuration option for an `int` value.
+    ///
+    /// \param callback Callback when the value is received
+    /// \param option Name of the option
+    /// \param description Description of the option
+    /// \param default_value Default value for the option if it is not provided
     ConfigurationOption(
         std::function<void(int value)> callback,
         std::string const& option,
         std::string const& description,
         int default_value);
 
+    /// Construct a configuration option for a `double` value.
+    ///
+    /// \param callback Callback when the value is received
+    /// \param option Name of the option
+    /// \param description Description of the option
+    /// \param default_value Default value for the option if it is not provided
     ConfigurationOption(
         std::function<void(double value)> callback,
         std::string const& option,
         std::string const& description,
         double default_value);
 
+    /// Construct a configuration option for a `string` value.
+    ///
+    /// \param callback Callback when the value is received
+    /// \param option Name of the option
+    /// \param description Description of the option
+    /// \param default_value Default value for the option if it is not provided
     ConfigurationOption(
         std::function<void(std::string const& value)> callback,
         std::string const& option,
         std::string const& description,
         std::string const& default_value);
 
+    /// Construct a configuration option for a `string` value.
+    ///
+    /// \param callback Callback when the value is received
+    /// \param option Name of the option
+    /// \param description Description of the option
+    /// \param default_value Default value for the option if it is not provided
     ConfigurationOption(
         std::function<void(std::string const& value)> callback,
         std::string const& option,
         std::string const& description,
         char const* default_value);
 
+    /// Construct a configuration option for a `bool` value.
+    ///
+    /// \param callback Callback when the value is received
+    /// \param option Name of the option
+    /// \param description Description of the option
+    /// \param default_value Default value for the option if it is not provided
     ConfigurationOption(
         std::function<void(bool value)> callback,
         std::string const& option,
         std::string const& description,
         bool default_value);
 
+    /// Construct a configuration option for an optional `int` value.
+    ///
+    /// \param callback Callback when the value is received
+    /// \param option Name of the option
+    /// \param description Description of the option
     ConfigurationOption(
         std::function<void(mir::optional_value<int> const& value)> callback,
         std::string const& option,
         std::string const& description);
 
+    /// Construct a configuration option for an optional `string` value.
+    ///
+    /// \param callback Callback when the value is received
+    /// \param option Name of the option
+    /// \param description Description of the option
     ConfigurationOption(
         std::function<void(mir::optional_value<std::string> const& value)> callback,
         std::string const& option,
         std::string const& description);
 
+    /// Construct a configuration option for an optional `bool` value.
+    ///
+    /// \param callback Callback when the value is received
+    /// \param option Name of the option
+    /// \param description Description of the option
     ConfigurationOption(
         std::function<void(mir::optional_value<bool> const& value)> callback,
         std::string const& option,
         std::string const& description);
 
+    /// Construct a configuration option for a `bool` value
+    /// that will default to `false` if not provided.
+    ///
+    /// \param callback Callback when the value is received
+    /// \param option Name of the option
+    /// \param description Description of the option
     ConfigurationOption(
         std::function<void(bool is_set)> callback,
         std::string const& option,
         std::string const& description);
 
-    // \remark Since MirAL 3.6
+    /// Construct a configuration option for a `vector` of `string`s value.
+    ///
+    /// \param callback Callback when the value is received
+    /// \param option Name of the option
+    /// \param description Description of the option
+    /// \remark Since MirAL 3.6
     ConfigurationOption(
         std::function<void(std::vector<std::string> const& values)> callback,
         std::string const& option,
         std::string const& description);
 
+    // Construct a configuration option for a generic type value, given by `Lambda`.
+    ///
+    /// \param callback Callback when the value is received
+    /// \param option Name of the option
+    /// \param description Description of the option
     template<typename Lambda>
     ConfigurationOption(
             Lambda&& callback,
@@ -116,11 +178,10 @@ private:
     std::shared_ptr<Self> self;
 };
 
-/**
- *  Update the option to be called back *before* Mir initialization starts
- *
- *  \param clo  the option
- */
+/// Update the option to be called back *before* Mir initialization starts
+///
+/// \param clo the option
+/// \returns a configuration option
 auto pre_init(ConfigurationOption const& clo) -> ConfigurationOption;
 }
 
