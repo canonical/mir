@@ -16,6 +16,7 @@
 # Build outputs
 _build
 api
+!api/library_root.rst
 
 # Node.js
 package*.json
