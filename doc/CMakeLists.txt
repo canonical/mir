@@ -67,7 +67,7 @@ if(BUILD_DOXYGEN)
 
   add_custom_target(doxygen
     COMMAND doxygen ${WORKING_DIR}/Doxyfile
-    BYPRODUCT ${DOXYGEN_OUTPUT_DIR}
+    BYPRODUCTS ${DOXYGEN_OUTPUT_DIR}
   )
 
   add_custom_target(doxygen-clean
