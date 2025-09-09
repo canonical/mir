@@ -94,7 +94,8 @@ serve: html
 	cd "$(BUILDDIR)"; python3 -m http.server --bind 127.0.0.1 8000
 
 clean: clean-doc
-	@test ! -e "$(VENVDIR)" -o -d "$(VENVDIR)" -a "$(abspath $(VENVDIR))" != "$(VENVDIR)"
+	# https://github.com/canonical/sphinx-docs-starter-pack/issues/435
+	@test ! -e "$(VENVDIR)" -o -d "$(VENVDIR)"
 	rm -rf $(VENVDIR)
 	rm -rf $(SPHINXDIR)/node_modules/
 	rm -rf $(SPHINXDIR)/styles
