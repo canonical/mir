@@ -73,7 +73,7 @@ auto pid_of(Application const& application) -> pid_t;
 /// since they do not connect directly to the Mir process.
 ///
 /// \param application The application
-/// \returns The file descript of the client's socket connection, or -1 if there
+/// \returns The file descriptor of the client's socket connection, or -1 if there
 ///          is no client socket.
 ///
 /// \remark Since MirAL 3.4
