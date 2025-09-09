@@ -93,7 +93,7 @@ public:
     /// Move the window to the point given by \p top_left.
     ///
     /// \param top_left point to move to
-    /// \note Not for external use, use #WindowManagerTools::modify_window instead/
+    /// \note Not for external use, use #WindowManagerTools::modify_window instead.
     void move_to(mir::geometry::Point top_left);
 
     /// Access the surface backing this window as a weak pointer.
