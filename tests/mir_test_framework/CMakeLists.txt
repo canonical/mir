@@ -68,6 +68,7 @@ target_link_libraries(mir-public-test-framework
     mircore
   PRIVATE
     PkgConfig::UMOCKDEV
+    PkgConfig::LIBINPUT
 )
 
 set_property(
@@ -95,6 +96,7 @@ target_link_libraries(mir-libinput-test-framework
   PUBLIC
     mircommon
     mircore
+    mir-public-test-doubles-platform
 )
 
 add_library(mir-umock-test-framework OBJECT udev_environment.cpp)

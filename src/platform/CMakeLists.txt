@@ -47,7 +47,6 @@ target_link_libraries(mirplatform
     miroptions
     mirudev
     PkgConfig::EPOXY
-    PkgConfig::LIBDISPLAY_INFO
 )
 
 set_target_properties(
