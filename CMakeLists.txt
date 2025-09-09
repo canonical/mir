@@ -335,9 +335,3 @@ add_custom_target(release-checks)
 mir_check_no_unreleased_symbols(mircommon release-checks)
 mir_check_no_unreleased_symbols(mirplatform release-checks)
 mir_check_no_unreleased_symbols(mirserver release-checks)
-
-if (TARGET doc)
-  add_custom_target(doc-show
-          xdg-open ${CMAKE_BINARY_DIR}/doc/sphinx/_build/index.html
-          DEPENDS doc)
-endif()

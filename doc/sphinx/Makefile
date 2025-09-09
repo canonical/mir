@@ -5,7 +5,8 @@
 # You can set these variables from the command line, and also
 # from the environment for the first two.
 SPHINXDIR       = .sphinx
-SPHINXOPTS      ?= -c . -d $(SPHINXDIR)/.doctrees -j auto
+DOCTREESDIR     ?= $(SPHINXDIR)/.doctrees
+SPHINXOPTS      ?= -c . -d $(DOCTREESDIR) -j auto
 SPHINXBUILD     ?= $(VENVDIR)/bin/sphinx-build
 SOURCEDIR       = .
 BUILDDIR        = _build
@@ -22,6 +23,7 @@ SPHINX_HOST     ?= 127.0.0.1
 SPHINX_PORT     ?= 8000
 PROJECT_ROOT    ?= $(shell readlink -f ../../)
 
+export MIR_BUILD_API_DOCS
 # Put it first so that "make" without argument is like "make help".
 help:
 	@echo
@@ -74,7 +76,7 @@ pa11y-install:
 		}
 
 pymarkdownlnt-install:
-	@. $(VENV); test -d $(SPHINXDIR)/venv/lib/python*/site-packages/pymarkdown || pip install pymarkdownlnt
+	@. $(VENV); test -d $(VENVDIR)/lib/python*/site-packages/pymarkdown || pip install pymarkdownlnt
 
 install: $(VENVDIR)
 
@@ -92,7 +94,8 @@ serve: html
 	cd "$(BUILDDIR)"; python3 -m http.server --bind 127.0.0.1 8000
 
 clean: clean-doc
-	@test ! -e "$(VENVDIR)" -o -d "$(VENVDIR)" -a "$(abspath $(VENVDIR))" != "$(VENVDIR)"
+	# https://github.com/canonical/sphinx-docs-starter-pack/issues/435
+	@test ! -e "$(VENVDIR)" -o -d "$(VENVDIR)"
 	rm -rf $(VENVDIR)
 	rm -rf $(SPHINXDIR)/node_modules/
 	rm -rf $(SPHINXDIR)/styles
@@ -100,7 +103,7 @@ clean: clean-doc
 
 clean-doc:
 	git clean -fx "$(BUILDDIR)"
-	rm -rf $(SPHINXDIR)/.doctrees
+	rm -rf $(DOCTREESDIR)
 
 linkcheck: install
 	. $(VENV) ; $(SPHINXBUILD) -b linkcheck "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) || { grep --color -F "[broken]" "$(BUILDDIR)/output.txt"; exit 1; }
@@ -119,12 +122,12 @@ lint-md: pymarkdownlnt-install
 	@. $(VENV); pymarkdownlnt --config $(SPHINXDIR)/.pymarkdown.json scan --recurse --exclude=./$(SPHINXDIR)/** $(SOURCEDIR)
 
 vale-install: install
-	@. $(VENV); test -d $(SPHINXDIR)/venv/lib/python*/site-packages/vale || pip install rst2html vale
+	@. $(VENV); test -d $(VENVDIR)/lib/python*/site-packages/vale || pip install rst2html vale
 	@. $(VENV); test -f $(VALE_CONFIG) || python3 $(SPHINXDIR)/get_vale_conf.py
 	@echo '.Name=="Canonical.400-Enforce-inclusive-terms"' > $(SPHINXDIR)/styles/woke.filter
 	@echo '.Level=="error" and .Name!="Canonical.500-Repeated-words" and .Name!="Canonical.000-US-spellcheck"' > $(SPHINXDIR)/styles/error.filter
 	@echo '.Name=="Canonical.000-US-spellcheck"' > $(SPHINXDIR)/styles/spelling.filter
-	@. $(VENV); find $(SPHINXDIR)/venv/lib/python*/site-packages/vale/vale_bin -size 195c -exec vale --version \;
+	@. $(VENV); find $(VENVDIR)/lib/python*/site-packages/vale/vale_bin -size 195c -exec vale --version \;
 
 woke: vale-install
 	@cat $(SPHINXDIR)/styles/config/vocabularies/Canonical/accept.txt > $(SPHINXDIR)/styles/config/vocabularies/Canonical/accept_backup.txt
@@ -176,9 +179,9 @@ allmetrics: html
 	@echo "Recording documentation metrics..."
 	@echo "Checking for existence of vale..."
 	. $(VENV)
-	@. $(VENV); test -d $(SPHINXDIR)/venv/lib/python*/site-packages/vale || pip install vale
+	@. $(VENV); test -d $(VENVDIR)/lib/python*/site-packages/vale || pip install vale
 	@. $(VENV); test -f $(VALE_CONFIG) || python3 $(SPHINXDIR)/get_vale_conf.py
-	@. $(VENV); find $(SPHINXDIR)/venv/lib/python*/site-packages/vale/vale_bin -size 195c -exec vale --config "$(VALE_CONFIG)" $(TARGET) > /dev/null \;
+	@. $(VENV); find $(VENVDIR)/lib/python*/site-packages/vale/vale_bin -size 195c -exec vale --config "$(VALE_CONFIG)" $(TARGET) > /dev/null \;
 	@eval '$(METRICSDIR)/source_metrics.sh $(PWD)'
 	@eval '$(METRICSDIR)/build_metrics.sh $(PWD) $(METRICSDIR)'
 
