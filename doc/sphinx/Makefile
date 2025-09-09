@@ -5,7 +5,8 @@
 # You can set these variables from the command line, and also
 # from the environment for the first two.
 SPHINXDIR       = .sphinx
-SPHINXOPTS      ?= -c . -d $(SPHINXDIR)/.doctrees -j auto
+DOCTREESDIR     ?= $(SPHINXDIR)/.doctrees
+SPHINXOPTS      ?= -c . -d $(DOCTREESDIR) -j auto
 SPHINXBUILD     ?= $(VENVDIR)/bin/sphinx-build
 SOURCEDIR       = .
 BUILDDIR        = _build
@@ -100,7 +101,7 @@ clean: clean-doc
 
 clean-doc:
 	git clean -fx "$(BUILDDIR)"
-	rm -rf $(SPHINXDIR)/.doctrees
+	rm -rf $(DOCTREESDIR)
 
 linkcheck: install
 	. $(VENV) ; $(SPHINXBUILD) -b linkcheck "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) || { grep --color -F "[broken]" "$(BUILDDIR)/output.txt"; exit 1; }
