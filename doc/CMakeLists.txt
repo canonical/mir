@@ -72,9 +72,7 @@ if(BUILD_DOXYGEN)
 
   add_custom_target(doxygen-clean
     COMMAND ${CMAKE_COMMAND} -E rm -rf ${DOXYGEN_OUTPUT_DIR}
-    # Deletes all the files inside the `api` directory except `library_root.rst`
-    VERBATIM
-    COMMAND /bin/bash -c  "rm -f $(ls -1d ${SPHINXDIR}/api/* | sed  '/.*library_root.rst/d')"
+    COMMAND git clean -xf ${SPHINXDIR}/api/*
   )
 
   add_dependencies(doc-html doxygen)
@@ -87,4 +85,3 @@ install(
   DESTINATION ${CMAKE_INSTALL_PREFIX}/share/doc/mir-doc
   OPTIONAL
 )
-
