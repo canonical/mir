@@ -6,7 +6,7 @@ The main() program
 
 The main() program from miral-shell looks like this:
 
-```{literalinclude} /@MIR_SOURCE_RELATIVE_PATH@/../examples/miral-shell/shell_main.cpp
+```{literalinclude} ../../../examples/miral-shell/shell_main.cpp
 ```
 
 This shell is providing {class}`FloatingWindowManagerPolicy`, {class}`TilingWindowManagerPolicy`
