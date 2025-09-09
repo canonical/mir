@@ -55,12 +55,8 @@ option(
 )
 
 if(BUILD_DOXYGEN)
-  set(REQUIRED "REQUIRED")
-endif()
+  find_package(Doxygen 1.8.0 "REQUIRED")
 
-find_package(Doxygen 1.8.0 ${REQUIRED})
-
-if(BUILD_DOXYGEN)
   set(WORKING_DIR ${CMAKE_CURRENT_BINARY_DIR}/sphinx)
   set(DOXYGEN_OUTPUT_DIR ${WORKING_DIR}/doxygen_output)
 
