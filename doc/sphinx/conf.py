@@ -239,8 +239,6 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.imgmath',
     'sphinx.ext.todo',
-    'breathe',
-    'exhale',
     'sphinx.ext.graphviz',
     'sphinxcontrib.mermaid'
 ]
@@ -300,50 +298,47 @@ intersphinx_mapping = {
 ############################################################
 ### Additional configuration
 ############################################################
-cmake_build_dir = Path('../../')  # Leave doc/sphinx
-sphinx_dir = cmake_build_dir / 'doc/sphinx'
-
 primary_domain = 'cpp'
-
 highlight_language = 'cpp'
 
 
+build_api_docs = os.getenv('MIR_BUILD_API_DOCS') == '1'
 
-def read_doxyfile(path):
-    # Instead of configuring Mir again to get the doxyfile, we assume the user
-    # already has configured it and grab the file from there.
+if build_api_docs:
+    # Only add exhale and breathe if the user ran doxygen (which produces `<build_dir>/doc/sphinx/doxygen_output/xml`)
     try:
-        # Read the doxyfile from the build directory
-        with open(path) as doxyfile_file:
-            return doxyfile_file.read()
-    except IOError as e:
-        raise Exception(f"""IOError: {e.errno}, {e.strerror}
-                        \rHint: Have you configured the cmake project and changed `cmake_build_dir` to point at it?""")
+        doxygen_xml_output_dir = Path(os.environ["MIR_BUILD_DIR"]) / "doc/sphinx/doxygen_output/xml"
+        assert doxygen_xml_output_dir.is_dir(), "Doxygen XML output not found"
 
+        extensions.extend(['exhale', 'breathe'])
 
-doxyfile_contents = read_doxyfile(cmake_build_dir / 'doc/sphinx/Doxyfile')
+        # Setup the exhale extension
+        exhale_args = {
+            # These arguments are required
+            "containmentFolder": './api',
+            "rootFileName": "EXCLUDE",
+            "doxygenStripFromPath": "..",
+            # Heavily encouraged optional argument (see docs)
+            "rootFileTitle": "Mir API",
+            # Suggested optional arguments
+            "createTreeView": False,
+            "exhaleExecutesDoxygen": False,
+            "exhaleUseDoxyfile": False,
+            "contentsDirectives": False,
+        }
 
-# Setup the exhale extension
-exhale_args = {
-    # These arguments are required
-    "containmentFolder": "./api",
-    "rootFileName": "EXCLUDE",
-    "doxygenStripFromPath": "..",
-    # Heavily encouraged optional argument (see docs)
-    "rootFileTitle": "Mir API",
-    # Suggested optional arguments
-    "createTreeView": False,
-    "exhaleExecutesDoxygen": True,
-    "exhaleUseDoxyfile": False,
-    "contentsDirectives": False,
-    "exhaleDoxygenStdin": doxyfile_contents
-}
+        # Setup the breathe extension
+        breathe_projects = {"Mir": str(doxygen_xml_output_dir)}
+        breathe_default_project = "Mir"
+        breathe_default_members = ('members', 'undoc-members')
+        breathe_order_parameters_first = True
 
-# Setup the breathe extension
-breathe_projects = {"Mir": "./xml/"}
-breathe_default_project = "Mir"
-breathe_default_members = ('members', 'undoc-members')
-breathe_order_parameters_first = True
+    except (KeyError, AssertionError) as ex:
+        raise Exception("MIR_CMAKE_API_DOCS is set, but couldn't find Doxygen output. "
+                        "Make sure `MIR_BUILD_DIR` points at the CMake build directory "
+                        "and that `doxygen_output` is populated inside\n"
+                        f"{ex}") from ex
+
 
 # Mermaid
 mermaid_version = "10.5.0"
