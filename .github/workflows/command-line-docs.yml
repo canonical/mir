@@ -14,7 +14,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  CheckSymbols:
+  CheckCommandLineDocs:
     runs-on: ubuntu-24.04
 
     timeout-minutes: 10
@@ -26,13 +26,14 @@ jobs:
         run: |
           sudo --preserve-env apt-add-repository --yes ppa:mir-team/dev
           sudo apt-get install --yes libclang1-18 python3-clang-18
-          echo "MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH=/usr/lib/llvm-18/lib/libclang-18.so.1" >> $GITHUB_ENV
-          echo "MIR_SYMBOLS_MAP_GENERATOR_CLANG_LIBRARY_PATH=/usr/lib/llvm-18/lib" >> $GITHUB_ENV
           sudo apt-get build-dep ./
 
       - name: Configure
         run: >
           cmake -B build ${{ github.workspace }}
+
+      - name: Build
+        run: cmake --build build
 
       - name: Check for documentation updates
         run: |
