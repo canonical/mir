@@ -170,14 +170,12 @@ public:
     ///@}
 
     /// How the window should gain and lose focus
-    /// \remark Since MirAL 3.3
     ///@{
     auto focus_mode() const -> mir::optional_value<MirFocusMode> const&;
     auto focus_mode() -> mir::optional_value<MirFocusMode>&;
     ///@}
 
     /// If this surface should be shown while the compositor is locked
-    /// \remark Since MirAL 3.9
     ///@{
     auto visible_on_lock_screen() const -> mir::optional_value<bool> const&;
     auto visible_on_lock_screen() -> mir::optional_value<bool>&;

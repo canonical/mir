@@ -76,7 +76,6 @@ auto pid_of(Application const& application) -> pid_t;
 /// \returns The file descriptor of the client's socket connection, or -1 if there
 ///          is no client socket.
 ///
-/// \remark Since MirAL 3.4
 auto socket_fd_of(Application const& application) -> int;
 }
 

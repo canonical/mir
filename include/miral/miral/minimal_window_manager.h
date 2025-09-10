@@ -30,7 +30,6 @@ enum class FocusStealing
 };
 
 /// Minimal implementation of a floating window management policy
-/// \remark Since MirAL 2.5
 class MinimalWindowManager : public WindowManagementPolicy
 {
 public:
@@ -42,7 +41,6 @@ public:
 
     /// Allows shells to change the modifer used to identify a window drag gesture
     /// The default is mir_input_event_modifier_alt
-    /// \remark Since MirAL 3.7
     MinimalWindowManager(WindowManagerTools const& tools, MirInputEventModifier pointer_drag_modifier);
 
     /// Allows shells to to change the modifer used to identify a window drag

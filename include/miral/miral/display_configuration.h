@@ -35,7 +35,7 @@ class ConfigurationOption;
 /// The config file (miral::MirRunner::display_config_file()) is located via
 /// the XDG Base Directory Specification. Vis:
 ///($XDG_CONFIG_HOME or $HOME/.config followed by $XDG_CONFIG_DIRS)
-/// \remark Since MirAL 2.4
+///
 /// \note From MirAL 3.8 will monitor the configuration file or, if none found,
 /// for the creation of a file in $XDG_CONFIG_HOME or $HOME/.config. Changes
 /// to this file will be reloaded. In addition, the selected layout may be
@@ -93,7 +93,6 @@ public:
     auto list_layouts() -> std::vector<std::string>;
 
     /// Enable a custom output attribute in the .display YAML
-    /// \remark Since MirAL 3.8
     void add_output_attribute(std::string const& key);
 
     /// Retrieve the user data associated with the active layout

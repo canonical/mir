@@ -354,20 +354,17 @@ struct WindowInfo
     /// See https://specifications.freedesktop.org/desktop-entry-spec/.
     ///
     /// \returns the application id
-    /// \remark Since MirAL 2.8
     auto application_id() const -> std::string;
 
     /// Describes how the window should gain and lose focus.
     ///
     /// \returns the focus mode
-    /// \remark Since MirAL 3.3
     /// \sa MirFocusMode - the focus mode options
     auto focus_mode() const -> MirFocusMode;
 
     /// If this surface should be shown while the compositor is locked
     ///
     /// \returns `true` if it will be shown on the lock screen, otherwise `false`
-    /// \remark Since MirAL 3.9
     auto visible_on_lock_screen() const -> bool;
 
     /// Describes which edges the window is tiled against.

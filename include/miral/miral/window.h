@@ -86,7 +86,6 @@ inline bool operator>=(Window const& lhs, Window const& rhs) { return !(lhs < rh
 
 /// Customization for Google test (to print surface name in errors)
 /// \see https://github.com/google/googletest/blob/main/docs/advanced.md#teaching-googletest-how-to-print-your-values
-/// \remark Since MirAL 3.3
 void PrintTo(Window const& bar, std::ostream* os);
 }
 

@@ -53,14 +53,12 @@ public:
     void add_stop_callback(std::function<void()> const& stop_callback);
 
     /// Add signal handler to the server's main loop
-    /// \remark Since MirAL 3.7
     void register_signal_handler(
         std::initializer_list<int> signals,
         std::function<void(int)> const& handler);
     
     /// Add a watch on a file descriptor. 
     /// The handler will be triggered when there is data to read on the Fd.
-    /// \remark Since MirAL 3.7
     auto register_fd_handler(
         mir::Fd fd,
         std::function<void(int)> const& handler)
@@ -84,22 +82,18 @@ public:
     /// The .config file is located via the XDG Base Directory Specification:
     ///   $XDG_CONFIG_HOME or $HOME/.config followed by $XDG_CONFIG_DIRS
     /// Config file entries are long form (e.g. "x11-output=1200x720")
-    /// \remark Since MirAL 2.4
     auto config_file() const -> std::string;
 
     /// Name of the .display configuration file.
     /// The .display file is located via the XDG Base Directory Specification:
     ///   $XDG_CONFIG_HOME or $HOME/.config followed by $XDG_CONFIG_DIRS
     /// Config file entries are long form (e.g. "x11-output=1200x720")
-    /// \remark Since MirAL 2.4
     auto display_config_file() const -> std::string;
 
     /// Get the Wayland endpoint name (if any) usable as a $WAYLAND_DISPLAY value
-    /// \remark Since MirAL 2.8
     auto wayland_display() const -> mir::optional_value<std::string>;
 
     /// Get the X11 socket name (if any) usable as a $DISPLAY value
-    /// \remark Since MirAL 2.8
     auto x11_display() const -> mir::optional_value<std::string>;
 
 private:
