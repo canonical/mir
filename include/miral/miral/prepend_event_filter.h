@@ -26,12 +26,22 @@ namespace mir { class Server; }
 
 namespace miral
 {
+/// Prepends an event filter to the Mir server event pipeline.
+///
+/// Filters are processed in order. This filter is prepended **before** any existing filters,
+/// including those provided by #miral::WindowManagementPolicy.
+///
+/// /// An event is passed to this filter only if no earlier filter has already handled it.
+///
+/// \sa AppendKeyboardEventFilter - a specialized event filter which only filters keyboard events
+/// \sa AppendEventFilter - append an event filter
 class PrependEventFilter
 {
 public:
-    /// Prepend an event filter (before any existing filters, including the window manager).
-    /// The supplied filter should return true if and only if it handles the event as filters
-    /// later in the list will not be called.
+    /// Construct a new event filter wrapper using the provided \p filter function.
+    ///
+    /// \param filter A function that returns `true` if it handled the event.
+    ///               Returning `true` prevents later filters from seeing the event.
     explicit PrependEventFilter(std::function<bool(MirEvent const* event)> const& filter);
 
     void operator()(mir::Server& server);
