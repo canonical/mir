@@ -18,8 +18,7 @@ These pages cover the key aspects of developing a compositor using Mir
 ```
 
 ```{grid-item-card} [How-to guides](/howto/index.md)
-**Key operations and common tasks**
-- {ref}`Develop a Wayland compositor <howto-develop-wayland-compositor>`
+**How-to guides** - step-by-step guides covering key operations and common tasks
 ```
 ````
 ````{grid} 1 1 2 2
