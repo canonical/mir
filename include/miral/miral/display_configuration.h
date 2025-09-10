@@ -171,8 +171,9 @@ public:
     ///
     /// The value of this attribute will be made available through
     /// #miral::UserDisplayConfigurationOutput::custom_attribute at the
-    /// \p key. Note that the value at the \p key must have a type of
-    /// `std::optional<std::string>`.
+    /// \p key.
+    ///
+    /// The value in the YAML file is expected to be a string.
     ///
     /// \param key the key to enable
     /// \remark Since MirAL 3.8
