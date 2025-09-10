@@ -12,23 +12,21 @@ that makes it an ideal choice for both device manufacturers and desktop users.
 These pages cover the key aspects of working on Mir
 
 ````{grid} 1 1 2 2
-```{grid-item-card} [Tutorials](/tutorial/contributing-index.md)
-**Start here**
-```
 
-```{grid-item-card} [How-to guides](/howto/contributing-index.md)
-**Key operations and common tasks**
+```{grid-item-card} [How-to guides](/how-to/contributing-index.md)
+**How-to guides** - step-by-step guides covering key operations and common tasks
 - {ref}`Getting Involved in Mir <howto-contribute>`
-```
-````
-````{grid} 1 1 2 2
-:reverse:
-```{grid-item-card} [Reference](/reference/configuring-index.md)
- **Technical information** - specifications, APIs, architecture
 ```
 
 ```{grid-item-card} [Explanation](/explanation/configuring-index.md)
  **Discussion and clarification** of key topics
+```
+
+````
+````{grid} 1 1 2 2
+
+```{grid-item-card} [Reference](/reference/contributing-index.md)
+ **Technical information** - specifications, APIs, architecture
 ```
 ````
 
