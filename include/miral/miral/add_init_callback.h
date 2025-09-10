@@ -25,12 +25,18 @@ namespace miral
 {
 /// Add a callback to be invoked when the server has been initialized, but 
 /// before it starts.
-/// If multiple callbacks are added they will be invoked in the sequence added.
+///
+/// Callbacks are processed in order. This callback is appended **after** any existing
+/// callback.
 class AddInitCallback
 {
 public:
     using Callback = std::function<void()>;
 
+    /// Constructs a new init callback using the provided \p callback function.
+    ///
+    /// \param callback The callback that is executed when the server has initialized
+    ///                 but is not yet running.
     explicit AddInitCallback(Callback const& callback);
     ~AddInitCallback();
 
