@@ -27,35 +27,62 @@ namespace mir { class Server; }
 
 namespace miral
 {
+/// This class provides methods to launch external clients from the compositor.
+///
+/// This class launches clients with the correct environment variables (e.g.
+/// WAYLAND_DISPLAY) as well as a valid activation token.
 class ExternalClientLauncher
 {
 public:
+    /// Construct a new external client launcher.
     ExternalClientLauncher();
     ~ExternalClientLauncher();
 
     void operator()(mir::Server& server);
 
-    /// Launch with client environment configured for Wayland.
+    /// Launch the provided command with an environment configured for Wayland.
+    ///
     /// If X11 is enabled, then DISPLAY will also be set accordingly.
-    /// \return The pid of the process that was launched.
+    ///
+    /// \param command_line the command to launch
+    /// \returns The pid of the process that was launched.
+    /// \throws std::logic_error if the #ExternalClientLauncher::operator has not been called yet.
     /// \remark Return type changed from void in MirAL 3.0
     auto launch(std::vector<std::string> const& command_line) const -> pid_t;
 
-    /// If X11 is enabled, then launch with client environment configured for X11.
-    /// For the occasions it is desired to coerce applications into using X11
-    /// \return The pid of the process that was launched (or -1 if X11 is not enabled)
+    /// If X11 is enabled, then launch with an environment configured for X11.
+    ///
+    /// This is useful in occasions where it is desired to coerce applications into using X11
+    ///
+    /// If X11 is unavailable, this method always returns `-1`.
+    ///
+    /// \returns The pid of the process that was launched, or -1 if X11 is not enabled
+    /// \throws std::logic_error if the #ExternalClientLauncher::operator has not been called yet
     /// \remark Return type changed from void in MirAL 3.0
     auto launch_using_x11(std::vector<std::string> const& command_line) const -> pid_t;
 
-    /// Use the proposed `desktop-entry` snap interface to launch another snap
+    /// Use the proposed `desktop-entry` snap interface to launch a snap.
+    ///
+    /// \param desktop_file the desktop file name of the snap
+    /// \throws std::logic_error if the #ExternalClientLauncher::operator has not been called yet
     void snapcraft_launch(std::string const& desktop_file) const;
 
-    /// Split out the tokens of a (possibly escaped) command
+    /// Split out the tokens of an escaped \p command.
+    ///
+    /// This is particularly helpful when you have a commands that you'd like
+    /// to provide to #ExternalClientLauncher::launch.
+    ///
+    /// \param command an unsplit command
+    /// \returns a command split into a `std::vector`
     static auto split_command(std::string const& command) -> std::vector<std::string>;
 
-    /// Launch with client environment configured for Wayland.
+    /// Launch the \p command with an environment configured for Wayland.
+    ///
     /// If X11 is enabled, then DISPLAY will also be set accordingly.
+    ///
+    /// \param command the command to run, this will be split with #ExternalClientClauncher::split_command
     /// \return The pid of the process that was launched.
+    /// \throws std::logic_error if the #ExternalClientLauncher::operator has not been called yet
     auto launch(std::string const& command) const -> pid_t;
 
 private:
