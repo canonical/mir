@@ -126,6 +126,7 @@ std::string description_text(char const* program, std::string const& config_file
 
     return result + "user options";
 }
+
 }
 
 mo::DefaultConfiguration::DefaultConfiguration(
@@ -340,6 +341,60 @@ auto mo::DefaultConfiguration::options_for(SharedLibrary const& module) const ->
     return parsed_options;
 }
 
+namespace
+{
+std::string markdown_escape(std::string const& text)
+{
+    std::string escaped_text;
+
+    for (char const c : text)
+    {
+        switch(c)
+        {
+        case '&':
+            escaped_text += "&amp;";
+            break;
+        case '<':
+            escaped_text += "&lt;";
+            break;
+        case '>':
+            escaped_text += "&gt;";
+            break;
+        case '\"':
+            escaped_text += "&quot;";
+            break;
+        case '\'':
+            escaped_text += "&apos;";
+            break;
+        default:
+            escaped_text += c;
+            break;
+        }
+    }
+
+    return escaped_text;
+}
+
+std::string options_to_markdown(const boost::program_options::options_description& desc)
+{
+    std::ostringstream text;
+    for (auto& o: desc.options())
+    {
+        text << "### `" << o->format_name();
+        if (!o->format_parameter().empty())
+        {
+            text << " " << o->format_parameter();
+        }
+        text << "`" << std::endl;
+        text << std::endl;
+        text << markdown_escape(o->description()) << std::endl;
+        text << std::endl;
+    }
+
+    return text.str();
+}
+}
+
 void mo::DefaultConfiguration::parse_arguments(
     boost::program_options::options_description desc,
     mo::ProgramOption& options,
@@ -352,6 +407,8 @@ void mo::DefaultConfiguration::parse_arguments(
     {
         desc.add_options()
             ("help,h", "Show command line help.");
+        desc.add_options()
+            ("help-markdown", "Show command line help in markdown format.");
         desc.add_options()
             ("version,V", "Display Mir version and exit.");
 
@@ -400,6 +457,25 @@ void mo::DefaultConfiguration::parse_arguments(
                 if (!module_desc.options().empty())
                 {
                     help_text << module_desc;
+                }
+            }
+            BOOST_THROW_EXCEPTION(mir::ExitWithOutput(help_text.str()));
+        }
+
+        if (options.is_set("help-markdown"))
+        {
+            std::ostringstream help_text;
+            help_text << "# Mir command line options" << std::endl;
+            help_text << std::endl;
+            help_text << options_to_markdown(desc);
+            for (auto& platform : platform_libraries)
+            {
+                auto& module_desc = module_options_desc.at(platform->get_handle());
+                if (!module_desc.options().empty())
+                {
+                    help_text << "## " << option_header_for(*platform) << std::endl;
+                    help_text << std::endl;
+                    help_text << options_to_markdown(module_desc);
                 }
             }
             BOOST_THROW_EXCEPTION(mir::ExitWithOutput(help_text.str()));

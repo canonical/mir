@@ -1,0 +1,45 @@
+name: Generate command line documentation
+
+on:
+  push:
+    branches:
+      - main
+  merge_group:
+    types: [checks_requested]
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.number && format('pr{0}', github.event.number) || github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  CheckCommandLineDocs:
+    runs-on: ubuntu-24.04
+
+    timeout-minutes: 360
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo --preserve-env apt-add-repository --yes ppa:mir-team/dev
+          sudo apt-get install --yes libclang1-18 python3-clang-18
+          sudo apt-get build-dep ./
+
+      - name: Configure
+        run: >
+          cmake -B build ${{ github.workspace }}
+
+      - name: Build
+        run: cmake --build build
+
+      - name: Check for documentation updates
+        run: |
+          ls -l ./build/bin/miral-shell
+          ldd ./build/bin/miral-shell
+          ./build/bin/miral-shell --help-markdown > .command-line-options.md
+          diff .command-line-options.md doc/sphinx/reference/command-line-options.md
+          if [ $? != 0 ]; then exit 1; fi
+          rm .command-line-options.md
