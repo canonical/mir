@@ -19,11 +19,11 @@ install(PROGRAMS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/mir-smoke-test-runner
 )
 
 add_custom_target(mir-compositor-smoke-test ALL
-  cp ${PROJECT_SOURCE_DIR}/tools/mir-compositor-smoke-test.bash ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/mir-compositor-smoke-test
+    cp ${PROJECT_SOURCE_DIR}/tools/mir-compositor-smoke-test.bash ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/mir-compositor-smoke-test
 )
 
 install(PROGRAMS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/mir-compositor-smoke-test
-        DESTINATION ${CMAKE_INSTALL_BINDIR}
+    DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
 find_program(EGLINFO_EXECUTABLE eglinfo)

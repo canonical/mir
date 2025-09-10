@@ -19,7 +19,6 @@ fi
 for compositor in ${compositor_list}; do
   echo Test ${compositor}
   wayland_host=wayland_host
-#  WAYLAND_DISPLAY=${wayland_host} MIR_SERVER_PLATFORM_DISPLAY_LIBS=mir:virtual MIR_SERVER_VIRTUAL_OUTPUT=1280x1024 ${compositor}&
   WAYLAND_DISPLAY=${wayland_host} ${compositor}&
   sc_pid=$!
   until [ -O "${XDG_RUNTIME_DIR}/${wayland_host}" ]
