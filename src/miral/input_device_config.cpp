@@ -202,70 +202,97 @@ auto to_handedness(std::optional<std::string> const& opt_val)-> std::optional<Mi
 
 void miral::add_input_device_configuration_options_to(mir::Server& server)
 {
-    server.add_configuration_option(mouse_handedness_opt, std::format("Select mouse laterality: [{}, {}]", right, left),
+    server.add_configuration_option(mouse_handedness_opt, std::format("Mouse laterality:\n"
+                                                                      " - {}: left button is primary.\n"
+                                                                      " - {}: right button is primary.",
+                                                                      right, left),
     mir::OptionType::string);
     server.add_configuration_option(mouse_cursor_acceleration_opt,
-                                    "Select acceleration profile for mice and trackballs [none, adaptive]",
+                                    std::format("Acceleration profile for mice and trackballs:\n"
+                                                " - {}: no acceleration.\n"
+                                                " - {}: cursor is accelerated.",
+                                                acceleration_none,
+                                                acceleration_adaptive),
                                     mir::OptionType::string);
     server.add_configuration_option(mouse_cursor_acceleration_bias_opt,
-                                    "Set the pointer acceleration speed of mice within a range of [-1.0, 1.0]",
+                                    "Pointer acceleration speed of mice. "
+                                    "Must be within range of [-1.0, 1.0].",
                                     mir::OptionType::real);
     server.add_configuration_option(mouse_scroll_speed_opt,
-                                    "Scales mouse scroll. Use negative values for natural scrolling",
+                                    "Mouse scroll speed scaling factor. "
+                                    "Use negative values for natural scrolling.",
                                     mir::OptionType::real);
     server.add_configuration_option(mouse_hscroll_speed_override_opt,
-                                    "Scales mouse horizontal scroll. Use negative values for natural scrolling",
+                                    "Mouse horizontal scroll speed scaling factor. "
+                                    "Use negative values for natural scrolling.",
                                     mir::OptionType::real);
     server.add_configuration_option(mouse_vscroll_speed_override_opt,
-                                    "Scales mouse vertical scroll. Use negative values for natural scrolling",
+                                    "Mouse vertical scroll speed scaling factor. "
+                                    "Use negative values for natural scrolling.",
                                     mir::OptionType::real);
     server.add_configuration_option(disable_while_typing_opt,
-                                    "Disable touchpad while typing on keyboard configuration [true, false]",
+                                    "Disable touchpad while typing on keyboard. [true, false]",
                                     mir::OptionType::boolean);
     server.add_configuration_option(disable_with_external_mouse_opt,
-                                    "Disable touchpad if an external pointer device is plugged in [true, false]",
+                                    "Disable touchpad if an external pointer device is plugged in. [true, false]",
                                     mir::OptionType::boolean);
     server.add_configuration_option(touchpad_tap_to_click_opt,
-                                    "Enable or disable tap-to-click on this device, with"
-                                    " 1, 2, 3 finger tap mapping to left, right, middle click, respectively [true, false]",
+                                    "Enable or disable tap-to-click on this device. "
+				    "If enabled 1, 2, and 3 finger taps are mapped to left, right, middle click events. [true, false]",
                                     mir::OptionType::boolean);
     server.add_configuration_option(touchpad_cursor_acceleration_opt,
-                                    "Select acceleration profile for touchpads [none, adaptive]",
+                                    std::format("Acceleration profile for touchpads:\n"
+                                                " - {}: no acceleration.\n"
+                                                " - {}: cursor accelerates.",
+                                                acceleration_none,
+                                                acceleration_adaptive),
                                     mir::OptionType::string);
     server.add_configuration_option(touchpad_cursor_acceleration_bias_opt,
-                                    "Set the pointer acceleration speed of touchpads within a range of [-1.0, 1.0]",
+                                    "Pointer acceleration speed scaling factor for touchpads. "
+                                    "Must be within range of [-1.0, 1.0].",
                                     mir::OptionType::real);
     server.add_configuration_option(touchpad_scroll_speed_opt,
-                                    "Scales touchpad scroll. Use negative values for natural scrolling",
+                                    "Touchpad scroll scaling factor. "
+                                    "Use negative values for natural scrolling.",
                                     mir::OptionType::real);
     server.add_configuration_option(touchpad_hscroll_speed_override_opt,
-                                    "Scales touchpad horizontal scroll. Use negative values for natural scrolling",
+                                    "Touchpad horizontal scroll scaling factor. "
+                                    "Use negative values for natural scrolling.",
                                     mir::OptionType::real);
     server.add_configuration_option(touchpad_vscroll_speed_override_opt,
-                                    "Scales touchpad vertical scroll. Use negative values for natural scrolling",
+                                    "Touchpad vertical scroll scaling factor. "
+                                    "Use negative values for natural scrolling.",
                                     mir::OptionType::real);
 
     server.add_configuration_option(touchpad_scroll_mode_opt,
-                                    std::format("Select scroll mode for touchpads: [{}, {}, {}]",
+                                    std::format("Scroll mode for touchpads. "
+                                                "Generates scroll events when:\n"
+                                                " - {}: single finger moves on right or bottom edges of touchpad.\n"
+                                                " - {}: two fingers move horzontally or vertically.\n"
+                                                " - {}: mouse button held down.",
                                                 touchpad_scroll_mode_edge,
                                                 touchpad_scroll_mode_two_finger,
                                                 touchpad_scroll_mode_button_down_scroll),
                                     mir::OptionType::string);
 
     server.add_configuration_option(touchpad_click_mode_opt,
-                                    std::format("Select click mode for touchpads: [{}, {}, {}]",
-                                        touchpad_click_mode_none,
-                                        touchpad_click_mode_area,
-                                        touchpad_click_mode_clickfinger),
+                                    std::format("Click mode for touchpad. "
+                                                "Left, middle and right button click events generated when:\n"
+                                                " - {}: no events generated.\n"
+                                                " - {}: single finger tap on left, middle or right area.\n"
+                                                " - {}: one, two or three fingers present when touchpad pushed down.",
+                                                touchpad_click_mode_none,
+                                                touchpad_click_mode_area,
+                                                touchpad_click_mode_clickfinger),
                                     mir::OptionType::string);
 
     server.add_configuration_option(touchpad_middle_mouse_button_emulation_opt,
-                                    "Converts a simultaneous left and right button click into a middle button",
+                                    "Generate middle mouse button click from a simultaneous left and right button click.",
                                     mir::OptionType::boolean);
 
     // 25 rate and 600 delay are the default in Weston and Sway
-    server.add_configuration_option(key_repeat_rate_opt, "The repeat rate for key presses", 25);
-    server.add_configuration_option(key_repeat_delay_opt, "The repeat delay for key presses", 600);
+    server.add_configuration_option(key_repeat_rate_opt, "Number of milliseconds between generated key repeat events.", 25);
+    server.add_configuration_option(key_repeat_delay_opt, "Number of millisecond to hold down a key before generating repeat events.", 600);
 
     server.add_init_callback(
         [&]()

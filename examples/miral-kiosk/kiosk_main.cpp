@@ -130,7 +130,7 @@ int main(int argc, char const* argv[])
             startup_only,
             launcher,
             wayland_extensions,
-            ConfigurationOption{run_startup_apps, "startup-apps", "Colon separated list of startup apps", ""},
+            ConfigurationOption{run_startup_apps, "startup-apps", "Colon separated list of startup apps.", ""},
             StartupInternalClient{splash}
         });
 }

@@ -30,7 +30,11 @@ using namespace mir::geometry;
 namespace
 {
 char const* const display_config_opt = "display-config";
-char const* const display_config_descr = "Display configuration [{clone,sidebyside,single,static=<filename>}]";
+char const* const display_config_descr = "Display configuration:\n"
+                                         " - clone: all screens show the same content.\n"
+                                         " - sidebyside: each screen placed to the right of the previous one.\n"
+                                         " - single: only the first screen used.\n"
+                                         " - static=filename: use layout specificed in <filename>.";
 
 //char const* const clone_opt_val = "clone";
 char const* const sidebyside_opt_val = "sidebyside";
@@ -38,17 +42,17 @@ char const* const single_opt_val = "single";
 char const* const static_opt_val = "static=";
 
 char const* const display_alpha_opt = "translucent";
-char const* const display_alpha_descr = "Select a display mode with alpha[{on,off}]";
+char const* const display_alpha_descr = "Select a display mode with alpha channel. [{on,off}]";
 
 char const* const display_alpha_off = "off";
 char const* const display_alpha_on = "on";
 
 char const* const display_scale_opt = "display-scale";
-char const* const display_scale_descr = "Scale for all displays";
+char const* const display_scale_descr = "Pixel scale for all displays, e.g. 2.0.";
 char const* const display_scale_default = "1.0";
 
 char const* const display_autoscale_opt = "display-autoscale";
-char const* const display_autoscale_descr = "Target height in logical pixels for all displays";
+char const* const display_autoscale_descr = "Automatically set pixel scale for displays so they have specified logical height in pixels, e.g. 1080.";
 
 class PixelFormatSelector : public mg::DisplayConfigurationPolicy
 {

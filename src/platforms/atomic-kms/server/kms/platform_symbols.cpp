@@ -87,7 +87,7 @@ void add_graphics_platform_options(boost::program_options::options_description& 
     config.add_options()
         (bypass_option_name,
          boost::program_options::value<bool>()->default_value(false),
-         "[platform-specific] Utilize the bypass optimization for fullscreen surfaces.");
+         "Enable bypass optimization for fullscreen surfaces.");
     mga::Quirks::add_quirks_option(config);
 }
 

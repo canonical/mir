@@ -144,69 +144,75 @@ mo::DefaultConfiguration::DefaultConfiguration(
     namespace po = boost::program_options;
 
     add_options()
-        (arw_server_socket_opt, "Make socket filename globally rw (equivalent to chmod a=rw)")
+        (arw_server_socket_opt, "Make server Wayland socket readable and writeable by all users. "
+            "For debugging purposes only.")
         (platform_display_libs, po::value<std::string>(),
-            "Libraries to use for platform output support (default: autodetect)")
+            "Comma separated list of libraries to use for platform output support, e.g. mir:x11,mir:wayland. "
+            "If not provided the libraries are autodetected.")
         (platform_rendering_libs, po::value<std::string>(),
-            "Libraries to use for platform rendering support (default: autodetect)")
+            "Comma separated list of libraries to use for platform rendering support, e.g. mir:egl-generic. "
+            "If not provided the libraries are autodetected.")
         (platform_input_lib, po::value<std::string>(),
-            "Library to use for platform input support (default: input-stub.so)")
+            "Library to use for platform input support, e.g. mir:stub-input. "
+            "If not provided this is autodetected.")
         (platform_path, po::value<std::string>()->default_value(MIR_SERVER_PLATFORM_PATH),
-            "Directory to look for platform libraries (default: " MIR_SERVER_PLATFORM_PATH ")")
+            "Directory to look for platform libraries.")
         (enable_input_opt, po::value<bool>()->default_value(enable_input_default),
             "Enable input.")
         (compositor_report_opt, po::value<std::string>()->default_value(off_opt_value),
-            "Compositor reporting [{log,lttng,off}]")
+            "Configure compositor reporting. [{off,log,lttng}]")
         (display_report_opt, po::value<std::string>()->default_value(off_opt_value),
-            "How to handle the Display report. [{log,lttng,off}]")
+            "Configure display reporting. [{off,log,lttng}]")
         (input_report_opt, po::value<std::string>()->default_value(off_opt_value),
-            "How to handle to Input report. [{log,lttng,off}]")
+            "Configure input reporting. [{off,log,lttng}]")
         (seat_report_opt, po::value<std::string>()->default_value(off_opt_value),
-            "How to handle to Seat report. [{log,off}]")
+            "Configure seat reporting. [{off,log}]")
         (scene_report_opt, po::value<std::string>()->default_value(off_opt_value),
-            "How to handle the scene report. [{log,lttng,off}]")
+            "Configure scene reporting. [{off,log,lttng}]")
         (shared_library_prober_report_opt, po::value<std::string>()->default_value(log_opt_value),
-            "How to handle the SharedLibraryProber report. [{log,lttng,off}]")
+            "Configure shared library prober reporting. [{log,off,lttng}]")
         (shell_report_opt, po::value<std::string>()->default_value(off_opt_value),
-         "How to handle the Shell report. [{log,off}]")
+            "Configure shell reporting. [{off,log}]")
         (composite_delay_opt, po::value<int>()->default_value(0),
-            "Compositor frame delay in milliseconds (how long to wait for new "
-            "frames from clients before compositing). Higher values result in "
-            "lower latency but risk causing frame skipping. "
-            "Default: A negative value means decide automatically.")
+            "Number of milliseconds to wait for new frames from clients before compositing. "
+            "Higher values result in lower latency but risk causing frame skipping.")
         (touchspots_opt,
-            "Display visualization of touchspots (e.g. for screencasting).")
+            "Enable visual feedback of touch events. "
+            "Useful for screencasting.")
         (cursor_opt,
             po::value<std::string>()->default_value("auto"),
-            "Cursor (mouse pointer) to use [{auto,null,software}]")
+            "Cursor type:\n"
+            " - auto: use hardware if available, or fallback to software.\n"
+            " - null: cursor disabled.\n"
+            " - software: always use software cursor.")
         (enable_key_repeat_opt, po::value<bool>()->default_value(true),
-             "Enable server generated key repeat")
+            "Enable server generated key repeat.")
         (idle_timeout_opt, po::value<int>()->default_value(0),
-            "Time (in seconds) Mir will remain idle before turning off the display "
+            "Number of seconds Mir will remain idle before turning off the display "
             "when the session is not locked, or 0 to keep display on forever.")
         (idle_timeout_when_locked_opt, po::value<int>()->default_value(0),
-            "Time (in seconds) Mir will remain idle before turning off the display "
+            "Number of seconds Mir will remain idle before turning off the display "
             "when the session is locked, or 0 to keep the display on forever.")
-        (fatal_except_opt, "On \"fatal error\" conditions [e.g. drivers behaving "
-            "in unexpected ways] throw an exception (instead of a core dump)")
-        (debug_opt, "Enable extra development debugging. "
-            "This is only interesting for people doing Mir server or client development.")
+        (fatal_except_opt, "Throw an exception when a fatal error condition occurs. "
+            "This replaces the default behaviour of dumping core and can make it easier to diagnose issues.")
+        (debug_opt, "Enable debugging information. "
+            "Useful when developing Mir servers.")
         (console_provider,
             po::value<std::string>()->default_value("auto"),
-            "Console device handling\n"
-            "How Mir handles console-related tasks (device handling, VT switching, etc)\n"
-            "Options:\n"
-            "logind: use logind\n"
-            "vt: use the Linux VT subsystem. Requires root.\n"
-            "none: support no console-related tasks. Useful for nested platforms which do not "
-                "need raw device access and which don't have a VT concept\n"
-            "auto: detect the appropriate provider.")
+            "Method used to handle console-related tasks (device handling, VT switching, etc):\n"
+            " - logind: use logind.\n"
+            " - vt: use the Linux VT subsystem. Requires root.\n"
+            " - none: support no console-related tasks. Useful for nested platforms which do not "
+            "need raw device access and which don't have a VT concept.\n"
+            " - auto: detect the appropriate provider.")
         (vt_option_name,
             boost::program_options::value<int>()->default_value(0),
-            "[requires --console-provider=vt] VT to run on or 0 to use current.")
+            "VT to run on or 0 to use current. "
+            "Only used when --console-provider=vt.")
         (vt_switching_option_name,
             boost::program_options::value<bool>()->default_value(true),
-            "[requires --console-provider=(vt|logind)] Enable VT switching on Ctrl+Alt+F*.");
+            "Enable VT switching on Ctrl+Alt+F*. "
+            "Only used when --console-provider=vt|logind.");
 
         add_platform_options();
 }
@@ -345,9 +351,9 @@ void mo::DefaultConfiguration::parse_arguments(
     try
     {
         desc.add_options()
-            ("help,h", "Show command line help");
+            ("help,h", "Show command line help.");
         desc.add_options()
-            ("version,V", "Display Mir version and exit");
+            ("version,V", "Display Mir version and exit.");
 
         options.parse_arguments(desc, argc, argv);
 

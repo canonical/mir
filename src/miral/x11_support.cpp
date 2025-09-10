@@ -40,7 +40,7 @@ void miral::X11Support::operator()(mir::Server& server) const
 
     server.add_configuration_option(
         mo::x11_display_opt,
-        "Enable X11 support [{1|true|on|yes, 0|false|off|no}].", self->x11_enabled);
+        "Enable X11 support.", self->x11_enabled);
 
     auto const x11_scale_default = []() -> char const* {
         if (auto const gdk_scale = getenv("GDK_SCALE"))
@@ -55,17 +55,19 @@ void miral::X11Support::operator()(mir::Server& server) const
 
     server.add_configuration_option(
         mo::x11_scale_opt,
-        "The scale to assume X11 apps use. Defaults to the value of GDK_SCALE or 1. Can be fractional. "
-        "(Consider also setting GDK_SCALE in app-env-x11 when using this)",
+        "The scale to assume X11 apps use. "
+        "Defaults to the value of GDK_SCALE or 1. "
+        "Can be fractional. "
+        "(Consider also setting GDK_SCALE in app-env-x11 when using this).",
         x11_scale_default);
 
     server.add_configuration_option(
         "xwayland-path",
-        "Path to Xwayland executable", "/usr/bin/Xwayland");
+        "Path to Xwayland executable.", "/usr/bin/Xwayland");
 
     server.add_configuration_option(
         x11_displayfd_opt,
-        "File descriptor to write X11 DISPLAY number to when ready to connect", mir::OptionType::integer);
+        "File descriptor to write X11 DISPLAY number to when ready to connect.", mir::OptionType::integer);
 
     server.add_init_callback([this, &server]
         {
