@@ -31,23 +31,34 @@ namespace miral
 class MirRunner;
 class ConfigurationOption;
 
-/// Enable display configuration.
-/// The config file (miral::MirRunner::display_config_file()) is located via
-/// the XDG Base Directory Specification. Vis:
-///($XDG_CONFIG_HOME or $HOME/.config followed by $XDG_CONFIG_DIRS)
+/// Enables loading the display configuration from a file.
 ///
-/// \note From MirAL 3.8 will monitor the configuration file or, if none found,
-/// for the creation of a file in $XDG_CONFIG_HOME or $HOME/.config. Changes
-/// to this file will be reloaded. In addition, the selected layout may be
-/// overridden using a corresponding file: display_config_file() + "-layout"
-/// which will also be monitored and changes reloaded
+/// The display configuration file name is provided by #miral::MirRunner::display_config_file.
+/// Mir searches for this file in each of the following directories in order, per the
+///  XDG Base Directory Specification:
+///
+/// 1. `$XDG_CONFIG_HOME` or $HOME/.config`
+/// 2. `$XDG_CONFIG_DIRS`
+///
+/// Once a file is found, the remaining directories are not searched.
+///
+/// If no file is found, a default display configuration will be written to either
+/// `$XDG_CONFIG_HOME` or `$HOME/.config`. Please see this default file for more
+/// information about content expected from this project.
+///
+/// Mir will continue to monitor the configuration file as it runs.
+///
+/// Additionally, the selected layout of the file may be overridden using a corresponding
+/// file: miral::MirRunner::display_config_file() + "-layout", which will also be monitored.
 class DisplayConfiguration
 {
 public:
-    /// A class providing access to an arbitrary piece of data from the [DisplayConfiguration].
-    /// This is specifically useful when a user wants to extend the based display configuration
+    /// A class providing access to an arbitrary piece of data from the #miral::DisplayConfiguration.
+    ///
+    /// This is specifically useful when a user wants to extend the basic display configuration
     /// with some sort of custom payload (e.g. a user may want to extend the layout configuration
     /// with information describing the position and size of specific applications).
+    ///
     /// \remark Since MirAL 5.3
     class Node
     {
@@ -61,12 +72,56 @@ public:
             unknown
         };
 
+        /// The type of the node.
+        ///
+        /// Once resolved, the user can call the appropriate methods on the object.
+        /// For example, if the type is #Type::string, users can safely call #as_string.
+        ///
+        /// \returns the node type
         auto type() const -> Type;
+
+        /// Returns the content of the node as a `std::string`.
+        ///
+        /// If the node does not have a #type of #Type::string, this will
+        /// cause a fatal error.
+        ///
+        /// \returns the node as a string
         auto as_string() const -> std::string;
+
+        // Returns the content of the node as an `int`.
+        ///
+        /// If the node does not have a #type of #Type::integer, this will
+        /// cause a fatal error.
+        ///
+        /// \returns the node as an integer
         auto as_int() const -> int;
+
+        /// Iterate over the children of this node.
+        ///
+        /// If the node does not have a #type of #Type::sequence, this will
+        /// cause a fatal error.
+        ///
+        /// \param f function to all on each child node
         void for_each(std::function<void(Node const&)> const& f) const;
+
+        /// Check if the node has a value at the given key.
+        ///
+        /// If the node does not have a #type of #Type::map, this will
+        /// cause a fatal error.
+        ///
+        /// \param key the key to check for existence
+        /// \returns `true` if the key exists, otherwise `false`
         auto has(std::string const& key) const -> bool;
+
+        /// Get the node at the given key.
+        ///
+        /// If the node does not have a #type of #Type::map, this will
+        /// cause a fatal error.
+        ///
+        /// \param key the key to get
+        /// \returns the node at the key, or `std::nullopt` if none exists
         auto at(std::string const& key) const -> std::optional<Node>;
+
         Node(Node&&) noexcept = default;
         Node& operator=(Node&&) noexcept = default;
         Node(Node const&) = delete;
@@ -81,34 +136,74 @@ public:
         std::unique_ptr<Self> self;
     };
 
+    /// Construct the display configuration.
+    ///
+    /// The configuration file will be loaded from the provided mir runner via
+    /// #miral::MirRunner::display_config_file.
+    ///
+    /// The configuration is loaded by #DisplayConfiguration::operator()(mir::Server&).
+    ///
+    /// \param mir_runner the mir runner
     explicit DisplayConfiguration(MirRunner const& mir_runner);
 
-    /// Provide the default 'display-layout' configuration option
+    /// Create a `--display-layout` configuration option.
+    ///
+    /// Note that this must be provided to #miral::MirRunner::run_with in order to
+    /// work.
+    ///
+    /// \returns a new configuration option
     auto layout_option() -> ConfigurationOption;
 
-    /// Select a layout from the configuration
+    /// Select a layout from the configuration.
+    ///
+    /// If the \p layout is not present in the configuration, the 'default'
+    /// layout is applied.
+    ///
+    /// \param layout the desired layout
     void select_layout(std::string const& layout);
 
-    /// List all layouts found in the config file
+    /// List the valid layouts from the configuration file.
+    ///
+    /// \returns the list of valid layouts
     auto list_layouts() -> std::vector<std::string>;
 
-    /// Enable a custom output attribute in the .display YAML
+    /// Enable a custom output attribute in the configuration file.
+    ///
+    /// The value of this attribute will be made available through
+    /// #miral::UserDisplayConfigurationOutput::custom_attribute at the
+    /// \p key.
+    ///
+    /// The value in the YAML file is expected to be a string.
+    ///
+    /// \param key the key to enable
     void add_output_attribute(std::string const& key);
 
     /// Retrieve the user data associated with the active layout
-    /// for this provided key. Callers should provide this user data
-    /// via [layout_userdata_builder].
+    /// for the provided \p key.
+    ///
+    /// Callers should provide this user data via
+    /// #miral::DisplayConfiguration::layout_userdata_builder.
+    ///
+    /// \param key the key to retrieve
+    /// \returns Arbitrary userdata, if any
     /// \remark Since MirAL 5.3
     auto layout_userdata(std::string const& key) const -> std::optional<std::any const>;
 
-    /// Enable a custom layout attribute in the .display YAML.
-    /// The caller must provides the key of this custom attribute in
-    /// addition to a function that will be used to build the custom
-    /// payload that is associated with the layer. This function is
+    /// Enable a custom layout attribute in the configuration file.
+    ///
+    /// The caller must provide the \p key of this custom attribute in
+    /// addition to a \p builder function that will be used to build the custom
+    /// payload that is associated with the layout. This function is
     /// provided with the raw details of the node at the provided key.
-    /// The function must return any piece of data that may later be
-    /// retrieved via [layout_userdata].
+    ///
+    /// The function can return any piece of data. This data may later be
+    /// retrieved via #miral::DisplayConfiguration::layout_userdata.
+    ///
+    /// \param key the key for the data
+    /// \param builder a builder function that takes the content of the node
+    ///                at the key as a parameter and returns an arbitrary payload
     /// \remark Since MirAL 5.3
+    /// \sa miral::DisplayConfiguration::Node - the node provided as a parameter to the builder
     void layout_userdata_builder(
         std::string const& key,
         std::function<std::any(Node const& value)> const& builder) const;
