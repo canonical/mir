@@ -31,7 +31,6 @@ namespace miral
 /// will be raised. When "next" is called, the application after that will be
 /// raised, and so on. When "complete" is called, the currently raised application
 /// will gain focus and be returned.
-/// \remark Since MirAL 3.10
 class ApplicationSelector
 {
 public:

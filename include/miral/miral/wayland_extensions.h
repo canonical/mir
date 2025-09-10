@@ -42,7 +42,6 @@ class Window;
 ///   * The server can add support for additional extensions
 ///   * The server can specify the configuration defaults
 ///   * Mir's option handling allows the defaults to be overridden
-/// \remark Since MirAL 2.4
 class WaylandExtensions
 {
 public:
@@ -58,11 +57,9 @@ public:
     /// All Wayland extensions supported.
     /// This includes both the supported() provided by Mir and any extensions
     /// that have been added using add_extension().
-    /// \remark Since MirAL 3.0
     auto all_supported() const -> std::set<std::string>;
 
     /// Context information useful for implementing Wayland extensions
-    /// \remark Since MirAL 2.5
     class Context
     {
     public:
@@ -77,7 +74,6 @@ public:
     };
 
     /// A Builder creates and registers an extension protocol.
-    /// \remark Since MirAL 2.5
     struct Builder
     {
         /// Name of the protocol extension's Wayland global
@@ -92,7 +88,6 @@ public:
     };
 
     /// Information that can be used to determine if to enable a conditionally enabled extension
-    /// \remark Since MirAL 3.4
     class EnableInfo
     {
     public:
@@ -110,10 +105,8 @@ public:
         std::unique_ptr<Self> const self;
     };
 
-    /// \remark Since MirAL 2.5
     using Filter = std::function<bool(Application const& app, char const* protocol)>;
 
-    /// \remark Since MirAL 3.4
     using EnableCallback = std::function<bool(EnableInfo const& info)>;
 
     /**
@@ -125,90 +118,74 @@ public:
     /// It is recommended to use this in conjunction with conditionally_enable() as malicious
     /// clients could potentially use this protocol to steal input focus or
     /// otherwise bother the user.
-    /// \remark Since MirAL 2.6
     static char const* const zwlr_layer_shell_v1;
 
     /// Allows clients to retrieve additional information about outputs
-    /// \remark Since MirAL 2.6
     static char const* const zxdg_output_manager_v1;
 
     /// Allows a client to get information and gain control over all toplevels of all clients
     /// Useful for taskbars and app switchers
     /// Could allow a client to extract information about other programs the user is running
-    /// \remark Since MirAL 3.1
     static char const* const zwlr_foreign_toplevel_manager_v1;
 
     /// Allows clients to act as a virtual keyboard, useful for on-screen keyboards.
     /// Clients are not required to display anything to send keyboard events using this extension,
     /// so malicious clients could use it to take actions without user input.
-    /// \remark Since MirAL 3.4
     static char const* const zwp_virtual_keyboard_manager_v1;
 
     /// Allows clients (such as on-screen keyboards) to intercept physical key events and act as a
     /// source of text input for other clients. Input methods are not required to display anything
     /// to use this extension, so malicious clients could use it to intercept keys events or take
     /// actions without user input.
-    /// \remark Since MirAL 3.10
     static const char* const zwp_input_method_v1;
 
     /// Allows clients to display a surface as an input panel surface. The input panel surface
     /// is shown when a text input is active and hidden otherwise. The panel itself can either
     /// be attached to the edge of the screen or set to float near the active input. This is
     /// often used in conjunction with zwp_input_method_v1.
-    /// \remark Since MirAL 3.10
     static const char* const zwp_input_panel_v1;
 
     /// Allows clients (such as on-screen keyboards) to intercept physical key events and act as a
     /// source of text input for other clients. Input methods are not required to display anything
     /// to use this extension, so malicious clients could use it to intercept keys events or take
     /// actions without user input.
-    /// \remark Since MirAL 3.4
     static char const* const zwp_input_method_manager_v2;
 
     /// Allows clients to take screenshots and record the screen. Only enable for clients that are
     /// trusted to view all displayed content, including windows of other apps.
-    /// \remark Since MirAL 3.5
     static char const* const zwlr_screencopy_manager_v1;
 
     /// Allows clients to act as a virtual pointer, useful for remote control and automation.
     /// Clients are not required to display anything to send pointer events using this extension,
     /// so malicious clients could use it to take actions without user input.
-    /// \remark Since MirAL 3.6
     static char const* const zwlr_virtual_pointer_manager_v1;
 
     /// Allows clients to act as a screen lock.
-    /// \remark Since MirAL 3.6
     static char const* const ext_session_lock_manager_v1;
 
     /// Add a bespoke Wayland extension both to "supported" and "enabled by default".
-    /// \remark Since MirAL 2.5
     void add_extension(Builder const& builder);
 
     /// Add a bespoke Wayland extension both to "supported" but not "enabled by default".
-    /// \remark Since MirAL 2.5
     void add_extension_disabled_by_default(Builder const& builder);
 
     /// The set of Wayland extensions that Mir recommends.
     /// Also the set that is enabled by default upon construction of a WaylandExtensions object.
-    /// \remark Since MirAL 2.6
     static auto recommended() -> std::set<std::string>;
 
     /// The set of Wayland extensions that core Mir supports.
     /// Does not include bespoke extensions
     /// A superset of recommended()
-    /// \remark Since MirAL 2.6
     static auto supported() -> std::set<std::string>;
 
     /// Enable a Wayland extension by default. The user can still disable it with the drop-wayland-extensions or
     /// wayland-extensions options. The extension can be forced to be enabled regardless of user options with
     /// conditionally_enable().
-    /// \remark Since MirAL 2.6
     auto enable(std::string name) -> WaylandExtensions&;
 
     /// Disable a Wayland extension by default. The user can still enable it with the add-wayland-extensions or
     /// wayland-extensions options. The extension can be forced to be disabled regardless of user options with
     /// conditionally_enable().
-    /// \remark Since MirAL 2.6
     auto disable(std::string name) -> WaylandExtensions&;
 
     /// Enable a Wayland extension only when the callback returns true. The callback can use info.user_preference()
@@ -217,7 +194,6 @@ public:
     /// client/extension pair (for example, once each time a client creates or destroys a wl_registry).
     /// All client processing will be blocked while the callback is being executed. To minimise the impact on client
     /// responsiveness users may want to cache the result of any expensive checks made in the callback.
-    /// \remark Since MirAL 3.4
     auto conditionally_enable(std::string name, EnableCallback const& callback) -> WaylandExtensions&;
 
 private:
@@ -227,12 +203,10 @@ private:
 
 /// Get the MirAL application for a wl_client.
 /// \return The application (null if no application is found)
-/// \remark Since MirAL 2.5
 auto application_for(wl_client* client) -> Application;
 
 /// Get the MirAL application for a wl_resource.
 /// \return The application (null if no application is found)
-/// \remark Since MirAL 2.5
 auto application_for(wl_resource* resource) -> Application;
 
 /// Get the MirAL Window for a Wayland Surface, XdgSurface, etc.
@@ -241,7 +215,6 @@ auto application_for(wl_resource* resource) -> Application;
 /// miral::Window).
 ///
 /// \return The window (null if no window is found)
-/// \remark Since MirAL 2.5
 auto window_for(wl_resource* surface) -> Window;
 }
 

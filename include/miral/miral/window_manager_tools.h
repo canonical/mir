@@ -152,7 +152,6 @@ public:
     void focus_next_application();
 
     /// make the previous application active
-    /// \remark Since MirAL 2.5
     void focus_prev_application();
 
     /// make the next surface active within the active application
@@ -162,7 +161,6 @@ public:
     void focus_prev_within_application();
 
     /// If possible, returns the application window to select, otherwise `std::nullopt`
-    /// \remark Since MirAL 3.10
     auto window_to_select_application(const Application) const -> std::optional<Window>;
 
     /// Check if the provided window can be selected
@@ -176,7 +174,6 @@ public:
     auto active_output() -> mir::geometry::Rectangle const;
 
     /// Find the active zone area
-    /// \remark Since MirAL 3.0
     auto active_application_zone() const -> Zone;
 
     /// Raise window and all its children
