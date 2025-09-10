@@ -18,7 +18,7 @@ These pages cover the key aspects of working on Mir
 - {ref}`Getting Involved in Mir <howto-contribute>`
 ```
 
-```{grid-item-card} [Explanation](/explanation/configuring-index.md)
+```{grid-item-card} [Explanation](/explanation/contributing-index.md)
  **Discussion and clarification** of key topics
 ```
 
