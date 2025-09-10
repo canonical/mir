@@ -43,7 +43,6 @@ class CursorTheme
 public:
     /// Construct a cursor theme with the provided set of themes for the cursor.
     ///
-    ///
     /// \param theme A colon-separated list of cursor themes. For example,
     ///              "default:DMZ-White" would specify that the user wishes
     ///              to load the default theme and, as a backup, the DMZ-White
