@@ -52,7 +52,7 @@ public:
     explicit CursorScale(float default_scale);
     ~CursorScale();
 
-    /// Applies a new scale, e immediately or when the server starts.
+    /// Applies a new scale, either immediately or when the server starts.
     ///
     /// The scale is clamped between 0 and 100, inclusive.
     ///
