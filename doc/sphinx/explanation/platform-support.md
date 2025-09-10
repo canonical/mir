@@ -2,7 +2,7 @@
 discourse: 13185
 ---
 
-# Mir graphics support
+# Platform support
 
 This document describes the requirements for running Mir.
 
