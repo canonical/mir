@@ -113,7 +113,7 @@ me::TestClientRunner::TestClientRunner() : self{std::make_shared<Self>()} {}
 void me::TestClientRunner::operator()(mir::Server& server)
 {
     static const char* const test_client_opt = "test-client";
-    static const char* const test_client_descr = "client executable";
+    static const char* const test_client_descr = "Client executable";
 
     static const char* const test_timeout_opt = "test-timeout";
     static const char* const test_timeout_descr = "Seconds to run before sending SIGTERM to client";

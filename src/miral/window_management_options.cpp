@@ -35,7 +35,7 @@ char const* const trace_option = "window-management-trace";
 
 void miral::WindowManagerOptions::operator()(mir::Server& server) const
 {
-    std::string description = "window management strategy [{";
+    std::string description = "Window management strategy. [{";
 
     auto first = true;
     for (auto const& option : policies)

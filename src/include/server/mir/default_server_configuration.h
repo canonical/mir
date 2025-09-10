@@ -361,8 +361,6 @@ protected:
 
     virtual std::shared_ptr<scene::MediatingDisplayChanger> the_mediating_display_changer();
 
-    /** @} */
-
     /** @Convenience wrapper functions
      *  @{ */
     virtual std::shared_ptr<graphics::DisplayConfigurationPolicy> wrap_display_configuration_policy(

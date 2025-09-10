@@ -102,15 +102,12 @@ public:
     auto id() const -> int;
 
     /// The output name. This matches that suppled to clients through wl_output
-    /// \remark Since MirAL 3.8
     auto name() const -> std::string;
 
     /// A custom attribute value
-    /// \remark Since MirAL 3.8
     auto attribute(std::string const& key) const -> std::optional<std::string>;
 
     /// A custom attribute map
-    /// \remark Since MirAL 3.8
     auto attributes_map() const -> std::map<std::string const, std::optional<std::string>>;
 
     auto valid() const -> bool;

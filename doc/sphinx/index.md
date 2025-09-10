@@ -13,20 +13,18 @@ These pages cover the key aspects of developing a compositor using Mir
 
 ````{grid} 1 1 2 2
 ```{grid-item-card} [Tutorials](/tutorial/index.md)
-**Start here**
-- [Write Your First Wayland Compositor](/tutorial/write-your-first-wayland-compositor.md): A guide through writing a simple compositor
+**Start here** - hands-on introductions to Mir for new developers
+- [Write Your First Wayland Compositor](/tutorial/write-your-first-wayland-compositor.md)
 ```
 
 ```{grid-item-card} [How-to guides](/howto/index.md)
-**Key operations and common tasks**
-- {ref}`Develop a Wayland compositor <howto-develop-wayland-compositor>`
+**How-to guides** - step-by-step guides covering key operations and common tasks
 ```
 ````
 ````{grid} 1 1 2 2
 :reverse:
 ```{grid-item-card} [Reference](/reference/index.md)
  **Technical information** - specifications, APIs, architecture
-- [Introducing the MirAL API](introducing_the_miral_api.md): The primary external interface for compositor authors
 ```
 
 ```{grid-item-card} [Explanation](/explanation/index.md)

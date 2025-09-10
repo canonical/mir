@@ -98,7 +98,8 @@ void miral::CursorScale::operator()(mir::Server& server) const
 {
     auto const* const cursor_scale_opt = "cursor-scale";
     server.add_configuration_option(
-        cursor_scale_opt, "Scales the mouse cursor visually. Accepts any value in the range [0, 100]", self->scale_);
+        cursor_scale_opt, "Mouse cursor scale, e.g. 2. "
+                          "Accepts any value in the range [0, 100]", self->scale_);
 
     server.add_init_callback(
         [&server, this, cursor_scale_opt]

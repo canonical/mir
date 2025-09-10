@@ -59,7 +59,8 @@ Build-Depends: cmake,
                systemtap-sdt-dev,
                wlcs (>= 1.8~),
                libapparmor-dev,
-               libpixman-1-dev
+               libpixman-1-dev,
+               xwayland
 Standards-Version: 4.6.1
 Homepage: https://mir-server.io/
 Vcs-Browser: https://github.com/canonical/mir/

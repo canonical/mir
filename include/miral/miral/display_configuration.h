@@ -176,7 +176,6 @@ public:
     /// The value in the YAML file is expected to be a string.
     ///
     /// \param key the key to enable
-    /// \remark Since MirAL 3.8
     void add_output_attribute(std::string const& key);
 
     /// Retrieve the user data associated with the active layout

@@ -5,6 +5,6 @@ includedir=@PKGCONFIG_INCLUDEDIR@/mircommon
 Name: mircommon
 Description: Mir server library
 Version: @MIR_VERSION@
-Requires: mircore
+Requires: mircore, xkbcommon
 Libs: -L${libdir} -lmircommon
 Cflags: -I${includedir}

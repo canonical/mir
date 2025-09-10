@@ -25,14 +25,31 @@ You may need to install git for the system you are working on.
 You’ll also need a few development tools installed. The exact dependencies and
 instructions vary across distros.
 
-###  On Ubuntu
+`````{tab-set}
 
-    sudo apt-get build-dep ./
+````{tab-item} Debian or derivatives
+:sync: debian
 
-### On Fedora and Alpine
+```sh
+sudo apt-get build-dep ./
+```
+````
 
-As we build these distros in Mir's CI you can copy the instructions
-from the corresponding files under `spread/build`.
+````{tab-item} Fedora
+:sync: fedora
+
+```sh
+sudo dnf --assumeyes builddep --allowerasing rpm/mir.spec
+```
+````
+
+````{tab-item} Alpine
+:sync: alpine
+
+As we build Alpine in Mir's CI you can copy the `apk add` command
+from `spread/build/alpine/task.yaml`.
+
+`````
 
 ## Building
 
