@@ -100,3 +100,41 @@ execute: |
     sbuild "${SBUILD_OPTS[@]}"
 
     schroot -c chroot:${SCHROOT_NAME} --directory /build -- env CCACHE_DIR=${CCACHE_DIR} ccache --show-stats --zero-stats > ${CCACHE_DIR}/ccache.stats
+
+    if [[ "${SPREAD_VARIANT}" == "ubuntu" ]]; then
+      # build the local archive for end-to-end tests
+      cd ${SPREAD_PATH}/..
+      apt-ftparchive packages . > Packages
+      echo "deb [trusted=yes] file:$PWD ./" >> /etc/apt/sources.list
+      echo "APT::Get::Assume-Yes true;" >> /etc/apt/apt.conf.d/99assume-yes
+      apt-get update
+
+      export \
+        MIR_SERVER_PLATFORM_DISPLAY_LIBS=mir:virtual \
+        MIR_SERVER_VIRTUAL_OUTPUT=800x600
+
+      # [doc:first-compositor:debian-dependencies-install]
+      apt-get install \
+        build-essential \
+        cmake \
+        libmiral-dev \
+        mir-graphics-drivers-desktop \
+        pkg-config
+      # [doc:first-compositor:debian-dependencies-install-end]
+
+      cd ${SPREAD_PATH}/doc/sphinx/tutorial/first-wayland-compositor
+
+      # [doc:first-compositor:build]
+      cmake .
+      cmake --build .
+      # [doc:first-compositor:build-end]
+
+      # we expect the timeout to hit
+      timeout 10 bash <<EOF || [ $? -eq 124 ]
+
+        # [doc:first-compositor:run]
+        ./demo-mir-compositor
+        # [doc:first-compositor:run-end]
+    EOF
+
+    fi
