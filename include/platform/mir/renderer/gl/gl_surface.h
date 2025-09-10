@@ -24,7 +24,7 @@ namespace mir
 {
 namespace graphics
 {
-class Framebuffer;
+class Buffer;
 
 namespace gl
 {
@@ -39,7 +39,7 @@ public:
     virtual void release_current() = 0;
 
     // Naming: SwapBuffers? Commit? Claim current buffer?
-    virtual auto commit() -> std::unique_ptr<graphics::Framebuffer> = 0;
+    virtual auto commit() -> std::unique_ptr<graphics::Buffer> = 0;
 
     /// Size, in pixels, of the underlying surface
     virtual auto size() const -> mir::geometry::Size = 0;
