@@ -2,6 +2,7 @@
 These pages provide additional detail about a number of aspects related to using Mir.
 
 - [Graphics support](mir-graphics-support.md): what's required to run Mir compositors
+- [Input Events](input-events.md): how input is passed through Mir
 - [Security](security.md): a deep dive into the security aspects of Mir compositors
 - [Performance](performance.md): a discussion of the performance aspects of Mir compositors
 - [Energy efficiency](energy-efficiency.md): a deep dive into the security aspects of Mir compositors
@@ -15,6 +16,7 @@ These pages provide additional detail about a number of aspects related to using
 :hidden:
 
 mir-graphics-support.md
+input-events.md
 security.md
 performance.md
 energy-efficiency.md
