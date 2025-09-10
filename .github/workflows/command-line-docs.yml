@@ -37,6 +37,8 @@ jobs:
 
       - name: Check for documentation updates
         run: |
+          ls -l ./build/bin/miral-shell
+          ldd ./build/bin/miral-shell
           ./build/bin/miral-shell --help-markdown > .command-line-options.md
           diff .command-line-options.md doc/sphinx/reference/command-line-options.md
           if [ $? != 0 ]; then exit 1; fi
