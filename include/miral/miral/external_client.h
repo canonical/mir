@@ -46,8 +46,7 @@ public:
     ///
     /// \param command_line the command to launch
     /// \returns The pid of the process that was launched.
-    /// \throws std::logic_error if the #ExternalClientLauncher::operator has not been called yet.
-    /// \remark Return type changed from void in MirAL 3.0
+    /// \pre the server has started with this instance passed to #MirRunner::run_with().
     auto launch(std::vector<std::string> const& command_line) const -> pid_t;
 
     /// If X11 is enabled, then launch with an environment configured for X11.
@@ -57,20 +56,16 @@ public:
     /// If X11 is unavailable, this method always returns `-1`.
     ///
     /// \returns The pid of the process that was launched, or -1 if X11 is not enabled
-    /// \throws std::logic_error if the #ExternalClientLauncher::operator has not been called yet
-    /// \remark Return type changed from void in MirAL 3.0
+    /// \pre the server has started with this instance passed to #MirRunner::run_with().
     auto launch_using_x11(std::vector<std::string> const& command_line) const -> pid_t;
 
     /// Use the proposed `desktop-entry` snap interface to launch a snap.
     ///
     /// \param desktop_file the desktop file name of the snap
-    /// \throws std::logic_error if the #ExternalClientLauncher::operator has not been called yet
+    /// \pre the server has started with this instance passed to #MirRunner::run_with().
     void snapcraft_launch(std::string const& desktop_file) const;
 
     /// Split out the tokens of an escaped \p command.
-    ///
-    /// This is particularly helpful when you have a commands that you'd like
-    /// to provide to #ExternalClientLauncher::launch.
     ///
     /// \param command an unsplit command
     /// \returns a command split into a `std::vector`
@@ -80,9 +75,9 @@ public:
     ///
     /// If X11 is enabled, then DISPLAY will also be set accordingly.
     ///
-    /// \param command the command to run, this will be split with #ExternalClientClauncher::split_command
+    /// \param command the command to run
     /// \return The pid of the process that was launched.
-    /// \throws std::logic_error if the #ExternalClientLauncher::operator has not been called yet
+    /// \pre the server has started with this instance passed to #MirRunner::run_with().
     auto launch(std::string const& command) const -> pid_t;
 
 private:
