@@ -49,9 +49,7 @@ class ConfigurationOption;
 /// Mir will continue to monitor the configuration file as it runs.
 ///
 /// Additionally, the selected layout of the file may be overridden using a corresponding
-/// file: miral::MirRunner::display_config_file + "-layout", which will also be monitored.
-///
-/// \remark Since MirAL 2.4
+/// file: miral::MirRunner::display_config_file() + "-layout", which will also be monitored.
 class DisplayConfiguration
 {
 public:
@@ -115,7 +113,7 @@ public:
         /// \returns `true` if the key exists, otherwise `false`
         auto has(std::string const& key) const -> bool;
 
-        // Get the node at the given key.
+        /// Get the node at the given key.
         ///
         /// If the node does not have a #type of #Type::map, this will
         /// cause a fatal error.
@@ -173,8 +171,8 @@ public:
     ///
     /// The value of this attribute will be made available through
     /// #miral::UserDisplayConfigurationOutput::custom_attribute at the
-    /// \p key. Note that the data is value for the key has to have a
-    /// type of `std::optional<std::string>`.
+    /// \p key. Note that the value at the \p key must have a type of
+    /// `std::optional<std::string>`.
     ///
     /// \param key the key to enable
     /// \remark Since MirAL 3.8
