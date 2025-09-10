@@ -79,7 +79,8 @@ void miral::ExternalClientLauncher::operator()(mir::Server& server)
     server.add_configuration_option(
         app_env,
         "Colon separated list of environment variables set or clear when launching applications. "
-        "Variables are set in the form NAME=VALUE and cleared with -NAME, e.g. DEBUG=1:-VERBOSE."
+        "Variables are set in the form NAME=VALUE and cleared with -NAME, e.g. DEBUG=1:-VERBOSE.",
+default_env);
         default_env);
 
     server.add_configuration_option(
