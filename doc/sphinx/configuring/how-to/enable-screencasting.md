@@ -1,5 +1,6 @@
-How To Enable Screencasting
-===========================
+(how-to-enable-screencasting)=
+
+# How To Enable Screencasting
 
 ## Requirements
 Required packages:

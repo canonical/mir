@@ -50,6 +50,6 @@ tutorial/index
 how-to/index
 explanation/index
 reference/index
-configuring-index
+configuring/index
 contributing-index
 ```

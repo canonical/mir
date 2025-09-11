@@ -171,6 +171,11 @@ redirects = {
     'explanation/ok-so-what-is-this-wayland-thing-anyway': '../../tutorial/write-your-first-wayland-compositor',
     'how-to/developing-a-wayland-compositor-using-mir': '../../tutorial/write-your-first-wayland-compositor',
     'how-to/developing-wayland-extension-protocols-for-mir-servers' : '../how-to/how-to-integrate-a-custom-wayland-protocol',
+    'explanation/component_reports': '../configuring/explanation/component_reports',
+    'how-to/how-to-calibrate-a-touchscreen-device': '../configuring/how-to/calibrate-a-touchscreen-device',
+    'how-to/how-to-enable-remote-desktop': '../configuring/how-to/enable-remote-desktop',
+    'how-to/how-to-enable-screencasting': '../configuring/how-to/enable-screencasting',
+    'how-to/how-to-use-on-screen-keyboards': '../configuring/how-to/use-on-screen-keyboards',
 }
 
 

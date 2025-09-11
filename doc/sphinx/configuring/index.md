@@ -13,11 +13,11 @@ These pages cover the key aspects of configuring Mir based compositors.
 
 ````{grid} 1 1 2 2
 
-```{grid-item-card} [How-to guides](/how-to/configuring-index.md)
+```{grid-item-card} [How-to](configuring-how-to-index)
 **How-to guides** - step-by-step guides covering key operations and common tasks
 ```
 
-```{grid-item-card} [Explanation](/explanation/configuring-index.md)
+```{grid-item-card} [Explanation](configuring-explanation-index)
  **Discussion and clarification** of key topics
 ```
 ````
@@ -35,7 +35,7 @@ Mir is a member of the Ubuntu family. It’s an open source project that warmly 
 
 ```{toctree}
 :hidden:
+:glob:
 
-how-to/configuring-index
-explanation/configuring-index
+*/index
 ```
