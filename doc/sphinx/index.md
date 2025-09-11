@@ -18,17 +18,23 @@ These pages cover the key aspects of developing a compositor using Mir
 ```
 
 ```{grid-item-card} [How-to guides](how-to-index)
-**How-to guides** - step-by-step guides covering key operations and common tasks
+**How-to guides** - step-by-step guides covering key operations and common tasks, including
+[handling keyboard input](/how-to/how-to-handle-keyboard-input.md) and [integrating custom
+wayland protocols](/how-to/how-to-integrate-a-custom-wayland-protocol.md)
 ```
 ````
 ````{grid} 1 1 2 2
 :reverse:
 ```{grid-item-card} [Reference](/reference/index.md)
- **Technical information** - specifications, APIs, architecture
+**Technical information** - specifications, APIs, architecture:
+[kernal requirements](/reference/kernel_requirements.md),
+[introduction to the miral API](/reference/introducing_the_miral_api.md) and more
 ```
 
 ```{grid-item-card} [Explanation](/explanation/index.md)
- **Discussion and clarification** of key topics
+**Discussion and clarification** of key topics, such as
+[accessibility methods](/explanation/accessibility-methods.md),
+[security](explanation/security.md) and more
 ```
 ````
 
@@ -36,11 +42,13 @@ These pages cover the key aspects of developing a compositor using Mir
 
 Mir is a member of the Ubuntu family. It’s an open source project that warmly welcomes community projects, contributions, suggestions, fixes and constructive feedback.
 
+* [Release Notes](https://github.com/canonical/mir/releases)
 * [Code of conduct](https://ubuntu.com/community/docs/ethos/code-of-conduct)
 * [Get support](https://discourse.ubuntu.com/c/project/mir/15)
 * [Join our online chat](https://matrix.to/#/#mir-server:matrix.org)
 * {ref}`Contribute <howto-contribute>`
-* Thinking about using Mir for your next project? [Get in touch](https://canonical.com/mir)!
+
+Thinking about using Mir for your next project? [Get in touch](https://canonical.com/mir)!
 
 
 ```{toctree}
