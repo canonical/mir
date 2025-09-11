@@ -15,7 +15,7 @@ section.
 
 * XDG desktop portals will also integrate based off of Wayland extensions
   combined with some "magic" to incorporate a portal implementation into
-your Desktop Environment. (See: {ref}how-to-enable-screencasting for an example)
+your Desktop Environment. (See: {ref}`how-to-enable-screencasting` for an example)
 
 * For your Desktop Environment to show up in the greeter at login it needs to
 be listed in a `.desktop` file under `/usr/share/wayland-sessions/`.

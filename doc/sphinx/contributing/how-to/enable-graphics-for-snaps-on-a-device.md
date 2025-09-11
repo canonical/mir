@@ -483,7 +483,7 @@ Configurations:
 ```
 
 If `eglinfo` does **NOT** list a GBM platform, or generates errors then you want to look
-at {ref}troubleshooting. If `eglinfo` does list a GBM platform
+at {ref}`#troubleshooting`. If `eglinfo` does list a GBM platform
 then we can proceed to testing `ubuntu-frame`.
 
 ### Test if `ubuntu-frame` works
@@ -537,6 +537,7 @@ ubuntu-frame
 
 If everything works, then `ubuntu-frame` is ready. If not, we'll have to troubleshoot.
 
+(#troubleshooting)=
 ### Troubleshooting
 When bringing up a confined ubuntu-frame snap on a new board with new drivers there are two
 separate access control mechanisms:
