@@ -43,7 +43,8 @@ Mir is a member of the Ubuntu family. It’s an open source project that warmly 
 
 ```{toctree}
 :hidden:
-:glob:
 
-*/index
+how-to/index
+explanation/index
+reference/index
 ```
