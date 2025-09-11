@@ -90,6 +90,5 @@ The Mir coding guidelines are <a href=../../_static/cppguide/>here</a>.
 
 ## Working on code
  - Hacking guidelines can be found here: [Mir Hacking Guides](https://github.com/canonical/mir/blob/main/HACKING.md)
- - You can configure *Mir* to provide runtime information helpful for debugging
-   by enabling component reports: [Component Reports](../explanation/component_reports.md)
- - A guide on versioning Mir DSOs: [DSO Versioning Guide](../reference/dso_versioning_guide.md)
+ - You can configure *Mir* to provide runtime information helpful for debugging by enabling [](component-reports)
+ - A guide on versioning Mir DSOs: [DSO Versioning Guide](dso-versioning-guide)

@@ -51,5 +51,5 @@ how-to/index
 explanation/index
 reference/index
 configuring/index
-contributing-index
+contributing/index
 ```

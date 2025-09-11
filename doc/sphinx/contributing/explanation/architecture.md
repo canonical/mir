@@ -1,3 +1,5 @@
+(mir-architecture)=
+
 # Architecture
 This document introduces the architecture of *Mir* at a high-level.
 
@@ -65,4 +67,4 @@ Library | Description
 *mircommon*|*Mir*-specific data concepts like *Mir* event building, logging, and timing utilities.
 *mirplatform*|*Mir* platform-specific data concepts (establishes a "common language" between `mirserver` and the platform modules
 
-There is a full list of Mir libraries in {ref}`Libraries <explanation-libraries>`
+There is a full list of Mir libraries in [](mir-libraries).

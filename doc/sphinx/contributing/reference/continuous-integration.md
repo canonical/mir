@@ -1,3 +1,5 @@
+(mir-continuous-integration)=
+
 # Mir Continuous Integration
 
 This document outlines the journey of a contribution to Mir through its continuous integration

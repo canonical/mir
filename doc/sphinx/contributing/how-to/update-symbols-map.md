@@ -1,3 +1,5 @@
+(how-to-update-symbols-maps)=
+
 # How to Update Symbols Map Files
 The Mir project is a collection of C++ libraries that a consumer
 can use to create a Wayland compositor. In order for consumers

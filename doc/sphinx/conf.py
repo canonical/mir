@@ -176,6 +176,16 @@ redirects = {
     'how-to/how-to-enable-remote-desktop': '../configuring/how-to/enable-remote-desktop',
     'how-to/how-to-enable-screencasting': '../configuring/how-to/enable-screencasting',
     'how-to/how-to-use-on-screen-keyboards': '../configuring/how-to/use-on-screen-keyboards',
+    'explanation/architecture': '../contributing/explanation/architecture',
+    'explanation/libraries': '../contributing/explanation/libraries',
+    'how-to/how-to-enable-graphics-for-snaps-on-a-device': '../contributing/how-to/enable-graphics-for-snaps-on-a-device',
+    'how-to/getting_involved_in_mir': '../contributing/how-to/getting-involved-in-mir',
+    'how-to/how-to-test-mir-for-a-release': '../contributing/how-to/test-mir-for-a-release',
+    'how-to/how-to-update-symbols-map': '../contributing/how-to/update-symbols-map',
+    'how-to/how-to-use-checkbox-mir': '../contributing/how-to/use-checkbox-mir',
+    'reference/continuous-integration': '../contributing/reference/continuous-integration',
+    'reference/cppguide': '../contributing/reference/cppguide',
+    'reference/dso_versioning_guide': '../contributing/reference/dso-versioning-guide',
 }
 
 

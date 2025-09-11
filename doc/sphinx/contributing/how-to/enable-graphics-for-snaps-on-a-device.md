@@ -1,3 +1,5 @@
+(how-to-enable-graphics-for-snaps-on-a-device)=
+
 # How to enable gpu-2404 on a device
 This document will guide you through the process of assembling a
 `gpu-2404` snap. With this snap, your device will be ready

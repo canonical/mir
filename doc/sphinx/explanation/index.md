@@ -13,14 +13,7 @@ These pages provide additional detail about a number of aspects related to using
 
 ```{toctree}
 :hidden:
+:glob:
 
-mir-graphics-support.md
-security.md
-performance.md
-energy-efficiency.md
-window-positions-under-wayland.md
-component_reports.md
-desktop-environment.md
-accessibility-methods.md
-consumer-libraries.md
+*
 ```

@@ -1,3 +1,5 @@
+(dso-versioning-guide)=
+
 A brief guide for versioning symbols in the Mir DSOs
 ====================================================
 
