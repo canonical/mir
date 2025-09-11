@@ -610,6 +610,8 @@ echo "c 10:60 rw" | sudo tee /sys/fs/cgroup/devices/snap.ubuntu-frame.ubuntu-fra
 
 And now we can go back to the shell, and try running `ubuntu-frame`:
 
+<!-- pyml disable-num-lines 3 commands-show-output -->
+
 ```shell
 $SNAP/usr/local/bin/frame
 ```

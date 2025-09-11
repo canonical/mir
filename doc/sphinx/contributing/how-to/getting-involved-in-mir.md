@@ -70,7 +70,9 @@ by default. Within this window you can start a terminal with Ctrl-Alt-Shift-T
 (the "Shift" is needed to avoid Ubuntu's DE intercepting the input). From this
 terminal you can start apps. For example:
 
-    $ gedit
+```
+gedit
+```
 
 To exit from miral-shell press Ctrl-Alt-Backspace.
 
