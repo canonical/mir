@@ -29,8 +29,11 @@ For Debian and its derivatives, we only need two small packages:
 * `mir-graphics-drivers-desktop` - provides drivers so Mir can talk with
   different graphics drivers
 
-```sh
-sudo apt install libmiral-dev mir-graphics-drivers-desktop
+```{literalinclude} ../../../spread/build/sbuild/task.yaml
+:language: bash
+:start-after: [doc:first-compositor:debian-dependencies-install]
+:end-before: [doc:first-compositor:debian-dependencies-install-end]
+:dedent: 6
 ```
 ````
 
@@ -38,7 +41,7 @@ sudo apt install libmiral-dev mir-graphics-drivers-desktop
 :sync: fedora
 
 ```sh
-sudo dnf install mir-devel libxkbcommon
+dnf install mir-devel libxkbcommon-devel
 ```
 ````
 
@@ -46,7 +49,7 @@ sudo dnf install mir-devel libxkbcommon
 :sync: alpine
 
 ```sh
-sudo apk add mir-dev
+apk add mir-dev libxkbcommon-dev
 ```
 
 `````
@@ -91,9 +94,11 @@ screen capture, pointer confinement, and so on.
 
 Finally, build the cmake project:
 
-```sh
-cmake -B build
-cmake --build build
+```{literalinclude} ../../../spread/build/sbuild/task.yaml
+:language: bash
+:start-after: [doc:first-compositor:build]
+:end-before: [doc:first-compositor:build-end]
+:dedent: 6
 ```
 
 ## Run the compositor
@@ -104,8 +109,11 @@ Mir](getting-started-with-mir.md).
 For development, it is very useful to run your compositor within an existing
 Wayland session, so let's do that first. To do this, run:
 
-```sh
-WAYLAND_DISPLAY=wayland-99 ./build/demo-mir-compositor
+```{literalinclude} ../../../spread/build/sbuild/task.yaml
+:language: bash
+:start-after: [doc:first-compositor:run]
+:end-before: [doc:first-compositor:run-end]
+:dedent: 8
 ```
 
 An all-black window with the compositor will pop up.

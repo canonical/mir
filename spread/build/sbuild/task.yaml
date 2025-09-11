@@ -113,13 +113,13 @@ execute: |
         MIR_SERVER_PLATFORM_DISPLAY_LIBS=mir:virtual \
         MIR_SERVER_VIRTUAL_OUTPUT=800x600
 
-      # [doc:first-compositor:debian-dependencies-install]
       apt-get install \
         build-essential \
         cmake \
-        libmiral-dev \
-        mir-graphics-drivers-desktop \
         pkg-config
+
+      # [doc:first-compositor:debian-dependencies-install]
+      apt-get install libmiral-dev mir-graphics-drivers-desktop
       # [doc:first-compositor:debian-dependencies-install-end]
 
       cd ${SPREAD_PATH}/doc/sphinx/tutorial/first-wayland-compositor
@@ -133,7 +133,7 @@ execute: |
       timeout 10 bash <<EOF || [ $? -eq 124 ]
 
         # [doc:first-compositor:run]
-        ./demo-mir-compositor
+        WAYLAND_DISPLAY=wayland-99 ./demo-mir-compositor
         # [doc:first-compositor:run-end]
     EOF
 
