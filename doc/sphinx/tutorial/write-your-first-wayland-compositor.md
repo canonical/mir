@@ -27,8 +27,11 @@ For Debian and its derivatives, we only need two small packages:
 * `mir-graphics-drivers-desktop` - provides drivers so Mir can talk with
   different graphics drivers
 
-```sh
-sudo apt install libmiral-dev mir-graphics-drivers-desktop
+```{literalinclude} ../../../spread/build/sbuild/task.yaml
+:language: bash
+:start-after: [doc:first-compositor:debian-dependencies-install]
+:end-before: [doc:first-compositor:debian-dependencies-install-end]
+:dedent: 6
 ```
 ````
 
@@ -36,7 +39,7 @@ sudo apt install libmiral-dev mir-graphics-drivers-desktop
 :sync: fedora
 
 ```sh
-sudo dnf install mir-devel libxkbcommon
+dnf install mir-devel libxkbcommon-devel
 ```
 ````
 
@@ -44,7 +47,7 @@ sudo dnf install mir-devel libxkbcommon
 :sync: alpine
 
 ```sh
-sudo apk add mir-dev
+apk add mir-dev libxkbcommon-dev
 ```
 
 `````
@@ -62,47 +65,15 @@ cd demo-mir-compositor
 
 Next, create `CMakeLists.txt` with the following content:
 
-```cmake
-# CMakeLists.txt
-cmake_minimum_required(VERSION 3.5)
-
-project(demo-mir-compositor)
-
-set(CMAKE_CXX_STANDARD 23)
-
-include(FindPkgConfig)
-pkg_check_modules(MIRAL miral REQUIRED)
-pkg_check_modules(XKBCOMMON xkbcommon REQUIRED)
-
-add_executable(demo-mir-compositor main.cpp)
-
-target_include_directories(demo-mir-compositor PUBLIC SYSTEM ${MIRAL_INCLUDE_DIRS})
-target_link_libraries(     demo-mir-compositor               ${MIRAL_LDFLAGS})
-target_link_libraries(     demo-mir-compositor               ${XKBCOMMON_LIBRARIES})
+```{literalinclude} ./first-wayland-compositor/CMakeLists.txt
+:language: cmake
 ```
 
 Next, create `main.cpp` with the following content:
 
-```cpp
-/// main.cpp
-
-#include <miral/runner.h>
-#include <miral/minimal_window_manager.h>
-#include <miral/set_window_management_policy.h>
-
-using namespace miral;
-
-int main(int argc, char const* argv[])
-{
-    MirRunner runner{argc, argv};
-
-    return runner.run_with(
-        {
-            set_window_management_policy<MinimalWindowManager>()
-        });
-}
+```{literalinclude} ./first-wayland-compositor/main.cpp
+:language: cpp
 ```
-
 
 `MirRunner` is a class from `libmiral` that acts as the "entry point" of your
 compositor.
@@ -121,9 +92,11 @@ screen capture, pointer confinement, and so on.
 
 Finally, build the cmake project:
 
-```sh
-cmake -B build
-cmake --build build
+```{literalinclude} ../../../spread/build/sbuild/task.yaml
+:language: bash
+:start-after: [doc:first-compositor:build]
+:end-before: [doc:first-compositor:build-end]
+:dedent: 6
 ```
 
 ## Run the compositor
@@ -134,8 +107,11 @@ Mir](getting-started-with-mir.md).
 For development, it is very useful to run your compositor within an existing
 Wayland session, so let's do that first. To do this, run:
 
-```sh
-WAYLAND_DISPLAY=wayland-99 ./build/demo-mir-compositor
+```{literalinclude} ../../../spread/build/sbuild/task.yaml
+:language: bash
+:start-after: [doc:first-compositor:run]
+:end-before: [doc:first-compositor:run-end]
+:dedent: 8
 ```
 
 An all-black window with the compositor will pop up.
