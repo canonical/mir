@@ -1,3 +1,5 @@
+(how-to-index)=
+
 # How-to guides
 These how-to guides cover the key aspects of working with Mir.
 

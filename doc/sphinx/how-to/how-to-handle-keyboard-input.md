@@ -19,7 +19,7 @@ headers, code, and options.
 Compositor](../tutorial/write-your-first-wayland-compositor.md) is a prerequisite for
 this how-to.
 
-### Header changes
+## Header changes
 Here we just include `append_keyboard_event_filter.h` for the declaration of
 `AppendKeyboardEventFilter` and `toolkit_event` to get definitions for event types and
 functions. We import everything from `miral::toolkit` to make the code a bit
@@ -36,7 +36,7 @@ easier to read.
 +using namespace miral::toolkit;
 ```
 
-### Code changes
+## Code changes
 This big block of code can be broken down into three parts: 
 1. Declaring the name of the terminal we'll use and an external client launcher
    that we'll use to launch it. 
