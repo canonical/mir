@@ -39,46 +39,39 @@ struct ApplicationInfo;
 class WindowSpecification;
 class Zone;
 
-/**
- * Workspace is intentionally opaque in the miral API. Its only purpose is to
- * provide a shared_ptr which is used as an identifier.
- *
- * The MirAL implementation of workspaces only prescribes the following:
- *  o When child windows are created they are added to all(any) workspaces of parent
- *  o Focus changes will first try windows with a common workspace
- *  o Adding/removing windows to a workspace affects the whole ancestor/decendent tree
- *
- * The presentation of workspaces is left entirely to the policy
- */
 class Workspace;
 
 class WindowManagerToolsImplementation;
 
-/// Window management functions for querying and updating MirAL's model
+/// This class provides compositor authors with facilities to request state and changes
+/// from windows, applications, workspaces, and more.
+///
+/// When a #WindowManagementPolicy is added to a #miral::MirRunner via #miral::add_window_manager_policy,
+/// the policy will receive an instance of #miral::WindowManagerTools as the first parameter.
+/// Compositor authors are encouraged to use this class instance to handle and request changes from
+/// the underlying Mir server.
 class WindowManagerTools
 {
 public:
+    /// Constructs an instance of window manager tools from an implementation.
+    ///
+    /// Compositor authors are not expected to construct this object themselves.
+    /// Instead, they should use #miral::add_window_manager_policy to create
+    /// an instance of this class for them. For this reason,
+    /// #miral::WindowManagerToolsImplementation is purposefully opaque.
     explicit WindowManagerTools(WindowManagerToolsImplementation* tools);
     WindowManagerTools(WindowManagerTools const&);
     WindowManagerTools& operator=(WindowManagerTools const&);
     ~WindowManagerTools();
 
-/** @name Query & Update Model
- *  These functions assume that the BasicWindowManager data structures can be accessed freely.
- *  I.e. they should only be used by a thread that has called the WindowManagementPolicy methods
- *  (where any necessary locks are held) or via a invoke_under_lock() callback.
- *  @{ */
-
-    /** count the applications
-     *
-     * @return number of applications
-     */
+    /// Returns the number of applications.
+    ///
+    /// @returns the number of applications
     auto count_applications() const -> unsigned int;
 
-    /** execute functor for each application
-     *
-     * @param functor the functor
-     */
+    /// Execute a functor for each application.
+    ///
+    /// \param functor called for each application
     void for_each_application(std::function<void(ApplicationInfo& info)> const& functor);
 
     /** find an application meeting the predicate
@@ -86,182 +79,233 @@ public:
      * @param predicate the predicate
      * @return          the application
      */
+    /// Find an application that meets the predicate.
+    ///
+    /// \param predicate the predicate
+    /// \returns an application, or the default-constructed application if none is found
     auto find_application(std::function<bool(ApplicationInfo const& info)> const& predicate)
     -> Application;
 
-    /** retrieve metadata for an application
-     *
-     * @param session   the application session
-     * @return          the metadata
-     */
+    /// Retrieve information about a \p session.
+    ///
+    /// \param session the application
+    /// \returns info about the application, or the default-constructed application info if the \p session is invalid
+    /// \sa miral::ApplicationInfo - info about the application
     auto info_for(std::weak_ptr<mir::scene::Session> const& session) const -> ApplicationInfo&;
 
-    /** retrieve metadata for a window
-     *
-     * @param surface   the window surface
-     * @return          the metadata
-     */
+    /// Retrieve info about a window from the \p surface.
+    ///
+    /// \param surface the surface
+    /// \returns info about the window, or the default-constructed window info if the \p surface is invalid
+    /// \sa miral::WindowInfo - info about the window
     auto info_for(std::weak_ptr<mir::scene::Surface> const& surface) const -> WindowInfo&;
 
-    /** retrieve metadata for a window
-     *
-     * @param window    the window
-     * @return          the metadata
-     */
+    /// Retrieve info about a window.
+    ///
+    /// \param window the window\
+    /// \returns info about the window, or the default-constructed window info if the \p surface is invalid
+    /// \throws std::out_of_range when the window is invalid
+    /// \sa miral::WindowInfo - info about the window
     auto info_for(Window const& window) const -> WindowInfo&;
 
-    /** retrieve metadata for a persistent surface id
-     *
-     * @param id        the persistent surface id
-     * @return          the metadata
-     * @throw           invalid_argument or runtime_error if the id is badly formatted/doesn't identify a current window
-     * \deprecated      'Persistent' surface IDs were part of mirclient API
-     */
+    /// Retrieve metadata for a persistent surface id.
+    ///
+    /// \param id the persistent surface id
+    /// \returns the metadata
+    /// \throws invalid_argument or runtime_error if the id is badly formatted/doesn't identify a current window
+    /// \deprecated 'Persistent' surface IDs were part of mirclient API
     [[deprecated("'Persistent' surface IDs were part of mirclient API")]]
     auto info_for_window_id(std::string const& id) const -> WindowInfo&;
 
-    /** retrieve the persistent surface id for a window
-     *
-     * @param window    the window
-     * @return          the persistent surface id
-     * \deprecated      'Persistent' surface IDs were part of mirclient API
-     */
+    /// Retrieve the persistent surface id for a window
+    ///
+    /// \param window the window
+    /// \returns the persistent surface id
+    /// \deprecated 'Persistent' surface IDs were part of mirclient API
     [[deprecated("'Persistent' surface IDs were part of mirclient API")]]
     auto id_for_window(Window const& window) const -> std::string;
 
-    /// Send close request to the window
+    /// Send a close request to the window.
+    ///
+    /// \param window the window
     void ask_client_to_close(Window const& window);
 
-    /// retrieve the active window
+    /// Retrieve the active window.
+    ///
+    /// If no window is active, then this will be the default-constructed window.
+    ///
+    /// \returns the active window
     auto active_window() const -> Window;
 
-    /** select a new active window based on the hint
-     *
-     * @param hint  the hint
-     * @return      the new active window
-     */
+    /// Select a new active window based on the \p hint.
+    ///
+    /// \param hint the window hint
+    /// \returns the new active window
     auto select_active_window(Window const& hint) -> Window;
 
-    /// move the active window
+    /// Drags the active window by the provided displacement.
+    ///
+    /// \param movement the displacement to move by
     void drag_active_window(mir::geometry::Displacement movement);
 
-    /// move the window
+    /// Drag the provided \p window by the provided displacement.
+    ///
+    /// \param window the window to move
+    /// \param movement the displacement to move by
     void drag_window(Window const& window, mir::geometry::Displacement movement);
 
-    /// make the next application active
+    /// Make the next application in the focus order after the currently
+    /// focused application active.
+    ///
+    /// "Next" is defined as the next most-recently focused application.
     void focus_next_application();
 
-    /// make the previous application active
+    /// Make the previous application in the focus order after the currently
+    /// focused application active.
+    ///
+    /// "Previous" is defined as the least-recently focused application.
     void focus_prev_application();
 
-    /// make the next surface active within the active application
+    /// Focus the next window within the currently active application.
+    ///
+    /// "Next" is defined as the next most-recently focused window.
     void focus_next_within_application();
 
-    /// make the prev surface active within the active application
+    /// Focus the previous window within the currently active application.
+    ///
+    /// "Previous" is defined as the least-recently focused window.
     void focus_prev_within_application();
 
-    /// If possible, returns the application window to select, otherwise `std::nullopt`
+    /// Returns the window of the given application that should be selected.
+    ///
+    /// \returns the window to select, or `std::nullopt` if none are found
     auto window_to_select_application(const Application) const -> std::optional<Window>;
 
-    /// Check if the provided window can be selected
+    /// Check if the provided \p window can be selected.
+    ///
+    /// \param window the window
+    /// \returns `true` if the window can be selected, otherwise `false`
     /// \remark Since MirAL 5.0
-    auto can_select_window(Window const&) const -> bool;
+    auto can_select_window(Window const& window) const -> bool;
 
-    /// Find the topmost window at the cursor
+    /// Find the topmost window at the cursor.
+    ///
+    /// \param cursor a point
+    /// \returns the window under the cursor, or the default-constructed window if none exists
     auto window_at(mir::geometry::Point cursor) const -> Window;
 
-    /// Find the active output area
+    /// Find the area of the active output.
+    ///
+    /// \returns the area of the active output
     auto active_output() -> mir::geometry::Rectangle const;
 
-    /// Find the active zone area
+    /// Find the active zone area.
+    ///
+    /// \returns the active zone
     auto active_application_zone() const -> Zone;
 
-    /// Raise window and all its children
+    /// Raise the provided window and its children to the top of the Z-order.
+    ///
+    /// \param root the window to raise
     void raise_tree(Window const& root);
 
-    /// Swaps the position of the windows in regards to Z order
-    /// \param first
-    /// \param second
-    /// \remark SinceMirAL 3.10
+    /// Swaps the position of the windows in regard to Z-order.
+    ///
+    /// \param first the first window
+    /// \param second the second window
     void swap_tree_order(Window const& first, Window const& second);
 
-    /// Moves the window to the bottom of the Z order
-    /// remark Since MirAL 3.10
+    /// Moves the window to the bottom of the Z order.
+    ///
+    /// \param root the window to send to the back of the Z order
     void send_tree_to_back(Window const& root);
 
-    /// Apply modifications to a window
+    /// Modify the provided window with the provided \p modifications.
+    ///
+    /// \param window_info the window to modify
+    /// \param modifications the modification sto make on the window
     void modify_window(WindowInfo& window_info, WindowSpecification const& modifications);
 
-    /// Apply modifications to a window
+    /// Modify the provided \p window with the provided \p modifications.
+    ///
+    /// \param window the window to modify
+    /// \param modifications the modification sto make on the window
     void modify_window(Window const& window, WindowSpecification const& modifications);
 
-    /// Set a default size and position to reflect state change
+    /// Set a default size and position to reflect state change.
+    ///
+    /// This method has no effect when #WindowSpecification::state is unset.
+    ///
+    /// \param modifications modifications, with state() set
+    /// \param window_info the window to modify
     void place_and_size_for_state(WindowSpecification& modifications, WindowInfo const& window_info) const;
 
-    /** Create a workspace.
-     * \remark the tools hold only a weak_ptr<> to the workspace - there is no need for an explicit "destroy".
-     * @return a shared_ptr owning the workspace
-     */
+    /// Create a workspace.
+    ///
+    /// \returns the created workspace
     auto create_workspace() -> std::shared_ptr<Workspace>;
 
-    /**
-     * Add the tree containing window to a workspace
-     * @param window    the window
-     * @param workspace the workspace;
-     */
+    /// Add the \p window to the \p workspace.
+    ///
+    /// A window may be added to more than one workspace.
+    ///
+    /// The #miral::Workspace is a purely associative contract. It is the job of the
+    /// compositor author to define what this means for their particular use case.
+    /// For example, the author may make it such that a particular workspace be
+    /// "active" and only windows on the active workspace are shown.
+    ///
+    /// \param window the window
+    /// \param workspace the workspace
     void add_tree_to_workspace(Window const& window, std::shared_ptr<Workspace> const& workspace);
 
-    /**
-     * Remove the tree containing window from a workspace
-     * @param window    the window
-     * @param workspace the workspace;
-     */
+    /// Remove the \p window from the \p workspace.
+    ///
+    /// \param window the window
+    /// \param workspace the workspace
     void remove_tree_from_workspace(Window const& window, std::shared_ptr<Workspace> const& workspace);
 
-    /**
-     * Moves all the content from one workspace to another
-     * @param from_workspace the workspace to move the windows from;
-     * @param to_workspace the workspace to move the windows to;
-     */
+    /// Move the windows associated with one workspace to another.
+    ///
+    /// \param to_workspace  the workspace to move windows to
+    /// \param from_workspace the workspace to move windows from
     void move_workspace_content_to_workspace(
         std::shared_ptr<Workspace> const& to_workspace,
         std::shared_ptr<Workspace> const& from_workspace);
 
-    /**
-     * invoke callback with each workspace containing window
-     * \warning it is unsafe to add or remove windows from workspaces from the callback during enumeration
-     * @param window
-     * @param callback
-     */
+
+    /// Invoke the \p callback for each workspace that contains the \p window.
+    ///
+    /// \warning It is unsafe to add or remove windows from workspace from the callback during enumeration.
+    /// \param window the window
+    /// \param callback called for each workspace that the window is a member of
     void for_each_workspace_containing(
         Window const& window,
         std::function<void(std::shared_ptr<Workspace> const& workspace)> const& callback);
 
-    /**
-     * invoke callback with each window contained in workspace
-     * \warning it is unsafe to add or remove windows from workspaces from the callback during enumeration
-     * @param workspace
-     * @param callback
-     */
+    /// Invoke the \p callback on each window contained in the \p workspace.
+    ///
+    /// \warning It is unsafe to add or remove windows from workspace from the callback during enumeration.
+    /// \param workspace the workspace
+    /// \param callback called for each window in the workspace
     void for_each_window_in_workspace(
         std::shared_ptr<Workspace> const& workspace,
         std::function<void(Window const& window)> const& callback);
 
-/** @} */
-
-    /** Multi-thread support
-     *  Allows threads that don't hold a lock on the model to acquire one and call the "Update Model"
-     *  member functions.
-     *  This should NOT be used by a thread that has called the WindowManagementPolicy methods (and
-     *  already holds the lock).
-     */
+    /// Invoke the given \p callback under the lock
+    ///
+    /// This method allows threads that do not hold a lock on the model to acquire one and
+    /// call any relevant member functions.
+    ///
+    /// This should NOT be used by a thread that has called the #miral::WindowManagementPolicy methods,
+    /// as they already hold the lock.
+    ///
+    /// \param callback the method to call under lock
     void invoke_under_lock(std::function<void()> const& callback);
 
-    /**
-     * Move the cursor to the provided point. If the point is outside of the range of the outputs,
-     * the point is clamped.
-     * @param point
-     */
+    /// Move the cursor to the provided \point.
+    ///
+    /// If the point is beyond the range of the outputs, the point is clamped to the output area.
+    /// \param point to move the cursor to
     void move_cursor_to(mir::geometry::PointF point);
 
 private:
