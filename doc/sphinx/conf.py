@@ -220,7 +220,10 @@ linkcheck_retries = 3
 #
 # NOTE: By default, the following MyST extensions are enabled:
 #       substitution, deflist, linkify
-myst_enable_extensions = set()
+myst_enable_extensions = set((
+    "attrs_block",
+    "attrs_inline",
+))
 
 
 # Custom Sphinx extensions; see

@@ -91,7 +91,7 @@ The snaps available outside of the `mir-pr<number>` branches come from PPA build
 Next, to get into a GDB session, run the snap with `snap run --gdbserver <snap>` and follow the steps to open a `gdb` prompt.
 To avoid breaking out, ignore the `SIGSTOP`s being sent on Mir startup:
 
-```gdb
+```text
 handle SIGSTOP nostop nopass
 break miral::MirRunner::run_with
 continue

@@ -1,6 +1,4 @@
----
-discourse: 29925
----
+(exp-window-positions-under-wayland)=
 
 # Window positions under Wayland
 

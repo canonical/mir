@@ -165,6 +165,7 @@ inline. The main reason for making a virtual function inline is to place
 its definition in the class, either for convenience or to document its
 behavior, e.g., for accessors and mutators.
 
+(the-inl-h-files)=
 ### The -inl.h Files
 
 You may use file names with a `-inl.h` suffix to define complex inline
@@ -1162,7 +1163,7 @@ Do not use C-style casts. Instead, use these C++-style casts.
   what you are doing and you understand the aliasing issues.
 - Do not use `dynamic_cast` except in test code. If you need to know
   type information at runtime in this way outside of a unit test, you
-  probably have a [design flaw](#run-time-type-information-rtti).
+  probably have a design flaw.
 
 ### Streams
 
@@ -1646,7 +1647,7 @@ url_table.cpp     // The class definition.
 url_table-inl.h  // Inline functions that include lots of code.
 ```
 
-See also the section [-inl.h Files](#the-inl-h-files)
+See also the section [-inl.h Files](the-inl-h-files)
 
 ### Type Names
 
@@ -2007,6 +2008,7 @@ In general the actual name of the variable should be descriptive enough
 to give a good idea of what the variable is used for. In certain cases,
 more comments are required.
 
+{#class-data-members}
 **Class Data Members**
 
 Each class data member (also called an instance variable or member

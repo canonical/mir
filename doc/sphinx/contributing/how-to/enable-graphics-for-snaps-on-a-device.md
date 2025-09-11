@@ -32,7 +32,8 @@ sudo snap install graphics-test-tools --channel 24/stable
 
 This snap will provide you with `graphics-test-tools.drm-info`. Run it and you
 should see something like the following:
-```
+
+```text
 Node: /dev/dri/card1
 ├───Driver: amdgpu (AMD GPU) version 3.54.0 (20150101)
 │   ├─── ...
@@ -435,7 +436,7 @@ This is the most basic test that can be performed, and is a good indication of b
 driver setup. This should list _at least_ a GBM platform with the expected vendor and
 `OpenGL_ES` client API. An abbreviated example (on a `mesa-2404` system):
 
-```
+```text
 $ graphics-test-tools.eglinfo
 EGL client extensions string:
 	EGL_EXT_device_base EGL_EXT_device_enumeration EGL_EXT_device_query
@@ -482,7 +483,7 @@ Configurations:
 ```
 
 If `eglinfo` does **NOT** list a GBM platform, or generates errors then you want to look
-at  [possible complications](#possible-complications). If `eglinfo` does list a GBM platform
+at {ref}`#troubleshooting`. If `eglinfo` does list a GBM platform
 then we can proceed to testing `ubuntu-frame`.
 
 ### Test if `ubuntu-frame` works
@@ -536,6 +537,7 @@ ubuntu-frame
 
 If everything works, then `ubuntu-frame` is ready. If not, we'll have to troubleshoot.
 
+(#troubleshooting)=
 ### Troubleshooting
 When bringing up a confined ubuntu-frame snap on a new board with new drivers there are two
 separate access control mechanisms:

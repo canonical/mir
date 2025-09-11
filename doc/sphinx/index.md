@@ -12,12 +12,12 @@ that makes it an ideal choice for both device manufacturers and desktop users.
 These pages cover the key aspects of developing a compositor using Mir
 
 ````{grid} 1 1 2 2
-```{grid-item-card} [Tutorials](/tutorial/index.md)
+```{grid-item-card} [Tutorials](tutorial-index)
 **Start here** - hands-on introductions to Mir for new developers
 - [Write Your First Wayland Compositor](/tutorial/write-your-first-wayland-compositor.md)
 ```
 
-```{grid-item-card} [How-to guides](/howto/index.md)
+```{grid-item-card} [How-to guides](how-to-index)
 **How-to guides** - step-by-step guides covering key operations and common tasks
 ```
 ````

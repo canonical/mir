@@ -1,6 +1,4 @@
----
-discourse: 13185
----
+(exp-mir-graphics-support)=
 
 # Mir graphics support
 
