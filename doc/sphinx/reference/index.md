@@ -5,6 +5,7 @@ These pages provide detailed reference to Mir APIs and other interfaces.
 - [Compositors Built with Mir](compositors-built-with-mir.md): A list of active compositor projects that are built with Mir
 - [Introducing the MirAL API](introducing_the_miral_api.md): The primary external interface for compositor authors
 - [Kernel requirements](kernel_requirements.md): The kernel features required to run Mir-based compositors
+- [Graphics driver quirks](driver-quirks.md): Options for altering how the graphics platform module handles specific devices
 
 
 ```{toctree}
@@ -14,4 +15,5 @@ These pages provide detailed reference to Mir APIs and other interfaces.
 compositors-built-with-mir.md
 introducing_the_miral_api.md
 kernel_requirements.md
+driver-quirks.md
 ```
