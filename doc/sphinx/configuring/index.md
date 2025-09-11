@@ -1,4 +1,4 @@
-# Contributing to Mir
+# Configuring Mir
 
 Mir is a compositor library designed to operate across a variety of Linux-based
 devices, including traditional desktops, IoT and embedded systems.
@@ -9,24 +9,16 @@ that makes it an ideal choice for both device manufacturers and desktop users.
 
 ## In this documentation
 
-These pages cover the key aspects of working on Mir
+These pages cover the key aspects of configuring Mir based compositors. 
 
 ````{grid} 1 1 2 2
 
-```{grid-item-card} [How-to guides](/how-to/contributing-index.md)
+```{grid-item-card} [How-to](configuring-how-to-index)
 **How-to guides** - step-by-step guides covering key operations and common tasks
-- {ref}`Getting Involved in Mir <howto-contribute>`
 ```
 
-```{grid-item-card} [Explanation](/explanation/contributing-index.md)
+```{grid-item-card} [Explanation](configuring-explanation-index)
  **Discussion and clarification** of key topics
-```
-
-````
-````{grid} 1 1 2 2
-
-```{grid-item-card} [Reference](/reference/contributing-index.md)
- **Technical information** - specifications, APIs, architecture
 ```
 ````
 
@@ -44,7 +36,6 @@ Mir is a member of the Ubuntu family. It’s an open source project that warmly 
 ```{toctree}
 :hidden:
 
-how-to/contributing-index
-explanation/contributing-index
-reference/contributing-index
+how-to/index
+explanation/index
 ```

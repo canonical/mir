@@ -8,9 +8,7 @@ These how-to guides cover the key aspects of working with Mir.
 
 ```{toctree}
 :hidden:
+:glob:
 
-developing-a-wayland-compositor-using-mir.md
-how-to-integrate-a-custom-wayland-protocol.md
-how-to-handle-keyboard-input.md
-specifying-csd-ssd-preference.md
+*
 ```

@@ -1,6 +1,4 @@
----
-discourse: 4911,5164,5603,6756,8037
----
+(write-your-first-wayland-compositor)=
 
 # Write your first Wayland compositor
 This tutorial will guide you through writing a basic Mir compositor. By the end

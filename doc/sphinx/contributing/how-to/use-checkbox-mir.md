@@ -1,6 +1,4 @@
----
-discourse: 37131
----
+(how-to-use-checkbox-mir)=
 
 # Using checkbox-mir to validate your snap graphical environment
 
