@@ -35,15 +35,51 @@ protected:
     NativeBufferBase operator=(NativeBufferBase const&) = delete;
 };
 
+/// Generic graphics buffer interface.
+///
+/// Buffers can come from Wayland resources, shared memory, DMA buffers. CPU
+/// accessible buffers can also be created by the compositor for internal
+/// rendering.
+///
+/// Some buffer types can be converted to [mg::Framebuffer] for display, or
+/// [gl::Texture] for compositing.
+///
+///
+/// \sa GraphicBufferAllocator::buffer_from_resource
+/// \sa GraphicBufferAllocator::buffer_from_shm
+/// \sa DMABufEGLProvider::import_dma_buf
+/// \sa GraphicBufferAllocator::alloc_software_buffer
+/// \sa FramebufferProvider::buffer_to_framebuffer
+/// \sa GLRenderingProvider::as_texture
 class Buffer
 {
 public:
     virtual ~Buffer() {}
 
+    /// The unique ID of this buffer.
+    ///
+    /// This ID is mainly used to identify the buffer for tracing. Returning 0
+    /// or any arbitrary value does not affect normal operation of the
+    /// compositor.
+    ///
+    /// \returns The unique ID of this buffer.
     virtual BufferID id() const = 0;
+
+    /// \note The size is the logical size of the buffer, where the width is
+    /// the perceived width, and NOT the stride.
+    ///
+    /// \returns The size of the buffer.
     virtual geometry::Size size() const = 0;
+
+    /// The pixel format determines how the pixels are laid out in memory, and
+    /// whether or not the buffer supports transparency.
+    ///
+    /// \returns The pixel format of the buffer.
     virtual MirPixelFormat pixel_format() const = 0;
 
+    /// Used with buffer classes that wrap other buffers.
+    ///
+    /// \returns A direct pointer to the inner/wrapped buffer.
     virtual NativeBufferBase* native_buffer_base() = 0;
 
 protected:
