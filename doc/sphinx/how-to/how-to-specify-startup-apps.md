@@ -1,4 +1,4 @@
-# How to Specify Startup Applications
+# How to specify startup applications
 
 When starting a compositor or display server, you usually want to start a few
 other applications. For example you might want to start a background viewer, a

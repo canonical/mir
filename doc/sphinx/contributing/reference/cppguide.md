@@ -1,6 +1,6 @@
 (cppguide)=
 
-# Mir C++ Style Guide
+# Mir C++ style guide
 
 Revision 4.2
 
@@ -43,7 +43,7 @@ restricted.
 Note that this guide is not a C++ tutorial: we assume that the reader is
 familiar with the language.
 
-## Header Files
+## Header files
 
 In general, every `.cpp` file should have an associated `.h` file. There
 are some common exceptions, such as unit tests and small `.cpp` files
@@ -55,7 +55,7 @@ readability, size and performance of your code.
 The following rules will guide you through the various pitfalls of using
 header files.
 
-### The #define Guard
+### The #define guard
 
 All header files should have `#define` guards to prevent multiple
 inclusion. The format of the symbol name should be
@@ -74,7 +74,7 @@ project `foo` should have the following guard:
 #endif  // FOO_BAR_BAZ_H_
 ```
 
-### Header File Dependencies
+### Header file dependencies
 
 Don't use an `#include` when a forward declaration would suffice.
 
@@ -123,7 +123,7 @@ transitively via headers not directly included. One exception is if
 `Foo` is used in `myfile.cpp`, it's ok to #include (or
 forward-declare) `Foo` in `myfile.h`, instead of `myfile.cpp`.
 
-### Inline Functions
+### Inline functions
 
 Define functions inline only when they are small, say, 10 lines or less.
 
@@ -167,7 +167,7 @@ behavior, e.g., for accessors and mutators.
 
 (the-inl-h-files)=
 
-### The -inl.h Files
+### The -inl.h files
 
 You may use file names with a `-inl.h` suffix to define complex inline
 functions when needed.
@@ -194,7 +194,7 @@ This can be used to keep your template definitions easy to read.
 Do not forget that a `-inl.h` file requires a [`#define`
 guard](#the-define-guard) just like any other header file.
 
-### Function Parameter Ordering
+### Function parameter ordering
 
 When defining a function, parameter order is: outputs, then inputs.
 
@@ -211,7 +211,7 @@ This is not a hard-and-fast rule. Parameters that are both input and
 output (often classes/structs) muddy the waters, and, as always,
 consistency with related functions may require you to bend the rule.
 
-### Names and Order of Includes
+### Names and order of includes
 
 Use standard order for readability and to avoid hidden dependencies:
 your project's public `.h`, your project's private `.h`, other
@@ -433,7 +433,7 @@ Named namespaces should be used as follows:
   aliases, as part of the general goal of keeping public APIs as small
   as possible.
 
-### Nested Classes
+### Nested classes
 
 Although you may use public nested classes when they are part of an
 interface, consider a [namespace](#namespaces) to keep declarations out
@@ -478,7 +478,7 @@ pointer will have to include the full class declaration for `Foo`.
 Do not make nested classes public unless they are actually part of the
 interface, e.g., a class that holds a set of options for some method.
 
-### Nonmember, Static Member, and Global Functions
+### Nonmember, static member, and global functions
 
 Prefer nonmember functions within a namespace or static member functions
 to global functions; use completely global functions rarely.
@@ -514,7 +514,7 @@ If you must define a nonmember function and it is only needed in its
 `.cpp` file, use an unnamed [namespace](#namespaces) or `static` linkage
 (eg `static int foo() {...}`) to limit its scope.
 
-### Local Variables
+### Local variables
 
 Place a function's variables in the narrowest scope possible, and
 initialize variables in the declaration.
@@ -611,7 +611,7 @@ The problems with doing work in constructors are:
 Constructors should not make virtual calls to functions, access
 potentially uninitialized global variables, etc.
 
-### Default Constructors
+### Default constructors
 
 You must define a default constructor if your class defines member
 variables of POD types and has no other constructors. Otherwise the
@@ -650,7 +650,7 @@ If your class has value semantics then consider making the class
 invariants such that the default constructor is cheap. For example,
 initialising member pointers to `nullptr` and allocating on first use.
 
-### Explicit Constructors
+### Explicit constructors
 
 Use the C++ keyword `explicit` for constructors with one argument.
 
@@ -684,7 +684,7 @@ allow them, should probably not be `explicit`. Classes that are intended
 to be transparent wrappers around other classes are also exceptions.
 Such exceptions should be clearly marked with comments.
 
-### Copy Constructors
+### Copy constructors
 
 Provide a copy constructor and assignment operator only when necessary.
 Otherwise, disable them with the help of `= delete;`.
@@ -729,7 +729,7 @@ both a copy constructor and assignment operator.
 If your class does not need a copy constructor or assignment operator,
 you must explicitly disable them.
 
-### Structs vs. Classes
+### Structs vs. classes
 
 Use a `struct` only for passive objects that carry data; everything else
 is a `class`.
@@ -810,7 +810,7 @@ detect attempts to override methods that have been changed or completely
 removed. It also makes it straightforward for a reader to determine if a
 method is virtual or not.
 
-### Multiple Inheritance
+### Multiple inheritance
 
 Only very rarely is multiple inheritance of implementation actually
 useful. We allow multiple inheritance only when at most one of the base
@@ -863,7 +863,7 @@ virtual, or protected, destructor (in an exception to the first rule,
 this should not be pure). See Stroustrup, The C++ Programming Language,
 3rd edition, section 12.4 for details.
 
-### Operator Overloading
+### Operator overloading
 
 Overload operators where appropriate.
 
@@ -905,7 +905,7 @@ In general, do overload operators where appropriate.
 See also [Copy Constructors](#copy-constructors) and [Function
 Overloading](#function-overloading).
 
-### Access Control
+### Access control
 
 Make data members `private`, and provide access to them through accessor
 functions as needed (for technical reasons, we allow data members of a
@@ -920,7 +920,7 @@ The definitions of accessors are usually inlined in the header file.
 See also [Inheritance](#inheritance) and [Function
 Names](#function-names).
 
-### Declaration Order
+### Declaration order
 
 Use the specified order of declarations within a class: `public:` before
 `private:`, methods before data members (variables), etc.
@@ -952,7 +952,7 @@ Usually, only trivial or performance-critical, and very short, methods
 may be defined inline. See [Inline Functions](#inline-functions) for
 more details.
 
-### Write Short Functions
+### Write short functions
 
 Prefer small and focused functions.
 
@@ -973,9 +973,9 @@ debug, or you want to use a piece of it in several different contexts,
 consider breaking up the function into smaller and more manageable
 pieces.
 
-## Other C++ Features
+## Other C++ features
 
-### Reference Arguments
+### Reference arguments
 
 Most parameters passed by reference should be labeled `const`.
 
@@ -1017,7 +1017,7 @@ this in comments as well. STL adapters such as `bind2nd` and `mem_fun`
 do not permit reference parameters, so you must declare functions with
 pointer parameters in these cases, too.
 
-### Function Overloading
+### Function overloading
 
 Use overloaded functions (including constructors) only if a reader
 looking at a call site can get a good idea of what is happening without
@@ -1056,7 +1056,7 @@ If you want to overload a function, consider qualifying the name with
 some information about the arguments, e.g., `append_string()`,
 `AppendInt()` rather than just `append()`.
 
-### Default Arguments
+### Default arguments
 
 We do not allow default function parameters, except in a few uncommon
 situations explained below.
@@ -1094,7 +1094,7 @@ string str_cat(AlphaNum const& a,
                AlphaNum const& d = gEmptyAlphaNum);
 ```
 
-### Variable-Length Arrays and alloca()
+### Variable-length arrays and alloca()
 
 We do not allow variable-length arrays or `alloca()`.
 
@@ -1252,7 +1252,7 @@ there is not a clearly superior solution. The simplicity doctrine
 mandates we settle on one of them though, and the majority decision was
 on `printf` + `read`/`write`.
 
-### Preincrement and Predecrement
+### Preincrement and predecrement
 
 Use prefix form (`++i`) of the increment and decrement operators with
 iterators and other template objects.
@@ -1348,7 +1348,7 @@ We favor the form `int const* foo` to `const int* foo`. This keeps the
 That said, while we encourage putting `const` after the type, we do not
 require it. But be consistent with the code around you!
 
-### Integer Types
+### Integer types
 
 Use built-in C++ integer types, both signed and unsigned int. Use more
 specific types like `size_t` where appropriate. If a program needs a
@@ -1380,7 +1380,7 @@ like `size_t` and `ptrdiff_t`.
 
 For integers we know can be "big", use `int64_t`.
 
-### 64-bit Portability
+### 64-bit portability
 
 Code should be 64-bit and 32-bit friendly. Bear in mind problems of
 printing, comparisons, and structure alignment.
@@ -1454,7 +1454,7 @@ printing, comparisons, and structure alignment.
   `#ifdef _LP64` to choose between the code variants. (But please avoid
   this if possible, and keep any such changes localized.)
 
-### Preprocessor Macros
+### Preprocessor macros
 
 Be very cautious with macros. Prefer inline functions, enums, and
 `const` variables to macros.
@@ -1548,7 +1548,7 @@ Naming rules are pretty arbitrary, but we feel that consistency is more
 important than individual preferences in this area, so regardless of
 whether you find them sensible or not, the rules are the rules.
 
-### General Naming Rules
+### General naming rules
 
 Function names, variable names, and filenames should be descriptive;
 eschew abbreviation. Types and variables should be nouns, while
@@ -1619,7 +1619,7 @@ int error_count;  // Good.
 int error_cnt;    // Bad.
 ```
 
-### File Names
+### File names
 
 Filenames should be all lowercase and can include underscores (`_`) or
 dashes (`-`). Follow the convention that your project uses. If there is
@@ -1656,7 +1656,7 @@ url_table-inl.h  // Inline functions that include lots of code.
 
 See also the section [-inl.h Files](the-inl-h-files)
 
-### Type Names
+### Type names
 
 Type names start with a capital letter and have a capital letter for
 each new word, with no underscores: `MyExcitingClass`, `MyExcitingEnum`.
@@ -1679,7 +1679,7 @@ typedef hash_map<UrlTableProperties*, string> PropertiesMap;
 enum UrlTableErrors ...
 ```
 
-### Variable Names
+### Variable names
 
 Variable names are all lowercase, with underscores between words. Class
 member variables follow this convention. For instance:
@@ -1731,7 +1731,7 @@ There are no special requirements for global variables, which should be
 rare in any case, but if you use one, consider prefixing it with `g_` or
 some other marker to easily distinguish it from local variables.
 
-### Constant Names
+### Constant names
 
 Name constants like other variables, using all lowercase, with
 underscores between words. `default_width`.
@@ -1744,7 +1744,7 @@ int const width{1024};
 int height{900};
 ```
 
-### Function Names
+### Function names
 
 Regular functions, accessors, and mutators are all lowercase, with
 underscores between words.
@@ -1783,7 +1783,7 @@ private:
 };
 ```
 
-### Namespace Names
+### Namespace names
 
 Namespace names are all lower-case, and based on project names and
 possibly their directory structure: `my_awesome_project`.
@@ -1791,7 +1791,7 @@ possibly their directory structure: `my_awesome_project`.
 See [Namespaces](#namespaces) for a discussion of namespaces and how to
 name them.
 
-### Enumerator Names
+### Enumerator names
 
 Enumerators should be named like [member
 variables](#class-data-members): `out_of_memory`, enclosed within an
@@ -1810,7 +1810,7 @@ enum class UrlTableErrors
 };
 ```
 
-### Macro Names
+### Macro names
 
 You're not really going to [define a macro](#preprocessor-macros), are
 you? If you do, they're like this:
@@ -1825,7 +1825,7 @@ then they should be named with all capitals and underscores.
 #define PI_ROUNDED 3.0
 ```
 
-### Exceptions to Naming Rules
+### Exceptions to naming rules
 
 If you are naming something that is analogous to an existing C or C++
 entity then you can follow the existing naming convention scheme.
@@ -1858,7 +1858,7 @@ When writing your comments, write for your audience: the next
 contributor who will need to understand your code. Be generous --- the
 next one may be you!
 
-### Comment Style
+### Comment style
 
 Use either the `//` or `/* */` syntax, as long as you are consistent.
 
@@ -1866,7 +1866,7 @@ You can use either the `//` or the `/* */` syntax; however, `//` is
 *much* more common. Be consistent with how you comment and what style
 you use where.
 
-### File Comments
+### File comments
 
 Start each file with a copyright notice, followed by a description of
 the contents of the file.
@@ -1903,7 +1903,7 @@ reading the `.h`, feel free to put it there instead, but mention in the
 Do not duplicate comments in both the `.h` and the `.cpp`. Duplicated
 comments diverge.
 
-### Class Comments
+### Class comments
 
 Every class definition should have an accompanying comment that
 describes what it is for and how it should be used.
@@ -1930,7 +1930,7 @@ Document the synchronization assumptions the class makes, if any. If an
 instance of the class can be accessed by multiple threads, take extra
 care to document the rules and invariants surrounding multithreaded use.
 
-### Function Comments
+### Function comments
 
 Declaration comments describe use of the function; comments at the
 definition of a function describe operation.
@@ -2010,7 +2010,7 @@ declaration, in the `.h` file or wherever. It's okay to recapitulate
 briefly what the function does, but the focus of the comments should be
 on how it does it.
 
-### Variable Comments
+### Variable comments
 
 In general the actual name of the variable should be descriptive enough
 to give a good idea of what the variable is used for. In certain cases,
@@ -2042,7 +2042,7 @@ describing what they are and what they are used for. For example:
 const int number_of_test_cases = 6;
 ```
 
-### Implementation Comments
+### Implementation comments
 
 In your implementation you should have comments in tricky, non-obvious,
 interesting, or important parts of your code.
@@ -2144,7 +2144,7 @@ she does not know what you are trying to do:
 ...        // Geez.  What a useless comment.
 ```
 
-### Punctuation, Spelling and Grammar
+### Punctuation, spelling and grammar
 
 Pay attention to punctuation, spelling, and grammar; it is easier to
 read well-written comments than badly written ones.
@@ -2162,7 +2162,7 @@ important that source code maintain a high level of clarity and
 readability. Proper punctuation, spelling, and grammar help with that
 goal.
 
-### TODO Comments
+### TODO comments
 
 Use `TODO` comments for code that is temporary, a short-term solution,
 or good-enough but not perfect.
@@ -2186,7 +2186,7 @@ sure that you either include a very specific date ("Fix by November
 2005") or a very specific event ("Remove this code when all clients
 can handle XML responses.").
 
-### Deprecation Comments
+### Deprecation comments
 
 Mark deprecated interface points with `DEPRECATED` comments.
 
@@ -2220,7 +2220,7 @@ may take some getting used to, but it is important that all project
 contributors follow the style rules so that they can all read and
 understand everyone's code easily.
 
-### Line Length
+### Line length
 
 Each line of text in your code should be at most 120 characters long.
 
@@ -2249,7 +2249,7 @@ longer lines.
 
 120 characters is the maximum.
 
-### Non-ASCII Characters
+### Non-ASCII characters
 
 Non-ASCII characters should be rare, and must use UTF-8 formatting.
 
@@ -2266,14 +2266,14 @@ where it enhances readability --- for example, `"\xEF\xBB\xBF"` is the
 Unicode zero-width no-break space character, which would be invisible if
 included in the source as straight UTF-8.
 
-### Spaces vs. Tabs
+### Spaces vs. tabs
 
 Use only spaces, and indent 4 spaces at a time.
 
 We use spaces for indentation. Do not use tabs in your code. You should
 set your editor to emit spaces when you hit the tab key.
 
-### Function Declarations and Definitions
+### Function declarations and definitions
 
 `void` or `auto` on the same line as function name, parameters and
 return type on the same line if they fit.
@@ -2382,7 +2382,7 @@ void Circle::rotate(double /*radians*/) {}
 void Circle::rotate(double) {}
 ```
 
-### Function Calls
+### Function calls
 
 On one line if it fits; otherwise, wrap arguments at the parenthesis.
 
@@ -2484,7 +2484,7 @@ else
     bar;
 ```
 
-### Loops and Switch Statements
+### Loops and switch statements
 
 Switch statements may use braces for blocks. Empty loop bodies should
 use `{}` or `continue`.
@@ -2532,7 +2532,7 @@ while (condition) continue;  // Good - continue indicates no logic.
 while (condition);  // Bad - looks like part of do/while loop.
 ```
 
-### Pointer and Reference Expressions
+### Pointer and reference expressions
 
 No spaces around period or arrow. Pointer operators do not have trailing
 spaces.
@@ -2573,7 +2573,7 @@ string const & str;  // Bad - spaces on both sides of &
 You should do this consistently within a single file, so, when modifying
 an existing file, use the style in that file.
 
-### Boolean Expressions
+### Boolean expressions
 
 When you have a boolean expression that is longer than the [standard
 line length](#line-length), be consistent in how you break up the lines.
@@ -2597,7 +2597,7 @@ readability when used appropriately. Also note that you should always
 use the punctuation operators, such as `&&` and `~`, rather than the
 word operators, such as `and` and `compl`.
 
-### Return Values
+### Return values
 
 Do not needlessly surround the `return` expression with parentheses.
 
@@ -2617,7 +2617,7 @@ return (value);                // You wouldn't write var = (value);
 return(result);                // return is not a function!
 ```
 
-### Variable and Array Initialization
+### Variable and array initialization
 
 Use `{}`.
 
@@ -2634,7 +2634,7 @@ You may choose between `=` and `()`; the following are all correct:
     char* p=new char [5]{}; // all five chars are initialized to '\0'
 ```
 
-### Preprocessor Directives
+### Preprocessor directives
 
 The hash mark that starts a preprocessor directive should always be at
 the beginning of the line.
@@ -2669,7 +2669,7 @@ if (lopsided_score)
 }
 ```
 
-### Class Format
+### Class format
 
 Sections in `public`, `protected` and `private` order.
 
@@ -2714,7 +2714,7 @@ Things to note:
 - See [Declaration Order](#declaration-order) for rules on ordering
   declarations within each of these sections.
 
-### Constructor Initializer Lists
+### Constructor initializer lists
 
 Constructor initializer lists can be all on one line or with subsequent
 lines indented four spaces.
@@ -2756,7 +2756,7 @@ MyClass::MyClass(int var)
 }
 ```
 
-### Namespace Formatting
+### Namespace formatting
 
 The contents of namespaces are not indented.
 
@@ -2802,7 +2802,7 @@ namespace bar
 {
 ```
 
-### Horizontal Whitespace
+### Horizontal whitespace
 
 Use of horizontal whitespace depends on location. Never put trailing
 whitespace at the end of a line.
@@ -2857,7 +2857,7 @@ set<list<string>> x;        // C++11 now allows >> to close templates.
 set<list<string> > x;       // Older C++ requiree a space in > >, and is allowed.
 ```
 
-### Vertical Whitespace
+### Vertical whitespace
 
 Minimize use of vertical whitespace but apply it to enhance readability.
 
@@ -2880,12 +2880,12 @@ Some rules of thumb to help when blank lines may be useful:
 - Blank lines inside a chain of if-else blocks may well help
   readability.
 
-## Exceptions to the Rules
+## Exceptions to the rules
 
 The coding conventions described above are mandatory. However, like all
 good rules, these sometimes have exceptions, which we discuss here.
 
-### Existing Non-conformant Code
+### Existing non-conformant code
 
 You may diverge from the rules when dealing with code that does not
 conform to this style guide.
@@ -2897,7 +2897,7 @@ that code. If you are in doubt about how to do this, ask the original
 author or the person currently responsible for the code. Remember that
 *consistency* includes local consistency, too.
 
-## Parting Words
+## Parting words
 
 Use common sense and *BE CONSISTENT*.
 

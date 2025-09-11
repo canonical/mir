@@ -1,6 +1,6 @@
 (how-to-enable-screencasting)=
 
-# How To Enable Screencasting
+# How to enable screencasting
 
 ## Requirements
 
@@ -14,7 +14,7 @@ Required wayland extensions:
 - `zwlr_layer_shell_v1` for slurp,
 - `zwlr_xdg_screencopy_manager_v1` for `xdg-desktop-portal-wlr`
 
-## Setup Steps
+## Setup steps
 
 1. The file at `/usr/share/xdg-desktop-portal/portals/<compositor-name>.portal` should contain the following:
 

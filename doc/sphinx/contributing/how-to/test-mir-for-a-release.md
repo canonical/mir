@@ -171,7 +171,7 @@ For each empty box in the matrix above, ensure that the following applications c
    xcalc
    ```
 
-## Mir Console Providers
+## Mir console providers
 
 For each Ubuntu release ensure that the compositor can start with each of the console providers:
 
@@ -216,7 +216,7 @@ The following describes how to select each console provider:
    - This does not provide VT switching capabilities (Ctrl-Alt-F1, etc)
    - This is _only_ used for the `gbm-x11`, `gbm-wayland`, and `virtual` platforms
 
-## Window Manager Examples
+## Window manager examples
 
 Run with different window managers and confirm that the window management
 styles work as expected:
@@ -227,7 +227,7 @@ miral-app --window-manager=tiling # a tiling window manager
 miral-app -kiosk # a typical kiosk
 ```
 
-## Testing Downstream Snaps (e.g. Ubuntu Frame and Miriway)
+## Testing downstream snaps (e.g. Ubuntu Frame and Miriway)
 
 For each of our downstream snaps, check that you have installed a build with the Mir version under test (typically from the `beta` channel). Then run the tests for that snap.
 

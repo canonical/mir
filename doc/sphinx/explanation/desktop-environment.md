@@ -1,6 +1,6 @@
 (exp-desktop-environment)=
 
-# Using Mir to build a Desktop Environment
+# Using Mir to build a desktop environment
 
 A Desktop Environment comprises much more than a compositor. A Desktop
 Environment has launchers, panels, integration with the system

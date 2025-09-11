@@ -1,13 +1,13 @@
 (how-to-debug-mir-snaps)=
 
-# How To Debug Mir Snaps
+# How to debug Mir snaps
 
 Getting a useful stack trace or debugging session with snaps requires some set up, as they don't contain debugging information.
 This document describes the steps required to supply the debugger with the necessary data.
 
-## Enable Debuginfod
+## Enable `debuginfod`
 
-First, we'll make sure you have Debuginfod enabled.
+First, we'll make sure you have `debuginfod` enabled.
 It's a service that hosts the debug info stripped from Ubuntu packages, which debuggers can retrieve by matching the `build-id` embedded in the executables and libraries.
 In modern Ubuntu it's installed by default, but enable it in GDB by default with:
 
@@ -20,11 +20,11 @@ echo "set debuginfod enabled on" >> ~/.gdbinfo
 
 To learn more, head to {ref}`server:about-debuginfod` on Ubuntu Server documentation pages.
 
-## Install The Snap
+## Install the snap
 
 Next, install the snap you want to debug. You have two options:
 
-### Mir CI Snaps
+### Mir CI snaps
 
 If debugging an issue in a Mir Pull Request, you can install the snap from [Mir Continuous Integration pipelines](https://github.com/canonical/mir/blob/main/.github/workflows/snap.yml#L72-L76).
 These are published in the store for as long as the pull request is active - install with, for example:
@@ -35,7 +35,7 @@ snap install mir-test-tools --channel "edge/mir-pr<number>"
 
 These are Debug builds, so you can go straight to {ref}`running-mir-snaps-under-gdb` below.
 
-### PPA-based Snaps
+### PPA-based snaps
 
 The snaps available outside of the `mir-pr<number>` branches come from PPA builds, which strip debug info into separate packages, making it a bit more involved to help GDB find them.
 
@@ -86,7 +86,7 @@ The snaps available outside of the `mir-pr<number>` branches come from PPA build
 
 (running-mir-snaps-under-gdb)=
 
-## Running Mir Snaps Under GDB
+## Running Mir snaps under GDB
 
 Next, to get into a GDB session, run the snap with `snap run --gdbserver <snap>` and follow the steps to open a `gdb` prompt.
 To avoid breaking out, ignore the `SIGSTOP`s being sent on Mir startup:

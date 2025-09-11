@@ -1,4 +1,4 @@
-# Introducing the Miral API
+# Introducing the MirAL API
 
 ## The main() program
 
