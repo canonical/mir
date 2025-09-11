@@ -6,7 +6,7 @@
 # from the environment for the first two.
 SPHINXDIR       = .sphinx
 DOCTREESDIR     ?= $(SPHINXDIR)/.doctrees
-SPHINXOPTS      ?= -c . -d $(DOCTREESDIR) -j auto
+SPHINXOPTS      ?= -c . -d $(DOCTREESDIR) -j auto $(EXTRA_SPHINXOPTS)
 SPHINXBUILD     ?= $(VENVDIR)/bin/sphinx-build
 SOURCEDIR       = .
 BUILDDIR        = _build
