@@ -41,8 +41,11 @@ For Debian and its derivatives, we only need two small packages:
 ````{tab-item} Fedora
 :sync: fedora
 
-```sh
-dnf install mir-devel libxkbcommon-devel
+```{literalinclude} ../../../spread/build/fedora/task.yaml
+:language: bash
+:start-after: [doc:first-compositor:fedora-dependencies-install]
+:end-before: [doc:first-compositor:fedora-dependencies-install-end]
+:dedent: 4
 ```
 ````
 

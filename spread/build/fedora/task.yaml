@@ -27,3 +27,39 @@ execute: |
     popd
 
     ccache --show-stats --zero-stats > ${CCACHE_DIR}/ccache.stats
+
+    # build the local repository for end-to-end tests
+    dnf --assumeyes install createrepo
+    createrepo /root/rpmbuild
+    dnf config-manager addrepo \
+       --id=mirpr \
+       --set=baseurl="file:///root/rpmbuild" \
+       --set=gpgcheck=0 \
+       --set=priority=90 \
+       --set=enabled=1 \
+       --save-filename=mirpr.repo
+    dnf update
+
+    export \
+      MIR_SERVER_PLATFORM_DISPLAY_LIBS=mir:virtual \
+      MIR_SERVER_VIRTUAL_OUTPUT=800x600
+
+    # [doc:first-compositor:fedora-dependencies-install]
+    dnf --assumeyes install 'pkgconfig(miral)'
+    # [doc:first-compositor:fedora-dependencies-install-end]
+
+    cd ${SPREAD_PATH}/doc/sphinx/tutorial/first-wayland-compositor
+
+    # [doc:first-compositor:build]
+    cmake .
+    cmake --build .
+    # [doc:first-compositor:build-end]
+
+    # we expect the timeout to hit
+    timeout 10 bash <<EOF || [ $? -eq 124 ]
+
+      # [doc:first-compositor:run]
+      WAYLAND_DISPLAY=wayland-99 ./demo-mir-compositor
+      # [doc:first-compositor:run-end]
+
+    EOF
