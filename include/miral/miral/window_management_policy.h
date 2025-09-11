@@ -41,7 +41,7 @@ struct WindowInfo;
 /// An opaque workspace indentifier.
 ///
 /// This symbol is purposefully opaque because it is only ever provided as a
-/// `std::shared_ptr` which is used as an unique identifier.
+/// `std::shared_ptr` which is used as a unique identifier.
 class Workspace;
 
 using namespace mir::geometry;
@@ -56,7 +56,7 @@ using namespace mir::geometry;
 /// Instances of this class are often used in conjunction with #miral::add_window_manager_policy.
 ///
 /// Methods that are prefixed with "advise_*" are notifications that originate from  the compositor.
-/// The policy does not have to take any action in response to these notifications.
+/// The policy need only implement these methods when it requires these notifications to manage its internal state.
 ///
 /// Methods that are prefixed with "handle_*" are requests that originate from the client applications.
 /// The policy is expected to take some action in response to these requests.
@@ -69,10 +69,10 @@ using namespace mir::geometry;
 class WindowManagementPolicy
 {
 public:
-    /// Called before any "advise_*" method is called.
+    /// First notification of a group of related `handle_...`, `confirm_...` and `advise_...` calls.
     virtual void advise_begin();
 
-    /// Called after any "advise_*" method is called.
+    /// Final notification of a group of related `handle_...`, `confirm_...` and `advise_...` calls.
     virtual void advise_end();
 
     /// Given the \p app_info and \p requested_specification, this method returns
@@ -96,18 +96,13 @@ public:
     /// the \p modification.
     ///
     /// The compositor author should use #miral::WindowManagerTools::modify_window to make the appropriate
-    /// changes. The compositor may choose to honor or change any of the requested modifications.
+    /// changes. The compositor may choose to honor, change, or ignore any of the requested modifications.
     ///
     /// \param window_info the window
     /// \param modifications the requested changes
     /// \sa miral::WindowManagerTools::modify_window - the method used to modify a window
     virtual void handle_modify_window(WindowInfo& window_info, WindowSpecification const& modifications) = 0;
 
-    /** request from client to raise the window
-     * \note the request has already been validated against the requesting event
-     *
-     * @param window_info   the window
-     */
     /// Request from the client to raise the window.
     ///
     /// The compositor author may use #miral::WindowManagerTools::raise_tree in response,
@@ -142,7 +137,7 @@ public:
 
     /// Handle a touch event originating from the user.
     ///
-    /// \param event the keyboard event
+    /// \param event the touch event
     /// \return `true` if the policy consumed the event, otherwise `false`
     virtual bool handle_touch_event(MirTouchEvent const* event) = 0;
 
@@ -238,13 +233,13 @@ public:
     /// Request from the client to initiate a move.
     ///
     /// \param window_info the window
-    /// \param input_event the requesting event
+    /// \param input_event the input event causing the movement request
     virtual void handle_request_move(WindowInfo& window_info, MirInputEvent const* input_event) = 0;
 
     /// Request from a client to initiate a resize.
     ///
     /// \param window_info the window
-    /// \param input_event the requesting event
+    /// \param input_event the input event causing the resize request
     /// \param edge the edge being resized
     /// \sa MirResizeEdge - edge resize options
     virtual void handle_request_resize(WindowInfo& window_info, MirInputEvent const* input_event, MirResizeEdge edge) = 0;
@@ -287,8 +282,8 @@ public:
     /// Notification that an application zone has been created.
     ///
     /// An application zone defines the area in which normal applications should be placed.
-    /// For example, an application zone make take up an entire output except for the areas
-    /// covered by panels.
+    /// For example, an application zone may take up an entire output except for the areas
+    /// covered by panels or task bars.
     ///
     /// An application zone is often created per output, but this does not have to be the case.
     ///
