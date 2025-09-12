@@ -30,16 +30,16 @@ using namespace mir::geometry;
 
 /// A rectangular area of the display.
 ///
-/// This area is not necessarily tied to a specific #miral::Output, but it often is.
+/// For example, the area of an output into which applications are placed.
 ///
 /// \sa miral::WindowManagementPolicy::advise_application_zone_create - notification of a new zone
 class Zone
 {
 public:
 
-    /// Construct a new zone with the given \p extends.
+    /// Construct a new zone with the given \p extents.
     ///
-    /// \param extends area of the zone
+    /// \param extents area of the zone
     Zone(Rectangle const& extents);
 
     /// Construct a copy of another zone.
@@ -47,7 +47,7 @@ public:
     /// \param other zone to copy
     Zone(Zone const& other);
 
-    /// Copy the data from another zone.
+    /// Copy from another zone.
     ///
     /// \param other zone to copy
     Zone& operator=(Zone const& other);
