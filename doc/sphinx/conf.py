@@ -184,6 +184,7 @@ redirects = {
     'how-to/how-to-use-checkbox-mir': '../contributing/how-to/use-checkbox-mir',
     'reference/continuous-integration': '../contributing/reference/continuous-integration',
     'reference/dso_versioning_guide': '../contributing/reference/dso-versioning-guide',
+    'explanation/mir-graphics-support': 'explanation/platform-support',
 }
 
 
