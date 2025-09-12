@@ -26,6 +26,10 @@ namespace mir
 namespace graphics
 {
 
+/// Used with buffers that wrap other buffers. This method provides direct
+/// access to the innermost buffer.
+///
+/// \sa #ClaimedBuffer - A buffer wrapper that invokes a callback on destruction.
 class NativeBufferBase
 {
 protected:
