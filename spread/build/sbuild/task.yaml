@@ -109,17 +109,14 @@ execute: |
       echo "APT::Get::Assume-Yes true;" >> /etc/apt/apt.conf.d/99assume-yes
       apt-get update
 
-      export \
-        MIR_SERVER_PLATFORM_DISPLAY_LIBS=mir:virtual \
-        MIR_SERVER_VIRTUAL_OUTPUT=800x600
-
       apt-get install \
         build-essential \
         cmake \
         pkg-config
 
       # [doc:first-compositor:debian-dependencies-install]
-      apt-get install bomber libmiral-dev mir-graphics-drivers-desktop
+      apt-get install libmiral-dev mir-graphics-drivers-desktop
+      apt-get install bomber
       # [doc:first-compositor:debian-dependencies-install-end]
 
       cd ${SPREAD_PATH}/doc/sphinx/tutorial/first-wayland-compositor
@@ -133,6 +130,11 @@ execute: |
       timeout 10 bash -e <<EOF || [ $? -eq 124 ]
 
         trap "jobs -p | xargs -r kill" SIGINT SIGTERM EXIT
+
+        export \
+          MIR_SERVER_PLATFORM_DISPLAY_LIBS=mir:virtual \
+          MIR_SERVER_VIRTUAL_OUTPUT=800x600 \
+          QT_QPA_PLATFORM=wayland
 
         # [doc:first-compositor:run]
         WAYLAND_DISPLAY=wayland-99 ./demo-mir-compositor &

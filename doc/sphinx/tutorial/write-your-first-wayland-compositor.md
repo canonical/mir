@@ -16,7 +16,7 @@ This tutorial assumes that:
 
 ## Install Dependencies
 
-Let's start by installing the dependencies required by our compositor.
+Let's start by installing the dependencies required by our compositor, and an example client.
 
 `````{tab-set}
 
@@ -29,6 +29,7 @@ For Debian and its derivatives, we only need two small packages:
   interface to interact with and customize Mir compositors.
 * `mir-graphics-drivers-desktop` - provides drivers so Mir can talk with
   different graphics drivers
+* `bomber` - a Qt-based game we'll use to validate the compositor
 
 ```{literalinclude} ../../../spread/build/sbuild/task.yaml
 :language: bash

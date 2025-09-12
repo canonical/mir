@@ -39,13 +39,11 @@ execute: |
        --set=enabled=1 \
        --save-filename=mirpr.repo
     dnf update
-
-    export \
-      MIR_SERVER_PLATFORM_DISPLAY_LIBS=mir:virtual \
-      MIR_SERVER_VIRTUAL_OUTPUT=800x600
+    echo "defaultyes=True" >> /etc/dnf/dnf.conf
 
     # [doc:first-compositor:fedora-dependencies-install]
-    dnf --assumeyes install bomber 'pkgconfig(miral)'
+    dnf install 'pkgconfig(miral)'
+    dnf install bomber
     # [doc:first-compositor:fedora-dependencies-install-end]
 
     cd ${SPREAD_PATH}/doc/sphinx/tutorial/first-wayland-compositor
@@ -59,6 +57,10 @@ execute: |
     timeout 10 bash -e <<EOF || [ $? -eq 124 ]
 
       trap "jobs -p | xargs -r kill" SIGINT SIGTERM EXIT
+
+      export \
+        MIR_SERVER_PLATFORM_DISPLAY_LIBS=mir:virtual \
+        MIR_SERVER_VIRTUAL_OUTPUT=800x600
 
       # [doc:first-compositor:run]
       WAYLAND_DISPLAY=wayland-99 ./demo-mir-compositor &
