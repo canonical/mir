@@ -30,8 +30,8 @@ reverse:
 ---
 ```{grid-item-card} [Reference](/reference/index.md)
 **Technical information** - specifications, APIs, architecture:
-[kernal requirements](/reference/kernel_requirements.md),
-[introduction to the miral API](/reference/introducing_the_miral_api.md) and more
+[kernel requirements](/reference/kernel_requirements.md),
+[introduction to the MirAL API](/reference/introducing_the_miral_api.md) and more
 ```
 
 ```{grid-item-card} [Explanation](/explanation/index.md)
