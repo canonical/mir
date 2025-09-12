@@ -57,9 +57,8 @@ public:
 
     /// The unique ID of this buffer.
     ///
-    /// This ID is mainly used to identify the buffer for tracing. Returning 0
-    /// or any arbitrary value does not affect normal operation of the
-    /// compositor.
+    /// This ID is only used to identify the buffer for tracing and is not used
+    /// for rendering.
     ///
     /// \returns The unique ID of this buffer.
     virtual BufferID id() const = 0;
