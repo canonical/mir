@@ -1,5 +1,6 @@
-Mir component reports
-=====================
+(component-reports)=
+
+# Mir component reports
 
 Both the server library and the client library include facilities to provide
 debugging and tracing information at runtime. This is achieved through
@@ -8,8 +9,7 @@ components. A component report can be usually handled in a number of different
 ways, configured using command-line options and/or environment variables. By
 default, component reports are turned off.
 
-Server reports
---------------
+## Server reports
 
 The way component reports are handled on the server can be configured using
 either command-line options or environment variables. The environment variables
@@ -29,8 +29,7 @@ For example, to enable the LTTng input report, one could either use the
 `--input-report=lttng` command-line option to the server, or set the
 `MIR_SERVER_INPUT_REPORT=lttng` environment variable.
 
-LTTng support
--------------
+## LTTng support
 
 Mir provides LTTng tracepoints for various interesting events. You can enable
 LTTng tracing for a Mir component by using the corresponding command-line

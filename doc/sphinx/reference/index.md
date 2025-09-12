@@ -9,9 +9,8 @@ These pages provide detailed reference to Mir APIs and other interfaces.
 
 ```{toctree}
 :hidden:
+:glob:
 
 /api/library_root
-compositors-built-with-mir.md
-introducing_the_miral_api.md
-kernel_requirements.md
+*
 ```

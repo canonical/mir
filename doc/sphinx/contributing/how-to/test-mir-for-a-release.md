@@ -1,3 +1,5 @@
+(how-to-test-mir-for-a-release)=
+
 # How to test Mir for a release
 The following document details the criteria that must be met before we can
 publish an official release of Mir. When adding to this test plan, please

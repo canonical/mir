@@ -1,5 +1,7 @@
-## How to Use On-Screen Keyboards
-Mir-based compositors support on-screen keyboards. 
+(how-to-use-on-screen-keyboards)=
+
+# How to Use On-Screen Keyboards
+Mir-based compositors support on-screen keyboards.
 
 You can use any Wayland compatible on-screen keyboard but as an example, we'll
 use `ubuntu-frame-osk`.

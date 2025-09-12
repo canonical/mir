@@ -12,21 +12,12 @@ that makes it an ideal choice for both device manufacturers and desktop users.
 These pages cover the key aspects of configuring Mir based compositors. 
 
 ````{grid} 1 1 2 2
-```{grid-item-card} [Tutorials](/tutorial/configuring-index.md)
-**Start here** - hands-on introductions to configuring Mir for new developers
-```
 
-```{grid-item-card} [How-to guides](/howto/configuring-index.md)
+```{grid-item-card} [How-to](configuring-how-to-index)
 **How-to guides** - step-by-step guides covering key operations and common tasks
 ```
-````
-````{grid} 1 1 2 2
-:reverse:
-```{grid-item-card} [Reference](/reference/configuring-index.md)
- **Technical information** - specifications, APIs, architecture
-```
 
-```{grid-item-card} [Explanation](/explanation/configuring-index.md)
+```{grid-item-card} [Explanation](configuring-explanation-index)
  **Discussion and clarification** of key topics
 ```
 ````
@@ -45,8 +36,6 @@ Mir is a member of the Ubuntu family. It’s an open source project that warmly 
 ```{toctree}
 :hidden:
 
-tutorial/configuring-index
-how-to/configuring-index
-explanation/configuring-index
-reference/configuring-index
+how-to/index
+explanation/index
 ```

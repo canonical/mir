@@ -1,6 +1,4 @@
----
-discourse: 43118
----
+(how-to-calibrate-a-touchscreen-device)=
 
 # How to calibrate a touchscreen device
 

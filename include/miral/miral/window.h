@@ -31,36 +31,80 @@ namespace scene { class Surface; }
 
 namespace miral
 {
-/// Handle class to manage a Mir surface. It may be null (e.g. default initialized)
+/// A class providing access to a Wayland or X11 surface.
+///
+/// Users are not expected to instantiate instances of this class themselves.
+/// Instead, they may implement #miral::WindowManagementPolicy::advise_new_window to
+/// be notified when the server has received a new window. Similarly, they may
+/// implement #miral::WindowManagementPolicy::advise_delete_window to be notified
+/// when a window has been destroyed.
+///
+/// If the window is default constructed, it will not have any surface backing it.
+///
+/// \sa miral::WindowManagementPolicy::advise_new_window - gets called when a new
+///     window has been created by the server
+/// \sa miral::WindowInfo - provides additional information for a #miral::Window instance
 class Window
 {
 public:
+    /// Construct an empty window instance.
+    ///
+    /// This window is not backed by anything, meaning that all methods on it will
+    /// return stub values.
     Window();
+
+    /// Construct a window backed by \p surface for \p application.
+    ///
+    /// \param application the application to which this window belongs
+    /// \param surface the raw surface backing this window
     Window(Application const& application, std::shared_ptr<mir::scene::Surface> const& surface);
     ~Window();
 
-    /// The position of the top-left corner of the window frame
+    /// Retrieve the position of the top-left corner of the window frame
+    ///
+    /// \returns the top-left point of the frame of the window
     auto top_left()     const -> mir::geometry::Point;
-    /// The size of the window frame. Units are logical screen coordinates (not necessarily device pixels). Any
+
+    /// Retrieve the size of the window frame.
+    ///
+    /// Units are logical screen coordinates (not necessarily device pixels). Any
     /// decorations are included in the size.
+    ///
+    /// \returns the size of the window, including decorations
     auto size()         const -> mir::geometry::Size;
-    /// The application that created this window
+
+    /// Retrieve the application that created this window.
+    ///
+    /// \returns the application
     auto application()  const -> Application;
 
-    /// Indicates that the Window isn't null
+    /// Checks whether the backing surface is valid or not.
+    ///
+    /// This will return true if the window was default constructed, or if the surface
+    /// backing it is now invalid.
     operator bool() const;
 
-    /// Not for external use, use WindowManagerTools::modify_window() instead
-    /// @{
+    /// Resize the window to the given \p size.
+    ///
+    /// \param size the new size
+    /// \note Not for external use, use #WindowManagerTools::modify_window instead.
     void resize(mir::geometry::Size const& size);
-    void move_to(mir::geometry::Point top_left);
-    /// @}
 
-    /// Access to the underlying Mir surface
-    /// @{
+    /// Move the window to the point given by \p top_left.
+    ///
+    /// \param top_left point to move to
+    /// \note Not for external use, use #WindowManagerTools::modify_window instead.
+    void move_to(mir::geometry::Point top_left);
+
+    /// Access the surface backing this window as a weak pointer.
+    ///
+    /// \returns weak pointer to the scene
     operator std::weak_ptr<mir::scene::Surface>() const;
+
+    /// Access the surface backing this window as a shared pointer.
+    ///
+    /// \returns shared pointer to the scene
     operator std::shared_ptr<mir::scene::Surface>() const;
-    /// @}
 
 private:
     struct Self;
@@ -86,7 +130,6 @@ inline bool operator>=(Window const& lhs, Window const& rhs) { return !(lhs < rh
 
 /// Customization for Google test (to print surface name in errors)
 /// \see https://github.com/google/googletest/blob/main/docs/advanced.md#teaching-googletest-how-to-print-your-values
-/// \remark Since MirAL 3.3
 void PrintTo(Window const& bar, std::ostream* os);
 }
 

@@ -1,3 +1,5 @@
+(mir-continuous-integration)=
+
 # Mir Continuous Integration
 
 This document outlines the journey of a contribution to Mir through its continuous integration
@@ -160,7 +162,7 @@ results.
 When in need of hands-on debugging, our GitHub workflows have a ["Setup tmate" step](https://github.com/canonical/mir/blob/92fc772bc32f921c3a1cde7f17abb43a3d482f55/.github/workflows/spread.yml#L123-L127).
 It allows for SSH access to the runner on failed runs. To use it, restart a failing job **with debug logging** enabled and wait for the step to fail. The [tmate action](https://github.com/marketplace/actions/debugging-with-tmate) will then repeatedly log:
 
-```
+```text
 SSH: ssh <id>@<host>
 or: ssh -i <path-to-private-SSH-key> <id>@<host>
 ```

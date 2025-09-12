@@ -6,21 +6,13 @@ These pages provide additional detail about a number of aspects related to using
 - [Performance](performance.md): a discussion of the performance aspects of Mir compositors
 - [Energy efficiency](energy-efficiency.md): a deep dive into the security aspects of Mir compositors
 - [Windowing paradigms](window-positions-under-wayland.md): how are windows managed?
-- [Component reports](component_reports.md): information on Mir's debug and performance reporting infrastructure
-- [Using Mir to build a Desktop Environment](doc/sphinx/explanation/desktop-environment.md): A Desktop Environment comprises a lot more than a compositor
+- {ref}`exp-desktop-environment`: A Desktop Environment comprises a lot more than a compositor
 - [Accessibility Methods](accessibility-methods.md): An overview of Mir's accessibility methods
 - [Libraries](consumer-libraries.md): libraries provided for compositor authors
 
 ```{toctree}
 :hidden:
+:glob:
 
-platform-support.md
-security.md
-performance.md
-energy-efficiency.md
-window-positions-under-wayland.md
-component_reports.md
-desktop-environment.md
-accessibility-methods.md
-consumer-libraries.md
+*
 ```

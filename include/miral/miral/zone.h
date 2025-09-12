@@ -53,7 +53,6 @@ public:
     void extents(Rectangle const& extents);
 
     /// An arbitrary number that uniquely identifies this zone, reguardless of how it is resized and moved
-    /// \remark Since MirAL 3.6
     auto id() const -> int;
 
 private:

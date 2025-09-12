@@ -167,11 +167,24 @@ sitemap_show_lastmod = True
 # NOTE: If undefined, set to None, or empty,
 #       the sphinx_reredirects extension will be disabled.
 redirects = {
-    'how-to/how-to-enable-graphics-core22-on-a-device': '../how-to-enable-graphics-for-snaps-on-a-device',
+    '_static/cppguide': '../../reference/cppguide',
+    'explanation/architecture': '../contributing/explanation/architecture',
+    'explanation/component_reports': '../configuring/explanation/component_reports',
+    'explanation/libraries': '../contributing/explanation/libraries',
     'explanation/ok-so-what-is-this-wayland-thing-anyway': '../../tutorial/write-your-first-wayland-compositor',
     'how-to/developing-a-wayland-compositor-using-mir': '../../tutorial/write-your-first-wayland-compositor',
     'how-to/developing-wayland-extension-protocols-for-mir-servers' : '../how-to/how-to-integrate-a-custom-wayland-protocol',
-    'explanation/mir-graphics-support': 'explanation/platform-support'
+    'how-to/getting_involved_in_mir': '../contributing/how-to/getting-involved-in-mir',
+    'how-to/how-to-calibrate-a-touchscreen-device': '../configuring/how-to/calibrate-a-touchscreen-device',
+    'how-to/how-to-enable-graphics-core22-on-a-device': '../contributing/how-to/enable-graphics-for-snaps-on-a-device',
+    'how-to/how-to-enable-remote-desktop': '../configuring/how-to/enable-remote-desktop',
+    'how-to/how-to-enable-screencasting': '../configuring/how-to/enable-screencasting',
+    'how-to/how-to-test-mir-for-a-release': '../contributing/how-to/test-mir-for-a-release',
+    'how-to/how-to-update-symbols-map': '../contributing/how-to/update-symbols-map',
+    'how-to/how-to-use-checkbox-mir': '../contributing/how-to/use-checkbox-mir',
+    'reference/continuous-integration': '../contributing/reference/continuous-integration',
+    'reference/dso_versioning_guide': '../contributing/reference/dso-versioning-guide',
+    'explanation/mir-graphics-support': 'explanation/platform-support',
 }
 
 
@@ -208,7 +221,10 @@ linkcheck_retries = 3
 #
 # NOTE: By default, the following MyST extensions are enabled:
 #       substitution, deflist, linkify
-myst_enable_extensions = set()
+myst_enable_extensions = set((
+    "attrs_block",
+    "attrs_inline",
+))
 
 
 # Custom Sphinx extensions; see
