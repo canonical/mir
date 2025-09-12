@@ -15,7 +15,7 @@ option(
 # Modifications to `MAKEOPTS` have to be made before targets are generated
 # below.
 if(BUILD_DOXYGEN)
-  find_package(Doxygen 1.8.0 "REQUIRED")
+  find_package(Doxygen 1.8.0 REQUIRED COMPONENTS dot)
   set(MAKEOPTS
     ${MAKEOPTS}
     MIR_BUILD_API_DOCS=1
@@ -59,16 +59,10 @@ add_custom_target(
 )
 
 if(BUILD_DOXYGEN)
-  set(WORKING_DIR ${CMAKE_CURRENT_BINARY_DIR}/sphinx)
-  set(DOXYGEN_OUTPUT_DIR ${WORKING_DIR}/doxygen_output)
-
-  configure_file(
-    ${SPHINXDIR}/Doxyfile.in
-    ${WORKING_DIR}/Doxyfile @ONLY IMMEDIATE
-  )
+  set(DOXYGEN_OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/doxygen_output)
 
   add_custom_target(doxygen
-    COMMAND doxygen ${WORKING_DIR}/Doxyfile
+    COMMAND doxygen ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile
     BYPRODUCTS ${DOXYGEN_OUTPUT_DIR}
   )
 
