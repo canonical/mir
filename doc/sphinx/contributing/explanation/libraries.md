@@ -1,11 +1,13 @@
 (mir-libraries)=
 
 # Libraries
+
 The Mir project is a collection of C++ libraries for writing Wayland
 compositors. This document describes what those libraries are and how they
 depend on one another.
 
-## Public Libraries
+## Public libraries
+
 The following libraries are intended for published for public consumption:
 
 - `miral`
@@ -35,7 +37,8 @@ input hardware of that platform. The libraries that Mir provides are:
 - `input-evdev`
 - `input-stub`
 
-## Dependency Graph
+## Dependency graph
+
 In the following diagram, each arrow denotes that the library at the start of
 the arrow depends on the library at the end of the arrow.
 

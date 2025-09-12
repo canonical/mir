@@ -1,8 +1,6 @@
-Introducing the Miral API
-=========================
+# Introducing the MirAL API
 
-The main() program
-------------------
+## The main() program
 
 The main() program from miral-shell looks like this:
 
