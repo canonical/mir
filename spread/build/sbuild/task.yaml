@@ -134,6 +134,7 @@ execute: |
         export \
           MIR_SERVER_PLATFORM_DISPLAY_LIBS=mir:virtual \
           MIR_SERVER_VIRTUAL_OUTPUT=800x600 \
+          PATH=$PATH:/usr/games \
           QT_QPA_PLATFORM=wayland
 
         # [doc:first-compositor:run]
