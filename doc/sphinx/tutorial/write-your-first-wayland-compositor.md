@@ -16,7 +16,7 @@ This tutorial assumes that:
 
 ## Install dependencies
 
-Let's start by installing the dependencies required by our compositor.
+Let's start by installing the dependencies required by our compositor, and an example client.
 
 `````{tab-set}
 
@@ -29,6 +29,7 @@ For Debian and its derivatives, we only need two small packages:
   interface to interact with and customize Mir compositors.
 * `mir-graphics-drivers-desktop` - provides drivers so Mir can talk with
   different graphics drivers
+* `bomber` - a Qt-based game we'll use to validate the compositor
 
 ```{literalinclude} ../../../spread/build/sbuild/task.yaml
 :language: bash
@@ -135,8 +136,13 @@ Next, let's open up an application in our compositor, namely the `bomber` arcade
 game.
 From another terminal, run:
 
-```sh
-WAYLAND_DISPLAY=wayland-99 bomber
+```{literalinclude} ../../../spread/build/sbuild/task.yaml
+---
+language: bash
+start-after: [doc:first-compositor:run-client]
+end-before: [doc:first-compositor:run-client-end]
+dedent: 8
+---
 ```
 
 An window displaying the `bomber` application should appear in the compositor.
