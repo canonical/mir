@@ -119,7 +119,7 @@ execute: |
         pkg-config
 
       # [doc:first-compositor:debian-dependencies-install]
-      apt-get install libmiral-dev mir-graphics-drivers-desktop
+      apt-get install bomber libmiral-dev mir-graphics-drivers-desktop
       # [doc:first-compositor:debian-dependencies-install-end]
 
       cd ${SPREAD_PATH}/doc/sphinx/tutorial/first-wayland-compositor
@@ -130,11 +130,20 @@ execute: |
       # [doc:first-compositor:build-end]
 
       # we expect the timeout to hit
-      timeout 10 bash <<EOF || [ $? -eq 124 ]
+      timeout 10 bash -e <<EOF || [ $? -eq 124 ]
+
+        trap "jobs -p | xargs -r kill" SIGINT SIGTERM EXIT
 
         # [doc:first-compositor:run]
-        WAYLAND_DISPLAY=wayland-99 ./demo-mir-compositor
+        WAYLAND_DISPLAY=wayland-99 ./demo-mir-compositor &
         # [doc:first-compositor:run-end]
+
+        # wait for the the socket
+        timeout --preserve-status 3 bash -c "while [ ! -S $XDG_RUNTIME_DIR/wayland-99 ]; do sleep 0.1; done"
+
+        # [doc:first-compositor:run-client]
+        WAYLAND_DISPLAY=wayland-99 bomber
+        # [doc:first-compositor:run-client-end]
     EOF
 
     fi

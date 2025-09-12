@@ -135,8 +135,13 @@ Next, let's open up an application in our compositor, namely the `bomber` arcade
 game.
 From another terminal, run:
 
-```sh
-WAYLAND_DISPLAY=wayland-99 bomber
+```{literalinclude} ../../../spread/build/sbuild/task.yaml
+---
+language: bash
+start-after: [doc:first-compositor:run-client]
+end-before: [doc:first-compositor:run-client-end]
+dedent: 8
+---
 ```
 
 An window displaying the `bomber` application should appear in the compositor.
