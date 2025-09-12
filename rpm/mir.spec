@@ -4,6 +4,13 @@
 # Use ccache
 %bcond ccache 0
 
+# Use clang
+%bcond clang 0
+
+%if %{with clang}
+%global toolchain clang
+%endif
+
 # Debug build with extra compile time checks
 %bcond debug 0
 
@@ -34,7 +41,11 @@ Source0:        https://github.com/canonical/%{name}/releases/download/v%{versio
 %if %{with ccache}
 BuildRequires:  ccache
 %endif
+%if %{with clang}
+BuildRequires:  clang
+%else
 BuildRequires:  gcc-c++
+%endif
 BuildRequires:  cmake, ninja-build, doxygen, graphviz, lcov, gcovr
 BuildRequires:  /usr/bin/xsltproc
 BuildRequires:  boost-devel
