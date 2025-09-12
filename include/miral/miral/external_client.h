@@ -30,7 +30,9 @@ namespace miral
 /// This class provides methods to launch external clients from the compositor.
 ///
 /// This class launches clients with the correct environment variables (e.g.
-/// WAYLAND_DISPLAY) as well as a valid activation token.
+/// `WAYLAND_DISPLAY`) as well as a valid activation token.
+///
+/// \sa miral::InternalClientLauncher - for launching clients in the same process as the compositor
 class ExternalClientLauncher
 {
 public:
