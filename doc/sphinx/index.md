@@ -53,7 +53,6 @@ Mir is a member of the Ubuntu family. It’s an open source project that warmly 
 
 Thinking about using Mir for your next project? [Get in touch](https://canonical.com/mir)!
 
-
 ```{toctree}
 ---
 hidden:
