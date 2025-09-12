@@ -1,11 +1,11 @@
 # Configuring Mir
 
-Mir is a compositor library designed to operate across a variety of Linux-based
-devices, including traditional desktops, IoT and embedded systems.
+This section provides information for end-users running a Mir-based compositor.
 
-Mir is a modern way to build Wayland compositors, providing
-a well-defined, efficient, flexible and secure platform for graphical environments
-that makes it an ideal choice for both device manufacturers and desktop users.
+Mir is a compositor, not a full desktop environment. The documents in this section provide
+information about configuring both external components — such as remote desktop capabilities,
+on-screen keyboards, and other components you may want to integrate into your desktop environment —
+and internal features of Mir itself, such as accessibility options and other built-in capabilities.
 
 ## In this documentation
 
