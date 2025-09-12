@@ -58,10 +58,10 @@ public:
     /// \returns The unique ID of this buffer.
     virtual BufferID id() const = 0;
 
+    /// \returns The size of the buffer.
+    ///
     /// \note The size is the logical size of the buffer, where the width is
     /// the perceived width, and NOT the stride.
-    ///
-    /// \returns The size of the buffer.
     virtual geometry::Size size() const = 0;
 
     /// The pixel format determines how the pixels are laid out in memory, and
