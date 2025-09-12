@@ -1,6 +1,6 @@
 (mir-continuous-integration)=
 
-# Mir Continuous Integration
+# Mir continuous integration
 
 This document outlines the journey of a contribution to Mir through its continuous integration
 pipeline.

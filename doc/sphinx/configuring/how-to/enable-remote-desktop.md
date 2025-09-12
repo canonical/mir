@@ -1,6 +1,6 @@
 (how-to-enable-remote-desktop)=
 
-# How to Enable Remote Desktop
+# How to enable remote desktop
 
 Mir supports remote desktops via the VNC protocol. To demo this, you'll use
 `wayvnc` - a VNC server.

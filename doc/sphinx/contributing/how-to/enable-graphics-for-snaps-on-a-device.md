@@ -17,11 +17,11 @@ To this end, we will accomplish the following in order:
 
 Before we get started, let's make sure that we have everything that we require.
 
-### 1. Development Board
+### Development board
 
 For starters, make sure that you have some sort of development board on hand.
 
-### 2. GPU Support Check
+### GPU support check
 
 Next, make sure that this board runs a `snapd`-enabled Ubuntu image with
 a kernel that includes GPU support. To do this, we'll run a series of checks.
@@ -100,7 +100,7 @@ If `drm-info` does *not* produce results similar to those above, then this
 indicates that your kernel **is NOT yet ready** to support the GPU. This
 means that kernel enablement is required before Ubuntu Frame can be enabled.
 
-### 3. Driver Support Check
+### Driver support check
 
 Finally, we will need to check that you have the proper userspace drivers
 installed on the system, namely:
@@ -225,7 +225,7 @@ This script has exported the proper paths via environment variables so that
 any snap that connects to our provider snap can properly resolve these
 libraries.
 
-### Multiarch Support
+### Multiarch support
 
 If the vendor drivers provide libraries for multiple sub-architectures (for example, 32-bit and 64-bit ARM) your provider snap can supply both. In this case, you will need to include all provided arch triples in the `ARCH_TRIPLETS` array in the above script (for example: `ARCH_TRIPLETS=( armhf-linux-gnu arm64-linux-gnu )`), and will need to set a few more environment variables in the `gpu-2404-provider-wrapper`.
 An example from `mesa-2404` (which provides both `x86_64-linux-gnu` and `i386-linux-gnu`) adds these lines:

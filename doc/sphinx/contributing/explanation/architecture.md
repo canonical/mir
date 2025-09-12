@@ -32,7 +32,7 @@ The **mirserver** library is the core implementation of *Mir*. It serves as the 
 ```{mermaid} mirserver.mmd
 ```
 
-### Core Concepts
+### Core concepts
 
 At the heart of `mirserver` are two interfaces: the **Shell** and the **Scene**. The **Shell**\` is responsible for fielding requests from the rest system. The **Shell** modifies the state of the **Scene** to reflect the requested changes.
 
@@ -40,12 +40,12 @@ Other classes only have "read only" access to the **Scene** and either request i
 
 For example, the **Frontend** would ask the **Shell** to initiate dragging a window. The **Shell** would then decide how to move that window to and update the state of the **Scene** to reflect that change.
 
-### From Scene to Screen
+### From scene to screen
 
 Knowing that the **Scene** holds the state of what is to be displayed, we can talk about the **Compositor**. The **Compositor** gets the collection of items to render from the **Scene**,
 renders them with the help of the [rendering platform](#platforms), and sends them off to the [display platform](#platforms) to be displayed.
 
-### From Interaction to Shell
+### From interaction to shell
 
 As stated previously, the **Shell** handles requests from the system and updates the state of the **Scene** accordingly. These requests come from a variety of sources, which we will investigate now.
 
@@ -67,7 +67,7 @@ We briefly hinted at the existence of so-called "platforms" previously, but they
 
 The GBM/KMS platform is most typically what will be used, as it is the native platform. The X11 platform is useful for development. The Wayland platform is specifically useful for Ubuntu Touch, where they are hosting *Mir* in another Wayland compositor.
 
-## Supporting Libraries
+## Supporting libraries
 
 *Mir* leans on a few core libraries to support the entire system. These libraries contain data structures and utilities that are shared throughout the project.
 

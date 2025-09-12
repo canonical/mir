@@ -1,4 +1,4 @@
-# Symbols Map Generator
+# Symbols map generator
 This tool parses the header files of a library in the Mir project to extract symbols.
 These symbols are outputted to a corresponding `symbols.map` file by default. If the `--diff`
 option is provided, then the added and removed symbols will be printed to `stdout`.

@@ -1,6 +1,6 @@
 (compositors-built-with-mir)=
 
-# Compositors Built with Mir
+# Compositors built with Mir
 
 Here is a list of active projects that are using Mir:
 

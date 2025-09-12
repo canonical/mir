@@ -172,7 +172,7 @@ System Manifest:
  Press (T) to start Testing                               Shortcuts: y/n
 ```
 
-### The Snap test plan
+### The snap test plan
 
 This test plan is primarily intended for the Mir team, allowing us to test updates to the snaps we maintain:
 
