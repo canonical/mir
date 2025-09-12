@@ -1,11 +1,11 @@
 # Contributing to Mir
 
-Mir is a compositor library designed to operate across a variety of Linux-based
-devices, including traditional desktops, IoT and embedded systems.
+This section provides information for contributors to the Mir project.
 
-Mir is a modern way to build Wayland compositors, providing
-a well-defined, efficient, flexible and secure platform for graphical environments
-that makes it an ideal choice for both device manufacturers and desktop users.
+Mir is a large C++ project that ships across many platforms and packaging formats,
+including snaps. The documents in this subsection are intended to assist developers
+who are contributing to Mir. These docs include everything from diagrams describing
+the architecture of Mir, guides for debugging snaps, a C++ style guide, and more.
 
 ## In this documentation
 
