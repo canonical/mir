@@ -55,11 +55,6 @@ class Buffer
 public:
     virtual ~Buffer() {}
 
-    /// The unique ID of this buffer.
-    ///
-    /// This ID is only used to identify the buffer for tracing and is not used
-    /// for rendering.
-    ///
     /// \returns The unique ID of this buffer.
     virtual BufferID id() const = 0;
 
