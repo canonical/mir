@@ -37,13 +37,19 @@ namespace renderer
 namespace software
 {
 
+/// Describes the layout of CPU accessible buffers.
+///
+/// Used for reading, writing, and transferring data between CPU buffers.
 class BufferDescriptor
 {
 public:
     virtual ~BufferDescriptor() = default;
 
+    /// \returns The pixel format of the buffer
     virtual MirPixelFormat format() const = 0;
+    /// \returns The stride (width + any hardware imposed padding)
     virtual geometry::Stride stride() const = 0;
+    /// \returns The size of the buffer
     virtual geometry::Size size() const = 0;
 };
 
