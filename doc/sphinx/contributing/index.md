@@ -23,6 +23,7 @@ These pages cover the key aspects of working on Mir
 ```
 
 ````
+
 ````{grid} 1 1 2 2
 
 ```{grid-item-card} [Reference](contributing-reference-index)
@@ -34,16 +35,16 @@ These pages cover the key aspects of working on Mir
 
 Mir is a member of the Ubuntu family. It’s an open source project that warmly welcomes community projects, contributions, suggestions, fixes and constructive feedback.
 
-* [Code of conduct](https://ubuntu.com/community/docs/ethos/code-of-conduct)
-* [Get support](https://discourse.ubuntu.com/c/project/mir/15)
-* [Join our online chat](https://matrix.to/#/#mir-server:matrix.org)
-* {ref}`Contribute <howto-contribute>`
-* Thinking about using Mir for your next project? [Get in touch](https://canonical.com/mir)!
-
+- [Code of conduct](https://ubuntu.com/community/docs/ethos/code-of-conduct)
+- [Get support](https://discourse.ubuntu.com/c/project/mir/15)
+- [Join our online chat](https://matrix.to/#/#mir-server:matrix.org)
+- {ref}`Contribute <howto-contribute>`
+- Thinking about using Mir for your next project? [Get in touch](https://canonical.com/mir)!
 
 ```{toctree}
-:hidden:
-
+---
+hidden:
+---
 how-to/index
 explanation/index
 reference/index

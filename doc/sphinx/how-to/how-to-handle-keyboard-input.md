@@ -6,9 +6,10 @@ based compositors.
 Handling keyboard input allows for great flexibility in your compositor. For
 example, it's widely known that ALT + F4 closes the currently open application.
 Some window managers take this a step further by allowing all navigation
-between windows to be done via the keyboard. 
+between windows to be done via the keyboard.
 
 We'll implement a couple of shortcuts:
+
 - CTRL + ALT + T / CTRL + ALT + SHIFT + T: To launch a terminal emulator
 - CTRL + ALT + Backspace: To stop the compositor
 
@@ -20,10 +21,12 @@ Compositor](../tutorial/write-your-first-wayland-compositor.md) is a prerequisit
 this how-to.
 
 ## Header changes
+
 Here we just include `append_keyboard_event_filter.h` for the declaration of
 `AppendKeyboardEventFilter` and `toolkit_event` to get definitions for event types and
 functions. We import everything from `miral::toolkit` to make the code a bit
 easier to read.
+
 ```diff
 @@ -1,10 +1,15 @@
  #include <miral/runner.h>
@@ -37,11 +40,13 @@ easier to read.
 ```
 
 ## Code changes
-This big block of code can be broken down into three parts: 
+
+This big block of code can be broken down into three parts:
+
 1. Declaring the name of the terminal we'll use and an external client launcher
-   that we'll use to launch it. 
-2. Filtering Mir events until we obtain a keyboard key down event. 
-3. Handling the combinations we want.
+   that we'll use to launch it.
+1. Filtering Mir events until we obtain a keyboard key down event.
+1. Handling the combinations we want.
 
 ```diff
 +    std::string terminal_cmd{"kgx"};
@@ -79,6 +84,7 @@ This big block of code can be broken down into three parts:
 ```
 
 ### Options changes
+
 Here we simply add the external client launcher we declared in the previous
 subsection, and an event filter that uses the code we specified in the previous
 subsection.

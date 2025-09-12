@@ -53,7 +53,9 @@ We now have the information needed to calibrate the touchscreen:
 echo 'ATTRS{idVendor}=="0483",ATTRS{idProduct}=="5750", ENV{LIBINPUT_CALIBRATION_MATRIX}="0 1.035 -0.021 1.007 0 -0.018"' | \
 sudo tee /etc/udev/rules.d/99-QDtech-MPI7003.rules
 ```
+
 And ensure the new rule has been processed by udev:
+
 ```shell
 sudo udevadm control --reload
 ```

@@ -1,4 +1,5 @@
 (howto-contribute)=
+
 # Getting Involved in Mir
 
 ## Getting involved
@@ -12,13 +13,14 @@ For announcements and other discussions on Mir see:
 For other questions and discussion about the Mir project, feel free to join the
 [Matrix channel](https://matrix.to/#/#mir-server:matrix.org).
 
-
 ## Getting Mir source and dependencies
 
 You can get the source with:
 
-    git clone https://github.com/canonical/mir.git
-    cd mir
+```
+git clone https://github.com/canonical/mir.git
+cd mir
+```
 
 You may need to install git for the system you are working on.
 
@@ -53,14 +55,18 @@ from `spread/build/alpine/task.yaml`.
 
 ## Building
 
-    cmake -S . -Bbuild
-    cd build
-    cmake --build .
+```
+cmake -S . -Bbuild
+cd build
+cmake --build .
+```
 
 This creates an example shell (miral-shell) in the bin directory. This can be
 run directly:
 
-    bin/miral-app
+```
+bin/miral-app
+```
 
 With the default options this runs in a window on X (which is convenient for
 development).
@@ -78,7 +84,9 @@ To exit from miral-shell press Ctrl-Alt-Backspace.
 
 You can install the Mir examples, headers and libraries you've built with:
 
-    sudo cmake --build . --target install
+```
+sudo cmake --build . --target install
+```
 
 ## Contributing to Mir
 
@@ -91,6 +99,7 @@ The Mir coding guidelines are <a href=../../_static/cppguide/>here</a>.
 ```
 
 ## Working on code
- - Hacking guidelines can be found here: [Mir Hacking Guides](https://github.com/canonical/mir/blob/main/HACKING.md)
- - You can configure *Mir* to provide runtime information helpful for debugging by enabling [](component-reports)
- - A guide on versioning Mir DSOs: [DSO Versioning Guide](dso-versioning-guide)
+
+- Hacking guidelines can be found here: [Mir Hacking Guides](https://github.com/canonical/mir/blob/main/HACKING.md)
+- You can configure *Mir* to provide runtime information helpful for debugging by enabling [](component-reports)
+- A guide on versioning Mir DSOs: [DSO Versioning Guide](dso-versioning-guide)
