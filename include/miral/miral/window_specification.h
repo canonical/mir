@@ -137,15 +137,14 @@ public:
     /// Defines the rectangle of a parent window against which the #aux_rect_placement_gravity
     /// is decided.
     ///
-    /// This is useful for when the window is of type #mir_window_type_menu
-    /// and wants to orient itself relative to a particular rectangle of the parent.
+    /// This is useful for when the window is of type #mir_window_type_menu, #mir_window_type_satellite
+    /// or #mir_window_type_tip and wants to orient itself relative to a particular rectangle of the parent.
     ///
     /// \returns a const reference to the auxiliary rectangle
     auto aux_rect() const -> mir::optional_value<Rectangle> const&;
 
-    /// The placement hint describes how windows with type #mir_window_type_menu
-    /// should be adjusted when their placement would cause them to extend beyond
-    /// their current output.
+    /// The placement hint describes how child windows should be adjusted when
+    /// their placement would cause them to extend beyond their current output.
     ///
     /// \returns a const reference to the placement hints
     auto placement_hints() const -> mir::optional_value<MirPlacementHints> const&;
@@ -153,7 +152,8 @@ public:
     /// The placement gravity describes what edge of a popup window should attach
     /// to a corresponding edge of its parent.
     ///
-    /// This only applies to windows with type #mir_window_type_menu.
+    /// This only applies to windows with type #mir_window_type_menu, #mir_window_type_satellite
+    /// or #mir_window_type_tip.
     ///
     /// #aux_rect_placement_gravity provides a way to set a corresponding point on a parent,
     /// such that the edge defined by the #window_placement_gravity of the popup touches
@@ -170,7 +170,8 @@ public:
     /// The auxiliary placement describes the edge of the parent that the corresponding edge
     /// of the popup should attach itself to.
     ///
-    /// This only applied to windows with type #mir_window_type_menu.
+    /// This only applied to windows with type #mir_window_type_menu, #mir_window_type_satellite
+    /// or #mir_window_type_tip.
     ///
     /// #window_placement_gravity provides a way to set a corresponding point on the popup itself,
     /// such that the edge defined by the #window_placement_gravity of the popup touches
@@ -322,15 +323,15 @@ public:
     /// Defines the rectangle of a parent window against which the #aux_rect_placement_gravity
     /// is decided.
     ///
-    /// This is useful for when the window is of type #mir_window_type_menu
-    /// and wants to orient itself relative to a particular rectangle of the parent.
+    /// This is useful for when the window is of type #mir_window_type_menu, #mir_window_type_satellite
+    /// or #mir_window_type_tip and wants to orient itself relative to a particular rectangle of the parent.
     ///
     /// \returns a reference to the auxiliary rectangle
     auto aux_rect() -> mir::optional_value<Rectangle>&;
 
-    /// The placement hint describes how windows with type #mir_window_type_menu
-    /// should be adjusted when their placement would cause them to extend beyond
-    /// their current output.
+    /// The placement hint describes how windows with type #mir_window_type_menu,
+    /// #mir_window_type_satellite or #mir_window_type_tip should be adjusted when
+    /// their placement would cause them to extend beyond their current output.
     ///
     /// \returns a reference to the placement hints
     auto placement_hints() -> mir::optional_value<MirPlacementHints>&;
@@ -338,7 +339,8 @@ public:
     /// The placement gravity describes what edge of a popup window should attach
     /// to a corresponding edge of its parent.
     ///
-    /// This only applies to windows with type #mir_window_type_menu.
+    /// This only applies to windows with type #mir_window_type_menu, #mir_window_type_satellite
+    /// or #mir_window_type_tip.
     ///
     /// #aux_rect_placement_gravity provides a way to set a corresponding point on a parent,
     /// such that the edge defined by the #window_placement_gravity of the popup touches
@@ -350,7 +352,8 @@ public:
     /// The auxiliary placement describes the edge of the parent that the corresponding edge
     /// of the popup should attach itself to.
     ///
-    /// This only applied to windows with type #mir_window_type_menu.
+    /// This only applied to windows with type #mir_window_type_menu, #mir_window_type_satellite
+    /// or #mir_window_type_tip.
     ///
     /// #window_placement_gravity provides a way to set a corresponding point on the popup itself,
     /// such that the edge defined by the #window_placement_gravity of the popup touches
@@ -362,7 +365,8 @@ public:
     // The auxiliary placement describes the edge of the parent that the corresponding edge
     /// of the popup should attach itself to.
     ///
-    /// This only applied to windows with type #mir_window_type_menu.
+    /// This only applied to windows with type #mir_window_type_menu, #mir_window_type_satellite
+    /// or #mir_window_type_tip.
     ///
     /// #window_placement_gravity provides a way to set a corresponding point on the popup itself,
     /// such that the edge defined by the #window_placement_gravity of the popup touches
