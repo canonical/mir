@@ -43,6 +43,8 @@
 #include <xkbcommon/xkbcommon-keysyms.h>
 
 #include <cstring>
+#include <csignal>
+#include <sys/wait.h>
 
 namespace
 {
@@ -64,12 +66,32 @@ struct ConfigureDecorations
         decorations(s);
     }
 };
+
+bool is_process_running(pid_t pid) {
+    if (kill(pid, 0) == 0) {
+        return true;
+    }
+
+    if (errno == ESRCH)
+        return false;
+    else if (errno == EPERM)
+        return true;
+    else
+        return false;
+}
+
+void sigchld_handler(int) {
+    while (waitpid(-1, nullptr, WNOHANG) > 0) {
+    }
+}
 }
 
 int main(int argc, char const* argv[])
 {
     using namespace miral;
     using namespace miral::toolkit;
+
+    signal(SIGCHLD, sigchld_handler);
 
     std::function<void()> shutdown_hook{[]{}};
 
@@ -303,6 +325,35 @@ int main(int argc, char const* argv[])
         return false;
     };
 
+    std::optional<pid_t> app_switcher_pid;
+    auto const alt_tab_filter = [&app_switcher_pid, external_client_launcher](MirKeyboardEvent const* key_event)
+    {
+        if (mir_keyboard_event_action(key_event) != mir_keyboard_action_down)
+            return false;
+
+        auto const modifiers = mir_keyboard_event_modifiers(key_event);
+        if (modifiers & mir_input_event_modifier_alt)
+        {
+            switch (mir_keyboard_event_keysym(key_event))
+            {
+                case XKB_KEY_Tab:
+                {
+                    if (!app_switcher_pid || !is_process_running(app_switcher_pid.value()))
+                    {
+                        std::string app_selector = "mir-application-switcher";
+                        app_switcher_pid = external_client_launcher.launch({app_selector});
+                        return true;
+                    }
+                    break;
+                }
+                default:
+                    break;
+            }
+        }
+
+        return false;
+    };
+
     return runner.run_with(
         {
             CursorTheme{"default:DMZ-White"},
@@ -333,6 +384,7 @@ int main(int argc, char const* argv[])
             sticky_keys,
             magnifier,
             AppendKeyboardEventFilter{magnifier_filter},
-            AppendKeyboardEventFilter{sticky_keys_filter}
+            AppendKeyboardEventFilter{sticky_keys_filter},
+            AppendKeyboardEventFilter{alt_tab_filter}
         });
 }
