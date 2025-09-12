@@ -354,15 +354,25 @@ public:
     virtual ~DisplayAllocator() = default;
 };
 
+/// A buffer that is directly displayable on an output.
+///
+/// Framebuffers can come from individual buffers, or via compositing multiple
+/// buffers into one framebuffer for display.
+///
+/// \sa
+/// - #mir::graphics::FramebufferProvider::buffer_to_framebuffer - Converts a
+/// buffer to a framebuffer
+/// - #mir::graphics::Renderer::render - Renders a list of renderables into a
+/// framebuffer for display.
+/// - #mir::graphics::DisplaySink::set_next_image - Displays the given
+/// framebuffer if it's suitable for the display sink.
 class Framebuffer
 {
 public:
     Framebuffer() = default;
     virtual ~Framebuffer() = default;
 
-    /**
-     * The size of this framebuffer, in pixels
-     */
+    /// \returns The size of this framebuffer, in pixels
     virtual auto size() const -> geometry::Size = 0;
 };
 
