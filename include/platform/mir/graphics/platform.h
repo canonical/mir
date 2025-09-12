@@ -171,7 +171,7 @@ public:
      * \returns  A FramebufferProvider. [Framebuffer](#Framebuffer)s returned from
      *           this FramebufferProvider will be displayable on *sink*.
      *           In particular, [sink.set_next_image(fb)](DisplaySink::set_next_image()) is
-     *           guaranteed to succeed if *fb* has been acquired via this FramebufferProvider.           
+     *           guaranteed to succeed if *fb* has been acquired via this FramebufferProvider.
      */
     virtual auto make_framebuffer_provider(DisplaySink& sink)
         -> std::unique_ptr<FramebufferProvider> = 0;
@@ -362,8 +362,6 @@ public:
 /// \sa
 /// - #mir::graphics::FramebufferProvider::buffer_to_framebuffer - Converts a
 /// buffer to a framebuffer
-/// - #mir::graphics::Renderer::render - Renders a list of renderables into a
-/// framebuffer for display.
 /// - #mir::graphics::DisplaySink::set_next_image - Displays the given
 /// framebuffer if it's suitable for the display sink.
 class Framebuffer
