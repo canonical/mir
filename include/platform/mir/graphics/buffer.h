@@ -45,12 +45,11 @@ protected:
 /// #mir::graphics::gl::Texture for compositing.
 ///
 ///
-/// \sa GraphicBufferAllocator::buffer_from_resource
-/// \sa GraphicBufferAllocator::buffer_from_shm
-/// \sa DMABufEGLProvider::import_dma_buf
-/// \sa GraphicBufferAllocator::alloc_software_buffer
-/// \sa FramebufferProvider::buffer_to_framebuffer
-/// \sa GLRenderingProvider::as_texture
+/// \sa
+/// - GraphicBufferAllocator - Allocates different types of buffers
+/// - DMABufEGLProvider::import_dma_buf
+/// - FramebufferProvider::buffer_to_framebuffer
+/// - GLRenderingProvider::as_texture - Convert a buffer to an OpenGL texture
 class Buffer
 {
 public:
