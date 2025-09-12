@@ -1,4 +1,4 @@
-# Energy Efficiency
+# Energy efficiency
 
 This document aims to explore in depth the energy efficiency considerations
 around Mir based compositors.

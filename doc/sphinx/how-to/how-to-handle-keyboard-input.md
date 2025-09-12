@@ -1,4 +1,4 @@
-# How to Handle Keyboard Input
+# How to handle keyboard input
 
 This how-to guide will show you the basics of handling keyboard input in Mir
 based compositors.

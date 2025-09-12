@@ -1,6 +1,6 @@
 (how-to-use-on-screen-keyboards)=
 
-# How to Use On-Screen Keyboards
+# How to use on-screen keyboards
 
 Mir-based compositors support on-screen keyboards.
 

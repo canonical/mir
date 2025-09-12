@@ -6,7 +6,7 @@ This tutorial will introduce you to the basic functionality of Mir by running a 
 the tutorial, you will install and run a demo compositor, learn how to use Mir in different environments,
 and learn about features that Mir provides.
 
-## Install Mir Demos
+## Install Mir demos
 
 First, we will install the Mir demo compositors.
 
@@ -71,17 +71,17 @@ The compositor should appear across your outputs.
 Note: Mir supports NVIDIA graphics cards but they can cause stability issues due
 to quirks on the driver side.
 
-## Run Clients
+## Run clients
 
 Whether you're running Mir nested in your current session or from a virtual
 terminal, you will be able to run Wayland clients in your current session.
 
-### Run Wayland Applications
+### Run Wayland applications
 
 To start, let's open up a terminal using `CTRL+ALT+T`. This will open up a
 Wayland terminal client.
 
-### Run X11 Applications
+### Run X11 applications
 
 Rerun `miral-app` with the following flags:
 
@@ -94,7 +94,7 @@ xterm session open if it is available on your system.
 
 At this point, you may experiment opening other applications as well.
 
-### Run Shell Component Applications
+### Run shell component applications
 
 In addition to traditional applications, Mir provides the facilities for you to
 run applications which are actually shell components, such as backgrounds, bars,

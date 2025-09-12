@@ -1,6 +1,6 @@
 (howto-contribute)=
 
-# Getting Involved in Mir
+# Getting involved in Mir
 
 ## Getting involved
 

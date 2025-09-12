@@ -1,6 +1,6 @@
 (how-to-update-symbols-maps)=
 
-# How to Update Symbols Map Files
+# How to update symbols map files
 
 The Mir project is a collection of C++ libraries that a consumer
 can use to create a Wayland compositor. In order for consumers
@@ -90,7 +90,7 @@ And that's it! Now we are ready to update our symbols automatically.
 
 ## How to update miral symbols
 
-### Scenario 1: Adding a new symbol
+### Scenario 1: adding a new symbol
 
 1. Make the additive change to the interface (e.g. by adding a new method
    to an existing class)
@@ -109,7 +109,7 @@ And that's it! Now we are ready to update our symbols automatically.
    cmake --build <BUILD_DIRECTORY> --target regenerate-miral-debian-symbols
    ```
 
-### Scenario 2: Removing or changing a symbol
+### Scenario 2: removing or changing a symbol
 
 1. Make a destructive change to the interface (e.g. remove a parameter from
    a method).
@@ -139,7 +139,7 @@ If `MIRAL_ABI` needed to be updated, you should also run:
 
 ## How to update miroil symbols
 
-### Scenario 1: Adding a new symbol
+### Scenario 1: adding a new symbol
 
 1. Make the additive change to the interface (e.g. by adding a new method
    to an existing class)
@@ -154,7 +154,7 @@ If `MIRAL_ABI` needed to be updated, you should also run:
    git diff src/miroil/symbols.map
    ```
 
-### Scenario 2: Removing or changing a symbol
+### Scenario 2: removing or changing a symbol
 
 1. Make a destructive change to the interface (e.g. remove a parameter from
    a method).
@@ -182,7 +182,7 @@ If `MIROIL_ABI` needed to be updated, you should also run:
 
 ## How to update mirserver symbols map
 
-### Scenario 1: Adding a new symbol
+### Scenario 1: adding a new symbol
 
 1. Make the additive change to the interface (e.g. by adding a new method
    to an existing class)
@@ -205,7 +205,7 @@ If `MIRSERVER_ABI` needed to be updated, you should also run:
 ./tools/update_package_abis.sh
 ```
 
-### Scenario 2: Removing or changing a symbol
+### Scenario 2: removing or changing a symbol
 
 1. Make a destructive change to the interface (e.g. remove a parameter from
    a method).

@@ -1,5 +1,5 @@
 =========================
-Mir C++ API Documentation
+Mir C++ API documentation
 =========================
 
 This is the C++ API documentation for Mir, generated from the source code

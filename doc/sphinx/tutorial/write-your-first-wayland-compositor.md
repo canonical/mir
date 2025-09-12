@@ -14,7 +14,7 @@ This tutorial assumes that:
 - You are familiar with C++ and CMake.
 - You have `cmake` and a C++ compiler installed.
 
-## Install Dependencies
+## Install dependencies
 
 Let's start by installing the dependencies required by our compositor.
 
@@ -55,7 +55,7 @@ apk add mir-dev libxkbcommon-dev
 
 `````
 
-## Create the Compositor
+## Create the compositor
 
 Now that we have the dependencies installed, we are ready to begin programming
 the compositor.
