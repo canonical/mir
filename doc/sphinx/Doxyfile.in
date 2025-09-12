@@ -856,11 +856,9 @@ INPUT                  = @CMAKE_SOURCE_DIR@/README.md \
                          @CMAKE_SOURCE_DIR@/HACKING.md \
                          @CMAKE_SOURCE_DIR@/doc \
                          @CMAKE_SOURCE_DIR@/include/core \
+                         @CMAKE_SOURCE_DIR@/include/common \
                          @CMAKE_SOURCE_DIR@/include/miral \
-                         @CMAKE_SOURCE_DIR@/include/miroil \
-                         @CMAKE_SOURCE_DIR@/include/server \
-                         @CMAKE_SOURCE_DIR@/include/platform \
-                         @CMAKE_SOURCE_DIR@/src/include \
+                         @CMAKE_SOURCE_DIR@/include/mirwayland \
                          @MIR_GENERATED_INCLUDE_DIRECTORIES_FLATTENED@
 
 # This tag can be used to specify the character encoding of the source files
@@ -1163,16 +1161,7 @@ CLANG_ADD_INC_PATHS    = YES
 CLANG_OPTIONS          = -std=c++23 \
                          -I@CMAKE_SOURCE_DIR@/include/core \
                          -I@CMAKE_SOURCE_DIR@/include/common \
-                         -I@CMAKE_SOURCE_DIR@/include/miral \
-                         -I@CMAKE_SOURCE_DIR@/include/miroil \
-                         -I@CMAKE_SOURCE_DIR@/include/platform \
-                         -I@CMAKE_SOURCE_DIR@/include/renderer \
-                         -I@CMAKE_SOURCE_DIR@/include/renderers/gl \
-                         -I@CMAKE_SOURCE_DIR@/include/server \
-                         -I@CMAKE_SOURCE_DIR@/include/wayland \
-                         -I@CMAKE_SOURCE_DIR@/src/include/common \
-                         -I@CMAKE_SOURCE_DIR@/src/include/gl \
-                         -I@CMAKE_SOURCE_DIR@/src/include/server
+                         -I@CMAKE_SOURCE_DIR@/include/miral
 
 # If clang assisted parsing is enabled you can provide the clang parser with the
 # path to the directory containing a file called compile_commands.json. This
