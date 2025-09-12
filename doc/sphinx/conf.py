@@ -171,6 +171,7 @@ redirects = {
     'explanation/ok-so-what-is-this-wayland-thing-anyway': '../../tutorial/write-your-first-wayland-compositor',
     'how-to/developing-a-wayland-compositor-using-mir': '../../tutorial/write-your-first-wayland-compositor',
     'how-to/developing-wayland-extension-protocols-for-mir-servers' : '../how-to/how-to-integrate-a-custom-wayland-protocol',
+    'explanation/mir-graphics-support': 'explanation/platform-support'
 }
 
 
