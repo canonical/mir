@@ -4,8 +4,14 @@ This section provides information for contributors to the Mir project.
 
 Mir is a large C++ project that ships across many platforms and packaging formats,
 including snaps. The documents in this subsection are intended to assist developers
-who are contributing to Mir. These docs include everything from diagrams describing
-the architecture of Mir, guides for debugging snaps, a C++ style guide, and more.
+who are contributing to Mir. These docs will guide you through the code, help test your
+changes, and get your proposals merged, in addition to documenting the project processes.
+
+The Mir development team welcomes new contributors to the project.
+If you are interested in making an impact on the Linux desktop, check out the
+[good first issues](https://github.com/canonical/mir/issues?q=is%3Aissue%20state%3Aopen%20label%3A%22Good%20first%20issue%22)
+label in the Mir project where you can find issues set aisde specifically
+for newcomers to the project.
 
 ## In this documentation
 

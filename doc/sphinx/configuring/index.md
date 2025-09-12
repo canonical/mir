@@ -2,10 +2,10 @@
 
 This section provides information for end-users running a Mir-based compositor.
 
-Mir is a compositor, not a full desktop environment. The documents in
-this section provide information about external components that one may
-want to use to compose their desktop environment, such as remote desktop
-capabilities, on-screen keyboards, and more.
+Mir is a compositor, not a full desktop environment. The documents in this section provide
+information about configuring both external components — such as remote desktop capabilities,
+on-screen keyboards, and other components you may want to integrate into your desktop environment —
+and internal features of Mir itself, such as accessibility options and other built-in capabilities.
 
 ## In this documentation
 
