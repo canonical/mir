@@ -7,14 +7,13 @@ compositors.
 Compositor](../tutorial/write-your-first-wayland-compositor.md) is a prerequisite for
 this how-to.
 
----
+______________________________________________________________________
 
 First, have a Wayland protocol XML on hand. As an example, we will use
 the ["ext-workspace-v1"](https://wayland.app/protocols/ext-workspace-v1)
 protocol.
 
-
-Next, if necessary, install the `mirwayland` library.  On Fedora and Alpine
+Next, if necessary, install the `mirwayland` library. On Fedora and Alpine
 it is already installed as part of the `mir-devel`/`mir-dev` package. On
 Debian and its derivatives, this can be installed with: `sudo apt install libmirwayland-dev`.
 
@@ -43,7 +42,7 @@ Next, rerun `cmake` for your project. Note that the following two files will app
 the filesystem:
 
 1. `wayland-generated/ext-workspace-v1_wrapper.h`
-2. `wayland-generated/ext-workspace-v1_wrapper.cpp`
+1. `wayland-generated/ext-workspace-v1_wrapper.cpp`
 
 You may choose to integrate the protocol files in a separate library
 or you may include the source files directly into your build. This step is up

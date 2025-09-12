@@ -1,4 +1,5 @@
 # Specifying CSD/SSD Preference
+
 Clients can ask the compositor to use server or client side decorations, or request the compositor to choose for them. {class}`miral::Decorations` allows you to customize how the server deals with these requests.
 
 This how-to will show you how to specify the behavior of the compositor regarding these requests.
@@ -6,10 +7,11 @@ This how-to will show you how to specify the behavior of the compositor regardin
 **Note**: [How to Specify Startup Apps](how-to-specify-startup-apps.md) is a
 prerequisite for this how-to.
 
----
+______________________________________________________________________
 
 To make the compositor prefer server side decorations when the client doesn't
 specify a preference, you only need to change two lines:
+
 ```diff
 @@ -1,6 +1,7 @@
  #include <miral/runner.h>
@@ -28,6 +30,7 @@ specify a preference, you only need to change two lines:
 
 That's it! You can now build and run your compositor and try running a Wayland
 compatible application to see how its decorations change:
+
 ```sh
 ./build/demo-mir-compositor --startup-app kgx --startup-app bomber
 ```

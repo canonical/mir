@@ -1,12 +1,15 @@
 (mir-architecture)=
 
 # Architecture
+
 This document introduces the architecture of *Mir* at a high-level.
 
 ## Audience
+
 This document is intended to provide contributors to *Mir* an overview of *Mir*'s systems. It is *not* intended to guide compositor authors.
 
 ## APIs for compositor authors
+
 **Diagram**: A diagram showing the relationships between the different libraries in Mir.
 
 ```{mermaid} architecture.mmd
@@ -14,13 +17,14 @@ This document is intended to provide contributors to *Mir* an overview of *Mir*'
 
 *Mir* provides compositor authors with a set of libraries that they can use to build Wayland based shells. These libraries are:
 
-Library | Description
---      | --
-*miral*|The most commonly used library is **miral** (the "*Mir* Abstraction Layer"). This provides an API that makes *Mir* easy for compositor authors to work with. It provides core window management concepts and an interface that is more ABI stable than Mir's internal APIs.
-*mirwayland*|Compositor authors may want to define their own wayland protocol extensions in addition to the ones that the core *Mir* implementation defines. The **mirwayland** library satisfies this requirement. This library may be used in conjunction with either `miral` or `miroil`.
-*miroil*|A custom library for the [Lomiri](https://lomiri.com/) folks. It is like **miral** in that it provides an abstraction over Mir's internal APIs. _Other compositor authors should not need to interact with **miroil**._
+| Library      | Description                                                                                                                                                                                                                                                                     |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| *miral*      | The most commonly used library is **miral** (the "*Mir* Abstraction Layer"). This provides an API that makes *Mir* easy for compositor authors to work with. It provides core window management concepts and an interface that is more ABI stable than Mir's internal APIs.     |
+| *mirwayland* | Compositor authors may want to define their own wayland protocol extensions in addition to the ones that the core *Mir* implementation defines. The **mirwayland** library satisfies this requirement. This library may be used in conjunction with either `miral` or `miroil`. |
+| *miroil*     | A custom library for the [Lomiri](https://lomiri.com/) folks. It is like **miral** in that it provides an abstraction over Mir's internal APIs. _Other compositor authors should not need to interact with **miroil**._                                                         |
 
-## The "engine" - mirserver 
+## The "engine" - mirserver
+
 The **mirserver** library is the core implementation of *Mir*. It serves as the engine for both `miral` and `miroil`. This library does the heavy-lifting for the compositor and, as a result, is the largest piece of *Mir*. This section will explain the primary concepts that drive the engine.
 
 **Diagram**: A class diagram showing the relationships between the different components of **mirserver**.
@@ -29,17 +33,20 @@ The **mirserver** library is the core implementation of *Mir*. It serves as the 
 ```
 
 ### Core Concepts
-At the heart of `mirserver` are two interfaces: the **Shell** and the **Scene**. The **Shell**` is responsible for fielding requests from the rest system. The **Shell** modifies the state of the **Scene** to reflect the requested changes.
 
-Other classes only have "read only" access to the **Scene** and either request information or subscribe to changes. They route any change requests via the **Shell**. (For those familiar with Design Patterns, this is _Model-View-Controller_.)  
+At the heart of `mirserver` are two interfaces: the **Shell** and the **Scene**. The **Shell**\` is responsible for fielding requests from the rest system. The **Shell** modifies the state of the **Scene** to reflect the requested changes.
+
+Other classes only have "read only" access to the **Scene** and either request information or subscribe to changes. They route any change requests via the **Shell**. (For those familiar with Design Patterns, this is _Model-View-Controller_.)
 
 For example, the **Frontend** would ask the **Shell** to initiate dragging a window. The **Shell** would then decide how to move that window to and update the state of the **Scene** to reflect that change.
 
 ### From Scene to Screen
+
 Knowing that the **Scene** holds the state of what is to be displayed, we can talk about the **Compositor**. The **Compositor** gets the collection of items to render from the **Scene**,
 renders them with the help of the [rendering platform](#platforms), and sends them off to the [display platform](#platforms) to be displayed.
 
 ### From Interaction to Shell
+
 As stated previously, the **Shell** handles requests from the system and updates the state of the **Scene** accordingly. These requests come from a variety of sources, which we will investigate now.
 
 **Frontend Wayland**: Responsible for connecting the Wayland protocol with the rest of *Mir*. The **WaylandConnector** class connects requests made via the Wayland protocol to the core state of the compositor.
@@ -51,7 +58,9 @@ As stated previously, the **Shell** handles requests from the system and updates
 For example, a compositor's window manager may respond to a key press event by opening up a new terminal via a request to the **Shell**.
 
 ## Platforms
+
 We briefly hinted at the existence of so-called "platforms" previously, but they are deserving of a dedicated section. A **Platform** is an adapter that allows the system to work across different graphics, input, and rendering stacks. They come in three flavors:
+
 - **Display Platform**: Determines what the compositor is rendering to. This may be a physical monitor via GBM/KMS (or EGLStreams for Nvidia), an X11 or Wayland window, or a completely virtual buffer.
 - **Input Platform**: Determines where the compositor is getting input from. This could be native event via `libinput`, X input events, or Wayland input events.
 - **Rendering Platform**: Determines how the compositor renders the final image. For now, only a GL backend is supported.
@@ -59,12 +68,13 @@ We briefly hinted at the existence of so-called "platforms" previously, but they
 The GBM/KMS platform is most typically what will be used, as it is the native platform. The X11 platform is useful for development. The Wayland platform is specifically useful for Ubuntu Touch, where they are hosting *Mir* in another Wayland compositor.
 
 ## Supporting Libraries
+
 *Mir* leans on a few core libraries to support the entire system. These libraries contain data structures and utilities that are shared throughout the project.
 
-Library | Description
---      | --
-*mircore*|Fundamental data concepts, like file descriptors and rectangles. These data structures tend not to be *Mir*-specific.
-*mircommon*|*Mir*-specific data concepts like *Mir* event building, logging, and timing utilities.
-*mirplatform*|*Mir* platform-specific data concepts (establishes a "common language" between `mirserver` and the platform modules
+| Library       | Description                                                                                                           |
+| ------------- | --------------------------------------------------------------------------------------------------------------------- |
+| *mircore*     | Fundamental data concepts, like file descriptors and rectangles. These data structures tend not to be *Mir*-specific. |
+| *mircommon*   | *Mir*-specific data concepts like *Mir* event building, logging, and timing utilities.                                |
+| *mirplatform* | *Mir* platform-specific data concepts (establishes a "common language" between `mirserver` and the platform modules   |
 
 There is a full list of Mir libraries in [](mir-libraries).

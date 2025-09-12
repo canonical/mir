@@ -1,18 +1,21 @@
 (write-your-first-wayland-compositor)=
 
 # Write your first Wayland compositor
+
 This tutorial will guide you through writing a basic Mir compositor. By the end
 of it, you will create, build, and run a program with basic window management
 capabilities such as controlling multiple windows, minimizing and maximizing,
 and handling mouse input.
 
 ## Assumptions
+
 This tutorial assumes that:
 
-* You are familiar with C++ and CMake.
-* You have `cmake` and a C++ compiler installed.
+- You are familiar with C++ and CMake.
+- You have `cmake` and a C++ compiler installed.
 
 ## Install Dependencies
+
 Let's start by installing the dependencies required by our compositor.
 
 `````{tab-set}
@@ -53,6 +56,7 @@ apk add mir-dev libxkbcommon-dev
 `````
 
 ## Create the Compositor
+
 Now that we have the dependencies installed, we are ready to begin programming
 the compositor.
 
@@ -66,20 +70,24 @@ cd demo-mir-compositor
 Next, create `CMakeLists.txt` with the following content:
 
 ```{literalinclude} ./first-wayland-compositor/CMakeLists.txt
-:language: cmake
+---
+language: cmake
+---
 ```
 
 Next, create `main.cpp` with the following content:
 
 ```{literalinclude} ./first-wayland-compositor/main.cpp
-:language: cpp
+---
+language: cpp
+---
 ```
 
 `MirRunner` is a class from `libmiral` that acts as the "entry point" of your
 compositor.
 
 `MirRunner runner` creates a `runner` object that can be used to configure your
-compositor.  To run the compositor you call `runner.run_with(...)`, passing in
+compositor. To run the compositor you call `runner.run_with(...)`, passing in
 different components to customize the behavior of the compositor. In this
 example, `run_with()` is passed a function `set_window_management_policy` that
 applies a `MinimalWindowManager` policy to the compositor. The compositor is
@@ -89,17 +97,19 @@ multiple windows, minimizing and maximizing, and handling mouse input.
 The runner allows for even more customization: enabling onscreen keyboards,
 screen capture, pointer confinement, and so on.
 
-
 Finally, build the cmake project:
 
 ```{literalinclude} ../../../spread/build/sbuild/task.yaml
-:language: bash
-:start-after: [doc:first-compositor:build]
-:end-before: [doc:first-compositor:build-end]
-:dedent: 6
+---
+language: bash
+start-after: [doc:first-compositor:build]
+end-before: [doc:first-compositor:build-end]
+dedent: 6
+---
 ```
 
 ## Run the compositor
+
 You can run a compositor nested in an X or Wayland session, or from a virtual
 terminal, just like the demo applications in [Getting started with
 Mir](getting-started-with-mir.md).
@@ -108,10 +118,12 @@ For development, it is very useful to run your compositor within an existing
 Wayland session, so let's do that first. To do this, run:
 
 ```{literalinclude} ../../../spread/build/sbuild/task.yaml
-:language: bash
-:start-after: [doc:first-compositor:run]
-:end-before: [doc:first-compositor:run-end]
-:dedent: 8
+---
+language: bash
+start-after: [doc:first-compositor:run]
+end-before: [doc:first-compositor:run-end]
+dedent: 8
+---
 ```
 
 An all-black window with the compositor will pop up.
@@ -128,6 +140,7 @@ An window displaying the `bomber` application should appear in the compositor.
 You may try moving the window around the screen, maximizing it or restoring it.
 
 ## Next steps
+
 Now that you have your base compositor working, check out these guides on how to
 further develop your compositor:
 
