@@ -29,30 +29,57 @@ namespace miral
 using namespace mir::geometry;
 
 /// A rectangular area of the display.
-/// Not tied to a specific output.
+///
+/// This area is not necessarily tied to a specific #miral::Output, but it often is.
+///
+/// \sa miral::WindowManagementPolicy::advise_application_zone_create - notification of a new zone
 class Zone
 {
 public:
 
-    Zone(Rectangle const& extents); ///< Create a new zone with the given extents
-    Zone(Zone const& other); ///< Makes a copy of the underlying private data
-    Zone& operator=(Zone const& other); ///< Copies private data by value
+    /// Construct a new zone with the given \p extends.
+    ///
+    /// \param extends area of the zone
+    Zone(Rectangle const& extents);
+
+    /// Construct a copy of another zone.
+    ///
+    /// \param other zone to copy
+    Zone(Zone const& other);
+
+    /// Copy the data from another zone.
+    ///
+    /// \param other zone to copy
+    Zone& operator=(Zone const& other);
     ~Zone();
 
-    /// Returns true only if all properties including IDs match
+    /// Returns `true` only if all properties including IDs match.
+    ///
+    /// \returns `true` if it is a match, otherwise `false`
     auto operator==(Zone const& other) const -> bool;
 
-    /// Returns if true if zone IDs match, even if extents are different
+    /// Returns `true` if zone IDs match, even if extents are different.
+    ///
+    /// \returns `true` if zone IDs match, otherwise `false`
     auto is_same_zone(Zone const& other) const -> bool;
 
-    /// The area of this zone in global display coordinates
+    /// The area of this zone in global display coordinates.
+    ///
+    /// \returns the extends of the zone
     auto extents() const -> Rectangle;
 
-    /// Set the extents of this zone
-    /// Does not make this a different zone
+    /// Set the extents of this zone.
+    ///
+    /// This does not make this a different zone, meaning that the #miral::Zone::id
+    /// will remain the same.
+    ///
+    /// \param extents the new extends
     void extents(Rectangle const& extents);
 
-    /// An arbitrary number that uniquely identifies this zone, reguardless of how it is resized and moved
+    /// A unique identifier for this zone, which remains the same regardless of
+    /// how the zone is resized and moved.
+    ///
+    /// \returns the unique id of the zone
     auto id() const -> int;
 
 private:
