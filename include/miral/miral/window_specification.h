@@ -131,7 +131,7 @@ public:
     /// This is often used when the buffer of the window is provided by the client to match
     /// the current orientation of the output.
     ///
-    /// \returnsa a const reference to the orientation.
+    /// \returns a a const reference to the orientation.
     auto preferred_orientation() const -> mir::optional_value<MirOrientationMode> const&;
 
     /// Defines the rectangle of a parent window against which the #aux_rect_placement_gravity
@@ -144,7 +144,7 @@ public:
     auto aux_rect() const -> mir::optional_value<Rectangle> const&;
 
     /// The placement hint describes how windows with type #mir_window_type_menu
-    /// should be adjusted when their placement would cause them to go off of
+    /// should be adjusted when their placement would cause them to extend beyond
     /// their current output.
     ///
     /// \returns a const reference to the placement hints
@@ -194,7 +194,7 @@ public:
     /// \returns a const reference to the maximum width
     auto max_width() const -> mir::optional_value<Width> const&;
 
-    /// The maximum height of the window
+    /// The maximum height of the window.
     ///
     /// \returns a const refence to the maximum height
     auto max_height() const -> mir::optional_value<Height> const&;
@@ -204,7 +204,7 @@ public:
     /// This is used in cases such as a terminal that can only be resized
     /// character-by-character.
     ///
-    /// Wayland protocols do not support this property, so it is generally not used by clients.
+    /// Wayland protocols do not support this property, so it generally will not be requested by clients.
     ///
     /// \returns a const reference to the width increment.
     auto width_inc() const -> mir::optional_value<DeltaX> const&;
@@ -273,7 +273,7 @@ public:
 
     /// The new position of the window frame.
     ///
-    /// \returnsa reference to  the top left point
+    /// \returns a reference to  the top left point
     auto top_left() -> mir::optional_value<Point>&;
 
     /// The size of the window frame, including any decorations.
@@ -316,7 +316,7 @@ public:
     /// This is often used when the buffer of the window is provided by the client to match
     /// the current orientation of the output.
     ///
-    /// \returns a reference to the state of the window.
+    /// \returns a reference to the orientation of the window.
     auto preferred_orientation() -> mir::optional_value<MirOrientationMode>&;
 
     /// Defines the rectangle of a parent window against which the #aux_rect_placement_gravity
@@ -329,7 +329,7 @@ public:
     auto aux_rect() -> mir::optional_value<Rectangle>&;
 
     /// The placement hint describes how windows with type #mir_window_type_menu
-    /// should be adjusted when their placement would cause them to go off of
+    /// should be adjusted when their placement would cause them to extend beyond
     /// their current output.
     ///
     /// \returns a reference to the placement hints
@@ -396,7 +396,7 @@ public:
     /// This is used in cases such as a terminal that can only be resized
     /// character-by-character.
     ///
-    /// Wayland protocols do not support this property, so it is generally not used by clients.
+    /// Wayland protocols do not support this property, so it generally will not be requested by clients.
     ///
     /// \returns a reference to the width increment
     auto width_inc() -> mir::optional_value<DeltaX>&;
