@@ -41,8 +41,8 @@ protected:
 /// accessible buffers can also be created by the compositor for internal
 /// rendering.
 ///
-/// Some buffer types can be converted to [mg::Framebuffer] for display, or
-/// [gl::Texture] for compositing.
+/// Some buffer types can be converted to #mir::graphics::Framebuffer for display, or
+/// #mir::graphics::gl::Texture for compositing.
 ///
 ///
 /// \sa GraphicBufferAllocator::buffer_from_resource
