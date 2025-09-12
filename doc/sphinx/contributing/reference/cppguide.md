@@ -15,7 +15,7 @@ but this power brings with it complexity, which in turn can make code
 more bug-prone and harder to read and maintain.
 
 The goal of this guide is to manage this complexity by describing in
-detail the dos and don\'ts of writing C++ code. These rules exist to
+detail the dos and don'ts of writing C++ code. These rules exist to
 keep the code base manageable while still allowing coders to use C++
 language features productively.
 
@@ -25,9 +25,9 @@ conventions cover far more than just source file formatting.
 
 One way in which we keep the code base manageable is by enforcing
 *consistency*. It is very important that any programmer be able to look
-at another\'s code and quickly understand it. Maintaining a uniform
+at another's code and quickly understand it. Maintaining a uniform
 style and following conventions means that we can more easily use
-\"pattern-matching\" to infer what various symbols are and what
+"pattern-matching" to infer what various symbols are and what
 invariants are true about them. Creating common, required idioms and
 patterns makes code much easier to understand. In some cases there might
 be good arguments for changing certain style rules, but we nonetheless
@@ -55,17 +55,17 @@ readability, size and performance of your code.
 The following rules will guide you through the various pitfalls of using
 header files.
 
-### The \#define Guard
+### The #define Guard
 
 All header files should have `#define` guards to prevent multiple
 inclusion. The format of the symbol name should be
 *`<PROJECT>`*`_`*`<PATH>`*`_`*`<FILE>`*`_H_`.
 
 To guarantee uniqueness, they should be based on the full path in a
-project\'s source tree. For example, the file `foo/src/bar/baz.h` in
+project's source tree. For example, the file `foo/src/bar/baz.h` in
 project `foo` should have the following guard:
 
-``` c++
+```c++
 #ifndef FOO_BAR_BAZ_H_
 #define FOO_BAR_BAZ_H_
 
@@ -76,7 +76,7 @@ project `foo` should have the following guard:
 
 ### Header File Dependencies
 
-Don\'t use an `#include` when a forward declaration would suffice.
+Don't use an `#include` when a forward declaration would suffice.
 
 When you include a header file you introduce a dependency that will
 cause your code to be recompiled whenever the header file changes. If
@@ -117,10 +117,10 @@ Of course, `.cpp` files typically do require the definitions of the
 classes they use, and usually have to include several header files.
 
 **Note:** If you use a symbol `Foo` in your source file, you should
-bring in a definition for `Foo` yourself, either via an \#include or via
+bring in a definition for `Foo` yourself, either via an #include or via
 a forward declaration. Do not depend on the symbol being brought in
 transitively via headers not directly included. One exception is if
-`Foo` is used in `myfile.cpp`, it\'s ok to \#include (or
+`Foo` is used in `myfile.cpp`, it's ok to #include (or
 forward-declare) `Foo` in `myfile.h`, instead of `myfile.cpp`.
 
 ### Inline Functions
@@ -142,7 +142,7 @@ mutators, and other short, performance-critical functions.
 **Cons:**
 
 Overuse of inlining can actually make programs slower. Depending on a
-function\'s size, inlining it can cause the code size to increase or
+function's size, inlining it can cause the code size to increase or
 decrease. Inlining a very small accessor function will usually decrease
 code size while inlining a very large function can dramatically increase
 code size. On modern processors smaller code usually runs faster due to
@@ -154,7 +154,7 @@ A decent rule of thumb is to not inline a function if it is more than 10
 lines long. Beware of destructors, which are often longer than they
 appear because of implicit member- and base-destructor calls!
 
-Another useful rule of thumb: it\'s typically not cost effective to
+Another useful rule of thumb: it's typically not cost effective to
 inline functions with loops or switch statements (unless, in the common
 case, the loop or switch statement is never executed).
 
@@ -166,6 +166,7 @@ its definition in the class, either for convenience or to document its
 behavior, e.g., for accessors and mutators.
 
 (the-inl-h-files)=
+
 ### The -inl.h Files
 
 You may use file names with a `-inl.h` suffix to define complex inline
@@ -213,15 +214,15 @@ consistency with related functions may require you to bend the rule.
 ### Names and Order of Includes
 
 Use standard order for readability and to avoid hidden dependencies:
-your project\'s public `.h`, your project\'s private `.h`, other
-libraries\' `.h`, .C library, C++ library,
+your project's public `.h`, your project's private `.h`, other
+libraries' `.h`, .C library, C++ library,
 
-All of a project\'s header files should be listed as descendants of the
-project\'s source directory without use of UNIX directory shortcuts `.`
+All of a project's header files should be listed as descendants of the
+project's source directory without use of UNIX directory shortcuts `.`
 (the current directory) or `..` (the parent directory). For example,
 `my-awesome-project/src/base/logging.h` should be included as
 
-``` c++
+```c++
 #include "base/logging.h"
 ```
 
@@ -229,12 +230,12 @@ In `dir/foo.cpp` or `dir/foo_test.cpp`, whose main purpose is to
 implement or test the stuff in `dir2/foo2.h`, order your includes as
 follows:
 
-1.  `dir2/foo2.h` (preferred location --- see details below).
-2.  Your project\'s public `.h` files.
-3.  Your project\'s private `.h` files.
-4.  Other libraries\' `.h` files.
-5.  C system files.
-6.  C++ system files.
+1. `dir2/foo2.h` (preferred location --- see details below).
+1. Your project's public `.h` files.
+1. Your project's private `.h` files.
+1. Other libraries' `.h` files.
+1. C system files.
+1. C++ system files.
 
 The preferred ordering reduces hidden dependencies. We want every header
 file to be compilable on its own. The easiest way to achieve this is to
@@ -251,7 +252,7 @@ For example, the includes in
 `my-awesome-project/src/foo/internal/fooserver.cpp` might look like
 this:
 
-``` c++
+```c++
 #include "foo/public/fooserver.h"  // Preferred location.
 
 #include "base/basictypes.h"
@@ -306,7 +307,7 @@ Use namespaces according to the policy described below.
 - Unnamed namespaces are allowed and even encouraged in `.cpp` files, to
   avoid runtime naming conflicts:
 
-  ``` c++
+  ```c++
   namespace                           // This is in a .cpp file.
   {
   // The content of a namespace is not indented
@@ -332,7 +333,7 @@ Named namespaces should be used as follows:
   [gflags](https://github.com/gflags/gflags) definitions/declarations,
   and forward declarations of classes from other namespaces:
 
-  ``` c++
+  ```c++
   // In the .h file
   namespace mynamespace
   {
@@ -349,7 +350,7 @@ Named namespaces should be used as follows:
   }  // namespace mynamespace
   ```
 
-  ``` c++
+  ```c++
   // In the .cpp file
   namespace mynamespace
   {
@@ -366,7 +367,7 @@ Named namespaces should be used as follows:
   The typical `.cpp` file might have more complex detail, including the
   need to reference classes in other namespaces.
 
-  ``` c++
+  ```c++
   #include "a.h"
 
   DEFINE_BOOL(someflag, false, "placeholder flag");
@@ -394,7 +395,7 @@ Named namespaces should be used as follows:
 - You may use a *using-declaration* anywhere in a `.cpp` file, and in
   functions, methods or classes in `.h` files.
 
-  ``` c++
+  ```c++
   // OK in .cpp files.
   // Must be in a function, method or class in .h files.
   using ::foo::bar;
@@ -404,7 +405,7 @@ Named namespaces should be used as follows:
   inside the named namespace that wraps an entire `.h` file, and in
   functions and methods.
 
-  ``` c++
+  ```c++
   // Shorten access to some commonly used names in .cpp files.
   namespace fbz = ::foo::bar::baz;
 
@@ -426,9 +427,9 @@ Named namespaces should be used as follows:
   }  // namespace librarian
   ```
 
-  Note that an alias in a .h file is visible to everyone \#including
+  Note that an alias in a .h file is visible to everyone #including
   that file, so public headers (those available outside a project) and
-  headers transitively \#included by them, should avoid defining
+  headers transitively #included by them, should avoid defining
   aliases, as part of the general goal of keeping public APIs as small
   as possible.
 
@@ -443,7 +444,7 @@ of the global scope.
 A class can define another class within it; this is also called a
 *member class*.
 
-``` c++
+```c++
 class Foo
 {
 private:
@@ -515,7 +516,7 @@ If you must define a nonmember function and it is only needed in its
 
 ### Local Variables
 
-Place a function\'s variables in the narrowest scope possible, and
+Place a function's variables in the narrowest scope possible, and
 initialize variables in the declaration.
 
 C++ allows you to declare variables anywhere in a function. We encourage
@@ -526,12 +527,13 @@ initialized to. In particular, initialization should be used instead of
 declaration and assignment, e.g.
 
 <!-- badcode -->
-``` c++
+
+```c++
 int i;
 i = f();      // Bad -- initialization separate from declaration.
 ```
 
-``` c++
+```c++
 int j = g();  // Good -- declaration has initialization.
 ```
 
@@ -540,7 +542,7 @@ scope of `i` is only the scope of the `for` loop), so you can then reuse
 `i` in another `for` loop in the same scope. It also correctly scopes
 declarations in `if` and `while` statements, e.g.
 
-``` c++
+```c++
 while (char const* p = strchr(str, '/')) str = p + 1;
 ```
 
@@ -549,7 +551,8 @@ invoked every time it enters scope and is created, and its destructor is
 invoked every time it goes out of scope.
 
 <!-- badcode -->
-``` c++
+
+```c++
 // Inefficient implementation:
 for (int i = 0; i < 1000000; ++i)
 {
@@ -561,7 +564,7 @@ for (int i = 0; i < 1000000; ++i)
 It may be more efficient to declare such a variable used in a loop
 outside that loop:
 
-``` c++
+```c++
 Foo f;  // My ctor and dtor get called once each.
 for (int i = 0; i < 1000000; ++i)
 {
@@ -572,7 +575,7 @@ for (int i = 0; i < 1000000; ++i)
 ## Classes
 
 Classes are the fundamental unit of code in C++. Naturally, we use them
-extensively. This section lists the main dos and don\'ts you should
+extensively. This section lists the main dos and don'ts you should
 follow when writing a class.
 
 ### Constructors
@@ -733,7 +736,7 @@ is a `class`.
 
 The `struct` and `class` keywords behave almost identically in C++. We
 add our own semantic meanings to each keyword, so you should use the
-appropriate keyword for the data-type you\'re defining.
+appropriate keyword for the data-type you're defining.
 
 `structs` should be used for passive objects that carry data, and may
 have associated constants, but lack any functionality other than
@@ -789,9 +792,9 @@ inheritance, you should be including an instance of the base class as a
 member instead.
 
 Do not overuse implementation inheritance. Composition is often more
-appropriate. Try to restrict use of inheritance to the \"is-a\" case:
-`Bar` subclasses `Foo` if it can reasonably be said that `Bar` \"is a
-kind of\" `Foo`.
+appropriate. Try to restrict use of inheritance to the "is-a" case:
+`Bar` subclasses `Foo` if it can reasonably be said that `Bar` "is a
+kind of" `Foo`.
 
 Make your destructor `virtual` if necessary. If your class has virtual
 methods, its destructor should be virtual.
@@ -845,7 +848,7 @@ Classes that satisfy certain conditions are interfaces.
 
 A class is an interface if it meets the following requirements:
 
-- It has only public pure virtual (\"`= 0`\") methods and static methods
+- It has only public pure virtual ("`= 0`") methods and static methods
   (but see below for destructor).
 - It may not have non-static data members.
 - It need not have any constructors defined. If a constructor is
@@ -997,7 +1000,7 @@ semantics.
 
 Within function parameter lists all references must be `const`:
 
-``` c++
+```c++
 void foo(string const& in, string* out);
 ```
 
@@ -1025,7 +1028,7 @@ having to first figure out exactly which overload is being called.
 You may write a function that takes a `string const&` and overload it
 with another that takes `char const*`.
 
-``` c++
+```c++
 class MyClass {
 public:
     void analyze(string const& text);
@@ -1042,8 +1045,8 @@ necessary for templatized code, and it can be convenient for Visitors.
 **Cons:**
 
 If a function is overloaded by the argument types alone, a reader may
-have to understand C++\'s complex matching rules in order to tell
-what\'s going on. Also many people are confused by the semantics of
+have to understand C++'s complex matching rules in order to tell
+what's going on. Also many people are confused by the semantics of
 inheritance if a derived class overrides only some of the variants of a
 function.
 
@@ -1083,7 +1086,7 @@ they may not be aware of.
 One specific exception is when default arguments are used to simulate
 variable-length argument lists.
 
-``` c++
+```c++
 // Support up to 4 params by using a default empty AlphaNum.
 string str_cat(AlphaNum const& a,
                AlphaNum const& b = gEmptyAlphaNum,
@@ -1104,8 +1107,8 @@ arrays and `alloca()` are very efficient.
 
 Variable-length arrays and alloca are not part of Standard C++. More
 importantly, they allocate a data-dependent amount of stack space that
-can trigger difficult-to-find memory overwriting bugs: \"It ran fine on
-my machine, but dies mysteriously in production\".
+can trigger difficult-to-find memory overwriting bugs: "It ran fine on
+my machine, but dies mysteriously in production".
 
 **Decision:**
 
@@ -1217,7 +1220,7 @@ printing. This is a fair point. But, there is a downside: you can easily
 use the wrong type, and the compiler will not warn you. It is easy to
 make this kind of mistake without knowing when using streams.
 
-``` c++
+```c++
 cout << this;  // Prints the address
 cout << *this;  // Prints the contents
 ```
@@ -1229,7 +1232,7 @@ Some say `printf` formatting is ugly and hard to read, but streams are
 often no better. Consider the following two fragments, both with the
 same typo. Which is easier to discover?
 
-``` c++
+```c++
 cerr << "Error connecting to '" << foo->bar()->hostname.first
      << ":" << foo->bar()->hostname.second << ": " << strerror(errno);
 
@@ -1239,7 +1242,7 @@ fprintf(stderr, "Error connecting to '%s:%u: %s",
 ```
 
 And so on and so forth for any issue you might bring up. (You could
-argue, \"Things would be better with the right wrappers,\" but if it is
+argue, "Things would be better with the right wrappers," but if it is
 true for one scheme, is it not also true for the other? Also, remember
 the goal is to make the language smaller, not add yet more machinery
 that someone has to learn.)
@@ -1262,8 +1265,8 @@ whether to preincrement (decrement) or postincrement (decrement).
 
 **Pros:**
 
-When the return value is ignored, the \"pre\" form (`++i`) is never less
-efficient than the \"post\" form (`i++`), and is often more efficient.
+When the return value is ignored, the "pre" form (`++i`) is never less
+efficient than the "post" form (`i++`), and is often more efficient.
 This is because post-increment (or decrement) requires a copy of `i` to
 be made, which is the value of the expression. If `i` is an iterator or
 other non-scalar type, copying `i` could be expensive. Since the two
@@ -1274,8 +1277,8 @@ just always pre-increment?
 
 The tradition developed, in C, of using post-increment when the
 expression value is not used, especially in `for` loops. Some find
-post-increment easier to read, since the \"subject\" (`i`) precedes the
-\"verb\" (`++`), just like in English.
+post-increment easier to read, since the "subject" (`i`) precedes the
+"verb" (`++`), just like in English.
 
 **Decision:**
 
@@ -1331,7 +1334,7 @@ it makes sense to do so:
 
 However, do not go crazy with `const`. Something like
 `int const* const* const x;` is likely overkill, even if it accurately
-describes how const x is. Focus on what\'s really useful to know: in
+describes how const x is. Focus on what's really useful to know: in
 this case, `int const** x` is probably sufficient.
 
 The `mutable` keyword is allowed but is unsafe when used with threads,
@@ -1375,7 +1378,7 @@ You should always use those in preference to `short`,
 of an integer. When appropriate, you are welcome to use standard types
 like `size_t` and `ptrdiff_t`.
 
-For integers we know can be \"big\", use `int64_t`.
+For integers we know can be "big", use `int64_t`.
 
 ### 64-bit Portability
 
@@ -1389,7 +1392,7 @@ printing, comparisons, and structure alignment.
   own ugly versions in some cases (in the style of the standard include
   file `inttypes.h`):
 
-  ``` c++
+  ```c++
   // printf macros for size_t, in the style of inttypes.h
   #ifdef _LP64
   #define __PRIS_PREFIX "z"
@@ -1410,7 +1413,7 @@ printing, comparisons, and structure alignment.
   ```
 
   | Type                     | DO NOT use            | DO use                   | Notes               |
-  |--------------------------|-----------------------|--------------------------|---------------------|
+  | ------------------------ | --------------------- | ------------------------ | ------------------- |
   | `void*` (or any pointer) | `%lx`                 | `%p`                     |                     |
   | `int64_t`                | `%qd`, `%lld`         | `%"PRId64"`              |                     |
   | `uint64_t`               | `%qu`, `%llu`, `%llx` | `%"PRIu64"`, `%"PRIx64"` |                     |
@@ -1442,7 +1445,7 @@ printing, comparisons, and structure alignment.
 - Use the `LL` or `ULL` suffixes as needed to create 64-bit constants.
   For example:
 
-  ``` c++
+  ```c++
   int64_t my_value = 0x123456789LL;
   uint64_t my_mask = 3ULL << 48;
   ```
@@ -1463,9 +1466,9 @@ macros have global scope.
 Luckily, macros are not nearly as necessary in C++ as they are in C.
 Instead of using a macro to inline performance-critical code, use an
 inline function. Instead of using a macro to store a constant, use a
-`const` variable. Instead of using a macro to \"abbreviate\" a long
+`const` variable. Instead of using a macro to "abbreviate" a long
 variable name, use a reference. Instead of using a macro to
-conditionally compile code \... well, don\'t do that at all (except, of
+conditionally compile code ... well, don't do that at all (except, of
 course, for the `#define` guards to prevent double inclusion of header
 files). It makes testing much more difficult.
 
@@ -1473,17 +1476,17 @@ Macros can do things these other techniques cannot, and you do see them
 in the codebase, especially in the lower-level libraries. And some of
 their special features (like stringifying, concatenation, and so forth)
 are not available through the language proper. But before using a macro,
-consider carefully whether there\'s a non-macro way to achieve the same
+consider carefully whether there's a non-macro way to achieve the same
 result.
 
 The following usage pattern will avoid many problems with macros; if you
 use macros, follow it whenever possible:
 
-- Don\'t define macros in a `.h` file.
+- Don't define macros in a `.h` file.
 - `#define` macros right before you use them, and `#undef` them right
   after.
 - Do not just `#undef` an existing macro before replacing it with your
-  own; instead, pick a name that\'s likely to be unique.
+  own; instead, pick a name that's likely to be unique.
 - Try not to use macros that expand to unbalanced C++ constructs, or at
   least document that behavior well.
 - Prefer not using `##` to generate function/class/variable names.
@@ -1509,15 +1512,16 @@ Use `sizeof(varname)` instead of `sizeof(type)` whenever possible.
 Use `sizeof(varname)` because it will update appropriately if the type
 of the variable changes. `sizeof(type)` may make sense in some cases,
 but should generally be avoided because it can fall out of sync if the
-variable\'s type changes.
+variable's type changes.
 
-``` c++
+```c++
 Struct data;
 memset(&data, 0, sizeof(data));
 ```
 
 <!-- badcode -->
-``` c++
+
+```c++
 memset(&data, 0, sizeof(Struct));
 ```
 
@@ -1548,7 +1552,7 @@ whether you find them sensible or not, the rules are the rules.
 
 Function names, variable names, and filenames should be descriptive;
 eschew abbreviation. Types and variables should be nouns, while
-functions should be \"command\" verbs.
+functions should be "command" verbs.
 
 **How to Name**
 
@@ -1557,7 +1561,7 @@ about saving horizontal space as it is far more important to make your
 code immediately understandable by a new reader. Examples of well-chosen
 names:
 
-``` c++
+```c++
 int num_errors;                  // Good.
 int num_completed_connections;   // Good.
 ```
@@ -1566,7 +1570,8 @@ Poorly-chosen names use ambiguous abbreviations or arbitrary characters
 that do not convey meaning:
 
 <!-- badcode -->
-``` c++
+
+```c++
 int n;                           // Bad - meaningless.
 int nerr;                        // Bad - ambiguous abbreviation.
 int n_comp_conns;                // Bad - ambiguous abbreviation.
@@ -1586,7 +1591,7 @@ access.
 Do not use abbreviations unless they are extremely well known outside
 your project. For example:
 
-``` c++
+```c++
 // Good
 // These show proper names with no abbreviations.
 int num_dns_connections;  // Most people know what "DNS" stands for.
@@ -1594,7 +1599,8 @@ int price_count_reader;   // OK, price count. Makes sense.
 ```
 
 <!-- badcode -->
-``` c++
+
+```c++
 // Bad!
 // Abbreviations can be confusing or ambiguous outside a small group.
 int wgc_connections;  // Only your group knows what this stands for.
@@ -1603,12 +1609,13 @@ int pc_reader;        // Lots of things can be abbreviated "pc".
 
 Never abbreviate by leaving out letters:
 
-``` c++
+```c++
 int error_count;  // Good.
 ```
 
 <!-- badcode -->
-``` c++
+
+```c++
 int error_cnt;    // Bad.
 ```
 
@@ -1616,14 +1623,14 @@ int error_cnt;    // Bad.
 
 Filenames should be all lowercase and can include underscores (`_`) or
 dashes (`-`). Follow the convention that your project uses. If there is
-no consistent local pattern to follow, prefer \"\_\".
+no consistent local pattern to follow, prefer "\_".
 
 Examples of acceptable file names:
 
-` my_useful_class.cpp`  
-`my-useful-class.cpp`  
-`myusefulclass.cpp`  
-`test_myusefulclass.cpp // _unittest and _regtest are deprecated.`  
+` my_useful_class.cpp`
+`my-useful-class.cpp`
+`myusefulclass.cpp`
+`test_myusefulclass.cpp // _unittest and _regtest are deprecated.`
 
 C++ files should end in `.cpp` and header files should end in `.h`.
 
@@ -1641,7 +1648,7 @@ your inline functions include a lot of code, they may go into a third
 file that ends in `-inl.h`. In a class with a lot of inline code, your
 class could have three files:
 
-``` c++
+```c++
 url_table.h      // The class declaration.
 url_table.cpp     // The class definition.
 url_table-inl.h  // Inline functions that include lots of code.
@@ -1659,7 +1666,7 @@ have the same naming convention. Type names should start with a capital
 letter and have a capital letter for each new word. No underscores. For
 example:
 
-``` c++
+```c++
 // classes and structs
 class UrlTable  ...
 class UrlTableTester  ...
@@ -1682,13 +1689,14 @@ member variables follow this convention. For instance:
 
 For example:
 
-``` c++
+```c++
 string table_name;  // OK - uses underscore.
 string tablename;   // OK - all lowercase.
 ```
 
 <!-- badcode -->
-``` c++
+
+```c++
 string tableName;   // Bad - mixed case.
 ```
 
@@ -1697,7 +1705,7 @@ string tableName;   // Bad - mixed case.
 Data members (also called instance variables or member variables) are
 lowercase with optional underscores like regular variable names.
 
-``` c++
+```c++
 string table_name;  // OK - underscore at end.
 string tablename;   // OK.
 ```
@@ -1706,7 +1714,7 @@ string tablename;   // OK.
 
 Data members in structs should be named like regular variables.
 
-``` c++
+```c++
 struct UrlTableProperties
 {
     string name;
@@ -1728,9 +1736,9 @@ some other marker to easily distinguish it from local variables.
 Name constants like other variables, using all lowercase, with
 underscores between words. `default_width`.
 
-It is distracting that whether a variable is \"const\" affects the name.
+It is distracting that whether a variable is "const" affects the name.
 
-``` c++
+```c++
 auto const match = map.find(value);
 int const width{1024};
 int height{900};
@@ -1751,7 +1759,7 @@ the function name. This only applies to functions which could be used by
 production code and to errors that are reasonably likely to occur during
 normal operation.
 
-``` c++
+```c++
 add_table_entry()
 delete_url()
 open_file_or_die()
@@ -1762,7 +1770,7 @@ open_file_or_die()
 Accessors and mutators (get and set functions) should follow the naming
 conventions for regular functions.
 
-``` c++
+```c++
 class MyClass
 {
 public:
@@ -1793,7 +1801,7 @@ Preferably, the individual enumerators should be named like [class data
 members](#class-data-members). The enumeration name, `UrlTableErrors`,
 is a type, and therefore mixed case.
 
-``` c++
+```c++
 enum class UrlTableErrors
 {
     ok,
@@ -1804,15 +1812,15 @@ enum class UrlTableErrors
 
 ### Macro Names
 
-You\'re not really going to [define a macro](#preprocessor-macros), are
-you? If you do, they\'re like this:
+You're not really going to [define a macro](#preprocessor-macros), are
+you? If you do, they're like this:
 `MY_MACRO_THAT_SCARES_SMALL_CHILDREN`.
 
 Please see the [description of macros](#preprocessor-macros); in general
 macros should *not* be used. However, if they are absolutely needed,
 then they should be named with all capitals and underscores.
 
-``` c++
+```c++
 #define ROUND(x) ...
 #define PI_ROUNDED 3.0
 ```
@@ -1823,19 +1831,19 @@ If you are naming something that is analogous to an existing C or C++
 entity then you can follow the existing naming convention scheme.
 
 `bigopen()`
-:   function name, follows form of `open()`
+: function name, follows form of `open()`
 
 `uint`
-:   `typedef`
+: `typedef`
 
 `bigpos`
-:   `struct` or `class`, follows form of `pos`
+: `struct` or `class`, follows form of `pos`
 
 `sparse_hash_map`
-:   STL-like entity; follows STL naming conventions
+: STL-like entity; follows STL naming conventions
 
 `LONGLONG_MAX`
-:   a constant, as in `INT_MAX`
+: a constant, as in `INT_MAX`
 
 ## Comments
 
@@ -1900,7 +1908,7 @@ comments diverge.
 Every class definition should have an accompanying comment that
 describes what it is for and how it should be used.
 
-``` c++
+```c++
 // Iterates over the contents of a GargantuanTable.  Sample usage:
 //    GargantuanTableIterator* iter = table->new_iterator();
 //    for (iter->seek("foo"); !iter->done(); iter->next())
@@ -1915,8 +1923,8 @@ class GargantuanTableIterator
 ```
 
 If you have already described a class in detail in the comments at the
-top of your file feel free to simply state \"See comment at top of file
-for a complete description\", but be sure to have some sort of comment.
+top of your file feel free to simply state "See comment at top of file
+for a complete description", but be sure to have some sort of comment.
 
 Document the synchronization assumptions the class makes, if any. If an
 instance of the class can be accessed by multiple threads, take extra
@@ -1931,8 +1939,8 @@ definition of a function describe operation.
 
 Every function declaration should have comments immediately preceding it
 that describe what the function does and how to use it. These comments
-should be descriptive (\"Opens the file\") rather than imperative
-(\"Open the file\"); the comment describes the function, it does not
+should be descriptive ("Opens the file") rather than imperative
+("Open the file"); the comment describes the function, it does not
 tell the function what to do. In general, these comments do not describe
 how the function performs its task. Instead, that should be left to
 comments in the function definition.
@@ -1951,7 +1959,7 @@ Types of things to mention in comments at the function declaration:
 
 Here is an example:
 
-``` c++
+```c++
 // Returns an iterator for this table.  It is the client's
 // responsibility to delete the iterator when it is done with it,
 // and it must not use the iterator once the GargantuanTable object
@@ -1970,17 +1978,17 @@ Iterator* get_iterator() const;
 ```
 
 However, do not be unnecessarily verbose or state the completely
-obvious. Notice below that it is not necessary to say \"returns false
-otherwise\" because this is implied.
+obvious. Notice below that it is not necessary to say "returns false
+otherwise" because this is implied.
 
-``` c++
+```c++
 // Returns true if the table cannot hold any more entries.
 bool is_table_full();
 ```
 
 When commenting constructors and destructors, remember that the person
 reading your code knows what constructors and destructors are for, so
-comments that just say something like \"destroys this object\" are not
+comments that just say something like "destroys this object" are not
 useful. Document what constructors do with their arguments (for example,
 if they take ownership of pointers), and what cleanup the destructor
 does. If this is trivial, just skip the comment. It is quite common for
@@ -1989,7 +1997,7 @@ destructors not to have a header comment.
 **Function Definitions**
 
 Each function definition should have a comment describing what the
-function does if there\'s anything tricky about how it does its job. For
+function does if there's anything tricky about how it does its job. For
 example, in the definition comment you might describe any coding tricks
 you use, give an overview of the steps you go through, or explain why
 you chose to implement the function in the way you did rather than using
@@ -1998,7 +2006,7 @@ acquire a lock for the first half of the function but why it is not
 needed for the second half.
 
 Note you should *not* just repeat the comments given with the function
-declaration, in the `.h` file or wherever. It\'s okay to recapitulate
+declaration, in the `.h` file or wherever. It's okay to recapitulate
 briefly what the function does, but the focus of the comments should be
 on how it does it.
 
@@ -2016,7 +2024,7 @@ variable) should have a comment describing what it is used for. If the
 variable can take sentinel values with special meanings, such as `NULL`
 or -1, document this. For example:
 
-``` c++
+```c++
 private:
     // Keeps track of the total number of entries in the table.
     // Used to ensure we do not go over the limit. -1 means
@@ -2029,7 +2037,7 @@ private:
 As with data members, all global variables should have a comment
 describing what they are and what they are used for. For example:
 
-``` c++
+```c++
 // The total number of tests cases that we run through in this regression test.
 const int number_of_test_cases = 6;
 ```
@@ -2044,7 +2052,7 @@ interesting, or important parts of your code.
 Tricky or complicated code blocks should have comments before them.
 Example:
 
-``` c++
+```c++
 // Divide result by two, taking into account that x
 // contains the carry from the add.
 for (int i = 0; i < result->size(); i++)
@@ -2061,7 +2069,7 @@ Also, lines that are non-obvious should get a comment at the end of the
 line. These end-of-line comments should be separated from the code by 2
 spaces. Example:
 
-``` c++
+```c++
 // If we have enough memory, mmap the data portion too.
 mmap_budget = max<int64>(0, mmap_budget - index_->length());
 if (mmap_budget >= data_size_ && !mmap_data(mmap_chunk_bytes, mlock))
@@ -2075,7 +2083,7 @@ function returns.
 If you have several comments on subsequent lines, it can often be more
 readable to line them up:
 
-``` c++
+```c++
 do_something();                      // Comment here so the comments line up.
 do_Something_else_that_is_longer();  // Comment here so there are two spaces between
                                      // the code and the comment.
@@ -2085,7 +2093,7 @@ do_Something_else_that_is_longer();  // Comment here so there are two spaces bet
 }
 ```
 
-**nullptr, true/false, 1, 2, 3\...**
+**nullptr, true/false, 1, 2, 3...**
 
 When you pass in `nullptr`, boolean, or literal integer values to
 functions, you should consider adding a comment about what they are, or
@@ -2093,7 +2101,8 @@ make your code self-documenting by using constants. For example,
 compare:
 
 <!-- badcode -->
-``` c++
+
+```c++
 bool success = calculate_something(interesting_value,
                                    10,
                                    false,
@@ -2102,7 +2111,7 @@ bool success = calculate_something(interesting_value,
 
 versus:
 
-``` c++
+```c++
 bool success = calculate_something(interesting_value,
                                    10,        // Default base value.
                                    false,     // Not the first time we're calling this.
@@ -2111,7 +2120,7 @@ bool success = calculate_something(interesting_value,
 
 Or alternatively, constants or self-describing variables:
 
-``` c++
+```c++
 int const default_base_value = 10;
 bool const first_time_calling = false;
 Callback* null_callback = nullptr;
@@ -2121,14 +2130,15 @@ bool success = calculate_something(interesting_value,
                                    null_callback);
 ```
 
-**Don\'ts**
+**Don'ts**
 
 Note that you should *never* describe the code itself. Assume that the
 person reading the code knows C++ better than you do, even though he or
 she does not know what you are trying to do:
 
 <!-- badcode -->
-``` c++
+
+```c++
 // Now go through the b array and make sure that if i occurs,
 // the next element is i+1.
 ...        // Geez.  What a useless comment.
@@ -2166,15 +2176,15 @@ request. A `TODO` is not a commitment that the person referenced will
 fix the problem. Thus when you create a `TODO`, it is almost always your
 name that is given.
 
-``` c++
+```c++
 // TODO(kl@gmail.com): Use a "*" here for concatenation operator.
 // TODO(Zeke) change this to use relations.
 ```
 
-If your `TODO` is of the form \"At a future date do something\" make
-sure that you either include a very specific date (\"Fix by November
-2005\") or a very specific event (\"Remove this code when all clients
-can handle XML responses.\").
+If your `TODO` is of the form "At a future date do something" make
+sure that you either include a very specific date ("Fix by November
+2005") or a very specific event ("Remove this code when all clients
+can handle XML responses.").
 
 ### Deprecation Comments
 
@@ -2208,7 +2218,7 @@ easier to follow if everyone uses the same style. Individuals may not
 agree with every aspect of the formatting rules, and some of the rules
 may take some getting used to, but it is important that all project
 contributors follow the style rules so that they can all read and
-understand everyone\'s code easily.
+understand everyone's code easily.
 
 ### Line Length
 
@@ -2223,7 +2233,7 @@ characters.
 
 Those who favor this rule argue that it is rude to force them to resize
 their windows and there is no need for anything longer. Some folks are
-used to having several code windows side-by-side, and thus don\'t have
+used to having several code windows side-by-side, and thus don't have
 room to widen their windows in any case. People set up their work
 environment assuming a particular maximum window width, and 80 columns
 has been the traditional standard. Why change it?
@@ -2243,7 +2253,7 @@ longer lines.
 
 Non-ASCII characters should be rare, and must use UTF-8 formatting.
 
-You shouldn\'t hard-code user-facing text in source, even English, so
+You shouldn't hard-code user-facing text in source, even English, so
 use of non-ASCII characters should be rare. However, in certain cases it
 is appropriate to include such words in your code. For example, if your
 code parses data files from foreign sources, it may be appropriate to
@@ -2270,7 +2280,7 @@ return type on the same line if they fit.
 
 Functions look like this:
 
-``` c++
+```c++
 auto ClassName::function_name(Type par_name1, Type par_name2) -> ReturnType
 {
     do_something();
@@ -2280,7 +2290,7 @@ auto ClassName::function_name(Type par_name1, Type par_name2) -> ReturnType
 
 or:
 
-``` c++
+```c++
 auto ClassName::long_function_name(Type par_name1, Type par_name2, Type par_name3)
 -> ReturnType
 {
@@ -2291,7 +2301,7 @@ auto ClassName::long_function_name(Type par_name1, Type par_name2, Type par_name
 
 or:
 
-``` c++
+```c++
 auto ClassName::really_really_really_long_function_name(
     Type par_name1,
     Type par_name2,
@@ -2325,7 +2335,7 @@ Some points to note:
 If your function is `const`, the `const` keyword should be on the same
 line as the last parameter:
 
-``` c++
+```c++
 // Everything in this function signature fits on a single line
 auto function_name(Type par) const -> ReturnType
 {
@@ -2345,7 +2355,7 @@ void really_long_function_name(
 If some parameters are unused, comment out the variable name in the
 function definition:
 
-``` c++
+```c++
 // Always have named parameters in interfaces.
 class Shape
 {
@@ -2365,7 +2375,8 @@ void Circle::rotate(double /*radians*/) {}
 ```
 
 <!-- badcode -->
-``` c++
+
+```c++
 // Bad - if someone wants to implement later, it's not clear what the
 // variable means.
 void Circle::rotate(double) {}
@@ -2377,7 +2388,7 @@ On one line if it fits; otherwise, wrap arguments at the parenthesis.
 
 Function calls have the following format:
 
-``` c++
+```c++
 bool retval = do_something(argument1, argument2, argument3);
 ```
 
@@ -2385,7 +2396,7 @@ If the arguments do not all fit on one line, they should be broken up
 onto multiple lines, with each subsequent line indented four spaced. Do
 not add spaces after the open paren or before the close paren:
 
-``` c++
+```c++
 bool retval = do_something(
     averyveryveryverylongargument1,
     argument2, argument3);
@@ -2394,7 +2405,7 @@ bool retval = do_something(
 If the function has many arguments, consider having one per line if this
 makes the code more readable:
 
-``` c++
+```c++
 bool retval = do_something(
     argument1,
     argument2,
@@ -2407,7 +2418,7 @@ bool retval = do_something(
 Prefer no spaces inside parentheses. The `else` keyword belongs on a new
 line.
 
-``` c++
+```c++
 if (condition)  // no spaces inside parentheses
 {
     ...  // 4 space indent.
@@ -2422,11 +2433,12 @@ Note that in all cases you must have a space between the `if` and the
 open parenthesis.
 
 <!-- badcode -->
-``` c++
+
+```c++
 if(condition)     // Bad - space missing after IF.
 ```
 
-``` c++
+```c++
 if (condition)   // Good - proper space after IF.
 ```
 
@@ -2434,7 +2446,7 @@ Short conditional statements may be written on one line if this enhances
 readability. You may use this only when the line is brief and the
 statement does not use the `else` clause.
 
-``` c++
+```c++
 if (x == foo) return new Foo();
 if (x == bar) return new Bar();
 ```
@@ -2442,7 +2454,8 @@ if (x == bar) return new Bar();
 This is not allowed when the if statement has an `else`:
 
 <!-- badcode -->
-``` c++
+
+```c++
 // Not allowed - IF statement on one line when there is an ELSE clause
 if (x) do_this();
 else do_that();
@@ -2451,7 +2464,7 @@ else do_that();
 Curly braces are preferred if the statement is on a different line than
 the condition.
 
-``` c++
+```c++
 if (condition)
 {
     do_something();  // 4 space indent.
@@ -2459,7 +2472,8 @@ if (condition)
 ```
 
 <!-- badcode -->
-``` c++
+
+```c++
 // Not allowed - single line IF statements without curly braces
 if (condition)
     foo;
@@ -2484,7 +2498,7 @@ always have a `default` case (in the case of an enumerated value, the
 compiler will warn you if any values are not handled). If the default
 case should never execute, simply `assert`:
 
-``` c++
+```c++
 switch (var)
 {
 case 0:      // no indent
@@ -2503,7 +2517,7 @@ default:
 Empty loop bodies should use `{}` or `continue`, but not a single
 semicolon.
 
-``` c++
+```c++
 while (condition)
 {
     // Repeat test until it returns false.
@@ -2513,7 +2527,8 @@ while (condition) continue;  // Good - continue indicates no logic.
 ```
 
 <!-- badcode -->
-``` c++
+
+```c++
 while (condition);  // Bad - looks like part of do/while loop.
 ```
 
@@ -2525,7 +2540,7 @@ spaces.
 The following are examples of correctly-formatted pointer and reference
 expressions:
 
-``` c++
+```c++
 x = *p;
 p = &x;
 x = r.y;
@@ -2541,14 +2556,15 @@ Note that:
 When declaring a pointer variable or argument, you should place the
 asterisk adjacent to the type:
 
-``` c++
+```c++
 // These are fine
 char* c;
 string const& str;
 ```
 
 <!-- badcode -->
-``` c++
+
+```c++
 char * c;  // Bad - spaces on both sides of *
 char *c ;  // Bad - * next to variable name
 string const & str;  // Bad - spaces on both sides of &
@@ -2565,7 +2581,7 @@ line length](#line-length), be consistent in how you break up the lines.
 In this example, the logical AND operator is always at the end of the
 lines:
 
-``` c++
+```c++
 if (this_one_thing > this_other_thing &&
     a_third_thing == a_fourth_thing &&
     yet_another && last_one)
@@ -2588,14 +2604,15 @@ Do not needlessly surround the `return` expression with parentheses.
 Use parentheses in `return expr;` only where you would use them in
 `x = expr;`.
 
-``` c++
+```c++
 return result;                  // No parentheses in the simple case.
 return (some_long_condition &&  // Parentheses ok to make a complex
         another_condition);     //     expression more readable.
 ```
 
 <!-- badcode -->
-``` c++
+
+```c++
 return (value);                // You wouldn't write var = (value);
 return(result);                // return is not a function!
 ```
@@ -2606,7 +2623,7 @@ Use `{}`.
 
 You may choose between `=` and `()`; the following are all correct:
 
-``` c++
+```c++
  //C++11: default initialization using {}
     int n{5}; //zero initialization: n is initialized to 5
     int* p{}; //initialized to nullptr
@@ -2614,7 +2631,7 @@ You may choose between `=` and `()`; the following are all correct:
     char s[12]{}; //all 12 chars are initialized to '\0'
     string s{}; //same as: string s;
     string name{"Some Name"};
-    char* p=new char [5]{}; // all five chars are initialized to '\0'   
+    char* p=new char [5]{}; // all five chars are initialized to '\0'
 ```
 
 ### Preprocessor Directives
@@ -2625,9 +2642,9 @@ the beginning of the line.
 Even when preprocessor directives are within the body of indented code,
 the directives should start at the beginning of the line.
 
-``` c++
+```c++
 // Good - directives at beginning of line
-if (lopsided_score) 
+if (lopsided_score)
 {
 #if DISASTER_PENDING      // Correct -- Starts at beginning of line
     drop_everything();
@@ -2640,9 +2657,10 @@ if (lopsided_score)
 ```
 
 <!-- badcode -->
-``` c++
+
+```c++
 // Bad - indented directives
-if (lopsided_score) 
+if (lopsided_score)
 {
     #if DISASTER_PENDING  // Wrong!  The "#if" should be at beginning of line
     drop_everything();
@@ -2659,7 +2677,7 @@ The basic format for a class declaration (lacking the comments, see
 [Class Comments](#class-comments) for a discussion of what comments are
 needed) is:
 
-``` c++
+```c++
       class MyClass : public OtherClass
       {
       public:
@@ -2703,14 +2721,14 @@ lines indented four spaces.
 
 There are three acceptable formats for initializer lists:
 
-``` c++
+```c++
 // When it all fits on one line:
 MyClass::MyClass(int var) : some_var_(var), some_other_var_(var + 1) {}
 ```
 
 or
 
-``` c++
+```c++
 // When it requires multiple lines, indent 4 spaces, putting the colon on
 // the constructor declaration line and commas at the end of the line.
 MyClass::MyClass(int var) :
@@ -2725,7 +2743,7 @@ MyClass::MyClass(int var) :
 
 or
 
-``` c++
+```c++
 // When it requires multiple lines, indent 4 spaces, putting the colon on
 // the first initializer line and commas at the end of the line.
 MyClass::MyClass(int var)
@@ -2745,7 +2763,7 @@ The contents of namespaces are not indented.
 [Namespaces](#namespaces) do not add an extra level of indentation. For
 example, use:
 
-``` c++
+```c++
 namespace
 {
 
@@ -2760,7 +2778,8 @@ void foo()  // Correct.  No extra indentation within namespace.
 Do not indent within a namespace:
 
 <!-- badcode -->
-``` c++
+
+```c++
 namespace
 {
 
@@ -2776,7 +2795,7 @@ namespace
 When declaring nested namespaces, put each namespace on its own line,
 with the opening brace on the line following.
 
-``` c++
+```c++
 namespace foo
 {
 namespace bar
@@ -2790,7 +2809,7 @@ whitespace at the end of a line.
 
 **General**
 
-``` c++
+```c++
 int i = 0;        // Semicolons usually have no space before them.
 int x[] = { 0 };  // Spaces inside braces for array initialization are
 int x[] = {0};    // optional.  If you use them, put them on both sides!
@@ -2808,13 +2827,13 @@ public:
 
 Adding trailing whitespace can cause extra work for others editing the
 same file, when they merge, as can removing existing trailing
-whitespace. So: Don\'t introduce trailing whitespace. Remove it if
-you\'re already changing that line, or do it in a separate clean-up
+whitespace. So: Don't introduce trailing whitespace. Remove it if
+you're already changing that line, or do it in a separate clean-up
 operation (preferably when no-one else is working on the file).
 
 **Operators**
 
-``` c++
+```c++
 x = 0;              // Assignment operators always have spaces around
                     // them.
 x = -5;             // No spaces separating unary operators and their
@@ -2828,7 +2847,7 @@ v = w * (x + z);    // Parentheses should have no spaces inside them.
 
 **Templates and Casts**
 
-``` c++
+```c++
 vector<string> x;           // No spaces inside the angle
 y = static_cast<char*>(x);  // brackets (< and >), before
                             // <, or between >( in a cast.
@@ -2842,10 +2861,10 @@ set<list<string> > x;       // Older C++ requiree a space in > >, and is allowed
 
 Minimize use of vertical whitespace but apply it to enhance readability.
 
-This is more a principle than a rule: don\'t use blank lines when you
-don\'t have to. In particular, don\'t put more than one or two blank
+This is more a principle than a rule: don't use blank lines when you
+don't have to. In particular, don't put more than one or two blank
 lines between functions, resist starting functions with a blank line,
-don\'t end functions with a blank line, and be discriminating with your
+don't end functions with a blank line, and be discriminating with your
 use of blank lines inside functions.
 
 The basic principle is: The more code that fits on one screen, the

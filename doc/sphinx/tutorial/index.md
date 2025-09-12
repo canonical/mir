@@ -8,7 +8,9 @@ These pages provide first-time introductions to key Mir aspects
 - {ref}`write-your-first-wayland-compositor`: A guide through writing a simple compositor
 
 ```{toctree}
-:hidden:
-:glob:
+---
+hidden:
+glob:
+---
 *
 ```

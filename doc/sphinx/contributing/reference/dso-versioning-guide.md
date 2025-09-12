@@ -1,21 +1,18 @@
 (dso-versioning-guide)=
 
-A brief guide for versioning symbols in the Mir DSOs
-====================================================
+# A brief guide for versioning symbols in the Mir DSOs
 
-So, what do I have to do?
--------------------------
+## So, what do I have to do?
 
 There are more detailed descriptions below, but as a general rule:
 
- - If you add a new symbol, add it to a `*_NEXTSERIES` version stanza,
-   like `MIR_CLIENT_0.22`, `MIR_PLATFORM_0.22`, etc representing the
-   next future Mir series in which the new symbol will first be released.
- - If you change the behavior or signature of a symbol _and_ wish to preserve
-   backward compatibility, see "Change symbols without breaking ABI" below.
+- If you add a new symbol, add it to a `*_NEXTSERIES` version stanza,
+  like `MIR_CLIENT_0.22`, `MIR_PLATFORM_0.22`, etc representing the
+  next future Mir series in which the new symbol will first be released.
+- If you change the behavior or signature of a symbol _and_ wish to preserve
+  backward compatibility, see "Change symbols without breaking ABI" below.
 
-Can I have some details?
-------------------------
+## Can I have some details?
 
 Sure.
 
@@ -28,15 +25,14 @@ ABI of these interfaces is important to keep in mind.
 
 Mir uses the ELF symbol versioning support. This provides three advantages:
 
- - Consumers of the Mir libraries can know at load time rather than symbol
-   resolution time whether the library exposes all the symbols they expect.
- - We can drop or change the behavior of symbols without breaking ABI by
-   exposing multiple different implementations under different versions, and
- - We can safely load multiple different versions of Mir libraries into the
-   same process.
+- Consumers of the Mir libraries can know at load time rather than symbol
+  resolution time whether the library exposes all the symbols they expect.
+- We can drop or change the behavior of symbols without breaking ABI by
+  exposing multiple different implementations under different versions, and
+- We can safely load multiple different versions of Mir libraries into the
+  same process.
 
-When should I bump SONAME?
---------------------------
+## When should I bump SONAME?
 
 There are varying standards for when to bump SONAME. In Mir we choose to bump
 the SONAME of a library whenever we make a change that could cause a binary
@@ -47,11 +43,11 @@ result in SONAME bumps.
 
 With that explanation, you _should_ bump SONAME when:
 
- - You remove a public symbol from a library
- - You change the signature of a public symbol _without_ retaining the previous
-   signature exposed under the old versioning.
- - You change the behavior of a public symbol _without_ retaining the previous
-   behavior exposed with the old versioning.
+- You remove a public symbol from a library
+- You change the signature of a public symbol _without_ retaining the previous
+  signature exposed under the old versioning.
+- You change the behavior of a public symbol _without_ retaining the previous
+  behavior exposed with the old versioning.
 
 If you are changing the behavior of an interface, think about whether it's easy
 to maintain the old interface in parallel. If it is, you should consider
@@ -59,19 +55,20 @@ providing both under different versions. This should become easier over time as
 the Mir ABI becomes more stable and also more valuable over time as the Mir
 libraries become more widely used.
 
-Load-time version detection
----------------------------
+## Load-time version detection
 
 When using versioned symbols the linker adds an extra, special symbol containing
 the version(s) exported from the library. Consumers of the library resolve this
 on library load. For example:
 
-    $ objdump -C -T lib/libmirclient.so
-    …
-    00000000002a2080  w   DO .data.rel.ro   0000000000000080  MIR_CLIENT_8 vtable for mir::client::DefaultConnectionConfiguration
-    0000000000000000 g    DO *ABS*  0000000000000000  MIR_CLIENT_8 MIR_CLIENT_8
-    0000000000030ed2 g    DF .text  0000000000000098  MIR_CLIENT_8 mir::client::DefaultConnectionConfiguration::the_rpc_report()
-    …
+```
+$ objdump -C -T lib/libmirclient.so
+…
+00000000002a2080  w   DO .data.rel.ro   0000000000000080  MIR_CLIENT_8 vtable for mir::client::DefaultConnectionConfiguration
+0000000000000000 g    DO *ABS*  0000000000000000  MIR_CLIENT_8 MIR_CLIENT_8
+0000000000030ed2 g    DF .text  0000000000000098  MIR_CLIENT_8 mir::client::DefaultConnectionConfiguration::the_rpc_report()
+…
+```
 
 This shows the special `MIR_CLIENT_8` symbol of the current libmirclient, along
 with a versioned symbol in the read-only data segment (the vtable for
@@ -87,26 +84,27 @@ possibly much later, and more confusingly.
 When you add new symbols, add them to a new `version` block in the relevant
 `symbols.map` file, like so:
 
-    MIR_CLIENT_0.17 {
-        global:
-            mir_connect_sync;
-            ...
-            /* Other symbols go here */
-    };
+```
+MIR_CLIENT_0.17 {
+    global:
+        mir_connect_sync;
+        ...
+        /* Other symbols go here */
+};
 
-    MIR_CLIENT_0.18 {
-        global:
-            mir_connect_new_symbol;
-        local:
-            *;
-    } MIR_CLIENT_0.17;
+MIR_CLIENT_0.18 {
+    global:
+        mir_connect_new_symbol;
+    local:
+        *;
+} MIR_CLIENT_0.17;
+```
 
 Note that the script is read top to bottom; wildcards are greedily bound when
 first encountered, so to avoid surprises you should only have a wildcard in the
 final stanza.
 
-Change symbols without breaking ABI
------------------------------------
+## Change symbols without breaking ABI
 
 ELF DSOs can have multiple implementations for the same symbol with different
 versions. This means that you can change the signature or behavior of a symbol
@@ -126,41 +124,45 @@ implementation. Binaries linked against the new library will resolve to the new
 (default) implementation.
 
 ### So, what do I have to do to make this work?
+
 For example, if you wanted to change the signature of
 `mir_connection_create_surface` to take a new parameter:
 
 `mir_connection_api.cpp`:
 
-    __asm__(".symver old_mir_connection_create_surface,mir_connection_create_surface@MIR_CLIENT_0.17");
+```
+__asm__(".symver old_mir_connection_create_surface,mir_connection_create_surface@MIR_CLIENT_0.17");
 
-    extern "C" MirWaitHandle* old_mir_connection_create_surface(...)
-    /* The old implementation */
+extern "C" MirWaitHandle* old_mir_connection_create_surface(...)
+/* The old implementation */
 
-    /* The @@ specifies that this is the default version */
-    __asm__(".symver mir_connection_create_surface,mir_connection_create_surface@@@MIR_CLIENT_0.18");
-    MirWaitHandle* mir_connection_create_surface(...)
-    /* The new implementation */
+/* The @@ specifies that this is the default version */
+__asm__(".symver mir_connection_create_surface,mir_connection_create_surface@@@MIR_CLIENT_0.18");
+MirWaitHandle* mir_connection_create_surface(...)
+/* The new implementation */
+```
 
 `symbols.map`:
 
-    MIR_CLIENT_0.17 {
-        global:
-            ...
-            mir_connection_create_surface;
-            ...
-    };
+```
+MIR_CLIENT_0.17 {
+    global:
+        ...
+        mir_connection_create_surface;
+        ...
+};
 
-    MIR_CLIENT_0.18 {
-        global:
-            ...
-            mir_connection_create_surface;
-            ...
-        local:
-            *;
-    } MIR_CLIENT_0.17;
+MIR_CLIENT_0.18 {
+    global:
+        ...
+        mir_connection_create_surface;
+        ...
+    local:
+        *;
+} MIR_CLIENT_0.17;
+```
 
-Safely load multiple versions of a library into the same address space
-----------------------------------------------------------------------
+## Safely load multiple versions of a library into the same address space
 
 This benefit is currently theoretical, as there seems to be a Protobuf singleton
 that aborts if we try this. But should that be resolved, it's theoretically
@@ -185,9 +187,8 @@ Ensure that different implementations of a symbol have different versions.
 Additionally, there's the complication of passing objects between different
 versions. For the moment, we can not bother trying to make this work.
 
+## See also:
 
-See also:
----------
 [Binutils manual](https://sourceware.org/binutils/docs/ld/VERSION.html)
 
 [Former glibc maintainer's DSO guide](https://www.akkadia.org/drepper/dsohowto.pdf)

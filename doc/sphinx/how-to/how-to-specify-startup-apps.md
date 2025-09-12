@@ -9,14 +9,13 @@ immensely annoying, so let's add an option for users to specify startup apps.
 Compositor](../tutorial/write-your-first-wayland-compositor.md) is a prerequisite for
 this how-to.
 
----
+______________________________________________________________________
 
 We'll start by creating an instance of `miral::ExternalClientLauncher`, this
 will provide a way to launch programs by name. Then, we'll create a function
 that will take the list of startup apps and launch them. Finally, we just need
 to pass the external client launcher and our configuration option to
 {func}`run_with` so that they're registered with the compositor.
-
 
 ```diff
  #include <miral/runner.h>
@@ -50,6 +49,7 @@ to pass the external client launcher and our configuration option to
 ```
 
 Now, to start `kgx` and `bomber` on startup, we can do:
+
 ```sh
 ./build/demo-mir-compositor --startup-app kgx --startup-app bomber
 ```
