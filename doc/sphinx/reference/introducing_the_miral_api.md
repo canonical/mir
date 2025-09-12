@@ -45,7 +45,7 @@ provides a hooks for co-ordinating other processing you need by running code:
 
 ### miral::WindowManagementPolicy
 
-This is an important way to be able to customise your compositor. Changing the 
+This is an important way to customise your compositor. Changing the 
 way that windows are managed affects the way users interact with your compositor.
 
 The "Hello World" example uses {class}`miral::MinimalWindowManager` which is an
