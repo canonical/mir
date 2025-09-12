@@ -45,7 +45,7 @@ build:
       # This is a special exit code on Read the Docs that will cancel the build immediately.
       # https://docs.readthedocs.io/en/stable/build-customization.html#cancel-build-based-on-a-condition
     - |
-      if [ "$READTHEDOCS_VERSION_TYPE" = "external" ] && git diff --quiet origin/main -- 'doc/' 'doc/sphinx/.readthedocs.yaml' 'src/' 'include';
+      if [ "$READTHEDOCS_VERSION_TYPE" = "external" ] && git diff --quiet origin/main -- 'doc/' 'doc/sphinx/.readthedocs.yaml' 'include/' 'src/include/';
       then
         exit 183;
       fi
