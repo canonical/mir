@@ -47,7 +47,7 @@ public:
     /// Describes the physical size of the output in millimeters.
     struct PhysicalSizeMM { int width; int height; };
 
-    /// The type of the output.
+    /// Display connector types.
     enum class Type
     {
         unknown,
@@ -80,10 +80,10 @@ public:
 
     /// The type of the output.
     ///
-    /// \returns the type
+    /// \returns the display connection type
     auto type() const -> Type;
 
-    /// The physical size of the output.
+    /// The physical size of the output in millimeters.
     ///
     /// \returns the physical size
     auto physical_size_mm() const -> PhysicalSizeMM;
@@ -195,7 +195,7 @@ inline bool operator!=(Output::PhysicalSizeMM const& lhs, Output::PhysicalSizeMM
 ///
 /// \param lhs first output
 /// \param rhs second output
-/// \returns `true` if their display area is the same, otherwise false
+/// \returns `true` if their display area is the same, otherwise `false`
 auto equivalent_display_area(Output const& lhs, Output const& rhs) -> bool;
 }
 
