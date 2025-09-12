@@ -1,6 +1,6 @@
 summary: Build Fedora packages
 systems: [fedora-*]
-variants: [amd64]
+variants: [amd64, clang]
 kill-timeout: 60m
 
 execute: |
@@ -11,8 +11,10 @@ execute: |
     fi
 
     dnf --assumeyes install @buildsys-build ccache 'dnf5-command(builddep)'
+    RPMBUILD_EXTRA_OPTIONS=""
     if [ "${CLANG}" -eq 1 ]; then
         dnf --assumeyes install clang
+        RPMBUILD_EXTRA_OPTIONS="--with clang"
     fi
 
     dnf --assumeyes builddep --allowerasing ${SPREAD_PATH}/rpm/mir.spec
@@ -22,6 +24,7 @@ execute: |
              --with ccache \
              --with debug \
              --with run_tests \
+             ${RPMBUILD_EXTRA_OPTIONS} \
              --define "_vpath_builddir $SPREAD_PATH/../build" \
              -bb rpm/mir.spec
     popd
