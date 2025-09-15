@@ -102,7 +102,7 @@ public:
 
     /// Retrieve info about a window.
     ///
-    /// \param window the window\
+    /// \param window the window
     /// \returns info about the window, or the default-constructed window info if the \p surface is invalid
     /// \throws std::out_of_range when the window is invalid
     /// \sa miral::WindowInfo - info about the window
