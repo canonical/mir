@@ -358,10 +358,9 @@ public:
 ///
 ///
 /// \sa
-/// - #mir::graphics::RenderingProvider::FramebufferProvider::buffer_to_framebuffer
-/// - Converts a buffer to a framebuffer
+/// - #mir::graphics::RenderingProvider::FramebufferProvider::buffer_to_framebuffer - Converts a buffer to a framebuffer
 /// - #mir::graphics::DisplaySink::set_next_image - Displays the given
-/// framebuffer if it's suitable for the display sink.
+///   framebuffer if it's suitable for the display sink.
 class Framebuffer
 {
 public:
