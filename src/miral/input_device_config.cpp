@@ -268,7 +268,7 @@ void miral::add_input_device_configuration_options_to(mir::Server& server)
                                     std::format("Scroll mode for touchpads. "
                                                 "Generates scroll events when:\n"
                                                 " - {}: single finger moves on right or bottom edges of touchpad.\n"
-                                                " - {}: two fingers move horzontally or vertically.\n"
+                                                " - {}: two fingers move horizontally or vertically.\n"
                                                 " - {}: mouse button held down.",
                                                 touchpad_scroll_mode_edge,
                                                 touchpad_scroll_mode_two_finger,

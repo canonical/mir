@@ -34,7 +34,7 @@ char const* const display_config_descr = "Display configuration:\n"
                                          " - clone: all screens show the same content.\n"
                                          " - sidebyside: each screen placed to the right of the previous one.\n"
                                          " - single: only the first screen used.\n"
-                                         " - static=filename: use layout specificed in <filename>.";
+                                         " - static=filename: use layout specified in <filename>.";
 
 //char const* const clone_opt_val = "clone";
 char const* const sidebyside_opt_val = "sidebyside";
