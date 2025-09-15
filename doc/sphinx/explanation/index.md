@@ -4,7 +4,7 @@ These pages provide additional detail about a number of aspects related to using
 
 ## System Considerations
 
-- [Graphics support](mir-graphics-support.md)
+- [Platform support](platform-support.md)
 - [Security](security.md)
 - [Performance](performance.md)
 - [Energy efficiency](energy-efficiency.md)
