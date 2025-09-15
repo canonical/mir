@@ -214,6 +214,24 @@ public:
             }
         };
 
+        void pointer_vertical_scroll_speed(live_config::Key const&, std::optional<float> opt_val)
+        {
+            if (opt_val.has_value())
+            {
+                std::lock_guard lock{config_mutex};
+                mouse.vscroll_speed(*opt_val);
+            }
+        }
+
+        void pointer_horizontal_scroll_speed(live_config::Key const&, std::optional<float> opt_val)
+        {
+            if (opt_val.has_value())
+            {
+                std::lock_guard lock{config_mutex};
+                mouse.vscroll_speed(*opt_val);
+            }
+        }
+
         void touchpad_tap_to_click(live_config::Key const&, std::optional<bool> opt_val)
         {
             if (opt_val.has_value())
@@ -338,6 +356,16 @@ miral::InputConfiguration::InputConfiguration(live_config::Store& config_store) 
         live_config::Key{"pointer", "acceleration"},
         "Acceleration profile for mice and trackballs [none, adaptive]",
         [self=self](auto... args) { self->config.pointer_acceleration(args...); });
+
+    config_store.add_float_attribute(
+        {"pointer", "vertical_scroll_speed"},
+        "Scroll speed scaling factor for mice and trackballs. Use negative values for natural scrolling",
+        [self=self](auto... args) { self->config.pointer_vertical_scroll_speed(args...); });
+
+    config_store.add_float_attribute(
+        {"pointer", "horizontal_scroll_speed"},
+        "Scroll speed scaling factor for mice and trackballs. Use negative values for natural scrolling",
+        [self=self](auto... args) { self->config.pointer_horizontal_scroll_speed(args...); });
 
     config_store.add_float_attribute(
         live_config::Key{"pointer", "acceleration_bias"},
