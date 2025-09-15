@@ -179,10 +179,10 @@ void miral::display_configuration_options(mir::Server& server)
     // Add choice of monitor configuration
     server.add_configuration_option(display_config_opt,
                                     std::format("Display configuration:\n"
-                                                 " - {}: all screens show the same content.\n"
-                                                 " - {}: each screen placed to the right of the previous one.\n"
-                                                 " - {}: only the first screen used.\n"
-                                                 " - {}filename: use layout specified in <filename>.",
+                                                 " - `{}`: all screens show the same content.\n"
+                                                 " - `{}`: each screen placed to the right of the previous one.\n"
+                                                 " - `{}`: only the first screen used.\n"
+                                                 " - `{}filename`: use layout specified in <filename>.",
                                                  clone_opt_val, sidebyside_opt_val, single_opt_val, static_opt_val),
                                     sidebyside_opt_val);
     server.add_configuration_option(display_alpha_opt,  display_alpha_descr,    display_alpha_off);
