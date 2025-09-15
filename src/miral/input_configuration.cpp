@@ -103,6 +103,86 @@ public:
             keyboard{keyboard}
         {}
 
+        void acceleration(live_config::Key const& key, std::optional<std::string_view> opt_val)
+        {
+            if (opt_val.has_value())
+            {
+                auto val = *opt_val;
+
+                if (val == "none")
+                {
+                    std::lock_guard lock{config_mutex};
+                    mouse.acceleration(mir_pointer_acceleration_none);
+                }
+                else if (val == "adaptive")
+                {
+                    std::lock_guard lock{config_mutex};
+                    mouse.acceleration(mir_pointer_acceleration_adaptive);
+                }
+                else
+                {
+                    mir::log_warning(
+                        "Config key '%s' has invalid string value: %s",
+                        key.to_string().c_str(),
+                        std::format("{}",val).c_str());
+                }
+            }
+        };
+
+        void acceleration_bias(live_config::Key const&, std::optional<float> opt_val)
+        {
+            if (opt_val.has_value())
+            {
+                std::lock_guard lock{config_mutex};
+                mouse.acceleration_bias(std::clamp(*opt_val, -1.0f, 1.0f));
+            }
+        };
+
+        void scroll_mode(live_config::Key const& key, std::optional<std::string_view> opt_val)
+        {
+            if (opt_val.has_value())
+            {
+                auto val = *opt_val;
+
+                if (val == "none")
+                {
+                    std::lock_guard lock{config_mutex};
+                    touchpad.scroll_mode(mir_touchpad_scroll_mode_none);
+                }
+                else if (val == "edge")
+                {
+                    std::lock_guard lock{config_mutex};
+                    touchpad.scroll_mode(mir_touchpad_scroll_mode_edge_scroll);
+                }
+                else if (val == "two-finger")
+                {
+                    std::lock_guard lock{config_mutex};
+                    touchpad.scroll_mode(mir_touchpad_scroll_mode_two_finger_scroll);
+                }
+                else if (val == "button-down")
+                {
+                    std::lock_guard lock{config_mutex};
+                    touchpad.scroll_mode(mir_touchpad_scroll_mode_button_down_scroll);
+                }
+                else
+                {
+                    mir::log_warning(
+                        "Config key '%s' has invalid string value: %s",
+                        key.to_string().c_str(),
+                        std::format("{}",val).c_str());
+                }
+            }
+        };
+
+        void tap_to_click(live_config::Key const&, std::optional<bool> opt_val)
+        {
+            if (opt_val.has_value())
+            {
+                std::lock_guard lock{config_mutex};
+                touchpad.tap_to_click(*opt_val);
+            }
+        }
+
         std::mutex config_mutex;
         Mouse mouse;
         Touchpad touchpad;
@@ -268,6 +348,26 @@ miral::InputConfiguration::InputConfiguration(live_config::Store& config_store) 
                     }
                 }
             });
+
+        config_store.add_string_attribute(
+            live_config::Key{"pointer", "acceleration"},
+            "Acceleration profile for mice and trackballs [none, adaptive]",
+            [self=self](auto... args) { self->config.acceleration(args...); });
+
+        config_store.add_float_attribute(
+            live_config::Key{"pointer", "acceleration_bias"},
+            "Acceleration speed of mice within a range of [-1.0, 1.0]",
+            [self=self](auto... args) { self->config.acceleration_bias(args...); });
+
+        config_store.add_string_attribute(
+            live_config::Key{"touchpad", "scroll_mode"},
+            "Scroll mode for touchpads: [edge, two-finger, button-down]",
+            [self=self](auto... args) { self->config.scroll_mode(args...); });
+
+        config_store.add_bool_attribute(
+            live_config::Key{"touchpad", "tap_to_click"},
+            "1, 2, 3 finger tap mapping to left, right, middle click, respectively [true, false]",
+            [self=self](auto... args) { self->config.tap_to_click(args...); });
 
         config_store.on_done([this]
             {
