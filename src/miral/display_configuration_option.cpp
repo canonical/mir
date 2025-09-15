@@ -23,6 +23,7 @@
 #include <mir/server.h>
 
 #include <algorithm>
+#include <format>
 
 namespace mg = mir::graphics;
 using namespace mir::geometry;
