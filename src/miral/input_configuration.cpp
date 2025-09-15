@@ -232,6 +232,15 @@ public:
             }
         }
 
+        void touchpad_disable_with_external_mouse(live_config::Key const&, std::optional<bool> opt_val)
+        {
+            if (opt_val.has_value())
+            {
+                std::lock_guard lock{config_mutex};
+                touchpad.disable_with_external_mouse(*opt_val);
+            }
+        }
+
         std::mutex config_mutex;
         Mouse mouse;
         Touchpad touchpad;
@@ -349,6 +358,11 @@ miral::InputConfiguration::InputConfiguration(live_config::Store& config_store) 
         live_config::Key{"touchpad", "disable_while_typing"},
         "Disable touchpad while typing on keyboard [true, false]",
         [self=self](auto... args) { self->config.touchpad_disable_while_typing(args...); });
+
+    config_store.add_bool_attribute(
+        live_config::Key{"touchpad", "disable_with_external_mouse"},
+        "Disable touchpad if an external pointer device is plugged in [true, false]",
+        [self=self](auto... args) { self->config.touchpad_disable_with_external_mouse(args...); });
 
     config_store.on_done([this]
         {
