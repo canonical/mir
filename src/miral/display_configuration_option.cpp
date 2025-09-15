@@ -30,13 +30,9 @@ using namespace mir::geometry;
 namespace
 {
 char const* const display_config_opt = "display-config";
-char const* const display_config_descr = "Display configuration:\n"
-                                         " - clone: all screens show the same content.\n"
-                                         " - sidebyside: each screen placed to the right of the previous one.\n"
-                                         " - single: only the first screen used.\n"
-                                         " - static=filename: use layout specified in <filename>.";
+char const* const display_config_descr = ;
 
-//char const* const clone_opt_val = "clone";
+char const* const clone_opt_val = "clone";
 char const* const sidebyside_opt_val = "sidebyside";
 char const* const single_opt_val = "single";
 char const* const static_opt_val = "static=";
@@ -182,7 +178,14 @@ void AutoscaleSetter::apply_to(mg::UserDisplayConfigurationOutput& output)
 void miral::display_configuration_options(mir::Server& server)
 {
     // Add choice of monitor configuration
-    server.add_configuration_option(display_config_opt, display_config_descr,   sidebyside_opt_val);
+    server.add_configuration_option(display_config_opt,
+                                    std::format("Display configuration:\n"
+                                                 " - {}: all screens show the same content.\n"
+                                                 " - {}: each screen placed to the right of the previous one.\n"
+                                                 " - {}: only the first screen used.\n"
+                                                 " - {}filename: use layout specified in <filename>.",
+                                                 clone_opt_val, sidebyside_opt_val, single_opt_val, static_opt_val),
+                                    sidebyside_opt_val);
     server.add_configuration_option(display_alpha_opt,  display_alpha_descr,    display_alpha_off);
     server.add_configuration_option(display_scale_opt,  display_scale_descr,    display_scale_default);
     server.add_configuration_option(display_autoscale_opt,  display_autoscale_descr, mir::OptionType::integer);
