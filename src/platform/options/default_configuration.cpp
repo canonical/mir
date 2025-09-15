@@ -385,10 +385,10 @@ std::string options_to_markdown(const boost::program_options::options_descriptio
         {
             text << " " << o->format_parameter();
         }
-        text << "`" << std::endl;
-        text << std::endl;
-        text << markdown_escape(o->description()) << std::endl;
-        text << std::endl;
+        text << "`\n";
+        text << "\n";
+        text << markdown_escape(o->description()) << "\n";
+        text << "\n";
     }
 
     return text.str();
@@ -465,16 +465,16 @@ void mo::DefaultConfiguration::parse_arguments(
         if (options.is_set("help-markdown"))
         {
             std::ostringstream help_text;
-            help_text << "# Mir command line options" << std::endl;
-            help_text << std::endl;
+            help_text << "# Mir command line options\n";
+            help_text << "\n";
             help_text << options_to_markdown(desc);
             for (auto& platform : platform_libraries)
             {
                 auto& module_desc = module_options_desc.at(platform->get_handle());
                 if (!module_desc.options().empty())
                 {
-                    help_text << "## " << option_header_for(*platform) << std::endl;
-                    help_text << std::endl;
+                    help_text << "## " << option_header_for(*platform) << "\n";
+                    help_text << "\n";
                     help_text << options_to_markdown(module_desc);
                 }
             }
