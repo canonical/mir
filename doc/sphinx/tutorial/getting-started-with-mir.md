@@ -1,11 +1,13 @@
 (tutorial-getting-started)=
+
 # Getting started with Mir
 
 This tutorial will introduce you to the basic functionality of Mir by running a demo compositor. By the end of
 the tutorial, you will install and run a demo compositor, learn how to use Mir in different environments,
 and learn about features that Mir provides.
 
-## Install Mir Demos
+## Install Mir demos
+
 First, we will install the Mir demo compositors.
 
 Mir demos are available on Debian derivatives, Fedora, and Alpine. For distros
@@ -18,22 +20,26 @@ sudo apt install mir-demos mir-graphics-drivers-desktop
 ```
 
 ### On Fedora
+
 ```sh
 sudo dnf install mir-demos
 ```
 
 ### On Alpine
+
 ```sh
 sudo apk add mir-demos mir
 ```
 
 ### On Arch Linux (AUR)
+
 ```
 https://aur.archlinux.org/packages/mir
 ```
 
 ## Run a Mir compositor nested in Wayland or X11
-Next, we will run one of the demos  that we just installed, namely `miral-app`.
+
+Next, we will run one of the demos that we just installed, namely `miral-app`.
 `miral-app` is a a script that handles running a Mir shell with a basic GUI.
 
 Within your current graphical session, run:
@@ -46,6 +52,7 @@ You should see an X11 window on your desktop. This is a full Wayland compositor
 running nested inside your current session.
 
 ## Run a Mir compositor natively
+
 Now that we've run `miral-app` in a nested session, let's run it natively from a
 virtual terminal.
 
@@ -64,15 +71,18 @@ The compositor should appear across your outputs.
 Note: Mir supports NVIDIA graphics cards but they can cause stability issues due
 to quirks on the driver side.
 
-## Run Clients
+## Run clients
+
 Whether you're running Mir nested in your current session or from a virtual
 terminal, you will be able to run Wayland clients in your current session.
 
-### Run Wayland Applications
+### Run Wayland applications
+
 To start, let's open up a terminal using `CTRL+ALT+T`. This will open up a
 Wayland terminal client.
 
-### Run X11 Applications
+### Run X11 applications
+
 Rerun `miral-app` with the following flags:
 
 ```sh
@@ -84,7 +94,8 @@ xterm session open if it is available on your system.
 
 At this point, you may experiment opening other applications as well.
 
-### Run Shell Component Applications
+### Run shell component applications
+
 In addition to traditional applications, Mir provides the facilities for you to
 run applications which are actually shell components, such as backgrounds, bars,
 panels and more.
@@ -107,5 +118,6 @@ Finally, run `waybar` from within your compositor session. You should see a bar
 appear at the top of your compositor.
 
 ## Next steps
+
 Check out the [developer tutorial](write-your-first-wayland-compositor.md) to
 build your first compositor with Mir.

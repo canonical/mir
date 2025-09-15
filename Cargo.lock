@@ -56,9 +56,9 @@ dependencies = [
 
 [[package]]
 name = "cxx"
-version = "1.0.160"
+version = "1.0.180"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "be1149bab7a5580cb267215751389597c021bfad13c0bb00c54e19559333764c"
+checksum = "6ecd70e33fb57b5fec1608d572bf8dc382f5385a19529056b32307a29ac329be"
 dependencies = [
  "cc",
  "cxxbridge-cmd",
@@ -70,9 +70,9 @@ dependencies = [
 
 [[package]]
 name = "cxx-build"
-version = "1.0.160"
+version = "1.0.184"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6aeeaf1aefae8e0f5141920a7ecbc64a22ab038d4b4ac59f2d19e0effafd5b53"
+checksum = "27d955b93e56a8e45cbc34df0ae920d8b5ad01541a4571222c78527c00e1a40a"
 dependencies = [
  "cc",
  "codespan-reporting",
@@ -85,9 +85,9 @@ dependencies = [
 
 [[package]]
 name = "cxxbridge-cmd"
-version = "1.0.160"
+version = "1.0.180"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c36ac1f9a72064b1f41fd7b49a4c1b3bf33b9ccb1274874dda6d264f57c55964"
+checksum = "64320fd0856fdf2421f8404b67d41e91291cbcfa3d57457b390f0a2618ee9a68"
 dependencies = [
  "clap",
  "codespan-reporting",
@@ -99,15 +99,15 @@ dependencies = [
 
 [[package]]
 name = "cxxbridge-flags"
-version = "1.0.160"
+version = "1.0.180"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "170c6ff5d009663866857a91ebee55b98ea4d4b34e7d7aba6dc4a4c95cc7b748"
+checksum = "77e40964f209961217b972415a8e3a0c23299076a0b2dfe79fa8366b5e5c833e"
 
 [[package]]
 name = "cxxbridge-macro"
-version = "1.0.160"
+version = "1.0.180"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4984a142211026786011a7e79fa22faa1eca1e9cbf0e60bffecfd57fd3db88f1"
+checksum = "51afdec15d8072d1b69f54f645edaf54250088a7e54c4fe493016781278136bd"
 dependencies = [
  "indexmap",
  "proc-macro2",
@@ -124,9 +124,9 @@ checksum = "877a4ace8713b0bcf2a4e7eec82529c029f1d0619886d18145fea96c3ffe5c0f"
 
 [[package]]
 name = "foldhash"
-version = "0.1.5"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d9c4f5dac5e15c24eb999c26181a6ca40b39fe946cbe4c263c7209467bc83af2"
+checksum = "77ce24cb58228fbb8aa041425bb1050850ac19177686ea6e0f41a70416f56fdb"
 
 [[package]]
 name = "hashbrown"
@@ -146,9 +146,9 @@ dependencies = [
 
 [[package]]
 name = "link-cplusplus"
-version = "1.0.10"
+version = "1.0.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4a6f6da007f968f9def0d65a05b187e2960183de70c160204ecfccf0ee330212"
+checksum = "7f78c730aaa7d0b9336a299029ea49f9ee53b0ed06e9202e8cb7db9bae7b8c82"
 dependencies = [
  "cc",
 ]

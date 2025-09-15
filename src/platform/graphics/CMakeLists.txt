@@ -118,6 +118,7 @@ target_link_libraries(
   PUBLIC
     mirwayland
     PkgConfig::EGL
+    PkgConfig::LIBDISPLAY_INFO
   PRIVATE
     mircommon
     PkgConfig::PIXMAN

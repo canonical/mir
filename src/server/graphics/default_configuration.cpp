@@ -237,7 +237,7 @@ auto mir::DefaultServerConfiguration::the_rendering_platforms() ->
                         graphics::probe_rendering_module(
                             display_targets,
                             *platform,
-                            *the_options(),
+                            *the_options_provider()->options_for(*platform),
                             the_console_services());
 
                     bool found_supported_device{false};

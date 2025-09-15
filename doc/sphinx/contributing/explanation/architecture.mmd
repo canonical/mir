@@ -1,0 +1,28 @@
+
+classDiagram
+    mirserver --> mircore
+    mircommon --> mircore
+    mirplatform --> mircore
+    mirwayland --> mircore
+    miral --> mircore
+
+    mirserver --> mirplatform
+    mirplatform --> mircommon
+    miral --> mircommon
+    mirserver --> mircommon
+    mirwayland --> mircommon
+
+
+    miral --> mirserver
+    mirwayland --> mirserver
+    miroil --> mirserver
+
+    Compositor --> miral
+    Compositor --> mirwayland
+    Compositor --> miroil
+
+    Compositor --> mircore
+
+    miroil --> mircore
+    class miroil["(miroil)"]
+    note for miroil "Compatibility library for Lomiri (only)"

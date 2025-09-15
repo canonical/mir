@@ -6,6 +6,13 @@ on:
     - main
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
+    paths-ignore:
+    - '.github/**'
+    - 'doc/**'
+    - 'snap/**'
+    - 'spread**'
+    - 'tools/**'
+    - '!.github/workflows/tics.yml'
   merge_group:
     types: [checks_requested]
   workflow_dispatch:
@@ -31,7 +38,7 @@ jobs:
     timeout-minutes: 360
     steps:
     - name: Check out code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       with:
         # So we can determine the merge base
         fetch-depth: 0

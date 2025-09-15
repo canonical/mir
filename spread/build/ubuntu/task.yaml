@@ -18,7 +18,7 @@ execute: |
     # (Currently: a newer version of WLCS)
     add-apt-repository ppa:mir-team/dev --component "main $( $NODBG || echo main/debug )"
 
-    # to get dpkg-architecture and mk-build-deps
+    # to get dpkg-architecture and debchange
     apt-get install \
       --yes \
       ccache \
@@ -54,7 +54,8 @@ execute: |
     # enable Rust support
     if [ "${ENABLE_RUST}" -eq 1 ]; then
       echo "OVERRIDE_CONFIGURE_OPTIONS += -DMIR_ENABLE_RUST=ON" >> debian/opts.mk
-      apt-get install --yes cargo rustc
+      apt-get install --yes cargo rustc-1.82
+      export PATH=/usr/lib/rust-1.82/bin:$PATH
     fi
 
     # change the build type

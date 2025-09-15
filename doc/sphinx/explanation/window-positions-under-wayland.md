@@ -1,6 +1,4 @@
----
-discourse: 29925
----
+(exp-window-positions-under-wayland)=
 
 # Window positions under Wayland
 
@@ -31,30 +29,31 @@ Obviously, that approach leads to frustration on the part of designers of client
 Although a lot of freedom is indeed being lost, when looking at applications in the real world they only use a small fraction of that and for some specific cases. That's not surprising, as they are supporting some visual "idioms" that users recognize because they are shared across applications.
 
 1. Regular or "top level" windows
-![regular_540p|690x388](regular_540p.gif)
-These are handled by `xdg-shell`'s `xdg_toplevel`.
+   ![A GIF demonstrating the behavior of regular windows](regular_540p.gif)
+   These are handled by `xdg-shell`'s `xdg_toplevel`.
 
-2. Dialog windows
-![dialog_540p|690x388](dialog_540p.gif)
-These are handled by `xdg-shell`'s `xdg_toplevel` with the "parent" set.
+1. Dialog windows
+   ![A GIF demonstrating the behavior of dialog windows](dialog_540p.gif)
+   These are handled by `xdg-shell`'s `xdg_toplevel` with the "parent" set.
 
-3. Menu and Popup windows
-![popup_540p|690x388](popup_540p.gif)
-These are handled by `xdg-shell`'s `xdg_popup` with a "grab"
+1. Menu and Popup windows
+   ![A GIF demonstrating the behavior of popup windows](popup_540p.gif)
+   These are handled by `xdg-shell`'s `xdg_popup` with a "grab"
 
-4. Tooltip and hover windows
-![tip_540p|690x388](tip_540p.gif)
-These are handled by `xdg-shell`'s `xdg_popup`.
+1. Tooltip and hover windows
+   ![A GIF demonstrating the behavior of tooltip windows](tip_540p.gif)
+   These are handled by `xdg-shell`'s `xdg_popup`.
 
-5. Satellite and toolbox windows
-![sattelite_540p|690x388](satellite_540p.gif)
-These are not currently handled by a Wayland extension, but could be added in a way consistent with the support for other window types.
+1. Satellite and toolbox windows
+   ![A GIF demonstrating the behavior of staellite windows](satellite_540p.gif)
+   These are not currently handled by a Wayland extension, but could be added in a way consistent with the support for other window types.
 
 ## Conclusion
 
 While client developers (of applications and toolkits) may be surprised that they can't set absolute geometry there are a number of objections to allowing it:
+
 1. preventing placement of windows to interfere with elements of the shell such as docks;
-2. allowing for how the shell is laid out (docs, multi-screen display walls, etc);
-3. no need for application to know how its own windows are laid out
+1. allowing for how the shell is laid out (docs, multi-screen display walls, etc);
+1. no need for application to know how its own windows are laid out
 
 The approach taken by Wayland supports most of the windowing idioms recognized by users and can be extended to cover more without allowing clients complete freedom.

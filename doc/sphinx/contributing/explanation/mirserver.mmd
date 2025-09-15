@@ -1,0 +1,33 @@
+
+classDiagram
+    namespace platforms {
+        class DisplayPlatform
+        class RenderingPlatform
+        class InputPlatform
+        class mirplatform
+    }
+
+    RenderingPlatform --> mirplatform
+    DisplayPlatform --> mirplatform
+    InputPlatform --> mirplatform
+
+    Seat <-- InputDispatcher: Sends events to
+    FrontendXWayland --> Shell: Makes request to
+    FrontendWayland --> Shell: Makes requests to
+    Seat --> Shell: Sends events to
+
+    Shell --> Display: Subscribe
+    Compositor --> Display: Subscribe
+    Shell --> Scene: Updates
+    Compositor --> Scene: Subscribe/get renderables
+
+    InputDispatcher <-- InputPlatform: Sends events to
+    Compositor --> RenderingPlatform: Handles rendering
+    Compositor --> DisplayPlatform: Outputs image to
+
+    <<Controller>> Shell
+    <<Model>> Scene
+    <<View>> Compositor
+
+    Shell o-- WindowManagementStrategy
+    note for WindowManagementStrategy "supplied by miral"

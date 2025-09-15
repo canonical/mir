@@ -36,6 +36,8 @@ target_link_libraries(mir-protected-test-doubles
     mirplatform
     mircommon
     mircore
+
+    PkgConfig::LIBINPUT
 )
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
@@ -144,6 +146,11 @@ target_link_libraries(mir-public-test-doubles-platform
     mircore
   PRIVATE
     PkgConfig::DRM
+)
+
+target_include_directories(mir-public-test-doubles-platform
+  PUBLIC
+    ${LIBINPUT_INCLUDE_DIRS}
 )
 
 add_library(mir-test-doubles-platform-static STATIC)

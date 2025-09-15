@@ -78,19 +78,22 @@ void miral::ExternalClientLauncher::operator()(mir::Server& server)
 
     server.add_configuration_option(
         app_env,
-        "Colon separated list of environment variables set when launching applications.",
+        "Colon separated list of environment variables set or clear when launching applications. "
+        "Variables are set in the form NAME=VALUE and cleared with -NAME, e.g. DEBUG=1:-VERBOSE.",
         default_env);
 
     server.add_configuration_option(
             app_env_amend,
-            "Colon separated list of additional environment variables added to --app-env. "
-            "Multiple additions may be specified by providing the argument multiple times.",
+            "Colon separated list of additional environment variables that add/modify/remove from --app-env. "
+            "Format is the same as as --app-env. "
+            "Multiple changes may be specified by providing the argument multiple times.",
             mir::OptionType::strings);
 
     server.add_configuration_option(
         app_x11_env,
-        "Colon separated list of additional environment variables set when launching X11 applications. "
-        "Adds to --app-env and --app-env-amend.",
+        "Colon separated list of additional environment variables add/modify/remove when launching X11 applications. "
+        "Format is the same as as --app-env. "
+        "Changes are applied after --app-env and --app-env-amend.",
         default_x11_env);
 
     server.add_init_callback([self=self, &server]

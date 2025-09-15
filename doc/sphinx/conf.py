@@ -80,7 +80,7 @@ ogp_image = "https://assets.ubuntu.com/v1/253da317-image-document-ubuntudocs.svg
 
 
 # Product favicon; shown in bookmarks, browser tabs, etc.
-html_favicon = '../../guides/favicon.ico'
+html_favicon = 'favicon.ico'
 
 
 # Dictionary of values to pass into the Sphinx context for all pages:
@@ -116,7 +116,7 @@ html_context = {
     # "sequential_nav": "both",
     "display_contributors": False,
 
-    # Required for feedback button    
+    # Required for feedback button
     'github_issues': 'enabled',
 }
 
@@ -167,8 +167,23 @@ sitemap_show_lastmod = True
 # NOTE: If undefined, set to None, or empty,
 #       the sphinx_reredirects extension will be disabled.
 redirects = {
-    'how-to/how-to-enable-graphics-core22-on-a-device': '../how-to-enable-graphics-for-snaps-on-a-device',
-    'explanation/ok-so-what-is-this-wayland-thing-anyway': '../../how-to/developing-a-wayland-compositor-using-mir'
+    '_static/cppguide': '../../reference/cppguide',
+    'explanation/architecture': '../contributing/explanation/architecture',
+    'explanation/component_reports': '../configuring/explanation/component_reports',
+    'explanation/libraries': '../contributing/explanation/libraries',
+    'explanation/ok-so-what-is-this-wayland-thing-anyway': '../../tutorial/write-your-first-wayland-compositor',
+    'how-to/developing-a-wayland-compositor-using-mir': '../../tutorial/write-your-first-wayland-compositor',
+    'how-to/developing-wayland-extension-protocols-for-mir-servers' : '../how-to/how-to-integrate-a-custom-wayland-protocol',
+    'how-to/getting_involved_in_mir': '../contributing/how-to/getting-involved-in-mir',
+    'how-to/how-to-calibrate-a-touchscreen-device': '../configuring/how-to/calibrate-a-touchscreen-device',
+    'how-to/how-to-enable-graphics-core22-on-a-device': '../contributing/how-to/enable-graphics-for-snaps-on-a-device',
+    'how-to/how-to-enable-remote-desktop': '../configuring/how-to/enable-remote-desktop',
+    'how-to/how-to-enable-screencasting': '../configuring/how-to/enable-screencasting',
+    'how-to/how-to-test-mir-for-a-release': '../contributing/how-to/test-mir-for-a-release',
+    'how-to/how-to-update-symbols-map': '../contributing/how-to/update-symbols-map',
+    'how-to/how-to-use-checkbox-mir': '../contributing/how-to/use-checkbox-mir',
+    'reference/continuous-integration': '../contributing/reference/continuous-integration',
+    'reference/dso_versioning_guide': '../contributing/reference/dso-versioning-guide',
 }
 
 
@@ -179,7 +194,8 @@ redirects = {
 # A regex list of URLs that are ignored by 'make linkcheck'
 linkcheck_ignore = [
     "http://127.0.0.1:8000",
-    "how-to/getting_involved_in_mir"
+    "how-to/getting_involved_in_mir",
+    "https://www.mail-archive.com",
     ]
 
 
@@ -204,7 +220,10 @@ linkcheck_retries = 3
 #
 # NOTE: By default, the following MyST extensions are enabled:
 #       substitution, deflist, linkify
-myst_enable_extensions = set()
+myst_enable_extensions = set((
+    "attrs_block",
+    "attrs_inline",
+))
 
 
 # Custom Sphinx extensions; see
@@ -236,8 +255,6 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.imgmath',
     'sphinx.ext.todo',
-    'breathe',
-    'exhale',
     'sphinx.ext.graphviz',
     'sphinxcontrib.mermaid'
 ]
@@ -288,69 +305,56 @@ if os.path.exists('./reuse/substitutions.yaml'):
 # Add configuration for intersphinx mapping
 
 intersphinx_mapping = {
-    'starter-pack': ('https://canonical-example-product-documentation.readthedocs-hosted.com/en/latest', None)
+    'starter-pack': ('https://canonical-example-product-documentation.readthedocs-hosted.com/en/latest', None),
+    'checkbox': ("https://canonical-checkbox.readthedocs-hosted.com/latest/", None),
+    'server': ('https://documentation.ubuntu.com/server/', None),
+    'snapcraft': ('https://documentation.ubuntu.com/snapcraft/stable/', None),
 }
 
 ############################################################
 ### Additional configuration
 ############################################################
-cmake_build_dir = Path('../../')  # Leave doc/sphinx
-sphinx_dir = cmake_build_dir / 'doc/sphinx'
-
 primary_domain = 'cpp'
-
 highlight_language = 'cpp'
 
-cppguide_dir = Path('../../guides')
-html_extra_path = [
-    str(cppguide_dir / 'favicon.ico'),
-]
 
-# These files are build via the `guides` cmake target
-cppguide_files = [
-    cppguide_dir / 'index.html',
-    cppguide_dir / 'styleguide.css',
-]
+build_api_docs = os.getenv('MIR_BUILD_API_DOCS') == '1'
 
-if all(os.path.exists(file) for file in cppguide_files):
-    html_extra_path.extend(str(file) for file in cppguide_files)
-
-
-def read_doxyfile(path):
-    # Instead of configuring Mir again to get the doxyfile, we assume the user
-    # already has configured it and grab the file from there.
+if build_api_docs:
+    # Only add exhale and breathe if the user ran doxygen (which produces `<build_dir>/doc/sphinx/doxygen_output/xml`)
     try:
-        # Read the doxyfile from the build directory
-        with open(path) as doxyfile_file:
-            return doxyfile_file.read()
-    except IOError as e:
-        raise Exception(f"""IOError: {e.errno}, {e.strerror}
-                        \rHint: Have you configured the cmake project and changed `cmake_build_dir` to point at it?""")
+        doxygen_xml_output_dir = Path(os.environ["MIR_BUILD_DIR"]) / "doc/sphinx/doxygen_output/xml"
+        assert doxygen_xml_output_dir.is_dir(), "Doxygen XML output not found"
 
+        extensions.extend(['exhale', 'breathe'])
 
-doxyfile_contents = read_doxyfile(cmake_build_dir / 'doc/sphinx/Doxyfile')
+        # Setup the exhale extension
+        exhale_args = {
+            # These arguments are required
+            "containmentFolder": './api',
+            "rootFileName": "EXCLUDE",
+            "doxygenStripFromPath": "..",
+            # Heavily encouraged optional argument (see docs)
+            "rootFileTitle": "Mir API",
+            # Suggested optional arguments
+            "createTreeView": False,
+            "exhaleExecutesDoxygen": False,
+            "exhaleUseDoxyfile": False,
+            "contentsDirectives": False,
+        }
 
-# Setup the exhale extension
-exhale_args = {
-    # These arguments are required
-    "containmentFolder": "./api",
-    "rootFileName": "library_root.rst",
-    "doxygenStripFromPath": "..",
-    # Heavily encouraged optional argument (see docs)
-    "rootFileTitle": "Mir API",
-    # Suggested optional arguments
-    "createTreeView": False,
-    "exhaleExecutesDoxygen": True,
-    "exhaleUseDoxyfile": False,
-    "contentsDirectives": False,
-    "exhaleDoxygenStdin": doxyfile_contents
-}
+        # Setup the breathe extension
+        breathe_projects = {"Mir": str(doxygen_xml_output_dir)}
+        breathe_default_project = "Mir"
+        breathe_default_members = ('members', 'undoc-members')
+        breathe_order_parameters_first = True
 
-# Setup the breathe extension
-breathe_projects = {"Mir": "./xml/"}
-breathe_default_project = "Mir"
-breathe_default_members = ('members', 'undoc-members')
-breathe_order_parameters_first = True
+    except (KeyError, AssertionError) as ex:
+        raise Exception("MIR_CMAKE_API_DOCS is set, but couldn't find Doxygen output. "
+                        "Make sure `MIR_BUILD_DIR` points at the CMake build directory "
+                        "and that `doxygen_output` is populated inside\n"
+                        f"{ex}") from ex
+
 
 # Mermaid
 mermaid_version = "10.5.0"

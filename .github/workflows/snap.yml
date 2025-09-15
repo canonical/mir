@@ -3,6 +3,14 @@ name: Snap
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
+    paths-ignore:
+    - '.github/**'
+    - 'debian/**'
+    - 'doc/**'
+    - 'spread**'
+    - 'tests/**'
+    - 'tools/**'
+    - '!.github/workflows/snap.yml'
 
 concurrency:
   group: ${{ github.workflow }}-pr${{ github.event.number }}
@@ -37,7 +45,7 @@ jobs:
 
     steps:
     - name: Check out code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       with:
         fetch-depth: 0  # needed for version determination
 
@@ -88,7 +96,7 @@ jobs:
 
     steps:
     - name: Check out code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       with:
         repository: ${{ matrix.snap }}
         ref: mir-libs-build

@@ -1,17 +1,20 @@
-# How-to guides
-These how-to guides cover the key aspects of working with Mir.
+(how-to-index)=
 
-- [Developing a Compositor](developing-a-wayland-compositor-using-mir.md): build your own, custom compositor with Mir
-- [Developing protocol extensions for Mir](developing-wayland-extension-protocols-for-mir-servers.md): extend your compositor with support for a custom protocol extension
+# How-to guides
+
+These guides cover the key aspects of developing a Wayland compositor with Mir.
+
+## Using the Features of Mir
+
+- [How to integrate a custom Wayland protocol](how-to-integrate-a-custom-wayland-protocol.md)
 - [How to specify start up applications](how-to-specify-startup-apps.md)
 - [How to handle user input](how-to-handle-keyboard-input.md)
 - [Specifying CSD/SSD Preference](specifying-csd-ssd-preference.md)
 
 ```{toctree}
-:hidden:
-
-developing-a-wayland-compositor-using-mir.md
-developing-wayland-extension-protocols-for-mir-servers.md
-how-to-handle-keyboard-input.md
-specifying-csd-ssd-preference.md
+---
+hidden:
+glob:
+---
+*
 ```

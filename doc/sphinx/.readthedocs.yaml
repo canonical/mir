@@ -50,8 +50,8 @@ build:
         exit 183;
       fi
     post_install:
-    - cmake -DMIR_ENABLE_TESTS=NO -DMIR_PLATFORM=x11 .
-    - cmake --build . --target guides
+    - cmake -DBUILD_DOXYGEN=YES -DMIR_ENABLE_TESTS=NO -DMIR_PLATFORM=x11 .
+    - cmake --build . --target doxygen
 
 # Build documentation in the docs/ directory with Sphinx
 sphinx:

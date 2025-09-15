@@ -24,7 +24,6 @@ namespace mir { class Server; }
 namespace miral
 {
 /// Add user configuration options for X11 support.
-/// \remark Since MirAL 2.4
 /// \note From MirAL 4.1, the \c --enable-x11 option requires an argument
 ///       (e.g., \c --enable-x11=true to enable X11 support).
 class X11Support
