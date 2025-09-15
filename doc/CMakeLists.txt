@@ -19,6 +19,8 @@ if(BUILD_DOXYGEN)
   set(MAKEOPTS
     ${MAKEOPTS}
     MIR_BUILD_API_DOCS=1
+    # FIXME: Sphinx gets itself into a bind reading cached API state
+    EXTRA_SPHINXOPTS=-E
   )
 endif()
 

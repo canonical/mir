@@ -1,14 +1,19 @@
 (contributing-explanation-index)=
 
 # Explanation
+
 These pages provide additional detail about contributing to Mir.
 
-- [](mir-architecture): an overview of Mir's architecture for contributors
-- [](mir-libraries): an overview of Mir's libraries and how they depend on one another
+## Architecture
+
+- [](mir-architecture)
+- [](mir-libraries)
+- {ref}`Input Platform <mir-input-platform>`
 
 ```{toctree}
-:hidden:
-:glob:
-
+---
+hidden:
+glob:
+---
 *
 ```

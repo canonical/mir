@@ -109,10 +109,6 @@ execute: |
       echo "APT::Get::Assume-Yes true;" >> /etc/apt/apt.conf.d/99assume-yes
       apt-get update
 
-      export \
-        MIR_SERVER_PLATFORM_DISPLAY_LIBS=mir:virtual \
-        MIR_SERVER_VIRTUAL_OUTPUT=800x600
-
       apt-get install \
         build-essential \
         cmake \
@@ -120,6 +116,7 @@ execute: |
 
       # [doc:first-compositor:debian-dependencies-install]
       apt-get install libmiral-dev mir-graphics-drivers-desktop
+      apt-get install bomber
       # [doc:first-compositor:debian-dependencies-install-end]
 
       cd ${SPREAD_PATH}/doc/sphinx/tutorial/first-wayland-compositor
@@ -130,11 +127,26 @@ execute: |
       # [doc:first-compositor:build-end]
 
       # we expect the timeout to hit
-      timeout 10 bash <<EOF || [ $? -eq 124 ]
+      timeout 10 bash -e <<EOF || [ $? -eq 124 ]
+
+        trap "jobs -p | xargs -r kill" SIGINT SIGTERM EXIT
+
+        export \
+          MIR_SERVER_PLATFORM_DISPLAY_LIBS=mir:virtual \
+          MIR_SERVER_VIRTUAL_OUTPUT=800x600 \
+          PATH=$PATH:/usr/games \
+          QT_QPA_PLATFORM=wayland
 
         # [doc:first-compositor:run]
-        WAYLAND_DISPLAY=wayland-99 ./demo-mir-compositor
+        WAYLAND_DISPLAY=wayland-99 ./demo-mir-compositor &
         # [doc:first-compositor:run-end]
+
+        # wait for the the socket
+        timeout --preserve-status 3 bash -c "while [ ! -S $XDG_RUNTIME_DIR/wayland-99 ]; do sleep 0.1; done"
+
+        # [doc:first-compositor:run-client]
+        WAYLAND_DISPLAY=wayland-99 bomber
+        # [doc:first-compositor:run-client-end]
     EOF
 
     fi

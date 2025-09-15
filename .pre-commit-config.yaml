@@ -24,3 +24,11 @@ repos:
     - mdformat-gfm
     - mdformat-myst
     - setuptools # Necessary until beautysh fix their stuff, see: https://github.com/hukkin/mdformat/issues/442
+
+- repo: https://github.com/jackdewinter/pymarkdown
+  rev: v0.9.32
+  hooks:
+  - id: pymarkdown
+    args:
+    - --config=doc/sphinx/.sphinx/.pymarkdown.json
+    - fix

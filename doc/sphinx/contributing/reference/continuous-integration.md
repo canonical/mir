@@ -1,6 +1,6 @@
 (mir-continuous-integration)=
 
-# Mir Continuous Integration
+# Mir continuous integration
 
 This document outlines the journey of a contribution to Mir through its continuous integration
 pipeline.
@@ -88,8 +88,9 @@ sanitizers:
 
 For each pull request we
 [check that the exported symbols are as expected](https://github.com/canonical/mir/actions/workflows/symbols-check.yml)
+
 - and fail if the ABI changed in any way. It doesn't necessarily mean an ABI break - but new symbols
-need to be tracked.
+  need to be tracked.
 
 ## Coverage measurement
 
@@ -101,6 +102,7 @@ request and `main` builds, and the results are visible on
 
 Merges to `main`, `release/` branches as well as annotated tags are followed by `.deb` package
 builds in mir-team's Launchpad's Personal Package Archives (PPAs):
+
 - [`~mir-team/dev`](https://launchpad.net/~mir-team/+archive/ubuntu/dev) for the latest development
   builds
 - [`~mir-team/rc`](https://launchpad.net/~mir-team/+archive/ubuntu/rc) for release candidate and

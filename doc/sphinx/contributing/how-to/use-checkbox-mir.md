@@ -28,6 +28,7 @@ checkbox-mir 0+git.7970755 from Canonical Certification Team (ce-certification-q
 The `--devmode` flag is required for Checkbox to be able to perform the testing.
 
 You can find out more about it provides through the `snap info` command:
+
 ```text
 $ snap info checkbox-mir
 name:      checkbox-mir
@@ -62,10 +63,11 @@ installed:          0+git.7970755            (49) 17MB devmode
 Depending on the test being ran, there are different requirements for it to start, and the test framework will try and determine if it's possible to run the test, rather than fail it.
 
 Here's a list of the different requirements:
+
 1. [`graphics-test-tools`](https://snapcraft.io/graphics-test-tools) installed,
-2. [`mir-test-tools`](https://snapcraft.io/mir-test-tools) installed,
-3. the graphics userspace provider snaps installed (by default that's [mesa-2404](https://snapcraft.io/mesa-2404) providing `gpu-2404`, depending on which track of the above you install), and the above snaps, and `checkbox-mir` itself connected to them,
-4. to run as a non-privileged user and confirm Mir interactions with the display manager, a local user session needs to be active,
+1. [`mir-test-tools`](https://snapcraft.io/mir-test-tools) installed,
+1. the graphics userspace provider snaps installed (by default that's [mesa-2404](https://snapcraft.io/mesa-2404) providing `gpu-2404`, depending on which track of the above you install), and the above snaps, and `checkbox-mir` itself connected to them,
+1. to run as a non-privileged user and confirm Mir interactions with the display manager, a local user session needs to be active,
 
 ### `checkbox-mir.checkbox-cli`
 
@@ -94,6 +96,7 @@ See [Checkbox documentation](https://canonical-checkbox.readthedocs-hosted.com/l
 ### The graphics-core test plan
 
 The graphics-coreXX test plan attempts to verify the graphics-coreXX enablement by running a handful of utilities verifying a number of aspects of graphics support:
+
 - DRM
 - KMS
 - eglinfo across GBM, Wayland and X
@@ -169,7 +172,7 @@ System Manifest:
  Press (T) to start Testing                               Shortcuts: y/n
 ```
 
-### The Snap test plan
+### The snap test plan
 
 This test plan is primarily intended for the Mir team, allowing us to test updates to the snaps we maintain:
 
@@ -197,6 +200,7 @@ This test plan is primarily intended for the Mir team, allowing us to test updat
 ### Launchers
 
 We provide a couple of launchers for automated runs:
+
 - `checkbox-mir.graphics`: runs the graphics-core test plan
 - `checkbox-mir.mir`: runs the Mir test plan
 
@@ -212,6 +216,6 @@ To do this, install checkbox-mir and dependencies on the target device as you wo
 
 You'll see the same user interface, be able to run the tests as you would locally - but from a distance, without impacting the test results by the environment you run them from etc. The test results will also be brought into your host at the end.
 
----
+______________________________________________________________________
 
 We'd love your feedback, please come to https://github.com/canonical/checkbox-mir and file issues, pull and enhancement requests. This test suite will grow for sure, and we'd love to know if you think things could be better.
