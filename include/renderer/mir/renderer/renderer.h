@@ -41,7 +41,7 @@ public:
     virtual void set_viewport(geometry::Rectangle const& rect) = 0;
     virtual void set_output_transform(glm::mat2 const&) = 0;
     virtual void set_output_filter(MirOutputFilter filter) = 0;
-    virtual auto render(graphics::RenderableList const&) const -> std::unique_ptr<graphics::Framebuffer> = 0;
+    virtual auto render(graphics::RenderableList const&) const -> std::unique_ptr<graphics::Buffer> = 0;
     virtual void suspend() = 0; // called when render() is skipped
 
 protected:

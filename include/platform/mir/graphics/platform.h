@@ -22,6 +22,7 @@
 #include <span>
 #include <gbm.h>
 
+#include "mir/graphics/buffer_basic.h"
 #include "mir/graphics/drm_formats.h"
 #include "mir/module_properties.h"
 #include "mir/module_deleter.h"
@@ -361,7 +362,7 @@ public:
 /// - #mir::graphics::RenderingProvider::FramebufferProvider::buffer_to_framebuffer - Converts a buffer to a framebuffer
 /// - #mir::graphics::DisplaySink::set_next_image - Displays the given
 ///   framebuffer if it's suitable for the display sink.
-class Framebuffer
+class Framebuffer : public BufferBasic
 {
 public:
     Framebuffer() = default;

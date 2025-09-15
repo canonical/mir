@@ -46,7 +46,7 @@ public:
         -> std::unique_ptr<EGLFramebuffer> override;
 
     struct SurfaceState;
-    class Framebuffer : public GenericEGLDisplayAllocator::EGLFramebuffer
+    class Framebuffer : public GenericEGLDisplayAllocator::EGLFramebuffer, public NativeBufferBase
     {
     public:
         /**
@@ -65,6 +65,9 @@ public:
         auto clone_handle() -> std::unique_ptr<GenericEGLDisplayAllocator::EGLFramebuffer> override;
 
         void swap_buffers();
+        
+        auto pixel_format() const -> MirPixelFormat override;
+        auto native_buffer_base() -> NativeBufferBase* override;
     private:
         class EGLState;
         Framebuffer(std::shared_ptr<EGLState const> state, geometry::Size size);

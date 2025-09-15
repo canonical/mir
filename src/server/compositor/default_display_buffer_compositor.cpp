@@ -51,6 +51,26 @@ mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
 {
 }
 
+namespace 
+{
+
+namespace
+{
+template<typename To, typename From>
+auto unique_ptr_cast(std::unique_ptr<From> ptr) -> std::unique_ptr<To>
+{
+    From* unowned_src = ptr.release();
+    if (auto to_src = dynamic_cast<To*>(unowned_src))
+    {
+        return std::unique_ptr<To>{to_src};
+    }
+    delete unowned_src;
+    BOOST_THROW_EXCEPTION((
+        std::bad_cast()));
+}
+}
+}
+
 bool mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& scene_elements)
 {
     if (scene_elements.size() == 0 && !completed_first_render)
@@ -128,7 +148,9 @@ bool mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
         renderer->set_viewport(view_area);
         renderer->set_output_filter(output_filter->filter());
 
-        display_sink.set_next_image(renderer->render(renderable_list));
+        auto buf = renderer->render(renderable_list);
+        if(auto framebuffer = unique_ptr_cast<mg::Framebuffer>(std::move(buf)))
+            display_sink.set_next_image(std::move(framebuffer));
 
         report->renderables_in_frame(this, renderable_list);
         report->rendered_frame(this);

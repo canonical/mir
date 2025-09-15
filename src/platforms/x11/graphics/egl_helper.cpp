@@ -42,6 +42,22 @@ public:
         eglDestroyContext(dpy, ctx);
         eglDestroySurface(dpy, surf);
     }
+
+    auto pixel_format() const -> MirPixelFormat
+    {
+        EGLint texture_format = -1;
+        eglQuerySurface(dpy, surf, EGL_TEXTURE_FORMAT, &texture_format);
+
+        switch (texture_format)
+        {
+        case EGL_TEXTURE_RGB:
+            return mir_pixel_format_rgb_888;
+        case EGL_TEXTURE_RGBA:
+            return mir_pixel_format_argb_8888;
+        default:
+            return mir_pixel_format_invalid;
+        }
+    }
     
     EGLDisplay const dpy;
     EGLContext const ctx;
@@ -86,6 +102,16 @@ void mgxh::Framebuffer::swap_buffers()
     {
         BOOST_THROW_EXCEPTION((mg::egl_error("eglSwapBuffers failed")));
     }
+}
+
+auto mgxh::Framebuffer::pixel_format() const -> MirPixelFormat
+{
+    return state->pixel_format();
+}
+
+auto mgxh::Framebuffer::native_buffer_base() -> NativeBufferBase*
+{
+    return this;
 }
 
 auto mgxh::Framebuffer::clone_handle() -> std::unique_ptr<mg::GenericEGLDisplayAllocator::EGLFramebuffer>

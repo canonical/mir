@@ -362,11 +362,12 @@ auto mga::DmaBufDisplayAllocator::framebuffer_for(std::shared_ptr<DMABufBuffer> 
         return {};
     }
 
-    struct AtomicKmsFbHandle : public mg::FBHandle
+    struct AtomicKmsFbHandle : public mg::FBHandle, public mg::NativeBufferBase
     {
-        AtomicKmsFbHandle(std::shared_ptr<uint32_t> fb_handle, geometry::Size size) :
+        AtomicKmsFbHandle(std::shared_ptr<uint32_t> fb_handle, geometry::Size size, mg::DRMFormat format) :
             kms_fb_id{fb_handle},
-            size_{size}
+            size_{size},
+            format{format}
         {
         }
 
@@ -380,14 +381,25 @@ auto mga::DmaBufDisplayAllocator::framebuffer_for(std::shared_ptr<DMABufBuffer> 
             return *kms_fb_id;
         }
 
+        auto pixel_format() const -> MirPixelFormat override
+        {
+            return format.as_mir_format().value_or(mir_pixel_format_invalid);
+        }
+
+        auto native_buffer_base() -> NativeBufferBase* override
+        {
+            return this;
+        }
+
     private:
         std::shared_ptr<uint32_t> kms_fb_id;
         geometry::Size size_;
+        mg::DRMFormat const format;
     };
 
     buffer->on_consumed();
 
-    return std::make_unique<AtomicKmsFbHandle>(fb_id, buffer->size());
+    return std::make_unique<AtomicKmsFbHandle>(fb_id, buffer->size(), buffer->format());
 }
 
 auto mga::DisplaySink::maybe_create_allocator(DisplayAllocator::Tag const& type_tag)

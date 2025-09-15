@@ -24,7 +24,7 @@
 
 namespace mir::graphics
 {
-class CPUAddressableFB : public FBHandle, public CPUAddressableDisplayAllocator::MappableFB
+class CPUAddressableFB : public FBHandle, public CPUAddressableDisplayAllocator::MappableFB, public NativeBufferBase
 {
 public:
     CPUAddressableFB(
@@ -41,6 +41,9 @@ public:
     auto size() const -> geometry::Size override; 
 
     operator uint32_t() const override;
+
+    auto pixel_format() const -> MirPixelFormat override;
+    auto native_buffer_base() -> NativeBufferBase* override;
     
     CPUAddressableFB(CPUAddressableFB const&) = delete;
     CPUAddressableFB& operator=(CPUAddressableFB const&) = delete;
