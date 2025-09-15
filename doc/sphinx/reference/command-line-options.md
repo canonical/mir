@@ -65,9 +65,10 @@ Enable visual feedback of touch events. Useful for screencasting.
 ### `--cursor arg (=auto)`
 
 Cursor type:
- - `auto`: use hardware if available, or fallback to software.
- - `null`: cursor disabled.
- - `software`: always use software cursor.
+
+- `auto`: use hardware if available, or fallback to software.
+- `null`: cursor disabled.
+- `software`: always use software cursor.
 
 ### `--enable-key-repeat arg (=1)`
 
@@ -92,10 +93,11 @@ Enable debugging information. Useful when developing Mir servers.
 ### `--console-provider arg (=auto)`
 
 Method used to handle console-related tasks (device handling, VT switching, etc):
- - `logind`: use logind.
- - `vt`: use the Linux VT subsystem. Requires root.
- - `none`: support no console-related tasks. Useful for nested platforms which do not need raw device access and which don&apos;t have a VT concept.
- - `auto`: detect the appropriate provider.
+
+- `logind`: use logind.
+- `vt`: use the Linux VT subsystem. Requires root.
+- `none`: support no console-related tasks. Useful for nested platforms which do not need raw device access and which don't have a VT concept.
+- `auto`: detect the appropriate provider.
 
 ### `--vt arg (=0)`
 
@@ -103,7 +105,7 @@ VT to run on or 0 to use current. Only used when `--console-provider=vt`.
 
 ### `--vt-switching arg (=1)`
 
-Enable VT switching on Ctrl+Alt+F*. Only used when `--console-provider=vt|logind`.
+Enable VT switching on Ctrl+Alt+F\*. Only used when `--console-provider=vt|logind`.
 
 ### `--env-hacks arg`
 
@@ -112,14 +114,16 @@ Colon separated list of environment variable settings.
 ### `--mouse-handedness arg`
 
 Mouse laterality:
- - `right`: left button is primary.
- - `left`: right button is primary.
+
+- `right`: left button is primary.
+- `left`: right button is primary.
 
 ### `--mouse-cursor-acceleration arg`
 
 Acceleration profile for mice and trackballs:
- - `none`: no acceleration.
- - `adaptive`: cursor is accelerated.
+
+- `none`: no acceleration.
+- `adaptive`: cursor is accelerated.
 
 ### `--mouse-cursor-acceleration-bias arg`
 
@@ -152,8 +156,9 @@ Enable or disable tap-to-click on this device. If enabled 1, 2, and 3 finger tap
 ### `--touchpad-cursor-acceleration arg`
 
 Acceleration profile for touchpads:
- - `none`: no acceleration.
- - `adaptive`: cursor accelerates.
+
+- `none`: no acceleration.
+- `adaptive`: cursor accelerates.
 
 ### `--touchpad-cursor-acceleration-bias arg`
 
@@ -174,16 +179,18 @@ Touchpad vertical scroll scaling factor. Use negative values for natural scrolli
 ### `--touchpad-scroll-mode arg`
 
 Scroll mode for touchpads. Generates scroll events when:
- - `edge`: single finger moves on right or bottom edges of touchpad.
- - `two-finger`: two fingers move horizontally or vertically.
- - `button-down`: mouse button held down.
+
+- `edge`: single finger moves on right or bottom edges of touchpad.
+- `two-finger`: two fingers move horizontally or vertically.
+- `button-down`: mouse button held down.
 
 ### `--touchpad-click-mode arg`
 
 Click mode for touchpad. Left, middle and right button click events generated when:
- - `none`: no events generated.
- - `area`: single finger tap on left, middle or right area.
- - `clickfinger`: one, two or three fingers present when touchpad pushed down.
+
+- `none`: no events generated.
+- `area`: single finger tap on left, middle or right area.
+- `clickfinger`: one, two or three fingers present when touchpad pushed down.
 
 ### `--touchpad-middle-mouse-button-emulation arg`
 
@@ -204,31 +211,32 @@ Colon separated cursor theme list, e.g. default:DMZ-Black.
 ### `--wayland-extensions arg`
 
 Colon separated list of Wayland extensions to enable. If used, default extensions will NOT be enabled unless specified. Default extensions:
- - mir_shell_v1
- - wl_shell
- - wp_fractional_scale_manager_v1
- - xdg_activation_v1
- - xdg_wm_base
- - zwp_text_input_manager_v1
- - zwp_text_input_manager_v2
- - zwp_text_input_manager_v3
- - zxdg_decoration_manager_v1
- - zxdg_output_manager_v1
- - zxdg_shell_v6
-Additional supported extensions:
- - ext_session_lock_manager_v1
- - zwlr_foreign_toplevel_manager_v1
- - zwlr_layer_shell_v1
- - zwlr_screencopy_manager_v1
- - zwlr_virtual_pointer_manager_v1
- - zwp_idle_inhibit_manager_v1
- - zwp_input_method_manager_v2
- - zwp_input_method_v1
- - zwp_input_panel_v1
- - zwp_pointer_constraints_v1
- - zwp_primary_selection_device_manager_v1
- - zwp_relative_pointer_manager_v1
- - zwp_virtual_keyboard_manager_v1
+
+- mir_shell_v1
+- wl_shell
+- wp_fractional_scale_manager_v1
+- xdg_activation_v1
+- xdg_wm_base
+- zwp_text_input_manager_v1
+- zwp_text_input_manager_v2
+- zwp_text_input_manager_v3
+- zxdg_decoration_manager_v1
+- zxdg_output_manager_v1
+- zxdg_shell_v6
+  Additional supported extensions:
+- ext_session_lock_manager_v1
+- zwlr_foreign_toplevel_manager_v1
+- zwlr_layer_shell_v1
+- zwlr_screencopy_manager_v1
+- zwlr_virtual_pointer_manager_v1
+- zwp_idle_inhibit_manager_v1
+- zwp_input_method_manager_v2
+- zwp_input_method_v1
+- zwp_input_panel_v1
+- zwp_pointer_constraints_v1
+- zwp_primary_selection_device_manager_v1
+- zwp_relative_pointer_manager_v1
+- zwp_virtual_keyboard_manager_v1
 
 ### `--add-wayland-extensions arg`
 
@@ -269,10 +277,11 @@ Log trace message
 ### `--display-config arg (=sidebyside)`
 
 Display configuration:
- - `clone`: all screens show the same content.
- - `sidebyside`: each screen placed to the right of the previous one.
- - `single`: only the first screen used.
- - `static=filename`: use layout specified in &lt;filename&gt;.
+
+- `clone`: all screens show the same content.
+- `sidebyside`: each screen placed to the right of the previous one.
+- `single`: only the first screen used.
+- `static=filename`: use layout specified in \<filename>.
 
 ### `--translucent arg (=off)`
 
@@ -399,5 +408,3 @@ Title of the window containing the Mir output.
 ### `--virtual-output arg`
 
 Colon separated list of outputs to use. Dimensions are in the form `WIDTHxHEIGHT`, e.g. `1920x1080:3840x2160`.
-
-
