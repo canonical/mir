@@ -356,8 +356,6 @@ public:
 
 /// A buffer that is directly displayable on an output.
 ///
-/// Framebuffers can come from individual buffers, or via compositing multiple
-/// buffers into one framebuffer for display.
 ///
 /// \sa
 /// - #mir::graphics::FramebufferProvider::buffer_to_framebuffer - Converts a
