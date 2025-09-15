@@ -15,7 +15,7 @@ option(
 # Modifications to `MAKEOPTS` have to be made before targets are generated
 # below.
 if(BUILD_DOXYGEN)
-  find_package(Doxygen 1.8.0 REQUIRED COMPONENTS dot)
+  find_package(Doxygen 1.9.8 REQUIRED COMPONENTS dot)
   set(MAKEOPTS
     ${MAKEOPTS}
     MIR_BUILD_API_DOCS=1
