@@ -259,6 +259,59 @@ public:
             }
         }
 
+        void touchpad_acceleration(live_config::Key const& key, std::optional<std::string_view> opt_val)
+        {
+            if (opt_val.has_value())
+            {
+                auto val = *opt_val;
+
+                if (val == "none")
+                {
+                    std::lock_guard lock{config_mutex};
+                    touchpad.acceleration(mir_pointer_acceleration_none);
+                }
+                else if (val == "adaptive")
+                {
+                    std::lock_guard lock{config_mutex};
+                    touchpad.acceleration(mir_pointer_acceleration_adaptive);
+                }
+                else
+                {
+                    mir::log_warning(
+                        "Config key '%s' has invalid string value: %s",
+                        key.to_string().c_str(),
+                        std::format("{}",val).c_str());
+                }
+            }
+        };
+
+        void touchpad_acceleration_bias(live_config::Key const&, std::optional<float> opt_val)
+        {
+            if (opt_val.has_value())
+            {
+                std::lock_guard lock{config_mutex};
+                touchpad.acceleration_bias(std::clamp(*opt_val, -1.0f, 1.0f));
+            }
+        };
+
+        void touchpad_vertical_scroll_speed(live_config::Key const&, std::optional<float> opt_val)
+        {
+            if (opt_val.has_value())
+            {
+                std::lock_guard lock{config_mutex};
+                touchpad.vscroll_speed(*opt_val);
+            }
+        }
+
+        void touchpad_horizontal_scroll_speed(live_config::Key const&, std::optional<float> opt_val)
+        {
+            if (opt_val.has_value())
+            {
+                std::lock_guard lock{config_mutex};
+                touchpad.vscroll_speed(*opt_val);
+            }
+        }
+
         std::mutex config_mutex;
         Mouse mouse;
         Touchpad touchpad;
@@ -391,6 +444,26 @@ miral::InputConfiguration::InputConfiguration(live_config::Store& config_store) 
         live_config::Key{"touchpad", "disable_with_external_mouse"},
         "Disable touchpad if an external pointer device is plugged in [true, false]",
         [self=self](auto... args) { self->config.touchpad_disable_with_external_mouse(args...); });
+
+    config_store.add_string_attribute(
+        live_config::Key{"touchpad", "acceleration"},
+        "Acceleration profile for touchpad [none, adaptive]",
+        [self=self](auto... args) { self->config.touchpad_acceleration(args...); });
+
+    config_store.add_float_attribute(
+        live_config::Key{"touchpad", "acceleration_bias"},
+        "Acceleration speed of touchpad within a range of [-1.0, 1.0]",
+        [self=self](auto... args) { self->config.touchpad_acceleration_bias(args...); });
+
+    config_store.add_float_attribute(
+        {"touchpad", "vertical_scroll_speed"},
+        "Scroll speed scaling factor for touchpad. Use negative values for natural scrolling",
+        [self=self](auto... args) { self->config.touchpad_vertical_scroll_speed(args...); });
+
+    config_store.add_float_attribute(
+        {"touchpad", "horizontal_scroll_speed"},
+        "Scroll speed scaling factor for touchpad. Use negative values for natural scrolling",
+        [self=self](auto... args) { self->config.touchpad_horizontal_scroll_speed(args...); });
 
     config_store.on_done([this]
         {
