@@ -30,7 +30,6 @@ using namespace mir::geometry;
 namespace
 {
 char const* const display_config_opt = "display-config";
-char const* const display_config_descr = ;
 
 char const* const clone_opt_val = "clone";
 char const* const sidebyside_opt_val = "sidebyside";
