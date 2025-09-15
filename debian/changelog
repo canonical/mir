@@ -4,10 +4,17 @@ mir (2.22.1) UNRELEASED; urgency=medium
     - Bugs fixed:
       . debian: drop extra symbol (#4153)
       . Fix some memory leaks (#4158)
-      . Fix use of std::clamp (#4161)
-      . Fix wlr-screencopy (#4162)
+      . Changing cursor_scale causes weird cursors and crashes (#4157)
+      . on Ubuntu 25.10 wf-recorder y-inverts some frames (#4160)
+      . use-pkgconfig-better (#4194)
+      . Check for WL_bind_wayland_display when probing eglstream-kms support
+        (#4147)
+        platform (#4155)
+      . Platform-specific options not passed through if platforms not probed
+        (#4130)
+      . mircommon: Add xkbcommon to pkgconfig dependency (#4240)
 
- -- Michał Sawicz <michal.sawicz@canonical.com>  Thu, 28 Aug 2025 18:05:06 +0200
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Mon, 15 Sep 2025 16:50:56 +0200
 
 mir (2.22.0) UNRELEASED; urgency=medium
 
