@@ -171,7 +171,7 @@ public:
      * \returns  A FramebufferProvider. [Framebuffer](#Framebuffer)s returned from
      *           this FramebufferProvider will be displayable on *sink*.
      *           In particular, [sink.set_next_image(fb)](DisplaySink::set_next_image()) is
-     *           guaranteed to succeed if *fb* has been acquired via this FramebufferProvider.           
+     *           guaranteed to succeed if *fb* has been acquired via this FramebufferProvider.
      */
     virtual auto make_framebuffer_provider(DisplaySink& sink)
         -> std::unique_ptr<FramebufferProvider> = 0;
@@ -354,15 +354,20 @@ public:
     virtual ~DisplayAllocator() = default;
 };
 
+/// A buffer that is directly displayable on an output.
+///
+///
+/// \sa
+/// - #mir::graphics::RenderingProvider::FramebufferProvider::buffer_to_framebuffer - Converts a buffer to a framebuffer
+/// - #mir::graphics::DisplaySink::set_next_image - Displays the given
+///   framebuffer if it's suitable for the display sink.
 class Framebuffer
 {
 public:
     Framebuffer() = default;
     virtual ~Framebuffer() = default;
 
-    /**
-     * The size of this framebuffer, in pixels
-     */
+    /// \returns The size of this framebuffer, in pixels
     virtual auto size() const -> geometry::Size = 0;
 };
 
