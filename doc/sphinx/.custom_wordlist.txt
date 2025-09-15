@@ -22,6 +22,7 @@ chroot
 ci
 CI
 classDiagram
+clickfinger
 cmake
 CMake
 codebase
@@ -181,6 +182,7 @@ SceneChangeNotifiers
 screencast
 screencasting
 Screencasting
+sidebyside
 SimulatedSecondaryClick
 sizeof
 SlowKeys
@@ -207,6 +209,7 @@ toolchain
 toolchains
 toolkits
 Tooltip
+touchpad
 tracepoint
 tracepoints
 TSan
@@ -235,6 +238,7 @@ webkit
 WindowManagementPolicy
 WindowManagerTools
 WL
+wl_shell
 wlcs
 WLCS
 wlr
@@ -243,6 +247,7 @@ workspaces
 X11
 XCB
 xdg
+xdg_wm_base
 xfce
 Xlib
 Xwayland
