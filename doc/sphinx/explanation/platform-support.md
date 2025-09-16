@@ -1,6 +1,6 @@
 (exp-mir-graphics-support)=
 
-# Mir graphics support
+# Platform support
 
 This document describes the requirements for running Mir.
 

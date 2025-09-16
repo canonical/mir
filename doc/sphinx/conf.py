@@ -184,6 +184,7 @@ redirects = {
     'how-to/how-to-use-checkbox-mir': '../contributing/how-to/use-checkbox-mir',
     'reference/continuous-integration': '../contributing/reference/continuous-integration',
     'reference/dso_versioning_guide': '../contributing/reference/dso-versioning-guide',
+    'explanation/mir-graphics-support': 'explanation/platform-support',
 }
 
 
@@ -321,9 +322,9 @@ highlight_language = 'cpp'
 build_api_docs = os.getenv('MIR_BUILD_API_DOCS') == '1'
 
 if build_api_docs:
-    # Only add exhale and breathe if the user ran doxygen (which produces `<build_dir>/doc/sphinx/doxygen_output/xml`)
+    # Only add exhale and breathe if the user ran doxygen (which produces `<build_dir>/doc/doxygen_output/xml`)
     try:
-        doxygen_xml_output_dir = Path(os.environ["MIR_BUILD_DIR"]) / "doc/sphinx/doxygen_output/xml"
+        doxygen_xml_output_dir = Path(os.environ["MIR_BUILD_DIR"]) / "doc/doxygen_output/xml"
         assert doxygen_xml_output_dir.is_dir(), "Doxygen XML output not found"
 
         extensions.extend(['exhale', 'breathe'])

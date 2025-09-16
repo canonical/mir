@@ -4,20 +4,22 @@ variants: [amd64, clang]
 kill-timeout: 60m
 
 execute: |
+    echo "defaultyes=True" >> /etc/dnf/dnf.conf
+
     if [[ "${SPREAD_SYSTEM}" == "fedora-rawhide" ]]; then
-      dnf --refresh --assumeyes upgrade
-      dnf --assumeyes install fedora-repos-rawhide
-      dnf --refresh --assumeyes --enablerepo=rawhide distro-sync
+      dnf --refresh upgrade
+      dnf install fedora-repos-rawhide
+      dnf --refresh --enablerepo=rawhide distro-sync
     fi
 
-    dnf --assumeyes install @buildsys-build ccache 'dnf5-command(builddep)'
+    dnf install @buildsys-build ccache 'dnf5-command(builddep)'
     RPMBUILD_EXTRA_OPTIONS=""
     if [ "${CLANG}" -eq 1 ]; then
-        dnf --assumeyes install clang
+        dnf install clang
         RPMBUILD_EXTRA_OPTIONS="--with clang"
     fi
 
-    dnf --assumeyes builddep --allowerasing ${SPREAD_PATH}/rpm/mir.spec
+    dnf builddep --allowerasing ${SPREAD_PATH}/rpm/mir.spec
 
     pushd ${SPREAD_PATH}
     rpmbuild --build-in-place \
@@ -32,7 +34,7 @@ execute: |
     ccache --show-stats --zero-stats > ${CCACHE_DIR}/ccache.stats
 
     # build the local repository for end-to-end tests
-    dnf --assumeyes install createrepo
+    dnf install createrepo
     createrepo /root/rpmbuild
     dnf config-manager addrepo \
        --id=mirpr \
@@ -42,7 +44,6 @@ execute: |
        --set=enabled=1 \
        --save-filename=mirpr.repo
     dnf update
-    echo "defaultyes=True" >> /etc/dnf/dnf.conf
 
     # [doc:first-compositor:fedora-dependencies-install]
     dnf install 'pkgconfig(miral)'
