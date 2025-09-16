@@ -207,56 +207,38 @@ public:
 
         void pointer_acceleration_bias(live_config::Key const&, std::optional<float> opt_val)
         {
-            if (opt_val.has_value())
-            {
-                std::lock_guard lock{config_mutex};
-                mouse.acceleration_bias(std::clamp(*opt_val, -1.0f, 1.0f));
-            }
-        };
+            std::lock_guard lock{config_mutex};
+            mouse.acceleration_bias(opt_val.transform([](auto val) { return std::clamp(val, -1.0f, 1.0f); }));
+        }
 
         void pointer_vertical_scroll_speed(live_config::Key const&, std::optional<float> opt_val)
         {
-            if (opt_val.has_value())
-            {
-                std::lock_guard lock{config_mutex};
-                mouse.vscroll_speed(*opt_val);
-            }
+            std::lock_guard lock{config_mutex};
+            mouse.vscroll_speed(opt_val);
         }
 
         void pointer_horizontal_scroll_speed(live_config::Key const&, std::optional<float> opt_val)
         {
-            if (opt_val.has_value())
-            {
-                std::lock_guard lock{config_mutex};
-                mouse.vscroll_speed(*opt_val);
-            }
+            std::lock_guard lock{config_mutex};
+            mouse.vscroll_speed(opt_val);
         }
 
         void touchpad_tap_to_click(live_config::Key const&, std::optional<bool> opt_val)
         {
-            if (opt_val.has_value())
-            {
-                std::lock_guard lock{config_mutex};
-                touchpad.tap_to_click(*opt_val);
-            }
+            std::lock_guard lock{config_mutex};
+            touchpad.tap_to_click(opt_val);
         }
 
         void touchpad_disable_while_typing(live_config::Key const&, std::optional<bool> opt_val)
         {
-            if (opt_val.has_value())
-            {
-                std::lock_guard lock{config_mutex};
-                touchpad.disable_while_typing(*opt_val);
-            }
+            std::lock_guard lock{config_mutex};
+            touchpad.disable_while_typing(opt_val);
         }
 
         void touchpad_disable_with_external_mouse(live_config::Key const&, std::optional<bool> opt_val)
         {
-            if (opt_val.has_value())
-            {
-                std::lock_guard lock{config_mutex};
-                touchpad.disable_with_external_mouse(*opt_val);
-            }
+            std::lock_guard lock{config_mutex};
+            touchpad.disable_with_external_mouse(opt_val);
         }
 
         void touchpad_acceleration(live_config::Key const& key, std::optional<std::string_view> opt_val)
@@ -287,29 +269,20 @@ public:
 
         void touchpad_acceleration_bias(live_config::Key const&, std::optional<float> opt_val)
         {
-            if (opt_val.has_value())
-            {
-                std::lock_guard lock{config_mutex};
-                touchpad.acceleration_bias(std::clamp(*opt_val, -1.0f, 1.0f));
-            }
+            std::lock_guard lock{config_mutex};
+            touchpad.acceleration_bias(opt_val.transform([](auto val) { return std::clamp(val, -1.0f, 1.0f); }));
         };
 
         void touchpad_vertical_scroll_speed(live_config::Key const&, std::optional<float> opt_val)
         {
-            if (opt_val.has_value())
-            {
-                std::lock_guard lock{config_mutex};
-                touchpad.vscroll_speed(*opt_val);
-            }
+            std::lock_guard lock{config_mutex};
+            touchpad.vscroll_speed(opt_val);
         }
 
         void touchpad_horizontal_scroll_speed(live_config::Key const&, std::optional<float> opt_val)
         {
-            if (opt_val.has_value())
-            {
-                std::lock_guard lock{config_mutex};
-                touchpad.vscroll_speed(*opt_val);
-            }
+            std::lock_guard lock{config_mutex};
+            touchpad.vscroll_speed(opt_val);
         }
 
         void touchpad_click_mode(live_config::Key const& key, std::optional<std::string_view> opt_val)
@@ -344,11 +317,8 @@ public:
 
         void touchpad_middle_mouse_button_emulation(live_config::Key const&, std::optional<bool> opt_val)
         {
-            if (opt_val)
-            {
-                std::lock_guard lock{config_mutex};
-                touchpad.middle_mouse_button_emulation(*opt_val);
-            }
+            std::lock_guard lock{config_mutex};
+            touchpad.middle_mouse_button_emulation(opt_val);
         }
 
         std::mutex config_mutex;
