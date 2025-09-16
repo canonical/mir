@@ -103,6 +103,240 @@ public:
             keyboard{keyboard}
         {}
 
+        void pointer_handedness(live_config::Key const& key, std::optional<std::string_view> val)
+        {
+            if (val)
+            {
+                std::lock_guard lock{config_mutex};
+                auto const& value = *val;
+                if (value == "right")
+                    mouse.handedness(mir_pointer_handedness_right);
+                else if (value == "left")
+                    mouse.handedness(mir_pointer_handedness_left);
+                else
+                    mir::log_warning(
+                        "Config key '%s' has invalid value: %s",
+                        key.to_string().c_str(),
+                        std::format("{}",*val).c_str());
+            }
+        }
+
+        void touchpad_scroll_mode(live_config::Key const& key, std::optional<std::string_view> val)
+        {
+            if (val)
+            {
+                std::lock_guard lock{config_mutex};
+                auto const& value = *val;
+                if (value == "none")
+                    touchpad.scroll_mode(mir_touchpad_scroll_mode_none);
+                else if (value == "two_finger_scroll")
+                    touchpad.scroll_mode(mir_touchpad_scroll_mode_two_finger_scroll);
+                else if (value == "edge_scroll")
+                    touchpad.scroll_mode(mir_touchpad_scroll_mode_edge_scroll);
+                else if (value == "button_down_scroll")
+                    touchpad.scroll_mode(mir_touchpad_scroll_mode_button_down_scroll);
+                else
+                    mir::log_warning(
+                        "Config key '%s' has invalid value: %s",
+                        key.to_string().c_str(),
+                        std::format("{}",*val).c_str());
+            }
+        }
+
+        void keyboard_repeat_rate(live_config::Key const& key, std::optional<int> val)
+        {
+            if (val)
+            {
+                if (val >= 0)
+                {
+                    std::lock_guard lock{config_mutex};
+                    keyboard.set_repeat_rate(*val);
+                }
+                else
+                {
+                    mir::log_warning(
+                        "Config value %s does not support negative values. Ignoring the supplied value (%d)...",
+                        key.to_string().c_str(), *val);
+                }
+            }
+        }
+
+        void keyboard_repeat_delay(live_config::Key const& key, std::optional<int> val)
+        {
+            if (val)
+            {
+                if (val >= 0)
+                {
+                    std::lock_guard lock{config_mutex};
+                    keyboard.set_repeat_delay(*val);
+                }
+                else
+                {
+                    mir::log_warning(
+                        "Config value %s does not support negative values. Ignoring the supplied value (%d)...",
+                        key.to_string().c_str(), *val);
+                }
+            }
+        }
+
+        void pointer_acceleration(live_config::Key const& key, std::optional<std::string_view> opt_val)
+        {
+            if (opt_val.has_value())
+            {
+                auto val = *opt_val;
+
+                if (val == "none")
+                {
+                    std::lock_guard lock{config_mutex};
+                    mouse.acceleration(mir_pointer_acceleration_none);
+                }
+                else if (val == "adaptive")
+                {
+                    std::lock_guard lock{config_mutex};
+                    mouse.acceleration(mir_pointer_acceleration_adaptive);
+                }
+                else
+                {
+                    mir::log_warning(
+                        "Config key '%s' has invalid value: %s",
+                        key.to_string().c_str(),
+                        std::format("{}",val).c_str());
+                }
+            }
+        };
+
+        void pointer_acceleration_bias(live_config::Key const& key, std::optional<float> opt_val)
+        {
+            std::lock_guard lock{config_mutex};
+            mouse.acceleration_bias(clamp_plus_minus_1(key, opt_val));
+        }
+
+        void pointer_vertical_scroll_speed(live_config::Key const&, std::optional<float> opt_val)
+        {
+            std::lock_guard lock{config_mutex};
+            mouse.vscroll_speed(opt_val);
+        }
+
+        void pointer_horizontal_scroll_speed(live_config::Key const&, std::optional<float> opt_val)
+        {
+            std::lock_guard lock{config_mutex};
+            mouse.vscroll_speed(opt_val);
+        }
+
+        void touchpad_tap_to_click(live_config::Key const&, std::optional<bool> opt_val)
+        {
+            std::lock_guard lock{config_mutex};
+            touchpad.tap_to_click(opt_val);
+        }
+
+        void touchpad_disable_while_typing(live_config::Key const&, std::optional<bool> opt_val)
+        {
+            std::lock_guard lock{config_mutex};
+            touchpad.disable_while_typing(opt_val);
+        }
+
+        void touchpad_disable_with_external_mouse(live_config::Key const&, std::optional<bool> opt_val)
+        {
+            std::lock_guard lock{config_mutex};
+            touchpad.disable_with_external_mouse(opt_val);
+        }
+
+        void touchpad_acceleration(live_config::Key const& key, std::optional<std::string_view> opt_val)
+        {
+            if (opt_val.has_value())
+            {
+                auto val = *opt_val;
+
+                if (val == "none")
+                {
+                    std::lock_guard lock{config_mutex};
+                    touchpad.acceleration(mir_pointer_acceleration_none);
+                }
+                else if (val == "adaptive")
+                {
+                    std::lock_guard lock{config_mutex};
+                    touchpad.acceleration(mir_pointer_acceleration_adaptive);
+                }
+                else
+                {
+                    mir::log_warning(
+                        "Config key '%s' has invalid value: %s",
+                        key.to_string().c_str(),
+                        std::format("{}",val).c_str());
+                }
+            }
+        };
+
+        void touchpad_acceleration_bias(live_config::Key const& key, std::optional<float> opt_val)
+        {
+            std::lock_guard lock{config_mutex};
+            touchpad.acceleration_bias(clamp_plus_minus_1(key, opt_val));
+        };
+
+        void touchpad_vertical_scroll_speed(live_config::Key const&, std::optional<float> opt_val)
+        {
+            std::lock_guard lock{config_mutex};
+            touchpad.vscroll_speed(opt_val);
+        }
+
+        void touchpad_horizontal_scroll_speed(live_config::Key const&, std::optional<float> opt_val)
+        {
+            std::lock_guard lock{config_mutex};
+            touchpad.vscroll_speed(opt_val);
+        }
+
+        void touchpad_click_mode(live_config::Key const& key, std::optional<std::string_view> opt_val)
+        {
+            if (opt_val)
+            {
+                auto val = *opt_val;
+                if (val == "none")
+                {
+                    std::lock_guard lock{config_mutex};
+                    touchpad.click_mode(mir_touchpad_click_mode_none);
+                }
+                else if (val == "area")
+                {
+                    std::lock_guard lock{config_mutex};
+                    touchpad.click_mode(mir_touchpad_click_mode_finger_count);
+                }
+                else if (val == "clickfinger")
+                {
+                    std::lock_guard lock{config_mutex};
+                    touchpad.click_mode(mir_touchpad_click_mode_area_to_click);
+                }
+                else
+                {
+                    mir::log_warning(
+                        "Config key '%s' has invalid string value: %s",
+                        key.to_string().c_str(),
+                        std::format("{}",val).c_str());
+                }
+            }
+        }
+
+        void touchpad_middle_mouse_button_emulation(live_config::Key const&, std::optional<bool> opt_val)
+        {
+            std::lock_guard lock{config_mutex};
+            touchpad.middle_mouse_button_emulation(opt_val);
+        }
+
+        auto clamp_plus_minus_1(live_config::Key const& key, std::optional<float> opt_val)-> std::optional<float>
+        {
+            auto const clamped_value =
+                opt_val.transform([](auto val) { return std::clamp(val, -1.0f, 1.0f); });
+
+            if (clamped_value != opt_val)
+            {
+                mir::log_warning("Config key '%s' value %f clamped to %f",
+                    key.to_string().c_str(),
+                    opt_val.value(),
+                    clamped_value.value());
+            }
+
+            return clamped_value;
+        }
+
         std::mutex config_mutex;
         Mouse mouse;
         Touchpad touchpad;
@@ -181,101 +415,98 @@ miral::InputConfiguration::InputConfiguration() :
 
 miral::InputConfiguration::InputConfiguration(live_config::Store& config_store) : InputConfiguration{}
 {
-        config_store.add_string_attribute(
-            {"pointer", "handedness"},
-            "Pointer handedness [{right, left}]",
-                [this](live_config::Key const& key, std::optional<std::string_view> val)
-                {
-                    if (val)
-                    {
-                        std::lock_guard lock{self->config.config_mutex};
-                        auto const& value = *val;
-                        if (value == "right")
-                            self->config.mouse.handedness(mir_pointer_handedness_right);
-                        else if (value == "left")
-                            self->config.mouse.handedness(mir_pointer_handedness_left);
-                        else
-                            mir::log_warning(
-                                "Config key '%s' has invalid integer value: %s",
-                                key.to_string().c_str(),
-                                std::format("{}",*val).c_str());
-                    }
-                });
+    config_store.add_int_attribute(
+        {"keyboard", "repeat_rate"},
+        "Number of milliseconds between generated key repeat events",
+        [self=self](auto... args) { self->config.keyboard_repeat_rate(args...); });
 
-        config_store.add_string_attribute(
-            {"touchpad", "scroll_mode"},
-            "Touchpad scroll mode [{none, two_finger_scroll, edge_scroll, button_down_scroll}]",
-            [this](live_config::Key const& key, std::optional<std::string_view> val)
-            {
-                if (val)
-                {
-                    std::lock_guard lock{self->config.config_mutex};
-                    auto const& value = *val;
-                    if (value == "none")
-                        self->config.touchpad.scroll_mode(mir_touchpad_scroll_mode_none);
-                    else if (value == "two_finger_scroll")
-                        self->config.touchpad.scroll_mode(mir_touchpad_scroll_mode_two_finger_scroll);
-                    else if (value == "edge_scroll")
-                        self->config.touchpad.scroll_mode(mir_touchpad_scroll_mode_edge_scroll);
-                    else if (value == "button_down_scroll")
-                        self->config.touchpad.scroll_mode(mir_touchpad_scroll_mode_button_down_scroll);
-                    else
-                        mir::log_warning(
-                            "Config key '%s' has invalid integer value: %s",
-                            key.to_string().c_str(),
-                            std::format("{}",*val).c_str());
-                }
-            });
+    config_store.add_int_attribute(
+        {"keyboard", "repeat_delay"},
+        "Number of milliseconds to hold down a key before generating repeat events",
+        [self=self](auto... args) { self->config.keyboard_repeat_delay(args...); });
 
-        config_store.add_int_attribute(
-            {"keyboard", "repeat_rate"},
-            "Keyboard repeat rate",
-            [this](live_config::Key const& key, std::optional<int> val)
-            {
-                if (val)
-                {
-                    if (val >= 0)
-                    {
-                        std::lock_guard lock{self->config.config_mutex};
-                        self->config.keyboard.set_repeat_rate(*val);
-                    }
-                    else
-                    {
-                        mir::log_warning(
-                            "Config value %s does not support negative values. Ignoring the supplied value (%d)...",
-                            key.to_string().c_str(), *val);
-                    }
-                }
-            });
+    config_store.add_string_attribute(
+        {"pointer", "handedness"},
+        "Pointer handedness [{right, left}]",
+        [self=self](auto... args) { self->config.pointer_handedness(args...); });
 
-        config_store.add_int_attribute(
-            {"keyboard", "repeat_delay"},
-            "Keyboard repeat delay",
-            [this](live_config::Key const& key, std::optional<int> val)
-            {
-                if (val)
-                {
-                    if (val >= 0)
-                    {
-                        std::lock_guard lock{self->config.config_mutex};
-                        self->config.keyboard.set_repeat_delay(*val);
-                    }
-                    else
-                    {
-                        mir::log_warning(
-                            "Config value %s does not support negative values. Ignoring the supplied value (%d)...",
-                            key.to_string().c_str(), *val);
-                    }
-                }
-            });
+    config_store.add_string_attribute(
+        live_config::Key{"pointer", "acceleration"},
+        "Acceleration profile for mice and trackballs [none, adaptive]",
+        [self=self](auto... args) { self->config.pointer_acceleration(args...); });
 
-        config_store.on_done([this]
-            {
-                std::lock_guard lock{self->config.config_mutex};
-                mouse(self->config.mouse);
-                touchpad(self->config.touchpad);
-                keyboard(self->config.keyboard);
-            });
+    config_store.add_float_attribute(
+        {"pointer", "vertical_scroll_speed"},
+        "Scroll speed scaling factor for mice and trackballs. Use negative values for natural scrolling",
+        [self=self](auto... args) { self->config.pointer_vertical_scroll_speed(args...); });
+
+    config_store.add_float_attribute(
+        {"pointer", "horizontal_scroll_speed"},
+        "Scroll speed scaling factor for mice and trackballs. Use negative values for natural scrolling",
+        [self=self](auto... args) { self->config.pointer_horizontal_scroll_speed(args...); });
+
+    config_store.add_float_attribute(
+        live_config::Key{"pointer", "acceleration_bias"},
+        "Acceleration speed of mice within a range of [-1.0, 1.0]",
+        [self=self](auto... args) { self->config.pointer_acceleration_bias(args...); });
+
+    config_store.add_string_attribute(
+        {"touchpad", "scroll_mode"},
+        "Touchpad scroll mode [{none, two_finger_scroll, edge_scroll, button_down_scroll}]",
+        [self=self](auto... args) { self->config.touchpad_scroll_mode(args...); });
+
+    config_store.add_bool_attribute(
+        live_config::Key{"touchpad", "tap_to_click"},
+        "1, 2, 3 finger tap mapping to left, right, middle click, respectively [true, false]",
+        [self=self](auto... args) { self->config.touchpad_tap_to_click(args...); });
+
+    config_store.add_bool_attribute(
+        live_config::Key{"touchpad", "disable_while_typing"},
+        "Disable touchpad while typing on keyboard [true, false]",
+        [self=self](auto... args) { self->config.touchpad_disable_while_typing(args...); });
+
+    config_store.add_bool_attribute(
+        live_config::Key{"touchpad", "disable_with_external_mouse"},
+        "Disable touchpad if an external pointer device is plugged in [true, false]",
+        [self=self](auto... args) { self->config.touchpad_disable_with_external_mouse(args...); });
+
+    config_store.add_string_attribute(
+        live_config::Key{"touchpad", "acceleration"},
+        "Acceleration profile for touchpad [none, adaptive]",
+        [self=self](auto... args) { self->config.touchpad_acceleration(args...); });
+
+    config_store.add_float_attribute(
+        live_config::Key{"touchpad", "acceleration_bias"},
+        "Acceleration speed of touchpad within a range of [-1.0, 1.0]",
+        [self=self](auto... args) { self->config.touchpad_acceleration_bias(args...); });
+
+    config_store.add_float_attribute(
+        {"touchpad", "vertical_scroll_speed"},
+        "Scroll speed scaling factor for touchpad. Use negative values for natural scrolling",
+        [self=self](auto... args) { self->config.touchpad_vertical_scroll_speed(args...); });
+
+    config_store.add_float_attribute(
+        {"touchpad", "horizontal_scroll_speed"},
+        "Scroll speed scaling factor for touchpad. Use negative values for natural scrolling",
+        [self=self](auto... args) { self->config.touchpad_horizontal_scroll_speed(args...); });
+
+    config_store.add_string_attribute(
+        {"touchpad", "click_mode"},
+        "Click mode for touchpad [none, area, clickfinger]",
+        [self=self](auto... args) { self->config.touchpad_click_mode(args...); });
+
+    config_store.add_bool_attribute(
+        live_config::Key{"touchpad", "middle_mouse_button_emulation"},
+        "Generate middle mouse button click from a simultaneous left and right touchpad button [true, false]",
+        [self=self](auto... args) { self->config.touchpad_middle_mouse_button_emulation(args...); });
+
+    config_store.on_done([this]
+        {
+            std::lock_guard lock{self->config.config_mutex};
+            mouse(self->config.mouse);
+            touchpad(self->config.touchpad);
+            keyboard(self->config.keyboard);
+        });
 }
 
 void miral::InputConfiguration::mouse(Mouse const& m)
