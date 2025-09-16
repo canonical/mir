@@ -58,11 +58,11 @@ public:
         std::shared_ptr<graphics::Cursor> const& cursor);
 
     void capture(
-        std::shared_ptr<renderer::software::WriteMappableBuffer> const& buffer,
         geometry::Rectangle const& area,
         glm::mat2 const& transform,
         bool overlay_cursor,
-        std::function<void(std::optional<time::Timestamp>)>&& callback) override;
+        std::function<void(std::optional<time::Timestamp>, std::shared_ptr<mir::graphics::Buffer>)>&& callback) // TODO: This should be an optional pair
+        override;
 
     CompositorID id() const override;
 
@@ -78,15 +78,13 @@ private:
             std::shared_ptr<renderer::RendererFactory> render_factory,
             std::shared_ptr<mir::graphics::GLConfig> const& config,
             std::shared_ptr<graphics::OutputFilter> const& output_filter,
-std::shared_ptr<graphics::Cursor> const& cursor);
+            std::shared_ptr<graphics::Cursor> const& cursor,
+            std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator);
 
-        auto render(
-            std::shared_ptr<renderer::software::WriteMappableBuffer> const& buffer,
-            geometry::Rectangle const& area,
-            glm::mat2 const& transform,
-            bool overlay_cursor) -> time::Timestamp;
+        auto render(geometry::Rectangle const& area, glm::mat2 const& transform, bool overlay_cursor)
+            -> std::pair<time::Timestamp, std::shared_ptr<graphics::Buffer>>;
 
-        auto renderer_for_buffer(std::shared_ptr<renderer::software::WriteMappableBuffer> buffer)
+        auto renderer_for_buffer(geometry::Rectangle const& area)
             -> renderer::Renderer&;
 
         std::mutex mutex;
@@ -103,7 +101,7 @@ std::shared_ptr<graphics::Cursor> const& cursor);
         geometry::Size last_rendered_size;
 
         std::unique_ptr<graphics::DisplaySink> offscreen_sink;
-        std::shared_ptr<OneShotBufferDisplayProvider> const output;
+        std::shared_ptr<OneShotBufferDisplayProvider> const display_provider;
         std::shared_ptr<mir::graphics::GLConfig> config;
         std::shared_ptr<graphics::OutputFilter> const output_filter;
         std::shared_ptr<graphics::Cursor> cursor;

@@ -186,11 +186,7 @@ public:
             scene(scene),
           capture_rect(capture_rect),
           screen_shooter(screen_shooter),
-          allocator(allocator),
-          pool([allocator, capture_rect=capture_rect]
-          {
-              return allocator->alloc_software_buffer(capture_rect.size, mir_pixel_format_argb_8888);
-          }, 2)
+          allocator(allocator)
     {
     }
 
@@ -200,16 +196,16 @@ public:
             return {};
 
         std::lock_guard lock{mutex};
-        auto buffer = pool.claim();
-        auto const mapping = mrs::as_write_mappable_buffer(buffer);
         screen_shooter->capture(
-            mapping,
             capture_rect,
             glm::mat2(1.f),
             overlay_cursor,
-            [](auto const&) {});
-        get_streams().begin()->stream->submit_buffer(
-            buffer, capture_rect.size, geom::RectangleD({0, 0}, capture_rect.size));
+            [this](auto const&, auto buffer)
+            {
+                if (buffer)
+                    get_streams().begin()->stream->submit_buffer(
+                        buffer, capture_rect.size, geom::RectangleD({0, 0}, capture_rect.size));
+            });
         return BasicSurface::generate_renderables(id);
     }
 
@@ -221,14 +217,6 @@ public:
     void set_capture_area(geom::Rectangle const& next_capture_rect)
     {
         std::lock_guard lock{mutex};
-
-        if (capture_rect.size != next_capture_rect.size)
-        {
-            pool.set_builder([allocator=allocator, next_capture_rect=next_capture_rect]
-            {
-                return allocator->alloc_software_buffer(next_capture_rect.size, mir_pixel_format_argb_8888);
-            });
-        }
 
         move_to(next_capture_rect.top_left);
         resize(next_capture_rect.size);
@@ -248,7 +236,6 @@ private:
     bool overlay_cursor = false;
     std::shared_ptr<mc::ScreenShooter> screen_shooter;
     std::shared_ptr<mg::GraphicBufferAllocator> allocator;
-    BufferPool mutable pool;
 };
 }
 

@@ -18,6 +18,7 @@
 #include "mir/graphics/cursor.h"
 #include "mir/graphics/drm_formats.h"
 #include "mir/graphics/gl_config.h"
+#include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/renderer/renderer.h"
 #include "mir/renderer/gl/gl_surface.h"
 #include "mir/compositor/scene_element.h"
@@ -39,19 +40,25 @@ namespace geom = mir::geometry;
 class mc::BasicScreenShooter::Self::OneShotBufferDisplayProvider : public mg::CPUAddressableDisplayAllocator
 {
 public:
-    OneShotBufferDisplayProvider() = default;
+    OneShotBufferDisplayProvider(std::shared_ptr<mg::GraphicBufferAllocator> allocator, geom::Size initial_size) :
+        allocator{allocator},
+        buffer_size{initial_size}
+    {
+        allocate_buffer();
+    }
 
     class FB : public mg::CPUAddressableDisplayAllocator::MappableFB
     {
     public:
-        FB(std::shared_ptr<mrs::WriteMappableBuffer> buffer)
-            : buffer{std::move(buffer)}
+        FB(std::shared_ptr<mg::Buffer> buffer) :
+            buffer{buffer},
+            writable{mrs::as_write_mappable_buffer(buffer)}
         {
         }
 
         auto map_writeable() -> std::unique_ptr<mrs::Mapping<unsigned char>> override
         {
-            return buffer->map_writeable();
+            return writable->map_writeable();
         }
         auto size() const -> geom::Size override
         {
@@ -59,14 +66,23 @@ public:
         }
         auto format() const -> MirPixelFormat override
         {
-            return buffer->format();
+            return writable->format();
         }
         auto stride() const -> geom::Stride override
         {
-            return buffer->stride();
+            return writable->stride();
+        }
+        auto native_buffer_base() -> mg::NativeBufferBase* override
+        {
+            return buffer->native_buffer_base();
+        }
+        auto pixel_format() const -> MirPixelFormat override
+        {
+            return format();
         }
     private:
-        std::shared_ptr<mrs::WriteMappableBuffer> const buffer;
+        std::shared_ptr<mg::Buffer> const buffer;
+        std::shared_ptr<mrs::WriteMappableBuffer> const writable;
     };
 
     auto supported_formats() const -> std::vector<graphics::DRMFormat> override
@@ -75,12 +91,12 @@ public:
         {
             BOOST_THROW_EXCEPTION((std::logic_error{"Attempted to query supported_formats before assigning a buffer"}));
         }
-        return {mg::DRMFormat::from_mir_format(next_buffer->format())};
+        return {mg::DRMFormat::from_mir_format(next_buffer->pixel_format())};
     }
 
     auto alloc_fb(mg::DRMFormat format) -> std::unique_ptr<MappableFB> override
     {
-        if (format.as_mir_format().value_or(mir_pixel_format_invalid) != next_buffer->format())
+        if (format.as_mir_format().value_or(mir_pixel_format_invalid) != next_buffer->pixel_format())
         {
             BOOST_THROW_EXCEPTION((std::runtime_error{"Mismatched pixel formats"}));
         }
@@ -96,16 +112,21 @@ public:
         return next_buffer->size();
     }
 
-    void set_next_buffer(std::shared_ptr<mrs::WriteMappableBuffer> buffer)
+    void output_size(geom::Size new_size)
     {
-        if (next_buffer)
-        {
-            BOOST_THROW_EXCEPTION((std::logic_error{"Attempt to set next buffer with a buffer already pending"}));
-        }
-        next_buffer = std::move(buffer);
+        buffer_size = new_size;
+    }
+
+    void allocate_buffer()
+    {
+        next_buffer = allocator->alloc_software_buffer(buffer_size, buffer_format);
     }
 private:
-    std::shared_ptr<mrs::WriteMappableBuffer> next_buffer;
+    std::shared_ptr<graphics::GraphicBufferAllocator> const allocator;
+    std::shared_ptr<mg::Buffer> next_buffer;
+
+    geom::Size buffer_size;
+    MirPixelFormat buffer_format{mir_pixel_format_argb_8888};
 };
 
 class OffscreenDisplaySink : public mg::DisplaySink
@@ -160,24 +181,24 @@ mc::BasicScreenShooter::Self::Self(
     std::shared_ptr<mr::RendererFactory> renderer_factory,
     std::shared_ptr<mir::graphics::GLConfig> const& config,
     std::shared_ptr<graphics::OutputFilter> const& output_filter,
-    std::shared_ptr<graphics::Cursor> const& cursor)
-    : scene{scene},
-      clock{clock},
-      render_provider{std::move(render_provider)},
-      renderer_factory{std::move(renderer_factory)},
-      last_rendered_size{0, 0},
-      output{std::make_shared<OneShotBufferDisplayProvider>()},
-      config{config},
-      output_filter{output_filter},
-      cursor{cursor}
+    std::shared_ptr<graphics::Cursor> const& cursor,
+    std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator) :
+    scene{scene},
+    clock{clock},
+    render_provider{std::move(render_provider)},
+    renderer_factory{std::move(renderer_factory)},
+    last_rendered_size{0, 0},
+    display_provider{std::make_shared<OneShotBufferDisplayProvider>(buffer_allocator, geom::Size{200, 300})},
+    config{config},
+    output_filter{output_filter},
+    cursor{cursor}
 {
 }
 
 auto mc::BasicScreenShooter::Self::render(
-    std::shared_ptr<mrs::WriteMappableBuffer> const& buffer,
     geom::Rectangle const& area,
     glm::mat2 const& transform,
-    bool overlay_cursor) -> time::Timestamp
+    bool overlay_cursor) -> std::pair<time::Timestamp, std::shared_ptr<mg::Buffer>>
 {
     std::lock_guard lock{mutex};
 
@@ -198,37 +219,45 @@ auto mc::BasicScreenShooter::Self::render(
 
     scene_elements.clear();
 
-    auto& renderer = renderer_for_buffer(buffer);
+    auto& renderer = renderer_for_buffer(area);
     renderer.set_output_transform(transform);
     renderer.set_viewport(area);
     renderer.set_output_filter(output_filter->filter());
     /* We don't need the result of this `render` call, as we know it's
      * going into the buffer we just set
      */
-    renderer.render(renderable_list);
+
+    auto frame = renderer.render(renderable_list);
 
     // Because we might be called on a different thread next time we need to
     // ensure the renderer doesn't keep the EGL context current
     renderer.suspend();
-    return captured_time;
+    return {captured_time, std::move(frame)};
 }
 
-auto mc::BasicScreenShooter::Self::renderer_for_buffer(std::shared_ptr<mrs::WriteMappableBuffer> buffer)
+auto mc::BasicScreenShooter::Self::renderer_for_buffer(geometry::Rectangle const& area)
     -> mr::Renderer&
 {
-    auto const buffer_size = buffer->size();
+    auto const buffer_size = area.size;
     if (buffer_size.height == geom::Height{0} || buffer_size.width == geom::Width{0})
     {
         BOOST_THROW_EXCEPTION((std::runtime_error{"Attempt to capture to a zero-sized buffer"}));
     }
-    output->set_next_buffer(std::move(buffer));
     if (buffer_size != last_rendered_size)
     {
         // We need to build a new Renderer, at the new size
-        offscreen_sink = std::make_unique<OffscreenDisplaySink>(output, buffer_size);
+        display_provider->output_size(buffer_size);
+        display_provider->allocate_buffer();
+        offscreen_sink = std::make_unique<OffscreenDisplaySink>(display_provider, buffer_size);
         auto gl_surface = render_provider->surface_for_sink(*offscreen_sink, *config);
         current_renderer = renderer_factory->create_renderer_for(std::move(gl_surface), render_provider);
         last_rendered_size = buffer_size;
+    }
+    else
+    {
+        // TODO: Do we need to allocate a new buffer every time?
+        // I think we do
+        display_provider->allocate_buffer();
     }
     return *current_renderer;
 }
@@ -238,8 +267,9 @@ auto mc::BasicScreenShooter::select_provider(
     std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator)
     -> std::shared_ptr<mg::GLRenderingProvider>
 {
-    auto display_provider = std::make_shared<Self::OneShotBufferDisplayProvider>();
-    OffscreenDisplaySink temp_db{display_provider, geom::Size{640, 480}};
+    auto const size = geom::Size{640, 480};
+    auto display_provider = std::make_shared<Self::OneShotBufferDisplayProvider>(buffer_allocator, size);
+    OffscreenDisplaySink temp_db{display_provider, size};
 
     std::pair<mg::probe::Result, std::shared_ptr<mg::GLRenderingProvider>> best_provider = std::make_pair(
         mg::probe::unsupported, nullptr);
@@ -276,28 +306,36 @@ mc::BasicScreenShooter::BasicScreenShooter(
     std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
     std::shared_ptr<mir::graphics::GLConfig> const& config,
     std::shared_ptr<graphics::OutputFilter> const& output_filter,
-    std::shared_ptr<graphics::Cursor> const& cursor)
-    : self{std::make_shared<Self>(scene, clock, select_provider(providers, buffer_allocator), std::move(render_factory), config, output_filter, cursor)},
-      executor{executor}
+    std::shared_ptr<graphics::Cursor> const& cursor) :
+    self{std::make_shared<Self>(
+        scene,
+        clock,
+        select_provider(providers, buffer_allocator),
+        std::move(render_factory),
+        config,
+        output_filter,
+        cursor,
+        buffer_allocator)},
+    executor{executor}
 {
 }
 
 void mc::BasicScreenShooter::capture(
-    std::shared_ptr<mrs::WriteMappableBuffer> const& buffer,
     geom::Rectangle const& area,
     glm::mat2 const& transform,
     bool overlay_cursor,
-    std::function<void(std::optional<time::Timestamp>)>&& callback)
+    std::function<void(std::optional<time::Timestamp>, std::shared_ptr<mg::Buffer>)>&& callback)
 {
     // TODO: use an atomic to keep track of number of in-flight captures, and error if it's too many
 
-    executor.spawn([weak_self=std::weak_ptr{self}, buffer, area, transform, overlay_cursor, callback=std::move(callback)]
+    executor.spawn([weak_self=std::weak_ptr{self}, area, transform, overlay_cursor, callback=std::move(callback)]
         {
             if (auto const self = weak_self.lock())
             {
                 try
                 {
-                    callback(self->render(buffer, area, transform, overlay_cursor));
+                    auto [time, frame] = self->render(area, transform, overlay_cursor);
+                    callback(time, frame);
                     return;
                 }
                 catch (...)
@@ -310,7 +348,7 @@ void mc::BasicScreenShooter::capture(
                 }
             }
 
-            callback(std::nullopt);
+            callback(std::nullopt, nullptr);
         });
 }
 

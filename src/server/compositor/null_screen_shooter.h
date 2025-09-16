@@ -34,11 +34,10 @@ public:
     NullScreenShooter(Executor& executor);
 
     void capture(
-        std::shared_ptr<renderer::software::WriteMappableBuffer> const& buffer,
         geometry::Rectangle const& area,
         glm::mat2 const& transform,
         bool overlay_cursor,
-        std::function<void(std::optional<time::Timestamp>)>&& callback) override;
+        std::function<void(std::optional<time::Timestamp>, std::shared_ptr<mir::graphics::Buffer>)>&& callback) override;
 
     CompositorID id() const override;
 
