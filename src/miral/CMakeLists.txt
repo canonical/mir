@@ -62,7 +62,7 @@ function(add_wayland_protocol xml_file out_var)
 
     add_custom_command(
       OUTPUT ${header}
-      COMMAND wayland-scanner client-header ${xml_file} ${header}.tmp
+      COMMAND "sh" "-c" "wayland-scanner client-header ${xml_file} ${header}.tmp"
       COMMAND ${CMAKE_COMMAND} -E copy ${header}.tmp ${header}
       COMMAND ${CMAKE_COMMAND} -E rm ${header}.tmp
       COMMAND sed -i s/\\<namespace\\>/namespace_/g ${header}
@@ -72,7 +72,7 @@ function(add_wayland_protocol xml_file out_var)
 
     add_custom_command(
       OUTPUT ${code}
-      COMMAND wayland-scanner private-code ${xml_file} ${code}.tmp
+      COMMAND "sh" "-c" "wayland-scanner private-code ${xml_file} ${code}.tmp"
       COMMAND ${CMAKE_COMMAND} -E copy ${code}.tmp ${code}
       COMMAND ${CMAKE_COMMAND} -E rm ${code}.tmp
       COMMAND sed -i s/\\<namespace\\>/namespace_/g ${code}
