@@ -342,6 +342,15 @@ public:
             }
         }
 
+        void touchpad_middle_mouse_button_emulation(live_config::Key const&, std::optional<bool> opt_val)
+        {
+            if (opt_val)
+            {
+                std::lock_guard lock{config_mutex};
+                touchpad.middle_mouse_button_emulation(*opt_val);
+            }
+        }
+
         std::mutex config_mutex;
         Mouse mouse;
         Touchpad touchpad;
@@ -499,6 +508,11 @@ miral::InputConfiguration::InputConfiguration(live_config::Store& config_store) 
         {"touchpad", "click_mode"},
         "Click mode for touchpad [none, area, clickfinger]",
         [self=self](auto... args) { self->config.touchpad_click_mode(args...); });
+
+    config_store.add_bool_attribute(
+        live_config::Key{"touchpad", "middle_mouse_button_emulation"},
+        "Generate middle mouse button click from a simultaneous left and right touchpad button [true, false]",
+        [self=self](auto... args) { self->config.touchpad_middle_mouse_button_emulation(args...); });
 
     config_store.on_done([this]
         {
