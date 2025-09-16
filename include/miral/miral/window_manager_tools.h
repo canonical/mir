@@ -108,10 +108,10 @@ public:
     /// \sa miral::WindowInfo - info about the window
     auto info_for(Window const& window) const -> WindowInfo&;
 
-    /// Retrieve metadata for a persistent surface id.
+    /// Retrieve info for a persistent surface id.
     ///
     /// \param id the persistent surface id
-    /// \returns the metadata
+    /// \returns the info
     /// \throws invalid_argument or runtime_error if the id is badly formatted/doesn't identify a current window
     /// \deprecated 'Persistent' surface IDs were part of mirclient API
     [[deprecated("'Persistent' surface IDs were part of mirclient API")]]
