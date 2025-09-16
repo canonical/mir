@@ -57,7 +57,7 @@ public:
         glm::mat2 const& transform,
         bool overlay_cursor,
         std::function<
-            void(std::optional<time::Timestamp>, std::shared_ptr<mir::graphics::Buffer> buffer)>&&
+            void(std::optional<time::Timestamp>, std::shared_ptr<graphics::Buffer> buffer)>&&
             callback) = 0;
 
     virtual CompositorID id() const = 0;

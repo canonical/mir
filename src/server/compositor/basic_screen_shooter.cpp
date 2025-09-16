@@ -122,7 +122,7 @@ public:
         next_buffer = allocator->alloc_software_buffer(buffer_size, buffer_format);
     }
 private:
-    std::shared_ptr<graphics::GraphicBufferAllocator> const allocator;
+    std::shared_ptr<mg::GraphicBufferAllocator> const allocator;
     std::shared_ptr<mg::Buffer> next_buffer;
 
     geom::Size buffer_size;
@@ -235,7 +235,7 @@ auto mc::BasicScreenShooter::Self::render(
     return {captured_time, std::move(frame)};
 }
 
-auto mc::BasicScreenShooter::Self::renderer_for_buffer(geometry::Rectangle const& area)
+auto mc::BasicScreenShooter::Self::renderer_for_buffer(geom::Rectangle const& area)
     -> mr::Renderer&
 {
     auto const buffer_size = area.size;

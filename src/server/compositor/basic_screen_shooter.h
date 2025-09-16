@@ -61,7 +61,7 @@ public:
         geometry::Rectangle const& area,
         glm::mat2 const& transform,
         bool overlay_cursor,
-        std::function<void(std::optional<time::Timestamp>, std::shared_ptr<mir::graphics::Buffer>)>&& callback) // TODO: This should be an optional pair
+        std::function<void(std::optional<time::Timestamp>, std::shared_ptr<graphics::Buffer>)>&& callback) // TODO: This should be an optional pair
         override;
 
     CompositorID id() const override;
