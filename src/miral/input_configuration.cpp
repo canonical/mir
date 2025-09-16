@@ -422,7 +422,7 @@ miral::InputConfiguration::InputConfiguration(live_config::Store& config_store) 
 
     config_store.add_int_attribute(
         {"keyboard", "repeat_delay"},
-        "Number of millisecond to hold down a key before generating repeat events",
+        "Number of milliseconds to hold down a key before generating repeat events",
         [self=self](auto... args) { self->config.keyboard_repeat_delay(args...); });
 
     config_store.add_string_attribute(
