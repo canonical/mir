@@ -78,6 +78,13 @@ auto make_scene_elements(std::initializer_list<std::shared_ptr<mg::Renderable>> 
     return elements;
 }
 
+class MockFramebuffer: public mg::Framebuffer
+{
+    MOCK_METHOD(mg::NativeBufferBase*, native_buffer_base, (), (override));
+    MOCK_METHOD(MirPixelFormat, pixel_format, (), (const override));
+    MOCK_METHOD(geom::Size, size, (), (const override));
+};
+
 struct DefaultDisplayBufferCompositor : public testing::Test
 {
     DefaultDisplayBufferCompositor()
@@ -92,6 +99,7 @@ struct DefaultDisplayBufferCompositor : public testing::Test
             .WillByDefault(Return(screen));
         ON_CALL(display_sink, overlay(_))
             .WillByDefault(Return(false));
+        ON_CALL(mock_renderer, render(_)).WillByDefault([] { return std::make_unique<MockFramebuffer>(); });
     }
 
     testing::NiceMock<mtd::MockRenderer> mock_renderer;
