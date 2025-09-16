@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "mir/test/doubles/mock_framebuffer.h"
 #include "src/server/compositor/default_display_buffer_compositor.h"
 #include "src/server/report/null_report_factory.h"
 #include "mir/compositor/scene.h"
@@ -78,13 +79,6 @@ auto make_scene_elements(std::initializer_list<std::shared_ptr<mg::Renderable>> 
     return elements;
 }
 
-class MockFramebuffer: public mg::Framebuffer
-{
-    MOCK_METHOD(mg::NativeBufferBase*, native_buffer_base, (), (override));
-    MOCK_METHOD(MirPixelFormat, pixel_format, (), (const override));
-    MOCK_METHOD(geom::Size, size, (), (const override));
-};
-
 struct DefaultDisplayBufferCompositor : public testing::Test
 {
     DefaultDisplayBufferCompositor()
@@ -99,7 +93,7 @@ struct DefaultDisplayBufferCompositor : public testing::Test
             .WillByDefault(Return(screen));
         ON_CALL(display_sink, overlay(_))
             .WillByDefault(Return(false));
-        ON_CALL(mock_renderer, render(_)).WillByDefault([] { return std::make_unique<MockFramebuffer>(); });
+        ON_CALL(mock_renderer, render(_)).WillByDefault([] { return std::make_unique<mtd::MockFramebuffer>(); });
     }
 
     testing::NiceMock<mtd::MockRenderer> mock_renderer;

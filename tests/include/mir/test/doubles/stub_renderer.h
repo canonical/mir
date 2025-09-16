@@ -17,6 +17,8 @@
 #ifndef MIR_TEST_DOUBLES_STUB_RENDERER_H_
 #define MIR_TEST_DOUBLES_STUB_RENDERER_H_
 
+#include "mir/test/doubles/mock_framebuffer.h"
+
 #include "mir/renderer/renderer.h"
 #include "mir/graphics/renderable.h"
 #include "mir/graphics/buffer.h"
@@ -44,7 +46,7 @@ public:
         // Yield to reduce runtime under valgrind
         std::this_thread::yield();
 
-        return {};
+        return std::make_unique<MockFramebuffer>();
     }
 };
 
