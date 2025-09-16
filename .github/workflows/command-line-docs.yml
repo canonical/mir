@@ -43,7 +43,7 @@ jobs:
           diff build/command-line-options.md doc/sphinx/reference/command-line-options.md
           if [ $? != 0 ]; then exit 1; fi
 
-      - if: ${{ failure() && runner.debug }}
+      - if: ${{ failure() }}
         name: Setup upterm session
         uses: mxschmitt/action-tmate@v3
         with:
