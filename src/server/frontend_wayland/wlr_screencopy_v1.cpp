@@ -42,6 +42,7 @@ namespace mw = mir::wayland;
 namespace mg = mir::graphics;
 namespace ms = mir::scene;
 namespace geom = mir::geometry;
+namespace mrs = mir::renderer::software;
 
 namespace
 {
@@ -176,7 +177,7 @@ private:
     /// @{
     bool copy_has_been_called{false};
     bool should_send_damage{false};
-    std::shared_ptr<renderer::software::WriteMappableBuffer> target;
+    std::shared_ptr<mrs::WriteMappableBuffer> target;
     /// @}
 };
 }
@@ -435,10 +436,11 @@ void mf::WlrScreencopyFrameV1::capture(geom::Rectangle buffer_space_damage)
         return;
     }
 
-    manager.value().screen_shooter->capture(std::move(target), params.output_space_area, params.transform, params.overlay_cursor,
+    manager.value().screen_shooter->capture(params.output_space_area, params.transform, params.overlay_cursor,
         [wayland_executor=ctx->wayland_executor, buffer_space_damage, self=mw::make_weak(this)]
-            (std::optional<time::Timestamp> captured_time)
+            (std::optional<time::Timestamp> captured_time, auto buffer)
         {
+            self.value().target = mrs::as_write_mappable_buffer(std::move(buffer));
             wayland_executor->spawn([self, captured_time, buffer_space_damage]()
                 {
                     if (self)
@@ -497,7 +499,7 @@ void mf::WlrScreencopyFrameV1::prepare_target(wl_resource* buffer)
             stride.as_int()));
     }
 
-    target = std::shared_ptr<mir::renderer::software::WriteMappableBuffer>{
+    target = std::shared_ptr<mrs::WriteMappableBuffer>{
         shm_data.get(),
         [shm_data, weak_buffer = mw::make_weak(shm_buffer), executor = ctx->wayland_executor](auto*)
         {
