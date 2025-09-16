@@ -312,6 +312,36 @@ public:
             }
         }
 
+        void touchpad_click_mode(live_config::Key const& key, std::optional<std::string_view> opt_val)
+        {
+            if (opt_val)
+            {
+                auto val = *opt_val;
+                if (val == "none")
+                {
+                    std::lock_guard lock{config_mutex};
+                    touchpad.click_mode(mir_touchpad_click_mode_none);
+                }
+                else if (val == "area")
+                {
+                    std::lock_guard lock{config_mutex};
+                    touchpad.click_mode(mir_touchpad_click_mode_finger_count);
+                }
+                else if (val == "clickfinger")
+                {
+                    std::lock_guard lock{config_mutex};
+                    touchpad.click_mode(mir_touchpad_click_mode_area_to_click);
+                }
+                else
+                {
+                    mir::log_warning(
+                        "Config key '%s' has invalid string value: %s",
+                        key.to_string().c_str(),
+                        std::format("{}",val).c_str());
+                }
+            }
+        }
+
         std::mutex config_mutex;
         Mouse mouse;
         Touchpad touchpad;
@@ -464,6 +494,11 @@ miral::InputConfiguration::InputConfiguration(live_config::Store& config_store) 
         {"touchpad", "horizontal_scroll_speed"},
         "Scroll speed scaling factor for touchpad. Use negative values for natural scrolling",
         [self=self](auto... args) { self->config.touchpad_horizontal_scroll_speed(args...); });
+
+    config_store.add_string_attribute(
+        {"touchpad", "click_mode"},
+        "Click mode for touchpad [none, area, clickfinger]",
+        [self=self](auto... args) { self->config.touchpad_click_mode(args...); });
 
     config_store.on_done([this]
         {
