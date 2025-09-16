@@ -115,7 +115,7 @@ public:
                     mouse.handedness(mir_pointer_handedness_left);
                 else
                     mir::log_warning(
-                        "Config key '%s' has invalid integer value: %s",
+                        "Config key '%s' has invalid value: %s",
                         key.to_string().c_str(),
                         std::format("{}",*val).c_str());
             }
@@ -137,7 +137,7 @@ public:
                     touchpad.scroll_mode(mir_touchpad_scroll_mode_button_down_scroll);
                 else
                     mir::log_warning(
-                        "Config key '%s' has invalid integer value: %s",
+                        "Config key '%s' has invalid value: %s",
                         key.to_string().c_str(),
                         std::format("{}",*val).c_str());
             }
@@ -198,17 +198,17 @@ public:
                 else
                 {
                     mir::log_warning(
-                        "Config key '%s' has invalid string value: %s",
+                        "Config key '%s' has invalid value: %s",
                         key.to_string().c_str(),
                         std::format("{}",val).c_str());
                 }
             }
         };
 
-        void pointer_acceleration_bias(live_config::Key const&, std::optional<float> opt_val)
+        void pointer_acceleration_bias(live_config::Key const& key, std::optional<float> opt_val)
         {
             std::lock_guard lock{config_mutex};
-            mouse.acceleration_bias(opt_val.transform([](auto val) { return std::clamp(val, -1.0f, 1.0f); }));
+            mouse.acceleration_bias(clamp_plus_minus_1(key, opt_val));
         }
 
         void pointer_vertical_scroll_speed(live_config::Key const&, std::optional<float> opt_val)
@@ -260,17 +260,17 @@ public:
                 else
                 {
                     mir::log_warning(
-                        "Config key '%s' has invalid string value: %s",
+                        "Config key '%s' has invalid value: %s",
                         key.to_string().c_str(),
                         std::format("{}",val).c_str());
                 }
             }
         };
 
-        void touchpad_acceleration_bias(live_config::Key const&, std::optional<float> opt_val)
+        void touchpad_acceleration_bias(live_config::Key const& key, std::optional<float> opt_val)
         {
             std::lock_guard lock{config_mutex};
-            touchpad.acceleration_bias(opt_val.transform([](auto val) { return std::clamp(val, -1.0f, 1.0f); }));
+            touchpad.acceleration_bias(clamp_plus_minus_1(key, opt_val));
         };
 
         void touchpad_vertical_scroll_speed(live_config::Key const&, std::optional<float> opt_val)
@@ -319,6 +319,22 @@ public:
         {
             std::lock_guard lock{config_mutex};
             touchpad.middle_mouse_button_emulation(opt_val);
+        }
+
+        auto clamp_plus_minus_1(live_config::Key const& key, std::optional<float> opt_val)-> std::optional<float>
+        {
+            auto const clamped_value =
+                opt_val.transform([](auto val) { return std::clamp(val, -1.0f, 1.0f); });
+
+            if (clamped_value != opt_val)
+            {
+                mir::log_warning("Config key '%s' value %f clamped to %f",
+                    key.to_string().c_str(),
+                    opt_val.value(),
+                    clamped_value.value());
+            }
+
+            return clamped_value;
         }
 
         std::mutex config_mutex;
@@ -401,12 +417,12 @@ miral::InputConfiguration::InputConfiguration(live_config::Store& config_store) 
 {
     config_store.add_int_attribute(
         {"keyboard", "repeat_rate"},
-        "Keyboard repeat rate",
+        "Number of milliseconds between generated key repeat events",
         [self=self](auto... args) { self->config.keyboard_repeat_rate(args...); });
 
     config_store.add_int_attribute(
         {"keyboard", "repeat_delay"},
-        "Keyboard repeat delay",
+        "Number of millisecond to hold down a key before generating repeat events",
         [self=self](auto... args) { self->config.keyboard_repeat_delay(args...); });
 
     config_store.add_string_attribute(
