@@ -255,8 +255,6 @@ auto mc::BasicScreenShooter::Self::renderer_for_buffer(geom::Rectangle const& ar
     }
     else
     {
-        // TODO: Do we need to allocate a new buffer every time?
-        // I think we do
         display_provider->allocate_buffer();
     }
     return *current_renderer;
