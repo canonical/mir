@@ -37,9 +37,8 @@ jobs:
 
       - name: Check for documentation updates
         run: |
-          ./build/bin/miral-shell --help-markdown > .command-line-options.md
-          ls -l .command-line-options.md
-          ls -l doc/sphinx/reference/command-line-options.md
-          diff .command-line-options.md doc/sphinx/reference/command-line-options.md
+          ./build/bin/miral-shell --help-markdown > build/command-line-options.md
+          ls -l build/.command-line-options.md
+          ls -l build/doc/sphinx/reference/command-line-options.md
+          diff .command-line-options.md build/doc/sphinx/reference/command-line-options.md
           if [ $? != 0 ]; then exit 1; fi
-          rm .command-line-options.md
