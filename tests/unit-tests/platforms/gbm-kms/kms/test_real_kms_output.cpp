@@ -71,7 +71,10 @@ public:
     auto size() const -> geom::Size override
     {
         return {};
-    }    
+    }
+
+    MOCK_METHOD(mg::NativeBufferBase*, native_buffer_base, (), (override));
+    MOCK_METHOD(MirPixelFormat, pixel_format, (), (const override));
 private:
     uint32_t const fb_id;
 };

@@ -56,9 +56,20 @@ class DummyCPUAddressableDisplayAllocator : public graphics::CPUAddressableDispl
         {
             return buffer->stride();
         }
+
         auto size() const -> geometry::Size override
         {
             return buffer->size();
+        }
+
+        auto native_buffer_base() -> graphics::NativeBufferBase*
+        {
+            return buffer->native_buffer_base();
+        }
+
+        auto pixel_format() const -> MirPixelFormat
+        {
+            return format();
         }
     private:
         std::unique_ptr<StubBuffer> const buffer;

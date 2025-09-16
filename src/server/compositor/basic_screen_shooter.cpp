@@ -326,6 +326,12 @@ void mc::BasicScreenShooter::capture(
 {
     // TODO: use an atomic to keep track of number of in-flight captures, and error if it's too many
 
+    if (area.size.width == geom::Width{0} || area.size.height == geom::Height{0})
+    {
+        callback(std::nullopt, nullptr);
+        return;
+    }
+
     executor.spawn([weak_self=std::weak_ptr{self}, area, transform, overlay_cursor, callback=std::move(callback)]
         {
             if (auto const self = weak_self.lock())

@@ -69,6 +69,8 @@ public:
     }
 
     MOCK_METHOD(mir::geometry::Size, size, (), (const override));
+    MOCK_METHOD(NativeBufferBase*, native_buffer_base, (), (override));
+    MOCK_METHOD(MirPixelFormat, pixel_format, (), (const override));
 };
 }
 
@@ -160,7 +162,7 @@ protected:
     NiceMock<MockGBM> mock_gbm;
     NiceMock<MockEGL> mock_egl;
     NiceMock<MockGL>  mock_gl;
-    NiceMock<MockDRM> mock_drm; 
+    NiceMock<MockDRM> mock_drm;
     std::shared_ptr<MockBuffer> mock_bypassable_buffer;
     NiceMock<MockDMABufBuffer> mock_dmabuf_buffer;
     std::shared_ptr<MockBuffer> mock_software_buffer;
