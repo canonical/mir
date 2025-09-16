@@ -131,7 +131,7 @@ struct BasicScreenShooter : Test
     std::shared_ptr<mtd::MockGlRenderingProvider> gl_provider{std::make_shared<testing::NiceMock<mtd::MockGlRenderingProvider>>()};
     std::vector<std::shared_ptr<mg::GLRenderingProvider>> gl_providers{gl_provider};
     std::shared_ptr<mtd::MockRendererFactory> renderer_factory{std::make_shared<testing::NiceMock<mtd::MockRendererFactory>>()};
-    std::shared_ptr<mtd::StubBufferAllocator> buffer_allocator;
+    std::shared_ptr<mtd::StubBufferAllocator> buffer_allocator{std::make_shared<mtd::StubBufferAllocator>()};
     std::shared_ptr<mtd::AdvanceableClock> clock{std::make_shared<mtd::AdvanceableClock>()};
     std::shared_ptr<mtd::MockCursor> cursor{std::make_shared<mtd::MockCursor>()};
     mtd::ExplicitExecutor executor;
@@ -204,11 +204,11 @@ TEST_F(BasicScreenShooter, graceful_failure_on_zero_sized)
 {
     auto zero_area = viewport_rect;
     zero_area.size = geom::Size{0, 0};
+    EXPECT_CALL(callback, Call(nullopt_time));
     shooter->capture(zero_area, viewport_transform, false, [&](auto time, auto)
         {
             callback.Call(time);
         });
-    EXPECT_CALL(callback, Call(nullopt_time));
     // No need to call the executor since we return before spawning a thread
 }
 
