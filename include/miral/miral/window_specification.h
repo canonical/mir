@@ -91,9 +91,13 @@ public:
     /// \returns a const reference to the top left point
     auto top_left() const -> mir::optional_value<Point> const&;
 
-    /// The size of the window frame, including any decorations.
+    /// The size of the window for window management purposes.
     ///
-    /// This value will be adjusted based on #min_width(), #WindowInfo::max_width(),
+    /// It may differ from the buffer size drawn by the client as it may include decorations
+    ///  and/or exclude drop-shadows
+    ///
+    /// \note If the #WindowSpecification is applied using #WindowManagementTools::modify_client
+    /// then value will be adjusted based on #min_width(), #WindowInfo::max_width(),
     /// #WindowInfo::min_height(), #WindowInfo::max_height(), #WindowInfo::min_aspect(),
     /// #WindowInfo::max_aspect(), #WindowInfo::width_inc() and WindowInfo::height_inc().
     /// Set these properties to their default values if they should be ignored.
