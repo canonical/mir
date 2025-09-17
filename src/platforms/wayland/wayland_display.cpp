@@ -35,7 +35,7 @@ struct WaylandDisplay
 };
 
 char const* wayland_host_option_name{"wayland-host"};
-char const* wayland_host_option_description{"Display name for host compositor, e.g. wayland-0."};
+char const* wayland_host_option_description{"Display name for host compositor, e.g. `wayland-0`."};
 }
 
 void mpw::add_connection_options(boost::program_options::options_description& config)
