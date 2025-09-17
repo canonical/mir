@@ -61,12 +61,17 @@ function(add_wayland_protocol xml_file out_var)
     set(code   ${GENERATED_DIR}/${name}.c)
 
     add_custom_command(
+      OUTPUT ${GENERATED_DIR}
+      COMMAND ${CMAKE_COMMAND} -E make_directory -p ${GENERATED_DIR}
+    )
+
+    add_custom_command(
       OUTPUT ${header}
       COMMAND "sh" "-c" "wayland-scanner client-header ${xml_file} ${header}.tmp"
       COMMAND ${CMAKE_COMMAND} -E copy ${header}.tmp ${header}
       COMMAND ${CMAKE_COMMAND} -E rm ${header}.tmp
       COMMAND sed -i s/\\<namespace\\>/namespace_/g ${header}
-      DEPENDS ${xml_file}
+      DEPENDS ${GENERATED_DIR} ${xml_file}
       VERBATIM
     )
 
@@ -76,7 +81,7 @@ function(add_wayland_protocol xml_file out_var)
       COMMAND ${CMAKE_COMMAND} -E copy ${code}.tmp ${code}
       COMMAND ${CMAKE_COMMAND} -E rm ${code}.tmp
       COMMAND sed -i s/\\<namespace\\>/namespace_/g ${code}
-      DEPENDS ${xml_file}
+      DEPENDS ${GENERATED_DIR} ${xml_file}
       VERBATIM
     )
 
