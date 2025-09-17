@@ -92,6 +92,7 @@ set(PROTOCOL_XMLS
   ${PROTOCOLS_DIR}/wlr-foreign-toplevel-management-unstable-v1.xml
   ${PROTOCOLS_DIR}/wlr-layer-shell-unstable-v1.xml
   ${PROTOCOLS_DIR}/wlr-layer-shell-unstable-v1.xml
+  ${PROTOCOLS_DIR}/xdg-shell.xml
 )
 
 set(GENERATED_PROTOCOL_SOURCES "")
