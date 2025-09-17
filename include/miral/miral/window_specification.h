@@ -147,8 +147,8 @@ public:
     /// \returns a const reference to the auxiliary rectangle
     auto aux_rect() const -> mir::optional_value<Rectangle> const&;
 
-    /// The placement hint describes how child windows should be adjusted when
-    /// their placement would cause them to extend beyond their current output.
+    /// The placement hint describes how child window placement should be 
+    /// adjusted they cannot be placed in the requested position
     ///
     /// \returns a const reference to the placement hints
     auto placement_hints() const -> mir::optional_value<MirPlacementHints> const&;
