@@ -114,7 +114,7 @@ public:
     /// \returns a const reference to the name
     auto name() const -> mir::optional_value<std::string> const&;
 
-    /// The output id of the window.
+    /// The output id optionally associated with a fullscreen window.
     ///
     /// \returns a const reference to the output id
     /// \sa miral::Output - the class that holds this output id
@@ -141,8 +141,9 @@ public:
     /// Defines the rectangle of a parent window against which the #aux_rect_placement_gravity
     /// is decided.
     ///
-    /// This is useful for when the window is of type #mir_window_type_menu, #mir_window_type_satellite
-    /// or #mir_window_type_tip and wants to orient itself relative to a particular rectangle of the parent.
+    /// This is useful for when the window  wants to orient itself relative to a particular
+    /// rectangle of the parent. See an explanation of this interaction in the documentation:
+    /// https://canonical-mir.readthedocs-hosted.com/stable/explanation/window-positions-under-wayland/
     ///
     /// \returns a const reference to the auxiliary rectangle
     auto aux_rect() const -> mir::optional_value<Rectangle> const&;
@@ -327,8 +328,9 @@ public:
     /// Defines the rectangle of a parent window against which the #aux_rect_placement_gravity
     /// is decided.
     ///
-    /// This is useful for when the window is of type #mir_window_type_menu, #mir_window_type_satellite
-    /// or #mir_window_type_tip and wants to orient itself relative to a particular rectangle of the parent.
+    /// This is useful for when the window  wants to orient itself relative to a particular
+    /// rectangle of the parent. See an explanation of this interaction in the documentation:
+    /// https://canonical-mir.readthedocs-hosted.com/stable/explanation/window-positions-under-wayland/
     ///
     /// \returns a reference to the auxiliary rectangle
     auto aux_rect() -> mir::optional_value<Rectangle>&;
