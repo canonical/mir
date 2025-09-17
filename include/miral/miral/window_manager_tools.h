@@ -43,8 +43,9 @@ class Workspace;
 
 class WindowManagerToolsImplementation;
 
-/// This class provides compositor authors with facilities to request state and changes
-/// from windows, applications, workspaces, and more.
+/// This class provides compositor authors with facilities to query state info for and
+/// request changes to elements of the window management model (such as windows
+/// and outputs).
 ///
 /// When a #WindowManagementPolicy is added to a #miral::MirRunner via #miral::add_window_manager_policy,
 /// the policy will receive an instance of #miral::WindowManagerTools as the first parameter.
@@ -82,29 +83,31 @@ public:
     /// Find an application that meets the predicate.
     ///
     /// \param predicate the predicate
-    /// \returns an application, or the default-constructed application if none is found
+    /// \returns an application, or a null application if none is found
     auto find_application(std::function<bool(ApplicationInfo const& info)> const& predicate)
     -> Application;
 
     /// Retrieve information about a \p session.
     ///
     /// \param session the application
-    /// \returns info about the application, or the default-constructed application info if the \p session is invalid
+    /// \returns info about the application
+    /// \pre the \p session is valid (not null)
     /// \sa miral::ApplicationInfo - info about the application
     auto info_for(std::weak_ptr<mir::scene::Session> const& session) const -> ApplicationInfo&;
 
     /// Retrieve info about a window from the \p surface.
     ///
     /// \param surface the surface
-    /// \returns info about the window, or the default-constructed window info if the \p surface is invalid
+    /// \returns info about the window
+    /// \pre the \p session is valid (not null)
     /// \sa miral::WindowInfo - info about the window
     auto info_for(std::weak_ptr<mir::scene::Surface> const& surface) const -> WindowInfo&;
 
     /// Retrieve info about a window.
     ///
     /// \param window the window
-    /// \returns info about the window, or the default-constructed window info if the \p surface is invalid
-    /// \throws std::out_of_range when the window is invalid
+    /// \returns info about the window
+    /// \pre the \p session is valid (not null)
     /// \sa miral::WindowInfo - info about the window
     auto info_for(Window const& window) const -> WindowInfo&;
 
@@ -112,7 +115,8 @@ public:
     ///
     /// \param id the persistent surface id
     /// \returns the info
-    /// \throws invalid_argument or runtime_error if the id is badly formatted/doesn't identify a current window
+    /// \throws invalid_argument if the id is badly formatted
+    /// \throws runtime_error if the id doesn't identify a current window
     /// \deprecated 'Persistent' surface IDs were part of mirclient API
     [[deprecated("'Persistent' surface IDs were part of mirclient API")]]
     auto info_for_window_id(std::string const& id) const -> WindowInfo&;
@@ -138,6 +142,10 @@ public:
     auto active_window() const -> Window;
 
     /// Select a new active window based on the \p hint.
+    /// 
+    /// Not all windows can become active - either because of their type
+    /// or other state. But there will typically be an associated parent or
+    /// child window that can become active.
     ///
     /// \param hint the window hint
     /// \returns the new active window
