@@ -88,7 +88,7 @@ public:
 
     /// The top left corner of the window.
     ///
-    /// \returns a const reference to the top left point
+    /// \returns the top left point
     auto top_left() const -> mir::optional_value<Point> const&;
 
     /// The size of the window for window management purposes.
@@ -106,28 +106,28 @@ public:
     ///
     /// This value is **not** guaranteed to be honored by the client.
     ///
-    /// \returns a const reference to the size
+    /// \returns the size
     auto size() const -> mir::optional_value<Size> const&;
 
     /// The name of the window.
     ///
-    /// \returns a const reference to the name
+    /// \returns the name
     auto name() const -> mir::optional_value<std::string> const&;
 
     /// The output id optionally associated with a fullscreen window.
     ///
-    /// \returns a const reference to the output id
+    /// \returns the output id
     /// \sa miral::Output - the class that holds this output id
     auto output_id() const -> mir::optional_value<int> const&;
 
     /// The type of the window.
     ///
-    /// \returns a const reference to the type
+    /// \returns the type
     auto type() const -> mir::optional_value<MirWindowType> const&;
 
     /// The state of the window.
     ///
-    /// \returns a const reference to the state
+    /// \returns the state
     auto state() const -> mir::optional_value<MirWindowState> const&;
 
     //// The preferred orientation of the window.
@@ -135,7 +135,7 @@ public:
     /// This is often used when the buffer of the window is provided by the client to match
     /// the current orientation of the output.
     ///
-    /// \returns a a const reference to the orientation.
+    /// \returns a the orientation.
     auto preferred_orientation() const -> mir::optional_value<MirOrientationMode> const&;
 
     /// Defines the rectangle of a parent window against which the #aux_rect_placement_gravity
@@ -145,13 +145,13 @@ public:
     /// rectangle of the parent. See an explanation of this interaction in the documentation:
     /// https://canonical-mir.readthedocs-hosted.com/stable/explanation/window-positions-under-wayland/
     ///
-    /// \returns a const reference to the auxiliary rectangle
+    /// \returns the auxiliary rectangle
     auto aux_rect() const -> mir::optional_value<Rectangle> const&;
 
     /// The placement hint describes how child window placement should be 
     /// adjusted they cannot be placed in the requested position
     ///
-    /// \returns a const reference to the placement hints
+    /// \returns the placement hints
     auto placement_hints() const -> mir::optional_value<MirPlacementHints> const&;
 
     /// The placement gravity describes what edge of a popup window should attach
@@ -164,12 +164,12 @@ public:
     /// such that the edge defined by the #window_placement_gravity of the popup touches
     /// the edge defined by the #aux_rect_placement_gravity of the parent window.
     ///
-    /// \returns a const reference to the placement gravity
+    /// \returns the placement gravity
     auto window_placement_gravity() const -> mir::optional_value<MirPlacementGravity> const&;
 
     /// The auxiliary placement gravity of the window
     ///
-    /// \returns a const reference to the placement gravity
+    /// \returns the placement gravity
     auto aux_rect_placement_gravity() const -> mir::optional_value<MirPlacementGravity> const&;
 
     /// The auxiliary placement describes the edge of the parent that the corresponding edge
@@ -182,22 +182,22 @@ public:
     /// such that the edge defined by the #window_placement_gravity of the popup touches
     /// the edge defined by the #aux_rect_placement_gravity of the parent window.
     ///
-    /// \returns a const reference to the placement offset
+    /// \returns the placement offset
     auto aux_rect_placement_offset() const -> mir::optional_value<Displacement> const&;
 
     /// The minimum width of the window.
     ///
-    /// \returns a const reference to the minimum width
+    /// \returns the minimum width
     auto min_width() const -> mir::optional_value<Width> const&;
 
     /// The minimum height of the window.
     ///
-    /// \returns a const reference to the minimum height
+    /// \returns the minimum height
     auto min_height() const -> mir::optional_value<Height> const&;
 
     /// The maximum width of the window.
     ///
-    /// \returns a const reference to the maximum width
+    /// \returns the maximum width
     auto max_width() const -> mir::optional_value<Width> const&;
 
     /// The maximum height of the window.
@@ -212,7 +212,7 @@ public:
     ///
     /// Wayland protocols do not support this property, so it generally will not be requested by clients.
     ///
-    /// \returns a const reference to the width increment.
+    /// \returns the width increment.
     auto width_inc() const -> mir::optional_value<DeltaX> const&;
 
     /// The size increments of the window in the Y direction.
@@ -222,21 +222,21 @@ public:
     ///
     /// Wayland protocols do not support this property, so it generally will not be requested by clients.
     ///
-    /// \returns a const reference to the height increment
+    /// \returns the height increment
     auto height_inc() const -> mir::optional_value<DeltaY> const&;
 
     /// The minimum aspect ratio.
     ///
     /// Wayland protocols do not support this property, so it generally will not be requested by clients.
     ///
-    /// \returns a const reference to the min aspect ratio
+    /// \returns the min aspect ratio
     auto min_aspect() const -> mir::optional_value<AspectRatio> const&;
 
     /// The maximum aspect ratio.
     ///
     /// Wayland protocols do not support this property, so it generally will not be requested by clients.
     ///
-    /// \returns a const reference to the max aspect ratio
+    /// \returns the max aspect ratio
     auto max_aspect() const -> mir::optional_value<AspectRatio> const&;
 
     /// The parent surface of the window.
@@ -249,24 +249,24 @@ public:
     /// This is an area in world coordinates that describes the input region
     /// for the window.
     ///
-    /// \returns a const reference to the list of rectangles that describes the input region
+    /// \returns the list of rectangles that describes the input region
     auto input_shape() const -> mir::optional_value<std::vector<Rectangle>> const&;
 
     /// The input mode of the window.
     ///
-    /// \returns a const reference to the input mode
+    /// \returns the input mode
     auto input_mode() const -> mir::optional_value<InputReceptionMode> const&;
 
     /// The shell chrome of the window.
     ///
     /// This is currently unused.
     ///
-    /// \returns a const reference to the shell chrome
+    /// \returns the shell chrome
     auto shell_chrome() const -> mir::optional_value<MirShellChrome> const&;
 
     /// The pointer confinement of the window.
     ///
-    /// \returns a const reference to the pointer confinement
+    /// \returns the pointer confinement
     auto confine_pointer() const -> mir::optional_value<MirPointerConfinementState> const&;
 
     /// Custom userdata set on the window.
@@ -274,7 +274,7 @@ public:
     /// This payload is set by the compositor author. The author may use this to
     /// set any information that they would like associated with the window.
     ///
-    /// \returns a const reference to the userdata
+    /// \returns the userdata
     auto userdata() const -> mir::optional_value<std::shared_ptr<void>> const&;
 
     /// The new position of the window frame.
@@ -282,9 +282,13 @@ public:
     /// \returns a reference to  the top left point
     auto top_left() -> mir::optional_value<Point>&;
 
-    /// The size of the window frame, including any decorations.
+    /// The size of the window for window management purposes.
     ///
-    /// This value will be adjusted based on #min_width(), #WindowInfo::max_width(),
+    /// It may differ from the buffer size drawn by the client as it may include decorations
+    ///  and/or exclude drop-shadows
+    ///
+    /// \note If the #WindowSpecification is applied using #WindowManagementTools::modify_client
+    /// then value will be adjusted based on #min_width(), #WindowInfo::max_width(),
     /// #WindowInfo::min_height(), #WindowInfo::max_height(), #WindowInfo::min_aspect(),
     /// #WindowInfo::max_aspect(), #WindowInfo::width_inc() and WindowInfo::height_inc().
     /// Set these properties to their default values if they should be ignored.
@@ -293,28 +297,28 @@ public:
     ///
     /// This value is **not** guaranteed to be honored by the client.
     ///
-    /// \returns a reference to the size
+    /// \returns the size
     auto size() -> mir::optional_value<Size>&;
 
     /// The name of the window.
     ///
-    /// \returns a reference to the name of the window
+    /// \returns the name of the window
     auto name() -> mir::optional_value<std::string>&;
 
     /// The output id of the window.
     ///
-    /// \returns a reference to the output id
+    /// \returns the output id
     /// \sa miral::Output - the class that holds this output id
     auto output_id() -> mir::optional_value<int>&;
 
     /// The type of the window.
     ///
-    /// \returns a reference to the type of the window
+    /// \returns the type of the window
     auto type() -> mir::optional_value<MirWindowType>&;
 
     /// The state of the window.
     ///
-    /// \returns a reference to the state of the window
+    /// \returns the state of the window
     auto state() -> mir::optional_value<MirWindowState>&;
 
     /// The preferred orientation of the window.
@@ -322,7 +326,7 @@ public:
     /// This is often used when the buffer of the window is provided by the client to match
     /// the current orientation of the output.
     ///
-    /// \returns a reference to the orientation of the window.
+    /// \returns the orientation of the window.
     auto preferred_orientation() -> mir::optional_value<MirOrientationMode>&;
 
     /// Defines the rectangle of a parent window against which the #aux_rect_placement_gravity
@@ -332,14 +336,14 @@ public:
     /// rectangle of the parent. See an explanation of this interaction in the documentation:
     /// https://canonical-mir.readthedocs-hosted.com/stable/explanation/window-positions-under-wayland/
     ///
-    /// \returns a reference to the auxiliary rectangle
+    /// \returns the auxiliary rectangle
     auto aux_rect() -> mir::optional_value<Rectangle>&;
 
     /// The placement hint describes how windows with type #mir_window_type_menu,
     /// #mir_window_type_satellite or #mir_window_type_tip should be adjusted when
     /// their placement would cause them to extend beyond their current output.
     ///
-    /// \returns a reference to the placement hints
+    /// \returns the placement hints
     auto placement_hints() -> mir::optional_value<MirPlacementHints>&;
 
     /// The placement gravity describes what edge of a popup window should attach
@@ -352,7 +356,7 @@ public:
     /// such that the edge defined by the #window_placement_gravity of the popup touches
     /// the edge defined by the #aux_rect_placement_gravity of the parent window.
     ///
-    /// \returns  a reference to the window placement gravity
+    /// \returns  the window placement gravity
     auto window_placement_gravity() -> mir::optional_value<MirPlacementGravity>&;
 
     /// The auxiliary placement describes the edge of the parent that the corresponding edge
@@ -365,7 +369,7 @@ public:
     /// such that the edge defined by the #window_placement_gravity of the popup touches
     /// the edge defined by the #aux_rect_placement_gravity of the parent window.
     ///
-    /// \returns a reference to the auxiliary placement gravity
+    /// \returns the auxiliary placement gravity
     auto aux_rect_placement_gravity() -> mir::optional_value<MirPlacementGravity>&;
 
     // The auxiliary placement describes the edge of the parent that the corresponding edge
@@ -378,22 +382,22 @@ public:
     /// such that the edge defined by the #window_placement_gravity of the popup touches
     /// the edge defined by the #aux_rect_placement_gravity of the parent window.
     ///
-    /// \returns a reference to the placement offset
+    /// \returns the placement offset
     auto aux_rect_placement_offset() -> mir::optional_value<Displacement>&;
 
     /// The minimum width of the window.
     ///
-    /// \returns a reference to the minimum width
+    /// \returns the minimum width
     auto min_width() -> mir::optional_value<Width>&;
 
     /// The minimum height of the window.
     ///
-    /// \returns a reference to the minimum height
+    /// \returns the minimum height
     auto min_height() -> mir::optional_value<Height>&;
 
     /// The maximum width of the window.
     ///
-    /// \returns a reference to the maximum width
+    /// \returns the maximum width
     auto max_width() -> mir::optional_value<Width>&;
 
     /// The maximum height of the window
@@ -408,7 +412,7 @@ public:
     ///
     /// Wayland protocols do not support this property, so it generally will not be requested by clients.
     ///
-    /// \returns a reference to the width increment
+    /// \returns the width increment
     auto width_inc() -> mir::optional_value<DeltaX>&;
 
     /// The size increments of the window in the Y direction.
@@ -418,26 +422,26 @@ public:
     ///
     /// Wayland protocols do not support this property, so it generally will not be requested by clients.
     ///
-    /// \returns a reference to the height increment
+    /// \returns the height increment
     auto height_inc() -> mir::optional_value<DeltaY>&;
 
     /// The minimum aspect ratio.
     ///
     /// Wayland protocols do not support this property, so it generally will not be requested by clients.
     ///
-    /// \returns a reference to the min aspect ratio
+    /// \returns the min aspect ratio
     auto min_aspect() -> mir::optional_value<AspectRatio>&;
 
     /// The maximum aspect ratio.
     ///
     /// Wayland protocols do not support this property, so it generally will not be requested by clients.
     ///
-    /// \returns a reference to the max aspect ratio
+    /// \returns the max aspect ratio
     auto max_aspect() -> mir::optional_value<AspectRatio>&;
 
     /// The parent of this window.
     ///
-    /// \returns a reference to the parent of this window
+    /// \returns the parent of this window
     auto parent() -> mir::optional_value<std::weak_ptr<mir::scene::Surface>>&;
 
     /// The input shape of the window.
@@ -445,24 +449,24 @@ public:
     /// This is an area in world coordinates that describes the input region
     /// for the window.
     ///
-    /// \returns a reference to the list of rectangles that describes the input region
+    /// \returns the list of rectangles that describes the input region
     auto input_shape() -> mir::optional_value<std::vector<Rectangle>>&;
 
     /// The input mode of the window.
     ///
-    /// \returns a reference to the input mode
+    /// \returns the input mode
     auto input_mode() -> mir::optional_value<InputReceptionMode>&;
 
     /// The shell chrome of the window.
     ///
     /// This is currently unused.
     ///
-    /// \returns a reference to the shell chrome
+    /// \returns the shell chrome
     auto shell_chrome() -> mir::optional_value<MirShellChrome>&;
 
     /// The pointer confinement of the window.
     ///
-    /// \returns a reference to the pointer confinement
+    /// \returns the pointer confinement
     auto confine_pointer() -> mir::optional_value<MirPointerConfinementState>&;
 
     /// Custom userdata set on the window.
@@ -470,17 +474,17 @@ public:
     /// This payload is set by the compositor author. The author may use this to
     /// set any information that they would like associated with the window.
     ///
-    /// \returns a reference to the userdata
+    /// \returns the userdata
     auto userdata() -> mir::optional_value<std::shared_ptr<void>>&;
 
     /// The depth layer of a child window is updated with the depth layer of its parent, but can be overridden.
     ///
-    /// \returns a const reference to the depth layer
+    /// \returns the depth layer
     auto depth_layer() const -> mir::optional_value<MirDepthLayer> const&;
 
     /// The depth layer of a child window is updated with the depth layer of its parent, but can be overridden.
     ///
-    /// \returns a reference to the depth layer
+    /// \returns the depth layer
     auto depth_layer() -> mir::optional_value<MirDepthLayer>&;
 
     /// The set of window edges that are attached to edges of the output.
@@ -489,7 +493,7 @@ public:
     /// If attached to oposite edges (eg left and right), it is stretched across the output in that direction
     /// If all edges are specified, it takes up the entire output
     ///
-    /// \returns a const reference to the edges
+    /// \returns the edges
     auto attached_edges() const -> mir::optional_value<MirPlacementGravity> const&;
 
     /// The set of window edges that are attached to edges of the output.
@@ -498,7 +502,7 @@ public:
     /// If attached to oposite edges (eg left and right), it is stretched across the output in that direction
     /// If all edges are specified, it takes up the entire output
     ///
-    /// \returns a reference to the edges
+    /// \returns the edges
     auto attached_edges() -> mir::optional_value<MirPlacementGravity>&;
 
     /// The area over which the window should not be occluded.
@@ -507,7 +511,7 @@ public:
     /// If the outer optional is unset (the default), the window's exclusive rect is not changed by this spec
     /// If the outer optional is set but the inner is not, the window's exclusive rect is cleared
     ///
-    /// \returns a const reference to the exclusive rectangle
+    /// \returns the exclusive rectangle
     auto exclusive_rect() const -> mir::optional_value<mir::optional_value<mir::geometry::Rectangle>> const&;
 
     /// The area over which the window should not be occluded.
@@ -516,78 +520,78 @@ public:
     /// If the outer optional is unset (the default), the window's exclusive rect is not changed by this spec
     /// If the outer optional is set but the inner is not, the window's exclusive rect is cleared
     ///
-    /// \returns a reference to the exclusive rectangle
+    /// \returns the exclusive rectangle
     auto exclusive_rect() -> mir::optional_value<mir::optional_value<mir::geometry::Rectangle>>&;
 
     /// Decides whether this window should ignore the exclusion zones set by other windows.
     ///
     /// This is only meaningful for windows attached to an edge.
     ///
-    /// \returns a const reference to the flag
+    /// \returns the flag
     auto ignore_exclusion_zones() const -> mir::optional_value<bool> const&;
 
     /// Decides whether this window should ignore the exclusion zones set by other windows.
     ///
     /// This is only meaningful for windows attached to an edge.
     ///
-    /// \returns a reference to the flag
+    /// \returns the flag
     auto ignore_exclusion_zones() -> mir::optional_value<bool>&;
 
     /// The D-bus service name and basename of the app's .desktop file.
     ///
     /// See https://specifications.freedesktop.org/desktop-entry-spec/
     ///
-    /// \returns a const reference to the application id
+    /// \returns the application id
     auto application_id() const -> mir::optional_value<std::string> const&;
 
     /// The D-bus service name and basename of the app's .desktop file.
     ///
     /// See https://specifications.freedesktop.org/desktop-entry-spec/
     ///
-    /// \returns a reference to the application id
+    /// \returns the application id
     auto application_id() -> mir::optional_value<std::string>&;
 
     /// If this window should have server-side decorations provided by Mir
     /// Currently, Mir only respects this value during surface construction
     ///
-    /// \returns a const reference to the flag
+    /// \returns the flag
     auto server_side_decorated() const -> mir::optional_value<bool> const&;
 
     /// If this window should have server-side decorations provided by Mir
     /// Currently, Mir only respects this value during surface construction
     ///
-    /// \returns a reference to the flag
+    /// \returns the flag
     auto server_side_decorated() -> mir::optional_value<bool>&;
 
     /// Describes how the window should gain and lose focus.
     ///
-    /// \returns a const reference to the focus mode
+    /// \returns the focus mode
     auto focus_mode() const -> mir::optional_value<MirFocusMode> const&;
 
     /// Describes how the window should gain and lose focus.
     ///
-    /// \returns a reference to the focus mode
+    /// \returns the focus mode
     auto focus_mode() -> mir::optional_value<MirFocusMode>&;
 
     /// If this surface should be shown while the compositor is locked.
     ///
-    /// \returns a const reference to the flag
+    /// \returns the flag
     auto visible_on_lock_screen() const -> mir::optional_value<bool> const&;
 
     /// If this surface should be shown while the compositor is locked.
     ///
-    /// \returns a reference to the flag
+    /// \returns the flag
     auto visible_on_lock_screen() -> mir::optional_value<bool>&;
 
     /// Describes which edges are touching part of the tiling grid.
     ///
-    /// \returns a const reference to the tiled edges
+    /// \returns the tiled edges
     /// \remark Since MirAL 5.3
     auto tiled_edges() const -> mir::optional_value<mir::Flags<MirTiledEdge>> const&;
 
     /// Describes which edges are touching part of the tiling grid.
     ///
-    /// \returns a reference to the tiled edges
+    /// \returns the tiled edges
     /// \remark Since MirAL 5.3
     auto tiled_edges() -> mir::optional_value<mir::Flags<MirTiledEdge>>&;
 
