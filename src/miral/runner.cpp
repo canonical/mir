@@ -21,6 +21,7 @@
 #include "join_client_threads.h"
 #include "launch_app.h"
 
+#include <mir/abnormal_exit.h>
 #include <mir/server.h>
 #include <mir/main_loop.h>
 #include <mir/report_exception.h>
@@ -183,6 +184,11 @@ try
     server->run();
 
     return server->exited_normally() ? EXIT_SUCCESS : EXIT_FAILURE;
+}
+catch (mir::ExitWithOutput const&)
+{
+    mir::report_exception();
+    return EXIT_SUCCESS;
 }
 catch (...)
 {
