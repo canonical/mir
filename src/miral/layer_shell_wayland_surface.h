@@ -33,8 +33,8 @@ public:
     struct CreationParams
     {
         mir::geometry::Size size;
-        uint layer;
-        uint anchor;
+        uint32_t layer;
+        uint32_t anchor;
     };
 
     /// Construct a layer shell surface for the given application.
