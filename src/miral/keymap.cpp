@@ -44,7 +44,7 @@ namespace mi = mir::input;
 namespace
 {
 auto constexpr keymap_description = "Keymap to use. "
-                                    "Specified in the form <layout>[+<variant>[+<options>]], e.g. \"gb\" or \"cz+qwerty\" or \"de++compose:caps\"";
+                                    "Specified in the form `<layout>[+<variant>[+<options>]]`, e.g. `gb` or `cz+qwerty` or `de++compose:caps`";
 
 std::string keymap_default()
 {

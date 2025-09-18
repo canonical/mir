@@ -147,13 +147,13 @@ mo::DefaultConfiguration::DefaultConfiguration(
         (arw_server_socket_opt, "Make server Wayland socket readable and writeable by all users. "
             "For debugging purposes only.")
         (platform_display_libs, po::value<std::string>(),
-            "Comma separated list of libraries to use for platform output support, e.g. mir:x11,mir:wayland. "
+            "Comma separated list of libraries to use for platform output support, e.g. `mir:x11,mir:wayland`. "
             "If not provided the libraries are autodetected.")
         (platform_rendering_libs, po::value<std::string>(),
-            "Comma separated list of libraries to use for platform rendering support, e.g. mir:egl-generic. "
+            "Comma separated list of libraries to use for platform rendering support, e.g. `mir:egl-generic`. "
             "If not provided the libraries are autodetected.")
         (platform_input_lib, po::value<std::string>(),
-            "Library to use for platform input support, e.g. mir:stub-input. "
+            "Library to use for platform input support, e.g. `mir:stub-input`. "
             "If not provided this is autodetected.")
         (platform_path, po::value<std::string>()->default_value(MIR_SERVER_PLATFORM_PATH),
             "Directory to look for platform libraries.")
@@ -182,9 +182,9 @@ mo::DefaultConfiguration::DefaultConfiguration(
         (cursor_opt,
             po::value<std::string>()->default_value("auto"),
             "Cursor type:\n"
-            " - auto: use hardware if available, or fallback to software.\n"
-            " - null: cursor disabled.\n"
-            " - software: always use software cursor.")
+            " - `auto`: use hardware if available, or fallback to software.\n"
+            " - `null`: cursor disabled.\n"
+            " - `software`: always use software cursor.")
         (enable_key_repeat_opt, po::value<bool>()->default_value(true),
             "Enable server generated key repeat.")
         (idle_timeout_opt, po::value<int>()->default_value(0),
@@ -200,19 +200,19 @@ mo::DefaultConfiguration::DefaultConfiguration(
         (console_provider,
             po::value<std::string>()->default_value("auto"),
             "Method used to handle console-related tasks (device handling, VT switching, etc):\n"
-            " - logind: use logind.\n"
-            " - vt: use the Linux VT subsystem. Requires root.\n"
-            " - none: support no console-related tasks. Useful for nested platforms which do not "
+            " - `logind`: use logind.\n"
+            " - `vt`: use the Linux VT subsystem. Requires root.\n"
+            " - `none`: support no console-related tasks. Useful for nested platforms which do not "
             "need raw device access and which don't have a VT concept.\n"
-            " - auto: detect the appropriate provider.")
+            " - `auto`: detect the appropriate provider.")
         (vt_option_name,
             boost::program_options::value<int>()->default_value(0),
             "VT to run on or 0 to use current. "
-            "Only used when --console-provider=vt.")
+            "Only used when `--console-provider=vt`.")
         (vt_switching_option_name,
             boost::program_options::value<bool>()->default_value(true),
             "Enable VT switching on Ctrl+Alt+F*. "
-            "Only used when --console-provider=vt|logind.");
+            "Only used when `--console-provider=vt|logind`.");
 
         add_platform_options();
 }
