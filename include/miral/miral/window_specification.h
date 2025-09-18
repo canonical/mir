@@ -130,7 +130,7 @@ public:
     /// \returns the state
     auto state() const -> mir::optional_value<MirWindowState> const&;
 
-    //// The preferred orientation of the window.
+    /// The preferred orientation of the window.
     ///
     /// This is often used when the buffer of the window is provided by the client to match
     /// the current orientation of the output.
@@ -138,12 +138,19 @@ public:
     /// \returns a the orientation.
     auto preferred_orientation() const -> mir::optional_value<MirOrientationMode> const&;
 
-    /// Defines the rectangle of a parent window against which the #aux_rect_placement_gravity
-    /// is decided.
+    /// Describes the auxiliary rectangle.
     ///
-    /// This is useful for when the window  wants to orient itself relative to a particular
-    /// rectangle of the parent. See an explanation of this interaction in the documentation:
-    /// https://canonical-mir.readthedocs-hosted.com/stable/explanation/window-positions-under-wayland/
+    /// A window can be positioned relative to its parent window using four fields:
+    ///
+    /// - `#aux_rect` specifies a reference rectangle on the parent window.
+    /// - `#aux_rect_placement_gravity` defines a specific point on `#aux_rect`.
+    /// - `#aux_rect_placement_offset`: an offset on `#aux_rect` relative to `#aux_rect`
+    /// - `#window_placement_gravity` defines a point on the child window.
+    ///
+    /// The child window is positioned so that the point defined by
+    /// `#window_placement_gravity` on the child window aligns with the point
+    /// defined by `#aux_rect_placement_gravity` on the parent window's `#aux_rect`.
+    /// The final position is offset by `#aux_rect`.
     ///
     /// \returns the auxiliary rectangle
     auto aux_rect() const -> mir::optional_value<Rectangle> const&;
@@ -154,35 +161,55 @@ public:
     /// \returns the placement hints
     auto placement_hints() const -> mir::optional_value<MirPlacementHints> const&;
 
-    /// The placement gravity describes what edge of a popup window should attach
-    /// to a corresponding edge of its parent.
+    /// Describes the placement gravity.
     ///
-    /// This only applies to windows with type #mir_window_type_menu, #mir_window_type_satellite
-    /// or #mir_window_type_tip.
+    /// A window can be positioned relative to its parent window using four fields:
     ///
-    /// #aux_rect_placement_gravity provides a way to set a corresponding point on a parent,
-    /// such that the edge defined by the #window_placement_gravity of the popup touches
-    /// the edge defined by the #aux_rect_placement_gravity of the parent window.
+    /// - `#aux_rect` specifies a reference rectangle on the parent window.
+    /// - `#aux_rect_placement_gravity` defines a specific point on `#aux_rect`.
+    /// - `#aux_rect_placement_offset`: an offset on `#aux_rect` relative to `#aux_rect`
+    /// - `#window_placement_gravity` defines a point on the child window.
+    ///
+    /// The child window is positioned so that the point defined by
+    /// `#window_placement_gravity` on the child window aligns with the point
+    /// defined by `#aux_rect_placement_gravity` on the parent window's `#aux_rect`.
+    /// The final position is offset by `#aux_rect`.
     ///
     /// \returns the placement gravity
     auto window_placement_gravity() const -> mir::optional_value<MirPlacementGravity> const&;
 
-    /// The auxiliary placement gravity of the window
+    /// Describes the auxiliary rectangle placement gravity.
     ///
-    /// \returns the placement gravity
+    /// A window can be positioned relative to its parent window using four fields:
+    ///
+    /// - `#aux_rect` specifies a reference rectangle on the parent window.
+    /// - `#aux_rect_placement_gravity` defines a specific point on `#aux_rect`.
+    /// - `#aux_rect_placement_offset`: an offset on `#aux_rect` relative to `#aux_rect`
+    /// - `#window_placement_gravity` defines a point on the child window.
+    ///
+    /// The child window is positioned so that the point defined by
+    /// `#window_placement_gravity` on the child window aligns with the point
+    /// defined by `#aux_rect_placement_gravity` on the parent window's `#aux_rect`.
+    /// The final position is offset by `#aux_rect`.
+    ///
+    /// \returns the auxiliary placement gravity
     auto aux_rect_placement_gravity() const -> mir::optional_value<MirPlacementGravity> const&;
 
-    /// The auxiliary placement describes the edge of the parent that the corresponding edge
-    /// of the popup should attach itself to.
+    /// Describes the auxiliary rectangle placement offset.
     ///
-    /// This only applied to windows with type #mir_window_type_menu, #mir_window_type_satellite
-    /// or #mir_window_type_tip.
+    /// A window can be positioned relative to its parent window using four fields:
     ///
-    /// #window_placement_gravity provides a way to set a corresponding point on the popup itself,
-    /// such that the edge defined by the #window_placement_gravity of the popup touches
-    /// the edge defined by the #aux_rect_placement_gravity of the parent window.
+    /// - `#aux_rect` specifies a reference rectangle on the parent window.
+    /// - `#aux_rect_placement_gravity` defines a specific point on `#aux_rect`.
+    /// - `#aux_rect_placement_offset`: an offset on `#aux_rect` relative to `#aux_rect`
+    /// - `#window_placement_gravity` defines a point on the child window.
     ///
-    /// \returns the placement offset
+    /// The child window is positioned so that the point defined by
+    /// `#window_placement_gravity` on the child window aligns with the point
+    /// defined by `#aux_rect_placement_gravity` on the parent window's `#aux_rect`.
+    /// The final position is offset by `#aux_rect`.
+    ///
+    /// \returns the auxiliary placement gravity
     auto aux_rect_placement_offset() const -> mir::optional_value<Displacement> const&;
 
     /// The minimum width of the window.
@@ -329,12 +356,19 @@ public:
     /// \returns the orientation of the window.
     auto preferred_orientation() -> mir::optional_value<MirOrientationMode>&;
 
-    /// Defines the rectangle of a parent window against which the #aux_rect_placement_gravity
-    /// is decided.
+    /// Describes the auxiliary rectangle.
     ///
-    /// This is useful for when the window  wants to orient itself relative to a particular
-    /// rectangle of the parent. See an explanation of this interaction in the documentation:
-    /// https://canonical-mir.readthedocs-hosted.com/stable/explanation/window-positions-under-wayland/
+    /// A window can be positioned relative to its parent window using four fields:
+    ///
+    /// - `#aux_rect` specifies a reference rectangle on the parent window.
+    /// - `#aux_rect_placement_gravity` defines a specific point on `#aux_rect`.
+    /// - `#aux_rect_placement_offset`: an offset on `#aux_rect` relative to `#aux_rect`
+    /// - `#window_placement_gravity` defines a point on the child window.
+    ///
+    /// The child window is positioned so that the point defined by
+    /// `#window_placement_gravity` on the child window aligns with the point
+    /// defined by `#aux_rect_placement_gravity` on the parent window's `#aux_rect`.
+    /// The final position is offset by `#aux_rect`.
     ///
     /// \returns the auxiliary rectangle
     auto aux_rect() -> mir::optional_value<Rectangle>&;
@@ -346,43 +380,55 @@ public:
     /// \returns the placement hints
     auto placement_hints() -> mir::optional_value<MirPlacementHints>&;
 
-    /// The placement gravity describes what edge of a popup window should attach
-    /// to a corresponding edge of its parent.
+    /// Describes the placement gravity.
     ///
-    /// This only applies to windows with type #mir_window_type_menu, #mir_window_type_satellite
-    /// or #mir_window_type_tip.
+    /// A window can be positioned relative to its parent window using four fields:
     ///
-    /// #aux_rect_placement_gravity provides a way to set a corresponding point on a parent,
-    /// such that the edge defined by the #window_placement_gravity of the popup touches
-    /// the edge defined by the #aux_rect_placement_gravity of the parent window.
+    /// - `#aux_rect` specifies a reference rectangle on the parent window.
+    /// - `#aux_rect_placement_gravity` defines a specific point on `#aux_rect`.
+    /// - `#aux_rect_placement_offset`: an offset on `#aux_rect` relative to `#aux_rect`
+    /// - `#window_placement_gravity` defines a point on the child window.
     ///
-    /// \returns  the window placement gravity
+    /// The child window is positioned so that the point defined by
+    /// `#window_placement_gravity` on the child window aligns with the point
+    /// defined by `#aux_rect_placement_gravity` on the parent window's `#aux_rect`.
+    /// The final position is offset by `#aux_rect`.
+    ///
+    /// \returns the placement gravity
     auto window_placement_gravity() -> mir::optional_value<MirPlacementGravity>&;
 
-    /// The auxiliary placement describes the edge of the parent that the corresponding edge
-    /// of the popup should attach itself to.
+    /// Describes the auxiliary rectangle placement gravity.
     ///
-    /// This only applied to windows with type #mir_window_type_menu, #mir_window_type_satellite
-    /// or #mir_window_type_tip.
+    /// A window can be positioned relative to its parent window using four fields:
     ///
-    /// #window_placement_gravity provides a way to set a corresponding point on the popup itself,
-    /// such that the edge defined by the #window_placement_gravity of the popup touches
-    /// the edge defined by the #aux_rect_placement_gravity of the parent window.
+    /// - `#aux_rect` specifies a reference rectangle on the parent window.
+    /// - `#aux_rect_placement_gravity` defines a specific point on `#aux_rect`.
+    /// - `#aux_rect_placement_offset`: an offset on `#aux_rect` relative to `#aux_rect`
+    /// - `#window_placement_gravity` defines a point on the child window.
+    ///
+    /// The child window is positioned so that the point defined by
+    /// `#window_placement_gravity` on the child window aligns with the point
+    /// defined by `#aux_rect_placement_gravity` on the parent window's `#aux_rect`.
+    /// The final position is offset by `#aux_rect`.
     ///
     /// \returns the auxiliary placement gravity
     auto aux_rect_placement_gravity() -> mir::optional_value<MirPlacementGravity>&;
 
-    // The auxiliary placement describes the edge of the parent that the corresponding edge
-    /// of the popup should attach itself to.
+    /// Describes the auxiliary rectangle placement offset.
     ///
-    /// This only applied to windows with type #mir_window_type_menu, #mir_window_type_satellite
-    /// or #mir_window_type_tip.
+    /// A window can be positioned relative to its parent window using four fields:
     ///
-    /// #window_placement_gravity provides a way to set a corresponding point on the popup itself,
-    /// such that the edge defined by the #window_placement_gravity of the popup touches
-    /// the edge defined by the #aux_rect_placement_gravity of the parent window.
+    /// - `#aux_rect` specifies a reference rectangle on the parent window.
+    /// - `#aux_rect_placement_gravity` defines a specific point on `#aux_rect`.
+    /// - `#aux_rect_placement_offset`: an offset on `#aux_rect` relative to `#aux_rect`
+    /// - `#window_placement_gravity` defines a point on the child window.
     ///
-    /// \returns the placement offset
+    /// The child window is positioned so that the point defined by
+    /// `#window_placement_gravity` on the child window aligns with the point
+    /// defined by `#aux_rect_placement_gravity` on the parent window's `#aux_rect`.
+    /// The final position is offset by `#aux_rect`.
+    ///
+    /// \returns the auxiliary placement gravity
     auto aux_rect_placement_offset() -> mir::optional_value<Displacement>&;
 
     /// The minimum width of the window.
