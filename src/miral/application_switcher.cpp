@@ -142,7 +142,6 @@ private:
     static constexpr Color white{255, 255, 255, 255};
     static constexpr Color yellow{255, 255, 0, 255};
 
-    // Font search logic should be kept in sync with src/server/shell/decoration/renderer.cpp
     static auto default_font() -> std::string
     {
         struct FontPath
@@ -559,16 +558,26 @@ private:
         for (int j = 0; j < height; j++)
         {
             uint8_t pattern[4];
-
             uint8_t constexpr bottom_color[] = { 0x11, 0x11, 0x11 };   // Dark gray
             uint8_t constexpr top_color[] =    { 0x33, 0x33, 0x33 };   // Cool gray
             for (auto i = 0; i != 3; ++i)
                 pattern[i] = (j * bottom_color[i] + (height - j) * top_color[i]) / height;
-            pattern[3] = 0xff;
+
+            if (j < static_cast<int>(static_cast<float>(height) / 8.f) || j >= static_cast<int>(static_cast<float>(height) * (7.f / 8.f)))
+                pattern[3] = 0x22;
+            else
+                pattern[3] = 0xff;
+
 
             auto const pixel = reinterpret_cast<uint32_t*>(row);
             for (int i = 0; i < width; i++)
+            {
+                auto old_alpha = pattern[3];
+                if (i < static_cast<int>(static_cast<float>(width) / 8.f) || i >= static_cast<int>(static_cast<float>(width) * (7.f / 8.f)))
+                    pattern[3] = 0x22;
                 mempcpy(pixel + i, pattern, sizeof pixel[i]);
+                pattern[3] = old_alpha;
+            }
 
             row += stride;
         }
