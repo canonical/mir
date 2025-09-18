@@ -69,7 +69,6 @@ private:
     static void closed(void* data, zwlr_layer_surface_v1* zwlr_layer_surface_v1);
 
     static zwlr_layer_surface_v1_listener layer_surface_listener;
-    WaylandApp const* const app_;
     WaylandObject<wl_surface> const surface_;
     WaylandObject<zwlr_layer_surface_v1> const layer_surface_;
     mir::geometry::Size configured_size_;

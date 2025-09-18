@@ -43,8 +43,7 @@ zwlr_layer_surface_v1_listener miral::tk::LayerShellWaylandSurface::layer_surfac
 miral::tk::LayerShellWaylandSurface::LayerShellWaylandSurface(
     WaylandApp const* app,
     CreationParams const& creation_params)
-    : app_{app},
-      surface_{wl_compositor_create_surface(app->compositor()), wl_surface_destroy},
+    : surface_{wl_compositor_create_surface(app->compositor()), wl_surface_destroy},
       layer_surface_{
           zwlr_layer_shell_v1_get_layer_surface(app->layer_shell(), surface_, nullptr, creation_params.layer, "miral"),
           zwlr_layer_surface_v1_destroy
