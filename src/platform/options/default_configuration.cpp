@@ -23,6 +23,7 @@
 #include "mir/logging/null_shared_library_prober_report.h"
 
 #include <format>
+#include <iostream>
 
 namespace mo = mir::options;
 
@@ -389,7 +390,6 @@ void mo::DefaultConfiguration::parse_arguments(
 
         if (!tokens.empty()) unparsed_arguments_handler(tokens.size(), tokens.data());
 
-        // See the ExitWithOutput documentation for information about its usage.
         if (options.is_set("help"))
         {
             std::ostringstream help_text;
@@ -402,14 +402,12 @@ void mo::DefaultConfiguration::parse_arguments(
                     help_text << module_desc;
                 }
             }
-            BOOST_THROW_EXCEPTION(mir::ExitWithOutput(help_text.str()));
+            std::cout << help_text.str() << std::endl;
         }
 
         if (options.is_set("version"))
         {
-            std::ostringstream mir_version;
-            mir_version << MIR_VERSION_MAJOR << "." << MIR_VERSION_MINOR << "." << MIR_VERSION_MICRO << std::endl;
-            BOOST_THROW_EXCEPTION(mir::ExitWithOutput(mir_version.str()));
+            std::cout << MIR_VERSION_MAJOR << "." << MIR_VERSION_MINOR << "." << MIR_VERSION_MICRO << std::endl;
         }
     }
     catch (po::error const& error)
