@@ -397,6 +397,13 @@ void mir::Server::apply_settings()
 
 void mir::Server::run()
 {
+    // If only informational output requested, stop here.
+    if (get_options()->is_set("help") || get_options()->is_set("version"))
+    {
+        self->exit_status = true;
+        return;
+    }
+
     try
     {
         mir::log_info("Starting");

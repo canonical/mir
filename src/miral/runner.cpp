@@ -180,12 +180,6 @@ try
         fd_manager->set_main_loop(main_loop);
     });
 
-    // If only informational output requested, stop here.
-    if (server->get_options()->is_set("help") || server->get_options()->is_set("version"))
-    {
-        return EXIT_SUCCESS;
-    }
-
     server->run();
 
     return server->exited_normally() ? EXIT_SUCCESS : EXIT_FAILURE;
