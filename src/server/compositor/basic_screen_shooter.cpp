@@ -40,7 +40,7 @@ namespace geom = mir::geometry;
 class mc::BasicScreenShooter::Self::OneShotBufferDisplayProvider : public mg::CPUAddressableDisplayAllocator
 {
 public:
-    OneShotBufferDisplayProvider(std::shared_ptr<mg::GraphicBufferAllocator> allocator, geom::Size initial_size) :
+    OneShotBufferDisplayProvider(std::shared_ptr<mg::GraphicBufferAllocator> allocator, geom::Size const& initial_size) :
         allocator{allocator},
         buffer_size{initial_size}
     {
