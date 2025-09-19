@@ -1,0 +1,484 @@
+## Options
+
+(global-arw-file)=
+### `arw-file`
+
+Make server Wayland socket readable and writeable by all users. For debugging purposes only.
+
+(global-platform-display-libs)=
+### `platform-display-libs`
+
+Comma separated list of libraries to use for platform output support, e.g. `mir:x11,mir:wayland`. If not provided the libraries are autodetected.
+
+(global-platform-rendering-libs)=
+### `platform-rendering-libs`
+
+Comma separated list of libraries to use for platform rendering support, e.g. `mir:egl-generic`. If not provided the libraries are autodetected.
+
+(global-platform-input-lib)=
+### `platform-input-lib`
+
+Library to use for platform input support, e.g. `mir:stub-input`. If not provided this is autodetected.
+
+(global-platform-path)=
+### `platform-path`
+
+Directory to look for platform libraries.
+
+(global-enable-input)=
+### `enable-input`
+
+Enable input.
+
+(global-compositor-report)=
+### `compositor-report`
+
+Configure compositor reporting. [{off,log,lttng}]
+
+(global-display-report)=
+### `display-report`
+
+Configure display reporting. [{off,log,lttng}]
+
+(global-input-report)=
+### `input-report`
+
+Configure input reporting. [{off,log,lttng}]
+
+(global-seat-report)=
+### `seat-report`
+
+Configure seat reporting. [{off,log}]
+
+(global-scene-report)=
+### `scene-report`
+
+Configure scene reporting. [{off,log,lttng}]
+
+(global-shared-library-prober-report)=
+### `shared-library-prober-report`
+
+Configure shared library prober reporting. [{log,off,lttng}]
+
+(global-shell-report)=
+### `shell-report`
+
+Configure shell reporting. [{off,log}]
+
+(global-composite-delay)=
+### `composite-delay`
+
+Number of milliseconds to wait for new frames from clients before compositing. Higher values result in lower latency but risk causing frame skipping.
+
+(global-enable-touchspots)=
+### `enable-touchspots`
+
+Enable visual feedback of touch events. Useful for screencasting.
+
+(global-cursor)=
+### `cursor`
+
+Cursor type:
+ - `auto`: use hardware if available, or fallback to software.
+ - `null`: cursor disabled.
+ - `software`: always use software cursor.
+
+(global-enable-key-repeat)=
+### `enable-key-repeat`
+
+Enable server generated key repeat.
+
+(global-idle-timeout)=
+### `idle-timeout`
+
+Number of seconds Mir will remain idle before turning off the display when the session is not locked, or 0 to keep display on forever.
+
+(global-idle-timeout-when-locked)=
+### `idle-timeout-when-locked`
+
+Number of seconds Mir will remain idle before turning off the display when the session is locked, or 0 to keep the display on forever.
+
+(global-on-fatal-error-except)=
+### `on-fatal-error-except`
+
+Throw an exception when a fatal error condition occurs. This replaces the default behaviour of dumping core and can make it easier to diagnose issues.
+
+(global-debug)=
+### `debug`
+
+Enable debugging information. Useful when developing Mir servers.
+
+(global-console-provider)=
+### `console-provider`
+
+Method used to handle console-related tasks (device handling, VT switching, etc):
+ - `logind`: use logind.
+ - `vt`: use the Linux VT subsystem. Requires root.
+ - `none`: support no console-related tasks. Useful for nested platforms which do not need raw device access and which don&apos;t have a VT concept.
+ - `auto`: detect the appropriate provider.
+
+(global-vt)=
+### `vt`
+
+VT to run on or 0 to use current. Only used when `--console-provider=vt`.
+
+(global-vt-switching)=
+### `vt-switching`
+
+Enable VT switching on Ctrl+Alt+F*. Only used when `--console-provider=vt|logind`.
+
+(global-env-hacks)=
+### `env-hacks`
+
+Colon separated list of environment variable settings.
+
+(global-mouse-handedness)=
+### `mouse-handedness`
+
+Mouse laterality:
+ - `right`: left button is primary.
+ - `left`: right button is primary.
+
+(global-mouse-cursor-acceleration)=
+### `mouse-cursor-acceleration`
+
+Acceleration profile for mice and trackballs:
+ - `none`: no acceleration.
+ - `adaptive`: cursor is accelerated.
+
+(global-mouse-cursor-acceleration-bias)=
+### `mouse-cursor-acceleration-bias`
+
+Pointer acceleration speed of mice. Must be within range of [-1.0, 1.0].
+
+(global-mouse-scroll-speed)=
+### `mouse-scroll-speed`
+
+Mouse scroll speed scaling factor. Use negative values for natural scrolling.
+
+(global-mouse-horizontal-scroll-speed-override)=
+### `mouse-horizontal-scroll-speed-override`
+
+Mouse horizontal scroll speed scaling factor. Use negative values for natural scrolling.
+
+(global-mouse-vertical-scroll-speed-override)=
+### `mouse-vertical-scroll-speed-override`
+
+Mouse vertical scroll speed scaling factor. Use negative values for natural scrolling.
+
+(global-touchpad-disable-while-typing)=
+### `touchpad-disable-while-typing`
+
+Disable touchpad while typing on keyboard. [true, false]
+
+(global-touchpad-disable-with-external-mouse)=
+### `touchpad-disable-with-external-mouse`
+
+Disable touchpad if an external pointer device is plugged in. [true, false]
+
+(global-touchpad-tap-to-click)=
+### `touchpad-tap-to-click`
+
+Enable or disable tap-to-click on this device. If enabled 1, 2, and 3 finger taps are mapped to left, right, middle click events. [true, false]
+
+(global-touchpad-cursor-acceleration)=
+### `touchpad-cursor-acceleration`
+
+Acceleration profile for touchpads:
+ - `none`: no acceleration.
+ - `adaptive`: cursor accelerates.
+
+(global-touchpad-cursor-acceleration-bias)=
+### `touchpad-cursor-acceleration-bias`
+
+Pointer acceleration speed scaling factor for touchpads. Must be within range of [-1.0, 1.0].
+
+(global-touchpad-scroll-speed)=
+### `touchpad-scroll-speed`
+
+Touchpad scroll scaling factor. Use negative values for natural scrolling.
+
+(global-touchpad-horizontal-scroll-speed-override)=
+### `touchpad-horizontal-scroll-speed-override`
+
+Touchpad horizontal scroll scaling factor. Use negative values for natural scrolling.
+
+(global-touchpad-vertical-scroll-speed-override)=
+### `touchpad-vertical-scroll-speed-override`
+
+Touchpad vertical scroll scaling factor. Use negative values for natural scrolling.
+
+(global-touchpad-scroll-mode)=
+### `touchpad-scroll-mode`
+
+Scroll mode for touchpads. Generates scroll events when:
+ - `edge`: single finger moves on right or bottom edges of touchpad.
+ - `two-finger`: two fingers move horizontally or vertically.
+ - `button-down`: mouse button held down.
+
+(global-touchpad-click-mode)=
+### `touchpad-click-mode`
+
+Click mode for touchpad. Left, middle and right button click events generated when:
+ - `none`: no events generated.
+ - `area`: single finger tap on left, middle or right area.
+ - `clickfinger`: one, two or three fingers present when touchpad pushed down.
+
+(global-touchpad-middle-mouse-button-emulation)=
+### `touchpad-middle-mouse-button-emulation`
+
+Generate middle mouse button click from a simultaneous left and right button click.
+
+(global-key-repeat-rate)=
+### `key-repeat-rate`
+
+Number of milliseconds between generated key repeat events.
+
+(global-key-repeat-delay)=
+### `key-repeat-delay`
+
+Number of millisecond to hold down a key before generating repeat events.
+
+(global-cursor-theme)=
+### `cursor-theme`
+
+Colon separated cursor theme list, e.g. default:DMZ-Black.
+
+(global-wayland-extensions)=
+### `wayland-extensions`
+
+Colon separated list of Wayland extensions to enable. If used, default extensions will NOT be enabled unless specified. Default extensions:
+ - mir_shell_v1
+ - wl_shell
+ - wp_fractional_scale_manager_v1
+ - xdg_activation_v1
+ - xdg_wm_base
+ - zwp_text_input_manager_v1
+ - zwp_text_input_manager_v2
+ - zwp_text_input_manager_v3
+ - zxdg_decoration_manager_v1
+ - zxdg_output_manager_v1
+ - zxdg_shell_v6
+Additional supported extensions:
+ - ext_session_lock_manager_v1
+ - zwlr_foreign_toplevel_manager_v1
+ - zwlr_layer_shell_v1
+ - zwlr_screencopy_manager_v1
+ - zwlr_virtual_pointer_manager_v1
+ - zwp_idle_inhibit_manager_v1
+ - zwp_input_method_manager_v2
+ - zwp_input_method_v1
+ - zwp_input_panel_v1
+ - zwp_pointer_constraints_v1
+ - zwp_primary_selection_device_manager_v1
+ - zwp_relative_pointer_manager_v1
+ - zwp_virtual_keyboard_manager_v1
+
+(global-add-wayland-extensions)=
+### `add-wayland-extensions`
+
+Colon separated list of Wayland extensions to enable in addition to default extensions. Use `all` to enable all supported extensions.
+
+(global-drop-wayland-extensions)=
+### `drop-wayland-extensions`
+
+Colon separated list of Wayland extensions to disable.
+
+(global-enable-x11)=
+### `enable-x11`
+
+Enable X11 support.
+
+(global-x11-scale)=
+### `x11-scale`
+
+The scale to assume X11 apps use. Defaults to the value of GDK_SCALE or 1. Can be fractional. (Consider also setting GDK_SCALE in app-env-x11 when using this).
+
+(global-xwayland-path)=
+### `xwayland-path`
+
+Path to Xwayland executable.
+
+(global-x11-displayfd)=
+### `x11-displayfd`
+
+File descriptor to write X11 DISPLAY number to when ready to connect.
+
+(global-focus-stealing-prevention)=
+### `focus-stealing-prevention`
+
+Prevent newly opened windows from taking keyboard focus from an active window.
+
+(global-window-manager)=
+### `window-manager`
+
+Window management strategy. [{floating|tiling}]
+
+(global-window-management-trace)=
+### `window-management-trace`
+
+Log trace message
+
+(global-display-config)=
+### `display-config`
+
+Display configuration:
+ - `clone`: all screens show the same content.
+ - `sidebyside`: each screen placed to the right of the previous one.
+ - `single`: only the first screen used.
+ - `static=filename`: use layout specified in &lt;filename&gt;.
+
+(global-translucent)=
+### `translucent`
+
+Select a display mode with alpha channel. [{on,off}]
+
+(global-display-scale)=
+### `display-scale`
+
+Pixel scale for all displays, e.g. 2.0.
+
+(global-display-autoscale)=
+### `display-autoscale`
+
+Automatically set pixel scale for displays so they have specified logical height in pixels, e.g. 1080.
+
+(global-app-env)=
+### `app-env`
+
+Colon separated list of environment variables set or clear when launching applications. Variables are set in the form `NAME=VALUE` and cleared with `-NAME`, e.g. `DEBUG=1:-VERBOSE`.
+
+(global-app-env-amend)=
+### `app-env-amend`
+
+Colon separated list of additional environment variables that add/modify/remove from `--app-env`. Format is the same as as `--app-env`. Multiple changes may be specified by providing the argument multiple times.
+
+(global-app-env-x11)=
+### `app-env-x11`
+
+Colon separated list of additional environment variables add/modify/remove when launching X11 applications. Format is the same as as `--app-env`. Changes are applied after `--app-env` and `--app-env-amend`.
+
+(global-keymap)=
+### `keymap`
+
+Keymap to use. Specified in the form `&lt;layout&gt;[+&lt;variant&gt;[+&lt;options&gt;]]`, e.g. `gb` or `cz+qwerty` or `de++compose:caps`
+
+(global-startup-apps)=
+### `startup-apps`
+
+Colon separated list of startup apps.
+
+(global-shell-wallpaper-font)=
+### `shell-wallpaper-font`
+
+Font file to use for wallpaper.
+
+(global-shell-terminal-emulator)=
+### `shell-terminal-emulator`
+
+Terminal emulator to use.
+
+(global-enable-mouse-keys)=
+### `enable-mouse-keys`
+
+Enable mousekeys (controlling the mouse with the numpad).
+
+(global-mouse-keys-acceleration-constant-factor)=
+### `mouse-keys-acceleration-constant-factor`
+
+The base speed for mousekey pointer motion.
+
+(global-mouse-keys-acceleration-linear-factor)=
+### `mouse-keys-acceleration-linear-factor`
+
+The linear speed increase for mousekey pointer motion.
+
+(global-mouse-keys-acceleration-quadratic-factor)=
+### `mouse-keys-acceleration-quadratic-factor`
+
+The quadratic speed increase for mousekey pointer motion.
+
+(global-mouse-keys-max-speed-x)=
+### `mouse-keys-max-speed-x`
+
+The maximum speed in pixels/second the mousekeys pointer can reach on the x axis. Pass zero to disable the speed limit.
+
+(global-mouse-keys-max-speed-y)=
+### `mouse-keys-max-speed-y`
+
+The maximum speed in pixels/second the mousekeys pointer can reach on the y axis. Pass zero to disable the speed limit.
+
+(global-help)=
+### `help`
+
+Show command line help.
+
+(global-help-markdown)=
+### `help-markdown`
+
+Show command line options in markdown format suitable for including into a document.
+
+(global-version)=
+### `version`
+
+Display Mir version and exit.
+
+## Options for mir:atomic-kms platform
+
+(mir-atomic-kms-bypass)=
+### `bypass`
+
+Enable bypass optimization for fullscreen surfaces.
+
+(mir-atomic-kms-driver-quirks)=
+### `driver-quirks`
+
+Driver quirks to apply. May be specified multiple times; multiple quirks are combined.
+
+## Options for mir:gbm-kms platform
+
+(mir-gbm-kms-bypass)=
+### `bypass`
+
+Enable bypass optimization for fullscreen surfaces.
+
+(mir-gbm-kms-driver-quirks)=
+### `driver-quirks`
+
+Driver quirks to apply. May be specified multiple times; multiple quirks are combined.
+
+## Options for mir:x11 platform
+
+(mir-x11-x11-output)=
+### `x11-output`
+
+Colon separated list of outputs to use. Dimensions are in the form `WIDTHxHEIGHT[^SCALE]`, e.g. `1920x1080:3840x2160^2`.
+
+(mir-x11-x11-window-title)=
+### `x11-window-title`
+
+Title of the window containing the Mir output.
+
+## Options for mir:wayland platform
+
+(mir-wayland-wayland-host)=
+### `wayland-host`
+
+Display name for host compositor, e.g. `wayland-0`.
+
+(mir-wayland-wayland-surface-app-id)=
+### `wayland-surface-app-id`
+
+Application ID for the window containing the Mir output.
+
+(mir-wayland-wayland-surface-title)=
+### `wayland-surface-title`
+
+Title of the window containing the Mir output.
+
+## Options for mir:virtual platform
+
+(mir-virtual-virtual-output)=
+### `virtual-output`
+
+Colon separated list of outputs to use. Dimensions are in the form `WIDTHxHEIGHT`, e.g. `1920x1080:3840x2160`.
