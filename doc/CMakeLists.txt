@@ -6,6 +6,14 @@ set(MAKEOPTS
 )
 set(SPHINXDIR ${CMAKE_CURRENT_SOURCE_DIR}/sphinx)
 
+set(OPTIONS_REFERENCE ${SPHINXDIR}/configuring/reference/options.md.include)
+add_custom_target(
+  COMMAND
+    ${CMAKE_BINARY_DIR}/bin/miral-shell --help-markdown
+    > ${OPTIONS_REFERENCE}
+  BYPRODUCTS ${OPTIONS_REFERENCE}
+)
+
 option(
   BUILD_DOXYGEN
   "Build Doxygen documentation as part of the default build"
@@ -45,6 +53,7 @@ foreach(target IN LISTS SPHINX_TARGETS)
     COMMAND ${CMAKE_COMMAND} -E env "MIR_BUILD_DIR=${CMAKE_BINARY_DIR}"
             make -C ${SPHINXDIR} ${target} ${MAKEOPTS}
     USES_TERMINAL
+    DEPENDS ${OPTIONS_REFERENCE}
   )
 endforeach()
 

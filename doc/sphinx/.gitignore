@@ -17,6 +17,7 @@
 _build
 api
 !api/library_root.rst
+configuring/reference/options.md.include
 
 # Node.js
 package*.json
