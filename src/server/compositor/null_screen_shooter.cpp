@@ -21,6 +21,7 @@
 namespace mc = mir::compositor;
 namespace mrs = mir::renderer::software;
 namespace geom = mir::geometry;
+namespace mg = mir::graphics;
 
 mc::NullScreenShooter::NullScreenShooter(Executor& executor)
     : executor{executor}
@@ -28,16 +29,15 @@ mc::NullScreenShooter::NullScreenShooter(Executor& executor)
 }
 
 void mc::NullScreenShooter::capture(
-    std::shared_ptr<mrs::WriteMappableBuffer> const&,
     geom::Rectangle const&,
     glm::mat2 const&,
     bool,
-    std::function<void(std::optional<time::Timestamp>)>&& callback)
+    std::function<void(std::optional<time::Timestamp>, std::shared_ptr<mg::Buffer>)>&& callback)
 {
     log_warning("Failed to capture screen because NullScreenShooter is in use");
     executor.spawn([callback=std::move(callback)]
         {
-            callback(std::nullopt);
+            callback(std::nullopt, {});
         });
 }
 

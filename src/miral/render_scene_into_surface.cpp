@@ -27,6 +27,7 @@
 #include "mir/shell/surface_stack.h"
 #include "mir/renderer/sw/pixel_source.h"
 
+#include <future>
 #include <mutex>
 #include <utility>
 #include <boost/mpl/pair.hpp>
@@ -42,108 +43,6 @@ namespace mi = mir::input;
 
 namespace
 {
-class ClaimedBuffer : public mg::Buffer
-{
-public:
-    explicit ClaimedBuffer(
-        std::shared_ptr<Buffer> const& buffer,
-        std::function<void()>&& release_callback)
-        : buffer(buffer), release_callback(std::move(release_callback))
-    {
-    }
-
-    ~ClaimedBuffer() override
-    {
-        release_callback();
-    }
-
-    mg::BufferID id() const override { return buffer->id(); }
-    geom::Size size() const override { return buffer->size(); }
-    MirPixelFormat pixel_format() const override { return buffer->pixel_format(); }
-    mg::NativeBufferBase* native_buffer_base() override { return buffer->native_buffer_base(); }
-
-private:
-    std::shared_ptr<Buffer> const buffer;
-    std::function<void()> const release_callback;
-};
-
-/// A simple buffer pool. Users provide the buffers that back the pool.
-/// These buffers may be claimed later.
-class BufferPool
-{
-public:
-    using BufferBuilder = std::function<std::shared_ptr<mg::Buffer>()>;
-
-    BufferPool(BufferBuilder&& builder_func, size_t default_size)
-        : data(std::make_shared<Self>(std::move(builder_func), default_size))
-    {
-    }
-
-    /// Claims the next free buffer from the pool. This may resize the buffer pool
-    /// if that is required to claim a buffer.
-    /// \returns A buffer from the pool
-    std::shared_ptr<mg::Buffer> claim()
-    {
-        std::lock_guard lock{data->mutex};
-        for (size_t i = 0; i < data->buffers.size(); ++i)
-        {
-            if (auto& [used, buffer] = data->buffers[i]; !used)
-            {
-                used = true;
-                std::weak_ptr weak_data = data;
-                return std::make_shared<ClaimedBuffer>(buffer, [weak_data=weak_data, i]
-                {
-                    if (auto const locked = weak_data.lock())
-                    {
-                        std::lock_guard lock{locked->mutex};
-                        locked->buffers[i].first = false;
-                    }
-                });
-            }
-        }
-
-        data->buffers.emplace_back(true, data->builder());
-        size_t i = data->buffers.size() - 1;
-
-        std::weak_ptr weak_data = data;
-        return std::make_shared<ClaimedBuffer>(data->buffers[i].second, [weak_data=weak_data, i]
-        {
-            if (auto const locked = weak_data.lock())
-            {
-                std::lock_guard lock{locked->mutex};
-                locked->buffers[i].first = false;
-            }
-        });
-    }
-
-    void set_builder(BufferBuilder&& in_builder)
-    {
-        std::lock_guard lock{data->mutex};
-        data->builder = std::move(in_builder);
-        for (auto& b: data->buffers)
-            b = { b.first, data->builder() };
-    }
-
-private:
-    struct Self
-    {
-        Self(BufferBuilder&& builder_func, size_t default_size)
-            : builder(std::move(builder_func))
-        {
-            for (size_t i = 0; i < default_size; ++i)
-                buffers.emplace_back(false, builder());
-        }
-
-        std::mutex mutex;
-        BufferBuilder builder;
-
-        /// List of available buffers along with their "claimed" status.
-        std::vector<std::pair<bool, std::shared_ptr<mg::Buffer>>> buffers;
-    };
-
-    std::shared_ptr<Self> data;
-};
-
 class AlwaysHasSubmittedBufferStream : public mc::Stream
 {
 public:
@@ -186,11 +85,7 @@ public:
             scene(scene),
           capture_rect(capture_rect),
           screen_shooter(screen_shooter),
-          allocator(allocator),
-          pool([allocator, capture_rect=capture_rect]
-          {
-              return allocator->alloc_software_buffer(capture_rect.size, mir_pixel_format_argb_8888);
-          }, 2)
+          allocator(allocator)
     {
     }
 
@@ -200,16 +95,24 @@ public:
             return {};
 
         std::lock_guard lock{mutex};
-        auto buffer = pool.claim();
-        auto const mapping = mrs::as_write_mappable_buffer(buffer);
+        auto capture_complete = std::make_shared<std::promise<void>>();
+        auto future = capture_complete->get_future();
+
         screen_shooter->capture(
-            mapping,
             capture_rect,
             glm::mat2(1.f),
             overlay_cursor,
-            [](auto const&) {});
-        get_streams().begin()->stream->submit_buffer(
-            buffer, capture_rect.size, geom::RectangleD({0, 0}, capture_rect.size));
+            [this, capture_complete](auto const&, auto buffer) mutable
+            {
+                if (buffer)
+                {
+                    get_streams().begin()->stream->submit_buffer(
+                        buffer, capture_rect.size, geom::RectangleD({0, 0}, capture_rect.size));
+                }
+                capture_complete->set_value();
+            });
+
+        future.wait();
         return BasicSurface::generate_renderables(id);
     }
 
@@ -221,14 +124,6 @@ public:
     void set_capture_area(geom::Rectangle const& next_capture_rect)
     {
         std::lock_guard lock{mutex};
-
-        if (capture_rect.size != next_capture_rect.size)
-        {
-            pool.set_builder([allocator=allocator, next_capture_rect=next_capture_rect]
-            {
-                return allocator->alloc_software_buffer(next_capture_rect.size, mir_pixel_format_argb_8888);
-            });
-        }
 
         move_to(next_capture_rect.top_left);
         resize(next_capture_rect.size);
@@ -248,7 +143,6 @@ private:
     bool overlay_cursor = false;
     std::shared_ptr<mc::ScreenShooter> screen_shooter;
     std::shared_ptr<mg::GraphicBufferAllocator> allocator;
-    BufferPool mutable pool;
 };
 }
 

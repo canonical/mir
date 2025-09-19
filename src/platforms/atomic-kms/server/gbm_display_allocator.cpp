@@ -56,14 +56,14 @@ namespace
 {
 using LockedFrontBuffer = std::unique_ptr<gbm_bo, std::function<void(gbm_bo*)>>;
 
-class GBMBoFramebuffer : public mg::FBHandle
+class GBMBoFramebuffer : public mg::FBHandle, public mg::NativeBufferBase
 {
 public:
-    static auto framebuffer_for_frontbuffer(mir::Fd const& drm_fd, LockedFrontBuffer bo) -> std::unique_ptr<GBMBoFramebuffer>
+    static auto framebuffer_for_frontbuffer(mir::Fd const& drm_fd, LockedFrontBuffer bo, mg::DRMFormat format) -> std::unique_ptr<GBMBoFramebuffer>
     {
         if (auto cached_fb = static_cast<std::shared_ptr<uint32_t const>*>(gbm_bo_get_user_data(bo.get())))
         {
-            return std::unique_ptr<GBMBoFramebuffer>{new GBMBoFramebuffer{std::move(bo), *cached_fb}};
+            return std::unique_ptr<GBMBoFramebuffer>{new GBMBoFramebuffer{std::move(bo), *cached_fb, format}};
         }
 
         auto fb_id = std::shared_ptr<uint32_t>{
@@ -80,8 +80,6 @@ public:
         uint32_t strides[4] = {gbm_bo_get_stride(bo.get()), 0, 0, 0};
         uint32_t offsets[4] = {gbm_bo_get_offset(bo.get(), 0), 0, 0, 0};
 
-        auto format = gbm_bo_get_format(bo.get());
-
         auto const width = gbm_bo_get_width(bo.get());
         auto const height = gbm_bo_get_height(bo.get());
 
@@ -95,7 +93,7 @@ public:
         // via gbm_bo_set_user_data()'s destroy_user_data parameter.
         gbm_bo_set_user_data(bo.get(), new std::shared_ptr<uint32_t>(fb_id), [](gbm_bo*, void* fb_ptr) { delete static_cast<std::shared_ptr<uint32_t const>*>(fb_ptr); });
 
-        return std::make_unique<GBMBoFramebuffer>(std::move(bo), std::move(fb_id));
+        return std::make_unique<GBMBoFramebuffer>(std::move(bo), std::move(fb_id), format);
     }
 
     operator uint32_t() const override
@@ -111,14 +109,26 @@ public:
                 gbm_bo_get_height(bo.get())};
     }
 
-    GBMBoFramebuffer(LockedFrontBuffer bo, std::shared_ptr<uint32_t const> fb)
+    auto pixel_format() const -> MirPixelFormat override
+    {
+        return format.as_mir_format().value_or(mir_pixel_format_invalid);
+    }
+
+    auto native_buffer_base() -> mg::NativeBufferBase* override
+    {
+        return this;
+    }
+
+    GBMBoFramebuffer(LockedFrontBuffer bo, std::shared_ptr<uint32_t const> fb, mg::DRMFormat format)
         : bo{std::move(bo)},
-          fb_id{std::move(fb)}
+          fb_id{std::move(fb)},
+          format{format}
     {
     }
 private:
     LockedFrontBuffer const bo;
     std::shared_ptr<uint32_t const> const fb_id;
+    mg::DRMFormat const format;
 };
 
 namespace
@@ -190,7 +200,8 @@ public:
         std::shared_ptr<mga::GbmQuirks> const& gbm_quirks) :
         drm_fd{std::move(drm_fd)},
         gbm_quirks{gbm_quirks},
-        surface{create_gbm_surface(gbm, size, format, modifiers)}
+        surface{create_gbm_surface(gbm, size, format, modifiers)},
+        format{format}
     {
     }
 
@@ -222,7 +233,7 @@ public:
             BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to acquire GBM front buffer"}));
         }
 
-        auto fb = GBMBoFramebuffer::framebuffer_for_frontbuffer(drm_fd, std::move(bo));
+        auto fb = GBMBoFramebuffer::framebuffer_for_frontbuffer(drm_fd, std::move(bo), format);
         if (!fb)
         {
             BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), "Failed to make DRM FB"}));
@@ -233,6 +244,7 @@ private:
     mir::Fd const drm_fd;
     std::shared_ptr<mga::GbmQuirks> const gbm_quirks;
     std::shared_ptr<gbm_surface> const surface;
+    mg::DRMFormat const format;
 };
 }
 

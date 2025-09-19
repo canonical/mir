@@ -629,7 +629,7 @@ void mrg::Renderer::tessellate(std::vector<mgl::Primitive>& primitives,
     primitives[0] = mgl::tessellate_renderable_into_rectangle(renderable, geom::Displacement{0,0});
 }
 
-auto mrg::Renderer::render(mg::RenderableList const& renderables) const -> std::unique_ptr<mg::Framebuffer>
+auto mrg::Renderer::render(mg::RenderableList const& renderables) const -> std::unique_ptr<mg::Buffer>
 {
     output_surface->make_current();
     output_surface->bind();

@@ -17,6 +17,8 @@
 #ifndef MIR_TEST_DOUBLES_STUB_RENDERER_H_
 #define MIR_TEST_DOUBLES_STUB_RENDERER_H_
 
+#include "mir/test/doubles/mock_framebuffer.h"
+
 #include "mir/renderer/renderer.h"
 #include "mir/graphics/renderable.h"
 #include "mir/graphics/buffer.h"
@@ -37,14 +39,14 @@ public:
     void set_output_filter(MirOutputFilter) override {};
     void suspend() override {}
 
-    auto render(graphics::RenderableList const& renderables) const -> std::unique_ptr<graphics::Framebuffer> override
+    auto render(graphics::RenderableList const& renderables) const -> std::unique_ptr<graphics::Buffer> override
     {
         for (auto const& r : renderables)
             r->buffer(); // We need to consume a buffer to unblock client tests
         // Yield to reduce runtime under valgrind
         std::this_thread::yield();
 
-        return {};
+        return std::make_unique<MockFramebuffer>();
     }
 };
 

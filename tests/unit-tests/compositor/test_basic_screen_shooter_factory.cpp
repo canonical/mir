@@ -68,7 +68,7 @@ public:
     std::shared_ptr<mtd::MockGlRenderingProvider> gl_provider{std::make_shared<NiceMock<mtd::MockGlRenderingProvider>>()};
     std::vector<std::shared_ptr<mg::GLRenderingProvider>> gl_providers{gl_provider};
     std::shared_ptr<mtd::MockRendererFactory> renderer_factory{std::make_shared<NiceMock<mtd::MockRendererFactory>>()};
-    std::shared_ptr<mtd::StubBufferAllocator> buffer_allocator;
+    std::shared_ptr<mtd::StubBufferAllocator> buffer_allocator{std::make_shared<mtd::StubBufferAllocator>()};
     std::unique_ptr<mc::BasicScreenShooterFactory> factory;
 };
 

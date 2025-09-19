@@ -296,6 +296,16 @@ mg::CPUAddressableFB::operator uint32_t() const
     return fb_id;
 }
 
+auto mg::CPUAddressableFB::pixel_format() const -> MirPixelFormat
+{
+    return buffer->format();
+}
+
+auto mg::CPUAddressableFB::native_buffer_base() -> NativeBufferBase*
+{
+    return this;
+}
+
 auto mg::CPUAddressableFB::fb_id_for_buffer(
     mir::Fd const &drm_fd,
     bool supports_modifiers,

@@ -13,10 +13,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef MIR_TEST_DOUBLES_MOCK_RENDERER_H_
-#define MIR_TEST_DOUBLES_MOCK_RENDERER_H_
 
-#include "mir/renderer/renderer.h"
+#ifndef MIR_TEST_DOUBLES_MOCK_FRAMEBUFFER_H_
+#define MIR_TEST_DOUBLES_MOCK_FRAMEBUFFER_H_
+
 #include "mir/graphics/platform.h"
 
 #include <gmock/gmock.h>
@@ -27,19 +27,14 @@ namespace test
 {
 namespace doubles
 {
-
-struct MockRenderer : public renderer::Renderer
+class MockFramebuffer : public graphics::Framebuffer
 {
-    MOCK_METHOD(void, set_viewport, (geometry::Rectangle const&));
-    MOCK_METHOD(void, set_output_transform, (glm::mat2 const&));
-    MOCK_METHOD(void, set_output_filter, (MirOutputFilter filter));
-    MOCK_METHOD(std::unique_ptr<graphics::Buffer>, render, (graphics::RenderableList const&), (const override));
-    MOCK_METHOD(void, suspend, ());
-
-    ~MockRenderer() noexcept {}
+    MOCK_METHOD(graphics::NativeBufferBase*, native_buffer_base, (), (override));
+    MOCK_METHOD(MirPixelFormat, pixel_format, (), (const override));
+    MOCK_METHOD(geometry::Size, size, (), (const override));
 };
+}
+}
+}
 
-}
-}
-}
-#endif /* MIR_TEST_DOUBLES_MOCK_RENDERER_H_ */
+#endif // MIR_TEST_DOUBLES_MOCK_FRAMEBUFFER_H_

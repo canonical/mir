@@ -120,6 +120,22 @@ public:
         }
     }
 
+    auto pixel_format() const -> MirPixelFormat
+    {
+        EGLint texture_format = -1;
+        eglQuerySurface(dpy, surf, EGL_TEXTURE_FORMAT, &texture_format);
+
+        switch (texture_format)
+        {
+        case EGL_TEXTURE_RGB:
+            return mir_pixel_format_rgb_888;
+        case EGL_TEXTURE_RGBA:
+            return mir_pixel_format_argb_8888;
+        default:
+            return mir_pixel_format_invalid;
+        }
+    }
+
     EGLDisplay const dpy;
     EGLContext const ctx;
     EGLSurface const surf;
@@ -161,6 +177,16 @@ void mgw::WlDisplayAllocator::Framebuffer::release_current()
 void mgw::WlDisplayAllocator::Framebuffer::swap_buffers()
 {
     state->swap_buffers();
+}
+
+auto mgw::WlDisplayAllocator::Framebuffer::pixel_format() const -> MirPixelFormat
+{
+    return state->pixel_format();
+}
+
+auto mgw::WlDisplayAllocator::Framebuffer::native_buffer_base() -> NativeBufferBase*
+{
+    return this;
 }
 
 auto mgw::WlDisplayAllocator::Framebuffer::clone_handle() -> std::unique_ptr<mg::GenericEGLDisplayAllocator::EGLFramebuffer>
