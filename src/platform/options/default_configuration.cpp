@@ -340,6 +340,75 @@ auto mo::DefaultConfiguration::options_for(SharedLibrary const& module) const ->
     return parsed_options;
 }
 
+namespace
+{
+std::string json_string(std::string const& text)
+{
+    std::ostringstream json_text;
+    json_text << "\"";
+    for (char const c : text)
+    {
+        switch(c)
+        {
+        case '\"':
+            json_text << "\\\"";
+            break;
+        case '\\':
+            json_text << "\\\\";
+            break;
+        case '\b':
+            json_text << "\\b";
+            break;
+        case '\f':
+            json_text << "\\f";
+            break;
+        case '\n':
+            json_text << "\\n";
+            break;
+        case '\r':
+            json_text << "\\r";
+            break;
+        case '\t':
+            json_text << "\\t";
+            break;
+        default:
+            if (c < 0x20)
+            {
+                char escape_sequence[7];
+                snprintf(escape_sequence, sizeof(escape_sequence), "\\u%04x", c);
+                json_text << escape_sequence;
+            }
+            else
+            {
+                json_text << c;
+            }
+            break;
+        }
+    }
+    json_text << "\"";
+
+    return json_text.str();
+}
+
+std::string options_to_json(const boost::program_options::options_description& desc)
+{
+    std::ostringstream text;
+    text << "[";
+    bool first = true;
+    for (auto& o: desc.options())
+    {
+        if (!first)
+            text << ",";
+        first = false;
+        text << "{\"name\":" << json_string(o->long_name());
+        text << ",\"description\":" << json_string(o->description()) << "}";
+    }
+    text << "]";
+
+    return text.str();
+}
+}
+
 void mo::DefaultConfiguration::parse_arguments(
     boost::program_options::options_description desc,
     mo::ProgramOption& options,
@@ -352,6 +421,8 @@ void mo::DefaultConfiguration::parse_arguments(
     {
         desc.add_options()
             ("help,h", "Show command line help.");
+        desc.add_options()
+            ("help-json", "Show command line options in JSON format suitable for processing into other forms, e.g. documentation.");
         desc.add_options()
             ("version,V", "Display Mir version and exit.");
 
@@ -402,6 +473,23 @@ void mo::DefaultConfiguration::parse_arguments(
                     help_text << module_desc;
                 }
             }
+            BOOST_THROW_EXCEPTION(mir::ExitWithOutput(help_text.str()));
+        }
+
+        if (options.is_set("help-json"))
+        {
+            std::ostringstream help_text;
+            help_text << "[{\"options\":" << options_to_json(desc) << "}";
+            for (auto& platform : platform_libraries)
+            {
+                auto& module_desc = module_options_desc.at(platform->get_handle());
+                if (!module_desc.options().empty())
+                {
+                    auto const describe_module = platform->load_function<mir::graphics::DescribeModule>("describe_graphics_module", MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
+                    help_text << ",{\"module\":" << json_string(describe_module()->name) << ",\"options\":" << options_to_json(module_desc) << "}";
+                }
+            }
+            help_text << "]";
             BOOST_THROW_EXCEPTION(mir::ExitWithOutput(help_text.str()));
         }
 
