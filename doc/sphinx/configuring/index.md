@@ -40,4 +40,5 @@ hidden:
 ---
 how-to/index
 explanation/index
+reference/index
 ```
