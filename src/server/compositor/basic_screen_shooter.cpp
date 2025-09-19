@@ -91,12 +91,12 @@ public:
         {
             BOOST_THROW_EXCEPTION((std::logic_error{"Attempted to query supported_formats before assigning a buffer"}));
         }
-        return {mg::DRMFormat::from_mir_format(next_buffer->pixel_format())};
+        return {mg::DRMFormat::from_mir_format(buffer_format)};
     }
 
     auto alloc_fb(mg::DRMFormat format) -> std::unique_ptr<MappableFB> override
     {
-        if (format.as_mir_format().value_or(mir_pixel_format_invalid) != next_buffer->pixel_format())
+        if (format.as_mir_format().value_or(mir_pixel_format_invalid) != buffer_format)
         {
             BOOST_THROW_EXCEPTION((std::runtime_error{"Mismatched pixel formats"}));
         }
