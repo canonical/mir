@@ -21,7 +21,7 @@ The remainder of the option can take two forms
 : match all devices that use a driver `name`.
 
 `devnode:path`
-: match devices based on path (e.g. `/dev/dri/card0`).
+: match devices based on path.
 
 The `skip` quirk will add an entry to the driver or device node block
 lists, and the `allow` quirk will remove an entry from those lists. A
@@ -29,8 +29,13 @@ device will be skipped if it's driver or device node appear on the
 ignore lists.
 
 Note that matching of the `allow` quirk is only useful for removing
-items from the default block list. It can't be used to "punch holes"
-in a driver-level block for a particular device node.
+items from the default block list. You can't use it to allow a
+specific device if its driver is blocked.
+
+Examples:
+
+  - `--driver-quirks=skip:driver:nvidia`
+  - `--driver-quirks=allow:device:/dev/dri/card0`
 
 
 ## Disable probing for modesetting support
@@ -54,6 +59,10 @@ but adds a final `default` or `skip` token.
 If the quirk is set to `default`, `gbm_surface_has_free_buffers` will
 be called as normal. If the quirk is set to `skip`, Mir will assume
 the result is true.
+
+At the moment, the main use of this quirk is to work around Nvidia
+drivers spuriously returning `false`. For more information, please see
+[#3296](https://github.com/canonical/mir/issues/3296).
 
 ## Default quirks
 
