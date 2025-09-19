@@ -84,7 +84,7 @@ private:
         auto render(geometry::Rectangle const& area, glm::mat2 const& transform, bool overlay_cursor)
             -> std::pair<time::Timestamp, std::shared_ptr<graphics::Buffer>>;
 
-        auto renderer_for_buffer(geometry::Rectangle const& area)
+        auto renderer_for_size(geometry::Size const& size)
             -> renderer::Renderer&;
 
         std::mutex mutex;

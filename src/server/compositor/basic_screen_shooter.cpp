@@ -219,7 +219,7 @@ auto mc::BasicScreenShooter::Self::render(
 
     scene_elements.clear();
 
-    auto& renderer = renderer_for_buffer(area);
+    auto& renderer = renderer_for_size(area.size);
     renderer.set_output_transform(transform);
     renderer.set_viewport(area);
     renderer.set_output_filter(output_filter->filter());
@@ -235,23 +235,22 @@ auto mc::BasicScreenShooter::Self::render(
     return {captured_time, std::move(frame)};
 }
 
-auto mc::BasicScreenShooter::Self::renderer_for_buffer(geom::Rectangle const& area)
+auto mc::BasicScreenShooter::Self::renderer_for_size(geom::Size const& size)
     -> mr::Renderer&
 {
-    auto const buffer_size = area.size;
-    if (buffer_size.height == geom::Height{0} || buffer_size.width == geom::Width{0})
+    if (size.height == geom::Height{0} || size.width == geom::Width{0})
     {
         BOOST_THROW_EXCEPTION((std::runtime_error{"Attempt to capture to a zero-sized buffer"}));
     }
-    if (buffer_size != last_rendered_size)
+    if (size != last_rendered_size)
     {
         // We need to build a new Renderer, at the new size
-        display_provider->output_size(buffer_size);
+        display_provider->output_size(size);
         display_provider->allocate_buffer();
-        offscreen_sink = std::make_unique<OffscreenDisplaySink>(display_provider, buffer_size);
+        offscreen_sink = std::make_unique<OffscreenDisplaySink>(display_provider, size);
         auto gl_surface = render_provider->surface_for_sink(*offscreen_sink, *config);
         current_renderer = renderer_factory->create_renderer_for(std::move(gl_surface), render_provider);
-        last_rendered_size = buffer_size;
+        last_rendered_size = size;
     }
     else
     {
