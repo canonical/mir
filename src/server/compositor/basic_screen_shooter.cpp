@@ -42,9 +42,9 @@ class mc::BasicScreenShooter::Self::OneShotBufferDisplayProvider : public mg::CP
 public:
     OneShotBufferDisplayProvider(std::shared_ptr<mg::GraphicBufferAllocator> allocator, geom::Size const& initial_size) :
         allocator{allocator},
-        buffer_size{initial_size}
+        buffer_size{initial_size},
+        next_buffer{allocator->alloc_software_buffer(buffer_size, buffer_format)}
     {
-        allocate_buffer();
     }
 
     class FB : public mg::CPUAddressableDisplayAllocator::MappableFB
@@ -100,7 +100,8 @@ public:
         {
             BOOST_THROW_EXCEPTION((std::runtime_error{"Mismatched pixel formats"}));
         }
-        return std::make_unique<FB>(std::exchange(next_buffer, nullptr));
+        return std::make_unique<FB>(
+            std::exchange(next_buffer, allocator->alloc_software_buffer(buffer_size, buffer_format)));
     }
 
     auto output_size() const -> geom::Size override
@@ -112,21 +113,23 @@ public:
         return next_buffer->size();
     }
 
-    void output_size(geom::Size new_size)
+    bool output_size_changed(geom::Size new_size)
     {
+        auto const size_changed = buffer_size != new_size;
+
         buffer_size = new_size;
+        if(size_changed)
+            next_buffer = allocator->alloc_software_buffer(buffer_size, buffer_format);
+
+        return size_changed;
     }
 
-    void allocate_buffer()
-    {
-        next_buffer = allocator->alloc_software_buffer(buffer_size, buffer_format);
-    }
 private:
     std::shared_ptr<mg::GraphicBufferAllocator> const allocator;
-    std::shared_ptr<mg::Buffer> next_buffer;
 
     geom::Size buffer_size;
     MirPixelFormat buffer_format{mir_pixel_format_argb_8888};
+    std::shared_ptr<mg::Buffer> next_buffer;
 };
 
 class OffscreenDisplaySink : public mg::DisplaySink
@@ -187,7 +190,6 @@ mc::BasicScreenShooter::Self::Self(
     clock{clock},
     render_provider{std::move(render_provider)},
     renderer_factory{std::move(renderer_factory)},
-    last_rendered_size{0, 0},
     display_provider{std::make_shared<OneShotBufferDisplayProvider>(buffer_allocator, geom::Size{200, 300})},
     config{config},
     output_filter{output_filter},
@@ -242,20 +244,14 @@ auto mc::BasicScreenShooter::Self::renderer_for_size(geom::Size const& size)
     {
         BOOST_THROW_EXCEPTION((std::runtime_error{"Attempt to capture to a zero-sized buffer"}));
     }
-    if (size != last_rendered_size)
+    if (display_provider->output_size_changed(size))
     {
         // We need to build a new Renderer, at the new size
-        display_provider->output_size(size);
-        display_provider->allocate_buffer();
         offscreen_sink = std::make_unique<OffscreenDisplaySink>(display_provider, size);
         auto gl_surface = render_provider->surface_for_sink(*offscreen_sink, *config);
         current_renderer = renderer_factory->create_renderer_for(std::move(gl_surface), render_provider);
-        last_rendered_size = size;
     }
-    else
-    {
-        display_provider->allocate_buffer();
-    }
+
     return *current_renderer;
 }
 
