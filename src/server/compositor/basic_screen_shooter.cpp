@@ -50,7 +50,7 @@ public:
     class FB : public mg::CPUAddressableDisplayAllocator::MappableFB
     {
     public:
-        FB(std::shared_ptr<mg::Buffer> buffer) :
+        explicit FB(std::shared_ptr<mg::Buffer> buffer) :
             buffer{buffer},
             writable{mrs::as_write_mappable_buffer(buffer)}
         {
