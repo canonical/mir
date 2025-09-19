@@ -34,9 +34,8 @@ specific device if its driver is blocked.
 
 Examples:
 
-  - `--driver-quirks=skip:driver:nvidia`
-  - `--driver-quirks=allow:device:/dev/dri/card0`
-
+- `--driver-quirks=skip:driver:nvidia`
+- `--driver-quirks=allow:device:/dev/dri/card0`
 
 ## Disable probing for modesetting support
 
@@ -68,10 +67,10 @@ drivers spuriously returning `false`. For more information, please see
 
 A default set of quirks is configured by the driver that corresponds to:
 
-* `skip:driver:nvidia`
-* `skip:driver:ast`
-* `skip:driver:simple-framebuffer`
-* `disable-kms-probe:driver:virtio_gpu`
-* `disable-kms-probe:driver:vc4-drm`
-* `disable-kms-probe:driver:v3d`
-* `gbm-surface-has-free-buffers:driver:nvidia:skip`
+- `skip:driver:nvidia`
+- `skip:driver:ast`
+- `skip:driver:simple-framebuffer`
+- `disable-kms-probe:driver:virtio_gpu`
+- `disable-kms-probe:driver:vc4-drm`
+- `disable-kms-probe:driver:v3d`
+- `gbm-surface-has-free-buffers:driver:nvidia:skip`
