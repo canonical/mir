@@ -344,41 +344,57 @@ namespace
 {
 std::string escape_markdown(std::string const& text)
 {
-    std::string escaped_text;
+    std::stringstream escaped_text;
 
     for (char const c : text)
     {
         switch(c)
         {
         case '&':
-            escaped_text += "&amp;";
+            escaped_text << "&amp;";
             break;
         case '<':
-            escaped_text += "&lt;";
+            escaped_text << "&lt;";
             break;
         case '>':
-            escaped_text += "&gt;";
+            escaped_text << "&gt;";
             break;
         case '\"':
-            escaped_text += "&quot;";
+            escaped_text << "&quot;";
             break;
         case '\'':
-            escaped_text += "&apos;";
+            escaped_text << "&apos;";
             break;
         default:
-            escaped_text += c;
+            escaped_text << c;
             break;
         }
     }
 
-    return escaped_text;
+    return escaped_text.str();
 }
 
-std::string options_to_markdown(const boost::program_options::options_description& desc)
+std::string make_markdown_label(std::string const& text)
+{
+    std::ostringstream label;
+
+    for (char const c : text)
+    {
+        if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9'))
+            label << c;
+        else
+            label << '-';
+    }
+
+    return label.str();
+}
+
+std::string options_to_markdown(const std::string& module_name, const boost::program_options::options_description& desc)
 {
     std::ostringstream text;
     for (auto& o: desc.options())
     {
+        text << "(" << make_markdown_label(module_name) << "-" << make_markdown_label(o->long_name()) << ")=\n";
         text << "### `" << o->long_name() << "`\n";
         text << "\n";
         text << escape_markdown(o->description()) << "\n";
@@ -460,15 +476,16 @@ void mo::DefaultConfiguration::parse_arguments(
         {
             std::ostringstream help_text;
             help_text << "## Options\n\n";
-            help_text << options_to_markdown(desc);
+            help_text << options_to_markdown("global", desc);
             for (auto& platform : platform_libraries)
             {
                 auto& module_desc = module_options_desc.at(platform->get_handle());
                 if (!module_desc.options().empty())
                 {
                     auto const describe_module = platform->load_function<mir::graphics::DescribeModule>("describe_graphics_module", MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
-                    help_text << "## Options for " << describe_module()->name << " platform\n\n";
-                    help_text << options_to_markdown(module_desc);
+                    auto const module_name = describe_module()->name;
+                    help_text << "## Options for " << module_name << " platform\n\n";
+                    help_text << options_to_markdown(module_name, module_desc);
                 }
             }
             BOOST_THROW_EXCEPTION(mir::ExitWithOutput(help_text.str()));
