@@ -58,6 +58,7 @@ mir_add_wrapped_executable(miral-test-internal NOINSTALL
     test_mousekeys_config.cpp
     test_slow_keys.cpp
     test_hover_click.cpp
+    test_locate_pointer.cpp
     ${MIRAL_TEST_SOURCES}
 )
 
