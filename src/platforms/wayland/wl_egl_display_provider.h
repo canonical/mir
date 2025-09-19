@@ -65,7 +65,7 @@ public:
         auto clone_handle() -> std::unique_ptr<GenericEGLDisplayAllocator::EGLFramebuffer> override;
 
         void swap_buffers();
-        
+
         auto pixel_format() const -> MirPixelFormat override;
         auto native_buffer_base() -> NativeBufferBase* override;
     private:
@@ -84,3 +84,4 @@ private:
 }
 
 #endif // MIR_PLATFORM_WAYLAND_DISPLAY_PROVIDER_H_
+
