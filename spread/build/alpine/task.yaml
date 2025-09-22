@@ -27,6 +27,7 @@ execute: |
         lttng-ust-tools \
         make \
         mesa-dev \
+        mesa-dri-gallium \
         nettle-dev \
         py3-dbusmock \
         py3-pillow \
