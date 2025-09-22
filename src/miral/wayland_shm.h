@@ -25,26 +25,12 @@
 
 namespace miral::tk
 {
-class WaylandShm;
-struct WaylandShmPool;
+class WaylandShmPool;
 
 /// Describes a shared memory buffer.
 class WaylandShmBuffer : public std::enable_shared_from_this<WaylandShmBuffer>
 {
 public:
-    /// Construct a shared memory buffer.
-    ///
-    /// \param pool the shm pool
-    /// \param data the data in the buffer
-    /// \param size size of the buffer
-    /// \param stride stride of the buffer
-    /// \param buffer wayland buffer object
-    WaylandShmBuffer(
-        std::shared_ptr<WaylandShmPool> const& pool,
-        void* data,
-        mir::geometry::Size const& size,
-        mir::geometry::Stride const& stride,
-        wl_buffer* buffer);
     ~WaylandShmBuffer();
 
     /// \returns the raw data
@@ -56,13 +42,6 @@ public:
     /// \returns the stride
     auto stride() const -> mir::geometry::Stride { return stride_; }
 
-    /// Returns if this buffer is currently being used by the compositor.
-    ///
-    /// In-use buffers keep themselves alive.
-    ///
-    /// \returns `true` if in use, otherwise `false`.
-    auto is_in_use() const -> bool { return self_ptr != nullptr; }
-
     /// Marks this buffer as in-use and assumes the resulting #wl_buffer is sent to the compositor.
     ///
     /// Keeps this buffer  alive until the compositor releases it. If the buffer is not sent to the compositor
@@ -73,13 +52,27 @@ public:
     auto use() -> wl_buffer*;
 
 private:
-    friend WaylandShm;
+    class PoolHandle;
+    friend WaylandShmPool;
+
+    WaylandShmBuffer(
+        std::shared_ptr<PoolHandle> const& pool,
+        void* data,
+        mir::geometry::Size const& size,
+        mir::geometry::Stride const& stride,
+        wl_buffer* buffer);
+
+    /// Returns if this buffer is currently being used by the compositor.
+    ///
+    /// In-use buffers keep themselves alive.
+    ///
+    /// \returns `true` if in use, otherwise `false`.
+    auto is_in_use() const -> bool { return self_ptr != nullptr; }
 
     static wl_buffer_listener const buffer_listener;
-
     static void handle_release(void *data, wl_buffer*);
 
-    std::shared_ptr<WaylandShmPool> pool;
+    std::shared_ptr<PoolHandle> pool;
     void* const data_;
     mir::geometry::Size const size_;
     mir::geometry::Stride const stride_;
@@ -91,15 +84,15 @@ private:
 ///
 /// An instance of this class does not efficiently provision multiple buffers for multiple window sizes.
 /// Please use one instance of this class per window if windows may have distinct sizes.
-class WaylandShm
+class WaylandShmPool
 {
 public:
-    /// Construct a wayland shared memory object.
+    /// Construct a wayland shared pool.
     ///
     /// Does not take ownership of the \p wl_shm.
     ///
     /// \param shm the wl_shm interface
-    explicit WaylandShm(wl_shm* shm);
+    explicit WaylandShmPool(wl_shm* shm);
 
     /// Get a buffer.
     ///

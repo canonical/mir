@@ -38,6 +38,8 @@ namespace miral
 /// This internal client relies on the following protocols:
 /// 1. wlr foreign toplevel management v1
 /// 2. wlr layer shell v1
+///
+/// \remark Since MirAL 5.6
 class ApplicationSwitcher
 {
 public:

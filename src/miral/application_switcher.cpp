@@ -298,7 +298,7 @@ public:
     void init(wl_display* display)
     {
         wayland_init(display);
-        shm_ = std::make_shared<miral::tk::WaylandShm>(shm());
+        shm_ = std::make_shared<miral::tk::WaylandShmPool>(shm());
         miral::tk::LayerShellWaylandSurface::CreationParams surface_params{
             mir::geometry::Size(0, 0),
             ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY,
@@ -594,7 +594,7 @@ private:
 
     std::mutex mutex;
     std::optional<miral::tk::WaylandObject<zwlr_foreign_toplevel_manager_v1>> toplevel_manager;
-    std::shared_ptr<miral::tk::WaylandShm> shm_;
+    std::shared_ptr<miral::tk::WaylandShmPool> shm_;
     std::shared_ptr<miral::tk::LayerShellWaylandSurface> surface_;
     ToplevelInfoPrinter printer;
     std::vector<ToplevelInfo> toplevels_in_focus_order;
