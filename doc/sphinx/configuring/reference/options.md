@@ -4,7 +4,7 @@
 
 Mir compostiros can usually be configured (in the order of preference) on the command line, in the environment, or in a configuration file.
 
-Different compositors will expose different options, but the below is a common set.
+Different compositors will expose different options, here's a list from the `miral-shell` example:
 
 ```{include} options.md.include
 
