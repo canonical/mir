@@ -53,7 +53,6 @@ endif()
 include (cmake/EnableCoverageReport.cmake)
 include (cmake/MirCommon.cmake)
 include (GNUInstallDirs)
-add_subdirectory(doc)
 
 set(build_types "None;Debug;Release;RelWithDebInfo;MinSizeRel;Coverage;AddressSanitizer;ThreadSanitizer;UBSanitizer")
 # Change informational string for CMAKE_BUILD_TYPE
@@ -296,6 +295,7 @@ mir_make_pkgconfig_variable(PKGCONFIG_LIBDIR "${CMAKE_INSTALL_LIBDIR}")
 mir_make_pkgconfig_variable(PKGCONFIG_INCLUDEDIR "${CMAKE_INSTALL_INCLUDEDIR}")
 include(JoinPaths)
 
+add_subdirectory(doc)
 set(MIR_GENERATED_INCLUDE_DIRECTORIES)
 add_subdirectory(src/)
 include_directories(${MIR_GENERATED_INCLUDE_DIRECTORIES})
