@@ -201,7 +201,7 @@ public:
 
         std::lock_guard lock{mutex};
         auto buffer = pool.claim();
-        auto const mapping = mrs::as_write_mappable_buffer(buffer);
+        auto const mapping = mrs::as_write_mappable(buffer);
         screen_shooter->capture(
             mapping,
             capture_rect,

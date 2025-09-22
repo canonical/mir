@@ -26,7 +26,7 @@
 
 namespace mg = mir::graphics;
 
-class mg::CPUAddressableFB::Buffer : public mir::renderer::software::RWMappableBuffer
+class mg::CPUAddressableFB::Buffer : public mir::renderer::software::RWMappable
 {
     template<typename T>
     class Mapping : public mir::renderer::software::Mapping<T>
@@ -345,8 +345,8 @@ auto mg::CPUAddressableFB::fb_id_for_buffer(
                 std::system_category(),
                 "Failed to create DRM framebuffer from CPU-accessible buffer"}));
         }
-    
-    
+
+
     }
     return fb_id;
 }

@@ -72,7 +72,7 @@ public:
         std::function<void()>&& on_consumed,
         std::function<void()>&& on_release) -> std::shared_ptr<Buffer> override;
     auto buffer_from_shm(
-        std::shared_ptr<renderer::software::RWMappableBuffer> data,
+        std::shared_ptr<renderer::software::RWMappable> data,
         std::function<void()>&& on_consumed,
         std::function<void()>&& on_release) -> std::shared_ptr<Buffer> override;
 

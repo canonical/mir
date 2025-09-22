@@ -83,7 +83,7 @@ private:
     static auto buffer_to_mapping_if_possible(std::shared_ptr<mg::Buffer> const& buffer)
         -> std::unique_ptr<mrs::Mapping<unsigned char const>>
     {
-        auto const mappable_buffer = mrs::as_read_mappable_buffer(buffer);
+        auto const mappable_buffer = mrs::as_read_mappable(buffer);
         if (!mappable_buffer)
         {
             BOOST_THROW_EXCEPTION(

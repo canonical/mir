@@ -32,7 +32,7 @@ class Executor;
 
 namespace renderer::software
 {
-class RWMappableBuffer;
+class RWMappable;
 }
 
 namespace graphics
@@ -48,7 +48,7 @@ public:
 
     /**
      * The supported CPU-accessible buffer pixel formats.
-     * \note: once the above is deprecated, this is really only (marginally) useful 
+     * \note: once the above is deprecated, this is really only (marginally) useful
      *        for the software allocation path.
      *        (and we could probably move software/cpu buffers up to libmirserver)
      */
@@ -87,7 +87,7 @@ public:
         std::function<void()>&& on_release) = 0;
 
     virtual auto buffer_from_shm(
-        std::shared_ptr<renderer::software::RWMappableBuffer> shm_data,
+        std::shared_ptr<renderer::software::RWMappable> shm_data,
         std::function<void()>&& on_consumed,
         std::function<void()>&& on_release) -> std::shared_ptr<Buffer> = 0;
 

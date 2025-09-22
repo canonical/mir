@@ -57,7 +57,7 @@ auto mtd::StubBufferAllocator::buffer_from_resource(wl_resource*, std::function<
 }
 
 auto mtd::StubBufferAllocator::buffer_from_shm(
-    std::shared_ptr<mir::renderer::software::RWMappableBuffer> data,
+    std::shared_ptr<mir::renderer::software::RWMappable> data,
     std::function<void()>&& on_consumed,
     std::function<void()>&& on_release) -> std::shared_ptr<mg::Buffer>
 {
