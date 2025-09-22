@@ -8,6 +8,7 @@ execute: |
         ccache \
         cmake \
         coreutils \
+        diffutils \
         elogind \
         eudev-dev \
         freetype-dev \

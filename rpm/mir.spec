@@ -49,7 +49,7 @@ BuildRequires:  clang
 %else
 BuildRequires:  gcc-c++
 %endif
-BuildRequires:  cmake, ninja-build, doxygen, graphviz, lcov, gcovr
+BuildRequires:  cmake, ninja-build, diffutils, doxygen, graphviz, lcov, gcovr
 BuildRequires:  /usr/bin/xsltproc
 BuildRequires:  boost-devel
 BuildRequires:  python3
