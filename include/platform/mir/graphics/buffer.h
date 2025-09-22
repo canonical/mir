@@ -57,27 +57,27 @@ protected:
 class Buffer
 {
 public:
-    virtual ~Buffer() {}
+    virtual ~Buffer() = default;
 
     /// \returns The unique ID of this buffer.
-    virtual BufferID id() const = 0;
+    virtual auto id() const -> BufferID = 0;
 
     /// \returns The size of the buffer.
     ///
     /// \note The size is the logical size of the buffer, where the width is
     /// the perceived width, and NOT the stride.
-    virtual geometry::Size size() const = 0;
+    virtual auto size() const -> geometry::Size = 0;
 
     /// The pixel format determines how the pixels are laid out in memory, and
     /// whether or not the buffer supports transparency.
     ///
     /// \returns The pixel format of the buffer.
-    virtual MirPixelFormat pixel_format() const = 0;
+    virtual auto pixel_format() const -> MirPixelFormat = 0;
 
     /// Used with buffer classes that wrap other buffers.
     ///
     /// \returns A direct pointer to the inner/wrapped buffer.
-    virtual NativeBufferBase* native_buffer_base() = 0;
+    virtual auto native_buffer_base() -> NativeBufferBase* = 0;
 
 protected:
     Buffer() = default;
