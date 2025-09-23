@@ -88,3 +88,5 @@ auto miral::live_config::Key::operator==(Key const& that) const -> bool
     return *self == *that.self;
 }
 
+miral::live_config::Store::Store() = default;
+miral::live_config::Store::~Store() = default;
