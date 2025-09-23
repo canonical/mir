@@ -1,3 +1,10 @@
+mir (2.22.2) UNRELEASED; urgency=medium
+
+  * Bugfix release 2.22.2
+    . Revert "Check DRM for supported formats (#3950)" (#4294)
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Tue, 23 Sep 2025 10:06:51 +0200
+
 mir (2.22.1) UNRELEASED; urgency=medium
 
   * Bugfix release 2.22.1
