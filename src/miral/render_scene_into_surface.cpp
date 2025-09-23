@@ -27,7 +27,6 @@
 #include "mir/shell/surface_stack.h"
 #include "mir/renderer/sw/pixel_source.h"
 
-#include <future>
 #include <mutex>
 #include <utility>
 #include <boost/mpl/pair.hpp>
@@ -95,24 +94,16 @@ public:
             return {};
 
         std::lock_guard lock{mutex};
-        auto capture_complete = std::make_shared<std::promise<void>>();
-        auto future = capture_complete->get_future();
-
         screen_shooter->capture(
             capture_rect,
             glm::mat2(1.f),
             overlay_cursor,
-            [this, capture_complete](auto const&, auto buffer) mutable
+            [this](auto const&, auto buffer)
             {
                 if (buffer)
-                {
                     get_streams().begin()->stream->submit_buffer(
                         buffer, capture_rect.size, geom::RectangleD({0, 0}, capture_rect.size));
-                }
-                capture_complete->set_value();
             });
-
-        future.wait();
         return BasicSurface::generate_renderables(id);
     }
 
