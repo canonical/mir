@@ -205,49 +205,11 @@ mc::BasicScreenShooter::Self::Self(
 }
 
 auto mc::BasicScreenShooter::Self::render(
-    std::shared_ptr<mrs::WriteMappableBuffer> const& buffer,
     geom::Rectangle const& area,
     glm::mat2 const& transform,
-    bool overlay_cursor) -> time::Timestamp{
-    std::lock_guard lock{mutex};
-
-    auto scene_elements = scene->scene_elements_for(this);
-    auto const captured_time = clock->now();
-    mg::RenderableList renderable_list;
-    renderable_list.reserve(scene_elements.size());
-    for (auto const& element : scene_elements)
-    {
-        renderable_list.push_back(element->renderable());
-    }
-
-    if (overlay_cursor)
-    {
-        if (auto const cursor_renderable = cursor->renderable())
-            renderable_list.push_back(cursor_renderable);
-    }
-
-    scene_elements.clear();
-
-    auto& renderer = renderer_for_buffer(buffer);
-    renderer.set_output_transform(transform);
-    renderer.set_viewport(area);
-    renderer.set_output_filter(output_filter->filter());
-    /* We don't need the result of this `render` call, as we know it's
-     * going into the buffer we just set
-     */
-
-    auto frame = renderer.render(renderable_list);
-
-    // Because we might be called on a different thread next time we need to
-    // ensure the renderer doesn't keep the EGL context current
-    renderer.suspend();
-    return captured_time;
-}
-
-auto mc::BasicScreenShooter::Self::render(
-    geom::Rectangle const& area,
-    glm::mat2 const& transform,
-    bool overlay_cursor) -> std::pair<time::Timestamp, std::shared_ptr<mg::Buffer>>
+    bool overlay_cursor,
+    std::function<renderer::Renderer&()>&& renderer_for_capture)
+    -> std::pair<time::Timestamp, std::unique_ptr<graphics::Buffer>>
 {
     std::lock_guard lock{mutex};
 
@@ -268,7 +230,7 @@ auto mc::BasicScreenShooter::Self::render(
 
     scene_elements.clear();
 
-    auto& renderer = renderer_for_size(area.size);
+    auto& renderer = renderer_for_capture();
     renderer.set_output_transform(transform);
     renderer.set_viewport(area);
     renderer.set_output_filter(output_filter->filter());
@@ -284,6 +246,43 @@ auto mc::BasicScreenShooter::Self::render(
     return {captured_time, std::move(frame)};
 }
 
+auto mc::BasicScreenShooter::Self::render(
+    std::shared_ptr<mrs::WriteMappableBuffer> const& buffer,
+    geom::Rectangle const& area,
+    glm::mat2 const& transform,
+    bool overlay_cursor) -> time::Timestamp
+{
+    auto [timestamp, _] = render(
+        area,
+        transform,
+        overlay_cursor,
+        [this, buffer]() -> renderer::Renderer&
+        {
+            return renderer_for_buffer(buffer);
+        });
+
+    return timestamp;
+}
+
+auto mc::BasicScreenShooter::Self::render(geom::Rectangle const& area, glm::mat2 const& transform, bool overlay_cursor)
+    -> std::pair<time::Timestamp, std::shared_ptr<mg::Buffer>>
+{
+    return render(
+        area,
+        transform,
+        overlay_cursor,
+        [this, area]() -> renderer::Renderer& { return renderer_for_size(area.size); });
+}
+
+auto mir::compositor::BasicScreenShooter::Self::rebuild_renderer(geom::Size const& size)
+{
+    // We need to build a new Renderer, at the new size
+    offscreen_sink = std::make_unique<OffscreenDisplaySink>(display_provider, size);
+    auto gl_surface = render_provider->surface_for_sink(*offscreen_sink, *config);
+    current_renderer = renderer_factory->create_renderer_for(std::move(gl_surface), render_provider);
+}
+
+
 auto mc::BasicScreenShooter::Self::renderer_for_buffer(std::shared_ptr<mrs::WriteMappableBuffer> const& buffer) -> mr::Renderer&
 {
     auto const size = buffer->size();
@@ -291,13 +290,11 @@ auto mc::BasicScreenShooter::Self::renderer_for_buffer(std::shared_ptr<mrs::Writ
     {
         BOOST_THROW_EXCEPTION((std::runtime_error{"Attempt to capture to a zero-sized buffer"}));
     }
+
     if (buffer->size() != display_provider->output_size())
     {
         display_provider->set_next_buffer(buffer);
-        // We need to build a new Renderer, at the new size
-        offscreen_sink = std::make_unique<OffscreenDisplaySink>(display_provider, size);
-        auto gl_surface = render_provider->surface_for_sink(*offscreen_sink, *config);
-        current_renderer = renderer_factory->create_renderer_for(std::move(gl_surface), render_provider);
+        rebuild_renderer(size);
     }
 
     return *current_renderer;
@@ -310,13 +307,9 @@ auto mc::BasicScreenShooter::Self::renderer_for_size(geom::Size const& size)
     {
         BOOST_THROW_EXCEPTION((std::runtime_error{"Attempt to capture to a zero-sized buffer"}));
     }
+
     if (display_provider->output_size_changed(size))
-    {
-        // We need to build a new Renderer, at the new size
-        offscreen_sink = std::make_unique<OffscreenDisplaySink>(display_provider, size);
-        auto gl_surface = render_provider->surface_for_sink(*offscreen_sink, *config);
-        current_renderer = renderer_factory->create_renderer_for(std::move(gl_surface), render_provider);
-    }
+        rebuild_renderer(size);
 
     return *current_renderer;
 }
@@ -386,29 +379,11 @@ void mc::BasicScreenShooter::capture(
     bool overlay_cursor,
     std::function<void(std::optional<time::Timestamp>)>&& callback)
 {
-    // TODO: use an atomic to keep track of number of in-flight captures, and error if it's too many
-
-    executor.spawn([weak_self=std::weak_ptr{self}, buffer, area, transform, overlay_cursor, callback=std::move(callback)]
-        {
-            if (auto const self = weak_self.lock())
-            {
-                try
-                {
-                    callback(self->render(buffer, area, transform, overlay_cursor));
-                    return;
-                }
-                catch (...)
-                {
-                    mir::log(
-                        ::mir::logging::Severity::error,
-                        "BasicScreenShooter",
-                        std::current_exception(),
-                        "failed to capture screen");
-                }
-            }
-
-            callback(std::nullopt);
-        });
+    spawn_capture_thread(
+        area,
+        [callback, area, transform, overlay_cursor, buffer](auto self)
+        { callback(self->render(buffer, area, transform, overlay_cursor)); },
+        [callback] { callback(std::nullopt); });
 }
 
 void mc::BasicScreenShooter::capture(
@@ -417,22 +392,41 @@ void mc::BasicScreenShooter::capture(
     bool overlay_cursor,
     std::function<void(std::optional<time::Timestamp>, std::shared_ptr<mg::Buffer>)>&& callback)
 {
+    spawn_capture_thread(
+        area,
+        [callback, area, transform, overlay_cursor](auto self)
+        {
+            auto const [timestamp, buffer] = self->render(area, transform, overlay_cursor);
+            callback(timestamp, buffer);
+        },
+        [callback] { callback(std::nullopt, nullptr); });
+}
+
+mc::CompositorID mc::BasicScreenShooter::id() const
+{
+    return self.get();
+}
+
+void mir::compositor::BasicScreenShooter::spawn_capture_thread(
+    geometry::Rectangle const& area,
+    std::function<void(std::shared_ptr<Self>)>&& on_lock,
+    std::function<void()>&& on_fail)
+{
     // TODO: use an atomic to keep track of number of in-flight captures, and error if it's too many
 
     if (area.size.width == geom::Width{0} || area.size.height == geom::Height{0})
     {
-        callback(std::nullopt, nullptr);
+        on_fail();
         return;
     }
 
-    executor.spawn([weak_self=std::weak_ptr{self}, area, transform, overlay_cursor, callback=std::move(callback)]
+    executor.spawn([weak_self=std::weak_ptr{self}, on_lock, on_fail]
         {
             if (auto const self = weak_self.lock())
             {
                 try
                 {
-                    auto [time, frame] = self->render(area, transform, overlay_cursor);
-                    callback(time, frame);
+                    on_lock(self);
                     return;
                 }
                 catch (...)
@@ -445,11 +439,7 @@ void mc::BasicScreenShooter::capture(
                 }
             }
 
-            callback(std::nullopt, nullptr);
+            on_fail();
         });
 }
 
-mc::CompositorID mc::BasicScreenShooter::id() const
-{
-    return self.get();
-}

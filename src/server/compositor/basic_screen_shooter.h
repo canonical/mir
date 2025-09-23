@@ -91,6 +91,13 @@ private:
             std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator);
 
         auto render(
+            geometry::Rectangle const& area,
+            glm::mat2 const& transform,
+            bool overlay_cursor,
+            std::function<renderer::Renderer&()>&& renderer_for_capture)
+            -> std::pair<time::Timestamp, std::unique_ptr<graphics::Buffer>>;
+
+        auto render(
             std::shared_ptr<WriteMappableBuffer> const& buffer,
             geometry::Rectangle const& area,
             glm::mat2 const& transform,
@@ -98,6 +105,8 @@ private:
 
         auto render(geometry::Rectangle const& area, glm::mat2 const& transform, bool overlay_cursor)
             -> std::pair<time::Timestamp, std::shared_ptr<graphics::Buffer>>;
+
+        auto rebuild_renderer(geometry::Size const& size);
 
         auto renderer_for_buffer(std::shared_ptr<WriteMappableBuffer> const& buffer)
             -> renderer::Renderer&;
@@ -123,6 +132,13 @@ private:
         std::shared_ptr<graphics::OutputFilter> const output_filter;
         std::shared_ptr<graphics::Cursor> cursor;
     };
+
+
+    void spawn_capture_thread(
+        geometry::Rectangle const& area,
+        std::function<void(std::shared_ptr<Self>)>&& on_lock,
+        std::function<void()>&& on_fail);
+
     std::shared_ptr<Self> const self;
     Executor& executor;
 
