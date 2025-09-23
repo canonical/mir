@@ -619,6 +619,23 @@ mrg::Renderer::Renderer(
 
 mrg::Renderer::~Renderer()
 {
+    auto prev_dpy = eglGetCurrentDisplay();
+    auto prev_ctx = eglGetCurrentContext();
+    auto prev_read = eglGetCurrentSurface(EGL_READ);
+    auto prev_draw = eglGetCurrentSurface(EGL_DRAW);
+
+    // We are going to be releasing GL resources; that means we have to have a current context
+    // We've allocated all our resources on the context of output_surface; release them there, too.
+    output_surface->make_current();
+
+    program_factory = nullptr;
+    // OutputSurface destructor correctly cleans up, leaving no current EGL context
+    output_surface = nullptr;
+
+    if (prev_ctx != EGL_NO_CONTEXT)
+    {
+        eglMakeCurrent(prev_dpy, prev_draw, prev_read, prev_ctx);
+    }
 }
 
 void mrg::Renderer::tessellate(std::vector<mgl::Primitive>& primitives,
