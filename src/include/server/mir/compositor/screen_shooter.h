@@ -59,6 +59,15 @@ public:
         bool overlay_cursor,
         std::function<void(std::optional<time::Timestamp>)>&& callback) = 0;
 
+    /// Capture a rectangle on the screen given by [area] into a buffer
+    /// supplied by the screenshooter. The resulting render will have the
+    /// [transform] applied to it. It is recommended that the [area] is an area
+    /// on a single output with that output's corresponding [transform],
+    /// however this is up to the discretion of the caller.
+    ///
+    /// The [callback] may be called on a different thread. It will be given
+    /// the timestamp of the capture and the buffer containing the screenshot
+    /// if it succeeds or nullopt and a nullptr if there was an error.
     virtual void capture(
         geometry::Rectangle const& area,
         glm::mat2 const& transform,
