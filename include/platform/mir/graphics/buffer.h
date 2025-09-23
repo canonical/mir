@@ -17,12 +17,21 @@
 #ifndef MIR_GRAPHICS_BUFFER_H_
 #define MIR_GRAPHICS_BUFFER_H_
 
+#include <memory>
+#include <stdexcept>
+
 #include "mir/graphics/buffer_id.h"
 #include "mir/geometry/size.h"
 #include "mir_toolkit/common.h"
 
 namespace mir
 {
+namespace renderer::software
+{
+template<typename Data>
+class Mapping;
+}
+
 namespace graphics
 {
 
@@ -37,6 +46,12 @@ protected:
     virtual ~NativeBufferBase() = default;
     NativeBufferBase(NativeBufferBase const&) = delete;
     NativeBufferBase operator=(NativeBufferBase const&) = delete;
+};
+
+class UnmappableBuffer : public std::invalid_argument
+{
+public:
+    using std::invalid_argument::invalid_argument;
 };
 
 /// Generic graphics buffer interface.
@@ -79,6 +94,22 @@ public:
     /// \returns A direct pointer to the inner/wrapped buffer.
     virtual auto native_buffer_base() -> NativeBufferBase* = 0;
 
+    /// Access the buffer content from the CPU
+    ///
+    /// \note This access might be costly (for example, requiring a copy across the PCIe bus
+    //        for buffers in VRAM).
+    ///       Wherever possible, buffers should be accessed through rendering-API-specific means,
+    ///       such as [GLRenderingProvider::as_texture].
+    ///
+    /// \returns A [Mapping] describing a CPU-accessible view of the buffer. The lifetime of
+    ///          this [Mapping] is tied to the lifetime of this [Buffer].
+    ///
+    /// \throws An [UnmappableBuffer] if the buffer cannot be mapped in this way. This may
+    ///         occur if the buffer has a format not representable by [MirPixelFormat]
+    ///         (for example, a planar YUV format) or if the buffer is being protected by the
+    ///         GPU Digital Rights Management path.
+    /// \throws A std::system_error if mapping
+    virtual auto map_readable() const -> std::unique_ptr<renderer::software::Mapping<std::byte const>> = 0;
 protected:
     Buffer() = default;
 };

@@ -82,8 +82,9 @@ public:
         geometry::Size const& size,
         MirPixelFormat const& pixel_format);
 
+    auto map_readable() const -> std::unique_ptr<renderer::software::Mapping<std::byte const>> override;
+
     auto map_writeable() -> std::unique_ptr<renderer::software::Mapping<std::byte>> override;
-    auto map_readable() -> std::unique_ptr<renderer::software::Mapping<std::byte const>> override;
     auto map_rw() -> std::unique_ptr<renderer::software::Mapping<std::byte>> override;
 
     auto format() const -> MirPixelFormat override { return ShmBuffer::pixel_format(); }
@@ -116,8 +117,9 @@ public:
     MappableBackedShmBuffer(
         std::shared_ptr<RWMappable> data);
 
+    auto map_readable() const -> std::unique_ptr<renderer::software::Mapping<std::byte const>> override;
+
     auto map_writeable() -> std::unique_ptr<renderer::software::Mapping<std::byte>> override;
-    auto map_readable() -> std::unique_ptr<renderer::software::Mapping<std::byte const>> override;
     auto map_rw() -> std::unique_ptr<renderer::software::Mapping<std::byte>> override;
 
     auto format() const -> MirPixelFormat override;
@@ -144,7 +146,7 @@ public:
 
     ~NotifyingMappableBackedShmBuffer() override;
 
-    auto map_readable() -> std::unique_ptr<renderer::software::Mapping<std::byte const>> override;
+    auto map_readable() const  -> std::unique_ptr<renderer::software::Mapping<std::byte const>> override;
     auto map_writeable() -> std::unique_ptr<renderer::software::Mapping<std::byte>> override;
     auto map_rw() -> std::unique_ptr<renderer::software::Mapping<std::byte>> override;
 
@@ -152,10 +154,9 @@ protected:
     void on_texture_accessed(std::shared_ptr<ShmBufferTexture> const&) override;
 
 private:
-    void notify_consumed();
+    void notify_consumed() const;
 
-    std::mutex consumed_mutex;
-    std::function<void()> on_consumed;
+    mir::Synchronised<std::function<void()>> on_consumed;
     std::function<void()> const on_release;
 };
 }

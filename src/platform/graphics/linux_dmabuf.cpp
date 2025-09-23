@@ -20,6 +20,8 @@
 #include "mir/graphics/drm_formats.h"
 #include "egl_buffer_copy.h"
 
+#include "mir/synchronised.h"
+#include "mir_toolkit/common.h"
 #include "wayland_wrapper.h"
 #include "mir/wayland/protocol_error.h"
 #include "mir/wayland/client.h"
@@ -31,12 +33,17 @@
 #include "mir/graphics/buffer_basic.h"
 #include "mir/graphics/dmabuf_buffer.h"
 #include "mir/graphics/egl_context_executor.h"
+#include "mir/renderer/sw/pixel_source.h"
 
 #include <EGL/egl.h>
 #include <cstdint>
 #include <cstring>
 #include <stdexcept>
+#include <sys/ioctl.h>
+#include <sys/mman.h>
 #include <sys/stat.h>
+#include <system_error>
+#include <linux/dma-buf.h>
 
 #define MIR_LOG_COMPONENT "linux-dmabuf-import"
 #include "mir/log.h"
@@ -53,7 +60,7 @@ namespace mg = mir::graphics;
 namespace mgc = mg::common;
 namespace mw = mir::wayland;
 namespace geom = mir::geometry;
-
+namespace mrs = mir::renderer::software;
 
 namespace
 {
@@ -1035,6 +1042,8 @@ public:
     void add_syncpoint() override
     {
     }
+
+
 private:
     GLuint const tex;
     BufferGLDescription const& desc;
@@ -1066,12 +1075,13 @@ public:
         std::function<void()>&& on_consumed,
         std::function<void()>&& on_release)
         : dpy{dpy},
-          tex{dpy, extensions, dma_buf, descriptor, std::move(egl_delegate)},
+          tex{dpy, extensions, dma_buf, descriptor, egl_delegate},
           provider_{std::move(provider)},
           on_consumed_{std::move(on_consumed)},
           on_release{std::move(on_release)},
           size_{dma_buf.size()},
           has_alpha{format_has_known_alpha(dma_buf.format()).value_or(true)},  // Has-alpha is the safe default for unknown formats
+          egl_executor{std::move(egl_delegate)},
           planes_{dma_buf.planes()},
           modifier_{dma_buf.modifier()},
           format_{dma_buf.format()}
@@ -1115,10 +1125,31 @@ public:
         return this;
     }
 
+    auto map_readable() const -> std::unique_ptr<mrs::Mapping<std::byte const>> override
+    {
+        auto consumed = on_consumed_.lock_mut();
+        (*consumed)();
+        *consumed = [](){};
+
+        if (modifier().value_or(DRM_FORMAT_MOD_INVALID) == DRM_FORMAT_MOD_LINEAR &&
+            format().as_mir_format().has_value())
+        {
+            // Fastpath; we can just mmap the memory
+            return std::unique_ptr<DmaBufMapping>{new DmaBufMapping{*this}};
+        }
+        else if (format().info() && format().info()->components())
+        {
+            return std::unique_ptr<GLMapping>(new GLMapping{*this});
+        }
+        BOOST_THROW_EXCEPTION((
+            mg::UnmappableBuffer{"Unsupported buffer format for direct CPU access"}));
+    }
+
     void on_consumed() override
     {
-        on_consumed_();
-        on_consumed_ = [](){};
+        auto consumed = on_consumed_.lock();
+        (*consumed)();
+        *consumed = [](){};
     }
 
     auto as_texture() -> DMABufTex*
@@ -1127,7 +1158,6 @@ public:
          * texture from this buffer; it's a good indication that the buffer
          * has been consumed.
          */
-        std::lock_guard lock{consumed_mutex};
         on_consumed();
 
         return &tex;
@@ -1158,23 +1188,167 @@ public:
         return provider_;
     }
 private:
+    friend class DmaBufMapping;
+    class DmaBufMapping : public mrs::Mapping<std::byte const>
+    {
+    public:
+        DmaBufMapping(DmabufTexBuffer const& parent)
+            : parent{parent}
+        {
+            if (!parent.format().as_mir_format().has_value())
+            {
+                BOOST_THROW_EXCEPTION((mg::UnmappableBuffer{"Format unrepresentable in mir_pixel_format"}));
+            }
+            if (parent.planes().size() != 1)
+            {
+                BOOST_THROW_EXCEPTION((mg::UnmappableBuffer{"Multiplanar formats not supported"}));
+            }
+            auto& info = parent.planes().front();
+            data_ = ::mmap(
+                nullptr,
+                info.stride * parent.size().height.as_uint32_t(),
+                PROT_READ,
+                MAP_SHARED_VALIDATE,
+                info.dma_buf,
+                info.offset);
+            if (data_ == MAP_FAILED)
+            {
+                BOOST_THROW_EXCEPTION((
+                    std::system_error{
+                        errno,
+                        std::system_category(),
+                        "Failed to map DMABuf"}));
+            }
+            struct dma_buf_sync sync{.flags = DMA_BUF_SYNC_READ | DMA_BUF_SYNC_START};
+            if (ioctl(info.dma_buf, DMA_BUF_IOCTL_SYNC, &sync) == -1)
+            {
+                // TODO: ioctl documentation says we should retry on EAGAIN and EINTR
+                BOOST_THROW_EXCEPTION((
+                    std::system_error{
+                        errno,
+                        std::system_category(),
+                        "Failed to notify kernel of dma-buf CPU read"
+                    }
+                ));
+            }
+        }
+
+        ~DmaBufMapping()
+        {
+            struct dma_buf_sync sync{.flags = DMA_BUF_SYNC_END};
+            ioctl(parent.planes().front().dma_buf, DMA_BUF_IOCTL_SYNC, &sync);
+
+            munmap(data_, len());
+        }
+
+        auto data() const -> std::byte const* override
+        {
+            return static_cast<std::byte const*>(data_);
+        }
+
+        auto len() const -> size_t override
+        {
+            return size().height.as_uint32_t() * stride().as_uint32_t();
+        }
+
+        auto format() const -> MirPixelFormat override
+        {
+           return parent.format_.as_mir_format().value_or(mir_pixel_format_invalid);
+        }
+
+        auto stride() const -> geom::Stride override
+        {
+            return geom::Stride{parent.planes().front().stride};
+        }
+
+        auto size() const -> geom::Size override
+        {
+            return parent.size();
+        }
+    private:
+        DmabufTexBuffer const& parent;
+        void* data_;
+    };
+
+    friend class GLMapping;
+    class GLMapping : public mrs::Mapping<std::byte const>
+    {
+    public:
+        GLMapping(DmabufTexBuffer const& parent)
+            : parent{parent}
+        {
+            auto data_promise = std::make_shared<std::promise<std::unique_ptr<std::byte const[]>>>();
+            parent.egl_executor->spawn(
+                [data_promise, &parent]()
+                {
+                    GLuint fbo;
+
+                    GLsizei width = parent.size_.width.as_int();
+                    GLsizei height = parent.size_.height.as_int();
+
+                    auto pixels = std::make_unique<std::byte[]>(width * height * 4);
+
+                    glGenFramebuffers(1, &fbo);
+                    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+                    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, parent.tex.tex_id(), 0);
+
+                    glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels.get());
+
+                    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+                    glDeleteFramebuffers(1, &fbo);
+
+                    data_promise->set_value(std::unique_ptr<std::byte const[]>(pixels.release()));
+                });
+            data_ = data_promise->get_future();
+        }
+
+        auto data() const -> std::byte const* override
+        {
+            return data_.get().get();
+        }
+
+        auto len() const -> size_t override
+        {
+            return size().height.as_uint32_t() * stride().as_uint32_t();
+        }
+
+        auto format() const -> MirPixelFormat override
+        {
+            // Because we're reading through GL the underlying format doesn't matter
+           return mir_pixel_format_argb_8888;
+        }
+
+        auto stride() const -> geom::Stride override
+        {
+            return geom::Stride{size().width.as_uint32_t() * 4};
+        }
+
+        auto size() const -> geom::Size override
+        {
+            return parent.size();
+        }
+
+    private:
+        DmabufTexBuffer const& parent;
+        std::shared_future<std::unique_ptr<std::byte const[]>> data_;
+    };
+
     EGLDisplay const dpy;
     DMABufTex tex;
 
     std::shared_ptr<mg::DMABufEGLProvider> const provider_;
 
-    std::mutex consumed_mutex;
-    std::function<void()> on_consumed_;
+    mir::Synchronised<std::function<void()>> on_consumed_;
     std::function<void()> const on_release;
 
     geom::Size const size_;
     bool const has_alpha;
 
+    std::shared_ptr<mgc::EGLContextExecutor> const egl_executor;
     std::vector<mg::DMABufBuffer::PlaneDescriptor> const planes_;
     std::optional<uint64_t> const modifier_;
     mg::DRMFormat const format_;
 };
-
 
 }
 

@@ -15,11 +15,13 @@
  */
 
 #include "mir/graphics/gl_format.h"
+#include "mir/graphics/ptr_backed_mapping.h"
 #include "mir/renderer/sw/pixel_source.h"
 #include "shm_buffer.h"
 #include "mir/graphics/program_factory.h"
 #include "mir/graphics/program.h"
 #include "mir/graphics/egl_context_executor.h"
+#include "mir_toolkit/common.h"
 
 #define MIR_LOG_COMPONENT "gfx-common"
 #include "mir/log.h"
@@ -277,6 +279,15 @@ mgc::MemoryBackedShmBuffer::MemoryBackedShmBuffer(
 {
 }
 
+auto mgc::MemoryBackedShmBuffer::map_readable() const -> std::unique_ptr<mrs::Mapping<std::byte const>>
+{
+    return std::make_unique<PtrBackedMapping<std::byte const>>(
+        pixels.get(),
+        format(),
+        size(),
+        stride());
+}
+
 void mgc::MemoryBackedShmBuffer::on_texture_accessed(std::shared_ptr<ShmBufferTexture> const& texture)
 {
     texture->try_upload_to_texture(
@@ -326,7 +337,7 @@ public:
         return buffer->size();
     }
 
-    auto data() -> T* override
+    auto data() const -> T* override
     {
         return buffer->pixels.get();
     }
@@ -343,11 +354,6 @@ private:
 auto mgc::MemoryBackedShmBuffer::map_writeable() -> std::unique_ptr<mrs::Mapping<std::byte>>
 {
     return std::make_unique<Mapping<std::byte>>(this);
-}
-
-auto mgc::MemoryBackedShmBuffer::map_readable() -> std::unique_ptr<mrs::Mapping<std::byte const>>
-{
-    return std::make_unique<Mapping<std::byte const>>(this);
 }
 
 auto mgc::MemoryBackedShmBuffer::map_rw() -> std::unique_ptr<mrs::Mapping<std::byte>>
@@ -367,9 +373,44 @@ auto mgc::MappableBackedShmBuffer::map_writeable() -> std::unique_ptr<mrs::Mappi
     return data->map_writeable();
 }
 
-auto mgc::MappableBackedShmBuffer::map_readable() -> std::unique_ptr<mrs::Mapping<std::byte const>>
+auto mgc::MappableBackedShmBuffer::map_readable() const -> std::unique_ptr<mrs::Mapping<std::byte const>>
 {
-    return data->map_readable();
+    class ReadOnlyWrapper : public mrs::Mapping<std::byte const>
+    {
+    public:
+        explicit ReadOnlyWrapper(std::unique_ptr<mrs::Mapping<std::byte>> mapping)
+            : mapping{std::move(mapping)}
+        {
+        }
+
+        auto data() const -> std::byte const* override
+        {
+            return mapping->data();
+        }
+
+        auto len() const -> size_t override
+        {
+            return mapping->len();
+        }
+
+        auto format() const -> MirPixelFormat override
+        {
+            return mapping->format();
+        }
+
+        auto stride() const -> geom::Stride override
+        {
+            return mapping->stride();
+        }
+
+        auto size() const -> geom::Size override
+        {
+            return mapping->size();
+        }
+    private:
+        std::unique_ptr<mrs::Mapping<std::byte>> const mapping;
+    };
+    return std::make_unique<ReadOnlyWrapper>(data->map_rw());
 }
 
 auto mgc::MappableBackedShmBuffer::map_rw() -> std::unique_ptr<mrs::Mapping<std::byte>>
@@ -379,12 +420,12 @@ auto mgc::MappableBackedShmBuffer::map_rw() -> std::unique_ptr<mrs::Mapping<std:
 
 void mgc::MappableBackedShmBuffer::on_texture_accessed(std::shared_ptr<ShmBufferTexture> const& texture)
 {
-    auto const mapping = data->map_readable();
+    auto mapping = map_readable();
     texture->try_upload_to_texture(
         id(),
         mapping->data(),
         size(),
-        mapping->stride(),
+        stride(),
         pixel_format());
 }
 
@@ -418,14 +459,14 @@ mgc::NotifyingMappableBackedShmBuffer::~NotifyingMappableBackedShmBuffer()
     on_release();
 }
 
-void mgc::NotifyingMappableBackedShmBuffer::notify_consumed()
+void mgc::NotifyingMappableBackedShmBuffer::notify_consumed() const
 {
-    std::lock_guard lock{consumed_mutex};
-    on_consumed();
-    on_consumed = [](){};
+    auto consumed = on_consumed.lock_mut();
+    (*consumed)();
+    *consumed = [](){};
 }
 
-auto mgc::NotifyingMappableBackedShmBuffer::map_readable() -> std::unique_ptr<mrs::Mapping<std::byte const>>
+auto mgc::NotifyingMappableBackedShmBuffer::map_readable() const -> std::unique_ptr<mrs::Mapping<std::byte const>>
 {
     notify_consumed();
     return MappableBackedShmBuffer::map_readable();

@@ -57,6 +57,10 @@ public:
         release_callback();
     }
 
+    std::unique_ptr<mrs::Mapping<std::byte const>> map_readable() const override
+    {
+        return buffer->map_readable();
+    }
     mg::BufferID id() const override { return buffer->id(); }
     geom::Size size() const override { return buffer->size(); }
     MirPixelFormat pixel_format() const override { return buffer->pixel_format(); }
