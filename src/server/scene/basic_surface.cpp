@@ -637,7 +637,7 @@ struct CursorImageFromBuffer : public mg::CursorImage
     CursorImageFromBuffer(
         std::shared_ptr<mg::Buffer> buffer,
         geom::Displacement const& hotspot)
-        : buffer{mrs::as_read_mappable(std::move(buffer))},
+        : buffer{std::move(buffer)},
           mapping{this->buffer->map_readable()},
           hotspot_(hotspot)
     {
@@ -657,8 +657,8 @@ struct CursorImageFromBuffer : public mg::CursorImage
         return hotspot_;
     }
 
-    std::shared_ptr<mrs::ReadMappable> const buffer;
-    std::unique_ptr<mrs::Mapping<std::byte const>> const mapping;
+    std::shared_ptr<mg::Buffer> const buffer;
+    std::unique_ptr<mrs::Mapping<std::byte const>> mapping;
     geom::Displacement const hotspot_;
 };
 }

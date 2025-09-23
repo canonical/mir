@@ -118,7 +118,7 @@ public:
     class Mapping : public mir::renderer::software::Mapping<T>
     {
     public:
-        Mapping(StubBuffer* buffer)
+        Mapping(std::conditional_t<std::is_const_v<T>, StubBuffer const*, StubBuffer*> buffer)
             : buffer{buffer}
         {
         }
@@ -138,7 +138,7 @@ public:
             return buffer->buf_size;
         }
 
-        auto data() -> T* override
+        auto data() const -> T* override
         {
             return buffer->written_pixels.data();
         }
@@ -148,7 +148,7 @@ public:
             return buffer->written_pixels.size();
         }
     private:
-        StubBuffer* const buffer;
+        std::conditional_t<std::is_const_v<T>, StubBuffer const*, StubBuffer*> const buffer;
     };
 
     template<typename T>
@@ -159,7 +159,7 @@ public:
         return std::make_unique<Mapping<std::byte>>(this);
     }
 
-    auto map_readable() -> std::unique_ptr<renderer::software::Mapping<std::byte const>> override
+    auto map_readable() const -> std::unique_ptr<renderer::software::Mapping<std::byte const>> override
     {
         return std::make_unique<Mapping<std::byte const>>(this);
     }
