@@ -63,6 +63,8 @@ struct MockBuffer : public graphics::Buffer, public graphics::NativeBufferBase
     MOCK_METHOD(graphics::BufferID, id, (), (const override));
 
     MOCK_METHOD(graphics::NativeBufferBase*, native_buffer_base, (), (override));
+
+    MOCK_METHOD(std::unique_ptr<renderer::software::Mapping<std::byte const>>, map_readable, (), (const override));
 };
 
 }

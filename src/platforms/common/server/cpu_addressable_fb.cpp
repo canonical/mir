@@ -74,7 +74,7 @@ class mg::CPUAddressableFB::Buffer : public mir::renderer::software::RWMappable
         }
 
         [[nodiscard]]
-        auto data() -> T*
+        auto data() const -> T*
         {
             return data_;
         }
@@ -134,14 +134,6 @@ public:
             pitch(),
             format(),
             static_cast<std::byte*>(data),
-            size_);
-    }
-    auto map_readable() -> std::unique_ptr<mir::renderer::software::Mapping<std::byte const>> override
-    {
-        auto const data = mmap_buffer(PROT_READ);
-        return std::make_unique<Mapping<std::byte const>>(
-            width(), height(), pitch(), format(),
-            static_cast<std::byte const*>(data),
             size_);
     }
 

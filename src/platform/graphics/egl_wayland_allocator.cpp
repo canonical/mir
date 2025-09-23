@@ -30,11 +30,14 @@
 #include "mir/graphics/program_factory.h"
 #include "mir/graphics/program.h"
 #include "mir/graphics/egl_context_executor.h"
+#include "mir/renderer/sw/pixel_source.h"
+#include "mir/synchronised.h"
 
 #include <GLES2/gl2.h>
 
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
+namespace mrs = mir::renderer::software;
 
 namespace
 {
@@ -227,10 +230,7 @@ public:
     void bind() override
     {
         glBindTexture(GL_TEXTURE_2D, tex);
-
-        std::lock_guard lock(consumed_mutex);
-        on_consumed();
-        on_consumed = [](){};
+        consumed();
     }
 
     auto tex_id() const -> GLuint override
@@ -241,11 +241,84 @@ public:
     void add_syncpoint() override
     {
     }
+
+    auto map_readable() const -> std::unique_ptr<mrs::Mapping<std::byte const>> override
+    {
+        return std::unique_ptr<mrs::Mapping<std::byte const>>{new GLMapping{*this}};
+    }
 private:
+    void consumed() const
+    {
+        auto locked_on_consumed = on_consumed.lock_mut();
+        (*locked_on_consumed)();
+        *locked_on_consumed = [](){};
+    }
+
+    class GLMapping : public mrs::Mapping<std::byte const>
+    {
+    public:
+        GLMapping(WaylandTexBuffer const& parent)
+            : parent{parent}
+        {
+            auto data_promise = std::make_shared<std::promise<std::unique_ptr<std::byte const[]>>>();
+            parent.egl_delegate->spawn(
+                [data_promise, &parent]()
+                {
+                    GLuint fbo;
+
+                    GLsizei width = parent.size_.width.as_int();
+                    GLsizei height = parent.size_.height.as_int();
+
+                    auto pixels = std::make_unique<std::byte[]>(width * height * 4);
+
+                    glGenFramebuffers(1, &fbo);
+                    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+                    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, parent.tex_id(), 0);
+
+                    glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels.get());
+
+                    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+                    glDeleteFramebuffers(1, &fbo);
+
+                    data_promise->set_value(std::unique_ptr<std::byte const[]>(pixels.release()));
+                });
+            data_ = data_promise->get_future();
+        }
+
+        auto data() const -> std::byte const* override
+        {
+            return data_.get().get();
+        }
+
+        auto len() const -> size_t override
+        {
+            return size().height.as_uint32_t() * stride().as_uint32_t();
+        }
+
+        auto format() const -> MirPixelFormat override
+        {
+            // Because we're reading through GL the underlying format doesn't matter
+           return mir_pixel_format_argb_8888;
+        }
+
+        auto stride() const -> geom::Stride override
+        {
+            return geom::Stride{size().width.as_uint32_t() * 4};
+        }
+
+        auto size() const -> geom::Size override
+        {
+            return parent.size();
+        }
+
+    private:
+        WaylandTexBuffer const& parent;
+        std::shared_future<std::unique_ptr<std::byte const[]>> data_;
+    };
+
     GLuint const tex;
 
-    std::mutex consumed_mutex;
-    std::function<void()> on_consumed;
+    mir::Synchronised<std::function<void()>> on_consumed;
     std::function<void()> const on_release;
 
     geom::Size const size_;
