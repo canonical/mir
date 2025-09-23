@@ -203,17 +203,11 @@ public:
         uint32_t const crtc_base_id{10};
         uint32_t const encoder_base_id{20};
         uint32_t const connector_base_id{30};
-        uint32_t const fb_base_id{40};
-        uint32_t const plane_base_id{50};
 
-        auto type_prop_id = mock_drm.add_property(drm_device, "type");
-        plane_formats.push_back(0);
-
-        for (int i = 0; i < connected + disconnected; i++)
+        for (int i = 0; i < connected; i++)
         {
             uint32_t const crtc_id{crtc_base_id + i};
             uint32_t const encoder_id{encoder_base_id + i};
-            uint32_t const plane_id{plane_base_id + i};
             uint32_t const all_crtcs_mask{0xff};
 
             crtc_ids.push_back(crtc_id);
@@ -221,17 +215,6 @@ public:
 
             encoder_ids.push_back(encoder_id);
             mock_drm.add_encoder(drm_device, encoder_id, crtc_id, all_crtcs_mask);
-
-            mock_drm.add_plane(
-                drm_device,
-                plane_formats,
-                plane_id,
-                crtc_id,
-                fb_base_id,
-                0, 0, 0, 0,
-                0xffff,
-                0,
-                {{type_prop_id, DRM_PLANE_TYPE_PRIMARY}});
         }
 
         for (int i = 0; i < connected; i++)
@@ -280,7 +263,6 @@ public:
     std::vector<uint32_t> crtc_ids;
     std::vector<uint32_t> encoder_ids;
     std::vector<uint32_t> connector_ids;
-    std::vector<uint32_t> plane_formats;
 
     mtf::UdevEnvironment fake_devices;
 

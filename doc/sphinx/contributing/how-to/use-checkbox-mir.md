@@ -204,13 +204,13 @@ We provide a couple of launchers for automated runs:
 - `checkbox-mir.graphics`: runs the graphics-core test plan
 - `checkbox-mir.mir`: runs the Mir test plan
 
-If you want to integrate checkbox-mir into your CI, these are likely what you want to run after having set your device up. You may also create a custom launcher, see {doc}`checkbox:reference/launcher`.
+If you want to integrate checkbox-mir into your CI, these are likely what you want to run after having set your device up. You may also create a custom launcher, see {ref}`checkbox:launcher`.
 
 `checkbox-mir.snaps` preselects the Snap test plan, but lets you choose which snaps to test.
 
 ### Running remotely
 
-The recommended way to run Checkbox tests is over the network - and using Checkbox itself, rather than a SSH connection (see {doc}`checkbox:explanation/remote` for more information).
+The recommended way to run Checkbox tests is over the network - and using Checkbox itself, rather than a SSH connection (see {ref}`checkbox:remote` for more information).
 
 To do this, install checkbox-mir and dependencies on the target device as you would normally, but rather than running the tests there, install Checkbox on your host and issue `checkbox remote <ip.address>`, pointing at the device you want to test.
 

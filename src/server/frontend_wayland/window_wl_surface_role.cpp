@@ -364,6 +364,13 @@ void mf::WindowWlSurfaceRole::commit(WlSurfaceState const& state)
 
         if (pending_changes)
         {
+            // TODO: The whole size handling needs to be straightened out
+            if (!pending_explicit_width && !pending_explicit_height)
+            {
+                auto content_size = scene_surface->content_size();
+                clear_pending_if_unchanged(pending_changes->width, content_size.width);
+                clear_pending_if_unchanged(pending_changes->height, content_size.height);
+            }
             clear_pending_if_unchanged(pending_changes->min_width,  committed_min_size.width);
             clear_pending_if_unchanged(pending_changes->min_height, committed_min_size.height);
             clear_pending_if_unchanged(pending_changes->max_width,  committed_max_size.width);

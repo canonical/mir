@@ -25,6 +25,7 @@
 
 using namespace miral;
 namespace mtf = mir_test_framework;
+using namespace testing;
 
 namespace
 {
@@ -59,4 +60,15 @@ TEST(WindowInfo, negative_window_size_does_not_divide_by_zero)
         }, a_successful_exit_function);
 
     EXPECT_TRUE(p->wait_for_termination().succeeded());
+}
+
+// Test for crash https://github.com/canonical/mir/issues/4281
+TEST(WindowInfo, stub_values_are_returned)
+{
+    WindowInfo info{};
+
+    EXPECT_THAT(info.min_width(), Eq(Width{0}));
+    EXPECT_THAT(info.min_height(), Eq(Height{0}));
+    EXPECT_THAT(info.max_width(), Eq(Width{std::numeric_limits<int>::max()}));
+    EXPECT_THAT(info.max_height(), Eq(Height{std::numeric_limits<int>::max()}));
 }

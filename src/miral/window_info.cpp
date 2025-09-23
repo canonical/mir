@@ -344,26 +344,50 @@ auto miral::WindowInfo::children() const -> std::vector <Window> const&
 
 auto miral::WindowInfo::min_width() const -> mir::geometry::Width
 {
-    std::shared_ptr<mir::scene::Surface> const surface{self->window};
-    return surface->min_width();
+    if (std::shared_ptr<mir::scene::Surface> const surface{self->window})
+    {
+        return surface->min_width();
+    }
+    else
+    {
+        return Width{0};
+    }
 }
 
 auto miral::WindowInfo::min_height() const -> mir::geometry::Height
 {
-    std::shared_ptr<mir::scene::Surface> const surface{self->window};
-    return surface->min_height();
+    if (std::shared_ptr<mir::scene::Surface> const surface{self->window})
+    {
+        return surface->min_height();
+    }
+    else
+    {
+        return Height{0};
+    }
 }
 
 auto miral::WindowInfo::max_width() const -> mir::geometry::Width
 {
-    std::shared_ptr<mir::scene::Surface> const surface{self->window};
-    return surface->max_width();
+    if (std::shared_ptr<mir::scene::Surface> const surface{self->window})
+    {
+        return surface->max_width();
+    }
+    else
+    {
+        return Width{std::numeric_limits<int>::max()};
+    }
 }
 
 auto miral::WindowInfo::max_height() const -> mir::geometry::Height
 {
-    std::shared_ptr<mir::scene::Surface> const surface{self->window};
-    return surface->max_height();
+    if (std::shared_ptr<mir::scene::Surface> const surface{self->window})
+    {
+        return surface->max_height();
+    }
+    else
+    {
+        return Height{std::numeric_limits<int>::max()};
+    }
 }
 
 auto miral::WindowInfo::userdata() const -> std::shared_ptr<void>

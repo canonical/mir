@@ -50,11 +50,6 @@ mtd::FakeDRMResources::FakeDRMResources()
     uint32_t const connector0_id{30};
     uint32_t const connector1_id{31};
     uint32_t const all_crtcs_mask{0x3};
-    uint32_t const fb_id{40};
-    uint32_t const plane_id{50};
-    uint32_t const gamma_size{0};
-
-    auto type_prop_id = add_property("type");
 
     modes.push_back(create_mode(1920, 1080, 138500, 2080, 1111, PreferredMode));
     modes.push_back(create_mode(832, 624, 57284, 1152, 667, NormalMode));
@@ -74,8 +69,6 @@ mtd::FakeDRMResources::FakeDRMResources()
                   DRM_MODE_CONNECTED, encoder1_id,
                   modes, connector_encoder_ids,
                   geom::Size{121, 144});
-
-    add_plane({0}, plane_id, crtc0_id, fb_id, 0, 0, 0, 0, all_crtcs_mask, gamma_size, {{ type_prop_id, DRM_PLANE_TYPE_PRIMARY }});
 
     prepare();
 }
@@ -104,61 +97,6 @@ drmModeRes* mtd::FakeDRMResources::resources_ptr()
     return &resources;
 }
 
-drmModePlaneRes* mtd::FakeDRMResources::plane_resources_ptr()
-{
-    return &plane_resources;
-}
-
-drmModeObjectProperties* mtd::FakeDRMResources::get_object_properties(uint32_t id, uint32_t type)
-{
-    auto props =
-        std::unique_ptr<drmModeObjectProperties, void (*)(drmModeObjectProperties*)>(new drmModeObjectProperties, &::drmModeFreeObjectProperties);
-
-    auto const& object = objects.at(id);
-    if (object.object_type != type)
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error{"Attempt to look up DRM object with incorrect type"});
-    }
-
-    props->count_props = object.ids.size();
-    props->props = const_cast<uint32_t*>(object.ids.data());
-    props->prop_values = const_cast<uint64_t*>(object.values.data());
-
-    allocated_obj_props.insert(props.get());
-    return props.release();
-}
-
-drmModePropertyRes* mtd::FakeDRMResources::get_property(uint32_t prop_id)
-{
-    auto const& property = properties.at(prop_id);
-
-    auto prop =
-       std::unique_ptr<drmModePropertyRes, void (*)(drmModePropertyPtr)>(new drmModePropertyRes, &::drmModeFreeProperty);
-
-    memset(prop.get(), 0, sizeof(*prop));
-
-    prop->prop_id = prop_id;
-    strncpy(prop->name, property.c_str(), sizeof(prop->name) - 1);
-
-    allocated_props.insert(prop.get());
-    return prop.release();
-}
-
-drmModePropertyBlobRes* mtd::FakeDRMResources::get_property_blob(uint32_t prop_id)
-{
-    auto blob =
-        std::unique_ptr<drmModePropertyBlobRes, void (*)(drmModePropertyBlobPtr)>(new drmModePropertyBlobRes, &::drmModeFreePropertyBlob);
-
-    memset(blob.get(), 0, sizeof(*blob));
-
-    blob->id = prop_id;
-    blob->length = 0;
-    blob->data = NULL;
-
-    allocated_prop_blobs.insert(blob.get());
-    return blob.release();
-}
-
 void mtd::FakeDRMResources::prepare()
 {
     resources.count_crtcs = crtcs.size();
@@ -175,56 +113,22 @@ void mtd::FakeDRMResources::prepare()
     for (auto const& connector: connectors)
         connector_ids.push_back(connector.connector_id);
     resources.connectors = connector_ids.data();
-
-    plane_resources.count_planes = planes.size();
-    for (auto const& plane: planes)
-        plane_ids.push_back(plane.plane_id);
-    plane_resources.planes = plane_ids.data();
 }
 
 void mtd::FakeDRMResources::reset()
 {
     resources = drmModeRes();
-    plane_resources = drmModePlaneRes();
 
     crtcs.clear();
     encoders.clear();
     connectors.clear();
-    planes.clear();
-    objects.clear();
-    properties.clear();
-    allocated_obj_props.clear();
-    allocated_props.clear();
-    allocated_prop_blobs.clear();
 
     crtc_ids.clear();
     encoder_ids.clear();
     connector_ids.clear();
-    plane_ids.clear();
 }
 
-uint32_t mtd::FakeDRMResources::add_property(char const* name)
-{
-    properties.insert({next_prop_id, name});
-    return next_prop_id++;
-}
-
-void mtd::FakeDRMResources::add_object(uint32_t id, uint32_t object_type, std::vector<FakeDRMPropertyValue> prop_values)
-{
-    std::vector<uint32_t> ids;
-    std::vector<uint64_t> values;
-
-    for (auto const& value : prop_values)
-    {
-        ids.push_back(value.id);
-        values.push_back(value.value);
-    }
-
-    objects[id] = {object_type, ids, values};
-}
-
-void mtd::FakeDRMResources::add_crtc(uint32_t id, drmModeModeInfo mode,
-                                     std::vector<FakeDRMPropertyValue> prop_values)
+void mtd::FakeDRMResources::add_crtc(uint32_t id, drmModeModeInfo mode)
 {
     drmModeCrtc crtc = drmModeCrtc();
 
@@ -232,13 +136,10 @@ void mtd::FakeDRMResources::add_crtc(uint32_t id, drmModeModeInfo mode,
     crtc.mode = mode;
 
     crtcs.push_back(crtc);
-
-    add_object(id, DRM_MODE_OBJECT_CRTC, prop_values);
 }
 
 void mtd::FakeDRMResources::add_encoder(uint32_t encoder_id, uint32_t crtc_id,
-                                        uint32_t possible_crtcs_mask,
-                                        std::vector<FakeDRMPropertyValue> prop_values)
+                                        uint32_t possible_crtcs_mask)
 {
     drmModeEncoder encoder = drmModeEncoder();
 
@@ -247,8 +148,6 @@ void mtd::FakeDRMResources::add_encoder(uint32_t encoder_id, uint32_t crtc_id,
     encoder.possible_crtcs = possible_crtcs_mask;
 
     encoders.push_back(encoder);
-
-    add_object(encoder_id, DRM_MODE_OBJECT_ENCODER, prop_values);
 }
 
 void mtd::FakeDRMResources::add_connector(uint32_t connector_id,
@@ -258,8 +157,7 @@ void mtd::FakeDRMResources::add_connector(uint32_t connector_id,
                                           std::vector<drmModeModeInfo>& modes,
                                           std::vector<uint32_t>& possible_encoder_ids,
                                           geom::Size const& physical_size,
-                                          drmModeSubPixel subpixel_arrangement,
-                                          std::vector<FakeDRMPropertyValue> prop_values)
+                                          drmModeSubPixel subpixel_arrangement)
 {
     drmModeConnector connector = drmModeConnector();
 
@@ -276,39 +174,6 @@ void mtd::FakeDRMResources::add_connector(uint32_t connector_id,
     connector.subpixel = subpixel_arrangement;
 
     connectors.push_back(connector);
-
-    add_object(connector_id, DRM_MODE_OBJECT_CONNECTOR, prop_values);
-}
-
-void mtd::FakeDRMResources::add_plane(std::vector<uint32_t> formats,
-                                      uint32_t plane_id,
-                                      uint32_t crtc_id,
-                                      uint32_t fb_id,
-                                      uint32_t crtc_x,
-                                      uint32_t crtc_y,
-                                      uint32_t x,
-                                      uint32_t y,
-                                      uint32_t possible_crtcs_mask,
-                                      uint32_t gamma_size,
-                                      std::vector<FakeDRMPropertyValue> prop_values)
-{
-    drmModePlane plane = drmModePlane();
-
-    plane.count_formats = formats.size();
-    plane.formats = formats.data();
-    plane.plane_id = plane_id;
-    plane.crtc_id = crtc_id;
-    plane.fb_id = fb_id;
-    plane.crtc_x = crtc_x;
-    plane.crtc_y = crtc_y;
-    plane.x = x;
-    plane.y = y;
-    plane.possible_crtcs = possible_crtcs_mask;
-    plane.gamma_size = gamma_size;
-
-    planes.push_back(plane);
-
-    add_object(plane_id, DRM_MODE_OBJECT_PLANE, prop_values);
 }
 
 drmModeCrtc* mtd::FakeDRMResources::find_crtc(uint32_t id)
@@ -341,15 +206,6 @@ drmModeConnector* mtd::FakeDRMResources::find_connector(uint32_t id)
     return nullptr;
 }
 
-drmModePlane* mtd::FakeDRMResources::find_plane(uint32_t id)
-{
-    for (auto& plane : planes)
-    {
-        if (plane.plane_id == id)
-            return &plane;
-    }
-    return nullptr;
-}
 
 drmModeModeInfo mtd::FakeDRMResources::create_mode(uint16_t hdisplay, uint16_t vdisplay,
                                                    uint32_t clock, uint16_t htotal,
@@ -421,6 +277,8 @@ mtd::MockDRM::MockDRM()
 
     global_mock = this;
 
+    memset(&empty_object_props, 0, sizeof(empty_object_props));
+
     ON_CALL(*this, open(_,_))
         .WillByDefault(
             WithArg<0>(
@@ -450,22 +308,6 @@ mtd::MockDRM::MockDRM()
                     return fd_to_drm.at(fd).resources_ptr();
                 }));
 
-    ON_CALL(*this, drmModeGetPlaneResources(_))
-        .WillByDefault(
-            Invoke(
-                [this](int fd)
-                {
-                    return fd_to_drm.at(fd).plane_resources_ptr();
-                }));
-
-    ON_CALL(*this, drmModeGetPlane(_, _))
-        .WillByDefault(
-            Invoke(
-                [this](int fd, uint32_t plane_id)
-                {
-                    return fd_to_drm.at(fd).find_plane(plane_id);
-                }));
-
     ON_CALL(*this, drmModeGetCrtc(_, _))
         .WillByDefault(
             Invoke(
@@ -491,52 +333,7 @@ mtd::MockDRM::MockDRM()
                 }));
 
     ON_CALL(*this, drmModeObjectGetProperties(_, _, _))
-        .WillByDefault(
-            Invoke(
-                [this](int fd, uint32_t id, uint32_t type)
-                {
-                    return fd_to_drm.at(fd).get_object_properties(id, type);
-                }));
-
-    ON_CALL(*this, drmModeFreeObjectProperties(_))
-        .WillByDefault(
-            Invoke(
-                [](drmModeObjectPropertiesPtr props)
-                {
-                    delete props;
-                }));
-
-    ON_CALL(*this, drmModeGetProperty(_, _))
-        .WillByDefault(
-            Invoke(
-                [this](int fd, uint32_t prop_id)
-                {
-                    return fd_to_drm.at(fd).get_property(prop_id);
-                }));
-
-    ON_CALL(*this, drmModeFreeProperty(_))
-        .WillByDefault(
-            Invoke(
-                [](drmModePropertyPtr prop)
-                {
-                    delete prop;
-                }));
-
-    ON_CALL(*this, drmModeGetPropertyBlob(_, _))
-        .WillByDefault(
-            Invoke(
-                [this](int fd, uint32_t prop_id)
-                {
-                    return fd_to_drm.at(fd).get_property_blob(prop_id);
-                }));
-
-    ON_CALL(*this, drmModeFreePropertyBlob(_))
-        .WillByDefault(
-            Invoke(
-                [](drmModePropertyBlobPtr prop)
-                {
-                    delete prop;
-                }));
+        .WillByDefault(Return(&empty_object_props));
 
     ON_CALL(*this, drmSetInterfaceVersion(_, _))
         .WillByDefault(
@@ -626,28 +423,18 @@ mtd::MockDRM::~MockDRM() noexcept
     global_mock = nullptr;
 }
 
-uint32_t mtd::MockDRM::add_property(char const *device, char const* name)
+void mtd::MockDRM::add_crtc(char const *device, uint32_t id, drmModeModeInfo mode)
 {
-    return fake_drms[device].add_property(name);
-}
-
-void mtd::MockDRM::add_crtc(
-    char const *device,
-    uint32_t id,
-    drmModeModeInfo mode,
-    std::vector<FakeDRMPropertyValue> prop_values)
-{
-    fake_drms[device].add_crtc(id, mode, prop_values);
+    fake_drms[device].add_crtc(id, mode);
 }
 
 void mtd::MockDRM::add_encoder(
     char const *device,
     uint32_t encoder_id,
     uint32_t crtc_id,
-    uint32_t possible_crtcs_mask,
-    std::vector<FakeDRMPropertyValue> prop_values)
+    uint32_t possible_crtcs_mask)
 {
-    fake_drms[device].add_encoder(encoder_id, crtc_id, possible_crtcs_mask, prop_values);
+    fake_drms[device].add_encoder(encoder_id, crtc_id, possible_crtcs_mask);
 }
 
 void mtd::MockDRM::prepare(char const *device)
@@ -692,8 +479,7 @@ void mtd::MockDRM::add_connector(
     std::vector<drmModeModeInfo> &modes,
     std::vector<uint32_t> &possible_encoder_ids,
     geometry::Size const &physical_size,
-    drmModeSubPixel subpixel_arrangement,
-    std::vector<FakeDRMPropertyValue> prop_values)
+    drmModeSubPixel subpixel_arrangement)
 {
     fake_drms[device].add_connector(
         connector_id,
@@ -703,36 +489,7 @@ void mtd::MockDRM::add_connector(
         modes,
         possible_encoder_ids,
         physical_size,
-        subpixel_arrangement,
-        prop_values);
-}
-
-void mtd::MockDRM::add_plane(
-    char const *device,
-    std::vector<uint32_t> formats,
-    uint32_t plane_id,
-    uint32_t crtc_id,
-    uint32_t fb_id,
-    uint32_t crtc_x,
-    uint32_t crtc_y,
-    uint32_t x,
-    uint32_t y,
-    uint32_t possible_crtcs_mask,
-    uint32_t gamma_size,
-    std::vector<FakeDRMPropertyValue> prop_values)
-{
-    fake_drms[device].add_plane(
-        formats,
-        plane_id,
-        crtc_id,
-        fb_id,
-        crtc_x,
-        crtc_y,
-        x,
-        y,
-        possible_crtcs_mask,
-        gamma_size,
-        prop_values);
+        subpixel_arrangement);
 }
 
 MATCHER_P2(IsFdOfDevice, devname, fds, "")
@@ -882,11 +639,6 @@ void drmModeFreeProperty(drmModePropertyPtr ptr)
     global_mock->drmModeFreeProperty(ptr);
 }
 
-void drmModeFreePropertyBlob(drmModePropertyBlobPtr ptr)
-{
-    global_mock->drmModeFreePropertyBlob(ptr);
-}
-
 int drmGetCap(int fd, uint64_t capability, uint64_t *value)
 {
     return global_mock->drmGetCap(fd, capability, value);
@@ -910,11 +662,6 @@ int drmSetClientCap(int fd, uint64_t capability, uint64_t value)
 drmModePropertyPtr drmModeGetProperty(int fd, uint32_t propertyId)
 {
     return global_mock->drmModeGetProperty(fd, propertyId);
-}
-
-drmModePropertyBlobPtr drmModeGetPropertyBlob(int fd, uint32_t blobId)
-{
-    return global_mock->drmModeGetPropertyBlob(fd, blobId);
 }
 
 int drmModeConnectorSetProperty(int fd, uint32_t connector_id, uint32_t property_id, uint64_t value)
