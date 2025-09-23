@@ -34,6 +34,13 @@ public:
     NullScreenShooter(Executor& executor);
 
     void capture(
+        std::shared_ptr<renderer::software::WriteMappableBuffer> const& buffer,
+        geometry::Rectangle const& area,
+        glm::mat2 const& transform,
+        bool overlay_cursor,
+        std::function<void(std::optional<time::Timestamp>)>&& callback) override;
+
+    void capture(
         geometry::Rectangle const& area,
         glm::mat2 const& transform,
         bool overlay_cursor,

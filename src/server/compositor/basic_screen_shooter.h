@@ -45,6 +45,8 @@ class Scene;
 
 class BasicScreenShooter: public ScreenShooter
 {
+private:
+    using WriteMappableBuffer = renderer::software::WriteMappableBuffer;
 public:
     BasicScreenShooter(
         std::shared_ptr<Scene> const& scene,
@@ -56,6 +58,13 @@ public:
         std::shared_ptr<mir::graphics::GLConfig> const& config,
         std::shared_ptr<graphics::OutputFilter> const& output_filter,
         std::shared_ptr<graphics::Cursor> const& cursor);
+
+    void capture(
+        std::shared_ptr<WriteMappableBuffer> const& buffer,
+        geometry::Rectangle const& area,
+        glm::mat2 const& transform,
+        bool overlay_cursor,
+        std::function<void(std::optional<time::Timestamp>)>&& callback) override;
 
     void capture(
         geometry::Rectangle const& area,
@@ -81,8 +90,17 @@ private:
             std::shared_ptr<graphics::Cursor> const& cursor,
             std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator);
 
+        auto render(
+            std::shared_ptr<WriteMappableBuffer> const& buffer,
+            geometry::Rectangle const& area,
+            glm::mat2 const& transform,
+            bool overlay_cursor) -> time::Timestamp;
+
         auto render(geometry::Rectangle const& area, glm::mat2 const& transform, bool overlay_cursor)
             -> std::pair<time::Timestamp, std::shared_ptr<graphics::Buffer>>;
+
+        auto renderer_for_buffer(std::shared_ptr<WriteMappableBuffer> const& buffer)
+            -> renderer::Renderer&;
 
         auto renderer_for_size(geometry::Size const& size)
             -> renderer::Renderer&;

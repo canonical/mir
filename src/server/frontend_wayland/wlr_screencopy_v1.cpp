@@ -436,19 +436,10 @@ void mf::WlrScreencopyFrameV1::capture(geom::Rectangle buffer_space_damage)
         return;
     }
 
-    manager.value().screen_shooter->capture(params.output_space_area, params.transform, params.overlay_cursor,
+    manager.value().screen_shooter->capture(target, params.output_space_area, params.transform, params.overlay_cursor,
         [wayland_executor=ctx->wayland_executor, buffer_space_damage, self=mw::make_weak(this)]
-            (std::optional<time::Timestamp> captured_time, auto buffer)
+            (std::optional<time::Timestamp> captured_time)
         {
-            assert(buffer->pixel_format() == self.value().target->format());
-
-            auto source_as_readable = mrs::as_read_mappable_buffer(std::move(buffer));
-            auto source_rmap = source_as_readable->map_readable();
-            auto target_wmap = self.value().target->map_writeable();
-
-            assert(target_wmap->len() == source_rmap->len());
-            std::memcpy(target_wmap->data(), source_rmap->data(), target_wmap->len());
-
             wayland_executor->spawn([self, captured_time, buffer_space_damage]()
                 {
                     if (self)

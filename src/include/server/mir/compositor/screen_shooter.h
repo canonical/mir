@@ -53,6 +53,13 @@ public:
     /// The [callback] may be called on a different thread. It will be given the timestamp
     /// of the capture if it succeeds or nullopt if there was an error.
     virtual void capture(
+        std::shared_ptr<renderer::software::WriteMappableBuffer> const& buffer,
+        geometry::Rectangle const& area,
+        glm::mat2 const& transform,
+        bool overlay_cursor,
+        std::function<void(std::optional<time::Timestamp>)>&& callback) = 0;
+
+    virtual void capture(
         geometry::Rectangle const& area,
         glm::mat2 const& transform,
         bool overlay_cursor,
