@@ -88,10 +88,6 @@ public:
 
     auto supported_formats() const -> std::vector<graphics::DRMFormat> override
     {
-        if (!next_buffer)
-        {
-            BOOST_THROW_EXCEPTION((std::logic_error{"Attempted to query supported_formats before assigning a buffer"}));
-        }
         return {mg::DRMFormat::from_mir_format(buffer_format)};
     }
 
@@ -108,11 +104,6 @@ public:
 
     auto output_size() const -> geom::Size override
     {
-        // TODO nuke this
-        if (!next_buffer)
-        {
-            BOOST_THROW_EXCEPTION((std::logic_error{"Attempted to query buffer size before assigning a buffer"}));
-        }
         return next_buffer->size();
     }
 
