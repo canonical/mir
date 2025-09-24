@@ -50,6 +50,7 @@ set(
   input_method_grab_keyboard_v2.cpp input_method_grab_keyboard_v2.h
   idle_inhibit_v1.cpp           idle_inhibit_v1.h
   wlr_screencopy_v1.cpp         wlr_screencopy_v1.h
+  ext_image_capture_v1.cpp      ext_image_capture_v1.h
   text_input_v1.cpp             text_input_v1.h
   primary_selection_v1.cpp      primary_selection_v1.h
   session_lock_v1.cpp           session_lock_v1.h
