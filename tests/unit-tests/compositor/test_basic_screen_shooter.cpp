@@ -136,7 +136,6 @@ struct BasicScreenShooter : Test
     std::shared_ptr<mtd::MockCursor> cursor{std::make_shared<mtd::MockCursor>()};
     mtd::ExplicitExecutor executor;
     std::unique_ptr<mc::BasicScreenShooter> shooter;
-    std::shared_ptr<mtd::StubBuffer> buffer{std::make_shared<mtd::StubBuffer>(geom::Size{800, 600})};
     geom::Rectangle const viewport_rect{{20, 30}, {40, 50}};
     glm::mat2 const viewport_transform{1.f};
     StrictMock<MockFunction<void(std::optional<mir::time::Timestamp>)>> callback;
