@@ -1,6 +1,6 @@
 [workspace]
 members = [
-  "src/platforms/evdev",
+  "src/platforms/evdev-rs",
 ]
 resolver = "2"
 
