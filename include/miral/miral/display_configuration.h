@@ -122,8 +122,8 @@ public:
         /// \returns the node at the key, or `std::nullopt` if none exists
         auto at(std::string const& key) const -> std::optional<Node>;
 
-        Node(Node&&) noexcept = default;
-        Node& operator=(Node&&) noexcept = default;
+        Node(Node&&) noexcept;
+        Node& operator=(Node&&) noexcept;
         Node(Node const&) = delete;
         Node& operator=(Node const&) = delete;
         ~Node();

@@ -177,6 +177,9 @@ miral::DisplayConfiguration::Node::Node(std::unique_ptr<Self>&& self)
 {
 }
 
+miral::DisplayConfiguration::Node::Node(Node&&) noexcept = default;
+miral::DisplayConfiguration::Node& miral::DisplayConfiguration::Node::operator=(Node&&) noexcept = default;
+
 miral::DisplayConfiguration::Node::~Node() = default;
 
 auto miral::DisplayConfiguration::Node::type() const -> Type

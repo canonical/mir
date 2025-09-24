@@ -97,8 +97,8 @@ public:
     /// multiple attributes to be updated transactionally
     virtual void on_done(HandleDone handler) = 0;
 
-    Store() = default;
-    virtual ~Store() = default;
+    Store();
+    virtual ~Store();
     Store(Store const&) = delete;
     Store& operator=(Store const&) = delete;
 };
