@@ -636,7 +636,7 @@ Pre-Depends: ${misc:Pre-Depends}
 Depends: libmiral7 (= ${libmiral7:Version}),
 # ${source:Version} is technically incorrect, but Launchpad doesn't do BinNMUs
 # so it's harmless.
-         libmircommon-dev (= ${source:Version}),
+         libmircore-dev (= ${source:Version}),
          ${misc:Depends},
 Description: Developer files for the Mir ABI-stable abstraction layer
  MirAL provides an ABI-stable abstraction layer for Mir based shells,
