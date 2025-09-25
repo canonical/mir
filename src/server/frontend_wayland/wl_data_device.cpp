@@ -151,9 +151,9 @@ mf::WlDataDevice::WlDataDevice(
       end_of_gesture_callback{[this, &wayland_executor] { wayland_executor.spawn([this]
         { this->clipboard.end_of_dnd_gesture(); drag_surface.reset(); }); }}
 {
-    clipboard.register_interest(clipboard_observer, wayland_executor);
+    // clipboard.register_interest(clipboard_observer, wayland_executor);
     // this will call focus_on() with the initial state
-    seat.add_focus_listener(client, this);
+    // seat.add_focus_listener(client, this);
 }
 
 mf::WlDataDevice::~WlDataDevice()
