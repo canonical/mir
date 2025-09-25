@@ -51,6 +51,7 @@
 #include "xdg_shell_stable.h"
 #include "xdg_shell_v6.h"
 #include "xwayland_wm_shell.h"
+#include "data_control_v1.h"
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
@@ -238,6 +239,13 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
                 ctx.keyboard_observer_registrar,
                 *ctx.wayland_executor,
                 ctx.token_authority);
+        }),
+    make_extension_builder<mw::DataControlManagerV1>([](auto const& ctx)
+        {
+            return mf::create_data_control_manager_v1(
+                    ctx.display,
+                    ctx.main_clipboard,
+                    ctx.primary_selection_clipboard);
         }),
 };
 
