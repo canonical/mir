@@ -396,6 +396,22 @@ auto compare_options(boost::shared_ptr<boost::program_options::option_descriptio
 {
     return rhs->long_name() > lhs->long_name();
 }
+
+auto option_default_to_string(boost::shared_ptr<boost::program_options::option_description> const& desc) -> std::string
+{
+    boost::any default_value;
+    if (!desc->semantic()->apply_default(default_value))
+        return "";
+
+    if (default_value.type() == typeid(bool))
+        return std::to_string(boost::any_cast<bool>(default_value));
+    else if (default_value.type() == typeid(int))
+        return std::to_string(boost::any_cast<int>(default_value));
+    else if (default_value.type() == typeid(std::string))
+        return boost::any_cast<std::string>(default_value);
+    else
+        return "";
+}
 }
 
 std::string options_to_markdown(const std::string& module_name, const boost::program_options::options_description& desc)
@@ -406,11 +422,14 @@ std::string options_to_markdown(const std::string& module_name, const boost::pro
     std::sort(options.begin(), options.end(), &compare_options);
     for (auto& o: options)
     {
+        text << "\n";
         text << "(" << make_markdown_label(module_name) << "-" << make_markdown_label(o->long_name()) << ")=\n";
         text << "### `" << o->long_name() << "`\n";
         text << "\n";
         text << escape_markdown(o->description()) << "\n";
-        text << "\n";
+        auto default_value = option_default_to_string(o);
+        if (!default_value.empty())
+            text << "\nDefaults to `" << default_value << "`.\n";
     }
 
     return text.str();
@@ -487,7 +506,7 @@ void mo::DefaultConfiguration::parse_arguments(
         if (options.is_set("help-markdown"))
         {
             std::ostringstream help_text;
-            help_text << "## Options\n\n";
+            help_text << "## Options\n";
             help_text << options_to_markdown("global", desc);
             for (auto& platform : platform_libraries)
             {
@@ -496,7 +515,7 @@ void mo::DefaultConfiguration::parse_arguments(
                 {
                     auto const describe_module = platform->load_function<mir::graphics::DescribeModule>("describe_graphics_module", MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
                     auto const module_name = describe_module()->name;
-                    help_text << "## Options for " << module_name << " platform\n\n";
+                    help_text << "## Options for " << module_name << " platform\n";
                     help_text << options_to_markdown(module_name, module_desc);
                 }
             }
