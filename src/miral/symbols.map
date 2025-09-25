@@ -706,4 +706,3 @@ global:
     typeinfo?for?miral::ApplicationSwitcher;
   };
 } MIRAL_5.5;
-
