@@ -15,6 +15,7 @@
  */
 
 #include "mir/input/platform.h"
+#include <memory>
 
 namespace mir
 {
@@ -25,12 +26,16 @@ namespace evdev_rs
 class Platform : public input::Platform
 {
 public:
-    Platform() = default;
+    Platform();
     std::shared_ptr<mir::dispatch::Dispatchable> dispatchable() override;
     void start() override;
     void stop() override;
     void pause_for_config() override;
     void continue_after_config() override;
+
+private:
+    class Self;
+    std::shared_ptr<Self> self;
 };
 }
 }

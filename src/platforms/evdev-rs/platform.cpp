@@ -17,13 +17,44 @@
 #include "platform.h"
 
 #include "mir/dispatch/dispatchable.h"
+#include "rust/cxx.h"
 #include "mir_platforms_evdev_rs/src/lib.rs.h"
 
+namespace mi = mir::input;
 namespace miers = mir::input::evdev_rs;
 namespace md = mir::dispatch;
 
 namespace
 {
+template <typename Impl>
+class PlatformImpl
+{
+public:
+    explicit PlatformImpl(rust::Box<Impl>&& box) : box(std::move(box)) {}
+
+    void start()
+    {
+        box->start();
+    }
+
+    void continue_after_config()
+    {
+        box->continue_after_config();
+    }
+
+    void pause_for_config()
+    {
+        box->pause_for_config();
+    }
+
+    void stop()
+    {
+        box->stop();
+    }
+private:
+    rust::Box<Impl> box;
+};
+
 class DispatchableStub : public md::Dispatchable
 {
 public:
@@ -44,6 +75,19 @@ public:
 };
 }
 
+class miers::Platform::Self
+{
+public:
+    Self() : platform_impl(std::move(evdev_rs_create())) {}
+
+    PlatformImpl<PlatformRs> platform_impl;
+};
+
+miers::Platform::Platform()
+    : self(std::make_shared<Self>())
+{
+}
+
 std::shared_ptr<mir::dispatch::Dispatchable> miers::Platform::dispatchable()
 {
     return std::make_shared<DispatchableStub>();
@@ -51,20 +95,20 @@ std::shared_ptr<mir::dispatch::Dispatchable> miers::Platform::dispatchable()
 
 void miers::Platform::start()
 {
-    evdev_rs_start();
+    self->platform_impl.start();
 }
 
 void miers::Platform::continue_after_config()
 {
-    evdev_rs_continue_after_config();
+    self->platform_impl.continue_after_config();
 }
 
 void miers::Platform::pause_for_config()
 {
-    evdev_rs_pause_for_config();
+    self->platform_impl.pause_for_config();
 }
 
 void miers::Platform::stop()
 {
-    evdev_rs_stop();
+    self->platform_impl.stop();
 }
