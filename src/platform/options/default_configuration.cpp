@@ -22,6 +22,7 @@
 #include "mir/shared_library_prober.h"
 #include "mir/logging/null_shared_library_prober_report.h"
 
+#include <algorithm>
 #include <format>
 
 namespace mo = mir::options;
@@ -389,10 +390,21 @@ std::string make_markdown_label(std::string const& text)
     return label.str();
 }
 
+namespace
+{
+auto compare_options(boost::shared_ptr<boost::program_options::option_description> const& lhs, boost::shared_ptr<boost::program_options::option_description> const& rhs) -> bool
+{
+    return rhs->long_name() > lhs->long_name();
+}
+}
+
 std::string options_to_markdown(const std::string& module_name, const boost::program_options::options_description& desc)
 {
     std::ostringstream text;
-    for (auto& o: desc.options())
+
+    auto options = std::vector<boost::shared_ptr<boost::program_options::option_description>>(desc.options());
+    std::sort(options.begin(), options.end(), &compare_options);
+    for (auto& o: options)
     {
         text << "(" << make_markdown_label(module_name) << "-" << make_markdown_label(o->long_name()) << ")=\n";
         text << "### `" << o->long_name() << "`\n";
