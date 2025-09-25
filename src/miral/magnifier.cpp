@@ -174,7 +174,10 @@ miral::Magnifier::Magnifier(live_config::Store& config_store)
         "Whether the magnifier is enabled",
         [this](live_config::Key const&, std::optional<bool> val)
         {
-            enable(val.value_or(false));
+            if (val.has_value())
+            {
+                enable(*val);
+            }
         });
     config_store.add_float_attribute(
         {"magnifier", "magnification"},
