@@ -306,12 +306,15 @@ int main(int argc, char const* argv[])
         return false;
     };
 
+    // The following filter triggers the application selector internal application
+    // on "Ctrl + Tab" and "Ctrl + Shift + Tab". Note that this does NOT use
+    // "Alt + Tab" as that is claimed by the MinimalWindowManager for the time being.
     auto const application_switcher_filter = [application_switcher=application_switcher, is_running = false](MirKeyboardEvent const* key_event) mutable
     {
         if (mir_keyboard_event_action(key_event) == mir_keyboard_action_down)
         {
             auto const modifiers = mir_keyboard_event_modifiers(key_event);
-            if (modifiers & mir_input_event_modifier_alt)
+            if (modifiers & mir_input_event_modifier_ctrl)
             {
                 auto const scancode = mir_keyboard_event_scan_code(key_event);
                 if (modifiers & mir_input_event_modifier_shift)
@@ -340,7 +343,7 @@ int main(int argc, char const* argv[])
         else if (mir_keyboard_event_action(key_event) == mir_keyboard_action_up)
         {
             auto const scancode = mir_keyboard_event_scan_code(key_event);
-            if ((scancode == KEY_LEFTALT || scancode == KEY_RIGHTALT) && is_running)
+            if ((scancode == KEY_LEFTCTRL || scancode == KEY_RIGHTCTRL) && is_running)
             {
                 application_switcher.confirm();
                 is_running = false;
