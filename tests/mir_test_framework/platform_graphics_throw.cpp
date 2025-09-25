@@ -201,4 +201,3 @@ mir::UniqueModulePtr<mg::DisplayPlatform> create_display_platform(
     mir::assert_entry_point_signature<mg::CreateDisplayPlatform>(&create_display_platform);
     return mir::make_module_ptr<ExceptionThrowingPlatform>();
 }
-

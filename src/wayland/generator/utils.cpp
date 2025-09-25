@@ -97,4 +97,3 @@ std::string to_camel_case(std::string const& name)
     }
     return sanitize_name(camel_cased_name);
 }
-

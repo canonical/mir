@@ -31,7 +31,7 @@ namespace scene
 class SurfaceObserver;
 
 // A simple implementation of surface observer which forwards all changes to a provided callback.
-// Also installs surface observers on each added surface which in turn forward each change to 
+// Also installs surface observers on each added surface which in turn forward each change to
 // said callback.
 class SceneChangeNotification : public Observer
 {
@@ -45,7 +45,7 @@ public:
     void surface_added(std::shared_ptr<Surface> const& surface) override;
     void surface_removed(std::shared_ptr<Surface> const& surface) override;
     void surfaces_reordered(SurfaceSet const& affected_surfaces) override;
-    
+
     void scene_changed() override;
 
     void surface_exists(std::shared_ptr<Surface> const& surface) override;
@@ -57,7 +57,7 @@ private:
 
     std::mutex surface_observers_guard;
     std::map<Surface*, std::shared_ptr<SurfaceObserver>> surface_observers;
-    
+
     void add_surface_observer(Surface* surface);
 };
 

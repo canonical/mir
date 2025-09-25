@@ -52,7 +52,7 @@ struct SceneChangeNotificationTest : public testing::Test
         }};
     std::function<void()> scene_change_callback{[this](){scene_callback.invoke();}};
     std::shared_ptr<testing::NiceMock<mtd::MockSurface>> surface;
-}; 
+};
 }
 
 TEST_F(SceneChangeNotificationTest, fowards_all_observations_to_callback)
@@ -89,7 +89,7 @@ TEST_F(SceneChangeNotificationTest, observes_surface_changes)
     std::weak_ptr<ms::SurfaceObserver> surface_observer;
     EXPECT_CALL(*surface, register_interest(_)).Times(1)
         .WillOnce(SaveArg<0>(&surface_observer));
-   
+
     EXPECT_CALL(scene_callback, invoke()).Times(1);
     EXPECT_CALL(buffer_callback, invoke(_)).Times(1);
 
@@ -118,7 +118,7 @@ TEST_F(SceneChangeNotificationTest, redraws_on_rename)
 TEST_F(SceneChangeNotificationTest, destroying_observer_unregisters_surface_observers)
 {
     using namespace ::testing;
-    
+
     EXPECT_CALL(*surface, register_interest(_))
         .Times(1);
     EXPECT_CALL(*surface, unregister_interest(_))

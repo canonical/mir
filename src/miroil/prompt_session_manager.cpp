@@ -17,7 +17,7 @@
 #include "miroil/prompt_session_manager.h"
 #include "mir/scene/prompt_session_manager.h"
 
-miroil::PromptSessionManager::PromptSessionManager(std::shared_ptr<mir::scene::PromptSessionManager> const& prompt_session_manager) 
+miroil::PromptSessionManager::PromptSessionManager(std::shared_ptr<mir::scene::PromptSessionManager> const& prompt_session_manager)
 :    prompt_session_manager{prompt_session_manager}
 {
 }

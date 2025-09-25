@@ -50,4 +50,3 @@ auto mf::ScaledBufferStream::has_submitted_buffer() const -> bool
 {
     return inner->has_submitted_buffer();
 }
-

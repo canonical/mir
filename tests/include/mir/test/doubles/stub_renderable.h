@@ -162,7 +162,7 @@ struct PlaneAlphaRenderable : public StubRenderable
 {
     float alpha() const override
     {
-        //approx 99% alpha 
+        //approx 99% alpha
         return 1.0f - ( 3.0f / 1024.0f );
     }
 };

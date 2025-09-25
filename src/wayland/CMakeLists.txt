@@ -73,4 +73,3 @@ configure_file(
 install(TARGETS     mirwayland                           LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}")
 install(FILES       ${CMAKE_CURRENT_BINARY_DIR}/mirwayland.pc    DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
 install(DIRECTORY   ${CMAKE_SOURCE_DIR}/include/wayland/mir      DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/mirwayland")
-

@@ -83,7 +83,7 @@ public:
     void register_signal_handler(
         std::initializer_list<int> signals,
         std::function<void(int)> const& handler);
-    
+
     /// Add a watch on a file descriptor to the server's main loop.
     ///
     /// The handler will be triggered when there is data to read on \p fd.

@@ -39,4 +39,3 @@ target_link_libraries(mirshell
   PRIVATE
     PkgConfig::UUID
 )
-

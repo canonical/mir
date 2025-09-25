@@ -50,12 +50,12 @@ public:
     {
         return this;
     }
-    
+
     std::shared_ptr<mg::Buffer> buffer() const override
     {
         return buffer_;
     }
-    
+
     geom::Rectangle screen_position() const override
     {
         return {position, buffer_->size()};
@@ -70,12 +70,12 @@ public:
     {
         return std::optional<geometry::Rectangle>();
     }
-    
+
     float alpha() const override
     {
         return 1.0;
     }
-    
+
     glm::mat4 transformation() const override
     {
         return glm::mat4();
@@ -109,10 +109,10 @@ public:
         position = pos - geom::Displacement{0.5*touchspot_image.width, 0.5*touchspot_image.height};
     }
 
-    
+
 private:
     std::shared_ptr<mg::Buffer> const buffer_;
-    
+
     std::mutex guard;
     geom::Point position;
 };
@@ -143,26 +143,26 @@ void mi::TouchspotController::visualize_touches(std::vector<Spot> const& touches
 
     {
     std::lock_guard lg(guard);
-    
+
     unsigned int const num_touches = enabled ? touches.size() : 0;
 
     while (touchspot_renderables.size() < num_touches)
         touchspot_renderables.push_back(std::make_shared<TouchspotRenderable>(touchspot_buffer));
-    
+
     for (unsigned int i = 0; i < num_touches; i++)
     {
         auto const& renderable = touchspot_renderables[i];
-        
+
         renderable->move_center_to(touches[i].touch_location);
         if (i >= renderables_in_use)
             scene->add_input_visualization(renderable);
-        
+
         must_update_scene = true;
     }
-    
+
     for (unsigned int i = num_touches; i < renderables_in_use; i++)
         scene->remove_input_visualization(touchspot_renderables[i]);
-    
+
     renderables_in_use = num_touches;
     } // release mutex
 

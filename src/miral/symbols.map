@@ -691,4 +691,3 @@ global:
     vtable?for?miral::live_config::Store;
   };
 } MIRAL_5.3;
-

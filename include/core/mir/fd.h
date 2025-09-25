@@ -23,7 +23,7 @@ namespace mir
 //TODO: remove once mir::Fd is used more pervasively.
 //      some existing code does not really allow us to transfer or share the ownership
 //      of the fd. Constructing using mir::Fd(IntOwnedFd(int)) will help transition the existing
-//      code to using the mir::Fd type properly. 
+//      code to using the mir::Fd type properly.
 struct IntOwnedFd
 {
     int int_owned_fd;

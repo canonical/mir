@@ -115,4 +115,3 @@ target_link_libraries(mirfrontend-wayland
   PRIVATE
     PkgConfig::GIOUnix
 )
-

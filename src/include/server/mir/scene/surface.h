@@ -66,7 +66,7 @@ public:
     /// Size of the surface including window frame (if any)
     virtual geometry::Size window_size() const = 0;
 
-    virtual graphics::RenderableList generate_renderables(compositor::CompositorID id) const = 0; 
+    virtual graphics::RenderableList generate_renderables(compositor::CompositorID id) const = 0;
 
     virtual MirWindowType type() const = 0;
     virtual MirWindowState state() const = 0;
@@ -97,7 +97,7 @@ public:
     virtual void set_alpha(float alpha) = 0;
     virtual void set_orientation(MirOrientation orientation) = 0;
     virtual void set_mirror_mode(MirMirrorMode mirror_mode) = 0;
-    
+
     virtual void set_cursor_image(std::shared_ptr<graphics::CursorImage> const& image) override = 0;
     virtual std::shared_ptr<graphics::CursorImage> cursor_image() const override = 0;
 

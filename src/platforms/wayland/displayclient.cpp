@@ -755,7 +755,7 @@ void mgw::DisplayClient::touch_motion(
 void mgw::DisplayClient::touch_frame(wl_touch* /*touch*/)
 {
 }
-    
+
 void mgw::DisplayClient::touch_cancel(wl_touch* /*touch*/)
 {
 }

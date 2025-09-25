@@ -202,7 +202,7 @@ void mir::input::InputEventTransformer::remove_device(Device const& device)
 void mir::input::InputEventTransformer::dispatch_event(std::shared_ptr<MirEvent> const& event)
 {
     if(!transform(*event))
-        seat->dispatch_event(event); 
+        seat->dispatch_event(event);
 }
 
 mir::EventUPtr mir::input::InputEventTransformer::create_device_state()
@@ -249,4 +249,3 @@ mir::input::OutputInfo mir::input::InputEventTransformer::output_info(uint32_t o
 {
     return seat->output_info(output_id);
 }
-

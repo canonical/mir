@@ -94,15 +94,15 @@ struct ServerConfiguration : mtf::InputTestingServerConfiguration
     mt::Barrier& test_complete;
 
     MockTouchVisualizer mock_visualizer;
-    static geom::Rectangle const display_bounds;    
-    
+    static geom::Rectangle const display_bounds;
+
     ServerConfiguration(mt::Barrier& test_complete)
         : InputTestingServerConfiguration({display_bounds}),
           test_complete(test_complete)
     {
     }
     void inject_input() override{}
-    
+
     std::shared_ptr<mi::TouchVisualizer> the_touch_visualizer() override
     {
         return mt::fake_shared(mock_visualizer);

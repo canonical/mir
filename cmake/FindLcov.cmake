@@ -1,4 +1,4 @@
-# - Find lcov 
+# - Find lcov
 # Will define:
 #
 # LCOV_EXECUTABLE - the lcov binary

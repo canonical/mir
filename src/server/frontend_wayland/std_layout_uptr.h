@@ -91,4 +91,4 @@ private:
 
 static_assert(
     std::is_standard_layout<mir::StdLayoutUPtr<int>>::value,
-    "StdLayoutUPtr<int> is meant to be standard layout, damnit!"); 
+    "StdLayoutUPtr<int> is meant to be standard layout, damnit!");

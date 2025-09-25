@@ -87,7 +87,7 @@ struct miral::MouseKeysConfig::Self
     {
     }
 
-    struct State 
+    struct State
     {
         explicit State(bool enabled) :
             enabled{enabled}
@@ -117,12 +117,12 @@ miral::MouseKeysConfig::MouseKeysConfig(std::shared_ptr<Self> self) :
 {
 }
 
-auto miral::MouseKeysConfig::enabled() -> MouseKeysConfig 
+auto miral::MouseKeysConfig::enabled() -> MouseKeysConfig
 {
     return MouseKeysConfig{std::make_shared<Self>(true)};
 }
 
-auto miral::MouseKeysConfig::disabled() -> MouseKeysConfig 
+auto miral::MouseKeysConfig::disabled() -> MouseKeysConfig
 {
     return MouseKeysConfig{std::make_shared<Self>(false)};
 }
@@ -140,7 +140,7 @@ miral::MouseKeysConfig::MouseKeysConfig(live_config::Store& config_store)
                 this->enable();
             else
                 this->disable();
-             
+
         });
 
     auto const ensure_non_negative = [](live_config::Key const& key,
@@ -220,7 +220,7 @@ void miral::MouseKeysConfig::enabled(bool enabled) const
         accessibility_manager->mousekeys_enabled(enabled);
     else
         self->state.lock()->enabled = enabled;
-    
+
 }
 
 void miral::MouseKeysConfig::enable() const

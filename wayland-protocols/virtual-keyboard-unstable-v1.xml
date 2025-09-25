@@ -46,7 +46,7 @@
       <arg name="fd" type="fd" summary="keymap file descriptor"/>
       <arg name="size" type="uint" summary="keymap size, in bytes"/>
     </request>
-    
+
     <enum name="error">
       <entry name="no_keymap" value="0" summary="No keymap was set"/>
     </enum>

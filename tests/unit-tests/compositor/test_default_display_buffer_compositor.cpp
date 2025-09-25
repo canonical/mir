@@ -341,4 +341,3 @@ TEST_F(DefaultDisplayBufferCompositor, marks_occluded_scene_elements)
 
     compositor.composite({element0_occluded, element1_rendered, element2_occluded});
 }
-

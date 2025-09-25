@@ -120,4 +120,3 @@ TEST_F(InitialWindowPlacement, initially_maximized_window_covers_only_one_output
     ASSERT_THAT(window.top_left(), Eq(display_area.top_left));
     ASSERT_THAT(window.size(), Eq(display_area.size));
 }
-

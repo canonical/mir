@@ -186,7 +186,7 @@ auto mgk::find_crtc_with_primary_plane(
     {
         std::tie(crtc, crtc_index) = find_crtc_and_index_for_connector(resources, connector);
     }
-    
+
     mgk::PlaneResources plane_res{drm_fd};
 
     for (auto& plane : plane_res.planes())

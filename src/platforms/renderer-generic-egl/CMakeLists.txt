@@ -42,4 +42,3 @@ set_target_properties(
 )
 
 install(TARGETS mirplatformrenderereglgeneric LIBRARY DESTINATION ${MIR_SERVER_PLATFORM_PATH})
-

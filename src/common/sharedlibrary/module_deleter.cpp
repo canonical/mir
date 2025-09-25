@@ -29,13 +29,13 @@ std::shared_ptr<mir::SharedLibrary> get_shared_library(void *address)
 
     Dl_info library_info{nullptr, nullptr, nullptr, nullptr};
     Dl_info executable_info{nullptr, nullptr, nullptr, nullptr};
-    
+
     dladdr(dlsym(nullptr, "main"), &executable_info);
     dladdr(address, &library_info);
-    
+
     if (library_info.dli_fbase == executable_info.dli_fbase)
         return nullptr;
-            
+
     return std::make_shared<mir::SharedLibrary>(library_info.dli_fname);
 }
 }
@@ -51,4 +51,3 @@ mir::detail::RefCountedLibrary::RefCountedLibrary(void* address)
 mir::detail::RefCountedLibrary::RefCountedLibrary(RefCountedLibrary const&) = default;
 mir::detail::RefCountedLibrary::~RefCountedLibrary() = default;
 mir::detail::RefCountedLibrary& mir::detail::RefCountedLibrary::operator=(RefCountedLibrary const&) = default;
-

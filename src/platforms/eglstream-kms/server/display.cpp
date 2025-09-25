@@ -581,4 +581,3 @@ bool mge::Display::apply_if_configuration_preserves_display_buffers(
 {
     return false;
 }
-

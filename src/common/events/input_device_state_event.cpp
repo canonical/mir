@@ -82,7 +82,7 @@ void MirInputDeviceStateEvent::set_modifiers(MirInputEventModifiers modifiers)
 
 void MirInputDeviceStateEvent::set_device_states(std::vector<mir::events::InputDeviceState> const& device_states)
 {
-    this->device_states = device_states; 
+    this->device_states = device_states;
 }
 
 uint32_t MirInputDeviceStateEvent::device_count() const

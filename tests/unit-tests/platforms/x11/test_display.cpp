@@ -56,7 +56,7 @@ public:
 
         ON_CALL(mock_egl, eglQueryString(_, EGL_EXTENSIONS))
             .WillByDefault(Return("other stuff and EGL_CHROMIUM_sync_control"));
-                    
+
         ON_CALL(mock_egl, eglQueryContext(mock_egl.fake_egl_display,
                                           mock_egl.fake_egl_context,
                                           EGL_CONTEXT_CLIENT_VERSION,
