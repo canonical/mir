@@ -30,9 +30,9 @@ namespace mir
  * This mechanism does not attempt to ensure that only one thread
  * is released per `raise()` or that each `raise()` unblocks only
  * one `wait()`. The only guarantees are that:
- * 1) At least one call to `raise()` strongly-happens-before 
+ * 1) At least one call to `raise()` strongly-happens-before
  *    a call to `wait()` returns, and
- * 2) `wait()` will block until a call to `raise()` that 
+ * 2) `wait()` will block until a call to `raise()` that
  *    happens-after the most recent return from `wait()`.
  *
  * The primary use-case for such a barrier is to signal a

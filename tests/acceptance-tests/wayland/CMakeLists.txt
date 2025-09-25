@@ -81,7 +81,7 @@ if (MIR_RUN_WLCS_TESTS)
     # threshold so that real deadlocks can fail faster.
     set(TIMEOUT 3600)
   endif()
-  
+
   mir_discover_external_gtests(
     NAME wlcs
     COMMAND ${WLCS_BINARY}

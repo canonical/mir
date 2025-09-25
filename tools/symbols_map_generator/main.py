@@ -35,7 +35,7 @@ HIDDEN_SYMBOLS = {
     "miral::Keymap::Keymap*;",
     "miral::InputConfiguration::InputConfiguration*;",
     "miral::OutputFilter::OutputFilter*;",
-    
+
     "miral::SimulatedSecondaryClick::SimulatedSecondaryClick*;",
     "miral::SimulatedSecondaryClick::disable*;",
     "miral::SimulatedSecondaryClick::disabled*;",
@@ -82,7 +82,7 @@ class Symbol:
     name: str
     version: str
     is_c_symbol: bool
-    
+
     def __init__(self, name: str, version: str, is_c_symbol: bool):
         self.name = name
         self.version = version
@@ -104,7 +104,7 @@ def is_operator(node: clang.cindex.Cursor) -> bool:
         remainder = node.spelling[len("operator"):]
         if any(not c.isalnum() for c in remainder):
             return True
-        
+
     return False
 
 
@@ -126,7 +126,7 @@ def has_vtable(node: clang.cindex.Cursor):
             or child.kind == clang.cindex.CursorKind.CONVERSION_FUNCTION)
             and child.is_virtual_method()):
             return True
-        
+
     # Otherwise, look up the tree
     base_classes: list[clang.cindex.Cursor] = []
     for child in node.semantic_parent.get_children():
@@ -162,7 +162,7 @@ def has_virtual_base_class(node: clang.cindex.Cursor):
                 continue
 
             result = has_virtual_base_class(class_or_struct_node)
-        
+
         if result:
             break
 
@@ -180,21 +180,21 @@ def is_function_inline(node: clang.cindex.CursorKind):
 def get_namespace_str(node: clang.cindex.Cursor) -> list[str]:
     if node.kind == clang.cindex.CursorKind.TRANSLATION_UNIT:
         return []
-    
+
     spelling = node.spelling
     if is_operator(node):
         spelling = "operator"
     elif node.kind == clang.cindex.CursorKind.DESTRUCTOR:
         spelling = f"?{node.spelling[1:]}"
-    
+
     return get_namespace_str(node.semantic_parent) + [spelling]
 
 
-def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str]) -> set[str]:   
+def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str]) -> set[str]:
     # Ignore private and protected variables
     if (node.access_specifier == clang.cindex.AccessSpecifier.PRIVATE):
         return result
-    
+
     # Check if we need to output a symbol
     if ((node.location.file is not None and node.location.file.name == filename)
         and ((node.kind == clang.cindex.CursorKind.FUNCTION_DECL and not is_function_inline(node))
@@ -206,7 +206,7 @@ def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str]) -> 
           or should_generate_as_class_or_struct(node))
           and not node.is_pure_virtual_method()
           and not node.is_anonymous()):
-        
+
         namespace_str = "::".join(get_namespace_str(node))
         _logger.debug(f"Emitting node {namespace_str} in file {node.location.file.name}")
 
@@ -226,7 +226,7 @@ def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str]) -> 
             def add_internal(s: str):
                 add_symbol_str(f"{s}*;")
             add_internal(namespace_str)
-            
+
             # Check if we're marked virtual
             is_virtual = False
             if ((node.kind == clang.cindex.CursorKind.CXX_METHOD
@@ -253,7 +253,7 @@ def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str]) -> 
                             or derived.kind == clang.cindex.CursorKind.STRUCT_DECL
                             or derived.kind == clang.cindex.CursorKind.CLASS_TEMPLATE
                             or derived.kind == clang.cindex.CursorKind.TYPEDEF_DECL)
-                    
+
                     # Find the base classes for the derived class
                     base_classes: list[clang.cindex.Cursor] = []
                     for child in derived.get_children():
@@ -274,25 +274,25 @@ def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str]) -> 
                                 add_internal(f"virtual?thunk?to?{namespace_str}")
                                 return True
 
-                    # Looks like it wasn't in any of our direct ancestors, so let's 
+                    # Looks like it wasn't in any of our direct ancestors, so let's
                     # try their ancestors too
                     for base in base_classes:
                         if search_class_hierarchy_for_virtual_thunk(base):
                             return True
-                        
+
                     return False
-                    
+
                 search_class_hierarchy_for_virtual_thunk(node.semantic_parent)
     elif node.location.file is not None:
         _logger.debug(f"NOT emitting node {node.spelling} in file {node.location.file.name}")
-                            
+
 
     # Traverse down the tree if we can
     is_file = node.kind == clang.cindex.CursorKind.TRANSLATION_UNIT
     is_containing_node = (node.kind == clang.cindex.CursorKind.CLASS_DECL
         or node.kind == clang.cindex.CursorKind.STRUCT_DECL
         or node.kind == clang.cindex.CursorKind.NAMESPACE)
-    if is_file or is_containing_node:        
+    if is_file or is_containing_node:
         if clang.cindex.conf.lib.clang_Location_isInSystemHeader(node.location):
             _logger.debug(f"Node is in a system header={node.location.file.name}")
             return result
@@ -319,8 +319,8 @@ def process_directory(directory: Path, search_dirs: Optional[list[str]]) -> set[
         file_args = args.copy()
         idx = clang.cindex.Index.create()
         tu = idx.parse(
-            file.as_posix(), 
-            args=file_args,  
+            file.as_posix(),
+            args=file_args,
             options=0)
         root = tu.cursor
         list(traverse_ast(root, file.as_posix(), result))
@@ -350,7 +350,7 @@ def read_symbols_from_file(f: argparse.FileType, library_name: str) -> list[Symb
             line = line.strip()
             if line.startswith("global:") or line.startswith("local:") or line == 'extern "C++" {' or line.startswith("}"):
                 continue
-            
+
             # This is a c-symbol
             assert line.endswith(';')
             retval.append(Symbol(line, version_str, True))
@@ -372,7 +372,7 @@ def report_symbols_diff(previous_symbols: list[Symbol], new_symbols: set[str], i
     Prints the diff between the previous symbols and the new symbols.
     """
     added_symbols = get_added_symbols(previous_symbols, new_symbols, is_internal)
-    
+
     print("")
     print("  \033[1mNew Symbols 🟢🟢🟢\033[0m")
     for s in added_symbols:
@@ -431,7 +431,7 @@ def main():
                     help='if true a diff should be output to the console')
     parser.add_argument('--include-dirs', type=str, help="colon separated list of directories to search for symbols",
                         required=True, dest='include_dirs')
-    
+
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO)
 
@@ -439,7 +439,7 @@ def main():
         _logger.info("symbols_map_generator is running in 'diff' mode")
     else:
         _logger.info("symbols_map_generator is running in 'output symbols' mode")
-    
+
     # Point libclang to a file on the system
     if 'MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH' in os.environ:
         file_path = os.environ['MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH']
@@ -448,7 +448,7 @@ def main():
     else:
         _logger.error("Expected MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH to be defined in the environment")
         exit(1)
-    
+
     if 'MIR_SYMBOLS_MAP_GENERATOR_CLANG_LIBRARY_PATH' in os.environ:
         library_path = os.environ['MIR_SYMBOLS_MAP_GENERATOR_CLANG_LIBRARY_PATH']
         _logger.info(f"MIR_SYMBOLS_MAP_GENERATOR_CLANG_LIBRARY_PATH is {library_path}")
@@ -456,7 +456,7 @@ def main():
     else:
         _logger.error("Expected MIR_SYMBOLS_MAP_GENERATOR_CLANG_LIBRARY_PATH to be defined in the environment")
         exit(1)
-    
+
     include_dirs = args.include_dirs.split(":")
     _logger.debug(f"Parsing with include directories: {include_dirs}")
 
@@ -486,7 +486,7 @@ def main():
             args.internal_headers,
             include_dirs
         )
-    
+
     previous_symbols = read_symbols_from_file(args.symbols_map_path, library)
 
     has_changed_symbols = False
@@ -522,7 +522,7 @@ def main():
                 symbol_version = f"{library.upper()}_{symbol.version}"
             else:
                 symbol_version = f"{library.upper()}_{version}"
-            
+
             if not symbol_version in data_to_output:
                 data_to_output[symbol_version] = {
                     "c": [],
@@ -563,7 +563,7 @@ def main():
             else:
                 closing_line = ""
 
-            # Add the correct previous version. This will depend on 
+            # Add the correct previous version. This will depend on
             is_internal = "_INTERNAL_" in version
             if is_internal:
                 if prev_internal_version_str is not None:
@@ -593,7 +593,7 @@ global:{c_symbols_str}
 '''
 
             f.write(output_str)
-    
+
         f.truncate()
 
 if __name__ == "__main__":

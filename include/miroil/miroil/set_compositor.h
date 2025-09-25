@@ -21,12 +21,12 @@
 
 namespace mir { class Server; }
 namespace mir { namespace graphics { class Display; class GLRenderingProvider; } }
-namespace mir { namespace compositor { class DisplayListener; } } 
+namespace mir { namespace compositor { class DisplayListener; } }
 
 namespace miroil
 {
     class Compositor;
-       
+
 // Configure the server for using the Qt compositor
 class SetCompositor
 {
@@ -34,20 +34,20 @@ class SetCompositor
                        const std::vector<std::shared_ptr<mir::graphics::GLRenderingProvider>> gl_providers,
                        const std::shared_ptr<Compositor> & compositor,
                        const std::shared_ptr<mir::compositor::DisplayListener>& displayListener)>;
-                       
-    using ConstructorFunction = std::function<std::shared_ptr<Compositor>()>;    
-    
+
+    using ConstructorFunction = std::function<std::shared_ptr<Compositor>()>;
+
 public:
     SetCompositor(ConstructorFunction constructor, InitFunction init);
-    
+
     void operator()(mir::Server& server);
 
 private:
     struct CompositorImpl;
-    
+
     std::weak_ptr<CompositorImpl> compositor_impl;
-    ConstructorFunction           constructor_function;    
-    InitFunction                  init_function;    
+    ConstructorFunction           constructor_function;
+    InitFunction                  init_function;
 };
 
 }

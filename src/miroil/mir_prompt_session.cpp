@@ -12,13 +12,13 @@ miroil::MirPromptSession::~MirPromptSession() = default;
 auto miroil::MirPromptSession::operator=(MirPromptSession const& src) -> MirPromptSession&
 {
     prompt_session = src.prompt_session;
-    return *this;    
+    return *this;
 }
 
 auto miroil::MirPromptSession::operator=(MirPromptSession&& src) -> MirPromptSession&
 {
     prompt_session = src.prompt_session;
-    return *this;    
+    return *this;
 }
 
 bool miroil::MirPromptSession::operator==(MirPromptSession const& other)

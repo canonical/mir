@@ -1,4 +1,4 @@
-# - Find gcovr scrip 
+# - Find gcovr scrip
 # Will define:
 #
 # GCOVR_EXECUTABLE - the gcovr script

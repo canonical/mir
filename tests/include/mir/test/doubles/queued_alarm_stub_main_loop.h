@@ -55,4 +55,3 @@ private:
 }
 
 #endif // MIR_TEST_DOUBLES_QUEUED_ALARM_STUB_MAIN_LOOP_H_
-

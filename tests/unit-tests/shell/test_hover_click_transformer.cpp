@@ -33,7 +33,7 @@ using namespace std::chrono_literals;
 namespace mt = mir::test;
 namespace mtd = mt::doubles;
 
-namespace 
+namespace
 {
     constexpr static auto test_hover_delay = 500ms;
     constexpr static auto test_cancel_displacement_threshold = 10;
@@ -101,8 +101,8 @@ struct TestStartCallback: public TestHoverClickTransformer, public WithParamInte
 
 TEST_P(TestStartCallback, start_event_called_only_after_grace_period)
 {
-    // How long to wait relative to the hover click delay 
-    auto const delay_percentage = GetParam(); 
+    // How long to wait relative to the hover click delay
+    auto const delay_percentage = GetParam();
     // 0.1 is the hardcoded grace period in the basic transformer
     auto const expect_start_called = delay_percentage >= grace_period_percentage;
 
@@ -111,7 +111,7 @@ TEST_P(TestStartCallback, start_event_called_only_after_grace_period)
 
     auto initial_pointer_move_event = motion_event(mir::geometry::DisplacementF{10, 0});
     seat_event_dispatch_mock(std::move(initial_pointer_move_event));
-    
+
     // Hover click is active now
     // If we move before the grace period, no start callback will be called
     // Otherwise, a start event will be called.
@@ -132,7 +132,7 @@ struct TestCancelCallback: public TestHoverClickTransformer, public WithParamInt
 
 TEST_P(TestCancelCallback, cancel_called_if_pointer_moves_before_hover_delay)
 {
-    // How long to wait relative to the hover click delay 
+    // How long to wait relative to the hover click delay
     auto const delay_percentage = GetParam();
 
     std::atomic<bool> hover_cancelled{false};

@@ -50,7 +50,7 @@ TEST_F(EventFilterChainDispatcher, offers_events_to_filters)
     auto filter = mock_filter();
     mi::EventFilterChainDispatcher filter_chain({filter, filter},
         std::make_shared<mi::NullInputDispatcher>());
-    
+
     // Filter will pass the event on twice
     EXPECT_CALL(*filter, handle(_)).Times(2).WillRepeatedly(Return(false));
     // So the filter chain should also reject the event
@@ -65,7 +65,7 @@ TEST_F(EventFilterChainDispatcher, prepends_appends_filters)
 
     mi::EventFilterChainDispatcher filter_chain({filter2},
         std::make_shared<mi::NullInputDispatcher>());
-    
+
     filter_chain.append(filter3);
     filter_chain.prepend(filter1);
 

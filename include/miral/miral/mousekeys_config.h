@@ -84,7 +84,7 @@ public:
     /// When already enabled, further calls have no effect.
     /// \remark Since MirAL 5.5
     void enable() const;
-    
+
     /// Disables mousekeys.
     /// When already disabled, further calls have no effect.
     /// \remark Since MirAL 5.5

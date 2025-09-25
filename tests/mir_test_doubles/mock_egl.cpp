@@ -147,7 +147,7 @@ mtd::MockEGL::MockEGL()
         }));
 
     ON_CALL(*this, eglSwapBuffers(_,_))
-        .WillByDefault(Return(EGL_TRUE));                              
+        .WillByDefault(Return(EGL_TRUE));
 
     ON_CALL(*this, eglGetCurrentDisplay())
     .WillByDefault(Return(fake_egl_display));

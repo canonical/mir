@@ -136,7 +136,7 @@ TEST(TouchEventProperties, touch_count_taken_from_pointer_count)
     MirTouchEvent old_ev;
 
     old_ev.set_pointer_count(pointer_count);
-    
+
     auto tev = mir_input_event_get_touch_event(mir_event_get_input_event(&old_ev));
     EXPECT_EQ(pointer_count, mir_touch_event_point_count(tev));
 }
@@ -218,8 +218,8 @@ TEST(PointerInputEventProperties, modifiers_taken_from_old_style_ev)
     MirInputEventModifiers modifiers = mir_input_event_modifier_shift;
     MirPointerEvent old_ev;
     old_ev.set_modifiers(modifiers);
-    
-    auto pointer_event = 
+
+    auto pointer_event =
         mir_input_event_get_pointer_event(mir_event_get_input_event(&old_ev));
     EXPECT_EQ(modifiers, mir_pointer_event_modifiers(pointer_event));
 }
@@ -230,7 +230,7 @@ TEST(PointerInputEventProperties, button_state_translated)
 
     old_ev.set_buttons(mir_pointer_button_primary);
     auto pev = mir_input_event_get_pointer_event(mir_event_get_input_event(&old_ev));
-    
+
     EXPECT_TRUE(mir_pointer_event_button_state(pev, mir_pointer_button_primary));
     EXPECT_FALSE(mir_pointer_event_button_state(pev, mir_pointer_button_secondary));
 

@@ -17,4 +17,3 @@
 #include <miroil/compositor.h>
 
 miroil::Compositor::~Compositor() = default;
-

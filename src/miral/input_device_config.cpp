@@ -474,4 +474,3 @@ void miral::KeyboardInputConfiguration::merge(KeyboardInputConfiguration const& 
     if (!repeat_delay)
         repeat_delay = other.repeat_delay;
 }
-

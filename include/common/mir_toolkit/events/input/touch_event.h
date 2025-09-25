@@ -26,7 +26,7 @@ extern "C" {
  */
 typedef struct MirTouchEvent MirTouchEvent;
 
-/** 
+/**
  * An identifier for a touch-point. TouchId's are unique per-gesture.
  * That is to say, once a touch has gone down at time T, no other touch will
  * use that touch's ID until all touches at time T have come up.
@@ -87,7 +87,7 @@ MirTouchTooltype mir_touch_event_tooltype(MirTouchEvent const* event,
  *  \param [in] axis        The axis to retreive a value from
  *  \return                 The value of the given axis
  */
-float mir_touch_event_axis_value(MirTouchEvent const* event, 
+float mir_touch_event_axis_value(MirTouchEvent const* event,
     size_t touch_index, MirTouchAxis axis);
 
 /**

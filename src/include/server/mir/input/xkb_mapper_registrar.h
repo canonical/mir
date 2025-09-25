@@ -102,7 +102,7 @@ private:
 
         bool update_and_map(MirEvent& event, ComposeState* compose_state);
         MirInputEventModifiers modifiers() const;
-        auto xkb_modifiers() const -> MirXkbModifiers;        
+        auto xkb_modifiers() const -> MirXkbModifiers;
         void notify_leds_changed();
         XkbMappingStateLedRegistrar& get_registrar();
     private:

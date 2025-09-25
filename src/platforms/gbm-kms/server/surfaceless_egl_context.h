@@ -27,16 +27,16 @@ public:
     SurfacelessEGLContext(EGLDisplay dpy, EGLContext share_with);
 
     ~SurfacelessEGLContext() override;
-    
+
     void make_current() const override;
-    
+
     void release_current() const override;
-    
+
     auto make_share_context() const -> std::unique_ptr<Context> override;
     explicit operator EGLContext() override;
 
     auto egl_display() const -> EGLDisplay;
-private:    
+private:
     EGLDisplay const dpy;
     EGLContext const ctx;
 };

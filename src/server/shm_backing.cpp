@@ -290,7 +290,7 @@ private:
         size_t size;
         bool size_is_trustworthy;
     };
-    
+
     template<typename T>
     class Mapping : public mir::shm::Mapping<T>
     {
@@ -411,7 +411,7 @@ void ShmBacking::resize(size_t new_size)
             std::system_category(),
             "Failed to map client-provided SHM pool"}));
     }
-    
+
     *current_mapping.lock() = std::make_shared<CurrentMapping>(
         mapped_address,
         new_size,
@@ -527,7 +527,7 @@ public:
         backing_store.resize(new_size);
     }
 private:
-    ShmBacking backing_store; 
+    ShmBacking backing_store;
 };
 }
 

@@ -34,7 +34,7 @@ mir::Fd::Fd(int raw_fd) :
             if (!fd) return;
             if (*fd > mir::Fd::invalid) ::close(*fd);
             delete fd;
-        }} 
+        }}
 {
 }
 

@@ -203,7 +203,7 @@ miral::BounceKeys& miral::BounceKeys::on_press_rejected(std::function<void(const
     return *this;
 }
 
-miral::BounceKeys& miral::BounceKeys::enable() 
+miral::BounceKeys& miral::BounceKeys::enable()
 {
     auto const config = self->config->lock();
     if (config->enabled)

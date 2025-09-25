@@ -202,7 +202,7 @@ mi::CursorController::CursorController(std::shared_ptr<mi::Scene> const& input_t
 
 mi::CursorController::~CursorController()
 {
-    try 
+    try
     {
         input_targets->remove_observer(observer);
     }

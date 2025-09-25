@@ -381,7 +381,7 @@ global:
     vtable?for?mir::wayland::RelativePointerManagerV1;
     typeinfo?for?mir::wayland::RelativePointerManagerV1::Global;
     vtable?for?mir::wayland::RelativePointerManagerV1::Global;
-    virtual?thunk?to?mir::wayland::RelativePointerManagerV1::?RelativePointerManagerV1*;  
+    virtual?thunk?to?mir::wayland::RelativePointerManagerV1::?RelativePointerManagerV1*;
 
     mir::wayland::RelativePointerV1::*;
     non-virtual?thunk?to?mir::wayland::RelativePointerV1::*;

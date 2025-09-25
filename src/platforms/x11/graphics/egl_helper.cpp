@@ -42,7 +42,7 @@ public:
         eglDestroyContext(dpy, ctx);
         eglDestroySurface(dpy, surf);
     }
-    
+
     EGLDisplay const dpy;
     EGLContext const ctx;
     EGLSurface const surf;
@@ -95,7 +95,7 @@ auto mgxh::Framebuffer::clone_handle() -> std::unique_ptr<mg::GenericEGLDisplayA
 
 mgxh::EGLHelper::EGLHelper(::Display* const x_dpy)
     : EGLHelper{0, 0}
-{   
+{
     setup_internal(x_dpy, true);
 }
 

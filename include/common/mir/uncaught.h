@@ -17,7 +17,7 @@
 #ifndef MIR_CLIENT_API_HELPERS_H_
 #define MIR_CLIENT_API_HELPERS_H_
 
-#include <boost/exception/diagnostic_information.hpp> 
+#include <boost/exception/diagnostic_information.hpp>
 
 #include "mir/log.h"
 

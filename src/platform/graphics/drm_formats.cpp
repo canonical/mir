@@ -718,4 +718,3 @@ auto mg::drm_modifier_to_string(uint64_t modifier) -> std::string
 #undef STRINGIFY
 }
 #endif
-

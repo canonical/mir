@@ -602,4 +602,3 @@ void ms::MediatingDisplayChanger::set_power_mode(MirPowerMode new_power_mode)
     });
     configure(config);
 }
-

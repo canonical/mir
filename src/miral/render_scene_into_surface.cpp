@@ -363,4 +363,3 @@ void miral::RenderSceneIntoSurface::operator()(mir::Server& server)
         self->init(server);
     });
 }
-

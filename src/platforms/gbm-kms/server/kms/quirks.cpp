@@ -253,4 +253,3 @@ void mir::graphics::gbm::GbmQuirks::egl_destroy_surface(EGLDisplay dpy, EGLSurfa
 {
     egl_destroy_surface_->egl_destroy_surface(dpy, surf);
 }
-

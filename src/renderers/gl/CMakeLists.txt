@@ -38,4 +38,3 @@ target_link_libraries(mirrenderergl
     mircommon
     mircore
 )
-

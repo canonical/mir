@@ -345,8 +345,8 @@ auto mg::CPUAddressableFB::fb_id_for_buffer(
                 std::system_category(),
                 "Failed to create DRM framebuffer from CPU-accessible buffer"}));
         }
-    
-    
+
+
     }
     return fb_id;
 }

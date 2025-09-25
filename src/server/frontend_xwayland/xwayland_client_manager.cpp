@@ -91,7 +91,7 @@ auto mf::XWaylandClientManager::session_for_client(pid_t client_pid) -> std::sha
         struct stat proc_stat{};
         if (stat(proc.c_str(), &proc_stat) == -1)
         {
-            log_debug("Failed to get uid & gid for PID %d using stat(%s, ...), falling back to get(uid,gid)", 
+            log_debug("Failed to get uid & gid for PID %d using stat(%s, ...), falling back to get(uid,gid)",
                       client_pid, proc.c_str());
 
             proc_stat.st_uid = getuid();

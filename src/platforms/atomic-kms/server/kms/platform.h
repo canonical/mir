@@ -54,7 +54,7 @@ public:
         std::shared_ptr<GLConfig> const& gl_config) override;
 
     std::shared_ptr<mir::udev::Context> udev;
-    
+
     std::shared_ptr<DisplayReport> const listener;
 
 protected:

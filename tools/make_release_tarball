@@ -63,4 +63,3 @@ fi
 
 mv $SCRATCH_DIR/$VERSIONED_NAME.tar.xz .
 echo "$VERSIONED_NAME.tar.xz successfully created and tested"
-

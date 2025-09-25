@@ -36,7 +36,7 @@ class SeatObserver
 {
 public:
     virtual ~SeatObserver() = default;
-    
+
     virtual void seat_add_device(uint64_t id) = 0;
     virtual void seat_remove_device(uint64_t id) = 0;
     virtual void seat_dispatch_event(std::shared_ptr<MirEvent const> const& event) = 0;

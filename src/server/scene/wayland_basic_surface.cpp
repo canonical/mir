@@ -67,5 +67,3 @@ auto ms::WaylandBasicSurface::wayland_surface() -> wayland::Weak<frontend::WlSur
 {
     return wayland_surface_;
 }
-
-

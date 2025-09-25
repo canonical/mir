@@ -736,7 +736,7 @@ mir (2.10.0) UNRELEASED; urgency=medium
       . CapsLock state gets stuck (#2592)
       . Popups dismissed by Mir when parent clicked (#2604)
       . Latest swaybg (on 22.10) doesn't paint on Mir (#2620)
-      . Shutdown crash when OSK is running (#2639) 
+      . Shutdown crash when OSK is running (#2639)
       . Cursor only updates once per enter on XWayland (#2643)
       . OSK stays on screen with unfocused app (#2651)
       . Scaling messes up screencopy (#2653)

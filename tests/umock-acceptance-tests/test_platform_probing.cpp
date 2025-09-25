@@ -42,7 +42,7 @@ public:
           report{std::make_shared<mir::logging::NullSharedLibraryProberReport>()}
     {
     }
-    
+
     auto add_gbm_kms_device() -> bool
     {
         using namespace std::string_literals;
@@ -99,7 +99,7 @@ private:
      */
     std::shared_ptr<mo::Configuration> options;
     std::shared_ptr<mir::SharedLibraryProberReport> const report;
-    
+
     std::vector<mtf::TemporaryEnvironmentValue> temporary_env;
     mtf::UdevEnvironment udev_env;
 #ifdef MIR_BUILD_PLATFORM_GBM_KMS
@@ -122,7 +122,5 @@ TEST_F(FullProbeStack, select_display_modules_loads_all_available_hardware_when_
     }
 
     auto devices = mg::select_display_modules(the_options(), the_console_services(), *the_library_prober_report());
-    EXPECT_THAT(devices.size(), Eq(expected_hardware_count));    
+    EXPECT_THAT(devices.size(), Eq(expected_hardware_count));
 }
-
-

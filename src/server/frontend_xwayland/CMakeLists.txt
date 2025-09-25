@@ -38,4 +38,3 @@ target_link_libraries(mirfrontend-xwayland
     mircommon
     mircore
 )
-

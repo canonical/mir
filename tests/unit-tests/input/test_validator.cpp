@@ -59,7 +59,7 @@ void add_another_touch(mir::EventUPtr const& ev, MirTouchId id, MirTouchAction a
     mev::add_touch(*ev, id, action, mir_touch_tooltype_finger,
                    0, 0, 0, 0, 0, 0);
 }
-    
+
 mir::EventUPtr make_touch(MirTouchId id, MirTouchAction action)
 {
     auto ev = mev::make_touch_event(
@@ -87,7 +87,7 @@ TEST_F(Validator, missing_touch_downs_are_inserted)
     EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(inserted_down_id0.get())));
     EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(inserted_down_id1.get())));
     EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(touch.get())));
-    
+
     rewriter.validate_and_dispatch(*touch);
 }
 
@@ -204,7 +204,7 @@ TEST_F(Validator, missing_up_and_down_and_up_is_inserted_variation)
     rewriter.validate_and_dispatch(*touch_3);
 }
 
-// In this case we put two touches down (0, 1) and then we release touch 1 
+// In this case we put two touches down (0, 1) and then we release touch 1
 // now as the next event we just show (0,1) changing as if point 1 had never
 // been released. We ensure that a touch down for 1 is inserted before we
 // show the change event.
@@ -235,7 +235,7 @@ TEST_F(Validator, down_is_inserted_before_released_touch_reappears)
     rewriter.validate_and_dispatch(*touch_3);
     rewriter.validate_and_dispatch(*touch_4);
     rewriter.validate_and_dispatch(*touch_5);
-        
+
 }
 
 // Here we put a single point down and then show it dissapearing while another ID appears...similar

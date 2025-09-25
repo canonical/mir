@@ -32,40 +32,40 @@ namespace mir { typedef std::unique_ptr<MirEvent, void(*)(MirEvent*)> EventUPtr;
 
 namespace miroil
 {
-    
+
 /*
     Creates Mir input events out of Qt input events
-    
-    The class is splitt into miroil::EventBuilder which does the internal mir stuff, 
-    and qtmir::EventBuilder which handles the qt stuff. 
+
+    The class is splitt into miroil::EventBuilder which does the internal mir stuff,
+    and qtmir::EventBuilder which handles the qt stuff.
 
     One important feature is that it's able to match a QInputEvent with the MirInputEvent that originated it, so
     it can make a MirInputEvent version of a QInputEvent containing also information that the latter does not carry,
     such as relative axis movement for pointer devices.
 */
-    
+
 class EventBuilder {
-    
+
 public:
     class EventInfo {
     public:
         void store(const MirInputEvent *mirInputEvent, ulong qtTimestamp);
-        
+
         ulong timestamp;
         MirInputDeviceId device_id;
         float relative_x{0};
         float relative_y{0};
     };
-    
+
 public:
     EventBuilder();
     virtual ~EventBuilder();
-    
+
     // add Touch event
     void add_touch(MirEvent &event, MirTouchId touch_id, MirTouchAction action,
         MirTouchTooltype tooltype, float x_axis_value, float y_axis_value,
         float pressure_value, float touch_major_value, float touch_minor_value, float size_value);
-    
+
     // Key event
     mir::EventUPtr make_key_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
         MirKeyboardAction action, xkb_keysym_t keysym, int scan_code, MirInputEventModifiers modifiers);
@@ -81,9 +81,9 @@ public:
         float x_axis_value, float y_axis_value,
         float hscroll_value, float vscroll_value,
         float relative_x_value, float relative_y_value);
-    
-    EventInfo * find_info(ulong qtTimestamp);    
-        
+
+    EventInfo * find_info(ulong qtTimestamp);
+
     /* Stores information that cannot be carried by QInputEvents so that it can be fully
        reconstructed later given the same qtTimestamp */
     void store(const MirInputEvent *mirInputEvent, ulong qtTimestamp);

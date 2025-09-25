@@ -128,7 +128,7 @@ public:
         // Caution: non-local state!
         // This works because standard-drm-devices contains a udev device with 226:0 and devnode /dev/dri/card0
         auto device = ctx.char_device_from_devnum(makedev(226, 0));
-       
+
         return std::make_shared<mgg::Platform>(
             *device,
             mir::report::null_display_report(),

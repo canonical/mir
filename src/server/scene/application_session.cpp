@@ -310,7 +310,7 @@ void ms::ApplicationSession::configure_streams(
         if (auto const s = std::dynamic_pointer_cast<mc::BufferStream>(stream.stream.lock()))
             list.emplace_back(ms::StreamInfo{s, stream.displacement});
     }
-    surface.set_streams(list); 
+    surface.set_streams(list);
 }
 
 auto ms::ApplicationSession::has_buffer_stream(

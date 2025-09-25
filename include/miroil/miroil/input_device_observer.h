@@ -28,13 +28,13 @@ class InputDeviceObserver
 public:
     InputDeviceObserver() = default;
     InputDeviceObserver(InputDeviceObserver const&) = delete;
-    InputDeviceObserver& operator=(InputDeviceObserver const&) = delete;    
+    InputDeviceObserver& operator=(InputDeviceObserver const&) = delete;
     virtual ~InputDeviceObserver();
-    
+
     virtual void device_added(miroil::InputDevice device) = 0;
     virtual void device_removed(miroil::InputDevice device) = 0;
 };
-    
+
 }
 
 #endif //MIROIL_INPUT_DEVICE_OBSERVER_H

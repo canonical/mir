@@ -80,7 +80,7 @@ function (mir_discover_tests_internal EXECUTABLE TEST_ENV_OPTIONS DETECT_FD_LEAK
         set(TSAN_EXTRA_OPTIONS "external_symbolizer_path=${LLVM_SYMBOLIZER}")
       endif()
     endif()
-    # Space after ${TSAN_EXTRA_OPTIONS} works around bug in TSAN env. variable parsing 
+    # Space after ${TSAN_EXTRA_OPTIONS} works around bug in TSAN env. variable parsing
     list(APPEND test_env "TSAN_OPTIONS=\"suppressions=${CMAKE_SOURCE_DIR}/tools/tsan-suppressions second_deadlock_stack=1 halt_on_error=1 history_size=7 die_after_fork=0 ${TSAN_EXTRA_OPTIONS} \"")
      # TSan does not support starting threads after fork
     list(APPEND test_exclusion_filter "ThreadedDispatcherSignalTest.keeps_dispatching_after_signal_interruption")

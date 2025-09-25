@@ -52,7 +52,7 @@ public:
     // Within the set of overlay renderables, rendering order is undefined.
     virtual void add_input_visualization(std::shared_ptr<graphics::Renderable> const& overlay) = 0;
     virtual void remove_input_visualization(std::weak_ptr<graphics::Renderable> const& overlay) = 0;
-    
+
     // As input visualizations added through the overlay system will not use the standard SurfaceObserver
     // mechanism, we require this method to trigger recomposition.
     // TODO: How can something like SurfaceObserver be adapted to work with non surface renderables?

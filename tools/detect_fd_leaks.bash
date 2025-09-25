@@ -38,7 +38,7 @@ process_fd_leak_backtrace_line()
 	echo "ignore"
 	return
     fi
-    
+
     local still_in_backtrace=$(echo "${1}" | grep "by 0x\|at 0x")
     if [ -n "$still_in_backtrace" ];
     then

@@ -69,4 +69,3 @@ void miral::WaylandTools::for_each_binding(
 {
     self->for_each_output_binding(client, mir::graphics::DisplayConfigurationOutputId{output.id()}, callback);
 }
-

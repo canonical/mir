@@ -11,7 +11,7 @@ set(miroil_include ${PROJECT_SOURCE_DIR}/include/miroil)
 add_definitions(-DMIR_LOG_COMPONENT_FALLBACK="miroil" -DMIROIL_ENABLE_DEPRECATIONS=0)
 
 add_library(miroil SHARED
-    compositor.cpp ${miroil_include}/miroil/compositor.h    
+    compositor.cpp ${miroil_include}/miroil/compositor.h
     ${miroil_include}/miroil/edid.h
     persist_display_config.cpp ${miroil_include}/miroil/persist_display_config.h
     display_configuration_policy.cpp ${miroil_include}/miroil/display_configuration_policy.h
@@ -23,9 +23,9 @@ add_library(miroil SHARED
     input_device_observer.cpp ${miroil_include}/miroil/input_device_observer.h
     mir_server_hooks.cpp ${miroil_include}/miroil/mir_server_hooks.h
     mir_prompt_session.cpp ${miroil_include}/miroil/mir_prompt_session.h
-    open_gl_context.cpp ${miroil_include}/miroil/open_gl_context.h    
+    open_gl_context.cpp ${miroil_include}/miroil/open_gl_context.h
     prompt_session_listener.cpp ${miroil_include}/miroil/prompt_session_listener.h
-    prompt_session_manager.cpp ${miroil_include}/miroil/prompt_session_manager.h    
+    prompt_session_manager.cpp ${miroil_include}/miroil/prompt_session_manager.h
     set_compositor.cpp ${miroil_include}/miroil/set_compositor.h
     surface.cpp ${miroil_include}/miroil/surface.h
     ${miroil_include}/miroil/display_configuration_storage.h

@@ -38,7 +38,7 @@
  *
  * The minor server API version. This will increase each time new backwards-compatible API
  * is added, and will reset to 0 each time MIR_SERVER_MAJOR_VERSION is incremented.
- * 
+ *
  * See also: http://semver.org/
  */
 #define MIR_SERVER_MINOR_VERSION (@MIR_VERSION_MINOR@)

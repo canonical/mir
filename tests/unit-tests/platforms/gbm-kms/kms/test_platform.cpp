@@ -115,8 +115,8 @@ TEST_F(MesaGraphicsPlatform, a_failure_while_creating_a_platform_results_in_an_e
 
     mir::SharedLibrary platform_lib{mtf::server_platform("graphics-gbm-kms")};
     auto probe = platform_lib.load_function<mg::PlatformProbe>(display_platform_probe_symbol);
-    auto supported_devices = probe(stub_vt, udev, options);    
-    
+    auto supported_devices = probe(stub_vt, udev, options);
+
     EXPECT_CALL(mock_drm, open(_,_))
         .WillRepeatedly(SetErrnoAndReturn(EINVAL, -1));
 
@@ -157,7 +157,7 @@ MATCHER_P(SupportLevelIs, matcher, "")
 TEST_F(MesaGraphicsPlatform, display_probe_returns_unsupported_when_no_drm_udev_devices)
 {
     using namespace testing;
-    
+
     mtf::UdevEnvironment udev_environment;
     mir::options::ProgramOption options;
     auto const stub_vt = std::make_shared<mtd::StubConsoleServices>();
@@ -173,7 +173,7 @@ TEST_F(MesaGraphicsPlatform, display_probe_returns_unsupported_when_no_drm_udev_
 TEST_F(MesaGraphicsPlatform, display_probe_returns_best_when_master)
 {
     using namespace testing;
-    
+
     mtf::UdevEnvironment udev_environment;
     boost::program_options::options_description po;
     mir::options::ProgramOption options;
@@ -317,4 +317,3 @@ TEST_F(MesaGraphicsPlatform, display_probe_does_not_touch_quirked_device)
     auto probe = platform_lib.load_function<mg::PlatformProbe>(display_platform_probe_symbol);
     probe(stub_vt, udev, *options_with_quirk);
 }
-

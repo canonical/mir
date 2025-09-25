@@ -31,7 +31,7 @@
 namespace mgg = mir::graphics::gbm;
 namespace mtf = mir_test_framework;
 namespace mtd = mir::test::doubles;
-                          
+
 namespace
 {
 
@@ -41,7 +41,7 @@ MATCHER_P(FlagSet, flag, "")
 }
 
 class DRMHelperTest : public ::testing::Test
-{              
+{
 protected:
     ::testing::NiceMock<mtd::MockDRM> mock_drm;
     mtf::UdevEnvironment fake_devices;
@@ -50,7 +50,7 @@ protected:
 }
 
 TEST_F(DRMHelperTest, closes_drm_fd_on_exec)
-{   
+{
     using namespace testing;
 
     fake_devices.add_standard_device("standard-drm-render-nodes");
@@ -59,4 +59,4 @@ TEST_F(DRMHelperTest, closes_drm_fd_on_exec)
 
     auto helper = mgg::helpers::DRMHelper::open_any_render_node(
         std::make_shared<mir::udev::Context>());
-}   
+}

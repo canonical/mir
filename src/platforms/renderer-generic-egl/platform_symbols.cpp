@@ -112,10 +112,10 @@ auto probe_rendering_platform(
     supported_devices.push_back(
         mg::SupportedDevice {
             nullptr,                          // We aren't associated with any particular device
-    
+
             maximum_suitability,              // We should be fully-functional, but let any hardware-specific
                                               // platform claim a higher priority, if it exists.
-    
+
             nullptr                           // No platform-specific data
         });
     return supported_devices;
@@ -137,4 +137,3 @@ mir::ModuleProperties const* describe_graphics_module()
     mir::assert_entry_point_signature<mg::DescribeModule>(&describe_graphics_module);
     return &description;
 }
-

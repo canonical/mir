@@ -107,7 +107,7 @@ int main(int argc, char const* argv[])
     MirRunner runner{argc, argv};
 
     DisplayConfiguration display_config{runner};
- 
+
     ConfigurationOption show_splash{
         [&](bool show_splash) {splash.enable(show_splash); },
         "show-splash",

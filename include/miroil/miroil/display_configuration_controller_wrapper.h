@@ -24,7 +24,7 @@ namespace mir { namespace graphics { class DisplayConfiguration; } }
 
 namespace miroil
 {
-    
+
 class DisplayConfigurationControllerWrapper
 {
 public:
@@ -40,7 +40,7 @@ public:
      * \param [in]  conf    The new display configuration to set
      */
     void set_base_configuration(std::shared_ptr<mir::graphics::DisplayConfiguration> const& conf);
-    
+
 private:
     std::shared_ptr<mir::shell::DisplayConfigurationController> const & wrapped;
 };
@@ -48,4 +48,3 @@ private:
 }
 
 #endif //MIROIL_DISPLAY_CONFIGURATION_CONTROLLER_WRAPPER_H_
-

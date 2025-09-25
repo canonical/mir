@@ -67,7 +67,7 @@ public:
     auto suitability_for_display(graphics::DisplaySink& /*sink*/)
         -> graphics::probe::Result override
     {
-        return graphics::probe::dummy; 
+        return graphics::probe::dummy;
     }
 
     auto make_framebuffer_provider(graphics::DisplaySink& /*sink*/)

@@ -54,4 +54,3 @@ void MirResizeEvent::set_height(int height)
 {
     height_ = height;
 }
-

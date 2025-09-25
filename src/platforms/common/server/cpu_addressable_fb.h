@@ -38,10 +38,10 @@ public:
 
     auto format() const -> MirPixelFormat override;
     auto stride() const -> geometry::Stride override;
-    auto size() const -> geometry::Size override; 
+    auto size() const -> geometry::Size override;
 
     operator uint32_t() const override;
-    
+
     CPUAddressableFB(CPUAddressableFB const&) = delete;
     CPUAddressableFB& operator=(CPUAddressableFB const&) = delete;
 private:

@@ -332,4 +332,3 @@ void mf::WaylandExecutor::spawn (std::function<void()>&& work)
             (std::system_error{err, std::system_category(), "eventfd_write failed to notify event loop"}));
     }
 }
-

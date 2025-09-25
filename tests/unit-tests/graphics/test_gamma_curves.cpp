@@ -91,4 +91,3 @@ TEST(LinearGammaLUTs, is_monotonically_increasing)
     EXPECT_THAT(luts.green, IsMonotonicallyIncreasing());
     EXPECT_THAT(luts.blue, IsMonotonicallyIncreasing());
 }
-

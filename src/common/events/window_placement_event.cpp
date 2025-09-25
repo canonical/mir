@@ -56,4 +56,3 @@ MirWindowPlacementEvent const* MirEvent::to_window_placement() const
 {
     return static_cast<MirWindowPlacementEvent const*>(this);
 }
-

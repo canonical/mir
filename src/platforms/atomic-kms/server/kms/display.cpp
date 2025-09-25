@@ -395,7 +395,7 @@ void mga::Display::configure_locked(
                     listener,
                     std::move(kms_output),
                     out.extents(),
-                    transform, 
+                    transform,
                     gbm_quirks);
 
                 display_buffers_new.push_back(std::move(db));

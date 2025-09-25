@@ -29,23 +29,23 @@ namespace miroil {
 struct SetCompositor::CompositorImpl : public mir::compositor::Compositor
 {
     CompositorImpl(const std::shared_ptr<miroil::Compositor> & compositor);
-    
-    auto get_wrapped() -> std::shared_ptr<miroil::Compositor>;    
+
+    auto get_wrapped() -> std::shared_ptr<miroil::Compositor>;
     void start();
     void stop();
-    
+
     std::shared_ptr<miroil::Compositor> custom_compositor;
 };
 
-SetCompositor::CompositorImpl::CompositorImpl(const std::shared_ptr<miroil::Compositor> & compositor) 
+SetCompositor::CompositorImpl::CompositorImpl(const std::shared_ptr<miroil::Compositor> & compositor)
 : custom_compositor(compositor)
 {
 }
-    
-auto SetCompositor::CompositorImpl::get_wrapped() 
+
+auto SetCompositor::CompositorImpl::get_wrapped()
 -> std::shared_ptr<miroil::Compositor>
-{ 
-    return custom_compositor;     
+{
+    return custom_compositor;
 }
 
 

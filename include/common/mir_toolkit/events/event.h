@@ -65,7 +65,7 @@ extern "C" {
 MirEventType mir_event_get_type(MirEvent const* event);
 
 /**
- * Retrieve the MirInputEvent associated with a MirEvent of 
+ * Retrieve the MirInputEvent associated with a MirEvent of
  * type mir_event_type_input. See <mir_toolkit/events/input/input_event.h>
  * for accessors.
  *
@@ -159,7 +159,7 @@ MirWindowPlacementEvent const* mir_event_get_window_placement_event(MirEvent con
  *        \  (oo)\_______
  *           (__)\       )\/\
  *                ||----w |
- *                ||     || 
+ *                ||     ||
  * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  * NOTICE: mir_event_ref and mir_event_unref are implemented in terms of copy
  * until such time that direct MirEvent access is deprecated. This means you

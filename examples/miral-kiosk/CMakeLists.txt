@@ -9,4 +9,3 @@ target_link_libraries(miral-kiosk example-shell-lib)
 if(DEFINED MIR_CHROOT)
     target_link_libraries(miral-kiosk EGL PkgConfig::GLESv2)
 endif()
-

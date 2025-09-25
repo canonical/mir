@@ -348,4 +348,3 @@ A: resource=0x00000000f7e20000 0x00000000f7e2ffff 0x0000000000140204\n0x00000000
 A: subsystem_device=0x7410
 A: subsystem_vendor=0x1558
 A: vendor=0x8086
-

@@ -45,7 +45,7 @@ class StubInputScene : public input::Scene
     void remove_input_visualization(std::weak_ptr<graphics::Renderable> const& /* overlay */) override
     {
     }
-    
+
     void emit_scene_changed() override
     {
     }

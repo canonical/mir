@@ -186,4 +186,3 @@ TEST_F(MRUWindowList, hiding_then_showing_windows_retains_order)
 
     EXPECT_THAT(as_enumerated, ElementsAre(window_c, window_b, window_a));
 }
-

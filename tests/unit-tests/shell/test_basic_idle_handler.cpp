@@ -355,5 +355,3 @@ TEST_F(BasicIdleHandler, renderable_removed_from_scene_on_active)
     EXPECT_CALL(*input_scene, remove_input_visualization(testing::_));
     observer->active();
 }
-
-

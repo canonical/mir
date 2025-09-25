@@ -93,7 +93,7 @@ TEST(Signal, release_from_wait_resets_signal)
         {
             signal.raise();
             std::this_thread::sleep_for(delay * 2);
-            signal.raise();            
+            signal.raise();
         }
     };
 

@@ -36,7 +36,7 @@ class Scene;
 class TouchspotRenderable;
 
 /// Receives touchspot events out of the input stack and manages appearance
-/// of touchspot renderables for visualization. Touchspot visualization is 
+/// of touchspot renderables for visualization. Touchspot visualization is
 /// disabled by default and must be enabled through a call to ::enable.
 class TouchspotController : public TouchVisualizer
 {
@@ -45,7 +45,7 @@ public:
         std::shared_ptr<input::Scene> const& scene);
 
     virtual ~TouchspotController() = default;
-    
+
     void enable() override;
     void disable() override;
 
@@ -68,7 +68,7 @@ private:
     //  https://github.com/canonical/mir/issues/3779
     std::shared_ptr<graphics::Buffer> const touchspot_buffer;
     std::shared_ptr<Scene> const scene;
-    
+
     std::mutex guard;
 
     bool enabled;

@@ -107,7 +107,7 @@ public:
         wl_array_init(&data_);
         wl_array_copy(&data_, const_cast<wl_array*>(in_data));
     }
-    
+
     CopyableWlArray(CopyableWlArray const& other)
         : CopyableWlArray{&other.data_}
     {

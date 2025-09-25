@@ -550,4 +550,3 @@ auto mir::graphics::gbm::Cursor::needs_compositing() const -> bool
 {
     return false;
 }
-

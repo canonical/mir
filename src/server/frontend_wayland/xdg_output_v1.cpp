@@ -110,7 +110,7 @@ mf::XdgOutputV1::XdgOutputV1(
 
     // Name may only be sent the first time
     send_name_event_if_supported(output_global.current_config().name);
-    
+
     // not sending description is allowed
     // send_description_event_if_supported("TODO: set this");
 

@@ -79,7 +79,7 @@ MirPointerButtons mir_pointer_event_buttons(MirPointerEvent const* event);
  *  \param [in] axis        The axis to retreive a value from
  *  \return                 The value of the given axis
  */
-float mir_pointer_event_axis_value(MirPointerEvent const* event, 
+float mir_pointer_event_axis_value(MirPointerEvent const* event,
     MirPointerAxis axis);
 
 /**

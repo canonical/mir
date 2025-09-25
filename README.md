@@ -1,9 +1,9 @@
 # Mir - Wayland compositor
 
-**Mir** is set of libraries for building Wayland based shells. Mir 
+**Mir** is set of libraries for building Wayland based shells. Mir
 simplifies the complexity that shell authors need to deal with: it
 provides a stable, well tested and performant platform with touch,
-mouse and tablet input, multi-display capability and secure 
+mouse and tablet input, multi-display capability and secure
 client-server communications.
 
 Mir deals with the bringup and configuration of a broad array of
@@ -16,17 +16,19 @@ and is extremely customisable by shell authors using a simple high-level
 API.
 
 ## Resources
+
 - For information on how to use Mir, refer to [the official documentation](https://canonical-mir.readthedocs-hosted.com).
 - For data sheets and whitepapers, check out [the Mir website](http://mir-server.io).
 - Mir is [hosted on GitHub](https://github.com/canonical/mir).
 - For announcements and other discussions on Mir see [Ubuntu Discourse](https://discourse.ubuntu.com/c/mir) or join
-[the matrix channel](https://matrix.to/#/#mir-server:matrix.org) to get in touch with the team.
+  [the matrix channel](https://matrix.to/#/#mir-server:matrix.org) to get in touch with the team.
 
 ## Packaging status
 
 [![Packaging status](https://repology.org/badge/vertical-allrepos/mir.svg)](https://repology.org/project/mir/versions)
 
 ## Copyright and License
+
 Copyright © Canonical Ltd.
 
 This program is free software: you can redistribute it and/or modify
@@ -35,8 +37,8 @@ published by the Free Software Foundation.
 
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
+along with this program. If not, see <http://www.gnu.org/licenses/>.

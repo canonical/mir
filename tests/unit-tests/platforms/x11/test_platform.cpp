@@ -111,7 +111,7 @@ TEST_F(X11GraphicsPlatformTest, probe_returns_unsupported_when_x_cannot_open_dis
     mir::SharedLibrary platform_lib{mtf::server_platform("server-x11")};
     auto probe = platform_lib.load_function<mg::PlatformProbe>(probe_platform);
     auto probe_result = probe(nullptr, nullptr, options);
-    
+
     EXPECT_THAT(probe_result, IsEmpty());
 }
 

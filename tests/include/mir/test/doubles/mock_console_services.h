@@ -33,7 +33,7 @@ class MockConsoleServices : public ConsoleServices
 public:
     MOCK_METHOD(
         void,
-         register_switch_handlers, 
+         register_switch_handlers,
         (graphics::EventHandlerRegister&,
          std::function<bool()> const&,
          std::function<bool()> const&),

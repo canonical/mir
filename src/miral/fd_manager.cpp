@@ -33,7 +33,7 @@ auto FdManager::register_handler(mir::Fd fd, std::function<void(int)> const& han
 -> std::unique_ptr<FdHandle>
 {
     std::lock_guard<std::mutex> lock{mutex};
-    
+
     auto handle = std::make_unique<FdHandleImpl>(fd, shared_from_this());
 
     if (auto const main_loop = weak_main_loop.lock())

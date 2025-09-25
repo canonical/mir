@@ -241,4 +241,3 @@ auto mga::GBMDisplayAllocator::make_surface(DRMFormat format, std::span<uint64_t
 {
     return std::make_unique<GBMSurfaceImpl>(fd, gbm.get(), size, format, modifiers, gbm_quirks);
 }
-

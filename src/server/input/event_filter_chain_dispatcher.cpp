@@ -30,7 +30,7 @@ mi::EventFilterChainDispatcher::EventFilterChainDispatcher(
 bool mi::EventFilterChainDispatcher::handle(MirEvent const& event)
 {
     std::lock_guard lg(filter_guard);
-    
+
     auto it = filters.begin();
     while (it != filters.end())
     {
@@ -56,7 +56,7 @@ void mi::EventFilterChainDispatcher::append(std::weak_ptr<EventFilter> const& fi
 void mi::EventFilterChainDispatcher::prepend(std::weak_ptr<EventFilter> const& filter)
 {
     std::lock_guard lg(filter_guard);
-        
+
     filters.insert(filters.begin(), filter);
 }
 

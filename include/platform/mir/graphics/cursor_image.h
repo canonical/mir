@@ -32,12 +32,12 @@ public:
 
     virtual void const* as_argb_8888() const = 0;
     virtual geometry::Size size() const = 0;
-    
+
     // We use "hotspot" to mean the offset within a cursor image
     // which should be placed at the onscreen
     // location of the pointer.
     virtual geometry::Displacement hotspot() const = 0;
-    
+
 
 protected:
     CursorImage() = default;

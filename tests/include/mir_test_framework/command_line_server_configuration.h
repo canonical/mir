@@ -30,7 +30,7 @@ class Server;
 
 namespace mir_test_framework
 {
-    auto configuration_from_commandline() 
+    auto configuration_from_commandline()
     -> std::shared_ptr<mir::options::DefaultConfiguration>;
 
     void configure_from_commandline(mir::Server& server);

@@ -933,4 +933,3 @@ bool mga::AtomicKMSOutput::has_cursor_image() const
 {
     return cursor_image_set;
 }
-

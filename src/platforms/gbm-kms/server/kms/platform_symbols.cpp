@@ -218,7 +218,7 @@ auto probe_display_platform(
                         std::string{"Failed to set DRM interface version on device "} + device.devnode()}));
                 }
 
-                // For now, we *also* require our DisplayPlatform to support creating a HW EGL context                
+                // For now, we *also* require our DisplayPlatform to support creating a HW EGL context
                 mgg::helpers::GBMHelper gbm_device{tmp_fd};
                 mgg::helpers::EGLHelper egl{MinimalGLConfig()};
 
@@ -336,7 +336,7 @@ auto probe_rendering_platform(
         }
         if (platform->acquire_provider<mg::CPUAddressableDisplayProvider>())
         {
-            /* We *can* support this output, but with slower buffer copies 
+            /* We *can* support this output, but with slower buffer copies
              * If another platform supports this device better, let it.
              */
             maximum_suitability = mg::probe::supported;
@@ -493,4 +493,3 @@ mir::ModuleProperties const* describe_graphics_module()
     mir::assert_entry_point_signature<mg::DescribeModule>(&describe_graphics_module);
     return &description;
 }
-

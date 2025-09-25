@@ -155,7 +155,7 @@ public:
     /// \returns the auxiliary rectangle
     auto aux_rect() const -> mir::optional_value<Rectangle> const&;
 
-    /// The placement hint describes how child window placement should be 
+    /// The placement hint describes how child window placement should be
     /// adjusted they cannot be placed in the requested position
     ///
     /// \returns the placement hints

@@ -171,4 +171,3 @@ WL_PRIVATE const struct wl_interface xdg_popup_interface = {
 	2, xdg_popup_requests,
 	2, xdg_popup_events,
 };
-

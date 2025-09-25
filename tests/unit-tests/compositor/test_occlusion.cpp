@@ -66,7 +66,7 @@ TEST_F(OcclusionFilterTest, single_window_not_occluded)
 {
     auto window = std::make_shared<mtd::FakeRenderable>(12, 34, 56, 78);
     auto elements = scene_elements_from({window});
- 
+
     auto const& occlusions = filter_occlusions_from(elements, monitor_rect);
 
     EXPECT_THAT(renderables_from(occlusions), IsEmpty());
@@ -80,7 +80,7 @@ TEST_F(OcclusionFilterTest, partially_offscreen_still_visible)
     auto top =    std::make_shared<mtd::FakeRenderable>(500,   -1, 100, 100);
     auto bottom = std::make_shared<mtd::FakeRenderable>(200, 1000, 100, 1000);
     auto elements = scene_elements_from({left, right, top, bottom});
- 
+
     auto const& occlusions = filter_occlusions_from(elements, monitor_rect);
 
     EXPECT_THAT(renderables_from(occlusions), IsEmpty());

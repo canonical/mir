@@ -28,7 +28,7 @@ using namespace mir::compositor;
 namespace
 {
 bool renderable_is_occluded(
-    Renderable const& renderable, 
+    Renderable const& renderable,
     Rectangle const& area,
     std::vector<Rectangle>& coverage)
 {

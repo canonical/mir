@@ -887,7 +887,7 @@ TEST_F(AbstractShell, makes_parent_active_when_switching_to_child)
     focus_controller.set_focus_to(surface_parent->session().lock(), surface_parent);
     /* window         | expected focus state
      * -----------------------------------------------
-     * surface_parent | mir_window_focus_state_focused 
+     * surface_parent | mir_window_focus_state_focused
      * surface_child  | <don't care>
     */
 

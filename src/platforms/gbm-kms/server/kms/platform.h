@@ -63,7 +63,7 @@ public:
         std::shared_ptr<GLConfig> const& gl_config) override;
 
     std::shared_ptr<mir::udev::Context> udev;
-    
+
     std::shared_ptr<DisplayReport> const listener;
 
 protected:
@@ -78,7 +78,7 @@ private:
         std::shared_ptr<DisplayReport> const& reporter,
         EmergencyCleanupRegistry& emergency_cleanup_registry,
         BypassOption bypass_option);
-    
+
     std::unique_ptr<Device> const device_handle;
     mir::Fd const drm_fd;
 
@@ -129,7 +129,7 @@ private:
     private:
         EGLDisplay const dpy;
     };
-    
+
     std::shared_ptr<gbm_device> const device;                   ///< gbm_device this platform is created on, always valid.
     EGLDisplayHandle dpy;
     std::shared_ptr<GBMDisplayProvider> const bound_display;    ///< Associated Display, if any (nullptr is valid)

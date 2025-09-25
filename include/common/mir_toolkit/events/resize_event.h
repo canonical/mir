@@ -25,7 +25,7 @@ extern "C" {
 
 /**
  * Retrieve the new width reported by a given MirResizeEvent
- * 
+ *
  * \param[in] ev The resize event
  * \return       The reported width
  */
@@ -33,7 +33,7 @@ int mir_resize_event_get_width(MirResizeEvent const* ev);
 
 /**
  * Retrieve the new height reported by a given MirResizeEvent
- * 
+ *
  * \param[in] ev The resize event
  * \return       The reported height
  */

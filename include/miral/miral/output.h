@@ -102,7 +102,7 @@ public:
     ///
     /// \returns the pixel format
     auto pixel_format() const -> MirPixelFormat;
-    
+
     /// The refresh rate in Hz.
     ///
     /// \returns the refresh rate

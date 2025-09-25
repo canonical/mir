@@ -18,4 +18,3 @@
 
 // Included here to ensure we have a single definition of the Program symbols
 mir::graphics::gl::Program::~Program() = default;
-

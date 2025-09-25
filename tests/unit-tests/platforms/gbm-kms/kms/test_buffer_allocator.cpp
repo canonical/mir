@@ -134,4 +134,3 @@ TEST_F(MesaBufferAllocatorTest, supported_pixel_formats_have_sane_default_in_fir
     ASSERT_FALSE(supported_pixel_formats.empty());
     EXPECT_EQ(mir_pixel_format_argb_8888, supported_pixel_formats[0]);
 }
-

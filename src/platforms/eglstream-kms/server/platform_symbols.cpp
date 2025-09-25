@@ -590,4 +590,3 @@ mir::ModuleProperties const* describe_graphics_module()
     mir::assert_entry_point_signature<mg::DescribeModule>(&describe_graphics_module);
     return &description;
 }
-

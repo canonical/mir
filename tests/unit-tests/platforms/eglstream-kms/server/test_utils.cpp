@@ -57,4 +57,3 @@ TEST(EGLStreamUtils, returns_nvidia_driver_version)
     EXPECT_TRUE(!!version);
     EXPECT_THAT(*version, Eq(mge::VersionInfo { 390, 23 }));
 }
-

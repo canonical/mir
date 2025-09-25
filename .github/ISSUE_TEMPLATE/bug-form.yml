@@ -20,17 +20,17 @@ body:
       label: Environment
       description: |
         What environment are you running Mir in? Please mention your hardware specifications, OS, Mesa, or Nvidia driver version, e.g.:
-        OS: Ubuntu 25.10 
+        OS: Ubuntu 25.10
         CPU: Intel Core i7 9750H
         GPU 1: nVidia GTX 1660Ti, nVidia proprietary drivers 570.169
         GPU 2: Intel UHD Graphics 630, Mesa 25.0.7
         Monitor Setup: One 1920x1080 monitor connected to the nvidia GPU via HDMI, built-in 1920x1080 laptop monitor connected to the intel GPU via DisplayPort.
       value: |
-        OS: 
-        CPU: 
-        GPU 1: 
-        GPU 2: 
-        Monitor Setup: 
+        OS:
+        CPU:
+        GPU 1:
+        GPU 2:
+        Monitor Setup:
     validations:
       required: true
   - type: textarea

@@ -38,4 +38,3 @@ void mg::DefaultOutputFilter::filter(MirOutputFilter new_filter)
     filter_ = new_filter;
     scene->emit_scene_changed();
 }
-

@@ -149,4 +149,3 @@ TEST_F(ServerConfigurationWrapping, surface_stack_is_of_wrapper_type)
 
     EXPECT_THAT(my_surface_stack, Ne(nullptr));
 }
-

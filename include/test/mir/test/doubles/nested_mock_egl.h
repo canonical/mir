@@ -25,7 +25,7 @@ namespace test
 {
 namespace doubles
 {
-/// MockEGL with configuration for operating a nested server.    
+/// MockEGL with configuration for operating a nested server.
 class NestedMockEGL : public ::testing::NiceMock<MockEGL>
 {
 public:

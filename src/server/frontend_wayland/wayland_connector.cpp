@@ -444,7 +444,7 @@ mf::WaylandConnector::~WaylandConnector()
                 cleanup_promise->set_value();
             });
         cleanup_done.get();
-        
+
         stop();
     }
     else

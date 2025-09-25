@@ -60,4 +60,3 @@ std::shared_ptr<mg::CursorImage> mi::BuiltinCursorImages::image(std::string cons
 
     return {};
 }
-

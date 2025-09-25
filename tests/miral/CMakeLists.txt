@@ -107,7 +107,7 @@ if(MIR_RUN_MIRAL_TESTS)
       TestConfigFile.*
     )
     mir_discover_tests_with_fd_leak_detection(miral-test)
-    
+
     set(MIR_EXCLUDE_TESTS)
     mir_discover_tests_with_fd_leak_detection(miral-test-internal)
 endif()

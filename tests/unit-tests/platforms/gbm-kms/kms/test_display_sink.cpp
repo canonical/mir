@@ -160,7 +160,7 @@ protected:
     NiceMock<MockGBM> mock_gbm;
     NiceMock<MockEGL> mock_egl;
     NiceMock<MockGL>  mock_gl;
-    NiceMock<MockDRM> mock_drm; 
+    NiceMock<MockDRM> mock_drm;
     std::shared_ptr<MockBuffer> mock_bypassable_buffer;
     NiceMock<MockDMABufBuffer> mock_dmabuf_buffer;
     std::shared_ptr<MockBuffer> mock_software_buffer;
@@ -257,4 +257,3 @@ TEST_F(MesaDisplaySinkTest, transformation_not_implemented_internally)
 
     EXPECT_EQ(rotate_left, sink.transformation());
 }
-

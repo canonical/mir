@@ -3,8 +3,7 @@
 # - `git commit` to commit them
 # - rinse and repeat, if pre-commit wants / applied changes
 
-files: ^doc/sphinx
-exclude: ^doc/sphinx/(\..*|Makefile|conf\.py)
+exclude: ^COPYING
 
 repos:
 - repo: https://github.com/pre-commit/pre-commit-hooks

@@ -96,7 +96,7 @@
 
     <event name="deactivate">
       <description summary="deactivate event">
-        Notification that no focused text input currently needs an active 
+        Notification that no focused text input currently needs an active
         input method on this seat.
 
         This event marks the zwp_input_method_v2 object as inactive. The

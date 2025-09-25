@@ -36,7 +36,7 @@
 namespace mir
 {
     typedef std::unique_ptr<MirEvent, void(*)(MirEvent*)> EventUPtr;
-    
+
 namespace events
 {
 // Surface orientation change event

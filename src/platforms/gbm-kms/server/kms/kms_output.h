@@ -48,7 +48,7 @@ public:
      * this may want to be an opaque class Id + operator== in future.
      */
     virtual uint32_t id() const = 0;
-    
+
     virtual void reset() = 0;
     virtual void configure(geometry::Displacement fb_offset, size_t kms_mode_index) = 0;
     virtual geometry::Size size() const = 0;

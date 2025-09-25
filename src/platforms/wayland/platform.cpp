@@ -59,8 +59,8 @@ auto make_initialised_egl_display(struct wl_display* wl_display) -> EGLDisplay
         BOOST_THROW_EXCEPTION((
             std::runtime_error{
                 "EGL version unsupported. Require at least 1.4, got " +
-                std::to_string(std::get<0>(version)) + 
-                "." + 
+                std::to_string(std::get<0>(version)) +
+                "." +
                 std::to_string(std::get<1>(version))
             }));
     }

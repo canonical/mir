@@ -30,7 +30,7 @@ namespace doubles
 {
 MATCHER_P(RawFdMatcher, value, std::string("raw_fd does not match mir::Fd"))
 {
-    return value == arg; 
+    return value == arg;
 }
 MATCHER(RawFdIsValid, std::string("raw_fd is not valid"))
 {

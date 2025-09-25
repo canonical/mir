@@ -57,4 +57,3 @@ TEST(FatalErrorTest, throw_formats_message_to_what)
         EXPECT_THAT(x.what(), StrEq("Mary had 1 little lamb"));
     }
 }
-

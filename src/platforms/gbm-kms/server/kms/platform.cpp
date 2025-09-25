@@ -63,7 +63,7 @@ auto master_fd_for_device(mir::udev::Device const& device, mir::ConsoleServices&
     {
         BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to acquire DRM fd"}));
     }
-    
+
     return std::make_tuple(std::move(device_handle), std::move(drm_fd));
 }
 
@@ -225,7 +225,7 @@ struct display_provider_or_nothing
 struct gbm_device_from_hw
 {
     auto operator()(std::shared_ptr<mg::GBMDisplayProvider> const& provider) { return provider->gbm_device(); }
-    auto operator()(std::shared_ptr<gbm_device> device) { return device; }    
+    auto operator()(std::shared_ptr<gbm_device> device) { return device; }
 };
 
 class DMABufBuffer : public mg::DMABufBuffer

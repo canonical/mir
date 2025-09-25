@@ -195,4 +195,3 @@ auto msh::BasicHoverClickTransformer::initialize_hover_initializer(std::shared_p
             state->on_hover_start();
         });
 }
-

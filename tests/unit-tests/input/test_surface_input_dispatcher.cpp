@@ -62,7 +62,7 @@ struct MockSurfaceWithGeometry : public mtd::MockSurface
     {
         return geom;
     }
-    
+
     geom::Rectangle const geom;
 };
 
@@ -74,7 +74,7 @@ struct StubInputScene : public mtd::StubInputScene
         surfaces.add(surface);
 
         observer->surface_added(surface);
-        
+
         return surface;
     }
 
@@ -110,7 +110,7 @@ struct StubInputScene : public mtd::StubInputScene
 		observer->surface_exists(surface);
         });
     }
-    
+
     void remove_observer(std::weak_ptr<ms::Observer> const& /* remove_observer */) override
     {
         assert(observer != nullptr);
@@ -122,7 +122,7 @@ struct StubInputScene : public mtd::StubInputScene
     {
         return is_locked;
     }
-    
+
     mir::ThreadSafeList<std::shared_ptr<ms::Surface>> mutable surfaces;
 
     std::shared_ptr<ms::Observer> observer;
@@ -192,7 +192,7 @@ struct FakePointer
     mir::EventUPtr press_button(geom::Point const& location, MirPointerButton button = mir_pointer_button_primary)
     {
         buttons |= button;
-        
+
         return mev::make_pointer_event(
             id, std::chrono::nanoseconds(0),
             0, mir_pointer_action_button_down, buttons,
@@ -210,7 +210,7 @@ struct FakeToucher
         : id(id)
     {
     }
-    
+
     mir::EventUPtr move_to(geom::Point const& point)
     {
         auto ev = mev::make_touch_event(id, std::chrono::nanoseconds(0), 0);
@@ -225,7 +225,7 @@ struct FakeToucher
     mir::EventUPtr touch_at(geom::Point const& point)
     {
         touched = true;
-        
+
         auto ev = mev::make_touch_event(id, std::chrono::nanoseconds(0), 0);
         mev::add_touch(*ev, 0, mir_touch_action_down,
                        mir_touch_tooltype_finger, point.x.as_int(), point.y.as_int(),
@@ -248,7 +248,7 @@ struct FakeToucher
     mir::EventUPtr release_at(geom::Point const& point)
     {
         touched = false;
-        
+
         auto ev = mev::make_touch_event(id, std::chrono::nanoseconds(0), 0);
         mev::add_touch(*ev, 0, mir_touch_action_up,
                        mir_touch_tooltype_finger, point.x.as_int(), point.y.as_int(),
@@ -482,7 +482,7 @@ TEST_F(SurfaceInputDispatcher, gestures_persist_over_button_down)
     EXPECT_CALL(*surface, consume(mt::ButtonUpEvent(6,6))).Times(1);
     EXPECT_CALL(*surface, consume(mt::PointerLeaveEvent())).Times(1);
     EXPECT_CALL(*another_surface, consume(mt::PointerEnterEvent())).Times(1);
-    
+
     dispatcher.start();
 
     EXPECT_TRUE(dispatcher.dispatch(std::move(ev_1)));
@@ -589,7 +589,7 @@ TEST_F(SurfaceInputDispatcher, gestures_persist_over_touch_down)
     EXPECT_CALL(*right_surface, consume(_)).Times(0);
 
     dispatcher.start();
-    
+
     FakeToucher toucher;
     EXPECT_TRUE(dispatcher.dispatch(toucher.touch_at({0, 0})));
     EXPECT_TRUE(dispatcher.dispatch(toucher.move_to({2, 2})));
@@ -609,7 +609,7 @@ TEST_F(SurfaceInputDispatcher, touch_target_switches_on_finger_down)
     EXPECT_CALL(*right_surface, consume(_)).Times(1);
 
     dispatcher.start();
-    
+
     FakeToucher toucher;
     EXPECT_TRUE(dispatcher.dispatch(toucher.touch_at({0, 0})));
     // Note: No touch release event produced
@@ -661,7 +661,7 @@ TEST_F(SurfaceInputDispatcher, touch_gesture_target_may_vanish_but_things_contin
     EXPECT_CALL(*surface_1, consume(mt::TouchEvent(0, 0))).Times(1);
 
     dispatcher.start();
-    
+
     FakeToucher toucher;
     EXPECT_TRUE(dispatcher.dispatch(toucher.touch_at({0, 0})));
     scene.remove_surface(surface_2);

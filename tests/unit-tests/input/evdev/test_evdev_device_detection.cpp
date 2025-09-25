@@ -85,4 +85,3 @@ INSTANTIATE_TEST_SUITE_P(InputDeviceCapabilityDetection,
                                     mi::DeviceCapability::keyboard
                                 )
                             ));
-
