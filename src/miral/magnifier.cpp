@@ -33,13 +33,20 @@ namespace mi = mir::input;
 namespace ms = mir::scene;
 namespace geom = mir::geometry;
 
+namespace
+{
+auto const default_capture_width = 150;
+auto const default_capture_height = 150;
+auto const default_magnification = 1.5f;
+}
+
 class miral::Magnifier::Self
 {
 public:
     Self()
     {
         render_scene_into_surface
-            .capture_area(geom::Rectangle{{300, 300}, geom::Size(400, 300)})
+            .capture_area(geom::Rectangle{{300, 300}, geom::Size(default_capture_width, default_capture_height)})
             .overlay_cursor(false);
     }
 
@@ -157,7 +164,7 @@ private:
     std::shared_ptr<Observer> observer;
     std::weak_ptr<ms::Surface> surface;
     geom::Point cursor_pos;
-    float magnification = 2.f;
+    float magnification = default_magnification;
     bool default_enabled = false;
 };
 
@@ -182,6 +189,7 @@ miral::Magnifier::Magnifier(live_config::Store& config_store)
     config_store.add_float_attribute(
         {"magnifier", "magnification"},
         "The magnification scale ",
+        default_magnification,
         [this](live_config::Key const& key, std::optional<float> val)
         {
             if (val.has_value() && *val <= 1.f)
@@ -192,11 +200,12 @@ miral::Magnifier::Magnifier(live_config::Store& config_store)
                 return;
             }
 
-            magnification(val.value_or(2.f));
+            magnification(val.value_or(default_magnification));
         });
     config_store.add_int_attribute(
         {"magnifier", "capture_size", "width"},
         "The width of the rectangular region that will be magnified",
+        default_capture_width,
         [this](live_config::Key const& key, std::optional<int> val)
         {
             if (val.has_value() && *val <= 0)
@@ -217,6 +226,7 @@ miral::Magnifier::Magnifier(live_config::Store& config_store)
     config_store.add_int_attribute(
         {"magnifier", "capture_size", "height"},
         "The height of the rectangular region that will be magnified",
+        default_capture_height,
         [this](live_config::Key const& key, std::optional<int> val)
         {
             if (val.has_value() && *val <= 0)
