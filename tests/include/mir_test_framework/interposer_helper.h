@@ -30,7 +30,7 @@ class InterposerHandlers
 {
 public:
     using Handler = std::function<std::optional<Returns>(Args...)>;
-  
+
     static auto add(Handler handler) -> InterposerHandle
     {
         handlers_added.store(true);

@@ -26,4 +26,3 @@ void mtf::PassthroughTracker::note_passthrough()
     }
     cv.notify_all();
 }
-

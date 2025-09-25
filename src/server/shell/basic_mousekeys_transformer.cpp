@@ -402,4 +402,3 @@ void mir::shell::BasicMouseKeysTransformer::max_speed(double x_axis, double y_ax
 
     state.lock()->max_speed_ = clamp_max_speed(geometry::DisplacementF{x_axis, y_axis});
 }
-

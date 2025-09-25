@@ -112,4 +112,3 @@ auto mir::DefaultServerConfiguration::the_shell_report() -> std::shared_ptr<shel
             return report_factory(options::shell_report_opt)->create_shell_report();
         });
 }
-

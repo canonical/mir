@@ -56,7 +56,7 @@ class BufferAllocator:
 public:
     BufferAllocator(EGLDisplay dpy, EGLContext share_with, std::shared_ptr<DMABufEGLProvider> dmabuf_provider);
     ~BufferAllocator() override;
-    
+
     std::shared_ptr<Buffer> alloc_software_buffer(geometry::Size size, MirPixelFormat) override;
     std::vector<MirPixelFormat> supported_pixel_formats() override;
 

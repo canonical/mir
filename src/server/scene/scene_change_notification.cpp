@@ -67,7 +67,7 @@ void ms::SceneChangeNotification::surface_exists(std::shared_ptr<ms::Surface> co
 {
     add_surface_observer(surface.get());
 }
-    
+
 void ms::SceneChangeNotification::surface_removed(std::shared_ptr<ms::Surface> const& surface)
 {
     {

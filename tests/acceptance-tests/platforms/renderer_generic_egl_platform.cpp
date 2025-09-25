@@ -43,4 +43,3 @@ RenderingGenericEGLEnv platform_harness;
 }
 
 INSTANTIATE_TEST_SUITE_P(RenderingGenericEGL, RenderingPlatformTest, testing::Values(&platform_harness));
-

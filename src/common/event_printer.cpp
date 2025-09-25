@@ -350,7 +350,7 @@ std::ostream& mir::operator<<(std::ostream& out, MirInputDeviceStateEvent const&
 
     for (size_t size = mir_input_device_state_event_device_count(&event), index = 0; index != size; ++index)
     {
-        out << mir_input_device_state_event_device_id(&event, index) 
+        out << mir_input_device_state_event_device_id(&event, index)
             << " btns=" << mir_input_device_state_event_device_pointer_buttons(&event, index)
             << " pressed=(";
         auto key_count = mir_input_device_state_event_device_pressed_keys_count(&event, index);
@@ -389,4 +389,3 @@ std::ostream& mir::operator<<(std::ostream& out, MirEvent const& event)
         return out << static_cast<int>(type) << "<INVALID>";
     }
 }
-

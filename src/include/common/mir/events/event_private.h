@@ -15,7 +15,7 @@
  */
 
 // ==================================
-// 
+//
 // Direct access to MirEvent deprecated. Prefer mir_event_* family of functions.
 //
 // ==================================

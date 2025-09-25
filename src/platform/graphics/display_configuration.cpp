@@ -379,5 +379,3 @@ mir::geometry::Rectangle mg::UserDisplayConfigurationOutput::extents() const
            mir::geometry::Rectangle(top_left, custom_logical_size.value()) :
            extents_of(modes, current_mode_index, orientation, top_left, scale);
 }
-
-

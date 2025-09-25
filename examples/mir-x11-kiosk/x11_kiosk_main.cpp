@@ -29,7 +29,7 @@ int main(int argc, char const* argv[])
     MirRunner runner{argc, argv};
 
     DisplayConfiguration display_config{runner};
- 
+
     return runner.run_with(
         {
             display_config,

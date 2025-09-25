@@ -38,7 +38,7 @@ struct Stream : Test
             std::make_shared<mtd::StubBuffer>(initial_size)}
     {
     }
-    
+
     MOCK_METHOD1(called, void(mg::Buffer&));
 
     geom::Size initial_size{44,2};

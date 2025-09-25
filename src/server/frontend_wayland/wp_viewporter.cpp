@@ -58,7 +58,7 @@ private:
 
 mf::WpViewporter::WpViewporter(wl_display* display)
     : Global(display, Version<1>{})
-{   
+{
 }
 
 void mf::WpViewporter::bind(wl_resource* new_resource)
@@ -109,7 +109,7 @@ auto as_int_size_if_exact(geom::SizeD size) -> std::optional<geom::Size>
 auto mf::Viewport::resolve_viewport(int32_t scale, geom::Size buffer_size) const
     -> std::pair<geom::RectangleD, geom::Size>
 {
-    auto const src_bounds = 
+    auto const src_bounds =
         [&]()
         {
             auto const entire_buffer = geom::RectangleD{{0, 0}, geom::SizeD{buffer_size}};
@@ -230,7 +230,7 @@ void mf::Viewport::set_destination(int32_t width, int32_t height)
         }
     }
     else
-    {   
+    {
         destination = geometry::Size{width, height};
     }
 

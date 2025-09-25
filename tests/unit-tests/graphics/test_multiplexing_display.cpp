@@ -83,7 +83,7 @@ public:
     }
 
 private:
-    // Dumbest possible version; 
+    // Dumbest possible version;
     auto pixel_formats_for_output_id(mg::DisplayConfigurationOutputId id)
         -> std::vector<MirPixelFormat>
     {

@@ -71,7 +71,7 @@ struct miral::MirRunner::Self
         std::initializer_list<int> signals;
         std::function<void(int)> const handler;
     };
-    
+
     std::vector<SignalInfo> signal_backlog;
 };
 
@@ -229,7 +229,7 @@ void miral::MirRunner::register_signal_handler(
     std::function<void(int)> const& handler)
 {
     std::lock_guard lock{self->mutex};
-    
+
     if (auto const server = self->weak_server.lock())
     {
         auto const main_loop = server->the_main_loop();

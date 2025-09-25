@@ -66,4 +66,3 @@ struct MockDevice : input::Device
 }
 
 #endif
-

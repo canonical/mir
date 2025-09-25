@@ -165,7 +165,7 @@ private:
         EGLDisplay const dpy;
         EGLContext const ctx;
     };
-    
+
     mg::CPUAddressableDisplayAllocator& allocator;
     EGLDisplay const dpy;
     EGLContextHandle const ctx;

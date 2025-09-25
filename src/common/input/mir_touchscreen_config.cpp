@@ -90,4 +90,3 @@ std::ostream& operator<<(std::ostream& out, MirTouchscreenConfig const& conf)
 {
     return out << " mode:" << conf.mapping_mode() << " outputid:" << conf.output_id();
 }
-

@@ -46,7 +46,7 @@ mir::DefaultServerConfiguration::the_display_buffer_compositor_factory()
             {
                 if (auto gl_provider = mg::RenderingPlatform::acquire_provider<mg::GLRenderingProvider>(platform))
                 {
-                    providers.push_back(gl_provider);            
+                    providers.push_back(gl_provider);
                 }
             }
             if (providers.empty())

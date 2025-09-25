@@ -48,7 +48,7 @@ public:
 
     /**
      * The supported CPU-accessible buffer pixel formats.
-     * \note: once the above is deprecated, this is really only (marginally) useful 
+     * \note: once the above is deprecated, this is really only (marginally) useful
      *        for the software allocation path.
      *        (and we could probably move software/cpu buffers up to libmirserver)
      */

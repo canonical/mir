@@ -727,4 +727,3 @@ Depends: ${misc:Depends},
 Description: Display server for Ubuntu - kiosk hosting X11 apps
  .
  Contains an "X11 kiosk" compositor based on the Mir display server
-

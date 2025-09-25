@@ -5,4 +5,3 @@ Name: mirrenderer
 Description: Mir renderer
 Version: @MIR_VERSION@
 Cflags: -I${includedir}/mirrenderer -I${includedir}/mirplatform -I${includedir}/mircommon
-

@@ -46,7 +46,7 @@ public:
 private:
     std::shared_ptr<mir::input::Device> device;
 };
-    
+
 }
 
 #endif //MIROIL_INPUT_DEVICE_H

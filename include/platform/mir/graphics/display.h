@@ -58,7 +58,7 @@ public:
 
     /** Post the content of the DisplayBuffers associated with this DisplaySyncGroup.
      *  The content of all the DisplayBuffers in this DisplaySyncGroup are guaranteed to be onscreen
-     *  in the near future. On some platforms, this may wait a potentially long time for vsync. 
+     *  in the near future. On some platforms, this may wait a potentially long time for vsync.
     **/
     virtual void post() = 0;
 

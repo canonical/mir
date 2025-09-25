@@ -262,4 +262,3 @@ void miral::Magnifier::operator()(mir::Server& server)
 {
     self->init(server);
 }
-

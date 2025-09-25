@@ -62,4 +62,3 @@ E: MODALIAS=platform:i8042
 E: SUBSYSTEM=platform
 L: driver=../../../bus/platform/drivers/i8042
 A: modalias=platform:i8042
-

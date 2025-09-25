@@ -36,7 +36,7 @@ typedef struct MirKeyboardEvent MirKeyboardEvent;
 
 /**
  * Retrieve the action which triggered a given key event.
- * 
+ *
  *  \param [in] event The key event
  *  \return           The associated action
  */

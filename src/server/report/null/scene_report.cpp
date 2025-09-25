@@ -30,4 +30,3 @@ void mrn::SceneReport::surface_removed(BasicSurfaceId /*id*/, std::string const&
 void mrn::SceneReport::surface_deleted(BasicSurfaceId /*id*/, std::string const& /*name*/)
 {
 }
-

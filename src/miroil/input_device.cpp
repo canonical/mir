@@ -37,7 +37,7 @@ bool miroil::InputDevice::operator==(InputDevice const& other)
 {
     return device == other.device;
 }
-        
+
 void miroil::InputDevice::apply_keymap(std::string const& layout, std::string const& variant)
 {
     using namespace mir::input;
@@ -52,7 +52,7 @@ void miroil::InputDevice::apply_keymap(std::string const& layout, std::string co
         }
     }
 }
-    
+
 
 MirInputDeviceId miroil::InputDevice::get_device_id()
 {
@@ -63,12 +63,12 @@ std::string miroil::InputDevice::get_device_name()
 {
     return device->name();
 }
-    
+
 bool miroil::InputDevice::is_keyboard()
 {
     return mir::contains(device->capabilities(), mir::input::DeviceCapability::keyboard);
 }
-        
+
 bool miroil::InputDevice::is_alpha_numeric()
 {
     return mir::contains(device->capabilities(), mir::input::DeviceCapability::alpha_numeric);

@@ -71,7 +71,7 @@ public:
     auto size() const -> geom::Size override
     {
         return {};
-    }    
+    }
 private:
     uint32_t const fb_id;
 };

@@ -339,4 +339,3 @@ A: power/runtime_enabled=disabled\n
 A: power/runtime_status=unsupported\n
 A: power/runtime_suspended_time=0\n
 A: power/runtime_usage=0\n
-
