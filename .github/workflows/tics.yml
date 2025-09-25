@@ -109,7 +109,10 @@ jobs:
 
     - name: Measure coverage
       timeout-minutes: 20
-      run: cmake --build build --target coverage
+      run: |
+        cmake --build build --target coverage
+        # avoid duplicate coverage data
+        rm build/coverage*.info
 
     - name: Get changed files
       if: github.event_name == 'merge_group'
