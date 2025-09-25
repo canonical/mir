@@ -154,19 +154,19 @@ public:
     template<typename T>
     friend class Mapping;
 
-    auto map_writeable() -> std::unique_ptr<renderer::software::Mapping<unsigned char>> override
+    auto map_writeable() -> std::unique_ptr<renderer::software::Mapping<std::byte>> override
     {
-        return std::make_unique<Mapping<unsigned char>>(this);
+        return std::make_unique<Mapping<std::byte>>(this);
     }
 
-    auto map_readable() -> std::unique_ptr<renderer::software::Mapping<unsigned char const>> override
+    auto map_readable() -> std::unique_ptr<renderer::software::Mapping<std::byte const>> override
     {
-        return std::make_unique<Mapping<unsigned char const>>(this);
+        return std::make_unique<Mapping<std::byte const>>(this);
     }
 
-    auto map_rw() -> std::unique_ptr<renderer::software::Mapping<unsigned char>> override
+    auto map_rw() -> std::unique_ptr<renderer::software::Mapping<std::byte>> override
     {
-        return std::make_unique<Mapping<unsigned char>>(this);
+        return std::make_unique<Mapping<std::byte>>(this);
     }
 
     NativeBufferBase* native_buffer_base() override
@@ -178,7 +178,7 @@ public:
     MirPixelFormat const buf_pixel_format;
     geometry::Stride const buf_stride;
     graphics::BufferID const buf_id;
-    std::vector<unsigned char> written_pixels;
+    std::vector<std::byte> written_pixels;
 };
 }
 }

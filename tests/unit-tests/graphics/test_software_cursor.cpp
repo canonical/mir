@@ -45,7 +45,7 @@ struct StubCursorImage : mg::CursorImage
         : hotspot_{hotspot},
           pixels(
             size().width.as_uint32_t() * size().height.as_uint32_t() * bytes_per_pixel,
-            0x55)
+            std::byte{0x55})
     {
     }
 
@@ -85,7 +85,7 @@ struct StubCursorImage : mg::CursorImage
 private:
     static size_t const bytes_per_pixel = 4;
     geom::Displacement const hotspot_;
-    std::vector<unsigned char> pixels;
+    std::vector<std::byte> pixels;
 };
 
 class MockBufferAllocator : public mtd::StubBufferAllocator
@@ -238,7 +238,7 @@ TEST_F(SoftwareCursor, creates_renderable_with_filled_buffer)
         4 * stub_cursor_image->size().width.as_uint32_t() *
         stub_cursor_image->size().height.as_uint32_t();
     auto const image_data =
-        static_cast<unsigned char const*>(stub_cursor_image->as_argb_8888());
+        static_cast<std::byte const*>(stub_cursor_image->as_argb_8888());
 
     cursor.show(stub_cursor_image);
 

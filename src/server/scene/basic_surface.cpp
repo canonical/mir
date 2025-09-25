@@ -653,7 +653,7 @@ struct CursorImageFromBuffer : public mg::CursorImage
     }
 
     std::shared_ptr<mrs::ReadMappableBuffer> const buffer;
-    std::unique_ptr<mrs::Mapping<unsigned char const>> const mapping;
+    std::unique_ptr<mrs::Mapping<std::byte const>> const mapping;
     geom::Displacement const hotspot_;
 };
 }

@@ -49,7 +49,7 @@ public:
         {
         }
 
-        auto map_writeable() -> std::unique_ptr<mrs::Mapping<unsigned char>> override
+        auto map_writeable() -> std::unique_ptr<mrs::Mapping<std::byte>> override
         {
             return buffer->map_writeable();
         }

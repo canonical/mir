@@ -88,7 +88,7 @@ public:
      *          after unmap.
      * \return  A CPU-mapped view of the buffer.
      */
-    virtual std::unique_ptr<Mapping<unsigned char>> map_writeable() = 0;
+    virtual auto map_writeable() -> std::unique_ptr<Mapping<std::byte>> = 0;
 };
 
 /**
@@ -106,7 +106,7 @@ public:
      *          of the mapping are not guaranteed to be visible.
      * \return  A CPU-mapped view of the buffer.
      */
-    virtual std::unique_ptr<Mapping<unsigned char const>> map_readable() = 0;
+    virtual auto map_readable() -> std::unique_ptr<Mapping<std::byte const>> = 0;
 };
 
 /**
@@ -129,7 +129,7 @@ public:
      *          guaranteed to be visible to the GPU until the mapping is destroyed.
      * \return A CPU-mapped view of the buffer.
      */
-    virtual std::unique_ptr<Mapping<unsigned char>> map_rw() = 0;
+    virtual auto map_rw() -> std::unique_ptr<Mapping<std::byte>> = 0;
 };
 
 class ReadTransferableBuffer : public virtual BufferDescriptor
@@ -137,7 +137,7 @@ class ReadTransferableBuffer : public virtual BufferDescriptor
 public:
     virtual ~ReadTransferableBuffer() = default;
 
-    virtual void transfer_from_buffer(unsigned char* destination) const = 0;
+    virtual void transfer_from_buffer(std::byte* destination) const = 0;
 };
 
 class WriteTransferableBuffer : public virtual BufferDescriptor
@@ -145,7 +145,7 @@ class WriteTransferableBuffer : public virtual BufferDescriptor
 public:
     virtual ~WriteTransferableBuffer() = default;
 
-    virtual void transfer_into_buffer(unsigned char const* source) = 0;
+    virtual void transfer_into_buffer(std::byte const* source) = 0;
 };
 
 auto as_read_mappable_buffer(
