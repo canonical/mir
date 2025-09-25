@@ -97,7 +97,7 @@ TEST_F(InputEventBuilder, makes_valid_touch_event)
        EXPECT_EQ(touch_major_values[i], mir_touch_event_axis_value(tev, i, mir_touch_axis_touch_major));
        EXPECT_EQ(touch_minor_values[i], mir_touch_event_axis_value(tev, i, mir_touch_axis_touch_minor));
        EXPECT_EQ(size_values[i], mir_touch_event_axis_value(tev, i, mir_touch_axis_size));
-   }   
+   }
 }
 
 TEST_F(InputEventBuilder, makes_valid_pointer_event)

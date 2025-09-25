@@ -18,7 +18,7 @@
 
 namespace miroil
 {
-    
+
 DisplayListenerWrapper::DisplayListenerWrapper(std::shared_ptr<mir::compositor::DisplayListener> const & display_listener)
  : display_listener(display_listener)
 {

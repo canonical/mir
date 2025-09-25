@@ -15,7 +15,7 @@ if ("${CMAKE_CXX_COMPILER}" MATCHES ".*clang.*" AND MIR_COMPILE_WITH_W_NO_GNU_ZE
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-gnu-zero-variadic-macro-arguments")
 endif()
 
-# lttng-ust uses urcu headers which contain code blocks inside expressions 
+# lttng-ust uses urcu headers which contain code blocks inside expressions
 # this is a gnu extension.
 string(REPLACE "-pedantic" "" NO_PEDANTIC_CHECK_FLAGS ${CMAKE_CXX_FLAGS})
 if("${CMAKE_CXX_COMPILER}" MATCHES "clang")

@@ -65,4 +65,3 @@ private:
 }
 
 #endif // MIR_INPUT_PARAMETER_KEYMAP_H_
-

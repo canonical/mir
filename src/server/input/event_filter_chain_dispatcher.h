@@ -44,10 +44,10 @@ public:
     bool dispatch(std::shared_ptr<MirEvent const> const& event) override;
     void start() override;
     void stop() override;
-    
+
 private:
     std::mutex filter_guard;
-    
+
     std::vector<std::weak_ptr<EventFilter>> filters;
     std::shared_ptr<InputDispatcher> const next_dispatcher;
 };

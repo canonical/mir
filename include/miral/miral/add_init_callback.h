@@ -23,7 +23,7 @@ namespace mir { class Server; }
 
 namespace miral
 {
-/// Add a callback to be invoked when the server has been initialized, but 
+/// Add a callback to be invoked when the server has been initialized, but
 /// before it starts.
 ///
 /// Callbacks are processed in order. This callback is appended **after** any existing

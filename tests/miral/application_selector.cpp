@@ -207,4 +207,3 @@ TEST_F(ApplicationSelectorTest, moving_forward_through_all_windows_in_an_app_sel
     auto window = application_selector.complete();
     EXPECT_EQ(window, sixth);
 }
-

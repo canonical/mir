@@ -17,7 +17,7 @@ struct wl_resource;
 /**
  * @page page_wl_eglstream_controller The wl_eglstream_controller protocol
  * @section page_ifaces_wl_eglstream_controller Interfaces
- * - @subpage page_iface_wl_eglstream_controller - 
+ * - @subpage page_iface_wl_eglstream_controller -
  * @section page_copyright_wl_eglstream_controller Copyright
  * <pre>
  *

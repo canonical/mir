@@ -49,4 +49,3 @@ void mir::LockableCallbackWrapper::unlock()
 {
     wrapped_callback->unlock();
 }
-

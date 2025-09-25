@@ -408,4 +408,3 @@ auto mf::WlDataDevice::DragIconSurface::scene_surface() const -> std::optional<s
 {
     return shared_scene_surface;
 }
-

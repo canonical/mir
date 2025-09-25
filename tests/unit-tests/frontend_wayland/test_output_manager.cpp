@@ -26,7 +26,7 @@ using namespace testing;
 
 namespace
 {
-  
+
 struct TransformTestParams
 {
     int32_t transform;
@@ -73,4 +73,3 @@ TEST_F(OutputManagerTest, output_transform_throws_when_invalid)
 {
     EXPECT_THROW(mf::OutputManager::from_output_transform(123), std::out_of_range);
 }
-

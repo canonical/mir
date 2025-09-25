@@ -15,7 +15,7 @@ extern "C" {
  * @page page_server_decoration The server_decoration protocol
  * @section page_ifaces_server_decoration Interfaces
  * - @subpage page_iface_org_kde_kwin_server_decoration_manager - Server side window decoration manager
- * - @subpage page_iface_org_kde_kwin_server_decoration - 
+ * - @subpage page_iface_org_kde_kwin_server_decoration -
  * @section page_copyright_server_decoration Copyright
  * <pre>
  *

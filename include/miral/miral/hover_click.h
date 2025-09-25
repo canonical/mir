@@ -33,7 +33,7 @@ namespace live_config { class Store; }
 /// disabilities. After a hover click, no further clicks are dispatched until
 /// the cursor moves by a configurable distance from the position of the
 /// previous click.
-/// 
+///
 /// \remark Since MirAL 5.5
 class HoverClick
 {
@@ -49,7 +49,7 @@ public:
     ///     it.
     ///     - {hover_click, reclick_displacement}: the distance in pixels the
     ///     pointer has to move from the the last hover click or hover click
-    ///     cancel position to initiate a new hover click 
+    ///     cancel position to initiate a new hover click
     explicit HoverClick(live_config::Store& config_store);
 
     /// Creates a `HoverClick` instance that's enabled by default.
@@ -79,7 +79,7 @@ public:
     // initial hover click position to cancel it.
     // \note The default cancel displacement threshold is 10 pixels.
     HoverClick& cancel_displacement_threshold(int displacement);
-    
+
     // Configures the distance in pixels the pointer has to move from the last
     // hover click or hover click cancel position to initiate a new hover
     // click.

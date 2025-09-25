@@ -56,7 +56,7 @@ class NullDisplay : public graphics::Display
 
     std::shared_ptr<graphics::Cursor> create_hardware_cursor() override
     {
-         return {}; 
+         return {};
     }
     NullDisplaySyncGroup group;
 };

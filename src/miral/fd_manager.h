@@ -57,7 +57,7 @@ private:
     std::mutex mutex;
     std::weak_ptr<mir::MainLoop> weak_main_loop;
 
-    // Backlog of FdInfo used to register all handlers 
+    // Backlog of FdInfo used to register all handlers
     // sent to register_handler() before the Server started
     std::vector<FdInfo> backlog;
 };
@@ -71,7 +71,7 @@ public:
 
 private:
     friend class FdManager;
-    
+
     FdHandleImpl(FdHandle const&) = delete;
     FdHandleImpl& operator=(FdHandleImpl const&) = delete;
 

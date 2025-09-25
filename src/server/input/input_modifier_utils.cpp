@@ -39,4 +39,3 @@ MirInputEventModifiers mi::expand_modifiers(MirInputEventModifiers modifiers)
 
     return modifiers;
 }
-

@@ -142,9 +142,9 @@ TEST_F(VirtualDisplayTest, displays_can_be_positioned)
     auto const conf = display->configuration();
 
     std::vector<Point> positions;
-    
+
     conf->for_each_output([&](mg::DisplayConfigurationOutput const& c) { positions.push_back(c.top_left); });
-    
+
     EXPECT_THAT(positions, ElementsAre(Point{0, 0}, Point{1280, 0}));
 }
 

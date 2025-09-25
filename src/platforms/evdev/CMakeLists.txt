@@ -1,5 +1,5 @@
 include_directories(
-  ${LIBINPUT_CFLAGS} 
+  ${LIBINPUT_CFLAGS}
   ${PROJECT_SOURCE_DIR}/src/include/platform # udev Context
   )
 

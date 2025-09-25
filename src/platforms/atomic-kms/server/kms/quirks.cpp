@@ -273,4 +273,3 @@ auto mir::graphics::atomic::GbmQuirks::gbm_surface_has_free_buffers(gbm_surface*
 {
     return surface_has_free_buffers->gbm_surface_has_free_buffers(gbm_surface);
 }
-

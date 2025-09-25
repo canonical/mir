@@ -63,7 +63,7 @@ private:
     static constexpr auto hover_delay_percentage = 1.0f - grace_period_percentage;
 
     class CursorObserver;
-    struct MutableState 
+    struct MutableState
     {
         std::optional<std::unique_ptr<time::Alarm>> click_dispatcher;
 

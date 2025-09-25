@@ -366,7 +366,7 @@ public:
     {
         runner->cursor_x = abs_x;
         runner->cursor_y = abs_y;
-        
+
         wrapped->cursor_moved_to(abs_x, abs_y);
     }
 

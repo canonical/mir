@@ -24,11 +24,11 @@ bool mir::test::spin_wait_for_condition_or_timeout(
     std::chrono::milliseconds spin_period)
 {
     auto const end = std::chrono::steady_clock::now() + timeout;
-    
+
     while (std::chrono::steady_clock::now() < end && !condition())
     {
         std::this_thread::sleep_for(spin_period);
-    }   
+    }
 
     return condition();
 }

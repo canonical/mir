@@ -44,4 +44,3 @@ struct StubTouchVisualizer : public input::TouchVisualizer
 } // namespace mir
 
 #endif // MIR_TEST_DOUBLES_STUB_TOUCH_VISUALIZER_H_
-

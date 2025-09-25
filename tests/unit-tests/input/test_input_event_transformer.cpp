@@ -165,4 +165,3 @@ TEST_F(TestInputEventTransformer, adding_transformer_twice_has_no_effect_on_expe
     input_event_transformer.append(mock_transformer_1);
     input_event_transformer.transform(*make_key_event());
 }
-
