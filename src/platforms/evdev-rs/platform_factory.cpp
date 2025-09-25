@@ -15,23 +15,19 @@
  */
 
 #include "platform.h"
-#include "mir/udev/wrapper.h"
-#include "mir/fd.h"
 #include "mir/assert_module_entry_point.h"
 #include "mir/libname.h"
 
 #include <memory>
-#include <string>
 
-namespace mo = mir::options;
 namespace mi = mir::input;
-namespace mu = mir::udev;
-namespace mie = mi::evdev;
+namespace mo = mir::options;
+namespace mie = mi::evdev_rs;
 
 namespace
 {
 mir::ModuleProperties const description = {
-    "mir:evdev-input",
+    "mir:evdev-input-rs",
     MIR_VERSION_MAJOR,
     MIR_VERSION_MINOR,
     MIR_VERSION_MICRO,
@@ -42,16 +38,12 @@ mir::ModuleProperties const description = {
 mir::UniqueModulePtr<mi::Platform> create_input_platform(
     mo::Option const& /*options*/,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& /*emergency_cleanup_registry*/,
-    std::shared_ptr<mi::InputDeviceRegistry> const& input_device_registry,
-    std::shared_ptr<mir::ConsoleServices> const& console,
-    std::shared_ptr<mi::InputReport> const& report)
+    std::shared_ptr<mi::InputDeviceRegistry> const& /*input_device_registry*/,
+    std::shared_ptr<mir::ConsoleServices> const& /*console*/,
+    std::shared_ptr<mi::InputReport> const& /*report*/)
 {
     mir::assert_entry_point_signature<mi::CreatePlatform>(&create_input_platform);
-    return mir::make_module_ptr<mie::Platform>(
-        input_device_registry,
-        report,
-        std::make_unique<mu::Context>(),
-        console);
+    return mir::make_module_ptr<mie::Platform>();
 }
 
 void add_input_platform_options(

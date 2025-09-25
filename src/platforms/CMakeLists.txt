@@ -66,3 +66,6 @@ endif()
 
 add_subdirectory(virtual)
 add_subdirectory(evdev/)
+if (MIR_ENABLE_RUST)
+  add_subdirectory(evdev-rs/)
+endif()

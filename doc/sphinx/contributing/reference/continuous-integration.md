@@ -92,12 +92,6 @@ For each pull request we
 - and fail if the ABI changed in any way. It doesn't necessarily mean an ABI break - but new symbols
   need to be tracked.
 
-## Coverage measurement
-
-We [track test coverage](https://github.com/canonical/mir/actions/workflows/coverage.yml) for each pull
-request and `main` builds, and the results are visible on
-[Codecov.io](https://app.codecov.io/gh/canonical/mir).
-
 ## `.deb` package builds
 
 Merges to `main`, `release/` branches as well as annotated tags are followed by `.deb` package

@@ -17,7 +17,7 @@
 #ifndef MIRAL_BOUNCE_KEYS_H
 #define MIRAL_BOUNCE_KEYS_H
 
-#include <mir_toolkit/events/event.h>
+#include <miral/toolkit_event.h>
 
 #include <chrono>
 #include <functional>
