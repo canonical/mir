@@ -52,6 +52,7 @@ mir_add_wrapped_executable(miral-test-internal NOINSTALL
     ignored_requests.cpp
     focus_mode.cpp
     fd_manager.cpp
+    application_selector.cpp
     test_input_configuration.cpp
     test_bounce_keys.cpp
     test_mousekeys_config.cpp
