@@ -309,27 +309,25 @@ Defaults to `0`.
 ### `driver-quirks`
 
 Driver quirks to apply. May be specified multiple times; multiple quirks are combined.
+## Options for mir:gbm-kms platform
+
+(mir-gbm-kms-bypass)=
+### `bypass`
+
+Enable bypass optimization for fullscreen surfaces.
+
+Defaults to `0`.
+
+(mir-gbm-kms-driver-quirks)=
+### `driver-quirks`
+
+Driver quirks to apply. May be specified multiple times; multiple quirks are combined.
 ## Options for mir:virtual platform
 
 (mir-virtual-virtual-output)=
 ### `virtual-output`
 
 Colon separated list of outputs to use. Dimensions are in the form `WIDTHxHEIGHT`, e.g. `1920x1080:3840x2160`.
-## Options for mir:x11 platform
-
-(mir-x11-x11-output)=
-### `x11-output`
-
-Colon separated list of outputs to use. Dimensions are in the form `WIDTHxHEIGHT[^SCALE]`, e.g. `1920x1080:3840x2160^2`.
-
-Defaults to `1280x1024`.
-
-(mir-x11-x11-window-title)=
-### `x11-window-title`
-
-Title of the window containing the Mir output.
-
-Defaults to `Mir on X`.
 ## Options for mir:wayland platform
 
 (mir-wayland-wayland-host)=
@@ -346,16 +344,18 @@ Application ID for the window containing the Mir output.
 ### `wayland-surface-title`
 
 Title of the window containing the Mir output.
-## Options for mir:gbm-kms platform
+## Options for mir:x11 platform
 
-(mir-gbm-kms-bypass)=
-### `bypass`
+(mir-x11-x11-output)=
+### `x11-output`
 
-Enable bypass optimization for fullscreen surfaces.
+Colon separated list of outputs to use. Dimensions are in the form `WIDTHxHEIGHT[^SCALE]`, e.g. `1920x1080:3840x2160^2`.
 
-Defaults to `0`.
+Defaults to `1280x1024`.
 
-(mir-gbm-kms-driver-quirks)=
-### `driver-quirks`
+(mir-x11-x11-window-title)=
+### `x11-window-title`
 
-Driver quirks to apply. May be specified multiple times; multiple quirks are combined.
+Title of the window containing the Mir output.
+
+Defaults to `Mir on X`.

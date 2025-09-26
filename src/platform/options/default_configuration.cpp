@@ -397,6 +397,14 @@ auto compare_options(boost::shared_ptr<boost::program_options::option_descriptio
     return rhs->long_name() > lhs->long_name();
 }
 
+auto compare_library_names(std::shared_ptr<mir::SharedLibrary> const& lhs, std::shared_ptr<mir::SharedLibrary> const& rhs) -> bool
+{
+    auto const lhs_desc = lhs->load_function<mir::graphics::DescribeModule>("describe_graphics_module", MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
+    auto const rhs_desc = rhs->load_function<mir::graphics::DescribeModule>("describe_graphics_module", MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
+
+    return strcmp(rhs_desc()->name, lhs_desc()->name) > 0;
+}
+
 auto option_default_to_string(boost::shared_ptr<boost::program_options::option_description> const& desc) -> std::string
 {
     boost::any default_value;
@@ -508,7 +516,11 @@ void mo::DefaultConfiguration::parse_arguments(
             std::ostringstream help_text;
             help_text << "## Options\n";
             help_text << options_to_markdown("global", desc);
-            for (auto& platform : platform_libraries)
+
+            auto platforms = std::vector<std::shared_ptr<mir::SharedLibrary>>(platform_libraries);
+            std::sort(platforms.begin(), platforms.end(), &compare_library_names);
+
+            for (auto& platform : platforms)
             {
                 auto& module_desc = module_options_desc.at(platform->get_handle());
                 if (!module_desc.options().empty())
