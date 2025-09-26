@@ -35,7 +35,7 @@ namespace doubles
 class StubBuffer :
     public graphics::BufferBasic,
     public graphics::NativeBufferBase,
-    public renderer::software::RWMappableBuffer
+    public renderer::software::RWMappable
 {
 public:
     StubBuffer()

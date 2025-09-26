@@ -58,7 +58,7 @@ public:
         std::shared_ptr<graphics::Cursor> const& cursor);
 
     void capture(
-        std::shared_ptr<renderer::software::WriteMappableBuffer> const& buffer,
+        std::shared_ptr<renderer::software::WriteMappable> const& buffer,
         geometry::Rectangle const& area,
         glm::mat2 const& transform,
         bool overlay_cursor,
@@ -81,12 +81,12 @@ private:
 std::shared_ptr<graphics::Cursor> const& cursor);
 
         auto render(
-            std::shared_ptr<renderer::software::WriteMappableBuffer> const& buffer,
+            std::shared_ptr<renderer::software::WriteMappable> const& buffer,
             geometry::Rectangle const& area,
             glm::mat2 const& transform,
             bool overlay_cursor) -> time::Timestamp;
 
-        auto renderer_for_buffer(std::shared_ptr<renderer::software::WriteMappableBuffer> buffer)
+        auto renderer_for_buffer(std::shared_ptr<renderer::software::WriteMappable> buffer)
             -> renderer::Renderer&;
 
         std::mutex mutex;

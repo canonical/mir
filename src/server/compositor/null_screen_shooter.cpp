@@ -28,7 +28,7 @@ mc::NullScreenShooter::NullScreenShooter(Executor& executor)
 }
 
 void mc::NullScreenShooter::capture(
-    std::shared_ptr<mrs::WriteMappableBuffer> const&,
+    std::shared_ptr<mrs::WriteMappable> const&,
     geom::Rectangle const&,
     glm::mat2 const&,
     bool,

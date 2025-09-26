@@ -37,7 +37,7 @@ class ReadWritePool;
 
 namespace mir::renderer::software
 {
-class RWMappableBuffer;
+class RWMappable;
 }
 
 namespace mir::frontend
@@ -48,7 +48,7 @@ class ShmPool;
 class ShmBuffer : public wayland::Buffer
 {
 public:
-    auto data() -> std::shared_ptr<renderer::software::RWMappableBuffer>;
+    auto data() -> std::shared_ptr<renderer::software::RWMappable>;
 
     static auto from(wl_resource* resource) -> ShmBuffer*;
 private:

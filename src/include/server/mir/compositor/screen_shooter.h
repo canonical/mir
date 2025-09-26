@@ -32,7 +32,7 @@ namespace renderer
 {
 namespace software
 {
-class WriteMappableBuffer;
+class WriteMappable;
 }
 }
 namespace compositor
@@ -52,7 +52,7 @@ public:
     /// The [callback] may be called on a different thread. It will be given the timestamp
     /// of the capture if it succeeds or nullopt if there was an error.
     virtual void capture(
-        std::shared_ptr<renderer::software::WriteMappableBuffer> const& buffer,
+        std::shared_ptr<renderer::software::WriteMappable> const& buffer,
         geometry::Rectangle const& area,
         glm::mat2 const& transform,
         bool overlay_cursor,

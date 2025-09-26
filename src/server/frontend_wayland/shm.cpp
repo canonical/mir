@@ -52,7 +52,7 @@ mf::ShmBuffer::ShmBuffer(
 
 namespace
 {
-class ErrorNotifyingRWMappableBuffer : public mrs::RWMappableBuffer
+class ErrorNotifyingRWMappableBuffer : public mrs::RWMappable
 {
 public:
     ErrorNotifyingRWMappableBuffer(
@@ -200,7 +200,7 @@ auto ErrorNotifyingRWMappableBuffer::map_writeable() -> std::unique_ptr<mrs::Map
 }
 }
 
-auto mf::ShmBuffer::data() -> std::shared_ptr<mrs::RWMappableBuffer>
+auto mf::ShmBuffer::data() -> std::shared_ptr<mrs::RWMappable>
 {
     return std::make_shared<ErrorNotifyingRWMappableBuffer>(
         wayland::make_weak<mf::ShmBuffer>(this),

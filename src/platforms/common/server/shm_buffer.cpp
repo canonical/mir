@@ -356,7 +356,7 @@ auto mgc::MemoryBackedShmBuffer::map_rw() -> std::unique_ptr<mrs::Mapping<unsign
 }
 
 mgc::MappableBackedShmBuffer::MappableBackedShmBuffer(
-    std::shared_ptr<mrs::RWMappableBuffer> data)
+    std::shared_ptr<mrs::RWMappable> data)
     : ShmBuffer(data->size(), data->format()),
       data{std::move(data)}
 {
@@ -404,7 +404,7 @@ auto mgc::MappableBackedShmBuffer::size() const -> geometry::Size
 }
 
 mgc::NotifyingMappableBackedShmBuffer::NotifyingMappableBackedShmBuffer(
-    std::shared_ptr<mrs::RWMappableBuffer> data,
+    std::shared_ptr<mrs::RWMappable> data,
     std::function<void()>&& on_consumed,
     std::function<void()>&& on_release)
     :  MappableBackedShmBuffer(std::move(data)),

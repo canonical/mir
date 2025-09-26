@@ -45,7 +45,7 @@ class Option;
 }
 namespace renderer::software
 {
-class WriteMappableBuffer;
+class WriteMappable;
 }
 
 namespace udev
@@ -388,13 +388,13 @@ public:
 
     class MappableFB :
         public Framebuffer,
-        public mir::renderer::software::WriteMappableBuffer
+        public mir::renderer::software::WriteMappable
     {
     public:
         MappableFB() = default;
         virtual ~MappableFB() override = default;
 
-        using renderer::software::WriteMappableBuffer::size;
+        using renderer::software::WriteMappable::size;
     };
 
     virtual auto supported_formats() const
