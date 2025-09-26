@@ -73,7 +73,7 @@ public:
 
 private:
     BufferCursorImage(std::unique_ptr<mrs::Mapping<unsigned char const>> mapping, geom::Displacement const& hotspot)
-        : size_{mapping->size()},
+        : size_{mapping->descriptor().size()},
           data{std::make_unique<unsigned char[]>(mapping->len())},
           hotspot_{hotspot}
     {

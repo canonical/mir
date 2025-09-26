@@ -54,7 +54,7 @@ public:
 };
 
 template<typename T>
-class Mapping : public BufferDescriptor
+class Mapping
 {
 public:
     /**
@@ -67,6 +67,7 @@ public:
 
     virtual T* data() = 0;
     virtual size_t len() const = 0;
+    virtual auto descriptor() const -> BufferDescriptor const& = 0;
 };
 
 /**

@@ -41,7 +41,8 @@ public:
         : buffer{std::move(buffer)},
           bounce_buffer{
               std::make_unique<unsigned char[]>(
-                  this->buffer->stride().as_uint32_t() * this->buffer->size().height.as_uint32_t())}
+                  this->buffer->stride().as_uint32_t() * this->buffer->size().height.as_uint32_t())},
+          buffer_descriptor{this->buffer}
     {
         Initialise(*this->buffer, bounce_buffer.get());
     }
@@ -51,21 +52,6 @@ public:
         Finalise(*buffer, bounce_buffer.get());
     }
 
-    auto format() const -> MirPixelFormat override
-    {
-        return buffer->format();
-    }
-
-    auto stride() const -> mir::geometry::Stride override
-    {
-        return buffer->stride();
-    }
-
-    auto size() const -> mir::geometry::Size override
-    {
-        return buffer->size();
-    }
-
     auto data() -> DataType* override
     {
         return bounce_buffer.get();
@@ -73,11 +59,41 @@ public:
 
     auto len() const -> size_t override
     {
-        return stride().as_uint32_t() * size().height.as_uint32_t();
+        return descriptor().stride().as_uint32_t() * descriptor().size().height.as_uint32_t();
+    }
+
+    auto descriptor() const -> mrs::BufferDescriptor const& override
+    {
+        return buffer_descriptor;
     }
 private:
+    struct BufferDescriptor: public mrs::BufferDescriptor
+    {
+        std::shared_ptr<BufferType> const buffer;
+        explicit BufferDescriptor(std::shared_ptr<BufferType> const& buffer) :
+            buffer{buffer}
+        {
+        }
+
+        auto format() const -> MirPixelFormat override
+        {
+            return buffer->format();
+        }
+
+        auto stride() const -> mir::geometry::Stride override
+        {
+            return buffer->stride();
+        }
+
+        auto size() const -> mir::geometry::Size override
+        {
+            return buffer->size();
+        }
+    };
+
     std::shared_ptr<BufferType> const buffer;
     std::unique_ptr<unsigned char[]> const bounce_buffer;
+    BufferDescriptor const buffer_descriptor;
 };
 
 void read_from_buffer(mrs::ReadTransferable& buffer, unsigned char* scratch_buffer)
@@ -191,7 +207,7 @@ auto mrs::alloc_buffer_with_content(
     auto const buffer = allocator.alloc_software_buffer(size, src_format);
 
     auto mapping = as_write_mappable(buffer)->map_writeable();
-    if (mapping->stride() == src_stride)
+    if (mapping->descriptor().stride() == src_stride)
     {
         // Happy case: Buffer is packed, like the cursor_image; we can just blit.
         ::memcpy(mapping->data(), content, mapping->len());
@@ -199,7 +215,7 @@ auto mrs::alloc_buffer_with_content(
     else
     {
         // Less happy path: the buffer has a different stride; we need to copy row-by-row
-        auto const dest_stride = mapping->stride().as_uint32_t();
+        auto const dest_stride = mapping->descriptor().stride().as_uint32_t();
         for (auto y = 0u; y < size.height.as_uint32_t(); ++y)
         {
             ::memcpy(

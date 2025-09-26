@@ -118,24 +118,10 @@ public:
     class Mapping : public mir::renderer::software::Mapping<T>
     {
     public:
-        Mapping(StubBuffer* buffer)
-            : buffer{buffer}
+        Mapping(StubBuffer* buffer) :
+            buffer{buffer},
+            buffer_descriptor{buffer}
         {
-        }
-
-        auto format() const -> MirPixelFormat override
-        {
-            return buffer->buf_pixel_format;
-        }
-
-        auto stride() const -> geometry::Stride override
-        {
-            return buffer->buf_stride;
-        }
-
-        auto size() const -> geometry::Size override
-        {
-            return buffer->buf_size;
         }
 
         auto data() -> T* override
@@ -147,8 +133,40 @@ public:
         {
             return buffer->written_pixels.size();
         }
+
+        auto descriptor() const -> BufferDescriptor const& override
+        {
+            return buffer_descriptor;
+        }
+
     private:
+        struct BufferDescriptor : public renderer::software::BufferDescriptor
+        {
+            StubBuffer const* const buffer;
+            explicit BufferDescriptor(StubBuffer const* buffer) :
+                buffer{buffer}
+            {
+            }
+
+            auto format() const -> MirPixelFormat override
+            {
+                return buffer->buf_pixel_format;
+            }
+
+            auto stride() const -> geometry::Stride override
+            {
+                return buffer->buf_stride;
+            }
+
+            auto size() const -> geometry::Size override
+            {
+                return buffer->buf_size;
+            }
+
+        };
+
         StubBuffer* const buffer;
+        BufferDescriptor const buffer_descriptor;
     };
 
     template<typename T>

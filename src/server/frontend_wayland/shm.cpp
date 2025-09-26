@@ -89,7 +89,8 @@ public:
         std::unique_ptr<mir::shm::Mapping<std::conditional_t<std::is_const_v<T>, std::byte const, std::byte>>> mapping,
         ErrorNotifyingRWMappableBuffer const& parent)
         : mapping{std::move(mapping)},
-          parent{parent}
+          parent{parent},
+          buffer_descriptor{parent}
     {
     }
 
@@ -99,21 +100,6 @@ public:
         {
             parent.notify_access_error();
         }
-    }
-
-    auto format() const -> MirPixelFormat override
-    {
-        return parent.format();
-    }
-
-    auto stride() const -> mir::geometry::Stride override
-    {
-        return parent.stride();
-    }
-
-    auto size() const -> mir::geometry::Size override
-    {
-        return parent.size();
     }
 
     auto data() -> T* override
@@ -126,9 +112,40 @@ public:
         return mapping->len();
     }
 
+    auto descriptor() const -> mrs::BufferDescriptor const& override
+    {
+        return buffer_descriptor;
+    }
+
 private:
+    struct BufferDescriptor: public mrs::BufferDescriptor
+    {
+        explicit BufferDescriptor(ErrorNotifyingRWMappableBuffer const& parent) :
+            parent{parent}
+        {
+        }
+
+        ErrorNotifyingRWMappableBuffer const& parent;
+
+        auto format() const -> MirPixelFormat override
+        {
+            return parent.format();
+        }
+
+        auto stride() const -> mir::geometry::Stride override
+        {
+            return parent.stride();
+        }
+
+        auto size() const -> mir::geometry::Size override
+        {
+            return parent.size();
+        }
+    };
+
     std::unique_ptr<mir::shm::Mapping<std::conditional_t<std::is_const_v<T>, std::byte const, std::byte>>> const mapping;
     ErrorNotifyingRWMappableBuffer const& parent;
+    BufferDescriptor const buffer_descriptor;
 };
 
 ErrorNotifyingRWMappableBuffer::ErrorNotifyingRWMappableBuffer(

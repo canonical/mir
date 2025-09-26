@@ -644,7 +644,7 @@ struct CursorImageFromBuffer : public mg::CursorImage
 
     geom::Size size() const
     {
-        return mapping->size();
+        return mapping->descriptor().size();
     }
 
     geom::Displacement hotspot() const

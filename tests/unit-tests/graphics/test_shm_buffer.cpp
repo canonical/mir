@@ -122,7 +122,7 @@ TEST_F(ShmBufferTest, has_correct_properties)
     PlatformlessShmBuffer shm_buffer(size, pixel_format);
 
     EXPECT_EQ(size, shm_buffer.size());
-    EXPECT_EQ(geom::Stride{expected_stride}, shm_buffer.map_readable()->stride());
+    EXPECT_EQ(geom::Stride{expected_stride}, shm_buffer.map_readable()->descriptor().stride());
     EXPECT_EQ(pixel_format, shm_buffer.pixel_format());
 }
 
