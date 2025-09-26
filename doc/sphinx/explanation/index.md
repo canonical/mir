@@ -8,6 +8,7 @@ These pages provide additional detail about a number of aspects related to using
 - [Security](security.md)
 - [Performance](performance.md)
 - [Energy efficiency](energy-efficiency.md)
+- [Graphics driver quirks](driver-quirks.md): Options for altering how the graphics platform module handles specific devices
 
 ## Developing with Mir
 
