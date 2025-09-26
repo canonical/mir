@@ -39,6 +39,10 @@ namespace miral
 /// 1. wlr foreign toplevel management v1
 /// 2. wlr layer shell v1
 ///
+/// \warning This is implementation is a work in progress. As such, it may be
+///          lacking features that are expected from a typical application switcher
+///          client. Use at your own risk.
+///
 /// \remark Since MirAL 5.6
 class ApplicationSwitcher
 {

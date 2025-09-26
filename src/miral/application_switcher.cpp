@@ -18,6 +18,7 @@
 #include "wayland_app.h"
 #include "wayland_shm.h"
 #include "wlr-foreign-toplevel-management-unstable-v1.h"
+#include "mir/default_font.h"
 
 #include <memory>
 #include <mir/fd.h>
@@ -37,9 +38,9 @@
 #include <gio/gio.h>
 
 #include "layer_shell_wayland_surface.h"
-#include "../server/frontend_wayland/desktop_file_manager.h"
 
 namespace geom = mir::geometry;
+namespace msh = mir::shell;
 
 namespace
 {
@@ -66,9 +67,9 @@ struct ToplevelInfoPrinter
         if (FT_Init_FreeType(&lib))
             return;
 
-        if (FT_New_Face(lib, default_font().c_str(), 0, &face))
+        if (FT_New_Face(lib, msh::default_font().c_str(), 0, &face))
         {
-            mir::log_error("Failed to load find: %s", default_font().c_str());
+            mir::log_error("Failed to load find: %s", msh::default_font().c_str());
             FT_Done_FreeType(lib);
             return;
         }
@@ -141,66 +142,6 @@ private:
 
     static constexpr Color white{255, 255, 255, 255};
     static constexpr Color yellow{255, 255, 0, 255};
-
-    static auto default_font() -> std::string
-    {
-        struct FontPath
-        {
-            char const* filename;
-            std::vector<char const*> prefixes;
-        };
-
-        FontPath const font_paths[]{
-            FontPath{"Ubuntu-B.ttf", {
-                "ubuntu-font-family",   // Ubuntu < 18.04
-                "ubuntu",               // Ubuntu >= 18.04/Arch
-            }},
-            FontPath{"FreeSansBold.ttf", {
-                "freefont",             // Debian/Ubuntu
-                "gnu-free",             // Fedora/Arch
-            }},
-            FontPath{"DejaVuSans-Bold.ttf", {
-                "dejavu",               // Ubuntu (others?)
-                "",                     // Arch
-            }},
-            FontPath{"LiberationSans-Bold.ttf", {
-                "liberation-sans",      // Fedora
-                "liberation-sans-fonts",// Fedora >= 42
-                "liberation",           // Arch/Ubuntu
-            }},
-            FontPath{"OpenSans-Bold.ttf", {
-                "open-sans",            // Fedora/Ubuntu
-            }},
-        };
-
-        char const* const font_path_search_paths[]{
-            "/usr/share/fonts/truetype",    // Ubuntu/Debian
-            "/usr/share/fonts/TTF",         // Arch
-            "/usr/share/fonts",             // Fedora/Arch
-        };
-
-        std::vector<std::string> usable_search_paths;
-        for (auto const& path : font_path_search_paths)
-        {
-            if (std::filesystem::exists(path))
-                usable_search_paths.emplace_back(path);
-        }
-
-        for (auto const& font : font_paths)
-        {
-            for (auto const& prefix : font.prefixes)
-            {
-                for (auto const& path : usable_search_paths)
-                {
-                    auto const full_font_path = path + '/' + prefix + '/' + font.filename;
-                    if (std::filesystem::exists(full_font_path))
-                        return full_font_path;
-                }
-            }
-        }
-
-        return "";
-    }
 
     TextMetrics compute_text_metrics(std::vector<ToplevelInfo> const& info_list)
     {
