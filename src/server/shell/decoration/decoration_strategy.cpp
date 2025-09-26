@@ -633,7 +633,7 @@ void RendererStrategy::Text::Impl::render_glyph(
 
 auto RendererStrategy::Text::Impl::font_path() -> std::string
 {
-    auto const path = msh::default_font();
+    auto const path = mir::default_font();
     if (path.empty())
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to find a font"));

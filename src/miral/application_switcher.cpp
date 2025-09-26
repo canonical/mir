@@ -67,9 +67,9 @@ struct ToplevelInfoPrinter
         if (FT_Init_FreeType(&lib))
             return;
 
-        if (FT_New_Face(lib, msh::default_font().c_str(), 0, &face))
+        if (FT_New_Face(lib, mir::default_font().c_str(), 0, &face))
         {
-            mir::log_error("Failed to load find: %s", msh::default_font().c_str());
+            mir::log_error("Failed to load find: %s", mir::default_font().c_str());
             FT_Done_FreeType(lib);
             return;
         }

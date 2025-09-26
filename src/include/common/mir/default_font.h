@@ -21,10 +21,7 @@
 
 namespace mir
 {
-namespace shell
-{
 auto default_font() -> std::string;
-}
 }
 
 #endif

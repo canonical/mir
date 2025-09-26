@@ -19,7 +19,7 @@
 #include <filesystem>
 
 // Font search logic should be kept in sync with examples/example-server-lib/wallpaper_config.cpp
-auto mir::shell::default_font() -> std::string
+auto mir::default_font() -> std::string
 {
     struct FontPath
     {

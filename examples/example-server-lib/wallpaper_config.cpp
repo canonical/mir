@@ -21,7 +21,7 @@
 
 namespace
 {
-/// Font search logic should be kept in sync with src/server/shell/default_font.cpp
+/// Font search logic should be kept in sync with src/common/default_font.cpp
 auto default_font() -> std::string
 {
     struct FontPath
