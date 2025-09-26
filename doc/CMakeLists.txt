@@ -27,7 +27,7 @@ add_test(
   NAME verify-options-reference-unchanged
   COMMAND bash -c "diff --unified \
     ${OPTIONS_REFERENCE} \
-    <( ${CMAKE_BINARY_DIR}/bin/demo-mir-compositor --help-markdown )"
+    <( ${CMAKE_BINARY_DIR}/bin/demo-mir-compositor --help-markdown | head -c -1 )"
 )
 
 option(
