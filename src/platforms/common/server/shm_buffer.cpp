@@ -298,8 +298,9 @@ template<typename T>
 class mgc::MemoryBackedShmBuffer::Mapping : public mir::renderer::software::Mapping<T>
 {
 public:
-    Mapping(std::conditional_t<std::is_const_v<T>, MemoryBackedShmBuffer const*, MemoryBackedShmBuffer*> buffer)
-        : buffer{buffer}
+    Mapping(std::conditional_t<std::is_const_v<T>, MemoryBackedShmBuffer const*, MemoryBackedShmBuffer*> buffer) :
+        buffer{buffer},
+        buffer_descriptor{buffer}
     {
     }
 
@@ -311,21 +312,6 @@ public:
         }
     }
 
-    auto format() const -> MirPixelFormat override
-    {
-        return buffer->pixel_format();
-    }
-
-    auto stride() const -> geom::Stride override
-    {
-        return buffer->stride_;
-    }
-
-    auto size() const -> geom::Size override
-    {
-        return buffer->size();
-    }
-
     auto data() -> T* override
     {
         return buffer->pixels.get();
@@ -333,11 +319,42 @@ public:
 
     auto len() const -> size_t override
     {
-        return stride().as_uint32_t() * size().height.as_uint32_t();
+        return buffer_descriptor.stride().as_uint32_t() * buffer_descriptor.size().height.as_uint32_t();
+    }
+
+    auto descriptor() const -> mrs::BufferDescriptor const& override
+    {
+        return buffer_descriptor;
     }
 
 private:
+    struct BufferDescriptor : public mrs::BufferDescriptor
+    {
+        MemoryBackedShmBuffer const* const buffer;
+
+        explicit BufferDescriptor(MemoryBackedShmBuffer const* buffer) :
+            buffer{buffer}
+        {
+        }
+
+        auto format() const -> MirPixelFormat override
+        {
+            return buffer->pixel_format();
+        }
+
+        auto stride() const -> geom::Stride override
+        {
+            return buffer->stride_;
+        }
+
+        auto size() const -> geom::Size override
+        {
+            return buffer->size();
+        }
+    };
+
     std::conditional_t<std::is_const_v<T>, MemoryBackedShmBuffer const*, MemoryBackedShmBuffer*> buffer;
+    BufferDescriptor const buffer_descriptor;
 };
 
 auto mgc::MemoryBackedShmBuffer::map_writeable() -> std::unique_ptr<mrs::Mapping<unsigned char>>
@@ -384,7 +401,7 @@ void mgc::MappableBackedShmBuffer::on_texture_accessed(std::shared_ptr<ShmBuffer
         id(),
         mapping->data(),
         size(),
-        mapping->stride(),
+        mapping->descriptor().stride(),
         pixel_format());
 }
 

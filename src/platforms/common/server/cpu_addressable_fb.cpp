@@ -25,6 +25,7 @@
 #include <drm_fourcc.h>
 
 namespace mg = mir::graphics;
+namespace mrs = mir::renderer::software;
 
 class mg::CPUAddressableFB::Buffer : public mir::renderer::software::RWMappable
 {
@@ -38,9 +39,7 @@ class mg::CPUAddressableFB::Buffer : public mir::renderer::software::RWMappable
             MirPixelFormat format,
             T* data,
             size_t len)
-            : size_{width, height},
-              stride_{pitch},
-              format_{format},
+            : buffer_descriptor{format, geometry::Stride{pitch}, geometry::Size{width, height}},
               data_{data},
               len_{len}
         {
@@ -56,24 +55,6 @@ class mg::CPUAddressableFB::Buffer : public mir::renderer::software::RWMappable
         }
 
         [[nodiscard]]
-        auto format() const -> MirPixelFormat
-        {
-            return format_;
-        }
-
-        [[nodiscard]]
-        auto stride() const -> mir::geometry::Stride
-        {
-            return stride_;
-        }
-
-        [[nodiscard]]
-        auto size() const -> mir::geometry::Size
-        {
-            return size_;
-        }
-
-        [[nodiscard]]
         auto data() -> T*
         {
             return data_;
@@ -85,10 +66,46 @@ class mg::CPUAddressableFB::Buffer : public mir::renderer::software::RWMappable
             return len_;
         }
 
+        [[nodiscard]]
+        auto descriptor() const -> mrs::BufferDescriptor const&
+        {
+            return buffer_descriptor;
+        }
+
     private:
-        mir::geometry::Size const size_;
-        mir::geometry::Stride const stride_;
-        MirPixelFormat const format_;
+        struct BufferDescriptor: mrs::BufferDescriptor
+        {
+            MirPixelFormat const format_;
+            geometry::Stride const stride_;
+            geometry::Size const size_;
+
+            BufferDescriptor(MirPixelFormat format, geometry::Stride stride, geometry::Size size) :
+                format_{format},
+                stride_{stride},
+                size_{size}
+            {
+            }
+
+            [[nodiscard]]
+            auto format() const -> MirPixelFormat
+            {
+                return format_;
+            }
+
+            [[nodiscard]]
+            auto stride() const -> mir::geometry::Stride
+            {
+                return stride_;
+            }
+
+            [[nodiscard]]
+            auto size() const -> mir::geometry::Size
+            {
+                return size_;
+            }
+        };
+
+        BufferDescriptor const buffer_descriptor;
         T* const data_;
         size_t const len_;
     };

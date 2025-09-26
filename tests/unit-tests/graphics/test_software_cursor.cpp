@@ -354,14 +354,14 @@ TEST_F(SoftwareCursor, handles_argb_8888_cursor_surface)
         (static_cast<uint32_t>(b) << 0);
 
     auto const mapping = cursor_buffer->map_readable();
-    ASSERT_THAT(mapping->format(), Eq(mir_pixel_format_argb_8888));
+    ASSERT_THAT(mapping->descriptor().format(), Eq(mir_pixel_format_argb_8888));
 
-    auto const stride = mapping->stride().as_uint32_t();
-    for (auto y = 0u; y < mapping->size().height.as_uint32_t(); ++y)
+    auto const stride = mapping->descriptor().stride().as_uint32_t();
+    for (auto y = 0u; y < mapping->descriptor().size().height.as_uint32_t(); ++y)
     {
         auto const line = std::vector<uint32_t>{
             reinterpret_cast<uint32_t const*>(mapping->data() + (stride * y)),
-            reinterpret_cast<uint32_t const*>(mapping->data() + (stride * y) + mapping->size().width.as_uint32_t())};
+            reinterpret_cast<uint32_t const*>(mapping->data() + (stride * y) + mapping->descriptor().size().width.as_uint32_t())};
         EXPECT_THAT(line, Each(Eq(expected_pixel)));
     }
 }
@@ -417,14 +417,14 @@ TEST_F(SoftwareCursor, handles_argb_8888_buffer_with_stride)
         (static_cast<uint32_t>(b) << 0);
 
     auto const mapping = cursor_buffer->map_readable();
-    ASSERT_THAT(mapping->format(), Eq(mir_pixel_format_argb_8888));
+    ASSERT_THAT(mapping->descriptor().format(), Eq(mir_pixel_format_argb_8888));
 
-    auto const stride = mapping->stride().as_uint32_t();
-    for (auto y = 0u; y < mapping->size().height.as_uint32_t(); ++y)
+    auto const stride = mapping->descriptor().stride().as_uint32_t();
+    for (auto y = 0u; y < mapping->descriptor().size().height.as_uint32_t(); ++y)
     {
         auto const line = std::vector<uint32_t>{
             reinterpret_cast<uint32_t const*>(mapping->data() + (stride * y)),
-            reinterpret_cast<uint32_t const*>(mapping->data() + (stride * y) + mapping->size().width.as_uint32_t())};
+            reinterpret_cast<uint32_t const*>(mapping->data() + (stride * y) + mapping->descriptor().size().width.as_uint32_t())};
         EXPECT_THAT(line, Each(Eq(expected_pixel)));
     }
 }
