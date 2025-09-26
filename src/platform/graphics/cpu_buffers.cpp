@@ -32,15 +32,15 @@ namespace
 template<
     typename BufferType,
     typename DataType,
-    void(*Initialise)(BufferType&, unsigned char*),
-    void(*Finalise)(BufferType&, unsigned char const*)>
+    void(*Initialise)(BufferType&, std::byte*),
+    void(*Finalise)(BufferType&, std::byte const*)>
 class CopyMap : public mrs::Mapping<DataType>
 {
 public:
     CopyMap(std::shared_ptr<BufferType> buffer)
         : buffer{std::move(buffer)},
           bounce_buffer{
-              std::make_unique<unsigned char[]>(
+              std::make_unique<std::byte[]>(
                   this->buffer->stride().as_uint32_t() * this->buffer->size().height.as_uint32_t())}
     {
         Initialise(*this->buffer, bounce_buffer.get());
@@ -77,15 +77,15 @@ public:
     }
 private:
     std::shared_ptr<BufferType> const buffer;
-    std::unique_ptr<unsigned char[]> const bounce_buffer;
+    std::unique_ptr<std::byte[]> const bounce_buffer;
 };
 
-void read_from_buffer(mrs::ReadTransferableBuffer& buffer, unsigned char* scratch_buffer)
+void read_from_buffer(mrs::ReadTransferableBuffer& buffer, std::byte* scratch_buffer)
 {
     buffer.transfer_from_buffer(scratch_buffer);
 }
 
-void write_to_buffer(mrs::WriteTransferableBuffer& buffer, unsigned char const* scratch_buffer)
+void write_to_buffer(mrs::WriteTransferableBuffer& buffer, std::byte const* scratch_buffer)
 {
     buffer.transfer_into_buffer(scratch_buffer);
 }
@@ -108,12 +108,12 @@ auto mrs::as_read_mappable_buffer(
         {
         }
 
-        std::unique_ptr<Mapping<unsigned char const>> map_readable() override
+        std::unique_ptr<Mapping<std::byte const>> map_readable() override
         {
             return std::make_unique<
                 CopyMap<
                     ReadTransferableBuffer,
-                    unsigned char const,
+                    std::byte const,
                     &read_from_buffer,
                     &noop>>(buffer);
         }
@@ -151,12 +151,12 @@ auto mrs::as_write_mappable_buffer(
         {
         }
 
-        std::unique_ptr<mrs::Mapping<unsigned char>> map_writeable() override
+        std::unique_ptr<mrs::Mapping<std::byte>> map_writeable() override
         {
             return std::make_unique<
                 CopyMap<
                     mrs::WriteTransferableBuffer,
-                    unsigned char,
+                    std::byte,
                     &noop,
                     &write_to_buffer>>(buffer);
         }

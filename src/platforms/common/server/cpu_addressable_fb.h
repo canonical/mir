@@ -34,7 +34,7 @@ public:
         mir::geometry::Size const& size);
     ~CPUAddressableFB() override;
 
-    auto map_writeable() -> std::unique_ptr<mir::renderer::software::Mapping<unsigned char>> override;
+    auto map_writeable() -> std::unique_ptr<mir::renderer::software::Mapping<std::byte>> override;
 
     auto format() const -> MirPixelFormat override;
     auto stride() const -> geometry::Stride override;

@@ -72,16 +72,16 @@ public:
     }
 
 private:
-    BufferCursorImage(std::unique_ptr<mrs::Mapping<unsigned char const>> mapping, geom::Displacement const& hotspot)
+    BufferCursorImage(std::unique_ptr<mrs::Mapping<std::byte const>> mapping, geom::Displacement const& hotspot)
         : size_{mapping->size()},
-          data{std::make_unique<unsigned char[]>(mapping->len())},
+          data{std::make_unique<std::byte[]>(mapping->len())},
           hotspot_{hotspot}
     {
         ::memcpy(data.get(), mapping->data(), mapping->len());
     }
 
     static auto buffer_to_mapping_if_possible(std::shared_ptr<mg::Buffer> const& buffer)
-        -> std::unique_ptr<mrs::Mapping<unsigned char const>>
+        -> std::unique_ptr<mrs::Mapping<std::byte const>>
     {
         auto const mappable_buffer = mrs::as_read_mappable_buffer(buffer);
         if (!mappable_buffer)
@@ -94,7 +94,7 @@ private:
     }
 
     geom::Size const size_;
-    std::unique_ptr<unsigned char[]> const data;
+    std::unique_ptr<std::byte[]> const data;
     geom::Displacement const hotspot_;
 };
 

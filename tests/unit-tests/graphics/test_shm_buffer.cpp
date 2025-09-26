@@ -82,7 +82,7 @@ struct PlatformlessShmBuffer : mgc::MemoryBackedShmBuffer
     {
     }
 
-    auto pixel_buffer() -> unsigned char const*
+    auto pixel_buffer() -> std::byte const*
     {
         // This uses the fact that MemoryBackedShmBuffer always returns the same backing store when mapping
         auto const read_mapping = map_readable();

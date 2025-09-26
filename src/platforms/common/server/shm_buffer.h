@@ -82,9 +82,9 @@ public:
         geometry::Size const& size,
         MirPixelFormat const& pixel_format);
 
-    auto map_writeable() -> std::unique_ptr<renderer::software::Mapping<unsigned char>> override;
-    auto map_readable() -> std::unique_ptr<renderer::software::Mapping<unsigned char const>> override;
-    auto map_rw() -> std::unique_ptr<renderer::software::Mapping<unsigned char>> override;
+    auto map_writeable() -> std::unique_ptr<renderer::software::Mapping<std::byte>> override;
+    auto map_readable() -> std::unique_ptr<renderer::software::Mapping<std::byte const>> override;
+    auto map_rw() -> std::unique_ptr<renderer::software::Mapping<std::byte>> override;
 
     auto format() const -> MirPixelFormat override { return ShmBuffer::pixel_format(); }
     auto stride() const -> geometry::Stride override { return stride_; }
@@ -105,7 +105,7 @@ private:
     friend class Mapping;
 
     geometry::Stride const stride_;
-    std::unique_ptr<unsigned char[]> const pixels;
+    std::unique_ptr<std::byte[]> const pixels;
 };
 
 class MappableBackedShmBuffer :
@@ -116,9 +116,9 @@ public:
     MappableBackedShmBuffer(
         std::shared_ptr<RWMappableBuffer> data);
 
-    auto map_writeable() -> std::unique_ptr<renderer::software::Mapping<unsigned char>> override;
-    auto map_readable() -> std::unique_ptr<renderer::software::Mapping<unsigned char const>> override;
-    auto map_rw() -> std::unique_ptr<renderer::software::Mapping<unsigned char>> override;
+    auto map_writeable() -> std::unique_ptr<renderer::software::Mapping<std::byte>> override;
+    auto map_readable() -> std::unique_ptr<renderer::software::Mapping<std::byte const>> override;
+    auto map_rw() -> std::unique_ptr<renderer::software::Mapping<std::byte>> override;
 
     auto format() const -> MirPixelFormat override;
     auto stride() const -> geometry::Stride override;
@@ -144,9 +144,9 @@ public:
 
     ~NotifyingMappableBackedShmBuffer() override;
 
-    auto map_readable() -> std::unique_ptr<renderer::software::Mapping<unsigned char const>> override;
-    auto map_writeable() -> std::unique_ptr<renderer::software::Mapping<unsigned char>> override;
-    auto map_rw() -> std::unique_ptr<renderer::software::Mapping<unsigned char>> override;
+    auto map_readable() -> std::unique_ptr<renderer::software::Mapping<std::byte const>> override;
+    auto map_writeable() -> std::unique_ptr<renderer::software::Mapping<std::byte>> override;
+    auto map_rw() -> std::unique_ptr<renderer::software::Mapping<std::byte>> override;
 
 protected:
     void on_texture_accessed(std::shared_ptr<ShmBufferTexture> const&) override;
