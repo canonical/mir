@@ -44,6 +44,10 @@ namespace time
 {
 class Clock;
 }
+namespace wayland
+{
+class DataControlDeviceV1;
+}
 namespace frontend
 {
 class WlPointer;
@@ -107,6 +111,8 @@ public:
     void add_focus_listener(wayland::Client* client, FocusListener* listener);
     void remove_focus_listener(wayland::Client* client, FocusListener* listener);
 
+    void set_data_device(std::shared_ptr<wayland::DataControlDeviceV1> control_device);
+
 private:
     void set_focus_to(WlSurface* surface);
 
@@ -137,6 +143,7 @@ private:
     std::shared_ptr<input::Seat> const seat;
 
     std::shared_ptr<shell::AccessibilityManager> const accessibility_manager;
+    std::optional<std::shared_ptr<wayland::DataControlDeviceV1>> data_control_device;
 
     void bind(wl_resource* new_wl_seat) override;
 };
