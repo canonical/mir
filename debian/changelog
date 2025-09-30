@@ -1,3 +1,11 @@
+mir (2.23.0) UNRELEASED; urgency=medium
+
+  * New upstream release 2.23.0
+
+    - A big focus on documentation.
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Tue, 30 Sep 2025 12:05:32 +0200
+
 mir (2.22.2) UNRELEASED; urgency=medium
 
   * Bugfix release 2.22.2
