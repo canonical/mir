@@ -702,4 +702,3 @@ global:
     mir::default_font*;
   };
 } MIR_COMMON_INTERNAL_2.22;
-
