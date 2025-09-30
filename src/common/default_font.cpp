@@ -2,8 +2,8 @@
  * Copyright © Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 or 3 as
- * published by the Free Software Foundation.
+ * under the terms of the GNU General Public License version 2 or 3,
+ * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -14,15 +14,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "wallpaper_config.h"
-#include <boost/filesystem.hpp>
-#include <mutex>
+#include "mir/default_font.h"
 #include <vector>
+#include <filesystem>
 
-namespace
-{
-/// Font search logic should be kept in sync with src/common/default_font.cpp
-auto default_font() -> std::string
+// Font search logic should be kept in sync with examples/example-server-lib/wallpaper_config.cpp
+auto mir::default_font() -> std::string
 {
     struct FontPath
     {
@@ -62,8 +59,8 @@ auto default_font() -> std::string
     std::vector<std::string> usable_search_paths;
     for (auto const& path : font_path_search_paths)
     {
-        if (boost::filesystem::exists(path))
-            usable_search_paths.push_back(path);
+        if (std::filesystem::exists(path))
+            usable_search_paths.emplace_back(path);
     }
 
     for (auto const& font : font_paths)
@@ -73,27 +70,11 @@ auto default_font() -> std::string
             for (auto const& path : usable_search_paths)
             {
                 auto const full_font_path = path + '/' + prefix + '/' + font.filename;
-                if (boost::filesystem::exists(full_font_path))
+                if (std::filesystem::exists(full_font_path))
                     return full_font_path;
             }
         }
     }
 
     return "";
-}
-
-std::mutex mutex;
-std::string font_file{default_font()};
-}
-
-void wallpaper::font_file(std::string const& font_file)
-{
-    std::lock_guard lock{mutex};
-    ::font_file = font_file;
-}
-
-auto wallpaper::font_file() -> std::string
-{
-    std::lock_guard lock{mutex};
-    return ::font_file;
 }
