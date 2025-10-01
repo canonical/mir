@@ -61,7 +61,6 @@ Emitter impl_includes(std::string const& protocol_name)
         "#include <boost/exception/diagnostic_information.hpp>",
         "#include <wayland-server-core.h>",
         empty_line,
-        "#include \"mir/log.h\"",
         "#include \"mir/wayland/protocol_error.h\"",
         "#include \"mir/wayland/client.h\"",
     };
