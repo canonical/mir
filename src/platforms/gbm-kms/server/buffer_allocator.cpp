@@ -261,7 +261,7 @@ public:
 
     void bind() override
     {
-        if (!gbm_surface_has_free_buffers(*surface))
+        if (!quirks->gbm_surface_has_free_buffers(*surface))
         {
             BOOST_THROW_EXCEPTION((std::logic_error{"Attempt to render to GBM surface before releasing previous front buffer"}));
         }
