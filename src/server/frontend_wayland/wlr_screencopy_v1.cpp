@@ -176,7 +176,7 @@ private:
     /// @{
     bool copy_has_been_called{false};
     bool should_send_damage{false};
-    std::shared_ptr<renderer::software::WriteMappableBuffer> target;
+    std::shared_ptr<renderer::software::WriteMappable> target;
     /// @}
 };
 }
@@ -497,7 +497,7 @@ void mf::WlrScreencopyFrameV1::prepare_target(wl_resource* buffer)
             stride.as_int()));
     }
 
-    target = std::shared_ptr<mir::renderer::software::WriteMappableBuffer>{
+    target = std::shared_ptr<mir::renderer::software::WriteMappable>{
         shm_data.get(),
         [shm_data, weak_buffer = mw::make_weak(shm_buffer), executor = ctx->wayland_executor](auto*)
         {

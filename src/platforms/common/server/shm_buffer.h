@@ -75,7 +75,7 @@ private:
 
 class MemoryBackedShmBuffer :
     public ShmBuffer,
-    public renderer::software::RWMappableBuffer
+    public renderer::software::RWMappable
 {
 public:
     MemoryBackedShmBuffer(
@@ -110,11 +110,11 @@ private:
 
 class MappableBackedShmBuffer :
     public ShmBuffer,
-    public renderer::software::RWMappableBuffer
+    public renderer::software::RWMappable
 {
 public:
     MappableBackedShmBuffer(
-        std::shared_ptr<RWMappableBuffer> data);
+        std::shared_ptr<RWMappable> data);
 
     auto map_writeable() -> std::unique_ptr<renderer::software::Mapping<std::byte>> override;
     auto map_readable() -> std::unique_ptr<renderer::software::Mapping<std::byte const>> override;
@@ -131,14 +131,14 @@ protected:
     void on_texture_accessed(std::shared_ptr<ShmBufferTexture> const&) override;
 
 private:
-    std::shared_ptr<RWMappableBuffer> const data;
+    std::shared_ptr<RWMappable> const data;
 };
 
 class NotifyingMappableBackedShmBuffer : public MappableBackedShmBuffer
 {
 public:
     NotifyingMappableBackedShmBuffer(
-        std::shared_ptr<renderer::software::RWMappableBuffer> data,
+        std::shared_ptr<renderer::software::RWMappable> data,
         std::function<void()>&& on_consumed,
         std::function<void()>&& on_release);
 
