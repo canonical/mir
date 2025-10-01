@@ -175,7 +175,7 @@ Library to use for platform input support, e.g. `mir:stub-input`. If not provide
 
 Directory to look for platform libraries.
 
-Defaults to `/home/michal/dev/canonical/mir/install/lib/mir/server-platform`.
+Defaults to `<LIBDIR>/mir/server-platform`.
 
 (global-platform-rendering-libs)=
 ### `platform-rendering-libs`

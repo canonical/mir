@@ -18,6 +18,7 @@ set(OPTIONS_REFERENCE ${SPHINXDIR}/configuring/reference/options.md.include)
 add_custom_target(
   COMMAND
     ${CMAKE_BINARY_DIR}/bin/demo-mir-compositor --help-markdown
+    | sed "s@${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}@\\<LIBDIR\\>@g"
     > ${OPTIONS_REFERENCE}
   BYPRODUCTS ${OPTIONS_REFERENCE}
   DEPENDS demo-mir-compositor
@@ -27,7 +28,11 @@ add_test(
   NAME verify-options-reference-unchanged
   COMMAND bash -c "diff --unified \
     ${OPTIONS_REFERENCE} \
-    <( ${CMAKE_BINARY_DIR}/bin/demo-mir-compositor --help-markdown | head -c -1 )"
+    <(
+      ${CMAKE_BINARY_DIR}/bin/demo-mir-compositor --help-markdown \
+      | head -c -1 \
+      | sed 's@${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}@\\<LIBDIR\\>@g' \
+     )"
 )
 
 option(
