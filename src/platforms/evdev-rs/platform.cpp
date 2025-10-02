@@ -53,40 +53,6 @@ private:
     rust::Box<Impl> box;
 };
 
-template <typename Impl>
-class PlatformImpl
-{
-public:
-    explicit PlatformImpl(rust::Box<Impl>&& box) : box(std::move(box)) {}
-
-    void start()
-    {
-        box->start();
-    }
-
-    void continue_after_config()
-    {
-        box->continue_after_config();
-    }
-
-    void pause_for_config()
-    {
-        box->pause_for_config();
-    }
-
-    void stop()
-    {
-        box->stop();
-    }
-
-    rust::Box<mir::input::evdev_rs::DeviceObserverRs> create_device_observer()
-    {
-        return box->create_device_observer();
-    }
-private:
-    rust::Box<Impl> box;
-};
-
 class DispatchableStub : public md::Dispatchable
 {
 public:
@@ -113,7 +79,7 @@ public:
     Self(Platform* platform, std::shared_ptr<ConsoleServices> const& console)
         : platform_impl(evdev_rs_create(std::make_shared<PlatformBridgeC>(platform, console))) {}
 
-    PlatformImpl<PlatformRs> platform_impl;
+    rust::Box<PlatformRs> platform_impl;
 };
 
 miers::Platform::Platform(std::shared_ptr<ConsoleServices> const& console)
@@ -128,27 +94,27 @@ std::shared_ptr<mir::dispatch::Dispatchable> miers::Platform::dispatchable()
 
 void miers::Platform::start()
 {
-    self->platform_impl.start();
+    self->platform_impl->start();
 }
 
 void miers::Platform::continue_after_config()
 {
-    self->platform_impl.continue_after_config();
+    self->platform_impl->continue_after_config();
 }
 
 void miers::Platform::pause_for_config()
 {
-    self->platform_impl.pause_for_config();
+    self->platform_impl->pause_for_config();
 }
 
 void miers::Platform::stop()
 {
-    self->platform_impl.stop();
+    self->platform_impl->stop();
 }
 
 std::unique_ptr<mir::Device::Observer> mir::input::evdev_rs::Platform::create_device_observer()
 {
     return std::make_unique<DeviceObserverWrapper<DeviceObserverRs>>(
-        self->platform_impl.create_device_observer());
+        self->platform_impl->create_device_observer());
 }
 
