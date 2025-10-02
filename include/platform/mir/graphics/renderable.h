@@ -18,11 +18,11 @@
 #define MIR_GRAPHICS_RENDERABLE_H_
 
 #include <optional>
-#include <mir/geometry/rectangle.h>
 #include <glm/glm.hpp>
 #include <memory>
 #include <vector>
 
+#include <mir/geometry/rectangles.h>
 #include "mir_toolkit/common.h"
 
 namespace mir
@@ -94,6 +94,16 @@ public:
 
     virtual auto surface_if_any() const
         -> std::optional<mir::scene::Surface const*> = 0;
+
+    /*
+     * Opaque region of the potentially transparent surface in absolute
+     * coordinates.
+     *
+     * Absolute coordinates are computed relative to the top left of
+     * #screen_position. #transformation is not applied.
+     */
+    virtual auto opaque_region() const -> std::optional<geometry::Rectangles> = 0;
+
 protected:
     Renderable() = default;
     Renderable(Renderable const&) = delete;

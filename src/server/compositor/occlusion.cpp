@@ -54,9 +54,25 @@ bool renderable_is_occluded(
         }
     }
 
-    if (!occluded && renderable.alpha() == 1.0f && !renderable.shaped())
-        coverage.push_back(clipped_window);
-
+    if (!occluded)
+    {
+        if (renderable.shaped())
+        {
+            if (auto const opaque_region = renderable.opaque_region())
+            {
+                for (auto const& subregion : *opaque_region)
+                {
+                    auto const clipped_subregion = intersection_of(subregion, area);
+                    coverage.push_back(clipped_subregion);
+                }
+            }
+            // Client didn't send an opaque region
+        }
+        else if (renderable.alpha() == 1.0f)
+        {
+            coverage.push_back(clipped_window);
+        }
+    }
     return occluded;
 }
 }

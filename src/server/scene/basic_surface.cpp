@@ -318,6 +318,11 @@ std::vector<geom::Rectangle> ms::BasicSurface::get_input_region() const
     return state->custom_input_rectangles;
 }
 
+void ms::BasicSurface::set_opaque_region(geom::Rectangles const& region)
+{
+    synchronised_state.lock()->opaque_region = region;
+}
+
 void ms::BasicSurface::resize(geom::Size const& desired_size)
 {
     geom::Size new_size = desired_size;
@@ -729,6 +734,26 @@ std::shared_ptr<ms::Surface> ms::BasicSurface::parent() const
 
 namespace
 {
+auto translate_opaque_region(
+    std::optional<mir::geometry::Rectangles> const& opaque_region, geom::Displacement translation)
+    -> std::optional<mir::geometry::Rectangles>
+{
+    return opaque_region.transform(
+        [&translation](auto const r)
+        {
+            auto region = geom::Rectangles{};
+            for (auto const& subregion : r)
+            {
+                auto const translated_top_left = geom::Point{
+                    subregion.top_left.x + translation.dx,
+                    subregion.top_left.y + translation.dy,
+                };
+                region.add(geom::Rectangle{translated_top_left, subregion.size});
+            }
+
+            return region;
+        });
+}
 //This class avoids locking for long periods of time by copying (or lazy-copying)
 class SurfaceSnapshot : public mg::Renderable
 {
@@ -742,16 +767,19 @@ public:
         MirMirrorMode mirror_mode,
         float alpha,
         mg::Renderable::ID id,
-        ms::Surface const* surface)
-    : entry{std::move(buffer)},
-      alpha_{alpha},
-      screen_position_{top_left, entry->size()},
-      clip_area_{clip_area},
-      transformation_{transform},
-      orientation_{orientation},
-      mirror_mode_{mirror_mode},
-      id_{id},
-      surface{surface}
+        ms::Surface const* surface,
+        std::optional<geom::Rectangles> opaque_region) :
+        entry{std::move(buffer)},
+        alpha_{alpha},
+        screen_position_{top_left, entry->size()},
+        clip_area_{clip_area},
+        transformation_{transform},
+        orientation_{orientation},
+        mirror_mode_{mirror_mode},
+        id_{id},
+        surface{surface},
+        opaque_region_{translate_opaque_region(
+            opaque_region, mir::geometry::generic::as_displacement(screen_position_.top_left))}
     {
     }
 
@@ -797,6 +825,12 @@ public:
     {
         return surface;
     }
+
+    std::optional<geom::Rectangles> opaque_region() const override
+    {
+        return opaque_region_;
+    }
+
 private:
     std::shared_ptr<mc::BufferStream::Submission> const entry;
     float const alpha_;
@@ -807,6 +841,7 @@ private:
     MirMirrorMode mirror_mode_;
     mg::Renderable::ID const id_;
     ms::Surface const* surface;
+    std::optional<geom::Rectangles> const opaque_region_;
 };
 }
 
@@ -872,7 +907,8 @@ mg::RenderableList ms::BasicSurface::generate_renderables(mc::CompositorID id) c
                 state->mirror_mode,
                 state->surface_alpha,
                 info.stream.get(),
-                this));
+                this,
+                state->opaque_region));
         }
     }
     return list;

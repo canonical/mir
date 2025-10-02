@@ -1648,3 +1648,12 @@ global:
   };
 local: *;
 } MIR_SERVER_INTERNAL_2.22;
+
+
+MIR_SERVER_INTERNAL_2.24 {
+global:
+  extern "C++" {
+    mir::scene::BasicSurface::set_opaque_region*;
+    non-virtual?thunk?to?mir::scene::BasicSurface::set_opaque_region*;
+local: *;
+} MIR_SERVER_INTERNAL_2.23;

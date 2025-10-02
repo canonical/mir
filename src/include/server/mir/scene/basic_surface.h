@@ -100,6 +100,8 @@ public:
     void set_input_region(std::vector<geometry::Rectangle> const& input_rectangles) override;
     std::vector<geometry::Rectangle> get_input_region() const override;
 
+    virtual void set_opaque_region(geometry::Rectangles const& region) override;
+
     void resize(geometry::Size const& size) override;
     geometry::Point top_left() const override;
     geometry::Rectangle input_bounds() const override;
@@ -210,6 +212,7 @@ private:
         bool hidden;
         input::InputReceptionMode input_mode;
         std::vector<geometry::Rectangle> custom_input_rectangles{};
+        geometry::Rectangles opaque_region{};
         std::shared_ptr<graphics::CursorImage> cursor_image;
 
         std::list<StreamInfo> layers;
