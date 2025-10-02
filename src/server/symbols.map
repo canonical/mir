@@ -1645,6 +1645,8 @@ MIR_SERVER_INTERNAL_2.23 {
 global:
   extern "C++" {
     mir::time::AlarmFactory::create_repeating_alarm*;
+    mir::scene::BasicSurface::set_opaque_region*;
+    non-virtual?thunk?to?mir::scene::BasicSurface::set_opaque_region*;
   };
 local: *;
 } MIR_SERVER_INTERNAL_2.22;

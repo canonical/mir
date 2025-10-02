@@ -91,6 +91,8 @@ public:
     virtual void set_input_region(std::vector<geometry::Rectangle> const& region) = 0;
     virtual std::vector<geometry::Rectangle> get_input_region() const = 0;
 
+    virtual void set_opaque_region(geometry::Rectangles const& region) = 0;
+
     /// Given value is the frame size of the window
     virtual void resize(geometry::Size const& window_size) = 0;
     virtual void set_transformation(glm::mat4 const& t) = 0;

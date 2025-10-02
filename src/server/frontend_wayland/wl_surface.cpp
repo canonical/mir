@@ -326,8 +326,18 @@ void mf::WlSurface::frame(wl_resource* new_callback)
 
 void mf::WlSurface::set_opaque_region(std::optional<wl_resource*> const& region)
 {
-    (void)region;
-    // This isn't essential, but could enable optimizations
+    if(auto r = region)
+    {
+        auto opaque_region = geom::Rectangles{}; // Unfortunately no vector ctor :(
+        for (auto const& subregion : WlRegion::from(*r)->rectangle_vector())
+            opaque_region.add(subregion);
+
+        pending.opaque_region.emplace(opaque_region);
+    }
+    else
+    {
+        pending.opaque_region.reset();
+    }
 }
 
 void mf::WlSurface::set_input_region(std::optional<wl_resource*> const& region)
@@ -378,6 +388,8 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
                 scene_surface.value()->set_orientation(state.orientation.value());
             if (state.mirror_mode)
                 scene_surface.value()->set_mirror_mode(state.mirror_mode.value());
+            if (state.opaque_region)
+                scene_surface.value()->set_opaque_region(state.opaque_region.value());
         }
      }
 

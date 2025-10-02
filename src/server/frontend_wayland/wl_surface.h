@@ -28,6 +28,7 @@
 #include "mir/geometry/size.h"
 #include "mir/geometry/point.h"
 #include "mir/geometry/rectangle.h"
+#include "mir/geometry/rectangles.h"
 #include "mir/shell/surface_specification.h"
 #include "linux_drm_syncobj.h"
 
@@ -88,6 +89,7 @@ struct WlSurfaceState
     std::optional<float> scale;
     std::optional<geometry::Displacement> offset;
     std::optional<std::optional<std::vector<geometry::Rectangle>>> input_shape;
+    std::optional<geometry::Rectangles> opaque_region;
     std::optional<MirOrientation> orientation;
     std::optional<MirMirrorMode> mirror_mode;
     std::vector<wayland::Weak<Callback>> frame_callbacks;
@@ -240,6 +242,8 @@ private:
     void set_buffer_transform(int32_t transform) override;
     void set_buffer_scale(int32_t scale) override;
     void offset(int32_t x, int32_t y) override;
+
+    std::optional<geometry::Rectangles> opaque_region_;
 };
 }
 }

@@ -318,6 +318,11 @@ std::vector<geom::Rectangle> ms::BasicSurface::get_input_region() const
     return state->custom_input_rectangles;
 }
 
+void ms::BasicSurface::set_opaque_region(geom::Rectangles const& region)
+{
+    synchronised_state.lock()->opaque_region = region;
+}
+
 void ms::BasicSurface::resize(geom::Size const& desired_size)
 {
     geom::Size new_size = desired_size;
@@ -742,16 +747,35 @@ public:
         MirMirrorMode mirror_mode,
         float alpha,
         mg::Renderable::ID id,
-        ms::Surface const* surface)
-    : entry{std::move(buffer)},
-      alpha_{alpha},
-      screen_position_{top_left, entry->size()},
-      clip_area_{clip_area},
-      transformation_{transform},
-      orientation_{orientation},
-      mirror_mode_{mirror_mode},
-      id_{id},
-      surface{surface}
+        ms::Surface const* surface,
+        std::optional<geom::Rectangles> opaque_region) :
+        entry{std::move(buffer)},
+        alpha_{alpha},
+        screen_position_{top_left, entry->size()},
+        clip_area_{clip_area},
+        transformation_{transform},
+        orientation_{orientation},
+        mirror_mode_{mirror_mode},
+        id_{id},
+        surface{surface},
+        opaque_region_{
+            [&] -> std::optional<geom::Rectangles>
+            {
+                if (!opaque_region)
+                    return std::nullopt;
+
+                auto region = geom::Rectangles{};
+                for (auto const& r : *opaque_region)
+                {
+                    auto const translated_top_left = geom::Point{
+                        r.top_left.x + geom::as_delta(screen_position_.top_left.x),
+                        r.top_left.y + geom::as_delta(screen_position_.top_left.y),
+                    };
+                    region.add(geom::Rectangle{translated_top_left, r.size});
+                }
+
+                return region;
+            }()}
     {
     }
 
@@ -797,6 +821,12 @@ public:
     {
         return surface;
     }
+
+    std::optional<geom::Rectangles> opaque_region() const override
+    {
+        return opaque_region_;
+    }
+
 private:
     std::shared_ptr<mc::BufferStream::Submission> const entry;
     float const alpha_;
@@ -807,6 +837,7 @@ private:
     MirMirrorMode mirror_mode_;
     mg::Renderable::ID const id_;
     ms::Surface const* surface;
+    std::optional<geom::Rectangles> const opaque_region_;
 };
 }
 
@@ -872,7 +903,8 @@ mg::RenderableList ms::BasicSurface::generate_renderables(mc::CompositorID id) c
                 state->mirror_mode,
                 state->surface_alpha,
                 info.stream.get(),
-                this));
+                this,
+                state->opaque_region));
         }
     }
     return list;
