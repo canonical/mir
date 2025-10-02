@@ -667,7 +667,7 @@ void ms::BasicSurface::set_cursor_from_buffer(
     observers->cursor_image_set_to(this, image);
 }
 
-auto ms::BasicSurface::wayland_surface() -> mw::Weak<mf::WlSurface> const&
+auto ms::BasicSurface::wayland_surface() const -> mw::Weak<mf::WlSurface> const&
 {
     return weak_surface;
 }

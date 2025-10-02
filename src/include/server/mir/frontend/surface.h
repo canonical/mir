@@ -57,7 +57,7 @@ public:
     virtual void set_cursor_image(std::shared_ptr<graphics::CursorImage> const& image) = 0;
 
     /// Returned value is only safe to use on the Wayland thread
-    virtual auto wayland_surface() -> wayland::Weak<WlSurface> const& = 0;
+    virtual auto wayland_surface() const -> wayland::Weak<WlSurface> const& = 0;
 
 protected:
     Surface() = default;
