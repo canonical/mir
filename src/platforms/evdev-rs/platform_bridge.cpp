@@ -14,34 +14,27 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/input/platform.h"
-#include <memory>
+#include "platform_bridge.h"
+
+#include "platform.h"
+#include "mir_platforms_evdev_rs/src/lib.rs.h"
 
 #include "mir/console_services.h"
+#include "mir/log.h"
+#include "mir/fd.h"
 
-namespace mir
-{
-class ConsoleServices;
+namespace miers = mir::input::evdev_rs;
 
-namespace input
-{
-namespace evdev_rs
-{
-class Platform : public input::Platform
-{
-public:
-    Platform(std::shared_ptr<ConsoleServices> const& console);
-    std::shared_ptr<mir::dispatch::Dispatchable> dispatchable() override;
-    void start() override;
-    void stop() override;
-    void pause_for_config() override;
-    void continue_after_config() override;
-    std::unique_ptr<mir::Device::Observer> create_device_observer();
+miers::PlatformBridgeC::PlatformBridgeC(
+    Platform* platform,
+    std::shared_ptr<mir::ConsoleServices> const& console)
+    : platform(platform), console(console) {}
 
-private:
-    class Self;
-    std::shared_ptr<Self> self;
-};
+int miers::PlatformBridgeC::acquire_device(int major, int minor) const
+{
+    mir::log_info("Acquiring device: %d.%d", major, minor);
+
+    console->acquire_device(major, minor, platform->create_device_observer());
+    return 0;
 }
-}
-}
+

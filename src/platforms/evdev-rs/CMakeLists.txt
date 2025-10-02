@@ -6,6 +6,7 @@ add_definitions(-DMIR_LOG_COMPONENT_FALLBACK="evdev-input-rs")
 
 add_library(mirplatforminputevdevrsobjects OBJECT
   platform.cpp
+  platform_bridge.cpp platform_bridge.h
 )
 
 target_link_libraries(mirplatforminputevdevrsobjects

@@ -17,22 +17,30 @@
 #ifndef MIR_INPUT_EVDEV_RS_PLATFORM_BRIDGE_H
 #define MIR_INPUT_EVDEV_RS_PLATFORM_BRIDGE_H
 
+#include <memory>
+
 namespace mir
 {
+class ConsoleServices;
+
 namespace input
 {
 namespace evdev_rs
 {
 class Platform;
 
-}
-}
-}
-
 class PlatformBridgeC
 {
 public:
+    PlatformBridgeC(Platform* platform, std::shared_ptr<mir::ConsoleServices> const& console);
     virtual ~PlatformBridgeC() = default;
+    int acquire_device(int major, int minor) const;
+private:
+    Platform* platform;
+    std::shared_ptr<mir::ConsoleServices> console;
 };
+}
+}
+}
 
 #endif // MIR_INPUT_EVDEV_RS_PLATFORM_BRIDGE_H

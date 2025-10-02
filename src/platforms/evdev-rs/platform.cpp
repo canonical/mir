@@ -28,6 +28,32 @@ namespace md = mir::dispatch;
 namespace
 {
 template <typename Impl>
+class DeviceObserverWrapper : public mir::Device::Observer
+{
+public:
+    explicit DeviceObserverWrapper(rust::Box<Impl>&& box)
+        : box(std::move(box)) {}
+
+    void activated(mir::Fd&& device_fd) override
+    {
+        box->activated(device_fd);
+    }
+
+    void suspended() override
+    {
+        box->suspended();
+    }
+
+    void removed() override
+    {
+        box->removed();
+    }
+
+private:
+    rust::Box<Impl> box;
+};
+
+template <typename Impl>
 class PlatformImpl
 {
 public:
@@ -51,6 +77,11 @@ public:
     void stop()
     {
         box->stop();
+    }
+
+    rust::Box<mir::input::evdev_rs::DeviceObserverRs> create_device_observer()
+    {
+        return box->create_device_observer();
     }
 private:
     rust::Box<Impl> box;
@@ -79,13 +110,14 @@ public:
 class miers::Platform::Self
 {
 public:
-    Self() : platform_impl(evdev_rs_create(std::make_shared<PlatformBridgeC>())) {}
+    Self(Platform* platform, std::shared_ptr<ConsoleServices> const& console)
+        : platform_impl(evdev_rs_create(std::make_shared<PlatformBridgeC>(platform, console))) {}
 
     PlatformImpl<PlatformRs> platform_impl;
 };
 
-miers::Platform::Platform()
-    : self(std::make_shared<Self>())
+miers::Platform::Platform(std::shared_ptr<ConsoleServices> const& console)
+    : self(std::make_shared<Self>(this, console))
 {
 }
 
@@ -113,3 +145,10 @@ void miers::Platform::stop()
 {
     self->platform_impl.stop();
 }
+
+std::unique_ptr<mir::Device::Observer> mir::input::evdev_rs::Platform::create_device_observer()
+{
+    return std::make_unique<DeviceObserverWrapper<DeviceObserverRs>>(
+        self->platform_impl.create_device_observer());
+}
+
