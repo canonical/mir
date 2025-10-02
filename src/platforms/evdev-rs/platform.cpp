@@ -15,6 +15,7 @@
  */
 
 #include "platform.h"
+#include "platform_bridge.h"
 
 #include "mir/dispatch/dispatchable.h"
 #include "rust/cxx.h"
@@ -78,7 +79,7 @@ public:
 class miers::Platform::Self
 {
 public:
-    Self() : platform_impl(std::move(evdev_rs_create())) {}
+    Self() : platform_impl(evdev_rs_create(std::make_shared<PlatformBridgeC>())) {}
 
     PlatformImpl<PlatformRs> platform_impl;
 };

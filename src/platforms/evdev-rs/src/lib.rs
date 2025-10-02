@@ -4,6 +4,7 @@ use std::path::Path;
 use libc::{O_RDONLY, O_RDWR, O_WRONLY};
 use std::fs::{File, OpenOptions};
 use std::os::unix::{fs::OpenOptionsExt, io::OwnedFd};
+use cxx::SharedPtr;
 
 struct LibinputInterfaceImpl;
 
@@ -76,6 +77,7 @@ impl PlatformRs {
 
 #[cxx::bridge]
 mod ffi {
+
     extern "Rust" {
         type PlatformRs;
 
@@ -84,10 +86,22 @@ mod ffi {
         fn pause_for_config(self: &PlatformRs);
         fn stop(self: &PlatformRs);
 
-        fn evdev_rs_create() -> Box<PlatformRs>;
+        fn evdev_rs_create(bridge: SharedPtr<PlatformBridgeC>) -> Box<PlatformRs>;
+    }
+
+    unsafe extern "C++" {
+        include!("/home/matthew/Github/mir/src/platforms/evdev-rs/platform_bridge.h");
+
+        type PlatformBridgeC;
+        // type DeviceC;
+
+        // // TODO: Add the device observer as well
+        // fn acquire_device(major: i32, minor: i32) -> UniquePtr<DeviceC>;
     }
 }
 
-pub fn evdev_rs_create() -> Box<PlatformRs> {
+pub use ffi::PlatformBridgeC;
+
+pub fn evdev_rs_create(bridge: SharedPtr<PlatformBridgeC>) -> Box<PlatformRs> {
     return Box::new(PlatformRs { libinput: None, known_devices: Vec::new() });
 }
