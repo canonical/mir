@@ -57,6 +57,7 @@ struct MockRenderable : public graphics::Renderable
     MOCK_CONST_METHOD0(visible, bool());
     MOCK_CONST_METHOD0(shaped, bool());
     MOCK_CONST_METHOD0(surface_if_any, std::optional<mir::scene::Surface const*>());
+    MOCK_CONST_METHOD0(opaque_region, std::optional<geometry::Rectangles>());
 };
 }
 }

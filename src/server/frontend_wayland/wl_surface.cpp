@@ -275,6 +275,11 @@ mf::WlSurface* mf::WlSurface::from(wl_resource* resource)
     return static_cast<WlSurface*>(static_cast<wayland::Surface*>(raw_surface));
 }
 
+std::optional<geom::Rectangles> mf::WlSurface::opaque_region() const
+{
+    return opaque_region_;
+}
+
 void mf::WlSurface::send_frame_callbacks(CallbackList& list)
 {
     for (auto const& frame : list)
@@ -326,8 +331,14 @@ void mf::WlSurface::frame(wl_resource* new_callback)
 
 void mf::WlSurface::set_opaque_region(std::optional<wl_resource*> const& region)
 {
-    (void)region;
-    // This isn't essential, but could enable optimizations
+    if(auto r = region)
+    {
+        auto opaque_region = geom::Rectangles{}; // Unfortunately no vector ctor :(
+        for (auto const& subregion : WlRegion::from(*r)->rectangle_vector())
+            opaque_region.add(subregion);
+
+        opaque_region_.emplace(opaque_region);
+    }
 }
 
 void mf::WlSurface::set_input_region(std::optional<wl_resource*> const& region)

@@ -28,6 +28,7 @@
 #include "mir/geometry/size.h"
 #include "mir/geometry/point.h"
 #include "mir/geometry/rectangle.h"
+#include "mir/geometry/rectangles.h"
 #include "mir/shell/surface_specification.h"
 #include "linux_drm_syncobj.h"
 
@@ -188,6 +189,8 @@ public:
 
     static WlSurface* from(wl_resource* resource);
 
+    std::optional<geometry::Rectangles> opaque_region() const;
+
 private:
     std::shared_ptr<mir::graphics::GraphicBufferAllocator> const allocator;
     std::shared_ptr<mir::Executor> const wayland_executor;
@@ -240,6 +243,8 @@ private:
     void set_buffer_transform(int32_t transform) override;
     void set_buffer_scale(int32_t scale) override;
     void offset(int32_t x, int32_t y) override;
+
+    std::optional<geometry::Rectangles> opaque_region_;
 };
 }
 }
