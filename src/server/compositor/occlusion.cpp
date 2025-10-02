@@ -54,8 +54,21 @@ bool renderable_is_occluded(
         }
     }
 
-    if (!occluded && renderable.alpha() == 1.0f && !renderable.shaped())
+    auto const opaque = renderable.alpha() == 1.0f;
+    auto const opaque_region = renderable.opaque_region();
+    auto const transparent_with_opaque_region = renderable.shaped() && opaque_region.has_value();
+    if (!occluded && opaque)
+    {
         coverage.push_back(clipped_window);
+    }
+    else if (transparent_with_opaque_region)
+    {
+        for (auto subregion : *opaque_region)
+        {
+            auto const clipped_subregion = intersection_of(subregion, area);
+            coverage.push_back(clipped_subregion);
+        }
+    }
 
     return occluded;
 }
