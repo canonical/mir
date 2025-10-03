@@ -54,22 +54,27 @@ bool renderable_is_occluded(
         }
     }
 
-    auto const opaque = renderable.alpha() == 1.0f;
     auto const opaque_region = renderable.opaque_region();
-    auto const transparent_with_opaque_region = renderable.shaped() && opaque_region.has_value();
-    if (!occluded && opaque)
+    if (renderable.shaped())
+    {
+        if (opaque_region.has_value())
+        {
+            // TODO: If a window is made out of multiple opaque regions, adding
+            // each region alone to the coverage list will not work.
+            // Separately, each region might not occlude a window, but
+            // together, they might.
+            //
+            // For now, I think their bounding rect will do.
+            auto bounding_rect = opaque_region.value().bounding_rectangle();
+            auto const clipped_rect = intersection_of(bounding_rect, area);
+            coverage.push_back(clipped_rect);
+        }
+        // Client didn't send an opaque region
+    }
+    else if (renderable.alpha() == 1.0f)
     {
         coverage.push_back(clipped_window);
     }
-    else if (transparent_with_opaque_region)
-    {
-        for (auto subregion : *opaque_region)
-        {
-            auto const clipped_subregion = intersection_of(subregion, area);
-            coverage.push_back(clipped_subregion);
-        }
-    }
-
     return occluded;
 }
 }
