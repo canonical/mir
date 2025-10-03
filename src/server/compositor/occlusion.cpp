@@ -79,9 +79,8 @@ bool renderable_is_occluded(
 }
 }
 
-SceneElementSequence mir::compositor::filter_occlusions_from(
-    SceneElementSequence& elements,
-    Rectangle const& area)
+std::pair<OccludedElementSequence, SceneElementSequence> mir::compositor::filter_occlusions_from(
+    SceneElementSequence&& elements, Rectangle const& area)
 {
     SceneElementSequence occluded;
     std::vector<Rectangle> coverage;
@@ -101,5 +100,5 @@ SceneElementSequence mir::compositor::filter_occlusions_from(
         }
     }
 
-    return occluded;
+    return {occluded, elements};
 }
