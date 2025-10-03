@@ -18,10 +18,12 @@
 #define MIR_INPUT_EVDEV_RS_PLATFORM_BRIDGE_H
 
 #include <memory>
+#include "/home/matthew/Github/mir/include/platform/mir/console_services.h"
 
 namespace mir
 {
 class ConsoleServices;
+class Device;
 
 namespace input
 {
@@ -29,12 +31,24 @@ namespace evdev_rs
 {
 class Platform;
 
+class DeviceBridgeC
+{
+public:
+    DeviceBridgeC(std::unique_ptr<Device> device, int fd);
+    int raw_fd() const;
+
+private:
+    std::unique_ptr<Device> device;
+    int fd;
+};
+
 class PlatformBridgeC
 {
 public:
     PlatformBridgeC(Platform* platform, std::shared_ptr<mir::ConsoleServices> const& console);
     virtual ~PlatformBridgeC() = default;
-    int acquire_device(int major, int minor) const;
+    std::unique_ptr<DeviceBridgeC> acquire_device(int major, int minor) const;
+
 private:
     Platform* platform;
     std::shared_ptr<mir::ConsoleServices> console;

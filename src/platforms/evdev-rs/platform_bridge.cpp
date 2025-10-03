@@ -30,13 +30,23 @@ miers::PlatformBridgeC::PlatformBridgeC(
     std::shared_ptr<mir::ConsoleServices> const& console)
     : platform(platform), console(console) {}
 
-int miers::PlatformBridgeC::acquire_device(int major, int minor) const
+std::unique_ptr<miers::DeviceBridgeC> miers::PlatformBridgeC::acquire_device(int major, int minor) const
 {
     mir::log_info("Acquiring device: %d.%d", major, minor);
     auto observer = platform->create_device_observer();
     DeviceObserverWithFd* raw_observer = observer.get();
     auto future = console->acquire_device(major, minor, std::move(observer));
     future.wait();
-    return raw_observer->raw_fd().value();
+    return std::make_unique<DeviceBridgeC>(future.get(), raw_observer->raw_fd().value());
 }
 
+miers::DeviceBridgeC::DeviceBridgeC(std::unique_ptr<Device> device, int fd)
+    : device(std::move(device)),
+      fd(fd)
+{
+}
+
+int miers::DeviceBridgeC::raw_fd() const
+{
+    return fd;
+}
