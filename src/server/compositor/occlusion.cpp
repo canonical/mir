@@ -77,21 +77,21 @@ bool renderable_is_occluded(
 }
 }
 
-SceneElementSequence mir::compositor::filter_occlusions_from(
-    SceneElementSequence& elements,
-    Rectangle const& area)
+std::pair<OccludedElementSequence, SceneElementSequence> mir::compositor::filter_occlusions_from(
+    SceneElementSequence&& elements, Rectangle const& area)
 {
-    SceneElementSequence occluded;
+    OccludedElementSequence occluded;
+    SceneElementSequence visible{std::move(elements)};
     std::vector<Rectangle> coverage;
 
-    auto it = elements.rbegin();
-    while (it != elements.rend())
+    auto it = visible.rbegin();
+    while (it != visible.rend())
     {
         auto const renderable = (*it)->renderable();
         if (renderable_is_occluded(*renderable, area, coverage))
         {
             occluded.insert(occluded.begin(), *it);
-            it = SceneElementSequence::reverse_iterator(elements.erase(std::prev(it.base())));
+            it = SceneElementSequence::reverse_iterator(visible.erase(std::prev(it.base())));
         }
         else
         {
@@ -99,5 +99,5 @@ SceneElementSequence mir::compositor::filter_occlusions_from(
         }
     }
 
-    return occluded;
+    return {std::move(occluded), std::move(visible)};
 }
