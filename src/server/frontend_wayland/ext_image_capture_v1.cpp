@@ -141,7 +141,6 @@ public:
     ExtImageCopyCaptureSessionV1(wl_resource* resource, ExtImageCaptureSourceV1* source, uint32_t options, std::shared_ptr<ExtImageCaptureV1Ctx> const& ctx);
     ~ExtImageCopyCaptureSessionV1();
 
-    void apply_damage(std::optional<geom::Rectangle> const& damage);
     void maybe_capture_frame();
 
     std::unique_ptr<compositor::ScreenShooter> const screen_shooter;
@@ -157,6 +156,7 @@ private:
 
     void send_buffer_constraints();
     void create_change_notifier();
+    void apply_damage(std::optional<geom::Rectangle> const& damage);
 
     wayland::Weak<OutputGlobal> const output;
     uint32_t const options;
