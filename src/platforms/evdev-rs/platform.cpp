@@ -28,7 +28,7 @@ namespace md = mir::dispatch;
 namespace
 {
 template <typename Impl>
-class DeviceObserverWrapper : public mir::Device::Observer
+class DeviceObserverWrapper : public miers::DeviceObserverWithFd
 {
 public:
     explicit DeviceObserverWrapper(rust::Box<Impl>&& box)
@@ -36,6 +36,7 @@ public:
 
     void activated(mir::Fd&& device_fd) override
     {
+        fd = device_fd;
         box->activated(device_fd);
     }
 
@@ -49,8 +50,14 @@ public:
         box->removed();
     }
 
+    std::optional<mir::Fd> raw_fd() const override
+    {
+        return fd;
+    }
+
 private:
     rust::Box<Impl> box;
+    std::optional<mir::Fd> fd;
 };
 
 class DispatchableStub : public md::Dispatchable
@@ -112,7 +119,7 @@ void miers::Platform::stop()
     self->platform_impl->stop();
 }
 
-std::unique_ptr<mir::Device::Observer> mir::input::evdev_rs::Platform::create_device_observer()
+std::unique_ptr<miers::DeviceObserverWithFd> miers::Platform::create_device_observer()
 {
     return std::make_unique<DeviceObserverWrapper<DeviceObserverRs>>(
         self->platform_impl->create_device_observer());

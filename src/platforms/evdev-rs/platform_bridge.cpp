@@ -33,8 +33,10 @@ miers::PlatformBridgeC::PlatformBridgeC(
 int miers::PlatformBridgeC::acquire_device(int major, int minor) const
 {
     mir::log_info("Acquiring device: %d.%d", major, minor);
-
-    console->acquire_device(major, minor, platform->create_device_observer());
-    return 0;
+    auto observer = platform->create_device_observer();
+    DeviceObserverWithFd* raw_observer = observer.get();
+    auto future = console->acquire_device(major, minor, std::move(observer));
+    future.wait();
+    return raw_observer->raw_fd().value();
 }
 

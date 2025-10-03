@@ -1,31 +1,45 @@
 use input::event::{DeviceEvent, EventTrait};
 use input::{AsRaw, Device, Event, Libinput, LibinputInterface};
+use std::os::fd::{AsRawFd, FromRawFd};
 use std::path::Path;
-use libc::{O_RDONLY, O_RDWR, O_WRONLY};
+use libc::{O_RDONLY, O_RDWR, O_WRONLY, c_int, dev_t, stat, major, minor, O_CLOEXEC};
+use std::ffi::CString;
+use std::os::unix::ffi::OsStrExt;
 use std::fs::{File, OpenOptions};
 use std::os::unix::{fs::OpenOptionsExt, io::OwnedFd};
 use cxx::SharedPtr;
 
 struct LibinputInterfaceImpl {
     bridge: SharedPtr<PlatformBridgeC>,
+    fds: Vec<OwnedFd>,
 }
 
 impl LibinputInterface for LibinputInterfaceImpl {
     // This method is called whenever libinput needs to open a new device.
     fn open_restricted(&mut self, path: &Path, flags: i32) -> Result<OwnedFd, i32> {
         println!("Opening device: {:?} with flags: {}", path, flags);
-        OpenOptions::new()
-            .custom_flags(flags)
-            .read((flags & O_RDONLY != 0) | (flags & O_RDWR != 0))
-            .write((flags & O_WRONLY != 0) | (flags & O_RDWR != 0))
-            .open(path)
-            .map(|file| file.into())
-            .map_err(|err| err.raw_os_error().unwrap())
+        let cpath = CString::new(path.as_os_str().as_bytes()).unwrap();
+
+        let mut st: stat = unsafe { std::mem::zeroed() };
+        let ret = unsafe { libc::stat(cpath.as_ptr(), &mut st) };
+        if ret != 0 {
+            return Err(ret);
+        }
+
+        let major_num = major(st.st_rdev);
+        let minor_num = minor(st.st_rdev);
+        let fd = self.bridge.acquire_device(major_num as i32, minor_num as i32);
+        println!("Acquired fd: {} for device with major: {}, minor: {}", fd, major_num, minor_num);
+        let owned = unsafe { OwnedFd::from_raw_fd(fd) };
+        self.fds.push(owned.try_clone().unwrap());
+        println!("Owned fd: {}", owned.as_raw_fd().to_string());
+        Ok(owned)
     }
 
     // This method is called when libinput is done with a device.
     fn close_restricted(&mut self, fd: OwnedFd) {
-        drop(File::from(fd));
+        println!("Closing device with fd: {}", fd.as_raw_fd().to_string());
+        // drop(File::from(fd));
     }
 }
 
@@ -38,7 +52,9 @@ pub struct PlatformRs {
 impl PlatformRs {
     pub fn start(&mut self) {
         println!("Starting evdev-rs platform");
-        self.libinput = Some(Libinput::new_with_udev(LibinputInterfaceImpl{ bridge: self.bridge.clone() }));
+        self.libinput = Some(Libinput::new_with_udev(LibinputInterfaceImpl{ bridge: self.bridge.clone(), fds: Vec::new() }));
+        let libinput = self.libinput.as_mut().unwrap();
+        libinput.udev_assign_seat("seat1").unwrap();
         self.process_input_events();
     }
     pub fn continue_after_config(&self) {}
@@ -56,7 +72,6 @@ impl PlatformRs {
             return;
         }
 
-        libinput.udev_assign_seat("seat0").unwrap();
 
         println!("Processing libinput events");
         for event in libinput {
@@ -88,15 +103,17 @@ impl PlatformRs {
 }
 
 pub struct DeviceObserverRs {
+    fd: Option<i32>
 }
 
 impl DeviceObserverRs {
     pub fn new() -> Self {
-        DeviceObserverRs {}
+        DeviceObserverRs { fd: None }
     }
 
     pub fn activated(&mut self, fd: i32) {
         println!("Device activated with fd: {}", fd);
+        self.fd = Some(fd);
     }
 
     pub fn suspended(&mut self, ) {
@@ -105,6 +122,7 @@ impl DeviceObserverRs {
 
     pub fn removed(&mut self, ) {
         println!("Device removed");
+        self.fd = None;
     }
 }
 
