@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<protocol name="ext_input_trigger_registration_v1">
+  <copyright>
+    Copyright 2025 Canonical Limited
+
+    Permission is hereby granted, free of charge, to any person obtaining a
+    copy of this software and associated documentation files (the "Software"),
+    to deal in the Software without restriction, including without limitation
+    the rights to use, copy, modify, merge, publish, distribute, sublicense,
+    and/or sell copies of the Software, and to permit persons to whom the
+    Software is furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in
+    all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+    THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+    THE SOFTWARE.
+  </copyright>
+
+  <description summary="Registration of global input triggers and associated actions">
+    This protocol allows for a privileged Wayland client to register ownership
+    of input trigger events and associate them with actions.
+  </description>
+
+  <interface name="ext_input_trigger_registration_manager_v1" version="1">
+    <description summary="used to register input triggers and actions">
+      This interface allows a Wayland client to register ownership of input
+      trigger events and associate them with actions.
+    </description>
+
+    <request name="destroy" type="destructor">
+      <description summary="destroy input trigger registration manager object">
+        This informs the compositor that the input trigger registration manager
+        object will no longer be used. Existing objects created through this
+        interface remain valid.
+      </description>
+    </request>
+
+    <!--
+      RFC
+
+      We want to be able to extend this to other input types: mouse, touchpad,
+      touchscreen, tablet pen, ...
+
+      Either we guess a generic way to describe all these triggers (e.g. a string
+      prefix),  or we plan to add specific registration requests later. The latter
+      seems the better approach both.
+
+      I envisage a family of requests:
+        o register_input_trigger_keyboard_event
+        o register_input_trigger_mouse_event
+        o register_input_trigger_touchpad_event
+        ...
+    -->
+    <request name="register_input_trigger_keyboard_event">
+      <description summary="register input trigger event">
+        This request creates an input trigger and asks the compositor to reserve it
+        to the manager.
+
+        <!--
+          RFC
+
+          Should we say "The keycombo must follow the XDG Shortcut standard"
+
+          This is the wording from "action binder", but I have concerns.
+
+          https://specifications.freedesktop.org/shortcuts-spec/latest/
+          describes using the `XKB_MOD_NAME_...` symbols. But these are
+          deprecated (and were deprecated before it was written).
+
+           And "LOGO"? I think "Meta" is more widely known.
+        -->
+        The keycombo must follow the XDG Shortcut standard.
+
+        The compositor will send either the ext_input_trigger_event_v1.done or
+        ext_input_trigger_event_v1.failed event on the created object in
+        response to this request.
+      </description>
+      <arg name="keycombo" type="string" summary="the keycombo to trigger the action"/>
+      <arg name="id" type="new_id" interface="ext_input_trigger_event_v1"/>
+    </request>
+
+    <request name="register_input_trigger_action">
+      <description summary="register input trigger action event">
+        This request creates an input trigger action.
+
+        The name parameter describes the action (it has no semantic content and
+        may be duplicated across actions).
+
+        The compositor will send the ext_input_trigger_action_v1.done event in
+        response to this request.
+      </description>
+      <arg name="name" type="string" summary="a description of the action"/>
+      <arg name="id" type="new_id" interface="ext_input_trigger_action_v1"/>
+    </request>
+  </interface>
+
+  <interface name="ext_input_trigger_event_v1" version="1">
+    <description summary="represents the (attempted) registration of an input trigger">
+      In response to the creation of this object the compositor must send
+      either the done or failed event.
+
+      The done event indicates that the trigger is "owned" by the manager.
+      This means the compositor will not allow this, or any other manager to
+      register the trigger event.
+
+      The failed event indicates that the trigger is not "owned" by the manager.
+      This the object is of no further use and should be destroyed.
+    </description>
+
+    <request name="destroy" type="destructor">
+      <description summary="destroy the input trigger">
+        This informs the compositor that the input trigger will no longer be
+        used.
+      </description>
+    </request>
+
+    <event name="done">
+      <description summary="input trigger successfully registered">
+        This client is now responsible for handling this input trigger.
+      </description>
+    </event>
+
+    <event name="failed">
+      <description summary="input trigger failed to register">
+        The failed event indicates that the trigger is not "owned" by the manager.
+        This means the object is of no further use and should be destroyed.
+      </description>
+    </event>
+  </interface>
+
+  <interface name="ext_input_trigger_action_v1" version="1">
+    <description summary="represents the registration of an input trigger action">
+      In response to the creation of this object the compositor must send
+      the done event.
+    </description>
+
+    <request name="add_input_trigger_event">
+      <description summary="add an input trigger to the action">
+        This request adds an input trigger to those that activate the action.
+      </description>
+      <arg name="trigger" type="object" interface="ext_input_trigger_event_v1" summary="the trigger being added"/>
+    </request>
+
+    <request name="drop_input_trigger_event">
+      <description summary="drop an input trigger from the action">
+        This request drops an input trigger from those that activate the action.
+      </description>
+      <arg name="trigger" type="object" interface="ext_input_trigger_event_v1" summary="the trigger being dropped"/>
+    </request>
+
+    <event name="done">
+      <description summary="the exported action token">
+        The 'done' event contains the unique token of this action and notifies
+        that the provider is done. The action token is usable by the
+        ext_input_trigger_activation_v1 protocol. The token can be used by this
+        or another client (or clients).
+      </description>
+      <arg name="token" type="string" summary="the exported action token"/>
+    </event>
+
+    <request name="cancel" type="destructor">
+      <description summary="purge the input trigger action">
+        This informs the compositor that the input trigger action will no
+        longer be used.
+
+        Any ext_input_trigger_activation_v1 created from the associated token
+        by this or other clients will become unavailable.
+      </description>
+    </request>
+
+    <request name="destroy" type="destructor">
+      <description summary="destroy the input trigger action">
+        This informs the compositor that the input trigger action will no
+        longer be used.
+        Any ext_input_trigger_activation_v1 created from the associated token
+        by this or other clients will be unaffected.
+      </description>
+    </request>
+  </interface>
+</protocol>
