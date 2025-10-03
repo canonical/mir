@@ -135,7 +135,7 @@ private:
 class ExtImageCopyCaptureFrameV1;
 
 class ExtImageCopyCaptureSessionV1
-    : public wayland::ImageCopyCaptureSessionV1
+    : public wayland::ImageCopyCaptureSessionV1, OutputConfigListener
 {
 public:
     ExtImageCopyCaptureSessionV1(wl_resource* resource, ExtImageCaptureSourceV1* source, uint32_t options, std::shared_ptr<ExtImageCaptureV1Ctx> const& ctx);
@@ -153,8 +153,8 @@ private:
     };
 
     void create_frame(wl_resource* new_resource) override;
+    auto output_config_changed(graphics::DisplayConfigurationOutput const& config) -> bool override;
 
-    void send_buffer_constraints();
     void create_change_notifier();
     void apply_damage(std::optional<geom::Rectangle> const& damage);
 
@@ -309,33 +309,34 @@ mf::ExtImageCopyCaptureSessionV1::ExtImageCopyCaptureSessionV1(
       options{options},
       ctx{ctx}
 {
-    // TODO: watch for output config changes to resend buffer constraints
-    send_buffer_constraints();
+    if (output)
+    {
+        output.value().add_listener(this);
+        output_config_changed(output.value().current_config());
+    }
 }
 
 mf::ExtImageCopyCaptureSessionV1::~ExtImageCopyCaptureSessionV1()
 {
+    if (output)
+    {
+        output.value().remove_listener(this);
+    }
     if (change_notifier)
     {
         ctx->surface_stack->remove_observer(change_notifier);
     }
 }
 
-
-void mf::ExtImageCopyCaptureSessionV1::send_buffer_constraints()
+auto mf::ExtImageCopyCaptureSessionV1::output_config_changed(graphics::DisplayConfigurationOutput const& config) -> bool
 {
-    if (!output)
-    {
-        send_stopped_event();
-        return;
-    }
-
-    auto const& output_config = output.value().current_config();
-    auto const buffer_size = output_config.modes[output_config.current_mode_index].size;
+    // Send buffer constraints matching new output configuration
+    auto const buffer_size = config.modes[config.current_mode_index].size;
     send_buffer_size_event(
         buffer_size.width.as_uint32_t(), buffer_size.height.as_uint32_t());
     send_shm_format_event(wayland::Shm::Format::argb8888);
     send_done_event();
+    return true;
 }
 
 void mf::ExtImageCopyCaptureSessionV1::apply_damage(
