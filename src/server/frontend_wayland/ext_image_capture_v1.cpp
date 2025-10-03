@@ -188,6 +188,7 @@ private:
 
     bool capture_has_been_called = false;
     wayland::Weak<wayland::Buffer> target;
+    geom::Rectangle frame_damage;
 
     wayland::Weak<ExtImageCopyCaptureSessionV1> const session;
     std::shared_ptr<ExtImageCaptureV1Ctx> const ctx;
@@ -487,14 +488,22 @@ void mf::ExtImageCopyCaptureFrameV1::damage_buffer(
     int32_t width,
     int32_t height)
 {
-    if (!session)
+    if (x < 0 || y < 0 || width <= 0 || height <= 0)
     {
         BOOST_THROW_EXCEPTION(wayland::ProtocolError(
             resource, Error::invalid_buffer_damage,
-            "session is gone"));
+            "invalid buffer damage coordinates"));
     }
-    // TODO: this needs to be converted to output space coordinates
-    session.value().apply_damage(geom::Rectangle{{x, y}, {width, height}});
+
+    auto new_damage = geom::Rectangle{{x, y}, {width, height}};
+    if (frame_damage.size != geom::Size{})
+    {
+        frame_damage = geom::Rectangles{frame_damage, new_damage}.bounding_rectangle();
+    }
+    else
+    {
+        frame_damage = new_damage;
+    }
 }
 
 void mf::ExtImageCopyCaptureFrameV1::capture()
@@ -553,24 +562,11 @@ void mf::ExtImageCopyCaptureFrameV1::capture_frame(
         return;
     }
 
-    auto buffer = std::shared_ptr<mir::renderer::software::WriteMappable>{
-        shm_data.get(),
-        [shm_data, weak_buffer = target, executor = ctx->wayland_executor](auto*)
-        {
-            // Send release event for underlying buffer if necessary
-            executor->spawn(
-                [shm_data, weak_buffer]()
-                {
-                    if (weak_buffer)
-                    {
-                        weak_buffer.value().send_release_event();
-                    }
-                });
-        }
-    };
+    // TODO: union buffer_space_damage with frame_damage to determine
+    // region to copy.
 
     session.value().screen_shooter->capture(
-        std::move(buffer), output_space_area, transform, overlay_cursor,
+        std::move(shm_data), output_space_area, transform, overlay_cursor,
         [executor=ctx->wayland_executor, buffer_space_damage, self=wayland::make_weak(this)](std::optional<time::Timestamp> captured_time)
         {
             executor->spawn([self, captured_time, buffer_space_damage]()
@@ -581,6 +577,7 @@ void mf::ExtImageCopyCaptureFrameV1::capture_frame(
                     }
                 });
         });
+    frame_damage = geom::Rectangle{};
 }
 
 void mf::ExtImageCopyCaptureFrameV1::report_result(
