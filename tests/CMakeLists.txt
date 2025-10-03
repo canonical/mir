@@ -138,7 +138,6 @@ PUBLIC
   mir-public-test-doubles
   mir-public-test-framework
 
-  Boost::system
   ${GTEST_BOTH_LIBRARIES}
 PRIVATE
   ${GMOCK_MAIN_LIBRARY}
@@ -152,7 +151,6 @@ PUBLIC
   mir-protected-test-framework
   mir-protected-test-doubles
 
-  Boost::system
   ${GTEST_BOTH_LIBRARIES}
 PRIVATE
   ${GMOCK_MAIN_LIBRARY}
