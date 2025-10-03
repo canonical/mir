@@ -76,7 +76,7 @@ bool mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
     /*
      * Note: Buffer lifetimes are ensured by the two objects holding
      *       references to them; visible_elements and renderable_list.
-     *       So no buffer is going to be releaswayland_executored back to the client till
+     *       So no buffer is going to be released back to the client till
      *       both of those containers get destroyed (end of the function).
      *       Actually, there's a third reference held by the texture cache
      *       in GLRenderer, but that gets released earlier in render().
