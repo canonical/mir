@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<protocol name="ext_input_trigger_activation_v1">
+  <copyright>
+    Copyright 2025 Canonical Limited
+
+    Permission is hereby granted, free of charge, to any person obtaining a
+    copy of this software and associated documentation files (the "Software"),
+    to deal in the Software without restriction, including without limitation
+    the rights to use, copy, modify, merge, publish, distribute, sublicense,
+    and/or sell copies of the Software, and to permit persons to whom the
+    Software is furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in
+    all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+    THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+    THE SOFTWARE.
+  </copyright>
+
+  <description summary="Registration for global input actions">
+    This protocol allows for a Wayland clients to subscribe to input trigger
+    actions for activate and deactivate notifications.
+  </description>
+
+  <interface name="ext_input_trigger_activation_manager_v1" version="1">
+    <description summary="used to register interest in input actions">
+      This interface allows a Wayland client to register interest in
+      input trigger actions.
+    </description>
+
+    <request name="destroy" type="destructor">
+      <description summary="destroy input trigger activation manager object">
+        This informs the compositor that the input trigger activation manager
+        object will no longer be used. Existing objects created through this
+        interface remain valid.
+      </description>
+    </request>
+
+    <request name="get_input_trigger_activation">
+      <description summary="register interest in input trigger action">
+        This request creates an input trigger activation object.
+
+        The token should be one issued by the compositor, if not then the
+        compositor can raise a protocol error.
+
+        If the token has been issued by the compositor, but is no longer
+        available, then an ext_input_trigger_activation_v1.unavailable event
+        should be sent immediately.
+      </description>
+      <arg name="token" type="string" summary="the exported action token"/>
+      <arg name="id" type="new_id" interface="ext_input_trigger_activation_v1"/>
+    </request>
+  </interface>
+
+  <interface name="ext_input_trigger_activation_v1" version="1">
+    <description summary="receives notifications of input trigger actions">
+      The compositor sends notification of the activation and deactivation of
+      the associated action.
+    </description>
+
+    <event name="begin">
+      <description summary="begin the input action">
+        One of the input trigger events associated with the action has occurred.
+
+        The app will begin the activity it associates with the action.
+
+        The compositor will route input events to the client until the action ends.
+      </description>
+      <arg name="activation_token" type="string" summary="an xdg_activation token"/>
+    </event>
+
+    <event name="end">
+      <description summary="end the input action">
+        The action is no longer being triggered.
+
+        The app will end the activity it associates with the action.
+
+        The compositor will no longer route input events to the client until the action ends.
+      </description>
+    </event>
+
+    <event name="unavailable">
+      <description summary="the input action is (or has become) unavailable">
+        Sent if the token is or becomes unavailable.
+
+        This means the object is of no further use and should be destroyed.
+      </description>
+    </event>
+
+    <request name="destroy" type="destructor">
+      <description summary="destroy the input trigger activation">
+        This informs the compositor that the input trigger activation will no
+        longer be used.
+      </description>
+    </request>
+  </interface>
+</protocol>
