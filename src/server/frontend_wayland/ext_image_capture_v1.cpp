@@ -155,7 +155,7 @@ private:
 
     void create_frame(wl_resource* new_resource) override;
 
-    void send_buffer_format();
+    void send_buffer_constraints();
     void create_change_notifier();
 
     wayland::Weak<OutputGlobal> const output;
@@ -310,7 +310,7 @@ mf::ExtImageCopyCaptureSessionV1::ExtImageCopyCaptureSessionV1(
       ctx{ctx}
 {
     // TODO: watch for output config changes to resend buffer constraints
-    send_buffer_format();
+    send_buffer_constraints();
 }
 
 mf::ExtImageCopyCaptureSessionV1::~ExtImageCopyCaptureSessionV1()
@@ -322,7 +322,7 @@ mf::ExtImageCopyCaptureSessionV1::~ExtImageCopyCaptureSessionV1()
 }
 
 
-void mf::ExtImageCopyCaptureSessionV1::send_buffer_format()
+void mf::ExtImageCopyCaptureSessionV1::send_buffer_constraints()
 {
     if (!output)
     {
