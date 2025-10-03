@@ -590,10 +590,10 @@ void mf::ExtImageCopyCaptureFrameV1::report_result(
         return;
     }
     // send_transform_event();
-    send_damage_event(buffer_space_damage.left().as_uint32_t(),
-                      buffer_space_damage.top().as_uint32_t(),
-                      buffer_space_damage.size.width.as_uint32_t(),
-                      buffer_space_damage.size.height.as_uint32_t());
+    send_damage_event(buffer_space_damage.left().as_int(),
+                      buffer_space_damage.top().as_int(),
+                      buffer_space_damage.size.width.as_int(),
+                      buffer_space_damage.size.height.as_int());
 
     WaylandTimespec const timespec{captured_time.value()};
     send_presentation_time_event(
