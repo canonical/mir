@@ -30,7 +30,6 @@ target_link_libraries(mir_window_management_tests
   mircommon
   miral
 
-  Boost::system
   # GBM platform dependencies
   PkgConfig::DRM
   # Shared platform dependencies

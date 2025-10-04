@@ -130,7 +130,6 @@ target_link_libraries(mir-test-doubles-static
   mir-protected-test-doubles
   mir-test-framework-static
 
-  Boost::system
   ${GMOCK_LIBRARIES}
   ${GMOCK_MAIN_LIBRARY}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
