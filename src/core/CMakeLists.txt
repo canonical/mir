@@ -36,11 +36,6 @@ target_include_directories(mircore
 )
 
 
-target_link_libraries(mircore
-  PRIVATE
-    Boost::system
-)
-
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 
 set_target_properties(mircore

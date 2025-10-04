@@ -116,7 +116,6 @@ target_link_libraries(mir-test-framework-static
   mir-stub-input-platform
   mir-protected-test-framework
   mir-public-test
-  Boost::system
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARIES}
   PkgConfig::UMOCKDEV
