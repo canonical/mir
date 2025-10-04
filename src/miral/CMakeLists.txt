@@ -61,27 +61,22 @@ function(add_wayland_protocol xml_file out_var)
     set(code   ${GENERATED_DIR}/${name}.c)
 
     add_custom_command(
-      OUTPUT ${GENERATED_DIR}
-      COMMAND ${CMAKE_COMMAND} -E make_directory -p ${GENERATED_DIR}
-    )
-
-    add_custom_command(
       OUTPUT ${header}
-      COMMAND "sh" "-c" "wayland-scanner client-header ${xml_file} ${header}.tmp"
-      COMMAND ${CMAKE_COMMAND} -E copy ${header}.tmp ${header}
-      COMMAND ${CMAKE_COMMAND} -E rm ${header}.tmp
-      COMMAND sed -i s/\\<namespace\\>/namespace_/g ${header}
-      DEPENDS ${GENERATED_DIR} ${xml_file}
+      COMMAND ${CMAKE_COMMAND} -E make_directory ${GENERATED_DIR}
+      COMMAND wayland-scanner client-header "${xml_file}" "${header}.tmp"
+      COMMAND sed -i s/\\<namespace\\>/namespace_/g "${header}.tmp"
+      COMMAND ${CMAKE_COMMAND} -E rename ${header}.tmp ${header}
+      DEPENDS ${xml_file}
       VERBATIM
     )
 
     add_custom_command(
       OUTPUT ${code}
-      COMMAND "sh" "-c" "wayland-scanner private-code ${xml_file} ${code}.tmp"
-      COMMAND ${CMAKE_COMMAND} -E copy ${code}.tmp ${code}
-      COMMAND ${CMAKE_COMMAND} -E rm ${code}.tmp
-      COMMAND sed -i s/\\<namespace\\>/namespace_/g ${code}
-      DEPENDS ${GENERATED_DIR} ${xml_file}
+      COMMAND ${CMAKE_COMMAND} -E make_directory ${GENERATED_DIR}
+      COMMAND wayland-scanner private-code "${xml_file}" "${code}.tmp"
+      COMMAND sed -i s/\\<namespace\\>/namespace_/g "${code}.tmp"
+      COMMAND ${CMAKE_COMMAND} -E rename ${code}.tmp ${code}
+      DEPENDS ${xml_file}
       VERBATIM
     )
 
