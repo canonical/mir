@@ -454,6 +454,12 @@ void basic_software_buffer_drawing(
         {
             return std::nullopt;
         }
+
+        auto opaque_region() const -> std::optional<mir::geometry::Rectangles> override
+        {
+            return std::nullopt;
+        }
+
     private:
         std::shared_ptr<mg::Buffer> const buffer_;
         mir::geometry::Point top_left;

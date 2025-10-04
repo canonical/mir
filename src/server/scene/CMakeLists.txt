@@ -33,6 +33,9 @@ ADD_LIBRARY(
   ${CMAKE_SOURCE_DIR}/src/include/server/mir/scene/surface_observer.h
 )
 
+# TODO: Having to do this suggests that `Surface::wayland_surface` might need some changes
+include_directories(../frontend_wayland)
+
 target_link_libraries(mirscene
   PUBLIC
     mirplatform

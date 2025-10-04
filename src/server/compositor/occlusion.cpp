@@ -54,16 +54,33 @@ bool renderable_is_occluded(
         }
     }
 
-    if (!occluded && renderable.alpha() == 1.0f && !renderable.shaped())
+    auto const opaque_region = renderable.opaque_region();
+    if (renderable.shaped())
+    {
+        if (opaque_region.has_value())
+        {
+            // TODO: If a window is made out of multiple opaque regions, adding
+            // each region alone to the coverage list will not work.
+            // Separately, each region might not occlude a window, but
+            // together, they might.
+            //
+            // For now, I think their bounding rect will do.
+            auto bounding_rect = opaque_region.value().bounding_rectangle();
+            auto const clipped_rect = intersection_of(bounding_rect, area);
+            coverage.push_back(clipped_rect);
+        }
+        // Client didn't send an opaque region
+    }
+    else if (renderable.alpha() == 1.0f)
+    {
         coverage.push_back(clipped_window);
-
+    }
     return occluded;
 }
 }
 
-SceneElementSequence mir::compositor::filter_occlusions_from(
-    SceneElementSequence& elements,
-    Rectangle const& area)
+std::pair<OccludedElementSequence, SceneElementSequence> mir::compositor::filter_occlusions_from(
+    SceneElementSequence&& elements, Rectangle const& area)
 {
     SceneElementSequence occluded;
     std::vector<Rectangle> coverage;
@@ -83,5 +100,5 @@ SceneElementSequence mir::compositor::filter_occlusions_from(
         }
     }
 
-    return occluded;
+    return {occluded, elements};
 }

@@ -24,7 +24,9 @@ namespace mir
 namespace compositor
 {
 
-SceneElementSequence filter_occlusions_from(SceneElementSequence& list, geometry::Rectangle const& area);
+using OccludedElementSequence = SceneElementSequence;
+std::pair<OccludedElementSequence, SceneElementSequence> filter_occlusions_from(
+    SceneElementSequence&& list, geometry::Rectangle const& area);
 
 } // namespace compositor
 } // namespace mir
