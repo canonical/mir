@@ -38,7 +38,7 @@ impl LibinputInterface for LibinputInterfaceImpl {
         let fd = device.raw_fd();
         println!("Acquired fd: {} for device with major: {}, minor: {}", fd, major_num, minor_num);
         self.fds.push(device);
-        
+
         let owned = unsafe { OwnedFd::from_raw_fd(fd)};
         println!("Owned fd: {}", owned.as_raw_fd().to_string());
         Ok(owned)
@@ -150,12 +150,12 @@ impl PlatformRs {
         let mut fds = [
             pollfd {
                 fd: state.libinput.as_raw_fd(),
-                events: POLLIN, 
+                events: POLLIN,
                 revents: 0,
             },
             pollfd {
                 fd: rfd.as_raw_fd(),
-                events: POLLIN, 
+                events: POLLIN,
                 revents: 0,
             }
         ];
@@ -169,19 +169,19 @@ impl PlatformRs {
                     return;
                 }
             }
-            
+
             if state.libinput.dispatch().is_err() {
                 // TODO: Report the error to Mir's logging facilities somehow
                 println!("Error dispatching libinput events");
                 return;
             }
-    
-    
+
+
             if fds[0].revents & POLLIN != 0 {
                 println!("Processing input events");
                 for event in &mut state.libinput {
                     println!("Got event: {:?}", event);
-        
+
                     match event {
                         Event::Device(device_event) => {
                             match device_event  {
@@ -199,11 +199,11 @@ impl PlatformRs {
                                 _ => {}
                             }
                         },
-        
+
                         Event::Pointer(pointer_event) => {
                             println!("Pointer event: {:?}", pointer_event);
                         },
-        
+
                         // TODO: Otherwise, find the event, process it, and request that the input sink handle it
                         _ => {}
                     }
