@@ -27,6 +27,7 @@
 
 #include <GLES2/gl2.h>
 
+#include <memory>
 #include <mutex>
 #include <map>
 
@@ -58,6 +59,11 @@ public:
     auto texture_for_provider(
         std::shared_ptr<EGLContextExecutor> const& egl_delegate,
         RenderingProvider* provider) -> std::shared_ptr<gl::Texture>;
+
+static auto texture_from_mapping(
+    std::shared_ptr<EGLContextExecutor> executor,
+    std::shared_ptr<renderer::software::Mapping<std::byte const>> mapping)
+    -> std::shared_ptr<gl::Texture>;
 
 protected:
     ShmBuffer(
@@ -159,6 +165,7 @@ private:
     mir::Synchronised<std::function<void()>> on_consumed;
     std::function<void()> const on_release;
 };
+
 }
 }
 }

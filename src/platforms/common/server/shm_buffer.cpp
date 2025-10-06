@@ -14,8 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "mir/graphics/buffer_id.h"
 #include "mir/graphics/gl_format.h"
 #include "mir/graphics/ptr_backed_mapping.h"
+#include "mir/graphics/texture.h"
 #include "mir/renderer/sw/pixel_source.h"
 #include "shm_buffer.h"
 #include "mir/graphics/program_factory.h"
@@ -216,6 +218,18 @@ private:
     std::mutex uploaded_mutex;
     bool uploaded = false;
 };
+
+auto mgc::ShmBuffer::texture_from_mapping(
+    std::shared_ptr<mgc::EGLContextExecutor> executor,
+    std::shared_ptr<mrs::Mapping<const std::byte>> mapping)
+    -> std::shared_ptr<gl::Texture>
+{
+    auto tex = std::shared_ptr<ShmBufferTexture>{
+        new ShmBufferTexture(std::move(executor)),
+        [mapping](auto to_delete) { delete to_delete; }};
+    tex->try_upload_to_texture(mg::BufferID{9}, mapping->data(), mapping->size(), mapping->stride(), mapping->format());
+    return tex;
+}
 
 
 bool mgc::ShmBuffer::supports(MirPixelFormat mir_format)

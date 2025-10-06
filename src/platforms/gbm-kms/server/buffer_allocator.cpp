@@ -219,19 +219,24 @@ auto mgg::BufferAllocator::shared_egl_context() -> EGLContext
 auto mgg::GLRenderingProvider::as_texture(std::shared_ptr<Buffer> buffer) -> std::shared_ptr<gl::Texture>
 {
     std::shared_ptr<NativeBufferBase> native_buffer{buffer, buffer->native_buffer_base()};
-    if (auto dmabuf_texture = dmabuf_provider->as_texture(native_buffer))
-    {
-        return dmabuf_texture;
-    }
-    else if (auto shm = std::dynamic_pointer_cast<mgc::ShmBuffer>(native_buffer))
-    {
-        return shm->texture_for_provider(egl_delegate, this);
-    }
-    else if (auto tex = std::dynamic_pointer_cast<gl::Texture>(native_buffer))
-    {
-        return tex;
-    }
-    BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to import buffer as texture; rendering will be incomplete"}));
+    // if (auto dmabuf_texture = dmabuf_provider->as_texture(native_buffer))
+    // {
+    //     return dmabuf_texture;
+    // }
+    // else if (auto shm = std::dynamic_pointer_cast<mgc::ShmBuffer>(native_buffer))
+    // {
+    //     return shm->texture_for_provider(egl_delegate, this);
+    // }
+    // else if (auto tex = std::dynamic_pointer_cast<gl::Texture>(native_buffer))
+    // {
+    //     return tex;
+    // }
+
+    auto mapping = buffer->map_readable();
+    std::shared_ptr<renderer::software::Mapping<std::byte const>> keepalive{mapping.release(), [buffer](auto to_delete){ delete to_delete;}};
+    return mgc::ShmBuffer::texture_from_mapping(egl_delegate, keepalive);
+
+    // BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to import buffer as texture; rendering will be incomplete"}));
 }
 
 namespace
