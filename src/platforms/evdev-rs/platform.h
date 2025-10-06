@@ -36,9 +36,7 @@ public:
 class Platform : public input::Platform
 {
 public:
-    Platform(
-        std::shared_ptr<ConsoleServices> const& console,
-        std::shared_ptr<InputDeviceRegistry> const& input_device_registry);
+    Platform(std::shared_ptr<ConsoleServices> const& console);
     std::shared_ptr<mir::dispatch::Dispatchable> dispatchable() override;
     void start() override;
     void stop() override;

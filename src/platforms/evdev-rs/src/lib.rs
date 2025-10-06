@@ -151,14 +151,6 @@ impl PlatformRs {
     
                     Event::Pointer(pointer_event) => {
                         println!("Pointer event: {:?}", pointer_event);
-                        match pointer_event {
-                            input::event::pointer::PointerEvent::MotionAbsolute(pointer_motion_absolute_event) => {
-                            },
-                            // | input::event::pointer::PointerEvent::Motion(_)
-                            // | input::event::pointer::PointerEvent::Button(_)
-                            // | input::event::pointer::PointerEvent::Axis(_) => {},
-                            _ => {}
-                        }
                     },
     
                     // TODO: Otherwise, find the event, process it, and request that the input sink handle it
@@ -193,62 +185,35 @@ impl DeviceObserverRs {
     }
 }
 
-#[cxx::bridge]
+#[cxx::bridge(namespace = "mir::input::evdev_rs")]
 mod ffi {
-    extern "Rust" {
-        #[namespace = "mir::input::evdev_rs"]
-        type PlatformRs;
 
-        #[namespace = "mir::input::evdev_rs"]
+
+    extern "Rust" {
+        type PlatformRs;
         type DeviceObserverRs;
 
-        #[namespace = "mir::input::evdev_rs"]
         fn start(self: &mut PlatformRs);
-
-        #[namespace = "mir::input::evdev_rs"]
         fn continue_after_config(self: &PlatformRs);
-
-        #[namespace = "mir::input::evdev_rs"]
         fn pause_for_config(self: &PlatformRs);
-
-        #[namespace = "mir::input::evdev_rs"]
         fn stop(self: &PlatformRs);
-
-        #[namespace = "mir::input::evdev_rs"]
         fn create_device_observer(self: &PlatformRs) -> Box<DeviceObserverRs>;
 
-        #[namespace = "mir::input::evdev_rs"]
         fn activated(self: &mut DeviceObserverRs, fd: i32);
-
-        #[namespace = "mir::input::evdev_rs"]
         fn suspended(self: &mut DeviceObserverRs);
-
-        #[namespace = "mir::input::evdev_rs"]
         fn removed(self: &mut DeviceObserverRs);
 
-        #[namespace = "mir::input::evdev_rs"]
         fn evdev_rs_create(bridge: SharedPtr<PlatformBridgeC>) -> Box<PlatformRs>;
     }
 
     unsafe extern "C++" {
         include!("/home/matthew/Github/mir/src/platforms/evdev-rs/platform_bridge.h");
 
-        #[namespace = "mir::input::evdev_rs"]
         type PlatformBridgeC;
-
-        #[namespace = "mir::input::evdev_rs"]
         type DeviceBridgeC;
 
-        #[namespace = "mir::input"]
-        type InputDeviceRegistry;
-
-        #[namespace = "mir::input::evdev_rs"]
-        fn input_device_registry(self: &PlatformBridgeC) -> SharedPtr<InputDeviceRegistry>;
-
-        #[namespace = "mir::input::evdev_rs"]
+        // // TODO: Add the device observer as well
         fn acquire_device(self: &PlatformBridgeC, major: i32, minor: i32) -> UniquePtr<DeviceBridgeC>;
-
-        #[namespace = "mir::input::evdev_rs"]
         fn raw_fd(self: &DeviceBridgeC) -> i32;
     }
 }

@@ -27,11 +27,8 @@ namespace miers = mir::input::evdev_rs;
 
 miers::PlatformBridgeC::PlatformBridgeC(
     Platform* platform,
-    std::shared_ptr<mir::ConsoleServices> const& console,
-    std::shared_ptr<mir::input::InputDeviceRegistry> const& input_device_registry)
-    : platform(platform),
-      console(console),
-    input_device_registry_(input_device_registry) {}
+    std::shared_ptr<mir::ConsoleServices> const& console)
+    : platform(platform), console(console) {}
 
 std::unique_ptr<miers::DeviceBridgeC> miers::PlatformBridgeC::acquire_device(int major, int minor) const
 {
@@ -41,11 +38,6 @@ std::unique_ptr<miers::DeviceBridgeC> miers::PlatformBridgeC::acquire_device(int
     auto future = console->acquire_device(major, minor, std::move(observer));
     future.wait();
     return std::make_unique<DeviceBridgeC>(future.get(), raw_observer->raw_fd().value());
-}
-
-std::shared_ptr<mir::input::InputDeviceRegistry> miers::PlatformBridgeC::input_device_registry() const
-{
-    return input_device_registry_;
 }
 
 miers::DeviceBridgeC::DeviceBridgeC(std::unique_ptr<Device> device, int fd)
