@@ -8,7 +8,6 @@ use std::os::unix::ffi::OsStrExt;
 use std::os::unix::{io::OwnedFd};
 use cxx::SharedPtr;
 use cxx::UniquePtr;
-
 use std::thread::{self, JoinHandle};
 use nix::unistd::close;
 
@@ -31,6 +30,9 @@ impl LibinputInterface for LibinputInterfaceImpl {
 
         let major_num = major(st.st_rdev);
         let minor_num = minor(st.st_rdev);
+
+        // By keeping the device referenced in the fds vector, we ensure it stays alive
+        // until close_restricted is called.
         let device = self.bridge.acquire_device(major_num as i32, minor_num as i32);
         let fd = device.raw_fd();
         println!("Acquired fd: {} for device with major: {}, minor: {}", fd, major_num, minor_num);
@@ -59,7 +61,7 @@ unsafe impl Send for PlatformBridgeC {}
 unsafe impl Sync for PlatformBridgeC {}
 
 
-struct PlatformRsSharedState {
+struct LibinputState {
     libinput: Libinput,
     known_devices: Vec<Device>
 }
@@ -67,6 +69,17 @@ struct PlatformRsSharedState {
 pub struct PlatformRs {
     bridge: SharedPtr<PlatformBridgeC>,
     handle: Option<JoinHandle<()>>,
+    wfd: Option<OwnedFd>,
+    tx: Option<std::sync::mpsc::Sender<LibinputCommand>>,
+}
+
+enum LibinputCommandType {
+    Shutdown,
+}
+
+struct LibinputCommand {
+    view_id: i32,
+    command_type: LibinputCommandType,
 }
 
 impl PlatformRs {
@@ -74,12 +87,16 @@ impl PlatformRs {
         println!("Starting evdev-rs platform");
 
         let bridge = self.bridge.clone(); // Arc clone, cheap, Send
+        let (rfd, wfd) = nix::unistd::pipe().unwrap();
+        let (tx, rx) = std::sync::mpsc::channel<LibinputCommand>();
 
+        self.wfd = Some(wfd);
+        self.tx = Some(tx);
         self.handle = Some(thread::spawn(move || {
             // We can lock the bridge inside the thread
             println!("Libinput started in thread!");
             let bridge_locked = bridge;
-            PlatformRs::process_input_events(bridge_locked);
+            PlatformRs::process_input_events(bridge_locked, rfd, rx);
         }));
     }
 
@@ -91,8 +108,12 @@ impl PlatformRs {
         Box::new(DeviceObserverRs::new())
     }
 
-    fn process_input_events(bridge_locked: SharedPtr<PlatformBridgeC>) {
-        let mut state = PlatformRsSharedState {
+    fn create_input_device(&self) -> Box<InputDeviceRs> {
+        Box::new(InputDeviceRs { })
+    }
+
+    fn process_input_events(bridge_locked: SharedPtr<PlatformBridgeC>, rfd: OwnedFd, receiver: std::sync::mpsc::Receiver<LibinputCommand>) {
+        let mut state = LibinputState {
             libinput: Libinput::new_with_udev(LibinputInterfaceImpl {
                 bridge: bridge_locked.clone(),
                 fds: Vec::new(),
@@ -102,16 +123,21 @@ impl PlatformRs {
 
         state.libinput.udev_assign_seat("seat0").unwrap();
 
-        let libinput_fd = state.libinput.as_raw_fd();
+        let mut fds = [
+            pollfd {
+                fd: state.libinput.as_raw_fd(),
+                events: POLLIN, 
+                revents: 0,
+            },
+            pollfd {
+                fd: rfd.as_raw_fd(),
+                events: POLLIN, 
+                revents: 0,
+            }
+        ];
 
         loop {
             println!("Waiting for input events...");
-            let mut fds = [pollfd {
-                fd: libinput_fd,
-                events: POLLIN, 
-                revents: 0,
-            }];
-
             unsafe {
                 let ret = poll(fds.as_mut_ptr(), fds.len() as _, -1); // -1 = wait indefinitely
                 if ret <= 0 {
@@ -127,34 +153,47 @@ impl PlatformRs {
             }
     
     
-            println!("Processing input events");
-            for event in &mut state.libinput {
-                println!("Got event: {:?}", event);
-    
-                match event {
-                    Event::Device(device_event) => {
-                        match device_event  {
-                            DeviceEvent::Added(added_event) => {
-                                let dev: Device = added_event.device();
-                                state.known_devices.push(dev);
-                            },
-                            DeviceEvent::Removed(removed_event) => {
-                                let dev: Device  = removed_event.device();
-                                let index = state.known_devices.iter().position(|x| x.as_raw() == dev.as_raw());
-                                if let Some(index) = index {
-                                    state.known_devices.remove(index);
-                                }
-                            },
-                            _ => {}
-                        }
-                    },
-    
-                    Event::Pointer(pointer_event) => {
-                        println!("Pointer event: {:?}", pointer_event);
-                    },
-    
-                    // TODO: Otherwise, find the event, process it, and request that the input sink handle it
-                    _ => {}
+            if fds[0].revents & POLLIN != 0 {
+                println!("Processing input events");
+                for event in &mut state.libinput {
+                    println!("Got event: {:?}", event);
+        
+                    match event {
+                        Event::Device(device_event) => {
+                            match device_event  {
+                                DeviceEvent::Added(added_event) => {
+                                    let dev: Device = added_event.device();
+                                    state.known_devices.push(dev);
+                                },
+                                DeviceEvent::Removed(removed_event) => {
+                                    let dev: Device  = removed_event.device();
+                                    let index = state.known_devices.iter().position(|x| x.as_raw() == dev.as_raw());
+                                    if let Some(index) = index {
+                                        state.known_devices.remove(index);
+                                    }
+                                },
+                                _ => {}
+                            }
+                        },
+        
+                        Event::Pointer(pointer_event) => {
+                            println!("Pointer event: {:?}", pointer_event);
+                        },
+        
+                        // TODO: Otherwise, find the event, process it, and request that the input sink handle it
+                        _ => {}
+                    }
+                }
+            }
+
+            if (fds[1].revents & POLLIN) != 0 {
+                let mut buf = [0u8];
+                nix::unistd::read(rfd, &mut buf).unwrap();
+                // handle commands
+                while let Ok(cmd) = rx.try_recv() {
+                    match cmd.command_type {
+                        LibinputCommandType::DoSomething => { /* ... */ }
+                    }
                 }
             }
         }
@@ -185,19 +224,29 @@ impl DeviceObserverRs {
     }
 }
 
+pub struct InputDeviceRs {
+    // device: Device
+}
+
+impl InputDeviceRs {
+    // pub fn new(device: Device) -> Self {
+    //     InputDeviceRs { device }
+    // }
+}
+
 #[cxx::bridge(namespace = "mir::input::evdev_rs")]
 mod ffi {
-
-
     extern "Rust" {
         type PlatformRs;
         type DeviceObserverRs;
+        type InputDeviceRs;
 
         fn start(self: &mut PlatformRs);
         fn continue_after_config(self: &PlatformRs);
         fn pause_for_config(self: &PlatformRs);
         fn stop(self: &PlatformRs);
         fn create_device_observer(self: &PlatformRs) -> Box<DeviceObserverRs>;
+        fn create_input_device(self: &PlatformRs) -> Box<InputDeviceRs>;
 
         fn activated(self: &mut DeviceObserverRs, fd: i32);
         fn suspended(self: &mut DeviceObserverRs);
@@ -222,5 +271,5 @@ pub use ffi::PlatformBridgeC;
 pub use ffi::DeviceBridgeC;
 
 pub fn evdev_rs_create(bridge: SharedPtr<PlatformBridgeC>) -> Box<PlatformRs> {
-    return Box::new(PlatformRs { bridge: bridge, handle: None } );
+    return Box::new(PlatformRs { bridge: bridge, handle: None, wfd: None, tx: None } );
 }

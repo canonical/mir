@@ -15,15 +15,76 @@
  */
 
 #include "platform_bridge.h"
-
 #include "platform.h"
-#include "mir_platforms_evdev_rs/src/lib.rs.h"
 
 #include "mir/console_services.h"
 #include "mir/log.h"
 #include "mir/fd.h"
+#include "mir/input/pointer_settings.h"
+#include "mir/input/touchpad_settings.h"
+#include "mir/input/touchscreen_settings.h"
+#include "mir/input/input_device_info.h"
 
+namespace mi = mir::input;
 namespace miers = mir::input::evdev_rs;
+
+namespace
+{
+template <typename Impl>
+class InputDevice : public mi::InputDevice
+{
+public:
+    explicit InputDevice(rust::Box<Impl>&& impl) : impl(std::move(impl)) {}
+
+    void start(mir::input::InputSink* destination, mir::input::EventBuilder* builder) override
+    {
+        impl->start(destination, builder);
+    }
+
+    void stop() override
+    {
+        impl->stop();
+    }
+
+    mir::input::InputDeviceInfo get_device_info() override
+    {
+        return impl->get_device_info();
+    }
+
+    mir::optional_value<mir::input::PointerSettings> get_pointer_settings() const override
+    {
+        return mir::optional_value<mir::input::PointerSettings>{};
+    }
+
+    void apply_settings(mir::input::PointerSettings const&) override
+    {
+
+    }
+
+    mir::optional_value<mir::input::TouchpadSettings> get_touchpad_settings() const override
+    {
+        return mir::optional_value<mir::input::TouchpadSettings>{};
+    }
+
+    void apply_settings(mir::input::TouchpadSettings const&) override
+    {
+
+    }
+
+    mir::optional_value<mir::input::TouchscreenSettings> get_touchscreen_settings() const override
+    {
+        return mir::optional_value<mir::input::TouchscreenSettings>{};
+    }
+
+    void apply_settings(mir::input::TouchscreenSettings const&) override
+    {
+
+    }
+
+private:
+    rust::Box<Impl> impl;
+};
+}
 
 miers::PlatformBridgeC::PlatformBridgeC(
     Platform* platform,
@@ -38,6 +99,12 @@ std::unique_ptr<miers::DeviceBridgeC> miers::PlatformBridgeC::acquire_device(int
     auto future = console->acquire_device(major, minor, std::move(observer));
     future.wait();
     return std::make_unique<DeviceBridgeC>(future.get(), raw_observer->raw_fd().value());
+}
+
+std::shared_ptr<mi::InputDevice> miers::PlatformBridgeC::create_input_device() const
+{
+    return nullptr;
+    // return std::make_shared<::InputDevice>(miers::evdev_rs_create_input_device());
 }
 
 miers::DeviceBridgeC::DeviceBridgeC(std::unique_ptr<Device> device, int fd)

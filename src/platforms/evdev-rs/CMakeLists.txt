@@ -1,5 +1,7 @@
 include_directories(
-  ${PROJECT_SOURCE_DIR}/src/include/platform # udev Context
+  ${PROJECT_SOURCE_DIR}/include/platform
+  ${PROJECT_SOURCE_DIR}/include/core
+  ${PROJECT_SOURCE_DIR}/src/include/platform
 )
 
 add_definitions(-DMIR_LOG_COMPONENT_FALLBACK="evdev-input-rs")
