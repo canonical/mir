@@ -21,7 +21,6 @@
 #include "mir/fatal.h"
 #include "mir/geometry/displacement.h"
 #include "mir/log.h"
-#include "mir/default_font.h"
 #include "mir/renderer/sw/pixel_source.h"
 
 #include <boost/throw_exception.hpp>
@@ -91,6 +90,67 @@ uint32_t constexpr default_active_button        = color(0xA0, 0xA0, 0xA0);
 uint32_t constexpr default_close_normal_button  = color(0xA0, 0x20, 0x20);
 uint32_t constexpr default_close_active_button  = color(0xC0, 0x60, 0x60);
 uint32_t constexpr default_button_icon          = color(0xFF, 0xFF, 0xFF);
+
+/// Font search logic should be kept in sync with examples/example-server-lib/wallpaper_config.cpp
+auto default_font() -> std::string
+{
+    struct FontPath
+    {
+        char const* filename;
+        std::vector<char const*> prefixes;
+    };
+
+    FontPath const font_paths[]{
+        FontPath{"Ubuntu-B.ttf", {
+            "ubuntu-font-family",   // Ubuntu < 18.04
+            "ubuntu",               // Ubuntu >= 18.04/Arch
+        }},
+        FontPath{"FreeSansBold.ttf", {
+            "freefont",             // Debian/Ubuntu
+            "gnu-free",             // Fedora/Arch
+        }},
+        FontPath{"DejaVuSans-Bold.ttf", {
+            "dejavu",               // Ubuntu (others?)
+            "",                     // Arch
+        }},
+        FontPath{"LiberationSans-Bold.ttf", {
+            "liberation-sans",      // Fedora
+            "liberation-sans-fonts",// Fedora >= 42
+            "liberation",           // Arch/Ubuntu
+        }},
+        FontPath{"OpenSans-Bold.ttf", {
+            "open-sans",            // Fedora/Ubuntu
+        }},
+    };
+
+    char const* const font_path_search_paths[]{
+        "/usr/share/fonts/truetype",    // Ubuntu/Debian
+        "/usr/share/fonts/TTF",         // Arch
+        "/usr/share/fonts",             // Fedora/Arch
+    };
+
+    std::vector<std::filesystem::path> usable_search_paths;
+    for (auto const& path : font_path_search_paths)
+    {
+        if (std::filesystem::exists(path))
+            usable_search_paths.push_back(path);
+    }
+
+    for (auto const& font : font_paths)
+    {
+        for (auto const& prefix : font.prefixes)
+        {
+            for (auto const& path : usable_search_paths)
+            {
+                auto const full_font_path = path / prefix / font.filename;
+                if (std::filesystem::exists(full_font_path))
+                    return full_font_path;
+            }
+        }
+    }
+
+    return "";
+}
 
 inline auto area(geom::Size size) -> size_t
 {
@@ -633,7 +693,7 @@ void RendererStrategy::Text::Impl::render_glyph(
 
 auto RendererStrategy::Text::Impl::font_path() -> std::string
 {
-    auto const path = mir::default_font();
+    auto const path = default_font();
     if (path.empty())
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to find a font"));

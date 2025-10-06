@@ -9,7 +9,6 @@ set(miral_include ${PROJECT_SOURCE_DIR}/include/miral)
 
 pkg_check_modules(YAML REQUIRED IMPORTED_TARGET yaml-cpp)
 pkg_check_modules(GIO REQUIRED IMPORTED_TARGET gio-2.0 gio-unix-2.0)
-pkg_check_modules(FREETYPE freetype2 REQUIRED IMPORTED_TARGET)
 
 add_compile_definitions(MIR_LOG_COMPONENT_FALLBACK="miral" MIRAL_ENABLE_DEPRECATIONS=0)
 
@@ -27,9 +26,6 @@ add_library(miral-internal STATIC
     mru_window_list.cpp                  mru_window_list.h
     open_desktop_entry.cpp               open_desktop_entry.h
     static_display_config.cpp            static_display_config.h
-    wayland_app.cpp                      wayland_app.h
-    layer_shell_wayland_surface.cpp      layer_shell_wayland_surface.h
-    wayland_shm.cpp                      wayland_shm.h
     window_info_internal.cpp             window_info_internal.h
     window_management_trace.cpp          window_management_trace.h
     xcursor_loader.cpp                   xcursor_loader.h
@@ -52,64 +48,10 @@ if (HAS_W_STRINGOP_TRUNCATION)
     )
 endif()
 
-set(PROTOCOLS_DIR ${CMAKE_SOURCE_DIR}/wayland-protocols)
-set(GENERATED_DIR ${CMAKE_BINARY_DIR}/miral-generated)
-
-function(add_wayland_protocol xml_file out_var)
-    get_filename_component(name ${xml_file} NAME_WE)
-    set(header ${GENERATED_DIR}/${name}.h)
-    set(code   ${GENERATED_DIR}/${name}.c)
-
-    add_custom_command(
-      OUTPUT ${GENERATED_DIR}
-      COMMAND ${CMAKE_COMMAND} -E make_directory -p ${GENERATED_DIR}
-    )
-
-    add_custom_command(
-      OUTPUT ${header}
-      COMMAND "sh" "-c" "wayland-scanner client-header ${xml_file} ${header}.tmp"
-      COMMAND ${CMAKE_COMMAND} -E copy ${header}.tmp ${header}
-      COMMAND ${CMAKE_COMMAND} -E rm ${header}.tmp
-      COMMAND sed -i s/\\<namespace\\>/namespace_/g ${header}
-      DEPENDS ${GENERATED_DIR} ${xml_file}
-      VERBATIM
-    )
-
-    add_custom_command(
-      OUTPUT ${code}
-      COMMAND "sh" "-c" "wayland-scanner private-code ${xml_file} ${code}.tmp"
-      COMMAND ${CMAKE_COMMAND} -E copy ${code}.tmp ${code}
-      COMMAND ${CMAKE_COMMAND} -E rm ${code}.tmp
-      COMMAND sed -i s/\\<namespace\\>/namespace_/g ${code}
-      DEPENDS ${GENERATED_DIR} ${xml_file}
-      VERBATIM
-    )
-
-    set(${out_var} ${${out_var}} ${header} ${code} PARENT_SCOPE)
-endfunction()
-
-set(PROTOCOL_XMLS
-  ${PROTOCOLS_DIR}/wlr-foreign-toplevel-management-unstable-v1.xml
-  ${PROTOCOLS_DIR}/wlr-layer-shell-unstable-v1.xml
-  ${PROTOCOLS_DIR}/wlr-layer-shell-unstable-v1.xml
-  ${PROTOCOLS_DIR}/xdg-shell.xml
-)
-
-set(GENERATED_PROTOCOL_SOURCES "")
-foreach(xml ${PROTOCOL_XMLS})
-    add_wayland_protocol(${xml} GENERATED_PROTOCOL_SOURCES)
-endforeach()
-
-add_library(protocols STATIC ${GENERATED_PROTOCOL_SOURCES})
-
-target_include_directories(protocols PUBLIC ${GENERATED_DIR})
-target_link_libraries(protocols PUBLIC PkgConfig::WAYLAND_CLIENT)
-
 add_library(miral-external OBJECT
     add_init_callback.cpp               ${miral_include}/miral/add_init_callback.h
     application.cpp                     ${miral_include}/miral/application.h
     add_init_callback.cpp               ${miral_include}/miral/add_init_callback.h
-    application_switcher.cpp            ${miral_include}/miral/application_switcher.h
     application.cpp                     ${miral_include}/miral/application.h
     application_authorizer.cpp          ${miral_include}/miral/application_authorizer.h
     application_info.cpp                ${miral_include}/miral/application_info.h
@@ -191,7 +133,6 @@ target_link_libraries(miral-internal
         PkgConfig::WAYLAND_CLIENT
         PkgConfig::YAML
         PkgConfig::GIO
-        protocols
 )
 
 target_include_directories(miral-external
@@ -208,8 +149,6 @@ target_link_libraries(miral-external
     PRIVATE
         miral-internal
         mirserver
-        protocols
-        PkgConfig::FREETYPE
 )
 
 target_link_libraries(miral

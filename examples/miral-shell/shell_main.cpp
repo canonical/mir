@@ -39,12 +39,10 @@
 #include <miral/hover_click.h>
 #include <miral/sticky_keys.h>
 #include <miral/magnifier.h>
-#include <miral/application_switcher.h>
 
 #include <xkbcommon/xkbcommon-keysyms.h>
 
 #include <cstring>
-#include <linux/input-event-codes.h>
 
 namespace
 {
@@ -76,7 +74,6 @@ int main(int argc, char const* argv[])
     std::function<void()> shutdown_hook{[]{}};
 
     SpinnerSplash spinner;
-    ApplicationSwitcher application_switcher;
     InternalClientLauncher launcher;
     auto focus_stealing_prevention = FocusStealing::allow;
     WindowManagerOptions window_managers
@@ -87,7 +84,7 @@ int main(int argc, char const* argv[])
 
     MirRunner runner{argc, argv};
 
-    runner.add_stop_callback([&] { shutdown_hook(); application_switcher.stop(); });
+    runner.add_stop_callback([&] { shutdown_hook(); });
 
     ExternalClientLauncher external_client_launcher;
 
@@ -306,54 +303,6 @@ int main(int argc, char const* argv[])
         return false;
     };
 
-    // The following filter triggers the application selector internal application
-    // on "Ctrl + Tab" and "Ctrl + Shift + Tab". Note that this does NOT use
-    // "Alt + Tab" as that is claimed by the MinimalWindowManager for the time being.
-    auto const application_switcher_filter = [application_switcher=application_switcher, is_running = false](MirKeyboardEvent const* key_event) mutable
-    {
-        if (mir_keyboard_event_action(key_event) == mir_keyboard_action_down)
-        {
-            auto const modifiers = mir_keyboard_event_modifiers(key_event);
-            if (modifiers & mir_input_event_modifier_ctrl)
-            {
-                auto const scancode = mir_keyboard_event_scan_code(key_event);
-                if (modifiers & mir_input_event_modifier_shift)
-                {
-                    if (scancode == KEY_TAB)
-                    {
-                        application_switcher.prev_app();
-                        is_running = true;
-                        return true;
-                    }
-                }
-                if (scancode == KEY_TAB)
-                {
-                    application_switcher.next_app();
-                    is_running = true;
-                    return true;
-                }
-                else if (scancode == KEY_ESC && is_running)
-                {
-                    application_switcher.cancel();
-                    is_running = false;
-                    return true;
-                }
-            }
-        }
-        else if (mir_keyboard_event_action(key_event) == mir_keyboard_action_up)
-        {
-            auto const scancode = mir_keyboard_event_scan_code(key_event);
-            if ((scancode == KEY_LEFTCTRL || scancode == KEY_RIGHTCTRL) && is_running)
-            {
-                application_switcher.confirm();
-                is_running = false;
-                return true;
-            }
-        }
-
-        return false;
-    };
-
     return runner.run_with(
         {
             CursorTheme{"default:DMZ-White"},
@@ -370,8 +319,7 @@ int main(int argc, char const* argv[])
             config_keymap,
             AppendKeyboardEventFilter{quit_on_ctrl_alt_bksp},
             StartupInternalClient{spinner},
-            StartupInternalClient{application_switcher},
-            ConfigurationOption{run_startup_apps, "startup-apps", "Colon separated list of startup apps", ""},
+            ConfigurationOption{run_startup_apps, "startup-apps", "Colon separated list of startup apps.", ""},
             pre_init(ConfigurationOption{[&](std::string const& typeface) { ::wallpaper::font_file(typeface); },
                                          "shell-wallpaper-font", "Font file to use for wallpaper.", ::wallpaper::font_file()}),
             ConfigurationOption{[&](std::string const& cmd) { terminal_cmd = cmd; },
@@ -385,7 +333,6 @@ int main(int argc, char const* argv[])
             sticky_keys,
             magnifier,
             AppendKeyboardEventFilter{magnifier_filter},
-            AppendKeyboardEventFilter{sticky_keys_filter},
-            AppendKeyboardEventFilter{application_switcher_filter},
+            AppendKeyboardEventFilter{sticky_keys_filter}
         });
 }

@@ -691,18 +691,3 @@ global:
     vtable?for?miral::live_config::Store;
   };
 } MIRAL_5.3;
-
-MIRAL_5.6 {
-global:
-  extern "C++" {
-    miral::ApplicationSwitcher::?ApplicationSwitcher*;
-    miral::ApplicationSwitcher::ApplicationSwitcher*;
-    miral::ApplicationSwitcher::cancel*;
-    miral::ApplicationSwitcher::confirm*;
-    miral::ApplicationSwitcher::next_app*;
-    miral::ApplicationSwitcher::operator*;
-    miral::ApplicationSwitcher::prev_app*;
-    miral::ApplicationSwitcher::stop*;
-    typeinfo?for?miral::ApplicationSwitcher;
-  };
-} MIRAL_5.5;

@@ -662,13 +662,3 @@ libmiral.so.7 libmiral7 #MINVER#
  (c++|arch-bits=64)"miral::live_config::IniFile::add_ints_attribute(miral::live_config::Key const&, std::basic_string_view<char, std::char_traits<char> >, std::span<int const, 18446744073709551615ul>, std::function<void (miral::live_config::Key const&, std::optional<std::span<int const, 18446744073709551615ul> >)>)@MIRAL_5.5" 5.5.0
  (c++|arch-bits=64)"miral::live_config::IniFile::add_strings_attribute(miral::live_config::Key const&, std::basic_string_view<char, std::char_traits<char> >, std::function<void (miral::live_config::Key const&, std::optional<std::span<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const, 18446744073709551615ul> >)>)@MIRAL_5.5" 5.5.0
  (c++|arch-bits=64)"miral::live_config::IniFile::add_strings_attribute(miral::live_config::Key const&, std::basic_string_view<char, std::char_traits<char> >, std::span<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const, 18446744073709551615ul>, std::function<void (miral::live_config::Key const&, std::optional<std::span<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const, 18446744073709551615ul> >)>)@MIRAL_5.5" 5.5.0
- MIRAL_5.6@MIRAL_5.6 5.6.0
- (c++)"miral::ApplicationSwitcher::ApplicationSwitcher()@MIRAL_5.6" 5.6.0
- (c++)"miral::ApplicationSwitcher::cancel() const@MIRAL_5.6" 5.6.0
- (c++)"miral::ApplicationSwitcher::confirm() const@MIRAL_5.6" 5.6.0
- (c++)"miral::ApplicationSwitcher::next_app() const@MIRAL_5.6" 5.6.0
- (c++)"miral::ApplicationSwitcher::operator()(std::weak_ptr<mir::scene::Session> const&) const@MIRAL_5.6" 5.6.0
- (c++)"miral::ApplicationSwitcher::operator()(wl_display*)@MIRAL_5.6" 5.6.0
- (c++)"miral::ApplicationSwitcher::prev_app() const@MIRAL_5.6" 5.6.0
- (c++)"miral::ApplicationSwitcher::stop() const@MIRAL_5.6" 5.6.0
- (c++)"miral::ApplicationSwitcher::~ApplicationSwitcher()@MIRAL_5.6" 5.6.0
