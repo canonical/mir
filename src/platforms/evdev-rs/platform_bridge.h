@@ -56,7 +56,7 @@ public:
     PlatformBridgeC(Platform* platform, std::shared_ptr<mir::ConsoleServices> const& console);
     virtual ~PlatformBridgeC() = default;
     std::unique_ptr<DeviceBridgeC> acquire_device(int major, int minor) const;
-    std::shared_ptr<InputDevice> create_input_device(int view_id) const;
+    std::shared_ptr<InputDevice> create_input_device(int device_id) const;
 
 private:
     Platform* platform;

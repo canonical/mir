@@ -2,6 +2,7 @@ use input::event::{DeviceEvent, EventTrait};
 use input::{AsRaw, Device, Event, Libinput, LibinputInterface};
 use std::os::fd::{AsRawFd, FromRawFd};
 use std::path::Path;
+use std::string;
 use libc::{stat, major, minor, poll, pollfd, POLLIN};
 use std::ffi::CString;
 use std::os::unix::ffi::OsStrExt;
@@ -10,6 +11,7 @@ use cxx::SharedPtr;
 use cxx::UniquePtr;
 use std::thread::{self, JoinHandle};
 use nix::unistd::close;
+use std::sync::mpsc;
 
 struct LibinputInterfaceImpl {
     bridge: SharedPtr<PlatformBridgeC>,
@@ -70,16 +72,17 @@ pub struct PlatformRs {
     bridge: SharedPtr<PlatformBridgeC>,
     handle: Option<JoinHandle<()>>,
     wfd: Option<OwnedFd>,
-    tx: Option<std::sync::mpsc::Sender<LibinputCommand>>,
+    tx: Option<mpsc::Sender<LibinputCommand>>,
 }
 
-enum LibinputCommandType {
-    Shutdown,
+pub struct InputDeviceInfoRs {
+    name: string,
+    unique_id: string,
+    capabilities: i32,
 }
 
-struct LibinputCommand {
-    view_id: i32,
-    command_type: LibinputCommandType,
+enum LibinputCommand {
+    GetDeviceInfo(i32, mpsc::Sender<InputDeviceInfoRs>)
 }
 
 impl PlatformRs {
@@ -88,15 +91,13 @@ impl PlatformRs {
 
         let bridge = self.bridge.clone(); // Arc clone, cheap, Send
         let (rfd, wfd) = nix::unistd::pipe().unwrap();
-        let (tx, rx) = std::sync::mpsc::channel<LibinputCommand>();
+        let (tx, rx) = mpsc::channel<LibinputCommand>();
 
         self.wfd = Some(wfd);
         self.tx = Some(tx);
         self.handle = Some(thread::spawn(move || {
-            // We can lock the bridge inside the thread
-            println!("Libinput started in thread!");
             let bridge_locked = bridge;
-            PlatformRs::process_input_events(bridge_locked, rfd, rx);
+            PlatformRs::run(bridge_locked, rfd, rx);
         }));
     }
 
@@ -108,11 +109,11 @@ impl PlatformRs {
         Box::new(DeviceObserverRs::new())
     }
 
-    fn create_input_device(&self) -> Box<InputDeviceRs> {
-        Box::new(InputDeviceRs { })
+    fn create_input_device(&self, device_id: i32) -> Box<InputDeviceRs> {
+        Box::new(InputDeviceRs { device_id })
     }
 
-    fn process_input_events(bridge_locked: SharedPtr<PlatformBridgeC>, rfd: OwnedFd, receiver: std::sync::mpsc::Receiver<LibinputCommand>) {
+    fn run(bridge_locked: SharedPtr<PlatformBridgeC>, rfd: OwnedFd, receiver: std::sync::mpsc::Receiver<LibinputCommand>) {
         let mut state = LibinputState {
             libinput: Libinput::new_with_udev(LibinputInterfaceImpl {
                 bridge: bridge_locked.clone(),
@@ -192,7 +193,24 @@ impl PlatformRs {
                 // handle commands
                 while let Ok(cmd) = rx.try_recv() {
                     match cmd.command_type {
-                        LibinputCommandType::DoSomething => { /* ... */ }
+                        LibinputCommand::GetDeviceInfo(id, tx) => {
+                            // For simplicity, just return info about the first device
+                            if let Some(device) = state.known_devices.first() {
+                                let info = InputDeviceInfoRs {
+                                    name: device.name().unwrap_or("").to_string(),
+                                    unique_id: device.unique_id().unwrap_or("").to_string(),
+                                    capabilities: device.capabilities().bits(),
+                                };
+                                let _ = tx.send(info);
+                            } else {
+                                let info = InputDeviceInfoRs {
+                                    name: "".to_string(),
+                                    unique_id: "".to_string(),
+                                    capabilities: 0,
+                                };
+                                let _ = tx.send(info);
+                            }
+                        }
                     }
                 }
             }
@@ -225,13 +243,13 @@ impl DeviceObserverRs {
 }
 
 pub struct InputDeviceRs {
-    // device: Device
+    device_id: i32
 }
 
 impl InputDeviceRs {
-    // pub fn new(device: Device) -> Self {
-    //     InputDeviceRs { device }
-    // }
+    pub fn new(device_id: i32) -> Self {
+        InputDeviceRs { device_id }
+    }
 }
 
 #[cxx::bridge(namespace = "mir::input::evdev_rs")]
@@ -246,7 +264,7 @@ mod ffi {
         fn pause_for_config(self: &PlatformRs);
         fn stop(self: &PlatformRs);
         fn create_device_observer(self: &PlatformRs) -> Box<DeviceObserverRs>;
-        fn create_input_device(self: &PlatformRs) -> Box<InputDeviceRs>;
+        fn create_input_device(self: &PlatformRs, device_id: i32) -> Box<InputDeviceRs>;
 
         fn activated(self: &mut DeviceObserverRs, fd: i32);
         fn suspended(self: &mut DeviceObserverRs);

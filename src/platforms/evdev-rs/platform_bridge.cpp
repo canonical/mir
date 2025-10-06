@@ -16,6 +16,7 @@
 
 #include "platform_bridge.h"
 #include "platform.h"
+#include "mir_platforms_evdev_rs/src/lib.rs.h"
 
 #include "mir/console_services.h"
 #include "mir/log.h"
@@ -101,10 +102,9 @@ std::unique_ptr<miers::DeviceBridgeC> miers::PlatformBridgeC::acquire_device(int
     return std::make_unique<DeviceBridgeC>(future.get(), raw_observer->raw_fd().value());
 }
 
-std::shared_ptr<mi::InputDevice> miers::PlatformBridgeC::create_input_device() const
+std::shared_ptr<mi::InputDevice> miers::PlatformBridgeC::create_input_device(int device_id) const
 {
-    return nullptr;
-    // return std::make_shared<::InputDevice>(miers::evdev_rs_create_input_device());
+    return std::make_shared<::InputDevice>(miers::create_input_device(device_id));
 }
 
 miers::DeviceBridgeC::DeviceBridgeC(std::unique_ptr<Device> device, int fd)
