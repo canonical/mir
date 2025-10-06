@@ -17,6 +17,7 @@
 #include "mir/run_mir.h"
 #include "mir/terminate_with_current_exception.h"
 #include "mir/display_server.h"
+#include "mir/log.h"
 #include "mir/fatal.h"
 #include "mir/main_loop.h"
 #include "mir/server_configuration.h"
@@ -162,6 +163,9 @@ extern "C" [[noreturn]] void fatal_signal_cleanup(int sig, siginfo_t* info, void
         constexpr size_t len = std::char_traits<char>::length(warning);
         [[maybe_unused]]auto n = write(STDERR_FILENO, warning, len);
     }
+    auto security_log = mir::security_fmt(mir::logging::Severity::error, "sys_crash", std::string{"Mir fatal signal received: "} + signum_to_string(sig)) + "\n";
+    [[maybe_unused]]auto n = write(STDERR_FILENO, security_log.data(), security_log.size());
+
     perform_emergency_cleanup();
 
     auto const old_handler = old_handlers.at(sig);

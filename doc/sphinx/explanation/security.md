@@ -35,9 +35,10 @@ The following events will be logged to standard error in [the OWASP format](http
   ```json
   {"datetime": "YYYY-MM-DDThh:mm:ssZ", "appid": "mir.canonical.com", "event": "sys_shutdown", "level": "WARN", "description": "Mir is shutting down" }
   ```
-- `sys_crash` on unhandled error:
+- `sys_crash` on unhandled error or fatal signal received:
   ```json
   {"datetime": "YYYY-MM-DDThh:mm:ssZ", "appid": "mir.canonical.com", "event": "sys_crash", "level": "ERROR", "description": "Mir unhandled exception in: <function>" }
+  {"datetime": "YYYY-MM-DDThh:mm:ssZ", "appid": "mir.canonical.com", "event": "sys_crash", "level": "ERROR", "description": "Mir fatal signal received: <function>" }
   ```
 
 ## Cryptography
