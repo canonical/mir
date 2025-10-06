@@ -19,7 +19,12 @@
 
 #include "mir/dispatch/dispatchable.h"
 #include "rust/cxx.h"
+#include "mir/optional_value.h"
 #include "mir_platforms_evdev_rs/src/lib.rs.h"
+#include "mir/input/pointer_settings.h"
+#include "mir/input/touchpad_settings.h"
+#include "mir/input/touchscreen_settings.h"
+#include "mir/input/input_device_info.h"
 
 namespace mi = mir::input;
 namespace miers = mir::input::evdev_rs;
@@ -58,6 +63,67 @@ public:
 private:
     rust::Box<Impl> box;
     std::optional<mir::Fd> fd;
+};
+
+template <typename Impl>
+class InputDevice : public mi::InputDevice
+{
+public:
+    explicit InputDevice(rust::Box<Impl>&& impl) : impl(std::move(impl)) {}
+
+    void start(mir::input::InputSink*, mir::input::EventBuilder*) override
+    {
+        impl->start();
+    }
+
+    void stop() override
+    {
+        impl->stop();
+    }
+
+    mir::input::InputDeviceInfo get_device_info() override
+    {
+        auto device_info = impl->get_device_info();
+        auto const name = device_info->name();
+        return {
+            std::string(device_info->name()),
+            std::string(device_info->unique_id()),
+            mir::input::DeviceCapabilities(0)
+        };
+    }
+
+    mir::optional_value<mir::input::PointerSettings> get_pointer_settings() const override
+    {
+        return mir::optional_value<mir::input::PointerSettings>{};
+    }
+
+    void apply_settings(mir::input::PointerSettings const&) override
+    {
+
+    }
+
+    mir::optional_value<mir::input::TouchpadSettings> get_touchpad_settings() const override
+    {
+        return mir::optional_value<mir::input::TouchpadSettings>{};
+    }
+
+    void apply_settings(mir::input::TouchpadSettings const&) override
+    {
+
+    }
+
+    mir::optional_value<mir::input::TouchscreenSettings> get_touchscreen_settings() const override
+    {
+        return mir::optional_value<mir::input::TouchscreenSettings>{};
+    }
+
+    void apply_settings(mir::input::TouchscreenSettings const&) override
+    {
+
+    }
+
+private:
+    rust::Box<Impl> impl;
 };
 
 class DispatchableStub : public md::Dispatchable
@@ -125,3 +191,7 @@ std::unique_ptr<miers::DeviceObserverWithFd> miers::Platform::create_device_obse
         self->platform_impl->create_device_observer());
 }
 
+std::shared_ptr<mi::InputDevice> miers::Platform::create_input_device(int device_id) const
+{
+    return std::make_shared<::InputDevice<InputDeviceRs>>(self->platform_impl->create_input_device(device_id));
+}

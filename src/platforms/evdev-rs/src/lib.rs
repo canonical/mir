@@ -2,7 +2,6 @@ use input::event::{DeviceEvent, EventTrait};
 use input::{AsRaw, Device, Event, Libinput, LibinputInterface};
 use std::os::fd::{AsRawFd, FromRawFd};
 use std::path::Path;
-use std::string;
 use libc::{stat, major, minor, poll, pollfd, POLLIN};
 use std::ffi::CString;
 use std::os::unix::ffi::OsStrExt;
@@ -72,17 +71,35 @@ pub struct PlatformRs {
     bridge: SharedPtr<PlatformBridgeC>,
     handle: Option<JoinHandle<()>>,
     wfd: Option<OwnedFd>,
-    tx: Option<mpsc::Sender<LibinputCommand>>,
+    tx: Option<mpsc::Sender<ThreadCommand>>,
 }
 
 pub struct InputDeviceInfoRs {
-    name: string,
-    unique_id: string,
+    name: String,
+    unique_id: String,
     capabilities: i32,
 }
 
-enum LibinputCommand {
+impl InputDeviceInfoRs {
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    pub fn unique_id(&self) -> &str {
+        &self.unique_id
+    }
+
+    pub fn capabilities(&self) -> i32 {
+        self.capabilities
+    }
+}
+
+enum ThreadCommand {
     GetDeviceInfo(i32, mpsc::Sender<InputDeviceInfoRs>)
+}
+
+fn create_channel() -> (mpsc::Sender<ThreadCommand>, mpsc::Receiver<ThreadCommand>) {
+    mpsc::channel()
 }
 
 impl PlatformRs {
@@ -91,7 +108,7 @@ impl PlatformRs {
 
         let bridge = self.bridge.clone(); // Arc clone, cheap, Send
         let (rfd, wfd) = nix::unistd::pipe().unwrap();
-        let (tx, rx) = mpsc::channel<LibinputCommand>();
+        let (tx, rx) = create_channel();
 
         self.wfd = Some(wfd);
         self.tx = Some(tx);
@@ -113,7 +130,7 @@ impl PlatformRs {
         Box::new(InputDeviceRs { device_id })
     }
 
-    fn run(bridge_locked: SharedPtr<PlatformBridgeC>, rfd: OwnedFd, receiver: std::sync::mpsc::Receiver<LibinputCommand>) {
+    fn run(bridge_locked: SharedPtr<PlatformBridgeC>, rfd: OwnedFd, rx: std::sync::mpsc::Receiver<ThreadCommand>) {
         let mut state = LibinputState {
             libinput: Libinput::new_with_udev(LibinputInterfaceImpl {
                 bridge: bridge_locked.clone(),
@@ -189,17 +206,17 @@ impl PlatformRs {
 
             if (fds[1].revents & POLLIN) != 0 {
                 let mut buf = [0u8];
-                nix::unistd::read(rfd, &mut buf).unwrap();
+                nix::unistd::read(&rfd, &mut buf).unwrap();
                 // handle commands
                 while let Ok(cmd) = rx.try_recv() {
-                    match cmd.command_type {
-                        LibinputCommand::GetDeviceInfo(id, tx) => {
+                    match cmd {
+                        ThreadCommand::GetDeviceInfo(id, tx) => {
                             // For simplicity, just return info about the first device
                             if let Some(device) = state.known_devices.first() {
                                 let info = InputDeviceInfoRs {
-                                    name: device.name().unwrap_or("").to_string(),
-                                    unique_id: device.unique_id().unwrap_or("").to_string(),
-                                    capabilities: device.capabilities().bits(),
+                                    name: device.name().to_string(),
+                                    unique_id: "TODO".to_string(),
+                                    capabilities: 0
                                 };
                                 let _ = tx.send(info);
                             } else {
@@ -250,6 +267,21 @@ impl InputDeviceRs {
     pub fn new(device_id: i32) -> Self {
         InputDeviceRs { device_id }
     }
+
+    pub fn start(&mut self) {
+        // Start reading events from the device and sending them to the sink
+    }
+
+    pub fn stop(&mut self) {
+    }
+
+    pub fn get_device_info(&self) -> Box<InputDeviceInfoRs> {
+        Box::new(InputDeviceInfoRs {
+            name: "Dummy Device".to_string(),
+            unique_id: "dummy-1234".to_string(),
+            capabilities: 0,
+        })
+    }
 }
 
 #[cxx::bridge(namespace = "mir::input::evdev_rs")]
@@ -258,6 +290,7 @@ mod ffi {
         type PlatformRs;
         type DeviceObserverRs;
         type InputDeviceRs;
+        type InputDeviceInfoRs;
 
         fn start(self: &mut PlatformRs);
         fn continue_after_config(self: &PlatformRs);
@@ -269,6 +302,14 @@ mod ffi {
         fn activated(self: &mut DeviceObserverRs, fd: i32);
         fn suspended(self: &mut DeviceObserverRs);
         fn removed(self: &mut DeviceObserverRs);
+
+        fn start(self: &mut InputDeviceRs);
+        fn stop(self: &mut InputDeviceRs);
+        fn get_device_info(self: &InputDeviceRs) -> Box<InputDeviceInfoRs>;
+
+        fn name(self: &InputDeviceInfoRs) -> &str;
+        fn unique_id(self: &InputDeviceInfoRs) -> &str;
+        fn capabilities(self: &InputDeviceInfoRs) -> i32;
 
         fn evdev_rs_create(bridge: SharedPtr<PlatformBridgeC>) -> Box<PlatformRs>;
     }
