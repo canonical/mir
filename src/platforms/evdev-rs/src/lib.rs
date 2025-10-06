@@ -98,6 +98,12 @@ enum ThreadCommand {
     GetDeviceInfo(i32, mpsc::Sender<InputDeviceInfoRs>)
 }
 
+// This is so silly.
+//
+// We can't create the channel inside of the PlatformRs implementation because
+// the "mod ffi" block gets confused when parsing the template, so it thinks that the
+// closing bracket is an equality operator. Moving it out to the global scope fixes
+// things, but this is so silly.
 fn create_channel() -> (mpsc::Sender<ThreadCommand>, mpsc::Receiver<ThreadCommand>) {
     mpsc::channel()
 }
