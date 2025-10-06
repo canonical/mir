@@ -17,6 +17,8 @@
 #include "mir/log.h"
 #include "mir/logging/logger.h"
 #include <cstdio>
+#include <chrono>
+#include <format>
 
 #include <exception>
 #include <boost/exception/diagnostic_information.hpp>
@@ -82,6 +84,50 @@ void log(
             "%s: unknown exception",
             message.c_str());
     }
+}
+
+auto security_fmt(
+    logging::Severity severity,
+    std::string const& event,
+    std::string const& description) -> std::string
+{
+    auto now = std::chrono::system_clock::now();
+    auto time_t = std::chrono::system_clock::to_time_t(now);
+
+    std::stringstream ss;
+    ss << std::put_time(std::localtime(&time_t), "%FT%TZ");
+
+    return std::format(
+        "{{"
+            "\"datetime\": \"{}\", "
+            "\"appid\": \"mir.canonical.com\", "
+            "\"event\": \"{}\", "
+            "\"level\": \"{}\", "
+            "\"description\": \"{}\" "
+        "}}",
+        ss.str(),
+        event,
+        (severity == logging::Severity::critical ? "CRITICAL" :
+         severity == logging::Severity::error ? "ERROR" :
+         severity == logging::Severity::warning ? "WARN" :
+         severity == logging::Severity::informational ? "INFO" :
+         severity == logging::Severity::debug ? "DEBUG" : "UNKNOWN"),
+        description
+    );
+}
+
+void security_log(
+    logging::Severity severity,
+    std::string const& event,
+    std::string const& description)
+{
+    std::stringstream ss;
+
+    mir::log(
+        severity,
+        "security",
+        security_fmt(severity, event, description)
+    );
 }
 
 } // namespace mir

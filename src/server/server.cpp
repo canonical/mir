@@ -400,6 +400,11 @@ void mir::Server::run()
     try
     {
         mir::log_info("Starting");
+        mir::security_log(
+            logging::Severity::warning,
+            "sys_startup",
+            "Mir is starting up");
+
         verify_accessing_allowed(self->server_config);
 
         auto const emergency_cleanup = self->server_config->the_emergency_cleanup();
@@ -420,6 +425,11 @@ void mir::Server::run()
             [&](DisplayServer&)
                 { self->init_callback(); self->init_callback = []{}; },
             self->terminator);
+
+        mir::security_log(
+            logging::Severity::warning,
+            "sys_shutdown",
+            "Mir is shutting down");
 
         self->exit_status = true;
     }
