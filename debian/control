@@ -6,6 +6,7 @@ XSBC-Original-Maintainer: Thomas Voß <thomas.voss@canonical.com>
 Build-Depends: cmake,
                pkg-config,
                debhelper (>= 9),
+               diffutils:native,
                doxygen,
                xsltproc,
                graphviz,
