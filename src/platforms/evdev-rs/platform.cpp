@@ -83,14 +83,18 @@ public:
 class miers::Platform::Self
 {
 public:
-    Self(Platform* platform, std::shared_ptr<ConsoleServices> const& console)
-        : platform_impl(evdev_rs_create(std::make_shared<PlatformBridgeC>(platform, console))) {}
+    Self(
+        Platform* platform,
+        std::shared_ptr<ConsoleServices> const& console,
+        std::shared_ptr<InputDeviceRegistry> const& input_device_registry)
+        : platform_impl(evdev_rs_create(std::make_shared<PlatformBridgeC>(platform, console, input_device_registry))) {}
 
     rust::Box<PlatformRs> platform_impl;
 };
 
-miers::Platform::Platform(std::shared_ptr<ConsoleServices> const& console)
-    : self(std::make_shared<Self>(this, console))
+miers::Platform::Platform(std::shared_ptr<ConsoleServices> const& console,
+    std::shared_ptr<InputDeviceRegistry> const& input_device_registry)
+    : self(std::make_shared<Self>(this, console, input_device_registry))
 {
 }
 

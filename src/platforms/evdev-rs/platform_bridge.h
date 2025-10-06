@@ -27,6 +27,7 @@ class Device;
 
 namespace input
 {
+class InputDeviceRegistry;
 namespace evdev_rs
 {
 class Platform;
@@ -45,13 +46,29 @@ private:
 class PlatformBridgeC
 {
 public:
-    PlatformBridgeC(Platform* platform, std::shared_ptr<mir::ConsoleServices> const& console);
+    PlatformBridgeC(
+        Platform* platform,
+        std::shared_ptr<mir::ConsoleServices> const& console,
+        std::shared_ptr<mir::input::InputDeviceRegistry> const& input_device_registry);
     virtual ~PlatformBridgeC() = default;
     std::unique_ptr<DeviceBridgeC> acquire_device(int major, int minor) const;
+    std::shared_ptr<mir::input::InputDeviceRegistry> input_device_registry() const;
+
+    // void handle_motion_event(
+    //     int64_t timestamp_nanoseconds,
+    //     float dx,
+    //     float dy
+    // );
+    // void handle_absolute_motion_event(
+    //     int64_t timestamp_nanoseconds,
+    //     float dx,
+    //     float dy
+    // );
 
 private:
     Platform* platform;
     std::shared_ptr<mir::ConsoleServices> console;
+    std::shared_ptr<mir::input::InputDeviceRegistry> input_device_registry_;
 };
 }
 }
