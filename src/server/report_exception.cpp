@@ -51,15 +51,6 @@ void mir::report_exception(std::ostream& out_stream, std::ostream& err_stream)
         }
 
         err_stream << "ERROR: " << boost::diagnostic_information(error) << std::endl;
-
-        // Log a security event
-        std::string function_str = "<function unknown>";
-        if (auto function = boost::get_error_info<boost::throw_function>(error))
-        {
-            function_str = *function;
-        }
-        auto message = std::format("Mir unhandled exception in: {}", function_str);
-        err_stream << mir::security_fmt(mir::logging::Severity::error, "sys_crash", message) << std::endl;
     }
     catch (...)
     {

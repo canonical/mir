@@ -19,9 +19,16 @@
 #include <cstdio>
 #include <chrono>
 #include <format>
+#include <iostream>
 
 #include <exception>
 #include <boost/exception/diagnostic_information.hpp>
+
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+#include <errno.h>
+extern char* program_invocation_short_name;
 
 namespace mir {
 
@@ -100,12 +107,13 @@ auto security_fmt(
     return std::format(
         "{{"
             "\"datetime\": \"{}\", "
-            "\"appid\": \"mir.canonical.com\", "
+            "\"appid\": \"{}\", "
             "\"event\": \"{}\", "
             "\"level\": \"{}\", "
             "\"description\": \"{}\" "
         "}}",
         ss.str(),
+        program_invocation_short_name ? program_invocation_short_name : "<unknown>",
         event,
         (severity == logging::Severity::critical ? "CRITICAL" :
          severity == logging::Severity::error ? "ERROR" :
@@ -121,13 +129,7 @@ void security_log(
     std::string const& event,
     std::string const& description)
 {
-    std::stringstream ss;
-
-    mir::log(
-        severity,
-        "security",
-        security_fmt(severity, event, description)
-    );
+    std::cerr << security_fmt(severity, event, description) << std::endl;
 }
 
 } // namespace mir

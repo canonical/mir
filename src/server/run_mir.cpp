@@ -17,7 +17,6 @@
 #include "mir/run_mir.h"
 #include "mir/terminate_with_current_exception.h"
 #include "mir/display_server.h"
-#include "mir/log.h"
 #include "mir/fatal.h"
 #include "mir/main_loop.h"
 #include "mir/server_configuration.h"
@@ -32,6 +31,12 @@
 #include <cassert>
 #include <unistd.h>
 #include <boost/throw_exception.hpp>
+
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+#include <errno.h>
+extern char* program_invocation_short_name;
 
 namespace
 {
@@ -163,8 +168,19 @@ extern "C" [[noreturn]] void fatal_signal_cleanup(int sig, siginfo_t* info, void
         constexpr size_t len = std::char_traits<char>::length(warning);
         [[maybe_unused]]auto n = write(STDERR_FILENO, warning, len);
     }
-    auto security_log = mir::security_fmt(mir::logging::Severity::error, "sys_crash", std::string{"Mir fatal signal received: "} + signum_to_string(sig)) + "\n";
-    [[maybe_unused]]auto n = write(STDERR_FILENO, security_log.data(), security_log.size());
+
+    // Log a security event
+    char security_head[] = "{\"datetime\": \"YYYY-MM-DDThh:mm:ssZ\", \"appid\": \"";
+    char security_tail[] = "\", \"event\": \"sys_crash\", \"level\": \"WARN\", \"description\": \"Fatal signal received\"}\n";
+    std::time_t time = std::time(nullptr);
+    // strftime isn't listed as async-signal-safe, but neither "%F" or "%T" use locale information
+    std::strftime(security_head + 14, 20, "%FT%TZ", std::gmtime(&time));
+    [[maybe_unused]]auto n = write(STDERR_FILENO, security_head, sizeof(security_head) - 1);
+    if (program_invocation_short_name)
+    {
+        [[maybe_unused]]auto n = write(STDERR_FILENO, program_invocation_short_name, std::strlen(program_invocation_short_name));
+    }
+    [[maybe_unused]]auto n2 = write(STDERR_FILENO, security_tail, sizeof(security_tail) - 1);
 
     perform_emergency_cleanup();
 

@@ -29,16 +29,15 @@ The following events will be logged to standard error in [the OWASP format](http
 
 - `sys_startup` on startup:
   ```json
-  {"datetime": "YYYY-MM-DDThh:mm:ssZ", "appid": "mir.canonical.com", "event": "sys_startup", "level": "WARN", "description": "Mir is starting up" }
+  {"datetime": "YYYY-MM-DDThh:mm:ssZ", "appid": "<program>", "event": "sys_startup", "level": "WARN", "description": "Mir is starting up" }
   ```
 - `sys_shutdown` on shutdown:
   ```json
-  {"datetime": "YYYY-MM-DDThh:mm:ssZ", "appid": "mir.canonical.com", "event": "sys_shutdown", "level": "WARN", "description": "Mir is shutting down" }
+  {"datetime": "YYYY-MM-DDThh:mm:ssZ", "appid": "<program>", "event": "sys_shutdown", "level": "WARN", "description": "Mir is shutting down" }
   ```
 - `sys_crash` on unhandled error or fatal signal received:
   ```json
-  {"datetime": "YYYY-MM-DDThh:mm:ssZ", "appid": "mir.canonical.com", "event": "sys_crash", "level": "ERROR", "description": "Mir unhandled exception in: <function>" }
-  {"datetime": "YYYY-MM-DDThh:mm:ssZ", "appid": "mir.canonical.com", "event": "sys_crash", "level": "ERROR", "description": "Mir fatal signal received: <function>" }
+  {"datetime": "YYYY-MM-DDThh:mm:ssZ", "appid": "<program>", "event": "sys_crash", "level": "WARN", "description": "Fatal signal received" }
   ```
 
 ## Cryptography
