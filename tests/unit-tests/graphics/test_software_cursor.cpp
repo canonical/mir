@@ -45,7 +45,7 @@ struct StubCursorImage : mg::CursorImage
         : hotspot_{hotspot},
           pixels(
             size().width.as_uint32_t() * size().height.as_uint32_t() * bytes_per_pixel,
-            0x55)
+            std::byte{0x55})
     {
     }
 
@@ -85,7 +85,7 @@ struct StubCursorImage : mg::CursorImage
 private:
     static size_t const bytes_per_pixel = 4;
     geom::Displacement const hotspot_;
-    std::vector<unsigned char> pixels;
+    std::vector<std::byte> pixels;
 };
 
 class MockBufferAllocator : public mtd::StubBufferAllocator
@@ -238,7 +238,7 @@ TEST_F(SoftwareCursor, creates_renderable_with_filled_buffer)
         4 * stub_cursor_image->size().width.as_uint32_t() *
         stub_cursor_image->size().height.as_uint32_t();
     auto const image_data =
-        static_cast<unsigned char const*>(stub_cursor_image->as_argb_8888());
+        static_cast<std::byte const*>(stub_cursor_image->as_argb_8888());
 
     cursor.show(stub_cursor_image);
 
@@ -327,7 +327,7 @@ TEST_F(SoftwareCursor, handles_argb_8888_cursor_surface)
     unsigned char const a = 0xaa;
     test_image->fill_with(r, g, b, a);
 
-    std::shared_ptr<mrs::ReadMappableBuffer> cursor_buffer;
+    std::shared_ptr<mrs::ReadMappable> cursor_buffer;
     EXPECT_CALL(mock_buffer_allocator, alloc_software_buffer(_,mir_pixel_format_argb_8888))
         .Times(1)
         .WillOnce(
@@ -335,7 +335,7 @@ TEST_F(SoftwareCursor, handles_argb_8888_cursor_surface)
                 [this, &cursor_buffer](auto sz, auto pf)
                 {
                    auto buffer = mock_buffer_allocator.mtd::StubBufferAllocator::alloc_software_buffer(sz, pf);
-                   cursor_buffer = mrs::as_read_mappable_buffer(buffer);
+                   cursor_buffer = mrs::as_read_mappable(buffer);
                    return buffer;
                 }));
 
@@ -380,7 +380,7 @@ TEST_F(SoftwareCursor, handles_argb_8888_buffer_with_stride)
     unsigned char const a = 0xdf;
     test_image->fill_with(r, g, b, a);
 
-    std::shared_ptr<mrs::ReadMappableBuffer> cursor_buffer;
+    std::shared_ptr<mrs::ReadMappable> cursor_buffer;
     EXPECT_CALL(mock_buffer_allocator, alloc_software_buffer(_,mir_pixel_format_argb_8888))
         .Times(1)
         .WillOnce(
@@ -399,7 +399,7 @@ TEST_F(SoftwareCursor, handles_argb_8888_buffer_with_stride)
                             mg::BufferUsage::hardware
                         },
                         stride);
-                    cursor_buffer = mrs::as_read_mappable_buffer(buffer);
+                    cursor_buffer = mrs::as_read_mappable(buffer);
                     return buffer;
                 }));
 

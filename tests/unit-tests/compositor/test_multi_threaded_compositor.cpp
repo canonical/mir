@@ -80,7 +80,7 @@ private:
     {
         void for_each_display_sink(std::function<void(mg::DisplaySink&)> const& f) override
         {
-            f(buffer);            
+            f(buffer);
         }
         void post() override {}
         std::chrono::milliseconds recommended_sleep() const override

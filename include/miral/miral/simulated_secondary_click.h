@@ -33,7 +33,7 @@ namespace live_config
 class Store;
 }
 /// Enables configuring simulated secondary click at runtime.
-/// 
+///
 /// Simulated secondary click is an accessibility method that allows users to
 /// simulate secondary clicks by holding the left mouse button. The pointer is
 /// allowed to move slightly during the hold to accomodate users with

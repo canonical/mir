@@ -6,6 +6,35 @@ set(MAKEOPTS
 )
 set(SPHINXDIR ${CMAKE_CURRENT_SOURCE_DIR}/sphinx)
 
+# Build a minimal Mir compositor to determine common options
+include(MirCommon)
+mir_add_wrapped_executable(demo-mir-compositor NOINSTALL
+  sphinx/tutorial/first-wayland-compositor/main.cpp
+)
+target_link_libraries(demo-mir-compositor
+  miral
+)
+set(OPTIONS_REFERENCE ${SPHINXDIR}/configuring/reference/options.md.include)
+add_custom_target(
+  COMMAND
+    ${CMAKE_BINARY_DIR}/bin/demo-mir-compositor --help-markdown
+    | sed "s@${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}@\\<LIBDIR\\>@g"
+    > ${OPTIONS_REFERENCE}
+  BYPRODUCTS ${OPTIONS_REFERENCE}
+  DEPENDS demo-mir-compositor
+)
+# Verify the options reference is up to date
+add_test(
+  NAME verify-options-reference-unchanged
+  COMMAND bash -c "diff --unified \
+    ${OPTIONS_REFERENCE} \
+    <(
+      ${CMAKE_BINARY_DIR}/bin/demo-mir-compositor --help-markdown \
+      | head -c -1 \
+      | sed 's@${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}@\\<LIBDIR\\>@g' \
+     )"
+)
+
 option(
   BUILD_DOXYGEN
   "Build Doxygen documentation as part of the default build"

@@ -201,7 +201,7 @@ std::shared_ptr<mg::Buffer> mgg::BufferAllocator::buffer_from_resource(
 }
 
 auto mgg::BufferAllocator::buffer_from_shm(
-    std::shared_ptr<renderer::software::RWMappableBuffer> data,
+    std::shared_ptr<renderer::software::RWMappable> data,
     std::function<void()>&& on_consumed,
     std::function<void()>&& on_release) -> std::shared_ptr<Buffer>
 {
@@ -261,7 +261,7 @@ public:
 
     void bind() override
     {
-        if (!gbm_surface_has_free_buffers(*surface))
+        if (!quirks->gbm_surface_has_free_buffers(*surface))
         {
             BOOST_THROW_EXCEPTION((std::logic_error{"Attempt to render to GBM surface before releasing previous front buffer"}));
         }

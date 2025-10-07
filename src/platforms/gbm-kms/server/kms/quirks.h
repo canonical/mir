@@ -22,6 +22,8 @@
 #include <memory>
 #include <boost/program_options.hpp>
 
+class gbm_surface;
+
 namespace mir
 {
 namespace options
@@ -52,12 +54,29 @@ public:
         virtual void egl_destroy_surface(EGLDisplay dpy, EGLSurface surf) const = 0;
     };
 
-    GbmQuirks(std::unique_ptr<EglDestroySurfaceQuirk> create_surface_flags);
+    class SurfaceHasFreeBuffersQuirk
+    {
+    public:
+        SurfaceHasFreeBuffersQuirk() = default;
+        virtual ~SurfaceHasFreeBuffersQuirk() = default;
+
+        SurfaceHasFreeBuffersQuirk(SurfaceHasFreeBuffersQuirk const&) = delete;
+        SurfaceHasFreeBuffersQuirk& operator=(SurfaceHasFreeBuffersQuirk const&) = delete;
+
+        virtual auto gbm_surface_has_free_buffers(gbm_surface* gbm_surface) const -> int = 0;
+    };
+
+    GbmQuirks(
+        std::unique_ptr<EglDestroySurfaceQuirk> create_surface_flags,
+        std::unique_ptr<SurfaceHasFreeBuffersQuirk> surface_has_free_buffers
+    );
 
     void egl_destroy_surface(EGLDisplay dpy, EGLSurface surf) const;
+    auto gbm_surface_has_free_buffers(gbm_surface* gbm_surface) const -> int;
 
 private:
     std::unique_ptr<EglDestroySurfaceQuirk> const egl_destroy_surface_;
+    std::unique_ptr<SurfaceHasFreeBuffersQuirk> const surface_has_free_buffers_;
 };
 
 /**

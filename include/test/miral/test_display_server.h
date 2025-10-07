@@ -66,7 +66,7 @@ struct TestDisplayServer : private TestRuntimeEnvironment
     /// Add signal handler to the server's main loop.
     void register_signal_handler(std::initializer_list<int> signals, std::function<void(int)> const& handler);
 
-    /// Add a watch on a file descriptor. 
+    /// Add a watch on a file descriptor.
     /// The handler will be triggered when there is data to read on the Fd.
     auto register_fd_handler(mir::Fd fd, std::function<void(int)> const& handler)
     -> std::unique_ptr<miral::FdHandle>;

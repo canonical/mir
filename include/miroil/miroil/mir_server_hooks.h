@@ -29,8 +29,8 @@ namespace mir { namespace shell { class DisplayConfigurationController; } }
 
 namespace miroil
 {
-using CreateNamedCursor = std::function<std::shared_ptr< mir::graphics::CursorImage>(std::string const& name)>;        
-    
+using CreateNamedCursor = std::function<std::shared_ptr< mir::graphics::CursorImage>(std::string const& name)>;
+
 class MirServerHooks
 {
 public:

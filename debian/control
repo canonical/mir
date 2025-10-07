@@ -6,6 +6,7 @@ XSBC-Original-Maintainer: Thomas Voß <thomas.voss@canonical.com>
 Build-Depends: cmake,
                pkg-config,
                debhelper (>= 9),
+               diffutils:native,
                doxygen,
                xsltproc,
                graphviz,
@@ -81,7 +82,7 @@ Description: Display server for Ubuntu - server library
  .
  Contains the shared library needed by server applications for Mir.
 
-Package: libmirplatform32
+Package: libmirplatform33
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -145,7 +146,7 @@ Section: libdevel
 Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmirplatform32 (= ${binary:Version}),
+Depends: libmirplatform33 (= ${binary:Version}),
          libmircommon-dev (= ${binary:Version}),
          libboost-program-options-dev,
          ${misc:Depends},
@@ -636,7 +637,7 @@ Pre-Depends: ${misc:Pre-Depends}
 Depends: libmiral7 (= ${libmiral7:Version}),
 # ${source:Version} is technically incorrect, but Launchpad doesn't do BinNMUs
 # so it's harmless.
-         libmircommon-dev (= ${source:Version}),
+         libmircore-dev (= ${source:Version}),
          ${misc:Depends},
 Description: Developer files for the Mir ABI-stable abstraction layer
  MirAL provides an ABI-stable abstraction layer for Mir based shells,
@@ -727,4 +728,3 @@ Depends: ${misc:Depends},
 Description: Display server for Ubuntu - kiosk hosting X11 apps
  .
  Contains an "X11 kiosk" compositor based on the Mir display server
-

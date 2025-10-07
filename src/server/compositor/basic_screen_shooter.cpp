@@ -44,12 +44,12 @@ public:
     class FB : public mg::CPUAddressableDisplayAllocator::MappableFB
     {
     public:
-        FB(std::shared_ptr<mrs::WriteMappableBuffer> buffer)
+        FB(std::shared_ptr<mrs::WriteMappable> buffer)
             : buffer{std::move(buffer)}
         {
         }
 
-        auto map_writeable() -> std::unique_ptr<mrs::Mapping<unsigned char>> override
+        auto map_writeable() -> std::unique_ptr<mrs::Mapping<std::byte>> override
         {
             return buffer->map_writeable();
         }
@@ -66,7 +66,7 @@ public:
             return buffer->stride();
         }
     private:
-        std::shared_ptr<mrs::WriteMappableBuffer> const buffer;
+        std::shared_ptr<mrs::WriteMappable> const buffer;
     };
 
     auto supported_formats() const -> std::vector<graphics::DRMFormat> override
@@ -96,7 +96,7 @@ public:
         return next_buffer->size();
     }
 
-    void set_next_buffer(std::shared_ptr<mrs::WriteMappableBuffer> buffer)
+    void set_next_buffer(std::shared_ptr<mrs::WriteMappable> buffer)
     {
         if (next_buffer)
         {
@@ -105,7 +105,7 @@ public:
         next_buffer = std::move(buffer);
     }
 private:
-    std::shared_ptr<mrs::WriteMappableBuffer> next_buffer;
+    std::shared_ptr<mrs::WriteMappable> next_buffer;
 };
 
 class OffscreenDisplaySink : public mg::DisplaySink
@@ -174,7 +174,7 @@ mc::BasicScreenShooter::Self::Self(
 }
 
 auto mc::BasicScreenShooter::Self::render(
-    std::shared_ptr<mrs::WriteMappableBuffer> const& buffer,
+    std::shared_ptr<mrs::WriteMappable> const& buffer,
     geom::Rectangle const& area,
     glm::mat2 const& transform,
     bool overlay_cursor) -> time::Timestamp
@@ -213,7 +213,7 @@ auto mc::BasicScreenShooter::Self::render(
     return captured_time;
 }
 
-auto mc::BasicScreenShooter::Self::renderer_for_buffer(std::shared_ptr<mrs::WriteMappableBuffer> buffer)
+auto mc::BasicScreenShooter::Self::renderer_for_buffer(std::shared_ptr<mrs::WriteMappable> buffer)
     -> mr::Renderer&
 {
     auto const buffer_size = buffer->size();
@@ -283,7 +283,7 @@ mc::BasicScreenShooter::BasicScreenShooter(
 }
 
 void mc::BasicScreenShooter::capture(
-    std::shared_ptr<mrs::WriteMappableBuffer> const& buffer,
+    std::shared_ptr<mrs::WriteMappable> const& buffer,
     geom::Rectangle const& area,
     glm::mat2 const& transform,
     bool overlay_cursor,

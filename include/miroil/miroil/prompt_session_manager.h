@@ -24,7 +24,7 @@
 namespace mir { namespace scene { class PromptSessionManager; class PromptSession;} }
 
 namespace miroil {
-    
+
 class PromptSessionManager
 {
 public:
@@ -41,7 +41,7 @@ public:
     auto application_for(std::shared_ptr<mir::scene::PromptSession> const& prompt_session) const -> miral::Application;
     void resume_prompt_session(std::shared_ptr<mir::scene::PromptSession> const& prompt_session) const;
     void stop_prompt_session(std::shared_ptr<mir::scene::PromptSession> const& prompt_session) const;
-    void suspend_prompt_session(std::shared_ptr<mir::scene::PromptSession> const& prompt_session) const;    
+    void suspend_prompt_session(std::shared_ptr<mir::scene::PromptSession> const& prompt_session) const;
 
 private:
     std::shared_ptr<mir::scene::PromptSessionManager> prompt_session_manager;

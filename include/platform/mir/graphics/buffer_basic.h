@@ -24,6 +24,9 @@ namespace mir
 namespace graphics
 {
 
+/// Automatically implements #Buffer::id.
+///
+/// IDs are not guaranteed to be stable across executions of Mir.
 class BufferBasic : public Buffer
 {
 public:

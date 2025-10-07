@@ -107,7 +107,7 @@ public:
     {
         return {{0, 0}, buf->size()};
     }
-    
+
     std::optional<geometry::Rectangle> clip_area() const override
     {
         return std::optional<geometry::Rectangle>();

@@ -26,7 +26,7 @@
 
 namespace mg = mir::graphics;
 
-class mg::CPUAddressableFB::Buffer : public mir::renderer::software::RWMappableBuffer
+class mg::CPUAddressableFB::Buffer : public mir::renderer::software::RWMappable
 {
     template<typename T>
     class Mapping : public mir::renderer::software::Mapping<T>
@@ -126,33 +126,33 @@ public:
             new Buffer{std::move(drm_fd), params, format}};
     }
 
-    auto map_writeable() -> std::unique_ptr<mir::renderer::software::Mapping<unsigned char>> override
+    auto map_writeable() -> std::unique_ptr<mir::renderer::software::Mapping<std::byte>> override
     {
         auto const data = mmap_buffer(PROT_WRITE);
-        return std::make_unique<Mapping<unsigned char>>(
+        return std::make_unique<Mapping<std::byte>>(
             width(), height(),
             pitch(),
             format(),
-            static_cast<unsigned char*>(data),
+            static_cast<std::byte*>(data),
             size_);
     }
-    auto map_readable() -> std::unique_ptr<mir::renderer::software::Mapping<unsigned char const>> override
+    auto map_readable() -> std::unique_ptr<mir::renderer::software::Mapping<std::byte const>> override
     {
         auto const data = mmap_buffer(PROT_READ);
-        return std::make_unique<Mapping<unsigned char const>>(
+        return std::make_unique<Mapping<std::byte const>>(
             width(), height(), pitch(), format(),
-            static_cast<unsigned char const*>(data),
+            static_cast<std::byte const*>(data),
             size_);
     }
 
-    auto map_rw() -> std::unique_ptr<mir::renderer::software::Mapping<unsigned char>> override
+    auto map_rw() -> std::unique_ptr<mir::renderer::software::Mapping<std::byte>> override
     {
         auto const data = mmap_buffer(PROT_READ | PROT_WRITE);
-        return std::make_unique<Mapping<unsigned char>>(
+        return std::make_unique<Mapping<std::byte>>(
             width(), height(),
             pitch(),
             format(),
-            static_cast<unsigned char*>(data),
+            static_cast<std::byte*>(data),
             size_);
     }
 
@@ -271,7 +271,7 @@ mg::CPUAddressableFB::CPUAddressableFB(
 {
 }
 
-auto mg::CPUAddressableFB::map_writeable() -> std::unique_ptr<mir::renderer::software::Mapping<unsigned char>>
+auto mg::CPUAddressableFB::map_writeable() -> std::unique_ptr<mir::renderer::software::Mapping<std::byte>>
 {
     return buffer->map_writeable();
 }
@@ -345,8 +345,8 @@ auto mg::CPUAddressableFB::fb_id_for_buffer(
                 std::system_category(),
                 "Failed to create DRM framebuffer from CPU-accessible buffer"}));
         }
-    
-    
+
+
     }
     return fb_id;
 }

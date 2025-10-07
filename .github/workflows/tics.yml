@@ -71,6 +71,7 @@ jobs:
       run: |
         sudo --preserve-env apt-add-repository --yes ppa:mir-team/dev
         sudo --preserve-env apt-get install --yes --no-install-recommends \
+          cargo-1.82 \
           dmz-cursor-theme \
           flake8 \
           glmark2-es2 \
@@ -79,15 +80,19 @@ jobs:
           mesa-utils \
           ninja-build \
           pylint \
+          rustc-1.82 \
           xwayland
 
         sudo --preserve-env apt-get build-dep --yes ./
+
+        echo PATH=${PATH}:/usr/lib/rust-1.82/bin >> $GITHUB_ENV
 
     - name: Configure
       run: >
         cmake
         -DCMAKE_BUILD_TYPE=Coverage
         -DMIR_RUN_PERFORMANCE_TESTS=ON
+        -DMIR_ENABLE_RUST=ON
         -DCMAKE_C_COMPILER_LAUNCHER=ccache
         -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
         -GNinja
@@ -109,7 +114,10 @@ jobs:
 
     - name: Measure coverage
       timeout-minutes: 20
-      run: cmake --build build --target coverage
+      run: |
+        cmake --build build --target coverage
+        # avoid duplicate coverage data
+        rm build/coverage*.info
 
     - name: Get changed files
       if: github.event_name == 'merge_group'

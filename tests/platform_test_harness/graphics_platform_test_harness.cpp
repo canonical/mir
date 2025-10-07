@@ -183,11 +183,11 @@ auto test_platform_construction(mir::SharedLibrary const& dso, std::vector<mg::S
 
                 std::cout << "Successfully constructed DisplayPlatform" << std::endl;
 
-                return display;                
+                return display;
             }
         }
         BOOST_THROW_EXCEPTION((std::runtime_error{"Device probe didn't return any supported devices"}));
-        
+
     }
     catch (...)
     {
@@ -253,7 +253,7 @@ void basic_display_swapping(mg::Display& display)
         {
             auto& gl_buffer = dynamic_cast<mir::renderer::gl::RenderTarget&>(db);
             gl_buffer.make_current();
-            
+
             for (int i = 0; i < 3; ++i)
             {
                 glClearColor(

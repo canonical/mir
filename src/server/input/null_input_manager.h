@@ -43,4 +43,3 @@ class NullInputManager : public input::InputManager
 }
 
 #endif
-

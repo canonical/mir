@@ -43,6 +43,7 @@
 #include <xkbcommon/xkbcommon-keysyms.h>
 
 #include <cstring>
+#include <linux/input-event-codes.h>
 
 namespace
 {
@@ -319,7 +320,7 @@ int main(int argc, char const* argv[])
             config_keymap,
             AppendKeyboardEventFilter{quit_on_ctrl_alt_bksp},
             StartupInternalClient{spinner},
-            ConfigurationOption{run_startup_apps, "startup-apps", "Colon separated list of startup apps.", ""},
+            ConfigurationOption{run_startup_apps, "startup-apps", "Colon separated list of startup apps", ""},
             pre_init(ConfigurationOption{[&](std::string const& typeface) { ::wallpaper::font_file(typeface); },
                                          "shell-wallpaper-font", "Font file to use for wallpaper.", ::wallpaper::font_file()}),
             ConfigurationOption{[&](std::string const& cmd) { terminal_cmd = cmd; },

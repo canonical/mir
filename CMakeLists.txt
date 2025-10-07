@@ -26,7 +26,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 set(MIR_VERSION_MAJOR 2)
 set(MIR_VERSION_MINOR 22)
-set(MIR_VERSION_PATCH 1)
+set(MIR_VERSION_PATCH 2)
 
 add_compile_definitions(MIR_VERSION_MAJOR=${MIR_VERSION_MAJOR})
 add_compile_definitions(MIR_VERSION_MINOR=${MIR_VERSION_MINOR})
@@ -53,7 +53,6 @@ endif()
 include (cmake/EnableCoverageReport.cmake)
 include (cmake/MirCommon.cmake)
 include (GNUInstallDirs)
-add_subdirectory(doc)
 
 set(build_types "None;Debug;Release;RelWithDebInfo;MinSizeRel;Coverage;AddressSanitizer;ThreadSanitizer;UBSanitizer")
 # Change informational string for CMAKE_BUILD_TYPE
@@ -164,7 +163,7 @@ enable_testing()
 find_package(PkgConfig)
 
 # Check for boost
-find_package(Boost 1.48.0 COMPONENTS system program_options filesystem iostreams REQUIRED)
+find_package(Boost 1.48.0 COMPONENTS program_options filesystem iostreams REQUIRED)
 
 add_compile_definitions(EGL_NO_X11)
 
@@ -296,6 +295,7 @@ mir_make_pkgconfig_variable(PKGCONFIG_LIBDIR "${CMAKE_INSTALL_LIBDIR}")
 mir_make_pkgconfig_variable(PKGCONFIG_INCLUDEDIR "${CMAKE_INSTALL_INCLUDEDIR}")
 include(JoinPaths)
 
+add_subdirectory(doc)
 set(MIR_GENERATED_INCLUDE_DIRECTORIES)
 add_subdirectory(src/)
 include_directories(${MIR_GENERATED_INCLUDE_DIRECTORIES})

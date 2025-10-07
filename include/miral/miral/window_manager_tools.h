@@ -142,7 +142,7 @@ public:
     auto active_window() const -> Window;
 
     /// Select a new active window based on the \p hint.
-    /// 
+    ///
     /// Not all windows can become active - either because of their type
     /// or other state. But there will typically be an associated parent or
     /// child window that can become active.

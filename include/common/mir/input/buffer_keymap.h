@@ -49,4 +49,3 @@ private:
 }
 
 #endif // MIR_INPUT_BUFFER_KEYMAP_H_
-

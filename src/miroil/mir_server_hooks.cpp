@@ -49,21 +49,21 @@ struct PromptSessionListenerImpl : mir::scene::PromptSessionListener
     void prompt_provider_removed(mir::scene::PromptSession const& prompt_session,
                                  std::shared_ptr<mir::scene::Session> const& prompt_provider) override;
 
-private:   
+private:
     std::shared_ptr<miroil::PromptSessionListener> const listener;
 };
 
 struct MirInputDeviceObserverImpl : mir::input::InputDeviceObserver
 {
-public:    
+public:
     MirInputDeviceObserverImpl(std::shared_ptr<miroil::InputDeviceObserver> & observer) : observer(observer) {};
-    
+
     void device_added(std::shared_ptr<mir::input::Device> const& device) override;
     void device_changed(std::shared_ptr<mir::input::Device> const& /*device*/) override {}
     void device_removed(std::shared_ptr<mir::input::Device> const& device) override;
     void changes_complete() override {}
-    
-private:    
+
+private:
     std::shared_ptr<miroil::InputDeviceObserver> observer;
 };
 
@@ -118,7 +118,7 @@ struct miroil::MirServerHooks::Self
     std::weak_ptr<mir::shell::DisplayConfigurationController> mir_display_configuration_controller;
     std::weak_ptr<mir::scene::PromptSessionManager> mir_prompt_session_manager;
     std::weak_ptr<mir::input::InputDeviceHub> input_device_hub;
-    CreateNamedCursor create_cursor;    
+    CreateNamedCursor create_cursor;
 };
 
 miroil::MirServerHooks::MirServerHooks() :
@@ -254,4 +254,3 @@ void MirInputDeviceObserverImpl::device_removed(const std::shared_ptr<mir::input
         observer->device_removed(miroil::InputDevice(device));
     }
 }
-

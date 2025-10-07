@@ -22,13 +22,13 @@ namespace mir { namespace scene { class PromptSession; } }
 namespace mir { namespace scene { class Session; } }
 
 namespace miroil {
-    
+
 class PromptSessionListener
 {
 public:
     virtual ~PromptSessionListener();
-    
-    PromptSessionListener& operator=(PromptSessionListener const&) = delete;    
+
+    PromptSessionListener& operator=(PromptSessionListener const&) = delete;
 
     virtual void starting(std::shared_ptr<mir::scene::PromptSession> const& prompt_session) = 0;
     virtual void stopping(std::shared_ptr<mir::scene::PromptSession> const& prompt_session) = 0;
@@ -38,7 +38,7 @@ public:
                                std::shared_ptr<mir::scene::Session> const& prompt_provider) = 0;
     virtual void prompt_provider_removed(mir::scene::PromptSession const& prompt_session,
                                  std::shared_ptr<mir::scene::Session> const& prompt_provider) = 0;
-                                 
+
 protected:
     PromptSessionListener() = default;
     PromptSessionListener(PromptSessionListener const&) = delete;

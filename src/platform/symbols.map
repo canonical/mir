@@ -1,4 +1,4 @@
-MIR_PLATFORM_2.22 {
+MIR_PLATFORM_2.23 {
  global:
   extern "C++" {
     mir::graphics::AtomicFrame::increment*;
@@ -161,8 +161,8 @@ MIR_PLATFORM_2.22 {
     mir::options::x11_display_opt;
     mir::options::x11_scale_opt;
     mir::renderer::software::alloc_buffer_with_content*;
-    mir::renderer::software::as_read_mappable_buffer*;
-    mir::renderer::software::as_write_mappable_buffer*;
+    mir::renderer::software::as_read_mappable*;
+    mir::renderer::software::as_write_mappable*;
     mir::udev::Context::?Context*;
     mir::udev::Context::Context*;
     mir::udev::Context::char_device_from_devnum*;

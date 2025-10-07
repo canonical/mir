@@ -62,7 +62,7 @@ TEST_F(FdManager, dropping_fd_handle_before_main_loop_created_does_not_register_
 
     EXPECT_CALL(*main_loop.get(), register_fd_handler(_, _, _))
         .Times(0);
-    
+
     attach_main_loop();
 }
 
@@ -77,9 +77,9 @@ TEST_F(FdManager, register_handler_after_main_loop_created_registers_fd_handler)
 TEST_F(FdManager, register_handler_before_main_loop_created_registers_fd_handler_after_main_loop_created)
 {
     auto const handle = manager->register_handler(fd, [](int) { std::function<void(int)>(); });
-    
+
     EXPECT_CALL(*main_loop.get(), register_fd_handler(_, _, _))
         .Times(1);
-    
+
     attach_main_loop();
 }

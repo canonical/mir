@@ -190,13 +190,13 @@ void mgg::Cursor::pad_and_write_image_data_locked(
     auto const buffer_height = std::max(min_height, gbm_bo_get_height(gbm_buffer));
     size_t const padded_size = buffer_stride * buffer_height;
 
-    auto padded = std::unique_ptr<uint8_t[]>(new uint8_t[padded_size]);
+    auto padded = std::make_unique<std::byte[]>(padded_size);
     size_t rhs_padding = buffer_stride - 4*image_width;
 
     auto const filler = 0; // 0x3f; is useful to make buffer visible for debugging
     auto const mapping = buffer->map_readable();
-    uint8_t const* src = mapping->data();
-    uint8_t* dest = &padded[0];
+    std::byte const* src = mapping->data();
+    std::byte* dest = &padded[0];
 
     switch (orientation)
     {
@@ -550,4 +550,3 @@ auto mir::graphics::gbm::Cursor::needs_compositing() const -> bool
 {
     return false;
 }
-

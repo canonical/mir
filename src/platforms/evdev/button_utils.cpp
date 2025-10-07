@@ -42,4 +42,3 @@ MirPointerButton mie::to_pointer_button(int button, MirPointerHandedness handedn
     }
     BOOST_THROW_EXCEPTION(std::runtime_error("Invalid mouse button"));
 }
-

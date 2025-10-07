@@ -40,4 +40,3 @@ public:
 }
 
 #endif /* MIR_TEST_DOUBLES_MOCK_COMPOSITOR_H_ */
-

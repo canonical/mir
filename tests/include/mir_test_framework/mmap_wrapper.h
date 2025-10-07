@@ -64,4 +64,3 @@ MunmapHandlerHandle add_munmap_handler(MunmapHandler handler);
 }
 
 #endif //MIR_TEST_FRAMEWORK_MMAP_WRAPPER_H_
-

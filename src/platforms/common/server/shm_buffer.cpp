@@ -273,7 +273,7 @@ mgc::MemoryBackedShmBuffer::MemoryBackedShmBuffer(
     MirPixelFormat const& pixel_format)
     : ShmBuffer(size, pixel_format),
       stride_{MIR_BYTES_PER_PIXEL(pixel_format) * size.width.as_uint32_t()},
-      pixels{new unsigned char[stride_.as_int() * size.height.as_int()]}
+      pixels{std::make_unique<std::byte[]>(stride_.as_int() * size.height.as_int())}
 {
 }
 
@@ -340,39 +340,39 @@ private:
     std::conditional_t<std::is_const_v<T>, MemoryBackedShmBuffer const*, MemoryBackedShmBuffer*> buffer;
 };
 
-auto mgc::MemoryBackedShmBuffer::map_writeable() -> std::unique_ptr<mrs::Mapping<unsigned char>>
+auto mgc::MemoryBackedShmBuffer::map_writeable() -> std::unique_ptr<mrs::Mapping<std::byte>>
 {
-    return std::make_unique<Mapping<unsigned char>>(this);
+    return std::make_unique<Mapping<std::byte>>(this);
 }
 
-auto mgc::MemoryBackedShmBuffer::map_readable() -> std::unique_ptr<mrs::Mapping<unsigned char const>>
+auto mgc::MemoryBackedShmBuffer::map_readable() -> std::unique_ptr<mrs::Mapping<std::byte const>>
 {
-    return std::make_unique<Mapping<unsigned char const>>(this);
+    return std::make_unique<Mapping<std::byte const>>(this);
 }
 
-auto mgc::MemoryBackedShmBuffer::map_rw() -> std::unique_ptr<mrs::Mapping<unsigned char>>
+auto mgc::MemoryBackedShmBuffer::map_rw() -> std::unique_ptr<mrs::Mapping<std::byte>>
 {
-    return std::make_unique<Mapping<unsigned char>>(this);
+    return std::make_unique<Mapping<std::byte>>(this);
 }
 
 mgc::MappableBackedShmBuffer::MappableBackedShmBuffer(
-    std::shared_ptr<mrs::RWMappableBuffer> data)
+    std::shared_ptr<mrs::RWMappable> data)
     : ShmBuffer(data->size(), data->format()),
       data{std::move(data)}
 {
 }
 
-auto mgc::MappableBackedShmBuffer::map_writeable() -> std::unique_ptr<mrs::Mapping<unsigned char>>
+auto mgc::MappableBackedShmBuffer::map_writeable() -> std::unique_ptr<mrs::Mapping<std::byte>>
 {
     return data->map_writeable();
 }
 
-auto mgc::MappableBackedShmBuffer::map_readable() -> std::unique_ptr<mrs::Mapping<unsigned char const>>
+auto mgc::MappableBackedShmBuffer::map_readable() -> std::unique_ptr<mrs::Mapping<std::byte const>>
 {
     return data->map_readable();
 }
 
-auto mgc::MappableBackedShmBuffer::map_rw() -> std::unique_ptr<mrs::Mapping<unsigned char>>
+auto mgc::MappableBackedShmBuffer::map_rw() -> std::unique_ptr<mrs::Mapping<std::byte>>
 {
     return data->map_rw();
 }
@@ -404,7 +404,7 @@ auto mgc::MappableBackedShmBuffer::size() const -> geometry::Size
 }
 
 mgc::NotifyingMappableBackedShmBuffer::NotifyingMappableBackedShmBuffer(
-    std::shared_ptr<mrs::RWMappableBuffer> data,
+    std::shared_ptr<mrs::RWMappable> data,
     std::function<void()>&& on_consumed,
     std::function<void()>&& on_release)
     :  MappableBackedShmBuffer(std::move(data)),
@@ -425,19 +425,19 @@ void mgc::NotifyingMappableBackedShmBuffer::notify_consumed()
     on_consumed = [](){};
 }
 
-auto mgc::NotifyingMappableBackedShmBuffer::map_readable() -> std::unique_ptr<mrs::Mapping<unsigned char const>>
+auto mgc::NotifyingMappableBackedShmBuffer::map_readable() -> std::unique_ptr<mrs::Mapping<std::byte const>>
 {
     notify_consumed();
     return MappableBackedShmBuffer::map_readable();
 }
 
-auto mgc::NotifyingMappableBackedShmBuffer::map_writeable() -> std::unique_ptr<mrs::Mapping<unsigned char>>
+auto mgc::NotifyingMappableBackedShmBuffer::map_writeable() -> std::unique_ptr<mrs::Mapping<std::byte>>
 {
     notify_consumed();
     return MappableBackedShmBuffer::map_writeable();
 }
 
-auto mgc::NotifyingMappableBackedShmBuffer::map_rw() -> std::unique_ptr<mrs::Mapping<unsigned char>>
+auto mgc::NotifyingMappableBackedShmBuffer::map_rw() -> std::unique_ptr<mrs::Mapping<std::byte>>
 {
     notify_consumed();
     return MappableBackedShmBuffer::map_rw();

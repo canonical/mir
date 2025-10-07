@@ -115,4 +115,3 @@ void log(ml::Severity severity, std::string const& message)
 }
 }
 }
-

@@ -49,7 +49,7 @@ protected:
 private:
     explicit RenderingPlatform(std::tuple<EGLDisplay, bool> dpy);
 
-    /* 
+    /*
      * We (sometimes) need to clean up the EGLDisplay with eglTerminate,
      * but this should happen after cleanup of `ctx` and `dmabuf_provider`
      * (which both wrap resources on the EGLDisplay).

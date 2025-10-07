@@ -87,7 +87,7 @@ MirInputEventType mir_input_event_get_type(MirInputEvent const* event);
  *
  * \param[in] event The input event
  * \return          The MirKeyboardEvent
- * \pre             The event type is mir_input_event_type_key 
+ * \pre             The event type is mir_input_event_type_key
  */
 MirKeyboardEvent const* mir_input_event_get_keyboard_event(MirInputEvent const* event);
 

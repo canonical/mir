@@ -210,7 +210,7 @@ auto probe_display_platform(
                     continue;
                 }
 
-                // For now, we *also* require our DisplayPlatform to support creating a HW EGL context                
+                // For now, we *also* require our DisplayPlatform to support creating a HW EGL context
                 mga::helpers::GBMHelper atomic_device{tmp_fd};
                 mga::helpers::EGLHelper egl{MinimalGLConfig()};
 
@@ -323,4 +323,3 @@ mir::ModuleProperties const* describe_graphics_module()
     mir::assert_entry_point_signature<mg::DescribeModule>(&describe_graphics_module);
     return &description;
 }
-

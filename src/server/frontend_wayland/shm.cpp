@@ -52,7 +52,7 @@ mf::ShmBuffer::ShmBuffer(
 
 namespace
 {
-class ErrorNotifyingRWMappableBuffer : public mrs::RWMappableBuffer
+class ErrorNotifyingRWMappableBuffer : public mrs::RWMappable
 {
 public:
     ErrorNotifyingRWMappableBuffer(
@@ -67,9 +67,9 @@ public:
     auto stride() const -> mir::geometry::Stride override;
     auto format() const -> MirPixelFormat override;
 
-    auto map_readable() -> std::unique_ptr<mrs::Mapping<unsigned char const>> override;
-    auto map_writeable() -> std::unique_ptr<mrs::Mapping<unsigned char>> override;
-    auto map_rw() -> std::unique_ptr<mrs::Mapping<unsigned char>> override;
+    auto map_readable() -> std::unique_ptr<mrs::Mapping<std::byte const>> override;
+    auto map_writeable() -> std::unique_ptr<mrs::Mapping<std::byte>> override;
+    auto map_rw() -> std::unique_ptr<mrs::Mapping<std::byte>> override;
 
     void notify_access_error() const;
 private:
@@ -184,23 +184,23 @@ auto ErrorNotifyingRWMappableBuffer::format() const -> MirPixelFormat
     return format_;
 }
 
-auto ErrorNotifyingRWMappableBuffer::map_rw() -> std::unique_ptr<mrs::Mapping<unsigned char>>
+auto ErrorNotifyingRWMappableBuffer::map_rw() -> std::unique_ptr<mrs::Mapping<std::byte>>
 {
-    return std::make_unique<ErrorNotifyingMapping<unsigned char>>(data->map_rw(), *this);
+    return std::make_unique<ErrorNotifyingMapping<std::byte>>(data->map_rw(), *this);
 }
 
-auto ErrorNotifyingRWMappableBuffer::map_readable() -> std::unique_ptr<mrs::Mapping<unsigned char const>>
+auto ErrorNotifyingRWMappableBuffer::map_readable() -> std::unique_ptr<mrs::Mapping<std::byte const>>
 {
-    return std::make_unique<ErrorNotifyingMapping<unsigned char const>>(data->map_ro(), *this);
+    return std::make_unique<ErrorNotifyingMapping<std::byte const>>(data->map_ro(), *this);
 }
 
-auto ErrorNotifyingRWMappableBuffer::map_writeable() -> std::unique_ptr<mrs::Mapping<unsigned char>>
+auto ErrorNotifyingRWMappableBuffer::map_writeable() -> std::unique_ptr<mrs::Mapping<std::byte>>
 {
-    return std::make_unique<ErrorNotifyingMapping<unsigned char>>(data->map_wo(), *this);
+    return std::make_unique<ErrorNotifyingMapping<std::byte>>(data->map_wo(), *this);
 }
 }
 
-auto mf::ShmBuffer::data() -> std::shared_ptr<mrs::RWMappableBuffer>
+auto mf::ShmBuffer::data() -> std::shared_ptr<mrs::RWMappable>
 {
     return std::make_shared<ErrorNotifyingRWMappableBuffer>(
         wayland::make_weak<mf::ShmBuffer>(this),

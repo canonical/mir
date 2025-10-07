@@ -124,7 +124,7 @@ struct ApplicationSession : public testing::Test
            event_sink,
            allocator);
     }
-    
+
     std::shared_ptr<ms::ApplicationSession> make_application_session(
         std::shared_ptr<ms::SurfaceFactory> const& surface_factory)
     {
@@ -166,7 +166,7 @@ struct ApplicationSession : public testing::Test
            event_sink,
            allocator);
     }
-    
+
     std::shared_ptr<ms::ApplicationSession> make_application_session_with_listener(
         std::shared_ptr<ms::SessionListener> const& session_listener)
     {
@@ -458,7 +458,7 @@ MATCHER_P(HasSingleStream, value, "")
     using namespace testing;
     EXPECT_THAT(arg.size(), Eq(1));
     if (arg.size() < 1 ) return false;
-    EXPECT_THAT(arg.front().stream.get(), Eq(value.get())); 
+    EXPECT_THAT(arg.front().stream.get(), Eq(value.get()));
     return !(::testing::Test::HasFailure());
 }
 

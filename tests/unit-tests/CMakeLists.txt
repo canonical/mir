@@ -184,7 +184,6 @@ target_link_libraries(
 
   mircommon
 
-  Boost::system
   PkgConfig::LIBINPUT
   PkgConfig::WAYLAND_SERVER
   ${MIR_SERVER_REFERENCES}
@@ -218,7 +217,6 @@ target_link_libraries(
   mir-test-framework-static
   mir-umock-test-framework
 
-  Boost::system
   PkgConfig::UMOCKDEV
   PkgConfig::LIBINPUT
   ${MIR_SERVER_REFERENCES}

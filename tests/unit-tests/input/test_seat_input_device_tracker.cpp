@@ -288,8 +288,8 @@ TEST_F(SeatInputDeviceTracker, pointer_confinement_bounds_mouse_inside)
     auto const max_w_h = 100;
     EXPECT_CALL(mock_cursor_observer, cursor_moved_to(move_x, move_y)).Times(1);
     EXPECT_CALL(mock_cursor_observer, cursor_moved_to(max_w_h - 1, max_w_h - 1)).Times(1);
-   
-    geom::Rectangle rec{{0, 0}, {max_w_h, max_w_h}}; 
+
+    geom::Rectangle rec{{0, 0}, {max_w_h, max_w_h}};
     tracker.set_confinement_regions({rec});
     tracker.add_device(some_device);
     tracker.dispatch(motion_event(some_device_builder, move_x, move_y));
@@ -304,7 +304,7 @@ TEST_F(SeatInputDeviceTracker, reset_pointer_confinement_allows_movement_past)
     EXPECT_CALL(mock_cursor_observer, cursor_moved_to(move_x + max_w_h * 2,
                                                       move_y + max_w_h * 2)).Times(1);
 
-    geom::Rectangle rec{{0, 0}, {max_w_h, max_w_h}}; 
+    geom::Rectangle rec{{0, 0}, {max_w_h, max_w_h}};
     tracker.set_confinement_regions({rec});
     tracker.add_device(some_device);
     tracker.dispatch(motion_event(some_device_builder, move_x, move_y));

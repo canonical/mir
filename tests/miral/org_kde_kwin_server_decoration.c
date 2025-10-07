@@ -66,4 +66,3 @@ WL_PRIVATE const struct wl_interface org_kde_kwin_server_decoration_interface = 
 	2, org_kde_kwin_server_decoration_requests,
 	1, org_kde_kwin_server_decoration_events,
 };
-

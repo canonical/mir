@@ -482,6 +482,6 @@ TEST(MultiplexingDispatchableTest, automatic_removals_are_threadsafe)
     eventloop.add_thread();
     eventloop.add_thread();
     eventloop.add_thread();
-    
+
     dispatchee->trigger();
 }

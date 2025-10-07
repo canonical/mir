@@ -75,5 +75,3 @@ TEST(ActionQueue, executes_action_only_once)
     // Even so, we expect our action to be executed only once.
     EXPECT_THAT(count_executed, Eq(1));
 }
-
-

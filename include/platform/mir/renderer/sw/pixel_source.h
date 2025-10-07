@@ -36,25 +36,8 @@ namespace renderer
 {
 namespace software
 {
-
-/// Describes the layout of CPU accessible buffers.
-///
-/// Used for reading, writing, and transferring data between CPU buffers.
-class BufferDescriptor
-{
-public:
-    virtual ~BufferDescriptor() = default;
-
-    /// \returns The pixel format of the buffer
-    virtual MirPixelFormat format() const = 0;
-    /// \returns The stride (width + any padding)
-    virtual geometry::Stride stride() const = 0;
-    /// \returns The size of the buffer
-    virtual geometry::Size size() const = 0;
-};
-
 template<typename T>
-class Mapping : public BufferDescriptor
+class Mapping
 {
 public:
     /**
@@ -67,15 +50,21 @@ public:
 
     virtual T* data() = 0;
     virtual size_t len() const = 0;
+    /// \returns The pixel format of the buffer
+    virtual MirPixelFormat format() const = 0;
+    /// \returns The stride (width + any padding)
+    virtual geometry::Stride stride() const = 0;
+    /// \returns The size of the buffer
+    virtual geometry::Size size() const = 0;
 };
 
 /**
  * A Buffer that can be mapped into CPU-accessible memory and directly written to.
  */
-class WriteMappableBuffer : public virtual BufferDescriptor
+class WriteMappable
 {
 public:
-    virtual ~WriteMappableBuffer() = default;
+    virtual ~WriteMappable() = default;
 
     /**
      * Map the buffer into CPU-writeable memory.
@@ -88,16 +77,21 @@ public:
      *          after unmap.
      * \return  A CPU-mapped view of the buffer.
      */
-    virtual std::unique_ptr<Mapping<unsigned char>> map_writeable() = 0;
-};
+    virtual auto map_writeable() -> std::unique_ptr<Mapping<std::byte>> = 0;
+    /// \returns The pixel format of the buffer
+    virtual MirPixelFormat format() const = 0;
+    /// \returns The stride (width + any padding)
+    virtual geometry::Stride stride() const = 0;
+    /// \returns The size of the buffer
+    virtual geometry::Size size() const = 0;};
 
 /**
  * A Buffer that can be mapped into CPU-readable memory.
  */
-class ReadMappableBuffer : public virtual BufferDescriptor
+class ReadMappable
 {
 public:
-    virtual ~ReadMappableBuffer() = default;
+    virtual ~ReadMappable() = default;
 
     /**
      * Map the buffer into CPU-readable memory.
@@ -106,18 +100,24 @@ public:
      *          of the mapping are not guaranteed to be visible.
      * \return  A CPU-mapped view of the buffer.
      */
-    virtual std::unique_ptr<Mapping<unsigned char const>> map_readable() = 0;
+    virtual auto map_readable() -> std::unique_ptr<Mapping<std::byte const>> = 0;
+    /// \returns The pixel format of the buffer
+    virtual MirPixelFormat format() const = 0;
+    /// \returns The stride (width + any padding)
+    virtual geometry::Stride stride() const = 0;
+    /// \returns The size of the buffer
+    virtual geometry::Size size() const = 0;
 };
 
 /**
  * A buffer that can be mapped into CPU-accessible memory for both reading and writing.
  */
-class RWMappableBuffer :
-    public ReadMappableBuffer,
-    public WriteMappableBuffer
+class RWMappable :
+    public ReadMappable,
+    public WriteMappable
 {
 public:
-    ~RWMappableBuffer() override = default;
+    ~RWMappable() override = default;
 
     /**
      * Map the buffer into CPU-accessible memory for both reading and writing.
@@ -129,30 +129,49 @@ public:
      *          guaranteed to be visible to the GPU until the mapping is destroyed.
      * \return A CPU-mapped view of the buffer.
      */
-    virtual std::unique_ptr<Mapping<unsigned char>> map_rw() = 0;
+    virtual auto map_rw() -> std::unique_ptr<Mapping<std::byte>> = 0;
+    /// \returns The pixel format of the buffer
+    virtual MirPixelFormat format() const override = 0;
+    /// \returns The stride (width + any padding)
+    virtual geometry::Stride stride() const override = 0;
+    /// \returns The size of the buffer
+    virtual geometry::Size size() const override = 0;
 };
 
-class ReadTransferableBuffer : public virtual BufferDescriptor
+class ReadTransferable
 {
 public:
-    virtual ~ReadTransferableBuffer() = default;
+    virtual ~ReadTransferable() = default;
 
-    virtual void transfer_from_buffer(unsigned char* destination) const = 0;
+    virtual void transfer_from_buffer(std::byte* destination) const = 0;
+    /// \returns The pixel format of the buffer
+    virtual MirPixelFormat format() const = 0;
+    /// \returns The stride (width + any padding)
+    virtual geometry::Stride stride() const = 0;
+    /// \returns The size of the buffer
+    virtual geometry::Size size() const = 0;
 };
 
-class WriteTransferableBuffer : public virtual BufferDescriptor
+class WriteTransferable
 {
 public:
-    virtual ~WriteTransferableBuffer() = default;
+    virtual ~WriteTransferable() = default;
 
-    virtual void transfer_into_buffer(unsigned char const* source) = 0;
+    virtual void transfer_into_buffer(std::byte const* source) = 0;
+
+    /// \returns The pixel format of the buffer
+    virtual MirPixelFormat format() const = 0;
+    /// \returns The stride (width + any padding)
+    virtual geometry::Stride stride() const = 0;
+    /// \returns The size of the buffer
+    virtual geometry::Size size() const = 0;
 };
 
-auto as_read_mappable_buffer(
-    std::shared_ptr<graphics::Buffer> const& buffer) -> std::shared_ptr<ReadMappableBuffer>;
+auto as_read_mappable(
+    std::shared_ptr<graphics::Buffer> const& buffer) -> std::shared_ptr<ReadMappable>;
 
-auto as_write_mappable_buffer(
-    std::shared_ptr<graphics::Buffer> const& buffer) -> std::shared_ptr<WriteMappableBuffer>;
+auto as_write_mappable(
+    std::shared_ptr<graphics::Buffer> const& buffer) -> std::shared_ptr<WriteMappable>;
 
 auto alloc_buffer_with_content(
     graphics::GraphicBufferAllocator& allocator,

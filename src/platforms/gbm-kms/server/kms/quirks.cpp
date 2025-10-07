@@ -23,6 +23,8 @@
 
 #include <boost/algorithm/string.hpp>
 
+#include <gbm.h>
+
 #include <vector>
 #include <unordered_set>
 
@@ -51,7 +53,7 @@ public:
             boost::split(tokens, option_value, boost::is_any_of(":"));
 
             auto static const available_options = std::set<std::string>{
-                "skip", "allow", "disable-kms-probe", "egl-destroy-surface"};
+                "skip", "allow", "disable-kms-probe", "egl-destroy-surface", "gbm-surface-has-free-buffers"};
             auto const structure = mgc::validate_structure(tokens, available_options);
             if(!structure)
                 return false;
@@ -78,6 +80,11 @@ public:
                 egl_destroy_surface.add(specifier, specifier_value, tokens[3]);
                 return true;
             }
+            else if (mgc::matches(tokens, "gbm-surface-has-free-buffers", {"default", "skip"}))
+            {
+                gbm_surface_has_free_buffers.add(specifier, specifier_value, tokens[3]);
+                return true;
+            }
 
             return false;
         };
@@ -92,7 +99,8 @@ public:
                     "Ignoring unexpected value for %s option: %s "
                     "(expects value of the form “{skip, allow}:{driver,devnode}:<driver or devnode>”"
                     ", “disable-kms-probe:{driver,devnode}:<driver or devnode>”, "
-                    "“egl-destroy-surface:{driver,devnode}:{default:leak}”)",
+                    "“egl-destroy-surface:{driver,devnode}:{default:leak}”), "
+                    "or “gbm-surface-has-free-buffers:{driver,devnode}:<driver or devnode>:{default,skip}”)",
                     quirks_option_name,
                     quirk.c_str());
             }
@@ -179,7 +187,39 @@ public:
             return std::make_unique<DefaultEglDestroySurface>();
         }();
 
-        return std::make_shared<GbmQuirks>(std::move(egl_destroy_surface_impl));
+        class GbmSurfaceHasFreeBuffersAlwaysTrue : public GbmQuirks::SurfaceHasFreeBuffersQuirk
+        {
+            auto gbm_surface_has_free_buffers(gbm_surface*) const -> int override
+            {
+                return 1;
+            }
+        };
+
+        class DefaultGbmSurfaceHasFreeBuffers : public GbmQuirks::SurfaceHasFreeBuffersQuirk
+        {
+            auto gbm_surface_has_free_buffers(gbm_surface* gbm_surface) const -> int override
+            {
+                return ::gbm_surface_has_free_buffers(gbm_surface);
+            }
+        };
+
+        mir::log_debug("Quirks(gbm-surface-has-free-buffers): checking device with devnode: %s, driver %s", devnode, driver);
+
+        auto surface_has_free_buffers_impl_name = mgc::apply_quirk(
+            devnode,
+            driver,
+            gbm_surface_has_free_buffers.devnodes,
+            gbm_surface_has_free_buffers.drivers,
+            "gbm-surface-has-free-buffers");
+
+        auto surface_has_free_buffers_impl = [&]() -> std::unique_ptr<GbmQuirks::SurfaceHasFreeBuffersQuirk>
+        {
+            if (gbm_surface_has_free_buffers_always_true_options.contains(surface_has_free_buffers_impl_name))
+                return std::make_unique<GbmSurfaceHasFreeBuffersAlwaysTrue>();
+            return std::make_unique<DefaultGbmSurfaceHasFreeBuffers>();
+        }();
+
+        return std::make_shared<GbmQuirks>(std::move(egl_destroy_surface_impl), std::move(surface_has_free_buffers_impl));
     }
 private:
     /* AST is a simple 2D output device, built into some motherboards.
@@ -198,6 +238,9 @@ private:
 
     inline static std::set<std::string_view> const egl_destroy_surface_leaking_options{"leak", "nvidia"};
     mgc::ValuedOption egl_destroy_surface;
+
+    inline static std::set<std::string_view> const gbm_surface_has_free_buffers_always_true_options{"skip", "nvidia"};
+    mgc::ValuedOption gbm_surface_has_free_buffers;
 };
 
 mgg::Quirks::Quirks(const options::Option& options)
@@ -244,8 +287,10 @@ auto mir::graphics::gbm::Quirks::gbm_quirks_for(udev::Device const& device) -> s
     return impl->gbm_quirks_for(device);
 }
 
-mir::graphics::gbm::GbmQuirks::GbmQuirks(std::unique_ptr<EglDestroySurfaceQuirk> egl_destroy_surface) :
-    egl_destroy_surface_{std::move(egl_destroy_surface)}
+mir::graphics::gbm::GbmQuirks::GbmQuirks(std::unique_ptr<EglDestroySurfaceQuirk> egl_destroy_surface,
+                                         std::unique_ptr<SurfaceHasFreeBuffersQuirk> surface_has_free_buffers) :
+    egl_destroy_surface_{std::move(egl_destroy_surface)},
+    surface_has_free_buffers_{std::move(surface_has_free_buffers)}
 {
 }
 
@@ -254,3 +299,7 @@ void mir::graphics::gbm::GbmQuirks::egl_destroy_surface(EGLDisplay dpy, EGLSurfa
     egl_destroy_surface_->egl_destroy_surface(dpy, surf);
 }
 
+auto mir::graphics::gbm::GbmQuirks::gbm_surface_has_free_buffers(gbm_surface* gbm_surface) const -> int
+{
+    return surface_has_free_buffers_->gbm_surface_has_free_buffers(gbm_surface);
+}

@@ -33,14 +33,14 @@ TEST_F(TestSlowKeys, enabling_from_miral_enables_it_in_the_accessibility_manager
     InSequence seq;
     // Called on server start since we enabled slow keys above
     EXPECT_CALL(*accessibility_manager, slow_keys_enabled(true));
-    
+
     // Each one corresponds to a call below
     EXPECT_CALL(*accessibility_manager, slow_keys_enabled(true));
     EXPECT_CALL(*accessibility_manager, slow_keys_enabled(false));
 
     add_server_init(slow_keys);
     start_server();
-    
+
     slow_keys.enable();
     slow_keys.disable();
 }
@@ -66,7 +66,7 @@ TEST_F(TestSlowKeys, setting_on_key_down_sets_transformer_on_key_down)
     EXPECT_CALL(accessibility_manager->slow_keys_transformer, on_key_down(_)).Times(1);
     start_server();
     EXPECT_THAT(calls, Eq(1));
-    
+
     // After the server starts, all modifications from miral get relayed
     // directly to the transformer. So `on_key_down` will get called once
     // again.
@@ -93,7 +93,7 @@ TEST_F(TestSlowKeys, setting_on_key_rejected_sets_transformer_on_key_rejected)
     EXPECT_CALL(accessibility_manager->slow_keys_transformer, on_key_rejected(_)).Times(1);
     start_server();
     EXPECT_THAT(calls, Eq(1));
-    
+
     EXPECT_CALL(accessibility_manager->slow_keys_transformer, on_key_rejected(_)).Times(1);
     slow_keys.on_key_rejected(std::move(okr));
     EXPECT_THAT(calls, Eq(2));
@@ -117,7 +117,7 @@ TEST_F(TestSlowKeys, setting_on_key_accepted_sets_transformer_on_key_accepted)
     EXPECT_CALL(accessibility_manager->slow_keys_transformer, on_key_accepted(_)).Times(1);
     start_server();
     EXPECT_THAT(calls, Eq(1));
-    
+
     EXPECT_CALL(accessibility_manager->slow_keys_transformer, on_key_accepted(_)).Times(1);
     slow_keys.on_key_accepted(std::move(oka));
     EXPECT_THAT(calls, Eq(2));

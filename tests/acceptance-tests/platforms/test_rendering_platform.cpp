@@ -105,7 +105,7 @@ public:
 TEST_P(RenderingPlatformTest, DISABLED_supports_gl_rendering)
 {
     using namespace testing;
-    
+
     platform_module = GetParam()->platform_module();
 
     auto const platform_loader = platform_module->load_function<mg::CreateRenderPlatform>(
@@ -123,9 +123,9 @@ TEST_P(RenderingPlatformTest, DISABLED_supports_gl_rendering)
         console_services,
         std::make_shared<mir::udev::Context>(),
         empty_options);
-    
+
     ASSERT_THAT(supported_devices, Not(IsEmpty()));
-    
+
     for (auto const& device : supported_devices)
     {
         std::shared_ptr<mg::RenderingPlatform> const platform = platform_loader(

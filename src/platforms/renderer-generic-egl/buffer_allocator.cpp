@@ -293,7 +293,7 @@ std::shared_ptr<mg::Buffer> mge::BufferAllocator::buffer_from_resource(
 }
 
 auto mge::BufferAllocator::buffer_from_shm(
-    std::shared_ptr<renderer::software::RWMappableBuffer> data,
+    std::shared_ptr<renderer::software::RWMappable> data,
     std::function<void()>&& on_consumed,
     std::function<void()>&& on_release) -> std::shared_ptr<Buffer>
 {

@@ -8,7 +8,7 @@ configure_file(
 )
 set(symbol_map ${CMAKE_CURRENT_BINARY_DIR}/symbols.map)
 
-add_library(mirplatformgraphicseglstreamkmsobjects OBJECT 
+add_library(mirplatformgraphicseglstreamkmsobjects OBJECT
   platform_symbols.cpp
   platform.cpp
   buffer_allocator.cpp

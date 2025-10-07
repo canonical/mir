@@ -59,13 +59,13 @@ struct StubScene : public mtd::StubInputScene
     {
         auto l = overlay.lock();
         assert(l);
-        
+
         auto it = std::find(overlays.begin(), overlays.end(), l);
         assert(it != overlays.end());
 
         overlays.erase(it);
     }
-    
+
     void expect_spots_centered_at(std::vector<geom::Point> spots)
     {
         int const touchspot_side_in_pixels = 64;
@@ -81,7 +81,7 @@ struct StubScene : public mtd::StubInputScene
         // If there are left over spots then we didn't have an overlay corresponding to one
         EXPECT_EQ(0, spots.size());
     }
-    
+
     std::vector<std::shared_ptr<mg::Renderable>> overlays;
 };
 
@@ -140,7 +140,7 @@ TEST_F(TestTouchspotController, handles_stride_mismatch_in_buffer)
     ASSERT_THAT(scene->overlays, Not(IsEmpty()));
 
     auto touchspot_buffer = scene->overlays[0]->buffer();
-    auto const mapping = mir::renderer::software::as_read_mappable_buffer(touchspot_buffer)->map_readable();
+    auto const mapping = mir::renderer::software::as_read_mappable(touchspot_buffer)->map_readable();
 
     // Verify that each row of the touchspot buffer starts with the corresponding row of the touchspot image
     // We don't care what else is in the buffer; the content of the padding in the stride doesn't matter.
@@ -162,7 +162,7 @@ TEST_F(TestTouchspotController, touches_result_in_renderables_in_stack)
 
     mi::TouchspotController controller(allocator, scene);
     controller.enable();
-    
+
     controller.visualize_touches({ {{0,0}, 1} });
 
     scene->expect_spots_centered_at({{0, 0}});
@@ -171,10 +171,10 @@ TEST_F(TestTouchspotController, touches_result_in_renderables_in_stack)
 TEST_F(TestTouchspotController, spots_move)
 {
     using namespace ::testing;
-    
+
     mi::TouchspotController controller(allocator, scene);
     controller.enable();
-    
+
     controller.visualize_touches({ {{0,0}, 1} });
     scene->expect_spots_centered_at({{0, 0}});
     controller.visualize_touches({ {{1,1}, 1} });
@@ -184,10 +184,10 @@ TEST_F(TestTouchspotController, spots_move)
 TEST_F(TestTouchspotController, multiple_spots)
 {
     using namespace ::testing;
-    
+
     mi::TouchspotController controller(allocator, scene);
     controller.enable();
-    
+
     controller.visualize_touches({ {{0,0}, 1}, {{1, 1}, 1}, {{3, 3}, 1} });
     scene->expect_spots_centered_at({{0, 0}, {1, 1}, {3, 3}});
     controller.visualize_touches({ {{0,0}, 1}, {{1, 1}, 1}, {{3, 3}, 1}, {{5, 5}, 1} });
@@ -204,7 +204,7 @@ TEST_F(TestTouchspotController, multiple_spots)
 TEST_F(TestTouchspotController, touches_do_not_result_in_renderables_in_stack_when_disabled)
 {
     using namespace ::testing;
-    
+
     mi::TouchspotController controller(allocator, scene);
     controller.enable();
 

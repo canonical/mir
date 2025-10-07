@@ -17,7 +17,7 @@
 #ifndef MIRAL_SLOW_KEYS_H
 #define MIRAL_SLOW_KEYS_H
 
-#include <mir_toolkit/events/event.h>
+#include <miral/toolkit_event.h>
 
 #include <chrono>
 #include <functional>
@@ -63,7 +63,7 @@ public:
     // Enables slow keys.
     // When already enabled, further calls have no effect.
     SlowKeys& enable();
-    
+
     // Disables slow keys.
     // When already disabled, further calls have no effect.
     SlowKeys& disable();
@@ -76,7 +76,7 @@ public:
     /// Configures the callback that's invoked when the key is pressed down.
     /// Useful for providing feedback to users.
     SlowKeys& on_key_down(std::function<void(MirKeyboardEvent const*)>&& on_key_down);
-    
+
     /// Configures the callback that's invoked when a press is rejected.
     /// Useful for providing feedback to users.
     SlowKeys& on_key_rejected(std::function<void(MirKeyboardEvent const*)>&& on_key_rejected);
