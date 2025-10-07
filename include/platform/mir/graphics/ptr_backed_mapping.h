@@ -23,6 +23,9 @@
 namespace mir::graphics
 {
 
+/**
+ * An adaptor providing a [Mapping] from an existing pointer
+ */
 template<typename T>
 class PtrBackedMapping : public renderer::software::Mapping<T>
 {
