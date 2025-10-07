@@ -170,17 +170,19 @@ extern "C" [[noreturn]] void fatal_signal_cleanup(int sig, siginfo_t* info, void
     }
 
     // Log a security event
-    char security_head[] = "{\"datetime\": \"YYYY-MM-DDThh:mm:ssZ\", \"appid\": \"";
-    char security_tail[] = "\", \"event\": \"sys_crash\", \"level\": \"WARN\", \"description\": \"Fatal signal received\"}\n";
+    char security_head[] = "{\"datetime\": \"YYYY-MM-DDThh:mm:ssZ";
+    char security_mid[]  = "\", \"appid\": \"";
+    char security_tail[] = "\", \"event\": \"crash\", \"description\": \"Fatal signal received\"}\n";
     std::time_t time = std::time(nullptr);
     // strftime isn't listed as async-signal-safe, but neither "%F" or "%T" use locale information
-    std::strftime(security_head + 14, 20, "%FT%TZ", std::gmtime(&time));
-    [[maybe_unused]]auto n = write(STDERR_FILENO, security_head, sizeof(security_head) - 1);
+    [[maybe_unused]]auto n = std::strftime(security_head + 14, 21, "%FT%TZ", std::gmtime(&time));
+    n = write(STDERR_FILENO, security_head, sizeof(security_head) - 1);
+    n = write(STDERR_FILENO, security_mid, sizeof(security_mid) - 1);
     if (program_invocation_short_name)
     {
-        [[maybe_unused]]auto n = write(STDERR_FILENO, program_invocation_short_name, std::strlen(program_invocation_short_name));
+        n = write(STDERR_FILENO, program_invocation_short_name, std::strlen(program_invocation_short_name));
     }
-    [[maybe_unused]]auto n2 = write(STDERR_FILENO, security_tail, sizeof(security_tail) - 1);
+    n = write(STDERR_FILENO, security_tail, sizeof(security_tail) - 1);
 
     perform_emergency_cleanup();
 

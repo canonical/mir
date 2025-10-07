@@ -102,7 +102,7 @@ auto security_fmt(
     auto time_t = std::chrono::system_clock::to_time_t(now);
 
     std::stringstream ss;
-    ss << std::put_time(std::localtime(&time_t), "%FT%TZ");
+    ss << std::put_time(std::gmtime(&time_t), "%FT%TZ");
 
     return std::format(
         "{{"
