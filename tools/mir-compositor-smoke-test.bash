@@ -8,7 +8,7 @@ timeout=3
 options="--test-timeout=${timeout}"
 
 root="$( dirname "${BASH_SOURCE[0]}" )"
-compositor_list="`find ${root} -name miral* | grep -v -e bin$ -e test -e terminal -e app`"
+compositor_list="`find ${root} -name 'miral*' | grep -v -e bin$ -e test -e terminal -e app`"
 
 unset MIR_SERVER_LOGGING
 
