@@ -54,7 +54,7 @@ then
   run_tests x11
 fi
 
-if [ -O "${XDG_RUNTIME_DIR}/${WAYLAND_DISPLAY:-wayland-0}" ]
+if [ -n "${XDG_CURRENT_DESKTOP}" ] && [ -O "${XDG_RUNTIME_DIR}/${WAYLAND_DISPLAY:-wayland-0}" ]
 then
   echo Test Wayland platform
   MIR_SERVER_WAYLAND_HOST="${WAYLAND_DISPLAY:-wayland-0}" run_tests wayland
