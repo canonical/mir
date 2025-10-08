@@ -298,7 +298,7 @@ private:
         auto format() const -> MirPixelFormat override
         {
             // Because we're reading through GL the underlying format doesn't matter
-           return mir_pixel_format_argb_8888;
+            return mir_pixel_format_argb_8888;
         }
 
         auto stride() const -> geom::Stride override
