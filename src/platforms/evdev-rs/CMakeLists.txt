@@ -45,7 +45,13 @@ target_link_libraries(mirplatforminputevdevrs
 add_rust_cxx_library(mirplatforminputevdevrs_rust
   CRATE mir_platforms_evdev_rs
   DEPENDS Cargo.toml src/lib.rs
-  LIBRARIES PkgConfig::UDEV PkgConfig::LIBINPUT)
+  LIBRARIES PkgConfig::UDEV PkgConfig::LIBINPUT
+  INCLUDES
+    ${PROJECT_SOURCE_DIR}/src/platforms/evdev-rs
+    ${PROJECT_SOURCE_DIR}/src/include/platform
+    ${PROJECT_SOURCE_DIR}/src/include/server
+    ${PROJECT_SOURCE_DIR}/include/common
+)
 
 target_link_libraries(mirplatforminputevdevrsobjects
   PRIVATE

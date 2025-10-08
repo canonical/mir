@@ -16,7 +16,6 @@
 
 #include "platform_bridge.h"
 #include "platform.h"
-#include "mir_platforms_evdev_rs/src/lib.rs.h"
 
 #include "mir/console_services.h"
 #include "mir/log.h"

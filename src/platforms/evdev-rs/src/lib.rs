@@ -158,6 +158,7 @@ impl PlatformRs {
             device_id: device_id,
             wfd: self.wfd.as_ref().unwrap().as_fd(),
             tx: self.tx.clone().unwrap(),
+            input_sink: None,
         })
     }
 
@@ -325,15 +326,12 @@ pub struct InputDeviceRs<'fd> {
     device_id: i32,
     wfd: BorrowedFd<'fd>,
     tx: mpsc::Sender<ThreadCommand>,
+    input_sink: Option<*mut InputSink>,
 }
 
 impl<'fd> InputDeviceRs<'fd> {
-    pub fn new(device_id: i32, wfd: BorrowedFd<'fd>, tx: mpsc::Sender<ThreadCommand>) -> Self {
-        InputDeviceRs { device_id, wfd, tx }
-    }
-
-    pub fn start(&mut self) {
-        // Start reading events from the device and sending them to the sink
+    pub fn start(&mut self, input_sink: *mut InputSink) {
+        self.input_sink = Some(input_sink);
     }
 
     pub fn stop(&mut self) {}
@@ -368,7 +366,7 @@ mod ffi {
         fn suspended(self: &mut DeviceObserverRs);
         fn removed(self: &mut DeviceObserverRs);
 
-        fn start(self: &mut InputDeviceRs);
+        unsafe fn start(self: &mut InputDeviceRs, input_sink: *mut InputSink);
         fn stop(self: &mut InputDeviceRs);
         fn get_device_info(self: &InputDeviceRs) -> Box<InputDeviceInfoRs>;
 
@@ -383,8 +381,10 @@ mod ffi {
     }
 
     unsafe extern "C++" {
-        include!("/home/matthew/Github/mir/src/platforms/evdev-rs/platform_bridge.h");
-        include!("/home/matthew/Github/mir/include/platform/mir/input/input_device_registry.h");
+        include!("platform_bridge.h");
+        include!("mir/input/input_device_registry.h");
+        include!("mir/input/device.h");
+        include!("mir/input/input_sink.h");
 
         type PlatformBridgeC;
         type DeviceBridgeC;
@@ -397,6 +397,9 @@ mod ffi {
 
         #[namespace = "mir::input"]
         type InputDeviceRegistry;
+
+        #[namespace = "mir::input"]
+        type InputSink;
 
         fn acquire_device(
             self: &PlatformBridgeC,
@@ -421,6 +424,7 @@ pub use ffi::DeviceBridgeC;
 pub use ffi::InputDevice;
 pub use ffi::InputDeviceRegistry;
 pub use ffi::PlatformBridgeC;
+pub use ffi::InputSink;
 
 pub fn evdev_rs_create(
     bridge: SharedPtr<PlatformBridgeC>,
