@@ -96,7 +96,7 @@ public:
     /// Access the buffer content from the CPU
     ///
     /// \note This access might be costly (for example, requiring a copy across the PCIe bus
-    //        for buffers in VRAM).
+    ///       for buffers in VRAM).
     ///       Wherever possible, buffers should be accessed through rendering-API-specific means,
     ///       such as [GLRenderingProvider::as_texture].
     ///
@@ -107,7 +107,7 @@ public:
     ///         occur if the buffer has a format not representable by [MirPixelFormat]
     ///         (for example, a planar YUV format) or if the buffer is being protected by the
     ///         GPU Digital Rights Management path.
-    /// \throws A std::system_error if mapping
+    /// \throws A std::system_error if mapping fails for a system-specific reason (eg: `mmap` failure)
     virtual auto map_readable() const -> std::unique_ptr<renderer::software::Mapping<std::byte const>> = 0;
 protected:
     Buffer() = default;
