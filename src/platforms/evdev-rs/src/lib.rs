@@ -1,15 +1,15 @@
+use cxx::{SharedPtr, UniquePtr, WeakPtr};
 use input::event::{DeviceEvent, EventTrait};
 use input::{AsRaw, Device, Event, Libinput, LibinputInterface};
-use std::os::fd::{AsFd, AsRawFd, BorrowedFd, FromRawFd};
-use std::path::Path;
-use libc::{stat, major, minor, poll, pollfd, POLLIN};
-use std::ffi::CString;
-use std::os::unix::ffi::OsStrExt;
-use std::os::unix::{io::OwnedFd};
-use cxx::{SharedPtr, WeakPtr, UniquePtr};
-use std::thread::{self, JoinHandle};
+use libc::{major, minor, poll, pollfd, stat, POLLIN};
 use nix::unistd::close;
+use std::ffi::CString;
+use std::os::fd::{AsFd, AsRawFd, BorrowedFd, FromRawFd};
+use std::os::unix::ffi::OsStrExt;
+use std::os::unix::io::OwnedFd;
+use std::path::Path;
 use std::sync::mpsc;
+use std::thread::{self, JoinHandle};
 
 struct LibinputInterfaceImpl {
     bridge: SharedPtr<PlatformBridgeC>,
@@ -33,12 +33,17 @@ impl LibinputInterface for LibinputInterfaceImpl {
 
         // By keeping the device referenced in the fds vector, we ensure it stays alive
         // until close_restricted is called.
-        let device = self.bridge.acquire_device(major_num as i32, minor_num as i32);
+        let device = self
+            .bridge
+            .acquire_device(major_num as i32, minor_num as i32);
         let fd = device.raw_fd();
-        println!("Acquired fd: {} for device with major: {}, minor: {}", fd, major_num, minor_num);
+        println!(
+            "Acquired fd: {} for device with major: {}, minor: {}",
+            fd, major_num, minor_num
+        );
         self.fds.push(device);
 
-        let owned = unsafe { OwnedFd::from_raw_fd(fd)};
+        let owned = unsafe { OwnedFd::from_raw_fd(fd) };
         println!("Owned fd: {}", owned.as_raw_fd().to_string());
         Ok(owned)
     }
@@ -59,21 +64,24 @@ impl LibinputInterface for LibinputInterfaceImpl {
 // we have to assert it ourselves.
 unsafe impl Send for PlatformBridgeC {}
 unsafe impl Sync for PlatformBridgeC {}
+unsafe impl Send for InputDeviceRegistry {}
+unsafe impl Sync for InputDeviceRegistry {}
 
-struct DeviceWithId {
+struct DeviceWrapper {
     id: i32,
-    device: Device
+    device: Device,
+    input_device: SharedPtr<InputDevice>,
 }
-
 
 struct LibinputState {
     libinput: Libinput,
-    known_devices: Vec<DeviceWithId>,
+    known_devices: Vec<DeviceWrapper>,
     next_device_id: i32,
 }
 
 pub struct PlatformRs {
     bridge: SharedPtr<PlatformBridgeC>,
+    device_registry: SharedPtr<InputDeviceRegistry>,
     handle: Option<JoinHandle<()>>,
     wfd: Option<OwnedFd>,
     tx: Option<mpsc::Sender<ThreadCommand>>,
@@ -100,7 +108,7 @@ impl InputDeviceInfoRs {
 }
 
 pub enum ThreadCommand {
-    GetDeviceInfo(i32, mpsc::Sender<InputDeviceInfoRs>)
+    GetDeviceInfo(i32, mpsc::Sender<InputDeviceInfoRs>),
 }
 
 // This is so silly.
@@ -113,7 +121,10 @@ fn create_thread_command_channel() -> (mpsc::Sender<ThreadCommand>, mpsc::Receiv
     mpsc::channel()
 }
 
-fn create_device_info_rs_channel() -> (mpsc::Sender<InputDeviceInfoRs>, mpsc::Receiver<InputDeviceInfoRs>) {
+fn create_device_info_rs_channel() -> (
+    mpsc::Sender<InputDeviceInfoRs>,
+    mpsc::Receiver<InputDeviceInfoRs>,
+) {
     mpsc::channel()
 }
 
@@ -121,18 +132,17 @@ impl PlatformRs {
     pub fn start(&mut self) {
         println!("Starting evdev-rs platform");
 
-        let bridge = self.bridge.clone(); // Arc clone, cheap, Send
+        let bridge = self.bridge.clone();
+        let device_registry = self.device_registry.clone();
         let (rfd, wfd) = nix::unistd::pipe().unwrap();
         let (tx, rx) = create_thread_command_channel();
 
         self.wfd = Some(wfd);
         self.tx = Some(tx);
         self.handle = Some(thread::spawn(move || {
-            let bridge_locked = bridge;
-            PlatformRs::run(bridge_locked, rfd, rx);
+            PlatformRs::run(bridge, device_registry, rfd, rx);
         }));
     }
-
 
     pub fn continue_after_config(&self) {}
     pub fn pause_for_config(&self) {}
@@ -142,17 +152,26 @@ impl PlatformRs {
     }
 
     fn create_input_device(&self, device_id: i32) -> Box<InputDeviceRs> {
-        Box::new(InputDeviceRs { device_id: device_id, wfd: self.wfd.as_ref().unwrap().as_fd(), tx: self.tx.clone().unwrap() })
+        Box::new(InputDeviceRs {
+            device_id: device_id,
+            wfd: self.wfd.as_ref().unwrap().as_fd(),
+            tx: self.tx.clone().unwrap(),
+        })
     }
 
-    fn run(bridge_locked: SharedPtr<PlatformBridgeC>, rfd: OwnedFd, rx: std::sync::mpsc::Receiver<ThreadCommand>) {
+    fn run(
+        bridge_locked: SharedPtr<PlatformBridgeC>,
+        device_registry: SharedPtr<InputDeviceRegistry>,
+        rfd: OwnedFd,
+        rx: std::sync::mpsc::Receiver<ThreadCommand>,
+    ) {
         let mut state = LibinputState {
             libinput: Libinput::new_with_udev(LibinputInterfaceImpl {
                 bridge: bridge_locked.clone(),
                 fds: Vec::new(),
             }),
             known_devices: Vec::new(),
-            next_device_id: 0
+            next_device_id: 0,
         };
 
         state.libinput.udev_assign_seat("seat0").unwrap();
@@ -167,7 +186,7 @@ impl PlatformRs {
                 fd: rfd.as_raw_fd(),
                 events: POLLIN,
                 revents: 0,
-            }
+            },
         ];
 
         loop {
@@ -186,34 +205,47 @@ impl PlatformRs {
                 return;
             }
 
-
             if fds[0].revents & POLLIN != 0 {
                 println!("Processing input events");
                 for event in &mut state.libinput {
                     println!("Got event: {:?}", event);
 
                     match event {
-                        Event::Device(device_event) => {
-                            match device_event  {
-                                DeviceEvent::Added(added_event) => {
-                                    let dev: Device = added_event.device();
-                                    state.known_devices.push(DeviceWithId { id: state.next_device_id, device: dev });
-                                    state.next_device_id += 1;
-                                },
-                                DeviceEvent::Removed(removed_event) => {
-                                    let dev: Device  = removed_event.device();
-                                    let index = state.known_devices.iter().position(|x| x.device.as_raw() == dev.as_raw());
-                                    if let Some(index) = index {
-                                        state.known_devices.remove(index);
-                                    }
-                                },
-                                _ => {}
+                        Event::Device(device_event) => match device_event {
+                            DeviceEvent::Added(added_event) => {
+                                let dev: Device = added_event.device();
+                                state.known_devices.push(DeviceWrapper {
+                                    id: state.next_device_id,
+                                    device: dev,
+                                    input_device: bridge_locked.create_input_device(
+                                        state.next_device_id - 1,
+                                    )
+                                });
+
+                                unsafe {
+                                    device_registry.clone().pin_mut_unchecked().add_device(&state.known_devices.last().unwrap().input_device);
+                                }
+                                state.next_device_id += 1;
                             }
+                            DeviceEvent::Removed(removed_event) => {
+                                let dev: Device = removed_event.device();
+                                let index = state
+                                    .known_devices
+                                    .iter()
+                                    .position(|x| x.device.as_raw() == dev.as_raw());
+                                if let Some(index) = index {
+                                    unsafe {
+                                        device_registry.clone().pin_mut_unchecked().remove_device(&state.known_devices[index].input_device);
+                                    }
+                                    state.known_devices.remove(index);
+                                }
+                            }
+                            _ => {}
                         },
 
                         Event::Pointer(pointer_event) => {
                             println!("Pointer event: {:?}", pointer_event);
-                        },
+                        }
 
                         // TODO: Otherwise, find the event, process it, and request that the input sink handle it
                         _ => {}
@@ -229,11 +261,13 @@ impl PlatformRs {
                     match cmd {
                         ThreadCommand::GetDeviceInfo(id, tx) => {
                             // For simplicity, just return info about the first device
-                            if let Some(dev_with_id) = state.known_devices.iter().find(|d| d.id == id) {
+                            if let Some(dev_with_id) =
+                                state.known_devices.iter().find(|d| d.id == id)
+                            {
                                 let info = InputDeviceInfoRs {
                                     name: dev_with_id.device.name().to_string(),
                                     unique_id: "TODO".to_string(),
-                                    capabilities: 0
+                                    capabilities: 0,
                                 };
                                 let _ = tx.send(info);
                             } else {
@@ -253,7 +287,7 @@ impl PlatformRs {
 }
 
 pub struct DeviceObserverRs {
-    fd: Option<i32>
+    fd: Option<i32>,
 }
 
 impl DeviceObserverRs {
@@ -266,11 +300,11 @@ impl DeviceObserverRs {
         self.fd = Some(fd);
     }
 
-    pub fn suspended(&mut self, ) {
+    pub fn suspended(&mut self) {
         println!("Device suspended");
     }
 
-    pub fn removed(&mut self, ) {
+    pub fn removed(&mut self) {
         println!("Device removed");
         self.fd = None;
     }
@@ -283,10 +317,7 @@ pub struct InputDeviceRs<'fd> {
 }
 
 impl<'fd> InputDeviceRs<'fd> {
-    pub fn new(
-        device_id: i32,
-        wfd: BorrowedFd<'fd>,
-        tx: mpsc::Sender<ThreadCommand>,) -> Self {
+    pub fn new(device_id: i32, wfd: BorrowedFd<'fd>, tx: mpsc::Sender<ThreadCommand>) -> Self {
         InputDeviceRs { device_id, wfd, tx }
     }
 
@@ -294,12 +325,13 @@ impl<'fd> InputDeviceRs<'fd> {
         // Start reading events from the device and sending them to the sink
     }
 
-    pub fn stop(&mut self) {
-    }
+    pub fn stop(&mut self) {}
 
     pub fn get_device_info(&self) -> Box<InputDeviceInfoRs> {
         let (tx, rx) = create_device_info_rs_channel();
-        self.tx.send(ThreadCommand::GetDeviceInfo(self.device_id, tx)).unwrap();
+        self.tx
+            .send(ThreadCommand::GetDeviceInfo(self.device_id, tx))
+            .unwrap();
         nix::unistd::write(&self.wfd, &[0u8]).unwrap();
         let device_info = rx.recv().unwrap();
         Box::new(device_info)
@@ -333,7 +365,10 @@ mod ffi {
         fn unique_id(self: &InputDeviceInfoRs) -> &str;
         fn capabilities(self: &InputDeviceInfoRs) -> i32;
 
-        fn evdev_rs_create(bridge: SharedPtr<PlatformBridgeC>, device_registry: SharedPtr<InputDeviceRegistry>) -> Box<PlatformRs>;
+        fn evdev_rs_create(
+            bridge: SharedPtr<PlatformBridgeC>,
+            device_registry: SharedPtr<InputDeviceRegistry>,
+        ) -> Box<PlatformRs>;
     }
 
     unsafe extern "C++" {
@@ -352,19 +387,39 @@ mod ffi {
         #[namespace = "mir::input"]
         type InputDeviceRegistry;
 
-        // // TODO: Add the device observer as well
-        fn acquire_device(self: &PlatformBridgeC, major: i32, minor: i32) -> UniquePtr<DeviceBridgeC>;
+        fn acquire_device(
+            self: &PlatformBridgeC,
+            major: i32,
+            minor: i32,
+        ) -> UniquePtr<DeviceBridgeC>;
         fn create_input_device(self: &PlatformBridgeC, device_id: i32) -> SharedPtr<InputDevice>;
         fn raw_fd(self: &DeviceBridgeC) -> i32;
-        fn add_device(self: Pin<&mut InputDeviceRegistry>, device: &SharedPtr<InputDevice>) -> WeakPtr<Device>;
+
+        #[namespace = "mir::input"]
+        fn add_device(
+            self: Pin<&mut InputDeviceRegistry>,
+            device: &SharedPtr<InputDevice>,
+        ) -> WeakPtr<Device>;
+
+        #[namespace = "mir::input"]
         fn remove_device(self: Pin<&mut InputDeviceRegistry>, device: &SharedPtr<InputDevice>);
     }
 }
 
-pub use ffi::PlatformBridgeC;
 pub use ffi::DeviceBridgeC;
+pub use ffi::InputDevice;
 pub use ffi::InputDeviceRegistry;
+pub use ffi::PlatformBridgeC;
 
-pub fn evdev_rs_create(bridge: SharedPtr<PlatformBridgeC>, device_registry: SharedPtr<InputDeviceRegistry>) -> Box<PlatformRs> {
-    return Box::new(PlatformRs { bridge: bridge, handle: None, wfd: None, tx: None } );
+pub fn evdev_rs_create(
+    bridge: SharedPtr<PlatformBridgeC>,
+    device_registry: SharedPtr<InputDeviceRegistry>,
+) -> Box<PlatformRs> {
+    return Box::new(PlatformRs {
+        bridge: bridge,
+        device_registry: device_registry,
+        handle: None,
+        wfd: None,
+        tx: None,
+    });
 }
