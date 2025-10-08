@@ -235,7 +235,7 @@ impl PlatformRs {
                                         device_registry.clone().pin_mut_unchecked().add_device(&input_device);
                                     }
                                 });
-                                
+
                                 state.next_device_id += 1;
                             }
                             DeviceEvent::Removed(removed_event) => {
