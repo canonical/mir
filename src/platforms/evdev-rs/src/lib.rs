@@ -66,6 +66,8 @@ unsafe impl Send for PlatformBridgeC {}
 unsafe impl Sync for PlatformBridgeC {}
 unsafe impl Send for InputDeviceRegistry {}
 unsafe impl Sync for InputDeviceRegistry {}
+unsafe impl Send for InputDevice {}
+unsafe impl Sync for InputDevice {}
 
 struct DeviceWrapper {
     id: i32,
@@ -193,19 +195,19 @@ impl PlatformRs {
             println!("Waiting for input events...");
             unsafe {
                 let ret = poll(fds.as_mut_ptr(), fds.len() as _, -1); // -1 = wait indefinitely
-                if ret <= 0 {
+                if ret < 0 {
                     println!("Error polling libinput fd");
                     return;
                 }
             }
 
-            if state.libinput.dispatch().is_err() {
-                // TODO: Report the error to Mir's logging facilities somehow
-                println!("Error dispatching libinput events");
-                return;
-            }
+            if (fds[0].revents & POLLIN) != 0 {
+                if state.libinput.dispatch().is_err() {
+                    // TODO: Report the error to Mir's logging facilities somehow
+                    println!("Error dispatching libinput events");
+                    return;
+                }
 
-            if fds[0].revents & POLLIN != 0 {
                 println!("Processing input events");
                 for event in &mut state.libinput {
                     println!("Got event: {:?}", event);
@@ -218,13 +220,22 @@ impl PlatformRs {
                                     id: state.next_device_id,
                                     device: dev,
                                     input_device: bridge_locked.create_input_device(
-                                        state.next_device_id - 1,
+                                        state.next_device_id,
                                     )
                                 });
 
-                                unsafe {
-                                    device_registry.clone().pin_mut_unchecked().add_device(&state.known_devices.last().unwrap().input_device);
-                                }
+                                // The device registry may call back into the input device, but the input device
+                                // may call back into this thread to retrieve information. To avoid deadlocks, we
+                                // have to queue this work onto a new thread to fire and forget it. It's not a big
+                                // deal, but it is a bit unfortunate.
+                                let input_device = state.known_devices.last().unwrap().input_device.clone();
+                                let device_registry = device_registry.clone();
+                                thread::spawn(move || {
+                                    unsafe {
+                                        device_registry.clone().pin_mut_unchecked().add_device(&input_device);
+                                    }
+                                });
+                                
                                 state.next_device_id += 1;
                             }
                             DeviceEvent::Removed(removed_event) => {
@@ -234,9 +245,9 @@ impl PlatformRs {
                                     .iter()
                                     .position(|x| x.device.as_raw() == dev.as_raw());
                                 if let Some(index) = index {
-                                    unsafe {
-                                        device_registry.clone().pin_mut_unchecked().remove_device(&state.known_devices[index].input_device);
-                                    }
+                                    // unsafe {
+                                    //     device_registry.clone().pin_mut_unchecked().remove_device(&state.known_devices[index].input_device);
+                                    // }
                                     state.known_devices.remove(index);
                                 }
                             }
