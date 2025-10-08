@@ -86,7 +86,7 @@ TEST_P(TestDifferentDelays, subsequent_keys_rejected_if_in_within_delay)
     virtual_keyboard->if_started_then(
         [this, press_delay](mi::InputSink* sink, mi::EventBuilder* builder)
         {
-            auto rejection_counter = 0;
+            std::atomic rejection_counter = 0;
             bounce_keys.on_press_rejected([&rejection_counter](auto) { rejection_counter++; });
 
             // Initial press, should pass
