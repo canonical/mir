@@ -1,6 +1,7 @@
 use input::event::{DeviceEvent, EventTrait};
 use input::{AsRaw, Device, Event, Libinput, LibinputInterface};
-use std::os::fd::{AsRawFd, FromRawFd};
+use std::clone;
+use std::os::fd::{AsFd, AsRawFd, BorrowedFd, FromRawFd};
 use std::path::Path;
 use libc::{stat, major, minor, poll, pollfd, POLLIN};
 use std::ffi::CString;
@@ -61,10 +62,16 @@ impl LibinputInterface for LibinputInterfaceImpl {
 unsafe impl Send for PlatformBridgeC {}
 unsafe impl Sync for PlatformBridgeC {}
 
+struct DeviceWithId {
+    id: i32,
+    device: Device
+}
+
 
 struct LibinputState {
     libinput: Libinput,
-    known_devices: Vec<Device>
+    known_devices: Vec<DeviceWithId>,
+    next_device_id: i32,
 }
 
 pub struct PlatformRs {
@@ -94,7 +101,7 @@ impl InputDeviceInfoRs {
     }
 }
 
-enum ThreadCommand {
+pub enum ThreadCommand {
     GetDeviceInfo(i32, mpsc::Sender<InputDeviceInfoRs>)
 }
 
@@ -104,7 +111,11 @@ enum ThreadCommand {
 // the "mod ffi" block gets confused when parsing the template, so it thinks that the
 // closing bracket is an equality operator. Moving it out to the global scope fixes
 // things, but this is so silly.
-fn create_channel() -> (mpsc::Sender<ThreadCommand>, mpsc::Receiver<ThreadCommand>) {
+fn create_thread_command_channel() -> (mpsc::Sender<ThreadCommand>, mpsc::Receiver<ThreadCommand>) {
+    mpsc::channel()
+}
+
+fn create_device_info_rs_channel() -> (mpsc::Sender<InputDeviceInfoRs>, mpsc::Receiver<InputDeviceInfoRs>) {
     mpsc::channel()
 }
 
@@ -114,7 +125,7 @@ impl PlatformRs {
 
         let bridge = self.bridge.clone(); // Arc clone, cheap, Send
         let (rfd, wfd) = nix::unistd::pipe().unwrap();
-        let (tx, rx) = create_channel();
+        let (tx, rx) = create_thread_command_channel();
 
         self.wfd = Some(wfd);
         self.tx = Some(tx);
@@ -133,7 +144,7 @@ impl PlatformRs {
     }
 
     fn create_input_device(&self, device_id: i32) -> Box<InputDeviceRs> {
-        Box::new(InputDeviceRs { device_id })
+        Box::new(InputDeviceRs { device_id: device_id, wfd: self.wfd.as_ref().unwrap().as_fd(), tx: self.tx.clone().unwrap() })
     }
 
     fn run(bridge_locked: SharedPtr<PlatformBridgeC>, rfd: OwnedFd, rx: std::sync::mpsc::Receiver<ThreadCommand>) {
@@ -143,6 +154,7 @@ impl PlatformRs {
                 fds: Vec::new(),
             }),
             known_devices: Vec::new(),
+            next_device_id: 0
         };
 
         state.libinput.udev_assign_seat("seat0").unwrap();
@@ -187,11 +199,12 @@ impl PlatformRs {
                             match device_event  {
                                 DeviceEvent::Added(added_event) => {
                                     let dev: Device = added_event.device();
-                                    state.known_devices.push(dev);
+                                    state.known_devices.push(DeviceWithId { id: state.next_device_id, device: dev });
+                                    state.next_device_id += 1;
                                 },
                                 DeviceEvent::Removed(removed_event) => {
                                     let dev: Device  = removed_event.device();
-                                    let index = state.known_devices.iter().position(|x| x.as_raw() == dev.as_raw());
+                                    let index = state.known_devices.iter().position(|x| x.device.as_raw() == dev.as_raw());
                                     if let Some(index) = index {
                                         state.known_devices.remove(index);
                                     }
@@ -218,9 +231,9 @@ impl PlatformRs {
                     match cmd {
                         ThreadCommand::GetDeviceInfo(id, tx) => {
                             // For simplicity, just return info about the first device
-                            if let Some(device) = state.known_devices.first() {
+                            if let Some(dev_with_id) = state.known_devices.iter().find(|d| d.id == id) {
                                 let info = InputDeviceInfoRs {
-                                    name: device.name().to_string(),
+                                    name: dev_with_id.device.name().to_string(),
                                     unique_id: "TODO".to_string(),
                                     capabilities: 0
                                 };
@@ -265,13 +278,18 @@ impl DeviceObserverRs {
     }
 }
 
-pub struct InputDeviceRs {
-    device_id: i32
+pub struct InputDeviceRs<'fd> {
+    device_id: i32,
+    wfd: BorrowedFd<'fd>,
+    tx: mpsc::Sender<ThreadCommand>,
 }
 
-impl InputDeviceRs {
-    pub fn new(device_id: i32) -> Self {
-        InputDeviceRs { device_id }
+impl<'fd> InputDeviceRs<'fd> {
+    pub fn new(
+        device_id: i32,
+        wfd: BorrowedFd<'fd>,
+        tx: mpsc::Sender<ThreadCommand>,) -> Self {
+        InputDeviceRs { device_id, wfd, tx }
     }
 
     pub fn start(&mut self) {
@@ -282,11 +300,11 @@ impl InputDeviceRs {
     }
 
     pub fn get_device_info(&self) -> Box<InputDeviceInfoRs> {
-        Box::new(InputDeviceInfoRs {
-            name: "Dummy Device".to_string(),
-            unique_id: "dummy-1234".to_string(),
-            capabilities: 0,
-        })
+        let (tx, rx) = create_device_info_rs_channel();
+        self.tx.send(ThreadCommand::GetDeviceInfo(self.device_id, tx)).unwrap();
+        nix::unistd::write(&self.wfd, &[0u8]).unwrap();
+        let device_info = rx.recv().unwrap();
+        Box::new(device_info)
     }
 }
 
@@ -295,7 +313,7 @@ mod ffi {
     extern "Rust" {
         type PlatformRs;
         type DeviceObserverRs;
-        type InputDeviceRs;
+        type InputDeviceRs<'fd>;
         type InputDeviceInfoRs;
 
         fn start(self: &mut PlatformRs);
@@ -317,24 +335,33 @@ mod ffi {
         fn unique_id(self: &InputDeviceInfoRs) -> &str;
         fn capabilities(self: &InputDeviceInfoRs) -> i32;
 
-        fn evdev_rs_create(bridge: SharedPtr<PlatformBridgeC>) -> Box<PlatformRs>;
+        fn evdev_rs_create(bridge: SharedPtr<PlatformBridgeC>, device_registry: SharedPtr<InputDeviceRegistry>) -> Box<PlatformRs>;
     }
 
     unsafe extern "C++" {
         include!("/home/matthew/Github/mir/src/platforms/evdev-rs/platform_bridge.h");
+        include!("/home/matthew/Github/mir/include/platform/mir/input/input_device_registry.h");
 
         type PlatformBridgeC;
         type DeviceBridgeC;
 
+        #[namespace = "mir::input"]
+        type InputDevice;
+
+        #[namespace = "mir::input"]
+        type InputDeviceRegistry;
+
         // // TODO: Add the device observer as well
         fn acquire_device(self: &PlatformBridgeC, major: i32, minor: i32) -> UniquePtr<DeviceBridgeC>;
+        fn create_input_device(self: &PlatformBridgeC, device_id: i32) -> SharedPtr<InputDevice>;
         fn raw_fd(self: &DeviceBridgeC) -> i32;
     }
 }
 
 pub use ffi::PlatformBridgeC;
 pub use ffi::DeviceBridgeC;
+pub use ffi::InputDeviceRegistry;
 
-pub fn evdev_rs_create(bridge: SharedPtr<PlatformBridgeC>) -> Box<PlatformRs> {
+pub fn evdev_rs_create(bridge: SharedPtr<PlatformBridgeC>, device_registry: SharedPtr<InputDeviceRegistry>) -> Box<PlatformRs> {
     return Box::new(PlatformRs { bridge: bridge, handle: None, wfd: None, tx: None } );
 }

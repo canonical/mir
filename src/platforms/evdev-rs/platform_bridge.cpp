@@ -45,7 +45,7 @@ std::shared_ptr<mi::InputDevice> miers::PlatformBridgeC::create_input_device(int
     return platform->create_input_device(device_id);
 }
 
-miers::DeviceBridgeC::DeviceBridgeC(std::unique_ptr<Device> device, int fd)
+miers::DeviceBridgeC::DeviceBridgeC(std::unique_ptr<mir::Device> device, int fd)
     : device(std::move(device)),
       fd(fd)
 {
