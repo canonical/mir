@@ -1,14 +1,12 @@
 use input::event::{DeviceEvent, EventTrait};
 use input::{AsRaw, Device, Event, Libinput, LibinputInterface};
-use std::clone;
 use std::os::fd::{AsFd, AsRawFd, BorrowedFd, FromRawFd};
 use std::path::Path;
 use libc::{stat, major, minor, poll, pollfd, POLLIN};
 use std::ffi::CString;
 use std::os::unix::ffi::OsStrExt;
 use std::os::unix::{io::OwnedFd};
-use cxx::SharedPtr;
-use cxx::UniquePtr;
+use cxx::{SharedPtr, WeakPtr, UniquePtr};
 use std::thread::{self, JoinHandle};
 use nix::unistd::close;
 use std::sync::mpsc;
@@ -346,6 +344,9 @@ mod ffi {
         type DeviceBridgeC;
 
         #[namespace = "mir::input"]
+        type Device;
+
+        #[namespace = "mir::input"]
         type InputDevice;
 
         #[namespace = "mir::input"]
@@ -355,6 +356,8 @@ mod ffi {
         fn acquire_device(self: &PlatformBridgeC, major: i32, minor: i32) -> UniquePtr<DeviceBridgeC>;
         fn create_input_device(self: &PlatformBridgeC, device_id: i32) -> SharedPtr<InputDevice>;
         fn raw_fd(self: &DeviceBridgeC) -> i32;
+        fn add_device(self: Pin<&mut InputDeviceRegistry>, device: &SharedPtr<InputDevice>) -> WeakPtr<Device>;
+        fn remove_device(self: Pin<&mut InputDeviceRegistry>, device: &SharedPtr<InputDevice>);
     }
 }
 
