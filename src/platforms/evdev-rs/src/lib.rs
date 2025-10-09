@@ -12,6 +12,8 @@ use std::ptr::NonNull;
 use std::sync::mpsc;
 use std::thread::{self, JoinHandle};
 
+mod enums;
+
 struct LibinputInterfaceImpl {
     bridge: SharedPtr<PlatformBridgeC>,
     fds: Vec<UniquePtr<DeviceBridgeC>>,
@@ -443,11 +445,16 @@ mod ffi {
         include!("mir/input/input_sink.h");
         include!("mir/input/event_builder.h");
         include!("mir/events/event.h");
+        include!("mir/events/scroll_axis.h");
         include!("mir_toolkit/events/enums.h");
+        include!("mir/geometry/point.h");
+        include!("mir/geometry/displacement.h");
+        include!("mir/geometry/forward.h");
 
         type PlatformBridgeC;
         type DeviceBridgeC;
         type EventBuilderWrapper;
+        type EventUPtrWrapper;
 
         #[namespace = "mir::input"]
         type Device;
@@ -467,6 +474,12 @@ mod ffi {
         #[namespace = ""]
         type MirEvent;
 
+        #[namespace = "mir::geometry"]
+        type PointF;
+
+        #[namespace = "mir::geometry"]
+        type DisplacementF;
+
         fn acquire_device(
             self: &PlatformBridgeC,
             major: i32,
@@ -475,6 +488,24 @@ mod ffi {
         fn create_input_device(self: &PlatformBridgeC, device_id: i32) -> SharedPtr<InputDevice>;
         fn raw_fd(self: &DeviceBridgeC) -> i32;
         unsafe fn create_event_builder_wrapper(self: &PlatformBridgeC, event_builder: *mut EventBuilder) -> UniquePtr<EventBuilderWrapper>;
+
+        // CXX-Rust doesn't support passing Option<T> to C++ functions, so I use booleans
+        // instead.
+        //
+        // On top of this, all enums are changed to i32 for ABI stability.
+        fn pointer_event(
+            self: &EventBuilderWrapper,
+            has_time: bool,
+            time_nanoseconds: u64,
+            action: i32,
+            buttons: u32,
+            has_position: bool, 
+            position_x: f32,
+            position_y: f32,
+            displacement_x: f32,
+            displacement_y: f32,
+            axis_source: i32
+        ) -> UniquePtr<EventUPtrWrapper>;
 
         #[namespace = "mir::input"]
         fn add_device(

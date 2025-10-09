@@ -65,27 +65,31 @@ miers::EventBuilderWrapper::EventBuilderWrapper(EventBuilder* event_builder)
 {
 }
 
-mir::EventUPtr miers::EventBuilderWrapper::pointer_event(
-    std::optional<uint64_t> time_nanoseconds,
-    MirPointerAction action,
-    MirPointerButtons buttons,
-    std::optional<mir::geometry::PointF> position,
-    mir::geometry::DisplacementF motion,
-    MirPointerAxisSource axis_source,
-    events::ScrollAxisH h_scroll,
-    events::ScrollAxisV v_scroll)
+std::unique_ptr<miers::EventUPtrWrapper> miers::EventBuilderWrapper::pointer_event(
+    bool has_time,
+    uint64_t time_nanoseconds,
+    int32_t action,
+    uint32_t buttons,
+    bool has_position,
+    float position_x,
+    float position_y,
+    float displacement_x,
+    float displacement_y,
+    int32_t axis_source) const
 {
-    return event_builder->pointer_event(
-        time_nanoseconds
-            ? std::chrono::nanoseconds(*time_nanoseconds)
+    return std::make_unique<EventUPtrWrapper>(event_builder->pointer_event(
+        has_time
+            ? std::chrono::nanoseconds(time_nanoseconds)
             : std::optional<EventBuilder::Timestamp>(std::nullopt),
-        action,
-        buttons,
-        position,
-        motion,
-        axis_source,
-        h_scroll,
-        v_scroll
-    );
+        static_cast<MirPointerAction>(action),
+        static_cast<MirPointerButtons>(buttons),
+        has_position
+            ? geometry::PointF(position_x, position_y)
+            : std::optional<geometry::PointF>(std::nullopt),
+        geometry::DisplacementF(displacement_x, displacement_y),
+        static_cast<MirPointerAxisSource>(axis_source),
+        events::ScrollAxisH(),
+        events::ScrollAxisV()
+    ));
 }
 

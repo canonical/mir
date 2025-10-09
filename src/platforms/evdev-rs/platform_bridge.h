@@ -48,20 +48,38 @@ private:
     int fd;
 };
 
+/// We have to wrap the #EventUPtr so that rust can get access to
+/// it appropriately. Because it has a deleter attached to it, rust
+/// dislikes it.
+class EventUPtrWrapper
+{
+public:
+    explicit EventUPtrWrapper(EventUPtr event) : event(std::move(event)) {}
+    operator EventUPtr()
+    {
+        return std::move(event);
+    }
+
+private:
+    EventUPtr event;
+};
+
 class EventBuilderWrapper
 {
 public:
     explicit EventBuilderWrapper(EventBuilder* event_builder);
-    EventUPtr pointer_event(
-        std::optional<uint64_t> time_nanoseconds,
-        MirPointerAction action,
-        MirPointerButtons buttons,
-        std::optional<mir::geometry::PointF> position,
-        mir::geometry::DisplacementF motion,
-        MirPointerAxisSource axis_source,
-        events::ScrollAxisH h_scroll,
-        events::ScrollAxisV v_scroll
-    );
+    std::unique_ptr<EventUPtrWrapper> pointer_event(
+        bool has_time,
+        uint64_t time_nanoseconds,
+        int32_t action,
+        uint32_t buttons,
+        bool has_position,
+        float position_x,
+        float position_y,
+        float displacement_x,
+        float displacement_y,
+        int32_t axis_source
+    ) const;
 
 private:
     EventBuilder* event_builder;
