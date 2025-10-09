@@ -17,6 +17,7 @@
 #ifndef MIRAL_CURSOR_SCALE_H
 #define MIRAL_CURSOR_SCALE_H
 
+#include <chrono>
 #include <memory>
 
 namespace mir { class Server; }
@@ -58,6 +59,8 @@ public:
     ///
     /// \param new_scale the new scale
     void scale(float new_scale) const;
+
+    void scale_temporarily(float new_scale, std::chrono::milliseconds duration) const;
 
     void operator()(mir::Server& server) const;
 private:
