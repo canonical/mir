@@ -316,7 +316,7 @@ impl PlatformRs {
                                                 motion_event.dy() as f32,
                                                 MirPointerAxisSource::None as i32,
                                             );
-                            
+
                                             if let Some(input_sink) = &mut device_wrapper.input_sink {
                                                 input_sink.handle_input(&created);
                                             }
