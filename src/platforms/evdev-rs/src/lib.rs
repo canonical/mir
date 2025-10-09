@@ -499,7 +499,7 @@ mod ffi {
             time_nanoseconds: u64,
             action: i32,
             buttons: u32,
-            has_position: bool, 
+            has_position: bool,
             position_x: f32,
             position_y: f32,
             displacement_x: f32,
