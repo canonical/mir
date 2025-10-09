@@ -129,7 +129,7 @@ struct TestLocatePointer : miral::TestServer
 
 struct TestDifferentDelays : public TestLocatePointer, public WithParamInterface<std::pair<std::chrono::milliseconds, bool>>{};
 
-TEST_P(TestDifferentDelays, responding_to_ctrl_down_with_different_delays)
+TEST_P(TestDifferentDelays, responding_to_schedule_and_request_with_different_delays)
 {
     auto [delay, on_pointer_locate_called] = GetParam();
 
