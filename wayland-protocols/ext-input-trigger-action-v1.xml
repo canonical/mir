@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<protocol name="ext_input_trigger_activation_v1">
+<protocol name="ext_input_trigger_action_v1">
   <copyright>
     Copyright 2025 Canonical Limited
 
@@ -26,12 +26,12 @@
     This protocol allows for a Wayland clients to subscribe to input trigger
     actions for activate and deactivate notifications.
 
-    ext_input_trigger_activation_v1 and the associated ext_input_trigger_registration_v1
+    ext_input_trigger_action_v1 and the associated ext_input_trigger_registration_v1
     are based on the following discussion document:
     https://docs.google.com/document/d/1Hj3BXkmW1quIEWqmN7xeJY29nSPfXP2bmoZvpOsEeJQ/
   </description>
 
-  <interface name="ext_input_trigger_activation_manager_v1" version="1">
+  <interface name="ext_input_trigger_action_manager_v1" version="1">
     <description summary="used to register interest in input actions">
       This interface allows a Wayland client to register interest in
       input trigger actions.
@@ -45,7 +45,7 @@
       </description>
     </request>
 
-    <request name="get_input_trigger_activation">
+    <request name="get_input_trigger_action">
       <description summary="register interest in input trigger action">
         This request creates an input trigger activation object.
 
@@ -53,15 +53,15 @@
         compositor can raise a protocol error.
 
         If the token has been issued by the compositor, but is no longer
-        available, then an ext_input_trigger_activation_v1.unavailable event
+        available, then an ext_input_trigger_action_v1.unavailable event
         should be sent immediately.
       </description>
       <arg name="token" type="string" summary="the exported action token"/>
-      <arg name="id" type="new_id" interface="ext_input_trigger_activation_v1"/>
+      <arg name="id" type="new_id" interface="ext_input_trigger_action_v1"/>
     </request>
   </interface>
 
-  <interface name="ext_input_trigger_activation_v1" version="1">
+  <interface name="ext_input_trigger_action_v1" version="1">
     <description summary="receives notifications of input trigger actions">
       The compositor sends notification of the activation and deactivation of
       the associated action.
@@ -71,21 +71,32 @@
       <description summary="begin the input action">
         One of the input trigger events associated with the action has occurred.
 
-        The app will begin the activity it associates with the action.
-
-        The compositor will route input events to the client until the action ends.
+        The app may begin the activity it associates with the action.
       </description>
+      <arg name="time" type="uint" summary="timestamp with millisecond granularity"/>
       <arg name="activation_token" type="string" summary="an xdg_activation token"/>
+    </event>
+
+    <event name="update">
+      <description summary="progress an the input action">
+        The input trigger that led to the "begin" event has clanged.
+
+        This will be sent between the "begin" and "end" events when there is a
+        meaningful update to the input trigger. (E.g. a multi-touch drag)
+
+        The app may update the activity it associates with the action.
+      </description>
+      <arg name="time" type="uint" summary="timestamp with millisecond granularity"/>
+      <arg name="progress" type="fixed" summary="progress normalized to [0.0, 1.0]"/>
     </event>
 
     <event name="end">
       <description summary="end the input action">
-        The action is no longer being triggered.
+        The input trigger that led to the "begin" event has stopped.
 
-        The app will end the activity it associates with the action.
-
-        The compositor will no longer route input events to the client until the action ends.
+        The app may end (or begin!) the activity it associates with the action.
       </description>
+      <arg name="time" type="uint" summary="timestamp with millisecond granularity"/>
     </event>
 
     <event name="unavailable">
