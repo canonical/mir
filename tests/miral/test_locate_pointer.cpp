@@ -120,7 +120,7 @@ struct TestLocatePointer : miral::TestServer
         miral::TestServer::SetUp();
     }
 
-    miral::LocatePointer locate_pointer{true};
+    miral::LocatePointer locate_pointer{miral::LocatePointer::enabled()};
     mir::test::Signal locate_pointer_invoked;
 
     std::weak_ptr<mir::input::CompositeEventFilter> composite_event_filter;
