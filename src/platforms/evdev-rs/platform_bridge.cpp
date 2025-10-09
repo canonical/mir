@@ -65,7 +65,7 @@ miers::EventBuilderWrapper::EventBuilderWrapper(EventBuilder* event_builder)
 {
 }
 
-std::unique_ptr<miers::EventUPtrWrapper> miers::EventBuilderWrapper::pointer_event(
+std::shared_ptr<MirEvent> miers::EventBuilderWrapper::pointer_event(
     bool has_time,
     uint64_t time_nanoseconds,
     int32_t action,
@@ -77,7 +77,7 @@ std::unique_ptr<miers::EventUPtrWrapper> miers::EventBuilderWrapper::pointer_eve
     float displacement_y,
     int32_t axis_source) const
 {
-    return std::make_unique<EventUPtrWrapper>(event_builder->pointer_event(
+    return event_builder->pointer_event(
         has_time
             ? std::chrono::nanoseconds(time_nanoseconds)
             : std::optional<EventBuilder::Timestamp>(std::nullopt),
@@ -90,5 +90,5 @@ std::unique_ptr<miers::EventUPtrWrapper> miers::EventBuilderWrapper::pointer_eve
         static_cast<MirPointerAxisSource>(axis_source),
         events::ScrollAxisH(),
         events::ScrollAxisV()
-    ));
+    );
 }

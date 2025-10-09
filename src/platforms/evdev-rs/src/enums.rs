@@ -1,4 +1,3 @@
-
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum MirEventType {
@@ -29,24 +28,24 @@ pub enum MirInputEventType {
 #[repr(u32)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum MirInputEventModifier {
-    None         = 1 << 0,
-    Alt          = 1 << 1,
-    AltLeft      = 1 << 2,
-    AltRight     = 1 << 3,
-    Shift        = 1 << 4,
-    ShiftLeft    = 1 << 5,
-    ShiftRight   = 1 << 6,
-    Sym          = 1 << 7,
-    Function     = 1 << 8,
-    Ctrl         = 1 << 9,
-    CtrlLeft     = 1 << 10,
-    CtrlRight    = 1 << 11,
-    Meta         = 1 << 12,
-    MetaLeft     = 1 << 13,
-    MetaRight    = 1 << 14,
-    CapsLock     = 1 << 15,
-    NumLock      = 1 << 16,
-    ScrollLock   = 1 << 17,
+    None = 1 << 0,
+    Alt = 1 << 1,
+    AltLeft = 1 << 2,
+    AltRight = 1 << 3,
+    Shift = 1 << 4,
+    ShiftLeft = 1 << 5,
+    ShiftRight = 1 << 6,
+    Sym = 1 << 7,
+    Function = 1 << 8,
+    Ctrl = 1 << 9,
+    CtrlLeft = 1 << 10,
+    CtrlRight = 1 << 11,
+    Meta = 1 << 12,
+    MetaLeft = 1 << 13,
+    MetaRight = 1 << 14,
+    CapsLock = 1 << 15,
+    NumLock = 1 << 16,
+    ScrollLock = 1 << 17,
 }
 
 pub type MirInputEventModifiers = u32;
@@ -121,14 +120,14 @@ pub enum MirPointerAxis {
 #[repr(u32)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum MirPointerButton {
-    Primary   = 1 << 0,
+    Primary = 1 << 0,
     Secondary = 1 << 1,
-    Tertiary  = 1 << 2,
-    Back      = 1 << 3,
-    Forward   = 1 << 4,
-    Side      = 1 << 5,
-    Extra     = 1 << 6,
-    Task      = 1 << 7,
+    Tertiary = 1 << 2,
+    Back = 1 << 3,
+    Forward = 1 << 4,
+    Side = 1 << 5,
+    Extra = 1 << 6,
+    Task = 1 << 7,
 }
 
 pub type MirPointerButtons = u32;

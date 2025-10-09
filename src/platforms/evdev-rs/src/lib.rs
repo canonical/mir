@@ -1,5 +1,5 @@
 use cxx::{SharedPtr, UniquePtr, WeakPtr};
-use input::event::{DeviceEvent, EventTrait};
+use input::event::{DeviceEvent, EventTrait, PointerEvent};
 use input::{AsRaw, Device, Event, Libinput, LibinputInterface};
 use libc::{major, minor, poll, pollfd, stat, POLLIN};
 use nix::unistd::close;
@@ -8,7 +8,7 @@ use std::os::fd::{AsFd, AsRawFd, BorrowedFd, FromRawFd};
 use std::os::unix::ffi::OsStrExt;
 use std::os::unix::io::OwnedFd;
 use std::path::Path;
-use std::ptr::NonNull;
+use std::{ptr::NonNull, pin::Pin};
 use std::sync::mpsc;
 use std::thread::{self, JoinHandle};
 
@@ -85,6 +85,16 @@ unsafe impl Sync for EventBuilder {}
 // raw types to fix the issue unfortuately, so we have to wrap them in a newtype
 // and define Send and Sync on that.
 struct InputSinkPtr(NonNull<InputSink>);
+impl InputSinkPtr {
+    fn handle_input(&mut self, event: &SharedPtr<ffi::MirEvent>) {
+        unsafe {
+            // Pin the raw pointer
+            let pinned = Pin::new_unchecked(self.0.as_mut());
+            pinned.handle_input(event);
+        }
+    }
+}
+
 unsafe impl Send for InputSinkPtr {}
 unsafe impl Sync for InputSinkPtr {}
 
@@ -288,10 +298,32 @@ impl PlatformRs {
 
                             if let Some(device_wrapper) = state
                                 .known_devices
-                                .iter()
+                                .iter_mut()
                                 .find(|x| x.device.as_raw() == dev.as_raw())
                             {
-                                println!("Pointer event: {:?}", pointer_event);
+                                match pointer_event {
+                                    PointerEvent::Motion(motion_event) => unsafe {
+                                        if let Some(event_builder) = &mut device_wrapper.event_builder {
+                                            let created = event_builder.pin_mut().pointer_event(
+                                                false,
+                                                0,
+                                                MirPointerAction::Motion as i32,
+                                                0,
+                                                false,
+                                                0 as f32,
+                                                0 as f32,
+                                                motion_event.dx() as f32,
+                                                motion_event.dy() as f32,
+                                                MirPointerAxisSource::None as i32,
+                                            );
+                            
+                                            if let Some(input_sink) = &mut device_wrapper.input_sink {
+                                                input_sink.handle_input(&created);
+                                            }
+                                        }
+                                    },
+                                    _ => {}
+                                }
                             }
                         }
 
@@ -333,8 +365,10 @@ impl PlatformRs {
                             {
                                 dev_with_id.input_sink = Some(input_sink);
                                 unsafe {
-                                    dev_with_id.event_builder = Some(bridge_locked
-                                        .create_event_builder_wrapper(event_builder.0.as_ptr()));
+                                    dev_with_id.event_builder = Some(
+                                        bridge_locked
+                                            .create_event_builder_wrapper(event_builder.0.as_ptr()),
+                                    );
                                 }
                                 println!("Starting input device with id: {}", id);
                             }
@@ -454,7 +488,6 @@ mod ffi {
         type PlatformBridgeC;
         type DeviceBridgeC;
         type EventBuilderWrapper;
-        type EventUPtrWrapper;
 
         #[namespace = "mir::input"]
         type Device;
@@ -487,7 +520,10 @@ mod ffi {
         ) -> UniquePtr<DeviceBridgeC>;
         fn create_input_device(self: &PlatformBridgeC, device_id: i32) -> SharedPtr<InputDevice>;
         fn raw_fd(self: &DeviceBridgeC) -> i32;
-        unsafe fn create_event_builder_wrapper(self: &PlatformBridgeC, event_builder: *mut EventBuilder) -> UniquePtr<EventBuilderWrapper>;
+        unsafe fn create_event_builder_wrapper(
+            self: &PlatformBridgeC,
+            event_builder: *mut EventBuilder,
+        ) -> UniquePtr<EventBuilderWrapper>;
 
         // CXX-Rust doesn't support passing Option<T> to C++ functions, so I use booleans
         // instead.
@@ -499,13 +535,13 @@ mod ffi {
             time_nanoseconds: u64,
             action: i32,
             buttons: u32,
-            has_position: bool, 
+            has_position: bool,
             position_x: f32,
             position_y: f32,
             displacement_x: f32,
             displacement_y: f32,
-            axis_source: i32
-        ) -> UniquePtr<EventUPtrWrapper>;
+            axis_source: i32,
+        ) -> SharedPtr<MirEvent>;
 
         #[namespace = "mir::input"]
         fn add_device(
@@ -528,6 +564,8 @@ pub use ffi::InputDevice;
 pub use ffi::InputDeviceRegistry;
 pub use ffi::InputSink;
 pub use ffi::PlatformBridgeC;
+
+use crate::enums::{MirPointerAction, MirPointerAxisSource, MirPointerButton};
 
 pub fn evdev_rs_create(
     bridge: SharedPtr<PlatformBridgeC>,

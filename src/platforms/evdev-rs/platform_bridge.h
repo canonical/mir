@@ -48,27 +48,11 @@ private:
     int fd;
 };
 
-/// We have to wrap the #EventUPtr so that rust can get access to
-/// it appropriately. Because it has a deleter attached to it, rust
-/// dislikes it.
-class EventUPtrWrapper
-{
-public:
-    explicit EventUPtrWrapper(EventUPtr event) : event(std::move(event)) {}
-    operator EventUPtr()
-    {
-        return std::move(event);
-    }
-
-private:
-    EventUPtr event;
-};
-
 class EventBuilderWrapper
 {
 public:
     explicit EventBuilderWrapper(EventBuilder* event_builder);
-    std::unique_ptr<EventUPtrWrapper> pointer_event(
+    std::shared_ptr<MirEvent> pointer_event(
         bool has_time,
         uint64_t time_nanoseconds,
         int32_t action,
