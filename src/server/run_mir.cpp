@@ -31,12 +31,7 @@
 #include <cassert>
 #include <unistd.h>
 #include <boost/throw_exception.hpp>
-
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE
-#endif
 #include <errno.h>
-extern char* program_invocation_short_name;  // TICS !cppcoreguidelines-avoid-non-const-global-variables
 
 namespace
 {
@@ -181,6 +176,10 @@ extern "C" [[noreturn]] void fatal_signal_cleanup(int sig, siginfo_t* info, void
     if (program_invocation_short_name)
     {
         n = write(STDERR_FILENO, program_invocation_short_name, std::strlen(program_invocation_short_name));
+    }
+    else
+    {
+        n = write(STDERR_FILENO, "<unknown>", 9);
     }
     n = write(STDERR_FILENO, security_tail, sizeof(security_tail) - 1);
 

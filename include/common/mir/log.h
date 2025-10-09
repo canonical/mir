@@ -40,23 +40,11 @@ void log(
     std::exception_ptr const& exception,
     std::string const& message);
 
-/// Format a security log message according to the OWASP specification
-///
-/// \param severity The severity of the event
-/// \param event A short string identifying the event type
-/// \param description A human-readable description of the event
-auto security_fmt(
-    logging::Severity severity,
-    std::string const& event,
-    std::string const& description) -> std::string;
-
 /// Log a security event according to the OWASP specification
 ///
 /// \param severity The severity of the event
 /// \param event A short string identifying the event type
 /// \param description A human-readable description of the event
-///
-/// \sa security_fmt()
 void security_log(
     logging::Severity severity,
     std::string const& event,

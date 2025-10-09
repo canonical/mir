@@ -23,12 +23,7 @@
 
 #include <exception>
 #include <boost/exception/diagnostic_information.hpp>
-
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE
-#endif
 #include <errno.h>
-extern char* program_invocation_short_name;  // TICS !cppcoreguidelines-avoid-non-const-global-variables
 
 namespace mir {
 
@@ -93,10 +88,10 @@ void log(
     }
 }
 
-auto security_fmt(
+void security_log(
     logging::Severity severity,
     std::string const& event,
-    std::string const& description) -> std::string
+    std::string const& description)
 {
     auto now = std::chrono::system_clock::now();
     auto time_t = std::chrono::system_clock::to_time_t(now);
@@ -104,7 +99,7 @@ auto security_fmt(
     std::stringstream ss;
     ss << std::put_time(std::gmtime(&time_t), "%FT%TZ");
 
-    return std::format(
+    std::cerr << std::format(
         "{{"
             "\"datetime\": \"{}\", "
             "\"appid\": \"{}\", "
@@ -122,14 +117,6 @@ auto security_fmt(
          severity == logging::Severity::debug ? "DEBUG" : "UNKNOWN"),
         description
     );
-}
-
-void security_log(
-    logging::Severity severity,
-    std::string const& event,
-    std::string const& description)
-{
-    std::cerr << security_fmt(severity, event, description) << std::endl;
 }
 
 } // namespace mir

@@ -16,12 +16,9 @@
 
 #include "mir/report_exception.h"
 #include "mir/abnormal_exit.h"
-#include "mir/log.h"
 
-#include <boost/exception/exception.hpp>
 #include <boost/exception/diagnostic_information.hpp>
 
-#include <format>
 #include <iostream>
 
 void mir::report_exception(std::ostream& out_stream, std::ostream& err_stream)
