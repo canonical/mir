@@ -20,7 +20,8 @@
 #include <memory>
 #include "mir/console_services.h"
 #include "mir/input/input_device.h"
-
+#include "mir/input/event_builder.h"
+#include "mir/geometry/displacement.h"
 
 namespace mir
 {
@@ -47,6 +48,25 @@ private:
     int fd;
 };
 
+class EventBuilderWrapper
+{
+public:
+    explicit EventBuilderWrapper(EventBuilder* event_builder);
+    EventUPtr pointer_event(
+        std::optional<uint64_t> time_nanoseconds,
+        MirPointerAction action,
+        MirPointerButtons buttons,
+        std::optional<mir::geometry::PointF> position,
+        mir::geometry::DisplacementF motion,
+        MirPointerAxisSource axis_source,
+        events::ScrollAxisH h_scroll,
+        events::ScrollAxisV v_scroll
+    );
+
+private:
+    EventBuilder* event_builder;
+};
+
 /// Bridge allowing conversation from Rust to C++.
 ///
 /// The rust code may use this bridge to request things from the system.
@@ -57,6 +77,7 @@ public:
     virtual ~PlatformBridgeC() = default;
     std::unique_ptr<DeviceBridgeC> acquire_device(int major, int minor) const;
     std::shared_ptr<InputDevice> create_input_device(int device_id) const;
+    std::unique_ptr<EventBuilderWrapper> create_event_builder_wrapper(EventBuilder* event_builder) const;
 
 private:
     Platform* platform;

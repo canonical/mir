@@ -95,7 +95,7 @@ struct DeviceWrapper {
     device: Device,
     input_device: SharedPtr<InputDevice>,
     input_sink: Option<InputSinkPtr>,
-    event_builder: Option<EventBuilderPtr>,
+    event_builder: Option<UniquePtr<EventBuilderWrapper>>,
 }
 
 struct LibinputState {
@@ -330,7 +330,10 @@ impl PlatformRs {
                                 state.known_devices.iter_mut().find(|d| d.id == id)
                             {
                                 dev_with_id.input_sink = Some(input_sink);
-                                dev_with_id.event_builder = Some(event_builder);
+                                unsafe {
+                                    dev_with_id.event_builder = Some(bridge_locked
+                                        .create_event_builder_wrapper(event_builder.0.as_ptr()));
+                                }
                                 println!("Starting input device with id: {}", id);
                             }
                         }
@@ -440,9 +443,11 @@ mod ffi {
         include!("mir/input/input_sink.h");
         include!("mir/input/event_builder.h");
         include!("mir/events/event.h");
+        include!("mir_toolkit/events/enums.h");
 
         type PlatformBridgeC;
         type DeviceBridgeC;
+        type EventBuilderWrapper;
 
         #[namespace = "mir::input"]
         type Device;
@@ -469,6 +474,7 @@ mod ffi {
         ) -> UniquePtr<DeviceBridgeC>;
         fn create_input_device(self: &PlatformBridgeC, device_id: i32) -> SharedPtr<InputDevice>;
         fn raw_fd(self: &DeviceBridgeC) -> i32;
+        unsafe fn create_event_builder_wrapper(self: &PlatformBridgeC, event_builder: *mut EventBuilder) -> UniquePtr<EventBuilderWrapper>;
 
         #[namespace = "mir::input"]
         fn add_device(
@@ -486,6 +492,7 @@ mod ffi {
 
 pub use ffi::DeviceBridgeC;
 pub use ffi::EventBuilder;
+pub use ffi::EventBuilderWrapper;
 pub use ffi::InputDevice;
 pub use ffi::InputDeviceRegistry;
 pub use ffi::InputSink;
