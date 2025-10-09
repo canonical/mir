@@ -40,6 +40,7 @@
 #include <miral/hover_click.h>
 #include <miral/sticky_keys.h>
 #include <miral/magnifier.h>
+#include <miral/cursor_scale.h>
 
 #define MIR_LOG_COMPONENT "miral-shell"
 #include <mir/log.h>
@@ -307,8 +308,11 @@ int main(int argc, char const* argv[])
         return false;
     };
 
-    auto locate_pointer = miral::LocatePointer{false}
-                              .on_locate_pointer([](auto, auto) { mir::log_info("Locate pointer!"); })
+    auto cursor_scale = miral::CursorScale{1.0f};
+
+    auto locate_pointer = miral::LocatePointer{true}
+                              .on_locate_pointer([&cursor_scale](auto, auto)
+                                                 { cursor_scale.scale_temporarily(5, std::chrono::seconds{1}); })
                               .delay(std::chrono::milliseconds{1000});
 
     auto const locate_pointer_filter = [&locate_pointer](auto const* keyboard_event)
@@ -363,6 +367,7 @@ int main(int argc, char const* argv[])
             magnifier,
             AppendKeyboardEventFilter{magnifier_filter},
             AppendKeyboardEventFilter{sticky_keys_filter},
+            cursor_scale,
             locate_pointer,
             AppendKeyboardEventFilter{locate_pointer_filter}
         });
