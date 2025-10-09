@@ -25,6 +25,10 @@
   <description summary="Registration for global input actions">
     This protocol allows for a Wayland clients to subscribe to input trigger
     actions for activate and deactivate notifications.
+
+    ext_input_trigger_activation_v1 and the associated ext_input_trigger_registration_v1
+    are based on the following discussion document:
+    https://docs.google.com/document/d/1Hj3BXkmW1quIEWqmN7xeJY29nSPfXP2bmoZvpOsEeJQ/
   </description>
 
   <interface name="ext_input_trigger_activation_manager_v1" version="1">
