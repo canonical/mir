@@ -28,7 +28,7 @@
 #define _GNU_SOURCE
 #endif
 #include <errno.h>
-extern char* program_invocation_short_name;
+extern char* program_invocation_short_name;  // TICS !cppcoreguidelines-avoid-non-const-global-variables
 
 namespace mir {
 
