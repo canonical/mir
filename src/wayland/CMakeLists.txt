@@ -48,7 +48,7 @@ mir_generate_protocol_wrapper(mirwayland "" ext-foreign-toplevel-list-v1.xml)
 mir_generate_protocol_wrapper(mirwayland "ext_" ext-image-capture-source-v1.xml)
 mir_generate_protocol_wrapper(mirwayland "ext_" ext-image-copy-capture-v1.xml)
 mir_generate_protocol_wrapper(mirwayland "ext_" ext-input-trigger-registration-v1.xml)
-mir_generate_protocol_wrapper(mirwayland "ext_" ext-input-trigger-activation-v1.xml)
+mir_generate_protocol_wrapper(mirwayland "ext_" ext-input-trigger-action-v1.xml)
 
 target_link_libraries(mirwayland
   PUBLIC
