@@ -94,5 +94,3 @@ private:
 }
 
 #endif // MIRAL_LOCATE_POINTER_H
-
-
