@@ -40,6 +40,16 @@ void log(
     std::exception_ptr const& exception,
     std::string const& message);
 
+/// Log a security event according to the OWASP specification
+///
+/// \param severity The severity of the event
+/// \param event A short string identifying the event type
+/// \param description A human-readable description of the event
+void security_log(
+    logging::Severity severity,
+    std::string const& event,
+    std::string const& description);
+
 #ifndef MIR_LOG_COMPONENT
 #ifdef MIR_LOG_COMPONENT_FALLBACK
 #define MIR_LOG_COMPONENT MIR_LOG_COMPONENT_FALLBACK
