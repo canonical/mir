@@ -92,4 +92,3 @@ std::unique_ptr<miers::EventUPtrWrapper> miers::EventBuilderWrapper::pointer_eve
         events::ScrollAxisV()
     ));
 }
-
