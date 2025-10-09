@@ -71,9 +71,9 @@ class InputDevice : public mi::InputDevice
 public:
     explicit InputDevice(rust::Box<Impl>&& impl) : impl(std::move(impl)) {}
 
-    void start(mir::input::InputSink* sink, mir::input::EventBuilder*) override
+    void start(mir::input::InputSink* sink, mir::input::EventBuilder* event_builder) override
     {
-        impl->start(sink);
+        impl->start(sink, event_builder);
     }
 
     void stop() override

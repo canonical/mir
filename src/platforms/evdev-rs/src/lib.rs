@@ -8,6 +8,7 @@ use std::os::fd::{AsFd, AsRawFd, BorrowedFd, FromRawFd};
 use std::os::unix::ffi::OsStrExt;
 use std::os::unix::io::OwnedFd;
 use std::path::Path;
+use std::ptr::NonNull;
 use std::sync::mpsc;
 use std::thread::{self, JoinHandle};
 
@@ -68,11 +69,33 @@ unsafe impl Send for InputDeviceRegistry {}
 unsafe impl Sync for InputDeviceRegistry {}
 unsafe impl Send for InputDevice {}
 unsafe impl Sync for InputDevice {}
+unsafe impl Send for InputSink {}
+unsafe impl Sync for InputSink {}
+unsafe impl Send for EventBuilder {}
+unsafe impl Sync for EventBuilder {}
+
+// Rust :(
+//
+// Because *mut InputSink and *mut EventBuilder are raw pointers, Rust assumes
+// that they are neither Send nor Sync. However, we know that the other side of
+// the pointer is actually a C++ object that is thread-safe, so we can assert
+// that these pointers are Send and Sync. We cannot define Send and Sync on the
+// raw types to fix the issue unfortuately, so we have to wrap them in a newtype
+// and define Send and Sync on that.
+struct InputSinkPtr(NonNull<InputSink>);
+unsafe impl Send for InputSinkPtr {}
+unsafe impl Sync for InputSinkPtr {}
+
+struct EventBuilderPtr(NonNull<EventBuilder>);
+unsafe impl Send for EventBuilderPtr {}
+unsafe impl Sync for EventBuilderPtr {}
 
 struct DeviceWrapper {
     id: i32,
     device: Device,
     input_device: SharedPtr<InputDevice>,
+    input_sink: Option<InputSinkPtr>,
+    event_builder: Option<EventBuilderPtr>,
 }
 
 struct LibinputState {
@@ -110,6 +133,7 @@ impl InputDeviceInfoRs {
 }
 
 pub enum ThreadCommand {
+    Start(i32, InputSinkPtr, EventBuilderPtr),
     GetDeviceInfo(i32, mpsc::Sender<InputDeviceInfoRs>),
 }
 
@@ -158,7 +182,6 @@ impl PlatformRs {
             device_id: device_id,
             wfd: self.wfd.as_ref().unwrap().as_fd(),
             tx: self.tx.clone().unwrap(),
-            input_sink: None,
         })
     }
 
@@ -220,21 +243,24 @@ impl PlatformRs {
                                 state.known_devices.push(DeviceWrapper {
                                     id: state.next_device_id,
                                     device: dev,
-                                    input_device: bridge_locked.create_input_device(
-                                        state.next_device_id,
-                                    )
+                                    input_device: bridge_locked
+                                        .create_input_device(state.next_device_id),
+                                    input_sink: None,
+                                    event_builder: None,
                                 });
 
                                 // The device registry may call back into the input device, but the input device
                                 // may call back into this thread to retrieve information. To avoid deadlocks, we
                                 // have to queue this work onto a new thread to fire and forget it. It's not a big
                                 // deal, but it is a bit unfortunate.
-                                let input_device = state.known_devices.last().unwrap().input_device.clone();
+                                let input_device =
+                                    state.known_devices.last().unwrap().input_device.clone();
                                 let device_registry = device_registry.clone();
-                                thread::spawn(move || {
-                                    unsafe {
-                                        device_registry.clone().pin_mut_unchecked().add_device(&input_device);
-                                    }
+                                thread::spawn(move || unsafe {
+                                    device_registry
+                                        .clone()
+                                        .pin_mut_unchecked()
+                                        .add_device(&input_device);
                                 });
 
                                 state.next_device_id += 1;
@@ -256,7 +282,15 @@ impl PlatformRs {
                         },
 
                         Event::Pointer(pointer_event) => {
-                            println!("Pointer event: {:?}", pointer_event);
+                            let dev: Device = pointer_event.device();
+
+                            if let Some(device_wrapper) = state
+                                .known_devices
+                                .iter()
+                                .find(|x| x.device.as_raw() == dev.as_raw())
+                            {
+                                println!("Pointer event: {:?}", pointer_event);
+                            }
                         }
 
                         // TODO: Otherwise, find the event, process it, and request that the input sink handle it
@@ -289,6 +323,15 @@ impl PlatformRs {
                                     capabilities: 0,
                                 };
                                 let _ = tx.send(info);
+                            }
+                        }
+                        ThreadCommand::Start(id, input_sink, event_builder) => {
+                            if let Some(dev_with_id) =
+                                state.known_devices.iter_mut().find(|d| d.id == id)
+                            {
+                                dev_with_id.input_sink = Some(input_sink);
+                                dev_with_id.event_builder = Some(event_builder);
+                                println!("Starting input device with id: {}", id);
                             }
                         }
                     }
@@ -326,12 +369,18 @@ pub struct InputDeviceRs<'fd> {
     device_id: i32,
     wfd: BorrowedFd<'fd>,
     tx: mpsc::Sender<ThreadCommand>,
-    input_sink: Option<*mut InputSink>,
 }
 
 impl<'fd> InputDeviceRs<'fd> {
-    pub fn start(&mut self, input_sink: *mut InputSink) {
-        self.input_sink = Some(input_sink);
+    pub fn start(&mut self, input_sink: *mut InputSink, event_builder: *mut EventBuilder) {
+        self.tx
+            .send(ThreadCommand::Start(
+                self.device_id,
+                InputSinkPtr(NonNull::new(input_sink).unwrap()),
+                EventBuilderPtr(NonNull::new(event_builder).unwrap()),
+            ))
+            .unwrap();
+        nix::unistd::write(&self.wfd, &[0u8]).unwrap();
     }
 
     pub fn stop(&mut self) {}
@@ -366,7 +415,11 @@ mod ffi {
         fn suspended(self: &mut DeviceObserverRs);
         fn removed(self: &mut DeviceObserverRs);
 
-        unsafe fn start(self: &mut InputDeviceRs, input_sink: *mut InputSink);
+        unsafe fn start(
+            self: &mut InputDeviceRs,
+            input_sink: *mut InputSink,
+            event_builder: *mut EventBuilder,
+        );
         fn stop(self: &mut InputDeviceRs);
         fn get_device_info(self: &InputDeviceRs) -> Box<InputDeviceInfoRs>;
 
@@ -385,6 +438,8 @@ mod ffi {
         include!("mir/input/input_device_registry.h");
         include!("mir/input/device.h");
         include!("mir/input/input_sink.h");
+        include!("mir/input/event_builder.h");
+        include!("mir/events/event.h");
 
         type PlatformBridgeC;
         type DeviceBridgeC;
@@ -400,6 +455,12 @@ mod ffi {
 
         #[namespace = "mir::input"]
         type InputSink;
+
+        #[namespace = "mir::input"]
+        type EventBuilder;
+
+        #[namespace = ""]
+        type MirEvent;
 
         fn acquire_device(
             self: &PlatformBridgeC,
@@ -417,14 +478,18 @@ mod ffi {
 
         #[namespace = "mir::input"]
         fn remove_device(self: Pin<&mut InputDeviceRegistry>, device: &SharedPtr<InputDevice>);
+
+        #[namespace = "mir::input"]
+        fn handle_input(self: Pin<&mut InputSink>, event: &SharedPtr<MirEvent>);
     }
 }
 
 pub use ffi::DeviceBridgeC;
+pub use ffi::EventBuilder;
 pub use ffi::InputDevice;
 pub use ffi::InputDeviceRegistry;
-pub use ffi::PlatformBridgeC;
 pub use ffi::InputSink;
+pub use ffi::PlatformBridgeC;
 
 pub fn evdev_rs_create(
     bridge: SharedPtr<PlatformBridgeC>,
