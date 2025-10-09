@@ -109,7 +109,7 @@ TEST_F(OcclusionFilterTest, translucent_window_occludes_nothing)
 
 TEST_F(OcclusionFilterTest, shaped_window_occludes_nothing)
 {
-    auto top = std::make_shared<mtd::FakeRenderable>(Rectangle{{10, 10}, {10, 10}}, 1.0f, false);
+    auto top = std::make_shared<mtd::FakeRenderable>(Rectangle{{10, 10}, {10, 10}}, 1.0f, false, std::nullopt);
     auto bottom = std::make_shared<mtd::FakeRenderable>(12, 12, 5, 5);
 
     auto const& [occlusions, elements] = filter_occlusions_from(scene_elements_from({bottom, top}), monitor_rect);

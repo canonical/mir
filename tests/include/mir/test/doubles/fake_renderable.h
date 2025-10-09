@@ -38,23 +38,35 @@ public:
     {
     }
     FakeRenderable(geometry::Rectangle display_area)
-        : FakeRenderable{display_area, 1.0f, true}
+        : FakeRenderable{display_area, 1.0f, true, std::nullopt}
     {
     }
 
     FakeRenderable(geometry::Rectangle display_area,
                    float opacity)
-        : FakeRenderable{display_area, opacity, true}
+        : FakeRenderable{display_area, opacity, true, std::nullopt}
     {
     }
 
     FakeRenderable(geometry::Rectangle display_area,
-                   float opacity,
-                   bool rectangular)
-        : buf{std::make_shared<StubBuffer>()},
-          rect(display_area),
-          opacity(opacity),
-          rectangular(rectangular)
+                   geometry::Rectangles opaque_region)
+        : FakeRenderable{display_area, 0.5f, true, opaque_region}
+    {
+        assert(
+            display_area.contains(opaque_region.bounding_rectangle()) &&
+            "Opaque regions cannot be larger than the display area");
+    }
+
+    FakeRenderable(
+        geometry::Rectangle display_area,
+        float opacity,
+        bool rectangular,
+        std::optional<geometry::Rectangles> opaque_region) :
+        buf{std::make_shared<StubBuffer>()},
+        rect(display_area),
+        opacity(opacity),
+        rectangular(rectangular),
+        opaque_region_(opaque_region)
     {
     }
 
@@ -121,7 +133,7 @@ public:
 
     auto opaque_region() const -> std::optional<geometry::Rectangles> override
     {
-        return std::nullopt;
+        return opaque_region_;
     }
 
 private:
@@ -129,6 +141,7 @@ private:
     mir::geometry::Rectangle rect;
     float opacity;
     bool rectangular;
+    std::optional<mir::geometry::Rectangles> const opaque_region_;
 };
 
 } // namespace doubles
