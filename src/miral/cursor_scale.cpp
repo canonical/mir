@@ -25,7 +25,6 @@
 #include "mir/shell/accessibility_manager.h"
 #include "mir/time/alarm.h"
 
-#include <atomic>
 #include <chrono>
 #include <memory>
 
@@ -33,7 +32,7 @@ struct miral::CursorScale::Self
 {
     Self(float default_scale) :
         default_scale{default_scale},
-        state{State{default_scale, default_scale}}
+        state{State{default_scale}}
     {
     }
 
@@ -51,19 +50,17 @@ struct miral::CursorScale::Self
 
     void scale_temporarily(float new_scale, std::chrono::milliseconds duration)
     {
-        auto s = state.lock();
-        s->previous_scale = s->scale;
-        s->scale = new_scale;
-
         if(accessibility_manager.expired() || main_loop.expired())
             return;
 
+        auto s = state.lock();
         auto const wind_time = std::chrono::milliseconds{125};
         auto const wind_down_start = wind_time + duration;
         auto const repeat_delay = std::chrono::milliseconds{8};
-        auto const start_scale = s->previous_scale;
-        auto const end_scale = s->scale;
+        auto const start_scale = s->scale;
+        auto const end_scale = new_scale;
         auto const ml = main_loop.lock();
+
 
         s->animation_alarm = ml->create_repeating_alarm(
             [this,
@@ -118,7 +115,6 @@ struct miral::CursorScale::Self
     struct State
     {
         float scale;
-        float previous_scale;
         std::shared_ptr<mir::time::Alarm> animation_alarm{nullptr};
         std::unique_ptr<mir::time::Alarm> animation_stop_alarm{nullptr};
     };
