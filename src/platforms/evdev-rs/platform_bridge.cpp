@@ -88,4 +88,3 @@ mir::EventUPtr miers::EventBuilderWrapper::pointer_event(
         v_scroll
     );
 }
-
