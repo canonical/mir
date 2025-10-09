@@ -18,10 +18,7 @@
 #include "mir/events/input_event.h"
 #include "mir/events/pointer_event.h"
 #include "mir/geometry/forward.h"
-#include "mir/input/composite_event_filter.h"
 #include "mir/input/event_filter.h"
-#include "mir/main_loop.h"
-#include "mir/options/option.h"
 #include "mir/server.h"
 #include "mir/synchronised.h"
 #include "mir/time/alarm.h"
@@ -45,7 +42,7 @@ struct miral::LocatePointer::Self
                 return false;
 
             auto const* pointer_event = input_event->to_pointer();
-            
+
             if (pointer_event->action() != mir_pointer_action_motion)
                 return false;
             if (auto position = pointer_event->position())
@@ -98,9 +95,19 @@ struct miral::LocatePointer::Self
     mir::Synchronised<State> state;
 };
 
-miral::LocatePointer::LocatePointer(bool enabled_by_default) :
-    self(std::make_shared<Self>(enabled_by_default))
+miral::LocatePointer::LocatePointer(std::shared_ptr<Self> self)
+    : self{std::move(self)}
 {
+}
+
+auto miral::LocatePointer::enabled() -> LocatePointer
+{
+    return LocatePointer{std::make_shared<Self>(true)};
+}
+
+auto miral::LocatePointer::disabled() -> LocatePointer
+{
+    return LocatePointer{std::make_shared<Self>(false)};
 }
 
 void miral::LocatePointer::operator()(mir::Server& server)

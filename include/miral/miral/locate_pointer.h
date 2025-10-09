@@ -33,9 +33,15 @@ namespace miral
 class LocatePointer
 {
 public:
-    LocatePointer(bool enabled_by_default);
+    /// Creates a `LocatePointer` instance that's enabled by default.
+    static auto enabled() -> LocatePointer;
+
+    /// Creates a `LocatePointer` instance that's disabled by default.
+    static auto disabled() -> LocatePointer;
 
     void operator()(mir::Server& server);
+
+    // TODO live config
 
     LocatePointer& delay(std::chrono::milliseconds delay);
     LocatePointer& on_locate_pointer(std::function<void(float x, float y)>&&);
@@ -50,12 +56,14 @@ public:
     /// [delay]. If [cancel_request] is called after this, then the callback
     /// will not be called.
     void schedule_request();
+
     /// Cancels the request established by [schedule_request]. If a request
     /// is not pending, then nothing happens.
     void cancel_request();
 
 private:
     struct Self;
+    explicit LocatePointer(std::shared_ptr<Self>);
     std::shared_ptr<Self> self;
 };
 }

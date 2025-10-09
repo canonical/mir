@@ -310,7 +310,7 @@ int main(int argc, char const* argv[])
 
     auto cursor_scale = miral::CursorScale{1.0f};
 
-    auto locate_pointer = miral::LocatePointer{true}
+    auto locate_pointer = miral::LocatePointer::enabled()
                               .on_locate_pointer([&cursor_scale](auto, auto)
                                                  { cursor_scale.scale_temporarily(5, std::chrono::seconds{1}); })
                               .delay(std::chrono::milliseconds{1000});
