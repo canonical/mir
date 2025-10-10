@@ -17,17 +17,10 @@
 #include "mir/graphics/platform.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_sink.h"
-#include "mir/graphics/graphic_buffer_allocator.h"
+#include "mir/main_loop.h"
 #include "mir/options/program_option.h"
 #include "mir/shared_library.h"
-#include "mir/renderer/gl/context.h"
-#include "mir/renderer/sw/pixel_source.h"
-#include "mir/renderer/renderer_factory.h"
-#include "mir/renderer/renderer.h"
-#include "mir/main_loop.h"
-#include "mir/renderer/gl/gl_surface.h"
 #include "mir/udev/wrapper.h"
-#include "mir/graphics/pixel_format_utils.h"
 #include "mir/default_server_configuration.h"
 #include "mir/emergency_cleanup.h"
 
@@ -41,7 +34,6 @@
 #include <unistd.h>
 
 namespace mg = mir::graphics;
-namespace mrs = mir::renderer::software;
 
 namespace
 {
@@ -239,71 +231,6 @@ auto test_display_has_at_least_one_enabled_output(mg::Display& display) -> bool
     return output_count > 0;
 }
 
-/*
-auto hex_to_gl(unsigned char colour) -> GLclampf
-{
-    return static_cast<float>(colour) / 255;
-}
-
-void basic_display_swapping(mg::Display& display)
-{
-    for_each_display_sink(
-        display,
-        [](mg::DisplayBuffer& db)
-        {
-            auto& gl_buffer = dynamic_cast<mir::renderer::gl::RenderTarget&>(db);
-            gl_buffer.make_current();
-
-            for (int i = 0; i < 3; ++i)
-            {
-                glClearColor(
-                    hex_to_gl(0xe9),
-                    hex_to_gl(0x54),
-                    hex_to_gl(0x20),
-                    0.0f);
-
-                glClear(GL_COLOR_BUFFER_BIT);
-
-                gl_buffer.swap_buffers();
-
-                sleep(1);
-
-                glClearColor(
-                    hex_to_gl(0x77),
-                    hex_to_gl(0x21),
-                    hex_to_gl(0x6f),
-                    1.0f);
-
-                glClear(GL_COLOR_BUFFER_BIT);
-
-                gl_buffer.swap_buffers();
-
-                sleep(1);
-            }
-        });
-}
-*/
-std::shared_ptr<mg::Buffer> alloc_and_fill_sw_buffer(
-    mg::GraphicBufferAllocator& allocator,
-    mir::geometry::Size size,
-    MirPixelFormat format,
-    uint32_t fill_value)
-{
-    auto const num_px = size.width.as_uint32_t() * size.height.as_uint32_t();
-    auto buffer = std::make_unique<unsigned char[]>(num_px* MIR_BYTES_PER_PIXEL(format));
-    std::fill(
-        reinterpret_cast<uint32_t*>(buffer.get()),
-        reinterpret_cast<uint32_t*>(buffer.get() + num_px),
-        fill_value);
-
-    return mrs::alloc_buffer_with_content(
-        allocator,
-        buffer.get(),
-        size,
-        mir::geometry::Stride(size.width.as_uint32_t() * MIR_BYTES_PER_PIXEL(format)),
-        format);
-}
-
 template<typename Period, typename Rep>
 auto bounce_within(
     mir::geometry::Rectangle const& surface,
@@ -348,164 +275,6 @@ auto bounce_within(
     return bounced_motion;
 }
 
-[[maybe_unused]]
-void basic_software_buffer_drawing(
-    mg::Display& display,
-    std::shared_ptr<mg::RenderingPlatform> platform,
-    mg::GraphicBufferAllocator& allocator,
-    mir::renderer::RendererFactory& /*factory*/)
-{
-    uint32_t const transparent_orange = 0x002054e9;
-    uint32_t const translucent_aubergine = 0xaa77216f;
-
-    auto orange =
-        alloc_and_fill_sw_buffer(allocator, {640, 480}, mir_pixel_format_xbgr_8888, transparent_orange);
-    auto aubergine =
-        alloc_and_fill_sw_buffer(allocator, {800, 600}, mir_pixel_format_argb_8888, translucent_aubergine);
-
-    std::vector<std::unique_ptr<mir::renderer::Renderer>> renderers;
-
-    int min_height{std::numeric_limits<int>::max()}, min_width{std::numeric_limits<int>::max()};
-    for_each_display_buffer(
-        display,
-        [platform, /*&renderers, &factory,*/ &min_height, &min_width](mg::DisplaySink& sink)
-        {
-            if (auto gl_provider = mg::RenderingPlatform::acquire_provider<mg::GLRenderingProvider>(platform))
-            {
-//                auto output_surface = gl_provider->surface_for_sink(sink, );
-//                renderers.push_back(factory.create_renderer_for(std::move(output_surface), gl_provider));
-                min_height = std::min(min_height, sink.view_area().bottom().as_int());
-                min_width = std::min(min_width, sink.view_area().right().as_int());
-            }
-            else
-            {
-                BOOST_THROW_EXCEPTION((std::runtime_error{"Platform does not support GL"}));
-            }
-        });
-
-    class DummyRenderable : public mg::Renderable
-    {
-    public:
-        DummyRenderable(
-            std::shared_ptr<mg::Buffer> buffer,
-            mir::geometry::Point top_left)
-            : buffer_{std::move(buffer)},
-              top_left{top_left}
-        {
-        }
-
-        auto id() const -> mg::Renderable::ID override
-        {
-            return buffer_.get();
-        }
-
-        auto buffer() const -> std::shared_ptr<mg::Buffer> override
-        {
-            return buffer_;
-        }
-
-        auto screen_position() const -> mir::geometry::Rectangle override
-        {
-            return mir::geometry::Rectangle{top_left, buffer()->size()};
-        }
-
-        auto src_bounds() const -> mir::geometry::RectangleD override
-        {
-            return {{0, 0}, buffer()->size()};
-        }
-
-        auto alpha() const -> float override
-        {
-            return 1.0f;
-        }
-
-        glm::mat4 transformation() const override
-        {
-            return glm::mat4(1);
-        }
-
-        MirOrientation orientation() const override
-        {
-            return mir_orientation_normal;
-        }
-
-        MirMirrorMode mirror_mode() const override
-        {
-            return mir_mirror_mode_none;
-        }
-
-        bool shaped() const override
-        {
-            return mg::contains_alpha(buffer_->pixel_format());
-        }
-
-        auto clip_area() const -> std::optional<mir::geometry::Rectangle> override
-        {
-            return std::optional<mir::geometry::Rectangle>{};
-        }
-
-        void set_position(mir::geometry::Point top_left)
-        {
-            this->top_left = top_left;
-        }
-
-        auto surface_if_any() const
-            -> std::optional<mir::scene::Surface const*> override
-        {
-            return std::nullopt;
-        }
-    private:
-        std::shared_ptr<mg::Buffer> const buffer_;
-        mir::geometry::Point top_left;
-    };
-
-    auto orange_rectangle =
-        std::make_shared<DummyRenderable>(std::move(orange), mir::geometry::Point{0, 0});
-    auto aubergine_rectangle =
-        std::make_shared<DummyRenderable>(std::move(aubergine), mir::geometry::Point{600, 600});
-
-    using namespace std::literals::chrono_literals;
-    using namespace std::chrono;
-
-    auto const end_time = steady_clock::now() + 10s;
-
-    auto last_frame_time = steady_clock::now();
-    auto orange_displacement = mir::geometry::Displacement{1, 1};
-    auto aubergine_displacement = mir::geometry::Displacement{-1, -1};
-    auto const bounding_box = mir::geometry::Rectangle{{0, 0,}, {min_width, min_height}};
-
-    while (steady_clock::now() < end_time)
-    {
-        auto const delta_t = steady_clock::now() - last_frame_time;
-        last_frame_time = steady_clock::now();
-
-        auto const delta_t_ms = duration_cast<milliseconds>(delta_t).count();
-
-        orange_displacement = bounce_within(
-            orange_rectangle->screen_position(),
-            orange_displacement,
-            delta_t,
-            bounding_box);
-        orange_rectangle->set_position(
-            orange_rectangle->screen_position().top_left +
-            delta_t_ms * orange_displacement);
-
-        aubergine_displacement = bounce_within(
-            aubergine_rectangle->screen_position(),
-            aubergine_displacement,
-            delta_t,
-            bounding_box);
-        aubergine_rectangle->set_position(
-            aubergine_rectangle->screen_position().top_left +
-            delta_t_ms * aubergine_displacement);
-
-        for(auto const& renderer : renderers)
-        {
-            renderer->render({orange_rectangle, aubergine_rectangle});
-        }
-    }
-}
-
 void print_diagnostic_information(std::exception const& err)
 {
     std::cout << "Error: " << err.what() << std::endl;
@@ -547,16 +316,6 @@ int main(int argc, char const** argv)
             if (auto display = test_display_construction(*platform, config))
             {
                 success &= test_display_has_at_least_one_enabled_output(*display);
-//                success &= test_display_buffers_support_gl(*display);
-//                basic_display_swapping(*display);
-
-                // TODO: Update for display/render platform split
-//                auto buffer_allocator = platform->create_buffer_allocator(*display);
-//
-//                basic_software_buffer_drawing(
-//                    *display,
-//                    *buffer_allocator,
-//                    *config.render_factory());
             }
             else
             {
