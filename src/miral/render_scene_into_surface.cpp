@@ -29,8 +29,6 @@
 
 #include <mutex>
 #include <utility>
-#include <boost/mpl/pair.hpp>
-#include <boost/system/detail/mutex.hpp>
 
 namespace geom = mir::geometry;
 namespace ms = mir::scene;
