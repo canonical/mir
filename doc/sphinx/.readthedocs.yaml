@@ -18,7 +18,6 @@ build:
   - libboost-dev
   - libboost-iostreams-dev
   - libboost-program-options-dev
-  - libboost-system-dev
   - libdrm-dev
   - libdisplay-info-dev
   - libegl-dev
