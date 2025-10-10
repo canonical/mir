@@ -137,10 +137,16 @@ struct DataControlStateV1
     {
     }
 
-    std::shared_ptr<ms::Clipboard> const clipboard, primary_clipboard;
-    wayland::Weak<DataControlSourceV1> current_source, current_primary_source;
+    struct MutableState
+    {
+        wayland::Weak<DataControlSourceV1> current_source;
+        wayland::Weak<DataControlSourceV1> current_primary_source;
+    };
+
+    std::shared_ptr<ms::Clipboard> const clipboard;
+    std::shared_ptr<ms::Clipboard> const primary_clipboard;
+    mir::Synchronised<MutableState> mutable_state;
 };
-using SyncedState = mir::Synchronised<DataControlStateV1>;
 
 class DataControlDeviceV1 : public wayland::DataControlDeviceV1
 {
@@ -171,19 +177,18 @@ public:
     };
 
     // Impl seperated out because it depends on `DataControlOfferV1`, which itself depends on this class
-    DataControlDeviceV1(struct wl_resource* id, std::shared_ptr<SyncedState> const& state, WlSeat const* seat);
+    DataControlDeviceV1(struct wl_resource* id, std::shared_ptr<DataControlStateV1> const& state, WlSeat const* seat);
 
     ~DataControlDeviceV1()
     {
-        auto s = state->lock();
-        s->clipboard->unregister_interest(*clipboard_observer);
-        s->primary_clipboard->unregister_interest(*primary_clipboard_observer);
+        state->clipboard->unregister_interest(*clipboard_observer);
+        state->primary_clipboard->unregister_interest(*primary_clipboard_observer);
         send_finished_event();
     }
 
     void receive_from_current_source(std::string const& mime, mir::Fd fd, bool is_primary)
     {
-        auto s = state->lock();
+        auto s = state->mutable_state.lock();
         if (is_primary && s->current_primary_source)
         {
             s->current_primary_source.value().send_send_event(mime, fd);
@@ -202,7 +207,6 @@ public:
 private:
     void set_selection(std::optional<struct wl_resource*> const& data_control_source) override
     {
-        auto s = state->lock();
         if (data_control_source)
         {
             auto source = mf::DataControlSourceV1::from(*data_control_source);
@@ -214,20 +218,20 @@ private:
             auto const data_exchange_source =
                 std::make_shared<DataExchangeSource>(wayland::Weak{source}, wayland::Weak{this}, seat);
 
+            auto s = state->mutable_state.lock();
             if(s->current_source)
                 s->current_source.value().send_cancelled_event();
-            s->clipboard->set_paste_source(data_exchange_source);
+            state->clipboard->set_paste_source(data_exchange_source);
             s->current_source = data_exchange_source->source;
         }
         else
         {
-            s->clipboard->clear_paste_source();
+            state->clipboard->clear_paste_source();
         }
     }
 
     void set_primary_selection(std::optional<struct wl_resource*> const& data_control_source) override
     {
-        auto s = state->lock();
         if (data_control_source)
         {
             auto source = mf::DataControlSourceV1::from(*data_control_source);
@@ -239,21 +243,22 @@ private:
             auto const data_exchange_source =
                 std::make_shared<DataExchangeSource>(wayland::Weak{source}, wayland::Weak{this}, seat);
 
+            auto s = state->mutable_state.lock();
             if(s->current_primary_source)
                 s->current_primary_source.value().send_cancelled_event();
-            s->primary_clipboard->set_paste_source(data_exchange_source);
+            state->primary_clipboard->set_paste_source(data_exchange_source);
             s->current_primary_source = data_exchange_source->source;
         }
         else
         {
-            s->primary_clipboard->clear_paste_source();
+            state->primary_clipboard->clear_paste_source();
         }
     }
 
     // Depends on `DataControlOffer`
     void on_clipboard_set(std::shared_ptr<ms::DataExchangeSource> const& source, bool is_primary);
 
-    std::shared_ptr<SyncedState> const state;
+    std::shared_ptr<DataControlStateV1> const state;
     WlSeat const* const seat;
     std::shared_ptr<ms::ClipboardObserver> const clipboard_observer, primary_clipboard_observer;
 };
@@ -291,7 +296,7 @@ public:
         std::shared_ptr<ms::Clipboard> const& clipboard,
         std::shared_ptr<ms::Clipboard> const& primary_clipboard) :
         wayland::DataControlManagerV1::Global(display, Version<1>{}),
-        state{std::make_shared<mir::Synchronised<DataControlStateV1>>(DataControlStateV1{clipboard, primary_clipboard})}
+        state{std::make_shared<DataControlStateV1>(clipboard, primary_clipboard)}
     {
     }
 
@@ -301,7 +306,7 @@ private:
     class Instance : public wayland::DataControlManagerV1
     {
     public:
-        Instance(struct wl_resource* id, std::shared_ptr<SyncedState> const& state) :
+        Instance(struct wl_resource* id, std::shared_ptr<DataControlStateV1> const& state) :
             wayland::DataControlManagerV1(id, Version<1>{}),
             state{state}
         {
@@ -318,7 +323,7 @@ private:
             new DataControlDeviceV1(id, state, WlSeat::from(seat));
         }
 
-        std::shared_ptr<SyncedState> const state;
+        std::shared_ptr<DataControlStateV1> const state;
     };
 
     void bind(wl_resource* id) override
@@ -326,13 +331,13 @@ private:
         new Instance{id, state};
     }
 
-    std::shared_ptr<SyncedState> const state;
+    std::shared_ptr<DataControlStateV1> const state;
 };
 }
 }
 
 mf::DataControlDeviceV1::DataControlDeviceV1(
-    struct wl_resource* id, std::shared_ptr<SyncedState> const& state, WlSeat const* seat) :
+    struct wl_resource* id, std::shared_ptr<DataControlStateV1> const& state, WlSeat const* seat) :
     wayland::DataControlDeviceV1(id, Version<1>{}),
     state{state},
     seat{seat},
@@ -340,11 +345,11 @@ mf::DataControlDeviceV1::DataControlDeviceV1(
     primary_clipboard_observer{
         std::make_shared<ClipboardObserver>([this](auto source) { on_clipboard_set(source, true); })}
 {
-    auto const& s = state->lock();
 
-    s->clipboard->register_interest(clipboard_observer);
-    s->primary_clipboard->register_interest(primary_clipboard_observer);
+    state->clipboard->register_interest(clipboard_observer);
+    state->primary_clipboard->register_interest(primary_clipboard_observer);
 
+    auto s = state->mutable_state.lock();
     // Tell the client about the current source, if any.
     if (s->current_source)
     {
