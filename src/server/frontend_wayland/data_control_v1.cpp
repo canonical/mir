@@ -151,31 +151,6 @@ struct DataControlStateV1
 class DataControlDeviceV1 : public wayland::DataControlDeviceV1
 {
 public:
-    struct ClipboardObserver : public ms::ClipboardObserver
-    {
-        std::function<void(std::shared_ptr<ms::DataExchangeSource> const&)> on_source_set;
-
-        ClipboardObserver(std::function<void(std::shared_ptr<ms::DataExchangeSource> const&)> on_source_set) :
-            on_source_set{on_source_set}
-        {
-        }
-
-        void paste_source_set(std::shared_ptr<ms::DataExchangeSource> const& source) override
-        {
-            on_source_set(source);
-        }
-
-        void drag_n_drop_source_set(std::shared_ptr<ms::DataExchangeSource> const&) override
-        {
-        }
-        void drag_n_drop_source_cleared(std::shared_ptr<ms::DataExchangeSource> const&) override
-        {
-        }
-        void end_of_dnd_gesture() override
-        {
-        }
-    };
-
     // Impl seperated out because it depends on `DataControlOfferV1`, which itself depends on this class
     DataControlDeviceV1(struct wl_resource* id, std::shared_ptr<DataControlStateV1> const& state, WlSeat const* seat);
 
@@ -205,6 +180,31 @@ public:
     }
 
 private:
+    struct ClipboardObserver : public ms::ClipboardObserver
+    {
+        std::function<void(std::shared_ptr<ms::DataExchangeSource> const&)> on_source_set;
+
+        ClipboardObserver(std::function<void(std::shared_ptr<ms::DataExchangeSource> const&)> on_source_set) :
+            on_source_set{on_source_set}
+        {
+        }
+
+        void paste_source_set(std::shared_ptr<ms::DataExchangeSource> const& source) override
+        {
+            on_source_set(source);
+        }
+
+        void drag_n_drop_source_set(std::shared_ptr<ms::DataExchangeSource> const&) override
+        {
+        }
+        void drag_n_drop_source_cleared(std::shared_ptr<ms::DataExchangeSource> const&) override
+        {
+        }
+        void end_of_dnd_gesture() override
+        {
+        }
+    };
+
     void set_selection(std::optional<struct wl_resource*> const& data_control_source) override
     {
         if (data_control_source)
