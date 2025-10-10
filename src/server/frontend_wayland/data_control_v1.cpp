@@ -51,14 +51,12 @@ public:
         return mime_types_;
     }
 
-    void finalize()
+    auto try_finalize() -> bool
     {
-        if (finalized_)
-            BOOST_THROW_EXCEPTION(
-                wayland::ProtocolError(
-                    resource, wayland::DataControlDeviceV1::Error::used_source, "Source already used"));
-
+        auto const not_finalized = finalized_ != true;
         finalized_ = true;
+
+        return not_finalized;
     }
 
 private:
@@ -205,18 +203,28 @@ private:
         }
     };
 
+    auto data_exchange_source_from_source(std::optional<struct wl_resource*> const& data_control_source)
+        -> std::shared_ptr<DataExchangeSource>
+    {
+        auto source = mf::DataControlSourceV1::from(*data_control_source);
+        if (!source)
+            return nullptr;
+
+        if (!source->try_finalize())
+            BOOST_THROW_EXCEPTION(
+                wayland::ProtocolError(
+                    resource, wayland::DataControlDeviceV1::Error::used_source, "Source already used"));
+
+        auto const data_exchange_source =
+            std::make_shared<DataExchangeSource>(wayland::Weak{source}, wayland::Weak{this}, seat);
+        return data_exchange_source;
+    }
+
     void set_selection(std::optional<struct wl_resource*> const& data_control_source) override
     {
         if (data_control_source)
         {
-            auto source = mf::DataControlSourceV1::from(*data_control_source);
-            if (!source)
-                return;
-
-            source->finalize();
-
-            auto const data_exchange_source =
-                std::make_shared<DataExchangeSource>(wayland::Weak{source}, wayland::Weak{this}, seat);
+            auto data_exchange_source = data_exchange_source_from_source(data_control_source);
 
             auto s = state->mutable_state.lock();
             if (s->current_source)
@@ -234,14 +242,7 @@ private:
     {
         if (data_control_source)
         {
-            auto source = mf::DataControlSourceV1::from(*data_control_source);
-            if (!source)
-                return;
-
-            source->finalize();
-
-            auto const data_exchange_source =
-                std::make_shared<DataExchangeSource>(wayland::Weak{source}, wayland::Weak{this}, seat);
+            auto data_exchange_source = data_exchange_source_from_source(data_control_source);
 
             auto s = state->mutable_state.lock();
             if (s->current_primary_source)
