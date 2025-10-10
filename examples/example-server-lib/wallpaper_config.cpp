@@ -15,7 +15,7 @@
  */
 
 #include "wallpaper_config.h"
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <mutex>
 #include <vector>
 
@@ -62,7 +62,7 @@ auto default_font() -> std::string
     std::vector<std::string> usable_search_paths;
     for (auto const& path : font_path_search_paths)
     {
-        if (boost::filesystem::exists(path))
+        if (std::filesystem::exists(path))
             usable_search_paths.push_back(path);
     }
 
@@ -73,7 +73,7 @@ auto default_font() -> std::string
             for (auto const& path : usable_search_paths)
             {
                 auto const full_font_path = path + '/' + prefix + '/' + font.filename;
-                if (boost::filesystem::exists(full_font_path))
+                if (std::filesystem::exists(full_font_path))
                     return full_font_path;
             }
         }

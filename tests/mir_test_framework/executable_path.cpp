@@ -18,12 +18,13 @@
 #include <mir/fatal.h>
 
 #include <libgen.h>
-#include <stdexcept>
 #include <boost/throw_exception.hpp>
 #include <boost/exception/errinfo_errno.hpp>
-#include <boost/filesystem.hpp>
 #include <dlfcn.h>
+
+#include <filesystem>
 #include <format>
+#include <stdexcept>
 
 std::string mir_test_framework::executable_path()
 {
@@ -61,7 +62,7 @@ std::string mir_test_framework::server_platform_path()
     for (auto const& option : {library_path() + "/server-modules/",
                                library_path() + "/mir/server-platform/",
                                std::string(MIR_SERVER_PLATFORM_PATH) + '/'})
-        if (boost::filesystem::exists(option))
+        if (std::filesystem::exists(option))
             return option;
     BOOST_THROW_EXCEPTION(std::runtime_error("Failed to find server platform directory in standard search locations"));
 }
@@ -71,9 +72,9 @@ std::string mir_test_framework::test_data_path()
     std::string run_path     = executable_path() + "/test-data";
     std::string install_path = MIR_INSTALL_PREFIX"/share/mir-test-data";
 
-    if (boost::filesystem::exists(run_path))
+    if (std::filesystem::exists(run_path))
         return run_path;
-    else if (boost::filesystem::exists(install_path))
+    else if (std::filesystem::exists(install_path))
         return install_path;
 
     BOOST_THROW_EXCEPTION(std::runtime_error("Failed to find test data in standard search locations"));
@@ -90,7 +91,7 @@ std::string mir_test_framework::server_platform(std::string const& name)
          {library_path() + "/server-modules/", library_path() + "/mir/server-platform/", std::string(MIR_SERVER_PLATFORM_PATH) + '/'})
     {
         auto path_to_test = option + libname;
-        if (boost::filesystem::exists(path_to_test))
+        if (std::filesystem::exists(path_to_test))
             return path_to_test;
     }
 
@@ -108,7 +109,7 @@ std::string mir_test_framework::server_input_platform(std::string const& name)
          {library_path() + "/server-modules/", library_path() + "/mir/server-platform/", std::string(MIR_SERVER_PLATFORM_PATH) + '/'})
     {
         auto path_to_test = option + libname;
-        if (boost::filesystem::exists(path_to_test))
+        if (std::filesystem::exists(path_to_test))
             return path_to_test;
     }
 

@@ -17,7 +17,6 @@ build:
   - graphviz
   - libboost-dev
   - libboost-iostreams-dev
-  - libboost-filesystem-dev
   - libboost-program-options-dev
   - libboost-system-dev
   - libdrm-dev

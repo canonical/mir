@@ -19,9 +19,10 @@
 
 #include "shared_library_prober_report.h"
 
+#include <functional>
+#include <memory>
 #include <string>
 #include <vector>
-#include <memory>
 
 namespace mir
 {

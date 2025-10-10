@@ -17,7 +17,6 @@
 #include "mir/shared_library_prober.h"
 #include "mir/shared_library.h"
 
-#include <boost/filesystem.hpp>
 #include <boost/throw_exception.hpp>
 
 #include <system_error>
@@ -26,22 +25,8 @@
 
 namespace
 {
-std::error_code boost_to_std_error(boost::system::error_code const& ec)
-{
-    if (ec)
-    {
-        if (ec.category() != boost::system::system_category())
-        {
-            BOOST_THROW_EXCEPTION(std::logic_error{"Boost error from unexpected category: " +
-                                   ec.message()});
-        }
-        return std::error_code{ec.value(), std::system_category()};
-    }
-    return std::error_code{};
-}
-
 // Libraries can be of the form libname.so(.X.Y)
-bool path_has_library_extension(boost::filesystem::path const& path)
+bool path_has_library_extension(std::filesystem::path const& path)
 {
     return path.extension().string() == ".so" ||
            path.string().find(".so.") != std::string::npos;
@@ -51,7 +36,7 @@ bool path_has_library_extension(boost::filesystem::path const& path)
 
 namespace
 {
-bool greater_soname_version(boost::filesystem::path const& lhs, boost::filesystem::path const& rhs)
+bool greater_soname_version(std::filesystem::path const& lhs, std::filesystem::path const& rhs)
 {
     auto lhbuf = strrchr(lhs.c_str(), '.');
     auto rhbuf = strrchr(rhs.c_str(), '.');
@@ -69,19 +54,19 @@ void mir::select_libraries_for_path(
     mir::SharedLibraryProberReport& report)
 {
     report.probing_path(path);
-    // We use the error_code overload because we want to throw a std::system_error
-    boost::system::error_code ec;
+    // We use the error_code overload because we want to report an error
+    std::error_code ec;
 
-    boost::filesystem::directory_iterator iterator{path, ec};
+    std::filesystem::directory_iterator iterator{path, ec};
     if (ec)
     {
-        std::system_error error(boost_to_std_error(ec), path);
+        std::system_error error(ec.value(), std::system_category(), path);
         report.probing_failed(path, error);
         throw error;
     }
 
-    std::vector<boost::filesystem::path> libraries;
-    for (; iterator != boost::filesystem::directory_iterator() ; ++iterator)
+    std::vector<std::filesystem::path> libraries;
+    for (; iterator != std::filesystem::directory_iterator() ; ++iterator)
     {
         if (path_has_library_extension(iterator->path()))
             libraries.push_back(iterator->path().string());
