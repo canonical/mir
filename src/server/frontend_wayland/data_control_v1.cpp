@@ -15,117 +15,383 @@
  */
 
 #include "data_control_v1.h"
+#include "wl_seat.h"
+
+#include "mir/scene/clipboard.h"
+#include "mir/scene/data_exchange.h"
+#include "mir/synchronised.h"
+#include "mir/wayland/protocol_error.h"
 
 namespace mf = mir::frontend;
+namespace ms = mir::scene;
 
 namespace mir
 {
 namespace frontend
 {
+
+class DataControlDeviceV1;
+class DataControlSourceV1 : public wayland::DataControlSourceV1
+{
+public:
+    DataControlSourceV1(struct wl_resource* id) :
+        wayland::DataControlSourceV1{id, Version<1>{}}
+    {
+    }
+
+    static auto from(struct wl_resource* id) -> mf::DataControlSourceV1*
+    {
+        return dynamic_cast<mf::DataControlSourceV1*>(wayland::DataControlSourceV1::from(id));
+    }
+
+    auto mime_types() const -> std::vector<std::string> const&
+    {
+        return mime_types_;
+    }
+
+    auto try_finalize() -> bool
+    {
+        auto const not_finalized = finalized_ != true;
+        finalized_ = true;
+
+        return not_finalized;
+    }
+
+private:
+    void offer(std::string const& mime_type) override
+    {
+        if (finalized_)
+            BOOST_THROW_EXCEPTION(
+                wayland::ProtocolError(
+                    resource,
+                    wayland::DataControlSourceV1::Error::invalid_offer,
+                    "Cannot add MIME types after source is set"));
+        mime_types_.push_back(mime_type);
+    }
+
+    std::vector<std::string> mime_types_;
+    bool finalized_{false};
+};
+
+class DataExchangeSource : public ms::DataExchangeSource
+{
+public:
+    DataExchangeSource(
+        wayland::Weak<DataControlSourceV1> source,
+        wayland::Weak<DataControlDeviceV1> device,
+        WlSeat const* const seat) :
+        source{source},
+        device{device},
+        seat{seat}
+    {
+    }
+
+    auto mime_types() const -> std::vector<std::string> const& override
+    {
+        return source.value().mime_types();
+    }
+
+    void initiate_send(std::string const& mime, Fd const& fd) override
+    {
+        source.value().send_send_event(mime, fd);
+    }
+
+    void cancelled() override
+    {
+        source.value().send_cancelled_event();
+    }
+
+    void dnd_drop_performed() override
+    {
+    }
+    auto actions() -> uint32_t override
+    {
+        return 0;
+    }
+    void offer_accepted(std::optional<std::string> const&) override
+    {
+    }
+    uint32_t offer_set_actions(uint32_t, uint32_t) override
+    {
+        return 0;
+    }
+    void dnd_finished() override
+    {
+    }
+
+    wayland::Weak<DataControlSourceV1> const source;
+    wayland::Weak<DataControlDeviceV1> const device;
+    WlSeat const* const seat;
+};
+
+struct DataControlStateV1
+{
+    DataControlStateV1(
+        std::shared_ptr<ms::Clipboard> const& clipboard, std::shared_ptr<ms::Clipboard> const& primary_clipboard) :
+        clipboard{clipboard},
+        primary_clipboard{primary_clipboard}
+    {
+    }
+
+    struct MutableState
+    {
+        wayland::Weak<DataControlSourceV1> current_source;
+        wayland::Weak<DataControlSourceV1> current_primary_source;
+    };
+
+    std::shared_ptr<ms::Clipboard> const clipboard;
+    std::shared_ptr<ms::Clipboard> const primary_clipboard;
+    mir::Synchronised<MutableState> mutable_state;
+};
+
+class DataControlDeviceV1 : public wayland::DataControlDeviceV1
+{
+public:
+    // Impl seperated out because it depends on `DataControlOfferV1`, which itself depends on this class
+    DataControlDeviceV1(struct wl_resource* id, std::shared_ptr<DataControlStateV1> const& state, WlSeat const* seat);
+
+    ~DataControlDeviceV1() override
+    {
+        state->clipboard->unregister_interest(*clipboard_observer);
+        state->primary_clipboard->unregister_interest(*primary_clipboard_observer);
+        send_finished_event();
+    }
+
+    void receive_from_current_source(std::string const& mime, mir::Fd fd, bool is_primary)
+    {
+        auto s = state->mutable_state.lock();
+        if (is_primary && s->current_primary_source)
+        {
+            s->current_primary_source.value().send_send_event(mime, fd);
+            return;
+        }
+
+        if (!is_primary && s->current_source)
+        {
+            s->current_source.value().send_send_event(mime, fd);
+            return;
+        }
+
+        std::unreachable();
+    }
+
+private:
+    struct ClipboardObserver : public ms::ClipboardObserver
+    {
+        std::function<void(std::shared_ptr<ms::DataExchangeSource> const&)> on_source_set;
+
+        ClipboardObserver(std::function<void(std::shared_ptr<ms::DataExchangeSource> const&)> on_source_set) :
+            on_source_set{on_source_set}
+        {
+        }
+
+        void paste_source_set(std::shared_ptr<ms::DataExchangeSource> const& source) override
+        {
+            on_source_set(source);
+        }
+
+        void drag_n_drop_source_set(std::shared_ptr<ms::DataExchangeSource> const&) override
+        {
+        }
+        void drag_n_drop_source_cleared(std::shared_ptr<ms::DataExchangeSource> const&) override
+        {
+        }
+        void end_of_dnd_gesture() override
+        {
+        }
+    };
+
+    auto data_exchange_source_from_source(std::optional<struct wl_resource*> const& data_control_source)
+        -> std::shared_ptr<DataExchangeSource>
+    {
+        auto source = mf::DataControlSourceV1::from(*data_control_source);
+        if (!source)
+            return nullptr;
+
+        if (!source->try_finalize())
+            BOOST_THROW_EXCEPTION(
+                wayland::ProtocolError(
+                    resource, wayland::DataControlDeviceV1::Error::used_source, "Source already used"));
+
+        auto const data_exchange_source =
+            std::make_shared<DataExchangeSource>(wayland::Weak{source}, wayland::Weak{this}, seat);
+        return data_exchange_source;
+    }
+
+    void set_selection(std::optional<struct wl_resource*> const& data_control_source) override
+    {
+        if (data_control_source)
+        {
+            auto data_exchange_source = data_exchange_source_from_source(data_control_source);
+
+            auto s = state->mutable_state.lock();
+            if (s->current_source)
+                s->current_source.value().send_cancelled_event();
+            state->clipboard->set_paste_source(data_exchange_source);
+            s->current_source = data_exchange_source->source;
+        }
+        else
+        {
+            state->clipboard->clear_paste_source();
+        }
+    }
+
+    void set_primary_selection(std::optional<struct wl_resource*> const& data_control_source) override
+    {
+        if (data_control_source)
+        {
+            auto data_exchange_source = data_exchange_source_from_source(data_control_source);
+
+            auto s = state->mutable_state.lock();
+            if (s->current_primary_source)
+                s->current_primary_source.value().send_cancelled_event();
+            state->primary_clipboard->set_paste_source(data_exchange_source);
+            s->current_primary_source = data_exchange_source->source;
+        }
+        else
+        {
+            state->primary_clipboard->clear_paste_source();
+        }
+    }
+
+    // Depends on `DataControlOffer`
+    void on_clipboard_set(std::shared_ptr<ms::DataExchangeSource> const& source, bool is_primary);
+
+    std::shared_ptr<DataControlStateV1> const state;
+    WlSeat const* const seat;
+    std::shared_ptr<ms::ClipboardObserver> const clipboard_observer, primary_clipboard_observer;
+};
+
+struct DataControlOfferV1 : public wayland::DataControlOfferV1
+{
+    DataControlOfferV1(
+        wayland::Weak<mf::DataControlDeviceV1> parent, std::vector<std::string> const& mime_types, bool is_primary) :
+        wayland::DataControlOfferV1{parent.value()},
+        parent{parent},
+        mime_types_{mime_types},
+        is_primary{is_primary}
+    {
+        parent.value().send_data_offer_event(resource);
+        for (auto const& mime : mime_types)
+        {
+            send_offer_event(mime);
+        }
+    }
+
+    void receive(std::string const& mime, mir::Fd fd) override
+    {
+        parent.value().receive_from_current_source(mime, fd, is_primary);
+    }
+
+    wayland::Weak<DataControlDeviceV1> const parent;
+    std::vector<std::string> const mime_types_;
+    bool const is_primary;
+};
+
 class DataControlManagerV1 : public wayland::DataControlManagerV1::Global
 {
 public:
-    DataControlManagerV1(struct wl_display*);
-    ~DataControlManagerV1() = default;
+    DataControlManagerV1(
+        struct wl_display* display,
+        std::shared_ptr<ms::Clipboard> const& clipboard,
+        std::shared_ptr<ms::Clipboard> const& primary_clipboard) :
+        wayland::DataControlManagerV1::Global(display, Version<1>{}),
+        state{std::make_shared<DataControlStateV1>(clipboard, primary_clipboard)}
+    {
+    }
 
 private:
     class Instance : public wayland::DataControlManagerV1
     {
     public:
-        Instance(struct wl_resource*);
+        Instance(struct wl_resource* id, std::shared_ptr<DataControlStateV1> const& state) :
+            wayland::DataControlManagerV1(id, Version<1>{}),
+            state{state}
+        {
+        }
 
     private:
-        void create_data_source(struct wl_resource* id) override;
-        void get_data_device(struct wl_resource* id, struct wl_resource* seat) override;
+        void create_data_source(struct wl_resource* id) override
+        {
+            auto const source = new DataControlSourceV1{id};
+
+            source->add_destroy_listener(
+                [this, source]
+                {
+                    for (auto const& clp : {state->clipboard, state->primary_clipboard})
+                    {
+                        if (auto const dxs = std::dynamic_pointer_cast<DataExchangeSource>(clp->paste_source());
+                            dxs && dxs->source.is(*source))
+                        {
+                            clp->clear_paste_source();
+                        }
+                    }
+                });
+        }
+
+        void get_data_device(struct wl_resource* id, struct wl_resource* seat) override
+        {
+            new DataControlDeviceV1(id, state, WlSeat::from(seat));
+        }
+
+        std::shared_ptr<DataControlStateV1> const state;
     };
 
-    void bind(wl_resource*) override;
-};
-class DataControlDeviceV1 : public wayland::DataControlDeviceV1
-{
-public:
-    DataControlDeviceV1(struct wl_resource* resource);
+    void bind(wl_resource* id) override
+    {
+        new Instance{id, state};
+    }
 
-private:
-    void set_selection(std::optional<struct wl_resource*> const& source) override;
-    void set_primary_selection(std::optional<struct wl_resource*> const& source) override;
-};
-
-class DataControlSourceV1 : public wayland::DataControlSourceV1
-{
-public:
-    DataControlSourceV1(struct wl_resource* resource);
-
-private:
-    void offer(std::string const& mime_type) override;
-};
-
-class DataControlOfferV1 : public wayland::DataControlOfferV1
-{
-public:
-    DataControlOfferV1(DataControlDeviceV1 const& parent);
-
-private:
-    virtual void receive(std::string const& mime_type, mir::Fd fd) override;
+    std::shared_ptr<DataControlStateV1> const state;
 };
 }
 }
 
-mf::DataControlManagerV1::DataControlManagerV1(struct wl_display* display)
-    : wayland::DataControlManagerV1::Global(display, Version<1>{})
+mf::DataControlDeviceV1::DataControlDeviceV1(
+    struct wl_resource* id, std::shared_ptr<DataControlStateV1> const& state, WlSeat const* seat) :
+    wayland::DataControlDeviceV1(id, Version<1>{}),
+    state{state},
+    seat{seat},
+    clipboard_observer{std::make_shared<ClipboardObserver>([this](auto source) { on_clipboard_set(source, false); })},
+    primary_clipboard_observer{
+        std::make_shared<ClipboardObserver>([this](auto source) { on_clipboard_set(source, true); })}
 {
+    state->clipboard->register_interest(clipboard_observer);
+    state->primary_clipboard->register_interest(primary_clipboard_observer);
 }
 
-void mf::DataControlManagerV1::bind(wl_resource*)
+void mf::DataControlDeviceV1::on_clipboard_set(std::shared_ptr<ms::DataExchangeSource> const& source, bool is_primary)
 {
+    if (auto data_exchange_source = std::dynamic_pointer_cast<mf::DataExchangeSource>(source))
+    {
+        // If the notification comes from a different seat, ignore it
+        if (data_exchange_source->seat != this->seat)
+            return;
+
+        // Make sure the device is not destroyed
+        if (!data_exchange_source->device)
+            return;
+
+        // If the device receiving the notification is the same as the device
+        // initiating the notification, do nothing. We're trying to notify
+        // _other_ devices listening for ext-data-control
+        if (data_exchange_source->device.is(*this))
+            return;
+
+        auto new_offer = new DataControlOfferV1(wayland::Weak{this}, data_exchange_source->mime_types(), is_primary);
+
+        // No need to lock, we already lock at the start of `set_selection` and `set_primary_selection`
+        if (is_primary)
+            send_primary_selection_event({new_offer->resource});
+        else
+            send_selection_event({new_offer->resource});
+    }
 }
 
-mf::DataControlManagerV1::Instance::Instance(struct wl_resource* resource)
-    : wayland::DataControlManagerV1(resource, Version<1>{})
+auto mf::create_data_control_manager_v1(
+    struct wl_display* display,
+    std::shared_ptr<ms::Clipboard> const& clipboard,
+    std::shared_ptr<ms::Clipboard> const& primary_clipboard) -> std::shared_ptr<wayland::DataControlManagerV1::Global>
 {
-
-}
-
-void mf::DataControlManagerV1::Instance::create_data_source(struct wl_resource*)
-{
-    // TODO
-}
-
-void mf::DataControlManagerV1::Instance::get_data_device(struct wl_resource*, struct wl_resource*)
-{
-    // TODO
-}
-
-mf::DataControlDeviceV1::DataControlDeviceV1(struct wl_resource* resource)
-    : wayland::DataControlDeviceV1(resource, Version<1>{})
-{
-}
-
-void mf::DataControlDeviceV1::set_selection(std::optional<struct wl_resource*> const&)
-{
-    // TODO
-}
-
-void mf::DataControlDeviceV1::set_primary_selection(std::optional<struct wl_resource*> const&)
-{
-}
-
-void mf::DataControlSourceV1::offer(std::string const&)
-{
-}
-
-mf::DataControlOfferV1::DataControlOfferV1(DataControlDeviceV1 const& parent)
-    : wayland::DataControlOfferV1(parent)
-{
-}
-
-void mf::DataControlOfferV1::receive(std::string const&, mir::Fd)
-{
-    // TODO
-}
-
-auto mf::create_data_control_manager_v1(struct wl_display* display)
-    -> std::shared_ptr<wayland::DataControlManagerV1::Global>
-{
-    return std::make_shared<DataControlManagerV1>(display);
+    return std::make_shared<DataControlManagerV1>(display, clipboard, primary_clipboard);
 }

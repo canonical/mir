@@ -22,10 +22,16 @@
 
 namespace mir
 {
+namespace scene
+{
+class Clipboard;
+}
 namespace frontend
 {
-auto create_data_control_manager_v1(struct wl_display* display)
-    -> std::shared_ptr<wayland::DataControlManagerV1::Global>;
+auto create_data_control_manager_v1(
+    struct wl_display* display,
+    std::shared_ptr<mir::scene::Clipboard> const& clipboard,
+    std::shared_ptr<mir::scene::Clipboard> const& primary_clipboard) -> std::shared_ptr<wayland::DataControlManagerV1::Global>;
 }
 }
 
