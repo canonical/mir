@@ -1,3 +1,82 @@
+mir (2.23.0) UNRELEASED; urgency=medium
+
+  * New upstream release 2.23.0
+
+    - A big focus on documentation.
+    - ABI summary:
+      . miral ABI unchanged at 7
+      . mircommon ABI unchanged at 11
+      . mircore ABI unchanged at 2
+      . miroil ABI unchanged at 8
+      . mirplatform ABI bumped to 33
+      . mirserver ABI unchanged at
+      . mirwayland ABI unchanged at 5
+      . mirplatformgraphics ABI unchanged at 23
+      . mirinputplatform ABI unchanged at 10
+
+    - Enhancements:
+      . Clearer naming in mirplatform API (#4293, #4316)
+
+    - Bugs fixed:
+      . Don't close the magnifier whenever live config settings are reloaded (#4308)
+      . libmiral should have no public dependency on libmircommon (#4303)
+      . mirwayland should not have public dependencies on mircommon (#4313)
+      . Frame segfault in miral::WindowManagementTrace::place_and_size_for_state (#4281)
+      . Fill out missing input options in live config (#4133)
+      . graphics: pass correct options to manually-selected platforms (#4130)
+      . Check for `EGL_WL_bind_wayland_display` when probing EGLStream display platform (#4147)
+
+    - Documentation:
+      . Add a --help-markdown flag to generate documentation (#4287)
+      . Fix checkbox cross-references
+      . Documentation for miral::WindowSpecification (#4258)
+      . Exiting with help text output is success (#4285)
+      . Documentation for miral::WindowManagerTools (#4254)
+      . Use more markdown in configuration options (#4277)
+      . Rename the graphics support docs to platform support (#4236)
+      . Documentation for `mg::Framebuffer` (#4265)
+      . Adopt the standard home page in Mir (#4259)
+      . Customize the descriptions of the configuring and contributing index pages (#4263)
+      . Documentation for `mg::software::BufferDescriptor` (#4266)
+      . Documentation for `mg::NativeBufferBase` (#4269)
+      . Documentation for `mg::Buffer` (#4250)
+      . Documentation for miral::InternalClient (#4268)
+      . Documentation for miral::Zone (#4264)
+      . Documentation about the input platform (#4077)
+      . Rework "Introducing the Miral API" (#4255)
+      . Documentation for miral::Output (#4261)
+      . Documentation for miral::ExternalClientLauncher (#4243)
+      . Standardize header titles on Sentence case (#4256)
+      . Documentation for miral::WindowManagementPolicy (#4245)
+      . Adopt standard landing pages for Mir (#4260)
+      . Documentation for miral::MirRunner (#4246)
+      . Documentation for miral::Window (#4218)
+      . Documentation for miral::PrependEventFilter (#4247)
+      . Documentation for miral::CursorScale (#4230)
+      . Documentation for miral::DisplayConfiguration (#4234)
+      . Documentation for miral::ConfigurationOption (#4229)
+      . Documentation for miral::CursorTheme (#4231)
+      . Update argument descriptions for consistency and clarity (#4212)
+      . Documentation for miral::AddInitCallback (#4227)
+      . Use tabs instead of separate sections for "Install Dependencies" (#4223)
+      . Documentation for miral::WindowInfo (#4224)
+      . Documentation for miral::ApplicationInfo (#4213)
+      . Add "Using Mir to build a Desktop Environment" (#4214)
+      . Convert the C++ style guide to markdown (#4203)
+      . Remove the 'developing a wayland compositor using mir' how-to (#4190)
+      . Add "How to debug Mir Snaps" page (#4208)
+      . Refresh documentation around "high level" architecture (#4210)
+      . Documentation for custom protocols + remove egmde reference (#4191)
+      . Adding alt text to all relevant media items (#4197)
+      . Fix inconsistent capitalization of program option descriptions (#4192)
+      . Move "How To Enable Screencasting" to configuration (where it belongs) (#4188)
+      . Split documentation by audience (#4169)
+      . Refactor the getting-started-with-mir tutorial to improve language +
+        split how some how-tos (#4173)
+
+
+ -- Alan Griffiths <alan.griffiths@canonical.com>  Mon, 06 Oct 2025 12:17:00 +0100
+
 mir (2.22.2) UNRELEASED; urgency=medium
 
   * Bugfix release 2.22.2
