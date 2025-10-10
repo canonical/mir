@@ -107,6 +107,11 @@ public:
         return std::nullopt;
     }
 
+    auto opaque_region() const -> std::optional<geom::Rectangles> override
+    {
+        return std::nullopt;
+    }
+
 private:
     std::shared_ptr<mg::Buffer> const buffer_;
 };

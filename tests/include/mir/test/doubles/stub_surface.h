@@ -40,6 +40,7 @@ struct StubSurface : scene::Surface
     void set_reception_mode(input::InputReceptionMode) override {}
     void set_input_region(std::vector<geometry::Rectangle> const&) override {}
     std::vector<geometry::Rectangle> get_input_region() const override { return {}; }
+    virtual void set_opaque_region(geometry::Rectangles const& ) override {}
     void resize(geometry::Size const&) override {}
     geometry::Point top_left() const override { return {}; }
     geometry::Rectangle input_bounds() const override { return {}; }

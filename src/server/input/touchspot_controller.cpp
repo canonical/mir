@@ -109,6 +109,10 @@ public:
         position = pos - geom::Displacement{0.5*touchspot_image.width, 0.5*touchspot_image.height};
     }
 
+    std::optional<geom::Rectangles> opaque_region() const override
+    {
+        return geom::Rectangles{{screen_position()}};
+    }
 
 private:
     std::shared_ptr<mg::Buffer> const buffer_;
