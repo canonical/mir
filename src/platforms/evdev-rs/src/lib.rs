@@ -1,6 +1,6 @@
 use cxx::{SharedPtr, UniquePtr, WeakPtr};
 use input::event::keyboard::{KeyState, KeyboardEventTrait, KeyboardKeyEvent};
-use input::event::pointer::PointerEventTrait;
+use input::event::pointer::{ButtonState, PointerButtonEvent, PointerEventTrait};
 use input::event::{DeviceEvent, EventTrait, KeyboardEvent, PointerEvent};
 use input::{AsRaw, Device, DeviceCapability, Event, Libinput, LibinputInterface};
 use libc::{major, minor, poll, pollfd, stat, POLLIN};
@@ -116,6 +116,7 @@ struct LibinputState {
     libinput: Libinput,
     known_devices: Vec<DeviceWrapper>,
     next_device_id: i32,
+    button_state: u32
 }
 
 pub struct PlatformRs {
@@ -212,6 +213,7 @@ impl PlatformRs {
             }),
             known_devices: Vec::new(),
             next_device_id: 0,
+            button_state: 0
         };
 
         state.libinput.udev_assign_seat("seat0").unwrap();
@@ -291,7 +293,9 @@ impl PlatformRs {
                             _ => {}
                         },
 
+                        // TODO: Need to set up reporting events (report->received_event_from_kernel)
                         Event::Pointer(pointer_event) => {
+
                             let dev: Device = pointer_event.device();
 
                             if let Some(device_wrapper) = state
@@ -299,12 +303,13 @@ impl PlatformRs {
                                 .iter_mut()
                                 .find(|x| x.device.as_raw() == dev.as_raw())
                             {
+                                let mut event_to_publish: Option<SharedPtr<MirEvent>> = None;
                                 match pointer_event {
-                                    PointerEvent::Motion(motion_event) => unsafe {
+                                    PointerEvent::Motion(motion_event) => {
                                         if let Some(event_builder) =
                                             &mut device_wrapper.event_builder
                                         {
-                                            let created = event_builder.pin_mut().pointer_event(
+                                            event_to_publish = Some(event_builder.pin_mut().pointer_event(
                                                 true,
                                                 motion_event.time_usec(),
                                                 MirPointerAction::Motion as i32,
@@ -315,16 +320,68 @@ impl PlatformRs {
                                                 motion_event.dx() as f32,
                                                 motion_event.dy() as f32,
                                                 MirPointerAxisSource::None as i32,
-                                            );
-
-                                            if let Some(input_sink) = &mut device_wrapper.input_sink
-                                            {
-                                                input_sink.handle_input(&created);
-                                            }
+                                            ));
                                         }
                                     },
 
+                                    PointerEvent::Button(button_event) => {
+                                        if let Some(event_builder) =
+                                            &mut device_wrapper.event_builder
+                                        {
+                                            const BTN_LEFT: u32 = 0x110;
+                                            const BTN_RIGHT: u32 = 0x111;
+                                            const BTN_MIDDLE: u32 = 0x112;
+                                            const BTN_SIDE: u32 = 0x113;
+                                            const BTN_EXTRA: u32 = 0x114;
+                                            const BTN_FORWARD: u32 = 0x115;
+                                            const BTN_BACK: u32 = 0x116;
+                                            const BTN_TASK: u32 = 0x117;
+
+                                            // TODO: Handle handedness switch
+                                            let mir_button = match button_event.button() {
+                                                BTN_LEFT => MirPointerButton::Primary,
+                                                BTN_RIGHT => MirPointerButton::Secondary,
+                                                BTN_MIDDLE => MirPointerButton::Tertiary,
+                                                BTN_BACK => MirPointerButton::Back,
+                                                BTN_FORWARD => MirPointerButton::Forward,
+                                                BTN_SIDE => MirPointerButton::Side,
+                                                BTN_EXTRA => MirPointerButton::Extra,
+                                                BTN_TASK => MirPointerButton::Task,
+                                                _ => MirPointerButton::Primary
+                                            };
+
+                                            let mut action: MirPointerAction = MirPointerAction::Actions;
+                                            if button_event.button_state() == ButtonState::Pressed {
+                                                state.button_state = state.button_state | mir_button as u32;
+                                                action = MirPointerAction::ButtonDown;
+                                            } else {
+                                                state.button_state = state.button_state & !(mir_button as u32);
+                                                action = MirPointerAction::ButtonUp;
+                                            }
+
+                                            event_to_publish = Some(event_builder.pin_mut().pointer_event(
+                                                true,
+                                                button_event.time_usec(),
+                                                action as i32,
+                                                state.button_state,
+                                                false,
+                                                0.0,
+                                                0.0,
+                                                0.0,
+                                                0.0,
+                                                MirPointerAxisSource::None as i32,
+                                            ));
+                                        }
+                                    }
+
                                     _ => {}
+                                }
+
+                                if let Some(created) = event_to_publish {
+                                    if let Some(input_sink) = &mut device_wrapper.input_sink
+                                    {
+                                        input_sink.handle_input(&created);
+                                    }
                                 }
                             }
                         }
@@ -638,9 +695,10 @@ pub use ffi::InputDevice;
 pub use ffi::InputDeviceRegistry;
 pub use ffi::InputSink;
 pub use ffi::PlatformBridgeC;
+pub use ffi::MirEvent;
 
 use crate::enums::{
-    MirDeviceCapability, MirKeyboardAction, MirPointerAction, MirPointerAxisSource,
+    MirDeviceCapability, MirKeyboardAction, MirPointerAction, MirPointerAxisSource, MirPointerButton,
 };
 
 pub fn evdev_rs_create(
