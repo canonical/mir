@@ -53,7 +53,7 @@ public:
 
     void finalize()
     {
-        if(finalized_)
+        if (finalized_)
             BOOST_THROW_EXCEPTION(
                 wayland::ProtocolError(
                     resource, wayland::DataControlDeviceV1::Error::used_source, "Source already used"));
@@ -77,7 +77,7 @@ private:
     bool finalized_{false};
 };
 
-class DataExchangeSource: public ms::DataExchangeSource
+class DataExchangeSource : public ms::DataExchangeSource
 {
 public:
     DataExchangeSource(
@@ -219,7 +219,7 @@ private:
                 std::make_shared<DataExchangeSource>(wayland::Weak{source}, wayland::Weak{this}, seat);
 
             auto s = state->mutable_state.lock();
-            if(s->current_source)
+            if (s->current_source)
                 s->current_source.value().send_cancelled_event();
             state->clipboard->set_paste_source(data_exchange_source);
             s->current_source = data_exchange_source->source;
@@ -244,7 +244,7 @@ private:
                 std::make_shared<DataExchangeSource>(wayland::Weak{source}, wayland::Weak{this}, seat);
 
             auto s = state->mutable_state.lock();
-            if(s->current_primary_source)
+            if (s->current_primary_source)
                 s->current_primary_source.value().send_cancelled_event();
             state->primary_clipboard->set_paste_source(data_exchange_source);
             s->current_primary_source = data_exchange_source->source;
@@ -265,7 +265,8 @@ private:
 
 struct DataControlOfferV1 : public wayland::DataControlOfferV1
 {
-    DataControlOfferV1(wayland::Weak<mf::DataControlDeviceV1> parent, std::vector<std::string> const& mime_types, bool is_primary) :
+    DataControlOfferV1(
+        wayland::Weak<mf::DataControlDeviceV1> parent, std::vector<std::string> const& mime_types, bool is_primary) :
         wayland::DataControlOfferV1{parent.value()},
         parent{parent},
         mime_types_{mime_types},
@@ -343,7 +344,6 @@ mf::DataControlDeviceV1::DataControlDeviceV1(
     primary_clipboard_observer{
         std::make_shared<ClipboardObserver>([this](auto source) { on_clipboard_set(source, true); })}
 {
-
     state->clipboard->register_interest(clipboard_observer);
     state->primary_clipboard->register_interest(primary_clipboard_observer);
 
@@ -368,8 +368,8 @@ void mf::DataControlDeviceV1::on_clipboard_set(std::shared_ptr<ms::DataExchangeS
     if (auto data_exchange_source = std::dynamic_pointer_cast<mf::DataExchangeSource>(source))
     {
         // If the notification comes from a different seat, ignore it
-        if(data_exchange_source->seat != this->seat)
-                return;
+        if (data_exchange_source->seat != this->seat)
+            return;
 
         // Make sure the device is not destroyed
         if (!data_exchange_source->device)
@@ -378,7 +378,7 @@ void mf::DataControlDeviceV1::on_clipboard_set(std::shared_ptr<ms::DataExchangeS
         // If the device receiving the notification is the same as the device
         // initiating the notification, do nothing. We're trying to notify
         // _other_ devices listening for ext-data-control
-        if(data_exchange_source->device.is(*this))
+        if (data_exchange_source->device.is(*this))
             return;
 
         auto new_offer = new DataControlOfferV1(wayland::Weak{this}, data_exchange_source->mime_types(), is_primary);
