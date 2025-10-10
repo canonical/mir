@@ -24,7 +24,8 @@ environment:
     RELEASE: noble
     RELEASE/ubuntu: noble
     RELEASE/ubuntu_plucky: plucky
-    RELEASE/ubuntu_devel: questing
+    RELEASE/ubuntu_questing: questing
+    RELEASE/ubuntu_devel: resolute
     RELEASE/debian_sid: sid
     PROPOSED: false
     PROPOSED/ubuntu_proposed: true
