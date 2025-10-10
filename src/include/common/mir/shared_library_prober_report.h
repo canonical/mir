@@ -17,7 +17,7 @@
 #ifndef MIR_SHARED_LIBRARY_PROBER_REPORT_H_
 #define MIR_SHARED_LIBRARY_PROBER_REPORT_H_
 
-#include <boost/filesystem.hpp>
+#include <filesystem>
 
 namespace mir
 {
@@ -26,10 +26,10 @@ class SharedLibraryProberReport
 public:
     virtual ~SharedLibraryProberReport() = default;
 
-    virtual void probing_path(boost::filesystem::path const& path) = 0;
-    virtual void probing_failed(boost::filesystem::path const& path, std::exception const& error) = 0;
-    virtual void loading_library(boost::filesystem::path const& filename) = 0;
-    virtual void loading_failed(boost::filesystem::path const& filename, std::exception const& error) = 0;
+    virtual void probing_path(std::filesystem::path const& path) = 0;
+    virtual void probing_failed(std::filesystem::path const& path, std::exception const& error) = 0;
+    virtual void loading_library(std::filesystem::path const& filename) = 0;
+    virtual void loading_failed(std::filesystem::path const& filename, std::exception const& error) = 0;
 
 protected:
     SharedLibraryProberReport() = default;

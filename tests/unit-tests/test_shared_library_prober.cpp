@@ -35,10 +35,10 @@ namespace
 class MockSharedLibraryProberReport : public mir::SharedLibraryProberReport
 {
 public:
-    MOCK_METHOD1(probing_path, void(boost::filesystem::path const&));
-    MOCK_METHOD2(probing_failed, void(boost::filesystem::path const&, std::exception const&));
-    MOCK_METHOD1(loading_library, void(boost::filesystem::path const&));
-    MOCK_METHOD2(loading_failed, void(boost::filesystem::path const&, std::exception const&));
+    MOCK_METHOD(void, probing_path, (std::filesystem::path const&), (override));
+    MOCK_METHOD(void, probing_failed, (std::filesystem::path const&, std::exception const&), (override));
+    MOCK_METHOD(void, loading_library, (std::filesystem::path const&), (override));
+    MOCK_METHOD(void, loading_failed, (std::filesystem::path const&, std::exception const&), (override));
 };
 
 class SharedLibraryProber : public testing::Test

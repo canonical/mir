@@ -23,27 +23,26 @@
 #include "shared_library_prober_report_tp.h"
 
 namespace mrl = mir::report::lttng;
-namespace bf = boost::filesystem;
 
-void mrl::SharedLibraryProberReport::probing_path(bf::path const& path)
+void mrl::SharedLibraryProberReport::probing_path(std::filesystem::path const& path)
 {
     mir_tracepoint(mir_server_shared_library_prober, probing_path,
                    path.string().c_str());
 }
 
-void mrl::SharedLibraryProberReport::probing_failed(bf::path const& path, std::exception const& error)
+void mrl::SharedLibraryProberReport::probing_failed(std::filesystem::path const& path, std::exception const& error)
 {
     mir_tracepoint(mir_server_shared_library_prober, probing_failed,
                    path.string().c_str(), error.what());
 }
 
-void mrl::SharedLibraryProberReport::loading_library(bf::path const& filename)
+void mrl::SharedLibraryProberReport::loading_library(std::filesystem::path const& filename)
 {
     mir_tracepoint(mir_server_shared_library_prober, loading_library,
                    filename.string().c_str());
 }
 
-void mrl::SharedLibraryProberReport::loading_failed(bf::path const& filename, std::exception const& error)
+void mrl::SharedLibraryProberReport::loading_failed(std::filesystem::path const& filename, std::exception const& error)
 {
     mir_tracepoint(mir_server_shared_library_prober, loading_failed,
                    filename.string().c_str(), error.what());

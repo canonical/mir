@@ -47,7 +47,6 @@ add_library(mirsharedsharedlibrary OBJECT
 
 target_link_libraries(mirsharedsharedlibrary
   PUBLIC
-    Boost::filesystem
     dl
 )
 

@@ -27,16 +27,16 @@ namespace logging
 class NullSharedLibraryProberReport : public mir::SharedLibraryProberReport
 {
 public:
-    void probing_path(boost::filesystem::path const& /*path*/) override
+    void probing_path(std::filesystem::path const&) override
     {
     }
-    void probing_failed(boost::filesystem::path const& /*path*/, std::exception const& /*error*/) override
+    void probing_failed(std::filesystem::path const& /*path*/, std::exception const& /*error*/) override
     {
     }
-    void loading_library(boost::filesystem::path const& /*filename*/) override
+    void loading_library(std::filesystem::path const& /*filename*/) override
     {
     }
-    void loading_failed(boost::filesystem::path const& /*filename*/, std::exception const& /*error*/) override
+    void loading_failed(std::filesystem::path const& /*filename*/, std::exception const& /*error*/) override
     {
     }
 };

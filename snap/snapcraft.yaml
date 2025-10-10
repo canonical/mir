@@ -24,7 +24,6 @@ parts:
     - eglexternalplatform-dev
     - git
     - libboost-date-time-dev
-    - libboost-filesystem-dev
     - libboost-iostreams-dev
     - libboost-program-options-dev
     - libdisplay-info-dev
@@ -59,7 +58,6 @@ parts:
     - libpixman-1-dev
     - xwayland
     stage-packages:
-    - libboost-filesystem1.83.0
     - libboost-iostreams1.83.0
     - libboost-program-options1.83.0
     - libdrm2
