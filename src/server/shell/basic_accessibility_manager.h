@@ -35,6 +35,10 @@ namespace input
 class CompositeEventFilter;
 class InputEventTransformer;
 }
+namespace shell
+{
+class MouseKeysTransformer;
+}
 namespace options
 {
 class Option;
@@ -45,10 +49,6 @@ class Clock;
 }
 namespace shell
 {
-class MouseKeysTransformer;
-class BasicHoverClickTransformer;
-class SlowKeysTransformer;
-class StickyKeysTransformer;
 class BasicAccessibilityManager : public AccessibilityManager
 {
 public:
