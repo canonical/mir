@@ -131,6 +131,23 @@ public:
     }
 
     /**
+     * Lock the data and return an accessor.
+     *
+     * This provides mutable access to the protected data, even
+     * in const-context. Useful for cases such as a lazy-initialised
+     * cache, where a call to a semantically const method may require
+     * internal mutation.
+     *
+     * \return A smart-pointer-esque accessor for the contained data.
+     *         While code has access to a live Locked instance it is
+     *         guaranteed to have unique access to the contained data.
+     */
+    auto lock_mut() const -> Locked
+    {
+        return LockedImpl<T>{std::unique_lock{mutex}, const_cast<T&>(value)};
+    }
+
+    /**
      * Smart-pointer-esque accessor for the protected data.
      *
      * Provides const access to the protected data, with the guarantee

@@ -52,7 +52,7 @@ class BufferCursorImage : public mg::CursorImage
 {
 public:
     BufferCursorImage(std::shared_ptr<mg::Buffer> buffer, geom::Displacement const& hotspot)
-        : BufferCursorImage(buffer_to_mapping_if_possible(buffer), hotspot)
+        : BufferCursorImage(buffer->map_readable(), hotspot)
     {
     }
 
@@ -78,19 +78,6 @@ private:
           hotspot_{hotspot}
     {
         ::memcpy(data.get(), mapping->data(), mapping->len());
-    }
-
-    static auto buffer_to_mapping_if_possible(std::shared_ptr<mg::Buffer> const& buffer)
-        -> std::unique_ptr<mrs::Mapping<std::byte const>>
-    {
-        auto const mappable_buffer = mrs::as_read_mappable(buffer);
-        if (!mappable_buffer)
-        {
-            BOOST_THROW_EXCEPTION(
-                std::runtime_error{
-                    "Attempt to create cursor from non-CPU-readable buffer. Rendering will be incomplete"});
-        }
-        return mappable_buffer->map_readable();
     }
 
     geom::Size const size_;

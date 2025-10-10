@@ -59,6 +59,7 @@
 namespace mg  = mir::graphics;
 namespace mge = mg::eglstream;
 namespace mgc = mg::common;
+namespace mrs = mir::renderer::software;
 namespace geom = mir::geometry;
 
 #ifndef EGL_WL_wayland_eglstream
@@ -421,6 +422,7 @@ class EGLStreamBuffer :
 {
 public:
     EGLStreamBuffer(
+        std::shared_ptr<mgc::EGLContextExecutor> executor,
         BoundEGLStream::TextureHandle tex,
         std::function<void()>&& on_consumed,
         MirPixelFormat format,
@@ -429,6 +431,7 @@ public:
         : size_{size},
           layout_{layout},
           format{format},
+          executor{std::move(executor)},
           tex{std::move(tex)},
           on_consumed{std::move(on_consumed)}
     {
@@ -447,6 +450,12 @@ public:
     NativeBufferBase* native_buffer_base() override
     {
         return this;
+    }
+
+    std::unique_ptr<mrs::Mapping<std::byte const>> map_readable() const override
+    {
+        on_consumed();
+        return std::make_unique<GLMapping>(*this);
     }
 
     mg::gl::Program const& shader(mg::gl::ProgramFactory& cache) const override
@@ -489,9 +498,72 @@ public:
     }
 
 private:
+    class GLMapping : public mrs::Mapping<std::byte const>
+    {
+    public:
+        GLMapping(EGLStreamBuffer const& parent)
+            : parent{parent}
+        {
+            auto data_promise = std::make_shared<std::promise<std::unique_ptr<std::byte const[]>>>();
+            parent.executor->spawn(
+                [data_promise, &parent]()
+                {
+                    GLuint fbo;
+
+                    GLsizei width = parent.size_.width.as_int();
+                    GLsizei height = parent.size_.height.as_int();
+
+                    auto pixels = std::make_unique<std::byte[]>(width * height * 4);
+
+                    glGenFramebuffers(1, &fbo);
+                    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+                    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, parent.tex.tex_id(), 0);
+
+                    glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels.get());
+
+                    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+                    glDeleteFramebuffers(1, &fbo);
+
+                    data_promise->set_value(std::unique_ptr<std::byte const[]>(pixels.release()));
+                });
+            data_ = data_promise->get_future();
+        }
+
+        auto data() const -> std::byte const* override
+        {
+            return data_.get().get();
+        }
+
+        auto len() const -> size_t override
+        {
+            return size().height.as_uint32_t() * stride().as_uint32_t();
+        }
+
+        auto format() const -> MirPixelFormat override
+        {
+            // Because we're reading through GL the underlying format doesn't matter
+           return mir_pixel_format_argb_8888;
+        }
+
+        auto stride() const -> geom::Stride override
+        {
+            return geom::Stride{size().width.as_uint32_t() * 4};
+        }
+
+        auto size() const -> geom::Size override
+        {
+            return parent.size();
+        }
+
+    private:
+        EGLStreamBuffer const& parent;
+        std::shared_future<std::unique_ptr<std::byte const[]>> data_;
+    };
+
     mir::geometry::Size const size_;
     Layout const layout_;
     MirPixelFormat const format;
+    std::shared_ptr<mgc::EGLContextExecutor> const executor;
     BoundEGLStream::TextureHandle tex;
     std::function<void()> on_consumed;
 };
@@ -537,6 +609,7 @@ mir::graphics::eglstream::BufferAllocator::buffer_from_resource(
         }();
 
     return std::make_shared<EGLStreamBuffer>(
+        egl_delegate,
         BoundEGLStream::texture_for_buffer(buffer),
         std::move(on_consumed),
         mir_pixel_format_argb_8888,
