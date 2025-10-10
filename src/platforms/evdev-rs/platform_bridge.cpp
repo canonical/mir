@@ -67,7 +67,7 @@ miers::EventBuilderWrapper::EventBuilderWrapper(EventBuilder* event_builder)
 
 std::shared_ptr<MirEvent> miers::EventBuilderWrapper::pointer_event(
     bool has_time,
-    uint64_t time_nanoseconds,
+    uint64_t time_microseconds,
     int32_t action,
     uint32_t buttons,
     bool has_position,
@@ -79,7 +79,7 @@ std::shared_ptr<MirEvent> miers::EventBuilderWrapper::pointer_event(
 {
     return event_builder->pointer_event(
         has_time
-            ? std::chrono::nanoseconds(time_nanoseconds)
+            ? std::chrono::microseconds(time_microseconds)
             : std::optional<EventBuilder::Timestamp>(std::nullopt),
         static_cast<MirPointerAction>(action),
         static_cast<MirPointerButtons>(buttons),
@@ -90,5 +90,22 @@ std::shared_ptr<MirEvent> miers::EventBuilderWrapper::pointer_event(
         static_cast<MirPointerAxisSource>(axis_source),
         events::ScrollAxisH(),
         events::ScrollAxisV()
+    );
+}
+
+std::shared_ptr<MirEvent> miers::EventBuilderWrapper::key_event(
+        bool has_time,
+        uint64_t time_microseconds,
+        int32_t action,
+        uint32_t scancode
+    ) const
+{
+    return event_builder->key_event(
+        has_time
+            ? std::chrono::microseconds(time_microseconds)
+            : std::optional<EventBuilder::Timestamp>(std::nullopt),
+        static_cast<MirKeyboardAction>(action),
+        xkb_keysym_t{0},
+        static_cast<int>(scancode)
     );
 }

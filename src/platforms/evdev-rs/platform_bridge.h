@@ -54,7 +54,7 @@ public:
     explicit EventBuilderWrapper(EventBuilder* event_builder);
     std::shared_ptr<MirEvent> pointer_event(
         bool has_time,
-        uint64_t time_nanoseconds,
+        uint64_t time_microseconds,
         int32_t action,
         uint32_t buttons,
         bool has_position,
@@ -63,6 +63,13 @@ public:
         float displacement_x,
         float displacement_y,
         int32_t axis_source
+    ) const;
+
+    std::shared_ptr<MirEvent> key_event(
+        bool has_time,
+        uint64_t time_microseconds,
+        int32_t action,
+        uint32_t scancode
     ) const;
 
 private:

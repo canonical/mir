@@ -141,3 +141,18 @@ pub enum MirPointerAxisSource {
     Continuous,
     WheelTilt,
 }
+
+#[repr(u32)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum MirDeviceCapability {
+    Unknown = 0,
+    Pointer = 1 << 1,
+    Keyboard = 1 << 2,
+    Touchpad = 1 << 3,
+    Touchscreen = 1 << 4,
+    Gamepad = 1 << 5,
+    Joystick = 1 << 6,
+    Switc = 1 << 7,
+    MultiTouch = 1 << 8,   // multitouch capable
+    AlphaNumeric = 1 << 9, // enough keys for text entry
+}

@@ -1,6 +1,8 @@
 use cxx::{SharedPtr, UniquePtr, WeakPtr};
-use input::event::{DeviceEvent, EventTrait, PointerEvent};
-use input::{AsRaw, Device, Event, Libinput, LibinputInterface};
+use input::event::keyboard::{KeyState, KeyboardEventTrait, KeyboardKeyEvent};
+use input::event::pointer::PointerEventTrait;
+use input::event::{DeviceEvent, EventTrait, KeyboardEvent, PointerEvent};
+use input::{AsRaw, Device, DeviceCapability, Event, Libinput, LibinputInterface};
 use libc::{major, minor, poll, pollfd, stat, POLLIN};
 use nix::unistd::close;
 use std::ffi::CString;
@@ -8,9 +10,9 @@ use std::os::fd::{AsFd, AsRawFd, BorrowedFd, FromRawFd};
 use std::os::unix::ffi::OsStrExt;
 use std::os::unix::io::OwnedFd;
 use std::path::Path;
-use std::{ptr::NonNull, pin::Pin};
 use std::sync::mpsc;
 use std::thread::{self, JoinHandle};
+use std::{pin::Pin, ptr::NonNull};
 
 mod enums;
 
@@ -127,7 +129,7 @@ pub struct PlatformRs {
 pub struct InputDeviceInfoRs {
     name: String,
     unique_id: String,
-    capabilities: i32,
+    capabilities: u32,
 }
 
 impl InputDeviceInfoRs {
@@ -139,7 +141,7 @@ impl InputDeviceInfoRs {
         &self.unique_id
     }
 
-    pub fn capabilities(&self) -> i32 {
+    pub fn capabilities(&self) -> u32 {
         self.capabilities
     }
 }
@@ -228,7 +230,6 @@ impl PlatformRs {
         ];
 
         loop {
-            println!("Waiting for input events...");
             unsafe {
                 let ret = poll(fds.as_mut_ptr(), fds.len() as _, -1); // -1 = wait indefinitely
                 if ret < 0 {
@@ -244,10 +245,7 @@ impl PlatformRs {
                     return;
                 }
 
-                println!("Processing input events");
                 for event in &mut state.libinput {
-                    println!("Got event: {:?}", event);
-
                     match event {
                         Event::Device(device_event) => match device_event {
                             DeviceEvent::Added(added_event) => {
@@ -303,10 +301,12 @@ impl PlatformRs {
                             {
                                 match pointer_event {
                                     PointerEvent::Motion(motion_event) => unsafe {
-                                        if let Some(event_builder) = &mut device_wrapper.event_builder {
+                                        if let Some(event_builder) =
+                                            &mut device_wrapper.event_builder
+                                        {
                                             let created = event_builder.pin_mut().pointer_event(
-                                                false,
-                                                0,
+                                                true,
+                                                motion_event.time_usec(),
                                                 MirPointerAction::Motion as i32,
                                                 0,
                                                 false,
@@ -316,12 +316,50 @@ impl PlatformRs {
                                                 motion_event.dy() as f32,
                                                 MirPointerAxisSource::None as i32,
                                             );
-                            
-                                            if let Some(input_sink) = &mut device_wrapper.input_sink {
+
+                                            if let Some(input_sink) = &mut device_wrapper.input_sink
+                                            {
                                                 input_sink.handle_input(&created);
                                             }
                                         }
                                     },
+
+                                    _ => {}
+                                }
+                            }
+                        }
+
+                        Event::Keyboard(keyboard_event) => {
+                            let dev: Device = keyboard_event.device();
+
+                            if let Some(device_wrapper) = state
+                                .known_devices
+                                .iter_mut()
+                                .find(|x| x.device.as_raw() == dev.as_raw())
+                            {
+                                match keyboard_event {
+                                    KeyboardEvent::Key(key_event) => {
+                                        let keyboard_action = match key_event.key_state() {
+                                            KeyState::Pressed => MirKeyboardAction::Down,
+                                            KeyState::Released => MirKeyboardAction::Up,
+                                        };
+
+                                        if let Some(event_builder) =
+                                            &mut device_wrapper.event_builder
+                                        {
+                                            let created = event_builder.pin_mut().key_event(
+                                                true,
+                                                key_event.time_usec(),
+                                                keyboard_action as i32,
+                                                key_event.key(),
+                                            );
+
+                                            if let Some(input_sink) = &mut device_wrapper.input_sink
+                                            {
+                                                input_sink.handle_input(&created);
+                                            }
+                                        }
+                                    }
                                     _ => {}
                                 }
                             }
@@ -344,10 +382,38 @@ impl PlatformRs {
                             if let Some(dev_with_id) =
                                 state.known_devices.iter().find(|d| d.id == id)
                             {
+                                let mut capabilities: u32 = 0;
+                                if dev_with_id
+                                    .device
+                                    .has_capability(input::DeviceCapability::Keyboard)
+                                {
+                                    capabilities = capabilities
+                                        | MirDeviceCapability::Keyboard as u32
+                                        | MirDeviceCapability::AlphaNumeric as u32;
+                                }
+                                if dev_with_id
+                                    .device
+                                    .has_capability(input::DeviceCapability::Pointer)
+                                {
+                                    capabilities =
+                                        capabilities | MirDeviceCapability::Pointer as u32;
+                                }
+                                if dev_with_id
+                                    .device
+                                    .has_capability(input::DeviceCapability::Touch)
+                                {
+                                    capabilities = capabilities
+                                        | MirDeviceCapability::Touchpad as u32
+                                        | MirDeviceCapability::Pointer as u32;
+                                }
+
                                 let info = InputDeviceInfoRs {
                                     name: dev_with_id.device.name().to_string(),
-                                    unique_id: "TODO".to_string(),
-                                    capabilities: 0,
+                                    unique_id: dev_with_id.device.name().to_string()
+                                        + &dev_with_id.device.sysname().to_string()
+                                        + &dev_with_id.device.id_vendor().to_string()
+                                        + &dev_with_id.device.id_product().to_string(),
+                                    capabilities: capabilities,
                                 };
                                 let _ = tx.send(info);
                             } else {
@@ -464,7 +530,7 @@ mod ffi {
 
         fn name(self: &InputDeviceInfoRs) -> &str;
         fn unique_id(self: &InputDeviceInfoRs) -> &str;
-        fn capabilities(self: &InputDeviceInfoRs) -> i32;
+        fn capabilities(self: &InputDeviceInfoRs) -> u32;
 
         fn evdev_rs_create(
             bridge: SharedPtr<PlatformBridgeC>,
@@ -532,7 +598,7 @@ mod ffi {
         fn pointer_event(
             self: &EventBuilderWrapper,
             has_time: bool,
-            time_nanoseconds: u64,
+            time_microseconds: u64,
             action: i32,
             buttons: u32,
             has_position: bool,
@@ -541,6 +607,14 @@ mod ffi {
             displacement_x: f32,
             displacement_y: f32,
             axis_source: i32,
+        ) -> SharedPtr<MirEvent>;
+
+        fn key_event(
+            self: &EventBuilderWrapper,
+            has_time: bool,
+            time_microseconds: u64,
+            action: i32,
+            scancode: u32,
         ) -> SharedPtr<MirEvent>;
 
         #[namespace = "mir::input"]
@@ -565,7 +639,9 @@ pub use ffi::InputDeviceRegistry;
 pub use ffi::InputSink;
 pub use ffi::PlatformBridgeC;
 
-use crate::enums::{MirPointerAction, MirPointerAxisSource, MirPointerButton};
+use crate::enums::{
+    MirDeviceCapability, MirKeyboardAction, MirPointerAction, MirPointerAxisSource,
+};
 
 pub fn evdev_rs_create(
     bridge: SharedPtr<PlatformBridgeC>,

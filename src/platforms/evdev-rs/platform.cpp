@@ -88,7 +88,7 @@ public:
         return {
             std::string(device_info->name()),
             std::string(device_info->unique_id()),
-            mir::input::DeviceCapabilities(0)
+            mir::input::DeviceCapabilities(device_info->capabilities()),
         };
     }
 
