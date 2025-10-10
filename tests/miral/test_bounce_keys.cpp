@@ -72,11 +72,11 @@ struct TestBounceKeys : miral::TestServer
     std::weak_ptr<mi::InputDeviceHub> input_device_hub;
 };
 
-struct TestDifferentDelays: public TestBounceKeys, public WithParamInterface<std::chrono::milliseconds>
+struct TestDifferentBounceKeysDelays: public TestBounceKeys, public WithParamInterface<std::chrono::milliseconds>
 {
 };
 
-TEST_P(TestDifferentDelays, subsequent_keys_rejected_if_in_within_delay)
+TEST_P(TestDifferentBounceKeysDelays, subsequent_keys_rejected_if_in_within_delay)
 {
     auto const press_delay = GetParam();
 
@@ -105,7 +105,7 @@ TEST_P(TestDifferentDelays, subsequent_keys_rejected_if_in_within_delay)
         });
 }
 
-INSTANTIATE_TEST_SUITE_P(TestBounceKeys, TestDifferentDelays, Values(test_bounce_keys_delay - 5ms, test_bounce_keys_delay + 5ms));
+INSTANTIATE_TEST_SUITE_P(TestBounceKeys, TestDifferentBounceKeysDelays, Values(test_bounce_keys_delay - 5ms, test_bounce_keys_delay + 5ms));
 
 TEST_F(TestBounceKeys, different_keys_are_not_rejected)
 {
