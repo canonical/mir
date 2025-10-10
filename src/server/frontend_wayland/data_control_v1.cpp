@@ -179,7 +179,7 @@ public:
     // Impl seperated out because it depends on `DataControlOfferV1`, which itself depends on this class
     DataControlDeviceV1(struct wl_resource* id, std::shared_ptr<DataControlStateV1> const& state, WlSeat const* seat);
 
-    ~DataControlDeviceV1()
+    ~DataControlDeviceV1() override
     {
         state->clipboard->unregister_interest(*clipboard_observer);
         state->primary_clipboard->unregister_interest(*primary_clipboard_observer);
@@ -299,8 +299,6 @@ public:
         state{std::make_shared<DataControlStateV1>(clipboard, primary_clipboard)}
     {
     }
-
-    ~DataControlManagerV1() = default;
 
 private:
     class Instance : public wayland::DataControlManagerV1
