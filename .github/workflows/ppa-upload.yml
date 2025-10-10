@@ -16,6 +16,7 @@ jobs:
         release:
         - "24.04"
         - "25.04"
+        - "25.10"
         - "devel"
 
     runs-on: ubuntu-latest
