@@ -528,6 +528,31 @@ mf::ExtForeignToplevelHandleV1::ExtForeignToplevelHandleV1(
     manager.send_toplevel_event(resource);
 }
 
+auto mf::ExtForeignToplevelHandleV1::from(
+    wl_resource* resource) -> ExtForeignToplevelHandleV1*
+{
+    return dynamic_cast<ExtForeignToplevelHandleV1*>(wayland::ExtForeignToplevelListV1::from(resource));
+}
+
+auto mf::ExtForeignToplevelHandleV1::from_or_throw(
+    wl_resource* resource) -> ExtForeignToplevelHandleV1&
+{
+    auto const handle = ExtForeignToplevelHandleV1::from(resource);
+    if (!handle)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error(
+            "ext_foreign_toplevel_handle_v1@" +
+            std::to_string(wl_resource_get_id(resource)) +
+            " is not a mir::frontend::ExtForeignToplevelHandleV1"));
+    }
+    return *handle;
+}
+
+std::shared_ptr<ms::Surface> mf::ExtForeignToplevelHandleV1::surface() const
+{
+    return weak_surface.lock();
+}
+
 void mf::ExtForeignToplevelHandleV1::should_close()
 {
     send_closed_event();
