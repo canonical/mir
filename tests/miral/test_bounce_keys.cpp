@@ -115,7 +115,7 @@ TEST_F(TestBounceKeys, different_keys_are_not_rejected)
     virtual_keyboard->if_started_then(
         [this](mi::InputSink* sink, mi::EventBuilder* builder)
         {
-            auto rejection_counter = 0;
+            std::atomic rejection_counter = 0;
             bounce_keys.on_press_rejected([&rejection_counter](auto) { rejection_counter++; });
 
             // Initial press, should pass
@@ -150,7 +150,7 @@ TEST_F(TestBounceKeys, irregular_press_periods_are_properly_rejected)
     virtual_keyboard->if_started_then(
         [this, &tap_periods](mi::InputSink* sink, mi::EventBuilder* builder)
         {
-            auto rejection_counter = 0;
+            std::atomic rejection_counter = 0;
             bounce_keys.on_press_rejected([&rejection_counter](auto) { rejection_counter++; });
 
             auto const num_presses = 10;
