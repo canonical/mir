@@ -45,6 +45,10 @@ class ExtForeignToplevelHandleV1
 public:
     ExtForeignToplevelHandleV1(ExtForeignToplevelListV1 const& manager, std::shared_ptr<scene::Surface> const& surface);
 
+    static auto from(wl_resource* resource) -> ExtForeignToplevelHandleV1*;
+    static auto from_or_throw(wl_resource* resource) -> ExtForeignToplevelHandleV1&;
+    std::shared_ptr<scene::Surface> surface() const;
+
     /// Sends the .closed event and makes this surface inert
     void should_close();
 
