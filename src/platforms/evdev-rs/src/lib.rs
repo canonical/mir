@@ -313,7 +313,7 @@ impl PlatformRs {
                                                 true,
                                                 motion_event.time_usec(),
                                                 MirPointerAction::Motion as i32,
-                                                0,
+                                                state.button_state,
                                                 false,
                                                 0 as f32,
                                                 0 as f32,
