@@ -43,12 +43,12 @@ I: Smoke testing complete with returncode 0, platforms tested: virtual x11 wayla
 ```
 
 These will differ between running "hosted" (from a terminal window) and running
-"native" (from a virtual terminal). They should be run both ways and the 
+"native" (from a virtual terminal). They should be run both ways and the
 results collated.
 
 ## Testing with `mir-compositor-smoke-test`
 
-These verify our demo servers work and should be run for each of the ubuntu 
+These verify our demo servers work and should be run for each of the ubuntu
 series (see previous section).
 
 1. Run `mir-compositor-smoke-test` like so:
@@ -58,7 +58,8 @@ series (see previous section).
    ```
 
 1. Confirm that the output of the test ends with: `I: compositor testing complete with returncode 0`.
-The preceding line confirms the compositors tested. E.g. 
+   The preceding line confirms the compositors tested. E.g.
+
    ```plain
    I: The following compositors executed successfully: /usr/bin/miral-system-compositor /usr/bin/miral-kiosk /usr/bin/miral-shell
    ```
