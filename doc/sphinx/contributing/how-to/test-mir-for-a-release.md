@@ -21,6 +21,49 @@ We will run the test plan on the `miral-app` test compositor.
    ```
 1. Confirm that you can run `miral-app`
 
+## Testing with `mir-smoke-test-runner`
+
+These verify our demo clients work with `mir_demo_server` and should be run for
+each of the ubuntu series (see previous section).
+
+The tests will automatically test the platforms that are expected to work.
+
+1. Run `mir-smoke-test-runner` like so:
+
+   ```sh
+   mir-smoke-test-runner
+   ```
+
+1. Confirm that the final output of the test begins with: `Smoke testing complete with returncode 0`.
+
+The platforms tested will be visible at the end of the line. For example:
+
+```
+I: Smoke testing complete with returncode 0, platforms tested: virtual x11 wayland
+```
+
+These will differ between running "hosted" (from a terminal window) and running
+"native" (from a virtual terminal). They should be run both ways and the
+results collated.
+
+## Testing with `mir-compositor-smoke-test`
+
+These verify our demo servers work and should be run for each of the ubuntu
+series (see previous section).
+
+1. Run `mir-compositor-smoke-test` like so:
+
+   ```sh
+   mir-compositor-smoke-test
+   ```
+
+1. Confirm that the output of the test ends with: `I: compositor testing complete with returncode 0`.
+   The preceding line confirms the compositors tested. E.g.
+
+   ```plain
+   I: The following compositors executed successfully: /usr/bin/miral-system-compositor /usr/bin/miral-kiosk /usr/bin/miral-shell
+   ```
+
 ## Testing each graphics platform
 
 Each test must be performed across a combination of different display
@@ -84,30 +127,6 @@ you should encounter one of the following scenarios for each output:
    gvncviewer localhost
    ```
 
-## The smoke tests
-
-These verify our demo clients work with `mir_demo_server` and should be run for
-each platform on each of the ubuntu series (see previous section).
-
-1. Decide which platform that you want to run the smoke tests on (e.g. gbm-kms,
-   virtual, X11, etc.)
-
-1. Run `mir-smoke-test-runner` like so:
-
-   ```sh
-   MIR_SERVER_PLATFORM_DISPLAY_LIBS=<YOUR_PLATFORM> mir-smoke-test-runner
-   ```
-
-   For example, if I wanted to run the tests on the virtual platform, I would run:
-
-   ```sh
-   MIR_SERVER_PLATFORM_DISPLAY_LIBS=mir:virtual MIR_SERVER_VIRTUAL_OUTPUT=1280x1024 mir-smoke-test-runner
-   ```
-
-   (Note that you do **not** have to connect via VNC for the smoke tests to run with the virtual platform.)
-
-1. Confirm that the final output of the test is: `Smoke testing complete with returncode 0`.
-
 ## Applications
 
 For each empty box in the matrix above, ensure that the following applications can start
@@ -127,8 +146,8 @@ For each empty box in the matrix above, ensure that the following applications c
 1. Test that `weston-terminal` can be started and can receive input:
 
    ```
-   sudo apt install weston
-   weston
+   sudo apt install weston-terminal
+   weston-terminal
    ```
 
 1. Test that `glmark2-wayland` can be run:
