@@ -156,3 +156,17 @@ pub enum MirDeviceCapability {
     MultiTouch = 1 << 8,   // multitouch capable
     AlphaNumeric = 1 << 9, // enough keys for text entry
 }
+
+#[repr(C)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum MirPointerAcceleration {
+    None = 1,
+    Adaptive = 2,
+}
+
+#[repr(C)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum MirPointerHandedness {
+    RightHanded = 0,
+    LeftHanded = 1,
+}

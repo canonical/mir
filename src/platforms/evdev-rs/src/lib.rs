@@ -1,9 +1,11 @@
-use cxx::{SharedPtr, UniquePtr, WeakPtr};
-use input::event::keyboard::{KeyState, KeyboardEventTrait, KeyboardKeyEvent};
-use input::event::pointer::{
-    ButtonState, PointerButtonEvent, PointerEventTrait, PointerScrollContinuousEvent,
-    PointerScrollEvent,
+mod enums;
+use crate::enums::{
+    MirDeviceCapability, MirKeyboardAction, MirPointerAcceleration, MirPointerAction,
+    MirPointerAxisSource, MirPointerButton, MirPointerHandedness,
 };
+use cxx::{SharedPtr, UniquePtr};
+use input::event::keyboard::{KeyState, KeyboardEventTrait};
+use input::event::pointer::{ButtonState, PointerEventTrait, PointerScrollEvent};
 use input::event::{DeviceEvent, EventTrait, KeyboardEvent, PointerEvent};
 use input::{AsRaw, Device, DeviceCapability, Event, Libinput, LibinputInterface};
 use libc::{major, minor, poll, pollfd, stat, POLLIN};
@@ -16,8 +18,6 @@ use std::path::Path;
 use std::sync::mpsc;
 use std::thread::{self, JoinHandle};
 use std::{pin::Pin, ptr::NonNull};
-
-mod enums;
 
 struct LibinputInterfaceImpl {
     bridge: SharedPtr<PlatformBridgeC>,
@@ -81,7 +81,7 @@ unsafe impl Sync for InputSink {}
 unsafe impl Send for EventBuilder {}
 unsafe impl Sync for EventBuilder {}
 
-// Rust :(
+// This is another hack.
 //
 // Because *mut InputSink and *mut EventBuilder are raw pointers, Rust assumes
 // that they are neither Send nor Sync. However, we know that the other side of
@@ -89,7 +89,7 @@ unsafe impl Sync for EventBuilder {}
 // that these pointers are Send and Sync. We cannot define Send and Sync on the
 // raw types to fix the issue unfortuately, so we have to wrap them in a newtype
 // and define Send and Sync on that.
-struct InputSinkPtr(NonNull<InputSink>);
+pub struct InputSinkPtr(NonNull<InputSink>);
 impl InputSinkPtr {
     fn handle_input(&mut self, event: &SharedPtr<ffi::MirEvent>) {
         unsafe {
@@ -103,7 +103,7 @@ impl InputSinkPtr {
 unsafe impl Send for InputSinkPtr {}
 unsafe impl Sync for InputSinkPtr {}
 
-struct EventBuilderPtr(NonNull<EventBuilder>);
+pub struct EventBuilderPtr(NonNull<EventBuilder>);
 unsafe impl Send for EventBuilderPtr {}
 unsafe impl Sync for EventBuilderPtr {}
 
@@ -159,6 +159,8 @@ impl InputDeviceInfoRs {
 pub enum ThreadCommand {
     Start(i32, InputSinkPtr, EventBuilderPtr),
     GetDeviceInfo(i32, mpsc::Sender<InputDeviceInfoRs>),
+    GetPointerSettings(i32, mpsc::Sender<ffi::PointerSettingsRs>),
+    SetPointerSettings(i32, ffi::PointerSettingsC),
 }
 
 // This is so silly.
@@ -174,6 +176,13 @@ fn create_thread_command_channel() -> (mpsc::Sender<ThreadCommand>, mpsc::Receiv
 fn create_device_info_rs_channel() -> (
     mpsc::Sender<InputDeviceInfoRs>,
     mpsc::Receiver<InputDeviceInfoRs>,
+) {
+    mpsc::channel()
+}
+
+fn create_pointer_settings_rs_channel() -> (
+    mpsc::Sender<ffi::PointerSettingsRs>,
+    mpsc::Receiver<ffi::PointerSettingsRs>,
 ) {
     mpsc::channel()
 }
@@ -725,6 +734,7 @@ impl PlatformRs {
                             }
                         }
 
+                        // TODO(mattkae): Handle touch events
                         // TODO: Otherwise, find the event, process it, and request that the input sink handle it
                         _ => {}
                     }
@@ -745,23 +755,17 @@ impl PlatformRs {
                                 let mut capabilities: u32 = 0;
                                 if dev_with_id
                                     .device
-                                    .has_capability(input::DeviceCapability::Keyboard)
+                                    .has_capability(DeviceCapability::Keyboard)
                                 {
                                     capabilities = capabilities
                                         | MirDeviceCapability::Keyboard as u32
                                         | MirDeviceCapability::AlphaNumeric as u32;
                                 }
-                                if dev_with_id
-                                    .device
-                                    .has_capability(input::DeviceCapability::Pointer)
-                                {
+                                if dev_with_id.device.has_capability(DeviceCapability::Pointer) {
                                     capabilities =
                                         capabilities | MirDeviceCapability::Pointer as u32;
                                 }
-                                if dev_with_id
-                                    .device
-                                    .has_capability(input::DeviceCapability::Touch)
-                                {
+                                if dev_with_id.device.has_capability(DeviceCapability::Touch) {
                                     capabilities = capabilities
                                         | MirDeviceCapability::Touchpad as u32
                                         | MirDeviceCapability::Pointer as u32;
@@ -797,6 +801,78 @@ impl PlatformRs {
                                     );
                                 }
                                 println!("Starting input device with id: {}", id);
+                            }
+                        }
+                        ThreadCommand::GetPointerSettings(id, tx) => {
+                            if let Some(dev_with_id) =
+                                state.known_devices.iter().find(|d| d.id == id)
+                            {
+                                match dev_with_id.device.has_capability(DeviceCapability::Pointer) {
+                                    true => {
+                                        let handedness = if dev_with_id.device.config_left_handed()
+                                        {
+                                            MirPointerHandedness::LeftHanded as i32
+                                        } else {
+                                            MirPointerHandedness::RightHanded as i32
+                                        };
+
+                                        let acceleration = if let Some(accel_profile) =
+                                            dev_with_id.device.config_accel_profile()
+                                        {
+                                            if accel_profile == input::AccelProfile::Adaptive {
+                                                MirPointerAcceleration::Adaptive as i32
+                                            } else {
+                                                MirPointerAcceleration::None as i32
+                                            }
+                                        } else {
+                                            MirPointerAcceleration::None as i32
+                                        };
+
+                                        let acceleration_bias =
+                                            dev_with_id.device.config_accel_speed() as f64;
+
+                                        let settings = ffi::PointerSettingsRs {
+                                            is_set: true,
+                                            handedness: handedness,
+                                            cursor_acceleration_bias: acceleration_bias,
+                                            acceleration: acceleration,
+                                            horizontal_scroll_scale: state.x_scroll_scale,
+                                            vertical_scroll_scale: state.y_scroll_scale,
+                                        };
+                                        let _ = tx.send(settings);
+                                    }
+                                    false => {
+                                        let settings = ffi::PointerSettingsRs::empty();
+                                        let _ = tx.send(settings);
+                                    }
+                                }
+                            } else {
+                                let settings = ffi::PointerSettingsRs::empty();
+                                let _ = tx.send(settings);
+                            }
+                        }
+                        ThreadCommand::SetPointerSettings(id, settings) => {
+                            if let Some(dev_with_id) =
+                                state.known_devices.iter_mut().find(|d| d.id == id)
+                            {
+                                // if dev_with_id.device.has_capability(DeviceCapability::Pointer) {
+                                //     let left_handed = match settings.handedness {
+                                //         x if x == MirPointerHandedness::LeftHanded as i32 => true,
+                                //         _ => false,
+                                //     };
+                                //     dev_with_id.device.set_config_left_handed(left_handed);
+
+                                //     let accel_profile = match settings.acceleration {
+                                //         x if x == MirPointerAcceleration::Adaptive as i32 => input::AccelProfile::Adaptive,
+                                //         _ => input::AccelProfile::Flat,
+                                //     };
+                                //     dev_with_id.device.set_config_accel_profile(accel_profile);
+
+                                //     dev_with_id.device.set_config_accel_speed(settings.cursor_acceleration_bias as f32);
+
+                                //     state.x_scroll_scale = settings.horizontal_scroll_scale;
+                                //     state.y_scroll_scale = settings.vertical_scroll_scale;
+                                // }
                             }
                         }
                     }
@@ -859,10 +935,62 @@ impl<'fd> InputDeviceRs<'fd> {
         let device_info = rx.recv().unwrap();
         Box::new(device_info)
     }
+
+    pub fn get_pointer_settings(&self) -> Box<ffi::PointerSettingsRs> {
+        let (tx, rx) = create_pointer_settings_rs_channel();
+        self.tx
+            .send(ThreadCommand::GetPointerSettings(self.device_id, tx))
+            .unwrap();
+        nix::unistd::write(&self.wfd, &[0u8]).unwrap();
+        let pointer_settings = rx.recv().unwrap();
+        Box::new(pointer_settings)
+    }
+
+    pub fn set_pointer_settings(&self, settings: &ffi::PointerSettingsC) {
+        self.tx
+            .send(ThreadCommand::SetPointerSettings(
+                self.device_id,
+                settings.clone(),
+            ))
+            .unwrap();
+        nix::unistd::write(&self.wfd, &[0u8]).unwrap();
+    }
+}
+
+impl ffi::PointerSettingsRs {
+    pub fn empty() -> Self {
+        ffi::PointerSettingsRs {
+            is_set: false,
+            handedness: 0,
+            cursor_acceleration_bias: 0.0,
+            acceleration: MirPointerAcceleration::None as i32,
+            horizontal_scroll_scale: 1.0,
+            vertical_scroll_scale: 1.0,
+        }
+    }
 }
 
 #[cxx::bridge(namespace = "mir::input::evdev_rs")]
 mod ffi {
+    #[derive(Copy, Clone)]
+    struct PointerSettingsC {
+        pub handedness: i32,
+        pub cursor_acceleration_bias: f64,
+        pub acceleration: i32,
+        pub horizontal_scroll_scale: f64,
+        pub vertical_scroll_scale: f64,
+    }
+
+    #[derive(Copy, Clone)]
+    struct PointerSettingsRs {
+        pub is_set: bool,
+        pub handedness: i32,
+        pub cursor_acceleration_bias: f64,
+        pub acceleration: i32,
+        pub horizontal_scroll_scale: f64,
+        pub vertical_scroll_scale: f64,
+    }
+
     extern "Rust" {
         type PlatformRs;
         type DeviceObserverRs;
@@ -891,6 +1019,8 @@ mod ffi {
         fn name(self: &InputDeviceInfoRs) -> &str;
         fn unique_id(self: &InputDeviceInfoRs) -> &str;
         fn capabilities(self: &InputDeviceInfoRs) -> u32;
+        fn get_pointer_settings(self: &InputDeviceRs) -> Box<PointerSettingsRs>;
+        fn set_pointer_settings(self: &InputDeviceRs, settings: &PointerSettingsC);
 
         fn evdev_rs_create(
             bridge: SharedPtr<PlatformBridgeC>,
@@ -1005,11 +1135,6 @@ pub use ffi::InputDeviceRegistry;
 pub use ffi::InputSink;
 pub use ffi::MirEvent;
 pub use ffi::PlatformBridgeC;
-
-use crate::enums::{
-    MirDeviceCapability, MirKeyboardAction, MirPointerAction, MirPointerAxisSource,
-    MirPointerButton,
-};
 
 pub fn evdev_rs_create(
     bridge: SharedPtr<PlatformBridgeC>,

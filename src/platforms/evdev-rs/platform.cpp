@@ -27,7 +27,7 @@
 #include "mir/input/input_device_info.h"
 
 namespace mi = mir::input;
-namespace miers = mir::input::evdev_rs;
+namespace miers = mi::evdev_rs;
 namespace md = mir::dispatch;
 
 namespace
@@ -71,7 +71,7 @@ class InputDevice : public mi::InputDevice
 public:
     explicit InputDevice(rust::Box<Impl>&& impl) : impl(std::move(impl)) {}
 
-    void start(mir::input::InputSink* sink, mir::input::EventBuilder* event_builder) override
+    void start(mi::InputSink* sink, mi::EventBuilder* event_builder) override
     {
         impl->start(sink, event_builder);
     }
@@ -81,45 +81,63 @@ public:
         impl->stop();
     }
 
-    mir::input::InputDeviceInfo get_device_info() override
+    mi::InputDeviceInfo get_device_info() override
     {
         auto device_info = impl->get_device_info();
         auto const name = device_info->name();
         return {
             std::string(device_info->name()),
             std::string(device_info->unique_id()),
-            mir::input::DeviceCapabilities(device_info->capabilities()),
+            mi::DeviceCapabilities(device_info->capabilities()),
         };
     }
 
-    mir::optional_value<mir::input::PointerSettings> get_pointer_settings() const override
+    mir::optional_value<mi::PointerSettings> get_pointer_settings() const override
     {
-        return mir::optional_value<mir::input::PointerSettings>{};
+        auto pointer_settings = impl->get_pointer_settings();
+        if (pointer_settings->is_set)
+            return mir::optional_value<mi::PointerSettings>{};
+
+        mi::PointerSettings result;
+        result.handedness = static_cast<MirPointerHandedness>(pointer_settings->handedness);
+        result.acceleration = static_cast<MirPointerAcceleration>(pointer_settings->acceleration);
+        result.cursor_acceleration_bias = pointer_settings->cursor_acceleration_bias;
+        result.horizontal_scroll_scale = pointer_settings->horizontal_scroll_scale;
+        result.vertical_scroll_scale = pointer_settings->vertical_scroll_scale;
+        return result;
     }
 
-    void apply_settings(mir::input::PointerSettings const&) override
+    void apply_settings(mi::PointerSettings const& pointer_settings) override
     {
-
+        miers::PointerSettingsC pointer_settings_c;
+        pointer_settings_c.handedness = static_cast<MirPointerHandedness>(pointer_settings.handedness);
+        pointer_settings_c.acceleration = static_cast<MirPointerAcceleration>(pointer_settings.acceleration);
+        pointer_settings_c.cursor_acceleration_bias = pointer_settings.cursor_acceleration_bias;
+        pointer_settings_c.horizontal_scroll_scale = pointer_settings.horizontal_scroll_scale;
+        pointer_settings_c.vertical_scroll_scale = pointer_settings.vertical_scroll_scale;
+        impl->set_pointer_settings(pointer_settings_c);
     }
 
-    mir::optional_value<mir::input::TouchpadSettings> get_touchpad_settings() const override
+    mir::optional_value<mi::TouchpadSettings> get_touchpad_settings() const override
     {
-        return mir::optional_value<mir::input::TouchpadSettings>{};
+        // TODO(mattkae): Handle touch gestures and settings
+        return mir::optional_value<mi::TouchpadSettings>{};
     }
 
-    void apply_settings(mir::input::TouchpadSettings const&) override
+    void apply_settings(mi::TouchpadSettings const&) override
     {
-
+        // TODO(mattkae): Handle touch gestures and settings
     }
 
-    mir::optional_value<mir::input::TouchscreenSettings> get_touchscreen_settings() const override
+    mir::optional_value<mi::TouchscreenSettings> get_touchscreen_settings() const override
     {
-        return mir::optional_value<mir::input::TouchscreenSettings>{};
+        // TODO(mattkae): Handle touch gestures and settings
+        return mir::optional_value<mi::TouchscreenSettings>{};
     }
 
-    void apply_settings(mir::input::TouchscreenSettings const&) override
+    void apply_settings(mi::TouchscreenSettings const&) override
     {
-
+        // TODO(mattkae): Handle touch gestures and settings
     }
 
 private:
