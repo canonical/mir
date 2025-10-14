@@ -286,4 +286,3 @@ auto mf::WlDataSource::make_source() -> std::shared_ptr<mir::scene::DataExchange
 {
     return std::make_shared<Source>(*this);
 }
-
