@@ -15,6 +15,7 @@
  */
 
 #include "mir/default_server_configuration.h"
+#include "mir/graphics/animation_driver.h"
 #include "mir/options/configuration.h"
 
 #include "reports.h"
@@ -23,6 +24,7 @@
 #include "null_report_factory.h"
 
 #include "mir/abnormal_exit.h"
+#include <memory>
 
 namespace mg = mir::graphics;
 namespace mf = mir::frontend;
@@ -71,9 +73,19 @@ auto mir::DefaultServerConfiguration::the_compositor_report() -> std::shared_ptr
 auto mir::DefaultServerConfiguration::the_display_report() -> std::shared_ptr<mg::DisplayReport>
 {
     return display_report(
-        [this]()->std::shared_ptr<mg::DisplayReport>
+        [this]()
         {
-            return report_factory(options::display_report_opt)->create_display_report();
+            return std::dynamic_pointer_cast<mg::DisplayReport>(the_animation_driver());
+        });
+}
+
+auto mir::DefaultServerConfiguration::the_animation_driver() -> std::shared_ptr<mg::AnimationDriver>
+{
+    return animation_driver(
+        [this]() -> std::shared_ptr<mg::AnimationDriver>
+        {
+            return std::make_shared<graphics::AnimationDriver>(
+                report_factory(options::display_report_opt)->create_display_report(), the_clock());
         });
 }
 
