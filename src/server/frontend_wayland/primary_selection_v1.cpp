@@ -24,76 +24,87 @@ namespace mf = mir::frontend;
 namespace mw = mir::wayland;
 namespace ms = mir::scene;
 
-namespace
+class mf::PrimarySelectionSource::Source : public ms::DataExchangeSource
 {
-class PrimarySelectionSource : public mw::PrimarySelectionSourceV1
-{
-private:
-    class Source : public ms::DataExchangeSource
-    {
-    public:
-        Source(
-            PrimarySelectionSource const* owner,
-            std::shared_ptr<mir::Executor> wayland_executor,
-            std::vector<std::string> types)
-            : owner{std::move(owner)},
-              wayland_executor{std::move(wayland_executor)},
-              types{std::move(types)}
-        {
-        }
-
-        auto mime_types() const -> std::vector<std::string> const& override
-        {
-            return types;
-        }
-
-        void initiate_send(std::string const& mime_type, mir::Fd const& target_fd) override
-        {
-            wayland_executor->spawn([owner=owner, mime_type, target_fd]()
-                {
-                    if (owner)
-                    {
-                        owner.value().send_send_event(mime_type, target_fd);
-                    }
-                });
-        }
-
-    private:
-        void cancelled() override {}
-        void dnd_drop_performed() override {}
-        auto actions() -> uint32_t override { return 0; }
-        void offer_accepted(const std::optional<std::string>&) override {}
-        uint32_t offer_set_actions(uint32_t, uint32_t) override { return 0; }
-        void dnd_finished() override {}
-
-        mw::Weak<PrimarySelectionSource const> const owner;
-        std::shared_ptr<mir::Executor> const wayland_executor;
-        std::vector<std::string> const types;
-    };
-
-    std::vector<std::string> mime_types;
-    std::shared_ptr<mir::Executor> const wayland_executor;
-
 public:
-    PrimarySelectionSource(
-        wl_resource* resource,
-        std::shared_ptr<mir::Executor> wayland_executor)
-        : PrimarySelectionSourceV1{resource, Version<1>()},
-          wayland_executor{std::move(wayland_executor)}
+    Source(
+        PrimarySelectionSource const* owner,
+        std::shared_ptr<mir::Executor> wayland_executor,
+        std::vector<std::string> types) :
+        owner{std::move(owner)},
+        wayland_executor{std::move(wayland_executor)},
+        types{std::move(types)}
     {
     }
 
-    void offer(std::string const& mime_type) override
+    auto mime_types() const -> std::vector<std::string> const& override
     {
-        mime_types.push_back(mime_type);
+        return types;
     }
 
-    auto make_source() const -> std::shared_ptr<ms::DataExchangeSource>
+    void initiate_send(std::string const& mime_type, mir::Fd const& target_fd) override
     {
-        return std::make_shared<Source>(this, wayland_executor, mime_types);
+        wayland_executor->spawn(
+            [owner = owner, mime_type, target_fd]()
+            {
+                if (owner)
+                {
+                    owner.value().send_send_event(mime_type, target_fd);
+                }
+            });
     }
+
+private:
+    void cancelled() override
+    {
+    }
+    void dnd_drop_performed() override
+    {
+    }
+    auto actions() -> uint32_t override
+    {
+        return 0;
+    }
+    void offer_accepted(std::optional<std::string> const&) override
+    {
+    }
+    uint32_t offer_set_actions(uint32_t, uint32_t) override
+    {
+        return 0;
+    }
+    void dnd_finished() override
+    {
+    }
+
+    mw::Weak<PrimarySelectionSource const> const owner;
+    std::shared_ptr<mir::Executor> const wayland_executor;
+    std::vector<std::string> const types;
 };
 
+mf::PrimarySelectionSource::PrimarySelectionSource(
+    wl_resource* resource, std::shared_ptr<mir::Executor> wayland_executor) :
+    PrimarySelectionSourceV1{resource, Version<1>()},
+    wayland_executor{std::move(wayland_executor)}
+{
+}
+
+auto mir::frontend::PrimarySelectionSource::from(struct wl_resource* resource) -> PrimarySelectionSource*
+{
+    return dynamic_cast<mf::PrimarySelectionSource*>(wayland::PrimarySelectionSourceV1::from(resource));
+}
+
+void mf::PrimarySelectionSource::offer(std::string const& mime_type)
+{
+    mime_types.push_back(mime_type);
+}
+
+auto mf::PrimarySelectionSource::make_source() const -> std::shared_ptr<ms::DataExchangeSource>
+{
+    return std::make_shared<Source>(this, wayland_executor, mime_types);
+}
+
+namespace
+{
 class PrimarySelectionOffer : public mw::PrimarySelectionOfferV1
 {
 public:
@@ -166,7 +177,7 @@ private:
     {
         (void)serial;
         auto const source_wrapper = mw::make_weak(source ?
-            dynamic_cast<PrimarySelectionSource*>(mw::PrimarySelectionSourceV1::from(source.value())) :
+            dynamic_cast<mf::PrimarySelectionSource*>(mw::PrimarySelectionSourceV1::from(source.value())) :
             nullptr);
         if (source_wrapper)
         {
@@ -223,7 +234,7 @@ private:
 
     struct Selection {
         std::shared_ptr<ms::DataExchangeSource> source;
-        mw::Weak<PrimarySelectionSource> wrapper;
+        mw::Weak<mf::PrimarySelectionSource> wrapper;
     };
 
     bool has_focus{false};
@@ -249,7 +260,7 @@ public:
 
     void create_source(struct wl_resource* id) override
     {
-        new PrimarySelectionSource{id, wayland_executor};
+        new mf::PrimarySelectionSource{id, wayland_executor};
     }
 
     void get_device(struct wl_resource* id, struct wl_resource* seat) override
