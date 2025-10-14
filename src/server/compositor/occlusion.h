@@ -25,7 +25,7 @@ namespace compositor
 {
 
 using OccludedElementSequence = SceneElementSequence;
-std::pair<OccludedElementSequence, SceneElementSequence> filter_occlusions_from(
+std::pair<OccludedElementSequence, SceneElementSequence> split_occluded_and_visible(
     SceneElementSequence&& list, geometry::Rectangle const& area);
 
 } // namespace compositor

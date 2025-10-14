@@ -60,7 +60,7 @@ bool mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
     report->began_frame(this);
 
     auto const& view_area = display_sink.view_area();
-    auto [occluded_elements, visible_elements] = mc::filter_occlusions_from(std::move(scene_elements), view_area);
+    auto [occluded_elements, visible_elements] = mc::split_occluded_and_visible(std::move(scene_elements), view_area);
 
     for (auto const& element : occluded_elements)
         element->occluded();
