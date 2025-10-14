@@ -16,9 +16,9 @@
 
 #include "data_control_v1.h"
 #include "mir/synchronised.h"
-#include "wl_seat.h"
-#include "wl_data_source.h"
 #include "primary_selection_v1.h"
+#include "wl_data_source.h"
+#include "wl_seat.h"
 
 #include "mir/scene/clipboard.h"
 #include "mir/scene/data_exchange.h"
@@ -83,9 +83,7 @@ private:
 class DataExchangeSource : public ms::DataExchangeSource
 {
 public:
-    DataExchangeSource(
-        wayland::Weak<DataControlSourceV1> source,
-        WlSeat const* const seat) :
+    DataExchangeSource(wayland::Weak<DataControlSourceV1> source, WlSeat const* const seat) :
         source{source},
         seat{seat}
     {
@@ -136,7 +134,6 @@ struct DataControlStateV1
         primary_clipboard{primary_clipboard}
     {
     }
-
 
     std::shared_ptr<ms::Clipboard> const clipboard;
     std::shared_ptr<ms::Clipboard> const primary_clipboard;
@@ -208,7 +205,7 @@ private:
     auto data_exchange_source_from_source(std::optional<struct wl_resource*> const& data_control_source)
         -> std::shared_ptr<ms::DataExchangeSource>
     {
-        if(auto source = mf::DataControlSourceV1::from(*data_control_source))
+        if (auto source = mf::DataControlSourceV1::from(*data_control_source))
         {
             if (!source)
                 return nullptr;
@@ -221,12 +218,12 @@ private:
             return std::make_shared<DataExchangeSource>(wayland::Weak{source}, seat);
         }
 
-        if(auto wl_data_source = mf::WlDataSource::from(*data_control_source))
+        if (auto wl_data_source = mf::WlDataSource::from(*data_control_source))
         {
             return wl_data_source->make_source();
         }
 
-        if(auto primary_data_source = mf::PrimarySelectionSource::from(*data_control_source))
+        if (auto primary_data_source = mf::PrimarySelectionSource::from(*data_control_source))
         {
             return primary_data_source->make_source();
         }
@@ -370,8 +367,7 @@ mf::DataControlDeviceV1::DataControlDeviceV1(
     auto const primary_paste_source = shared_state->primary_clipboard->paste_source();
     if (primary_paste_source)
     {
-        auto offer =
-            new mf::DataControlOfferV1(wayland::Weak{this}, primary_paste_source->mime_types(), true);
+        auto offer = new mf::DataControlOfferV1(wayland::Weak{this}, primary_paste_source->mime_types(), true);
         send_primary_selection_event({offer->resource});
     }
 }
