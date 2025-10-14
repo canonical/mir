@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/fd.h"
-#include "mir/time/posix_clock.h"
+#include <mir/fd.h>
+#include <mir/time/posix_clock.h>
 
 namespace mir::graphics::drm
 {

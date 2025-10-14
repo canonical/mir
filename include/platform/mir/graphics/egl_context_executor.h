@@ -17,7 +17,7 @@
 #ifndef MIR_EGL_CONTEXT_EXECUTOR_H
 #define MIR_EGL_CONTEXT_EXECUTOR_H
 
-#include "mir/executor.h"
+#include <mir/executor.h>
 
 #include <memory>
 #include <future>

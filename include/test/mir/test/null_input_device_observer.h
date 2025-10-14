@@ -17,7 +17,7 @@
 #ifndef MIR_INPUT_NULL_INPUT_DEVICE_OBSERVER_H_
 #define MIR_INPUT_NULL_INPUT_DEVICE_OBSERVER_H_
 
-#include "mir/input/input_device_observer.h"
+#include <mir/input/input_device_observer.h>
 
 namespace mir
 {

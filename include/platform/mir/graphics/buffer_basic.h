@@ -16,8 +16,8 @@
 #ifndef MIR_GRAPHICS_BUFFER_BASIC_H_
 #define MIR_GRAPHICS_BUFFER_BASIC_H_
 
-#include "mir/graphics/buffer.h"
-#include "mir/graphics/buffer_id.h"
+#include <mir/graphics/buffer.h>
+#include <mir/graphics/buffer_id.h>
 
 namespace mir
 {

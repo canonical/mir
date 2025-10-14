@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_NULL_LOGGER_H_
 #define MIR_TEST_DOUBLES_NULL_LOGGER_H_
 
-#include "mir/logging/logger.h"
+#include <mir/logging/logger.h>
 
 namespace mir
 {

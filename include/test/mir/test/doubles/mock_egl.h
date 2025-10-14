@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_EGL_H_
 #define MIR_TEST_DOUBLES_MOCK_EGL_H_
 
-#include "mir/synchronised.h"
+#include <mir/synchronised.h>
 #include <gmock/gmock.h>
 
 #include <mutex>

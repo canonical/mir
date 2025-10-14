@@ -23,7 +23,7 @@
 #include <memory>
 #include <vector>
 
-#include "mir_toolkit/common.h"
+#include <mir_toolkit/common.h>
 
 namespace mir
 {

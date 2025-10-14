@@ -17,8 +17,8 @@
 #ifndef MIR_INPUT_INPUT_DEVICE_H_
 #define MIR_INPUT_INPUT_DEVICE_H_
 
-#include "mir/module_deleter.h"
-#include "mir/optional_value.h"
+#include <mir/module_deleter.h>
+#include <mir/optional_value.h>
 
 #include <memory>
 

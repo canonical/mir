@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_PIPE_H_
 #define MIR_TEST_PIPE_H_
 
-#include "mir/fd.h"
+#include <mir/fd.h>
 
 namespace mir
 {

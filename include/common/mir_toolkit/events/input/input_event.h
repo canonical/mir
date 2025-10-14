@@ -17,15 +17,15 @@
 #ifndef MIR_TOOLKIT_INPUT_EVENT_H_
 #define MIR_TOOLKIT_INPUT_EVENT_H_
 
-#include "mir_toolkit/events/event.h"
-#include "mir_toolkit/mir_input_device_types.h"
+#include <mir_toolkit/events/event.h>
+#include <mir_toolkit/mir_input_device_types.h>
 
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "mir_toolkit/events/input/touch_event.h"
-#include "mir_toolkit/events/input/keyboard_event.h"
-#include "mir_toolkit/events/input/pointer_event.h"
+#include <mir_toolkit/events/input/touch_event.h>
+#include <mir_toolkit/events/input/keyboard_event.h>
+#include <mir_toolkit/events/input/pointer_event.h>
 
 #ifdef __cplusplus
 extern "C" {

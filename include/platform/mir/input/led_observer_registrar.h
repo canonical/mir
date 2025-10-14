@@ -17,8 +17,8 @@
 #ifndef MIR_INPUT_LED_OBSERVER_REGISTER_H
 #define MIR_INPUT_LED_OBSERVER_REGISTER_H
 
-#include "mir/input/keyboard_leds.h"
-#include "mir_toolkit/mir_input_device_types.h"
+#include <mir/input/keyboard_leds.h>
+#include <mir_toolkit/mir_input_device_types.h>
 #include <memory>
 
 namespace mir

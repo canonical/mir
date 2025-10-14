@@ -17,7 +17,7 @@
 #ifndef MIR_INPUT_DEVICE_STATE_H_
 #define MIR_INPUT_DEVICE_STATE_H_
 
-#include "mir_toolkit/event.h"
+#include <mir_toolkit/event.h>
 
 #include <vector>
 

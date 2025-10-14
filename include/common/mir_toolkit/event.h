@@ -17,6 +17,6 @@
 #ifndef MIR_TOOLKIT_EVENT_COMPAT_HEADER_H_
 #define MIR_TOOLKIT_EVENT_COMPAT_HEADER_H_
 
-#include "mir_toolkit/events/event.h"
+#include <mir_toolkit/events/event.h>
 
 #endif /* MIR_TOOLKIT_EVENT_COMPAT_HEADER_H_ */

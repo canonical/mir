@@ -17,7 +17,7 @@
 #ifndef MIR_GRAPHICS_BUFFER_ID_H_
 #define MIR_GRAPHICS_BUFFER_ID_H_
 
-#include "mir/int_wrapper.h"
+#include <mir/int_wrapper.h>
 
 #include <stdint.h>
 

@@ -20,9 +20,9 @@
 #include <cstdint>
 #include <optional>
 
-#include "mir/graphics/buffer.h"
-#include "mir/graphics/texture.h"
-#include "mir/fd.h"
+#include <mir/graphics/buffer.h>
+#include <mir/graphics/texture.h>
+#include <mir/fd.h>
 
 namespace mir
 {

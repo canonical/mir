@@ -17,7 +17,7 @@
 #ifndef MIR_INPUT_POINTER_SETTINGS_H_
 #define MIR_INPUT_POINTER_SETTINGS_H_
 
-#include "mir_toolkit/client_types.h"
+#include <mir_toolkit/client_types.h>
 
 namespace mir
 {

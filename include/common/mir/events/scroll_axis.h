@@ -17,7 +17,7 @@
 #ifndef MIR_EVENTS_SCROLL_AXIS_H_
 #define MIR_EVENTS_SCROLL_AXIS_H_
 
-#include "mir/geometry/dimensions.h"
+#include <mir/geometry/dimensions.h>
 
 namespace mir
 {

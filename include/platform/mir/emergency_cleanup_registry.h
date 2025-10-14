@@ -19,7 +19,7 @@
 #define MIR_EMERGENCY_CLEANUP_REGISTRY_H_
 
 #include <functional>
-#include "mir/module_deleter.h"
+#include <mir/module_deleter.h>
 
 namespace mir
 {

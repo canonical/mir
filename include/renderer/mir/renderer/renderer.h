@@ -17,9 +17,9 @@
 #ifndef MIR_RENDERER_RENDERER_H_
 #define MIR_RENDERER_RENDERER_H_
 
-#include "mir/geometry/rectangle.h"
-#include "mir/graphics/renderable.h"
-#include "mir_toolkit/common.h"
+#include <mir/geometry/rectangle.h>
+#include <mir/graphics/renderable.h>
+#include <mir_toolkit/common.h>
 #include <glm/glm.hpp>
 
 namespace mir
