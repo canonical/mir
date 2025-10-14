@@ -155,6 +155,7 @@ add_library(miral-external OBJECT
     bounce_keys.cpp                     ${miral_include}/miral/bounce_keys.h
     slow_keys.cpp                       ${miral_include}/miral/slow_keys.h
     sticky_keys.cpp                     ${miral_include}/miral/sticky_keys.h
+    locate_pointer.cpp                  ${miral_include}/miral/locate_pointer.h
 )
 
 add_library(miral SHARED
