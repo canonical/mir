@@ -323,9 +323,9 @@ impl PlatformRs {
                                     .iter()
                                     .position(|x| x.device.as_raw() == dev.as_raw());
                                 if let Some(index) = index {
-                                    // unsafe {
-                                    //     device_registry.clone().pin_mut_unchecked().remove_device(&state.known_devices[index].input_device);
-                                    // }
+                                    unsafe {
+                                        device_registry.clone().pin_mut_unchecked().remove_device(&state.known_devices[index].input_device);
+                                    }
                                     state.known_devices.remove(index);
                                 }
                             }
@@ -638,8 +638,7 @@ impl PlatformRs {
                                             const BTN_BACK: u32 = 0x116;
                                             const BTN_TASK: u32 = 0x117;
 
-                                            // TODO: Handle handedness switch
-                                            let mir_button = match button_event.button() {
+                                            let mut mir_button = match button_event.button() {
                                                 BTN_LEFT => MirPointerButton::Primary,
                                                 BTN_RIGHT => MirPointerButton::Secondary,
                                                 BTN_MIDDLE => MirPointerButton::Tertiary,
@@ -650,6 +649,19 @@ impl PlatformRs {
                                                 BTN_TASK => MirPointerButton::Task,
                                                 _ => MirPointerButton::Primary,
                                             };
+
+                                            if device_wrapper.device.config_left_handed()
+                                            {
+                                                mir_button = match mir_button {
+                                                    MirPointerButton::Primary => {
+                                                        MirPointerButton::Secondary
+                                                    }
+                                                    MirPointerButton::Secondary => {
+                                                        MirPointerButton::Primary
+                                                    }
+                                                    _ => mir_button,
+                                                };
+                                            }
 
                                             let mut action: MirPointerAction =
                                                 MirPointerAction::Actions;
@@ -855,24 +867,22 @@ impl PlatformRs {
                             if let Some(dev_with_id) =
                                 state.known_devices.iter_mut().find(|d| d.id == id)
                             {
-                                // if dev_with_id.device.has_capability(DeviceCapability::Pointer) {
-                                //     let left_handed = match settings.handedness {
-                                //         x if x == MirPointerHandedness::LeftHanded as i32 => true,
-                                //         _ => false,
-                                //     };
-                                //     dev_with_id.device.set_config_left_handed(left_handed);
+                                if dev_with_id.device.has_capability(DeviceCapability::Pointer) {
+                                    let left_handed = match settings.handedness {
+                                        x if x == MirPointerHandedness::LeftHanded as i32 => true,
+                                        _ => false,
+                                    };
+                                    dev_with_id.device.config_left_handed_set(left_handed).unwrap();
 
-                                //     let accel_profile = match settings.acceleration {
-                                //         x if x == MirPointerAcceleration::Adaptive as i32 => input::AccelProfile::Adaptive,
-                                //         _ => input::AccelProfile::Flat,
-                                //     };
-                                //     dev_with_id.device.set_config_accel_profile(accel_profile);
-
-                                //     dev_with_id.device.set_config_accel_speed(settings.cursor_acceleration_bias as f32);
-
-                                //     state.x_scroll_scale = settings.horizontal_scroll_scale;
-                                //     state.y_scroll_scale = settings.vertical_scroll_scale;
-                                // }
+                                    let accel_profile = match settings.acceleration {
+                                        x if x == MirPointerAcceleration::Adaptive as i32 => input::AccelProfile::Adaptive,
+                                        _ => input::AccelProfile::Flat,
+                                    };
+                                    dev_with_id.device.config_accel_set_profile(accel_profile).unwrap();
+                                    dev_with_id.device.config_accel_set_speed(settings.cursor_acceleration_bias as f64).unwrap();
+                                    state.x_scroll_scale = settings.horizontal_scroll_scale;
+                                    state.y_scroll_scale = settings.vertical_scroll_scale;
+                                }
                             }
                         }
                     }
