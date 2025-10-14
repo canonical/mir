@@ -23,7 +23,6 @@
 #include "mir/scene/data_exchange.h"
 #include "mir/wayland/protocol_error.h"
 
-#define MIR_LOG_COMPONENT "ext-data-control-v1"
 #include "mir/log.h"
 
 #include <cassert>
