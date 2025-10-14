@@ -703,6 +703,17 @@ global:
     miral::ApplicationSwitcher::operator*;
     miral::ApplicationSwitcher::prev_app*;
     miral::ApplicationSwitcher::stop*;
+    miral::LocatePointer::LocatePointer*;
+    miral::LocatePointer::cancel_request*;
+    miral::LocatePointer::delay*;
+    miral::LocatePointer::disable*;
+    miral::LocatePointer::disabled*;
+    miral::LocatePointer::enable*;
+    miral::LocatePointer::enabled*;
+    miral::LocatePointer::on_locate_pointer*;
+    miral::LocatePointer::operator*;
+    miral::LocatePointer::schedule_request*;
     typeinfo?for?miral::ApplicationSwitcher;
+    typeinfo?for?miral::LocatePointer;
   };
 } MIRAL_5.5;

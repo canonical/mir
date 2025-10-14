@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "miral/locate_pointer.h"
 #include "miral/minimal_window_manager.h"
 #include "tiling_window_manager.h"
 #include "floating_window_manager.h"
@@ -39,6 +40,9 @@
 #include <miral/hover_click.h>
 #include <miral/sticky_keys.h>
 #include <miral/magnifier.h>
+
+#define MIR_LOG_COMPONENT "miral-shell"
+#include <mir/log.h>
 
 #include <xkbcommon/xkbcommon-keysyms.h>
 
@@ -304,6 +308,32 @@ int main(int argc, char const* argv[])
         return false;
     };
 
+    auto locate_pointer =
+        miral::LocatePointer::enabled()
+            .on_locate_pointer([](auto) { mir::log_info("Locate Pointer called"); })
+            .delay(std::chrono::milliseconds{1000});
+
+    auto const locate_pointer_filter = [&locate_pointer](auto const* keyboard_event)
+    {
+            auto const keysym = mir_keyboard_event_keysym(keyboard_event);
+            if (keysym != XKB_KEY_Control_R && keysym != XKB_KEY_Control_L)
+                return false;
+
+            switch (mir_keyboard_event_action(keyboard_event)) {
+                case mir_keyboard_action_down:
+                    locate_pointer.schedule_request();
+                    break;
+                case mir_keyboard_action_up:
+                    locate_pointer.cancel_request();
+                    break;
+
+                default:
+                    return false;
+            }
+
+            return false;
+    };
+
     return runner.run_with(
         {
             CursorTheme{"default:DMZ-White"},
@@ -334,6 +364,8 @@ int main(int argc, char const* argv[])
             sticky_keys,
             magnifier,
             AppendKeyboardEventFilter{magnifier_filter},
-            AppendKeyboardEventFilter{sticky_keys_filter}
+            AppendKeyboardEventFilter{sticky_keys_filter},
+            locate_pointer,
+            AppendKeyboardEventFilter{locate_pointer_filter}
         });
 }
