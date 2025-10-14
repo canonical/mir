@@ -21,6 +21,7 @@
 
 #include "mir/observer_registrar.h"
 
+#include <functional>
 #include <memory>
 
 namespace mir
@@ -54,6 +55,11 @@ class Clipboard : public ObserverRegistrar<ClipboardObserver>
 public:
     /// Get the current copy-paste source.
     virtual auto paste_source() const -> std::shared_ptr<DataExchangeSource> = 0;
+
+    /// Do something with the current paste source. Must guarantee thread
+    /// safety.
+    virtual void do_with_paste_source(
+        std::move_only_function<void(std::shared_ptr<DataExchangeSource> const&)>&& fn) = 0;
 
     /// Sets the given source to be the current copy-paste source for all clients.
     virtual void set_paste_source(std::shared_ptr<DataExchangeSource> const& source) = 0;

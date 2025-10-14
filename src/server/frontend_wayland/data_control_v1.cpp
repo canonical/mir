@@ -156,24 +156,25 @@ public:
 
     void receive_from_current_source(std::string const& mime, mir::Fd fd, bool is_primary)
     {
-        // FIXME time-of-check vs time-of-use bug
-        // If the clipboard is changed between checking and using it (cleared),
-        // it might cause a crash.
-        // Workaround: add `Clipboard::use_current_clipboard(Function&&)` which
-        // would lock around the execution of the function.
-        auto const primary_paste_source = shared_state->primary_clipboard->paste_source();
-        if (is_primary && primary_paste_source)
-        {
-            primary_paste_source->initiate_send(mime, fd);
-            return;
-        }
+        shared_state->primary_clipboard->do_with_paste_source(
+            [is_primary, mime, fd](auto const& primary_paste_source)
+            {
+                if (is_primary && primary_paste_source)
+                {
+                    primary_paste_source->initiate_send(mime, fd);
+                    return;
+                }
+            });
 
-        auto const paste_source = shared_state->clipboard->paste_source();
-        if (!is_primary && paste_source)
-        {
-            paste_source->initiate_send(mime, fd);
-            return;
-        }
+        shared_state->clipboard->do_with_paste_source(
+            [is_primary, mime, fd](auto const& paste_source)
+            {
+                if (!is_primary && paste_source)
+                {
+                    paste_source->initiate_send(mime, fd);
+                    return;
+                }
+            });
 
         mir::log_warning("Attempt to receive from invalid source");
         return;
@@ -370,21 +371,26 @@ mf::DataControlDeviceV1::DataControlDeviceV1(
     state->clipboard->register_interest(clipboard_observer);
     state->primary_clipboard->register_interest(primary_clipboard_observer);
 
-    // FIXME more toctou
-    auto const paste_source = shared_state->clipboard->paste_source();
-    // Tell the client about the current source, if any.
-    if (paste_source)
-    {
-        auto offer = new mf::DataControlOfferV1(wayland::Weak{this}, paste_source->mime_types(), false);
-        send_selection_event({offer->resource});
-    }
+    shared_state->clipboard->do_with_paste_source(
+        [this](auto const& paste_source)
+        {
+            // Tell the client about the current source, if any.
+            if (paste_source)
+            {
+                auto offer = new mf::DataControlOfferV1(wayland::Weak{this}, paste_source->mime_types(), false);
+                send_selection_event({offer->resource});
+            }
+        });
 
-    auto const primary_paste_source = shared_state->primary_clipboard->paste_source();
-    if (primary_paste_source)
-    {
-        auto offer = new mf::DataControlOfferV1(wayland::Weak{this}, primary_paste_source->mime_types(), true);
-        send_primary_selection_event({offer->resource});
-    }
+    shared_state->primary_clipboard->do_with_paste_source(
+        [this](auto const& primary_paste_source)
+        {
+            if (primary_paste_source)
+            {
+                auto offer = new mf::DataControlOfferV1(wayland::Weak{this}, primary_paste_source->mime_types(), true);
+                send_primary_selection_event({offer->resource});
+            }
+        });
 }
 
 void mf::DataControlDeviceV1::on_clipboard_set(std::shared_ptr<ms::DataExchangeSource> const& source, bool is_primary)
