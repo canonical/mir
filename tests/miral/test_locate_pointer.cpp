@@ -129,9 +129,9 @@ struct TestLocatePointer : miral::TestServer
     std::weak_ptr<mir::input::InputDeviceHub> input_device_hub;
 };
 
-struct TestDifferentDelays : public TestLocatePointer, public WithParamInterface<std::pair<std::chrono::milliseconds, bool>>{};
+struct TestDifferentLocatePointerDelays : public TestLocatePointer, public WithParamInterface<std::pair<std::chrono::milliseconds, bool>>{};
 
-TEST_P(TestDifferentDelays, responding_to_ctrl_down_with_different_delays)
+TEST_P(TestDifferentLocatePointerDelays, responding_to_schedule_and_request_with_different_delays)
 {
     auto [delay, on_pointer_locate_called] = GetParam();
 
@@ -144,7 +144,7 @@ TEST_P(TestDifferentDelays, responding_to_ctrl_down_with_different_delays)
 
 INSTANTIATE_TEST_SUITE_P(
     TestLocatePointer,
-    TestDifferentDelays,
+    TestDifferentLocatePointerDelays,
     ::Values(std::pair{locate_pointer_delay + 10ms, true}, std::pair{locate_pointer_delay - 10ms, false}));
 
 struct TestPointerMovementTracking :
