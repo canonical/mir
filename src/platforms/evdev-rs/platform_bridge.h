@@ -76,6 +76,41 @@ private:
     EventBuilder* event_builder;
 };
 
+class RectangleC
+{
+public:
+    RectangleC(int32_t x, int32_t y, int32_t width, int32_t height)
+        : x_(x), y_(y), width_(width), height_(height)
+    {
+    }
+
+    int32_t x() const
+    {
+        return x_;
+    }
+
+    int32_t y() const
+    {
+        return y_;
+    }
+
+    int32_t width() const
+    {
+        return width_;
+    }
+
+    int32_t height() const
+    {
+        return height_;
+    }
+
+private:
+    int32_t const x_;
+    int32_t const y_;
+    int32_t const width_;
+    int32_t const height_;
+};
+
 /// Bridge allowing conversation from Rust to C++.
 ///
 /// The rust code may use this bridge to request things from the system.
@@ -87,6 +122,7 @@ public:
     std::unique_ptr<DeviceBridgeC> acquire_device(int major, int minor) const;
     std::shared_ptr<InputDevice> create_input_device(int device_id) const;
     std::unique_ptr<EventBuilderWrapper> create_event_builder_wrapper(EventBuilder* event_builder) const;
+    std::unique_ptr<RectangleC> bounding_rectangle(InputSink const&) const;
 
 private:
     Platform* platform;

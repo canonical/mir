@@ -20,6 +20,7 @@
 #include "mir/console_services.h"
 #include "mir/log.h"
 #include "mir/fd.h"
+#include "mir/input/input_sink.h"
 
 namespace mi = mir::input;
 namespace miers = mir::input::evdev_rs;
@@ -47,6 +48,17 @@ std::shared_ptr<mi::InputDevice> miers::PlatformBridgeC::create_input_device(int
 std::unique_ptr<miers::EventBuilderWrapper> miers::PlatformBridgeC::create_event_builder_wrapper(EventBuilder* event_builder) const
 {
     return std::make_unique<EventBuilderWrapper>(event_builder);
+}
+
+std::unique_ptr<miers::RectangleC> miers::PlatformBridgeC::bounding_rectangle(InputSink const& input_sink) const
+{
+    auto const rectangle = input_sink.bounding_rectangle();
+    return std::make_unique<RectangleC>(
+        rectangle.top_left.x.as_int(),
+        rectangle.top_left.y.as_int(),
+        rectangle.size.width.as_int(),
+        rectangle.size.height.as_int()
+    );
 }
 
 miers::DeviceBridgeC::DeviceBridgeC(std::unique_ptr<mir::Device> device, int fd)

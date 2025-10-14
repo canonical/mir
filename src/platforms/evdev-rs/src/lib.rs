@@ -116,7 +116,9 @@ struct LibinputState {
     libinput: Libinput,
     known_devices: Vec<DeviceWrapper>,
     next_device_id: i32,
-    button_state: u32
+    button_state: u32,
+    pointer_x: f32,
+    pointer_y: f32,
 }
 
 pub struct PlatformRs {
@@ -213,7 +215,9 @@ impl PlatformRs {
             }),
             known_devices: Vec::new(),
             next_device_id: 0,
-            button_state: 0
+            button_state: 0,
+            pointer_x: 0.0,
+            pointer_y: 0.0,
         };
 
         state.libinput.udev_assign_seat("seat0").unwrap();
@@ -321,6 +325,41 @@ impl PlatformRs {
                                                 motion_event.dy() as f32,
                                                 MirPointerAxisSource::None as i32,
                                             ));
+                                        }
+                                    },
+
+                                    PointerEvent::MotionAbsolute(absolute_motion_event) => {
+                                        if let Some(event_builder) =
+                                            &mut device_wrapper.event_builder
+                                        {
+                                            if let Some(input_sink) = &mut device_wrapper.input_sink
+                                            {
+                                                let sink_ref: &InputSink = unsafe { input_sink.0.as_ref() };
+                                                let bounding_rect = bridge_locked.bounding_rectangle(sink_ref);
+                                                let width = bounding_rect.width() as u32;
+                                                let height = bounding_rect.height() as u32;
+
+                                                let old_x = state.pointer_x;
+                                                let old_y = state.pointer_y;
+                                                state.pointer_x = absolute_motion_event.absolute_x_transformed(width) as f32;
+                                                state.pointer_y = absolute_motion_event.absolute_y_transformed(height) as f32;
+
+                                                let movement_x = state.pointer_x - old_x;
+                                                let movement_y = state.pointer_y - old_y;
+
+                                                event_to_publish = Some(event_builder.pin_mut().pointer_event(
+                                                    true,
+                                                    absolute_motion_event.time_usec(),
+                                                    MirPointerAction::Motion as i32,
+                                                    state.button_state,
+                                                    true,
+                                                    state.pointer_x,
+                                                    state.pointer_y,
+                                                    movement_x,
+                                                    movement_y,
+                                                    MirPointerAxisSource::None as i32,
+                                                ));
+                                            }
                                         }
                                     },
 
@@ -604,14 +643,12 @@ mod ffi {
         include!("mir/events/event.h");
         include!("mir/events/scroll_axis.h");
         include!("mir_toolkit/events/enums.h");
-        include!("mir/geometry/point.h");
-        include!("mir/geometry/displacement.h");
-        include!("mir/geometry/forward.h");
 
         type PlatformBridgeC;
         type DeviceBridgeC;
         type EventBuilderWrapper;
-
+        type RectangleC;
+        
         #[namespace = "mir::input"]
         type Device;
 
@@ -630,17 +667,12 @@ mod ffi {
         #[namespace = ""]
         type MirEvent;
 
-        #[namespace = "mir::geometry"]
-        type PointF;
-
-        #[namespace = "mir::geometry"]
-        type DisplacementF;
-
         fn acquire_device(
             self: &PlatformBridgeC,
             major: i32,
             minor: i32,
         ) -> UniquePtr<DeviceBridgeC>;
+        fn bounding_rectangle(self: &PlatformBridgeC, sink: &InputSink) -> UniquePtr<RectangleC>;
         fn create_input_device(self: &PlatformBridgeC, device_id: i32) -> SharedPtr<InputDevice>;
         fn raw_fd(self: &DeviceBridgeC) -> i32;
         unsafe fn create_event_builder_wrapper(
@@ -685,6 +717,11 @@ mod ffi {
 
         #[namespace = "mir::input"]
         fn handle_input(self: Pin<&mut InputSink>, event: &SharedPtr<MirEvent>);
+
+        fn x(self: &RectangleC) -> i32;
+        fn y(self: &RectangleC) -> i32;
+        fn width(self: &RectangleC) -> i32;
+        fn height(self: &RectangleC) -> i32;
     }
 }
 
