@@ -64,6 +64,8 @@ mf::OutputInstance::OutputInstance(wl_resource* resource, OutputGlobal* global)
     send_name_event_if_supported(global->output_config.name);
 }
 
+// clang can't tell that .value() won't throw in this context
+// NOLINTBEGIN(bugprone-exception-escape)
 mf::OutputInstance::~OutputInstance()
 {
     if (global)
@@ -72,6 +74,7 @@ mf::OutputInstance::~OutputInstance()
         global.value().remove_listener(this);
     }
 }
+// NOLINTEND(bugprone-exception-escape)
 
 auto mf::OutputInstance::from(wl_resource* output) -> OutputInstance*
 {
