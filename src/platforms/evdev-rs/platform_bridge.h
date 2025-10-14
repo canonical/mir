@@ -21,7 +21,6 @@
 #include "mir/console_services.h"
 #include "mir/input/input_device.h"
 #include "mir/input/event_builder.h"
-#include "mir/geometry/displacement.h"
 
 namespace mir
 {
@@ -62,7 +61,15 @@ public:
         float position_y,
         float displacement_x,
         float displacement_y,
-        int32_t axis_source
+        int32_t axis_source,
+        float precise_x,
+        int discrete_x,
+        int value120_x,
+        bool scroll_stop_x,
+        float precise_y,
+        int discrete_y,
+        int value120_y,
+        bool scroll_stop_y
     ) const;
 
     std::shared_ptr<MirEvent> key_event(

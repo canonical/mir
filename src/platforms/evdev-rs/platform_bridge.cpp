@@ -21,9 +21,11 @@
 #include "mir/log.h"
 #include "mir/fd.h"
 #include "mir/input/input_sink.h"
+#include "mir/geometry/forward.h"
 
 namespace mi = mir::input;
 namespace miers = mir::input::evdev_rs;
+namespace geom = mir::geometry;
 
 miers::PlatformBridgeC::PlatformBridgeC(
     Platform* platform,
@@ -87,7 +89,15 @@ std::shared_ptr<MirEvent> miers::EventBuilderWrapper::pointer_event(
     float position_y,
     float displacement_x,
     float displacement_y,
-    int32_t axis_source) const
+    int32_t axis_source,
+    float precise_x,
+    int discrete_x,
+    int value120_x,
+    bool scroll_stop_x,
+    float precise_y,
+    int discrete_y,
+    int value120_y,
+    bool scroll_stop_y) const
 {
     return event_builder->pointer_event(
         has_time
@@ -100,8 +110,16 @@ std::shared_ptr<MirEvent> miers::EventBuilderWrapper::pointer_event(
             : std::optional<geometry::PointF>(std::nullopt),
         geometry::DisplacementF(displacement_x, displacement_y),
         static_cast<MirPointerAxisSource>(axis_source),
-        events::ScrollAxisH(),
-        events::ScrollAxisV()
+        events::ScrollAxisH(
+            geom::generic::Value<float, geom::DeltaXTag>(precise_x),
+            geom::generic::Value<int, geom::DeltaXTag>(discrete_x),
+            geom::generic::Value<int, geom::DeltaXTag>(value120_x),
+            scroll_stop_x),
+        events::ScrollAxisV(
+            geom::generic::Value<float, geom::DeltaYTag>(precise_y),
+            geom::generic::Value<int, geom::DeltaYTag>(discrete_y),
+            geom::generic::Value<int, geom::DeltaYTag>(value120_y),
+            scroll_stop_y)
     );
 }
 

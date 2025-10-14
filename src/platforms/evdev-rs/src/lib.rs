@@ -1,6 +1,9 @@
 use cxx::{SharedPtr, UniquePtr, WeakPtr};
 use input::event::keyboard::{KeyState, KeyboardEventTrait, KeyboardKeyEvent};
-use input::event::pointer::{ButtonState, PointerButtonEvent, PointerEventTrait};
+use input::event::pointer::{
+    ButtonState, PointerButtonEvent, PointerEventTrait, PointerScrollContinuousEvent,
+    PointerScrollEvent,
+};
 use input::event::{DeviceEvent, EventTrait, KeyboardEvent, PointerEvent};
 use input::{AsRaw, Device, DeviceCapability, Event, Libinput, LibinputInterface};
 use libc::{major, minor, poll, pollfd, stat, POLLIN};
@@ -119,6 +122,10 @@ struct LibinputState {
     button_state: u32,
     pointer_x: f32,
     pointer_y: f32,
+    scroll_axis_x_accum: f64,
+    scroll_axis_y_accum: f64,
+    x_scroll_scale: f64,
+    y_scroll_scale: f64,
 }
 
 pub struct PlatformRs {
@@ -218,7 +225,26 @@ impl PlatformRs {
             button_state: 0,
             pointer_x: 0.0,
             pointer_y: 0.0,
+            scroll_axis_x_accum: 0.0,
+            scroll_axis_y_accum: 0.0,
+            x_scroll_scale: 1.0,
+            y_scroll_scale: 1.0,
         };
+
+        fn get_scroll_axis(
+            value120: f64,
+            value: f64,
+            scale: f64,
+            accum: &mut f64,
+        ) -> (f64, f64, f64, bool) {
+            let precise = value * scale;
+            let stop = precise == 0.0;
+            *accum = *accum + value120;
+
+            let discrete = *accum / 120.0;
+            *accum = *accum % 120.0;
+            return (precise, discrete, value120, stop);
+        }
 
         state.libinput.udev_assign_seat("seat0").unwrap();
 
@@ -299,7 +325,6 @@ impl PlatformRs {
 
                         // TODO: Need to set up reporting events (report->received_event_from_kernel)
                         Event::Pointer(pointer_event) => {
-
                             let dev: Device = pointer_event.device();
 
                             if let Some(device_wrapper) = state
@@ -313,20 +338,29 @@ impl PlatformRs {
                                         if let Some(event_builder) =
                                             &mut device_wrapper.event_builder
                                         {
-                                            event_to_publish = Some(event_builder.pin_mut().pointer_event(
-                                                true,
-                                                motion_event.time_usec(),
-                                                MirPointerAction::Motion as i32,
-                                                state.button_state,
-                                                false,
-                                                0 as f32,
-                                                0 as f32,
-                                                motion_event.dx() as f32,
-                                                motion_event.dy() as f32,
-                                                MirPointerAxisSource::None as i32,
-                                            ));
+                                            event_to_publish =
+                                                Some(event_builder.pin_mut().pointer_event(
+                                                    true,
+                                                    motion_event.time_usec(),
+                                                    MirPointerAction::Motion as i32,
+                                                    state.button_state,
+                                                    false,
+                                                    0 as f32,
+                                                    0 as f32,
+                                                    motion_event.dx() as f32,
+                                                    motion_event.dy() as f32,
+                                                    MirPointerAxisSource::None as i32,
+                                                    0.0,
+                                                    0,
+                                                    0,
+                                                    false,
+                                                    0.0,
+                                                    0,
+                                                    0,
+                                                    false,
+                                                ));
                                         }
-                                    },
+                                    }
 
                                     PointerEvent::MotionAbsolute(absolute_motion_event) => {
                                         if let Some(event_builder) =
@@ -334,34 +368,253 @@ impl PlatformRs {
                                         {
                                             if let Some(input_sink) = &mut device_wrapper.input_sink
                                             {
-                                                let sink_ref: &InputSink = unsafe { input_sink.0.as_ref() };
-                                                let bounding_rect = bridge_locked.bounding_rectangle(sink_ref);
+                                                let sink_ref: &InputSink =
+                                                    unsafe { input_sink.0.as_ref() };
+                                                let bounding_rect =
+                                                    bridge_locked.bounding_rectangle(sink_ref);
                                                 let width = bounding_rect.width() as u32;
                                                 let height = bounding_rect.height() as u32;
 
                                                 let old_x = state.pointer_x;
                                                 let old_y = state.pointer_y;
-                                                state.pointer_x = absolute_motion_event.absolute_x_transformed(width) as f32;
-                                                state.pointer_y = absolute_motion_event.absolute_y_transformed(height) as f32;
+                                                state.pointer_x = absolute_motion_event
+                                                    .absolute_x_transformed(width)
+                                                    as f32;
+                                                state.pointer_y = absolute_motion_event
+                                                    .absolute_y_transformed(height)
+                                                    as f32;
 
                                                 let movement_x = state.pointer_x - old_x;
                                                 let movement_y = state.pointer_y - old_y;
 
-                                                event_to_publish = Some(event_builder.pin_mut().pointer_event(
-                                                    true,
-                                                    absolute_motion_event.time_usec(),
-                                                    MirPointerAction::Motion as i32,
-                                                    state.button_state,
-                                                    true,
-                                                    state.pointer_x,
-                                                    state.pointer_y,
-                                                    movement_x,
-                                                    movement_y,
-                                                    MirPointerAxisSource::None as i32,
-                                                ));
+                                                event_to_publish =
+                                                    Some(event_builder.pin_mut().pointer_event(
+                                                        true,
+                                                        absolute_motion_event.time_usec(),
+                                                        MirPointerAction::Motion as i32,
+                                                        state.button_state,
+                                                        true,
+                                                        state.pointer_x,
+                                                        state.pointer_y,
+                                                        movement_x,
+                                                        movement_y,
+                                                        MirPointerAxisSource::None as i32,
+                                                        0.0,
+                                                        0,
+                                                        0,
+                                                        false,
+                                                        0.0,
+                                                        0,
+                                                        0,
+                                                        false,
+                                                    ));
                                             }
                                         }
-                                    },
+                                    }
+
+                                    PointerEvent::ScrollWheel(scroll_wheel_event) => {
+                                        if let Some(event_builder) =
+                                            &mut device_wrapper.event_builder
+                                        {
+                                            let (precise_x, discrete_x, value120_x, stop_x) =
+                                                if scroll_wheel_event
+                                                    .has_axis(input::event::pointer::Axis::Vertical)
+                                                {
+                                                    let scroll_value120_x = scroll_wheel_event
+                                                        .scroll_value_v120(
+                                                            input::event::pointer::Axis::Horizontal,
+                                                        );
+                                                    let scroll_value_x = scroll_wheel_event
+                                                        .scroll_value(
+                                                            input::event::pointer::Axis::Horizontal,
+                                                        );
+                                                    get_scroll_axis(
+                                                        scroll_value120_x,
+                                                        scroll_value_x,
+                                                        state.x_scroll_scale as f64,
+                                                        &mut state.scroll_axis_x_accum,
+                                                    )
+                                                } else {
+                                                    (0.0, 0.0, 0.0, true)
+                                                };
+
+                                            let (precise_y, discrete_y, value120_y, stop_y) =
+                                                if scroll_wheel_event
+                                                    .has_axis(input::event::pointer::Axis::Vertical)
+                                                {
+                                                    let scroll_value120_y = scroll_wheel_event
+                                                        .scroll_value_v120(
+                                                            input::event::pointer::Axis::Vertical,
+                                                        );
+                                                    let scroll_value_y = scroll_wheel_event
+                                                        .scroll_value(
+                                                            input::event::pointer::Axis::Vertical,
+                                                        );
+                                                    get_scroll_axis(
+                                                        scroll_value120_y,
+                                                        scroll_value_y,
+                                                        state.y_scroll_scale as f64,
+                                                        &mut state.scroll_axis_y_accum,
+                                                    )
+                                                } else {
+                                                    (0.0, 0.0, 0.0, true)
+                                                };
+
+                                            event_to_publish =
+                                                Some(event_builder.pin_mut().pointer_event(
+                                                    true,
+                                                    scroll_wheel_event.time_usec(),
+                                                    MirPointerAction::Motion as i32,
+                                                    state.button_state,
+                                                    false,
+                                                    0.0,
+                                                    0.0,
+                                                    0.0,
+                                                    0.0,
+                                                    MirPointerAxisSource::Wheel as i32,
+                                                    precise_x as f32,
+                                                    discrete_x as i32,
+                                                    value120_x as i32,
+                                                    stop_x,
+                                                    precise_y as f32,
+                                                    discrete_y as i32,
+                                                    value120_y as i32,
+                                                    stop_y,
+                                                ));
+                                        }
+                                    }
+
+                                    PointerEvent::ScrollContinuous(scroll_continuous_event) => {
+                                        if let Some(event_builder) =
+                                            &mut device_wrapper.event_builder
+                                        {
+                                            let (precise_x, discrete_x, value120_x, stop_x) =
+                                                if scroll_continuous_event
+                                                    .has_axis(input::event::pointer::Axis::Vertical)
+                                                {
+                                                    let scroll_value120_x = 0.0;
+                                                    let scroll_value_x = scroll_continuous_event
+                                                        .scroll_value(
+                                                            input::event::pointer::Axis::Horizontal,
+                                                        );
+                                                    get_scroll_axis(
+                                                        scroll_value120_x,
+                                                        scroll_value_x,
+                                                        state.x_scroll_scale as f64,
+                                                        &mut state.scroll_axis_x_accum,
+                                                    )
+                                                } else {
+                                                    (0.0, 0.0, 0.0, true)
+                                                };
+
+                                            let (precise_y, discrete_y, value120_y, stop_y) =
+                                                if scroll_continuous_event
+                                                    .has_axis(input::event::pointer::Axis::Vertical)
+                                                {
+                                                    let scroll_value120_y = 0.0;
+                                                    let scroll_value_y = scroll_continuous_event
+                                                        .scroll_value(
+                                                            input::event::pointer::Axis::Vertical,
+                                                        );
+                                                    get_scroll_axis(
+                                                        scroll_value120_y,
+                                                        scroll_value_y,
+                                                        state.y_scroll_scale as f64,
+                                                        &mut state.scroll_axis_y_accum,
+                                                    )
+                                                } else {
+                                                    (0.0, 0.0, 0.0, true)
+                                                };
+
+                                            event_to_publish =
+                                                Some(event_builder.pin_mut().pointer_event(
+                                                    true,
+                                                    scroll_continuous_event.time_usec(),
+                                                    MirPointerAction::Motion as i32,
+                                                    state.button_state,
+                                                    false,
+                                                    0.0,
+                                                    0.0,
+                                                    0.0,
+                                                    0.0,
+                                                    MirPointerAxisSource::Wheel as i32,
+                                                    precise_x as f32,
+                                                    discrete_x as i32,
+                                                    value120_x as i32,
+                                                    stop_x,
+                                                    precise_y as f32,
+                                                    discrete_y as i32,
+                                                    value120_y as i32,
+                                                    stop_y,
+                                                ));
+                                        }
+                                    }
+
+                                    PointerEvent::ScrollFinger(scroll_finger_event) => {
+                                        if let Some(event_builder) =
+                                            &mut device_wrapper.event_builder
+                                        {
+                                            let (precise_x, discrete_x, value120_x, stop_x) =
+                                                if scroll_finger_event
+                                                    .has_axis(input::event::pointer::Axis::Vertical)
+                                                {
+                                                    let scroll_value120_x = 0.0;
+                                                    let scroll_value_x = scroll_finger_event
+                                                        .scroll_value(
+                                                            input::event::pointer::Axis::Horizontal,
+                                                        );
+                                                    get_scroll_axis(
+                                                        scroll_value120_x,
+                                                        scroll_value_x,
+                                                        state.x_scroll_scale as f64,
+                                                        &mut state.scroll_axis_x_accum,
+                                                    )
+                                                } else {
+                                                    (0.0, 0.0, 0.0, true)
+                                                };
+
+                                            let (precise_y, discrete_y, value120_y, stop_y) =
+                                                if scroll_finger_event
+                                                    .has_axis(input::event::pointer::Axis::Vertical)
+                                                {
+                                                    let scroll_value120_y = 0.0;
+                                                    let scroll_value_y = scroll_finger_event
+                                                        .scroll_value(
+                                                            input::event::pointer::Axis::Vertical,
+                                                        );
+                                                    get_scroll_axis(
+                                                        scroll_value120_y,
+                                                        scroll_value_y,
+                                                        state.y_scroll_scale as f64,
+                                                        &mut state.scroll_axis_y_accum,
+                                                    )
+                                                } else {
+                                                    (0.0, 0.0, 0.0, true)
+                                                };
+
+                                            event_to_publish =
+                                                Some(event_builder.pin_mut().pointer_event(
+                                                    true,
+                                                    scroll_finger_event.time_usec(),
+                                                    MirPointerAction::Motion as i32,
+                                                    state.button_state,
+                                                    false,
+                                                    0.0,
+                                                    0.0,
+                                                    0.0,
+                                                    0.0,
+                                                    MirPointerAxisSource::Wheel as i32,
+                                                    precise_x as f32,
+                                                    discrete_x as i32,
+                                                    value120_x as i32,
+                                                    stop_x,
+                                                    precise_y as f32,
+                                                    discrete_y as i32,
+                                                    value120_y as i32,
+                                                    stop_y,
+                                                ));
+                                        }
+                                    }
 
                                     PointerEvent::Button(button_event) => {
                                         if let Some(event_builder) =
@@ -386,30 +639,42 @@ impl PlatformRs {
                                                 BTN_SIDE => MirPointerButton::Side,
                                                 BTN_EXTRA => MirPointerButton::Extra,
                                                 BTN_TASK => MirPointerButton::Task,
-                                                _ => MirPointerButton::Primary
+                                                _ => MirPointerButton::Primary,
                                             };
 
-                                            let mut action: MirPointerAction = MirPointerAction::Actions;
+                                            let mut action: MirPointerAction =
+                                                MirPointerAction::Actions;
                                             if button_event.button_state() == ButtonState::Pressed {
-                                                state.button_state = state.button_state | mir_button as u32;
+                                                state.button_state =
+                                                    state.button_state | mir_button as u32;
                                                 action = MirPointerAction::ButtonDown;
                                             } else {
-                                                state.button_state = state.button_state & !(mir_button as u32);
+                                                state.button_state =
+                                                    state.button_state & !(mir_button as u32);
                                                 action = MirPointerAction::ButtonUp;
                                             }
 
-                                            event_to_publish = Some(event_builder.pin_mut().pointer_event(
-                                                true,
-                                                button_event.time_usec(),
-                                                action as i32,
-                                                state.button_state,
-                                                false,
-                                                0.0,
-                                                0.0,
-                                                0.0,
-                                                0.0,
-                                                MirPointerAxisSource::None as i32,
-                                            ));
+                                            event_to_publish =
+                                                Some(event_builder.pin_mut().pointer_event(
+                                                    true,
+                                                    button_event.time_usec(),
+                                                    action as i32,
+                                                    state.button_state,
+                                                    false,
+                                                    0.0,
+                                                    0.0,
+                                                    0.0,
+                                                    0.0,
+                                                    MirPointerAxisSource::None as i32,
+                                                    0.0,
+                                                    0,
+                                                    0,
+                                                    false,
+                                                    0.0,
+                                                    0,
+                                                    0,
+                                                    false,
+                                                ));
                                         }
                                     }
 
@@ -417,8 +682,7 @@ impl PlatformRs {
                                 }
 
                                 if let Some(created) = event_to_publish {
-                                    if let Some(input_sink) = &mut device_wrapper.input_sink
-                                    {
+                                    if let Some(input_sink) = &mut device_wrapper.input_sink {
                                         input_sink.handle_input(&created);
                                     }
                                 }
@@ -648,7 +912,7 @@ mod ffi {
         type DeviceBridgeC;
         type EventBuilderWrapper;
         type RectangleC;
-        
+
         #[namespace = "mir::input"]
         type Device;
 
@@ -696,6 +960,14 @@ mod ffi {
             displacement_x: f32,
             displacement_y: f32,
             axis_source: i32,
+            precise_x: f32,
+            discrete_x: i32,
+            value120_x: i32,
+            scroll_stop_x: bool,
+            precise_y: f32,
+            discrete_y: i32,
+            value120_y: i32,
+            scroll_stop_y: bool,
         ) -> SharedPtr<MirEvent>;
 
         fn key_event(
@@ -731,11 +1003,12 @@ pub use ffi::EventBuilderWrapper;
 pub use ffi::InputDevice;
 pub use ffi::InputDeviceRegistry;
 pub use ffi::InputSink;
-pub use ffi::PlatformBridgeC;
 pub use ffi::MirEvent;
+pub use ffi::PlatformBridgeC;
 
 use crate::enums::{
-    MirDeviceCapability, MirKeyboardAction, MirPointerAction, MirPointerAxisSource, MirPointerButton,
+    MirDeviceCapability, MirKeyboardAction, MirPointerAction, MirPointerAxisSource,
+    MirPointerButton,
 };
 
 pub fn evdev_rs_create(
