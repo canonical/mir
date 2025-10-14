@@ -648,7 +648,7 @@ mod ffi {
         type DeviceBridgeC;
         type EventBuilderWrapper;
         type RectangleC;
-        
+
         #[namespace = "mir::input"]
         type Device;
 
