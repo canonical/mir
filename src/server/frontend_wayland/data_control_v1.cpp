@@ -60,7 +60,7 @@ public:
             finalized_ = true;
             return true;
         }
-        
+
         return false;
     }
 
