@@ -15,7 +15,6 @@
  */
 
 #include "data_control_v1.h"
-#include "mir/synchronised.h"
 #include "primary_selection_v1.h"
 #include "wl_data_source.h"
 #include "wl_seat.h"
