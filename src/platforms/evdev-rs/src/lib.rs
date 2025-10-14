@@ -88,7 +88,7 @@ impl PlatformRs {
         rfd: OwnedFd,
         rx: std::sync::mpsc::Receiver<ThreadCommand>,
     ) {
-        let mut state = LibinputState {
+        let mut state = LibinputLoopState {
             libinput: Libinput::new_with_udev(LibinputInterfaceImpl {
                 bridge: bridge_locked.clone(),
                 fds: Vec::new(),
@@ -150,10 +150,16 @@ impl PlatformRs {
     }
 
     fn process_libinput_events(
-        state: &mut LibinputState,
+        state: &mut LibinputLoopState,
         device_registry: SharedPtr<ffi::InputDeviceRegistry>,
         bridge: SharedPtr<ffi::PlatformBridgeC>,
     ) {
+        fn handle_input(input_sink: &mut Option<InputSinkPtr>, event: SharedPtr<ffi::MirEvent>) {
+            if let Some(input_sink) = input_sink {
+                input_sink.handle_input(&event);
+            }
+        }
+
         fn get_scroll_axis(
             value120: f64,
             value: f64,
@@ -231,30 +237,32 @@ impl PlatformRs {
                         .iter_mut()
                         .find(|x| x.device.as_raw() == dev.as_raw())
                     {
-                        let mut event_to_publish: Option<SharedPtr<ffi::MirEvent>> = None;
                         match pointer_event {
                             PointerEvent::Motion(motion_event) => {
                                 if let Some(event_builder) = &mut device_wrapper.event_builder {
-                                    event_to_publish = Some(event_builder.pin_mut().pointer_event(
-                                        true,
-                                        motion_event.time_usec(),
-                                        MirPointerAction::Motion as i32,
-                                        state.button_state,
-                                        false,
-                                        0 as f32,
-                                        0 as f32,
-                                        motion_event.dx() as f32,
-                                        motion_event.dy() as f32,
-                                        MirPointerAxisSource::None as i32,
-                                        0.0,
-                                        0,
-                                        0,
-                                        false,
-                                        0.0,
-                                        0,
-                                        0,
-                                        false,
-                                    ));
+                                    handle_input(
+                                        &mut device_wrapper.input_sink,
+                                        event_builder.pin_mut().pointer_event(
+                                            true,
+                                            motion_event.time_usec(),
+                                            MirPointerAction::Motion as i32,
+                                            state.button_state,
+                                            false,
+                                            0 as f32,
+                                            0 as f32,
+                                            motion_event.dx() as f32,
+                                            motion_event.dy() as f32,
+                                            MirPointerAxisSource::None as i32,
+                                            0.0,
+                                            0,
+                                            0,
+                                            false,
+                                            0.0,
+                                            0,
+                                            0,
+                                            false,
+                                        ),
+                                    );
                                 }
                             }
 
@@ -279,8 +287,9 @@ impl PlatformRs {
                                         let movement_x = state.pointer_x - old_x;
                                         let movement_y = state.pointer_y - old_y;
 
-                                        event_to_publish =
-                                            Some(event_builder.pin_mut().pointer_event(
+                                        handle_input(
+                                            &mut device_wrapper.input_sink,
+                                            event_builder.pin_mut().pointer_event(
                                                 true,
                                                 absolute_motion_event.time_usec(),
                                                 MirPointerAction::Motion as i32,
@@ -299,7 +308,8 @@ impl PlatformRs {
                                                 0,
                                                 0,
                                                 false,
-                                            ));
+                                            ),
+                                        );
                                     }
                                 }
                             }
@@ -348,26 +358,29 @@ impl PlatformRs {
                                             (0.0, 0.0, 0.0, true)
                                         };
 
-                                    event_to_publish = Some(event_builder.pin_mut().pointer_event(
-                                        true,
-                                        scroll_wheel_event.time_usec(),
-                                        MirPointerAction::Motion as i32,
-                                        state.button_state,
-                                        false,
-                                        0.0,
-                                        0.0,
-                                        0.0,
-                                        0.0,
-                                        MirPointerAxisSource::Wheel as i32,
-                                        precise_x as f32,
-                                        discrete_x as i32,
-                                        value120_x as i32,
-                                        stop_x,
-                                        precise_y as f32,
-                                        discrete_y as i32,
-                                        value120_y as i32,
-                                        stop_y,
-                                    ));
+                                    handle_input(
+                                        &mut device_wrapper.input_sink,
+                                        event_builder.pin_mut().pointer_event(
+                                            true,
+                                            scroll_wheel_event.time_usec(),
+                                            MirPointerAction::Motion as i32,
+                                            state.button_state,
+                                            false,
+                                            0.0,
+                                            0.0,
+                                            0.0,
+                                            0.0,
+                                            MirPointerAxisSource::Wheel as i32,
+                                            precise_x as f32,
+                                            discrete_x as i32,
+                                            value120_x as i32,
+                                            stop_x,
+                                            precise_y as f32,
+                                            discrete_y as i32,
+                                            value120_y as i32,
+                                            stop_y,
+                                        ),
+                                    );
                                 }
                             }
 
@@ -411,26 +424,29 @@ impl PlatformRs {
                                             (0.0, 0.0, 0.0, true)
                                         };
 
-                                    event_to_publish = Some(event_builder.pin_mut().pointer_event(
-                                        true,
-                                        scroll_continuous_event.time_usec(),
-                                        MirPointerAction::Motion as i32,
-                                        state.button_state,
-                                        false,
-                                        0.0,
-                                        0.0,
-                                        0.0,
-                                        0.0,
-                                        MirPointerAxisSource::Wheel as i32,
-                                        precise_x as f32,
-                                        discrete_x as i32,
-                                        value120_x as i32,
-                                        stop_x,
-                                        precise_y as f32,
-                                        discrete_y as i32,
-                                        value120_y as i32,
-                                        stop_y,
-                                    ));
+                                    handle_input(
+                                        &mut device_wrapper.input_sink,
+                                        event_builder.pin_mut().pointer_event(
+                                            true,
+                                            scroll_continuous_event.time_usec(),
+                                            MirPointerAction::Motion as i32,
+                                            state.button_state,
+                                            false,
+                                            0.0,
+                                            0.0,
+                                            0.0,
+                                            0.0,
+                                            MirPointerAxisSource::Wheel as i32,
+                                            precise_x as f32,
+                                            discrete_x as i32,
+                                            value120_x as i32,
+                                            stop_x,
+                                            precise_y as f32,
+                                            discrete_y as i32,
+                                            value120_y as i32,
+                                            stop_y,
+                                        ),
+                                    );
                                 }
                             }
 
@@ -472,26 +488,29 @@ impl PlatformRs {
                                             (0.0, 0.0, 0.0, true)
                                         };
 
-                                    event_to_publish = Some(event_builder.pin_mut().pointer_event(
-                                        true,
-                                        scroll_finger_event.time_usec(),
-                                        MirPointerAction::Motion as i32,
-                                        state.button_state,
-                                        false,
-                                        0.0,
-                                        0.0,
-                                        0.0,
-                                        0.0,
-                                        MirPointerAxisSource::Wheel as i32,
-                                        precise_x as f32,
-                                        discrete_x as i32,
-                                        value120_x as i32,
-                                        stop_x,
-                                        precise_y as f32,
-                                        discrete_y as i32,
-                                        value120_y as i32,
-                                        stop_y,
-                                    ));
+                                    handle_input(
+                                        &mut device_wrapper.input_sink,
+                                        event_builder.pin_mut().pointer_event(
+                                            true,
+                                            scroll_finger_event.time_usec(),
+                                            MirPointerAction::Motion as i32,
+                                            state.button_state,
+                                            false,
+                                            0.0,
+                                            0.0,
+                                            0.0,
+                                            0.0,
+                                            MirPointerAxisSource::Wheel as i32,
+                                            precise_x as f32,
+                                            discrete_x as i32,
+                                            value120_x as i32,
+                                            stop_x,
+                                            precise_y as f32,
+                                            discrete_y as i32,
+                                            value120_y as i32,
+                                            stop_y,
+                                        ),
+                                    );
                                 }
                             }
 
@@ -540,36 +559,33 @@ impl PlatformRs {
                                         action = MirPointerAction::ButtonUp;
                                     }
 
-                                    event_to_publish = Some(event_builder.pin_mut().pointer_event(
-                                        true,
-                                        button_event.time_usec(),
-                                        action as i32,
-                                        state.button_state,
-                                        false,
-                                        0.0,
-                                        0.0,
-                                        0.0,
-                                        0.0,
-                                        MirPointerAxisSource::None as i32,
-                                        0.0,
-                                        0,
-                                        0,
-                                        false,
-                                        0.0,
-                                        0,
-                                        0,
-                                        false,
-                                    ));
+                                    handle_input(
+                                        &mut device_wrapper.input_sink,
+                                        event_builder.pin_mut().pointer_event(
+                                            true,
+                                            button_event.time_usec(),
+                                            action as i32,
+                                            state.button_state,
+                                            false,
+                                            0.0,
+                                            0.0,
+                                            0.0,
+                                            0.0,
+                                            MirPointerAxisSource::None as i32,
+                                            0.0,
+                                            0,
+                                            0,
+                                            false,
+                                            0.0,
+                                            0,
+                                            0,
+                                            false,
+                                        ),
+                                    );
                                 }
                             }
 
                             _ => {}
-                        }
-
-                        if let Some(created) = event_to_publish {
-                            if let Some(input_sink) = &mut device_wrapper.input_sink {
-                                input_sink.handle_input(&created);
-                            }
                         }
                     }
                 }
@@ -608,7 +624,6 @@ impl PlatformRs {
                 }
 
                 // TODO(mattkae): Handle touch events
-                // TODO: Otherwise, find the event, process it, and request that the input sink handle it
                 _ => {}
             }
         }
@@ -617,7 +632,7 @@ impl PlatformRs {
     fn process_thread_events(
         rfd: OwnedFd,
         rx: &mpsc::Receiver<ThreadCommand>,
-        state: &mut LibinputState,
+        state: &mut LibinputLoopState,
         bridge_locked: &SharedPtr<ffi::PlatformBridgeC>,
         is_running: &mut bool,
     ) {
@@ -857,7 +872,7 @@ struct DeviceWrapper {
     event_builder: Option<UniquePtr<ffi::EventBuilderWrapper>>,
 }
 
-struct LibinputState {
+struct LibinputLoopState {
     libinput: Libinput,
     known_devices: Vec<DeviceWrapper>,
     next_device_id: i32,
@@ -890,7 +905,7 @@ impl InputDeviceInfoRs {
     }
 }
 
-pub enum ThreadCommand {
+enum ThreadCommand {
     Start(i32, InputSinkPtr, EventBuilderPtr),
     GetDeviceInfo(i32, mpsc::Sender<InputDeviceInfoRs>),
     GetPointerSettings(i32, mpsc::Sender<ffi::PointerSettingsRs>),
@@ -898,12 +913,12 @@ pub enum ThreadCommand {
     Stop,
 }
 
-// This is so silly.
-//
-// We can't create the channel inside of the PlatformRs implementation because
+// Warning(mattkae):
+// We can't create channel inside of the PlatformRs implementation because
 // the "mod ffi" block gets confused when parsing the template, so it thinks that the
 // closing bracket is an equality operator. Moving it out to the global scope fixes
-// things, but this is so silly.
+// things.
+
 fn create_thread_command_channel() -> (mpsc::Sender<ThreadCommand>, mpsc::Receiver<ThreadCommand>) {
     mpsc::channel()
 }
