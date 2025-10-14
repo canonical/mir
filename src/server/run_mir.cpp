@@ -31,6 +31,7 @@
 #include <cassert>
 #include <unistd.h>
 #include <boost/throw_exception.hpp>
+#include <errno.h>
 
 namespace
 {
@@ -162,6 +163,26 @@ extern "C" [[noreturn]] void fatal_signal_cleanup(int sig, siginfo_t* info, void
         constexpr size_t len = std::char_traits<char>::length(warning);
         [[maybe_unused]]auto n = write(STDERR_FILENO, warning, len);
     }
+
+    // Log a security event
+    char security_head[] = "{\"datetime\": \"YYYY-MM-DDThh:mm:ssZ";
+    char security_mid[]  = "\", \"appid\": \"";
+    char security_tail[] = "\", \"event\": \"crash\", \"description\": \"Fatal signal received\"}\n";
+    std::time_t time = std::time(nullptr);
+    // strftime isn't listed as async-signal-safe, but neither "%F" or "%T" use locale information
+    [[maybe_unused]]auto n = std::strftime(security_head + 14, 21, "%FT%TZ", std::gmtime(&time));
+    n = write(STDERR_FILENO, security_head, sizeof(security_head) - 1);
+    n = write(STDERR_FILENO, security_mid, sizeof(security_mid) - 1);
+    if (program_invocation_short_name)
+    {
+        n = write(STDERR_FILENO, program_invocation_short_name, std::strlen(program_invocation_short_name));
+    }
+    else
+    {
+        n = write(STDERR_FILENO, "<unknown>", 9);
+    }
+    n = write(STDERR_FILENO, security_tail, sizeof(security_tail) - 1);
+
     perform_emergency_cleanup();
 
     auto const old_handler = old_handlers.at(sig);

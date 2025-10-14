@@ -17,9 +17,13 @@
 #include "mir/log.h"
 #include "mir/logging/logger.h"
 #include <cstdio>
+#include <chrono>
+#include <format>
+#include <iostream>
 
 #include <exception>
 #include <boost/exception/diagnostic_information.hpp>
+#include <errno.h>
 
 namespace mir {
 
@@ -82,6 +86,37 @@ void log(
             "%s: unknown exception",
             message.c_str());
     }
+}
+
+void security_log(
+    logging::Severity severity,
+    std::string const& event,
+    std::string const& description)
+{
+    auto now = std::chrono::system_clock::now();
+    auto time_t = std::chrono::system_clock::to_time_t(now);
+
+    std::stringstream ss;
+    ss << std::put_time(std::gmtime(&time_t), "%FT%TZ");
+
+    std::cerr << std::format(
+        "{{"
+            "\"datetime\": \"{}\", "
+            "\"appid\": \"{}\", "
+            "\"event\": \"{}\", "
+            "\"level\": \"{}\", "
+            "\"description\": \"{}\" "
+        "}}",
+        ss.str(),
+        program_invocation_short_name ? program_invocation_short_name : "<unknown>",
+        event,
+        (severity == logging::Severity::critical ? "CRITICAL" :
+         severity == logging::Severity::error ? "ERROR" :
+         severity == logging::Severity::warning ? "WARN" :
+         severity == logging::Severity::informational ? "INFO" :
+         severity == logging::Severity::debug ? "DEBUG" : "UNKNOWN"),
+        description
+    );
 }
 
 } // namespace mir

@@ -31,10 +31,10 @@ class SharedLibraryProberReport : public mir::SharedLibraryProberReport
 public:
     SharedLibraryProberReport(std::shared_ptr<Logger> const& logger);
 
-    void probing_path(boost::filesystem::path const& path) override;
-    void probing_failed(boost::filesystem::path const& path, std::exception const& error) override;
-    void loading_library(boost::filesystem::path const& filename) override;
-    void loading_failed(boost::filesystem::path const& filename, std::exception const& error) override;
+    void probing_path(std::filesystem::path const& path) override;
+    void probing_failed(std::filesystem::path const& path, std::exception const& error) override;
+    void loading_library(std::filesystem::path const& filename) override;
+    void loading_failed(std::filesystem::path const& filename, std::exception const& error) override;
 
 private:
     std::shared_ptr<Logger> const logger;

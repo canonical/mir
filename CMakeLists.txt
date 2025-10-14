@@ -25,8 +25,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 set(MIR_VERSION_MAJOR 2)
-set(MIR_VERSION_MINOR 22)
-set(MIR_VERSION_PATCH 2)
+set(MIR_VERSION_MINOR 23)
+set(MIR_VERSION_PATCH 0)
 
 add_compile_definitions(MIR_VERSION_MAJOR=${MIR_VERSION_MAJOR})
 add_compile_definitions(MIR_VERSION_MINOR=${MIR_VERSION_MINOR})
@@ -163,7 +163,7 @@ enable_testing()
 find_package(PkgConfig)
 
 # Check for boost
-find_package(Boost 1.48.0 COMPONENTS program_options filesystem iostreams REQUIRED)
+find_package(Boost 1.48.0 COMPONENTS program_options iostreams REQUIRED)
 
 add_compile_definitions(EGL_NO_X11)
 

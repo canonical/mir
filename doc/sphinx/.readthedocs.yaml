@@ -17,9 +17,7 @@ build:
   - graphviz
   - libboost-dev
   - libboost-iostreams-dev
-  - libboost-filesystem-dev
   - libboost-program-options-dev
-  - libboost-system-dev
   - libdrm-dev
   - libdisplay-info-dev
   - libegl-dev
@@ -60,10 +58,6 @@ sphinx:
   builder: dirhtml
   configuration: doc/sphinx/conf.py
   fail_on_warning: false
-
-# If using Sphinx, optionally build your docs in additional formats such as PDF
-formats:
-   - pdf
 
 # Optionally declare the Python requirements required to build your docs
 python:

@@ -67,6 +67,12 @@ then
 
   echo Test atomic-kms platform
   run_tests atomic-kms
+
+  if readlink -f /sys/class/drm/*/device/driver | grep -q nvidia$
+  then
+    echo Test eglstream-kms platform
+    run_tests eglstream-kms
+  fi
 fi
 
 date --utc --iso-8601=seconds | xargs echo "[timestamp] End time :"
