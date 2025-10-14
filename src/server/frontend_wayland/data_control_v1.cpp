@@ -53,10 +53,13 @@ public:
 
     auto try_finalize() -> bool
     {
-        auto const not_finalized = finalized_ != true;
-        finalized_ = true;
-
-        return not_finalized;
+        if (!finalized_)
+        {
+            finalized_ = true;
+            return true;
+        }
+        
+        return false;
     }
 
 private:
