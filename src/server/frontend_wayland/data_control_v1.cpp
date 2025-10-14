@@ -24,6 +24,8 @@
 #include "mir/synchronised.h"
 #include "mir/wayland/protocol_error.h"
 
+#include "mir/log.h"
+
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
 
@@ -171,7 +173,8 @@ public:
             return;
         }
 
-        std::unreachable();
+        mir::log_warning("Attempt to receive from invalid source");
+        return;
     }
 
 private:
@@ -226,7 +229,7 @@ private:
             return primary_data_source->make_source();
         }
 
-        std::unreachable();
+        return nullptr;
     }
 
     void set_selection(std::optional<struct wl_resource*> const& data_control_source) override
@@ -234,6 +237,12 @@ private:
         if (data_control_source)
         {
             auto data_exchange_source = data_exchange_source_from_source(data_control_source);
+            if(!data_control_source)
+            {
+                mir::log_warning("Attempt to call `set_selection` with a null source or an unhandled source type");
+                return;
+            }
+
             our_source = data_exchange_source;
             shared_state->clipboard->set_paste_source(data_exchange_source);
         }
@@ -248,6 +257,12 @@ private:
         if (data_control_source)
         {
             auto data_exchange_source = data_exchange_source_from_source(data_control_source);
+            if(!data_control_source)
+            {
+                mir::log_warning(
+                    "Attempt to call `set_primary_selection` with a null source or an unhandled source type");
+                return;
+            }
             our_primary_source = data_exchange_source;
             shared_state->primary_clipboard->set_paste_source(data_exchange_source);
         }
