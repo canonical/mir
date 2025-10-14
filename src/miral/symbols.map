@@ -703,6 +703,7 @@ global:
     miral::ApplicationSwitcher::operator*;
     miral::ApplicationSwitcher::prev_app*;
     miral::ApplicationSwitcher::stop*;
+    miral::CursorScale::scale_temporarily*;
     miral::LocatePointer::LocatePointer*;
     miral::LocatePointer::cancel_request*;
     miral::LocatePointer::delay*;
