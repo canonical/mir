@@ -154,27 +154,20 @@ public:
 
     void receive_from_current_source(std::string const& mime, mir::Fd fd, bool is_primary)
     {
-        // FIXME time-of-check vs time-of-use bug
-        // If the clipboard is changed between checking and using it (cleared),
-        // it might cause a crash.
-        // Workaround: add `Clipboard::use_current_clipboard(Function&&)` which
-        // would lock around the execution of the function.
-        auto const primary_paste_source = shared_state->primary_clipboard->paste_source();
-        if (is_primary && primary_paste_source)
-        {
-            primary_paste_source->initiate_send(mime, fd);
-            return;
-        }
+        auto send_initiated = false;
+        auto const target_clipboard = is_primary ? shared_state->primary_clipboard : shared_state->clipboard;
 
-        auto const paste_source = shared_state->clipboard->paste_source();
-        if (!is_primary && paste_source)
-        {
-            paste_source->initiate_send(mime, fd);
-            return;
-        }
+        target_clipboard->do_with_paste_source(
+            [mime, fd, &send_initiated](auto const& paste_source)
+            {
+                if (!paste_source)
+                    return;
+                paste_source->initiate_send(mime, fd);
+                send_initiated = true;
+            });
 
-        mir::log_warning("Attempt to receive from invalid source");
-        return;
+        if(!send_initiated)
+            mir::log_warning("Attempt to receive from invalid source");
     }
 
 private:

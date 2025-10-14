@@ -60,6 +60,7 @@ class BasicClipboard : public Clipboard
 {
 public:
     auto paste_source() const -> std::shared_ptr<DataExchangeSource> override;
+    void do_with_paste_source(std::move_only_function<void(std::shared_ptr<DataExchangeSource> const&)> fn) override;
     void set_paste_source(std::shared_ptr<DataExchangeSource> const& source) override;
     void clear_paste_source() override;
     void clear_paste_source(DataExchangeSource const& source) override;
