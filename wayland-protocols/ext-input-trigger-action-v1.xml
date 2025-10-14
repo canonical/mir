@@ -79,7 +79,7 @@
 
     <event name="update">
       <description summary="progress an the input action">
-        The input trigger that led to the "begin" event has clanged.
+        The input trigger that led to the "begin" event has changed.
 
         This will be sent between the "begin" and "end" events when there is a
         meaningful update to the input trigger. (E.g. a multi-touch drag)
