@@ -1,3 +1,28 @@
+/*
+ * Copyright © Canonical Ltd.
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License version 2 or 3,
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+// TODO: Report errors to Mir's logging facilities
+// TODO: Need to set up reporting events when received from libinput (report->received_event_from_kernel)
+// TODO: Implement continue after_config and pause_for_config
+
+// Some notes about the implementation here:
+// 1. CXX-Rust doesn't support passing Option<T> to C++ functions, so I use booleans
+//    instead.
+// 2. All enums are changed to i32 for ABI stability
+
 mod enums;
 use crate::enums::{
     MirDeviceCapability, MirKeyboardAction, MirPointerAcceleration, MirPointerAction,
@@ -20,10 +45,19 @@ use std::thread::{self, JoinHandle};
 use std::{pin::Pin, ptr::NonNull};
 
 pub struct PlatformRs {
+    /// The platform bridge provides access to functionality that must happen in C++.
     bridge: SharedPtr<ffi::PlatformBridgeC>,
+
+    /// The input device registry is used for registering and unregistering input devices.
     device_registry: SharedPtr<ffi::InputDeviceRegistry>,
+
+    /// The handle of the thread running the input loop.
     handle: Option<JoinHandle<()>>,
+
+    /// The write end of the pipe used to wake the input thread.
     wfd: Option<OwnedFd>,
+
+    /// The channel used to send non-libinput commands to the input thread.
     tx: Option<mpsc::Sender<ThreadCommand>>,
 }
 
@@ -74,7 +108,7 @@ impl PlatformRs {
         Box::new(DeviceObserverRs::new())
     }
 
-    fn create_input_device(&self, device_id: i32) -> Box<InputDeviceRs> {
+    fn create_input_device(&self, device_id: i32) -> Box<InputDeviceRs<'_>> {
         Box::new(InputDeviceRs {
             device_id: device_id,
             wfd: self.wfd.as_ref().unwrap().as_fd(),
@@ -176,19 +210,19 @@ impl PlatformRs {
         }
 
         if state.libinput.dispatch().is_err() {
-            // TODO: Report the error to Mir's logging facilities somehow
             println!("Error dispatching libinput events");
             return;
         }
 
         for event in &mut state.libinput {
+            let libinput_device: Device = event.device();
+
             match event {
                 Event::Device(device_event) => match device_event {
                     DeviceEvent::Added(added_event) => {
-                        let dev: Device = added_event.device();
-                        state.known_devices.push(DeviceWrapper {
+                        state.known_devices.push(DeviceInfo {
                             id: state.next_device_id,
-                            device: dev,
+                            device: libinput_device,
                             input_device: bridge.create_input_device(state.next_device_id),
                             input_sink: None,
                             event_builder: None,
@@ -228,20 +262,17 @@ impl PlatformRs {
                     _ => {}
                 },
 
-                // TODO: Need to set up reporting events (report->received_event_from_kernel)
                 Event::Pointer(pointer_event) => {
-                    let dev: Device = pointer_event.device();
-
-                    if let Some(device_wrapper) = state
+                    if let Some(device_info) = state
                         .known_devices
                         .iter_mut()
-                        .find(|x| x.device.as_raw() == dev.as_raw())
+                        .find(|x| x.device.as_raw() == libinput_device.as_raw())
                     {
                         match pointer_event {
                             PointerEvent::Motion(motion_event) => {
-                                if let Some(event_builder) = &mut device_wrapper.event_builder {
+                                if let Some(event_builder) = &mut device_info.event_builder {
                                     handle_input(
-                                        &mut device_wrapper.input_sink,
+                                        &mut device_info.input_sink,
                                         event_builder.pin_mut().pointer_event(
                                             true,
                                             motion_event.time_usec(),
@@ -267,8 +298,8 @@ impl PlatformRs {
                             }
 
                             PointerEvent::MotionAbsolute(absolute_motion_event) => {
-                                if let Some(event_builder) = &mut device_wrapper.event_builder {
-                                    if let Some(input_sink) = &mut device_wrapper.input_sink {
+                                if let Some(event_builder) = &mut device_info.event_builder {
+                                    if let Some(input_sink) = &mut device_info.input_sink {
                                         let sink_ref: &ffi::InputSink =
                                             unsafe { input_sink.0.as_ref() };
                                         let bounding_rect = bridge.bounding_rectangle(sink_ref);
@@ -288,7 +319,7 @@ impl PlatformRs {
                                         let movement_y = state.pointer_y - old_y;
 
                                         handle_input(
-                                            &mut device_wrapper.input_sink,
+                                            &mut device_info.input_sink,
                                             event_builder.pin_mut().pointer_event(
                                                 true,
                                                 absolute_motion_event.time_usec(),
@@ -315,7 +346,7 @@ impl PlatformRs {
                             }
 
                             PointerEvent::ScrollWheel(scroll_wheel_event) => {
-                                if let Some(event_builder) = &mut device_wrapper.event_builder {
+                                if let Some(event_builder) = &mut device_info.event_builder {
                                     let (precise_x, discrete_x, value120_x, stop_x) =
                                         if scroll_wheel_event
                                             .has_axis(input::event::pointer::Axis::Vertical)
@@ -359,7 +390,7 @@ impl PlatformRs {
                                         };
 
                                     handle_input(
-                                        &mut device_wrapper.input_sink,
+                                        &mut device_info.input_sink,
                                         event_builder.pin_mut().pointer_event(
                                             true,
                                             scroll_wheel_event.time_usec(),
@@ -385,7 +416,7 @@ impl PlatformRs {
                             }
 
                             PointerEvent::ScrollContinuous(scroll_continuous_event) => {
-                                if let Some(event_builder) = &mut device_wrapper.event_builder {
+                                if let Some(event_builder) = &mut device_info.event_builder {
                                     let (precise_x, discrete_x, value120_x, stop_x) =
                                         if scroll_continuous_event
                                             .has_axis(input::event::pointer::Axis::Vertical)
@@ -425,7 +456,7 @@ impl PlatformRs {
                                         };
 
                                     handle_input(
-                                        &mut device_wrapper.input_sink,
+                                        &mut device_info.input_sink,
                                         event_builder.pin_mut().pointer_event(
                                             true,
                                             scroll_continuous_event.time_usec(),
@@ -451,7 +482,7 @@ impl PlatformRs {
                             }
 
                             PointerEvent::ScrollFinger(scroll_finger_event) => {
-                                if let Some(event_builder) = &mut device_wrapper.event_builder {
+                                if let Some(event_builder) = &mut device_info.event_builder {
                                     let (precise_x, discrete_x, value120_x, stop_x) =
                                         if scroll_finger_event
                                             .has_axis(input::event::pointer::Axis::Vertical)
@@ -489,7 +520,7 @@ impl PlatformRs {
                                         };
 
                                     handle_input(
-                                        &mut device_wrapper.input_sink,
+                                        &mut device_info.input_sink,
                                         event_builder.pin_mut().pointer_event(
                                             true,
                                             scroll_finger_event.time_usec(),
@@ -515,7 +546,7 @@ impl PlatformRs {
                             }
 
                             PointerEvent::Button(button_event) => {
-                                if let Some(event_builder) = &mut device_wrapper.event_builder {
+                                if let Some(event_builder) = &mut device_info.event_builder {
                                     const BTN_LEFT: u32 = 0x110;
                                     const BTN_RIGHT: u32 = 0x111;
                                     const BTN_MIDDLE: u32 = 0x112;
@@ -537,7 +568,7 @@ impl PlatformRs {
                                         _ => MirPointerButton::Primary,
                                     };
 
-                                    if device_wrapper.device.config_left_handed() {
+                                    if device_info.device.config_left_handed() {
                                         mir_button = match mir_button {
                                             MirPointerButton::Primary => {
                                                 MirPointerButton::Secondary
@@ -560,7 +591,7 @@ impl PlatformRs {
                                     }
 
                                     handle_input(
-                                        &mut device_wrapper.input_sink,
+                                        &mut device_info.input_sink,
                                         event_builder.pin_mut().pointer_event(
                                             true,
                                             button_event.time_usec(),
@@ -692,7 +723,6 @@ impl PlatformRs {
                                     .create_event_builder_wrapper(event_builder.0.as_ptr()),
                             );
                         }
-                        println!("Starting input device with id: {}", id);
                     }
                 }
                 ThreadCommand::GetPointerSettings(id, tx) => {
@@ -777,14 +807,19 @@ impl PlatformRs {
 }
 
 struct LibinputInterfaceImpl {
+    /// The bridge used to acquire the device.
     bridge: SharedPtr<ffi::PlatformBridgeC>,
+
+    /// The list of opened devices.
+    ///
+    /// Mir expects the caller who acquired the device to keep it alive until the device
+    /// is closed. To do this, we keep it in the vector.
     fds: Vec<UniquePtr<ffi::DeviceBridgeC>>,
 }
 
 impl LibinputInterface for LibinputInterfaceImpl {
     // This method is called whenever libinput needs to open a new device.
-    fn open_restricted(&mut self, path: &Path, flags: i32) -> Result<OwnedFd, i32> {
-        println!("Opening device: {:?} with flags: {}", path, flags);
+    fn open_restricted(&mut self, path: &Path, _: i32) -> Result<OwnedFd, i32> {
         let cpath = CString::new(path.as_os_str().as_bytes()).unwrap();
 
         let mut st: stat = unsafe { std::mem::zeroed() };
@@ -802,24 +837,39 @@ impl LibinputInterface for LibinputInterfaceImpl {
             .bridge
             .acquire_device(major_num as i32, minor_num as i32);
         let fd = device.raw_fd();
-        println!(
-            "Acquired fd: {} for device with major: {}, minor: {}",
-            fd, major_num, minor_num
-        );
         self.fds.push(device);
 
         let owned = unsafe { OwnedFd::from_raw_fd(fd) };
-        println!("Owned fd: {}", owned.as_raw_fd().to_string());
         Ok(owned)
     }
 
     // This method is called when libinput is done with a device.
     fn close_restricted(&mut self, fd: OwnedFd) {
-        let raw_fd = fd.as_raw_fd();
-        println!("Closing device with fd: {}", raw_fd.to_string());
+        let fd_raw = fd.as_raw_fd();
         let _ = close(fd);
-        // self.fds.retain(|f| f.as_raw_fd() != raw_fd);
+        self.fds.retain(|d| d.raw_fd() != fd_raw);
     }
+}
+
+struct LibinputLoopState {
+    libinput: Libinput,
+    known_devices: Vec<DeviceInfo>,
+    next_device_id: i32,
+    button_state: u32,
+    pointer_x: f32,
+    pointer_y: f32,
+    scroll_axis_x_accum: f64,
+    scroll_axis_y_accum: f64,
+    x_scroll_scale: f64,
+    y_scroll_scale: f64,
+}
+
+struct DeviceInfo {
+    id: i32,
+    device: Device,
+    input_device: SharedPtr<ffi::InputDevice>,
+    input_sink: Option<InputSinkPtr>,
+    event_builder: Option<UniquePtr<ffi::EventBuilderWrapper>>,
 }
 
 // This is a bit of a hack here.
@@ -859,31 +909,9 @@ impl InputSinkPtr {
 
 unsafe impl Send for InputSinkPtr {}
 unsafe impl Sync for InputSinkPtr {}
-
 pub struct EventBuilderPtr(NonNull<ffi::EventBuilder>);
 unsafe impl Send for EventBuilderPtr {}
 unsafe impl Sync for EventBuilderPtr {}
-
-struct DeviceWrapper {
-    id: i32,
-    device: Device,
-    input_device: SharedPtr<ffi::InputDevice>,
-    input_sink: Option<InputSinkPtr>,
-    event_builder: Option<UniquePtr<ffi::EventBuilderWrapper>>,
-}
-
-struct LibinputLoopState {
-    libinput: Libinput,
-    known_devices: Vec<DeviceWrapper>,
-    next_device_id: i32,
-    button_state: u32,
-    pointer_x: f32,
-    pointer_y: f32,
-    scroll_axis_x_accum: f64,
-    scroll_axis_y_accum: f64,
-    x_scroll_scale: f64,
-    y_scroll_scale: f64,
-}
 
 pub struct InputDeviceInfoRs {
     name: String,
@@ -914,10 +942,10 @@ enum ThreadCommand {
 }
 
 // Warning(mattkae):
-// We can't create channel inside of the PlatformRs implementation because
-// the "mod ffi" block gets confused when parsing the template, so it thinks that the
-// closing bracket is an equality operator. Moving it out to the global scope fixes
-// things.
+//   We can't create channel inside of the PlatformRs implementation because
+//   the "mod ffi" block gets confused when parsing the template, so it thinks that the
+//   closing bracket is an equality operator. Moving it out to the global scope fixes
+//   things.
 
 fn create_thread_command_channel() -> (mpsc::Sender<ThreadCommand>, mpsc::Receiver<ThreadCommand>) {
     mpsc::channel()
@@ -1129,10 +1157,6 @@ mod ffi {
             event_builder: *mut EventBuilder,
         ) -> UniquePtr<EventBuilderWrapper>;
 
-        // CXX-Rust doesn't support passing Option<T> to C++ functions, so I use booleans
-        // instead.
-        //
-        // On top of this, all enums are changed to i32 for ABI stability.
         fn pointer_event(
             self: &EventBuilderWrapper,
             has_time: bool,
