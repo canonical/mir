@@ -140,7 +140,7 @@ TEST_F(TestTouchspotController, handles_stride_mismatch_in_buffer)
     ASSERT_THAT(scene->overlays, Not(IsEmpty()));
 
     auto touchspot_buffer = scene->overlays[0]->buffer();
-    auto const mapping = mir::renderer::software::as_read_mappable(touchspot_buffer)->map_readable();
+    auto const mapping = touchspot_buffer->map_readable();
 
     // Verify that each row of the touchspot buffer starts with the corresponding row of the touchspot image
     // We don't care what else is in the buffer; the content of the padding in the stride doesn't matter.

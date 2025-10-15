@@ -88,6 +88,11 @@ std::shared_ptr<mg::Buffer> wrap_with_destruction_notifier(
             return wrapped->native_buffer_base();
         }
 
+        std::unique_ptr<mir::renderer::software::Mapping<std::byte const>> map_readable() const override
+        {
+            return wrapped->map_readable();
+        }
+
     private:
         std::shared_ptr<mg::Buffer> const wrapped;
         std::shared_ptr<bool> const destroyed;
