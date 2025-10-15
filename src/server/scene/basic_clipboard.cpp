@@ -27,7 +27,7 @@ auto ms::BasicClipboard::paste_source() const -> std::shared_ptr<DataExchangeSou
 }
 
 void ms::BasicClipboard::do_with_paste_source(
-    std::move_only_function<void(std::shared_ptr<DataExchangeSource> const&)>&& fn)
+    std::move_only_function<void(std::shared_ptr<DataExchangeSource> const&)> fn)
 {
     std::lock_guard lock{paste_mutex};
     fn(paste_source_);
