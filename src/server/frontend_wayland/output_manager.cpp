@@ -64,6 +64,8 @@ mf::OutputInstance::OutputInstance(wl_resource* resource, OutputGlobal* global)
     send_name_event_if_supported(global->output_config.name);
 }
 
+// clang can't tell that .value() won't throw in this context
+// NOLINTBEGIN(bugprone-exception-escape)
 mf::OutputInstance::~OutputInstance()
 {
     if (global)
@@ -72,6 +74,7 @@ mf::OutputInstance::~OutputInstance()
         global.value().remove_listener(this);
     }
 }
+// NOLINTEND(bugprone-exception-escape)
 
 auto mf::OutputInstance::from(wl_resource* output) -> OutputInstance*
 {
@@ -156,7 +159,7 @@ void mf::OutputGlobal::handle_configuration_changed(mg::DisplayConfigurationOutp
     bool needs_done = false;
     for (auto& listener : listeners)
     {
-        if (listener->output_config_changed(config))
+        if (listener && listener.value().output_config_changed(config))
         {
             needs_done = true;
         }
@@ -190,14 +193,12 @@ void mf::OutputGlobal::for_each_output_bound_by(
 
 void mf::OutputGlobal::add_listener(OutputConfigListener* listener)
 {
-    listeners.push_back(listener);
+    listeners.emplace_back(listener);
 }
 
 void mf::OutputGlobal::remove_listener(OutputConfigListener* listener)
 {
-    listeners.erase(
-        std::remove_if(listeners.begin(), listeners.end(), [&](auto candidate) { return candidate == listener; }),
-        listeners.end());
+    std::erase_if(listeners, [&](auto candidate) { return !candidate || &candidate.value() == listener; });
 }
 
 void mf::OutputGlobal::bind(wl_resource* resource)
@@ -206,7 +207,7 @@ void mf::OutputGlobal::bind(wl_resource* resource)
     instances[instance->client].push_back(instance);
     for (auto const& listener : listeners)
     {
-        listener->output_config_changed(output_config);
+        if (listener) listener.value().output_config_changed(output_config);
     }
     instance->send_done();
 }
