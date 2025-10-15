@@ -720,4 +720,3 @@ global:
     typeinfo?for?miral::LocatePointer;
   };
 } MIRAL_5.5;
-
