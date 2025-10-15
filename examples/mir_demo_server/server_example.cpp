@@ -180,10 +180,22 @@ try
                         is_running = true;
                         return true;
                     }
+                    else if (scancode == KEY_GRAVE)
+                    {
+                        application_switcher.prev_window();
+                        is_running = true;
+                        return true;
+                    }
                 }
                 if (scancode == KEY_TAB)
                 {
                     application_switcher.next_app();
+                    is_running = true;
+                    return true;
+                }
+                else if (scancode == KEY_GRAVE)
+                {
+                    application_switcher.next_window();
                     is_running = true;
                     return true;
                 }
