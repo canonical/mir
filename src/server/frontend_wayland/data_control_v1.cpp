@@ -155,24 +155,14 @@ public:
 
     void receive_from_current_source(std::string const& mime, mir::Fd fd, bool is_primary)
     {
-        shared_state->primary_clipboard->do_with_paste_source(
-            [is_primary, mime, fd](auto const& primary_paste_source)
-            {
-                if (is_primary && primary_paste_source)
-                {
-                    primary_paste_source->initiate_send(mime, fd);
-                    return;
-                }
-            });
+        auto const target_clipboard = is_primary ? shared_state->primary_clipboard : shared_state->clipboard;
 
-        shared_state->clipboard->do_with_paste_source(
-            [is_primary, mime, fd](auto const& paste_source)
+        target_clipboard->do_with_paste_source(
+            [mime, fd](auto const& paste_source)
             {
-                if (!is_primary && paste_source)
-                {
-                    paste_source->initiate_send(mime, fd);
+                if (!paste_source)
                     return;
-                }
+                paste_source->initiate_send(mime, fd);
             });
 
         mir::log_warning("Attempt to receive from invalid source");
