@@ -188,12 +188,18 @@ public:
     /// conditionally_enable().
     auto disable(std::string name) -> WaylandExtensions&;
 
-    /// Enable a Wayland extension only when the callback returns true. The callback can use info.user_preference()
-    /// to respect the extension options the user provided, it is not required. Unlike enable() and disable(),
-    /// conditionally_enable() can override the user options. The callback may be called multiple times for a each
-    /// client/extension pair (for example, once each time a client creates or destroys a wl_registry).
-    /// All client processing will be blocked while the callback is being executed. To minimise the impact on client
-    /// responsiveness users may want to cache the result of any expensive checks made in the callback.
+    /// Enable a Wayland extension only when the \p callback returns true.
+    ///
+    /// The callback can use info.user_preference() to respect the extension options the user provided, although it is not required.
+    /// Unlike #enable and #disable, #conditionally_enable can override the user options. The callback may be
+    /// called multiple times for each  client/extension pair (for example, once each time a client creates or
+    /// destroys a wl_registry).
+    ///
+    /// All client processing will be blocked while the callback is being executed. To minimize the impact on client
+    /// responsiveness, users may want to cache the result of any expensive checks made in the callback.
+    ///
+    /// This method may be called multiple times for the same extension \p name. The \p callback functions
+    /// will be executed in the order in which they are added until one returns `true` or they all return `false`.
     auto conditionally_enable(std::string name, EnableCallback const& callback) -> WaylandExtensions&;
 
 private:

@@ -23,6 +23,7 @@
 
 namespace miral
 {
+class WaylandExtensions;
 
 /// A simple application switcher.
 ///
@@ -35,7 +36,7 @@ namespace miral
 /// Users must call #ApplicationSwitcher::stop in the stop callback of their server
 /// to stop the switcher.
 ///
-/// This internal client relies on the following protocols:
+/// This internal client automatically enables and uses the following protocols:
 /// 1. wlr foreign toplevel management v1
 /// 2. wlr layer shell v1
 ///
@@ -48,7 +49,9 @@ class ApplicationSwitcher
 {
 public:
     /// Creates a new application switcher.
-    ApplicationSwitcher();
+    ///
+    /// \param extensions A instance of #miral::WaylandExtensions
+    explicit ApplicationSwitcher(WaylandExtensions& extensions);
     ~ApplicationSwitcher();
 
     void operator()(wl_display* display);

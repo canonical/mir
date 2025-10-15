@@ -260,7 +260,9 @@ struct miral::WaylandExtensions::Self
         }
         else
         {
-            conditional_extensions[name] = callback;
+            if (conditional_extensions.find(name) == conditional_extensions.end())
+                conditional_extensions[name] = std::vector<EnableCallback>{};
+            conditional_extensions[name].push_back(callback);
         }
     }
 
@@ -387,7 +389,14 @@ struct miral::WaylandExtensions::Self
                             user_pref = false;
                         }
 
-                        return cond->second(EnableInfo{ app, protocol, user_pref});
+                        EnableInfo const info{app, protocol, user_pref};
+                        for (auto const& check : cond->second)
+                        {
+                            if (check(info))
+                                return true;
+                        }
+
+                        return false;
                     }
                 });
         }
@@ -412,7 +421,7 @@ struct miral::WaylandExtensions::Self
 
     std::set<std::string> const recommended_extensions;
     std::vector<Builder> wayland_extension_hooks;
-    std::map<std::string, EnableCallback> conditional_extensions;
+    std::map<std::string, std::vector<EnableCallback>> conditional_extensions;
     /**
      * Extensions to enable by default if the user does not override with a command line options
      * This starts set to mir::frontend::get_standard_extensions()
