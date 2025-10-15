@@ -17,6 +17,7 @@
 #ifndef MIRAL_CURSOR_SCALE_H
 #define MIRAL_CURSOR_SCALE_H
 
+#include <chrono>
 #include <memory>
 
 namespace mir { class Server; }
@@ -58,6 +59,10 @@ public:
     ///
     /// \param new_scale the new scale
     void scale(float new_scale) const;
+
+    /// Temporarily scales the cursor up or down by the given multiplier.
+    /// \note This method is added as a temporary helper and may be removed at any time
+    void scale_temporarily(float scale_multiplier, std::chrono::milliseconds duration) const;
 
     void operator()(mir::Server& server) const;
 private:

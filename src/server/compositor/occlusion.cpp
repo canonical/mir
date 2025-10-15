@@ -54,28 +54,45 @@ bool renderable_is_occluded(
         }
     }
 
-    if (!occluded && renderable.alpha() == 1.0f && !renderable.shaped())
-        coverage.push_back(clipped_window);
-
+    if (!occluded)
+    {
+        if (renderable.shaped())
+        {
+            if (auto const opaque_region = renderable.opaque_region())
+            {
+                for (auto const& subregion : *opaque_region)
+                {
+                    auto const clipped_subregion = intersection_of(subregion, area);
+                    coverage.push_back(clipped_subregion);
+                }
+            }
+            // Client didn't send an opaque region
+        }
+        else if (renderable.alpha() == 1.0f)
+        {
+            coverage.push_back(clipped_window);
+        }
+    }
     return occluded;
 }
 }
 
-SceneElementSequence mir::compositor::filter_occlusions_from(
-    SceneElementSequence& elements,
-    Rectangle const& area)
+std::pair<OccludedElementSequence, SceneElementSequence> mir::compositor::split_occluded_and_visible(
+    SceneElementSequence&& elements, Rectangle const& area)
 {
-    SceneElementSequence occluded;
+    std::pair<OccludedElementSequence, SceneElementSequence> result{{}, std::move(elements)};
     std::vector<Rectangle> coverage;
 
-    auto it = elements.rbegin();
-    while (it != elements.rend())
+    auto& [occluded, visible] = result;
+
+    auto it = visible.rbegin();
+    while (it != visible.rend())
     {
         auto const renderable = (*it)->renderable();
         if (renderable_is_occluded(*renderable, area, coverage))
         {
             occluded.insert(occluded.begin(), *it);
-            it = SceneElementSequence::reverse_iterator(elements.erase(std::prev(it.base())));
+            it = SceneElementSequence::reverse_iterator(visible.erase(std::prev(it.base())));
         }
         else
         {
@@ -83,5 +100,5 @@ SceneElementSequence mir::compositor::filter_occlusions_from(
         }
     }
 
-    return occluded;
+    return result;
 }
