@@ -388,13 +388,21 @@ void mf::DataControlDeviceV1::on_clipboard_set(std::shared_ptr<ms::DataExchangeS
     if ((is_primary && source == our_primary_source) || (!is_primary && source == our_source))
         return;
 
-    auto new_offer = new DataControlOfferV1(wayland::Weak{this}, source->mime_types(), is_primary);
-
-    // No need to lock, we already lock at the start of `set_selection` and `set_primary_selection`
-    if (is_primary)
-        send_primary_selection_event({new_offer->resource});
-    else
-        send_selection_event({new_offer->resource});
+    if(source)
+    {
+        auto new_offer = new DataControlOfferV1(wayland::Weak{this}, source->mime_types(), is_primary);
+        // No need to lock, we already lock at the start of `set_selection` and `set_primary_selection`
+        if (is_primary)
+            send_primary_selection_event({new_offer->resource});
+        else
+            send_selection_event({new_offer->resource});
+    } else
+    {
+        if (is_primary)
+            send_primary_selection_event({});
+        else
+            send_selection_event({});
+    }
 }
 
 auto mf::create_data_control_manager_v1(
