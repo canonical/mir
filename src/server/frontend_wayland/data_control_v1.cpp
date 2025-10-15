@@ -196,10 +196,10 @@ private:
         }
     };
 
-    auto data_exchange_source_from_source(std::optional<struct wl_resource*> const& data_control_source)
+    auto data_exchange_source_from_source(struct wl_resource* data_control_source)
         -> std::shared_ptr<ms::DataExchangeSource>
     {
-        if (auto source = mf::DataControlSourceV1::from(*data_control_source))
+        if (auto source = mf::DataControlSourceV1::from(data_control_source))
         {
             if (!source)
                 return nullptr;
@@ -212,12 +212,12 @@ private:
             return std::make_shared<DataExchangeSource>(wayland::Weak{source}, seat);
         }
 
-        if (auto wl_data_source = mf::WlDataSource::from(*data_control_source))
+        if (auto wl_data_source = mf::WlDataSource::from(data_control_source))
         {
             return wl_data_source->make_source();
         }
 
-        if (auto primary_data_source = mf::PrimarySelectionSource::from(*data_control_source))
+        if (auto primary_data_source = mf::PrimarySelectionSource::from(data_control_source))
         {
             return primary_data_source->make_source();
         }
@@ -229,7 +229,7 @@ private:
     {
         if (data_control_source)
         {
-            auto data_exchange_source = data_exchange_source_from_source(data_control_source);
+            auto data_exchange_source = data_exchange_source_from_source(*data_control_source);
             if(!data_control_source)
             {
                 mir::log_warning("Attempt to call `set_selection` with a null source or an unhandled source type");
@@ -249,7 +249,7 @@ private:
     {
         if (data_control_source)
         {
-            auto data_exchange_source = data_exchange_source_from_source(data_control_source);
+            auto data_exchange_source = data_exchange_source_from_source(*data_control_source);
             if(!data_control_source)
             {
                 mir::log_warning(
