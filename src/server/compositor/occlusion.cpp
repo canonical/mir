@@ -80,9 +80,10 @@ bool renderable_is_occluded(
 std::pair<OccludedElementSequence, SceneElementSequence> mir::compositor::split_occluded_and_visible(
     SceneElementSequence&& elements, Rectangle const& area)
 {
-    OccludedElementSequence occluded;
-    SceneElementSequence visible{std::move(elements)};
+    std::pair<OccludedElementSequence, SceneElementSequence> result{{}, std::move(elements)};
     std::vector<Rectangle> coverage;
+
+    auto& [occluded, visible] = result;
 
     auto it = visible.rbegin();
     while (it != visible.rend())
@@ -99,5 +100,5 @@ std::pair<OccludedElementSequence, SceneElementSequence> mir::compositor::split_
         }
     }
 
-    return {std::move(occluded), std::move(visible)};
+    return result;
 }
