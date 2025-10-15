@@ -1,4 +1,4 @@
-MIR_SERVER_INTERNAL_2.22 {
+MIR_SERVER_INTERNAL_2.24 {
 global:
   extern "C++" {
     VTT?for?mir::DefaultServerConfiguration;
@@ -523,6 +523,7 @@ global:
     mir::scene::BasicSurface::set_min_height*;
     mir::scene::BasicSurface::set_min_width*;
     mir::scene::BasicSurface::set_mirror_mode*;
+    mir::scene::BasicSurface::set_opaque_region*;
     mir::scene::BasicSurface::set_orientation*;
     mir::scene::BasicSurface::set_reception_mode*;
     mir::scene::BasicSurface::set_streams*;
@@ -819,6 +820,7 @@ global:
     mir::time::Alarm::operator*;
     mir::time::AlarmFactory::?AlarmFactory*;
     mir::time::AlarmFactory::AlarmFactory*;
+    mir::time::AlarmFactory::create_repeating_alarm*;
     mir::time::AlarmFactory::operator*;
     non-virtual?thunk?to?mir::BasicCallback::lock*;
     non-virtual?thunk?to?mir::BasicCallback::operator*;
@@ -1097,6 +1099,7 @@ global:
     non-virtual?thunk?to?mir::scene::BasicSurface::set_min_height*;
     non-virtual?thunk?to?mir::scene::BasicSurface::set_min_width*;
     non-virtual?thunk?to?mir::scene::BasicSurface::set_mirror_mode*;
+    non-virtual?thunk?to?mir::scene::BasicSurface::set_opaque_region*;
     non-virtual?thunk?to?mir::scene::BasicSurface::set_orientation*;
     non-virtual?thunk?to?mir::scene::BasicSurface::set_reception_mode*;
     non-virtual?thunk?to?mir::scene::BasicSurface::set_streams*;
@@ -1640,20 +1643,3 @@ global:
   };
 local: *;
 };
-
-MIR_SERVER_INTERNAL_2.23 {
-global:
-  extern "C++" {
-    mir::time::AlarmFactory::create_repeating_alarm*;
-  };
-local: *;
-} MIR_SERVER_INTERNAL_2.22;
-
-
-MIR_SERVER_INTERNAL_2.24 {
-global:
-  extern "C++" {
-    mir::scene::BasicSurface::set_opaque_region*;
-    non-virtual?thunk?to?mir::scene::BasicSurface::set_opaque_region*;
-local: *;
-} MIR_SERVER_INTERNAL_2.23;
