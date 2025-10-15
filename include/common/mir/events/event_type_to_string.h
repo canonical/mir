@@ -18,7 +18,7 @@
 #define MIR_EVENT_TYPE_TO_STRING_H_
 
 #include <string>
-#include "mir_toolkit/client_types.h"
+#include <mir_toolkit/client_types.h>
 
 namespace mir
 {

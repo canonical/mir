@@ -17,16 +17,16 @@
 #ifndef MIR_EVENT_BUILDERS_H_
 #define MIR_EVENT_BUILDERS_H_
 
-#include "mir_toolkit/event.h"
+#include <mir_toolkit/event.h>
 
-#include "mir/geometry/size.h"
-#include "mir/geometry/point.h"
-#include "mir/geometry/rectangle.h"
-#include "mir/geometry/displacement.h"
-#include "mir/frontend/surface_id.h"
-#include "mir/events/input_device_state.h"
-#include "mir/events/scroll_axis.h"
-#include "mir/events/touch_contact.h"
+#include <mir/geometry/size.h>
+#include <mir/geometry/point.h>
+#include <mir/geometry/rectangle.h>
+#include <mir/geometry/displacement.h>
+#include <mir/frontend/surface_id.h>
+#include <mir/events/input_device_state.h>
+#include <mir/events/scroll_axis.h>
+#include <mir/events/touch_contact.h>
 
 #include <memory>
 #include <chrono>

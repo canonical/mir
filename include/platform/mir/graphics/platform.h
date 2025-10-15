@@ -22,11 +22,11 @@
 #include <span>
 #include <gbm.h>
 
-#include "mir/graphics/drm_formats.h"
-#include "mir/module_properties.h"
-#include "mir/module_deleter.h"
-#include "mir/renderer/sw/pixel_source.h"
-#include "mir/fd.h"
+#include <mir/graphics/drm_formats.h>
+#include <mir/module_properties.h>
+#include <mir/module_deleter.h>
+#include <mir/renderer/sw/pixel_source.h>
+#include <mir/fd.h>
 
 #include <EGL/egl.h>
 

@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_MOUSEKEYS_TRANSFORMER_H
 #define MIR_TEST_DOUBLES_MOCK_MOUSEKEYS_TRANSFORMER_H
 
-#include "mir/shell/mousekeys_transformer.h"
+#include <mir/shell/mousekeys_transformer.h>
 
 #include <gmock/gmock.h>
 

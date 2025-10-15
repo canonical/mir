@@ -17,7 +17,7 @@
 #ifndef MIR_INPUT_PLATFORM_H_
 #define MIR_INPUT_PLATFORM_H_
 
-#include "mir/module_properties.h"
+#include <mir/module_properties.h>
 
 #include <mir/options/option.h>
 #include <mir/module_deleter.h>

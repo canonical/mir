@@ -17,8 +17,8 @@
 #ifndef MIRAL_RUNNER_H
 #define MIRAL_RUNNER_H
 
-#include "mir/optional_value.h"
-#include "mir/fd.h"
+#include <mir/optional_value.h>
+#include <mir/fd.h>
 
 #include <functional>
 #include <initializer_list>

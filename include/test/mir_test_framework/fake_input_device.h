@@ -17,8 +17,8 @@
 #ifndef MIR_TEST_FRAMEWORK_FAKE_INPUT_DEVICE_H_
 #define MIR_TEST_FRAMEWORK_FAKE_INPUT_DEVICE_H_
 
-#include "mir_toolkit/events/event.h"
-#include "mir/test/event_factory.h"
+#include <mir_toolkit/events/event.h>
+#include <mir/test/event_factory.h>
 #include <chrono>
 #include <functional>
 #include <vector>

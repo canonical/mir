@@ -17,8 +17,8 @@
 #ifndef MIR_DISPATCH_ACTION_QUEUE_H_
 #define MIR_DISPATCH_ACTION_QUEUE_H_
 
-#include "mir/fd.h"
-#include "mir/dispatch/dispatchable.h"
+#include <mir/fd.h>
+#include <mir/dispatch/dispatchable.h>
 
 #include <list>
 #include <mutex>

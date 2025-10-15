@@ -20,7 +20,7 @@
 
 #include <functional>
 #include <initializer_list>
-#include "mir/module_deleter.h"
+#include <mir/module_deleter.h>
 
 namespace mir
 {

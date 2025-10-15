@@ -17,9 +17,9 @@
 #ifndef MIR_GRAPHICS_BUFFER_H_
 #define MIR_GRAPHICS_BUFFER_H_
 
-#include "mir/graphics/buffer_id.h"
-#include "mir/geometry/size.h"
-#include "mir_toolkit/common.h"
+#include <mir/graphics/buffer_id.h>
+#include <mir/geometry/size.h>
+#include <mir_toolkit/common.h>
 
 namespace mir
 {

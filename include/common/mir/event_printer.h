@@ -17,7 +17,7 @@
 #ifndef MIR_EVENT_PRINTER_H_
 #define MIR_EVENT_PRINTER_H_
 
-#include "mir_toolkit/event.h"
+#include <mir_toolkit/event.h>
 
 #include <iostream>
 

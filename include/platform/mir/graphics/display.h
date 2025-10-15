@@ -17,7 +17,7 @@
 #ifndef MIR_GRAPHICS_DISPLAY_H_
 #define MIR_GRAPHICS_DISPLAY_H_
 
-#include "mir/graphics/frame.h"
+#include <mir/graphics/frame.h>
 #include <memory>
 #include <functional>
 #include <chrono>

@@ -17,7 +17,7 @@
 #ifndef MIR_GRAPHICS_OVERLAPPING_OUTPUT_GROUPING_H_
 #define MIR_GRAPHICS_OVERLAPPING_OUTPUT_GROUPING_H_
 
-#include "mir/geometry/forward.h"
+#include <mir/geometry/forward.h>
 
 #include <vector>
 #include <functional>

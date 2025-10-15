@@ -23,7 +23,7 @@
 #include <vector>
 
 #include <mir/geometry/rectangles.h>
-#include "mir_toolkit/common.h"
+#include <mir_toolkit/common.h>
 
 namespace mir
 {

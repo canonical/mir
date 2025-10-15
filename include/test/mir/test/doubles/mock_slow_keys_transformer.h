@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_SLOW_KEYS_TRANSFORMER_H
 #define MIR_TEST_DOUBLES_MOCK_SLOW_KEYS_TRANSFORMER_H
 
-#include "mir/shell/slow_keys_transformer.h"
+#include <mir/shell/slow_keys_transformer.h>
 
 #include <gmock/gmock.h>
 

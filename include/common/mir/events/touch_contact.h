@@ -17,9 +17,9 @@
 #ifndef MIR_EVENTS_TOUCH_CONTACT_H_
 #define MIR_EVENTS_TOUCH_CONTACT_H_
 
-#include "mir_toolkit/event.h"
+#include <mir_toolkit/event.h>
 #include "contact_state.h"
-#include "mir/geometry/point.h"
+#include <mir/geometry/point.h>
 
 #include <optional>
 

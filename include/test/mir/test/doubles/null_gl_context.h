@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_NULL_GL_CONTEXT_H_
 #define MIR_TEST_DOUBLES_NULL_GL_CONTEXT_H_
 
-#include "mir/renderer/gl/context.h"
+#include <mir/renderer/gl/context.h>
 
 namespace mir
 {

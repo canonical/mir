@@ -17,9 +17,9 @@
 #ifndef MIR_OPTIONS_DEFAULT_CONFIGURATION_H_
 #define MIR_OPTIONS_DEFAULT_CONFIGURATION_H_
 
-#include "mir/options/configuration.h"
-#include "mir/options/program_option.h"
-#include "mir/shared_library.h"
+#include <mir/options/configuration.h>
+#include <mir/options/program_option.h>
+#include <mir/shared_library.h>
 #include <boost/program_options/options_description.hpp>
 #include <vector>
 #include <unordered_map>

@@ -19,7 +19,7 @@
 #ifndef MIR_LOG_H_
 #define MIR_LOG_H_
 
-#include "mir/logging/logger.h"  // for Severity
+#include <mir/logging/logger.h>  // for Severity
 #include <string>
 #include <cstdarg>
 #include <exception>

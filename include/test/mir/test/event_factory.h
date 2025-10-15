@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_EVENT_FACTORY_H
 #define MIR_TEST_EVENT_FACTORY_H
 
-#include "mir/geometry/point.h"
+#include <mir/geometry/point.h>
 
 #include <optional>
 #include <chrono>
