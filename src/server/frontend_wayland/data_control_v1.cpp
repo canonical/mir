@@ -329,7 +329,20 @@ private:
     private:
         void create_data_source(struct wl_resource* id) override
         {
-            new DataControlSourceV1{id};
+            auto const source = new DataControlSourceV1{id};
+
+            source->add_destroy_listener(
+                [this, source]
+                {
+                    for (auto const& clp : {state->clipboard, state->primary_clipboard})
+                    {
+                        if (auto const dxs = std::dynamic_pointer_cast<DataExchangeSource>(clp->paste_source());
+                            dxs && dxs->source.is(*source))
+                        {
+                            clp->clear_paste_source();
+                        }
+                    }
+                });
         }
 
         void get_data_device(struct wl_resource* id, struct wl_resource* seat) override
