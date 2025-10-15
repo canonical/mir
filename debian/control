@@ -67,7 +67,7 @@ Vcs-Git: https://github.com/canonical/mir
 
 #TODO: Packaging infrastructure for better dependency generation,
 #      ala pkg-xorg's xviddriver:Provides and ABI detection.
-Package: libmirserver65
+Package: libmirserver66
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -162,7 +162,7 @@ Section: libdevel
 Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmirserver65 (= ${binary:Version}),
+Depends: libmirserver66 (= ${binary:Version}),
          libmirplatform-dev (= ${binary:Version}),
          libmircommon-dev (= ${binary:Version}),
          libglm-dev,
@@ -179,7 +179,7 @@ Section: libdevel
 Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmirserver65 (= ${binary:Version}),
+Depends: libmirserver66 (= ${binary:Version}),
       libmirplatform-dev (= ${binary:Version}),
       libmircommon-dev (= ${binary:Version}),
       libmircore-dev (= ${binary:Version}),

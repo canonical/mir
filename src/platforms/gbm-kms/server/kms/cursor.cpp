@@ -532,6 +532,11 @@ auto mir::graphics::gbm::Cursor::renderable() -> std::shared_ptr<Renderable>
             return mir_mirror_mode_none;
         }
 
+        std::optional<geom::Rectangles> opaque_region() const override
+        {
+            return geom::Rectangles{{screen_position()}};
+        }
+
     private:
         std::shared_ptr<Buffer> buffer_;
         geom::Point position;
