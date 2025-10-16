@@ -56,8 +56,9 @@ public:
     /// Get the current copy-paste source.
     virtual auto paste_source() const -> std::shared_ptr<DataExchangeSource> = 0;
 
-    /// Do something with the current paste source. Must guarantee thread
-    /// safety.
+    /// Run the given callback on the current paste source. Must run on the
+    /// same thread as the caller and hold the paste source lock to prevent any
+    /// modifications from occuring while the callback is being executed.
     virtual void do_with_paste_source(
         std::move_only_function<void(std::shared_ptr<DataExchangeSource> const&)> fn) = 0;
 
