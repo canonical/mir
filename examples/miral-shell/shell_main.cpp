@@ -21,6 +21,7 @@
 #include "wallpaper_config.h"
 #include "spinner/splash.h"
 
+#include <miral/application_switcher.h>
 #include <miral/display_configuration_option.h>
 #include <miral/external_client.h>
 #include <miral/runner.h>
@@ -86,8 +87,9 @@ int main(int argc, char const* argv[])
         };
 
     MirRunner runner{argc, argv};
+    ApplicationSwitcher application_switcher;
 
-    runner.add_stop_callback([&] { shutdown_hook(); });
+    runner.add_stop_callback([&] { shutdown_hook(); application_switcher.stop(); });
 
     ExternalClientLauncher external_client_launcher;
 
@@ -334,10 +336,60 @@ int main(int argc, char const* argv[])
             return false;
     };
 
+    // The following filter triggers the application selector internal application
+    // on "Ctrl + Tab" and "Ctrl + Shift + Tab". Note that this does NOT use
+    // "Alt + Tab" as that is claimed by the MinimalWindowManager for the time being.
+    auto const application_switcher_filter = [application_switcher=application_switcher, is_running = false](MirKeyboardEvent const* key_event) mutable
+    {
+        if (mir_keyboard_event_action(key_event) == mir_keyboard_action_down)
+        {
+            auto const modifiers = mir_keyboard_event_modifiers(key_event);
+            if (modifiers & mir_input_event_modifier_ctrl)
+            {
+                auto const scancode = mir_keyboard_event_scan_code(key_event);
+                if (modifiers & mir_input_event_modifier_shift)
+                {
+                    if (scancode == KEY_TAB)
+                    {
+                        application_switcher.prev_app();
+                        is_running = true;
+                        return true;
+                    }
+                }
+                if (scancode == KEY_TAB)
+                {
+                    application_switcher.next_app();
+                    is_running = true;
+                    return true;
+                }
+                else if (scancode == KEY_ESC && is_running)
+                {
+                    application_switcher.cancel();
+                    is_running = false;
+                    return true;
+                }
+            }
+        }
+        else if (mir_keyboard_event_action(key_event) == mir_keyboard_action_up)
+        {
+            auto const scancode = mir_keyboard_event_scan_code(key_event);
+            if ((scancode == KEY_LEFTCTRL || scancode == KEY_RIGHTCTRL) && is_running)
+            {
+                application_switcher.confirm();
+                is_running = false;
+                return true;
+            }
+        }
+
+        return false;
+    };
+
     return runner.run_with(
         {
             CursorTheme{"default:DMZ-White"},
-            WaylandExtensions{},
+            WaylandExtensions{}
+                .conditionally_enable(WaylandExtensions::zwlr_layer_shell_v1, [](WaylandExtensions::EnableInfo const&) { return false; })
+                .conditionally_enable(WaylandExtensions::zwlr_foreign_toplevel_manager_v1, [](WaylandExtensions::EnableInfo const&) { return false; }),
             X11Support{},
             ConfigureDecorations{},
             pre_init(ConfigurationOption{[&](bool is_set)
@@ -367,6 +419,8 @@ int main(int argc, char const* argv[])
             AppendKeyboardEventFilter{sticky_keys_filter},
             cursor_scale,
             locate_pointer,
-            AppendKeyboardEventFilter{locate_pointer_filter}
+            AppendKeyboardEventFilter{locate_pointer_filter},
+            StartupInternalClient{application_switcher},
+            AppendKeyboardEventFilter{application_switcher_filter}
         });
 }

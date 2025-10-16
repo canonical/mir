@@ -363,7 +363,7 @@ std::shared_ptr<mf::Connector>
             auto options = the_options();
             bool const arw_socket = options->is_set(options::arw_server_socket_opt);
 
-            auto wayland_extensions = std::set<std::string>{
+            auto const wayland_extensions = std::set<std::string>{
                 enabled_wayland_extensions.begin(),
                 enabled_wayland_extensions.end()};
 

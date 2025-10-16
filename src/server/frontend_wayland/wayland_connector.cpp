@@ -50,6 +50,9 @@
 #include <functional>
 #include <type_traits>
 #include <cstring>
+#include <unistd.h>
+
+#include "mir/scene/session.h"
 
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
@@ -593,6 +596,9 @@ bool mf::WaylandConnector::wl_display_global_filter_func(wl_client const* client
 {
     auto const* const interface = wl_global_get_interface(global);
     auto const session = get_session(const_cast<wl_client*>(client));
+    if (session->process_id() == getpid())
+        return true;
+
     return extension_filter(session, interface->name);
 }
 
