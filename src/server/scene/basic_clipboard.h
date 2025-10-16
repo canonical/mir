@@ -73,14 +73,17 @@ public:
     void register_interest(std::weak_ptr<ClipboardObserver> const& observer) override
     {
         multiplexer.register_interest(observer);
+        observer.lock()->paste_source_set(paste_source_);
     }
     void register_interest(std::weak_ptr<ClipboardObserver> const& observer, Executor& executor) override
     {
         multiplexer.register_interest(observer, executor);
+        observer.lock()->paste_source_set(paste_source_);
     }
     void register_early_observer(std::weak_ptr<ClipboardObserver> const& observer, Executor& executor) override
     {
         multiplexer.register_early_observer(observer, executor);
+        observer.lock()->paste_source_set(paste_source_);
     }
     void unregister_interest(ClipboardObserver const& observer) override
     {
