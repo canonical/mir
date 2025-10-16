@@ -17,11 +17,11 @@
 #ifndef MIR_TESTS_INCLUDE_MIR_TEST_FRAMEWORK_ASYNC_SERVER_RUNNER_H_
 #define MIR_TESTS_INCLUDE_MIR_TEST_FRAMEWORK_ASYNC_SERVER_RUNNER_H_
 
-#include "mir_test_framework/temporary_environment_value.h"
-#include "mir/test/auto_unblock_thread.h"
+#include <mir_test_framework/temporary_environment_value.h>
+#include <mir/test/auto_unblock_thread.h>
 
-#include "mir/server.h"
-#include "miral/set_window_management_policy.h"
+#include <mir/server.h>
+#include <miral/set_window_management_policy.h>
 
 #include <condition_variable>
 #include <list>

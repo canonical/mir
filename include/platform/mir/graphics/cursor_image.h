@@ -18,8 +18,8 @@
 #ifndef MIR_GRAPHICS_CURSOR_IMAGE_H_
 #define MIR_GRAPHICS_CURSOR_IMAGE_H_
 
-#include "mir/geometry/size.h"
-#include "mir/geometry/displacement.h"
+#include <mir/geometry/size.h>
+#include <mir/geometry/displacement.h>
 
 namespace mir
 {

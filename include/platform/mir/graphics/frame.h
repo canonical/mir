@@ -17,7 +17,7 @@
 #ifndef MIR_GRAPHICS_FRAME_H_
 #define MIR_GRAPHICS_FRAME_H_
 
-#include "mir/time/posix_timestamp.h"
+#include <mir/time/posix_timestamp.h>
 #include <cstdint>
 
 namespace mir { namespace graphics {

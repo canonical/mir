@@ -17,7 +17,7 @@
 #ifndef MIROIL_DISPLAY_LISTENER_WRAPPER_H
 #define MIROIL_DISPLAY_LISTENER_WRAPPER_H
 
-#include "mir/geometry/forward.h"
+#include <mir/geometry/forward.h>
 
 #include <memory>
 

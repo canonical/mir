@@ -22,7 +22,7 @@ struct wl_client;
 #include <memory>
 #include <optional>
 
-#include "mir/wayland/lifetime_tracker.h"
+#include <mir/wayland/lifetime_tracker.h>
 
 class MirEvent;
 

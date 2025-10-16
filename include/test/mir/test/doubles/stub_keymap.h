@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_STUB_KEYMAP_H_
 #define MIR_TEST_DOUBLES_STUB_KEYMAP_H_
 
-#include "mir/input/keymap.h"
+#include <mir/input/keymap.h>
 
 namespace mir
 {

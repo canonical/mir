@@ -17,13 +17,13 @@
 #ifndef MIR_GRAPHICS_DISPLAY_CONFIGURATION_H_
 #define MIR_GRAPHICS_DISPLAY_CONFIGURATION_H_
 
-#include "mir/int_wrapper.h"
-#include "mir/geometry/size.h"
-#include "mir/geometry/rectangle.h"
-#include "mir/geometry/point.h"
-#include "mir/graphics/gamma_curves.h"
-#include "mir/optional_value.h"
-#include "mir_toolkit/common.h"
+#include <mir/int_wrapper.h>
+#include <mir/geometry/size.h>
+#include <mir/geometry/rectangle.h>
+#include <mir/geometry/point.h>
+#include <mir/graphics/gamma_curves.h>
+#include <mir/optional_value.h>
+#include <mir_toolkit/common.h>
 
 #include <glm/glm.hpp>
 

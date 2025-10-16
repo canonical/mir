@@ -18,7 +18,7 @@
 #ifndef MIR_GRAPHICS_OUTPUT_FILTER_H_
 #define MIR_GRAPHICS_OUTPUT_FILTER_H_
 
-#include "mir_toolkit/common.h"
+#include <mir_toolkit/common.h>
 
 namespace mir
 {

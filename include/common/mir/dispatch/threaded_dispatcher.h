@@ -24,8 +24,8 @@
 #include <mutex>
 #include <condition_variable>
 
-#include "mir/dispatch/multiplexing_dispatchable.h"
-#include "mir/fd.h"
+#include <mir/dispatch/multiplexing_dispatchable.h>
+#include <mir/fd.h>
 
 namespace mir
 {

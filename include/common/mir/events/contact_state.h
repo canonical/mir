@@ -17,7 +17,7 @@
 #ifndef MIR_EVENTS_CONTACT_STATE_H_
 #define MIR_EVENTS_CONTACT_STATE_H_
 
-#include "mir_toolkit/event.h"
+#include <mir_toolkit/event.h>
 
 namespace mir
 {

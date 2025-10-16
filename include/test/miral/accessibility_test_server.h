@@ -17,10 +17,10 @@
 #ifndef MIRAL_ACCESSIBILITY_TEST_SERVER_H
 #define MIRAL_ACCESSIBILITY_TEST_SERVER_H
 
-#include "miral/test_server.h"
-#include "mir/server.h"
+#include <miral/test_server.h>
+#include <mir/server.h>
 
-#include "mir/test/doubles/mock_accessibility_manager.h"
+#include <mir/test/doubles/mock_accessibility_manager.h>
 
 namespace mtd = mir::test::doubles;
 

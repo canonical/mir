@@ -17,9 +17,9 @@
 #ifndef MIR_INPUT_EVENT_BUILDER_H_
 #define MIR_INPUT_EVENT_BUILDER_H_
 
-#include "mir_toolkit/event.h"
-#include "mir/events/touch_contact.h"
-#include "mir/events/scroll_axis.h"
+#include <mir_toolkit/event.h>
+#include <mir/events/touch_contact.h>
+#include <mir/events/scroll_axis.h>
 #include <memory>
 #include <chrono>
 #include <vector>

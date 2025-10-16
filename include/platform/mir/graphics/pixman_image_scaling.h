@@ -17,7 +17,7 @@
 #ifndef MIR_GRAPHICS_PIXMAN_IMAGE_SCALING_H_
 #define MIR_GRAPHICS_PIXMAN_IMAGE_SCALING_H_
 
-#include "mir/geometry/size.h"
+#include <mir/geometry/size.h>
 #include <memory>
 
 namespace mir::graphics

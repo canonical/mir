@@ -21,10 +21,10 @@
 #include <functional>
 #include <memory>
 
-#include "mir/geometry/dimensions.h"
-#include "mir/geometry/size.h"
-#include "mir/graphics/buffer.h"
-#include "mir_toolkit/common.h"
+#include <mir/geometry/dimensions.h>
+#include <mir/geometry/size.h>
+#include <mir/graphics/buffer.h>
+#include <mir_toolkit/common.h>
 
 namespace mir
 {

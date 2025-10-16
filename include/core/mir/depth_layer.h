@@ -17,7 +17,7 @@
 #ifndef MIR_DEPTH_LAYER_H_
 #define MIR_DEPTH_LAYER_H_
 
-#include "mir_toolkit/common.h"
+#include <mir_toolkit/common.h>
 
 namespace mir
 {

@@ -17,8 +17,8 @@
 #ifndef MIR_GRAPHICS_BUFFER_PROPERTIES_H_
 #define MIR_GRAPHICS_BUFFER_PROPERTIES_H_
 
-#include "mir/geometry/size.h"
-#include "mir_toolkit/common.h"
+#include <mir/geometry/size.h>
+#include <mir_toolkit/common.h>
 
 namespace mir
 {

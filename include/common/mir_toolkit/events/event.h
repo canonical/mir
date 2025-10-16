@@ -21,7 +21,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include "mir_toolkit/common.h"
+#include <mir_toolkit/common.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -43,13 +43,13 @@ typedef struct MirEvent MirEvent;
 }
 #endif
 
-#include "mir_toolkit/events/input/input_event.h"
-#include "mir_toolkit/events/resize_event.h"
-#include "mir_toolkit/events/window_event.h"
-#include "mir_toolkit/events/orientation_event.h"
-#include "mir_toolkit/events/prompt_session_event.h"
-#include "mir_toolkit/events/window_output_event.h"
-#include "mir_toolkit/events/input_device_state_event.h"
+#include <mir_toolkit/events/input/input_event.h>
+#include <mir_toolkit/events/resize_event.h>
+#include <mir_toolkit/events/window_event.h>
+#include <mir_toolkit/events/orientation_event.h>
+#include <mir_toolkit/events/prompt_session_event.h>
+#include <mir_toolkit/events/window_output_event.h>
+#include <mir_toolkit/events/input_device_state_event.h>
 
 #ifdef __cplusplus
 extern "C" {

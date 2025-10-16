@@ -24,9 +24,9 @@
 #include <memory>
 #include <span>
 
-#include "mir/graphics/buffer.h"
-#include "mir/graphics/drm_formats.h"
-#include "mir/graphics/egl_extensions.h"
+#include <mir/graphics/buffer.h>
+#include <mir/graphics/drm_formats.h>
+#include <mir/graphics/egl_extensions.h>
 
 namespace mir
 {

@@ -17,7 +17,7 @@
 #ifndef MIR_OPTIONAL_VALUE_H_
 #define MIR_OPTIONAL_VALUE_H_
 
-#include "mir/fatal.h"
+#include <mir/fatal.h>
 #include <utility>
 
 namespace mir
