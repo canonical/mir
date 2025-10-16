@@ -374,27 +374,6 @@ mf::DataControlDeviceV1::DataControlDeviceV1(
 {
     state->clipboard->register_interest(clipboard_observer);
     state->primary_clipboard->register_interest(primary_clipboard_observer);
-
-    shared_state->clipboard->do_with_paste_source(
-        [this](auto const& paste_source)
-        {
-            // Tell the client about the current source, if any.
-            if (paste_source)
-            {
-                auto offer = new mf::DataControlOfferV1(wayland::Weak{this}, paste_source->mime_types(), false);
-                send_selection_event({offer->resource});
-            }
-        });
-
-    shared_state->primary_clipboard->do_with_paste_source(
-        [this](auto const& primary_paste_source)
-        {
-            if (primary_paste_source)
-            {
-                auto offer = new mf::DataControlOfferV1(wayland::Weak{this}, primary_paste_source->mime_types(), true);
-                send_primary_selection_event({offer->resource});
-            }
-        });
 }
 
 void mf::DataControlDeviceV1::on_clipboard_set(std::shared_ptr<ms::DataExchangeSource> const& source, bool is_primary)
