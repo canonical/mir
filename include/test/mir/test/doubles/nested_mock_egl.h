@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_NESTED_MOCK_EGL_H_
 #define MIR_TEST_DOUBLES_NESTED_MOCK_EGL_H_
 
-#include "mir/test/doubles/mock_egl.h"
+#include <mir/test/doubles/mock_egl.h>
 
 namespace mir
 {

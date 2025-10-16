@@ -17,10 +17,10 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_ACCESSIBILITY_MANAGER_H
 #define MIR_TEST_DOUBLES_MOCK_ACCESSIBILITY_MANAGER_H
 
-#include "mir/shell/accessibility_manager.h"
-#include "mir/test/doubles/mock_hover_click_transformer.h"
-#include "mir/test/doubles/mock_mousekeys_transformer.h"
-#include "mir/test/doubles/mock_slow_keys_transformer.h"
+#include <mir/shell/accessibility_manager.h>
+#include <mir/test/doubles/mock_hover_click_transformer.h>
+#include <mir/test/doubles/mock_mousekeys_transformer.h>
+#include <mir/test/doubles/mock_slow_keys_transformer.h>
 
 #include <gmock/gmock.h>
 

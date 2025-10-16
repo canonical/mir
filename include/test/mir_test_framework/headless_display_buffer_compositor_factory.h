@@ -16,7 +16,7 @@
 
 #ifndef MIR_TEST_FRAMEWORK_HEADLESS_DISPLAY_BUFFER_COMPOSITOR_FACTORY_H_
 #define MIR_TEST_FRAMEWORK_HEADLESS_DISPLAY_BUFFER_COMPOSITOR_FACTORY_H_
-#include "mir/compositor/display_buffer_compositor_factory.h"
+#include <mir/compositor/display_buffer_compositor_factory.h>
 
 namespace mir::graphics
 {

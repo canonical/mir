@@ -17,7 +17,7 @@
 #ifndef MIR_WAYLAND_LIFETIME_TRACKER_H_
 #define MIR_WAYLAND_LIFETIME_TRACKER_H_
 
-#include "mir/int_wrapper.h"
+#include <mir/int_wrapper.h>
 
 #include <memory>
 #include <functional>

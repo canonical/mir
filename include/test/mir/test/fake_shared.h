@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_FAKE_SHARED_H_
 #define MIR_TEST_FAKE_SHARED_H_
 
-#include "mir/test/empty_deleter.h"
+#include <mir/test/empty_deleter.h>
 
 #include <memory>
 

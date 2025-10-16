@@ -19,7 +19,7 @@
 
 #include <cmath>
 
-#include "mir_toolkit/event.h"
+#include <mir_toolkit/event.h>
 
 #include <boost/type_index.hpp>
 

@@ -17,9 +17,9 @@
 #ifndef MIR_INPUT_INPUT_SINK_H_
 #define MIR_INPUT_INPUT_SINK_H_
 
-#include "mir_toolkit/event.h"
-#include "mir/geometry/rectangle.h"
-#include "mir/geometry/point.h"
+#include <mir_toolkit/event.h>
+#include <mir/geometry/rectangle.h>
+#include <mir/geometry/point.h>
 
 #include <memory>
 #include <vector>

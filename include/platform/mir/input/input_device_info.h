@@ -17,7 +17,7 @@
 #ifndef MIR_INPUT_INPUT_DEVICE_INFO_H_
 #define MIR_INPUT_INPUT_DEVICE_INFO_H_
 
-#include "mir/input/device_capability.h"
+#include <mir/input/device_capability.h>
 
 #include <cstdint>
 #include <string>

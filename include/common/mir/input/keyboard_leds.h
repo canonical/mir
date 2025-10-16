@@ -17,7 +17,7 @@
 #ifndef MIR_INPUT_KEYBOARD_LEDS_H
 #define MIR_INPUT_KEYBOARD_LEDS_H
 
-#include "mir/flags.h"
+#include <mir/flags.h>
 #include <cstdint>
 
 namespace mir

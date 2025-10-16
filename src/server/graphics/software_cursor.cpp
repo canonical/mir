@@ -134,6 +134,11 @@ public:
         scale = new_scale;
     }
 
+    auto opaque_region() const -> std::optional<geom::Rectangles> override
+    {
+        return geom::Rectangles{{screen_position()}};
+    }
+
 private:
     std::shared_ptr<mg::Buffer> const buffer_;
     mutable std::mutex position_mutex;

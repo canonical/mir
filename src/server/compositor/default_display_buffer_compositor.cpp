@@ -60,14 +60,14 @@ bool mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
     report->began_frame(this);
 
     auto const& view_area = display_sink.view_area();
-    auto const& occlusions = mc::filter_occlusions_from(scene_elements, view_area);
+    auto [occluded_elements, visible_elements] = mc::split_occluded_and_visible(std::move(scene_elements), view_area);
 
-    for (auto const& element : occlusions)
+    for (auto const& element : occluded_elements)
         element->occluded();
 
     mg::RenderableList renderable_list;
-    renderable_list.reserve(scene_elements.size());
-    for (auto const& element : scene_elements)
+    renderable_list.reserve(visible_elements.size());
+    for (auto const& element : visible_elements)
     {
         element->rendered();
         renderable_list.push_back(element->renderable());
@@ -75,13 +75,13 @@ bool mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
 
     /*
      * Note: Buffer lifetimes are ensured by the two objects holding
-     *       references to them; scene_elements and renderable_list.
-     *       So no buffer is going to be releaswayland_executored back to the client till
+     *       references to them; visible_elements and renderable_list.
+     *       So no buffer is going to be released back to the client till
      *       both of those containers get destroyed (end of the function).
      *       Actually, there's a third reference held by the texture cache
      *       in GLRenderer, but that gets released earlier in render().
      */
-    scene_elements.clear();  // Those in use are still in renderable_list
+    visible_elements.clear();  // Those in use are still in renderable_list
 
     std::vector<mg::DisplayElement> framebuffers;
     framebuffers.reserve(renderable_list.size());

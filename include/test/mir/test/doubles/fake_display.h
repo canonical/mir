@@ -17,10 +17,10 @@
 #ifndef MIR_TEST_DOUBLES_FAKE_DISPLAY_H_
 #define MIR_TEST_DOUBLES_FAKE_DISPLAY_H_
 
-#include "mir/test/doubles/null_display.h"
-#include "mir/fd.h"
+#include <mir/test/doubles/null_display.h>
+#include <mir/fd.h>
 
-#include "mir/geometry/rectangle.h"
+#include <mir/geometry/rectangle.h>
 
 #include <atomic>
 #include <mutex>

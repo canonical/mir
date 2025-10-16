@@ -17,7 +17,7 @@
 #ifndef MIRAL_WINDOW_H
 #define MIRAL_WINDOW_H
 
-#include "miral/application.h"
+#include <miral/application.h>
 
 #include <mir/geometry/point.h>
 #include <mir/geometry/size.h>

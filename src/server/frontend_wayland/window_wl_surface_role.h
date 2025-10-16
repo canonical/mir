@@ -62,7 +62,6 @@ class WlSeat;
 
 class WindowWlSurfaceRole
     : public WlSurfaceRole,
-      public virtual wayland::LifetimeTracker,
       public OutputManagerListener,
       public OutputConfigListener
 {

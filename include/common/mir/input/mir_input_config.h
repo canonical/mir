@@ -17,8 +17,8 @@
 #ifndef MIR_INPUT_INPUT_CONFIGURATION_H
 #define MIR_INPUT_INPUT_CONFIGURATION_H
 
-#include "mir_toolkit/mir_input_device_types.h"
-#include "mir/input/device_capability.h"
+#include <mir_toolkit/mir_input_device_types.h>
+#include <mir/input/device_capability.h>
 
 #include <memory>
 #include <vector>

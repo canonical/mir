@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_STUB_CURSOR_IMAGE_H_
 #define MIR_TEST_DOUBLES_STUB_CURSOR_IMAGE_H_
 
-#include "mir/graphics/cursor_image.h"
+#include <mir/graphics/cursor_image.h>
 
 namespace mir
 {

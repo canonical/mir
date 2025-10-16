@@ -106,6 +106,12 @@ public:
     {
         return std::nullopt;
     }
+
+    auto opaque_region() const -> std::optional<geometry::Rectangles> override
+    {
+        return std::nullopt;
+    }
+
 private:
     std::shared_ptr<graphics::Buffer> make_stub_buffer(geometry::Rectangle const& rect)
     {

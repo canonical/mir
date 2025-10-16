@@ -17,8 +17,8 @@
 #ifndef MIR_INPUT_TOUCHSCREEN_SETTINGS_H
 #define MIR_INPUT_TOUCHSCREEN_SETTINGS_H
 
-#include "mir_toolkit/client_types.h"
-#include "mir_toolkit/mir_input_device_types.h"
+#include <mir_toolkit/client_types.h>
+#include <mir_toolkit/mir_input_device_types.h>
 
 namespace mir
 {

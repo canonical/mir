@@ -17,7 +17,7 @@
 #ifndef MIR_PLATFORM_GRAPHICS_DRM_FORMATS_H_
 #define MIR_PLATFORM_GRAPHICS_DRM_FORMATS_H_
 
-#include "mir_toolkit/common.h"
+#include <mir_toolkit/common.h>
 #include <cstdint>
 #include <string>
 #include <optional>

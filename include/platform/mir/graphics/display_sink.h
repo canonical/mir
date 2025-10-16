@@ -17,7 +17,7 @@
 #ifndef MIR_GRAPHICS_DISPLAY_SINK_H_
 #define MIR_GRAPHICS_DISPLAY_SINK_H_
 
-#include "mir/graphics/platform.h"
+#include <mir/graphics/platform.h>
 #include <mir/geometry/rectangle.h>
 #include <mir/graphics/renderable.h>
 #include <mir_toolkit/common.h>

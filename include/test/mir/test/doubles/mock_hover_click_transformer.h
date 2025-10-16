@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_HOVER_CLICK_TRANSFORMER_H
 #define MIR_TEST_DOUBLES_MOCK_HOVER_CLICK_TRANSFORMER_H
 
-#include "mir/shell/hover_click_transformer.h"
+#include <mir/shell/hover_click_transformer.h>
 
 #include <gmock/gmock.h>
 

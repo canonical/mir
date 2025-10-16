@@ -18,7 +18,7 @@
 #define MIR_CORE_ANONYMOUS_SHM_FILE_H_
 
 #include "shm_file.h"
-#include "mir/fd.h"
+#include <mir/fd.h>
 
 namespace mir
 {

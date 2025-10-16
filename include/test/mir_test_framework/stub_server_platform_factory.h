@@ -17,10 +17,10 @@
 #ifndef MIR_TEST_FRAMEWORK_STUB_SERVER_PLATFORM_FACTORY_
 #define MIR_TEST_FRAMEWORK_STUB_SERVER_PLATFORM_FACTORY_
 
-#include "mir/geometry/rectangle.h"
+#include <mir/geometry/rectangle.h>
 
-#include "mir/graphics/platform.h"
-#include "mir/module_deleter.h"
+#include <mir/graphics/platform.h>
+#include <mir/module_deleter.h>
 #include <vector>
 #include <memory>
 #include <string>

@@ -17,8 +17,8 @@
 #ifndef MIR_INPUT_TOUCH_PAD_CONFIGURATION_H_
 #define MIR_INPUT_TOUCH_PAD_CONFIGURATION_H_
 
-#include "mir_toolkit/common.h"
-#include "mir_toolkit/mir_input_device_types.h"
+#include <mir_toolkit/common.h>
+#include <mir_toolkit/mir_input_device_types.h>
 
 #include <memory>
 #include <iosfwd>

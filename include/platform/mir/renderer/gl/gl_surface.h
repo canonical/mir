@@ -17,7 +17,7 @@
 #ifndef MIR_RENDERER_GL_SURFACE_H_
 #define MIR_RENDERER_GL_SURFACE_H_
 
-#include "mir/geometry/size.h"
+#include <mir/geometry/size.h>
 #include <memory>
 
 namespace mir

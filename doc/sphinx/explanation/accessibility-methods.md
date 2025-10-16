@@ -99,6 +99,7 @@ Mir includes the following visual accessibility methods:
 1. Cursor scaling
 1. Color filters
 1. Zooming/Magnification
+1. Locate Pointer
 
 ### Cursor scaling
 
@@ -122,3 +123,11 @@ magnification tool. By default, it magnifies a small area around the cursor,
 but the magnification power and magnification area can be modified at runtime.
 
 API details: check out {cpp:class}`miral::Magnifier`
+
+### Locate Pointer
+
+Useful for providing visual feedback about the position if the cursor. The
+default implementation grows the cursor for a brief period of time before
+shrinking it back down.
+
+API details: check out {cpp:class}`miral::LocatePointer`

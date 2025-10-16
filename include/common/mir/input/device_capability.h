@@ -17,7 +17,7 @@
 #ifndef MIR_INPUT_DEVICE_CAPABILITY_H_
 #define MIR_INPUT_DEVICE_CAPABILITY_H_
 
-#include "mir/flags.h"
+#include <mir/flags.h>
 
 #include <cstdint>
 

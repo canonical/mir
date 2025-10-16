@@ -17,7 +17,7 @@
 #ifndef MIRAL_APPLICATION_INFO_H
 #define MIRAL_APPLICATION_INFO_H
 
-#include "miral/application.h"
+#include <miral/application.h>
 
 #include <string>
 #include <vector>

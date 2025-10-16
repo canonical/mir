@@ -39,7 +39,7 @@ namespace frontend
 class DisplayChanger;
 class OutputGlobal;
 
-class OutputConfigListener
+class OutputConfigListener : public virtual wayland::LifetimeTracker
 {
 public:
     // Returns true if the wl_output needs to send a done event
@@ -87,7 +87,7 @@ private:
     void instance_destroyed(OutputInstance* instance);
 
     graphics::DisplayConfigurationOutput output_config;
-    std::vector<OutputConfigListener*> listeners;
+    std::vector<wayland::Weak<OutputConfigListener>> listeners;
     std::unordered_map<wayland::Client*, std::vector<OutputInstance*>> instances;
 };
 

@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DISPLAY_CONFIG_MATCHERS_H_
 #define MIR_TEST_DISPLAY_CONFIG_MATCHERS_H_
 
-#include "mir_toolkit/client_types.h"
+#include <mir_toolkit/client_types.h>
 
 #include <memory>
 #include <gmock/gmock.h>

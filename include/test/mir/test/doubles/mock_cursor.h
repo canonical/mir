@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_CURSOR_H
 #define MIR_TEST_DOUBLES_MOCK_CURSOR_H
 
-#include "mir/graphics/cursor.h"
+#include <mir/graphics/cursor.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 

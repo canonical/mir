@@ -17,8 +17,8 @@
 #ifndef MIR_DISPATCH_MULTIPLEXING_DISPATCHABLE_H_
 #define MIR_DISPATCH_MULTIPLEXING_DISPATCHABLE_H_
 
-#include "mir/dispatch/dispatchable.h"
-#include "mir/posix_rw_mutex.h"
+#include <mir/dispatch/dispatchable.h>
+#include <mir/posix_rw_mutex.h>
 
 #include <functional>
 #include <initializer_list>

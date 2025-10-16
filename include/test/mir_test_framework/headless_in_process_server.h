@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_FRAMEWORK_HEADLESS_IN_PROCESS_SERVER_H_
 #define MIR_TEST_FRAMEWORK_HEADLESS_IN_PROCESS_SERVER_H_
 
-#include "mir_test_framework/headless_test.h"
+#include <mir_test_framework/headless_test.h>
 
 namespace mir_test_framework
 {

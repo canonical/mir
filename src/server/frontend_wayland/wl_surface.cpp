@@ -326,8 +326,13 @@ void mf::WlSurface::frame(wl_resource* new_callback)
 
 void mf::WlSurface::set_opaque_region(std::optional<wl_resource*> const& region)
 {
-    (void)region;
-    // This isn't essential, but could enable optimizations
+    pending.opaque_region = region.transform([](auto*r)
+        {
+            geom::Rectangles opaque_region;
+            for (auto const& subregion : WlRegion::from(r)->rectangle_vector())
+                opaque_region.add(subregion);
+            return opaque_region;
+        });
 }
 
 void mf::WlSurface::set_input_region(std::optional<wl_resource*> const& region)
@@ -378,6 +383,8 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
                 scene_surface.value()->set_orientation(state.orientation.value());
             if (state.mirror_mode)
                 scene_surface.value()->set_mirror_mode(state.mirror_mode.value());
+            if (state.opaque_region)
+                scene_surface.value()->set_opaque_region(state.opaque_region.value());
         }
      }
 
