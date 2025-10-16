@@ -15,6 +15,7 @@
  */
 
 #include "miral/application_switcher.h"
+#include "miral/wayland_extensions.h"
 #include "wayland_app.h"
 #include "wayland_shm.h"
 #include "wlr-foreign-toplevel-management-unstable-v1.h"
@@ -633,15 +634,25 @@ public:
             app->prev_app();
     }
 
+    std::weak_ptr<mir::scene::Session> session;
 private:
     mir::Fd const shutdown_signal;
     std::mutex mutex;
     std::shared_ptr<WaylandApp> app;
 };
 
-miral::ApplicationSwitcher::ApplicationSwitcher()
+miral::ApplicationSwitcher::ApplicationSwitcher(WaylandExtensions& extensions)
     : self(std::make_shared<Self>())
 {
+    extensions.conditionally_enable(WaylandExtensions::zwlr_foreign_toplevel_manager_v1, [this](WaylandExtensions::EnableInfo const& enable_info) -> bool
+    {
+        return !self->session.expired() && self->session.lock() == enable_info.app();
+    });
+
+    extensions.conditionally_enable(WaylandExtensions::zwlr_layer_shell_v1, [this](WaylandExtensions::EnableInfo const& enable_info) -> bool
+    {
+        return !self->session.expired() && self->session.lock() == enable_info.app();
+    });
 }
 
 miral::ApplicationSwitcher::~ApplicationSwitcher()
@@ -654,8 +665,9 @@ void miral::ApplicationSwitcher::operator()(wl_display* display)
     self->run_client(display);
 }
 
-void miral::ApplicationSwitcher::operator()(std::weak_ptr<mir::scene::Session> const&) const
+void miral::ApplicationSwitcher::operator()(std::weak_ptr<mir::scene::Session> const& session) const
 {
+    self->session = session;
 }
 
 void miral::ApplicationSwitcher::next_app() const

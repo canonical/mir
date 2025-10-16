@@ -142,7 +142,8 @@ try
     miral::StickyKeys sticky_keys{config_store};
     miral::Keymap keymap{config_store};
     miral::HoverClick hover_click{config_store};
-    miral::ApplicationSwitcher application_switcher;
+    miral::WaylandExtensions wayland_extensions;
+    miral::ApplicationSwitcher application_switcher(wayland_extensions);
 
     miral::ConfigFile config_file{
         runner,
@@ -155,8 +156,6 @@ try
 
     InputFilters input_filters;
     me::TestClientRunner test_runner;
-
-    miral::WaylandExtensions wayland_extensions;
 
     for (auto const& ext : wayland_extensions.all_supported())
         wayland_extensions.enable(ext);

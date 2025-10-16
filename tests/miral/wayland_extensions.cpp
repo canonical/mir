@@ -735,3 +735,23 @@ TEST_F(WaylandExtensions, conditionally_enable_can_disable_extension_enabled_by_
 
     EXPECT_THAT(*enumerator_client.interfaces, Not(Contains(Eq("zwlr_layer_shell_v1"))));
 }
+
+TEST_F(WaylandExtensions, conditionally_enable_can_enable_extension_when_multiple_filters_are_added)
+{
+    miral::WaylandExtensions extensions;
+    ClientGlobalEnumerator enumerator_client;
+    extensions.conditionally_enable("zwlr_layer_shell_v1", [&](auto const&)
+        {
+            return false;
+        });
+    extensions.conditionally_enable("zwlr_layer_shell_v1", [&](auto const&)
+        {
+            return true;
+        });
+
+    add_server_init(extensions);
+    start_server();
+    run_as_client(enumerator_client);
+
+    EXPECT_THAT(*enumerator_client.interfaces, Contains(Eq("zwlr_layer_shell_v1")));
+}
