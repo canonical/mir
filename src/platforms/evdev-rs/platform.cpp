@@ -149,7 +149,7 @@ class DispatchableStub : public md::Dispatchable
 public:
     mir::Fd watch_fd() const override
     {
-        return mir::Fd{0};
+        return mir::Fd{};
     }
 
     bool dispatch(md::FdEvents) override
@@ -159,7 +159,7 @@ public:
 
     mir::dispatch::FdEvents relevant_events() const override
     {
-        return md::FdEvent::readable;
+        return md::FdEvent::remote_closed;
     }
 };
 }

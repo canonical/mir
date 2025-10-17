@@ -23,13 +23,6 @@
 //    instead.
 // 2. All enums are changed to i32 for ABI stability
 
-// TODO: Make platform bridge type
-// TODO: Chunk everything into other files
-// TODO: Investigate not using 'poll' from nix instead of libc
-// TODO: Look into event builders with default values (e.g. spreading a default config)
-// TODO: https://medium.com/@adetaylor/thoughts-on-pin-3092e043eb19
-// TODO: Remove 'mut' keyword where not needed
-
 use cxx;
 use input;
 use input::event;
@@ -40,6 +33,7 @@ use input::event::pointer::PointerEventTrait;
 use input::event::pointer::PointerScrollEvent;
 use input::event::EventTrait;
 use input::AsRaw;
+use input::Device;
 use libc;
 use nix::unistd;
 use std::os::fd::{AsFd, AsRawFd, BorrowedFd, FromRawFd};
@@ -47,23 +41,6 @@ use std::os::unix::ffi::OsStrExt;
 use std::os::unix::io;
 use std::sync::mpsc;
 use std::thread;
-
-pub struct PlatformRs {
-    /// The platform bridge provides access to functionality that must happen in C++.
-    bridge: cxx::SharedPtr<ffi::PlatformBridgeC>,
-
-    /// The input device registry is used for registering and unregistering input devices.
-    device_registry: cxx::SharedPtr<ffi::InputDeviceRegistry>,
-
-    /// The handle of the thread running the input loop.
-    handle: Option<thread::JoinHandle<()>>,
-
-    /// The write end of the pipe used to wake the input thread.
-    wfd: Option<io::OwnedFd>,
-
-    /// The channel used to send non-libinput commands to the input thread.
-    tx: Option<mpsc::Sender<ThreadCommand>>,
-}
 
 /// Creates a platform on the rust side of things.
 ///
@@ -80,6 +57,23 @@ pub fn evdev_rs_create(
         wfd: None,
         tx: None,
     });
+}
+
+pub struct PlatformRs {
+    /// The platform bridge provides access to functionality that must happen in C++.
+    bridge: cxx::SharedPtr<ffi::PlatformBridgeC>,
+
+    /// The input device registry is used for registering and unregistering input devices.
+    device_registry: cxx::SharedPtr<ffi::InputDeviceRegistry>,
+
+    /// The handle of the thread running the input loop.
+    handle: Option<thread::JoinHandle<()>>,
+
+    /// The write end of the pipe used to wake the input thread.
+    wfd: Option<io::OwnedFd>,
+
+    /// The channel used to send non-libinput commands to the input thread.
+    tx: Option<mpsc::Sender<ThreadCommand>>,
 }
 
 impl PlatformRs {
@@ -234,6 +228,15 @@ impl PlatformRs {
             return (precise, discrete, value120, stop);
         }
 
+        fn get_device_info_from_libinput_device<'a>(
+            known_devices: &'a mut Vec<DeviceInfo>,
+            libinput_device: &input::Device,
+        ) -> Option<&'a mut DeviceInfo> {
+            known_devices
+                .iter_mut()
+                .find(|d| d.device.as_raw() == libinput_device.as_raw())
+        }
+
         if state.libinput.dispatch().is_err() {
             println!("Error dispatching libinput events");
             return;
@@ -284,15 +287,14 @@ impl PlatformRs {
                             state.known_devices.remove(index);
                         }
                     }
-                    _ => {}
+                    _ => todo!("Unhandled device event type"),
                 },
 
                 input::Event::Pointer(pointer_event) => {
-                    if let Some(device_info) = state
-                        .known_devices
-                        .iter_mut()
-                        .find(|x| x.device.as_raw() == libinput_device.as_raw())
-                    {
+                    if let Some(device_info) = get_device_info_from_libinput_device(
+                        &mut state.known_devices,
+                        &libinput_device,
+                    ) {
                         match pointer_event {
                             event::PointerEvent::Motion(motion_event) => {
                                 if let Some(event_builder) = &mut device_info.event_builder {
@@ -652,19 +654,16 @@ impl PlatformRs {
                                 }
                             }
 
-                            _ => {}
+                            _ => todo!("Unhandled pointer event type"),
                         }
                     }
                 }
 
                 input::Event::Keyboard(keyboard_event) => {
-                    let dev: input::Device = keyboard_event.device();
-
-                    if let Some(device_wrapper) = state
-                        .known_devices
-                        .iter_mut()
-                        .find(|x| x.device.as_raw() == dev.as_raw())
-                    {
+                    if let Some(device_info) = get_device_info_from_libinput_device(
+                        &mut state.known_devices,
+                        &libinput_device,
+                    ) {
                         match keyboard_event {
                             event::KeyboardEvent::Key(key_event) => {
                                 let keyboard_action = match key_event.key_state() {
@@ -676,7 +675,7 @@ impl PlatformRs {
                                     }
                                 };
 
-                                if let Some(event_builder) = &mut device_wrapper.event_builder {
+                                if let Some(event_builder) = &mut device_info.event_builder {
                                     let created = event_builder.pin_mut().key_event(
                                         true,
                                         key_event.time_usec(),
@@ -684,7 +683,7 @@ impl PlatformRs {
                                         key_event.key(),
                                     );
 
-                                    if let Some(input_sink) = &mut device_wrapper.input_sink {
+                                    if let Some(input_sink) = &mut device_info.input_sink {
                                         input_sink.handle_input(&created);
                                     }
                                 }
@@ -694,9 +693,17 @@ impl PlatformRs {
                     }
                 }
 
-                // TODO(mattkae): Make match exhaustive
-                // TODO(mattkae): Handle touch events
-                _ => {}
+                input::Event::Touch(_) => todo!("Handle touch events"),
+
+                input::Event::Tablet(_) => todo!("Handle tablet events"),
+
+                input::Event::TabletPad(_) => todo!("Handle tablet pad events"),
+
+                input::Event::Gesture(_) => todo!("Handle gesture events"),
+
+                input::Event::Switch(_) => todo!("Handle switch events"),
+
+                _ => todo!("Unhandled libinput event type"),
             }
         }
     }
@@ -708,6 +715,13 @@ impl PlatformRs {
         bridge_locked: &cxx::SharedPtr<ffi::PlatformBridgeC>,
         is_running: &mut bool,
     ) {
+        fn find_device_by_id<'a>(
+            state: &'a mut LibinputLoopState,
+            id: i32,
+        ) -> Option<&'a mut DeviceInfo> {
+            state.known_devices.iter_mut().find(|d| d.id == id)
+        }
+
         let mut buf = [0u8];
         nix::unistd::read(&rfd, &mut buf).unwrap();
         // handle commands
@@ -718,9 +732,9 @@ impl PlatformRs {
                 }
                 ThreadCommand::GetDeviceInfo(id, tx) => {
                     // For simplicity, just return info about the first device
-                    if let Some(dev_with_id) = state.known_devices.iter().find(|d| d.id == id) {
+                    if let Some(device_info) = find_device_by_id(state, id) {
                         let mut capabilities: u32 = 0;
-                        if dev_with_id
+                        if device_info
                             .device
                             .has_capability(input::DeviceCapability::Keyboard)
                         {
@@ -728,13 +742,13 @@ impl PlatformRs {
                                 | ffi::DeviceCapability::keyboard.repr
                                 | ffi::DeviceCapability::alpha_numeric.repr;
                         }
-                        if dev_with_id
+                        if device_info
                             .device
                             .has_capability(input::DeviceCapability::Pointer)
                         {
                             capabilities = capabilities | ffi::DeviceCapability::pointer.repr;
                         }
-                        if dev_with_id
+                        if device_info
                             .device
                             .has_capability(input::DeviceCapability::Touch)
                         {
@@ -744,11 +758,11 @@ impl PlatformRs {
                         }
 
                         let info = InputDeviceInfoRs {
-                            name: dev_with_id.device.name().to_string(),
-                            unique_id: dev_with_id.device.name().to_string()
-                                + &dev_with_id.device.sysname().to_string()
-                                + &dev_with_id.device.id_vendor().to_string()
-                                + &dev_with_id.device.id_product().to_string(),
+                            name: device_info.device.name().to_string(),
+                            unique_id: device_info.device.name().to_string()
+                                + &device_info.device.sysname().to_string()
+                                + &device_info.device.id_vendor().to_string()
+                                + &device_info.device.id_product().to_string(),
                             capabilities: capabilities,
                         };
                         let _ = tx.send(info);
@@ -762,28 +776,28 @@ impl PlatformRs {
                     }
                 }
                 ThreadCommand::Start(id, input_sink, event_builder) => {
-                    if let Some(dev_with_id) = state.known_devices.iter_mut().find(|d| d.id == id) {
-                        dev_with_id.input_sink = Some(input_sink);
-                        dev_with_id.event_builder = Some(unsafe {
+                    if let Some(device_info) = find_device_by_id(state, id) {
+                        device_info.input_sink = Some(input_sink);
+                        device_info.event_builder = Some(unsafe {
                             bridge_locked.create_event_builder_wrapper(event_builder.0.as_ptr())
                         });
                     }
                 }
                 ThreadCommand::GetPointerSettings(id, tx) => {
-                    if let Some(dev_with_id) = state.known_devices.iter().find(|d| d.id == id) {
-                        match dev_with_id
+                    if let Some(device_info) = find_device_by_id(state, id) {
+                        match device_info
                             .device
                             .has_capability(input::DeviceCapability::Pointer)
                         {
                             true => {
-                                let handedness = if dev_with_id.device.config_left_handed() {
+                                let handedness = if device_info.device.config_left_handed() {
                                     ffi::MirPointerHandedness::mir_pointer_handedness_left.repr
                                 } else {
                                     ffi::MirPointerHandedness::mir_pointer_handedness_right.repr
                                 };
 
                                 let acceleration = if let Some(accel_profile) =
-                                    dev_with_id.device.config_accel_profile()
+                                    device_info.device.config_accel_profile()
                                 {
                                     if accel_profile == input::AccelProfile::Adaptive {
                                         ffi::MirPointerAcceleration::mir_pointer_acceleration_adaptive.repr
@@ -796,7 +810,7 @@ impl PlatformRs {
                                 };
 
                                 let acceleration_bias =
-                                    dev_with_id.device.config_accel_speed() as f64;
+                                    device_info.device.config_accel_speed() as f64;
 
                                 let settings = ffi::PointerSettingsRs {
                                     is_set: true,
@@ -819,8 +833,8 @@ impl PlatformRs {
                     }
                 }
                 ThreadCommand::SetPointerSettings(id, settings) => {
-                    if let Some(dev_with_id) = state.known_devices.iter_mut().find(|d| d.id == id) {
-                        if dev_with_id
+                    if let Some(device_info) = find_device_by_id(state, id) {
+                        if device_info
                             .device
                             .has_capability(input::DeviceCapability::Pointer)
                         {
@@ -833,7 +847,7 @@ impl PlatformRs {
                                 }
                                 _ => false,
                             };
-                            dev_with_id
+                            device_info
                                 .device
                                 .config_left_handed_set(left_handed)
                                 .unwrap();
@@ -844,11 +858,11 @@ impl PlatformRs {
                                 }
                                 _ => input::AccelProfile::Flat,
                             };
-                            dev_with_id
+                            device_info
                                 .device
                                 .config_accel_set_profile(accel_profile)
                                 .unwrap();
-                            dev_with_id
+                            device_info
                                 .device
                                 .config_accel_set_speed(settings.cursor_acceleration_bias as f64)
                                 .unwrap();
@@ -928,20 +942,33 @@ struct DeviceInfo {
     event_builder: Option<cxx::UniquePtr<ffi::EventBuilderWrapper>>,
 }
 
-// TODO: Add a brief note about the implementation here of why this should work.
-// This is a bit of a hack here.
-//
-// The other side of our platform bridge is known by us to be thread-safe, so we can
+// The other side of the PlatformBridgeC is known by us to be thread-safe, so we can
 // safely send it to another thread. However, Rust has no way of knowing that, so
 // we have to assert it ourselves.
 unsafe impl Send for ffi::PlatformBridgeC {}
 unsafe impl Sync for ffi::PlatformBridgeC {}
+
+// The other side of the InputDeviceRegistry is known by us to be thread-safe, so we can
+// safely send it to another thread. However, Rust has no way of knowing that, so
+// we have to assert it ourselves.
 unsafe impl Send for ffi::InputDeviceRegistry {}
 unsafe impl Sync for ffi::InputDeviceRegistry {}
+
+// The other side of the InputDevice is known by us to be thread-safe, so we can
+// safely send it to another thread. However, Rust has no way of knowing that, so
+// we have to assert it ourselves.
 unsafe impl Send for ffi::InputDevice {}
 unsafe impl Sync for ffi::InputDevice {}
+
+// The other side of the InputSink is known by us to be thread-safe, so we can
+// safely send it to another thread. However, Rust has no way of knowing that, so
+// we have to assert it ourselves.
 unsafe impl Send for ffi::InputSink {}
 unsafe impl Sync for ffi::InputSink {}
+
+// The other side of the EventBuilder is known by us to be thread-safe, so we can
+// safely send it to another thread. However, Rust has no way of knowing that, so
+// we have to assert it ourselves.
 unsafe impl Send for ffi::EventBuilder {}
 unsafe impl Sync for ffi::EventBuilder {}
 
@@ -956,10 +983,7 @@ unsafe impl Sync for ffi::EventBuilder {}
 pub struct InputSinkPtr(std::ptr::NonNull<ffi::InputSink>);
 impl InputSinkPtr {
     fn handle_input(&mut self, event: &cxx::SharedPtr<ffi::MirEvent>) {
-        let pinned = unsafe {
-            // Pin the raw pointer
-            std::pin::Pin::new_unchecked(self.0.as_mut())
-        };
+        let pinned = unsafe { std::pin::Pin::new_unchecked(self.0.as_mut()) };
         pinned.handle_input(event);
     }
 }
@@ -990,7 +1014,6 @@ impl InputDeviceInfoRs {
     }
 }
 
-// TODO: Each command could have a .process method
 enum ThreadCommand {
     Start(i32, InputSinkPtr, EventBuilderPtr),
     GetDeviceInfo(i32, mpsc::Sender<InputDeviceInfoRs>),
@@ -1221,7 +1244,7 @@ mod ffi {
         fn pause_for_config(self: &PlatformRs);
         fn stop(self: &mut PlatformRs);
         fn create_device_observer(self: &PlatformRs) -> Box<DeviceObserverRs>;
-        fn create_input_device(self: &PlatformRs, device_id: i32) -> Box<InputDeviceRs>;
+        fn create_input_device(self: &PlatformRs, device_id: i32) -> Box<InputDeviceRs<'_>>;
 
         fn activated(self: &mut DeviceObserverRs, fd: i32);
         fn suspended(self: &mut DeviceObserverRs);
