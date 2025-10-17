@@ -23,11 +23,16 @@
 //    instead.
 // 2. All enums are changed to i32 for ABI stability
 
-mod enums;
-use crate::enums::{
-    MirDeviceCapability, MirKeyboardAction, MirPointerAcceleration, MirPointerAction,
-    MirPointerAxisSource, MirPointerButton, MirPointerHandedness,
-};
+// TODO: Make platform bridge type
+// TODO: Chunk everything into other files
+// TODO: Scope unsafe stuff better
+// TODO: Investigate not using 'poll' from nix instead of libc
+// TODO: It is best practice to include one path in the namespace instead of exposing 'poll' for example
+// TODO: Look into event builders with default values (e.g. spreading a default config)
+// TODO: https://medium.com/@adetaylor/thoughts-on-pin-3092e043eb19
+// TODO: Remove 'mut' keyword where not needed
+
+use crate::ffi::MirPointerAction;
 use cxx::{SharedPtr, UniquePtr};
 use input::event::keyboard::{KeyState, KeyboardEventTrait};
 use input::event::pointer::{ButtonState, PointerEventTrait, PointerScrollEvent};
@@ -155,12 +160,13 @@ impl PlatformRs {
 
         let mut is_running = true;
         while is_running {
-            unsafe {
-                let ret = poll(fds.as_mut_ptr(), fds.len() as _, -1); // -1 = wait indefinitely
-                if ret < 0 {
-                    println!("Error polling libinput fd");
-                    return;
-                }
+            let ret = unsafe {
+                poll(fds.as_mut_ptr(), fds.len() as _, -1) // -1 = wait indefinitely
+            };
+
+            if ret < 0 {
+                println!("Error polling libinput fd");
+                return;
             }
 
             if (fds[0].revents & POLLIN) != 0 {
@@ -276,14 +282,16 @@ impl PlatformRs {
                                         event_builder.pin_mut().pointer_event(
                                             true,
                                             motion_event.time_usec(),
-                                            MirPointerAction::Motion as i32,
+                                            ffi::MirPointerAction::mir_pointer_action_button_up
+                                                .repr,
                                             state.button_state,
                                             false,
                                             0 as f32,
                                             0 as f32,
                                             motion_event.dx() as f32,
                                             motion_event.dy() as f32,
-                                            MirPointerAxisSource::None as i32,
+                                            ffi::MirPointerAxisSource::mir_pointer_axis_source_none
+                                                .repr,
                                             0.0,
                                             0,
                                             0,
@@ -323,14 +331,14 @@ impl PlatformRs {
                                             event_builder.pin_mut().pointer_event(
                                                 true,
                                                 absolute_motion_event.time_usec(),
-                                                MirPointerAction::Motion as i32,
+                                                ffi::MirPointerAction::mir_pointer_action_motion.repr,
                                                 state.button_state,
                                                 true,
                                                 state.pointer_x,
                                                 state.pointer_y,
                                                 movement_x,
                                                 movement_y,
-                                                MirPointerAxisSource::None as i32,
+                                                ffi::MirPointerAxisSource::mir_pointer_axis_source_none.repr,
                                                 0.0,
                                                 0,
                                                 0,
@@ -394,14 +402,14 @@ impl PlatformRs {
                                         event_builder.pin_mut().pointer_event(
                                             true,
                                             scroll_wheel_event.time_usec(),
-                                            MirPointerAction::Motion as i32,
+                                            ffi::MirPointerAction::mir_pointer_action_motion.repr,
                                             state.button_state,
                                             false,
                                             0.0,
                                             0.0,
                                             0.0,
                                             0.0,
-                                            MirPointerAxisSource::Wheel as i32,
+                                            ffi::MirPointerAxisSource::mir_pointer_axis_source_wheel.repr,
                                             precise_x as f32,
                                             discrete_x as i32,
                                             value120_x as i32,
@@ -460,14 +468,14 @@ impl PlatformRs {
                                         event_builder.pin_mut().pointer_event(
                                             true,
                                             scroll_continuous_event.time_usec(),
-                                            MirPointerAction::Motion as i32,
+                                            ffi::MirPointerAction::mir_pointer_action_motion.repr,
                                             state.button_state,
                                             false,
                                             0.0,
                                             0.0,
                                             0.0,
                                             0.0,
-                                            MirPointerAxisSource::Wheel as i32,
+                                            ffi::MirPointerAxisSource::mir_pointer_axis_source_wheel.repr,
                                             precise_x as f32,
                                             discrete_x as i32,
                                             value120_x as i32,
@@ -524,14 +532,14 @@ impl PlatformRs {
                                         event_builder.pin_mut().pointer_event(
                                             true,
                                             scroll_finger_event.time_usec(),
-                                            MirPointerAction::Motion as i32,
+                                            ffi::MirPointerAction::mir_pointer_action_motion.repr,
                                             state.button_state,
                                             false,
                                             0.0,
                                             0.0,
                                             0.0,
                                             0.0,
-                                            MirPointerAxisSource::Wheel as i32,
+                                            ffi::MirPointerAxisSource::mir_pointer_axis_source_wheel.repr,
                                             precise_x as f32,
                                             discrete_x as i32,
                                             value120_x as i32,
@@ -557,37 +565,50 @@ impl PlatformRs {
                                     const BTN_TASK: u32 = 0x117;
 
                                     let mut mir_button = match button_event.button() {
-                                        BTN_LEFT => MirPointerButton::Primary,
-                                        BTN_RIGHT => MirPointerButton::Secondary,
-                                        BTN_MIDDLE => MirPointerButton::Tertiary,
-                                        BTN_BACK => MirPointerButton::Back,
-                                        BTN_FORWARD => MirPointerButton::Forward,
-                                        BTN_SIDE => MirPointerButton::Side,
-                                        BTN_EXTRA => MirPointerButton::Extra,
-                                        BTN_TASK => MirPointerButton::Task,
-                                        _ => MirPointerButton::Primary,
+                                        BTN_LEFT => {
+                                            ffi::MirPointerButton::mir_pointer_button_primary
+                                        }
+                                        BTN_RIGHT => {
+                                            ffi::MirPointerButton::mir_pointer_button_secondary
+                                        }
+                                        BTN_MIDDLE => {
+                                            ffi::MirPointerButton::mir_pointer_button_tertiary
+                                        }
+                                        BTN_BACK => ffi::MirPointerButton::mir_pointer_button_back,
+                                        BTN_FORWARD => {
+                                            ffi::MirPointerButton::mir_pointer_button_forward
+                                        }
+                                        BTN_SIDE => ffi::MirPointerButton::mir_pointer_button_side,
+                                        BTN_EXTRA => {
+                                            ffi::MirPointerButton::mir_pointer_button_extra
+                                        }
+                                        BTN_TASK => ffi::MirPointerButton::mir_pointer_button_task,
+                                        _ => ffi::MirPointerButton::mir_pointer_button_primary,
                                     };
 
                                     if device_info.device.config_left_handed() {
                                         mir_button = match mir_button {
-                                            MirPointerButton::Primary => {
-                                                MirPointerButton::Secondary
+                                            ffi::MirPointerButton::mir_pointer_button_primary => {
+                                                ffi::MirPointerButton::mir_pointer_button_secondary
                                             }
-                                            MirPointerButton::Secondary => {
-                                                MirPointerButton::Primary
+                                            ffi::MirPointerButton::mir_pointer_button_secondary => {
+                                                ffi::MirPointerButton::mir_pointer_button_primary
                                             }
                                             _ => mir_button,
                                         };
                                     }
 
-                                    let mut action: MirPointerAction = MirPointerAction::Actions;
+                                    let mut action: MirPointerAction =
+                                        ffi::MirPointerAction::mir_pointer_actions;
                                     if button_event.button_state() == ButtonState::Pressed {
-                                        state.button_state = state.button_state | mir_button as u32;
-                                        action = MirPointerAction::ButtonDown;
+                                        state.button_state = state.button_state | mir_button.repr;
+                                        action =
+                                            ffi::MirPointerAction::mir_pointer_action_button_down;
                                     } else {
                                         state.button_state =
-                                            state.button_state & !(mir_button as u32);
-                                        action = MirPointerAction::ButtonUp;
+                                            state.button_state & !(mir_button.repr);
+                                        action =
+                                            ffi::MirPointerAction::mir_pointer_action_button_up;
                                     }
 
                                     handle_input(
@@ -595,14 +616,15 @@ impl PlatformRs {
                                         event_builder.pin_mut().pointer_event(
                                             true,
                                             button_event.time_usec(),
-                                            action as i32,
+                                            action.repr,
                                             state.button_state,
                                             false,
                                             0.0,
                                             0.0,
                                             0.0,
                                             0.0,
-                                            MirPointerAxisSource::None as i32,
+                                            ffi::MirPointerAxisSource::mir_pointer_axis_source_none
+                                                .repr,
                                             0.0,
                                             0,
                                             0,
@@ -632,15 +654,19 @@ impl PlatformRs {
                         match keyboard_event {
                             KeyboardEvent::Key(key_event) => {
                                 let keyboard_action = match key_event.key_state() {
-                                    KeyState::Pressed => MirKeyboardAction::Down,
-                                    KeyState::Released => MirKeyboardAction::Up,
+                                    KeyState::Pressed => {
+                                        ffi::MirKeyboardAction::mir_keyboard_action_down
+                                    }
+                                    KeyState::Released => {
+                                        ffi::MirKeyboardAction::mir_keyboard_action_up
+                                    }
                                 };
 
                                 if let Some(event_builder) = &mut device_wrapper.event_builder {
                                     let created = event_builder.pin_mut().key_event(
                                         true,
                                         key_event.time_usec(),
-                                        keyboard_action as i32,
+                                        keyboard_action.repr,
                                         key_event.key(),
                                     );
 
@@ -654,6 +680,7 @@ impl PlatformRs {
                     }
                 }
 
+                // TODO(mattkae): Make match exhaustive
                 // TODO(mattkae): Handle touch events
                 _ => {}
             }
@@ -684,16 +711,16 @@ impl PlatformRs {
                             .has_capability(DeviceCapability::Keyboard)
                         {
                             capabilities = capabilities
-                                | MirDeviceCapability::Keyboard as u32
-                                | MirDeviceCapability::AlphaNumeric as u32;
+                                | ffi::DeviceCapability::keyboard.repr
+                                | ffi::DeviceCapability::alpha_numeric.repr;
                         }
                         if dev_with_id.device.has_capability(DeviceCapability::Pointer) {
-                            capabilities = capabilities | MirDeviceCapability::Pointer as u32;
+                            capabilities = capabilities | ffi::DeviceCapability::pointer.repr;
                         }
                         if dev_with_id.device.has_capability(DeviceCapability::Touch) {
                             capabilities = capabilities
-                                | MirDeviceCapability::Touchpad as u32
-                                | MirDeviceCapability::Pointer as u32;
+                                | ffi::DeviceCapability::touchpad.repr
+                                | ffi::DeviceCapability::pointer.repr;
                         }
 
                         let info = InputDeviceInfoRs {
@@ -730,21 +757,22 @@ impl PlatformRs {
                         match dev_with_id.device.has_capability(DeviceCapability::Pointer) {
                             true => {
                                 let handedness = if dev_with_id.device.config_left_handed() {
-                                    MirPointerHandedness::LeftHanded as i32
+                                    ffi::MirPointerHandedness::mir_pointer_handedness_left.repr
                                 } else {
-                                    MirPointerHandedness::RightHanded as i32
+                                    ffi::MirPointerHandedness::mir_pointer_handedness_right.repr
                                 };
 
                                 let acceleration = if let Some(accel_profile) =
                                     dev_with_id.device.config_accel_profile()
                                 {
                                     if accel_profile == input::AccelProfile::Adaptive {
-                                        MirPointerAcceleration::Adaptive as i32
+                                        ffi::MirPointerAcceleration::mir_pointer_acceleration_adaptive.repr
                                     } else {
-                                        MirPointerAcceleration::None as i32
+                                        ffi::MirPointerAcceleration::mir_pointer_acceleration_none
+                                            .repr
                                     }
                                 } else {
-                                    MirPointerAcceleration::None as i32
+                                    ffi::MirPointerAcceleration::mir_pointer_acceleration_none.repr
                                 };
 
                                 let acceleration_bias =
@@ -774,7 +802,12 @@ impl PlatformRs {
                     if let Some(dev_with_id) = state.known_devices.iter_mut().find(|d| d.id == id) {
                         if dev_with_id.device.has_capability(DeviceCapability::Pointer) {
                             let left_handed = match settings.handedness {
-                                x if x == MirPointerHandedness::LeftHanded as i32 => true,
+                                x if x
+                                    == ffi::MirPointerHandedness::mir_pointer_handedness_left
+                                        .repr =>
+                                {
+                                    true
+                                }
                                 _ => false,
                             };
                             dev_with_id
@@ -783,7 +816,7 @@ impl PlatformRs {
                                 .unwrap();
 
                             let accel_profile = match settings.acceleration {
-                                x if x == MirPointerAcceleration::Adaptive as i32 => {
+                                x if x == ffi::MirPointerAcceleration::mir_pointer_acceleration_adaptive.repr => {
                                     input::AccelProfile::Adaptive
                                 }
                                 _ => input::AccelProfile::Flat,
@@ -872,6 +905,7 @@ struct DeviceInfo {
     event_builder: Option<UniquePtr<ffi::EventBuilderWrapper>>,
 }
 
+// TODO: Add a brief note about the implementation here of why this should work.
 // This is a bit of a hack here.
 //
 // The other side of our platform bridge is known by us to be thread-safe, so we can
@@ -894,7 +928,7 @@ unsafe impl Sync for ffi::EventBuilder {}
 // that they are neither Send nor Sync. However, we know that the other side of
 // the pointer is actually a C++ object that is thread-safe, so we can assert
 // that these pointers are Send and Sync. We cannot define Send and Sync on the
-// raw types to fix the issue unfortuately, so we have to wrap them in a newtype
+// raw types to fix the issue unfortuately, so we have to wrap them in a new type
 // and define Send and Sync on that.
 pub struct InputSinkPtr(NonNull<ffi::InputSink>);
 impl InputSinkPtr {
@@ -933,6 +967,7 @@ impl InputDeviceInfoRs {
     }
 }
 
+// TODO: Each command could have a .process method
 enum ThreadCommand {
     Start(i32, InputSinkPtr, EventBuilderPtr),
     GetDeviceInfo(i32, mpsc::Sender<InputDeviceInfoRs>),
@@ -1046,7 +1081,7 @@ impl ffi::PointerSettingsRs {
             is_set: false,
             handedness: 0,
             cursor_acceleration_bias: 0.0,
-            acceleration: MirPointerAcceleration::None as i32,
+            acceleration: ffi::MirPointerAcceleration::mir_pointer_acceleration_none.repr,
             horizontal_scroll_scale: 1.0,
             vertical_scroll_scale: 1.0,
         }
@@ -1055,6 +1090,84 @@ impl ffi::PointerSettingsRs {
 
 #[cxx::bridge(namespace = "mir::input::evdev_rs")]
 mod ffi {
+    // Note(mattkae): The device capability enum MUST be in its expanded
+    // form instead of using a bit shift (e.g. 1 << 3) because cxx
+    // currently does not support bit shifts in enums. This will result
+    // in the error: "enums with non-integer literal discriminants are
+    // not supported yet".
+    #[repr(u32)]
+    #[derive(Debug, Copy, Clone, PartialEq, Eq)]
+    enum DeviceCapability {
+        unknown = 0,
+        pointer = 2,
+        keyboard = 4,
+        touchpad = 8,
+        touchscreen = 16,
+        gamepad = 32,
+        joystick = 64,
+        switch_ = 128,
+        multitouch = 256,
+        alpha_numeric = 512,
+    }
+
+    #[repr(i32)]
+    #[derive(Debug, Copy, Clone, PartialEq, Eq)]
+    enum MirKeyboardAction {
+        mir_keyboard_action_up,
+        mir_keyboard_action_down,
+        mir_keyboard_action_repeat,
+        mir_keyboard_action_modifiers,
+        mir_keyboard_actions,
+    }
+
+    #[repr(i32)]
+    #[derive(Debug, Copy, Clone, PartialEq, Eq)]
+    pub enum MirPointerAcceleration {
+        mir_pointer_acceleration_none = 1,
+        mir_pointer_acceleration_adaptive = 2,
+    }
+
+    #[repr(i32)]
+    #[derive(Debug, Copy, Clone, PartialEq, Eq)]
+    enum MirPointerAction {
+        mir_pointer_action_button_up,
+        mir_pointer_action_button_down,
+        mir_pointer_action_enter,
+        mir_pointer_action_leave,
+        mir_pointer_action_motion,
+        mir_pointer_actions,
+    }
+
+    #[repr(i32)]
+    #[derive(Debug, Copy, Clone, PartialEq, Eq)]
+    enum MirPointerAxisSource {
+        mir_pointer_axis_source_none,
+        mir_pointer_axis_source_wheel,
+        mir_pointer_axis_source_finger,
+        mir_pointer_axis_source_continuous,
+        mir_pointer_axis_source_wheel_tilt,
+    }
+
+    #[repr(u32)]
+    #[derive(Debug, Copy, Clone, PartialEq, Eq)]
+    enum MirPointerButton {
+        mir_pointer_button_primary = 1,
+        mir_pointer_button_secondary = 2,
+        mir_pointer_button_tertiary = 4,
+        mir_pointer_button_back = 8,
+        mir_pointer_button_forward = 16,
+        mir_pointer_button_side = 32,
+        mir_pointer_button_extra = 64,
+        mir_pointer_button_task = 128,
+    }
+
+    #[repr(i32)]
+    #[derive(Debug, Copy, Clone, PartialEq, Eq)]
+    enum MirPointerHandedness {
+        mir_pointer_handedness_right = 0,
+        mir_pointer_handedness_left = 1,
+    }
+
     #[derive(Copy, Clone)]
     struct PointerSettingsC {
         pub handedness: i32,
@@ -1143,6 +1256,21 @@ mod ffi {
 
         #[namespace = ""]
         type MirEvent;
+
+        #[namespace = "mir::input"]
+        type DeviceCapability;
+
+        #[namespace = ""]
+        type MirKeyboardAction;
+
+        #[namespace = ""]
+        type MirPointerAcceleration;
+
+        #[namespace = ""]
+        type MirPointerAction;
+
+        #[namespace = ""]
+        type MirPointerAxisSource;
 
         fn acquire_device(
             self: &PlatformBridgeC,
