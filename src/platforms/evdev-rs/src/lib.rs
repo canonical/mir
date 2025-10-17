@@ -33,7 +33,6 @@ use input::event::pointer::PointerEventTrait;
 use input::event::pointer::PointerScrollEvent;
 use input::event::EventTrait;
 use input::AsRaw;
-use input::Device;
 use libc;
 use nix::unistd;
 use std::os::fd::{AsFd, AsRawFd, BorrowedFd, FromRawFd};
