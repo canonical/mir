@@ -167,7 +167,7 @@ public:
                 send_initiated = true;
             });
 
-        if(!send_initiated)
+        if (!send_initiated)
             mir::log_warning("Attempt to receive from invalid source");
     }
 
@@ -231,7 +231,7 @@ private:
         if (data_control_source)
         {
             auto data_exchange_source = data_exchange_source_from_source(*data_control_source);
-            if(!data_control_source)
+            if (!data_control_source)
             {
                 mir::log_warning("Attempt to call `set_selection` with a null source or an unhandled source type");
                 return;
@@ -251,7 +251,7 @@ private:
         if (data_control_source)
         {
             auto data_exchange_source = data_exchange_source_from_source(*data_control_source);
-            if(!data_control_source)
+            if (!data_control_source)
             {
                 mir::log_warning(
                     "Attempt to call `set_primary_selection` with a null source or an unhandled source type");
@@ -389,7 +389,7 @@ void mf::DataControlDeviceV1::on_clipboard_set(std::shared_ptr<ms::DataExchangeS
     if ((is_primary && source == our_primary_source) || (!is_primary && source == our_source))
         return;
 
-    if(source)
+    if (source)
     {
         auto new_offer = new DataControlOfferV1(wayland::Weak{this}, source->mime_types(), is_primary);
         // No need to lock, we already lock at the start of `set_selection` and `set_primary_selection`
@@ -397,7 +397,8 @@ void mf::DataControlDeviceV1::on_clipboard_set(std::shared_ptr<ms::DataExchangeS
             send_primary_selection_event({new_offer->resource});
         else
             send_selection_event({new_offer->resource});
-    } else
+    }
+    else
     {
         if (is_primary)
             send_primary_selection_event({});
