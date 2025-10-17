@@ -38,6 +38,7 @@
 #include <gio/gio.h>
 
 #include "layer_shell_wayland_surface.h"
+#include "miral/wayland_extensions.h"
 
 namespace geom = mir::geometry;
 namespace msh = mir::shell;
@@ -239,6 +240,14 @@ public:
     void init(wl_display* display)
     {
         wayland_init(display);
+        if (!layer_shell())
+            mir::fatal_error("The %s interface is required for the application switcher to run. "
+                "Please enable it using miral::WaylandExtensions.", miral::WaylandExtensions::zwlr_layer_shell_v1);
+
+        if (!toplevel_manager)
+            mir::fatal_error("The %s interface is required for the application switcher to run. "
+                "Please enable it using miral::WaylandExtensions.", miral::WaylandExtensions::zwlr_foreign_toplevel_manager_v1);
+
         shm_ = std::make_shared<miral::tk::WaylandShmPool>(shm());
         miral::tk::LayerShellWaylandSurface::CreationParams surface_params{
             mir::geometry::Size(0, 0),
