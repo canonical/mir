@@ -25,45 +25,61 @@
 
 // TODO: Make platform bridge type
 // TODO: Chunk everything into other files
-// TODO: Scope unsafe stuff better
 // TODO: Investigate not using 'poll' from nix instead of libc
-// TODO: It is best practice to include one path in the namespace instead of exposing 'poll' for example
 // TODO: Look into event builders with default values (e.g. spreading a default config)
 // TODO: https://medium.com/@adetaylor/thoughts-on-pin-3092e043eb19
 // TODO: Remove 'mut' keyword where not needed
 
-use crate::ffi::MirPointerAction;
-use cxx::{SharedPtr, UniquePtr};
-use input::event::keyboard::{KeyState, KeyboardEventTrait};
-use input::event::pointer::{ButtonState, PointerEventTrait, PointerScrollEvent};
-use input::event::{DeviceEvent, EventTrait, KeyboardEvent, PointerEvent};
-use input::{AsRaw, Device, DeviceCapability, Event, Libinput, LibinputInterface};
-use libc::{major, minor, poll, pollfd, stat, POLLIN};
-use nix::unistd::close;
-use std::ffi::CString;
+use cxx;
+use input;
+use input::event;
+use input::event::keyboard;
+use input::event::keyboard::KeyboardEventTrait;
+use input::event::pointer;
+use input::event::pointer::PointerEventTrait;
+use input::event::pointer::PointerScrollEvent;
+use input::event::EventTrait;
+use input::AsRaw;
+use libc;
+use nix::unistd;
 use std::os::fd::{AsFd, AsRawFd, BorrowedFd, FromRawFd};
 use std::os::unix::ffi::OsStrExt;
-use std::os::unix::io::OwnedFd;
-use std::path::Path;
+use std::os::unix::io;
 use std::sync::mpsc;
-use std::thread::{self, JoinHandle};
-use std::{pin::Pin, ptr::NonNull};
+use std::thread;
 
 pub struct PlatformRs {
     /// The platform bridge provides access to functionality that must happen in C++.
-    bridge: SharedPtr<ffi::PlatformBridgeC>,
+    bridge: cxx::SharedPtr<ffi::PlatformBridgeC>,
 
     /// The input device registry is used for registering and unregistering input devices.
-    device_registry: SharedPtr<ffi::InputDeviceRegistry>,
+    device_registry: cxx::SharedPtr<ffi::InputDeviceRegistry>,
 
     /// The handle of the thread running the input loop.
-    handle: Option<JoinHandle<()>>,
+    handle: Option<thread::JoinHandle<()>>,
 
     /// The write end of the pipe used to wake the input thread.
-    wfd: Option<OwnedFd>,
+    wfd: Option<io::OwnedFd>,
 
     /// The channel used to send non-libinput commands to the input thread.
     tx: Option<mpsc::Sender<ThreadCommand>>,
+}
+
+/// Creates a platform on the rust side of things.
+///
+/// The `bridge` and `device_registry` parameters are provided by the C++ side of things.
+/// The C++ platform simply forwards al calls to the rust implementation.
+pub fn evdev_rs_create(
+    bridge: cxx::SharedPtr<ffi::PlatformBridgeC>,
+    device_registry: cxx::SharedPtr<ffi::InputDeviceRegistry>,
+) -> Box<PlatformRs> {
+    return Box::new(PlatformRs {
+        bridge: bridge,
+        device_registry: device_registry,
+        handle: None,
+        wfd: None,
+        tx: None,
+    });
 }
 
 impl PlatformRs {
@@ -105,7 +121,7 @@ impl PlatformRs {
         }
 
         if let Some(wfd) = &self.wfd {
-            let _ = close(wfd.as_raw_fd());
+            let _ = unistd::close(wfd.as_raw_fd());
         }
     }
 
@@ -122,13 +138,13 @@ impl PlatformRs {
     }
 
     fn run(
-        bridge_locked: SharedPtr<ffi::PlatformBridgeC>,
-        device_registry: SharedPtr<ffi::InputDeviceRegistry>,
-        rfd: OwnedFd,
+        bridge_locked: cxx::SharedPtr<ffi::PlatformBridgeC>,
+        device_registry: cxx::SharedPtr<ffi::InputDeviceRegistry>,
+        rfd: io::OwnedFd,
         rx: std::sync::mpsc::Receiver<ThreadCommand>,
     ) {
         let mut state = LibinputLoopState {
-            libinput: Libinput::new_with_udev(LibinputInterfaceImpl {
+            libinput: input::Libinput::new_with_udev(LibinputInterfaceImpl {
                 bridge: bridge_locked.clone(),
                 fds: Vec::new(),
             }),
@@ -146,14 +162,14 @@ impl PlatformRs {
         state.libinput.udev_assign_seat("seat0").unwrap();
 
         let mut fds = [
-            pollfd {
+            libc::pollfd {
                 fd: state.libinput.as_raw_fd(),
-                events: POLLIN,
+                events: libc::POLLIN,
                 revents: 0,
             },
-            pollfd {
+            libc::pollfd {
                 fd: rfd.as_raw_fd(),
-                events: POLLIN,
+                events: libc::POLLIN,
                 revents: 0,
             },
         ];
@@ -161,7 +177,7 @@ impl PlatformRs {
         let mut is_running = true;
         while is_running {
             let ret = unsafe {
-                poll(fds.as_mut_ptr(), fds.len() as _, -1) // -1 = wait indefinitely
+                libc::poll(fds.as_mut_ptr(), fds.len() as _, -1) // -1 = wait indefinitely
             };
 
             if ret < 0 {
@@ -169,7 +185,7 @@ impl PlatformRs {
                 return;
             }
 
-            if (fds[0].revents & POLLIN) != 0 {
+            if (fds[0].revents & libc::POLLIN) != 0 {
                 PlatformRs::process_libinput_events(
                     &mut state,
                     device_registry.clone(),
@@ -177,7 +193,7 @@ impl PlatformRs {
                 );
             }
 
-            if (fds[1].revents & POLLIN) != 0 {
+            if (fds[1].revents & libc::POLLIN) != 0 {
                 PlatformRs::process_thread_events(
                     rfd.try_clone().unwrap(),
                     &rx,
@@ -191,10 +207,13 @@ impl PlatformRs {
 
     fn process_libinput_events(
         state: &mut LibinputLoopState,
-        device_registry: SharedPtr<ffi::InputDeviceRegistry>,
-        bridge: SharedPtr<ffi::PlatformBridgeC>,
+        device_registry: cxx::SharedPtr<ffi::InputDeviceRegistry>,
+        bridge: cxx::SharedPtr<ffi::PlatformBridgeC>,
     ) {
-        fn handle_input(input_sink: &mut Option<InputSinkPtr>, event: SharedPtr<ffi::MirEvent>) {
+        fn handle_input(
+            input_sink: &mut Option<InputSinkPtr>,
+            event: cxx::SharedPtr<ffi::MirEvent>,
+        ) {
             if let Some(input_sink) = input_sink {
                 input_sink.handle_input(&event);
             }
@@ -221,11 +240,11 @@ impl PlatformRs {
         }
 
         for event in &mut state.libinput {
-            let libinput_device: Device = event.device();
+            let libinput_device = event.device();
 
             match event {
-                Event::Device(device_event) => match device_event {
-                    DeviceEvent::Added(added_event) => {
+                input::Event::Device(device_event) => match device_event {
+                    event::DeviceEvent::Added(_) => {
                         state.known_devices.push(DeviceInfo {
                             id: state.next_device_id,
                             device: libinput_device,
@@ -249,8 +268,8 @@ impl PlatformRs {
 
                         state.next_device_id += 1;
                     }
-                    DeviceEvent::Removed(removed_event) => {
-                        let dev: Device = removed_event.device();
+                    event::DeviceEvent::Removed(removed_event) => {
+                        let dev = removed_event.device();
                         let index = state
                             .known_devices
                             .iter()
@@ -268,14 +287,14 @@ impl PlatformRs {
                     _ => {}
                 },
 
-                Event::Pointer(pointer_event) => {
+                input::Event::Pointer(pointer_event) => {
                     if let Some(device_info) = state
                         .known_devices
                         .iter_mut()
                         .find(|x| x.device.as_raw() == libinput_device.as_raw())
                     {
                         match pointer_event {
-                            PointerEvent::Motion(motion_event) => {
+                            event::PointerEvent::Motion(motion_event) => {
                                 if let Some(event_builder) = &mut device_info.event_builder {
                                     handle_input(
                                         &mut device_info.input_sink,
@@ -305,7 +324,7 @@ impl PlatformRs {
                                 }
                             }
 
-                            PointerEvent::MotionAbsolute(absolute_motion_event) => {
+                            event::PointerEvent::MotionAbsolute(absolute_motion_event) => {
                                 if let Some(event_builder) = &mut device_info.event_builder {
                                     if let Some(input_sink) = &mut device_info.input_sink {
                                         let sink_ref: &ffi::InputSink =
@@ -353,7 +372,7 @@ impl PlatformRs {
                                 }
                             }
 
-                            PointerEvent::ScrollWheel(scroll_wheel_event) => {
+                            event::PointerEvent::ScrollWheel(scroll_wheel_event) => {
                                 if let Some(event_builder) = &mut device_info.event_builder {
                                     let (precise_x, discrete_x, value120_x, stop_x) =
                                         if scroll_wheel_event
@@ -423,7 +442,7 @@ impl PlatformRs {
                                 }
                             }
 
-                            PointerEvent::ScrollContinuous(scroll_continuous_event) => {
+                            event::PointerEvent::ScrollContinuous(scroll_continuous_event) => {
                                 if let Some(event_builder) = &mut device_info.event_builder {
                                     let (precise_x, discrete_x, value120_x, stop_x) =
                                         if scroll_continuous_event
@@ -489,7 +508,7 @@ impl PlatformRs {
                                 }
                             }
 
-                            PointerEvent::ScrollFinger(scroll_finger_event) => {
+                            event::PointerEvent::ScrollFinger(scroll_finger_event) => {
                                 if let Some(event_builder) = &mut device_info.event_builder {
                                     let (precise_x, discrete_x, value120_x, stop_x) =
                                         if scroll_finger_event
@@ -553,7 +572,7 @@ impl PlatformRs {
                                 }
                             }
 
-                            PointerEvent::Button(button_event) => {
+                            event::PointerEvent::Button(button_event) => {
                                 if let Some(event_builder) = &mut device_info.event_builder {
                                     const BTN_LEFT: u32 = 0x110;
                                     const BTN_RIGHT: u32 = 0x111;
@@ -564,12 +583,20 @@ impl PlatformRs {
                                     const BTN_BACK: u32 = 0x116;
                                     const BTN_TASK: u32 = 0x117;
 
-                                    let mut mir_button = match button_event.button() {
+                                    let mir_button = match button_event.button() {
                                         BTN_LEFT => {
-                                            ffi::MirPointerButton::mir_pointer_button_primary
+                                            if device_info.device.config_left_handed() {
+                                                ffi::MirPointerButton::mir_pointer_button_secondary
+                                            } else {
+                                                ffi::MirPointerButton::mir_pointer_button_primary
+                                            }
                                         }
                                         BTN_RIGHT => {
-                                            ffi::MirPointerButton::mir_pointer_button_secondary
+                                            if device_info.device.config_left_handed() {
+                                                ffi::MirPointerButton::mir_pointer_button_primary
+                                            } else {
+                                                ffi::MirPointerButton::mir_pointer_button_secondary
+                                            }
                                         }
                                         BTN_MIDDLE => {
                                             ffi::MirPointerButton::mir_pointer_button_tertiary
@@ -586,30 +613,17 @@ impl PlatformRs {
                                         _ => ffi::MirPointerButton::mir_pointer_button_primary,
                                     };
 
-                                    if device_info.device.config_left_handed() {
-                                        mir_button = match mir_button {
-                                            ffi::MirPointerButton::mir_pointer_button_primary => {
-                                                ffi::MirPointerButton::mir_pointer_button_secondary
-                                            }
-                                            ffi::MirPointerButton::mir_pointer_button_secondary => {
-                                                ffi::MirPointerButton::mir_pointer_button_primary
-                                            }
-                                            _ => mir_button,
-                                        };
-                                    }
-
-                                    let mut action: MirPointerAction =
-                                        ffi::MirPointerAction::mir_pointer_actions;
-                                    if button_event.button_state() == ButtonState::Pressed {
+                                    let action: ffi::MirPointerAction = if button_event
+                                        .button_state()
+                                        == pointer::ButtonState::Pressed
+                                    {
                                         state.button_state = state.button_state | mir_button.repr;
-                                        action =
-                                            ffi::MirPointerAction::mir_pointer_action_button_down;
+                                        ffi::MirPointerAction::mir_pointer_action_button_down
                                     } else {
                                         state.button_state =
                                             state.button_state & !(mir_button.repr);
-                                        action =
-                                            ffi::MirPointerAction::mir_pointer_action_button_up;
-                                    }
+                                        ffi::MirPointerAction::mir_pointer_action_button_up
+                                    };
 
                                     handle_input(
                                         &mut device_info.input_sink,
@@ -643,8 +657,8 @@ impl PlatformRs {
                     }
                 }
 
-                Event::Keyboard(keyboard_event) => {
-                    let dev: Device = keyboard_event.device();
+                input::Event::Keyboard(keyboard_event) => {
+                    let dev: input::Device = keyboard_event.device();
 
                     if let Some(device_wrapper) = state
                         .known_devices
@@ -652,12 +666,12 @@ impl PlatformRs {
                         .find(|x| x.device.as_raw() == dev.as_raw())
                     {
                         match keyboard_event {
-                            KeyboardEvent::Key(key_event) => {
+                            event::KeyboardEvent::Key(key_event) => {
                                 let keyboard_action = match key_event.key_state() {
-                                    KeyState::Pressed => {
+                                    keyboard::KeyState::Pressed => {
                                         ffi::MirKeyboardAction::mir_keyboard_action_down
                                     }
-                                    KeyState::Released => {
+                                    keyboard::KeyState::Released => {
                                         ffi::MirKeyboardAction::mir_keyboard_action_up
                                     }
                                 };
@@ -688,10 +702,10 @@ impl PlatformRs {
     }
 
     fn process_thread_events(
-        rfd: OwnedFd,
+        rfd: io::OwnedFd,
         rx: &mpsc::Receiver<ThreadCommand>,
         state: &mut LibinputLoopState,
-        bridge_locked: &SharedPtr<ffi::PlatformBridgeC>,
+        bridge_locked: &cxx::SharedPtr<ffi::PlatformBridgeC>,
         is_running: &mut bool,
     ) {
         let mut buf = [0u8];
@@ -708,16 +722,22 @@ impl PlatformRs {
                         let mut capabilities: u32 = 0;
                         if dev_with_id
                             .device
-                            .has_capability(DeviceCapability::Keyboard)
+                            .has_capability(input::DeviceCapability::Keyboard)
                         {
                             capabilities = capabilities
                                 | ffi::DeviceCapability::keyboard.repr
                                 | ffi::DeviceCapability::alpha_numeric.repr;
                         }
-                        if dev_with_id.device.has_capability(DeviceCapability::Pointer) {
+                        if dev_with_id
+                            .device
+                            .has_capability(input::DeviceCapability::Pointer)
+                        {
                             capabilities = capabilities | ffi::DeviceCapability::pointer.repr;
                         }
-                        if dev_with_id.device.has_capability(DeviceCapability::Touch) {
+                        if dev_with_id
+                            .device
+                            .has_capability(input::DeviceCapability::Touch)
+                        {
                             capabilities = capabilities
                                 | ffi::DeviceCapability::touchpad.repr
                                 | ffi::DeviceCapability::pointer.repr;
@@ -744,17 +764,17 @@ impl PlatformRs {
                 ThreadCommand::Start(id, input_sink, event_builder) => {
                     if let Some(dev_with_id) = state.known_devices.iter_mut().find(|d| d.id == id) {
                         dev_with_id.input_sink = Some(input_sink);
-                        unsafe {
-                            dev_with_id.event_builder = Some(
-                                bridge_locked
-                                    .create_event_builder_wrapper(event_builder.0.as_ptr()),
-                            );
-                        }
+                        dev_with_id.event_builder = Some(unsafe {
+                            bridge_locked.create_event_builder_wrapper(event_builder.0.as_ptr())
+                        });
                     }
                 }
                 ThreadCommand::GetPointerSettings(id, tx) => {
                     if let Some(dev_with_id) = state.known_devices.iter().find(|d| d.id == id) {
-                        match dev_with_id.device.has_capability(DeviceCapability::Pointer) {
+                        match dev_with_id
+                            .device
+                            .has_capability(input::DeviceCapability::Pointer)
+                        {
                             true => {
                                 let handedness = if dev_with_id.device.config_left_handed() {
                                     ffi::MirPointerHandedness::mir_pointer_handedness_left.repr
@@ -800,7 +820,10 @@ impl PlatformRs {
                 }
                 ThreadCommand::SetPointerSettings(id, settings) => {
                     if let Some(dev_with_id) = state.known_devices.iter_mut().find(|d| d.id == id) {
-                        if dev_with_id.device.has_capability(DeviceCapability::Pointer) {
+                        if dev_with_id
+                            .device
+                            .has_capability(input::DeviceCapability::Pointer)
+                        {
                             let left_handed = match settings.handedness {
                                 x if x
                                     == ffi::MirPointerHandedness::mir_pointer_handedness_left
@@ -841,28 +864,28 @@ impl PlatformRs {
 
 struct LibinputInterfaceImpl {
     /// The bridge used to acquire the device.
-    bridge: SharedPtr<ffi::PlatformBridgeC>,
+    bridge: cxx::SharedPtr<ffi::PlatformBridgeC>,
 
     /// The list of opened devices.
     ///
     /// Mir expects the caller who acquired the device to keep it alive until the device
     /// is closed. To do this, we keep it in the vector.
-    fds: Vec<UniquePtr<ffi::DeviceBridgeC>>,
+    fds: Vec<cxx::UniquePtr<ffi::DeviceBridgeC>>,
 }
 
-impl LibinputInterface for LibinputInterfaceImpl {
+impl input::LibinputInterface for LibinputInterfaceImpl {
     // This method is called whenever libinput needs to open a new device.
-    fn open_restricted(&mut self, path: &Path, _: i32) -> Result<OwnedFd, i32> {
-        let cpath = CString::new(path.as_os_str().as_bytes()).unwrap();
+    fn open_restricted(&mut self, path: &std::path::Path, _: i32) -> Result<io::OwnedFd, i32> {
+        let cpath = std::ffi::CString::new(path.as_os_str().as_bytes()).unwrap();
 
-        let mut st: stat = unsafe { std::mem::zeroed() };
+        let mut st: libc::stat = unsafe { std::mem::zeroed() };
         let ret = unsafe { libc::stat(cpath.as_ptr(), &mut st) };
         if ret != 0 {
             return Err(ret);
         }
 
-        let major_num = major(st.st_rdev);
-        let minor_num = minor(st.st_rdev);
+        let major_num = libc::major(st.st_rdev);
+        let minor_num = libc::minor(st.st_rdev);
 
         // By keeping the device referenced in the fds vector, we ensure it stays alive
         // until close_restricted is called.
@@ -872,20 +895,20 @@ impl LibinputInterface for LibinputInterfaceImpl {
         let fd = device.raw_fd();
         self.fds.push(device);
 
-        let owned = unsafe { OwnedFd::from_raw_fd(fd) };
+        let owned = unsafe { io::OwnedFd::from_raw_fd(fd) };
         Ok(owned)
     }
 
     // This method is called when libinput is done with a device.
-    fn close_restricted(&mut self, fd: OwnedFd) {
+    fn close_restricted(&mut self, fd: io::OwnedFd) {
         let fd_raw = fd.as_raw_fd();
-        let _ = close(fd);
+        let _ = unistd::close(fd);
         self.fds.retain(|d| d.raw_fd() != fd_raw);
     }
 }
 
 struct LibinputLoopState {
-    libinput: Libinput,
+    libinput: input::Libinput,
     known_devices: Vec<DeviceInfo>,
     next_device_id: i32,
     button_state: u32,
@@ -899,10 +922,10 @@ struct LibinputLoopState {
 
 struct DeviceInfo {
     id: i32,
-    device: Device,
-    input_device: SharedPtr<ffi::InputDevice>,
+    device: input::Device,
+    input_device: cxx::SharedPtr<ffi::InputDevice>,
     input_sink: Option<InputSinkPtr>,
-    event_builder: Option<UniquePtr<ffi::EventBuilderWrapper>>,
+    event_builder: Option<cxx::UniquePtr<ffi::EventBuilderWrapper>>,
 }
 
 // TODO: Add a brief note about the implementation here of why this should work.
@@ -930,20 +953,20 @@ unsafe impl Sync for ffi::EventBuilder {}
 // that these pointers are Send and Sync. We cannot define Send and Sync on the
 // raw types to fix the issue unfortuately, so we have to wrap them in a new type
 // and define Send and Sync on that.
-pub struct InputSinkPtr(NonNull<ffi::InputSink>);
+pub struct InputSinkPtr(std::ptr::NonNull<ffi::InputSink>);
 impl InputSinkPtr {
-    fn handle_input(&mut self, event: &SharedPtr<ffi::MirEvent>) {
-        unsafe {
+    fn handle_input(&mut self, event: &cxx::SharedPtr<ffi::MirEvent>) {
+        let pinned = unsafe {
             // Pin the raw pointer
-            let pinned = Pin::new_unchecked(self.0.as_mut());
-            pinned.handle_input(event);
-        }
+            std::pin::Pin::new_unchecked(self.0.as_mut())
+        };
+        pinned.handle_input(event);
     }
 }
 
 unsafe impl Send for InputSinkPtr {}
 unsafe impl Sync for InputSinkPtr {}
-pub struct EventBuilderPtr(NonNull<ffi::EventBuilder>);
+pub struct EventBuilderPtr(std::ptr::NonNull<ffi::EventBuilder>);
 unsafe impl Send for EventBuilderPtr {}
 unsafe impl Sync for EventBuilderPtr {}
 
@@ -1035,8 +1058,8 @@ impl<'fd> InputDeviceRs<'fd> {
         self.tx
             .send(ThreadCommand::Start(
                 self.device_id,
-                InputSinkPtr(NonNull::new(input_sink).unwrap()),
-                EventBuilderPtr(NonNull::new(event_builder).unwrap()),
+                InputSinkPtr(std::ptr::NonNull::new(input_sink).unwrap()),
+                EventBuilderPtr(std::ptr::NonNull::new(event_builder).unwrap()),
             ))
             .unwrap();
         nix::unistd::write(&self.wfd, &[0u8]).unwrap();
@@ -1272,6 +1295,12 @@ mod ffi {
         #[namespace = ""]
         type MirPointerAxisSource;
 
+        #[namespace = ""]
+        type MirPointerButton;
+
+        #[namespace = ""]
+        type MirPointerHandedness;
+
         fn acquire_device(
             self: &PlatformBridgeC,
             major: i32,
@@ -1332,21 +1361,4 @@ mod ffi {
         fn width(self: &RectangleC) -> i32;
         fn height(self: &RectangleC) -> i32;
     }
-}
-
-/// Creates a platform on the rust side of things.
-///
-/// The `bridge` and `device_registry` parameters are provided by the C++ side of things.
-/// The C++ platform simply forwards al calls to the rust implementation.
-pub fn evdev_rs_create(
-    bridge: SharedPtr<ffi::PlatformBridgeC>,
-    device_registry: SharedPtr<ffi::InputDeviceRegistry>,
-) -> Box<PlatformRs> {
-    return Box::new(PlatformRs {
-        bridge: bridge,
-        device_registry: device_registry,
-        handle: None,
-        wfd: None,
-        tx: None,
-    });
 }
