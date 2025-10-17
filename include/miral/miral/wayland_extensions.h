@@ -163,6 +163,10 @@ public:
     /// Allows clients to act as a screen lock.
     static char const* const ext_session_lock_manager_v1;
 
+    /// Allows clients to manage the current selection and act as a clipboard manager.
+    /// \remark Since MirAL 5.6
+    static char const* const ext_data_control_manager_v1;
+
     /// Add a bespoke Wayland extension both to "supported" and "enabled by default".
     void add_extension(Builder const& builder);
 
