@@ -50,7 +50,7 @@
     <event name="capabilities">
       <description summary="input trigger capabilities">
         This is emitted when ext_input_trigger_registration_manager_v1 is bound
-        and whenever a system gains or loses the capabilities.  The argument is
+        and whenever a system gains or loses the capabilities. The argument is
         a capability enum containing the complete set of capabilities.
       </description>
       <arg name="capabilities" type="uint" enum="capability" summary="types of inputs that support triggers"/>
