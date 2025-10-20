@@ -24,7 +24,7 @@
 #include <miral/keymap.h>
 #include <miral/live_config.h>
 #include <miral/live_config_ini_file.h>
-#include <miral/minimal_window_manager.h>
+#include <miral/minimal_window_manager_v2.h>
 #include <miral/config_file.h>
 #include <miral/runner.h>
 #include <miral/set_window_management_policy.h>
@@ -226,7 +226,7 @@ try
         miral::display_configuration_options,
         miral::X11Support{},
         wayland_extensions,
-        miral::set_window_management_policy<miral::MinimalWindowManager>(),
+        miral::set_window_management_policy<miral::MinimalWindowManagerV2>(),
         add_timeout_option_to,
         miral::CursorTheme{"default:DMZ-White"},
         input_filters,

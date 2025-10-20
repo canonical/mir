@@ -17,7 +17,7 @@
 #ifndef MIRAL_SHELL_FLOATING_WINDOW_MANAGER_H
 #define MIRAL_SHELL_FLOATING_WINDOW_MANAGER_H
 
-#include <miral/minimal_window_manager.h>
+#include <miral/minimal_window_manager_v2.h>
 
 #include "splash_session.h"
 
@@ -32,7 +32,7 @@ using namespace mir::geometry;
 
 class DecorationProvider;
 
-class FloatingWindowManagerPolicy : public miral::MinimalWindowManager
+class FloatingWindowManagerPolicy : public miral::MinimalWindowManagerV2
 {
 public:
     FloatingWindowManagerPolicy(

@@ -19,7 +19,7 @@
 #include <miral/test_display_server.h>
 
 #include <miral/command_line_option.h>
-#include <miral/minimal_window_manager.h>
+#include <miral/minimal_window_manager_v2.h>
 #include <miral/set_window_management_policy.h>
 
 #include <mir_test_framework/executable_path.h>
@@ -70,7 +70,7 @@ miral::TestDisplayServer::~TestDisplayServer() = default;
 auto miral::TestDisplayServer::build_window_manager_policy(WindowManagerTools const& tools)
 -> std::unique_ptr<WindowManagementPolicy>
 {
-    return std::make_unique<MinimalWindowManager>(tools);
+    return std::make_unique<MinimalWindowManagerV2>(tools);
 }
 
 void miral::TestDisplayServer::start_server()
