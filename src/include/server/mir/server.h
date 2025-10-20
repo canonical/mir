@@ -78,6 +78,10 @@ namespace renderer
 {
 class RendererFactory;
 }
+namespace time
+{
+class Clock;
+}
 
 class Fd;
 class MainLoop;
@@ -313,6 +317,10 @@ public:
     void override_the_renderer_factory(Builder<renderer::RendererFactory> const& renderer_factory_builder);
 
     void override_the_accessibility_manager(Builder<shell::AccessibilityManager> const& accessibility_manager_factory_builder);
+
+    /// Allows for overriding the central clock used for alarms and other
+    /// timekeeping. Exclusively used for testing at the moment.
+    void override_the_clock(Builder<time::Clock> const& clock_builder);
 
     /// Each of the wrap functions takes a wrapper functor of the same form
     template<typename T> using Wrapper = std::function<std::shared_ptr<T>(std::shared_ptr<T> const&)>;
