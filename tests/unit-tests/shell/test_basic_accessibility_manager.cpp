@@ -34,6 +34,7 @@
 #include <gtest/gtest.h>
 
 #include <memory>
+#include <unordered_set>
 
 #include "mir/shell/sticky_keys_transformer.h"
 
@@ -326,7 +327,8 @@ enum class TransformerToTest
     SSC,
     HoverClick,
     SlowKeys,
-    StickyKeys
+    StickyKeys,
+    Count
 };
 
 auto const transformers_to_test = std::unordered_set{
@@ -336,13 +338,43 @@ auto const transformers_to_test = std::unordered_set{
     TransformerToTest::SlowKeys,
     TransformerToTest::StickyKeys
 };
+
+std::ostream& operator<<(std::ostream& ostream, TransformerToTest const& t)
+{
+    auto const str = [&t]
+    {
+        switch (t)
+        {
+        case TransformerToTest::MouseKeys:
+            return "MouseKeys";
+        case TransformerToTest::SSC:
+            return "SSC";
+        case TransformerToTest::HoverClick:
+            return "HoverClick";
+        case TransformerToTest::SlowKeys:
+            return "SlowKeys";
+        case TransformerToTest::StickyKeys:
+            return "StickyKeys";
+        case TransformerToTest::Count:
+            std::unreachable();
+        }
+    }();
+
+    return ostream << str;
+}
+
 struct TestArbitraryEnablesAndDisables :
     public TestBasicAccessibilityManager,
     public WithParamInterface<TransformerToTest>
 {
+    static inline std::unordered_set<TransformerToTest> transformers_used;
+
     auto get_transformer() -> std::shared_ptr<mir::input::Transformer>
     {
-        switch (GetParam())
+        auto const param = GetParam();
+        transformers_used.insert(param);
+
+        switch (param)
         {
         case TransformerToTest::MouseKeys:
             return mock_mousekeys_transformer;
@@ -354,13 +386,17 @@ struct TestArbitraryEnablesAndDisables :
             return mock_slow_keys_transformer;
         case TransformerToTest::StickyKeys:
             return mock_sticky_keys_transformer;
+        case TransformerToTest::Count:
+            std::unreachable();
         }
-        std::unreachable();
     }
 
     void toggle_transformer(bool on)
     {
-        switch (GetParam())
+        auto const param = GetParam();
+        transformers_used.insert(param);
+
+        switch (param)
         {
         case TransformerToTest::MouseKeys:
             basic_accessibility_manager.mousekeys_enabled(on);
@@ -377,6 +413,8 @@ struct TestArbitraryEnablesAndDisables :
         case TransformerToTest::StickyKeys:
             basic_accessibility_manager.sticky_keys_enabled(on);
             break;
+        case TransformerToTest::Count:
+            std::unreachable();
         }
     }
 
@@ -388,6 +426,17 @@ struct TestArbitraryEnablesAndDisables :
     void disable_transformer()
     {
         return toggle_transformer(false);
+    }
+
+    static void SetUpTestSuite()
+    {
+        transformers_used.clear();
+    }
+
+    static void TearDownTestSuite()
+    {
+        EXPECT_THAT(transformers_used.size(), Eq(static_cast<std::size_t>(TransformerToTest::Count)));
+        EXPECT_THAT(transformers_used, Eq(transformers_to_test));
     }
 };
 
