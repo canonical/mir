@@ -79,31 +79,30 @@ struct miral::BounceKeys::Self
             auto const keytime =
                 mir::time::Timestamp{std::chrono::nanoseconds{mir_input_event_get_event_time(input_event)}};
 
-            auto state = runtime_state.lock();
             auto config_ = config->lock();
 
-            if (state->has_value())
+            if (state)
             {
                 auto rejected = false;
-                if (keysym == state->value().last_key && keytime - state->value().last_key_time < config_->delay)
+                if (keysym == state->last_key && keytime - state->last_key_time < config_->delay)
                 {
                     config_->on_press_rejected(key_event);
                     rejected = true;;
                 }
 
-                state->value().last_key = keysym;
-                state->value().last_key_time = keytime;
+                state->last_key = keysym;
+                state->last_key_time = keytime;
                 return rejected;
             }
             else
             {
-                state->emplace(keysym, keytime);
+                state.emplace(keysym, keytime);
             }
 
             return true;
         }
 
-        mir::Synchronised<std::optional<RuntimeState>> runtime_state;
+        std::optional<RuntimeState> state;
         std::shared_ptr<mir::Synchronised<Config>> const config;
     };
 
