@@ -700,8 +700,10 @@ global:
     miral::ApplicationSwitcher::cancel*;
     miral::ApplicationSwitcher::confirm*;
     miral::ApplicationSwitcher::next_app*;
+    miral::ApplicationSwitcher::next_window*;
     miral::ApplicationSwitcher::operator*;
     miral::ApplicationSwitcher::prev_app*;
+    miral::ApplicationSwitcher::prev_window*;
     miral::ApplicationSwitcher::stop*;
     miral::CursorScale::scale_temporarily*;
     miral::LocatePointer::LocatePointer*;
