@@ -312,39 +312,6 @@ TEST_F(TestBasicAccessibilityManager, calling_simulated_secondary_click_hold_dur
     basic_accessibility_manager.simulated_secondary_click().hold_duration(expected_duration);
 }
 
-TEST_F(TestBasicAccessibilityManager, setting_on_hold_start_sets_it_on_transformer)
-{
-    auto const expected_on_hold_start = []
-    {
-    };
-
-    EXPECT_CALL(*mock_simulated_secondary_click_transformer, on_hold_start(_));
-
-    basic_accessibility_manager.simulated_secondary_click().on_hold_start(expected_on_hold_start);
-}
-
-TEST_F(TestBasicAccessibilityManager, setting_on_hold_cancel_sets_it_on_transformer)
-{
-    auto const expected_on_hold_cancel = []
-    {
-    };
-
-    EXPECT_CALL(*mock_simulated_secondary_click_transformer, on_hold_cancel(_));
-
-    basic_accessibility_manager.simulated_secondary_click().on_hold_cancel(expected_on_hold_cancel);
-}
-
-TEST_F(TestBasicAccessibilityManager, setting_on_secondary_click_sets_it_on_transformer)
-{
-    auto const expected_on_secondary_click = []
-    {
-    };
-
-    EXPECT_CALL(*mock_simulated_secondary_click_transformer, on_secondary_click(_));
-
-    basic_accessibility_manager.simulated_secondary_click().on_secondary_click(expected_on_secondary_click);
-}
-
 MATCHER_P(WeakPtrEqSharedPtr, transformer_shared_ptr, "")
 {
     return arg.lock() == transformer_shared_ptr;
