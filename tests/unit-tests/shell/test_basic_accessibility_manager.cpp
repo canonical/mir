@@ -317,6 +317,9 @@ MATCHER_P(WeakPtrEqSharedPtr, transformer_shared_ptr, "")
     return arg.lock() == transformer_shared_ptr;
 }
 
+// When adding a new member to this list, don't forget to add it to the list
+// below.
+// TODO Use C++26 reflection to automate this.
 enum class TransformerToTest
 {
     MouseKeys,
@@ -326,6 +329,13 @@ enum class TransformerToTest
     StickyKeys
 };
 
+auto const transformers_to_test = std::unordered_set{
+    TransformerToTest::MouseKeys,
+    TransformerToTest::SSC,
+    TransformerToTest::HoverClick,
+    TransformerToTest::SlowKeys,
+    TransformerToTest::StickyKeys
+};
 struct TestArbitraryEnablesAndDisables :
     public TestBasicAccessibilityManager,
     public WithParamInterface<TransformerToTest>
@@ -393,10 +403,7 @@ TEST_P(TestDoubleTransformerEnable, enabling_accessibility_transformer_twice_cal
     enable_transformer();
 }
 
-INSTANTIATE_TEST_SUITE_P(
-    TestBasicAccessibilityManager,
-    TestDoubleTransformerEnable,
-    Values(TransformerToTest::MouseKeys, TransformerToTest::SSC, TransformerToTest::HoverClick, TransformerToTest::StickyKeys));
+INSTANTIATE_TEST_SUITE_P(TestBasicAccessibilityManager, TestDoubleTransformerEnable, ValuesIn(transformers_to_test));
 
 struct TestDoubleEnableWithDisableInBetween : public TestArbitraryEnablesAndDisables
 {
@@ -414,9 +421,7 @@ TEST_P(
 }
 
 INSTANTIATE_TEST_SUITE_P(
-    TestBasicAccessibilityManager,
-    TestDoubleEnableWithDisableInBetween,
-    Values(TransformerToTest::MouseKeys, TransformerToTest::SSC, TransformerToTest::HoverClick, TransformerToTest::StickyKeys));
+    TestBasicAccessibilityManager, TestDoubleEnableWithDisableInBetween, ValuesIn(transformers_to_test));
 
 struct TestDoubleDisable : public TestArbitraryEnablesAndDisables
 {
@@ -431,10 +436,7 @@ TEST_P(TestDoubleDisable, disabling_accessibility_transformer_twice_calls_remove
     disable_transformer();
 }
 
-INSTANTIATE_TEST_SUITE_P(
-    TestBasicAccessibilityManager,
-    TestDoubleDisable,
-    Values(TransformerToTest::MouseKeys, TransformerToTest::SSC, TransformerToTest::HoverClick, TransformerToTest::StickyKeys));
+INSTANTIATE_TEST_SUITE_P(TestBasicAccessibilityManager, TestDoubleDisable, ValuesIn(transformers_to_test));
 
 struct TestDoubleDisableWithEnableInBetween : public TestArbitraryEnablesAndDisables
 {
@@ -453,9 +455,7 @@ TEST_P(
 }
 
 INSTANTIATE_TEST_SUITE_P(
-    TestBasicAccessibilityManager,
-    TestDoubleDisableWithEnableInBetween,
-    Values(TransformerToTest::MouseKeys, TransformerToTest::SSC, TransformerToTest::HoverClick));
+    TestBasicAccessibilityManager, TestDoubleDisableWithEnableInBetween, ValuesIn(transformers_to_test));
 
 struct TestDisableWithoutEnable : public TestArbitraryEnablesAndDisables
 {
@@ -467,7 +467,4 @@ TEST_P(TestDisableWithoutEnable, disabling_accessibility_transformer_before_enab
     disable_transformer();
 }
 
-INSTANTIATE_TEST_SUITE_P(
-    TestBasicAccessibilityManager,
-    TestDisableWithoutEnable,
-    Values(TransformerToTest::MouseKeys, TransformerToTest::SSC, TransformerToTest::HoverClick, TransformerToTest::StickyKeys));
+INSTANTIATE_TEST_SUITE_P(TestBasicAccessibilityManager, TestDisableWithoutEnable, ValuesIn(transformers_to_test));
