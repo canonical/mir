@@ -87,6 +87,7 @@
         The app may update the activity it associates with the action.
       </description>
       <arg name="time" type="uint" summary="timestamp with millisecond granularity"/>
+      <arg name="activation_token" type="string" summary="an xdg_activation token"/>
       <arg name="progress" type="fixed" summary="progress normalized to [0.0, 1.0]"/>
     </event>
 
@@ -97,6 +98,7 @@
         The app may end (or begin!) the activity it associates with the action.
       </description>
       <arg name="time" type="uint" summary="timestamp with millisecond granularity"/>
+      <arg name="activation_token" type="string" summary="an xdg_activation token"/>
     </event>
 
     <event name="unavailable">
