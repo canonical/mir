@@ -24,7 +24,7 @@
 
   <description summary="Registration for global input actions">
     This protocol allows for a Wayland clients to subscribe to input trigger
-    actions for activate and deactivate notifications.
+    actions for "begin", "update,  and "end" notifications.
 
     ext_input_trigger_action_v1 and the associated ext_input_trigger_registration_v1
     are based on the following discussion document:
@@ -47,7 +47,7 @@
 
     <request name="get_input_trigger_action">
       <description summary="register interest in input trigger action">
-        This request creates an input trigger activation object.
+        This request creates an input trigger action object.
 
         The token should be one issued by the compositor, if not then the
         compositor can raise a protocol error.
@@ -63,13 +63,13 @@
 
   <interface name="ext_input_trigger_action_v1" version="1">
     <description summary="receives notifications of input trigger actions">
-      The compositor sends notification of the activation and deactivation of
-      the associated action.
+      The compositor sends notification of the triggering of the associated
+      action.
     </description>
 
     <event name="begin">
       <description summary="begin the input action">
-        One of the input trigger events associated with the action has occurred.
+        One of the input triggers associated with the action has occurred.
 
         The app may begin the activity it associates with the action.
       </description>
