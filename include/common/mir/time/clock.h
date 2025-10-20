@@ -17,7 +17,7 @@
 #ifndef MIR_TIME_CLOCK_H_
 #define MIR_TIME_CLOCK_H_
 
-#include "mir/time/types.h"
+#include <mir/time/types.h>
 
 namespace mir
 {
