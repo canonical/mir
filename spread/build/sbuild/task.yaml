@@ -31,15 +31,6 @@ execute: |
 
     printf "\$mailto = 'null@example.com';\n1;\n" > ~/.sbuildrc
 
-    # work around sbuild apparmor issues
-    cat <<EOF > /etc/apparmor.d/local/sbuild
-    network inet dgram,
-    network inet stream,
-    network inet6 dgram,
-    network inet6 stream,
-    EOF
-    apparmor_parser -r /etc/apparmor.d/sbuild
-
     adduser $USER sbuild
     # set host and build environment up
     source <( dpkg-architecture --print-set --host-arch ${ARCH} )
