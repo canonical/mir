@@ -161,11 +161,13 @@ public:
     /// This extension relies on other extensions like
     /// ext_output_image_capture_source_manager_v1 to create capture
     /// sources.
+    /// \remark Since MirAL 5.6
     static char const* const ext_image_copy_capture_manager_v1;
 
     /// Allows clients to create an image capture source representing
     /// an output. This extension is only useful in conjunction with
     /// ext_image_copy_capture_manager_v1.
+    /// \remark Since MirAL 5.6
     static char const* const ext_output_image_capture_source_manager_v1;
 
     /// Allows clients to act as a virtual pointer, useful for remote control and automation.
