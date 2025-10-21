@@ -64,22 +64,27 @@
       </description>
     </request>
 
-    <!--
-      RFC
+    <enum name="modifiers" bitfield="true">
+      <description summary="modifier keys">
+        The various shift modifiers on the keyboard
+      </description>
+      <entry name="alt" value="0x01" summary="any Alt key"/>
+      <entry name="alt_left" value="0x02" summary="left Alt key"/>
+      <entry name="alt_right" value="0x04" summary="Right Alt key"/>
+      <entry name="shift" value="0x08" summary="any Shift key"/>
+      <entry name="shift_left" value="0x10" summary="left Shift key"/>
+      <entry name="shift_right" value="0x20" summary="right Shift key"/>
+      <entry name="sym" value="0x40" summary="Sym key"/>
+      <entry name="function" value="0x80" summary="Function key"/>
+      <entry name="ctrl" value="0x100" summary="any Ctrl key"/>
+      <entry name="ctrl_left" value="0x200" summary="left Ctrl key"/>
+      <entry name="ctrl_right" value="0x400" summary="right Ctrl key"/>
+      <entry name="meta" value="0x800" summary="any Meta key"/>
+      <entry name="meta_left" value="0x1000" summary="left Meta key"/>
+      <entry name="meta_right" value="0x2000" summary="right Meta key"/>
+      <!-- no need for caps/num/scroll lock? -->
+    </enum>
 
-      We want to be able to extend this to other input types: mouse, touchpad,
-      touchscreen, tablet pen, ...
-
-      Either we guess a generic way to describe all these triggers (e.g. a string
-      prefix),  or we plan to add specific registration requests later. The latter
-      seems the better approach both.
-
-      I envisage a family of requests:
-        o register_keyboard_trigger
-        o register_mouse_trigger
-        o register_touchpad_trigger
-        ...
-    -->
     <request name="register_keyboard_trigger">
       <description summary="register input trigger">
         This request creates an input trigger and asks the compositor to reserve
@@ -110,6 +115,29 @@
         changes.
       </description>
       <arg name="keycombo" type="string" summary="the keycombo to trigger the action"/>
+      <arg name="id" type="new_id" interface="ext_input_trigger_v1"/>
+    </request>
+
+    <request name="register_modifier_trigger">
+      <description summary="register input trigger">
+        This request creates an input trigger and asks the compositor to reserve
+        it to the manager.
+
+        This describes a trigger based on holding or tapping one or more
+        modifier keys. As modifiers are used normally in combination with other
+        keys, the hold_delay and tap_count should not both be zero.
+
+        The compositor will send either the ext_input_trigger_v1.done or
+        ext_input_trigger_v1.failed event on the created object in
+        response to this request.
+
+        Input actions triggered by this request will result in an
+        ext_input_trigger_action_v1.begin event when triggered
+        target edge(s) and ext_input_trigger_action_v1.end when the trigger ends.
+      </description>
+      <arg name="modifiers" type="uint" enum="modifiers"/>
+      <arg name="hold_delay" type="uint" summary="minimum milliseconds pressed before triggering"/>
+      <arg name="tap_count" type="uint" summary="number of consecutive taps before triggering"/>
       <arg name="id" type="new_id" interface="ext_input_trigger_v1"/>
     </request>
 
@@ -144,6 +172,13 @@
       <arg name="edges" type="uint" enum="screen_edges"/>
       <arg name="id" type="new_id" interface="ext_input_trigger_v1"/>
     </request>
+
+    <!--
+      TODO
+        o register_touchpad_trigger
+        o register_touchscreen_trigger
+        ...
+    -->
 
     <request name="get_action_control">
       <description summary="get input trigger action control object">
