@@ -131,8 +131,6 @@ public:
     void set_cursor_from_buffer(std::shared_ptr<graphics::Buffer> buffer,
                                 geometry::Displacement const& hotspot);
 
-    auto wayland_surface() -> wayland::Weak<frontend::WlSurface> const& override;
-
     void request_client_surface_close() override;
 
     std::shared_ptr<Surface> parent() const override;

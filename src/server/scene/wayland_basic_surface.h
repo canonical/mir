@@ -49,7 +49,6 @@ public:
         std::shared_ptr<SceneReport> const& report,
         std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> const& display_config_registrar);
 
-    auto wayland_surface() -> wayland::Weak<frontend::WlSurface> const& override;
     auto session() const -> std::weak_ptr<Session> override;
 private:
     std::weak_ptr<Session> const session_;
