@@ -358,6 +358,8 @@ std::ostream& operator<<(std::ostream& ostream, TransformerToTest const& t)
         case TransformerToTest::Count:
             std::unreachable();
         }
+
+        std::unreachable();
     }();
 
     return ostream << str;
@@ -389,6 +391,8 @@ struct TestArbitraryEnablesAndDisables :
         case TransformerToTest::Count:
             std::unreachable();
         }
+
+        std::unreachable();
     }
 
     void toggle_transformer(bool on)
