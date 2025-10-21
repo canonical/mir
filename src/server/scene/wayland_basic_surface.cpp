@@ -62,8 +62,3 @@ auto ms::WaylandBasicSurface::session() const -> std::weak_ptr<Session>
 {
     return session_;
 }
-
-auto ms::WaylandBasicSurface::wayland_surface() -> wayland::Weak<frontend::WlSurface> const&
-{
-    return wayland_surface_;
-}
