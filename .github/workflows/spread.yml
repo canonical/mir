@@ -75,6 +75,8 @@ jobs:
       CCACHE_DIR: "/tmp/ccache"
 
     steps:
+    - run: sudo snap install snapd --edge
+
     - name: Set up LXD
       uses: canonical/setup-lxd@main
 
