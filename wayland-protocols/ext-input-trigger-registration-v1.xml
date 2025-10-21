@@ -43,8 +43,9 @@
         set, then triggers can be set.
       </description>
       <entry name="keyboard" value="1" summary="key combinations can be used as triggers"/>
-      <entry name="pointer" value="2" summary="pointer gestures can be used as triggers"/>
-      <entry name="touchpad" value="4" summary="touchpad gestures can be used as triggers"/>
+      <entry name="modifiers" value="2" summary="keyboard modifier taps and/or holds can be used as triggers"/>
+      <entry name="pointer" value="4" summary="pointer gestures can be used as triggers"/>
+      <entry name="touchpad" value="8" summary="touchpad gestures can be used as triggers"/>
     </enum>
 
     <event name="capabilities">
