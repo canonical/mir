@@ -143,25 +143,6 @@ public:
 private:
     rust::Box<Impl> impl;
 };
-
-class DispatchableStub : public md::Dispatchable
-{
-public:
-    mir::Fd watch_fd() const override
-    {
-        return mir::Fd{};
-    }
-
-    bool dispatch(md::FdEvents) override
-    {
-        return false;
-    }
-
-    mir::dispatch::FdEvents relevant_events() const override
-    {
-        return md::FdEvent::remote_closed;
-    }
-};
 }
 
 class miers::Platform::Self
@@ -183,7 +164,7 @@ miers::Platform::Platform(
 
 std::shared_ptr<mir::dispatch::Dispatchable> miers::Platform::dispatchable()
 {
-    return std::make_shared<DispatchableStub>();
+    return nullptr;
 }
 
 void miers::Platform::start()

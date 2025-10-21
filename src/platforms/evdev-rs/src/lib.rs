@@ -111,11 +111,15 @@ impl PlatformRs {
 
         if let Some(handle) = self.handle.take() {
             let _ = handle.join();
+            self.handle = None;
         }
 
-        if let Some(wfd) = &self.wfd {
-            let _ = unistd::close(wfd.as_raw_fd());
+        if let Some(wfd) = self.wfd.take() {
+            drop(wfd);
+            self.wfd = None;
         }
+
+        self.tx = None;
     }
 
     pub fn create_device_observer(&self) -> Box<DeviceObserverRs> {
@@ -196,6 +200,21 @@ impl PlatformRs {
                 );
             }
         }
+
+        // Note: When the main loop exits, we need to remove all devices from the device registry
+        // or else Mir will try to free the devices later but we won't have access to the platform
+        // code at that point. This results in a segfault.
+        for device_info in state.known_devices.iter().rev() {
+            println!("Removing device id {} from registry", device_info.id);
+            unsafe {
+                device_registry
+                    .clone()
+                    .pin_mut_unchecked()
+                    .remove_device(&device_info.input_device);
+            }
+        }
+
+        state.known_devices.clear();
     }
 
     fn process_libinput_events(
@@ -302,7 +321,7 @@ impl PlatformRs {
                                         event_builder.pin_mut().pointer_event(
                                             true,
                                             motion_event.time_usec(),
-                                            ffi::MirPointerAction::mir_pointer_action_button_up
+                                            ffi::MirPointerAction::mir_pointer_action_motion
                                                 .repr,
                                             state.button_state,
                                             false,
@@ -345,7 +364,6 @@ impl PlatformRs {
 
                                         let movement_x = state.pointer_x - old_x;
                                         let movement_y = state.pointer_y - old_y;
-
                                         handle_input(
                                             &mut device_info.input_sink,
                                             event_builder.pin_mut().pointer_event(

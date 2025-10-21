@@ -104,7 +104,7 @@ std::shared_ptr<MirEvent> miers::EventBuilderWrapper::pointer_event(
             ? std::chrono::microseconds(time_microseconds)
             : std::optional<EventBuilder::Timestamp>(std::nullopt),
         static_cast<MirPointerAction>(action),
-        static_cast<MirPointerButtons>(buttons),
+        buttons,
         has_position
             ? geometry::PointF(position_x, position_y)
             : std::optional<geometry::PointF>(std::nullopt),
