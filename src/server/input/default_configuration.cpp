@@ -185,7 +185,11 @@ std::shared_ptr<mi::CursorController> mir::DefaultServerConfiguration::the_curso
     return cursor_controller(
         [this]()
         {
-            return std::make_shared<mi::CursorController>(the_input_scene(), the_cursor(), the_default_cursor_image());
+            return std::make_shared<mi::CursorController>(
+                the_input_scene(),
+                the_cursor(),
+                the_default_cursor_image(),
+                the_cursor_observer_multiplexer());
         });
 }
 
@@ -302,7 +306,6 @@ std::shared_ptr<mi::Seat> mir::DefaultServerConfiguration::the_seat()
                     the_input_dispatcher(),
                     the_touch_visualizer(),
                     the_cursor_controller(),
-                    the_cursor_observer_multiplexer(),
                     the_display_configuration_observer_registrar(),
                     the_key_mapper(),
                     the_clock(),
