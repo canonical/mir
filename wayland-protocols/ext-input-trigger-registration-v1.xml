@@ -42,10 +42,11 @@
         This is a bitmask of capabilities this system has; if a member is
         set, then triggers can be set.
       </description>
-      <entry name="keyboard" value="1" summary="key combinations can be used as triggers"/>
-      <entry name="modifiers" value="2" summary="keyboard modifier taps and/or holds can be used as triggers"/>
-      <entry name="pointer" value="4" summary="pointer gestures can be used as triggers"/>
-      <entry name="touchpad" value="8" summary="touchpad gestures can be used as triggers"/>
+      <entry name="keyboard" value="0x01" summary="key combinations can be used as triggers"/>
+      <entry name="modifiers" value="0x02" summary="keyboard modifier taps and/or holds can be used as triggers"/>
+      <entry name="pointer" value="0x04" summary="pointer gestures can be used as triggers"/>
+      <entry name="touchpad_drag" value="0x08" summary="touchpad drag gestures can be used as triggers"/>
+      <entry name="touchpad_tap" value="0x10" summary="touchpad taps can be used as triggers"/>
     </enum>
 
     <event name="capabilities">
@@ -188,9 +189,70 @@
       <arg name="id" type="new_id" interface="ext_input_trigger_v1"/>
     </request>
 
+    <enum name="drag_direction" bitfield="false">
+      <description summary="directions for drag">
+        These values are used to indicate which drag direction
+        triggers a global input action.
+      </description>
+      <entry name="up" value="1" summary="upwards"/>
+      <entry name="down" value="2" summary="downwards"/>
+      <entry name="left" value="3" summary="leftwards"/>
+      <entry name="up_left" value="4" summary="up to left"/>
+      <entry name="down_left" value="5" summary="down to left"/>
+      <entry name="right" value="6" summary="rightwards"/>
+      <entry name="up_right" value="7" summary="up to right"/>
+      <entry name="down_right" value="8" summary="down to right"/>
+    </enum>
+
+    <request name="register_touchpad_drag_trigger">
+      <description summary="register input trigger">
+        This request creates an input trigger and asks the compositor to reserve
+        it to the manager.
+
+        This describes a trigger based on dragging three (or more) touchpoints.
+        If advertising the touchpad_drag capability the compositor must support
+        three touchpoints. Fewer touchpoints are typically reserved for apps,
+        requesting more than three touchpoints may result in a failed event.
+
+        The compositor will send either the ext_input_trigger_v1.done or
+        ext_input_trigger_v1.failed event on the created object in
+        response to this request.
+
+        Input actions triggered by this request will result in an
+        ext_input_trigger_action_v1.begin event when the mult-touch moves in the
+        drag direction, ext_input_trigger_action_v1.update as move continues and
+        ext_input_trigger_action_v1.end when touches change.
+      </description>
+      <arg name="touches" type="uint" summary="number of touches"/>
+      <arg name="direction" type="uint" enum="drag_direction"/>
+      <arg name="id" type="new_id" interface="ext_input_trigger_v1"/>
+    </request>
+
+    <request name="register_touchpad_tap_trigger">
+      <description summary="register input trigger">
+        This request creates an input trigger and asks the compositor to reserve
+        it to the manager.
+
+        This describes a trigger based on tapping three (or more) touchpoints.
+        If advertising the touchpad_tap capability the compositor must support
+        three touchpoints. Fewer touchpoints are typically reserved for apps,
+        requesting more than three touchpoints may result in a failed event.
+
+        The compositor will send either the ext_input_trigger_v1.done or
+        ext_input_trigger_v1.failed event on the created object in
+        response to this request.
+
+        Input actions triggered by this request will result in an
+        ext_input_trigger_action_v1.begin and end events when the mult-touch is
+        held for at least hold_delay and released without a touchpad drag.
+      </description>
+      <arg name="touches" type="uint" summary="number of touches"/>
+      <arg name="hold_delay" type="uint" summary="minimum milliseconds pressed before triggering"/>
+      <arg name="id" type="new_id" interface="ext_input_trigger_v1"/>
+    </request>
+
     <!--
       TODO
-        o register_touchpad_trigger
         o register_touchscreen_trigger
         ...
     -->
