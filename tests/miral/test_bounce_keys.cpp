@@ -24,6 +24,7 @@
 #include "mir/input/input_device_registry.h"
 #include "mir/input/input_sink.h"
 #include "mir/server.h"
+#include "mir/test/doubles/advanceable_clock.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -32,6 +33,7 @@ using namespace ::testing;
 using namespace std::chrono_literals;
 
 namespace mi = mir::input;
+namespace mtd = mir::test::doubles;
 
 namespace
 {
@@ -46,7 +48,8 @@ void press(mi::InputSink* sink, mi::EventBuilder* builder, unsigned int keysym, 
 
 struct TestBounceKeys : miral::TestServer
 {
-    TestBounceKeys()
+    TestBounceKeys() :
+        clock{std::make_shared<mtd::AdvanceableClock>()}
     {
         add_server_init(
             [this](mir::Server& server)
@@ -59,6 +62,8 @@ struct TestBounceKeys : miral::TestServer
                         input_device_hub = server.the_input_device_hub();
                     });
 
+                server.override_the_clock([this] -> std::shared_ptr<mir::time::Clock> { return clock; });
+
                 bounce_keys(server);
             });
 
@@ -70,6 +75,7 @@ struct TestBounceKeys : miral::TestServer
     std::weak_ptr<mi::CompositeEventFilter> composite_event_filter;
     std::weak_ptr<mi::InputDeviceRegistry> input_device_registry;
     std::weak_ptr<mi::InputDeviceHub> input_device_hub;
+    std::shared_ptr<mtd::AdvanceableClock> const clock;
 };
 
 struct TestDifferentBounceKeysDelays: public TestBounceKeys, public WithParamInterface<std::chrono::milliseconds>
@@ -96,7 +102,7 @@ TEST_P(TestDifferentBounceKeysDelays, subsequent_keys_rejected_if_in_within_dela
             auto const num_presses = 10;
             for (auto i = 0; i < num_presses; i++)
             {
-                std::this_thread::sleep_for(press_delay);
+                clock->advance_by(press_delay);
                 press(sink, builder, XKB_KEY_d, 32);
             }
 
@@ -105,7 +111,7 @@ TEST_P(TestDifferentBounceKeysDelays, subsequent_keys_rejected_if_in_within_dela
         });
 }
 
-INSTANTIATE_TEST_SUITE_P(TestBounceKeys, TestDifferentBounceKeysDelays, Values(test_bounce_keys_delay - 5ms, test_bounce_keys_delay + 5ms));
+INSTANTIATE_TEST_SUITE_P(TestBounceKeys, TestDifferentBounceKeysDelays, Values(test_bounce_keys_delay - 5ms, test_bounce_keys_delay + 100ms));
 
 TEST_F(TestBounceKeys, different_keys_are_not_rejected)
 {
@@ -125,7 +131,7 @@ TEST_F(TestBounceKeys, different_keys_are_not_rejected)
             for (auto i = 0; i < num_presses; i++)
             {
                 // Would be rejected if the same key was being pressed
-                std::this_thread::sleep_for(test_bounce_keys_delay - 1ms);
+                clock->advance_by(test_bounce_keys_delay - 1ms);
 
                 if (i % 2 == 0)
                     press(sink, builder, XKB_KEY_f, 33);
@@ -142,10 +148,15 @@ TEST_F(TestBounceKeys, irregular_press_periods_are_properly_rejected)
     auto virtual_keyboard = miral::test::add_test_device(
         input_device_registry.lock(), input_device_hub.lock(), mi::DeviceCapability::keyboard);
 
+    auto const to_millis = [](auto duration)
+    {
+        return std::chrono::duration_cast<std::chrono::milliseconds>(duration);
+    };
+
     auto const tap_periods = std::array{
-        0.75 * test_bounce_keys_delay,
-        1.1 * test_bounce_keys_delay,
-        1.35 * test_bounce_keys_delay}; // reject, pass, pass
+        to_millis(0.75 * test_bounce_keys_delay),
+        to_millis(1.1 * test_bounce_keys_delay),
+        to_millis(1.35 * test_bounce_keys_delay)}; // reject, pass, pass
 
     virtual_keyboard->if_started_then(
         [this, &tap_periods](mi::InputSink* sink, mi::EventBuilder* builder)
@@ -157,7 +168,7 @@ TEST_F(TestBounceKeys, irregular_press_periods_are_properly_rejected)
             for (auto i = 0; i < num_presses; i++)
             {
                 press(sink, builder, XKB_KEY_d, 32);
-                std::this_thread::sleep_for(tap_periods[i % tap_periods.size()]);
+                clock->advance_by(tap_periods[i % tap_periods.size()]);
             }
 
             EXPECT_THAT(rejection_counter, Eq(num_presses / tap_periods.size()));

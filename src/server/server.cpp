@@ -99,7 +99,8 @@ struct TemporaryCompositeEventFilter : public mi::CompositeEventFilter
     MACRO(shell)\
     MACRO(persistent_surface_store)\
     MACRO(renderer_factory)\
-    MACRO(accessibility_manager)
+    MACRO(accessibility_manager)\
+    MACRO(clock)
 
 #define FOREACH_ACCESSOR(MACRO)\
     MACRO(the_compositor)\
