@@ -54,8 +54,8 @@ struct miral::BounceKeys::Self
             mir::time::Timestamp last_key_time;
         };
 
-        BounceKeysFilter(std::shared_ptr<mir::Synchronised<Config>> config) :
-            config{std::move(config)}
+        explicit BounceKeysFilter(std::shared_ptr<mir::Synchronised<Config>> const& config) :
+            config{config}
         {
         }
 
