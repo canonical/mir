@@ -17,6 +17,7 @@
 #ifndef MIR_FRONTEND_PRIMARY_SELECTION_V1_H
 #define MIR_FRONTEND_PRIMARY_SELECTION_V1_H
 
+#include "mir/scene/data_exchange.h"
 #include "primary-selection-unstable-v1_wrapper.h"
 
 namespace mir
@@ -28,6 +29,22 @@ class Clipboard;
 }
 namespace frontend
 {
+class PrimarySelectionSource : public mir::wayland::PrimarySelectionSourceV1
+{
+private:
+    std::vector<std::string> mime_types;
+    std::shared_ptr<mir::Executor> const wayland_executor;
+
+public:
+    class Source;
+
+    PrimarySelectionSource(wl_resource* resource, std::shared_ptr<mir::Executor> wayland_executor);
+
+    static auto from(struct wl_resource* resource) -> PrimarySelectionSource*;
+
+    void offer(std::string const& mime_type) override;
+    auto make_source() const -> std::shared_ptr<mir::scene::DataExchangeSource>;
+};
 auto create_primary_selection_device_manager_v1(
     wl_display* display,
     std::shared_ptr<Executor> wayland_executor,

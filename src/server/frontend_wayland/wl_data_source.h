@@ -50,6 +50,8 @@ public:
     void set_actions(uint32_t dnd_actions) override;
     /// @}
 
+    auto make_source() -> std::shared_ptr<mir::scene::DataExchangeSource>;
+
 private:
     class ClipboardObserver;
     class Source;

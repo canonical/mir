@@ -41,6 +41,7 @@ mir_generate_protocol_wrapper(mirwayland "wp_" viewporter.xml)
 mir_generate_protocol_wrapper(mirwayland "wp_" fractional-scale-v1.xml)
 mir_generate_protocol_wrapper(mirwayland "z" xdg-activation-v1.xml)
 mir_generate_protocol_wrapper(mirwayland "wp_" linux-drm-syncobj-v1.xml)
+mir_generate_protocol_wrapper(mirwayland "ext_" ext-data-control-v1.xml)
 
 target_link_libraries(mirwayland
   PUBLIC

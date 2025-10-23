@@ -103,8 +103,11 @@ TEST_F(BasicClipboardTest, clearing_old_paste_source_does_nothing)
 
 TEST_F(BasicClipboardTest, observer_notified_of_paste_source_set)
 {
-    clipboard.register_interest(observer_ptr);
+    Sequence seq;
+    EXPECT_CALL(observer, paste_source_set(Eq(nullptr)));
     EXPECT_CALL(observer, paste_source_set(Eq(source_a)));
+
+    clipboard.register_interest(observer_ptr);
     clipboard.set_paste_source(source_a);
 }
 
@@ -112,8 +115,11 @@ TEST_F(BasicClipboardTest, observer_notified_of_paste_source_change)
 {
     clipboard.set_paste_source(source_a);
 
-    clipboard.register_interest(observer_ptr);
+    Sequence seq;
+    EXPECT_CALL(observer, paste_source_set(Eq(source_a)));
     EXPECT_CALL(observer, paste_source_set(Eq(source_b)));
+
+    clipboard.register_interest(observer_ptr);
     clipboard.set_paste_source(source_b);
 }
 
@@ -121,8 +127,11 @@ TEST_F(BasicClipboardTest, observer_notified_of_paste_source_cleared)
 {
     clipboard.set_paste_source(source_a);
 
-    clipboard.register_interest(observer_ptr);
+    Sequence seq;
     EXPECT_CALL(observer, paste_source_set(Eq(nullptr)));
+    EXPECT_CALL(observer, paste_source_set(Eq(source_a)));
+
+    clipboard.register_interest(observer_ptr);
     clipboard.clear_paste_source();
 }
 
@@ -130,8 +139,11 @@ TEST_F(BasicClipboardTest, observer_notified_of_paste_source_cleared_with_value)
 {
     clipboard.set_paste_source(source_a);
 
-    clipboard.register_interest(observer_ptr);
+    Sequence seq;
+    EXPECT_CALL(observer, paste_source_set(Eq(source_a)));
     EXPECT_CALL(observer, paste_source_set(Eq(nullptr)));
+
+    clipboard.register_interest(observer_ptr);
     clipboard.clear_paste_source(*source_a);
 }
 
@@ -140,16 +152,20 @@ TEST_F(BasicClipboardTest, observer_not_notified_when_old_paste_source_cleared)
     clipboard.set_paste_source(source_a);
     clipboard.set_paste_source(source_b);
 
+    EXPECT_CALL(observer, paste_source_set(Eq(source_b)));
+
     clipboard.register_interest(observer_ptr);
-    EXPECT_CALL(observer, paste_source_set(_)).Times(0);
     // a is not longer the current paste source, so nothing should happen
     clipboard.clear_paste_source(*source_a);
 }
 
 TEST_F(BasicClipboardTest, can_set_paste_source_from_paste_source_observer_callback)
 {
-    clipboard.register_interest(observer_ptr);
     EXPECT_CALL(observer, paste_source_set(_))
+        .WillOnce([&](auto source)
+        {
+            EXPECT_THAT(source, Eq(nullptr));
+        })
         .WillOnce([&](auto)
         {
             clipboard.set_paste_source(source_b);
@@ -158,5 +174,6 @@ TEST_F(BasicClipboardTest, can_set_paste_source_from_paste_source_observer_callb
         {
             EXPECT_THAT(source, Eq(source_b));
         });
+    clipboard.register_interest(observer_ptr);
     clipboard.set_paste_source(source_a);
 }
