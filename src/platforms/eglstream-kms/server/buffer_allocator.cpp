@@ -53,9 +53,6 @@
 #include <boost/throw_exception.hpp>
 #include <boost/exception/errinfo_errno.hpp>
 
-#include <cassert>
-
-
 namespace mg  = mir::graphics;
 namespace mge = mg::eglstream;
 namespace mgc = mg::common;
