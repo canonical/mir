@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// TODO: Report errors to Mir's logging facilities
+// TODO: Report errors to Mir's logging facilities. We should do this following Mir's logging refactor.
 // TODO: Need to set up reporting events when received from libinput (report->received_event_from_kernel)
 // TODO: Implement continue after_config and pause_for_config
 
@@ -41,16 +41,16 @@ use std::os::unix::io;
 use std::sync::mpsc;
 use std::thread;
 
-/// Creates a platform on the rust side of things.
+/// Creates a platform on the Rust side of things.
 ///
 /// The `bridge` and `device_registry` parameters are provided by the C++ side of things.
-/// The C++ platform simply forwards al calls to the rust implementation.
+/// The C++ platform simply forwards all calls to the Rust implementation.
 pub fn evdev_rs_create(
     bridge: cxx::SharedPtr<ffi::PlatformBridgeC>,
     device_registry: cxx::SharedPtr<ffi::InputDeviceRegistry>,
 ) -> Box<PlatformRs> {
     return Box::new(PlatformRs {
-        bridge: bridge,
+        bridge,
         device_registry: device_registry,
         handle: None,
         wfd: None,
@@ -156,6 +156,7 @@ impl PlatformRs {
             y_scroll_scale: 1.0,
         };
 
+        // TODO: This does not handle multi-seat. If/when we do multi-seat, this will need to be refactored.
         state.libinput.udev_assign_seat("seat0").unwrap();
 
         let mut fds = [
@@ -173,6 +174,9 @@ impl PlatformRs {
 
         let mut is_running = true;
         while is_running {
+            // # Safety
+            // 
+            // Calling libc::poll is unsafe.
             let ret = unsafe {
                 libc::poll(fds.as_mut_ptr(), fds.len() as _, -1) // -1 = wait indefinitely
             };
@@ -206,6 +210,9 @@ impl PlatformRs {
         // code at that point. This results in a segfault.
         for device_info in state.known_devices.iter().rev() {
             println!("Removing device id {} from registry", device_info.id);
+            // # Safety
+            // 
+            // Because we need to use pin_mut_unchecked, this is unsafe.
             unsafe {
                 device_registry
                     .clone()
@@ -280,6 +287,10 @@ impl PlatformRs {
                         // deal, but it is a bit unfortunate.
                         let input_device = state.known_devices.last().unwrap().input_device.clone();
                         let device_registry = device_registry.clone();
+
+                        // # Safety
+                        // 
+                        // Because we need to use pin_mut_unchecked, this is unsafe.
                         thread::spawn(move || unsafe {
                             device_registry
                                 .clone()
@@ -296,6 +307,9 @@ impl PlatformRs {
                             .iter()
                             .position(|x| x.device.as_raw() == dev.as_raw());
                         if let Some(index) = index {
+                            // # Safety
+                            // 
+                            // Because we need to use pin_mut_unchecked, this is unsafe.
                             unsafe {
                                 device_registry
                                     .clone()
@@ -347,6 +361,9 @@ impl PlatformRs {
                             event::PointerEvent::MotionAbsolute(absolute_motion_event) => {
                                 if let Some(event_builder) = &mut device_info.event_builder {
                                     if let Some(input_sink) = &mut device_info.input_sink {
+                                        // # Safety
+                                        // 
+                                        // Calling as_ref on a NonNull is unsafe.
                                         let sink_ref: &ffi::InputSink =
                                             unsafe { input_sink.0.as_ref() };
                                         let bounding_rect = bridge.bounding_rectangle(sink_ref);
@@ -395,7 +412,7 @@ impl PlatformRs {
                                 if let Some(event_builder) = &mut device_info.event_builder {
                                     let (precise_x, discrete_x, value120_x, stop_x) =
                                         if scroll_wheel_event
-                                            .has_axis(input::event::pointer::Axis::Vertical)
+                                            .has_axis(input::event::pointer::Axis::Horizontal)
                                         {
                                             let scroll_value120_x = scroll_wheel_event
                                                 .scroll_value_v120(
@@ -465,7 +482,7 @@ impl PlatformRs {
                                 if let Some(event_builder) = &mut device_info.event_builder {
                                     let (precise_x, discrete_x, value120_x, stop_x) =
                                         if scroll_continuous_event
-                                            .has_axis(input::event::pointer::Axis::Vertical)
+                                            .has_axis(input::event::pointer::Axis::Horizontal)
                                         {
                                             let scroll_value120_x = 0.0;
                                             let scroll_value_x = scroll_continuous_event
@@ -531,7 +548,7 @@ impl PlatformRs {
                                 if let Some(event_builder) = &mut device_info.event_builder {
                                     let (precise_x, discrete_x, value120_x, stop_x) =
                                         if scroll_finger_event
-                                            .has_axis(input::event::pointer::Axis::Vertical)
+                                            .has_axis(input::event::pointer::Axis::Horizontal)
                                         {
                                             let scroll_value120_x = 0.0;
                                             let scroll_value_x = scroll_finger_event.scroll_value(
@@ -671,6 +688,8 @@ impl PlatformRs {
                                 }
                             }
 
+                            #[allow(deprecated)]
+                            event::PointerEvent::Axis(_) => {} // Deprecated, unhandled.
                             _ => todo!("Unhandled pointer event type"),
                         }
                     }
@@ -748,7 +767,6 @@ impl PlatformRs {
                     *is_running = false;
                 }
                 ThreadCommand::GetDeviceInfo(id, tx) => {
-                    // For simplicity, just return info about the first device
                     if let Some(device_info) = find_device_by_id(state, id) {
                         let mut capabilities: u32 = 0;
                         if device_info
@@ -781,6 +799,7 @@ impl PlatformRs {
                                 + &device_info.device.id_vendor().to_string()
                                 + &device_info.device.id_product().to_string(),
                             capabilities: capabilities,
+                            valid: true
                         };
                         let _ = tx.send(info);
                     } else {
@@ -788,6 +807,7 @@ impl PlatformRs {
                             name: "".to_string(),
                             unique_id: "".to_string(),
                             capabilities: 0,
+                            valid: false
                         };
                         let _ = tx.send(info);
                     }
@@ -795,6 +815,9 @@ impl PlatformRs {
                 ThreadCommand::Start(id, input_sink, event_builder) => {
                     if let Some(device_info) = find_device_by_id(state, id) {
                         device_info.input_sink = Some(input_sink);
+                        // # Safety
+                        // 
+                        // Calling as_ptr on a NonNull is unsafe.
                         device_info.event_builder = Some(unsafe {
                             bridge_locked.create_event_builder_wrapper(event_builder.0.as_ptr())
                         });
@@ -823,6 +846,7 @@ impl PlatformRs {
                                             .repr
                                     }
                                 } else {
+                                    eprintln!("Acceleration profile should be provided, but none is.");
                                     ffi::MirPointerAcceleration::mir_pointer_acceleration_none.repr
                                 };
 
@@ -836,16 +860,21 @@ impl PlatformRs {
                                     acceleration: acceleration,
                                     horizontal_scroll_scale: state.x_scroll_scale,
                                     vertical_scroll_scale: state.y_scroll_scale,
+                                    has_error: false
                                 };
                                 let _ = tx.send(settings);
                             }
                             false => {
-                                let settings = ffi::PointerSettingsRs::empty();
+                                eprintln!("Attempting to get pointer settings from a device that is not pointer capable.");
+                                let mut settings = ffi::PointerSettingsRs::empty();
+                                settings.has_error = true;
                                 let _ = tx.send(settings);
                             }
                         }
                     } else {
-                        let settings = ffi::PointerSettingsRs::empty();
+                        eprintln!("Calling get pointer settings on a device that is not registered.");
+                        let mut settings = ffi::PointerSettingsRs::empty();
+                        settings.has_error = true;
                         let _ = tx.send(settings);
                     }
                 }
@@ -855,6 +884,7 @@ impl PlatformRs {
                             .device
                             .has_capability(input::DeviceCapability::Pointer)
                         {
+                            println!("{}, {}", device_info.device.name(), device_info.device.has_capability(input::DeviceCapability::Pointer));
                             let left_handed = match settings.handedness {
                                 x if x
                                     == ffi::MirPointerHandedness::mir_pointer_handedness_left
@@ -864,10 +894,9 @@ impl PlatformRs {
                                 }
                                 _ => false,
                             };
-                            device_info
+                            let _ = device_info
                                 .device
-                                .config_left_handed_set(left_handed)
-                                .unwrap();
+                                .config_left_handed_set(left_handed);
 
                             let accel_profile = match settings.acceleration {
                                 x if x == ffi::MirPointerAcceleration::mir_pointer_acceleration_adaptive.repr => {
@@ -875,17 +904,21 @@ impl PlatformRs {
                                 }
                                 _ => input::AccelProfile::Flat,
                             };
-                            device_info
+                            let _ = device_info
                                 .device
-                                .config_accel_set_profile(accel_profile)
-                                .unwrap();
-                            device_info
+                                .config_accel_set_profile(accel_profile);
+                            let _ = device_info
                                 .device
-                                .config_accel_set_speed(settings.cursor_acceleration_bias as f64)
-                                .unwrap();
+                                .config_accel_set_speed(settings.cursor_acceleration_bias as f64);
                             state.x_scroll_scale = settings.horizontal_scroll_scale;
                             state.y_scroll_scale = settings.vertical_scroll_scale;
                         }
+                        else {
+                            eprintln!("Device does not have the pointer capability.");
+                        }
+                    }
+                    else {
+                        eprintln!("Unable to set the pointer settings because the device was not found.");
                     }
                 }
             }
@@ -909,6 +942,9 @@ impl input::LibinputInterface for LibinputInterfaceImpl {
     fn open_restricted(&mut self, path: &std::path::Path, _: i32) -> Result<io::OwnedFd, i32> {
         let cpath = std::ffi::CString::new(path.as_os_str().as_bytes()).unwrap();
 
+        // # Safety
+        // 
+        // This is an unsafe libc function.
         let mut st: libc::stat = unsafe { std::mem::zeroed() };
         let ret = unsafe { libc::stat(cpath.as_ptr(), &mut st) };
         if ret != 0 {
@@ -926,6 +962,9 @@ impl input::LibinputInterface for LibinputInterfaceImpl {
         let fd = device.raw_fd();
         self.fds.push(device);
 
+        // # Safety
+        //
+        // Calling from_raw_fd is unsafe.
         let owned = unsafe { io::OwnedFd::from_raw_fd(fd) };
         Ok(owned)
     }
@@ -959,38 +998,22 @@ struct DeviceInfo {
     event_builder: Option<cxx::UniquePtr<ffi::EventBuilderWrapper>>,
 }
 
-// The other side of the PlatformBridgeC is known by us to be thread-safe, so we can
+// # Safety
+//
+// The other side of the classes below are known by us to be thread-safe, so we can
 // safely send it to another thread. However, Rust has no way of knowing that, so
 // we have to assert it ourselves.
 unsafe impl Send for ffi::PlatformBridgeC {}
 unsafe impl Sync for ffi::PlatformBridgeC {}
-
-// The other side of the InputDeviceRegistry is known by us to be thread-safe, so we can
-// safely send it to another thread. However, Rust has no way of knowing that, so
-// we have to assert it ourselves.
 unsafe impl Send for ffi::InputDeviceRegistry {}
 unsafe impl Sync for ffi::InputDeviceRegistry {}
-
-// The other side of the InputDevice is known by us to be thread-safe, so we can
-// safely send it to another thread. However, Rust has no way of knowing that, so
-// we have to assert it ourselves.
 unsafe impl Send for ffi::InputDevice {}
 unsafe impl Sync for ffi::InputDevice {}
-
-// The other side of the InputSink is known by us to be thread-safe, so we can
-// safely send it to another thread. However, Rust has no way of knowing that, so
-// we have to assert it ourselves.
 unsafe impl Send for ffi::InputSink {}
 unsafe impl Sync for ffi::InputSink {}
-
-// The other side of the EventBuilder is known by us to be thread-safe, so we can
-// safely send it to another thread. However, Rust has no way of knowing that, so
-// we have to assert it ourselves.
 unsafe impl Send for ffi::EventBuilder {}
 unsafe impl Sync for ffi::EventBuilder {}
 
-// This is another hack.
-//
 // Because *mut InputSink and *mut EventBuilder are raw pointers, Rust assumes
 // that they are neither Send nor Sync. However, we know that the other side of
 // the pointer is actually a C++ object that is thread-safe, so we can assert
@@ -1000,11 +1023,17 @@ unsafe impl Sync for ffi::EventBuilder {}
 pub struct InputSinkPtr(std::ptr::NonNull<ffi::InputSink>);
 impl InputSinkPtr {
     fn handle_input(&mut self, event: &cxx::SharedPtr<ffi::MirEvent>) {
+        // # Safety
+        //
+        // Calling new_unchecked is unsafe.
         let pinned = unsafe { std::pin::Pin::new_unchecked(self.0.as_mut()) };
         pinned.handle_input(event);
     }
 }
 
+// # Safety
+//
+// These needs to be unsafe because we are asserting that Send and Sync are valid on them.
 unsafe impl Send for InputSinkPtr {}
 unsafe impl Sync for InputSinkPtr {}
 pub struct EventBuilderPtr(std::ptr::NonNull<ffi::EventBuilder>);
@@ -1015,9 +1044,14 @@ pub struct InputDeviceInfoRs {
     name: String,
     unique_id: String,
     capabilities: u32,
+    valid: bool
 }
 
 impl InputDeviceInfoRs {
+    pub fn valid(&self) -> bool {
+        self.valid
+    }
+
     pub fn name(&self) -> &str {
         &self.name
     }
@@ -1147,17 +1181,13 @@ impl ffi::PointerSettingsRs {
             acceleration: ffi::MirPointerAcceleration::mir_pointer_acceleration_none.repr,
             horizontal_scroll_scale: 1.0,
             vertical_scroll_scale: 1.0,
+            has_error: false
         }
     }
 }
 
 #[cxx::bridge(namespace = "mir::input::evdev_rs")]
 mod ffi {
-    // Note(mattkae): The device capability enum MUST be in its expanded
-    // form instead of using a bit shift (e.g. 1 << 3) because cxx
-    // currently does not support bit shifts in enums. This will result
-    // in the error: "enums with non-integer literal discriminants are
-    // not supported yet".
     #[repr(u32)]
     #[derive(Debug, Copy, Clone, PartialEq, Eq)]
     enum DeviceCapability {
@@ -1248,6 +1278,7 @@ mod ffi {
         pub acceleration: i32,
         pub horizontal_scroll_scale: f64,
         pub vertical_scroll_scale: f64,
+        pub has_error: bool
     }
 
     extern "Rust" {
@@ -1267,6 +1298,9 @@ mod ffi {
         fn suspended(self: &mut DeviceObserverRs);
         fn removed(self: &mut DeviceObserverRs);
 
+        /// # Safety
+        /// 
+        /// This is unsafe because it is receiving raw pointers from C++ as parameters.
         unsafe fn start(
             self: &mut InputDeviceRs,
             input_sink: *mut InputSink,
@@ -1275,6 +1309,7 @@ mod ffi {
         fn stop(self: &mut InputDeviceRs);
         fn get_device_info(self: &InputDeviceRs) -> Box<InputDeviceInfoRs>;
 
+        fn valid(self: &InputDeviceInfoRs) -> bool;
         fn name(self: &InputDeviceInfoRs) -> &str;
         fn unique_id(self: &InputDeviceInfoRs) -> &str;
         fn capabilities(self: &InputDeviceInfoRs) -> u32;
@@ -1349,6 +1384,10 @@ mod ffi {
         fn bounding_rectangle(self: &PlatformBridgeC, sink: &InputSink) -> UniquePtr<RectangleC>;
         fn create_input_device(self: &PlatformBridgeC, device_id: i32) -> SharedPtr<InputDevice>;
         fn raw_fd(self: &DeviceBridgeC) -> i32;
+
+        // # Safety
+        // 
+        // This is unsafe because it receives a raw C++ pointer as an argument.
         unsafe fn create_event_builder_wrapper(
             self: &PlatformBridgeC,
             event_builder: *mut EventBuilder,

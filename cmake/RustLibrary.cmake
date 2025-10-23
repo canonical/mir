@@ -42,7 +42,6 @@ function(add_rust_cxx_library target)
 
   if(arg_INCLUDES)
     foreach(inc_dir IN LISTS arg_INCLUDES)
-      message(${inc_dir})
       target_include_directories(${target}-cxxbridge PRIVATE "${inc_dir}")
     endforeach()
   endif()

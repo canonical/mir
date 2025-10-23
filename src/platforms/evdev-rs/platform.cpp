@@ -25,6 +25,7 @@
 #include "mir/input/touchpad_settings.h"
 #include "mir/input/touchscreen_settings.h"
 #include "mir/input/input_device_info.h"
+#include "mir/log.h"
 
 namespace mi = mir::input;
 namespace miers = mi::evdev_rs;
@@ -84,7 +85,9 @@ public:
     mi::InputDeviceInfo get_device_info() override
     {
         auto device_info = impl->get_device_info();
-        auto const name = device_info->name();
+        if (!device_info->valid())
+            mir::log_error("Unable to get device info for the input device.");
+
         return {
             std::string(device_info->name()),
             std::string(device_info->unique_id()),
@@ -95,8 +98,14 @@ public:
     mir::optional_value<mi::PointerSettings> get_pointer_settings() const override
     {
         auto pointer_settings = impl->get_pointer_settings();
-        if (pointer_settings->is_set)
+        if (!pointer_settings->is_set)
             return mir::optional_value<mi::PointerSettings>{};
+
+        if (pointer_settings->has_error)
+        {
+            mir::log_warning("Unable to get pointer settings for the input device.");
+            return mir::optional_value<mi::PointerSettings>{};
+        }
 
         mi::PointerSettings result;
         result.handedness = static_cast<MirPointerHandedness>(pointer_settings->handedness);
