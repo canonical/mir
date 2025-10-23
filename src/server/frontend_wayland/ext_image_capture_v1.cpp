@@ -159,7 +159,7 @@ private:
     void apply_damage(std::optional<geom::Rectangle> const& damage);
 
     wayland::Weak<OutputGlobal> const output;
-    uint32_t const options;
+    bool overlay_cursor;
     std::shared_ptr<ExtImageCaptureV1Ctx> const ctx;
 
     DamageAmount damage_amount = DamageAmount::full;
@@ -306,7 +306,7 @@ mf::ExtImageCopyCaptureSessionV1::ExtImageCopyCaptureSessionV1(
     : wayland::ImageCopyCaptureSessionV1{resource, Version<1>()},
       screen_shooter(ctx->screen_shooter_factory->create(thread_pool_executor)),
       output{source->output},
-      options{options},
+      overlay_cursor{(options & wayland::ImageCopyCaptureManagerV1::Options::paint_cursors) != 0},
       ctx{ctx}
 {
     if (output)
@@ -342,18 +342,25 @@ auto mf::ExtImageCopyCaptureSessionV1::output_config_changed(graphics::DisplayCo
 void mf::ExtImageCopyCaptureSessionV1::apply_damage(
     std::optional<geom::Rectangle> const& damage)
 {
+    if (!output) {
+        return;
+    }
+
     if (damage && damage_amount != DamageAmount::full)
     {
-        if (damage.value().size != geom::Size{})
+        auto const output_space_area = output.value().current_config().extents();
+
+        auto const intersection = intersection_of(damage.value(), output_space_area);
+        if (intersection.size != geom::Size{})
         {
             if (damage_amount == DamageAmount::partial)
             {
-                output_space_damage = geom::Rectangles{output_space_damage, damage.value()}.bounding_rectangle();
+                output_space_damage = geom::Rectangles{output_space_damage, intersection}.bounding_rectangle();
             }
             else // damage_amount == DamageAmount::none
             {
                 damage_amount = DamageAmount::partial;
-                output_space_damage = damage.value();
+                output_space_damage = intersection;
             }
         }
     }
@@ -407,7 +414,6 @@ void mf::ExtImageCopyCaptureSessionV1::maybe_capture_frame()
     auto const buffer_size = output_config.modes[output_config.current_mode_index].size;
     auto const output_space_area = output_config.extents();
     auto const transform = output_config.transformation();
-    bool const overlay_cursor = (options & wayland::ImageCopyCaptureManagerV1::Options::paint_cursors) != 0;
 
     switch (damage_amount)
     {
@@ -463,7 +469,7 @@ mf::ExtImageCopyCaptureFrameV1::ExtImageCopyCaptureFrameV1(
 }
 
 void mf::ExtImageCopyCaptureFrameV1::attach_buffer(
-    [[maybe_unused]] wl_resource* buffer)
+    wl_resource* buffer)
 {
     if (capture_has_been_called)
     {
