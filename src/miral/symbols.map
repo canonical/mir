@@ -700,8 +700,10 @@ global:
     miral::ApplicationSwitcher::cancel*;
     miral::ApplicationSwitcher::confirm*;
     miral::ApplicationSwitcher::next_app*;
+    miral::ApplicationSwitcher::next_window*;
     miral::ApplicationSwitcher::operator*;
     miral::ApplicationSwitcher::prev_app*;
+    miral::ApplicationSwitcher::prev_window*;
     miral::ApplicationSwitcher::stop*;
     miral::CursorScale::scale_temporarily*;
     miral::LocatePointer::LocatePointer*;
@@ -714,6 +716,7 @@ global:
     miral::LocatePointer::on_locate_pointer*;
     miral::LocatePointer::operator*;
     miral::LocatePointer::schedule_request*;
+    miral::WaylandExtensions::ext_data_control_manager_v1*;
     typeinfo?for?miral::ApplicationSwitcher;
     typeinfo?for?miral::LocatePointer;
   };

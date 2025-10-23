@@ -38,6 +38,7 @@
 #include <gio/gio.h>
 
 #include "layer_shell_wayland_surface.h"
+#include "miral/wayland_extensions.h"
 
 namespace geom = mir::geometry;
 namespace msh = mir::shell;
@@ -48,6 +49,7 @@ struct ToplevelInfo
 {
     zwlr_foreign_toplevel_handle_v1* handle;
     std::string app_id;
+    std::string window_title;
 };
 
 struct preferred_codecvt : std::codecvt_byname<wchar_t, char, std::mbstate_t>
@@ -59,6 +61,12 @@ struct preferred_codecvt : std::codecvt_byname<wchar_t, char, std::mbstate_t>
 };
 
 std::locale::id preferred_codecvt::id;
+
+enum class SelectorState
+{
+    Applications,
+    Windows
+};
 
 struct ToplevelInfoPrinter
 {
@@ -92,7 +100,8 @@ struct ToplevelInfoPrinter
 
     void print(std::shared_ptr<miral::tk::WaylandShmBuffer> const& buffer,
         std::vector<ToplevelInfo> const& info_list,
-        std::optional<std::string> const& selected_app_id)
+        SelectorState selector_state,
+        std::optional<int> selected_window_index)
     {
         if (!initialized)
             return;
@@ -100,16 +109,17 @@ struct ToplevelInfoPrinter
         auto const region_size = buffer->size();
         FT_Set_Pixel_Sizes(face, 20, 0);
 
-        const auto [width, height, line_height, lines] = compute_text_metrics(info_list);
+        const auto [width, height, line_height, lines, selected_line_index] = compute_text_metrics(info_list, selector_state, selected_window_index);
         auto base_pos_y = 0.5 * (region_size.height - height);
         static constexpr int region_pixel_bytes = 4;
         auto const region_buffer = static_cast<unsigned char*>(buffer->data());
 
-        for (auto const& line : lines)
+        for (size_t i = 0; i < lines.size(); i++)
         {
+            auto const& line = lines[i];
             auto base_pos_x = 0.5 * (region_size.width - width);
             auto line_text = converter.from_bytes(line);
-            Color color = (selected_app_id && *selected_app_id == line) ? yellow : white;
+            Color color = selected_line_index == i ? yellow : white;
 
             for (auto const ch : line_text)
             {
@@ -134,6 +144,7 @@ private:
         geom::Height height{};
         geom::DeltaY line_height{};
         std::vector<std::string> lines;
+        std::optional<int> selected_index;
     };
 
     struct Color {
@@ -143,18 +154,41 @@ private:
     static constexpr Color white{255, 255, 255, 255};
     static constexpr Color yellow{255, 255, 0, 255};
 
-    TextMetrics compute_text_metrics(std::vector<ToplevelInfo> const& info_list)
+    TextMetrics compute_text_metrics(
+        std::vector<ToplevelInfo> const& info_list,
+        SelectorState selector_state,
+        std::optional<int> selected_window_index)
     {
         TextMetrics metrics;
+        std::optional<ToplevelInfo> selected_top_level;
+        if (selected_window_index)
+            selected_top_level = info_list[*selected_window_index];
 
+        // First, sort the information such that application ids are displayed in order alongside
+        // their associated list of windows.
+        std::vector<std::pair<std::string, std::vector<ToplevelInfo>>> list_of_app_id_to_window_mapping;
         for (auto const& info : info_list)
         {
-            auto const& displayed_text = info.app_id;
-            if (std::ranges::find(metrics.lines, displayed_text) != metrics.lines.end())
-                continue;
+            auto const& app_id = info.app_id;
+            bool found = false;
+            for (auto& mapping : list_of_app_id_to_window_mapping)
+            {
+                if (mapping.first == info.app_id)
+                {
+                    mapping.second.push_back(info);
+                    found = true;
+                    break;
+                }
+            }
 
-            metrics.lines.push_back(displayed_text);
-            auto line_text = converter.from_bytes(displayed_text);
+            if (!found)
+                list_of_app_id_to_window_mapping.push_back({app_id, {info}});
+        }
+
+        auto const add_text = [&](std::string const& text)
+        {
+            metrics.lines.push_back(text);
+            auto const line_text = converter.from_bytes(text);
             geom::Width line_width{};
 
             for (auto const ch : line_text)
@@ -169,6 +203,27 @@ private:
 
             metrics.width = std::max(metrics.width, line_width);
             metrics.height = metrics.height + metrics.line_height;
+        };
+
+        // Using the sorted list, we then create the displayed list.
+        for (const auto& [app_id, window_info_list] : list_of_app_id_to_window_mapping)
+        {
+            add_text(app_id);
+            if (selected_top_level && selector_state == SelectorState::Applications)
+            {
+                if (selected_top_level->app_id == app_id)
+                    metrics.selected_index = metrics.lines.size() - 1;
+            }
+
+            for (auto const& window_info : window_info_list)
+            {
+                add_text("    " + window_info.window_title);
+                if (selected_top_level && selector_state == SelectorState::Windows)
+                {
+                    if (selected_top_level->handle == window_info.handle)
+                        metrics.selected_index = metrics.lines.size() - 1;
+                }
+            }
         }
         return metrics;
     }
@@ -239,6 +294,14 @@ public:
     void init(wl_display* display)
     {
         wayland_init(display);
+        if (!layer_shell())
+            mir::fatal_error("The %s interface is required for the application switcher to run. "
+                "Please enable it using miral::WaylandExtensions.", miral::WaylandExtensions::zwlr_layer_shell_v1);
+
+        if (!toplevel_manager)
+            mir::fatal_error("The %s interface is required for the application switcher to run. "
+                "Please enable it using miral::WaylandExtensions.", miral::WaylandExtensions::zwlr_foreign_toplevel_manager_v1);
+
         shm_ = std::make_shared<miral::tk::WaylandShmPool>(shm());
         miral::tk::LayerShellWaylandSurface::CreationParams surface_params{
             mir::geometry::Size(0, 0),
@@ -254,7 +317,7 @@ public:
     void add(zwlr_foreign_toplevel_handle_v1* toplevel)
     {
         std::lock_guard lock{mutex};
-        toplevels_in_focus_order.push_back(ToplevelInfo{toplevel, "<unset>"});
+        toplevels_in_focus_order.push_back(ToplevelInfo{toplevel, "<unset>", "<unset>"});
         if (!tentative_focus_index)
             tentative_focus_index = 0;
     }
@@ -269,6 +332,19 @@ public:
         if (it != toplevels_in_focus_order.end())
         {
             it->app_id = app_id;
+        }
+    }
+
+    void window_title(zwlr_foreign_toplevel_handle_v1* toplevel, char const* window_title)
+    {
+        std::lock_guard lock{mutex};
+        auto const it = std::ranges::find_if(toplevels_in_focus_order, [toplevel](auto const& element)
+        {
+            return element.handle == toplevel;
+        });
+        if (it != toplevels_in_focus_order.end())
+        {
+            it->window_title = window_title;
         }
     }
 
@@ -287,7 +363,7 @@ public:
         }
         else
         {
-            toplevels_in_focus_order.insert(toplevels_in_focus_order.begin(), ToplevelInfo{toplevel, "<unset>"});
+            toplevels_in_focus_order.insert(toplevels_in_focus_order.begin(), ToplevelInfo{toplevel, "<unset>", "<unset>"});
         }
     }
 
@@ -333,7 +409,7 @@ public:
     void next_app()
     {
         std::lock_guard lock{mutex};
-        if (start_if_not_running())
+        if (start_if_not_running(SelectorState::Applications))
             return;
 
         if (!tentative_focus_index)
@@ -347,13 +423,14 @@ public:
                 *tentative_focus_index = 0;
         } while (!is_first_toplevel_with_app_id(toplevels_in_focus_order[*tentative_focus_index]));
 
+        selector_state = SelectorState::Applications;
         draw_internal();
     }
 
     void prev_app()
     {
         std::lock_guard lock{mutex};
-        if (start_if_not_running())
+        if (start_if_not_running(SelectorState::Applications))
             return;
 
         if (!tentative_focus_index)
@@ -367,6 +444,53 @@ public:
             else
                 (*tentative_focus_index)--;
         } while (!is_first_toplevel_with_app_id(toplevels_in_focus_order[*tentative_focus_index]));
+
+        selector_state = SelectorState::Applications;
+        draw_internal();
+    }
+
+    void next_window()
+    {
+        std::lock_guard lock{mutex};
+        if (start_if_not_running(SelectorState::Windows))
+            return;
+
+        if (!tentative_focus_index)
+            return;
+
+        auto const current_app_id = toplevels_in_focus_order[*tentative_focus_index].app_id;
+
+        do
+        {
+            (*tentative_focus_index)++;
+            if (*tentative_focus_index == toplevels_in_focus_order.size())
+                *tentative_focus_index = 0;
+        } while (toplevels_in_focus_order[*tentative_focus_index].app_id != current_app_id);
+
+        selector_state = SelectorState::Windows;
+        draw_internal();
+    }
+
+    void prev_window()
+    {
+        std::lock_guard lock{mutex};
+        if (start_if_not_running(SelectorState::Windows))
+            return;
+
+        if (!tentative_focus_index)
+            return;
+
+        auto const current_app_id = toplevels_in_focus_order[*tentative_focus_index].app_id;
+
+        do
+        {
+            if (*tentative_focus_index == 0)
+                tentative_focus_index = toplevels_in_focus_order.size() - 1;
+            else
+                (*tentative_focus_index)--;
+        } while (toplevels_in_focus_order[*tentative_focus_index].app_id != current_app_id);
+
+        selector_state = SelectorState::Windows;
         draw_internal();
     }
 
@@ -395,7 +519,7 @@ protected:
     }
 
 private:
-    bool is_first_toplevel_with_app_id(ToplevelInfo const& info)
+    bool is_first_toplevel_with_app_id(ToplevelInfo const& info) const
     {
         for (auto const& other : toplevels_in_focus_order)
         {
@@ -406,7 +530,7 @@ private:
         }
 
         return true;
-    };
+    }
 
     static void handle_toplevel(void* data, zwlr_foreign_toplevel_manager_v1*, zwlr_foreign_toplevel_handle_v1* toplevel)
     {
@@ -424,7 +548,11 @@ private:
         handle_finished
     };
 
-    static void handle_title(void*, zwlr_foreign_toplevel_handle_v1*, char const*) {}
+    static void handle_title(void* data, zwlr_foreign_toplevel_handle_v1* handle, char const* window_title)
+    {
+        auto const self = static_cast<WaylandApp*>(data);
+        self->window_title(handle, window_title);
+    }
     static void handle_output_enter(void*, zwlr_foreign_toplevel_handle_v1*, wl_output*) {}
     static void handle_output_leave(void*, zwlr_foreign_toplevel_handle_v1*, wl_output*) {}
     static void handle_toplevel_done(void*, zwlr_foreign_toplevel_handle_v1*) {}
@@ -467,13 +595,14 @@ private:
     /// Starts the application switcher if it isn't already running.
     ///
     /// \returns `true` if it started, otherwise `false`.
-    bool start_if_not_running()
+    bool start_if_not_running(SelectorState next_state)
     {
         if (is_running)
             return false;
 
         is_running = true;
         tentative_focus_index = toplevels_in_focus_order.empty() ? std::optional<size_t>() : 0;
+        selector_state = next_state;
         draw_internal();
         return true;
     }
@@ -526,7 +655,8 @@ private:
         printer.print(
             buffer,
             toplevels_in_focus_order,
-            tentative_focus_index ? toplevels_in_focus_order[*tentative_focus_index].app_id : std::optional<std::string>());
+            selector_state,
+            tentative_focus_index);
 
         surface_->attach_buffer(buffer->use(), 1);
         surface_->commit();
@@ -540,6 +670,7 @@ private:
     ToplevelInfoPrinter printer;
     std::vector<ToplevelInfo> toplevels_in_focus_order;
     std::optional<size_t> tentative_focus_index;
+    SelectorState selector_state = SelectorState::Applications;
     bool is_running = false;
 };
 }
@@ -633,6 +764,20 @@ public:
             app->prev_app();
     }
 
+    void next_window()
+    {
+        std::lock_guard lock{mutex};
+        if (app)
+            app->next_window();
+    }
+
+    void prev_window()
+    {
+        std::lock_guard lock{mutex};
+        if (app)
+            app->prev_window();
+    }
+
 private:
     mir::Fd const shutdown_signal;
     std::mutex mutex;
@@ -666,6 +811,16 @@ void miral::ApplicationSwitcher::next_app() const
 void miral::ApplicationSwitcher::prev_app() const
 {
     self->prev_app();
+}
+
+void miral::ApplicationSwitcher::next_window() const
+{
+    self->next_window();
+}
+
+void miral::ApplicationSwitcher::prev_window() const
+{
+    self->prev_window();
 }
 
 void miral::ApplicationSwitcher::confirm() const

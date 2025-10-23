@@ -20,7 +20,6 @@
 #include "mir/input/event_builder.h"
 #include "mir/main_loop.h"
 
-#include <cassert>
 #include <cmath>
 #include <utility>
 

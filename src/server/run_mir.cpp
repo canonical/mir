@@ -28,7 +28,6 @@
 #include <atomic>
 #include <mutex>
 #include <csignal>
-#include <cassert>
 #include <unistd.h>
 #include <boost/throw_exception.hpp>
 #include <errno.h>
@@ -227,8 +226,9 @@ void mir::run_mir(
         terminator_ :
         [&server_ptr](int)
         {
-          assert(server_ptr);
-          server_ptr->stop();
+            if (!server_ptr)
+                fatal_error_abort("Logic error in mir::run_mir() server_ptr is nullptr");
+            server_ptr->stop();
         };
 
     struct sigaction old_action{};

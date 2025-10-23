@@ -44,6 +44,7 @@ char const* const miral::WaylandExtensions::zwp_input_method_manager_v2{"zwp_inp
 char const* const miral::WaylandExtensions::zwlr_screencopy_manager_v1{"zwlr_screencopy_manager_v1"};
 char const* const miral::WaylandExtensions::zwlr_virtual_pointer_manager_v1{"zwlr_virtual_pointer_manager_v1"};
 char const* const miral::WaylandExtensions::ext_session_lock_manager_v1{"ext_session_lock_manager_v1"};
+char const* const miral::WaylandExtensions::ext_data_control_manager_v1{"ext_data_control_manager_v1"};
 
 namespace
 {

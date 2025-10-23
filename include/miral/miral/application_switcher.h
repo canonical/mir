@@ -64,6 +64,18 @@ public:
     /// The application will not be focused until #confirm is called.
     void prev_app() const;
 
+    /// Tentatively select the next window within the tentatively focused
+    /// application.
+    ///
+    /// The window will not be focused until #confirm is called.
+    void next_window() const;
+
+    /// Tentatively select the previous window within the tentatively focused
+    /// application.
+    ///
+    /// The window will not be focused until #confirm is called.
+    void prev_window() const;
+
     /// Focus the tentatively selected application and hide it.
     void confirm() const;
 

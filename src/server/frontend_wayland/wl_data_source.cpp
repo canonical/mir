@@ -281,3 +281,8 @@ uint32_t mf::WlDataSource::drag_n_drop_set_actions(uint32_t dnd_actions, uint32_
 
     return DndAction::none;
 }
+
+auto mf::WlDataSource::make_source() -> std::shared_ptr<mir::scene::DataExchangeSource>
+{
+    return std::make_shared<Source>(*this);
+}

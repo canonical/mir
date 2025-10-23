@@ -81,7 +81,6 @@ mtf::Process::Process(pid_t pid)
     , terminated(false)
     , detached(false)
 {
-    assert(pid > 0);
 }
 
 mtf::Process::~Process()
