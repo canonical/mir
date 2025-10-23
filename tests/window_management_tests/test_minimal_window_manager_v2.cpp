@@ -514,7 +514,7 @@ public:
 };
 
 template <uint N>
-class MultipleWindowsMinimalWindowManagerPreventFocusStealingTest : public MultipleWindowsMinimalWindowManagerV2Test<N>
+class MultipleWindowsMinimalWindowManagerV2PreventFocusStealingTest : public MultipleWindowsMinimalWindowManagerV2Test<N>
 {
 public:
     miral::FocusStealing focus_stealing() const override
@@ -526,7 +526,7 @@ public:
 using MinimalWindowManagerV2WithOneWindow = MultipleWindowsMinimalWindowManagerV2Test<1>;
 using MinimalWindowManagerV2WithTwoWindows = MultipleWindowsMinimalWindowManagerV2Test<2>;
 using MinimalWindowManagerV2WithThreeWindows = MultipleWindowsMinimalWindowManagerV2Test<3>;
-using MinimalWindowManagerV2WithThreeWindowsPreventFocusStealing = MultipleWindowsMinimalWindowManagerPreventFocusStealingTest<3>;
+using MinimalWindowManagerV2WithThreeWindowsPreventFocusStealing = MultipleWindowsMinimalWindowManagerV2PreventFocusStealingTest<3>;
 
 TEST_F(MinimalWindowManagerV2WithThreeWindows, new_windows_are_inserted_above_older_windows)
 {
