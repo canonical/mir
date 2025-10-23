@@ -760,4 +760,3 @@ global:
     vtable?for?miral::MinimalWindowManagerV2;
   };
 } MIRAL_5.5;
-
