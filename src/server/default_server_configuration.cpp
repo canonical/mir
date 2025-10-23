@@ -40,6 +40,7 @@
 #include "mir/graphics/platform.h"
 #include "mir/console_services.h"
 #include "mir/decoration_strategy.h"
+#include "mir/scene/session.h"
 
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
@@ -51,6 +52,19 @@ namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace mi = mir::input;
 
+namespace
+{
+std::map<std::string, mir::ServerConfiguration::WaylandProtocolExtensionFilter> get_default_wayland_extension_policy_map()
+{
+    std::map<std::string, mir::ServerConfiguration::WaylandProtocolExtensionFilter> result;
+    for (auto const& extension : mir::frontend::get_supported_extensions())
+        result[extension] = [](auto const&, const char*) { return false; };
+    for (auto const& extension: mir::frontend::get_standard_extensions())
+        result[extension] = [](auto const&, const char*) { return true; };
+    return result;
+}
+}
+
 mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const* argv[]) :
         DefaultServerConfiguration(std::make_shared<mo::DefaultConfiguration>(argc, argv))
 {
@@ -58,7 +72,16 @@ mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const
 
 mir::DefaultServerConfiguration::DefaultServerConfiguration(std::shared_ptr<mo::Configuration> const& configuration_options) :
     configuration_options(configuration_options),
-    enabled_wayland_extensions(frontend::get_standard_extensions())
+    wayland_extension_policy_map(get_default_wayland_extension_policy_map()),
+    wayland_extension_filter([this](auto const& session, auto const& interface_name)
+    {
+        auto const it = wayland_extension_policy_map.find(interface_name);
+        if (it != wayland_extension_policy_map.end())
+            return it->second(session, interface_name)
+                || session->process_id() == getpid();
+
+        return true;
+    })
 {
 }
 

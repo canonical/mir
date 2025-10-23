@@ -14,6 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <ranges>
+
 #include "fractional-scale-v1_wrapper.h"
 #include "fractional_scale_v1.h"
 #include "mir/default_server_configuration.h"
@@ -371,9 +373,8 @@ std::shared_ptr<mf::Connector>
             auto options = the_options();
             bool const arw_socket = options->is_set(options::arw_server_socket_opt);
 
-            auto wayland_extensions = std::set<std::string>{
-                enabled_wayland_extensions.begin(),
-                enabled_wayland_extensions.end()};
+            auto const extension_keys = wayland_extension_policy_map | std::views::keys;
+            std::set<std::string> const wayland_extensions(std::ranges::begin(extension_keys), std::ranges::end(extension_keys));
 
             auto const x11_enabled = options->is_set(mo::x11_display_opt) && options->get<bool>(mo::x11_display_opt);
 
@@ -428,7 +429,16 @@ void mir::DefaultServerConfiguration::set_wayland_extension_filter(WaylandProtoc
 
 void mir::DefaultServerConfiguration::set_enabled_wayland_extensions(std::vector<std::string> const& extensions)
 {
-    enabled_wayland_extensions = extensions;
+    wayland_extension_policy_map.clear();
+    for (auto const& extension : extensions)
+        wayland_extension_policy_map[extension] = [](auto const&, const char*) { return true; };
+}
+
+void mir::DefaultServerConfiguration::set_wayland_extension_policy(
+    std::string const& interface_name,
+    WaylandProtocolExtensionFilter const& policy)
+{
+    wayland_extension_policy_map[interface_name] = policy;
 }
 
 auto mir::frontend::get_window(wl_resource* surface) -> std::shared_ptr<ms::Surface>

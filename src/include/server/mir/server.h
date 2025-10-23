@@ -491,6 +491,7 @@ public:
             wl_display*,
             std::function<void(std::function<void()>&& work)> const&)> builder);
 
+    [[deprecated("Prefer using set_wayland_extension_policy() to set a policy on a per-interface bassis.")]]
     void set_wayland_extension_filter(
         std::function<bool(std::shared_ptr<scene::Session> const&, char const*)> const& extension_filter);
 
@@ -503,7 +504,19 @@ public:
     auto get_activation_token() const -> std::string;
 
     /// Overrides the standard set of Wayland extensions (mir::frontend::get_standard_extensions()) with a new list
+    [[deprecated("Prefer using set_wayland_extension_policy() to set a policy on a per-interface bassis.")]]
     void set_enabled_wayland_extensions(std::vector<std::string> const& extensions);
+
+    /// Set a policy for the provided wayland extension.
+    ///
+    /// Only clients for which the \p policy returns `true` will be offered the global \p interface_name.
+    ///
+    /// \param interface_name the interface to apply the policy on
+    /// \param policy the policy predicate with the session and interface name provided
+    ///               as arguments.
+    void set_wayland_extension_policy(
+        std::string const& interface_name,
+        std::function<bool(std::shared_ptr<scene::Session> const&, char const*)> const& policy);
 /** @} */
 
     auto the_decoration_strategy() const -> std::shared_ptr<DecorationStrategy>;

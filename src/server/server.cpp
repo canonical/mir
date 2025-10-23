@@ -546,6 +546,16 @@ void mir::Server::set_enabled_wayland_extensions(std::vector<std::string> const&
     }
 }
 
+void mir::Server::set_wayland_extension_policy(
+    std::string const& interface_name,
+    std::function<bool(std::shared_ptr<scene::Session> const&, char const*)> const& policy)
+{
+    if (auto const config = self->server_config)
+    {
+        config->set_wayland_extension_policy(interface_name, policy);
+    }
+}
+
 auto mir::Server::open_client_wayland(ConnectHandler const& connect_handler) -> int
 {
     if (auto const config = self->server_config)

@@ -17,6 +17,7 @@ global:
     mir::DefaultServerConfiguration::set_enabled_wayland_extensions*;
     mir::DefaultServerConfiguration::set_the_decoration_strategy*;
     mir::DefaultServerConfiguration::set_wayland_extension_filter*;
+    mir::DefaultServerConfiguration::set_wayland_extension_policy*;
     mir::DefaultServerConfiguration::the_accessibility_manager*;
     mir::DefaultServerConfiguration::the_buffer_allocator*;
     mir::DefaultServerConfiguration::the_clock*;
@@ -195,6 +196,7 @@ global:
     mir::Server::set_terminator*;
     mir::Server::set_the_decoration_strategy*;
     mir::Server::set_wayland_extension_filter*;
+    mir::Server::set_wayland_extension_policy*;
     mir::Server::stop*;
     mir::Server::supported_pixel_formats*;
     mir::Server::the_accessibility_manager*;
@@ -831,6 +833,7 @@ global:
     non-virtual?thunk?to?mir::DefaultServerConfiguration::set_enabled_wayland_extensions*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::set_the_decoration_strategy*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::set_wayland_extension_filter*;
+    non-virtual?thunk?to?mir::DefaultServerConfiguration::set_wayland_extension_policy*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_accessibility_manager*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_application_not_responding_detector*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_buffer_allocator*;
