@@ -738,6 +738,7 @@ global:
     miral::MinimalWindowManagerV2::handle_window_ready*;
     miral::MinimalWindowManagerV2::place_new_window*;
     miral::MinimalWindowManagerV2::pointer_drag_modifier*;
+    miral::WaylandExtensions::ext_data_control_manager_v1*;
     non-virtual?thunk?to?miral::MinimalWindowManagerV2::advise_delete_app*;
     non-virtual?thunk?to?miral::MinimalWindowManagerV2::advise_focus_gained*;
     non-virtual?thunk?to?miral::MinimalWindowManagerV2::advise_new_app*;
@@ -759,3 +760,4 @@ global:
     vtable?for?miral::MinimalWindowManagerV2;
   };
 } MIRAL_5.5;
+

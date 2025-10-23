@@ -22,10 +22,9 @@
 #include "mir/input/event_filter.h"
 #include "mir/input/mousekeys_keymap.h"
 #include "mir/log.h"
-#include "mir/main_loop.h"
 #include "mir/server.h"
 #include "mir/synchronised.h"
-#include "mir/time/alarm.h"
+#include "mir/time/types.h"
 #include "miral/live_config.h"
 
 #include <chrono>
@@ -51,13 +50,12 @@ struct miral::BounceKeys::Self
     {
         struct RuntimeState
         {
-            std::optional<mi::XkbSymkey> last_key;
+            mi::XkbSymkey last_key;
+            mir::time::Timestamp last_key_time;
         };
 
-        BounceKeysFilter(
-            std::shared_ptr<mir::MainLoop> const& main_loop, std::shared_ptr<mir::Synchronised<Config>> config) :
-            config{std::move(config)},
-            last_key_clearer{main_loop->create_alarm([this] { this->runtime_state.lock()->last_key.reset(); })}
+        explicit BounceKeysFilter(std::shared_ptr<mir::Synchronised<Config>> const& config) :
+            config{config}
         {
         }
 
@@ -78,34 +76,41 @@ struct miral::BounceKeys::Self
                 return false;
 
             auto const keysym = mir_keyboard_event_keysym(key_event);
+            auto const keytime =
+                mir::time::Timestamp{std::chrono::nanoseconds{mir_input_event_get_event_time(input_event)}};
 
-            last_key_clearer->cancel();
-            auto state = runtime_state.lock();
             auto config_ = config->lock();
 
-            last_key_clearer->reschedule_in(config_->delay);
-
-            if(!state->last_key || *state->last_key != keysym)
+            if (state)
             {
-                state->last_key = keysym;
-                return false;
-            }
+                auto rejected = false;
+                if (keysym == state->last_key && keytime - state->last_key_time < config_->delay)
+                {
+                    config_->on_press_rejected(key_event);
+                    rejected = true;;
+                }
 
-            config_->on_press_rejected(key_event);
+                state->last_key = keysym;
+                state->last_key_time = keytime;
+                return rejected;
+            }
+            else
+            {
+                state.emplace(keysym, keytime);
+            }
 
             return true;
         }
 
-        mir::Synchronised<RuntimeState> runtime_state;
+        std::optional<RuntimeState> state;
         std::shared_ptr<mir::Synchronised<Config>> const config;
-        std::unique_ptr<mir::time::Alarm> const last_key_clearer;
     };
 
     void enable()
     {
-        if (auto [ml, cef] = std::pair{main_loop.lock(), composite_event_filter.lock()}; ml && cef)
+        if (auto cef = composite_event_filter.lock())
         {
-            bounce_keys_filter = std::make_shared<Self::BounceKeysFilter>(ml, config);
+            bounce_keys_filter = std::make_shared<Self::BounceKeysFilter>(config);
             cef->prepend(bounce_keys_filter);
         }
     }
@@ -118,7 +123,6 @@ struct miral::BounceKeys::Self
     std::shared_ptr<mir::Synchronised<Config>> const config;
     std::shared_ptr<BounceKeysFilter> bounce_keys_filter;
 
-    std::weak_ptr<mir::MainLoop> main_loop;
     std::weak_ptr<mi::CompositeEventFilter> composite_event_filter;
 };
 
@@ -180,7 +184,6 @@ void miral::BounceKeys::operator()(mir::Server& server)
     server.add_init_callback(
         [&server, this]
         {
-            self->main_loop = server.the_main_loop();
             self->composite_event_filter = server.the_composite_event_filter();
 
             if (self->config->lock()->enabled)

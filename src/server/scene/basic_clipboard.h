@@ -60,6 +60,7 @@ class BasicClipboard : public Clipboard
 {
 public:
     auto paste_source() const -> std::shared_ptr<DataExchangeSource> override;
+    void do_with_paste_source(std::move_only_function<void(std::shared_ptr<DataExchangeSource> const&)> fn) override;
     void set_paste_source(std::shared_ptr<DataExchangeSource> const& source) override;
     void clear_paste_source() override;
     void clear_paste_source(DataExchangeSource const& source) override;
@@ -73,14 +74,17 @@ public:
     void register_interest(std::weak_ptr<ClipboardObserver> const& observer) override
     {
         multiplexer.register_interest(observer);
+        observer.lock()->paste_source_set(paste_source_);
     }
     void register_interest(std::weak_ptr<ClipboardObserver> const& observer, Executor& executor) override
     {
         multiplexer.register_interest(observer, executor);
+        observer.lock()->paste_source_set(paste_source_);
     }
     void register_early_observer(std::weak_ptr<ClipboardObserver> const& observer, Executor& executor) override
     {
         multiplexer.register_early_observer(observer, executor);
+        observer.lock()->paste_source_set(paste_source_);
     }
     void unregister_interest(ClipboardObserver const& observer) override
     {
