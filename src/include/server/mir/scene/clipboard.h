@@ -56,7 +56,7 @@ public:
     /// Get the current copy-paste source.
     virtual auto paste_source() const -> std::shared_ptr<DataExchangeSource> = 0;
 
-    /// Run the given callback on the current paste source. 
+    /// Run the given callback on the current paste source.
     /// Will execute on the calling thread and the source will not be modified while
     /// the callback is being executed.
     virtual void do_with_paste_source(
