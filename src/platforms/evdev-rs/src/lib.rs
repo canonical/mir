@@ -175,7 +175,7 @@ impl PlatformRs {
         let mut is_running = true;
         while is_running {
             // # Safety
-            // 
+            //
             // Calling libc::poll is unsafe.
             let ret = unsafe {
                 libc::poll(fds.as_mut_ptr(), fds.len() as _, -1) // -1 = wait indefinitely
@@ -211,7 +211,7 @@ impl PlatformRs {
         for device_info in state.known_devices.iter().rev() {
             println!("Removing device id {} from registry", device_info.id);
             // # Safety
-            // 
+            //
             // Because we need to use pin_mut_unchecked, this is unsafe.
             unsafe {
                 device_registry
@@ -289,7 +289,7 @@ impl PlatformRs {
                         let device_registry = device_registry.clone();
 
                         // # Safety
-                        // 
+                        //
                         // Because we need to use pin_mut_unchecked, this is unsafe.
                         thread::spawn(move || unsafe {
                             device_registry
@@ -308,7 +308,7 @@ impl PlatformRs {
                             .position(|x| x.device.as_raw() == dev.as_raw());
                         if let Some(index) = index {
                             // # Safety
-                            // 
+                            //
                             // Because we need to use pin_mut_unchecked, this is unsafe.
                             unsafe {
                                 device_registry
@@ -362,7 +362,7 @@ impl PlatformRs {
                                 if let Some(event_builder) = &mut device_info.event_builder {
                                     if let Some(input_sink) = &mut device_info.input_sink {
                                         // # Safety
-                                        // 
+                                        //
                                         // Calling as_ref on a NonNull is unsafe.
                                         let sink_ref: &ffi::InputSink =
                                             unsafe { input_sink.0.as_ref() };
@@ -816,7 +816,7 @@ impl PlatformRs {
                     if let Some(device_info) = find_device_by_id(state, id) {
                         device_info.input_sink = Some(input_sink);
                         // # Safety
-                        // 
+                        //
                         // Calling as_ptr on a NonNull is unsafe.
                         device_info.event_builder = Some(unsafe {
                             bridge_locked.create_event_builder_wrapper(event_builder.0.as_ptr())
@@ -943,7 +943,7 @@ impl input::LibinputInterface for LibinputInterfaceImpl {
         let cpath = std::ffi::CString::new(path.as_os_str().as_bytes()).unwrap();
 
         // # Safety
-        // 
+        //
         // This is an unsafe libc function.
         let mut st: libc::stat = unsafe { std::mem::zeroed() };
         let ret = unsafe { libc::stat(cpath.as_ptr(), &mut st) };
@@ -1299,7 +1299,7 @@ mod ffi {
         fn removed(self: &mut DeviceObserverRs);
 
         /// # Safety
-        /// 
+        ///
         /// This is unsafe because it is receiving raw pointers from C++ as parameters.
         unsafe fn start(
             self: &mut InputDeviceRs,
@@ -1386,7 +1386,7 @@ mod ffi {
         fn raw_fd(self: &DeviceBridgeC) -> i32;
 
         // # Safety
-        // 
+        //
         // This is unsafe because it receives a raw C++ pointer as an argument.
         unsafe fn create_event_builder_wrapper(
             self: &PlatformBridgeC,
