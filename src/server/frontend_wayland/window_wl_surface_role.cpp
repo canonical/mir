@@ -528,7 +528,7 @@ void mf::WindowWlSurfaceRole::create_scene_surface()
     mods.input_shape = std::vector<geom::Rectangle>{};
     surface.value().populate_surface_data(mods.streams.value(), mods.input_shape.value(), {});
 
-    auto const scene_surface = shell->create_surface(session, surface, mods, observer, &wayland_executor);
+    auto const scene_surface = shell->create_surface(session, mods, observer, &wayland_executor);
     surface_registry->add_surface(scene_surface, surface);
     weak_scene_surface = scene_surface;
 

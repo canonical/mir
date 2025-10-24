@@ -384,8 +384,7 @@ mf::WlDataDevice::DragIconSurface::DragIconSurface(WlSurface* icon, std::shared_
 
     auto const& session = surface.value().session;
 
-    shared_scene_surface =
-        session->create_surface(session, wayland::Weak<WlSurface>(surface), spec, nullptr, nullptr);
+    shared_scene_surface = session->create_surface(session, spec, nullptr, nullptr);
 
     DragIconSurface::drag_icon_controller->set_drag_icon(shared_scene_surface);
 }
