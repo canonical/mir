@@ -43,6 +43,7 @@
 #include <miral/magnifier.h>
 #include <miral/cursor_scale.h>
 
+#include <unordered_set>
 #include <xkbcommon/xkbcommon-keysyms.h>
 
 #include <cstring>
@@ -315,25 +316,53 @@ int main(int argc, char const* argv[])
                                                  { cursor_scale.scale_temporarily(5, std::chrono::seconds{1}); })
                               .delay(std::chrono::milliseconds{1000});
 
-    auto const locate_pointer_filter = [&locate_pointer](auto const* keyboard_event)
+    auto const locate_pointer_filter =
+        [&locate_pointer, pressed_keys = std::unordered_set<uint32_t>{}](auto const* keyboard_event) mutable
     {
-            auto const keysym = mir_keyboard_event_keysym(keyboard_event);
-            if (keysym != XKB_KEY_Control_R && keysym != XKB_KEY_Control_L)
-                return false;
+        auto const keysym = mir_keyboard_event_keysym(keyboard_event);
+        auto const action = mir_keyboard_event_action(keyboard_event);
 
-            switch (mir_keyboard_event_action(keyboard_event)) {
-                case mir_keyboard_action_down:
-                    locate_pointer.schedule_request();
-                    break;
-                case mir_keyboard_action_up:
-                    locate_pointer.cancel_request();
-                    break;
-
-                default:
-                    return false;
-            }
-
+        switch (action)
+        {
+        case mir_keyboard_action_down:
+            pressed_keys.insert(keysym);
+            break;
+        case mir_keyboard_action_up:
+            pressed_keys.erase(keysym);
+            break;
+        default:
             return false;
+        }
+
+        // More than one key, bail
+        if(pressed_keys.size() != 1)
+        {
+            locate_pointer.cancel_request();
+            return false;
+        }
+
+        auto const pressed_keysym = *pressed_keys.begin();
+
+        if (pressed_keysym != XKB_KEY_Control_R && pressed_keysym != XKB_KEY_Control_L)
+        {
+            locate_pointer.cancel_request();
+            return false;
+        }
+
+        switch (mir_keyboard_event_action(keyboard_event))
+        {
+        case mir_keyboard_action_down:
+            locate_pointer.schedule_request();
+            break;
+        case mir_keyboard_action_up:
+            locate_pointer.cancel_request();
+            break;
+
+        default:
+            return false;
+        }
+
+        return false;
     };
 
     // The following filter triggers the application selector internal application
