@@ -179,6 +179,7 @@ private:
 
     std::vector<graphics::DisplayConfigurationOutputId> pending_enter_events;
     std::vector<graphics::DisplayConfigurationOutputId> pending_rescale_events;
+    WlSeat* seat;
 };
 
 }
