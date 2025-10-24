@@ -161,9 +161,12 @@ public:
 
     void keyboard_focus_set(std::shared_ptr<mi::Surface> const& surface) override
     {
-        if (auto const scene_surface = dynamic_cast<ms::Surface*>(surface.get()))
+        if (auto const scene_surface = dynamic_pointer_cast<ms::Surface>(surface))
         {
-            seat.set_focus_to(mw::as_nullable_ptr(scene_surface->wayland_surface()));
+            if (auto const wayland_surface = seat.lookup_wayland_surface(scene_surface))
+            {
+                seat.set_focus_to(mw::as_nullable_ptr(*wayland_surface));
+            }
         }
         else
         {
@@ -371,6 +374,28 @@ void mf::WlSeat::add_focus_listener(mw::Client* client, FocusListener* listener)
 void mf::WlSeat::remove_focus_listener(mw::Client* client, FocusListener* listener)
 {
     focus_listeners->unregister_listener(client, listener);
+}
+
+void mf::WlSeat::add_scene_surface(
+    std::shared_ptr<ms::Surface const> const& surf, wayland::Weak<mf::WlSurface> const& wl_surf)
+{
+    scene_surface_to_wayland_surface.insert({surf, wl_surf});
+}
+
+void mf::WlSeat::remove_scene_surface(std::shared_ptr<scene::Surface const> const& surf)
+{
+    scene_surface_to_wayland_surface.erase(surf);
+}
+
+auto mf::WlSeat::lookup_wayland_surface(std::shared_ptr<scene::Surface const> const& surf)
+    -> std::optional<wayland::Weak<frontend::WlSurface>>
+{
+    if (auto const iter = scene_surface_to_wayland_surface.find(surf); iter != scene_surface_to_wayland_surface.end())
+    {
+        return iter->second;
+    }
+
+    return std::nullopt;
 }
 
 mf::PointerEventDispatcher::PointerEventDispatcher(WlPointer* wl_pointer) :

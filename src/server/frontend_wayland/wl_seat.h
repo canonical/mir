@@ -36,6 +36,10 @@ class Seat;
 class Keymap;
 class KeyboardObserver;
 }
+namespace scene
+{
+class Surface;
+}
 namespace shell
 {
 class AccessibilityManager;
@@ -107,6 +111,12 @@ public:
     void add_focus_listener(wayland::Client* client, FocusListener* listener);
     void remove_focus_listener(wayland::Client* client, FocusListener* listener);
 
+    void add_scene_surface(
+        std::shared_ptr<scene::Surface const> const& surf, wayland::Weak<frontend::WlSurface> const& wl_surf);
+    void remove_scene_surface(std::shared_ptr<scene::Surface const> const& surf);
+    auto lookup_wayland_surface(std::shared_ptr<scene::Surface const> const& surf)
+        -> std::optional<wayland::Weak<frontend::WlSurface>>;
+
 private:
     void set_focus_to(WlSurface* surface);
 
@@ -137,6 +147,8 @@ private:
     std::shared_ptr<input::Seat> const seat;
 
     std::shared_ptr<shell::AccessibilityManager> const accessibility_manager;
+    std::unordered_map<std::shared_ptr<scene::Surface const>, wayland::Weak<frontend::WlSurface> const>
+        scene_surface_to_wayland_surface;
 
     void bind(wl_resource* new_wl_seat) override;
 };
