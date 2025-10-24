@@ -157,7 +157,15 @@ impl PlatformRs {
         };
 
         // TODO: This does not handle multi-seat. If/when we do multi-seat, this will need to be refactored.
-        state.libinput.udev_assign_seat("seat0").unwrap();
+        let started = match state.libinput.udev_assign_seat("seat0") {
+            Err(_) => false,
+            _ => true,
+        };
+
+        if !started {
+            eprintln!("Failed to call udev_assign_seat, not running the libinput loop");
+            return;
+        }
 
         let mut fds = [
             libc::pollfd {
@@ -176,7 +184,8 @@ impl PlatformRs {
         while is_running {
             // # Safety
             //
-            // Calling libc::poll is unsafe.
+            // `libc::poll` requires that the first parameter be a pointer to an array of `struct pollfd`, with the second parameter being at most the number of valid elements of that array.
+            // `fds` is an array of valid `pollfd`s of length `fds.len()`, so this is safe by construction
             let ret = unsafe {
                 libc::poll(fds.as_mut_ptr(), fds.len() as _, -1) // -1 = wait indefinitely
             };
@@ -335,8 +344,7 @@ impl PlatformRs {
                                         event_builder.pin_mut().pointer_event(
                                             true,
                                             motion_event.time_usec(),
-                                            ffi::MirPointerAction::mir_pointer_action_motion
-                                                .repr,
+                                            ffi::MirPointerAction::mir_pointer_action_motion.repr,
                                             state.button_state,
                                             false,
                                             0 as f32,
@@ -799,7 +807,7 @@ impl PlatformRs {
                                 + &device_info.device.id_vendor().to_string()
                                 + &device_info.device.id_product().to_string(),
                             capabilities: capabilities,
-                            valid: true
+                            valid: true,
                         };
                         let _ = tx.send(info);
                     } else {
@@ -807,7 +815,7 @@ impl PlatformRs {
                             name: "".to_string(),
                             unique_id: "".to_string(),
                             capabilities: 0,
-                            valid: false
+                            valid: false,
                         };
                         let _ = tx.send(info);
                     }
@@ -846,7 +854,9 @@ impl PlatformRs {
                                             .repr
                                     }
                                 } else {
-                                    eprintln!("Acceleration profile should be provided, but none is.");
+                                    eprintln!(
+                                        "Acceleration profile should be provided, but none is."
+                                    );
                                     ffi::MirPointerAcceleration::mir_pointer_acceleration_none.repr
                                 };
 
@@ -860,7 +870,7 @@ impl PlatformRs {
                                     acceleration: acceleration,
                                     horizontal_scroll_scale: state.x_scroll_scale,
                                     vertical_scroll_scale: state.y_scroll_scale,
-                                    has_error: false
+                                    has_error: false,
                                 };
                                 let _ = tx.send(settings);
                             }
@@ -872,7 +882,9 @@ impl PlatformRs {
                             }
                         }
                     } else {
-                        eprintln!("Calling get pointer settings on a device that is not registered.");
+                        eprintln!(
+                            "Calling get pointer settings on a device that is not registered."
+                        );
                         let mut settings = ffi::PointerSettingsRs::empty();
                         settings.has_error = true;
                         let _ = tx.send(settings);
@@ -884,7 +896,13 @@ impl PlatformRs {
                             .device
                             .has_capability(input::DeviceCapability::Pointer)
                         {
-                            println!("{}, {}", device_info.device.name(), device_info.device.has_capability(input::DeviceCapability::Pointer));
+                            println!(
+                                "{}, {}",
+                                device_info.device.name(),
+                                device_info
+                                    .device
+                                    .has_capability(input::DeviceCapability::Pointer)
+                            );
                             let left_handed = match settings.handedness {
                                 x if x
                                     == ffi::MirPointerHandedness::mir_pointer_handedness_left
@@ -894,9 +912,7 @@ impl PlatformRs {
                                 }
                                 _ => false,
                             };
-                            let _ = device_info
-                                .device
-                                .config_left_handed_set(left_handed);
+                            let _ = device_info.device.config_left_handed_set(left_handed);
 
                             let accel_profile = match settings.acceleration {
                                 x if x == ffi::MirPointerAcceleration::mir_pointer_acceleration_adaptive.repr => {
@@ -904,21 +920,19 @@ impl PlatformRs {
                                 }
                                 _ => input::AccelProfile::Flat,
                             };
-                            let _ = device_info
-                                .device
-                                .config_accel_set_profile(accel_profile);
+                            let _ = device_info.device.config_accel_set_profile(accel_profile);
                             let _ = device_info
                                 .device
                                 .config_accel_set_speed(settings.cursor_acceleration_bias as f64);
                             state.x_scroll_scale = settings.horizontal_scroll_scale;
                             state.y_scroll_scale = settings.vertical_scroll_scale;
-                        }
-                        else {
+                        } else {
                             eprintln!("Device does not have the pointer capability.");
                         }
-                    }
-                    else {
-                        eprintln!("Unable to set the pointer settings because the device was not found.");
+                    } else {
+                        eprintln!(
+                            "Unable to set the pointer settings because the device was not found."
+                        );
                     }
                 }
             }
@@ -1044,7 +1058,7 @@ pub struct InputDeviceInfoRs {
     name: String,
     unique_id: String,
     capabilities: u32,
-    valid: bool
+    valid: bool,
 }
 
 impl InputDeviceInfoRs {
@@ -1181,7 +1195,7 @@ impl ffi::PointerSettingsRs {
             acceleration: ffi::MirPointerAcceleration::mir_pointer_acceleration_none.repr,
             horizontal_scroll_scale: 1.0,
             vertical_scroll_scale: 1.0,
-            has_error: false
+            has_error: false,
         }
     }
 }
@@ -1278,7 +1292,7 @@ mod ffi {
         pub acceleration: i32,
         pub horizontal_scroll_scale: f64,
         pub vertical_scroll_scale: f64,
-        pub has_error: bool
+        pub has_error: bool,
     }
 
     extern "Rust" {
