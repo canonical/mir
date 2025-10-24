@@ -46,6 +46,12 @@ class Workspace;
 
 using namespace mir::geometry;
 
+enum class FocusStealing
+{
+    prevent,
+    allow
+};
+
 /// An interface that defines the window management policy for the compositor.
 ///
 /// Compositor authors may implement this interface to provide custom
