@@ -23,12 +23,6 @@
 
 namespace miral
 {
-struct FloatingWindowManagerOptions
-{
-    FocusStealing focus_stealing = FocusStealing::allow;
-    MirInputEventModifier pointer_drag_modifier = mir_input_event_modifier_alt;
-};
-
 /// A minimal floating window management policy.
 ///
 /// This policy provides the following features:
@@ -48,7 +42,8 @@ struct FloatingWindowManagerOptions
 class FloatingWindowManager : public WindowManagementPolicy
 {
 public:
-    FloatingWindowManager(WindowManagerTools const& tools, FloatingWindowManagerOptions const& options);
+    explicit FloatingWindowManager(WindowManagerTools const& tools);
+    FloatingWindowManager(WindowManagerTools const& tools, FocusStealing focus_stealing, MirInputEventModifier pointer_drag_modifier);
     ~FloatingWindowManager() override;
 
     auto place_new_window(

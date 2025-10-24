@@ -103,11 +103,17 @@ struct miral::FloatingWindowManager::Impl
     FocusStealing focus_stealing;
 };
 
+miral::FloatingWindowManager::FloatingWindowManager(WindowManagerTools const& tools)
+    : FloatingWindowManager(tools, FocusStealing::allow, mir_input_event_modifier_alt)
+{
+}
+
 miral::FloatingWindowManager::FloatingWindowManager(
     WindowManagerTools const& tools,
-    FloatingWindowManagerOptions const& options) :
+    FocusStealing focus_stealing,
+    MirInputEventModifier pointer_drag_modifier) :
     tools{tools},
-    self{std::make_unique<Impl>(tools, options.pointer_drag_modifier, options.focus_stealing)}
+    self{std::make_unique<Impl>(tools, pointer_drag_modifier, focus_stealing)}
 {
 }
 

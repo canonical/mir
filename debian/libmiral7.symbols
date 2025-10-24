@@ -674,7 +674,8 @@ libmiral.so.7 libmiral7 #MINVER#
  (c++)"miral::ApplicationSwitcher::prev_window() const@MIRAL_5.6" 5.6.0
  (c++)"miral::ApplicationSwitcher::stop() const@MIRAL_5.6" 5.6.0
  (c++)"miral::ApplicationSwitcher::~ApplicationSwitcher()@MIRAL_5.6" 5.6.0
- (c++)"miral::FloatingWindowManager::FloatingWindowManager(miral::WindowManagerTools const&, miral::FloatingWindowManagerOptions const&)@MIRAL_5.6" 5.6.0
+ (c++)"miral::FloatingWindowManager::FloatingWindowManager(miral::WindowManagerTools const&)@MIRAL_5.6" 5.6.0
+ (c++)"miral::FloatingWindowManager::FloatingWindowManager(miral::WindowManagerTools const&, miral::FocusStealing, MirInputEventModifier)@MIRAL_5.6" 5.6.0
  (c++)"miral::FloatingWindowManager::advise_focus_gained(miral::WindowInfo const&)@MIRAL_5.6" 5.6.0
  (c++)"miral::FloatingWindowManager::advise_new_window(miral::WindowInfo const&)@MIRAL_5.6" 5.6.0
  (c++)"miral::FloatingWindowManager::begin_pointer_move(miral::WindowInfo const&, MirInputEvent const*)@MIRAL_5.6" 5.6.0

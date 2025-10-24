@@ -221,13 +221,12 @@ try
         return false;
     };
 
-    miral::FloatingWindowManagerOptions floating_window_manager_options;
     auto const server_exit_status = runner.run_with({
         // example options for display layout, logging and timeout
         miral::display_configuration_options,
         miral::X11Support{},
         wayland_extensions,
-        miral::set_window_management_policy<miral::FloatingWindowManager>(floating_window_manager_options),
+        miral::set_window_management_policy<miral::FloatingWindowManager>(),
         add_timeout_option_to,
         miral::CursorTheme{"default:DMZ-White"},
         input_filters,

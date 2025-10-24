@@ -752,8 +752,8 @@ global:
     non-virtual?thunk?to?miral::FloatingWindowManager::place_new_window*;
     typeinfo?for?miral::ApplicationSwitcher;
     typeinfo?for?miral::FloatingWindowManager;
-    typeinfo?for?miral::FloatingWindowManagerOptions;
     typeinfo?for?miral::LocatePointer;
     vtable?for?miral::FloatingWindowManager;
   };
 } MIRAL_5.5;
+

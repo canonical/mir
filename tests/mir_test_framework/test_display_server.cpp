@@ -70,7 +70,7 @@ miral::TestDisplayServer::~TestDisplayServer() = default;
 auto miral::TestDisplayServer::build_window_manager_policy(WindowManagerTools const& tools)
 -> std::unique_ptr<WindowManagementPolicy>
 {
-    return std::make_unique<FloatingWindowManager>(tools, FloatingWindowManagerOptions{});
+    return std::make_unique<FloatingWindowManager>(tools);
 }
 
 void miral::TestDisplayServer::start_server()

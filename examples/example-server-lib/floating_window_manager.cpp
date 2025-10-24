@@ -60,7 +60,7 @@ FloatingWindowManagerPolicy::FloatingWindowManagerPolicy(
     miral::InternalClientLauncher const& launcher,
     std::function<void()>& shutdown_hook,
     FocusStealing focus_stealing) :
-    FloatingWindowManager(tools, { .focus_stealing = focus_stealing }),
+    FloatingWindowManager(tools, focus_stealing, mir_input_event_modifier_alt),
     spinner{spinner},
     decoration_provider{std::make_unique<DecorationProvider>()}
 {
