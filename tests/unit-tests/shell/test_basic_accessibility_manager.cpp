@@ -34,7 +34,6 @@
 #include <gtest/gtest.h>
 
 #include <memory>
-#include <unordered_set>
 
 #include "mir/shell/sticky_keys_transformer.h"
 
@@ -330,7 +329,7 @@ using AccessibilityManager = mir::shell::AccessibilityManager;
 using TransformerEnablerAndGetter =
     std::pair<std::function<void(AccessibilityManager&, bool)>, std::function<Transformer&(AccessibilityManager&)>>;
 
-auto const transformer_enablers_and_getters = std::initializer_list<TransformerEnablerAndGetter>{
+TransformerEnablerAndGetter const transformer_enablers_and_getters[] = {
     {&AccessibilityManager::mousekeys_enabled, &AccessibilityManager::mousekeys},
     {&AccessibilityManager::simulated_secondary_click_enabled, &AccessibilityManager::simulated_secondary_click},
     {&AccessibilityManager::hover_click_enabled, &AccessibilityManager::hover_click},
