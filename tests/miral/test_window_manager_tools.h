@@ -108,7 +108,6 @@ struct StubStubSession : mir::test::doubles::StubSession
 {
     auto create_surface(
         std::shared_ptr<mir::scene::Session> const & /*session*/,
-        mir::wayland::Weak<mir::frontend::WlSurface> const & /*wayland_surface*/,
         mir::shell::SurfaceSpecification const &params,
         std::shared_ptr<mir::scene::SurfaceObserver> const & /*observer*/,
         mir::Executor *) -> std::shared_ptr<mir::scene::Surface> override;

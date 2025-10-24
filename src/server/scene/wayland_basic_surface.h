@@ -28,7 +28,6 @@ class WaylandBasicSurface : public BasicSurface
 public:
     WaylandBasicSurface(
         std::shared_ptr<Session> const& session,
-        wayland::Weak<frontend::WlSurface> wayland_surface,
         std::string const& name,
         geometry::Rectangle rect,
         MirPointerConfinementState state,
@@ -39,7 +38,6 @@ public:
 
     WaylandBasicSurface(
         std::shared_ptr<Session> const& session,
-        wayland::Weak<frontend::WlSurface> wayland_surface,
         std::string const& name,
         geometry::Rectangle rect,
         std::weak_ptr<Surface> const& parent,
@@ -52,7 +50,6 @@ public:
     auto session() const -> std::weak_ptr<Session> override;
 private:
     std::weak_ptr<Session> const session_;
-    wayland::Weak<frontend::WlSurface> const wayland_surface_;
 };
 }
 }

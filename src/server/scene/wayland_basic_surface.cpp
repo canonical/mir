@@ -27,7 +27,6 @@ namespace geom = mir::geometry;
 
 ms::WaylandBasicSurface::WaylandBasicSurface(
     std::shared_ptr<Session> const& session,
-    wayland::Weak<frontend::WlSurface> wayland_surface,
     std::string const& name,
     geometry::Rectangle rect,
     std::weak_ptr<Surface> const& parent,
@@ -37,14 +36,12 @@ ms::WaylandBasicSurface::WaylandBasicSurface(
     std::shared_ptr<SceneReport> const& report,
     std::shared_ptr<ObserverRegistrar<mg::DisplayConfigurationObserver>> const& display_config_registrar) :
     BasicSurface(name, rect, parent, confinement_state, layers, cursor_image, report, display_config_registrar),
-    session_(session),
-    wayland_surface_(wayland_surface)
+    session_(session)
 {
 }
 
 ms::WaylandBasicSurface::WaylandBasicSurface(
     std::shared_ptr<Session> const& session,
-    wayland::Weak<frontend::WlSurface> wayland_surface,
     std::string const& name,
     geometry::Rectangle rect,
     MirPointerConfinementState state,
@@ -53,8 +50,7 @@ ms::WaylandBasicSurface::WaylandBasicSurface(
     std::shared_ptr<SceneReport> const& report,
     std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> const& display_config_registrar) :
     BasicSurface(name, rect, state, layers, cursor_image, report, display_config_registrar),
-    session_(session),
-    wayland_surface_(wayland_surface)
+    session_(session)
 {
 }
 
