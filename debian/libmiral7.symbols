@@ -674,6 +674,25 @@ libmiral.so.7 libmiral7 #MINVER#
  (c++)"miral::ApplicationSwitcher::prev_window() const@MIRAL_5.6" 5.6.0
  (c++)"miral::ApplicationSwitcher::stop() const@MIRAL_5.6" 5.6.0
  (c++)"miral::ApplicationSwitcher::~ApplicationSwitcher()@MIRAL_5.6" 5.6.0
+ (c++)"miral::FloatingWindowManager::FloatingWindowManager(miral::WindowManagerTools const&, miral::FloatingWindowManagerOptions const&)@MIRAL_5.6" 5.6.0
+ (c++)"miral::FloatingWindowManager::advise_focus_gained(miral::WindowInfo const&)@MIRAL_5.6" 5.6.0
+ (c++)"miral::FloatingWindowManager::advise_new_window(miral::WindowInfo const&)@MIRAL_5.6" 5.6.0
+ (c++)"miral::FloatingWindowManager::begin_pointer_move(miral::WindowInfo const&, MirInputEvent const*)@MIRAL_5.6" 5.6.0
+ (c++)"miral::FloatingWindowManager::begin_pointer_resize(miral::WindowInfo const&, MirInputEvent const*, MirResizeEdge const&)@MIRAL_5.6" 5.6.0
+ (c++)"miral::FloatingWindowManager::begin_touch_move(miral::WindowInfo const&, MirInputEvent const*)@MIRAL_5.6" 5.6.0
+ (c++)"miral::FloatingWindowManager::begin_touch_resize(miral::WindowInfo const&, MirInputEvent const*, MirResizeEdge const&)@MIRAL_5.6" 5.6.0
+ (c++)"miral::FloatingWindowManager::confirm_inherited_move(miral::WindowInfo const&, mir::geometry::generic::Displacement<int>)@MIRAL_5.6" 5.6.0
+ (c++)"miral::FloatingWindowManager::confirm_placement_on_display(miral::WindowInfo const&, MirWindowState, mir::geometry::generic::Rectangle<int> const&)@MIRAL_5.6" 5.6.0
+ (c++)"miral::FloatingWindowManager::handle_keyboard_event(MirKeyboardEvent const*)@MIRAL_5.6" 5.6.0
+ (c++)"miral::FloatingWindowManager::handle_modify_window(miral::WindowInfo&, miral::WindowSpecification const&)@MIRAL_5.6" 5.6.0
+ (c++)"miral::FloatingWindowManager::handle_pointer_event(MirPointerEvent const*)@MIRAL_5.6" 5.6.0
+ (c++)"miral::FloatingWindowManager::handle_raise_window(miral::WindowInfo&)@MIRAL_5.6" 5.6.0
+ (c++)"miral::FloatingWindowManager::handle_request_move(miral::WindowInfo&, MirInputEvent const*)@MIRAL_5.6" 5.6.0
+ (c++)"miral::FloatingWindowManager::handle_request_resize(miral::WindowInfo&, MirInputEvent const*, MirResizeEdge)@MIRAL_5.6" 5.6.0
+ (c++)"miral::FloatingWindowManager::handle_touch_event(MirTouchEvent const*)@MIRAL_5.6" 5.6.0
+ (c++)"miral::FloatingWindowManager::handle_window_ready(miral::WindowInfo&)@MIRAL_5.6" 5.6.0
+ (c++)"miral::FloatingWindowManager::place_new_window(miral::ApplicationInfo const&, miral::WindowSpecification const&)@MIRAL_5.6" 5.6.0
+ (c++)"miral::FloatingWindowManager::~FloatingWindowManager()@MIRAL_5.6" 5.6.0
  (c++)"miral::LocatePointer::LocatePointer(miral::live_config::Store&)@MIRAL_5.6" 5.6.0
  (c++)"miral::LocatePointer::LocatePointer(std::shared_ptr<miral::LocatePointer::Self>)@MIRAL_5.6" 5.6.0
  (c++)"miral::LocatePointer::cancel_request()@MIRAL_5.6" 5.6.0
@@ -684,32 +703,10 @@ libmiral.so.7 libmiral7 #MINVER#
  (c++)"miral::LocatePointer::on_locate_pointer(std::function<void (mir::geometry::generic::Point<float>)>&&)@MIRAL_5.6" 5.6.0
  (c++)"miral::LocatePointer::operator()(mir::Server&)@MIRAL_5.6" 5.6.0
  (c++)"miral::LocatePointer::schedule_request()@MIRAL_5.6" 5.6.0
- (c++)"miral::MinimalWindowManagerV2::MinimalWindowManagerV2(miral::WindowManagerTools const&)@MIRAL_5.6" 5.6.0
- (c++)"miral::MinimalWindowManagerV2::advise_delete_app(miral::ApplicationInfo const&)@MIRAL_5.6" 5.6.0
- (c++)"miral::MinimalWindowManagerV2::advise_focus_gained(miral::WindowInfo const&)@MIRAL_5.6" 5.6.0
- (c++)"miral::MinimalWindowManagerV2::advise_new_app(miral::ApplicationInfo&)@MIRAL_5.6" 5.6.0
- (c++)"miral::MinimalWindowManagerV2::advise_new_window(miral::WindowInfo const&)@MIRAL_5.6" 5.6.0
- (c++)"miral::MinimalWindowManagerV2::begin_pointer_move(miral::WindowInfo const&, MirInputEvent const*)@MIRAL_5.6" 5.6.0
- (c++)"miral::MinimalWindowManagerV2::begin_pointer_resize(miral::WindowInfo const&, MirInputEvent const*, MirResizeEdge const&)@MIRAL_5.6" 5.6.0
- (c++)"miral::MinimalWindowManagerV2::begin_touch_move(miral::WindowInfo const&, MirInputEvent const*)@MIRAL_5.6" 5.6.0
- (c++)"miral::MinimalWindowManagerV2::begin_touch_resize(miral::WindowInfo const&, MirInputEvent const*, MirResizeEdge const&)@MIRAL_5.6" 5.6.0
- (c++)"miral::MinimalWindowManagerV2::confirm_inherited_move(miral::WindowInfo const&, mir::geometry::generic::Displacement<int>)@MIRAL_5.6" 5.6.0
- (c++)"miral::MinimalWindowManagerV2::confirm_placement_on_display(miral::WindowInfo const&, MirWindowState, mir::geometry::generic::Rectangle<int> const&)@MIRAL_5.6" 5.6.0
- (c++)"miral::MinimalWindowManagerV2::focus_stealing(miral::FocusStealing)@MIRAL_5.6" 5.6.0
- (c++)"miral::MinimalWindowManagerV2::handle_keyboard_event(MirKeyboardEvent const*)@MIRAL_5.6" 5.6.0
- (c++)"miral::MinimalWindowManagerV2::handle_modify_window(miral::WindowInfo&, miral::WindowSpecification const&)@MIRAL_5.6" 5.6.0
- (c++)"miral::MinimalWindowManagerV2::handle_pointer_event(MirPointerEvent const*)@MIRAL_5.6" 5.6.0
- (c++)"miral::MinimalWindowManagerV2::handle_raise_window(miral::WindowInfo&)@MIRAL_5.6" 5.6.0
- (c++)"miral::MinimalWindowManagerV2::handle_request_move(miral::WindowInfo&, MirInputEvent const*)@MIRAL_5.6" 5.6.0
- (c++)"miral::MinimalWindowManagerV2::handle_request_resize(miral::WindowInfo&, MirInputEvent const*, MirResizeEdge)@MIRAL_5.6" 5.6.0
- (c++)"miral::MinimalWindowManagerV2::handle_touch_event(MirTouchEvent const*)@MIRAL_5.6" 5.6.0
- (c++)"miral::MinimalWindowManagerV2::handle_window_ready(miral::WindowInfo&)@MIRAL_5.6" 5.6.0
- (c++)"miral::MinimalWindowManagerV2::place_new_window(miral::ApplicationInfo const&, miral::WindowSpecification const&)@MIRAL_5.6" 5.6.0
- (c++)"miral::MinimalWindowManagerV2::pointer_drag_modifier(MirInputEventModifier)@MIRAL_5.6" 5.6.0
  (c++)"miral::WaylandExtensions::ext_data_control_manager_v1@MIRAL_5.6" 5.6.0
  (c++)"miral::live_config::Key::Key(miral::live_config::Key const&)@MIRAL_5.5" 5.6.0
- (c++)"typeinfo for miral::MinimalWindowManagerV2@MIRAL_5.6" 5.6.0
- (c++)"vtable for miral::MinimalWindowManagerV2@MIRAL_5.6" 5.6.0
+ (c++)"typeinfo for miral::FloatingWindowManager@MIRAL_5.6" 5.6.0
+ (c++)"vtable for miral::FloatingWindowManager@MIRAL_5.6" 5.6.0
  (c++|arch-bits=32)"miral::CursorScale::scale_temporarily(float, std::chrono::duration<long long, std::ratio<1ll, 1000ll> >) const@MIRAL_5.6" 5.6.0
  (c++|arch-bits=32)"miral::LocatePointer::delay(std::chrono::duration<long long, std::ratio<1ll, 1000ll> >)@MIRAL_5.6" 5.6.0
  (c++|arch-bits=64)"miral::CursorScale::scale_temporarily(float, std::chrono::duration<long, std::ratio<1l, 1000l> >) const@MIRAL_5.6" 5.6.0

@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <miral/minimal_window_manager_v2.h>
+#include <miral/floating_window_manager.h>
 #include <miral/toolkit_event.h>
 #include <linux/input.h>
 #include <gmpxx.h>
@@ -63,7 +63,7 @@ auto touch_center(MirTouchEvent const* event) -> mir::geometry::Point
 }
 }
 
-struct miral::MinimalWindowManagerV2::Impl
+struct miral::FloatingWindowManager::Impl
 {
     Impl(WindowManagerTools const& tools,
         MirInputEventModifier pointer_drag_modifier,
@@ -103,32 +103,24 @@ struct miral::MinimalWindowManagerV2::Impl
     FocusStealing focus_stealing;
 };
 
-miral::MinimalWindowManagerV2::MinimalWindowManagerV2(WindowManagerTools const& tools) :
+miral::FloatingWindowManager::FloatingWindowManager(
+    WindowManagerTools const& tools,
+    FloatingWindowManagerOptions const& options) :
     tools{tools},
-    self{std::make_shared<Impl>(tools, mir_input_event_modifier_alt, FocusStealing::allow)}
+    self{std::make_unique<Impl>(tools, options.pointer_drag_modifier, options.focus_stealing)}
 {
 }
 
-miral::MinimalWindowManagerV2& miral::MinimalWindowManagerV2::focus_stealing(FocusStealing focus_stealing)
-{
-    self->focus_stealing = focus_stealing;
-    return *this;
-}
+miral::FloatingWindowManager::~FloatingWindowManager() = default;
 
-miral::MinimalWindowManagerV2& miral::MinimalWindowManagerV2::pointer_drag_modifier(MirInputEventModifier pointer_drag_modifier)
-{
-    self->pointer_drag_modifier = pointer_drag_modifier;
-    return *this;
-}
-
-auto miral::MinimalWindowManagerV2::place_new_window(
+auto miral::FloatingWindowManager::place_new_window(
     ApplicationInfo const& /*app_info*/, WindowSpecification const& requested_specification)
     -> WindowSpecification
 {
     return requested_specification;
 }
 
-void miral::MinimalWindowManagerV2::handle_window_ready(WindowInfo& window_info)
+void miral::FloatingWindowManager::handle_window_ready(WindowInfo& window_info)
 {
     if (!self->should_prevent_focus(window_info) && window_info.can_be_active())
     {
@@ -136,25 +128,25 @@ void miral::MinimalWindowManagerV2::handle_window_ready(WindowInfo& window_info)
     }
 }
 
-void miral::MinimalWindowManagerV2::handle_modify_window(
+void miral::FloatingWindowManager::handle_modify_window(
     WindowInfo& window_info, miral::WindowSpecification const& modifications)
 {
     tools.modify_window(window_info, modifications);
 }
 
-void miral::MinimalWindowManagerV2::handle_raise_window(WindowInfo& window_info)
+void miral::FloatingWindowManager::handle_raise_window(WindowInfo& window_info)
 {
     tools.select_active_window(window_info.window());
 }
 
-auto miral::MinimalWindowManagerV2::confirm_placement_on_display(
+auto miral::FloatingWindowManager::confirm_placement_on_display(
     WindowInfo const& /*window_info*/, MirWindowState /*new_state*/, Rectangle const& new_placement)
     -> Rectangle
 {
     return new_placement;
 }
 
-bool miral::MinimalWindowManagerV2::handle_keyboard_event(MirKeyboardEvent const* event)
+bool miral::FloatingWindowManager::handle_keyboard_event(MirKeyboardEvent const* event)
 {
     auto const action = mir_keyboard_event_action(event);
     auto const shift_state = mir_keyboard_event_modifiers(event) & shift_states;
@@ -174,7 +166,7 @@ bool miral::MinimalWindowManagerV2::handle_keyboard_event(MirKeyboardEvent const
     return false;
 }
 
-bool miral::MinimalWindowManagerV2::handle_touch_event(MirTouchEvent const* event)
+bool miral::FloatingWindowManager::handle_touch_event(MirTouchEvent const* event)
 {
     if (self->handle_touch_event(event))
     {
@@ -184,12 +176,12 @@ bool miral::MinimalWindowManagerV2::handle_touch_event(MirTouchEvent const* even
     return false;
 }
 
-bool miral::MinimalWindowManagerV2::handle_pointer_event(MirPointerEvent const* event)
+bool miral::FloatingWindowManager::handle_pointer_event(MirPointerEvent const* event)
 {
     return self->handle_pointer_event(event);
 }
 
-void miral::MinimalWindowManagerV2::handle_request_move(WindowInfo& window_info, MirInputEvent const* input_event)
+void miral::FloatingWindowManager::handle_request_move(WindowInfo& window_info, MirInputEvent const* input_event)
 {
     if (begin_pointer_move(window_info, input_event))
     {
@@ -201,17 +193,17 @@ void miral::MinimalWindowManagerV2::handle_request_move(WindowInfo& window_info,
     }
 }
 
-bool miral::MinimalWindowManagerV2::begin_pointer_move(WindowInfo const& window_info, MirInputEvent const* input_event)
+bool miral::FloatingWindowManager::begin_pointer_move(WindowInfo const& window_info, MirInputEvent const* input_event)
 {
     return self->begin_pointer_gesture(tools.info_for(window_info.window()), input_event, Gesture::pointer_moving, mir_resize_edge_none);
 }
 
-bool miral::MinimalWindowManagerV2::begin_touch_move(WindowInfo const& window_info, MirInputEvent const* input_event)
+bool miral::FloatingWindowManager::begin_touch_move(WindowInfo const& window_info, MirInputEvent const* input_event)
 {
     return self->begin_touch_gesture(tools.info_for(window_info.window()), input_event, Gesture::touch_moving, mir_resize_edge_none);
 }
 
-void miral::MinimalWindowManagerV2::handle_request_resize(
+void miral::FloatingWindowManager::handle_request_resize(
     WindowInfo& window_info, MirInputEvent const* input_event, MirResizeEdge edge)
 {
     if (begin_pointer_resize(window_info, input_event, edge))
@@ -224,25 +216,25 @@ void miral::MinimalWindowManagerV2::handle_request_resize(
     }
 }
 
-bool miral::MinimalWindowManagerV2::begin_touch_resize(
+bool miral::FloatingWindowManager::begin_touch_resize(
     WindowInfo const& window_info, MirInputEvent const* input_event, MirResizeEdge const& edge)
 {
     return self->begin_touch_gesture(tools.info_for(window_info.window()), input_event, Gesture::touch_resizing, edge);
 }
 
-bool miral::MinimalWindowManagerV2::begin_pointer_resize(
+bool miral::FloatingWindowManager::begin_pointer_resize(
     WindowInfo const& window_info, MirInputEvent const* input_event, MirResizeEdge const& edge)
 {
     return self->begin_pointer_gesture(tools.info_for(window_info.window()), input_event, Gesture::pointer_resizing, edge);
 }
 
-auto miral::MinimalWindowManagerV2::confirm_inherited_move(WindowInfo const& window_info, Displacement movement)
+auto miral::FloatingWindowManager::confirm_inherited_move(WindowInfo const& window_info, Displacement movement)
     -> Rectangle
 {
     return {window_info.window().top_left()+movement, window_info.window().size()};
 }
 
-void miral::MinimalWindowManagerV2::advise_new_window(miral::WindowInfo const& window_info)
+void miral::FloatingWindowManager::advise_new_window(miral::WindowInfo const& window_info)
 {
     auto const should_receive_focus = self->advise_new_window(window_info);
 
@@ -255,15 +247,12 @@ void miral::MinimalWindowManagerV2::advise_new_window(miral::WindowInfo const& w
         tools.swap_tree_order(tools.active_window(), window_info.window());
 }
 
-void miral::MinimalWindowManagerV2::advise_focus_gained(WindowInfo const& window_info)
+void miral::FloatingWindowManager::advise_focus_gained(WindowInfo const& window_info)
 {
     tools.raise_tree(window_info.window());
 }
 
-void miral::MinimalWindowManagerV2::advise_new_app(miral::ApplicationInfo&){}
-void miral::MinimalWindowManagerV2::advise_delete_app(miral::ApplicationInfo const&){}
-
-bool miral::MinimalWindowManagerV2::Impl::prepare_for_gesture(
+bool miral::FloatingWindowManager::Impl::prepare_for_gesture(
     WindowInfo& window_info,
     Point input_pos,
     Gesture input_gesture)
@@ -316,7 +305,7 @@ bool miral::MinimalWindowManagerV2::Impl::prepare_for_gesture(
     return false;
 }
 
-bool miral::MinimalWindowManagerV2::Impl::begin_pointer_gesture(
+bool miral::FloatingWindowManager::Impl::begin_pointer_gesture(
     WindowInfo& window_info, MirInputEvent const* input_event, Gesture gesture_, MirResizeEdge edge)
 {
     if (mir_input_event_get_type(input_event) != mir_input_event_type_pointer)
@@ -348,7 +337,7 @@ bool miral::MinimalWindowManagerV2::Impl::begin_pointer_gesture(
     return true;
 }
 
-bool miral::MinimalWindowManagerV2::Impl::begin_touch_gesture(
+bool miral::FloatingWindowManager::Impl::begin_touch_gesture(
     WindowInfo& window_info,
     MirInputEvent const* input_event,
     Gesture gesture_,
@@ -374,7 +363,7 @@ bool miral::MinimalWindowManagerV2::Impl::begin_touch_gesture(
     return true;
 }
 
-bool miral::MinimalWindowManagerV2::Impl::handle_pointer_event(MirPointerEvent const* event)
+bool miral::FloatingWindowManager::Impl::handle_pointer_event(MirPointerEvent const* event)
 {
     auto const action = mir_pointer_event_action(event);
     auto const shift_keys = mir_pointer_event_modifiers(event) & shift_states;
@@ -450,7 +439,7 @@ bool miral::MinimalWindowManagerV2::Impl::handle_pointer_event(MirPointerEvent c
     return consumes_event;
 }
 
-bool miral::MinimalWindowManagerV2::Impl::handle_touch_event(MirTouchEvent const* event)
+bool miral::FloatingWindowManager::Impl::handle_touch_event(MirTouchEvent const* event)
 {
     bool consumes_event = false;
     auto const new_touch = touch_center(event);
@@ -527,7 +516,7 @@ bool miral::MinimalWindowManagerV2::Impl::handle_touch_event(MirTouchEvent const
     return consumes_event;
 }
 
-void miral::MinimalWindowManagerV2::Impl::apply_resize_by(Displacement movement)
+void miral::FloatingWindowManager::Impl::apply_resize_by(Displacement movement)
 {
     if (gesture_window)
     {
@@ -572,14 +561,14 @@ void miral::MinimalWindowManagerV2::Impl::apply_resize_by(Displacement movement)
     }
 }
 
-bool miral::MinimalWindowManagerV2::Impl::should_prevent_focus(WindowInfo const& info)
+bool miral::FloatingWindowManager::Impl::should_prevent_focus(WindowInfo const& info)
 {
     return (focus_stealing == FocusStealing::prevent) && tools.active_window() &&
            info.depth_layer() == mir_depth_layer_application &&
            tools.active_window().application() != info.window().application();
 }
 
-bool miral::MinimalWindowManagerV2::Impl::advise_new_window(WindowInfo const& info)
+bool miral::FloatingWindowManager::Impl::advise_new_window(WindowInfo const& info)
 {
     return !should_prevent_focus(info);
 }

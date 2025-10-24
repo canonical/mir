@@ -120,7 +120,7 @@ add_library(miral-external OBJECT
     input_configuration.cpp             ${miral_include}/miral/input_configuration.h
     keymap.cpp                          ${miral_include}/miral/keymap.h
     minimal_window_manager.cpp          ${miral_include}/miral/minimal_window_manager.h
-    minimal_window_manager_v2.cpp       ${miral_include}/miral/minimal_window_manager_v2.h
+    floating_window_manager.cpp         ${miral_include}/miral/floating_window_manager.h
     display_configuration_option.cpp    ${miral_include}/miral/display_configuration_option.h
     output.cpp                          ${miral_include}/miral/output.h
     append_event_filter.cpp             ${miral_include}/miral/append_event_filter.h

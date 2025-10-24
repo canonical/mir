@@ -17,7 +17,6 @@
 #ifndef MIRAL_MINIMAL_WINDOW_MANAGER_H
 #define MIRAL_MINIMAL_WINDOW_MANAGER_H
 
-#include "focus_stealing.h"
 #include <miral/window_management_policy.h>
 #include <miral/window_manager_tools.h>
 #include <mir_toolkit/events/enums.h>
@@ -26,7 +25,7 @@ namespace miral
 {
 /// Minimal implementation of a floating window management policy
 ///
-/// \deprecated This class is deprecated. Please use #miral::MinalWindowManagerV2.
+/// \deprecated This class is deprecated. Please use #miral::FloatingWindowManager.
 class MinimalWindowManager : public WindowManagementPolicy
 {
 public:

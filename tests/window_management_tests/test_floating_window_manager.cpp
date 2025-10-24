@@ -14,11 +14,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define MIR_LOG_COMPONENT "test_minimal_window_manager_v2"
+#define MIR_LOG_COMPONENT "test_floating_window_manager_v2"
 
 #include "mir/geometry/forward.h"
 #include "mir_test_framework/window_management_test_harness.h"
-#include <miral/minimal_window_manager_v2.h>
+#include <miral/floating_window_manager.h>
 #include <miral/output.h>
 #include <mir/scene/session.h>
 #include <mir/wayland/weak.h>
@@ -121,10 +121,10 @@ CreateSurfaceSpecFunc create_bottom_attached()
 }
 }
 
-class MinimalWindowManagerV2Test : public mir_test_framework::WindowManagementTestHarness
+class FloatingWindowManagerTest : public mir_test_framework::WindowManagementTestHarness
 {
 public:
-    MinimalWindowManagerV2Test() : WindowManagementTestHarness()
+    FloatingWindowManagerTest() : WindowManagementTestHarness()
     {
         server.wrap_display_configuration_policy([&](std::shared_ptr<mg::DisplayConfigurationPolicy> const&)
             -> std::shared_ptr<mg::DisplayConfigurationPolicy>
@@ -137,8 +137,8 @@ public:
     {
         return [&](miral::WindowManagerTools const& tools)
         {
-            auto result = std::make_unique<miral::MinimalWindowManagerV2>(tools);
-            result->focus_stealing(focus_stealing());
+            miral::FloatingWindowManagerOptions floating_window_manager_options(focus_stealing());
+            auto result = std::make_unique<miral::FloatingWindowManager>(tools, floating_window_manager_options);
             return result;
         };
     }
@@ -157,7 +157,7 @@ public:
     }
 };
 
-TEST_F(MinimalWindowManagerV2Test, new_window_has_focus)
+TEST_F(FloatingWindowManagerTest, new_window_has_focus)
 {
     auto const app = open_application("test");
     miral::WindowSpecification spec;
@@ -167,7 +167,7 @@ TEST_F(MinimalWindowManagerV2Test, new_window_has_focus)
     EXPECT_TRUE(focused(window));
 }
 
-TEST_F(MinimalWindowManagerV2Test, alt_f4_closes_active_window)
+TEST_F(FloatingWindowManagerTest, alt_f4_closes_active_window)
 {
     auto const app = open_application("test");
     miral::WindowSpecification spec;
@@ -194,7 +194,7 @@ TEST_F(MinimalWindowManagerV2Test, alt_f4_closes_active_window)
     EXPECT_TRUE(focused(miral::Window()));
 }
 
-TEST_F(MinimalWindowManagerV2Test, can_select_window_with_pointer)
+TEST_F(FloatingWindowManagerTest, can_select_window_with_pointer)
 {
     // Create two apps, each with a single window
     auto const app1 = open_application("test");
@@ -228,7 +228,7 @@ TEST_F(MinimalWindowManagerV2Test, can_select_window_with_pointer)
     EXPECT_TRUE(focused(window1));
 }
 
-TEST_F(MinimalWindowManagerV2Test, can_select_window_with_touch)
+TEST_F(FloatingWindowManagerTest, can_select_window_with_touch)
 {
     // Create two apps, each with a single window
     auto const app1 = open_application("test");
@@ -260,7 +260,7 @@ TEST_F(MinimalWindowManagerV2Test, can_select_window_with_touch)
     EXPECT_TRUE(focused(window1));
 }
 
-TEST_F(MinimalWindowManagerV2Test, can_move_window_with_pointer)
+TEST_F(FloatingWindowManagerTest, can_move_window_with_pointer)
 {
     auto const app = open_application("test");
     miral::WindowSpecification spec;
@@ -303,7 +303,7 @@ TEST_F(MinimalWindowManagerV2Test, can_move_window_with_pointer)
     EXPECT_EQ(window.top_left(), geom::Point(initial_window_position.x.as_int() + 50, initial_window_position.y.as_int() + 50));
 }
 
-TEST_F(MinimalWindowManagerV2Test, can_move_window_with_pointer_even_when_maximized)
+TEST_F(FloatingWindowManagerTest, can_move_window_with_pointer_even_when_maximized)
 {
     auto const app = open_application("test");
     miral::WindowSpecification spec;
@@ -351,7 +351,7 @@ TEST_F(MinimalWindowManagerV2Test, can_move_window_with_pointer_even_when_maximi
     EXPECT_EQ(info.state(), mir_window_state_restored);
 }
 
-TEST_F(MinimalWindowManagerV2Test, can_move_window_with_touch)
+TEST_F(FloatingWindowManagerTest, can_move_window_with_touch)
 {
     mir::log_info("can_move_window_with_touch: opening application");
     auto const app = open_application("test");
@@ -403,7 +403,7 @@ TEST_F(MinimalWindowManagerV2Test, can_move_window_with_touch)
     EXPECT_EQ(window.top_left(), geom::Point(initial_window_position.x.as_int() + 50, initial_window_position.y.as_int() + 50));
 }
 
-TEST_F(MinimalWindowManagerV2Test, can_resize_south_east_with_pointer)
+TEST_F(FloatingWindowManagerTest, can_resize_south_east_with_pointer)
 {
     auto const app = open_application("test");
     miral::WindowSpecification spec;
@@ -450,7 +450,7 @@ TEST_F(MinimalWindowManagerV2Test, can_resize_south_east_with_pointer)
     EXPECT_EQ(window.size(), geom::Size(50, 50));
 }
 
-TEST_F(MinimalWindowManagerV2Test, can_resize_south_east_with_touch)
+TEST_F(FloatingWindowManagerTest, can_resize_south_east_with_touch)
 {
     auto const app = open_application("test");
     miral::WindowSpecification spec;
@@ -492,12 +492,12 @@ TEST_F(MinimalWindowManagerV2Test, can_resize_south_east_with_touch)
 }
 
 template <uint N>
-class MultipleWindowsMinimalWindowManagerV2Test : public MinimalWindowManagerV2Test
+class MultipleWindowsFloatingWindowManagerTest : public FloatingWindowManagerTest
 {
 public:
     void SetUp() override
     {
-        MinimalWindowManagerV2Test::SetUp();
+        FloatingWindowManagerTest::SetUp();
         miral::WindowSpecification spec;
         spec.size() = { geom::Width {100}, geom::Height{100} };
         spec.depth_layer() = mir_depth_layer_application;
@@ -514,7 +514,7 @@ public:
 };
 
 template <uint N>
-class MultipleWindowsMinimalWindowManagerV2PreventFocusStealingTest : public MultipleWindowsMinimalWindowManagerV2Test<N>
+class MultipleWindowsFloatingWindowManagerPreventFocusStealingTest : public MultipleWindowsFloatingWindowManagerTest<N>
 {
 public:
     miral::FocusStealing focus_stealing() const override
@@ -523,18 +523,18 @@ public:
     }
 };
 
-using MinimalWindowManagerV2WithOneWindow = MultipleWindowsMinimalWindowManagerV2Test<1>;
-using MinimalWindowManagerV2WithTwoWindows = MultipleWindowsMinimalWindowManagerV2Test<2>;
-using MinimalWindowManagerV2WithThreeWindows = MultipleWindowsMinimalWindowManagerV2Test<3>;
-using MinimalWindowManagerV2WithThreeWindowsPreventFocusStealing = MultipleWindowsMinimalWindowManagerV2PreventFocusStealingTest<3>;
+using FloatingWindowManagerWithOneWindow = MultipleWindowsFloatingWindowManagerTest<1>;
+using FloatingWindowManagerWithTwoWindows = MultipleWindowsFloatingWindowManagerTest<2>;
+using FloatingWindowManagerWithThreeWindows = MultipleWindowsFloatingWindowManagerTest<3>;
+using FloatingWindowManagerWithThreeWindowsPreventFocusStealing = MultipleWindowsFloatingWindowManagerPreventFocusStealingTest<3>;
 
-TEST_F(MinimalWindowManagerV2WithThreeWindows, new_windows_are_inserted_above_older_windows)
+TEST_F(FloatingWindowManagerWithThreeWindows, new_windows_are_inserted_above_older_windows)
 {
     EXPECT_TRUE(is_above(windows[2], windows[1]));
     EXPECT_TRUE(is_above(windows[1], windows[0]));
 }
 
-TEST_F(MinimalWindowManagerV2WithThreeWindows, when_a_window_is_focused_then_it_appears_above_other_windows)
+TEST_F(FloatingWindowManagerWithThreeWindows, when_a_window_is_focused_then_it_appears_above_other_windows)
 {
     tools().select_active_window(windows[0]);
     EXPECT_TRUE(focused(windows[0]));
@@ -542,7 +542,7 @@ TEST_F(MinimalWindowManagerV2WithThreeWindows, when_a_window_is_focused_then_it_
     EXPECT_TRUE(is_above(windows[2], windows[1]));
 }
 
-TEST_F(MinimalWindowManagerV2WithThreeWindowsPreventFocusStealing,
+TEST_F(FloatingWindowManagerWithThreeWindowsPreventFocusStealing,
     when_a_window_is_opened_with_prevent_focus_stealing_then_it_does_not_appears_above_other_windows)
 {
     EXPECT_TRUE(focused(windows[0]));
@@ -550,7 +550,7 @@ TEST_F(MinimalWindowManagerV2WithThreeWindowsPreventFocusStealing,
     EXPECT_TRUE(is_above(windows[2], windows[1]));
 }
 
-TEST_F(MinimalWindowManagerV2WithTwoWindows, if_active_window_is_removed_then_parent_has_focus_priority)
+TEST_F(FloatingWindowManagerWithTwoWindows, if_active_window_is_removed_then_parent_has_focus_priority)
 {
     miral::WindowSpecification spec;
     spec.size() = { geom::Width {100}, geom::Height{100} };
@@ -562,14 +562,14 @@ TEST_F(MinimalWindowManagerV2WithTwoWindows, if_active_window_is_removed_then_pa
     EXPECT_TRUE(is_above(windows[0], windows[1]));
 }
 
-TEST_F(MinimalWindowManagerV2WithThreeWindows, if_active_window_is_removed_then_last_focused_window_is_focused)
+TEST_F(FloatingWindowManagerWithThreeWindows, if_active_window_is_removed_then_last_focused_window_is_focused)
 {
     tools().ask_client_to_close(windows[2]);
     EXPECT_TRUE(focused(windows[1]));
     EXPECT_TRUE(is_above(windows[1], windows[0]));
 }
 
-TEST_F(MinimalWindowManagerV2WithThreeWindows, when_active_window_is_closed_then_we_focus_a_window_in_same_workspaces)
+TEST_F(FloatingWindowManagerWithThreeWindows, when_active_window_is_closed_then_we_focus_a_window_in_same_workspaces)
 {
     auto const workspace = tools().create_workspace();
     tools().add_tree_to_workspace(windows[0], workspace);
@@ -580,7 +580,7 @@ TEST_F(MinimalWindowManagerV2WithThreeWindows, when_active_window_is_closed_then
     EXPECT_TRUE(is_above(windows[0], windows[1]));
 }
 
-TEST_F(MinimalWindowManagerV2WithTwoWindows,
+TEST_F(FloatingWindowManagerWithTwoWindows,
     if_active_window_is_removed_and_we_cannot_focus_any_window_on_closing_window_workspaces_then_try_focus_within_app)
 {
     auto const workspace = tools().create_workspace();
@@ -594,7 +594,7 @@ TEST_F(MinimalWindowManagerV2WithTwoWindows,
     EXPECT_TRUE(is_above(windows[0], windows[1]));
 }
 
-TEST_F(MinimalWindowManagerV2WithThreeWindows,
+TEST_F(FloatingWindowManagerWithThreeWindows,
     if_active_window_is_removed_and_we_cannot_focus_any_window_on_closing_window_workspaces_and_there_are_no_other_windows_in_this_app_then_focus_other_app)
 {
     auto const workspace1 = tools().create_workspace();
@@ -607,7 +607,7 @@ TEST_F(MinimalWindowManagerV2WithThreeWindows,
     EXPECT_TRUE(is_above(windows[1], windows[0]));
 }
 
-TEST_F(MinimalWindowManagerV2WithOneWindow, minimized_window_returns_to_previous_state_on_focus)
+TEST_F(FloatingWindowManagerWithOneWindow, minimized_window_returns_to_previous_state_on_focus)
 {
     miral::WindowSpecification spec;
     spec.state() = mir_window_state_minimized;
@@ -618,7 +618,7 @@ TEST_F(MinimalWindowManagerV2WithOneWindow, minimized_window_returns_to_previous
     EXPECT_THAT(tools().info_for(windows[0]).state(), Eq(mir_window_state_restored));
 }
 
-TEST_F(MinimalWindowManagerV2WithOneWindow, restoring_a_minimized_window_with_no_active_window_focuses_the_restored_window)
+TEST_F(FloatingWindowManagerWithOneWindow, restoring_a_minimized_window_with_no_active_window_focuses_the_restored_window)
 {
     miral::WindowSpecification spec;
     spec.state() = mir_window_state_minimized;
@@ -630,7 +630,7 @@ TEST_F(MinimalWindowManagerV2WithOneWindow, restoring_a_minimized_window_with_no
     EXPECT_THAT(focused(windows[0]), Eq(true));
 }
 
-TEST_F(MinimalWindowManagerV2WithThreeWindows, minimizing_an_inactive_window_moves_it_to_the_back_of_the_z_order)
+TEST_F(FloatingWindowManagerWithThreeWindows, minimizing_an_inactive_window_moves_it_to_the_back_of_the_z_order)
 {
     miral::WindowSpecification spec;
     spec.state() = mir_window_state_minimized;
@@ -640,7 +640,7 @@ TEST_F(MinimalWindowManagerV2WithThreeWindows, minimizing_an_inactive_window_mov
     EXPECT_THAT(is_above(windows[0], windows[1]), Eq(true));
 }
 
-TEST_F(MinimalWindowManagerV2WithThreeWindows,
+TEST_F(FloatingWindowManagerWithThreeWindows,
     minimizing_the_active_window_moves_it_to_the_back_of_the_z_order_and_selects_a_new_window)
 {
     miral::WindowSpecification spec;
@@ -651,7 +651,7 @@ TEST_F(MinimalWindowManagerV2WithThreeWindows,
     EXPECT_THAT(is_above(windows[0], windows[2]), Eq(true));
 }
 
-TEST_F(MinimalWindowManagerV2WithThreeWindows,
+TEST_F(FloatingWindowManagerWithThreeWindows,
     minimizing_the_active_window_selects_window_in_same_workspace_if_avalable)
 {
     auto const workspace1 = tools().create_workspace();
@@ -666,7 +666,7 @@ TEST_F(MinimalWindowManagerV2WithThreeWindows,
     EXPECT_THAT(focused(windows[0]), Eq(true));
 }
 
-TEST_F(MinimalWindowManagerV2WithThreeWindows,
+TEST_F(FloatingWindowManagerWithThreeWindows,
     minimizing_the_active_window_selects_window_on_any_workspace_if_none_exist_on_current_workspace)
 {
     auto const workspace1 = tools().create_workspace();
@@ -681,7 +681,7 @@ TEST_F(MinimalWindowManagerV2WithThreeWindows,
     EXPECT_THAT(focused(windows[1]), Eq(true));
 }
 
-TEST_F(MinimalWindowManagerV2Test, if_active_window_is_removed_and_it_is_only_window_then_nothing_is_focused)
+TEST_F(FloatingWindowManagerTest, if_active_window_is_removed_and_it_is_only_window_then_nothing_is_focused)
 {
     // Setup: Create one app with one window
     auto const app = open_application("app1");
@@ -699,7 +699,7 @@ TEST_F(MinimalWindowManagerV2Test, if_active_window_is_removed_and_it_is_only_wi
     EXPECT_TRUE(focused({}));
 }
 
-TEST_F(MinimalWindowManagerV2Test,
+TEST_F(FloatingWindowManagerTest,
     if_active_windows_session_closes_and_there_is_nothing_to_select_then_focused_is_empty)
 {
     // Setup: Create one app with one window
@@ -716,7 +716,7 @@ TEST_F(MinimalWindowManagerV2Test,
     EXPECT_TRUE(focused({}));
 }
 
-TEST_F(MinimalWindowManagerV2Test, closing_attached_window_causes_maximized_to_resize)
+TEST_F(FloatingWindowManagerTest, closing_attached_window_causes_maximized_to_resize)
 {
     // Setup: Create one app with a maximized window and one app with a top attached window
     auto const output_rectangle =  get_initial_output_configs()[0];
@@ -744,13 +744,13 @@ TEST_F(MinimalWindowManagerV2Test, closing_attached_window_causes_maximized_to_r
     )));
 }
 
-class MinimalWindowManagerV2StartMoveStateChangeTest
-    : public MinimalWindowManagerV2Test,
+class FloatingWindowManagerStartMoveStateChangeTest
+    : public FloatingWindowManagerTest,
       public ::testing::WithParamInterface<MirWindowState>
 {
 };
 
-TEST_P(MinimalWindowManagerV2StartMoveStateChangeTest, maximized_windows_that_are_moved_get_restored)
+TEST_P(FloatingWindowManagerStartMoveStateChangeTest, maximized_windows_that_are_moved_get_restored)
 {
     auto const state = GetParam();
 
@@ -795,8 +795,8 @@ TEST_P(MinimalWindowManagerV2StartMoveStateChangeTest, maximized_windows_that_ar
 }
 
 INSTANTIATE_TEST_SUITE_P(
-    MinimalWindowManagerV2StartMoveStateChangeTest,
-    MinimalWindowManagerV2StartMoveStateChangeTest,
+    FloatingWindowManagerStartMoveStateChangeTest,
+    FloatingWindowManagerStartMoveStateChangeTest,
     ::testing::Values(
         mir_window_state_maximized,
         mir_window_state_vertmaximized,
@@ -825,13 +825,13 @@ struct AttachedSurfacePlacementCaseToString {
     }
 };
 
-class MinimalWindowManagerV2AttachedTest
-    : public MinimalWindowManagerV2Test,
+class FloatingWindowManagerAttachedTest
+    : public FloatingWindowManagerTest,
       public ::testing::WithParamInterface<AttachedSurfacePlacementCase>
 {
 };
 
-TEST_P(MinimalWindowManagerV2AttachedTest, attached_window_positioning)
+TEST_P(FloatingWindowManagerAttachedTest, attached_window_positioning)
 {
     auto const app = open_application("test");
     auto const& placements = GetParam().placements;
@@ -854,7 +854,7 @@ TEST_P(MinimalWindowManagerV2AttachedTest, attached_window_positioning)
     }
 }
 
-INSTANTIATE_TEST_SUITE_P(MinimalWindowManagerV2AttachedTestPlacement, MinimalWindowManagerV2AttachedTest, ::testing::Values(
+INSTANTIATE_TEST_SUITE_P(FloatingWindowManagerAttachedTestPlacement, FloatingWindowManagerAttachedTest, ::testing::Values(
     AttachedSurfacePlacementCase{
         .name="Top_Left",
         .placements={
@@ -1074,13 +1074,13 @@ struct MaximizedSurfaceExclusionZonesCase
     std::function<geom::Rectangle(geom::Rectangle const&)> expected_rectangle;
 };
 
-class MinimalWindowManagerV2MaximizedSurfaceExclusionZoneTest
-    : public MinimalWindowManagerV2Test,
+class FloatingWindowManagerMaximizedSurfaceExclusionZoneTest
+    : public FloatingWindowManagerTest,
       public ::testing::WithParamInterface<MaximizedSurfaceExclusionZonesCase>
 {
 };
 
-TEST_P(MinimalWindowManagerV2MaximizedSurfaceExclusionZoneTest, maximized_windows_respect_exclusive_areas)
+TEST_P(FloatingWindowManagerMaximizedSurfaceExclusionZoneTest, maximized_windows_respect_exclusive_areas)
 {
     auto const app = open_application("test");
     auto const param = GetParam();
@@ -1102,8 +1102,8 @@ TEST_P(MinimalWindowManagerV2MaximizedSurfaceExclusionZoneTest, maximized_window
     EXPECT_EQ(window.size(), expected.size);
 }
 
-INSTANTIATE_TEST_SUITE_P(MinimalWindowManagerV2MaximizedSurfaceExclusionZoneTest,
-    MinimalWindowManagerV2MaximizedSurfaceExclusionZoneTest,
+INSTANTIATE_TEST_SUITE_P(FloatingWindowManagerMaximizedSurfaceExclusionZoneTest,
+    FloatingWindowManagerMaximizedSurfaceExclusionZoneTest,
     ::testing::Values(
         MaximizedSurfaceExclusionZonesCase{
             .exclusive_surface_create_func={create_top_attached()},
@@ -1204,7 +1204,7 @@ INSTANTIATE_TEST_SUITE_P(MinimalWindowManagerV2MaximizedSurfaceExclusionZoneTest
     )
 );
 
-TEST_F(MinimalWindowManagerV2Test, when_no_surface_is_focused_then_window_is_placed_on_output_of_cursor)
+TEST_F(FloatingWindowManagerTest, when_no_surface_is_focused_then_window_is_placed_on_output_of_cursor)
 {
     // Move the cursor to the second output
     auto const second_rectangle = get_initial_output_configs()[1].extents();
@@ -1231,7 +1231,7 @@ TEST_F(MinimalWindowManagerV2Test, when_no_surface_is_focused_then_window_is_pla
     ));
 }
 
-TEST_F(MinimalWindowManagerV2Test, window_can_be_maximized_on_new_output)
+TEST_F(FloatingWindowManagerTest, window_can_be_maximized_on_new_output)
 {
     // Add a third output
     auto const new_output_configs = output_configs_from_output_rectangles({
@@ -1264,7 +1264,7 @@ TEST_F(MinimalWindowManagerV2Test, window_can_be_maximized_on_new_output)
     EXPECT_THAT(window.top_left(), Eq(new_output_configs[2].extents().top_left));
 }
 
-TEST_F(MinimalWindowManagerV2Test, maximized_window_respects_output_resize)
+TEST_F(FloatingWindowManagerTest, maximized_window_respects_output_resize)
 {
     auto const app = open_application("test");
     miral::WindowSpecification spec;
@@ -1281,7 +1281,7 @@ TEST_F(MinimalWindowManagerV2Test, maximized_window_respects_output_resize)
     EXPECT_THAT(window.size(), Eq(new_output_configs[0].extents().size));
 }
 
-TEST_F(MinimalWindowManagerV2Test, maximized_window_respects_output_removal)
+TEST_F(FloatingWindowManagerTest, maximized_window_respects_output_removal)
 {
     tools().move_cursor_to(geom::PointF(900, 100));
 
@@ -1303,7 +1303,7 @@ TEST_F(MinimalWindowManagerV2Test, maximized_window_respects_output_removal)
     EXPECT_THAT(window.size(), Eq(new_output_configs[0].extents().size));
 }
 
-TEST_F(MinimalWindowManagerV2Test, DISABLED_maximized_window_respects_output_unused)
+TEST_F(FloatingWindowManagerTest, DISABLED_maximized_window_respects_output_unused)
 {
     tools().move_cursor_to(geom::PointF(0, 0));
     auto const app = open_application("test");
@@ -1319,7 +1319,7 @@ TEST_F(MinimalWindowManagerV2Test, DISABLED_maximized_window_respects_output_unu
     EXPECT_THAT(window_rect, Eq(new_output_configs[1].extents()));
 }
 
-TEST_F(MinimalWindowManagerV2Test, DISABLED_maximized_window_respects_output_disconnected)
+TEST_F(FloatingWindowManagerTest, DISABLED_maximized_window_respects_output_disconnected)
 {
     tools().move_cursor_to(geom::PointF(0, 0));
     auto const app = open_application("test");
@@ -1336,7 +1336,7 @@ TEST_F(MinimalWindowManagerV2Test, DISABLED_maximized_window_respects_output_dis
     EXPECT_THAT(window_rect, Eq(new_output_configs[1].extents()));
 }
 
-TEST_F(MinimalWindowManagerV2Test, DISABLED_windows_on_removed_output_are_placed_on_next_available_output)
+TEST_F(FloatingWindowManagerTest, DISABLED_windows_on_removed_output_are_placed_on_next_available_output)
 {
     tools().move_cursor_to(geom::PointF(900, 100));
 
@@ -1353,7 +1353,7 @@ TEST_F(MinimalWindowManagerV2Test, DISABLED_windows_on_removed_output_are_placed
     EXPECT_TRUE(window_rect.overlaps(new_output_configs[0].extents()));
 }
 
-TEST_F(MinimalWindowManagerV2Test, raising_tree_changes_z_order)
+TEST_F(FloatingWindowManagerTest, raising_tree_changes_z_order)
 {
     auto const app1 = open_application("app1");
     auto const app2 = open_application("app2");
