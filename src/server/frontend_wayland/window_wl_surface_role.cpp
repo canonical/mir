@@ -21,6 +21,8 @@
 #include "wl_surface.h"
 #include "wayland_surface_observer.h"
 #include "wl_seat.h"
+#include "surface_registry.h"
+
 #include "mir/frontend/wayland.h"
 #include "mir/wayland/client.h"
 #include "mir/shell/surface_specification.h"
@@ -102,6 +104,7 @@ mf::WindowWlSurfaceRole::~WindowWlSurfaceRole()
     if (auto const scene_surface = weak_scene_surface.lock())
     {
         shell->destroy_surface(session, scene_surface);
+        surface_registry->remove_surface(scene_surface);
         weak_scene_surface.reset();
     }
 }
@@ -524,6 +527,7 @@ void mf::WindowWlSurfaceRole::create_scene_surface()
     surface.value().populate_surface_data(mods.streams.value(), mods.input_shape.value(), {});
 
     auto const scene_surface = shell->create_surface(session, surface, mods, observer, &wayland_executor);
+    surface_registry->add_surface(scene_surface, surface);
     weak_scene_surface = scene_surface;
 
     if (mods.min_width)  committed_min_size.width  = mods.min_width.value();
