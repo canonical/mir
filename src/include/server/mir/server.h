@@ -491,10 +491,6 @@ public:
             wl_display*,
             std::function<void(std::function<void()>&& work)> const&)> builder);
 
-    [[deprecated("Prefer using set_wayland_extension_policy() to set a policy on a per-interface bassis.")]]
-    void set_wayland_extension_filter(
-        std::function<bool(std::shared_ptr<scene::Session> const&, char const*)> const& extension_filter);
-
     /// Get the name of the Wayland endpoint (if any) usable as a $WAYLAND_DISPLAY value
     auto wayland_display() const -> std::optional<std::string>;
 
@@ -502,10 +498,6 @@ public:
     auto x11_display() const -> std::optional<std::string>;
 
     auto get_activation_token() const -> std::string;
-
-    /// Overrides the standard set of Wayland extensions (mir::frontend::get_standard_extensions()) with a new list
-    [[deprecated("Prefer using set_wayland_extension_policy() to set a policy on a per-interface bassis.")]]
-    void set_enabled_wayland_extensions(std::vector<std::string> const& extensions);
 
     /// Set a policy for the provided wayland extension.
     ///

@@ -114,12 +114,6 @@ public:
 
     using WaylandProtocolExtensionFilter = std::function<bool(std::shared_ptr<scene::Session> const&, char const*)>;
 
-    [[deprecated("Prefer using set_wayland_extension_policy() to set a policy on a per-interface bassis.")]]
-    virtual void set_wayland_extension_filter(WaylandProtocolExtensionFilter const& extension_filter) = 0;
-
-    [[deprecated("Prefer using set_wayland_extension_policy() to set a policy on a per-interface bassis.")]]
-    virtual void set_enabled_wayland_extensions(std::vector<std::string> const& extensions) = 0;
-
     /// Set a policy for the provided wayland extension.
     ///
     /// Only clients whose \p policy returns `true` will be allowed to use the interface

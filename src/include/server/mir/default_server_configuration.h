@@ -200,8 +200,6 @@ public:
             wl_display*,
             std::function<void(std::function<void()>&& work)> const&)> builder) override;
 
-    void set_wayland_extension_filter(WaylandProtocolExtensionFilter const& extension_filter) override;
-    void set_enabled_wayland_extensions(std::vector<std::string> const& extensions) override;
     void set_wayland_extension_policy(
         std::string const& interface_name,
         WaylandProtocolExtensionFilter const& policy) override;

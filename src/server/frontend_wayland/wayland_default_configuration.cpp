@@ -422,18 +422,6 @@ void mir::DefaultServerConfiguration::add_wayland_extension(
     wayland_extension_hooks.push_back({name, builder});
 }
 
-void mir::DefaultServerConfiguration::set_wayland_extension_filter(WaylandProtocolExtensionFilter const& extension_filter)
-{
-    wayland_extension_filter = extension_filter;
-}
-
-void mir::DefaultServerConfiguration::set_enabled_wayland_extensions(std::vector<std::string> const& extensions)
-{
-    wayland_extension_policy_map.clear();
-    for (auto const& extension : extensions)
-        wayland_extension_policy_map[extension] = [](auto const&, const char*) { return true; };
-}
-
 void mir::DefaultServerConfiguration::set_wayland_extension_policy(
     std::string const& interface_name,
     WaylandProtocolExtensionFilter const& policy)
