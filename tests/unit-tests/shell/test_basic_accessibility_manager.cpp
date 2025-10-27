@@ -312,144 +312,79 @@ TEST_F(TestBasicAccessibilityManager, calling_simulated_secondary_click_hold_dur
     basic_accessibility_manager.simulated_secondary_click().hold_duration(expected_duration);
 }
 
-TEST_F(TestBasicAccessibilityManager, setting_on_hold_start_sets_it_on_transformer)
+MATCHER_P(WeakPtrEqPtr, transformer_ptr, "")
 {
-    auto const expected_on_hold_start = []
-    {
-    };
-
-    EXPECT_CALL(*mock_simulated_secondary_click_transformer, on_hold_start(_));
-
-    basic_accessibility_manager.simulated_secondary_click().on_hold_start(expected_on_hold_start);
+    return arg.lock().get() == transformer_ptr;
 }
 
-TEST_F(TestBasicAccessibilityManager, setting_on_hold_cancel_sets_it_on_transformer)
+MATCHER_P(SharedPtrEqPtr, transformer_ptr, "")
 {
-    auto const expected_on_hold_cancel = []
-    {
-    };
-
-    EXPECT_CALL(*mock_simulated_secondary_click_transformer, on_hold_cancel(_));
-
-    basic_accessibility_manager.simulated_secondary_click().on_hold_cancel(expected_on_hold_cancel);
+    return arg.get() == transformer_ptr;
 }
 
-TEST_F(TestBasicAccessibilityManager, setting_on_secondary_click_sets_it_on_transformer)
+namespace
 {
-    auto const expected_on_secondary_click = []
-    {
-    };
+using Transformer = mir::input::Transformer;
+using AccessibilityManager = mir::shell::AccessibilityManager;
+using TransformerEnablerAndGetter =
+    std::pair<std::function<void(AccessibilityManager&, bool)>, std::function<Transformer&(AccessibilityManager&)>>;
 
-    EXPECT_CALL(*mock_simulated_secondary_click_transformer, on_secondary_click(_));
-
-    basic_accessibility_manager.simulated_secondary_click().on_secondary_click(expected_on_secondary_click);
-}
-
-MATCHER_P(WeakPtrEqSharedPtr, transformer_shared_ptr, "")
-{
-    return arg.lock() == transformer_shared_ptr;
-}
-
-enum class TransformerToTest
-{
-    MouseKeys,
-    SSC,
-    HoverClick,
-    SlowKeys,
-    StickyKeys
+TransformerEnablerAndGetter const transformer_enablers_and_getters[] = {
+    {&AccessibilityManager::mousekeys_enabled, &AccessibilityManager::mousekeys},
+    {&AccessibilityManager::simulated_secondary_click_enabled, &AccessibilityManager::simulated_secondary_click},
+    {&AccessibilityManager::hover_click_enabled, &AccessibilityManager::hover_click},
+    {&AccessibilityManager::slow_keys_enabled, &AccessibilityManager::slow_keys},
+    {&AccessibilityManager::sticky_keys_enabled, &AccessibilityManager::sticky_keys},
 };
+}
 
 struct TestArbitraryEnablesAndDisables :
     public TestBasicAccessibilityManager,
-    public WithParamInterface<TransformerToTest>
+    public WithParamInterface<TransformerEnablerAndGetter>
 {
-    auto get_transformer() -> std::shared_ptr<mir::input::Transformer>
-    {
-        switch (GetParam())
-        {
-        case TransformerToTest::MouseKeys:
-            return mock_mousekeys_transformer;
-        case TransformerToTest::SSC:
-            return mock_simulated_secondary_click_transformer;
-        case TransformerToTest::HoverClick:
-            return mock_hover_click_transformer;
-        case TransformerToTest::SlowKeys:
-            return mock_slow_keys_transformer;
-        case TransformerToTest::StickyKeys:
-            return mock_sticky_keys_transformer;
-        }
-        std::unreachable();
-    }
 
-    void toggle_transformer(bool on)
-    {
-        switch (GetParam())
-        {
-        case TransformerToTest::MouseKeys:
-            basic_accessibility_manager.mousekeys_enabled(on);
-            break;
-        case TransformerToTest::SSC:
-            basic_accessibility_manager.simulated_secondary_click_enabled(on);
-            break;
-        case TransformerToTest::HoverClick:
-            basic_accessibility_manager.hover_click_enabled(on);
-            break;
-        case TransformerToTest::SlowKeys:
-            basic_accessibility_manager.slow_keys_enabled(on);
-            break;
-        case TransformerToTest::StickyKeys:
-            basic_accessibility_manager.sticky_keys_enabled(on);
-            break;
-        }
-    }
-
-    void enable_transformer()
-    {
-        return toggle_transformer(true);
-    }
-
-    void disable_transformer()
-    {
-        return toggle_transformer(false);
-    }
 };
 
 struct TestDoubleTransformerEnable : public TestArbitraryEnablesAndDisables
+
 {
 };
 
 TEST_P(TestDoubleTransformerEnable, enabling_accessibility_transformer_twice_calls_append_once)
 {
-    EXPECT_CALL(input_event_transformer, append(WeakPtrEqSharedPtr(get_transformer()))).Times(1);
+    auto [enable_transformer_under_test, get_transformer_under_test] = GetParam();
 
-    enable_transformer();
-    enable_transformer();
+    auto& tut = get_transformer_under_test(basic_accessibility_manager);
+    EXPECT_CALL(input_event_transformer, append(WeakPtrEqPtr(&tut))).Times(1);
+
+    enable_transformer_under_test(basic_accessibility_manager, true);
+    enable_transformer_under_test(basic_accessibility_manager, true);
 }
 
 INSTANTIATE_TEST_SUITE_P(
-    TestBasicAccessibilityManager,
-    TestDoubleTransformerEnable,
-    Values(TransformerToTest::MouseKeys, TransformerToTest::SSC, TransformerToTest::HoverClick, TransformerToTest::StickyKeys));
+    TestBasicAccessibilityManager, TestDoubleTransformerEnable, ValuesIn(transformer_enablers_and_getters));
 
 struct TestDoubleEnableWithDisableInBetween : public TestArbitraryEnablesAndDisables
 {
+
 };
 
 TEST_P(
     TestDoubleEnableWithDisableInBetween,
     enabling_accessibility_transformer_then_disabling_then_enabling_calls_append_once)
 {
-    EXPECT_CALL(input_event_transformer, append(WeakPtrEqSharedPtr(get_transformer()))).Times(2);
+    auto [enable_transformer_under_test, get_transformer_under_test] = GetParam();
 
-    enable_transformer();
-    disable_transformer();
-    enable_transformer();
+    auto const& tut = get_transformer_under_test(basic_accessibility_manager);
+    EXPECT_CALL(input_event_transformer, append(WeakPtrEqPtr(&tut))).Times(2);
+
+    enable_transformer_under_test(basic_accessibility_manager, true);
+    enable_transformer_under_test(basic_accessibility_manager, false);
+    enable_transformer_under_test(basic_accessibility_manager, true);
 }
 
 INSTANTIATE_TEST_SUITE_P(
-    TestBasicAccessibilityManager,
-    TestDoubleEnableWithDisableInBetween,
-    Values(TransformerToTest::MouseKeys, TransformerToTest::SSC, TransformerToTest::HoverClick, TransformerToTest::StickyKeys));
+    TestBasicAccessibilityManager, TestDoubleEnableWithDisableInBetween, ValuesIn(transformer_enablers_and_getters));
 
 struct TestDoubleDisable : public TestArbitraryEnablesAndDisables
 {
@@ -457,17 +392,18 @@ struct TestDoubleDisable : public TestArbitraryEnablesAndDisables
 
 TEST_P(TestDoubleDisable, disabling_accessibility_transformer_twice_calls_remove_once)
 {
-    EXPECT_CALL(input_event_transformer, remove(get_transformer())).Times(1);
+    auto [enable_transformer_under_test, get_transformer_under_test] = GetParam();
 
-    enable_transformer(); // Have to enable to be able to disable
-    disable_transformer();
-    disable_transformer();
+    auto const& tut = get_transformer_under_test(basic_accessibility_manager);
+    EXPECT_CALL(input_event_transformer, remove(SharedPtrEqPtr(&tut))).Times(1);
+
+
+    enable_transformer_under_test(basic_accessibility_manager, true); // Have to enable to be able to disable
+    enable_transformer_under_test(basic_accessibility_manager, false);
+    enable_transformer_under_test(basic_accessibility_manager, false);
 }
 
-INSTANTIATE_TEST_SUITE_P(
-    TestBasicAccessibilityManager,
-    TestDoubleDisable,
-    Values(TransformerToTest::MouseKeys, TransformerToTest::SSC, TransformerToTest::HoverClick, TransformerToTest::StickyKeys));
+INSTANTIATE_TEST_SUITE_P(TestBasicAccessibilityManager, TestDoubleDisable, ValuesIn(transformer_enablers_and_getters));
 
 struct TestDoubleDisableWithEnableInBetween : public TestArbitraryEnablesAndDisables
 {
@@ -477,18 +413,19 @@ TEST_P(
     TestDoubleDisableWithEnableInBetween,
     disabling_accessibility_transformer_then_enabling_then_disabling_calls_remove_twice)
 {
-    EXPECT_CALL(input_event_transformer, remove(get_transformer())).Times(2);
+    auto [enable_transformer_under_test, get_transformer_under_test] = GetParam();
 
-    enable_transformer(); // Have to enable to be able to disable
-    disable_transformer();
-    enable_transformer();
-    disable_transformer();
+    auto const& tut = get_transformer_under_test(basic_accessibility_manager);
+    EXPECT_CALL(input_event_transformer, remove(SharedPtrEqPtr(&tut))).Times(2);
+
+    enable_transformer_under_test(basic_accessibility_manager, true); // Have to enable to be able to disable
+    enable_transformer_under_test(basic_accessibility_manager, false);
+    enable_transformer_under_test(basic_accessibility_manager, true);
+    enable_transformer_under_test(basic_accessibility_manager, false);
 }
 
 INSTANTIATE_TEST_SUITE_P(
-    TestBasicAccessibilityManager,
-    TestDoubleDisableWithEnableInBetween,
-    Values(TransformerToTest::MouseKeys, TransformerToTest::SSC, TransformerToTest::HoverClick));
+    TestBasicAccessibilityManager, TestDoubleDisableWithEnableInBetween, ValuesIn(transformer_enablers_and_getters));
 
 struct TestDisableWithoutEnable : public TestArbitraryEnablesAndDisables
 {
@@ -496,11 +433,11 @@ struct TestDisableWithoutEnable : public TestArbitraryEnablesAndDisables
 
 TEST_P(TestDisableWithoutEnable, disabling_accessibility_transformer_before_enabling_it_doesnt_call_remove)
 {
-    EXPECT_CALL(input_event_transformer, remove(get_transformer())).Times(0);
-    disable_transformer();
+    auto [enable_transformer_under_test, get_transformer_under_test] = GetParam();
+
+    auto const& tut = get_transformer_under_test(basic_accessibility_manager);
+    EXPECT_CALL(input_event_transformer, remove(SharedPtrEqPtr(&tut))).Times(0);
+    enable_transformer_under_test(basic_accessibility_manager, false);
 }
 
-INSTANTIATE_TEST_SUITE_P(
-    TestBasicAccessibilityManager,
-    TestDisableWithoutEnable,
-    Values(TransformerToTest::MouseKeys, TransformerToTest::SSC, TransformerToTest::HoverClick, TransformerToTest::StickyKeys));
+INSTANTIATE_TEST_SUITE_P(TestBasicAccessibilityManager, TestDisableWithoutEnable, ValuesIn(transformer_enablers_and_getters));

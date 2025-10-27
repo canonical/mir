@@ -71,20 +71,20 @@ MATCHER_P(WeakPtrTo, p, "")
 
 struct MockSessionContainer : public ms::SessionContainer
 {
-    MOCK_METHOD1(insert_session, void(std::shared_ptr<ms::Session> const&));
-    MOCK_METHOD1(remove_session, void(std::shared_ptr<ms::Session> const&));
-    MOCK_CONST_METHOD1(successor_of, std::shared_ptr<ms::Session>(std::shared_ptr<ms::Session> const&));
-    MOCK_CONST_METHOD1(for_each, void(std::function<void(std::shared_ptr<ms::Session> const&)>));
-    MOCK_METHOD0(lock, void());
-    MOCK_METHOD0(unlock, void());
+    MOCK_METHOD(void, insert_session, (std::shared_ptr<ms::Session> const&));
+    MOCK_METHOD(void, remove_session, (std::shared_ptr<ms::Session> const&));
+    MOCK_METHOD(std::shared_ptr<ms::Session>, successor_of, (std::shared_ptr<ms::Session> const&), (const));
+    MOCK_METHOD(void, for_each, (std::function<void(std::shared_ptr<ms::Session> const&)>), (const));
+    MOCK_METHOD(void, lock, ());
+    MOCK_METHOD(void, unlock, ());
     ~MockSessionContainer() noexcept {}
 };
 
 struct MockSessionEventSink : public ms::SessionEventSink
 {
-    MOCK_METHOD1(handle_focus_change, void(std::shared_ptr<ms::Session> const& session));
-    MOCK_METHOD0(handle_no_focus, void());
-    MOCK_METHOD1(handle_session_stopping, void(std::shared_ptr<ms::Session> const& session));
+    MOCK_METHOD(void, handle_focus_change, (std::shared_ptr<ms::Session> const& session));
+    MOCK_METHOD(void, handle_no_focus, ());
+    MOCK_METHOD(void, handle_session_stopping, (std::shared_ptr<ms::Session> const& session));
 };
 
 struct MockSessionManager : ms::SessionManager
@@ -110,7 +110,7 @@ struct MockSessionManager : ms::SessionManager
     {
     }
 
-    MOCK_METHOD1(set_focus_to, void (std::shared_ptr<ms::Session> const& focus));
+    MOCK_METHOD(void, set_focus_to, (std::shared_ptr<ms::Session> const& focus));
 
     void unmocked_set_focus_to(std::shared_ptr<ms::Session> const& focus)
     { ms::SessionManager::set_focus_to(focus); }
@@ -118,16 +118,18 @@ struct MockSessionManager : ms::SessionManager
 
 struct MockSurfaceFactory : public ms::SurfaceFactory
 {
-    MOCK_METHOD4(create_surface, std::shared_ptr<ms::Surface>(
-        std::shared_ptr<ms::Session> const&,
-        mw::Weak<mf::WlSurface> const&,
-        std::list<ms::StreamInfo> const&,
-        msh::SurfaceSpecification const&));
+    MOCK_METHOD(
+        std::shared_ptr<ms::Surface>,
+        create_surface,
+        (std::shared_ptr<ms::Session> const&,
+         mw::Weak<mf::WlSurface> const&,
+         std::list<ms::StreamInfo> const&,
+         msh::SurfaceSpecification const&));
 };
 
 struct MockDecorationManager : public msh::decoration::NullManager
 {
-    MOCK_METHOD1(decorate, void(std::shared_ptr<ms::Surface> const&));
+    MOCK_METHOD(void, decorate, (std::shared_ptr<ms::Surface> const&));
 };
 
 using NiceMockWindowManager = NiceMock<mtd::MockWindowManager>;

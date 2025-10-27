@@ -18,6 +18,7 @@
 #include "server_example_decoration.h"
 #include "org_kde_kwin_server_decoration.h"
 
+#include <mir/server.h>
 #include <miral/internal_client.h>
 #include <miral/wayland_extensions.h>
 
@@ -105,25 +106,23 @@ auto make_scoped(Type* owned, void(*deleter)(Type*)) -> std::unique_ptr<Type, vo
 
 struct ClientGlobalEnumerator
 {
-    using InterfaceNames = std::vector<std::string>;
-
-    void operator()(wl_display* display)
+    void run()
     {
+        auto display = wl_display_connect(nullptr);
         auto const registry = make_scoped(wl_display_get_registry(display), &wl_registry_destroy);
-        wl_registry_add_listener(registry.get(), &registry_listener, interfaces.get());
+        wl_registry_add_listener(registry.get(), &registry_listener, nullptr);
         wl_display_roundtrip(display);
         wl_display_roundtrip(display);
     }
 
     static void new_global(
-        void* data,
+        void* /*data*/,
         struct wl_registry* /*registry*/,
         uint32_t /*id*/,
         char const* interface,
         uint32_t /*version*/)
     {
-        auto const interfaces = static_cast<InterfaceNames*>(data);
-        interfaces->push_back(interface);
+        std::cout << interface << std::endl;
     }
 
     static void global_remove(
@@ -138,11 +137,67 @@ struct ClientGlobalEnumerator
         new_global,
         global_remove
     };
-
-    std::shared_ptr<InterfaceNames> interfaces = std::make_shared<InterfaceNames>();
 };
 
 wl_registry_listener constexpr ClientGlobalEnumerator::registry_listener;
+
+/// Runs the client enumerator in a subprocess.
+///
+/// Mir will allow clients that originate from the compositor itself to access
+/// any protocols that they like. However, we would like to test the case
+/// where an external client asks the compositor for exstensions that it does
+/// not have access to. To do this, we need to fork this process, record the
+/// interfaces that come out of the child process, and return them to the
+/// test code via a pipe.
+///
+/// \param server
+/// \returns the list of interfaces that are available to the process
+std::vector<std::string> run_client_enumerator(mir::Server& server)
+{
+    std::vector<std::string> interfaces;
+
+    int pipefd[2];
+    if (pipe(pipefd) == -1)
+    {
+        std::cerr << "run_client_enumerator: pipe failed" << std::endl;
+        return {};
+    }
+
+    auto const pid = fork();
+    if (pid == 0)
+    {
+        close(pipefd[0]);
+        dup2(pipefd[1], STDOUT_FILENO);
+        close(pipefd[1]);
+
+        auto const wayland_display = server.wayland_display();
+        setenv("WAYLAND_DISPLAY", wayland_display.value().c_str(),  true);
+
+        ClientGlobalEnumerator enumerator;
+        enumerator.run();
+        _exit(0);
+    }
+
+    close(pipefd[1]);
+    FILE *stream = fdopen(pipefd[0], "r");
+    if (!stream)
+    {
+        std::cerr << "run_client_enumerator: fdopen failed" << std::endl;
+        return {};
+    }
+
+    char line[256];
+    while (fgets(line, sizeof(line), stream))
+    {
+        size_t const len = strlen(line);
+        interfaces.emplace_back(line, line + len - 1);
+    }
+    fclose(stream);
+
+    int status;
+    waitpid(pid, &status, 0);
+    return interfaces;
+}
 
 struct ClientDecorationCreator
 {
@@ -242,16 +297,16 @@ TEST_F(WaylandExtensions, client_connects)
 
 TEST_F(WaylandExtensions, client_sees_default_extensions)
 {
-    ClientGlobalEnumerator enumerator_client;
+
     start_server();
 
-    run_as_client(enumerator_client);
+    auto const interfaces = run_client_enumerator(server());
 
     auto const available_extensions = miral::WaylandExtensions::recommended();
 
     // Some extension names do not include the *_manager like their globals's name does.
     // Fix by adding a non-manager version to the available list for each interface that contains "_manager".
-    std::vector<std::string> available = *enumerator_client.interfaces;
+    std::vector<std::string> available = interfaces;
     std::string const to_remove = "_manager";
     for (unsigned i = 0; i < available.size(); i++)
     {
@@ -285,14 +340,14 @@ TEST_F(WaylandExtensions, add_extension_disabled_by_default_adds_protocol_to_sup
 {
     miral::WaylandExtensions extensions;
     extensions.add_extension_disabled_by_default(mir::examples::server_decoration_extension());
-    ClientGlobalEnumerator enumerator_client;
+
 
     add_server_init(extensions);
     start_server();
 
-    run_as_client(enumerator_client);
+    auto const interfaces = run_client_enumerator(server());
 
-    EXPECT_THAT(*enumerator_client.interfaces, Not(Contains(Eq(mir::examples::server_decoration_extension().name))));
+    EXPECT_THAT(interfaces, Not(Contains(Eq(mir::examples::server_decoration_extension().name))));
 }
 
 TEST_F(WaylandExtensions, can_retrieve_application_for_client)
@@ -370,14 +425,13 @@ TEST_F(WaylandExtensions, disable_can_remove_default_extensions)
     std::string const extension_to_remove{"zxdg_shell_v6"};
     miral::WaylandExtensions extensions;
     extensions.disable(extension_to_remove);
-    ClientGlobalEnumerator enumerator_client;
 
     add_server_init(extensions);
     start_server();
 
-    run_as_client(enumerator_client);
+    auto const interfaces = run_client_enumerator(server());
 
-    EXPECT_THAT(*enumerator_client.interfaces, Not(Contains(Eq(extension_to_remove))));
+    EXPECT_THAT(interfaces, Not(Contains(Eq(extension_to_remove))));
 }
 
 TEST_F(WaylandExtensions, enable_can_enable_non_standard_extensions)
@@ -385,14 +439,13 @@ TEST_F(WaylandExtensions, enable_can_enable_non_standard_extensions)
     std::string const extension_to_enable{"zwlr_layer_shell_v1"};
     miral::WaylandExtensions extensions;
     extensions.enable(extension_to_enable);
-    ClientGlobalEnumerator enumerator_client;
 
     add_server_init(extensions);
     start_server();
 
-    run_as_client(enumerator_client);
+    auto const interfaces = run_client_enumerator(server());
 
-    EXPECT_THAT(*enumerator_client.interfaces, Contains(Eq(extension_to_enable)));
+    EXPECT_THAT(interfaces, Contains(Eq(extension_to_enable)));
 }
 
 TEST_F(WaylandExtensions, enable_can_enable_bespoke_extension)
@@ -400,14 +453,14 @@ TEST_F(WaylandExtensions, enable_can_enable_bespoke_extension)
     miral::WaylandExtensions extensions;
     extensions.add_extension_disabled_by_default(mir::examples::server_decoration_extension());
     extensions.enable(mir::examples::server_decoration_extension().name);
-    ClientGlobalEnumerator enumerator_client;
+
 
     add_server_init(extensions);
     start_server();
 
-    run_as_client(enumerator_client);
+    auto const interfaces = run_client_enumerator(server());
 
-    EXPECT_THAT(*enumerator_client.interfaces, Contains(Eq(mir::examples::server_decoration_extension().name)));
+    EXPECT_THAT(interfaces, Contains(Eq(mir::examples::server_decoration_extension().name)));
 }
 
 TEST_F(WaylandExtensions, disable_can_disable_bespoke_extension)
@@ -415,14 +468,14 @@ TEST_F(WaylandExtensions, disable_can_disable_bespoke_extension)
     miral::WaylandExtensions extensions;
     extensions.add_extension(mir::examples::server_decoration_extension());
     extensions.disable(mir::examples::server_decoration_extension().name);
-    ClientGlobalEnumerator enumerator_client;
+
 
     add_server_init(extensions);
     start_server();
 
-    run_as_client(enumerator_client);
+    auto const interfaces = run_client_enumerator(server());
 
-    EXPECT_THAT(*enumerator_client.interfaces, Not(Contains(Eq(mir::examples::server_decoration_extension().name))));
+    EXPECT_THAT(interfaces, Not(Contains(Eq(mir::examples::server_decoration_extension().name))));
 }
 
 TEST_F(WaylandExtensions, cannot_duplicate_existing_extension)
@@ -432,7 +485,7 @@ TEST_F(WaylandExtensions, cannot_duplicate_existing_extension)
         [&](auto const&){ return std::shared_ptr<void>{};}};
 
     miral::WaylandExtensions extensions;
-    ClientGlobalEnumerator enumerator_client;
+
 
     EXPECT_THROW(
         extensions.add_extension(duplicate_extension),
@@ -446,7 +499,7 @@ TEST_F(WaylandExtensions, cannot_duplicate_existing_extension)
 TEST_F(WaylandExtensions, cannot_duplicate_bespoke_extension)
 {
     miral::WaylandExtensions extensions;
-    ClientGlobalEnumerator enumerator_client;
+
 
     extensions.add_extension(mir::examples::server_decoration_extension());
 
@@ -462,100 +515,100 @@ TEST_F(WaylandExtensions, cannot_duplicate_bespoke_extension)
 TEST_F(WaylandExtensions, wayland_extensions_option_sets_extensions)
 {
     miral::WaylandExtensions extensions;
-    ClientGlobalEnumerator enumerator_client;
+
 
     add_to_environment("MIR_SERVER_WAYLAND_EXTENSIONS", "xdg_wm_base:zwlr_layer_shell_v1");
 
     add_server_init(extensions);
     start_server();
 
-    run_as_client(enumerator_client);
+    auto const interfaces = run_client_enumerator(server());
 
-    EXPECT_THAT(*enumerator_client.interfaces, Contains(Eq("xdg_wm_base")));
-    EXPECT_THAT(*enumerator_client.interfaces, Contains(Eq("zwlr_layer_shell_v1")));
-    EXPECT_THAT(*enumerator_client.interfaces, Not(Contains(Eq("wl_shell"))));
+    EXPECT_THAT(interfaces, Contains(Eq("xdg_wm_base")));
+    EXPECT_THAT(interfaces, Contains(Eq("zwlr_layer_shell_v1")));
+    EXPECT_THAT(interfaces, Not(Contains(Eq("wl_shell"))));
 }
 
 TEST_F(WaylandExtensions, add_extensions_option_adds_extensions)
 {
     miral::WaylandExtensions extensions;
-    ClientGlobalEnumerator enumerator_client;
+
 
     add_to_environment("MIR_SERVER_ADD_WAYLAND_EXTENSIONS", "xdg_wm_base:zwlr_layer_shell_v1");
 
     add_server_init(extensions);
     start_server();
 
-    run_as_client(enumerator_client);
+    auto const interfaces = run_client_enumerator(server());
 
-    EXPECT_THAT(*enumerator_client.interfaces, Contains(Eq("wl_shell")));
-    EXPECT_THAT(*enumerator_client.interfaces, Contains(Eq("xdg_wm_base")));
-    EXPECT_THAT(*enumerator_client.interfaces, Contains(Eq("zwlr_layer_shell_v1")));
+    EXPECT_THAT(interfaces, Contains(Eq("wl_shell")));
+    EXPECT_THAT(interfaces, Contains(Eq("xdg_wm_base")));
+    EXPECT_THAT(interfaces, Contains(Eq("zwlr_layer_shell_v1")));
 }
 
 TEST_F(WaylandExtensions, drop_extensions_option_removes_extensions)
 {
     miral::WaylandExtensions extensions;
-    ClientGlobalEnumerator enumerator_client;
+
 
     add_to_environment("MIR_SERVER_DROP_WAYLAND_EXTENSIONS", "xdg_wm_base:zwlr_layer_shell_v1");
 
     add_server_init(extensions);
     start_server();
 
-    run_as_client(enumerator_client);
+    auto const interfaces = run_client_enumerator(server());
 
-    EXPECT_THAT(*enumerator_client.interfaces, Contains(Eq("wl_shell")));
-    EXPECT_THAT(*enumerator_client.interfaces, Not(Contains(Eq("xdg_wm_base"))));
-    EXPECT_THAT(*enumerator_client.interfaces, Not(Contains(Eq("zwlr_layer_shell_v1"))));
+    EXPECT_THAT(interfaces, Contains(Eq("wl_shell")));
+    EXPECT_THAT(interfaces, Not(Contains(Eq("xdg_wm_base"))));
+    EXPECT_THAT(interfaces, Not(Contains(Eq("zwlr_layer_shell_v1"))));
 }
 
 TEST_F(WaylandExtensions, add_extensions_option_adds_extensions_if_name_is_not_global_name)
 {
     miral::WaylandExtensions extensions;
-    ClientGlobalEnumerator enumerator_client;
+
 
     add_to_environment("MIR_SERVER_ADD_WAYLAND_EXTENSIONS", "zwp_input_method_v2:zwp_virtual_keyboard_v1");
 
     add_server_init(extensions);
     start_server();
 
-    run_as_client(enumerator_client);
+    auto const interfaces = run_client_enumerator(server());
 
-    EXPECT_THAT(*enumerator_client.interfaces, Contains(Eq("zwp_input_method_manager_v2")));
-    EXPECT_THAT(*enumerator_client.interfaces, Contains(Eq("zwp_virtual_keyboard_manager_v1")));
+    EXPECT_THAT(interfaces, Contains(Eq("zwp_input_method_manager_v2")));
+    EXPECT_THAT(interfaces, Contains(Eq("zwp_virtual_keyboard_manager_v1")));
 }
 
 TEST_F(WaylandExtensions, drop_extensions_option_overrides_enable)
 {
     miral::WaylandExtensions extensions;
     extensions.enable("zwlr_layer_shell_v1");
-    ClientGlobalEnumerator enumerator_client;
+
 
     add_to_environment("MIR_SERVER_DROP_WAYLAND_EXTENSIONS", "zwlr_layer_shell_v1");
 
     add_server_init(extensions);
     start_server();
 
-    run_as_client(enumerator_client);
+    auto const interfaces = run_client_enumerator(server());
 
-    EXPECT_THAT(*enumerator_client.interfaces, Not(Contains(Eq("zwlr_layer_shell_v1"))));
+    EXPECT_THAT(interfaces, Not(Contains(Eq("zwlr_layer_shell_v1"))));
 }
 
 TEST_F(WaylandExtensions, add_extensions_option_overrides_disable)
 {
     miral::WaylandExtensions extensions;
     extensions.disable("zwlr_layer_shell_v1");
-    ClientGlobalEnumerator enumerator_client;
+
 
     add_to_environment("MIR_SERVER_ADD_WAYLAND_EXTENSIONS", "zwlr_layer_shell_v1");
 
     add_server_init(extensions);
     start_server();
 
-    run_as_client(enumerator_client);
+    auto const interfaces = run_client_enumerator(server());
 
-    EXPECT_THAT(*enumerator_client.interfaces, Contains(Eq("zwlr_layer_shell_v1")));
+    EXPECT_THAT(interfaces, Contains(Eq("zwlr_layer_shell_v1")));
 }
 
 TEST_F(WaylandExtensions, conditionally_enable_given_correct_extension_name)
@@ -571,7 +624,8 @@ TEST_F(WaylandExtensions, conditionally_enable_given_correct_extension_name)
 
     add_server_init(extensions);
     start_server();
-    run_as_client(ClientGlobalEnumerator{});
+
+    run_client_enumerator(server());
 
     EXPECT_THAT(condition_called, Eq(true));
 }
@@ -589,7 +643,7 @@ TEST_F(WaylandExtensions, conditionally_enable_not_given_user_preference_if_none
 
     add_server_init(extensions);
     start_server();
-    run_as_client(ClientGlobalEnumerator{});
+    run_client_enumerator(server());
 
     EXPECT_THAT(condition_called, Eq(true));
 }
@@ -608,7 +662,7 @@ TEST_F(WaylandExtensions, conditionally_enable_given_user_preference_true_if_add
 
     add_server_init(extensions);
     start_server();
-    run_as_client(ClientGlobalEnumerator{});
+    run_client_enumerator(server());
 
     EXPECT_THAT(condition_called, Eq(true));
 }
@@ -627,7 +681,7 @@ TEST_F(WaylandExtensions, conditionally_enable_given_user_preference_false_if_dr
 
     add_server_init(extensions);
     start_server();
-    run_as_client(ClientGlobalEnumerator{});
+    run_client_enumerator(server());
 
     EXPECT_THAT(condition_called, Eq(true));
 }
@@ -646,7 +700,7 @@ TEST_F(WaylandExtensions, conditionally_enable_given_user_preference_true_if_in_
 
     add_server_init(extensions);
     start_server();
-    run_as_client(ClientGlobalEnumerator{});
+    run_client_enumerator(server());
 
     EXPECT_THAT(condition_called, Eq(true));
 }
@@ -665,7 +719,7 @@ TEST_F(WaylandExtensions, conditionally_enable_given_user_preference_false_if_no
 
     add_server_init(extensions);
     start_server();
-    run_as_client(ClientGlobalEnumerator{});
+    run_client_enumerator(server());
 
     EXPECT_THAT(condition_called, Eq(true));
 }
@@ -673,7 +727,7 @@ TEST_F(WaylandExtensions, conditionally_enable_given_user_preference_false_if_no
 TEST_F(WaylandExtensions, conditionally_enable_can_enable_extension)
 {
     miral::WaylandExtensions extensions;
-    ClientGlobalEnumerator enumerator_client;
+
     extensions.conditionally_enable("zwlr_layer_shell_v1", [&](auto const&)
         {
             return true;
@@ -681,15 +735,15 @@ TEST_F(WaylandExtensions, conditionally_enable_can_enable_extension)
 
     add_server_init(extensions);
     start_server();
-    run_as_client(enumerator_client);
+    auto const interfaces = run_client_enumerator(server());
 
-    EXPECT_THAT(*enumerator_client.interfaces, Contains(Eq("zwlr_layer_shell_v1")));
+    EXPECT_THAT(interfaces, Contains(Eq("zwlr_layer_shell_v1")));
 }
 
 TEST_F(WaylandExtensions, conditionally_enable_can_disable_extension)
 {
     miral::WaylandExtensions extensions;
-    ClientGlobalEnumerator enumerator_client;
+
     extensions.conditionally_enable("zwlr_layer_shell_v1", [&](auto const&)
         {
             return false;
@@ -697,15 +751,15 @@ TEST_F(WaylandExtensions, conditionally_enable_can_disable_extension)
 
     add_server_init(extensions);
     start_server();
-    run_as_client(enumerator_client);
+    auto const interfaces = run_client_enumerator(server());
 
-    EXPECT_THAT(*enumerator_client.interfaces, Not(Contains(Eq("zwlr_layer_shell_v1"))));
+    EXPECT_THAT(interfaces, Not(Contains(Eq("zwlr_layer_shell_v1"))));
 }
 
 TEST_F(WaylandExtensions, conditionally_enable_can_enable_extension_disabled_by_user)
 {
     miral::WaylandExtensions extensions;
-    ClientGlobalEnumerator enumerator_client;
+
     extensions.conditionally_enable("zwlr_layer_shell_v1", [&](auto const&)
         {
             return true;
@@ -714,15 +768,15 @@ TEST_F(WaylandExtensions, conditionally_enable_can_enable_extension_disabled_by_
     add_to_environment("MIR_SERVER_DROP_WAYLAND_EXTENSIONS", "zwlr_layer_shell_v1");
     add_server_init(extensions);
     start_server();
-    run_as_client(enumerator_client);
+    auto const interfaces = run_client_enumerator(server());
 
-    EXPECT_THAT(*enumerator_client.interfaces, Contains(Eq("zwlr_layer_shell_v1")));
+    EXPECT_THAT(interfaces, Contains(Eq("zwlr_layer_shell_v1")));
 }
 
 TEST_F(WaylandExtensions, conditionally_enable_can_disable_extension_enabled_by_user)
 {
     miral::WaylandExtensions extensions;
-    ClientGlobalEnumerator enumerator_client;
+
     extensions.conditionally_enable("zwlr_layer_shell_v1", [&](auto const&)
         {
             return false;
@@ -731,7 +785,7 @@ TEST_F(WaylandExtensions, conditionally_enable_can_disable_extension_enabled_by_
     add_to_environment("MIR_SERVER_ADD_WAYLAND_EXTENSIONS", "zwlr_layer_shell_v1");
     add_server_init(extensions);
     start_server();
-    run_as_client(enumerator_client);
+    auto const interfaces = run_client_enumerator(server());
 
-    EXPECT_THAT(*enumerator_client.interfaces, Not(Contains(Eq("zwlr_layer_shell_v1"))));
+    EXPECT_THAT(interfaces, Not(Contains(Eq("zwlr_layer_shell_v1"))));
 }

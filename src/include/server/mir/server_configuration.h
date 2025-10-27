@@ -113,8 +113,18 @@ public:
     virtual std::shared_ptr<scene::SessionLock> the_session_lock() = 0;
 
     using WaylandProtocolExtensionFilter = std::function<bool(std::shared_ptr<scene::Session> const&, char const*)>;
-    virtual void set_wayland_extension_filter(WaylandProtocolExtensionFilter const& extension_filter) = 0;
-    virtual void set_enabled_wayland_extensions(std::vector<std::string> const& extensions) = 0;
+
+    /// Set a policy for the provided wayland extension.
+    ///
+    /// Only clients whose \p policy returns `true` will be allowed to use the interface
+    /// given by \p interface_name.
+    ///
+    /// \param interface_name the interface to apply the policy on
+    /// \param policy the policy predicate with the session and interface name provided
+    ///               as arguments.
+    virtual void set_wayland_extension_policy(
+        std::string const& interface_name,
+        std::function<bool(std::shared_ptr<scene::Session> const&, const char*)> const& policy) = 0;
 
     virtual auto the_decoration_strategy() -> std::shared_ptr<DecorationStrategy> = 0;
     virtual void set_the_decoration_strategy(std::shared_ptr<DecorationStrategy> strategy) = 0;

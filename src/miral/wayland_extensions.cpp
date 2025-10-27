@@ -45,6 +45,8 @@ char const* const miral::WaylandExtensions::zwlr_screencopy_manager_v1{"zwlr_scr
 char const* const miral::WaylandExtensions::zwlr_virtual_pointer_manager_v1{"zwlr_virtual_pointer_manager_v1"};
 char const* const miral::WaylandExtensions::ext_session_lock_manager_v1{"ext_session_lock_manager_v1"};
 char const* const miral::WaylandExtensions::ext_data_control_manager_v1{"ext_data_control_manager_v1"};
+char const* const miral::WaylandExtensions::ext_image_copy_capture_manager_v1{"ext_image_copy_capture_manager_v1"};
+char const* const miral::WaylandExtensions::ext_output_image_capture_source_manager_v1{"ext_output_image_capture_source_manager_v1"};
 
 namespace
 {
@@ -100,25 +102,28 @@ private:
 decltype(StaticExtensionTracker::mutex)       StaticExtensionTracker::mutex;
 decltype(StaticExtensionTracker::extensions)  StaticExtensionTracker::extensions;
 
+auto map_to_global_name(std::string const& extension) -> std::string
+{
+    if (extension == "zwp_input_method_v2")
+    {
+        return "zwp_input_method_manager_v2";
+    }
+    else if (extension == "zwp_virtual_keyboard_v1")
+    {
+        return "zwp_virtual_keyboard_manager_v1";
+    }
+    else
+    {
+        return extension;
+    }
+}
+
 /// The extension names given to Mir may not always be the name of the relevant global, but Mir needs the global name
 auto map_to_global_names(std::set<std::string> const& extensions) -> std::set<std::string>
 {
     std::set<std::string> result;
     for (auto const& extension : extensions)
-    {
-        if (extension == "zwp_input_method_v2")
-        {
-            result.insert("zwp_input_method_manager_v2");
-        }
-        else if (extension == "zwp_virtual_keyboard_v1")
-        {
-            result.insert("zwp_virtual_keyboard_manager_v1");
-        }
-        else
-        {
-            result.insert(extension);
-        }
-    }
+        result.insert(map_to_global_name(extension));
     return result;
 }
 }
@@ -197,7 +202,7 @@ struct miral::WaylandExtensions::Self
         return result;
     }
 
-    void validate(std::set<std::string> extensions) const
+    void validate(std::set<std::string> const& extensions) const
     {
         std::vector<std::string> errors;
 
@@ -261,12 +266,14 @@ struct miral::WaylandExtensions::Self
         }
         else
         {
+            default_extensions.erase(name);
             conditional_extensions[name] = callback;
         }
     }
 
     void init_server(mir::Server& server)
     {
+        // Add the shell-custom extensions.
         for (auto const& hook : wayland_extension_hooks)
         {
             struct FrigContext : Context
@@ -296,101 +303,112 @@ struct miral::WaylandExtensions::Self
             server.add_wayland_extension(hook.name, std::move(frig));
         }
 
-        std::set<std::string> selected_extensions;
-        std::set<std::string> manually_enabled_extensions;
+        // Next, parse the command line options to see which are enabled for all
+        // wayland clients by default.
+        //
+        // If a supported extension does not appear in the list, add it to the
+        // list of manually disabled extensions.
+        std::set<std::string> enabled_extensions;
+        std::set<std::string> manually_enabled_extensions; // Note that this set only exists to validate `user_pref` later on.
         std::set<std::string> manually_disabled_extensions;
         if (server.get_options()->is_set(mo::wayland_extensions_opt))
         {
             manually_enabled_extensions = Self::parse_extensions_option(
                 server.get_options()->get<std::string>(mo::wayland_extensions_opt));
-            selected_extensions = manually_enabled_extensions;
+            enabled_extensions = manually_enabled_extensions;
             for (auto const& ext : supported_extensions)
             {
-                if (manually_enabled_extensions.find(ext) == manually_enabled_extensions.end())
-                {
+                if (!manually_enabled_extensions.contains(ext))
                     manually_disabled_extensions.insert(ext);
-                }
             }
         }
         else
         {
-            selected_extensions = default_extensions;
+            enabled_extensions = default_extensions;
         }
 
+        // Next, add the additional extensions that are enabled by default.
         if (server.get_options()->is_set(mo::add_wayland_extensions_opt))
         {
             auto const value = server.get_options()->get<std::string>(mo::add_wayland_extensions_opt);
             auto const added = value == "all" ? supported_extensions : Self::parse_extensions_option(value);
             for (auto const& extension : added)
             {
-                selected_extensions.insert(extension);
+                enabled_extensions.insert(extension);
                 manually_enabled_extensions.insert(extension);
                 manually_disabled_extensions.erase(extension);
             }
         }
 
+        // Next, manage the explicitly dropped extensions.
         if (server.get_options()->is_set(mo::drop_wayland_extensions_opt))
         {
             auto const dropped = Self::parse_extensions_option(
                 server.get_options()->get<std::string>(mo::drop_wayland_extensions_opt));
             for (auto const& extension : dropped)
             {
-                selected_extensions.erase(extension);
+                enabled_extensions.erase(extension);
                 manually_enabled_extensions.erase(extension);
                 manually_disabled_extensions.insert(extension);
             }
         }
 
-        for (auto const& pair : conditional_extensions)
-        {
-            selected_extensions.insert(pair.first);
-        }
-
-        selected_extensions = map_to_global_names(selected_extensions);
-        manually_enabled_extensions = map_to_global_names(manually_enabled_extensions);
+        // Now that we know which extensions should be available, we are ready to
+        // set the policy for each extension.
+        enabled_extensions = map_to_global_names(enabled_extensions);
         manually_disabled_extensions = map_to_global_names(manually_disabled_extensions);
+        validate(enabled_extensions);
 
-        validate(selected_extensions);
-        server.set_enabled_wayland_extensions(
-            std::vector<std::string>{
-                selected_extensions.begin(),
-                selected_extensions.end()});
-
-        if (extensions_filter)
+        // Set up the always-enabled extensions.
+        for (auto const& extension : enabled_extensions)
         {
-            server.set_wayland_extension_filter(
-                [this](Application const& app, char const* protocol) -> bool
-                {
-                    return extensions_filter.value()(app, protocol);
-                });
+            server.set_wayland_extension_policy(extension, [](auto const&, const char*)
+            {
+                return true;
+            });
         }
-        else if (!conditional_extensions.empty())
+
+        // Set up the missing extensions that do not appear in the always-enabled list.
+        for (auto const& extension : supported_extensions)
         {
-            server.set_wayland_extension_filter(
-                [this, manually_enabled_extensions, manually_disabled_extensions]
-                (Application const& app, char const* protocol) -> bool
+            if (!enabled_extensions.contains(extension))
+            {
+                server.set_wayland_extension_policy(extension, [](auto const&, const char*)
                 {
-                    auto const cond = conditional_extensions.find(protocol);
-
-                    if (cond == conditional_extensions.end())
-                    {
-                        return true;
-                    }
-                    else
-                    {
-                        std::optional<bool> user_pref;
-                        if (manually_enabled_extensions.find(protocol) != manually_enabled_extensions.end())
-                        {
-                            user_pref = true;
-                        }
-                        else if (manually_disabled_extensions.find(protocol) != manually_disabled_extensions.end())
-                        {
-                            user_pref = false;
-                        }
-
-                        return cond->second(EnableInfo{ app, protocol, user_pref});
-                    }
+                    return false;
                 });
+            }
+        }
+
+        // Set up the manually disabled extensions.
+        for (auto const& extension : manually_disabled_extensions)
+        {
+            server.set_wayland_extension_policy(extension, [](auto const&, const char*)
+            {
+                return false;
+            });
+        }
+
+        // Set up the conditional extensions.
+        for (auto const& [extension, filter] : conditional_extensions)
+        {
+            server.set_wayland_extension_policy(map_to_global_name(extension), [
+                manually_enabled_extensions=manually_enabled_extensions,
+                manually_disabled_extensions=manually_disabled_extensions,
+                filter](auto const& app, const char* protocol)
+            {
+                std::optional<bool> user_pref;
+                if (manually_enabled_extensions.contains(protocol))
+                {
+                    user_pref = true;
+                }
+                else if (manually_disabled_extensions.contains(protocol))
+                {
+                    user_pref = false;
+                }
+
+                return filter(EnableInfo{ app, protocol, user_pref});
+            });
         }
     }
 
@@ -424,7 +442,6 @@ struct miral::WaylandExtensions::Self
      * This includes extensions returned by mir::frontend::get_supported_extensions() and any bespoke extensions added
      */
     std::set<std::string> supported_extensions;
-    std::optional<WaylandExtensions::Filter> extensions_filter;
 };
 
 
@@ -436,17 +453,6 @@ miral::WaylandExtensions::WaylandExtensions()
 void miral::WaylandExtensions::operator()(mir::Server& server) const
 {
     StaticExtensionTracker::add_server_extension(&server, self.get());
-
-    std::vector<std::string> supported_extensions{self->supported_extensions.begin(), self->supported_extensions.end()};
-    std::vector<std::string> default_extensions{self->default_extensions.begin(), self->default_extensions.end()};
-    std::vector<std::string> non_default_extensions;
-    for (auto const& extension : self->supported_extensions)
-    {
-        if (self->default_extensions.find(extension) == self->default_extensions.end())
-        {
-            non_default_extensions.push_back(extension);
-        }
-    }
 
     server.add_configuration_option(
         mo::wayland_extensions_opt,

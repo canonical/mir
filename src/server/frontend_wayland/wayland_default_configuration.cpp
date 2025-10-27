@@ -14,6 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <ranges>
+
 #include "fractional-scale-v1_wrapper.h"
 #include "fractional_scale_v1.h"
 #include "mir/default_server_configuration.h"
@@ -24,6 +26,7 @@
 #include "mir/options/default_configuration.h"
 #include "mir/scene/session.h"
 
+#include "ext_image_capture_v1.h"
 #include "foreign_toplevel_manager_v1.h"
 #include "idle_inhibit_v1.h"
 #include "input_method_v1.h"
@@ -202,6 +205,20 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
                 ctx.screen_shooter_factory,
                 ctx.surface_stack);
         }),
+    make_extension_builder<mw::OutputImageCaptureSourceManagerV1>([](auto const& ctx)
+        {
+            return mf::create_ext_output_image_capture_source_manager_v1(
+                ctx.display);
+        }),
+    make_extension_builder<mw::ImageCopyCaptureManagerV1>([](auto const& ctx)
+        {
+            return mf::create_ext_image_copy_capture_manager_v1(
+                ctx.display,
+                ctx.wayland_executor,
+                ctx.graphic_buffer_allocator,
+                ctx.screen_shooter_factory,
+                ctx.surface_stack);
+        }),
     make_extension_builder<mw::PrimarySelectionDeviceManagerV1>([](auto const& ctx)
         {
             return mf::create_primary_selection_device_manager_v1(ctx.display, ctx.wayland_executor, ctx.primary_selection_clipboard);
@@ -371,9 +388,8 @@ std::shared_ptr<mf::Connector>
             auto options = the_options();
             bool const arw_socket = options->is_set(options::arw_server_socket_opt);
 
-            auto wayland_extensions = std::set<std::string>{
-                enabled_wayland_extensions.begin(),
-                enabled_wayland_extensions.end()};
+            auto const extension_keys = wayland_extension_policy_map | std::views::keys;
+            std::set<std::string> const wayland_extensions(std::ranges::begin(extension_keys), std::ranges::end(extension_keys));
 
             auto const x11_enabled = options->is_set(mo::x11_display_opt) && options->get<bool>(mo::x11_display_opt);
 
@@ -421,14 +437,11 @@ void mir::DefaultServerConfiguration::add_wayland_extension(
     wayland_extension_hooks.push_back({name, builder});
 }
 
-void mir::DefaultServerConfiguration::set_wayland_extension_filter(WaylandProtocolExtensionFilter const& extension_filter)
+void mir::DefaultServerConfiguration::set_wayland_extension_policy(
+    std::string const& interface_name,
+    WaylandProtocolExtensionFilter const& policy)
 {
-    wayland_extension_filter = extension_filter;
-}
-
-void mir::DefaultServerConfiguration::set_enabled_wayland_extensions(std::vector<std::string> const& extensions)
-{
-    enabled_wayland_extensions = extensions;
+    wayland_extension_policy_map[interface_name] = policy;
 }
 
 auto mir::frontend::get_window(wl_resource* surface) -> std::shared_ptr<ms::Surface>

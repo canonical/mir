@@ -20,7 +20,7 @@
 #include <mir_test_framework/executable_path.h>
 #include <mir_test_framework/main.h>
 #include <miral/x11_support.h>
-#include <miral/minimal_window_manager.h>
+#include <miral/floating_window_manager.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -41,7 +41,7 @@ namespace
 {
 struct AbstractGLMark2Test : testing::Test, mtf::AsyncServerRunner {
     void SetUp() override {
-        auto const set_window_management_policy = miral::set_window_management_policy<miral::MinimalWindowManager>();
+        auto const set_window_management_policy = miral::set_window_management_policy<miral::FloatingWindowManager>();
         set_window_management_policy(server);
         start_server();
     }

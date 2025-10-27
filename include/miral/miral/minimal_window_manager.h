@@ -23,13 +23,9 @@
 
 namespace miral
 {
-enum class FocusStealing
-{
-    prevent,
-    allow
-};
-
 /// Minimal implementation of a floating window management policy
+///
+/// \deprecated This class is deprecated. Please use #miral::FloatingWindowManager.
 class MinimalWindowManager : public WindowManagementPolicy
 {
 public:
