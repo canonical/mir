@@ -60,7 +60,7 @@ FloatingWindowManagerPolicy::FloatingWindowManagerPolicy(
     miral::InternalClientLauncher const& launcher,
     std::function<void()>& shutdown_hook,
     FocusStealing focus_stealing) :
-    MinimalWindowManager(tools, focus_stealing),
+    FloatingWindowManager(tools, focus_stealing, mir_input_event_modifier_alt),
     spinner{spinner},
     decoration_provider{std::make_unique<DecorationProvider>()}
 {
@@ -77,7 +77,7 @@ FloatingWindowManagerPolicy::~FloatingWindowManagerPolicy() = default;
 
 bool FloatingWindowManagerPolicy::handle_pointer_event(MirPointerEvent const* event)
 {
-    if (MinimalWindowManager::handle_pointer_event(event))
+    if (FloatingWindowManager::handle_pointer_event(event))
         return true;
 
     auto const action = mir_pointer_event_action(event);
@@ -133,7 +133,7 @@ bool FloatingWindowManagerPolicy::handle_touch_event(MirTouchEvent const* event)
 {
     auto const count = mir_touch_event_point_count(event);
 
-    if (MinimalWindowManager::handle_touch_event(event) || count != 3)
+    if (FloatingWindowManager::handle_touch_event(event) || count != 3)
     {
         pinching = false;
         return false;
@@ -235,7 +235,7 @@ bool FloatingWindowManagerPolicy::handle_touch_event(MirTouchEvent const* event)
 
 void FloatingWindowManagerPolicy::advise_new_window(WindowInfo const& window_info)
 {
-    MinimalWindowManager::advise_new_window(window_info);
+    FloatingWindowManager::advise_new_window(window_info);
 
     auto const parent = window_info.parent();
 
@@ -250,13 +250,13 @@ void FloatingWindowManagerPolicy::advise_new_window(WindowInfo const& window_inf
 
 void FloatingWindowManagerPolicy::handle_window_ready(WindowInfo& window_info)
 {
-    MinimalWindowManager::handle_window_ready(window_info);
+    FloatingWindowManager::handle_window_ready(window_info);
     keep_spinner_on_top();
 }
 
 void FloatingWindowManagerPolicy::advise_focus_gained(WindowInfo const& info)
 {
-    MinimalWindowManager::advise_focus_gained(info);
+    FloatingWindowManager::advise_focus_gained(info);
     keep_spinner_on_top();
 }
 
@@ -274,7 +274,7 @@ void FloatingWindowManagerPolicy::keep_spinner_on_top()
 
 bool FloatingWindowManagerPolicy::handle_keyboard_event(MirKeyboardEvent const* event)
 {
-    if (MinimalWindowManager::handle_keyboard_event(event))
+    if (FloatingWindowManager::handle_keyboard_event(event))
         return true;
 
     auto const action = mir_keyboard_event_action(event);
@@ -470,7 +470,7 @@ void FloatingWindowManagerPolicy::keep_window_within_constraints(
 WindowSpecification FloatingWindowManagerPolicy::place_new_window(
     ApplicationInfo const& app_info, WindowSpecification const& request_parameters)
 {
-    auto parameters = MinimalWindowManager::place_new_window(app_info, request_parameters);
+    auto parameters = FloatingWindowManager::place_new_window(app_info, request_parameters);
 
     if (app_info.application() == decoration_provider->session())
     {
@@ -603,5 +603,5 @@ void FloatingWindowManagerPolicy::handle_modify_window(WindowInfo& window_info, 
     if (pdata.in_hidden_workspace && mods.state().is_set())
         pdata.old_state = mods.state().consume();
 
-    MinimalWindowManager::handle_modify_window(window_info, mods);
+    FloatingWindowManager::handle_modify_window(window_info, mods);
 }
