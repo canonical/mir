@@ -529,20 +529,13 @@ void mir::Server::add_wayland_extension(
     }
 }
 
-void mir::Server::set_wayland_extension_filter(
-    std::function<bool(std::shared_ptr<scene::Session> const&, char const*)> const& extension_filter)
+void mir::Server::set_wayland_extension_policy(
+    std::string const& interface_name,
+    std::function<bool(std::shared_ptr<scene::Session> const&, char const*)> const& policy)
 {
     if (auto const config = self->server_config)
     {
-        config->set_wayland_extension_filter(extension_filter);
-    }
-}
-
-void mir::Server::set_enabled_wayland_extensions(std::vector<std::string> const& extensions)
-{
-    if (auto const config = self->server_config)
-    {
-        config->set_enabled_wayland_extensions(extensions);
+        config->set_wayland_extension_policy(interface_name, policy);
     }
 }
 

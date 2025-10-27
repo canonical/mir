@@ -50,7 +50,6 @@
 #include <optional>
 #include <stdexcept>
 #include <system_error>
-#include <cassert>
 #include <fcntl.h>
 
 #include <wayland-server.h>

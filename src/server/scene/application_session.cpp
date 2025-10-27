@@ -32,7 +32,6 @@
 
 #include <stdexcept>
 #include <memory>
-#include <cassert>
 #include <algorithm>
 #include <cstring>
 

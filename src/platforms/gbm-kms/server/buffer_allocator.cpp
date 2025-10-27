@@ -52,7 +52,6 @@
 #include <memory>
 #include <optional>
 #include <stdexcept>
-#include <cassert>
 #include <fcntl.h>
 #include <xf86drm.h>
 #include <drm_fourcc.h>

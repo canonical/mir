@@ -28,7 +28,6 @@
 #include <boost/throw_exception.hpp>
 
 #include <algorithm>
-#include <cassert>
 #include <functional>
 #include <memory>
 #include <ranges>
