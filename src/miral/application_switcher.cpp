@@ -943,4 +943,3 @@ miral::ApplicationSwitcherKeyboardFilter::operator std::function<bool(const MirK
         return false;
     };
 }
-

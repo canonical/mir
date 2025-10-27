@@ -766,4 +766,3 @@ global:
     vtable?for?miral::FloatingWindowManager;
   };
 } MIRAL_5.5;
-
