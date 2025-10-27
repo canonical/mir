@@ -20,6 +20,9 @@
 #include <miral/window_manager_tools.h>
 #include <memory>
 #include <wayland-client.h>
+#include <functional>
+#include <miral/toolkit_event.h>
+#include <linux/input-event-codes.h>
 
 namespace miral
 {
@@ -89,6 +92,83 @@ private:
     class Self;
     std::shared_ptr<Self> self;
 };
+
+/// This class provides a common shortcut strategy for the
+/// #miral::ApplicationSwitcher.
+///
+/// By default, this class will do the following:
+/// - Call #miral::ApplicationSwitcher::next_app on `alt + tab`.
+/// - Call #miral::ApplicationSwitcher::prev_app on `alt + shift + tab`
+/// - Call #miral::ApplicationSwitcher::next_window on `alt + grave`
+/// - Call #miral::ApplicationSwitcher::prev_window` on `alt + shift + grave`.
+///
+/// The default shortcuts may be changed by the shell author.
+///
+/// This class should be provided to a #miral::AppendKeyboardEventFilter.
+///
+/// \remark Since MirAL 5.6
+class ApplicationSwitcherKeyboardFilter
+{
+public:
+    explicit ApplicationSwitcherKeyboardFilter(ApplicationSwitcher const& switcher);
+    ~ApplicationSwitcherKeyboardFilter();
+
+    /// Sets the primary modifier for the keyboard filter.
+    ///
+    /// This is the modifier that must be held for any application switcher
+    /// action to begin.
+    ///
+    /// Defaults to #mir_input_event_modifier_alt.
+    ///
+    /// \param modifier the new modifier
+    /// \returns this
+    ApplicationSwitcherKeyboardFilter& primary_modifier(MirInputEventModifier modifier);
+
+    /// Sets the reverse modifier.
+    ///
+    /// This is the modifier that must be held alongside the primary modifier
+    /// in order to reverse the direction of an action being run. For example,
+    /// holding the primary modifier and hitting the application key will select
+    /// the next application, while holding both the primary and reverse modifiers
+    /// and hitting the application will select the previous application..
+    ///
+    /// Defaults to #mir_input_event_modifier_shift.
+    ///
+    /// \param modifier the new modifier
+    /// \returns this
+    ApplicationSwitcherKeyboardFilter& reverse_modifier(MirInputEventModifier modifier);
+
+    /// Sets the application scancode.
+    ///
+    /// This is the key that must be clicked in order to trigger either
+    /// #miral::ApplicationSwitcher::next_app or #miral::ApplicationSwitcher::prev_app,
+    /// depending on the modifiers that are currently being held.
+    ///
+    /// Defaults to KEY_TAB.
+    ///
+    /// \param key the key to trigger an application switch
+    /// \returns this
+    ApplicationSwitcherKeyboardFilter& application_key(int scancode);
+
+    /// Sets the window scancode.
+    ///
+    /// This is the key that must be clicked in order to trigger either
+    /// #miral::ApplicationSwitcher::next_window or #miral::ApplicationSwitcher::prev_window,
+    /// depending on the modifiers that are currently being held.
+    ///
+    /// Defaults to KEY_GRAVE.
+    ///
+    /// \param key the key to trigger a window switch
+    /// \returns this
+    ApplicationSwitcherKeyboardFilter& window_key(int scancode);
+
+    operator std::function<bool(MirKeyboardEvent const* event)>() const;
+
+private:
+    class Self;
+    std::unique_ptr<Self> self;
+};
+
 }
 
 #endif
