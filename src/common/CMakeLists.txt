@@ -28,6 +28,7 @@ list(APPEND MIR_COMMON_SOURCES
   immediate_executor.cpp
   ${PROJECT_SOURCE_DIR}/include/common/mir/signal.h
   signal.cpp
+  debug_draw.cpp
 )
 
 

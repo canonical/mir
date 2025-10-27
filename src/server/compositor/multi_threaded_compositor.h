@@ -31,6 +31,7 @@ namespace graphics
 {
 class Display;
 class Cursor;
+class GraphicBufferAllocator;
 }
 namespace scene
 {
@@ -65,7 +66,8 @@ public:
         std::shared_ptr<CompositorReport> const& compositor_report,
         std::shared_ptr<graphics::Cursor> const& cursor,
         std::chrono::milliseconds fixed_composite_delay,  // -1 = automatic
-        bool compose_on_start);
+        bool compose_on_start,
+        std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator);
     ~MultiThreadedCompositor();
 
     void start();
@@ -81,6 +83,7 @@ private:
     std::shared_ptr<DisplayListener> const display_listener;
     std::shared_ptr<CompositorReport> const report;
     std::shared_ptr<graphics::Cursor> const cursor;
+    std::shared_ptr<graphics::GraphicBufferAllocator> const allocator;
 
     std::vector<std::unique_ptr<CompositingFunctor>> thread_functors;
 

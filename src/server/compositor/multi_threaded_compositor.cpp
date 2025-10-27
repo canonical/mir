@@ -15,6 +15,8 @@
  */
 
 #include "multi_threaded_compositor.h"
+#include "mir/graphics/graphic_buffer_allocator.h"
+
 #include <mir/compositor/scene_element.h>
 #include <mir/graphics/cursor.h>
 #include <mir/graphics/display.h>
@@ -32,12 +34,14 @@
 #include <mir/executor.h>
 #include <mir/signal.h>
 #include <mir/log.h>
+#include <mir/debug_draw.h>
 
 #include <atomic>
 #include <thread>
 #include <chrono>
 #include <future>
 #include <boost/throw_exception.hpp>
+#include <variant>
 
 using namespace std::literals::chrono_literals;
 
@@ -71,6 +75,181 @@ public:
 private:
     std::shared_ptr<mg::Renderable> const renderable_;
 };
+
+struct DebugSceneElement: public mir::compositor::SceneElement
+{
+public:
+    explicit DebugSceneElement(std::shared_ptr<mg::Renderable> renderable)
+        : renderable_{std::move(renderable)}
+    {
+    }
+
+    std::shared_ptr<mg::Renderable> renderable() const override
+    {
+        return renderable_;
+    }
+
+    void rendered() override
+    {
+    }
+
+    void occluded() override
+    {
+    }
+
+private:
+    std::shared_ptr<mg::Renderable> const renderable_;
+};
+
+class DebugRenderable : public mg::Renderable
+{
+public:
+    DebugRenderable(std::shared_ptr<mg::Buffer> const& buffer, mir::geometry::Rectangle const& rect) :
+        buffer_{buffer},
+        rect_{rect}
+    {
+    }
+
+    // Implement Renderable interface
+    ID id() const override
+    {
+        return this;
+    }
+    std::shared_ptr<mg::Buffer> buffer() const override
+    {
+        return buffer_;
+    }
+    mir::geometry::Rectangle screen_position() const override
+    {
+        return rect_;
+    }
+
+    mir::geometry::RectangleD src_bounds() const override
+    {
+        if (buffer_)
+        {
+            auto size = buffer_->size();
+            return mir::geometry::RectangleD{
+                {0.0, 0.0}, {static_cast<double>(size.width.as_int()), static_cast<double>(size.height.as_int())}};
+        }
+        return mir::geometry::RectangleD{{0.0, 0.0}, {0.0, 0.0}};
+    }
+
+    std::optional<mir::geometry::Rectangle> clip_area() const override
+    {
+        return std::nullopt;
+    }
+
+    float alpha() const override
+    {
+        return 1.0f;
+    }
+
+    glm::mat4 transformation() const override
+    {
+        return glm::mat4(1.0f); // Identity matrix
+    }
+
+    MirOrientation orientation() const override
+    {
+        return mir_orientation_normal;
+    }
+
+    MirMirrorMode mirror_mode() const override
+    {
+        return mir_mirror_mode_none;
+    }
+
+    bool shaped() const override
+    {
+        return true;
+    }
+
+    auto surface_if_any() const -> std::optional<mir::scene::Surface const*> override
+    {
+        return std::nullopt;
+    }
+
+    auto opaque_region() const -> std::optional<mir::geometry::Rectangles> override
+    {
+        return std::nullopt;
+    }
+
+private:
+    std::shared_ptr<mg::Buffer> buffer_;
+    mir::geometry::Rectangle rect_;
+};
+
+auto draw_command_to_scene_element(
+    mir::debug::DrawCommand const& command, std::shared_ptr<mg::GraphicBufferAllocator> const& allocator)
+-> std::shared_ptr<mc::SceneElement>
+{
+    struct DrawCommandVisitor
+    {
+        std::shared_ptr<mg::GraphicBufferAllocator> const& allocator;
+        auto operator()(
+            mir::debug::CircleDrawCommand const& command)
+        {
+            // Calculate the bounding rectangle for the circle
+            auto const& center = command.center;
+            auto const& radius = command.radius;
+
+            auto const left = center.x.as_int() - radius;
+            auto const top = center.y.as_int() - radius;
+            auto const width = radius * 2;
+            auto const height = radius * 2;
+
+            mir::geometry::Rectangle rect{
+                mir::geometry::Point{left, top},
+                mir::geometry::Size{width, height}};
+
+            // Allocate a software buffer
+            auto buffer = allocator->alloc_software_buffer(
+                mir::geometry::Size{mir::geometry::Width{width}, mir::geometry::Height{height}},
+                mir_pixel_format_argb_8888);
+
+
+            // Draw the filled circle into the buffer
+            auto mapped = mir::renderer::software::as_write_mappable(buffer);
+            auto writable = mapped->map_writeable();
+            auto stride = mapped->stride().as_int();
+
+            // Draw a filled circle using Bresenham-like algorithm
+            for (int y = 0; y < height; ++y)
+            {
+                for (int x = 0; x < width; ++x)
+                {
+                    // Calculate distance from center
+                    int dx = x - radius;
+                    int dy = y - radius;
+                    int dist_sq = dx * dx + dy * dy;
+
+                    uint32_t* pixel = reinterpret_cast<uint32_t*>(writable->data() + y * stride + x * 4);
+                    // Check if point is inside circle
+                    if (dist_sq <= radius * radius)
+                    {
+                        // Write pixel in ARGB format
+                        uint8_t a = static_cast<uint8_t>(command.color.a * 255.0f);
+                        uint8_t r = static_cast<uint8_t>(command.color.r * 255.0f);
+                        uint8_t g = static_cast<uint8_t>(command.color.g * 255.0f);
+                        uint8_t b = static_cast<uint8_t>(command.color.b * 255.0f);
+                        *pixel = (a << 24) | (r << 16) | (g << 8) | b;
+                    }
+                    else
+                    {
+                        // Write transparent pixel
+                        *pixel = 0x00000000;
+                    }
+                }
+            }
+
+            // Create a scene element from the renderable
+            return std::make_shared<DebugSceneElement>(std::make_shared<DebugRenderable>(buffer, rect));
+        }
+    };
+
+    return std::visit(DrawCommandVisitor{allocator}, command);
+}
 }
 
 namespace mir
@@ -88,7 +267,8 @@ public:
         std::shared_ptr<DisplayListener> const& display_listener,
         std::chrono::milliseconds fixed_composite_delay,
         std::shared_ptr<CompositorReport> const& report,
-        std::shared_ptr<mg::Cursor> const& cursor) :
+        std::shared_ptr<mg::Cursor> const& cursor,
+        std::shared_ptr<mg::GraphicBufferAllocator> const& allocator) :
         compositor_factory{db_compositor_factory},
         group(group),
         scene(scene),
@@ -98,7 +278,8 @@ public:
         report{report},
         cursor{cursor},
         started_future{started.get_future()},
-        stopped_future{stopped.get_future()}
+        stopped_future{stopped.get_future()},
+        allocator{allocator}
     {
     }
 
@@ -189,6 +370,12 @@ public:
                                 scene_elements.push_back(std::make_shared<CursorSceneElement>(cursor_renderable));
                         }
 
+                        for(auto const& debug_draw_command: *mir::debug::get_draw_commands().lock())
+                        {
+                            auto const scene_element = draw_command_to_scene_element(debug_draw_command, allocator);
+                            scene_elements.push_back(scene_element);
+                        }
+
                         if (compositor->composite(std::move(scene_elements)))
                             needs_post = true;
                     }
@@ -274,6 +461,7 @@ private:
     std::future<void> started_future;
     std::promise<void> stopped;
     std::future<void> stopped_future;
+    std::shared_ptr<mg::GraphicBufferAllocator> const allocator;
 };
 
 }
@@ -287,13 +475,15 @@ mc::MultiThreadedCompositor::MultiThreadedCompositor(
     std::shared_ptr<CompositorReport> const& compositor_report,
     std::shared_ptr<mg::Cursor> const& cursor,
     std::chrono::milliseconds fixed_composite_delay,
-    bool compose_on_start)
+    bool compose_on_start,
+    std::shared_ptr<mg::GraphicBufferAllocator> const& allocator)
     : display{display},
       display_buffer_compositor_factory{db_compositor_factory},
       scene{scene},
       display_listener{display_listener},
       report{compositor_report},
       cursor{cursor},
+      allocator{allocator},
       state{CompositorState::stopped},
       fixed_composite_delay{fixed_composite_delay},
       compose_on_start{compose_on_start}
@@ -390,7 +580,7 @@ void mc::MultiThreadedCompositor::create_compositing_threads()
     {
         auto thread_functor = std::make_unique<mc::CompositingFunctor>(
             display_buffer_compositor_factory, group, scene, display_listener,
-            fixed_composite_delay, report, cursor);
+            fixed_composite_delay, report, cursor, allocator);
 
         mir::thread_pool_executor.spawn(std::ref(*thread_functor));
         thread_functors.push_back(std::move(thread_functor));
