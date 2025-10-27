@@ -42,6 +42,11 @@ mir_generate_protocol_wrapper(mirwayland "wp_" fractional-scale-v1.xml)
 mir_generate_protocol_wrapper(mirwayland "z" xdg-activation-v1.xml)
 mir_generate_protocol_wrapper(mirwayland "wp_" linux-drm-syncobj-v1.xml)
 mir_generate_protocol_wrapper(mirwayland "ext_" ext-data-control-v1.xml)
+# We can't strip the "ext_" prefix here, because it creates a conflict
+# with wlr-foreign-toplevel-management-unstable-v1.
+mir_generate_protocol_wrapper(mirwayland "" ext-foreign-toplevel-list-v1.xml)
+mir_generate_protocol_wrapper(mirwayland "ext_" ext-image-capture-source-v1.xml)
+mir_generate_protocol_wrapper(mirwayland "ext_" ext-image-copy-capture-v1.xml)
 
 target_link_libraries(mirwayland
   PUBLIC

@@ -26,6 +26,7 @@
 #include "mir/options/default_configuration.h"
 #include "mir/scene/session.h"
 
+#include "ext_image_capture_v1.h"
 #include "foreign_toplevel_manager_v1.h"
 #include "idle_inhibit_v1.h"
 #include "input_method_v1.h"
@@ -198,6 +199,20 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
     make_extension_builder<mw::WlrScreencopyManagerV1>([](auto const& ctx)
         {
             return mf::create_wlr_screencopy_manager_unstable_v1(
+                ctx.display,
+                ctx.wayland_executor,
+                ctx.graphic_buffer_allocator,
+                ctx.screen_shooter_factory,
+                ctx.surface_stack);
+        }),
+    make_extension_builder<mw::OutputImageCaptureSourceManagerV1>([](auto const& ctx)
+        {
+            return mf::create_ext_output_image_capture_source_manager_v1(
+                ctx.display);
+        }),
+    make_extension_builder<mw::ImageCopyCaptureManagerV1>([](auto const& ctx)
+        {
+            return mf::create_ext_image_copy_capture_manager_v1(
                 ctx.display,
                 ctx.wayland_executor,
                 ctx.graphic_buffer_allocator,
