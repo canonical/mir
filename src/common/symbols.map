@@ -600,6 +600,8 @@ global:
     mir::ThreadSafeList::for_each*;
     mir::ThreadSafeList::remove*;
     mir::ThreadSafeList::remove_all*;
+    mir::debug::get_draw_commands*; # TODO move them to a new stanza
+    mir::debug::draw_circle*;
     mir::input::KeyMapper::?KeyMapper*;
     mir::input::KeyMapper::KeyMapper*;
     mir::input::KeyMapper::operator*;

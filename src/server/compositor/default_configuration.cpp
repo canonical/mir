@@ -84,7 +84,8 @@ mir::DefaultServerConfiguration::the_compositor()
                 the_compositor_report(),
                 the_cursor(),
                 composite_delay,
-                true);
+                true,
+                the_buffer_allocator());
         });
 }
 
