@@ -134,29 +134,29 @@ struct MockShell
         did_modify_surface(surface, original_spec);
     }
 
-    MOCK_METHOD2(did_modify_surface, void(
+    MOCK_METHOD(void, did_modify_surface, (
         std::shared_ptr<ms::Surface> const&,
         msh::SurfaceSpecification const&));
 
-    MOCK_METHOD3(request_move, void(
+    MOCK_METHOD(void, request_move, (
         std::shared_ptr<ms::Session> const&,
         std::shared_ptr<ms::Surface> const&,
         MirInputEvent const*));
 
-    MOCK_METHOD4(request_resize, void(
+    MOCK_METHOD(void, request_resize, (
         std::shared_ptr<ms::Session> const&,
         std::shared_ptr<ms::Surface> const&,
         MirInputEvent const*,
         MirResizeEdge));
 
-    MOCK_METHOD5(create_surface, std::shared_ptr<ms::Surface>(
+    MOCK_METHOD(std::shared_ptr<ms::Surface>, create_surface, (
         std::shared_ptr<ms::Session> const&,
         mw::Weak<mf::WlSurface> const&,
         msh::SurfaceSpecification const&,
         std::shared_ptr<ms::SurfaceObserver> const&,
         mir::Executor*));
 
-    MOCK_METHOD2(destroy_surface, void(
+    MOCK_METHOD(void, destroy_surface, (
         std::shared_ptr<ms::Session> const&,
         std::shared_ptr<ms::Surface> const&));
 };
