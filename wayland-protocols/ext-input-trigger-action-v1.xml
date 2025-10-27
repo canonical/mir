@@ -24,7 +24,7 @@
 
   <description summary="Registration for global input actions">
     This protocol allows for a Wayland clients to subscribe to input trigger
-    actions for "begin", "update,  and "end" notifications.
+    actions for "begin", "update, and "end" notifications.
 
     ext_input_trigger_action_v1 and the associated ext_input_trigger_registration_v1
     are based on the following discussion document:
