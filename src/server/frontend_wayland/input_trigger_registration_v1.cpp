@@ -15,6 +15,7 @@
  */
 
 #include "input_trigger_registration_v1.h"
+#include "input_trigger_action_v1.h"
 #include "mir/events/event.h"
 #include "mir/events/input_event.h"
 #include "mir/events/keyboard_event.h"
@@ -83,6 +84,12 @@ public:
 
     uint32_t const modifiers;
     uint32_t const keysym;
+
+    struct ExtraData
+    {
+        std::shared_ptr<mi::EventFilter> event_filter;
+        std::string action_token;
+    } extra_data;
 };
 
 class ActionControl : public wayland::InputTriggerActionControlV1
@@ -98,13 +105,14 @@ public:
 
         if(auto const keyboard_trigger = static_cast<KeyboardSymTrigger*>(wayland::InputTriggerV1::from(trigger)))
         {
-            auto const filter = std::make_shared<KeyboardEventFilter>(wayland::make_weak(keyboard_trigger));
-            triggers_to_filters.insert({trigger, filter});
-            cef->prepend(filter);
+            auto const token = "foo";
 
-            // keyboard_trigger->send_done_event();
-            // TODO: Set up token -> action control / trigger association
-            send_done_event("foo");
+            auto const filter = keyboard_trigger->extra_data.event_filter =
+                std::make_shared<KeyboardEventFilter>(wayland::make_weak(keyboard_trigger), token);
+            keyboard_trigger->extra_data.action_token = token;
+
+            cef->prepend(filter);
+            send_done_event(token);
         }
     }
     virtual void drop_input_trigger_event(struct wl_resource* /*trigger*/) override
@@ -115,46 +123,80 @@ private:
     struct KeyboardEventFilter : public mi::EventFilter
     {
         wayland::Weak<KeyboardSymTrigger> const trigger;
+        std::string const token;
 
-        explicit KeyboardEventFilter(wayland::Weak<KeyboardSymTrigger> trigger) :
-            trigger{std::move(trigger)}
+        bool began{false};
+
+        explicit KeyboardEventFilter(wayland::Weak<KeyboardSymTrigger> trigger, std::string const& token) :
+            trigger{std::move(trigger)},
+            token{token}
         {
         }
 
         bool handle(MirEvent const& event) override
         {
-            if(event.type() != mir_event_type_input)
+            if (event.type() != mir_event_type_input)
                 return false;
 
             auto const* input_event = event.to_input();
-            if(input_event->input_type() != mir_input_event_type_key)
+            if (input_event->input_type() != mir_input_event_type_key)
                 return false;
 
             auto const* key_event = input_event->to_keyboard();
 
-            auto const modifier_intersection = key_event->modifiers() & trigger.value().modifiers;
-            if (modifier_intersection != key_event->modifiers() || modifier_intersection != trigger.value().modifiers)
-                return false;
+            if (auto const action_iter = input_trigger_data.find(trigger.value().extra_data.action_token);
+                action_iter != input_trigger_data.end())
+            {
+                auto const [_, action] = *action_iter;
+                // TODO pass the clock and the token authority
+                auto const bogus_activation_token = "foobar";
+                auto const bogus_time = 0;
 
-            // I'm sure this is not going to blow up in my face later :)
-            if(static_cast<uint32_t>(key_event->keysym()) != trigger.value().keysym)
-                return false;
+                auto const modifier_intersection = key_event->modifiers() & trigger.value().modifiers;
+                if (modifier_intersection != key_event->modifiers() ||
+                    modifier_intersection != trigger.value().modifiers)
+                {
+                    if (began)
+                    {
+                        action->send_end_event(bogus_time, bogus_activation_token);
+                        began = false;
+                    }
 
-            // TODO: Get the action from the trigger and send a begin event
+                    return false;
+                }
 
-            return true;
+                // I'm sure this is not going to blow up in my face later :)
+                if (static_cast<uint32_t>(key_event->keysym()) != trigger.value().keysym)
+                {
+                    if (began)
+                    {
+                        action->send_end_event(bogus_time, bogus_activation_token);
+                        began = false;
+                    }
+
+                    return false;
+                }
+
+                action->send_begin_event(bogus_time, bogus_activation_token);
+                began = true;
+            }
+
+            // Invalid token
+            return false;
         }
     };
 
     std::shared_ptr<mi::CompositeEventFilter> const cef;
-    std::unordered_map<wl_resource*, std::shared_ptr<mi::EventFilter>> triggers_to_filters;
 };
 
 // The trigger is registered with the composite event filter when its added to a control object
 void InputTriggerRegistrationManagerV1::Instance::register_keyboard_sym_trigger(
     uint32_t modifiers, uint32_t keysym, struct wl_resource* id)
 {
-    new KeyboardSymTrigger{modifiers, keysym, id};
+    auto const* keyboard_trigger = new KeyboardSymTrigger{modifiers, keysym, id};
+
+    // TODO validation before done event
+    keyboard_trigger->send_done_event();
 }
 
 void InputTriggerRegistrationManagerV1::Instance::register_keyboard_code_trigger(

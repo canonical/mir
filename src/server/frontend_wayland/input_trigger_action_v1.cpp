@@ -21,15 +21,6 @@ namespace mir
 namespace frontend
 {
 
-class InputTriggerActionV1 : public wayland::InputTriggerActionV1
-{
-public:
-    InputTriggerActionV1(wl_resource* id) :
-        wayland::InputTriggerActionV1{id, Version<1>{}}
-    {
-    }
-};
-
 class InputTriggerActionManagerV1 : public wayland::InputTriggerActionManagerV1::Global
 {
 public:
@@ -41,10 +32,11 @@ public:
 private:
     class Instance : public wayland::InputTriggerActionManagerV1
     {
-        void get_input_trigger_action(std::string const& /*token*/, struct wl_resource* id) override
+        void get_input_trigger_action(std::string const& token, struct wl_resource* id) override
         {
             // TODO validate token
-            new InputTriggerActionV1{id};
+            auto const action = std::make_shared<InputTriggerActionV1>(id);
+            input_trigger_data.insert({token, action});
         }
 
     public:
@@ -58,6 +50,7 @@ private:
     {
         new Instance{new_ext_input_trigger_action_manager_v1};
     }
+
 };
 
 auto create_input_trigger_action_manager_v1(wl_display* display)
