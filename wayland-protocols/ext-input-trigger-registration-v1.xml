@@ -134,14 +134,12 @@
       <arg name="id" type="new_id" interface="ext_input_trigger_v1"/>
     </request>
 
-    <request name="register_modifier_trigger">
+    <request name="register_modifier_hold_trigger">
       <description summary="register input trigger">
         This request creates an input trigger and asks the compositor to reserve
         it to the manager.
 
-        This describes a trigger based on holding or tapping one or more
-        modifier keys. As modifiers are used normally in combination with other
-        keys, the hold_delay and tap_count should not both be zero.
+        This describes a trigger based on holding one or more modifier keys.
 
         The compositor will send either the ext_input_trigger_v1.done or
         ext_input_trigger_v1.failed event on the created object in
@@ -149,10 +147,29 @@
 
         Input actions triggered by this request will result in an
         ext_input_trigger_action_v1.begin event when triggered
-        target edge(s) and ext_input_trigger_action_v1.end when the trigger ends.
+        and ext_input_trigger_action_v1.end when the trigger ends.
       </description>
       <arg name="modifiers" type="uint" enum="modifiers"/>
-      <arg name="hold_delay" type="uint" summary="minimum milliseconds pressed before triggering"/>
+      <arg name="id" type="new_id" interface="ext_input_trigger_v1"/>
+    </request>
+
+    <request name="register_modifier_tap_trigger">
+      <description summary="register input trigger">
+        This request creates an input trigger and asks the compositor to reserve
+        it to the manager.
+
+        This describes a trigger based tapping one a modifier key. The tap_count
+        may not be zero.
+
+        The compositor will send either the ext_input_trigger_v1.done or
+        ext_input_trigger_v1.failed event on the created object in
+        response to this request.
+
+        Input actions triggered by this request will result in an
+        ext_input_trigger_action_v1.begin event when triggered
+        and ext_input_trigger_action_v1.end when the trigger ends.
+      </description>
+      <arg name="modifier" type="uint" enum="modifier"/>
       <arg name="tap_count" type="uint" summary="number of consecutive taps before triggering"/>
       <arg name="id" type="new_id" interface="ext_input_trigger_v1"/>
     </request>
