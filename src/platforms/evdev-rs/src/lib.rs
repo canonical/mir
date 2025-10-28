@@ -34,6 +34,7 @@ use input::event::pointer::PointerScrollEvent;
 use input::event::EventTrait;
 use input::AsRaw;
 use libc;
+use nix::poll::{poll, PollFd, PollFlags};
 use nix::unistd;
 use std::os::fd::{AsFd, AsRawFd, BorrowedFd, FromRawFd};
 use std::os::unix::ffi::OsStrExt;
@@ -52,9 +53,12 @@ pub fn evdev_rs_create(
     return Box::new(PlatformRs {
         bridge,
         device_registry: device_registry,
-        handle: None,
         wfd: None,
+        rfd: None,
+        rx: None,
         tx: None,
+        state: None,
+        is_running: false,
     });
 }
 
@@ -65,14 +69,19 @@ pub struct PlatformRs {
     /// The input device registry is used for registering and unregistering input devices.
     device_registry: cxx::SharedPtr<ffi::InputDeviceRegistry>,
 
-    /// The handle of the thread running the input loop.
-    handle: Option<thread::JoinHandle<()>>,
-
     /// The write end of the pipe used to wake the input thread.
     wfd: Option<io::OwnedFd>,
 
+    rfd: Option<io::OwnedFd>,
+
+    rx: Option<mpsc::Receiver<ThreadCommand>>,
+
     /// The channel used to send non-libinput commands to the input thread.
     tx: Option<mpsc::Sender<ThreadCommand>>,
+
+    state: Option<LibinputLoopState>,
+
+    is_running: bool,
 }
 
 impl PlatformRs {
@@ -84,15 +93,51 @@ impl PlatformRs {
         println!("Starting the evdev-rs platform");
 
         let bridge = self.bridge.clone();
-        let device_registry = self.device_registry.clone();
         let (rfd, wfd) = nix::unistd::pipe().unwrap();
         let (tx, rx) = create_thread_command_channel();
 
         self.wfd = Some(wfd);
+        self.rfd = Some(rfd);
         self.tx = Some(tx);
-        self.handle = Some(thread::spawn(move || {
-            PlatformRs::run(bridge, device_registry, rfd, rx);
-        }));
+        self.rx = Some(rx);
+
+        let mut libinput = input::Libinput::new_with_udev(LibinputInterfaceImpl {
+            bridge: bridge.clone(),
+            fds: Vec::new(),
+        });
+
+        // TODO: This does not handle multi-seat. If/when we do multi-seat, this will need to be refactored.
+        let started = match libinput.udev_assign_seat("seat0") {
+            Err(_) => false,
+            _ => true,
+        };
+
+        if !started {
+            eprintln!("Failed to call udev_assign_seat, not running the libinput loop");
+            return;
+        }
+
+        self.state = Some(LibinputLoopState {
+            libinput: libinput,
+            known_devices: Vec::new(),
+            next_device_id: 0,
+            button_state: 0,
+            pointer_x: 0.0,
+            pointer_y: 0.0,
+            scroll_axis_x_accum: 0.0,
+            scroll_axis_y_accum: 0.0,
+            x_scroll_scale: 1.0,
+            y_scroll_scale: 1.0,
+        });
+        self.is_running = true;
+    }
+
+    pub unsafe fn libinput_fd(&mut self) -> i32 {
+        self.state.as_mut().unwrap().libinput.as_raw_fd()
+    }
+
+    pub fn communication_fd(&mut self) -> i32 {
+        self.rfd.as_mut().unwrap().as_raw_fd()
     }
 
     pub fn continue_after_config(&self) {}
@@ -102,16 +147,29 @@ impl PlatformRs {
     ///
     /// This method will signal the input thread to stop and wait for it to finish.
     pub fn stop(&mut self) {
+        // Note: When the main loop exits, we need to remove all devices from the device registry
+        // or else Mir will try to free the devices later but we won't have access to the platform
+        // code at that point. This results in a segfault.
+        for device_info in self.state.as_mut().unwrap().known_devices.iter().rev() {
+            println!("Removing device id {} from registry", device_info.id);
+            // # Safety
+            //
+            // Because we need to use pin_mut_unchecked, this is unsafe.
+            unsafe {
+                self.device_registry
+                    .clone()
+                    .pin_mut_unchecked()
+                    .remove_device(&device_info.input_device);
+            }
+        }
+
+        self.state.as_mut().unwrap().known_devices.clear();
+
         if let Some(tx) = &self.tx {
             let _ = tx.send(ThreadCommand::Stop);
             if let Some(wfd) = &self.wfd {
                 let _ = nix::unistd::write(wfd.as_fd(), &[0u8]);
             }
-        }
-
-        if let Some(handle) = self.handle.take() {
-            let _ = handle.join();
-            self.handle = None;
         }
 
         if let Some(wfd) = self.wfd.take() {
@@ -134,103 +192,24 @@ impl PlatformRs {
         })
     }
 
-    fn run(
-        bridge_locked: cxx::SharedPtr<ffi::PlatformBridgeC>,
-        device_registry: cxx::SharedPtr<ffi::InputDeviceRegistry>,
-        rfd: io::OwnedFd,
-        rx: std::sync::mpsc::Receiver<ThreadCommand>,
-    ) {
-        let mut state = LibinputLoopState {
-            libinput: input::Libinput::new_with_udev(LibinputInterfaceImpl {
-                bridge: bridge_locked.clone(),
-                fds: Vec::new(),
-            }),
-            known_devices: Vec::new(),
-            next_device_id: 0,
-            button_state: 0,
-            pointer_x: 0.0,
-            pointer_y: 0.0,
-            scroll_axis_x_accum: 0.0,
-            scroll_axis_y_accum: 0.0,
-            x_scroll_scale: 1.0,
-            y_scroll_scale: 1.0,
-        };
-
-        // TODO: This does not handle multi-seat. If/when we do multi-seat, this will need to be refactored.
-        let started = match state.libinput.udev_assign_seat("seat0") {
-            Err(_) => false,
-            _ => true,
-        };
-
-        if !started {
-            eprintln!("Failed to call udev_assign_seat, not running the libinput loop");
+    pub fn process(&mut self) {
+        if !self.is_running {
             return;
         }
 
-        let mut fds = [
-            libc::pollfd {
-                fd: state.libinput.as_raw_fd(),
-                events: libc::POLLIN,
-                revents: 0,
-            },
-            libc::pollfd {
-                fd: rfd.as_raw_fd(),
-                events: libc::POLLIN,
-                revents: 0,
-            },
-        ];
+        PlatformRs::process_libinput_events(
+            &mut self.state.as_mut().unwrap(),
+            self.device_registry.clone(),
+            self.bridge.clone(),
+        );
 
-        let mut is_running = true;
-        while is_running {
-            // # Safety
-            //
-            // `libc::poll` requires that the first parameter be a pointer to an array of `struct pollfd`, with the second parameter being at most the number of valid elements of that array.
-            // `fds` is an array of valid `pollfd`s of length `fds.len()`, so this is safe by construction
-            let ret = unsafe {
-                libc::poll(fds.as_mut_ptr(), fds.len() as _, -1) // -1 = wait indefinitely
-            };
-
-            if ret < 0 {
-                println!("Error polling libinput fd");
-                return;
-            }
-
-            if (fds[0].revents & libc::POLLIN) != 0 {
-                PlatformRs::process_libinput_events(
-                    &mut state,
-                    device_registry.clone(),
-                    bridge_locked.clone(),
-                );
-            }
-
-            if (fds[1].revents & libc::POLLIN) != 0 {
-                PlatformRs::process_thread_events(
-                    rfd.try_clone().unwrap(),
-                    &rx,
-                    &mut state,
-                    &bridge_locked,
-                    &mut is_running,
-                );
-            }
-        }
-
-        // Note: When the main loop exits, we need to remove all devices from the device registry
-        // or else Mir will try to free the devices later but we won't have access to the platform
-        // code at that point. This results in a segfault.
-        for device_info in state.known_devices.iter().rev() {
-            println!("Removing device id {} from registry", device_info.id);
-            // # Safety
-            //
-            // Because we need to use pin_mut_unchecked, this is unsafe.
-            unsafe {
-                device_registry
-                    .clone()
-                    .pin_mut_unchecked()
-                    .remove_device(&device_info.input_device);
-            }
-        }
-
-        state.known_devices.clear();
+        PlatformRs::process_thread_events(
+            self.rfd.as_mut().unwrap().try_clone().unwrap(),
+            &self.rx.as_mut().unwrap(),
+            &mut self.state.as_mut().unwrap(),
+            &self.bridge,
+            &mut self.is_running,
+        );
     }
 
     fn process_libinput_events(
@@ -764,6 +743,13 @@ impl PlatformRs {
             id: i32,
         ) -> Option<&'a mut DeviceInfo> {
             state.known_devices.iter_mut().find(|d| d.id == id)
+        }
+
+        let mut fds = [PollFd::new(rfd.as_fd(), PollFlags::POLLIN)];
+        let timeout: u8 = 0;
+        let num_ready = poll(&mut fds, timeout);
+        if num_ready.is_err() || num_ready.unwrap() <= 0 {
+            return;
         }
 
         let mut buf = [0u8];
@@ -1305,6 +1291,9 @@ mod ffi {
         fn continue_after_config(self: &PlatformRs);
         fn pause_for_config(self: &PlatformRs);
         fn stop(self: &mut PlatformRs);
+        unsafe fn libinput_fd(self: &mut PlatformRs) -> i32;
+        fn communication_fd(self: &mut PlatformRs) -> i32;
+        pub fn process(self: &mut PlatformRs);
         fn create_device_observer(self: &PlatformRs) -> Box<DeviceObserverRs>;
         fn create_input_device(self: &PlatformRs, device_id: i32) -> Box<InputDeviceRs<'_>>;
 

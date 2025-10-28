@@ -18,6 +18,8 @@
 #include "platform_bridge.h"
 
 #include "mir/dispatch/dispatchable.h"
+#include "mir/dispatch/multiplexing_dispatchable.h"
+#include "mir/dispatch/readable_fd.h"
 #include "rust/cxx.h"
 #include "mir/optional_value.h"
 #include "mir_platforms_evdev_rs/src/lib.rs.h"
@@ -159,9 +161,11 @@ class miers::Platform::Self
 public:
     Self(Platform* platform, std::shared_ptr<ConsoleServices> const& console,
         std::shared_ptr<InputDeviceRegistry> const& input_device_registry)
-        : platform_impl(evdev_rs_create(std::make_shared<PlatformBridgeC>(platform, console), input_device_registry)) {}
+        : platform_impl(evdev_rs_create(std::make_shared<PlatformBridgeC>(platform, console), input_device_registry)),
+          dispatchable{std::make_shared<md::MultiplexingDispatchable>()} {}
 
     rust::Box<PlatformRs> platform_impl;
+    std::shared_ptr<md::MultiplexingDispatchable> dispatchable;
 };
 
 miers::Platform::Platform(
@@ -173,12 +177,21 @@ miers::Platform::Platform(
 
 std::shared_ptr<mir::dispatch::Dispatchable> miers::Platform::dispatchable()
 {
-    return nullptr;
+    return self->dispatchable;
 }
 
 void miers::Platform::start()
 {
     self->platform_impl->start();
+
+    auto const libinput_dispatch = std::make_shared<md::ReadableFd>(
+        Fd{IntOwnedFd{self->platform_impl->libinput_fd()}},
+        [&]() { self->platform_impl->process(); });
+    auto const communication_dispatch = std::make_shared<md::ReadableFd>(
+        Fd{IntOwnedFd{self->platform_impl->communication_fd()}},
+        [&]() { self->platform_impl->process(); });
+    self->dispatchable->add_watch(libinput_dispatch);
+    self->dispatchable->add_watch(communication_dispatch);
 }
 
 void miers::Platform::continue_after_config()
