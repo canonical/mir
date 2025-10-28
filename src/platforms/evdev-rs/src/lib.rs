@@ -24,6 +24,7 @@
 // 2. All enums are changed to i32 for ABI stability
 
 use cxx;
+use cxx::SharedPtr;
 use input;
 use input::event;
 use input::event::keyboard;
@@ -34,13 +35,15 @@ use input::event::pointer::PointerScrollEvent;
 use input::event::EventTrait;
 use input::AsRaw;
 use libc;
-use nix::poll::{poll, PollFd, PollFlags};
 use nix::unistd;
-use std::os::fd::{AsFd, AsRawFd, BorrowedFd, FromRawFd};
+use std::os::fd::{AsRawFd, FromRawFd};
 use std::os::unix::ffi::OsStrExt;
 use std::os::unix::io;
-use std::sync::mpsc;
+use std::sync::Arc;
+use std::sync::Mutex;
 use std::thread;
+
+use crate::ffi::PlatformBridgeC;
 
 /// Creates a platform on the Rust side of things.
 ///
@@ -53,12 +56,7 @@ pub fn evdev_rs_create(
     return Box::new(PlatformRs {
         bridge,
         device_registry: device_registry,
-        wfd: None,
-        rfd: None,
-        rx: None,
-        tx: None,
         state: None,
-        is_running: false,
     });
 }
 
@@ -69,19 +67,7 @@ pub struct PlatformRs {
     /// The input device registry is used for registering and unregistering input devices.
     device_registry: cxx::SharedPtr<ffi::InputDeviceRegistry>,
 
-    /// The write end of the pipe used to wake the input thread.
-    wfd: Option<io::OwnedFd>,
-
-    rfd: Option<io::OwnedFd>,
-
-    rx: Option<mpsc::Receiver<ThreadCommand>>,
-
-    /// The channel used to send non-libinput commands to the input thread.
-    tx: Option<mpsc::Sender<ThreadCommand>>,
-
-    state: Option<LibinputLoopState>,
-
-    is_running: bool,
+    state: Option<Arc<Mutex<LibinputLoopState>>>,
 }
 
 impl PlatformRs {
@@ -93,14 +79,6 @@ impl PlatformRs {
         println!("Starting the evdev-rs platform");
 
         let bridge = self.bridge.clone();
-        let (rfd, wfd) = nix::unistd::pipe().unwrap();
-        let (tx, rx) = create_thread_command_channel();
-
-        self.wfd = Some(wfd);
-        self.rfd = Some(rfd);
-        self.tx = Some(tx);
-        self.rx = Some(rx);
-
         let mut libinput = input::Libinput::new_with_udev(LibinputInterfaceImpl {
             bridge: bridge.clone(),
             fds: Vec::new(),
@@ -117,7 +95,7 @@ impl PlatformRs {
             return;
         }
 
-        self.state = Some(LibinputLoopState {
+        self.state = Some(Arc::new(Mutex::new(LibinputLoopState {
             libinput: libinput,
             known_devices: Vec::new(),
             next_device_id: 0,
@@ -128,16 +106,17 @@ impl PlatformRs {
             scroll_axis_y_accum: 0.0,
             x_scroll_scale: 1.0,
             y_scroll_scale: 1.0,
-        });
-        self.is_running = true;
+        })));
     }
 
     pub unsafe fn libinput_fd(&mut self) -> i32 {
-        self.state.as_mut().unwrap().libinput.as_raw_fd()
-    }
-
-    pub fn communication_fd(&mut self) -> i32 {
-        self.rfd.as_mut().unwrap().as_raw_fd()
+        self.state
+            .as_mut()
+            .unwrap()
+            .lock()
+            .unwrap()
+            .libinput
+            .as_raw_fd()
     }
 
     pub fn continue_after_config(&self) {}
@@ -150,12 +129,23 @@ impl PlatformRs {
         // Note: When the main loop exits, we need to remove all devices from the device registry
         // or else Mir will try to free the devices later but we won't have access to the platform
         // code at that point. This results in a segfault.
-        for device_info in self.state.as_mut().unwrap().known_devices.iter().rev() {
+        for device_info in self
+            .state
+            .as_mut()
+            .unwrap()
+            .lock()
+            .unwrap()
+            .known_devices
+            .iter_mut()
+            .rev()
+        {
             println!("Removing device id {} from registry", device_info.id);
             // # Safety
             //
             // Because we need to use pin_mut_unchecked, this is unsafe.
             unsafe {
+                device_info.input_sink = None;
+                device_info.event_builder = None;
                 self.device_registry
                     .clone()
                     .pin_mut_unchecked()
@@ -163,53 +153,36 @@ impl PlatformRs {
             }
         }
 
-        self.state.as_mut().unwrap().known_devices.clear();
-
-        if let Some(tx) = &self.tx {
-            let _ = tx.send(ThreadCommand::Stop);
-            if let Some(wfd) = &self.wfd {
-                let _ = nix::unistd::write(wfd.as_fd(), &[0u8]);
-            }
-        }
-
-        if let Some(wfd) = self.wfd.take() {
-            drop(wfd);
-            self.wfd = None;
-        }
-
-        self.tx = None;
+        self.state = None;
     }
 
     pub fn create_device_observer(&self) -> Box<DeviceObserverRs> {
         Box::new(DeviceObserverRs::new())
     }
 
-    fn create_input_device(&self, device_id: i32) -> Box<InputDeviceRs<'_>> {
+    fn create_input_device(&mut self, device_id: i32) -> Box<InputDeviceRs> {
         Box::new(InputDeviceRs {
             device_id: device_id,
-            wfd: self.wfd.as_ref().unwrap().as_fd(),
-            tx: self.tx.clone().unwrap(),
+            state: self.state.as_mut().unwrap().clone(),
+            bridge: self.bridge.clone(),
         })
     }
 
     pub fn process(&mut self) {
-        if !self.is_running {
+        if self.state.is_none() {
             return;
         }
 
-        PlatformRs::process_libinput_events(
-            &mut self.state.as_mut().unwrap(),
-            self.device_registry.clone(),
-            self.bridge.clone(),
-        );
-
-        PlatformRs::process_thread_events(
-            self.rfd.as_mut().unwrap().try_clone().unwrap(),
-            &self.rx.as_mut().unwrap(),
-            &mut self.state.as_mut().unwrap(),
-            &self.bridge,
-            &mut self.is_running,
-        );
+        match self.state.as_mut().unwrap().try_lock() {
+            Ok(mut state) => {
+                PlatformRs::process_libinput_events(
+                    &mut *state,
+                    self.device_registry.clone(),
+                    self.bridge.clone(),
+                );
+            }
+            _ => {}
+        }
     }
 
     fn process_libinput_events(
@@ -730,200 +703,6 @@ impl PlatformRs {
             }
         }
     }
-
-    fn process_thread_events(
-        rfd: io::OwnedFd,
-        rx: &mpsc::Receiver<ThreadCommand>,
-        state: &mut LibinputLoopState,
-        bridge_locked: &cxx::SharedPtr<ffi::PlatformBridgeC>,
-        is_running: &mut bool,
-    ) {
-        fn find_device_by_id<'a>(
-            state: &'a mut LibinputLoopState,
-            id: i32,
-        ) -> Option<&'a mut DeviceInfo> {
-            state.known_devices.iter_mut().find(|d| d.id == id)
-        }
-
-        let mut fds = [PollFd::new(rfd.as_fd(), PollFlags::POLLIN)];
-        let timeout: u8 = 0;
-        let num_ready = poll(&mut fds, timeout);
-        if num_ready.is_err() || num_ready.unwrap() <= 0 {
-            return;
-        }
-
-        let mut buf = [0u8];
-        nix::unistd::read(&rfd, &mut buf).unwrap();
-        // handle commands
-        while let Ok(cmd) = rx.try_recv() {
-            match cmd {
-                ThreadCommand::Stop => {
-                    *is_running = false;
-                }
-                ThreadCommand::GetDeviceInfo(id, tx) => {
-                    if let Some(device_info) = find_device_by_id(state, id) {
-                        let mut capabilities: u32 = 0;
-                        if device_info
-                            .device
-                            .has_capability(input::DeviceCapability::Keyboard)
-                        {
-                            capabilities = capabilities
-                                | ffi::DeviceCapability::keyboard.repr
-                                | ffi::DeviceCapability::alpha_numeric.repr;
-                        }
-                        if device_info
-                            .device
-                            .has_capability(input::DeviceCapability::Pointer)
-                        {
-                            capabilities = capabilities | ffi::DeviceCapability::pointer.repr;
-                        }
-                        if device_info
-                            .device
-                            .has_capability(input::DeviceCapability::Touch)
-                        {
-                            capabilities = capabilities
-                                | ffi::DeviceCapability::touchpad.repr
-                                | ffi::DeviceCapability::pointer.repr;
-                        }
-
-                        let info = InputDeviceInfoRs {
-                            name: device_info.device.name().to_string(),
-                            unique_id: device_info.device.name().to_string()
-                                + &device_info.device.sysname().to_string()
-                                + &device_info.device.id_vendor().to_string()
-                                + &device_info.device.id_product().to_string(),
-                            capabilities: capabilities,
-                            valid: true,
-                        };
-                        let _ = tx.send(info);
-                    } else {
-                        let info = InputDeviceInfoRs {
-                            name: "".to_string(),
-                            unique_id: "".to_string(),
-                            capabilities: 0,
-                            valid: false,
-                        };
-                        let _ = tx.send(info);
-                    }
-                }
-                ThreadCommand::Start(id, input_sink, event_builder) => {
-                    if let Some(device_info) = find_device_by_id(state, id) {
-                        device_info.input_sink = Some(input_sink);
-                        // # Safety
-                        //
-                        // Calling as_ptr on a NonNull is unsafe.
-                        device_info.event_builder = Some(unsafe {
-                            bridge_locked.create_event_builder_wrapper(event_builder.0.as_ptr())
-                        });
-                    }
-                }
-                ThreadCommand::GetPointerSettings(id, tx) => {
-                    if let Some(device_info) = find_device_by_id(state, id) {
-                        match device_info
-                            .device
-                            .has_capability(input::DeviceCapability::Pointer)
-                        {
-                            true => {
-                                let handedness = if device_info.device.config_left_handed() {
-                                    ffi::MirPointerHandedness::mir_pointer_handedness_left.repr
-                                } else {
-                                    ffi::MirPointerHandedness::mir_pointer_handedness_right.repr
-                                };
-
-                                let acceleration = if let Some(accel_profile) =
-                                    device_info.device.config_accel_profile()
-                                {
-                                    if accel_profile == input::AccelProfile::Adaptive {
-                                        ffi::MirPointerAcceleration::mir_pointer_acceleration_adaptive.repr
-                                    } else {
-                                        ffi::MirPointerAcceleration::mir_pointer_acceleration_none
-                                            .repr
-                                    }
-                                } else {
-                                    eprintln!(
-                                        "Acceleration profile should be provided, but none is."
-                                    );
-                                    ffi::MirPointerAcceleration::mir_pointer_acceleration_none.repr
-                                };
-
-                                let acceleration_bias =
-                                    device_info.device.config_accel_speed() as f64;
-
-                                let settings = ffi::PointerSettingsRs {
-                                    is_set: true,
-                                    handedness: handedness,
-                                    cursor_acceleration_bias: acceleration_bias,
-                                    acceleration: acceleration,
-                                    horizontal_scroll_scale: state.x_scroll_scale,
-                                    vertical_scroll_scale: state.y_scroll_scale,
-                                    has_error: false,
-                                };
-                                let _ = tx.send(settings);
-                            }
-                            false => {
-                                eprintln!("Attempting to get pointer settings from a device that is not pointer capable.");
-                                let mut settings = ffi::PointerSettingsRs::empty();
-                                settings.has_error = true;
-                                let _ = tx.send(settings);
-                            }
-                        }
-                    } else {
-                        eprintln!(
-                            "Calling get pointer settings on a device that is not registered."
-                        );
-                        let mut settings = ffi::PointerSettingsRs::empty();
-                        settings.has_error = true;
-                        let _ = tx.send(settings);
-                    }
-                }
-                ThreadCommand::SetPointerSettings(id, settings) => {
-                    if let Some(device_info) = find_device_by_id(state, id) {
-                        if device_info
-                            .device
-                            .has_capability(input::DeviceCapability::Pointer)
-                        {
-                            println!(
-                                "{}, {}",
-                                device_info.device.name(),
-                                device_info
-                                    .device
-                                    .has_capability(input::DeviceCapability::Pointer)
-                            );
-                            let left_handed = match settings.handedness {
-                                x if x
-                                    == ffi::MirPointerHandedness::mir_pointer_handedness_left
-                                        .repr =>
-                                {
-                                    true
-                                }
-                                _ => false,
-                            };
-                            let _ = device_info.device.config_left_handed_set(left_handed);
-
-                            let accel_profile = match settings.acceleration {
-                                x if x == ffi::MirPointerAcceleration::mir_pointer_acceleration_adaptive.repr => {
-                                    input::AccelProfile::Adaptive
-                                }
-                                _ => input::AccelProfile::Flat,
-                            };
-                            let _ = device_info.device.config_accel_set_profile(accel_profile);
-                            let _ = device_info
-                                .device
-                                .config_accel_set_speed(settings.cursor_acceleration_bias as f64);
-                            state.x_scroll_scale = settings.horizontal_scroll_scale;
-                            state.y_scroll_scale = settings.vertical_scroll_scale;
-                        } else {
-                            eprintln!("Device does not have the pointer capability.");
-                        }
-                    } else {
-                        eprintln!(
-                            "Unable to set the pointer settings because the device was not found."
-                        );
-                    }
-                }
-            }
-        }
-    }
 }
 
 struct LibinputInterfaceImpl {
@@ -990,6 +769,12 @@ struct LibinputLoopState {
     y_scroll_scale: f64,
 }
 
+impl LibinputLoopState {
+    pub fn find_device_by_id<'a>(&mut self, id: i32) -> Option<&'_ mut DeviceInfo> {
+        self.known_devices.iter_mut().find(|d| d.id == id)
+    }
+}
+
 struct DeviceInfo {
     id: i32,
     device: input::Device,
@@ -1036,9 +821,6 @@ impl InputSinkPtr {
 // These needs to be unsafe because we are asserting that Send and Sync are valid on them.
 unsafe impl Send for InputSinkPtr {}
 unsafe impl Sync for InputSinkPtr {}
-pub struct EventBuilderPtr(std::ptr::NonNull<ffi::EventBuilder>);
-unsafe impl Send for EventBuilderPtr {}
-unsafe impl Sync for EventBuilderPtr {}
 
 pub struct InputDeviceInfoRs {
     name: String,
@@ -1065,38 +847,6 @@ impl InputDeviceInfoRs {
     }
 }
 
-enum ThreadCommand {
-    Start(i32, InputSinkPtr, EventBuilderPtr),
-    GetDeviceInfo(i32, mpsc::Sender<InputDeviceInfoRs>),
-    GetPointerSettings(i32, mpsc::Sender<ffi::PointerSettingsRs>),
-    SetPointerSettings(i32, ffi::PointerSettingsC),
-    Stop,
-}
-
-// Warning(mattkae):
-//   We can't create channel inside of the PlatformRs implementation because
-//   the "mod ffi" block gets confused when parsing the template, so it thinks that the
-//   closing bracket is an equality operator. Moving it out to the global scope fixes
-//   things.
-
-fn create_thread_command_channel() -> (mpsc::Sender<ThreadCommand>, mpsc::Receiver<ThreadCommand>) {
-    mpsc::channel()
-}
-
-fn create_device_info_rs_channel() -> (
-    mpsc::Sender<InputDeviceInfoRs>,
-    mpsc::Receiver<InputDeviceInfoRs>,
-) {
-    mpsc::channel()
-}
-
-fn create_pointer_settings_rs_channel() -> (
-    mpsc::Sender<ffi::PointerSettingsRs>,
-    mpsc::Receiver<ffi::PointerSettingsRs>,
-) {
-    mpsc::channel()
-}
-
 pub struct DeviceObserverRs {
     fd: Option<i32>,
 }
@@ -1117,58 +867,174 @@ impl DeviceObserverRs {
     }
 }
 
-pub struct InputDeviceRs<'fd> {
+pub struct InputDeviceRs {
     device_id: i32,
-    wfd: BorrowedFd<'fd>,
-    tx: mpsc::Sender<ThreadCommand>,
+    state: Arc<Mutex<LibinputLoopState>>,
+    bridge: SharedPtr<PlatformBridgeC>,
 }
 
-impl<'fd> InputDeviceRs<'fd> {
+impl InputDeviceRs {
     pub fn start(
         &mut self,
         input_sink: *mut ffi::InputSink,
         event_builder: *mut ffi::EventBuilder,
     ) {
-        self.tx
-            .send(ThreadCommand::Start(
-                self.device_id,
-                InputSinkPtr(std::ptr::NonNull::new(input_sink).unwrap()),
-                EventBuilderPtr(std::ptr::NonNull::new(event_builder).unwrap()),
-            ))
-            .unwrap();
-        nix::unistd::write(&self.wfd, &[0u8]).unwrap();
+        println!("Starting");
+        if let Some(device_info) = self.state.lock().unwrap().find_device_by_id(self.device_id) {
+            device_info.input_sink =
+                Some(InputSinkPtr(std::ptr::NonNull::new(input_sink).unwrap()));
+
+            // # Safety
+            //
+            // Calling as_ptr on a NonNull is unsafe.
+            device_info.event_builder =
+                Some(unsafe { self.bridge.create_event_builder_wrapper(event_builder) });
+        }
     }
 
     pub fn stop(&mut self) {}
 
     pub fn get_device_info(&self) -> Box<InputDeviceInfoRs> {
-        let (tx, rx) = create_device_info_rs_channel();
-        self.tx
-            .send(ThreadCommand::GetDeviceInfo(self.device_id, tx))
-            .unwrap();
-        nix::unistd::write(&self.wfd, &[0u8]).unwrap();
-        let device_info = rx.recv().unwrap();
-        Box::new(device_info)
+        println!("getDeviceInfo");
+        if let Some(device_info) = self.state.lock().unwrap().find_device_by_id(self.device_id) {
+            let mut capabilities: u32 = 0;
+            if device_info
+                .device
+                .has_capability(input::DeviceCapability::Keyboard)
+            {
+                capabilities = capabilities
+                    | ffi::DeviceCapability::keyboard.repr
+                    | ffi::DeviceCapability::alpha_numeric.repr;
+            }
+            if device_info
+                .device
+                .has_capability(input::DeviceCapability::Pointer)
+            {
+                capabilities = capabilities | ffi::DeviceCapability::pointer.repr;
+            }
+            if device_info
+                .device
+                .has_capability(input::DeviceCapability::Touch)
+            {
+                capabilities = capabilities
+                    | ffi::DeviceCapability::touchpad.repr
+                    | ffi::DeviceCapability::pointer.repr;
+            }
+
+            let info = InputDeviceInfoRs {
+                name: device_info.device.name().to_string(),
+                unique_id: device_info.device.name().to_string()
+                    + &device_info.device.sysname().to_string()
+                    + &device_info.device.id_vendor().to_string()
+                    + &device_info.device.id_product().to_string(),
+                capabilities: capabilities,
+                valid: true,
+            };
+            return Box::new(info);
+        } else {
+            let info = InputDeviceInfoRs {
+                name: "".to_string(),
+                unique_id: "".to_string(),
+                capabilities: 0,
+                valid: false,
+            };
+            return Box::new(info);
+        }
     }
 
     pub fn get_pointer_settings(&self) -> Box<ffi::PointerSettingsRs> {
-        let (tx, rx) = create_pointer_settings_rs_channel();
-        self.tx
-            .send(ThreadCommand::GetPointerSettings(self.device_id, tx))
-            .unwrap();
-        nix::unistd::write(&self.wfd, &[0u8]).unwrap();
-        let pointer_settings = rx.recv().unwrap();
-        Box::new(pointer_settings)
+        println!("getPointerSettings");
+        let mut state = self.state.lock().unwrap();
+        if let Some(device_info) = state.find_device_by_id(self.device_id) {
+            match device_info
+                .device
+                .has_capability(input::DeviceCapability::Pointer)
+            {
+                true => {
+                    let handedness = if device_info.device.config_left_handed() {
+                        ffi::MirPointerHandedness::mir_pointer_handedness_left.repr
+                    } else {
+                        ffi::MirPointerHandedness::mir_pointer_handedness_right.repr
+                    };
+
+                    let acceleration =
+                        if let Some(accel_profile) = device_info.device.config_accel_profile() {
+                            if accel_profile == input::AccelProfile::Adaptive {
+                                ffi::MirPointerAcceleration::mir_pointer_acceleration_adaptive.repr
+                            } else {
+                                ffi::MirPointerAcceleration::mir_pointer_acceleration_none.repr
+                            }
+                        } else {
+                            eprintln!("Acceleration profile should be provided, but none is.");
+                            ffi::MirPointerAcceleration::mir_pointer_acceleration_none.repr
+                        };
+
+                    let acceleration_bias = device_info.device.config_accel_speed() as f64;
+
+                    return Box::new(ffi::PointerSettingsRs {
+                        is_set: true,
+                        handedness: handedness,
+                        cursor_acceleration_bias: acceleration_bias,
+                        acceleration: acceleration,
+                        horizontal_scroll_scale: state.x_scroll_scale,
+                        vertical_scroll_scale: state.y_scroll_scale,
+                        has_error: false,
+                    });
+                }
+                false => {
+                    eprintln!("Attempting to get pointer settings from a device that is not pointer capable.");
+                    return Box::new(ffi::PointerSettingsRs::empty());
+                }
+            }
+        } else {
+            eprintln!("Calling get pointer settings on a device that is not registered.");
+            let mut settings = ffi::PointerSettingsRs::empty();
+            settings.has_error = true;
+            return Box::new(settings);
+        }
     }
 
     pub fn set_pointer_settings(&self, settings: &ffi::PointerSettingsC) {
-        self.tx
-            .send(ThreadCommand::SetPointerSettings(
-                self.device_id,
-                settings.clone(),
-            ))
-            .unwrap();
-        nix::unistd::write(&self.wfd, &[0u8]).unwrap();
+        println!("setPointerSettings");
+        let mut state = self.state.lock().unwrap();
+        if let Some(device_info) = state.find_device_by_id(self.device_id) {
+            if device_info
+                .device
+                .has_capability(input::DeviceCapability::Pointer)
+            {
+                println!(
+                    "{}, {}",
+                    device_info.device.name(),
+                    device_info
+                        .device
+                        .has_capability(input::DeviceCapability::Pointer)
+                );
+                let left_handed = match settings.handedness {
+                    x if x == ffi::MirPointerHandedness::mir_pointer_handedness_left.repr => true,
+                    _ => false,
+                };
+                let _ = device_info.device.config_left_handed_set(left_handed);
+
+                let accel_profile = match settings.acceleration {
+                    x if x
+                        == ffi::MirPointerAcceleration::mir_pointer_acceleration_adaptive.repr =>
+                    {
+                        input::AccelProfile::Adaptive
+                    }
+                    _ => input::AccelProfile::Flat,
+                };
+                let _ = device_info.device.config_accel_set_profile(accel_profile);
+                let _ = device_info
+                    .device
+                    .config_accel_set_speed(settings.cursor_acceleration_bias as f64);
+                state.x_scroll_scale = settings.horizontal_scroll_scale;
+                state.y_scroll_scale = settings.vertical_scroll_scale;
+            } else {
+                eprintln!("Device does not have the pointer capability.");
+            }
+        } else {
+            eprintln!("Unable to set the pointer settings because the device was not found.");
+        }
     }
 }
 
@@ -1284,7 +1150,7 @@ mod ffi {
     extern "Rust" {
         type PlatformRs;
         type DeviceObserverRs;
-        type InputDeviceRs<'fd>;
+        type InputDeviceRs;
         type InputDeviceInfoRs;
 
         fn start(self: &mut PlatformRs);
@@ -1292,10 +1158,9 @@ mod ffi {
         fn pause_for_config(self: &PlatformRs);
         fn stop(self: &mut PlatformRs);
         unsafe fn libinput_fd(self: &mut PlatformRs) -> i32;
-        fn communication_fd(self: &mut PlatformRs) -> i32;
         pub fn process(self: &mut PlatformRs);
         fn create_device_observer(self: &PlatformRs) -> Box<DeviceObserverRs>;
-        fn create_input_device(self: &PlatformRs, device_id: i32) -> Box<InputDeviceRs<'_>>;
+        fn create_input_device(self: &mut PlatformRs, device_id: i32) -> Box<InputDeviceRs>;
 
         fn activated(self: &mut DeviceObserverRs, fd: i32);
         fn suspended(self: &mut DeviceObserverRs);

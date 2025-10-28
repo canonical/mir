@@ -165,6 +165,7 @@ public:
           dispatchable{std::make_shared<md::MultiplexingDispatchable>()} {}
 
     rust::Box<PlatformRs> platform_impl;
+    std::shared_ptr<md::ReadableFd> libinput_dispatch;
     std::shared_ptr<md::MultiplexingDispatchable> dispatchable;
 };
 
@@ -184,14 +185,10 @@ void miers::Platform::start()
 {
     self->platform_impl->start();
 
-    auto const libinput_dispatch = std::make_shared<md::ReadableFd>(
+    self->libinput_dispatch = std::make_shared<md::ReadableFd>(
         Fd{IntOwnedFd{self->platform_impl->libinput_fd()}},
         [&]() { self->platform_impl->process(); });
-    auto const communication_dispatch = std::make_shared<md::ReadableFd>(
-        Fd{IntOwnedFd{self->platform_impl->communication_fd()}},
-        [&]() { self->platform_impl->process(); });
-    self->dispatchable->add_watch(libinput_dispatch);
-    self->dispatchable->add_watch(communication_dispatch);
+    self->dispatchable->add_watch(self->libinput_dispatch);
 }
 
 void miers::Platform::continue_after_config()
@@ -206,6 +203,9 @@ void miers::Platform::pause_for_config()
 
 void miers::Platform::stop()
 {
+    if (self->libinput_dispatch)
+        self->dispatchable->remove_watch(self->libinput_dispatch);
+    self->libinput_dispatch.reset();
     self->platform_impl->stop();
 }
 
