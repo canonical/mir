@@ -18,8 +18,9 @@
 
 #include "fractional-scale-v1_wrapper.h"
 #include "fractional_scale_v1.h"
-#include <mir/default_server_configuration.h>
+#include "input_trigger_action_v1.h"
 
+#include <mir/default_server_configuration.h>
 #include <mir/frontend/wayland.h>
 #include <mir/graphics/platform.h>
 #include <mir/log.h>
@@ -276,6 +277,11 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
             return mf::create_input_trigger_registration_manager_v1(
                     ctx.display,
                     ctx.composite_event_filter);
+        }),
+    make_extension_builder<mw::InputTriggerActionManagerV1>([](auto const& ctx)
+        {
+            return mf::create_input_trigger_action_manager_v1(
+                    ctx.display);
         }),
 };
 
