@@ -29,6 +29,19 @@ namespace frontend
 {
 auto create_input_trigger_action_manager_v1(wl_display*)
     -> std::shared_ptr<wayland::InputTriggerActionManagerV1::Global>;
+
+class InputTriggerActionV1 : public wayland::InputTriggerActionV1
+{
+public:
+    InputTriggerActionV1(wl_resource* id) :
+        wayland::InputTriggerActionV1{id, Version<1>{}}
+    {
+    }
+};
+
+// TODO this is wildly unsafe
+// THIS IS TEMPORARY
+static inline std::unordered_map<std::string, std::shared_ptr<InputTriggerActionV1>> input_trigger_data;
 }
 }
 #endif
