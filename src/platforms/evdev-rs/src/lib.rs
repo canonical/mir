@@ -140,12 +140,12 @@ impl PlatformRs {
             .rev()
         {
             println!("Removing device id {} from registry", device_info.id);
+            device_info.input_sink = None;
+            device_info.event_builder = None;
             // # Safety
             //
             // Because we need to use pin_mut_unchecked, this is unsafe.
             unsafe {
-                device_info.input_sink = None;
-                device_info.event_builder = None;
                 self.device_registry
                     .clone()
                     .pin_mut_unchecked()
@@ -879,7 +879,6 @@ impl InputDeviceRs {
         input_sink: *mut ffi::InputSink,
         event_builder: *mut ffi::EventBuilder,
     ) {
-        println!("Starting");
         if let Some(device_info) = self.state.lock().unwrap().find_device_by_id(self.device_id) {
             device_info.input_sink =
                 Some(InputSinkPtr(std::ptr::NonNull::new(input_sink).unwrap()));
@@ -895,7 +894,6 @@ impl InputDeviceRs {
     pub fn stop(&mut self) {}
 
     pub fn get_device_info(&self) -> Box<InputDeviceInfoRs> {
-        println!("getDeviceInfo");
         if let Some(device_info) = self.state.lock().unwrap().find_device_by_id(self.device_id) {
             let mut capabilities: u32 = 0;
             if device_info
@@ -943,7 +941,6 @@ impl InputDeviceRs {
     }
 
     pub fn get_pointer_settings(&self) -> Box<ffi::PointerSettingsRs> {
-        println!("getPointerSettings");
         let mut state = self.state.lock().unwrap();
         if let Some(device_info) = state.find_device_by_id(self.device_id) {
             match device_info
@@ -995,20 +992,12 @@ impl InputDeviceRs {
     }
 
     pub fn set_pointer_settings(&self, settings: &ffi::PointerSettingsC) {
-        println!("setPointerSettings");
         let mut state = self.state.lock().unwrap();
         if let Some(device_info) = state.find_device_by_id(self.device_id) {
             if device_info
                 .device
                 .has_capability(input::DeviceCapability::Pointer)
             {
-                println!(
-                    "{}, {}",
-                    device_info.device.name(),
-                    device_info
-                        .device
-                        .has_capability(input::DeviceCapability::Pointer)
-                );
                 let left_handed = match settings.handedness {
                     x if x == ffi::MirPointerHandedness::mir_pointer_handedness_left.repr => true,
                     _ => false,
