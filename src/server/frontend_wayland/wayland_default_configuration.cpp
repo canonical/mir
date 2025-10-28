@@ -55,6 +55,7 @@
 #include "xdg_shell_v6.h"
 #include "xwayland_wm_shell.h"
 #include "data_control_v1.h"
+#include "input_trigger_registration_v1.h"
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
@@ -263,6 +264,12 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
                     ctx.display,
                     ctx.main_clipboard,
                     ctx.primary_selection_clipboard);
+        }),
+    make_extension_builder<mw::InputTriggerRegistrationManagerV1>([](auto const& ctx)
+        {
+            return mf::create_input_trigger_registration_manager_v1(
+                    ctx.display,
+                    ctx.composite_event_filter);
         }),
 };
 
