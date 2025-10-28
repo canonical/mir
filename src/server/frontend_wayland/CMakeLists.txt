@@ -68,6 +68,7 @@ set(
   linux_drm_syncobj.cpp         linux_drm_syncobj.h
   data_control_v1.cpp           data_control_v1.h
   input_trigger_registration_v1.cpp          input_trigger_registration_v1.h
+  input_trigger_action_v1.cpp   input_trigger_action_v1.h
 )
 
 add_custom_command(
