@@ -42,7 +42,7 @@ Version:        2.22.0
 Release:        0%{?dist}
 Summary:        Next generation Wayland display server toolkit
 
-# mircommon is LGPL-2.1-only/LGPL-3.0-only, everything else is GPL-2.0-only/GPL-3.0-only
+# mircommon is LGPL-2.1-only/LGPL-3.0-only, everything else is GPL-2.0-only/GPL-3.0-only, built with Rust dependencies
 License:        (GPL-2.0-only or GPL-3.0-only) and (LGPL-2.1-only or LGPL-3.0-only)
 URL:            https://canonical.com/mir
 Source0:        https://github.com/canonical/%{name}/releases/download/v%{version}/%{name}-%{version}.tar.xz
@@ -69,6 +69,7 @@ BuildRequires:  glm-devel
 BuildRequires:  glog-devel, lttng-ust-devel, systemtap-sdt-devel
 BuildRequires:  gflags-devel
 BuildRequires:  python3-pillow
+BuildRequires:  cargo-rpm-macros >= 24
 
 # Everything detected via pkgconfig
 BuildRequires:  pkgconfig(egl)
@@ -245,6 +246,8 @@ Mir unit and integration tests.
 
 %build
 %cmake_build
+%cargo_license_summary
+%{cargo_license} > LICENSE.dependencies
 
 
 %install
@@ -288,7 +291,7 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/miral-shell.desktop
 %{_libdir}/libmiroil.so.%{miroil_sover}
 
 %files server-libs
-%license COPYING.GPL*
+%license COPYING.GPL* LICENSE.dependencies
 %doc README.md
 %{_libdir}/libmiral.so.%{miral_sover}
 %{_libdir}/libmirserver.so.%{mirserver_sover}
@@ -298,6 +301,7 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/miral-shell.desktop
 %{_libdir}/%{name}/server-platform/graphics-gbm-kms.so.%{mirplatformgraphics_sover}
 %{_libdir}/%{name}/server-platform/graphics-wayland.so.%{mirplatformgraphics_sover}
 %{_libdir}/%{name}/server-platform/input-evdev.so.%{mirplatforminput_sover}
+%{_libdir}/%{name}/server-platform/input-evdev-rs.so.%{mirplatforminput_sover}
 %{_libdir}/%{name}/server-platform/renderer-egl-generic.so.%{mirplatformgraphics_sover}
 %{_libdir}/%{name}/server-platform/server-virtual.so.%{mirplatformgraphics_sover}
 %{_libdir}/%{name}/server-platform/server-x11.so.%{mirplatformgraphics_sover}

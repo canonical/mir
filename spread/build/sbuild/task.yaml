@@ -54,6 +54,7 @@ execute: |
     )
 
     SBUILD_OPTS=(
+      --no-clean-source
       --jobs=$(nproc)
       --verbose
       --dist=${RELEASE}

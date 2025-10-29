@@ -1,4 +1,4 @@
-find_program(CARGO_EXECUTABLE cargo)
+find_program(CARGO_EXECUTABLE cargo REQUIRED)
 
 function(add_rust_cxx_library target)
   set(one_value_args CRATE CXX_BRIDGE_SOURCE_FILE)
