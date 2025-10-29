@@ -29,7 +29,6 @@
 struct miral::OutputFilter::Self
 {
     Self(MirOutputFilter default_filter) :
-        default_filter{default_filter},
         filter_{default_filter}
     {
     }
@@ -44,7 +43,6 @@ struct miral::OutputFilter::Self
         output_filter.lock()->filter(filter_);
     }
 
-    MirOutputFilter const default_filter;
     std::atomic<MirOutputFilter> filter_;
 
     // output_filter is only updated during the single-threaded initialization phase of startup
@@ -58,24 +56,27 @@ miral::OutputFilter::OutputFilter()
 
 miral::OutputFilter::OutputFilter(live_config::Store& config_store) : OutputFilter{}
 {
+    static constexpr char const* values[] = { "none", "grayscale", "invert" };
+
     config_store.add_string_attribute(
         {"output_filter"},
         "Output filter to use [{none,grayscale,invert}]",
-        [this](live_config::Key const& key, std::optional<std::string_view> val)
+        values[mir_output_filter_none],
+        [self=self](live_config::Key const& key, std::optional<std::string_view> val)
         {
-            MirOutputFilter new_filter = self->default_filter;
             if (val)
             {
-                auto filter_name = *val;
-                if (filter_name == "none")
+                MirOutputFilter new_filter = mir_output_filter_none;
+                auto const filter_name = *val;
+                if (filter_name == values[mir_output_filter_none])
                 {
                     new_filter = mir_output_filter_none;
                 }
-                else if (filter_name == "grayscale")
+                else if (filter_name == values[mir_output_filter_grayscale])
                 {
                     new_filter = mir_output_filter_grayscale;
                 }
-                else if (filter_name == "invert")
+                else if (filter_name == values[mir_output_filter_invert])
                 {
                     new_filter = mir_output_filter_invert;
                 }
@@ -86,8 +87,8 @@ miral::OutputFilter::OutputFilter(live_config::Store& config_store) : OutputFilt
                         key.to_string().c_str(),
                         std::format("{}",*val).c_str());
                 }
+                self->filter(new_filter);
             }
-            filter(new_filter);
         });
 }
 
