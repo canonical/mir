@@ -55,7 +55,8 @@ auto translate_and_scale(
 }
 }
 
-namespace mir::frontend {
+namespace mir::frontend
+{
 
 /* Image capture sources */
 
