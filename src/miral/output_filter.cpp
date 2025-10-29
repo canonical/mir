@@ -67,7 +67,11 @@ miral::OutputFilter::OutputFilter(live_config::Store& config_store) : OutputFilt
             if (val)
             {
                 auto filter_name = *val;
-                if (filter_name == "grayscale")
+                if (filter_name == "none")
+                {
+                    new_filter = mir_output_filter_none;
+                }
+                else if (filter_name == "grayscale")
                 {
                     new_filter = mir_output_filter_grayscale;
                 }
@@ -78,7 +82,7 @@ miral::OutputFilter::OutputFilter(live_config::Store& config_store) : OutputFilt
                 else
                 {
                     mir::log_warning(
-                        "Config key '%s' has invalid integer value: %s",
+                        "Config key '%s' has invalid value: %s",
                         key.to_string().c_str(),
                         std::format("{}",*val).c_str());
                 }
