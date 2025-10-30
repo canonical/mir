@@ -23,7 +23,6 @@
 #include <mir/compositor/screen_shooter_factory.h>
 #include <mir/frontend/surface_stack.h>
 #include <mir/geometry/rectangles.h>
-#include <mir/graphics/graphic_buffer_allocator.h>
 #include <mir/renderer/sw/pixel_source.h>
 #include <mir/scene/scene_change_notification.h>
 #include <mir/wayland/protocol_error.h>
@@ -33,7 +32,6 @@
 #include "wayland_timespec.h"
 
 namespace mf = mir::frontend;
-namespace mg = mir::graphics;
 namespace ms = mir::scene;
 namespace geom = mir::geometry;
 
@@ -58,81 +56,14 @@ auto translate_and_scale(
 namespace mir::frontend
 {
 
-/* Image capture sources */
-
-class ExtOutputImageCaptureSourceManagerV1Global
-    : public wayland::OutputImageCaptureSourceManagerV1::Global
-{
-public:
-    ExtOutputImageCaptureSourceManagerV1Global(wl_display* display);
-
-private:
-    void bind(wl_resource *new_resource) override;
-};
-
-class ExtOutputImageCaptureSourceManagerV1
-    : public wayland::OutputImageCaptureSourceManagerV1
-{
-public:
-    ExtOutputImageCaptureSourceManagerV1(wl_resource *resource);
-
-private:
-    void create_source(wl_resource* new_resource, wl_resource* output) override;
-};
-
-class ExtImageCaptureSourceV1
-    : public wayland::ImageCaptureSourceV1
-{
-public:
-    ExtImageCaptureSourceV1(wl_resource* resource,
-                            OutputGlobal& output,
-                            ExtOutputImageCaptureSourceManagerV1* manager);
-
-    static ExtImageCaptureSourceV1* from_or_throw(wl_resource* resource);
-
-    // FIXME: currently this is only set up for output capture. It
-    // will need to change to also cover toplevel capture.
-    wayland::Weak<OutputGlobal> const output;
-
-private:
-    wayland::Weak<ExtOutputImageCaptureSourceManagerV1> const manager;
-};
-
-
-/* Image capture sessions */
 struct ExtImageCaptureV1Ctx
 {
     std::shared_ptr<Executor> const wayland_executor;
-    std::shared_ptr<graphics::GraphicBufferAllocator> const allocator;
     std::shared_ptr<compositor::ScreenShooterFactory> const screen_shooter_factory;
     std::shared_ptr<SurfaceStack> const surface_stack;
 };
 
-class ExtImageCopyCaptureManagerV1Global
-    : public wayland::ImageCopyCaptureManagerV1::Global
-{
-public:
-    ExtImageCopyCaptureManagerV1Global(wl_display* display, std::shared_ptr<ExtImageCaptureV1Ctx> const& ctx);
-
-private:
-    void bind(wl_resource* new_resource) override;
-
-    std::shared_ptr<ExtImageCaptureV1Ctx> const ctx;
-};
-
-class ExtImageCopyCaptureManagerV1
-    : public wayland::ImageCopyCaptureManagerV1
-{
-public:
-    ExtImageCopyCaptureManagerV1(wl_resource* resource, std::shared_ptr<ExtImageCaptureV1Ctx> const& ctx);
-
-private:
-    void create_session(wl_resource* new_resource, wl_resource* source, uint32_t options) override;
-    void create_pointer_cursor_session(wl_resource* new_resource, wl_resource* source, wl_resource* pointer) override;
-
-    std::shared_ptr<ExtImageCaptureV1Ctx> const ctx;
-};
-
+/* Image copy backends */
 class ExtImageCopyCaptureSessionV1;
 class ExtImageCopyCaptureFrameV1;
 
@@ -171,11 +102,73 @@ protected:
     auto output_config_changed(graphics::DisplayConfigurationOutput const& config) -> bool override;
 };
 
+using ExtImageCopyBackendFactory = std::function<ExtImageCopyBackend*(ExtImageCopyCaptureSessionV1*,bool)>;
+
+/* Image capture sources */
+class ExtOutputImageCaptureSourceManagerV1Global
+    : public wayland::OutputImageCaptureSourceManagerV1::Global
+{
+public:
+    ExtOutputImageCaptureSourceManagerV1Global(wl_display* display, std::shared_ptr<ExtImageCaptureV1Ctx> const& ctx);
+
+private:
+    void bind(wl_resource *new_resource) override;
+
+    std::shared_ptr<ExtImageCaptureV1Ctx> const ctx;
+};
+
+class ExtOutputImageCaptureSourceManagerV1
+    : public wayland::OutputImageCaptureSourceManagerV1
+{
+public:
+    ExtOutputImageCaptureSourceManagerV1(wl_resource *resource, std::shared_ptr<ExtImageCaptureV1Ctx> const& ctx);
+
+private:
+    void create_source(wl_resource* new_resource, wl_resource* output) override;
+
+    std::shared_ptr<ExtImageCaptureV1Ctx> const ctx;
+};
+
+class ExtImageCaptureSourceV1
+    : public wayland::ImageCaptureSourceV1
+{
+public:
+    ExtImageCaptureSourceV1(wl_resource* resource,
+                            ExtImageCopyBackendFactory const& backend_factory);
+
+    static ExtImageCaptureSourceV1* from_or_throw(wl_resource* resource);
+
+    ExtImageCopyBackendFactory const backend_factory;
+};
+
+
+/* Image capture sessions */
+class ExtImageCopyCaptureManagerV1Global
+    : public wayland::ImageCopyCaptureManagerV1::Global
+{
+public:
+    ExtImageCopyCaptureManagerV1Global(wl_display* display);
+
+private:
+    void bind(wl_resource* new_resource) override;
+};
+
+class ExtImageCopyCaptureManagerV1
+    : public wayland::ImageCopyCaptureManagerV1
+{
+public:
+    ExtImageCopyCaptureManagerV1(wl_resource* resource);
+
+private:
+    void create_session(wl_resource* new_resource, wl_resource* source, uint32_t options) override;
+    void create_pointer_cursor_session(wl_resource* new_resource, wl_resource* source, wl_resource* pointer) override;
+};
+
 class ExtImageCopyCaptureSessionV1
     : public wayland::ImageCopyCaptureSessionV1
 {
 public:
-    ExtImageCopyCaptureSessionV1(wl_resource* resource, std::function<ExtImageCopyBackend*(ExtImageCopyCaptureSessionV1*)> backend_factory);
+    ExtImageCopyCaptureSessionV1(wl_resource* resource, bool overlay_cursor, ExtImageCopyBackendFactory const& backend_factory);
     ~ExtImageCopyCaptureSessionV1();
 
     void maybe_capture_frame();
@@ -212,112 +205,7 @@ private:
 
 }
 
-auto mf::create_ext_output_image_capture_source_manager_v1(
-    wl_display* display)
--> std::shared_ptr<wayland::OutputImageCaptureSourceManagerV1::Global>
-{
-    return std::make_shared<ExtOutputImageCaptureSourceManagerV1Global>(display);;
-}
-
-mf::ExtOutputImageCaptureSourceManagerV1Global::ExtOutputImageCaptureSourceManagerV1Global(
-    wl_display* display)
-    : Global{display, Version<1>()}
-{
-}
-
-void mf::ExtOutputImageCaptureSourceManagerV1Global::bind(wl_resource* new_resource)
-{
-    new ExtOutputImageCaptureSourceManagerV1{new_resource};
-}
-
-mf::ExtOutputImageCaptureSourceManagerV1::ExtOutputImageCaptureSourceManagerV1(
-    wl_resource* resource)
-    : wayland::OutputImageCaptureSourceManagerV1{resource, Version<1>()}
-{
-}
-
-void mf::ExtOutputImageCaptureSourceManagerV1::create_source(wl_resource* new_resource, wl_resource* output)
-{
-    auto& output_global = OutputGlobal::from_or_throw(output);
-    new ExtImageCaptureSourceV1{new_resource, output_global, this};
-}
-
-mf::ExtImageCaptureSourceV1::ExtImageCaptureSourceV1(
-    wl_resource* resource, OutputGlobal& output,
-    ExtOutputImageCaptureSourceManagerV1 *manager)
-    : wayland::ImageCaptureSourceV1{resource, Version<1>()},
-      output{&output},
-      manager{manager}
-{
-}
-
-mf::ExtImageCaptureSourceV1* mf::ExtImageCaptureSourceV1::from_or_throw(wl_resource *resource)
-{
-    auto source = dynamic_cast<ExtImageCaptureSourceV1*>(wayland::ImageCaptureSourceV1::from(resource));
-
-    if (!source)
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error(
-            "ext_image_capture_source_v1@" +
-            std::to_string(wl_resource_get_id(resource)) +
-            " is not a mir::frontend::ExtImageCaptureSourceV1"));
-    }
-    return source;
-}
-
-auto mf::create_ext_image_copy_capture_manager_v1(
-    wl_display* display,
-    std::shared_ptr<Executor> const& wayland_executor,
-    std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
-    std::shared_ptr<compositor::ScreenShooterFactory> const& screen_shooter_factory,
-    std::shared_ptr<SurfaceStack> const& surface_stack)
--> std::shared_ptr<wayland::ImageCopyCaptureManagerV1::Global>
-{
-    auto ctx = std::make_shared<ExtImageCaptureV1Ctx>(
-        wayland_executor, allocator, screen_shooter_factory, surface_stack);
-    return std::make_shared<ExtImageCopyCaptureManagerV1Global>(display, std::move(ctx));;
-}
-
-mf::ExtImageCopyCaptureManagerV1Global::ExtImageCopyCaptureManagerV1Global(
-    wl_display *display,
-    std::shared_ptr<ExtImageCaptureV1Ctx> const& ctx)
-    : Global{display, Version<1>()},
-      ctx{ctx}
-{
-}
-
-void mf::ExtImageCopyCaptureManagerV1Global::bind(wl_resource *new_resource)
-{
-    new ExtImageCopyCaptureManagerV1{new_resource, ctx};
-}
-
-mf::ExtImageCopyCaptureManagerV1::ExtImageCopyCaptureManagerV1(
-    wl_resource *resource,
-    std::shared_ptr<ExtImageCaptureV1Ctx> const& ctx)
-    : wayland::ImageCopyCaptureManagerV1{resource, Version<1>()},
-      ctx{ctx}
-{
-}
-
-void mf::ExtImageCopyCaptureManagerV1::create_session(
-    wl_resource* new_resource, wl_resource* source, uint32_t options)
-{
-    auto const source_instance = ExtImageCaptureSourceV1::from_or_throw(source);
-    bool overlay_cursor = (options & Options::paint_cursors) != 0;
-
-    new ExtImageCopyCaptureSessionV1{new_resource, [output=source_instance->output, overlay_cursor, ctx=ctx](auto session)
-        {
-            return new ExtImageCopyBackend(session, wayland::as_nullable_ptr(output), overlay_cursor, ctx);
-        }};
-}
-
-void mf::ExtImageCopyCaptureManagerV1::create_pointer_cursor_session(
-    [[maybe_unused]] wl_resource* new_resource,
-    [[maybe_unused]] wl_resource* source,
-    [[maybe_unused]] wl_resource* pointer)
-{
-    BOOST_THROW_EXCEPTION(std::runtime_error("not implemented"));
-}
+/* Image copy backends */
 
 mf::ExtImageCopyBackend::ExtImageCopyBackend(
     ExtImageCopyCaptureSessionV1 *session,
@@ -495,12 +383,121 @@ void mf::ExtImageCopyBackend::begin_capture(ExtImageCopyCaptureFrameV1& frame)
     damage_amount = DamageAmount::none;
 }
 
+/* Image capture sources */
+
+auto mf::create_ext_output_image_capture_source_manager_v1(
+    wl_display* display,
+    std::shared_ptr<Executor> const& wayland_executor,
+    std::shared_ptr<compositor::ScreenShooterFactory> const& screen_shooter_factory,
+    std::shared_ptr<SurfaceStack> const& surface_stack)
+-> std::shared_ptr<wayland::OutputImageCaptureSourceManagerV1::Global>
+{
+    auto ctx = std::make_shared<ExtImageCaptureV1Ctx>(
+        wayland_executor, screen_shooter_factory, surface_stack);
+    return std::make_shared<ExtOutputImageCaptureSourceManagerV1Global>(display, std::move(ctx));
+}
+
+mf::ExtOutputImageCaptureSourceManagerV1Global::ExtOutputImageCaptureSourceManagerV1Global(
+    wl_display* display,
+    std::shared_ptr<ExtImageCaptureV1Ctx> const& ctx)
+    : Global{display, Version<1>()},
+      ctx{ctx}
+{
+}
+
+void mf::ExtOutputImageCaptureSourceManagerV1Global::bind(wl_resource* new_resource)
+{
+    new ExtOutputImageCaptureSourceManagerV1{new_resource, ctx};
+}
+
+mf::ExtOutputImageCaptureSourceManagerV1::ExtOutputImageCaptureSourceManagerV1(
+    wl_resource* resource,
+    std::shared_ptr<ExtImageCaptureV1Ctx> const& ctx)
+    : wayland::OutputImageCaptureSourceManagerV1{resource, Version<1>()},
+      ctx{ctx}
+{
+}
+
+void mf::ExtOutputImageCaptureSourceManagerV1::create_source(wl_resource* new_resource, wl_resource* output)
+{
+    auto& output_global = OutputGlobal::from_or_throw(output);
+    ExtImageCopyBackendFactory backend_factory = [output=wayland::make_weak(&output_global), ctx=ctx](auto *session, bool overlay_cursor) {
+        return new ExtImageCopyBackend(session, wayland::as_nullable_ptr(output), overlay_cursor, ctx);
+    };
+    new ExtImageCaptureSourceV1{new_resource, backend_factory};
+}
+
+mf::ExtImageCaptureSourceV1::ExtImageCaptureSourceV1(
+    wl_resource* resource,
+    ExtImageCopyBackendFactory const& backend_factory)
+    : wayland::ImageCaptureSourceV1{resource, Version<1>()},
+      backend_factory{backend_factory}
+{
+}
+
+mf::ExtImageCaptureSourceV1* mf::ExtImageCaptureSourceV1::from_or_throw(wl_resource *resource)
+{
+    auto source = dynamic_cast<ExtImageCaptureSourceV1*>(wayland::ImageCaptureSourceV1::from(resource));
+
+    if (!source)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error(
+            "ext_image_capture_source_v1@" +
+            std::to_string(wl_resource_get_id(resource)) +
+            " is not a mir::frontend::ExtImageCaptureSourceV1"));
+    }
+    return source;
+}
+
+/* Image capture sessions */
+
+auto mf::create_ext_image_copy_capture_manager_v1(
+    wl_display* display)
+-> std::shared_ptr<wayland::ImageCopyCaptureManagerV1::Global>
+{
+    return std::make_shared<ExtImageCopyCaptureManagerV1Global>(display);
+}
+
+mf::ExtImageCopyCaptureManagerV1Global::ExtImageCopyCaptureManagerV1Global(
+    wl_display *display)
+    : Global{display, Version<1>()}
+{
+}
+
+void mf::ExtImageCopyCaptureManagerV1Global::bind(wl_resource *new_resource)
+{
+    new ExtImageCopyCaptureManagerV1{new_resource};
+}
+
+mf::ExtImageCopyCaptureManagerV1::ExtImageCopyCaptureManagerV1(
+    wl_resource *resource)
+    : wayland::ImageCopyCaptureManagerV1{resource, Version<1>()}
+{
+}
+
+void mf::ExtImageCopyCaptureManagerV1::create_session(
+    wl_resource* new_resource, wl_resource* source, uint32_t options)
+{
+    auto const source_instance = ExtImageCaptureSourceV1::from_or_throw(source);
+    bool overlay_cursor = (options & Options::paint_cursors) != 0;
+
+    new ExtImageCopyCaptureSessionV1{new_resource, overlay_cursor, source_instance->backend_factory};
+}
+
+void mf::ExtImageCopyCaptureManagerV1::create_pointer_cursor_session(
+    [[maybe_unused]] wl_resource* new_resource,
+    [[maybe_unused]] wl_resource* source,
+    [[maybe_unused]] wl_resource* pointer)
+{
+    BOOST_THROW_EXCEPTION(std::runtime_error("not implemented"));
+}
+
 mf::ExtImageCopyCaptureSessionV1::ExtImageCopyCaptureSessionV1(
     wl_resource *resource,
-    std::function<ExtImageCopyBackend*(ExtImageCopyCaptureSessionV1*)> backend_factory)
+    bool overlay_cursor,
+    ExtImageCopyBackendFactory const& backend_factory)
     : wayland::ImageCopyCaptureSessionV1{resource, Version<1>()},
-      backend{backend_factory(this)}
-      //new ExtImageCopyBackend(this, wayland::as_nullable_ptr(source->output), (options & wayland::ImageCopyCaptureManagerV1::Options::paint_cursors) != 0, ctx)}
+      backend{backend_factory(this, overlay_cursor)}
 {
 }
 
