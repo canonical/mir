@@ -46,6 +46,10 @@ struct OutputFilter : miral::TestServer
 struct TestOutputFilterFilterCtor : public OutputFilter, public WithParamInterface<MirOutputFilter>
 {
 };
+
+struct TestOutputFilterConfigFilter : public OutputFilter, public WithParamInterface<std::pair<std::string, int>>
+{
+};
 }
 
 TEST_F(OutputFilter, register_when_default_constructed)
@@ -78,9 +82,11 @@ INSTANTIATE_TEST_SUITE_P(
         MirOutputFilter::mir_output_filter_grayscale,
         MirOutputFilter::mir_output_filter_invert));
 
-TEST_F(OutputFilter, live_config_can_set_none_without_warning)
+TEST_P(TestOutputFilterConfigFilter, live_config_can_set_none_without_warning)
 {
-    EXPECT_CALL(test_logger, log(mir::logging::Severity::warning, HasSubstr("output_filter"), _)).Times(0);
+    auto const [option, output_filter_log_occurences] = GetParam();
+    EXPECT_CALL(test_logger, log(mir::logging::Severity::warning, HasSubstr("output_filter"), _))
+        .Times(output_filter_log_occurences);
     EXPECT_CALL(test_logger, log(_, Not(HasSubstr("output_filter")), _)).Times(AnyNumber());
 
     auto const logger_builder = [this]() -> std::shared_ptr<mir::logging::Logger> { return mir::test::fake_shared(test_logger); };
@@ -94,7 +100,15 @@ TEST_F(OutputFilter, live_config_can_set_none_without_warning)
     add_to_environment("MIR_SERVER_LOGGING", "true");
     start_server();
 
-
-    std::istringstream input_stream{"output_filter=none"};
+    std::istringstream input_stream{std::format("output_filter={}", option)};
     ini_file.load_file(input_stream, "a_path");
 }
+
+INSTANTIATE_TEST_SUITE_P(
+    OutputFilter,
+    TestOutputFilterConfigFilter,
+    Values(
+        std::pair{"none", 0},
+        std::pair{"grayscale", 0},
+        std::pair{"invert", 0},
+        std::pair{"obviously invalid option", 1}));
