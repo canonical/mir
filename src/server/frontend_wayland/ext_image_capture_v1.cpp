@@ -95,6 +95,7 @@ protected:
 
     // Output capture specific bits
     wayland::Weak<OutputGlobal> const output;
+    wayland::DestroyListenerId destroy_listener_id;
     std::shared_ptr<scene::SceneChangeNotification> change_notifier;
     std::unique_ptr<compositor::ScreenShooter> const screen_shooter;
 
@@ -171,12 +172,16 @@ public:
     ExtImageCopyCaptureSessionV1(wl_resource* resource, bool overlay_cursor, ExtImageCopyBackendFactory const& backend_factory);
     ~ExtImageCopyCaptureSessionV1();
 
+    void set_buffer_constraints(geom::Size const& buffer_size);
+    void set_stopped();
     void maybe_capture_frame();
 
 private:
     void create_frame(wl_resource* new_resource) override;
 
     std::unique_ptr<ExtImageCopyBackend> backend;
+    geom::Size buffer_size;
+    bool stopped = false;
     wayland::Weak<ExtImageCopyCaptureFrameV1> current_frame;
 };
 
@@ -221,7 +226,13 @@ mf::ExtImageCopyBackend::ExtImageCopyBackend(
     if (output)
     {
         output->add_listener(this);
+        destroy_listener_id = output->add_destroy_listener([session]()
+            {
+                session->set_stopped();
+            });
         output_config_changed(output->current_config());
+    } else {
+        session->set_stopped();
     }
 }
 
@@ -230,6 +241,7 @@ mf::ExtImageCopyBackend::~ExtImageCopyBackend()
     if (output)
     {
         output.value().remove_listener(this);
+        output.value().remove_destroy_listener(destroy_listener_id);
     }
     if (change_notifier)
     {
@@ -241,10 +253,7 @@ auto mf::ExtImageCopyBackend::output_config_changed(graphics::DisplayConfigurati
 {
     // Send buffer constraints matching new output configuration
     auto const buffer_size = config.modes[config.current_mode_index].size;
-    session->send_buffer_size_event(
-        buffer_size.width.as_uint32_t(), buffer_size.height.as_uint32_t());
-    session->send_shm_format_event(wayland::Shm::Format::argb8888);
-    session->send_done_event();
+    session->set_buffer_constraints(buffer_size);
     return true;
 }
 
@@ -318,13 +327,6 @@ bool mf::ExtImageCopyBackend::has_damage()
 
 void mf::ExtImageCopyBackend::begin_capture(ExtImageCopyCaptureFrameV1& frame)
 {
-    using FailureReason = wayland::ImageCopyCaptureFrameV1::FailureReason;
-    // If output has gone away, then the session has stopped
-    if (!output) {
-        frame.send_failed_event(FailureReason::stopped);
-        return;
-    }
-
     auto const& output_config = output.value().current_config();
     auto const buffer_size = output_config.modes[output_config.current_mode_index].size;
     auto const output_space_area = output_config.extents();
@@ -350,18 +352,7 @@ void mf::ExtImageCopyBackend::begin_capture(ExtImageCopyCaptureFrameV1& frame)
     }
 
     auto shm_buffer = dynamic_cast<ShmBuffer*>(wayland::as_nullable_ptr(frame.target));
-    if (!shm_buffer)
-    {
-        frame.send_failed_event(FailureReason::buffer_constraints);
-        return;
-    }
     auto shm_data = shm_buffer->data();
-    if (shm_data->format() != mir_pixel_format_argb_8888 ||
-        shm_data->size() != buffer_size)
-    {
-        frame.send_failed_event(FailureReason::buffer_constraints);
-        return;
-    }
 
     // TODO: capture only the region covered by
     // union(buffer_space_damage, frame->frame_damage)
@@ -505,6 +496,25 @@ mf::ExtImageCopyCaptureSessionV1::~ExtImageCopyCaptureSessionV1()
 {
 }
 
+void mf::ExtImageCopyCaptureSessionV1::set_buffer_constraints(geom::Size const &new_size)
+{
+    this->buffer_size = new_size;
+
+    send_buffer_size_event(
+        buffer_size.width.as_uint32_t(), buffer_size.height.as_uint32_t());
+    send_shm_format_event(wayland::Shm::Format::argb8888);
+    send_done_event();
+}
+
+void mf::ExtImageCopyCaptureSessionV1::set_stopped()
+{
+    if (!stopped)
+    {
+        send_stopped_event();
+        stopped = true;
+    }
+}
+
 void mf::ExtImageCopyCaptureSessionV1::maybe_capture_frame()
 {
     if (!current_frame || !current_frame.value().is_ready())
@@ -516,6 +526,28 @@ void mf::ExtImageCopyCaptureSessionV1::maybe_capture_frame()
     if (!backend->has_damage())
     {
         // Do nothing if the backend has no reported damage
+        return;
+    }
+
+    using FailureReason = wayland::ImageCopyCaptureFrameV1::FailureReason;
+    if (stopped)
+    {
+        current_frame.value().send_failed_event(FailureReason::stopped);
+        return;
+    }
+
+    // Check buffer constraints
+    auto shm_buffer = dynamic_cast<ShmBuffer*>(wayland::as_nullable_ptr(current_frame.value().target));
+    if (!shm_buffer)
+    {
+        current_frame.value().send_failed_event(FailureReason::buffer_constraints);
+        return;
+    }
+    auto shm_data = shm_buffer->data();
+    if (shm_data->format() != mir_pixel_format_argb_8888 ||
+        shm_data->size() != buffer_size)
+    {
+        current_frame.value().send_failed_event(FailureReason::buffer_constraints);
         return;
     }
 
