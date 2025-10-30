@@ -25,6 +25,8 @@
 
 #include <gmock/gmock.h>
 
+#include <format>
+
 using namespace testing;
 
 namespace
