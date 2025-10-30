@@ -42,6 +42,10 @@ struct OutputFilter : miral::TestServer
     };
     TestLogger test_logger;
 };
+
+struct TestOutputFilterFilterCtor : public OutputFilter, public WithParamInterface<MirOutputFilter>
+{
+};
 }
 
 TEST_F(OutputFilter, register_when_default_constructed)
@@ -59,26 +63,20 @@ TEST_F(OutputFilter, register_with_live_config)
     start_server();
 }
 
-TEST_F(OutputFilter, register_when_constructed_with_none)
+TEST_P(TestOutputFilterFilterCtor, register_when_constructed_filter)
 {
-    miral::OutputFilter output_filter{MirOutputFilter::mir_output_filter_none};
+    miral::OutputFilter output_filter{GetParam()};
     add_server_init([&output_filter](mir::Server& server) { output_filter(server); });
     start_server();
 }
 
-TEST_F(OutputFilter, register_when_constructed_with_grayscale)
-{
-    miral::OutputFilter output_filter{MirOutputFilter::mir_output_filter_grayscale};
-    add_server_init([&output_filter](mir::Server& server) { output_filter(server); });
-    start_server();
-}
-
-TEST_F(OutputFilter, register_when_constructed_with_invert)
-{
-    miral::OutputFilter output_filter{MirOutputFilter::mir_output_filter_invert};
-    add_server_init([&output_filter](mir::Server& server) { output_filter(server); });
-    start_server();
-}
+INSTANTIATE_TEST_SUITE_P(
+    OuputFilter,
+    TestOutputFilterFilterCtor,
+    Values(
+        MirOutputFilter::mir_output_filter_none,
+        MirOutputFilter::mir_output_filter_grayscale,
+        MirOutputFilter::mir_output_filter_invert));
 
 TEST_F(OutputFilter, live_config_can_set_none_without_warning)
 {
