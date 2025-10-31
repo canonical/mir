@@ -36,8 +36,6 @@
 #include <miral/slow_keys.h>
 #include <miral/hover_click.h>
 #include <miral/append_keyboard_event_filter.h>
-#include <miral/application_switcher.h>
-#include <miral/internal_client.h>
 
 #include "mir/abnormal_exit.h"
 #include "mir/main_loop.h"
@@ -142,7 +140,6 @@ try
     miral::StickyKeys sticky_keys{config_store};
     miral::Keymap keymap{config_store};
     miral::HoverClick hover_click{config_store};
-    miral::ApplicationSwitcher application_switcher;
 
     miral::ConfigFile config_file{
         runner,
@@ -151,7 +148,7 @@ try
         [&config_store](auto&... args){ config_store.load_file(args...); }};
 
     std::function<void()> shutdown_hook{[]{}};
-    runner.add_stop_callback([&] { shutdown_hook(); application_switcher.stop(); });
+    runner.add_stop_callback([&] { shutdown_hook(); });
 
     InputFilters input_filters;
     me::TestClientRunner test_runner;
@@ -160,66 +157,6 @@ try
 
     for (auto const& ext : wayland_extensions.all_supported())
         wayland_extensions.enable(ext);
-
-    // The following filter triggers the application selector internal application
-    // on "Ctrl + Tab" and "Ctrl + Shift + Tab". Note that this does NOT use
-    // "Alt + Tab" as that is claimed by the MinimalWindowManager for the time being.
-    auto const application_switcher_filter = [application_switcher=application_switcher, is_running = false](MirKeyboardEvent const* key_event) mutable
-    {
-        if (mir_keyboard_event_action(key_event) == mir_keyboard_action_down)
-        {
-            auto const modifiers = mir_keyboard_event_modifiers(key_event);
-            if (modifiers & mir_input_event_modifier_ctrl)
-            {
-                auto const scancode = mir_keyboard_event_scan_code(key_event);
-                if (modifiers & mir_input_event_modifier_shift)
-                {
-                    if (scancode == KEY_TAB)
-                    {
-                        application_switcher.prev_app();
-                        is_running = true;
-                        return true;
-                    }
-                    else if (scancode == KEY_GRAVE)
-                    {
-                        application_switcher.prev_window();
-                        is_running = true;
-                        return true;
-                    }
-                }
-                if (scancode == KEY_TAB)
-                {
-                    application_switcher.next_app();
-                    is_running = true;
-                    return true;
-                }
-                else if (scancode == KEY_GRAVE)
-                {
-                    application_switcher.next_window();
-                    is_running = true;
-                    return true;
-                }
-                else if (scancode == KEY_ESC && is_running)
-                {
-                    application_switcher.cancel();
-                    is_running = false;
-                    return true;
-                }
-            }
-        }
-        else if (mir_keyboard_event_action(key_event) == mir_keyboard_action_up)
-        {
-            auto const scancode = mir_keyboard_event_scan_code(key_event);
-            if ((scancode == KEY_LEFTCTRL || scancode == KEY_RIGHTCTRL) && is_running)
-            {
-                application_switcher.confirm();
-                is_running = false;
-                return true;
-            }
-        }
-
-        return false;
-    };
 
     auto const server_exit_status = runner.run_with({
         // example options for display layout, logging and timeout
@@ -239,8 +176,6 @@ try
         sticky_keys,
         hover_click,
         keymap,
-        miral::AppendKeyboardEventFilter{application_switcher_filter},
-        miral::StartupInternalClient{application_switcher},
     });
 
     // Propagate any test failure

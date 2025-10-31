@@ -38,6 +38,8 @@
 #include <gio/gio.h>
 
 #include "layer_shell_wayland_surface.h"
+#include "mir/synchronised.h"
+#include "miral/append_keyboard_event_filter.h"
 #include "miral/wayland_extensions.h"
 
 namespace geom = mir::geometry;
@@ -836,4 +838,81 @@ void miral::ApplicationSwitcher::cancel() const
 void miral::ApplicationSwitcher::stop() const
 {
     self->stop();
+}
+
+class miral::ApplicationSwitcherKeyboardFilter::Self
+{
+public:
+    explicit Self(ApplicationSwitcher const& switcher, KeybindConfiguration const& keybind_configuration)
+        : switcher(switcher),
+          keybind_configuration(keybind_configuration),
+          keyboard_event_filter([&, is_running = false](MirKeyboardEvent const* key_event) mutable
+         {
+            auto const modifiers = toolkit::mir_keyboard_event_modifiers(key_event);
+            if (toolkit::mir_keyboard_event_action(key_event) == mir_keyboard_action_down)
+            {
+                if (modifiers & keybind_configuration.primary_modifier)
+                {
+                    auto const scancode = toolkit::mir_keyboard_event_scan_code(key_event);
+                    if (modifiers & keybind_configuration.reverse_modifier)
+                    {
+                        if (scancode == keybind_configuration.application_key)
+                        {
+                            switcher.prev_app();
+                            is_running = true;
+                            return true;
+                        }
+                        else if (scancode == keybind_configuration.window_key)
+                        {
+                            switcher.prev_window();
+                            is_running = true;
+                            return true;
+                        }
+                    }
+                    if (scancode == keybind_configuration.application_key)
+                    {
+                        switcher.next_app();
+                        is_running = true;
+                        return true;
+                    }
+                    else if (scancode == keybind_configuration.window_key)
+                    {
+                        switcher.next_window();
+                        is_running = true;
+                        return true;
+                    }
+                }
+            }
+            else if (is_running && toolkit::mir_keyboard_event_action(key_event) == mir_keyboard_action_up)
+            {
+                if (!(modifiers & keybind_configuration.primary_modifier))
+                {
+                    switcher.confirm();
+                    is_running = false;
+                    return true;
+                }
+            }
+
+            return false;
+         })
+    {
+    }
+
+    ApplicationSwitcher switcher;
+    KeybindConfiguration keybind_configuration;
+    AppendKeyboardEventFilter keyboard_event_filter;
+};
+
+miral::ApplicationSwitcherKeyboardFilter::ApplicationSwitcherKeyboardFilter(
+    ApplicationSwitcher const& switcher,
+    KeybindConfiguration const& keybind_configuration)
+    : self(std::make_shared<Self>(switcher, keybind_configuration))
+{
+}
+
+miral::ApplicationSwitcherKeyboardFilter::~ApplicationSwitcherKeyboardFilter() = default;
+
+void miral::ApplicationSwitcherKeyboardFilter::operator()(mir::Server& server) const
+{
+    self->keyboard_event_filter(server);
 }
