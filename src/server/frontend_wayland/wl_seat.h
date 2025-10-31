@@ -113,8 +113,6 @@ public:
     void add_focus_listener(wayland::Client* client, FocusListener* listener);
     void remove_focus_listener(wayland::Client* client, FocusListener* listener);
 
-    auto surface_registry() const -> std::shared_ptr<frontend::SurfaceRegistry>;
-
 private:
     void set_focus_to(WlSurface* surface);
 
@@ -145,7 +143,6 @@ private:
     std::shared_ptr<input::Seat> const seat;
 
     std::shared_ptr<shell::AccessibilityManager> const accessibility_manager;
-    std::shared_ptr<frontend::SurfaceRegistry> const surface_registry_;
 
     void bind(wl_resource* new_wl_seat) override;
 };

@@ -221,8 +221,7 @@ mf::WlSeat::WlSeat(
         clock{clock},
         input_hub{input_hub},
         seat{seat},
-        accessibility_manager{accessibility_manager},
-        surface_registry_{surface_registry}
+        accessibility_manager{accessibility_manager}
 {
     input_hub->add_observer(config_observer);
     keyboard_observer_registrar->register_interest(keyboard_observer, wayland_executor);
@@ -379,11 +378,6 @@ void mf::WlSeat::add_focus_listener(mw::Client* client, FocusListener* listener)
 void mf::WlSeat::remove_focus_listener(mw::Client* client, FocusListener* listener)
 {
     focus_listeners->unregister_listener(client, listener);
-}
-
-auto mir::frontend::WlSeat::surface_registry() const -> std::shared_ptr<frontend::SurfaceRegistry>
-{
-    return surface_registry_;
 }
 
 mf::PointerEventDispatcher::PointerEventDispatcher(WlPointer* wl_pointer) :
