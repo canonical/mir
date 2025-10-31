@@ -916,4 +916,3 @@ void miral::ApplicationSwitcherKeyboardFilter::operator()(mir::Server& server) c
 {
     self->keyboard_event_filter(server);
 }
-
