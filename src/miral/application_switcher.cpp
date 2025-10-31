@@ -39,6 +39,7 @@
 
 #include "layer_shell_wayland_surface.h"
 #include "mir/synchronised.h"
+#include "miral/append_keyboard_event_filter.h"
 #include "miral/wayland_extensions.h"
 
 namespace geom = mir::geometry;
@@ -842,104 +843,77 @@ void miral::ApplicationSwitcher::stop() const
 class miral::ApplicationSwitcherKeyboardFilter::Self
 {
 public:
-    explicit Self(ApplicationSwitcher const& switcher)
-        : switcher(switcher)
+    explicit Self(ApplicationSwitcher const& switcher, KeybindConfiguration const& keybind_configuration)
+        : switcher(switcher),
+          keybind_configuration(keybind_configuration),
+          keyboard_event_filter([&, is_running = false](MirKeyboardEvent const* key_event) mutable
+         {
+            auto const modifiers = toolkit::mir_keyboard_event_modifiers(key_event);
+            if (toolkit::mir_keyboard_event_action(key_event) == mir_keyboard_action_down)
+            {
+                if (modifiers & keybind_configuration.primary_modifier)
+                {
+                    auto const scancode = toolkit::mir_keyboard_event_scan_code(key_event);
+                    if (modifiers & keybind_configuration.reverse_modifier)
+                    {
+                        if (scancode == keybind_configuration.application_key)
+                        {
+                            switcher.prev_app();
+                            is_running = true;
+                            return true;
+                        }
+                        else if (scancode == keybind_configuration.window_key)
+                        {
+                            switcher.prev_window();
+                            is_running = true;
+                            return true;
+                        }
+                    }
+                    if (scancode == keybind_configuration.application_key)
+                    {
+                        switcher.next_app();
+                        is_running = true;
+                        return true;
+                    }
+                    else if (scancode == keybind_configuration.window_key)
+                    {
+                        switcher.next_window();
+                        is_running = true;
+                        return true;
+                    }
+                }
+            }
+            else if (is_running && toolkit::mir_keyboard_event_action(key_event) == mir_keyboard_action_up)
+            {
+                if (!(modifiers & keybind_configuration.primary_modifier))
+                {
+                    switcher.confirm();
+                    is_running = false;
+                    return true;
+                }
+            }
+
+            return false;
+         })
     {
     }
 
-    struct State
-    {
-        MirInputEventModifier primary = mir_input_event_modifier_alt;
-        MirInputEventModifier reverse = mir_input_event_modifier_shift;
-        int application_key = KEY_TAB;
-        int window_key = KEY_GRAVE;
-    };
-
     ApplicationSwitcher switcher;
-    mir::Synchronised<State> state;
+    KeybindConfiguration keybind_configuration;
+    AppendKeyboardEventFilter keyboard_event_filter;
 };
 
-miral::ApplicationSwitcherKeyboardFilter::ApplicationSwitcherKeyboardFilter(ApplicationSwitcher const& switcher)
-    : self(std::make_unique<Self>(switcher))
+miral::ApplicationSwitcherKeyboardFilter::ApplicationSwitcherKeyboardFilter(
+    ApplicationSwitcher const& switcher,
+    KeybindConfiguration const& keybind_configuration)
+    : self(std::make_shared<Self>(switcher, keybind_configuration))
 {
 }
 
 miral::ApplicationSwitcherKeyboardFilter::~ApplicationSwitcherKeyboardFilter() = default;
 
-miral::ApplicationSwitcherKeyboardFilter& miral::ApplicationSwitcherKeyboardFilter::primary_modifier(MirInputEventModifier modifier)
+void miral::ApplicationSwitcherKeyboardFilter::operator()(mir::Server& server) const
 {
-    self->state.lock()->primary = modifier;
-    return *this;
+    self->keyboard_event_filter(server);
 }
 
-miral::ApplicationSwitcherKeyboardFilter& miral::ApplicationSwitcherKeyboardFilter::reverse_modifier(MirInputEventModifier modifier)
-{
-    self->state.lock()->reverse = modifier;
-    return *this;
-}
-
-miral::ApplicationSwitcherKeyboardFilter& miral::ApplicationSwitcherKeyboardFilter::application_key(int key)
-{
-    self->state.lock()->application_key = key;
-    return *this;
-}
-
-miral::ApplicationSwitcherKeyboardFilter& miral::ApplicationSwitcherKeyboardFilter::window_key(int key)
-{
-    self->state.lock()->window_key = key;
-    return *this;
-}
-
-miral::ApplicationSwitcherKeyboardFilter::operator std::function<bool(const MirKeyboardEvent*)>() const
-{
-    return [&, is_running = false](MirKeyboardEvent const* key_event) mutable
-    {
-        auto const state = self->state.lock();
-        auto const modifiers = toolkit::mir_keyboard_event_modifiers(key_event);
-        if (toolkit::mir_keyboard_event_action(key_event) == mir_keyboard_action_down)
-        {
-            if (modifiers & state->primary)
-            {
-                auto const scancode = toolkit::mir_keyboard_event_scan_code(key_event);
-                if (modifiers & state->reverse)
-                {
-                    if (scancode == state->application_key)
-                    {
-                        self->switcher.prev_app();
-                        is_running = true;
-                        return true;
-                    }
-                    else if (scancode == state->window_key)
-                    {
-                        self->switcher.prev_window();
-                        is_running = true;
-                        return true;
-                    }
-                }
-                if (scancode == state->application_key)
-                {
-                    self->switcher.next_app();
-                    is_running = true;
-                    return true;
-                }
-                else if (scancode == state->window_key)
-                {
-                    self->switcher.next_window();
-                    is_running = true;
-                    return true;
-                }
-            }
-        }
-        else if (is_running && toolkit::mir_keyboard_event_action(key_event) == mir_keyboard_action_up)
-        {
-            if (!(modifiers & state->primary))
-            {
-                self->switcher.confirm();
-                is_running = false;
-                return true;
-            }
-        }
-
-        return false;
-    };
-}

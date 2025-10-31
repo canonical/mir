@@ -371,6 +371,6 @@ int main(int argc, char const* argv[])
             locate_pointer,
             AppendKeyboardEventFilter{locate_pointer_filter},
             StartupInternalClient{application_switcher},
-            AppendKeyboardEventFilter{ApplicationSwitcherKeyboardFilter(application_switcher)}
+            ApplicationSwitcherKeyboardFilter(application_switcher, ApplicationSwitcherKeyboardFilter::KeybindConfiguration{})
         });
 }
