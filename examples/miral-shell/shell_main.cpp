@@ -317,23 +317,43 @@ int main(int argc, char const* argv[])
 
     auto const locate_pointer_filter = [&locate_pointer](auto const* keyboard_event)
     {
-            auto const keysym = mir_keyboard_event_keysym(keyboard_event);
-            if (keysym != XKB_KEY_Control_R && keysym != XKB_KEY_Control_L)
-                return false;
+        auto const keysym = mir_keyboard_event_keysym(keyboard_event);
+        auto const action = mir_keyboard_event_action(keyboard_event);
+        auto const modifiers = mir_keyboard_event_modifiers(keyboard_event);
 
-            switch (mir_keyboard_event_action(keyboard_event)) {
-                case mir_keyboard_action_down:
-                    locate_pointer.schedule_request();
-                    break;
-                case mir_keyboard_action_up:
-                    locate_pointer.cancel_request();
-                    break;
+        auto only_ctrl_down = [modifiers]
+        {
+            auto const ctrls_mask = mir_input_event_modifier_ctrl | mir_input_event_modifier_ctrl_left |
+                                    mir_input_event_modifier_ctrl_right;
+            auto const any_ctrl_down = modifiers & ctrls_mask;
+            auto const any_other_modifier_down = modifiers & ~ctrls_mask;
 
-                default:
-                    return false;
+            return any_ctrl_down && !any_other_modifier_down;
+        }();
+
+        // If ctrl is the only modifier pressed, make sure the keysym is also ctrl
+        if (only_ctrl_down)
+        {
+            switch (action)
+            {
+            case mir_keyboard_action_down:
+                only_ctrl_down = (keysym == XKB_KEY_Control_R || keysym == XKB_KEY_Control_L);
+                break;
+            case mir_keyboard_action_up:
+                only_ctrl_down = false;
+                break;
+
+            default:
+                break;
             }
+        }
 
-            return false;
+        if(only_ctrl_down)
+            locate_pointer.schedule_request();
+        else
+            locate_pointer.cancel_request();
+
+        return false;
     };
 
     // The following filter triggers the application selector internal application
