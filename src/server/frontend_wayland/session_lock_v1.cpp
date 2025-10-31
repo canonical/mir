@@ -62,8 +62,7 @@ class SessionLockV1 : wayland::SessionLockV1
 public:
     SessionLockV1(
         wl_resource* new_resource,
-        mf::SessionLockManagerV1& manager,
-        std::shared_ptr<frontend::SurfaceRegistry> const& surface_registry);
+        mf::SessionLockManagerV1& manager);
     ~SessionLockV1();
 
 private:
@@ -90,7 +89,6 @@ private:
      * `WaylandExecutor` so all interactions are single-threaded
      */
     std::shared_ptr<SessionLockV1Observer> const observer;
-    std::shared_ptr<frontend::SurfaceRegistry> const surface_registry;
 };
 
 class SessionLockSurfaceV1 : wayland::SessionLockSurfaceV1, public WindowWlSurfaceRole
@@ -100,8 +98,7 @@ public:
         wl_resource* new_resource,
         mf::SessionLockManagerV1& manager,
         WlSurface* surface,
-        graphics::DisplayConfigurationOutputId output_id,
-        std::shared_ptr<frontend::SurfaceRegistry> const& surface_registry);
+        graphics::DisplayConfigurationOutputId output_id);
     ~SessionLockSurfaceV1() = default;
 
 private:
@@ -199,19 +196,17 @@ void mf::SessionLockManagerV1::bind(wl_resource* new_resource)
 
 void mf::SessionLockManagerV1::Instance::lock(wl_resource* lock)
 {
-    new SessionLockV1(lock, manager, surface_registry);
+    new SessionLockV1(lock, manager);
 }
 
 // SessionLockV1
 
 mf::SessionLockV1::SessionLockV1(
     wl_resource* new_resource,
-    SessionLockManagerV1& manager,
-    std::shared_ptr<frontend::SurfaceRegistry> const& surface_registry) :
+    SessionLockManagerV1& manager) :
     mw::SessionLockV1(new_resource, Version<1>()),
     manager{manager},
-    observer{std::make_shared<SessionLockV1Observer>(*this)},
-    surface_registry{surface_registry}
+    observer{std::make_shared<SessionLockV1Observer>(*this)}
 {
     if (manager.try_lock(this))
     {
@@ -243,7 +238,7 @@ void mf::SessionLockV1::get_lock_surface(wl_resource* id, wl_resource* surface_r
             " does not map to a valid Mir output ID"));
     }
 
-    new SessionLockSurfaceV1{id, manager, WlSurface::from(surface_resource), output_id.value(), surface_registry};
+    new SessionLockSurfaceV1{id, manager, WlSurface::from(surface_resource), output_id.value()};
 }
 
 void mf::SessionLockV1::destroy()
@@ -296,8 +291,7 @@ mf::SessionLockSurfaceV1::SessionLockSurfaceV1(
     wl_resource* new_resource,
     mf::SessionLockManagerV1& manager,
     WlSurface* surface,
-    graphics::DisplayConfigurationOutputId output_id,
-    std::shared_ptr<frontend::SurfaceRegistry> const& surface_registry)
+    graphics::DisplayConfigurationOutputId output_id)
     : mw::SessionLockSurfaceV1(new_resource, Version<1>()),
       WindowWlSurfaceRole(
           manager.wayland_executor,
@@ -306,7 +300,7 @@ mf::SessionLockSurfaceV1::SessionLockSurfaceV1(
           surface,
           manager.shell,
           manager.output_manager,
-          surface_registry)
+          manager.surface_registry)
 {
     shell::SurfaceSpecification spec;
     spec.state = mir_window_state_attached;
