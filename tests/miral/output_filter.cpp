@@ -29,6 +29,7 @@
 #include <format>
 
 using namespace testing;
+using mir::logging::Logger;
 
 namespace
 {
@@ -50,26 +51,23 @@ struct TestOutputFilterConfigFilter : public OutputFilter, public WithParamInter
     {
         OutputFilter::SetUp();
 
-        add_server_init([this](mir::Server& server)
-        {
-            server.override_the_logger(logger_builder);
-        });
-
+        add_server_init([this](mir::Server& server){ server.override_the_logger(logger_builder); });
         add_to_environment("MIR_SERVER_LOGGING", "true");
     }
 
     void TearDown() override
     {
         OutputFilter::TearDown();
+        // Be a good citizen and replace the mock logger before destroying it
         mir::logging::set_logger(std::make_shared<mir::test::doubles::NullLogger>());
     }
 
-    struct TestLogger : mir::logging::Logger
+    struct MockLogger : Logger
     {
         MOCK_METHOD(void, log, (mir::logging::Severity severity, const std::string& message, const std::string& component), (override));
     };
-    TestLogger test_logger;
-    mir::Server::Builder<mir::logging::Logger> const logger_builder = [this]() -> std::shared_ptr<mir::logging::Logger> { return mir::test::fake_shared(test_logger); };
+    MockLogger mock_logger;
+    mir::Server::Builder<Logger> const logger_builder = [this]() -> std::shared_ptr<Logger> { return mir::test::fake_shared(mock_logger); };
 };
 }
 
@@ -106,17 +104,13 @@ INSTANTIATE_TEST_SUITE_P(
 TEST_P(TestOutputFilterConfigFilter, live_config_can_set_none_without_warning)
 {
     auto const [option, output_filter_log_occurences] = GetParam();
-    EXPECT_CALL(test_logger, log(mir::logging::Severity::warning, HasSubstr("output_filter"), _))
+    EXPECT_CALL(mock_logger, log(mir::logging::Severity::warning, HasSubstr("output_filter"), _))
         .Times(output_filter_log_occurences);
-    EXPECT_CALL(test_logger, log(_, Not(HasSubstr("output_filter")), _)).Times(AnyNumber());
+    EXPECT_CALL(mock_logger, log(_, Not(HasSubstr("output_filter")), _)).Times(AnyNumber());
 
     miral::live_config::IniFile ini_file;
     miral::OutputFilter output_filter{ini_file};
-    add_server_init([&output_filter](mir::Server& server)
-    {
-        output_filter(server);
-    });
-    add_to_environment("MIR_SERVER_LOGGING", "true");
+    add_server_init([&output_filter](mir::Server& server) { output_filter(server); });
     start_server();
 
     std::istringstream input_stream{std::format("output_filter={}", option)};
