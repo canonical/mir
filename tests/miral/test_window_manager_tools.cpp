@@ -292,7 +292,7 @@ auto mt::TestWindowManagerTools::create_surface(
 {
     // This type is Mir-internal, I hope we don't need to create it here
     std::shared_ptr<mir::scene::SurfaceObserver> const observer;
-    return session->create_surface(nullptr, {}, params, observer, nullptr);
+    return session->create_surface(nullptr, params, observer, nullptr);
 }
 
 auto mt::TestWindowManagerTools::create_fake_display_configuration(std::vector<miral::Rectangle> const& outputs)
@@ -378,7 +378,6 @@ auto mt::TestWindowManagerTools::create_and_select_window_for_session(
 
 auto mt::StubStubSession::create_surface(
     std::shared_ptr<mir::scene::Session> const& /*session*/,
-    mir::wayland::Weak<mir::frontend::WlSurface> const& /*wayland_surface*/,
     mir::shell::SurfaceSpecification const& params,
     std::shared_ptr<mir::scene::SurfaceObserver> const& /*observer*/,
     mir::Executor*) -> std::shared_ptr<mir::scene::Surface>

@@ -81,7 +81,6 @@ struct MockSurface
         : ms::WaylandBasicSurface{
               session,
               {},
-              {},
               {{},{}},
               mir_pointer_unconfined,
               { { std::make_shared<testing::NiceMock<mtd::MockBufferStream>>(), {0, 0}} },
@@ -149,12 +148,13 @@ struct MockShell
         MirInputEvent const*,
         MirResizeEdge));
 
-    MOCK_METHOD(std::shared_ptr<ms::Surface>, create_surface, (
-        std::shared_ptr<ms::Session> const&,
-        mw::Weak<mf::WlSurface> const&,
-        msh::SurfaceSpecification const&,
-        std::shared_ptr<ms::SurfaceObserver> const&,
-        mir::Executor*));
+    MOCK_METHOD(
+        std::shared_ptr<ms::Surface>,
+        create_surface,
+        (std::shared_ptr<ms::Session> const&,
+         msh::SurfaceSpecification const&,
+         std::shared_ptr<ms::SurfaceObserver> const&,
+         mir::Executor*));
 
     MOCK_METHOD(void, destroy_surface, (
         std::shared_ptr<ms::Session> const&,
@@ -166,10 +166,9 @@ struct DecorationBasicDecoration
 {
     void SetUp() override
     {
-        ON_CALL(shell, create_surface(_, _, _, _, _))
+        ON_CALL(shell, create_surface(_, _, _, _))
             .WillByDefault(Invoke([this](
                     std::shared_ptr<ms::Session> const&,
-                    mw::Weak<mf::WlSurface> const&,
                     msh::SurfaceSpecification const& params,
                     std::shared_ptr<ms::SurfaceObserver> const& observer,
                     mir::Executor*) -> std::shared_ptr<ms::Surface>

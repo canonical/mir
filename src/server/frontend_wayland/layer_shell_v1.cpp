@@ -68,9 +68,11 @@ namespace frontend
 class LayerShellV1::Instance : wayland::LayerShellV1
 {
 public:
-    Instance(wl_resource* new_resource, mf::LayerShellV1* shell)
-        : LayerShellV1{new_resource, Version<4>()},
-          shell{shell}
+    Instance(
+        wl_resource* new_resource,
+        mf::LayerShellV1* shell) :
+        LayerShellV1{new_resource, Version<4>()},
+        shell{shell}
     {
     }
 
@@ -222,12 +224,14 @@ mf::LayerShellV1::LayerShellV1(
     Executor& wayland_executor,
     std::shared_ptr<msh::Shell> shell,
     WlSeat& seat,
-    OutputManager* output_manager)
+    OutputManager* output_manager,
+    std::shared_ptr<frontend::SurfaceRegistry> const& surface_registry)
     : Global(display, Version<4>()),
       wayland_executor{wayland_executor},
       shell{shell},
       seat{seat},
-      output_manager{output_manager}
+      output_manager{output_manager},
+      surface_registry{surface_registry}
 {
 }
 
@@ -288,7 +292,8 @@ mf::LayerSurfaceV1::LayerSurfaceV1(
           wayland::LayerSurfaceV1::client,
           surface,
           layer_shell.shell,
-          layer_shell.output_manager)
+          layer_shell.output_manager,
+          layer_shell.surface_registry)
 {
     // TODO: Error if surface has buffer attached or committed
     shell::SurfaceSpecification spec;

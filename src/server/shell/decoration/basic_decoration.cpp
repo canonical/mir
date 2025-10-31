@@ -284,7 +284,7 @@ auto msd::BasicDecoration::create_surface() const -> std::shared_ptr<scene::Surf
             mg::BufferUsage::software}),
         {},
         }};
-    return shell->create_surface(session, {}, params, nullptr, nullptr);
+    return shell->create_surface(session, params, nullptr, nullptr);
 }
 
 void msd::BasicDecoration::update(
