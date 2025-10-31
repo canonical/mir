@@ -65,7 +65,6 @@ struct ExtImageCaptureV1Ctx
 
 /* Image copy backends */
 class ExtImageCopyCaptureSessionV1;
-class ExtImageCopyCaptureFrameV1;
 
 class ExtImageCopyBackend :
     public OutputConfigListener {
@@ -74,7 +73,10 @@ public:
     ~ExtImageCopyBackend();
 
     bool has_damage();
-    void begin_capture(ExtImageCopyCaptureFrameV1& frame);
+    void begin_capture(
+        std::shared_ptr<renderer::software::RWMappable> shm_data,
+        geom::Rectangle const& frame_damage,
+        std::function<void(std::optional<time::Timestamp>, geom::Rectangle)> const& callback);
 
 protected:
     enum class DamageAmount
@@ -164,6 +166,8 @@ private:
     void create_session(wl_resource* new_resource, wl_resource* source, uint32_t options) override;
     void create_pointer_cursor_session(wl_resource* new_resource, wl_resource* source, wl_resource* pointer) override;
 };
+
+class ExtImageCopyCaptureFrameV1;
 
 class ExtImageCopyCaptureSessionV1
     : public wayland::ImageCopyCaptureSessionV1
@@ -325,7 +329,10 @@ bool mf::ExtImageCopyBackend::has_damage()
     return damage_amount != DamageAmount::none;
 }
 
-void mf::ExtImageCopyBackend::begin_capture(ExtImageCopyCaptureFrameV1& frame)
+void mf::ExtImageCopyBackend::begin_capture(
+    std::shared_ptr<renderer::software::RWMappable> shm_data,
+    [[maybe_unused]] geom::Rectangle const& frame_damage,
+    std::function<void(std::optional<time::Timestamp>, geom::Rectangle)> const& callback)
 {
     auto const& output_config = output.value().current_config();
     auto const buffer_size = output_config.modes[output_config.current_mode_index].size;
@@ -351,26 +358,19 @@ void mf::ExtImageCopyBackend::begin_capture(ExtImageCopyCaptureFrameV1& frame)
         break;
     }
 
-    auto shm_buffer = dynamic_cast<ShmBuffer*>(wayland::as_nullable_ptr(frame.target));
-    auto shm_data = shm_buffer->data();
-
     // TODO: capture only the region covered by
     // union(buffer_space_damage, frame->frame_damage)
 
     screen_shooter->capture(
         std::move(shm_data), output_space_area, transform, overlay_cursor,
-        [executor=ctx->wayland_executor, buffer_space_damage, frame=wayland::make_weak(&frame)](std::optional<time::Timestamp> captured_time)
+        [executor=ctx->wayland_executor, buffer_space_damage, callback](std::optional<time::Timestamp> captured_time)
         {
-            executor->spawn([frame, captured_time, buffer_space_damage]()
+            executor->spawn([callback, captured_time, buffer_space_damage]()
                 {
-                    if (frame)
-                    {
-                        frame.value().report_result(captured_time, buffer_space_damage);
-                    }
+                    callback(captured_time, buffer_space_damage);
                 });
         });
 
-    frame.frame_damage = geom::Rectangle{};
     damage_amount = DamageAmount::none;
 }
 
@@ -551,7 +551,16 @@ void mf::ExtImageCopyCaptureSessionV1::maybe_capture_frame()
         return;
     }
 
-    backend->begin_capture(current_frame.value());
+    backend->begin_capture(
+        shm_data, current_frame.value().frame_damage,
+        [frame=current_frame](std::optional<time::Timestamp> captured_time, geom::Rectangle buffer_space_damage)
+            {
+                if (frame)
+                {
+                    frame.value().report_result(captured_time, buffer_space_damage);
+                }
+            });
+    current_frame.value().frame_damage = geom::Rectangle{};
 }
 
 void mf::ExtImageCopyCaptureSessionV1::create_frame(
