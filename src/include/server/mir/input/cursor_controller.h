@@ -43,9 +43,11 @@ class Scene;
 class CursorController : public CursorObserver, public frontend::DragIconController
 {
 public:
-    CursorController(std::shared_ptr<Scene> const& input_targets,
+    CursorController(
+        std::shared_ptr<Scene> const& input_targets,
         std::shared_ptr<graphics::Cursor> const& cursor,
-        std::shared_ptr<graphics::CursorImage> const& default_cursor_image);
+        std::shared_ptr<graphics::CursorImage> const& default_cursor_image,
+        std::shared_ptr<CursorObserver> const& downstream_observer);
     virtual ~CursorController();
 
     void cursor_moved_to(float abs_x, float abs_y) override;
@@ -64,6 +66,7 @@ private:
     std::shared_ptr<Scene> const input_targets;
     std::shared_ptr<graphics::Cursor> const cursor;
     std::shared_ptr<graphics::CursorImage> const default_cursor_image;
+    std::shared_ptr<CursorObserver> const cursor_observer;
     std::weak_ptr<scene::Observer> observer;    // Not mutated after construction
 
     std::mutex cursor_state_guard;
