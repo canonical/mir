@@ -70,11 +70,9 @@ class LayerShellV1::Instance : wayland::LayerShellV1
 public:
     Instance(
         wl_resource* new_resource,
-        mf::LayerShellV1* shell,
-        std::shared_ptr<frontend::SurfaceRegistry> const& surface_registry) :
+        mf::LayerShellV1* shell) :
         LayerShellV1{new_resource, Version<4>()},
-        shell{shell},
-        surface_registry{surface_registry}
+        shell{shell}
     {
     }
 
@@ -87,7 +85,6 @@ private:
         std::string const& namespace_) override;
 
     mf::LayerShellV1* const shell;
-    std::shared_ptr<frontend::SurfaceRegistry> const surface_registry;
 };
 
 class LayerSurfaceV1 : public wayland::LayerSurfaceV1, public WindowWlSurfaceRole
@@ -98,8 +95,7 @@ public:
         WlSurface* surface,
         std::optional<graphics::DisplayConfigurationOutputId> output_id,
         LayerShellV1 const& layer_shell,
-        MirDepthLayer layer,
-        std::shared_ptr<frontend::SurfaceRegistry> const& surface_registry);
+        MirDepthLayer layer);
 
     ~LayerSurfaceV1() = default;
 
@@ -261,7 +257,7 @@ auto mf::LayerShellV1::get_window(wl_resource* surface) -> std::shared_ptr<ms::S
 
 void mf::LayerShellV1::bind(wl_resource* new_resource)
 {
-    new Instance{new_resource, this, surface_registry};
+    new Instance{new_resource, this};
 }
 
 void mf::LayerShellV1::Instance::get_layer_surface(
@@ -278,8 +274,7 @@ void mf::LayerShellV1::Instance::get_layer_surface(
         WlSurface::from(surface),
         OutputManager::output_id_for(output),
         *shell,
-        layer_shell_layer_to_mir_depth_layer(layer),
-        surface_registry);
+        layer_shell_layer_to_mir_depth_layer(layer));
 }
 
 // LayerSurfaceV1
@@ -289,8 +284,7 @@ mf::LayerSurfaceV1::LayerSurfaceV1(
     WlSurface* surface,
     std::optional<graphics::DisplayConfigurationOutputId> output_id,
     LayerShellV1 const& layer_shell,
-    MirDepthLayer layer,
-    std::shared_ptr<frontend::SurfaceRegistry> const& surface_registry)
+    MirDepthLayer layer)
     : mw::LayerSurfaceV1(new_resource, Version<4>()),
       WindowWlSurfaceRole(
           layer_shell.wayland_executor,
@@ -299,7 +293,7 @@ mf::LayerSurfaceV1::LayerSurfaceV1(
           surface,
           layer_shell.shell,
           layer_shell.output_manager,
-          surface_registry)
+          layer_shell.surface_registry)
 {
     // TODO: Error if surface has buffer attached or committed
     shell::SurfaceSpecification spec;
