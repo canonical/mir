@@ -21,6 +21,7 @@
 #include <mir/server.h>
 
 #include <miral/test_server.h>
+#include "mir/test/doubles/null_logger.h"
 #include <mir/test/fake_shared.h>
 
 #include <gmock/gmock.h>
@@ -37,12 +38,6 @@ struct OutputFilter : miral::TestServer
     {
         start_server_in_setup = false;
     }
-
-    struct TestLogger : mir::logging::Logger
-    {
-        MOCK_METHOD(void, log, (mir::logging::Severity severity, const std::string& message, const std::string& component), (override));
-    };
-    TestLogger test_logger;
 };
 
 struct TestOutputFilterFilterCtor : public OutputFilter, public WithParamInterface<MirOutputFilter>
@@ -51,6 +46,30 @@ struct TestOutputFilterFilterCtor : public OutputFilter, public WithParamInterfa
 
 struct TestOutputFilterConfigFilter : public OutputFilter, public WithParamInterface<std::pair<std::string, int>>
 {
+    void SetUp() override
+    {
+        OutputFilter::SetUp();
+
+        add_server_init([this](mir::Server& server)
+        {
+            server.override_the_logger(logger_builder);
+        });
+
+        add_to_environment("MIR_SERVER_LOGGING", "true");
+    }
+
+    void TearDown() override
+    {
+        OutputFilter::TearDown();
+        mir::logging::set_logger(std::make_shared<mir::test::doubles::NullLogger>());
+    }
+
+    struct TestLogger : mir::logging::Logger
+    {
+        MOCK_METHOD(void, log, (mir::logging::Severity severity, const std::string& message, const std::string& component), (override));
+    };
+    TestLogger test_logger;
+    mir::Server::Builder<mir::logging::Logger> const logger_builder = [this]() -> std::shared_ptr<mir::logging::Logger> { return mir::test::fake_shared(test_logger); };
 };
 }
 
@@ -91,13 +110,11 @@ TEST_P(TestOutputFilterConfigFilter, live_config_can_set_none_without_warning)
         .Times(output_filter_log_occurences);
     EXPECT_CALL(test_logger, log(_, Not(HasSubstr("output_filter")), _)).Times(AnyNumber());
 
-    auto const logger_builder = [this]() -> std::shared_ptr<mir::logging::Logger> { return mir::test::fake_shared(test_logger); };
     miral::live_config::IniFile ini_file;
     miral::OutputFilter output_filter{ini_file};
-    add_server_init([&output_filter, &logger_builder](mir::Server& server)
+    add_server_init([&output_filter](mir::Server& server)
     {
         output_filter(server);
-        server.override_the_logger(logger_builder);
     });
     add_to_environment("MIR_SERVER_LOGGING", "true");
     start_server();
