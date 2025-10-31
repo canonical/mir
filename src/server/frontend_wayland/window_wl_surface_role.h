@@ -73,7 +73,8 @@ public:
         wayland::Client* client,
         WlSurface* surface,
         std::shared_ptr<shell::Shell> const& shell,
-        OutputManager* output_manager);
+        OutputManager* output_manager,
+        std::shared_ptr<SurfaceRegistry> const& surface_registry);
 
     ~WindowWlSurfaceRole() override;
 

@@ -123,6 +123,7 @@ public:
         std::shared_ptr<scene::SessionCoordinator> session_coordinator;
         std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> keyboard_observer_registrar;
         std::shared_ptr<shell::TokenAuthority> token_authority;
+        std::shared_ptr<frontend::SurfaceRegistry> const surface_registry;
     };
 
     WaylandExtensions() = default;

@@ -68,7 +68,8 @@ mf::WindowWlSurfaceRole::WindowWlSurfaceRole(
     mw::Client* client,
     WlSurface* surface,
     std::shared_ptr<msh::Shell> const& shell,
-    OutputManager* output_manager)
+    OutputManager* output_manager,
+    std::shared_ptr<SurfaceRegistry> const& surface_registry)
     : surface{surface},
       client{client},
       shell{shell},
@@ -78,7 +79,7 @@ mf::WindowWlSurfaceRole::WindowWlSurfaceRole(
       observer{std::make_shared<WaylandSurfaceObserver>(wayland_executor, seat, surface, this)},
       committed_min_size{0, 0},
       committed_max_size{max_possible_size},
-      surface_registry{seat->surface_registry()}
+      surface_registry{surface_registry}
 {
     spec().type = mir_window_type_freestyle;
     surface->set_role(this);
