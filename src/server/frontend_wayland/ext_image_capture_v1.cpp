@@ -66,17 +66,16 @@ struct ExtImageCaptureV1Ctx
 /* Image copy backends */
 class ExtImageCopyCaptureSessionV1;
 
-class ExtImageCopyBackend :
-    public OutputConfigListener {
+class ExtImageCopyBackend {
 public:
-    ExtImageCopyBackend(ExtImageCopyCaptureSessionV1 *session, OutputGlobal* output, bool overlay_cursor, std::shared_ptr<ExtImageCaptureV1Ctx> const& ctx);
-    ~ExtImageCopyBackend();
+    ExtImageCopyBackend(ExtImageCopyCaptureSessionV1 *session, bool overlay_cursor);
+    virtual ~ExtImageCopyBackend() = default;
 
-    bool has_damage();
-    void begin_capture(
+    virtual bool has_damage();
+    virtual void begin_capture(
         std::shared_ptr<renderer::software::RWMappable> shm_data,
         geom::Rectangle const& frame_damage,
-        std::function<void(std::optional<time::Timestamp>, geom::Rectangle)> const& callback);
+        std::function<void(std::optional<time::Timestamp>, geom::Rectangle)> const& callback) = 0;
 
 protected:
     enum class DamageAmount
@@ -86,17 +85,32 @@ protected:
         full,
     };
 
-    void apply_damage(std::optional<geom::Rectangle> const& damage);
-
     ExtImageCopyCaptureSessionV1* const session;
-    std::shared_ptr<ExtImageCaptureV1Ctx> const ctx;
     bool const overlay_cursor;
 
+    geom::Rectangle output_space_area;
     geom::Rectangle output_space_damage;
     DamageAmount damage_amount = DamageAmount::full;
 
-    // Output capture specific bits
+    void apply_damage(std::optional<geom::Rectangle> const& damage);
+};
+
+class ExtOutputImageCopyBackend
+    : public ExtImageCopyBackend, public OutputConfigListener {
+public:
+    ExtOutputImageCopyBackend(ExtImageCopyCaptureSessionV1 *session, bool overlay_cursor, OutputGlobal* output, std::shared_ptr<ExtImageCaptureV1Ctx> const& ctx);
+    ~ExtOutputImageCopyBackend();
+
+    bool has_damage() override;
+    void begin_capture(
+        std::shared_ptr<renderer::software::RWMappable> shm_data,
+        geom::Rectangle const& frame_damage,
+        std::function<void(std::optional<time::Timestamp>, geom::Rectangle)> const& callback) override;
+
+private:
     wayland::Weak<OutputGlobal> const output;
+    std::shared_ptr<ExtImageCaptureV1Ctx> const ctx;
+
     wayland::DestroyListenerId destroy_listener_id;
     std::shared_ptr<scene::SceneChangeNotification> change_notifier;
     std::unique_ptr<compositor::ScreenShooter> const screen_shooter;
@@ -183,10 +197,11 @@ public:
 private:
     void create_frame(wl_resource* new_resource) override;
 
-    std::unique_ptr<ExtImageCopyBackend> backend;
     geom::Size buffer_size;
     bool stopped = false;
     wayland::Weak<ExtImageCopyCaptureFrameV1> current_frame;
+
+    std::unique_ptr<ExtImageCopyBackend> backend;
 };
 
 class ExtImageCopyCaptureFrameV1
@@ -218,60 +233,17 @@ private:
 
 mf::ExtImageCopyBackend::ExtImageCopyBackend(
     ExtImageCopyCaptureSessionV1 *session,
-    OutputGlobal *output,
-    bool overlay_cursor,
-    std::shared_ptr<ExtImageCaptureV1Ctx> const& ctx)
+    bool overlay_cursor)
     : session{session},
-      ctx{ctx},
-      overlay_cursor{overlay_cursor},
-      output{output},
-      screen_shooter(ctx->screen_shooter_factory->create(thread_pool_executor))
+      overlay_cursor{overlay_cursor}
 {
-    if (output)
-    {
-        output->add_listener(this);
-        destroy_listener_id = output->add_destroy_listener([session]()
-            {
-                session->set_stopped();
-            });
-        output_config_changed(output->current_config());
-    } else {
-        session->set_stopped();
-    }
-}
-
-mf::ExtImageCopyBackend::~ExtImageCopyBackend()
-{
-    if (output)
-    {
-        output.value().remove_listener(this);
-        output.value().remove_destroy_listener(destroy_listener_id);
-    }
-    if (change_notifier)
-    {
-        ctx->surface_stack->remove_observer(change_notifier);
-    }
-}
-
-auto mf::ExtImageCopyBackend::output_config_changed(graphics::DisplayConfigurationOutput const& config) -> bool
-{
-    // Send buffer constraints matching new output configuration
-    auto const buffer_size = config.modes[config.current_mode_index].size;
-    session->set_buffer_constraints(buffer_size);
-    return true;
 }
 
 void mf::ExtImageCopyBackend::apply_damage(
     std::optional<geom::Rectangle> const& damage)
 {
-    if (!output) {
-        return;
-    }
-
     if (damage && damage_amount != DamageAmount::full)
     {
-        auto const output_space_area = output.value().current_config().extents();
-
         auto const intersection = intersection_of(damage.value(), output_space_area);
         if (intersection.size != geom::Size{})
         {
@@ -299,7 +271,72 @@ void mf::ExtImageCopyBackend::apply_damage(
     }
 }
 
-void mf::ExtImageCopyBackend::create_change_notifier()
+bool mf::ExtImageCopyBackend::has_damage()
+{
+    return damage_amount != DamageAmount::none;
+}
+
+mf::ExtOutputImageCopyBackend::ExtOutputImageCopyBackend(
+    ExtImageCopyCaptureSessionV1 *session,
+    bool overlay_cursor,
+    OutputGlobal *output,
+    std::shared_ptr<ExtImageCaptureV1Ctx> const& ctx)
+    : ExtImageCopyBackend{session, overlay_cursor},
+      output{output},
+      ctx{ctx},
+      screen_shooter(ctx->screen_shooter_factory->create(thread_pool_executor))
+{
+    if (output)
+    {
+        output->add_listener(this);
+        destroy_listener_id = output->add_destroy_listener([session]()
+            {
+                session->set_stopped();
+            });
+        output_config_changed(output->current_config());
+    } else {
+        session->set_stopped();
+    }
+}
+
+mf::ExtOutputImageCopyBackend::~ExtOutputImageCopyBackend()
+{
+    if (output)
+    {
+        output.value().remove_listener(this);
+        output.value().remove_destroy_listener(destroy_listener_id);
+    }
+    if (change_notifier)
+    {
+        ctx->surface_stack->remove_observer(change_notifier);
+    }
+}
+
+auto mf::ExtOutputImageCopyBackend::output_config_changed(graphics::DisplayConfigurationOutput const& config) -> bool
+{
+    // Send buffer constraints matching new output configuration
+    auto const buffer_size = config.modes[config.current_mode_index].size;
+    session->set_buffer_constraints(buffer_size);
+
+    // Mark the whole buffer as damaged
+    output_space_area = output.value().current_config().extents();
+    apply_damage(std::nullopt);
+    return true;
+}
+
+bool mf::ExtOutputImageCopyBackend::has_damage()
+{
+    if (!change_notifier)
+    {
+        // Create the change notifier the first time a client tries to
+        // capture a frame.
+        create_change_notifier();
+    }
+
+    return ExtImageCopyBackend::has_damage();
+}
+
+void mf::ExtOutputImageCopyBackend::create_change_notifier()
 {
     auto callback = [this, weak_self=wayland::make_weak(this)](std::optional<geom::Rectangle> const& damage)
         {
@@ -317,19 +354,7 @@ void mf::ExtImageCopyBackend::create_change_notifier()
     ctx->surface_stack->add_observer(change_notifier);
 }
 
-bool mf::ExtImageCopyBackend::has_damage()
-{
-    if (!change_notifier)
-    {
-        // Create the change notifier the first time a client tries to
-        // capture a frame.
-        create_change_notifier();
-    }
-
-    return damage_amount != DamageAmount::none;
-}
-
-void mf::ExtImageCopyBackend::begin_capture(
+void mf::ExtOutputImageCopyBackend::begin_capture(
     std::shared_ptr<renderer::software::RWMappable> shm_data,
     [[maybe_unused]] geom::Rectangle const& frame_damage,
     std::function<void(std::optional<time::Timestamp>, geom::Rectangle)> const& callback)
@@ -413,7 +438,7 @@ void mf::ExtOutputImageCaptureSourceManagerV1::create_source(wl_resource* new_re
 {
     auto& output_global = OutputGlobal::from_or_throw(output);
     ExtImageCopyBackendFactory backend_factory = [output=wayland::make_weak(&output_global), ctx=ctx](auto *session, bool overlay_cursor) {
-        return new ExtImageCopyBackend(session, wayland::as_nullable_ptr(output), overlay_cursor, ctx);
+        return new ExtOutputImageCopyBackend(session, overlay_cursor, wayland::as_nullable_ptr(output), ctx);
     };
     new ExtImageCaptureSourceV1{new_resource, backend_factory};
 }
@@ -498,7 +523,7 @@ mf::ExtImageCopyCaptureSessionV1::~ExtImageCopyCaptureSessionV1()
 
 void mf::ExtImageCopyCaptureSessionV1::set_buffer_constraints(geom::Size const &new_size)
 {
-    this->buffer_size = new_size;
+    buffer_size = new_size;
 
     send_buffer_size_event(
         buffer_size.width.as_uint32_t(), buffer_size.height.as_uint32_t());
