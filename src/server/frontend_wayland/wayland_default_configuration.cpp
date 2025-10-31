@@ -220,7 +220,8 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
                 ctx.session_lock,
                 *ctx.seat,
                 ctx.output_manager,
-                ctx.surface_stack);
+                ctx.surface_stack,
+                ctx.surface_registry);
         }),
     make_extension_builder<mw::MirShellV1>([](auto const& ctx)
         {
