@@ -57,6 +57,7 @@ class WlSurface;
 class WlDataDevice;
 class KeyboardCallbacks;
 class KeyboardHelper;
+class SurfaceRegistry;
 
 class PointerEventDispatcher
 {
@@ -82,7 +83,8 @@ public:
         std::shared_ptr<mir::input::InputDeviceHub> const& input_hub,
         std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> const& keyboard_observer_registrar,
         std::shared_ptr<mir::input::Seat> const& seat,
-        std::shared_ptr<shell::AccessibilityManager> const& accessibility_manager);
+        std::shared_ptr<shell::AccessibilityManager> const& accessibility_manager,
+        std::shared_ptr<frontend::SurfaceRegistry> const& surface_registry);
 
     ~WlSeat();
 
@@ -111,11 +113,7 @@ public:
     void add_focus_listener(wayland::Client* client, FocusListener* listener);
     void remove_focus_listener(wayland::Client* client, FocusListener* listener);
 
-    void add_scene_surface(
-        std::shared_ptr<scene::Surface const> const& surf, wayland::Weak<frontend::WlSurface> const& wl_surf);
-    void remove_scene_surface(std::shared_ptr<scene::Surface const> const& surf);
-    auto lookup_wayland_surface(std::shared_ptr<scene::Surface const> const& surf)
-        -> std::optional<wayland::Weak<frontend::WlSurface>>;
+    auto surface_registry() const -> std::shared_ptr<frontend::SurfaceRegistry>;
 
 private:
     void set_focus_to(WlSurface* surface);
@@ -147,8 +145,7 @@ private:
     std::shared_ptr<input::Seat> const seat;
 
     std::shared_ptr<shell::AccessibilityManager> const accessibility_manager;
-    std::unordered_map<std::shared_ptr<scene::Surface const>, wayland::Weak<frontend::WlSurface> const>
-        scene_surface_to_wayland_surface;
+    std::shared_ptr<frontend::SurfaceRegistry> const surface_registry_;
 
     void bind(wl_resource* new_wl_seat) override;
 };

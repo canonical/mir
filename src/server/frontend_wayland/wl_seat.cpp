@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "surface_registry.h"
 #include "wayland_wrapper.h"
 
 #include "wl_seat.h"
@@ -143,8 +144,9 @@ class mf::WlSeat::KeyboardObserver
     : public input::KeyboardObserver
 {
 public:
-    KeyboardObserver(WlSeat& seat)
-        : seat{seat}
+    KeyboardObserver(WlSeat& seat, std::shared_ptr<mf::SurfaceRegistry> const surface_registry) :
+        seat{seat},
+        surface_registry{surface_registry}
     {
     }
 
@@ -163,7 +165,7 @@ public:
     {
         if (auto const scene_surface = dynamic_pointer_cast<ms::Surface>(surface))
         {
-            if (auto const wayland_surface = seat.lookup_wayland_surface(scene_surface))
+            if (auto const wayland_surface = surface_registry->lookup_wayland_surface(scene_surface))
             {
                 seat.set_focus_to(mw::as_nullable_ptr(*wayland_surface));
             }
@@ -176,6 +178,7 @@ public:
 
 private:
     WlSeat& seat;
+    std::shared_ptr<mf::SurfaceRegistry> const surface_registry;
 };
 
 class mf::WlSeat::Instance : public wayland::Seat
@@ -198,7 +201,8 @@ mf::WlSeat::WlSeat(
     std::shared_ptr<mi::InputDeviceHub> const& input_hub,
     std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> const& keyboard_observer_registrar,
     std::shared_ptr<mi::Seat> const& seat,
-    std::shared_ptr<shell::AccessibilityManager> const& accessibility_manager)
+    std::shared_ptr<shell::AccessibilityManager> const& accessibility_manager,
+    std::shared_ptr<mf::SurfaceRegistry> const& surface_registry)
     :   Global(display, Version<9>()),
         keymap{std::make_shared<input::ParameterKeymap>()},
         config_observer{
@@ -209,7 +213,7 @@ mf::WlSeat::WlSeat(
                     keymap = new_keymap;
                 })},
         keyboard_observer_registrar{keyboard_observer_registrar},
-        keyboard_observer{std::make_shared<KeyboardObserver>(*this)},
+        keyboard_observer{std::make_shared<KeyboardObserver>(*this, surface_registry)},
         focus_listeners{std::make_shared<ListenerList<FocusListener>>()},
         pointer_listeners{std::make_shared<ListenerList<PointerEventDispatcher>>()},
         keyboard_listeners{std::make_shared<ListenerList<WlKeyboard>>()},
@@ -217,7 +221,8 @@ mf::WlSeat::WlSeat(
         clock{clock},
         input_hub{input_hub},
         seat{seat},
-        accessibility_manager{accessibility_manager}
+        accessibility_manager{accessibility_manager},
+        surface_registry_{surface_registry}
 {
     input_hub->add_observer(config_observer);
     keyboard_observer_registrar->register_interest(keyboard_observer, wayland_executor);
@@ -376,26 +381,9 @@ void mf::WlSeat::remove_focus_listener(mw::Client* client, FocusListener* listen
     focus_listeners->unregister_listener(client, listener);
 }
 
-void mf::WlSeat::add_scene_surface(
-    std::shared_ptr<ms::Surface const> const& surf, wayland::Weak<mf::WlSurface> const& wl_surf)
+auto mir::frontend::WlSeat::surface_registry() const -> std::shared_ptr<frontend::SurfaceRegistry>
 {
-    scene_surface_to_wayland_surface.insert({surf, wl_surf});
-}
-
-void mf::WlSeat::remove_scene_surface(std::shared_ptr<scene::Surface const> const& surf)
-{
-    scene_surface_to_wayland_surface.erase(surf);
-}
-
-auto mf::WlSeat::lookup_wayland_surface(std::shared_ptr<scene::Surface const> const& surf)
-    -> std::optional<wayland::Weak<frontend::WlSurface>>
-{
-    if (auto const iter = scene_surface_to_wayland_surface.find(surf); iter != scene_surface_to_wayland_surface.end())
-    {
-        return iter->second;
-    }
-
-    return std::nullopt;
+    return surface_registry_;
 }
 
 mf::PointerEventDispatcher::PointerEventDispatcher(WlPointer* wl_pointer) :

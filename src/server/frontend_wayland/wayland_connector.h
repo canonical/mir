@@ -93,6 +93,7 @@ class WlSurface;
 class WpViewporter;
 class LinuxDRMSyncobjManager;
 class DesktopFileManager;
+class SurfaceRegistry;
 
 class WaylandExtensions
 {
