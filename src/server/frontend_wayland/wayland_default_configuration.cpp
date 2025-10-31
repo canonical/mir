@@ -107,7 +107,8 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
                 *ctx.wayland_executor,
                 ctx.shell,
                 *ctx.seat,
-                ctx.output_manager);
+                ctx.output_manager,
+                ctx.surface_registry);
         }),
     make_extension_builder<mw::LayerShellV1>([](auto const& ctx)
         {
