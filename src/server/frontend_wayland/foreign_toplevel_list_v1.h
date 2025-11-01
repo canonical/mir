@@ -47,7 +47,7 @@ public:
 
     static auto from(wl_resource* resource) -> ExtForeignToplevelHandleV1*;
     static auto from_or_throw(wl_resource* resource) -> ExtForeignToplevelHandleV1&;
-    std::shared_ptr<scene::Surface> surface() const;
+    auto surface() const -> std::shared_ptr<scene::Surface>;
 
     /// Sends the .closed event and makes this surface inert
     void should_close();
