@@ -52,7 +52,7 @@ class ForeignSurfaceObserver;
 class ForeignToplevelIdentifierMap
 {
 public:
-    std::string toplevel_id(std::shared_ptr<scene::Surface> const& surface);
+    auto toplevel_id(std::shared_ptr<scene::Surface> const& surface) -> std::string;
     void forget_toplevel(std::shared_ptr<scene::Surface> const& surface);
     void forget_stale_toplevels();
 
@@ -531,7 +531,7 @@ mf::ExtForeignToplevelHandleV1::ExtForeignToplevelHandleV1(
 auto mf::ExtForeignToplevelHandleV1::from(
     wl_resource* resource) -> ExtForeignToplevelHandleV1*
 {
-    return dynamic_cast<ExtForeignToplevelHandleV1*>(wayland::ExtForeignToplevelListV1::from(resource));
+    return dynamic_cast<ExtForeignToplevelHandleV1*>(wayland::ExtForeignToplevelHandleV1::from(resource));
 }
 
 auto mf::ExtForeignToplevelHandleV1::from_or_throw(
@@ -548,7 +548,7 @@ auto mf::ExtForeignToplevelHandleV1::from_or_throw(
     return *handle;
 }
 
-std::shared_ptr<ms::Surface> mf::ExtForeignToplevelHandleV1::surface() const
+auto mf::ExtForeignToplevelHandleV1::surface() const -> std::shared_ptr<ms::Surface>
 {
     return weak_surface.lock();
 }
