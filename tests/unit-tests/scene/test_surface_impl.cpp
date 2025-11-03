@@ -53,30 +53,30 @@ class TestSurfaceObserver : public ms::NullSurfaceObserver
 {
 public:
     TestSurfaceObserver(
-        mf::SurfaceId id,
+        mf::SurfaceId surface_id,
         std::shared_ptr<mf::EventSink> const& event_sink)
-        : id(id),
+        : surface_id(surface_id),
           event_sink(event_sink)
     {
     }
 
     void content_resized_to(ms::Surface const*, geom::Size const& content_size) override
     {
-        event_sink->handle_event(mev::make_window_resize_event(id, content_size));
+        event_sink->handle_event(mev::make_window_resize_event(surface_id, content_size));
     }
 
     void attrib_changed(ms::Surface const*, MirWindowAttrib attrib, int value) override
     {
-        event_sink->handle_event(mev::make_window_configure_event(id, attrib, value));
+        event_sink->handle_event(mev::make_window_configure_event(surface_id, attrib, value));
     }
 
     void client_surface_close_requested(ms::Surface const*) override
     {
-        event_sink->handle_event(mev::make_window_close_event(id));
+        event_sink->handle_event(mev::make_window_close_event(surface_id));
     }
 
 private:
-    mf::SurfaceId const id;
+    mf::SurfaceId const surface_id;
     std::shared_ptr<mf::EventSink> const event_sink;
 };
 

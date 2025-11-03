@@ -51,24 +51,28 @@ namespace
 class TestSurfaceObserver : public ms::NullSurfaceObserver
 {
 public:
-    TestSurfaceObserver(std::shared_ptr<mf::EventSink> const& event_sink)
-        : event_sink(event_sink)
+    TestSurfaceObserver(
+        mf::SurfaceId surface_id,
+        std::shared_ptr<mf::EventSink> const& event_sink)
+        : surface_id(surface_id),
+          event_sink(event_sink)
     {
     }
 
     void content_resized_to(ms::Surface const*, geom::Size const& content_size) override
     {
-        event_sink->handle_event(mev::make_window_resize_event(mf::SurfaceId(), content_size));
+        event_sink->handle_event(mev::make_window_resize_event(surface_id, content_size));
     }
 
     void input_consumed(ms::Surface const*, std::shared_ptr<MirEvent const> const& event) override
     {
         auto ev = mev::clone_event(*event);
-        mev::set_window_id(*ev, mf::SurfaceId().as_value());
+        mev::set_window_id(*ev, surface_id.as_value());
         event_sink->handle_event(std::move(ev));
     }
 
 private:
+    mf::SurfaceId const surface_id;
     std::shared_ptr<mf::EventSink> const event_sink;
 };
 
@@ -103,7 +107,7 @@ struct SurfaceCreation : public ::testing::Test
     ms::BasicSurface surface;
     std::shared_ptr<mt::doubles::MockEventSink> const mock_event_sink = std::make_shared<mt::doubles::MockEventSink>();
     std::shared_ptr<TestSurfaceObserver> observer =
-        std::make_shared<TestSurfaceObserver>(mock_event_sink);
+        std::make_shared<TestSurfaceObserver>(mf::SurfaceId(), mock_event_sink);
     mtd::ExplicitExecutor executor;
 };
 
