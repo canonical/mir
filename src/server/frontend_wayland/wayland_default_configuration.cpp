@@ -52,7 +52,6 @@
 #include "xdg_decoration_unstable_v1.h"
 #include "xdg_output_v1.h"
 #include "xdg_shell_stable.h"
-#include "xdg_shell_v6.h"
 #include "xwayland_wm_shell.h"
 #include "data_control_v1.h"
 
@@ -89,15 +88,6 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
                 *ctx.wayland_executor,
                 ctx.shell,
                 ctx.seat,
-                ctx.output_manager);
-        }),
-    make_extension_builder<mw::XdgShellV6>([](auto const& ctx)
-        {
-            return std::make_shared<mf::XdgShellV6>(
-                ctx.display,
-                *ctx.wayland_executor,
-                ctx.shell,
-                *ctx.seat,
                 ctx.output_manager);
         }),
     make_extension_builder<mw::XdgWmBase>([](auto const& ctx)
@@ -358,7 +348,6 @@ auto mf::get_standard_extensions() -> std::vector<std::string>
     return std::vector<std::string>{
         mw::Shell::interface_name,
         mw::XdgWmBase::interface_name,
-        mw::XdgShellV6::interface_name,
         mw::XdgOutputManagerV1::interface_name,
         mw::TextInputManagerV1::interface_name,
         mw::TextInputManagerV2::interface_name,
@@ -450,9 +439,6 @@ auto mir::frontend::get_window(wl_resource* surface) -> std::shared_ptr<ms::Surf
         return result;
 
     if (auto result = XdgShellStable::get_window(surface))
-        return result;
-
-    if (auto result = XdgShellV6::get_window(surface))
         return result;
 
     if (auto result = LayerShellV1::get_window(surface))

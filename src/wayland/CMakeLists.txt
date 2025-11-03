@@ -17,7 +17,6 @@ add_library(mirwayland SHARED
 )
 
 mir_generate_protocol_wrapper(mirwayland "wl_" wayland.xml)
-mir_generate_protocol_wrapper(mirwayland "z" xdg-shell-unstable-v6.xml)
 mir_generate_protocol_wrapper(mirwayland "" xdg-shell.xml)
 mir_generate_protocol_wrapper(mirwayland "z" xdg-output-unstable-v1.xml)
 mir_generate_protocol_wrapper(mirwayland "zwlr_" wlr-layer-shell-unstable-v1.xml)
