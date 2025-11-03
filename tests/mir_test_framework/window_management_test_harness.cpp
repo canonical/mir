@@ -31,11 +31,13 @@
 #include <miral/window_manager_tools.h>
 #include <miral/set_window_management_policy.h>
 #include <miral/zone.h>
+#include <miral/runner.h>
 #include <mir/test/doubles/stub_display_configuration.h>
 #include "mir/graphics/display_configuration_observer.h"
 #include "mir/graphics/null_display_configuration_observer.h"
 #include "miral/output.h"
 #include "src/miral/window_manager_tools_implementation.h"
+#include "src/miral/fd_manager.h"
 
 namespace ms = mir::scene;
 namespace msh = mir::shell;
@@ -400,6 +402,19 @@ public:
     /// after each action.
     std::vector<std::function<void()>> pending_actions;
 
+    // MirRunner-like functionality
+    std::function<void()> start_callback{[]{}};
+    std::function<void()> stop_callback{[]{}};
+    std::shared_ptr<miral::FdManager> const fd_manager = std::make_shared<miral::FdManager>();
+    
+    struct SignalInfo
+    {
+        std::initializer_list<int> signals;
+        std::function<void(int)> const handler;
+    };
+    std::vector<SignalInfo> signal_backlog;
+    bool server_started = false;
+
 };
 
 mir_test_framework::WindowManagementTestHarness::WindowManagementTestHarness()
@@ -411,6 +426,35 @@ mir_test_framework::WindowManagementTestHarness::~WindowManagementTestHarness() 
 
 void mir_test_framework::WindowManagementTestHarness::SetUp()
 {
+    // Add init callback to execute start callbacks and register handlers
+    server.add_init_callback([this]
+    {
+        auto const main_loop = server.the_main_loop();
+        
+        // Enqueue start callback to ensure server has fully started
+        main_loop->enqueue(this, [this]
+        {
+            self->start_callback();
+            self->server_started = true;
+        });
+        
+        // Register signal handlers from backlog
+        for (auto const& signal : self->signal_backlog)
+        {
+            main_loop->register_signal_handler(signal.signals, signal.handler);
+        }
+        self->signal_backlog.clear();
+        
+        // Set up FdManager with the main loop
+        self->fd_manager->set_main_loop(main_loop);
+    });
+    
+    // Add stop callback
+    server.add_stop_callback([this]
+    {
+        self->stop_callback();
+    });
+
     miral::SetWindowManagementPolicy const policy(
         [&](miral::WindowManagerTools const& tools)
         {
@@ -614,4 +658,68 @@ auto mir_test_framework::WindowManagementTestHarness::output_configs_from_output
     }
 
     return outputs;
+}
+
+void mir_test_framework::WindowManagementTestHarness::add_start_callback(std::function<void()> const& start_callback)
+{
+    auto const& existing = self->start_callback;
+    
+    auto const updated = [=]
+        {
+            existing();
+            start_callback();
+        };
+    
+    self->start_callback = updated;
+}
+
+void mir_test_framework::WindowManagementTestHarness::add_stop_callback(std::function<void()> const& stop_callback)
+{
+    auto const& existing = self->stop_callback;
+    
+    auto const updated = [=]
+        {
+            stop_callback();
+            existing();
+        };
+    
+    self->stop_callback = updated;
+}
+
+void mir_test_framework::WindowManagementTestHarness::register_signal_handler(
+    std::initializer_list<int> signals,
+    std::function<void(int)> const& handler)
+{
+    if (self->server_started)
+    {
+        auto const main_loop = server.the_main_loop();
+        main_loop->register_signal_handler(signals, handler);
+    }
+    else
+    {
+        auto const signal_info = Self::SignalInfo{signals, handler};
+        self->signal_backlog.push_back(signal_info);
+    }
+}
+
+auto mir_test_framework::WindowManagementTestHarness::register_fd_handler(
+    mir::Fd fd, 
+    std::function<void(int)> const& handler)
+-> std::unique_ptr<miral::FdHandle>
+{
+    return self->fd_manager->register_handler(fd, handler);
+}
+
+void mir_test_framework::WindowManagementTestHarness::invoke_runner(
+    std::function<void(miral::MirRunner& runner)> const& f)
+{
+    // WindowManagementTestHarness doesn't use MirRunner for lifecycle management,
+    // but we can create a temporary one for compatibility with code that expects
+    // to interact with a MirRunner. This is a no-op implementation that allows
+    // tests to compile but doesn't provide full MirRunner functionality.
+    // The actual functionality (start/stop callbacks, signal/fd handlers) is
+    // implemented directly in this class.
+    static char const* dummy_args[] = { "WindowManagementTestHarness", nullptr };
+    miral::MirRunner runner(1, dummy_args);
+    f(runner);
 }

@@ -23,12 +23,19 @@
 #include <miral/window_manager_tools.h>
 #include <mir/events/event.h>
 #include <mir/graphics/display_configuration.h>
+#include <mir/fd.h>
 #include <mir_test_framework/headless_in_process_server.h>
 
 namespace mir::scene
 {
 class Surface;
 class Session;
+}
+
+namespace miral
+{
+class MirRunner;
+struct FdHandle;
 }
 
 namespace mir_test_framework
@@ -74,6 +81,21 @@ public:
     /// This is useful for creating a list of simple, connected outputs quickly.
     static auto output_configs_from_output_rectangles(std::vector<mir::geometry::Rectangle> const& output_rects)
         -> std::vector<mir::graphics::DisplayConfigurationOutput>;
+
+    /// Add a callback to be invoked when the server has started
+    void add_start_callback(std::function<void()> const& start_callback);
+
+    /// Add a callback to be invoked when the server is about to stop  
+    void add_stop_callback(std::function<void()> const& stop_callback);
+
+    /// Add signal handler to the server's main loop
+    void register_signal_handler(std::initializer_list<int> signals, std::function<void(int)> const& handler);
+
+    /// Add a watch on a file descriptor to the server's main loop
+    auto register_fd_handler(mir::Fd fd, std::function<void(int)> const& handler) -> std::unique_ptr<miral::FdHandle>;
+
+    /// Wrapper to gain access to the MirRunner
+    void invoke_runner(std::function<void(miral::MirRunner& runner)> const& f);
 
     virtual auto get_builder() -> WindowManagementPolicyBuilder = 0;
     virtual auto get_initial_output_configs() -> std::vector<mir::graphics::DisplayConfigurationOutput> = 0;
