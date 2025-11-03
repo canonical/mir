@@ -20,7 +20,7 @@
 #include <mir/graphics/buffer.h>
 #include <mir/scene/surface_factory.h>
 #include <mir/scene/null_session_listener.h>
-#include <mir/scene/surface_event_source.h>
+#include <mir/scene/null_surface_observer.h>
 #include <mir/scene/output_properties_cache.h>
 #include <mir/test/fake_shared.h>
 #include <mir/test/doubles/mock_surface_stack.h>
@@ -557,115 +557,4 @@ public:
         return mock;
     };
 };
-
-int calculate_dpi(geom::Size const& resolution, geom::Size const& size)
-{
-    float constexpr mm_per_inch = 25.4f;
-
-    auto diagonal_mm = sqrt(size.height.as_int()*size.height.as_int()
-                            + size.width.as_int()*size.width.as_int());
-    auto diagonal_px = sqrt(resolution.height.as_int() * resolution.height.as_int()
-                            + resolution.width.as_int() * resolution.width.as_int());
-
-    return diagonal_px / diagonal_mm * mm_per_inch;
-}
-
-struct ApplicationSessionSurfaceOutput : public ApplicationSession
-{
-    ApplicationSessionSurfaceOutput() :
-        high_dpi(static_cast<mg::DisplayConfigurationOutputId>(5), {3840, 2160}, {509, 286}, 2.5f, 60.0, mir_form_factor_monitor),
-        projector(static_cast<mg::DisplayConfigurationOutputId>(2), {1280, 1024}, {800, 600}, 0.5f, 50.0, mir_form_factor_projector),
-        stub_surface_factory{std::make_shared<ObserverPreservingSurfaceFactory>()},
-        sender{std::make_shared<testing::NiceMock<mtd::MockEventSink>>()},
-        observer{std::make_shared<ms::SurfaceEventSource>(mf::SurfaceId{1}, ms::OutputPropertiesCache{}, sender)},
-        app_session(
-            stub_surface_stack,
-            stub_surface_factory,
-            pid,
-            mir::Fd{mir::Fd::invalid},
-            name,
-            stub_session_listener,
-            sender,
-            allocator)
-    {
-    }
-
-    struct TestOutput
-    {
-        TestOutput(
-            mg::DisplayConfigurationOutputId id,
-            geom::Size const& resolution,
-            geom::Size const& physical_size,
-            float scale,
-            double hz,
-            MirFormFactor form_factor) :
-            output{id, resolution, physical_size, mir_pixel_format_argb_8888, hz, true},
-            form_factor{form_factor},
-            scale{scale},
-            dpi{calculate_dpi(resolution, physical_size)},
-            width{resolution.width.as_int()},
-            id{static_cast<uint32_t>(output.id.as_value())}
-        {
-            output.scale = scale;
-            output.form_factor = form_factor;
-        }
-
-        mtd::StubDisplayConfigurationOutput output;
-        MirFormFactor form_factor;
-        float scale;
-        int dpi;
-        int width;
-        uint32_t id;
-    };
-
-    TestOutput const high_dpi;
-    TestOutput const projector;
-    std::shared_ptr<ms::SurfaceFactory> const stub_surface_factory;
-    std::shared_ptr<testing::NiceMock<mtd::MockEventSink>> sender;
-    std::shared_ptr<ms::SurfaceEventSource> observer;
-    ms::ApplicationSession app_session;
-};
-}
-
-namespace
-{
-MATCHER_P(SurfaceOutputEventFor, output, "")
-{
-    using namespace testing;
-
-    if (mir_event_get_type(arg) != mir_event_type_window_output)
-    {
-        *result_listener << "Event is not a MirWindowOutputEvent";
-        return 0;
-    }
-
-    auto const event = mir_event_get_window_output_event(arg);
-
-    if (output.output.current_mode_index >= output.output.modes.size())
-        return false;
-
-    auto const& mode = output.output.modes[output.output.current_mode_index];
-
-    return
-        ExplainMatchResult(
-            Eq(output.dpi),
-            mir_window_output_event_get_dpi(event),
-            result_listener) &&
-        ExplainMatchResult(
-            Eq(output.form_factor),
-            mir_window_output_event_get_form_factor(event),
-            result_listener) &&
-        ExplainMatchResult(
-            Eq(output.scale),
-            mir_window_output_event_get_scale(event),
-            result_listener) &&
-        ExplainMatchResult(
-            Eq(mode.vrefresh_hz),
-            mir_window_output_event_get_refresh_rate(event),
-            result_listener) &&
-        ExplainMatchResult(
-            Eq(output.id),
-            mir_window_output_event_get_output_id(event),
-            result_listener);
-}
 }

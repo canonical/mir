@@ -14,11 +14,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "src/server/report/null_report_factory.h"
+
 #include <mir/events/event_builders.h>
 #include <mir/scene/output_properties_cache.h>
 #include <mir/scene/basic_surface.h>
-#include "src/server/report/null_report_factory.h"
-#include <mir/scene/surface_event_source.h>
+#include <mir/scene/null_surface_observer.h>
 
 #include <mir/test/doubles/fake_display_configuration_observer_registrar.h>
 #include <mir/test/doubles/mock_event_sink.h>
@@ -46,6 +47,31 @@ namespace mr = mir::report;
 
 namespace
 {
+// Test-only observer that forwards events to an event sink
+class TestSurfaceObserver : public ms::NullSurfaceObserver
+{
+public:
+    TestSurfaceObserver(std::shared_ptr<mf::EventSink> const& event_sink)
+        : event_sink(event_sink)
+    {
+    }
+
+    void content_resized_to(ms::Surface const*, geom::Size const& content_size) override
+    {
+        event_sink->handle_event(mev::make_window_resize_event(mf::SurfaceId(), content_size));
+    }
+
+    void input_consumed(ms::Surface const*, std::shared_ptr<MirEvent const> const& event) override
+    {
+        auto ev = mev::clone_event(*event);
+        mev::set_window_id(*ev, mf::SurfaceId().as_value());
+        event_sink->handle_event(std::move(ev));
+    }
+
+private:
+    std::shared_ptr<mf::EventSink> const event_sink;
+};
+
 struct SurfaceCreation : public ::testing::Test
 {
     SurfaceCreation()
@@ -76,9 +102,8 @@ struct SurfaceCreation : public ::testing::Test
     std::shared_ptr<ms::SceneReport> const report = mr::null_scene_report();
     ms::BasicSurface surface;
     std::shared_ptr<mt::doubles::MockEventSink> const mock_event_sink = std::make_shared<mt::doubles::MockEventSink>();
-    ms::OutputPropertiesCache cache;
-    std::shared_ptr<ms::SurfaceEventSource> observer =
-        std::make_shared<ms::SurfaceEventSource>(mf::SurfaceId(), cache, mock_event_sink);
+    std::shared_ptr<TestSurfaceObserver> observer =
+        std::make_shared<TestSurfaceObserver>(mock_event_sink);
     mtd::ExplicitExecutor executor;
 };
 

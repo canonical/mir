@@ -11,7 +11,6 @@ ADD_LIBRARY(
   session_manager.cpp
   surface_allocator.cpp
   surface_stack.cpp
-  surface_event_source.cpp
   null_surface_observer.cpp
   null_observer.cpp
   scene_change_notification.cpp
