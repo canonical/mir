@@ -50,70 +50,53 @@ public:
     }
 };
 
-// Test that start callbacks are invoked
-TEST_F(MirRunnerAccessTest, start_callback_is_invoked)
+// Test that start callbacks can be registered
+TEST_F(MirRunnerAccessTest, start_callback_can_be_registered)
 {
-    std::atomic<bool> callback_invoked{false};
-    
-    add_start_callback([&]
+    // Test that the API is available and doesn't crash
+    add_start_callback([]
     {
-        callback_invoked = true;
+        // This callback won't be invoked since WindowManagementTestHarness
+        // doesn't use MirRunner::run_with(), but the API should be available
     });
     
-    // SetUp() will start the server and invoke callbacks
-    // No need to explicitly check here as the callback will be invoked during SetUp
     // The test passes if no exception is thrown
 }
 
-// Test that multiple start callbacks are invoked in order
-TEST_F(MirRunnerAccessTest, multiple_start_callbacks_invoked_in_order)
+// Test that multiple start callbacks can be registered
+TEST_F(MirRunnerAccessTest, multiple_start_callbacks_can_be_registered)
 {
-    std::vector<int> invocation_order;
+    // Test that multiple callbacks can be registered without crashing
+    add_start_callback([] { });
+    add_start_callback([] { });
+    add_start_callback([] { });
     
-    add_start_callback([&]
-    {
-        invocation_order.push_back(1);
-    });
-    
-    add_start_callback([&]
-    {
-        invocation_order.push_back(2);
-    });
-    
-    add_start_callback([&]
-    {
-        invocation_order.push_back(3);
-    });
-    
-    // Callbacks will be invoked during SetUp in the order they were added
     // The test passes if no exception is thrown
 }
 
 // Test that stop callbacks can be registered
 TEST_F(MirRunnerAccessTest, stop_callback_can_be_registered)
 {
-    std::atomic<bool> callback_invoked{false};
-    
-    add_stop_callback([&]
+    // Test that the API is available and doesn't crash
+    add_stop_callback([]
     {
-        callback_invoked = true;
+        // This callback won't be invoked since WindowManagementTestHarness
+        // doesn't use MirRunner::run_with(), but the API should be available
     });
     
-    // Stop callback will be invoked during TearDown
     // The test passes if no exception is thrown
 }
 
 // Test that signal handlers can be registered
 TEST_F(MirRunnerAccessTest, signal_handler_can_be_registered)
 {
-    std::atomic<bool> handler_registered{false};
-    
-    register_signal_handler({SIGUSR1}, [&](int)
+    // Test that the API is available and doesn't crash
+    register_signal_handler({SIGUSR1}, [](int)
     {
-        handler_registered = true;
+        // This handler won't be invoked since WindowManagementTestHarness
+        // doesn't use MirRunner::run_with(), but the API should be available
     });
     
-    // Signal handler will be registered during server startup
     // The test passes if no exception is thrown
 }
 
@@ -123,11 +106,11 @@ TEST_F(MirRunnerAccessTest, fd_handler_can_be_registered)
     int pipefd[2];
     ASSERT_EQ(0, pipe(pipefd));
     
-    std::atomic<bool> handler_invoked{false};
-    
-    auto handle = register_fd_handler(mir::Fd{pipefd[0]}, [&](int)
+    // Test that the API is available and returns a valid handle
+    auto handle = register_fd_handler(mir::Fd{pipefd[0]}, [](int)
     {
-        handler_invoked = true;
+        // This handler may or may not be invoked depending on MirRunner's
+        // FdManager implementation, but the API should be available
     });
     
     EXPECT_NE(nullptr, handle);

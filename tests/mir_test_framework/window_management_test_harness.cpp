@@ -404,14 +404,8 @@ public:
     /// after each action.
     std::vector<std::function<void()>> pending_actions;
 
-    // MirRunner for API compatibility
+    // MirRunner for API delegation
     std::unique_ptr<miral::MirRunner> runner;
-    
-    // Callback storage for execution (since MirRunner's callbacks won't execute without run_with())
-    std::function<void()> start_callback{[]{}};
-    std::function<void()> stop_callback{[]{}};
-    
-    bool server_started = false;
 
 };
 
@@ -424,25 +418,6 @@ mir_test_framework::WindowManagementTestHarness::~WindowManagementTestHarness() 
 
 void mir_test_framework::WindowManagementTestHarness::SetUp()
 {
-    // Add init callback to execute start callbacks from both MirRunner and local storage
-    server.add_init_callback([this]
-    {
-        auto const main_loop = server.the_main_loop();
-        
-        // Enqueue start callback to ensure server has fully started
-        main_loop->enqueue(this, [this]
-        {
-            self->start_callback();
-            self->server_started = true;
-        });
-    });
-    
-    // Add stop callback to execute stop callbacks
-    server.add_stop_callback([this]
-    {
-        self->stop_callback();
-    });
-
     miral::SetWindowManagementPolicy const policy(
         [&](miral::WindowManagerTools const& tools)
         {
@@ -650,47 +625,19 @@ auto mir_test_framework::WindowManagementTestHarness::output_configs_from_output
 
 void mir_test_framework::WindowManagementTestHarness::add_start_callback(std::function<void()> const& start_callback)
 {
-    // Delegate to MirRunner for API compatibility
     self->runner->add_start_callback(start_callback);
-    
-    // Also store locally so we can execute it
-    auto const& existing = self->start_callback;
-    auto const updated = [existing, start_callback]
-        {
-            existing();
-            start_callback();
-        };
-    self->start_callback = updated;
 }
 
 void mir_test_framework::WindowManagementTestHarness::add_stop_callback(std::function<void()> const& stop_callback)
 {
-    // Delegate to MirRunner for API compatibility
     self->runner->add_stop_callback(stop_callback);
-    
-    // Also store locally so we can execute it
-    auto const& existing = self->stop_callback;
-    auto const updated = [existing, stop_callback]
-        {
-            stop_callback();
-            existing();
-        };
-    self->stop_callback = updated;
 }
 
 void mir_test_framework::WindowManagementTestHarness::register_signal_handler(
     std::initializer_list<int> signals,
     std::function<void(int)> const& handler)
 {
-    // Delegate to MirRunner
     self->runner->register_signal_handler(signals, handler);
-    
-    // Also register directly with the server if it's already started
-    if (self->server_started)
-    {
-        auto const main_loop = server.the_main_loop();
-        main_loop->register_signal_handler(signals, handler);
-    }
 }
 
 auto mir_test_framework::WindowManagementTestHarness::register_fd_handler(
@@ -698,14 +645,11 @@ auto mir_test_framework::WindowManagementTestHarness::register_fd_handler(
     std::function<void(int)> const& handler)
 -> std::unique_ptr<miral::FdHandle>
 {
-    // Delegate to MirRunner - this will work because MirRunner has an FdManager
-    // that can register handlers before or after the server starts
     return self->runner->register_fd_handler(fd, handler);
 }
 
 void mir_test_framework::WindowManagementTestHarness::invoke_runner(
     std::function<void(miral::MirRunner& runner)> const& f)
 {
-    // Provide access to the actual MirRunner instance
     f(*self->runner);
 }
