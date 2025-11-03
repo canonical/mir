@@ -26,15 +26,15 @@ extern "C" {
 
 typedef enum
 {
-    mir_event_type_window,
-    mir_event_type_resize,
-    mir_event_type_prompt_session_state_change,
-    mir_event_type_orientation,
-    mir_event_type_close_window,
-    mir_event_type_input,
-    mir_event_type_window_output,
-    mir_event_type_input_device_state,
-    mir_event_type_window_placement,
+    mir_event_type_window = 2,
+    mir_event_type_resize = 3,
+    mir_event_type_prompt_session_state_change = 4,
+    mir_event_type_orientation = 5,
+    mir_event_type_close_window = 6,
+    mir_event_type_input = 7,
+    mir_event_type_window_output = 9,
+    mir_event_type_input_device_state = 10,
+    mir_event_type_window_placement = 11,
 } MirEventType;
 
 typedef enum {
