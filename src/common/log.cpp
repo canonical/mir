@@ -118,7 +118,7 @@ void security_log(
          severity == logging::Severity::debug ? "DEBUG" : "UNKNOWN"),
         description
     );
-    
+
     logging::log(severity, message, "security");
 }
 
