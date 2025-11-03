@@ -655,7 +655,7 @@ void mir_test_framework::WindowManagementTestHarness::add_start_callback(std::fu
     
     // Also store locally so we can execute it
     auto const& existing = self->start_callback;
-    auto const updated = [=]
+    auto const updated = [existing, start_callback]
         {
             existing();
             start_callback();
@@ -670,7 +670,7 @@ void mir_test_framework::WindowManagementTestHarness::add_stop_callback(std::fun
     
     // Also store locally so we can execute it
     auto const& existing = self->stop_callback;
-    auto const updated = [=]
+    auto const updated = [existing, stop_callback]
         {
             stop_callback();
             existing();
