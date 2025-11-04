@@ -118,7 +118,7 @@ void security_log(
          severity == logging::Severity::debug ? "DEBUG" : "UNKNOWN"),
         description
     );
-    log(severity, "security", message);
+    logging::log(severity, message, "security");
 }
 
 } // namespace mir
