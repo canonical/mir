@@ -37,6 +37,11 @@
       input trigger actions.
     </description>
 
+    <enum name="error">
+      <entry name="invalid_token" value="1"
+        summary="token was not issued by the compositor"/>
+    </enum>
+
     <request name="destroy" type="destructor">
       <description summary="destroy input trigger activation manager object">
         This informs the compositor that the input trigger activation manager
@@ -49,8 +54,9 @@
       <description summary="register interest in input trigger action">
         This request creates an input trigger action object.
 
-        The token should be one issued by the compositor, if not then the
-        compositor can raise a protocol error.
+        The token should be one issued by the compositor. If the token was not
+        issued by the compositor, the compositor must raise an invalid_token
+        protocol error.
 
         If the token has been issued by the compositor, but is no longer
         available, then an ext_input_trigger_action_v1.unavailable event
