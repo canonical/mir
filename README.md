@@ -18,7 +18,7 @@ API.
 ## Resources
 
 - For information on how to use Mir, refer to [the official documentation](https://canonical-mir.readthedocs-hosted.com).
-- For data sheets and whitepapers, check out [the Mir website](http://mir-server.io).
+- For data sheets and whitepapers, check out [the Mir website](https://canonical.com/mir).
 - Mir is [hosted on GitHub](https://github.com/canonical/mir).
 - For announcements and other discussions on Mir see [Ubuntu Discourse](https://discourse.ubuntu.com/c/mir) or join
   [the matrix channel](https://matrix.to/#/#mir-server:matrix.org) to get in touch with the team.
