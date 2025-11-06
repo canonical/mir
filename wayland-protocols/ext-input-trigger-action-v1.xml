@@ -39,7 +39,7 @@
 
     <enum name="error">
       <entry name="invalid_token" value="1"
-        summary="token was not issued by the compositor"/>
+        summary="token was not issued by the compositor or has been invalidated"/>
     </enum>
 
     <request name="destroy" type="destructor">
