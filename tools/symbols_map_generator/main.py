@@ -15,15 +15,27 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
+_logger = logging.getLogger(__name__)
+
+library_not_found_error_msg: str = ("    Please install libclang-19-dev and python3-clang-19."
+    "\n    Also, ensure that the required environment variables are set correctly. (e.g.)"
+    "\n        export MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH=/usr/lib/llvm-19/lib/libclang.so.1"
+    "\n        export MIR_SYMBOLS_MAP_GENERATOR_CLANG_LIBRARY_PATH=/usr/lib/llvm-19/lib")
+
 import argparse
 from pathlib import Path
 from typing import TypedDict, Optional
 from collections import OrderedDict
 import bisect
-import clang.cindex
+try:
+    import clang.cindex
+except ModuleNotFoundError as e:
+    _logger.error("Could not import clang in python.")
+    _logger.error(library_not_found_error_msg)
+    raise e
+
 import os
 
-_logger = logging.getLogger(__name__)
 
 HIDDEN_SYMBOLS = {
     "miral::SessionLockListener::?SessionLockListener*;",
@@ -397,17 +409,13 @@ def report_symbols_diff(previous_symbols: list[Symbol], new_symbols: set[str], i
 
 def main():
     parser = argparse.ArgumentParser(description="This tool parses the header files of a provided in the Mir project "
-                                        "and process a list of new internal and external symbols. "
+                                        "and creates a list of new internal and external symbols.\n"
                                         "By default, the script updates the corresponding symbols.map file automatically. "
-                                        "To view this diff only, the user may provide the --diff option. "
-                                        "The tool uses https://pypi.org/project/libclang/ to process "
-                                        "the AST of the project's header files.\n\nIf the content of the outputted map "
-                                        "file appears incorrect, trying using a later version of clang (e.g. clang 19). You can do this "
-                                        "by specifying 'MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH' along with 'MIR_SYMBOLS_MAP_GENERATOR_CLANG_LIBRARY_PATH'. "
-                                        "Note that you most likely must set both of these values so that libLLVM-XY.so can be resolved alongside clang. "
-                                        "As an example, I used this script (https://github.com/opencollab/llvm-jenkins.debian.net/blob/master/llvm.sh) "
-                                        "to install clang 19 (sudo ./llvm.sh 19), and I set the following:"
-                                        "\n\n    export MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH=/usr/lib/llvm-19/lib/libclang.so.1"
+                                        "To view this diff only, the user may provide the --diff option.\n"
+                                        "Please install libclang-19-dev and python3-clang-19 before using this tool.\n"
+                                        "You must also specify the 'MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH' and 'MIR_SYMBOLS_MAP_GENERATOR_CLANG_LIBRARY_PATH'"
+                                        " environment variables, for example:"
+                                        "\n    export MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH=/usr/lib/llvm-19/lib/libclang.so.1"
                                         "\n    export MIR_SYMBOLS_MAP_GENERATOR_CLANG_LIBRARY_PATH=/usr/lib/llvm-19/lib"
                                         , formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('--library-name', type=str,
@@ -597,4 +605,8 @@ global:{c_symbols_str}
         f.truncate()
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        _logger.error(library_not_found_error_msg)
+        _logger.error(e)
