@@ -7,6 +7,12 @@
 # Use clang
 %bcond clang 0
 
+# Use lld
+%bcond lld 0
+
+# Use mold
+%bcond mold 0
+
 %if %{with clang}
 # Force clang toolchain
 %global toolchain clang
@@ -48,6 +54,12 @@ BuildRequires:  ccache
 BuildRequires:  clang
 %else
 BuildRequires:  gcc-c++
+%endif
+%if %{with lld}
+BuildRequires:  lld
+%endif
+%if %{with mold}
+BuildRequires:  mold
 %endif
 BuildRequires:  cmake, ninja-build, diffutils, doxygen, graphviz, lcov, gcovr
 BuildRequires:  /usr/bin/xsltproc
@@ -224,6 +236,8 @@ Mir unit and integration tests.
 	%{?with_ccache:-DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache} \
 	%{?with_debug:-DCMAKE_BUILD_TYPE=Debug} \
 	%{!?with_debug:-DMIR_FATAL_COMPILE_WARNINGS=OFF} \
+	%{?with_lld:-DMIR_USE_LD=lld} \
+	%{?with_mold:-DMIR_USE_LD=mold} \
 	-DMIR_USE_PRECOMPILED_HEADERS=OFF \
 	-DCMAKE_INSTALL_LIBEXECDIR="usr/libexec/mir" \
 	-DMIR_PLATFORM="atomic-kms;gbm-kms;wayland;x11"
