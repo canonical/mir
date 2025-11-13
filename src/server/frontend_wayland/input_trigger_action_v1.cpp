@@ -20,7 +20,7 @@ namespace mir
 {
 namespace frontend
 {
-std::unordered_map<std::string, std::shared_ptr<InputTriggerActionV1>> input_trigger_data = {};
+std::unordered_map<std::string, wayland::Weak<InputTriggerActionV1>> input_trigger_data = {};
 
 class InputTriggerActionManagerV1 : public wayland::InputTriggerActionManagerV1::Global
 {
@@ -36,8 +36,8 @@ private:
         void get_input_trigger_action(std::string const& token, struct wl_resource* id) override
         {
             // TODO validate token
-            auto const action = std::make_shared<InputTriggerActionV1>(id);
-            input_trigger_data.insert({token, action});
+            auto const action = new InputTriggerActionV1(id);
+            input_trigger_data.insert({token, wayland::make_weak(action)});
         }
 
     public:
