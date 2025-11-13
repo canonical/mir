@@ -34,8 +34,7 @@ jobs:
                  "lxd:ubuntu-24.04:spread/build/ubuntu:tsan_clang"'
         fi
 
-        TASKS+='"lxd:alpine-3.19:spread/build/alpine:amd64"
-                "lxd:alpine-3.20:spread/build/alpine:amd64"
+        TASKS+='"lxd:alpine-3.20:spread/build/alpine:amd64"
                 "lxd:alpine-3.21:spread/build/alpine:amd64"
                 "lxd:alpine-edge:spread/build/alpine:amd64"
                 "lxd:ubuntu-24.04:spread/build/sbuild:debian_sid"
