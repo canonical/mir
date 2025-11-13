@@ -20,6 +20,7 @@
 #include "mir/events/input_event.h"
 #include "mir/events/keyboard_event.h"
 #include "mir/wayland/weak.h"
+#include "mir_toolkit/events/enums.h"
 
 #include <mir/input/composite_event_filter.h>
 
@@ -78,13 +79,13 @@ class KeyboardSymTrigger : public wayland::InputTriggerV1
 public:
     KeyboardSymTrigger(uint32_t modifiers, uint32_t keysym, struct wl_resource* id, RegistrationType type) :
         InputTriggerV1{id, Version<1>{}},
-        modifiers{modifiers},
+        modifiers{to_mir_modifiers(modifiers)},
         keysym{keysym},
         type{type}
     {
     }
 
-    uint32_t const modifiers;
+    MirInputEventModifiers const modifiers;
     uint32_t const keysym;
     RegistrationType const type;
 
@@ -93,6 +94,52 @@ public:
         std::shared_ptr<mi::EventFilter> event_filter;
         std::string action_token;
     } extra_data;
+
+    static auto to_mir_modifiers(uint32_t protocol_modifiers) -> MirInputEventModifiers
+    {
+        using PM = wayland::InputTriggerRegistrationManagerV1::Modifiers;
+
+        if (protocol_modifiers == 0)
+            return mir_input_event_modifier_none;
+
+        struct Mapping
+        {
+            uint32_t protocol_modifier;
+            MirInputEventModifiers mir_modifier;
+        };
+
+        // clang-format off
+        constexpr std::array<std::pair<uint32_t, MirInputEventModifiers>, 14> mappings = {
+            std::pair{ PM::alt,         mir_input_event_modifier_alt },
+            std::pair{ PM::alt_left,    MirInputEventModifiers(mir_input_event_modifier_alt_left | mir_input_event_modifier_alt) },
+            std::pair{ PM::alt_right,   MirInputEventModifiers(mir_input_event_modifier_alt_right | mir_input_event_modifier_alt) },
+
+            std::pair{ PM::shift,       mir_input_event_modifier_shift },
+            std::pair{ PM::shift_left,  MirInputEventModifiers(mir_input_event_modifier_shift_left | mir_input_event_modifier_shift) },
+            std::pair{ PM::shift_right, MirInputEventModifiers(mir_input_event_modifier_shift_right | mir_input_event_modifier_shift) },
+
+            std::pair{ PM::sym,         mir_input_event_modifier_sym },
+            std::pair{ PM::function,    mir_input_event_modifier_function },
+
+            std::pair{ PM::ctrl,        mir_input_event_modifier_ctrl },
+            std::pair{ PM::ctrl_left,   MirInputEventModifiers(mir_input_event_modifier_ctrl_left | mir_input_event_modifier_ctrl) },
+            std::pair{ PM::ctrl_right,  MirInputEventModifiers(mir_input_event_modifier_ctrl_right | mir_input_event_modifier_ctrl) },
+
+            std::pair{ PM::meta,        mir_input_event_modifier_meta },
+            std::pair{ PM::meta_left,   MirInputEventModifiers(mir_input_event_modifier_meta_left | mir_input_event_modifier_meta) },
+            std::pair{ PM::meta_right,  MirInputEventModifiers(mir_input_event_modifier_meta_right | mir_input_event_modifier_meta) },
+        };
+        // clang-format on
+
+        MirInputEventModifiers result = 0;
+        for (auto const& [protocol_modifier, mir_modifier] : mappings)
+        {
+            if (protocol_modifiers & protocol_modifier)
+                result |= mir_modifier;
+        }
+
+        return result;
+    }
 };
 
 class ActionControl : public wayland::InputTriggerActionControlV1
@@ -162,7 +209,7 @@ private:
                 {
                     if (began)
                     {
-                        action->send_end_event(bogus_time, bogus_activation_token);
+                        action.value().send_end_event(bogus_time, bogus_activation_token);
                         began = false;
                     }
 
@@ -174,14 +221,14 @@ private:
                 {
                     if (began)
                     {
-                        action->send_end_event(bogus_time, bogus_activation_token);
+                        action.value().send_end_event(bogus_time, bogus_activation_token);
                         began = false;
                     }
 
                     return false;
                 }
 
-                action->send_begin_event(bogus_time, bogus_activation_token);
+                action.value().send_begin_event(bogus_time, bogus_activation_token);
                 began = true;
             }
 
