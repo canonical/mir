@@ -152,7 +152,7 @@ private:
                 {
                     if (began)
                     {
-                        action->send_end_event(bogus_time, bogus_activation_token);
+                        action.value().send_end_event(bogus_time, bogus_activation_token);
                         began = false;
                     }
 
@@ -164,14 +164,14 @@ private:
                 {
                     if (began)
                     {
-                        action->send_end_event(bogus_time, bogus_activation_token);
+                        action.value().send_end_event(bogus_time, bogus_activation_token);
                         began = false;
                     }
 
                     return false;
                 }
 
-                action->send_begin_event(bogus_time, bogus_activation_token);
+                action.value().send_begin_event(bogus_time, bogus_activation_token);
                 began = true;
             }
 
