@@ -15,6 +15,15 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
+import sys
+import os
+import argparse
+from pathlib import Path
+from typing import TypedDict, Optional
+from collections import OrderedDict
+import bisect
+
+logging.basicConfig(level=logging.INFO)
 _logger = logging.getLogger(__name__)
 
 library_not_found_error_msg: str = """\
@@ -23,19 +32,12 @@ library_not_found_error_msg: str = """\
         export MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH=/usr/lib/llvm-19/lib/libclang.so.1
         export MIR_SYMBOLS_MAP_GENERATOR_CLANG_LIBRARY_PATH=/usr/lib/llvm-19/lib"""
 
-import argparse
-from pathlib import Path
-from typing import TypedDict, Optional
-from collections import OrderedDict
-import bisect
 try:
     import clang.cindex
-except ModuleNotFoundError as e:
+except ModuleNotFoundError:
     _logger.error("Could not import clang in python.")
     _logger.error(library_not_found_error_msg)
-    raise e
-
-import os
+    sys.exit(1)
 
 
 HIDDEN_SYMBOLS = {
@@ -442,7 +444,6 @@ def main():
                         required=True, dest='include_dirs')
 
     args = parser.parse_args()
-    logging.basicConfig(level=logging.INFO)
 
     if args.diff:
         _logger.info("symbols_map_generator is running in 'diff' mode")
@@ -609,5 +610,6 @@ if __name__ == "__main__":
     try:
         main()
     except Exception as e:
-        _logger.error(library_not_found_error_msg)
-        _logger.error(e)
+        _logger.exception(e)
+        _logger.exception(library_not_found_error_msg)
+        sys.exit(1)
