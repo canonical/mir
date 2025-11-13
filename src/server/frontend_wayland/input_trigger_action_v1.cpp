@@ -20,6 +20,7 @@ namespace mir
 {
 namespace frontend
 {
+std::unordered_map<std::string, std::shared_ptr<InputTriggerActionV1>> input_trigger_data = {};
 
 class InputTriggerActionManagerV1 : public wayland::InputTriggerActionManagerV1::Global
 {
