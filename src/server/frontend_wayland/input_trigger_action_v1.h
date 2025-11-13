@@ -19,6 +19,7 @@
 #define MIR_SERVER_FRONTEND_INPUT_TRIGGER_ACTION_V1_H_
 
 #include "ext-input-trigger-action-v1_wrapper.h"
+#include "mir/wayland/weak.h"
 
 namespace mir
 {
@@ -39,7 +40,7 @@ public:
     }
 };
 
-extern std::unordered_map<std::string, std::shared_ptr<InputTriggerActionV1>> input_trigger_data;
+extern std::unordered_map<std::string, wayland::Weak<InputTriggerActionV1>> input_trigger_data;
 }
 }
 #endif
