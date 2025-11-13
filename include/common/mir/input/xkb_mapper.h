@@ -37,6 +37,8 @@ namespace input
 using XKBContextPtr = std::unique_ptr<xkb_context, void(*)(xkb_context*)>;
 XKBContextPtr make_unique_context();
 
+auto expand_modifiers(MirInputEventModifiers modifiers) -> MirInputEventModifiers;
+
 using XKBStatePtr = std::unique_ptr<xkb_state, void(*)(xkb_state*)>;
 using XKBComposeTablePtr = std::unique_ptr<xkb_compose_table, void(*)(xkb_compose_table*)>;
 using XKBComposeStatePtr = std::unique_ptr<xkb_compose_state, void(*)(xkb_compose_state*)>;
