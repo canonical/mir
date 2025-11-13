@@ -335,9 +335,21 @@ private:
                     return false;
                 }
 
+                if (key_event->action() == mir_keyboard_action_down)
+                {
+                    action.value().send_begin_event(bogus_time, bogus_activation_token);
+                    began = true;
+                    return true;
+                }
 
-                action.value().send_begin_event(bogus_time, bogus_activation_token);
-                began = true;
+                if (key_event->action() == mir_keyboard_action_up && began)
+                {
+                    action.value().send_end_event(bogus_time, bogus_activation_token);
+                    began = false;
+                    return true;
+                }
+
+                return false;
             }
 
             // Invalid token
