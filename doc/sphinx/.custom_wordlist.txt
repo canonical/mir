@@ -1,8 +1,11 @@
 abi
 ABI
+accessor
 Accessors
 Actions
 adapter
+alloca
+another's
 API
 AppArmor
 appfinder
@@ -12,6 +15,7 @@ backend
 backends
 barebones
 Binutils
+boolean
 BounceKeys
 Broadcom
 buf
@@ -26,6 +30,7 @@ cmake
 CMake
 codebase
 Codecov
+compilable
 CompositorAuthor
 config
 const
@@ -39,6 +44,7 @@ CursorScale
 dbgsym
 debian
 deps
+destructors
 devel
 DisplayLink's
 DisplayPlatform
@@ -49,6 +55,8 @@ distros
 dlopen
 dma
 dmabuf
+don'ts
+Doxygen
 drm
 DRM
 DSO
@@ -61,6 +69,7 @@ EGLStreams
 egmde
 enablement
 EndToEnd
+enum
 Enums
 etnaviv
 Etnaviv
@@ -75,6 +84,7 @@ FrontendWayland
 FrontendXWayland
 fs
 fullscreen
+functors
 gbm
 GC
 gcc
@@ -88,12 +98,18 @@ gpu
 GPU
 GPUs
 grayscale
+hotplug
+hotplugged
 HoverClick
 href
 https
 IdleHub
 Igalia
 IMX
+initializer
+inlined
+inlining
+Inlining
 InputDispatcher
 InputPlatform
 intel
@@ -137,13 +153,18 @@ mirserver
 mirserverlttng
 mirwayland
 mmal
+modesetting
 Mousekeys
 MouseKeysConfig
+multithreaded
 Multiarch
+mutators
+Mutators
 MX
 natively
 Natively
 nouveau
+nullptr
 NULL
 Nvidia
 Nvidia's
@@ -152,9 +173,13 @@ offscreen
 OMX
 orchestrator
 OutputFilter
+Penhey
+postincrement
 ppa
 PPAs
 pre
+preprocessor
+preincrement
 preload
 preselects
 prober
@@ -191,6 +216,8 @@ SpinnerSplash
 ssd
 SSD
 StickyKeys
+stringifying
+Stroustrup
 subclassed
 subgraph
 subprocess
@@ -214,6 +241,7 @@ Typedefs
 UBports
 ubuntu
 udev
+unary
 UndefinedBehaviourSanitizer
 usecases
 userland
@@ -225,6 +253,7 @@ VDPAU
 VideoCore
 Vivante
 VNC
+Voss
 vt
 vtable
 Vulkan
