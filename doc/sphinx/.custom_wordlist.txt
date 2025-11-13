@@ -158,6 +158,7 @@ Mousekeys
 MouseKeysConfig
 multithreaded
 Multiarch
+mutator
 mutators
 Mutators
 MX
