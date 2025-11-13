@@ -16,9 +16,9 @@
 
 #include "input_trigger_registration_v1.h"
 #include "input_trigger_action_v1.h"
-#include "mir/events/event.h"
 #include "mir/events/input_event.h"
 #include "mir/events/keyboard_event.h"
+#include "mir/input/xkb_mapper.h"
 #include "mir/wayland/weak.h"
 #include "mir_toolkit/events/enums.h"
 
@@ -179,6 +179,128 @@ private:
         {
         }
 
+        static bool protocol_and_event_modifiers_match(uint32_t protocol_modifiers, MirInputEventModifiers event_mods)
+        {
+            using ProtocolModifiers = wayland::InputTriggerRegistrationManagerV1::Modifiers;
+            namespace mi = mir::input;
+
+            // Canonicalise event modifiers to match how Mir represents them elsewhere.
+            event_mods = mi::expand_modifiers(event_mods);
+
+            MirInputEventModifiers required = 0;
+            MirInputEventModifiers allowed = 0;
+
+            // Pure function: compute per-kind (required, allowed) masks and return them.
+            auto handle_kind =
+                [&](uint32_t protocol_generic,
+                    uint32_t protocol_left,
+                    uint32_t protocol_right,
+                    MirInputEventModifiers mir_generic,
+                    MirInputEventModifiers mir_left,
+                    MirInputEventModifiers mir_right) -> std::pair<MirInputEventModifiers, MirInputEventModifiers>
+            {
+                MirInputEventModifiers req = 0;
+                MirInputEventModifiers allow = 0;
+
+                // Did the client specify a generic modifier? or a specific side?
+                bool p_generic = (protocol_modifiers & protocol_generic) != 0;
+                bool p_left = (protocol_left != 0 && (protocol_modifiers & protocol_left) != 0);
+                bool p_right = (protocol_right != 0 && (protocol_modifiers & protocol_right) != 0);
+
+                // Client explicitly requested side(s): require those sides and the generic bit.
+                if (p_left || p_right)
+                {
+                    if (p_left)
+                        req |= mir_left;
+                    if (p_right)
+                        req |= mir_right;
+                    req |= mir_generic;
+
+                    // Allow generic and both side bits.
+                    allow |= mir_generic | mir_left | mir_right;
+                }
+                else if (p_generic)
+                {
+                    // Client requested generic only -> require generic, but allow either side.
+                    req |= mir_generic;
+                    allow |= mir_generic | mir_left | mir_right;
+                }
+                // else: client didn't request this kind -> leave both masks zero (disallow).
+
+                return {req, allow};
+            };
+
+            struct Kind
+            {
+                uint32_t protocol_generic;
+                uint32_t protocol_left;
+                uint32_t protocol_right;
+                MirInputEventModifiers mir_generic;
+                MirInputEventModifiers mir_left;
+                MirInputEventModifiers mir_right;
+            };
+
+            constexpr Kind kinds[] = {
+                // ctrl
+                {ProtocolModifiers::ctrl,
+                 ProtocolModifiers::ctrl_left,
+                 ProtocolModifiers::ctrl_right,
+                 mir_input_event_modifier_ctrl,
+                 mir_input_event_modifier_ctrl_left,
+                 mir_input_event_modifier_ctrl_right},
+
+                // alt
+                {ProtocolModifiers::alt,
+                 ProtocolModifiers::alt_left,
+                 ProtocolModifiers::alt_right,
+                 mir_input_event_modifier_alt,
+                 mir_input_event_modifier_alt_left,
+                 mir_input_event_modifier_alt_right},
+
+                // shift
+                {ProtocolModifiers::shift,
+                 ProtocolModifiers::shift_left,
+                 ProtocolModifiers::shift_right,
+                 mir_input_event_modifier_shift,
+                 mir_input_event_modifier_shift_left,
+                 mir_input_event_modifier_shift_right},
+
+                // meta
+                {ProtocolModifiers::meta,
+                 ProtocolModifiers::meta_left,
+                 ProtocolModifiers::meta_right,
+                 mir_input_event_modifier_meta,
+                 mir_input_event_modifier_meta_left,
+                 mir_input_event_modifier_meta_right},
+
+                // sym (protocol-generic only; left/right fields = 0)
+                {ProtocolModifiers::sym, 0, 0, mir_input_event_modifier_sym, 0, 0},
+
+                // function (protocol-generic only)
+                {ProtocolModifiers::function, 0, 0, mir_input_event_modifier_function, 0, 0},
+            };
+
+            // Given the client specified modifier, construct a mask containing the required bits (if a side is
+            // defined), and a mask containing the allowed bits (if a side is not defined)
+            for (auto const& k : kinds)
+            {
+                auto p = handle_kind(
+                    k.protocol_generic, k.protocol_left, k.protocol_right, k.mir_generic, k.mir_left, k.mir_right);
+                required |= p.first;
+                allowed |= p.second;
+            }
+
+            // Required bits must be present
+            if ((event_mods & required) != required)
+                return false;
+
+            // No bits are allowed outside 'allowed'
+            if ((event_mods & ~allowed) != 0)
+                return false;
+
+            return true;
+        }
+
         bool handle(MirEvent const& event) override
         {
             if (event.type() != mir_event_type_input)
@@ -198,27 +320,24 @@ private:
                 auto const bogus_activation_token = "foobar";
                 auto const bogus_time = 0;
 
-                auto const modifier_intersection = key_event->modifiers() & trigger.value().modifiers;
-                if (modifier_intersection != key_event->modifiers() ||
-                    modifier_intersection != trigger.value().modifiers)
+                auto const event_mods = mi::expand_modifiers(key_event->modifiers());
+                auto const trigger_mods = mi::expand_modifiers(trigger.value().modifiers);
+
+                // FIXME if the modifiers include shift, and the key is
+                // alphabetic key, we receive XKB_KEY_<uppercase key>. If the
+                // client requests a lowercase keysym, then it will never be
+                // triggered.
+                if (!protocol_and_event_modifiers_match(trigger_mods, event_mods) ||
+                    static_cast<uint32_t>(key_event->keysym()) != trigger.value().keysym)
                 {
                     if (began)
-                    {
-                        action->send_end_event(bogus_time, bogus_activation_token);
-                        began = false;
-                    }
+                        action.value().send_end_event(bogus_time, bogus_activation_token);
 
+                    began = false;
                     return false;
                 }
 
-                // I'm sure this is not going to blow up in my face later :)
-                if (static_cast<uint32_t>(key_event->keysym()) != trigger.value().keysym)
                 {
-                    if (began)
-                    {
-                        action->send_end_event(bogus_time, bogus_activation_token);
-                        began = false;
-                    }
 
                     return false;
                 }
