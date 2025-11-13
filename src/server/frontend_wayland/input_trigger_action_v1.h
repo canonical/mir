@@ -39,9 +39,7 @@ public:
     }
 };
 
-// TODO this is wildly unsafe
-// THIS IS TEMPORARY
-static inline std::unordered_map<std::string, std::shared_ptr<InputTriggerActionV1>> input_trigger_data;
+extern std::unordered_map<std::string, std::shared_ptr<InputTriggerActionV1>> input_trigger_data;
 }
 }
 #endif
