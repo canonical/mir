@@ -400,7 +400,8 @@ void InputTriggerRegistrationManagerV1::Instance::register_touch_tap_trigger(uin
 // TODO: Store the description string
 void InputTriggerRegistrationManagerV1::Instance::get_action_control(std::string const&, struct wl_resource* id)
 {
-    new ActionControl{cef, id};
+    auto action_control = new ActionControl{cef, id};
+    action_control->send_done_event("foo");
 }
 }
 }
