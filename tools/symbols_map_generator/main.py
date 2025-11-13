@@ -17,10 +17,11 @@
 import logging
 _logger = logging.getLogger(__name__)
 
-library_not_found_error_msg: str = ("    Please install libclang-19-dev and python3-clang-19."
-    "\n    Also, ensure that the required environment variables are set correctly. (e.g.)"
-    "\n        export MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH=/usr/lib/llvm-19/lib/libclang.so.1"
-    "\n        export MIR_SYMBOLS_MAP_GENERATOR_CLANG_LIBRARY_PATH=/usr/lib/llvm-19/lib")
+library_not_found_error_msg: str = """\
+    Please install libclang-19-dev and python3-clang-19.
+    Also, ensure that the required environment variables are set correctly. (e.g.)
+        export MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH=/usr/lib/llvm-19/lib/libclang.so.1
+        export MIR_SYMBOLS_MAP_GENERATOR_CLANG_LIBRARY_PATH=/usr/lib/llvm-19/lib"""
 
 import argparse
 from pathlib import Path
