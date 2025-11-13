@@ -1,6 +1,6 @@
 summary: Build (on Alpine)
 systems: [alpine-*]
-variants: [amd64]
+variants: [amd64, "*ld"]
 
 execute: |
     apk add \
@@ -39,11 +39,15 @@ execute: |
         pixman-dev \
         xwayland
 
+    if [ "${LINKER}" != "ld" ]; then
+        apk add ${LINKER}
+    fi
+
     BUILD_DIR=$PWD/../build
     cmake \
         -H$SPREAD_PATH -B$BUILD_DIR \
-        -DCMAKE_BUILD_TYPE=Debug \
-        -DMIR_USE_LD=ld \
+        -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
+        -DMIR_USE_LD=${LINKER} \
         -DMIR_ENABLE_WLCS_TESTS=OFF \
         -DCMAKE_C_COMPILER_LAUNCHER=ccache \
         -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
