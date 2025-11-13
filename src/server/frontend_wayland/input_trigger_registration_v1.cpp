@@ -149,8 +149,7 @@ public:
     }
     void add_input_trigger_event(struct wl_resource* trigger) override
     {
-
-        if(auto const keyboard_trigger = static_cast<KeyboardSymTrigger*>(wayland::InputTriggerV1::from(trigger)))
+        if (auto const keyboard_trigger = static_cast<KeyboardSymTrigger*>(wayland::InputTriggerV1::from(trigger)))
         {
             auto const token = "foo";
 
