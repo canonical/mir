@@ -138,7 +138,7 @@ int main(int /*argc*/, char** /*argv*/)
         .done =
         [](void* /*data*/, ext_input_trigger_action_control_v1* /*control*/, char const* token)
         {
-            action_control_token = token;
+            action_control_token = strdup(token);
         },
     };
     ext_input_trigger_action_control_v1_add_listener(action_control, &action_control_listener, nullptr);
