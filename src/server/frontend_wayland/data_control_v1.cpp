@@ -331,7 +331,7 @@ private:
             auto const source = new DataControlSourceV1{id};
 
             source->add_destroy_listener(
-                [this, source]
+                [state=state, source]
                 {
                     for (auto const& clp : {state->clipboard, state->primary_clipboard})
                     {
