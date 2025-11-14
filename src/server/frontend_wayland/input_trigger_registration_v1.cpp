@@ -344,8 +344,9 @@ private:
                     if (began)
                     {
                         action.value().send_end_event(bogus_time, bogus_activation_token);
+                        began = false;
+                    }
 
-                    began = false;
                     return false;
                 }
 
