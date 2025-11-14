@@ -16,6 +16,7 @@
 
 #include "input_trigger_registration_v1.h"
 #include "input_trigger_action_v1.h"
+#include "input_trigger_data.h"
 #include "mir/events/input_event.h"
 #include "mir/events/keyboard_event.h"
 #include "mir/input/xkb_mapper.h"
@@ -41,9 +42,13 @@ enum class RegistrationType : uint32_t
 class InputTriggerRegistrationManagerV1 : public wayland::InputTriggerRegistrationManagerV1::Global
 {
 public:
-    InputTriggerRegistrationManagerV1(wl_display* display, std::shared_ptr<mi::CompositeEventFilter> const& cef) :
+    InputTriggerRegistrationManagerV1(
+        wl_display* display,
+        std::shared_ptr<mi::CompositeEventFilter> const& cef,
+        std::shared_ptr<InputTriggerData> const& itd) :
         Global{display, Version<1>{}},
-        cef{cef}
+        cef{cef},
+        itd{itd}
     {
     }
 
@@ -52,9 +57,11 @@ public:
     public:
         Instance(
             wl_resource* new_ext_input_trigger_registration_manager_v1,
-            std::shared_ptr<mi::CompositeEventFilter> const& cef) :
+            std::shared_ptr<mi::CompositeEventFilter> const& cef,
+            std::shared_ptr<InputTriggerData> const& itd) :
             wayland::InputTriggerRegistrationManagerV1{new_ext_input_trigger_registration_manager_v1, Version<1>{}},
-            cef{cef}
+            cef{cef},
+            itd{itd}
         {
         }
 
@@ -64,15 +71,17 @@ public:
 
     private:
         std::shared_ptr<mi::CompositeEventFilter> const cef;
+        std::shared_ptr<InputTriggerData> const itd;
     };
 
     void bind(wl_resource* new_ext_input_trigger_registration_manager_v1) override
     {
-        new Instance{new_ext_input_trigger_registration_manager_v1, cef};
+        new Instance{new_ext_input_trigger_registration_manager_v1, cef, itd};
     }
 
 private:
     std::shared_ptr<mi::CompositeEventFilter> const cef;
+    std::shared_ptr<InputTriggerData> const itd;
 };
 
 class KeyboardSymTrigger : public wayland::InputTriggerV1
@@ -148,9 +157,13 @@ public:
 class ActionControl : public wayland::InputTriggerActionControlV1
 {
 public:
-    ActionControl(std::shared_ptr<mi::CompositeEventFilter> const& cef, struct wl_resource* id) :
+    ActionControl(
+        std::shared_ptr<mi::CompositeEventFilter> const& cef,
+        std::shared_ptr<InputTriggerData> const& itd,
+        struct wl_resource* id) :
         mir::wayland::InputTriggerActionControlV1{id, Version<1>{}},
-        cef{cef}
+        cef{cef},
+        itd{itd}
     {
     }
 
@@ -159,7 +172,7 @@ public:
         if (auto const keyboard_trigger = static_cast<KeyboardSymTrigger*>(wayland::InputTriggerV1::from(trigger)))
         {
             auto const token = "foo";
-            trigger_filter = std::make_shared<KeyboardEventFilter>(wayland::make_weak(keyboard_trigger), token);
+            trigger_filter = std::make_shared<KeyboardEventFilter>(wayland::make_weak(keyboard_trigger), token, itd);
             keyboard_trigger->extra_data.action_token = token;
 
             cef->prepend(trigger_filter);
@@ -175,14 +188,18 @@ private:
     {
         wayland::Weak<KeyboardSymTrigger> const trigger;
         std::string const token;
+        std::shared_ptr<InputTriggerData> const itd;
 
         bool began{false};
         std::unordered_set<uint32_t> pressed_keysyms;
 
-
-        explicit KeyboardEventFilter(wayland::Weak<KeyboardSymTrigger> trigger, std::string const& token) :
+        explicit KeyboardEventFilter(
+            wayland::Weak<KeyboardSymTrigger> trigger,
+            std::string const& token,
+            std::shared_ptr<InputTriggerData> const& itd) :
             trigger{std::move(trigger)},
-            token{token}
+            token{token},
+            itd{itd}
         {
         }
 
@@ -325,8 +342,9 @@ private:
             else if (key_event->action() == mir_keyboard_action_up)
                 pressed_keysyms.erase(key_event->keysym());
 
-            if (auto const action_iter = input_trigger_data.find(trigger.value().extra_data.action_token);
-                action_iter != input_trigger_data.end())
+            auto const input_trigger_data = itd->registered_actions.lock();
+            if (auto const action_iter = input_trigger_data->find(trigger.value().extra_data.action_token);
+                action_iter != input_trigger_data->end())
             {
                 auto const [_, action] = *action_iter;
                 // TODO pass the clock and the token authority
@@ -395,6 +413,7 @@ private:
     };
 
     std::shared_ptr<mi::CompositeEventFilter> const cef;
+    std::shared_ptr<InputTriggerData> const itd;
     std::shared_ptr<mi::EventFilter> trigger_filter;
 };
 
@@ -430,15 +449,16 @@ void InputTriggerRegistrationManagerV1::Instance::register_keyboard_code_trigger
 // TODO: Store the description string
 void InputTriggerRegistrationManagerV1::Instance::get_action_control(std::string const&, struct wl_resource* id)
 {
-    auto action_control = new ActionControl{cef, id};
+    auto action_control = new ActionControl{cef, itd, id};
     action_control->send_done_event("foo");
 }
 }
 }
 
 auto mf::create_input_trigger_registration_manager_v1(
-    wl_display* display, std::shared_ptr<mi::CompositeEventFilter> const& cef)
-    -> std::shared_ptr<wayland::InputTriggerRegistrationManagerV1::Global>
+    wl_display* display,
+    std::shared_ptr<mi::CompositeEventFilter> const& cef,
+    std::shared_ptr<InputTriggerData> const& itd) -> std::shared_ptr<wayland::InputTriggerRegistrationManagerV1::Global>
 {
-    return std::make_shared<mf::InputTriggerRegistrationManagerV1>(display, cef);
+    return std::make_shared<mf::InputTriggerRegistrationManagerV1>(display, cef, itd);
 }

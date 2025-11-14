@@ -15,53 +15,55 @@
  */
 
 #include "input_trigger_action_v1.h"
+#include "input_trigger_data.h"
 
 namespace mir
 {
 namespace frontend
 {
-std::unordered_map<std::string, wayland::Weak<InputTriggerActionV1>> input_trigger_data = {};
-
 class InputTriggerActionManagerV1 : public wayland::InputTriggerActionManagerV1::Global
 {
 public:
-    InputTriggerActionManagerV1(wl_display* display) :
-        Global{display, Version<1>{}}
+    InputTriggerActionManagerV1(wl_display* display, std::shared_ptr<InputTriggerData> const& itd) :
+        Global{display, Version<1>{}},
+        itd{itd}
     {
     }
 
 private:
     class Instance : public wayland::InputTriggerActionManagerV1
     {
+        std::shared_ptr<InputTriggerData> const itd;
+
         void get_input_trigger_action(std::string const& token, struct wl_resource* id) override
         {
             // TODO validate token
             auto const action = new InputTriggerActionV1(id);
-            input_trigger_data.insert({token, wayland::make_weak(action)});
+            itd->registered_actions.lock()->insert({token, wayland::make_weak(action)});
 
-            action->add_destroy_listener([token]{
-                input_trigger_data.erase(token);
-            });
+            action->add_destroy_listener([token, itd = itd] { itd->registered_actions.lock()->erase(token); });
         }
 
     public:
-        Instance(wl_resource* new_ext_input_trigger_action_manager_v1) :
-            InputTriggerActionManagerV1{new_ext_input_trigger_action_manager_v1, Version<1>{}}
+        Instance(wl_resource* new_ext_input_trigger_action_manager_v1, std::shared_ptr<InputTriggerData> const& itd) :
+            InputTriggerActionManagerV1{new_ext_input_trigger_action_manager_v1, Version<1>{}},
+            itd{itd}
         {
         }
     };
 
     void bind(wl_resource* new_ext_input_trigger_action_manager_v1) override
     {
-        new Instance{new_ext_input_trigger_action_manager_v1};
+        new Instance{new_ext_input_trigger_action_manager_v1, itd};
     }
 
+    std::shared_ptr<InputTriggerData> const itd;
 };
 
-auto create_input_trigger_action_manager_v1(wl_display* display)
+auto create_input_trigger_action_manager_v1(wl_display* display, std::shared_ptr<InputTriggerData> const& itd)
     -> std::shared_ptr<wayland::InputTriggerActionManagerV1::Global>
 {
-    return std::make_shared<InputTriggerActionManagerV1>(display);
+    return std::make_shared<InputTriggerActionManagerV1>(display, itd);
 }
 }
 }

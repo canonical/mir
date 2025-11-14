@@ -94,6 +94,7 @@ class WpViewporter;
 class LinuxDRMSyncobjManager;
 class DesktopFileManager;
 class SurfaceRegistry;
+class InputTriggerData;
 
 class WaylandExtensions
 {
@@ -124,6 +125,7 @@ public:
         std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> keyboard_observer_registrar;
         std::shared_ptr<shell::TokenAuthority> token_authority;
         std::shared_ptr<SurfaceRegistry> surface_registry;
+        std::shared_ptr<InputTriggerData> input_trigger_data;
     };
 
     WaylandExtensions() = default;
