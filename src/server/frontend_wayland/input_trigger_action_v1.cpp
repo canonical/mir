@@ -38,6 +38,10 @@ private:
             // TODO validate token
             auto const action = new InputTriggerActionV1(id);
             input_trigger_data.insert({token, wayland::make_weak(action)});
+
+            action->add_destroy_listener([token]{
+                input_trigger_data.erase(token);
+            });
         }
 
     public:
