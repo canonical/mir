@@ -88,7 +88,6 @@ public:
 
     struct ExtraData
     {
-        std::shared_ptr<mi::EventFilter> event_filter;
         std::string action_token;
     } extra_data;
 
@@ -147,17 +146,16 @@ public:
         cef{cef}
     {
     }
+
     void add_input_trigger_event(struct wl_resource* trigger) override
     {
         if (auto const keyboard_trigger = static_cast<KeyboardSymTrigger*>(wayland::InputTriggerV1::from(trigger)))
         {
             auto const token = "foo";
-
-            auto const filter = keyboard_trigger->extra_data.event_filter =
-                std::make_shared<KeyboardEventFilter>(wayland::make_weak(keyboard_trigger), token);
+            trigger_filter = std::make_shared<KeyboardEventFilter>(wayland::make_weak(keyboard_trigger), token);
             keyboard_trigger->extra_data.action_token = token;
 
-            cef->prepend(filter);
+            cef->prepend(trigger_filter);
             send_done_event(token);
         }
     }
@@ -360,6 +358,7 @@ private:
     };
 
     std::shared_ptr<mi::CompositeEventFilter> const cef;
+    std::shared_ptr<mi::EventFilter> trigger_filter;
 };
 
 // The trigger is registered with the composite event filter when its added to a control object
