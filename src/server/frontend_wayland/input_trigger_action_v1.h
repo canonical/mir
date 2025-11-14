@@ -44,4 +44,3 @@ extern std::unordered_map<std::string, wayland::Weak<InputTriggerActionV1>> inpu
 }
 }
 #endif
-
