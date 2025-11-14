@@ -14,30 +14,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_SERVER_FRONTEND_INPUT_TRIGGER_ACTION_V1_H_
-#define MIR_SERVER_FRONTEND_INPUT_TRIGGER_ACTION_V1_H_
+#ifndef MIR_SERVER_FRONTEND_INPUT_TRIGGER_DATA_H_
+#define MIR_SERVER_FRONTEND_INPUT_TRIGGER_DATA_H_
 
-#include "ext-input-trigger-action-v1_wrapper.h"
+#include "mir/synchronised.h"
+#include "mir/wayland/weak.h"
+#include <unordered_map>
 
 namespace mir
 {
-namespace input
-{
-}
 namespace frontend
 {
-class InputTriggerData;
-auto create_input_trigger_action_manager_v1(wl_display*, std::shared_ptr<InputTriggerData> const& itd)
-    -> std::shared_ptr<wayland::InputTriggerActionManagerV1::Global>;
 
-class InputTriggerActionV1 : public wayland::InputTriggerActionV1
+class InputTriggerActionV1;
+
+struct InputTriggerData
 {
-public:
-    InputTriggerActionV1(wl_resource* id) :
-        wayland::InputTriggerActionV1{id, Version<1>{}}
-    {
-    }
+    mir::Synchronised<std::unordered_map<std::string, wayland::Weak<InputTriggerActionV1>>> registered_actions;
 };
+
 }
 }
+
 #endif
