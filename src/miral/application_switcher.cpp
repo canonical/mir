@@ -38,8 +38,10 @@
 #include <gio/gio.h>
 
 #include "layer_shell_wayland_surface.h"
+#include "mir/server.h"
 #include "mir/synchronised.h"
 #include "miral/append_keyboard_event_filter.h"
+#include "miral/internal_client.h"
 #include "miral/wayland_extensions.h"
 
 namespace geom = mir::geometry;
@@ -748,7 +750,7 @@ public:
 
     void stop() const
     {
-        if (eventfd_write(shutdown_signal, 1) == -1)
+        if (shutdown_signal != mir::Fd::invalid && eventfd_write(shutdown_signal, 1) == -1)
             mir::log_error("Failed to notify internal decoration client to shutdown");
     }
 
@@ -840,11 +842,11 @@ void miral::ApplicationSwitcher::stop() const
     self->stop();
 }
 
-class miral::ApplicationSwitcherKeyboardFilter::Self
+class miral::StandardApplicationSwitcher::Self
 {
 public:
-    explicit Self(ApplicationSwitcher const& switcher, KeybindConfiguration const& keybind_configuration)
-        : switcher(switcher),
+    explicit Self(KeybindConfiguration const& keybind_configuration)
+        : startup_internal_client(switcher, switcher, [&] { switcher.stop(); }),
           keybind_configuration(keybind_configuration),
           keyboard_event_filter([&, is_running = false](MirKeyboardEvent const* key_event) mutable
          {
@@ -902,20 +904,20 @@ public:
     }
 
     ApplicationSwitcher switcher;
+    StartupInternalClient startup_internal_client;
     KeybindConfiguration keybind_configuration;
     AppendKeyboardEventFilter keyboard_event_filter;
 };
 
-miral::ApplicationSwitcherKeyboardFilter::ApplicationSwitcherKeyboardFilter(
-    ApplicationSwitcher const& switcher,
-    KeybindConfiguration const& keybind_configuration)
-    : self(std::make_shared<Self>(switcher, keybind_configuration))
+miral::StandardApplicationSwitcher::StandardApplicationSwitcher(KeybindConfiguration const& keybind_configuration)
+    : self(std::make_shared<Self>(keybind_configuration))
 {
 }
 
-miral::ApplicationSwitcherKeyboardFilter::~ApplicationSwitcherKeyboardFilter() = default;
+miral::StandardApplicationSwitcher::~StandardApplicationSwitcher() = default;
 
-void miral::ApplicationSwitcherKeyboardFilter::operator()(mir::Server& server) const
+void miral::StandardApplicationSwitcher::operator()(mir::Server& server) const
 {
     self->keyboard_event_filter(server);
+    self->startup_internal_client.operator()(server);
 }

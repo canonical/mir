@@ -87,9 +87,8 @@ int main(int argc, char const* argv[])
         };
 
     MirRunner runner{argc, argv};
-    ApplicationSwitcher application_switcher;
 
-    runner.add_stop_callback([&] { shutdown_hook(); application_switcher.stop(); });
+    runner.add_stop_callback([&] { shutdown_hook(); });
 
     ExternalClientLauncher external_client_launcher;
 
@@ -370,7 +369,6 @@ int main(int argc, char const* argv[])
             cursor_scale,
             locate_pointer,
             AppendKeyboardEventFilter{locate_pointer_filter},
-            StartupInternalClient{application_switcher},
-            ApplicationSwitcherKeyboardFilter(application_switcher, ApplicationSwitcherKeyboardFilter::KeybindConfiguration{})
+            StandardApplicationSwitcher(StandardApplicationSwitcher::KeybindConfiguration{})
         });
 }

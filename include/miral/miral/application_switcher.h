@@ -98,10 +98,12 @@ private:
     std::shared_ptr<Self> self;
 };
 
-/// This class provides a common shortcut strategy for the
-/// #miral::ApplicationSwitcher.
+/// This class encapsulates the standard usage of the #miral::ApplicationSwitcher.
 ///
-/// By default, this class will do the following:
+/// It will provide the application switcher to an internal client, setup common keybinds,
+/// and automatically stop it when the server starts.
+///
+/// This class will provide the following keybinds by default:
 /// - Call #miral::ApplicationSwitcher::next_app on `alt + tab`.
 /// - Call #miral::ApplicationSwitcher::prev_app on `alt + shift + tab`
 /// - Call #miral::ApplicationSwitcher::next_window on `alt + grave`
@@ -110,7 +112,7 @@ private:
 /// This class should be provided to a #miral::MirRunner::run_with.
 ///
 /// \remark Since MirAL 5.6
-class ApplicationSwitcherKeyboardFilter
+class StandardApplicationSwitcher
 {
 public:
     /// Describes the keyboard shortcuts for the application switcher keyboard filter.
@@ -146,10 +148,9 @@ public:
         int window_key = KEY_GRAVE;
     };
 
-    /// Create a new keyboard filter for the provided \p switcher with the provided
-    /// \p keybind_configuration.
-    ApplicationSwitcherKeyboardFilter(ApplicationSwitcher const& switcher, KeybindConfiguration const& keybind_configuration);
-    ~ApplicationSwitcherKeyboardFilter();
+    /// Create a new standard application switcher with the provided \p keybind_configuration.
+    explicit StandardApplicationSwitcher(KeybindConfiguration const& keybind_configuration);
+    ~StandardApplicationSwitcher();
 
     void operator()(mir::Server& server) const;
 
