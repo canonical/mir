@@ -16,12 +16,13 @@
 
 #include "mir/log.h"
 #include "mir/logging/logger.h"
-#include <cstdio>
 #include <chrono>
+#include <cstdio>
+#include <exception>
 #include <format>
 #include <iostream>
+#include <sstream>
 
-#include <exception>
 #include <boost/exception/diagnostic_information.hpp>
 #include <errno.h>
 
@@ -99,7 +100,7 @@ void security_log(
     std::stringstream ss;
     ss << std::put_time(std::gmtime(&time_t), "%FT%TZ");
 
-    std::cerr << std::format(
+    auto message = std::format(
         "{{"
             "\"datetime\": \"{}\", "
             "\"appid\": \"{}\", "
@@ -117,6 +118,7 @@ void security_log(
          severity == logging::Severity::debug ? "DEBUG" : "UNKNOWN"),
         description
     );
+    logging::log(severity, message, "security");
 }
 
 } // namespace mir
