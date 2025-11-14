@@ -869,17 +869,20 @@ public:
                             return true;
                         }
                     }
-                    if (scancode == keybind_configuration.application_key)
+                    else
                     {
-                        switcher.next_app();
-                        is_running = true;
-                        return true;
-                    }
-                    else if (scancode == keybind_configuration.window_key)
-                    {
-                        switcher.next_window();
-                        is_running = true;
-                        return true;
+                        if (scancode == keybind_configuration.application_key)
+                        {
+                            switcher.next_app();
+                            is_running = true;
+                            return true;
+                        }
+                        else if (scancode == keybind_configuration.window_key)
+                        {
+                            switcher.next_window();
+                            is_running = true;
+                            return true;
+                        }
                     }
                 }
             }

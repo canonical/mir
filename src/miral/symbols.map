@@ -707,11 +707,7 @@ global:
     miral::ApplicationSwitcher::stop*;
     miral::ApplicationSwitcherKeyboardFilter::?ApplicationSwitcherKeyboardFilter*;
     miral::ApplicationSwitcherKeyboardFilter::ApplicationSwitcherKeyboardFilter*;
-    miral::ApplicationSwitcherKeyboardFilter::application_key*;
     miral::ApplicationSwitcherKeyboardFilter::operator*;
-    miral::ApplicationSwitcherKeyboardFilter::primary_modifier*;
-    miral::ApplicationSwitcherKeyboardFilter::reverse_modifier*;
-    miral::ApplicationSwitcherKeyboardFilter::window_key*;
     miral::CursorScale::scale_temporarily*;
     miral::FloatingWindowManager::?FloatingWindowManager*;
     miral::FloatingWindowManager::FloatingWindowManager*;
@@ -767,3 +763,4 @@ global:
     vtable?for?miral::FloatingWindowManager;
   };
 } MIRAL_5.5;
+
