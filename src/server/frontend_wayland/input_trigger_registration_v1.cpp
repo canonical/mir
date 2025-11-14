@@ -23,6 +23,7 @@
 #include "mir_toolkit/events/enums.h"
 
 #include <mir/input/composite_event_filter.h>
+#include <unordered_set>
 
 namespace mf = mir::frontend;
 namespace mi = mir::input;
@@ -170,6 +171,8 @@ private:
         std::string const token;
 
         bool began{false};
+        std::unordered_set<uint32_t> pressed_keysyms;
+
 
         explicit KeyboardEventFilter(wayland::Weak<KeyboardSymTrigger> trigger, std::string const& token) :
             trigger{std::move(trigger)},
@@ -310,6 +313,11 @@ private:
 
             auto const* key_event = input_event->to_keyboard();
 
+            if (key_event->action() == mir_keyboard_action_down)
+                pressed_keysyms.insert(key_event->keysym());
+            else if (key_event->action() == mir_keyboard_action_up)
+                pressed_keysyms.erase(key_event->keysym());
+
             if (auto const action_iter = input_trigger_data.find(trigger.value().extra_data.action_token);
                 action_iter != input_trigger_data.end())
             {
@@ -320,32 +328,31 @@ private:
 
                 auto const event_mods = mi::expand_modifiers(key_event->modifiers());
                 auto const trigger_mods = mi::expand_modifiers(trigger.value().modifiers);
+                auto const modifiers_match = protocol_and_event_modifiers_match(trigger_mods, event_mods);
 
-                // FIXME if the modifiers include shift, and the key is
-                // alphabetic key, we receive XKB_KEY_<uppercase key>. If the
-                // client requests a lowercase keysym, then it will never be
-                // triggered.
-                if (!protocol_and_event_modifiers_match(trigger_mods, event_mods) ||
-                    static_cast<uint32_t>(key_event->keysym()) != trigger.value().keysym)
+                auto const trigger_mods_contain_shift = (trigger_mods & mir_input_event_modifier_shift) |
+                                                        (trigger_mods & mir_input_event_modifier_shift_left) |
+                                                        (trigger_mods & mir_input_event_modifier_shift_right) != 0;
+
+                auto const keysym_matches =
+                    keysym_exists_in_set(trigger.value().keysym, pressed_keysyms, trigger_mods_contain_shift);
+
+                if (!modifiers_match || !keysym_matches)
                 {
                     if (began)
+                    {
                         action.value().send_end_event(bogus_time, bogus_activation_token);
 
                     began = false;
                     return false;
                 }
 
-                if (key_event->action() == mir_keyboard_action_down)
+                // If the trigger keysym is pressed (either just pressed or was already pressed),
+                // ensure we send a begin event if we haven't already.
+                if (!began)
                 {
                     action.value().send_begin_event(bogus_time, bogus_activation_token);
                     began = true;
-                    return true;
-                }
-
-                if (key_event->action() == mir_keyboard_action_up && began)
-                {
-                    action.value().send_end_event(bogus_time, bogus_activation_token);
-                    began = false;
                     return true;
                 }
 
@@ -354,6 +361,28 @@ private:
 
             // Invalid token
             return false;
+        }
+
+        static auto keysym_exists_in_set(
+            uint32_t keysym, std::unordered_set<uint32_t> const& pressed, bool case_insensitive) -> bool
+        {
+            if (!case_insensitive)
+                return pressed.find(keysym) != pressed.end();
+
+            // Only perform case mapping for ASCII letters. For other keysyms, fall back to exact match.
+            uint32_t lower = keysym;
+            uint32_t upper = keysym;
+
+            if (keysym >= XKB_KEY_A && keysym <= XKB_KEY_Z)
+            {
+                lower = keysym + (XKB_KEY_a - XKB_KEY_A);
+            }
+            else if (keysym >= XKB_KEY_a && keysym <= XKB_KEY_z)
+            {
+                upper = keysym - (XKB_KEY_a - XKB_KEY_A);
+            }
+
+            return pressed.find(lower) != pressed.end() || pressed.find(upper) != pressed.end();
         }
     };
 
