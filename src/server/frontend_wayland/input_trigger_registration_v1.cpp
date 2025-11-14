@@ -80,22 +80,22 @@ class KeyboardSymTrigger : public wayland::InputTriggerV1
 public:
     KeyboardSymTrigger(uint32_t modifiers, uint32_t keysym, struct wl_resource* id, RegistrationType type) :
         InputTriggerV1{id, Version<1>{}},
-        modifiers{to_mir_modifiers(modifiers)},
         keysym{keysym},
-        type{type}
+        type{type},
+        modifiers{to_mir_modifiers(modifiers, keysym)}
     {
     }
 
-    MirInputEventModifiers const modifiers;
     uint32_t const keysym;
     RegistrationType const type;
+    MirInputEventModifiers const modifiers;
 
     struct ExtraData
     {
         std::string action_token;
     } extra_data;
 
-    static auto to_mir_modifiers(uint32_t protocol_modifiers) -> MirInputEventModifiers
+    static auto to_mir_modifiers(uint32_t protocol_modifiers, uint32_t keysym) -> MirInputEventModifiers
     {
         using PM = wayland::InputTriggerRegistrationManagerV1::Modifiers;
 
@@ -137,6 +137,9 @@ public:
             if (protocol_modifiers & protocol_modifier)
                 result |= mir_modifier;
         }
+
+        if (keysym >= XKB_KEY_A && keysym <= XKB_KEY_Z)
+            result |= mir_input_event_modifier_shift;
 
         return result;
     }
