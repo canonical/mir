@@ -169,7 +169,7 @@
         ext_input_trigger_action_v1.begin event when triggered
         and ext_input_trigger_action_v1.end when the trigger ends.
       </description>
-      <arg name="modifier" type="uint" enum="modifier"/>
+      <arg name="modifier" type="uint" enum="modifiers"/>
       <arg name="tap_count" type="uint" summary="number of consecutive taps before triggering"/>
       <arg name="id" type="new_id" interface="ext_input_trigger_v1"/>
     </request>
