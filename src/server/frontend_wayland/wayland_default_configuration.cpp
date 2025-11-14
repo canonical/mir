@@ -18,6 +18,7 @@
 
 #include "fractional-scale-v1_wrapper.h"
 #include "fractional_scale_v1.h"
+#include "input_trigger_action_v1.h"
 #include "mir/default_server_configuration.h"
 
 #include "mir/frontend/wayland.h"
@@ -55,6 +56,7 @@
 #include "xdg_shell_v6.h"
 #include "xwayland_wm_shell.h"
 #include "data_control_v1.h"
+#include "input_trigger_registration_v1.h"
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
@@ -263,6 +265,19 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
                     ctx.display,
                     ctx.main_clipboard,
                     ctx.primary_selection_clipboard);
+        }),
+    make_extension_builder<mw::InputTriggerRegistrationManagerV1>([](auto const& ctx)
+        {
+            return mf::create_input_trigger_registration_manager_v1(
+                    ctx.display,
+                    ctx.composite_event_filter,
+                    ctx.input_trigger_data);
+        }),
+    make_extension_builder<mw::InputTriggerActionManagerV1>([](auto const& ctx)
+        {
+            return mf::create_input_trigger_action_manager_v1(
+                    ctx.display,
+                    ctx.input_trigger_data);
         }),
 };
 
