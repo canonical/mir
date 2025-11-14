@@ -33,6 +33,7 @@
 #include "wp_viewporter.h"
 #include "linux_drm_syncobj.h"
 #include "surface_registry.h"
+#include "input_trigger_data.h"
 
 #include <mir/errno_utils.h>
 #include <mir/main_loop.h>
@@ -344,7 +345,8 @@ mf::WaylandConnector::WaylandConnector(
         session_coordinator,
         keyboard_observer_registrar,
         token_authority,
-        surface_registry});
+        surface_registry,
+        std::make_shared<frontend::InputTriggerData>()});
 
     shm_global = std::make_unique<WlShm>(display.get(), executor);
 
