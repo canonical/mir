@@ -19,7 +19,7 @@ execute: |
     fi
 
     if [ "${LINKER}" != "ld" ]; then
-        dnf install ${LINKER}
+        dnf install "${LINKER}"
         RPMBUILD_EXTRA_OPTIONS+=(--with ${LINKER})
     fi
 

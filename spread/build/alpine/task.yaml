@@ -40,7 +40,7 @@ execute: |
         xwayland
 
     if [ "${LINKER}" != "ld" ]; then
-        apk add ${LINKER}
+        apk add "${LINKER}"
     fi
 
     BUILD_DIR=$PWD/../build

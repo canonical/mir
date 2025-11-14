@@ -42,7 +42,7 @@ execute: |
 
     # Set up linker
     if [ "${LINKER}" != "ld" ]; then
-      apt-get install --yes --no-install-recommends ${LINKER}
+      apt-get install --yes --no-install-recommends "${LINKER}"
     fi
     echo "OVERRIDE_CONFIGURE_OPTIONS += -DMIR_USE_LD=${LINKER}" >> debian/opts.mk
 
