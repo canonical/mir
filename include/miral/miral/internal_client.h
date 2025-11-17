@@ -64,16 +64,18 @@ public:
     /// to start interacting with the server. Note that this callback happens on another thread.
     /// This callback must exit.
     ///
-    /// The \p join_callback will be called before a join is requested on the client thread so that
+    /// The \p handle_stop callback will be called before a join is requested on the client thread so that
     /// the client may perform some cleanup (e.g. setting a flag to tell the Wayland event loop to stop).
     ///
     /// \param client_code called when the Wayland client is initialized
     /// \param connect_notification called when the session has connected
-    /// \param join_callback called before the client thread joins
+    /// \param handle_stop called before the client thread joins
+    ///
+    /// \remark Since MirAL 5.6
     StartupInternalClient(
         std::function<void(struct ::wl_display* display)> client_code,
         std::function<void(std::weak_ptr<mir::scene::Session> const session)> connect_notification,
-        std::function<void()> join_callback);
+        std::function<void()> handle_stop);
 
     /// Construct an internal client to be launched when the Mir server starts.
     ///

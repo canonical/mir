@@ -17,11 +17,10 @@
 #ifndef MIRAL_APPLICATION_SWITCHER_H
 #define MIRAL_APPLICATION_SWITCHER_H
 
+#include <miral/toolkit_event.h>
 #include <miral/window_manager_tools.h>
 #include <memory>
 #include <wayland-client.h>
-#include <functional>
-#include <miral/toolkit_event.h>
 #include <linux/input-event-codes.h>
 
 namespace mir
@@ -107,7 +106,7 @@ private:
 /// - Call #miral::ApplicationSwitcher::next_app on `alt + tab`.
 /// - Call #miral::ApplicationSwitcher::prev_app on `alt + shift + tab`
 /// - Call #miral::ApplicationSwitcher::next_window on `alt + grave`
-/// - Call #miral::ApplicationSwitcher::prev_window` on `alt + shift + grave`.
+/// - Call #miral::ApplicationSwitcher::prev_window on `alt + shift + grave`.
 ///
 /// This class should be provided to a #miral::MirRunner::run_with.
 ///
@@ -147,6 +146,9 @@ public:
         /// Defaults to KEY_GRAVE.
         int window_key = KEY_GRAVE;
     };
+
+    /// Create a new standard application switcher with the default #KeybindConfiguration.
+    StandardApplicationSwitcher();
 
     /// Create a new standard application switcher with the provided \p keybind_configuration.
     explicit StandardApplicationSwitcher(KeybindConfiguration const& keybind_configuration);
