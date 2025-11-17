@@ -846,7 +846,7 @@ class miral::StandardApplicationSwitcher::Self
 {
 public:
     explicit Self(KeybindConfiguration const& keybind_configuration)
-        : startup_internal_client(switcher, switcher, [this] { switcher.stop(); }),
+        : startup_internal_client(switcher, switcher, [switcher=switcher] { switcher.stop(); }),
           keybind_configuration(keybind_configuration),
           keyboard_event_filter([&, is_running = false](MirKeyboardEvent const* key_event) mutable
          {
