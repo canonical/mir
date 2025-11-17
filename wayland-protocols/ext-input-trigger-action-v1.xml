@@ -82,6 +82,9 @@
         The time argument is a timestamp with millisecond granularity, with an
         undefined base. clients must not assume any relation to wall-clock
         time; timestamps are only valid for comparison/deltas.
+
+        The activation token argument is a short-lived opaque token that may be
+        used with `xdg_activation_v1` to request to focus another surface.
       </description>
       <arg name="time" type="uint" summary="timestamp with millisecond granularity"/>
       <arg name="activation_token" type="string" summary="an xdg_activation token"/>
@@ -99,6 +102,9 @@
         The time argument is a timestamp with millisecond granularity, with an
         undefined base. clients must not assume any relation to wall-clock
         time; timestamps are only valid for comparison/deltas.
+
+        The activation token argument is a short-lived opaque token that may be
+        used with `xdg_activation_v1` to request to focus another surface.
       </description>
       <arg name="time" type="uint" summary="timestamp with millisecond granularity"/>
       <arg name="activation_token" type="string" summary="an xdg_activation token"/>
@@ -114,6 +120,9 @@
         The time argument is a timestamp with millisecond granularity, with an
         undefined base. clients must not assume any relation to wall-clock
         time; timestamps are only valid for comparison/deltas.
+
+        The activation token argument is a short-lived opaque token that may be
+        used with `xdg_activation_v1` to request to focus another surface.
       </description>
       <arg name="time" type="uint" summary="timestamp with millisecond granularity"/>
       <arg name="activation_token" type="string" summary="an xdg_activation token"/>
