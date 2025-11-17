@@ -33,6 +33,7 @@ using ::testing::NotNull;
 
 namespace
 {
+static std::string temp_dir;
 static std::string applications_dir;
 }
 
@@ -44,10 +45,11 @@ struct GDesktopFileCache : Test
     {
         // Establish the temporary directory
         char tmp_dir_path[] = "/tmp/mir-XXXXXX";
-        mkdtemp(tmp_dir_path);
-        std::string desktop_file_directory_name = tmp_dir_path;
-        setenv("XDG_DATA_DIRS", desktop_file_directory_name.c_str(), 1);
-        applications_dir = desktop_file_directory_name + "/applications";
+        if (mkdtemp(tmp_dir_path) == nullptr)
+            throw std::runtime_error("failed to create temporary directory");
+        setenv("XDG_DATA_DIRS", tmp_dir_path, 1);
+        temp_dir = tmp_dir_path;
+        applications_dir = temp_dir + "/applications";
         mkdir(applications_dir.c_str(), S_IRWXU);
     }
 
@@ -56,6 +58,8 @@ struct GDesktopFileCache : Test
         // Remove all files from the temporary directory
         for (const auto& entry : std::filesystem::directory_iterator(applications_dir))
             std::filesystem::remove_all(entry.path());
+        rmdir(applications_dir.c_str());
+        rmdir(temp_dir.c_str());
     }
 
     void write_desktop_file(const char* contents, const char* filename)
