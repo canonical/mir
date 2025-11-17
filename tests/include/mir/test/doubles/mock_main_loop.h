@@ -40,13 +40,13 @@ public:
                       std::function<void(int)> const&), (override));
 
     MOCK_METHOD(void, register_signal_handler_module_ptr, (std::initializer_list<int>,
-                      std::function<void(int)> const&), (override));
+                      std::function<void(int)> const&), ());
 
     MOCK_METHOD(void, register_fd_handler, (std::initializer_list<int>, void const*,
                       std::function<void(int)> const&), (override));
 
     MOCK_METHOD(void, register_fd_handler_module_ptr, (std::initializer_list<int>, void const*,
-                      std::function<void(int)> const&), (override));
+                      std::function<void(int)> const&), ());
 
     MOCK_METHOD(void, unregister_fd_handler, (void const*), (override));
 
@@ -58,7 +58,7 @@ public:
     MOCK_METHOD(void, spawn, (std::function<void()>&), (override));
 
     MOCK_METHOD(std::unique_ptr<time::Alarm>, create_alarm, (std::function<void()> const& callback), (override));
-    MOCK_METHOD(std::unique_ptr<time::Alarm>, create_alarm, (LockableCallback* callback), (override));
+    MOCK_METHOD(std::unique_ptr<time::Alarm>, create_alarm, (LockableCallback* callback), ());
 
     std::unique_ptr<time::Alarm> create_alarm(std::unique_ptr<LockableCallback> callback) override
     {
