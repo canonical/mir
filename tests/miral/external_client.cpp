@@ -31,8 +31,10 @@ struct ExternalClient : miral::TestServer
     ExternalClient()
     {
         char tmp_dir_path[] = "/tmp/mir-XXXXXX";
-        mkdtemp(tmp_dir_path);
-        output = std::string(tmp_dir_path) + "/output";
+        if (mkdtemp(tmp_dir_path) == nullptr)
+            throw std::runtime_error("failed to create temporary directory");
+        output_dir = std::string(tmp_dir_path);
+        output = output_dir + "/output";
 
         start_server_in_setup = false;
         add_server_init(external_client);
@@ -41,12 +43,14 @@ struct ExternalClient : miral::TestServer
     ~ExternalClient()
     {
         unlink(output.c_str());
+        rmdir(output_dir.c_str());
     }
 
     miral::ExternalClientLauncher external_client;
     miral::X11Support x11_disabled_by_default{};
     miral::X11Support x11_enabled_by_default{miral::X11Support{}.default_to_enabled()};
 
+    std::string output_dir;
     std::string output;
 
     auto client_env_value(std::string const& key) const -> std::string
