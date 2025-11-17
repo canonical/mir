@@ -99,10 +99,6 @@ public:
     RegistrationType const type;
     MirInputEventModifiers const modifiers;
 
-    struct ExtraData
-    {
-        std::string action_token;
-    } extra_data;
 
     static auto to_mir_modifiers(uint32_t protocol_modifiers, uint32_t keysym) -> MirInputEventModifiers
     {
@@ -173,9 +169,13 @@ public:
         {
             auto const token = "foo";
             trigger_filter = std::make_shared<KeyboardEventFilter>(wayland::make_weak(keyboard_trigger), token, itd);
-            keyboard_trigger->extra_data.action_token = token;
 
             cef->prepend(trigger_filter);
+
+            // Tell the client that the action has been successfully registered.
+            // They then should call
+            // `InputTriggerActionManagerV1::get_input_trigger_action` using the
+            // token we supply here.
             send_done_event(token);
         }
     }
@@ -343,7 +343,7 @@ private:
                 pressed_keysyms.erase(key_event->keysym());
 
             auto const input_trigger_data = itd->registered_actions.lock();
-            if (auto const action_iter = input_trigger_data->find(trigger.value().extra_data.action_token);
+            if (auto const action_iter = input_trigger_data->find(token);
                 action_iter != input_trigger_data->end())
             {
                 auto const [_, action] = *action_iter;
