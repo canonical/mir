@@ -21,6 +21,8 @@
 #include "mir/test/doubles/explicit_executor.h"
 #include "mir_test_framework/open_wrapper.h"
 
+#include <boost/iostreams/device/file_descriptor.hpp>
+#include <boost/iostreams/stream.hpp>
 #include <filesystem>
 #include <fcntl.h>
 #include <gmock/gmock.h>
@@ -194,10 +196,10 @@ TEST_F(DesktopFileManager, can_resolve_from_valid_flatpak_info)
     std::stringstream flatpak_info_path;
     flatpak_info_path << "/proc/" << PID << "/root/.flatpak-info";
     auto const flatpak_info = flatpak_info_path.str();
-    auto tmp_file_name = std::tmpnam(NULL);
+    char tmp_file_name[] = "/tmp/mir-XXXXXX";
     {
-        std::ofstream tmp_file;
-        tmp_file.open(tmp_file_name);
+        boost::iostreams::file_descriptor fd{mkstemp(tmp_file_name), boost::iostreams::close_handle};
+        boost::iostreams::stream<boost::iostreams::file_descriptor> tmp_file(fd);
         tmp_file << "[Application]\nname=" << app_id;
     }
 
@@ -228,10 +230,10 @@ TEST_F(DesktopFileManager, app_id_will_not_resolve_from_flatpak_info_when_name_i
     std::stringstream flatpak_info_path;
     flatpak_info_path << "/proc/" << PID << "/root/.flatpak-info";
     auto const flatpak_info = flatpak_info_path.str();
-    auto tmp_file_name = std::tmpnam(NULL);
+    char tmp_file_name[] = "/tmp/mir-XXXXXX";
     {
-        std::ofstream tmp_file;
-        tmp_file.open(tmp_file_name);
+        boost::iostreams::file_descriptor fd{mkstemp(tmp_file_name), boost::iostreams::close_handle};
+        boost::iostreams::stream<boost::iostreams::file_descriptor> tmp_file(fd);
         tmp_file << "[Application]";
     }
 

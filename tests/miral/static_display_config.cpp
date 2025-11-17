@@ -163,7 +163,10 @@ public:
 
 TEST_F(StaticDisplayConfig, nonexistent_config_file_is_no_error)
 {
-    miral::StaticDisplayConfig{tmpnam(nullptr)};
+    char tmp_file_name[] = "/tmp/mir-XXXXXX";
+    int fd = mkstemp(tmp_file_name);
+    close(fd);
+    miral::StaticDisplayConfig{tmp_file_name};
 }
 
 TEST_F(StaticDisplayConfig, empty_config_input_causes_AbnormalExit)
