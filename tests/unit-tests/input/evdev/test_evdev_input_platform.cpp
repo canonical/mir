@@ -47,8 +47,8 @@ namespace
 
 struct MockInputDeviceRegistry : public mi::InputDeviceRegistry
 {
-    MOCK_METHOD1(add_device, std::weak_ptr<mi::Device>(std::shared_ptr<mi::InputDevice> const&));
-    MOCK_METHOD1(remove_device, void(std::shared_ptr<mi::InputDevice> const&));
+    MOCK_METHOD(std::weak_ptr<mi::Device>, add_device, (std::shared_ptr<mi::InputDevice> const&), ());
+    MOCK_METHOD(void, remove_device, (std::shared_ptr<mi::InputDevice> const&), ());
 };
 
 std::shared_ptr<udev_device> device_for_path(char const* devnode)

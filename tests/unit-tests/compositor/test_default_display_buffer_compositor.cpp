@@ -289,9 +289,9 @@ struct MockSceneElement : mc::SceneElement
             .WillByDefault(testing::Return(renderable));
     }
 
-    MOCK_CONST_METHOD0(renderable, std::shared_ptr<mir::graphics::Renderable>());
-    MOCK_METHOD0(rendered, void());
-    MOCK_METHOD0(occluded, void());
+    MOCK_METHOD(std::shared_ptr<mir::graphics::Renderable>, renderable, (), (const));
+    MOCK_METHOD(void, rendered, (), ());
+    MOCK_METHOD(void, occluded, (), ());
 };
 }
 

@@ -61,7 +61,7 @@ class StubSessionAuthorizer : public frontend::SessionAuthorizer
 
 struct MockSessionAuthorizer : StubSessionAuthorizer
 {
-    MOCK_METHOD1(screencast_is_allowed, bool(frontend::SessionCredentials const&));
+    MOCK_METHOD(bool, screencast_is_allowed, (frontend::SessionCredentials const&), ());
 };
 
 }

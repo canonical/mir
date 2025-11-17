@@ -30,13 +30,11 @@ namespace doubles
 
 struct MockDisplayConfiguration : public graphics::DisplayConfiguration
 {
-    MOCK_CONST_METHOD1(
-        for_each_output,
-        void(std::function<void(graphics::DisplayConfigurationOutput const&)>));
+    MOCK_METHOD(void, for_each_output, (std::function<void(graphics::DisplayConfigurationOutput const&)>), (const));
 
     MOCK_METHOD(void, for_each_output, (std::function<void(graphics::UserDisplayConfigurationOutput&)>), (override));
 
-    MOCK_CONST_METHOD0(valid, bool());
+    MOCK_METHOD(bool, valid, (), (const));
 
     std::unique_ptr<graphics::DisplayConfiguration> clone() const
     {

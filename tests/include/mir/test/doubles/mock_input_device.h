@@ -36,15 +36,15 @@ struct MockInputDevice : input::InputDevice
     MockInputDevice() = default;
     MockInputDevice(char const* name, char const* uid, input::DeviceCapabilities);
 
-    MOCK_METHOD2(start, void(input::InputSink* destination, input::EventBuilder* builder));
-    MOCK_METHOD0(stop, void());
-    MOCK_METHOD0(get_device_info, input::InputDeviceInfo());
-    MOCK_CONST_METHOD0(get_pointer_settings, mir::optional_value<input::PointerSettings>());
-    MOCK_METHOD1(apply_settings, void(input::PointerSettings const&));
-    MOCK_CONST_METHOD0(get_touchpad_settings, mir::optional_value<input::TouchpadSettings>());
-    MOCK_METHOD1(apply_settings, void(input::TouchpadSettings const&));
-    MOCK_CONST_METHOD0(get_touchscreen_settings, mir::optional_value<input::TouchscreenSettings>());
-    MOCK_METHOD1(apply_settings, void(input::TouchscreenSettings const&));
+    MOCK_METHOD(void, start, (input::InputSink* destination, input::EventBuilder* builder), ());
+    MOCK_METHOD(void, stop, (), ());
+    MOCK_METHOD(input::InputDeviceInfo, get_device_info, (), ());
+    MOCK_METHOD(mir::optional_value<input::PointerSettings>, get_pointer_settings, (), (const));
+    MOCK_METHOD(void, apply_settings, (input::PointerSettings const&), ());
+    MOCK_METHOD(mir::optional_value<input::TouchpadSettings>, get_touchpad_settings, (), (const));
+    MOCK_METHOD(void, apply_settings, (input::TouchpadSettings const&), ());
+    MOCK_METHOD(mir::optional_value<input::TouchscreenSettings>, get_touchscreen_settings, (), (const));
+    MOCK_METHOD(void, apply_settings, (input::TouchscreenSettings const&), ());
 };
 }
 }

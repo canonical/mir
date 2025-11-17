@@ -28,46 +28,46 @@ namespace test
 
 struct MockKMSOutput : public graphics::gbm::KMSOutput
 {
-    MOCK_CONST_METHOD0(id, uint32_t());
-    MOCK_METHOD0(reset, void());
-    MOCK_METHOD2(configure, void(geometry::Displacement, size_t));
-    MOCK_CONST_METHOD0(size, geometry::Size());
-    MOCK_CONST_METHOD0(max_refresh_rate, int());
+    MOCK_METHOD(uint32_t, id, (), (const));
+    MOCK_METHOD(void, reset, (), ());
+    MOCK_METHOD(void, configure, (geometry::Displacement, size_t), ());
+    MOCK_METHOD(geometry::Size, size, (), (const));
+    MOCK_METHOD(int, max_refresh_rate, (), (const));
 
     bool set_crtc(graphics::FBHandle const& fb) override
     {
         return set_crtc_thunk(&fb);
     }
 
-    MOCK_METHOD0(has_crtc_mismatch, bool());
-    MOCK_METHOD1(set_crtc_thunk, bool(graphics::FBHandle const*));
-    MOCK_METHOD0(clear_crtc, void());
+    MOCK_METHOD(bool, has_crtc_mismatch, (), ());
+    MOCK_METHOD(bool, set_crtc_thunk, (graphics::FBHandle const*), ());
+    MOCK_METHOD(void, clear_crtc, (), ());
 
     bool schedule_page_flip(graphics::FBHandle const& fb) override
     {
         return schedule_page_flip_thunk(&fb);
     }
-    MOCK_METHOD1(schedule_page_flip_thunk, bool(graphics::FBHandle const*));
-    MOCK_METHOD0(wait_for_page_flip, void());
+    MOCK_METHOD(bool, schedule_page_flip_thunk, (graphics::FBHandle const*), ());
+    MOCK_METHOD(void, wait_for_page_flip, (), ());
 
-    MOCK_CONST_METHOD0(last_frame, graphics::Frame());
+    MOCK_METHOD(graphics::Frame, last_frame, (), (const));
 
-    MOCK_METHOD1(set_cursor_image, bool(gbm_bo*));
-    MOCK_METHOD1(move_cursor, void(geometry::Point));
-    MOCK_METHOD0(clear_cursor, bool());
-    MOCK_CONST_METHOD0(has_cursor_image, bool());
+    MOCK_METHOD(bool, set_cursor_image, (gbm_bo*), ());
+    MOCK_METHOD(void, move_cursor, (geometry::Point), ());
+    MOCK_METHOD(bool, clear_cursor, (), ());
+    MOCK_METHOD(bool, has_cursor_image, (), (const));
 
-    MOCK_METHOD1(set_power_mode, void(MirPowerMode));
-    MOCK_METHOD1(set_gamma, void(mir::graphics::GammaCurves const&));
+    MOCK_METHOD(void, set_power_mode, (MirPowerMode), ());
+    MOCK_METHOD(void, set_gamma, (mir::graphics::GammaCurves const&), ());
 
-    MOCK_METHOD0(refresh_hardware_state, void());
-    MOCK_CONST_METHOD1(update_from_hardware_state, void(graphics::DisplayConfigurationOutput&));
+    MOCK_METHOD(void, refresh_hardware_state, (), ());
+    MOCK_METHOD(void, update_from_hardware_state, (graphics::DisplayConfigurationOutput&), (const));
 
-    MOCK_CONST_METHOD1(fb_for, std::shared_ptr<graphics::FBHandle const>(gbm_bo*));
-    MOCK_CONST_METHOD1(fb_for, std::shared_ptr<graphics::FBHandle const>(graphics::DMABufBuffer const&));
-    MOCK_CONST_METHOD1(buffer_requires_migration, bool(gbm_bo*));
-    MOCK_CONST_METHOD0(drm_fd, int());
-    MOCK_CONST_METHOD0(connected, bool());
+    MOCK_METHOD(std::shared_ptr<graphics::FBHandle const>, fb_for, (gbm_bo*), (const));
+    MOCK_METHOD(std::shared_ptr<graphics::FBHandle const>, fb_for, (graphics::DMABufBuffer const&), (const));
+    MOCK_METHOD(bool, buffer_requires_migration, (gbm_bo*), (const));
+    MOCK_METHOD(int, drm_fd, (), (const));
+    MOCK_METHOD(bool, connected, (), (const));
 };
 
 } // namespace test

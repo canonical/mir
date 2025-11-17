@@ -46,8 +46,8 @@ public:
 class MockObserver : public TestObserver
 {
 public:
-    MOCK_METHOD1(observation_made, void(std::string const&));
-    MOCK_METHOD3(multi_argument_observation, void(std::string const&, int, float));
+    MOCK_METHOD(void, observation_made, (std::string const&), ());
+    MOCK_METHOD(void, multi_argument_observation, (std::string const&, int, float), ());
 };
 
 class ThreadedExecutor : public mir::Executor

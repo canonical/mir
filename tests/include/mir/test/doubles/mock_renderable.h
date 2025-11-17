@@ -45,19 +45,19 @@ struct MockRenderable : public graphics::Renderable
             .WillByDefault(testing::Return(true));
     }
 
-    MOCK_CONST_METHOD0(id, ID());
-    MOCK_CONST_METHOD0(buffer, std::shared_ptr<graphics::Buffer>());
-    MOCK_CONST_METHOD0(screen_position, geometry::Rectangle());
-    MOCK_CONST_METHOD0(src_bounds, geometry::RectangleD());
-    MOCK_CONST_METHOD0(clip_area, std::optional<geometry::Rectangle>());
-    MOCK_CONST_METHOD0(alpha, float());
-    MOCK_CONST_METHOD0(transformation, glm::mat4());
-    MOCK_CONST_METHOD0(orientation, MirOrientation());
-    MOCK_CONST_METHOD0(mirror_mode, MirMirrorMode());
-    MOCK_CONST_METHOD0(visible, bool());
-    MOCK_CONST_METHOD0(shaped, bool());
-    MOCK_CONST_METHOD0(surface_if_any, std::optional<mir::scene::Surface const*>());
-    MOCK_CONST_METHOD0(opaque_region, std::optional<geometry::Rectangles>());
+    MOCK_METHOD(ID, id, (), (const));
+    MOCK_METHOD(std::shared_ptr<graphics::Buffer>, buffer, (), (const));
+    MOCK_METHOD(geometry::Rectangle, screen_position, (), (const));
+    MOCK_METHOD(geometry::RectangleD, src_bounds, (), (const));
+    MOCK_METHOD(std::optional<geometry::Rectangle>, clip_area, (), (const));
+    MOCK_METHOD(float, alpha, (), (const));
+    MOCK_METHOD(glm::mat4, transformation, (), (const));
+    MOCK_METHOD(MirOrientation, orientation, (), (const));
+    MOCK_METHOD(MirMirrorMode, mirror_mode, (), (const));
+    MOCK_METHOD(bool, visible, (), (const));
+    MOCK_METHOD(bool, shaped, (), (const));
+    MOCK_METHOD(std::optional<mir::scene::Surface const*>, surface_if_any, (), (const));
+    MOCK_METHOD(std::optional<geometry::Rectangles>, opaque_region, (), (const));
 };
 }
 }

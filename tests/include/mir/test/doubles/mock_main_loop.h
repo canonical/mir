@@ -36,33 +36,29 @@ public:
     void stop() override {}
     bool running() const override { return true; }
 
-    MOCK_METHOD2(register_signal_handler,
-                 void(std::initializer_list<int>,
-                      std::function<void(int)> const&));
+    MOCK_METHOD(void, register_signal_handler, (std::initializer_list<int>,
+                      std::function<void(int)> const&), ());
 
-    MOCK_METHOD2(register_signal_handler_module_ptr,
-                 void(std::initializer_list<int>,
-                      std::function<void(int)> const&));
+    MOCK_METHOD(void, register_signal_handler_module_ptr, (std::initializer_list<int>,
+                      std::function<void(int)> const&), ());
 
-    MOCK_METHOD3(register_fd_handler,
-                 void(std::initializer_list<int>, void const*,
-                      std::function<void(int)> const&));
+    MOCK_METHOD(void, register_fd_handler, (std::initializer_list<int>, void const*,
+                      std::function<void(int)> const&), ());
 
-    MOCK_METHOD3(register_fd_handler_module_ptr,
-                 void(std::initializer_list<int>, void const*,
-                      std::function<void(int)> const&));
+    MOCK_METHOD(void, register_fd_handler_module_ptr, (std::initializer_list<int>, void const*,
+                      std::function<void(int)> const&), ());
 
-    MOCK_METHOD1(unregister_fd_handler, void(void const*));
+    MOCK_METHOD(void, unregister_fd_handler, (void const*), ());
 
-    MOCK_METHOD2(enqueue, void(void const*, ServerAction const&));
+    MOCK_METHOD(void, enqueue, (void const*, ServerAction const&), ());
     MOCK_METHOD(void, enqueue_with_guaranteed_execution, (ServerAction const&), (override));
-    MOCK_METHOD1(pause_processing_for,void (void const*));
-    MOCK_METHOD1(resume_processing_for,void (void const*));
+    MOCK_METHOD(void, pause_processing_for, (void const*), ());
+    MOCK_METHOD(void, resume_processing_for, (void const*), ());
 
-    MOCK_METHOD1(spawn, void(std::function<void()>&));
+    MOCK_METHOD(void, spawn, (std::function<void()>&), ());
 
-    MOCK_METHOD1(create_alarm, std::unique_ptr<time::Alarm>(std::function<void()> const& callback));
-    MOCK_METHOD1(create_alarm, std::unique_ptr<time::Alarm>(LockableCallback* callback));
+    MOCK_METHOD(std::unique_ptr<time::Alarm>, create_alarm, (std::function<void()> const& callback), ());
+    MOCK_METHOD(std::unique_ptr<time::Alarm>, create_alarm, (LockableCallback* callback), ());
 
     std::unique_ptr<time::Alarm> create_alarm(std::unique_ptr<LockableCallback> callback) override
     {

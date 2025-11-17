@@ -47,16 +47,16 @@ struct MockWindowManagerPolicy
     bool handle_pointer_event(MirPointerEvent const* /*event*/) { return false; }
     bool handle_keyboard_event(MirKeyboardEvent const* /*event*/) { return false; }
 
-    MOCK_METHOD1(advise_new_window, void (miral::WindowInfo const& window_info));
-    MOCK_METHOD2(advise_move_to, void(miral::WindowInfo const& window_info, mir::geometry::Point top_left));
-    MOCK_METHOD2(advise_resize, void(miral::WindowInfo const& window_info, mir::geometry::Size const& new_size));
-    MOCK_METHOD1(advise_raise, void(std::vector<miral::Window> const&));
-    MOCK_METHOD1(advise_output_create, void(miral::Output const&));
-    MOCK_METHOD2(advise_output_update, void(miral::Output const&, miral::Output const&));
-    MOCK_METHOD1(advise_output_delete, void(miral::Output const&));
-    MOCK_METHOD1(advise_application_zone_create, void(miral::Zone const&));
-    MOCK_METHOD2(advise_application_zone_update, void(miral::Zone const&, miral::Zone const&));
-    MOCK_METHOD1(advise_application_zone_delete, void(miral::Zone const&));
+    MOCK_METHOD(void, advise_new_window, (miral::WindowInfo const& window_info), ());
+    MOCK_METHOD(void, advise_move_to, (miral::WindowInfo const& window_info, mir::geometry::Point top_left), ());
+    MOCK_METHOD(void, advise_resize, (miral::WindowInfo const& window_info, mir::geometry::Size const& new_size), ());
+    MOCK_METHOD(void, advise_raise, (std::vector<miral::Window> const&), ());
+    MOCK_METHOD(void, advise_output_create, (miral::Output const&), ());
+    MOCK_METHOD(void, advise_output_update, (miral::Output const&, miral::Output const&), ());
+    MOCK_METHOD(void, advise_output_delete, (miral::Output const&), ());
+    MOCK_METHOD(void, advise_application_zone_create, (miral::Zone const&), ());
+    MOCK_METHOD(void, advise_application_zone_update, (miral::Zone const&, miral::Zone const&), ());
+    MOCK_METHOD(void, advise_application_zone_delete, (miral::Zone const&), ());
 
     void handle_request_move(miral::WindowInfo& /*window_info*/, MirInputEvent const* /*input_event*/) {}
     void handle_request_resize(miral::WindowInfo& /*window_info*/, MirInputEvent const* /*input_event*/, MirResizeEdge /*edge*/) {}

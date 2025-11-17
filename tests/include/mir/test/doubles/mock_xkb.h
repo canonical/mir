@@ -37,13 +37,12 @@ public:
     MockXkb();
     ~MockXkb();
 
-    MOCK_METHOD1(xkb_x11_get_core_keyboard_device_id, int32_t(xcb_connection_t*));
-    MOCK_METHOD4(xkb_x11_keymap_new_from_device, xkb_keymap*(
-        xkb_context*,
+    MOCK_METHOD(int32_t, xkb_x11_get_core_keyboard_device_id, (xcb_connection_t*), ());
+    MOCK_METHOD(xkb_keymap*, xkb_x11_keymap_new_from_device, (xkb_context*,
         xcb_connection_t*,
         int32_t,
-        xkb_keymap_compile_flags));
-    MOCK_METHOD3(xkb_x11_state_new_from_device, xkb_state*(xkb_keymap*, xcb_connection_t*, int32_t));
+        xkb_keymap_compile_flags), ());
+    MOCK_METHOD(xkb_state*, xkb_x11_state_new_from_device, (xkb_keymap*, xcb_connection_t*, int32_t), ());
 };
 
 }

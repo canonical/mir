@@ -27,13 +27,13 @@ struct RaiiTest : public ::testing::Test
 {
     RaiiTest();
     ~RaiiTest();
-    MOCK_METHOD0(create_void, void());
-    MOCK_METHOD0(destroy_void, void());
+    MOCK_METHOD(void, create_void, (), ());
+    MOCK_METHOD(void, destroy_void, (), ());
 
-    MOCK_METHOD0(create_ptr, RaiiTest*());
-    MOCK_METHOD1(destroy_ptr, void (RaiiTest*));
+    MOCK_METHOD(RaiiTest*, create_ptr, (), ());
+    MOCK_METHOD(void, destroy_ptr, (RaiiTest*), ());
 
-    MOCK_METHOD0(test_call, void());
+    MOCK_METHOD(void, test_call, (), ());
 };
 
 RaiiTest* self = nullptr;

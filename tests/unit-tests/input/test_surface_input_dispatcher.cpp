@@ -274,8 +274,8 @@ struct FakeToucher
 
 struct MockKeyboardObserver: mi::KeyboardObserver
 {
-    MOCK_METHOD1(keyboard_event, void(std::shared_ptr<MirEvent const> const& event));
-    MOCK_METHOD1(keyboard_focus_set, void(std::shared_ptr<mi::Surface> const& surface));
+    MOCK_METHOD(void, keyboard_event, (std::shared_ptr<MirEvent const> const& event), ());
+    MOCK_METHOD(void, keyboard_focus_set, (std::shared_ptr<mi::Surface> const& surface), ());
 };
 
 }

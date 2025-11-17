@@ -29,9 +29,9 @@ namespace doubles
 
 struct MockInputDispatcher : public mir::input::InputDispatcher
 {
-    MOCK_METHOD1(dispatch, bool(std::shared_ptr<MirEvent const> const&));
-    MOCK_METHOD0(start, void());
-    MOCK_METHOD0(stop, void());
+    MOCK_METHOD(bool, dispatch, (std::shared_ptr<MirEvent const> const&), ());
+    MOCK_METHOD(void, start, (), ());
+    MOCK_METHOD(void, stop, (), ());
 };
 
 }

@@ -38,7 +38,7 @@ TEST(SessionContainer, for_each)
 
     struct local
     {
-        MOCK_METHOD1(see, void(std::shared_ptr<ms::Session> const&));
+        MOCK_METHOD(void, see, (std::shared_ptr<ms::Session> const&), ());
         void operator()(std::shared_ptr<ms::Session> const& session)
         {
             see(session);

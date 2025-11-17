@@ -36,36 +36,35 @@ struct MockWindowManager : shell::WindowManager
         ON_CALL(*this, add_surface(_,_,_)).WillByDefault(Invoke(add_surface_default));
     }
 
-    MOCK_METHOD1(add_session, void (std::shared_ptr<scene::Session> const&));
-    MOCK_METHOD1(remove_session, void (std::shared_ptr<scene::Session> const&));
+    MOCK_METHOD(void, add_session, (std::shared_ptr<scene::Session> const&), ());
+    MOCK_METHOD(void, remove_session, (std::shared_ptr<scene::Session> const&), ());
 
-    MOCK_METHOD3(add_surface, std::shared_ptr<scene::Surface>(
+    MOCK_METHOD(std::shared_ptr<scene::Surface>, add_surface, (
         std::shared_ptr<scene::Session> const& session,
         shell::SurfaceSpecification const& params,
         std::function<std::shared_ptr<scene::Surface>(
             std::shared_ptr<scene::Session> const& session,
-            shell::SurfaceSpecification const& params)> const& build));
+            shell::SurfaceSpecification const& params)> const& build), ());
 
     MOCK_METHOD(void, surface_ready, (std::shared_ptr<scene::Surface> const&), (override));
-    MOCK_METHOD3(modify_surface, void(std::shared_ptr<scene::Session> const&, std::shared_ptr<scene::Surface> const&, shell::SurfaceSpecification const&));
-    MOCK_METHOD2(remove_surface, void(std::shared_ptr<scene::Session> const&, std::weak_ptr<scene::Surface> const&));
+    MOCK_METHOD(void, modify_surface, (std::shared_ptr<scene::Session> const&, std::shared_ptr<scene::Surface> const&, shell::SurfaceSpecification const&), ());
+    MOCK_METHOD(void, remove_surface, (std::shared_ptr<scene::Session> const&, std::weak_ptr<scene::Surface> const&), ());
 
-    MOCK_METHOD1(add_display, void(geometry::Rectangle const&));
-    MOCK_METHOD1(remove_display, void(geometry::Rectangle const&));
+    MOCK_METHOD(void, add_display, (geometry::Rectangle const&), ());
+    MOCK_METHOD(void, remove_display, (geometry::Rectangle const&), ());
 
-    MOCK_METHOD1(handle_keyboard_event, bool(MirKeyboardEvent const*));
-    MOCK_METHOD1(handle_touch_event, bool(MirTouchEvent const*));
-    MOCK_METHOD1(handle_pointer_event, bool(MirPointerEvent const*));
+    MOCK_METHOD(bool, handle_keyboard_event, (MirKeyboardEvent const*), ());
+    MOCK_METHOD(bool, handle_touch_event, (MirTouchEvent const*), ());
+    MOCK_METHOD(bool, handle_pointer_event, (MirPointerEvent const*), ());
 
-    MOCK_METHOD3(handle_raise_surface, void(std::shared_ptr<scene::Session> const&, std::shared_ptr<scene::Surface> const&, uint64_t));
-    MOCK_METHOD3(handle_request_move, void(std::shared_ptr<scene::Session> const&, std::shared_ptr<scene::Surface> const&, MirInputEvent const*));
-    MOCK_METHOD4(handle_request_resize, void(std::shared_ptr<scene::Session> const&, std::shared_ptr<scene::Surface> const&, MirInputEvent const*, MirResizeEdge));
+    MOCK_METHOD(void, handle_raise_surface, (std::shared_ptr<scene::Session> const&, std::shared_ptr<scene::Surface> const&, uint64_t), ());
+    MOCK_METHOD(void, handle_request_move, (std::shared_ptr<scene::Session> const&, std::shared_ptr<scene::Surface> const&, MirInputEvent const*), ());
+    MOCK_METHOD(void, handle_request_resize, (std::shared_ptr<scene::Session> const&, std::shared_ptr<scene::Surface> const&, MirInputEvent const*, MirResizeEdge), ());
 
-    MOCK_METHOD4(set_surface_attribute,
-        int(std::shared_ptr<scene::Session> const& session,
+    MOCK_METHOD(int, set_surface_attribute, (std::shared_ptr<scene::Session> const& session,
             std::shared_ptr<scene::Surface> const& surface,
             MirWindowAttrib attrib,
-            int value));
+            int value), ());
 
     static auto add_surface_default(
         std::shared_ptr<scene::Session> const& session,

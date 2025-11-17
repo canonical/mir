@@ -33,7 +33,7 @@ namespace
 class MockLogger : public ml::Logger
 {
 public:
-    MOCK_METHOD3(log, void(ml::Severity severity, const std::string& message, const std::string& component));
+    MOCK_METHOD(void, log, (ml::Severity severity, const std::string& message, const std::string& component), ());
     ~MockLogger() noexcept(true) {}
 };
 
