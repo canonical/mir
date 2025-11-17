@@ -129,7 +129,7 @@ public:
         );
     }
 
-    MOCK_METHOD(void, configure, (mg::DisplayConfiguration const&), (override));
+    MOCK_METHOD(void, configure, (mg::DisplayConfiguration const&), ());
 
     void register_configuration_change_handler(
         mg::EventHandlerRegister& handlers,
@@ -149,8 +149,8 @@ public:
             });
     }
 
-    MOCK_METHOD(void, pause, (), (override));
-    MOCK_METHOD(void, resume, (), (override));
+    MOCK_METHOD(void, pause, (), ());
+    MOCK_METHOD(void, resume, (), ());
 
     bool conf_change_handler_invoked()
     {

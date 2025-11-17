@@ -30,8 +30,8 @@ namespace doubles
 
 struct MockGLConfig : public graphics::GLConfig
 {
-    MOCK_METHOD(int, depth_buffer_bits, (), (const, override));
-    MOCK_METHOD(int, stencil_buffer_bits, (), (const, override));
+    MOCK_METHOD(int, depth_buffer_bits, (), (const));
+    MOCK_METHOD(int, stencil_buffer_bits, (), (const));
 };
 
 }

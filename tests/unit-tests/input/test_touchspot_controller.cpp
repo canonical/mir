@@ -44,8 +44,8 @@ namespace
 
 struct MockBufferAllocator : public mtd::StubBufferAllocator
 {
-    MOCK_METHOD(std::shared_ptr<mg::Buffer>, alloc_software_buffer, (geom::Size, MirPixelFormat), (override));
-    MOCK_METHOD(std::vector<MirPixelFormat>, supported_pixel_formats, (), (override));
+    MOCK_METHOD(std::shared_ptr<mg::Buffer>, alloc_software_buffer, (geom::Size, MirPixelFormat), ());
+    MOCK_METHOD(std::vector<MirPixelFormat>, supported_pixel_formats, (), ());
 };
 
 struct StubScene : public mtd::StubInputScene
@@ -224,7 +224,7 @@ namespace
 
 struct StubSceneWithMockEmission : public StubScene
 {
-    MOCK_METHOD(void, emit_scene_changed, (), (override));
+    MOCK_METHOD(void, emit_scene_changed, (), ());
 };
 
 struct TestTouchspotControllerSceneUpdates : public TestTouchspotController

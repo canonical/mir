@@ -102,7 +102,7 @@ struct MockSurface
         register_interest(observer);
     }
 
-    MOCK_METHOD(void, request_client_surface_close, (), (override));
+    MOCK_METHOD(void, request_client_surface_close, (), ());
 
     mir::Executor& executor;
 };

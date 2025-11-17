@@ -46,8 +46,8 @@ public:
 class MockObserver : public TestObserver
 {
 public:
-    MOCK_METHOD(void, observation_made, (std::string const&), (override));
-    MOCK_METHOD(void, multi_argument_observation, (std::string const&, int, float), (override));
+    MOCK_METHOD(void, observation_made, (std::string const&), ());
+    MOCK_METHOD(void, multi_argument_observation, (std::string const&, int, float), ());
 };
 
 class ThreadedExecutor : public mir::Executor

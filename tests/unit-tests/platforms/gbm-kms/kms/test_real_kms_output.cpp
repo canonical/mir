@@ -51,8 +51,8 @@ public:
 class MockPageFlipper : public mgg::PageFlipper
 {
 public:
-    MOCK_METHOD(bool, schedule_flip, (uint32_t,uint32_t,uint32_t), (override));
-    MOCK_METHOD(mg::Frame, wait_for_flip, (uint32_t), (override));
+    MOCK_METHOD(bool, schedule_flip, (uint32_t,uint32_t,uint32_t), ());
+    MOCK_METHOD(mg::Frame, wait_for_flip, (uint32_t), ());
 };
 
 class MockKMSFramebuffer : public mg::FBHandle

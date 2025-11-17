@@ -33,8 +33,8 @@ namespace
 {
 struct MockObserver: ms::IdleStateObserver
 {
-    MOCK_METHOD(void, idle, (), (override));
-    MOCK_METHOD(void, active, (), (override));
+    MOCK_METHOD(void, idle, (), ());
+    MOCK_METHOD(void, active, (), ());
 };
 
 struct BasicIdleHub: Test

@@ -345,8 +345,8 @@ struct StubDisplayListener : mc::DisplayListener
 
 struct MockDisplayListener : mc::DisplayListener
 {
-    MOCK_METHOD(void, add_display, (geom::Rectangle const& /*area*/), (override));
-    MOCK_METHOD(void, remove_display, (geom::Rectangle const& /*area*/), (override));
+    MOCK_METHOD(void, add_display, (geom::Rectangle const& /*area*/), ());
+    MOCK_METHOD(void, remove_display, (geom::Rectangle const& /*area*/), ());
 };
 
 auto const null_report = mr::null_compositor_report();

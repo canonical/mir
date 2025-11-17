@@ -31,16 +31,16 @@ namespace doubles
 
 struct MockSurfaceStack : public shell::SurfaceStack
 {
-    MOCK_METHOD(void, raise, (std::weak_ptr<scene::Surface> const&), (override));
-    MOCK_METHOD(void, raise, (scene::SurfaceSet const&), (override));
+    MOCK_METHOD(void, raise, (std::weak_ptr<scene::Surface> const&), ());
+    MOCK_METHOD(void, raise, (scene::SurfaceSet const&), ());
 
-    MOCK_METHOD(void, add_surface, (std::shared_ptr<scene::Surface> const&, input::InputReceptionMode new_mode), (override));
+    MOCK_METHOD(void, add_surface, (std::shared_ptr<scene::Surface> const&, input::InputReceptionMode new_mode), ());
 
-    MOCK_METHOD(void, remove_surface, (std::weak_ptr<scene::Surface> const& surface), (override));
-    MOCK_METHOD(std::shared_ptr<scene::Surface>, surface_at, (geometry::Point), (const, override));
-    MOCK_METHOD(void, swap_z_order, (scene::SurfaceSet const&, scene::SurfaceSet const&), (override));
-    MOCK_METHOD(void, send_to_back, (scene::SurfaceSet const&), (override));
-    MOCK_METHOD(bool, is_above, (std::weak_ptr<scene::Surface> const& a, std::weak_ptr<scene::Surface> const& b), (const, override));
+    MOCK_METHOD(void, remove_surface, (std::weak_ptr<scene::Surface> const& surface), ());
+    MOCK_METHOD(std::shared_ptr<scene::Surface>, surface_at, (geometry::Point), (const));
+    MOCK_METHOD(void, swap_z_order, (scene::SurfaceSet const&, scene::SurfaceSet const&), ());
+    MOCK_METHOD(void, send_to_back, (scene::SurfaceSet const&), ());
+    MOCK_METHOD(bool, is_above, (std::weak_ptr<scene::Surface> const& a, std::weak_ptr<scene::Surface> const& b), (const));
 };
 
 }

@@ -29,10 +29,10 @@ namespace doubles
 
 struct MockInputDeviceHub : input::InputDeviceHub
 {
-    MOCK_METHOD(void, add_observer, (std::shared_ptr<input::InputDeviceObserver> const&), (override));
-    MOCK_METHOD(void, remove_observer, (std::weak_ptr<input::InputDeviceObserver> const&), (override));
-    MOCK_METHOD(void, for_each_input_device, (std::function<void(input::Device const&)> const&), (override));
-    MOCK_METHOD(void, for_each_mutable_input_device, (std::function<void(input::Device&)> const&), (override));
+    MOCK_METHOD(void, add_observer, (std::shared_ptr<input::InputDeviceObserver> const&), ());
+    MOCK_METHOD(void, remove_observer, (std::weak_ptr<input::InputDeviceObserver> const&), ());
+    MOCK_METHOD(void, for_each_input_device, (std::function<void(input::Device const&)> const&), ());
+    MOCK_METHOD(void, for_each_mutable_input_device, (std::function<void(input::Device&)> const&), ());
 };
 
 }

@@ -47,10 +47,10 @@ namespace
 {
 struct MockAlarm : public mir::time::Alarm
 {
-    MOCK_METHOD(bool, cancel, (), (override));
-    MOCK_METHOD(mir::time::Alarm::State, state, (), (const, override));
-    MOCK_METHOD(bool, reschedule_in, (std::chrono::milliseconds), (override));
-    MOCK_METHOD(bool, reschedule_for, (mir::time::Timestamp), (override));
+    MOCK_METHOD(bool, cancel, (), ());
+    MOCK_METHOD(mir::time::Alarm::State, state, (), (const));
+    MOCK_METHOD(bool, reschedule_in, (std::chrono::milliseconds), ());
+    MOCK_METHOD(bool, reschedule_for, (mir::time::Timestamp), ());
 
     // destructor cancels the alarm
     ~MockAlarm()
@@ -61,7 +61,7 @@ struct MockAlarm : public mir::time::Alarm
 
 struct MockAlarmFactory : public mir::time::AlarmFactory
 {
-    MOCK_METHOD(mir::time::Alarm*, create_alarm_adapter, (std::function<void()> const&), (override));
+    MOCK_METHOD(mir::time::Alarm*, create_alarm_adapter, (std::function<void()> const&), ());
     std::unique_ptr<mir::time::Alarm> create_alarm(std::function<void()> const& cb)
     {
         return std::unique_ptr<mir::time::Alarm>(create_alarm_adapter(cb));

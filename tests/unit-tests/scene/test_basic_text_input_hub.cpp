@@ -27,15 +27,15 @@ namespace mt = mir::test;
 
 struct MockStateObserver : ms::TextInputStateObserver
 {
-    MOCK_METHOD(void, activated, (ms::TextInputStateSerial, bool, ms::TextInputState const&), (override));
-    MOCK_METHOD(void, deactivated, (), (override));
-    MOCK_METHOD(void, show_input_panel, (), (override));
-    MOCK_METHOD(void, hide_input_panel, (), (override));
+    MOCK_METHOD(void, activated, (ms::TextInputStateSerial, bool, ms::TextInputState const&), ());
+    MOCK_METHOD(void, deactivated, (), ());
+    MOCK_METHOD(void, show_input_panel, (), ());
+    MOCK_METHOD(void, hide_input_panel, (), ());
 };
 
 struct MockChangeHandler : ms::TextInputChangeHandler
 {
-    MOCK_METHOD(void, text_changed, (ms::TextInputChange const&), (override));
+    MOCK_METHOD(void, text_changed, (ms::TextInputChange const&), ());
 };
 
 struct BasicTextInputHubTest : Test
