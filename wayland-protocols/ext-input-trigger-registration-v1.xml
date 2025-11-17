@@ -246,6 +246,8 @@
         ext_input_trigger_action_v1.begin event when the multi-touch moves in the
         drag direction, ext_input_trigger_action_v1.update as move continues and
         ext_input_trigger_action_v1.end when touches change.
+
+        Gesture detection and cancellation parameters are compositor defined.
       </description>
       <arg name="touches" type="uint" summary="number of touches"/>
       <arg name="direction" type="uint" enum="drag_direction"/>
@@ -269,6 +271,8 @@
         Input actions triggered by this request will result in an
         ext_input_trigger_action_v1.begin and end events when the multi-touch is
         held for at least hold_delay and released without a touch drag.
+
+        Gesture detection and cancellation parameters are compositor defined.
       </description>
       <arg name="touches" type="uint" summary="number of touches"/>
       <arg name="hold_delay" type="uint" summary="minimum milliseconds pressed before triggering"/>
