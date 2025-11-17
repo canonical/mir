@@ -31,18 +31,18 @@ namespace doubles
 {
 struct MockInputSeat : input::Seat
 {
-    MOCK_METHOD(void, add_device, (input::Device const& device), ());
-    MOCK_METHOD(void, remove_device, (input::Device const& device), ());
-    MOCK_METHOD(void, dispatch_event, (std::shared_ptr<MirEvent> const& event), ());
-    MOCK_METHOD(mir::EventUPtr, create_device_state, (), ());
-    MOCK_METHOD(MirXkbModifiers, xkb_modifiers, (), (const));
-    MOCK_METHOD(void, set_key_state, (input::Device const&, std::vector<uint32_t> const&), ());
-    MOCK_METHOD(void, set_pointer_state, (input::Device const&, MirPointerButtons), ());
-    MOCK_METHOD(void, set_cursor_position, (float, float), ());
-    MOCK_METHOD(void, set_confinement_regions, (geometry::Rectangles const&), ());
-    MOCK_METHOD(void, reset_confinement_regions, (), ());
-    MOCK_METHOD(geometry::Rectangle, bounding_rectangle, (), (const));
-    MOCK_METHOD(input::OutputInfo, output_info, (uint32_t), (const));
+    MOCK_METHOD(void, add_device, (input::Device const& device), (override));
+    MOCK_METHOD(void, remove_device, (input::Device const& device), (override));
+    MOCK_METHOD(void, dispatch_event, (std::shared_ptr<MirEvent> const& event), (override));
+    MOCK_METHOD(mir::EventUPtr, create_device_state, (), (override));
+    MOCK_METHOD(MirXkbModifiers, xkb_modifiers, (), (const, override));
+    MOCK_METHOD(void, set_key_state, (input::Device const&, std::vector<uint32_t> const&), (override));
+    MOCK_METHOD(void, set_pointer_state, (input::Device const&, MirPointerButtons), (override));
+    MOCK_METHOD(void, set_cursor_position, (float, float), (override));
+    MOCK_METHOD(void, set_confinement_regions, (geometry::Rectangles const&), (override));
+    MOCK_METHOD(void, reset_confinement_regions, (), (override));
+    MOCK_METHOD(geometry::Rectangle, bounding_rectangle, (), (const, override));
+    MOCK_METHOD(input::OutputInfo, output_info, (uint32_t), (const, override));
 };
 }
 }

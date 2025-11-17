@@ -63,7 +63,7 @@ struct TestMouseKeysTransformer : testing::Test
     mi::DefaultEventBuilder default_event_builder;
     std::function<void(std::shared_ptr<MirEvent> const& event)> dispatch;
 
-    MOCK_METHOD(void, on_dispatch, (std::shared_ptr<MirEvent> const& event), ());
+    MOCK_METHOD(void, on_dispatch, (std::shared_ptr<MirEvent> const& event), (override));
 
     auto down_event(int button) const -> mir::EventUPtr
     {

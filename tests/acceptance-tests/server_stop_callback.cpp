@@ -26,9 +26,9 @@ namespace
 {
 struct ServerStopCallback : mtf::HeadlessTest
 {
-    MOCK_METHOD(void, stop_callback0, (), (const));
-    MOCK_METHOD(void, stop_callback1, (), (const));
-    MOCK_METHOD(void, stop_callback2, (), (const));
+    MOCK_METHOD(void, stop_callback0, (), (const, override));
+    MOCK_METHOD(void, stop_callback1, (), (const, override));
+    MOCK_METHOD(void, stop_callback2, (), (const, override));
 };
 }
 

@@ -29,11 +29,11 @@ namespace doubles
 
 struct MockInputPlatform : input::Platform
 {
-    MOCK_METHOD(std::shared_ptr<mir::dispatch::Dispatchable>, dispatchable, (), ());
-    MOCK_METHOD(void, start, (), ());
-    MOCK_METHOD(void, stop, (), ());
-    MOCK_METHOD(void, pause_for_config, (), ());
-    MOCK_METHOD(void, continue_after_config, (), ());
+    MOCK_METHOD(std::shared_ptr<mir::dispatch::Dispatchable>, dispatchable, (), (override));
+    MOCK_METHOD(void, start, (), (override));
+    MOCK_METHOD(void, stop, (), (override));
+    MOCK_METHOD(void, pause_for_config, (), (override));
+    MOCK_METHOD(void, continue_after_config, (), (override));
 };
 
 }

@@ -60,7 +60,7 @@ namespace
 class MockCallback
 {
 public:
-    MOCK_METHOD(void, call, (), ());
+    MOCK_METHOD(void, call, (), (override));
 };
 
 class MockSurfaceObserver : public ms::NullSurfaceObserver

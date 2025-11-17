@@ -40,7 +40,7 @@ namespace
 struct MyShell : msh::ShellWrapper
 {
     using msh::ShellWrapper::ShellWrapper;
-    MOCK_METHOD(void, focus_next_session, (), ());
+    MOCK_METHOD(void, focus_next_session, (), (override));
 };
 
 struct MyCursorObserverMultiplexer : mi::CursorObserverMultiplexer
@@ -52,7 +52,7 @@ struct MyCursorObserverMultiplexer : mi::CursorObserverMultiplexer
     {
     }
 
-    MOCK_METHOD(void, cursor_moved_to, (float abs_x, float abs_y), ());
+    MOCK_METHOD(void, cursor_moved_to, (float abs_x, float abs_y), (override));
 
     void pointer_usable() { wrapped->pointer_usable(); }
     void pointer_unusable() { wrapped->pointer_unusable(); }

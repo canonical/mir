@@ -70,18 +70,18 @@ MATCHER_P(LockedEq, value, "")
 
 struct MockCallback
 {
-    MOCK_METHOD(void, call, (), ());
+    MOCK_METHOD(void, call, (), (override));
 };
 
 struct MockSceneObserver : public ms::Observer
 {
-    MOCK_METHOD(void, surface_added, (std::shared_ptr<ms::Surface> const&), ());
-    MOCK_METHOD(void, surface_removed, (std::shared_ptr<ms::Surface> const&), ());
-    MOCK_METHOD(void, surfaces_reordered, (ms::SurfaceSet const&), ());
-    MOCK_METHOD(void, scene_changed, (), ());
+    MOCK_METHOD(void, surface_added, (std::shared_ptr<ms::Surface> const&), (override));
+    MOCK_METHOD(void, surface_removed, (std::shared_ptr<ms::Surface> const&), (override));
+    MOCK_METHOD(void, surfaces_reordered, (ms::SurfaceSet const&), (override));
+    MOCK_METHOD(void, scene_changed, (), (override));
 
-    MOCK_METHOD(void, surface_exists, (std::shared_ptr<ms::Surface> const&), ());
-    MOCK_METHOD(void, end_observation, (), ());
+    MOCK_METHOD(void, surface_exists, (std::shared_ptr<ms::Surface> const&), (override));
+    MOCK_METHOD(void, end_observation, (), (override));
 };
 
 struct StubSurface : public ms::BasicSurface
@@ -593,7 +593,7 @@ struct MockConfigureSurface : StubSurface
     {
     }
 
-    MOCK_METHOD(int, configure, (MirWindowAttrib, int), ());
+    MOCK_METHOD(int, configure, (MirWindowAttrib, int), (override));
 };
 }
 
