@@ -280,7 +280,7 @@ impl PlatformRs {
                             state.known_devices.remove(index);
                         }
                     }
-                    _ => todo!("Unhandled device event type"),
+                    _ => println!("TODO: Unhandled device event type"),
                 },
 
                 input::Event::Pointer(pointer_event) => {
@@ -650,7 +650,7 @@ impl PlatformRs {
 
                             #[allow(deprecated)]
                             event::PointerEvent::Axis(_) => {} // Deprecated, unhandled.
-                            _ => todo!("Unhandled pointer event type"),
+                            _ => println!("TODO: Unhandled pointer event type"),
                         }
                     }
                 }
@@ -689,17 +689,17 @@ impl PlatformRs {
                     }
                 }
 
-                input::Event::Touch(_) => todo!("Handle touch events"),
+                input::Event::Touch(_) => println!("TODO: Handle touch events"),
 
-                input::Event::Tablet(_) => todo!("Handle tablet events"),
+                input::Event::Tablet(_) => println!("TODO: Handle tablet events"),
 
-                input::Event::TabletPad(_) => todo!("Handle tablet pad events"),
+                input::Event::TabletPad(_) => println!("TODO: Handle tablet pad events"),
 
-                input::Event::Gesture(_) => todo!("Handle gesture events"),
+                input::Event::Gesture(_) => println!("TODO: Handle gesture events"),
 
-                input::Event::Switch(_) => todo!("Handle switch events"),
+                input::Event::Switch(_) => println!("TODO: Handle switch events"),
 
-                _ => todo!("Unhandled libinput event type"),
+                _ => println!("TODO: Unhandled libinput event type"),
             }
         }
     }
