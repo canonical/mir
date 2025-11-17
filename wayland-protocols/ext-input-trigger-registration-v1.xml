@@ -147,6 +147,9 @@
 
         This describes a trigger based on holding one or more modifier keys.
 
+        Hold duration is left to be specified by the compositor to ensure
+        consistency.
+
         The compositor will send either the ext_input_trigger_v1.done or
         ext_input_trigger_v1.failed event on the created object in
         response to this request.
@@ -169,6 +172,9 @@
 
         This describes a trigger based on tapping one modifier key. The tap_count
         may not be zero.
+
+        Tap duration is left to be specified by the compositor to ensure
+        consistency. It must be less than the hold duration.
 
         The compositor will send either the ext_input_trigger_v1.done or
         ext_input_trigger_v1.failed event on the created object in
