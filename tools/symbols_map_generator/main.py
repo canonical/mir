@@ -610,6 +610,5 @@ if __name__ == "__main__":
     try:
         main()
     except Exception as e:
-        _logger.exception(e)
         _logger.exception(library_not_found_error_msg)
         sys.exit(1)
