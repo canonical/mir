@@ -341,8 +341,11 @@
       <description summary="the exported action token">
         The 'done' event contains the unique token of this action and notifies
         that the provider is done. The action token is usable by the
-        ext_input_trigger_action_v1 protocol. The token can be used by this
-        or another client (or clients).
+        ext_input_trigger_action_v1 protocol to get handles to actions via
+        `ext_input_trigger_action_v1.get_input_trigger_action`. The token can be
+        used by this or another client (or clients). This token must only be
+        valid for a small duration of time, after which trying to use it will
+        raise an `invalid_token` protocol error.
       </description>
       <arg name="token" type="string" summary="the exported action token"/>
     </event>
