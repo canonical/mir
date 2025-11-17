@@ -48,14 +48,14 @@ struct MockDevice : input::Device
         ON_CALL(*this, touchscreen_configuration()).WillByDefault(testing::Return(MirTouchscreenConfig{}));
     }
 
-    MOCK_METHOD(MirInputDeviceId, id, (), (const));
-    MOCK_METHOD(input::DeviceCapabilities, capabilities, (), (const));
-    MOCK_METHOD(std::string, name, (), (const));
-    MOCK_METHOD(std::string, unique_id, (), (const));
-    MOCK_METHOD(optional_value<MirPointerConfig>, pointer_configuration, (), (const));
-    MOCK_METHOD(optional_value<MirTouchpadConfig>, touchpad_configuration, (), (const));
-    MOCK_METHOD(optional_value<MirKeyboardConfig>, keyboard_configuration, (), (const));
-    MOCK_METHOD(optional_value<MirTouchscreenConfig>, touchscreen_configuration, (), (const));
+    MOCK_METHOD(MirInputDeviceId, id, (), (const, override));
+    MOCK_METHOD(input::DeviceCapabilities, capabilities, (), (const, override));
+    MOCK_METHOD(std::string, name, (), (const, override));
+    MOCK_METHOD(std::string, unique_id, (), (const, override));
+    MOCK_METHOD(optional_value<MirPointerConfig>, pointer_configuration, (), (const, override));
+    MOCK_METHOD(optional_value<MirTouchpadConfig>, touchpad_configuration, (), (const, override));
+    MOCK_METHOD(optional_value<MirKeyboardConfig>, keyboard_configuration, (), (const, override));
+    MOCK_METHOD(optional_value<MirTouchscreenConfig>, touchscreen_configuration, (), (const, override));
     MOCK_METHOD(void, apply_pointer_configuration, (MirPointerConfig const&), (override));
     MOCK_METHOD(void, apply_touchpad_configuration, (MirTouchpadConfig const&), (override));
     MOCK_METHOD(void, apply_keyboard_configuration, (MirKeyboardConfig const&), (override));

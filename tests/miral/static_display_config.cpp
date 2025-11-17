@@ -49,7 +49,7 @@ static const std::vector<uint8_t> basic_edid{
 
 struct MockLogger : ml::Logger
 {
-    MOCK_METHOD(void, log, (ml::Severity severity, const std::string& message, const std::string& component), ());
+    MOCK_METHOD(void, log, (ml::Severity severity, const std::string& message, const std::string& component), (override));
 };
 
 struct StaticDisplayConfig : Test

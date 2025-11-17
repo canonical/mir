@@ -164,13 +164,13 @@ struct MockWindowManagerPolicy : miral::CanonicalWindowManagerPolicy
     bool handle_pointer_event(MirPointerEvent const* /*event*/) { return false; }
     bool handle_keyboard_event(MirKeyboardEvent const* /*event*/) { return false; }
 
-    MOCK_METHOD(void, advise_new_window, (miral::WindowInfo const& window_info), ());
-    MOCK_METHOD(void, advise_move_to, (miral::WindowInfo const& window_info, mir::geometry::Point top_left), ());
-    MOCK_METHOD(void, advise_resize, (miral::WindowInfo const& window_info, mir::geometry::Size const& new_size), ());
-    MOCK_METHOD(void, advise_raise, (std::vector<miral::Window> const&), ());
-    MOCK_METHOD(void, advise_output_create, (miral::Output const&), ());
-    MOCK_METHOD(void, advise_output_update, (miral::Output const&, miral::Output const&), ());
-    MOCK_METHOD(void, advise_output_delete, (miral::Output const&), ());
+    MOCK_METHOD(void, advise_new_window, (miral::WindowInfo const& window_info), (override));
+    MOCK_METHOD(void, advise_move_to, (miral::WindowInfo const& window_info, mir::geometry::Point top_left), (override));
+    MOCK_METHOD(void, advise_resize, (miral::WindowInfo const& window_info, mir::geometry::Size const& new_size), (override));
+    MOCK_METHOD(void, advise_raise, (std::vector<miral::Window> const&), (override));
+    MOCK_METHOD(void, advise_output_create, (miral::Output const&), (override));
+    MOCK_METHOD(void, advise_output_update, (miral::Output const&, miral::Output const&), (override));
+    MOCK_METHOD(void, advise_output_delete, (miral::Output const&), (override));
 
     void handle_request_move(miral::WindowInfo& /*window_info*/, MirInputEvent const* /*input_event*/) {}
     void handle_request_resize(miral::WindowInfo& /*window_info*/, MirInputEvent const* /*input_event*/, MirResizeEdge /*edge*/) {}

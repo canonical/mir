@@ -30,15 +30,15 @@ namespace doubles
 {
 struct MockKeyMapper : input::KeyMapper
 {
-    MOCK_METHOD(void, set_key_state, (MirInputDeviceId id, std::vector<uint32_t> const& key_state), ());
-    MOCK_METHOD(void, set_keymap_for_device, (MirInputDeviceId id, std::shared_ptr<input::Keymap> map), ());
-    MOCK_METHOD(void, set_keymap_for_all_devices, (std::shared_ptr<input::Keymap> map), ());
-    MOCK_METHOD(void, clear_keymap_for_device, (MirInputDeviceId id), ());
-    MOCK_METHOD(void, clear_all_keymaps, (), ());
-    MOCK_METHOD(void, map_event, (MirEvent& event), ());
-    MOCK_METHOD(MirInputEventModifiers, modifiers, (), (const));
-    MOCK_METHOD(MirInputEventModifiers, device_modifiers, (MirInputDeviceId), (const));
-    MOCK_METHOD(MirXkbModifiers, xkb_modifiers, (), (const));
+    MOCK_METHOD(void, set_key_state, (MirInputDeviceId id, std::vector<uint32_t> const& key_state), (override));
+    MOCK_METHOD(void, set_keymap_for_device, (MirInputDeviceId id, std::shared_ptr<input::Keymap> map), (override));
+    MOCK_METHOD(void, set_keymap_for_all_devices, (std::shared_ptr<input::Keymap> map), (override));
+    MOCK_METHOD(void, clear_keymap_for_device, (MirInputDeviceId id), (override));
+    MOCK_METHOD(void, clear_all_keymaps, (), (override));
+    MOCK_METHOD(void, map_event, (MirEvent& event), (override));
+    MOCK_METHOD(MirInputEventModifiers, modifiers, (), (const, override));
+    MOCK_METHOD(MirInputEventModifiers, device_modifiers, (MirInputDeviceId), (const, override));
+    MOCK_METHOD(MirXkbModifiers, xkb_modifiers, (), (const, override));
 };
 
 }
