@@ -93,6 +93,12 @@
         it to the manager. This allows triggering on a character key combination
         such as "Meta+a".
 
+        As the layout changes, key locations might change. For example, when
+        changing between a QWERTY and AZERTY layout, the location of the "Q"
+        key will change, and the user will have to press a different physical
+        key combination. With non-latin layouts, some key combinations might
+        not be available.
+
         The trigger begins when the combination of modifiers and keysym are
         pressed and ends when that changes. The keysym parameter is interpreted
         according to xkbcommon-keysyms.h.
