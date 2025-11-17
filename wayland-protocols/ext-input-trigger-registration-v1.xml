@@ -201,6 +201,10 @@
         Input actions triggered by this request will result in an
         ext_input_trigger_action_v1.begin event when the pointer is pushed to the
         target edge(s) and ext_input_trigger_action_v1.end when pointer moves away.
+
+        Target edges are specified by the compositor to ensure consistency
+        across apps. Examples include per-output edges, or global edges over all
+        outputs.
       </description>
       <arg name="edges" type="uint" enum="screen_edges"/>
       <arg name="id" type="new_id" interface="ext_input_trigger_v1"/>
