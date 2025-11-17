@@ -220,7 +220,7 @@ private:
 mf::LayerShellV1::LayerShellV1(
     struct wl_display* display,
     Executor& wayland_executor,
-    std::shared_ptr<msh::Shell> shell,
+    std::shared_ptr<msh::Shell> const& shell,
     WlSeat& seat,
     OutputManager* output_manager)
     : Global(display, Version<4>()),
