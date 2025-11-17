@@ -43,8 +43,8 @@ struct GDesktopFileCache : Test
     static void SetUpTestSuite()
     {
         // Establish the temporary directory
-        std::filesystem::path tmp_dir_path {std::filesystem::temp_directory_path() /= std::tmpnam(nullptr)};
-        std::filesystem::create_directories(tmp_dir_path);
+        char tmp_dir_path[] = "/tmp/mir-XXXXXX";
+        mkdtemp(tmp_dir_path);
         std::string desktop_file_directory_name = tmp_dir_path;
         setenv("XDG_DATA_DIRS", desktop_file_directory_name.c_str(), 1);
         applications_dir = desktop_file_directory_name + "/applications";
