@@ -163,7 +163,9 @@ public:
 
 TEST_F(StaticDisplayConfig, nonexistent_config_file_is_no_error)
 {
-    miral::StaticDisplayConfig{tmpnam(nullptr)};
+    char tmp_dir_path[] = "/tmp/mir-XXXXXX";
+    mkdtemp(tmp_dir_path);
+    miral::StaticDisplayConfig{std::string(tmp_dir_path) + "/display.conf"};
 }
 
 TEST_F(StaticDisplayConfig, empty_config_input_causes_AbnormalExit)
