@@ -37,20 +37,20 @@ Mir follows a comprehensive C++ style guide documented in [`doc/sphinx/contribut
 
 - **Indentation**: 4 spaces (no tabs)
 - **Line length**: Maximum 120 characters
-- **Braces**: Opening brace on new line for functions, classes, and namespaces
+- **Braces**: Opening brace on new line for functions, classes, namespaces, and branches
 - **Namespace content**: Not indented
 - **Function declarations**: Return type or `auto` on same line as function name
 - **Pointer/Reference placement**: Asterisk/ampersand adjacent to type (e.g., `char* c`, `string const& str`)
 
 ### C++ Features
 
-- **Use C++11 features** where appropriate
+- **Use C++20 features** where appropriate (up to C++20)
 - **Constructors**: Use `explicit` for single-argument constructors
 - **Initialization**: Prefer `{}` initialization (e.g., `int n{5}`)
 - **Null pointers**: Use `nullptr` instead of `NULL` or `0`
 - **Const correctness**: Use `const` wherever possible; prefer `int const*` over `const int*`
 - **Smart pointers**: Prefer smart pointers over raw pointers for ownership
-- **Auto keyword**: Use `auto` for complex types and iterators when it improves readability
+- **Auto keyword**: Use `auto` for complex types and iterators when it improves readability, as well as new-style function declarations with `auto`
 
 ### Classes
 
@@ -76,7 +76,7 @@ Mir follows a comprehensive C++ style guide documented in [`doc/sphinx/contribut
 ### Comments
 
 - **File headers**: Include copyright, license, author, and description
-- **Class comments**: Describe purpose and usage
+- **Class comments**: Describe purpose and usage; include Doxygen-style documentation in headers
 - **Function comments**: Describe what the function does, not how (unless complex)
 - **TODO comments**: Use format `// TODO(name): Description`
 - **Code documentation**: Comment tricky or non-obvious code
