@@ -376,7 +376,8 @@
     <request name="cancel" type="destructor">
       <description summary="purge the input trigger action">
         This informs the compositor that the input trigger action will no
-        longer be used.
+        longer be used. This event may be sent when the user requests to delete
+        an input trigger.
 
         Any ext_input_trigger_action_v1 created from the associated token
         by this or other clients will become unavailable.
