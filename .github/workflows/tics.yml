@@ -127,6 +127,12 @@ jobs:
         # Every merge_group event runs for one pull request, so we can diff against parent
         git diff --name-only ${{ github.sha }}~1 ${{ github.sha }} >> $TICS_CHANGED_LIST
 
+    - name: Setup tmate session
+      uses: canonical/action-tmate@main
+      with:
+        detached: true
+        limit-access-to-actor: true
+
     - name: Run TICS analysis
       uses: tiobe/tics-github-action@v3
       with:
