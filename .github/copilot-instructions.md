@@ -22,32 +22,6 @@ Mir is a Wayland compositor library written in C++23 with some Rust components. 
 - **Renderers** (`src/renderers/gl/`): GL-based rendering implementations
 - **Tests** (`tests/`): Unit tests, integration tests, performance tests using gtest/gmock
 
-## Build System
-
-### Building
-
-```bash
-mkdir build && cd build
-cmake ..
-make
-```
-
-### Speed optimizations
-
-```bash
-cmake -DCMAKE_C_COMPILER_LAUNCHER=ccache \
-      -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-      -DMIR_USE_PRECOMPILED_HEADERS=OFF \
-      -DMIR_USE_LD=mold ..
-```
-
-### Key CMake patterns
-
-- `mir_add_wrapped_executable()`: Creates executables with wrapper scripts
-- Compile commands available at `build/compile_commands.json` for LSP
-- Uses C++23 standard (`CMAKE_CXX_STANDARD=23`)
-- Fatal warnings enabled by default (`MIR_FATAL_COMPILE_WARNINGS=ON`)
-
 ## Coding Standards
 
 Mir follows a comprehensive C++ style guide documented in [`doc/sphinx/contributing/reference/cppguide.md`](../doc/sphinx/contributing/reference/cppguide.md). Below are key highlights:
@@ -96,7 +70,6 @@ Mir follows a comprehensive C++ style guide documented in [`doc/sphinx/contribut
 - **Indentation**: 4 spaces (no tabs)
 - **Line length**: Maximum 120 characters
 - **Braces**: Opening brace on new line for functions, classes, namespaces, and branches
-- **Namespace content**: Not indented
 - **Function declarations**: Return type or `auto` on same line as function name
 - **Pointer/Reference placement**: Asterisk/ampersand adjacent to type (e.g., `char* c`, `string const& str`)
 
@@ -148,7 +121,7 @@ Mir follows a comprehensive C++ style guide documented in [`doc/sphinx/contribut
 - **Inline functions**: Only for small functions (≤10 lines)
 - **Preprocessor macros**: Avoid when possible; prefer inline functions, enums, and const variables
 - **Streams**: Use only for logging, prefer `printf`-style for other I/O
-- **Reference parameters**: Input parameters should be `const` references or values; output parameters should be pointers
+- **Reference parameters**: Input parameters should be `const` references or values; output parameters are rare and should use non-const references when modifying inputs, or return std::pair/std::tuple for multiple outputs
 
 ## Testing
 
@@ -182,7 +155,7 @@ TEST_F(MyComponentTest, descriptive_test_name)
 }
 ```
 
-## Shell Development with mirAL
+## Shell Development with MirAL
 
 ### Typical Shell Structure
 
@@ -213,8 +186,11 @@ int main(int argc, char const* argv[])
 
 ## Wayland Protocol Integration
 
-1. Place protocol XML in `wayland-protocols/`
-2. Generate wrappers using `mir_wayland_generator`:
+When integrating a new Wayland protocol:
+
+1. **Place protocol XML** in `wayland-protocols/` directory
+
+2. **Generate wrapper code** using `mir_wayland_generator`:
 
 ```cmake
 add_custom_command(
@@ -224,26 +200,23 @@ add_custom_command(
 )
 ```
 
-3. Integrate with `miral::WaylandExtensions` in your shell
+3. **Implement the protocol** in `src/server/frontend_wayland/`:
+   - Create implementation files in the `mir::frontend` namespace
+   - Implement the generated wayland protocol interfaces
+   - Follow existing patterns (see `foreign_toplevel_manager_v1.cpp`, `ext_image_capture_v1.cpp`, etc.)
 
-## Debugging
+4. **Create a factory function** to instantiate the protocol global:
+   - Expose a `create_*_manager()` or `create_*_global()` function
+   - Pass required dependencies via `WaylandConnector::Context` (e.g., `MainLoop`, `Executor`, `Shell`)
+   - Return `std::shared_ptr<wayland::ProtocolName::Global>`
 
-### Component Reports
+5. **Integrate with WaylandConnector**:
+   - If the protocol needs existing server components (MainLoop, Shell, etc.), access them through `WaylandConnector::Context`
+   - If the protocol requires a new server component, add it to `DefaultServerConfiguration` and expose via `Server`
+   - Register the protocol global with the wayland display in the appropriate initialization code
 
-Enable runtime debugging via environment or command-line options (see `doc/sphinx/configuring/explanation/component-reports.md`)
-
-### Mesa/GBM Debugging
-
-Build debug Mesa packages for easier graphics stack debugging:
-
-```bash
-apt source mesa
-# Edit debian/rules: change -Db_ndebug=true to =false
-DEB_BUILD_OPTIONS="noopt nostrip" sbuild -d $UBUNTU_CODENAME -j 32
-sudo dpkg --install --force-overwrite ../*.deb
-```
-
-Then in gdb: `directory $MESA_BUILD_DIR/build`
+6. **Hook into MirAL** (if needed):
+   - Integrate with `miral::WaylandExtensions` in your shell to enable/disable the protocol
 
 ## Linting
 
@@ -287,7 +260,6 @@ Build artifacts are already excluded via `.gitignore`. Do not commit:
 - [Full C++ Style Guide](../doc/sphinx/contributing/reference/cppguide.md)
 - [Hacking Guide](../HACKING.md)
 - [Getting Started with Mir](../doc/sphinx/tutorial/getting-started-with-mir.md)
-- [Component Reports](../doc/sphinx/configuring/explanation/component-reports.md)
 
 ## Consistency Reminder
 
