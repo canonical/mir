@@ -738,9 +738,6 @@ global:
     miral::LocatePointer::on_locate_pointer*;
     miral::LocatePointer::operator*;
     miral::LocatePointer::schedule_request*;
-    miral::StandardApplicationSwitcher::?StandardApplicationSwitcher*;
-    miral::StandardApplicationSwitcher::StandardApplicationSwitcher*;
-    miral::StandardApplicationSwitcher::operator*;
     miral::WaylandExtensions::ext_data_control_manager_v1*;
     miral::WaylandExtensions::ext_image_copy_capture_manager_v1*;
     miral::WaylandExtensions::ext_output_image_capture_source_manager_v1*;
@@ -763,8 +760,6 @@ global:
     typeinfo?for?miral::BasicApplicationSwitcher;
     typeinfo?for?miral::FloatingWindowManager;
     typeinfo?for?miral::LocatePointer;
-    typeinfo?for?miral::StandardApplicationSwitcher::KeybindConfiguration;
-    typeinfo?for?miral::StandardApplicationSwitcher;
     vtable?for?miral::FloatingWindowManager;
   };
 } MIRAL_5.5;
