@@ -794,6 +794,10 @@ miral::ApplicationSwitcher::~ApplicationSwitcher()
     self->stop();
 }
 
+miral::ApplicationSwitcher::ApplicationSwitcher(ApplicationSwitcher const&) = default;
+
+miral::ApplicationSwitcher& miral::ApplicationSwitcher::operator=(ApplicationSwitcher const&) = default;
+
 void miral::ApplicationSwitcher::operator()(wl_display* display)
 {
     self->run_client(display);
