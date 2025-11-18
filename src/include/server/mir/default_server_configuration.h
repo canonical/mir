@@ -375,6 +375,16 @@ protected:
         std::shared_ptr<input::CursorObserverMultiplexer> const& wrapped);
 /** @} */
 
+    // Warning: input_manager, display_platforms, and rendering_platforms are cached
+    // very purposefully. If they are not cached, Mir may destruct objects that were
+    // created in a dynamically loaded library after the library has been unloaded,
+    // which leads to seg faults because those code paths cannot be found. For this
+    // reason, we cache pointers to these objects AND make sure that they are destructed
+    // after everything else.
+    std::vector<std::shared_ptr<graphics::DisplayPlatform>> display_platforms;
+    std::vector<std::shared_ptr<graphics::RenderingPlatform>> rendering_platforms;
+    std::shared_ptr<input::InputManager>    input_manager;
+
     CachedPtr<frontend::Connector>   wayland_connector;
     CachedPtr<frontend::Connector>   xwayland_connector;
     CachedPtr<frontend::DragIconController> drag_icon_controller;
@@ -383,7 +393,6 @@ protected:
     CachedPtr<input::EventFilterChainDispatcher> event_filter_chain_dispatcher;
     CachedPtr<input::InputEventTransformer> input_event_transformer;
     CachedPtr<input::CompositeEventFilter> composite_event_filter;
-    CachedPtr<input::InputManager>    input_manager;
     CachedPtr<input::SurfaceInputDispatcher>    surface_input_dispatcher;
     CachedPtr<frontend::PointerInputDispatcher> pointer_input_dispatcher;
     CachedPtr<input::DefaultInputDeviceHub>    default_input_device_hub;
@@ -470,9 +479,6 @@ private:
     // Helpers for platform library loading
     std::vector<std::shared_ptr<mir::SharedLibrary>> platform_libraries;
     auto the_platform_libaries() -> std::vector<std::shared_ptr<mir::SharedLibrary>> const&;
-
-    std::vector<std::shared_ptr<graphics::DisplayPlatform>> display_platforms;
-    std::vector<std::shared_ptr<graphics::RenderingPlatform>> rendering_platforms;
 };
 }
 
