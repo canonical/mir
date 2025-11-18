@@ -671,6 +671,7 @@ libmiral.so.7 libmiral7 #MINVER#
  (c++)"miral::ApplicationSwitcher::next_window() const@MIRAL_5.6" 5.6.0
  (c++)"miral::ApplicationSwitcher::operator()(std::weak_ptr<mir::scene::Session> const&) const@MIRAL_5.6" 5.6.0
  (c++)"miral::ApplicationSwitcher::operator()(wl_display*)@MIRAL_5.6" 5.6.0
+ (c++)"miral::ApplicationSwitcher::operator=(miral::ApplicationSwitcher const&)@MIRAL_5.6" 5.6.0
  (c++)"miral::ApplicationSwitcher::prev_app() const@MIRAL_5.6" 5.6.0
  (c++)"miral::ApplicationSwitcher::prev_window() const@MIRAL_5.6" 5.6.0
  (c++)"miral::ApplicationSwitcher::stop() const@MIRAL_5.6" 5.6.0

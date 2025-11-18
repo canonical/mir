@@ -34,4 +34,5 @@ target_link_libraries(server_platform_common
     mircore
     ${KMS_UTILS_STATIC_LIBRARY}
     PkgConfig::WAYLAND_SERVER
+    PkgConfig::GLESv2
 )

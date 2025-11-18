@@ -167,7 +167,7 @@ set -euo pipefail
 SELF="$( cd -- "$(dirname "$0")/.." ; pwd -P )/usr"
 
 
-# The arch triplet(s) for this driver (eg: arm64-linux-gnu, i386-linux-gnu, etc)
+# The arch triplet(s) for this driver (e.g.: arm64-linux-gnu, i386-linux-gnu, etc)
 ARCH_TRIPLETS=( x86_64-linux-gnu )
 
 

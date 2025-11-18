@@ -58,6 +58,9 @@ public:
     ApplicationSwitcher();
     ~ApplicationSwitcher();
 
+    ApplicationSwitcher(ApplicationSwitcher const&);
+    ApplicationSwitcher& operator=(ApplicationSwitcher const&);
+
     void operator()(wl_display* display);
     void operator()(std::weak_ptr<mir::scene::Session> const& session) const;
 

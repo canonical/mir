@@ -291,7 +291,7 @@ auto mgg::Display::create_hardware_cursor() -> std::shared_ptr<graphics::Cursor>
         try
         {
             locked_cursor = std::make_shared<Cursor>(
-                *output_container,
+                output_container,
                 std::make_shared<KMSCurrentConfiguration>(*this));
         }
         catch (std::runtime_error const&)

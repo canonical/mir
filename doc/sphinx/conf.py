@@ -88,7 +88,7 @@ html_favicon = 'favicon.ico'
 
 html_context = {
     # Product page URL; can be different from product docs URL
-    "product_page": "https://canonical.com/mir",
+    "product_page": "canonical.com/mir",
 
     # Product tag image; the orange part of your logo, shown in the page header
     'product_tag': '_static/tag.png',
