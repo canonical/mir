@@ -23,7 +23,7 @@ using namespace testing;
 
 struct CommandLineHandling : mir_test_framework::HeadlessTest
 {
-    MOCK_METHOD(void, callback, (std::vector<char const*> const&), (override));
+    MOCK_METHOD(void, callback, (std::vector<char const*> const&), ());
 
     std::function<void(int argc, char const* const* argv)> callback_functor =
         [this](int argc, char const* const* argv)

@@ -70,7 +70,7 @@ MATCHER_P(LockedEq, value, "")
 
 struct MockCallback
 {
-    MOCK_METHOD(void, call, (), (override));
+    MOCK_METHOD(void, call, (), ());
 };
 
 struct MockSceneObserver : public ms::Observer
