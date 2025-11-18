@@ -705,6 +705,9 @@ global:
     miral::ApplicationSwitcher::prev_app*;
     miral::ApplicationSwitcher::prev_window*;
     miral::ApplicationSwitcher::stop*;
+    miral::BasicApplicationSwitcher::?BasicApplicationSwitcher*;
+    miral::BasicApplicationSwitcher::BasicApplicationSwitcher*;
+    miral::BasicApplicationSwitcher::operator*;
     miral::CursorScale::scale_temporarily*;
     miral::FloatingWindowManager::?FloatingWindowManager*;
     miral::FloatingWindowManager::FloatingWindowManager*;
@@ -756,6 +759,8 @@ global:
     non-virtual?thunk?to?miral::FloatingWindowManager::handle_window_ready*;
     non-virtual?thunk?to?miral::FloatingWindowManager::place_new_window*;
     typeinfo?for?miral::ApplicationSwitcher;
+    typeinfo?for?miral::BasicApplicationSwitcher::KeybindConfiguration;
+    typeinfo?for?miral::BasicApplicationSwitcher;
     typeinfo?for?miral::FloatingWindowManager;
     typeinfo?for?miral::LocatePointer;
     typeinfo?for?miral::StandardApplicationSwitcher::KeybindConfiguration;

@@ -842,7 +842,7 @@ void miral::ApplicationSwitcher::stop() const
     self->stop();
 }
 
-class miral::StandardApplicationSwitcher::Self
+class miral::BasicApplicationSwitcher::Self
 {
 public:
     explicit Self(KeybindConfiguration const& keybind_configuration)
@@ -909,17 +909,17 @@ public:
     AppendKeyboardEventFilter keyboard_event_filter;
 };
 
-miral::StandardApplicationSwitcher::StandardApplicationSwitcher()
-    : StandardApplicationSwitcher(KeybindConfiguration{}) {}
+miral::BasicApplicationSwitcher::BasicApplicationSwitcher()
+    : BasicApplicationSwitcher(KeybindConfiguration{}) {}
 
-miral::StandardApplicationSwitcher::StandardApplicationSwitcher(KeybindConfiguration const& keybind_configuration)
+miral::BasicApplicationSwitcher::BasicApplicationSwitcher(KeybindConfiguration const& keybind_configuration)
     : self(std::make_shared<Self>(keybind_configuration))
 {
 }
 
-miral::StandardApplicationSwitcher::~StandardApplicationSwitcher() = default;
+miral::BasicApplicationSwitcher::~BasicApplicationSwitcher() = default;
 
-void miral::StandardApplicationSwitcher::operator()(mir::Server& server) const
+void miral::BasicApplicationSwitcher::operator()(mir::Server& server) const
 {
     self->keyboard_event_filter(server);
     self->startup_internal_client.operator()(server);

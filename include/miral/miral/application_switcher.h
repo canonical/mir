@@ -111,7 +111,7 @@ private:
 /// This class should be provided to a #miral::MirRunner::run_with.
 ///
 /// \remark Since MirAL 5.6
-class StandardApplicationSwitcher
+class BasicApplicationSwitcher
 {
 public:
     /// Describes the keyboard shortcuts for the application switcher keyboard filter.
@@ -147,12 +147,12 @@ public:
         int window_key = KEY_GRAVE;
     };
 
-    /// Create a new standard application switcher with the default #KeybindConfiguration.
-    StandardApplicationSwitcher();
+    /// Create a new basic application switcher with the default #KeybindConfiguration.
+    BasicApplicationSwitcher();
 
-    /// Create a new standard application switcher with the provided \p keybind_configuration.
-    explicit StandardApplicationSwitcher(KeybindConfiguration const& keybind_configuration);
-    ~StandardApplicationSwitcher();
+    /// Create a new basic application switcher with the provided \p keybind_configuration.
+    explicit BasicApplicationSwitcher(KeybindConfiguration const& keybind_configuration);
+    ~BasicApplicationSwitcher();
 
     void operator()(mir::Server& server) const;
 
