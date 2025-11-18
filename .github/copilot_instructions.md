@@ -78,7 +78,7 @@ Mir follows a comprehensive C++ style guide documented in [`doc/sphinx/contribut
 - **File headers**: Include copyright, license, author, and description
 - **Class comments**: Describe purpose and usage; include Doxygen-style documentation in headers
 - **Function comments**: Describe what the function does, not how (unless complex)
-- **TODO comments**: Use format `// TODO(name): Description`
+- **TODO comments**: Use format `// TODO: Description`
 - **Code documentation**: Comment tricky or non-obvious code
 - **Avoid obvious comments**: Don't state what the code clearly does
 
