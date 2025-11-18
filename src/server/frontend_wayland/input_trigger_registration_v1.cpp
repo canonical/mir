@@ -351,9 +351,9 @@ private:
                 auto const trigger_mods = mi::expand_modifiers(trigger.value().modifiers);
                 auto const modifiers_match = protocol_and_event_modifiers_match(trigger_mods, event_mods);
 
-                auto const trigger_mods_contain_shift = (trigger_mods & mir_input_event_modifier_shift) |
-                                                        (trigger_mods & mir_input_event_modifier_shift_left) |
-                                                        (trigger_mods & mir_input_event_modifier_shift_right) != 0;
+                auto const trigger_mods_contain_shift = ((trigger_mods & mir_input_event_modifier_shift) |
+                                                         (trigger_mods & mir_input_event_modifier_shift_left) |
+                                                         (trigger_mods & mir_input_event_modifier_shift_right)) != 0;
 
                 auto const keysym_matches =
                     keysym_exists_in_set(trigger.value().keysym, pressed_keysyms, trigger_mods_contain_shift);
