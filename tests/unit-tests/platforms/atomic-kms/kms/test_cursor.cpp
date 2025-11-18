@@ -284,8 +284,8 @@ public:
         }
     } mock_gbm;
     NiceMock<mtd::MockDRM> mock_drm;
-    StubKMSOutputContainer output_container;
-    StubCurrentConfiguration current_configuration{output_container};
+    std::shared_ptr<StubKMSOutputContainer> output_container = std::make_shared<StubKMSOutputContainer>();
+    StubCurrentConfiguration current_configuration{*output_container};
     mga::Cursor cursor;
 
 };

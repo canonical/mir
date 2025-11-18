@@ -302,8 +302,7 @@ struct MesaCursorTest : ::testing::Test
 
     size_t const cursor_side{64};
     MesaCursorTest()
-        : cursor{output_container,
-            mt::fake_shared(current_configuration)}
+        : cursor{output_container,current_configuration}
     {
         using namespace ::testing;
         ON_CALL(mock_drm, drmGetCap(_, DRM_CAP_CURSOR_WIDTH, _))
@@ -324,7 +323,7 @@ struct MesaCursorTest : ::testing::Test
     testing::NiceMock<mtd::MockDRM> mock_drm;
     std::shared_ptr<StubCursorImage> const stub_image = std::make_shared<StubCursorImage>();
     std::shared_ptr<StubKMSOutputContainer> output_container = std::make_shared<StubKMSOutputContainer>();
-    StubCurrentConfiguration current_configuration{*output_container};
+    std::shared_ptr<StubCurrentConfiguration> current_configuration = std::make_shared<StubCurrentConfiguration>(*output_container);
     mgg::Cursor cursor;
 };
 
@@ -353,8 +352,7 @@ TEST_F(MesaCursorTest, creates_cursor_bo_image)
                                         GBM_FORMAT_ARGB8888,
                                         GBM_BO_USE_CURSOR | GBM_BO_USE_WRITE));
 
-    mgg::Cursor cursor_tmp{output_container,
-        std::make_shared<StubCurrentConfiguration>(*output_container)};
+    mgg::Cursor cursor_tmp{output_container, current_configuration};
 }
 
 TEST_F(MesaCursorTest, queries_received_cursor_size)
@@ -365,8 +363,7 @@ TEST_F(MesaCursorTest, queries_received_cursor_size)
     EXPECT_CALL(mock_gbm, gbm_bo_get_width(_)).Times(2);
     EXPECT_CALL(mock_gbm, gbm_bo_get_height(_)).Times(2);
 
-    mgg::Cursor cursor_tmp{output_container,
-        std::make_shared<StubCurrentConfiguration>(*output_container)};
+    mgg::Cursor cursor_tmp{output_container, current_configuration};
 }
 
 TEST_F(MesaCursorTest, respects_drm_cap_cursor)
@@ -380,8 +377,7 @@ TEST_F(MesaCursorTest, respects_drm_cap_cursor)
 
     EXPECT_CALL(mock_gbm, gbm_bo_create(_, drm_buffer_size, drm_buffer_size, _, _));
 
-    mgg::Cursor cursor_tmp{output_container,
-        std::make_shared<StubCurrentConfiguration>(*output_container)};
+    mgg::Cursor cursor_tmp{output_container, current_configuration};
 }
 
 TEST_F(MesaCursorTest, show_cursor_writes_to_bo)
@@ -444,8 +440,7 @@ TEST_F(MesaCursorTest, pads_missing_data_when_buffer_size_differs)
 
     EXPECT_CALL(mock_gbm, gbm_bo_write(mock_gbm.fake_gbm.bo, ContainsASingleWhitePixel(width*height), buffer_size_bytes));
 
-    mgg::Cursor cursor_tmp{output_container,
-        std::make_shared<StubCurrentConfiguration>(*output_container)};
+    mgg::Cursor cursor_tmp{output_container, current_configuration};
     cursor_tmp.show(std::make_shared<SinglePixelCursorImage>());
 }
 
@@ -479,8 +474,7 @@ TEST_F(MesaCursorTest, clears_cursor_state_on_construction)
     EXPECT_CALL(*output_container->outputs[1], has_cursor_image()).Times(0);
     EXPECT_CALL(*output_container->outputs[2], has_cursor_image()).Times(0);
 
-    mgg::Cursor cursor_tmp{output_container,
-        std::make_shared<StubCurrentConfiguration>(*output_container)};
+    mgg::Cursor cursor_tmp{output_container, current_configuration};
 
     output_container->verify_and_clear_expectations();
 }
@@ -497,8 +491,7 @@ TEST_F(MesaCursorTest, construction_fails_if_initial_set_fails)
         .WillByDefault(Return(false));
 
     EXPECT_THROW(
-        mgg::Cursor cursor_tmp(output_container,
-            std::make_shared<StubCurrentConfiguration>(*output_container));
+        mgg::Cursor cursor_tmp(output_container, current_configuration);
     , std::runtime_error);
 }
 
@@ -588,7 +581,7 @@ TEST_F(MesaCursorTest, moves_properly_to_and_inside_left_rotated_output)
 
     cursor.show(stub_image);
 
-    current_configuration.conf.set_orentation_of_output(mg::DisplayConfigurationOutputId{2}, mir_orientation_left);
+    current_configuration->conf.set_orentation_of_output(mg::DisplayConfigurationOutputId{2}, mir_orientation_left);
 
     InSequence seq;
     EXPECT_CALL(*output_container->outputs[2], move_cursor(geom::Point{112, 36}));
@@ -607,7 +600,7 @@ TEST_F(MesaCursorTest, moves_properly_to_and_inside_right_rotated_output)
 
     cursor.show(stub_image);
 
-    current_configuration.conf.set_orentation_of_output(mg::DisplayConfigurationOutputId{2}, mir_orientation_right);
+    current_configuration->conf.set_orentation_of_output(mg::DisplayConfigurationOutputId{2}, mir_orientation_right);
 
     InSequence seq;
     EXPECT_CALL(*output_container->outputs[2], move_cursor(geom::Point{624, 100}));
@@ -625,7 +618,7 @@ TEST_F(MesaCursorTest, moves_properly_to_and_inside_inverted_output)
 
     cursor.show(stub_image);
 
-    current_configuration.conf.set_orentation_of_output(mg::DisplayConfigurationOutputId{2}, mir_orientation_inverted);
+    current_configuration->conf.set_orentation_of_output(mg::DisplayConfigurationOutputId{2}, mir_orientation_inverted);
 
     InSequence seq;
     EXPECT_CALL(*output_container->outputs[2], move_cursor(geom::Point{636, 24}));
