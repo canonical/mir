@@ -40,6 +40,9 @@ struct miral::CursorScale::Self
     {
         auto s = state.lock();
 
+        if(new_scale == s->scale)
+            return;
+
         s->scale = new_scale;
 
         if(accessibility_manager.expired())
