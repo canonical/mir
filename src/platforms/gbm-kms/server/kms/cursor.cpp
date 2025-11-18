@@ -127,7 +127,7 @@ auto mir::graphics::gbm::Cursor::GBMBOWrapper::change_orientation(MirOrientation
 }
 
 mgg::Cursor::Cursor(
-    KMSOutputContainer& output_container,
+    std::shared_ptr<KMSOutputContainer> const& output_container,
     std::shared_ptr<CurrentConfiguration> const& current_configuration) :
         output_container(output_container),
         current_position(),
@@ -302,11 +302,12 @@ void mir::graphics::gbm::Cursor::suspend()
 void mir::graphics::gbm::Cursor::clear(std::lock_guard<std::mutex> const&)
 {
     last_set_failed = false;
-    output_container.for_each_output([&](std::shared_ptr<KMSOutput> const& output)
-        {
-            if (!output->clear_cursor())
-                last_set_failed = true;
-        });
+    if (auto const locked = output_container.lock())
+        locked->for_each_output([&](std::shared_ptr<KMSOutput> const& output)
+            {
+                if (!output->clear_cursor())
+                    last_set_failed = true;
+            });
 }
 
 void mgg::Cursor::resume()
