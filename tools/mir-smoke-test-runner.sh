@@ -45,33 +45,40 @@ if [ -z "$XDG_RUNTIME_DIR" ]; then
   export XDG_RUNTIME_DIR=/tmp
 fi
 
-echo Test virtual platform
-MIR_SERVER_VIRTUAL_OUTPUT=1200x900 run_tests virtual
+if [ -n "${MIR_SERVER_PLATFORM_DISPLAY_LIBS}" ]; then
+  echo "MIR_SERVER_PLATFORM_DISPLAY_LIBS is set externally to '${MIR_SERVER_PLATFORM_DISPLAY_LIBS}', only running tests for that platform"
+  platform=$(echo "${MIR_SERVER_PLATFORM_DISPLAY_LIBS}" | cut -d: -f2)
+  run_tests "${platform}"
 
-if [ -n "${DISPLAY}" ]
-then
-  echo Test X11 platform
-  run_tests x11
-fi
+else
+  echo Test virtual platform
+  MIR_SERVER_VIRTUAL_OUTPUT=1200x900 run_tests virtual
 
-if [ -n "${XDG_CURRENT_DESKTOP}" ] && [ -O "${XDG_RUNTIME_DIR}/${WAYLAND_DISPLAY:-wayland-0}" ]
-then
-  echo Test Wayland platform
-  MIR_SERVER_WAYLAND_HOST="${WAYLAND_DISPLAY:-wayland-0}" run_tests wayland
-fi
-
-if [ -z "$XDG_CURRENT_DESKTOP" ]
-then
-  echo Test gbm-kms platform
-  run_tests gbm-kms
-
-  echo Test atomic-kms platform
-  run_tests atomic-kms
-
-  if readlink -f /sys/class/drm/*/device/driver | grep -q nvidia$
+  if [ -n "${DISPLAY}" ]
   then
-    echo Test eglstream-kms platform
-    run_tests eglstream-kms
+    echo Test X11 platform
+    run_tests x11
+  fi
+
+  if [ -n "${XDG_CURRENT_DESKTOP}" ] && [ -O "${XDG_RUNTIME_DIR}/${WAYLAND_DISPLAY:-wayland-0}" ]
+  then
+    echo Test Wayland platform
+    MIR_SERVER_WAYLAND_HOST="${WAYLAND_DISPLAY:-wayland-0}" run_tests wayland
+  fi
+
+  if [ -z "$XDG_CURRENT_DESKTOP" ]
+  then
+    echo Test gbm-kms platform
+    run_tests gbm-kms
+
+    echo Test atomic-kms platform
+    run_tests atomic-kms
+
+    if readlink -f /sys/class/drm/*/device/driver | grep -q nvidia$
+    then
+      echo Test eglstream-kms platform
+      run_tests eglstream-kms
+    fi
   fi
 fi
 
