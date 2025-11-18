@@ -50,7 +50,7 @@ struct MockKMSOutput : public graphics::gbm::KMSOutput
     MOCK_METHOD(bool, schedule_page_flip_thunk, (graphics::FBHandle const*), ());
     MOCK_METHOD(void, wait_for_page_flip, (), (override));
 
-    MOCK_METHOD(graphics::Frame, last_frame, (), (const, override));
+    MOCK_METHOD(graphics::Frame, last_frame, (), (const));
 
     MOCK_METHOD(bool, set_cursor_image, (gbm_bo*), (override));
     MOCK_METHOD(void, move_cursor, (geometry::Point), (override));
