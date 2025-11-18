@@ -55,7 +55,7 @@ public:
     MOCK_METHOD(void, pause_processing_for, (void const*), (override));
     MOCK_METHOD(void, resume_processing_for, (void const*), (override));
 
-    MOCK_METHOD(void, spawn, (std::function<void()>&), (override));
+    MOCK_METHOD(void, spawn, (std::function<void()>&), ());
 
     MOCK_METHOD(std::unique_ptr<time::Alarm>, create_alarm, (std::function<void()> const& callback), (override));
     MOCK_METHOD(std::unique_ptr<time::Alarm>, create_alarm, (LockableCallback* callback), ());
