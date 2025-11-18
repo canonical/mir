@@ -323,8 +323,8 @@ struct MesaCursorTest : ::testing::Test
 
     testing::NiceMock<mtd::MockDRM> mock_drm;
     std::shared_ptr<StubCursorImage> const stub_image = std::make_shared<StubCursorImage>();
-    StubKMSOutputContainer output_container;
-    StubCurrentConfiguration current_configuration{output_container};
+    std::shared_ptr<StubKMSOutputContainer> output_container = std::make_shared<StubKMSOutputContainer>();
+    StubCurrentConfiguration current_configuration{*output_container};
     mgg::Cursor cursor;
 };
 
@@ -354,7 +354,7 @@ TEST_F(MesaCursorTest, creates_cursor_bo_image)
                                         GBM_BO_USE_CURSOR | GBM_BO_USE_WRITE));
 
     mgg::Cursor cursor_tmp{output_container,
-        std::make_shared<StubCurrentConfiguration>(output_container)};
+        std::make_shared<StubCurrentConfiguration>(*output_container)};
 }
 
 TEST_F(MesaCursorTest, queries_received_cursor_size)
@@ -366,7 +366,7 @@ TEST_F(MesaCursorTest, queries_received_cursor_size)
     EXPECT_CALL(mock_gbm, gbm_bo_get_height(_)).Times(2);
 
     mgg::Cursor cursor_tmp{output_container,
-        std::make_shared<StubCurrentConfiguration>(output_container)};
+        std::make_shared<StubCurrentConfiguration>(*output_container)};
 }
 
 TEST_F(MesaCursorTest, respects_drm_cap_cursor)
@@ -381,7 +381,7 @@ TEST_F(MesaCursorTest, respects_drm_cap_cursor)
     EXPECT_CALL(mock_gbm, gbm_bo_create(_, drm_buffer_size, drm_buffer_size, _, _));
 
     mgg::Cursor cursor_tmp{output_container,
-        std::make_shared<StubCurrentConfiguration>(output_container)};
+        std::make_shared<StubCurrentConfiguration>(*output_container)};
 }
 
 TEST_F(MesaCursorTest, show_cursor_writes_to_bo)
@@ -445,7 +445,7 @@ TEST_F(MesaCursorTest, pads_missing_data_when_buffer_size_differs)
     EXPECT_CALL(mock_gbm, gbm_bo_write(mock_gbm.fake_gbm.bo, ContainsASingleWhitePixel(width*height), buffer_size_bytes));
 
     mgg::Cursor cursor_tmp{output_container,
-        std::make_shared<StubCurrentConfiguration>(output_container)};
+        std::make_shared<StubCurrentConfiguration>(*output_container)};
     cursor_tmp.show(std::make_shared<SinglePixelCursorImage>());
 }
 
@@ -470,35 +470,35 @@ TEST_F(MesaCursorTest, clears_cursor_state_on_construction)
 {
     using namespace testing;
 
-    EXPECT_CALL(*output_container.outputs[0], clear_cursor());
-    EXPECT_CALL(*output_container.outputs[1], clear_cursor());
-    EXPECT_CALL(*output_container.outputs[2], clear_cursor());
+    EXPECT_CALL(*output_container->outputs[0], clear_cursor());
+    EXPECT_CALL(*output_container->outputs[1], clear_cursor());
+    EXPECT_CALL(*output_container->outputs[2], clear_cursor());
 
     /* No checking of existing cursor state */
-    EXPECT_CALL(*output_container.outputs[0], has_cursor_image()).Times(0);
-    EXPECT_CALL(*output_container.outputs[1], has_cursor_image()).Times(0);
-    EXPECT_CALL(*output_container.outputs[2], has_cursor_image()).Times(0);
+    EXPECT_CALL(*output_container->outputs[0], has_cursor_image()).Times(0);
+    EXPECT_CALL(*output_container->outputs[1], has_cursor_image()).Times(0);
+    EXPECT_CALL(*output_container->outputs[2], has_cursor_image()).Times(0);
 
     mgg::Cursor cursor_tmp{output_container,
-        std::make_shared<StubCurrentConfiguration>(output_container)};
+        std::make_shared<StubCurrentConfiguration>(*output_container)};
 
-    output_container.verify_and_clear_expectations();
+    output_container->verify_and_clear_expectations();
 }
 
 TEST_F(MesaCursorTest, construction_fails_if_initial_set_fails)
 {
     using namespace testing;
 
-    ON_CALL(*output_container.outputs[0], clear_cursor())
+    ON_CALL(*output_container->outputs[0], clear_cursor())
         .WillByDefault(Return(false));
-    ON_CALL(*output_container.outputs[0], set_cursor_image(_))
+    ON_CALL(*output_container->outputs[0], set_cursor_image(_))
         .WillByDefault(Return(false));
-    ON_CALL(*output_container.outputs[0], has_cursor_image())
+    ON_CALL(*output_container->outputs[0], has_cursor_image())
         .WillByDefault(Return(false));
 
     EXPECT_THROW(
         mgg::Cursor cursor_tmp(output_container,
-            std::make_shared<StubCurrentConfiguration>(output_container));
+            std::make_shared<StubCurrentConfiguration>(*output_container));
     , std::runtime_error);
 }
 
@@ -508,18 +508,18 @@ TEST_F(MesaCursorTest, move_to_sets_clears_cursor_if_needed)
 
     cursor.show(stub_image);
 
-    EXPECT_CALL(*output_container.outputs[0], has_cursor_image())
+    EXPECT_CALL(*output_container->outputs[0], has_cursor_image())
         .WillOnce(Return(false))
         .WillOnce(Return(true));
-    EXPECT_CALL(*output_container.outputs[0], set_cursor_image(_));
+    EXPECT_CALL(*output_container->outputs[0], set_cursor_image(_));
 
-    EXPECT_CALL(*output_container.outputs[1], has_cursor_image())
+    EXPECT_CALL(*output_container->outputs[1], has_cursor_image())
         .WillOnce(Return(true));
-    EXPECT_CALL(*output_container.outputs[1], clear_cursor());
+    EXPECT_CALL(*output_container->outputs[1], clear_cursor());
 
     cursor.move_to({10, 10});
 
-    output_container.verify_and_clear_expectations();
+    output_container->verify_and_clear_expectations();
 }
 
 TEST_F(MesaCursorTest, move_to_doesnt_set_clear_cursor_if_not_needed)
@@ -528,19 +528,19 @@ TEST_F(MesaCursorTest, move_to_doesnt_set_clear_cursor_if_not_needed)
 
     cursor.show(stub_image);
 
-    EXPECT_CALL(*output_container.outputs[0], has_cursor_image())
+    EXPECT_CALL(*output_container->outputs[0], has_cursor_image())
         .WillOnce(Return(true));
-    EXPECT_CALL(*output_container.outputs[0], set_cursor_image(_))
+    EXPECT_CALL(*output_container->outputs[0], set_cursor_image(_))
         .Times(0);
 
-    EXPECT_CALL(*output_container.outputs[1], has_cursor_image())
+    EXPECT_CALL(*output_container->outputs[1], has_cursor_image())
         .WillOnce(Return(false));
-    EXPECT_CALL(*output_container.outputs[1], clear_cursor())
+    EXPECT_CALL(*output_container->outputs[1], clear_cursor())
         .Times(0);
 
     cursor.move_to({10, 10});
 
-    output_container.verify_and_clear_expectations();
+    output_container->verify_and_clear_expectations();
 }
 
 TEST_F(MesaCursorTest, move_to_moves_cursor_to_right_output)
@@ -549,37 +549,37 @@ TEST_F(MesaCursorTest, move_to_moves_cursor_to_right_output)
 
     cursor.show(stub_image);
 
-    EXPECT_CALL(*output_container.outputs[0], move_cursor(geom::Point{10,-4}));
-    EXPECT_CALL(*output_container.outputs[1], move_cursor(_))
+    EXPECT_CALL(*output_container->outputs[0], move_cursor(geom::Point{10,-4}));
+    EXPECT_CALL(*output_container->outputs[1], move_cursor(_))
         .Times(0);
 
     cursor.move_to({10, -4});
 
-    output_container.verify_and_clear_expectations();
+    output_container->verify_and_clear_expectations();
 
-    EXPECT_CALL(*output_container.outputs[0], move_cursor(_))
+    EXPECT_CALL(*output_container->outputs[0], move_cursor(_))
         .Times(0);
-    EXPECT_CALL(*output_container.outputs[1], move_cursor(geom::Point{50,100}));
+    EXPECT_CALL(*output_container->outputs[1], move_cursor(geom::Point{50,100}));
 
     cursor.move_to({150, 150});
 
-    output_container.verify_and_clear_expectations();
+    output_container->verify_and_clear_expectations();
 
-    EXPECT_CALL(*output_container.outputs[0], move_cursor(geom::Point{150,75}));
-    EXPECT_CALL(*output_container.outputs[1], move_cursor(geom::Point{50,25}));
+    EXPECT_CALL(*output_container->outputs[0], move_cursor(geom::Point{150,75}));
+    EXPECT_CALL(*output_container->outputs[1], move_cursor(geom::Point{50,25}));
 
     cursor.move_to({150, 75});
 
-    output_container.verify_and_clear_expectations();
+    output_container->verify_and_clear_expectations();
 
-    EXPECT_CALL(*output_container.outputs[0], move_cursor(_))
+    EXPECT_CALL(*output_container->outputs[0], move_cursor(_))
         .Times(0);
-    EXPECT_CALL(*output_container.outputs[1], move_cursor(_))
+    EXPECT_CALL(*output_container->outputs[1], move_cursor(_))
         .Times(0);
 
     cursor.move_to({-64, -64});
 
-    output_container.verify_and_clear_expectations();
+    output_container->verify_and_clear_expectations();
 }
 
 TEST_F(MesaCursorTest, moves_properly_to_and_inside_left_rotated_output)
@@ -591,13 +591,13 @@ TEST_F(MesaCursorTest, moves_properly_to_and_inside_left_rotated_output)
     current_configuration.conf.set_orentation_of_output(mg::DisplayConfigurationOutputId{2}, mir_orientation_left);
 
     InSequence seq;
-    EXPECT_CALL(*output_container.outputs[2], move_cursor(geom::Point{112, 36}));
-    EXPECT_CALL(*output_container.outputs[2], move_cursor(geom::Point{150, 32}));
+    EXPECT_CALL(*output_container->outputs[2], move_cursor(geom::Point{112, 36}));
+    EXPECT_CALL(*output_container->outputs[2], move_cursor(geom::Point{150, 32}));
 
     cursor.move_to({766, 112});
     cursor.move_to({770, 150});
 
-    output_container.verify_and_clear_expectations();
+    output_container->verify_and_clear_expectations();
 }
 
 
@@ -610,13 +610,13 @@ TEST_F(MesaCursorTest, moves_properly_to_and_inside_right_rotated_output)
     current_configuration.conf.set_orentation_of_output(mg::DisplayConfigurationOutputId{2}, mir_orientation_right);
 
     InSequence seq;
-    EXPECT_CALL(*output_container.outputs[2], move_cursor(geom::Point{624, 100}));
-    EXPECT_CALL(*output_container.outputs[2], move_cursor(geom::Point{586, 104}));
+    EXPECT_CALL(*output_container->outputs[2], move_cursor(geom::Point{624, 100}));
+    EXPECT_CALL(*output_container->outputs[2], move_cursor(geom::Point{586, 104}));
 
     cursor.move_to({766, 112});
     cursor.move_to({770, 150});
 
-    output_container.verify_and_clear_expectations();
+    output_container->verify_and_clear_expectations();
 }
 
 TEST_F(MesaCursorTest, moves_properly_to_and_inside_inverted_output)
@@ -628,52 +628,52 @@ TEST_F(MesaCursorTest, moves_properly_to_and_inside_inverted_output)
     current_configuration.conf.set_orentation_of_output(mg::DisplayConfigurationOutputId{2}, mir_orientation_inverted);
 
     InSequence seq;
-    EXPECT_CALL(*output_container.outputs[2], move_cursor(geom::Point{636, 24}));
-    EXPECT_CALL(*output_container.outputs[2], move_cursor(geom::Point{632,-14}));
+    EXPECT_CALL(*output_container->outputs[2], move_cursor(geom::Point{636, 24}));
+    EXPECT_CALL(*output_container->outputs[2], move_cursor(geom::Point{632,-14}));
 
     cursor.move_to({766, 112});
     cursor.move_to({770, 150});
 
-    output_container.verify_and_clear_expectations();
+    output_container->verify_and_clear_expectations();
 }
 
 TEST_F(MesaCursorTest, hides_cursor_in_all_outputs)
 {
     using namespace testing;
 
-    EXPECT_CALL(*output_container.outputs[0], clear_cursor());
-    EXPECT_CALL(*output_container.outputs[1], clear_cursor());
-    EXPECT_CALL(*output_container.outputs[2], clear_cursor());
+    EXPECT_CALL(*output_container->outputs[0], clear_cursor());
+    EXPECT_CALL(*output_container->outputs[1], clear_cursor());
+    EXPECT_CALL(*output_container->outputs[2], clear_cursor());
 
     cursor.hide();
 
-    output_container.verify_and_clear_expectations();
+    output_container->verify_and_clear_expectations();
 }
 
 TEST_F(MesaCursorTest, hidden_cursor_is_not_shown_on_display_when_moved)
 {
     using namespace testing;
 
-    EXPECT_CALL(*output_container.outputs[0], clear_cursor());
-    EXPECT_CALL(*output_container.outputs[1], clear_cursor());
-    EXPECT_CALL(*output_container.outputs[2], clear_cursor());
-    EXPECT_CALL(*output_container.outputs[0], move_cursor(_)).Times(0);
-    EXPECT_CALL(*output_container.outputs[1], move_cursor(_)).Times(0);
-    EXPECT_CALL(*output_container.outputs[2], move_cursor(_)).Times(0);
+    EXPECT_CALL(*output_container->outputs[0], clear_cursor());
+    EXPECT_CALL(*output_container->outputs[1], clear_cursor());
+    EXPECT_CALL(*output_container->outputs[2], clear_cursor());
+    EXPECT_CALL(*output_container->outputs[0], move_cursor(_)).Times(0);
+    EXPECT_CALL(*output_container->outputs[1], move_cursor(_)).Times(0);
+    EXPECT_CALL(*output_container->outputs[2], move_cursor(_)).Times(0);
 
     cursor.hide();
     cursor.move_to({17, 29});
 
-    output_container.verify_and_clear_expectations();
+    output_container->verify_and_clear_expectations();
 }
 
 TEST_F(MesaCursorTest, clears_cursor_on_exit)
 {
     using namespace testing;
 
-    EXPECT_CALL(*output_container.outputs[0], clear_cursor());
-    EXPECT_CALL(*output_container.outputs[1], clear_cursor());
-    EXPECT_CALL(*output_container.outputs[2], clear_cursor());
+    EXPECT_CALL(*output_container->outputs[0], clear_cursor());
+    EXPECT_CALL(*output_container->outputs[1], clear_cursor());
+    EXPECT_CALL(*output_container->outputs[2], clear_cursor());
 }
 
 TEST_F(MesaCursorTest, cursor_is_shown_at_correct_location_after_suspend_resume)
@@ -682,57 +682,57 @@ TEST_F(MesaCursorTest, cursor_is_shown_at_correct_location_after_suspend_resume)
 
     cursor.show(stub_image);
 
-    EXPECT_CALL(*output_container.outputs[0], move_cursor(geom::Point{150,75}));
-    EXPECT_CALL(*output_container.outputs[1], move_cursor(geom::Point{50,25}));
-    EXPECT_CALL(*output_container.outputs[0], clear_cursor());
-    EXPECT_CALL(*output_container.outputs[1], clear_cursor());
-    EXPECT_CALL(*output_container.outputs[2], has_cursor_image())
+    EXPECT_CALL(*output_container->outputs[0], move_cursor(geom::Point{150,75}));
+    EXPECT_CALL(*output_container->outputs[1], move_cursor(geom::Point{50,25}));
+    EXPECT_CALL(*output_container->outputs[0], clear_cursor());
+    EXPECT_CALL(*output_container->outputs[1], clear_cursor());
+    EXPECT_CALL(*output_container->outputs[2], has_cursor_image())
         .WillRepeatedly(Return(false));
-    EXPECT_CALL(*output_container.outputs[2], clear_cursor());
+    EXPECT_CALL(*output_container->outputs[2], clear_cursor());
 
     cursor.move_to({150, 75});
     cursor.suspend();
 
-    output_container.verify_and_clear_expectations();
+    output_container->verify_and_clear_expectations();
 
-    EXPECT_CALL(*output_container.outputs[0], set_cursor_image(_));
-    EXPECT_CALL(*output_container.outputs[1], set_cursor_image(_));
-    EXPECT_CALL(*output_container.outputs[0], move_cursor(geom::Point{150,75}));
-    EXPECT_CALL(*output_container.outputs[1], move_cursor(geom::Point{50,25}));
+    EXPECT_CALL(*output_container->outputs[0], set_cursor_image(_));
+    EXPECT_CALL(*output_container->outputs[1], set_cursor_image(_));
+    EXPECT_CALL(*output_container->outputs[0], move_cursor(geom::Point{150,75}));
+    EXPECT_CALL(*output_container->outputs[1], move_cursor(geom::Point{50,25}));
 
     cursor.resume();
-    output_container.verify_and_clear_expectations();
+    output_container->verify_and_clear_expectations();
 }
 
 TEST_F(MesaCursorTest, hidden_cursor_is_not_shown_after_suspend_resume)
 {
     using namespace testing;
 
-    EXPECT_CALL(*output_container.outputs[0], clear_cursor()).Times(AnyNumber());
-    EXPECT_CALL(*output_container.outputs[1], clear_cursor()).Times(AnyNumber());
-    EXPECT_CALL(*output_container.outputs[2], clear_cursor()).Times(AnyNumber());
+    EXPECT_CALL(*output_container->outputs[0], clear_cursor()).Times(AnyNumber());
+    EXPECT_CALL(*output_container->outputs[1], clear_cursor()).Times(AnyNumber());
+    EXPECT_CALL(*output_container->outputs[2], clear_cursor()).Times(AnyNumber());
 
     cursor.hide();
     cursor.suspend();
 
-    output_container.verify_and_clear_expectations();
+    output_container->verify_and_clear_expectations();
 
-    EXPECT_CALL(*output_container.outputs[0], set_cursor_image(_)).Times(0);
-    EXPECT_CALL(*output_container.outputs[1], set_cursor_image(_)).Times(0);
-    EXPECT_CALL(*output_container.outputs[2], set_cursor_image(_)).Times(0);
+    EXPECT_CALL(*output_container->outputs[0], set_cursor_image(_)).Times(0);
+    EXPECT_CALL(*output_container->outputs[1], set_cursor_image(_)).Times(0);
+    EXPECT_CALL(*output_container->outputs[2], set_cursor_image(_)).Times(0);
 
     cursor.resume();
-    output_container.verify_and_clear_expectations();
+    output_container->verify_and_clear_expectations();
 }
 
 TEST_F(MesaCursorTest, show_with_param_places_cursor_on_output)
 {
-    EXPECT_CALL(*output_container.outputs[0], clear_cursor());
+    EXPECT_CALL(*output_container->outputs[0], clear_cursor());
     cursor.hide();
 
-    output_container.verify_and_clear_expectations();
+    output_container->verify_and_clear_expectations();
 
-    EXPECT_CALL(*output_container.outputs[0], set_cursor_image(_));
+    EXPECT_CALL(*output_container->outputs[0], set_cursor_image(_));
     cursor.show(stub_image);
 }
 
@@ -762,15 +762,15 @@ TEST_F(MesaCursorTest, show_cursor_sets_cursor_with_hotspot)
 
 
     EXPECT_CALL(mock_gbm, gbm_bo_write(_, _, _)).Times(AnyNumber());
-    EXPECT_CALL(*output_container.outputs[0], set_cursor_image(_)).Times(AnyNumber());
+    EXPECT_CALL(*output_container->outputs[0], set_cursor_image(_)).Times(AnyNumber());
 
     // When we set the image with the hotspot, first we should see the cursor move from its initial
     // location, to account for the displacement. Further movement should be offset by the hotspot.
     {
         InSequence seq;
-        EXPECT_CALL(*output_container.outputs[0], move_cursor(initial_buffer_location));
-        EXPECT_CALL(*output_container.outputs[0], move_cursor(expected_buffer_location_1));
-        EXPECT_CALL(*output_container.outputs[0], move_cursor(expected_buffer_location_2));
+        EXPECT_CALL(*output_container->outputs[0], move_cursor(initial_buffer_location));
+        EXPECT_CALL(*output_container->outputs[0], move_cursor(expected_buffer_location_1));
+        EXPECT_CALL(*output_container->outputs[0], move_cursor(expected_buffer_location_2));
     }
 
     cursor.show(std::make_shared<HotspotCursor>());

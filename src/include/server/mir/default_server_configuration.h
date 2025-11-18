@@ -381,9 +381,9 @@ protected:
     // which leads to seg faults because those code paths cannot be found. For this
     // reason, we cache pointers to these objects AND make sure that they are destructed
     // after everything else.
-    std::shared_ptr<input::InputManager>    input_manager;
     std::vector<std::shared_ptr<graphics::DisplayPlatform>> display_platforms;
     std::vector<std::shared_ptr<graphics::RenderingPlatform>> rendering_platforms;
+    std::shared_ptr<input::InputManager>    input_manager;
 
     CachedPtr<frontend::Connector>   wayland_connector;
     CachedPtr<frontend::Connector>   xwayland_connector;
