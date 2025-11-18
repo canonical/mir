@@ -710,7 +710,6 @@ libmiral.so.7 libmiral7 #MINVER#
  (c++)"miral::StandardApplicationSwitcher::operator()(mir::Server&) const@MIRAL_5.6" 5.6.0
  (c++)"miral::StandardApplicationSwitcher::~StandardApplicationSwitcher()@MIRAL_5.6" 5.6.0
  (c++)"miral::StartupInternalClient::StartupInternalClient(std::function<void (wl_display*)>, std::function<void (std::weak_ptr<mir::scene::Session>)>, std::function<void ()>)@MIRAL_5.0" 5.6.0
- (c++)"miral::StartupInternalClient::StartupInternalClient<miral::ApplicationSwitcher>(miral::ApplicationSwitcher const&)@MIRAL_5.0" 5.6.0
  (c++)"miral::WaylandExtensions::ext_data_control_manager_v1@MIRAL_5.6" 5.6.0
  (c++)"miral::WaylandExtensions::ext_image_copy_capture_manager_v1@MIRAL_5.6" 5.6.0
  (c++)"miral::WaylandExtensions::ext_output_image_capture_source_manager_v1@MIRAL_5.6" 5.6.0
