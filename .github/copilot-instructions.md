@@ -230,7 +230,7 @@ add_custom_command(
 
 ### Component Reports
 
-Enable runtime debugging via environment or command-line options (see `doc/sphinx/explanation/component_reports.md`)
+Enable runtime debugging via environment or command-line options (see `doc/sphinx/configuring/explanation/component-reports.md`)
 
 ### Mesa/GBM Debugging
 
@@ -287,7 +287,7 @@ Build artifacts are already excluded via `.gitignore`. Do not commit:
 - [Full C++ Style Guide](../doc/sphinx/contributing/reference/cppguide.md)
 - [Hacking Guide](../HACKING.md)
 - [Getting Started with Mir](../doc/sphinx/tutorial/getting-started-with-mir.md)
-- [Component Reports](../doc/sphinx/explanation/component_reports.md)
+- [Component Reports](../doc/sphinx/configuring/explanation/component-reports.md)
 
 ## Consistency Reminder
 
