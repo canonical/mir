@@ -54,9 +54,9 @@ struct DecorationBasicManager
     }
 
     // user needs to wrap the raw pointer in a unique_ptr because GTest is dumb
-    MOCK_METHOD(msd::Decoration*, build_decoration, (), (override));
+    MOCK_METHOD(msd::Decoration*, build_decoration, (), ());
 
-    MOCK_METHOD(void, decoration_destroyed, (msd::Decoration*), (override));
+    MOCK_METHOD(void, decoration_destroyed, (msd::Decoration*), ());
 
     std::shared_ptr<mir::ObserverRegistrar<mir::graphics::DisplayConfigurationObserver>>
         registrar{std::make_shared<mtd::StubObserverRegistrar<mir::graphics::DisplayConfigurationObserver>>()};

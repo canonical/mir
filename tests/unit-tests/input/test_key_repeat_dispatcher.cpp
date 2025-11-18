@@ -61,7 +61,7 @@ struct MockAlarm : public mir::time::Alarm
 
 struct MockAlarmFactory : public mir::time::AlarmFactory
 {
-    MOCK_METHOD(mir::time::Alarm*, create_alarm_adapter, (std::function<void()> const&), (override));
+    MOCK_METHOD(mir::time::Alarm*, create_alarm_adapter, (std::function<void()> const&), ());
     std::unique_ptr<mir::time::Alarm> create_alarm(std::function<void()> const& cb)
     {
         return std::unique_ptr<mir::time::Alarm>(create_alarm_adapter(cb));

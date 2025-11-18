@@ -50,8 +50,6 @@ struct MockKMSOutput : public graphics::gbm::KMSOutput
     MOCK_METHOD(bool, schedule_page_flip_thunk, (graphics::FBHandle const*), ());
     MOCK_METHOD(void, wait_for_page_flip, (), (override));
 
-    MOCK_METHOD(graphics::Frame, last_frame, (), (const));
-
     MOCK_METHOD(bool, set_cursor_image, (gbm_bo*), (override));
     MOCK_METHOD(void, move_cursor, (geometry::Point), (override));
     MOCK_METHOD(bool, clear_cursor, (), (override));
@@ -63,9 +61,6 @@ struct MockKMSOutput : public graphics::gbm::KMSOutput
     MOCK_METHOD(void, refresh_hardware_state, (), (override));
     MOCK_METHOD(void, update_from_hardware_state, (graphics::DisplayConfigurationOutput&), (const, override));
 
-    MOCK_METHOD(std::shared_ptr<graphics::FBHandle const>, fb_for, (gbm_bo*), (const, override));
-    MOCK_METHOD(std::shared_ptr<graphics::FBHandle const>, fb_for, (graphics::DMABufBuffer const&), (const, override));
-    MOCK_METHOD(bool, buffer_requires_migration, (gbm_bo*), (const, override));
     MOCK_METHOD(int, drm_fd, (), (const, override));
     MOCK_METHOD(bool, connected, (), (const, override));
 };

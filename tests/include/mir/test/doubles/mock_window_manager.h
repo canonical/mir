@@ -61,11 +61,6 @@ struct MockWindowManager : shell::WindowManager
     MOCK_METHOD(void, handle_request_move, (std::shared_ptr<scene::Session> const&, std::shared_ptr<scene::Surface> const&, MirInputEvent const*), (override));
     MOCK_METHOD(void, handle_request_resize, (std::shared_ptr<scene::Session> const&, std::shared_ptr<scene::Surface> const&, MirInputEvent const*, MirResizeEdge), (override));
 
-    MOCK_METHOD(int, set_surface_attribute, (std::shared_ptr<scene::Session> const& session,
-            std::shared_ptr<scene::Surface> const& surface,
-            MirWindowAttrib attrib,
-            int value), (override));
-
     static auto add_surface_default(
         std::shared_ptr<scene::Session> const& session,
         shell::SurfaceSpecification const& params,

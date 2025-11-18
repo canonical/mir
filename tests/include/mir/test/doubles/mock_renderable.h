@@ -41,8 +41,6 @@ struct MockRenderable : public graphics::Renderable
             .WillByDefault(testing::Return(1.0f));
         ON_CALL(*this, transformation())
             .WillByDefault(testing::Return(glm::mat4{}));
-        ON_CALL(*this, visible())
-            .WillByDefault(testing::Return(true));
     }
 
     MOCK_METHOD(ID, id, (), (const, override));
@@ -54,7 +52,6 @@ struct MockRenderable : public graphics::Renderable
     MOCK_METHOD(glm::mat4, transformation, (), (const, override));
     MOCK_METHOD(MirOrientation, orientation, (), (const, override));
     MOCK_METHOD(MirMirrorMode, mirror_mode, (), (const, override));
-    MOCK_METHOD(bool, visible, (), (const, override));
     MOCK_METHOD(bool, shaped, (), (const, override));
     MOCK_METHOD(std::optional<mir::scene::Surface const*>, surface_if_any, (), (const, override));
     MOCK_METHOD(std::optional<geometry::Rectangles>, opaque_region, (), (const, override));

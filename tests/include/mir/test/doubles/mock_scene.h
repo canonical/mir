@@ -34,12 +34,9 @@ public:
     {
         ON_CALL(*this, scene_elements_for(testing::_))
             .WillByDefault(testing::Return(compositor::SceneElementSequence{}));
-        ON_CALL(*this, frames_pending(testing::_))
-            .WillByDefault(testing::Return(0));
     }
 
     MOCK_METHOD(compositor::SceneElementSequence, scene_elements_for, (compositor::CompositorID), (override));
-    MOCK_METHOD(int, frames_pending, (compositor::CompositorID), (const, override));
     MOCK_METHOD(void, register_compositor, (compositor::CompositorID), (override));
     MOCK_METHOD(void, unregister_compositor, (compositor::CompositorID), (override));
 

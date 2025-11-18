@@ -29,11 +29,10 @@ namespace doubles
 {
 struct MockCursor : public mir::graphics::Cursor
 {
-    MOCK_METHOD(void, show, (), (override));
-    MOCK_METHOD(void, show, (std::shared_ptr<mir::graphics::CursorImage> const&), (override));
     MOCK_METHOD(void, hide, (), (override));
-
+    MOCK_METHOD(void, show, (std::shared_ptr<mir::graphics::CursorImage> const&), (override));
     MOCK_METHOD(void, move_to, (mir::geometry::Point), (override));
+
     MOCK_METHOD(void, scale, (float), (override));
     MOCK_METHOD(std::shared_ptr<mir::graphics::Renderable>, renderable, (), (override));
     MOCK_METHOD(bool, needs_compositing, (), (const, override));
