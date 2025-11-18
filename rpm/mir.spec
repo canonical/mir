@@ -312,6 +312,7 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/miral-shell.desktop
 %{_bindir}/mir_demo_*
 %{_bindir}/mir-x11-kiosk*
 %{_bindir}/miral-*
+%{_bindir}/trigger_client
 %{_datadir}/applications/miral-shell.desktop
 %{_datadir}/icons/hicolor/scalable/apps/spiral-logo.svg
 
