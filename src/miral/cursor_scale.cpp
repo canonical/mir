@@ -85,7 +85,7 @@ struct miral::CursorScale::Self
                         auto const t = static_cast<float>(time.count()) / wind_time.count();
                         return std::lerp(start_scale, end_scale, t);
                     }
-                    else if (time > wind_down_start)
+                    else if (time >= wind_down_start)
                     {
                         auto const t = static_cast<float>((time - wind_down_start).count()) / wind_time.count();
                         return std::lerp(end_scale, start_scale, t);
