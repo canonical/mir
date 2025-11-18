@@ -68,16 +68,31 @@ struct miral::CursorScale::Self
         auto const start_scale = s->scale;
         auto const end_scale = s->scale * scale_multiplier;
         auto const ml = main_loop.lock();
+        auto const animation_duration = wind_time + duration + wind_time;
 
-        s->animation_alarm = ml->create_repeating_alarm(
+        auto animation_callback{
             [this,
              repeat_delay,
              time = std::chrono::milliseconds{0},
+             animation_duration,
              wind_down_start,
              start_scale,
              end_scale,
              wind_time]() mutable
             {
+                if (time >= animation_duration)
+                {
+                    {
+                        auto const s = state.lock();
+                        s->animation_alarm->cancel();
+                        s->animation_alarm = nullptr;
+                    }
+
+                    // Reset scale just in case
+                    this->scale(start_scale);
+                    return;
+                }
+
                 auto const scale = [&]
                 {
                     if (time < wind_time)
@@ -99,25 +114,10 @@ struct miral::CursorScale::Self
                 this->scale(scale);
 
                 time += repeat_delay;
-            },
-            repeat_delay);
+            }};
 
-        s->animation_stop_alarm = ml->create_alarm(
-            [this, start_scale]
-            {
-                {
-                    auto const s = state.lock();
-                    s->animation_alarm->cancel();
-                    s->animation_alarm = nullptr;
-                }
-
-                // Reset scale just in case
-                this->scale(start_scale);
-            });
-
+        s->animation_alarm = ml->create_repeating_alarm(animation_callback, repeat_delay);
         s->animation_alarm->reschedule_in(std::chrono::milliseconds{0});
-        auto const animation_duration = wind_time + duration + wind_time;
-        s->animation_stop_alarm->reschedule_in(animation_duration);
     }
 
     float const default_scale;
