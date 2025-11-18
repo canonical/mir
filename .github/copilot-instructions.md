@@ -1,4 +1,6 @@
-# Mir Compositor Coding Instructions
+# Mir Copilot Instructions
+
+This document provides essential knowledge for working with the Mir codebase, including architecture, coding standards, and workflows.
 
 ## Overview
 
@@ -46,13 +48,24 @@ cmake -DCMAKE_C_COMPILER_LAUNCHER=ccache \
 - Uses C++23 standard (`CMAKE_CXX_STANDARD=23`)
 - Fatal warnings enabled by default (`MIR_FATAL_COMPILE_WARNINGS=ON`)
 
-## Code Conventions
+## Coding Standards
 
-### Error Handling
+Mir follows a comprehensive C++ style guide documented in [`doc/sphinx/contributing/reference/cppguide.md`](../doc/sphinx/contributing/reference/cppguide.md). Below are key highlights:
 
-- Functions throw exceptions if they cannot meet post-conditions (minimum: basic exception safety)
-- Preconditions are NOT checked - use `assert` for precondition verification
-- Pointers are assumed to refer to valid objects unless explicitly documented otherwise
+### General Principles
+
+- **Consistency is paramount**: Follow existing code style in files you're modifying
+- **Readability over cleverness**: Write code that is easy to understand and maintain
+- **Minimal changes**: Make the smallest possible changes to achieve your goal
+
+### Naming Conventions
+
+- **Classes/Structs/Types**: `PascalCase` (e.g., `MyExcitingClass`, `UrlTableProperties`)
+- **Functions**: `snake_case` (e.g., `add_table_entry()`, `open_file()`)
+- **Variables**: `snake_case` (e.g., `my_variable`, `table_name`)
+- **Constants**: `snake_case` (e.g., `default_width`, `max_connections`)
+- **Macros**: `UPPER_CASE` (e.g., `MY_MACRO`) - but avoid macros when possible
+- **Namespaces**: `snake_case` (e.g., `my_awesome_project`)
 
 ### Namespaces
 
@@ -61,13 +74,81 @@ cmake -DCMAKE_C_COMPILER_LAUNCHER=ccache \
 - `mir::graphics::`, `mir::input::`, `mir::scene::` - component namespaces
 - `miral::` - Abstraction layer APIs
 - `namespace geom = mir::geometry;` - common alias in implementation files
+- **Unnamed namespaces**: Encouraged in `.cpp` files for internal linkage
+- **No unnamed namespaces in headers**
+- **Using directives**: Allowed in `.cpp` files, avoid in headers
+- **Namespace content**: Not indented
 
-### Header Organization
+### File Organization
 
-```cpp
-// Public headers (include/) - interfaces only, no platform types
-// Implementation headers (src/) - platform-specific, within component only
-```
+- **Header files**: Use `.h` extension with proper header guards
+- **Implementation files**: Use `.cpp` extension
+- **Include order**:
+  1. Corresponding header file (for .cpp files)
+  2. Project's public headers
+  3. Project's private headers
+  4. Other libraries' headers
+  5. C system headers
+  6. C++ standard library headers
+
+### Formatting
+
+- **Indentation**: 4 spaces (no tabs)
+- **Line length**: Maximum 120 characters
+- **Braces**: Opening brace on new line for functions, classes, namespaces, and branches
+- **Namespace content**: Not indented
+- **Function declarations**: Return type or `auto` on same line as function name
+- **Pointer/Reference placement**: Asterisk/ampersand adjacent to type (e.g., `char* c`, `string const& str`)
+
+### C++ Features
+
+- **Use C++23 features** where appropriate
+- **Constructors**: Use `explicit` for single-argument constructors
+- **Initialization**: Prefer `{}` initialization (e.g., `int n{5}`)
+- **Null pointers**: Use `nullptr` instead of `NULL` or `0`
+- **Const correctness**: Use `const` wherever possible; prefer `int const*` over `const int*`
+- **Smart pointers**: Prefer smart pointers over raw pointers for ownership
+- **Auto keyword**: Use `auto` for complex types and iterators when it improves readability, as well as new-style function declarations with `auto`
+
+### Classes
+
+- **Access specifiers order**: `public:`, then `protected:`, then `private:`
+- **Member declaration order**: 
+  1. Typedefs and Enums
+  2. Constants
+  3. Constructors
+  4. Destructor
+  5. Methods
+  6. Data members
+- **Copy/Move operations**: Explicitly delete or implement as needed
+- **Virtual destructors**: Use when class has virtual methods
+- **Override keyword**: Always use `override` when overriding virtual methods
+
+### Error Handling
+
+- **Exceptions**: Functions should throw exceptions when they cannot meet post-conditions
+- **Exception safety**: Provide at least the basic exception safety guarantee
+- **Preconditions**: May be verified using `assert` but are not required to be checked
+- **Pointers**: Assumed to be valid unless explicitly documented otherwise
+
+### Comments
+
+- **File headers**: Include copyright, license, author, and description
+- **Class comments**: Describe purpose and usage; include Doxygen-style documentation in headers
+- **Function comments**: Describe what the function does, not how (unless complex)
+- **TODO comments**: Use format `// TODO: Description`
+- **Code documentation**: Comment tricky or non-obvious code
+- **Avoid obvious comments**: Don't state what the code clearly does
+
+### Best Practices
+
+- **Keep functions small**: Prefer functions under 40 lines
+- **Avoid global state**: Minimize use of global variables
+- **Forward declarations**: Use when possible to reduce header dependencies
+- **Inline functions**: Only for small functions (≤10 lines)
+- **Preprocessor macros**: Avoid when possible; prefer inline functions, enums, and const variables
+- **Streams**: Use only for logging, prefer `printf`-style for other I/O
+- **Reference parameters**: Input parameters should be `const` references or values; output parameters should be pointers
 
 ## Testing
 
@@ -174,3 +255,41 @@ Pre-commit hooks (`.pre-commit-config.yaml`) handle:
 - Large files check
 
 Run: `pre-commit run --all-files`
+
+## Repository-Specific Guidelines
+
+### Do Not Check In CodeQL Files
+
+**Important**: Do not commit CodeQL database files or analysis results to the repository. These files are:
+- Generated locally during code analysis
+- Large binary files that don't belong in version control
+- Automatically generated by CI/CD pipelines when needed
+
+If you generate CodeQL databases locally for analysis, ensure they are:
+- Stored outside the repository directory, or
+- Properly excluded via `.gitignore`
+
+Common CodeQL artifacts to avoid:
+- CodeQL database directories (usually named `codeql-db` or similar)
+- `.sarif` files containing analysis results
+- Custom CodeQL query results
+
+### Build Artifacts
+
+Build artifacts are already excluded via `.gitignore`. Do not commit:
+- Compiled binaries
+- Object files
+- Build directories (e.g., `build/`, `build-*/`, `cmake-*/`)
+- IDE-specific files (except those already tracked)
+
+## Additional Resources
+
+- [Full C++ Style Guide](../doc/sphinx/contributing/reference/cppguide.md)
+- [Hacking Guide](../HACKING.md)
+- [Getting Started with Mir](../doc/sphinx/tutorial/getting-started-with-mir.md)
+- [Component Reports](../doc/sphinx/explanation/component_reports.md)
+
+## Consistency Reminder
+
+When in doubt, follow the style of the code you're working in. Local consistency is important for maintainability.
+
