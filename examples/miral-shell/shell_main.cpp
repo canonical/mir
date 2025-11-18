@@ -369,6 +369,6 @@ int main(int argc, char const* argv[])
             cursor_scale,
             locate_pointer,
             AppendKeyboardEventFilter{locate_pointer_filter},
-            StandardApplicationSwitcher(StandardApplicationSwitcher::KeybindConfiguration{})
+            StandardApplicationSwitcher{}
         });
 }
