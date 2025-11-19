@@ -20,6 +20,7 @@
 
 #include <mir/test/doubles/mock_display_configuration.h>
 
+#include <filesystem>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include "yaml-cpp/yaml.h"
@@ -166,7 +167,7 @@ TEST_F(StaticDisplayConfig, nonexistent_config_file_is_no_error)
     char tmp_dir_path[] = "/tmp/mir-XXXXXX";
     ASSERT_THAT(mkdtemp(tmp_dir_path), NotNull());
     miral::StaticDisplayConfig{std::string(tmp_dir_path) + "/display.conf"};
-    rmdir(tmp_dir_path);
+    std::filesystem::remove_all(tmp_dir_path);
 }
 
 TEST_F(StaticDisplayConfig, empty_config_input_causes_AbnormalExit)
