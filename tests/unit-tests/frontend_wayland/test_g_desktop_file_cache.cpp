@@ -34,7 +34,6 @@ using ::testing::NotNull;
 namespace
 {
 static std::string temp_dir;
-static std::string applications_dir;
 }
 
 struct GDesktopFileCache : Test
@@ -49,7 +48,7 @@ struct GDesktopFileCache : Test
             throw std::runtime_error("failed to create temporary directory");
         setenv("XDG_DATA_DIRS", tmp_dir_path, 1);
         temp_dir = tmp_dir_path;
-        applications_dir = temp_dir + "/applications";
+        auto applications_dir = temp_dir + "/applications";
         mkdir(applications_dir.c_str(), S_IRWXU);
     }
 
@@ -60,7 +59,7 @@ struct GDesktopFileCache : Test
 
     void write_desktop_file(const char* contents, const char* filename)
     {
-        auto filepath = applications_dir + "/" + filename;
+        auto filepath = temp_dir + "/applications/" + filename;
         std::fstream file(filepath, std::fstream::out);
         file << contents;
     }
