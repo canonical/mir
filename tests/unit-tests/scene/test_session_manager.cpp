@@ -56,9 +56,9 @@ namespace
 {
 struct MockSessionEventSink : public ms::SessionEventSink
 {
-    MOCK_METHOD1(handle_focus_change, void(std::shared_ptr<ms::Session> const& session));
-    MOCK_METHOD0(handle_no_focus, void());
-    MOCK_METHOD1(handle_session_stopping, void(std::shared_ptr<ms::Session> const& session));
+    MOCK_METHOD(void, handle_focus_change, (std::shared_ptr<ms::Session> const& session), (override));
+    MOCK_METHOD(void, handle_no_focus, (), (override));
+    MOCK_METHOD(void, handle_session_stopping, (std::shared_ptr<ms::Session> const& session), (override));
 };
 
 struct SessionManagerSetup : public testing::Test

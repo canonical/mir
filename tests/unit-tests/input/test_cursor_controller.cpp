@@ -331,7 +331,6 @@ struct TestController : mi::CursorController
             mt::fake_shared(cursor),
             default_cursor_image)
     {
-        EXPECT_CALL(cursor, show()).Times(AnyNumber());
         EXPECT_CALL(cursor, show(_)).Times(AnyNumber());
         pointer_usable();
         Mock::VerifyAndClearExpectations(&cursor);

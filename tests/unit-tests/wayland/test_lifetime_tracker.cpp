@@ -36,7 +36,7 @@ public:
 
 struct MockListener
 {
-    MOCK_METHOD0(callback, void());
+    MOCK_METHOD(void, callback, (), ());
 };
 
 struct LifetimeTrackerTest: Test
