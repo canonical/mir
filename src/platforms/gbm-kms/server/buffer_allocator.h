@@ -112,6 +112,8 @@ public:
         DisplaySink& sink,
         GLConfig const& config) -> std::unique_ptr<gl::OutputSurface> override;
 
+    auto supports_syncobj_timeline() const -> bool override;
+
     auto import_syncobj(Fd const& syncobj_fd) -> std::unique_ptr<drm::Syncobj> override;
 
 private:

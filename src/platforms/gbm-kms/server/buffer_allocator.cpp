@@ -53,6 +53,7 @@
 #include <optional>
 #include <stdexcept>
 #include <fcntl.h>
+#include <drm.h>
 #include <xf86drm.h>
 #include <drm_fourcc.h>
 
@@ -540,6 +541,16 @@ auto mgg::GLRenderingProvider::surface_for_sink(
         ctx,
         *cpu_allocator,
         config);
+}
+
+auto mgg::GLRenderingProvider::supports_syncobj_timeline() const -> bool
+{
+    uint64_t has_timeline = 0;
+    if (drmGetCap(drm_fd, DRM_CAP_SYNCOBJ_TIMELINE, &has_timeline) == 0 && has_timeline)
+    {
+        return true;
+    }
+    return false;
 }
 
 auto mgg::GLRenderingProvider::import_syncobj(Fd const& syncobj_fd)

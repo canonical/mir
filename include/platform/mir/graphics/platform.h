@@ -235,6 +235,14 @@ public:
     };
 
     /**
+     * Check if the device supports DRM syncobj timeline functionality
+     *
+     * \returns
+     *     true if the device supports DRM_CAP_SYNCOBJ_TIMELINE, false otherwise.
+     */
+    virtual auto supports_syncobj_timeline() const -> bool = 0;
+
+    /**
      * Import a DRM syncobj from a file descriptor
      *
      * \param [in] syncobj_fd

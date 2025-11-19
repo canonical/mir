@@ -356,8 +356,23 @@ mf::WaylandConnector::WaylandConnector(
         }
         if (!providers.empty())
         {
-            mir::log_debug("Detected DRM Syncobj capable rendering platform. Enabling linux_drm_syncobj_v1 explicit sync support.");
-            drm_syncobj = std::make_unique<LinuxDRMSyncobjManager>(display.get(), providers);
+            // Check if all providers support syncobj timeline
+            bool all_support_timeline = true;
+            for (auto const& provider : providers)
+            {
+                if (!provider->supports_syncobj_timeline())
+                {
+                    all_support_timeline = false;
+                    mir::log_info("DRM Syncobj timeline not supported by device. Disabling linux_drm_syncobj_v1 explicit sync support.");
+                    break;
+                }
+            }
+            
+            if (all_support_timeline)
+            {
+                mir::log_debug("Detected DRM Syncobj capable rendering platform. Enabling linux_drm_syncobj_v1 explicit sync support.");
+                drm_syncobj = std::make_unique<LinuxDRMSyncobjManager>(display.get(), providers);
+            }
         }
     }
 
