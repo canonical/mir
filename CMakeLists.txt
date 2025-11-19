@@ -48,7 +48,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS on)
 
 option(use_debflags "Use build flags from dpkg-buildflags." OFF)
 if(use_debflags)
-  include (cmake/Debian.cmake)
+    include (cmake/Debian.cmake)
 endif()
 include (cmake/EnableCoverageReport.cmake)
 include (cmake/MirCommon.cmake)
@@ -73,26 +73,26 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--as-needed")
 
 set(MIR_FATAL_COMPILE_WARNINGS ON CACHE BOOL "Should compiler warnings fail the build")
 if(MIR_FATAL_COMPILE_WARNINGS)
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
-  # Disable maybe-uninitialized errors on GCC when optimisation is enabled
-  # They are notorious for false-positives
-  # Also, disable array-bounds errors, they are likewise significantly
-  # false-positivey
-  # (We particularly hit https://gcc.gnu.org/bugzilla/show_bug.cgi?id=111415)
-  if ((CMAKE_C_COMPILER_ID MATCHES "GNU") AND NOT (CMAKE_BUILD_TYPE MATCHES "Debug"))
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-error=maybe-uninitialized -Wno-error=array-bounds")
-  endif()
-  if ((CMAKE_CXX_COMPILER_ID MATCHES "GNU") AND NOT (CMAKE_BUILD_TYPE MATCHES "Debug"))
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=maybe-uninitialized -Wno-error=array-bounds")
-  endif()
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
+    # Disable maybe-uninitialized errors on GCC when optimisation is enabled
+    # They are notorious for false-positives
+    # Also, disable array-bounds errors, they are likewise significantly
+    # false-positivey
+    # (We particularly hit https://gcc.gnu.org/bugzilla/show_bug.cgi?id=111415)
+    if ((CMAKE_C_COMPILER_ID MATCHES "GNU") AND NOT (CMAKE_BUILD_TYPE MATCHES "Debug"))
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-error=maybe-uninitialized -Wno-error=array-bounds")
+    endif()
+    if ((CMAKE_CXX_COMPILER_ID MATCHES "GNU") AND NOT (CMAKE_BUILD_TYPE MATCHES "Debug"))
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=maybe-uninitialized -Wno-error=array-bounds")
+    endif()
 endif()
 
 include(CheckCXXCompilerFlag)
 check_cxx_compiler_flag(-Wmismatched-tags HAS_W_MISMATCHED_TAGS)
 
 if(HAS_W_MISMATCHED_TAGS)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-mismatched-tags")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-mismatched-tags")
 endif()
 
 # GCC 7.1 fixed a bug in the ARM ABI, which results in some std::vector methods
@@ -102,25 +102,25 @@ endif()
 # GCC 7.1.
 check_cxx_compiler_flag(-Wpsabi HAS_W_PSABI)
 if(HAS_W_PSABI)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-psabi")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-psabi")
 endif()
 
 set(MIR_USE_LD ld CACHE STRING "Linker to use")
 set_property(CACHE MIR_USE_LD PROPERTY STRINGS "ld;gold;lld;mold")
 if(MIR_USE_LD MATCHES "gold")
-  set (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fuse-ld=gold")
-  set (CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -fuse-ld=gold")
-  set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=gold")
+    set (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fuse-ld=gold")
+    set (CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -fuse-ld=gold")
+    set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=gold")
 endif()
 if(MIR_USE_LD MATCHES "lld")
-  set (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fuse-ld=lld")
-  set (CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -fuse-ld=lld")
-  set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=lld")
+    set (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fuse-ld=lld")
+    set (CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -fuse-ld=lld")
+    set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=lld")
 endif()
 if(MIR_USE_LD MATCHES "mold")
-  set (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fuse-ld=mold")
-  set (CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -fuse-ld=mold")
-  set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=mold")
+    set (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fuse-ld=mold")
+    set (CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -fuse-ld=mold")
+    set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=mold")
 endif()
 
 string(TOLOWER "${CMAKE_BUILD_TYPE}" cmake_build_type_lower)
@@ -134,29 +134,29 @@ string(TOLOWER "${CMAKE_BUILD_TYPE}" cmake_build_type_lower)
 #  * Find xml report feasible for jenkins in coverage.xml
 #####################################################################
 if(cmake_build_type_lower MATCHES "coverage")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ftest-coverage -fprofile-arcs")
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ftest-coverage -fprofile-arcs")
-  set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -ftest-coverage -fprofile-arcs")
-  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -ftest-coverage -fprofile-arcs")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ftest-coverage -fprofile-arcs")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ftest-coverage -fprofile-arcs")
+    set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -ftest-coverage -fprofile-arcs")
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -ftest-coverage -fprofile-arcs")
 endif()
 
 if(cmake_build_type_lower MATCHES "addresssanitizer")
-  add_compile_options(-fsanitize=address -fno-omit-frame-pointer)
-  add_link_options(-fsanitize=address)
+    add_compile_options(-fsanitize=address -fno-omit-frame-pointer)
+    add_link_options(-fsanitize=address)
 elseif(cmake_build_type_lower MATCHES "threadsanitizer")
-  add_compile_options(-fsanitize=thread -fno-omit-frame-pointer)
-  add_link_options(-fsanitize=thread)
+    add_compile_options(-fsanitize=thread -fno-omit-frame-pointer)
+    add_link_options(-fsanitize=thread)
 elseif(cmake_build_type_lower MATCHES "ubsanitizer")
-  add_compile_options(-fsanitize=undefined -fno-omit-frame-pointer)
-  add_link_options(-fsanitize=undefined)
-  # "Symbol already defined" errors occur with pre-compiled headers
-  SET(MIR_USE_PRECOMPILED_HEADERS OFF CACHE BOOL "Use precompiled headers" FORCE)
-  # We have inline classes as interfaces used by .so's and implemented elsewhere.
-  # This results in multiple trivial implementations. So let's not warn about that.
-  add_compile_options(-fno-sanitize=vptr)
+    add_compile_options(-fsanitize=undefined -fno-omit-frame-pointer)
+    add_link_options(-fsanitize=undefined)
+    # "Symbol already defined" errors occur with pre-compiled headers
+    SET(MIR_USE_PRECOMPILED_HEADERS OFF CACHE BOOL "Use precompiled headers" FORCE)
+    # We have inline classes as interfaces used by .so's and implemented elsewhere.
+    # This results in multiple trivial implementations. So let's not warn about that.
+    add_compile_options(-fno-sanitize=vptr)
 else()
-  # AddressSanitizer builds fail if we disallow undefined symbols
-  add_link_options(-Wl,--no-undefined)
+    # AddressSanitizer builds fail if we disallow undefined symbols
+    add_link_options(-Wl,--no-undefined)
 endif()
 
 enable_testing()
@@ -171,7 +171,7 @@ pkg_check_modules(WAYLAND_EGLSTREAM wayland-eglstream IMPORTED_TARGET)
 
 # Set the default platforms based on availability of NVIDIA libraries
 if (WAYLAND_EGLSTREAM_FOUND)
-  set(
+    set(
     MIR_PLATFORM
     gbm-kms;atomic-kms;x11;eglstream-kms;wayland
     CACHE
@@ -179,7 +179,7 @@ if (WAYLAND_EGLSTREAM_FOUND)
     "a list of graphics backends to build (options are 'gbm-kms', 'atomic-kms', 'x11', 'eglstream-kms', or 'wayland')"
   )
 else()
-  set(
+    set(
     MIR_PLATFORM
     gbm-kms;atomic-kms;x11;wayland
     CACHE
@@ -211,42 +211,42 @@ CMAKE_DEPENDENT_OPTION(
   "APPARMOR_FOUND" OFF
 )
 if (MIR_USE_APPARMOR)
-  add_compile_definitions(MIR_USE_APPARMOR)
+    add_compile_definitions(MIR_USE_APPARMOR)
 endif()
 
 SET(MIR_EXCLUDE_TESTS "" CACHE STRING "Semicolon-separated list of tests to exclude (wildcards accepted)")
 
 
 foreach(platform IN LISTS MIR_PLATFORM)
-  if (platform STREQUAL "gbm-kms")
-    set(MIR_BUILD_PLATFORM_GBM_KMS TRUE)
-  endif()
-  if (platform STREQUAL "atomic-kms")
-    set(MIR_BUILD_PLATFORM_ATOMIC_KMS TRUE)
-  endif()
-  if (platform STREQUAL "x11")
-     set(MIR_BUILD_PLATFORM_X11 TRUE)
-  endif()
-  if (platform STREQUAL "eglstream-kms")
-     if (NOT WAYLAND_EGLSTREAM_FOUND)
-        message(FATAL_ERROR "EGLStream platform requested, but required NVIDIA external EGL platform nvidia-egl-wayland not found")
-     endif()
-     set(MIR_BUILD_PLATFORM_EGLSTREAM_KMS TRUE)
-  endif()
-  if (platform STREQUAL "wayland")
-     set(MIR_BUILD_PLATFORM_WAYLAND TRUE)
-  endif()
+    if (platform STREQUAL "gbm-kms")
+        set(MIR_BUILD_PLATFORM_GBM_KMS TRUE)
+    endif()
+    if (platform STREQUAL "atomic-kms")
+        set(MIR_BUILD_PLATFORM_ATOMIC_KMS TRUE)
+    endif()
+    if (platform STREQUAL "x11")
+        set(MIR_BUILD_PLATFORM_X11 TRUE)
+    endif()
+    if (platform STREQUAL "eglstream-kms")
+        if (NOT WAYLAND_EGLSTREAM_FOUND)
+            message(FATAL_ERROR "EGLStream platform requested, but required NVIDIA external EGL platform nvidia-egl-wayland not found")
+        endif()
+        set(MIR_BUILD_PLATFORM_EGLSTREAM_KMS TRUE)
+    endif()
+    if (platform STREQUAL "wayland")
+        set(MIR_BUILD_PLATFORM_WAYLAND TRUE)
+    endif()
 endforeach(platform)
 
 set(MIR_ENABLE_RUST OFF CACHE BOOL "Enable Rust support")
 if (MIR_ENABLE_RUST)
-  include(cmake/RustLibrary.cmake)
-  add_compile_definitions(MIR_ENABLE_RUST)
+    include(cmake/RustLibrary.cmake)
+    add_compile_definitions(MIR_ENABLE_RUST)
 endif()
 
 pkg_check_modules(GLM glm)
 if(NOT GLM_FOUND)
-  find_package(glm REQUIRED)  # There's no glm.pc on Fedora, but find_package(glm) fails on Ubuntu...
+    find_package(glm REQUIRED)  # There's no glm.pc on Fedora, but find_package(glm) fails on Ubuntu...
 endif()
 pkg_check_modules(DRM REQUIRED IMPORTED_TARGET libdrm)
 pkg_check_modules(EGL REQUIRED IMPORTED_TARGET egl)
@@ -282,11 +282,11 @@ include_directories(SYSTEM ${DRM_INCLUDE_DIRS})
 include(CheckIncludeFile)
 CHECK_INCLUDE_FILE(sys/sdt.h HAVE_SYS_SDT_H)
 if (HAVE_SYS_SDT_H)
-  add_compile_definitions(LTTNG_UST_HAVE_SDT_INTEGRATION)
+    add_compile_definitions(LTTNG_UST_HAVE_SDT_INTEGRATION)
 endif()
 
 if (MIR_BUILD_PLATFORM_GBM_KMS OR MIR_BUILD_PLATFORM_ATOMIC_KMS)
-  pkg_check_modules(GBM REQUIRED IMPORTED_TARGET gbm>=11.0.0)
+    pkg_check_modules(GBM REQUIRED IMPORTED_TARGET gbm>=11.0.0)
 endif()
 
 set(MIR_TRACEPOINT_LIB_INSTALL_DIR ${CMAKE_INSTALL_LIBDIR}/mir/tools)
@@ -304,24 +304,24 @@ add_subdirectory(examples/)
 add_subdirectory(cmake/)
 
 if (MIR_ENABLE_TESTS)
-  find_package(GtestGmock REQUIRED)
-  pkg_check_modules(LIBEVDEV REQUIRED IMPORTED_TARGET libevdev)
-  include_directories(${GMOCK_INCLUDE_DIR} ${GTEST_INCLUDE_DIR})
-  add_subdirectory(tests/)
-  add_subdirectory(examples/tests/)
+    find_package(GtestGmock REQUIRED)
+    pkg_check_modules(LIBEVDEV REQUIRED IMPORTED_TARGET libevdev)
+    include_directories(${GMOCK_INCLUDE_DIR} ${GTEST_INCLUDE_DIR})
+    add_subdirectory(tests/)
+    add_subdirectory(examples/tests/)
 
-  # There's no nice way to format this. Thanks CMake.
-  mir_add_test(NAME LGPL-required
+    # There's no nice way to format this. Thanks CMake.
+    mir_add_test(NAME LGPL-required
     COMMAND /bin/sh -c "! grep -rl --exclude-dir=protocol --exclude=org_kde* 'GNU General' ${PROJECT_SOURCE_DIR}/src/core ${PROJECT_SOURCE_DIR}/include/core ${PROJECT_SOURCE_DIR}/src/common ${PROJECT_SOURCE_DIR}/include/common ${PROJECT_SOURCE_DIR}/src/include/common ${PROJECT_SOURCE_DIR}/src/platform ${PROJECT_SOURCE_DIR}/include/platform ${PROJECT_SOURCE_DIR}/src/include/platform ${PROJECT_SOURCE_DIR}/src/platforms ${PROJECT_SOURCE_DIR}/include/platforms ${PROJECT_SOURCE_DIR}/src/include/platforms ${PROJECT_SOURCE_DIR}/src/renderers ${PROJECT_SOURCE_DIR}/include/renderers ${PROJECT_SOURCE_DIR}/src/include/renderers"
   )
-  mir_add_test(NAME GPL-required
+    mir_add_test(NAME GPL-required
     COMMAND /bin/sh -c "! grep -rl --exclude-dir=protocol --exclude=org_kde* 'GNU Lesser' ${PROJECT_SOURCE_DIR}/src/server ${PROJECT_SOURCE_DIR}/include/server ${PROJECT_SOURCE_DIR}/src/include/server ${PROJECT_SOURCE_DIR}/tests ${PROJECT_SOURCE_DIR}/examples"
   )
 
-  if (IS_DIRECTORY "${PROJECT_SOURCE_DIR}/debian")
-    mir_add_test(NAME package-abis
+    if (IS_DIRECTORY "${PROJECT_SOURCE_DIR}/debian")
+        mir_add_test(NAME package-abis
       COMMAND /bin/sh -c "cd ${PROJECT_SOURCE_DIR} && tools/update_package_abis.sh --check --verbose")
-  endif ()
+    endif ()
 endif ()
 
 enable_coverage_report(mirserver)
