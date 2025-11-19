@@ -55,11 +55,7 @@ struct GDesktopFileCache : Test
 
     void TearDown() override
     {
-        // Remove all files from the temporary directory
-        for (const auto& entry : std::filesystem::directory_iterator(applications_dir))
-            std::filesystem::remove_all(entry.path());
-        rmdir(applications_dir.c_str());
-        rmdir(temp_dir.c_str());
+        std::filesystem::remove_all(temp_dir);
     }
 
     void write_desktop_file(const char* contents, const char* filename)
