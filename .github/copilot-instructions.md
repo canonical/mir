@@ -266,9 +266,21 @@ int main(int argc, char const* argv[])
 
 ### Configuration Options
 
-- Use `miral::ConfigurationOption` to add command-line options
+MirAL provides two mechanisms for configuration:
+
+**`miral::ConfigurationOption`** - For command-line options and startup configuration:
+- Values are set once at startup from command line, environment variables, or config file
+- Use for options that don't need to change while the server is running
 - Lambda callbacks can be automatically converted using `lambda_as_function`
 - Options are passed to `MirRunner::run_with()` along with other initialization objects
+- Example: Setting the terminal command, startup apps, or initial window management mode
+
+**`miral::live_config::*`** - For runtime-updatable configuration:
+- Values can be changed while the server is running (e.g., from a reloaded config file)
+- Use for options that should respond to changes without restarting the server
+- Requires a `live_config::Store` implementation (e.g., `live_config::IniFile`)
+- MirAL features like `CursorScale`, `Keymap`, and `InputConfiguration` accept a Store
+- Example: Accessibility settings, cursor scaling, keymaps that users can adjust on-the-fly
 
 ## Wayland Protocol Integration
 
