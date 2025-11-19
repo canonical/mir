@@ -42,8 +42,7 @@ struct ExternalClient : miral::TestServer
 
     ~ExternalClient()
     {
-        unlink(output.c_str());
-        rmdir(output_dir.c_str());
+        std::filesystem::remove_all(output_dir);
     }
 
     miral::ExternalClientLauncher external_client;
