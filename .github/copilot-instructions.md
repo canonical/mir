@@ -121,6 +121,9 @@ Use these standard aliases in `.cpp` files for brevity:
 - **Smart pointers**: Prefer smart pointers over raw pointers for ownership
 - **Auto keyword**: Use `auto` for complex types and iterators when it improves readability, as well as new-style function declarations with `auto`
 - **Optional values**: Use `std::optional<T>` for values that may or may not be present; use `std::nullopt` to represent absence
+- **Enum classes**: Prefer `enum class` over plain `enum` for type safety
+- **Time types**: Use `std::chrono::nanoseconds` for timestamps and `std::chrono::milliseconds` for durations
+- **Noexcept**: Mark destructors and move operations as `noexcept` where appropriate
 
 ### Classes
 
@@ -135,6 +138,11 @@ Use these standard aliases in `.cpp` files for brevity:
 - **Copy/Move operations**: Explicitly delete or implement as needed
 - **Virtual destructors**: Use when class has virtual methods
 - **Override keyword**: Always use `override` when overriding virtual methods
+- **Deleted functions**: Use `= delete` to explicitly disable copy/move operations when not needed:
+  ```cpp
+  MyClass(MyClass const&) = delete;
+  MyClass& operator=(MyClass const&) = delete;
+  ```
 
 ### Error Handling
 
@@ -255,6 +263,12 @@ int main(int argc, char const* argv[])
 - Use `miral::WindowManagerTools` to interact with windows
 - See `examples/miral-shell/` for reference implementations
 - Built-in managers: `FloatingWindowManager`, `CanonicalWindowManager`, `MinimalWindowManager`
+
+### Configuration Options
+
+- Use `miral::ConfigurationOption` to add command-line options
+- Lambda callbacks can be automatically converted using `lambda_as_function`
+- Options are passed to `MirRunner::run_with()` along with other initialization objects
 
 ## Wayland Protocol Integration
 
