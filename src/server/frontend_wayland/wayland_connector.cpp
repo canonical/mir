@@ -370,7 +370,6 @@ mf::WaylandConnector::WaylandConnector(
                     if (!provider->supports_syncobj_timeline())
                     {
                         all_support_timeline = false;
-                        mir::log_info("DRM Syncobj timeline not supported by device. Disabling linux_drm_syncobj_v1 explicit sync support.");
                         break;
                     }
                 }
@@ -379,6 +378,10 @@ mf::WaylandConnector::WaylandConnector(
                 {
                     mir::log_debug("Detected DRM Syncobj capable rendering platform. Enabling linux_drm_syncobj_v1 explicit sync support.");
                     drm_syncobj = std::make_unique<LinuxDRMSyncobjManager>(display.get(), providers);
+                }
+                else
+                {
+                    mir::log_info("DRM Syncobj timeline not supported by device. Disabling linux_drm_syncobj_v1 explicit sync support.");
                 }
             }
         }
