@@ -366,7 +366,7 @@ mf::WaylandConnector::WaylandConnector(
                     break;
                 }
             }
-            
+
             if (all_support_timeline)
             {
                 mir::log_debug("Detected DRM Syncobj capable rendering platform. Enabling linux_drm_syncobj_v1 explicit sync support.");
