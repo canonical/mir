@@ -118,7 +118,7 @@ private:
     int32_t const height_;
 };
 
-/// Bridge allowing conversation from Rust to C++.
+/// Bridge allowing conversion from Rust to C++.
 ///
 /// The rust code may use this bridge to request things from the system.
 class PlatformBridgeC
