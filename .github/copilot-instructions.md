@@ -22,6 +22,10 @@ Mir is a Wayland compositor library written in C++23 with some Rust components. 
 - **Renderers** (`src/renderers/gl/`): GL-based rendering implementations
 - **Tests** (`tests/`): Unit tests, integration tests, performance tests using gtest/gmock
 
+## Key CMake Patterns
+
+- `mir_add_wrapped_executable()`: Creates executables with wrapper scripts
+
 ## Coding Standards
 
 Mir follows a comprehensive C++ style guide documented in [`doc/sphinx/contributing/reference/cppguide.md`](../doc/sphinx/contributing/reference/cppguide.md). Below are key highlights:
