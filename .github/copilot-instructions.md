@@ -51,11 +51,23 @@ Mir follows a comprehensive C++ style guide documented in [`doc/sphinx/contribut
 - `mir::geometry::` - geometric types (Point, Size, Rectangle, etc.)
 - `mir::graphics::`, `mir::input::`, `mir::scene::` - component namespaces
 - `miral::` - Abstraction layer APIs
-- `namespace geom = mir::geometry;` - common alias in implementation files
 - **Unnamed namespaces**: Encouraged in `.cpp` files for internal linkage
 - **No unnamed namespaces in headers**
 - **Using directives**: Allowed in `.cpp` files, avoid in headers
 - **Namespace content**: Not indented
+
+### Common Namespace Aliases
+
+Use these standard aliases in `.cpp` files for brevity:
+
+- `namespace geom = mir::geometry;`
+- `namespace mg = mir::graphics;`
+- `namespace mi = mir::input;`
+- `namespace ms = mir::scene;`
+- `namespace mf = mir::frontend;`
+- `namespace msh = mir::shell;`
+- `namespace mc = mir::compositor;`
+- `namespace mw = mir::wayland;` (in Wayland-related files)
 
 ### File Organization
 
@@ -126,6 +138,28 @@ Mir follows a comprehensive C++ style guide documented in [`doc/sphinx/contribut
 - **Preprocessor macros**: Avoid when possible; prefer inline functions, enums, and const variables
 - **Streams**: Use only for logging, prefer `printf`-style for other I/O
 - **Reference parameters**: Input parameters should be `const` references or values; output parameters are rare and should use non-const references when modifying inputs, or return std::pair/std::tuple for multiple outputs
+
+## Common Patterns
+
+### Thread Safety
+
+- Use `mir::Synchronised<T>` for thread-safe access to shared data - it combines a mutex with the data it protects
+- Prefer `std::lock_guard` for simple lock scoping
+- Use `std::unique_lock` when you need more control (e.g., condition variables)
+- Observer pattern is widely used - classes ending in `Observer` or `Listener` implement notification interfaces
+
+### Resource Management
+
+- Use RAII for all resource management
+- Prefer `std::shared_ptr` and `std::unique_ptr` for ownership
+- Use `std::weak_ptr` in observer/callback scenarios to avoid cycles (especially in Wayland protocol implementations)
+- Exception safety: Aim for at least basic exception safety guarantee
+
+### Interface Abstractions
+
+- Pure virtual interfaces (ending with `= 0`) define contracts between components
+- Implementation classes typically live in `src/` while interfaces are in `include/`
+- Use `override` keyword for all virtual method overrides (never omit it)
 
 ## Testing
 
