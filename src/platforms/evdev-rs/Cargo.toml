@@ -9,9 +9,9 @@ crate-type = ["staticlib"]
 
 [dependencies]
 cxx.workspace = true
-input = "0.9.1"
-libc = "0.2.176"
-nix = { version = "0.30.1", features = ["poll"] }
+input.workspace = true
+libc.workspace = true
+nix.workspace = true
 
 [build-dependencies]
 cxx-build.workspace = true
