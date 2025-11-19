@@ -803,7 +803,7 @@ unsafe impl Sync for ffi::EventBuilder {}
 // that they are neither Send nor Sync. However, we know that the other side of
 // the pointer is actually a C++ object that is thread-safe, so we can assert
 // that these pointers are Send and Sync. We cannot define Send and Sync on the
-// raw types to fix the issue unfortuately, so we have to wrap them in a new type
+// raw types to fix the issue unfortunately, so we have to wrap them in a new type
 // and define Send and Sync on that.
 pub struct InputSinkPtr(std::ptr::NonNull<ffi::InputSink>);
 impl InputSinkPtr {
