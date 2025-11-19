@@ -30,6 +30,28 @@ Mir is a Wayland compositor library written in C++23 with some Rust components. 
 
 Mir follows a comprehensive C++ style guide documented in [`doc/sphinx/contributing/reference/cppguide.md`](../doc/sphinx/contributing/reference/cppguide.md). Below are key highlights:
 
+### File Headers
+
+All source files must include a copyright header:
+
+```cpp
+/*
+ * Copyright © Canonical Ltd.
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 or 3,
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+```
+
 ### General Principles
 
 - **Consistency is paramount**: Follow existing code style in files you're modifying
@@ -98,6 +120,7 @@ Use these standard aliases in `.cpp` files for brevity:
 - **Const correctness**: Use `const` wherever possible; prefer `int const*` over `const int*`
 - **Smart pointers**: Prefer smart pointers over raw pointers for ownership
 - **Auto keyword**: Use `auto` for complex types and iterators when it improves readability, as well as new-style function declarations with `auto`
+- **Optional values**: Use `std::optional<T>` for values that may or may not be present; use `std::nullopt` to represent absence
 
 ### Classes
 
@@ -191,6 +214,17 @@ TEST_F(MyComponentTest, descriptive_test_name)
 {
     // Arrange, Act, Assert
 }
+```
+
+### GMock Matchers
+
+Use GMock matchers with `EXPECT_THAT` and `ASSERT_THAT` for expressive assertions:
+
+```cpp
+EXPECT_THAT(value, Eq(expected));
+EXPECT_THAT(result, Ne(unwanted));
+EXPECT_THAT(count, Gt(0));
+EXPECT_THAT(collection, Contains(item));
 ```
 
 ## Shell Development with MirAL
