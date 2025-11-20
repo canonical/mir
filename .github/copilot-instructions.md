@@ -93,11 +93,11 @@ Use these standard aliases in `.cpp` files for brevity:
 - **Implementation files**: Use `.cpp` extension
 - **Include order**:
   1. Corresponding header file (for .cpp files)
-  2. Project's public headers
-  3. Project's private headers
-  4. Other libraries' headers
-  5. C system headers
-  6. C++ standard library headers
+  1. Project's public headers
+  1. Project's private headers
+  1. Other libraries' headers
+  1. C system headers
+  1. C++ standard library headers
 
 ### Formatting
 
@@ -124,13 +124,13 @@ Use these standard aliases in `.cpp` files for brevity:
 ### Classes
 
 - **Access specifiers order**: `public:`, then `protected:`, then `private:`
-- **Member declaration order**: 
+- **Member declaration order**:
   1. Typedefs and Enums
-  2. Constants
-  3. Constructors
-  4. Destructor
-  5. Methods
-  6. Data members
+  1. Constants
+  1. Constructors
+  1. Destructor
+  1. Methods
+  1. Data members
 - **Copy/Move operations**: Explicitly delete or implement as needed
 - **Virtual destructors**: Use when class has virtual methods
 - **Override keyword**: Always use `override` when overriding virtual methods
@@ -237,7 +237,7 @@ When integrating a new Wayland protocol:
 
 1. **Place protocol XML** in `wayland-protocols/` directory
 
-2. **Generate wrapper code** using `mir_wayland_generator`:
+1. **Generate wrapper code** using `mir_wayland_generator`:
 
 ```cmake
 add_custom_command(
@@ -248,21 +248,25 @@ add_custom_command(
 ```
 
 3. **Implement the protocol** in `src/server/frontend_wayland/`:
+
    - Create implementation files in the `mir::frontend` namespace
    - Implement the generated wayland protocol interfaces
    - Follow existing patterns (see `foreign_toplevel_manager_v1.cpp`, `ext_image_capture_v1.cpp`, etc.)
 
-4. **Create a factory function** to instantiate the protocol global:
+1. **Create a factory function** to instantiate the protocol global:
+
    - Expose a `create_*_manager()` or `create_*_global()` function
    - Pass required dependencies via `WaylandConnector::Context` (e.g., `MainLoop`, `Executor`, `Shell`)
    - Return `std::shared_ptr<wayland::ProtocolName::Global>`
 
-5. **Integrate with WaylandConnector**:
+1. **Integrate with WaylandConnector**:
+
    - If the protocol needs existing server components (MainLoop, Shell, etc.), access them through `WaylandConnector::Context`
    - If the protocol requires a new server component, add it to `DefaultServerConfiguration` and expose via `Server`
    - Register the protocol global with the wayland display in the appropriate initialization code
 
-6. **Hook into MirAL** (if needed):
+1. **Hook into MirAL** (if needed):
+
    - Integrate with `miral::WaylandExtensions` in your shell to enable/disable the protocol
 
 ## Linting
@@ -285,4 +289,3 @@ Run: `pre-commit run --all-files`
 ## Consistency Reminder
 
 When in doubt, follow the style of the code you're working in. Local consistency is important for maintainability.
-
