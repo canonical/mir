@@ -45,13 +45,13 @@ add_library(mirsharedsharedlibrary OBJECT
   shared_library_prober.cpp
 )
 
+target_include_directories(mirsharedsharedlibrary
+  PUBLIC
+    ${PROJECT_SOURCE_DIR}/src/include/common
+)
+
 target_link_libraries(mirsharedsharedlibrary
   PUBLIC
     dl
 )
 
-list(APPEND MIR_COMMON_REFERENCES
-  mirsharedsharedlibrary
-)
-
-set(MIR_COMMON_REFERENCES ${MIR_COMMON_REFERENCES} PARENT_SCOPE)
