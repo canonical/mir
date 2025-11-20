@@ -33,7 +33,6 @@
 #include <stdexcept>
 #include <memory>
 #include <algorithm>
-#include <cstring>
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
@@ -41,7 +40,6 @@ namespace msh = mir::shell;
 namespace mg = mir::graphics;
 namespace mev = mir::events;
 namespace mc = mir::compositor;
-namespace geom = mir::geometry;
 
 ms::ApplicationSession::ApplicationSession(
     std::shared_ptr<msh::SurfaceStack> const& surface_stack,

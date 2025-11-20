@@ -31,11 +31,9 @@
 #include "mir/wayland/weak.h"
 #include "decoration/manager.h"
 
-#include <algorithm>
 #include <iterator>
 #include <vector>
 
-namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace mi = mir::input;
 namespace msh = mir::shell;
