@@ -19,6 +19,7 @@
 #include "mir/graphics/buffer.h"
 #include "mir/scene/surface_factory.h"
 #include "mir/scene/null_session_listener.h"
+#include "mir/scene/null_surface_observer.h"
 #include "mir/client_visible_error.h"
 #include "mir/test/fake_shared.h"
 #include "mir/test/doubles/mock_surface_stack.h"
