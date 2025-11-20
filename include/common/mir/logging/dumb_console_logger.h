@@ -17,7 +17,7 @@
 #ifndef MIR_LOGGING_DUMB_CONSOLE_LOGGER_H_
 #define MIR_LOGGING_DUMB_CONSOLE_LOGGER_H_
 
-#include "mir/logging/logger.h"
+#include <mir/logging/logger.h>
 
 namespace mir
 {

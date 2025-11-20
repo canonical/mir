@@ -17,8 +17,8 @@
 #ifndef MIR_WINDOW_PLACEMENT_EVENT_H
 #define MIR_WINDOW_PLACEMENT_EVENT_H
 
-#include "mir/events/event.h"
-#include "mir_toolkit/client_types.h"
+#include <mir/events/event.h>
+#include <mir_toolkit/client_types.h>
 
 struct MirWindowPlacementEvent : MirEvent
 {

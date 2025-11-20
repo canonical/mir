@@ -19,7 +19,7 @@
 
 #include <cstdint>
 
-#include "mir/events/event.h"
+#include <mir/events/event.h>
 
 struct MirWindowOutputEvent : MirEvent
 {

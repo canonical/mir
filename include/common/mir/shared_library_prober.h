@@ -17,7 +17,7 @@
 #ifndef MIR_SHARED_LIBRARY_PROBER_H_
 #define MIR_SHARED_LIBRARY_PROBER_H_
 
-#include "mir/shared_library_prober_report.h"
+#include <mir/shared_library_prober_report.h>
 
 #include <functional>
 #include <memory>

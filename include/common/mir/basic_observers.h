@@ -17,7 +17,7 @@
 #ifndef MIR_BASIC_OBSERVERS_H_
 #define MIR_BASIC_OBSERVERS_H_
 
-#include "mir/thread_safe_list.h"
+#include <mir/thread_safe_list.h>
 #include <memory>
 
 namespace mir

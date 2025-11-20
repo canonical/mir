@@ -17,7 +17,7 @@
 #ifndef MIR_THREAD_SAFE_LIST_H_
 #define MIR_THREAD_SAFE_LIST_H_
 
-#include "mir/recursive_read_write_mutex.h"
+#include <mir/recursive_read_write_mutex.h>
 
 #include <atomic>
 #include <functional>

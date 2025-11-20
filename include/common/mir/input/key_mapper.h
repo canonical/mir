@@ -17,9 +17,9 @@
 #ifndef MIR_INPUT_KEY_MAPPER_H_
 #define MIR_INPUT_KEY_MAPPER_H_
 
-#include "mir_toolkit/client_types.h"
-#include "mir_toolkit/event.h"
-#include "mir/events/xkb_modifiers.h"
+#include <mir_toolkit/client_types.h>
+#include <mir_toolkit/event.h>
+#include <mir/events/xkb_modifiers.h>
 
 #include <vector>
 #include <memory>

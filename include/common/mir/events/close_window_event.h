@@ -17,7 +17,7 @@
 #ifndef MIR_COMMON_CLOSE_WINDOW_EVENT_H_
 #define MIR_COMMON_CLOSE_WINDOW_EVENT_H_
 
-#include "mir/events/event.h"
+#include <mir/events/event.h>
 
 struct MirCloseWindowEvent : MirEvent
 {
