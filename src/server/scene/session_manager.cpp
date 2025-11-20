@@ -16,17 +16,17 @@
 
 #include "session_manager.h"
 #include "application_session.h"
-#include "mir/scene/session_container.h"
-#include "mir/scene/surface.h"
-#include "mir/scene/session.h"
-#include "mir/scene/session_listener.h"
-#include "mir/scene/application_not_responding_detector.h"
-#include "mir/shell/surface_stack.h"
-#include "mir/scene/session_event_sink.h"
-#include "mir/frontend/event_sink.h"
-#include "mir/graphics/display.h"
-#include "mir/graphics/display_configuration.h"
-#include "mir/observer_multiplexer.h"
+#include <mir/scene/session_container.h>
+#include <mir/scene/surface.h>
+#include <mir/scene/session.h>
+#include <mir/scene/session_listener.h>
+#include <mir/scene/application_not_responding_detector.h>
+#include <mir/shell/surface_stack.h>
+#include <mir/scene/session_event_sink.h>
+#include <mir/frontend/event_sink.h>
+#include <mir/graphics/display.h>
+#include <mir/graphics/display_configuration.h>
+#include <mir/observer_multiplexer.h>
 
 #include <boost/throw_exception.hpp>
 

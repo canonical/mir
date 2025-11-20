@@ -15,7 +15,7 @@
  */
 
 #include "rendering_tracker.h"
-#include "mir/scene/surface.h"
+#include <mir/scene/surface.h>
 
 #include <algorithm>
 #include <iterator>

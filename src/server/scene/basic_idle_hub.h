@@ -17,10 +17,10 @@
 #ifndef MIR_SCENE_BASIC_IDLE_HUB_H_
 #define MIR_SCENE_BASIC_IDLE_HUB_H_
 
-#include "mir/scene/idle_hub.h"
-#include "mir/observer_multiplexer.h"
-#include "mir/time/types.h"
-#include "mir/synchronised.h"
+#include <mir/scene/idle_hub.h>
+#include <mir/observer_multiplexer.h>
+#include <mir/time/types.h>
+#include <mir/synchronised.h>
 
 #include <mutex>
 #include <map>

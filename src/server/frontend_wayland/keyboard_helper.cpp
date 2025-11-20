@@ -16,11 +16,11 @@
 
 #include "keyboard_helper.h"
 
-#include "mir/anonymous_shm_file.h"
-#include "mir/input/keymap.h"
-#include "mir/events/keyboard_event.h"
-#include "mir/input/seat.h"
-#include "mir/fatal.h"
+#include <mir/anonymous_shm_file.h>
+#include <mir/input/keymap.h>
+#include <mir/events/keyboard_event.h>
+#include <mir/input/seat.h>
+#include <mir/fatal.h>
 
 #include <cstring> // memcpy
 #include <unordered_set>

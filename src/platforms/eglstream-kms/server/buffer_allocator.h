@@ -17,11 +17,11 @@
 #ifndef MIR_PLATFORMS_EGLSTREAM_BUFFER_ALLOCATOR_
 #define MIR_PLATFORMS_EGLSTREAM_BUFFER_ALLOCATOR_
 
-#include "mir/graphics/graphic_buffer_allocator.h"
-#include "mir/graphics/buffer_id.h"
-#include "mir/graphics/egl_extensions.h"
-#include "mir/graphics/egl_context_executor.h"
-#include "mir/graphics/platform.h"
+#include <mir/graphics/graphic_buffer_allocator.h>
+#include <mir/graphics/buffer_id.h>
+#include <mir/graphics/egl_extensions.h>
+#include <mir/graphics/egl_context_executor.h>
+#include <mir/graphics/platform.h>
 
 #include "wayland-eglstream-controller.h"
 

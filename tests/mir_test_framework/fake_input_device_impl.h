@@ -17,14 +17,14 @@
 #ifndef MIR_TEST_FRAMEWORK_FAKE_INPUT_DEVICE_IMPL_H_
 #define MIR_TEST_FRAMEWORK_FAKE_INPUT_DEVICE_IMPL_H_
 
-#include "mir_test_framework/fake_input_device.h"
+#include <mir_test_framework/fake_input_device.h>
 
-#include "mir/input/input_device.h"
-#include "mir/input/pointer_settings.h"
-#include "mir/input/touchscreen_settings.h"
-#include "mir/input/input_device_info.h"
-#include "mir/geometry/point.h"
-#include "mir/geometry/displacement.h"
+#include <mir/input/input_device.h>
+#include <mir/input/pointer_settings.h>
+#include <mir/input/touchscreen_settings.h>
+#include <mir/input/input_device_info.h>
+#include <mir/geometry/point.h>
+#include <mir/geometry/displacement.h>
 
 #include <mutex>
 #include <functional>

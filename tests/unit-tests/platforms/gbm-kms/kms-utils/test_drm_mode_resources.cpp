@@ -16,8 +16,8 @@
 
 #include "kms-utils/drm_mode_resources.h"
 
-#include "mir/geometry/size.h"
-#include "mir/test/doubles/mock_drm.h"
+#include <mir/geometry/size.h>
+#include <mir/test/doubles/mock_drm.h>
 
 #include <unordered_set>
 #include <array>

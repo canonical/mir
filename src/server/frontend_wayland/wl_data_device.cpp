@@ -18,17 +18,17 @@
 #include "wl_data_source.h"
 #include "wl_surface.h"
 
-#include "mir/events/pointer_event.h"
-#include "mir/executor.h"
-#include "mir/frontend/drag_icon_controller.h"
-#include "mir/frontend/pointer_input_dispatcher.h"
-#include "mir/log.h"
-#include "mir/scene/clipboard.h"
-#include "mir/scene/session.h"
-#include "mir/scene/surface.h"
-#include "mir/shell/surface_specification.h"
-#include "mir/wayland/client.h"
-#include "mir/wayland/protocol_error.h"
+#include <mir/events/pointer_event.h>
+#include <mir/executor.h>
+#include <mir/frontend/drag_icon_controller.h>
+#include <mir/frontend/pointer_input_dispatcher.h>
+#include <mir/log.h>
+#include <mir/scene/clipboard.h>
+#include <mir/scene/session.h>
+#include <mir/scene/surface.h>
+#include <mir/shell/surface_specification.h>
+#include <mir/wayland/client.h>
+#include <mir/wayland/protocol_error.h>
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;

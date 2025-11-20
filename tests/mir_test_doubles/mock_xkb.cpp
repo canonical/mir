@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/test/doubles/mock_xkb.h"
+#include <mir/test/doubles/mock_xkb.h>
 #include <gtest/gtest.h>
 
 // xcb/xkb.h has a struct member named "explicit", which C++ does not like

@@ -17,8 +17,8 @@
 #ifndef MIR_COMPOSITOR_MULTI_THREADED_COMPOSITOR_H_
 #define MIR_COMPOSITOR_MULTI_THREADED_COMPOSITOR_H_
 
-#include "mir/compositor/compositor.h"
-#include "mir/geometry/forward.h"
+#include <mir/compositor/compositor.h>
+#include <mir/geometry/forward.h>
 
 #include <memory>
 #include <vector>

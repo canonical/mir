@@ -17,10 +17,10 @@
 #ifndef MIR_SCENE_BROADCASTING_SESSION_EVENT_SINK_H_
 #define MIR_SCENE_BROADCASTING_SESSION_EVENT_SINK_H_
 
-#include "mir/scene/session_event_sink.h"
-#include "mir/scene/session_event_handler_register.h"
+#include <mir/scene/session_event_sink.h>
+#include <mir/scene/session_event_handler_register.h>
 
-#include "mir/thread_safe_list.h"
+#include <mir/thread_safe_list.h>
 
 namespace mir
 {

@@ -15,8 +15,8 @@
  */
 
 #include "library_example.h"
-#include "mir/shared_library.h"
-#include "mir_test_framework/executable_path.h"
+#include <mir/shared_library.h>
+#include <mir_test_framework/executable_path.h>
 
 #include <gtest/gtest.h>
 

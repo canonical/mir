@@ -14,9 +14,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "miroil/persist_display_config.h"
-#include "miroil/display_configuration_policy.h"
-#include "miroil/display_configuration_storage.h"
+#include <miroil/persist_display_config.h>
+#include <miroil/display_configuration_policy.h>
+#include <miroil/display_configuration_storage.h>
 
 #include <mir/graphics/display_configuration.h>
 #include <mir/graphics/display_configuration_observer.h>

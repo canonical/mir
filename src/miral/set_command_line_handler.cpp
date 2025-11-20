@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "miral/set_command_line_handler.h"
+#include <miral/set_command_line_handler.h>
 
 #include <mir/server.h>
 

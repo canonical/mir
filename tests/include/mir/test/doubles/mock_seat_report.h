@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_SEAT_REPORT_H_
 #define MIR_TEST_DOUBLES_MOCK_SEAT_REPORT_H_
 
-#include "mir/input/seat_observer.h"
+#include <mir/input/seat_observer.h>
 #include <gmock/gmock.h>
 
 class MirEvent;

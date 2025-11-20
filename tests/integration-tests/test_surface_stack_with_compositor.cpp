@@ -14,33 +14,33 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/compositor/display_listener.h"
-#include "mir/graphics/platform.h"
-#include "mir/renderer/renderer_factory.h"
+#include <mir/compositor/display_listener.h>
+#include <mir/graphics/platform.h>
+#include <mir/renderer/renderer_factory.h>
 #include "src/server/report/null_report_factory.h"
 #include "src/server/scene/surface_stack.h"
-#include "mir/scene/basic_surface.h"
+#include <mir/scene/basic_surface.h>
 #include "src/server/compositor/default_display_buffer_compositor_factory.h"
 #include "src/server/compositor/multi_threaded_compositor.h"
-#include "mir/compositor/stream.h"
-#include "mir/test/fake_shared.h"
-#include "mir/test/doubles/fake_display_configuration_observer_registrar.h"
-#include "mir/test/doubles/mock_buffer_stream.h"
-#include "mir/test/doubles/null_display.h"
-#include "mir/test/doubles/stub_renderer.h"
-#include "mir/test/doubles/stub_display_sink.h"
-#include "mir/test/doubles/stub_buffer.h"
-#include "mir/test/doubles/null_display_sync_group.h"
-#include "mir/test/doubles/mock_event_sink.h"
-#include "mir/test/doubles/stub_buffer_allocator.h"
-#include "mir/test/doubles/mock_gl_buffer.h"
-#include "mir/test/doubles/mock_output_surface.h"
-#include "mir/test/doubles/stub_gl_rendering_provider.h"
-#include "mir/test/doubles/null_gl_config.h"
-#include "mir/test/doubles/stub_buffer_allocator.h"
-#include "mir/test/doubles/stub_main_loop.h"
-#include "mir/test/doubles/stub_output_filter.h"
-#include "mir/test/doubles/stub_cursor.h"
+#include <mir/compositor/stream.h>
+#include <mir/test/fake_shared.h>
+#include <mir/test/doubles/fake_display_configuration_observer_registrar.h>
+#include <mir/test/doubles/mock_buffer_stream.h>
+#include <mir/test/doubles/null_display.h>
+#include <mir/test/doubles/stub_renderer.h>
+#include <mir/test/doubles/stub_display_sink.h>
+#include <mir/test/doubles/stub_buffer.h>
+#include <mir/test/doubles/null_display_sync_group.h>
+#include <mir/test/doubles/mock_event_sink.h>
+#include <mir/test/doubles/stub_buffer_allocator.h>
+#include <mir/test/doubles/mock_gl_buffer.h>
+#include <mir/test/doubles/mock_output_surface.h>
+#include <mir/test/doubles/stub_gl_rendering_provider.h>
+#include <mir/test/doubles/null_gl_config.h>
+#include <mir/test/doubles/stub_buffer_allocator.h>
+#include <mir/test/doubles/stub_main_loop.h>
+#include <mir/test/doubles/stub_output_filter.h>
+#include <mir/test/doubles/stub_cursor.h>
 
 #include <condition_variable>
 #include <mutex>

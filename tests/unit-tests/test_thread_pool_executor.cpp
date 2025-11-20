@@ -22,9 +22,9 @@
 #include <thread>
 #include <future>
 
-#include "mir/executor.h"
-#include "mir/test/signal.h"
-#include "mir/test/current_thread_name.h"
+#include <mir/executor.h>
+#include <mir/test/signal.h>
+#include <mir/test/current_thread_name.h>
 
 using namespace std::literals::chrono_literals;
 using namespace testing;

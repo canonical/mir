@@ -16,8 +16,8 @@
 
 #include "fractional_scale_v1.h"
 
-#include "mir/graphics/display_configuration.h"
-#include "mir/wayland/protocol_error.h"
+#include <mir/graphics/display_configuration.h>
+#include <mir/wayland/protocol_error.h>
 #include "wl_surface.h"
 
 #include <boost/throw_exception.hpp>

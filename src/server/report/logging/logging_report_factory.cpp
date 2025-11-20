@@ -22,7 +22,7 @@
 #include "shell_report.h"
 #include "input_report.h"
 #include "seat_report.h"
-#include "mir/logging/shared_library_prober_report.h"
+#include <mir/logging/shared_library_prober_report.h>
 
 namespace mr = mir::report;
 

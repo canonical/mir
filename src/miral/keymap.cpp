@@ -14,9 +14,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "miral/keymap.h"
+#include <miral/keymap.h>
 
-#include "miral/live_config.h"
+#include <miral/live_config.h>
 
 #include <mir/fd.h>
 #include <mir/glib_main_loop.h>

@@ -15,20 +15,20 @@
  */
 
 #include "src/server/shell/basic_idle_handler.h"
-#include "mir/executor.h"
-#include "mir/test/doubles/mock_idle_hub.h"
-#include "mir/test/doubles/mock_input_scene.h"
-#include "mir/test/doubles/stub_buffer_allocator.h"
-#include "mir/test/doubles/stub_session_lock.h"
-#include "mir/shell/display_configuration_controller.h"
-#include "mir/test/fake_shared.h"
+#include <mir/executor.h>
+#include <mir/test/doubles/mock_idle_hub.h>
+#include <mir/test/doubles/mock_input_scene.h>
+#include <mir/test/doubles/stub_buffer_allocator.h>
+#include <mir/test/doubles/stub_session_lock.h>
+#include <mir/shell/display_configuration_controller.h>
+#include <mir/test/fake_shared.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <map>
 #include <boost/throw_exception.hpp>
 
-#include "mir/graphics/renderable.h"
+#include <mir/graphics/renderable.h>
 
 using namespace testing;
 namespace ms = mir::scene;

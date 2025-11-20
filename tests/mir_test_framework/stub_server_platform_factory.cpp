@@ -15,14 +15,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/shared_library.h"
+#include <mir/shared_library.h>
 
-#include "mir/geometry/rectangle.h"
-#include "mir/graphics/display.h"
+#include <mir/geometry/rectangle.h>
+#include <mir/graphics/display.h>
 
-#include "mir_test_framework/executable_path.h"
-#include "mir_test_framework/stub_server_platform_factory.h"
-#include "mir_test_framework/fake_input_device.h"
+#include <mir_test_framework/executable_path.h>
+#include <mir_test_framework/stub_server_platform_factory.h>
+#include <mir_test_framework/fake_input_device.h>
 
 #include <vector>
 

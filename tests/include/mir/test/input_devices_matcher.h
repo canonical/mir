@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_INPUT_DEVICES_MATCHER_H_
 #define MIR_TEST_INPUT_DEVICES_MATCHER_H_
 
-#include "mir/input/device.h"
+#include <mir/input/device.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

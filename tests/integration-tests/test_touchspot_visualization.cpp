@@ -14,19 +14,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/input/touch_visualizer.h"
+#include <mir/input/touch_visualizer.h>
 
-#include "mir/input/device_capability.h"
-#include "mir/input/input_device_info.h"
+#include <mir/input/device_capability.h>
+#include <mir/input/input_device_info.h>
 
-#include "mir/test/barrier.h"
-#include "mir/test/fake_shared.h"
+#include <mir/test/barrier.h>
+#include <mir/test/fake_shared.h>
 
-#include "mir_test_framework/deferred_in_process_server.h"
-#include "mir_test_framework/input_testing_server_configuration.h"
-#include "mir_test_framework/executable_path.h"
-#include "mir_test_framework/fake_input_device.h"
-#include "mir_test_framework/stub_server_platform_factory.h"
+#include <mir_test_framework/deferred_in_process_server.h>
+#include <mir_test_framework/input_testing_server_configuration.h>
+#include <mir_test_framework/executable_path.h>
+#include <mir_test_framework/fake_input_device.h>
+#include <mir_test_framework/stub_server_platform_factory.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

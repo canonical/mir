@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_EVENT_HANDLER_REGISTER_H_
 #define MIR_TEST_DOUBLES_MOCK_EVENT_HANDLER_REGISTER_H_
 
-#include "mir/graphics/event_handler_register.h"
+#include <mir/graphics/event_handler_register.h>
 
 #include <gmock/gmock.h>
 

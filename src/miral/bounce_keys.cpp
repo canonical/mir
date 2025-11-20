@@ -14,18 +14,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "miral/bounce_keys.h"
+#include <miral/bounce_keys.h>
 
-#include "mir/events/input_event.h"
-#include "mir/events/keyboard_event.h"
-#include "mir/input/composite_event_filter.h"
-#include "mir/input/event_filter.h"
-#include "mir/input/mousekeys_keymap.h"
-#include "mir/log.h"
-#include "mir/server.h"
-#include "mir/synchronised.h"
-#include "mir/time/types.h"
-#include "miral/live_config.h"
+#include <mir/events/input_event.h>
+#include <mir/events/keyboard_event.h>
+#include <mir/input/composite_event_filter.h>
+#include <mir/input/event_filter.h>
+#include <mir/input/mousekeys_keymap.h>
+#include <mir/log.h>
+#include <mir/server.h>
+#include <mir/synchronised.h>
+#include <mir/time/types.h>
+#include <miral/live_config.h>
 
 #include <chrono>
 #include <optional>

@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/graphics/buffer_properties.h"
+#include <mir/graphics/buffer_properties.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

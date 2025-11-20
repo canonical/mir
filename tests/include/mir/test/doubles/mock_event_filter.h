@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_EVENT_FILTER_H_
 #define MIR_TEST_DOUBLES_MOCK_EVENT_FILTER_H_
 
-#include "mir/input/event_filter.h"
+#include <mir/input/event_filter.h>
 
 #include <gmock/gmock.h>
 

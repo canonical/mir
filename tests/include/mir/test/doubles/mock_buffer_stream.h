@@ -17,9 +17,9 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_BUFFER_STREAM_H_
 #define MIR_TEST_DOUBLES_MOCK_BUFFER_STREAM_H_
 
-#include "mir/compositor/buffer_stream.h"
-#include "mir/graphics/drm_formats.h"
-#include "mir_toolkit/common.h"
+#include <mir/compositor/buffer_stream.h>
+#include <mir/graphics/drm_formats.h>
+#include <mir_toolkit/common.h>
 #include "stub_buffer.h"
 #include <gmock/gmock.h>
 

@@ -18,7 +18,7 @@
 #define MIR_GRAPHICS_GBM_EGL_HELPER_H_
 
 #include "../display_helpers.h"
-#include "mir/graphics/egl_extensions.h"
+#include <mir/graphics/egl_extensions.h>
 #include <stdexcept>
 #include <EGL/egl.h>
 

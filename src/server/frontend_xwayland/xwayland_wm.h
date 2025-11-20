@@ -19,8 +19,8 @@
 #ifndef MIR_FRONTEND_XWAYLAND_WM_H
 #define MIR_FRONTEND_XWAYLAND_WM_H
 
-#include "mir/dispatch/threaded_dispatcher.h"
-#include "mir/geometry/rectangle.h"
+#include <mir/dispatch/threaded_dispatcher.h>
+#include <mir/geometry/rectangle.h>
 #include "wayland_connector.h"
 #include "xcb_connection.h"
 

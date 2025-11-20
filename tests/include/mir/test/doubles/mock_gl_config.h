@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_GL_CONFIG_H_
 #define MIR_TEST_DOUBLES_MOCK_GL_CONFIG_H_
 
-#include "mir/graphics/gl_config.h"
+#include <mir/graphics/gl_config.h>
 
 #include <gmock/gmock.h>
 

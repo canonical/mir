@@ -14,22 +14,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/graphics/egl_wayland_allocator.h"
+#include <mir/graphics/egl_wayland_allocator.h>
 
 #include <boost/throw_exception.hpp>
 #include <mutex>
 
-#include "mir/graphics/egl_extensions.h"
-#include "mir/graphics/egl_error.h"
-#include "mir/geometry/size.h"
-#include "mir/graphics/buffer.h"
-#include "mir/graphics/buffer_basic.h"
-#include "mir/graphics/texture.h"
-#include "mir/renderer/gl/context.h"
-#include "mir/executor.h"
-#include "mir/graphics/program_factory.h"
-#include "mir/graphics/program.h"
-#include "mir/graphics/egl_context_executor.h"
+#include <mir/graphics/egl_extensions.h>
+#include <mir/graphics/egl_error.h>
+#include <mir/geometry/size.h>
+#include <mir/graphics/buffer.h>
+#include <mir/graphics/buffer_basic.h>
+#include <mir/graphics/texture.h>
+#include <mir/renderer/gl/context.h>
+#include <mir/executor.h>
+#include <mir/graphics/program_factory.h>
+#include <mir/graphics/program.h>
+#include <mir/graphics/egl_context_executor.h>
 
 #include <GLES2/gl2.h>
 

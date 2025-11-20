@@ -17,10 +17,10 @@
 #ifndef MIR_GRAPHICS_VIRTUAL_PLATFORM_H_
 #define MIR_GRAPHICS_VIRTUAL_PLATFORM_H_
 
-#include "mir/graphics/platform.h"
-#include "mir/options/option.h"
-#include "mir/graphics/display.h"
-#include "mir/fd.h"
+#include <mir/graphics/platform.h>
+#include <mir/options/option.h>
+#include <mir/graphics/display.h>
+#include <mir/fd.h>
 
 namespace mir
 {

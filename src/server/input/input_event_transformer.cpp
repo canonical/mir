@@ -14,22 +14,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/input/input_event_transformer.h"
+#include <mir/input/input_event_transformer.h>
 
-#include "mir/log.h"
+#include <mir/log.h>
 #include "default_event_builder.h"
-#include "mir/events/event_builders.h"
-#include "mir/input/device.h"
-#include "mir/input/device_capability.h"
-#include "mir/input/input_device_registry.h"
-#include "mir/input/input_sink.h"
-#include "mir/input/seat.h"
-#include "mir/input/virtual_input_device.h"
-#include "mir/input/mir_pointer_config.h"
-#include "mir/input/mir_touchpad_config.h"
-#include "mir/input/mir_touchscreen_config.h"
-#include "mir/input/mir_keyboard_config.h"
-#include "mir/main_loop.h"
+#include <mir/events/event_builders.h>
+#include <mir/input/device.h>
+#include <mir/input/device_capability.h>
+#include <mir/input/input_device_registry.h>
+#include <mir/input/input_sink.h>
+#include <mir/input/seat.h>
+#include <mir/input/virtual_input_device.h>
+#include <mir/input/mir_pointer_config.h>
+#include <mir/input/mir_touchpad_config.h>
+#include <mir/input/mir_touchscreen_config.h>
+#include <mir/input/mir_keyboard_config.h>
+#include <mir/main_loop.h>
 
 #include <algorithm>
 

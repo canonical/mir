@@ -17,7 +17,7 @@
 #ifndef MIR_GRAPHICS_GBM_LINUX_VIRTUAL_TERMINAL_H_
 #define MIR_GRAPHICS_GBM_LINUX_VIRTUAL_TERMINAL_H_
 
-#include "mir/console_services.h"
+#include <mir/console_services.h>
 
 #include <memory>
 #include <linux/vt.h>

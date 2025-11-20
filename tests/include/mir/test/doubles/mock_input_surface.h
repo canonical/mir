@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_INPUT_SURFACE_H_
 #define MIR_TEST_DOUBLES_MOCK_INPUT_SURFACE_H_
 
-#include "mir/input/surface.h"
+#include <mir/input/surface.h>
 #include <gmock/gmock.h>
 
 namespace mir

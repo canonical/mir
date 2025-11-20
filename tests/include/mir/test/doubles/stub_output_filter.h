@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_STUB_OUTPUT_FILTER_H_
 #define MIR_TEST_DOUBLES_STUB_OUTPUT_FILTER_H_
 
-#include "mir/graphics/output_filter.h"
+#include <mir/graphics/output_filter.h>
 
 namespace mir
 {

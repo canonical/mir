@@ -14,10 +14,10 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/events/event_helpers.h"
-#include "mir/events/input_event.h"
-#include "mir/events/pointer_event.h"
-#include "mir/events/touch_event.h"
+#include <mir/events/event_helpers.h>
+#include <mir/events/input_event.h>
+#include <mir/events/pointer_event.h>
+#include <mir/events/touch_event.h>
 
 namespace mev = mir::events;
 namespace geom = mir::geometry;

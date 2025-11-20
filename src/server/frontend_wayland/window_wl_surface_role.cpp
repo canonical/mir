@@ -21,13 +21,13 @@
 #include "wl_surface.h"
 #include "wayland_surface_observer.h"
 #include "wl_seat.h"
-#include "mir/frontend/wayland.h"
-#include "mir/wayland/client.h"
-#include "mir/shell/surface_specification.h"
-#include "mir/shell/shell.h"
-#include "mir/scene/surface.h"
-#include "mir/events/input_event.h"
-#include "mir/log.h"
+#include <mir/frontend/wayland.h>
+#include <mir/wayland/client.h>
+#include <mir/shell/surface_specification.h>
+#include <mir/shell/shell.h>
+#include <mir/scene/surface.h>
+#include <mir/events/input_event.h>
+#include <mir/log.h>
 
 #include <boost/throw_exception.hpp>
 

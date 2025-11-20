@@ -14,13 +14,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/options/program_option.h"
-#include "mir/shared_library.h"
-#include "mir/options/default_configuration.h"
-#include "mir/graphics/platform.h"
-#include "mir/abnormal_exit.h"
-#include "mir/shared_library_prober.h"
-#include "mir/logging/null_shared_library_prober_report.h"
+#include <mir/options/program_option.h>
+#include <mir/shared_library.h>
+#include <mir/options/default_configuration.h>
+#include <mir/graphics/platform.h>
+#include <mir/abnormal_exit.h>
+#include <mir/shared_library_prober.h>
+#include <mir/logging/null_shared_library_prober_report.h>
 
 #include <algorithm>
 #include <format>

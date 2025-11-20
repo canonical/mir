@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_DISPLAY_CONFIGURATION_H_
 #define MIR_TEST_DOUBLES_MOCK_DISPLAY_CONFIGURATION_H_
 
-#include "mir/graphics/display_configuration.h"
+#include <mir/graphics/display_configuration.h>
 
 #include <gmock/gmock.h>
 

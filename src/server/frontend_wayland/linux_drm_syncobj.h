@@ -18,8 +18,8 @@
 #define MIR_SERVER_FRONTEND_LINUX_DRM_SYNCOBJ_H_
 
 #include "linux-drm-syncobj-v1_wrapper.h"
-#include "mir/graphics/platform.h"
-#include "mir/time/posix_clock.h"
+#include <mir/graphics/platform.h>
+#include <mir/time/posix_clock.h>
 
 namespace mir::frontend
 {

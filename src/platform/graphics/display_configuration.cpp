@@ -14,9 +14,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/graphics/display_configuration.h"
-#include "mir/output_type_names.h"
-#include "mir/graphics/transformation.h"
+#include <mir/graphics/display_configuration.h>
+#include <mir/output_type_names.h>
+#include <mir/graphics/transformation.h>
 
 extern "C"
 {

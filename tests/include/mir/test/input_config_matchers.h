@@ -16,7 +16,7 @@
 #ifndef MIR_TEST_INPUT_CONFIG_MATCHERS_H
 #define MIR_TEST_INPUT_CONFIG_MATCHERS_H
 
-#include "mir/input/mir_input_config.h"
+#include <mir/input/mir_input_config.h>
 #include <gmock/gmock.h>
 
 namespace testing

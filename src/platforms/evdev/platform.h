@@ -21,8 +21,8 @@
 #include "libinput_device_ptr.h"
 #include "fd_store.h"
 
-#include "mir/input/platform.h"
-#include "mir/console_services.h"
+#include <mir/input/platform.h>
+#include <mir/console_services.h>
 
 #include <sys/stat.h>
 

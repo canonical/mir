@@ -14,14 +14,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir_test_framework/headless_test.h"
-#include "mir_test_framework/stub_server_platform_factory.h"
-#include "mir_test_framework/headless_display_buffer_compositor_factory.h"
+#include <mir_test_framework/headless_test.h>
+#include <mir_test_framework/stub_server_platform_factory.h>
+#include <mir_test_framework/headless_display_buffer_compositor_factory.h>
 
-#include "mir/shared_library.h"
-#include "mir/geometry/rectangle.h"
-#include "mir/graphics/display.h"
-#include "mir_test_framework/executable_path.h"
+#include <mir/shared_library.h>
+#include <mir/geometry/rectangle.h>
+#include <mir/graphics/display.h>
+#include <mir_test_framework/executable_path.h>
 
 #include <boost/throw_exception.hpp>
 

@@ -15,7 +15,7 @@
  */
 
 #include "surfaceless_egl_context.h"
-#include "mir/graphics/egl_error.h"
+#include <mir/graphics/egl_error.h>
 
 #include <optional>
 #include <EGL/egl.h>

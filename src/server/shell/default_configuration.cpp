@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/default_server_configuration.h"
+#include <mir/default_server_configuration.h>
 
 #include "basic_accessibility_manager.h"
 #include "basic_idle_handler.h"
@@ -28,14 +28,14 @@
 #include "basic_slow_keys_transformer.h"
 #include "basic_sticky_keys_transformer.h"
 
-#include "mir/abnormal_exit.h"
-#include "mir/input/composite_event_filter.h"
-#include "mir/main_loop.h"
-#include "mir/options/configuration.h"
-#include "mir/options/option.h"
-#include "mir/shell/abstract_shell.h"
-#include "mir/shell/system_compositor_window_manager.h"
-#include "mir/shell/token_authority.h"
+#include <mir/abnormal_exit.h>
+#include <mir/input/composite_event_filter.h>
+#include <mir/main_loop.h>
+#include <mir/options/configuration.h>
+#include <mir/options/option.h>
+#include <mir/shell/abstract_shell.h>
+#include <mir/shell/system_compositor_window_manager.h>
+#include <mir/shell/token_authority.h>
 
 namespace ms = mir::scene;
 namespace msh = mir::shell;

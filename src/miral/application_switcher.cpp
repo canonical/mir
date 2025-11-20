@@ -14,11 +14,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "miral/application_switcher.h"
+#include <miral/application_switcher.h>
 #include "wayland_app.h"
 #include "wayland_shm.h"
 #include "wlr-foreign-toplevel-management-unstable-v1.h"
-#include "mir/default_font.h"
+#include <mir/default_font.h>
 
 #include <memory>
 #include <mir/fd.h>
@@ -38,11 +38,11 @@
 #include <gio/gio.h>
 
 #include "layer_shell_wayland_surface.h"
-#include "mir/server.h"
-#include "mir/synchronised.h"
-#include "miral/append_keyboard_event_filter.h"
-#include "miral/internal_client.h"
-#include "miral/wayland_extensions.h"
+#include <mir/server.h>
+#include <mir/synchronised.h>
+#include <miral/append_keyboard_event_filter.h>
+#include <miral/internal_client.h>
+#include <miral/wayland_extensions.h>
 
 namespace geom = mir::geometry;
 namespace msh = mir::shell;

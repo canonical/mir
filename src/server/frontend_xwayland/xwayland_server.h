@@ -19,7 +19,7 @@
 #ifndef MIR_FRONTEND_XWAYLAND_SERVER_H
 #define MIR_FRONTEND_XWAYLAND_SERVER_H
 
-#include "mir/fd.h"
+#include <mir/fd.h>
 
 #include <memory>
 #include <string>

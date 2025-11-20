@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/scene/surface_state_tracker.h"
-#include "mir/fatal.h"
+#include <mir/scene/surface_state_tracker.h>
+#include <mir/fatal.h>
 
 namespace ms = mir::scene;
 

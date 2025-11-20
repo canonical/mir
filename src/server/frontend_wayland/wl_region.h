@@ -19,7 +19,7 @@
 
 #include "wayland_wrapper.h"
 
-#include "mir/geometry/rectangle.h"
+#include <mir/geometry/rectangle.h>
 
 #include <vector>
 

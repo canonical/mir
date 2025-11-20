@@ -16,8 +16,8 @@
 
 #ifndef MIR_GL_TESSELLATION_HELPERS_H_
 #define MIR_GL_TESSELLATION_HELPERS_H_
-#include "mir/gl/primitive.h"
-#include "mir/geometry/displacement.h"
+#include <mir/gl/primitive.h>
+#include <mir/geometry/displacement.h>
 
 namespace mir
 {

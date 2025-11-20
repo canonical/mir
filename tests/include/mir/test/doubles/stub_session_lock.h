@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_STUB_SESSION_LOCK_H
 #define MIR_TEST_DOUBLES_STUB_SESSION_LOCK_H
 
-#include "mir/scene/session_lock.h"
+#include <mir/scene/session_lock.h>
 
 namespace mir
 {

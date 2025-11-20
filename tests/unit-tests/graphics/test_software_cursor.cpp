@@ -15,16 +15,16 @@
  */
 
 #include "src/server/graphics/software_cursor.h"
-#include "mir/graphics/cursor_image.h"
-#include "mir/graphics/renderable.h"
+#include <mir/graphics/cursor_image.h>
+#include <mir/graphics/renderable.h>
 
-#include "mir/test/doubles/stub_buffer_allocator.h"
-#include "mir/test/doubles/stub_buffer.h"
-#include "mir/test/doubles/stub_input_scene.h"
-#include "mir/test/doubles/explicit_executor.h"
-#include "mir/test/doubles/mock_input_scene.h"
+#include <mir/test/doubles/stub_buffer_allocator.h>
+#include <mir/test/doubles/stub_buffer.h>
+#include <mir/test/doubles/stub_input_scene.h>
+#include <mir/test/doubles/explicit_executor.h>
+#include <mir/test/doubles/mock_input_scene.h>
 
-#include "mir/test/fake_shared.h"
+#include <mir/test/fake_shared.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

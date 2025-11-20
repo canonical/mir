@@ -17,7 +17,7 @@
 #ifndef MIR_GRAPHICS_GBM_KMS_FRAMEBUFFER_H_
 #define MIR_GRAPHICS_GBM_KMS_FRAMEBUFFER_H_
 
-#include "mir/graphics/platform.h"
+#include <mir/graphics/platform.h>
 
 namespace mir
 {

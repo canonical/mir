@@ -14,26 +14,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/graphics/platform.h"
+#include <mir/graphics/platform.h>
 #include <drm.h>
-#include "mir/log.h"
+#include <mir/log.h>
 
 #include "platform.h"
 #include "display_helpers.h"
 #include "quirks.h"
 #include "kms-utils/drm_mode_resources.h"
-#include "mir/options/program_option.h"
-#include "mir/options/option.h"
-#include "mir/options/configuration.h"
-#include "mir/udev/wrapper.h"
-#include "mir/module_deleter.h"
-#include "mir/assert_module_entry_point.h"
-#include "mir/libname.h"
-#include "mir/console_services.h"
+#include <mir/options/program_option.h>
+#include <mir/options/option.h>
+#include <mir/options/configuration.h>
+#include <mir/udev/wrapper.h>
+#include <mir/module_deleter.h>
+#include <mir/assert_module_entry_point.h>
+#include <mir/libname.h>
+#include <mir/console_services.h>
 #include "one_shot_device_observer.h"
-#include "mir/graphics/egl_error.h"
-#include "mir/graphics/gl_config.h"
-#include "mir/graphics/egl_logger.h"
+#include <mir/graphics/egl_error.h>
+#include <mir/graphics/gl_config.h>
+#include <mir/graphics/egl_logger.h>
 
 #include <EGL/egl.h>
 #include <GLES2/gl2.h>

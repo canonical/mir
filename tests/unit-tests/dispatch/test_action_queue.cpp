@@ -14,9 +14,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/dispatch/action_queue.h"
+#include <mir/dispatch/action_queue.h>
 
-#include "mir/test/fd_utils.h"
+#include <mir/test/fd_utils.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

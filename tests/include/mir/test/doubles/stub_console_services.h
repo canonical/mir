@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_STUB_CONSOLE_SERVICES_H_
 #define MIR_TEST_DOUBLES_STUB_CONSOLE_SERVICES_H_
 
-#include "mir/console_services.h"
+#include <mir/console_services.h>
 
 #include <sys/stat.h>
 #include <string>

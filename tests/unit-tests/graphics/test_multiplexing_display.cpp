@@ -19,17 +19,17 @@
 
 #include <boost/throw_exception.hpp>
 
-#include "mir/geometry/forward.h"
-#include "mir/output_type_names.h"
-#include "mir/graphics/display_configuration.h"
-#include "mir/graphics/display_configuration_policy.h"
-#include "mir/test/doubles/mock_display.h"
-#include "mir/test/doubles/mock_main_loop.h"
-#include "mir/test/doubles/null_gl_context.h"
-#include "mir/test/doubles/stub_display_configuration.h"
-#include "mir/test/doubles/null_display_configuration_policy.h"
+#include <mir/geometry/forward.h>
+#include <mir/output_type_names.h>
+#include <mir/graphics/display_configuration.h>
+#include <mir/graphics/display_configuration_policy.h>
+#include <mir/test/doubles/mock_display.h>
+#include <mir/test/doubles/mock_main_loop.h>
+#include <mir/test/doubles/null_gl_context.h>
+#include <mir/test/doubles/stub_display_configuration.h>
+#include <mir/test/doubles/null_display_configuration_policy.h>
 
-#include "mir_toolkit/common.h"
+#include <mir_toolkit/common.h>
 #include "src/server/graphics/multiplexing_display.h"
 
 

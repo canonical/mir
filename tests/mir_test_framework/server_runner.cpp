@@ -14,15 +14,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir_test_framework/server_runner.h"
+#include <mir_test_framework/server_runner.h>
 
-#include "mir/default_server_configuration.h"
-#include "mir/display_server.h"
-#include "mir/frontend/connector.h"
+#include <mir/default_server_configuration.h>
+#include <mir/display_server.h>
+#include <mir/frontend/connector.h>
 #include <mir/report_exception.h>
-#include "mir/run_mir.h"
-#include "mir/main_loop.h"
-#include "mir/log.h"
+#include <mir/run_mir.h>
+#include <mir/main_loop.h>
+#include <mir/log.h>
 
 #include <boost/throw_exception.hpp>
 

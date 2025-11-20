@@ -14,14 +14,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "miral/hover_click.h"
+#include <miral/hover_click.h>
 
-#include "mir/options/option.h"
-#include "mir/server.h"
-#include "mir/shell/accessibility_manager.h"
-#include "mir/shell/hover_click_transformer.h"
-#include "mir/synchronised.h"
-#include "miral/live_config.h"
+#include <mir/options/option.h>
+#include <mir/server.h>
+#include <mir/shell/accessibility_manager.h>
+#include <mir/shell/hover_click_transformer.h>
+#include <mir/synchronised.h>
+#include <miral/live_config.h>
 
 #include <mir/log.h>
 

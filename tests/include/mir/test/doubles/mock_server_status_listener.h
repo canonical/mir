@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_SERVER_STATUS_LISTENER_H_
 #define MIR_TEST_DOUBLES_MOCK_SERVER_STATUS_LISTENER_H_
 
-#include "mir/server_status_listener.h"
+#include <mir/server_status_listener.h>
 
 #include <gmock/gmock.h>
 

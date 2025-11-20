@@ -17,7 +17,7 @@
 #ifndef MIR_FRONTEND_WL_KEYBOARD_H
 #define MIR_FRONTEND_WL_KEYBOARD_H
 
-#include "mir/wayland/weak.h"
+#include <mir/wayland/weak.h>
 
 #include "wayland_wrapper.h"
 #include "keyboard_helper.h"

@@ -17,8 +17,8 @@
 #ifndef MIR_SCENE_PROMPT_SESSION_MANAGERIMPL_H_
 #define MIR_SCENE_PROMPT_SESSION_MANAGERIMPL_H_
 
-#include "mir/scene/prompt_session_manager.h"
-#include "mir_toolkit/common.h"
+#include <mir/scene/prompt_session_manager.h>
+#include <mir_toolkit/common.h>
 
 #include <mutex>
 #include <memory>

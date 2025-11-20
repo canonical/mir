@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_INPUT_SINK_H_
 #define MIR_TEST_DOUBLES_MOCK_INPUT_SINK_H_
 
-#include "mir/input/input_sink.h"
+#include <mir/input/input_sink.h>
 
 #include <gmock/gmock.h>
 

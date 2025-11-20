@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_CONFIGURATION_H_
 #define MIR_TEST_DOUBLES_MOCK_CONFIGURATION_H_
 
-#include "mir/options/configuration.h"
+#include <mir/options/configuration.h>
 
 #include <gmock/gmock.h>
 

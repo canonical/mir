@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/graphics/drm_syncobj.h"
+#include <mir/graphics/drm_syncobj.h>
 
 #include <boost/throw_exception.hpp>
 #include <drm.h>

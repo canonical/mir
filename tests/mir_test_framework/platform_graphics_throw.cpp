@@ -14,13 +14,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/graphics/platform.h"
-#include "mir/test/doubles/null_platform.h"
-#include "mir/test/doubles/null_emergency_cleanup.h"
-#include "mir/assert_module_entry_point.h"
-#include "mir/libname.h"
-#include "mir/options/program_option.h"
-#include "mir/udev/wrapper.h"
+#include <mir/graphics/platform.h>
+#include <mir/test/doubles/null_platform.h>
+#include <mir/test/doubles/null_emergency_cleanup.h>
+#include <mir/assert_module_entry_point.h>
+#include <mir/libname.h>
+#include <mir/options/program_option.h>
+#include <mir/udev/wrapper.h>
 
 #include <boost/throw_exception.hpp>
 #include <stdlib.h>

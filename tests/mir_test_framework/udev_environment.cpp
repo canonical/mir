@@ -14,10 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir_test_framework/udev_environment.h"
-#include "mir_test_framework/executable_path.h"
+#include <mir_test_framework/udev_environment.h>
+#include <mir_test_framework/executable_path.h>
 
-#include "mir/udev/wrapper.h"
+#include <mir/udev/wrapper.h>
 
 #include <umockdev.h>
 

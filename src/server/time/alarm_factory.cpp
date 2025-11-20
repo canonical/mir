@@ -14,7 +14,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/time/alarm_factory.h"
+#include <mir/time/alarm_factory.h>
 
 auto mir::time::AlarmFactory::create_repeating_alarm(
     std::function<void()> const& callback, std::chrono::milliseconds repeat_delay) -> std::shared_ptr<Alarm>

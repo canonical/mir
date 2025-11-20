@@ -16,7 +16,7 @@
 
 #include "test_rendering_platform.h"
 
-#include "mir_test_framework/executable_path.h"
+#include <mir_test_framework/executable_path.h>
 
 namespace mtf = mir_test_framework;
 

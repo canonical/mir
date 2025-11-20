@@ -14,9 +14,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/shell/surface_stack_wrapper.h"
+#include <mir/shell/surface_stack_wrapper.h>
 
-#include "mir/geometry/point.h"
+#include <mir/geometry/point.h>
 
 namespace msh = mir::shell;
 

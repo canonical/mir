@@ -18,9 +18,9 @@
 #define MIR_TEST_DOUBLES_MOCK_GL_BUFFER_H_
 
 #include "mock_buffer.h"
-#include "mir/graphics/texture.h"
-#include "mir/graphics/program.h"
-#include "mir/graphics/program_factory.h"
+#include <mir/graphics/texture.h>
+#include <mir/graphics/program.h>
+#include <mir/graphics/program_factory.h>
 
 namespace mir
 {

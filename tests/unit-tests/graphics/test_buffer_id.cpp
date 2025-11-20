@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/graphics/buffer_id.h"
-#include "mir/test/doubles/stub_buffer.h"
+#include <mir/graphics/buffer_id.h>
+#include <mir/test/doubles/stub_buffer.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

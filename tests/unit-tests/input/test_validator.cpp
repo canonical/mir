@@ -14,13 +14,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/input/validator.h"
+#include <mir/input/validator.h>
 
-#include "mir/events/event_private.h"
-#include "mir/events/event_builders.h"
+#include <mir/events/event_private.h>
+#include <mir/events/event_builders.h>
 
-#include "mir/test/fake_shared.h"
-#include "mir/test/event_matchers.h"
+#include <mir/test/fake_shared.h>
+#include <mir/test/event_matchers.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

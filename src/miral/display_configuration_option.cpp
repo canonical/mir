@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "miral/display_configuration_option.h"
+#include <miral/display_configuration_option.h>
 #include "static_display_config.h"
 
 #include <mir/graphics/default_display_configuration_policy.h>

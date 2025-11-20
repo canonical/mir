@@ -17,12 +17,12 @@
 #ifndef MIR_SHELL_SHELL_H_
 #define MIR_SHELL_SHELL_H_
 
-#include "mir/shell/focus_controller.h"
-#include "mir/input/event_filter.h"
-#include "mir/compositor/display_listener.h"
-#include "mir/fd.h"
+#include <mir/shell/focus_controller.h>
+#include <mir/input/event_filter.h>
+#include <mir/compositor/display_listener.h>
+#include <mir/fd.h>
 
-#include "mir_toolkit/common.h"
+#include <mir_toolkit/common.h>
 
 #include <unistd.h>
 

@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/report_exception.h"
-#include "mir/abnormal_exit.h"
+#include <mir/report_exception.h>
+#include <mir/abnormal_exit.h>
 
 #include <boost/exception/diagnostic_information.hpp>
 

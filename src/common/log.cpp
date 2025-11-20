@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/log.h"
-#include "mir/logging/logger.h"
+#include <mir/log.h>
+#include <mir/logging/logger.h>
 #include <chrono>
 #include <cstdio>
 #include <exception>

@@ -17,15 +17,15 @@
 #include "input_platform.h"
 #include "input_device.h"
 
-#include "mir/c_memory.h"
-#include "mir/graphics/display_configuration.h"
-#include "mir/input/input_device_registry.h"
-#include "mir/input/input_device_info.h"
-#include "mir/dispatch/readable_fd.h"
+#include <mir/c_memory.h>
+#include <mir/graphics/display_configuration.h>
+#include <mir/input/input_device_registry.h>
+#include <mir/input/input_device_info.h>
+#include <mir/dispatch/readable_fd.h>
 #include "../x11_resources.h"
 
 #define MIR_LOG_COMPONENT "x11-input"
-#include "mir/log.h"
+#include <mir/log.h>
 
 #include <inttypes.h>
 #include <signal.h>

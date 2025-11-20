@@ -19,7 +19,7 @@
 #define MIR_REPORT_NULL_DISPLAY_REPORT_H_
 
 
-#include "mir/graphics/display_report.h"
+#include <mir/graphics/display_report.h>
 
 
 namespace mir

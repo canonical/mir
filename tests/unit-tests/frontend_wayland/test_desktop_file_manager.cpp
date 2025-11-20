@@ -15,11 +15,11 @@
  */
 
 #include "src/server/frontend_wayland/desktop_file_manager.h"
-#include "mir/test/doubles/mock_surface.h"
-#include "mir/test/doubles/mock_scene_session.h"
-#include "mir/scene/surface_observer.h"
-#include "mir/test/doubles/explicit_executor.h"
-#include "mir_test_framework/open_wrapper.h"
+#include <mir/test/doubles/mock_surface.h>
+#include <mir/test/doubles/mock_scene_session.h>
+#include <mir/scene/surface_observer.h>
+#include <mir/test/doubles/explicit_executor.h>
+#include <mir_test_framework/open_wrapper.h>
 
 #include <filesystem>
 #include <fcntl.h>

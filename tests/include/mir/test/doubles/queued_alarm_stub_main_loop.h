@@ -17,8 +17,8 @@
 #ifndef MIR_TEST_DOUBLES_QUEUED_ALARM_STUB_MAIN_LOOP_H_
 #define MIR_TEST_DOUBLES_QUEUED_ALARM_STUB_MAIN_LOOP_H_
 
-#include "mir/test/doubles/stub_main_loop.h"
-#include "mir/test/doubles/stub_notifying_alarm.h"
+#include <mir/test/doubles/stub_main_loop.h>
+#include <mir/test/doubles/stub_notifying_alarm.h>
 
 #include <deque>
 
