@@ -254,20 +254,6 @@ TEST_F(MediatingDisplayChangerTest, sends_error_when_incomplete_fallback_configu
                        mt::fake_shared(conf));
 }
 
-TEST_F(MediatingDisplayChangerTest, sends_error_when_applying_new_configuration_for_focused_session_fails)
-{
-    mtd::NullDisplayConfiguration conf;
-    auto session = std::make_shared<mtd::MockSceneSession>();
-
-    ON_CALL(mock_display, configure(Ref(conf)))
-        .WillByDefault(InvokeWithoutArgs([]() { BOOST_THROW_EXCEPTION(std::runtime_error{"Ducks!"}); }));
-    EXPECT_CALL(*session, send_error(_));
-
-    session_event_sink.handle_focus_change(session);
-    changer->configure(session,
-                       mt::fake_shared(conf));
-}
-
 TEST_F(MediatingDisplayChangerTest, reapplies_old_config_when_applying_new_configuration_fails)
 {
     mtd::NullDisplayConfiguration conf;
@@ -533,27 +519,6 @@ TEST_F(MediatingDisplayChangerTest, focusing_a_session_with_db_invalidating_atta
     EXPECT_CALL(mock_compositor, stop());
     EXPECT_CALL(mock_display, configure(Ref(*conf)));
     EXPECT_CALL(mock_compositor, start());
-
-    session_event_sink.handle_focus_change(session1);
-}
-
-TEST_F(MediatingDisplayChangerTest, failure_to_apply_session_config_on_focus_sends_error)
-{
-    auto conf = std::make_shared<mtd::NullDisplayConfiguration>();
-    auto session1 = std::make_shared<mtd::MockSceneSession>();
-
-    session_container.insert_session(session1);
-    changer->configure(session1, conf);
-
-    EXPECT_CALL(
-        mock_display,
-        configure(mt::DisplayConfigMatches(std::cref(*conf))))
-            .WillOnce(InvokeWithoutArgs([]() { BOOST_THROW_EXCEPTION(std::runtime_error{"Banana"}); }));
-    EXPECT_CALL(
-        mock_display,
-        configure(Not(mt::DisplayConfigMatches(std::cref(*conf)))))
-            .Times(AnyNumber());
-    EXPECT_CALL(*session1, send_error(_));
 
     session_event_sink.handle_focus_change(session1);
 }

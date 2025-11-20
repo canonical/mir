@@ -508,34 +508,6 @@ struct ApplicationSessionSender : public ApplicationSession
 };
 }
 
-TEST_F(ApplicationSessionSender, error_sender)
-{
-    using namespace ::testing;
-
-    class TestError : public mir::ClientVisibleError
-    {
-    public:
-        TestError()
-            : ClientVisibleError("Hello")
-        {
-        }
-
-        MirErrorDomain domain() const noexcept override
-        {
-            return static_cast<MirErrorDomain>(42);
-        }
-
-        uint32_t code() const noexcept override
-        {
-            return 8u;
-        }
-    } error;
-    EXPECT_CALL(sender, handle_error(Ref(error)))
-        .Times(1);
-
-    app_session.send_error(error);
-}
-
 TEST_F(ApplicationSessionSender, start_prompt_session)
 {
     using namespace ::testing;

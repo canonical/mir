@@ -21,7 +21,6 @@
 #include <mir/scene/surface.h>
 #include <mir/graphics/display_configuration.h>
 #include <mir/input/mir_input_config.h>
-#include <mir/client_visible_error.h>
 #include <mir/shell/surface_specification.h>
 #include <mir/wayland/weak.h>
 
@@ -54,8 +53,6 @@ struct MockSceneSession : public scene::Session
 
     MOCK_METHOD(void, hide, (), (override));
     MOCK_METHOD(void, show, (), (override));
-
-    MOCK_METHOD(void, send_error, (ClientVisibleError const&), (override));
 
     MOCK_METHOD(void, start_prompt_session, (), (override));
     MOCK_METHOD(void, stop_prompt_session, (), (override));
