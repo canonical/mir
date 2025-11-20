@@ -283,7 +283,7 @@ int mga::AtomicKMSOutput::max_refresh_rate() const
         return 1;
 
     drmModeModeInfo const& current_mode = conf->connector->modes[conf->mode_index];
-    return current_mode.vrefresh;
+    return static_cast<int>(current_mode.vrefresh);
 }
 
 void mga::AtomicKMSOutput::configure(geom::Displacement offset, size_t kms_mode_index)
@@ -322,8 +322,8 @@ bool mga::AtomicKMSOutput::set_crtc(FBHandle const& fb)
     /* Source viewport. Coordinates are 16.16 fixed point format */
     update.add_property(*conf->plane_props, "SRC_X", conf->fb_offset.dx.as_uint32_t() << 16);
     update.add_property(*conf->plane_props, "SRC_Y", conf->fb_offset.dy.as_uint32_t() << 16);
-    update.add_property(*conf->plane_props, "SRC_W", width << 16);
-    update.add_property(*conf->plane_props, "SRC_H", height << 16);
+    update.add_property(*conf->plane_props, "SRC_W", static_cast<uint64_t>(width) << 16);
+    update.add_property(*conf->plane_props, "SRC_H", static_cast<uint64_t>(height) << 16);
 
     /* Destination viewport. Coordinates are *not* 16.16 */
     update.add_property(*conf->plane_props, "CRTC_X", 0);
@@ -890,10 +890,10 @@ void mga::AtomicKMSOutput::update_from_hardware_state(
         modes.push_back({size, vrefresh_hz});
 
         if (kms_modes_are_equal(&mode_info, current_mode_info))
-            current_mode_index = m;
+            current_mode_index = static_cast<uint32_t>(m);
 
         if ((mode_info.type & DRM_MODE_TYPE_PREFERRED) == DRM_MODE_TYPE_PREFERRED)
-            preferred_mode_index = m;
+            preferred_mode_index = static_cast<uint32_t>(m);
     }
 
     /* Fallback for VMWare which fails to specify a matching current mode (bug:1661295) */
@@ -902,7 +902,7 @@ void mga::AtomicKMSOutput::update_from_hardware_state(
             drmModeModeInfo &mode_info = connector->modes[m];
 
             if (strcmp(mode_info.name, "preferred") == 0)
-                current_mode_index = m;
+                current_mode_index = static_cast<uint32_t>(m);
         }
     }
 

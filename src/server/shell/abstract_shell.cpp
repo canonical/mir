@@ -494,27 +494,27 @@ void msh::AbstractShell::set_popup_grab_tree(std::shared_ptr<scene::Surface> con
 }
 
 void msh::AbstractShell::set_focus_to(
-    std::shared_ptr<ms::Session> const& focus_session,
-    std::shared_ptr<ms::Surface> const& focus_surface)
+    std::shared_ptr<ms::Session> const& new_focus_session,
+    std::shared_ptr<ms::Surface> const& new_focus_surface)
 {
     std::unique_lock lock(focus_mutex);
 
-    if (last_requested_focus_surface.lock() != focus_surface)
+    if (last_requested_focus_surface.lock() != new_focus_surface)
     {
-        last_requested_focus_surface = focus_surface;
-        auto new_active_surfaces = get_ancestry(focus_surface);
+        last_requested_focus_surface = new_focus_surface;
+        auto new_active_surfaces = get_ancestry(new_focus_surface);
 
         /// HACK: Grabbing popups (menus, in Mir terminology) should be given keyboard focus according to xdg-shell,
         /// however, giving menus keyboard focus breaks Qt submenus. As of February 2022 Weston and other compositors
         /// disobey the protocol by not giving keyboard focus to grabbing popups, so we do the same thing. The behavior
         /// is subject change. See: https://github.com/canonical/mir/issues/2324.
-        auto const new_keyboard_focus_surface = get_non_popup_parent(focus_surface);
+        auto const new_keyboard_focus_surface = get_non_popup_parent(new_focus_surface);
 
         notify_active_surfaces(lock, new_keyboard_focus_surface, std::move(new_active_surfaces));
         set_keyboard_focus_surface(lock, new_keyboard_focus_surface);
     }
 
-    update_focus_locked(lock, focus_session, focus_surface);
+    update_focus_locked(lock, new_focus_session, new_focus_surface);
 }
 
 void msh::AbstractShell::notify_active_surfaces(
