@@ -38,7 +38,7 @@ bool error_indicates_tmpfile_not_supported(int error)
                             // that incorrectly returns EINVAL. Yay.
 }
 
-mir::Fd create_anonymous_file(size_t size)
+mir::Fd create_anonymous_file(off_t size)
 {
     auto raw_fd = memfd_create("mir-buffer", MFD_CLOEXEC);
     if (raw_fd == -1 && errno == ENOSYS)
@@ -68,7 +68,7 @@ mir::Fd create_anonymous_file(size_t size)
 
     mir::Fd fd = mir::Fd{raw_fd};
 
-    if (ftruncate(fd, static_cast<off_t>(size)) == -1)
+    if (ftruncate(fd, size) == -1)
     {
         BOOST_THROW_EXCEPTION(
             std::system_error(errno, std::system_category(), "Failed to resize temporary file"));
@@ -117,7 +117,7 @@ private:
  ********************/
 
 mir::AnonymousShmFile::AnonymousShmFile(size_t size)
-    : fd_{create_anonymous_file(size)},
+    : fd_{create_anonymous_file(static_cast<off_t>(size))},
       mapping{new MapHandle(fd_, size)}
 {
 }

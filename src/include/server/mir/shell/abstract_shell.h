@@ -120,8 +120,8 @@ public:
 
     void set_popup_grab_tree(std::shared_ptr<scene::Surface> const& surface) override;
     void set_focus_to(
-        std::shared_ptr<scene::Session> const& focus_session,
-        std::shared_ptr<scene::Surface> const& focus_surface) override;
+        std::shared_ptr<scene::Session> const& new_focus_session,
+        std::shared_ptr<scene::Surface> const& new_focus_surface) override;
 
     // The surface with focus
     std::shared_ptr<scene::Surface> focused_surface() const override;

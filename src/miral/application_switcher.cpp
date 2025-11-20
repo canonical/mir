@@ -105,7 +105,7 @@ struct ToplevelInfoPrinter
     void print(std::shared_ptr<miral::tk::WaylandShmBuffer> const& buffer,
         std::vector<ToplevelInfo> const& info_list,
         SelectorState selector_state,
-        std::optional<int> selected_window_index)
+        std::optional<size_t> selected_window_index)
     {
         if (!initialized)
             return;
@@ -161,12 +161,12 @@ private:
     TextMetrics compute_text_metrics(
         std::vector<ToplevelInfo> const& info_list,
         SelectorState selector_state,
-        std::optional<int> selected_window_index)
+        std::optional<size_t> selected_window_index)
     {
         TextMetrics metrics;
         std::optional<ToplevelInfo> selected_top_level;
         if (selected_window_index)
-            selected_top_level = info_list[static_cast<size_t>(*selected_window_index)];
+            selected_top_level = info_list[*selected_window_index];
 
         // First, sort the information such that application ids are displayed in order alongside
         // their associated list of windows.
