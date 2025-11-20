@@ -20,7 +20,7 @@
 #include <chrono>
 #include <memory>
 
-#include "mir_toolkit/event.h"
+#include <mir_toolkit/event.h>
 
 namespace mir
 {

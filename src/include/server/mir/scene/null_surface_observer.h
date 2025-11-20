@@ -17,7 +17,7 @@
 #ifndef MIR_SCENE_NULL_SURFACE_OBSERVER_H_
 #define MIR_SCENE_NULL_SURFACE_OBSERVER_H_
 
-#include "mir/scene/surface_observer.h"
+#include <mir/scene/surface_observer.h>
 
 namespace mir
 {

@@ -18,9 +18,9 @@
 #include "display.h"
 #include "display_sink.h"
 #include "egl_helper.h"
-#include "mir/graphics/egl_error.h"
-#include "mir/graphics/platform.h"
-#include "mir/options/option.h"
+#include <mir/graphics/egl_error.h>
+#include <mir/graphics/platform.h>
+#include <mir/options/option.h>
 #include "options_parsing_helpers.h"
 #include <optional>
 

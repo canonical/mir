@@ -14,13 +14,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/graphics/graphic_buffer_allocator.h"
-#include "mir/test/doubles/stub_buffer_allocator.h"
+#include <mir/graphics/graphic_buffer_allocator.h>
+#include <mir/test/doubles/stub_buffer_allocator.h>
 #include "src/server/shell/decoration/basic_manager.h"
 #include "src/server/shell/decoration/decoration.h"
 
-#include "mir/test/doubles/stub_observer_registrar.h"
-#include "mir/test/doubles/stub_shell.h"
+#include <mir/test/doubles/stub_observer_registrar.h>
+#include <mir/test/doubles/stub_shell.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

@@ -16,9 +16,9 @@
 
 #include "wl_data_source.h"
 
-#include "mir/executor.h"
-#include "mir/scene/clipboard.h"
-#include "mir/wayland/weak.h"
+#include <mir/executor.h>
+#include <mir/scene/clipboard.h>
+#include <mir/wayland/weak.h>
 
 #include <vector>
 

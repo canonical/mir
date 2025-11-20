@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_STUB_SCENE_ELEMENT_H_
 #define MIR_TEST_DOUBLES_STUB_SCENE_ELEMENT_H_
 
-#include "mir/compositor/scene_element.h"
+#include <mir/compositor/scene_element.h>
 #include "stub_renderable.h"
 
 namespace mir

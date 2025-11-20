@@ -17,14 +17,14 @@
 #ifndef MIR_FRONTEND_WAYLAND_CONNECTOR_H_
 #define MIR_FRONTEND_WAYLAND_CONNECTOR_H_
 
-#include "mir/shell/token_authority.h"
+#include <mir/shell/token_authority.h>
 #include "wayland_wrapper.h"
 
-#include "mir/fd.h"
-#include "mir/frontend/connector.h"
-#include "mir/frontend/drag_icon_controller.h"
+#include <mir/fd.h>
+#include <mir/frontend/connector.h>
+#include <mir/frontend/drag_icon_controller.h>
 #include <mir/frontend/wayland.h>
-#include "mir/optional_value.h"
+#include <mir/optional_value.h>
 
 #include <wayland-server-core.h>
 #include <unordered_map>

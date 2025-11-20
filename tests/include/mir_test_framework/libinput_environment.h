@@ -17,8 +17,8 @@
 #ifndef MIR_TEST_FRAMEWORK_LIBINPUT_ENVIRONMENT_H_
 #define MIR_TEST_FRAMEWORK_LIBINPUT_ENVIRONMENT_H_
 
-#include "mir/test/doubles/mock_udev.h"
-#include "mir/test/doubles/mock_libinput.h"
+#include <mir/test/doubles/mock_udev.h>
+#include <mir/test/doubles/mock_libinput.h>
 
 #include <unordered_map>
 #include <string>

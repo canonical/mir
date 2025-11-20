@@ -20,13 +20,13 @@
 #include "output_manager.h"
 #include "wl_surface_role.h"
 
-#include "mir/flags.h"
-#include "mir/wayland/weak.h"
-#include "mir/wayland/lifetime_tracker.h"
-#include "mir/geometry/displacement.h"
-#include "mir/geometry/size.h"
-#include "mir/geometry/rectangle.h"
-#include "mir/graphics/display_configuration.h"
+#include <mir/flags.h>
+#include <mir/wayland/weak.h>
+#include <mir/wayland/lifetime_tracker.h>
+#include <mir/geometry/displacement.h>
+#include <mir/geometry/size.h>
+#include <mir/geometry/rectangle.h>
+#include <mir/graphics/display_configuration.h>
 
 #include <mir_toolkit/common.h>
 

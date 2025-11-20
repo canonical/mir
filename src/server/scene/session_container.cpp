@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/scene/session_container.h"
+#include <mir/scene/session_container.h>
 
 #include <boost/throw_exception.hpp>
 

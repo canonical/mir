@@ -16,7 +16,7 @@
 
 #include "input_modifier_utils.h"
 
-#include "mir_toolkit/events/input/input_event.h"
+#include <mir_toolkit/events/input/input_event.h>
 
 namespace mi = mir::input;
 

@@ -14,9 +14,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/input/validator.h"
-#include "mir/events/event_builders.h"
-#include "mir_toolkit/event.h"
+#include <mir/input/validator.h>
+#include <mir/events/event_builders.h>
+#include <mir_toolkit/event.h>
 
 #include <set>
 #include <algorithm>

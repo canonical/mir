@@ -16,21 +16,21 @@
 
 #include "src/server/input/key_repeat_dispatcher.h"
 
-#include "mir/events/event_private.h"
-#include "mir/events/event_builders.h"
-#include "mir/time/alarm.h"
-#include "mir/time/alarm_factory.h"
-#include "mir/input/input_device_observer.h"
-#include "mir/input/mir_pointer_config.h"
-#include "mir/input/mir_touchpad_config.h"
-#include "mir/input/mir_touchscreen_config.h"
-#include "mir/input/mir_keyboard_config.h"
-#include "mir/input/device.h"
+#include <mir/events/event_private.h>
+#include <mir/events/event_builders.h>
+#include <mir/time/alarm.h>
+#include <mir/time/alarm_factory.h>
+#include <mir/input/input_device_observer.h>
+#include <mir/input/mir_pointer_config.h>
+#include <mir/input/mir_touchpad_config.h>
+#include <mir/input/mir_touchscreen_config.h>
+#include <mir/input/mir_keyboard_config.h>
+#include <mir/input/device.h>
 
-#include "mir/test/fake_shared.h"
-#include "mir/test/event_matchers.h"
-#include "mir/test/doubles/mock_input_dispatcher.h"
-#include "mir/test/doubles/mock_input_device_hub.h"
+#include <mir/test/fake_shared.h>
+#include <mir/test/event_matchers.h>
+#include <mir/test/doubles/mock_input_dispatcher.h>
+#include <mir/test/doubles/mock_input_device_hub.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

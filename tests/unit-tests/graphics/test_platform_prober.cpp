@@ -23,37 +23,37 @@
 #include <ranges>
 #include <string>
 
-#include "mir/console_services.h"
-#include "mir/graphics/platform.h"
+#include <mir/console_services.h>
+#include <mir/graphics/platform.h>
 #include "quirk_common.h"
-#include "mir/options/configuration.h"
-#include "mir/options/default_configuration.h"
-#include "mir/options/option.h"
-#include "mir/shared_library.h"
-#include "mir/shared_library_prober_report.h"
-#include "mir/test/doubles/fake_display.h"
-#include "mir/test/doubles/mock_gl_rendering_provider.h"
-#include "mir/test/doubles/mock_udev_device.h"
-#include "mir/test/doubles/mock_x11.h"
-#include "mir/test/doubles/null_platform.h"
-#include "mir/test/doubles/stub_console_services.h"
-#include "mir_test_framework/temporary_environment_value.h"
+#include <mir/options/configuration.h>
+#include <mir/options/default_configuration.h>
+#include <mir/options/option.h>
+#include <mir/shared_library.h>
+#include <mir/shared_library_prober_report.h>
+#include <mir/test/doubles/fake_display.h>
+#include <mir/test/doubles/mock_gl_rendering_provider.h>
+#include <mir/test/doubles/mock_udev_device.h>
+#include <mir/test/doubles/mock_x11.h>
+#include <mir/test/doubles/null_platform.h>
+#include <mir/test/doubles/stub_console_services.h>
+#include <mir_test_framework/temporary_environment_value.h>
 #include "src/server/graphics/platform_probe.h"
 #include "mir/logging/null_shared_library_prober_report.h"
-#include "mir/options/program_option.h"
-#include "mir/udev/wrapper.h"
-#include "mir/test/doubles/null_logger.h"
+#include <mir/options/program_option.h>
+#include <mir/udev/wrapper.h>
+#include <mir/test/doubles/null_logger.h>
 
-#include "mir/test/doubles/mock_egl.h"
+#include <mir/test/doubles/mock_egl.h>
 #if defined(MIR_BUILD_PLATFORM_GBM_KMS) || defined(MIR_BUILD_PLATFORM_ATOMIC_KMS)
-#include "mir/test/doubles/mock_drm.h"
-#include "mir/test/doubles/mock_gbm.h"
-#include "mir/test/doubles/mock_gl.h"
+#include <mir/test/doubles/mock_drm.h>
+#include <mir/test/doubles/mock_gbm.h>
+#include <mir/test/doubles/mock_gl.h>
 #endif
-#include "mir/test/doubles/null_console_services.h"
+#include <mir/test/doubles/null_console_services.h>
 
-#include "mir_test_framework/udev_environment.h"
-#include "mir_test_framework/executable_path.h"
+#include <mir_test_framework/udev_environment.h>
+#include <mir_test_framework/executable_path.h>
 
 namespace mtd = mir::test::doubles;
 namespace mtf = mir_test_framework;

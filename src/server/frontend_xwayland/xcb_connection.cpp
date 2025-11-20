@@ -19,8 +19,8 @@
 #include "xcb_connection.h"
 
 #include "xwayland_log.h"
-#include "mir/log.h"
-#include "mir/c_memory.h"
+#include <mir/log.h>
+#include <mir/c_memory.h>
 
 #include "boost/throw_exception.hpp"
 #include <sstream>

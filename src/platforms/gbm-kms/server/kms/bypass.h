@@ -17,7 +17,7 @@
 #ifndef MIR_GRAPHICS_GBM_BYPASS_H_
 #define MIR_GRAPHICS_GBM_BYPASS_H_
 
-#include "mir/graphics/renderable.h"
+#include <mir/graphics/renderable.h>
 
 namespace mir
 {

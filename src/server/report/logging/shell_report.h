@@ -17,7 +17,7 @@
 #ifndef MIR_REPORT_NULL_SHELL_REPORT_H
 #define MIR_REPORT_NULL_SHELL_REPORT_H
 
-#include "mir/shell/shell_report.h"
+#include <mir/shell/shell_report.h>
 
 namespace mir
 {

@@ -17,8 +17,8 @@
 #ifndef MIR_TEST_DOUBLES_KEY_MAPPER_H_
 #define MIR_TEST_DOUBLES_KEY_MAPPER_H_
 
-#include "mir/input/key_mapper.h"
-#include "mir/input/keymap.h"
+#include <mir/input/key_mapper.h>
+#include <mir/input/keymap.h>
 
 #include <gmock/gmock.h>
 

@@ -16,7 +16,7 @@
 
 #include <mir/shared_library_prober.h>
 
-#include "mir_test_framework/executable_path.h"
+#include <mir_test_framework/executable_path.h>
 
 #include <stdlib.h>
 #include <errno.h>

@@ -18,15 +18,15 @@
 #include "one_shot_device_observer.h"
 
 #include "kms-utils/drm_mode_resources.h"
-#include "mir/graphics/egl_error.h"
+#include <mir/graphics/egl_error.h>
 #include "kms/quirks.h"
 
-#include "mir/udev/wrapper.h"
-#include "mir/console_services.h"
+#include <mir/udev/wrapper.h>
+#include <mir/console_services.h>
 
 #include <sys/sysmacros.h>
 
-#include "mir/log.h"
+#include <mir/log.h>
 
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>

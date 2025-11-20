@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/test/doubles/mock_buffer.h"
+#include <mir/test/doubles/mock_buffer.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <mir/gl/tessellation_helpers.h>
 #include <mir/test/doubles/mock_renderable.h>

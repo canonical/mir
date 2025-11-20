@@ -17,10 +17,10 @@
 #ifndef MIR_TEST_DOUBLES_FAKE_ALARM_FACTORY_H_
 #define MIR_TEST_DOUBLES_FAKE_ALARM_FACTORY_H_
 
-#include "mir/time/alarm_factory.h"
-#include "mir/time/alarm.h"
-#include "mir/time/clock.h"
-#include "mir/test/doubles/advanceable_clock.h"
+#include <mir/time/alarm_factory.h>
+#include <mir/time/alarm.h>
+#include <mir/time/clock.h>
+#include <mir/test/doubles/advanceable_clock.h>
 
 #include <vector>
 

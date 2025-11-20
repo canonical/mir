@@ -13,21 +13,21 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "mir/graphics/texture.h"
-#include "mir/test/doubles/null_emergency_cleanup.h"
+#include <mir/graphics/texture.h>
+#include <mir/test/doubles/null_emergency_cleanup.h>
 #include "src/server/report/null_report_factory.h"
 #include "src/platforms/gbm-kms/server/kms/platform.h"
 #include "src/platforms/gbm-kms/server/kms/display_sink.h"
-#include "mir/graphics/dmabuf_buffer.h"
-#include "mir/test/doubles/mock_egl.h"
-#include "mir/test/doubles/mock_gl.h"
-#include "mir/test/doubles/mock_drm.h"
-#include "mir/test/doubles/mock_buffer.h"
-#include "mir/test/doubles/mock_gbm.h"
-#include "mir/test/doubles/stub_gl_config.h"
-#include "mir_test_framework/udev_environment.h"
-#include "mir/test/doubles/fake_renderable.h"
-#include "mir/graphics/transformation.h"
+#include <mir/graphics/dmabuf_buffer.h>
+#include <mir/test/doubles/mock_egl.h>
+#include <mir/test/doubles/mock_gl.h>
+#include <mir/test/doubles/mock_drm.h>
+#include <mir/test/doubles/mock_buffer.h>
+#include <mir/test/doubles/mock_gbm.h>
+#include <mir/test/doubles/stub_gl_config.h>
+#include <mir_test_framework/udev_environment.h>
+#include <mir/test/doubles/fake_renderable.h>
+#include <mir/graphics/transformation.h>
 #include "mock_kms_output.h"
 
 #include <fcntl.h>

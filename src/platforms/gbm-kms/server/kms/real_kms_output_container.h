@@ -18,7 +18,7 @@
 #define MIR_GRAPHICS_GBM_REAL_KMS_OUTPUT_CONTAINER_H_
 
 #include "kms_output_container.h"
-#include "mir/fd.h"
+#include <mir/fd.h>
 #include <vector>
 
 namespace mir

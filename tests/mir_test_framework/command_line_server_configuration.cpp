@@ -15,11 +15,11 @@
  *
  */
 
-#include "mir_test_framework/command_line_server_configuration.h"
-#include "mir_test_framework/main.h"
+#include <mir_test_framework/command_line_server_configuration.h>
+#include <mir_test_framework/main.h>
 
-#include "mir/options/default_configuration.h"
-#include "mir/server.h"
+#include <mir/options/default_configuration.h>
+#include <mir/server.h>
 
 #include <gtest/gtest.h>
 

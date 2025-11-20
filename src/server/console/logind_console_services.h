@@ -18,8 +18,8 @@
 
 #include <future>
 #include <unordered_map>
-#include "mir/console_services.h"
-#include "mir/scene/session_lock.h"
+#include <mir/console_services.h>
+#include <mir/scene/session_lock.h>
 
 #include "glib.h"
 #include "logind-seat.h"

@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/udev/wrapper.h"
+#include <mir/udev/wrapper.h>
 #include <libudev.h>
 #include <cstring>
 #include <boost/throw_exception.hpp>

@@ -18,7 +18,7 @@
 #define MIR_FRONTEND_IDLE_INHIBIT_V1_H_
 
 #include "idle-inhibit-unstable-v1_wrapper.h"
-#include "mir/scene/idle_hub.h"
+#include <mir/scene/idle_hub.h>
 
 #include <memory>
 

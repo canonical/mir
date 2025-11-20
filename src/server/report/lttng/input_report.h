@@ -19,7 +19,7 @@
 
 #include "server_tracepoint_provider.h"
 
-#include "mir/input/input_report.h"
+#include <mir/input/input_report.h>
 
 namespace mir
 {

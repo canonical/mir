@@ -14,14 +14,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir_toolkit/event.h"
-#include "mir/shell/accessibility_manager.h"
+#include <mir_toolkit/event.h>
+#include <mir/shell/accessibility_manager.h>
 #include "src/server/input/default_event_builder.h"
 #include "src/server/shell/basic_slow_keys_transformer.h"
 
-#include "mir/test/doubles/advanceable_clock.h"
-#include "mir/test/doubles/queued_alarm_stub_main_loop.h"
-#include "mir/test/fake_shared.h"
+#include <mir/test/doubles/advanceable_clock.h>
+#include <mir/test/doubles/queued_alarm_stub_main_loop.h>
+#include <mir/test/fake_shared.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

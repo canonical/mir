@@ -17,7 +17,7 @@
 #ifndef MIR_EMERGENCY_CLEANUP_H_
 #define MIR_EMERGENCY_CLEANUP_H_
 
-#include "mir/emergency_cleanup_registry.h"
+#include <mir/emergency_cleanup_registry.h>
 
 namespace mir
 {

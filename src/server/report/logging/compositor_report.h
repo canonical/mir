@@ -17,8 +17,8 @@
 #ifndef MIR_REPORT_LOGGING_COMPOSITOR_REPORT_H_
 #define MIR_REPORT_LOGGING_COMPOSITOR_REPORT_H_
 
-#include "mir/compositor/compositor_report.h"
-#include "mir/time/clock.h"
+#include <mir/compositor/compositor_report.h>
+#include <mir/time/clock.h>
 #include <memory>
 #include <mutex>
 #include <unordered_map>

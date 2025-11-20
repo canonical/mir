@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir_test_framework/fake_input_server_configuration.h"
+#include <mir_test_framework/fake_input_server_configuration.h>
 
 namespace mtf = mir_test_framework;
 namespace mi = mir::input;

@@ -14,9 +14,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir_test_framework/async_server_runner.h"
-#include "mir/test/popen.h"
-#include "mir/test/spin_wait.h"
+#include <mir_test_framework/async_server_runner.h>
+#include <mir/test/popen.h>
+#include <mir/test/spin_wait.h>
 #include <mir_test_framework/executable_path.h>
 #include <mir_test_framework/main.h>
 #include <miral/x11_support.h>

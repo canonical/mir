@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_STUB_ALARM_H_
 #define MIR_TEST_DOUBLES_STUB_ALARM_H_
 
-#include "mir/time/alarm.h"
+#include <mir/time/alarm.h>
 
 namespace mir
 {

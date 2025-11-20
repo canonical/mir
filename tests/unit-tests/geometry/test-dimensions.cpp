@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/geometry/dimensions.h"
+#include <mir/geometry/dimensions.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

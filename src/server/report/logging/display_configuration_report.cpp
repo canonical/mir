@@ -15,10 +15,10 @@
  */
 
 #include "display_configuration_report.h"
-#include "mir/graphics/display_configuration.h"
-#include "mir/output_type_names.h"
-#include "mir/logging/logger.h"
-#include "mir/scene/session.h"
+#include <mir/graphics/display_configuration.h>
+#include <mir/output_type_names.h>
+#include <mir/logging/logger.h>
+#include <mir/scene/session.h>
 
 #include <boost/exception/diagnostic_information.hpp>
 #include <cmath>

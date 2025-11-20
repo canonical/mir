@@ -15,14 +15,14 @@
  */
 
 #include "software_cursor.h"
-#include "mir/graphics/cursor_image.h"
-#include "mir/graphics/graphic_buffer_allocator.h"
-#include "mir/graphics/pixel_format_utils.h"
-#include "mir/graphics/renderable.h"
-#include "mir/input/scene.h"
-#include "mir/renderer/sw/pixel_source.h"
-#include "mir/executor.h"
-#include "mir/graphics/pixman_image_scaling.h"
+#include <mir/graphics/cursor_image.h>
+#include <mir/graphics/graphic_buffer_allocator.h>
+#include <mir/graphics/pixel_format_utils.h>
+#include <mir/graphics/renderable.h>
+#include <mir/input/scene.h>
+#include <mir/renderer/sw/pixel_source.h>
+#include <mir/executor.h>
+#include <mir/graphics/pixman_image_scaling.h>
 
 #include <boost/throw_exception.hpp>
 

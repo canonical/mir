@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "miral/cursor_theme.h"
+#include <miral/cursor_theme.h>
 #include "xcursor_loader.h"
 
 #include <mir/options/option.h>

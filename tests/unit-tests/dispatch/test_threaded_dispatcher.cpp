@@ -14,16 +14,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/dispatch/threaded_dispatcher.h"
-#include "mir/dispatch/dispatchable.h"
-#include "mir/fd.h"
-#include "mir/test/current_thread_name.h"
-#include "mir/test/death.h"
-#include "mir/test/pipe.h"
-#include "mir/test/signal.h"
-#include "mir/test/test_dispatchable.h"
-#include "mir_test_framework/process.h"
-#include "mir/test/cross_process_action.h"
+#include <mir/dispatch/threaded_dispatcher.h>
+#include <mir/dispatch/dispatchable.h>
+#include <mir/fd.h>
+#include <mir/test/current_thread_name.h>
+#include <mir/test/death.h>
+#include <mir/test/pipe.h>
+#include <mir/test/signal.h>
+#include <mir/test/test_dispatchable.h>
+#include <mir_test_framework/process.h>
+#include <mir/test/cross_process_action.h>
 
 #include <fcntl.h>
 

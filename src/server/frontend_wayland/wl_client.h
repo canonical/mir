@@ -25,7 +25,7 @@ struct wl_display;
 #include <optional>
 #include <deque>
 
-#include "mir/wayland/client.h"
+#include <mir/wayland/client.h>
 
 struct MirEvent;
 

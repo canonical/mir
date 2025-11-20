@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/graphics/egl_resources.h"
-#include "mir/graphics/egl_error.h"
+#include <mir/graphics/egl_resources.h>
+#include <mir/graphics/egl_error.h>
 
 #include <boost/throw_exception.hpp>
 

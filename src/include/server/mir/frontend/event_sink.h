@@ -17,7 +17,7 @@
 #ifndef MIR_FRONTEND_EVENT_SINK_H_
 #define MIR_FRONTEND_EVENT_SINK_H_
 
-#include "mir/events/event_builders.h"
+#include <mir/events/event_builders.h>
 
 class MirInputConfig;
 namespace mir

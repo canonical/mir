@@ -15,7 +15,7 @@
 
  */
 
-#include "mir/logging/multi_logger.h"
+#include <mir/logging/multi_logger.h>
 
 namespace ml = mir::logging;
 

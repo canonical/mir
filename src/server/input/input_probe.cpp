@@ -14,15 +14,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/input/input_probe.h"
-#include "mir/input/platform.h"
+#include <mir/input/input_probe.h>
+#include <mir/input/platform.h>
 
-#include "mir/options/configuration.h"
-#include "mir/options/option.h"
+#include <mir/options/configuration.h>
+#include <mir/options/option.h>
 
-#include "mir/shared_library_prober.h"
-#include "mir/shared_library.h"
-#include "mir/log.h"
+#include <mir/shared_library_prober.h>
+#include <mir/shared_library.h>
+#include <mir/log.h>
 
 #include <stdexcept>
 

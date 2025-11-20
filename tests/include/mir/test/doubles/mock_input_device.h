@@ -17,11 +17,11 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_INPUT_DEVICE_H
 #define MIR_TEST_DOUBLES_MOCK_INPUT_DEVICE_H
 
-#include "mir/input/input_device.h"
-#include "mir/input/input_device_info.h" // needed for fake device setup
-#include "mir/input/pointer_settings.h"
-#include "mir/input/touchpad_settings.h"
-#include "mir/input/touchscreen_settings.h"
+#include <mir/input/input_device.h>
+#include <mir/input/input_device_info.h> // needed for fake device setup
+#include <mir/input/pointer_settings.h>
+#include <mir/input/touchpad_settings.h>
+#include <mir/input/touchscreen_settings.h>
 
 #include <gmock/gmock.h>
 

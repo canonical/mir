@@ -17,11 +17,11 @@
 #ifndef MIR_SHELL_BASIC_ACCESSIBILITY_MANAGER_H
 #define MIR_SHELL_BASIC_ACCESSIBILITY_MANAGER_H
 
-#include "mir/input/input_event_transformer.h"
-#include "mir/shell/accessibility_manager.h"
+#include <mir/input/input_event_transformer.h>
+#include <mir/shell/accessibility_manager.h>
 
-#include "mir/input/mousekeys_keymap.h"
-#include "mir/synchronised.h"
+#include <mir/input/mousekeys_keymap.h>
+#include <mir/synchronised.h>
 
 namespace mir
 {

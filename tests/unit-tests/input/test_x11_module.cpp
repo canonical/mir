@@ -14,13 +14,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/shared_library.h"
-#include "mir/input/platform.h"
+#include <mir/shared_library.h>
+#include <mir/input/platform.h>
 
-#include "mir/test/doubles/mock_x11.h"
-#include "mir/test/doubles/mock_option.h"
-#include "mir_test_framework/executable_path.h"
-#include "mir/test/doubles/stub_console_services.h"
+#include <mir/test/doubles/mock_x11.h>
+#include <mir/test/doubles/mock_option.h>
+#include <mir_test_framework/executable_path.h>
+#include <mir/test/doubles/stub_console_services.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

@@ -18,7 +18,7 @@
 #define MIR_FRONTEND_FRACTIONAL_SCALE_V1_H
 
 #include "fractional-scale-v1_wrapper.h"
-#include "mir/graphics/display_configuration.h"
+#include <mir/graphics/display_configuration.h>
 #include <unordered_map>
 #include <utility>
 

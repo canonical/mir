@@ -16,19 +16,19 @@
 
 #include "mediating_display_changer.h"
 
-#include "mir/client_visible_error.h"
-#include "mir/compositor/compositor.h"
-#include "mir/graphics/display.h"
-#include "mir/graphics/display_configuration.h"
-#include "mir/graphics/display_configuration_observer.h"
-#include "mir/graphics/display_configuration_policy.h"
-#include "mir/scene/session.h"
-#include "mir/scene/session_container.h"
-#include "mir/scene/session_event_handler_register.h"
-#include "mir/scene/session_event_sink.h"
-#include "mir/server_action_queue.h"
-#include "mir/time/alarm.h"
-#include "mir/time/alarm_factory.h"
+#include <mir/client_visible_error.h>
+#include <mir/compositor/compositor.h>
+#include <mir/graphics/display.h>
+#include <mir/graphics/display_configuration.h>
+#include <mir/graphics/display_configuration_observer.h>
+#include <mir/graphics/display_configuration_policy.h>
+#include <mir/scene/session.h>
+#include <mir/scene/session_container.h>
+#include <mir/scene/session_event_handler_register.h>
+#include <mir/scene/session_event_sink.h>
+#include <mir/server_action_queue.h>
+#include <mir/time/alarm.h>
+#include <mir/time/alarm_factory.h>
 
 #include <boost/throw_exception.hpp>
 

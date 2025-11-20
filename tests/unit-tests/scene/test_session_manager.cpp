@@ -16,28 +16,28 @@
 
 #include "src/server/scene/session_manager.h"
 
-#include "mir/scene/session.h"
-#include "mir/scene/session_container.h"
-#include "mir/scene/null_session_listener.h"
-#include "mir/graphics/display_configuration_observer.h"
-#include "mir/compositor/buffer_stream.h"
-#include "mir/scene/null_surface_observer.h"
-#include "mir/scene/basic_surface.h"
+#include <mir/scene/session.h>
+#include <mir/scene/session_container.h>
+#include <mir/scene/null_session_listener.h>
+#include <mir/graphics/display_configuration_observer.h>
+#include <mir/compositor/buffer_stream.h>
+#include <mir/scene/null_surface_observer.h>
+#include <mir/scene/basic_surface.h>
 #include "src/include/server/mir/scene/session_event_sink.h"
 #include "src/server/report/null_report_factory.h"
 
-#include "mir/test/doubles/mock_surface_stack.h"
-#include "mir/test/doubles/mock_session_listener.h"
-#include "mir/test/doubles/stub_buffer_stream.h"
-#include "mir/test/doubles/null_session_event_sink.h"
-#include "mir/test/doubles/null_event_sink.h"
-#include "mir/test/doubles/stub_surface_factory.h"
-#include "mir/test/doubles/stub_display.h"
-#include "mir/test/doubles/stub_buffer_allocator.h"
-#include "mir/test/doubles/stub_observer_registrar.h"
+#include <mir/test/doubles/mock_surface_stack.h>
+#include <mir/test/doubles/mock_session_listener.h>
+#include <mir/test/doubles/stub_buffer_stream.h>
+#include <mir/test/doubles/null_session_event_sink.h>
+#include <mir/test/doubles/null_event_sink.h>
+#include <mir/test/doubles/stub_surface_factory.h>
+#include <mir/test/doubles/stub_display.h>
+#include <mir/test/doubles/stub_buffer_allocator.h>
+#include <mir/test/doubles/stub_observer_registrar.h>
 
-#include "mir/test/fake_shared.h"
-#include "mir/test/make_surface_spec.h"
+#include <mir/test/fake_shared.h>
+#include <mir/test/make_surface_spec.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

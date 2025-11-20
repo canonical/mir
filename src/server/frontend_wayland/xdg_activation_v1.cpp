@@ -16,18 +16,18 @@
 
 #include "xdg_activation_v1.h"
 
-#include "mir/events/keyboard_event.h"
-#include "mir/input/keyboard_observer.h"
-#include "mir/main_loop.h"
-#include "mir/scene/null_session_listener.h"
-#include "mir/scene/session.h"
-#include "mir/scene/session_coordinator.h"
-#include "mir/scene/session_listener.h"
-#include "mir/shell/shell.h"
-#include "mir/shell/token_authority.h"
-#include "mir/wayland/client.h"
-#include "mir/wayland/protocol_error.h"
-#include "mir/log.h"
+#include <mir/events/keyboard_event.h>
+#include <mir/input/keyboard_observer.h>
+#include <mir/main_loop.h>
+#include <mir/scene/null_session_listener.h>
+#include <mir/scene/session.h>
+#include <mir/scene/session_coordinator.h>
+#include <mir/scene/session_listener.h>
+#include <mir/shell/shell.h>
+#include <mir/shell/token_authority.h>
+#include <mir/wayland/client.h>
+#include <mir/wayland/protocol_error.h>
+#include <mir/log.h>
 #include "wl_seat.h"
 #include "wl_surface.h"
 

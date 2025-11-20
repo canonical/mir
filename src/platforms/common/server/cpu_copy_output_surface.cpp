@@ -22,10 +22,10 @@
 
 #include <drm_fourcc.h>
 
-#include "mir/graphics/egl_error.h"
-#include "mir/graphics/platform.h"
-#include "mir/graphics/gl_config.h"
-#include "mir/log.h"
+#include <mir/graphics/egl_error.h>
+#include <mir/graphics/platform.h>
+#include <mir/graphics/gl_config.h>
+#include <mir/log.h>
 
 #include "cpu_copy_output_surface.h"
 

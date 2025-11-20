@@ -15,9 +15,9 @@
  */
 
 #include "src/server/scene/prompt_session_container.h"
-#include "mir/test/doubles/mock_scene_session.h"
-#include "mir/test/doubles/null_prompt_session.h"
-#include "mir/test/fake_shared.h"
+#include <mir/test/doubles/mock_scene_session.h>
+#include <mir/test/doubles/null_prompt_session.h>
+#include <mir/test/fake_shared.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

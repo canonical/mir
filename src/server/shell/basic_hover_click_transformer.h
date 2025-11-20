@@ -17,11 +17,11 @@
 #ifndef MIR_SHELL_BASIC_HOVER_CLICK_TRANSFORMER_H_
 #define MIR_SHELL_BASIC_HOVER_CLICK_TRANSFORMER_H_
 
-#include "mir/shell/hover_click_transformer.h"
+#include <mir/shell/hover_click_transformer.h>
 
-#include "mir/geometry/point.h"
-#include "mir/synchronised.h"
-#include "mir/time/alarm.h"
+#include <mir/geometry/point.h>
+#include <mir/synchronised.h>
+#include <mir/time/alarm.h>
 
 namespace mir
 {

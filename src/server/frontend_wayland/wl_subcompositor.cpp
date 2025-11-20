@@ -14,13 +14,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/log.h"
+#include <mir/log.h>
 
 #include "wl_subcompositor.h"
 #include "wl_surface.h"
 
-#include "mir/wayland/client.h"
-#include "mir/geometry/rectangle.h"
+#include <mir/wayland/client.h>
+#include <mir/geometry/rectangle.h>
 
 namespace mf = mir::frontend;
 namespace geom = mir::geometry;

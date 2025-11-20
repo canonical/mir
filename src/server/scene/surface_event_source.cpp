@@ -14,13 +14,13 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/events/event_builders.h"
-#include "mir/scene/surface_event_source.h"
-#include "mir/scene/surface.h"
-#include "mir/scene/output_properties_cache.h"
+#include <mir/events/event_builders.h>
+#include <mir/scene/surface_event_source.h>
+#include <mir/scene/surface.h>
+#include <mir/scene/output_properties_cache.h>
 
-#include "mir/geometry/size.h"
-#include "mir/geometry/rectangle.h"
+#include <mir/geometry/size.h>
+#include <mir/geometry/rectangle.h>
 
 #include <algorithm>
 

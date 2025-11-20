@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/graphics/platform.h"
-#include "mir/fd.h"
+#include <mir/graphics/platform.h>
+#include <mir/fd.h>
 
 namespace mir::graphics::gbm
 {

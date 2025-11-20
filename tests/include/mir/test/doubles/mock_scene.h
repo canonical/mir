@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_SCENE_H_
 #define MIR_TEST_DOUBLES_MOCK_SCENE_H_
 
-#include "mir/compositor/scene.h"
+#include <mir/compositor/scene.h>
 #include <gmock/gmock.h>
 
 namespace mir

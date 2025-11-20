@@ -15,21 +15,21 @@
  */
 
 #include "add_virtual_device.h"
-#include "miral/sticky_keys.h"
-#include "miral/test_server.h"
+#include <miral/sticky_keys.h>
+#include <miral/test_server.h>
 
-#include "mir/input/event_builder.h"
-#include "mir/input/input_device_hub.h"
-#include "mir/input/input_device_registry.h"
-#include "mir/input/input_sink.h"
-#include "mir/input/virtual_input_device.h"
-#include "mir/server.h"
+#include <mir/input/event_builder.h>
+#include <mir/input/input_device_hub.h>
+#include <mir/input/input_device_registry.h>
+#include <mir/input/input_sink.h>
+#include <mir/input/virtual_input_device.h>
+#include <mir/server.h>
 
 #include <linux/input-event-codes.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include "miral/append_event_filter.h"
+#include <miral/append_event_filter.h>
 
 namespace mi = mir::input;
 using namespace testing;

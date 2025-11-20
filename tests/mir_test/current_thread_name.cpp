@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/test/current_thread_name.h"
+#include <mir/test/current_thread_name.h>
 
 #include <pthread.h>
 

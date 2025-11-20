@@ -17,12 +17,12 @@
 #ifndef MIR_SHELL_BASIC_MOUSEKEYS_TRANSFORMER_H
 #define MIR_SHELL_BASIC_MOUSEKEYS_TRANSFORMER_H
 
-#include "mir/shell/mousekeys_transformer.h"
+#include <mir/shell/mousekeys_transformer.h>
 
-#include "mir/geometry/displacement.h"
-#include "mir/input/mousekeys_keymap.h"
-#include "mir/synchronised.h"
-#include "mir_toolkit/events/enums.h"
+#include <mir/geometry/displacement.h>
+#include <mir/input/mousekeys_keymap.h>
+#include <mir/synchronised.h>
+#include <mir_toolkit/events/enums.h>
 
 #include <memory>
 

@@ -16,9 +16,9 @@
 
 #include "idle_inhibit_v1.h"
 
-#include "mir/executor.h"
-#include "mir/scene/surface.h"
-#include "mir/scene/null_surface_observer.h"
+#include <mir/executor.h>
+#include <mir/scene/surface.h>
+#include <mir/scene/null_surface_observer.h>
 
 #include "wl_surface.h"
 

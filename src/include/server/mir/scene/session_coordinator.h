@@ -17,10 +17,10 @@
 #ifndef MIR_SCENE_SESSION_COORDINATOR_H_
 #define MIR_SCENE_SESSION_COORDINATOR_H_
 
-#include "mir/frontend/surface_id.h"
-#include "mir/fd.h"
+#include <mir/frontend/surface_id.h>
+#include <mir/fd.h>
 
-#include "mir_toolkit/common.h"
+#include <mir_toolkit/common.h>
 
 #include <unistd.h>
 

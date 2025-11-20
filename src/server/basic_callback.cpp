@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/basic_callback.h"
+#include <mir/basic_callback.h>
 
 mir::BasicCallback::BasicCallback(std::function<void()> const& callback)
     : callback{callback}

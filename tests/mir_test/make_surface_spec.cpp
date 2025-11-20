@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/test/make_surface_spec.h"
-#include "mir/compositor/buffer_stream.h"
+#include <mir/test/make_surface_spec.h>
+#include <mir/compositor/buffer_stream.h>
 
 namespace mt = mir::test;
 namespace mc = mir::compositor;

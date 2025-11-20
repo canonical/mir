@@ -14,10 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/libname.h"
-#include "mir/graphics/platform.h"
-#include "mir/assert_module_entry_point.h"
-#include "mir/udev/wrapper.h"
+#include <mir/libname.h>
+#include <mir/graphics/platform.h>
+#include <mir/assert_module_entry_point.h>
+#include <mir/udev/wrapper.h>
 
 namespace mg = mir::graphics;
 

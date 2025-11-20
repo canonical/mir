@@ -19,7 +19,7 @@
 
 #include "drm_event_handler.h"
 
-#include "mir/fd.h"
+#include <mir/fd.h>
 
 #include <functional>
 #include <vector>

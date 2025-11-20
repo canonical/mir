@@ -14,16 +14,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "miral/cursor_scale.h"
-#include "mir/main_loop.h"
-#include "mir/synchronised.h"
-#include "miral/live_config.h"
+#include <miral/cursor_scale.h>
+#include <mir/main_loop.h>
+#include <mir/synchronised.h>
+#include <miral/live_config.h>
 
-#include "mir/options/option.h"
-#include "mir/log.h"
-#include "mir/server.h"
-#include "mir/shell/accessibility_manager.h"
-#include "mir/time/alarm.h"
+#include <mir/options/option.h>
+#include <mir/log.h>
+#include <mir/server.h>
+#include <mir/shell/accessibility_manager.h>
+#include <mir/time/alarm.h>
 
 #include <chrono>
 #include <memory>

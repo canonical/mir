@@ -14,21 +14,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/test/doubles/stub_buffer.h"
+#include <mir/test/doubles/stub_buffer.h>
 #include "src/server/scene/surface_stack.h"
-#include "mir/graphics/buffer_properties.h"
-#include "mir/geometry/rectangle.h"
-#include "mir/scene/observer.h"
-#include "mir/compositor/scene_element.h"
+#include <mir/graphics/buffer_properties.h>
+#include <mir/geometry/rectangle.h>
+#include <mir/scene/observer.h>
+#include <mir/compositor/scene_element.h>
 #include "src/server/report/null_report_factory.h"
-#include "mir/scene/basic_surface.h"
-#include "mir/test/fake_shared.h"
-#include "mir/test/doubles/fake_display_configuration_observer_registrar.h"
-#include "mir/test/doubles/stub_buffer_stream.h"
-#include "mir/test/doubles/stub_renderable.h"
-#include "mir/test/doubles/mock_buffer_stream.h"
-#include "mir/test/doubles/explicit_executor.h"
-#include "mir/executor.h"
+#include <mir/scene/basic_surface.h>
+#include <mir/test/fake_shared.h>
+#include <mir/test/doubles/fake_display_configuration_observer_registrar.h>
+#include <mir/test/doubles/stub_buffer_stream.h>
+#include <mir/test/doubles/stub_renderable.h>
+#include <mir/test/doubles/mock_buffer_stream.h>
+#include <mir/test/doubles/explicit_executor.h>
+#include <mir/executor.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

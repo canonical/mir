@@ -14,28 +14,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/graphics/display.h"
-#include "mir/graphics/display_sink.h"
-#include "mir/graphics/display_configuration.h"
-#include "mir/graphics/drm_formats.h"
-#include "mir/graphics/platform.h"
+#include <mir/graphics/display.h>
+#include <mir/graphics/display_sink.h>
+#include <mir/graphics/display_configuration.h>
+#include <mir/graphics/drm_formats.h>
+#include <mir/graphics/platform.h>
 
 #include "src/platforms/gbm-kms/server/kms/platform.h"
 #include "src/platforms/gbm-kms/server/kms/quirks.h"
 
-#include "mir/options/program_option.h"
-#include "mir/test/doubles/null_emergency_cleanup.h"
+#include <mir/options/program_option.h>
+#include <mir/test/doubles/null_emergency_cleanup.h>
 #include "src/server/report/null_report_factory.h"
-#include "mir/test/doubles/stub_console_services.h"
-#include "mir/test/doubles/mock_egl.h"
-#include "mir/test/doubles/mock_gl.h"
-#include "mir/graphics/display_configuration_policy.h"
-#include "mir/test/doubles/stub_gl_config.h"
+#include <mir/test/doubles/stub_console_services.h>
+#include <mir/test/doubles/mock_egl.h>
+#include <mir/test/doubles/mock_gl.h>
+#include <mir/graphics/display_configuration_policy.h>
+#include <mir/test/doubles/stub_gl_config.h>
 
-#include "mir_test_framework/udev_environment.h"
+#include <mir_test_framework/udev_environment.h>
 
-#include "mir/test/doubles/mock_drm.h"
-#include "mir/test/doubles/mock_gbm.h"
+#include <mir/test/doubles/mock_drm.h>
+#include <mir/test/doubles/mock_gbm.h>
 
 #include <drm_fourcc.h>
 #include <gtest/gtest.h>

@@ -14,9 +14,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/glib_main_loop.h"
-#include "mir/lockable_callback_wrapper.h"
-#include "mir/basic_callback.h"
+#include <mir/glib_main_loop.h>
+#include <mir/lockable_callback_wrapper.h>
+#include <mir/basic_callback.h>
 
 #include <stdexcept>
 #include <condition_variable>

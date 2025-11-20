@@ -18,9 +18,9 @@
 
 #include "wl_surface.h"
 #include "window_wl_surface_role.h"
-#include "mir/shell/surface_specification.h"
-#include "mir/frontend/surface.h"
-#include "mir/log.h"
+#include <mir/shell/surface_specification.h>
+#include <mir/frontend/surface.h>
+#include <mir/log.h>
 
 namespace mf = mir::frontend;
 namespace mw = mir::wayland;

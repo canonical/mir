@@ -19,8 +19,8 @@
 #include "xwayland_server.h"
 #include "xwayland_spawner.h"
 #include "wayland_connector.h"
-#include "mir/log.h"
-#include "mir/wayland/client.h"
+#include <mir/log.h>
+#include <mir/wayland/client.h>
 
 #include <boost/throw_exception.hpp>
 #include <sys/socket.h>

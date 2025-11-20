@@ -16,7 +16,7 @@
 
 #include "one_shot_device_observer.h"
 
-#include "mir/fd.h"
+#include <mir/fd.h>
 
 namespace mgc = mir::graphics::common;
 

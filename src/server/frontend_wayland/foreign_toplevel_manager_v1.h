@@ -19,7 +19,7 @@
 
 #include "wlr-foreign-toplevel-management-unstable-v1_wrapper.h"
 #include "desktop_file_manager.h"
-#include "mir/synchronised.h"
+#include <mir/synchronised.h>
 
 #include <memory>
 #include <mutex>

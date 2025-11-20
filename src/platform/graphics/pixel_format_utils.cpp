@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/graphics/pixel_format_utils.h"
+#include <mir/graphics/pixel_format_utils.h>
 
 namespace {
 

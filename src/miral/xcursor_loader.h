@@ -18,7 +18,7 @@
 #ifndef MIRAL_CURSOR_LOADER_H_
 #define MIRAL_CURSOR_LOADER_H_
 
-#include "mir/input/cursor_images.h"
+#include <mir/input/cursor_images.h>
 
 #include <memory>
 #include <string>

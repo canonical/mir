@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/test/doubles/stub_notifying_alarm.h"
-#include "mir/time/clock.h"
+#include <mir/test/doubles/stub_notifying_alarm.h>
+#include <mir/time/clock.h>
 
 namespace mtd = mir::test::doubles;
 

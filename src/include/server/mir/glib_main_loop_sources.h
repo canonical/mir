@@ -17,9 +17,9 @@
 #ifndef MIR_GLIB_MAIN_LOOP_SOURCES_H_
 #define MIR_GLIB_MAIN_LOOP_SOURCES_H_
 
-#include "mir/time/clock.h"
-#include "mir/thread_safe_list.h"
-#include "mir/fd.h"
+#include <mir/time/clock.h>
+#include <mir/thread_safe_list.h>
+#include <mir/fd.h>
 
 #include <functional>
 #include <vector>

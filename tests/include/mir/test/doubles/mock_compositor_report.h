@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_COMPOSITOR_REPORT_H_
 #define MIR_TEST_DOUBLES_MOCK_COMPOSITOR_REPORT_H_
 
-#include "mir/compositor/compositor_report.h"
+#include <mir/compositor/compositor_report.h>
 #include <gmock/gmock.h>
 
 namespace mir
