@@ -68,7 +68,7 @@ mir::Fd create_anonymous_file(size_t size)
 
     mir::Fd fd = mir::Fd{raw_fd};
 
-    if (ftruncate(fd, static_cast<__off64_t>(size)) == -1)
+    if (ftruncate(fd, static_cast<off_t>(size)) == -1)
     {
         BOOST_THROW_EXCEPTION(
             std::system_error(errno, std::system_category(), "Failed to resize temporary file"));
