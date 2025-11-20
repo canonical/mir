@@ -165,7 +165,15 @@ void ms::MediatingDisplayChanger::configure(
                 /* If the session is focused, apply the configuration */
                 if (focused_session.lock() == session)
                 {
-                    apply_config(conf);
+                    try
+                    {
+                        apply_config(conf);
+                    }
+                    catch (std::exception const&)
+                    {
+                        // apply_config already handles the error by notifying observers
+                        // and attempting to revert to the previous configuration
+                    }
                 }
             }
         });
@@ -413,7 +421,15 @@ void ms::MediatingDisplayChanger::focus_change_handler(
     auto const it = config_map.find(session);
     if (it != config_map.end())
     {
-        apply_config(it->second);
+        try
+        {
+            apply_config(it->second);
+        }
+        catch (std::exception const&)
+        {
+            // apply_config already handles the error by notifying observers
+            // and attempting to revert to the previous configuration
+        }
     }
     else if (!base_configuration_applied)
     {
