@@ -25,4 +25,3 @@ target_include_directories(mirsharedlogging
     PUBLIC
         ${PROJECT_SOURCE_DIR}/src/include/common
 )
-
