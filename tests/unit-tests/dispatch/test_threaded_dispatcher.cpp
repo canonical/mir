@@ -55,9 +55,9 @@ public:
 class MockDispatchable : public md::Dispatchable
 {
 public:
-    MOCK_CONST_METHOD0(watch_fd, mir::Fd());
-    MOCK_METHOD1(dispatch, bool(md::FdEvents));
-    MOCK_CONST_METHOD0(relevant_events, md::FdEvents());
+    MOCK_METHOD(mir::Fd, watch_fd, (), (const, override));
+    MOCK_METHOD(bool, dispatch, (md::FdEvents), (override));
+    MOCK_METHOD(md::FdEvents, relevant_events, (), (const, override));
 };
 
 }

@@ -17,9 +17,16 @@
 #ifndef MIRAL_APPLICATION_SWITCHER_H
 #define MIRAL_APPLICATION_SWITCHER_H
 
+#include <miral/toolkit_event.h>
 #include <miral/window_manager_tools.h>
 #include <memory>
 #include <wayland-client.h>
+#include <linux/input-event-codes.h>
+
+namespace mir
+{
+class Server;
+}
 
 namespace miral
 {
@@ -50,6 +57,9 @@ public:
     /// Creates a new application switcher.
     ApplicationSwitcher();
     ~ApplicationSwitcher();
+
+    ApplicationSwitcher(ApplicationSwitcher const&);
+    ApplicationSwitcher& operator=(ApplicationSwitcher const&);
 
     void operator()(wl_display* display);
     void operator()(std::weak_ptr<mir::scene::Session> const& session) const;
@@ -89,6 +99,71 @@ private:
     class Self;
     std::shared_ptr<Self> self;
 };
+
+/// This class encapsulates the standard usage of the #miral::ApplicationSwitcher.
+///
+/// It will provide the application switcher to an internal client, setup common keybinds,
+/// and automatically stop it when the server starts.
+///
+/// This class will provide the following keybinds by default:
+/// - Call #miral::ApplicationSwitcher::next_app on `alt + tab`.
+/// - Call #miral::ApplicationSwitcher::prev_app on `alt + shift + tab`
+/// - Call #miral::ApplicationSwitcher::next_window on `alt + grave`
+/// - Call #miral::ApplicationSwitcher::prev_window on `alt + shift + grave`.
+///
+/// This class should be provided to a #miral::MirRunner::run_with.
+///
+/// \remark Since MirAL 5.6
+class BasicApplicationSwitcher
+{
+public:
+    /// Describes the keyboard shortcuts for the application switcher keyboard filter.
+    struct KeybindConfiguration
+    {
+        /// This is the modifier that must be held for any application switcher
+        /// action to begin.
+        ///
+        /// Defaults to #mir_input_event_modifier_alt.
+        MirInputEventModifier primary_modifier = mir_input_event_modifier_alt;
+
+        /// This is the modifier that must be held alongside the primary modifier
+        /// in order to reverse the direction of an action being run. For example,
+        /// holding the primary modifier and hitting the application key will select
+        /// the next application, while holding both the primary and reverse modifiers
+        /// and hitting the application will select the previous application.
+        ///
+        /// Defaults to #mir_input_event_modifier_shift.
+        MirInputEventModifier reverse_modifier = mir_input_event_modifier_shift;
+
+        /// This is the key that must be clicked in order to trigger either
+        /// #miral::ApplicationSwitcher::next_app or #miral::ApplicationSwitcher::prev_app,
+        /// depending on the modifiers that are currently being held.
+        ///
+        /// Defaults to KEY_TAB.
+        int application_key = KEY_TAB;
+
+        /// This is the key that must be clicked in order to trigger either
+        /// #miral::ApplicationSwitcher::next_window or #miral::ApplicationSwitcher::prev_window,
+        /// depending on the modifiers that are currently being held.
+        ///
+        /// Defaults to KEY_GRAVE.
+        int window_key = KEY_GRAVE;
+    };
+
+    /// Create a new basic application switcher with the default #KeybindConfiguration.
+    BasicApplicationSwitcher();
+
+    /// Create a new basic application switcher with the provided \p keybind_configuration.
+    explicit BasicApplicationSwitcher(KeybindConfiguration const& keybind_configuration);
+    ~BasicApplicationSwitcher();
+
+    void operator()(mir::Server& server) const;
+
+private:
+    class Self;
+    std::shared_ptr<Self> self;
+};
+
 }
 
 #endif

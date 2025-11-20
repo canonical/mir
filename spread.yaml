@@ -38,8 +38,10 @@ environment:
     BUILD_TYPE/asan,asan_clang: AddressSanitizer
     BUILD_TYPE/tsan,tsan_clang: ThreadSanitizer
     BUILD_TYPE/ubsan,ubsan_clang: UBSanitizer
+    BUILD_TYPE/clang,lld,mold: Debug
     LINKER: ld
-    LINKER/clang: lld
+    LINKER/lld,clang: lld
+    LINKER/mold: mold
     DEB_BUILD_EXTRA:
     DEB_BUILD_EXTRA/asan,asan_clang,ubsan,ubsan_clang: nostrip optimize=-lto
     DEB_BUILD_EXTRA/tsan,tsan_clang: nostrip nocheck

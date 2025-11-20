@@ -30,12 +30,11 @@ namespace doubles
 
 struct MockInputSink : mir::input::InputSink
 {
-    MOCK_METHOD1(handle_input, void(std::shared_ptr<MirEvent> const&));
-    MOCK_METHOD1(confine_pointer, void(mir::geometry::Point&));
-    MOCK_CONST_METHOD0(bounding_rectangle, mir::geometry::Rectangle());
-    MOCK_CONST_METHOD1(output_info, mir::input::OutputInfo(uint32_t));
-    MOCK_METHOD1(key_state, void(std::vector<uint32_t> const&));
-    MOCK_METHOD1(pointer_state, void(MirPointerButtons));
+    MOCK_METHOD(void, handle_input, (std::shared_ptr<MirEvent> const&), (override));
+    MOCK_METHOD(mir::geometry::Rectangle, bounding_rectangle, (), (const, override));
+    MOCK_METHOD(mir::input::OutputInfo, output_info, (uint32_t), (const, override));
+    MOCK_METHOD(void, key_state, (std::vector<uint32_t> const&), (override));
+    MOCK_METHOD(void, pointer_state, (MirPointerButtons), (override));
 };
 
 }

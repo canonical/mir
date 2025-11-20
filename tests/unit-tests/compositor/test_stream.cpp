@@ -39,7 +39,7 @@ struct Stream : Test
     {
     }
 
-    MOCK_METHOD1(called, void(mg::Buffer&));
+    MOCK_METHOD(void, called, (mg::Buffer&), ());
 
     geom::Size initial_size{44,2};
     std::vector<std::shared_ptr<mg::Buffer>> buffers;

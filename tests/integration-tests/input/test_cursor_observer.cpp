@@ -43,7 +43,7 @@ using namespace ::testing;
 
 struct MockCursorObserver : public mi::CursorObserver
 {
-    MOCK_METHOD2(cursor_moved_to, void(float, float));
+    MOCK_METHOD(void, cursor_moved_to, (float, float), (override));
 
     ~MockCursorObserver() noexcept {}
 

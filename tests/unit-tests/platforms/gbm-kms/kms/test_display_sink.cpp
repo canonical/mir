@@ -124,18 +124,6 @@ public:
             .WillByDefault(Return(true));
         ON_CALL(*mock_kms_output, max_refresh_rate())
             .WillByDefault(Return(mock_refresh_rate));
-        ON_CALL(*mock_kms_output, fb_for(A<gbm_bo*>()))
-            .WillByDefault(Return(
-                std::shared_ptr<FBHandle const>{
-                    reinterpret_cast<FBHandle const*>(0x12ad),
-                    [](auto) {}}));
-        ON_CALL(*mock_kms_output, fb_for(A<DMABufBuffer const&>()))
-            .WillByDefault(Return(
-                std::shared_ptr<FBHandle const>{
-                    reinterpret_cast<FBHandle const*>(0xe0e0),
-                    [](auto) {}}));
-        ON_CALL(*mock_kms_output, buffer_requires_migration(_))
-            .WillByDefault(Return(false));
 
         ON_CALL(*mock_bypassable_buffer, size())
             .WillByDefault(Return(display_area.size));

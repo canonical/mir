@@ -29,8 +29,8 @@ namespace doubles
 {
 struct MockInputDeviceRegistry : input::InputDeviceRegistry
 {
-    MOCK_METHOD1(add_device, std::weak_ptr<input::Device>(std::shared_ptr<input::InputDevice> const&));
-    MOCK_METHOD1(remove_device, void(std::shared_ptr<input::InputDevice> const&));
+    MOCK_METHOD(std::weak_ptr<input::Device>, add_device, (std::shared_ptr<input::InputDevice> const&), (override));
+    MOCK_METHOD(void, remove_device, (std::shared_ptr<input::InputDevice> const&), (override));
 
 };
 
