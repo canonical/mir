@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "../../include/common/mir/shared_library_prober.h"
+#include <mir/shared_library_prober.h>
 
 #include "mir_test_framework/executable_path.h"
 
