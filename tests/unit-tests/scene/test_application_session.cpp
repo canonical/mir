@@ -21,7 +21,6 @@
 #include <mir/scene/null_session_listener.h>
 #include <mir/scene/surface_event_source.h>
 #include <mir/scene/output_properties_cache.h>
-#include <mir/client_visible_error.h>
 #include <mir/test/fake_shared.h>
 #include <mir/test/doubles/mock_surface_stack.h>
 #include <mir/test/doubles/mock_surface.h>
