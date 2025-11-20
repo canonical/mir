@@ -16,7 +16,6 @@
 
 #include "mediating_display_changer.h"
 
-#include <mir/client_visible_error.h>
 #include <mir/compositor/compositor.h>
 #include <mir/graphics/display.h>
 #include <mir/graphics/display_configuration.h>
@@ -43,44 +42,6 @@ namespace mt = mir::time;
 namespace
 {
 char const* const bad_display_config = "Invalid or inconsistent display configuration";
-
-class DisplayConfigurationInProgressError : public mir::ClientVisibleError
-{
-public:
-    DisplayConfigurationInProgressError()
-        : ClientVisibleError("Base display configuration already in progress")
-    {
-    }
-
-    MirErrorDomain domain() const noexcept override
-    {
-        return mir_error_domain_display_configuration;
-    }
-
-    uint32_t code() const noexcept override
-    {
-        return mir_display_configuration_error_in_progress;
-    }
-};
-
-class DisplayConfigurationFailedError : public mir::ClientVisibleError
-{
-public:
-    DisplayConfigurationFailedError()
-        : ClientVisibleError("Display configuration falied")
-    {
-    }
-
-    MirErrorDomain domain() const noexcept override
-    {
-        return mir_error_domain_display_configuration;
-    }
-
-    uint32_t code() const noexcept override
-    {
-        return mir_display_configuration_error_rejected_by_hardware;
-    }
-};
 
 class ApplyNowAndRevertOnScopeExit
 {
@@ -204,82 +165,10 @@ void ms::MediatingDisplayChanger::configure(
                 /* If the session is focused, apply the configuration */
                 if (focused_session.lock() == session)
                 {
-                    try
-                    {
-                        apply_config(conf);
-                    }
-                    catch (std::exception const&)
-                    {
-                        session->send_error(DisplayConfigurationFailedError{});
-                    }
-                }
-            }
-        });
-}
-
-void
-ms::MediatingDisplayChanger::preview_base_configuration(
-    std::weak_ptr<ms::Session> const& session,
-    std::shared_ptr<graphics::DisplayConfiguration> const& conf,
-    std::chrono::seconds timeout)
-{
-    if (!conf->valid())
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error(bad_display_config));
-    }
-
-    {
-        std::lock_guard lock{configuration_mutex};
-
-        if (preview_configuration_timeout)
-        {
-            BOOST_THROW_EXCEPTION(
-                DisplayConfigurationInProgressError());
-        }
-
-        preview_configuration_timeout = alarm_factory->create_alarm(
-            [this, session]()
-                {
-                    if (auto live_session = session.lock())
-                    {
-                        apply_base_config();
-                        observer->configuration_updated_for_session(live_session, base_configuration());
-                    }
-                });
-        preview_configuration_timeout->reschedule_in(timeout);
-        currently_previewing_session = session;
-    }
-
-    server_action_queue->enqueue(
-        this,
-        [this, conf, session]()
-        {
-            if (auto live_session = session.lock())
-            {
-                try
-                {
                     apply_config(conf);
-                    observer->configuration_updated_for_session(live_session, conf);
-                }
-                catch (std::runtime_error const&)
-                {
-                    live_session->send_error(DisplayConfigurationFailedError{});
                 }
             }
         });
-}
-
-void
-ms::MediatingDisplayChanger::confirm_base_configuration(
-    std::shared_ptr<ms::Session> const& /*session*/,
-    std::shared_ptr<graphics::DisplayConfiguration> const& confirmed_conf)
-{
-    {
-        std::lock_guard lock{configuration_mutex};
-        preview_configuration_timeout = std::unique_ptr<mt::Alarm>();
-        currently_previewing_session = std::weak_ptr<ms::Session>{};
-    }
-    set_base_configuration(confirmed_conf);
 }
 
 std::shared_ptr<mg::DisplayConfiguration>
@@ -524,14 +413,7 @@ void ms::MediatingDisplayChanger::focus_change_handler(
     auto const it = config_map.find(session);
     if (it != config_map.end())
     {
-        try
-        {
-            apply_config(it->second);
-        }
-        catch (std::exception const&)
-        {
-            session->send_error(DisplayConfigurationFailedError{});
-        }
+        apply_config(it->second);
     }
     else if (!base_configuration_applied)
     {
