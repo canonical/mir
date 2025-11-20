@@ -21,8 +21,7 @@ add_library(mirsharedlogging OBJECT
   logger.cpp
 )
 
-list(APPEND MIR_COMMON_REFERENCES
-  mirsharedlogging
+target_include_directories(mirsharedlogging
+    PUBLIC
+        ${PROJECT_SOURCE_DIR}/src/include/common
 )
-
-set(MIR_COMMON_REFERENCES ${MIR_COMMON_REFERENCES} PARENT_SCOPE)

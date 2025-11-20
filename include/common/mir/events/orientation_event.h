@@ -14,23 +14,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_LOGGING_DUMB_CONSOLE_LOGGER_H_
-#define MIR_LOGGING_DUMB_CONSOLE_LOGGER_H_
+#ifndef MIR_COMMON_ORIENTATION_EVENT_H_
+#define MIR_COMMON_ORIENTATION_EVENT_H_
 
-#include "mir/logging/logger.h"
+#include <mir/events/event.h>
 
-namespace mir
+struct MirOrientationEvent : MirEvent
 {
-namespace logging
-{
-class DumbConsoleLogger : public Logger
-{
-public:
+    auto clone() const -> MirOrientationEvent* override;
 
-protected:
-    void log(Severity severity, const std::string& message, const std::string& component) override;
+    MirOrientationEvent();
+
+    int surface_id() const;
+    void set_surface_id(int id);
+
+    MirOrientation direction() const;
+    void set_direction(MirOrientation orientation);
+
+private:
+    int surface_id_ = 0;
+    MirOrientation direction_ = mir_orientation_normal;
 };
-}
-}
 
-#endif // MIR_LOGGING_DUMB_CONSOLE_LOGGER_H_
+#endif /* MIR_COMMON_ORIENTATION_EVENT_H_ */

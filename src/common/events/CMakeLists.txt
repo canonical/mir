@@ -28,12 +28,16 @@ set(EVENT_SOURCES
   resize_event.cpp
   window_output_event.cpp
   event_helpers.cpp
-  window_placement_event.cpp ${PROJECT_SOURCE_DIR}/src/include/common/mir/events/window_placement_event.h
+  window_placement_event.cpp ${PROJECT_SOURCE_DIR}/include/common/mir/events/window_placement_event.h
 )
 
-add_library(
-  mirevents OBJECT
+add_library(mirevents OBJECT
   ${EVENT_SOURCES}
+)
+
+target_include_directories(mirevents
+    PUBLIC
+        ${PROJECT_SOURCE_DIR}/src/include/common
 )
 
 target_link_libraries(mirevents

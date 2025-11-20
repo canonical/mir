@@ -21,8 +21,8 @@
 #include <string>
 #include <memory>
 
-#include "mir/events/input_event.h"
-#include "mir/events/xkb_modifiers.h"
+#include <mir/events/input_event.h>
+#include <mir/events/xkb_modifiers.h>
 
 namespace mir
 {

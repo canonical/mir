@@ -14,18 +14,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_BASIC_OBSERVERS_H_
-#define MIR_BASIC_OBSERVERS_H_
+#ifndef MIR_COMMON_PROMPT_SESSION_EVENT_H_
+#define MIR_COMMON_PROMPT_SESSION_EVENT_H_
 
-#include "mir/thread_safe_list.h"
-#include <memory>
+#include <mir/events/event.h>
 
-namespace mir
+struct MirPromptSessionEvent : MirEvent
 {
-template<class Observer>
-class BasicObservers : protected ThreadSafeList<std::shared_ptr<Observer>>
-{
+    MirPromptSessionEvent();
+    auto clone() const -> MirPromptSessionEvent* override;
+
+    MirPromptSessionState new_state() const;
+    void set_new_state(MirPromptSessionState state);
+
+private:
+    MirPromptSessionState state = mir_prompt_session_state_stopped;
 };
-}
 
-#endif /* MIR_BASIC_OBSERVERS_H_ */
+#endif /* MIR_COMMON_PROMPT_SESSION_EVENT_H_ */
