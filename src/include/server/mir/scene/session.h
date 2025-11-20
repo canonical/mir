@@ -17,10 +17,6 @@
 #ifndef MIR_SCENE_SESSION_H_
 #define MIR_SCENE_SESSION_H_
 
-#include "mir_toolkit/common.h"
-#include "mir_toolkit/client_types.h"
-#include "mir/graphics/buffer_id.h"
-#include "mir/geometry/size.h"
 #include "mir/fd.h"
 
 #include <vector>
@@ -44,8 +40,6 @@ class Weak;
 namespace frontend
 {
 class WlSurface;
-class EventSink;
-class Surface;
 class BufferStream;
 }
 namespace shell
@@ -56,7 +50,6 @@ struct SurfaceSpecification;
 namespace graphics
 {
 struct BufferProperties;
-class Buffer;
 }
 namespace scene
 {
