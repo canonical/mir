@@ -87,9 +87,8 @@ int main(int argc, char const* argv[])
         };
 
     MirRunner runner{argc, argv};
-    ApplicationSwitcher application_switcher;
 
-    runner.add_stop_callback([&] { shutdown_hook(); application_switcher.stop(); });
+    runner.add_stop_callback([&] { shutdown_hook(); });
 
     ExternalClientLauncher external_client_launcher;
 
@@ -358,65 +357,6 @@ int main(int argc, char const* argv[])
         return false;
     };
 
-    // The following filter triggers the application selector internal application
-    // on "Alt + Tab" and "Alt + Shift + Tab".
-    auto const application_switcher_filter = [application_switcher=application_switcher, is_running = false](MirKeyboardEvent const* key_event) mutable
-    {
-        if (mir_keyboard_event_action(key_event) == mir_keyboard_action_down)
-        {
-            auto const modifiers = mir_keyboard_event_modifiers(key_event);
-            if (modifiers & mir_input_event_modifier_alt)
-            {
-                auto const scancode = mir_keyboard_event_scan_code(key_event);
-                if (modifiers & mir_input_event_modifier_shift)
-                {
-                    if (scancode == KEY_TAB)
-                    {
-                        application_switcher.prev_app();
-                        is_running = true;
-                        return true;
-                    }
-                    else if (scancode == KEY_GRAVE)
-                    {
-                        application_switcher.prev_window();
-                        is_running = true;
-                        return true;
-                    }
-                }
-                if (scancode == KEY_TAB)
-                {
-                    application_switcher.next_app();
-                    is_running = true;
-                    return true;
-                }
-                else if (scancode == KEY_GRAVE)
-                {
-                    application_switcher.next_window();
-                    is_running = true;
-                    return true;
-                }
-                else if (scancode == KEY_ESC && is_running)
-                {
-                    application_switcher.cancel();
-                    is_running = false;
-                    return true;
-                }
-            }
-        }
-        else if (mir_keyboard_event_action(key_event) == mir_keyboard_action_up)
-        {
-            auto const scancode = mir_keyboard_event_scan_code(key_event);
-            if ((scancode == KEY_LEFTALT || scancode == KEY_RIGHTALT) && is_running)
-            {
-                application_switcher.confirm();
-                is_running = false;
-                return true;
-            }
-        }
-
-        return false;
-    };
-
     return runner.run_with(
         {
             CursorTheme{"default:DMZ-White"},
@@ -451,7 +391,6 @@ int main(int argc, char const* argv[])
             cursor_scale,
             locate_pointer,
             AppendKeyboardEventFilter{locate_pointer_filter},
-            StartupInternalClient{application_switcher},
-            AppendKeyboardEventFilter{application_switcher_filter}
+            BasicApplicationSwitcher{}
         });
 }

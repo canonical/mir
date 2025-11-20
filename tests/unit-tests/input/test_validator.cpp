@@ -36,7 +36,7 @@ namespace mir
 {
 struct MockEventSink
 {
-    MOCK_METHOD1(handle, void(MirEvent const&));
+    MOCK_METHOD(void, handle, (MirEvent const&), ());
 };
 }
 

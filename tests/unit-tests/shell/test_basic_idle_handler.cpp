@@ -44,9 +44,9 @@ namespace
 struct MockDisplayConfigurationController: msh::DisplayConfigurationController
 {
 public:
-    MOCK_METHOD1(set_base_configuration, void(std::shared_ptr<mg::DisplayConfiguration> const&));
-    MOCK_METHOD0(base_configuration, std::shared_ptr<mg::DisplayConfiguration>());
-    MOCK_METHOD1(set_power_mode, void(MirPowerMode));
+    MOCK_METHOD(void, set_base_configuration, (std::shared_ptr<mg::DisplayConfiguration> const&), (override));
+    MOCK_METHOD(std::shared_ptr<mg::DisplayConfiguration>, base_configuration, (), (override));
+    MOCK_METHOD(void, set_power_mode, (MirPowerMode), (override));
 };
 
 class FakeSessionLock : public ms::SessionLock
