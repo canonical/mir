@@ -118,12 +118,14 @@ mf::XdgShellStable::XdgShellStable(
     Executor& wayland_executor,
     std::shared_ptr<msh::Shell> const& shell,
     WlSeat& seat,
-    OutputManager* output_manager)
+    OutputManager* output_manager,
+    std::shared_ptr<SurfaceRegistry> const& surface_registry)
     : Global(display, Version<5>()),
       wayland_executor{wayland_executor},
       shell{shell},
       seat{seat},
-      output_manager{output_manager}
+      output_manager{output_manager},
+      surface_registry{surface_registry}
 {
 }
 
@@ -277,7 +279,8 @@ mf::XdgPopupStable::XdgPopupStable(
           mw::XdgPopup::client,
           surface,
           xdg_surface->xdg_shell.shell,
-          xdg_surface->xdg_shell.output_manager),
+          xdg_surface->xdg_shell.output_manager,
+          xdg_surface->xdg_shell.surface_registry),
       reactive{positioner.reactive},
       aux_rect{positioner.aux_rect ? positioner.aux_rect.value() : geom::Rectangle{}},
       shell{xdg_surface->xdg_shell.shell},
@@ -426,7 +429,8 @@ mf::XdgToplevelStable::XdgToplevelStable(wl_resource* new_resource, XdgSurfaceSt
           mw::XdgToplevel::client,
           surface,
           xdg_surface->xdg_shell.shell,
-          xdg_surface->xdg_shell.output_manager),
+          xdg_surface->xdg_shell.output_manager,
+          xdg_surface->xdg_shell.surface_registry),
       xdg_surface{xdg_surface}
 {
     if (version_supports_wm_capabilities())

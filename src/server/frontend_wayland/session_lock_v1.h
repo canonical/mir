@@ -36,6 +36,7 @@ class WlSeat;
 class SurfaceStack;
 class OutputManager;
 class SessionLockV1;
+class SurfaceRegistry;
 
 class SessionLockManagerV1 : public wayland::SessionLockManagerV1::Global
 {
@@ -47,7 +48,8 @@ public:
         std::shared_ptr<scene::SessionLock> const& session_lock,
         WlSeat& seat,
         OutputManager* output_manager,
-        std::shared_ptr<SurfaceStack> const& surface_stack);
+        std::shared_ptr<SurfaceStack> const& surface_stack,
+        std::shared_ptr<SurfaceRegistry> const& surface_registry);
 
     Executor& wayland_executor;
     std::shared_ptr<shell::Shell> const shell;
@@ -55,6 +57,7 @@ public:
     WlSeat& seat;
     OutputManager* const output_manager;
     std::shared_ptr<SurfaceStack> surface_stack;
+    std::shared_ptr<SurfaceRegistry> const surface_registry;
 
     bool try_lock(SessionLockV1* lock);
     bool try_relinquish_locking_privilege(SessionLockV1* lock);

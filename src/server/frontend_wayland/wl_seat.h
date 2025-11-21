@@ -80,7 +80,7 @@ public:
         std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> const& keyboard_observer_registrar,
         std::shared_ptr<mir::input::Seat> const& seat,
         std::shared_ptr<shell::AccessibilityManager> const& accessibility_manager,
-        std::shared_ptr<frontend::SurfaceRegistry> const& surface_registry);
+        std::shared_ptr<SurfaceRegistry> const& surface_registry);
 
     ~WlSeat();
 

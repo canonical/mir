@@ -194,12 +194,14 @@ mf::XdgShellV6::XdgShellV6(
     Executor& wayland_executor,
     std::shared_ptr<msh::Shell> const& shell,
     WlSeat& seat,
-    OutputManager* output_manager) :
+    OutputManager* output_manager,
+    std::shared_ptr<SurfaceRegistry> const& surface_registry) :
     Global(display, Version<1>()),
     wayland_executor{wayland_executor},
     shell{shell},
     seat{seat},
-    output_manager{output_manager}
+    output_manager{output_manager},
+    surface_registry{surface_registry}
 {
 }
 
@@ -309,7 +311,8 @@ mf::XdgPopupV6::XdgPopupV6(
           mw::XdgPopupV6::client,
           surface,
           xdg_surface->xdg_shell.shell,
-          xdg_surface->xdg_shell.output_manager),
+          xdg_surface->xdg_shell.output_manager,
+          xdg_surface->xdg_shell.surface_registry),
       xdg_surface{xdg_surface}
 {
     auto specification = static_cast<mir::shell::SurfaceSpecification*>(
@@ -376,7 +379,8 @@ mf::XdgToplevelV6::XdgToplevelV6(struct wl_resource* new_resource, XdgSurfaceV6*
           mw::XdgToplevelV6::client,
           surface,
           xdg_surface->xdg_shell.shell,
-          xdg_surface->xdg_shell.output_manager),
+          xdg_surface->xdg_shell.output_manager,
+          xdg_surface->xdg_shell.surface_registry),
       xdg_surface{xdg_surface}
 {
     wl_array states{};

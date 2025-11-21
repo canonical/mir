@@ -342,7 +342,8 @@ mf::WaylandConnector::WaylandConnector(
         decoration_strategy,
         session_coordinator,
         keyboard_observer_registrar,
-        token_authority});
+        token_authority,
+        surface_registry});
 
     shm_global = std::make_unique<WlShm>(display.get(), executor);
 
