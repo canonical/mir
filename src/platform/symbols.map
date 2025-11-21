@@ -1,6 +1,7 @@
-MIR_PLATFORM_2.23 {
+MIR_PLATFORM_2.24 {
  global:
   extern "C++" {
+    mir::gl::tessellate_renderable_into_rectangle*;
     mir::graphics::AtomicFrame::increment*;
     mir::graphics::AtomicFrame::load*;
     mir::graphics::AtomicFrame::store*;
@@ -95,6 +96,7 @@ MIR_PLATFORM_2.23 {
     mir::graphics::red_channel_depth*;
     mir::graphics::scale_cursor_image*;
     mir::graphics::tessellate_renderable_into_rectangle*;
+    mir::graphics::valid_pixel_format*;
     mir::graphics::wayland::bind_display*;
     mir::graphics::wayland::buffer_from_resource*;
     mir::graphics::wayland::unbind_display*;
@@ -160,8 +162,13 @@ MIR_PLATFORM_2.23 {
     mir::options::wayland_extensions_opt;
     mir::options::x11_display_opt;
     mir::options::x11_scale_opt;
+    mir::renderer::gl::RendererFactory::RendererFactory*;
+    mir::renderer::gl::Renderer::Renderer*;
+    mir::renderer::gl::Renderer::render*;
+    mir::renderer::gl::Renderer::set_output_transform*;
+    mir::renderer::gl::Renderer::set_viewport*;
+    mir::renderer::gl::Renderer::?Renderer*;
     mir::renderer::software::alloc_buffer_with_content*;
-    mir::renderer::software::as_read_mappable*;
     mir::renderer::software::as_write_mappable*;
     mir::udev::Context::?Context*;
     mir::udev::Context::Context*;
@@ -213,21 +220,8 @@ MIR_PLATFORM_2.23 {
     vtable?for?mir::options::DefaultConfiguration;
     vtable?for?mir::options::Option;
     vtable?for?mir::options::ProgramOption;
+    vtable?for?mir::renderer::gl::RendererFactory;
  };
  local: *;
 };
 
-MIR_PLATFORM_2.24.0 {
- global:
-extern "C++" {
-    mir::graphics::valid_pixel_format*;
-    mir::gl::tessellate_renderable_into_rectangle*;
-    mir::renderer::gl::RendererFactory::RendererFactory*;
-    mir::renderer::gl::Renderer::Renderer*;
-    mir::renderer::gl::Renderer::render*;
-    mir::renderer::gl::Renderer::set_output_transform*;
-    mir::renderer::gl::Renderer::set_viewport*;
-    mir::renderer::gl::Renderer::?Renderer*;
-    vtable?for?mir::renderer::gl::RendererFactory;
-  };
-} MIR_PLATFORM_2.23;
