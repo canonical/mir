@@ -106,7 +106,7 @@ void assign_or_unset(Environment& env, std::string const& key, auto optional_val
     }
 }
 
-auto execute_with_environment(std::vector<std::string> const app, Environment& application_environment) -> pid_t
+auto execute_with_environment(std::vector<std::string> const app, Environment& application_environment, std::optional<int> stdout_fd, std::optional<int> stderr_fd) -> pid_t
 {
     auto const exec_env = application_environment.exec_env();
 
@@ -130,6 +130,17 @@ auto execute_with_environment(std::vector<std::string> const app, Environment& a
         sigfillset(&all_signals);
         pthread_sigmask(SIG_UNBLOCK, &all_signals, nullptr);
 
+        if (stdout_fd)
+        {
+             dup2(*stdout_fd, STDOUT_FILENO);
+             close(*stdout_fd);
+        }
+        if (stderr_fd)
+        {
+             dup2(*stderr_fd, STDERR_FILENO);
+             close(*stderr_fd);
+        }
+
         // execvpe() isn't listed as being async-signal-safe, but the implementation looks fine and rewriting seems
         // unnecessary
         execvpe(exec_args[0], const_cast<char* const*>(exec_args.data()), const_cast<char* const*>(exec_env.data()));
@@ -148,7 +159,9 @@ auto miral::launch_app_env(
     std::optional<std::string> const& wayland_display,
     std::optional<std::string> const& x11_display,
     std::optional<std::string> const& xdg_activation_token,
-    miral::AppEnvironment const& app_env) -> pid_t
+    miral::AppEnvironment const& app_env,
+    std::optional<int> stdout_fd,
+    std::optional<int> stderr_fd) -> pid_t
 {
     Environment application_environment;
 
@@ -160,5 +173,5 @@ auto miral::launch_app_env(
     assign_or_unset(application_environment, "XDG_ACTIVATION_TOKEN", xdg_activation_token);
     assign_or_unset(application_environment, "DESKTOP_STARTUP_ID", xdg_activation_token);
 
-    return execute_with_environment(app, application_environment);
+    return execute_with_environment(app, application_environment, stdout_fd, stderr_fd);
 }

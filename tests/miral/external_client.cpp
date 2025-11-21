@@ -18,6 +18,8 @@
 #include <miral/external_client.h>
 #include <miral/x11_support.h>
 
+#include "mir/test/pipe.h"
+
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <filesystem>
@@ -31,49 +33,45 @@ struct ExternalClient : miral::TestServer
 {
     ExternalClient()
     {
-        char tmp_dir_path[] = "/tmp/mir-XXXXXX";
-        if (mkdtemp(tmp_dir_path) == nullptr)
-            throw std::runtime_error("failed to create temporary directory");
-        output_dir = std::string(tmp_dir_path);
-        output = output_dir + "/output";
-
         start_server_in_setup = false;
         add_server_init(external_client);
     }
 
     ~ExternalClient()
     {
-        std::filesystem::remove_all(output_dir);
     }
 
     miral::ExternalClientLauncher external_client;
     miral::X11Support x11_disabled_by_default{};
     miral::X11Support x11_enabled_by_default{miral::X11Support{}.default_to_enabled()};
 
-    std::string output_dir;
-    std::string output;
-
     auto client_env_value(std::string const& key) const -> std::string
     {
-        auto const client_pid = external_client.launch({"bash", "-c", ("echo ${" + key + ":-(unset)} >" + output).c_str()});
-        return get_client_env_value(client_pid);
+        mir::test::Pipe output;
+        auto const client_pid = external_client.launch({"bash", "-c", ("echo ${" + key + ":-(unset)}").c_str()});
+        return get_client_env_value(client_pid, output.read_fd());
     }
 
     auto client_env_x11_value(std::string const& key) const -> std::string
     {
-        auto const client_pid = external_client.launch_using_x11({"bash", "-c", ("echo ${" + key + "} >" + output).c_str()});
-        return get_client_env_value(client_pid);
+        mir::test::Pipe output;
+        auto const client_pid = external_client.launch_using_x11({"bash", "-c", ("echo ${" + key + "}").c_str()});
+        return get_client_env_value(client_pid, output.read_fd());
     }
 
-    std::string get_client_env_value(pid_t client_pid) const
+    std::string get_client_env_value(pid_t client_pid, int fd) const
     {
         int status;
         waitpid(client_pid, &status, 0);
 
-        std::ifstream in{output};
-        std::string result;
-        getline(in, result);
-        return result;
+        std::string line;
+        size_t size = 1024;
+        line.resize(size);
+        ssize_t n_read = read(fd, &line[0], size);
+        if (n_read < 0)
+            return "";
+        line.resize(size);// FIXME: Stop on newline
+        return line;
     }
 
     bool cannot_start_X_server()

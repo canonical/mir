@@ -125,7 +125,7 @@ auto miral::ExternalClientLauncher::launch(std::vector<std::string> const& comma
     auto const x11_display = self->server->x11_display();
     auto const activation_token = self->server->get_activation_token();
 
-    return launch_app_env(command_line, wayland_display, x11_display, activation_token, self->env);
+    return launch_app_env(command_line, wayland_display, x11_display, activation_token, self->env, std::nullopt, std::nullopt);
 }
 
 miral::ExternalClientLauncher::ExternalClientLauncher() : self{std::make_shared<Self>()} {}
@@ -141,7 +141,7 @@ auto  miral::ExternalClientLauncher::launch_using_x11(std::vector<std::string> c
     {
         auto const wayland_display = self->server->wayland_display();
         return launch_app_env(
-            command_line, wayland_display, x11_display, self->server->get_activation_token(), self->x11_env);
+            command_line, wayland_display, x11_display, self->server->get_activation_token(), self->x11_env, std::nullopt, std::nullopt);
     }
 
     return -1;

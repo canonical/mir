@@ -35,7 +35,9 @@ auto launch_app_env(std::vector<std::string> const& app,
     std::optional<std::string> const& wayland_display,
     std::optional<std::string> const& x11_display,
     std::optional<std::string> const& xdg_activation_token,
-    AppEnvironment const& app_env) -> pid_t;
+    miral::AppEnvironment const& app_env,
+    std::optional<int> stdout_fd,
+    std::optional<int> stderr_fd) -> pid_t;
 }
 
 #endif //MIRAL_LAUNCH_APP_H
