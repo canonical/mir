@@ -38,7 +38,7 @@ bool error_indicates_tmpfile_not_supported(int error)
                             // that incorrectly returns EINVAL. Yay.
 }
 
-mir::Fd create_anonymous_file(size_t size)
+mir::Fd create_anonymous_file(off_t size)
 {
     auto raw_fd = memfd_create("mir-buffer", MFD_CLOEXEC);
     if (raw_fd == -1 && errno == ENOSYS)
@@ -117,7 +117,7 @@ private:
  ********************/
 
 mir::AnonymousShmFile::AnonymousShmFile(size_t size)
-    : fd_{create_anonymous_file(size)},
+    : fd_{create_anonymous_file(static_cast<off_t>(size))},
       mapping{new MapHandle(fd_, size)}
 {
 }

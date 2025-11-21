@@ -59,7 +59,7 @@ public:
      * in Nvidia G-Sync/AMD FreeSync/VESA Adaptive Sync. So this function
      * returns the maximum rate to expect.
      */
-    virtual int max_refresh_rate() const = 0;
+    virtual unsigned max_refresh_rate() const = 0;
 
     virtual bool set_crtc(FBHandle const& fb) = 0;
 

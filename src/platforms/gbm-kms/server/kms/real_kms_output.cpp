@@ -131,7 +131,7 @@ geom::Size mgg::RealKMSOutput::size() const
     return {mode.hdisplay, mode.vdisplay};
 }
 
-int mgg::RealKMSOutput::max_refresh_rate() const
+unsigned mgg::RealKMSOutput::max_refresh_rate() const
 {
     if (connector->connection == DRM_MODE_DISCONNECTED)
         return 1;

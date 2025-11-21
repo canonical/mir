@@ -45,7 +45,7 @@ public:
     void reset();
     void configure(size_t kms_mode_index);
     geometry::Size size() const;
-    int max_refresh_rate() const;
+    unsigned max_refresh_rate() const;
 
     EGLOutputLayerEXT output_layer() const;
     uint32_t crtc_id() const;

@@ -202,7 +202,7 @@ geom::Size mgek::EGLOutput::size() const
     return {mode.hdisplay, mode.vdisplay};
 }
 
-int mgek::EGLOutput::max_refresh_rate() const
+unsigned mgek::EGLOutput::max_refresh_rate() const
 {
     drmModeModeInfo const& current_mode = connector->modes[mode_index];
     return current_mode.vrefresh;
