@@ -85,16 +85,6 @@ char const* mir::event_type_to_c_str(MirEventType t)
         return "mir_event_type_window_output";
     case mir_event_type_window_placement:
         return "mir_event_type_window_placement";
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    case mir_event_type_key:
-        return "mir_event_type_key";
-    case mir_event_type_motion:
-        return "mir_event_type_motion";
-    case mir_event_type_input_configuration:
-        return "mir_event_type_input_configuration";
-#pragma GCC diagnostic pop
     }
 }
 
