@@ -276,14 +276,14 @@ geom::Size mga::AtomicKMSOutput::size() const
     return {mode.hdisplay, mode.vdisplay};
 }
 
-int mga::AtomicKMSOutput::max_refresh_rate() const
+unsigned mga::AtomicKMSOutput::max_refresh_rate() const
 {
     auto conf = configuration.lock();
     if (conf->connector->connection == DRM_MODE_DISCONNECTED)
         return 1;
 
     drmModeModeInfo const& current_mode = conf->connector->modes[conf->mode_index];
-    return static_cast<int>(current_mode.vrefresh);
+    return current_mode.vrefresh;
 }
 
 void mga::AtomicKMSOutput::configure(geom::Displacement offset, size_t kms_mode_index)
