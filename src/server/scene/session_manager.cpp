@@ -141,8 +141,6 @@ std::shared_ptr<ms::Session> ms::SessionManager::open_session(
         void send_ping(int32_t) override {}
 
         void handle_input_config_change(MirInputConfig const&) override {}
-
-        void handle_error(ClientVisibleError const&) override {}
     };
 
     std::shared_ptr<Session> new_session = std::make_shared<ApplicationSession>(

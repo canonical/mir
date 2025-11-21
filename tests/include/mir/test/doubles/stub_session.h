@@ -38,8 +38,6 @@ struct StubSession : scene::Session
 
     std::shared_ptr<scene::Surface> default_surface() const override;
 
-    void send_error(ClientVisibleError const&) override;
-
     void hide() override;
 
     void show() override;

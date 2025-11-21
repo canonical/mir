@@ -37,21 +37,6 @@ public:
     void configure(std::shared_ptr<scene::Session> const&, std::shared_ptr<graphics::DisplayConfiguration> const&) override
     {
     }
-
-    void set_base_configuration(std::shared_ptr<graphics::DisplayConfiguration> const&) override
-    {
-    }
-    void preview_base_configuration(
-        std::weak_ptr<scene::Session> const&,
-        std::shared_ptr<graphics::DisplayConfiguration> const&,
-        std::chrono::seconds) override
-    {
-    }
-    void confirm_base_configuration(
-        std::shared_ptr<scene::Session> const&,
-        std::shared_ptr<graphics::DisplayConfiguration> const&) override
-    {
-    }
 };
 }
 }

@@ -315,8 +315,3 @@ auto ms::ApplicationSession::has_buffer_stream(
 {
     return streams.find(stream) != streams.end();
 }
-
-void ms::ApplicationSession::send_error(mir::ClientVisibleError const& error)
-{
-    event_sink->handle_error(error);
-}

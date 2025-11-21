@@ -22,7 +22,6 @@
 class MirInputConfig;
 namespace mir
 {
-class ClientVisibleError;
 namespace graphics
 {
 class DisplayConfiguration;
@@ -40,7 +39,6 @@ public:
     virtual void handle_display_config_change(graphics::DisplayConfiguration const& config) = 0;
     virtual void send_ping(int32_t serial) = 0;
     virtual void handle_input_config_change(MirInputConfig const& config) = 0;
-    virtual void handle_error(ClientVisibleError const& error) = 0;
 
 protected:
     EventSink() = default;
