@@ -21,6 +21,7 @@ parts:
     - -DMIR_PLATFORM='atomic-kms;gbm-kms;eglstream-kms;x11;wayland'
     build-packages:
     - build-essential
+    - cargo-1.85
     - eglexternalplatform-dev
     - git
     - libboost-date-time-dev

@@ -11,8 +11,8 @@ edition = "2021"
 rust-version = "1.75.0"
 
 [workspace.dependencies]
-cxx = "1.0"
+cxx = "1.0.167"
 cxx-build = "1.0"
-input = "0.9.1"
-libc = "0.2.176"
+input = "0.9.0"
+libc = "0.2.175"
 nix = { version = "0.30.1", features = ["poll"] }

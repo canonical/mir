@@ -12,6 +12,7 @@ build:
     python: "3.11"
   # https://github.com/readthedocs/readthedocs.org/issues/9599
   apt_packages:
+  - cargo
   - cmake
   - doxygen
   - graphviz
