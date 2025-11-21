@@ -50,11 +50,11 @@ option(use_debflags "Use build flags from dpkg-buildflags." OFF)
 if(use_debflags)
   include (cmake/Debian.cmake)
 endif()
-include (cmake/EnableCoverageReport.cmake)
+include (CMakeDependentOption)
 include (cmake/MirCommon.cmake)
 include (GNUInstallDirs)
 
-set(build_types "None;Debug;Release;RelWithDebInfo;MinSizeRel;Coverage;AddressSanitizer;ThreadSanitizer;UBSanitizer")
+set(build_types "None;Debug;Release;RelWithDebInfo;MinSizeRel;AddressSanitizer;ThreadSanitizer;UBSanitizer")
 # Change informational string for CMAKE_BUILD_TYPE
 set(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE} CACHE STRING "${build_types}" FORCE)
 # Enable cmake-gui to display a drop down list for CMAKE_BUILD_TYPE
@@ -125,21 +125,6 @@ endif()
 
 string(TOLOWER "${CMAKE_BUILD_TYPE}" cmake_build_type_lower)
 
-#####################################################################
-# Enable code coverage calculation with gcov/gcovr/lcov
-# Usage:
-#  * Switch build type to coverage (use ccmake or cmake-gui)
-#  * Invoke make, make test, make coverage
-#  * Find html report in subdir coveragereport
-#  * Find xml report feasible for jenkins in coverage.xml
-#####################################################################
-if(cmake_build_type_lower MATCHES "coverage")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ftest-coverage -fprofile-arcs")
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ftest-coverage -fprofile-arcs")
-  set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -ftest-coverage -fprofile-arcs")
-  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -ftest-coverage -fprofile-arcs")
-endif()
-
 if(cmake_build_type_lower MATCHES "addresssanitizer")
   add_compile_options(-fsanitize=address -fno-omit-frame-pointer)
   add_link_options(-fsanitize=address)
@@ -203,6 +188,29 @@ CMAKE_DEPENDENT_OPTION(
   MIR_SIGBUS_HANDLER_ENVIRONMENT_BROKEN "Expect WLCS BadBuffer tests to fail" OFF
   "MIR_RUN_WLCS_TESTS" OFF
 )
+
+CMAKE_DEPENDENT_OPTION(MIR_ENABLE_COVERAGE "Enable code coverage" OFF MIR_ENABLE_TESTS OFF)
+if(MIR_ENABLE_COVERAGE)
+    include(CodeCoverage)
+    append_coverage_compiler_flags()
+    setup_target_for_coverage_lcov(
+        NAME coverage-html
+        EXECUTABLE ctest --test-dir ${CMAKE_BINARY_DIR} --output-on-failure
+        EXCLUDE "tests/*" "${CMAKE_BINARY_DIR}/*"
+        LCOV_ARGS --ignore-errors inconsistent --ignore-errors mismatch
+        GENHTML_ARGS --ignore-errors inconsistent --ignore-errors corrupt
+    )
+
+    setup_target_for_coverage_gcovr_xml(
+        NAME coverage-xml
+        EXECUTABLE ctest --test-dir ${CMAKE_BINARY_DIR} --output-on-failure
+        EXCLUDE "tests/*" "${CMAKE_BINARY_DIR}/*"
+    )
+
+    add_custom_target(coverage
+        DEPENDS coverage-html coverage-xml
+    )
+endif()
 
 pkg_check_modules(APPARMOR IMPORTED_TARGET libapparmor)
 
@@ -323,8 +331,6 @@ if (MIR_ENABLE_TESTS)
       COMMAND /bin/sh -c "cd ${PROJECT_SOURCE_DIR} && tools/update_package_abis.sh --check --verbose")
   endif ()
 endif ()
-
-enable_coverage_report(mirserver)
 
 add_custom_target(ptest
     COMMAND "${CMAKE_SOURCE_DIR}/tools/run_ctests.sh" "--cost-file" "${CMAKE_BINARY_DIR}/ptest_ctest_cost_data.txt" "sh ${CMAKE_BINARY_DIR}/discover_all_tests.sh" "--" "$$ARGS"
