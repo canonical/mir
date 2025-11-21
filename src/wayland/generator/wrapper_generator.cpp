@@ -45,11 +45,11 @@ Emitter header_includes()
     return Lines{
         "#include <optional>",
         empty_line,
-        "#include \"mir/fd.h\"",
+        "#include <mir/fd.h>",
         "#include <wayland-server-core.h>",
         empty_line,
-        "#include \"mir/wayland/resource.h\"",
-        "#include \"mir/wayland/global.h\"",
+        "#include <mir/wayland/resource.h>",
+        "#include <mir/wayland/global.h>",
     };
 }
 
@@ -61,8 +61,8 @@ Emitter impl_includes(std::string const& protocol_name)
         "#include <boost/exception/diagnostic_information.hpp>",
         "#include <wayland-server-core.h>",
         empty_line,
-        "#include \"mir/wayland/protocol_error.h\"",
-        "#include \"mir/wayland/client.h\"",
+        "#include <mir/wayland/protocol_error.h>",
+        "#include <mir/wayland/client.h>",
     };
 }
 
