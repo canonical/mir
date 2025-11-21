@@ -447,21 +447,28 @@ auto mgg::RenderingPlatform::maybe_create_provider(
     if (dynamic_cast<mg::DRMRenderingProvider::Tag const*>(&type_tag))
     {
         // Check if the device supports DRM syncobj timeline
-        auto drm_fd = Fd{IntOwnedFd{gbm_device_get_fd(device.get())}};
+        int raw_fd = gbm_device_get_fd(device.get());
         uint64_t has_timeline = 0;
-        if (drmGetCap(drm_fd, DRM_CAP_SYNCOBJ_TIMELINE, &has_timeline) == 0 && has_timeline)
+        auto cap_result = drmGetCap(raw_fd, DRM_CAP_SYNCOBJ_TIMELINE, &has_timeline);
+        if (cap_result != 0)
         {
-            return std::make_shared<mgg::GLRenderingProvider>(
-                std::move(drm_fd),
-                bound_display,
-                egl_delegate,
-                dmabuf_provider,
-                share_ctx->egl_display(),
-                static_cast<EGLContext>(*share_ctx),
-                quirks);
+            mir::log_info("Failed to query DRM_CAP_SYNCOBJ_TIMELINE: %s. Disabling linux_drm_syncobj_v1.", strerror(-cap_result));
+            return nullptr;
         }
-        // Device doesn't support syncobj timeline, don't provide DRMRenderingProvider
-        return nullptr;
+        if (!has_timeline)
+        {
+            mir::log_info("DRM_CAP_SYNCOBJ_TIMELINE not supported by device. Disabling linux_drm_syncobj_v1.");
+            return nullptr;
+        }
+        // Device supports syncobj timeline, create the provider
+        return std::make_shared<mgg::GLRenderingProvider>(
+            Fd{IntOwnedFd{gbm_device_get_fd(device.get())}},
+            bound_display,
+            egl_delegate,
+            dmabuf_provider,
+            share_ctx->egl_display(),
+            static_cast<EGLContext>(*share_ctx),
+            quirks);
     }
     return nullptr;
 }

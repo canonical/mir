@@ -53,7 +53,6 @@
 #include <optional>
 #include <stdexcept>
 #include <fcntl.h>
-#include <drm.h>
 #include <xf86drm.h>
 #include <drm_fourcc.h>
 
