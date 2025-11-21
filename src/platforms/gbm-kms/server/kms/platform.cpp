@@ -452,12 +452,12 @@ auto mgg::RenderingPlatform::maybe_create_provider(
         auto cap_result = drmGetCap(raw_fd, DRM_CAP_SYNCOBJ_TIMELINE, &has_timeline);
         if (cap_result != 0)
         {
-            mir::log_info("Failed to query DRM_CAP_SYNCOBJ_TIMELINE: %s. Disabling linux_drm_syncobj_v1.", strerror(-cap_result));
+            mir::log_debug("Failed to query DRM_CAP_SYNCOBJ_TIMELINE: %s", strerror(-cap_result));
             return nullptr;
         }
         if (!has_timeline)
         {
-            mir::log_info("DRM_CAP_SYNCOBJ_TIMELINE not supported by device. Disabling linux_drm_syncobj_v1.");
+            mir::log_debug("DRM_CAP_SYNCOBJ_TIMELINE not supported by device");
             return nullptr;
         }
         // Device supports syncobj timeline, create the provider
