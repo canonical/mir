@@ -13,11 +13,6 @@ include_directories(
     ${GTEST_INCLUDE_DIR}
 )
 
-string(REPLACE "-fno-lto" "" NO_NO_LTO_FLAGS ${CMAKE_C_FLAGS})
-set(CMAKE_C_FLAGS ${NO_NO_LTO_FLAGS})
-string(REPLACE "-fno-lto" "" NO_NO_LTO_FLAGS ${CMAKE_CXX_FLAGS})
-set(CMAKE_CXX_FLAGS ${NO_NO_LTO_FLAGS})
-
 if (MIR_BUILD_INTERPROCESS_TESTS)
     list(APPEND MIRAL_TEST_SOURCES window_info.cpp)
 endif()
