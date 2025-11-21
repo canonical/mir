@@ -17,18 +17,18 @@
 #include "virtual_keyboard_v1.h"
 #include "wayland_wrapper.h"
 
-#include "mir/input/event_builder.h"
-#include "mir/input/input_sink.h"
-#include "mir/input/input_device_registry.h"
-#include "mir/input/device.h"
-#include "mir/input/virtual_input_device.h"
-#include "mir/input/mir_keyboard_config.h"
-#include "mir/input/buffer_keymap.h"
-#include "mir/events/xkb_modifiers.h"
-#include "mir/events/event.h"
-#include "mir/events/input_event.h"
-#include "mir/events/keyboard_event.h"
-#include "mir/log.h"
+#include <mir/input/event_builder.h>
+#include <mir/input/input_sink.h>
+#include <mir/input/input_device_registry.h>
+#include <mir/input/device.h>
+#include <mir/input/virtual_input_device.h>
+#include <mir/input/mir_keyboard_config.h>
+#include <mir/input/buffer_keymap.h>
+#include <mir/events/xkb_modifiers.h>
+#include <mir/events/event.h>
+#include <mir/events/input_event.h>
+#include <mir/events/keyboard_event.h>
+#include <mir/log.h>
 
 #include <cstring>
 #include <sys/mman.h>

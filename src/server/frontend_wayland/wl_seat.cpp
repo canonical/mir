@@ -25,18 +25,18 @@
 #include "wl_touch.h"
 #include "wl_data_device.h"
 
-#include "mir/executor.h"
-#include "mir/wayland/client.h"
-#include "mir/observer_registrar.h"
-#include "mir/input/input_device_observer.h"
-#include "mir/input/input_device_hub.h"
-#include "mir/input/device.h"
-#include "mir/input/parameter_keymap.h"
-#include "mir/input/mir_keyboard_config.h"
-#include "mir/input/keyboard_observer.h"
-#include "mir/scene/surface.h"
-#include "mir/shell/accessibility_manager.h"
-#include "mir_toolkit/events/input/pointer_event.h"
+#include <mir/executor.h>
+#include <mir/wayland/client.h>
+#include <mir/observer_registrar.h>
+#include <mir/input/input_device_observer.h>
+#include <mir/input/input_device_hub.h>
+#include <mir/input/device.h>
+#include <mir/input/parameter_keymap.h>
+#include <mir/input/mir_keyboard_config.h>
+#include <mir/input/keyboard_observer.h>
+#include <mir/scene/surface.h>
+#include <mir/shell/accessibility_manager.h>
+#include <mir_toolkit/events/input/pointer_event.h>
 
 #include <mutex>
 #include <algorithm>

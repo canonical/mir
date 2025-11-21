@@ -15,7 +15,7 @@
  */
 
 #include "src/server/scene/basic_text_input_hub.h"
-#include "mir/test/fake_shared.h"
+#include <mir/test/fake_shared.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

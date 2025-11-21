@@ -21,18 +21,18 @@
 #include "src/platforms/x11/input/input_platform.h"
 #include "src/platforms/x11/input/input_device.h"
 
-#include "mir/events/event_private.h"
-#include "mir/dispatch/dispatchable.h"
-#include "mir_toolkit/events/input/input_event.h"
-#include "mir/test/doubles/mock_input_sink.h"
-#include "mir/test/doubles/mock_input_seat.h"
-#include "mir/test/doubles/mock_input_device_registry.h"
-#include "mir/test/doubles/mock_x11.h"
-#include "mir/test/doubles/mock_xkb.h"
-#include "mir/test/doubles/mock_x11_resources.h"
-#include "mir/test/doubles/advanceable_clock.h"
-#include "mir/test/fake_shared.h"
-#include "mir/test/event_matchers.h"
+#include <mir/events/event_private.h>
+#include <mir/dispatch/dispatchable.h>
+#include <mir_toolkit/events/input/input_event.h>
+#include <mir/test/doubles/mock_input_sink.h>
+#include <mir/test/doubles/mock_input_seat.h>
+#include <mir/test/doubles/mock_input_device_registry.h>
+#include <mir/test/doubles/mock_x11.h>
+#include <mir/test/doubles/mock_xkb.h>
+#include <mir/test/doubles/mock_x11_resources.h>
+#include <mir/test/doubles/advanceable_clock.h>
+#include <mir/test/fake_shared.h>
+#include <mir/test/event_matchers.h>
 
 namespace md = mir::dispatch;
 namespace mi = mir::input;

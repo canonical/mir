@@ -17,7 +17,7 @@
 #ifndef MIR_REPORT_LOGGING_INPUT_REPORT_H_
 #define MIR_REPORT_LOGGING_INPUT_REPORT_H_
 
-#include "mir/input/input_report.h"
+#include <mir/input/input_report.h>
 
 #include <memory>
 

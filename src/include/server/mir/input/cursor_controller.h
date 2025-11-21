@@ -17,9 +17,9 @@
 #ifndef MIR_INPUT_CURSOR_CONTROLLER_H_
 #define MIR_INPUT_CURSOR_CONTROLLER_H_
 
-#include "mir/input/cursor_observer.h"
-#include "mir/frontend/drag_icon_controller.h"
-#include "mir/geometry/point.h"
+#include <mir/input/cursor_observer.h>
+#include <mir/frontend/drag_icon_controller.h>
+#include <mir/geometry/point.h>
 
 #include <memory>
 #include <mutex>

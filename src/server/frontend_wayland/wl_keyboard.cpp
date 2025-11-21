@@ -18,9 +18,9 @@
 
 #include "wl_surface.h"
 #include "wl_seat.h"
-#include "mir/log.h"
-#include "mir/events/keyboard_event.h"
-#include "mir/wayland/client.h"
+#include <mir/log.h>
+#include <mir/events/keyboard_event.h>
+#include <mir/wayland/client.h>
 
 #include <xkbcommon/xkbcommon.h>
 #include <cstring> // memcpy

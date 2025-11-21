@@ -14,10 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/posix_rw_mutex.h"
+#include <mir/posix_rw_mutex.h>
 
-#include "mir/test/auto_unblock_thread.h"
-#include "mir/test/signal.h"
+#include <mir/test/auto_unblock_thread.h>
+#include <mir/test/signal.h>
 
 
 #include <mutex>

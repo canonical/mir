@@ -20,7 +20,7 @@
 #include <gmock/gmock.h>
 #include <boost/throw_exception.hpp>
 
-#include "mir/graphics/platform.h"
+#include <mir/graphics/platform.h>
 
 namespace mg = mir::graphics;
 

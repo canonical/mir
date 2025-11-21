@@ -19,8 +19,8 @@
 
 #include "kms_output.h"
 #include "kms-utils/drm_mode_resources.h"
-#include "mir/fd.h"
-#include "mir/synchronised.h"
+#include <mir/fd.h>
+#include <mir/synchronised.h>
 
 #include <memory>
 #include <future>

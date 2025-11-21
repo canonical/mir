@@ -17,10 +17,10 @@
 #define MIR_LOG_COMPONENT "input-event-access"
 
 
-#include "mir/events/event_type_to_string.h"
-#include "mir/events/event_private.h"
-#include "mir/fatal.h"
-#include "mir/log.h"
+#include <mir/events/event_type_to_string.h>
+#include <mir/events/event_private.h>
+#include <mir/fatal.h>
+#include <mir/log.h>
 #include <mir_toolkit/events/input/pointer_event.h>
 
 #include "../handle_event_exception.h"

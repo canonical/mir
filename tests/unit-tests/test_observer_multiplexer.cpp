@@ -14,11 +14,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/observer_multiplexer.h"
+#include <mir/observer_multiplexer.h>
 
-#include "mir/test/barrier.h"
-#include "mir/test/auto_unblock_thread.h"
-#include "mir/test/doubles/explicit_executor.h"
+#include <mir/test/barrier.h>
+#include <mir/test/auto_unblock_thread.h>
+#include <mir/test/doubles/explicit_executor.h>
 
 #include <memory>
 #include <array>

@@ -17,11 +17,11 @@
 #ifndef MIR_GRAPHICS_X_DISPLAY_SINK_H_
 #define MIR_GRAPHICS_X_DISPLAY_SINK_H_
 
-#include "mir/graphics/display_sink.h"
-#include "mir/graphics/display_configuration.h"
-#include "mir/graphics/display.h"
-#include "mir/graphics/platform.h"
-#include "mir/renderer/gl/render_target.h"
+#include <mir/graphics/display_sink.h>
+#include <mir/graphics/display_configuration.h>
+#include <mir/graphics/display.h>
+#include <mir/graphics/platform.h>
+#include <mir/renderer/gl/render_target.h>
 #include "egl_helper.h"
 
 #include <EGL/egl.h>

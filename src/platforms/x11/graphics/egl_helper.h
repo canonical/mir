@@ -23,7 +23,7 @@
 #include <xcb/xcb.h>
 #include <EGL/egl.h>
 
-#include "mir/graphics/platform.h"
+#include <mir/graphics/platform.h>
 
 typedef struct _XDisplay Display;
 

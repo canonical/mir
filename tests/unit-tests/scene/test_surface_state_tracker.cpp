@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/scene/surface_state_tracker.h"
+#include <mir/scene/surface_state_tracker.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

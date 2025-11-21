@@ -16,13 +16,13 @@
 
 #include "server_example_input_filter.h"
 
-#include "mir/server.h"
+#include <mir/server.h>
 
-#include "mir/compositor/compositor.h"
-#include "mir/graphics/display.h"
-#include "mir/graphics/display_configuration.h"
-#include "mir/input/composite_event_filter.h"
-#include "mir/options/option.h"
+#include <mir/compositor/compositor.h>
+#include <mir/graphics/display.h>
+#include <mir/graphics/display_configuration.h>
+#include <mir/input/composite_event_filter.h>
+#include <mir/options/option.h>
 
 #include <linux/input.h>
 

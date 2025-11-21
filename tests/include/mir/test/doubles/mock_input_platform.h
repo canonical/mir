@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_INPUT_PLATFORM_H_
 #define MIR_TEST_DOUBLES_MOCK_INPUT_PLATFORM_H_
 
-#include "mir/input/platform.h"
+#include <mir/input/platform.h>
 #include <gmock/gmock.h>
 
 namespace mir

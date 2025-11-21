@@ -16,8 +16,8 @@
 
 #include "src/server/shell/basic_sticky_keys_transformer.h"
 #include "src/server/input/default_event_builder.h"
-#include "mir/test/doubles/advanceable_clock.h"
-#include "mir/events/event.h"
+#include <mir/test/doubles/advanceable_clock.h>
+#include <mir/events/event.h>
 #include <linux/input-event-codes.h>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

@@ -14,15 +14,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "miral/slow_keys.h"
+#include <miral/slow_keys.h>
 
-#include "mir/server.h"
-#include "mir/shell/accessibility_manager.h"
-#include "mir/shell/slow_keys_transformer.h"
-#include "mir/log.h"
+#include <mir/server.h>
+#include <mir/shell/accessibility_manager.h>
+#include <mir/shell/slow_keys_transformer.h>
+#include <mir/log.h>
 
-#include "mir/synchronised.h"
-#include "miral/live_config.h"
+#include <mir/synchronised.h>
+#include <miral/live_config.h>
 
 struct miral::SlowKeys::Self
 {

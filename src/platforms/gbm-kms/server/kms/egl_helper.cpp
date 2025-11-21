@@ -15,14 +15,14 @@
  */
 
 #include "egl_helper.h"
-#include "mir/graphics/gl_config.h"
-#include "mir/graphics/egl_error.h"
+#include <mir/graphics/gl_config.h>
+#include <mir/graphics/egl_error.h>
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
 #include <gbm.h>
 
 #define MIR_LOG_COMPONENT "EGL"
-#include "mir/log.h"
+#include <mir/log.h>
 
 namespace mg = mir::graphics;
 namespace mgmh = mir::graphics::gbm::helpers;

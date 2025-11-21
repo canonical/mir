@@ -16,16 +16,16 @@
 
 #include "render_scene_into_surface.h"
 
-#include "mir/executor.h"
-#include "mir/server.h"
-#include "mir/compositor/scene.h"
-#include "mir/compositor/screen_shooter.h"
-#include "mir/compositor/screen_shooter_factory.h"
-#include "mir/compositor/stream.h"
-#include "mir/graphics/graphic_buffer_allocator.h"
-#include "mir/scene/basic_surface.h"
-#include "mir/shell/surface_stack.h"
-#include "mir/renderer/sw/pixel_source.h"
+#include <mir/executor.h>
+#include <mir/server.h>
+#include <mir/compositor/scene.h>
+#include <mir/compositor/screen_shooter.h>
+#include <mir/compositor/screen_shooter_factory.h>
+#include <mir/compositor/stream.h>
+#include <mir/graphics/graphic_buffer_allocator.h>
+#include <mir/scene/basic_surface.h>
+#include <mir/shell/surface_stack.h>
+#include <mir/renderer/sw/pixel_source.h>
 
 #include <mutex>
 #include <utility>

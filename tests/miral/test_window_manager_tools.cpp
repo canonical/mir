@@ -24,7 +24,7 @@
 #include <mir/shell/display_layout.h>
 #include <mir/shell/focus_controller.h>
 #include <mir/shell/persistent_surface_store.h>
-#include "mir/graphics/display_configuration_observer.h"
+#include <mir/graphics/display_configuration_observer.h>
 #include <mir/wayland/weak.h>
 
 #include <mir/test/doubles/stub_session.h>

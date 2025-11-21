@@ -16,8 +16,8 @@
 
 #include "wayland_connector.h"
 
-#include "mir/shell/token_authority.h"
-#include "mir/graphics/platform.h"
+#include <mir/shell/token_authority.h>
+#include <mir/graphics/platform.h>
 #include "wl_client.h"
 #include "wl_data_device_manager.h"
 #include "wayland_utils.h"
@@ -33,11 +33,11 @@
 #include "wp_viewporter.h"
 #include "linux_drm_syncobj.h"
 
-#include "mir/main_loop.h"
-#include "mir/thread_name.h"
-#include "mir/log.h"
-#include "mir/graphics/graphic_buffer_allocator.h"
-#include "mir/frontend/wayland.h"
+#include <mir/main_loop.h>
+#include <mir/thread_name.h>
+#include <mir/log.h>
+#include <mir/graphics/graphic_buffer_allocator.h>
+#include <mir/frontend/wayland.h>
 
 #include <future>
 #include <optional>

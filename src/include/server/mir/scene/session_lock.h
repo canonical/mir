@@ -17,7 +17,7 @@
 #ifndef MIR_SCENE_SESSION_LOCK_H
 #define MIR_SCENE_SESSION_LOCK_H
 
-#include "mir/observer_registrar.h"
+#include <mir/observer_registrar.h>
 #include <memory>
 
 namespace mir

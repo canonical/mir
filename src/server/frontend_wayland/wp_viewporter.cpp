@@ -16,9 +16,9 @@
  */
 
 #include "wp_viewporter.h"
-#include "mir/geometry/forward.h"
-#include "mir/wayland/protocol_error.h"
-#include "mir/wayland/weak.h"
+#include <mir/geometry/forward.h>
+#include <mir/wayland/protocol_error.h>
+#include <mir/wayland/weak.h>
 #include "wl_surface.h"
 
 #include <utility>

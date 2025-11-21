@@ -18,8 +18,8 @@
 #ifndef MIR_INPUT_SEAT_OBSERVER_MULTIPLEXER_H_
 #define MIR_INPUT_SEAT_OBSERVER_MULTIPLEXER_H_
 
-#include "mir/input/seat_observer.h"
-#include "mir/observer_multiplexer.h"
+#include <mir/input/seat_observer.h>
+#include <mir/observer_multiplexer.h>
 
 namespace mir
 {

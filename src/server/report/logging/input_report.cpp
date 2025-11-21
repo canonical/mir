@@ -16,8 +16,8 @@
 
 #include "input_report.h"
 
-#include "mir/logging/logger.h"
-#include "mir/logging/input_timestamp.h"
+#include <mir/logging/logger.h>
+#include <mir/logging/input_timestamp.h>
 
 #include <linux/input.h>
 

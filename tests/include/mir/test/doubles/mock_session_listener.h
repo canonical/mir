@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_SESSION_LISTENER_H_
 #define MIR_TEST_DOUBLES_MOCK_SESSION_LISTENER_H_
 
-#include "mir/scene/session_listener.h"
+#include <mir/scene/session_listener.h>
 
 #include <gmock/gmock.h>
 

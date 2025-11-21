@@ -14,11 +14,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/input/xkb_mapper_registrar.h"
-#include "mir/input/keymap.h"
-#include "mir/input/keyboard_leds.h"
-#include "mir/events/keyboard_event.h"
-#include "mir/events/event_builders.h"
+#include <mir/input/xkb_mapper_registrar.h>
+#include <mir/input/keymap.h>
+#include <mir/input/keyboard_leds.h>
+#include <mir/events/keyboard_event.h>
+#include <mir/events/event_builders.h>
 
 #include <linux/input-event-codes.h>
 

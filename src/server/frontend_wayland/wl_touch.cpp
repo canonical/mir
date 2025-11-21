@@ -20,12 +20,12 @@
 #include "wl_surface.h"
 #include "wl_seat.h"
 
-#include "mir/executor.h"
-#include "mir_toolkit/events/event.h"
-#include "mir/events/touch_event.h"
-#include "mir/log.h"
-#include "mir/time/clock.h"
-#include "mir/wayland/client.h"
+#include <mir/executor.h>
+#include <mir_toolkit/events/event.h>
+#include <mir/events/touch_event.h>
+#include <mir/log.h>
+#include <mir/time/clock.h>
+#include <mir/wayland/client.h>
 
 namespace mf = mir::frontend;
 namespace mw = mir::wayland;

@@ -17,7 +17,7 @@
 #ifndef MIR_SHELL_DEFAULT_PERSISTENT_SURFACE_STORE_H_
 #define MIR_SHELL_DEFAULT_PERSISTENT_SURFACE_STORE_H_
 
-#include "mir/shell/persistent_surface_store.h"
+#include <mir/shell/persistent_surface_store.h>
 #include <mutex>
 
 namespace mir

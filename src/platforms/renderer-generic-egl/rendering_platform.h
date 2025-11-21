@@ -17,8 +17,8 @@
 #ifndef MIR_GRAPHICS_RENDERING_EGL_GENERIC_H_
 #define MIR_GRAPHICS_RENDERING_EGL_GENERIC_H_
 
-#include "mir/graphics/linux_dmabuf.h"
-#include "mir/graphics/platform.h"
+#include <mir/graphics/linux_dmabuf.h>
+#include <mir/graphics/platform.h>
 
 #include <EGL/egl.h>
 

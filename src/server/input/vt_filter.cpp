@@ -14,10 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/input/vt_filter.h"
-#include "mir_toolkit/event.h"
-#include "mir/console_services.h"
-#include "mir/log.h"
+#include <mir/input/vt_filter.h>
+#include <mir_toolkit/event.h>
+#include <mir/console_services.h>
+#include <mir/log.h>
 
 #include <linux/input.h>
 

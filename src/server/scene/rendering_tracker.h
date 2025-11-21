@@ -17,13 +17,13 @@
 #ifndef MIR_SCENE_RENDERING_TRACKER_H_
 #define MIR_SCENE_RENDERING_TRACKER_H_
 
-#include "mir/compositor/compositor_id.h"
+#include <mir/compositor/compositor_id.h>
 
 #include <memory>
 #include <set>
 #include <mutex>
 
-#include "mir_toolkit/common.h"
+#include <mir_toolkit/common.h>
 
 namespace mir
 {

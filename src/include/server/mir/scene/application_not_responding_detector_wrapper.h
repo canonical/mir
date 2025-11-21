@@ -17,7 +17,7 @@
 #ifndef MIR_SCENE_APPLICATION_NOT_RESPONDING_DETECTOR_WRAPPER_H_
 #define MIR_SCENE_APPLICATION_NOT_RESPONDING_DETECTOR_WRAPPER_H_
 
-#include "mir/scene/application_not_responding_detector.h"
+#include <mir/scene/application_not_responding_detector.h>
 
 #include <memory>
 

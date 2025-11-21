@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_STUB_MAIN_LOOP_H
 #define MIR_TEST_DOUBLES_STUB_MAIN_LOOP_H
 
-#include "mir/main_loop.h"
+#include <mir/main_loop.h>
 
 namespace mir
 {

@@ -17,17 +17,17 @@
 #include "src/server/input/seat_input_device_tracker.h"
 #include "src/server/input/default_event_builder.h"
 
-#include "mir/input/xkb_mapper_registrar.h"
-#include "mir/test/doubles/mock_input_dispatcher.h"
-#include "mir/test/doubles/mock_cursor_observer.h"
-#include "mir/test/doubles/mock_touch_visualizer.h"
-#include "mir/test/doubles/mock_seat_report.h"
-#include "mir/test/doubles/advanceable_clock.h"
-#include "mir/test/event_matchers.h"
-#include "mir/test/fake_shared.h"
+#include <mir/input/xkb_mapper_registrar.h>
+#include <mir/test/doubles/mock_input_dispatcher.h>
+#include <mir/test/doubles/mock_cursor_observer.h>
+#include <mir/test/doubles/mock_touch_visualizer.h>
+#include <mir/test/doubles/mock_seat_report.h>
+#include <mir/test/doubles/advanceable_clock.h>
+#include <mir/test/event_matchers.h>
+#include <mir/test/fake_shared.h>
 
-#include "mir/input/cursor_observer_multiplexer.h"
-#include "mir/geometry/rectangles.h"
+#include <mir/input/cursor_observer_multiplexer.h>
+#include <mir/geometry/rectangles.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

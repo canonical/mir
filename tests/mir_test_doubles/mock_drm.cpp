@@ -14,10 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/test/doubles/mock_drm.h"
-#include "mir_test_framework/mmap_wrapper.h"
-#include "mir_test_framework/open_wrapper.h"
-#include "mir/geometry/size.h"
+#include <mir/test/doubles/mock_drm.h>
+#include <mir_test_framework/mmap_wrapper.h>
+#include <mir_test_framework/open_wrapper.h>
+#include <mir/geometry/size.h>
 #include <gtest/gtest.h>
 
 #include <stdexcept>

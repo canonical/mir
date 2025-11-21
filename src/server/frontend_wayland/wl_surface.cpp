@@ -17,7 +17,7 @@
 #include "wl_surface.h"
 #include "output_manager.h"
 #include "fractional_scale_v1.h"
-#include "mir/wayland/weak.h"
+#include <mir/wayland/weak.h>
 #include "viewporter_wrapper.h"
 #include "wayland_connector.h"
 #include "wayland_utils.h"
@@ -32,17 +32,17 @@
 
 #include "wayland_frontend.tp.h"
 
-#include "mir/wayland/protocol_error.h"
-#include "mir/wayland/client.h"
-#include "mir/graphics/buffer_properties.h"
-#include "mir/scene/session.h"
-#include "mir/frontend/wayland.h"
-#include "mir/compositor/buffer_stream.h"
-#include "mir/executor.h"
-#include "mir/graphics/graphic_buffer_allocator.h"
-#include "mir/scene/surface.h"
-#include "mir/shell/surface_specification.h"
-#include "mir/log.h"
+#include <mir/wayland/protocol_error.h>
+#include <mir/wayland/client.h>
+#include <mir/graphics/buffer_properties.h>
+#include <mir/scene/session.h>
+#include <mir/frontend/wayland.h>
+#include <mir/compositor/buffer_stream.h>
+#include <mir/executor.h>
+#include <mir/graphics/graphic_buffer_allocator.h>
+#include <mir/scene/surface.h>
+#include <mir/shell/surface_specification.h>
+#include <mir/log.h>
 #include "wp_viewporter.h"
 
 #include <chrono>

@@ -14,21 +14,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/shell/abstract_shell.h"
+#include <mir/shell/abstract_shell.h>
 
-#include "mir/shell/input_targeter.h"
-#include "mir/shell/shell_report.h"
-#include "mir/shell/surface_specification.h"
-#include "mir/shell/surface_stack.h"
-#include "mir/shell/window_manager.h"
-#include "mir/scene/prompt_session.h"
-#include "mir/scene/prompt_session_manager.h"
-#include "mir/scene/null_surface_observer.h"
-#include "mir/scene/session_coordinator.h"
-#include "mir/scene/session.h"
-#include "mir/scene/surface.h"
-#include "mir/input/seat.h"
-#include "mir/wayland/weak.h"
+#include <mir/shell/input_targeter.h>
+#include <mir/shell/shell_report.h>
+#include <mir/shell/surface_specification.h>
+#include <mir/shell/surface_stack.h>
+#include <mir/shell/window_manager.h>
+#include <mir/scene/prompt_session.h>
+#include <mir/scene/prompt_session_manager.h>
+#include <mir/scene/null_surface_observer.h>
+#include <mir/scene/session_coordinator.h>
+#include <mir/scene/session.h>
+#include <mir/scene/surface.h>
+#include <mir/input/seat.h>
+#include <mir/wayland/weak.h>
 #include "decoration/manager.h"
 
 #include <iterator>

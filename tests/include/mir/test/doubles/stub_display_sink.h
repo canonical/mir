@@ -17,12 +17,12 @@
 #ifndef MIR_TEST_DOUBLES_STUB_DISPLAY_BUFFER_H_
 #define MIR_TEST_DOUBLES_STUB_DISPLAY_BUFFER_H_
 
-#include "mir/graphics/drm_formats.h"
-#include "mir/graphics/platform.h"
-#include "mir/test/doubles/null_display_sink.h"
-#include "mir/geometry/rectangle.h"
-#include "mir/test/doubles/stub_buffer.h"
-#include "mir_toolkit/common.h"
+#include <mir/graphics/drm_formats.h>
+#include <mir/graphics/platform.h>
+#include <mir/test/doubles/null_display_sink.h>
+#include <mir/geometry/rectangle.h>
+#include <mir/test/doubles/stub_buffer.h>
+#include <mir_toolkit/common.h>
 #include <drm_fourcc.h>
 
 namespace mir

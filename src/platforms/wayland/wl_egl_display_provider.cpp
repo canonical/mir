@@ -1,8 +1,8 @@
 #include "wl_egl_display_provider.h"
 
-#include "mir/graphics/egl_error.h"
-#include "mir/graphics/gl_config.h"
-#include "mir/graphics/platform.h"
+#include <mir/graphics/egl_error.h>
+#include <mir/graphics/gl_config.h>
+#include <mir/graphics/platform.h>
 #include <EGL/egl.h>
 #include <wayland-egl-core.h>
 

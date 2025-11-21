@@ -16,16 +16,16 @@
 
 #include "src/server/input/idle_poking_dispatcher.h"
 
-#include "mir/executor.h"
-#include "mir/events/keyboard_event.h"
-#include "mir/events/keyboard_resync_event.h"
-#include "mir/events/pointer_event.h"
-#include "mir/events/touch_event.h"
+#include <mir/executor.h>
+#include <mir/events/keyboard_event.h>
+#include <mir/events/keyboard_resync_event.h>
+#include <mir/events/pointer_event.h>
+#include <mir/events/touch_event.h>
 
-#include "mir/test/fake_shared.h"
-#include "mir/test/event_matchers.h"
-#include "mir/test/doubles/mock_input_dispatcher.h"
-#include "mir/test/doubles/mock_idle_hub.h"
+#include <mir/test/fake_shared.h>
+#include <mir/test/event_matchers.h>
+#include <mir/test/doubles/mock_input_dispatcher.h>
+#include <mir/test/doubles/mock_idle_hub.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

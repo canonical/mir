@@ -18,11 +18,11 @@
 #ifndef MIR_GRAPHICS_ATOMIC_CURSOR_H_
 #define MIR_GRAPHICS_ATOMIC_CURSOR_H_
 
-#include "mir/graphics/cursor.h"
+#include <mir/graphics/cursor.h>
 
-#include "mir_toolkit/common.h"
-#include "mir/synchronised.h"
-#include "mir/geometry/displacement.h"
+#include <mir_toolkit/common.h>
+#include <mir/synchronised.h>
+#include <mir/geometry/displacement.h>
 
 #include <gbm.h>
 

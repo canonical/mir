@@ -18,7 +18,7 @@
 #define MIR_REPORT_LTTNG_SHARED_LIBRARY_PROBER_REPORT_H_
 
 #include "server_tracepoint_provider.h"
-#include "mir/shared_library_prober_report.h"
+#include <mir/shared_library_prober_report.h>
 
 namespace mir
 {

@@ -17,9 +17,9 @@
 #ifndef MIR_TEST_DOUBLES_NULL_PLATFORM_H_
 #define MIR_TEST_DOUBLES_NULL_PLATFORM_H_
 
-#include "mir/graphics/platform.h"
-#include "mir/graphics/graphic_buffer_allocator.h"
-#include "mir/test/doubles/null_display.h"
+#include <mir/graphics/platform.h>
+#include <mir/graphics/graphic_buffer_allocator.h>
+#include <mir/test/doubles/null_display.h>
 
 namespace mir
 {

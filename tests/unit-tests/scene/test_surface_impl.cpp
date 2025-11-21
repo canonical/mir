@@ -14,19 +14,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/events/event_private.h"
-#include "mir/events/event_builders.h"
-#include "mir/scene/basic_surface.h"
-#include "mir/scene/surface_event_source.h"
+#include <mir/events/event_private.h>
+#include <mir/events/event_builders.h>
+#include <mir/scene/basic_surface.h>
+#include <mir/scene/surface_event_source.h>
 #include "src/server/report/null_report_factory.h"
-#include "mir/scene/output_properties_cache.h"
+#include <mir/scene/output_properties_cache.h>
 
-#include "mir/test/doubles/fake_display_configuration_observer_registrar.h"
-#include "mir/test/doubles/mock_buffer_stream.h"
-#include "mir/test/doubles/mock_event_sink.h"
-#include "mir/test/doubles/explicit_executor.h"
-#include "mir/test/fake_shared.h"
-#include "mir/test/event_matchers.h"
+#include <mir/test/doubles/fake_display_configuration_observer_registrar.h>
+#include <mir/test/doubles/mock_buffer_stream.h>
+#include <mir/test/doubles/mock_event_sink.h>
+#include <mir/test/doubles/explicit_executor.h>
+#include <mir/test/fake_shared.h>
+#include <mir/test/event_matchers.h>
 
 #include <stdexcept>
 #include <gmock/gmock.h>

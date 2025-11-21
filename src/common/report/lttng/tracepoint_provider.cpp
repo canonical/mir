@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/report/lttng/tracepoint_provider.h"
+#include <mir/report/lttng/tracepoint_provider.h>
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>

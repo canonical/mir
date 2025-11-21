@@ -20,8 +20,8 @@
 #include "wl_seat.h"
 #include "input_method_common.h"
 
-#include "mir/scene/text_input_hub.h"
-#include "mir/log.h"
+#include <mir/scene/text_input_hub.h>
+#include <mir/log.h>
 
 #include <deque>
 

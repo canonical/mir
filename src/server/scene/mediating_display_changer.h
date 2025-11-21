@@ -17,9 +17,9 @@
 #ifndef MIR_SCENE_MEDIATING_DISPLAY_CHANGER_H_
 #define MIR_SCENE_MEDIATING_DISPLAY_CHANGER_H_
 
-#include "mir/frontend/display_changer.h"
-#include "mir/display_changer.h"
-#include "mir/shell/display_configuration_controller.h"
+#include <mir/frontend/display_changer.h>
+#include <mir/display_changer.h>
+#include <mir/shell/display_configuration_controller.h>
 
 #include <mutex>
 #include <map>

@@ -13,7 +13,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "mir/test/event_factory.h"
+#include <mir/test/event_factory.h>
 
 namespace mis = mir::input::synthesis;
 namespace geom = mir::geometry;

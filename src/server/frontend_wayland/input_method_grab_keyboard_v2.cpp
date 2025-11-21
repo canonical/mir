@@ -17,12 +17,12 @@
 #include "input_method_grab_keyboard_v2.h"
 #include "wl_seat.h"
 
-#include "mir/input/composite_event_filter.h"
-#include "mir/input/event_filter.h"
-#include "mir/events/keyboard_event.h"
-#include "mir/events/event_builders.h"
-#include "mir/wayland/client.h"
-#include "mir/executor.h"
+#include <mir/input/composite_event_filter.h>
+#include <mir/input/event_filter.h>
+#include <mir/events/keyboard_event.h>
+#include <mir/events/event_builders.h>
+#include <mir/wayland/client.h>
+#include <mir/executor.h>
 
 namespace mf = mir::frontend;
 namespace mw = mir::wayland;

@@ -17,10 +17,10 @@
 #include <sstream>
 
 #include "seat_report.h"
-#include "mir/events/event.h"
-#include "mir/geometry/rectangles.h"
-#include "mir/logging/logger.h"
-#include "mir/input/device.h"
+#include <mir/events/event.h>
+#include <mir/geometry/rectangles.h>
+#include <mir/logging/logger.h>
+#include <mir/input/device.h>
 
 namespace mi   = mir::input;
 namespace ml   = mir::logging;

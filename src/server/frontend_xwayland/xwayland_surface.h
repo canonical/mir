@@ -24,9 +24,9 @@
 #include "xwayland_client_manager.h"
 #include "xwayland_surface_role_surface.h"
 #include "xwayland_surface_observer_surface.h"
-#include "mir/events/input_event.h"
-#include "mir/scene/surface_state_tracker.h"
-#include "mir/proof_of_mutex_lock.h"
+#include <mir/events/input_event.h>
+#include <mir/scene/surface_state_tracker.h>
+#include <mir/proof_of_mutex_lock.h>
 
 #include <xcb/xcb.h>
 

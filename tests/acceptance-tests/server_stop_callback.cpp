@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir_test_framework/headless_test.h"
+#include <mir_test_framework/headless_test.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

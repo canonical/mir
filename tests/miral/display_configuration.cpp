@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "miral/display_configuration.h"
-#include "miral/test_server.h"
+#include <miral/display_configuration.h>
+#include <miral/test_server.h>
 
 #include <fstream>
 #include <gtest/gtest.h>

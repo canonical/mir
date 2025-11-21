@@ -15,7 +15,7 @@
  */
 
 
-#include "miral/x11_support.h"
+#include <miral/x11_support.h>
 
 #include <mir/server.h>
 #include <mir/options/configuration.h>

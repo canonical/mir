@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "miral/runner.h"
+#include <miral/runner.h>
 #include "system_compositor_window_manager.h"
 #include "fd_manager.h"
 #include "input_device_configuration_options.h"

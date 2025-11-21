@@ -17,7 +17,7 @@
 #ifndef MIR_INPUT_VT_FILTER_H_
 #define MIR_INPUT_VT_FILTER_H_
 
-#include "mir/input/event_filter.h"
+#include <mir/input/event_filter.h>
 
 #include <memory>
 

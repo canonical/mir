@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/graphics/output_filter.h"
+#include <mir/graphics/output_filter.h>
 
 #include <atomic>
 #include <memory>

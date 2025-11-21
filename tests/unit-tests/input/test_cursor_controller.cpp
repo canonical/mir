@@ -14,22 +14,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/input/cursor_controller.h"
+#include <mir/input/cursor_controller.h>
 
-#include "mir/thread_safe_list.h"
-#include "mir/input/surface.h"
-#include "mir/input/scene.h"
-#include "mir/scene/observer.h"
-#include "mir/scene/surface_observer.h"
-#include "mir/graphics/cursor_image.h"
+#include <mir/thread_safe_list.h>
+#include <mir/input/surface.h>
+#include <mir/input/scene.h>
+#include <mir/scene/observer.h>
+#include <mir/scene/surface_observer.h>
+#include <mir/graphics/cursor_image.h>
 
-#include "mir_toolkit/cursors.h"
+#include <mir_toolkit/cursors.h>
 
-#include "mir/test/fake_shared.h"
-#include "mir/test/doubles/stub_surface.h"
-#include "mir/test/doubles/mock_cursor.h"
-#include "mir/test/doubles/mock_surface.h"
-#include "mir/test/doubles/stub_input_scene.h"
+#include <mir/test/fake_shared.h>
+#include <mir/test/doubles/stub_surface.h>
+#include <mir/test/doubles/mock_cursor.h>
+#include <mir/test/doubles/mock_surface.h>
+#include <mir/test/doubles/stub_input_scene.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

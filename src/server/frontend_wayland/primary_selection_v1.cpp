@@ -16,9 +16,9 @@
 
 #include "primary_selection_v1.h"
 #include "wl_seat.h"
-#include "mir/scene/clipboard.h"
-#include "mir/wayland/weak.h"
-#include "mir/executor.h"
+#include <mir/scene/clipboard.h>
+#include <mir/wayland/weak.h>
+#include <mir/executor.h>
 
 namespace mf = mir::frontend;
 namespace mw = mir::wayland;

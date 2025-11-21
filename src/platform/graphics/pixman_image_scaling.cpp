@@ -14,10 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/graphics/pixman_image_scaling.h"
+#include <mir/graphics/pixman_image_scaling.h>
 
-#include "mir/graphics/cursor_image.h"
-#include "mir_toolkit/common.h"
+#include <mir/graphics/cursor_image.h>
+#include <mir_toolkit/common.h>
 
 #include "pixman-1/pixman.h"
 

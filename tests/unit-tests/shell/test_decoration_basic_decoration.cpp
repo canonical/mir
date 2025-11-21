@@ -15,22 +15,22 @@
  */
 
 #include "src/server/shell/decoration/basic_decoration.h"
-#include "mir/scene/surface_observer.h"
-#include "mir/shell/surface_specification.h"
-#include "mir/input/cursor_images.h"
+#include <mir/scene/surface_observer.h>
+#include <mir/shell/surface_specification.h>
+#include <mir/input/cursor_images.h>
 #include "src/server/scene/wayland_basic_surface.h"
 #include "src/server/report/null_report_factory.h"
 
-#include "mir/test/fake_shared.h"
-#include "mir/test/doubles/fake_display_configuration_observer_registrar.h"
-#include "mir/test/doubles/stub_shell.h"
-#include "mir/test/doubles/mock_scene_session.h"
-#include "mir/test/doubles/mock_buffer_stream.h"
-#include "mir/test/doubles/stub_buffer_allocator.h"
-#include "mir/test/doubles/explicit_executor.h"
-#include "mir/test/doubles/stub_cursor_image.h"
-#include "mir/events/event_builders.h"
-#include "mir/events/event_helpers.h"
+#include <mir/test/fake_shared.h>
+#include <mir/test/doubles/fake_display_configuration_observer_registrar.h>
+#include <mir/test/doubles/stub_shell.h>
+#include <mir/test/doubles/mock_scene_session.h>
+#include <mir/test/doubles/mock_buffer_stream.h>
+#include <mir/test/doubles/stub_buffer_allocator.h>
+#include <mir/test/doubles/explicit_executor.h>
+#include <mir/test/doubles/stub_cursor_image.h>
+#include <mir/events/event_builders.h>
+#include <mir/events/event_helpers.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_ADVANCEABLE_CLOCK_H_
 #define MIR_TEST_DOUBLES_ADVANCEABLE_CLOCK_H_
 
-#include "mir/time/steady_clock.h"
+#include <mir/time/steady_clock.h>
 #include <mutex>
 
 namespace mir

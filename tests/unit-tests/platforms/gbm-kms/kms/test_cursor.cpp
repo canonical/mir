@@ -19,16 +19,16 @@
 #include "src/platforms/gbm-kms/server/kms/kms_output_container.h"
 #include "src/platforms/gbm-kms/server/kms/kms_display_configuration.h"
 
-#include "mir/graphics/cursor_image.h"
+#include <mir/graphics/cursor_image.h>
 
 #include <memory>
 #include <xf86drm.h>
 
-#include "mir/test/doubles/mock_gbm.h"
-#include "mir/test/doubles/mock_drm.h"
-#include "mir/test/doubles/stub_display_configuration.h"
-#include "mir/test/fake_shared.h"
-#include "mir_test_framework/temporary_environment_value.h"
+#include <mir/test/doubles/mock_gbm.h>
+#include <mir/test/doubles/mock_drm.h>
+#include <mir/test/doubles/stub_display_configuration.h>
+#include <mir/test/fake_shared.h>
+#include <mir_test_framework/temporary_environment_value.h>
 #include "mock_kms_output.h"
 
 #include <gtest/gtest.h>

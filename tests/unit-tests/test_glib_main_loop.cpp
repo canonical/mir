@@ -14,16 +14,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/glib_main_loop.h"
-#include "mir/time/steady_clock.h"
+#include <mir/glib_main_loop.h>
+#include <mir/time/steady_clock.h>
 
-#include "mir/test/signal.h"
-#include "mir/test/pipe.h"
-#include "mir/test/auto_unblock_thread.h"
-#include "mir/test/barrier.h"
-#include "mir/test/doubles/advanceable_clock.h"
-#include "mir/test/doubles/mock_lockable_callback.h"
-#include "mir_test_framework/process.h"
+#include <mir/test/signal.h>
+#include <mir/test/pipe.h>
+#include <mir/test/auto_unblock_thread.h>
+#include <mir/test/barrier.h>
+#include <mir/test/doubles/advanceable_clock.h>
+#include <mir/test/doubles/mock_lockable_callback.h>
+#include <mir_test_framework/process.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

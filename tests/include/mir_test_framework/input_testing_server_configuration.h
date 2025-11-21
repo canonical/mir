@@ -18,9 +18,9 @@
 #ifndef MIR_TEST_INPUT_TESTING_SERVER_CONFIGURATION_H_
 #define MIR_TEST_INPUT_TESTING_SERVER_CONFIGURATION_H_
 
-#include "mir_test_framework/testing_server_configuration.h"
+#include <mir_test_framework/testing_server_configuration.h>
 
-#include "mir/geometry/rectangle.h"
+#include <mir/geometry/rectangle.h>
 
 #include <map>
 #include <string>

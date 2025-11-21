@@ -16,11 +16,11 @@
 
 #include "xwayland_client_manager.h"
 #include "xwayland_log.h"
-#include "mir/shell/shell.h"
-#include "mir/scene/session.h"
-#include "mir/log.h"
-#include "mir/frontend/session_authorizer.h"
-#include "mir/frontend/session_credentials.h"
+#include <mir/shell/shell.h>
+#include <mir/scene/session.h>
+#include <mir/log.h>
+#include <mir/frontend/session_authorizer.h>
+#include <mir/frontend/session_credentials.h>
 
 #include <unistd.h>
 #include <sys/stat.h>

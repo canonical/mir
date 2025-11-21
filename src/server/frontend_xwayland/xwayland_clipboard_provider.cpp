@@ -18,8 +18,8 @@
 #include "xwayland_clipboard_source.h"
 
 #include "xwayland_log.h"
-#include "mir/scene/clipboard.h"
-#include "mir/dispatch/multiplexing_dispatchable.h"
+#include <mir/scene/clipboard.h>
+#include <mir/dispatch/multiplexing_dispatchable.h>
 
 #include <xcb/xfixes.h>
 #include <string.h>
