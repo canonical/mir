@@ -199,11 +199,10 @@ struct ApplicationSession : public testing::Test
 
 struct MockSurfaceFactory : ms::SurfaceFactory
 {
-    MOCK_METHOD4(create_surface, std::shared_ptr<ms::Surface>(
-        std::shared_ptr<ms::Session> const&,
+    MOCK_METHOD(std::shared_ptr<ms::Surface>, create_surface, (std::shared_ptr<ms::Session> const&,
         mw::Weak<mf::WlSurface> const&,
         std::list<ms::StreamInfo> const&,
-        msh::SurfaceSpecification const& params));
+        msh::SurfaceSpecification const& params), (override));
 };
 }
 

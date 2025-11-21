@@ -41,7 +41,7 @@ public:
     XdgShellStable(
         wl_display* display,
         Executor& wayland_executor,
-        std::shared_ptr<shell::Shell> shell,
+        std::shared_ptr<shell::Shell> const& shell,
         WlSeat& seat,
         OutputManager* output_manager);
 

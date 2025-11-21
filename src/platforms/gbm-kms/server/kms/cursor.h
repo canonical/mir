@@ -69,7 +69,7 @@ class Cursor : public graphics::Cursor
 {
 public:
     Cursor(
-        KMSOutputContainer& output_container,
+        std::shared_ptr<KMSOutputContainer> const& output_container,
         std::shared_ptr<CurrentConfiguration> const& current_configuration);
 
     ~Cursor() noexcept;
@@ -108,7 +108,7 @@ private:
 
     std::mutex guard;
 
-    KMSOutputContainer& output_container;
+    std::weak_ptr<KMSOutputContainer> output_container;
     geometry::Point current_position;
     geometry::Displacement hotspot;
     geometry::Size size;

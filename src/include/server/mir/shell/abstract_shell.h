@@ -29,10 +29,17 @@ namespace input
 {
 class Seat;
 }
+namespace scene
+{
+class SessionCoordinator;
+class PromptSessionManager;
+}
 namespace shell
 {
 class ShellReport;
 class WindowManager;
+class InputTargeter;
+class SurfaceStack;
 namespace decoration
 {
 class Manager;

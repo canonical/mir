@@ -17,7 +17,7 @@
 #ifndef MIR_COMMON_CLIENT_VISIBLE_ERROR_H_
 #define MIR_COMMON_CLIENT_VISIBLE_ERROR_H_
 
-#include "mir_toolkit/client_types.h"
+#include <mir_toolkit/client_types.h>
 
 #include <exception>
 #include <stdexcept>

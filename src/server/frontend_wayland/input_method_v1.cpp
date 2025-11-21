@@ -36,8 +36,8 @@ class mf::InputMethodV1::Instance : wayland::InputMethodV1
 {
 public:
     Instance(wl_resource* new_resource,
-         std::shared_ptr<scene::TextInputHub> const text_input_hub,
-         std::shared_ptr<Executor> const wayland_executor)
+         std::shared_ptr<scene::TextInputHub> const& text_input_hub,
+         std::shared_ptr<Executor> const& wayland_executor)
         : InputMethodV1{new_resource, Version<1>()},
           text_input_hub(text_input_hub),
           state_observer{std::make_shared<StateObserver>(this)}
@@ -168,7 +168,7 @@ private:
     public:
         InputMethodContextV1(
             mf::InputMethodV1::Instance* method,
-            std::shared_ptr<scene::TextInputHub> const text_input_hub)
+            std::shared_ptr<scene::TextInputHub> const& text_input_hub)
             : wayland::InputMethodContextV1(*static_cast<wayland::InputMethodV1*>(method)),
               text_input_hub(text_input_hub)
         {
@@ -381,8 +381,8 @@ private:
 
 mf::InputMethodV1::InputMethodV1(
     wl_display *display,
-    std::shared_ptr<Executor> const wayland_executor,
-    std::shared_ptr<scene::TextInputHub> const text_input_hub)
+    std::shared_ptr<Executor> const& wayland_executor,
+    std::shared_ptr<scene::TextInputHub> const& text_input_hub)
     : Global(display, Version<1>()),
       wayland_executor(wayland_executor),
       text_input_hub(text_input_hub)
@@ -400,18 +400,18 @@ class mf::InputPanelV1::Instance : wayland::InputPanelV1
 {
 public:
     Instance(
-        std::shared_ptr<Executor> const wayland_executor,
-        std::shared_ptr<shell::Shell> const shell,
+        std::shared_ptr<Executor> const& wayland_executor,
+        std::shared_ptr<shell::Shell> const& shell,
         WlSeat* seat,
         OutputManager* const output_manager,
         wl_resource* new_resource,
-        std::shared_ptr<scene::TextInputHub> const text_input_hub)
-        : InputPanelV1{new_resource, Version<1>()},
-          wayland_executor{wayland_executor},
-          shell{shell},
-          seat{seat},
-          output_manager{output_manager},
-          text_input_hub{text_input_hub}
+        std::shared_ptr<scene::TextInputHub> const& text_input_hub) :
+        InputPanelV1{new_resource, Version<1>()},
+        wayland_executor{wayland_executor},
+        shell{shell},
+        seat{seat},
+        output_manager{output_manager},
+        text_input_hub{text_input_hub}
     {}
 
 private:
@@ -422,12 +422,12 @@ private:
     public:
         InputPanelSurfaceV1(
             wl_resource* id,
-            std::shared_ptr<Executor> const wayland_executor,
+            std::shared_ptr<Executor> const& wayland_executor,
             WlSeat* seat,
             WlSurface* surface,
-            std::shared_ptr<shell::Shell> shell,
+            std::shared_ptr<shell::Shell> const& shell,
             OutputManager* const output_manager,
-            std::shared_ptr<scene::TextInputHub> text_input_hub)
+            std::shared_ptr<scene::TextInputHub> const& text_input_hub)
             : wayland::InputPanelSurfaceV1(id, Version<1>()),
               WindowWlSurfaceRole(
                   *wayland_executor,
@@ -571,11 +571,11 @@ private:
 
 mf::InputPanelV1::InputPanelV1(
     wl_display* display,
-    std::shared_ptr<Executor> const wayland_executor,
-    std::shared_ptr<shell::Shell> const shell,
+    std::shared_ptr<Executor> const& wayland_executor,
+    std::shared_ptr<shell::Shell> const& shell,
     WlSeat* seat,
     OutputManager* const output_manager,
-    std::shared_ptr<scene::TextInputHub> const text_input_hub)
+    std::shared_ptr<scene::TextInputHub> const& text_input_hub)
     : Global(display, Version<1>()),
       wayland_executor{wayland_executor},
       shell{shell},

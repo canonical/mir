@@ -39,23 +39,18 @@ class Weak;
 namespace frontend
 {
 class WlSurface;
-class EventSink;
 }
 namespace scene
 {
 class PromptSession;
-class PromptSessionManager;
 class PromptSessionCreationParameters;
-class SessionCoordinator;
 class Surface;
 class SurfaceObserver;
 }
 
 namespace shell
 {
-class InputTargeter;
 struct SurfaceSpecification;
-class SurfaceStack;
 
 class Shell :
     public virtual FocusController,

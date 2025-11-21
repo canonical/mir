@@ -14,21 +14,30 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_COMMON_CLOSE_WINDOW_EVENT_H_
-#define MIR_COMMON_CLOSE_WINDOW_EVENT_H_
+#ifndef MIR_COMMON_RESIZE_EVENT_H_
+#define MIR_COMMON_RESIZE_EVENT_H_
 
-#include "mir/events/event.h"
+#include <mir/events/event.h>
 
-struct MirCloseWindowEvent : MirEvent
+struct MirResizeEvent : MirEvent
 {
-    MirCloseWindowEvent();
-    auto clone() const -> MirCloseWindowEvent* override;
+    MirResizeEvent();
+
+    auto clone() const -> MirResizeEvent* override;
 
     int surface_id() const;
     void set_surface_id(int id);
 
+    int width() const;
+    void set_width(int width);
+
+    int height() const;
+    void set_height(int height);
+
 private:
     int surface_id_ = 0;
+    int width_ = 0;
+    int height_ = 0;
 };
 
-#endif /* MIR_COMMON_CLOSE_WINDOW_EVENT_H_ */
+#endif /* MIR_COMMON_RESIZE_EVENT_H_ */

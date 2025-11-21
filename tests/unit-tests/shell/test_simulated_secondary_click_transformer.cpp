@@ -61,7 +61,7 @@ struct TestSimulatedSecondaryClickTransformer : Test
         transformer->displacement_threshold(test_displacement_threshold);
     }
 
-    MOCK_METHOD1(on_dispatch, void(std::shared_ptr<MirEvent> const& event));
+    MOCK_METHOD(void, on_dispatch, (std::shared_ptr<MirEvent> const& event), ());
 
     mtd::AdvanceableClock clock;
     std::shared_ptr<mtd::QueuedAlarmStubMainLoop> const main_loop;

@@ -72,11 +72,13 @@ jobs:
         sudo --preserve-env apt-add-repository --yes ppa:mir-team/dev
         sudo --preserve-env apt-get install --yes --no-install-recommends \
           cargo-1.82 \
+          clang \
           dmz-cursor-theme \
           flake8 \
           glmark2-es2 \
           glmark2-es2-wayland \
           lcov \
+          libclang-rt-dev \
           mesa-utils \
           ninja-build \
           pylint \

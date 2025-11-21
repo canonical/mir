@@ -153,7 +153,7 @@ TEST_F(PromptSessionManager, can_iterate_over_prompt_providers_in_a_prompt_sessi
     session_manager.add_prompt_provider(prompt_session, provider_session);
     session_manager.add_prompt_provider(prompt_session, another_prompt_provider);
 
-    struct { MOCK_METHOD1(enumerate, void(std::shared_ptr<ms::Session> const& prompt_provider)); } mock;
+    struct { MOCK_METHOD(void, enumerate, (std::shared_ptr<ms::Session> const& prompt_provider), ()); } mock;
 
     EXPECT_CALL(mock, enumerate(provider_session));
     EXPECT_CALL(mock, enumerate(another_prompt_provider));

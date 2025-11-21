@@ -14,21 +14,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_COMMON_PROMPT_SESSION_EVENT_H_
-#define MIR_COMMON_PROMPT_SESSION_EVENT_H_
+#ifndef MIR_LOGGING_DUMB_CONSOLE_LOGGER_H_
+#define MIR_LOGGING_DUMB_CONSOLE_LOGGER_H_
 
-#include "mir/events/event.h"
+#include <mir/logging/logger.h>
 
-struct MirPromptSessionEvent : MirEvent
+namespace mir
 {
-    MirPromptSessionEvent();
-    auto clone() const -> MirPromptSessionEvent* override;
+namespace logging
+{
+class DumbConsoleLogger : public Logger
+{
+public:
 
-    MirPromptSessionState new_state() const;
-    void set_new_state(MirPromptSessionState state);
-
-private:
-    MirPromptSessionState state = mir_prompt_session_state_stopped;
+protected:
+    void log(Severity severity, const std::string& message, const std::string& component) override;
 };
+}
+}
 
-#endif /* MIR_COMMON_PROMPT_SESSION_EVENT_H_ */
+#endif // MIR_LOGGING_DUMB_CONSOLE_LOGGER_H_

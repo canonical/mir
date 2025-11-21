@@ -270,7 +270,7 @@ auto mga::Display::create_hardware_cursor() -> std::shared_ptr<graphics::Cursor>
         try
         {
             locked_cursor = std::make_shared<mga::Cursor>(
-                *output_container, std::make_shared<AtomicKmsCurrentConfiguration>(*this));
+                output_container, std::make_shared<AtomicKmsCurrentConfiguration>(*this));
         }
         catch (std::runtime_error const&)
         {

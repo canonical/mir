@@ -21,7 +21,6 @@
 
 #include "mir/observer_registrar.h"
 
-#include <atomic>
 #include <set>
 #include <map>
 #include <mutex>
@@ -33,6 +32,7 @@ namespace graphics
 class GraphicBufferAllocator;
 }
 namespace shell { class SurfaceStack; }
+namespace frontend { class EventSink; }
 namespace scene
 {
 class SessionListener;

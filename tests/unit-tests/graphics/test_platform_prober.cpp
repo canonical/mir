@@ -39,7 +39,7 @@
 #include "mir/test/doubles/stub_console_services.h"
 #include "mir_test_framework/temporary_environment_value.h"
 #include "src/server/graphics/platform_probe.h"
-#include "src/include/common/mir/logging/null_shared_library_prober_report.h"
+#include "mir/logging/null_shared_library_prober_report.h"
 #include "mir/options/program_option.h"
 #include "mir/udev/wrapper.h"
 #include "mir/test/doubles/null_logger.h"

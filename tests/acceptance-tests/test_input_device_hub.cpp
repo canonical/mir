@@ -36,10 +36,10 @@ namespace
 
 struct MockInputDeviceObserver : public mi::InputDeviceObserver
 {
-    MOCK_METHOD1(device_added, void(std::shared_ptr<mi::Device> const& device));
-    MOCK_METHOD1(device_changed, void(std::shared_ptr<mi::Device> const& device));
-    MOCK_METHOD1(device_removed, void(std::shared_ptr<mi::Device> const& device));
-    MOCK_METHOD0(changes_complete, void());
+    MOCK_METHOD(void, device_added, (std::shared_ptr<mi::Device> const& device), (override));
+    MOCK_METHOD(void, device_changed, (std::shared_ptr<mi::Device> const& device), (override));
+    MOCK_METHOD(void, device_removed, (std::shared_ptr<mi::Device> const& device), (override));
+    MOCK_METHOD(void, changes_complete, (), (override));
 };
 
 struct TestInputDeviceHub : mtf::HeadlessInProcessServer

@@ -88,7 +88,8 @@ class WlInternalClientRunner : public Base, public virtual InternalClientRunner
 public:
     WlInternalClientRunner(
         std::function<void(struct ::wl_display* display)> client_code,
-        std::function<void(std::weak_ptr<mir::scene::Session> const session)> connect_notification);
+        std::function<void(std::weak_ptr<mir::scene::Session> const session)> connect_notification,
+        std::function<void()> handle_stop);
 
     void run(mir::Server& server) override;
     void join_client_thread() override;
@@ -99,14 +100,17 @@ private:
     std::thread thread;
     std::function<void(struct ::wl_display* display)> const client_code;
     std::function<void(std::weak_ptr<mir::scene::Session> const session)> const connect_notification;
+    std::function<void()> handle_stop;
 };
 
 template<typename Base>
 WlInternalClientRunner<Base>::WlInternalClientRunner(
     std::function<void(struct ::wl_display* display)> client_code,
-    std::function<void(std::weak_ptr<mir::scene::Session> const session)> connect_notification) :
+    std::function<void(std::weak_ptr<mir::scene::Session> const session)> connect_notification,
+    std::function<void()> handle_stop) :
     client_code(std::move(client_code)),
-    connect_notification(std::move(connect_notification))
+    connect_notification(std::move(connect_notification)),
+    handle_stop(std::move(handle_stop))
 {
 }
 
@@ -156,6 +160,7 @@ void WlInternalClientRunner<Base>::join_client_thread()
 {
     if (thread.joinable())
     {
+        handle_stop();
         thread.join();
     }
 }
@@ -163,7 +168,15 @@ void WlInternalClientRunner<Base>::join_client_thread()
 miral::StartupInternalClient::StartupInternalClient(
     std::function<void(struct ::wl_display* display)> client_code,
     std::function<void(std::weak_ptr<mir::scene::Session> const session)> connect_notification) :
-    internal_client(std::make_shared<WlInternalClientRunner<Self>>(std::move(client_code), std::move(connect_notification)))
+    internal_client(std::make_shared<WlInternalClientRunner<Self>>(std::move(client_code), std::move(connect_notification), []{}))
+{
+}
+
+miral::StartupInternalClient::StartupInternalClient(
+    std::function<void(struct ::wl_display* display)> client_code,
+    std::function<void(std::weak_ptr<mir::scene::Session> const session)> connect_notification,
+    std::function<void()> handle_stop)
+    : internal_client(std::make_shared<WlInternalClientRunner<Self>>(std::move(client_code), std::move(connect_notification), std::move(handle_stop)))
 {
 }
 
@@ -197,7 +210,7 @@ void miral::InternalClientLauncher::launch(
     std::function<void(struct ::wl_display* display)> const& client_code,
     std::function<void(std::weak_ptr<mir::scene::Session> const session)> const& connect_notification) const
 {
-    self->runner = std::make_shared<WlInternalClientRunner<Self>>(client_code, connect_notification);
+    self->runner = std::make_shared<WlInternalClientRunner<Self>>(client_code, connect_notification, []{});
     self->server->the_main_loop()->enqueue(this, [this] { self->runner->run(*self->server); });
     register_runner(self->server, self->runner);
 }

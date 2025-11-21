@@ -17,10 +17,10 @@
 #ifndef MIR_INPUT_RECEIVER_XKB_MAPPER_H_
 #define MIR_INPUT_RECEIVER_XKB_MAPPER_H_
 
-#include "mir/input/key_mapper.h"
-#include "mir/input/keymap.h"
-#include "mir/optional_value.h"
-#include "mir/events/xkb_modifiers.h"
+#include <mir/input/key_mapper.h>
+#include <mir/input/keymap.h>
+#include <mir/optional_value.h>
+#include <mir/events/xkb_modifiers.h>
 
 #include <xkbcommon/xkbcommon.h>
 #include <xkbcommon/xkbcommon-compose.h>

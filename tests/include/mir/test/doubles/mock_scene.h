@@ -34,17 +34,14 @@ public:
     {
         ON_CALL(*this, scene_elements_for(testing::_))
             .WillByDefault(testing::Return(compositor::SceneElementSequence{}));
-        ON_CALL(*this, frames_pending(testing::_))
-            .WillByDefault(testing::Return(0));
     }
 
-    MOCK_METHOD1(scene_elements_for, compositor::SceneElementSequence(compositor::CompositorID));
-    MOCK_CONST_METHOD1(frames_pending, int(compositor::CompositorID));
-    MOCK_METHOD1(register_compositor, void(compositor::CompositorID));
-    MOCK_METHOD1(unregister_compositor, void(compositor::CompositorID));
+    MOCK_METHOD(compositor::SceneElementSequence, scene_elements_for, (compositor::CompositorID), (override));
+    MOCK_METHOD(void, register_compositor, (compositor::CompositorID), (override));
+    MOCK_METHOD(void, unregister_compositor, (compositor::CompositorID), (override));
 
-    MOCK_METHOD1(add_observer, void(std::shared_ptr<scene::Observer> const&));
-    MOCK_METHOD1(remove_observer, void(std::weak_ptr<scene::Observer> const&));
+    MOCK_METHOD(void, add_observer, (std::shared_ptr<scene::Observer> const&), (override));
+    MOCK_METHOD(void, remove_observer, (std::weak_ptr<scene::Observer> const&), (override));
 };
 
 } // namespace doubles

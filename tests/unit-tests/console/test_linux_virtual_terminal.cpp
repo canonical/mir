@@ -52,24 +52,24 @@ class MockVTFileOperations : public mir::VTFileOperations
 {
 public:
     ~MockVTFileOperations() noexcept {}
-    MOCK_METHOD2(open, int(char const*, int));
-    MOCK_METHOD1(close, int(int));
-    MOCK_METHOD3(ioctl, int(int, unsigned long int, int));
-    MOCK_METHOD3(ioctl, int(int, unsigned long int, void*));
-    MOCK_METHOD3(tcsetattr, int(int, int, const struct termios*));
-    MOCK_METHOD2(tcgetattr, int(int, struct termios*));
+    MOCK_METHOD(int, open, (char const*, int), (override));
+    MOCK_METHOD(int, close, (int), (override));
+    MOCK_METHOD(int, ioctl, (int, unsigned long int, int), (override));
+    MOCK_METHOD(int, ioctl, (int, unsigned long int, void*), (override));
+    MOCK_METHOD(int, tcsetattr, (int, int, const struct termios*), (override));
+    MOCK_METHOD(int, tcgetattr, (int, struct termios*), (override));
 };
 
 class MockPosixProcessOperations : public mir::PosixProcessOperations
 {
 public:
     ~MockPosixProcessOperations() = default;
-    MOCK_CONST_METHOD0(getpid, pid_t());
-    MOCK_CONST_METHOD0(getppid, pid_t());
-    MOCK_CONST_METHOD1(getpgid, pid_t(pid_t));
-    MOCK_CONST_METHOD1(getsid, pid_t(pid_t));
-    MOCK_METHOD2(setpgid, int(pid_t, pid_t));
-    MOCK_METHOD0(setsid, pid_t());
+    MOCK_METHOD(pid_t, getpid, (), (const, override));
+    MOCK_METHOD(pid_t, getppid, (), (const, override));
+    MOCK_METHOD(pid_t, getpgid, (pid_t), (const, override));
+    MOCK_METHOD(pid_t, getsid, (pid_t), (const, override));
+    MOCK_METHOD(int, setpgid, (pid_t, pid_t), (override));
+    MOCK_METHOD(pid_t, setsid, (), (override));
 };
 
 // The default return values are appropriate, so

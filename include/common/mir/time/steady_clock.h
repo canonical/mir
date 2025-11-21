@@ -17,7 +17,7 @@
 #ifndef MIR_TIME_STEADY_CLOCK_H_
 #define MIR_TIME_STEADY_CLOCK_H_
 
-#include "mir/time/clock.h"
+#include <mir/time/clock.h>
 
 namespace mir
 {

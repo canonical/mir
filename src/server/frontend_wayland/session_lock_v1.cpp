@@ -120,11 +120,11 @@ private:
 mf::SessionLockManagerV1::SessionLockManagerV1(
     struct wl_display* display,
     Executor& wayland_executor,
-    std::shared_ptr<msh::Shell> shell,
-    std::shared_ptr<ms::SessionLock> session_lock,
+    std::shared_ptr<msh::Shell> const& shell,
+    std::shared_ptr<ms::SessionLock> const& session_lock,
     WlSeat& seat,
     OutputManager* output_manager,
-    std::shared_ptr<SurfaceStack> surface_stack)
+    std::shared_ptr<SurfaceStack> const& surface_stack)
     : Global(display, Version<1>()),
       wayland_executor{wayland_executor},
       shell{std::move(shell)},

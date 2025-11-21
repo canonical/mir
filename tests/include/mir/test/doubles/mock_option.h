@@ -29,11 +29,11 @@ namespace doubles
 {
 struct MockOption : mir::options::Option
 {
-    MOCK_CONST_METHOD1(is_set, bool(char const*));
-    MOCK_CONST_METHOD2(get, bool(char const*, bool));
-    MOCK_CONST_METHOD2(get, int(char const*, int));
-    MOCK_CONST_METHOD2(get, std::string(char const* name, char const*));
-    MOCK_CONST_METHOD1(get, boost::any const&(char const*));
+    MOCK_METHOD(bool, is_set, (char const*), (const, override));
+    MOCK_METHOD(bool, get, (char const*, bool), (const, override));
+    MOCK_METHOD(int, get, (char const*, int), (const, override));
+    MOCK_METHOD(std::string, get, (char const* name, char const*), (const, override));
+    MOCK_METHOD(boost::any const&, get, (char const*), (const, override));
 };
 
 }
