@@ -543,12 +543,6 @@ auto mgg::GLRenderingProvider::surface_for_sink(
         config);
 }
 
-auto mgg::GLRenderingProvider::supports_syncobj_timeline() const -> bool
-{
-    uint64_t has_timeline = 0;
-    return drmGetCap(drm_fd, DRM_CAP_SYNCOBJ_TIMELINE, &has_timeline) == 0 && has_timeline;
-}
-
 auto mgg::GLRenderingProvider::import_syncobj(Fd const& syncobj_fd)
     -> std::unique_ptr<drm::Syncobj>
 {

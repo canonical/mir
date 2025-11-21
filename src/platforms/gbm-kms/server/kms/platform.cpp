@@ -35,6 +35,7 @@
 #include "kms_cpu_addressable_display_provider.h"
 #include "surfaceless_egl_context.h"
 #include <boost/throw_exception.hpp>
+#include <drm.h>
 #include <drm_fourcc.h>
 #include <gbm.h>
 #include <system_error>
@@ -432,8 +433,7 @@ mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgg::RenderingPlatform::create_
 auto mgg::RenderingPlatform::maybe_create_provider(
     RenderingProvider::Tag const& type_tag) -> std::shared_ptr<graphics::RenderingProvider>
 {
-    if (dynamic_cast<mg::GLRenderingProvider::Tag const*>(&type_tag) ||
-        dynamic_cast<mg::DRMRenderingProvider::Tag const*>(&type_tag))
+    if (dynamic_cast<mg::GLRenderingProvider::Tag const*>(&type_tag))
     {
         return std::make_shared<mgg::GLRenderingProvider>(
             Fd{IntOwnedFd{gbm_device_get_fd(device.get())}},
@@ -443,6 +443,25 @@ auto mgg::RenderingPlatform::maybe_create_provider(
             share_ctx->egl_display(),
             static_cast<EGLContext>(*share_ctx),
             quirks);
+    }
+    if (dynamic_cast<mg::DRMRenderingProvider::Tag const*>(&type_tag))
+    {
+        // Check if the device supports DRM syncobj timeline
+        auto drm_fd = Fd{IntOwnedFd{gbm_device_get_fd(device.get())}};
+        uint64_t has_timeline = 0;
+        if (drmGetCap(drm_fd, DRM_CAP_SYNCOBJ_TIMELINE, &has_timeline) == 0 && has_timeline)
+        {
+            return std::make_shared<mgg::GLRenderingProvider>(
+                std::move(drm_fd),
+                bound_display,
+                egl_delegate,
+                dmabuf_provider,
+                share_ctx->egl_display(),
+                static_cast<EGLContext>(*share_ctx),
+                quirks);
+        }
+        // Device doesn't support syncobj timeline, don't provide DRMRenderingProvider
+        return nullptr;
     }
     return nullptr;
 }
