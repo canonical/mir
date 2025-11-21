@@ -405,13 +405,15 @@ public:
         WlSeat* seat,
         OutputManager* const output_manager,
         wl_resource* new_resource,
-        std::shared_ptr<scene::TextInputHub> const& text_input_hub) :
+        std::shared_ptr<scene::TextInputHub> const& text_input_hub,
+        std::shared_ptr<SurfaceRegistry> const& surface_registry) :
         InputPanelV1{new_resource, Version<1>()},
         wayland_executor{wayland_executor},
         shell{shell},
         seat{seat},
         output_manager{output_manager},
-        text_input_hub{text_input_hub}
+        text_input_hub{text_input_hub},
+        surface_registry{surface_registry}
     {}
 
 private:
@@ -427,7 +429,8 @@ private:
             WlSurface* surface,
             std::shared_ptr<shell::Shell> const& shell,
             OutputManager* const output_manager,
-            std::shared_ptr<scene::TextInputHub> const& text_input_hub)
+            std::shared_ptr<scene::TextInputHub> const& text_input_hub,
+            std::shared_ptr<SurfaceRegistry> const& surface_registry)
             : wayland::InputPanelSurfaceV1(id, Version<1>()),
               WindowWlSurfaceRole(
                   *wayland_executor,
@@ -435,7 +438,8 @@ private:
                   wayland::InputPanelSurfaceV1::client,
                   surface,
                   shell,
-                  output_manager),
+                  output_manager,
+                  surface_registry),
               output_manager(output_manager),
               text_input_hub{text_input_hub},
               state_observer{std::make_shared<StateObserver>(this)}
@@ -559,7 +563,8 @@ private:
             WlSurface::from(surface),
             shell,
             output_manager,
-            text_input_hub);
+            text_input_hub,
+            surface_registry);
     }
 
     std::shared_ptr<Executor> const wayland_executor;
@@ -567,6 +572,7 @@ private:
     WlSeat* seat;
     OutputManager* const output_manager;
     std::shared_ptr<scene::TextInputHub> const text_input_hub;
+    std::shared_ptr<SurfaceRegistry> const surface_registry;
 };
 
 mf::InputPanelV1::InputPanelV1(
@@ -575,13 +581,15 @@ mf::InputPanelV1::InputPanelV1(
     std::shared_ptr<shell::Shell> const& shell,
     WlSeat* seat,
     OutputManager* const output_manager,
-    std::shared_ptr<scene::TextInputHub> const& text_input_hub)
+    std::shared_ptr<scene::TextInputHub> const& text_input_hub,
+    std::shared_ptr<SurfaceRegistry> const& surface_registry)
     : Global(display, Version<1>()),
       wayland_executor{wayland_executor},
       shell{shell},
       seat{seat},
       output_manager{output_manager},
-      text_input_hub{text_input_hub}
+      text_input_hub{text_input_hub},
+      surface_registry{surface_registry}
 {}
 
 void mf::InputPanelV1::bind(wl_resource *new_resource)
@@ -592,6 +600,7 @@ void mf::InputPanelV1::bind(wl_resource *new_resource)
         seat,
         output_manager,
         new_resource,
-        text_input_hub
+        text_input_hub,
+        surface_registry,
     };
 }

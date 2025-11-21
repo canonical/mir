@@ -34,7 +34,6 @@ class StubSurfaceFactory : public scene::SurfaceFactory
 public:
     std::shared_ptr<scene::Surface> create_surface(
         std::shared_ptr<scene::Session> const&,
-        wayland::Weak<frontend::WlSurface> const&,
         std::list<scene::StreamInfo> const&,
         shell::SurfaceSpecification const& params) override
     {

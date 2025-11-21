@@ -89,7 +89,8 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
                 *ctx.wayland_executor,
                 ctx.shell,
                 ctx.seat,
-                ctx.output_manager);
+                ctx.output_manager,
+                ctx.surface_registry);
         }),
     make_extension_builder<mw::XdgShellV6>([](auto const& ctx)
         {
@@ -98,7 +99,8 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
                 *ctx.wayland_executor,
                 ctx.shell,
                 *ctx.seat,
-                ctx.output_manager);
+                ctx.output_manager,
+                ctx.surface_registry);
         }),
     make_extension_builder<mw::XdgWmBase>([](auto const& ctx)
         {
@@ -107,7 +109,8 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
                 *ctx.wayland_executor,
                 ctx.shell,
                 *ctx.seat,
-                ctx.output_manager);
+                ctx.output_manager,
+                ctx.surface_registry);
         }),
     make_extension_builder<mw::LayerShellV1>([](auto const& ctx)
         {
@@ -116,7 +119,8 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
                 *ctx.wayland_executor,
                 ctx.shell,
                 *ctx.seat,
-                ctx.output_manager);
+                ctx.output_manager,
+                ctx.surface_registry);
         }),
     make_extension_builder<mw::XdgOutputManagerV1>([](auto const& ctx)
         {
@@ -178,7 +182,8 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
               ctx.shell,
               ctx.seat,
               ctx.output_manager,
-              ctx.text_input_hub
+              ctx.text_input_hub,
+              ctx.surface_registry
           );
       }),
     make_extension_builder<mw::InputMethodManagerV2>([](auto const& ctx)
@@ -232,7 +237,8 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
                 ctx.session_lock,
                 *ctx.seat,
                 ctx.output_manager,
-                ctx.surface_stack);
+                ctx.surface_stack,
+                ctx.surface_registry);
         }),
     make_extension_builder<mw::MirShellV1>([](auto const& ctx)
         {

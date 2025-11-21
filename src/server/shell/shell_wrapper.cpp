@@ -88,12 +88,11 @@ void msh::ShellWrapper::stop_prompt_session(std::shared_ptr<ms::PromptSession> c
 
 auto msh::ShellWrapper::create_surface(
     std::shared_ptr<ms::Session> const& session,
-    wayland::Weak<frontend::WlSurface> const& wayland_surface,
     SurfaceSpecification const& params,
     std::shared_ptr<ms::SurfaceObserver> const& observer,
     Executor* observer_executor) -> std::shared_ptr<ms::Surface>
 {
-    return wrapped->create_surface(session, wayland_surface, params, observer, observer_executor);
+    return wrapped->create_surface(session, params, observer, observer_executor);
 }
 
 void msh::ShellWrapper::surface_ready(std::shared_ptr<ms::Surface> const& surface)

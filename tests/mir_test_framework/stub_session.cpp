@@ -74,7 +74,6 @@ void mtd::StubSession::resume_prompt_session()
 
 auto mtd::StubSession::create_surface(
     std::shared_ptr<Session> const& /*session*/,
-    wayland::Weak<frontend::WlSurface> const& /*wayland_surface*/,
     mir::shell::SurfaceSpecification const& /*params*/,
     std::shared_ptr<scene::SurfaceObserver> const& /*observer*/,
     Executor* /*observer_executor*/) -> std::shared_ptr<ms::Surface>

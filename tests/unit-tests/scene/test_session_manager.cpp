@@ -167,7 +167,7 @@ TEST_F(SessionManagerSessionListenerSetup, additional_listeners_receive_surface_
     auto session = session_manager.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "XPlane");
     auto bs = std::dynamic_pointer_cast<mc::BufferStream>(session->create_buffer_stream(
         mg::BufferProperties{{640, 480}, mir_pixel_format_abgr_8888, mg::BufferUsage::hardware}));
-    session->create_surface(nullptr, {}, mt::make_surface_spec(bs), mt::fake_shared(observer), nullptr);
+    session->create_surface(nullptr, mt::make_surface_spec(bs), mt::fake_shared(observer), nullptr);
 }
 
 namespace

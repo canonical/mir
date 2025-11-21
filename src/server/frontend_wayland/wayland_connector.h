@@ -93,6 +93,7 @@ class WlSurface;
 class WpViewporter;
 class LinuxDRMSyncobjManager;
 class DesktopFileManager;
+class SurfaceRegistry;
 
 class WaylandExtensions
 {
@@ -122,6 +123,7 @@ public:
         std::shared_ptr<scene::SessionCoordinator> session_coordinator;
         std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> keyboard_observer_registrar;
         std::shared_ptr<shell::TokenAuthority> token_authority;
+        std::shared_ptr<SurfaceRegistry> surface_registry;
     };
 
     WaylandExtensions() = default;
