@@ -38,7 +38,7 @@
 %global mirplatforminput_sover 10
 
 Name:           mir
-Version:        2.22.0
+Version:        2.23.0
 Release:        0%{?dist}
 Summary:        Next generation Wayland display server toolkit
 
@@ -331,6 +331,9 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/miral-shell.desktop
 
 
 %changelog
+* Fri Nov 21 2025 Michał Sawicz <michal.sawicz@canonical.com> - 2.23.0-1
+- Update to 2.23.0
+
 * Tue Aug 26 2025 Neal Gompa <ngompa@fedoraproject.org> - 2.22.0-1
 - Update to 2.22.0
 
