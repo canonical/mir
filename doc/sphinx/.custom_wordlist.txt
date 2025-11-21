@@ -46,6 +46,7 @@ debian
 deps
 destructors
 devel
+dispatchable
 DisplayLink's
 DisplayPlatform
 dispatchable
