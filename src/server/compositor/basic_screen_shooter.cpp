@@ -15,20 +15,20 @@
  */
 
 #include "basic_screen_shooter.h"
-#include "mir/graphics/cursor.h"
-#include "mir/graphics/drm_formats.h"
-#include "mir/graphics/gl_config.h"
-#include "mir/renderer/renderer.h"
-#include "mir/renderer/gl/gl_surface.h"
-#include "mir/compositor/scene_element.h"
-#include "mir/compositor/scene.h"
-#include "mir/log.h"
-#include "mir/executor.h"
-#include "mir/graphics/platform.h"
-#include "mir/renderer/renderer_factory.h"
-#include "mir/renderer/sw/pixel_source.h"
-#include "mir/graphics/display_sink.h"
-#include "mir/graphics/output_filter.h"
+#include <mir/graphics/cursor.h>
+#include <mir/graphics/drm_formats.h>
+#include <mir/graphics/gl_config.h>
+#include <mir/renderer/renderer.h>
+#include <mir/renderer/gl/gl_surface.h>
+#include <mir/compositor/scene_element.h>
+#include <mir/compositor/scene.h>
+#include <mir/log.h>
+#include <mir/executor.h>
+#include <mir/graphics/platform.h>
+#include <mir/renderer/renderer_factory.h>
+#include <mir/renderer/sw/pixel_source.h>
+#include <mir/graphics/display_sink.h>
+#include <mir/graphics/output_filter.h>
 
 namespace mc = mir::compositor;
 namespace mr = mir::renderer;

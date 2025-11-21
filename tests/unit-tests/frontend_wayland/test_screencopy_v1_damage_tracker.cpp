@@ -15,12 +15,12 @@
  */
 
 #include "src/server/frontend_wayland/wlr_screencopy_v1.h"
-#include "mir/scene/observer.h"
-#include "mir/scene/surface_observer.h"
-#include "mir/test/doubles/mock_frontend_surface_stack.h"
-#include "mir/test/doubles/mock_surface.h"
-#include "mir/test/doubles/explicit_executor.h"
-#include "mir/test/fake_shared.h"
+#include <mir/scene/observer.h>
+#include <mir/scene/surface_observer.h>
+#include <mir/test/doubles/mock_frontend_surface_stack.h>
+#include <mir/test/doubles/mock_surface.h>
+#include <mir/test/doubles/explicit_executor.h>
+#include <mir/test/fake_shared.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

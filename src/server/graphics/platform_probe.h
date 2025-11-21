@@ -19,9 +19,9 @@
 
 #include <vector>
 #include <memory>
-#include "mir/shared_library.h"
-#include "mir/graphics/platform.h"
-#include "mir/shared_library_prober_report.h"
+#include <mir/shared_library.h>
+#include <mir/graphics/platform.h>
+#include <mir/shared_library_prober_report.h>
 
 namespace mir
 {

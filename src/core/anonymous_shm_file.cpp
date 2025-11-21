@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/anonymous_shm_file.h"
+#include <mir/anonymous_shm_file.h>
 
 #include <boost/throw_exception.hpp>
 

@@ -17,9 +17,9 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_INPUT_SEAT_H_
 #define MIR_TEST_DOUBLES_MOCK_INPUT_SEAT_H_
 
-#include "mir/input/seat.h"
-#include "mir/input/device.h"
-#include "mir/input/input_sink.h"
+#include <mir/input/seat.h>
+#include <mir/input/device.h>
+#include <mir/input/input_sink.h>
 
 #include <gmock/gmock.h>
 

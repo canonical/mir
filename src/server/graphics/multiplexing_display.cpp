@@ -16,10 +16,10 @@
 
 #include "multiplexing_display.h"
 #include "multiplexing_hw_cursor.h"
-#include "mir/graphics/display_configuration.h"
-#include "mir/renderer/gl/context.h"
-#include "mir/output_type_names.h"
-#include "mir/log.h"
+#include <mir/graphics/display_configuration.h>
+#include <mir/renderer/gl/context.h>
+#include <mir/output_type_names.h>
+#include <mir/log.h>
 
 #include <boost/throw_exception.hpp>
 #include <exception>

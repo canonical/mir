@@ -17,8 +17,8 @@
 #ifndef MIR_TEST_DOUBLES_NULL_DISPLAY_CHANGER_H_
 #define MIR_TEST_DOUBLES_NULL_DISPLAY_CHANGER_H_
 
-#include "mir/frontend/display_changer.h"
-#include "mir/test/doubles/null_display_configuration.h"
+#include <mir/frontend/display_changer.h>
+#include <mir/test/doubles/null_display_configuration.h>
 
 namespace mir
 {

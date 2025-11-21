@@ -14,9 +14,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/graphics/egl_context_executor.h"
-#include "mir/fd.h"
-#include "mir/geometry/size.h"
+#include <mir/graphics/egl_context_executor.h>
+#include <mir/fd.h>
+#include <mir/geometry/size.h>
 
 #include <memory>
 #include <optional>

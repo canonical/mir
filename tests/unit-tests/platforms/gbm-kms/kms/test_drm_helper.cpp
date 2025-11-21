@@ -16,12 +16,12 @@
 
 #include "src/platforms/gbm-kms/server/display_helpers.h"
 #include "src/platforms/gbm-kms/server/kms/quirks.h"
-#include "mir/udev/wrapper.h"
+#include <mir/udev/wrapper.h>
 
-#include "mir_test_framework/udev_environment.h"
-#include "mir/test/doubles/mock_drm.h"
-#include "mir/test/doubles/stub_console_services.h"
-#include "mir/test/doubles/mock_option.h"
+#include <mir_test_framework/udev_environment.h>
+#include <mir/test/doubles/mock_drm.h>
+#include <mir/test/doubles/stub_console_services.h>
+#include <mir/test/doubles/mock_option.h>
 
 #include <fcntl.h>
 

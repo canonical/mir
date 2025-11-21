@@ -23,11 +23,11 @@
 #include "xwayland_wm_shell.h"
 #include "xwayland_surface_role.h"
 
-#include "mir/frontend/wayland.h"
-#include "mir/scene/surface.h"
-#include "mir/shell/shell.h"
-#include "mir/shell/surface_specification.h"
-#include "mir/events/input_event.h"
+#include <mir/frontend/wayland.h>
+#include <mir/scene/surface.h>
+#include <mir/shell/shell.h>
+#include <mir/shell/surface_specification.h>
+#include <mir/events/input_event.h>
 
 #include "boost/throw_exception.hpp"
 

@@ -17,9 +17,9 @@
 #ifndef MIR_TEST_FAKE_INPUT_SERVER_CONFIGURATION_H_
 #define MIR_TEST_FAKE_INPUT_SERVER_CONFIGURATION_H_
 
-#include "mir_test_framework/testing_server_configuration.h"
-#include "mir_test_framework/temporary_environment_value.h"
-#include "mir_test_framework/executable_path.h"
+#include <mir_test_framework/testing_server_configuration.h>
+#include <mir_test_framework/temporary_environment_value.h>
+#include <mir_test_framework/executable_path.h>
 
 namespace mir_test_framework
 {

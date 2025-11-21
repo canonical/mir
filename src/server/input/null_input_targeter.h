@@ -17,7 +17,7 @@
 #ifndef MIR_INPUT_NULL_INPUT_TARGETER_H_
 #define MIR_INPUT_NULL_INPUT_TARGETER_H_
 
-#include "mir/shell/input_targeter.h"
+#include <mir/shell/input_targeter.h>
 
 namespace mir
 {

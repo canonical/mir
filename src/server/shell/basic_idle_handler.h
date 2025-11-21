@@ -17,10 +17,10 @@
 #ifndef MIR_SHELL_BASIC_IDLE_HANDLER_H_
 #define MIR_SHELL_BASIC_IDLE_HANDLER_H_
 
-#include "mir/shell/idle_handler.h"
-#include "mir/proof_of_mutex_lock.h"
-#include "mir/executor.h"
-#include "mir/observer_multiplexer.h"
+#include <mir/shell/idle_handler.h>
+#include <mir/proof_of_mutex_lock.h>
+#include <mir/executor.h>
+#include <mir/observer_multiplexer.h>
 
 #include <memory>
 #include <vector>

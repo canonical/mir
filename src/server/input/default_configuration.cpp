@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/default_server_configuration.h"
+#include <mir/default_server_configuration.h>
 
 #include "key_repeat_dispatcher.h"
 #include "keyboard_resync_dispatcher.h"
@@ -31,29 +31,29 @@
 #include "seat_observer_multiplexer.h"
 #include "idle_poking_dispatcher.h"
 
-#include "mir/input/touch_visualizer.h"
-#include "mir/input/input_probe.h"
-#include "mir/input/platform.h"
-#include "mir/input/xkb_mapper_registrar.h"
-#include "mir/input/vt_filter.h"
-#include "mir/input/device.h"
-#include "mir/input/input_event_transformer.h"
-#include "mir/input/cursor_observer_multiplexer.h"
-#include "mir/input/cursor_controller.h"
-#include "mir/options/configuration.h"
-#include "mir/options/option.h"
-#include "mir/dispatch/multiplexing_dispatchable.h"
-#include "mir/compositor/scene.h"
-#include "mir/emergency_cleanup.h"
-#include "mir/main_loop.h"
-#include "mir/abnormal_exit.h"
-#include "mir/glib_main_loop.h"
-#include "mir/log.h"
-#include "mir/shared_library.h"
-#include "mir/dispatch/action_queue.h"
-#include "mir/console_services.h"
+#include <mir/input/touch_visualizer.h>
+#include <mir/input/input_probe.h>
+#include <mir/input/platform.h>
+#include <mir/input/xkb_mapper_registrar.h>
+#include <mir/input/vt_filter.h>
+#include <mir/input/device.h>
+#include <mir/input/input_event_transformer.h>
+#include <mir/input/cursor_observer_multiplexer.h>
+#include <mir/input/cursor_controller.h>
+#include <mir/options/configuration.h>
+#include <mir/options/option.h>
+#include <mir/dispatch/multiplexing_dispatchable.h>
+#include <mir/compositor/scene.h>
+#include <mir/emergency_cleanup.h>
+#include <mir/main_loop.h>
+#include <mir/abnormal_exit.h>
+#include <mir/glib_main_loop.h>
+#include <mir/log.h>
+#include <mir/shared_library.h>
+#include <mir/dispatch/action_queue.h>
+#include <mir/console_services.h>
 
-#include "mir_toolkit/cursors.h"
+#include <mir_toolkit/cursors.h>
 
 namespace mi = mir::input;
 namespace mr = mir::report;

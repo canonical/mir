@@ -16,7 +16,7 @@
 
 #include "bypass.h"
 
-#include "mir/graphics/renderable.h"
+#include <mir/graphics/renderable.h>
 
 using namespace mir;
 namespace mga = mir::graphics::atomic;

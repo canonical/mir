@@ -19,19 +19,19 @@
 #include "libinput_ptr.h"
 #include "fd_store.h"
 
-#include "mir/udev/wrapper.h"
-#include "mir/dispatch/dispatchable.h"
-#include "mir/dispatch/readable_fd.h"
-#include "mir/dispatch/multiplexing_dispatchable.h"
-#include "mir/dispatch/action_queue.h"
-#include "mir/console_services.h"
+#include <mir/udev/wrapper.h>
+#include <mir/dispatch/dispatchable.h>
+#include <mir/dispatch/readable_fd.h>
+#include <mir/dispatch/multiplexing_dispatchable.h>
+#include <mir/dispatch/action_queue.h>
+#include <mir/console_services.h>
 
-#include "mir/input/input_device_registry.h"
-#include "mir/input/input_report.h"
-#include "mir/fd.h"
-#include "mir/raii.h"
+#include <mir/input/input_device_registry.h>
+#include <mir/input/input_report.h>
+#include <mir/fd.h>
+#include <mir/raii.h>
 
-#include "mir/log.h"
+#include <mir/log.h>
 
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>

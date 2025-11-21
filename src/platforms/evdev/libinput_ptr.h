@@ -17,8 +17,8 @@
 #ifndef MIR_INPUT_EVDEV_LIBINPUT_PTR_H_
 #define MIR_INPUT_EVDEV_LIBINPUT_PTR_H_
 
-#include "mir_toolkit/event.h"
-#include "mir/fd.h"
+#include <mir_toolkit/event.h>
+#include <mir/fd.h>
 
 #include <unordered_map>
 #include <memory>

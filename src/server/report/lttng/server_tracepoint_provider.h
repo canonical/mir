@@ -17,7 +17,7 @@
 #ifndef MIR_LTTNG_SERVER_TRACEPOINT_PROVIDER_H_
 #define MIR_LTTNG_SERVER_TRACEPOINT_PROVIDER_H_
 
-#include "mir/report/lttng/tracepoint_provider.h"
+#include <mir/report/lttng/tracepoint_provider.h>
 
 namespace mir
 {

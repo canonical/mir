@@ -15,14 +15,14 @@
  */
 
 #include "basic_sticky_keys_transformer.h"
-#include "mir/events/input_event.h"
-#include "mir/events/keyboard_event.h"
+#include <mir/events/input_event.h>
+#include <mir/events/keyboard_event.h>
 #include <linux/input-event-codes.h>
 #include <vector>
 
-#include "mir/synchronised.h"
-#include "mir/events/pointer_event.h"
-#include "mir/events/touch_event.h"
+#include <mir/synchronised.h>
+#include <mir/events/pointer_event.h>
+#include <mir/events/touch_event.h>
 
 namespace msh = mir::shell;
 namespace mi = mir::input;

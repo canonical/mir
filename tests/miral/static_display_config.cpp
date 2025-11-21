@@ -15,8 +15,8 @@
  */
 
 #include "static_display_config.h"
-#include "mir/logging/dumb_console_logger.h"
-#include "mir/logging/logger.h"
+#include <mir/logging/dumb_console_logger.h>
+#include <mir/logging/logger.h>
 
 #include <mir/test/doubles/mock_display_configuration.h>
 

@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "miroil/open_gl_context.h"
+#include <miroil/open_gl_context.h>
 
 // mir
 #include <mir/server.h>

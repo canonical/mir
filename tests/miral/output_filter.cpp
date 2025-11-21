@@ -21,7 +21,7 @@
 #include <mir/server.h>
 
 #include <miral/test_server.h>
-#include "mir/test/doubles/null_logger.h"
+#include <mir/test/doubles/null_logger.h>
 #include <mir/test/fake_shared.h>
 
 #include <gmock/gmock.h>

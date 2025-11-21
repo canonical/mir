@@ -14,7 +14,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/events/close_window_event.h"
+#include <mir/events/close_window_event.h>
 
 MirCloseWindowEvent::MirCloseWindowEvent() :
     MirEvent{mir_event_type_close_window}

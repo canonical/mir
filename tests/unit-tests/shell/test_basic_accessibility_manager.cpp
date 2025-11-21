@@ -15,27 +15,27 @@
  */
 
 #include "include/server/mir/shell/keyboard_helper.h"
-#include "mir/shell/accessibility_manager.h"
-#include "mir/shell/hover_click_transformer.h"
-#include "mir/shell/mousekeys_transformer.h"
-#include "mir/shell/simulated_secondary_click_transformer.h"
+#include <mir/shell/accessibility_manager.h>
+#include <mir/shell/hover_click_transformer.h>
+#include <mir/shell/mousekeys_transformer.h>
+#include <mir/shell/simulated_secondary_click_transformer.h>
 #include "src/server/shell/basic_accessibility_manager.h"
 
-#include "mir/input/input_event_transformer.h"
-#include "mir/input/mousekeys_keymap.h"
-#include "mir/shell/slow_keys_transformer.h"
-#include "mir/test/fake_shared.h"
+#include <mir/input/input_event_transformer.h>
+#include <mir/input/mousekeys_keymap.h>
+#include <mir/shell/slow_keys_transformer.h>
+#include <mir/test/fake_shared.h>
 
-#include "mir/test/doubles/mock_input_seat.h"
-#include "mir/test/doubles/advanceable_clock.h"
-#include "mir/test/doubles/stub_cursor.h"
+#include <mir/test/doubles/mock_input_seat.h>
+#include <mir/test/doubles/advanceable_clock.h>
+#include <mir/test/doubles/stub_cursor.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <memory>
 
-#include "mir/shell/sticky_keys_transformer.h"
+#include <mir/shell/sticky_keys_transformer.h>
 
 
 using namespace testing;

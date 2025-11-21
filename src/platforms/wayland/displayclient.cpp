@@ -16,9 +16,9 @@
  */
 
 #include "displayclient.h"
-#include "mir/fatal.h"
+#include <mir/fatal.h>
 #include "wl_egl_display_provider.h"
-#include "mir/graphics/platform.h"
+#include <mir/graphics/platform.h>
 #include <mir/graphics/pixel_format_utils.h>
 
 #include <wayland-client.h>

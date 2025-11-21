@@ -16,16 +16,16 @@
 
 #include "platform.h"
 #include "display.h"
-#include "mir/console_services.h"
-#include "mir/emergency_cleanup_registry.h"
-#include "mir/graphics/platform.h"
-#include "mir/udev/wrapper.h"
+#include <mir/console_services.h>
+#include <mir/emergency_cleanup_registry.h>
+#include <mir/graphics/platform.h>
+#include <mir/udev/wrapper.h>
 #include "one_shot_device_observer.h"
 #include <boost/throw_exception.hpp>
 #include <system_error>
 #include <xf86drm.h>
 
-#include "mir/log.h"
+#include <mir/log.h>
 
 namespace mg = mir::graphics;
 namespace mga = mg::atomic;

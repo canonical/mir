@@ -16,8 +16,8 @@
 #ifndef MIR_INPUT_X_INPUT_PLATFORM_H_
 #define MIR_INPUT_X_INPUT_PLATFORM_H_
 
-#include "mir/input/platform.h"
-#include "mir/geometry/forward.h"
+#include <mir/input/platform.h>
+#include <mir/geometry/forward.h>
 #include <memory>
 #include <functional>
 #include <optional>

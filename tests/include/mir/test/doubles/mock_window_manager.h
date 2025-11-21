@@ -17,8 +17,8 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_WINDOW_MANAGER_H_
 #define MIR_TEST_DOUBLES_MOCK_WINDOW_MANAGER_H_
 
-#include "mir/shell/window_manager.h"
-#include "mir/shell/surface_specification.h"
+#include <mir/shell/window_manager.h>
+#include <mir/shell/surface_specification.h>
 
 #include <gmock/gmock.h>
 

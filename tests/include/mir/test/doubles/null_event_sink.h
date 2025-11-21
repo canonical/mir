@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_NULL_EVENT_SINK_H_
 #define MIR_TEST_DOUBLES_NULL_EVENT_SINK_H_
 
-#include "mir/frontend/event_sink.h"
+#include <mir/frontend/event_sink.h>
 
 #include <memory>
 

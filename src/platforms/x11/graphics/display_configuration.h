@@ -17,8 +17,8 @@
 #ifndef MIR_GRAPHICS_X_DISPLAY_CONFIGURATION_H_
 #define MIR_GRAPHICS_X_DISPLAY_CONFIGURATION_H_
 
-#include "mir/graphics/display_configuration.h"
-#include "mir/geometry/size.h"
+#include <mir/graphics/display_configuration.h>
+#include <mir/geometry/size.h>
 
 namespace mir
 {

@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/test/doubles/mock_gl.h"
+#include <mir/test/doubles/mock_gl.h>
 #include <gtest/gtest.h>
 
 #include <GLES2/gl2.h>

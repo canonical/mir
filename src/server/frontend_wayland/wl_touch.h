@@ -18,8 +18,8 @@
 #define MIR_FRONTEND_WL_TOUCH_H
 
 #include "wayland_wrapper.h"
-#include "mir/wayland/weak.h"
-#include "mir/geometry/point.h"
+#include <mir/wayland/weak.h>
+#include <mir/geometry/point.h>
 
 #include <unordered_map>
 #include <functional>

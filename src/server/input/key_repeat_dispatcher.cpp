@@ -16,11 +16,11 @@
 
 #include "key_repeat_dispatcher.h"
 
-#include "mir/input/device.h"
-#include "mir/input/input_device_hub.h"
-#include "mir/time/alarm_factory.h"
-#include "mir/time/alarm.h"
-#include "mir/events/event_builders.h"
+#include <mir/input/device.h>
+#include <mir/input/input_device_hub.h>
+#include <mir/time/alarm_factory.h>
+#include <mir/time/alarm.h>
+#include <mir/events/event_builders.h>
 
 #include <xkbcommon/xkbcommon-keysyms.h>
 

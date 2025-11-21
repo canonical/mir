@@ -19,9 +19,9 @@
 #include <GLES2/gl2ext.h>
 
 #include "egl_buffer_copy.h"
-#include "mir/graphics/egl_context_executor.h"
-#include "mir/graphics/egl_error.h"
-#include "mir/graphics/egl_extensions.h"
+#include <mir/graphics/egl_context_executor.h>
+#include <mir/graphics/egl_error.h>
+#include <mir/graphics/egl_extensions.h>
 
 #include <algorithm>
 #include <cstring>
@@ -31,7 +31,7 @@
 #include <boost/throw_exception.hpp>
 
 #define MIR_LOG_COMPONENT "egl-buffer-copy"
-#include "mir/log.h"
+#include <mir/log.h>
 
 namespace mg = mir::graphics;
 

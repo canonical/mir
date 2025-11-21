@@ -37,11 +37,11 @@
 #include <miral/hover_click.h>
 #include <miral/append_keyboard_event_filter.h>
 
-#include "mir/abnormal_exit.h"
-#include "mir/main_loop.h"
-#include "mir/options/option.h"
-#include "mir/report_exception.h"
-#include "mir/server.h"
+#include <mir/abnormal_exit.h>
+#include <mir/main_loop.h>
+#include <mir/options/option.h>
+#include <mir/report_exception.h>
+#include <mir/server.h>
 
 #include <boost/exception/diagnostic_information.hpp>
 
@@ -49,7 +49,7 @@
 #include <cstdlib>
 #include <linux/input-event-codes.h>
 
-#include "miral/sticky_keys.h"
+#include <miral/sticky_keys.h>
 
 namespace mir { class AbnormalExit; }
 

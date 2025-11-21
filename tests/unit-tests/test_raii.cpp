@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/raii.h"
+#include <mir/raii.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

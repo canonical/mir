@@ -19,12 +19,12 @@
 #include "wl_data_source.h"
 #include "wl_seat.h"
 
-#include "mir/scene/clipboard.h"
-#include "mir/scene/data_exchange.h"
-#include "mir/synchronised.h"
-#include "mir/wayland/protocol_error.h"
+#include <mir/scene/clipboard.h>
+#include <mir/scene/data_exchange.h>
+#include <mir/synchronised.h>
+#include <mir/wayland/protocol_error.h>
 
-#include "mir/log.h"
+#include <mir/log.h>
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;

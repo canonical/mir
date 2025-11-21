@@ -17,9 +17,9 @@
 #ifndef MIR_TEST_DOUBLES_NULL_DISPLAY_H_
 #define MIR_TEST_DOUBLES_NULL_DISPLAY_H_
 
-#include "mir/graphics/display.h"
-#include "mir/test/doubles/null_display_configuration.h"
-#include "mir/test/doubles/null_display_sync_group.h"
+#include <mir/graphics/display.h>
+#include <mir/test/doubles/null_display_configuration.h>
+#include <mir/test/doubles/null_display_sync_group.h>
 
 namespace mir
 {

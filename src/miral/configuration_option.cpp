@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "miral/command_line_option.h"
+#include <miral/command_line_option.h>
 
 #include <mir/server.h>
 #include <mir/options/option.h>

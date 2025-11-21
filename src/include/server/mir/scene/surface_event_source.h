@@ -17,9 +17,9 @@
 #ifndef MIR_SCENE_SURFACE_EVENT_SOURCE_H_
 #define MIR_SCENE_SURFACE_EVENT_SOURCE_H_
 
-#include "mir/scene/null_surface_observer.h"
-#include "mir/frontend/surface_id.h"
-#include "mir/frontend/event_sink.h"
+#include <mir/scene/null_surface_observer.h>
+#include <mir/frontend/surface_id.h>
+#include <mir/frontend/event_sink.h>
 
 #include <memory>
 

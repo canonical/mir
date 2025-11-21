@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "miroil/display_configuration_policy.h"
+#include <miroil/display_configuration_policy.h>
 
 miroil::DisplayConfigurationPolicy::DisplayConfigurationPolicy() = default;
 miroil::DisplayConfigurationPolicy::~DisplayConfigurationPolicy() = default;

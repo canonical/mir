@@ -16,7 +16,7 @@
 #ifndef MIR_TEST_DOUBLES_STUB_GL_PROGRAM_H_
 #define MIR_TEST_DOUBLES_STUB_GL_PROGRAM_H_
 
-#include "mir/gl/program.h"
+#include <mir/gl/program.h>
 
 namespace mir
 {

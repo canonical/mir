@@ -14,11 +14,11 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/shell/token_authority.h"
+#include <mir/shell/token_authority.h>
 
-#include "mir/main_loop.h"
-#include "mir/time/alarm.h"
-#include "mir/log.h"
+#include <mir/main_loop.h>
+#include <mir/time/alarm.h>
+#include <mir/log.h>
 
 #include <chrono>
 #include <cmath>

@@ -16,8 +16,8 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_RENDERER_H_
 #define MIR_TEST_DOUBLES_MOCK_RENDERER_H_
 
-#include "mir/renderer/renderer.h"
-#include "mir/graphics/platform.h"
+#include <mir/renderer/renderer.h>
+#include <mir/graphics/platform.h>
 
 #include <gmock/gmock.h>
 

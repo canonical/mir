@@ -16,7 +16,7 @@
 
 #include "src/server/shm_backing.h"
 
-#include "mir_test_framework/mmap_wrapper.h"
+#include <mir_test_framework/mmap_wrapper.h>
 
 #include <linux/memfd.h>
 #include <sys/mman.h>

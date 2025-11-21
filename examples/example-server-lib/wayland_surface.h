@@ -19,7 +19,7 @@
 
 #include "wayland_app.h"
 
-#include "mir/geometry/size.h"
+#include <mir/geometry/size.h>
 
 #include <functional>
 

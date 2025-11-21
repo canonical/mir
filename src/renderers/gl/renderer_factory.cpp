@@ -16,8 +16,8 @@
 
 #include "renderer_factory.h"
 #include "renderer.h"
-#include "mir/graphics/platform.h"
-#include "mir/renderer/gl/gl_surface.h"
+#include <mir/graphics/platform.h>
+#include <mir/renderer/gl/gl_surface.h>
 
 namespace mrg = mir::renderer::gl;
 

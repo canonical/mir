@@ -14,19 +14,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/graphics/egl_extensions.h"
+#include <mir/graphics/egl_extensions.h>
 #define MIR_LOG_COMPONENT "gbm-kms"
-#include "mir/log.h"
+#include <mir/log.h>
 
 #include "rendering_platform.h"
-#include "mir/module_deleter.h"
-#include "mir/assert_module_entry_point.h"
-#include "mir/libname.h"
-#include "mir/udev/wrapper.h"
-#include "mir/graphics/platform.h"
-#include "mir/graphics/egl_error.h"
-#include "mir/graphics/gl_config.h"
-#include "mir/graphics/egl_logger.h"
+#include <mir/module_deleter.h>
+#include <mir/assert_module_entry_point.h>
+#include <mir/libname.h>
+#include <mir/udev/wrapper.h>
+#include <mir/graphics/platform.h>
+#include <mir/graphics/egl_error.h>
+#include <mir/graphics/gl_config.h>
+#include <mir/graphics/egl_logger.h>
 
 #include <EGL/egl.h>
 #include <GLES2/gl2.h>

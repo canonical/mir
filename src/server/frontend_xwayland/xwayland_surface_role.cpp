@@ -20,9 +20,9 @@
 #include "xwayland_log.h"
 
 #include "wl_surface.h"
-#include "mir/shell/surface_specification.h"
-#include "mir/scene/surface.h"
-#include "mir/shell/shell.h"
+#include <mir/shell/surface_specification.h>
+#include <mir/scene/surface.h>
+#include <mir/shell/shell.h>
 
 #include <boost/throw_exception.hpp>
 

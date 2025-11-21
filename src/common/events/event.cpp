@@ -14,18 +14,18 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/events/event.h"
-#include "mir/events/close_window_event.h"
-#include "mir/events/input_event.h"
-#include "mir/events/keyboard_event.h"
-#include "mir/events/touch_event.h"
-#include "mir/events/orientation_event.h"
-#include "mir/events/prompt_session_event.h"
-#include "mir/events/resize_event.h"
-#include "mir/events/window_event.h"
-#include "mir/events/window_output_event.h"
-#include "mir/events/input_device_state_event.h"
-#include "mir/events/window_placement_event.h"
+#include <mir/events/event.h>
+#include <mir/events/close_window_event.h>
+#include <mir/events/input_event.h>
+#include <mir/events/keyboard_event.h>
+#include <mir/events/touch_event.h>
+#include <mir/events/orientation_event.h>
+#include <mir/events/prompt_session_event.h>
+#include <mir/events/resize_event.h>
+#include <mir/events/window_event.h>
+#include <mir/events/window_output_event.h>
+#include <mir/events/input_device_state_event.h>
+#include <mir/events/window_placement_event.h>
 
 
 MirEvent::MirEvent(MirEventType type) :

@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/events/input_event.h"
-#include "mir/events/keyboard_resync_event.h"
+#include <mir/events/input_event.h>
+#include <mir/events/keyboard_resync_event.h>
 
 MirKeyboardResyncEvent::MirKeyboardResyncEvent() :
     MirInputEvent(mir_input_event_type_keyboard_resync)

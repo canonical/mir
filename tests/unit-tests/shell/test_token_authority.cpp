@@ -14,12 +14,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/glib_main_loop.h"
-#include "mir/main_loop.h"
-#include "mir/shell/token_authority.h"
-#include "mir/test/auto_unblock_thread.h"
-#include "mir/test/spin_wait.h"
-#include "mir/time/steady_clock.h"
+#include <mir/glib_main_loop.h>
+#include <mir/main_loop.h>
+#include <mir/shell/token_authority.h>
+#include <mir/test/auto_unblock_thread.h>
+#include <mir/test/spin_wait.h>
+#include <mir/time/steady_clock.h>
 #include <algorithm>
 #include <chrono>
 #include <gtest/gtest.h>

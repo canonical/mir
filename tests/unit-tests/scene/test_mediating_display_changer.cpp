@@ -15,21 +15,21 @@
  */
 
 #include "src/server/scene/mediating_display_changer.h"
-#include "mir/scene/session_container.h"
-#include "mir/graphics/display_configuration_policy.h"
+#include <mir/scene/session_container.h>
+#include <mir/graphics/display_configuration_policy.h>
 #include "src/server/scene/broadcasting_session_event_sink.h"
-#include "mir/server_action_queue.h"
+#include <mir/server_action_queue.h>
 
-#include "mir/test/doubles/mock_display.h"
-#include "mir/test/doubles/mock_compositor.h"
-#include "mir/test/doubles/null_display_configuration.h"
-#include "mir/test/doubles/stub_display_configuration.h"
-#include "mir/test/doubles/mock_scene_session.h"
-#include "mir/test/doubles/stub_session.h"
-#include "mir/test/fake_shared.h"
-#include "mir/test/display_config_matchers.h"
-#include "mir/test/doubles/fake_alarm_factory.h"
-#include "mir/test/doubles/mock_display_configuration_observer.h"
+#include <mir/test/doubles/mock_display.h>
+#include <mir/test/doubles/mock_compositor.h>
+#include <mir/test/doubles/null_display_configuration.h>
+#include <mir/test/doubles/stub_display_configuration.h>
+#include <mir/test/doubles/mock_scene_session.h>
+#include <mir/test/doubles/stub_session.h>
+#include <mir/test/fake_shared.h>
+#include <mir/test/display_config_matchers.h>
+#include <mir/test/doubles/fake_alarm_factory.h>
+#include <mir/test/doubles/mock_display_configuration_observer.h>
 
 #include "gmock/gmock.h"
 #include <mutex>

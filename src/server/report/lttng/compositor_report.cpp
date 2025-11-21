@@ -16,8 +16,8 @@
 
 #include "compositor_report.h"
 
-#include "mir/graphics/buffer.h"
-#include "mir/report/lttng/mir_tracepoint.h"
+#include <mir/graphics/buffer.h>
+#include <mir/report/lttng/mir_tracepoint.h>
 
 #define TRACEPOINT_DEFINE
 #define TRACEPOINT_PROBE_DYNAMIC_LINKAGE

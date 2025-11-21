@@ -16,7 +16,7 @@
 
 #include "scene_report.h"
 
-#include "mir/logging/logger.h"
+#include <mir/logging/logger.h>
 
 #include <sstream>
 

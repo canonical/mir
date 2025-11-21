@@ -15,9 +15,9 @@
  */
 
 #include "basic_slow_keys_transformer.h"
-#include "mir/events/input_event.h"
-#include "mir/events/keyboard_event.h"
-#include "mir/main_loop.h"
+#include <mir/events/input_event.h>
+#include <mir/events/keyboard_event.h>
+#include <mir/main_loop.h>
 
 namespace msh = mir::shell;
 namespace mi = mir::input;

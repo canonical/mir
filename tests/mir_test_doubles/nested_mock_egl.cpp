@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/test/doubles/nested_mock_egl.h"
+#include <mir/test/doubles/nested_mock_egl.h>
 
 namespace mtd = mir::test::doubles;
 

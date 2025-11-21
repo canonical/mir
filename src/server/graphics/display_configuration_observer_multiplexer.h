@@ -17,9 +17,9 @@
 #ifndef MIR_DISPLAY_CONFIGURATION_MULTIPLEXER_H_
 #define MIR_DISPLAY_CONFIGURATION_MULTIPLEXER_H_
 
-#include "mir/observer_registrar.h"
-#include "mir/observer_multiplexer.h"
-#include "mir/graphics/display_configuration_observer.h"
+#include <mir/observer_registrar.h>
+#include <mir/observer_multiplexer.h>
+#include <mir/graphics/display_configuration_observer.h>
 
 #include <mutex>
 

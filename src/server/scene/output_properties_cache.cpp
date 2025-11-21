@@ -14,10 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/scene/output_properties_cache.h"
+#include <mir/scene/output_properties_cache.h>
 
-#include "mir/geometry/rectangle.h"
-#include "mir/graphics/display_configuration.h"
+#include <mir/geometry/rectangle.h>
+#include <mir/graphics/display_configuration.h>
 
 #include <cmath>
 

@@ -18,8 +18,8 @@
 
 #include "wl_seat.h"
 #include "wl_surface.h"
-#include "mir/executor.h"
-#include "mir/scene/text_input_hub.h"
+#include <mir/executor.h>
+#include <mir/scene/text_input_hub.h>
 
 #include <boost/throw_exception.hpp>
 #include <mir/wayland/client.h>

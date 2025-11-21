@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_INPUT_DISPATCHER_H_
 #define MIR_TEST_DOUBLES_MOCK_INPUT_DISPATCHER_H_
 
-#include "mir/input/input_dispatcher.h"
+#include <mir/input/input_dispatcher.h>
 #include <gmock/gmock.h>
 
 namespace mir

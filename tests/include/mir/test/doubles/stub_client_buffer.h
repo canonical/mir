@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_STUB_CLIENT_BUFFER_H_
 #define MIR_TEST_DOUBLES_STUB_CLIENT_BUFFER_H_
 
-#include "mir/client/client_buffer.h"
+#include <mir/client/client_buffer.h>
 #include <unistd.h>
 
 namespace mir

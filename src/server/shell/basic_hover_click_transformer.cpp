@@ -15,11 +15,11 @@
  */
 
 #include "basic_hover_click_transformer.h"
-#include "mir/geometry/displacement.h"
-#include "mir/input/cursor_observer.h"
-#include "mir/input/cursor_observer_multiplexer.h"
-#include "mir/input/event_builder.h"
-#include "mir/main_loop.h"
+#include <mir/geometry/displacement.h>
+#include <mir/input/cursor_observer.h>
+#include <mir/input/cursor_observer_multiplexer.h>
+#include <mir/input/event_builder.h>
+#include <mir/main_loop.h>
 
 namespace msh = mir::shell;
 namespace mi = mir::input;

@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/options/program_option.h"
+#include <mir/options/program_option.h>
 
 #include <cstdlib>
 

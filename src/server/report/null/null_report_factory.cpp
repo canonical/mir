@@ -22,7 +22,7 @@
 #include "seat_report.h"
 #include "shell_report.h"
 #include "scene_report.h"
-#include "mir/logging/null_shared_library_prober_report.h"
+#include <mir/logging/null_shared_library_prober_report.h>
 
 std::shared_ptr<mir::compositor::CompositorReport> mir::report::NullReportFactory::create_compositor_report()
 {

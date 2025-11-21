@@ -14,9 +14,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir_test_framework/deferred_in_process_server.h"
-#include "mir_test_framework/testing_server_configuration.h"
-#include "mir/test/doubles/mock_input_manager.h"
+#include <mir_test_framework/deferred_in_process_server.h>
+#include <mir_test_framework/testing_server_configuration.h>
+#include <mir/test/doubles/mock_input_manager.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

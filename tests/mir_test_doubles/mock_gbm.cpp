@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/test/doubles/mock_gbm.h"
+#include <mir/test/doubles/mock_gbm.h>
 #include <gtest/gtest.h>
 
 namespace mtd=mir::test::doubles;

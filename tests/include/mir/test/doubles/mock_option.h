@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_OPTION_H_
 #define MIR_TEST_DOUBLES_MOCK_OPTION_H_
 
-#include "mir/options/option.h"
+#include <mir/options/option.h>
 
 #include <gmock/gmock.h>
 

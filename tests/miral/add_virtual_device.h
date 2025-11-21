@@ -17,12 +17,12 @@
 #ifndef MIRAL_TEST_ADD_VIRTUAL_DEVICE_H
 #define MIRAL_TEST_ADD_VIRTUAL_DEVICE_H
 
-#include "mir/input/input_device_observer.h"
-#include "mir/input/virtual_input_device.h"
-#include "mir/input/device.h"
-#include "mir/input/input_device_hub.h"
-#include "mir/input/input_device_registry.h"
-#include "mir/test/signal.h"
+#include <mir/input/input_device_observer.h>
+#include <mir/input/virtual_input_device.h>
+#include <mir/input/device.h>
+#include <mir/input/input_device_hub.h>
+#include <mir/input/input_device_registry.h>
+#include <mir/test/signal.h>
 
 namespace miral
 {

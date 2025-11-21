@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_NULL_PROMPT_SESSION_H_
 #define MIR_TEST_DOUBLES_NULL_PROMPT_SESSION_H_
 
-#include "mir/scene/prompt_session.h"
+#include <mir/scene/prompt_session.h>
 
 namespace mir
 {

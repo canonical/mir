@@ -18,14 +18,14 @@
 
 #include "wl_seat.h"
 #include "wl_surface.h"
-#include "mir/executor.h"
-#include "mir/scene/text_input_hub.h"
-#include "mir/wayland/client.h"
-#include "mir/input/virtual_input_device.h"
-#include "mir/input/device.h"
-#include "mir/input/input_device_registry.h"
-#include "mir/input/event_builder.h"
-#include "mir/input/input_sink.h"
+#include <mir/executor.h>
+#include <mir/scene/text_input_hub.h>
+#include <mir/wayland/client.h>
+#include <mir/input/virtual_input_device.h>
+#include <mir/input/device.h>
+#include <mir/input/input_device_registry.h>
+#include <mir/input/event_builder.h>
+#include <mir/input/input_sink.h>
 
 #include <boost/throw_exception.hpp>
 #include <deque>

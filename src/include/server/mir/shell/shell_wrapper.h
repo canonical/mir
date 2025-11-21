@@ -17,7 +17,7 @@
 #ifndef MIR_SHELL_SHELL_WRAPPER_H_
 #define MIR_SHELL_SHELL_WRAPPER_H_
 
-#include "mir/shell/shell.h"
+#include <mir/shell/shell.h>
 
 namespace mir
 {

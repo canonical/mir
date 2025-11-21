@@ -17,8 +17,8 @@
 #ifndef MIR_GRAPHICS_GBM_NATIVE_BUFFER_H_
 #define MIR_GRAPHICS_GBM_NATIVE_BUFFER_H_
 
-#include "mir_toolkit/mir_native_buffer.h"
-#include "mir/graphics/native_buffer.h"
+#include <mir_toolkit/mir_native_buffer.h>
+#include <mir/graphics/native_buffer.h>
 
 namespace mir
 {

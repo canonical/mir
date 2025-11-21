@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/test/doubles/mock_x11.h"
+#include <mir/test/doubles/mock_x11.h>
 #include <gtest/gtest.h>
 
 #include <cstring>

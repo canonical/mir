@@ -17,7 +17,7 @@
 #ifndef MIR_DEFAULT_SERVER_STATUS_LISTENER_H_
 #define MIR_DEFAULT_SERVER_STATUS_LISTENER_H_
 
-#include "mir/server_status_listener.h"
+#include <mir/server_status_listener.h>
 
 namespace mir
 {

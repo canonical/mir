@@ -14,13 +14,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "miral/output_filter.h"
-#include "miral/live_config.h"
+#include <miral/output_filter.h>
+#include <miral/live_config.h>
 
-#include "mir/graphics/output_filter.h"
-#include "mir/log.h"
-#include "mir/options/option.h"
-#include "mir/server.h"
+#include <mir/graphics/output_filter.h>
+#include <mir/log.h>
+#include <mir/options/option.h>
+#include <mir/server.h>
 
 #include <atomic>
 #include <format>

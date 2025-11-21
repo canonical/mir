@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_SIMPLE_DEVICE_OBSERVER_H_
 #define MIR_TEST_DOUBLES_SIMPLE_DEVICE_OBSERVER_H_
 
-#include "mir/console_services.h"
+#include <mir/console_services.h>
 
 #include <functional>
 

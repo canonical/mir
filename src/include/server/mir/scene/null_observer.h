@@ -17,7 +17,7 @@
 #ifndef MIR_SCENE_NULL_OBSERVER_H_
 #define MIR_SCENE_NULL_OBSERVER_H_
 
-#include "mir/scene/observer.h"
+#include <mir/scene/observer.h>
 
 namespace mir
 {

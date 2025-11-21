@@ -17,7 +17,7 @@
 #ifndef MIR_SHELL_SURFACE_STACK_WRAPPER_H
 #define MIR_SHELL_SURFACE_STACK_WRAPPER_H
 
-#include "mir/shell/surface_stack.h"
+#include <mir/shell/surface_stack.h>
 
 namespace mir
 {

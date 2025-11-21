@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir_test_framework/process.h"
-#include "mir/log.h"
+#include <mir_test_framework/process.h>
+#include <mir/log.h>
 
 #include <errno.h>
 #include <signal.h>
