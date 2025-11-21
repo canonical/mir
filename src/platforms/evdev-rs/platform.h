@@ -15,22 +15,42 @@
  */
 
 #include "mir/input/platform.h"
+#include <memory>
+
+#include "mir/console_services.h"
 
 namespace mir
 {
+class ConsoleServices;
+
 namespace input
 {
+class InputDeviceRegistry;
+
 namespace evdev_rs
 {
+class DeviceObserverWithFd : public mir::Device::Observer
+{
+public:
+    virtual std::optional<mir::Fd> raw_fd() const = 0;
+};
+
 class Platform : public input::Platform
 {
 public:
-    Platform() = default;
+    Platform(std::shared_ptr<ConsoleServices> const& console,
+        std::shared_ptr<InputDeviceRegistry> const& input_device_registry);
     std::shared_ptr<mir::dispatch::Dispatchable> dispatchable() override;
     void start() override;
     void stop() override;
     void pause_for_config() override;
     void continue_after_config() override;
+    std::unique_ptr<DeviceObserverWithFd> create_device_observer();
+    std::shared_ptr<InputDevice> create_input_device(int device_id) const;
+
+private:
+    class Self;
+    std::shared_ptr<Self> self;
 };
 }
 }
