@@ -7,11 +7,9 @@ Files: *
 Copyright: 2012-2022 Canonical Ltd.
 License: GPL-3-or-GPL-2
 
-Files: cmake/EnableCoverageReport.cmake
-       cmake/FindLcov.cmake
-       cmake/Findgcovr.cmake
-Copyright: 2010-2011 Johannes Wienke <jwienke@techfak.uni-bielefeld.de>
-License: GPL-2+
+Files: cmake/CodeCoverage.cmake
+Copyright: 2012 - 2017, Lars Bilke
+License: BSD-3-Clause
 
 Files: include/common/*
        include/core/*
