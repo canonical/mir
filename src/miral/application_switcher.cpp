@@ -105,7 +105,7 @@ struct ToplevelInfoPrinter
     void print(std::shared_ptr<miral::tk::WaylandShmBuffer> const& buffer,
         std::vector<ToplevelInfo> const& info_list,
         SelectorState selector_state,
-        std::optional<int> selected_window_index)
+        std::optional<size_t> selected_window_index)
     {
         if (!initialized)
             return;
@@ -127,7 +127,7 @@ struct ToplevelInfoPrinter
 
             for (auto const ch : line_text)
             {
-                FT_Load_Glyph(face, FT_Get_Char_Index(face, ch), FT_LOAD_DEFAULT);
+                FT_Load_Glyph(face, FT_Get_Char_Index(face, static_cast<FT_ULong>(ch)), FT_LOAD_DEFAULT);
                 auto glyph = face->glyph;
                 FT_Render_Glyph(glyph, FT_RENDER_MODE_NORMAL);
 
@@ -161,7 +161,7 @@ private:
     TextMetrics compute_text_metrics(
         std::vector<ToplevelInfo> const& info_list,
         SelectorState selector_state,
-        std::optional<int> selected_window_index)
+        std::optional<size_t> selected_window_index)
     {
         TextMetrics metrics;
         std::optional<ToplevelInfo> selected_top_level;
@@ -197,7 +197,7 @@ private:
 
             for (auto const ch : line_text)
             {
-                FT_Load_Glyph(face, FT_Get_Char_Index(face, ch), FT_LOAD_DEFAULT);
+                FT_Load_Glyph(face, FT_Get_Char_Index(face, static_cast<FT_ULong>(ch)), FT_LOAD_DEFAULT);
                 auto const glyph = face->glyph;
                 FT_Render_Glyph(glyph, FT_RENDER_MODE_NORMAL);
 
