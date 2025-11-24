@@ -21,7 +21,6 @@
 #include <mir/scene/null_session_listener.h>
 #include <mir/scene/surface_event_source.h>
 #include <mir/scene/output_properties_cache.h>
-#include <mir/client_visible_error.h>
 #include <mir/test/fake_shared.h>
 #include <mir/test/doubles/mock_surface_stack.h>
 #include <mir/test/doubles/mock_surface.h>
@@ -507,34 +506,6 @@ struct ApplicationSessionSender : public ApplicationSession
     testing::NiceMock<mtd::MockEventSink> sender;
     ms::ApplicationSession app_session;
 };
-}
-
-TEST_F(ApplicationSessionSender, error_sender)
-{
-    using namespace ::testing;
-
-    class TestError : public mir::ClientVisibleError
-    {
-    public:
-        TestError()
-            : ClientVisibleError("Hello")
-        {
-        }
-
-        MirErrorDomain domain() const noexcept override
-        {
-            return static_cast<MirErrorDomain>(42);
-        }
-
-        uint32_t code() const noexcept override
-        {
-            return 8u;
-        }
-    } error;
-    EXPECT_CALL(sender, handle_error(Ref(error)))
-        .Times(1);
-
-    app_session.send_error(error);
 }
 
 TEST_F(ApplicationSessionSender, start_prompt_session)

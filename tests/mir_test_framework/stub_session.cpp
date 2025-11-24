@@ -43,11 +43,6 @@ std::shared_ptr<mir::scene::Surface> mtd::StubSession::default_surface() const
     return {};
 }
 
-void mtd::StubSession::send_error(
-    mir::ClientVisibleError const& /*error*/)
-{
-}
-
 void mtd::StubSession::hide()
 {
 }

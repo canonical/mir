@@ -70,14 +70,6 @@ public:
     void configure(std::shared_ptr<scene::Session> const& session,
                    std::shared_ptr<graphics::DisplayConfiguration> const& conf) override;
 
-    void preview_base_configuration(
-        std::weak_ptr<scene::Session> const& session,
-        std::shared_ptr<graphics::DisplayConfiguration> const& conf,
-        std::chrono::seconds timeout) override;
-    void confirm_base_configuration(
-        std::shared_ptr<scene::Session> const& session,
-        std::shared_ptr<graphics::DisplayConfiguration> const& confirmed_conf) override;
-
     /* From mir::DisplayChanger */
     void configure(std::shared_ptr<graphics::DisplayConfiguration> const& conf) override;
 
@@ -113,8 +105,6 @@ private:
     std::shared_ptr<graphics::DisplayConfiguration> base_configuration_;
     bool base_configuration_applied;
     std::shared_ptr<time::AlarmFactory> const alarm_factory;
-    std::unique_ptr<time::Alarm> preview_configuration_timeout;
-    std::weak_ptr<scene::Session> currently_previewing_session;
     struct SessionObserver;
     std::unique_ptr<SessionObserver> const session_observer;
 

@@ -37,7 +37,6 @@ struct NullEventSink : public frontend::EventSink
     void handle_event(EventUPtr&&) override {}
     void handle_lifecycle_event(MirLifecycleState) override {}
     void handle_display_config_change(graphics::DisplayConfiguration const&) override {}
-    void handle_error(ClientVisibleError const&) override {}
     void send_ping(int32_t) override {}
     void handle_input_config_change(MirInputConfig const&) override {}
 };

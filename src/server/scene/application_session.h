@@ -71,8 +71,6 @@ public:
     void hide() override;
     void show() override;
 
-    void send_error(ClientVisibleError const& error) override;
-
     void start_prompt_session() override;
     void stop_prompt_session() override;
     void suspend_prompt_session() override;
