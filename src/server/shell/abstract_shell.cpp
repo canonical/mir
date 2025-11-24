@@ -651,9 +651,9 @@ void msh::AbstractShell::set_popup_parent(std::shared_ptr<scene::Surface> const&
         return;
     }
     popup_parent = new_popup_parent;
-    for (auto it = grabbing_popups.rbegin(); it != grabbing_popups.rend(); it++)
+    for (auto const& weak_popup : std::ranges::reverse_view(grabbing_popups))
     {
-        if (auto const popup = it->lock())
+        if (auto const popup = weak_popup.lock())
         {
             popup->request_client_surface_close();
             popup->hide();

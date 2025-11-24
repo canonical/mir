@@ -158,9 +158,9 @@ auto mf::WlSurface::subsurface_at(geom::Point point) -> std::optional<WlSurface*
     }
     point = point - offset_;
     // loop backwards so the first subsurface we find that accepts the input is the topmost one
-    for (auto child_it = children.rbegin(); child_it != children.rend(); ++child_it)
+    for (auto const& child : std::ranges::reverse_view(children))
     {
-        if (auto result = (*child_it)->subsurface_at(point))
+        if (auto result = child->subsurface_at(point))
             return result;
     }
     geom::Rectangle surface_rect = {geom::Point{}, buffer_size_.value_or(geom::Size{})};
