@@ -169,7 +169,7 @@ void ms::MediatingDisplayChanger::configure(
                     {
                         apply_config(conf);
                     }
-                    catch (std::exception const&)
+                    catch (std::exception const&) // TICS: !bugprone-empty-catch
                     {
                         // apply_config already handles the error by notifying observers
                         // and attempting to revert to the previous configuration
@@ -425,7 +425,7 @@ void ms::MediatingDisplayChanger::focus_change_handler(
         {
             apply_config(it->second);
         }
-        catch (std::exception const&)
+        catch (std::exception const&) // TICS: !bugprone-empty-catch
         {
             // apply_config already handles the error by notifying observers
             // and attempting to revert to the previous configuration
