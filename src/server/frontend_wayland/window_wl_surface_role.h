@@ -59,6 +59,7 @@ namespace frontend
 class WaylandSurfaceObserver;
 class WlSurface;
 class WlSeat;
+class SurfaceRegistry;
 
 class WindowWlSurfaceRole
     : public WlSurfaceRole,
@@ -72,7 +73,8 @@ public:
         wayland::Client* client,
         WlSurface* surface,
         std::shared_ptr<shell::Shell> const& shell,
-        OutputManager* output_manager);
+        OutputManager* output_manager,
+        std::shared_ptr<SurfaceRegistry> const& surface_registry);
 
     ~WindowWlSurfaceRole() override;
 
@@ -179,6 +181,7 @@ private:
 
     std::vector<graphics::DisplayConfigurationOutputId> pending_enter_events;
     std::vector<graphics::DisplayConfigurationOutputId> pending_rescale_events;
+    std::shared_ptr<SurfaceRegistry> const surface_registry;
 };
 
 }

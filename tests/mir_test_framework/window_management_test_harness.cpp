@@ -462,7 +462,6 @@ auto mir_test_framework::WindowManagementTestHarness::create_window(
 
     auto surface = server.the_shell()->create_surface(
         session,
-        {},
         spec,
         self->surface_observer,
         &mir::immediate_executor);

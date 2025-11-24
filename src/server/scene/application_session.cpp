@@ -74,7 +74,6 @@ ms::ApplicationSession::~ApplicationSession()
 
 auto ms::ApplicationSession::create_surface(
     std::shared_ptr<Session> const& session,
-    wayland::Weak<frontend::WlSurface> const& wayland_surface,
     shell::SurfaceSpecification const& the_params,
     std::shared_ptr<ms::SurfaceObserver> const& observer,
     Executor* observer_executor) -> std::shared_ptr<Surface>
@@ -100,7 +99,7 @@ auto ms::ApplicationSession::create_surface(
         stream_list.push_back({std::dynamic_pointer_cast<mc::BufferStream>(stream.stream.lock()), stream.displacement});
     }
 
-    auto surface = surface_factory->create_surface(session, wayland_surface, stream_list, params);
+    auto surface = surface_factory->create_surface(session, stream_list, params);
 
     auto const input_mode = params.input_mode.is_set() ? params.input_mode.value() : input::InputReceptionMode::normal;
     surface_stack->add_surface(surface, input_mode);

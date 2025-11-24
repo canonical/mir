@@ -41,15 +41,20 @@ namespace frontend
 class SessionLockManagerV1::Instance : wayland::SessionLockManagerV1
 {
 public:
-    Instance(wl_resource* new_resource, mf::SessionLockManagerV1& manager)
+    Instance(
+        wl_resource* new_resource,
+        mf::SessionLockManagerV1& manager,
+        std::shared_ptr<SurfaceRegistry> const& surface_registry)
         : SessionLockManagerV1{new_resource, Version<1>()},
-          manager{manager}
+          manager{manager},
+          surface_registry{surface_registry}
     {
     }
 
 private:
     void lock(wl_resource* lock) override;
     mf::SessionLockManagerV1& manager;
+    std::shared_ptr<SurfaceRegistry> const surface_registry;
 };
 
 class SessionLockV1 : wayland::SessionLockV1
@@ -124,14 +129,16 @@ mf::SessionLockManagerV1::SessionLockManagerV1(
     std::shared_ptr<ms::SessionLock> const& session_lock,
     WlSeat& seat,
     OutputManager* output_manager,
-    std::shared_ptr<SurfaceStack> const& surface_stack)
+    std::shared_ptr<SurfaceStack> const& surface_stack,
+    std::shared_ptr<SurfaceRegistry> const& surface_registry)
     : Global(display, Version<1>()),
       wayland_executor{wayland_executor},
       shell{std::move(shell)},
       session_lock{std::move(session_lock)},
       seat{seat},
       output_manager{output_manager},
-      surface_stack{surface_stack}
+      surface_stack{surface_stack},
+      surface_registry{surface_registry}
 {
 }
 
@@ -180,7 +187,7 @@ bool mf::SessionLockManagerV1::is_active_lock(SessionLockV1* lock)
 
 void mf::SessionLockManagerV1::bind(wl_resource* new_resource)
 {
-    new Instance{new_resource, *this};
+    new Instance{new_resource, *this, surface_registry};
 }
 
 // SessionLockManagerV1::Instance
@@ -288,7 +295,8 @@ mf::SessionLockSurfaceV1::SessionLockSurfaceV1(
           mw::SessionLockSurfaceV1::client,
           surface,
           manager.shell,
-          manager.output_manager)
+          manager.output_manager,
+          manager.surface_registry)
 {
     shell::SurfaceSpecification spec;
     spec.state = mir_window_state_attached;

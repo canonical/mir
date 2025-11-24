@@ -39,6 +39,7 @@ namespace frontend
 
 class WlSeat;
 class OutputManager;
+class SurfaceRegistry;
 
 class InputMethodV1 : public wayland::InputMethodV1::Global
 {
@@ -66,7 +67,8 @@ public:
         std::shared_ptr<shell::Shell> const& shell,
         WlSeat* seat,
         OutputManager* output_manager,
-        std::shared_ptr<scene::TextInputHub> const& text_input_hub);
+        std::shared_ptr<scene::TextInputHub> const& text_input_hub,
+        std::shared_ptr<SurfaceRegistry> const& surface_registry);
 
 private:
     class Instance;
@@ -77,6 +79,7 @@ private:
     WlSeat* seat;
     OutputManager* const output_manager;
     std::shared_ptr<scene::TextInputHub> const text_input_hub;
+    std::shared_ptr<SurfaceRegistry> const surface_registry;
 };
 
 }

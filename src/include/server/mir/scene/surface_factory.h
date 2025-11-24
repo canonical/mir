@@ -47,7 +47,6 @@ public:
 
     virtual std::shared_ptr<Surface> create_surface(
         std::shared_ptr<Session> const& session,
-        wayland::Weak<frontend::WlSurface> const& wayland_surface,
         std::list<scene::StreamInfo> const& streams,
         shell::SurfaceSpecification const& params) = 0;
 

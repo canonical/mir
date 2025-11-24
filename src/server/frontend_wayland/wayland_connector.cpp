@@ -32,6 +32,7 @@
 #include "foreign_toplevel_manager_v1.h"
 #include "wp_viewporter.h"
 #include "linux_drm_syncobj.h"
+#include "surface_registry.h"
 
 #include <mir/main_loop.h>
 #include <mir/thread_name.h>
@@ -294,6 +295,7 @@ mf::WaylandConnector::WaylandConnector(
         std::make_shared<FrameExecutor>(*main_loop),
         this->allocator);
     subcompositor_global = std::make_unique<mf::WlSubcompositor>(display.get());
+    auto const surface_registry = std::make_shared<mf::SurfaceRegistry>();
     seat_global = std::make_unique<mf::WlSeat>(
         display.get(),
         *executor,
@@ -301,7 +303,8 @@ mf::WaylandConnector::WaylandConnector(
         input_hub,
         keyboard_observer_registrar,
         seat,
-        accessibility_manager);
+        accessibility_manager,
+        surface_registry);
     output_manager = std::make_unique<mf::OutputManager>(
         display.get(),
         executor,
@@ -339,7 +342,8 @@ mf::WaylandConnector::WaylandConnector(
         decoration_strategy,
         session_coordinator,
         keyboard_observer_registrar,
-        token_authority});
+        token_authority,
+        surface_registry});
 
     shm_global = std::make_unique<WlShm>(display.get(), executor);
 

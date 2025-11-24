@@ -41,9 +41,11 @@ public:
         WlSurface* surface,
         std::shared_ptr<msh::Shell> const& shell,
         WlSeat& seat,
-        OutputManager* output_manager)
-        : ShellSurface(new_resource, Version<1>()),
-          WindowWlSurfaceRole{wayland_executor, &seat, wayland::ShellSurface::client, surface, shell, output_manager}
+        OutputManager* output_manager,
+        std::shared_ptr<SurfaceRegistry> const& surface_registry) :
+        ShellSurface(new_resource, Version<1>()),
+        WindowWlSurfaceRole{
+            wayland_executor, &seat, wayland::ShellSurface::client, surface, shell, output_manager, surface_registry}
     {
     }
 
@@ -215,12 +217,14 @@ public:
         Executor& wayland_executor,
         std::shared_ptr<msh::Shell> const& shell,
         WlSeat& seat,
-        OutputManager* const output_manager)
+        OutputManager* const output_manager,
+        std::shared_ptr<SurfaceRegistry> const& surface_registry)
         : Global(display, Version<1>()),
           wayland_executor{wayland_executor},
           shell{shell},
           seat{seat},
-          output_manager{output_manager}
+          output_manager{output_manager},
+          surface_registry{surface_registry}
     {
     }
 
@@ -231,18 +235,21 @@ private:
     std::shared_ptr<msh::Shell> const shell;
     WlSeat& seat;
     OutputManager* const output_manager;
+    std::shared_ptr<SurfaceRegistry> const surface_registry;
 
     class Instance : public wayland::Shell
     {
     public:
-        Instance(wl_resource* new_resource, WlShell* shell)
-            : mw::Shell{new_resource, Version<1>()},
-              shell{shell}
+        Instance(wl_resource* new_resource, WlShell* shell, std::shared_ptr<SurfaceRegistry> const& surface_registry) :
+            mw::Shell{new_resource, Version<1>()},
+            shell{shell},
+            surface_registry{surface_registry}
         {
         }
 
     private:
         WlShell* const shell;
+        std::shared_ptr<SurfaceRegistry> const surface_registry;
 
         void get_shell_surface(wl_resource* new_shell_surface, wl_resource* surface) override
         {
@@ -252,13 +259,14 @@ private:
                 WlSurface::from(surface),
                 shell->shell,
                 shell->seat,
-                shell->output_manager);
+                shell->output_manager,
+                surface_registry);
         }
     };
 
     void bind(wl_resource* new_resource) override
     {
-        new Instance{new_resource, this};
+        new Instance{new_resource, this, surface_registry};
     }
 };
 }
@@ -269,10 +277,11 @@ auto mf::create_wl_shell(
     Executor& wayland_executor,
     std::shared_ptr<msh::Shell> const& shell,
     WlSeat* seat,
-    OutputManager* const output_manager)
+    OutputManager* const output_manager,
+    std::shared_ptr<SurfaceRegistry> const& surface_registry)
 -> std::shared_ptr<mw::Shell::Global>
 {
-    return std::make_shared<mf::WlShell>(display, wayland_executor, shell, *seat, output_manager);
+    return std::make_shared<mf::WlShell>(display, wayland_executor, shell, *seat, output_manager, surface_registry);
 }
 
 auto mf::get_wl_shell_window(wl_resource* surface) -> std::shared_ptr<ms::Surface>

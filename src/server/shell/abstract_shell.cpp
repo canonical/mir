@@ -220,7 +220,6 @@ void msh::AbstractShell::close_session(
 
 auto msh::AbstractShell::create_surface(
     std::shared_ptr<ms::Session> const& session,
-    wayland::Weak<frontend::WlSurface> const& wayland_surface,
     SurfaceSpecification const& spec,
     std::shared_ptr<ms::SurfaceObserver> const& observer,
     Executor* observer_executor) -> std::shared_ptr<ms::Surface>
@@ -245,7 +244,7 @@ auto msh::AbstractShell::create_surface(
     // Instead of a shared pointer, a local variable could be used and the lambda could capture a reference to it
     // This should be safe, but could be the source of nasty bugs and crashes if the wm did something unexpected
     auto const should_decorate = std::make_shared<bool>(false);
-    auto const build = [observer, observer_executor, should_decorate, wayland_surface](
+    auto const build = [observer, observer_executor, should_decorate](
             std::shared_ptr<ms::Session> const& session,
             msh::SurfaceSpecification const& placed_params)
         {
@@ -253,7 +252,7 @@ auto msh::AbstractShell::create_surface(
             {
                 *should_decorate = true;
             }
-            return session->create_surface(session, wayland_surface, placed_params, observer, observer_executor);
+            return session->create_surface(session, placed_params, observer, observer_executor);
         };
 
     auto const result = window_manager->add_surface(session, wm_visible_spec, build);
