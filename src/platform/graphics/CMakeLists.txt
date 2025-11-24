@@ -117,11 +117,10 @@ target_link_libraries(
 
   PUBLIC
     mirwayland
-    PkgConfig::EGL
-    PkgConfig::LIBDISPLAY_INFO
-  PRIVATE
     mircommon
+    PkgConfig::EGL
+    PkgConfig::GLESv2
+  PRIVATE
     PkgConfig::PIXMAN
+    PkgConfig::LIBDISPLAY_INFO
 )
-
-set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
