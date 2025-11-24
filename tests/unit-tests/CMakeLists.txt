@@ -220,7 +220,6 @@ target_link_libraries(
   PkgConfig::UMOCKDEV
   PkgConfig::LIBINPUT
   ${MIR_SERVER_REFERENCES}
-  mirplatformgraphicscommon
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
 
