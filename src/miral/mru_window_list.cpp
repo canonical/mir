@@ -19,6 +19,7 @@
 #include <mir/scene/surface.h>
 
 #include <algorithm>
+#include <ranges>
 
 namespace
 {
@@ -57,8 +58,8 @@ auto miral::MRUWindowList::top() const -> Window
 
 void miral::MRUWindowList::enumerate(Enumerator const& enumerator) const
 {
-    for (auto i = windows.rbegin(); i != windows.rend(); ++i)
-        if (visible(*i))
-            if (!enumerator(const_cast<Window&>(*i)))
+    for (auto const& window : std::ranges::reverse_view(windows))
+        if (visible(window))
+            if (!enumerator(const_cast<Window&>(window)))
                 break;
 }

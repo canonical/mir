@@ -26,6 +26,7 @@
 #include "window_wl_surface_role.h"
 #include "input_method_common.h"
 #include <deque>
+#include <ranges>
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
@@ -231,11 +232,11 @@ private:
         auto find_serial(uint32_t done_count) const -> std::optional<ms::TextInputStateSerial>
         {
             // Loop in reverse order because the serial we're looking for will generally be at the end
-            for (auto it = serials.rbegin(); it != serials.rend(); it++)
+            for (auto const& serial_pair : std::ranges::reverse_view(serials))
             {
-                if (it->first == done_count)
+                if (serial_pair.first == done_count)
                 {
-                    return it->second;
+                    return serial_pair.second;
                 }
             }
             return std::nullopt;
