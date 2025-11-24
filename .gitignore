@@ -11,6 +11,7 @@ cmake-*
 build
 benchmarks/build
 compile_commands.json
+__pycache__/
 
 tools/bot-data.tar.xz
 _codeql_detected_source_root
