@@ -187,7 +187,6 @@ target_link_libraries(
   PkgConfig::LIBINPUT
   PkgConfig::WAYLAND_SERVER
   ${MIR_SERVER_REFERENCES}
-  mirplatformgraphicscommon
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
 
