@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "miral/live_config.h"
+#include <miral/live_config.h>
 
 #include <format>
 #include <stdexcept>

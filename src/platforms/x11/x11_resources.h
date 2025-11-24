@@ -17,8 +17,8 @@
 #ifndef MIR_X11_RESOURCES_H_
 #define MIR_X11_RESOURCES_H_
 
-#include "mir/geometry/forward.h"
-#include "mir_toolkit/common.h"
+#include <mir/geometry/forward.h>
+#include <mir_toolkit/common.h>
 
 #include <xcb/xcb.h>
 #include <optional>

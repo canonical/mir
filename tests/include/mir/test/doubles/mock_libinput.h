@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_LIBINPUT_H_
 #define MIR_TEST_DOUBLES_MOCK_LIBINPUT_H_
 
-#include "mir/dispatch/action_queue.h"
+#include <mir/dispatch/action_queue.h>
 
 #include <optional>
 #include <gmock/gmock.h>

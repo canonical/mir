@@ -15,12 +15,12 @@
  */
 
 #include "input_method_v1.h"
-#include "mir/scene/text_input_hub.h"
-#include "mir/shell/surface_specification.h"
-#include "mir/shell/shell.h"
-#include "mir/scene/session.h"
-#include "mir/scene/surface.h"
-#include "mir/log.h"
+#include <mir/scene/text_input_hub.h>
+#include <mir/shell/surface_specification.h>
+#include <mir/shell/shell.h>
+#include <mir/scene/session.h>
+#include <mir/scene/surface.h>
+#include <mir/log.h>
 #include "wl_surface.h"
 #include "output_manager.h"
 #include "window_wl_surface_role.h"

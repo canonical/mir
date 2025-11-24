@@ -18,7 +18,7 @@
 #ifndef MIR_SHELL_SURFACE_COORDINATOR_H_
 #define MIR_SHELL_SURFACE_COORDINATOR_H_
 
-#include "mir/geometry/forward.h"
+#include <mir/geometry/forward.h>
 
 #include <memory>
 #include <set>

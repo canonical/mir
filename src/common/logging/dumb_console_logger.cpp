@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/logging/dumb_console_logger.h"
+#include <mir/logging/dumb_console_logger.h>
 
 #include <iostream>
 

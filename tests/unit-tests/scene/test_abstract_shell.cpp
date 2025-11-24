@@ -14,35 +14,36 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/shell/abstract_shell.h"
+#include <mir/shell/abstract_shell.h>
 
-#include "mir/events/event_builders.h"
-#include "mir/scene/session.h"
-#include "mir/scene/null_session_listener.h"
-#include "mir/scene/session_container.h"
-#include "mir/scene/surface_factory.h"
-#include "mir/graphics/display_configuration_observer.h"
+#include <mir/events/event_builders.h>
+#include <mir/scene/session.h>
+#include <mir/scene/null_session_listener.h>
+#include <mir/scene/session_container.h>
+#include <mir/scene/surface_factory.h>
+#include <mir/graphics/display_configuration_observer.h>
+#include <mir/wayland/weak.h>
 
 #include "src/server/report/null/shell_report.h"
 #include "src/include/server/mir/scene/session_event_sink.h"
 #include "src/server/scene/session_manager.h"
 #include "src/server/shell/decoration/null_manager.h"
 
-#include "mir/test/doubles/mock_window_manager.h"
-#include "mir/test/doubles/mock_surface_stack.h"
-#include "mir/test/doubles/mock_surface.h"
-#include "mir/test/doubles/stub_surface.h"
-#include "mir/test/doubles/null_event_sink.h"
-#include "mir/test/doubles/null_prompt_session_manager.h"
-#include "mir/test/doubles/stub_input_targeter.h"
-#include "mir/test/doubles/stub_buffer_allocator.h"
-#include "mir/test/doubles/stub_display.h"
-#include "mir/test/doubles/mock_input_seat.h"
-#include "mir/test/doubles/stub_observer_registrar.h"
+#include <mir/test/doubles/mock_window_manager.h>
+#include <mir/test/doubles/mock_surface_stack.h>
+#include <mir/test/doubles/mock_surface.h>
+#include <mir/test/doubles/stub_surface.h>
+#include <mir/test/doubles/null_event_sink.h>
+#include <mir/test/doubles/null_prompt_session_manager.h>
+#include <mir/test/doubles/stub_input_targeter.h>
+#include <mir/test/doubles/stub_buffer_allocator.h>
+#include <mir/test/doubles/stub_display.h>
+#include <mir/test/doubles/mock_input_seat.h>
+#include <mir/test/doubles/stub_observer_registrar.h>
 
-#include "mir/test/fake_shared.h"
-#include "mir/test/event_matchers.h"
-#include "mir/test/make_surface_spec.h"
+#include <mir/test/fake_shared.h>
+#include <mir/test/event_matchers.h>
+#include <mir/test/make_surface_spec.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

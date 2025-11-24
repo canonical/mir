@@ -17,7 +17,7 @@
 #define MIR_LOG_COMPONENT "test_g_desktop_file_cache"
 
 #include "src/server/frontend_wayland/foreign_toplevel_manager_v1.h"
-#include "mir/test/doubles/stub_main_loop.h"
+#include <mir/test/doubles/stub_main_loop.h>
 #include <fstream>
 
 #include <gmock/gmock.h>

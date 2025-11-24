@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/fatal.h"
-#include "mir/test/death.h"
+#include <mir/fatal.h>
+#include <mir/test/death.h>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <csignal>

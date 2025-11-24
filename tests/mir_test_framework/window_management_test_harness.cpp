@@ -16,9 +16,9 @@
 
 #define MIR_LOG_COMPONENT "WindowManagementTestHarness"
 
-#include "mir/test/doubles/fake_display.h"
-#include "mir/test/doubles/stub_buffer_stream.h"
-#include "mir_test_framework/window_management_test_harness.h"
+#include <mir/test/doubles/fake_display.h>
+#include <mir/test/doubles/stub_buffer_stream.h>
+#include <mir_test_framework/window_management_test_harness.h>
 #include <mir/executor.h>
 #include <mir/scene/surface.h>
 #include <mir/scene/null_surface_observer.h>
@@ -32,9 +32,9 @@
 #include <miral/set_window_management_policy.h>
 #include <miral/zone.h>
 #include <mir/test/doubles/stub_display_configuration.h>
-#include "mir/graphics/display_configuration_observer.h"
-#include "mir/graphics/null_display_configuration_observer.h"
-#include "miral/output.h"
+#include <mir/graphics/display_configuration_observer.h>
+#include <mir/graphics/null_display_configuration_observer.h>
+#include <miral/output.h>
 #include "src/miral/window_manager_tools_implementation.h"
 
 namespace ms = mir::scene;

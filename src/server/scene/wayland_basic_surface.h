@@ -17,7 +17,7 @@
 #ifndef MIR_SCENE_WAYLAND_BASIC_SURFACE_H
 #define MIR_SCENE_WAYLAND_BASIC_SURFACE_H
 
-#include "mir/scene/basic_surface.h"
+#include <mir/scene/basic_surface.h>
 
 namespace mir
 {

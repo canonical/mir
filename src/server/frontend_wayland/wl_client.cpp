@@ -17,11 +17,11 @@
 #include "wl_client.h"
 #include "std_layout_uptr.h"
 
-#include "mir/frontend/session_authorizer.h"
-#include "mir/frontend/session_credentials.h"
-#include "mir/shell/shell.h"
-#include "mir/scene/session.h"
-#include "mir/fatal.h"
+#include <mir/frontend/session_authorizer.h>
+#include <mir/frontend/session_credentials.h>
+#include <mir/shell/shell.h>
+#include <mir/scene/session.h>
+#include <mir/fatal.h>
 
 #include <wayland-server-core.h>
 

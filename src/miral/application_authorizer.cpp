@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "miral/application_authorizer.h"
+#include <miral/application_authorizer.h>
 
 #include <mir/frontend/session_credentials.h>
 #include <mir/frontend/session_authorizer.h>

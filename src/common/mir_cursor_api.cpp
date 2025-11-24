@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir_toolkit/cursors.h"
+#include <mir_toolkit/cursors.h>
 
 // Cursor names are from CSS3: https://www.w3.org/TR/css-ui-3/#propdef-cursor
 extern "C" char const* const mir_default_cursor_name = "default";

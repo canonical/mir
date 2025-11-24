@@ -13,9 +13,9 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include "mir/gl/tessellation_helpers.h"
-#include "mir/graphics/renderable.h"
-#include "mir/graphics/buffer.h"
+#include <mir/gl/tessellation_helpers.h>
+#include <mir/graphics/renderable.h>
+#include <mir/graphics/buffer.h>
 
 namespace mg = mir::graphics;
 namespace mgl = mir::gl;

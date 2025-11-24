@@ -22,11 +22,11 @@
 #include "wayland_utils.h"
 #include "output_manager.h"
 
-#include "mir/shell/surface_specification.h"
-#include "mir/log.h"
-#include "mir/wayland/weak.h"
-#include "mir/wayland/client.h"
-#include "mir/wayland/protocol_error.h"
+#include <mir/shell/surface_specification.h>
+#include <mir/log.h>
+#include <mir/wayland/weak.h>
+#include <mir/wayland/client.h>
+#include <mir/wayland/protocol_error.h>
 #include <boost/throw_exception.hpp>
 #include <deque>
 #include <vector>

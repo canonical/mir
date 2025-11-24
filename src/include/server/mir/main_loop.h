@@ -17,10 +17,10 @@
 #ifndef MIR_MAIN_LOOP_H_
 #define MIR_MAIN_LOOP_H_
 
-#include "mir/graphics/event_handler_register.h"
-#include "mir/time/alarm_factory.h"
-#include "mir/server_action_queue.h"
-#include "mir/executor.h"
+#include <mir/graphics/event_handler_register.h>
+#include <mir/time/alarm_factory.h>
+#include <mir/server_action_queue.h>
+#include <mir/executor.h>
 
 namespace mir
 {

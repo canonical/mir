@@ -18,13 +18,13 @@
 
 #include "fractional-scale-v1_wrapper.h"
 #include "fractional_scale_v1.h"
-#include "mir/default_server_configuration.h"
+#include <mir/default_server_configuration.h>
 
-#include "mir/frontend/wayland.h"
-#include "mir/graphics/platform.h"
-#include "mir/log.h"
-#include "mir/options/default_configuration.h"
-#include "mir/scene/session.h"
+#include <mir/frontend/wayland.h>
+#include <mir/graphics/platform.h>
+#include <mir/log.h>
+#include <mir/options/default_configuration.h>
+#include <mir/scene/session.h>
 
 #include "ext_image_capture_v1.h"
 #include "foreign_toplevel_manager_v1.h"
@@ -32,7 +32,7 @@
 #include "input_method_v1.h"
 #include "input_method_v2.h"
 #include "layer_shell_v1.h"
-#include "mir/shell/accessibility_manager.h"
+#include <mir/shell/accessibility_manager.h>
 #include "mir_shell.h"
 #include "pointer_constraints_unstable_v1.h"
 #include "primary_selection_v1.h"

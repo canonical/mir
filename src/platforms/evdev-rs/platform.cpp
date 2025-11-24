@@ -16,8 +16,8 @@
 
 #include "platform.h"
 
-#include "mir/dispatch/dispatchable.h"
-#include "mir_platforms_evdev_rs/src/lib.rs.h"
+#include <mir/dispatch/dispatchable.h>
+#include <mir_platforms_evdev_rs/src/lib.rs.h>
 
 namespace miers = mir::input::evdev_rs;
 namespace md = mir::dispatch;

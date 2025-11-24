@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/thread_name.h"
-#include "mir/test/signal.h"
+#include <mir/thread_name.h>
+#include <mir/test/signal.h>
 
 #include <thread>
 #include <pthread.h>

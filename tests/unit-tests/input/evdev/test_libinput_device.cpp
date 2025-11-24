@@ -19,20 +19,20 @@
 #include "src/server/report/null_report_factory.h"
 #include "src/server/input/default_event_builder.h"
 
-#include "mir/input/input_device_registry.h"
-#include "mir/input/input_sink.h"
-#include "mir/input/pointer_settings.h"
-#include "mir/input/touchpad_settings.h"
-#include "mir/flags.h"
-#include "mir/geometry/point.h"
-#include "mir/geometry/rectangle.h"
-#include "mir/test/event_matchers.h"
-#include "mir/test/doubles/mock_input_seat.h"
-#include "mir/test/doubles/mock_input_sink.h"
-#include "mir/test/doubles/advanceable_clock.h"
-#include "mir/test/fake_shared.h"
-#include "mir/udev/wrapper.h"
-#include "mir_test_framework/libinput_environment.h"
+#include <mir/input/input_device_registry.h>
+#include <mir/input/input_sink.h>
+#include <mir/input/pointer_settings.h>
+#include <mir/input/touchpad_settings.h>
+#include <mir/flags.h>
+#include <mir/geometry/point.h>
+#include <mir/geometry/rectangle.h>
+#include <mir/test/event_matchers.h>
+#include <mir/test/doubles/mock_input_seat.h>
+#include <mir/test/doubles/mock_input_sink.h>
+#include <mir/test/doubles/advanceable_clock.h>
+#include <mir/test/fake_shared.h>
+#include <mir/udev/wrapper.h>
+#include <mir_test_framework/libinput_environment.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

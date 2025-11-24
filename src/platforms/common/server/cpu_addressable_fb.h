@@ -17,8 +17,8 @@
 #ifndef MIR_GRAPHICS_CPU_ADDRESSABLE_FB_H_
 #define MIR_GRAPHICS_CPU_ADDRESSABLE_FB_H_
 
-#include "mir/fd.h"
-#include "mir/graphics/platform.h"
+#include <mir/fd.h>
+#include <mir/graphics/platform.h>
 
 #include "kms_framebuffer.h"
 

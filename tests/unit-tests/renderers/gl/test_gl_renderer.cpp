@@ -29,7 +29,7 @@
 #include <mir/test/doubles/stub_gl_rendering_provider.h>
 #include <mir/test/doubles/mock_output_surface.h>
 
-#include "mir/graphics/transformation.h"
+#include <mir/graphics/transformation.h>
 
 using testing::SetArgPointee;
 using testing::InSequence;

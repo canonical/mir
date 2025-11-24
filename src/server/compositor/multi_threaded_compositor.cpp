@@ -15,23 +15,23 @@
  */
 
 #include "multi_threaded_compositor.h"
-#include "mir/compositor/scene_element.h"
-#include "mir/graphics/cursor.h"
-#include "mir/graphics/display.h"
-#include "mir/graphics/display_sink.h"
-#include "mir/compositor/display_buffer_compositor.h"
-#include "mir/compositor/display_buffer_compositor_factory.h"
-#include "mir/compositor/display_listener.h"
-#include "mir/compositor/scene.h"
-#include "mir/compositor/compositor_report.h"
-#include "mir/scene/scene_change_notification.h"
-#include "mir/terminate_with_current_exception.h"
-#include "mir/raii.h"
-#include "mir/unwind_helpers.h"
-#include "mir/thread_name.h"
-#include "mir/executor.h"
-#include "mir/signal.h"
-#include "mir/log.h"
+#include <mir/compositor/scene_element.h>
+#include <mir/graphics/cursor.h>
+#include <mir/graphics/display.h>
+#include <mir/graphics/display_sink.h>
+#include <mir/compositor/display_buffer_compositor.h>
+#include <mir/compositor/display_buffer_compositor_factory.h>
+#include <mir/compositor/display_listener.h>
+#include <mir/compositor/scene.h>
+#include <mir/compositor/compositor_report.h>
+#include <mir/scene/scene_change_notification.h>
+#include <mir/terminate_with_current_exception.h>
+#include <mir/raii.h>
+#include <mir/unwind_helpers.h>
+#include <mir/thread_name.h>
+#include <mir/executor.h>
+#include <mir/signal.h>
+#include <mir/log.h>
 
 #include <atomic>
 #include <thread>

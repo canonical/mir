@@ -14,18 +14,18 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/scene/basic_surface.h"
-#include "mir/compositor/buffer_stream.h"
-#include "mir/frontend/event_sink.h"
-#include "mir/graphics/buffer.h"
-#include "mir/graphics/cursor_image.h"
-#include "mir/graphics/null_display_configuration_observer.h"
-#include "mir/geometry/displacement.h"
-#include "mir/renderer/sw/pixel_source.h"
-#include "mir/observer_multiplexer.h"
-#include "mir/scene/surface_observer.h"
+#include <mir/scene/basic_surface.h>
+#include <mir/compositor/buffer_stream.h>
+#include <mir/frontend/event_sink.h>
+#include <mir/graphics/buffer.h>
+#include <mir/graphics/cursor_image.h>
+#include <mir/graphics/null_display_configuration_observer.h>
+#include <mir/geometry/displacement.h>
+#include <mir/renderer/sw/pixel_source.h>
+#include <mir/observer_multiplexer.h>
+#include <mir/scene/surface_observer.h>
 
-#include "mir/scene/scene_report.h"
+#include <mir/scene/scene_report.h>
 
 #include <boost/throw_exception.hpp>
 

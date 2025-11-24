@@ -15,7 +15,7 @@
  */
 
 #include "default_output_filter.h"
-#include "mir/input/scene.h"
+#include <mir/input/scene.h>
 
 #include <memory>
 

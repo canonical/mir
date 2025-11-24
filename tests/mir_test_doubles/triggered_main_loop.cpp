@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/test/doubles/triggered_main_loop.h"
-#include "mir/test/doubles/stub_alarm.h"
+#include <mir/test/doubles/triggered_main_loop.h>
+#include <mir/test/doubles/stub_alarm.h>
 
 #include <algorithm>
 #include <sys/select.h>

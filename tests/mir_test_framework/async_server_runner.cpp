@@ -14,18 +14,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir_test_framework/async_server_runner.h"
-#include "mir_test_framework/command_line_server_configuration.h"
+#include <mir_test_framework/async_server_runner.h>
+#include <mir_test_framework/command_line_server_configuration.h>
 
-#include "mir/fd.h"
+#include <mir/fd.h>
 #include <mir/logging/dumb_console_logger.h>
 #include <mir/logging/file_logger.h>
 #include <mir/logging/multi_logger.h>
-#include "mir/main_loop.h"
-#include "mir/options/option.h"
+#include <mir/main_loop.h>
+#include <mir/options/option.h>
 #include <mir/report_exception.h>
 #include <mir/thread_name.h>
-#include "mir/test/doubles/null_logger.h"
+#include <mir/test/doubles/null_logger.h>
 
 #include <boost/throw_exception.hpp>
 

@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_EXPLICIT_EXECUTOR_H_
 #define MIR_TEST_DOUBLES_EXPLICIT_EXECUTOR_H_
 
-#include "mir/executor.h"
+#include <mir/executor.h>
 #include "gtest/gtest.h"
 
 #include <mutex>

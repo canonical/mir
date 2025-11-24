@@ -17,10 +17,10 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include "mir/test/doubles/mock_display.h"
-#include "mir/test/doubles/mock_cursor.h"
-#include "mir/test/doubles/stub_cursor_image.h"
-#include "mir/test/doubles/stub_renderable.h"
+#include <mir/test/doubles/mock_display.h>
+#include <mir/test/doubles/mock_cursor.h>
+#include <mir/test/doubles/stub_cursor_image.h>
+#include <mir/test/doubles/stub_renderable.h>
 #include "src/server/graphics/multiplexing_hw_cursor.h"
 
 using namespace testing;

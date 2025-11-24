@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/test/doubles/mock_libinput.h"
+#include <mir/test/doubles/mock_libinput.h>
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>

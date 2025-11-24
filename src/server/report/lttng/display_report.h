@@ -19,7 +19,7 @@
 
 #include "server_tracepoint_provider.h"
 
-#include "mir/graphics/display_report.h"
+#include <mir/graphics/display_report.h>
 
 namespace mir
 {

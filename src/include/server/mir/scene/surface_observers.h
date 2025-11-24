@@ -17,8 +17,8 @@
 #ifndef MIR_SCENE_SURFACE_OBSERVERS_H_
 #define MIR_SCENE_SURFACE_OBSERVERS_H_
 
-#include "mir/observer_multiplexer.h"
-#include "mir/scene/surface_observer.h"
+#include <mir/observer_multiplexer.h>
+#include <mir/scene/surface_observer.h>
 
 namespace mir
 {

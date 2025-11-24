@@ -19,17 +19,17 @@
 #include "platform.h"
 #include "buffer_allocator.h"
 #include "display.h"
-#include "mir/graphics/platform.h"
+#include <mir/graphics/platform.h>
 #include "utils.h"
 #include "kms_cpu_addressable_display_provider.h"
 
 #include "one_shot_device_observer.h"
 
-#include "mir/console_services.h"
-#include "mir/graphics/egl_error.h"
-#include "mir/renderer/gl/context.h"
+#include <mir/console_services.h>
+#include <mir/graphics/egl_error.h>
+#include <mir/renderer/gl/context.h>
 
-#include "mir/log.h"
+#include <mir/log.h>
 
 #include <sys/sysmacros.h>
 #include <boost/throw_exception.hpp>

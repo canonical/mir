@@ -16,24 +16,24 @@
 
 #include "src/server/input/default_input_device_hub.h"
 
-#include "mir/test/doubles/mock_input_device.h"
-#include "mir/test/doubles/mock_input_device_observer.h"
-#include "mir/test/doubles/mock_input_seat.h"
-#include "mir/test/doubles/mock_event_sink.h"
-#include "mir/test/doubles/mock_key_mapper.h"
-#include "mir/test/doubles/mock_led_observer_registrar.h"
-#include "mir/test/doubles/mock_server_status_listener.h"
-#include "mir/test/doubles/advanceable_clock.h"
-#include "mir/test/fake_shared.h"
-#include "mir/test/fd_utils.h"
+#include <mir/test/doubles/mock_input_device.h>
+#include <mir/test/doubles/mock_input_device_observer.h>
+#include <mir/test/doubles/mock_input_seat.h>
+#include <mir/test/doubles/mock_event_sink.h>
+#include <mir/test/doubles/mock_key_mapper.h>
+#include <mir/test/doubles/mock_led_observer_registrar.h>
+#include <mir/test/doubles/mock_server_status_listener.h>
+#include <mir/test/doubles/advanceable_clock.h>
+#include <mir/test/fake_shared.h>
+#include <mir/test/fd_utils.h>
 
-#include "mir/dispatch/action_queue.h"
-#include "mir/dispatch/multiplexing_dispatchable.h"
-#include "mir/events/event_builders.h"
-#include "mir/input/mir_pointer_config.h"
-#include "mir/input/mir_touchpad_config.h"
-#include "mir/input/device.h"
-#include "mir/input/input_device.h"
+#include <mir/dispatch/action_queue.h>
+#include <mir/dispatch/multiplexing_dispatchable.h>
+#include <mir/events/event_builders.h>
+#include <mir/input/mir_pointer_config.h>
+#include <mir/input/mir_touchpad_config.h>
+#include <mir/input/device.h>
+#include <mir/input/input_device.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

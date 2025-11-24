@@ -19,18 +19,18 @@
 #include "kms_output.h"
 #include "cpu_addressable_fb.h"
 #include "gbm_display_allocator.h"
-#include "mir/fd.h"
-#include "mir/graphics/display_report.h"
-#include "mir/graphics/platform.h"
-#include "mir/graphics/transformation.h"
+#include <mir/fd.h>
+#include <mir/graphics/display_report.h>
+#include <mir/graphics/platform.h>
+#include <mir/graphics/transformation.h>
 #include "bypass.h"
-#include "mir/fatal.h"
-#include "mir/log.h"
+#include <mir/fatal.h>
+#include <mir/log.h>
 #include "display_helpers.h"
 #include "egl_helper.h"
-#include "mir/graphics/egl_error.h"
-#include "mir/graphics/gl_config.h"
-#include "mir/graphics/dmabuf_buffer.h"
+#include <mir/graphics/egl_error.h>
+#include <mir/graphics/gl_config.h>
+#include <mir/graphics/dmabuf_buffer.h>
 
 #include <boost/throw_exception.hpp>
 #include <EGL/egl.h>

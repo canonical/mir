@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_LED_OBSERVER_REGISTRAR_H_
 #define MIR_TEST_DOUBLES_LED_OBSERVER_REGISTRAR_H_
 
-#include "mir/input/led_observer_registrar.h"
+#include <mir/input/led_observer_registrar.h>
 
 #include <gmock/gmock.h>
 

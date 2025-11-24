@@ -16,10 +16,10 @@
 
 #include "desktop_file_manager.h"
 
-#include "mir/main_loop.h"
-#include "mir/log.h"
-#include "mir/scene/surface.h"
-#include "mir/scene/session.h"
+#include <mir/main_loop.h>
+#include <mir/log.h>
+#include <mir/scene/surface.h>
+#include <mir/scene/session.h>
 #include <fstream>
 #include <filesystem>
 

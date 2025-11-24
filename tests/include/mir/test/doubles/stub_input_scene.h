@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_STUB_INPUT_SCENE_H_
 #define MIR_TEST_DOUBLES_STUB_INPUT_SCENE_H_
 
-#include "mir/input/scene.h"
+#include <mir/input/scene.h>
 
 namespace mir
 {

@@ -17,8 +17,8 @@
 #ifndef MIR_SCENE_SURFACE_ALLOCATOR_H_
 #define MIR_SCENE_SURFACE_ALLOCATOR_H_
 
-#include "mir/observer_registrar.h"
-#include "mir/scene/surface_factory.h"
+#include <mir/observer_registrar.h>
+#include <mir/scene/surface_factory.h>
 
 namespace mir
 {

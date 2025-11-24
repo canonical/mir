@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/wayland/protocol_error.h"
-#include "mir/log.h"
+#include <mir/wayland/protocol_error.h>
+#include <mir/log.h>
 
 #include <wayland-server-core.h>
 

@@ -17,12 +17,12 @@
 #include "src/server/input/default_event_builder.h"
 #include "src/server/shell/basic_hover_click_transformer.h"
 
-#include "mir/test/doubles/advanceable_clock.h"
-#include "mir/test/doubles/queued_alarm_stub_main_loop.h"
-#include "mir/test/fake_shared.h"
+#include <mir/test/doubles/advanceable_clock.h>
+#include <mir/test/doubles/queued_alarm_stub_main_loop.h>
+#include <mir/test/fake_shared.h>
 
-#include "mir/input/cursor_observer_multiplexer.h"
-#include "mir/geometry/displacement.h"
+#include <mir/input/cursor_observer_multiplexer.h>
+#include <mir/geometry/displacement.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

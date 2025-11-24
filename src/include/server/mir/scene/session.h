@@ -17,7 +17,7 @@
 #ifndef MIR_SCENE_SESSION_H_
 #define MIR_SCENE_SESSION_H_
 
-#include "mir/fd.h"
+#include <mir/fd.h>
 
 #include <vector>
 #include <sys/types.h>

@@ -20,13 +20,13 @@
 #include "window_wl_surface_role.h"
 #include "output_manager.h"
 
-#include "mir/shell/surface_specification.h"
-#include "mir/fatal.h"
-#include "mir/wayland/client.h"
-#include "mir/wayland/protocol_error.h"
-#include "mir/scene/session_lock.h"
-#include "mir/frontend/surface_stack.h"
-#include "mir/log.h"
+#include <mir/shell/surface_specification.h>
+#include <mir/fatal.h>
+#include <mir/wayland/client.h>
+#include <mir/wayland/protocol_error.h>
+#include <mir/scene/session_lock.h>
+#include <mir/frontend/surface_stack.h>
+#include <mir/log.h>
 
 namespace mf = mir::frontend;
 namespace msh = mir::shell;

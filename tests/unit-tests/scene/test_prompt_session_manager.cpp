@@ -16,13 +16,13 @@
 
 #include "src/server/scene/prompt_session_manager_impl.h"
 
-#include "mir/scene/session_container.h"
-#include "mir/scene/prompt_session.h"
-#include "mir/scene/prompt_session_creation_parameters.h"
+#include <mir/scene/session_container.h>
+#include <mir/scene/prompt_session.h>
+#include <mir/scene/prompt_session_creation_parameters.h>
 
-#include "mir/test/doubles/mock_prompt_session_listener.h"
-#include "mir/test/doubles/stub_session.h"
-#include "mir/test/fake_shared.h"
+#include <mir/test/doubles/mock_prompt_session_listener.h>
+#include <mir/test/doubles/stub_session.h>
+#include <mir/test/fake_shared.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

@@ -17,8 +17,8 @@
 #ifndef MIR_FRONTEND_XWAYLAND_SURFACE_OBSERVER_H
 #define MIR_FRONTEND_XWAYLAND_SURFACE_OBSERVER_H
 
-#include "mir/scene/null_surface_observer.h"
-#include "mir/synchronised.h"
+#include <mir/scene/null_surface_observer.h>
+#include <mir/synchronised.h>
 
 #include <memory>
 #include <mutex>

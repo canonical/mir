@@ -17,9 +17,9 @@
 #ifndef MIR_SCENE_APPLICATION_SESSION_H_
 #define MIR_SCENE_APPLICATION_SESSION_H_
 
-#include "mir/scene/session.h"
+#include <mir/scene/session.h>
 
-#include "mir/observer_registrar.h"
+#include <mir/observer_registrar.h>
 
 #include <set>
 #include <map>

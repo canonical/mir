@@ -18,7 +18,7 @@
 #ifndef MIR_INPUT_CURSOR_IMAGES_H_
 #define MIR_INPUT_CURSOR_IMAGES_H_
 
-#include "mir/geometry/size.h"
+#include <mir/geometry/size.h>
 
 #include <memory>
 #include <string>

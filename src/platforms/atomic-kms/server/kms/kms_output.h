@@ -17,13 +17,13 @@
 #ifndef MIR_GRAPHICS_GBM_ATOMIC_KMS_OUTPUT_H_
 #define MIR_GRAPHICS_GBM_ATOMIC_KMS_OUTPUT_H_
 
-#include "mir/geometry/size.h"
-#include "mir/geometry/point.h"
-#include "mir/geometry/displacement.h"
-#include "mir/graphics/display_configuration.h"
-#include "mir/graphics/frame.h"
-#include "mir/graphics/dmabuf_buffer.h"
-#include "mir_toolkit/common.h"
+#include <mir/geometry/size.h>
+#include <mir/geometry/point.h>
+#include <mir/geometry/displacement.h>
+#include <mir/graphics/display_configuration.h>
+#include <mir/graphics/frame.h>
+#include <mir/graphics/dmabuf_buffer.h>
+#include <mir_toolkit/common.h>
 #include "kms-utils/drm_mode_resources.h"
 
 #include <gbm.h>

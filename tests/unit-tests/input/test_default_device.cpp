@@ -15,16 +15,16 @@
  */
 
 #include "src/server/input/default_device.h"
-#include "mir/input/input_device.h"
-#include "mir/input/mir_input_config.h"
-#include "mir/input/mir_touchpad_config.h"
-#include "mir/input/mir_pointer_config.h"
-#include "mir/input/mir_touchscreen_config.h"
-#include "mir/test/doubles/mock_key_mapper.h"
-#include "mir/test/doubles/stub_keymap.h"
-#include "mir/dispatch/action_queue.h"
-#include "mir/test/fake_shared.h"
-#include "mir/events/event_private.h"
+#include <mir/input/input_device.h>
+#include <mir/input/mir_input_config.h>
+#include <mir/input/mir_touchpad_config.h>
+#include <mir/input/mir_pointer_config.h>
+#include <mir/input/mir_touchscreen_config.h>
+#include <mir/test/doubles/mock_key_mapper.h>
+#include <mir/test/doubles/stub_keymap.h>
+#include <mir/dispatch/action_queue.h>
+#include <mir/test/fake_shared.h>
+#include <mir/events/event_private.h>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <stdexcept>

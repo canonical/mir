@@ -19,7 +19,7 @@
 #ifndef MIR_FRONTEND_XWAYLAND_CONNECTOR_H
 #define MIR_FRONTEND_XWAYLAND_CONNECTOR_H
 
-#include "mir/frontend/connector.h"
+#include <mir/frontend/connector.h>
 
 #include <memory>
 #include <mutex>

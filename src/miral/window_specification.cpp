@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "miral/window_specification.h"
+#include <miral/window_specification.h>
 #include "window_specification_internal.h"
 
 #include <mir/shell/surface_specification.h>

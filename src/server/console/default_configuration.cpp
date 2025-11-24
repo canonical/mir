@@ -14,13 +14,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/default_server_configuration.h"
-#include "mir/options/configuration.h"
-#include "mir/log.h"
-#include "mir/emergency_cleanup.h"
-#include "mir/glib_main_loop.h"
-#include "mir/abnormal_exit.h"
-#include "mir/scene/session_lock.h"
+#include <mir/default_server_configuration.h>
+#include <mir/options/configuration.h>
+#include <mir/log.h>
+#include <mir/emergency_cleanup.h>
+#include <mir/glib_main_loop.h>
+#include <mir/abnormal_exit.h>
+#include <mir/scene/session_lock.h>
 
 #include "minimal_console_services.h"
 #include "linux_virtual_terminal.h"

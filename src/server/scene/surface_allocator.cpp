@@ -15,7 +15,7 @@
  */
 
 #include "surface_allocator.h"
-#include "mir/shell/surface_specification.h"
+#include <mir/shell/surface_specification.h>
 #include "wayland_basic_surface.h"
 
 namespace geom=mir::geometry;

@@ -16,17 +16,17 @@
 
 #include "application_session.h"
 
-#include "mir/scene/surface.h"
-#include "mir/scene/session_container.h"
-#include "mir/scene/session_listener.h"
-#include "mir/scene/surface_factory.h"
-#include "mir/shell/surface_stack.h"
-#include "mir/shell/surface_specification.h"
-#include "mir/compositor/stream.h"
-#include "mir/events/event_builders.h"
-#include "mir/frontend/event_sink.h"
-#include "mir/graphics/graphic_buffer_allocator.h"
-#include "mir/scene/surface_observer.h"
+#include <mir/scene/surface.h>
+#include <mir/scene/session_container.h>
+#include <mir/scene/session_listener.h>
+#include <mir/scene/surface_factory.h>
+#include <mir/shell/surface_stack.h>
+#include <mir/shell/surface_specification.h>
+#include <mir/compositor/stream.h>
+#include <mir/events/event_builders.h>
+#include <mir/frontend/event_sink.h>
+#include <mir/graphics/graphic_buffer_allocator.h>
+#include <mir/scene/surface_observer.h>
 
 #include <boost/throw_exception.hpp>
 

@@ -16,19 +16,19 @@
 #define MIR_LOG_COMPONENT "GLRenderer"
 
 #include "renderer.h"
-#include "mir/compositor/buffer_stream.h"
-#include "mir/graphics/renderable.h"
-#include "mir/graphics/transformation.h"
-#include "mir/graphics/display_sink.h"
-#include "mir/gl/tessellation_helpers.h"
-#include "mir/log.h"
-#include "mir/report_exception.h"
-#include "mir/graphics/egl_error.h"
-#include "mir/graphics/platform.h"
-#include "mir/graphics/texture.h"
-#include "mir/graphics/program_factory.h"
-#include "mir/graphics/program.h"
-#include "mir/renderer/gl/gl_surface.h"
+#include <mir/compositor/buffer_stream.h>
+#include <mir/graphics/renderable.h>
+#include <mir/graphics/transformation.h>
+#include <mir/graphics/display_sink.h>
+#include <mir/gl/tessellation_helpers.h>
+#include <mir/log.h>
+#include <mir/report_exception.h>
+#include <mir/graphics/egl_error.h>
+#include <mir/graphics/platform.h>
+#include <mir/graphics/texture.h>
+#include <mir/graphics/program_factory.h>
+#include <mir/graphics/program.h>
+#include <mir/renderer/gl/gl_surface.h>
 
 #define GLM_FORCE_RADIANS
 #include <glm/gtc/matrix_transform.hpp>

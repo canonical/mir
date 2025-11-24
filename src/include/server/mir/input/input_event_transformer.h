@@ -17,10 +17,10 @@
 #ifndef MIR_INPUT_INPUT_EVENT_TRANSFORMER_H_
 #define MIR_INPUT_INPUT_EVENT_TRANSFORMER_H_
 
-#include "mir/input/transformer.h"
+#include <mir/input/transformer.h>
 
-#include "mir/input/seat.h"
-#include "mir_toolkit/events/event.h"
+#include <mir/input/seat.h>
+#include <mir_toolkit/events/event.h>
 
 #include <functional>
 #include <mutex>

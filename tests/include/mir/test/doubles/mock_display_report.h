@@ -17,8 +17,8 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_DISPLAY_REPORT_H_
 #define MIR_TEST_DOUBLES_MOCK_DISPLAY_REPORT_H_
 
-#include "mir/graphics/display_report.h"
-#include "mir/graphics/frame.h"  // GMock can't live with just forward decls
+#include <mir/graphics/display_report.h>
+#include <mir/graphics/frame.h>  // GMock can't live with just forward decls
 #include <gmock/gmock.h>
 
 namespace mir

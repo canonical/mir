@@ -14,10 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "miral/canonical_window_manager.h"
+#include <miral/canonical_window_manager.h>
 
-#include "miral/window_info.h"
-#include "miral/window_manager_tools.h"
+#include <miral/window_info.h>
+#include <miral/window_manager_tools.h>
 
 namespace ms = mir::scene;
 

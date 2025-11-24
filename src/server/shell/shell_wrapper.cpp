@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/shell/shell_wrapper.h"
-#include "mir/geometry/point.h"
+#include <mir/shell/shell_wrapper.h>
+#include <mir/geometry/point.h>
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;

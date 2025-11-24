@@ -17,10 +17,10 @@
 #ifndef MIR_GRAPHICS_SOFTWARE_CURSOR_H_
 #define MIR_GRAPHICS_SOFTWARE_CURSOR_H_
 
-#include "mir/graphics/cursor.h"
-#include "mir/graphics/cursor_image.h"
-#include "mir_toolkit/client_types.h"
-#include "mir/geometry/displacement.h"
+#include <mir/graphics/cursor.h>
+#include <mir/graphics/cursor_image.h>
+#include <mir_toolkit/client_types.h>
+#include <mir/geometry/displacement.h>
 
 #include <mutex>
 

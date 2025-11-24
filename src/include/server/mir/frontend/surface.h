@@ -17,11 +17,11 @@
 #ifndef MIR_FRONTEND_SURFACE_H_
 #define MIR_FRONTEND_SURFACE_H_
 
-#include "mir/frontend/buffer_stream.h"
-#include "mir/geometry/size.h"
-#include "mir/geometry/displacement.h"
+#include <mir/frontend/buffer_stream.h>
+#include <mir/geometry/size.h>
+#include <mir/geometry/displacement.h>
 
-#include "mir_toolkit/common.h"
+#include <mir_toolkit/common.h>
 
 #include <string>
 #include <memory>

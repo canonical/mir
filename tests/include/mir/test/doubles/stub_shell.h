@@ -17,10 +17,10 @@
 #ifndef MIR_TEST_DOUBLES_STUB_SHELL_H_
 #define MIR_TEST_DOUBLES_STUB_SHELL_H_
 
-#include "mir/shell/shell.h"
-#include "mir/test/doubles/stub_session.h"
-#include "mir/test/doubles/null_prompt_session.h"
-#include "mir/test/doubles/stub_surface.h"
+#include <mir/shell/shell.h>
+#include <mir/test/doubles/stub_session.h>
+#include <mir/test/doubles/null_prompt_session.h>
+#include <mir/test/doubles/stub_surface.h>
 
 namespace mir
 {

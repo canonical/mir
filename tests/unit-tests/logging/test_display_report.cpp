@@ -15,9 +15,9 @@
  */
 
 #include "src/server/report/logging/display_report.h"
-#include "mir/graphics/frame.h"
-#include "mir/logging/logger.h"
-#include "mir/test/doubles/mock_egl.h"
+#include <mir/graphics/frame.h>
+#include <mir/logging/logger.h>
+#include <mir/test/doubles/mock_egl.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

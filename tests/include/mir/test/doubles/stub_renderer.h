@@ -17,9 +17,9 @@
 #ifndef MIR_TEST_DOUBLES_STUB_RENDERER_H_
 #define MIR_TEST_DOUBLES_STUB_RENDERER_H_
 
-#include "mir/renderer/renderer.h"
-#include "mir/graphics/renderable.h"
-#include "mir/graphics/buffer.h"
+#include <mir/renderer/renderer.h>
+#include <mir/graphics/renderable.h>
+#include <mir/graphics/buffer.h>
 #include <thread>
 
 namespace mir

@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/test/doubles/stub_session.h"
+#include <mir/test/doubles/stub_session.h>
 
 namespace mtd = mir::test::doubles;
 namespace ms = mir::scene;

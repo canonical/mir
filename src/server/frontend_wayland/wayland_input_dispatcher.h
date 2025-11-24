@@ -17,9 +17,9 @@
 #ifndef MIR_FRONTEND_WAYLAND_INPUT_DISPATCHER_H
 #define MIR_FRONTEND_WAYLAND_INPUT_DISPATCHER_H
 
-#include "mir_toolkit/common.h"
-#include "mir/geometry/point.h"
-#include "mir/wayland/weak.h"
+#include <mir_toolkit/common.h>
+#include <mir/geometry/point.h>
+#include <mir/wayland/weak.h>
 
 #include <memory>
 #include <chrono>

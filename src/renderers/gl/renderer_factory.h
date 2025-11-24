@@ -17,7 +17,7 @@
 #ifndef MIR_RENDERER_GL_RENDERER_FACTORY_H_
 #define MIR_RENDERER_GL_RENDERER_FACTORY_H_
 
-#include "mir/renderer/renderer_factory.h"
+#include <mir/renderer/renderer_factory.h>
 
 namespace mir
 {

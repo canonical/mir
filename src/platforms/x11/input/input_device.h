@@ -17,12 +17,12 @@
 #ifndef MIR_INPUT_X_INPUT_DEVICE_H_
 #define MIR_INPUT_X_INPUT_DEVICE_H_
 
-#include "mir/input/input_device.h"
-#include "mir/input/input_device_info.h"
-#include "mir_toolkit/event.h"
-#include "mir/geometry/point.h"
-#include "mir/geometry/displacement.h"
-#include "mir/optional_value.h"
+#include <mir/input/input_device.h>
+#include <mir/input/input_device_info.h>
+#include <mir_toolkit/event.h>
+#include <mir/geometry/point.h>
+#include <mir/geometry/displacement.h>
+#include <mir/optional_value.h>
 
 #include <chrono>
 #include <optional>

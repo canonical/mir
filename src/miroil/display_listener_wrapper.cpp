@@ -13,8 +13,8 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "miroil/display_listener_wrapper.h"
-#include "mir/compositor/display_listener.h"
+#include <miroil/display_listener_wrapper.h>
+#include <mir/compositor/display_listener.h>
 
 namespace miroil
 {

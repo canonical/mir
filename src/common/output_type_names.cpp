@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/output_type_names.h"
+#include <mir/output_type_names.h>
 
 namespace mir {
 

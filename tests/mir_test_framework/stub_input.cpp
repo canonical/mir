@@ -14,11 +14,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir_test_framework/stub_input_platform_accessor.h"
+#include <mir_test_framework/stub_input_platform_accessor.h>
 #include "fake_input_device_impl.h"
-#include "mir/module_properties.h"
-#include "mir/assert_module_entry_point.h"
-#include "mir/libname.h"
+#include <mir/module_properties.h>
+#include <mir/assert_module_entry_point.h>
+#include <mir/libname.h>
 
 
 namespace mtf = mir_test_framework;

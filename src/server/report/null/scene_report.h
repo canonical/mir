@@ -18,7 +18,7 @@
 #ifndef MIR_REPORT_NULL_SCENE_REPORT_H_
 #define MIR_REPORT_NULL_SCENE_REPORT_H_
 
-#include "mir/scene/scene_report.h"
+#include <mir/scene/scene_report.h>
 
 namespace mir
 {

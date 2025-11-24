@@ -14,9 +14,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/scene/surface_observer.h"
+#include <mir/scene/surface_observer.h>
 #include "src/server/scene/rendering_tracker.h"
-#include "mir/test/doubles/mock_surface.h"
+#include <mir/test/doubles/mock_surface.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

@@ -17,7 +17,7 @@
 #ifndef MIR_PLATFORM_GBM_KMS_ONE_SHOT_DEVICE_OBSERVER_H_
 #define MIR_PLATFORM_GBM_KMS_ONE_SHOT_DEVICE_OBSERVER_H_
 
-#include "mir/console_services.h"
+#include <mir/console_services.h>
 
 #include <atomic>
 

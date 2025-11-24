@@ -17,8 +17,8 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include "mir/events/event_private.h"
-#include "mir_toolkit/events/input/input_event.h"
+#include <mir/events/event_private.h>
+#include <mir_toolkit/events/input/input_event.h>
 
 using namespace testing;
 

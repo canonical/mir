@@ -17,9 +17,9 @@
 #ifndef MIR_GRAPHICS_EGL_GENERIC_BUFFER_ALLOCATOR_H_
 #define MIR_GRAPHICS_EGL_GENERIC_BUFFER_ALLOCATOR_H_
 
-#include "mir/graphics/graphic_buffer_allocator.h"
-#include "mir/graphics/linux_dmabuf.h"
-#include "mir/graphics/platform.h"
+#include <mir/graphics/graphic_buffer_allocator.h>
+#include <mir/graphics/linux_dmabuf.h>
+#include <mir/graphics/platform.h>
 
 #include <EGL/egl.h>
 #include <wayland-server-core.h>

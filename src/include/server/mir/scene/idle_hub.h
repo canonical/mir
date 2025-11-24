@@ -17,7 +17,7 @@
 #ifndef MIR_SCENE_IDLE_HUB_H_
 #define MIR_SCENE_IDLE_HUB_H_
 
-#include "mir/time/types.h"
+#include <mir/time/types.h>
 
 #include <memory>
 #include <optional>

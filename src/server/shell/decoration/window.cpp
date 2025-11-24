@@ -19,8 +19,8 @@
 #include "basic_decoration.h"
 #include "decoration_strategy.h"
 
-#include "mir/scene/surface.h"
-#include "mir/scene/null_surface_observer.h"
+#include <mir/scene/surface.h>
+#include <mir/scene/null_surface_observer.h>
 
 namespace ms = mir::scene;
 namespace geom = mir::geometry;

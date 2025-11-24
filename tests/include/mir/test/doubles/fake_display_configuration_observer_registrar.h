@@ -17,12 +17,12 @@
 #ifndef MIR_TEST_DOUBLES_FAKE_DISPLAY_CONFIGURATION_OBSERVER_REGISTRAR_H_
 #define MIR_TEST_DOUBLES_FAKE_DISPLAY_CONFIGURATION_OBSERVER_REGISTRAR_H_
 
-#include "mir/executor.h"
-#include "mir/graphics/display_configuration_observer.h"
+#include <mir/executor.h>
+#include <mir/graphics/display_configuration_observer.h>
 
-#include "mir/test/doubles/stub_display_configuration.h"
-#include "mir/test/doubles/stub_observer_registrar.h"
-#include "mir/test/fake_shared.h"
+#include <mir/test/doubles/stub_display_configuration.h>
+#include <mir/test/doubles/stub_observer_registrar.h>
+#include <mir/test/fake_shared.h>
 
 namespace mir
 {

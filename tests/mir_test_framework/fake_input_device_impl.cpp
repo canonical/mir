@@ -15,22 +15,22 @@
  */
 
 #include "fake_input_device_impl.h"
-#include "mir_test_framework/stub_input_platform_accessor.h"
+#include <mir_test_framework/stub_input_platform_accessor.h>
 
-#include "mir/input/input_device.h"
-#include "mir/input/input_device_info.h"
-#include "mir/input/input_sink.h"
-#include "mir/input/pointer_settings.h"
-#include "mir/input/touchpad_settings.h"
-#include "mir/input/event_builder.h"
-#include "mir/events/input_event.h"
-#include "mir/dispatch/action_queue.h"
-#include "mir/geometry/displacement.h"
+#include <mir/input/input_device.h>
+#include <mir/input/input_device_info.h>
+#include <mir/input/input_sink.h>
+#include <mir/input/pointer_settings.h>
+#include <mir/input/touchpad_settings.h>
+#include <mir/input/event_builder.h>
+#include <mir/events/input_event.h>
+#include <mir/dispatch/action_queue.h>
+#include <mir/geometry/displacement.h>
 #include "src/platforms/evdev/button_utils.h"
 
 #include "boost/throw_exception.hpp"
 
-#include "mir/events/event_builders.h"
+#include <mir/events/event_builders.h>
 
 #include <chrono>
 #include <thread>

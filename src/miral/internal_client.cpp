@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "miral/internal_client.h"
+#include <miral/internal_client.h>
 #include "join_client_threads.h"
 
 #include <mir/main_loop.h>

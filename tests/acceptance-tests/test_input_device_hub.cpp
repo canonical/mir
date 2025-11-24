@@ -14,15 +14,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/input/input_device_info.h"
-#include "mir/input/input_device_observer.h"
-#include "mir/input/input_device_hub.h"
+#include <mir/input/input_device_info.h>
+#include <mir/input/input_device_observer.h>
+#include <mir/input/input_device_hub.h>
 
-#include "mir_test_framework/headless_in_process_server.h"
-#include "mir_test_framework/fake_input_device.h"
-#include "mir_test_framework/stub_server_platform_factory.h"
-#include "mir/test/signal_actions.h"
-#include "mir/test/fake_shared.h"
+#include <mir_test_framework/headless_in_process_server.h>
+#include <mir_test_framework/fake_input_device.h>
+#include <mir_test_framework/stub_server_platform_factory.h>
+#include <mir/test/signal_actions.h>
+#include <mir/test/fake_shared.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

@@ -15,8 +15,8 @@
  */
 
 #include "idle_poking_dispatcher.h"
-#include "mir/events/event.h"
-#include "mir/scene/idle_hub.h"
+#include <mir/events/event.h>
+#include <mir/scene/idle_hub.h>
 
 namespace mi = mir::input;
 

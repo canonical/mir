@@ -15,7 +15,7 @@
  */
 
 #include "display_report.h"
-#include "mir/logging/logger.h"
+#include <mir/logging/logger.h>
 #include <EGL/eglext.h>
 #include <sstream>
 #include <cstring>

@@ -14,9 +14,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/graphics/default_display_configuration_policy.h"
-#include "mir/graphics/display_configuration.h"
-#include "mir/graphics/pixel_format_utils.h"
+#include <mir/graphics/default_display_configuration_policy.h>
+#include <mir/graphics/display_configuration.h>
+#include <mir/graphics/pixel_format_utils.h>
 
 #include <unordered_map>
 #include <algorithm>

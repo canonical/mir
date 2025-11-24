@@ -14,12 +14,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir_test_framework/input_testing_server_configuration.h"
+#include <mir_test_framework/input_testing_server_configuration.h>
 
-#include "mir/input/surface.h"
-#include "mir/input/composite_event_filter.h"
+#include <mir/input/surface.h>
+#include <mir/input/composite_event_filter.h>
 
-#include "mir/test/signal.h"
+#include <mir/test/signal.h>
 
 #include <boost/throw_exception.hpp>
 

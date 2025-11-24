@@ -16,17 +16,17 @@
 
 #include "src/server/console/linux_virtual_terminal.h"
 #include "src/server/report/null_report_factory.h"
-#include "mir/graphics/event_handler_register.h"
-#include "mir/anonymous_shm_file.h"
-#include "mir/emergency_cleanup_registry.h"
+#include <mir/graphics/event_handler_register.h>
+#include <mir/anonymous_shm_file.h>
+#include <mir/emergency_cleanup_registry.h>
 
-#include "mir/test/fake_shared.h"
-#include "mir/test/doubles/mock_display_report.h"
-#include "mir/test/doubles/mock_event_handler_register.h"
-#include "mir/test/doubles/mock_drm.h"
-#include "mir/test/doubles/null_device_observer.h"
-#include "mir/test/doubles/simple_device_observer.h"
-#include "mir/test/doubles/null_emergency_cleanup.h"
+#include <mir/test/fake_shared.h>
+#include <mir/test/doubles/mock_display_report.h>
+#include <mir/test/doubles/mock_event_handler_register.h>
+#include <mir/test/doubles/mock_drm.h>
+#include <mir/test/doubles/null_device_observer.h>
+#include <mir/test/doubles/simple_device_observer.h>
+#include <mir/test/doubles/null_emergency_cleanup.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

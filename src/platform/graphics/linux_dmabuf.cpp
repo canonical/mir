@@ -14,23 +14,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/graphics/linux_dmabuf.h"
-#include "mir/anonymous_shm_file.h"
-#include "mir/fd.h"
-#include "mir/graphics/drm_formats.h"
+#include <mir/graphics/linux_dmabuf.h>
+#include <mir/anonymous_shm_file.h>
+#include <mir/fd.h>
+#include <mir/graphics/drm_formats.h>
 #include "egl_buffer_copy.h"
 
 #include "wayland_wrapper.h"
-#include "mir/wayland/protocol_error.h"
-#include "mir/wayland/client.h"
-#include "mir/graphics/egl_extensions.h"
-#include "mir/graphics/egl_error.h"
-#include "mir/graphics/texture.h"
-#include "mir/graphics/program_factory.h"
-#include "mir/graphics/buffer.h"
-#include "mir/graphics/buffer_basic.h"
-#include "mir/graphics/dmabuf_buffer.h"
-#include "mir/graphics/egl_context_executor.h"
+#include <mir/wayland/protocol_error.h>
+#include <mir/wayland/client.h>
+#include <mir/graphics/egl_extensions.h>
+#include <mir/graphics/egl_error.h>
+#include <mir/graphics/texture.h>
+#include <mir/graphics/program_factory.h>
+#include <mir/graphics/buffer.h>
+#include <mir/graphics/buffer_basic.h>
+#include <mir/graphics/dmabuf_buffer.h>
+#include <mir/graphics/egl_context_executor.h>
 
 #include <EGL/egl.h>
 #include <cstdint>
@@ -39,7 +39,7 @@
 #include <sys/stat.h>
 
 #define MIR_LOG_COMPONENT "linux-dmabuf-import"
-#include "mir/log.h"
+#include <mir/log.h>
 
 #include <mutex>
 #include <vector>

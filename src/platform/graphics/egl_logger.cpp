@@ -18,12 +18,12 @@
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 
-#include "mir/graphics/egl_logger.h"
+#include <mir/graphics/egl_logger.h>
 
 #define MIR_LOG_COMPONENT "EGL"
-#include "mir/log.h"
-#include "mir/graphics/egl_extensions.h"
-#include "mir/graphics/egl_error.h"
+#include <mir/log.h>
+#include <mir/graphics/egl_extensions.h>
+#include <mir/graphics/egl_error.h>
 
 namespace mg = mir::graphics;
 

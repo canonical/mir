@@ -17,9 +17,9 @@
 #ifndef MIR_SHELL_ABSTRACT_SHELL_H_
 #define MIR_SHELL_ABSTRACT_SHELL_H_
 
-#include "mir/shell/shell.h"
-#include "mir/shell/window_manager_builder.h"
-#include "mir/scene/surface_observer.h"
+#include <mir/shell/shell.h>
+#include <mir/shell/window_manager_builder.h>
+#include <mir/scene/surface_observer.h>
 
 #include <mutex>
 

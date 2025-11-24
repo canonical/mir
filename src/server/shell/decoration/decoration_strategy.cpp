@@ -18,11 +18,11 @@
 #include "decoration_strategy.h"
 #include "window.h"
 
-#include "mir/fatal.h"
-#include "mir/geometry/displacement.h"
-#include "mir/log.h"
-#include "mir/default_font.h"
-#include "mir/renderer/sw/pixel_source.h"
+#include <mir/fatal.h>
+#include <mir/geometry/displacement.h>
+#include <mir/log.h>
+#include <mir/default_font.h>
+#include <mir/renderer/sw/pixel_source.h>
 
 #include <boost/throw_exception.hpp>
 #include <ft2build.h>

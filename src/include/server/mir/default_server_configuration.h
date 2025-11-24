@@ -16,10 +16,10 @@
 #ifndef MIR_DEFAULT_SERVER_CONFIGURATION_H_
 #define MIR_DEFAULT_SERVER_CONFIGURATION_H_
 
-#include "mir/cached_ptr.h"
-#include "mir/options/option.h"
-#include "mir/server_configuration.h"
-#include "mir/shell/window_manager_builder.h"
+#include <mir/cached_ptr.h>
+#include <mir/options/option.h>
+#include <mir/server_configuration.h>
+#include <mir/shell/window_manager_builder.h>
 
 #include <memory>
 #include <string>
