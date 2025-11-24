@@ -31,7 +31,7 @@ function(add_rust_cxx_library target)
     OUTPUT ${cxxbridge_header} ${cxxbridge_source} ${crate_staticlib}
     COMMAND ${CARGO_EXECUTABLE} build ${cargo_release_flag} --target-dir ${rust_target_dir} -p ${arg_CRATE}
     DEPENDS ${arg_DEPENDS}
-    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
+    WORKING_DIRECTORY ${rust_target_dir})
 
   add_library(${target}-rust STATIC IMPORTED)
   set_target_properties(${target}-rust PROPERTIES
