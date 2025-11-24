@@ -46,6 +46,7 @@
 #include "wp_viewporter.h"
 
 #include <chrono>
+#include <ranges>
 #include <boost/throw_exception.hpp>
 #include <cmath>
 #include <limits>

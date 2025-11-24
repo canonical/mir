@@ -24,6 +24,7 @@
 #include <mir/log.h>
 
 #include <deque>
+#include <ranges>
 
 namespace mf = mir::frontend;
 namespace mw = mir::wayland;

@@ -30,6 +30,7 @@
 #include <boost/throw_exception.hpp>
 #include <deque>
 #include <chrono>
+#include <ranges>
 #include <linux/input-event-codes.h>
 
 namespace mf = mir::frontend;

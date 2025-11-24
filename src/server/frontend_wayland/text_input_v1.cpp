@@ -24,6 +24,7 @@
 #include <memory>
 #include <boost/throw_exception.hpp>
 #include <deque>
+#include <ranges>
 #include <utility>
 
 namespace mf = mir::frontend;

@@ -32,6 +32,7 @@
 #include "decoration/manager.h"
 
 #include <iterator>
+#include <ranges>
 #include <vector>
 
 namespace ms = mir::scene;

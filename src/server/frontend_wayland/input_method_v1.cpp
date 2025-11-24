@@ -26,6 +26,7 @@
 #include "window_wl_surface_role.h"
 #include "input_method_common.h"
 #include <deque>
+#include <ranges>
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;

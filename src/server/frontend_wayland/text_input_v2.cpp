@@ -24,6 +24,7 @@
 #include <boost/throw_exception.hpp>
 #include <mir/wayland/client.h>
 #include <deque>
+#include <ranges>
 
 namespace mf = mir::frontend;
 namespace mw = mir::wayland;

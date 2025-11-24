@@ -19,6 +19,7 @@
 #include <mir/scene/surface.h>
 
 #include <algorithm>
+#include <ranges>
 
 namespace
 {
