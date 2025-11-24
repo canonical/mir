@@ -27,11 +27,16 @@ function(add_rust_cxx_library target)
   set(cxxbridge_source "${cxxbridge_include_dir}/${arg_CRATE}/${arg_CXX_BRIDGE_SOURCE_FILE}.cc")
   set(crate_staticlib "${rust_binary_dir}/lib${arg_CRATE}.a")
 
+  # Build the Rust crate and copy the generated cxxbridge files to expected location
   add_custom_command(
     OUTPUT ${cxxbridge_header} ${cxxbridge_source} ${crate_staticlib}
     COMMAND ${CARGO_EXECUTABLE} build ${cargo_release_flag} --target-dir ${rust_target_dir} -p ${arg_CRATE}
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${cxxbridge_include_dir}/${arg_CRATE}/src"
+    COMMAND sh -c "cp ${rust_binary_dir}/build/${arg_CRATE}-*/out/cxxbridge/include/${arg_CRATE}/${arg_CXX_BRIDGE_SOURCE_FILE}.h ${cxxbridge_header}"
+    COMMAND sh -c "cp ${rust_binary_dir}/build/${arg_CRATE}-*/out/cxxbridge/sources/${arg_CRATE}/${arg_CXX_BRIDGE_SOURCE_FILE}.cc ${cxxbridge_source}"
     DEPENDS ${arg_DEPENDS}
-    WORKING_DIRECTORY ${rust_target_dir})
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+    COMMENT "Building Rust crate ${arg_CRATE} and copying cxxbridge files")
 
   add_library(${target}-rust STATIC IMPORTED)
   set_target_properties(${target}-rust PROPERTIES
