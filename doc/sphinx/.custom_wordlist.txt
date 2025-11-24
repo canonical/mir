@@ -89,6 +89,7 @@ functors
 gbm
 GC
 gcc
+gcovr
 gflags
 github
 GitHub

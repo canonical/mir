@@ -75,6 +75,7 @@ jobs:
           clang \
           dmz-cursor-theme \
           flake8 \
+          gcovr \
           glmark2-es2 \
           glmark2-es2-wayland \
           lcov \
@@ -92,7 +93,8 @@ jobs:
     - name: Configure
       run: >
         cmake
-        -DCMAKE_BUILD_TYPE=Coverage
+        -DCMAKE_BUILD_TYPE=Debug
+        -DMIR_ENABLE_COVERAGE=ON
         -DMIR_RUN_PERFORMANCE_TESTS=ON
         -DMIR_ENABLE_RUST=ON
         -DCMAKE_C_COMPILER_LAUNCHER=ccache
@@ -107,19 +109,10 @@ jobs:
     - name: Clear CCache stats
       run: ccache --show-stats --zero-stats
 
-    - name: Test
-      timeout-minutes: 10
-      env:
-        CTEST_OUTPUT_ON_FAILURE: 1
-        XDG_RUNTIME_DIR: /tmp
-      run: cmake --build build --target test
-
     - name: Measure coverage
-      timeout-minutes: 20
+      timeout-minutes: 30
       run: |
-        cmake --build build --target coverage
-        # avoid duplicate coverage data
-        rm build/coverage*.info
+        cmake --build build --target coverage-xml
 
     - name: Get changed files
       if: github.event_name == 'merge_group'

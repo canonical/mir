@@ -113,10 +113,10 @@ auto miral::ApplicationCredentials::pid() const -> pid_t
 
 auto miral::ApplicationCredentials::uid() const -> uid_t
 {
-    return creds.pid();
+    return creds.uid();
 }
 
 auto miral::ApplicationCredentials::gid() const -> gid_t
 {
-    return creds.pid();
+    return creds.gid();
 }

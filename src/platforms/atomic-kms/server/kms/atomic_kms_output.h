@@ -47,7 +47,7 @@ public:
     void reset() override;
     void configure(geometry::Displacement fb_offset, size_t kms_mode_index) override;
     geometry::Size size() const override;
-    int max_refresh_rate() const override;
+    unsigned max_refresh_rate() const override;
 
     bool set_crtc(FBHandle const& fb) override;
     bool has_crtc_mismatch() override;

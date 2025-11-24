@@ -32,7 +32,7 @@ struct MockKMSOutput : public graphics::gbm::KMSOutput
     MOCK_METHOD(void, reset, (), (override));
     MOCK_METHOD(void, configure, (geometry::Displacement, size_t), (override));
     MOCK_METHOD(geometry::Size, size, (), (const, override));
-    MOCK_METHOD(int, max_refresh_rate, (), (const, override));
+    MOCK_METHOD(unsigned, max_refresh_rate, (), (const, override));
 
     bool set_crtc(graphics::FBHandle const& fb) override
     {

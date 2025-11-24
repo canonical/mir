@@ -93,13 +93,13 @@ auto ms::ApplicationSession::create_surface(
     std::shared_ptr<mc::BufferStream> const buffer_stream =
         std::dynamic_pointer_cast<mc::BufferStream>(params.streams.value()[0].stream.lock());
 
-    std::list<StreamInfo> streams;
+    std::list<StreamInfo> stream_list;
     for (auto& stream : params.streams.value())
     {
-        streams.push_back({std::dynamic_pointer_cast<mc::BufferStream>(stream.stream.lock()), stream.displacement});
+        stream_list.push_back({std::dynamic_pointer_cast<mc::BufferStream>(stream.stream.lock()), stream.displacement});
     }
 
-    auto surface = surface_factory->create_surface(session, streams, params);
+    auto surface = surface_factory->create_surface(session, stream_list, params);
 
     auto const input_mode = params.input_mode.is_set() ? params.input_mode.value() : input::InputReceptionMode::normal;
     surface_stack->add_surface(surface, input_mode);
@@ -298,10 +298,10 @@ void ms::ApplicationSession::destroy_buffer_stream(std::shared_ptr<frontend::Buf
 }
 
 void ms::ApplicationSession::configure_streams(
-    ms::Surface& surface, std::vector<shell::StreamSpecification> const& streams)
+    ms::Surface& surface, std::vector<shell::StreamSpecification> const& stream_specs)
 {
     std::list<ms::StreamInfo> list;
-    for (auto& stream : streams)
+    for (auto& stream : stream_specs)
     {
         if (auto const s = std::dynamic_pointer_cast<mc::BufferStream>(stream.stream.lock()))
             list.emplace_back(ms::StreamInfo{s, stream.displacement});
