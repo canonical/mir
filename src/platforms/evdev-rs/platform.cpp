@@ -44,8 +44,8 @@ public:
 
     void activated(mir::Fd&& device_fd) override
     {
-        fd = device_fd;
-        box->activated(device_fd);
+        fd = std::move(device_fd);
+        box->activated(fd);
     }
 
     void suspended() override

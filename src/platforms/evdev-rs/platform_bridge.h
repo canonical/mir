@@ -17,10 +17,10 @@
 #ifndef MIR_INPUT_EVDEV_RS_PLATFORM_BRIDGE_H
 #define MIR_INPUT_EVDEV_RS_PLATFORM_BRIDGE_H
 
+#include <mir/console_services.h>
+#include <mir/input/input_device.h>
+#include <mir/input/event_builder.h>
 #include <memory>
-#include "mir/console_services.h"
-#include "mir/input/input_device.h"
-#include "mir/input/event_builder.h"
 
 namespace mir
 {

@@ -39,6 +39,8 @@ std::unique_ptr<miers::DeviceBridgeC> miers::PlatformBridgeC::acquire_device(int
     DeviceObserverWithFd* raw_observer = observer.get();
     auto future = console->acquire_device(major, minor, std::move(observer));
     future.wait();
+    if (!raw_observer->raw_fd())
+        throw std::runtime_error("Failed to acquire device");
     return std::make_unique<DeviceBridgeC>(future.get(), raw_observer->raw_fd().value());
 }
 
