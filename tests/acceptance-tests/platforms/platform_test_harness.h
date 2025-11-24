@@ -17,7 +17,7 @@
 #ifndef MIR_PLATFORM_TEST_HARNESS_H
 #define MIR_PLATFORM_TEST_HARNESS_H
 
-#include "mir/shared_library.h"
+#include <mir/shared_library.h>
 #include <memory>
 
 namespace mir

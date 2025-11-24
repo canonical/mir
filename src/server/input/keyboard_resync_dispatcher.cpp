@@ -16,7 +16,7 @@
 
 #include "keyboard_resync_dispatcher.h"
 
-#include "mir/events/keyboard_resync_event.h"
+#include <mir/events/keyboard_resync_event.h>
 
 namespace mi = mir::input;
 

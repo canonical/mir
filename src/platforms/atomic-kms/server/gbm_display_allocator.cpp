@@ -18,7 +18,7 @@
 #include "kms_framebuffer.h"
 #include "kms/quirks.h"
 
-#include "mir/log.h"
+#include <mir/log.h>
 
 #include <drm_fourcc.h>
 #include <xf86drmMode.h>

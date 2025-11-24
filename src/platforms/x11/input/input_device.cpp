@@ -16,13 +16,13 @@
 
 #include "input_device.h"
 
-#include "mir/input/pointer_settings.h"
-#include "mir/input/touchpad_settings.h"
-#include "mir/input/touchscreen_settings.h"
-#include "mir/input/input_device_info.h"
-#include "mir/input/device_capability.h"
-#include "mir/input/event_builder.h"
-#include "mir/input/input_sink.h"
+#include <mir/input/pointer_settings.h>
+#include <mir/input/touchpad_settings.h>
+#include <mir/input/touchscreen_settings.h>
+#include <mir/input/input_device_info.h>
+#include <mir/input/device_capability.h>
+#include <mir/input/event_builder.h>
+#include <mir/input/input_sink.h>
 
 #include <xcb/xcb.h>
 

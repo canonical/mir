@@ -14,28 +14,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/shell/abstract_shell.h"
+#include <mir/shell/abstract_shell.h>
 
-#include "mir/shell/input_targeter.h"
-#include "mir/shell/shell_report.h"
-#include "mir/shell/surface_specification.h"
-#include "mir/shell/surface_stack.h"
-#include "mir/shell/window_manager.h"
-#include "mir/scene/prompt_session.h"
-#include "mir/scene/prompt_session_manager.h"
-#include "mir/scene/null_surface_observer.h"
-#include "mir/scene/session_coordinator.h"
-#include "mir/scene/session.h"
-#include "mir/scene/surface.h"
-#include "mir/input/seat.h"
-#include "mir/wayland/weak.h"
+#include <mir/shell/input_targeter.h>
+#include <mir/shell/shell_report.h>
+#include <mir/shell/surface_specification.h>
+#include <mir/shell/surface_stack.h>
+#include <mir/shell/window_manager.h>
+#include <mir/scene/prompt_session.h>
+#include <mir/scene/prompt_session_manager.h>
+#include <mir/scene/null_surface_observer.h>
+#include <mir/scene/session_coordinator.h>
+#include <mir/scene/session.h>
+#include <mir/scene/surface.h>
+#include <mir/input/seat.h>
+#include <mir/wayland/weak.h>
 #include "decoration/manager.h"
 
-#include <algorithm>
 #include <iterator>
 #include <vector>
 
-namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace mi = mir::input;
 namespace msh = mir::shell;
@@ -222,7 +220,6 @@ void msh::AbstractShell::close_session(
 
 auto msh::AbstractShell::create_surface(
     std::shared_ptr<ms::Session> const& session,
-    wayland::Weak<frontend::WlSurface> const& wayland_surface,
     SurfaceSpecification const& spec,
     std::shared_ptr<ms::SurfaceObserver> const& observer,
     Executor* observer_executor) -> std::shared_ptr<ms::Surface>
@@ -247,7 +244,7 @@ auto msh::AbstractShell::create_surface(
     // Instead of a shared pointer, a local variable could be used and the lambda could capture a reference to it
     // This should be safe, but could be the source of nasty bugs and crashes if the wm did something unexpected
     auto const should_decorate = std::make_shared<bool>(false);
-    auto const build = [observer, observer_executor, should_decorate, wayland_surface](
+    auto const build = [observer, observer_executor, should_decorate](
             std::shared_ptr<ms::Session> const& session,
             msh::SurfaceSpecification const& placed_params)
         {
@@ -255,7 +252,7 @@ auto msh::AbstractShell::create_surface(
             {
                 *should_decorate = true;
             }
-            return session->create_surface(session, wayland_surface, placed_params, observer, observer_executor);
+            return session->create_surface(session, placed_params, observer, observer_executor);
         };
 
     auto const result = window_manager->add_surface(session, wm_visible_spec, build);
@@ -494,27 +491,27 @@ void msh::AbstractShell::set_popup_grab_tree(std::shared_ptr<scene::Surface> con
 }
 
 void msh::AbstractShell::set_focus_to(
-    std::shared_ptr<ms::Session> const& focus_session,
-    std::shared_ptr<ms::Surface> const& focus_surface)
+    std::shared_ptr<ms::Session> const& new_focus_session,
+    std::shared_ptr<ms::Surface> const& new_focus_surface)
 {
     std::unique_lock lock(focus_mutex);
 
-    if (last_requested_focus_surface.lock() != focus_surface)
+    if (last_requested_focus_surface.lock() != new_focus_surface)
     {
-        last_requested_focus_surface = focus_surface;
-        auto new_active_surfaces = get_ancestry(focus_surface);
+        last_requested_focus_surface = new_focus_surface;
+        auto new_active_surfaces = get_ancestry(new_focus_surface);
 
         /// HACK: Grabbing popups (menus, in Mir terminology) should be given keyboard focus according to xdg-shell,
         /// however, giving menus keyboard focus breaks Qt submenus. As of February 2022 Weston and other compositors
         /// disobey the protocol by not giving keyboard focus to grabbing popups, so we do the same thing. The behavior
         /// is subject change. See: https://github.com/canonical/mir/issues/2324.
-        auto const new_keyboard_focus_surface = get_non_popup_parent(focus_surface);
+        auto const new_keyboard_focus_surface = get_non_popup_parent(new_focus_surface);
 
         notify_active_surfaces(lock, new_keyboard_focus_surface, std::move(new_active_surfaces));
         set_keyboard_focus_surface(lock, new_keyboard_focus_surface);
     }
 
-    update_focus_locked(lock, focus_session, focus_surface);
+    update_focus_locked(lock, new_focus_session, new_focus_surface);
 }
 
 void msh::AbstractShell::notify_active_surfaces(

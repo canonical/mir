@@ -23,11 +23,11 @@
 #include "xwayland_wm_shell.h"
 #include "xwayland_surface_role.h"
 
-#include "mir/frontend/wayland.h"
-#include "mir/scene/surface.h"
-#include "mir/shell/shell.h"
-#include "mir/shell/surface_specification.h"
-#include "mir/events/input_event.h"
+#include <mir/frontend/wayland.h>
+#include <mir/scene/surface.h>
+#include <mir/shell/shell.h>
+#include <mir/shell/surface_specification.h>
+#include <mir/events/input_event.h>
 
 #include "boost/throw_exception.hpp"
 
@@ -787,7 +787,7 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
         prep_surface_spec(lock, spec);
     }
 
-    auto const surface = shell->create_surface(session, mw::make_weak(wl_surface), spec, observer, nullptr);
+    auto const surface = shell->create_surface(session, spec, observer, nullptr);
     XWaylandSurfaceObserverManager local_surface_observer_manager{surface, std::move(observer)};
     inform_client_of_window_state(std::unique_lock{mutex}, state);
     auto const top_left = scaled_top_left_of(*surface) + scaled_content_offset_of(*surface);

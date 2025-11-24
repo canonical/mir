@@ -17,7 +17,7 @@
 #ifndef MIR_SHELL_DISPLAY_LAYOUT_H_
 #define MIR_SHELL_DISPLAY_LAYOUT_H_
 
-#include "mir/graphics/display_configuration.h"
+#include <mir/graphics/display_configuration.h>
 
 namespace mir
 {

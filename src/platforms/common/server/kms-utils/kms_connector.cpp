@@ -15,7 +15,7 @@
  */
 
 #include "kms_connector.h"
-#include "mir/output_type_names.h"
+#include <mir/output_type_names.h>
 
 #include <boost/throw_exception.hpp>
 #include <algorithm>

@@ -16,7 +16,7 @@
 
 #include "minimal_console_services.h"
 
-#include "mir/log.h"
+#include <mir/log.h>
 
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/exception/errinfo_file_name.hpp>

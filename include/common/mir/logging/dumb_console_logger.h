@@ -14,18 +14,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_BASIC_OBSERVERS_H_
-#define MIR_BASIC_OBSERVERS_H_
+#ifndef MIR_LOGGING_DUMB_CONSOLE_LOGGER_H_
+#define MIR_LOGGING_DUMB_CONSOLE_LOGGER_H_
 
-#include "mir/thread_safe_list.h"
-#include <memory>
+#include <mir/logging/logger.h>
 
 namespace mir
 {
-template<class Observer>
-class BasicObservers : protected ThreadSafeList<std::shared_ptr<Observer>>
+namespace logging
 {
+class DumbConsoleLogger : public Logger
+{
+public:
+
+protected:
+    void log(Severity severity, const std::string& message, const std::string& component) override;
 };
 }
+}
 
-#endif /* MIR_BASIC_OBSERVERS_H_ */
+#endif // MIR_LOGGING_DUMB_CONSOLE_LOGGER_H_

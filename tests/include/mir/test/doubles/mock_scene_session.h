@@ -17,13 +17,13 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_SCENE_SESSION_H_
 #define MIR_TEST_DOUBLES_MOCK_SCENE_SESSION_H_
 
-#include "mir/scene/session.h"
-#include "mir/scene/surface.h"
-#include "mir/graphics/display_configuration.h"
-#include "mir/input/mir_input_config.h"
-#include "mir/client_visible_error.h"
-#include "mir/shell/surface_specification.h"
-#include "mir/wayland/weak.h"
+#include <mir/scene/session.h>
+#include <mir/scene/surface.h>
+#include <mir/graphics/display_configuration.h>
+#include <mir/input/mir_input_config.h>
+#include <mir/client_visible_error.h>
+#include <mir/shell/surface_specification.h>
+#include <mir/wayland/weak.h>
 
 #include <gmock/gmock.h>
 
@@ -38,7 +38,6 @@ struct MockSceneSession : public scene::Session
 {
     MOCK_METHOD(std::shared_ptr<scene::Surface>, create_surface, (
         std::shared_ptr<Session> const&,
-        wayland::Weak<frontend::WlSurface> const&,
         shell::SurfaceSpecification const&,
         std::shared_ptr<scene::SurfaceObserver> const&,
         Executor*), (override));

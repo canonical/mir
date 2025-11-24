@@ -15,7 +15,7 @@
  */
 
 #include "application_info_internal.h"
-#include "miral/window.h"
+#include <miral/window.h>
 
 #include <mir/scene/session.h>
 

@@ -14,15 +14,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/input/cursor_controller.h"
+#include <mir/input/cursor_controller.h>
 
-#include "mir/input/scene.h"
-#include "mir/input/surface.h"
-#include "mir/graphics/cursor.h"
-#include "mir/graphics/cursor_image.h"
-#include "mir/scene/observer.h"
-#include "mir/scene/null_surface_observer.h"
-#include "mir/scene/surface.h"
+#include <mir/input/scene.h>
+#include <mir/input/surface.h>
+#include <mir/graphics/cursor.h>
+#include <mir/graphics/cursor_image.h>
+#include <mir/scene/observer.h>
+#include <mir/scene/null_surface_observer.h>
+#include <mir/scene/surface.h>
 
 #include <exception>
 #include <mutex>

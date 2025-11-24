@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_LED_OBSERVER_REGISTRAR_H_
 #define MIR_TEST_DOUBLES_LED_OBSERVER_REGISTRAR_H_
 
-#include "mir/input/led_observer_registrar.h"
+#include <mir/input/led_observer_registrar.h>
 
 #include <gmock/gmock.h>
 
@@ -29,8 +29,8 @@ namespace doubles
 {
 struct MockLedObserverRegistrar : input::LedObserverRegistrar
 {
-    MOCK_METHOD2(register_interest, void(std::weak_ptr<input::LedObserver> const&, MirInputDeviceId));
-    MOCK_METHOD2(unregister_interest, void(input::LedObserver const&, MirInputDeviceId));
+    MOCK_METHOD(void, register_interest, (std::weak_ptr<input::LedObserver> const&, MirInputDeviceId), (override));
+    MOCK_METHOD(void, unregister_interest, (input::LedObserver const&, MirInputDeviceId), (override));
 };
 
 }

@@ -37,31 +37,29 @@ public:
             .WillByDefault(testing::Return(&fake_screen));
     }
 
-    MOCK_CONST_METHOD0(has_error, int());
-    MOCK_CONST_METHOD0(get_file_descriptor, int());
-    MOCK_CONST_METHOD0(poll_for_event, xcb_generic_event_t*());
-    MOCK_CONST_METHOD0(screen, xcb_screen_t*());
-    MOCK_CONST_METHOD1(intern_atom, xcb_atom_t(std::string const& name));
-    MOCK_CONST_METHOD0(get_output_refresh_rate,double());
-    MOCK_CONST_METHOD1(get_extension_data, xcb_query_extension_reply_t const*(xcb_extension_t *ext));
-    MOCK_CONST_METHOD0(generate_id, uint32_t());
-    MOCK_CONST_METHOD0(default_pixel_format, MirPixelFormat());
-    MOCK_CONST_METHOD5(create_window, void(
-        xcb_window_t window,
+    MOCK_METHOD(int, has_error, (), (const, override));
+    MOCK_METHOD(int, get_file_descriptor, (), (const, override));
+    MOCK_METHOD(xcb_generic_event_t*, poll_for_event, (), (const, override));
+    MOCK_METHOD(xcb_screen_t*, screen, (), (const, override));
+    MOCK_METHOD(xcb_atom_t, intern_atom, (std::string const& name), (const, override));
+    MOCK_METHOD(double, get_output_refresh_rate, (), (const, override));
+    MOCK_METHOD(xcb_query_extension_reply_t const*, get_extension_data, (xcb_extension_t *ext), (const, override));
+    MOCK_METHOD(uint32_t, generate_id, (), (const, override));
+    MOCK_METHOD(MirPixelFormat, default_pixel_format, (), (const, override));
+    MOCK_METHOD(void, create_window, (xcb_window_t window,
         int16_t x, int16_t y,
         uint32_t value_mask,
-        const void* value_list));
-    MOCK_CONST_METHOD6(change_property, void(
-        xcb_window_t window,
+        const void* value_list), (const, override));
+    MOCK_METHOD(void, change_property, (xcb_window_t window,
         xcb_atom_t property_atom,
         xcb_atom_t type_atom,
         uint8_t format,
         size_t length,
-        void const* data));
-    MOCK_CONST_METHOD1(map_window, void(xcb_window_t window));
-    MOCK_CONST_METHOD1(destroy_window, void(xcb_window_t window));
-    MOCK_CONST_METHOD0(flush, void());
-    MOCK_CONST_METHOD0(connection, xcb_connection_t*());
+        void const* data), (const, override));
+    MOCK_METHOD(void, map_window, (xcb_window_t window), (const, override));
+    MOCK_METHOD(void, destroy_window, (xcb_window_t window), (const, override));
+    MOCK_METHOD(void, flush, (), (const, override));
+    MOCK_METHOD(xcb_connection_t*, connection, (), (const, override));
 
     xcb_screen_t fake_screen{
         0, 0, 0, 0, 0,

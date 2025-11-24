@@ -16,28 +16,28 @@
 
 #include "src/server/scene/session_manager.h"
 
-#include "mir/scene/session.h"
-#include "mir/scene/session_container.h"
-#include "mir/scene/null_session_listener.h"
-#include "mir/graphics/display_configuration_observer.h"
-#include "mir/compositor/buffer_stream.h"
-#include "mir/scene/null_surface_observer.h"
-#include "mir/scene/basic_surface.h"
+#include <mir/scene/session.h>
+#include <mir/scene/session_container.h>
+#include <mir/scene/null_session_listener.h>
+#include <mir/graphics/display_configuration_observer.h>
+#include <mir/compositor/buffer_stream.h>
+#include <mir/scene/null_surface_observer.h>
+#include <mir/scene/basic_surface.h>
 #include "src/include/server/mir/scene/session_event_sink.h"
 #include "src/server/report/null_report_factory.h"
 
-#include "mir/test/doubles/mock_surface_stack.h"
-#include "mir/test/doubles/mock_session_listener.h"
-#include "mir/test/doubles/stub_buffer_stream.h"
-#include "mir/test/doubles/null_session_event_sink.h"
-#include "mir/test/doubles/null_event_sink.h"
-#include "mir/test/doubles/stub_surface_factory.h"
-#include "mir/test/doubles/stub_display.h"
-#include "mir/test/doubles/stub_buffer_allocator.h"
-#include "mir/test/doubles/stub_observer_registrar.h"
+#include <mir/test/doubles/mock_surface_stack.h>
+#include <mir/test/doubles/mock_session_listener.h>
+#include <mir/test/doubles/stub_buffer_stream.h>
+#include <mir/test/doubles/null_session_event_sink.h>
+#include <mir/test/doubles/null_event_sink.h>
+#include <mir/test/doubles/stub_surface_factory.h>
+#include <mir/test/doubles/stub_display.h>
+#include <mir/test/doubles/stub_buffer_allocator.h>
+#include <mir/test/doubles/stub_observer_registrar.h>
 
-#include "mir/test/fake_shared.h"
-#include "mir/test/make_surface_spec.h"
+#include <mir/test/fake_shared.h>
+#include <mir/test/make_surface_spec.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -56,9 +56,9 @@ namespace
 {
 struct MockSessionEventSink : public ms::SessionEventSink
 {
-    MOCK_METHOD1(handle_focus_change, void(std::shared_ptr<ms::Session> const& session));
-    MOCK_METHOD0(handle_no_focus, void());
-    MOCK_METHOD1(handle_session_stopping, void(std::shared_ptr<ms::Session> const& session));
+    MOCK_METHOD(void, handle_focus_change, (std::shared_ptr<ms::Session> const& session), (override));
+    MOCK_METHOD(void, handle_no_focus, (), (override));
+    MOCK_METHOD(void, handle_session_stopping, (std::shared_ptr<ms::Session> const& session), (override));
 };
 
 struct SessionManagerSetup : public testing::Test
@@ -167,7 +167,7 @@ TEST_F(SessionManagerSessionListenerSetup, additional_listeners_receive_surface_
     auto session = session_manager.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "XPlane");
     auto bs = std::dynamic_pointer_cast<mc::BufferStream>(session->create_buffer_stream(
         mg::BufferProperties{{640, 480}, mir_pixel_format_abgr_8888, mg::BufferUsage::hardware}));
-    session->create_surface(nullptr, {}, mt::make_surface_spec(bs), mt::fake_shared(observer), nullptr);
+    session->create_surface(nullptr, mt::make_surface_spec(bs), mt::fake_shared(observer), nullptr);
 }
 
 namespace

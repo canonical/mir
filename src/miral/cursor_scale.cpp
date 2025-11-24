@@ -14,16 +14,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "miral/cursor_scale.h"
-#include "mir/main_loop.h"
-#include "mir/synchronised.h"
-#include "miral/live_config.h"
+#include <miral/cursor_scale.h>
+#include <mir/main_loop.h>
+#include <mir/synchronised.h>
+#include <miral/live_config.h>
 
-#include "mir/options/option.h"
-#include "mir/log.h"
-#include "mir/server.h"
-#include "mir/shell/accessibility_manager.h"
-#include "mir/time/alarm.h"
+#include <mir/options/option.h>
+#include <mir/log.h>
+#include <mir/server.h>
+#include <mir/shell/accessibility_manager.h>
+#include <mir/time/alarm.h>
 
 #include <chrono>
 #include <memory>
@@ -39,6 +39,9 @@ struct miral::CursorScale::Self
     void scale(float new_scale)
     {
         auto s = state.lock();
+
+        if(new_scale == s->scale)
+            return;
 
         s->scale = new_scale;
 
@@ -65,57 +68,56 @@ struct miral::CursorScale::Self
         auto const start_scale = s->scale;
         auto const end_scale = s->scale * scale_multiplier;
         auto const ml = main_loop.lock();
+        auto const animation_duration = wind_time + duration + wind_time;
 
-        s->animation_alarm = ml->create_repeating_alarm(
+        auto animation_callback{
             [this,
              repeat_delay,
              time = std::chrono::milliseconds{0},
+             animation_duration,
              wind_down_start,
              start_scale,
              end_scale,
              wind_time]() mutable
             {
-                auto const scale = [&] -> std::optional<float>
+                if (time >= animation_duration)
+                {
+                    {
+                        auto const s = state.lock();
+                        s->animation_alarm->cancel();
+                        s->animation_alarm = nullptr;
+                    }
+
+                    // Reset scale just in case
+                    this->scale(start_scale);
+                    return;
+                }
+
+                auto const scale = [&]
                 {
                     if (time < wind_time)
                     {
-                        auto const t = static_cast<float>(time.count()) / wind_time.count();
+                        auto const t = (1.0f * time) / wind_time;
                         return std::lerp(start_scale, end_scale, t);
                     }
-                    else if (time > wind_down_start)
+                    else if (time >= wind_time && time < wind_down_start)
                     {
-                        auto const t = static_cast<float>((time - wind_down_start).count()) / wind_time.count();
+                        return end_scale;
+                    }
+                    else
+                    {
+                        auto const t = (1.0f * (time - wind_down_start)) / wind_time;
                         return std::lerp(end_scale, start_scale, t);
                     }
-                    return std::nullopt;
                 }();
 
-
-                if(scale)
-                {
-                    this->scale(*scale);
-                }
+                this->scale(scale);
 
                 time += repeat_delay;
-            },
-            repeat_delay);
+            }};
 
-        s->animation_stop_alarm = ml->create_alarm(
-            [this, start_scale]
-            {
-                {
-                    auto const s = state.lock();
-                    s->animation_alarm->cancel();
-                    s->animation_alarm = nullptr;
-                }
-
-                // Reset scale just in case
-                this->scale(start_scale);
-            });
-
+        s->animation_alarm = ml->create_repeating_alarm(animation_callback, repeat_delay);
         s->animation_alarm->reschedule_in(std::chrono::milliseconds{0});
-        auto const animation_duration = wind_time + duration + wind_time;
-        s->animation_stop_alarm->reschedule_in(animation_duration);
     }
 
     float const default_scale;
@@ -201,6 +203,10 @@ void miral::CursorScale::operator()(mir::Server& server) const
             self->main_loop = server.the_main_loop();
             auto const scale = options->get<double>(cursor_scale_opt);
 
-            self->scale(static_cast<float>(scale));
+            if (auto am = self->accessibility_manager.lock())
+            {
+                self->state.lock()->scale = scale;
+                am->cursor_scale(scale);
+            }
         });
 }

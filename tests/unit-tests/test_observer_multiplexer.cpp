@@ -14,11 +14,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/observer_multiplexer.h"
+#include <mir/observer_multiplexer.h>
 
-#include "mir/test/barrier.h"
-#include "mir/test/auto_unblock_thread.h"
-#include "mir/test/doubles/explicit_executor.h"
+#include <mir/test/barrier.h>
+#include <mir/test/auto_unblock_thread.h>
+#include <mir/test/doubles/explicit_executor.h>
 
 #include <memory>
 #include <array>
@@ -46,8 +46,8 @@ public:
 class MockObserver : public TestObserver
 {
 public:
-    MOCK_METHOD1(observation_made, void(std::string const&));
-    MOCK_METHOD3(multi_argument_observation, void(std::string const&, int, float));
+    MOCK_METHOD(void, observation_made, (std::string const&), (override));
+    MOCK_METHOD(void, multi_argument_observation, (std::string const&, int, float), (override));
 };
 
 class ThreadedExecutor : public mir::Executor

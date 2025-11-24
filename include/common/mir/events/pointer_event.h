@@ -17,8 +17,8 @@
 #ifndef MIR_COMMON_POINTER_EVENT_H_
 #define MIR_COMMON_POINTER_EVENT_H_
 
-#include "mir/events/input_event.h"
-#include "mir/events/scroll_axis.h"
+#include <mir/events/input_event.h>
+#include <mir/events/scroll_axis.h>
 
 #include <optional>
 

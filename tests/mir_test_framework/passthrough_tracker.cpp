@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir_test_framework/passthrough_tracker.h"
+#include <mir_test_framework/passthrough_tracker.h>
 
 namespace mtf = mir_test_framework;
 

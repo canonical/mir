@@ -16,21 +16,21 @@
 
 #include "src/server/input/key_repeat_dispatcher.h"
 
-#include "mir/events/event_private.h"
-#include "mir/events/event_builders.h"
-#include "mir/time/alarm.h"
-#include "mir/time/alarm_factory.h"
-#include "mir/input/input_device_observer.h"
-#include "mir/input/mir_pointer_config.h"
-#include "mir/input/mir_touchpad_config.h"
-#include "mir/input/mir_touchscreen_config.h"
-#include "mir/input/mir_keyboard_config.h"
-#include "mir/input/device.h"
+#include <mir/events/event_private.h>
+#include <mir/events/event_builders.h>
+#include <mir/time/alarm.h>
+#include <mir/time/alarm_factory.h>
+#include <mir/input/input_device_observer.h>
+#include <mir/input/mir_pointer_config.h>
+#include <mir/input/mir_touchpad_config.h>
+#include <mir/input/mir_touchscreen_config.h>
+#include <mir/input/mir_keyboard_config.h>
+#include <mir/input/device.h>
 
-#include "mir/test/fake_shared.h"
-#include "mir/test/event_matchers.h"
-#include "mir/test/doubles/mock_input_dispatcher.h"
-#include "mir/test/doubles/mock_input_device_hub.h"
+#include <mir/test/fake_shared.h>
+#include <mir/test/event_matchers.h>
+#include <mir/test/doubles/mock_input_dispatcher.h>
+#include <mir/test/doubles/mock_input_device_hub.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -47,10 +47,10 @@ namespace
 {
 struct MockAlarm : public mir::time::Alarm
 {
-    MOCK_METHOD0(cancel, bool());
-    MOCK_CONST_METHOD0(state, mir::time::Alarm::State());
-    MOCK_METHOD1(reschedule_in, bool(std::chrono::milliseconds));
-    MOCK_METHOD1(reschedule_for, bool(mir::time::Timestamp));
+    MOCK_METHOD(bool, cancel, (), (override));
+    MOCK_METHOD(mir::time::Alarm::State, state, (), (const, override));
+    MOCK_METHOD(bool, reschedule_in, (std::chrono::milliseconds), (override));
+    MOCK_METHOD(bool, reschedule_for, (mir::time::Timestamp), (override));
 
     // destructor cancels the alarm
     ~MockAlarm()
@@ -61,7 +61,7 @@ struct MockAlarm : public mir::time::Alarm
 
 struct MockAlarmFactory : public mir::time::AlarmFactory
 {
-    MOCK_METHOD1(create_alarm_adapter, mir::time::Alarm*(std::function<void()> const&));
+    MOCK_METHOD(mir::time::Alarm*, create_alarm_adapter, (std::function<void()> const&), ());
     std::unique_ptr<mir::time::Alarm> create_alarm(std::function<void()> const& cb)
     {
         return std::unique_ptr<mir::time::Alarm>(create_alarm_adapter(cb));

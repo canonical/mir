@@ -17,7 +17,7 @@
 #ifndef MIR_INPUT_VALIDATOR_H_
 #define MIR_INPUT_VALIDATOR_H_
 
-#include "mir/events/touch_contact.h"
+#include <mir/events/touch_contact.h>
 
 #include <memory>
 #include <unordered_map>

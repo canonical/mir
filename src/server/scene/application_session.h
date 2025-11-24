@@ -17,11 +17,10 @@
 #ifndef MIR_SCENE_APPLICATION_SESSION_H_
 #define MIR_SCENE_APPLICATION_SESSION_H_
 
-#include "mir/scene/session.h"
+#include <mir/scene/session.h>
 
-#include "mir/observer_registrar.h"
+#include <mir/observer_registrar.h>
 
-#include <atomic>
 #include <set>
 #include <map>
 #include <mutex>
@@ -33,6 +32,7 @@ namespace graphics
 class GraphicBufferAllocator;
 }
 namespace shell { class SurfaceStack; }
+namespace frontend { class EventSink; }
 namespace scene
 {
 class SessionListener;
@@ -56,7 +56,6 @@ public:
 
     auto create_surface(
         std::shared_ptr<Session> const& session,
-        wayland::Weak<frontend::WlSurface> const& wayland_surface,
         shell::SurfaceSpecification const& params,
         std::shared_ptr<scene::SurfaceObserver> const& observer,
         Executor* observer_executor) -> std::shared_ptr<Surface> override;

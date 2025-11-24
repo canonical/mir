@@ -16,8 +16,8 @@
 
 #include "wayland_executor.h"
 
-#include "mir/fd.h"
-#include "mir/log.h"
+#include <mir/fd.h>
+#include <mir/log.h>
 
 #include <sys/eventfd.h>
 

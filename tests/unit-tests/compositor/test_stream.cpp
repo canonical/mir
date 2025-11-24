@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/test/doubles/stub_buffer.h"
-#include "mir/compositor/stream.h"
+#include <mir/test/doubles/stub_buffer.h>
+#include <mir/compositor/stream.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -39,7 +39,7 @@ struct Stream : Test
     {
     }
 
-    MOCK_METHOD1(called, void(mg::Buffer&));
+    MOCK_METHOD(void, called, (mg::Buffer&), ());
 
     geom::Size initial_size{44,2};
     std::vector<std::shared_ptr<mg::Buffer>> buffers;

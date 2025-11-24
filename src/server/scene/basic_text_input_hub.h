@@ -17,8 +17,8 @@
 #ifndef MIR_SCENE_BASIC_TEXT_INPUT_HUB_H_
 #define MIR_SCENE_BASIC_TEXT_INPUT_HUB_H_
 
-#include "mir/scene/text_input_hub.h"
-#include "mir/observer_multiplexer.h"
+#include <mir/scene/text_input_hub.h>
+#include <mir/observer_multiplexer.h>
 
 #include <mutex>
 

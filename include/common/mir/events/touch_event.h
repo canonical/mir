@@ -20,7 +20,7 @@
 #include <chrono>
 #include <cstdint>
 
-#include "mir/events/input_event.h"
+#include <mir/events/input_event.h>
 
 struct MirTouchEvent : MirInputEvent
 {

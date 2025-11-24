@@ -17,9 +17,9 @@
 #ifndef MIR_TEST_DOUBLES_NULL_DISPLAY_SYNC_GROUP_H_
 #define MIR_TEST_DOUBLES_NULL_DISPLAY_SYNC_GROUP_H_
 
-#include "mir/graphics/display.h"
-#include "mir/geometry/size.h"
-#include "mir/test/doubles/stub_display_sink.h"
+#include <mir/graphics/display.h>
+#include <mir/geometry/size.h>
+#include <mir/test/doubles/stub_display_sink.h>
 #include <thread>
 
 namespace mir

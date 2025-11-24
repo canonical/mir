@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/graphics/program_factory.h"
+#include <mir/graphics/program_factory.h>
 
 // Included here to ensure we have a single definition of the ProgramFactory symbols
 mir::graphics::gl::ProgramFactory::~ProgramFactory() = default;

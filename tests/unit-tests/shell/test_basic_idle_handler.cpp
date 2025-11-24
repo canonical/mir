@@ -15,20 +15,20 @@
  */
 
 #include "src/server/shell/basic_idle_handler.h"
-#include "mir/executor.h"
-#include "mir/test/doubles/mock_idle_hub.h"
-#include "mir/test/doubles/mock_input_scene.h"
-#include "mir/test/doubles/stub_buffer_allocator.h"
-#include "mir/test/doubles/stub_session_lock.h"
-#include "mir/shell/display_configuration_controller.h"
-#include "mir/test/fake_shared.h"
+#include <mir/executor.h>
+#include <mir/test/doubles/mock_idle_hub.h>
+#include <mir/test/doubles/mock_input_scene.h>
+#include <mir/test/doubles/stub_buffer_allocator.h>
+#include <mir/test/doubles/stub_session_lock.h>
+#include <mir/shell/display_configuration_controller.h>
+#include <mir/test/fake_shared.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <map>
 #include <boost/throw_exception.hpp>
 
-#include "mir/graphics/renderable.h"
+#include <mir/graphics/renderable.h>
 
 using namespace testing;
 namespace ms = mir::scene;
@@ -44,9 +44,9 @@ namespace
 struct MockDisplayConfigurationController: msh::DisplayConfigurationController
 {
 public:
-    MOCK_METHOD1(set_base_configuration, void(std::shared_ptr<mg::DisplayConfiguration> const&));
-    MOCK_METHOD0(base_configuration, std::shared_ptr<mg::DisplayConfiguration>());
-    MOCK_METHOD1(set_power_mode, void(MirPowerMode));
+    MOCK_METHOD(void, set_base_configuration, (std::shared_ptr<mg::DisplayConfiguration> const&), (override));
+    MOCK_METHOD(std::shared_ptr<mg::DisplayConfiguration>, base_configuration, (), (override));
+    MOCK_METHOD(void, set_power_mode, (MirPowerMode), (override));
 };
 
 class FakeSessionLock : public ms::SessionLock

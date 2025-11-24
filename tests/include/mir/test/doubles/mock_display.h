@@ -17,10 +17,10 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_DISPLAY_H_
 #define MIR_TEST_DOUBLES_MOCK_DISPLAY_H_
 
-#include "mir/graphics/display.h"
-#include "mir/graphics/display_configuration.h"
-#include "mir/renderer/gl/context.h"
-#include "mir/main_loop.h"
+#include <mir/graphics/display.h>
+#include <mir/graphics/display_configuration.h>
+#include <mir/renderer/gl/context.h>
+#include <mir/main_loop.h>
 #include <gmock/gmock.h>
 
 namespace mir

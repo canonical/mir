@@ -20,12 +20,12 @@
 #include "src/platforms/virtual/display.h"
 #include "src/platforms/virtual/platform.h"
 
-#include "mir/graphics/display_configuration.h"
-#include "mir/graphics/default_display_configuration_policy.h"
+#include <mir/graphics/display_configuration.h>
+#include <mir/graphics/default_display_configuration_policy.h>
 
-#include "mir/test/doubles/null_display_configuration_policy.h"
-#include "mir/test/doubles/mock_egl.h"
-#include "mir/test/fake_shared.h"
+#include <mir/test/doubles/null_display_configuration_policy.h>
+#include <mir/test/doubles/mock_egl.h>
+#include <mir/test/fake_shared.h>
 
 
 namespace mg = mir::graphics;

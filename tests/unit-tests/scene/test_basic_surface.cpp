@@ -15,24 +15,24 @@
  */
 
 
-#include "mir/graphics/drm_formats.h"
-#include "mir/scene/basic_surface.h"
+#include <mir/graphics/drm_formats.h>
+#include <mir/scene/basic_surface.h>
 #include "src/server/scene/surface_change_notification.h"
 
-#include "mir/events/event_private.h"
-#include "mir/frontend/event_sink.h"
-#include "mir/geometry/rectangle.h"
-#include "mir/geometry/displacement.h"
-#include "mir/scene/null_surface_observer.h"
-#include "mir/events/event_builders.h"
+#include <mir/events/event_private.h>
+#include <mir/frontend/event_sink.h>
+#include <mir/geometry/rectangle.h>
+#include <mir/geometry/displacement.h>
+#include <mir/scene/null_surface_observer.h>
+#include <mir/events/event_builders.h>
 
-#include "mir/test/doubles/fake_display_configuration_observer_registrar.h"
-#include "mir/test/doubles/stub_cursor_image.h"
-#include "mir/test/doubles/mock_buffer_stream.h"
-#include "mir/test/doubles/stub_buffer.h"
-#include "mir/test/doubles/stub_session.h"
-#include "mir/test/doubles/explicit_executor.h"
-#include "mir/test/geometry_matchers.h"
+#include <mir/test/doubles/fake_display_configuration_observer_registrar.h>
+#include <mir/test/doubles/stub_cursor_image.h>
+#include <mir/test/doubles/mock_buffer_stream.h>
+#include <mir/test/doubles/stub_buffer.h>
+#include <mir/test/doubles/stub_session.h>
+#include <mir/test/doubles/explicit_executor.h>
+#include <mir/test/geometry_matchers.h>
 
 #include "src/server/report/null_report_factory.h"
 
@@ -60,7 +60,7 @@ namespace
 class MockCallback
 {
 public:
-    MOCK_METHOD0(call, void());
+    MOCK_METHOD(void, call, (), ());
 };
 
 class MockSurfaceObserver : public ms::NullSurfaceObserver

@@ -15,10 +15,10 @@
  */
 
 #include "src/server/frontend_xwayland/xwayland_client_manager.h"
-#include "mir/test/doubles/stub_shell.h"
-#include "mir/test/doubles/stub_session.h"
-#include "mir/test/doubles/stub_session_authorizer.h"
-#include "mir/test/fake_shared.h"
+#include <mir/test/doubles/stub_shell.h>
+#include <mir/test/doubles/stub_session.h>
+#include <mir/test/doubles/stub_session_authorizer.h>
+#include <mir/test/fake_shared.h>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 

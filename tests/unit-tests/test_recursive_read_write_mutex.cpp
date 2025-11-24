@@ -14,9 +14,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/recursive_read_write_mutex.h"
+#include <mir/recursive_read_write_mutex.h>
 
-#include "mir/test/barrier.h"
+#include <mir/test/barrier.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -53,10 +53,10 @@ struct RecursiveReadWriteMutex : public Test
             if (thread.joinable()) thread.join();
     }
 
-    MOCK_METHOD0(notify_read_locked, void());
-    MOCK_METHOD0(notify_read_unlocking, void());
-    MOCK_METHOD0(notify_write_locked, void());
-    MOCK_METHOD0(notify_write_unlocking, void());
+    MOCK_METHOD(void, notify_read_locked, (), ());
+    MOCK_METHOD(void, notify_read_unlocking, (), ());
+    MOCK_METHOD(void, notify_write_locked, (), ());
+    MOCK_METHOD(void, notify_write_unlocking, (), ());
 
 };
 }

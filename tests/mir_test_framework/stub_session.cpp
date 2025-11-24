@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/test/doubles/stub_session.h"
+#include <mir/test/doubles/stub_session.h>
 
 namespace mtd = mir::test::doubles;
 namespace ms = mir::scene;
@@ -74,7 +74,6 @@ void mtd::StubSession::resume_prompt_session()
 
 auto mtd::StubSession::create_surface(
     std::shared_ptr<Session> const& /*session*/,
-    wayland::Weak<frontend::WlSurface> const& /*wayland_surface*/,
     mir::shell::SurfaceSpecification const& /*params*/,
     std::shared_ptr<scene::SurfaceObserver> const& /*observer*/,
     Executor* /*observer_executor*/) -> std::shared_ptr<ms::Surface>

@@ -17,18 +17,18 @@
 #include "input_device_config.h"
 #include "input_device_configuration_options.h"
 
-#include "mir/abnormal_exit.h"
-#include "mir/input/device.h"
-#include "mir/input/device_capability.h"
-#include "mir/input/input_device_hub.h"
-#include "mir/input/input_device_observer.h"
-#include "mir/input/mir_pointer_config.h"
-#include "mir/input/mir_touchpad_config.h"
-#include "mir/options/configuration.h"
-#include "mir/options/option.h"
-#include "mir/server.h"
-#include "mir_toolkit/mir_input_device_types.h"
-#include "mir/log.h"
+#include <mir/abnormal_exit.h>
+#include <mir/input/device.h>
+#include <mir/input/device_capability.h>
+#include <mir/input/input_device_hub.h>
+#include <mir/input/input_device_observer.h>
+#include <mir/input/mir_pointer_config.h>
+#include <mir/input/mir_touchpad_config.h>
+#include <mir/options/configuration.h>
+#include <mir/options/option.h>
+#include <mir/server.h>
+#include <mir_toolkit/mir_input_device_types.h>
+#include <mir/log.h>
 
 #include <format>
 #include <optional>

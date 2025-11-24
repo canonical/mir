@@ -14,9 +14,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/graphics/drm_formats.h"
-#include "mir/synchronised.h"
-#include "mir_toolkit/common.h"
+#include <mir/graphics/drm_formats.h>
+#include <mir/synchronised.h>
+#include <mir_toolkit/common.h>
 
 #include <cstdint>
 #include <drm_fourcc.h>
@@ -26,7 +26,7 @@
 #include <unordered_set>
 #include <boost/throw_exception.hpp>
 
-#include "mir/log.h"
+#include <mir/log.h>
 
 #ifdef MIR_HAVE_DRM_GET_MODIFIER_NAME
 #include <xf86drm.h>

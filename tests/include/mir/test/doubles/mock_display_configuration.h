@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_DISPLAY_CONFIGURATION_H_
 #define MIR_TEST_DOUBLES_MOCK_DISPLAY_CONFIGURATION_H_
 
-#include "mir/graphics/display_configuration.h"
+#include <mir/graphics/display_configuration.h>
 
 #include <gmock/gmock.h>
 
@@ -30,13 +30,11 @@ namespace doubles
 
 struct MockDisplayConfiguration : public graphics::DisplayConfiguration
 {
-    MOCK_CONST_METHOD1(
-        for_each_output,
-        void(std::function<void(graphics::DisplayConfigurationOutput const&)>));
+    MOCK_METHOD(void, for_each_output, (std::function<void(graphics::DisplayConfigurationOutput const&)>), (const, override));
 
     MOCK_METHOD(void, for_each_output, (std::function<void(graphics::UserDisplayConfigurationOutput&)>), (override));
 
-    MOCK_CONST_METHOD0(valid, bool());
+    MOCK_METHOD(bool, valid, (), (const, override));
 
     std::unique_ptr<graphics::DisplayConfiguration> clone() const
     {

@@ -17,8 +17,8 @@
 #ifndef MIR_COMMON_EVENT_H_
 #define MIR_COMMON_EVENT_H_
 
-#include "mir_toolkit/event.h"
-#include "mir/events/event_builders.h"
+#include <mir_toolkit/event.h>
+#include <mir/events/event_builders.h>
 
 #include <cstring>
 

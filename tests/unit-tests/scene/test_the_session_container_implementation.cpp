@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/test/doubles/stub_session.h"
-#include "mir/scene/session_container.h"
+#include <mir/test/doubles/stub_session.h>
+#include <mir/scene/session_container.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -38,7 +38,7 @@ TEST(SessionContainer, for_each)
 
     struct local
     {
-        MOCK_METHOD1(see, void(std::shared_ptr<ms::Session> const&));
+        MOCK_METHOD(void, see, (std::shared_ptr<ms::Session> const&), ());
         void operator()(std::shared_ptr<ms::Session> const& session)
         {
             see(session);

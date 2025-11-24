@@ -14,21 +14,34 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_COMMON_CLOSE_WINDOW_EVENT_H_
-#define MIR_COMMON_CLOSE_WINDOW_EVENT_H_
+#ifndef MIR_COMMON_WINDOW_EVENT_H_
+#define MIR_COMMON_WINDOW_EVENT_H_
 
-#include "mir/events/event.h"
+#include <mir/events/event.h>
 
-struct MirCloseWindowEvent : MirEvent
+#include <optional>
+#include <vector>
+
+typedef struct MirBlob MirBlob;
+
+struct MirWindowEvent : MirEvent
 {
-    MirCloseWindowEvent();
-    auto clone() const -> MirCloseWindowEvent* override;
+    MirWindowEvent();
+    auto clone() const -> MirWindowEvent* override;
 
-    int surface_id() const;
-    void set_surface_id(int id);
+    int id() const;
+    void set_id(int id);
+
+    MirWindowAttrib attrib() const;
+    void set_attrib(MirWindowAttrib attrib);
+
+    int value() const;
+    void set_value(int value);
 
 private:
-    int surface_id_ = 0;
+    int id_ = 0;
+    MirWindowAttrib attrib_ = {};
+    int value_ = 0;
 };
 
-#endif /* MIR_COMMON_CLOSE_WINDOW_EVENT_H_ */
+#endif /* MIR_COMMON_WINDOW_EVENT_H_ */

@@ -17,8 +17,8 @@
 #ifndef MIR_FRONTEND_XWAYLAND_SURFACE_OBSERVER_SURFACE_H
 #define MIR_FRONTEND_XWAYLAND_SURFACE_OBSERVER_SURFACE_H
 
-#include "mir_toolkit/common.h"
-#include "mir/geometry/size.h"
+#include <mir_toolkit/common.h>
+#include <mir/geometry/size.h>
 
 #include <functional>
 

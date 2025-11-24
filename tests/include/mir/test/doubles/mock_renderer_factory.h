@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_RENDERER_FACTORY_H
 #define MIR_TEST_DOUBLES_MOCK_RENDERER_FACTORY_H
 
-#include "mir/renderer/renderer_factory.h"
+#include <mir/renderer/renderer_factory.h>
 
 namespace mir
 {

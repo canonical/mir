@@ -14,14 +14,14 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/input/mir_input_config.h"
-#include "mir/input/device_capability.h"
-#include "mir/input/mir_touchpad_config.h"
-#include "mir/input/mir_keyboard_config.h"
-#include "mir/input/mir_pointer_config.h"
-#include "mir/input/mir_touchscreen_config.h"
+#include <mir/input/mir_input_config.h>
+#include <mir/input/device_capability.h>
+#include <mir/input/mir_touchpad_config.h>
+#include <mir/input/mir_keyboard_config.h>
+#include <mir/input/mir_pointer_config.h>
+#include <mir/input/mir_touchscreen_config.h>
 
-#include "mir/optional_value.h"
+#include <mir/optional_value.h>
 #include <algorithm>
 #include <ostream>
 

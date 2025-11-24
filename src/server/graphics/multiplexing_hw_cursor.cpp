@@ -16,7 +16,7 @@
 
 #include "multiplexing_hw_cursor.h"
 
-#include "mir/graphics/display.h"
+#include <mir/graphics/display.h>
 #include <boost/throw_exception.hpp>
 
 namespace mg = mir::graphics;

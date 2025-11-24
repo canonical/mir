@@ -16,17 +16,17 @@
 
 #include "src/server/compositor/default_display_buffer_compositor.h"
 #include "src/server/report/null_report_factory.h"
-#include "mir/compositor/scene.h"
-#include "mir/renderer/renderer.h"
-#include "mir/geometry/rectangle.h"
-#include "mir/test/doubles/mock_renderer.h"
-#include "mir/test/fake_shared.h"
-#include "mir/test/doubles/mock_display_sink.h"
-#include "mir/test/doubles/fake_renderable.h"
-#include "mir/test/doubles/mock_compositor_report.h"
-#include "mir/test/doubles/stub_scene_element.h"
-#include "mir/test/doubles/stub_gl_rendering_provider.h"
-#include "mir/test/doubles/stub_output_filter.h"
+#include <mir/compositor/scene.h>
+#include <mir/renderer/renderer.h>
+#include <mir/geometry/rectangle.h>
+#include <mir/test/doubles/mock_renderer.h>
+#include <mir/test/fake_shared.h>
+#include <mir/test/doubles/mock_display_sink.h>
+#include <mir/test/doubles/fake_renderable.h>
+#include <mir/test/doubles/mock_compositor_report.h>
+#include <mir/test/doubles/stub_scene_element.h>
+#include <mir/test/doubles/stub_gl_rendering_provider.h>
+#include <mir/test/doubles/stub_output_filter.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -289,9 +289,9 @@ struct MockSceneElement : mc::SceneElement
             .WillByDefault(testing::Return(renderable));
     }
 
-    MOCK_CONST_METHOD0(renderable, std::shared_ptr<mir::graphics::Renderable>());
-    MOCK_METHOD0(rendered, void());
-    MOCK_METHOD0(occluded, void());
+    MOCK_METHOD(std::shared_ptr<mir::graphics::Renderable>, renderable, (), (const, override));
+    MOCK_METHOD(void, rendered, (), (override));
+    MOCK_METHOD(void, occluded, (), (override));
 };
 }
 

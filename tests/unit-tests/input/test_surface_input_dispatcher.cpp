@@ -16,17 +16,17 @@
 
 #include "src/server/input/surface_input_dispatcher.h"
 
-#include "mir/events/event_builders.h"
-#include "mir/events/event_private.h"
-#include "mir/scene/observer.h"
-#include "mir/scene/surface_observer.h"
-#include "mir/thread_safe_list.h"
+#include <mir/events/event_builders.h>
+#include <mir/events/event_private.h>
+#include <mir/scene/observer.h>
+#include <mir/scene/surface_observer.h>
+#include <mir/thread_safe_list.h>
 
-#include "mir/test/event_matchers.h"
-#include "mir/test/fake_shared.h"
-#include "mir/test/doubles/stub_input_scene.h"
-#include "mir/test/doubles/mock_surface.h"
-#include "mir/test/doubles/explicit_executor.h"
+#include <mir/test/event_matchers.h>
+#include <mir/test/fake_shared.h>
+#include <mir/test/doubles/stub_input_scene.h>
+#include <mir/test/doubles/mock_surface.h>
+#include <mir/test/doubles/explicit_executor.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -274,8 +274,8 @@ struct FakeToucher
 
 struct MockKeyboardObserver: mi::KeyboardObserver
 {
-    MOCK_METHOD1(keyboard_event, void(std::shared_ptr<MirEvent const> const& event));
-    MOCK_METHOD1(keyboard_focus_set, void(std::shared_ptr<mi::Surface> const& surface));
+    MOCK_METHOD(void, keyboard_event, (std::shared_ptr<MirEvent const> const& event), (override));
+    MOCK_METHOD(void, keyboard_focus_set, (std::shared_ptr<mi::Surface> const& surface), (override));
 };
 
 }

@@ -20,12 +20,12 @@
 #include <gmock/gmock.h>
 #include <boost/throw_exception.hpp>
 
-#include "mir/graphics/platform.h"
-#include "mir/graphics/graphic_buffer_allocator.h"
-#include "mir/options/program_option.h"
-#include "mir/emergency_cleanup_registry.h"
-#include "mir/udev/wrapper.h"
-#include "mir/test/doubles/null_console_services.h"
+#include <mir/graphics/platform.h>
+#include <mir/graphics/graphic_buffer_allocator.h>
+#include <mir/options/program_option.h>
+#include <mir/emergency_cleanup_registry.h>
+#include <mir/udev/wrapper.h>
+#include <mir/test/doubles/null_console_services.h>
 
 namespace mg = mir::graphics;
 namespace mtd = mir::test::doubles;

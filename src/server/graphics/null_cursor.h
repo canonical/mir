@@ -17,7 +17,7 @@
 #ifndef MIR_GRAPHICS_NULL_CURSOR_H_
 #define MIR_GRAPHICS_NULL_CURSOR_H_
 
-#include "mir/graphics/cursor.h"
+#include <mir/graphics/cursor.h>
 
 namespace mir
 {

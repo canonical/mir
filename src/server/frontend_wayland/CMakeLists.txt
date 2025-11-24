@@ -68,6 +68,7 @@ set(
   xdg_activation_v1.cpp         xdg_activation_v1.h
   linux_drm_syncobj.cpp         linux_drm_syncobj.h
   data_control_v1.cpp           data_control_v1.h
+  surface_registry.cpp          surface_registry.h
 )
 
 add_custom_command(

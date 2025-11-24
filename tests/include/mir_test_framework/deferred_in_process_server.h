@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_FRAMEWORK_DEFERRED_IN_PROCESS_SERVER_H_
 #define MIR_TEST_FRAMEWORK_DEFERRED_IN_PROCESS_SERVER_H_
 
-#include "mir_test_framework/server_runner.h"
+#include <mir_test_framework/server_runner.h>
 
 #include <gtest/gtest.h>
 

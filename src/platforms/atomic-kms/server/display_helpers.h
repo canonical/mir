@@ -17,8 +17,8 @@
 #ifndef MIR_GRAPHICS_GBM_ATOMIC_KMS_DISPLAY_HELPERS_H_
 #define MIR_GRAPHICS_GBM_ATOMIC_KMS_DISPLAY_HELPERS_H_
 
-#include "mir/udev/wrapper.h"
-#include "mir/fd.h"
+#include <mir/udev/wrapper.h>
+#include <mir/fd.h>
 
 #include <cstddef>
 #include <memory>

@@ -17,9 +17,9 @@
 #ifndef TEST_DISPLAY_H_
 #define TEST_DISPLAY_H_
 
-#include "mir/test/doubles/mock_display_configuration.h"
-#include "mir/renderer/gl/context.h"
-#include "mir/test/display_config_matchers.h"
+#include <mir/test/doubles/mock_display_configuration.h>
+#include <mir/renderer/gl/context.h>
+#include <mir/test/display_config_matchers.h>
 
 TEST_F(DisplayTestGeneric, configure_disallows_invalid_configuration)
 {

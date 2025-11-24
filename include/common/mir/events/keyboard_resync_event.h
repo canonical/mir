@@ -19,7 +19,7 @@
 
 #include <vector>
 
-#include "mir/events/input_event.h"
+#include <mir/events/input_event.h>
 
 /// Sent when the server restarts and the keyboard needs to be resynced
 struct MirKeyboardResyncEvent : MirInputEvent

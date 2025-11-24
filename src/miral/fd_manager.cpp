@@ -15,7 +15,7 @@
  */
 
 #include "fd_manager.h"
-#include "mir/main_loop.h"
+#include <mir/main_loop.h>
 
 #include <boost/throw_exception.hpp>
 

@@ -17,11 +17,11 @@
 #ifndef MIR_FRONTEND_SURFACE_H_
 #define MIR_FRONTEND_SURFACE_H_
 
-#include "mir/frontend/buffer_stream.h"
-#include "mir/geometry/size.h"
-#include "mir/geometry/displacement.h"
+#include <mir/frontend/buffer_stream.h>
+#include <mir/geometry/size.h>
+#include <mir/geometry/displacement.h>
 
-#include "mir_toolkit/common.h"
+#include <mir_toolkit/common.h>
 
 #include <string>
 #include <memory>
@@ -55,10 +55,6 @@ public:
     virtual auto content_size() const -> geometry::Size = 0;
 
     virtual void set_cursor_image(std::shared_ptr<graphics::CursorImage> const& image) = 0;
-
-    /// Returned value is only safe to use on the Wayland thread
-    virtual auto wayland_surface() -> wayland::Weak<WlSurface> const& = 0;
-
 protected:
     Surface() = default;
     Surface(Surface const&) = delete;

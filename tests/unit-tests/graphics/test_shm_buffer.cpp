@@ -15,12 +15,12 @@
  */
 
 #include "src/platforms/common/server/shm_buffer.h"
-#include "mir/graphics/egl_context_executor.h"
-#include "mir/renderer/gl/context.h"
+#include <mir/graphics/egl_context_executor.h>
+#include <mir/renderer/gl/context.h>
 
-#include "mir/test/doubles/mock_gl.h"
-#include "mir/test/doubles/mock_egl.h"
-#include "mir/test/doubles/stub_gl_rendering_provider.h"
+#include <mir/test/doubles/mock_gl.h>
+#include <mir/test/doubles/mock_egl.h>
+#include <mir/test/doubles/stub_gl_rendering_provider.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

@@ -19,7 +19,7 @@
 
 #include <gmock/gmock.h>
 
-#include "mir/renderer/gl/gl_surface.h"
+#include <mir/renderer/gl/gl_surface.h>
 
 namespace mir::test::doubles
 {

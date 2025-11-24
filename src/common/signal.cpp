@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/signal.h"
+#include <mir/signal.h>
 
 mir::Signal::Signal()
   : raised{false}

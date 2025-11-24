@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/wayland/lifetime_tracker.h"
-#include "mir/wayland/weak.h"
+#include <mir/wayland/lifetime_tracker.h>
+#include <mir/wayland/weak.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -36,7 +36,7 @@ public:
 
 struct MockListener
 {
-    MOCK_METHOD0(callback, void());
+    MOCK_METHOD(void, callback, (), ());
 };
 
 struct LifetimeTrackerTest: Test

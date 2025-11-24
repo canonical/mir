@@ -14,28 +14,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/compositor/compositor.h"
-#include "mir/console_services.h"
-#include "mir/frontend/connector.h"
-#include "mir/graphics/display_configuration.h"
-#include "mir/graphics/display_configuration_policy.h"
-#include "mir/server_action_queue.h"
-#include "mir/graphics/event_handler_register.h"
-#include "mir/server_status_listener.h"
-#include "mir/events/event_private.h"
+#include <mir/compositor/compositor.h>
+#include <mir/console_services.h>
+#include <mir/frontend/connector.h>
+#include <mir/graphics/display_configuration.h>
+#include <mir/graphics/display_configuration_policy.h>
+#include <mir/server_action_queue.h>
+#include <mir/graphics/event_handler_register.h>
+#include <mir/server_status_listener.h>
+#include <mir/events/event_private.h>
 
-#include "mir/test/pipe.h"
-#include "mir/test/signal.h"
-#include "mir/test/auto_unblock_thread.h"
-#include "mir_test_framework/testing_server_configuration.h"
-#include "mir_test_framework/temporary_environment_value.h"
-#include "mir/test/doubles/mock_input_manager.h"
-#include "mir/test/doubles/mock_input_dispatcher.h"
-#include "mir/test/doubles/mock_compositor.h"
-#include "mir/test/doubles/null_display.h"
-#include "mir/test/doubles/mock_server_status_listener.h"
-#include "mir/test/doubles/mock_console_services.h"
-#include "mir/run_mir.h"
+#include <mir/test/pipe.h>
+#include <mir/test/signal.h>
+#include <mir/test/auto_unblock_thread.h>
+#include <mir_test_framework/testing_server_configuration.h>
+#include <mir_test_framework/temporary_environment_value.h>
+#include <mir/test/doubles/mock_input_manager.h>
+#include <mir/test/doubles/mock_input_dispatcher.h>
+#include <mir/test/doubles/mock_compositor.h>
+#include <mir/test/doubles/null_display.h>
+#include <mir/test/doubles/mock_server_status_listener.h>
+#include <mir/test/doubles/mock_console_services.h>
+#include <mir/run_mir.h>
 
 #include <boost/throw_exception.hpp>
 #include <gtest/gtest.h>
@@ -129,7 +129,7 @@ public:
         );
     }
 
-    MOCK_METHOD1(configure, void(mg::DisplayConfiguration const&));
+    MOCK_METHOD(void, configure, (mg::DisplayConfiguration const&), (override));
 
     void register_configuration_change_handler(
         mg::EventHandlerRegister& handlers,
@@ -149,8 +149,8 @@ public:
             });
     }
 
-    MOCK_METHOD0(pause, void());
-    MOCK_METHOD0(resume, void());
+    MOCK_METHOD(void, pause, (), (override));
+    MOCK_METHOD(void, resume, (), (override));
 
     bool conf_change_handler_invoked()
     {

@@ -14,30 +14,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_COMMON_RESIZE_EVENT_H_
-#define MIR_COMMON_RESIZE_EVENT_H_
+#ifndef MIR_COMMON_PROMPT_SESSION_EVENT_H_
+#define MIR_COMMON_PROMPT_SESSION_EVENT_H_
 
-#include "mir/events/event.h"
+#include <mir/events/event.h>
 
-struct MirResizeEvent : MirEvent
+struct MirPromptSessionEvent : MirEvent
 {
-    MirResizeEvent();
+    MirPromptSessionEvent();
+    auto clone() const -> MirPromptSessionEvent* override;
 
-    auto clone() const -> MirResizeEvent* override;
-
-    int surface_id() const;
-    void set_surface_id(int id);
-
-    int width() const;
-    void set_width(int width);
-
-    int height() const;
-    void set_height(int height);
+    MirPromptSessionState new_state() const;
+    void set_new_state(MirPromptSessionState state);
 
 private:
-    int surface_id_ = 0;
-    int width_ = 0;
-    int height_ = 0;
+    MirPromptSessionState state = mir_prompt_session_state_stopped;
 };
 
-#endif /* MIR_COMMON_RESIZE_EVENT_H_ */
+#endif /* MIR_COMMON_PROMPT_SESSION_EVENT_H_ */

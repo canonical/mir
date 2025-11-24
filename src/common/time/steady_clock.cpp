@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/time/steady_clock.h"
+#include <mir/time/steady_clock.h>
 #include <algorithm>
 
 mir::time::Timestamp mir::time::SteadyClock::now() const

@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_CURSOR_OBSERVER_H
 #define MIR_TEST_DOUBLES_MOCK_CURSOR_OBSERVER_H
 
-#include "mir/input/cursor_observer.h"
+#include <mir/input/cursor_observer.h>
 
 #include <gmock/gmock.h>
 

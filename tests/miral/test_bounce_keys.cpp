@@ -16,15 +16,15 @@
 
 #include "add_virtual_device.h"
 
-#include "miral/bounce_keys.h"
-#include "miral/test_server.h"
+#include <miral/bounce_keys.h>
+#include <miral/test_server.h>
 
-#include "mir/input/event_builder.h"
-#include "mir/input/input_device_hub.h"
-#include "mir/input/input_device_registry.h"
-#include "mir/input/input_sink.h"
-#include "mir/server.h"
-#include "mir/test/doubles/advanceable_clock.h"
+#include <mir/input/event_builder.h>
+#include <mir/input/input_device_hub.h>
+#include <mir/input/input_device_registry.h>
+#include <mir/input/input_sink.h>
+#include <mir/server.h>
+#include <mir/test/doubles/advanceable_clock.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

@@ -20,9 +20,9 @@
 #include "kms_output_container.h"
 #include "kms_display_configuration.h"
 #include "shm_buffer.h"
-#include "mir/geometry/rectangle.h"
-#include "mir/graphics/cursor_image.h"
-#include "mir/graphics/pixman_image_scaling.h"
+#include <mir/geometry/rectangle.h>
+#include <mir/graphics/cursor_image.h>
+#include <mir/graphics/pixman_image_scaling.h>
 
 #include <xf86drm.h>
 
@@ -263,9 +263,9 @@ void mga::Cursor::show(std::shared_ptr<CursorImage> const& cursor_image)
 
     current_cursor_image = cursor_image;
 
-    size = current_cursor_image->size() * current_scale;
     auto const scaled_cursor_buf = mg::scale_cursor_image(*current_cursor_image, current_scale);
     auto const buf_size_bytes = scaled_cursor_buf.size.width.as_value() * scaled_cursor_buf.size.height.as_value() * 4;
+    size = scaled_cursor_buf.size;
 
     buffer = std::make_shared<mgc::MemoryBackedShmBuffer>(
         size,

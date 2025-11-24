@@ -16,7 +16,7 @@
 
 #include "builtin_cursor_images.h"
 
-#include "mir/graphics/cursor_image.h"
+#include <mir/graphics/cursor_image.h>
 
 #include "default-theme.h"
 

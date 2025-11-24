@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_INPUT_DEVICE_REGISTRY_H_
 #define MIR_TEST_DOUBLES_MOCK_INPUT_DEVICE_REGISTRY_H_
 
-#include "mir/input/input_device_registry.h"
+#include <mir/input/input_device_registry.h>
 
 #include <gmock/gmock.h>
 
@@ -29,8 +29,8 @@ namespace doubles
 {
 struct MockInputDeviceRegistry : input::InputDeviceRegistry
 {
-    MOCK_METHOD1(add_device, std::weak_ptr<input::Device>(std::shared_ptr<input::InputDevice> const&));
-    MOCK_METHOD1(remove_device, void(std::shared_ptr<input::InputDevice> const&));
+    MOCK_METHOD(std::weak_ptr<input::Device>, add_device, (std::shared_ptr<input::InputDevice> const&), (override));
+    MOCK_METHOD(void, remove_device, (std::shared_ptr<input::InputDevice> const&), (override));
 
 };
 

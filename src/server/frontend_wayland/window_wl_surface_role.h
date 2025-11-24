@@ -20,13 +20,13 @@
 #include "output_manager.h"
 #include "wl_surface_role.h"
 
-#include "mir/flags.h"
-#include "mir/wayland/weak.h"
-#include "mir/wayland/lifetime_tracker.h"
-#include "mir/geometry/displacement.h"
-#include "mir/geometry/size.h"
-#include "mir/geometry/rectangle.h"
-#include "mir/graphics/display_configuration.h"
+#include <mir/flags.h>
+#include <mir/wayland/weak.h>
+#include <mir/wayland/lifetime_tracker.h>
+#include <mir/geometry/displacement.h>
+#include <mir/geometry/size.h>
+#include <mir/geometry/rectangle.h>
+#include <mir/graphics/display_configuration.h>
 
 #include <mir_toolkit/common.h>
 
@@ -59,6 +59,7 @@ namespace frontend
 class WaylandSurfaceObserver;
 class WlSurface;
 class WlSeat;
+class SurfaceRegistry;
 
 class WindowWlSurfaceRole
     : public WlSurfaceRole,
@@ -72,7 +73,8 @@ public:
         wayland::Client* client,
         WlSurface* surface,
         std::shared_ptr<shell::Shell> const& shell,
-        OutputManager* output_manager);
+        OutputManager* output_manager,
+        std::shared_ptr<SurfaceRegistry> const& surface_registry);
 
     ~WindowWlSurfaceRole() override;
 
@@ -179,6 +181,7 @@ private:
 
     std::vector<graphics::DisplayConfigurationOutputId> pending_enter_events;
     std::vector<graphics::DisplayConfigurationOutputId> pending_rescale_events;
+    std::shared_ptr<SurfaceRegistry> const surface_registry;
 };
 
 }

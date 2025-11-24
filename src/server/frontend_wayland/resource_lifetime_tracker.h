@@ -17,7 +17,7 @@
 #ifndef MIR_FRONTEND_RESOURCE_LIFETIME_TRACKER_H_
 #define MIR_FRONTEND_RESOURCE_LIFETIME_TRACKER_H_
 
-#include "mir/wayland/lifetime_tracker.h"
+#include <mir/wayland/lifetime_tracker.h>
 
 struct wl_resource;
 struct wl_listener;

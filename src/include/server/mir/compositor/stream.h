@@ -17,10 +17,10 @@
 #ifndef MIR_COMPOSITOR_STREAM_H_
 #define MIR_COMPOSITOR_STREAM_H_
 
-#include "mir/compositor/buffer_stream.h"
-#include "mir/geometry/size.h"
-#include "mir/geometry/rectangle.h"
-#include "mir/synchronised.h"
+#include <mir/compositor/buffer_stream.h>
+#include <mir/geometry/size.h>
+#include <mir/geometry/rectangle.h>
+#include <mir/synchronised.h>
 
 #include <atomic>
 #include <memory>

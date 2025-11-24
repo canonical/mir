@@ -14,11 +14,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "miral/application_switcher.h"
+#include <miral/application_switcher.h>
 #include "wayland_app.h"
 #include "wayland_shm.h"
 #include "wlr-foreign-toplevel-management-unstable-v1.h"
-#include "mir/default_font.h"
+#include <mir/default_font.h>
 
 #include <memory>
 #include <mir/fd.h>
@@ -38,7 +38,11 @@
 #include <gio/gio.h>
 
 #include "layer_shell_wayland_surface.h"
-#include "miral/wayland_extensions.h"
+#include <mir/server.h>
+#include <mir/synchronised.h>
+#include <miral/append_keyboard_event_filter.h>
+#include <miral/internal_client.h>
+#include <miral/wayland_extensions.h>
 
 namespace geom = mir::geometry;
 namespace msh = mir::shell;
@@ -101,7 +105,7 @@ struct ToplevelInfoPrinter
     void print(std::shared_ptr<miral::tk::WaylandShmBuffer> const& buffer,
         std::vector<ToplevelInfo> const& info_list,
         SelectorState selector_state,
-        std::optional<int> selected_window_index)
+        std::optional<size_t> selected_window_index)
     {
         if (!initialized)
             return;
@@ -123,7 +127,7 @@ struct ToplevelInfoPrinter
 
             for (auto const ch : line_text)
             {
-                FT_Load_Glyph(face, FT_Get_Char_Index(face, ch), FT_LOAD_DEFAULT);
+                FT_Load_Glyph(face, FT_Get_Char_Index(face, static_cast<FT_ULong>(ch)), FT_LOAD_DEFAULT);
                 auto glyph = face->glyph;
                 FT_Render_Glyph(glyph, FT_RENDER_MODE_NORMAL);
 
@@ -157,7 +161,7 @@ private:
     TextMetrics compute_text_metrics(
         std::vector<ToplevelInfo> const& info_list,
         SelectorState selector_state,
-        std::optional<int> selected_window_index)
+        std::optional<size_t> selected_window_index)
     {
         TextMetrics metrics;
         std::optional<ToplevelInfo> selected_top_level;
@@ -193,7 +197,7 @@ private:
 
             for (auto const ch : line_text)
             {
-                FT_Load_Glyph(face, FT_Get_Char_Index(face, ch), FT_LOAD_DEFAULT);
+                FT_Load_Glyph(face, FT_Get_Char_Index(face, static_cast<FT_ULong>(ch)), FT_LOAD_DEFAULT);
                 auto const glyph = face->glyph;
                 FT_Render_Glyph(glyph, FT_RENDER_MODE_NORMAL);
 
@@ -746,7 +750,7 @@ public:
 
     void stop() const
     {
-        if (eventfd_write(shutdown_signal, 1) == -1)
+        if (shutdown_signal != mir::Fd::invalid && eventfd_write(shutdown_signal, 1) == -1)
             mir::log_error("Failed to notify internal decoration client to shutdown");
     }
 
@@ -840,4 +844,87 @@ void miral::ApplicationSwitcher::cancel() const
 void miral::ApplicationSwitcher::stop() const
 {
     self->stop();
+}
+
+class miral::BasicApplicationSwitcher::Self
+{
+public:
+    explicit Self(KeybindConfiguration const& keybind_configuration)
+        : startup_internal_client(switcher, switcher, [switcher=switcher] { switcher.stop(); }),
+          keybind_configuration(keybind_configuration),
+          keyboard_event_filter([&, is_running = false](MirKeyboardEvent const* key_event) mutable
+         {
+            auto const modifiers = toolkit::mir_keyboard_event_modifiers(key_event);
+            if (toolkit::mir_keyboard_event_action(key_event) == mir_keyboard_action_down)
+            {
+                if (modifiers & keybind_configuration.primary_modifier)
+                {
+                    auto const scancode = toolkit::mir_keyboard_event_scan_code(key_event);
+                    if (modifiers & keybind_configuration.reverse_modifier)
+                    {
+                        if (scancode == keybind_configuration.application_key)
+                        {
+                            switcher.prev_app();
+                            is_running = true;
+                            return true;
+                        }
+                        else if (scancode == keybind_configuration.window_key)
+                        {
+                            switcher.prev_window();
+                            is_running = true;
+                            return true;
+                        }
+                    }
+                    else
+                    {
+                        if (scancode == keybind_configuration.application_key)
+                        {
+                            switcher.next_app();
+                            is_running = true;
+                            return true;
+                        }
+                        else if (scancode == keybind_configuration.window_key)
+                        {
+                            switcher.next_window();
+                            is_running = true;
+                            return true;
+                        }
+                    }
+                }
+            }
+            else if (is_running && toolkit::mir_keyboard_event_action(key_event) == mir_keyboard_action_up)
+            {
+                if (!(modifiers & keybind_configuration.primary_modifier))
+                {
+                    switcher.confirm();
+                    is_running = false;
+                    return true;
+                }
+            }
+
+            return false;
+         })
+    {
+    }
+
+    ApplicationSwitcher switcher;
+    StartupInternalClient startup_internal_client;
+    KeybindConfiguration keybind_configuration;
+    AppendKeyboardEventFilter keyboard_event_filter;
+};
+
+miral::BasicApplicationSwitcher::BasicApplicationSwitcher()
+    : BasicApplicationSwitcher(KeybindConfiguration{}) {}
+
+miral::BasicApplicationSwitcher::BasicApplicationSwitcher(KeybindConfiguration const& keybind_configuration)
+    : self(std::make_shared<Self>(keybind_configuration))
+{
+}
+
+miral::BasicApplicationSwitcher::~BasicApplicationSwitcher() = default;
+
+void miral::BasicApplicationSwitcher::operator()(mir::Server& server) const
+{
+    self->keyboard_event_filter(server);
+    self->startup_internal_client.operator()(server);
 }

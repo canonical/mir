@@ -15,7 +15,7 @@
  *
  */
 
-#include "mir/frontend/session_credentials.h"
+#include <mir/frontend/session_credentials.h>
 
 namespace mf = mir::frontend;
 

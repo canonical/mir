@@ -14,21 +14,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/test/doubles/stub_buffer.h"
+#include <mir/test/doubles/stub_buffer.h>
 #include "src/server/scene/surface_stack.h"
-#include "mir/graphics/buffer_properties.h"
-#include "mir/geometry/rectangle.h"
-#include "mir/scene/observer.h"
-#include "mir/compositor/scene_element.h"
+#include <mir/graphics/buffer_properties.h>
+#include <mir/geometry/rectangle.h>
+#include <mir/scene/observer.h>
+#include <mir/compositor/scene_element.h>
 #include "src/server/report/null_report_factory.h"
-#include "mir/scene/basic_surface.h"
-#include "mir/test/fake_shared.h"
-#include "mir/test/doubles/fake_display_configuration_observer_registrar.h"
-#include "mir/test/doubles/stub_buffer_stream.h"
-#include "mir/test/doubles/stub_renderable.h"
-#include "mir/test/doubles/mock_buffer_stream.h"
-#include "mir/test/doubles/explicit_executor.h"
-#include "mir/executor.h"
+#include <mir/scene/basic_surface.h>
+#include <mir/test/fake_shared.h>
+#include <mir/test/doubles/fake_display_configuration_observer_registrar.h>
+#include <mir/test/doubles/stub_buffer_stream.h>
+#include <mir/test/doubles/stub_renderable.h>
+#include <mir/test/doubles/mock_buffer_stream.h>
+#include <mir/test/doubles/explicit_executor.h>
+#include <mir/executor.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -70,18 +70,18 @@ MATCHER_P(LockedEq, value, "")
 
 struct MockCallback
 {
-    MOCK_METHOD0(call, void());
+    MOCK_METHOD(void, call, (), ());
 };
 
 struct MockSceneObserver : public ms::Observer
 {
-    MOCK_METHOD1(surface_added, void(std::shared_ptr<ms::Surface> const&));
-    MOCK_METHOD1(surface_removed, void(std::shared_ptr<ms::Surface> const&));
-    MOCK_METHOD1(surfaces_reordered, void(ms::SurfaceSet const&));
-    MOCK_METHOD0(scene_changed, void());
+    MOCK_METHOD(void, surface_added, (std::shared_ptr<ms::Surface> const&), (override));
+    MOCK_METHOD(void, surface_removed, (std::shared_ptr<ms::Surface> const&), (override));
+    MOCK_METHOD(void, surfaces_reordered, (ms::SurfaceSet const&), (override));
+    MOCK_METHOD(void, scene_changed, (), (override));
 
-    MOCK_METHOD1(surface_exists, void(std::shared_ptr<ms::Surface> const&));
-    MOCK_METHOD0(end_observation, void());
+    MOCK_METHOD(void, surface_exists, (std::shared_ptr<ms::Surface> const&), (override));
+    MOCK_METHOD(void, end_observation, (), (override));
 };
 
 struct StubSurface : public ms::BasicSurface
@@ -593,7 +593,7 @@ struct MockConfigureSurface : StubSurface
     {
     }
 
-    MOCK_METHOD2(configure, int(MirWindowAttrib, int));
+    MOCK_METHOD(int, configure, (MirWindowAttrib, int), (override));
 };
 }
 

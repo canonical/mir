@@ -17,7 +17,7 @@
 #ifndef MIR_INPUT_DEFAULT_INPUT_MANAGER_H_
 #define MIR_INPUT_DEFAULT_INPUT_MANAGER_H_
 
-#include "mir/input/input_manager.h"
+#include <mir/input/input_manager.h>
 
 #include <atomic>
 #include <memory>

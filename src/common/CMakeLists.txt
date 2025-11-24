@@ -3,7 +3,6 @@ pkg_check_modules(XKBCOMMON REQUIRED IMPORTED_TARGET xkbcommon)
 add_compile_definitions(MIR_LOG_COMPONENT_FALLBACK="mircommon")
 
 set(MIR_COMMON_SOURCES)
-set(MIR_COMMON_REFERENCES)
 
 include_directories(
   ${MIR_GENERATED_INCLUDE_DIRECTORIES}
@@ -34,11 +33,6 @@ list(APPEND MIR_COMMON_SOURCES
   immediate_executor.cpp
   ${PROJECT_SOURCE_DIR}/include/common/mir/signal.h
   signal.cpp
-)
-
-list(APPEND MIR_COMMON_REFERENCES
-  mirevents
-  mirtime
 )
 
 set(
@@ -76,9 +70,12 @@ target_include_directories(mircommon
 
 target_link_libraries(mircommon
   PUBLIC
-    mircore
-    ${MIR_COMMON_REFERENCES}
-    PkgConfig::XKBCOMMON
+    mirsharedlogging
+    mirsharedlttng
+    mirsharedsharedlibrary
+    mirsharedthread
+    mirevents
+    mirtime
 )
 
 

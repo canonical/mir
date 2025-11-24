@@ -19,11 +19,11 @@
 
 #include "kms-utils/drm_mode_resources.h"
 #include "kms_framebuffer.h"
-#include "mir/geometry/size.h"
-#include "mir/geometry/point.h"
-#include "mir/geometry/displacement.h"
-#include "mir/graphics/display_configuration.h"
-#include "mir_toolkit/common.h"
+#include <mir/geometry/size.h>
+#include <mir/geometry/point.h>
+#include <mir/geometry/displacement.h>
+#include <mir/graphics/display_configuration.h>
+#include <mir_toolkit/common.h>
 
 #include <epoxy/egl.h>
 
@@ -45,7 +45,7 @@ public:
     void reset();
     void configure(size_t kms_mode_index);
     geometry::Size size() const;
-    int max_refresh_rate() const;
+    unsigned max_refresh_rate() const;
 
     EGLOutputLayerEXT output_layer() const;
     uint32_t crtc_id() const;

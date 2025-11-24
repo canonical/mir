@@ -16,18 +16,18 @@
 
 #include "wlr_screencopy_v1.h"
 
-#include "mir/log.h"
-#include "mir/compositor/screen_shooter.h"
-#include "mir/compositor/screen_shooter_factory.h"
-#include "mir/graphics/graphic_buffer_allocator.h"
-#include "mir/renderer/sw/pixel_source.h"
-#include "mir/graphics/buffer.h"
-#include "mir/scene/scene_change_notification.h"
-#include "mir/frontend/surface_stack.h"
-#include "mir/geometry/rectangles.h"
-#include "mir/wayland/weak.h"
-#include "mir/wayland/protocol_error.h"
-#include "mir/executor.h"
+#include <mir/log.h>
+#include <mir/compositor/screen_shooter.h>
+#include <mir/compositor/screen_shooter_factory.h>
+#include <mir/graphics/graphic_buffer_allocator.h>
+#include <mir/renderer/sw/pixel_source.h>
+#include <mir/graphics/buffer.h>
+#include <mir/scene/scene_change_notification.h>
+#include <mir/frontend/surface_stack.h>
+#include <mir/geometry/rectangles.h>
+#include <mir/wayland/weak.h>
+#include <mir/wayland/protocol_error.h>
+#include <mir/executor.h>
 #include "wayland_wrapper.h"
 #include "wayland_timespec.h"
 #include "output_manager.h"

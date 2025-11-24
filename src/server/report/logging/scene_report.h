@@ -18,7 +18,7 @@
 #ifndef MIR_REPORT_LOGGING_SCENE_REPORT_H_
 #define MIR_REPORT_LOGGING_SCENE_REPORT_H_
 
-#include "mir/scene/scene_report.h"
+#include <mir/scene/scene_report.h>
 
 #include <map>
 #include <memory>

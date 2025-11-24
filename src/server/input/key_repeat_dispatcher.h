@@ -17,9 +17,9 @@
 #ifndef MIR_INPUT_KEY_REPEAT_DISPATCHER_H_
 #define MIR_INPUT_KEY_REPEAT_DISPATCHER_H_
 
-#include "mir/input/input_dispatcher.h"
-#include "mir/input/input_device_observer.h"
-#include "mir/optional_value.h"
+#include <mir/input/input_dispatcher.h>
+#include <mir/input/input_device_observer.h>
+#include <mir/optional_value.h>
 
 #include <memory>
 #include <chrono>

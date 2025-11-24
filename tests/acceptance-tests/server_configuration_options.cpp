@@ -14,9 +14,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir_test_framework/headless_test.h"
+#include <mir_test_framework/headless_test.h>
 
-#include "mir/options/option.h"
+#include <mir/options/option.h>
 
 #include <boost/program_options/errors.hpp>
 #include <gtest/gtest.h>

@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/time/posix_timestamp.h"
+#include <mir/time/posix_timestamp.h>
 #include <gtest/gtest.h>
 
 using namespace std::chrono_literals;

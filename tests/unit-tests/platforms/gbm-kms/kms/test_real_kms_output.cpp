@@ -17,12 +17,12 @@
 #include "kms_framebuffer.h"
 #include "src/platforms/gbm-kms/server/kms/real_kms_output.h"
 #include "src/platforms/gbm-kms/server/kms/page_flipper.h"
-#include "mir/fatal.h"
+#include <mir/fatal.h>
 
-#include "mir/test/fake_shared.h"
+#include <mir/test/fake_shared.h>
 
-#include "mir/test/doubles/mock_drm.h"
-#include "mir/test/doubles/mock_gbm.h"
+#include <mir/test/doubles/mock_drm.h>
+#include <mir/test/doubles/mock_gbm.h>
 
 #include <stdexcept>
 
@@ -51,8 +51,8 @@ public:
 class MockPageFlipper : public mgg::PageFlipper
 {
 public:
-    MOCK_METHOD3(schedule_flip, bool(uint32_t,uint32_t,uint32_t));
-    MOCK_METHOD1(wait_for_flip, mg::Frame(uint32_t));
+    MOCK_METHOD(bool, schedule_flip, (uint32_t,uint32_t,uint32_t), (override));
+    MOCK_METHOD(mg::Frame, wait_for_flip, (uint32_t), (override));
 };
 
 class MockKMSFramebuffer : public mg::FBHandle

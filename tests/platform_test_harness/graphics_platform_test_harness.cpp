@@ -14,15 +14,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/graphics/platform.h"
-#include "mir/graphics/display.h"
-#include "mir/graphics/display_sink.h"
-#include "mir/main_loop.h"
-#include "mir/options/program_option.h"
-#include "mir/shared_library.h"
-#include "mir/udev/wrapper.h"
-#include "mir/default_server_configuration.h"
-#include "mir/emergency_cleanup.h"
+#include <mir/graphics/platform.h>
+#include <mir/graphics/display.h>
+#include <mir/graphics/display_sink.h>
+#include <mir/main_loop.h>
+#include <mir/options/program_option.h>
+#include <mir/shared_library.h>
+#include <mir/udev/wrapper.h>
+#include <mir/default_server_configuration.h>
+#include <mir/emergency_cleanup.h>
 
 #include <EGL/egl.h>
 #include <GLES2/gl2.h>

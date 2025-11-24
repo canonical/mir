@@ -14,24 +14,30 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_GRAPHICS_GBM_NATIVE_BUFFER_H_
-#define MIR_GRAPHICS_GBM_NATIVE_BUFFER_H_
+#ifndef MIR_COMMON_RESIZE_EVENT_H_
+#define MIR_COMMON_RESIZE_EVENT_H_
 
-#include "mir_toolkit/mir_native_buffer.h"
-#include "mir/graphics/native_buffer.h"
+#include <mir/events/event.h>
 
-namespace mir
+struct MirResizeEvent : MirEvent
 {
-namespace graphics
-{
-namespace eglstream
-{
-//TODO: a class that allows access to a mgc::ShmFile seems like the appropriate internal type.
-struct NativeBuffer : graphics::NativeBuffer, MirBufferPackage
-{
+    MirResizeEvent();
+
+    auto clone() const -> MirResizeEvent* override;
+
+    int surface_id() const;
+    void set_surface_id(int id);
+
+    int width() const;
+    void set_width(int width);
+
+    int height() const;
+    void set_height(int height);
+
+private:
+    int surface_id_ = 0;
+    int width_ = 0;
+    int height_ = 0;
 };
-}
-}
-}
 
-#endif /* MIR_GRAPHICS_GBM_NATIVE_BUFFER_H_ */
+#endif /* MIR_COMMON_RESIZE_EVENT_H_ */

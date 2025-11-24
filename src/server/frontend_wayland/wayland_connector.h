@@ -17,14 +17,14 @@
 #ifndef MIR_FRONTEND_WAYLAND_CONNECTOR_H_
 #define MIR_FRONTEND_WAYLAND_CONNECTOR_H_
 
-#include "mir/shell/token_authority.h"
+#include <mir/shell/token_authority.h>
 #include "wayland_wrapper.h"
 
-#include "mir/fd.h"
-#include "mir/frontend/connector.h"
-#include "mir/frontend/drag_icon_controller.h"
+#include <mir/fd.h>
+#include <mir/frontend/connector.h>
+#include <mir/frontend/drag_icon_controller.h>
 #include <mir/frontend/wayland.h>
-#include "mir/optional_value.h"
+#include <mir/optional_value.h>
 
 #include <wayland-server-core.h>
 #include <unordered_map>
@@ -93,6 +93,7 @@ class WlSurface;
 class WpViewporter;
 class LinuxDRMSyncobjManager;
 class DesktopFileManager;
+class SurfaceRegistry;
 
 class WaylandExtensions
 {
@@ -122,6 +123,7 @@ public:
         std::shared_ptr<scene::SessionCoordinator> session_coordinator;
         std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> keyboard_observer_registrar;
         std::shared_ptr<shell::TokenAuthority> token_authority;
+        std::shared_ptr<SurfaceRegistry> surface_registry;
     };
 
     WaylandExtensions() = default;

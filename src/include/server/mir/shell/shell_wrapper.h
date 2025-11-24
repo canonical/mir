@@ -17,7 +17,7 @@
 #ifndef MIR_SHELL_SHELL_WRAPPER_H_
 #define MIR_SHELL_SHELL_WRAPPER_H_
 
-#include "mir/shell/shell.h"
+#include <mir/shell/shell.h>
 
 namespace mir
 {
@@ -70,7 +70,6 @@ public:
 
     auto create_surface(
         std::shared_ptr<scene::Session> const& session,
-        wayland::Weak<frontend::WlSurface> const& wayland_surface,
         SurfaceSpecification const& params,
         std::shared_ptr<scene::SurfaceObserver> const& observer,
         Executor* observer_executor) -> std::shared_ptr<scene::Surface> override;

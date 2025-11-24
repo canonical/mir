@@ -17,9 +17,9 @@
 #ifndef MIR_SCENE_CLIPBOARD_H_
 #define MIR_SCENE_CLIPBOARD_H_
 
-#include "mir/scene/data_exchange.h"
+#include <mir/scene/data_exchange.h>
 
-#include "mir/observer_registrar.h"
+#include <mir/observer_registrar.h>
 
 #include <functional>
 #include <memory>

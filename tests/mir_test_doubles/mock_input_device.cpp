@@ -14,10 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/test/doubles/mock_input_device.h"
-#include "mir/input/device_capability.h"
-#include "mir/input/pointer_settings.h"
-#include "mir/input/touchpad_settings.h"
+#include <mir/test/doubles/mock_input_device.h>
+#include <mir/input/device_capability.h>
+#include <mir/input/pointer_settings.h>
+#include <mir/input/touchpad_settings.h>
 
 namespace mtd = mir::test::doubles;
 

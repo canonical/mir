@@ -14,10 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/executor.h"
-#include "mir/signal.h"
+#include <mir/executor.h>
+#include <mir/signal.h>
 
-#include "mir/thread_name.h"
+#include <mir/thread_name.h>
 
 #include <thread>
 #include <memory>

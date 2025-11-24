@@ -17,13 +17,13 @@
 #ifndef MIR_GRAPHICS_GBM_SHM_BUFFER_H_
 #define MIR_GRAPHICS_GBM_SHM_BUFFER_H_
 
-#include "mir/synchronised.h"
-#include "mir/graphics/buffer_basic.h"
-#include "mir/geometry/dimensions.h"
-#include "mir/geometry/size.h"
-#include "mir_toolkit/common.h"
-#include "mir/renderer/sw/pixel_source.h"
-#include "mir/graphics/texture.h"
+#include <mir/synchronised.h>
+#include <mir/graphics/buffer_basic.h>
+#include <mir/geometry/dimensions.h>
+#include <mir/geometry/size.h>
+#include <mir_toolkit/common.h>
+#include <mir/renderer/sw/pixel_source.h>
+#include <mir/graphics/texture.h>
 
 #include <GLES2/gl2.h>
 

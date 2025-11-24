@@ -43,7 +43,8 @@ public:
         Executor& wayland_executor,
         std::shared_ptr<shell::Shell> const& shell,
         WlSeat& seat,
-        OutputManager* output_manager);
+        OutputManager* output_manager,
+        std::shared_ptr<SurfaceRegistry> const& surface_registry);
 
     static auto get_window(wl_resource* surface) -> std::shared_ptr<scene::Surface>;
 
@@ -51,6 +52,7 @@ public:
     std::shared_ptr<shell::Shell> const shell;
     WlSeat& seat;
     OutputManager* const output_manager;
+    std::shared_ptr<SurfaceRegistry> const surface_registry;
 
 private:
     class Instance;

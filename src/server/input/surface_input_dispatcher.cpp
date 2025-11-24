@@ -16,13 +16,13 @@
 
 #include "surface_input_dispatcher.h"
 
-#include "mir/input/scene.h"
-#include "mir/input/surface.h"
-#include "mir/scene/null_observer.h"
-#include "mir/scene/surface.h"
-#include "mir/scene/null_surface_observer.h"
-#include "mir/events/event_helpers.h"
-#include "mir/events/pointer_event.h"
+#include <mir/input/scene.h>
+#include <mir/input/surface.h>
+#include <mir/scene/null_observer.h>
+#include <mir/scene/surface.h>
+#include <mir/scene/null_surface_observer.h>
+#include <mir/events/event_helpers.h>
+#include <mir/events/pointer_event.h>
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>

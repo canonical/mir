@@ -14,26 +14,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_COMMON_ORIENTATION_EVENT_H_
-#define MIR_COMMON_ORIENTATION_EVENT_H_
+#ifndef MIR_BASIC_OBSERVERS_H_
+#define MIR_BASIC_OBSERVERS_H_
 
-#include "mir/events/event.h"
+#include <mir/thread_safe_list.h>
+#include <memory>
 
-struct MirOrientationEvent : MirEvent
+namespace mir
 {
-    auto clone() const -> MirOrientationEvent* override;
-
-    MirOrientationEvent();
-
-    int surface_id() const;
-    void set_surface_id(int id);
-
-    MirOrientation direction() const;
-    void set_direction(MirOrientation orientation);
-
-private:
-    int surface_id_ = 0;
-    MirOrientation direction_ = mir_orientation_normal;
+template<class Observer>
+class BasicObservers : protected ThreadSafeList<std::shared_ptr<Observer>>
+{
 };
+}
 
-#endif /* MIR_COMMON_ORIENTATION_EVENT_H_ */
+#endif /* MIR_BASIC_OBSERVERS_H_ */

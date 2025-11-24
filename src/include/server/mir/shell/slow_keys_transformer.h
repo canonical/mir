@@ -17,7 +17,7 @@
 #ifndef MIR_SHELL_SLOW_KEYS_TRANSFORMER
 #define MIR_SHELL_SLOW_KEYS_TRANSFORMER
 
-#include "mir/input/transformer.h"
+#include <mir/input/transformer.h>
 #include <mir_toolkit/events/event.h>
 
 #include <chrono>

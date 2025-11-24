@@ -19,7 +19,7 @@
 
 #include "cursor_observer.h"
 
-#include "mir/observer_multiplexer.h"
+#include <mir/observer_multiplexer.h>
 
 namespace mir
 {

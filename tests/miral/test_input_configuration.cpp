@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir_toolkit/mir_input_device_types.h"
-#include "miral/input_configuration.h"
+#include <mir_toolkit/mir_input_device_types.h>
+#include <miral/input_configuration.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

@@ -17,8 +17,8 @@
 #ifndef MIR_SCENE_SURFACE_ALLOCATOR_H_
 #define MIR_SCENE_SURFACE_ALLOCATOR_H_
 
-#include "mir/observer_registrar.h"
-#include "mir/scene/surface_factory.h"
+#include <mir/observer_registrar.h>
+#include <mir/scene/surface_factory.h>
 
 namespace mir
 {
@@ -41,7 +41,6 @@ public:
 
     std::shared_ptr<Surface> create_surface(
         std::shared_ptr<Session> const& session,
-        wayland::Weak<frontend::WlSurface> const& wayland_surface,
         std::list<scene::StreamInfo> const& streams,
         shell::SurfaceSpecification const& params) override;
 

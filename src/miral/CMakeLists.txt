@@ -201,7 +201,7 @@ target_include_directories(miral
 
 target_link_libraries(miral-external
     PUBLIC
-        mircommon
+        mircore
     PRIVATE
         miral-internal
         mirserver

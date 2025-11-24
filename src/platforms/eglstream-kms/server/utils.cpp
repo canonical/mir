@@ -16,7 +16,7 @@
 
 #include "utils.h"
 
-#include "mir/graphics/egl_error.h"
+#include <mir/graphics/egl_error.h>
 
 #include <sys/stat.h>
 

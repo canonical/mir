@@ -14,9 +14,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/geometry/rectangle.h"
-#include "mir/compositor/scene_element.h"
-#include "mir/graphics/renderable.h"
+#include <mir/geometry/rectangle.h>
+#include <mir/compositor/scene_element.h>
+#include <mir/graphics/renderable.h>
 #include "occlusion.h"
 
 #include <vector>

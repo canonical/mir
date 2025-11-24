@@ -17,12 +17,12 @@
 #ifndef MIR_SHELL_SHELL_H_
 #define MIR_SHELL_SHELL_H_
 
-#include "mir/shell/focus_controller.h"
-#include "mir/input/event_filter.h"
-#include "mir/compositor/display_listener.h"
-#include "mir/fd.h"
+#include <mir/shell/focus_controller.h>
+#include <mir/input/event_filter.h>
+#include <mir/compositor/display_listener.h>
+#include <mir/fd.h>
 
-#include "mir_toolkit/common.h"
+#include <mir_toolkit/common.h>
 
 #include <unistd.h>
 
@@ -39,23 +39,18 @@ class Weak;
 namespace frontend
 {
 class WlSurface;
-class EventSink;
 }
 namespace scene
 {
 class PromptSession;
-class PromptSessionManager;
 class PromptSessionCreationParameters;
-class SessionCoordinator;
 class Surface;
 class SurfaceObserver;
 }
 
 namespace shell
 {
-class InputTargeter;
 struct SurfaceSpecification;
-class SurfaceStack;
 
 class Shell :
     public virtual FocusController,
@@ -84,7 +79,6 @@ public:
 
     virtual auto create_surface(
         std::shared_ptr<scene::Session> const& session,
-        wayland::Weak<frontend::WlSurface> const& wayland_surface,
         SurfaceSpecification const& params,
         std::shared_ptr<scene::SurfaceObserver> const& observer,
         Executor* observer_executor) -> std::shared_ptr<scene::Surface> = 0;

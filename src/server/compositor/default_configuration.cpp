@@ -14,21 +14,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/default_server_configuration.h"
+#include <mir/default_server_configuration.h>
 
-#include "mir/log.h"
-#include "mir/shell/shell.h"
+#include <mir/log.h>
+#include <mir/shell/shell.h>
 #include "default_display_buffer_compositor_factory.h"
-#include "mir/executor.h"
+#include <mir/executor.h>
 #include "multi_threaded_compositor.h"
 #include "gl/renderer_factory.h"
 #include "basic_screen_shooter.h"
 #include "basic_screen_shooter_factory.h"
 #include "null_screen_shooter.h"
 #include "null_screen_shooter_factory.h"
-#include "mir/main_loop.h"
-#include "mir/graphics/platform.h"
-#include "mir/options/configuration.h"
+#include <mir/main_loop.h>
+#include <mir/graphics/platform.h>
+#include <mir/options/configuration.h>
 
 namespace mc = mir::compositor;
 namespace ms = mir::scene;

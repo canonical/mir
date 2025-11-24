@@ -18,13 +18,13 @@
 
 #include "fractional-scale-v1_wrapper.h"
 #include "fractional_scale_v1.h"
-#include "mir/default_server_configuration.h"
+#include <mir/default_server_configuration.h>
 
-#include "mir/frontend/wayland.h"
-#include "mir/graphics/platform.h"
-#include "mir/log.h"
-#include "mir/options/default_configuration.h"
-#include "mir/scene/session.h"
+#include <mir/frontend/wayland.h>
+#include <mir/graphics/platform.h>
+#include <mir/log.h>
+#include <mir/options/default_configuration.h>
+#include <mir/scene/session.h>
 
 #include "ext_image_capture_v1.h"
 #include "foreign_toplevel_manager_v1.h"
@@ -32,7 +32,7 @@
 #include "input_method_v1.h"
 #include "input_method_v2.h"
 #include "layer_shell_v1.h"
-#include "mir/shell/accessibility_manager.h"
+#include <mir/shell/accessibility_manager.h>
 #include "mir_shell.h"
 #include "pointer_constraints_unstable_v1.h"
 #include "primary_selection_v1.h"
@@ -89,7 +89,8 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
                 *ctx.wayland_executor,
                 ctx.shell,
                 ctx.seat,
-                ctx.output_manager);
+                ctx.output_manager,
+                ctx.surface_registry);
         }),
     make_extension_builder<mw::XdgShellV6>([](auto const& ctx)
         {
@@ -98,7 +99,8 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
                 *ctx.wayland_executor,
                 ctx.shell,
                 *ctx.seat,
-                ctx.output_manager);
+                ctx.output_manager,
+                ctx.surface_registry);
         }),
     make_extension_builder<mw::XdgWmBase>([](auto const& ctx)
         {
@@ -107,7 +109,8 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
                 *ctx.wayland_executor,
                 ctx.shell,
                 *ctx.seat,
-                ctx.output_manager);
+                ctx.output_manager,
+                ctx.surface_registry);
         }),
     make_extension_builder<mw::LayerShellV1>([](auto const& ctx)
         {
@@ -116,7 +119,8 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
                 *ctx.wayland_executor,
                 ctx.shell,
                 *ctx.seat,
-                ctx.output_manager);
+                ctx.output_manager,
+                ctx.surface_registry);
         }),
     make_extension_builder<mw::XdgOutputManagerV1>([](auto const& ctx)
         {
@@ -178,7 +182,8 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
               ctx.shell,
               ctx.seat,
               ctx.output_manager,
-              ctx.text_input_hub
+              ctx.text_input_hub,
+              ctx.surface_registry
           );
       }),
     make_extension_builder<mw::InputMethodManagerV2>([](auto const& ctx)
@@ -232,7 +237,8 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
                 ctx.session_lock,
                 *ctx.seat,
                 ctx.output_manager,
-                ctx.surface_stack);
+                ctx.surface_stack,
+                ctx.surface_registry);
         }),
     make_extension_builder<mw::MirShellV1>([](auto const& ctx)
         {

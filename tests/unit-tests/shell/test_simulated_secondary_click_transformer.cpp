@@ -14,16 +14,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/events/event.h"
-#include "mir/events/event_builders.h"
-#include "mir/events/input_event.h"
-#include "mir/events/pointer_event.h"
+#include <mir/events/event.h>
+#include <mir/events/event_builders.h>
+#include <mir/events/input_event.h>
+#include <mir/events/pointer_event.h>
 #include "src/server/input/default_event_builder.h"
 #include "src/server/shell/basic_simulated_secondary_click_transformer.h"
 
-#include "mir/test/doubles/advanceable_clock.h"
-#include "mir/test/doubles/queued_alarm_stub_main_loop.h"
-#include "mir/test/fake_shared.h"
+#include <mir/test/doubles/advanceable_clock.h>
+#include <mir/test/doubles/queued_alarm_stub_main_loop.h>
+#include <mir/test/fake_shared.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -61,7 +61,7 @@ struct TestSimulatedSecondaryClickTransformer : Test
         transformer->displacement_threshold(test_displacement_threshold);
     }
 
-    MOCK_METHOD1(on_dispatch, void(std::shared_ptr<MirEvent> const& event));
+    MOCK_METHOD(void, on_dispatch, (std::shared_ptr<MirEvent> const& event), ());
 
     mtd::AdvanceableClock clock;
     std::shared_ptr<mtd::QueuedAlarmStubMainLoop> const main_loop;

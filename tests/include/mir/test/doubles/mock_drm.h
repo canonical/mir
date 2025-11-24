@@ -17,9 +17,9 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_DRM_H_
 #define MIR_TEST_DOUBLES_MOCK_DRM_H_
 
-#include "mir_test_framework/mmap_wrapper.h"
-#include "mir_test_framework/open_wrapper.h"
-#include "mir/geometry/forward.h"
+#include <mir_test_framework/mmap_wrapper.h>
+#include <mir_test_framework/open_wrapper.h>
+#include <mir/geometry/forward.h>
 
 #include <gmock/gmock.h>
 

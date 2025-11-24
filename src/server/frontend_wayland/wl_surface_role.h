@@ -17,8 +17,8 @@
 #ifndef MIR_FRONTEND_WL_SURFACE_ROLE_H
 #define MIR_FRONTEND_WL_SURFACE_ROLE_H
 
-#include "mir/frontend/surface_id.h"
-#include "mir/geometry/displacement.h"
+#include <mir/frontend/surface_id.h>
+#include <mir/geometry/displacement.h>
 
 #include <mir_toolkit/common.h>
 

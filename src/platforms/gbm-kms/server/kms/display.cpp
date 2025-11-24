@@ -17,24 +17,24 @@
 #include "display.h"
 #include "cursor.h"
 #include "kms/egl_helper.h"
-#include "mir/graphics/platform.h"
+#include <mir/graphics/platform.h>
 #include "platform.h"
 #include "display_sink.h"
 #include "kms_display_configuration.h"
 #include "kms_output.h"
 #include "kms_page_flipper.h"
-#include "mir/console_services.h"
-#include "mir/graphics/overlapping_output_grouping.h"
-#include "mir/graphics/event_handler_register.h"
+#include <mir/console_services.h>
+#include <mir/graphics/overlapping_output_grouping.h>
+#include <mir/graphics/event_handler_register.h>
 
 #include "kms_framebuffer.h"
-#include "mir/graphics/display_report.h"
-#include "mir/graphics/display_configuration_policy.h"
-#include "mir/graphics/transformation.h"
-#include "mir/geometry/rectangle.h"
-#include "mir/renderer/gl/context.h"
-#include "mir/graphics/drm_formats.h"
-#include "mir/graphics/egl_error.h"
+#include <mir/graphics/display_report.h>
+#include <mir/graphics/display_configuration_policy.h>
+#include <mir/graphics/transformation.h>
+#include <mir/geometry/rectangle.h>
+#include <mir/renderer/gl/context.h>
+#include <mir/graphics/drm_formats.h>
+#include <mir/graphics/egl_error.h>
 
 #include <boost/throw_exception.hpp>
 #include <boost/exception/get_error_info.hpp>
@@ -44,7 +44,7 @@
 #include <system_error>
 #include <xf86drm.h>
 #define MIR_LOG_COMPONENT "gbm-kms"
-#include "mir/log.h"
+#include <mir/log.h>
 #include "kms-utils/drm_mode_resources.h"
 #include "kms-utils/kms_connector.h"
 

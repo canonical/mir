@@ -17,7 +17,7 @@
 #ifndef MIR_FRONTEND_INPUT_METHOD_GRAB_KEYBOARD_V2_H
 #define MIR_FRONTEND_INPUT_METHOD_GRAB_KEYBOARD_V2_H
 
-#include "mir/wayland/weak.h"
+#include <mir/wayland/weak.h>
 
 #include "input-method-unstable-v2_wrapper.h"
 #include "keyboard_helper.h"

@@ -17,17 +17,17 @@
 #include "platform.h"
 #include "platform_bridge.h"
 
-#include "mir/dispatch/dispatchable.h"
-#include "mir/dispatch/multiplexing_dispatchable.h"
-#include "mir/dispatch/readable_fd.h"
-#include "rust/cxx.h"
-#include "mir/optional_value.h"
-#include "mir_platforms_evdev_rs/src/lib.rs.h"
-#include "mir/input/pointer_settings.h"
-#include "mir/input/touchpad_settings.h"
-#include "mir/input/touchscreen_settings.h"
-#include "mir/input/input_device_info.h"
-#include "mir/log.h"
+#include <mir/optional_value.h>
+#include <mir/dispatch/dispatchable.h>
+#include <mir/dispatch/multiplexing_dispatchable.h>
+#include <mir/dispatch/readable_fd.h>
+#include <mir_platforms_evdev_rs/src/lib.rs.h>
+#include <rust/cxx.h>
+#include <mir/input/pointer_settings.h>
+#include <mir/input/touchpad_settings.h>
+#include <mir/input/touchscreen_settings.h>
+#include <mir/input/input_device_info.h>
+#include <mir/log.h>
 
 namespace mi = mir::input;
 namespace miers = mi::evdev_rs;

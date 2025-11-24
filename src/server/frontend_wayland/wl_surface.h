@@ -18,18 +18,18 @@
 #define MIR_FRONTEND_WL_SURFACE_H
 
 #include "fractional_scale_v1.h"
-#include "mir/geometry/forward.h"
+#include <mir/geometry/forward.h>
 #include "wayland_wrapper.h"
-#include "mir/wayland/weak.h"
+#include <mir/wayland/weak.h>
 
 #include "wl_surface_role.h"
 
-#include "mir/geometry/displacement.h"
-#include "mir/geometry/size.h"
-#include "mir/geometry/point.h"
-#include "mir/geometry/rectangle.h"
-#include "mir/geometry/rectangles.h"
-#include "mir/shell/surface_specification.h"
+#include <mir/geometry/displacement.h>
+#include <mir/geometry/size.h>
+#include <mir/geometry/point.h>
+#include <mir/geometry/rectangle.h>
+#include <mir/geometry/rectangles.h>
+#include <mir/shell/surface_specification.h>
 #include "linux_drm_syncobj.h"
 
 #include <atomic>

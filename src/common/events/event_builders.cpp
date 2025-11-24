@@ -14,11 +14,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/events/event_builders.h"
+#include <mir/events/event_builders.h>
 
-#include "mir/events/event_private.h"
-#include "mir/events/window_placement_event.h"
-#include "mir/input/xkb_mapper.h"
+#include <mir/events/event_private.h>
+#include <mir/events/window_placement_event.h>
+#include <mir/input/xkb_mapper.h>
 
 #include <boost/throw_exception.hpp>
 

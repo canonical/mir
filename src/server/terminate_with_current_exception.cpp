@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/terminate_with_current_exception.h"
-#include "mir/log.h"
+#include <mir/terminate_with_current_exception.h>
+#include <mir/log.h>
 
 #include <unistd.h>
 #include <csignal>

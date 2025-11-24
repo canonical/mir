@@ -48,6 +48,7 @@ destructors
 devel
 DisplayLink's
 DisplayPlatform
+dispatchable
 dispmanx
 Dispmanx
 DispmanX
@@ -88,6 +89,7 @@ functors
 gbm
 GC
 gcc
+gcovr
 gflags
 github
 GitHub

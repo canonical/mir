@@ -17,7 +17,7 @@
 #ifndef MIR_COMPOSITOR_COMPOSITOR_REPORT_H_
 #define MIR_COMPOSITOR_COMPOSITOR_REPORT_H_
 
-#include "mir/graphics/renderable.h"
+#include <mir/graphics/renderable.h>
 
 namespace mir
 {

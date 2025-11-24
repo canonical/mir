@@ -18,8 +18,8 @@
 #define MIR_SERVER_H_
 
 #include <mir/graphics/display_configuration.h>
-#include "mir/shell/window_manager_builder.h"
-#include "mir_toolkit/common.h"
+#include <mir/shell/window_manager_builder.h>
+#include <mir_toolkit/common.h>
 
 #include <functional>
 #include <memory>

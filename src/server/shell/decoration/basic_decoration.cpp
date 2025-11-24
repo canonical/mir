@@ -15,20 +15,20 @@
  */
 
 #include "basic_decoration.h"
-#include "mir/graphics/buffer.h"
+#include <mir/graphics/buffer.h>
 #include "window.h"
 #include "input.h"
 #include "threadsafe_access.h"
 
-#include "mir/executor.h"
-#include "mir/shell/shell.h"
-#include "mir/shell/surface_specification.h"
-#include "mir/scene/surface.h"
-#include "mir/scene/session.h"
-#include "mir/graphics/buffer_properties.h"
-#include "mir/compositor/buffer_stream.h"
-#include "mir/input/cursor_images.h"
-#include "mir/wayland/weak.h"
+#include <mir/executor.h>
+#include <mir/shell/shell.h>
+#include <mir/shell/surface_specification.h>
+#include <mir/scene/surface.h>
+#include <mir/scene/session.h>
+#include <mir/graphics/buffer_properties.h>
+#include <mir/compositor/buffer_stream.h>
+#include <mir/input/cursor_images.h>
+#include <mir/wayland/weak.h>
 
 #include <boost/throw_exception.hpp>
 #include <functional>
@@ -284,7 +284,7 @@ auto msd::BasicDecoration::create_surface() const -> std::shared_ptr<scene::Surf
             mg::BufferUsage::software}),
         {},
         }};
-    return shell->create_surface(session, {}, params, nullptr, nullptr);
+    return shell->create_surface(session, params, nullptr, nullptr);
 }
 
 void msd::BasicDecoration::update(
