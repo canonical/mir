@@ -12,20 +12,9 @@ set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 add_compile_definitions(MIR_SERVER_PLATFORM_PATH="${MIR_SERVER_PLATFORM_PATH}")
 add_compile_definitions(MIR_SERVER_GRAPHICS_PLATFORM_VERSION="${MIR_SERVER_GRAPHICS_PLATFORM_VERSION}")
 
-set(MIR_PLATFORM_REFERENCES
-  PkgConfig::EGL
-  PkgConfig::GLESv2
-  mirwayland
-  mirplatformgraphicscommon
-  miroptions
-  mirudev
-)
-
 add_subdirectory(graphics/)
 add_subdirectory(options)
 add_subdirectory(udev)
-
-set(MIR_PLATFORM_REFERENCES ${MIR_PLATFORM_REFERENCES} PARENT_SCOPE)
 
 add_library(mirplatform SHARED
   ${PROJECT_SOURCE_DIR}/include/platform/mir/input/input_sink.h
@@ -40,7 +29,6 @@ target_include_directories(mirplatform
 target_link_libraries(mirplatform
   PRIVATE
     mircommon
-    ${MIR_PLATFORM_REFERENCES}
   PUBLIC
     mirwayland
     mirplatformgraphicscommon

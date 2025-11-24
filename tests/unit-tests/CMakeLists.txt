@@ -187,7 +187,6 @@ target_link_libraries(
   PkgConfig::LIBINPUT
   PkgConfig::WAYLAND_SERVER
   ${MIR_SERVER_REFERENCES}
-  ${MIR_PLATFORM_REFERENCES}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
 
@@ -220,7 +219,6 @@ target_link_libraries(
   PkgConfig::UMOCKDEV
   PkgConfig::LIBINPUT
   ${MIR_SERVER_REFERENCES}
-  ${MIR_PLATFORM_REFERENCES}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
 
