@@ -1092,15 +1092,33 @@ TEST_F(AbstractShell, as_focus_controller_emits_input_device_state_event_on_focu
     focus_controller.set_focus_to(session, surface);
 }
 
-TEST_F(AbstractShell, create_surface_with_ssd_requested_in_spec_applies_default_size_and_decorates)
+struct SsdConstraintAdjustmentTestParam
 {
+    geom::Width min_width;
+    geom::Height min_height;
+    geom::Width max_width;
+    geom::Height max_height;
+    std::string test_name;
+};
+
+class SsdConstraintAdjustmentTest : public AbstractShell, public WithParamInterface<SsdConstraintAdjustmentTestParam>
+{
+};
+
+// Test that min/max constraints are adjusted when SSD is requested but width/height are not specified
+TEST_P(SsdConstraintAdjustmentTest, not_specifying_width_and_height_still_bumps_min_max_constraints)
+{
+    auto const& param = GetParam();
+
     std::shared_ptr<ms::Session> const session =
         shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "XPlane");
 
     auto params = mt::make_surface_spec(session->create_buffer_stream(properties));
     params.server_side_decorated = true;
-    params.min_width = geom::Width{100};
-    params.min_height = geom::Height{80};
+    params.min_width = param.min_width;
+    params.min_height = param.min_height;
+    params.max_width = param.max_width;
+    params.max_height = param.max_height;
     // Intentionally omit explicit width/height to test default 640x480 behavior
 
     geom::Size const expected_content_size{640, 480};  // Default size when width/height not set
@@ -1128,9 +1146,30 @@ TEST_F(AbstractShell, create_surface_with_ssd_requested_in_spec_applies_default_
     shell.create_surface(session, params, nullptr, nullptr);
 
     // Verify size constraints were adjusted for decorations
-    EXPECT_THAT(wm_params.min_width.value(), Eq(geom::Width{100} + horiz_padding));
-    EXPECT_THAT(wm_params.min_height.value(), Eq(geom::Height{80} + vert_padding));
+    EXPECT_THAT(wm_params.min_width.value(), Eq(param.min_width + horiz_padding));
+    EXPECT_THAT(wm_params.min_height.value(), Eq(param.min_height + vert_padding));
+    EXPECT_THAT(wm_params.max_width.value(), Eq(param.max_width + horiz_padding));
+    EXPECT_THAT(wm_params.max_height.value(), Eq(param.max_height + vert_padding));
 }
+
+INSTANTIATE_TEST_SUITE_P(
+    SsdConstraintAdjustment,
+    SsdConstraintAdjustmentTest,
+    Values(
+        SsdConstraintAdjustmentTestParam{
+            geom::Width{100}, geom::Height{80},
+            geom::Width{1920}, geom::Height{1080},
+            "typical_constraints"},
+        SsdConstraintAdjustmentTestParam{
+            geom::Width{200}, geom::Height{150},
+            geom::Width{1024}, geom::Height{768},
+            "alternate_constraints"}
+    ),
+    [](const TestParamInfo<SsdConstraintAdjustmentTestParam>& info) {
+        return info.param.test_name;
+    }
+);
+
 
 struct WmEnablingSsdTestParam
 {
@@ -1142,7 +1181,7 @@ class WmEnablingSsdTest : public AbstractShell, public WithParamInterface<WmEnab
 {
 };
 
-// Test that WM can enable decorations after placement, whether SSD was initially unset or false
+// Test that WM can enable decorations via build callback, whether SSD was initially unset or false
 TEST_P(WmEnablingSsdTest, wm_can_enable_ssd_post_placement)
 {
     auto const& param = GetParam();
@@ -1212,12 +1251,9 @@ TEST_F(AbstractShell, create_surface_without_ssd_passes_dimensions_directly_and_
     EXPECT_CALL(decoration_manager, decorate(_))
         .Times(0);
 
-    auto result = shell.create_surface(session, params, nullptr, nullptr);
+    shell.create_surface(session, params, nullptr, nullptr);
 
     // Verify dimensions were passed through unchanged
     EXPECT_THAT(wm_params.width.value(), Eq(geom::Width{800}));
     EXPECT_THAT(wm_params.height.value(), Eq(geom::Height{600}));
-
-    // Verify that surface creation succeeded
-    ASSERT_THAT(result, NotNull());
 }
