@@ -1146,7 +1146,7 @@ class WmEnablingSsdTest : public AbstractShell, public WithParamInterface<WmEnab
 TEST_P(WmEnablingSsdTest, wm_can_enable_ssd_post_placement)
 {
     auto const& param = GetParam();
-    
+
     std::shared_ptr<ms::Session> const session =
         shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "XPlane");
 
@@ -1217,7 +1217,7 @@ TEST_F(AbstractShell, create_surface_without_ssd_passes_dimensions_directly_and_
     // Verify dimensions were passed through unchanged
     EXPECT_THAT(wm_params.width.value(), Eq(geom::Width{800}));
     EXPECT_THAT(wm_params.height.value(), Eq(geom::Height{600}));
-    
+
     // Verify that surface creation succeeded
     ASSERT_THAT(result, NotNull());
 }
