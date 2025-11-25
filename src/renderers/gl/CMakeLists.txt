@@ -33,7 +33,7 @@ target_include_directories(
 
 target_link_libraries(mirrenderergl
   PUBLIC
-    mirplatform
-    mircommon
     mircore
+  PRIVATE
+    mirplatform
 )
