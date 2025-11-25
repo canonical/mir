@@ -1099,7 +1099,14 @@ TEST_F(AbstractShell, create_surface_with_ssd_requested_in_spec_applies_default_
 
     auto params = mt::make_surface_spec(session->create_buffer_stream(properties));
     params.server_side_decorated = true;
+    params.min_width = geom::Width{100};
+    params.min_height = geom::Height{80};
     // Intentionally omit explicit width/height to test default 640x480 behavior
+
+    geom::Size const expected_content_size{640, 480};  // Default size when width/height not set
+    geom::Size const decorated_size{700, 550};  // Size with decorations
+    geom::DeltaX const horiz_padding{decorated_size.width.as_int() - expected_content_size.width.as_int()};
+    geom::DeltaY const vert_padding{decorated_size.height.as_int() - expected_content_size.height.as_int()};
 
     msh::SurfaceSpecification wm_params;
     EXPECT_CALL(*wm, add_surface(session, _, _)).WillOnce(Invoke(
@@ -1113,25 +1120,38 @@ TEST_F(AbstractShell, create_surface_with_ssd_requested_in_spec_applies_default_
                 return build(session, spec);
             }));
 
-    // Decoration should be applied since server_side_decorated is true in the spec
-    EXPECT_CALL(decoration_manager, compute_size_with_decorations(_, _, _))
-        .WillOnce(Return(geom::Size{700, 550}));
+    EXPECT_CALL(decoration_manager, compute_size_with_decorations(expected_content_size, _, _))
+        .WillOnce(Return(decorated_size));
     EXPECT_CALL(decoration_manager, decorate(_))
         .Times(1);
 
     shell.create_surface(session, params, nullptr, nullptr);
 
-    // Verify size constraints were adjusted (even though width/height weren't set initially,
-    // they should be computed based on decorations if min/max constraints exist)
+    // Verify size constraints were adjusted for decorations
+    EXPECT_THAT(wm_params.min_width.value(), Eq(geom::Width{100} + horiz_padding));
+    EXPECT_THAT(wm_params.min_height.value(), Eq(geom::Height{80} + vert_padding));
 }
 
-TEST_F(AbstractShell, create_surface_with_wm_enabling_ssd_post_placement_decorates_after_wm_callback)
+struct WmEnablingSsdTestParam
 {
+    mir::optional_value<bool> initial_ssd_value;
+    std::string test_name;
+};
+
+class WmEnablingSsdTest : public AbstractShell, public WithParamInterface<WmEnablingSsdTestParam>
+{
+};
+
+// Test that WM can enable decorations after placement, whether SSD was initially unset or false
+TEST_P(WmEnablingSsdTest, wm_can_enable_ssd_post_placement)
+{
+    auto const& param = GetParam();
+    
     std::shared_ptr<ms::Session> const session =
         shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "XPlane");
 
     auto params = mt::make_surface_spec(session->create_buffer_stream(properties));
-    // Start with server_side_decorated unset (or false)
+    params.server_side_decorated = param.initial_ssd_value;
 
     EXPECT_CALL(*wm, add_surface(session, params, _)).WillOnce(Invoke(
         [&](std::shared_ptr<ms::Session> const& session,
@@ -1146,12 +1166,25 @@ TEST_F(AbstractShell, create_surface_with_wm_enabling_ssd_post_placement_decorat
                 return build(session, modified_params);
             }));
 
-    // Decoration should be applied after WM callback
+    // Decoration should be applied after WM callback completes
     EXPECT_CALL(decoration_manager, decorate(_))
         .Times(1);
 
     shell.create_surface(session, params, nullptr, nullptr);
 }
+
+INSTANTIATE_TEST_SUITE_P(
+    WmEnablingSsd,
+    WmEnablingSsdTest,
+    Values(
+        WmEnablingSsdTestParam{mir::optional_value<bool>{}, "ssd_initially_unset"},
+        WmEnablingSsdTestParam{false, "ssd_initially_false"}
+    ),
+    [](const TestParamInfo<WmEnablingSsdTestParam>& info) {
+        return info.param.test_name;
+    }
+);
+
 
 TEST_F(AbstractShell, create_surface_without_ssd_passes_dimensions_directly_and_no_decoration)
 {
@@ -1184,7 +1217,7 @@ TEST_F(AbstractShell, create_surface_without_ssd_passes_dimensions_directly_and_
     // Verify dimensions were passed through unchanged
     EXPECT_THAT(wm_params.width.value(), Eq(geom::Width{800}));
     EXPECT_THAT(wm_params.height.value(), Eq(geom::Height{600}));
-
-    // Verify initial_placement_done was called
+    
+    // Verify that surface creation succeeded
     ASSERT_THAT(result, NotNull());
 }
