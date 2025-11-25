@@ -1,5 +1,4 @@
 include_directories(
-  ${PROJECT_SOURCE_DIR}/include/platform
   ${PROJECT_SOURCE_DIR}/src/include/gl
   ${PROJECT_SOURCE_DIR}/include/renderers/gl
 )
@@ -13,6 +12,7 @@ ADD_LIBRARY(
 
 target_link_libraries(mirgl
   PUBLIC
+    mirplatform
     mircommon
     mircore
 )

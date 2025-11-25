@@ -1,5 +1,4 @@
 include_directories(
-  ${CMAKE_SOURCE_DIR}
   ${PROJECT_SOURCE_DIR}/include/renderers/sw
   ${PROJECT_SOURCE_DIR}/src/include/server
 
