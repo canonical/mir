@@ -12,8 +12,6 @@ target_link_libraries(exampleserverconfig
 
 include_directories(
   ${PROJECT_SOURCE_DIR}/src/include/server
-  ${PROJECT_SOURCE_DIR}/include/renderers/gl
-  ${PROJECT_SOURCE_DIR}/include/renderers/sw
 )
 
 mir_add_wrapped_executable(mir_demo_server
