@@ -277,9 +277,6 @@ pkg_check_modules(XCB_RES REQUIRED IMPORTED_TARGET xcb-res)
 pkg_check_modules(XCB_XFIXES REQUIRED IMPORTED_TARGET xcb-xfixes)
 
 include(CheckCXXSymbolExists)
-list(APPEND CMAKE_REQUIRED_INCLUDES ${DRM_INCLUDE_DIRS})
-list(APPEND CMAKE_REQUIRED_LIBRARIES ${DRM_LIBRARIES})
-include_directories(SYSTEM ${DRM_INCLUDE_DIRS})
 
 # Add USDT hooks to all LTTNG tracepoints
 #

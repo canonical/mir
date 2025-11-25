@@ -14,7 +14,6 @@
 
 include(CheckCXXSymbolExists)
 
-list(APPEND CMAKE_REQUIRED_LIBRARIES dl)
 list(APPEND CMAKE_REQUIRED_DEFINITIONS -D_GNU_SOURCE)
 
 check_cxx_symbol_exists("dlvsym" "dlfcn.h" HAS_DLVSYM)
