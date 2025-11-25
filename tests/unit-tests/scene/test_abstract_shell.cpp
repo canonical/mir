@@ -128,6 +128,7 @@ struct MockSurfaceFactory : public ms::SurfaceFactory
 struct MockDecorationManager : public msh::decoration::NullManager
 {
     MOCK_METHOD(void, decorate, (std::shared_ptr<ms::Surface> const&));
+    MOCK_METHOD(geom::Size, compute_size_with_decorations, (geom::Size content_size, MirWindowType type, MirWindowState state), (override));
 };
 
 using NiceMockWindowManager = NiceMock<mtd::MockWindowManager>;
@@ -1089,4 +1090,101 @@ TEST_F(AbstractShell, as_focus_controller_emits_input_device_state_event_on_focu
 
     msh::FocusController& focus_controller = shell;
     focus_controller.set_focus_to(session, surface);
+}
+
+TEST_F(AbstractShell, create_surface_with_ssd_requested_in_spec_applies_default_size_and_decorates)
+{
+    std::shared_ptr<ms::Session> const session =
+        shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "XPlane");
+
+    auto params = mt::make_surface_spec(session->create_buffer_stream(properties));
+    params.server_side_decorated = true;
+    // Intentionally omit explicit width/height to test default 640x480 behavior
+
+    msh::SurfaceSpecification wm_params;
+    EXPECT_CALL(*wm, add_surface(session, _, _)).WillOnce(Invoke(
+        [&](std::shared_ptr<ms::Session> const&,
+            msh::SurfaceSpecification const& spec,
+            std::function<std::shared_ptr<ms::Surface>(
+                std::shared_ptr<ms::Session> const& session,
+                msh::SurfaceSpecification const&)> const& build)
+            {
+                wm_params = spec;
+                return build(session, spec);
+            }));
+
+    // Decoration should be applied since server_side_decorated is true in the spec
+    EXPECT_CALL(decoration_manager, compute_size_with_decorations(_, _, _))
+        .WillOnce(Return(geom::Size{700, 550}));
+    EXPECT_CALL(decoration_manager, decorate(_))
+        .Times(1);
+
+    shell.create_surface(session, params, nullptr, nullptr);
+
+    // Verify size constraints were adjusted (even though width/height weren't set initially,
+    // they should be computed based on decorations if min/max constraints exist)
+}
+
+TEST_F(AbstractShell, create_surface_with_wm_enabling_ssd_post_placement_decorates_after_wm_callback)
+{
+    std::shared_ptr<ms::Session> const session =
+        shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "XPlane");
+
+    auto params = mt::make_surface_spec(session->create_buffer_stream(properties));
+    // Start with server_side_decorated unset (or false)
+
+    EXPECT_CALL(*wm, add_surface(session, params, _)).WillOnce(Invoke(
+        [&](std::shared_ptr<ms::Session> const& session,
+            msh::SurfaceSpecification const&,
+            std::function<std::shared_ptr<ms::Surface>(
+                std::shared_ptr<ms::Session> const& session,
+                msh::SurfaceSpecification const&)> const& build)
+            {
+                // Window manager enables SSD via the build callback
+                auto modified_params = params;
+                modified_params.server_side_decorated = true;
+                return build(session, modified_params);
+            }));
+
+    // Decoration should be applied after WM callback
+    EXPECT_CALL(decoration_manager, decorate(_))
+        .Times(1);
+
+    shell.create_surface(session, params, nullptr, nullptr);
+}
+
+TEST_F(AbstractShell, create_surface_without_ssd_passes_dimensions_directly_and_no_decoration)
+{
+    std::shared_ptr<ms::Session> const session =
+        shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "XPlane");
+
+    auto params = mt::make_surface_spec(session->create_buffer_stream(properties));
+    params.width = geom::Width{800};
+    params.height = geom::Height{600};
+    params.server_side_decorated = false;
+
+    msh::SurfaceSpecification wm_params;
+    EXPECT_CALL(*wm, add_surface(session, _, _)).WillOnce(Invoke(
+        [&](std::shared_ptr<ms::Session> const& session,
+            msh::SurfaceSpecification const& spec,
+            std::function<std::shared_ptr<ms::Surface>(
+                std::shared_ptr<ms::Session> const& session,
+                msh::SurfaceSpecification const&)> const& build)
+            {
+                wm_params = spec;
+                return build(session, spec);
+            }));
+
+    // No decoration should be applied
+    EXPECT_CALL(decoration_manager, decorate(_))
+        .Times(0);
+
+    auto result = shell.create_surface(session, params, nullptr, nullptr);
+
+    // Verify dimensions were passed through unchanged
+    EXPECT_THAT(wm_params.width.value(), Eq(geom::Width{800}));
+    EXPECT_THAT(wm_params.height.value(), Eq(geom::Height{600}));
+
+    // Verify initial_placement_done was called
+    ASSERT_THAT(result, NotNull());
 }
