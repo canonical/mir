@@ -301,9 +301,7 @@ mir_make_pkgconfig_variable(PKGCONFIG_INCLUDEDIR "${CMAKE_INSTALL_INCLUDEDIR}")
 include(JoinPaths)
 
 add_subdirectory(doc)
-set(MIR_GENERATED_INCLUDE_DIRECTORIES)
 add_subdirectory(src/)
-include_directories(${MIR_GENERATED_INCLUDE_DIRECTORIES})
 
 add_subdirectory(examples/)
 add_subdirectory(cmake/)
