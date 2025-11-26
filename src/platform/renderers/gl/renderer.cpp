@@ -632,10 +632,7 @@ mrg::Renderer::~Renderer()
     // OutputSurface destructor correctly cleans up, leaving no current EGL context
     output_surface.reset();
 
-    if (prev_ctx != EGL_NO_CONTEXT)
-    {
-        eglMakeCurrent(prev_dpy, prev_draw, prev_read, prev_ctx);
-    }
+    eglMakeCurrent(prev_dpy, prev_draw, prev_read, prev_ctx);
 }
 
 void mrg::Renderer::tessellate(std::vector<mgl::Primitive>& primitives,
