@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <EGL/egl.h>
 #include <stdexcept>
 #include <glm/ext/matrix_transform.hpp>
 #include <gtest/gtest.h>
@@ -558,4 +559,37 @@ TEST_F(GLRenderer, binds_surface_on_set_viewport)
 
     // Teardown might make further GL calls; we don't care about them here.
     testing::Mock::VerifyAndClearExpectations(raw_surface);
+}
+
+TEST_F(GLRenderer, destroys_gl_resources_with_current_context)
+{
+    auto mock_output_surface = make_output_surface();
+
+    auto const dummy_dpy = reinterpret_cast<EGLDisplay>(0x0000110011);
+    auto const dummy_ctx = reinterpret_cast<EGLContext>(0x00ffaa1122);
+
+    ON_CALL(*mock_output_surface, make_current())
+        .WillByDefault(
+            [dummy_dpy, dummy_ctx]()
+            {
+               eglMakeCurrent(dummy_dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, dummy_ctx);
+            });
+
+    mrg::Renderer renderer(gl_platform, std::move(mock_output_surface));
+
+    eglMakeCurrent(dummy_dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+
+    // All cleanup should be done with a current context
+    EXPECT_CALL(mock_gl, glDeleteShader(_))
+        .WillRepeatedly(
+            [dummy_ctx](auto)
+            {
+               EXPECT_THAT(eglGetCurrentContext(), testing::Eq(dummy_ctx));
+            });
+    EXPECT_CALL(mock_gl, glDeleteProgram(_))
+        .WillRepeatedly(
+            [dummy_ctx](auto)
+            {
+               EXPECT_THAT(eglGetCurrentContext(), testing::Eq(dummy_ctx));
+            });
 }
