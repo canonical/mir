@@ -352,6 +352,59 @@ TEST_F(AbstractShell, create_surface_allows_window_manager_to_disable_ssd)
     shell.create_surface(session, params, nullptr, nullptr);
 }
 
+struct WmSsdControlTestParam
+{
+    mir::optional_value<bool> initial_ssd_value;
+    bool wm_sets_ssd_to;
+    std::string test_name;
+};
+
+class WmSsdControlTest : public AbstractShell, public WithParamInterface<WmSsdControlTestParam>
+{
+};
+
+// Test that WM can control decorations via build callback for all combinations of initial and WM-set values
+TEST_P(WmSsdControlTest, wm_controls_ssd_via_build_callback)
+{
+    auto const& param = GetParam();
+
+    std::shared_ptr<ms::Session> const session =
+        shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "XPlane");
+
+    auto params = mt::make_surface_spec(session->create_buffer_stream(properties));
+    params.server_side_decorated = param.initial_ssd_value;
+
+    EXPECT_CALL(*wm, add_surface(session, params, _)).WillOnce(Invoke(
+        [&](std::shared_ptr<ms::Session> const& session,
+            msh::SurfaceSpecification const&,
+            std::function<std::shared_ptr<ms::Surface>(
+                std::shared_ptr<ms::Session> const& session,
+                msh::SurfaceSpecification const&)> const& build)
+            {
+                auto modified_params = params;
+                modified_params.server_side_decorated = param.wm_sets_ssd_to;
+                return build(session, modified_params);
+            }));
+
+    EXPECT_CALL(decoration_manager, decorate(_))
+        .Times(param.wm_sets_ssd_to ? 1 : 0);
+
+    shell.create_surface(session, params, nullptr, nullptr);
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    WmSsdControl,
+    WmSsdControlTest,
+    Values(
+        WmSsdControlTestParam{mir::optional_value<bool>{}, true, "unset_to_true"},
+        WmSsdControlTestParam{false, true, "false_to_true"},
+        WmSsdControlTestParam{true, false, "true_to_false"}
+    ),
+    [](const TestParamInfo<WmSsdControlTestParam>& info) {
+        return info.param.test_name;
+    }
+);
+
 TEST_F(AbstractShell, create_surface_sets_surfaces_session)
 {
     auto const mock_surface = std::make_shared<mtd::MockSurface>();
@@ -1172,61 +1225,6 @@ INSTANTIATE_TEST_SUITE_P(
         ConstraintAdjustmentTestParam{false, "without_ssd"}
     ),
     [](const TestParamInfo<ConstraintAdjustmentTestParam>& info) {
-        return info.param.test_name;
-    }
-);
-
-
-
-struct WmEnablingSsdTestParam
-{
-    mir::optional_value<bool> initial_ssd_value;
-    std::string test_name;
-};
-
-class WmEnablingSsdTest : public AbstractShell, public WithParamInterface<WmEnablingSsdTestParam>
-{
-};
-
-// Test that WM can enable decorations via build callback, whether SSD was initially unset or false
-TEST_P(WmEnablingSsdTest, wm_can_enable_ssd_post_placement)
-{
-    auto const& param = GetParam();
-
-    std::shared_ptr<ms::Session> const session =
-        shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "XPlane");
-
-    auto params = mt::make_surface_spec(session->create_buffer_stream(properties));
-    params.server_side_decorated = param.initial_ssd_value;
-
-    EXPECT_CALL(*wm, add_surface(session, params, _)).WillOnce(Invoke(
-        [&](std::shared_ptr<ms::Session> const& session,
-            msh::SurfaceSpecification const&,
-            std::function<std::shared_ptr<ms::Surface>(
-                std::shared_ptr<ms::Session> const& session,
-                msh::SurfaceSpecification const&)> const& build)
-            {
-                // Window manager enables SSD via the build callback
-                auto modified_params = params;
-                modified_params.server_side_decorated = true;
-                return build(session, modified_params);
-            }));
-
-    // Decoration should be applied after WM callback completes
-    EXPECT_CALL(decoration_manager, decorate(_))
-        .Times(1);
-
-    shell.create_surface(session, params, nullptr, nullptr);
-}
-
-INSTANTIATE_TEST_SUITE_P(
-    WmEnablingSsd,
-    WmEnablingSsdTest,
-    Values(
-        WmEnablingSsdTestParam{mir::optional_value<bool>{}, "ssd_initially_unset"},
-        WmEnablingSsdTestParam{false, "ssd_initially_false"}
-    ),
-    [](const TestParamInfo<WmEnablingSsdTestParam>& info) {
         return info.param.test_name;
     }
 );
