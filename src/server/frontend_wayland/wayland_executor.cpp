@@ -23,6 +23,7 @@
 
 #include <boost/throw_exception.hpp>
 
+#include <atomic>
 #include <cstring>
 #include <deque>
 #include <functional>
@@ -72,10 +73,13 @@ public:
             return;
         }
 
-        std::lock_guard lock{mutex};
         if (state == ExecutionState::Running)
         {
-            workqueue.emplace_back(std::move(work));
+            std::lock_guard lock{mutex};
+            if (state == ExecutionState::Running)
+            {
+                workqueue.emplace_back(std::move(work));
+            }
         }
         // If we've been terminated then drop the work on the floor, letting the
         // std::function destructor clean up any necessary state.
@@ -132,7 +136,7 @@ public:
 private:
     static thread_local bool on_wayland_thread;
     std::mutex mutex;
-    ExecutionState state{ExecutionState::Running};
+    std::atomic<ExecutionState> state{ExecutionState::Running};
     wl_event_loop* const loop;
     std::deque<std::function<void()>> workqueue;
 };
