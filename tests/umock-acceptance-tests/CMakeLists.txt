@@ -1,7 +1,6 @@
 include(CMakeDependentOption)
 
 include_directories(
-  ${CMAKE_SOURCE_DIR}
   ${CMAKE_SOURCE_DIR}/tests/include/
   ${PROJECT_SOURCE_DIR}/src/include/common
 )

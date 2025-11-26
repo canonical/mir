@@ -36,10 +36,6 @@ set(server_common_include_dirs
 
 set(server_symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/common/server/symbols.map)
 
-set(client_common_include_dirs
-  ${CMAKE_CURRENT_SOURCE_DIR}/common/client
-)
-
 add_subdirectory(common/)
 
 add_subdirectory(renderer-generic-egl/)

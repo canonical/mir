@@ -17,9 +17,7 @@ add_subdirectory(core)
 add_subdirectory(platforms/)
 
 # the src/include/... directories should be private to the implementation
-set(MIR_GENERATED_INCLUDE_DIRECTORIES)
 add_subdirectory(common/)
-include_directories(${MIR_GENERATED_INCLUDE_DIRECTORIES})
 
 add_subdirectory(platform/)
 add_subdirectory(wayland/)
@@ -35,11 +33,6 @@ target_compile_definitions(wrapper PUBLIC
     EXECUTABLE_FORMAT=\"%s.bin\"
     _DEFAULT_SOURCE
     _BSD_SOURCE)
-
-set(
-  MIR_GENERATED_INCLUDE_DIRECTORIES
-  ${MIR_GENERATED_INCLUDE_DIRECTORIES}
-  PARENT_SCOPE)
 
 set(MIR_SERVER_REFERENCES ${MIR_SERVER_REFERENCES} PARENT_SCOPE)
 set(MIR_SERVER_PLATFORM_PATH ${MIR_SERVER_PLATFORM_PATH} PARENT_SCOPE)

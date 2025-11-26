@@ -1,8 +1,5 @@
 include_directories(../frontend_xwayland ${CMAKE_CURRENT_BINARY_DIR})
 
-# One day, maybe, we can add include dependences to an OBJECT library. Until then...
-get_property(mirwayland_includes TARGET mirwayland PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
-include_directories(${mirwayland_includes})
 pkg_check_modules(GIOUnix REQUIRED IMPORTED_TARGET gio-unix-2.0)
 
 set(
