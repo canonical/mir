@@ -1136,9 +1136,12 @@ public:
             // Fastpath; we can just mmap the memory
             return std::unique_ptr<DmaBufMapping>{new DmaBufMapping{*this}};
         }
-        else if (format().info() && format().info()->components())
+        else if (auto const info = format().info())
         {
-            return std::unique_ptr<GLMapping>(new GLMapping{*this});
+            if (info->components().has_value())
+            {
+                return std::unique_ptr<GLMapping>(new GLMapping{*this});
+            }
         }
         BOOST_THROW_EXCEPTION((
             mg::UnmappableBuffer{"Unsupported buffer format for direct CPU access"}));
