@@ -136,6 +136,13 @@ public:
 private:
     static thread_local bool on_wayland_thread;
     std::mutex mutex;
+    /*
+     * `state` is atomic because it is used in a double-checked locking pattern in `enqueue()`.
+     * The first check of `state` (outside the mutex) allows fast-path rejection of work when
+     * the executor is not running, avoiding unnecessary locking. The second check (inside the mutex)
+     * ensures correctness in the presence of concurrent state changes. This pattern requires `state`
+     * to be atomic to prevent data races and ensure thread safety.
+     */
     std::atomic<ExecutionState> state{ExecutionState::Running};
     wl_event_loop* const loop;
     std::deque<std::function<void()>> workqueue;
