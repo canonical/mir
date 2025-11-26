@@ -1092,23 +1092,30 @@ TEST_F(AbstractShell, as_focus_controller_emits_input_device_state_event_on_focu
     focus_controller.set_focus_to(session, surface);
 }
 
-TEST_F(AbstractShell, not_specifying_width_and_height_still_bumps_min_max_constraints)
+struct ConstraintAdjustmentTestParam
 {
+    bool server_side_decorated;
+    std::string test_name;
+};
+
+class ConstraintAdjustmentTest : public AbstractShell, public WithParamInterface<ConstraintAdjustmentTestParam>
+{
+};
+
+TEST_P(ConstraintAdjustmentTest, not_specifying_width_and_height_still_bumps_min_max_constraints_when_decorated)
+{
+    auto const& param = GetParam();
+
     std::shared_ptr<ms::Session> const session =
         shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "XPlane");
 
     auto params = mt::make_surface_spec(session->create_buffer_stream(properties));
-    params.server_side_decorated = true;
+    params.server_side_decorated = param.server_side_decorated;
     params.min_width = geom::Width{100};
     params.min_height = geom::Height{80};
     params.max_width = geom::Width{1920};
     params.max_height = geom::Height{1080};
     // Intentionally omit explicit width/height to test default 640x480 behavior
-
-    geom::Size const expected_content_size{640, 480};  // Default size when width/height not set
-    geom::Size const decorated_size{700, 550};  // Size with decorations
-    geom::DeltaX const horiz_padding{decorated_size.width.as_int() - expected_content_size.width.as_int()};
-    geom::DeltaY const vert_padding{decorated_size.height.as_int() - expected_content_size.height.as_int()};
 
     msh::SurfaceSpecification wm_params;
     EXPECT_CALL(*wm, add_surface(session, _, _)).WillOnce(Invoke(
@@ -1122,19 +1129,52 @@ TEST_F(AbstractShell, not_specifying_width_and_height_still_bumps_min_max_constr
                 return build(session, spec);
             }));
 
-    EXPECT_CALL(decoration_manager, compute_size_with_decorations(expected_content_size, _, _))
-        .WillOnce(Return(decorated_size));
-    EXPECT_CALL(decoration_manager, decorate(_))
-        .Times(1);
+    if (param.server_side_decorated)
+    {
+        geom::Size const expected_content_size{640, 480};  // Default size when width/height not set
+        geom::Size const decorated_size{700, 550};  // Size with decorations
+        geom::DeltaX const horiz_padding{decorated_size.width.as_int() - expected_content_size.width.as_int()};
+        geom::DeltaY const vert_padding{decorated_size.height.as_int() - expected_content_size.height.as_int()};
 
-    shell.create_surface(session, params, nullptr, nullptr);
+        EXPECT_CALL(decoration_manager, compute_size_with_decorations(expected_content_size, _, _))
+            .WillOnce(Return(decorated_size));
+        EXPECT_CALL(decoration_manager, decorate(_))
+            .Times(1);
 
-    // Verify size constraints were adjusted for decorations
-    EXPECT_THAT(wm_params.min_width.value(), Eq(geom::Width{100} + horiz_padding));
-    EXPECT_THAT(wm_params.min_height.value(), Eq(geom::Height{80} + vert_padding));
-    EXPECT_THAT(wm_params.max_width.value(), Eq(geom::Width{1920} + horiz_padding));
-    EXPECT_THAT(wm_params.max_height.value(), Eq(geom::Height{1080} + vert_padding));
+        shell.create_surface(session, params, nullptr, nullptr);
+
+        // Verify size constraints were adjusted for decorations
+        EXPECT_THAT(wm_params.min_width.value(), Eq(geom::Width{100} + horiz_padding));
+        EXPECT_THAT(wm_params.min_height.value(), Eq(geom::Height{80} + vert_padding));
+        EXPECT_THAT(wm_params.max_width.value(), Eq(geom::Width{1920} + horiz_padding));
+        EXPECT_THAT(wm_params.max_height.value(), Eq(geom::Height{1080} + vert_padding));
+    }
+    else
+    {
+        EXPECT_CALL(decoration_manager, decorate(_))
+            .Times(0);
+
+        shell.create_surface(session, params, nullptr, nullptr);
+
+        // Verify size constraints were NOT adjusted (remain unchanged)
+        EXPECT_THAT(wm_params.min_width.value(), Eq(geom::Width{100}));
+        EXPECT_THAT(wm_params.min_height.value(), Eq(geom::Height{80}));
+        EXPECT_THAT(wm_params.max_width.value(), Eq(geom::Width{1920}));
+        EXPECT_THAT(wm_params.max_height.value(), Eq(geom::Height{1080}));
+    }
 }
+
+INSTANTIATE_TEST_SUITE_P(
+    ConstraintAdjustment,
+    ConstraintAdjustmentTest,
+    Values(
+        ConstraintAdjustmentTestParam{true, "with_ssd"},
+        ConstraintAdjustmentTestParam{false, "without_ssd"}
+    ),
+    [](const TestParamInfo<ConstraintAdjustmentTestParam>& info) {
+        return info.param.test_name;
+    }
+);
 
 
 
