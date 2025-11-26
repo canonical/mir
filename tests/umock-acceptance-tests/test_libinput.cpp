@@ -40,6 +40,14 @@ auto get_libinput_platform()
     return std::make_shared<mir::SharedLibrary>(path);
 }
 
+#ifdef MIR_ENABLE_RUST
+auto get_libinput_rust_platform()
+{
+    auto path = mtf::server_input_platform("input-evdev-rs");
+    return std::make_shared<mir::SharedLibrary>(path);
+}
+#endif
+
 char const probe_input_platform_symbol[] = "probe_input_platform";
 
 }
@@ -78,3 +86,15 @@ TEST(LibInput, probes_as_supported_when_umock_dev_available_or_before_input_devi
     auto probe_fun = library->load_function<mir::input::ProbePlatform>(probe_input_platform_symbol);
     EXPECT_THAT(probe_fun(options, console), Eq(mir::input::PlatformPriority::supported));
 }
+
+#ifdef MIR_ENABLE_RUST
+TEST(LibInput, rust_libinput_probes_as_experimental)
+{
+    NiceMock<mtd::MockOption> options;
+    mtd::StubConsoleServices console;
+
+    auto library = get_libinput_rust_platform();
+    auto probe_fun = library->load_function<mir::input::ProbePlatform>(probe_input_platform_symbol);
+    EXPECT_THAT(probe_fun(options, console), Ge(mir::input::PlatformPriority::experimental));
+}
+#endif
