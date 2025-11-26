@@ -628,9 +628,9 @@ mrg::Renderer::~Renderer()
     // We've allocated all our resources on the context of output_surface; release them there, too.
     output_surface->make_current();
 
-    program_factory = nullptr;
+    program_factory.reset();
     // OutputSurface destructor correctly cleans up, leaving no current EGL context
-    output_surface = nullptr;
+    output_surface.reset();
 
     if (prev_ctx != EGL_NO_CONTEXT)
     {
