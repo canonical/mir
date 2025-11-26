@@ -510,7 +510,7 @@ private:
                     GLsizei width = parent.size_.width.as_int();
                     GLsizei height = parent.size_.height.as_int();
 
-                    auto pixels = std::make_unique<std::byte[]>(width * height * 4);
+                    auto pixels = std::make_unique<std::byte[]>(static_cast<size_t>(width) * height * 4uz);
 
                     glGenFramebuffers(1, &fbo);
                     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
@@ -533,7 +533,7 @@ private:
 
         auto len() const -> size_t override
         {
-            return size().height.as_uint32_t() * stride().as_uint32_t();
+            return size().height.as<size_t>() * stride().as<size_t>();
         }
 
         auto format() const -> MirPixelFormat override
