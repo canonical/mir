@@ -46,7 +46,6 @@ enum class PlatformPriority : uint32_t
 {
     unsupported = 0,
     dummy = 1,
-    experimental = 64,
     supported = 128,
     best = 256,
 };
