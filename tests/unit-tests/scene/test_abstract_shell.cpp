@@ -301,57 +301,6 @@ TEST_F(AbstractShell, create_surface_allows_window_manager_to_set_create_paramet
     shell.create_surface(session, params, nullptr, nullptr);
 }
 
-TEST_F(AbstractShell, create_surface_allows_window_manager_to_enable_ssd)
-{
-    std::shared_ptr<ms::Session> const session =
-        shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "XPlane");
-
-    auto params = mt::make_surface_spec(session->create_buffer_stream(properties));
-
-    EXPECT_CALL(decoration_manager, decorate(_))
-        .Times(1);
-
-    EXPECT_CALL(*wm, add_surface(session, params, _)).WillOnce(Invoke(
-        [&](std::shared_ptr<ms::Session> const& session,
-            msh::SurfaceSpecification const& params,
-            std::function<std::shared_ptr<ms::Surface>(
-                std::shared_ptr<ms::Session> const& session,
-                msh::SurfaceSpecification const&)> const& build)
-            {
-                auto modified_params = params;
-                modified_params.server_side_decorated = true;
-                return build(session, modified_params);
-            }));
-
-    shell.create_surface(session, params, nullptr, nullptr);
-}
-
-TEST_F(AbstractShell, create_surface_allows_window_manager_to_disable_ssd)
-{
-    std::shared_ptr<ms::Session> const session =
-        shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "XPlane");
-
-    auto params = mt::make_surface_spec(session->create_buffer_stream(properties));
-    params.server_side_decorated = true;
-
-    EXPECT_CALL(decoration_manager, decorate(_))
-        .Times(0);
-
-    EXPECT_CALL(*wm, add_surface(session, params, _)).WillOnce(Invoke(
-        [&](std::shared_ptr<ms::Session> const& session,
-            msh::SurfaceSpecification const& params,
-            std::function<std::shared_ptr<ms::Surface>(
-                std::shared_ptr<ms::Session> const& session,
-                msh::SurfaceSpecification const&)> const& build)
-            {
-                auto modified_params = params;
-                modified_params.server_side_decorated = false;
-                return build(session, modified_params);
-            }));
-
-    shell.create_surface(session, params, nullptr, nullptr);
-}
-
 struct WmSsdControlTestParam
 {
     mir::optional_value<bool> initial_ssd_value;
@@ -404,6 +353,7 @@ INSTANTIATE_TEST_SUITE_P(
         return info.param.test_name;
     }
 );
+
 
 TEST_F(AbstractShell, create_surface_sets_surfaces_session)
 {
