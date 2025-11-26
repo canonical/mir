@@ -354,7 +354,6 @@ INSTANTIATE_TEST_SUITE_P(
     }
 );
 
-
 TEST_F(AbstractShell, create_surface_sets_surfaces_session)
 {
     auto const mock_surface = std::make_shared<mtd::MockSurface>();
