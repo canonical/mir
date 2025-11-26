@@ -59,7 +59,6 @@ target_link_libraries(mirwayland
 target_include_directories(mirwayland
   PUBLIC
     ${PROJECT_SOURCE_DIR}/include/wayland
-    ${PROJECT_SOURCE_DIR}/src/include/wayland
     ${CMAKE_CURRENT_BINARY_DIR}
 )
 

@@ -5,7 +5,6 @@ add_compile_definitions(MIR_LOG_COMPONENT_FALLBACK="mircommon")
 set(MIR_COMMON_SOURCES)
 
 include_directories(
-  ${MIR_GENERATED_INCLUDE_DIRECTORIES}
   ${PROJECT_SOURCE_DIR}/include/common
 )
 
@@ -35,10 +34,6 @@ list(APPEND MIR_COMMON_SOURCES
   signal.cpp
 )
 
-set(
-  MIR_GENERATED_INCLUDE_DIRECTORIES
-  ${MIR_GENERATED_INCLUDE_DIRECTORIES}
-  PARENT_SCOPE)
 
 # TODO we need a place to manage ABI and related versioning but use this as placeholder
 set(MIRCOMMON_ABI 11)

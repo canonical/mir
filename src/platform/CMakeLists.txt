@@ -3,10 +3,6 @@ pkg_check_modules(PIXMAN REQUIRED IMPORTED_TARGET pixman-1)
 
 add_compile_definitions(MIR_LOG_COMPONENT_FALLBACK="mirplatform")
 
-include_directories(
-  ${PROJECT_SOURCE_DIR}/src/include/platform
-)
-
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 
 add_compile_definitions(MIR_SERVER_PLATFORM_PATH="${MIR_SERVER_PLATFORM_PATH}")
