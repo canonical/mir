@@ -505,7 +505,7 @@ private:
             parent.executor->spawn(
                 [data_promise, &parent]()
                 {
-                    GLuint fbo;
+                    GLuint fbo{0};
 
                     GLsizei width = parent.size_.width.as_int();
                     GLsizei height = parent.size_.height.as_int();
