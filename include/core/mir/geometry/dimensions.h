@@ -18,10 +18,12 @@
 #define MIR_GEOMETRY_DIMENSIONS_H_
 
 #include "forward.h"
+#include "mir/geometry/size.h"
 
 #include <iosfwd>
 #include <type_traits>
 #include <cstdint>
+#include <limits>
 
 namespace mir
 {
@@ -29,6 +31,18 @@ namespace geometry
 {
 namespace generic
 {
+// Concept guaranteeing conversion from U to T is lossless
+template<typename U, typename T>
+concept ConversionIsLossless = requires
+{
+    // T has at least as many digits of precision as U, and...
+    requires std::numeric_limits<T>::digits >= std::numeric_limits<U>::digits;
+    // T can store the minimum value representible in U, and...
+    requires std::numeric_limits<T>::lowest() <= std::numeric_limits<U>::lowest();
+    // T can store the maximum value representible in U.
+    requires std::numeric_limits<T>::max() >= std::numeric_limits<U>::max();
+};
+
 template<typename T, typename Tag>
 /// Wraps a geometry value and prevents it from being accidentally used for invalid operations (such as setting a
 /// width to a height or adding two x positions together). Of course, explicit casts are possible to get around
@@ -46,6 +60,13 @@ struct Value
 
     template <typename Q = T>
     constexpr typename std::enable_if<std::is_integral<Q>::value, uint32_t>::type as_uint32_t() const
+    {
+        return this->value;
+    }
+
+    template <typename Q>
+        requires ConversionIsLossless<T, Q>
+    constexpr Q as() const
     {
         return this->value;
     }
