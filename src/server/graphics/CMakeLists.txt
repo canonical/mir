@@ -1,7 +1,3 @@
-include_directories(
-  ${PROJECT_SOURCE_DIR}/include/renderers/sw
-)
-
 add_library(
   mirgraphics OBJECT
 

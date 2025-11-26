@@ -9,7 +9,6 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/include/server
   ${PROJECT_SOURCE_DIR}/include/renderer
   ${PROJECT_SOURCE_DIR}/include/renderers/gl
-  ${PROJECT_SOURCE_DIR}/include/renderers/sw
   ${PROJECT_SOURCE_DIR}/src/include/server
 )
 add_compile_definitions(MIR_SERVER_INPUT_PLATFORM_VERSION="${MIR_SERVER_INPUT_PLATFORM_VERSION}")
