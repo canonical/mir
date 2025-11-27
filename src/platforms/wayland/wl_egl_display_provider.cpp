@@ -5,34 +5,15 @@
 #include <mir/graphics/platform.h>
 #include <EGL/egl.h>
 #include <wayland-egl-core.h>
+#include "egl_helpers.h"
 
 #include <mutex>
 #include <optional>
 
 namespace mg = mir::graphics;
+namespace mgc = mg::common;
 namespace mgw = mir::graphics::wayland;
 namespace geom = mir::geometry;
-
-namespace
-{
-// Utility to restore EGL state on scope exit
-class CacheEglState
-{
-public:
-    CacheEglState() = default;
-
-    ~CacheEglState()
-    {
-        eglMakeCurrent(dpy, draw_surf, read_surf, ctx);
-    }
-private:
-    CacheEglState(CacheEglState const&) = delete;
-    EGLDisplay const dpy = eglGetCurrentDisplay();
-    EGLContext const ctx = eglGetCurrentContext();
-    EGLSurface const draw_surf = eglGetCurrentSurface(EGL_DRAW);
-    EGLSurface const read_surf = eglGetCurrentSurface(EGL_READ);
-};
-}
 
 class mgw::WlDisplayAllocator::SurfaceState
 {
@@ -79,7 +60,7 @@ public:
           surf{surf},
           ss{std::move(ss)}
     {
-        CacheEglState stash;
+        mgc::CacheEglState stash;
 
         make_current();
         // Don't block in eglSwapBuffers; we rely on external synchronisation to throttle rendering
