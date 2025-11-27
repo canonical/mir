@@ -74,6 +74,7 @@ public:
         {
             eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
         }
+        eglDestroySurface(dpy, surf);
         eglDestroyContext(dpy, ctx);
     }
 
