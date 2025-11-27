@@ -19,6 +19,7 @@
 
 #include "buffer_allocator.h"
 #include "cpu_copy_output_surface.h"
+#include "egl_helpers.h"
 #include <mir/anonymous_shm_file.h>
 #include <mir/graphics/display_sink.h>
 #include <mir/graphics/drm_formats.h>
@@ -41,6 +42,7 @@
 #include <mir/wayland/protocol_error.h>
 #include <mir/wayland/wayland_base.h>
 #include <mir/renderer/gl/gl_surface.h>
+#include <optional>
 
 #define MIR_LOG_COMPONENT "platform-eglstream-kms"
 #include <mir/log.h>
@@ -718,6 +720,28 @@ public:
           size_{std::move(size)}
     {
         eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+    }
+
+    ~EGLStreamOutputSurface()
+    {
+        // Capture current EGL state to restore, if the current context is not the one we're destroying
+        auto const egl_restore =
+            [this]() -> std::optional<mgc::CacheEglState>
+            {
+                if (ctx != eglGetCurrentContext())
+                {
+                    return {mgc::CacheEglState{}};
+                }
+
+                // We *are* the current context; release the current context, so we can destroy resources.
+                eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+                // We don't need to restore EGL state
+                return std::nullopt;
+            }();
+
+        // Free our EGL resources
+        eglDestroySurface(dpy, surface);
+        eglDestroyContext(dpy, ctx);
     }
 
     void bind() override
