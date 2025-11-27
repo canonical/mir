@@ -71,11 +71,14 @@ public:
     ExtImageCopyBackend(ExtImageCopyCaptureSessionV1 *session, bool overlay_cursor);
     virtual ~ExtImageCopyBackend() = default;
 
+    ExtImageCopyBackend(ExtImageCopyBackend const&) = delete;
+    ExtImageCopyBackend& operator=(ExtImageCopyBackend const&) = delete;
+
     virtual bool has_damage();
     virtual void begin_capture(
-        std::shared_ptr<renderer::software::RWMappable> shm_data,
+        std::shared_ptr<renderer::software::RWMappable> const& shm_data,
         geom::Rectangle const& frame_damage,
-        std::function<void(std::optional<time::Timestamp>, geom::Rectangle)> const& callback) = 0;
+        std::function<void(std::optional<uint32_t>, time::Timestamp, geom::Rectangle)> const& callback) = 0;
 
 protected:
     enum class DamageAmount
@@ -103,9 +106,9 @@ public:
 
     bool has_damage() override;
     void begin_capture(
-        std::shared_ptr<renderer::software::RWMappable> shm_data,
+        std::shared_ptr<renderer::software::RWMappable> const& shm_data,
         geom::Rectangle const& frame_damage,
-        std::function<void(std::optional<time::Timestamp>, geom::Rectangle)> const& callback) override;
+        std::function<void(std::optional<uint32_t>, time::Timestamp, geom::Rectangle)> const& callback) override;
 
 private:
     wayland::Weak<OutputGlobal> const output;
@@ -197,7 +200,6 @@ public:
 private:
     void create_frame(wl_resource* new_resource) override;
 
-    geom::Size buffer_size;
     bool stopped = false;
     wayland::Weak<ExtImageCopyCaptureFrameV1> current_frame;
 
@@ -211,11 +213,11 @@ public:
     ExtImageCopyCaptureFrameV1(wl_resource* resource, ExtImageCopyCaptureSessionV1* session);
 
     bool is_ready() const;
-    void report_result(std::optional<time::Timestamp> captured_time,
+    void begin_capture(ExtImageCopyBackend& backend);
+    void report_result(std::optional<uint32_t> failure_reason,
+                       time::Timestamp captured_time,
                        geom::Rectangle buffer_space_damage);
 
-    wayland::Weak<wayland::Buffer> target;
-    geom::Rectangle frame_damage;
 
 private:
     void attach_buffer(wl_resource* buffer) override;
@@ -223,6 +225,8 @@ private:
     void capture() override;
 
     bool capture_has_been_called = false;
+    wayland::Weak<wayland::Buffer> target;
+    geom::Rectangle frame_damage;
 
     wayland::Weak<ExtImageCopyCaptureSessionV1> const session;
 };
@@ -294,7 +298,9 @@ mf::ExtOutputImageCopyBackend::ExtOutputImageCopyBackend(
                 session->set_stopped();
             });
         output_config_changed(output->current_config());
-    } else {
+    }
+    else
+    {
         session->set_stopped();
     }
 }
@@ -355,20 +361,34 @@ void mf::ExtOutputImageCopyBackend::create_change_notifier()
 }
 
 void mf::ExtOutputImageCopyBackend::begin_capture(
-    std::shared_ptr<renderer::software::RWMappable> shm_data,
+    std::shared_ptr<renderer::software::RWMappable> const& shm_data,
     [[maybe_unused]] geom::Rectangle const& frame_damage,
-    std::function<void(std::optional<time::Timestamp>, geom::Rectangle)> const& callback)
+    std::function<void(std::optional<uint32_t>, time::Timestamp, geom::Rectangle)> const& callback)
 {
+    using FailureReason = wayland::ImageCopyCaptureFrameV1::FailureReason;
+    if (!output)
+    {
+        callback(std::make_optional(FailureReason::stopped), {}, {});
+        return;
+    }
+
     auto const& output_config = output.value().current_config();
     auto const buffer_size = output_config.modes[output_config.current_mode_index].size;
     auto const output_space_area = output_config.extents();
     auto const transform = output_config.transformation();
 
+    // Check that the provided buffer matches our constraints
+    if (!shm_data || shm_data->format() != mir_pixel_format_argb_8888 || shm_data->size() != buffer_size)
+    {
+        callback(std::make_optional(FailureReason::buffer_constraints), {}, {});
+        return;
+    }
+
     geom::Rectangle buffer_space_damage;
     switch (damage_amount)
     {
     case DamageAmount::none:
-        BOOST_THROW_EXCEPTION(std::runtime_error("ExtImageCopyBackend::begin_capture called when there is no damage available"));
+        BOOST_THROW_EXCEPTION(std::logic_error("ExtImageCopyBackend::begin_capture called when there is no damage available"));
         break;
 
     case DamageAmount::partial:
@@ -387,12 +407,19 @@ void mf::ExtOutputImageCopyBackend::begin_capture(
     // union(buffer_space_damage, frame->frame_damage)
 
     screen_shooter->capture(
-        std::move(shm_data), output_space_area, transform, overlay_cursor,
+        shm_data, output_space_area, transform, overlay_cursor,
         [executor=ctx->wayland_executor, buffer_space_damage, callback](std::optional<time::Timestamp> captured_time)
         {
             executor->spawn([callback, captured_time, buffer_space_damage]()
                 {
-                    callback(captured_time, buffer_space_damage);
+                    if (captured_time)
+                    {
+                        callback(std::nullopt, captured_time.value(), buffer_space_damage);
+                    }
+                    else
+                    {
+                        callback(std::make_optional(FailureReason::unknown), {}, {});
+                    }
                 });
         });
 
@@ -410,7 +437,7 @@ auto mf::create_ext_output_image_capture_source_manager_v1(
 {
     auto ctx = std::make_shared<ExtImageCaptureV1Ctx>(
         wayland_executor, screen_shooter_factory, surface_stack);
-    return std::make_shared<ExtOutputImageCaptureSourceManagerV1Global>(display, std::move(ctx));
+    return std::make_shared<ExtOutputImageCaptureSourceManagerV1Global>(display, ctx);
 }
 
 mf::ExtOutputImageCaptureSourceManagerV1Global::ExtOutputImageCaptureSourceManagerV1Global(
@@ -521,10 +548,8 @@ mf::ExtImageCopyCaptureSessionV1::~ExtImageCopyCaptureSessionV1()
 {
 }
 
-void mf::ExtImageCopyCaptureSessionV1::set_buffer_constraints(geom::Size const &new_size)
+void mf::ExtImageCopyCaptureSessionV1::set_buffer_constraints(geom::Size const &buffer_size)
 {
-    buffer_size = new_size;
-
     send_buffer_size_event(
         buffer_size.width.as_uint32_t(), buffer_size.height.as_uint32_t());
     send_shm_format_event(wayland::Shm::Format::argb8888);
@@ -542,50 +567,21 @@ void mf::ExtImageCopyCaptureSessionV1::set_stopped()
 
 void mf::ExtImageCopyCaptureSessionV1::maybe_capture_frame()
 {
-    if (!current_frame || !current_frame.value().is_ready())
+    if (!current_frame)
     {
         // Do nothing if there is no frame to capture to.
         return;
     }
+    auto& frame = current_frame.value();
 
-    if (!backend->has_damage())
+    if (!frame.is_ready() || !backend->has_damage())
     {
-        // Do nothing if the backend has no reported damage
+        // Do nothing if the frame is not ready to capture into or the
+        // backend has no reported damage
         return;
     }
 
-    using FailureReason = wayland::ImageCopyCaptureFrameV1::FailureReason;
-    if (stopped)
-    {
-        current_frame.value().send_failed_event(FailureReason::stopped);
-        return;
-    }
-
-    // Check buffer constraints
-    auto shm_buffer = dynamic_cast<ShmBuffer*>(wayland::as_nullable_ptr(current_frame.value().target));
-    if (!shm_buffer)
-    {
-        current_frame.value().send_failed_event(FailureReason::buffer_constraints);
-        return;
-    }
-    auto shm_data = shm_buffer->data();
-    if (shm_data->format() != mir_pixel_format_argb_8888 ||
-        shm_data->size() != buffer_size)
-    {
-        current_frame.value().send_failed_event(FailureReason::buffer_constraints);
-        return;
-    }
-
-    backend->begin_capture(
-        shm_data, current_frame.value().frame_damage,
-        [frame=current_frame](std::optional<time::Timestamp> captured_time, geom::Rectangle buffer_space_damage)
-            {
-                if (frame)
-                {
-                    frame.value().report_result(captured_time, buffer_space_damage);
-                }
-            });
-    current_frame.value().frame_damage = geom::Rectangle{};
+    frame.begin_capture(*backend);
 }
 
 void mf::ExtImageCopyCaptureSessionV1::create_frame(
@@ -683,13 +679,36 @@ bool mf::ExtImageCopyCaptureFrameV1::is_ready() const
     return capture_has_been_called;
 }
 
+void mf::ExtImageCopyCaptureFrameV1::begin_capture(ExtImageCopyBackend& backend)
+{
+    // Check buffer constraints
+    auto shm_buffer = dynamic_cast<ShmBuffer*>(wayland::as_nullable_ptr(target));
+    if (!shm_buffer)
+    {
+        send_failed_event(FailureReason::buffer_constraints);
+        return;
+    }
+    auto shm_data = shm_buffer->data();
+    backend.begin_capture(
+        shm_data, frame_damage,
+        [frame=wayland::make_weak(this)](std::optional<uint32_t> failure_reason, time::Timestamp captured_time, geom::Rectangle buffer_space_damage)
+            {
+                if (frame)
+                {
+                    frame.value().report_result(failure_reason, captured_time, buffer_space_damage);
+                }
+            });
+    frame_damage = geom::Rectangle{};
+}
+
 void mf::ExtImageCopyCaptureFrameV1::report_result(
-    std::optional<time::Timestamp> captured_time,
+    std::optional<uint32_t> failure_reason,
+    time::Timestamp captured_time,
     geom::Rectangle buffer_space_damage)
 {
-    if (!captured_time)
+    if (failure_reason)
     {
-        send_failed_event(FailureReason::unknown);
+        send_failed_event(failure_reason.value());
         return;
     }
     send_damage_event(buffer_space_damage.left().as_int(),
@@ -697,7 +716,7 @@ void mf::ExtImageCopyCaptureFrameV1::report_result(
                       buffer_space_damage.size.width.as_int(),
                       buffer_space_damage.size.height.as_int());
 
-    WaylandTimespec const timespec{captured_time.value()};
+    WaylandTimespec const timespec{captured_time};
     send_presentation_time_event(
         timespec.tv_sec_hi,
         timespec.tv_sec_lo,
