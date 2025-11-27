@@ -64,6 +64,18 @@ struct Value
         return this->value;
     }
 
+    /// Losslessly extract the underlying value
+    ///
+    /// The as<Q> accessor will exist for any numeric type Q
+    /// that can exactly represent any valid ValueType
+    ///
+    /// For example, if ValueType is int32_t, then
+    /// as<int64_t> and as<double> both exist
+    /// as an i32 is exactly representable in a double, but
+    /// as<uint64_t> and as<float> do not exist,
+    /// as int32_t can contain negative values not representable
+    /// in uint64_t, and float does not have sufficient precision
+    /// to exactly represent any int32_t value.
     template <typename Q>
         requires ConversionIsLossless<T, Q>
     constexpr Q as() const
