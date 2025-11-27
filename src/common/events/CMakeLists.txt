@@ -37,6 +37,8 @@ add_library(mirevents OBJECT
 
 target_include_directories(mirevents
     PUBLIC
+        ${PROJECT_SOURCE_DIR}/include/common
+    PRIVATE
         ${PROJECT_SOURCE_DIR}/src/include/common
 )
 

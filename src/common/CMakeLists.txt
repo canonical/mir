@@ -4,10 +4,6 @@ add_compile_definitions(MIR_LOG_COMPONENT_FALLBACK="mircommon")
 
 set(MIR_COMMON_SOURCES)
 
-include_directories(
-  ${PROJECT_SOURCE_DIR}/include/common
-)
-
 add_subdirectory(events)
 add_subdirectory(logging)
 add_subdirectory(report/lttng)
@@ -61,6 +57,8 @@ add_library(mircommon SHARED
 target_include_directories(mircommon
   PUBLIC
     ${PROJECT_SOURCE_DIR}/include/common
+  PRIVATE
+    ${PROJECT_SOURCE_DIR}/src/include/common
 )
 
 target_link_libraries(mircommon
