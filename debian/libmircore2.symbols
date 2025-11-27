@@ -37,3 +37,6 @@ libmircore.so.2 libmircore2 #MINVER#
  (c++)"mir::input::MouseKeysKeymap::set_action(unsigned int, std::optional<mir::input::MouseKeysKeymap::Action>)@MIR_CORE_2.21" 2.21.0
  (c++)"mir::input::MouseKeysKeymap::get_action(unsigned int) const@MIR_CORE_2.21" 2.21.0
  (c++)"mir::input::MouseKeysKeymap::for_each_key_action_pair(std::function<void (unsigned int, mir::input::MouseKeysKeymap::Action)>&&) const@MIR_CORE_2.21" 2.21.0
+ MIR_CORE_2.24@MIR_CORE_2.24 2.24.0
+ (c++)"mir::report_exception(std::ostream&, std::ostream&)@MIR_CORE_2.24" 2.24.0
+ (c++)"mir::report_exception(std::ostream&)@MIR_CORE_2.24" 2.24.0
