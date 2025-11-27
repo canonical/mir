@@ -65,7 +65,6 @@ endif()
 
 # public headers (only public headers should be accessed by acceptance tests)
 include_directories(
-  ${PROJECT_SOURCE_DIR}/include/miral
   ${PROJECT_SOURCE_DIR}/src/include/server
   ${MIRSERVER_INCLUDE_DIRS}
   ${PROJECT_SOURCE_DIR}/include/test
