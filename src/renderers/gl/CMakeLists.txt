@@ -26,8 +26,6 @@ target_include_directories(
   PUBLIC
     ${PROJECT_SOURCE_DIR}/include/renderer
     ${PROJECT_SOURCE_DIR}/include/renderers/gl
-  PRIVATE
-    ${PROJECT_SOURCE_DIR}/src/include/server
 )
 
 target_link_libraries(mirrenderergl
@@ -35,5 +33,4 @@ target_link_libraries(mirrenderergl
     mircore
   PRIVATE
     mirgl
-    mirplatform
 )
