@@ -28,12 +28,12 @@ target_include_directories(
     ${PROJECT_SOURCE_DIR}/include/renderers/gl
   PRIVATE
     ${PROJECT_SOURCE_DIR}/src/include/server
-    ${PROJECT_SOURCE_DIR}/src/include/gl
 )
 
 target_link_libraries(mirrenderergl
   PUBLIC
     mircore
   PRIVATE
+    mirgl
     mirplatform
 )
