@@ -38,7 +38,11 @@ public:
 
     ~EGLState()
     {
-        eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+        // If we're the current context, release it so we can release resources.
+        if (eglGetCurrentContext() == ctx)
+        {
+            eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+        }
         eglDestroyContext(dpy, ctx);
         eglDestroySurface(dpy, surf);
     }

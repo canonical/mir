@@ -255,6 +255,12 @@ public:
     ~GBMOutputSurface()
     {
         quirks->egl_destroy_surface(dpy, egl_surf);
+
+        // If we're the current context, release it so that resources can be destroyed.
+        if (eglGetCurrentContext() == ctx)
+        {
+            eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+        }
         eglDestroyContext(dpy, ctx);
     }
 
