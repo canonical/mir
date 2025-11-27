@@ -17,8 +17,7 @@ target_include_directories(mir_window_management_tests
   ${CMAKE_SOURCE_DIR}
   ${CMAKE_CURRENT_BINARY_DIR}
   ${PROJECT_SOURCE_DIR}/src/include/server
-  ${PROJECT_SOURCE_DIR}/src/include/gl
-  ${PROJECT_SOURCE_DIR}/include/renderers/sw)
+  ${PROJECT_SOURCE_DIR}/src/include/gl)
 
 target_link_libraries(mir_window_management_tests
   mir-test-static
