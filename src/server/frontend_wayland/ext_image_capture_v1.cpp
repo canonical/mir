@@ -66,7 +66,8 @@ struct ExtImageCaptureV1Ctx
 /* Image copy backends */
 class ExtImageCopyCaptureSessionV1;
 
-class ExtImageCopyBackend {
+class ExtImageCopyBackend
+{
 public:
     ExtImageCopyBackend(ExtImageCopyCaptureSessionV1 *session, bool overlay_cursor);
     virtual ~ExtImageCopyBackend() = default;
@@ -99,7 +100,8 @@ protected:
 };
 
 class ExtOutputImageCopyBackend
-    : public ExtImageCopyBackend, public OutputConfigListener {
+    : public ExtImageCopyBackend, public OutputConfigListener
+{
 public:
     ExtOutputImageCopyBackend(ExtImageCopyCaptureSessionV1 *session, bool overlay_cursor, OutputGlobal* output, std::shared_ptr<ExtImageCaptureV1Ctx> const& ctx);
     ~ExtOutputImageCopyBackend();
