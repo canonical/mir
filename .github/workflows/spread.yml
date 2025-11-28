@@ -117,7 +117,9 @@ jobs:
         echo "max_size = 800M" > ${CCACHE_DIR}/ccache.conf
 
     - name: Run Spread task
-      run: snap run spread-mir-ci.spread -reuse -v ${{ matrix.spread-task }}
+      run: |
+        tools/make_release_tarball --skip-checks
+        snap run spread-mir-ci.spread -reuse -v ${{ matrix.spread-task }}
 
     - name: CCache stats
       run: cat ${CCACHE_DIR}/ccache.stats
