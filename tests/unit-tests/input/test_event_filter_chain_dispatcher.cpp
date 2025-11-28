@@ -19,7 +19,6 @@
 #include <mir/test/doubles/mock_event_filter.h>
 #include <mir/test/doubles/mock_input_dispatcher.h>
 #include <mir/events/event_builders.h>
-#include <mir/events/event_private.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

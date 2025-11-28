@@ -22,7 +22,6 @@
 #include <mir/server_action_queue.h>
 #include <mir/graphics/event_handler_register.h>
 #include <mir/server_status_listener.h>
-#include <mir/events/event_private.h>
 
 #include <mir/test/pipe.h>
 #include <mir/test/signal.h>
