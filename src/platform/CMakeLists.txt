@@ -32,6 +32,7 @@ target_link_libraries(mirplatform
     miroptions
     mirudev
     PkgConfig::EPOXY
+    mirrenderergl
     mirgl
 )
 

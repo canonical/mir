@@ -583,20 +583,6 @@ Description: Display server for Ubuntu - x driver metapackage
  This package depends on a full set of graphics and input drivers for X
  systems.
 
-Package: libmirrenderer-dev
-Section: libdevel
-Architecture: linux-any
-Multi-Arch: same
-Pre-Depends: ${misc:Pre-Depends}
-Depends: ${misc:Depends},
-         libmircommon-dev (= ${binary:Version}),
-         libmirplatform-dev (= ${binary:Version})
-Description: Display server for Ubuntu - Renderer development files
- Mir is a display server running on linux systems, with a focus on efficiency,
- robust operation and a well-defined driver model.
- .
- Contains header files required for renderer development.
-
 Package: mir-renderer-gl-dev
 Section: libdevel
 Architecture: linux-any
