@@ -27,6 +27,7 @@
 #include <mir/test/doubles/mock_input_surface.h>
 #include <mir/test/doubles/stub_buffer.h>
 #include <mir/test/doubles/explicit_executor.h>
+#include <mir/test/doubles/test_surface_observer.h>
 #include <mir/test/event_matchers.h>
 
 #include <gmock/gmock.h>
@@ -47,34 +48,6 @@ namespace mr = mir::report;
 
 namespace
 {
-// Test-only observer that forwards events to an event sink
-class TestSurfaceObserver : public ms::NullSurfaceObserver
-{
-public:
-    TestSurfaceObserver(
-        mf::SurfaceId surface_id,
-        std::shared_ptr<mf::EventSink> const& event_sink)
-        : surface_id(surface_id),
-          event_sink(event_sink)
-    {
-    }
-
-    void content_resized_to(ms::Surface const*, geom::Size const& content_size) override
-    {
-        event_sink->handle_event(mev::make_window_resize_event(surface_id, content_size));
-    }
-
-    void input_consumed(ms::Surface const*, std::shared_ptr<MirEvent const> const& event) override
-    {
-        auto ev = mev::clone_event(*event);
-        mev::set_window_id(*ev, surface_id.as_value());
-        event_sink->handle_event(std::move(ev));
-    }
-
-private:
-    mf::SurfaceId const surface_id;
-    std::shared_ptr<mf::EventSink> const event_sink;
-};
 
 struct SurfaceCreation : public ::testing::Test
 {
@@ -106,8 +79,8 @@ struct SurfaceCreation : public ::testing::Test
     std::shared_ptr<ms::SceneReport> const report = mr::null_scene_report();
     ms::BasicSurface surface;
     std::shared_ptr<mt::doubles::MockEventSink> const mock_event_sink = std::make_shared<mt::doubles::MockEventSink>();
-    std::shared_ptr<TestSurfaceObserver> observer =
-        std::make_shared<TestSurfaceObserver>(mf::SurfaceId(), mock_event_sink);
+    std::shared_ptr<mtd::TestSurfaceObserver> observer =
+        std::make_shared<mtd::TestSurfaceObserver>(mf::SurfaceId(), mock_event_sink);
     mtd::ExplicitExecutor executor;
 };
 
