@@ -108,7 +108,6 @@ set(MIR_SERVER_REFERENCES
   mirservertime
 
   mirrenderergl
-  mirgl
 
   PkgConfig::DRM
   PkgConfig::EGL

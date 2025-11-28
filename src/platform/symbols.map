@@ -221,5 +221,6 @@ MIR_PLATFORM_2.24.0 {
  global:
 extern "C++" {
     mir::graphics::valid_pixel_format*;
+    mir::gl::tessellate_renderable_into_rectangle*;
   };
 } MIR_PLATFORM_2.23;

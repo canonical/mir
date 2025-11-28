@@ -26,7 +26,6 @@ add_subdirectory(miral/)
 add_subdirectory(miroil/)
 add_subdirectory(renderer/)
 add_subdirectory(renderers/)
-add_subdirectory(gl/)
 
 add_executable(wrapper wrapper.c)
 target_compile_definitions(wrapper PUBLIC
