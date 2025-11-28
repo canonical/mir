@@ -12,6 +12,7 @@ add_subdirectory(graphics/)
 add_subdirectory(options)
 add_subdirectory(udev)
 add_subdirectory(gl)
+add_subdirectory(renderers/)
 
 add_library(mirplatform SHARED
   ${PROJECT_SOURCE_DIR}/include/platform/mir/input/input_sink.h
