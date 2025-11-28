@@ -12,28 +12,29 @@ execute: |
       dnf --refresh --enablerepo=rawhide distro-sync
     fi
 
-    dnf install @buildsys-build ccache 'dnf5-command(builddep)'
+    dnf install rpmdevtools mock
+
     if [ "${CLANG}" -eq 1 ]; then
-        dnf install clang
         RPMBUILD_EXTRA_OPTIONS+=(--with clang)
     fi
 
     if [ "${LINKER}" != "ld" ]; then
-        dnf install "${LINKER}"
         RPMBUILD_EXTRA_OPTIONS+=(--with ${LINKER})
     fi
 
-    dnf builddep --allowerasing ${SPREAD_PATH}/rpm/mir.spec
+    rpmdev-setuptree
+    cp ${SPREAD_PATH}/mir-*.tar.xz ~/rpmbuild/SOURCES
+    cp ${SPREAD_PATH}/rpm/mir.spec ~/rpmbuild/SPECS
+    rpmbuild -bs ~/rpmbuild/SPECS/mir.spec
 
-    pushd ${SPREAD_PATH}
-    rpmbuild --build-in-place \
-             --with ccache \
-             --with debug \
-             --with run_tests \
-             "${RPMBUILD_EXTRA_OPTIONS[@]}" \
-             --define "_vpath_builddir $SPREAD_PATH/../build" \
-             -bb rpm/mir.spec
-    popd
+    mock \
+      --root ${SPREAD_SYSTEM}-x86_64 \
+      --verbose \
+      --with ccache \
+      --with debug \
+      --with run_tests \
+      "${RPMBUILD_EXTRA_OPTIONS[@]}" \
+      ~/rpmbuild/SRPMS/mir-*.src.rpm
 
     ccache --show-stats --zero-stats > ${CCACHE_DIR}/ccache.stats
 
