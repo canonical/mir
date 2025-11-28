@@ -23,8 +23,6 @@
 #include <mir/shell/surface_stack.h>
 #include <mir/shell/surface_specification.h>
 #include <mir/compositor/stream.h>
-#include <mir/events/event_builders.h>
-#include <mir/frontend/event_sink.h>
 #include <mir/graphics/graphic_buffer_allocator.h>
 #include <mir/scene/surface_observer.h>
 
@@ -34,11 +32,9 @@
 #include <memory>
 #include <algorithm>
 
-namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace mg = mir::graphics;
-namespace mev = mir::events;
 namespace mc = mir::compositor;
 
 ms::ApplicationSession::ApplicationSession(
@@ -48,7 +44,6 @@ ms::ApplicationSession::ApplicationSession(
     Fd socket_fd,
     std::string const& session_name,
     std::shared_ptr<SessionListener> const& session_listener,
-    std::shared_ptr<mf::EventSink> const& sink,
     std::shared_ptr<graphics::GraphicBufferAllocator> const& gralloc) :
     surface_stack(surface_stack),
     surface_factory(surface_factory),
@@ -56,7 +51,6 @@ ms::ApplicationSession::ApplicationSession(
     socket_fd_(socket_fd),
     session_name(session_name),
     session_listener(session_listener),
-    event_sink(sink),
     gralloc(gralloc)
 {
     assert(surface_stack);
@@ -256,18 +250,14 @@ void ms::ApplicationSession::show()
 
 void ms::ApplicationSession::start_prompt_session()
 {
-    // All sessions which are part of the prompt session get this event.
-    event_sink->handle_event(mev::make_prompt_session_state_event(mir_prompt_session_state_started));
 }
 
 void ms::ApplicationSession::stop_prompt_session()
 {
-    event_sink->handle_event(mev::make_prompt_session_state_event(mir_prompt_session_state_stopped));
 }
 
 void ms::ApplicationSession::suspend_prompt_session()
 {
-    event_sink->handle_event(mev::make_prompt_session_state_event(mir_prompt_session_state_suspended));
 }
 
 void ms::ApplicationSession::resume_prompt_session()
