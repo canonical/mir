@@ -29,10 +29,14 @@ public:
     CacheEglState();
     ~CacheEglState();
 
+    // We allow moves to make it easier to use this where some, but not all
+    // codepaths need to restore EGL state.
     CacheEglState(CacheEglState&& from);
     auto operator=(CacheEglState&& rhs) -> CacheEglState&;
 private:
     CacheEglState(CacheEglState const&) = delete;
+    auto operator=(CacheEglState const&) -> CacheEglState = delete;
+
     EGLDisplay dpy;
     EGLContext ctx;
     EGLSurface draw_surf;
