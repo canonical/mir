@@ -221,12 +221,17 @@ void mf::WlSurface::add_subsurface(WlSubsurface* child)
 
 void mf::WlSurface::remove_subsurface(WlSubsurface* child)
 {
-    children.erase(
-        std::remove(
-            children.begin(),
-            children.end(),
-            child),
-        children.end());
+    auto it = std::find(children.begin(), children.end(), child);
+    if (it != children.end())
+    {
+        size_t index = it - children.begin();
+        // Adjust parent_z_index if we're removing a child from before it
+        if (index < parent_z_index && parent_z_index > 0)
+        {
+            parent_z_index--;
+        }
+        children.erase(it);
+    }
 }
 
 bool mf::WlSurface::has_subsurface_with_surface(WlSurface* surface) const
@@ -243,6 +248,7 @@ void mf::WlSurface::reorder_subsurface(WlSubsurface* child, WlSurface* sibling_s
     if (!pending_children_order)
     {
         pending_children_order = children;
+        pending_parent_z_index = parent_z_index;
     }
 
     // Find the child in the pending order
@@ -258,55 +264,67 @@ void mf::WlSurface::reorder_subsurface(WlSubsurface* child, WlSurface* sibling_s
         return;
     }
 
+    size_t old_child_index = child_it - pending_children_order->begin();
+    
+    // Adjust parent_z_index if we're removing a child from before it
+    if (old_child_index < pending_parent_z_index.value())
+    {
+        pending_parent_z_index.value()--;
+    }
+
     // Remove child from its current position
     pending_children_order->erase(child_it);
 
-    // Find the sibling
-    // The sibling can be either another subsurface's surface, or the parent surface itself
-    auto sibling_it = pending_children_order->end();
+    // Find the insertion position
+    size_t insert_index;
     
     // Check if sibling is this surface (the parent)
     if (sibling_surface == this)
     {
-        // Place relative to parent means either at bottom (below parent) or at top (above parent)
-        // Since parent is not in the children list, we interpret:
-        // - place_below(parent) -> place at bottom of stack
-        // - place_above(parent) -> place at top of stack
+        // Place relative to parent in the z-order
         if (above)
         {
-            // Place at top (end of vector)
-            sibling_it = pending_children_order->end();
+            // Place just above parent (immediately after parent's position)
+            insert_index = pending_parent_z_index.value();
         }
         else
         {
-            // Place at bottom (beginning of vector)
-            sibling_it = pending_children_order->begin();
+            // Place just below parent (immediately before parent's position)
+            insert_index = pending_parent_z_index.value();
+            // Adjust parent position since we're inserting before it
+            pending_parent_z_index.value()++;
         }
     }
     else
     {
         // Find which subsurface has this sibling surface
-        for (auto it = pending_children_order->begin(); it != pending_children_order->end(); ++it)
-        {
-            if ((*it)->get_surface() == sibling_surface)
-            {
-                sibling_it = it;
-                break;
-            }
-        }
+        auto sibling_it = std::find_if(
+            pending_children_order->begin(),
+            pending_children_order->end(),
+            [sibling_surface](WlSubsurface const* s) { return s->get_surface() == sibling_surface; });
+        
+        size_t sibling_index = sibling_it - pending_children_order->begin();
         
         if (above)
         {
-            // Place just above sibling (after it in the vector)
-            // Incrementing iterator here is safe even if sibling_it points to the last element,
-            // as it will become end() which is the correct insertion point for "above the top-most"
-            ++sibling_it;
+            // Place just above sibling
+            insert_index = sibling_index + 1;
         }
-        // For below, sibling_it is already at the right position
+        else
+        {
+            // Place just below sibling
+            insert_index = sibling_index;
+        }
+        
+        // Adjust parent position if we're inserting before it
+        if (insert_index <= pending_parent_z_index.value())
+        {
+            pending_parent_z_index.value()++;
+        }
     }
 
     // Insert child at the new position
-    pending_children_order->insert(sibling_it, child);
+    pending_children_order->insert(pending_children_order->begin() + insert_index, child);
 }
 
 void mf::WlSurface::refresh_surface_data_now()
@@ -320,6 +338,13 @@ void mf::WlSurface::populate_surface_data(std::vector<shell::StreamSpecification
 {
     geometry::Displacement offset = parent_offset + offset_;
 
+    // Render subsurfaces that are below the parent
+    for (size_t i = 0; i < parent_z_index && i < children.size(); ++i)
+    {
+        children[i]->populate_surface_data(buffer_streams, input_shape_accumulator, offset);
+    }
+
+    // Render the parent surface
     buffer_streams.push_back(msh::StreamSpecification{stream, offset});
     geom::Rectangle surface_rect = {geom::Point{} + offset, buffer_size_.value_or(geom::Size{})};
     if (input_shape)
@@ -345,9 +370,10 @@ void mf::WlSurface::populate_surface_data(std::vector<shell::StreamSpecification
         input_shape_accumulator.push_back(surface_rect);
     }
 
-    for (WlSubsurface* subsurface : children)
+    // Render subsurfaces that are above the parent
+    for (size_t i = parent_z_index; i < children.size(); ++i)
     {
-        subsurface->populate_surface_data(buffer_streams, input_shape_accumulator, offset);
+        children[i]->populate_surface_data(buffer_streams, input_shape_accumulator, offset);
     }
 }
 
@@ -639,6 +665,11 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
     {
         children = std::move(*pending_children_order);
         pending_children_order = std::nullopt;
+    }
+    if (pending_parent_z_index)
+    {
+        parent_z_index = pending_parent_z_index.value();
+        pending_parent_z_index = std::nullopt;
     }
 
     for (WlSubsurface* child: children)

@@ -200,7 +200,9 @@ private:
     NullWlSurfaceRole null_role;
     WlSurfaceRole* role;
     std::vector<WlSubsurface*> children; // ordering is from bottom to top
+    size_t parent_z_index{0}; // index in children where parent surface renders (subsurfaces before this are below parent)
     std::optional<std::vector<WlSubsurface*>> pending_children_order; // pending z-order changes
+    std::optional<size_t> pending_parent_z_index; // pending parent z-order position
     /* We might need to resubmit the current buffer, but with different metadata
      * For example: if a client commits a wl_surface.buffer_scale() without attaching
      * a new buffer, we need to generate a new frame with the same content, but at the
