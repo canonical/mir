@@ -39,6 +39,8 @@
 #include <cmath>
 #include <sstream>
 #include <mutex>
+#include <ranges>
+#include <type_traits>
 
 namespace mg = mir::graphics;
 namespace mgl = mir::gl;
@@ -156,6 +158,12 @@ const GLchar* const vertex_shader_src =
     "   v_texcoord = texcoord;\n"
     "}\n"
 };
+
+template<typename Index, typename Range>
+    requires std::integral<Index>
+auto enumerate_with_idx_type(Range&& range) {
+    return std::views::zip(std::views::iota(Index{0}), std::forward<Range>(range));
+}
 }
 
 class mrg::Renderer::ProgramFactory : public mir::graphics::gl::ProgramFactory
@@ -249,7 +257,7 @@ private:
 
         glShaderSource(id, 1, &src, NULL);
         glCompileShader(id);
-        GLint ok;
+        GLint ok{0};
         glGetShaderiv(id, GL_COMPILE_STATUS, &ok);
         if (!ok)
         {
@@ -271,7 +279,7 @@ private:
         glAttachShader(program, fragment_shader);
         glAttachShader(program, vertex_shader);
         glLinkProgram(program);
-        GLint ok;
+        GLint ok{0};
         glGetProgramiv(program, GL_LINK_STATUS, &ok);
         if (!ok)
         {
@@ -293,7 +301,7 @@ private:
 };
 
 // Shader that converts colors to grayscale.
-const GLchar* grayscale_src =
+GLchar const* const grayscale_src =
     "uniform sampler2D tex;\n"
     "vec4 sample_to_rgba(in vec2 texcoord) {\n"
     "   vec4 col = texture2D(tex, texcoord);\n"
@@ -302,7 +310,7 @@ const GLchar* grayscale_src =
     "}\n";
 
 // Shader that inverts colors.
-const GLchar* invert_src =
+GLchar const* const invert_src =
     "uniform sampler2D tex;\n"
     "vec4 sample_to_rgba(in vec2 texcoord) {\n"
     "   vec4 col = texture2D(tex, texcoord);\n"
@@ -425,7 +433,7 @@ private:
 
         glShaderSource(id, 1, &src, NULL);
         glCompileShader(id);
-        GLint ok;
+        GLint ok{0};
         glGetShaderiv(id, GL_COMPILE_STATUS, &ok);
         if (!ok)
         {
@@ -473,7 +481,7 @@ private:
         glAttachShader(program, fragment_shader);
         glAttachShader(program, vertex_shader);
         glLinkProgram(program);
-        GLint ok;
+        GLint ok{0};
         glGetProgramiv(program, GL_LINK_STATUS, &ok);
         if (!ok)
         {
@@ -490,7 +498,7 @@ private:
 
    static GLuint make_texture(mir::geometry::Size size)
     {
-        GLuint tex;
+        GLuint tex{0};
         glGenTextures(1, &tex);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, tex);
@@ -509,7 +517,7 @@ private:
 
     static GLuint make_framebuffer(GLuint tex)
     {
-        GLuint fb;
+        GLuint fb{0};
         glGenFramebuffers(1, &fb);
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fb);
         glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex, 0);
@@ -532,13 +540,13 @@ mrg::Renderer::Program::Program(GLuint program_id)
     id = program_id;
     position_attr = glGetAttribLocation(id, "position");
     texcoord_attr = glGetAttribLocation(id, "texcoord");
-    for (auto i = 0u; i < tex_uniforms.size() ; ++i)
+    for (auto const [index, uniform] : enumerate_with_idx_type<GLint>(tex_uniforms))
     {
         /* You can reference uniform arrays as tex[0], tex[1], tex[2], … until you
          * hit the end of the array, which will return -1 as the location.
          */
-        auto const uniform_name = std::string{"tex["} + std::to_string(i) + "]";
-        tex_uniforms[i] = glGetUniformLocation(id, uniform_name.c_str());
+        auto const uniform_name = std::string{"tex["} + std::to_string(index) + "]";
+        uniform = glGetUniformLocation(id, uniform_name.c_str());
     }
     centre_uniform = glGetUniformLocation(id, "centre");
     oriented_centre = glGetUniformLocation(id, "oriented_centre");
@@ -564,6 +572,7 @@ mrg::Renderer::Renderer(
     : output_surface{std::make_unique<OutputFilter>(make_output_current(std::move(output)))},
       clear_color{0.0f, 0.0f, 0.0f, 1.0f},
       program_factory{std::make_unique<ProgramFactory>()},
+      screen_to_gl_coords({0}),
       display_transform(1),
       gl_interface{std::move(gl_interface)}
 {
@@ -596,7 +605,7 @@ mrg::Renderer::Renderer(
 
     for (auto& s : glstrings)
     {
-        auto val = reinterpret_cast<char const*>(glGetString(s.id));
+        auto val = reinterpret_cast<char const*>(glGetString(s.id)); //TICS !cppcoreguidelines-pro-type-reinterpret-cast: glGetString returns an ASCII string, guaranteed not to have the high-bit set, so it's representationally-identical to signed char
         mir::log_info(std::string(s.label) + ": " + (val ? val : ""));
     }
 
@@ -735,11 +744,11 @@ void mrg::Renderer::draw(mg::Renderable const& renderable) const
     {   // Avoid reloading the screen-global uniforms on every renderable
         // TODO: We actually only need to bind these *once*, right? Not once per frame?
         prog->last_used_frameno = frameno;
-        for (auto i = 0u; i < prog->tex_uniforms.size(); ++i)
+        for (auto const [index, uniform] : enumerate_with_idx_type<GLint>(prog->tex_uniforms))
         {
-            if (prog->tex_uniforms[i] != -1)
+            if (uniform != -1)
             {
-                glUniform1i(prog->tex_uniforms[i], i);
+                glUniform1i(uniform, index);
             }
         }
         glUniformMatrix4fv(prog->display_transform_uniform, 1, GL_FALSE,
