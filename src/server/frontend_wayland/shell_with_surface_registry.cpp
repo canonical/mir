@@ -76,8 +76,9 @@ auto mf::ShellWithSurfaceRegistry::create_surface(
     std::shared_ptr<ms::SurfaceObserver> const& observer,
     Executor* observer_executor) -> std::shared_ptr<ms::Surface>
 {
-    // Note: add_surface_to_registry() must be called separately with the WlSurface
-    // This is because we don't have access to the WlSurface at this point
+    // Note: The caller must call add_surface_to_registry() with the WlSurface after this
+    // to complete the registration. The asymmetry with destroy_surface() (which automatically
+    // removes from registry) is intentional: we don't have access to the WlSurface at this point.
     return wrapped_shell->create_surface(session, params, observer, observer_executor);
 }
 

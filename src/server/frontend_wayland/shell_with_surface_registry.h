@@ -58,7 +58,8 @@ public:
 
     void stop_prompt_session(std::shared_ptr<scene::PromptSession> const& prompt_session) override;
 
-    /// Creates a surface and registers it with the SurfaceRegistry
+    /// Creates a surface. Note: The surface must be registered with add_surface_to_registry()
+    /// after creation since the WlSurface is not available at this point.
     auto create_surface(
         std::shared_ptr<scene::Session> const& session,
         shell::SurfaceSpecification const& params,
