@@ -281,7 +281,8 @@ ExtensionBuilder const xwayland_builder {
                 ctx.session_authorizer,
                 ctx.main_clipboard,
                 *ctx.seat,
-                ctx.surface_stack);
+                ctx.surface_stack,
+                ctx.surface_registry);
         }
 };
 
