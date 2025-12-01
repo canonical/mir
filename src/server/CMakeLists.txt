@@ -7,8 +7,6 @@ add_compile_definitions(
 
 include_directories(
   ${PROJECT_SOURCE_DIR}/include/server
-  ${PROJECT_SOURCE_DIR}/include/renderer
-  ${PROJECT_SOURCE_DIR}/include/renderers/gl
   ${PROJECT_SOURCE_DIR}/src/include/server
 )
 add_compile_definitions(MIR_SERVER_INPUT_PLATFORM_VERSION="${MIR_SERVER_INPUT_PLATFORM_VERSION}")
@@ -46,7 +44,6 @@ configure_file(
 
 add_library(mirserverobjects OBJECT
   run_mir.cpp
-  report_exception.cpp
   terminate_with_current_exception.cpp
   display_server.cpp
   default_server_configuration.cpp
@@ -107,9 +104,6 @@ set(MIR_SERVER_REFERENCES
   mirnullreport
   mirconsole
   mirservertime
-
-  mirrenderergl
-  mirgl
 
   PkgConfig::DRM
   PkgConfig::EGL

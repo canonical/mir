@@ -221,5 +221,13 @@ MIR_PLATFORM_2.24.0 {
  global:
 extern "C++" {
     mir::graphics::valid_pixel_format*;
+    mir::gl::tessellate_renderable_into_rectangle*;
+    mir::renderer::gl::RendererFactory::RendererFactory*;
+    mir::renderer::gl::Renderer::Renderer*;
+    mir::renderer::gl::Renderer::render*;
+    mir::renderer::gl::Renderer::set_output_transform*;
+    mir::renderer::gl::Renderer::set_viewport*;
+    mir::renderer::gl::Renderer::?Renderer*;
+    vtable?for?mir::renderer::gl::RendererFactory;
   };
 } MIR_PLATFORM_2.23;

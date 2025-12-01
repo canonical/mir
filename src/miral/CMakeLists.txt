@@ -1,6 +1,5 @@
 include_directories(
   ${PROJECT_SOURCE_DIR}/src/include/server
-  ${PROJECT_SOURCE_DIR}/include/renderer
 )
 
 set(MIRAL_ABI 7)
