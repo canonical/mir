@@ -67,6 +67,8 @@ public:
 
     auto subsurface_at(geometry::Point point) -> std::optional<WlSurface*>;
 
+    WlSurface* get_surface() const { return surface; }
+
 private:
     void set_position(int32_t x, int32_t y) override;
     void place_above(struct wl_resource* sibling) override;

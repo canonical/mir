@@ -48,6 +48,7 @@
 #include <chrono>
 #include <ranges>
 #include <boost/throw_exception.hpp>
+#include <algorithm>
 #include <cmath>
 #include <limits>
 #include <optional>
@@ -226,6 +227,79 @@ void mf::WlSurface::remove_subsurface(WlSubsurface* child)
             children.end(),
             child),
         children.end());
+}
+
+void mf::WlSurface::reorder_subsurface(WlSubsurface* child, WlSurface* sibling_surface, bool above)
+{
+    // Initialize pending order if not already set
+    if (!pending_children_order)
+    {
+        pending_children_order = children;
+    }
+
+    // Find the child in the pending order
+    auto child_it = std::find(pending_children_order->begin(), pending_children_order->end(), child);
+    if (child_it == pending_children_order->end())
+    {
+        // Child not found, shouldn't happen
+        return;
+    }
+
+    // Remove child from its current position
+    pending_children_order->erase(child_it);
+
+    // Find the sibling
+    // The sibling can be either another subsurface's surface, or the parent surface itself
+    auto sibling_it = pending_children_order->end();
+    
+    // Check if sibling is this surface (the parent)
+    if (sibling_surface == this)
+    {
+        // Place relative to parent means either at bottom (below parent) or at top (above parent)
+        // Since parent is not in the children list, we interpret:
+        // - place_below(parent) -> place at bottom of stack
+        // - place_above(parent) -> place at top of stack
+        if (above)
+        {
+            // Place at top (end of vector)
+            sibling_it = pending_children_order->end();
+        }
+        else
+        {
+            // Place at bottom (beginning of vector)
+            sibling_it = pending_children_order->begin();
+        }
+    }
+    else
+    {
+        // Find which subsurface has this sibling surface
+        for (auto it = pending_children_order->begin(); it != pending_children_order->end(); ++it)
+        {
+            if ((*it)->get_surface() == sibling_surface)
+            {
+                sibling_it = it;
+                break;
+            }
+        }
+        
+        if (sibling_it == pending_children_order->end())
+        {
+            // Sibling not found - protocol error, but we'll just ignore it
+            // Re-add child at its original position
+            pending_children_order->push_back(child);
+            return;
+        }
+        
+        if (above)
+        {
+            // Place just above sibling (after it in the vector)
+            ++sibling_it;
+        }
+        // For below, sibling_it is already at the right position
+    }
+
+    // Insert child at the new position
+    pending_children_order->insert(sibling_it, child);
 }
 
 void mf::WlSurface::refresh_surface_data_now()
@@ -551,6 +625,13 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
         }
 
         buffer_size_ = logical_size;
+    }
+
+    // Apply pending subsurface z-order changes
+    if (pending_children_order)
+    {
+        children = std::move(pending_children_order.value());
+        pending_children_order = std::nullopt;
     }
 
     for (WlSubsurface* child: children)

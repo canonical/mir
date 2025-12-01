@@ -147,6 +147,7 @@ public:
     void set_pending_offset(std::optional<geometry::Displacement> const& offset);
     void add_subsurface(WlSubsurface* child);
     void remove_subsurface(WlSubsurface* child);
+    void reorder_subsurface(WlSubsurface* child, WlSurface* sibling, bool above);
     void refresh_surface_data_now();
     void pending_invalidate_surface_data() { pending.invalidate_surface_data(); }
     void populate_surface_data(std::vector<shell::StreamSpecification>& buffer_streams,
@@ -198,6 +199,7 @@ private:
     NullWlSurfaceRole null_role;
     WlSurfaceRole* role;
     std::vector<WlSubsurface*> children; // ordering is from bottom to top
+    std::optional<std::vector<WlSubsurface*>> pending_children_order; // pending z-order changes
     /* We might need to resubmit the current buffer, but with different metadata
      * For example: if a client commits a wl_surface.buffer_scale() without attaching
      * a new buffer, we need to generate a new frame with the same content, but at the
