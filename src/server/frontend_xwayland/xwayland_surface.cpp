@@ -519,8 +519,8 @@ void mf::XWaylandSurface::close()
 
     if (scene_surface)
     {
-        wm_shell.surface_registry->remove_surface(scene_surface);
         shell->destroy_surface(scene_surface->session().lock(), scene_surface);
+        wm_shell.surface_registry->remove_surface(scene_surface);
         scene_surface.reset();
         // Someone may still be holding on to the surface somewhere, and that's fine
     }
