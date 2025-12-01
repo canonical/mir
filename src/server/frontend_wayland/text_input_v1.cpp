@@ -24,6 +24,7 @@
 #include <memory>
 #include <boost/throw_exception.hpp>
 #include <deque>
+#include <ranges>
 #include <utility>
 
 namespace mf = mir::frontend;
@@ -322,11 +323,11 @@ void TextInputV1::send_text_change(ms::TextInputChange const& change)
 auto TextInputV1::find_client_serial(ms::TextInputStateSerial state_serial) const -> std::optional<uint32_t>
 {
     // Loop in reverse order because the serial we're looking for will generally be at the end
-    for (auto it = state_serials.rbegin(); it != state_serials.rend(); it++)
+    for (auto const& serial_pair : std::ranges::reverse_view(state_serials))
     {
-        if (it->hub_serial == state_serial)
+        if (serial_pair.hub_serial == state_serial)
         {
-            return it->client_serial;
+            return serial_pair.client_serial;
         }
     }
     return std::nullopt;

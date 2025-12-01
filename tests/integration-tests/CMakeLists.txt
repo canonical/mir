@@ -3,13 +3,8 @@ include(CMakeDependentOption)
 include_directories(
   ${CMAKE_SOURCE_DIR}
   ${CMAKE_CURRENT_BINARY_DIR}
-  ${PROJECT_SOURCE_DIR}/src/include/platform
-  ${PROJECT_SOURCE_DIR}/src/include/cookie
-  ${PROJECT_SOURCE_DIR}/src/include/common
   ${PROJECT_SOURCE_DIR}/src/include/server
-  ${PROJECT_SOURCE_DIR}/src/include/client
   ${PROJECT_SOURCE_DIR}/src/include/gl
-  ${PROJECT_SOURCE_DIR}/include/renderers/sw
 )
 
 set(
@@ -54,7 +49,6 @@ target_link_libraries(
 
   mircommon
 
-  ${MIR_PLATFORM_REFERENCES}
   ${MIR_SERVER_REFERENCES}
   # GBM platform dependencies
   PkgConfig::DRM

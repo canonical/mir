@@ -1,4 +1,3 @@
-include_directories(${PROJECT_SOURCE_DIR}/include/renderers/sw)
 set(
   INPUT_SOURCES
 

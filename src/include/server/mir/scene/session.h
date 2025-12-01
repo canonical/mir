@@ -26,7 +26,6 @@
 
 namespace mir
 {
-class ClientVisibleError;
 class Executor;
 namespace compositor
 {
@@ -66,8 +65,6 @@ public:
     virtual auto process_id() const -> pid_t = 0;
     virtual auto socket_fd() const -> Fd = 0;
     virtual auto name() const -> std::string = 0;
-
-    virtual void send_error(ClientVisibleError const&) = 0;
 
     virtual auto default_surface() const -> std::shared_ptr<Surface> = 0;
 

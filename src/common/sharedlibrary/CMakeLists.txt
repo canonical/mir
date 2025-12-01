@@ -14,7 +14,6 @@
 
 include(CheckCXXSymbolExists)
 
-list(APPEND CMAKE_REQUIRED_LIBRARIES dl)
 list(APPEND CMAKE_REQUIRED_DEFINITIONS -D_GNU_SOURCE)
 
 check_cxx_symbol_exists("dlvsym" "dlfcn.h" HAS_DLVSYM)
@@ -47,7 +46,7 @@ add_library(mirsharedsharedlibrary OBJECT
 
 target_include_directories(mirsharedsharedlibrary
   PUBLIC
-    ${PROJECT_SOURCE_DIR}/src/include/common
+    ${PROJECT_SOURCE_DIR}/include/common
 )
 
 target_link_libraries(mirsharedsharedlibrary

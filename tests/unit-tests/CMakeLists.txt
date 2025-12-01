@@ -23,14 +23,8 @@ endif()
 include_directories(
   ${CMAKE_SOURCE_DIR}
 
-  ${PROJECT_SOURCE_DIR}/include/renderers/sw
-  ${PROJECT_SOURCE_DIR}/src/include/platform
   ${PROJECT_SOURCE_DIR}/src/include/server
-  ${PROJECT_SOURCE_DIR}/src/include/client
-  ${PROJECT_SOURCE_DIR}/src/include/common
   ${PROJECT_SOURCE_DIR}/src/include/gl
-  ${PROJECT_SOURCE_DIR}/src/platforms/common/client
-  ${PROJECT_SOURCE_DIR}/src/platforms/common/server
   ${CMAKE_BINARY_DIR}/src/server/console
 )
 
@@ -187,7 +181,6 @@ target_link_libraries(
   PkgConfig::LIBINPUT
   PkgConfig::WAYLAND_SERVER
   ${MIR_SERVER_REFERENCES}
-  ${MIR_PLATFORM_REFERENCES}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
 
@@ -220,7 +213,6 @@ target_link_libraries(
   PkgConfig::UMOCKDEV
   PkgConfig::LIBINPUT
   ${MIR_SERVER_REFERENCES}
-  ${MIR_PLATFORM_REFERENCES}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
 

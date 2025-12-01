@@ -19,7 +19,6 @@
 #include <mir/scene/basic_surface.h>
 #include "src/server/scene/surface_change_notification.h"
 
-#include <mir/events/event_private.h>
 #include <mir/frontend/event_sink.h>
 #include <mir/geometry/rectangle.h>
 #include <mir/geometry/displacement.h>

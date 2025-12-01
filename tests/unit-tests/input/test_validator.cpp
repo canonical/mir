@@ -16,7 +16,6 @@
 
 #include <mir/input/validator.h>
 
-#include <mir/events/event_private.h>
 #include <mir/events/event_builders.h>
 
 #include <mir/test/fake_shared.h>

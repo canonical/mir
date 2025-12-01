@@ -18,9 +18,7 @@
 #define MIR_TEST_DOUBLES_MOCK_EVENT_SINK_H_
 
 #include <mir/frontend/event_sink.h>
-#include <mir/client_visible_error.h>
 #include <mir/graphics/display_configuration.h>
-#include <mir/events/event_private.h>
 #include <mir/input/mir_input_config.h>
 
 #include <gmock/gmock.h>
@@ -42,7 +40,6 @@ struct MockEventSink : public frontend::EventSink
     MOCK_METHOD(void, handle_event, (MirEvent const&));
     MOCK_METHOD(void, handle_lifecycle_event, (MirLifecycleState), (override));
     MOCK_METHOD(void, handle_display_config_change, (graphics::DisplayConfiguration const&), (override));
-    MOCK_METHOD(void, handle_error, (ClientVisibleError const&), (override));
     MOCK_METHOD(void, send_ping, (int32_t), (override));
     MOCK_METHOD(void, handle_input_config_change, (MirInputConfig const&), (override));
 };

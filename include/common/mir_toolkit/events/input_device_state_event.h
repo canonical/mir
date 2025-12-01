@@ -18,6 +18,7 @@
 #define MIR_TOOLKIT_EVENTS_INPUT_DEVICE_STATE_EVENT_H_
 
 #include <mir_toolkit/events/event.h>
+#include <mir_toolkit/mir_input_device_types.h>
 
 #ifdef __cplusplus
 extern "C" {

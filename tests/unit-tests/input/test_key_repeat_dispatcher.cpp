@@ -16,7 +16,6 @@
 
 #include "src/server/input/key_repeat_dispatcher.h"
 
-#include <mir/events/event_private.h>
 #include <mir/events/event_builders.h>
 #include <mir/time/alarm.h>
 #include <mir/time/alarm_factory.h>
