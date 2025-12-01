@@ -31,16 +31,23 @@ namespace geometry
 {
 namespace generic
 {
+// U is within T's representable range
+template<typename U, typename T>
+concept ConversionWithinBounds = requires
+{
+    // T can store the minimum value representible in U, and...
+    requires std::numeric_limits<T>::lowest() <= std::numeric_limits<U>::lowest();
+    // T can store the maximum value representible in U.
+    requires std::numeric_limits<T>::max() >= std::numeric_limits<U>::max();
+};
+
 // Concept guaranteeing conversion from U to T is lossless
 template<typename U, typename T>
 concept ConversionIsLossless = requires
 {
     // T has at least as many digits of precision as U, and...
     requires std::numeric_limits<T>::digits >= std::numeric_limits<U>::digits;
-    // T can store the minimum value representible in U, and...
-    requires std::numeric_limits<T>::lowest() <= std::numeric_limits<U>::lowest();
-    // T can store the maximum value representible in U.
-    requires std::numeric_limits<T>::max() >= std::numeric_limits<U>::max();
+    requires ConversionWithinBounds<U, T>;
 };
 
 template<typename T, typename Tag>
@@ -82,6 +89,18 @@ struct Value
     {
         return this->value;
     }
+
+    /// Convert to a different type, possibly losing precision but not range
+    ///
+    /// The round_to<Q> accessor will exist for any numeric type Q
+    /// that have enough range to represent any valid ValueType.
+    template <typename Q>
+        requires ConversionWithinBounds<T, Q>
+    constexpr Q round_to() const
+    {
+        return static_cast<Q>(this->value);
+    }
+
 
     constexpr T as_value() const noexcept
     {
