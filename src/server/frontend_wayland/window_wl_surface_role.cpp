@@ -16,7 +16,7 @@
 
 #include "window_wl_surface_role.h"
 
-#include "output_manager.h"
+#include "shell_with_surface_registry.h"
 #include "surface_registry.h"
 #include "wayland_utils.h"
 #include "wl_surface.h"
@@ -105,7 +105,6 @@ mf::WindowWlSurfaceRole::~WindowWlSurfaceRole()
     if (auto const scene_surface = weak_scene_surface.lock())
     {
         shell->destroy_surface(session, scene_surface);
-        surface_registry->remove_surface(scene_surface);
         weak_scene_surface.reset();
     }
 }
