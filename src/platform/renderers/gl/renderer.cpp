@@ -741,10 +741,10 @@ void mrg::Renderer::draw(mg::Renderable const& renderable) const
     glActiveTexture(GL_TEXTURE0);
 
     auto const& rect = renderable.screen_position();
-    GLfloat centrex = rect.top_left.x.as_int() +
-                      rect.size.width.as_int() / 2.0f;
-    GLfloat centrey = rect.top_left.y.as_int() +
-                      rect.size.height.as_int() / 2.0f;
+    GLfloat centrex = rect.top_left.x.round_to<GLfloat>() +
+                      rect.size.width.round_to<GLfloat>() / 2.0f;
+    GLfloat centrey = rect.top_left.y.round_to<GLfloat>() +
+                      rect.size.height.round_to<GLfloat>() / 2.0f;
     glUniform2f(prog->centre_uniform, centrex, centrey);
 
     // Wayland surfaces may specify an orientation that matches the output
@@ -761,10 +761,10 @@ void mrg::Renderer::draw(mg::Renderable const& renderable) const
     auto const orientation = renderable.orientation();
     if (orientation == mir_orientation_left || orientation == mir_orientation_right)
     {
-        centrex = rect.top_left.x.as_int() +
-                        rect.size.height.as_int() / 2.0f;
-        centrey = rect.top_left.y.as_int() +
-                        rect.size.width.as_int() / 2.0f;
+        centrex = rect.top_left.x.round_to<GLfloat>() +
+                        rect.size.height.round_to<GLfloat>() / 2.0f;
+        centrey = rect.top_left.y.round_to<GLfloat>() +
+                        rect.size.width.round_to<GLfloat>() / 2.0f;
     }
     glUniform2f(prog->oriented_centre, centrex, centrey);
 
@@ -901,17 +901,17 @@ void mrg::Renderer::set_viewport(geometry::Rectangle const& rect)
 
     float const vertical_fov_degrees = 30.0f;
     float const near =
-        (rect.size.height.as_int() / 2.0f) /
-        std::tan((vertical_fov_degrees * M_PI / 180.0f) / 2.0f);
+        (rect.size.height.round_to<float>() / 2.0f) /
+        std::tanf((vertical_fov_degrees * M_PI / 180.0f) / 2.0f);
     float const far = -near;
 
     screen_to_gl_coords = glm::scale(screen_to_gl_coords,
-            glm::vec3{2.0f / rect.size.width.as_int(),
-                      -2.0f / rect.size.height.as_int(),
+            glm::vec3{2.0f / rect.size.width.round_to<float>(),
+                      -2.0f / rect.size.height.round_to<float>(),
                       2.0f / (near - far)});
     screen_to_gl_coords = glm::translate(screen_to_gl_coords,
-            glm::vec3{-rect.top_left.x.as_int(),
-                      -rect.top_left.y.as_int(),
+            glm::vec3{-rect.top_left.x.round_to<float>(),
+                      -rect.top_left.y.round_to<float>(),
                       0.0f});
 
     viewport = rect;
@@ -943,9 +943,9 @@ void mrg::Renderer::update_gl_viewport()
         GLint reduced_width = output_width, reduced_height = output_height;
         // if viewport_aspect_ratio >= output_aspect_ratio
         if (viewport_width * output_height >= output_width * viewport_height)
-            reduced_height = output_width * viewport_height / viewport_width;
+            reduced_height = static_cast<GLint>(output_width * viewport_height / viewport_width);
         else
-            reduced_width = output_height * viewport_width / viewport_height;
+            reduced_width = static_cast<GLint>(output_height * viewport_width / viewport_height);
 
         GLint offset_x = (output_width - reduced_width) / 2;
         GLint offset_y = (output_height - reduced_height) / 2;
