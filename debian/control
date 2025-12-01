@@ -149,8 +149,14 @@ Depends: libmirplatform33 (= ${binary:Version}),
          libboost-program-options-dev,
          ${misc:Depends},
          libgbm-dev,
-Breaks: libmirplatform (<< 0.6)
-Replaces: libmirplatform (<< 0.6)
+Breaks: libmirplatform (<< 0.6),
+        libmirrenderer-dev (<< 3.0),
+        mir-renderer-gl-dev (<< 3.0)
+Replaces: libmirplatform (<< 0.6),
+          libmirrenderer-dev (<< 3.0),
+          mir-renderer-gl-dev (<< 3.0)
+Provides: libmirrenderer-dev,
+          mir-renderer-gl-dev
 Description: Display server for Ubuntu - development headers
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
