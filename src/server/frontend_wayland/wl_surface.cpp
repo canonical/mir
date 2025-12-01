@@ -251,7 +251,10 @@ void mf::WlSurface::reorder_subsurface(WlSubsurface* child, WlSurface* sibling_s
     {
         // Child not found - this indicates an internal inconsistency where a subsurface
         // is trying to reorder itself but is not in the parent's children list
-        log_warning("Subsurface %p attempted to reorder but not found in parent's children list", static_cast<void*>(child));
+        log_warning(
+            "Subsurface (wl_surface@%u) attempted to reorder but not found in parent's (wl_surface@%u) children list",
+            wl_resource_get_id(child->get_surface()->raw_resource()),
+            wl_resource_get_id(raw_resource()));
         return;
     }
 
@@ -295,6 +298,8 @@ void mf::WlSurface::reorder_subsurface(WlSubsurface* child, WlSurface* sibling_s
         if (above)
         {
             // Place just above sibling (after it in the vector)
+            // Incrementing iterator here is safe even if sibling_it points to the last element,
+            // as it will become end() which is the correct insertion point for "above the top-most"
             ++sibling_it;
         }
         // For below, sibling_it is already at the right position
