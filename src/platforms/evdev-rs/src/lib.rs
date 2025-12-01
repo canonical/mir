@@ -1182,7 +1182,7 @@ mod ffi {
     unsafe extern "C++" {
         include!("platform_bridge.h");
         include!("mir/input/input_device_registry.h");
-        include!("mir/input/device.h");
+        include!("mir/input/device_capability.h");
         include!("mir/input/input_sink.h");
         include!("mir/input/event_builder.h");
         include!("mir/events/event.h");

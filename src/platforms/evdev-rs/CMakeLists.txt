@@ -48,10 +48,7 @@ add_rust_cxx_library(mirplatforminputevdevrs_rust
   LIBRARIES PkgConfig::UDEV PkgConfig::LIBINPUT
   INCLUDES
     ${PROJECT_SOURCE_DIR}/src/platforms/evdev-rs
-    ${PROJECT_SOURCE_DIR}/src/include/platform
-    ${PROJECT_SOURCE_DIR}/src/include/server
     ${PROJECT_SOURCE_DIR}/include/common
-    ${PROJECT_SOURCE_DIR}/src/include/common
 )
 
 target_link_libraries(mirplatforminputevdevrsobjects

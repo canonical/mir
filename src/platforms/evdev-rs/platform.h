@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/console_services.h"
+#include <mir/console_services.h>
 #include <mir/input/platform.h>
 #include <memory>
 

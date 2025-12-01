@@ -125,7 +125,6 @@ class PlatformBridgeC
 {
 public:
     PlatformBridgeC(Platform* platform, std::shared_ptr<mir::ConsoleServices> const& console);
-    virtual ~PlatformBridgeC() = default;
     std::unique_ptr<DeviceBridgeC> acquire_device(int major, int minor) const;
     std::shared_ptr<InputDevice> create_input_device(int device_id) const;
     std::unique_ptr<EventBuilderWrapper> create_event_builder_wrapper(EventBuilder* event_builder) const;
