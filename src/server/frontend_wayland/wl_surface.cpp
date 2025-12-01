@@ -265,7 +265,7 @@ void mf::WlSurface::reorder_subsurface(WlSubsurface* child, WlSurface* sibling_s
     }
 
     size_t old_child_index = child_it - pending_children_order->begin();
-    
+
     // Adjust parent_z_index if we're removing a child from before it
     auto& parent_idx = pending_parent_z_index.value();
     if (old_child_index < parent_idx)
@@ -278,7 +278,7 @@ void mf::WlSurface::reorder_subsurface(WlSubsurface* child, WlSurface* sibling_s
 
     // Find the insertion position
     size_t insert_index;
-    
+
     // Check if sibling is this surface (the parent)
     if (sibling_surface == this)
     {
@@ -303,7 +303,7 @@ void mf::WlSurface::reorder_subsurface(WlSubsurface* child, WlSurface* sibling_s
             pending_children_order->begin(),
             pending_children_order->end(),
             [sibling_surface](auto const* s) { return s->get_surface() == sibling_surface; });
-        
+
         if (sibling_it == pending_children_order->end())
         {
             // Sibling not found - this indicates an internal inconsistency
@@ -314,9 +314,9 @@ void mf::WlSurface::reorder_subsurface(WlSubsurface* child, WlSurface* sibling_s
                 wl_resource_get_id(raw_resource()));
             return;
         }
-        
+
         size_t sibling_index = sibling_it - pending_children_order->begin();
-        
+
         if (above)
         {
             // Place just above sibling
@@ -327,7 +327,7 @@ void mf::WlSurface::reorder_subsurface(WlSubsurface* child, WlSurface* sibling_s
             // Place just below sibling
             insert_index = sibling_index;
         }
-        
+
         // Adjust parent position if we're inserting before it
         if (insert_index <= parent_idx)
         {
