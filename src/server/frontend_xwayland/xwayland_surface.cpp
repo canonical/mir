@@ -22,12 +22,14 @@
 #include "xwayland_client_manager.h"
 #include "xwayland_wm_shell.h"
 #include "xwayland_surface_role.h"
+#include "surface_registry.h"
 
 #include <mir/frontend/wayland.h>
 #include <mir/scene/surface.h>
 #include <mir/shell/shell.h>
 #include <mir/shell/surface_specification.h>
 #include <mir/events/input_event.h>
+#include <mir/wayland/weak.h>
 
 #include "boost/throw_exception.hpp"
 
@@ -517,6 +519,7 @@ void mf::XWaylandSurface::close()
 
     if (scene_surface)
     {
+        wm_shell.surface_registry->remove_surface(scene_surface);
         shell->destroy_surface(scene_surface->session().lock(), scene_surface);
         scene_surface.reset();
         // Someone may still be holding on to the surface somewhere, and that's fine
@@ -788,6 +791,7 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
     }
 
     auto const surface = shell->create_surface(session, spec, observer, nullptr);
+    wm_shell.surface_registry->add_surface(surface, mw::Weak<WlSurface>(wl_surface));
     XWaylandSurfaceObserverManager local_surface_observer_manager{surface, std::move(observer)};
     inform_client_of_window_state(std::unique_lock{mutex}, state);
     auto const top_left = scaled_top_left_of(*surface) + scaled_content_offset_of(*surface);
