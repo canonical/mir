@@ -527,7 +527,15 @@ void mf::WindowWlSurfaceRole::create_scene_surface()
     surface.value().populate_surface_data(mods.streams.value(), mods.input_shape.value(), {});
 
     auto const scene_surface = shell->create_surface(session, mods, observer, &wayland_executor);
-    surface_registry->add_surface(scene_surface, surface);
+    if (auto shell_with_registry = std::dynamic_pointer_cast<ShellWithSurfaceRegistry>(shell))
+    {
+        shell_with_registry->add_surface_to_registry(scene_surface, surface);
+    }
+    else
+    {
+        // Fallback for non-wrapped shells (e.g., in tests)
+        surface_registry->add_surface(scene_surface, surface);
+    }
     weak_scene_surface = scene_surface;
 
     if (mods.min_width)  committed_min_size.width  = mods.min_width.value();
