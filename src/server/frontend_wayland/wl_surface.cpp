@@ -229,6 +229,14 @@ void mf::WlSurface::remove_subsurface(WlSubsurface* child)
         children.end());
 }
 
+bool mf::WlSurface::has_subsurface_with_surface(WlSurface* surface) const
+{
+    return std::any_of(
+        children.begin(),
+        children.end(),
+        [surface](WlSubsurface const* child) { return child->get_surface() == surface; });
+}
+
 void mf::WlSurface::reorder_subsurface(WlSubsurface* child, WlSurface* sibling_surface, bool above)
 {
     // Initialize pending order if not already set
@@ -241,7 +249,9 @@ void mf::WlSurface::reorder_subsurface(WlSubsurface* child, WlSurface* sibling_s
     auto child_it = std::find(pending_children_order->begin(), pending_children_order->end(), child);
     if (child_it == pending_children_order->end())
     {
-        // Child not found, shouldn't happen
+        // Child not found - this indicates an internal inconsistency where a subsurface
+        // is trying to reorder itself but is not in the parent's children list
+        log_warning("Subsurface %p attempted to reorder but not found in parent's children list", static_cast<void*>(child));
         return;
     }
 
@@ -280,14 +290,6 @@ void mf::WlSurface::reorder_subsurface(WlSubsurface* child, WlSurface* sibling_s
                 sibling_it = it;
                 break;
             }
-        }
-        
-        if (sibling_it == pending_children_order->end())
-        {
-            // Sibling not found - protocol error, but we'll just ignore it
-            // Re-add child at its original position
-            pending_children_order->push_back(child);
-            return;
         }
         
         if (above)
@@ -630,7 +632,7 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
     // Apply pending subsurface z-order changes
     if (pending_children_order)
     {
-        children = std::move(pending_children_order.value());
+        children = std::move(*pending_children_order);
         pending_children_order = std::nullopt;
     }
 
