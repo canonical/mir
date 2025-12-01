@@ -58,7 +58,7 @@ mi::PlatformPriority probe_input_platform(
     mir::ConsoleServices& /*console*/)
 {
     mir::assert_entry_point_signature<mi::ProbePlatform>(&probe_input_platform);
-    return mi::PlatformPriority::supported;
+    return mi::PlatformPriority::unsupported;
 }
 
 mir::ModuleProperties const* describe_input_module()
