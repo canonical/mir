@@ -247,7 +247,7 @@ void mf::WlSurface::reorder_subsurface(WlSubsurface* child, WlSurface* sibling_s
     // Initialize pending order if not already set
     if (!pending_children_order)
     {
-        pending_children_order = children;
+        pending_children_order = std::list<WlSubsurface*>(children.begin(), children.end());
         pending_parent_z_index = parent_z_index;
     }
 
@@ -264,35 +264,42 @@ void mf::WlSurface::reorder_subsurface(WlSubsurface* child, WlSurface* sibling_s
         return;
     }
 
-    size_t old_child_index = child_it - pending_children_order->begin();
-
-    // Adjust parent_z_index if we're removing a child from before it
+    // Check if removing child affects parent position
     auto& parent_idx = pending_parent_z_index.value();
-    if (old_child_index < parent_idx)
-    {
-        parent_idx--;
-    }
+    bool child_before_parent = std::distance(pending_children_order->begin(), child_it) < 
+                                static_cast<ptrdiff_t>(parent_idx);
 
     // Remove child from its current position
     pending_children_order->erase(child_it);
 
-    // Find the insertion position
-    size_t insert_index;
+    // Adjust parent index if child was before it
+    if (child_before_parent)
+    {
+        parent_idx--;
+    }
+
+    // Determine insertion position
+    std::list<WlSubsurface*>::iterator insert_pos;
 
     // Check if sibling is this surface (the parent)
     if (sibling_surface == this)
     {
+        // Get iterator to parent position
+        auto parent_pos = pending_children_order->begin();
+        std::advance(parent_pos, parent_idx);
+
         // Place relative to parent in the z-order
+        // parent_z_index indicates where "above parent" elements start
         if (above)
         {
-            // Place just above parent (immediately after parent's position)
-            insert_index = parent_idx;
+            // Place just above parent: insert at parent_z_index position
+            insert_pos = parent_pos;
         }
         else
         {
-            // Place just below parent (immediately before parent's position)
-            insert_index = parent_idx;
-            // Adjust parent position since we're inserting before it
+            // Place just below parent: also insert at parent_z_index position
+            // but increment parent_z_index so parent renders before this child
+            insert_pos = parent_pos;
             parent_idx++;
         }
     }
@@ -315,20 +322,19 @@ void mf::WlSurface::reorder_subsurface(WlSubsurface* child, WlSurface* sibling_s
             return;
         }
 
-        size_t sibling_index = sibling_it - pending_children_order->begin();
-
         if (above)
         {
-            // Place just above sibling
-            insert_index = sibling_index + 1;
+            // Place just above sibling (after it in the list, higher z-order)
+            insert_pos = std::next(sibling_it);
         }
         else
         {
-            // Place just below sibling
-            insert_index = sibling_index;
+            // Place just below sibling (before it in the list, lower z-order)
+            insert_pos = sibling_it;
         }
 
-        // Adjust parent position if we're inserting before it
+        // Check if inserting before parent (affects parent index)
+        size_t insert_index = std::distance(pending_children_order->begin(), insert_pos);
         if (insert_index <= parent_idx)
         {
             parent_idx++;
@@ -336,7 +342,7 @@ void mf::WlSurface::reorder_subsurface(WlSubsurface* child, WlSurface* sibling_s
     }
 
     // Insert child at the new position
-    pending_children_order->insert(pending_children_order->begin() + insert_index, child);
+    pending_children_order->insert(insert_pos, child);
 }
 
 void mf::WlSurface::refresh_surface_data_now()
@@ -675,12 +681,13 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
     // Apply pending subsurface z-order changes
     if (pending_children_order)
     {
-        children = std::move(*pending_children_order);
+        // Convert list back to vector
+        children.assign(pending_children_order->begin(), pending_children_order->end());
+        if (pending_parent_z_index)
+        {
+            parent_z_index = pending_parent_z_index.value();
+        }
         pending_children_order = std::nullopt;
-    }
-    if (pending_parent_z_index)
-    {
-        parent_z_index = pending_parent_z_index.value();
         pending_parent_z_index = std::nullopt;
     }
 
