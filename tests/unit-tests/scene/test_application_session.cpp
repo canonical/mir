@@ -29,8 +29,6 @@
 #include <mir/test/doubles/stub_display_configuration.h>
 #include <mir/test/doubles/stub_surface_factory.h>
 #include <mir/test/doubles/stub_buffer_stream.h>
-#include <mir/test/doubles/null_event_sink.h>
-#include <mir/test/doubles/mock_event_sink.h>
 #include <mir/test/doubles/stub_buffer_allocator.h>
 #include <mir/test/doubles/stub_observer_registrar.h>
 #include <mir/test/make_surface_spec.h>
@@ -57,10 +55,6 @@ static std::shared_ptr<mtd::MockSurface> make_mock_surface()
     auto surface = std::make_shared<NiceMock<mtd::MockSurface>>();
     ON_CALL(*surface, size()).WillByDefault(Return(geom::Size { 100, 100 }));
     return surface;
-}
-
-MATCHER_P(EqPromptSessionEventState, state, "") {
-  return arg.type() == mir_event_type_prompt_session_state_change && arg.to_prompt_session()->new_state() == state;
 }
 
 MATCHER_P(HasParent, parent, "")
@@ -102,8 +96,7 @@ struct StubSurfaceStack : public msh::SurfaceStack
 struct ApplicationSession : public testing::Test
 {
     ApplicationSession()
-        : event_sink(std::make_shared<mtd::NullEventSink>()),
-          surface_observer(std::make_shared<ms::NullSurfaceObserver>()),
+        : surface_observer(std::make_shared<ms::NullSurfaceObserver>()),
           stub_session_listener(std::make_shared<ms::NullSessionListener>()),
           stub_surface_stack(std::make_shared<StubSurfaceStack>()),
           pid(0),
@@ -120,7 +113,6 @@ struct ApplicationSession : public testing::Test
            mir::Fd{mir::Fd::invalid},
            name,
            stub_session_listener,
-           event_sink,
            allocator);
     }
 
@@ -134,7 +126,6 @@ struct ApplicationSession : public testing::Test
            mir::Fd{mir::Fd::invalid},
            name,
            stub_session_listener,
-           event_sink,
            allocator);
     }
 
@@ -149,7 +140,6 @@ struct ApplicationSession : public testing::Test
            mir::Fd{mir::Fd::invalid},
            name,
            stub_session_listener,
-           event_sink,
            allocator);
     }
     std::shared_ptr<ms::ApplicationSession> make_application_session_with_coordinator(
@@ -162,7 +152,6 @@ struct ApplicationSession : public testing::Test
            mir::Fd{mir::Fd::invalid},
            name,
            stub_session_listener,
-           event_sink,
            allocator);
     }
 
@@ -176,12 +165,10 @@ struct ApplicationSession : public testing::Test
            mir::Fd{mir::Fd::invalid},
            name,
            session_listener,
-           event_sink,
            allocator);
     }
 
 
-    std::shared_ptr<mtd::NullEventSink> const event_sink;
     std::shared_ptr<ms::NullSurfaceObserver> const surface_observer;
     std::shared_ptr<ms::NullSessionListener> const stub_session_listener;
     std::shared_ptr<StubSurfaceStack> const stub_surface_stack;
@@ -430,7 +417,6 @@ TEST_F(ApplicationSession, process_id)
         mir::Fd{mir::Fd::invalid},
         name,
         std::make_shared<ms::NullSessionListener>(),
-        event_sink,
         allocator);
 
     EXPECT_THAT(app_session.process_id(), Eq(session_pid));
@@ -485,44 +471,6 @@ TEST_F(ApplicationSession, surface_uses_prexisting_buffer_stream_if_set)
     params.type = mir_window_type_normal;
 
     session->create_surface(nullptr, params, surface_observer, nullptr);
-}
-
-namespace
-{
-struct ApplicationSessionSender : public ApplicationSession
-{
-    ApplicationSessionSender() :
-        app_session(
-            stub_surface_stack,
-            stub_surface_factory,
-            pid,
-            mir::Fd{mir::Fd::invalid},
-            name,
-            stub_session_listener,
-            mt::fake_shared(sender),
-            allocator)
-    {
-    }
-
-    testing::NiceMock<mtd::MockEventSink> sender;
-    ms::ApplicationSession app_session;
-};
-}
-
-TEST_F(ApplicationSessionSender, start_prompt_session)
-{
-    using namespace ::testing;
-
-    EXPECT_CALL(sender, handle_event(EqPromptSessionEventState(mir_prompt_session_state_started))).Times(1);
-    app_session.start_prompt_session();
-}
-
-TEST_F(ApplicationSessionSender, stop_prompt_session)
-{
-    using namespace ::testing;
-
-    EXPECT_CALL(sender, handle_event(EqPromptSessionEventState(mir_prompt_session_state_stopped))).Times(1);
-    app_session.stop_prompt_session();
 }
 
 namespace
