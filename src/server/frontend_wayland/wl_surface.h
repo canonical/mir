@@ -201,7 +201,7 @@ private:
     NullWlSurfaceRole null_role;
     WlSurfaceRole* role;
     std::vector<WlSubsurface*> children; // ordering is from bottom to top
-    size_t parent_z_index{0}; // index in children where parent surface renders (subsurfaces before this are below parent)
+    ptrdiff_t parent_z_index{0}; // index in children where parent surface renders (subsurfaces before this are below parent)
     std::optional<std::list<WlSubsurface*>> pending_children_order; // pending z-order changes (using list for simpler reordering)
     std::list<WlSubsurface*>::iterator pending_parent_position; // iterator to position where parent renders in pending_children_order
     /* We might need to resubmit the current buffer, but with different metadata

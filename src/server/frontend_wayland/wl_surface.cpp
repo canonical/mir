@@ -224,9 +224,8 @@ void mf::WlSurface::remove_subsurface(WlSubsurface* child)
     auto it = std::find(children.begin(), children.end(), child);
     if (it != children.end())
     {
-        size_t index = it - children.begin();
         // Adjust parent_z_index if we're removing a child from before it
-        if (index < parent_z_index && parent_z_index > 0)
+        if (it - children.begin() < parent_z_index)
         {
             parent_z_index--;
         }
