@@ -668,11 +668,27 @@ void mrg::Renderer::draw(mg::Renderable const& renderable) const
         glm::vec4 clip_pos(clip_x, clip_y, 0, 1);
         clip_pos = display_transform * clip_pos;
 
+        // Calculate scale factor from logical viewport to physical output
+        // When output has a scale factor (e.g., HiDPI), the viewport is in logical coordinates
+        // but glScissor needs physical/framebuffer coordinates
+        auto const output_size = output_surface->size();
+        float scale_x = 1.0f;
+        float scale_y = 1.0f;
+        
+        if (viewport.size.width.as_int() > 0 && output_size.width.as_int() > 0)
+        {
+            scale_x = static_cast<float>(output_size.width.as_int()) / viewport.size.width.as_int();
+        }
+        if (viewport.size.height.as_int() > 0 && output_size.height.as_int() > 0)
+        {
+            scale_y = static_cast<float>(output_size.height.as_int()) / viewport.size.height.as_int();
+        }
+
         glScissor(
             (int)clip_pos.x - viewport.top_left.x.as_int(),
             (int)clip_pos.y,
-            clip_area.value().size.width.as_int(),
-            clip_area.value().size.height.as_int()
+            clip_area.value().size.width.as_int() * scale_x,
+            clip_area.value().size.height.as_int() * scale_y
         );
     }
 
