@@ -472,4 +472,3 @@ TEST_F(ApplicationSession, surface_uses_prexisting_buffer_stream_if_set)
 
     session->create_surface(nullptr, params, surface_observer, nullptr);
 }
-
