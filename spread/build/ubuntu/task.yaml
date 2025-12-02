@@ -6,6 +6,7 @@ systems: [ubuntu-*]
 variants:
 - -ubuntu*
 - -debian*
+- -fedora*
 
 summary: Build Ubuntu packages
 
