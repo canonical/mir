@@ -105,6 +105,7 @@ jobs:
         -DMIR_ENABLE_RUST=ON
         -DCMAKE_C_COMPILER_LAUNCHER=ccache
         -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+        -DMIR_USING_WLCS_DEV=ON
         -GNinja
         -B build
         ${{ github.workspace }}
