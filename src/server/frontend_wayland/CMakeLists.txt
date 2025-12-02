@@ -1,5 +1,3 @@
-include_directories(../frontend_xwayland ${CMAKE_CURRENT_BINARY_DIR})
-
 pkg_check_modules(GIOUnix REQUIRED IMPORTED_TARGET gio-unix-2.0)
 
 set(
@@ -98,6 +96,15 @@ set_source_files_properties(
 add_library(mirfrontend-wayland OBJECT
 
   ${WAYLAND_SOURCES}
+)
+
+target_include_directories(mirfrontend-wayland
+  PUBLIC
+    ${PROJECT_SOURCE_DIR}/include/server
+  PRIVATE
+    ${PROJECT_SOURCE_DIR}/src/include/server
+    ../frontend_xwayland
+    ${CMAKE_CURRENT_BINARY_DIR}
 )
 
 target_link_libraries(mirfrontend-wayland

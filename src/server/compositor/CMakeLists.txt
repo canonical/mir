@@ -1,8 +1,3 @@
-include_directories(
-  # TODO: This is a temporary dependency until renderers become proper plugins
-  ${PROJECT_SOURCE_DIR}/src/platform/renderers/
-)
-
 set(
   MIR_COMPOSITOR_SRCS
 
@@ -24,6 +19,13 @@ ADD_LIBRARY(
   mircompositor OBJECT
 
   ${MIR_COMPOSITOR_SRCS}
+)
+
+target_include_directories(mircompositor
+  PUBLIC
+    ${PROJECT_SOURCE_DIR}/include/server
+  PRIVATE
+    ${PROJECT_SOURCE_DIR}/src/include/server
 )
 
 target_link_libraries(mircompositor

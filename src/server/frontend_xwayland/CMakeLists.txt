@@ -21,11 +21,18 @@ set(
 )
 
 add_compile_definitions(MIR_LOG_COMPONENT="xwayland")
-include_directories(../frontend_wayland)
 
 add_library(mirfrontend-xwayland OBJECT
 
   ${XWAYLAND_SOURCES}
+)
+
+target_include_directories(mirfrontend-xwayland
+  PUBLIC
+    ${PROJECT_SOURCE_DIR}/include/server
+  PRIVATE
+    ${PROJECT_SOURCE_DIR}/src/include/server
+    ../frontend_wayland
 )
 
 target_link_libraries(mirfrontend-xwayland

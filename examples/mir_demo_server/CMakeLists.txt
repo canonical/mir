@@ -10,8 +10,9 @@ target_link_libraries(exampleserverconfig
   mirwayland
 )
 
-include_directories(
-  ${PROJECT_SOURCE_DIR}/src/include/server
+target_include_directories(exampleserverconfig
+  PUBLIC
+    ${PROJECT_SOURCE_DIR}/src/include/server
 )
 
 mir_add_wrapped_executable(mir_demo_server

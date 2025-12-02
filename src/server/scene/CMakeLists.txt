@@ -28,6 +28,13 @@ ADD_LIBRARY(
   ${CMAKE_SOURCE_DIR}/src/include/server/mir/scene/surface_observer.h
 )
 
+target_include_directories(mirscene
+  PUBLIC
+    ${PROJECT_SOURCE_DIR}/include/server
+  PRIVATE
+    ${PROJECT_SOURCE_DIR}/src/include/server
+)
+
 target_link_libraries(mirscene
   PUBLIC
     mirplatform

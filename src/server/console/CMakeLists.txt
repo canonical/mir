@@ -29,6 +29,13 @@ set_source_files_properties(
     "${CMAKE_C_FLAGS} -Wno-pedantic -Wno-unused-parameter -Wno-unused-function"
 )
 
+target_include_directories(mirconsole
+  PUBLIC
+    ${PROJECT_SOURCE_DIR}/include/server
+  PRIVATE
+    ${PROJECT_SOURCE_DIR}/src/include/server
+)
+
 target_link_libraries(mirconsole
   PUBLIC
     mirplatform

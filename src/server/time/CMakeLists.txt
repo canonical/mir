@@ -11,6 +11,13 @@ add_library(
   ${TIME_SOURCES}
 )
 
+target_include_directories(mirservertime
+    PUBLIC
+        ${PROJECT_SOURCE_DIR}/include/server
+    PRIVATE
+        ${PROJECT_SOURCE_DIR}/src/include/server
+)
+
 target_link_libraries(mirservertime
   PUBLIC
     mircommon

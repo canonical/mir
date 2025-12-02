@@ -21,7 +21,7 @@
 #include "default_display_buffer_compositor_factory.h"
 #include <mir/executor.h>
 #include "multi_threaded_compositor.h"
-#include "gl/renderer_factory.h"
+#include <mir/renderer/gl/renderer_factory.h>
 #include "basic_screen_shooter.h"
 #include "basic_screen_shooter_factory.h"
 #include "null_screen_shooter.h"
