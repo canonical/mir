@@ -921,7 +921,7 @@ void mrg::Renderer::set_viewport(geometry::Rectangle const& rect)
     float const vertical_fov_degrees = 30.0f;
     float const near =
         (rect.size.height.round_to<float>() / 2.0f) /
-        std::tanf((vertical_fov_degrees * M_PI / 180.0f) / 2.0f);
+        std::tan((vertical_fov_degrees * M_PI / 180.0f) / 2.0f);
     float const far = -near;
 
     screen_to_gl_coords = glm::scale(screen_to_gl_coords,
