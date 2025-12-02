@@ -455,7 +455,6 @@ global:
     mir::input::receiver::XKBMapperRegistrar::set_keymap_for_device*;
     mir::input::receiver::XKBMapperRegistrar::unregister_interest*;
     mir::input::receiver::XKBMapperRegistrar::xkb_modifiers*;
-    mir::report_exception*;
     mir::run_mir*;
     mir::scene::ApplicationNotRespondingDetector::?ApplicationNotRespondingDetector*;
     mir::scene::ApplicationNotRespondingDetector::ApplicationNotRespondingDetector*;

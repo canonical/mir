@@ -46,7 +46,7 @@ add_library(mirsharedsharedlibrary OBJECT
 
 target_include_directories(mirsharedsharedlibrary
   PUBLIC
-    ${PROJECT_SOURCE_DIR}/src/include/common
+    ${PROJECT_SOURCE_DIR}/include/common
 )
 
 target_link_libraries(mirsharedsharedlibrary

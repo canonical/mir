@@ -11,6 +11,8 @@ add_compile_definitions(MIR_SERVER_GRAPHICS_PLATFORM_VERSION="${MIR_SERVER_GRAPH
 add_subdirectory(graphics/)
 add_subdirectory(options)
 add_subdirectory(udev)
+add_subdirectory(gl)
+add_subdirectory(renderers/)
 
 add_library(mirplatform SHARED
   ${PROJECT_SOURCE_DIR}/include/platform/mir/input/input_sink.h
@@ -31,6 +33,8 @@ target_link_libraries(mirplatform
     miroptions
     mirudev
     PkgConfig::EPOXY
+    mirrenderergl
+    mirgl
 )
 
 set_target_properties(

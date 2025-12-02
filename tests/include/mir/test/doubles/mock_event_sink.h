@@ -19,7 +19,6 @@
 
 #include <mir/frontend/event_sink.h>
 #include <mir/graphics/display_configuration.h>
-#include <mir/events/event_private.h>
 #include <mir/input/mir_input_config.h>
 
 #include <gmock/gmock.h>

@@ -21,7 +21,6 @@
 #include "src/platforms/x11/input/input_platform.h"
 #include "src/platforms/x11/input/input_device.h"
 
-#include <mir/events/event_private.h>
 #include <mir/dispatch/dispatchable.h>
 #include <mir_toolkit/events/input/input_event.h>
 #include <mir/test/doubles/mock_input_sink.h>

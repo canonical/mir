@@ -8,5 +8,5 @@ add_library(mirsharedlttng OBJECT
 
 target_include_directories(mirsharedlttng
   PUBLIC
-    ${PROJECT_SOURCE_DIR}/src/include/common
+    ${PROJECT_SOURCE_DIR}/include/common
 )

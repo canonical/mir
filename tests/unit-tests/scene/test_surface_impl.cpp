@@ -14,10 +14,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <mir/events/event_private.h>
 #include <mir/events/event_builders.h>
+#include <mir/events/close_window_event.h>
+#include <mir/events/resize_event.h>
 #include <mir/scene/basic_surface.h>
-#include <mir/scene/surface_event_source.h>
+#include <mir/scene/null_surface_observer.h>
 #include "src/server/report/null_report_factory.h"
 #include <mir/scene/output_properties_cache.h>
 
@@ -25,6 +26,7 @@
 #include <mir/test/doubles/mock_buffer_stream.h>
 #include <mir/test/doubles/mock_event_sink.h>
 #include <mir/test/doubles/explicit_executor.h>
+#include <mir/test/doubles/test_surface_observer.h>
 #include <mir/test/fake_shared.h>
 #include <mir/test/event_matchers.h>
 
@@ -175,8 +177,7 @@ TEST_F(Surface, emits_resize_events)
 
     geom::Size const new_size{123, 456};
     auto sink = std::make_shared<mtd::MockEventSink>();
-    ms::OutputPropertiesCache cache;
-    auto const observer = std::make_shared<ms::SurfaceEventSource>(stub_id, cache, sink);
+    auto const observer = std::make_shared<mtd::TestSurfaceObserver>(stub_id, sink);
 
     mtd::ExplicitExecutor executor;
     surface->register_interest(observer, executor);
@@ -197,8 +198,7 @@ TEST_F(Surface, emits_resize_events_only_on_change)
     geom::Size const new_size{123, 456};
     geom::Size const new_size2{789, 1011};
     auto sink = std::make_shared<mtd::MockEventSink>();
-    ms::OutputPropertiesCache cache;
-    auto const observer = std::make_shared<ms::SurfaceEventSource>(stub_id, cache, sink);
+    auto const observer = std::make_shared<mtd::TestSurfaceObserver>(stub_id, sink);
 
     mtd::ExplicitExecutor executor;
     surface->register_interest(observer, executor);
@@ -238,8 +238,7 @@ TEST_F(Surface, sends_focus_notifications_when_focus_gained_and_lost)
             .Times(1);
     }
 
-    ms::OutputPropertiesCache cache;
-    auto const observer = std::make_shared<ms::SurfaceEventSource>(stub_id, cache, mt::fake_shared(sink));
+    auto const observer = std::make_shared<mtd::TestSurfaceObserver>(stub_id, mt::fake_shared(sink));
 
     mtd::ExplicitExecutor executor;
     surface->register_interest(observer, executor);
@@ -258,8 +257,7 @@ TEST_F(Surface, emits_client_close_events)
     using namespace testing;
 
     auto sink = std::make_shared<mtd::MockEventSink>();
-    ms::OutputPropertiesCache cache;
-    auto const observer = std::make_shared<ms::SurfaceEventSource>(stub_id, cache, sink);
+    auto const observer = std::make_shared<mtd::TestSurfaceObserver>(stub_id, sink);
 
     mtd::ExplicitExecutor executor;
     surface->register_interest(observer, executor);

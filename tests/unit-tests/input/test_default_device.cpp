@@ -24,7 +24,6 @@
 #include <mir/test/doubles/stub_keymap.h>
 #include <mir/dispatch/action_queue.h>
 #include <mir/test/fake_shared.h>
-#include <mir/events/event_private.h>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <stdexcept>

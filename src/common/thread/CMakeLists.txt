@@ -20,5 +20,7 @@ add_library(mirsharedthread OBJECT
 
 target_include_directories(mirsharedthread
   PUBLIC
+    ${PROJECT_SOURCE_DIR}/include/common
+  PRIVATE
     ${PROJECT_SOURCE_DIR}/src/include/common
 )

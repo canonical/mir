@@ -1,7 +1,0 @@
-prefix=@CMAKE_INSTALL_PREFIX@
-includedir=@PKGCONFIG_INCLUDEDIR@
-
-Name: mirrenderer
-Description: Mir renderer
-Version: @MIR_VERSION@
-Cflags: -I${includedir}/mirrenderer -I${includedir}/mirplatform -I${includedir}/mircommon
