@@ -270,7 +270,7 @@ void mf::WlSurface::reorder_subsurface(WlSubsurface* child, WlSurface* sibling_s
     // List erase doesn't invalidate other iterators, so parent_pos remains valid unless...
     if (child_it == pending_parent_position)
     {
-        pending_parent_position = pending_children_order->end();
+        pending_parent_position = std::next(child_it);
     }
 
     // Remove child from its current position
