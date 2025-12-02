@@ -267,30 +267,25 @@ void mf::WlSurface::reorder_subsurface(WlSubsurface* child, WlSurface* sibling_s
         return;
     }
 
-    auto& parent_pos = pending_parent_position.value();
+    // List erase doesn't invalidate other iterators, so parent_pos remains valid unless...
+    if (child_it == pending_parent_position)
+    {
+        pending_parent_position = pending_children_order->end();
+    }
 
     // Remove child from its current position
-    // List erase doesn't invalidate other iterators, so parent_pos remains valid
     pending_children_order->erase(child_it);
-
-    // Determine insertion position
-    std::list<WlSubsurface*>::iterator insert_pos;
 
     // Check if sibling is this surface (the parent)
     if (sibling_surface == this)
     {
-        // Place relative to parent in the z-order
-        // parent_position indicates where "above parent" elements start
+        // Insert child at the new position (for parent-relative placement)
+        auto const newpos = pending_children_order->insert(pending_parent_position, child);
+
+        // For place_above(parent), adjust parent position after insertion
         if (above)
         {
-            // Place just above parent: insert at parent position
-            insert_pos = parent_pos;
-        }
-        else
-        {
-            // Place just below parent: insert at parent position, then adjust parent_pos
-            insert_pos = parent_pos;
-            // After insertion, parent_pos will need to be incremented
+            pending_parent_position = newpos;
         }
     }
     else
@@ -315,43 +310,19 @@ void mf::WlSurface::reorder_subsurface(WlSubsurface* child, WlSurface* sibling_s
         if (above)
         {
             // Place just above sibling (after it in the list, higher z-order)
-            insert_pos = std::next(sibling_it);
+            pending_children_order->insert(std::next(sibling_it), child);
         }
         else
         {
             // Place just below sibling (before it in the list, lower z-order)
-            insert_pos = sibling_it;
-        }
+            auto const newpos = pending_children_order->insert(sibling_it, child);
 
-        // Check if we're inserting before parent position (requires adjustment)
-        bool insert_before_parent = false;
-        for (auto it = pending_children_order->begin(); it != parent_pos; ++it)
-        {
-            if (it == insert_pos)
+            // If inserting below the parent position, adjust parent position iterator
+            if (sibling_it == pending_parent_position)
             {
-                insert_before_parent = true;
-                break;
+                pending_parent_position = newpos;
             }
         }
-
-        // Insert child
-        pending_children_order->insert(insert_pos, child);
-
-        // Adjust parent position if we inserted before it
-        if (insert_before_parent)
-        {
-            ++parent_pos;
-        }
-        return;
-    }
-
-    // Insert child at the new position (for parent-relative placement)
-    pending_children_order->insert(insert_pos, child);
-
-    // For place_below(parent), adjust parent position after insertion
-    if (!above)
-    {
-        ++parent_pos;
     }
 }
 
@@ -364,15 +335,15 @@ void mf::WlSurface::populate_surface_data(std::vector<shell::StreamSpecification
                                           std::vector<geom::Rectangle>& input_shape_accumulator,
                                           geometry::Displacement const& parent_offset) const
 {
-    geometry::Displacement offset = parent_offset + offset_;
+    auto const offset = parent_offset + offset_;
+    std::span const children_before_parent{children.begin(), children.begin() + parent_z_index};
+    std::span const children_after_parent{children.begin() + parent_z_index, children.end()};
 
-    // Render subsurfaces that are below the parent
-    for (size_t i = 0; i < parent_z_index && i < children.size(); ++i)
+    for (auto const& c : children_before_parent)
     {
-        children[i]->populate_surface_data(buffer_streams, input_shape_accumulator, offset);
+        c->populate_surface_data(buffer_streams, input_shape_accumulator, offset);
     }
 
-    // Render the parent surface
     buffer_streams.push_back(msh::StreamSpecification{stream, offset});
     geom::Rectangle surface_rect = {geom::Point{} + offset, buffer_size_.value_or(geom::Size{})};
     if (input_shape)
@@ -398,10 +369,9 @@ void mf::WlSurface::populate_surface_data(std::vector<shell::StreamSpecification
         input_shape_accumulator.push_back(surface_rect);
     }
 
-    // Render subsurfaces that are above the parent
-    for (size_t i = parent_z_index; i < children.size(); ++i)
+    for (auto const& c : children_after_parent)
     {
-        children[i]->populate_surface_data(buffer_streams, input_shape_accumulator, offset);
+        c->populate_surface_data(buffer_streams, input_shape_accumulator, offset);
     }
 }
 
@@ -692,11 +662,7 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
     if (pending_children_order)
     {
         // Calculate parent_z_index from iterator position before converting to vector
-        if (pending_parent_position)
-        {
-            parent_z_index = std::distance(pending_children_order->begin(), pending_parent_position.value());
-            pending_parent_position = std::nullopt;
-        }
+        parent_z_index = std::distance(pending_children_order->begin(), pending_parent_position);
 
         // Convert list back to vector
         children.assign(pending_children_order->begin(), pending_children_order->end());
