@@ -73,7 +73,7 @@ public:
     }
 
 private:
-    GLuint id;
+    GLuint id{0};
 };
 
 using RenderbufferHandle = GLHandle<&glGenRenderbuffers, &glDeleteRenderbuffers>;
@@ -119,6 +119,10 @@ auto select_format_from(mg::CPUAddressableDisplayAllocator const& provider) -> m
         case DRM_FORMAT_RGBX8888:
             // RGB?8888 requires an EGL extension, but is OK
             best_format = format;
+            break;
+        default:
+            // We only care about the above two; include a default case to
+            // make this clear.
             break;
         }
     }
@@ -256,10 +260,11 @@ mgc::CPUCopyOutputSurface::Impl::Impl(
             case 0:
                 BOOST_THROW_EXCEPTION((
                     mg::gl_error("Failed to verify GL Framebuffer completeness")));
+            default:
+                BOOST_THROW_EXCEPTION((
+                    std::runtime_error{
+                        std::string{"Unknown GL framebuffer error code: "} + std::to_string(status)}));
         }
-        BOOST_THROW_EXCEPTION((
-            std::runtime_error{
-                std::string{"Unknown GL framebuffer error code: "} + std::to_string(status)}));
     }
 }
 
@@ -338,7 +343,7 @@ auto mgc::CPUCopyOutputSurface::Impl::commit() -> std::unique_ptr<mg::Framebuffe
          */
         glReadPixels(
             0, 0,
-            fb->size().width.as_uint32_t(), fb->size().height.as_uint32_t(),
+            fb->size().width.as<GLsizei>(), fb->size().height.as<GLsizei>(),
             pixel_layout, GL_UNSIGNED_BYTE, mapping->data());
     }
     return fb;
