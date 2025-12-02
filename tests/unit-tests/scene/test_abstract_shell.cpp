@@ -128,6 +128,8 @@ struct MockSurfaceFactory : public ms::SurfaceFactory
 struct MockDecorationManager : public msh::decoration::NullManager
 {
     MOCK_METHOD(void, decorate, (std::shared_ptr<ms::Surface> const&));
+    MOCK_METHOD(
+        geom::Size, compute_size_with_decorations, (geom::Size content_size, MirWindowType type, MirWindowState state));
 };
 
 using NiceMockWindowManager = NiceMock<mtd::MockWindowManager>;
@@ -1090,3 +1092,201 @@ TEST_F(AbstractShell, as_focus_controller_emits_input_device_state_event_on_focu
     msh::FocusController& focus_controller = shell;
     focus_controller.set_focus_to(session, surface);
 }
+struct SsdConstraintsParams
+{
+    bool set_width;
+    bool set_height;
+    bool set_min_size;
+    bool set_max_size;
+};
+
+class SsdSizeConstraintsTest : public AbstractShell, public WithParamInterface<SsdConstraintsParams>
+{
+};
+
+TEST_P(SsdSizeConstraintsTest, adjusts_size_constraints_when_ssd_enabled)
+{
+    auto const& p = GetParam();
+
+    auto session = shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "TestSession");
+    auto params = mt::make_surface_spec(session->create_buffer_stream(properties));
+
+    params.server_side_decorated = true;
+
+    int const w_val = 800;
+    int const h_val = 600;
+    int const min_w = 100;
+    int const min_h = 100;
+    int const max_w = 2000;
+    int const max_h = 2000;
+
+    if (p.set_width)
+        params.width = geom::Width{w_val};
+
+    if (p.set_height)
+        params.height = geom::Height{h_val};
+
+    if (p.set_min_size)
+    {
+        params.min_width = geom::Width{min_w};
+        params.min_height = geom::Height{min_h};
+    }
+
+    if (p.set_max_size)
+    {
+        params.max_width = geom::Width{max_w};
+        params.max_height = geom::Height{max_h};
+    }
+
+    geom::Size const padding{20, 30};
+
+    EXPECT_CALL(decoration_manager, compute_size_with_decorations(_, _, _))
+
+        .WillRepeatedly(
+            Invoke([padding](geom::Size const& content, MirWindowType, MirWindowState)
+                   { return geom::Size{content.width + padding.width, content.height + padding.height}; }));
+
+    msh::SurfaceSpecification captured_spec;
+    EXPECT_CALL(*wm, add_surface(session, _, _))
+        .WillOnce(Invoke(
+            [&](auto, auto spec, auto)
+            {
+                captured_spec = spec;
+                return std::make_shared<NiceMock<mtd::MockSurface>>();
+            }));
+
+    shell.create_surface(session, params, nullptr, nullptr);
+
+    if (p.set_width)
+        EXPECT_THAT(captured_spec.width.value(), Eq(geom::Width{w_val} + padding.width));
+    else
+        EXPECT_FALSE(captured_spec.width.is_set());
+
+    if (p.set_height)
+        EXPECT_THAT(captured_spec.height.value(), Eq(geom::Height{h_val} + padding.height));
+    else
+        EXPECT_FALSE(captured_spec.height.is_set());
+
+    if (p.set_min_size)
+    {
+        EXPECT_THAT(captured_spec.min_width.value(), Eq(geom::Width{min_w} + padding.width));
+        EXPECT_THAT(captured_spec.min_height.value(), Eq(geom::Height{min_h} + padding.height));
+    }
+    else
+    {
+        EXPECT_FALSE(captured_spec.min_width.is_set());
+        EXPECT_FALSE(captured_spec.min_height.is_set());
+    }
+
+    if (p.set_max_size)
+    {
+        EXPECT_THAT(captured_spec.max_width.value(), Eq(geom::Width{max_w} + padding.width));
+        EXPECT_THAT(captured_spec.max_height.value(), Eq(geom::Height{max_h} + padding.height));
+    }
+    else
+    {
+        EXPECT_FALSE(captured_spec.max_width.is_set());
+        EXPECT_FALSE(captured_spec.max_height.is_set());
+    }
+
+}
+
+TEST_P(SsdSizeConstraintsTest, does_not_adjust_size_constraints_when_ssd_disabled)
+{
+    auto const& p = GetParam();
+
+    auto session = shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "TestSession");
+    auto params = mt::make_surface_spec(session->create_buffer_stream(properties));
+
+    params.server_side_decorated = false;
+
+    int const w_val = 800;
+    int const h_val = 600;
+    int const min_w = 100;
+    int const min_h = 100;
+    int const max_w = 2000;
+    int const max_h = 2000;
+
+    if (p.set_width)
+        params.width = geom::Width{w_val};
+
+    if (p.set_height)
+        params.height = geom::Height{h_val};
+
+    if (p.set_min_size)
+    {
+        params.min_width = geom::Width{min_w};
+        params.min_height = geom::Height{min_h};
+    }
+
+    if (p.set_max_size)
+    {
+        params.max_width = geom::Width{max_w};
+        params.max_height = geom::Height{max_h};
+    }
+
+    EXPECT_CALL(decoration_manager, compute_size_with_decorations(_, _, _)).Times(0);
+
+    msh::SurfaceSpecification captured_spec;
+    EXPECT_CALL(*wm, add_surface(session, _, _))
+        .WillOnce(Invoke(
+            [&](auto, auto spec, auto)
+            {
+                captured_spec = spec;
+                return std::make_shared<NiceMock<mtd::MockSurface>>();
+            }));
+
+    shell.create_surface(session, params, nullptr, nullptr);
+
+    if (p.set_width)
+        EXPECT_THAT(captured_spec.width.value(), Eq(geom::Width{w_val}));
+    else
+        EXPECT_FALSE(captured_spec.width.is_set());
+
+    if (p.set_height)
+        EXPECT_THAT(captured_spec.height.value(), Eq(geom::Height{h_val}));
+    else
+        EXPECT_FALSE(captured_spec.height.is_set());
+
+    if (p.set_min_size)
+    {
+        EXPECT_THAT(captured_spec.min_width.value(), Eq(geom::Width{min_w}));
+        EXPECT_THAT(captured_spec.min_height.value(), Eq(geom::Height{min_h}));
+    }
+    else
+    {
+        EXPECT_FALSE(captured_spec.min_width.is_set());
+        EXPECT_FALSE(captured_spec.min_height.is_set());
+    }
+
+    if (p.set_max_size)
+    {
+        EXPECT_THAT(captured_spec.max_width.value(), Eq(geom::Width{max_w}));
+        EXPECT_THAT(captured_spec.max_height.value(), Eq(geom::Height{max_h}));
+    }
+    else
+    {
+        EXPECT_FALSE(captured_spec.max_width.is_set());
+        EXPECT_FALSE(captured_spec.max_height.is_set());
+    }
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    SsdSizeConstraints,
+    SsdSizeConstraintsTest,
+    testing::Values(
+        SsdConstraintsParams{.set_width = false, .set_height = false, .set_min_size = false, .set_max_size = false},
+        SsdConstraintsParams{.set_width = true, .set_height = true, .set_min_size = true, .set_max_size = true},
+        SsdConstraintsParams{.set_width = true, .set_height = false, .set_min_size = false, .set_max_size = false},
+        SsdConstraintsParams{.set_width = false, .set_height = true, .set_min_size = false, .set_max_size = false},
+        SsdConstraintsParams{.set_width = false, .set_height = false, .set_min_size = true, .set_max_size = false},
+        SsdConstraintsParams{.set_width = false, .set_height = false, .set_min_size = false, .set_max_size = true}),
+    [](TestParamInfo<SsdConstraintsParams> const& info)
+    {
+        return std::format(
+            "width_{}_height_{}_min_size_{}_max_size_{}",
+            info.param.set_width ? "set" : "unset",
+            info.param.set_height ? "set" : "unset",
+            info.param.set_min_size ? "set" : "unset",
+            info.param.set_max_size ? "set" : "unset");
+    });
