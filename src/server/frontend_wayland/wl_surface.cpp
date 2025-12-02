@@ -269,28 +269,9 @@ void mf::WlSurface::reorder_subsurface(WlSubsurface* child, WlSurface* sibling_s
 
     auto& parent_pos = pending_parent_position.value();
 
-    // Check if child is before parent position (determines if we need to adjust parent_pos)
-    bool child_before_parent = false;
-    for (auto it = pending_children_order->begin(); it != parent_pos; ++it)
-    {
-        if (it == child_it)
-        {
-            child_before_parent = true;
-            break;
-        }
-    }
-
     // Remove child from its current position
+    // List erase doesn't invalidate other iterators, so parent_pos remains valid
     pending_children_order->erase(child_it);
-
-    // Adjust parent position if child was before it
-    // List erase doesn't invalidate other iterators, so parent_pos is still valid
-    // We just need to move it back one position if an element before it was removed
-    if (child_before_parent)
-    {
-        // Decrement is safe because child was before parent, so parent wasn't at begin()
-        --parent_pos;
-    }
 
     // Determine insertion position
     std::list<WlSubsurface*>::iterator insert_pos;
