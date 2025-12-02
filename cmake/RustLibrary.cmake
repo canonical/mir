@@ -50,7 +50,7 @@ function(add_rust_cxx_library target)
   if(arg_LIBRARIES)
     foreach(library ${arg_LIBRARIES})
       target_include_directories(${target}-cxxbridge PRIVATE
-              "$<TARGET_PROPERTY:${library},INTERFACE_INCLUDE_DIRECTORIES>}"
+              "$<TARGET_PROPERTY:${library},INTERFACE_INCLUDE_DIRECTORIES>"
       )
     endforeach ()
   endif()
