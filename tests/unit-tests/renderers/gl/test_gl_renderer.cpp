@@ -367,29 +367,29 @@ TEST_F(GLRenderer, scales_scissor_test_with_output_scale)
     // Regression test for: WindowInfo::clip_area is incorrect if the output is scaled
     // When display has scale=2, viewport is in logical coordinates (960x540)
     // but physical output is 1920x1080. glScissor needs physical coordinates.
-    
+
     int const physical_width = 1920;
     int const physical_height = 1080;
     int const logical_width = 960;   // physical / scale(2.0)
     int const logical_height = 540;  // physical / scale(2.0)
-    
+
     auto output_surface = make_output_surface();
     ON_CALL(*output_surface, size())
         .WillByDefault(Return(mir::geometry::Size{physical_width, physical_height}));
-    
+
     // clip_area is in logical coordinates
     EXPECT_CALL(*renderable, clip_area())
         .WillRepeatedly(Return(std::optional<mir::geometry::Rectangle>({{0, 0}, {100, 100}})));
-    
+
     EXPECT_CALL(mock_gl, glEnable(GL_SCISSOR_TEST));
     EXPECT_CALL(mock_gl, glDisable(GL_SCISSOR_TEST));
     // Width and height should be scaled by 2.0 (200, 200 instead of 100, 100)
     int const scaled_clip_size = 100 * 2;  // logical size * scale factor
     EXPECT_CALL(mock_gl, glScissor(0, physical_height - scaled_clip_size, scaled_clip_size, scaled_clip_size));
-    
+
     mrg::Renderer renderer(gl_platform, std::move(output_surface));
     renderer.set_viewport(mir::geometry::Rectangle{{0, 0}, {logical_width, logical_height}});
-    
+
     renderer.render(renderable_list);
 }
 
