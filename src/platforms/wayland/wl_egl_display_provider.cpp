@@ -187,8 +187,8 @@ auto mgw::WlDisplayAllocator::alloc_framebuffer(
         EGL_NONE
     };
 
-    EGLint num_egl_configs;
-    EGLConfig egl_config;
+    EGLint num_egl_configs{0};
+    EGLConfig egl_config{nullptr};
     if (eglChooseConfig(dpy, config_attr, &egl_config, 1, &num_egl_configs) == EGL_FALSE ||
         num_egl_configs != 1)
     {
