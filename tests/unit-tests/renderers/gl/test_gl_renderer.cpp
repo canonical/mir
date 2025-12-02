@@ -384,7 +384,8 @@ TEST_F(GLRenderer, scales_scissor_test_with_output_scale)
     EXPECT_CALL(mock_gl, glEnable(GL_SCISSOR_TEST));
     EXPECT_CALL(mock_gl, glDisable(GL_SCISSOR_TEST));
     // Width and height should be scaled by 2.0 (200, 200 instead of 100, 100)
-    EXPECT_CALL(mock_gl, glScissor(0, 1080 - 200, 200, 200));
+    int const scaled_clip_size = 100 * 2;  // logical size * scale factor
+    EXPECT_CALL(mock_gl, glScissor(0, physical_height - scaled_clip_size, scaled_clip_size, scaled_clip_size));
     
     mrg::Renderer renderer(gl_platform, std::move(output_surface));
     renderer.set_viewport(mir::geometry::Rectangle{{0, 0}, {logical_width, logical_height}});

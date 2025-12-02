@@ -672,16 +672,16 @@ void mrg::Renderer::draw(mg::Renderable const& renderable) const
         // When output has a scale factor (e.g., HiDPI), the viewport is in logical coordinates
         // but glScissor needs physical/framebuffer coordinates
         auto const output_size = output_surface->size();
-        float scale_x = 1.0f;
-        float scale_y = 1.0f;
+        double scale_x = 1.0;
+        double scale_y = 1.0;
         
         if (viewport.size.width.as_int() > 0 && output_size.width.as_int() > 0)
         {
-            scale_x = static_cast<float>(output_size.width.as_int()) / viewport.size.width.as_int();
+            scale_x = static_cast<double>(output_size.width.as_int()) / viewport.size.width.as_int();
         }
         if (viewport.size.height.as_int() > 0 && output_size.height.as_int() > 0)
         {
-            scale_y = static_cast<float>(output_size.height.as_int()) / viewport.size.height.as_int();
+            scale_y = static_cast<double>(output_size.height.as_int()) / viewport.size.height.as_int();
         }
 
         glScissor(
