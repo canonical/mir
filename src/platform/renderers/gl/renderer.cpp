@@ -652,6 +652,18 @@ auto mrg::Renderer::render(mg::RenderableList const& renderables) const -> std::
     return output;
 }
 
+namespace
+{
+template<typename T>
+auto calc_scale(T logical, T physical) -> double
+    requires requires{ logical.as_int(); physical.as_int(); }
+{
+    auto const l = logical.as_int();
+    auto const p = physical.as_int();
+    return (l > 0 && p > 0) ? static_cast<double>(p) / l : 1.0;
+};
+}
+
 void mrg::Renderer::draw(mg::Renderable const& renderable) const
 {
     auto const texture = gl_interface->as_texture(renderable.buffer());
@@ -672,17 +684,8 @@ void mrg::Renderer::draw(mg::Renderable const& renderable) const
         // When output has a scale factor (e.g., HiDPI), the viewport is in logical coordinates
         // but glScissor needs physical/framebuffer coordinates
         auto const output_size = output_surface->size();
-        double scale_x = 1.0;
-        double scale_y = 1.0;
-        
-        if (viewport.size.width.as_int() > 0 && output_size.width.as_int() > 0)
-        {
-            scale_x = static_cast<double>(output_size.width.as_int()) / viewport.size.width.as_int();
-        }
-        if (viewport.size.height.as_int() > 0 && output_size.height.as_int() > 0)
-        {
-            scale_y = static_cast<double>(output_size.height.as_int()) / viewport.size.height.as_int();
-        }
+        double const scale_x = calc_scale(viewport.size.width, output_size.width);
+        double const scale_y = calc_scale(viewport.size.height, output_size.height);
 
         glScissor(
             (int)clip_pos.x - viewport.top_left.x.as_int(),
