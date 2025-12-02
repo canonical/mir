@@ -688,8 +688,8 @@ void mrg::Renderer::draw(mg::Renderable const& renderable) const
         double const scale_y = calc_scale(viewport.size.height, output_size.height);
 
         glScissor(
-            (int)clip_pos.x - viewport.top_left.x.as_int(),
-            (int)clip_pos.y,
+            static_cast<int>((clip_pos.x - viewport.top_left.x.as_int()) * scale_x),
+            static_cast<int>(clip_pos.y * scale_y),
             static_cast<int>(clip_area.value().size.width.as_int() * scale_x),
             static_cast<int>(clip_area.value().size.height.as_int() * scale_y)
         );
