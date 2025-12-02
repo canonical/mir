@@ -473,36 +473,3 @@ TEST_F(ApplicationSession, surface_uses_prexisting_buffer_stream_if_set)
     session->create_surface(nullptr, params, surface_observer, nullptr);
 }
 
-namespace
-{
-class ObserverPreservingSurface : public mtd::MockSurface
-{
-public:
-    void register_interest(std::weak_ptr<mir::scene::SurfaceObserver> const& observer) override
-    {
-        return BasicSurface::register_interest(observer);
-    }
-
-    void unregister_interest(mir::scene::SurfaceObserver const& observer) override
-    {
-        return BasicSurface::unregister_interest(observer);
-    }
-};
-
-class ObserverPreservingSurfaceFactory : public ms::SurfaceFactory
-{
-public:
-    std::shared_ptr<ms::Surface> create_surface(
-        std::shared_ptr<ms::Session> const&,
-        std::list<ms::StreamInfo> const&,
-        mir::shell::SurfaceSpecification const& params) override
-    {
-        using namespace testing;
-        auto mock = std::make_shared<NiceMock<ObserverPreservingSurface>>();
-        ON_CALL(*mock, size()).WillByDefault(Return(geom::Size{
-            params.width.is_set() ? params.width.value() : geom::Width{1},
-            params.height.is_set() ? params.height.value() : geom::Height{1}}));
-        return mock;
-    };
-};
-}
