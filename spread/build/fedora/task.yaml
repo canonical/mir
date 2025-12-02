@@ -1,26 +1,31 @@
 summary: Build Fedora packages
 systems: [fedora-*]
-variants: [amd64, clang, "*ld"]
+variants: [fedora_*]
 kill-timeout: 60m
 
 execute: |
     echo "defaultyes=True" >> /etc/dnf/dnf.conf
 
-    if [[ "${SPREAD_SYSTEM}" == "fedora-rawhide" ]]; then
-      dnf --refresh upgrade
-      dnf install fedora-repos-rawhide
-      dnf --refresh --enablerepo=rawhide distro-sync
-    fi
-
-    dnf install rpmdevtools mock
+    PACKAGES=(
+      ccache
+      cmake
+      createrepo
+      mock
+      rpmdevtools
+    )
 
     if [ "${CLANG}" -eq 1 ]; then
+        PACKAGES+=( clang )
         RPMBUILD_EXTRA_OPTIONS+=(--with clang)
+    else
+        PACKAGES+=( gcc gcc-c++ )
     fi
 
     if [ "${LINKER}" != "ld" ]; then
         RPMBUILD_EXTRA_OPTIONS+=(--with ${LINKER})
     fi
+
+    dnf install "${PACKAGES[@]}"
 
     rpmdev-setuptree
     cp ${SPREAD_PATH}/mir-*.tar.xz ~/rpmbuild/SOURCES
@@ -28,7 +33,7 @@ execute: |
     rpmbuild -bs ~/rpmbuild/SPECS/mir.spec
 
     mock \
-      --root ${SPREAD_SYSTEM}-x86_64 \
+      --root fedora-${RELEASE}-x86_64 \
       --verbose \
       --with ccache \
       --with debug \
@@ -38,46 +43,48 @@ execute: |
 
     ccache --show-stats --zero-stats > ${CCACHE_DIR}/ccache.stats
 
-    # build the local repository for end-to-end tests
-    dnf install createrepo
-    createrepo /root/rpmbuild
-    dnf config-manager addrepo \
-       --id=mirpr \
-       --set=baseurl="file:///root/rpmbuild" \
-       --set=gpgcheck=0 \
-       --set=priority=90 \
-       --set=enabled=1 \
-       --save-filename=mirpr.repo
+    if [ "${SPREAD_VARIANT}" = "fedora_43" ]; then
 
-    # [doc:first-compositor:fedora-dependencies-install]
-    dnf install 'pkgconfig(miral)'
-    dnf install bomber
-    # [doc:first-compositor:fedora-dependencies-install-end]
+      # build the local repository for end-to-end tests
+      createrepo /root/rpmbuild
+      dnf config-manager addrepo \
+         --id=mirpr \
+         --set=baseurl="file:///root/rpmbuild" \
+         --set=gpgcheck=0 \
+         --set=priority=90 \
+         --set=enabled=1 \
+         --save-filename=mirpr.repo
 
-    cd ${SPREAD_PATH}/doc/sphinx/tutorial/first-wayland-compositor
+      # [doc:first-compositor:fedora-dependencies-install]
+      dnf install 'pkgconfig(miral)'
+      dnf install bomber
+      # [doc:first-compositor:fedora-dependencies-install-end]
 
-    # [doc:first-compositor:build]
-    cmake .
-    cmake --build .
-    # [doc:first-compositor:build-end]
+      cd ${SPREAD_PATH}/doc/sphinx/tutorial/first-wayland-compositor
 
-    # we expect the timeout to hit
-    timeout 10 bash -e <<EOF || [ $? -eq 124 ]
+      # [doc:first-compositor:build]
+      cmake .
+      cmake --build .
+      # [doc:first-compositor:build-end]
 
-      trap "jobs -p | xargs -r kill" SIGINT SIGTERM EXIT
+      # we expect the timeout to hit
+      timeout 10 bash -e <<EOF || [ $? -eq 124 ]
 
-      export \
-        MIR_SERVER_PLATFORM_DISPLAY_LIBS=mir:virtual \
-        MIR_SERVER_VIRTUAL_OUTPUT=800x600
+        trap "jobs -p | xargs -r kill" SIGINT SIGTERM EXIT
 
-      # [doc:first-compositor:run]
-      WAYLAND_DISPLAY=wayland-99 ./demo-mir-compositor &
-      # [doc:first-compositor:run-end]
+        export \
+          MIR_SERVER_PLATFORM_DISPLAY_LIBS=mir:virtual \
+          MIR_SERVER_VIRTUAL_OUTPUT=800x600
 
-      # wait for the the socket
-      timeout --preserve-status 3 bash -c "while [ ! -S $XDG_RUNTIME_DIR/wayland-99 ]; do sleep 0.1; done"
+        # [doc:first-compositor:run]
+        WAYLAND_DISPLAY=wayland-99 ./demo-mir-compositor &
+        # [doc:first-compositor:run-end]
 
-      # [doc:first-compositor:run-client]
-      WAYLAND_DISPLAY=wayland-99 bomber
-      # [doc:first-compositor:run-client-end]
+        # wait for the the socket
+        timeout --preserve-status 3 bash -c "while [ ! -S $XDG_RUNTIME_DIR/wayland-99 ]; do sleep 0.1; done"
+
+        # [doc:first-compositor:run-client]
+        WAYLAND_DISPLAY=wayland-99 bomber
+        # [doc:first-compositor:run-client-end]
     EOF
+    fi
