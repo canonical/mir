@@ -130,7 +130,7 @@ private:
     auto output_config_changed(graphics::DisplayConfigurationOutput const& config) -> bool override;
 };
 
-using ExtImageCopyBackendFactory = std::function<ExtImageCopyBackend*(ExtImageCopyCaptureSessionV1*,bool)>;
+using ExtImageCopyBackendFactory = std::function<std::unique_ptr<ExtImageCopyBackend>(ExtImageCopyCaptureSessionV1*,bool)>;
 
 /* Image capture sources */
 class ExtOutputImageCaptureSourceManagerV1Global
@@ -470,7 +470,7 @@ void mf::ExtOutputImageCaptureSourceManagerV1::create_source(wl_resource* new_re
 {
     auto& output_global = OutputGlobal::from_or_throw(output);
     ExtImageCopyBackendFactory backend_factory = [output=wayland::make_weak(&output_global), ctx=ctx](auto *session, bool overlay_cursor) {
-        return new ExtOutputImageCopyBackend(session, overlay_cursor, wayland::as_nullable_ptr(output), ctx);
+        return std::make_unique<ExtOutputImageCopyBackend>(session, overlay_cursor, wayland::as_nullable_ptr(output), ctx);
     };
     new ExtImageCaptureSourceV1{new_resource, backend_factory};
 }
