@@ -1,5 +1,3 @@
-include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-
 # Don't treat missing-field-initializers as an error, since
 # the LTTng macros contain code that triggers this (but it's
 # harmless; it concerns a padding field)
@@ -57,6 +55,11 @@ target_link_libraries(mirlttng
 )
 
 add_library(mirserverlttng SHARED tracepoints.c)
+
+target_include_directories(mirserverlttng
+  PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
 
 target_link_libraries(
   mirserverlttng
