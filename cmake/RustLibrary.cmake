@@ -47,6 +47,14 @@ function(add_rust_cxx_library target)
     endforeach()
   endif()
 
+  if(arg_LIBRARIES)
+    foreach(library ${arg_LIBRARIES})
+      target_include_directories(${target}-cxxbridge PRIVATE
+              "$<TARGET_PROPERTY:${library},INTERFACE_INCLUDE_DIRECTORIES>}"
+      )
+    endforeach ()
+  endif()
+
   # rust-cxx generates symbols named like "cxxbridge1$foo", which
   # triggers a warning in Clang.
   check_cxx_compiler_flag(-Wdollar-in-identifier-extension SUPPORTS_DOLLAR_IN_ID_WARNING)
@@ -69,8 +77,14 @@ function(add_rust_cxx_library target)
   # the required --start-group/--end-group link flags.
   set(LIBRARIES)
   foreach(library ${arg_LIBRARIES})
-    get_target_property(libs ${library} INTERFACE_LINK_LIBRARIES)
-    list(APPEND LIBRARIES ${libs})
+    if (TARGET ${library})
+      get_target_property(libs ${library} INTERFACE_LINK_LIBRARIES)
+      if (libs)
+        list(APPEND LIBRARIES ${libs})
+      endif()
+    else()
+      list(APPEND LIBRARIES ${library})
+    endif()
   endforeach ()
   target_link_libraries(${target} INTERFACE $<LINK_GROUP:RESCAN,${target}-cxxbridge,${target}-rust,${LIBRARIES}>)
 endfunction()
