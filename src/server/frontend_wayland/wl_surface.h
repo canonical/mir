@@ -98,9 +98,8 @@ struct WlSurfaceState
 
     std::optional<SyncPoint> release_fence;
 
-    // Subsurface z-order state
-    std::optional<std::list<WlSubsurface*>> children_order; // pending z-order changes (using list for simpler reordering)
-    std::list<WlSubsurface*>::const_iterator parent_position; // iterator to position where parent renders in children_order
+    // Subsurface z-order state (plus a nullptr representing the parent surface)
+    std::optional<std::list<WlSubsurface*>> surface_order; // pending z-order changes (using list for simpler reordering)
 
 private:
     // only set to true if invalidate_surface_data() is called
