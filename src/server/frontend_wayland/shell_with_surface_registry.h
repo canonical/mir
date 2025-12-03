@@ -121,9 +121,6 @@ public:
         std::shared_ptr<scene::Surface> const& surface,
         wayland::Weak<WlSurface> const& wl_surface);
 
-    /// Gets the underlying SurfaceRegistry
-    auto surface_registry() const -> std::shared_ptr<SurfaceRegistry> const&;
-
 private:
     std::shared_ptr<shell::Shell> const wrapped_shell;
     std::shared_ptr<SurfaceRegistry> const registry;

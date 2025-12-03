@@ -209,8 +209,3 @@ void mf::ShellWithSurfaceRegistry::add_surface_to_registry(
 {
     registry->add_surface(surface, wl_surface);
 }
-
-auto mf::ShellWithSurfaceRegistry::surface_registry() const -> std::shared_ptr<SurfaceRegistry> const&
-{
-    return registry;
-}
