@@ -10,7 +10,6 @@ backends:
             - alpine-3.21
             - alpine-edge
             - ubuntu-24.04
-            - fedora-41
             - fedora-42
             - fedora-43
             - fedora-rawhide:
