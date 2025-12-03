@@ -40,6 +40,7 @@ jobs:
       NEEDRESTART_SUSPEND: yes
       DEBIAN_FRONTEND: noninteractive
       TICS_CHANGED_LIST: tics_changed.list
+      TICS_TMPDIR: /tmp/tics-tmpdir
 
     timeout-minutes: 360
     steps:
@@ -136,6 +137,7 @@ jobs:
 
     - name: Run TICS analysis
       uses: tiobe/tics-github-action@v3
+      timeout-minutes: 300  # avoid global job timeout to perform cleanup below
       with:
         mode: ${{ contains(fromJSON('["pull_request", "merge_group"]'), github.event_name) && 'client' || 'qserver' }}
         project: ${{ env.PROJECT }}
@@ -145,8 +147,16 @@ jobs:
         filelist: ${{ github.event_name == 'merge_group' && env.TICS_CHANGED_LIST || '' }}
         # FIXME: workaround for a TICS bug
         additionalFlags: ${{ contains(fromJSON('["pull_request", "merge_group"]'), github.event_name) && '-resultdir build' || '' }}
+        tmpdir: ${{ runner.debug && env.TICS_TMPDIR || null }}
 
-    - if: ${{ github.event_name == 'push' && cancelled() }}
+    - if: ${{ always() && runner.debug }}
+      uses: actions/upload-artifact@v5
+      with:
+        name: TICS tmpdir
+        path: ${{ env.TICS_TMPDIR }}
+        if-no-files-found: error
+
+    - if: ${{ contains(fromJSON('["push", "workflow_dispatch"]'), github.event_name) && cancelled() }}
       name: Detach TICS QServer to prevent "project already connected" issue
       env:
         TICSAUTHTOKEN: ${{ secrets.TICSAUTHTOKEN }}
