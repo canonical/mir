@@ -104,6 +104,12 @@ void mf::WlSurfaceState::update_from(WlSurfaceState const& source)
 
     if (source.release_fence)
         release_fence = source.release_fence;
+
+    if (source.children_order)
+    {
+        children_order = source.children_order;
+        parent_z_index = source.parent_z_index;
+    }
 }
 
 bool mf::WlSurfaceState::surface_data_needs_refresh() const
@@ -244,18 +250,19 @@ bool mf::WlSurface::has_subsurface_with_surface(WlSurface* surface) const
 void mf::WlSurface::reorder_subsurface(WlSubsurface* child, WlSurface* sibling_surface, SubsurfacePlacement placement)
 {
     // Initialize pending order if not already set
-    if (!pending_children_order)
+    if (!pending.children_order)
     {
-        pending_children_order = std::list<WlSubsurface*>(children.begin(), children.end());
-        // Initialize parent position iterator to point at parent_z_index position
-        auto it = pending_children_order->begin();
-        std::advance(it, parent_z_index);
-        pending_parent_position = it;
+        pending.children_order = std::list<WlSubsurface*>(children.begin(), children.end());
+        pending.parent_z_index = parent_z_index;
     }
 
+    // Convert parent_z_index to iterator for current operation
+    auto parent_pos = pending.children_order->begin();
+    std::advance(parent_pos, *pending.parent_z_index);
+
     // Find the child in the pending order
-    if (auto const child_pos = std::find(pending_children_order->begin(), pending_children_order->end(), child);
-        child_pos == pending_children_order->end())
+    if (auto const child_pos = std::find(pending.children_order->begin(), pending.children_order->end(), child);
+        child_pos == pending.children_order->end())
     {
         // Child not found - this indicates an internal inconsistency where a subsurface
         // is trying to reorder itself but is not in the parent's children list
@@ -267,37 +274,44 @@ void mf::WlSurface::reorder_subsurface(WlSubsurface* child, WlSurface* sibling_s
     }
     else
     {
-        // List erase doesn't invalidate OTHER iterators, so ensure pending_parent_position remains valid
-        if (child_pos == pending_parent_position)
+        // List erase doesn't invalidate OTHER iterators, so parent_pos remains valid
+        // unless we're erasing the element it points to
+        if (child_pos == parent_pos)
         {
-            pending_parent_position = std::next(child_pos);
+            // Calculate new parent index before erasing
+            auto new_parent_pos = std::next(child_pos);
+            *pending.parent_z_index = std::distance(pending.children_order->begin(), new_parent_pos);
         }
 
         // Remove child from its current position
-        pending_children_order->erase(child_pos);
+        pending.children_order->erase(child_pos);
     }
+
+    // Re-calculate parent_pos after erase to reflect any index changes
+    parent_pos = pending.children_order->begin();
+    std::advance(parent_pos, *pending.parent_z_index);
 
     // Check if sibling is this surface (the parent)
     if (sibling_surface == this)
     {
         // Insert child at the new position (for parent-relative placement)
-        auto const child_pos = pending_children_order->insert(pending_parent_position, child);
+        auto const child_pos = pending.children_order->insert(parent_pos, child);
 
         // For place_above(parent), adjust parent position after insertion
         if (placement == SubsurfacePlacement::above)
         {
-            pending_parent_position = child_pos;
+            *pending.parent_z_index = std::distance(pending.children_order->begin(), child_pos);
         }
     }
     else
     {
         // Find which subsurface has this sibling surface
         auto sibling_it = std::find_if(
-            pending_children_order->begin(),
-            pending_children_order->end(),
+            pending.children_order->begin(),
+            pending.children_order->end(),
             [sibling_surface](auto const* s) { return s->get_surface() == sibling_surface; });
 
-        if (sibling_it == pending_children_order->end())
+        if (sibling_it == pending.children_order->end())
         {
             // Sibling not found - this indicates an internal inconsistency
             log_warning(
@@ -311,17 +325,17 @@ void mf::WlSurface::reorder_subsurface(WlSubsurface* child, WlSurface* sibling_s
         if (placement == SubsurfacePlacement::above)
         {
             // Place just above sibling (after it in the list, higher z-order)
-            pending_children_order->insert(std::next(sibling_it), child);
+            pending.children_order->insert(std::next(sibling_it), child);
         }
         else
         {
             // Place just below sibling (before it in the list, lower z-order)
-            auto const child_pos = pending_children_order->insert(sibling_it, child);
+            auto const child_pos = pending.children_order->insert(sibling_it, child);
 
-            // If inserting below pending_parent_position, also adjust pending_parent_position
-            if (sibling_it == pending_parent_position)
+            // If inserting below parent_pos, also adjust parent_z_index
+            if (sibling_it == parent_pos)
             {
-                pending_parent_position = child_pos;
+                *pending.parent_z_index = std::distance(pending.children_order->begin(), child_pos);
             }
         }
     }
@@ -660,14 +674,15 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
     }
 
     // Apply pending subsurface z-order changes
-    if (pending_children_order)
+    if (state.children_order)
     {
-        // Calculate parent_z_index from iterator position before converting to vector
-        parent_z_index = std::distance(pending_children_order->begin(), pending_parent_position);
+        // Use the parent_z_index from pending state
+        parent_z_index = *state.parent_z_index;
 
         // Convert list back to vector
-        children.assign(pending_children_order->begin(), pending_children_order->end());
-        pending_children_order = std::nullopt;
+        children.assign(state.children_order->begin(), state.children_order->end());
+        state.children_order = std::nullopt;
+        state.parent_z_index = std::nullopt;
     }
 
     for (WlSubsurface* child: children)

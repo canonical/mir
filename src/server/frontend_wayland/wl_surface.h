@@ -98,6 +98,10 @@ struct WlSurfaceState
 
     std::optional<SyncPoint> release_fence;
 
+    // Subsurface z-order state
+    std::optional<std::list<WlSubsurface*>> children_order; // pending z-order changes (using list for simpler reordering)
+    std::optional<ptrdiff_t> parent_z_index; // index/position where parent renders in children_order
+
 private:
     // only set to true if invalidate_surface_data() is called
     // surface_data_needs_refresh() returns true if this is true, or if other things are changed which mandate a refresh
@@ -204,8 +208,6 @@ private:
     WlSurfaceRole* role;
     std::vector<WlSubsurface*> children; // ordering is from bottom to top
     ptrdiff_t parent_z_index{0}; // index in children where parent surface renders (subsurfaces before this are below parent)
-    std::optional<std::list<WlSubsurface*>> pending_children_order; // pending z-order changes (using list for simpler reordering)
-    std::list<WlSubsurface*>::iterator pending_parent_position; // iterator to position where parent renders in pending_children_order
     /* We might need to resubmit the current buffer, but with different metadata
      * For example: if a client commits a wl_surface.buffer_scale() without attaching
      * a new buffer, we need to generate a new frame with the same content, but at the
