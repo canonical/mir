@@ -149,7 +149,7 @@ public:
     void add_subsurface(WlSubsurface* child);
     void remove_subsurface(WlSubsurface* child);
     bool has_subsurface_with_surface(WlSurface* surface) const;
-    enum class SubsurfacePlacement { Above, Below };
+    enum class SubsurfacePlacement { above, below };
 
     void reorder_subsurface(WlSubsurface* child, WlSurface* sibling, SubsurfacePlacement placement);
     void refresh_surface_data_now();

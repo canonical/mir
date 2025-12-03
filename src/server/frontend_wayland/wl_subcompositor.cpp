@@ -165,7 +165,7 @@ void mf::WlSubsurface::place_above(struct wl_resource* sibling)
             "wl_subsurface.place_above: sibling must be the parent or a sibling subsurface"));
     }
 
-    parent.value().reorder_subsurface(this, sibling_surface, WlSurface::SubsurfacePlacement::Above);
+    parent.value().reorder_subsurface(this, sibling_surface, WlSurface::SubsurfacePlacement::above);
 }
 
 void mf::WlSubsurface::place_below(struct wl_resource* sibling)
@@ -196,7 +196,7 @@ void mf::WlSubsurface::place_below(struct wl_resource* sibling)
             "wl_subsurface.place_below: sibling must be the parent or a sibling subsurface"));
     }
 
-    parent.value().reorder_subsurface(this, sibling_surface, WlSurface::SubsurfacePlacement::Below);
+    parent.value().reorder_subsurface(this, sibling_surface, WlSurface::SubsurfacePlacement::below);
 }
 
 void mf::WlSubsurface::set_sync()

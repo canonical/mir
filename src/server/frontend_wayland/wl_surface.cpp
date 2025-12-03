@@ -284,7 +284,7 @@ void mf::WlSurface::reorder_subsurface(WlSubsurface* child, WlSurface* sibling_s
         auto const child_pos = pending_children_order->insert(pending_parent_position, child);
 
         // For place_above(parent), adjust parent position after insertion
-        if (placement == SubsurfacePlacement::Above)
+        if (placement == SubsurfacePlacement::above)
         {
             pending_parent_position = child_pos;
         }
@@ -308,7 +308,7 @@ void mf::WlSurface::reorder_subsurface(WlSubsurface* child, WlSurface* sibling_s
             return;
         }
 
-        if (placement == SubsurfacePlacement::Above)
+        if (placement == SubsurfacePlacement::above)
         {
             // Place just above sibling (after it in the list, higher z-order)
             pending_children_order->insert(std::next(sibling_it), child);
