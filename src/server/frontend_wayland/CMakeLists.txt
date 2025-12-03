@@ -99,9 +99,8 @@ add_library(mirfrontend-wayland OBJECT
 )
 
 target_include_directories(mirfrontend-wayland
-  PUBLIC
-    ${PROJECT_SOURCE_DIR}/include/server
   PRIVATE
+    ${PROJECT_SOURCE_DIR}/include/server
     ${PROJECT_SOURCE_DIR}/src/include/server
     ../frontend_xwayland
     ${CMAKE_CURRENT_BINARY_DIR}

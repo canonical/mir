@@ -28,9 +28,8 @@ add_library(mirfrontend-xwayland OBJECT
 )
 
 target_include_directories(mirfrontend-xwayland
-  PUBLIC
-    ${PROJECT_SOURCE_DIR}/include/server
   PRIVATE
+    ${PROJECT_SOURCE_DIR}/include/server
     ${PROJECT_SOURCE_DIR}/src/include/server
     ../frontend_wayland
 )

@@ -26,9 +26,8 @@ set_source_files_properties(
 )
 
 target_include_directories(mirconsole
-  PUBLIC
-    ${PROJECT_SOURCE_DIR}/include/server
   PRIVATE
+    ${PROJECT_SOURCE_DIR}/include/server
     ${PROJECT_SOURCE_DIR}/src/include/server
     ${CMAKE_CURRENT_BINARY_DIR}
 )

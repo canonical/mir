@@ -12,9 +12,8 @@ add_library(
 )
 
 target_include_directories(mirservertime
-    PUBLIC
-        ${PROJECT_SOURCE_DIR}/include/server
     PRIVATE
+        ${PROJECT_SOURCE_DIR}/include/server
         ${PROJECT_SOURCE_DIR}/src/include/server
 )
 
