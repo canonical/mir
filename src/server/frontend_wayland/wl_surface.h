@@ -149,7 +149,9 @@ public:
     void add_subsurface(WlSubsurface* child);
     void remove_subsurface(WlSubsurface* child);
     bool has_subsurface_with_surface(WlSurface* surface) const;
-    void reorder_subsurface(WlSubsurface* child, WlSurface* sibling, bool above);
+    enum class SubsurfacePlacement { Above, Below };
+
+    void reorder_subsurface(WlSubsurface* child, WlSurface* sibling, SubsurfacePlacement placement);
     void refresh_surface_data_now();
     void pending_invalidate_surface_data() { pending.invalidate_surface_data(); }
     void populate_surface_data(std::vector<shell::StreamSpecification>& buffer_streams,
