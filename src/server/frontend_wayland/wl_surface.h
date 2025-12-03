@@ -100,7 +100,7 @@ struct WlSurfaceState
 
     // Subsurface z-order state
     std::optional<std::list<WlSubsurface*>> children_order; // pending z-order changes (using list for simpler reordering)
-    std::optional<ptrdiff_t> parent_z_index; // index/position where parent renders in children_order
+    std::list<WlSubsurface*>::const_iterator parent_position; // iterator to position where parent renders in children_order
 
 private:
     // only set to true if invalidate_surface_data() is called
