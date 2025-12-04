@@ -17,15 +17,18 @@
 #include "input_trigger_registration_v1.h"
 #include "input_trigger_action_v1.h"
 #include "input_trigger_data.h"
-#include "mir/events/input_event.h"
-#include "mir/events/keyboard_event.h"
-#include "mir/executor.h"
-#include "mir/input/xkb_mapper.h"
-#include "mir/time/alarm_factory.h"
-#include "mir/wayland/weak.h"
+
+#include <mir/events/input_event.h>
+#include <mir/events/keyboard_event.h>
+#include <mir/executor.h>
+#include <mir/input/xkb_mapper.h>
+#include <mir/time/alarm_factory.h>
+#include <mir/wayland/weak.h>
+#include <mir/input/event_filter.h>
+#include <mir/input/composite_event_filter.h>
+
 #include "mir_toolkit/events/enums.h"
 
-#include <mir/input/composite_event_filter.h>
 #include <unordered_set>
 #include <atomic>
 
