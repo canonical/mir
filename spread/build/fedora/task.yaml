@@ -35,7 +35,10 @@ execute: |
     mock \
       --root fedora-${RELEASE}-x86_64 \
       --verbose \
-      --with ccache \
+      --enable-plugin=ccache \
+      --plugin-option=ccache:dir=${CCACHE_DIR} \
+      --plugin-option=ccache:hashdir=False \
+      --plugin-option=ccache:show_stats=True \
       --with debug \
       --with run_tests \
       "${RPMBUILD_EXTRA_OPTIONS[@]}" \
