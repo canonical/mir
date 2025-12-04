@@ -38,7 +38,11 @@ public:
 
     ~EGLState()
     {
-        eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+        // If we're the current context, release it so we can release resources.
+        if (eglGetCurrentContext() == ctx)
+        {
+            eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+        }
         eglDestroyContext(dpy, ctx);
         eglDestroySurface(dpy, surf);
     }
@@ -207,7 +211,7 @@ auto mgxh::EGLHelper::framebuffer_for_window(
         EGL_NONE
     };
 
-    EGLint num_egl_configs;
+    EGLint num_egl_configs{0};
     if (eglChooseConfig(egl_display, config_attr, &egl_config, 1, &num_egl_configs) == EGL_FALSE ||
         num_egl_configs != 1)
     {
@@ -241,7 +245,7 @@ void mgxh::EGLHelper::setup_internal(::Display* x_dpy, bool initialize)
 
     if (initialize)
     {
-        EGLint major, minor;
+        EGLint major{-1}, minor{-1};
 
         if (eglInitialize(egl_display, &major, &minor) == EGL_FALSE)
             BOOST_THROW_EXCEPTION(mg::egl_error("Failed to initialize EGL display"));

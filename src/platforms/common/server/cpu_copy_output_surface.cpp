@@ -28,6 +28,7 @@
 #include <mir/log.h>
 
 #include "cpu_copy_output_surface.h"
+#include "egl_helpers.h"
 
 namespace mg = mir::graphics;
 namespace mgc = mg::common;
@@ -53,6 +54,13 @@ public:
     GLHandle(GLHandle const&) = delete;
     GLHandle& operator=(GLHandle const&) = delete;
 
+    void reset()
+    {
+        if (id)
+            (*deleter)(1, &id);
+        id = 0;
+    }
+
     GLHandle(GLHandle&& from)
         : id{from.id}
     {
@@ -65,7 +73,7 @@ public:
     }
 
 private:
-    GLuint id;
+    GLuint id{0};
 };
 
 using RenderbufferHandle = GLHandle<&glGenRenderbuffers, &glDeleteRenderbuffers>;
@@ -112,6 +120,10 @@ auto select_format_from(mg::CPUAddressableDisplayAllocator const& provider) -> m
             // RGB?8888 requires an EGL extension, but is OK
             best_format = format;
             break;
+        default:
+            // We only care about the above two; include a default case to
+            // make this clear.
+            break;
         }
     }
     if (best_format)
@@ -131,6 +143,8 @@ public:
         mg::CPUAddressableDisplayAllocator& allocator,
         GLConfig const& config);
 
+    ~Impl();
+
     void bind();
 
     void make_current();
@@ -142,37 +156,13 @@ public:
     auto layout() const -> Layout;
 
 private:
-    class EGLContextHandle
-    {
-    public:
-        EGLContextHandle(EGLDisplay dpy, EGLContext ctx)
-            : dpy{dpy},
-              ctx{ctx}
-        {
-        }
-
-        ~EGLContextHandle()
-        {
-            eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-            eglDestroyContext(dpy, ctx);
-        }
-
-        operator EGLContext() const
-        {
-            return ctx;
-        }
-    private:
-        EGLDisplay const dpy;
-        EGLContext const ctx;
-    };
-
     mg::CPUAddressableDisplayAllocator& allocator;
     EGLDisplay const dpy;
-    EGLContextHandle const ctx;
+    EGLContext ctx;
     DRMFormat const format;
-    RenderbufferHandle const colour_buffer;
+    RenderbufferHandle colour_buffer;
     std::shared_ptr<RenderbufferHandle> depth_stencil_buffer;
-    FramebufferHandle const fbo;
+    FramebufferHandle fbo;
 };
 
 mgc::CPUCopyOutputSurface::CPUCopyOutputSurface(
@@ -223,7 +213,7 @@ mgc::CPUCopyOutputSurface::Impl::Impl(
     GLConfig const& config)
     : allocator{allocator},
       dpy{dpy},
-      ctx{dpy, create_current_context(dpy, share_ctx)},
+      ctx{create_current_context(dpy, share_ctx)},
       format{select_format_from(allocator)}
 {
     glBindRenderbuffer(GL_RENDERBUFFER, colour_buffer);
@@ -270,11 +260,40 @@ mgc::CPUCopyOutputSurface::Impl::Impl(
             case 0:
                 BOOST_THROW_EXCEPTION((
                     mg::gl_error("Failed to verify GL Framebuffer completeness")));
+            default:
+                BOOST_THROW_EXCEPTION((
+                    std::runtime_error{
+                        std::string{"Unknown GL framebuffer error code: "} + std::to_string(status)}));
         }
-        BOOST_THROW_EXCEPTION((
-            std::runtime_error{
-                std::string{"Unknown GL framebuffer error code: "} + std::to_string(status)}));
     }
+}
+
+mgc::CPUCopyOutputSurface::Impl::~Impl()
+{
+    // Capture current EGL state to restore, if the current context is not the one we're destroying
+    auto const egl_restore =
+        [this]() -> std::optional<mgc::CacheEglState>
+        {
+            if (ctx != eglGetCurrentContext())
+            {
+                // We're not current; capture the current state...
+                auto current_state = mgc::CacheEglState{};
+                // ...then *make* us current, so we can release our resources
+                make_current();
+                return current_state;
+            }
+
+            // We *are* the current context; we don't need to restore EGL state
+            return std::nullopt;
+        }();
+
+    // We're the current EGL context; destroy our GL resources...
+    fbo.reset();
+    colour_buffer.reset();
+
+    // Now release our context, and delete it.
+    release_current();
+    eglDestroyContext(dpy, ctx);
 }
 
 void mgc::CPUCopyOutputSurface::Impl::bind()
@@ -324,7 +343,7 @@ auto mgc::CPUCopyOutputSurface::Impl::commit() -> std::unique_ptr<mg::Framebuffe
          */
         glReadPixels(
             0, 0,
-            fb->size().width.as_uint32_t(), fb->size().height.as_uint32_t(),
+            fb->size().width.as<GLsizei>(), fb->size().height.as<GLsizei>(),
             pixel_layout, GL_UNSIGNED_BYTE, mapping->data());
     }
     return fb;

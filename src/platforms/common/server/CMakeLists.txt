@@ -19,6 +19,8 @@ add_library(server_platform_common STATIC
   options_parsing_helpers.cpp
   quirk_common.h
   quirk_common.cpp
+  egl_helpers.h
+  egl_helpers.cpp
 )
 
 target_include_directories(
