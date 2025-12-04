@@ -20,6 +20,7 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include <filesystem>
 #include <fstream>
 
 using namespace testing;
@@ -30,20 +31,27 @@ struct ExternalClient : miral::TestServer
 {
     ExternalClient()
     {
+        char tmp_dir_path[] = "/tmp/mir-XXXXXX";
+        if (mkdtemp(tmp_dir_path) == nullptr)
+            throw std::runtime_error("failed to create temporary directory");
+        output_dir = std::string(tmp_dir_path);
+        output = output_dir + "/output";
+
         start_server_in_setup = false;
         add_server_init(external_client);
     }
 
     ~ExternalClient()
     {
-        unlink(output.c_str());
+        std::filesystem::remove_all(output_dir);
     }
 
     miral::ExternalClientLauncher external_client;
     miral::X11Support x11_disabled_by_default{};
     miral::X11Support x11_enabled_by_default{miral::X11Support{}.default_to_enabled()};
 
-    std::string const output = tmpnam(nullptr);
+    std::string output_dir;
+    std::string output;
 
     auto client_env_value(std::string const& key) const -> std::string
     {
