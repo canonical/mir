@@ -479,7 +479,9 @@ def main():
             clang.cindex.Config.set_library_file(found_so)
             _logger.info(f"Using found libclang.so.1 at: {found_so}")
         else:
-            _logger.error("Expected MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH to be defined in the environment")
+            _logger.error("Could not find libclang.so.1 in the environment. "
+                          "You may want to set MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH "
+                          "if libclang.so.1 is manually installed in a non-standard directory.")
             exit(1)
 
     if 'MIR_SYMBOLS_MAP_GENERATOR_CLANG_LIBRARY_PATH' in os.environ:
@@ -511,7 +513,9 @@ def main():
             clang.cindex.Config.set_library_path(found_lib)
             _logger.info(f"Using found clang library directory at: {found_lib}")
         else:
-            _logger.error("Expected MIR_SYMBOLS_MAP_GENERATOR_CLANG_LIBRARY_PATH to be defined in the environment")
+            _logger.error("Could not find clang library directory. "
+                          "You may want to set MIR_SYMBOLS_MAP_GENERATOR_CLANG_LIBRARY_PATH "
+                          "if clang is not installed in the standard directory.")
             exit(1)
 
     include_dirs = args.include_dirs.split(":")
