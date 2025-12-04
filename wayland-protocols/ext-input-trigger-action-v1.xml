@@ -83,6 +83,9 @@
 
         The app may begin the activity it associates with the action.
 
+        For keyboard triggers, this will be sent when all keys in the
+        corresponding trigger has been presed.
+
         The time argument is a timestamp with millisecond granularity, with an
         undefined base. clients must not assume any relation to wall-clock
         time; timestamps are only valid for comparison/deltas.
@@ -100,6 +103,8 @@
 
         The app may end (or begin!) the activity it associates with the action.
 
+        For keyboard triggers, this will be sent when any key in the
+        corresponding trigger has been released.
 
         The time argument is a timestamp with millisecond granularity, with an
         undefined base. clients must not assume any relation to wall-clock
