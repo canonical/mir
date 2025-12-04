@@ -26,6 +26,7 @@
 #include <mir/log.h>
 #include <mir/options/default_configuration.h>
 #include <mir/scene/session.h>
+#include <mir/main_loop.h>
 
 #include "ext_image_capture_v1.h"
 #include "foreign_toplevel_manager_v1.h"
@@ -277,7 +278,9 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
             return mf::create_input_trigger_registration_manager_v1(
                     ctx.display,
                     ctx.composite_event_filter,
-                    ctx.input_trigger_data);
+                    ctx.input_trigger_data,
+                    ctx.wayland_executor,
+                    ctx.main_loop);
         }),
     make_extension_builder<mw::InputTriggerActionManagerV1>([](auto const& ctx)
         {

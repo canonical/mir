@@ -119,7 +119,7 @@ int main(int /*argc*/, char** /*argv*/)
     uint32_t modifiers = EXT_INPUT_TRIGGER_REGISTRATION_MANAGER_V1_MODIFIERS_SHIFT |
                          EXT_INPUT_TRIGGER_REGISTRATION_MANAGER_V1_MODIFIERS_CTRL;
     trigger_obj = ext_input_trigger_registration_manager_v1_register_keyboard_sym_trigger(
-        registration_manager, modifiers, XKB_KEY_C, EXT_INPUT_TRIGGER_REGISTRATION_MANAGER_V1_REGISTRATION_TYPE_TAP);
+        registration_manager, modifiers, XKB_KEY_C, EXT_INPUT_TRIGGER_REGISTRATION_MANAGER_V1_REGISTRATION_TYPE_HOLD);
 
     ext_input_trigger_v1_add_listener(trigger_obj, &trigger_listener, nullptr);
 

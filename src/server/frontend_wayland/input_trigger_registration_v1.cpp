@@ -19,12 +19,15 @@
 #include "input_trigger_data.h"
 #include "mir/events/input_event.h"
 #include "mir/events/keyboard_event.h"
+#include "mir/executor.h"
 #include "mir/input/xkb_mapper.h"
+#include "mir/time/alarm_factory.h"
 #include "mir/wayland/weak.h"
 #include "mir_toolkit/events/enums.h"
 
 #include <mir/input/composite_event_filter.h>
 #include <unordered_set>
+#include <atomic>
 
 namespace mf = mir::frontend;
 namespace mi = mir::input;
@@ -39,49 +42,49 @@ enum class RegistrationType : uint32_t
     hold = wayland::InputTriggerRegistrationManagerV1::RegistrationType::hold,
 };
 
+struct Context
+{
+    std::shared_ptr<mi::CompositeEventFilter> const cef;
+    std::shared_ptr<InputTriggerData> const itd;
+    std::shared_ptr<mir::Executor> const wayland_executor;
+    std::shared_ptr<time::AlarmFactory> const alarm_factory;
+};
+
 class InputTriggerRegistrationManagerV1 : public wayland::InputTriggerRegistrationManagerV1::Global
 {
 public:
-    InputTriggerRegistrationManagerV1(
-        wl_display* display,
-        std::shared_ptr<mi::CompositeEventFilter> const& cef,
-        std::shared_ptr<InputTriggerData> const& itd) :
+    InputTriggerRegistrationManagerV1(wl_display* display, Context const& context) :
         Global{display, Version<1>{}},
-        cef{cef},
-        itd{itd}
+        context{context}
     {
     }
 
     class Instance : public wayland::InputTriggerRegistrationManagerV1
     {
     public:
-        Instance(
-            wl_resource* new_ext_input_trigger_registration_manager_v1,
-            std::shared_ptr<mi::CompositeEventFilter> const& cef,
-            std::shared_ptr<InputTriggerData> const& itd) :
+        Instance(wl_resource* new_ext_input_trigger_registration_manager_v1, Context const& context) :
             wayland::InputTriggerRegistrationManagerV1{new_ext_input_trigger_registration_manager_v1, Version<1>{}},
-            cef{cef},
-            itd{itd}
+            context{context}
         {
         }
 
-        void register_keyboard_sym_trigger(uint32_t modifiers, uint32_t keysym, uint32_t type, struct wl_resource* id) override;
-        void register_keyboard_code_trigger(uint32_t modifiers, uint32_t keycode, uint32_t type, struct wl_resource* id) override;
+        void register_keyboard_sym_trigger(
+            uint32_t modifiers, uint32_t keysym, uint32_t type, struct wl_resource* id) override;
+        void register_keyboard_code_trigger(
+            uint32_t modifiers, uint32_t keycode, uint32_t type, struct wl_resource* id) override;
         void get_action_control(std::string const& name, struct wl_resource* id) override;
 
     private:
-        std::shared_ptr<mi::CompositeEventFilter> const cef;
-        std::shared_ptr<InputTriggerData> const itd;
+        Context const& context;
     };
 
     void bind(wl_resource* new_ext_input_trigger_registration_manager_v1) override
     {
-        new Instance{new_ext_input_trigger_registration_manager_v1, cef, itd};
+        new Instance{new_ext_input_trigger_registration_manager_v1, context};
     }
 
 private:
-    std::shared_ptr<mi::CompositeEventFilter> const cef;
-    std::shared_ptr<InputTriggerData> const itd;
+    Context const context;
 };
 
 class KeyboardSymTrigger : public wayland::InputTriggerV1
@@ -98,7 +101,6 @@ public:
     uint32_t const keysym;
     RegistrationType const type;
     MirInputEventModifiers const modifiers;
-
 
     static auto to_mir_modifiers(uint32_t protocol_modifiers, uint32_t keysym) -> MirInputEventModifiers
     {
@@ -153,13 +155,9 @@ public:
 class ActionControl : public wayland::InputTriggerActionControlV1
 {
 public:
-    ActionControl(
-        std::shared_ptr<mi::CompositeEventFilter> const& cef,
-        std::shared_ptr<InputTriggerData> const& itd,
-        struct wl_resource* id) :
+    ActionControl(Context const& context, struct wl_resource* id) :
         mir::wayland::InputTriggerActionControlV1{id, Version<1>{}},
-        cef{cef},
-        itd{itd}
+        context{context}
     {
     }
 
@@ -168,9 +166,10 @@ public:
         if (auto const keyboard_trigger = static_cast<KeyboardSymTrigger*>(wayland::InputTriggerV1::from(trigger)))
         {
             auto const token = "foo";
-            trigger_filter = std::make_shared<KeyboardEventFilter>(wayland::make_weak(keyboard_trigger), token, itd);
+            trigger_filter =
+                std::make_shared<KeyboardEventFilter>(wayland::make_weak(keyboard_trigger), token, context);
 
-            cef->prepend(trigger_filter);
+            context.cef->prepend(trigger_filter);
 
             // Tell the client that the action has been successfully registered.
             // They then should call
@@ -188,18 +187,21 @@ private:
     {
         wayland::Weak<KeyboardSymTrigger> const trigger;
         std::string const token;
-        std::shared_ptr<InputTriggerData> const itd;
+        Context const& context;
 
-        bool began{false};
+        std::atomic<bool> began{false};
+        // This extends slightly before `began`. It is set when the key combo
+        // is first completed, instead of being set after the hold delay.
+        std::unique_ptr<time::Alarm> hold_alarm;
+
+        // TODO key state tracking should be moved into its own class, to be shared with all active filters
         std::unordered_set<uint32_t> pressed_keysyms;
 
         explicit KeyboardEventFilter(
-            wayland::Weak<KeyboardSymTrigger> trigger,
-            std::string const& token,
-            std::shared_ptr<InputTriggerData> const& itd) :
+            wayland::Weak<KeyboardSymTrigger> trigger, std::string const& token, Context const& context) :
             trigger{std::move(trigger)},
             token{token},
-            itd{itd}
+            context{context}
         {
         }
 
@@ -342,9 +344,8 @@ private:
             else if (key_event->action() == mir_keyboard_action_up)
                 pressed_keysyms.erase(key_event->keysym());
 
-            auto const input_trigger_data = itd->registered_actions.lock();
-            if (auto const action_iter = input_trigger_data->find(token);
-                action_iter != input_trigger_data->end())
+            auto const input_trigger_data = context.itd->registered_actions.lock();
+            if (auto const action_iter = input_trigger_data->find(token); action_iter != input_trigger_data->end())
             {
                 auto const [_, action] = *action_iter;
                 // TODO pass the clock and the token authority
@@ -362,24 +363,88 @@ private:
                 auto const keysym_matches =
                     keysym_exists_in_set(trigger.value().keysym, pressed_keysyms, trigger_mods_contain_shift);
 
-                if (!modifiers_match || !keysym_matches)
+                // TODO single activation path
+                // TODO maybe taps and holds should be different filters?
+                if (trigger)
                 {
-                    if (began)
+                    switch (trigger.value().type)
                     {
-                        action.value().send_end_event(bogus_time, bogus_activation_token);
-                        began = false;
+                    case RegistrationType::tap:
+                        {
+                            if (!modifiers_match || !keysym_matches)
+                            {
+                                if (began)
+                                {
+                                    action.value().send_end_event(bogus_time, bogus_activation_token);
+                                    began = false;
+                                }
+
+                                return false;
+                            }
+
+                            // If the trigger keysym is pressed (either just pressed or was already pressed),
+                            // ensure we send a begin event if we haven't already.
+                            if (!began)
+                            {
+                                action.value().send_begin_event(bogus_time, bogus_activation_token);
+                                began = true;
+                                return true;
+                            }
+
+                            return false;
+                        }
+                    case RegistrationType::hold:
+                        {
+                            using namespace std::literals;
+                            auto constexpr hold_time = 500ms;
+
+                            switch (key_event->action())
+                            {
+                            case mir_keyboard_action_down:
+                                {
+                                    if (modifiers_match && keysym_matches && !hold_alarm)
+                                    {
+                                        // If we haven't already began, then set up a wayland alarm to send the begin
+                                        // event after the hold time
+                                        // TODO specify the hold time
+                                        // TODO find some way of clearing the alarm after it fires
+
+                                        hold_alarm = context.alarm_factory->create_alarm([=, this]{
+                                            context.wayland_executor->spawn([this, action, bogus_activation_token]{
+                                                action.value().send_begin_event(bogus_time, bogus_activation_token);
+                                                began = true;
+                                            });
+                                        });
+
+                                        hold_alarm->reschedule_in(hold_time);
+
+                                    }
+                                    break;
+                                }
+                            case mir_keyboard_action_up:
+                                {
+                                    // If we began, then send end immediately. Otherwise, do nothing (released before
+                                    // hold time)
+                                    if ((!modifiers_match || !keysym_matches) && hold_alarm)
+                                    {
+                                        hold_alarm->cancel();
+                                        hold_alarm.reset();
+                                        // FIXME Possible TOCTOU
+                                        if(began)
+                                        {
+                                            action.value().send_end_event(bogus_time, bogus_activation_token);
+                                            began = false;
+                                        }
+                                    }
+                                    break;
+                                }
+                            default:
+                                break;
+                            }
+
+                            return false;
+                        }
                     }
-
-                    return false;
-                }
-
-                // If the trigger keysym is pressed (either just pressed or was already pressed),
-                // ensure we send a begin event if we haven't already.
-                if (!began)
-                {
-                    action.value().send_begin_event(bogus_time, bogus_activation_token);
-                    began = true;
-                    return true;
                 }
 
                 return false;
@@ -412,8 +477,7 @@ private:
         }
     };
 
-    std::shared_ptr<mi::CompositeEventFilter> const cef;
-    std::shared_ptr<InputTriggerData> const itd;
+    Context const& context;
     std::shared_ptr<mi::EventFilter> trigger_filter;
 };
 
@@ -435,7 +499,7 @@ void InputTriggerRegistrationManagerV1::Instance::register_keyboard_sym_trigger(
     uint32_t modifiers, uint32_t keysym, uint32_t type, struct wl_resource* id)
 {
     auto const registration_type = to_registration_type(type);
-    auto const* keyboard_trigger =new KeyboardSymTrigger{modifiers, keysym, id, registration_type};
+    auto const* keyboard_trigger = new KeyboardSymTrigger{modifiers, keysym, id, registration_type};
 
     // TODO validation before done event
     keyboard_trigger->send_done_event();
@@ -449,7 +513,7 @@ void InputTriggerRegistrationManagerV1::Instance::register_keyboard_code_trigger
 // TODO: Store the description string
 void InputTriggerRegistrationManagerV1::Instance::get_action_control(std::string const&, struct wl_resource* id)
 {
-    auto action_control = new ActionControl{cef, itd, id};
+    auto action_control = new ActionControl{context, id};
     action_control->send_done_event("foo");
 }
 }
@@ -458,7 +522,11 @@ void InputTriggerRegistrationManagerV1::Instance::get_action_control(std::string
 auto mf::create_input_trigger_registration_manager_v1(
     wl_display* display,
     std::shared_ptr<mi::CompositeEventFilter> const& cef,
-    std::shared_ptr<InputTriggerData> const& itd) -> std::shared_ptr<wayland::InputTriggerRegistrationManagerV1::Global>
+    std::shared_ptr<InputTriggerData> const& itd,
+    std::shared_ptr<mir::Executor> const& wayland_executor,
+    std::shared_ptr<time::AlarmFactory> const& alarm_factory)
+    -> std::shared_ptr<wayland::InputTriggerRegistrationManagerV1::Global>
 {
-    return std::make_shared<mf::InputTriggerRegistrationManagerV1>(display, cef, itd);
+    return std::make_shared<mf::InputTriggerRegistrationManagerV1>(
+        display, mf::Context{cef, itd, wayland_executor, alarm_factory});
 }
