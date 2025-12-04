@@ -243,7 +243,6 @@ bool mf::WlSurface::has_subsurface_with_surface(WlSurface* surface) const
 
 void mf::WlSurface::reorder_subsurface(WlSubsurface* child, WlSurface* sibling_surface, SubsurfacePlacement placement)
 {
-    // Initialize pending order if not already set
     if (!pending_surface_order)
     {
         std::list<WlSubsurface*> surfaces(children.begin(), children.begin()+parent_z_index);
@@ -257,8 +256,6 @@ void mf::WlSurface::reorder_subsurface(WlSubsurface* child, WlSurface* sibling_s
     if (auto const child_pos = std::find(pending_surface_order->begin(), pending_surface_order->end(), child);
         child_pos == pending_surface_order->end())
     {
-        // Child not found - this indicates an internal inconsistency where a subsurface
-        // is trying to reorder itself but is not in the parent's children list
         log_warning(
             "Subsurface (wl_surface@%u) attempted to reorder but not found in parent's (wl_surface@%u) children list",
             wl_resource_get_id(child->get_surface()->raw_resource()),
@@ -267,7 +264,6 @@ void mf::WlSurface::reorder_subsurface(WlSubsurface* child, WlSurface* sibling_s
     }
     else
     {
-        // Remove child from its current position
         pending_surface_order->erase(child_pos);
     }
 
@@ -282,7 +278,6 @@ void mf::WlSurface::reorder_subsurface(WlSubsurface* child, WlSurface* sibling_s
 
     if (sibling_it == pending_surface_order->end())
     {
-        // Sibling not found - this indicates an internal inconsistency
         log_warning(
             "Subsurface (wl_surface@%u) attempted to reorder relative to a sibling (wl_surface@%u) not found in parent's (wl_surface@%u) children list",
             wl_resource_get_id(child->get_surface()->raw_resource()),

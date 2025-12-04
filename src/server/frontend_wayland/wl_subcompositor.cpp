@@ -147,7 +147,6 @@ void mf::WlSubsurface::place_above(struct wl_resource* sibling)
 
     WlSurface* sibling_surface = WlSurface::from(sibling);
 
-    // Check if sibling is this subsurface itself (protocol error)
     if (sibling_surface == surface)
     {
         BOOST_THROW_EXCEPTION(mw::ProtocolError(
@@ -156,7 +155,6 @@ void mf::WlSubsurface::place_above(struct wl_resource* sibling)
             "wl_subsurface.place_above: sibling cannot be the subsurface itself"));
     }
 
-    // Check if sibling is the parent or a sibling subsurface
     if (sibling_surface != &parent.value() && !parent.value().has_subsurface_with_surface(sibling_surface))
     {
         BOOST_THROW_EXCEPTION(mw::ProtocolError(
@@ -178,7 +176,6 @@ void mf::WlSubsurface::place_below(struct wl_resource* sibling)
 
     WlSurface* sibling_surface = WlSurface::from(sibling);
 
-    // Check if sibling is this subsurface itself (protocol error)
     if (sibling_surface == surface)
     {
         BOOST_THROW_EXCEPTION(mw::ProtocolError(
@@ -187,7 +184,6 @@ void mf::WlSubsurface::place_below(struct wl_resource* sibling)
             "wl_subsurface.place_below: sibling cannot be the subsurface itself"));
     }
 
-    // Check if sibling is the parent or a sibling subsurface
     if (sibling_surface != &parent.value() && !parent.value().has_subsurface_with_surface(sibling_surface))
     {
         BOOST_THROW_EXCEPTION(mw::ProtocolError(
