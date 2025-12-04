@@ -70,7 +70,11 @@
   <interface name="ext_input_trigger_action_v1" version="1">
     <description summary="receives notifications of input trigger actions">
       The compositor sends notification of the triggering of the associated
-      action.
+      action. Client must listen to begin, end, and activated, and act
+      accordingly.
+
+      begin and end will always be sent in pairs, with begin always preceding
+      end. While activated will always be sent on its own.
     </description>
 
     <event name="begin">
@@ -90,14 +94,12 @@
       <arg name="activation_token" type="string" summary="an xdg_activation token"/>
     </event>
 
-    <event name="update">
-      <description summary="progress on the input action">
-        The input trigger that led to the "begin" event has changed.
+    <event name="end">
+      <description summary="end the input action">
+        The input trigger that led to the "begin" event has stopped.
 
-        This will be sent between the "begin" and "end" events when there is a
-        meaningful update to the input trigger. (E.g. a multi-touch drag)
+        The app may end (or begin!) the activity it associates with the action.
 
-        The app may update the activity it associates with the action.
 
         The time argument is a timestamp with millisecond granularity, with an
         undefined base. clients must not assume any relation to wall-clock
@@ -108,14 +110,16 @@
       </description>
       <arg name="time" type="uint" summary="timestamp with millisecond granularity"/>
       <arg name="activation_token" type="string" summary="an xdg_activation token"/>
-      <arg name="progress" type="fixed" summary="progress normalized to [0.0, 1.0]"/>
     </event>
 
-    <event name="end">
-      <description summary="end the input action">
-        The input trigger that led to the "begin" event has stopped.
+    <event name="activated">
+      <description summary="activate the input action">
+        The input trigger has been activated. This can be on the leading or
+        trailing edge of the input being pressed. It's up to the user to
+        configure this as they see fit.
 
-        The app may end (or begin!) the activity it associates with the action.
+        The app may interpret this as a request to perform the action it
+        associates with the trigger.
 
         The time argument is a timestamp with millisecond granularity, with an
         undefined base. clients must not assume any relation to wall-clock
