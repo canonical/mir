@@ -98,9 +98,6 @@ struct WlSurfaceState
 
     std::optional<SyncPoint> release_fence;
 
-    // Subsurface z-order state (plus a nullptr representing the parent surface)
-    std::optional<std::list<WlSubsurface*>> surface_order; // pending z-order changes (using list for simpler reordering)
-
 private:
     // only set to true if invalidate_surface_data() is called
     // surface_data_needs_refresh() returns true if this is true, or if other things are changed which mandate a refresh
@@ -226,6 +223,10 @@ private:
     static void complete_commit(WlSurface* surf);
 
     WlSurfaceState pending;
+    // Subsurface z-order state (plus a nullptr representing the parent surface)
+    // This is separate from WlSurfaceState because it must be applied immediately on commit,
+    // even if the parent surface is a synchronized subsurface (per Wayland spec)
+    std::optional<std::list<WlSubsurface*>> pending_surface_order;
     geometry::Displacement offset_;
     float scale{1};
     std::optional<geometry::Size> buffer_size_;

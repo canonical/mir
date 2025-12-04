@@ -104,11 +104,6 @@ void mf::WlSurfaceState::update_from(WlSurfaceState const& source)
 
     if (source.release_fence)
         release_fence = source.release_fence;
-
-    if (source.surface_order)
-    {
-        surface_order = source.surface_order;
-    }
 }
 
 bool mf::WlSurfaceState::surface_data_needs_refresh() const
@@ -249,18 +244,18 @@ bool mf::WlSurface::has_subsurface_with_surface(WlSurface* surface) const
 void mf::WlSurface::reorder_subsurface(WlSubsurface* child, WlSurface* sibling_surface, SubsurfacePlacement placement)
 {
     // Initialize pending order if not already set
-    if (!pending.surface_order)
+    if (!pending_surface_order)
     {
         std::list<WlSubsurface*> surfaces(children.begin(), children.begin()+parent_z_index);
         surfaces.push_back(nullptr); // Special entry marking the parent position
         surfaces.insert(surfaces.end(), children.begin()+parent_z_index, children.end());
 
-        pending.surface_order = surfaces;
+        pending_surface_order = surfaces;
     }
 
     // Find the child in the pending order
-    if (auto const child_pos = std::find(pending.surface_order->begin(), pending.surface_order->end(), child);
-        child_pos == pending.surface_order->end())
+    if (auto const child_pos = std::find(pending_surface_order->begin(), pending_surface_order->end(), child);
+        child_pos == pending_surface_order->end())
     {
         // Child not found - this indicates an internal inconsistency where a subsurface
         // is trying to reorder itself but is not in the parent's children list
@@ -273,7 +268,7 @@ void mf::WlSurface::reorder_subsurface(WlSubsurface* child, WlSurface* sibling_s
     else
     {
         // Remove child from its current position
-        pending.surface_order->erase(child_pos);
+        pending_surface_order->erase(child_pos);
     }
 
     // If sibling is this surface (the parent) use nullptr to represent it
@@ -281,11 +276,11 @@ void mf::WlSurface::reorder_subsurface(WlSubsurface* child, WlSurface* sibling_s
 
     // Find which subsurface has this sibling surface
     auto sibling_it = std::find_if(
-        pending.surface_order->begin(),
-        pending.surface_order->end(),
+        pending_surface_order->begin(),
+        pending_surface_order->end(),
         [target](auto const* s) { return s ? s->get_surface() == target : target == nullptr; });
 
-    if (sibling_it == pending.surface_order->end())
+    if (sibling_it == pending_surface_order->end())
     {
         // Sibling not found - this indicates an internal inconsistency
         log_warning(
@@ -299,12 +294,12 @@ void mf::WlSurface::reorder_subsurface(WlSubsurface* child, WlSurface* sibling_s
     if (placement == SubsurfacePlacement::above)
     {
         // Place just above sibling (after it in the list, higher z-order)
-        pending.surface_order->insert(std::next(sibling_it), child);
+        pending_surface_order->insert(std::next(sibling_it), child);
     }
     else
     {
         // Place just below sibling (before it in the list, lower z-order)
-        pending.surface_order->insert(sibling_it, child);
+        pending_surface_order->insert(sibling_it, child);
     }
 }
 
@@ -640,18 +635,6 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
         buffer_size_ = logical_size;
     }
 
-    // Apply pending subsurface z-order changes
-    if (state.surface_order)
-    {
-        // Convert list back to vector
-        children.assign(state.surface_order->begin(), state.surface_order->end());
-
-        // Update parent_z_index and clear the parent marker
-        auto const parent_marker = std::find(children.begin(), children.end(), nullptr);
-        parent_z_index = parent_marker - children.begin();
-        children.erase(parent_marker);
-    }
-
     for (WlSubsurface* child: children)
     {
         child->parent_has_committed();
@@ -764,6 +747,22 @@ void mf::WlSurface::commit()
 
 void mf::WlSurface::complete_commit(WlSurface* surf)
 {
+    // Apply pending subsurface z-order changes BEFORE role->commit()
+    // Per Wayland spec, subsurface state changes (z-order, position) are applied
+    // immediately on parent commit, even if the parent is a synchronized subsurface
+    if (surf->pending_surface_order)
+    {
+        // Convert list back to vector
+        surf->children.assign(surf->pending_surface_order->begin(), surf->pending_surface_order->end());
+
+        // Update parent_z_index and clear the parent marker
+        auto const parent_marker = std::find(surf->children.begin(), surf->children.end(), nullptr);
+        surf->parent_z_index = parent_marker - surf->children.begin();
+        surf->children.erase(parent_marker);
+
+        surf->pending_surface_order = std::nullopt;
+    }
+
     // order is important
     auto const state = std::move(surf->pending);
     surf->pending = WlSurfaceState();
