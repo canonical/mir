@@ -33,7 +33,7 @@ using ::testing::NotNull;
 
 namespace
 {
-static std::string applications_dir;
+static std::string temp_dir;
 }
 
 struct GDesktopFileCache : Test
@@ -43,24 +43,23 @@ struct GDesktopFileCache : Test
     static void SetUpTestSuite()
     {
         // Establish the temporary directory
-        std::filesystem::path tmp_dir_path {std::filesystem::temp_directory_path() /= std::tmpnam(nullptr)};
-        std::filesystem::create_directories(tmp_dir_path);
-        std::string desktop_file_directory_name = tmp_dir_path;
-        setenv("XDG_DATA_DIRS", desktop_file_directory_name.c_str(), 1);
-        applications_dir = desktop_file_directory_name + "/applications";
+        char tmp_dir_path[] = "/tmp/mir-XXXXXX";
+        if (mkdtemp(tmp_dir_path) == nullptr)
+            throw std::runtime_error("failed to create temporary directory");
+        setenv("XDG_DATA_DIRS", tmp_dir_path, 1);
+        temp_dir = tmp_dir_path;
+        auto applications_dir = temp_dir + "/applications";
         mkdir(applications_dir.c_str(), S_IRWXU);
     }
 
     void TearDown() override
     {
-        // Remove all files from the temporary directory
-        for (const auto& entry : std::filesystem::directory_iterator(applications_dir))
-            std::filesystem::remove_all(entry.path());
+        std::filesystem::remove_all(temp_dir);
     }
 
     void write_desktop_file(const char* contents, const char* filename)
     {
-        auto filepath = applications_dir + "/" + filename;
+        auto filepath = temp_dir + "/applications/" + filename;
         std::fstream file(filepath, std::fstream::out);
         file << contents;
     }
