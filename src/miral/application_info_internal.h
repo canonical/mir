@@ -17,8 +17,8 @@
 #ifndef MIR_APPLICATION_INFO_INTERNAL_H
 #define MIR_APPLICATION_INFO_INTERNAL_H
 
-#include "miral/application_info.h"
-#include "miral/window.h"
+#include <miral/application_info.h>
+#include <miral/window.h>
 
 struct miral::ApplicationInfo::Self
 {

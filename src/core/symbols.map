@@ -37,5 +37,11 @@ MIR_CORE_2.21 {
     mir::input::MouseKeysKeymap::set_action*;
     mir::input::MouseKeysKeymap::get_action*;
   };
-local: *;
-};
+} MIR_CORE_2.9;
+
+MIR_CORE_2.24 {
+global:
+  extern "C++" {
+    mir::report_exception*;
+  };
+} MIR_CORE_2.21;

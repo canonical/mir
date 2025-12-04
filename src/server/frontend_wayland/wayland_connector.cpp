@@ -16,8 +16,8 @@
 
 #include "wayland_connector.h"
 
-#include "mir/shell/token_authority.h"
-#include "mir/graphics/platform.h"
+#include <mir/shell/token_authority.h>
+#include <mir/graphics/platform.h>
 #include "wl_client.h"
 #include "wl_data_device_manager.h"
 #include "wayland_utils.h"
@@ -32,12 +32,13 @@
 #include "foreign_toplevel_manager_v1.h"
 #include "wp_viewporter.h"
 #include "linux_drm_syncobj.h"
+#include "surface_registry.h"
 
-#include "mir/main_loop.h"
-#include "mir/thread_name.h"
-#include "mir/log.h"
-#include "mir/graphics/graphic_buffer_allocator.h"
-#include "mir/frontend/wayland.h"
+#include <mir/main_loop.h>
+#include <mir/thread_name.h>
+#include <mir/log.h>
+#include <mir/graphics/graphic_buffer_allocator.h>
+#include <mir/frontend/wayland.h>
 
 #include <future>
 #include <optional>
@@ -294,6 +295,7 @@ mf::WaylandConnector::WaylandConnector(
         std::make_shared<FrameExecutor>(*main_loop),
         this->allocator);
     subcompositor_global = std::make_unique<mf::WlSubcompositor>(display.get());
+    auto const surface_registry = std::make_shared<mf::SurfaceRegistry>();
     seat_global = std::make_unique<mf::WlSeat>(
         display.get(),
         *executor,
@@ -301,7 +303,8 @@ mf::WaylandConnector::WaylandConnector(
         input_hub,
         keyboard_observer_registrar,
         seat,
-        accessibility_manager);
+        accessibility_manager,
+        surface_registry);
     output_manager = std::make_unique<mf::OutputManager>(
         display.get(),
         executor,
@@ -339,7 +342,8 @@ mf::WaylandConnector::WaylandConnector(
         decoration_strategy,
         session_coordinator,
         keyboard_observer_registrar,
-        token_authority});
+        token_authority,
+        surface_registry});
 
     shm_global = std::make_unique<WlShm>(display.get(), executor);
 

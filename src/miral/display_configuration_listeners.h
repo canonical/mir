@@ -17,7 +17,7 @@
 #ifndef MIRAL_DISPLAY_CONFIGURATION_OBSERVERS_H
 #define MIRAL_DISPLAY_CONFIGURATION_OBSERVERS_H
 
-#include "miral/output.h"
+#include <miral/output.h>
 
 #include <mir/graphics/display_configuration_observer.h>
 

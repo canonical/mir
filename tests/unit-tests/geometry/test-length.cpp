@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/geometry/length.h"
+#include <mir/geometry/length.h>
 
 #include <gtest/gtest.h>
 

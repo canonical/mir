@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_STUB_CURSOR_OBSERVER_H_
 #define MIR_TEST_DOUBLES_STUB_CURSOR_OBSERVER_H_
 
-#include "mir/input/cursor_observer.h"
+#include <mir/input/cursor_observer.h>
 
 namespace mir
 {

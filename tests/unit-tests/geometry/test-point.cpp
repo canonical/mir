@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/geometry/point.h"
+#include <mir/geometry/point.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

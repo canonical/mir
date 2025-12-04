@@ -20,11 +20,11 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include "mir/server.h"
-#include "mir/compositor/scene.h"
-#include "mir/compositor/scene_element.h"
-#include "mir/graphics/renderable.h"
-#include "mir/scene/surface.h"
+#include <mir/server.h>
+#include <mir/compositor/scene.h>
+#include <mir/compositor/scene_element.h>
+#include <mir/graphics/renderable.h>
+#include <mir/scene/surface.h>
 
 namespace mtf = mir_test_framework;
 

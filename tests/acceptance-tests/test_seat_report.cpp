@@ -14,25 +14,25 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/input/input_device_info.h"
-#include "mir/input/keymap.h"
-#include "mir/input/mir_touchpad_config.h"
-#include "mir/input/mir_input_config.h"
-#include "mir/input/input_device.h"
-#include "mir/input/device.h"
-#include "mir/input/touchscreen_settings.h"
+#include <mir/input/input_device_info.h>
+#include <mir/input/keymap.h>
+#include <mir/input/mir_touchpad_config.h>
+#include <mir/input/mir_input_config.h>
+#include <mir/input/input_device.h>
+#include <mir/input/device.h>
+#include <mir/input/touchscreen_settings.h>
 
-#include "mir_test_framework/stub_server_platform_factory.h"
-#include "mir_test_framework/headless_in_process_server.h"
-#include "mir_test_framework/fake_input_device.h"
-#include "mir/test/signal.h"
-#include "mir/test/event_matchers.h"
-#include "mir/test/event_factory.h"
+#include <mir_test_framework/stub_server_platform_factory.h>
+#include <mir_test_framework/headless_in_process_server.h>
+#include <mir_test_framework/fake_input_device.h>
+#include <mir/test/signal.h>
+#include <mir/test/event_matchers.h>
+#include <mir/test/event_factory.h>
 
-#include "mir/input/input_device_observer.h"
-#include "mir/input/input_device_hub.h"
-#include "mir/input/seat_observer.h"
-#include "mir/observer_registrar.h"
+#include <mir/input/input_device_observer.h>
+#include <mir/input/input_device_hub.h>
+#include <mir/input/seat_observer.h>
+#include <mir/observer_registrar.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

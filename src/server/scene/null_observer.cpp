@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/scene/null_observer.h"
+#include <mir/scene/null_observer.h>
 
 namespace ms = mir::scene;
 

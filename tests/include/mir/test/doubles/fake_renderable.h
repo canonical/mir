@@ -18,7 +18,7 @@
 #define MIR_TEST_DOUBLES_FAKE_RENDERABLE_H_
 
 #include "stub_buffer.h"
-#include "mir/graphics/renderable.h"
+#include <mir/graphics/renderable.h>
 #define GLM_FORCE_RADIANS
 #include <glm/gtc/matrix_transform.hpp>
 #include <gmock/gmock.h>

@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/input/cursor_observer_multiplexer.h"
+#include <mir/input/cursor_observer_multiplexer.h>
 
 namespace mi = mir::input;
 

@@ -1,6 +1,5 @@
 include_directories(
   ${PROJECT_SOURCE_DIR}/src/include/server
-  ${PROJECT_SOURCE_DIR}/include/renderer
 )
 
 set(MIRAL_ABI 7)
@@ -163,9 +162,6 @@ add_library(miral SHARED
     ${miral_include}/miral/runner.h # Syntactically, we need something here
 )
 
-#include <mir/udev/wrapper.h>
-set_source_files_properties(keymap.cpp PROPERTIES COMPILE_FLAGS "-I${PROJECT_SOURCE_DIR}/src/include/platform")
-
 check_cxx_compiler_flag(-Wno-attribute-alias HAS_W_NO_ATTRIBUTE_ALIAS)
 if(HAS_W_NO_ATTRIBUTE_ALIAS)
     set_source_files_properties(
@@ -201,7 +197,7 @@ target_include_directories(miral
 
 target_link_libraries(miral-external
     PUBLIC
-        mircommon
+        mircore
     PRIVATE
         miral-internal
         mirserver

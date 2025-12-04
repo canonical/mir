@@ -14,22 +14,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir_test_framework/stubbed_server_configuration.h"
-#include "mir_test_framework/command_line_server_configuration.h"
+#include <mir_test_framework/stubbed_server_configuration.h>
+#include <mir_test_framework/command_line_server_configuration.h>
 
-#include "mir_test_framework/stub_server_platform_factory.h"
+#include <mir_test_framework/stub_server_platform_factory.h>
 
-#include "mir/options/default_configuration.h"
-#include "mir/graphics/cursor.h"
+#include <mir/options/default_configuration.h>
+#include <mir/graphics/cursor.h>
 
-#include "mir/test/doubles/stub_renderer.h"
+#include <mir/test/doubles/stub_renderer.h>
 
-#include "mir/renderer/renderer_factory.h"
+#include <mir/renderer/renderer_factory.h>
 #include "src/server/input/null_input_manager.h"
 #include "src/server/input/null_input_dispatcher.h"
 #include "src/server/input/null_input_targeter.h"
-#include "mir/test/doubles/null_logger.h"
-#include "mir/test/doubles/stub_cursor.h"
+#include <mir/test/doubles/null_logger.h>
+#include <mir/test/doubles/stub_cursor.h>
 
 namespace geom = mir::geometry;
 namespace mc = mir::compositor;

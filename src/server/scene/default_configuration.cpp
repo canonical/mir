@@ -14,18 +14,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/default_server_configuration.h"
+#include <mir/default_server_configuration.h>
 
-#include "mir/frontend/drag_icon_controller.h"
-#include "mir/graphics/display.h"
-#include "mir/input/cursor_observer.h"
-#include "mir/input/scene.h"
-#include "mir/input/cursor_controller.h"
-#include "mir/main_loop.h"
-#include "mir/renderer/gl/context.h"
-#include "mir/scene/session.h"
-#include "mir/scene/session_container.h"
-#include "mir/shell/display_configuration_controller.h"
+#include <mir/frontend/drag_icon_controller.h>
+#include <mir/graphics/display.h>
+#include <mir/input/cursor_observer.h>
+#include <mir/input/scene.h>
+#include <mir/input/cursor_controller.h>
+#include <mir/main_loop.h>
+#include <mir/renderer/gl/context.h>
+#include <mir/scene/session.h>
+#include <mir/scene/session_container.h>
+#include <mir/shell/display_configuration_controller.h>
 
 #include "broadcasting_session_event_sink.h"
 #include "mediating_display_changer.h"
@@ -36,8 +36,8 @@
 #include "basic_clipboard.h"
 #include "basic_text_input_hub.h"
 #include "basic_idle_hub.h"
-#include "mir/options/default_configuration.h"
-#include "mir/frontend/display_changer.h"
+#include <mir/options/default_configuration.h>
+#include <mir/frontend/display_changer.h>
 
 namespace mc = mir::compositor;
 namespace mf = mir::frontend;

@@ -17,7 +17,7 @@
 #ifndef MIR_DISPLAYCONFIGURATIONREPORT_H
 #define MIR_DISPLAYCONFIGURATIONREPORT_H
 
-#include "mir/graphics/display_configuration_observer.h"
+#include <mir/graphics/display_configuration_observer.h>
 
 #include <memory>
 

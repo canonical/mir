@@ -17,7 +17,7 @@
 #ifndef MIR_COMPOSITOR_DISPLAY_BUFFER_COMPOSITOR_H_
 #define MIR_COMPOSITOR_DISPLAY_BUFFER_COMPOSITOR_H_
 
-#include "mir/compositor/scene.h"
+#include <mir/compositor/scene.h>
 
 namespace mir
 {

@@ -17,17 +17,17 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include "mir/graphics/platform.h"
-#include "mir/options/program_option.h"
+#include <mir/graphics/platform.h>
+#include <mir/options/program_option.h>
 #include "src/platforms/x11/graphics/platform.h"
 #include "src/platforms/x11/x11_resources.h"
 #include "src/server/report/null/display_report.h"
-#include "mir/udev/wrapper.h"
+#include <mir/udev/wrapper.h>
 
-#include "mir/test/doubles/mock_x11_resources.h"
-#include "mir/test/doubles/mock_x11.h"
-#include "mir/shared_library.h"
-#include "mir_test_framework/executable_path.h"
+#include <mir/test/doubles/mock_x11_resources.h>
+#include <mir/test/doubles/mock_x11.h>
+#include <mir/shared_library.h>
+#include <mir_test_framework/executable_path.h>
 
 namespace mir
 {

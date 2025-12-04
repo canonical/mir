@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_SYSTEM_PERFORMANCE_TEST_H_
 #define MIR_TEST_SYSTEM_PERFORMANCE_TEST_H_
 
-#include "mir_test_framework/temporary_environment_value.h"
+#include <mir_test_framework/temporary_environment_value.h>
 
 #include <gtest/gtest.h>
 #include <string>

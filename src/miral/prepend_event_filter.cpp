@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "miral/prepend_event_filter.h"
+#include <miral/prepend_event_filter.h>
 
 #include <mir/input/event_filter.h>
 #include <mir/input/composite_event_filter.h>

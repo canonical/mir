@@ -14,7 +14,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/events/pointer_event.h"
+#include <mir/events/pointer_event.h>
 
 #include <boost/throw_exception.hpp>
 

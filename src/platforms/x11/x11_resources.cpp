@@ -16,7 +16,7 @@
 
 
 #define MIR_LOG_COMPONENT "x11-error"
-#include "mir/log.h"
+#include <mir/log.h>
 
 #include "x11_resources.h"
 

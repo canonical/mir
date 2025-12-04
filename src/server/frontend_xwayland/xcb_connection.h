@@ -19,11 +19,11 @@
 #ifndef MIR_FRONTEND_XCB_CONNECTION_H
 #define MIR_FRONTEND_XCB_CONNECTION_H
 
-#include "mir/geometry/point.h"
-#include "mir/geometry/size.h"
-#include "mir/fatal.h"
-#include "mir/fd.h"
-#include "mir/log.h"
+#include <mir/geometry/point.h>
+#include <mir/geometry/size.h>
+#include <mir/fatal.h>
+#include <mir/fd.h>
+#include <mir/log.h>
 
 #include <xcb/xcb.h>
 #include <string>

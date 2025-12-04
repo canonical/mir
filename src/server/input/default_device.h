@@ -17,14 +17,14 @@
 #ifndef MIR_INPUT_DEFAULT_DEVICE_H_
 #define MIR_INPUT_DEFAULT_DEVICE_H_
 
-#include "mir_toolkit/event.h"
-#include "mir/input/device.h"
-#include "mir/input/input_device_info.h"
-#include "mir/input/pointer_settings.h"
-#include "mir/input/touchpad_settings.h"
-#include "mir/input/touchscreen_settings.h"
-#include "mir/input/mir_keyboard_config.h"
-#include "mir/optional_value.h"
+#include <mir_toolkit/event.h>
+#include <mir/input/device.h>
+#include <mir/input/input_device_info.h>
+#include <mir/input/pointer_settings.h>
+#include <mir/input/touchpad_settings.h>
+#include <mir/input/touchscreen_settings.h>
+#include <mir/input/mir_keyboard_config.h>
+#include <mir/optional_value.h>
 
 #include <memory>
 #include <functional>

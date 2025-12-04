@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_CONSOLE_SERVICES_H_
 #define MIR_TEST_DOUBLES_MOCK_CONSOLE_SERVICES_H_
 
-#include "mir/console_services.h"
+#include <mir/console_services.h>
 
 #include <gmock/gmock.h>
 

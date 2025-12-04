@@ -20,8 +20,8 @@
  * the build to fail with duplicate definitions.
  */
 
-#include "mir_test_framework/mmap_wrapper.h"
-#include "mir_test_framework/interposer_helper.h"
+#include <mir_test_framework/mmap_wrapper.h>
+#include <mir_test_framework/interposer_helper.h>
 
 #include <boost/throw_exception.hpp>
 #include <dlfcn.h>

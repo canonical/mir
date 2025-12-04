@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/graphics/display_configuration.h"
+#include <mir/graphics/display_configuration.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

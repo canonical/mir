@@ -17,18 +17,18 @@
 #ifndef MIR_SCENE_SURFACE_STACK_H_
 #define MIR_SCENE_SURFACE_STACK_H_
 
-#include "mir/shell/surface_stack.h"
-#include "mir/frontend/surface_stack.h"
+#include <mir/shell/surface_stack.h>
+#include <mir/frontend/surface_stack.h>
 
-#include "mir/compositor/scene.h"
-#include "mir/scene/observer.h"
-#include "mir/input/scene.h"
-#include "mir/recursive_read_write_mutex.h"
-#include "mir/scene/session_lock.h"
+#include <mir/compositor/scene.h>
+#include <mir/scene/observer.h>
+#include <mir/input/scene.h>
+#include <mir/recursive_read_write_mutex.h>
+#include <mir/scene/session_lock.h>
 
-#include "mir/basic_observers.h"
-#include "mir/scene/surface_observer.h"
-#include "mir/observer_multiplexer.h"
+#include <mir/basic_observers.h>
+#include <mir/scene/surface_observer.h>
+#include <mir/observer_multiplexer.h>
 
 #include <atomic>
 #include <map>

@@ -15,8 +15,8 @@
  */
 
 #include "scaled_buffer_stream.h"
-#include "mir/geometry/forward.h"
-#include "mir/geometry/rectangle.h"
+#include <mir/geometry/forward.h>
+#include <mir/geometry/rectangle.h>
 
 namespace mf = mir::frontend;
 namespace geom = mir::geometry;

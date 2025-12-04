@@ -19,17 +19,17 @@
 #include "wl_pointer.h"
 #include "output_manager.h"
 
-#include "mir/events/pointer_event.h"
-#include "mir/executor.h"
-#include "mir/geometry/rectangles.h"
-#include "mir/input/device.h"
-#include "mir/input/event_builder.h"
-#include "mir/input/input_device_registry.h"
-#include "mir/input/input_sink.h"
-#include "mir/input/virtual_input_device.h"
-#include "mir/log.h"
-#include "mir/wayland/protocol_error.h"
-#include "mir/wayland/weak.h"
+#include <mir/events/pointer_event.h>
+#include <mir/executor.h>
+#include <mir/geometry/rectangles.h>
+#include <mir/input/device.h>
+#include <mir/input/event_builder.h>
+#include <mir/input/input_device_registry.h>
+#include <mir/input/input_sink.h>
+#include <mir/input/virtual_input_device.h>
+#include <mir/log.h>
+#include <mir/wayland/protocol_error.h>
+#include <mir/wayland/weak.h>
 
 #include <boost/throw_exception.hpp>
 #include <linux/input-event-codes.h>

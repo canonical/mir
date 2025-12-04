@@ -14,10 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/geometry/size.h"
-#include "mir/wayland/weak.h"
+#include <mir/geometry/size.h>
+#include <mir/wayland/weak.h>
 #include "wayland_wrapper.h"
-#include "mir/graphics/drm_formats.h"
+#include <mir/graphics/drm_formats.h>
 
 #include <sys/mman.h>
 #include <fcntl.h>

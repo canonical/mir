@@ -15,7 +15,7 @@
  */
 
 #include "kms_page_flipper.h"
-#include "mir/graphics/display_report.h"
+#include <mir/graphics/display_report.h>
 
 #include <stdexcept>
 #include <boost/throw_exception.hpp>

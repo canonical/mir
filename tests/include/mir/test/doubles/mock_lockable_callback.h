@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_LOCKABLE_CALLBACK_H_
 #define MIR_TEST_DOUBLES_MOCK_LOCKABLE_CALLBACK_H_
 
-#include "mir/lockable_callback.h"
+#include <mir/lockable_callback.h>
 
 #include <gmock/gmock.h>
 

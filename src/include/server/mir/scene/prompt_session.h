@@ -17,7 +17,7 @@
 #ifndef MIR_SCENE_PROMPT_SESSION_H_
 #define MIR_SCENE_PROMPT_SESSION_H_
 
-#include "mir/frontend/prompt_session.h"
+#include <mir/frontend/prompt_session.h>
 
 namespace mir
 {

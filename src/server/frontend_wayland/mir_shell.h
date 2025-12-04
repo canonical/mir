@@ -17,7 +17,7 @@
 #ifndef MIR_FRONTEND_MIR_SHELL_H
 #define MIR_FRONTEND_MIR_SHELL_H
 
-#include "mir-shell-unstable-v1_wrapper.h"
+#include <mir-shell-unstable-v1_wrapper.h>
 
 #include <memory>
 

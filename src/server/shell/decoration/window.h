@@ -17,8 +17,8 @@
 #ifndef MIR_SHELL_DECORATION_WINDOW_H_
 #define MIR_SHELL_DECORATION_WINDOW_H_
 
-#include "mir/geometry/rectangle.h"
-#include "mir/geometry/displacement.h"
+#include <mir/geometry/rectangle.h>
+#include <mir/geometry/displacement.h>
 
 #include <mir_toolkit/common.h>
 

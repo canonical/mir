@@ -17,7 +17,7 @@
 #ifndef MIRAL_WAYLAND_SHM_H
 #define MIRAL_WAYLAND_SHM_H
 
-#include "mir/geometry/size.h"
+#include <mir/geometry/size.h>
 
 #include <wayland-client.h>
 #include <memory>

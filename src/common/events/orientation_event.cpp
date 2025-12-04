@@ -14,7 +14,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/events/orientation_event.h"
+#include <mir/events/orientation_event.h>
 
 MirOrientationEvent::MirOrientationEvent() : MirEvent(mir_event_type_orientation)
 {

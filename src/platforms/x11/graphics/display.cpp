@@ -14,13 +14,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/c_memory.h"
-#include "mir/graphics/display_report.h"
-#include "mir/graphics/display_configuration.h"
+#include <mir/c_memory.h>
+#include <mir/graphics/display_report.h>
+#include <mir/graphics/display_configuration.h>
 #include <mir/graphics/display_configuration_policy.h>
-#include "mir/graphics/egl_error.h"
-#include "mir/renderer/gl/context.h"
-#include "mir/graphics/gl_config.h"
+#include <mir/graphics/egl_error.h>
+#include <mir/renderer/gl/context.h>
+#include <mir/graphics/gl_config.h>
 #include "display_configuration.h"
 #include "display.h"
 #include "platform.h"
@@ -30,7 +30,7 @@
 #include <algorithm>
 
 #define MIR_LOG_COMPONENT "display"
-#include "mir/log.h"
+#include <mir/log.h>
 
 namespace mx=mir::X;
 namespace mg=mir::graphics;

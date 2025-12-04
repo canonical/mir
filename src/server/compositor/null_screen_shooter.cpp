@@ -15,8 +15,8 @@
  */
 
 #include "null_screen_shooter.h"
-#include "mir/log.h"
-#include "mir/executor.h"
+#include <mir/log.h>
+#include <mir/executor.h>
 
 namespace mc = mir::compositor;
 namespace mrs = mir::renderer::software;

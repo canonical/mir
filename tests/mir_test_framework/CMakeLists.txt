@@ -1,11 +1,5 @@
 include_directories(
-  ${CMAKE_SOURCE_DIR}
-  ${PROJECT_SOURCE_DIR}/include/platform
-  ${PROJECT_SOURCE_DIR}/src/include/common
   ${PROJECT_SOURCE_DIR}/src/include/server
-  ${PROJECT_SOURCE_DIR}/src/include/client
-  ${PROJECT_SOURCE_DIR}/include/renderers/sw
-  ${PROJECT_SOURCE_DIR}/include/miral
   ${CMAKE_SOURCE_DIR}
 )
 
@@ -63,6 +57,7 @@ add_library(mir-public-test-framework OBJECT
 
 target_link_libraries(mir-public-test-framework
   PUBLIC
+    miral
     mirplatform
     mircommon
     mircore
@@ -102,7 +97,7 @@ target_link_libraries(mir-libinput-test-framework
 add_library(mir-umock-test-framework OBJECT udev_environment.cpp)
 
 target_link_libraries(mir-umock-test-framework
-  PRIVATE PkgConfig::UMOCKDEV
+  PRIVATE mirplatform PkgConfig::UMOCKDEV
 )
 
 add_library(mir-test-framework-static STATIC)

@@ -17,12 +17,12 @@
 #ifndef MIR_SCENE_BASIC_SURFACE_H_
 #define MIR_SCENE_BASIC_SURFACE_H_
 
-#include "mir/graphics/display_configuration.h"
-#include "mir/scene/surface.h"
-#include "mir/wayland/weak.h"
-#include "mir/geometry/rectangle.h"
-#include "mir_toolkit/common.h"
-#include "mir/synchronised.h"
+#include <mir/graphics/display_configuration.h>
+#include <mir/scene/surface.h>
+#include <mir/wayland/weak.h>
+#include <mir/geometry/rectangle.h>
+#include <mir_toolkit/common.h>
+#include <mir/synchronised.h>
 
 #include <glm/glm.hpp>
 #include <vector>
@@ -130,8 +130,6 @@ public:
 
     void set_cursor_from_buffer(std::shared_ptr<graphics::Buffer> buffer,
                                 geometry::Displacement const& hotspot);
-
-    auto wayland_surface() -> wayland::Weak<frontend::WlSurface> const& override;
 
     void request_client_surface_close() override;
 

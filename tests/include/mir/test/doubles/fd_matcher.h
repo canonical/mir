@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_FD_MATCHER_H_
 #define MIR_TEST_DOUBLES_FD_MATCHER_H_
 
-#include "mir/fd.h"
+#include <mir/fd.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <gmock/gmock.h>

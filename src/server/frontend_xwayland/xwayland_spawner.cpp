@@ -18,13 +18,13 @@
 
 #include "xwayland_spawner.h"
 
-#include "mir/dispatch/multiplexing_dispatchable.h"
-#include "mir/dispatch/threaded_dispatcher.h"
-#include "mir/dispatch/readable_fd.h"
-#include "mir/fd.h"
-#include "mir/log.h"
-#include "mir/fatal.h"
-#include "mir/thread_name.h"
+#include <mir/dispatch/multiplexing_dispatchable.h>
+#include <mir/dispatch/threaded_dispatcher.h>
+#include <mir/dispatch/readable_fd.h>
+#include <mir/fd.h>
+#include <mir/log.h>
+#include <mir/fatal.h>
+#include <mir/thread_name.h>
 
 #include <fcntl.h>
 #include <sys/socket.h>

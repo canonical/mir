@@ -18,8 +18,8 @@
 #define MIR_MINIMAL_CONSOLE_SERVICES_H_
 
 #include "linux_virtual_terminal.h"
-#include "mir/console_services.h"
-#include "mir/fd.h"
+#include <mir/console_services.h>
+#include <mir/fd.h>
 #include <boost/throw_exception.hpp>
 #include <future>
 

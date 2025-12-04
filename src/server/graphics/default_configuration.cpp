@@ -14,32 +14,32 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/default_server_configuration.h"
-#include "mir/options/configuration.h"
+#include <mir/default_server_configuration.h>
+#include <mir/options/configuration.h>
 
-#include "mir/graphics/default_display_configuration_policy.h"
-#include "mir/graphics/graphic_buffer_allocator.h"
-#include "mir/graphics/display.h"
+#include <mir/graphics/default_display_configuration_policy.h>
+#include <mir/graphics/graphic_buffer_allocator.h>
+#include <mir/graphics/display.h>
 #include "multiplexing_display.h"
 #include "null_cursor.h"
 #include "software_cursor.h"
 #include "platform_probe.h"
-#include "mir/shell/accessibility_manager.h"
+#include <mir/shell/accessibility_manager.h>
 
-#include "mir/graphics/gl_config.h"
-#include "mir/graphics/platform.h"
-#include "mir/graphics/cursor.h"
+#include <mir/graphics/gl_config.h>
+#include <mir/graphics/platform.h>
+#include <mir/graphics/cursor.h>
 #include "display_configuration_observer_multiplexer.h"
 #include "default_output_filter.h"
 
-#include "mir/shared_library.h"
-#include "mir/shared_library_prober.h"
-#include "mir/abnormal_exit.h"
-#include "mir/emergency_cleanup.h"
-#include "mir/log.h"
-#include "mir/report_exception.h"
-#include "mir/main_loop.h"
-#include "mir/udev/wrapper.h"
+#include <mir/shared_library.h>
+#include <mir/shared_library_prober.h>
+#include <mir/abnormal_exit.h>
+#include <mir/emergency_cleanup.h>
+#include <mir/log.h>
+#include <mir/report_exception.h>
+#include <mir/main_loop.h>
+#include <mir/udev/wrapper.h>
 
 #include <boost/throw_exception.hpp>
 

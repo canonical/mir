@@ -19,8 +19,8 @@
 #include "wl_egl_display_provider.h"
 #include "platform.h"
 #include "display.h"
-#include "mir/graphics/egl_error.h"
-#include "mir/graphics/platform.h"
+#include <mir/graphics/egl_error.h>
+#include <mir/graphics/platform.h>
 
 namespace mg = mir::graphics;
 namespace mgw = mir::graphics::wayland;

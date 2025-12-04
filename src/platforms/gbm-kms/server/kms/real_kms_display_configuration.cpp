@@ -17,9 +17,9 @@
 #include "real_kms_display_configuration.h"
 #include "kms_output.h"
 #include "kms_output_container.h"
-#include "mir/graphics/pixel_format_utils.h"
-#include "mir/log.h"
-#include "mir/output_type_names.h"
+#include <mir/graphics/pixel_format_utils.h>
+#include <mir/log.h>
+#include <mir/output_type_names.h>
 
 #include <boost/throw_exception.hpp>
 

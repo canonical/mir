@@ -15,9 +15,9 @@
  */
 
 #include "default_event_builder.h"
-#include "mir/time/clock.h"
-#include "mir/input/seat.h"
-#include "mir/events/event_builders.h"
+#include <mir/time/clock.h>
+#include <mir/input/seat.h>
+#include <mir/events/event_builders.h>
 
 #include <algorithm>
 

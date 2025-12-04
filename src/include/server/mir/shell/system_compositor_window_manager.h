@@ -17,8 +17,8 @@
 #ifndef MIR_SHELL_SYSTEM_COMPOSITOR_WINDOW_MANAGER_H_
 #define MIR_SHELL_SYSTEM_COMPOSITOR_WINDOW_MANAGER_H_
 
-#include "mir/shell/window_manager.h"
-#include "mir/graphics/display_configuration.h"
+#include <mir/shell/window_manager.h>
+#include <mir/graphics/display_configuration.h>
 
 #include <map>
 #include <mutex>

@@ -14,11 +14,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "miral/test_server.h"
-#include "miral/x11_support.h"
+#include <miral/test_server.h>
+#include <miral/x11_support.h>
 
-#include "mir/test/pipe.h"
-#include "mir/test/signal.h"
+#include <mir/test/pipe.h>
+#include <mir/test/signal.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

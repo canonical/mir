@@ -14,9 +14,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir_test_framework/udev_environment.h"
-#include "mir/udev/wrapper.h"
-#include "mir/test/death.h"
+#include <mir_test_framework/udev_environment.h>
+#include <mir/udev/wrapper.h>
+#include <mir/test/death.h>
 
 #include <gtest/gtest.h>
 #include <memory>

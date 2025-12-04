@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/shell/persistent_surface_store.h"
+#include <mir/shell/persistent_surface_store.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

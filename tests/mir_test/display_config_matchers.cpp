@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/test/display_config_matchers.h"
-#include "mir/graphics/display_configuration.h"
+#include <mir/test/display_config_matchers.h>
+#include <mir/graphics/display_configuration.h>
 #include <gtest/gtest.h>
 
 namespace mg = mir::graphics;

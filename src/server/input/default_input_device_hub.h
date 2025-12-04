@@ -19,16 +19,16 @@
 
 #include "default_event_builder.h"
 
-#include "mir/input/input_device_registry.h"
-#include "mir/input/input_sink.h"
-#include "mir/input/seat.h"
-#include "mir/input/input_device_hub.h"
-#include "mir/input/input_device_observer.h"
-#include "mir/input/input_device_info.h"
-#include "mir/input/mir_input_config.h"
-#include "mir/thread_safe_list.h"
+#include <mir/input/input_device_registry.h>
+#include <mir/input/input_sink.h>
+#include <mir/input/seat.h>
+#include <mir/input/input_device_hub.h>
+#include <mir/input/input_device_observer.h>
+#include <mir/input/input_device_info.h>
+#include <mir/input/mir_input_config.h>
+#include <mir/thread_safe_list.h>
 
-#include "mir_toolkit/event.h"
+#include <mir_toolkit/event.h>
 
 #include <linux/input.h>
 #include <vector>

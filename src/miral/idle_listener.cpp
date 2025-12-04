@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "miral/idle_listener.h"
+#include <miral/idle_listener.h>
 #include <mir/server.h>
 #include <mir/shell/idle_handler.h>
 

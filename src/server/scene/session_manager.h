@@ -17,10 +17,10 @@
 #ifndef MIR_SCENE_APPLICATION_MANAGER_H_
 #define MIR_SCENE_APPLICATION_MANAGER_H_
 
-#include "mir/scene/session_coordinator.h"
-#include "mir/scene/session_listener.h"
-#include "mir/observer_registrar.h"
-#include "mir/fd.h"
+#include <mir/scene/session_coordinator.h>
+#include <mir/scene/session_listener.h>
+#include <mir/observer_registrar.h>
+#include <mir/fd.h>
 
 #include <memory>
 #include <vector>

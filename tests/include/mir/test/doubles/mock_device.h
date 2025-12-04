@@ -17,13 +17,13 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_DEVICE_H_
 #define MIR_TEST_DOUBLES_MOCK_DEVICE_H_
 
-#include "mir/input/device.h"
-#include "mir/input/device_capability.h"
-#include "mir/input/mir_pointer_config.h"
-#include "mir/input/mir_keyboard_config.h"
-#include "mir/input/mir_touchpad_config.h"
-#include "mir/input/mir_touchscreen_config.h"
-#include "mir/optional_value.h"
+#include <mir/input/device.h>
+#include <mir/input/device_capability.h>
+#include <mir/input/mir_pointer_config.h>
+#include <mir/input/mir_keyboard_config.h>
+#include <mir/input/mir_touchpad_config.h>
+#include <mir/input/mir_touchscreen_config.h>
+#include <mir/optional_value.h>
 
 #include <string>
 
@@ -48,14 +48,14 @@ struct MockDevice : input::Device
         ON_CALL(*this, touchscreen_configuration()).WillByDefault(testing::Return(MirTouchscreenConfig{}));
     }
 
-    MOCK_CONST_METHOD0(id, MirInputDeviceId());
-    MOCK_CONST_METHOD0(capabilities, input::DeviceCapabilities());
-    MOCK_CONST_METHOD0(name, std::string());
-    MOCK_CONST_METHOD0(unique_id, std::string());
-    MOCK_CONST_METHOD0(pointer_configuration, optional_value<MirPointerConfig>());
-    MOCK_CONST_METHOD0(touchpad_configuration, optional_value<MirTouchpadConfig>());
-    MOCK_CONST_METHOD0(keyboard_configuration, optional_value<MirKeyboardConfig>());
-    MOCK_CONST_METHOD0(touchscreen_configuration, optional_value<MirTouchscreenConfig>());
+    MOCK_METHOD(MirInputDeviceId, id, (), (const, override));
+    MOCK_METHOD(input::DeviceCapabilities, capabilities, (), (const, override));
+    MOCK_METHOD(std::string, name, (), (const, override));
+    MOCK_METHOD(std::string, unique_id, (), (const, override));
+    MOCK_METHOD(optional_value<MirPointerConfig>, pointer_configuration, (), (const, override));
+    MOCK_METHOD(optional_value<MirTouchpadConfig>, touchpad_configuration, (), (const, override));
+    MOCK_METHOD(optional_value<MirKeyboardConfig>, keyboard_configuration, (), (const, override));
+    MOCK_METHOD(optional_value<MirTouchscreenConfig>, touchscreen_configuration, (), (const, override));
     MOCK_METHOD(void, apply_pointer_configuration, (MirPointerConfig const&), (override));
     MOCK_METHOD(void, apply_touchpad_configuration, (MirTouchpadConfig const&), (override));
     MOCK_METHOD(void, apply_keyboard_configuration, (MirKeyboardConfig const&), (override));

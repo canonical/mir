@@ -17,11 +17,11 @@
 #ifndef MIR_COMPOSITOR_BASIC_SCREEN_SHOOTER_H_
 #define MIR_COMPOSITOR_BASIC_SCREEN_SHOOTER_H_
 
-#include "mir/compositor/screen_shooter.h"
-#include "mir/graphics/platform.h"
-#include "mir/renderer/renderer_factory.h"
-#include "mir/renderer/sw/pixel_source.h"
-#include "mir/time/clock.h"
+#include <mir/compositor/screen_shooter.h>
+#include <mir/graphics/platform.h>
+#include <mir/renderer/renderer_factory.h>
+#include <mir/renderer/sw/pixel_source.h>
+#include <mir/time/clock.h>
 
 #include <mutex>
 #include <glm/glm.hpp>

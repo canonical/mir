@@ -17,11 +17,11 @@
 #ifndef MIR_SHELL_DECORATION_STRATEGY_H_
 #define MIR_SHELL_DECORATION_STRATEGY_H_
 
-#include "mir/geometry/displacement.h"
-#include "mir/geometry/point.h"
-#include "mir/geometry/rectangle.h"
-#include "mir/geometry/size.h"
-#include "mir_toolkit/client_types.h"
+#include <mir/geometry/displacement.h>
+#include <mir/geometry/point.h>
+#include <mir/geometry/rectangle.h>
+#include <mir/geometry/size.h>
+#include <mir_toolkit/client_types.h>
 
 #include <memory>
 #include <optional>

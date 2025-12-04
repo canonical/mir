@@ -14,9 +14,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "miroil/set_compositor.h"
-#include "mir/graphics/platform.h"
-#include "miroil/compositor.h"
+#include <miroil/set_compositor.h>
+#include <mir/graphics/platform.h>
+#include <miroil/compositor.h>
 #include <stdexcept>
 
 // mir

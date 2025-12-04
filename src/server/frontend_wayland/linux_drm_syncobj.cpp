@@ -17,10 +17,10 @@
 
 #include "linux_drm_syncobj.h"
 #include "linux-drm-syncobj-v1_wrapper.h"
-#include "mir/graphics/platform.h"
-#include "mir/graphics/drm_syncobj.h"
-#include "mir/wayland/protocol_error.h"
-#include "mir/wayland/weak.h"
+#include <mir/graphics/platform.h>
+#include <mir/graphics/drm_syncobj.h>
+#include <mir/wayland/protocol_error.h>
+#include <mir/wayland/weak.h>
 #include "wl_surface.h"
 #include <boost/throw_exception.hpp>
 #include <drm.h>

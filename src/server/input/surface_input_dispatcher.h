@@ -17,14 +17,14 @@
 #ifndef MIR_INPUT_DEFAULT_INPUT_DISPATCHER_H_
 #define MIR_INPUT_DEFAULT_INPUT_DISPATCHER_H_
 
-#include "mir/executor.h"
-#include "mir/frontend/pointer_input_dispatcher.h"
-#include "mir/geometry/point.h"
-#include "mir/input/input_dispatcher.h"
-#include "mir/input/keyboard_observer.h"
-#include "mir/observer_multiplexer.h"
-#include "mir/observer_registrar.h"
-#include "mir/shell/input_targeter.h"
+#include <mir/executor.h>
+#include <mir/frontend/pointer_input_dispatcher.h>
+#include <mir/geometry/point.h>
+#include <mir/input/input_dispatcher.h>
+#include <mir/input/keyboard_observer.h>
+#include <mir/observer_multiplexer.h>
+#include <mir/observer_registrar.h>
+#include <mir/shell/input_targeter.h>
 
 #include <memory>
 #include <mutex>

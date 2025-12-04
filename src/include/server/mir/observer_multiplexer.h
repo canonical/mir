@@ -17,11 +17,11 @@
 #ifndef MIR_OBSERVER_MULTIPLEXER_H_
 #define MIR_OBSERVER_MULTIPLEXER_H_
 
-#include "mir/observer_registrar.h"
-#include "mir/posix_rw_mutex.h"
-#include "mir/executor.h"
-#include "mir/raii.h"
-#include "mir/synchronised.h"
+#include <mir/observer_registrar.h>
+#include <mir/posix_rw_mutex.h>
+#include <mir/executor.h>
+#include <mir/raii.h>
+#include <mir/synchronised.h>
 
 #include <vector>
 #include <algorithm>

@@ -17,7 +17,7 @@
 #ifndef MIR_SHELL_BASIC_STICKY_KEYS_TRANSFORMER_H
 #define MIR_SHELL_BASIC_STICKY_KEYS_TRANSFORMER_H
 
-#include "mir/shell/sticky_keys_transformer.h"
+#include <mir/shell/sticky_keys_transformer.h>
 
 namespace mir::shell
 {

@@ -15,10 +15,10 @@
  *
  */
 
-#include "mir/default_server_configuration.h"
-#include "mir/log.h"
-#include "mir/options/default_configuration.h"
-#include "mir/main_loop.h"
+#include <mir/default_server_configuration.h>
+#include <mir/log.h>
+#include <mir/options/default_configuration.h>
+#include <mir/main_loop.h>
 #include "wayland_connector.h"
 #include "xwayland_connector.h"
 

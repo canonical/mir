@@ -17,9 +17,9 @@
 #ifndef MIR_GRAPHICS_X_PLATFORM_H_
 #define MIR_GRAPHICS_X_PLATFORM_H_
 
-#include "mir/graphics/display_report.h"
-#include "mir/graphics/platform.h"
-#include "mir/geometry/size.h"
+#include <mir/graphics/display_report.h>
+#include <mir/graphics/platform.h>
+#include <mir/geometry/size.h>
 
 #include <xcb/xcb.h>
 #include <mutex>

@@ -15,7 +15,7 @@
  */
 
 #include "ioctl_vt_switcher.h"
-#include "mir/log.h"
+#include <mir/log.h>
 
 #include <sys/ioctl.h>
 #include <string.h>

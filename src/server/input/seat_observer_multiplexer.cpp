@@ -16,8 +16,8 @@
 
 #include "seat_observer_multiplexer.h"
 
-#include "mir/geometry/rectangle.h"
-#include "mir/geometry/rectangles.h"
+#include <mir/geometry/rectangle.h>
+#include <mir/geometry/rectangles.h>
 
 namespace mi = mir::input;
 namespace geom = mir::geometry;

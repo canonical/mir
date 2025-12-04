@@ -17,9 +17,9 @@
 #include "quirks.h"
 #include "quirk_common.h"
 
-#include "mir/log.h"
-#include "mir/options/option.h"
-#include "mir/udev/wrapper.h"
+#include <mir/log.h>
+#include <mir/options/option.h>
+#include <mir/udev/wrapper.h>
 
 #include <boost/algorithm/string.hpp>
 

@@ -17,13 +17,13 @@
 #ifndef MIR_SCENE_SURFACE_H_
 #define MIR_SCENE_SURFACE_H_
 
-#include "mir/graphics/renderable.h"
-#include "mir/input/surface.h"
-#include "mir/frontend/surface.h"
-#include "mir/compositor/compositor_id.h"
-#include "mir/flags.h"
-#include "mir/optional_value.h"
-#include "mir/observer_registrar.h"
+#include <mir/graphics/renderable.h>
+#include <mir/input/surface.h>
+#include <mir/frontend/surface.h>
+#include <mir/compositor/compositor_id.h>
+#include <mir/flags.h>
+#include <mir/optional_value.h>
+#include <mir/observer_registrar.h>
 #include "surface_state_tracker.h"
 
 #include <vector>

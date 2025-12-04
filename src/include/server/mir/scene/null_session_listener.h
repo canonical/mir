@@ -17,7 +17,7 @@
 #ifndef MIR_SCENE_NULL_SESSION_LISTENER_H_
 #define MIR_SCENE_NULL_SESSION_LISTENER_H_
 
-#include "mir/scene/session_listener.h"
+#include <mir/scene/session_listener.h>
 
 namespace mir
 {

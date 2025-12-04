@@ -16,11 +16,11 @@
 
 #include "xdg_decoration_unstable_v1.h"
 
-#include "mir/decoration_strategy.h"
-#include "mir/log.h"
-#include "mir/shell/surface_specification.h"
-#include "mir/wayland/client.h"
-#include "mir/wayland/protocol_error.h"
+#include <mir/decoration_strategy.h>
+#include <mir/log.h>
+#include <mir/shell/surface_specification.h>
+#include <mir/wayland/client.h>
+#include <mir/wayland/protocol_error.h>
 
 #include "xdg-decoration-unstable-v1_wrapper.h"
 #include "xdg_output_v1.h"

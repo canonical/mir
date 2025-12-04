@@ -14,11 +14,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/graphics/default_display_configuration_policy.h"
-#include "mir/graphics/display_configuration.h"
-#include "mir/geometry/displacement.h"
+#include <mir/graphics/default_display_configuration_policy.h>
+#include <mir/graphics/display_configuration.h>
+#include <mir/geometry/displacement.h>
 
-#include "mir/test/doubles/stub_display_configuration.h"
+#include <mir/test/doubles/stub_display_configuration.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

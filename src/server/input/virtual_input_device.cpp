@@ -14,11 +14,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/input/virtual_input_device.h"
+#include <mir/input/virtual_input_device.h>
 
-#include "mir/input/pointer_settings.h"
-#include "mir/input/touchpad_settings.h"
-#include "mir/input/touchscreen_settings.h"
+#include <mir/input/pointer_settings.h>
+#include <mir/input/touchpad_settings.h>
+#include <mir/input/touchscreen_settings.h>
 
 #include <atomic>
 

@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/graphics/egl_context_executor.h"
-#include "mir/renderer/gl/context.h"
+#include <mir/graphics/egl_context_executor.h>
+#include <mir/renderer/gl/context.h>
 
 namespace mgc = mir::graphics::common;
 

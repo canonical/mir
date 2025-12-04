@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/geometry/dimensions.h"
+#include <mir/geometry/dimensions.h>
 
 #include "boost/throw_exception.hpp"
 #include <gmock/gmock.h>

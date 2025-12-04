@@ -21,12 +21,12 @@
 #include "kms_display_configuration.h"
 #include "kms_output.h"
 
-#include "mir/console_services.h"
-#include "mir/graphics/display_configuration_policy.h"
-#include "mir/graphics/display_report.h"
-#include "mir/graphics/event_handler_register.h"
-#include "mir/graphics/overlapping_output_grouping.h"
-#include "mir/graphics/platform.h"
+#include <mir/console_services.h>
+#include <mir/graphics/display_configuration_policy.h>
+#include <mir/graphics/display_report.h>
+#include <mir/graphics/event_handler_register.h>
+#include <mir/graphics/overlapping_output_grouping.h>
+#include <mir/graphics/platform.h>
 
 #include <boost/throw_exception.hpp>
 #include <boost/exception/get_error_info.hpp>
@@ -36,7 +36,7 @@
 #include <memory>
 #include <system_error>
 #include <xf86drm.h>
-#include "mir/log.h"
+#include <mir/log.h>
 #include "kms-utils/drm_mode_resources.h"
 #include "kms-utils/kms_connector.h"
 
@@ -270,7 +270,7 @@ auto mga::Display::create_hardware_cursor() -> std::shared_ptr<graphics::Cursor>
         try
         {
             locked_cursor = std::make_shared<mga::Cursor>(
-                *output_container, std::make_shared<AtomicKmsCurrentConfiguration>(*this));
+                output_container, std::make_shared<AtomicKmsCurrentConfiguration>(*this));
         }
         catch (std::runtime_error const&)
         {

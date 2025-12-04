@@ -17,10 +17,10 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_SURFACE_H_
 #define MIR_TEST_DOUBLES_MOCK_SURFACE_H_
 
-#include "mir/scene/basic_surface.h"
+#include <mir/scene/basic_surface.h>
 #include "src/server/report/null_report_factory.h"
 #include "mock_buffer_stream.h"
-#include "mir/test/doubles/fake_display_configuration_observer_registrar.h"
+#include <mir/test/doubles/fake_display_configuration_observer_registrar.h>
 
 #include <gmock/gmock.h>
 

@@ -18,18 +18,19 @@
 
 #include "wl_seat.h"
 #include "wl_surface.h"
-#include "mir/executor.h"
-#include "mir/scene/text_input_hub.h"
-#include "mir/wayland/client.h"
-#include "mir/input/virtual_input_device.h"
-#include "mir/input/device.h"
-#include "mir/input/input_device_registry.h"
-#include "mir/input/event_builder.h"
-#include "mir/input/input_sink.h"
+#include <mir/executor.h>
+#include <mir/scene/text_input_hub.h>
+#include <mir/wayland/client.h>
+#include <mir/input/virtual_input_device.h>
+#include <mir/input/device.h>
+#include <mir/input/input_device_registry.h>
+#include <mir/input/event_builder.h>
+#include <mir/input/input_sink.h>
 
 #include <boost/throw_exception.hpp>
 #include <deque>
 #include <chrono>
+#include <ranges>
 #include <linux/input-event-codes.h>
 
 namespace mf = mir::frontend;
@@ -377,11 +378,11 @@ void mf::TextInputV3::send_text_change(ms::TextInputChange const& change)
 auto mf::TextInputV3::find_client_serial(ms::TextInputStateSerial state_serial) const -> std::optional<uint32_t>
 {
     // Loop in reverse order because the serial we're looking for will generally be at the end
-    for (auto it = state_serials.rbegin(); it != state_serials.rend(); it++)
+    for (auto const& serial_pair : std::ranges::reverse_view(state_serials))
     {
-        if (it->second == state_serial)
+        if (serial_pair.second == state_serial)
         {
-            return it->first;
+            return serial_pair.first;
         }
     }
     return std::nullopt;

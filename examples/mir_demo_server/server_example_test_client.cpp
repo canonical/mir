@@ -15,12 +15,12 @@
  */
 
 #include "server_example_test_client.h"
-#include "mir/fd.h"
-#include "mir/server.h"
-#include "mir/main_loop.h"
-#include "mir/logging/logger.h"
-#include "mir/log.h"
-#include "mir/options/option.h"
+#include <mir/fd.h>
+#include <mir/server.h>
+#include <mir/main_loop.h>
+#include <mir/logging/logger.h>
+#include <mir/log.h>
+#include <mir/options/option.h>
 
 #include <chrono>
 #include <future>

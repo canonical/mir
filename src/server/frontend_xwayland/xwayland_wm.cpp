@@ -28,11 +28,11 @@
 #include "xwayland_clipboard_source.h"
 #include "xwayland_clipboard_provider.h"
 
-#include "mir/c_memory.h"
-#include "mir/fd.h"
-#include "mir/executor.h"
-#include "mir/frontend/surface_stack.h"
-#include "mir/scene/null_observer.h"
+#include <mir/c_memory.h>
+#include <mir/fd.h>
+#include <mir/executor.h>
+#include <mir/frontend/surface_stack.h>
+#include <mir/scene/null_observer.h>
 
 #include <cstring>
 #include <boost/throw_exception.hpp>

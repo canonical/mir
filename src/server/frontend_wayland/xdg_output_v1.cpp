@@ -18,9 +18,9 @@
 
 #include "wl_surface.h"
 #include "xdg-output-unstable-v1_wrapper.h"
-#include "mir/log.h"
+#include <mir/log.h>
 #include "output_manager.h"
-#include "mir/wayland/client.h"
+#include <mir/wayland/client.h>
 
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;

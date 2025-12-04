@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/shell/surface_specification.h"
+#include <mir/shell/surface_specification.h>
 
 namespace msh = mir::shell;
 

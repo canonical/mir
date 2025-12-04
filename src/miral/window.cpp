@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "miral/window.h"
+#include <miral/window.h>
 
 #include <mir/scene/session.h>
 #include <mir/scene/surface.h>

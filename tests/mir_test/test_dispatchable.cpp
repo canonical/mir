@@ -16,8 +16,8 @@
 
 #include <fcntl.h>
 
-#include "mir/test/pipe.h"
-#include "mir/test/test_dispatchable.h"
+#include <mir/test/pipe.h>
+#include <mir/test/test_dispatchable.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

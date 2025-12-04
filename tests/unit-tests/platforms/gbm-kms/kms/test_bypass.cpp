@@ -15,7 +15,7 @@
  */
 
 #include "src/platforms/gbm-kms/server/kms/bypass.h"
-#include "mir/test/doubles/fake_renderable.h"
+#include <mir/test/doubles/fake_renderable.h>
 
 #include <gtest/gtest.h>
 #include <memory>

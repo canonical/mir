@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/renderer/gl/context.h"
+#include <mir/renderer/gl/context.h>
 
 #include <EGL/egl.h>
 

@@ -102,14 +102,11 @@ add_custom_command(
        ${DRM_MODIFIERS_FILE}"
 )
 
-target_include_directories(
-  mirplatformgraphicscommon
+target_include_directories(mirplatformgraphicscommon
 
   PUBLIC
     ${CMAKE_CURRENT_BINARY_DIR}
     ${PROJECT_SOURCE_DIR}/include/platform
-  PRIVATE
-    ${PROJECT_SOURCE_DIR}/include/renderers/gl
 )
 
 target_link_libraries(
@@ -117,11 +114,10 @@ target_link_libraries(
 
   PUBLIC
     mirwayland
-    PkgConfig::EGL
-    PkgConfig::LIBDISPLAY_INFO
-  PRIVATE
     mircommon
+    PkgConfig::EGL
+    PkgConfig::GLESv2
+  PRIVATE
     PkgConfig::PIXMAN
+    PkgConfig::LIBDISPLAY_INFO
 )
-
-set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)

@@ -17,7 +17,7 @@
 #ifndef MIR_SCENE_NULL_PROMPT_SESSION_MANAGER_H_
 #define MIR_SCENE_NULL_PROMPT_SESSION_MANAGER_H_
 
-#include "mir/scene/prompt_session_manager.h"
+#include <mir/scene/prompt_session_manager.h>
 
 namespace mir
 {

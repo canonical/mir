@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/test/cross_process_action.h"
+#include <mir/test/cross_process_action.h>
 
 namespace mt = mir::test;
 

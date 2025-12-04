@@ -14,13 +14,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/signal.h"
+#include <mir/signal.h>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <thread>
 #include <latch>
 
-#include "mir/test/auto_unblock_thread.h"
+#include <mir/test/auto_unblock_thread.h>
 
 namespace mt = mir::test;
 

@@ -20,7 +20,7 @@
 #include <memory>
 #include <functional>
 
-#include "mir/geometry/point.h"
+#include <mir/geometry/point.h>
 
 namespace mir
 {

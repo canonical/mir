@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir_test_framework/stub_input_platform_accessor.h"
+#include <mir_test_framework/stub_input_platform_accessor.h>
 
 namespace mir_test_framework
 {

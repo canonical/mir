@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/test/doubles/stub_gl_rendering_provider.h"
+#include <mir/test/doubles/stub_gl_rendering_provider.h>
 #include "src/server/compositor/default_display_buffer_compositor_factory.h"
 #include <miral/test_display_server.h>
 

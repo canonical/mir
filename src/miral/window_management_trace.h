@@ -19,9 +19,9 @@
 
 #include "window_manager_tools_implementation.h"
 
-#include "miral/window_manager_tools.h"
-#include "miral/window_management_options.h"
-#include "miral/window_management_policy.h"
+#include <miral/window_manager_tools.h>
+#include <miral/window_management_options.h>
+#include <miral/window_management_policy.h>
 
 #include <atomic>
 

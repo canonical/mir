@@ -18,9 +18,9 @@
 #ifndef MIR_GRAPHICS_COMMON_QUIRK_COMMON_H_
 #define MIR_GRAPHICS_COMMON_QUIRK_COMMON_H_
 
-#include "mir/log.h"
+#include <mir/log.h>
 
-#include "mir/udev/wrapper.h"
+#include <mir/udev/wrapper.h>
 
 #include <algorithm>
 #include <optional>

@@ -14,9 +14,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/wayland/client.h"
-#include "mir/synchronised.h"
-#include "mir/fatal.h"
+#include <mir/wayland/client.h>
+#include <mir/synchronised.h>
+#include <mir/fatal.h>
 
 #include <vector>
 #include <algorithm>

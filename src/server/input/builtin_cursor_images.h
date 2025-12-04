@@ -18,7 +18,7 @@
 #ifndef MIR_INPUT_BUILTIN_CURSOR_IMAGES_H_
 #define MIR_INPUT_BUILTIN_CURSOR_IMAGES_H_
 
-#include "mir/input/cursor_images.h"
+#include <mir/input/cursor_images.h>
 
 namespace mir
 {

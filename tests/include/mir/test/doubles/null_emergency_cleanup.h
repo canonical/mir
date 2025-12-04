@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_NULL_EMERGENCY_CLEANUP_H_
 #define MIR_TEST_DOUBLES_NULL_EMERGENCY_CLEANUP_H_
 
-#include "mir/emergency_cleanup.h"
+#include <mir/emergency_cleanup.h>
 
 namespace mir
 {

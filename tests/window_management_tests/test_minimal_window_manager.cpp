@@ -16,8 +16,8 @@
 
 #define MIR_LOG_COMPONENT "test_minimal_window_manager"
 
-#include "mir/geometry/forward.h"
-#include "mir_test_framework/window_management_test_harness.h"
+#include <mir/geometry/forward.h>
+#include <mir_test_framework/window_management_test_harness.h>
 #include <miral/minimal_window_manager.h>
 #include <miral/output.h>
 #include <mir/scene/session.h>

@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/graphics/texture.h"
+#include <mir/graphics/texture.h>
 
 mir::graphics::gl::Texture::Texture() = default;
 

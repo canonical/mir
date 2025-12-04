@@ -17,8 +17,8 @@
 #ifndef MIR_GLIB_MAIN_LOOP_H_
 #define MIR_GLIB_MAIN_LOOP_H_
 
-#include "mir/main_loop.h"
-#include "mir/glib_main_loop_sources.h"
+#include <mir/main_loop.h>
+#include <mir/glib_main_loop_sources.h>
 
 #include <atomic>
 #include <vector>

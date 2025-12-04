@@ -17,14 +17,14 @@
 #include "src/server/input/touchspot_controller.h"
 #include "src/server/input/touchspot_image.c"
 
-#include "mir/graphics/graphic_buffer_allocator.h"
-#include "mir/graphics/renderable.h"
-#include "mir/test/fake_shared.h"
-#include "mir/test/doubles/stub_buffer_allocator.h"
-#include "mir/test/doubles/stub_buffer.h"
-#include "mir/test/doubles/stub_scene.h"
-#include "mir/test/doubles/mock_buffer.h"
-#include "mir/test/doubles/stub_input_scene.h"
+#include <mir/graphics/graphic_buffer_allocator.h>
+#include <mir/graphics/renderable.h>
+#include <mir/test/fake_shared.h>
+#include <mir/test/doubles/stub_buffer_allocator.h>
+#include <mir/test/doubles/stub_buffer.h>
+#include <mir/test/doubles/stub_scene.h>
+#include <mir/test/doubles/mock_buffer.h>
+#include <mir/test/doubles/stub_input_scene.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -44,8 +44,8 @@ namespace
 
 struct MockBufferAllocator : public mtd::StubBufferAllocator
 {
-    MOCK_METHOD2(alloc_software_buffer, std::shared_ptr<mg::Buffer>(geom::Size, MirPixelFormat));
-    MOCK_METHOD0(supported_pixel_formats, std::vector<MirPixelFormat>());
+    MOCK_METHOD(std::shared_ptr<mg::Buffer>, alloc_software_buffer, (geom::Size, MirPixelFormat), (override));
+    MOCK_METHOD(std::vector<MirPixelFormat>, supported_pixel_formats, (), (override));
 };
 
 struct StubScene : public mtd::StubInputScene
@@ -224,7 +224,7 @@ namespace
 
 struct StubSceneWithMockEmission : public StubScene
 {
-    MOCK_METHOD0(emit_scene_changed, void());
+    MOCK_METHOD(void, emit_scene_changed, (), (override));
 };
 
 struct TestTouchspotControllerSceneUpdates : public TestTouchspotController

@@ -16,9 +16,9 @@
 
 #include "basic_simulated_secondary_click_transformer.h"
 
-#include "mir/events/pointer_event.h"
-#include "mir/input/event_builder.h"
-#include "mir/main_loop.h"
+#include <mir/events/pointer_event.h>
+#include <mir/input/event_builder.h>
+#include <mir/main_loop.h>
 
 #include <cmath>
 #include <utility>

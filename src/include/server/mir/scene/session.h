@@ -17,11 +17,7 @@
 #ifndef MIR_SCENE_SESSION_H_
 #define MIR_SCENE_SESSION_H_
 
-#include "mir_toolkit/common.h"
-#include "mir_toolkit/client_types.h"
-#include "mir/graphics/buffer_id.h"
-#include "mir/geometry/size.h"
-#include "mir/fd.h"
+#include <mir/fd.h>
 
 #include <vector>
 #include <sys/types.h>
@@ -30,7 +26,6 @@
 
 namespace mir
 {
-class ClientVisibleError;
 class Executor;
 namespace compositor
 {
@@ -44,8 +39,6 @@ class Weak;
 namespace frontend
 {
 class WlSurface;
-class EventSink;
-class Surface;
 class BufferStream;
 }
 namespace shell
@@ -56,7 +49,6 @@ struct SurfaceSpecification;
 namespace graphics
 {
 struct BufferProperties;
-class Buffer;
 }
 namespace scene
 {
@@ -73,8 +65,6 @@ public:
     virtual auto process_id() const -> pid_t = 0;
     virtual auto socket_fd() const -> Fd = 0;
     virtual auto name() const -> std::string = 0;
-
-    virtual void send_error(ClientVisibleError const&) = 0;
 
     virtual auto default_surface() const -> std::shared_ptr<Surface> = 0;
 
@@ -93,7 +83,6 @@ public:
     /// \return a newly created surface
     virtual auto create_surface(
         std::shared_ptr<Session> const& session,
-        wayland::Weak<frontend::WlSurface> const& wayland_surface,
         shell::SurfaceSpecification const& params,
         std::shared_ptr<scene::SurfaceObserver> const& observer,
         Executor* observer_executor) -> std::shared_ptr<Surface> = 0;

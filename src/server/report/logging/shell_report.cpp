@@ -15,10 +15,10 @@
  */
 
 #include "shell_report.h"
-#include "mir/logging/logger.h"
-#include "mir/scene/session.h"
-#include "mir/scene/surface.h"
-#include "mir/event_printer.h"
+#include <mir/logging/logger.h>
+#include <mir/scene/session.h>
+#include <mir/scene/surface.h>
+#include <mir/event_printer.h>
 
 #include <boost/lexical_cast.hpp>
 

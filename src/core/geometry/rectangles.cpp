@@ -14,8 +14,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/geometry/rectangles.h"
-#include "mir/geometry/displacement.h"
+#include <mir/geometry/rectangles.h>
+#include <mir/geometry/displacement.h>
 #include <algorithm>
 #include <compare>
 #include <limits>

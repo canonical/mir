@@ -27,12 +27,12 @@
 
 #include "logind-session.h"
 
-#include "mir/fd.h"
-#include "mir/main_loop.h"
-#include "mir/glib_main_loop.h"
+#include <mir/fd.h>
+#include <mir/main_loop.h>
+#include <mir/glib_main_loop.h>
 
 #define MIR_LOG_COMPONTENT "logind"
-#include "mir/log.h"
+#include <mir/log.h>
 
 namespace
 {

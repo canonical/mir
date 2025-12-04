@@ -10,7 +10,7 @@ changes, and get your proposals merged, in addition to documenting the project p
 The Mir development team welcomes new contributors to the project.
 If you are interested in making an impact on the Linux desktop, check out the
 [good first issues](https://github.com/canonical/mir/issues?q=is%3Aissue%20state%3Aopen%20label%3A%22Good%20first%20issue%22)
-label in the Mir project where you can find issues set aisde specifically
+label in the Mir project where you can find issues set aside specifically
 for newcomers to the project.
 
 ## In this documentation

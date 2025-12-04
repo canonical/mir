@@ -19,6 +19,5 @@ target_link_libraries(miroptions
   PUBLIC
     mircommon
     mircore
-  PRIVATE
     Boost::program_options
 )

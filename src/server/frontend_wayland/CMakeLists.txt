@@ -1,8 +1,5 @@
 include_directories(../frontend_xwayland ${CMAKE_CURRENT_BINARY_DIR})
 
-# One day, maybe, we can add include dependences to an OBJECT library. Until then...
-get_property(mirwayland_includes TARGET mirwayland PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
-include_directories(${mirwayland_includes})
 pkg_check_modules(GIOUnix REQUIRED IMPORTED_TARGET gio-unix-2.0)
 
 set(
@@ -68,6 +65,7 @@ set(
   xdg_activation_v1.cpp         xdg_activation_v1.h
   linux_drm_syncobj.cpp         linux_drm_syncobj.h
   data_control_v1.cpp           data_control_v1.h
+  surface_registry.cpp          surface_registry.h
 )
 
 add_custom_command(
@@ -84,13 +82,6 @@ add_custom_command(
   DEPENDS
     ${CMAKE_CURRENT_SOURCE_DIR}/wayland_frontend.tp
 )
-
-# Inconveniently, GCC on 16.04 hits an ICE when attempting to use LTO
-# on the tracepoints. Fortunately we can turn it off for just that translation
-# unit.
-if (CMAKE_COMPILER_IS_GNUCXX AND (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 6))
-  set(TRACEPOINT_COMPILE_FLAGS "-fno-lto")
-endif()
 
 check_cxx_compiler_flag(-Wgnu-empty-initializer HAS_W_GNU_EMPTY_INITIALIZER)
 if (HAS_W_GNU_EMPTY_INITIALIZER)

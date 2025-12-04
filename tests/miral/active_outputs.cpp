@@ -15,7 +15,7 @@
  */
 
 #include "active_outputs.h"
-#include "miral/output.h"
+#include <miral/output.h>
 
 #include <mir/shell/display_configuration_controller.h>
 

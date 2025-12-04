@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/fd.h"
-#include "mir/renderer/sw/pixel_source.h"
+#include <mir/fd.h>
+#include <mir/renderer/sw/pixel_source.h>
 
 #include <cstddef>
 #include <sys/mman.h>

@@ -17,7 +17,7 @@
 #ifndef MIR_INPUT_INPUT_MODIFIER_UTILS_H_
 #define MIR_INPUT_INPUT_MODIFIER_UTILS_H_
 
-#include "mir_toolkit/event.h"
+#include <mir_toolkit/event.h>
 
 namespace mir
 {

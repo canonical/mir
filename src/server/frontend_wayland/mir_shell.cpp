@@ -16,7 +16,7 @@
 
 #include "mir_shell.h"
 
-#include "mir/wayland/protocol_error.h"
+#include <mir/wayland/protocol_error.h>
 #include "wl_surface.h"
 
 namespace mf = mir::frontend;

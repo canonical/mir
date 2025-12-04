@@ -19,7 +19,7 @@
 
 #include "egl_output.h"
 
-#include "mir/graphics/display_configuration.h"
+#include <mir/graphics/display_configuration.h>
 
 
 #include <xf86drmMode.h>

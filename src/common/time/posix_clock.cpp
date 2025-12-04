@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/time/posix_clock.h"
+#include <mir/time/posix_clock.h>
 #include <chrono>
 #include <ctime>
 #include <system_error>

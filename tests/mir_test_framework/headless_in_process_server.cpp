@@ -14,9 +14,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/graphics/display.h"
-#include "mir_test_framework/headless_in_process_server.h"
-#include "mir_test_framework/stub_server_platform_factory.h"
+#include <mir/graphics/display.h>
+#include <mir_test_framework/headless_in_process_server.h>
+#include <mir_test_framework/stub_server_platform_factory.h>
 
 namespace mtf = mir_test_framework;
 namespace msh = mir::shell;

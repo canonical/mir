@@ -18,7 +18,7 @@
 #define MIR_FRONTEND_XDG_ACTIVATION_UNSTABLE_V1_H
 
 #include "xdg-activation-v1_wrapper.h"
-#include "mir/observer_registrar.h"
+#include <mir/observer_registrar.h>
 
 struct wl_display;
 

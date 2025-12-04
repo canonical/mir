@@ -17,25 +17,25 @@
 #include "src/server/compositor/multi_threaded_compositor.h"
 #include "src/server/report/null_report_factory.h"
 
-#include "mir/compositor/display_listener.h"
-#include "mir/compositor/display_buffer_compositor.h"
-#include "mir/compositor/scene.h"
-#include "mir/compositor/display_buffer_compositor_factory.h"
-#include "mir/scene/observer.h"
-#include "mir/raii.h"
+#include <mir/compositor/display_listener.h>
+#include <mir/compositor/display_buffer_compositor.h>
+#include <mir/compositor/scene.h>
+#include <mir/compositor/display_buffer_compositor_factory.h>
+#include <mir/scene/observer.h>
+#include <mir/raii.h>
 
-#include "mir/test/current_thread_name.h"
-#include "mir/test/doubles/null_display.h"
-#include "mir/test/doubles/null_display_sink.h"
-#include "mir/test/doubles/mock_cursor.h"
-#include "mir/test/doubles/mock_display_sink.h"
-#include "mir/test/doubles/mock_compositor_report.h"
-#include "mir/test/doubles/mock_scene.h"
-#include "mir/test/doubles/stub_scene.h"
-#include "mir/test/doubles/stub_display.h"
-#include "mir/test/doubles/stub_renderable.h"
-#include "mir/test/doubles/null_display_buffer_compositor_factory.h"
-#include "mir/test/doubles/stub_cursor.h"
+#include <mir/test/current_thread_name.h>
+#include <mir/test/doubles/null_display.h>
+#include <mir/test/doubles/null_display_sink.h>
+#include <mir/test/doubles/mock_cursor.h>
+#include <mir/test/doubles/mock_display_sink.h>
+#include <mir/test/doubles/mock_compositor_report.h>
+#include <mir/test/doubles/mock_scene.h>
+#include <mir/test/doubles/stub_scene.h>
+#include <mir/test/doubles/stub_display.h>
+#include <mir/test/doubles/stub_renderable.h>
+#include <mir/test/doubles/null_display_buffer_compositor_factory.h>
+#include <mir/test/doubles/stub_cursor.h>
 
 #include <boost/throw_exception.hpp>
 
@@ -345,8 +345,8 @@ struct StubDisplayListener : mc::DisplayListener
 
 struct MockDisplayListener : mc::DisplayListener
 {
-    MOCK_METHOD1(add_display, void(geom::Rectangle const& /*area*/));
-    MOCK_METHOD1(remove_display, void(geom::Rectangle const& /*area*/));
+    MOCK_METHOD(void, add_display, (geom::Rectangle const& /*area*/), (override));
+    MOCK_METHOD(void, remove_display, (geom::Rectangle const& /*area*/), (override));
 };
 
 auto const null_report = mr::null_compositor_report();

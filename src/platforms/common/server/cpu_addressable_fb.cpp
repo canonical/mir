@@ -16,8 +16,8 @@
 
 #include "cpu_addressable_fb.h"
 
-#include "mir/log.h"
-#include "mir_toolkit/common.h"
+#include <mir/log.h>
+#include <mir_toolkit/common.h>
 
 #include <sys/mman.h>
 #include <xf86drmMode.h>

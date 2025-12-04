@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/report/lttng/mir_tracepoint.h"
+#include <mir/report/lttng/mir_tracepoint.h>
 
 #include "input_report.h"
 

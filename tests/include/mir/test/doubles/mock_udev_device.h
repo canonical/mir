@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_UDEV_DEVICE_H_
 #define MIR_TEST_DOUBLES_MOCK_UDEV_DEVICE_H_
 
-#include "mir/udev/wrapper.h"
+#include <mir/udev/wrapper.h>
 
 #include <gmock/gmock.h>
 

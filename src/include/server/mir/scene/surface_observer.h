@@ -17,13 +17,13 @@
 #ifndef MIR_SCENE_SURFACE_OBSERVER_H_
 #define MIR_SCENE_SURFACE_OBSERVER_H_
 
-#include "mir_toolkit/common.h"
-#include "mir_toolkit/events/event.h"
+#include <mir_toolkit/common.h>
+#include <mir_toolkit/events/event.h>
 
-#include "mir/input/input_reception_mode.h"
-#include "mir/geometry/rectangle.h"
-#include "mir/graphics/display_configuration.h"
-#include "mir/flags.h"
+#include <mir/input/input_reception_mode.h>
+#include <mir/geometry/rectangle.h>
+#include <mir/graphics/display_configuration.h>
+#include <mir/flags.h>
 
 #include <glm/glm.hpp>
 #include <string>

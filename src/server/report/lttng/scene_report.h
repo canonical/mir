@@ -20,7 +20,7 @@
 
 #include "server_tracepoint_provider.h"
 
-#include "mir/scene/scene_report.h"
+#include <mir/scene/scene_report.h>
 
 namespace mir
 {

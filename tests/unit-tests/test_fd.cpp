@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/fd.h"
+#include <mir/fd.h>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <unistd.h>

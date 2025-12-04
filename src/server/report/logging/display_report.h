@@ -18,8 +18,8 @@
 #ifndef MIR_REPORT_LOGGING_DISPLAY_REPORTER_H_
 #define MIR_REPORT_LOGGING_DISPLAY_REPORTER_H_
 
-#include "mir/graphics/display_report.h"
-#include "mir/graphics/frame.h"
+#include <mir/graphics/display_report.h>
+#include <mir/graphics/frame.h>
 
 #include <unordered_map>
 #include <memory>

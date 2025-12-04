@@ -17,7 +17,7 @@
 #ifndef MIR_GRAPHICS_GBM_PAGE_FLIPPER_H_
 #define MIR_GRAPHICS_GBM_PAGE_FLIPPER_H_
 
-#include "mir/graphics/frame.h"
+#include <mir/graphics/frame.h>
 #include <cstdint>
 
 namespace mir

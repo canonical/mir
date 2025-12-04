@@ -17,7 +17,7 @@
 #ifndef MIRAL_WINDOW_MANAGER_TOOLS_IMPLEMENTATION_H
 #define MIRAL_WINDOW_MANAGER_TOOLS_IMPLEMENTATION_H
 
-#include "miral/application.h"
+#include <miral/application.h>
 
 #include <mir/geometry/displacement.h>
 #include <mir/geometry/rectangle.h>

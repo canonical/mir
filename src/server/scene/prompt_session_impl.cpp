@@ -16,7 +16,7 @@
 
 #include "prompt_session_impl.h"
 
-#include "mir/scene/session.h"
+#include <mir/scene/session.h>
 
 namespace ms = mir::scene;
 

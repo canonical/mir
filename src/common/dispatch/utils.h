@@ -17,7 +17,7 @@
 #ifndef MIR_DISPATCH_UTILS_H_
 #define MIR_DISPATCH_UTILS_H_
 
-#include "mir/dispatch/dispatchable.h"
+#include <mir/dispatch/dispatchable.h>
 #include <sys/epoll.h>
 
 namespace mir

@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_GL_CONFIG_H_
 #define MIR_TEST_DOUBLES_MOCK_GL_CONFIG_H_
 
-#include "mir/graphics/gl_config.h"
+#include <mir/graphics/gl_config.h>
 
 #include <gmock/gmock.h>
 
@@ -30,8 +30,8 @@ namespace doubles
 
 struct MockGLConfig : public graphics::GLConfig
 {
-    MOCK_CONST_METHOD0(depth_buffer_bits, int());
-    MOCK_CONST_METHOD0(stencil_buffer_bits, int());
+    MOCK_METHOD(int, depth_buffer_bits, (), (const, override));
+    MOCK_METHOD(int, stencil_buffer_bits, (), (const, override));
 };
 
 }

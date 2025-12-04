@@ -14,13 +14,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/dispatch/threaded_dispatcher.h"
-#include "mir/dispatch/dispatchable.h"
-#include "mir/signal_blocker.h"
-#include "mir/thread_name.h"
+#include <mir/dispatch/threaded_dispatcher.h>
+#include <mir/dispatch/dispatchable.h>
+#include <mir/signal_blocker.h>
+#include <mir/thread_name.h>
 
-#include "mir/raii.h"
-#include "mir/logging/logger.h"
+#include <mir/raii.h>
+#include <mir/logging/logger.h>
 
 #include <poll.h>
 #include <system_error>

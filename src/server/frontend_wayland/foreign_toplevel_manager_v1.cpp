@@ -18,17 +18,17 @@
 
 #include "wayland_utils.h"
 #include "desktop_file_manager.h"
-#include "mir/wayland/weak.h"
-#include "mir/frontend/surface_stack.h"
-#include "mir/shell/shell.h"
-#include "mir/shell/surface_specification.h"
-#include "mir/scene/null_observer.h"
-#include "mir/scene/null_surface_observer.h"
-#include "mir/scene/surface.h"
-#include "mir/scene/session.h"
-#include "mir/log.h"
-#include "mir/executor.h"
-#include "mir/main_loop.h"
+#include <mir/wayland/weak.h>
+#include <mir/frontend/surface_stack.h>
+#include <mir/shell/shell.h>
+#include <mir/shell/surface_specification.h>
+#include <mir/scene/null_observer.h>
+#include <mir/scene/null_surface_observer.h>
+#include <mir/scene/surface.h>
+#include <mir/scene/session.h>
+#include <mir/log.h>
+#include <mir/executor.h>
+#include <mir/main_loop.h>
 
 #include <algorithm>
 #include <mutex>

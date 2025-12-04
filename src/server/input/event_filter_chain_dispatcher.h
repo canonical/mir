@@ -17,8 +17,8 @@
 #ifndef MIR_INPUT_EVENT_FILTER_CHAIN_DISPATCHER_H_
 #define MIR_INPUT_EVENT_FILTER_CHAIN_DISPATCHER_H_
 
-#include "mir/input/composite_event_filter.h"
-#include "mir/input/input_dispatcher.h"
+#include <mir/input/composite_event_filter.h>
+#include <mir/input/input_dispatcher.h>
 
 #include <vector>
 #include <mutex>

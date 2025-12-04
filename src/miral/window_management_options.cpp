@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "miral/window_management_options.h"
+#include <miral/window_management_options.h>
 
 #include "basic_window_manager.h"
 #include "window_management_trace.h"

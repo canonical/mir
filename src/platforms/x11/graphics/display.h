@@ -17,9 +17,9 @@
 #ifndef MIR_GRAPHICS_X_DISPLAY_H_
 #define MIR_GRAPHICS_X_DISPLAY_H_
 
-#include "mir/graphics/display.h"
-#include "mir/geometry/size.h"
-#include "mir_toolkit/common.h"
+#include <mir/graphics/display.h>
+#include <mir/geometry/size.h>
+#include <mir_toolkit/common.h>
 #include "egl_helper.h"
 #include "../x11_resources.h"
 

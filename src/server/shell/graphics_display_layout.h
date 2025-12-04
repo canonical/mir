@@ -17,7 +17,7 @@
 #ifndef MIR_SHELL_GRAPHICS_DISPLAY_LAYOUT_H_
 #define MIR_SHELL_GRAPHICS_DISPLAY_LAYOUT_H_
 
-#include "mir/shell/display_layout.h"
+#include <mir/shell/display_layout.h>
 
 #include <memory>
 

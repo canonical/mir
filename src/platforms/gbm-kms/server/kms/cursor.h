@@ -18,12 +18,12 @@
 #ifndef MIR_GRAPHICS_GBM_CURSOR_H_
 #define MIR_GRAPHICS_GBM_CURSOR_H_
 
-#include "mir/graphics/cursor.h"
-#include "mir/geometry/point.h"
-#include "mir/geometry/displacement.h"
+#include <mir/graphics/cursor.h>
+#include <mir/geometry/point.h>
+#include <mir/geometry/displacement.h>
 
-#include "mir_toolkit/common.h"
-#include "mir/synchronised.h"
+#include <mir_toolkit/common.h>
+#include <mir/synchronised.h>
 
 #include <gbm.h>
 
@@ -69,7 +69,7 @@ class Cursor : public graphics::Cursor
 {
 public:
     Cursor(
-        KMSOutputContainer& output_container,
+        std::shared_ptr<KMSOutputContainer> const& output_container,
         std::shared_ptr<CurrentConfiguration> const& current_configuration);
 
     ~Cursor() noexcept;
@@ -108,7 +108,7 @@ private:
 
     std::mutex guard;
 
-    KMSOutputContainer& output_container;
+    std::weak_ptr<KMSOutputContainer> output_container;
     geometry::Point current_position;
     geometry::Displacement hotspot;
     geometry::Size size;

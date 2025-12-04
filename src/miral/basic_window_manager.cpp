@@ -17,7 +17,7 @@
 #include "basic_window_manager.h"
 #include "display_configuration_listeners.h"
 
-#include "miral/window_manager_tools.h"
+#include <miral/window_manager_tools.h>
 
 #include <mir/log.h>
 #include <mir/executor.h>

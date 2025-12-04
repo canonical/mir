@@ -19,10 +19,10 @@
 
 #include <memory>
 
-#include "mir/graphics/drm_formats.h"
-#include "mir/geometry/size.h"
-#include "mir/graphics/platform.h"
-#include "mir/renderer/gl/gl_surface.h"
+#include <mir/graphics/drm_formats.h>
+#include <mir/geometry/size.h>
+#include <mir/graphics/platform.h>
+#include <mir/renderer/gl/gl_surface.h>
 
 namespace mir::graphics
 {

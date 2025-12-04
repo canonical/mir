@@ -17,7 +17,7 @@
 #ifndef MIR_INPUT_TOUCH_VISUALIZER_H_
 #define MIR_INPUT_TOUCH_VISUALIZER_H_
 
-#include "mir/geometry/point.h"
+#include <mir/geometry/point.h>
 
 #include <vector>
 

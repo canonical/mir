@@ -14,15 +14,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/input/device_capability.h"
+#include <mir/input/device_capability.h>
 #include "src/platforms/evdev/libinput_ptr.h"
 #include "src/platforms/evdev/libinput_device_ptr.h"
 #include "src/platforms/evdev/libinput_device.h"
 #include "src/server/report/null_report_factory.h"
 
-#include "mir_test_framework/libinput_environment.h"
-#include "mir/test/doubles/mock_led_observer_registrar.h"
-#include "mir/test/fake_shared.h"
+#include <mir_test_framework/libinput_environment.h>
+#include <mir/test/doubles/mock_led_observer_registrar.h>
+#include <mir/test/fake_shared.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

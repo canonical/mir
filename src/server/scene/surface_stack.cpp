@@ -16,14 +16,14 @@
 
 #include "surface_stack.h"
 #include "rendering_tracker.h"
-#include "mir/scene/surface.h"
-#include "mir/scene/null_surface_observer.h"
-#include "mir/scene/scene_report.h"
-#include "mir/compositor/scene_element.h"
-#include "mir/graphics/renderable.h"
-#include "mir/depth_layer.h"
-#include "mir/executor.h"
-#include "mir/log.h"
+#include <mir/scene/surface.h>
+#include <mir/scene/null_surface_observer.h>
+#include <mir/scene/scene_report.h>
+#include <mir/compositor/scene_element.h>
+#include <mir/graphics/renderable.h>
+#include <mir/depth_layer.h>
+#include <mir/executor.h>
+#include <mir/log.h>
 
 #include <boost/throw_exception.hpp>
 

@@ -14,15 +14,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "miral/input_configuration.h"
-#include "miral/live_config.h"
+#include <miral/input_configuration.h>
+#include <miral/live_config.h>
 
 #include "input_device_config.h"
 
 #include <mir/input/input_device_hub.h>
 #include <mir/log.h>
 #include <mir/server.h>
-#include "mir/shell/accessibility_manager.h"
+#include <mir/shell/accessibility_manager.h>
 
 #include <algorithm>
 #include <format>

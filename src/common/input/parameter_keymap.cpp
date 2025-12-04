@@ -14,7 +14,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/input/parameter_keymap.h"
+#include <mir/input/parameter_keymap.h>
 
 #include <stdexcept>
 #include <boost/throw_exception.hpp>

@@ -16,17 +16,16 @@
 
 #include "session_manager.h"
 #include "application_session.h"
-#include "mir/scene/session_container.h"
-#include "mir/scene/surface.h"
-#include "mir/scene/session.h"
-#include "mir/scene/session_listener.h"
-#include "mir/scene/application_not_responding_detector.h"
-#include "mir/shell/surface_stack.h"
-#include "mir/scene/session_event_sink.h"
-#include "mir/frontend/event_sink.h"
-#include "mir/graphics/display.h"
-#include "mir/graphics/display_configuration.h"
-#include "mir/observer_multiplexer.h"
+#include <mir/scene/session_container.h>
+#include <mir/scene/surface.h>
+#include <mir/scene/session.h>
+#include <mir/scene/session_listener.h>
+#include <mir/scene/application_not_responding_detector.h>
+#include <mir/shell/surface_stack.h>
+#include <mir/scene/session_event_sink.h>
+#include <mir/graphics/display.h>
+#include <mir/graphics/display_configuration.h>
+#include <mir/observer_multiplexer.h>
 
 #include <boost/throw_exception.hpp>
 
@@ -127,24 +126,6 @@ std::shared_ptr<ms::Session> ms::SessionManager::open_session(
     Fd socket_fd,
     std::string const& name)
 {
-    class NullEventSink : public mir::frontend::EventSink
-    {
-    public:
-        NullEventSink() {}
-
-        void handle_event(EventUPtr&&) override {}
-
-        void handle_lifecycle_event(MirLifecycleState) override {}
-
-        void handle_display_config_change(graphics::DisplayConfiguration const&) override {}
-
-        void send_ping(int32_t) override {}
-
-        void handle_input_config_change(MirInputConfig const&) override {}
-
-        void handle_error(ClientVisibleError const&) override {}
-    };
-
     std::shared_ptr<Session> new_session = std::make_shared<ApplicationSession>(
         surface_stack,
         surface_factory,
@@ -152,7 +133,6 @@ std::shared_ptr<ms::Session> ms::SessionManager::open_session(
         socket_fd,
         name,
         observers,
-        std::make_shared<NullEventSink>(),
         allocator);
 
     app_container->insert_session(new_session);

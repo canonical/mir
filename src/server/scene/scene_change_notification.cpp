@@ -16,9 +16,9 @@
 
 #include "surface_change_notification.h"
 
-#include "mir/scene/scene_change_notification.h"
-#include "mir/scene/surface.h"
-#include "mir/geometry/displacement.h"
+#include <mir/scene/scene_change_notification.h>
+#include <mir/scene/surface.h>
+#include <mir/geometry/displacement.h>
 
 #include <boost/throw_exception.hpp>
 

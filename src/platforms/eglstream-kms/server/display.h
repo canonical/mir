@@ -17,10 +17,10 @@
 #ifndef MIR_PLATFORMS_EGLSTREAM_KMS_DISPLAY_H_
 #define MIR_PLATFORMS_EGLSTREAM_KMS_DISPLAY_H_
 
-#include "mir/graphics/display.h"
+#include <mir/graphics/display.h>
 #include "kms_display_configuration.h"
-#include "mir/fd.h"
-#include "mir/graphics/platform.h"
+#include <mir/fd.h>
+#include <mir/graphics/platform.h>
 
 #include <mutex>
 

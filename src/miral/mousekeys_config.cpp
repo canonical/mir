@@ -14,12 +14,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "miral/mousekeys_config.h"
-#include "miral/live_config.h"
+#include <miral/mousekeys_config.h>
+#include <miral/live_config.h>
 
-#include "mir/shell/mousekeys_transformer.h"
-#include "mir/options/configuration.h"
-#include "mir/synchronised.h"
+#include <mir/shell/mousekeys_transformer.h>
+#include <mir/options/configuration.h>
+#include <mir/synchronised.h>
 
 #include <mir/server.h>
 #include <mir/shell/accessibility_manager.h>

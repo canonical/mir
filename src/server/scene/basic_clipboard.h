@@ -17,8 +17,8 @@
 #ifndef MIR_SCENE_BASIC_CLIPBOARD_H_
 #define MIR_SCENE_BASIC_CLIPBOARD_H_
 
-#include "mir/scene/clipboard.h"
-#include "mir/observer_multiplexer.h"
+#include <mir/scene/clipboard.h>
+#include <mir/observer_multiplexer.h>
 
 #include <mutex>
 

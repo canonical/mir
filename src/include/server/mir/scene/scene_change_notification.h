@@ -17,8 +17,8 @@
 #ifndef MIR_SCENE_SCENE_CHANGE_NOTIFICATION_H_
 #define MIR_SCENE_SCENE_CHANGE_NOTIFICATION_H_
 
-#include "mir/scene/observer.h"
-#include "mir/geometry/forward.h"
+#include <mir/scene/observer.h>
+#include <mir/geometry/forward.h>
 
 #include <functional>
 #include <map>

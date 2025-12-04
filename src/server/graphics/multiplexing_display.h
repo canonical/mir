@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/graphics/display.h"
-#include "mir/graphics/display_configuration_policy.h"
+#include <mir/graphics/display.h>
+#include <mir/graphics/display_configuration_policy.h>
 
 #include <vector>
 #include <memory>

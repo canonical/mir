@@ -17,7 +17,7 @@
 #ifndef MIR_WINDOW_INFO_DEFAULTS_H
 #define MIR_WINDOW_INFO_DEFAULTS_H
 
-#include "miral/window_info.h"
+#include <miral/window_info.h>
 
 namespace miral
 {

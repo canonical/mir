@@ -16,13 +16,13 @@
 
 #include "rendering_platform.h"
 #include "buffer_allocator.h"
-#include "mir/graphics/egl_extensions.h"
-#include "mir/graphics/platform.h"
-#include "mir/graphics/egl_error.h"
-#include "mir/renderer/gl/context.h"
+#include <mir/graphics/egl_extensions.h>
+#include <mir/graphics/platform.h>
+#include <mir/graphics/egl_error.h>
+#include <mir/renderer/gl/context.h>
 
 #define MIR_LOG_COMPONENT "platform-generic-egl"
-#include "mir/log.h"
+#include <mir/log.h>
 
 #include <EGL/egl.h>
 #include <boost/throw_exception.hpp>

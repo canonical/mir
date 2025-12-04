@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "miral/application_authorizer.h"
+#include <miral/application_authorizer.h>
 
 #include <mir/frontend/session_credentials.h>
 #include <mir/frontend/session_authorizer.h>
@@ -113,10 +113,10 @@ auto miral::ApplicationCredentials::pid() const -> pid_t
 
 auto miral::ApplicationCredentials::uid() const -> uid_t
 {
-    return creds.pid();
+    return creds.uid();
 }
 
 auto miral::ApplicationCredentials::gid() const -> gid_t
 {
-    return creds.pid();
+    return creds.gid();
 }

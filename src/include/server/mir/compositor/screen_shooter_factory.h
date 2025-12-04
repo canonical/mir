@@ -17,7 +17,7 @@
 #ifndef SCREEN_SHOOTER_FACTORY_H
 #define SCREEN_SHOOTER_FACTORY_H
 
-#include "mir/compositor/screen_shooter.h"
+#include <mir/compositor/screen_shooter.h>
 #include <memory>
 
 namespace mir

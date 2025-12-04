@@ -24,24 +24,24 @@
 #include "kms_cpu_addressable_display_provider.h"
 
 #include "kms-utils/drm_mode_resources.h"
-#include "mir/graphics/platform.h"
+#include <mir/graphics/platform.h>
 #include "kms-utils/threaded_drm_event_handler.h"
 
-#include "mir/graphics/display_configuration.h"
-#include "mir/graphics/display_configuration_policy.h"
-#include "mir/graphics/overlapping_output_grouping.h"
-#include "mir/graphics/gl_config.h"
-#include "mir/graphics/egl_error.h"
-#include "mir/graphics/display_sink.h"
-#include "mir/graphics/transformation.h"
-#include "mir/graphics/egl_extensions.h"
-#include "mir/graphics/display_report.h"
-#include "mir/graphics/event_handler_register.h"
+#include <mir/graphics/display_configuration.h>
+#include <mir/graphics/display_configuration_policy.h>
+#include <mir/graphics/overlapping_output_grouping.h>
+#include <mir/graphics/gl_config.h>
+#include <mir/graphics/egl_error.h>
+#include <mir/graphics/display_sink.h>
+#include <mir/graphics/transformation.h>
+#include <mir/graphics/egl_extensions.h>
+#include <mir/graphics/display_report.h>
+#include <mir/graphics/event_handler_register.h>
 
-#include "mir/udev/wrapper.h"
+#include <mir/udev/wrapper.h>
 
 #define MIR_LOG_COMPONENT "platform-eglstream-kms"
-#include "mir/log.h"
+#include <mir/log.h>
 
 #include <xf86drmMode.h>
 #include <system_error>

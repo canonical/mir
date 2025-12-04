@@ -16,7 +16,7 @@
 
 #include "src/platforms/common/server/kms-utils/threaded_drm_event_handler.h"
 
-#include "mir/test/doubles/mock_drm.h"
+#include <mir/test/doubles/mock_drm.h>
 
 #include <mutex>
 #include <deque>

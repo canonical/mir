@@ -17,9 +17,9 @@
 #ifndef MIR_GRAPHICS_GBM_ATOMIC_KMS_DISPLAY_H_
 #define MIR_GRAPHICS_GBM_ATOMIC_KMS_DISPLAY_H_
 
-#include "mir/graphics/display.h"
-#include "mir/graphics/platform.h"
-#include "mir/udev/wrapper.h"
+#include <mir/graphics/display.h>
+#include <mir/graphics/platform.h>
+#include <mir/udev/wrapper.h>
 #include "platform_common.h"
 #include "real_kms_output_container.h"
 #include "real_kms_display_configuration.h"

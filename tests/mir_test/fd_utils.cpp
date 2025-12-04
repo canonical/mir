@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/test/fd_utils.h"
+#include <mir/test/fd_utils.h>
 
 ::testing::AssertionResult mir::test::std_call_succeeded(int retval)
 {

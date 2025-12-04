@@ -16,14 +16,14 @@
 
 #include "default_input_manager.h"
 
-#include "mir/input/platform.h"
-#include "mir/dispatch/action_queue.h"
-#include "mir/dispatch/multiplexing_dispatchable.h"
-#include "mir/dispatch/threaded_dispatcher.h"
+#include <mir/input/platform.h>
+#include <mir/dispatch/action_queue.h>
+#include <mir/dispatch/multiplexing_dispatchable.h>
+#include <mir/dispatch/threaded_dispatcher.h>
 
-#include "mir/thread_name.h"
-#include "mir/unwind_helpers.h"
-#include "mir/terminate_with_current_exception.h"
+#include <mir/thread_name.h>
+#include <mir/unwind_helpers.h>
+#include <mir/terminate_with_current_exception.h>
 
 #include <future>
 #include <memory>

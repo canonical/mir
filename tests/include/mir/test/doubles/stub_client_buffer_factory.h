@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_STUB_CLIENT_BUFFER_FACTORY_H_
 #define MIR_TEST_DOUBLES_STUB_CLIENT_BUFFER_FACTORY_H_
 
-#include "mir/client/client_buffer_factory.h"
+#include <mir/client/client_buffer_factory.h>
 #include "stub_client_buffer.h"
 
 namespace mir

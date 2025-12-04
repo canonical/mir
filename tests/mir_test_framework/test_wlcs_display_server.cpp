@@ -22,8 +22,8 @@
 #include <mir_test_framework/fake_input_device.h>
 #include <mir_test_framework/stub_server_platform_factory.h>
 #include <mir/test/signal.h>
-#include "mir/test/fake_shared.h"
-#include "mir/test/null_input_device_observer.h"
+#include <mir/test/fake_shared.h>
+#include <mir/test/null_input_device_observer.h>
 
 #include <mir/executor.h>
 #include <mir/fd.h>

@@ -14,12 +14,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/input/mousekeys_keymap.h"
-#include "mir/shell/accessibility_manager.h"
+#include <mir/input/mousekeys_keymap.h>
+#include <mir/shell/accessibility_manager.h>
 
-#include "mir/shell/mousekeys_transformer.h"
-#include "miral/mousekeys_config.h"
-#include "miral/accessibility_test_server.h"
+#include <mir/shell/mousekeys_transformer.h>
+#include <miral/mousekeys_config.h>
+#include <miral/accessibility_test_server.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

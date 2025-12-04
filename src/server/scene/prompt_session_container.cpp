@@ -15,7 +15,7 @@
  */
 
 #include "prompt_session_container.h"
-#include "mir/scene/session.h"
+#include <mir/scene/session.h>
 
 #include <boost/throw_exception.hpp>
 #include <atomic>

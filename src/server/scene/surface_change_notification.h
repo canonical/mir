@@ -17,7 +17,7 @@
 #ifndef MIR_SCENE_SURFACE_CHANGE_NOTIFICATION_H_
 #define MIR_SCENE_SURFACE_CHANGE_NOTIFICATION_H_
 
-#include "mir/scene/null_surface_observer.h"
+#include <mir/scene/null_surface_observer.h>
 
 #include <functional>
 #include <mutex>

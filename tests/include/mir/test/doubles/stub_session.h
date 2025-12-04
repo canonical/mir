@@ -38,8 +38,6 @@ struct StubSession : scene::Session
 
     std::shared_ptr<scene::Surface> default_surface() const override;
 
-    void send_error(ClientVisibleError const&) override;
-
     void hide() override;
 
     void show() override;
@@ -54,7 +52,6 @@ struct StubSession : scene::Session
 
     auto create_surface(
         std::shared_ptr<Session> const& session,
-        wayland::Weak<frontend::WlSurface> const& wayland_surface,
         shell::SurfaceSpecification const& params,
         std::shared_ptr<scene::SurfaceObserver> const& observer,
         Executor* observer_executor) -> std::shared_ptr<scene::Surface> override;

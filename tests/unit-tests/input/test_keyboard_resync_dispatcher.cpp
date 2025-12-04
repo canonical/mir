@@ -16,11 +16,11 @@
 
 #include "src/server/input/keyboard_resync_dispatcher.h"
 
-#include "mir/events/keyboard_event.h"
+#include <mir/events/keyboard_event.h>
 
-#include "mir/test/fake_shared.h"
-#include "mir/test/event_matchers.h"
-#include "mir/test/doubles/mock_input_dispatcher.h"
+#include <mir/test/fake_shared.h>
+#include <mir/test/event_matchers.h>
+#include <mir/test/doubles/mock_input_dispatcher.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

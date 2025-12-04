@@ -15,28 +15,28 @@
  */
 
 #include <boost/throw_exception.hpp>
-#include "mir/graphics/display_configuration.h"
-#include "mir/graphics/display.h"
-#include "mir/graphics//default_display_configuration_policy.h"
-#include "mir/time/steady_clock.h"
-#include "mir/glib_main_loop.h"
+#include <mir/graphics/display_configuration.h>
+#include <mir/graphics/display.h>
+#include <mir/graphics//default_display_configuration_policy.h>
+#include <mir/time/steady_clock.h>
+#include <mir/glib_main_loop.h>
 #include "src/platforms/gbm-kms/server/kms/platform.h"
 #include "src/server/report/null_report_factory.h"
-#include "mir/options/program_option.h"
+#include <mir/options/program_option.h>
 #include "src/platforms/gbm-kms/server/kms/quirks.h"
 
-#include "mir/test/signal.h"
-#include "mir/test/auto_unblock_thread.h"
+#include <mir/test/signal.h>
+#include <mir/test/auto_unblock_thread.h>
 
-#include "mir/test/doubles/mock_egl.h"
-#include "mir/test/doubles/mock_gl.h"
-#include "mir/test/doubles/mock_drm.h"
-#include "mir/test/doubles/mock_gbm.h"
-#include "mir/test/doubles/null_emergency_cleanup.h"
-#include "mir/test/doubles/stub_console_services.h"
-#include "mir/test/doubles/stub_gl_config.h"
+#include <mir/test/doubles/mock_egl.h>
+#include <mir/test/doubles/mock_gl.h>
+#include <mir/test/doubles/mock_drm.h>
+#include <mir/test/doubles/mock_gbm.h>
+#include <mir/test/doubles/null_emergency_cleanup.h>
+#include <mir/test/doubles/stub_console_services.h>
+#include <mir/test/doubles/stub_gl_config.h>
 
-#include "mir_test_framework/udev_environment.h"
+#include <mir_test_framework/udev_environment.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

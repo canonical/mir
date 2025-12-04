@@ -14,9 +14,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "miroil/event_builder.h"
-#include "mir_toolkit/events/input/input_event.h"
-#include "mir/events/event_builders.h"
+#include <miroil/event_builder.h>
+#include <mir_toolkit/events/input/input_event.h>
+#include <mir/events/event_builders.h>
 
 namespace miroil {
 

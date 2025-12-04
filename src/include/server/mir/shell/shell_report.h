@@ -17,9 +17,9 @@
 #ifndef MIR_SHELL_SHELL_REPORT_H
 #define MIR_SHELL_SHELL_REPORT_H
 
-#include "mir/frontend/surface_id.h"
-#include "mir_toolkit/common.h"
-#include "mir/geometry/forward.h"
+#include <mir/frontend/surface_id.h>
+#include <mir_toolkit/common.h>
+#include <mir/geometry/forward.h>
 
 #include <memory>
 #include <set>

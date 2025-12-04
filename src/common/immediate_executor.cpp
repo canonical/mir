@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/executor.h"
+#include <mir/executor.h>
 
 namespace
 {

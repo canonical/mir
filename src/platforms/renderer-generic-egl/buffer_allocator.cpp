@@ -15,25 +15,25 @@
  */
 
 #include "buffer_allocator.h"
-#include "mir/graphics/gl_config.h"
-#include "mir/graphics/linux_dmabuf.h"
-#include "mir/anonymous_shm_file.h"
-#include "mir/renderer/sw/pixel_source.h"
-#include "mir/graphics/platform.h"
+#include <mir/graphics/gl_config.h>
+#include <mir/graphics/linux_dmabuf.h>
+#include <mir/anonymous_shm_file.h>
+#include <mir/renderer/sw/pixel_source.h>
+#include <mir/graphics/platform.h>
 #include "shm_buffer.h"
-#include "mir/graphics/egl_context_executor.h"
-#include "mir/graphics/egl_extensions.h"
-#include "mir/graphics/egl_error.h"
-#include "mir/graphics/buffer_properties.h"
-#include "mir/raii.h"
-#include "mir/graphics/display.h"
-#include "mir/renderer/gl/context.h"
-#include "mir/graphics/egl_wayland_allocator.h"
-#include "mir/executor.h"
-#include "mir/renderer/gl/gl_surface.h"
-#include "mir/graphics/display_sink.h"
-#include "mir/graphics/drm_formats.h"
-#include "mir/graphics/egl_error.h"
+#include <mir/graphics/egl_context_executor.h>
+#include <mir/graphics/egl_extensions.h>
+#include <mir/graphics/egl_error.h>
+#include <mir/graphics/buffer_properties.h>
+#include <mir/raii.h>
+#include <mir/graphics/display.h>
+#include <mir/renderer/gl/context.h>
+#include <mir/graphics/egl_wayland_allocator.h>
+#include <mir/executor.h>
+#include <mir/renderer/gl/gl_surface.h>
+#include <mir/graphics/display_sink.h>
+#include <mir/graphics/drm_formats.h>
+#include <mir/graphics/egl_error.h>
 #include "cpu_copy_output_surface.h"
 
 #include <boost/throw_exception.hpp>

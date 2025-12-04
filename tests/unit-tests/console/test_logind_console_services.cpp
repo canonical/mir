@@ -22,19 +22,19 @@
 #include <fcntl.h>
 #include <boost/throw_exception.hpp>
 
-#include "mir/time/steady_clock.h"
-#include "mir/glib_main_loop.h"
-#include "mir/anonymous_shm_file.h"
-#include "mir_test_framework/executable_path.h"
-#include "mir_test_framework/process.h"
-#include "mir_test_framework/temporary_environment_value.h"
-#include "mir/test/pipe.h"
-#include "mir/test/signal.h"
-#include "mir/test/doubles/mock_event_handler_register.h"
-#include "mir/test/auto_unblock_thread.h"
-#include "mir/test/doubles/simple_device_observer.h"
-#include "mir/test/doubles/null_device_observer.h"
-#include "mir/test/doubles/stub_session_lock.h"
+#include <mir/time/steady_clock.h>
+#include <mir/glib_main_loop.h>
+#include <mir/anonymous_shm_file.h>
+#include <mir_test_framework/executable_path.h>
+#include <mir_test_framework/process.h>
+#include <mir_test_framework/temporary_environment_value.h>
+#include <mir/test/pipe.h>
+#include <mir/test/signal.h>
+#include <mir/test/doubles/mock_event_handler_register.h>
+#include <mir/test/auto_unblock_thread.h>
+#include <mir/test/doubles/simple_device_observer.h>
+#include <mir/test/doubles/null_device_observer.h>
+#include <mir/test/doubles/stub_session_lock.h>
 
 #include "src/server/console/logind_console_services.h"
 

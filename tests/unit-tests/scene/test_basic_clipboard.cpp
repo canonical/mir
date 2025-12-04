@@ -15,7 +15,7 @@
  */
 
 #include "src/server/scene/basic_clipboard.h"
-#include "mir/test/fake_shared.h"
+#include <mir/test/fake_shared.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

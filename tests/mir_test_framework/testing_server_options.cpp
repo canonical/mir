@@ -14,9 +14,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir_test_framework/testing_server_configuration.h"
-#include "mir_test_framework/temporary_environment_value.h"
-#include "mir/server_status_listener.h"
+#include <mir_test_framework/testing_server_configuration.h>
+#include <mir_test_framework/temporary_environment_value.h>
+#include <mir/server_status_listener.h>
 
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>

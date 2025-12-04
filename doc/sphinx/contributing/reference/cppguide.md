@@ -512,7 +512,7 @@ placing the functions in a namespace possibly in a separate library.
 
 If you must define a nonmember function and it is only needed in its
 `.cpp` file, use an unnamed [namespace](#namespaces) or `static` linkage
-(eg `static int foo() {...}`) to limit its scope.
+(e.g. `static int foo() {...}`) to limit its scope.
 
 ### Local variables
 
@@ -982,7 +982,7 @@ Most parameters passed by reference should be labeled `const`.
 **Definition:**
 
 In C, if a function needs to modify a variable, the parameter must use a
-pointer, eg `int foo(int *pval)`. In C++, the function can alternatively
+pointer, e.g. `int foo(int *pval)`. In C++, the function can alternatively
 declare a reference parameter: `int foo(int& val)`.
 
 **Pros:**
@@ -1040,7 +1040,7 @@ public:
 
 Overloading can make code more intuitive by allowing an
 identically-named function to take different arguments. It may be
-necessary for templatized code, and it can be convenient for Visitors.
+necessary for template code, and it can be convenient for Visitors.
 
 **Cons:**
 
@@ -2198,12 +2198,12 @@ After the word `DEPRECATED`, write your name, e-mail address, or other
 identifier in parentheses.
 
 A deprecation comment must include simple, clear directions for people
-to fix their callsites. In C++, you can implement a deprecated function
+to fix their call sites. In C++, you can implement a deprecated function
 as an inline function that calls the new interface point.
 
 Marking an interface point `DEPRECATED` will not magically cause any
-callsites to change. If you want people to actually stop using the
-deprecated facility, you will have to fix the callsites yourself or
+call sites to change. If you want people to actually stop using the
+deprecated facility, you will have to fix the call sites yourself or
 recruit a crew to help you.
 
 New code should not contain calls to deprecated interface points. Use
@@ -2394,7 +2394,7 @@ bool retval = do_something(argument1, argument2, argument3);
 
 If the arguments do not all fit on one line, they should be broken up
 onto multiple lines, with each subsequent line indented four spaced. Do
-not add spaces after the open paren or before the close paren:
+not add spaces after the open parenthesis or before the close parenthesis:
 
 ```c++
 bool retval = do_something(

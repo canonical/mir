@@ -14,13 +14,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/log.h"
+#include <mir/log.h>
 
 #include <drm_mode.h>
 #include <epoxy/egl.h>
 
 #include "egl_output.h"
-#include "mir/graphics/egl_error.h"
+#include <mir/graphics/egl_error.h>
 #include "kms-utils/kms_connector.h"
 
 #include <cstring>
@@ -202,7 +202,7 @@ geom::Size mgek::EGLOutput::size() const
     return {mode.hdisplay, mode.vdisplay};
 }
 
-int mgek::EGLOutput::max_refresh_rate() const
+unsigned mgek::EGLOutput::max_refresh_rate() const
 {
     drmModeModeInfo const& current_mode = connector->modes[mode_index];
     return current_mode.vrefresh;

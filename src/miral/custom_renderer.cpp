@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "miral/custom_renderer.h"
+#include <miral/custom_renderer.h>
 #include <mir/server.h>
 #include <mir/renderer/renderer_factory.h>
 #include <mir/renderer/renderer.h>

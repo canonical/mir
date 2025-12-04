@@ -14,24 +14,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/dispatch/multiplexing_dispatchable.h"
-#include "mir/events/event_builders.h"
-#include "mir/glib_main_loop.h"
-#include "mir/input/input_device_hub.h"
-#include "mir/input/input_device_registry.h"
-#include "mir/input/input_event_transformer.h"
-#include "mir/input/transformer.h"
-#include "mir/input/virtual_input_device.h"
+#include <mir/dispatch/multiplexing_dispatchable.h>
+#include <mir/events/event_builders.h>
+#include <mir/glib_main_loop.h>
+#include <mir/input/input_device_hub.h>
+#include <mir/input/input_device_registry.h>
+#include <mir/input/input_event_transformer.h>
+#include <mir/input/transformer.h>
+#include <mir/input/virtual_input_device.h>
 #include "src/server/input/default_input_device_hub.h"
 
-#include "mir/test/doubles/advanceable_clock.h"
-#include "mir/test/doubles/mock_input_seat.h"
-#include "mir/test/doubles/mock_key_mapper.h"
-#include "mir/test/doubles/mock_led_observer_registrar.h"
-#include "mir/test/doubles/mock_server_status_listener.h"
-#include "mir/test/fake_shared.h"
-#include "mir/test/fd_utils.h"
-#include "mir/test/signal.h"
+#include <mir/test/doubles/advanceable_clock.h>
+#include <mir/test/doubles/mock_input_seat.h>
+#include <mir/test/doubles/mock_key_mapper.h>
+#include <mir/test/doubles/mock_led_observer_registrar.h>
+#include <mir/test/doubles/mock_server_status_listener.h>
+#include <mir/test/fake_shared.h>
+#include <mir/test/fd_utils.h>
+#include <mir/test/signal.h>
 
 #include <functional>
 #include <gtest/gtest.h>

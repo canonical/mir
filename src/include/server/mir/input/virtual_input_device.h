@@ -17,9 +17,9 @@
 #ifndef MIR_INPUT_VIRTUAL_INPUT_DEVICE_H_
 #define MIR_INPUT_VIRTUAL_INPUT_DEVICE_H_
 
-#include "mir/input/input_device.h"
-#include "mir/input/input_device_info.h"
-#include "mir/synchronised.h"
+#include <mir/input/input_device.h>
+#include <mir/input/input_device_info.h>
+#include <mir/synchronised.h>
 
 #include <functional>
 #include <optional>

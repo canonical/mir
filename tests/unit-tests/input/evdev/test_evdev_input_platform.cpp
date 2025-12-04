@@ -17,15 +17,15 @@
 #include "src/platforms/evdev/platform.h"
 #include "src/server/report/null_report_factory.h"
 
-#include "mir/input/input_device_registry.h"
-#include "mir/dispatch/dispatchable.h"
+#include <mir/input/input_device_registry.h>
+#include <mir/dispatch/dispatchable.h>
 
-#include "mir/udev/wrapper.h"
-#include "mir_test_framework/udev_environment.h"
-#include "mir/test/fake_shared.h"
-#include "mir/test/doubles/mock_libinput.h"
-#include "mir/test/doubles/stub_console_services.h"
-#include "mir/test/fd_utils.h"
+#include <mir/udev/wrapper.h>
+#include <mir_test_framework/udev_environment.h>
+#include <mir/test/fake_shared.h>
+#include <mir/test/doubles/mock_libinput.h>
+#include <mir/test/doubles/stub_console_services.h>
+#include <mir/test/fd_utils.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -47,8 +47,8 @@ namespace
 
 struct MockInputDeviceRegistry : public mi::InputDeviceRegistry
 {
-    MOCK_METHOD1(add_device, std::weak_ptr<mi::Device>(std::shared_ptr<mi::InputDevice> const&));
-    MOCK_METHOD1(remove_device, void(std::shared_ptr<mi::InputDevice> const&));
+    MOCK_METHOD(std::weak_ptr<mi::Device>, add_device, (std::shared_ptr<mi::InputDevice> const&), (override));
+    MOCK_METHOD(void, remove_device, (std::shared_ptr<mi::InputDevice> const&), (override));
 };
 
 std::shared_ptr<udev_device> device_for_path(char const* devnode)

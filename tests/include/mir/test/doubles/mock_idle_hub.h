@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_IDLE_HUB_H_
 #define MIR_TEST_DOUBLES_MOCK_IDLE_HUB_H_
 
-#include "mir/scene/idle_hub.h"
+#include <mir/scene/idle_hub.h>
 
 #include <gmock/gmock.h>
 

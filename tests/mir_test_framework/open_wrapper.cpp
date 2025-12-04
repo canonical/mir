@@ -54,8 +54,8 @@ extern int __REDIRECT_NTH (__ttyname_r_alias, (int __fd, char *__buf,
  * End glibc hackery (although there is a second block below)
  */
 
-#include "mir_test_framework/open_wrapper.h"
-#include "mir_test_framework/interposer_helper.h"
+#include <mir_test_framework/open_wrapper.h>
+#include <mir_test_framework/interposer_helper.h>
 
 #include <atomic>
 #include <list>

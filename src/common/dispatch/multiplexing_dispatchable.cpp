@@ -14,9 +14,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/dispatch/multiplexing_dispatchable.h"
+#include <mir/dispatch/multiplexing_dispatchable.h>
 #include "utils.h"
-#include "mir/posix_rw_mutex.h"
+#include <mir/posix_rw_mutex.h>
 
 #include <boost/throw_exception.hpp>
 #include <shared_mutex>

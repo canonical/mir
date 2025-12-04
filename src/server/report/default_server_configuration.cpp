@@ -14,15 +14,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/default_server_configuration.h"
-#include "mir/options/configuration.h"
+#include <mir/default_server_configuration.h>
+#include <mir/options/configuration.h>
 
 #include "reports.h"
 #include "lttng_report_factory.h"
 #include "logging_report_factory.h"
 #include "null_report_factory.h"
 
-#include "mir/abnormal_exit.h"
+#include <mir/abnormal_exit.h>
 
 namespace mg = mir::graphics;
 namespace mf = mir::frontend;

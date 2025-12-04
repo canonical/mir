@@ -18,7 +18,7 @@
 #define MIR_INPUT_METHOD_COMMON_H
 
 #include <cstdint>
-#include "mir/scene/text_input_hub.h"
+#include <mir/scene/text_input_hub.h>
 #include "text-input-unstable-v3_wrapper.h"
 
 namespace ms = mir::scene;

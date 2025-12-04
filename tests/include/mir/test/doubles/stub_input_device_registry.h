@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_STUB_INPUT_DEVICE_REGISTRY_H_
 #define MIR_TEST_DOUBLES_STUB_INPUT_DEVICE_REGISTRY_H_
 
-#include "mir/input/input_device_registry.h"
+#include <mir/input/input_device_registry.h>
 
 namespace mir
 {

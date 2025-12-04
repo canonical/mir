@@ -14,18 +14,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "miral/locate_pointer.h"
-#include "mir/events/input_event.h"
-#include "mir/events/pointer_event.h"
-#include "mir/geometry/forward.h"
-#include "mir/input/composite_event_filter.h"
-#include "mir/input/event_filter.h"
-#include "mir/log.h"
-#include "mir/main_loop.h"
-#include "mir/server.h"
-#include "mir/synchronised.h"
-#include "mir/time/alarm.h"
-#include "miral/live_config.h"
+#include <miral/locate_pointer.h>
+#include <mir/events/input_event.h>
+#include <mir/events/pointer_event.h>
+#include <mir/geometry/forward.h>
+#include <mir/input/composite_event_filter.h>
+#include <mir/input/event_filter.h>
+#include <mir/log.h>
+#include <mir/main_loop.h>
+#include <mir/server.h>
+#include <mir/synchronised.h>
+#include <mir/time/alarm.h>
+#include <miral/live_config.h>
 
 namespace geom = mir::geometry;
 

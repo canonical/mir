@@ -17,7 +17,7 @@
 #ifndef MIR_INPUT_KEYBOARD_OBSERVER_H_
 #define MIR_INPUT_KEYBOARD_OBSERVER_H_
 
-#include "mir/events/input_event.h"
+#include <mir/events/input_event.h>
 #include <memory>
 
 namespace mir

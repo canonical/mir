@@ -17,19 +17,19 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include "mir/graphics/platform.h"
+#include <mir/graphics/platform.h>
 #include "src/platforms/x11/graphics/display.h"
 #include "src/platforms/x11/graphics/platform.h"
 #include "src/server/report/null/display_report.h"
 
-#include "mir/graphics/display_configuration.h"
+#include <mir/graphics/display_configuration.h>
 
-#include "mir/test/doubles/null_display_configuration_policy.h"
-#include "mir/test/doubles/mock_egl.h"
-#include "mir/test/doubles/mock_x11.h"
-#include "mir/test/doubles/mock_x11_resources.h"
-#include "mir/test/doubles/mock_gl_config.h"
-#include "mir/test/fake_shared.h"
+#include <mir/test/doubles/null_display_configuration_policy.h>
+#include <mir/test/doubles/mock_egl.h>
+#include <mir/test/doubles/mock_x11.h>
+#include <mir/test/doubles/mock_x11_resources.h>
+#include <mir/test/doubles/mock_gl_config.h>
+#include <mir/test/fake_shared.h>
 
 
 namespace mg=mir::graphics;

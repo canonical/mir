@@ -455,7 +455,6 @@ global:
     mir::input::receiver::XKBMapperRegistrar::set_keymap_for_device*;
     mir::input::receiver::XKBMapperRegistrar::unregister_interest*;
     mir::input::receiver::XKBMapperRegistrar::xkb_modifiers*;
-    mir::report_exception*;
     mir::run_mir*;
     mir::scene::ApplicationNotRespondingDetector::?ApplicationNotRespondingDetector*;
     mir::scene::ApplicationNotRespondingDetector::ApplicationNotRespondingDetector*;
@@ -539,7 +538,6 @@ global:
     mir::scene::BasicSurface::unregister_interest*;
     mir::scene::BasicSurface::visible*;
     mir::scene::BasicSurface::visible_on_lock_screen*;
-    mir::scene::BasicSurface::wayland_surface*;
     mir::scene::BasicSurface::window_size*;
     mir::scene::ClipboardObserver::?ClipboardObserver*;
     mir::scene::ClipboardObserver::ClipboardObserver*;
@@ -1114,7 +1112,6 @@ global:
     non-virtual?thunk?to?mir::scene::BasicSurface::unregister_interest*;
     non-virtual?thunk?to?mir::scene::BasicSurface::visible*;
     non-virtual?thunk?to?mir::scene::BasicSurface::visible_on_lock_screen*;
-    non-virtual?thunk?to?mir::scene::BasicSurface::wayland_surface*;
     non-virtual?thunk?to?mir::scene::BasicSurface::window_size*;
     non-virtual?thunk?to?mir::scene::ClipboardObserver::?ClipboardObserver*;
     non-virtual?thunk?to?mir::scene::DataExchangeSource::?DataExchangeSource*;

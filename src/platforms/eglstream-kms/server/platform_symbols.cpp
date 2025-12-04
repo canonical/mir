@@ -18,19 +18,19 @@
 
 #include "platform.h"
 #include "utils.h"
-#include "mir/graphics/platform.h"
-#include "mir/options/option.h"
-#include "mir/options/configuration.h"
-#include "mir/module_deleter.h"
-#include "mir/assert_module_entry_point.h"
-#include "mir/libname.h"
-#include "mir/log.h"
-#include "mir/graphics/egl_error.h"
+#include <mir/graphics/platform.h>
+#include <mir/options/option.h>
+#include <mir/options/configuration.h>
+#include <mir/module_deleter.h>
+#include <mir/assert_module_entry_point.h>
+#include <mir/libname.h>
+#include <mir/log.h>
+#include <mir/graphics/egl_error.h>
 #include "one_shot_device_observer.h"
-#include "mir/raii.h"
+#include <mir/raii.h>
 #include "kms-utils/drm_mode_resources.h"
-#include "mir/graphics/egl_logger.h"
-#include "mir/udev/wrapper.h"
+#include <mir/graphics/egl_logger.h>
+#include <mir/udev/wrapper.h>
 
 #include <boost/throw_exception.hpp>
 #include <xf86drm.h>

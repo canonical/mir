@@ -17,8 +17,8 @@
 #ifndef MIR_COMPOSITOR_DEFAULT_DISPLAY_BUFFER_COMPOSITOR_FACTORY_H_
 #define MIR_COMPOSITOR_DEFAULT_DISPLAY_BUFFER_COMPOSITOR_FACTORY_H_
 
-#include "mir/compositor/display_buffer_compositor_factory.h"
-#include "mir/compositor/compositor_report.h"
+#include <mir/compositor/display_buffer_compositor_factory.h>
+#include <mir/compositor/compositor_report.h>
 
 namespace mir
 {

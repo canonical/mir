@@ -14,21 +14,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/display_server.h"
-#include "mir/server_configuration.h"
-#include "mir/main_loop.h"
-#include "mir/server_status_listener.h"
-#include "mir/display_changer.h"
-#include "mir/console_services.h"
+#include <mir/display_server.h>
+#include <mir/server_configuration.h>
+#include <mir/main_loop.h>
+#include <mir/server_status_listener.h>
+#include <mir/display_changer.h>
+#include <mir/console_services.h>
 
-#include "mir/compositor/compositor.h"
-#include "mir/frontend/connector.h"
-#include "mir/graphics/display.h"
-#include "mir/graphics/display_configuration.h"
-#include "mir/input/input_manager.h"
-#include "mir/input/input_dispatcher.h"
-#include "mir/log.h"
-#include "mir/unwind_helpers.h"
+#include <mir/compositor/compositor.h>
+#include <mir/frontend/connector.h>
+#include <mir/graphics/display.h>
+#include <mir/graphics/display_configuration.h>
+#include <mir/input/input_manager.h>
+#include <mir/input/input_dispatcher.h>
+#include <mir/log.h>
+#include <mir/unwind_helpers.h>
 
 #include <boost/exception/diagnostic_information.hpp>
 

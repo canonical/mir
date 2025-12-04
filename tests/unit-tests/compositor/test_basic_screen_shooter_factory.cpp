@@ -14,23 +14,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/executor.h"
-#include "mir/graphics/platform.h"
-#include "mir/graphics/display_sink.h"
-#include "mir/renderer/gl/gl_surface.h"
+#include <mir/executor.h>
+#include <mir/graphics/platform.h>
+#include <mir/graphics/display_sink.h>
+#include <mir/renderer/gl/gl_surface.h>
 #include "src/server/compositor/basic_screen_shooter_factory.h"
 
-#include "mir/test/doubles/mock_scene.h"
-#include "mir/test/doubles/mock_renderer.h"
-#include "mir/test/doubles/mock_gl_rendering_provider.h"
-#include "mir/test/doubles/mock_renderer_factory.h"
-#include "mir/test/doubles/advanceable_clock.h"
-#include "mir/test/doubles/explicit_executor.h"
-#include "mir/test/doubles/stub_buffer.h"
-#include "mir/test/doubles/stub_output_filter.h"
-#include "mir/test/doubles/stub_gl_config.h"
-#include "mir/test/doubles/stub_buffer_allocator.h"
-#include "mir/test/doubles/stub_cursor.h"
+#include <mir/test/doubles/mock_scene.h>
+#include <mir/test/doubles/mock_renderer.h>
+#include <mir/test/doubles/mock_gl_rendering_provider.h>
+#include <mir/test/doubles/mock_renderer_factory.h>
+#include <mir/test/doubles/advanceable_clock.h>
+#include <mir/test/doubles/explicit_executor.h>
+#include <mir/test/doubles/stub_buffer.h>
+#include <mir/test/doubles/stub_output_filter.h>
+#include <mir/test/doubles/stub_gl_config.h>
+#include <mir/test/doubles/stub_buffer_allocator.h>
+#include <mir/test/doubles/stub_cursor.h>
 
 #include <gtest/gtest.h>
 

@@ -17,7 +17,7 @@
 #ifndef MIR_SHELL_MOUSEKEYS_TRANSFORMER_H
 #define MIR_SHELL_MOUSEKEYS_TRANSFORMER_H
 
-#include "mir/input/transformer.h"
+#include <mir/input/transformer.h>
 
 namespace mir
 {

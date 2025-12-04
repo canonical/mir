@@ -17,31 +17,32 @@
 #include "platform.h"
 #include "buffer_allocator.h"
 #include "display.h"
-#include "mir/console_services.h"
-#include "mir/emergency_cleanup_registry.h"
-#include "mir/fd.h"
-#include "mir/graphics/dmabuf_buffer.h"
-#include "mir/graphics/drm_formats.h"
-#include "mir/graphics/egl_context_executor.h"
-#include "mir/graphics/platform.h"
-#include "mir/graphics/texture.h"
-#include "mir/udev/wrapper.h"
-#include "mir/graphics/egl_error.h"
-#include "mir/graphics/egl_extensions.h"
+#include <mir/console_services.h>
+#include <mir/emergency_cleanup_registry.h>
+#include <mir/fd.h>
+#include <mir/graphics/dmabuf_buffer.h>
+#include <mir/graphics/drm_formats.h>
+#include <mir/graphics/egl_context_executor.h>
+#include <mir/graphics/platform.h>
+#include <mir/graphics/texture.h>
+#include <mir/udev/wrapper.h>
+#include <mir/graphics/egl_error.h>
+#include <mir/graphics/egl_extensions.h>
 #include "one_shot_device_observer.h"
-#include "mir/graphics/linux_dmabuf.h"
-#include "mir/graphics/egl_context_executor.h"
-#include "mir/graphics/drm_syncobj.h"
+#include <mir/graphics/linux_dmabuf.h>
+#include <mir/graphics/egl_context_executor.h>
+#include <mir/graphics/drm_syncobj.h>
 #include "kms_cpu_addressable_display_provider.h"
 #include "surfaceless_egl_context.h"
 #include <boost/throw_exception.hpp>
+#include <drm.h>
 #include <drm_fourcc.h>
 #include <gbm.h>
 #include <system_error>
 #include <xf86drm.h>
 
 #define MIR_LOG_COMPONENT "platform-graphics-gbm-kms"
-#include "mir/log.h"
+#include <mir/log.h>
 
 #include <fcntl.h>
 #include <boost/exception/all.hpp>
@@ -432,9 +433,34 @@ mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgg::RenderingPlatform::create_
 auto mgg::RenderingPlatform::maybe_create_provider(
     RenderingProvider::Tag const& type_tag) -> std::shared_ptr<graphics::RenderingProvider>
 {
-    if (dynamic_cast<mg::GLRenderingProvider::Tag const*>(&type_tag) ||
-        dynamic_cast<mg::DRMRenderingProvider::Tag const*>(&type_tag))
+    if (dynamic_cast<mg::GLRenderingProvider::Tag const*>(&type_tag))
     {
+        return std::make_shared<mgg::GLRenderingProvider>(
+            Fd{IntOwnedFd{gbm_device_get_fd(device.get())}},
+            bound_display,
+            egl_delegate,
+            dmabuf_provider,
+            share_ctx->egl_display(),
+            static_cast<EGLContext>(*share_ctx),
+            quirks);
+    }
+    if (dynamic_cast<mg::DRMRenderingProvider::Tag const*>(&type_tag))
+    {
+        // Check if the device supports DRM syncobj timeline
+        int raw_fd = gbm_device_get_fd(device.get());
+        uint64_t has_timeline = 0;
+        auto cap_result = drmGetCap(raw_fd, DRM_CAP_SYNCOBJ_TIMELINE, &has_timeline);
+        if (cap_result != 0)
+        {
+            mir::log_debug("Failed to query DRM_CAP_SYNCOBJ_TIMELINE: %s", strerror(-cap_result));
+            return nullptr;
+        }
+        if (!has_timeline)
+        {
+            mir::log_debug("DRM_CAP_SYNCOBJ_TIMELINE not supported by device");
+            return nullptr;
+        }
+        // Device supports syncobj timeline, create the provider
         return std::make_shared<mgg::GLRenderingProvider>(
             Fd{IntOwnedFd{gbm_device_get_fd(device.get())}},
             bound_display,

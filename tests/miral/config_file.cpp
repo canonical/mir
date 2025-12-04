@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "miral/test_server.h"
-#include "miral/config_file.h"
+#include <miral/test_server.h>
+#include <miral/config_file.h>
 
 #include <wayland_wrapper.h>
 #include <gmock/gmock-function-mocker.h>

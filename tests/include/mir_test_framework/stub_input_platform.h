@@ -16,7 +16,7 @@
 #ifndef MIR_TEST_FRAMEWORK_STUB_INPUT_PLATFORM_H_
 #define MIR_TEST_FRAMEWORK_STUB_INPUT_PLATFORM_H_
 
-#include "mir/input/platform.h"
+#include <mir/input/platform.h>
 #include <atomic>
 #include <memory>
 #include <mutex>

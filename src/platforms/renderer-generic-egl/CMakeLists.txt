@@ -13,12 +13,6 @@ add_library(
   rendering_platform.cpp
 )
 
-target_include_directories(
-  mirplatformrenderereglgeneric
-  PRIVATE
-    $<TARGET_PROPERTY:mirrenderergl,INTERFACE_INCLUDE_DIRECTORIES>
-)
-
 target_link_libraries(
   mirplatformrenderereglgeneric
 

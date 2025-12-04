@@ -18,17 +18,17 @@
 
 #include "handle_event_exception.h"
 
-#include "mir/events/event_type_to_string.h"
+#include <mir/events/event_type_to_string.h>
 #include <mir/fatal.h>
 
-#include "mir_toolkit/events/event.h"
-#include "mir/events/event_private.h"
-#include "mir/events/window_placement_event.h"
+#include <mir_toolkit/events/event.h>
+#include <mir/events/event_private.h>
+#include <mir/events/window_placement_event.h>
 
-#include "mir_toolkit/events/resize_event.h"
-#include "mir_toolkit/events/prompt_session_event.h"
-#include "mir_toolkit/events/orientation_event.h"
-#include "mir_toolkit/events/input_device_state_event.h"
+#include <mir_toolkit/events/resize_event.h>
+#include <mir_toolkit/events/prompt_session_event.h>
+#include <mir_toolkit/events/orientation_event.h>
+#include <mir_toolkit/events/input_device_state_event.h>
 
 #include <cstring>
 

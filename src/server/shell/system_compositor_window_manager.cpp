@@ -14,15 +14,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/shell/system_compositor_window_manager.h"
+#include <mir/shell/system_compositor_window_manager.h>
 
-#include "mir/shell/display_layout.h"
-#include "mir/shell/focus_controller.h"
-#include "mir/shell/surface_specification.h"
+#include <mir/shell/display_layout.h>
+#include <mir/shell/focus_controller.h>
+#include <mir/shell/surface_specification.h>
 
-#include "mir/scene/session.h"
-#include "mir/scene/session_coordinator.h"
-#include "mir/scene/surface.h"
+#include <mir/scene/session.h>
+#include <mir/scene/session_coordinator.h>
+#include <mir/scene/surface.h>
 
 #include <boost/throw_exception.hpp>
 

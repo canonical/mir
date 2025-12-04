@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_STUB_CLIENT_PLATFORM_FACTORY_H_
 #define MIR_TEST_DOUBLES_STUB_CLIENT_PLATFORM_FACTORY_H_
 
-#include "mir/client/client_platform_factory.h"
+#include <mir/client/client_platform_factory.h>
 
 namespace mir
 {

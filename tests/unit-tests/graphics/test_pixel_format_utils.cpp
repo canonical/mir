@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir_toolkit/common.h"
-#include "mir/graphics/pixel_format_utils.h"
+#include <mir_toolkit/common.h>
+#include <mir/graphics/pixel_format_utils.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 

@@ -17,8 +17,8 @@
 #ifndef MIRAL_FD_MANAGER_H
 #define MIRAL_FD_MANAGER_H
 
-#include "miral/runner.h"
-#include "mir/fd.h"
+#include <miral/runner.h>
+#include <mir/fd.h>
 
 #include <memory>
 #include <mutex>

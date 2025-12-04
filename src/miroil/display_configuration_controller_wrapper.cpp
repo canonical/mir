@@ -15,7 +15,7 @@
  */
 
 #include <miroil/display_configuration_controller_wrapper.h>
-#include "mir/shell/display_configuration_controller.h"
+#include <mir/shell/display_configuration_controller.h>
 
 namespace miroil {
 

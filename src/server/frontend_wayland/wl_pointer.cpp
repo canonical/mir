@@ -21,18 +21,18 @@
 #include "wl_seat.h"
 #include "relative-pointer-unstable-v1_wrapper.h"
 
-#include "mir/log.h"
-#include "mir/executor.h"
-#include "mir/frontend/wayland.h"
-#include "mir/scene/surface.h"
-#include "mir/frontend/buffer_stream.h"
-#include "mir/geometry/displacement.h"
-#include "mir/graphics/cursor_image.h"
-#include "mir/graphics/buffer.h"
-#include "mir/renderer/sw/pixel_source.h"
-#include "mir/compositor/buffer_stream.h"
-#include "mir/events/pointer_event.h"
-#include "mir/wayland/client.h"
+#include <mir/log.h>
+#include <mir/executor.h>
+#include <mir/frontend/wayland.h>
+#include <mir/scene/surface.h>
+#include <mir/frontend/buffer_stream.h>
+#include <mir/geometry/displacement.h>
+#include <mir/graphics/cursor_image.h>
+#include <mir/graphics/buffer.h>
+#include <mir/renderer/sw/pixel_source.h>
+#include <mir/compositor/buffer_stream.h>
+#include <mir/events/pointer_event.h>
+#include <mir/wayland/client.h>
 
 #include <linux/input-event-codes.h>
 #include <boost/throw_exception.hpp>

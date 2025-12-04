@@ -14,11 +14,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/shell/persistent_surface_store.h"
+#include <mir/shell/persistent_surface_store.h>
 
-#include "mir/scene/surface_observer.h"
+#include <mir/scene/surface_observer.h>
 #include "src/server/shell/default_persistent_surface_store.h"
-#include "mir/test/doubles/mock_surface.h"
+#include <mir/test/doubles/mock_surface.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

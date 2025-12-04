@@ -17,7 +17,7 @@
 #ifndef MIR_BASIC_CALLBACK_H_
 #define MIR_BASIC_CALLBACK_H_
 
-#include "mir/lockable_callback.h"
+#include <mir/lockable_callback.h>
 
 #include <functional>
 

@@ -14,9 +14,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "miral/display_configuration.h"
-#include "miral/runner.h"
-#include "miral/command_line_option.h"
+#include <miral/display_configuration.h>
+#include <miral/runner.h>
+#include <miral/command_line_option.h>
 #include "static_display_config.h"
 
 #include <mir/server.h>

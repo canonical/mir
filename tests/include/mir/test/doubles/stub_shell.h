@@ -17,10 +17,10 @@
 #ifndef MIR_TEST_DOUBLES_STUB_SHELL_H_
 #define MIR_TEST_DOUBLES_STUB_SHELL_H_
 
-#include "mir/shell/shell.h"
-#include "mir/test/doubles/stub_session.h"
-#include "mir/test/doubles/null_prompt_session.h"
-#include "mir/test/doubles/stub_surface.h"
+#include <mir/shell/shell.h>
+#include <mir/test/doubles/stub_session.h>
+#include <mir/test/doubles/null_prompt_session.h>
+#include <mir/test/doubles/stub_surface.h>
 
 namespace mir
 {
@@ -135,7 +135,6 @@ struct StubShell : public shell::Shell
 
     auto create_surface(
         std::shared_ptr<scene::Session> const& /*session*/,
-        wayland::Weak<frontend::WlSurface> const& /*wayland_surface*/,
         shell::SurfaceSpecification const& /*params*/,
         std::shared_ptr<scene::SurfaceObserver> const& /*observer*/,
         Executor* /*observer_executor*/) -> std::shared_ptr<scene::Surface> override

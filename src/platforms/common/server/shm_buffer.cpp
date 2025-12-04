@@ -14,15 +14,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/graphics/gl_format.h"
-#include "mir/renderer/sw/pixel_source.h"
+#include <mir/graphics/gl_format.h>
+#include <mir/renderer/sw/pixel_source.h>
 #include "shm_buffer.h"
-#include "mir/graphics/program_factory.h"
-#include "mir/graphics/program.h"
-#include "mir/graphics/egl_context_executor.h"
+#include <mir/graphics/program_factory.h>
+#include <mir/graphics/program.h>
+#include <mir/graphics/egl_context_executor.h>
 
 #define MIR_LOG_COMPONENT "gfx-common"
-#include "mir/log.h"
+#include <mir/log.h>
 
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>

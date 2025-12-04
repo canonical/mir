@@ -15,7 +15,7 @@
  */
 
 #include "test_window_manager_tools.h"
-#include "mir/events/event_builders.h"
+#include <mir/events/event_builders.h>
 
 using namespace miral;
 using namespace testing;

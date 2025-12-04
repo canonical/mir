@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/graphics/egl_extensions.h"
-#include "mir/test/doubles/mock_egl.h"
+#include <mir/graphics/egl_extensions.h>
+#include <mir/test/doubles/mock_egl.h>
 #include <stdexcept>
 
 #include <gtest/gtest.h>

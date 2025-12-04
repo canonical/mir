@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_NULL_DISPLAY_CONFIGURATION_POLICY_H_
 #define MIR_TEST_DOUBLES_NULL_DISPLAY_CONFIGURATION_POLICY_H_
 
-#include "mir/graphics/display_configuration_policy.h"
+#include <mir/graphics/display_configuration_policy.h>
 
 namespace mir
 {

@@ -18,11 +18,11 @@
 #ifndef MIR_FRONTEND_WP_VIEWPORTER_H
 #define MIR_FRONTEND_WP_VIEWPORTER_H
 
-#include "mir/wayland/weak.h"
+#include <mir/wayland/weak.h>
 #include "viewporter_wrapper.h"
 #include "wayland_wrapper.h"
 
-#include "mir/geometry/rectangle.h"
+#include <mir/geometry/rectangle.h>
 
 #include <optional>
 

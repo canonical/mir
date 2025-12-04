@@ -19,7 +19,7 @@
 
 #include "server_tracepoint_provider.h"
 
-#include "mir/compositor/compositor_report.h"
+#include <mir/compositor/compositor_report.h>
 
 namespace mir
 {

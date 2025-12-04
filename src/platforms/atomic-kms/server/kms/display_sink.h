@@ -17,11 +17,11 @@
 #ifndef MIR_GRAPHICS_GBM_ATOMIC_KMS_DISPLAY_SINK_H_
 #define MIR_GRAPHICS_GBM_ATOMIC_KMS_DISPLAY_SINK_H_
 
-#include "mir/graphics/display_sink.h"
-#include "mir/graphics/display.h"
+#include <mir/graphics/display_sink.h>
+#include <mir/graphics/display.h>
 #include "display_helpers.h"
 #include "egl_helper.h"
-#include "mir/graphics/platform.h"
+#include <mir/graphics/platform.h>
 #include "platform_common.h"
 #include "kms_framebuffer.h"
 

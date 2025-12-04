@@ -15,8 +15,8 @@
  */
 
 #include "shm_backing.h"
-#include "mir/raii.h"
-#include "mir/synchronised.h"
+#include <mir/raii.h>
+#include <mir/synchronised.h>
 
 #include <sys/mman.h>
 #include <fcntl.h>

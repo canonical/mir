@@ -19,31 +19,31 @@
 
 #include "buffer_allocator.h"
 #include "cpu_copy_output_surface.h"
-#include "mir/anonymous_shm_file.h"
-#include "mir/graphics/display_sink.h"
-#include "mir/graphics/drm_formats.h"
-#include "mir/graphics/egl_context_executor.h"
-#include "mir/graphics/egl_resources.h"
-#include "mir/graphics/gl_config.h"
-#include "mir/graphics/platform.h"
+#include <mir/anonymous_shm_file.h>
+#include <mir/graphics/display_sink.h>
+#include <mir/graphics/drm_formats.h>
+#include <mir/graphics/egl_context_executor.h>
+#include <mir/graphics/egl_resources.h>
+#include <mir/graphics/gl_config.h>
+#include <mir/graphics/platform.h>
 #include "shm_buffer.h"
-#include "mir/graphics/buffer_properties.h"
-#include "mir/renderer/gl/context.h"
-#include "mir/graphics/display.h"
+#include <mir/graphics/buffer_properties.h>
+#include <mir/renderer/gl/context.h>
+#include <mir/graphics/display.h>
 #include "wayland-eglstream-controller.h"
-#include "mir/graphics/egl_error.h"
-#include "mir/graphics/texture.h"
-#include "mir/graphics/program_factory.h"
-#include "mir/graphics/program.h"
-#include "mir/graphics/display.h"
-#include "mir/renderer/gl/context.h"
-#include "mir/raii.h"
-#include "mir/wayland/protocol_error.h"
-#include "mir/wayland/wayland_base.h"
-#include "mir/renderer/gl/gl_surface.h"
+#include <mir/graphics/egl_error.h>
+#include <mir/graphics/texture.h>
+#include <mir/graphics/program_factory.h>
+#include <mir/graphics/program.h>
+#include <mir/graphics/display.h>
+#include <mir/renderer/gl/context.h>
+#include <mir/raii.h>
+#include <mir/wayland/protocol_error.h>
+#include <mir/wayland/wayland_base.h>
+#include <mir/renderer/gl/gl_surface.h>
 
 #define MIR_LOG_COMPONENT "platform-eglstream-kms"
-#include "mir/log.h"
+#include <mir/log.h>
 
 #include <wayland-server-core.h>
 

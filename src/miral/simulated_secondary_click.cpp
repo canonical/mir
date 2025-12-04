@@ -14,14 +14,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "miral/simulated_secondary_click.h"
-#include "miral/live_config.h"
+#include <miral/simulated_secondary_click.h>
+#include <miral/live_config.h>
 
-#include "mir/server.h"
-#include "mir/shell/accessibility_manager.h"
-#include "mir/shell/simulated_secondary_click_transformer.h"
-#include "mir/synchronised.h"
-#include "mir/log.h"
+#include <mir/server.h>
+#include <mir/shell/accessibility_manager.h>
+#include <mir/shell/simulated_secondary_click_transformer.h>
+#include <mir/synchronised.h>
+#include <mir/log.h>
 
 struct miral::SimulatedSecondaryClick::Self
 {

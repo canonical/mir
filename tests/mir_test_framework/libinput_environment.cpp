@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir_test_framework/libinput_environment.h"
-#include "mir/test/fake_shared.h"
+#include <mir_test_framework/libinput_environment.h>
+#include <mir/test/fake_shared.h>
 
 #include <boost/throw_exception.hpp>
 

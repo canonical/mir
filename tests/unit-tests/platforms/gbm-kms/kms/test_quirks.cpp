@@ -19,11 +19,11 @@
 
 #include <boost/program_options/options_description.hpp>
 
-#include "mir/options/program_option.h"
-#include "mir/udev/wrapper.h"
-#include "mir_test_framework/udev_environment.h"
+#include <mir/options/program_option.h>
+#include <mir/udev/wrapper.h>
+#include <mir_test_framework/udev_environment.h>
 #include "src/platforms/gbm-kms/server/kms/quirks.h"
-#include "mir_test_framework/temporary_environment_value.h"
+#include <mir_test_framework/temporary_environment_value.h>
 
 namespace mtf = mir_test_framework;
 namespace mgg = mir::graphics::gbm;

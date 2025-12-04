@@ -16,7 +16,7 @@
 
 #include "shared_library_prober_report.h"
 
-#include "mir/report/lttng/mir_tracepoint.h"
+#include <mir/report/lttng/mir_tracepoint.h>
 
 #define TRACEPOINT_DEFINE
 #define TRACEPOINT_PROBE_DYNAMIC_LINKAGE

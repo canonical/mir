@@ -15,14 +15,14 @@
  */
 
 #include "shm.h"
-#include "mir/graphics/drm_formats.h"
+#include <mir/graphics/drm_formats.h>
 #include "../shm_backing.h"
-#include "mir/log.h"
-#include "mir/wayland/protocol_error.h"
+#include <mir/log.h>
+#include <mir/wayland/protocol_error.h>
 
-#include "mir/wayland/weak.h"
-#include "mir/executor.h"
-#include "mir/renderer/sw/pixel_source.h"
+#include <mir/wayland/weak.h>
+#include <mir/executor.h>
+#include <mir/renderer/sw/pixel_source.h>
 #include "wayland_wrapper.h"
 
 #include <drm_fourcc.h>

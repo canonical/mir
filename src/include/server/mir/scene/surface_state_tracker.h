@@ -17,7 +17,7 @@
 #ifndef MIR_SCENE_SURFACE_STATE_TRACKER_
 #define MIR_SCENE_SURFACE_STATE_TRACKER_
 
-#include "mir_toolkit/common.h"
+#include <mir_toolkit/common.h>
 #include <initializer_list>
 
 namespace mir

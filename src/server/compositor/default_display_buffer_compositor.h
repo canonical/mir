@@ -17,8 +17,8 @@
 #ifndef MIR_COMPOSITOR_DEFAULT_DISPLAY_BUFFER_COMPOSITOR_H_
 #define MIR_COMPOSITOR_DEFAULT_DISPLAY_BUFFER_COMPOSITOR_H_
 
-#include "mir/compositor/display_buffer_compositor.h"
-#include "mir/graphics/platform.h"
+#include <mir/compositor/display_buffer_compositor.h>
+#include <mir/graphics/platform.h>
 #include <memory>
 
 namespace mir

@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/renderer/sw/pixel_source.h"
+#include <mir/renderer/sw/pixel_source.h>
 
 #include <mir/graphics/graphic_buffer_allocator.h>
 

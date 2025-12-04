@@ -15,13 +15,13 @@
  */
 
 #include "basic_idle_handler.h"
-#include "mir/fatal.h"
-#include "mir/scene/idle_hub.h"
-#include "mir/scene/session_lock.h"
-#include "mir/graphics/renderable.h"
-#include "mir/renderer/sw/pixel_source.h"
-#include "mir/input/scene.h"
-#include "mir/shell/display_configuration_controller.h"
+#include <mir/fatal.h>
+#include <mir/scene/idle_hub.h>
+#include <mir/scene/session_lock.h>
+#include <mir/graphics/renderable.h>
+#include <mir/renderer/sw/pixel_source.h>
+#include <mir/input/scene.h>
+#include <mir/shell/display_configuration_controller.h>
 
 #include <mutex>
 

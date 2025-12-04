@@ -3,12 +3,6 @@ pkg_check_modules(XKBCOMMON REQUIRED IMPORTED_TARGET xkbcommon)
 add_compile_definitions(MIR_LOG_COMPONENT_FALLBACK="mircommon")
 
 set(MIR_COMMON_SOURCES)
-set(MIR_COMMON_REFERENCES)
-
-include_directories(
-  ${MIR_GENERATED_INCLUDE_DIRECTORIES}
-  ${PROJECT_SOURCE_DIR}/include/common
-)
 
 add_subdirectory(events)
 add_subdirectory(logging)
@@ -36,15 +30,6 @@ list(APPEND MIR_COMMON_SOURCES
   signal.cpp
 )
 
-list(APPEND MIR_COMMON_REFERENCES
-  mirevents
-  mirtime
-)
-
-set(
-  MIR_GENERATED_INCLUDE_DIRECTORIES
-  ${MIR_GENERATED_INCLUDE_DIRECTORIES}
-  PARENT_SCOPE)
 
 # TODO we need a place to manage ABI and related versioning but use this as placeholder
 set(MIRCOMMON_ABI 11)
@@ -72,13 +57,18 @@ add_library(mircommon SHARED
 target_include_directories(mircommon
   PUBLIC
     ${PROJECT_SOURCE_DIR}/include/common
+  PRIVATE
+    ${PROJECT_SOURCE_DIR}/src/include/common
 )
 
 target_link_libraries(mircommon
   PUBLIC
-    mircore
-    ${MIR_COMMON_REFERENCES}
-    PkgConfig::XKBCOMMON
+    mirsharedlogging
+    mirsharedlttng
+    mirsharedsharedlibrary
+    mirsharedthread
+    mirevents
+    mirtime
 )
 
 

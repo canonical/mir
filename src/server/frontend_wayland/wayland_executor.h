@@ -17,8 +17,8 @@
 #ifndef MIR_FRONTEND_EXECUTOR_H
 #define MIR_FRONTEND_EXECUTOR_H
 
-#include "mir/executor.h"
-#include "mir/fd.h"
+#include <mir/executor.h>
+#include <mir/fd.h>
 
 #include <wayland-server-core.h>
 

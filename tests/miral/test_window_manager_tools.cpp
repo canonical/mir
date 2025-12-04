@@ -24,7 +24,7 @@
 #include <mir/shell/display_layout.h>
 #include <mir/shell/focus_controller.h>
 #include <mir/shell/persistent_surface_store.h>
-#include "mir/graphics/display_configuration_observer.h"
+#include <mir/graphics/display_configuration_observer.h>
 #include <mir/wayland/weak.h>
 
 #include <mir/test/doubles/stub_session.h>
@@ -164,13 +164,13 @@ struct MockWindowManagerPolicy : miral::CanonicalWindowManagerPolicy
     bool handle_pointer_event(MirPointerEvent const* /*event*/) { return false; }
     bool handle_keyboard_event(MirKeyboardEvent const* /*event*/) { return false; }
 
-    MOCK_METHOD1(advise_new_window, void (miral::WindowInfo const& window_info));
-    MOCK_METHOD2(advise_move_to, void(miral::WindowInfo const& window_info, mir::geometry::Point top_left));
-    MOCK_METHOD2(advise_resize, void(miral::WindowInfo const& window_info, mir::geometry::Size const& new_size));
-    MOCK_METHOD1(advise_raise, void(std::vector<miral::Window> const&));
-    MOCK_METHOD1(advise_output_create, void(miral::Output const&));
-    MOCK_METHOD2(advise_output_update, void(miral::Output const&, miral::Output const&));
-    MOCK_METHOD1(advise_output_delete, void(miral::Output const&));
+    MOCK_METHOD(void, advise_new_window, (miral::WindowInfo const& window_info), (override));
+    MOCK_METHOD(void, advise_move_to, (miral::WindowInfo const& window_info, mir::geometry::Point top_left), (override));
+    MOCK_METHOD(void, advise_resize, (miral::WindowInfo const& window_info, mir::geometry::Size const& new_size), (override));
+    MOCK_METHOD(void, advise_raise, (std::vector<miral::Window> const&), (override));
+    MOCK_METHOD(void, advise_output_create, (miral::Output const&), (override));
+    MOCK_METHOD(void, advise_output_update, (miral::Output const&, miral::Output const&), (override));
+    MOCK_METHOD(void, advise_output_delete, (miral::Output const&), (override));
 
     void handle_request_move(miral::WindowInfo& /*window_info*/, MirInputEvent const* /*input_event*/) {}
     void handle_request_resize(miral::WindowInfo& /*window_info*/, MirInputEvent const* /*input_event*/, MirResizeEdge /*edge*/) {}
@@ -292,7 +292,7 @@ auto mt::TestWindowManagerTools::create_surface(
 {
     // This type is Mir-internal, I hope we don't need to create it here
     std::shared_ptr<mir::scene::SurfaceObserver> const observer;
-    return session->create_surface(nullptr, {}, params, observer, nullptr);
+    return session->create_surface(nullptr, params, observer, nullptr);
 }
 
 auto mt::TestWindowManagerTools::create_fake_display_configuration(std::vector<miral::Rectangle> const& outputs)
@@ -378,7 +378,6 @@ auto mt::TestWindowManagerTools::create_and_select_window_for_session(
 
 auto mt::StubStubSession::create_surface(
     std::shared_ptr<mir::scene::Session> const& /*session*/,
-    mir::wayland::Weak<mir::frontend::WlSurface> const& /*wayland_surface*/,
     mir::shell::SurfaceSpecification const& params,
     std::shared_ptr<mir::scene::SurfaceObserver> const& /*observer*/,
     mir::Executor*) -> std::shared_ptr<mir::scene::Surface>

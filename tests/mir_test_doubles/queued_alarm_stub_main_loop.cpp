@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/test/doubles/queued_alarm_stub_main_loop.h"
-#include "mir/time/clock.h"
+#include <mir/test/doubles/queued_alarm_stub_main_loop.h>
+#include <mir/time/clock.h>
 
 namespace mtd = mir::test::doubles;
 

@@ -14,11 +14,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/event_printer.h"
+#include <mir/event_printer.h>
 
-#include "mir/events/event_private.h"
-#include "mir/events/window_placement_event.h"
-#include "mir/logging/input_timestamp.h"
+#include <mir/events/event_private.h>
+#include <mir/events/window_placement_event.h>
+#include <mir/logging/input_timestamp.h>
 
 std::ostream& mir::operator<<(std::ostream& out, MirInputEventModifier modifier)
 {

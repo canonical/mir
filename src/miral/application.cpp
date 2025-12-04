@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "miral/application.h"
+#include <miral/application.h>
 
 #include <mir/scene/session.h>
 #include <mir/log.h>

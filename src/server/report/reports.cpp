@@ -16,12 +16,12 @@
 
 #include "reports.h"
 
-#include "mir/default_server_configuration.h"
-#include "mir/options/option.h"
+#include <mir/default_server_configuration.h>
+#include <mir/options/option.h>
 #include "logging/display_configuration_report.h"
-#include "mir/observer_multiplexer.h"
-#include "mir/options/configuration.h"
-#include "mir/abnormal_exit.h"
+#include <mir/observer_multiplexer.h>
+#include <mir/options/configuration.h>
+#include <mir/abnormal_exit.h>
 
 #include "report_factory.h"
 #include "lttng_report_factory.h"

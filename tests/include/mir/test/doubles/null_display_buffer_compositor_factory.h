@@ -17,8 +17,8 @@
 #ifndef MIR_TEST_DOUBLES_NULL_DISPLAY_BUFFER_COMPOSITOR_FACTORY_H_
 #define MIR_TEST_DOUBLES_NULL_DISPLAY_BUFFER_COMPOSITOR_FACTORY_H_
 
-#include "mir/compositor/display_buffer_compositor_factory.h"
-#include "mir/compositor/display_buffer_compositor.h"
+#include <mir/compositor/display_buffer_compositor_factory.h>
+#include <mir/compositor/display_buffer_compositor.h>
 
 #include <thread>
 

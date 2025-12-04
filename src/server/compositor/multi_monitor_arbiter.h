@@ -18,10 +18,10 @@
 #ifndef MIR_COMPOSITOR_MULTI_MONITOR_ARBITER_H_
 #define MIR_COMPOSITOR_MULTI_MONITOR_ARBITER_H_
 
-#include "mir/compositor/compositor_id.h"
-#include "mir/compositor/buffer_stream.h"
-#include "mir/geometry/forward.h"
-#include "mir/synchronised.h"
+#include <mir/compositor/compositor_id.h>
+#include <mir/compositor/buffer_stream.h>
+#include <mir/geometry/forward.h>
+#include <mir/synchronised.h>
 #include <memory>
 #include <vector>
 #include <optional>

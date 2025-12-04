@@ -7,7 +7,6 @@ USAGE: ./check-and-update-debian-symbols.py LIB_DIR_PATH LIB_NAME LIB_VERSION AB
 To use: Go to your build folder and run "make check-miroil-symbols"""
 
 import sys
-from sys import stderr
 import os
 from os import path
 import subprocess

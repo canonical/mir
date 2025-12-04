@@ -21,7 +21,7 @@
 #include "wl_seat.h"
 #include "wl_surface.h"
 
-#include "mir/events/event.h"
+#include <mir/events/event.h>
 
 namespace mir
 {

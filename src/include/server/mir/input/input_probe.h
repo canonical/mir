@@ -17,7 +17,7 @@
 #ifndef MIR_INPUT_PROBE_H_
 #define MIR_INPUT_PROBE_H_
 
-#include "mir/module_deleter.h"
+#include <mir/module_deleter.h>
 
 #include <vector>
 

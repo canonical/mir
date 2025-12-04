@@ -17,13 +17,13 @@
 #ifndef MIR_INPUT_SEAT_INPUT_DEVICE_TRACKER_H
 #define MIR_INPUT_SEAT_INPUT_DEVICE_TRACKER_H
 
-#include "mir/input/touch_visualizer.h"
-#include "mir/geometry/point.h"
-#include "mir/geometry/rectangles.h"
-#include "mir/geometry/size.h"
-#include "mir/optional_value.h"
-#include "mir_toolkit/event.h"
-#include "mir/events/xkb_modifiers.h"
+#include <mir/input/touch_visualizer.h>
+#include <mir/geometry/point.h>
+#include <mir/geometry/rectangles.h>
+#include <mir/geometry/size.h>
+#include <mir/optional_value.h>
+#include <mir_toolkit/event.h>
+#include <mir/events/xkb_modifiers.h>
 
 #include <atomic>
 #include <unordered_map>

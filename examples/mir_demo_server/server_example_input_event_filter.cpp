@@ -16,8 +16,8 @@
 
 #include "server_example_input_event_filter.h"
 
-#include "mir/server.h"
-#include "mir/input/composite_event_filter.h"
+#include <mir/server.h>
+#include <mir/input/composite_event_filter.h>
 
 #include <linux/input.h>
 

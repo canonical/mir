@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_FD_UTILS_H_
 #define MIR_TEST_FD_UTILS_H_
 
-#include "mir/fd.h"
+#include <mir/fd.h>
 #include <chrono>
 
 #include <poll.h>

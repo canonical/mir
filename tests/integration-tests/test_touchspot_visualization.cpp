@@ -14,19 +14,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/input/touch_visualizer.h"
+#include <mir/input/touch_visualizer.h>
 
-#include "mir/input/device_capability.h"
-#include "mir/input/input_device_info.h"
+#include <mir/input/device_capability.h>
+#include <mir/input/input_device_info.h>
 
-#include "mir/test/barrier.h"
-#include "mir/test/fake_shared.h"
+#include <mir/test/barrier.h>
+#include <mir/test/fake_shared.h>
 
-#include "mir_test_framework/deferred_in_process_server.h"
-#include "mir_test_framework/input_testing_server_configuration.h"
-#include "mir_test_framework/executable_path.h"
-#include "mir_test_framework/fake_input_device.h"
-#include "mir_test_framework/stub_server_platform_factory.h"
+#include <mir_test_framework/deferred_in_process_server.h>
+#include <mir_test_framework/input_testing_server_configuration.h>
+#include <mir_test_framework/executable_path.h>
+#include <mir_test_framework/fake_input_device.h>
+#include <mir_test_framework/stub_server_platform_factory.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -84,9 +84,9 @@ MATCHER_P(TouchedSpotsAt, positions, "")
 
 struct MockTouchVisualizer : public mi::TouchVisualizer
 {
-    MOCK_METHOD1(visualize_touches, void(std::vector<mi::TouchVisualizer::Spot> const&));
-    MOCK_METHOD0(enable, void());
-    MOCK_METHOD0(disable, void());
+    MOCK_METHOD(void, visualize_touches, (std::vector<mi::TouchVisualizer::Spot> const&), (override));
+    MOCK_METHOD(void, enable, (), (override));
+    MOCK_METHOD(void, disable, (), (override));
 };
 
 struct ServerConfiguration : mtf::InputTestingServerConfiguration

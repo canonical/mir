@@ -17,8 +17,8 @@
 #ifndef MIR_COMPOSITOR_BASIC_SCREEN_SHOOTER_FACTORY_H
 #define MIR_COMPOSITOR_BASIC_SCREEN_SHOOTER_FACTORY_H
 
-#include "mir/compositor/screen_shooter_factory.h"
-#include "mir/graphics/platform.h"
+#include <mir/compositor/screen_shooter_factory.h>
+#include <mir/graphics/platform.h>
 
 namespace mir
 {

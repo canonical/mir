@@ -15,16 +15,16 @@
  */
 
 #include "src/server/graphics/software_cursor.h"
-#include "mir/graphics/cursor_image.h"
-#include "mir/graphics/renderable.h"
+#include <mir/graphics/cursor_image.h>
+#include <mir/graphics/renderable.h>
 
-#include "mir/test/doubles/stub_buffer_allocator.h"
-#include "mir/test/doubles/stub_buffer.h"
-#include "mir/test/doubles/stub_input_scene.h"
-#include "mir/test/doubles/explicit_executor.h"
-#include "mir/test/doubles/mock_input_scene.h"
+#include <mir/test/doubles/stub_buffer_allocator.h>
+#include <mir/test/doubles/stub_buffer.h>
+#include <mir/test/doubles/stub_input_scene.h>
+#include <mir/test/doubles/explicit_executor.h>
+#include <mir/test/doubles/mock_input_scene.h>
 
-#include "mir/test/fake_shared.h"
+#include <mir/test/fake_shared.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -105,8 +105,8 @@ public:
                     }));
     }
 
-    MOCK_METHOD2(alloc_software_buffer, std::shared_ptr<mg::Buffer>(geom::Size, MirPixelFormat));
-    MOCK_METHOD0(supported_pixel_formats, std::vector<MirPixelFormat>());
+    MOCK_METHOD(std::shared_ptr<mg::Buffer>, alloc_software_buffer, (geom::Size, MirPixelFormat), (override));
+    MOCK_METHOD(std::vector<MirPixelFormat>, supported_pixel_formats, (), (override));
 };
 
 class ExplicitExecutor : public mtd::ExplicitExecutor

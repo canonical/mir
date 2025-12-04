@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/input/buffer_keymap.h"
-#include "mir/input/parameter_keymap.h"
+#include <mir/input/buffer_keymap.h>
+#include <mir/input/parameter_keymap.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

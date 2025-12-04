@@ -17,11 +17,10 @@
 #ifndef MIR_SCENE_APPLICATION_SESSION_H_
 #define MIR_SCENE_APPLICATION_SESSION_H_
 
-#include "mir/scene/session.h"
+#include <mir/scene/session.h>
 
-#include "mir/observer_registrar.h"
+#include <mir/observer_registrar.h>
 
-#include <atomic>
 #include <set>
 #include <map>
 #include <mutex>
@@ -49,14 +48,12 @@ public:
         Fd socket_fd,
         std::string const& session_name,
         std::shared_ptr<SessionListener> const& session_listener,
-        std::shared_ptr<frontend::EventSink> const& sink,
         std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator);
 
     ~ApplicationSession();
 
     auto create_surface(
         std::shared_ptr<Session> const& session,
-        wayland::Weak<frontend::WlSurface> const& wayland_surface,
         shell::SurfaceSpecification const& params,
         std::shared_ptr<scene::SurfaceObserver> const& observer,
         Executor* observer_executor) -> std::shared_ptr<Surface> override;
@@ -71,8 +68,6 @@ public:
 
     void hide() override;
     void show() override;
-
-    void send_error(ClientVisibleError const& error) override;
 
     void start_prompt_session() override;
     void stop_prompt_session() override;
@@ -98,7 +93,6 @@ private:
     Fd socket_fd_;
     std::string const session_name;
     std::shared_ptr<SessionListener> const session_listener;
-    std::shared_ptr<frontend::EventSink> const event_sink;
     std::shared_ptr<graphics::GraphicBufferAllocator> const gralloc;
 
     std::vector<std::shared_ptr<Surface>> surfaces;

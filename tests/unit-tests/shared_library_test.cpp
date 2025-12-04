@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/shared_library.h"
+#include <mir/shared_library.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -22,7 +22,7 @@
 #include <boost/exception/diagnostic_information.hpp>
 #include <stdexcept>
 
-#include "mir_test_framework/executable_path.h"
+#include <mir_test_framework/executable_path.h>
 
 namespace mtf = mir_test_framework;
 using namespace testing;

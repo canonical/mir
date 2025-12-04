@@ -17,10 +17,10 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_BUFFER_H_
 #define MIR_TEST_DOUBLES_MOCK_BUFFER_H_
 
-#include "mir/graphics/buffer_basic.h"
-#include "mir/geometry/size.h"
-#include "mir/graphics/buffer_id.h"
-#include "mir/renderer/sw/pixel_source.h"
+#include <mir/graphics/buffer_basic.h>
+#include <mir/geometry/size.h>
+#include <mir/graphics/buffer_id.h>
+#include <mir/renderer/sw/pixel_source.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

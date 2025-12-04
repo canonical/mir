@@ -15,8 +15,8 @@
  */
 
 #include "platform.h"
-#include "mir/assert_module_entry_point.h"
-#include "mir/libname.h"
+#include <mir/assert_module_entry_point.h>
+#include <mir/libname.h>
 
 #include <memory>
 

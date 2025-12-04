@@ -16,10 +16,10 @@
 
 #include "prompt_session_manager_impl.h"
 
-#include "mir/scene/prompt_session_creation_parameters.h"
-#include "mir/scene/prompt_session_listener.h"
-#include "mir/scene/session.h"
-#include "mir/scene/session_container.h"
+#include <mir/scene/prompt_session_creation_parameters.h>
+#include <mir/scene/prompt_session_listener.h>
+#include <mir/scene/session.h>
+#include <mir/scene/session_container.h>
 #include "prompt_session_container.h"
 #include "prompt_session_impl.h"
 

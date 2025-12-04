@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "miral/wayland_extensions.h"
-#include "miral/window.h"
+#include <miral/wayland_extensions.h>
+#include <miral/window.h>
 
 #include <mir/abnormal_exit.h>
 #include <mir/frontend/wayland.h>

@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/graphics/buffer_basic.h"
+#include <mir/graphics/buffer_basic.h>
 #include <atomic>
 
 namespace mg = mir::graphics;

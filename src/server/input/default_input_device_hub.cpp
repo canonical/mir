@@ -17,23 +17,23 @@
 #include "default_input_device_hub.h"
 #include "default_device.h"
 
-#include "mir/input/input_device.h"
-#include "mir/input/input_device_observer.h"
-#include "mir/input/mir_pointer_config.h"
-#include "mir/input/mir_touchpad_config.h"
-#include "mir/input/mir_touchscreen_config.h"
-#include "mir/input/mir_keyboard_config.h"
-#include "mir/geometry/point.h"
-#include "mir/server_status_listener.h"
-#include "mir/dispatch/multiplexing_dispatchable.h"
-#include "mir/dispatch/action_queue.h"
-#include "mir/server_action_queue.h"
+#include <mir/input/input_device.h>
+#include <mir/input/input_device_observer.h>
+#include <mir/input/mir_pointer_config.h>
+#include <mir/input/mir_touchpad_config.h>
+#include <mir/input/mir_touchscreen_config.h>
+#include <mir/input/mir_keyboard_config.h>
+#include <mir/geometry/point.h>
+#include <mir/server_status_listener.h>
+#include <mir/dispatch/multiplexing_dispatchable.h>
+#include <mir/dispatch/action_queue.h>
+#include <mir/server_action_queue.h>
 #define MIR_LOG_COMPONENT "input-hub"
-#include "mir/log.h"
+#include <mir/log.h>
 
 #include "boost/throw_exception.hpp"
-#include "mir/input/led_observer_registrar.h"
-#include "mir/input/key_mapper.h"
+#include <mir/input/led_observer_registrar.h>
+#include <mir/input/key_mapper.h>
 
 #include <algorithm>
 #include <atomic>

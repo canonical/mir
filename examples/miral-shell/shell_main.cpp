@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "miral/locate_pointer.h"
-#include "miral/minimal_window_manager.h"
+#include <miral/locate_pointer.h>
+#include <miral/minimal_window_manager.h>
 #include "tiling_window_manager.h"
 #include "floating_window_manager.h"
 #include "wallpaper_config.h"
@@ -87,9 +87,8 @@ int main(int argc, char const* argv[])
         };
 
     MirRunner runner{argc, argv};
-    ApplicationSwitcher application_switcher;
 
-    runner.add_stop_callback([&] { shutdown_hook(); application_switcher.stop(); });
+    runner.add_stop_callback([&] { shutdown_hook(); });
 
     ExternalClientLauncher external_client_launcher;
 
@@ -317,80 +316,43 @@ int main(int argc, char const* argv[])
 
     auto const locate_pointer_filter = [&locate_pointer](auto const* keyboard_event)
     {
-            auto const keysym = mir_keyboard_event_keysym(keyboard_event);
-            if (keysym != XKB_KEY_Control_R && keysym != XKB_KEY_Control_L)
-                return false;
+        auto const keysym = mir_keyboard_event_keysym(keyboard_event);
+        auto const action = mir_keyboard_event_action(keyboard_event);
+        auto const modifiers = mir_keyboard_event_modifiers(keyboard_event);
 
-            switch (mir_keyboard_event_action(keyboard_event)) {
-                case mir_keyboard_action_down:
-                    locate_pointer.schedule_request();
-                    break;
-                case mir_keyboard_action_up:
-                    locate_pointer.cancel_request();
-                    break;
-
-                default:
-                    return false;
-            }
-
-            return false;
-    };
-
-    // The following filter triggers the application selector internal application
-    // on "Alt + Tab" and "Alt + Shift + Tab".
-    auto const application_switcher_filter = [application_switcher=application_switcher, is_running = false](MirKeyboardEvent const* key_event) mutable
-    {
-        if (mir_keyboard_event_action(key_event) == mir_keyboard_action_down)
+        auto only_ctrl_down = [modifiers]
         {
-            auto const modifiers = mir_keyboard_event_modifiers(key_event);
-            if (modifiers & mir_input_event_modifier_alt)
+            auto constexpr ctrls_mask = mir_input_event_modifier_ctrl | mir_input_event_modifier_ctrl_left |
+                                    mir_input_event_modifier_ctrl_right;
+            auto const any_ctrl_down = modifiers & ctrls_mask;
+            auto const any_other_modifier_down = modifiers & ~ctrls_mask;
+
+            return any_ctrl_down && !any_other_modifier_down;
+        }();
+
+
+        auto other_key_down = false;
+        // If ctrl is the only modifier pressed, make sure the keysym is also ctrl
+        if (only_ctrl_down)
+        {
+            switch (action)
             {
-                auto const scancode = mir_keyboard_event_scan_code(key_event);
-                if (modifiers & mir_input_event_modifier_shift)
-                {
-                    if (scancode == KEY_TAB)
-                    {
-                        application_switcher.prev_app();
-                        is_running = true;
-                        return true;
-                    }
-                    else if (scancode == KEY_GRAVE)
-                    {
-                        application_switcher.prev_window();
-                        is_running = true;
-                        return true;
-                    }
-                }
-                if (scancode == KEY_TAB)
-                {
-                    application_switcher.next_app();
-                    is_running = true;
-                    return true;
-                }
-                else if (scancode == KEY_GRAVE)
-                {
-                    application_switcher.next_window();
-                    is_running = true;
-                    return true;
-                }
-                else if (scancode == KEY_ESC && is_running)
-                {
-                    application_switcher.cancel();
-                    is_running = false;
-                    return true;
-                }
+            case mir_keyboard_action_down:
+                other_key_down = (keysym != XKB_KEY_Control_R && keysym != XKB_KEY_Control_L);
+                break;
+            case mir_keyboard_action_up:
+                only_ctrl_down = false;
+                break;
+
+            default:
+                break;
             }
         }
-        else if (mir_keyboard_event_action(key_event) == mir_keyboard_action_up)
-        {
-            auto const scancode = mir_keyboard_event_scan_code(key_event);
-            if ((scancode == KEY_LEFTALT || scancode == KEY_RIGHTALT) && is_running)
-            {
-                application_switcher.confirm();
-                is_running = false;
-                return true;
-            }
-        }
+
+        if (only_ctrl_down && !other_key_down)
+            locate_pointer.schedule_request();
+        else
+            locate_pointer.cancel_request();
 
         return false;
     };
@@ -429,7 +391,6 @@ int main(int argc, char const* argv[])
             cursor_scale,
             locate_pointer,
             AppendKeyboardEventFilter{locate_pointer_filter},
-            StartupInternalClient{application_switcher},
-            AppendKeyboardEventFilter{application_switcher_filter}
+            BasicApplicationSwitcher{}
         });
 }

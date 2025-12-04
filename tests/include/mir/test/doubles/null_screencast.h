@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_NULL_SCREENCAST_H_
 #define MIR_TEST_DOUBLES_NULL_SCREENCAST_H_
 
-#include "mir/frontend/screencast.h"
+#include <mir/frontend/screencast.h>
 
 namespace mir
 {

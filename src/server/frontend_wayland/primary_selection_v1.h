@@ -17,7 +17,7 @@
 #ifndef MIR_FRONTEND_PRIMARY_SELECTION_V1_H
 #define MIR_FRONTEND_PRIMARY_SELECTION_V1_H
 
-#include "mir/scene/data_exchange.h"
+#include <mir/scene/data_exchange.h>
 #include "primary-selection-unstable-v1_wrapper.h"
 
 namespace mir

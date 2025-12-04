@@ -21,7 +21,7 @@
 #include <mir/graphics/null_display_configuration_observer.h>
 
 #include "wayland_wrapper.h"
-#include "mir/wayland/weak.h"
+#include <mir/wayland/weak.h>
 
 #include <optional>
 #include <memory>

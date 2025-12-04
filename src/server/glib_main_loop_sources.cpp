@@ -14,9 +14,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/glib_main_loop_sources.h"
-#include "mir/lockable_callback.h"
-#include "mir/raii.h"
+#include <mir/glib_main_loop_sources.h>
+#include <mir/lockable_callback.h>
+#include <mir/raii.h>
 #include <mir/log.h>
 
 #include <algorithm>

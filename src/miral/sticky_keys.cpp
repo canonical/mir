@@ -14,13 +14,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "miral/sticky_keys.h"
-#include "miral/live_config.h"
-#include "mir/server.h"
-#include "mir/synchronised.h"
-#include "mir/input/event_builder.h"
-#include "mir/shell/accessibility_manager.h"
-#include "mir/shell/sticky_keys_transformer.h"
+#include <miral/sticky_keys.h>
+#include <miral/live_config.h>
+#include <mir/server.h>
+#include <mir/synchronised.h>
+#include <mir/input/event_builder.h>
+#include <mir/shell/accessibility_manager.h>
+#include <mir/shell/sticky_keys_transformer.h>
 
 namespace mi = mir::input;
 namespace msh = mir::shell;

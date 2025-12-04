@@ -15,12 +15,12 @@
  */
 
 #include "graphics_display_layout.h"
-#include "mir/graphics/display.h"
-#include "mir/graphics/display_sink.h"
+#include <mir/graphics/display.h>
+#include <mir/graphics/display_sink.h>
 
-#include "mir/geometry/rectangle.h"
-#include "mir/geometry/rectangles.h"
-#include "mir/geometry/displacement.h"
+#include <mir/geometry/rectangle.h>
+#include <mir/geometry/rectangles.h>
+#include <mir/geometry/displacement.h>
 
 namespace msh = mir::shell;
 namespace mg = mir::graphics;

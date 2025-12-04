@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "miral/live_config_ini_file.h"
+#include <miral/live_config_ini_file.h>
 
 #include <mir/log.h>
 

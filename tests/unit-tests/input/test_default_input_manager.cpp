@@ -16,12 +16,12 @@
 
 #include "src/server/input/default_input_manager.h"
 
-#include "mir/test/signal_actions.h"
-#include "mir/test/fake_shared.h"
-#include "mir/test/doubles/mock_input_platform.h"
+#include <mir/test/signal_actions.h>
+#include <mir/test/fake_shared.h>
+#include <mir/test/doubles/mock_input_platform.h>
 
-#include "mir/dispatch/multiplexing_dispatchable.h"
-#include "mir/dispatch/action_queue.h"
+#include <mir/dispatch/multiplexing_dispatchable.h>
+#include <mir/dispatch/action_queue.h>
 
 #include <sys/eventfd.h>
 

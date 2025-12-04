@@ -15,9 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/logging/shared_library_prober_report.h"
-#include "mir/logging/logger.h"
-#include "mir/log.h"
+#include <mir/logging/shared_library_prober_report.h>
+#include <mir/logging/logger.h>
+#include <mir/log.h>
 
 namespace ml = mir::logging;
 

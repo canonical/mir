@@ -14,18 +14,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/test/doubles/queued_alarm_stub_main_loop.h"
+#include <mir/test/doubles/queued_alarm_stub_main_loop.h>
 
-#include "mir/events/event_builders.h"
-#include "mir/events/pointer_event.h"
-#include "mir/geometry/forward.h"
-#include "mir/input/input_event_transformer.h"
-#include "mir/shell/mousekeys_transformer.h"
+#include <mir/events/event_builders.h>
+#include <mir/events/pointer_event.h>
+#include <mir/geometry/forward.h>
+#include <mir/input/input_event_transformer.h>
+#include <mir/shell/mousekeys_transformer.h>
 #include "src/server/input/default_event_builder.h"
 #include "src/server/shell/basic_mousekeys_transformer.h"
 
-#include "mir/test/doubles/advanceable_clock.h"
-#include "mir/test/fake_shared.h"
+#include <mir/test/doubles/advanceable_clock.h>
+#include <mir/test/fake_shared.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -63,7 +63,7 @@ struct TestMouseKeysTransformer : testing::Test
     mi::DefaultEventBuilder default_event_builder;
     std::function<void(std::shared_ptr<MirEvent> const& event)> dispatch;
 
-    MOCK_METHOD1(on_dispatch, void(std::shared_ptr<MirEvent> const& event));
+    MOCK_METHOD(void, on_dispatch, (std::shared_ptr<MirEvent> const& event), ());
 
     auto down_event(int button) const -> mir::EventUPtr
     {

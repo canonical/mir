@@ -17,14 +17,14 @@
 #include "touchspot_controller.h"
 #include "touchspot_image.c"
 
-#include "mir/geometry/displacement.h"
-#include "mir/graphics/graphic_buffer_allocator.h"
-#include "mir/graphics/buffer_properties.h"
-#include "mir/graphics/buffer.h"
-#include "mir/graphics/renderable.h"
-#include "mir/geometry/dimensions.h"
-#include "mir/input/scene.h"
-#include "mir/renderer/sw/pixel_source.h"
+#include <mir/geometry/displacement.h>
+#include <mir/graphics/graphic_buffer_allocator.h>
+#include <mir/graphics/buffer_properties.h>
+#include <mir/graphics/buffer.h>
+#include <mir/graphics/renderable.h>
+#include <mir/geometry/dimensions.h>
+#include <mir/input/scene.h>
+#include <mir/renderer/sw/pixel_source.h>
 
 namespace mi = mir::input;
 namespace mg = mir::graphics;

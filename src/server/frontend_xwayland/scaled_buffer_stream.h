@@ -17,7 +17,7 @@
 #ifndef MIR_FRONTEND_SCALED_BUFFER_STREAM_H
 #define MIR_FRONTEND_SCALED_BUFFER_STREAM_H
 
-#include "mir/compositor/buffer_stream.h"
+#include <mir/compositor/buffer_stream.h>
 
 namespace mir
 {

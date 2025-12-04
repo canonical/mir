@@ -17,7 +17,7 @@
 #ifndef MIR_GRAPHICS_GBM_KMS_DISPLAY_CONFIGURATION_H_
 #define MIR_GRAPHICS_GBM_KMS_DISPLAY_CONFIGURATION_H_
 
-#include "mir/graphics/display_configuration.h"
+#include <mir/graphics/display_configuration.h>
 #include <memory>
 
 namespace mir

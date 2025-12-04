@@ -17,8 +17,8 @@
 #ifndef MIR_CONSOLE_IOCTL_VT_SWITCHER_H
 #define MIR_CONSOLE_IOCTL_VT_SWITCHER_H
 
-#include "mir/console_services.h"
-#include "mir/fd.h"
+#include <mir/console_services.h>
+#include <mir/fd.h>
 
 namespace mir
 {

@@ -16,11 +16,11 @@
 
 #include <miroil/input_device.h>
 
-#include "mir/flags.h"
-#include "mir/input/device.h"
-#include "mir/input/mir_keyboard_config.h"
-#include "mir/input/parameter_keymap.h"
-#include "mir/version.h"
+#include <mir/flags.h>
+#include <mir/input/device.h>
+#include <mir/input/mir_keyboard_config.h>
+#include <mir/input/parameter_keymap.h>
+#include <mir/version.h>
 
 miroil::InputDevice::InputDevice(std::shared_ptr<mir::input::Device> const& device)
 : device(device)

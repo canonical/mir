@@ -14,28 +14,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/server.h"
+#include <mir/server.h>
 
-#include "mir/emergency_cleanup.h"
-#include "mir/fd.h"
-#include "mir/frontend/connector.h"
-#include "mir/frontend/wayland.h"
-#include "mir/graphics/graphic_buffer_allocator.h"
-#include "mir/graphics/display_sink.h"
-#include "mir/input/composite_event_filter.h"
-#include "mir/input/event_filter.h"
-#include "mir/options/default_configuration.h"
-#include "mir/default_server_configuration.h"
-#include "mir/logging/logger.h"
-#include "mir/log.h"
-#include "mir/main_loop.h"
-#include "mir/report_exception.h"
-#include "mir/run_mir.h"
+#include <mir/emergency_cleanup.h>
+#include <mir/fd.h>
+#include <mir/frontend/connector.h>
+#include <mir/frontend/wayland.h>
+#include <mir/graphics/graphic_buffer_allocator.h>
+#include <mir/graphics/display_sink.h>
+#include <mir/input/composite_event_filter.h>
+#include <mir/input/event_filter.h>
+#include <mir/options/default_configuration.h>
+#include <mir/default_server_configuration.h>
+#include <mir/logging/logger.h>
+#include <mir/log.h>
+#include <mir/main_loop.h>
+#include <mir/report_exception.h>
+#include <mir/run_mir.h>
 
 // TODO these are used to frig a stub renderer when running headless
-#include "mir/renderer/renderer.h"
-#include "mir/graphics/renderable.h"
-#include "mir/renderer/renderer_factory.h"
+#include <mir/renderer/renderer.h>
+#include <mir/graphics/renderable.h>
+#include <mir/renderer/renderer_factory.h>
 
 #include "frontend_wayland/wayland_connector.h"
 #include <iostream>

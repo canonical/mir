@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "miral/external_client.h"
+#include <miral/external_client.h>
 
 #include "launch_app.h"
 #include "open_desktop_entry.h"

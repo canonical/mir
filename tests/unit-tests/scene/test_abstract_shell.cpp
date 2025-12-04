@@ -14,42 +14,41 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/shell/abstract_shell.h"
+#include <mir/shell/abstract_shell.h>
 
-#include "mir/events/event_builders.h"
-#include "mir/scene/session.h"
-#include "mir/scene/null_session_listener.h"
-#include "mir/scene/session_container.h"
-#include "mir/scene/surface_factory.h"
-#include "mir/graphics/display_configuration_observer.h"
-#include "mir/wayland/weak.h"
+#include <mir/events/event_builders.h>
+#include <mir/scene/session.h>
+#include <mir/scene/null_session_listener.h>
+#include <mir/scene/session_container.h>
+#include <mir/scene/surface_factory.h>
+#include <mir/graphics/display_configuration_observer.h>
+#include <mir/wayland/weak.h>
 
 #include "src/server/report/null/shell_report.h"
 #include "src/include/server/mir/scene/session_event_sink.h"
 #include "src/server/scene/session_manager.h"
 #include "src/server/shell/decoration/null_manager.h"
 
-#include "mir/test/doubles/mock_window_manager.h"
-#include "mir/test/doubles/mock_surface_stack.h"
-#include "mir/test/doubles/mock_surface.h"
-#include "mir/test/doubles/stub_surface.h"
-#include "mir/test/doubles/null_event_sink.h"
-#include "mir/test/doubles/null_prompt_session_manager.h"
-#include "mir/test/doubles/stub_input_targeter.h"
-#include "mir/test/doubles/stub_buffer_allocator.h"
-#include "mir/test/doubles/stub_display.h"
-#include "mir/test/doubles/mock_input_seat.h"
-#include "mir/test/doubles/stub_observer_registrar.h"
+#include <mir/test/doubles/mock_window_manager.h>
+#include <mir/test/doubles/mock_surface_stack.h>
+#include <mir/test/doubles/mock_surface.h>
+#include <mir/test/doubles/stub_surface.h>
+#include <mir/test/doubles/null_event_sink.h>
+#include <mir/test/doubles/null_prompt_session_manager.h>
+#include <mir/test/doubles/stub_input_targeter.h>
+#include <mir/test/doubles/stub_buffer_allocator.h>
+#include <mir/test/doubles/stub_display.h>
+#include <mir/test/doubles/mock_input_seat.h>
+#include <mir/test/doubles/stub_observer_registrar.h>
 
-#include "mir/test/fake_shared.h"
-#include "mir/test/event_matchers.h"
-#include "mir/test/make_surface_spec.h"
+#include <mir/test/fake_shared.h>
+#include <mir/test/event_matchers.h>
+#include <mir/test/make_surface_spec.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 namespace mf = mir::frontend;
-namespace mw = mir::wayland;
 namespace mi = mir::input;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
@@ -122,7 +121,6 @@ struct MockSurfaceFactory : public ms::SurfaceFactory
         std::shared_ptr<ms::Surface>,
         create_surface,
         (std::shared_ptr<ms::Session> const&,
-         mw::Weak<mf::WlSurface> const&,
          std::list<ms::StreamInfo> const&,
          msh::SurfaceSpecification const&));
 };
@@ -130,6 +128,8 @@ struct MockSurfaceFactory : public ms::SurfaceFactory
 struct MockDecorationManager : public msh::decoration::NullManager
 {
     MOCK_METHOD(void, decorate, (std::shared_ptr<ms::Surface> const&));
+    MOCK_METHOD(
+        geom::Size, compute_size_with_decorations, (geom::Size content_size, MirWindowType type, MirWindowState state));
 };
 
 using NiceMockWindowManager = NiceMock<mtd::MockWindowManager>;
@@ -174,7 +174,7 @@ struct AbstractShell : Test
             WillByDefault(Invoke(&session_manager, &MockSessionManager::unmocked_set_focus_to));
         ON_CALL(mock_surface, size())
             .WillByDefault(Return(geom::Size{}));
-        ON_CALL(surface_factory, create_surface(_, _, _, _))
+        ON_CALL(surface_factory, create_surface(_, _, _))
             .WillByDefault(Return(mt::fake_shared(mock_surface)));
         ON_CALL(seat, create_device_state())
             .WillByDefault(Invoke(
@@ -192,11 +192,10 @@ struct AbstractShell : Test
             __LINE__,
             mir::Fd{mir::Fd::invalid},
             "Foo");
-        EXPECT_CALL(surface_factory, create_surface(_, _, _, _))
+        EXPECT_CALL(surface_factory, create_surface(_, _, _))
             .WillOnce(Return(mt::fake_shared(surface)));
         return shell.create_surface(
             session,
-            {},
             mt::make_surface_spec(session->create_buffer_stream(properties)),
             nullptr,
             nullptr);
@@ -248,17 +247,17 @@ TEST_F(AbstractShell, close_session_removes_existing_session_surfaces_from_windo
     mtd::StubSurface surface1;
     mtd::StubSurface surface2;
     mtd::StubSurface surface3;
-    EXPECT_CALL(surface_factory, create_surface(_, _, _, _)).
+    EXPECT_CALL(surface_factory, create_surface(_, _, _)).
         WillOnce(Return(mt::fake_shared(surface1))).
         WillOnce(Return(mt::fake_shared(surface2))).
         WillOnce(Return(mt::fake_shared(surface3)));
 
     auto const session = shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "XPlane");
-    auto const created_surface1 = shell.create_surface(session, {},
+    auto const created_surface1 = shell.create_surface(session,
         mt::make_surface_spec(session->create_buffer_stream(properties)), nullptr, nullptr);
-    auto const created_surface2 = shell.create_surface(session, {},
+    auto const created_surface2 = shell.create_surface(session,
         mt::make_surface_spec(session->create_buffer_stream(properties)), nullptr, nullptr);
-    auto const created_surface3 = shell.create_surface(session, {},
+    auto const created_surface3 = shell.create_surface(session,
         mt::make_surface_spec(session->create_buffer_stream(properties)), nullptr, nullptr);
 
     session->destroy_surface(created_surface2);
@@ -280,7 +279,7 @@ TEST_F(AbstractShell, create_surface_provides_create_parameters_to_window_manage
     auto params = mt::make_surface_spec(session->create_buffer_stream(properties));
     EXPECT_CALL(*wm, add_surface(session, params, _));
 
-    shell.create_surface(session, {}, params, nullptr, nullptr);
+    shell.create_surface(session, params, nullptr, nullptr);
 }
 
 TEST_F(AbstractShell, create_surface_allows_window_manager_to_set_create_parameters)
@@ -300,7 +299,7 @@ TEST_F(AbstractShell, create_surface_allows_window_manager_to_set_create_paramet
             std::function<std::shared_ptr<ms::Surface>(std::shared_ptr<ms::Session> const& session, msh::SurfaceSpecification const&)> const& build)
             { return build(session, params); }));
 
-    shell.create_surface(session, {}, params, nullptr, nullptr);
+    shell.create_surface(session, params, nullptr, nullptr);
 }
 
 TEST_F(AbstractShell, create_surface_allows_window_manager_to_enable_ssd)
@@ -325,7 +324,7 @@ TEST_F(AbstractShell, create_surface_allows_window_manager_to_enable_ssd)
                 return build(session, modified_params);
             }));
 
-    shell.create_surface(session, {}, params, nullptr, nullptr);
+    shell.create_surface(session, params, nullptr, nullptr);
 }
 
 TEST_F(AbstractShell, create_surface_allows_window_manager_to_disable_ssd)
@@ -351,7 +350,7 @@ TEST_F(AbstractShell, create_surface_allows_window_manager_to_disable_ssd)
                 return build(session, modified_params);
             }));
 
-    shell.create_surface(session, {}, params, nullptr, nullptr);
+    shell.create_surface(session, params, nullptr, nullptr);
 }
 
 TEST_F(AbstractShell, create_surface_sets_surfaces_session)
@@ -361,12 +360,12 @@ TEST_F(AbstractShell, create_surface_sets_surfaces_session)
     std::shared_ptr<ms::Session> session =
         shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "XPlane");
 
-    EXPECT_CALL(surface_factory, create_surface(session, _, _, _)).
+    EXPECT_CALL(surface_factory, create_surface(session, _, _)).
         WillOnce(Return(mock_surface));
 
     auto params = mt::make_surface_spec(session->create_buffer_stream(properties));
 
-    shell.create_surface(session, {}, params, nullptr, nullptr);
+    shell.create_surface(session, params, nullptr, nullptr);
 }
 
 TEST_F(AbstractShell, destroy_surface_removes_surface_from_window_manager)
@@ -375,7 +374,7 @@ TEST_F(AbstractShell, destroy_surface_removes_surface_from_window_manager)
         shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "XPlane");
     auto const params = mt::make_surface_spec(session->create_buffer_stream(properties));
 
-    auto const surface = shell.create_surface(session, {}, params, nullptr, nullptr);
+    auto const surface = shell.create_surface(session, params, nullptr, nullptr);
 
     EXPECT_CALL(*wm, remove_surface(session, WeakPtrTo(surface)));
 
@@ -493,8 +492,8 @@ TEST_F(AbstractShell, as_focus_controller_focus_next_session_notifies_session_ev
     auto session1 = shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "Bla");
     auto const params = mt::make_surface_spec(session->create_buffer_stream(properties));
     auto const params2 = mt::make_surface_spec(session->create_buffer_stream(properties));
-    shell.create_surface(session, {}, params, nullptr, nullptr);
-    shell.create_surface(session1, {}, params2, nullptr, nullptr);
+    shell.create_surface(session, params, nullptr, nullptr);
+    shell.create_surface(session1, params2, nullptr, nullptr);
 
     focus_controller.set_focus_to(session, {});
 
@@ -509,8 +508,8 @@ TEST_F(AbstractShell, as_focus_controller_focused_session_follows_focus)
     auto session1 = shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "Bla");
     auto const params = mt::make_surface_spec(session->create_buffer_stream(properties));
     auto const params2 = mt::make_surface_spec(session->create_buffer_stream(properties));
-    shell.create_surface(session, {}, params, nullptr, nullptr);
-    shell.create_surface(session1, {}, params2, nullptr, nullptr);
+    shell.create_surface(session, params, nullptr, nullptr);
+    shell.create_surface(session1, params2, nullptr, nullptr);
 
     msh::FocusController& focus_controller = shell;
 
@@ -527,14 +526,14 @@ TEST_F(AbstractShell, as_focus_controller_focused_surface_follows_focus)
     auto const session0 = shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "XPlane");
     auto const session1 = shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "Bla");
     ON_CALL(mock_surface1, size()).WillByDefault(Return(geom::Size{}));
-    EXPECT_CALL(surface_factory, create_surface(_, _, _, _)).Times(AnyNumber())
+    EXPECT_CALL(surface_factory, create_surface(_, _, _)).Times(AnyNumber())
         .WillOnce(Return(mt::fake_shared(mock_surface1)))
         .WillOnce(Return(mt::fake_shared(mock_surface)));
 
     auto const params0 = mt::make_surface_spec(session0->create_buffer_stream(properties));
     auto const params1 = mt::make_surface_spec(session1->create_buffer_stream(properties));
-    auto const surface0 = shell.create_surface(session0, {}, params0, nullptr, nullptr);
-    auto const surface1 = shell.create_surface(session1, {}, params1, nullptr, nullptr);
+    auto const surface0 = shell.create_surface(session0, params0, nullptr, nullptr);
+    auto const surface1 = shell.create_surface(session1, params1, nullptr, nullptr);
 
     msh::FocusController& focus_controller = shell;
 
@@ -571,9 +570,9 @@ TEST_F(AbstractShell, as_focus_controller_focus_next_session_skips_surfaceless_s
     auto session1 = shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "Surfaceless");
     auto session2 = shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "Bla");
     auto const params = mt::make_surface_spec(session->create_buffer_stream(properties));
-    auto created_surface = shell.create_surface(session, {}, params, nullptr, nullptr);
+    auto created_surface = shell.create_surface(session, params, nullptr, nullptr);
     auto const params2 = mt::make_surface_spec(session2->create_buffer_stream(properties));
-    shell.create_surface(session2, {}, params2, nullptr, nullptr);
+    shell.create_surface(session2, params2, nullptr, nullptr);
 
     focus_controller.set_focus_to(session, created_surface);
 
@@ -589,7 +588,7 @@ TEST_F(AbstractShell,
     auto session = shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "XPlane");
     auto session1 = shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "Surfaceless");
     auto creation_params = mt::make_surface_spec(session->create_buffer_stream(properties));
-    auto surface = shell.create_surface(session, {}, creation_params, nullptr, nullptr);
+    auto surface = shell.create_surface(session, creation_params, nullptr, nullptr);
 
     focus_controller.set_focus_to(session, surface);
 
@@ -606,7 +605,7 @@ TEST_F(AbstractShell, modify_surface_with_only_streams_doesnt_call_into_wm)
         shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "XPlane");
 
     auto creation_params = mt::make_surface_spec(session->create_buffer_stream(properties));
-    auto surface = shell.create_surface(session, {}, creation_params, nullptr, nullptr);
+    auto surface = shell.create_surface(session, creation_params, nullptr, nullptr);
 
     msh::SurfaceSpecification stream_modification;
     stream_modification.streams = std::vector<msh::StreamSpecification>{};
@@ -623,7 +622,7 @@ TEST_F(AbstractShell, modify_surface_does_not_call_wm_for_empty_changes)
 
     auto creation_params = mt::make_surface_spec(session->create_buffer_stream(properties));
 
-    auto surface = shell.create_surface(session, {}, creation_params, nullptr, nullptr);
+    auto surface = shell.create_surface(session, creation_params, nullptr, nullptr);
 
     msh::SurfaceSpecification stream_modification;
 
@@ -646,7 +645,7 @@ TEST_F(AbstractShell, size_gets_adjusted_for_windows_with_margins)
         shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "XPlane");
 
     auto creation_params = mt::make_surface_spec(session->create_buffer_stream(properties));
-    auto surface = shell.create_surface(session, {}, creation_params, nullptr, nullptr);
+    auto surface = shell.create_surface(session, creation_params, nullptr, nullptr);
     surface->resize({50, 50});
     surface->set_window_margins(top, left, bottom, right);
 
@@ -677,7 +676,7 @@ TEST_F(AbstractShell, max_size_gets_adjusted_for_windows_with_margins)
         shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "XPlane");
 
     auto creation_params = mt::make_surface_spec(session->create_buffer_stream(properties));
-    auto surface = shell.create_surface(session, {}, creation_params, nullptr, nullptr);
+    auto surface = shell.create_surface(session, creation_params, nullptr, nullptr);
     surface->resize({50, 50});
     surface->set_window_margins(top, left, bottom, right);
 
@@ -708,7 +707,7 @@ TEST_F(AbstractShell, min_size_gets_adjusted_for_windows_with_margins)
         shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "XPlane");
 
     auto creation_params = mt::make_surface_spec(session->create_buffer_stream(properties));
-    auto surface = shell.create_surface(session, {}, creation_params, nullptr, nullptr);
+    auto surface = shell.create_surface(session, creation_params, nullptr, nullptr);
     surface->resize({50, 50});
     surface->set_window_margins(top, left, bottom, right);
 
@@ -740,7 +739,7 @@ TEST_F(AbstractShell, aux_rect_gets_adjusted_for_windows_with_margins)
         shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "XPlane");
 
     auto creation_params = mt::make_surface_spec(session->create_buffer_stream(properties));
-    auto surface = shell.create_surface(session, {}, creation_params, nullptr, nullptr);
+    auto surface = shell.create_surface(session, creation_params, nullptr, nullptr);
     surface->resize(content_size);
     surface->set_window_margins(top, left, bottom, right);
 
@@ -766,7 +765,7 @@ TEST_F(AbstractShell, when_remaining_session_has_no_surface_focus_next_session_d
             shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "another_session");
 
         auto creation_params = mt::make_surface_spec(another_session->create_buffer_stream(properties));
-        auto surface = shell.create_surface(another_session, {}, creation_params, nullptr, nullptr);
+        auto surface = shell.create_surface(another_session, creation_params, nullptr, nullptr);
 
         shell.set_focus_to(another_session, surface);
 
@@ -778,15 +777,15 @@ TEST_F(AbstractShell, when_remaining_session_has_no_surface_focus_next_session_d
 
 TEST_F(AbstractShell, focus_can_be_set)
 {
-    EXPECT_CALL(surface_factory, create_surface(_, _, _, _)).Times(AnyNumber())
+    EXPECT_CALL(surface_factory, create_surface(_, _, _)).Times(AnyNumber())
         .WillOnce(Return(mt::fake_shared(mock_surface1)))
         .WillOnce(Return(mt::fake_shared(mock_surface)));
 
     msh::FocusController& focus_controller = shell;
     auto const session = shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "XPlane");
     auto const params = mt::make_surface_spec(session->create_buffer_stream(properties));
-    auto const created_surface1 = shell.create_surface(session, {}, params, nullptr, nullptr);
-    auto const created_surface2 = shell.create_surface(session, {}, params, nullptr, nullptr);
+    auto const created_surface1 = shell.create_surface(session, params, nullptr, nullptr);
+    auto const created_surface2 = shell.create_surface(session, params, nullptr, nullptr);
 
     focus_controller.set_focus_to(session, created_surface2);
     EXPECT_THAT(created_surface1->focus_state(), Eq(mir_window_focus_state_unfocused));
@@ -801,7 +800,7 @@ TEST_F(AbstractShell, setting_focus_to_child_makes_parent_active)
 {
     ON_CALL(mock_surface1, parent())
         .WillByDefault(Return(mt::fake_shared(mock_surface)));
-    EXPECT_CALL(surface_factory, create_surface(_, _, _, _)).Times(AnyNumber())
+    EXPECT_CALL(surface_factory, create_surface(_, _, _)).Times(AnyNumber())
         .WillOnce(Return(mt::fake_shared(mock_surface)))
         .WillOnce(Return(mt::fake_shared(mock_surface1)))
         .WillOnce(Return(mt::fake_shared(mock_surface2)));
@@ -809,9 +808,9 @@ TEST_F(AbstractShell, setting_focus_to_child_makes_parent_active)
     msh::FocusController& focus_controller = shell;
     auto const session = shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "XPlane");
     auto const params = mt::make_surface_spec(session->create_buffer_stream(properties));
-    auto const parent_surface = shell.create_surface(session, {}, params, nullptr, nullptr);
-    auto const child_surface = shell.create_surface(session, {}, params, nullptr, nullptr);
-    auto const other_surface = shell.create_surface(session, {}, params, nullptr, nullptr);
+    auto const parent_surface = shell.create_surface(session, params, nullptr, nullptr);
+    auto const child_surface = shell.create_surface(session, params, nullptr, nullptr);
+    auto const other_surface = shell.create_surface(session, params, nullptr, nullptr);
 
     ASSERT_THAT(child_surface->parent(), Eq(parent_surface));
 
@@ -1037,7 +1036,7 @@ TEST_F(AbstractShell, popup_grab_tree_can_be_set_based_on_child)
 // Regression test for https://github.com/canonical/mir/issues/2279
 TEST_F(AbstractShell, focus_next_session_allows_later_focusing_same_window)
 {
-    EXPECT_CALL(surface_factory, create_surface(_, _, _, _)).Times(AnyNumber())
+    EXPECT_CALL(surface_factory, create_surface(_, _, _)).Times(AnyNumber())
         .WillOnce(Return(mt::fake_shared(mock_surface1)))
         .WillOnce(Return(mt::fake_shared(mock_surface)));
 
@@ -1045,9 +1044,9 @@ TEST_F(AbstractShell, focus_next_session_allows_later_focusing_same_window)
     auto session1 = shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "XPlane");
     auto session2 = shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "Bla");
     auto const params1 = mt::make_surface_spec(session1->create_buffer_stream(properties));
-    auto created_surface1 = shell.create_surface(session1, {}, params1, nullptr, nullptr);
+    auto created_surface1 = shell.create_surface(session1, params1, nullptr, nullptr);
     auto const params2 = mt::make_surface_spec(session2->create_buffer_stream(properties));
-    auto created_surface2 = shell.create_surface(session2, {}, params2, nullptr, nullptr);
+    auto created_surface2 = shell.create_surface(session2, params2, nullptr, nullptr);
 
     focus_controller.set_focus_to(session1, created_surface1);
     focus_controller.focus_next_session();
@@ -1088,8 +1087,206 @@ TEST_F(AbstractShell, as_focus_controller_emits_input_device_state_event_on_focu
 
     auto session = shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "some");
     auto creation_params = mt::make_surface_spec(session->create_buffer_stream(properties));
-    auto surface = shell.create_surface(session, {}, creation_params, nullptr, nullptr);
+    auto surface = shell.create_surface(session, creation_params, nullptr, nullptr);
 
     msh::FocusController& focus_controller = shell;
     focus_controller.set_focus_to(session, surface);
 }
+struct SsdConstraintsParams
+{
+    bool set_width;
+    bool set_height;
+    bool set_min_size;
+    bool set_max_size;
+};
+
+class SsdSizeConstraintsTest : public AbstractShell, public WithParamInterface<SsdConstraintsParams>
+{
+};
+
+TEST_P(SsdSizeConstraintsTest, adjusts_size_constraints_when_ssd_enabled)
+{
+    auto const& p = GetParam();
+
+    auto session = shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "TestSession");
+    auto params = mt::make_surface_spec(session->create_buffer_stream(properties));
+
+    params.server_side_decorated = true;
+
+    int const w_val = 800;
+    int const h_val = 600;
+    int const min_w = 100;
+    int const min_h = 100;
+    int const max_w = 2000;
+    int const max_h = 2000;
+
+    if (p.set_width)
+        params.width = geom::Width{w_val};
+
+    if (p.set_height)
+        params.height = geom::Height{h_val};
+
+    if (p.set_min_size)
+    {
+        params.min_width = geom::Width{min_w};
+        params.min_height = geom::Height{min_h};
+    }
+
+    if (p.set_max_size)
+    {
+        params.max_width = geom::Width{max_w};
+        params.max_height = geom::Height{max_h};
+    }
+
+    geom::Size const padding{20, 30};
+
+    EXPECT_CALL(decoration_manager, compute_size_with_decorations(_, _, _))
+
+        .WillRepeatedly(
+            Invoke([padding](geom::Size const& content, MirWindowType, MirWindowState)
+                   { return geom::Size{content.width + padding.width, content.height + padding.height}; }));
+
+    msh::SurfaceSpecification captured_spec;
+    EXPECT_CALL(*wm, add_surface(session, _, _))
+        .WillOnce(Invoke(
+            [&](auto, auto spec, auto)
+            {
+                captured_spec = spec;
+                return std::make_shared<NiceMock<mtd::MockSurface>>();
+            }));
+
+    shell.create_surface(session, params, nullptr, nullptr);
+
+    if (p.set_width)
+        EXPECT_THAT(captured_spec.width.value(), Eq(geom::Width{w_val} + padding.width));
+    else
+        EXPECT_FALSE(captured_spec.width.is_set());
+
+    if (p.set_height)
+        EXPECT_THAT(captured_spec.height.value(), Eq(geom::Height{h_val} + padding.height));
+    else
+        EXPECT_FALSE(captured_spec.height.is_set());
+
+    if (p.set_min_size)
+    {
+        EXPECT_THAT(captured_spec.min_width.value(), Eq(geom::Width{min_w} + padding.width));
+        EXPECT_THAT(captured_spec.min_height.value(), Eq(geom::Height{min_h} + padding.height));
+    }
+    else
+    {
+        EXPECT_FALSE(captured_spec.min_width.is_set());
+        EXPECT_FALSE(captured_spec.min_height.is_set());
+    }
+
+    if (p.set_max_size)
+    {
+        EXPECT_THAT(captured_spec.max_width.value(), Eq(geom::Width{max_w} + padding.width));
+        EXPECT_THAT(captured_spec.max_height.value(), Eq(geom::Height{max_h} + padding.height));
+    }
+    else
+    {
+        EXPECT_FALSE(captured_spec.max_width.is_set());
+        EXPECT_FALSE(captured_spec.max_height.is_set());
+    }
+
+}
+
+TEST_P(SsdSizeConstraintsTest, does_not_adjust_size_constraints_when_ssd_disabled)
+{
+    auto const& p = GetParam();
+
+    auto session = shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "TestSession");
+    auto params = mt::make_surface_spec(session->create_buffer_stream(properties));
+
+    params.server_side_decorated = false;
+
+    int const w_val = 800;
+    int const h_val = 600;
+    int const min_w = 100;
+    int const min_h = 100;
+    int const max_w = 2000;
+    int const max_h = 2000;
+
+    if (p.set_width)
+        params.width = geom::Width{w_val};
+
+    if (p.set_height)
+        params.height = geom::Height{h_val};
+
+    if (p.set_min_size)
+    {
+        params.min_width = geom::Width{min_w};
+        params.min_height = geom::Height{min_h};
+    }
+
+    if (p.set_max_size)
+    {
+        params.max_width = geom::Width{max_w};
+        params.max_height = geom::Height{max_h};
+    }
+
+    EXPECT_CALL(decoration_manager, compute_size_with_decorations(_, _, _)).Times(0);
+
+    msh::SurfaceSpecification captured_spec;
+    EXPECT_CALL(*wm, add_surface(session, _, _))
+        .WillOnce(Invoke(
+            [&](auto, auto spec, auto)
+            {
+                captured_spec = spec;
+                return std::make_shared<NiceMock<mtd::MockSurface>>();
+            }));
+
+    shell.create_surface(session, params, nullptr, nullptr);
+
+    if (p.set_width)
+        EXPECT_THAT(captured_spec.width.value(), Eq(geom::Width{w_val}));
+    else
+        EXPECT_FALSE(captured_spec.width.is_set());
+
+    if (p.set_height)
+        EXPECT_THAT(captured_spec.height.value(), Eq(geom::Height{h_val}));
+    else
+        EXPECT_FALSE(captured_spec.height.is_set());
+
+    if (p.set_min_size)
+    {
+        EXPECT_THAT(captured_spec.min_width.value(), Eq(geom::Width{min_w}));
+        EXPECT_THAT(captured_spec.min_height.value(), Eq(geom::Height{min_h}));
+    }
+    else
+    {
+        EXPECT_FALSE(captured_spec.min_width.is_set());
+        EXPECT_FALSE(captured_spec.min_height.is_set());
+    }
+
+    if (p.set_max_size)
+    {
+        EXPECT_THAT(captured_spec.max_width.value(), Eq(geom::Width{max_w}));
+        EXPECT_THAT(captured_spec.max_height.value(), Eq(geom::Height{max_h}));
+    }
+    else
+    {
+        EXPECT_FALSE(captured_spec.max_width.is_set());
+        EXPECT_FALSE(captured_spec.max_height.is_set());
+    }
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    SsdSizeConstraints,
+    SsdSizeConstraintsTest,
+    testing::Values(
+        SsdConstraintsParams{.set_width = false, .set_height = false, .set_min_size = false, .set_max_size = false},
+        SsdConstraintsParams{.set_width = true, .set_height = true, .set_min_size = true, .set_max_size = true},
+        SsdConstraintsParams{.set_width = true, .set_height = false, .set_min_size = false, .set_max_size = false},
+        SsdConstraintsParams{.set_width = false, .set_height = true, .set_min_size = false, .set_max_size = false},
+        SsdConstraintsParams{.set_width = false, .set_height = false, .set_min_size = true, .set_max_size = false},
+        SsdConstraintsParams{.set_width = false, .set_height = false, .set_min_size = false, .set_max_size = true}),
+    [](TestParamInfo<SsdConstraintsParams> const& info)
+    {
+        return std::format(
+            "width_{}_height_{}_min_size_{}_max_size_{}",
+            info.param.set_width ? "set" : "unset",
+            info.param.set_height ? "set" : "unset",
+            info.param.set_min_size ? "set" : "unset",
+            info.param.set_max_size ? "set" : "unset");
+    });

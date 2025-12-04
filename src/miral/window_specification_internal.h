@@ -17,7 +17,7 @@
 #ifndef MIR_WINDOW_SPECIFICATION_INTERNAL_H
 #define MIR_WINDOW_SPECIFICATION_INTERNAL_H
 
-#include "miral/window_specification.h"
+#include <miral/window_specification.h>
 #include <mir/shell/surface_specification.h>
 
 namespace miral

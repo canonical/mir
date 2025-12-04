@@ -14,13 +14,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/graphics/graphic_buffer_allocator.h"
-#include "mir/test/doubles/stub_buffer_allocator.h"
+#include <mir/graphics/graphic_buffer_allocator.h>
+#include <mir/test/doubles/stub_buffer_allocator.h>
 #include "src/server/shell/decoration/basic_manager.h"
 #include "src/server/shell/decoration/decoration.h"
 
-#include "mir/test/doubles/stub_observer_registrar.h"
-#include "mir/test/doubles/stub_shell.h"
+#include <mir/test/doubles/stub_observer_registrar.h>
+#include <mir/test/doubles/stub_shell.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -54,9 +54,9 @@ struct DecorationBasicManager
     }
 
     // user needs to wrap the raw pointer in a unique_ptr because GTest is dumb
-    MOCK_METHOD0(build_decoration, msd::Decoration*());
+    MOCK_METHOD(msd::Decoration*, build_decoration, (), ());
 
-    MOCK_METHOD1(decoration_destroyed, void(msd::Decoration*));
+    MOCK_METHOD(void, decoration_destroyed, (msd::Decoration*), ());
 
     std::shared_ptr<mir::ObserverRegistrar<mir::graphics::DisplayConfigurationObserver>>
         registrar{std::make_shared<mtd::StubObserverRegistrar<mir::graphics::DisplayConfigurationObserver>>()};
@@ -89,7 +89,7 @@ public:
         mock->decoration_destroyed(this);
     }
 
-    MOCK_METHOD1(set_scale, void(float));
+    MOCK_METHOD(void, set_scale, (float), (override));
 
     DecorationBasicManager* const mock;
 };

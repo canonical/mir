@@ -17,10 +17,10 @@
 #ifndef MIR_INPUT_SEAT_H_
 #define MIR_INPUT_SEAT_H_
 
-#include "mir/geometry/rectangle.h"
-#include "mir/geometry/rectangles.h"
-#include "mir/events/xkb_modifiers.h"
-#include "mir_toolkit/event.h"
+#include <mir/geometry/rectangle.h>
+#include <mir/geometry/rectangles.h>
+#include <mir/events/xkb_modifiers.h>
+#include <mir_toolkit/event.h>
 
 #include <memory>
 #include <vector>

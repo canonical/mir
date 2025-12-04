@@ -17,7 +17,7 @@
 #include <vector>
 #include <span>
 
-#include "mir/graphics/cursor.h"
+#include <mir/graphics/cursor.h>
 
 namespace mir::graphics
 {

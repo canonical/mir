@@ -17,7 +17,7 @@
 #ifndef MIR_FRONTEND_WAYLAND_TIMESPEC_H
 #define MIR_FRONTEND_WAYLAND_TIMESPEC_H
 
-#include "mir/time/types.h"
+#include <mir/time/types.h>
 
 namespace mir
 {

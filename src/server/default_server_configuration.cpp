@@ -14,33 +14,33 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/default_server_configuration.h"
-#include "mir/fatal.h"
-#include "mir/options/default_configuration.h"
-#include "mir/glib_main_loop.h"
-#include "mir/default_server_status_listener.h"
-#include "mir/emergency_cleanup.h"
-#include "mir/frontend/wayland.h"
+#include <mir/default_server_configuration.h>
+#include <mir/fatal.h>
+#include <mir/options/default_configuration.h>
+#include <mir/glib_main_loop.h>
+#include <mir/default_server_status_listener.h>
+#include <mir/emergency_cleanup.h>
+#include <mir/frontend/wayland.h>
 
-#include "mir/logging/dumb_console_logger.h"
-#include "mir/options/option.h"
-#include "mir/options/program_option.h"
-#include "mir/frontend/session_credentials.h"
-#include "mir/frontend/session_authorizer.h"
-#include "mir/graphics/cursor.h"
-#include "mir/scene/null_session_listener.h"
-#include "mir/graphics/display.h"
-#include "mir/input/cursor_observer.h"
-#include "mir/input/vt_filter.h"
-#include "mir/input/input_manager.h"
-#include "mir/time/steady_clock.h"
-#include "mir/geometry/rectangles.h"
-#include "mir/scene/null_prompt_session_listener.h"
+#include <mir/logging/dumb_console_logger.h>
+#include <mir/options/option.h>
+#include <mir/options/program_option.h>
+#include <mir/frontend/session_credentials.h>
+#include <mir/frontend/session_authorizer.h>
+#include <mir/graphics/cursor.h>
+#include <mir/scene/null_session_listener.h>
+#include <mir/graphics/display.h>
+#include <mir/input/cursor_observer.h>
+#include <mir/input/vt_filter.h>
+#include <mir/input/input_manager.h>
+#include <mir/time/steady_clock.h>
+#include <mir/geometry/rectangles.h>
+#include <mir/scene/null_prompt_session_listener.h>
 #include "default_emergency_cleanup.h"
-#include "mir/graphics/platform.h"
-#include "mir/console_services.h"
-#include "mir/decoration_strategy.h"
-#include "mir/scene/session.h"
+#include <mir/graphics/platform.h>
+#include <mir/console_services.h>
+#include <mir/decoration_strategy.h>
+#include <mir/scene/session.h>
 
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;

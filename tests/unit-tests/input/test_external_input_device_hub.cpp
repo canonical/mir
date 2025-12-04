@@ -15,11 +15,11 @@
  */
 
 #include "src/server/input/default_input_device_hub.h"
-#include "mir/test/doubles/mock_input_device_hub.h"
-#include "mir/test/doubles/mock_device.h"
-#include "mir/test/doubles/mock_input_device_observer.h"
-#include "mir/test/doubles/triggered_main_loop.h"
-#include "mir/test/fake_shared.h"
+#include <mir/test/doubles/mock_input_device_hub.h>
+#include <mir/test/doubles/mock_device.h>
+#include <mir/test/doubles/mock_input_device_observer.h>
+#include <mir/test/doubles/triggered_main_loop.h>
+#include <mir/test/fake_shared.h>
 
 namespace mt = mir::test;
 namespace mtd = mt::doubles;

@@ -17,9 +17,9 @@
 #ifndef MIR_SCENE_OUTPUT_PROPERTIES_CACHE_H_
 #define MIR_SCENE_OUTPUT_PROPERTIES_CACHE_H_
 
-#include "mir_toolkit/common.h"
-#include "mir/geometry/rectangle.h"
-#include "mir/graphics/display_configuration.h"
+#include <mir_toolkit/common.h>
+#include <mir/geometry/rectangle.h>
+#include <mir/graphics/display_configuration.h>
 
 #include <vector>
 #include <memory>

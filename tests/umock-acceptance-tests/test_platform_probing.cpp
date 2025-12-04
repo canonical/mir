@@ -14,16 +14,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/shared_library.h"
-#include "mir_test_framework/udev_environment.h"
-#include "mir/test/doubles/stub_console_services.h"
-#include "mir/logging/null_shared_library_prober_report.h"
-#include "mir/options/default_configuration.h"
-#include "mir_test_framework/temporary_environment_value.h"
-#include "mir/test/doubles/mock_drm.h"
-#include "mir/test/doubles/mock_gbm.h"
+#include <mir/shared_library.h>
+#include <mir_test_framework/udev_environment.h>
+#include <mir/test/doubles/stub_console_services.h>
+#include <mir/logging/null_shared_library_prober_report.h>
+#include <mir/options/default_configuration.h>
+#include <mir_test_framework/temporary_environment_value.h>
+#include <mir/test/doubles/mock_drm.h>
+#include <mir/test/doubles/mock_gbm.h>
 #include "src/server/graphics/platform_probe.h"
-#include "mir/udev/wrapper.h"
+#include <mir/udev/wrapper.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

@@ -16,7 +16,7 @@
 
 #include "surface_change_notification.h"
 
-#include "mir/scene/surface.h"
+#include <mir/scene/surface.h>
 
 namespace ms = mir::scene;
 namespace geom = mir::geometry;

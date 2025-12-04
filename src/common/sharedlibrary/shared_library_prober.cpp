@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/shared_library_prober.h"
-#include "mir/shared_library.h"
+#include <mir/shared_library_prober.h>
+#include <mir/shared_library.h>
 
 #include <boost/throw_exception.hpp>
 

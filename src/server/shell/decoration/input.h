@@ -18,8 +18,8 @@
 #define MIR_SHELL_DECORATION_INPUT_H_
 
 #include "decoration_strategy.h"
-#include "mir/geometry/rectangle.h"
-#include "mir_toolkit/common.h"
+#include <mir/geometry/rectangle.h>
+#include <mir_toolkit/common.h>
 
 #include <memory>
 #include <vector>

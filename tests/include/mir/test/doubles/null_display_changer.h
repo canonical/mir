@@ -17,8 +17,8 @@
 #ifndef MIR_TEST_DOUBLES_NULL_DISPLAY_CHANGER_H_
 #define MIR_TEST_DOUBLES_NULL_DISPLAY_CHANGER_H_
 
-#include "mir/frontend/display_changer.h"
-#include "mir/test/doubles/null_display_configuration.h"
+#include <mir/frontend/display_changer.h>
+#include <mir/test/doubles/null_display_configuration.h>
 
 namespace mir
 {
@@ -35,21 +35,6 @@ public:
         return std::make_shared<NullDisplayConfiguration>();
     }
     void configure(std::shared_ptr<scene::Session> const&, std::shared_ptr<graphics::DisplayConfiguration> const&) override
-    {
-    }
-
-    void set_base_configuration(std::shared_ptr<graphics::DisplayConfiguration> const&) override
-    {
-    }
-    void preview_base_configuration(
-        std::weak_ptr<scene::Session> const&,
-        std::shared_ptr<graphics::DisplayConfiguration> const&,
-        std::chrono::seconds) override
-    {
-    }
-    void confirm_base_configuration(
-        std::shared_ptr<scene::Session> const&,
-        std::shared_ptr<graphics::DisplayConfiguration> const&) override
     {
     }
 };

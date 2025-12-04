@@ -14,12 +14,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir_test_framework/stub_input_platform.h"
+#include <mir_test_framework/stub_input_platform.h>
 
-#include "mir/input/input_device_registry.h"
-#include "mir/dispatch/action_queue.h"
-#include "mir/dispatch/multiplexing_dispatchable.h"
-#include "mir/module_deleter.h"
+#include <mir/input/input_device_registry.h>
+#include <mir/dispatch/action_queue.h>
+#include <mir/dispatch/multiplexing_dispatchable.h>
+#include <mir/module_deleter.h>
 
 #include <algorithm>
 

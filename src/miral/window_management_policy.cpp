@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "miral/window_management_policy.h"
+#include <miral/window_management_policy.h>
 
 void miral::WindowManagementPolicy::advise_begin() {}
 void miral::WindowManagementPolicy::advise_end() {}

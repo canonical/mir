@@ -17,8 +17,8 @@
 #ifndef MIR_SHELL_DECORATION_MANAGER_H_
 #define MIR_SHELL_DECORATION_MANAGER_H_
 
-#include "mir/geometry/size.h"
-#include "mir_toolkit/client_types.h"
+#include <mir/geometry/size.h>
+#include <mir_toolkit/client_types.h>
 
 #include <memory>
 

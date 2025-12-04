@@ -20,10 +20,11 @@
 #include "wl_seat.h"
 #include "input_method_common.h"
 
-#include "mir/scene/text_input_hub.h"
-#include "mir/log.h"
+#include <mir/scene/text_input_hub.h>
+#include <mir/log.h>
 
 #include <deque>
+#include <ranges>
 
 namespace mf = mir::frontend;
 namespace mw = mir::wayland;
@@ -269,11 +270,11 @@ void mf::InputMethodV2::deactivated()
 auto mf::InputMethodV2::find_serial(uint32_t done_event_count) const -> std::optional<ms::TextInputStateSerial>
 {
     // Loop in reverse order because the serial we're looking for will generally be at the end
-    for (auto it = serials.rbegin(); it != serials.rend(); it++)
+    for (auto const& serial_pair : std::ranges::reverse_view(serials))
     {
-        if (it->first == done_event_count)
+        if (serial_pair.first == done_event_count)
         {
-            return it->second;
+            return serial_pair.second;
         }
     }
     return std::nullopt;

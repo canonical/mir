@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/geometry/forward.h"
-#include "mir/test/doubles/stub_buffer.h"
+#include <mir/geometry/forward.h>
+#include <mir/test/doubles/stub_buffer.h>
 #include "src/server/compositor/multi_monitor_arbiter.h"
 
 #include <gtest/gtest.h>

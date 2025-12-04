@@ -18,7 +18,7 @@
 #ifndef MIR_REPORT_NULL_SEAT_REPORT_H_
 #define MIR_REPORT_NULL_SEAT_REPORT_H_
 
-#include "mir/input/seat_observer.h"
+#include <mir/input/seat_observer.h>
 
 namespace mir
 {

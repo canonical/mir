@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/dispatch/readable_fd.h"
+#include <mir/dispatch/readable_fd.h>
 
 mir::dispatch::ReadableFd::ReadableFd(Fd fd, std::function<void()> const& on_readable) :
     fd{fd},

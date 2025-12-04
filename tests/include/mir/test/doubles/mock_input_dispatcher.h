@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_INPUT_DISPATCHER_H_
 #define MIR_TEST_DOUBLES_MOCK_INPUT_DISPATCHER_H_
 
-#include "mir/input/input_dispatcher.h"
+#include <mir/input/input_dispatcher.h>
 #include <gmock/gmock.h>
 
 namespace mir
@@ -29,9 +29,9 @@ namespace doubles
 
 struct MockInputDispatcher : public mir::input::InputDispatcher
 {
-    MOCK_METHOD1(dispatch, bool(std::shared_ptr<MirEvent const> const&));
-    MOCK_METHOD0(start, void());
-    MOCK_METHOD0(stop, void());
+    MOCK_METHOD(bool, dispatch, (std::shared_ptr<MirEvent const> const&), (override));
+    MOCK_METHOD(void, start, (), (override));
+    MOCK_METHOD(void, stop, (), (override));
 };
 
 }

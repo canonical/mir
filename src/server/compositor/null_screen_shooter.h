@@ -19,7 +19,7 @@
 
 #include <glm/fwd.hpp>
 
-#include "mir/compositor/screen_shooter.h"
+#include <mir/compositor/screen_shooter.h>
 
 namespace mir
 {

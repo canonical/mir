@@ -17,13 +17,12 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_SCENE_SESSION_H_
 #define MIR_TEST_DOUBLES_MOCK_SCENE_SESSION_H_
 
-#include "mir/scene/session.h"
-#include "mir/scene/surface.h"
-#include "mir/graphics/display_configuration.h"
-#include "mir/input/mir_input_config.h"
-#include "mir/client_visible_error.h"
-#include "mir/shell/surface_specification.h"
-#include "mir/wayland/weak.h"
+#include <mir/scene/session.h>
+#include <mir/scene/surface.h>
+#include <mir/graphics/display_configuration.h>
+#include <mir/input/mir_input_config.h>
+#include <mir/shell/surface_specification.h>
+#include <mir/wayland/weak.h>
 
 #include <gmock/gmock.h>
 
@@ -38,7 +37,6 @@ struct MockSceneSession : public scene::Session
 {
     MOCK_METHOD(std::shared_ptr<scene::Surface>, create_surface, (
         std::shared_ptr<Session> const&,
-        wayland::Weak<frontend::WlSurface> const&,
         shell::SurfaceSpecification const&,
         std::shared_ptr<scene::SurfaceObserver> const&,
         Executor*), (override));
@@ -54,8 +52,6 @@ struct MockSceneSession : public scene::Session
 
     MOCK_METHOD(void, hide, (), (override));
     MOCK_METHOD(void, show, (), (override));
-
-    MOCK_METHOD(void, send_error, (ClientVisibleError const&), (override));
 
     MOCK_METHOD(void, start_prompt_session, (), (override));
     MOCK_METHOD(void, stop_prompt_session, (), (override));

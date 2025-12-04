@@ -16,7 +16,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_INPUT_DEVICE_OBSERVER_H_
 #define MIR_TEST_DOUBLES_MOCK_INPUT_DEVICE_OBSERVER_H_
 
-#include "mir/input/input_device_observer.h"
+#include <mir/input/input_device_observer.h>
 
 #include <gmock/gmock.h>
 

@@ -14,20 +14,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "mir/input/composite_event_filter.h"
-#include "mir/input/device.h"
-#include "mir/input/event_builder.h"
-#include "mir/input/input_device_hub.h"
-#include "mir/input/input_device_observer.h"
-#include "mir/input/input_device_registry.h"
-#include "mir/input/input_sink.h"
-#include "mir/input/virtual_input_device.h"
-#include "mir/server.h"
-#include "mir/test/signal.h"
+#include <mir/input/composite_event_filter.h>
+#include <mir/input/device.h>
+#include <mir/input/event_builder.h>
+#include <mir/input/input_device_hub.h>
+#include <mir/input/input_device_observer.h>
+#include <mir/input/input_device_registry.h>
+#include <mir/input/input_sink.h>
+#include <mir/input/virtual_input_device.h>
+#include <mir/server.h>
+#include <mir/test/signal.h>
 
-#include "miral/append_event_filter.h"
-#include "miral/locate_pointer.h"
-#include "miral/test_server.h"
+#include <miral/append_event_filter.h>
+#include <miral/locate_pointer.h>
+#include <miral/test_server.h>
 
 #include <gmock/gmock.h>
 

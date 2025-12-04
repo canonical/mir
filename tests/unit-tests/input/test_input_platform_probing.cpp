@@ -16,24 +16,24 @@
 
 #include <gtest/gtest.h>
 
-#include "mir/input/input_probe.h"
+#include <mir/input/input_probe.h>
 
 #include "src/server/report/null_report_factory.h"
 
-#include "mir/options/option.h"
-#include "mir/emergency_cleanup_registry.h"
+#include <mir/options/option.h>
+#include <mir/emergency_cleanup_registry.h>
 
-#include "mir_test_framework/udev_environment.h"
-#include "mir_test_framework/executable_path.h"
-#include "mir_test_framework/stub_input_platform.h"
-#include "mir/test/doubles/null_console_services.h"
-#include "mir/test/doubles/mock_x11.h"
-#include "mir/test/doubles/mock_libinput.h"
-#include "mir/test/doubles/mock_option.h"
-#include "mir/test/doubles/mock_input_device_registry.h"
+#include <mir_test_framework/udev_environment.h>
+#include <mir_test_framework/executable_path.h>
+#include <mir_test_framework/stub_input_platform.h>
+#include <mir/test/doubles/null_console_services.h>
+#include <mir/test/doubles/mock_x11.h>
+#include <mir/test/doubles/mock_libinput.h>
+#include <mir/test/doubles/mock_option.h>
+#include <mir/test/doubles/mock_input_device_registry.h>
 #include "src/platforms/evdev/platform.h"
 #include "src/platforms/x11/input/input_platform.h"
-#include "mir/test/fake_shared.h"
+#include <mir/test/fake_shared.h>
 
 namespace mt = mir::test;
 namespace mtd = mt::doubles;

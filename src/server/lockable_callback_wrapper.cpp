@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/lockable_callback_wrapper.h"
+#include <mir/lockable_callback_wrapper.h>
 
 mir::LockableCallbackWrapper::LockableCallbackWrapper(
     std::unique_ptr<LockableCallback> wrapped,

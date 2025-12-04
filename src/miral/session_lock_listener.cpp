@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "miral/session_lock_listener.h"
+#include <miral/session_lock_listener.h>
 
 #include <mir/server.h>
 #include <mir/scene/session_lock.h>

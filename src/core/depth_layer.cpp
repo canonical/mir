@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/depth_layer.h"
+#include <mir/depth_layer.h>
 
 // GCC and Clang both ensure the switch is exhaustive.
 // GCC, however, gets a "control reaches end of non-void function" warning without this

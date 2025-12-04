@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir_test_framework/temporary_environment_value.h"
+#include <mir_test_framework/temporary_environment_value.h>
 
 #include <cstdlib>
 

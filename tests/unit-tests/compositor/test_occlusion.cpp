@@ -14,10 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/geometry/rectangle.h"
+#include <mir/geometry/rectangle.h>
 #include "src/server/compositor/occlusion.h"
-#include "mir/test/doubles/fake_renderable.h"
-#include "mir/test/doubles/stub_scene_element.h"
+#include <mir/test/doubles/fake_renderable.h>
+#include <mir/test/doubles/stub_scene_element.h>
 
 #include <gtest/gtest.h>
 #include <memory>

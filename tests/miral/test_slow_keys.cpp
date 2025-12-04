@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "miral/slow_keys.h"
-#include "miral/accessibility_test_server.h"
+#include <miral/slow_keys.h>
+#include <miral/accessibility_test_server.h>
 
 #include <gmock/gmock.h>
 

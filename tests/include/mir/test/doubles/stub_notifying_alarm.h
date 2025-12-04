@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_STUB_NOTIFYING_ALARM_H_
 #define MIR_TEST_DOUBLES_STUB_NOTIFYING_ALARM_H_
 
-#include "mir/test/doubles/stub_alarm.h"
+#include <mir/test/doubles/stub_alarm.h>
 
 #include <functional>
 

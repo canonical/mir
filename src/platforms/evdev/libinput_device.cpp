@@ -19,18 +19,18 @@
 #include "libinput_device_ptr.h"
 #include "button_utils.h"
 
-#include "mir/input/input_sink.h"
-#include "mir/input/input_report.h"
-#include "mir/input/device_capability.h"
-#include "mir/input/pointer_settings.h"
-#include "mir/input/touchpad_settings.h"
-#include "mir/input/input_device_info.h"
-#include "mir/events/event_builders.h"
-#include "mir/geometry/displacement.h"
-#include "mir/dispatch/dispatchable.h"
-#include "mir/fd.h"
-#include "mir/log.h"
-#include "mir/raii.h"
+#include <mir/input/input_sink.h>
+#include <mir/input/input_report.h>
+#include <mir/input/device_capability.h>
+#include <mir/input/pointer_settings.h>
+#include <mir/input/touchpad_settings.h>
+#include <mir/input/input_device_info.h>
+#include <mir/events/event_builders.h>
+#include <mir/geometry/displacement.h>
+#include <mir/dispatch/dispatchable.h>
+#include <mir/fd.h>
+#include <mir/log.h>
+#include <mir/raii.h>
 
 #include <libinput.h>
 #include <linux/input.h>  // only used to get constants for input reports

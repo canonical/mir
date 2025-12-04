@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "miroil/eventdispatch.h"
+#include <miroil/eventdispatch.h>
 
 #include "gesture_ender.h"
 

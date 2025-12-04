@@ -17,8 +17,8 @@
 #ifndef MIR_SHELL_IDLE_HANDLER_H_
 #define MIR_SHELL_IDLE_HANDLER_H_
 
-#include "mir/time/types.h"
-#include "mir/observer_registrar.h"
+#include <mir/time/types.h>
+#include <mir/observer_registrar.h>
 
 #include <optional>
 

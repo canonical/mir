@@ -19,12 +19,12 @@
 #include "kms_output.h"
 #include "cpu_addressable_fb.h"
 #include "gbm_display_allocator.h"
-#include "mir/fd.h"
-#include "mir/graphics/display_report.h"
-#include "mir/graphics/drm_formats.h"
-#include "mir/graphics/platform.h"
-#include "mir/log.h"
-#include "mir/graphics/dmabuf_buffer.h"
+#include <mir/fd.h>
+#include <mir/graphics/display_report.h>
+#include <mir/graphics/drm_formats.h>
+#include <mir/graphics/platform.h>
+#include <mir/log.h>
+#include <mir/graphics/dmabuf_buffer.h>
 
 #include <algorithm>
 #include <boost/throw_exception.hpp>

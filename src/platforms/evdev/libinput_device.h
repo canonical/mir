@@ -20,13 +20,13 @@
 #include "libinput_ptr.h"
 #include "libinput_device_ptr.h"
 
-#include "mir/input/event_builder.h"
-#include "mir/input/input_device.h"
-#include "mir/input/input_device_info.h"
-#include "mir/input/keyboard_leds.h"
-#include "mir/input/led_observer_registrar.h"
-#include "mir/input/touchscreen_settings.h"
-#include "mir/geometry/point.h"
+#include <mir/input/event_builder.h>
+#include <mir/input/input_device.h>
+#include <mir/input/input_device_info.h>
+#include <mir/input/keyboard_leds.h>
+#include <mir/input/led_observer_registrar.h>
+#include <mir/input/touchscreen_settings.h>
+#include <mir/geometry/point.h>
 
 #include <vector>
 #include <map>

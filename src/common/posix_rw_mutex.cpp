@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/posix_rw_mutex.h"
+#include <mir/posix_rw_mutex.h>
 
 #include <system_error>
 #include <boost/throw_exception.hpp>

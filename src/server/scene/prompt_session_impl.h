@@ -17,7 +17,7 @@
 #ifndef MIR_SCENE_PROMPT_SESSION_IMPL_H_
 #define MIR_SCENE_PROMPT_SESSION_IMPL_H_
 
-#include "mir/scene/prompt_session.h"
+#include <mir/scene/prompt_session.h>
 
 #include <mutex>
 

@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_NULL_DISPLAY_SINK_H_
 #define MIR_TEST_DOUBLES_NULL_DISPLAY_SINK_H_
 
-#include "mir/graphics/display_sink.h"
+#include <mir/graphics/display_sink.h>
 
 namespace mir
 {

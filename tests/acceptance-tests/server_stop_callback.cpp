@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir_test_framework/headless_test.h"
+#include <mir_test_framework/headless_test.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -26,9 +26,9 @@ namespace
 {
 struct ServerStopCallback : mtf::HeadlessTest
 {
-    MOCK_CONST_METHOD0(stop_callback0, void());
-    MOCK_CONST_METHOD0(stop_callback1, void());
-    MOCK_CONST_METHOD0(stop_callback2, void());
+    MOCK_METHOD(void, stop_callback0, (), (const));
+    MOCK_METHOD(void, stop_callback1, (), (const));
+    MOCK_METHOD(void, stop_callback2, (), (const));
 };
 }
 

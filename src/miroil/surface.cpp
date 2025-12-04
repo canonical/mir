@@ -15,10 +15,10 @@
  */
 #include <miroil/surface.h>
 #include <miroil/surface_observer.h>
-#include "mir/scene/surface.h"
-#include "mir/scene/surface_observer.h"
-#include "mir/log.h"
-#include "mir/executor.h"
+#include <mir/scene/surface.h>
+#include <mir/scene/surface_observer.h>
+#include <mir/log.h>
+#include <mir/executor.h>
 
 class miroil::SurfaceObserverImpl : public mir::scene::SurfaceObserver
 {

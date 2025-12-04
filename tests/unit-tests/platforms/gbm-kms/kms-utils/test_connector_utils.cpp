@@ -16,8 +16,8 @@
 
 #include "kms-utils/kms_connector.h"
 
-#include "mir/geometry/size.h"
-#include "mir/test/doubles/mock_drm.h"
+#include <mir/geometry/size.h>
+#include <mir/test/doubles/mock_drm.h>
 
 #include <array>
 

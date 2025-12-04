@@ -17,7 +17,7 @@
 #ifndef MIR_FRONTEND_XWAYLAND_CLIENT_MANAGER_H
 #define MIR_FRONTEND_XWAYLAND_CLIENT_MANAGER_H
 
-#include "mir/fd.h"
+#include <mir/fd.h>
 
 #include <memory>
 #include <mutex>

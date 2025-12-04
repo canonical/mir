@@ -19,9 +19,9 @@
 
 #include <gmock/gmock.h>
 
-#include "mir/graphics/gl_config.h"
-#include "mir/graphics/platform.h"
-#include "mir/renderer/gl/gl_surface.h"
+#include <mir/graphics/gl_config.h>
+#include <mir/graphics/platform.h>
+#include <mir/renderer/gl/gl_surface.h>
 
 namespace mir::test::doubles
 {

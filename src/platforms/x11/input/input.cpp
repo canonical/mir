@@ -16,9 +16,9 @@
 
 #include "input_platform.h"
 #include "../x11_resources.h"
-#include "mir/module_properties.h"
-#include "mir/assert_module_entry_point.h"
-#include "mir/libname.h"
+#include <mir/module_properties.h>
+#include <mir/assert_module_entry_point.h>
+#include <mir/libname.h>
 
 namespace mo = mir::options;
 namespace mi = mir::input;

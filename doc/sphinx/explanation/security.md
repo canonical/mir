@@ -16,7 +16,7 @@ Ubuntu Frame is published as a snap. As such, the threat model for frame assumes
 that the snap is secure, and proceeds to outline the frame snap's interactions
 with the outside world.
 
-**Diagram**: A flowchart depicting the security barries between compoinents in Ubuntu Frame.
+**Diagram**: A flowchart depicting the security barriers between components in Ubuntu Frame.
 
 ```{mermaid} ubuntu_frame_threat_model.mmd
 ```

@@ -17,7 +17,7 @@
 #ifndef EXAMPLE_INPUT_EVENT_FILTER_H_
 #define EXAMPLE_INPUT_EVENT_FILTER_H_
 
-#include "mir/input/event_filter.h"
+#include <mir/input/event_filter.h>
 
 #include <functional>
 #include <memory>

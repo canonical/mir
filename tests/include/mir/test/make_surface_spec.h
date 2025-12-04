@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_SURFACE_SPECIFICATION_H_
 #define MIR_TEST_SURFACE_SPECIFICATION_H_
 
-#include "mir/shell/surface_specification.h"
+#include <mir/shell/surface_specification.h>
 
 #include <functional>
 

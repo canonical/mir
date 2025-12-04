@@ -17,7 +17,7 @@
 #ifndef MIR_LOCKABLE_CALLBACK_WRAPPER_H_
 #define MIR_LOCKABLE_CALLBACK_WRAPPER_H_
 
-#include "mir/lockable_callback.h"
+#include <mir/lockable_callback.h>
 
 #include <functional>
 #include <memory>

@@ -14,9 +14,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/test/event_matchers.h"
+#include <mir/test/event_matchers.h>
 
-#include "mir/event_printer.h"
+#include <mir/event_printer.h>
 
 void PrintTo(MirEvent const& event, std::ostream *os)
 {

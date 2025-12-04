@@ -14,7 +14,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/events/window_placement_event.h"
+#include <mir/events/window_placement_event.h>
 
 MirWindowPlacementEvent::MirWindowPlacementEvent() :
     MirEvent(mir_event_type_window_placement),

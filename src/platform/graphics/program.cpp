@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/graphics/program.h"
+#include <mir/graphics/program.h>
 
 // Included here to ensure we have a single definition of the Program symbols
 mir::graphics::gl::Program::~Program() = default;

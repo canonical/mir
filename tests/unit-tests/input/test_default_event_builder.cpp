@@ -16,8 +16,8 @@
 
 #include "src/server/input/default_event_builder.h"
 
-#include "mir/test/doubles/advanceable_clock.h"
-#include "mir/test/fake_shared.h"
+#include <mir/test/doubles/advanceable_clock.h>
+#include <mir/test/fake_shared.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

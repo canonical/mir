@@ -17,7 +17,7 @@
 #ifndef MIR_INPUT_DEFAULT_EVENT_BUILDER_H_
 #define MIR_INPUT_DEFAULT_EVENT_BUILDER_H_
 
-#include "mir/input/event_builder.h"
+#include <mir/input/event_builder.h>
 #include <memory>
 #include <atomic>
 

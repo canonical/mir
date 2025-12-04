@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/wayland/resource.h"
-#include "mir/wayland/client.h"
+#include <mir/wayland/resource.h>
+#include <mir/wayland/client.h>
 
 #include <boost/throw_exception.hpp>
 #include <wayland-server-core.h>

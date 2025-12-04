@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/input/mir_touchpad_config.h"
+#include <mir/input/mir_touchpad_config.h>
 #include <ostream>
 
 struct MirTouchpadConfig::Implementation

@@ -15,11 +15,11 @@
  */
 
 #include "multi_monitor_arbiter.h"
-#include "mir/compositor/buffer_stream.h"
-#include "mir/geometry/forward.h"
-#include "mir/graphics/buffer.h"
-#include "mir/frontend/event_sink.h"
-#include "mir/graphics/drm_formats.h"
+#include <mir/compositor/buffer_stream.h>
+#include <mir/geometry/forward.h>
+#include <mir/graphics/buffer.h>
+#include <mir/frontend/event_sink.h>
+#include <mir/graphics/drm_formats.h>
 #include "multi_threaded_compositor.h"
 #include <boost/throw_exception.hpp>
 #include <algorithm>

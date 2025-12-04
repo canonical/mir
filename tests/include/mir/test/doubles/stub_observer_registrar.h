@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_STUB_OBSERVER_REGISTRAR_H_
 #define MIR_TEST_DOUBLES_STUB_OBSERVER_REGISTRAR_H_
 
-#include "mir/observer_registrar.h"
+#include <mir/observer_registrar.h>
 
 namespace mir
 {

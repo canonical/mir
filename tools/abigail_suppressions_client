@@ -1,7 +1,0 @@
-# Ignore changes to opaque types
-[suppress_type]
-#    accessed_through = pointer
-    name_regexp = MirNativeBuffer|MirConnection|MirCursorConfiguration|MirCloseWindowEvent|MirEvent|MirPointerEvent|MirTouchEvent|MirInputConfigurationEvent|MirInputDeviceStateEvent|MirKeymapEvent|MirInputEvent|MirKeyboardEvent|MirOrientationEvent|MirPersistentId|MirPromptSessionEvent|MirResizeEvent|MirPlatformMessage|MirPromptSession|MirScreencast|MirScreencastSpec|MirWindow|MirSurfaceSpec
-
-[suppress_type]
-    name = uint16_t

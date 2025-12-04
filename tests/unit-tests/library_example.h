@@ -17,7 +17,7 @@
 #ifndef MIR_UNIT_TESTS_LIBRARY_EXAMPLE_H_
 #define MIR_UNIT_TESTS_LIBRARY_EXAMPLE_H_
 
-#include "mir/module_deleter.h"
+#include <mir/module_deleter.h>
 
 class SomeInterface
 {

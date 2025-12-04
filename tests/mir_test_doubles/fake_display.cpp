@@ -14,11 +14,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/test/doubles/fake_display.h"
+#include <mir/test/doubles/fake_display.h>
 
-#include "mir/test/doubles/stub_display_configuration.h"
+#include <mir/test/doubles/stub_display_configuration.h>
 
-#include "mir/graphics/event_handler_register.h"
+#include <mir/graphics/event_handler_register.h>
 
 #include <system_error>
 #include <boost/throw_exception.hpp>

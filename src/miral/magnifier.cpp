@@ -15,17 +15,17 @@
  */
 
 #include "render_scene_into_surface.h"
-#include "miral/magnifier.h"
+#include <miral/magnifier.h>
 
 #include <input-method-unstable-v2_wrapper.h>
 #include <wayland_wrapper.h>
 
-#include "miral/live_config.h"
-#include "mir/log.h"
-#include "mir/server.h"
-#include "mir/input/cursor_observer.h"
-#include "mir/input/cursor_observer_multiplexer.h"
-#include "mir/scene/surface.h"
+#include <miral/live_config.h>
+#include <mir/log.h>
+#include <mir/server.h>
+#include <mir/input/cursor_observer.h>
+#include <mir/input/cursor_observer_multiplexer.h>
+#include <mir/scene/surface.h>
 
 #include <glm/gtc/matrix_transform.hpp>
 

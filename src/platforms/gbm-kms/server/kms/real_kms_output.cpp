@@ -16,11 +16,11 @@
 
 #include "real_kms_output.h"
 #include "kms_framebuffer.h"
-#include "mir/graphics/display_configuration.h"
+#include <mir/graphics/display_configuration.h>
 #include "page_flipper.h"
 #include "kms-utils/kms_connector.h"
-#include "mir/fatal.h"
-#include "mir/log.h"
+#include <mir/fatal.h>
+#include <mir/log.h>
 #include <string.h> // strcmp
 
 #include <boost/throw_exception.hpp>
@@ -131,7 +131,7 @@ geom::Size mgg::RealKMSOutput::size() const
     return {mode.hdisplay, mode.vdisplay};
 }
 
-int mgg::RealKMSOutput::max_refresh_rate() const
+unsigned mgg::RealKMSOutput::max_refresh_rate() const
 {
     if (connector->connection == DRM_MODE_DISCONNECTED)
         return 1;

@@ -17,8 +17,8 @@
 #ifndef MIR_SHELL_DECORATION_THREADSAFE_ACCESS_H_
 #define MIR_SHELL_DECORATION_THREADSAFE_ACCESS_H_
 
-#include "mir/executor.h"
-#include "mir/fatal.h"
+#include <mir/executor.h>
+#include <mir/fatal.h>
 
 #include <memory>
 #include <mutex>

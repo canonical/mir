@@ -17,19 +17,13 @@ add_subdirectory(core)
 add_subdirectory(platforms/)
 
 # the src/include/... directories should be private to the implementation
-include_directories(${PROJECT_SOURCE_DIR}/src/include/common)
-set(MIR_GENERATED_INCLUDE_DIRECTORIES)
 add_subdirectory(common/)
-include_directories(${MIR_GENERATED_INCLUDE_DIRECTORIES})
 
 add_subdirectory(platform/)
 add_subdirectory(wayland/)
 add_subdirectory(server/)
 add_subdirectory(miral/)
 add_subdirectory(miroil/)
-add_subdirectory(renderer/)
-add_subdirectory(renderers/)
-add_subdirectory(gl/)
 
 add_executable(wrapper wrapper.c)
 target_compile_definitions(wrapper PUBLIC
@@ -37,13 +31,7 @@ target_compile_definitions(wrapper PUBLIC
     _DEFAULT_SOURCE
     _BSD_SOURCE)
 
-set(
-  MIR_GENERATED_INCLUDE_DIRECTORIES
-  ${MIR_GENERATED_INCLUDE_DIRECTORIES}
-  PARENT_SCOPE)
-
 set(MIR_SERVER_REFERENCES ${MIR_SERVER_REFERENCES} PARENT_SCOPE)
-set(MIR_PLATFORM_REFERENCES ${MIR_PLATFORM_REFERENCES} PARENT_SCOPE)
 set(MIR_SERVER_PLATFORM_PATH ${MIR_SERVER_PLATFORM_PATH} PARENT_SCOPE)
 set(MIRSERVER_INCLUDE_DIRS ${MIRSERVER_INCLUDE_DIRS} PARENT_SCOPE)
 

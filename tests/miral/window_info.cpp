@@ -16,7 +16,7 @@
 
 #include <miral/window_info.h>
 
-#include "mir_test_framework/process.h"
+#include <mir_test_framework/process.h>
 
 #include <mir/test/doubles/stub_surface.h>
 

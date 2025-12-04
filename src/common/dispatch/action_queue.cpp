@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/dispatch/action_queue.h"
+#include <mir/dispatch/action_queue.h>
 
 #include <boost/throw_exception.hpp>
 #include <sys/eventfd.h>

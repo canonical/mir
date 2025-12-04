@@ -16,15 +16,15 @@
 
 #include "basic_mousekeys_transformer.h"
 
-#include "mir/geometry/forward.h"
-#include "mir/input/event_builder.h"
-#include "mir/input/mousekeys_keymap.h"
-#include "mir/log.h"
-#include "mir/main_loop.h"
-#include "mir/time/clock.h"
+#include <mir/geometry/forward.h>
+#include <mir/input/event_builder.h>
+#include <mir/input/mousekeys_keymap.h>
+#include <mir/log.h>
+#include <mir/main_loop.h>
+#include <mir/time/clock.h>
 
-#include "mir_toolkit/events/enums.h"
-#include "mir_toolkit/events/input/keyboard_event.h"
+#include <mir_toolkit/events/enums.h>
+#include <mir_toolkit/events/input/keyboard_event.h>
 
 #include <cmath>
 #include <cstdint>

@@ -17,11 +17,11 @@
 #ifndef MIR_INPUT_SURFACE_H_
 #define MIR_INPUT_SURFACE_H_
 
-#include "mir/geometry/point.h"
-#include "mir/geometry/rectangle.h"
-#include "mir/input/input_reception_mode.h"
+#include <mir/geometry/point.h>
+#include <mir/geometry/rectangle.h>
+#include <mir/input/input_reception_mode.h>
 
-#include "mir_toolkit/event.h"
+#include <mir_toolkit/event.h>
 
 #include <string>
 #include <memory>

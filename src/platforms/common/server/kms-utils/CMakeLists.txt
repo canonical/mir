@@ -18,4 +18,5 @@ target_include_directories(${KMS_UTILS_STATIC_LIBRARY}
 target_link_libraries(${KMS_UTILS_STATIC_LIBRARY}
   PkgConfig::DRM
   mircore
+  mircommon
 )

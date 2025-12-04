@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_STUB_INPUT_SURFACE_H_
 #define MIR_TEST_DOUBLES_STUB_INPUT_SURFACE_H_
 
-#include "mir/input/surface.h"
+#include <mir/input/surface.h>
 
 #include <memory>
 

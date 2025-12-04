@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_TOUCH_VISUALIZER_H_
 #define MIR_TEST_DOUBLES_MOCK_TOUCH_VISUALIZER_H_
 
-#include "mir/input/touch_visualizer.h"
+#include <mir/input/touch_visualizer.h>
 
 #include <gmock/gmock.h>
 

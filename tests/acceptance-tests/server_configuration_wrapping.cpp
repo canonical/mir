@@ -14,16 +14,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/input/cursor_observer_multiplexer.h"
-#include "mir/shell/shell_wrapper.h"
-#include "mir/shell/surface_stack_wrapper.h"
+#include <mir/input/cursor_observer_multiplexer.h>
+#include <mir/shell/shell_wrapper.h>
+#include <mir/shell/surface_stack_wrapper.h>
 
-#include "mir/geometry/point.h"
-#include "mir/main_loop.h"
+#include <mir/geometry/point.h>
+#include <mir/main_loop.h>
 
-#include "mir_test_framework/headless_test.h"
+#include <mir_test_framework/headless_test.h>
 
-#include "mir_test_framework/executable_path.h"
+#include <mir_test_framework/executable_path.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -40,7 +40,7 @@ namespace
 struct MyShell : msh::ShellWrapper
 {
     using msh::ShellWrapper::ShellWrapper;
-    MOCK_METHOD0(focus_next_session, void());
+    MOCK_METHOD(void, focus_next_session, (), (override));
 };
 
 struct MyCursorObserverMultiplexer : mi::CursorObserverMultiplexer
@@ -52,7 +52,7 @@ struct MyCursorObserverMultiplexer : mi::CursorObserverMultiplexer
     {
     }
 
-    MOCK_METHOD2(cursor_moved_to, void(float abs_x, float abs_y));
+    MOCK_METHOD(void, cursor_moved_to, (float abs_x, float abs_y), (override));
 
     void pointer_usable() { wrapped->pointer_usable(); }
     void pointer_unusable() { wrapped->pointer_unusable(); }

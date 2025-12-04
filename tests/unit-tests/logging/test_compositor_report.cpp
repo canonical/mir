@@ -15,8 +15,8 @@
  */
 
 #include "src/server/report/logging/compositor_report.h"
-#include "mir/logging/logger.h"
-#include "mir/test/doubles/advanceable_clock.h"
+#include <mir/logging/logger.h>
+#include <mir/test/doubles/advanceable_clock.h>
 
 #include <gtest/gtest.h>
 #include <string>

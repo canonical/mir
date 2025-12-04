@@ -17,9 +17,9 @@
 #ifndef MIR_SHELL_ABSTRACT_SHELL_H_
 #define MIR_SHELL_ABSTRACT_SHELL_H_
 
-#include "mir/shell/shell.h"
-#include "mir/shell/window_manager_builder.h"
-#include "mir/scene/surface_observer.h"
+#include <mir/shell/shell.h>
+#include <mir/shell/window_manager_builder.h>
+#include <mir/scene/surface_observer.h>
 
 #include <mutex>
 
@@ -29,10 +29,17 @@ namespace input
 {
 class Seat;
 }
+namespace scene
+{
+class SessionCoordinator;
+class PromptSessionManager;
+}
 namespace shell
 {
 class ShellReport;
 class WindowManager;
+class InputTargeter;
+class SurfaceStack;
 namespace decoration
 {
 class Manager;
@@ -63,7 +70,6 @@ public:
 
     auto create_surface(
         std::shared_ptr<scene::Session> const& session,
-        wayland::Weak<frontend::WlSurface> const& wayland_surface,
         SurfaceSpecification const& params,
         std::shared_ptr<scene::SurfaceObserver> const& observer,
         Executor* observer_executor) -> std::shared_ptr<scene::Surface> override;
@@ -120,8 +126,8 @@ public:
 
     void set_popup_grab_tree(std::shared_ptr<scene::Surface> const& surface) override;
     void set_focus_to(
-        std::shared_ptr<scene::Session> const& focus_session,
-        std::shared_ptr<scene::Surface> const& focus_surface) override;
+        std::shared_ptr<scene::Session> const& new_focus_session,
+        std::shared_ptr<scene::Surface> const& new_focus_surface) override;
 
     // The surface with focus
     std::shared_ptr<scene::Surface> focused_surface() const override;

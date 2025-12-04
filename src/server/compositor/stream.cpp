@@ -14,10 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/compositor/stream.h"
+#include <mir/compositor/stream.h>
 #include "multi_monitor_arbiter.h"
-#include "mir/geometry/rectangle.h"
-#include "mir/graphics/buffer.h"
+#include <mir/geometry/rectangle.h>
+#include <mir/graphics/buffer.h>
 #include <boost/throw_exception.hpp>
 #include <math.h>
 

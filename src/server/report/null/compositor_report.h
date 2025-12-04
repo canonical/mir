@@ -17,7 +17,7 @@
 #ifndef MIR_REPORT_NULL_COMPOSITOR_REPORT_H_
 #define MIR_REPORT_NULL_COMPOSITOR_REPORT_H_
 
-#include "mir/compositor/compositor_report.h"
+#include <mir/compositor/compositor_report.h>
 
 namespace mir
 {

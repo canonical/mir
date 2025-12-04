@@ -16,13 +16,13 @@
 
 #include "default_device.h"
 #include "default_input_device_hub.h"
-#include "mir/dispatch/action_queue.h"
-#include "mir/input/device_capability.h"
-#include "mir/input/input_device.h"
-#include "mir/input/mir_touchpad_config.h"
-#include "mir/input/mir_touchscreen_config.h"
-#include "mir/input/mir_pointer_config.h"
-#include "mir/input/key_mapper.h"
+#include <mir/dispatch/action_queue.h>
+#include <mir/input/device_capability.h>
+#include <mir/input/input_device.h>
+#include <mir/input/mir_touchpad_config.h>
+#include <mir/input/mir_touchscreen_config.h>
+#include <mir/input/mir_pointer_config.h>
+#include <mir/input/key_mapper.h>
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>

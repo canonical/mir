@@ -14,11 +14,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/graphics/overlapping_output_grouping.h"
+#include <mir/graphics/overlapping_output_grouping.h>
 
-#include "mir/graphics/display_configuration.h"
-#include "mir/geometry/rectangle.h"
-#include "mir/geometry/rectangles.h"
+#include <mir/graphics/display_configuration.h>
+#include <mir/geometry/rectangle.h>
+#include <mir/geometry/rectangles.h>
 
 #include <unordered_set>
 

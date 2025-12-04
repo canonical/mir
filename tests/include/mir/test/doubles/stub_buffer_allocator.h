@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_STUB_BUFFER_ALLOCATOR_H_
 #define MIR_TEST_DOUBLES_STUB_BUFFER_ALLOCATOR_H_
 
-#include "mir/graphics/graphic_buffer_allocator.h"
+#include <mir/graphics/graphic_buffer_allocator.h>
 #include <wayland-server.h>
 
 namespace mir

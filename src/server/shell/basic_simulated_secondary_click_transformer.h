@@ -17,11 +17,11 @@
 #ifndef MIR_SHELL_BASIC_SIMULATED_SECONDARY_CLICK_TRANSFORMER_H
 #define MIR_SHELL_BASIC_SIMULATED_SECONDARY_CLICK_TRANSFORMER_H
 
-#include "mir/shell/simulated_secondary_click_transformer.h"
+#include <mir/shell/simulated_secondary_click_transformer.h>
 
-#include "mir/synchronised.h"
-#include "mir/time/alarm.h"
-#include "mir/events/pointer_event.h"
+#include <mir/synchronised.h>
+#include <mir/time/alarm.h>
+#include <mir/events/pointer_event.h>
 
 #include <memory>
 

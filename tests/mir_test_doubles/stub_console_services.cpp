@@ -14,9 +14,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/test/doubles/stub_console_services.h"
+#include <mir/test/doubles/stub_console_services.h>
 
-#include "mir/fd.h"
+#include <mir/fd.h>
 
 #include <boost/throw_exception.hpp>
 #include <sys/sysmacros.h>

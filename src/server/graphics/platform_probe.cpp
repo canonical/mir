@@ -16,14 +16,14 @@
 
  #include "platform_probe.h"
 
-#include "mir/graphics/display.h"
-#include "mir/log.h"
-#include "mir/graphics/platform.h"
-#include "mir/options/configuration.h"
-#include "mir/shared_library.h"
-#include "mir/shared_library_prober.h"
-#include "mir/shared_library_prober_report.h"
-#include "mir/udev/wrapper.h"
+#include <mir/graphics/display.h>
+#include <mir/log.h>
+#include <mir/graphics/platform.h>
+#include <mir/options/configuration.h>
+#include <mir/shared_library.h>
+#include <mir/shared_library_prober.h>
+#include <mir/shared_library_prober_report.h>
+#include <mir/udev/wrapper.h>
 
 #include <algorithm>
 #include <boost/throw_exception.hpp>

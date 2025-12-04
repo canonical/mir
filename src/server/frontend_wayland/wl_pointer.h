@@ -19,10 +19,10 @@
 
 
 #include "wayland_wrapper.h"
-#include "mir/wayland/weak.h"
-#include "mir/geometry/point.h"
-#include "mir/geometry/displacement.h"
-#include "mir/events/scroll_axis.h"
+#include <mir/wayland/weak.h>
+#include <mir/geometry/point.h>
+#include <mir/geometry/displacement.h>
+#include <mir/events/scroll_axis.h>
 
 #include <chrono>
 #include <functional>

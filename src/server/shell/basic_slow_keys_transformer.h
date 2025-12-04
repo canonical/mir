@@ -18,11 +18,11 @@
 #ifndef MIR_SHELL_BASIC_SLOW_KEYS_TRANSFORMER_H
 #define MIR_SHELL_BASIC_SLOW_KEYS_TRANSFORMER_H
 
-#include "mir/shell/slow_keys_transformer.h"
+#include <mir/shell/slow_keys_transformer.h>
 
-#include "mir/input/input_event_transformer.h"
-#include "mir/synchronised.h"
-#include "mir/time/alarm.h"
+#include <mir/input/input_event_transformer.h>
+#include <mir/synchronised.h>
+#include <mir/time/alarm.h>
 
 namespace mir
 {

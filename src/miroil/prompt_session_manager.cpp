@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "miroil/prompt_session_manager.h"
-#include "mir/scene/prompt_session_manager.h"
+#include <miroil/prompt_session_manager.h>
+#include <mir/scene/prompt_session_manager.h>
 
 miroil::PromptSessionManager::PromptSessionManager(std::shared_ptr<mir::scene::PromptSessionManager> const& prompt_session_manager)
 :    prompt_session_manager{prompt_session_manager}

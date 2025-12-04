@@ -22,10 +22,10 @@
 #include "xwayland_server.h"
 #include "xwayland_spawner.h"
 #include "xwayland_wm.h"
-#include "mir/log.h"
-#include "mir/dispatch/multiplexing_dispatchable.h"
-#include "mir/dispatch/readable_fd.h"
-#include "mir/executor.h"
+#include <mir/log.h>
+#include <mir/dispatch/multiplexing_dispatchable.h>
+#include <mir/dispatch/readable_fd.h>
+#include <mir/executor.h>
 
 #include <unistd.h>
 

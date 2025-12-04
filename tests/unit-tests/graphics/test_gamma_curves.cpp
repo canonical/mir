@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/graphics/gamma_curves.h"
+#include <mir/graphics/gamma_curves.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

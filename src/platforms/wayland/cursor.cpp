@@ -16,7 +16,7 @@
 
 #include "cursor.h"
 #include "displayclient.h"
-#include "mir/graphics/pixman_image_scaling.h"
+#include <mir/graphics/pixman_image_scaling.h>
 
 #include <mir/fd.h>
 

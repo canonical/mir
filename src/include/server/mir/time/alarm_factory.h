@@ -18,7 +18,7 @@
 #ifndef MIR_TIME_ALARM_FACTORY_H_
 #define MIR_TIME_ALARM_FACTORY_H_
 
-#include "mir/time/alarm.h"
+#include <mir/time/alarm.h>
 
 #include <chrono>
 #include <functional>

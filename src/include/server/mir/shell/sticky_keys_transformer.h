@@ -17,7 +17,7 @@
 #ifndef MIR_SHELL_STICKY_KEYS_TRANSFORMER_H
 #define MIR_SHELL_STICKY_KEYS_TRANSFORMER_H
 
-#include "mir/input/transformer.h"
+#include <mir/input/transformer.h>
 #include <functional>
 
 namespace mir::shell

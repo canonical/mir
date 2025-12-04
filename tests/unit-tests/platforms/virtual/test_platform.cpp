@@ -17,11 +17,11 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include "mir/graphics/platform.h"
+#include <mir/graphics/platform.h>
 #include "src/platforms/virtual/platform.h"
-#include "mir/test/doubles/mock_egl.h"
+#include <mir/test/doubles/mock_egl.h>
 
-#include "mir/shared_library.h"
+#include <mir/shared_library.h>
 #include "src/server/report/null/display_report.h"
 
 namespace mg = mir::graphics;

@@ -17,10 +17,10 @@
 #ifndef MIR_SHELL_WINDOW_MANAGER_H_
 #define MIR_SHELL_WINDOW_MANAGER_H_
 
-#include "mir/frontend/surface_id.h"
-#include "mir_toolkit/common.h"
-#include "mir_toolkit/event.h"
-#include "mir/geometry/forward.h"
+#include <mir/frontend/surface_id.h>
+#include <mir_toolkit/common.h>
+#include <mir_toolkit/event.h>
+#include <mir/geometry/forward.h>
 
 #include <memory>
 

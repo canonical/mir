@@ -15,8 +15,8 @@
  */
 
 #include "test_window_manager_tools.h"
-#include "mir/test/doubles/mock_display_configuration.h"
-#include "mir/graphics/display_configuration_observer.h"
+#include <mir/test/doubles/mock_display_configuration.h>
+#include <mir/graphics/display_configuration_observer.h>
 
 using namespace miral;
 using namespace testing;

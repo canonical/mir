@@ -16,7 +16,7 @@
 
 #include "fd_store.h"
 
-#include "mir/log.h"
+#include <mir/log.h>
 
 #include <algorithm>
 #include <boost/throw_exception.hpp>

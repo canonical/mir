@@ -17,7 +17,7 @@
 #ifndef MIR_INPUT_KEYBOARD_RESYNC_DISPATCHER_H_
 #define MIR_INPUT_KEYBOARD_RESYNC_DISPATCHER_H_
 
-#include "mir/input/input_dispatcher.h"
+#include <mir/input/input_dispatcher.h>
 
 #include <vector>
 

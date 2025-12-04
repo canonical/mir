@@ -1,7 +1,3 @@
-ClientSurfaceEventsTest.surface_gets_enter_event
-ClientSurfaceEventsTest.surface_gets_leave_event
-SubsurfaceTest.place_above_simple
-SubsurfaceTest.place_below_simple
 TouchInputSubsurfaces/SubsurfaceMultilevelTest.subsurface_moves_after_both_sync_parent_and_grandparent_commit/0
 TouchInputSubsurfaces/SubsurfaceMultilevelTest.subsurface_with_desync_parent_moves_when_only_parent_committed/0
 TouchInputSubsurfaces/SubsurfaceTest.desync_subsurface_moves_when_only_parent_committed/0
@@ -54,10 +50,9 @@ XdgToplevelStableTest.pointer_leaves_surface_during_interactive_resize
 XdgToplevelV6Test.pointer_leaves_surface_during_interactive_move
 XdgToplevelV6Test.pointer_leaves_surface_during_interactive_resize
 
-AllSurfaceTypes/TouchTest.sends_touch_up_on_surface_destroy/4 # Fixed by https://github.com/canonical/wlcs/pull/199
-AllSurfaceTypes/TouchTest.sends_touch_up_on_surface_destroy/5 # Fixed by https://github.com/canonical/wlcs/pull/199
-
-ForeignToplevelHandleTest.can_maximize_foreign_while_fullscreen # https://github.com/canonical/mir/issues/2164
+# https://github.com/canonical/mir/issues/2164
+ForeignToplevelHandleTest.can_maximize_foreign_while_fullscreen
+XdgToplevelStableConfigurationTest.window_can_maximize_itself_while_fullscreen
 
 # See https://github.com/canonical/mir/issues/2324
 TextInputV3WithInputMethodV2Test.text_input_enters_parent_surface_after_child_destroyed

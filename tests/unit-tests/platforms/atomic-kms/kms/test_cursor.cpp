@@ -18,11 +18,11 @@
 #include "src/platforms/atomic-kms/server/kms/kms_output.h"
 #include "src/platforms/atomic-kms/server/kms/kms_output_container.h"
 #include "src/platforms/atomic-kms/server/kms/kms_display_configuration.h"
-#include "mir/graphics/cursor_image.h"
-#include "mir/test/doubles/stub_display_configuration.h"
-#include "mir/test/doubles/mock_gbm.h"
-#include "mir/test/doubles/mock_drm.h"
-#include "mir/test/fake_shared.h"
+#include <mir/graphics/cursor_image.h>
+#include <mir/test/doubles/stub_display_configuration.h>
+#include <mir/test/doubles/mock_gbm.h>
+#include <mir/test/doubles/mock_drm.h>
+#include <mir/test/fake_shared.h>
 #include "mock_kms_output.h"
 #include "kms/atomic_kms_output.h"
 
@@ -284,8 +284,8 @@ public:
         }
     } mock_gbm;
     NiceMock<mtd::MockDRM> mock_drm;
-    StubKMSOutputContainer output_container;
-    StubCurrentConfiguration current_configuration{output_container};
+    std::shared_ptr<StubKMSOutputContainer> output_container = std::make_shared<StubKMSOutputContainer>();
+    StubCurrentConfiguration current_configuration{*output_container};
     mga::Cursor cursor;
 
 };

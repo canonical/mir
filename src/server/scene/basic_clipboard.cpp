@@ -16,7 +16,7 @@
 
 #include "basic_clipboard.h"
 
-#include "mir/fatal.h"
+#include <mir/fatal.h>
 
 namespace ms = mir::scene;
 

@@ -16,8 +16,8 @@
 
 #include "egl_helper.h"
 
-#include "mir/graphics/gl_config.h"
-#include "mir/graphics/egl_error.h"
+#include <mir/graphics/gl_config.h>
+#include <mir/graphics/egl_error.h>
 
 #include <EGL/egl.h>
 #include <boost/throw_exception.hpp>

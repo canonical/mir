@@ -21,8 +21,8 @@
 
 #include <wayland-server-core.h>
 
-#include "mir/test/fd_utils.h"
-#include "mir/test/auto_unblock_thread.h"
+#include <mir/test/fd_utils.h>
+#include <mir/test/auto_unblock_thread.h>
 
 namespace mt = mir::test;
 namespace mf = mir::frontend;

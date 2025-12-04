@@ -19,13 +19,13 @@
 
 #include "window_manager_tools_implementation.h"
 
-#include "miral/window_management_policy.h"
-#include "miral/window_info.h"
+#include <miral/window_management_policy.h>
+#include <miral/window_info.h>
 #include "active_outputs.h"
-#include "miral/application.h"
-#include "miral/application_info.h"
-#include "miral/zone.h"
-#include "miral/output.h"
+#include <miral/application.h>
+#include <miral/application_info.h>
+#include <miral/zone.h>
+#include <miral/output.h>
 #include "mru_window_list.h"
 
 #include <mir/geometry/rectangles.h>

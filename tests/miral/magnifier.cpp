@@ -15,10 +15,10 @@
  */
 
 #include <miral/magnifier.h>
-#include "mir/server.h"
-#include "mir/compositor/scene.h"
-#include "mir/compositor/scene_element.h"
-#include "mir/graphics/renderable.h"
+#include <mir/server.h>
+#include <mir/compositor/scene.h>
+#include <mir/compositor/scene_element.h>
+#include <mir/graphics/renderable.h>
 
 #include <miral/test_server.h>
 #include <gtest/gtest.h>

@@ -15,7 +15,7 @@
  */
 
 #include "test_window_manager_tools.h"
-#include "miral/output.h"
+#include <miral/output.h>
 
 #include <optional>
 

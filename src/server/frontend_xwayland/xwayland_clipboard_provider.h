@@ -18,7 +18,7 @@
 #define MIR_FRONTEND_XWAYLAND_CLIPBOARD_PROVIDER_H_
 
 #include "xcb_connection.h"
-#include "mir/scene/data_exchange.h"
+#include <mir/scene/data_exchange.h>
 
 #include <map>
 

@@ -17,7 +17,7 @@
 #ifndef MIR_INPUT_WAYLAND_INPUT_PLATFORM_H_
 #define MIR_INPUT_WAYLAND_INPUT_PLATFORM_H_
 
-#include "mir/input/platform.h"
+#include <mir/input/platform.h>
 
 namespace mir
 {
