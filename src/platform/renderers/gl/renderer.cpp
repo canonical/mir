@@ -572,7 +572,7 @@ mrg::Renderer::Renderer(
     : output_surface{std::make_unique<OutputFilter>(make_output_current(std::move(output)))},
       clear_color{0.0f, 0.0f, 0.0f, 1.0f},
       program_factory{std::make_unique<ProgramFactory>()},
-      screen_to_gl_coords({0}),
+      screen_to_gl_coords(0),
       display_transform(1),
       gl_interface{std::move(gl_interface)}
 {
