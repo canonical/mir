@@ -34,9 +34,9 @@ library_not_found_error_msg: str = """\
 
 try:
     import clang.cindex
-except ModuleNotFoundError:
+except ModuleNotFoundError as e:
     _logger.error("Could not import clang in python.")
-    _logger.error(library_not_found_error_msg)
+    _logger.exception(e)
     sys.exit(1)
 
 
@@ -456,16 +456,63 @@ def main():
         _logger.info(f"MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH is {file_path}")
         clang.cindex.Config.set_library_file(file_path)
     else:
-        _logger.error("Expected MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH to be defined in the environment")
-        exit(1)
+        clang_so_paths = [
+            "/usr/lib/llvm-19/lib/libclang.so.1",
+            "/usr/lib/x86_64-linux-gnu/libclang-19.so.1",
+            "/usr/lib/aarch64-linux-gnu/libclang-19.so.1",
+            "/usr/lib/libclang-19.so.1",
+            "/usr/lib/llvm-18/lib/libclang-18.so.1",
+            "/usr/lib/x86_64-linux-gnu/libclang-18.so.1",
+            "/usr/lib/aarch64-linux-gnu/libclang-18.so.1",
+            "/usr/lib/libclang-18.so.1",
+        ]
+
+        # Find libclang.so.1
+        found_so = None
+        for path in clang_so_paths:
+            if os.path.isfile(path):
+                found_so = path
+                _logger.debug(f"Found libclang.so.1 at: {path}")
+                break
+
+        if found_so is not None:
+            clang.cindex.Config.set_library_file(found_so)
+            _logger.info(f"Using found libclang.so.1 at: {found_so}")
+        else:
+            _logger.error("Expected MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH to be defined in the environment")
+            exit(1)
 
     if 'MIR_SYMBOLS_MAP_GENERATOR_CLANG_LIBRARY_PATH' in os.environ:
         library_path = os.environ['MIR_SYMBOLS_MAP_GENERATOR_CLANG_LIBRARY_PATH']
         _logger.info(f"MIR_SYMBOLS_MAP_GENERATOR_CLANG_LIBRARY_PATH is {library_path}")
         clang.cindex.Config.set_library_path(library_path)
     else:
-        _logger.error("Expected MIR_SYMBOLS_MAP_GENERATOR_CLANG_LIBRARY_PATH to be defined in the environment")
-        exit(1)
+        clang_lib_dirs = [
+            "/usr/lib/llvm-19/lib",
+            "/usr/lib/llvm-18/lib",
+            "/usr/lib/x86_64-linux-gnu",
+            "/usr/lib/aarch64-linux-gnu",
+            "/usr/lib",
+        ]
+
+        # Find library directory
+        found_lib = None
+        for lib_dir in clang_lib_dirs:
+            if os.path.isdir(lib_dir):
+                # Check if directory contains libclang files
+                for file in os.listdir(lib_dir):
+                    if file.startswith('libclang') and '.so' in file:
+                        found_lib = lib_dir
+                        _logger.debug(f"Found clang library directory at: {lib_dir}")
+                        break
+            if found_lib:
+                break
+        if found_lib is not None:
+            clang.cindex.Config.set_library_path(found_lib)
+            _logger.info(f"Using found clang library directory at: {found_lib}")
+        else:
+            _logger.error("Expected MIR_SYMBOLS_MAP_GENERATOR_CLANG_LIBRARY_PATH to be defined in the environment")
+            exit(1)
 
     include_dirs = args.include_dirs.split(":")
     _logger.debug(f"Parsing with include directories: {include_dirs}")
