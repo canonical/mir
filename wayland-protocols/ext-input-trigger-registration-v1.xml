@@ -44,9 +44,6 @@
       </description>
       <entry name="keyboard" value="0x01" summary="key combinations can be used as triggers"/>
       <entry name="modifiers" value="0x02" summary="keyboard modifier taps and/or holds can be used as triggers"/>
-      <entry name="pointer" value="0x04" summary="pointer gestures can be used as triggers"/>
-      <entry name="touch_drag" value="0x08" summary="touch drag gestures can be used as triggers"/>
-      <entry name="touch_tap" value="0x10" summary="touch taps can be used as triggers"/>
     </enum>
 
     <event name="capabilities">
