@@ -54,6 +54,7 @@ execute: |
     )
 
     SBUILD_OPTS=(
+      --no-clean-source
       --jobs=$(nproc)
       --verbose
       --dist=${RELEASE}
@@ -69,6 +70,11 @@ execute: |
     if [[ "${SPREAD_VARIANT}" == *"ubuntu"* ]]; then
       SBUILD_OPTS+=(
         --extra-repository="deb http://ppa.launchpad.net/mir-team/dev/ubuntu ${RELEASE} main"
+        --extra-repository-key=${SPREAD_PATH}/${SPREAD_TASK}/mir-team.asc
+      )
+    elif [[ "${SPREAD_VARIANT}" == *"debian"* ]]; then
+      SBUILD_OPTS+=(
+        --extra-repository="deb http://ppa.launchpad.net/mir-team/test/ubuntu resolute main"
         --extra-repository-key=${SPREAD_PATH}/${SPREAD_TASK}/mir-team.asc
       )
     fi

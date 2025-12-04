@@ -1,9 +1,6 @@
 # Force out of source build
 %undefine __cmake_in_source_build
 
-# Use ccache
-%bcond ccache 0
-
 # Use clang
 %bcond clang 0
 
@@ -24,7 +21,7 @@
 %bcond debug 0
 
 # Run tests by default
-%bcond run_tests 1
+%bcond check 1
 
 # Track various library soversions
 %global miral_sover 7
@@ -42,14 +39,11 @@ Version:        2.23.0
 Release:        0%{?dist}
 Summary:        Next generation Wayland display server toolkit
 
-# mircommon is LGPL-2.1-only/LGPL-3.0-only, everything else is GPL-2.0-only/GPL-3.0-only
+# mircommon is LGPL-2.1-only/LGPL-3.0-only, everything else is GPL-2.0-only/GPL-3.0-only, built with Rust dependencies
 License:        (GPL-2.0-only or GPL-3.0-only) and (LGPL-2.1-only or LGPL-3.0-only)
 URL:            https://canonical.com/mir
 Source0:        https://github.com/canonical/%{name}/releases/download/v%{version}/%{name}-%{version}.tar.xz
 
-%if %{with ccache}
-BuildRequires:  ccache
-%endif
 %if %{with clang}
 BuildRequires:  clang
 %else
@@ -69,6 +63,7 @@ BuildRequires:  glm-devel
 BuildRequires:  glog-devel, lttng-ust-devel, systemtap-sdt-devel
 BuildRequires:  gflags-devel
 BuildRequires:  python3-pillow
+BuildRequires:  cargo-rpm-macros >= 24
 
 # Everything detected via pkgconfig
 BuildRequires:  pkgconfig(egl)
@@ -229,11 +224,15 @@ Mir unit and integration tests.
 
 %prep
 %autosetup
+%cargo_prep
+
+
+%generate_buildrequires
+%cargo_generate_buildrequires
 
 
 %conf
 %cmake	-GNinja \
-	%{?with_ccache:-DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache} \
 	%{?with_debug:-DCMAKE_BUILD_TYPE=Debug} \
 	%{!?with_debug:-DMIR_FATAL_COMPILE_WARNINGS=OFF} \
 	%{?with_lld:-DMIR_USE_LD=lld} \
@@ -245,6 +244,8 @@ Mir unit and integration tests.
 
 %build
 %cmake_build
+%cargo_license_summary
+%{cargo_license} > LICENSE.dependencies
 
 
 %install
@@ -252,7 +253,7 @@ Mir unit and integration tests.
 
 
 %check
-%if %{with run_tests}
+%if %{with check}
 export XDG_RUNTIME_DIR=$(mktemp -d)
 %ctest
 rm -rf $XDG_RUNTIME_DIR
@@ -288,7 +289,7 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/miral-shell.desktop
 %{_libdir}/libmiroil.so.%{miroil_sover}
 
 %files server-libs
-%license COPYING.GPL*
+%license COPYING.GPL* LICENSE.dependencies
 %doc README.md
 %{_libdir}/libmiral.so.%{miral_sover}
 %{_libdir}/libmirserver.so.%{mirserver_sover}
@@ -298,6 +299,7 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/miral-shell.desktop
 %{_libdir}/%{name}/server-platform/graphics-gbm-kms.so.%{mirplatformgraphics_sover}
 %{_libdir}/%{name}/server-platform/graphics-wayland.so.%{mirplatformgraphics_sover}
 %{_libdir}/%{name}/server-platform/input-evdev.so.%{mirplatforminput_sover}
+%{_libdir}/%{name}/server-platform/input-evdev-rs.so.%{mirplatforminput_sover}
 %{_libdir}/%{name}/server-platform/renderer-egl-generic.so.%{mirplatformgraphics_sover}
 %{_libdir}/%{name}/server-platform/server-virtual.so.%{mirplatformgraphics_sover}
 %{_libdir}/%{name}/server-platform/server-x11.so.%{mirplatformgraphics_sover}

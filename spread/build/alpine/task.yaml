@@ -5,6 +5,7 @@ variants: [amd64, "*ld"]
 execute: |
     apk add \
         boost-dev \
+        cargo \
         ccache \
         cmake \
         coreutils \

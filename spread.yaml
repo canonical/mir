@@ -10,11 +10,9 @@ backends:
             - alpine-3.21
             - alpine-edge
             - ubuntu-24.04
-            - fedora-41
-            - fedora-42
+            - ubuntu-devel:
+                image: ubuntu-daily:devel
             - fedora-43
-            - fedora-rawhide:
-                image: images:fedora/43
 
 environment:
     ARCH: amd64
@@ -28,10 +26,14 @@ environment:
     RELEASE/ubuntu_questing: questing
     RELEASE/ubuntu_devel: resolute
     RELEASE/debian_sid: sid
+    RELEASE/fedora_42: 42
+    RELEASE/fedora_43: 43
+    RELEASE/fedora_rawhide: rawhide
+    RELEASE/fedora_clang: 43
     PROPOSED: false
     PROPOSED/ubuntu_proposed: true
     CLANG: 0
-    CLANG/clang,asan_clang,tsan_clang,ubsan_clang: 1
+    CLANG/clang,asan_clang,tsan_clang,ubsan_clang,fedora_clang: 1
     VALGRIND: 0
     VALGRIND/valgrind: 1
     BUILD_TYPE: RelWithDebInfo
@@ -47,8 +49,6 @@ environment:
     DEB_BUILD_EXTRA/tsan,tsan_clang: nostrip nocheck
     DEBOOTSTRAP_OPTS:
     DEBOOTSTRAP_OPTS/debian_sid,ubuntu_devel: --no-merged-usr
-    ENABLE_RUST: 0
-    ENABLE_RUST/rust: 1
     CTEST_OUTPUT_ON_FAILURE: 1
     CCACHE_DIR: /root/.ccache
     # Needed for precompiled headers (https://ccache.dev/manual/latest.html#_precompiled_headers)
