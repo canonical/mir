@@ -197,7 +197,6 @@ add_custom_target(
         --library-name mir_server
         --version ${MIR_VERSION_MAJOR}.${MIR_VERSION_MINOR}
         --symbols-map-path="${CMAKE_CURRENT_SOURCE_DIR}/symbols.map"
-        --internal-headers-directory="${PROJECT_SOURCE_DIR}/src/include/server"
         --include-dirs="$<JOIN:$<TARGET_PROPERTY:mirserver,INCLUDE_DIRECTORIES>,:>"
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
 
@@ -207,7 +206,6 @@ add_custom_target(
       --library-name mir_server
       --version ${MIR_VERSION_MAJOR}.${MIR_VERSION_MINOR}
       --symbols-map-path="${CMAKE_CURRENT_SOURCE_DIR}/symbols.map"
-      --internal-headers-directory="${PROJECT_SOURCE_DIR}/src/include/server"
       --include-dirs "$<JOIN:$<TARGET_PROPERTY:mirserver,INCLUDE_DIRECTORIES>,:>"
       --diff
   WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
