@@ -48,8 +48,16 @@ public:
      */
     virtual ~Mapping() = default;
 
-    virtual T* data() = 0;
-    virtual size_t len() const = 0;
+    /**
+     * Access the data
+     */
+    virtual auto data() const -> T* = 0;
+
+    /**
+     * Size (in units of sizeof(T)) of the buffer
+     */
+    virtual auto len() const -> size_t = 0;
+
     /// \returns The pixel format of the buffer
     virtual MirPixelFormat format() const = 0;
     /// \returns The stride (width + any padding)
@@ -83,29 +91,6 @@ public:
     /// \returns The stride (width + any padding)
     virtual geometry::Stride stride() const = 0;
     /// \returns The size of the buffer
-    virtual geometry::Size size() const = 0;};
-
-/**
- * A Buffer that can be mapped into CPU-readable memory.
- */
-class ReadMappable
-{
-public:
-    virtual ~ReadMappable() = default;
-
-    /**
-     * Map the buffer into CPU-readable memory.
-     *
-     * \note    The mapping may not be coherent with the GPU. Updates made by the GPU to the buffer after creation
-     *          of the mapping are not guaranteed to be visible.
-     * \return  A CPU-mapped view of the buffer.
-     */
-    virtual auto map_readable() -> std::unique_ptr<Mapping<std::byte const>> = 0;
-    /// \returns The pixel format of the buffer
-    virtual MirPixelFormat format() const = 0;
-    /// \returns The stride (width + any padding)
-    virtual geometry::Stride stride() const = 0;
-    /// \returns The size of the buffer
     virtual geometry::Size size() const = 0;
 };
 
@@ -113,7 +98,6 @@ public:
  * A buffer that can be mapped into CPU-accessible memory for both reading and writing.
  */
 class RWMappable :
-    public ReadMappable,
     public WriteMappable
 {
 public:
@@ -166,9 +150,6 @@ public:
     /// \returns The size of the buffer
     virtual geometry::Size size() const = 0;
 };
-
-auto as_read_mappable(
-    std::shared_ptr<graphics::Buffer> const& buffer) -> std::shared_ptr<ReadMappable>;
 
 auto as_write_mappable(
     std::shared_ptr<graphics::Buffer> const& buffer) -> std::shared_ptr<WriteMappable>;

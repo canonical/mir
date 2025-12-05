@@ -71,6 +71,8 @@ execute: |
         --extra-repository="deb http://ppa.launchpad.net/mir-team/dev/ubuntu ${RELEASE} main"
         --extra-repository-key=${SPREAD_PATH}/${SPREAD_TASK}/mir-team.asc
       )
+      # We're using the dev PPA version of WLCS
+      echo "OVERRIDE_CONFIGURE_OPTIONS += -DMIR_USING_WLCS_DEV=ON" >> debian/opts.mk
     fi
 
     # Cross building

@@ -65,6 +65,9 @@ execute: |
     echo "OVERRIDE_CONFIGURE_OPTIONS += -DCMAKE_C_COMPILER_LAUNCHER=ccache" >> debian/opts.mk
     echo "OVERRIDE_CONFIGURE_OPTIONS += -DCMAKE_CXX_COMPILER_LAUNCHER=ccache" >> debian/opts.mk
 
+    # We're using WLCS from the dev PPA
+    echo "OVERRIDE_CONFIGURE_OPTIONS += -DMIR_USING_WLCS_DEV=ON" >> debian/opts.mk
+
     # build and run tests
     UBSAN_OPTIONS=halt_on_error=1 ASAN_OPTIONS=detect_leaks=0,verify_asan_link_order=0,detect_odr_violation=0 debian/rules build
 

@@ -20,9 +20,17 @@
 #include <mir/graphics/buffer_id.h>
 #include <mir/geometry/size.h>
 #include <mir_toolkit/common.h>
+#include <memory>
+#include <stdexcept>
 
 namespace mir
 {
+namespace renderer::software
+{
+template<typename Data>
+class Mapping;
+}
+
 namespace graphics
 {
 
@@ -37,6 +45,12 @@ protected:
     virtual ~NativeBufferBase() = default;
     NativeBufferBase(NativeBufferBase const&) = delete;
     NativeBufferBase operator=(NativeBufferBase const&) = delete;
+};
+
+class UnmappableBuffer : public std::invalid_argument
+{
+public:
+    using std::invalid_argument::invalid_argument;
 };
 
 /// Generic graphics buffer interface.
@@ -57,28 +71,44 @@ protected:
 class Buffer
 {
 public:
-    virtual ~Buffer() {}
+    virtual ~Buffer() = default;
 
     /// \returns The unique ID of this buffer.
-    virtual BufferID id() const = 0;
+    virtual auto id() const -> BufferID = 0;
 
     /// \returns The size of the buffer.
     ///
     /// \note The size is the logical size of the buffer, where the width is
     /// the perceived width, and NOT the stride.
-    virtual geometry::Size size() const = 0;
+    virtual auto size() const -> geometry::Size = 0;
 
     /// The pixel format determines how the pixels are laid out in memory, and
     /// whether or not the buffer supports transparency.
     ///
     /// \returns The pixel format of the buffer.
-    virtual MirPixelFormat pixel_format() const = 0;
+    virtual auto pixel_format() const -> MirPixelFormat = 0;
 
     /// Used with buffer classes that wrap other buffers.
     ///
     /// \returns A direct pointer to the inner/wrapped buffer.
-    virtual NativeBufferBase* native_buffer_base() = 0;
+    virtual auto native_buffer_base() -> NativeBufferBase* = 0;
 
+    /// Access the buffer content from the CPU
+    ///
+    /// \note This access might be costly (for example, requiring a copy across the PCIe bus
+    ///       for buffers in VRAM).
+    ///       Wherever possible, buffers should be accessed through rendering-API-specific means,
+    ///       such as [GLRenderingProvider::as_texture].
+    ///
+    /// \returns A [Mapping] describing a CPU-accessible view of the buffer. The lifetime of
+    ///          this [Mapping] is tied to the lifetime of this [Buffer].
+    ///
+    /// \throws An [UnmappableBuffer] if the buffer cannot be mapped in this way. This may
+    ///         occur if the buffer has a format not representable by [MirPixelFormat]
+    ///         (for example, a planar YUV format) or if the buffer is being protected by the
+    ///         GPU Digital Rights Management path.
+    /// \throws A std::system_error if mapping fails for a system-specific reason (eg: `mmap` failure)
+    virtual auto map_readable() const -> std::unique_ptr<renderer::software::Mapping<std::byte const>> = 0;
 protected:
     Buffer() = default;
 };
