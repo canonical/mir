@@ -122,9 +122,7 @@ add_custom_target(
         --library-name mir_common
         --version ${MIR_VERSION_MAJOR}.${MIR_VERSION_MINOR}
         --symbols-map-path="${CMAKE_CURRENT_SOURCE_DIR}/symbols.map"
-        --external-headers-directory="${PROJECT_SOURCE_DIR}/include/common"
-        --internal-headers-directory="${PROJECT_SOURCE_DIR}/src/include/common"
-        --include-dirs="$<JOIN:$<TARGET_PROPERTY:mirserver,INCLUDE_DIRECTORIES>,:>"
+        --include-dirs="$<JOIN:$<TARGET_PROPERTY:mircommon,INTERFACE_INCLUDE_DIRECTORIES>,:>"
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
 
 add_custom_target(
@@ -133,8 +131,6 @@ add_custom_target(
         --library-name mir_common
         --version ${MIR_VERSION_MAJOR}.${MIR_VERSION_MINOR}
         --symbols-map-path="${CMAKE_CURRENT_SOURCE_DIR}/symbols.map"
-        --external-headers-directory="${PROJECT_SOURCE_DIR}/include/common"
-        --internal-headers-directory="${PROJECT_SOURCE_DIR}/src/include/common"
-        --include-dirs="$<JOIN:$<TARGET_PROPERTY:mirserver,INCLUDE_DIRECTORIES>,:>"
+        --include-dirs="$<JOIN:$<TARGET_PROPERTY:mircommon,INTERFACE_INCLUDE_DIRECTORIES>,:>"
         --diff
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
