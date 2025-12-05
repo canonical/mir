@@ -25,7 +25,7 @@
 #include <mir/compositor/buffer_stream.h>
 #include <mir/test/doubles/mock_gl.h>
 #include <mir/test/doubles/mock_egl.h>
-#include <src/platform/renderers/gl/renderer.h>
+#include <mir/renderers/gl/renderer.h>
 #include <mir/test/doubles/stub_gl_rendering_provider.h>
 #include <mir/test/doubles/mock_output_surface.h>
 

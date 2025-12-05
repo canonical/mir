@@ -15,7 +15,7 @@
 
 #define MIR_LOG_COMPONENT "GLRenderer"
 
-#include "renderer.h"
+#include <mir/renderers/gl/renderer.h>
 #include <mir/graphics/renderable.h>
 #include <mir/graphics/transformation.h>
 #include <mir/graphics/display_sink.h>
