@@ -17,6 +17,13 @@ add_library(
   default_output_filter.cpp
 )
 
+target_include_directories(mirgraphics
+  PUBLIC
+    ${PROJECT_SOURCE_DIR}/include/server
+  PRIVATE
+    ${PROJECT_SOURCE_DIR}/src/include/server
+)
+
 target_link_libraries(mirgraphics
   PUBLIC
     mirplatform

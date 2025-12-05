@@ -18,6 +18,13 @@ add_library(
   ${LOGGING_SOURCES}
 )
 
+target_include_directories(mirlogging
+  PUBLIC
+    ${PROJECT_SOURCE_DIR}/include/server
+  PRIVATE
+    ${PROJECT_SOURCE_DIR}/src/include/server
+)
+
 target_link_libraries(mirlogging
   PUBLIC
     mirplatform
