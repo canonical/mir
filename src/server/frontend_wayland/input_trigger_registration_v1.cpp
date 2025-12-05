@@ -125,8 +125,7 @@ void InputTriggerRegistrationManagerV1::Instance::register_keyboard_code_trigger
 // TODO: Store the description string
 void InputTriggerRegistrationManagerV1::Instance::get_action_control(std::string const&, struct wl_resource* id)
 {
-    auto action_control = new ActionControl{itd, id};
-    action_control->send_done_event("foo");
+     new ActionControl{itd, id};
 }
 }
 
