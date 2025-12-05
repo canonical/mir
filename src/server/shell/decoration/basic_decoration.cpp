@@ -100,6 +100,7 @@ class msd::BasicDecoration::BufferStreams
 {
     // Must be at top so it can be used by create_buffer_stream() when called in the constructor
     std::shared_ptr<scene::Session> const session;
+    MirPixelFormat const buffer_format;
 
 public:
     BufferStreams(std::shared_ptr<scene::Session> const& session, MirPixelFormat buffer_format);
@@ -115,17 +116,15 @@ public:
 private:
     BufferStreams(BufferStreams const&) = delete;
     BufferStreams& operator=(BufferStreams const&) = delete;
-
-    MirPixelFormat const buffer_format;
 };
 
 msd::BasicDecoration::BufferStreams::BufferStreams(std::shared_ptr<scene::Session> const& session, MirPixelFormat buffer_format)
     : session{session},
+      buffer_format{buffer_format},
       titlebar{create_buffer_stream()},
       left_border{create_buffer_stream()},
       right_border{create_buffer_stream()},
-      bottom_border{create_buffer_stream()},
-      buffer_format{buffer_format}
+      bottom_border{create_buffer_stream()}
 {
 }
 
