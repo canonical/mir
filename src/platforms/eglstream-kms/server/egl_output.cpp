@@ -59,6 +59,7 @@ public:
 
         gem_handle = params.handle;
         pitch_ = params.pitch;
+        map_size = params.size;
 
         auto ret = drmModeAddFB(drm_fd, width, height, 24, 32, params.pitch, params.handle, &fb_id);
         if (ret)
@@ -76,7 +77,7 @@ public:
             BOOST_THROW_EXCEPTION((std::system_error{-ret, std::system_category(), "Failed to map KMS dumb buffer"}));
         }
 
-        auto map = mmap(0, params.size, PROT_READ | PROT_WRITE, MAP_SHARED, drm_fd, map_request.offset);
+        map = mmap(0, map_size, PROT_READ | PROT_WRITE, MAP_SHARED, drm_fd, map_request.offset);
         if (map == MAP_FAILED)
         {
             BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), "Failed to mmap() buffer"}));
@@ -86,6 +87,8 @@ public:
     }
     ~CPUAddressableFb() noexcept(false)
     {
+        munmap(map, map_size);
+
         struct drm_mode_destroy_dumb params = { gem_handle };
 
         if (ioctl(drm_fd, DRM_IOCTL_MODE_DESTROY_DUMB, &params) != 0)
@@ -117,6 +120,8 @@ private:
     uint32_t fb_id;
     uint32_t gem_handle;
     uint32_t pitch_;
+    void* map;
+    size_t map_size;
 };
 
 }

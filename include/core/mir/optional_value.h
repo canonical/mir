@@ -76,7 +76,7 @@ private:
         }
     }
 
-    T value_;
+    T value_{};
     bool is_set_{false};
 };
 

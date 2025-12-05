@@ -108,7 +108,7 @@ class LayoutEmitter : public Emitter::Impl
 {
 public:
     LayoutEmitter(Emitter const& child, bool clear_line_before = true, bool clear_line_after = true, std::string indent="")
-        : child{std::move(child)},
+        : child{child},
           clear_line_before{clear_line_before},
           clear_line_after{clear_line_after},
           indent{indent}
