@@ -143,7 +143,8 @@ void InputTriggerRegistrationManagerV1::Instance::register_keyboard_sym_trigger(
 {
     auto const* keyboard_trigger = new KeyboardSymTrigger{modifiers, keysym, id, type};
 
-    // TODO validation before done event
+    // TODO validation before done event: Make sure no other keyboard triggers
+    // use the same modifier + keysym combo.
     keyboard_trigger->send_done_event();
 }
 
