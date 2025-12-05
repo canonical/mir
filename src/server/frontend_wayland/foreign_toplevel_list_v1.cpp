@@ -29,7 +29,6 @@
 #include "mir/executor.h"
 
 #include <format>
-#include <mutex>
 #include <map>
 #include <boost/throw_exception.hpp>
 
@@ -57,7 +56,6 @@ public:
     void forget_stale_toplevels();
 
 private:
-    std::mutex mutex;
     std::map<
         std::weak_ptr<scene::Surface>,
         std::string,
@@ -66,7 +64,8 @@ private:
 };
 
 class ForeignSceneObserver
-    : public ms::NullObserver
+    : public ms::NullObserver,
+      public std::enable_shared_from_this<ForeignSceneObserver>
 {
 public:
     ForeignSceneObserver(
@@ -85,12 +84,12 @@ private:
     void end_observation() override;
     ///@}
 
-    void create_surface_observer(std::shared_ptr<scene::Surface> const& surface); ///< Should NOT be called under lock
-    void clear_surface_observers(); ///< Should NOT be called under lock
+    void create_surface_observer(std::shared_ptr<scene::Surface> const& surface);
+    void destroy_surface_observer(std::shared_ptr<scene::Surface> const& surface);
+    void clear_surface_observers();
 
     std::shared_ptr<Executor> const wayland_executor;
-    wayland::Weak<ExtForeignToplevelListV1> const manager; ///< Can only be safely accessed on the Wayland thread
-    std::mutex mutex;
+    wayland::Weak<ExtForeignToplevelListV1> const manager;
     std::map<
         std::weak_ptr<scene::Surface>,
         std::shared_ptr<ForeignSurfaceObserver>,
@@ -116,8 +115,8 @@ public:
 
 private:
     /// if we don't have a live handle, action is not called and no error is raised
-    void with_toplevel_handle(std::lock_guard<std::mutex>&, std::function<void(ExtForeignToplevelHandleV1&)> const& action);
-    void create_or_close_toplevel_handle_as_needed(std::lock_guard<std::mutex>& lock);
+    void with_toplevel_handle(std::function<void(ExtForeignToplevelHandleV1&)> const& action);
+    void create_or_close_toplevel_handle_as_needed();
 
     /// Surface observer
     ///@{
@@ -128,7 +127,6 @@ private:
 
     wayland::Weak<ExtForeignToplevelListV1> const manager;
 
-    std::mutex mutex;
     std::weak_ptr<scene::Surface> weak_surface;
     /// If nullptr, the surface is not supposed to have a handle (such as when it does not have a toplevel type)
     /// If it points to an empty Weak, the handle is being created or was destroyed by the client
@@ -216,8 +214,6 @@ void mf::ExtForeignToplevelListV1Global::bind(wl_resource* new_resource)
 
 std::string mf::ForeignToplevelIdentifierMap::toplevel_id(std::shared_ptr<scene::Surface> const& surface)
 {
-    std::lock_guard lock{mutex};
-
     std::string& identifier = toplevel_ids[surface];
     if (identifier.empty())
     {
@@ -228,13 +224,11 @@ std::string mf::ForeignToplevelIdentifierMap::toplevel_id(std::shared_ptr<scene:
 
 void mf::ForeignToplevelIdentifierMap::forget_toplevel(std::shared_ptr<scene::Surface> const& surface)
 {
-    std::lock_guard lock{mutex};
     toplevel_ids.erase(surface);
 }
 
 void mf::ForeignToplevelIdentifierMap::forget_stale_toplevels()
 {
-    std::lock_guard lock{mutex};
     std::erase_if(toplevel_ids, [](auto const& item)
         {
             return item.first.expired();
@@ -265,12 +259,72 @@ mf::ForeignSceneObserver::~ForeignSceneObserver()
 
 void mf::ForeignSceneObserver::surface_added(std::shared_ptr<scene::Surface> const& surface)
 {
-    create_surface_observer(surface);
+    // Defer processing to Wayland thread
+    wayland_executor->spawn(
+        [weak_observer = weak_from_this(), surface]()
+            {
+                if (auto const observer = weak_observer.lock())
+                {
+                    observer->create_surface_observer(surface);
+                }
+            });
 }
 
 void mf::ForeignSceneObserver::surface_removed(std::shared_ptr<scene::Surface> const& surface)
 {
-    std::lock_guard lock{mutex};
+    // Defer processing to Wayland thread
+    wayland_executor->spawn(
+        [weak_observer = weak_from_this(), surface]()
+            {
+                if (auto const observer = weak_observer.lock())
+                {
+                    observer->destroy_surface_observer(surface);
+                }
+            });
+}
+
+void mf::ForeignSceneObserver::surface_exists(std::shared_ptr<scene::Surface> const& surface)
+{
+    // Defer processing to Wayland thread
+    wayland_executor->spawn(
+        [weak_observer = weak_from_this(), surface]()
+            {
+                if (auto const observer = weak_observer.lock())
+                {
+                    observer->create_surface_observer(surface);
+                }
+            });
+}
+
+void mf::ForeignSceneObserver::end_observation()
+{
+    // Defer processing to Wayland thread
+    wayland_executor->spawn(
+        [weak_observer = weak_from_this()]()
+            {
+                if (auto const observer = weak_observer.lock())
+                {
+                    observer->clear_surface_observers();
+                }
+            });
+}
+
+void mf::ForeignSceneObserver::create_surface_observer(std::shared_ptr<scene::Surface> const& surface)
+{
+    auto observer = std::make_shared<ForeignSurfaceObserver>(manager, surface, desktop_file_manager, id_map);
+    surface->register_interest(observer, *wayland_executor);
+    auto insert_result = surface_observers.insert(std::make_pair(surface, observer));
+    if (!insert_result.second)
+    {
+        log_error(
+            "Can not add ForeignSurfaceObserver: surface %p already in the observers map",
+            static_cast<void*>(surface.get()));
+        observer->cease_and_desist();
+    }
+}
+
+void mf::ForeignSceneObserver::destroy_surface_observer(std::shared_ptr<scene::Surface> const& surface)
+{
     auto const iter = surface_observers.find(surface);
     if (iter == surface_observers.end())
     {
@@ -286,34 +340,8 @@ void mf::ForeignSceneObserver::surface_removed(std::shared_ptr<scene::Surface> c
     id_map->forget_toplevel(surface);
 }
 
-void mf::ForeignSceneObserver::surface_exists(std::shared_ptr<scene::Surface> const& surface)
-{
-    create_surface_observer(surface);
-}
-
-void mf::ForeignSceneObserver::end_observation()
-{
-    clear_surface_observers();
-}
-
-void mf::ForeignSceneObserver::create_surface_observer(std::shared_ptr<scene::Surface> const& surface)
-{
-    std::lock_guard lock{mutex};
-    auto observer = std::make_shared<ForeignSurfaceObserver>(manager, surface, desktop_file_manager, id_map);
-    surface->register_interest(observer, *wayland_executor);
-    auto insert_result = surface_observers.insert(std::make_pair(surface, observer));
-    if (!insert_result.second)
-    {
-        log_error(
-            "Can not add ForeignSurfaceObserver: surface %p already in the observers map",
-            static_cast<void*>(surface.get()));
-        observer->cease_and_desist();
-    }
-}
-
 void mf::ForeignSceneObserver::clear_surface_observers()
 {
-    std::lock_guard lock{mutex};
     for (auto const& pair : surface_observers)
     {
         pair.second->cease_and_desist();
@@ -337,8 +365,7 @@ mf::ForeignSurfaceObserver::ForeignSurfaceObserver(
       desktop_file_manager{desktop_file_manager},
       id_map{id_map}
 {
-    std::lock_guard lock{mutex};
-    create_or_close_toplevel_handle_as_needed(lock);
+    create_or_close_toplevel_handle_as_needed();
 }
 
 mf::ForeignSurfaceObserver::~ForeignSurfaceObserver()
@@ -348,13 +375,11 @@ mf::ForeignSurfaceObserver::~ForeignSurfaceObserver()
 
 void mf::ForeignSurfaceObserver::cease_and_desist()
 {
-    std::lock_guard lock{mutex};
     weak_surface.reset();
-    create_or_close_toplevel_handle_as_needed(lock);
+    create_or_close_toplevel_handle_as_needed();
 }
 
 void mf::ForeignSurfaceObserver::with_toplevel_handle(
-    std::lock_guard<std::mutex>&,
     std::function<void(ExtForeignToplevelHandleV1&)> const& action)
 {
     if (handle && *handle)
@@ -363,7 +388,7 @@ void mf::ForeignSurfaceObserver::with_toplevel_handle(
     }
 }
 
-void mf::ForeignSurfaceObserver::create_or_close_toplevel_handle_as_needed(std::lock_guard<std::mutex>& lock)
+void mf::ForeignSurfaceObserver::create_or_close_toplevel_handle_as_needed()
 {
     bool should_have_handle = true;
 
@@ -428,19 +453,17 @@ void mf::ForeignSurfaceObserver::create_or_close_toplevel_handle_as_needed(std::
         }
         else
         {
-            with_toplevel_handle(lock, [](ExtForeignToplevelHandleV1& handle)
+            with_toplevel_handle([](ExtForeignToplevelHandleV1& handle)
                 {
                     handle.should_close();
                 });
-            handle = {};
+            handle.reset();
         }
     }
 }
 
 void mf::ForeignSurfaceObserver::attrib_changed(const scene::Surface*, MirWindowAttrib attrib, int)
 {
-    std::lock_guard lock{mutex};
-
     auto surface = weak_surface.lock();
     if (!surface)
     {
@@ -451,7 +474,7 @@ void mf::ForeignSurfaceObserver::attrib_changed(const scene::Surface*, MirWindow
     {
     case mir_window_attrib_state:
     case mir_window_attrib_type:
-        create_or_close_toplevel_handle_as_needed(lock);
+        create_or_close_toplevel_handle_as_needed();
 
     default:
         break;
@@ -460,9 +483,7 @@ void mf::ForeignSurfaceObserver::attrib_changed(const scene::Surface*, MirWindow
 
 void mf::ForeignSurfaceObserver::renamed(ms::Surface const*, std::string const& name)
 {
-    std::lock_guard lock{mutex};
-
-    with_toplevel_handle(lock, [name](ExtForeignToplevelHandleV1& handle)
+    with_toplevel_handle([name](ExtForeignToplevelHandleV1& handle)
         {
             handle.send_title_event(name);
             handle.send_done_event();
@@ -473,10 +494,8 @@ void mf::ForeignSurfaceObserver::application_id_set_to(
     scene::Surface const* surface,
     std::string const& application_id)
 {
-    std::lock_guard lock{mutex};
-
     std::string id = application_id;
-    with_toplevel_handle(lock, [&](ExtForeignToplevelHandleV1& handle)
+    with_toplevel_handle([&](ExtForeignToplevelHandleV1& handle)
         {
             auto app_id = desktop_file_manager->resolve_app_id(surface);
             if (!app_id.empty())
