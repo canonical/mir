@@ -111,11 +111,9 @@ public:
         std::shared_ptr<ForeignToplevelIdentifierMap> const& id_map);
     ~ForeignSurfaceObserver();
 
-    void cease_and_desist(); ///< Must NOT be called under lock
+    void cease_and_desist();
 
 private:
-    /// if we don't have a live handle, action is not called and no error is raised
-    void with_toplevel_handle(std::function<void(ExtForeignToplevelHandleV1&)> const& action);
     void create_or_close_toplevel_handle_as_needed();
 
     /// Surface observer
@@ -128,9 +126,11 @@ private:
     wayland::Weak<ExtForeignToplevelListV1> const manager;
 
     std::weak_ptr<scene::Surface> weak_surface;
-    /// If nullptr, the surface is not supposed to have a handle (such as when it does not have a toplevel type)
-    /// If it points to an empty Weak, the handle is being created or was destroyed by the client
-    std::shared_ptr<wayland::Weak<ExtForeignToplevelHandleV1>> handle;
+    /// True if the surface counts as a toplevel window
+    bool has_handle = false;
+    /// The toplevel handle. This will be empty if the surface is not
+    /// a toplevel window or if the client has destroyed the handle.
+    wayland::Weak<ExtForeignToplevelHandleV1> handle;
 
     std::shared_ptr<DesktopFileManager> const desktop_file_manager;
     std::shared_ptr<ForeignToplevelIdentifierMap> const id_map;
@@ -261,7 +261,7 @@ void mf::ForeignSceneObserver::surface_added(std::shared_ptr<scene::Surface> con
 {
     // Defer processing to Wayland thread
     wayland_executor->spawn(
-        [weak_observer = weak_from_this(), surface]()
+        [weak_observer=weak_from_this(), surface]()
             {
                 if (auto const observer = weak_observer.lock())
                 {
@@ -274,7 +274,7 @@ void mf::ForeignSceneObserver::surface_removed(std::shared_ptr<scene::Surface> c
 {
     // Defer processing to Wayland thread
     wayland_executor->spawn(
-        [weak_observer = weak_from_this(), surface]()
+        [weak_observer=weak_from_this(), surface]()
             {
                 if (auto const observer = weak_observer.lock())
                 {
@@ -287,7 +287,7 @@ void mf::ForeignSceneObserver::surface_exists(std::shared_ptr<scene::Surface> co
 {
     // Defer processing to Wayland thread
     wayland_executor->spawn(
-        [weak_observer = weak_from_this(), surface]()
+        [weak_observer=weak_from_this(), surface]()
             {
                 if (auto const observer = weak_observer.lock())
                 {
@@ -300,7 +300,7 @@ void mf::ForeignSceneObserver::end_observation()
 {
     // Defer processing to Wayland thread
     wayland_executor->spawn(
-        [weak_observer = weak_from_this()]()
+        [weak_observer=weak_from_this()]()
             {
                 if (auto const observer = weak_observer.lock())
                 {
@@ -342,12 +342,12 @@ void mf::ForeignSceneObserver::destroy_surface_observer(std::shared_ptr<scene::S
 
 void mf::ForeignSceneObserver::clear_surface_observers()
 {
-    for (auto const& pair : surface_observers)
+    for (auto const& [weak_surface, observer] : surface_observers)
     {
-        pair.second->cease_and_desist();
-        if (auto const surface = pair.first.lock())
+        observer->cease_and_desist();
+        if (auto const surface = weak_surface.lock())
         {
-            surface->unregister_interest(*pair.second);
+            surface->unregister_interest(*observer);
         }
     }
     surface_observers.clear();
@@ -379,15 +379,6 @@ void mf::ForeignSurfaceObserver::cease_and_desist()
     create_or_close_toplevel_handle_as_needed();
 }
 
-void mf::ForeignSurfaceObserver::with_toplevel_handle(
-    std::function<void(ExtForeignToplevelHandleV1&)> const& action)
-{
-    if (handle && *handle)
-    {
-        action(handle->value());
-    }
-}
-
 void mf::ForeignSurfaceObserver::create_or_close_toplevel_handle_as_needed()
 {
     bool should_have_handle = true;
@@ -417,7 +408,7 @@ void mf::ForeignSurfaceObserver::create_or_close_toplevel_handle_as_needed()
             break;
         }
 
-        if (!surface->session().lock())
+        if (surface->session().expired())
             should_have_handle = false;
     }
     else
@@ -425,8 +416,7 @@ void mf::ForeignSurfaceObserver::create_or_close_toplevel_handle_as_needed()
         should_have_handle = false;
     }
 
-    bool const currently_have_handle{handle};
-    if (should_have_handle != currently_have_handle)
+    if (should_have_handle != has_handle)
     {
         if (should_have_handle)
         {
@@ -434,38 +424,36 @@ void mf::ForeignSurfaceObserver::create_or_close_toplevel_handle_as_needed()
             if (!manager)
                 return;
 
-            handle = std::make_shared<mw::Weak<ExtForeignToplevelHandleV1>>();
-
             std::string toplevel_id = id_map->toplevel_id(surface);
             std::string name = surface->name();
             std::string app_id = desktop_file_manager->resolve_app_id(surface.get());
 
             // Remember Wayland objects manage their own lifetime
             auto const handle_ptr = new ExtForeignToplevelHandleV1{manager.value(), surface};
-            *handle = mw::make_weak(handle_ptr);
+            handle = mw::make_weak(handle_ptr);
 
-            handle->value().send_identifier_event(toplevel_id);
+            handle_ptr->send_identifier_event(toplevel_id);
             if (!name.empty())
-                handle->value().send_title_event(name);
+                handle_ptr->send_title_event(name);
             if (!app_id.empty())
-                handle->value().send_app_id_event(app_id);
-            handle->value().send_done_event();
+                handle_ptr->send_app_id_event(app_id);
+            handle_ptr->send_done_event();
         }
         else
         {
-            with_toplevel_handle([](ExtForeignToplevelHandleV1& handle)
-                {
-                    handle.should_close();
-                });
-            handle.reset();
+            if (handle)
+            {
+                handle.value().should_close();
+            };
+            handle = {};
         }
+        has_handle = should_have_handle;
     }
 }
 
 void mf::ForeignSurfaceObserver::attrib_changed(const scene::Surface*, MirWindowAttrib attrib, int)
 {
-    auto surface = weak_surface.lock();
-    if (!surface)
+    if (weak_surface.expired())
     {
         return;
     }
@@ -483,11 +471,11 @@ void mf::ForeignSurfaceObserver::attrib_changed(const scene::Surface*, MirWindow
 
 void mf::ForeignSurfaceObserver::renamed(ms::Surface const*, std::string const& name)
 {
-    with_toplevel_handle([name](ExtForeignToplevelHandleV1& handle)
-        {
-            handle.send_title_event(name);
-            handle.send_done_event();
-        });
+    if (handle)
+    {
+        handle.value().send_title_event(name);
+        handle.value().send_done_event();
+    };
 }
 
 void mf::ForeignSurfaceObserver::application_id_set_to(
@@ -495,15 +483,15 @@ void mf::ForeignSurfaceObserver::application_id_set_to(
     std::string const& application_id)
 {
     std::string id = application_id;
-    with_toplevel_handle([&](ExtForeignToplevelHandleV1& handle)
+    if (handle)
+    {
+        auto app_id = desktop_file_manager->resolve_app_id(surface);
+        if (!app_id.empty())
         {
-            auto app_id = desktop_file_manager->resolve_app_id(surface);
-            if (!app_id.empty())
-            {
-                handle.send_app_id_event(app_id);
-                handle.send_done_event();
-            }
-        });
+            handle.value().send_app_id_event(app_id);
+            handle.value().send_done_event();
+        }
+    };
 }
 
 // ExtForeignToplevelListV1
