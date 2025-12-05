@@ -3,5 +3,6 @@ usr/bin/miral-kiosk
 usr/bin/miral-app
 usr/bin/miral-terminal
 usr/bin/miral-system-compositor
+usr/bin/trigger_client
 usr/share/applications/miral-shell.desktop
 usr/share/icons/hicolor/scalable/apps/spiral-logo.svg
