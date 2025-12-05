@@ -155,8 +155,6 @@ if (MIR_USE_APPARMOR)
   target_link_libraries(mirserver PUBLIC PkgConfig::APPARMOR)
 endif()
 
-set(MIRSERVER_INCLUDE_DIRS ${UUID_INCLUDE_DIRS} PARENT_SCOPE)
-
 install(TARGETS mirserver
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
