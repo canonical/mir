@@ -34,6 +34,7 @@ set(
   mir_shell.cpp                 mir_shell.h
   resource_lifetime_tracker.cpp resource_lifetime_tracker.h
   wl_region.cpp                 wl_region.h
+  foreign_toplevel_list_v1.cpp  foreign_toplevel_list_v1.h
   foreign_toplevel_manager_v1.cpp foreign_toplevel_manager_v1.h
   desktop_file_manager.cpp      desktop_file_manager.h
   frame_executor.cpp            frame_executor.h
