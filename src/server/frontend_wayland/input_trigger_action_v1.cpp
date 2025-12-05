@@ -329,6 +329,11 @@ private:
                     trigger.value().add_destroy_listener(remove_filter);
                 }
             }
+            else
+            {
+                auto const action = new InputTriggerActionV1(id);
+                action->send_unavailable_event();
+            }
         }
 
     public:
