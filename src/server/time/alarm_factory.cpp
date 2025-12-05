@@ -22,7 +22,7 @@ auto mir::time::AlarmFactory::create_repeating_alarm(
     auto const shared_weak_alarm{std::make_shared<std::weak_ptr<time::Alarm>>()};
 
     std::shared_ptr result = create_alarm(
-        [swk = shared_weak_alarm, cb = std::move(callback), repeat_delay]()
+        [swk = shared_weak_alarm, cb = callback, repeat_delay]()
         {
             cb();
 

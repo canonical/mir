@@ -258,7 +258,7 @@ std::shared_ptr<mf::DesktopFile> mf::DesktopFileManager::resolve_if_flatpak(int 
     if (!g_key_file_load_from_file(key_file, info_filename, G_KEY_FILE_NONE, NULL))
         return nullptr;
 
-    char* sandboxed_app_id = g_key_file_get_string(key_file, "Application", "name", NULL);
+    g_autofree char* sandboxed_app_id = g_key_file_get_string(key_file, "Application", "name", NULL);
     if (!sandboxed_app_id)
         return nullptr;
 
