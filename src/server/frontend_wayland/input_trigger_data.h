@@ -17,6 +17,7 @@
 #ifndef MIR_SERVER_FRONTEND_INPUT_TRIGGER_DATA_H_
 #define MIR_SERVER_FRONTEND_INPUT_TRIGGER_DATA_H_
 
+#include "ext-input-trigger-registration-v1_wrapper.h"
 #include "mir/synchronised.h"
 #include "mir/wayland/weak.h"
 #include <unordered_map>
@@ -30,7 +31,7 @@ class InputTriggerActionV1;
 
 struct InputTriggerData
 {
-    mir::Synchronised<std::unordered_map<std::string, wayland::Weak<InputTriggerActionV1>>> registered_actions;
+    mir::Synchronised<std::unordered_map<std::string, wayland::Weak<wayland::InputTriggerV1>>> pending_actions;
 };
 
 }
