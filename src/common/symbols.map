@@ -703,4 +703,3 @@ global:
     mir::security_log*;
   };
 } MIR_COMMON_INTERNAL_2.22;
-
