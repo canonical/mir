@@ -66,6 +66,8 @@ char const* const group = "group";
 char const* const orientation_value[] = { "normal", "left", "inverted", "right" };
 char const* const mirror_suffix_horizontal = "-h-mirrored";
 char const* const mirror_suffix_vertical = "-v-mirrored";
+constexpr size_t mirror_suffix_horizontal_len = 11; // Length of "-h-mirrored"
+constexpr size_t mirror_suffix_vertical_len = 11;   // Length of "-v-mirrored"
 char const* const layout_suffix = "-layout";
 
 auto as_string(MirOrientation orientation, MirMirrorMode mirror_mode) -> std::string
@@ -85,20 +87,17 @@ auto parse_orientation_and_mirror(std::string const& orientation_str)
     std::string base_orientation = orientation_str;
     
     // Check for mirror suffixes
-    size_t const h_suffix_len = strlen(mirror_suffix_horizontal);
-    size_t const v_suffix_len = strlen(mirror_suffix_vertical);
-    
-    if (orientation_str.size() >= h_suffix_len && 
-        orientation_str.compare(orientation_str.size() - h_suffix_len, h_suffix_len, mirror_suffix_horizontal) == 0)
+    if (orientation_str.size() >= mirror_suffix_horizontal_len && 
+        orientation_str.compare(orientation_str.size() - mirror_suffix_horizontal_len, mirror_suffix_horizontal_len, mirror_suffix_horizontal) == 0)
     {
         mirror_mode = mir_mirror_mode_horizontal;
-        base_orientation = orientation_str.substr(0, orientation_str.size() - h_suffix_len);
+        base_orientation = orientation_str.substr(0, orientation_str.size() - mirror_suffix_horizontal_len);
     }
-    else if (orientation_str.size() >= v_suffix_len && 
-             orientation_str.compare(orientation_str.size() - v_suffix_len, v_suffix_len, mirror_suffix_vertical) == 0)
+    else if (orientation_str.size() >= mirror_suffix_vertical_len && 
+             orientation_str.compare(orientation_str.size() - mirror_suffix_vertical_len, mirror_suffix_vertical_len, mirror_suffix_vertical) == 0)
     {
         mirror_mode = mir_mirror_mode_vertical;
-        base_orientation = orientation_str.substr(0, orientation_str.size() - v_suffix_len);
+        base_orientation = orientation_str.substr(0, orientation_str.size() - mirror_suffix_vertical_len);
     }
     
     // Parse base orientation

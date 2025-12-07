@@ -306,6 +306,8 @@ mir::geometry::Rectangle mg::DisplayConfigurationOutput::extents() const
 
 glm::mat2 mg::DisplayConfigurationOutput::transformation() const
 {
+    // Apply mirror transformation after orientation (matrix multiplication is right-to-left).
+    // This means we first rotate, then mirror, which matches the Wayland transform semantics.
     return mg::transformation(mirror_mode) * mg::transformation(orientation);
 }
 
