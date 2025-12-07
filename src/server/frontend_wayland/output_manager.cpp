@@ -91,7 +91,7 @@ auto mf::OutputInstance::output_config_changed(mg::DisplayConfigurationOutput co
         as_subpixel_arrangement(config.subpixel_arrangement),
         config.display_info.vendor.value_or("Unknown manufacturer"),
         config.display_info.model.value_or("Unknown model"),
-        OutputManager::to_output_transform(config.orientation, mir_mirror_mode_none));
+        OutputManager::to_output_transform(config.orientation, config.mirror_mode));
 
     for (size_t i = 0; i < config.modes.size(); ++i)
     {

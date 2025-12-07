@@ -870,6 +870,46 @@ TEST_F(StaticDisplayConfig, cards_apply_on_unmatched_displays)
     EXPECT_THAT(vga1.orientation, Eq(mir_orientation_right));
 }
 
+TEST_F(StaticDisplayConfig, orientation_h_mirrored_works)
+{
+    std::istringstream stream{
+        "layouts:\n"
+        "  default:\n"
+        "    cards:\n"
+        "    - VGA-1:\n"
+        "        orientation: normal-h-mirrored\n"
+        "    - HDMI-A-1:\n"
+        "        orientation: left-h-mirrored\n"};
+
+    sdc.load_config(stream, "");
+    sdc.apply_to(dc);
+
+    EXPECT_THAT(vga1.orientation, Eq(mir_orientation_normal));
+    EXPECT_THAT(vga1.mirror_mode, Eq(mir_mirror_mode_horizontal));
+    EXPECT_THAT(hdmi1.orientation, Eq(mir_orientation_left));
+    EXPECT_THAT(hdmi1.mirror_mode, Eq(mir_mirror_mode_horizontal));
+}
+
+TEST_F(StaticDisplayConfig, orientation_v_mirrored_works)
+{
+    std::istringstream stream{
+        "layouts:\n"
+        "  default:\n"
+        "    cards:\n"
+        "    - VGA-1:\n"
+        "        orientation: inverted-v-mirrored\n"
+        "    - HDMI-A-1:\n"
+        "        orientation: right-v-mirrored\n"};
+
+    sdc.load_config(stream, "");
+    sdc.apply_to(dc);
+
+    EXPECT_THAT(vga1.orientation, Eq(mir_orientation_inverted));
+    EXPECT_THAT(vga1.mirror_mode, Eq(mir_mirror_mode_vertical));
+    EXPECT_THAT(hdmi1.orientation, Eq(mir_orientation_right));
+    EXPECT_THAT(hdmi1.mirror_mode, Eq(mir_mirror_mode_vertical));
+}
+
 TEST_P(PropertyValueTest, serialize_properties_for_outputs)
 {
     std::ostringstream out;

@@ -82,6 +82,7 @@ private:
         mir::optional_value<double> refresh;
         mir::optional_value<float>  scale;
         mir::optional_value<MirOrientation>  orientation;
+        mir::optional_value<MirMirrorMode>  mirror_mode;
         mir::optional_value<int> group_id;
         std::map<std::string, std::optional<std::string>> custom_attribute;
     };

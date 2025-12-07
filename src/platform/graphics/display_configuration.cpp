@@ -188,6 +188,7 @@ bool mg::operator==(mg::DisplayConfigurationOutput const& val1,
                (val1.used == val2.used) &&
                (val1.top_left == val2.top_left) &&
                (val1.orientation == val2.orientation) &&
+               (val1.mirror_mode == val2.mirror_mode) &&
                (val1.current_mode_index == val2.current_mode_index) &&
                (val1.modes.size() == val2.modes.size()) &&
                (val1.custom_logical_size == val2.custom_logical_size) &&
@@ -305,7 +306,7 @@ mir::geometry::Rectangle mg::DisplayConfigurationOutput::extents() const
 
 glm::mat2 mg::DisplayConfigurationOutput::transformation() const
 {
-    return mg::transformation(orientation);
+    return mg::transformation(mirror_mode) * mg::transformation(orientation);
 }
 
 bool mg::DisplayConfigurationOutput::valid() const
@@ -361,6 +362,7 @@ mg::UserDisplayConfigurationOutput::UserDisplayConfigurationOutput(
         current_format(main.current_format),
         power_mode(main.power_mode),
         orientation(main.orientation),
+        mirror_mode(main.mirror_mode),
         scale(main.scale),
         form_factor(main.form_factor),
         subpixel_arrangement(main.subpixel_arrangement),

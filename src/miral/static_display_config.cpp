@@ -64,28 +64,53 @@ char const* const orientation = "orientation";
 char const* const scale = "scale";
 char const* const group = "group";
 char const* const orientation_value[] = { "normal", "left", "inverted", "right" };
+char const* const mirror_suffix_horizontal = "-h-mirrored";
+char const* const mirror_suffix_vertical = "-v-mirrored";
 char const* const layout_suffix = "-layout";
 
-auto as_string(MirOrientation orientation) -> char const*
+auto as_string(MirOrientation orientation, MirMirrorMode mirror_mode) -> std::string
 {
-    return orientation_value[orientation/90];
+    std::string result = orientation_value[orientation/90];
+    if (mirror_mode == mir_mirror_mode_horizontal)
+        result += mirror_suffix_horizontal;
+    else if (mirror_mode == mir_mirror_mode_vertical)
+        result += mirror_suffix_vertical;
+    return result;
 }
 
-auto as_orientation(std::string const& orientation) -> mir::optional_value<MirOrientation>
+auto parse_orientation_and_mirror(std::string const& orientation_str) 
+    -> std::pair<mir::optional_value<MirOrientation>, mir::optional_value<MirMirrorMode>>
 {
-    if (orientation == orientation_value[3])
-        return mir_orientation_right;
-
-    if (orientation == orientation_value[2])
-        return mir_orientation_inverted;
-
-    if (orientation == orientation_value[1])
-        return mir_orientation_left;
-
-    if (orientation == orientation_value[0])
-        return mir_orientation_normal;
-
-    return {};
+    MirMirrorMode mirror_mode = mir_mirror_mode_none;
+    std::string base_orientation = orientation_str;
+    
+    // Check for mirror suffixes
+    if (orientation_str.ends_with(mirror_suffix_horizontal))
+    {
+        mirror_mode = mir_mirror_mode_horizontal;
+        base_orientation = orientation_str.substr(0, orientation_str.size() - strlen(mirror_suffix_horizontal));
+    }
+    else if (orientation_str.ends_with(mirror_suffix_vertical))
+    {
+        mirror_mode = mir_mirror_mode_vertical;
+        base_orientation = orientation_str.substr(0, orientation_str.size() - strlen(mirror_suffix_vertical));
+    }
+    
+    // Parse base orientation
+    mir::optional_value<MirOrientation> orientation;
+    if (base_orientation == orientation_value[3])
+        orientation = mir_orientation_right;
+    else if (base_orientation == orientation_value[2])
+        orientation = mir_orientation_inverted;
+    else if (base_orientation == orientation_value[1])
+        orientation = mir_orientation_left;
+    else if (base_orientation == orientation_value[0])
+        orientation = mir_orientation_normal;
+    
+    if (!orientation.is_set())
+        return {{}, {}};
+    
+    return {orientation, mirror_mode};
 }
 
 auto select_mode_index(size_t mode_index, std::vector<mg::DisplayConfigurationMode> const & modes) -> size_t
@@ -199,12 +224,15 @@ void miral::YamlFileDisplayConfig::parse_configuration(YAML::Node const& node, C
 
     if (auto const o = node[orientation])
     {
-        std::string const orientation = o.as<std::string>();
-        output_config.orientation = as_orientation(orientation);
+        std::string const orientation_str = o.as<std::string>();
+        auto [parsed_orientation, parsed_mirror_mode] = parse_orientation_and_mirror(orientation_str);
 
-        if (!output_config.orientation)
+        if (!parsed_orientation.is_set())
             throw mir::AbnormalExit{error_prefix + "invalid 'orientation' (" +
-                                    orientation + ") for " + identifier};
+                                    orientation_str + ") for " + identifier};
+        
+        output_config.orientation = parsed_orientation;
+        output_config.mirror_mode = parsed_mirror_mode;
     }
 
     if (auto const s = node[scale])
@@ -535,8 +563,8 @@ void miral::YamlFileDisplayConfig::serialize_output_configuration(
                 << "\t# Defaults to preferred mode"
                    "\n        position: [" << conf_output.top_left.x << ", " << conf_output.top_left.y << ']'
                 << "\t# Defaults to [0, 0]"
-                   "\n        orientation: " << as_string(conf_output.orientation)
-                << "\t# {normal, left, right, inverted}, defaults to normal"
+                   "\n        orientation: " << as_string(conf_output.orientation, conf_output.mirror_mode)
+                << "\t# {normal, left, right, inverted, [orientation]-h-mirrored, [orientation]-v-mirrored}, defaults to normal"
                    "\n        scale: " << conf_output.scale
                 << "\n        group: " << conf_output.logical_group_id.as_value()
                 << "\t# Outputs with the same non-zero value are treated as a single display";
@@ -636,6 +664,15 @@ void miral::YamlFileDisplayConfig::apply_to_output(mg::UserDisplayConfigurationO
         if (conf.orientation.is_set())
         {
             conf_output.orientation = conf.orientation.value();
+        }
+
+        if (conf.mirror_mode.is_set())
+        {
+            conf_output.mirror_mode = conf.mirror_mode.value();
+        }
+        else
+        {
+            conf_output.mirror_mode = mir_mirror_mode_none;
         }
 
         if (conf.group_id.is_set())

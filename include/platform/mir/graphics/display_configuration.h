@@ -142,6 +142,7 @@ struct DisplayConfigurationOutput
     /** Current power mode **/
     MirPowerMode power_mode;
     MirOrientation orientation;
+    MirMirrorMode mirror_mode{mir_mirror_mode_none};
 
     /** Requested scale factor for this output, for HiDPI support */
     float scale{1.0f};
@@ -204,6 +205,7 @@ struct UserDisplayConfigurationOutput
     MirPixelFormat& current_format;
     MirPowerMode& power_mode;
     MirOrientation& orientation;
+    MirMirrorMode& mirror_mode;
     float& scale;
     MirFormFactor& form_factor;
     MirSubpixelArrangement& subpixel_arrangement;
