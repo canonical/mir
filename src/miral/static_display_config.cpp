@@ -85,15 +85,20 @@ auto parse_orientation_and_mirror(std::string const& orientation_str)
     std::string base_orientation = orientation_str;
     
     // Check for mirror suffixes
-    if (orientation_str.ends_with(mirror_suffix_horizontal))
+    size_t const h_suffix_len = strlen(mirror_suffix_horizontal);
+    size_t const v_suffix_len = strlen(mirror_suffix_vertical);
+    
+    if (orientation_str.size() >= h_suffix_len && 
+        orientation_str.compare(orientation_str.size() - h_suffix_len, h_suffix_len, mirror_suffix_horizontal) == 0)
     {
         mirror_mode = mir_mirror_mode_horizontal;
-        base_orientation = orientation_str.substr(0, orientation_str.size() - strlen(mirror_suffix_horizontal));
+        base_orientation = orientation_str.substr(0, orientation_str.size() - h_suffix_len);
     }
-    else if (orientation_str.ends_with(mirror_suffix_vertical))
+    else if (orientation_str.size() >= v_suffix_len && 
+             orientation_str.compare(orientation_str.size() - v_suffix_len, v_suffix_len, mirror_suffix_vertical) == 0)
     {
         mirror_mode = mir_mirror_mode_vertical;
-        base_orientation = orientation_str.substr(0, orientation_str.size() - strlen(mirror_suffix_vertical));
+        base_orientation = orientation_str.substr(0, orientation_str.size() - v_suffix_len);
     }
     
     // Parse base orientation
