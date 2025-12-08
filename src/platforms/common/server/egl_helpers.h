@@ -35,7 +35,7 @@ public:
     auto operator=(CacheEglState&& rhs) -> CacheEglState&;
 private:
     CacheEglState(CacheEglState const&) = delete;
-    auto operator=(CacheEglState const&) -> CacheEglState = delete;
+    auto operator=(CacheEglState const&) -> CacheEglState& = delete;
 
     EGLDisplay dpy;
     EGLContext ctx;
