@@ -43,14 +43,15 @@ use std::sync::Arc;
 use std::sync::Mutex;
 use std::thread;
 
-use crate::ffi::PlatformBridgeC;
+use crate::ffi::PlatformBridge;
+use cxx::ExternType;
 
 /// Creates a platform on the Rust side of things.
 ///
 /// The `bridge` and `device_registry` parameters are provided by the C++ side of things.
 /// The C++ platform simply forwards all calls to the Rust implementation.
 pub fn evdev_rs_create(
-    bridge: cxx::SharedPtr<ffi::PlatformBridgeC>,
+    bridge: cxx::SharedPtr<ffi::PlatformBridge>,
     device_registry: cxx::SharedPtr<ffi::InputDeviceRegistry>,
 ) -> Box<PlatformRs> {
     return Box::new(PlatformRs {
@@ -62,7 +63,7 @@ pub fn evdev_rs_create(
 
 pub struct PlatformRs {
     /// The platform bridge provides access to functionality that must happen in C++.
-    bridge: cxx::SharedPtr<ffi::PlatformBridgeC>,
+    bridge: cxx::SharedPtr<ffi::PlatformBridge>,
 
     /// The input device registry is used for registering and unregistering input devices.
     device_registry: cxx::SharedPtr<ffi::InputDeviceRegistry>,
@@ -188,7 +189,7 @@ impl PlatformRs {
     fn process_libinput_events(
         state: &mut LibinputLoopState,
         device_registry: cxx::SharedPtr<ffi::InputDeviceRegistry>,
-        bridge: cxx::SharedPtr<ffi::PlatformBridgeC>,
+        bridge: cxx::SharedPtr<ffi::PlatformBridge>,
     ) {
         fn handle_input(
             input_sink: &mut Option<InputSinkPtr>,
@@ -251,7 +252,6 @@ impl PlatformRs {
 
                         // # Safety
                         //
-                        // Because we need to use pin_mut_unchecked, this is unsafe.
                         thread::spawn(move || unsafe {
                             device_registry
                                 .clone()
@@ -291,29 +291,30 @@ impl PlatformRs {
                         match pointer_event {
                             event::PointerEvent::Motion(motion_event) => {
                                 if let Some(event_builder) = &mut device_info.event_builder {
+                                    let pointer_event = PointerEventDataRs{
+                                        has_time: true,
+                                        time_microseconds: motion_event.time_usec(),
+                                        action: ffi::MirPointerAction::mir_pointer_action_motion.repr,
+                                        buttons: state.button_state,
+                                        has_position: false,
+                                        position_x: 0 as f32,
+                                        position_y: 0 as f32,
+                                        displacement_x: motion_event.dx() as f32,
+                                        displacement_y: motion_event.dy() as f32,
+                                        axis_source: ffi::MirPointerAxisSource::mir_pointer_axis_source_none
+                                            .repr,
+                                        precise_x: 0.0,
+                                        discrete_x: 0,
+                                        value120_x: 0,
+                                        scroll_stop_x: false,
+                                        precise_y: 0.0,
+                                        discrete_y: 0,
+                                        value120_y: 0,
+                                        scroll_stop_y: false,
+                                    };
                                     handle_input(
                                         &mut device_info.input_sink,
-                                        event_builder.pin_mut().pointer_event(
-                                            true,
-                                            motion_event.time_usec(),
-                                            ffi::MirPointerAction::mir_pointer_action_motion.repr,
-                                            state.button_state,
-                                            false,
-                                            0 as f32,
-                                            0 as f32,
-                                            motion_event.dx() as f32,
-                                            motion_event.dy() as f32,
-                                            ffi::MirPointerAxisSource::mir_pointer_axis_source_none
-                                                .repr,
-                                            0.0,
-                                            0,
-                                            0,
-                                            false,
-                                            0.0,
-                                            0,
-                                            0,
-                                            false,
-                                        ),
+                                        event_builder.pin_mut().pointer_event(&pointer_event),
                                     );
                                 }
                             }
@@ -341,28 +342,29 @@ impl PlatformRs {
 
                                         let movement_x = state.pointer_x - old_x;
                                         let movement_y = state.pointer_y - old_y;
+                                        let pointer_event = PointerEventDataRs{
+                                            has_time: true,
+                                            time_microseconds: absolute_motion_event.time_usec(),
+                                            action: ffi::MirPointerAction::mir_pointer_action_motion.repr,
+                                            buttons: state.button_state,
+                                            has_position: true,
+                                            position_x: state.pointer_x,
+                                            position_y: state.pointer_y,
+                                            displacement_x: movement_x,
+                                            displacement_y: movement_y,
+                                            axis_source: ffi::MirPointerAxisSource::mir_pointer_axis_source_none.repr,
+                                            precise_x: 0.0,
+                                            discrete_x: 0,
+                                            value120_x: 0,
+                                            scroll_stop_x: false,
+                                            precise_y: 0.0,
+                                            discrete_y: 0,
+                                            value120_y: 0,
+                                            scroll_stop_y: false,
+                                        };
                                         handle_input(
                                             &mut device_info.input_sink,
-                                            event_builder.pin_mut().pointer_event(
-                                                true,
-                                                absolute_motion_event.time_usec(),
-                                                ffi::MirPointerAction::mir_pointer_action_motion.repr,
-                                                state.button_state,
-                                                true,
-                                                state.pointer_x,
-                                                state.pointer_y,
-                                                movement_x,
-                                                movement_y,
-                                                ffi::MirPointerAxisSource::mir_pointer_axis_source_none.repr,
-                                                0.0,
-                                                0,
-                                                0,
-                                                false,
-                                                0.0,
-                                                0,
-                                                0,
-                                                false,
-                                            ),
+                                            event_builder.pin_mut().pointer_event(&pointer_event),
                                         );
                                     }
                                 }
@@ -412,28 +414,29 @@ impl PlatformRs {
                                             (0.0, 0.0, 0.0, true)
                                         };
 
+                                    let pointer_event = PointerEventDataRs{
+                                        has_time: true,
+                                        time_microseconds: scroll_wheel_event.time_usec(),
+                                        action: ffi::MirPointerAction::mir_pointer_action_motion.repr,
+                                        buttons: state.button_state,
+                                        has_position: false,
+                                        position_x: 0.0,
+                                        position_y: 0.0,
+                                        displacement_x: 0.0,
+                                        displacement_y: 0.0,
+                                        axis_source: ffi::MirPointerAxisSource::mir_pointer_axis_source_wheel.repr,
+                                        precise_x: precise_x as f32,
+                                        discrete_x: discrete_x as i32,
+                                        value120_x: value120_x as i32,
+                                        scroll_stop_x: stop_x,
+                                        precise_y: precise_y as f32,
+                                        discrete_y: discrete_y as i32,
+                                        value120_y: value120_y as i32,
+                                        scroll_stop_y: stop_y,
+                                    };
                                     handle_input(
                                         &mut device_info.input_sink,
-                                        event_builder.pin_mut().pointer_event(
-                                            true,
-                                            scroll_wheel_event.time_usec(),
-                                            ffi::MirPointerAction::mir_pointer_action_motion.repr,
-                                            state.button_state,
-                                            false,
-                                            0.0,
-                                            0.0,
-                                            0.0,
-                                            0.0,
-                                            ffi::MirPointerAxisSource::mir_pointer_axis_source_wheel.repr,
-                                            precise_x as f32,
-                                            discrete_x as i32,
-                                            value120_x as i32,
-                                            stop_x,
-                                            precise_y as f32,
-                                            discrete_y as i32,
-                                            value120_y as i32,
-                                            stop_y,
-                                        ),
+                                        event_builder.pin_mut().pointer_event(&pointer_event),
                                     );
                                 }
                             }
@@ -478,28 +481,29 @@ impl PlatformRs {
                                             (0.0, 0.0, 0.0, true)
                                         };
 
+                                    let pointer_event = PointerEventDataRs{
+                                        has_time: true,
+                                        time_microseconds: scroll_continuous_event.time_usec(),
+                                        action: ffi::MirPointerAction::mir_pointer_action_motion.repr,
+                                        buttons: state.button_state,
+                                        has_position: false,
+                                        position_x: 0.0,
+                                        position_y: 0.0,
+                                        displacement_x: 0.0,
+                                        displacement_y: 0.0,
+                                        axis_source: ffi::MirPointerAxisSource::mir_pointer_axis_source_wheel.repr,
+                                        precise_x: precise_x as f32,
+                                        discrete_x: discrete_x as i32,
+                                        value120_x: value120_x as i32,
+                                        scroll_stop_x: stop_x,
+                                        precise_y: precise_y as f32,
+                                        discrete_y: discrete_y as i32,
+                                        value120_y: value120_y as i32,
+                                        scroll_stop_y: stop_y,
+                                    };
                                     handle_input(
                                         &mut device_info.input_sink,
-                                        event_builder.pin_mut().pointer_event(
-                                            true,
-                                            scroll_continuous_event.time_usec(),
-                                            ffi::MirPointerAction::mir_pointer_action_motion.repr,
-                                            state.button_state,
-                                            false,
-                                            0.0,
-                                            0.0,
-                                            0.0,
-                                            0.0,
-                                            ffi::MirPointerAxisSource::mir_pointer_axis_source_wheel.repr,
-                                            precise_x as f32,
-                                            discrete_x as i32,
-                                            value120_x as i32,
-                                            stop_x,
-                                            precise_y as f32,
-                                            discrete_y as i32,
-                                            value120_y as i32,
-                                            stop_y,
-                                        ),
+                                        event_builder.pin_mut().pointer_event(&pointer_event),
                                     );
                                 }
                             }
@@ -542,28 +546,29 @@ impl PlatformRs {
                                             (0.0, 0.0, 0.0, true)
                                         };
 
+                                    let pointer_event = PointerEventDataRs{
+                                        has_time: true,
+                                        time_microseconds: scroll_finger_event.time_usec(),
+                                        action: ffi::MirPointerAction::mir_pointer_action_motion.repr,
+                                        buttons: state.button_state,
+                                        has_position: false,
+                                        position_x: 0.0,
+                                        position_y: 0.0,
+                                        displacement_x: 0.0,
+                                        displacement_y: 0.0,
+                                        axis_source: ffi::MirPointerAxisSource::mir_pointer_axis_source_wheel.repr,
+                                        precise_x: precise_x as f32,
+                                        discrete_x: discrete_x as i32,
+                                        value120_x: value120_x as i32,
+                                        scroll_stop_x: stop_x,
+                                        precise_y: precise_y as f32,
+                                        discrete_y: discrete_y as i32,
+                                        value120_y: value120_y as i32,
+                                        scroll_stop_y: stop_y,
+                                    };
                                     handle_input(
                                         &mut device_info.input_sink,
-                                        event_builder.pin_mut().pointer_event(
-                                            true,
-                                            scroll_finger_event.time_usec(),
-                                            ffi::MirPointerAction::mir_pointer_action_motion.repr,
-                                            state.button_state,
-                                            false,
-                                            0.0,
-                                            0.0,
-                                            0.0,
-                                            0.0,
-                                            ffi::MirPointerAxisSource::mir_pointer_axis_source_wheel.repr,
-                                            precise_x as f32,
-                                            discrete_x as i32,
-                                            value120_x as i32,
-                                            stop_x,
-                                            precise_y as f32,
-                                            discrete_y as i32,
-                                            value120_y as i32,
-                                            stop_y,
-                                        ),
+                                        event_builder.pin_mut().pointer_event(&pointer_event),
                                     );
                                 }
                             }
@@ -621,29 +626,29 @@ impl PlatformRs {
                                         ffi::MirPointerAction::mir_pointer_action_button_up
                                     };
 
+                                    let pointer_event = PointerEventDataRs{
+                                        has_time: true,
+                                        time_microseconds: button_event.time_usec(),
+                                        action: action.repr,
+                                        buttons: state.button_state,
+                                        has_position: false,
+                                        position_x: 0.0,
+                                        position_y: 0.0,
+                                        displacement_x: 0.0,
+                                        displacement_y: 0.0,
+                                        axis_source: ffi::MirPointerAxisSource::mir_pointer_axis_source_none.repr,
+                                        precise_x: 0.0,
+                                        discrete_x: 0,
+                                        value120_x: 0,
+                                        scroll_stop_x: false,
+                                        precise_y: 0.0,
+                                        discrete_y: 0,
+                                        value120_y: 0,
+                                        scroll_stop_y: false,
+                                    };
                                     handle_input(
                                         &mut device_info.input_sink,
-                                        event_builder.pin_mut().pointer_event(
-                                            true,
-                                            button_event.time_usec(),
-                                            action.repr,
-                                            state.button_state,
-                                            false,
-                                            0.0,
-                                            0.0,
-                                            0.0,
-                                            0.0,
-                                            ffi::MirPointerAxisSource::mir_pointer_axis_source_none
-                                                .repr,
-                                            0.0,
-                                            0,
-                                            0,
-                                            false,
-                                            0.0,
-                                            0,
-                                            0,
-                                            false,
-                                        ),
+                                        event_builder.pin_mut().pointer_event(&pointer_event),
                                     );
                                 }
                             }
@@ -672,12 +677,13 @@ impl PlatformRs {
                                 };
 
                                 if let Some(event_builder) = &mut device_info.event_builder {
-                                    let created = event_builder.pin_mut().key_event(
-                                        true,
-                                        key_event.time_usec(),
-                                        keyboard_action.repr,
-                                        key_event.key(),
-                                    );
+                                    let key_event_data = ffi::KeyEventData{
+                                        has_time: true,
+                                        time_microseconds: key_event.time_usec(),
+                                        action: keyboard_action.repr,
+                                        scancode: key_event.key(),
+                                    };
+                                    let created = event_builder.pin_mut().key_event(&key_event_data);
 
                                     if let Some(input_sink) = &mut device_info.input_sink {
                                         input_sink.handle_input(&created);
@@ -707,13 +713,13 @@ impl PlatformRs {
 
 struct LibinputInterfaceImpl {
     /// The bridge used to acquire the device.
-    bridge: cxx::SharedPtr<ffi::PlatformBridgeC>,
+    bridge: cxx::SharedPtr<ffi::PlatformBridge>,
 
     /// The list of opened devices.
     ///
     /// Mir expects the caller who acquired the device to keep it alive until the device
     /// is closed. To do this, we keep it in the vector.
-    fds: Vec<cxx::UniquePtr<ffi::DeviceBridgeC>>,
+    fds: Vec<cxx::UniquePtr<ffi::DeviceWrapper>>,
 }
 
 impl input::LibinputInterface for LibinputInterfaceImpl {
@@ -788,8 +794,8 @@ struct DeviceInfo {
 // The other side of the classes below are known by us to be thread-safe, so we can
 // safely send it to another thread. However, Rust has no way of knowing that, so
 // we have to assert it ourselves.
-unsafe impl Send for ffi::PlatformBridgeC {}
-unsafe impl Sync for ffi::PlatformBridgeC {}
+unsafe impl Send for ffi::PlatformBridge {}
+unsafe impl Sync for ffi::PlatformBridge {}
 unsafe impl Send for ffi::InputDeviceRegistry {}
 unsafe impl Sync for ffi::InputDeviceRegistry {}
 unsafe impl Send for ffi::InputDevice {}
@@ -870,7 +876,7 @@ impl DeviceObserverRs {
 pub struct InputDeviceRs {
     device_id: i32,
     state: Arc<Mutex<LibinputLoopState>>,
-    bridge: SharedPtr<PlatformBridgeC>,
+    bridge: SharedPtr<PlatformBridge>,
 }
 
 impl InputDeviceRs {
@@ -991,7 +997,7 @@ impl InputDeviceRs {
         }
     }
 
-    pub fn set_pointer_settings(&self, settings: &ffi::PointerSettingsC) {
+    pub fn set_pointer_settings(&self, settings: &ffi::PointerSettings) {
         let mut state = self.state.lock().unwrap();
         if let Some(device_info) = state.find_device_by_id(self.device_id) {
             if device_info
@@ -1039,6 +1045,49 @@ impl ffi::PointerSettingsRs {
             has_error: false,
         }
     }
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct KeyEventData {
+    pub has_time: bool,
+    pub time_microseconds: u64,
+    pub action: i32,
+    pub scancode: u32,
+}
+
+unsafe impl ExternType for KeyEventData {
+    type Id = cxx::type_id!("mir::input::evdev_rs::KeyEventData");
+    type Kind = cxx::kind::Trivial;
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct PointerEventDataRs
+{
+    pub has_time: bool,
+    pub time_microseconds: u64,
+    pub action: i32,
+    pub buttons: u32,
+    pub has_position: bool,
+    pub position_x: f32,
+    pub position_y: f32,
+    pub displacement_x: f32,
+    pub displacement_y: f32,
+    pub axis_source: i32,
+    pub precise_x: f32,
+    pub discrete_x: i32,
+    pub value120_x: i32,
+    pub scroll_stop_x: bool,
+    pub precise_y: f32,
+    pub discrete_y: i32,
+    pub value120_y: i32,
+    pub scroll_stop_y: bool,
+}
+
+unsafe impl ExternType for PointerEventDataRs {
+    type Id = cxx::type_id!("mir::input::evdev_rs::PointerEventData");
+    type Kind = cxx::kind::Trivial;
 }
 
 #[cxx::bridge(namespace = "mir::input::evdev_rs")]
@@ -1117,7 +1166,7 @@ mod ffi {
     }
 
     #[derive(Copy, Clone)]
-    struct PointerSettingsC {
+    struct PointerSettings {
         pub handedness: i32,
         pub cursor_acceleration_bias: f64,
         pub acceleration: i32,
@@ -1135,6 +1184,10 @@ mod ffi {
         pub vertical_scroll_scale: f64,
         pub has_error: bool,
     }
+
+    // PointerEventData is declared as an extern C++ type mapped to the Rust struct above
+
+    // KeyEventData is declared as an extern C++ type mapped to the Rust struct above
 
     extern "Rust" {
         type PlatformRs;
@@ -1171,10 +1224,10 @@ mod ffi {
         fn unique_id(self: &InputDeviceInfoRs) -> &str;
         fn capabilities(self: &InputDeviceInfoRs) -> u32;
         fn get_pointer_settings(self: &InputDeviceRs) -> Box<PointerSettingsRs>;
-        fn set_pointer_settings(self: &InputDeviceRs, settings: &PointerSettingsC);
+        fn set_pointer_settings(self: &InputDeviceRs, settings: &PointerSettings);
 
         fn evdev_rs_create(
-            bridge: SharedPtr<PlatformBridgeC>,
+            bridge: SharedPtr<PlatformBridge>,
             device_registry: SharedPtr<InputDeviceRegistry>,
         ) -> Box<PlatformRs>;
     }
@@ -1189,10 +1242,14 @@ mod ffi {
         include!("mir/events/scroll_axis.h");
         include!("mir_toolkit/events/enums.h");
 
-        type PlatformBridgeC;
-        type DeviceBridgeC;
+        type PlatformBridge;
+        type DeviceWrapper;
         type EventBuilderWrapper;
-        type RectangleC;
+        type RectangleWrapper;
+        // Map C++ KeyEventData to the Rust struct
+        type KeyEventData = crate::KeyEventData;
+        // Map C++ PointerEventData to the Rust struct
+        type PointerEventData = crate::PointerEventDataRs;
 
         #[namespace = "mir::input"]
         type Device;
@@ -1234,51 +1291,29 @@ mod ffi {
         type MirPointerHandedness;
 
         fn acquire_device(
-            self: &PlatformBridgeC,
+            self: &PlatformBridge,
             major: i32,
             minor: i32,
-        ) -> UniquePtr<DeviceBridgeC>;
-        fn bounding_rectangle(self: &PlatformBridgeC, sink: &InputSink) -> UniquePtr<RectangleC>;
-        fn create_input_device(self: &PlatformBridgeC, device_id: i32) -> SharedPtr<InputDevice>;
-        fn raw_fd(self: &DeviceBridgeC) -> i32;
+        ) -> UniquePtr<DeviceWrapper>;
+        fn bounding_rectangle(self: &PlatformBridge, sink: &InputSink) -> UniquePtr<RectangleWrapper>;
+        fn create_input_device(self: &PlatformBridge, device_id: i32) -> SharedPtr<InputDevice>;
+        fn raw_fd(self: &DeviceWrapper) -> i32;
 
         // # Safety
         //
         // This is unsafe because it receives a raw C++ pointer as an argument.
         unsafe fn create_event_builder_wrapper(
-            self: &PlatformBridgeC,
+            self: &PlatformBridge,
             event_builder: *mut EventBuilder,
         ) -> UniquePtr<EventBuilderWrapper>;
 
         fn pointer_event(
             self: &EventBuilderWrapper,
-            has_time: bool,
-            time_microseconds: u64,
-            action: i32,
-            buttons: u32,
-            has_position: bool,
-            position_x: f32,
-            position_y: f32,
-            displacement_x: f32,
-            displacement_y: f32,
-            axis_source: i32,
-            precise_x: f32,
-            discrete_x: i32,
-            value120_x: i32,
-            scroll_stop_x: bool,
-            precise_y: f32,
-            discrete_y: i32,
-            value120_y: i32,
-            scroll_stop_y: bool,
-        ) -> SharedPtr<MirEvent>;
+            data: &PointerEventData) -> SharedPtr<MirEvent>;
 
         fn key_event(
             self: &EventBuilderWrapper,
-            has_time: bool,
-            time_microseconds: u64,
-            action: i32,
-            scancode: u32,
-        ) -> SharedPtr<MirEvent>;
+            data: &KeyEventData) -> SharedPtr<MirEvent>;
 
         #[namespace = "mir::input"]
         fn add_device(
@@ -1292,9 +1327,9 @@ mod ffi {
         #[namespace = "mir::input"]
         fn handle_input(self: Pin<&mut InputSink>, event: &SharedPtr<MirEvent>);
 
-        fn x(self: &RectangleC) -> i32;
-        fn y(self: &RectangleC) -> i32;
-        fn width(self: &RectangleC) -> i32;
-        fn height(self: &RectangleC) -> i32;
+        fn x(self: &RectangleWrapper) -> i32;
+        fn y(self: &RectangleWrapper) -> i32;
+        fn width(self: &RectangleWrapper) -> i32;
+        fn height(self: &RectangleWrapper) -> i32;
     }
 }

@@ -27,12 +27,12 @@ namespace mi = mir::input;
 namespace miers = mir::input::evdev_rs;
 namespace geom = mir::geometry;
 
-miers::PlatformBridgeC::PlatformBridgeC(
+miers::PlatformBridge::PlatformBridge(
     Platform* platform,
     std::shared_ptr<mir::ConsoleServices> const& console)
     : platform(platform), console(console) {}
 
-std::unique_ptr<miers::DeviceBridgeC> miers::PlatformBridgeC::acquire_device(int major, int minor) const
+std::unique_ptr<miers::DeviceWrapper> miers::PlatformBridge::acquire_device(int major, int minor) const
 {
     mir::log_info("Acquiring device: %d.%d", major, minor);
     auto observer = platform->create_device_observer();
@@ -42,37 +42,31 @@ std::unique_ptr<miers::DeviceBridgeC> miers::PlatformBridgeC::acquire_device(int
     if (auto const raw_fd = raw_observer->raw_fd(); !raw_fd)
         throw std::runtime_error("Failed to acquire device");
     else
-        return std::make_unique<DeviceBridgeC>(future.get(), raw_fd.value());
+        return std::make_unique<DeviceWrapper>(future.get(), raw_fd.value());
 }
 
-std::shared_ptr<mi::InputDevice> miers::PlatformBridgeC::create_input_device(int device_id) const
+std::shared_ptr<mi::InputDevice> miers::PlatformBridge::create_input_device(int device_id) const
 {
     return platform->create_input_device(device_id);
 }
 
-std::unique_ptr<miers::EventBuilderWrapper> miers::PlatformBridgeC::create_event_builder_wrapper(EventBuilder* event_builder) const
+std::unique_ptr<miers::EventBuilderWrapper> miers::PlatformBridge::create_event_builder_wrapper(EventBuilder* event_builder) const
 {
     return std::make_unique<EventBuilderWrapper>(event_builder);
 }
 
-std::unique_ptr<miers::RectangleC> miers::PlatformBridgeC::bounding_rectangle(InputSink const& input_sink) const
+std::unique_ptr<miers::RectangleWrapper> miers::PlatformBridge::bounding_rectangle(InputSink const& input_sink) const
 {
-    auto const rectangle = input_sink.bounding_rectangle();
-    return std::make_unique<RectangleC>(
-        rectangle.top_left.x.as_int(),
-        rectangle.top_left.y.as_int(),
-        rectangle.size.width.as_int(),
-        rectangle.size.height.as_int()
-    );
+    return std::make_unique<RectangleWrapper>(input_sink.bounding_rectangle());
 }
 
-miers::DeviceBridgeC::DeviceBridgeC(std::unique_ptr<mir::Device> device, int fd)
+miers::DeviceWrapper::DeviceWrapper(std::unique_ptr<mir::Device> device, int fd)
     : device(std::move(device)),
       fd(fd)
 {
 }
 
-int miers::DeviceBridgeC::raw_fd() const
+int miers::DeviceWrapper::raw_fd() const
 {
     return fd;
 }
@@ -82,63 +76,65 @@ miers::EventBuilderWrapper::EventBuilderWrapper(EventBuilder* event_builder)
 {
 }
 
-std::shared_ptr<MirEvent> miers::EventBuilderWrapper::pointer_event(
-    bool has_time,
-    uint64_t time_microseconds,
-    int32_t action,
-    uint32_t buttons,
-    bool has_position,
-    float position_x,
-    float position_y,
-    float displacement_x,
-    float displacement_y,
-    int32_t axis_source,
-    float precise_x,
-    int discrete_x,
-    int value120_x,
-    bool scroll_stop_x,
-    float precise_y,
-    int discrete_y,
-    int value120_y,
-    bool scroll_stop_y) const
+std::shared_ptr<MirEvent> miers::EventBuilderWrapper::pointer_event(PointerEventData const& data) const
 {
     return event_builder->pointer_event(
-        has_time
-            ? std::chrono::microseconds(time_microseconds)
+        data.has_time
+            ? std::chrono::microseconds(data.time_microseconds)
             : std::optional<EventBuilder::Timestamp>(std::nullopt),
-        static_cast<MirPointerAction>(action),
-        buttons,
-        has_position
-            ? geometry::PointF(position_x, position_y)
+        static_cast<MirPointerAction>(data.action),
+        data.buttons,
+        data.has_position
+            ? geometry::PointF(data.position_x, data.position_y)
             : std::optional<geometry::PointF>(std::nullopt),
-        geometry::DisplacementF(displacement_x, displacement_y),
-        static_cast<MirPointerAxisSource>(axis_source),
+        geometry::DisplacementF(data.displacement_x, data.displacement_y),
+        static_cast<MirPointerAxisSource>(data.axis_source),
         events::ScrollAxisH(
-            geom::generic::Value<float, geom::DeltaXTag>(precise_x),
-            geom::generic::Value<int, geom::DeltaXTag>(discrete_x),
-            geom::generic::Value<int, geom::DeltaXTag>(value120_x),
-            scroll_stop_x),
+            geom::generic::Value<float, geom::DeltaXTag>(data.precise_x),
+            geom::generic::Value<int, geom::DeltaXTag>(data.discrete_x),
+            geom::generic::Value<int, geom::DeltaXTag>(data.value120_x),
+            data.scroll_stop_x),
         events::ScrollAxisV(
-            geom::generic::Value<float, geom::DeltaYTag>(precise_y),
-            geom::generic::Value<int, geom::DeltaYTag>(discrete_y),
-            geom::generic::Value<int, geom::DeltaYTag>(value120_y),
-            scroll_stop_y)
+            geom::generic::Value<float, geom::DeltaYTag>(data.precise_y),
+            geom::generic::Value<int, geom::DeltaYTag>(data.discrete_y),
+            geom::generic::Value<int, geom::DeltaYTag>(data.value120_y),
+            data.scroll_stop_y)
     );
 }
 
-std::shared_ptr<MirEvent> miers::EventBuilderWrapper::key_event(
-        bool has_time,
-        uint64_t time_microseconds,
-        int32_t action,
-        uint32_t scancode
-    ) const
+std::shared_ptr<MirEvent> miers::EventBuilderWrapper::key_event(KeyEventData const& data) const
 {
     return event_builder->key_event(
-        has_time
-            ? std::chrono::microseconds(time_microseconds)
+        data.has_time
+            ? std::chrono::microseconds(data.time_microseconds)
             : std::optional<EventBuilder::Timestamp>(std::nullopt),
-        static_cast<MirKeyboardAction>(action),
+        static_cast<MirKeyboardAction>(data.action),
         xkb_keysym_t{0},
-        static_cast<int>(scancode)
+        static_cast<int>(data.scancode)
     );
+}
+
+miers::RectangleWrapper::RectangleWrapper(geometry::Rectangle&& rect)
+    : rect{std::move(rect)}
+{
+}
+
+int32_t miers::RectangleWrapper::x() const
+{
+    return rect.top_left.x.as_value();
+}
+
+int32_t miers::RectangleWrapper::y() const
+{
+    return rect.top_left.y.as_value();
+}
+
+int32_t miers::RectangleWrapper::width() const
+{
+    return rect.size.width.as_value();
+}
+
+int32_t miers::RectangleWrapper::height() const
+{
+    return rect.size.height.as_value();
 }

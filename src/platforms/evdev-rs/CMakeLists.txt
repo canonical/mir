@@ -1,9 +1,3 @@
-include_directories(
-  ${PROJECT_SOURCE_DIR}/include/platform
-  ${PROJECT_SOURCE_DIR}/include/core
-  ${PROJECT_SOURCE_DIR}/src/include/platform
-)
-
 add_definitions(-DMIR_LOG_COMPONENT_FALLBACK="evdev-input-rs")
 
 add_library(mirplatforminputevdevrsobjects OBJECT
@@ -45,7 +39,7 @@ target_link_libraries(mirplatforminputevdevrs
 add_rust_cxx_library(mirplatforminputevdevrs_rust
   CRATE mir_platforms_evdev_rs
   DEPENDS Cargo.toml src/lib.rs
-  LIBRARIES PkgConfig::UDEV PkgConfig::LIBINPUT mircommon
+  LIBRARIES PkgConfig::UDEV PkgConfig::LIBINPUT mircommon mirplatform
   INCLUDES
     ${PROJECT_SOURCE_DIR}/src/platforms/evdev-rs
 )

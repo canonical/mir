@@ -154,14 +154,12 @@ void mi::DefaultInputManager::stop()
 void mi::DefaultInputManager::start_platforms()
 {
     platform->start();
-    if (auto const dispatchable = platform->dispatchable())
-        multiplexer->add_watch(dispatchable);
+    multiplexer->add_watch(platform->dispatchable());
 }
 
 void mi::DefaultInputManager::stop_platforms()
 {
-    if (auto const dispatchable = platform->dispatchable())
-        multiplexer->remove_watch(dispatchable);
+    multiplexer->remove_watch(platform->dispatchable());
     platform->stop();
 }
 

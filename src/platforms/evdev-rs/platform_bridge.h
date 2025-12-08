@@ -20,6 +20,7 @@
 #include <mir/console_services.h>
 #include <mir/input/input_device.h>
 #include <mir/input/event_builder.h>
+#include <mir/geometry/rectangle.h>
 #include <memory>
 
 namespace mir
@@ -36,10 +37,10 @@ class Platform;
 ///
 /// The platform must maintain a reference to the #mir::Device
 /// or else the device will be destroyed.
-class DeviceBridgeC
+class DeviceWrapper
 {
 public:
-    DeviceBridgeC(std::unique_ptr<Device> device, int fd);
+    DeviceWrapper(std::unique_ptr<Device> device, int fd);
     int raw_fd() const;
 
 private:
@@ -47,88 +48,71 @@ private:
     int fd;
 };
 
+struct PointerEventData
+{
+    bool has_time;
+    uint64_t time_microseconds;
+    int32_t action;
+    uint32_t buttons;
+    bool has_position;
+    float position_x;
+    float position_y;
+    float displacement_x;
+    float displacement_y;
+    int32_t axis_source;
+    float precise_x;
+    int discrete_x;
+    int value120_x;
+    bool scroll_stop_x;
+    float precise_y;
+    int discrete_y;
+    int value120_y;
+    bool scroll_stop_y;
+};
+
+struct KeyEventData
+{
+    bool has_time;
+    uint64_t time_microseconds;
+    int32_t action;
+    uint32_t scancode;
+};
+
 class EventBuilderWrapper
 {
 public:
     explicit EventBuilderWrapper(EventBuilder* event_builder);
-    std::shared_ptr<MirEvent> pointer_event(
-        bool has_time,
-        uint64_t time_microseconds,
-        int32_t action,
-        uint32_t buttons,
-        bool has_position,
-        float position_x,
-        float position_y,
-        float displacement_x,
-        float displacement_y,
-        int32_t axis_source,
-        float precise_x,
-        int discrete_x,
-        int value120_x,
-        bool scroll_stop_x,
-        float precise_y,
-        int discrete_y,
-        int value120_y,
-        bool scroll_stop_y
-    ) const;
-
-    std::shared_ptr<MirEvent> key_event(
-        bool has_time,
-        uint64_t time_microseconds,
-        int32_t action,
-        uint32_t scancode
-    ) const;
+    std::shared_ptr<MirEvent> pointer_event(PointerEventData const&) const;
+    std::shared_ptr<MirEvent> key_event(KeyEventData const&) const;
 
 private:
     EventBuilder* event_builder;
 };
 
-class RectangleC
+class RectangleWrapper
 {
 public:
-    RectangleC(int32_t x, int32_t y, int32_t width, int32_t height)
-        : x_(x), y_(y), width_(width), height_(height)
-    {
-    }
-
-    int32_t x() const
-    {
-        return x_;
-    }
-
-    int32_t y() const
-    {
-        return y_;
-    }
-
-    int32_t width() const
-    {
-        return width_;
-    }
-
-    int32_t height() const
-    {
-        return height_;
-    }
+    explicit RectangleWrapper(geometry::Rectangle&& rect);
+    int32_t x() const;
+    int32_t y() const;
+    int32_t width() const;
+    int32_t height() const;
 
 private:
-    int32_t const x_;
-    int32_t const y_;
-    int32_t const width_;
-    int32_t const height_;
+    geometry::Rectangle rect;
 };
 
 /// Bridge allowing conversion from Rust to C++.
 ///
 /// The rust code may use this bridge to request things from the system.
-class PlatformBridgeC
+class PlatformBridge
 {
 public:
-    PlatformBridgeC(Platform* platform, std::shared_ptr<mir::ConsoleServices> const& console);
-    std::unique_ptr<DeviceBridgeC> acquire_device(int major, int minor) const;
+    PlatformBridge(Platform* platform, std::shared_ptr<mir::ConsoleServices> const& console);
+    std::unique_ptr<DeviceWrapper> acquire_device(int major, int minor) const;
     std::shared_ptr<InputDevice> create_input_device(int device_id) const;
     std::unique_ptr<EventBuilderWrapper> create_event_builder_wrapper(EventBuilder* event_builder) const;
-    std::unique_ptr<RectangleC> bounding_rectangle(InputSink const&) const;
+    std::unique_ptr<RectangleWrapper> bounding_rectangle(InputSink const&) const;
 
 private:
     Platform* platform;

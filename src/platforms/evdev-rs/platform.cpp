@@ -120,7 +120,7 @@ public:
 
     void apply_settings(mi::PointerSettings const& pointer_settings) override
     {
-        miers::PointerSettingsC pointer_settings_c;
+        miers::PointerSettings pointer_settings_c;
         pointer_settings_c.handedness = static_cast<MirPointerHandedness>(pointer_settings.handedness);
         pointer_settings_c.acceleration = static_cast<MirPointerAcceleration>(pointer_settings.acceleration);
         pointer_settings_c.cursor_acceleration_bias = pointer_settings.cursor_acceleration_bias;
@@ -161,7 +161,7 @@ class miers::Platform::Self
 public:
     Self(Platform* platform, std::shared_ptr<ConsoleServices> const& console,
         std::shared_ptr<InputDeviceRegistry> const& input_device_registry)
-        : platform_impl(evdev_rs_create(std::make_shared<PlatformBridgeC>(platform, console), input_device_registry)),
+        : platform_impl(evdev_rs_create(std::make_shared<PlatformBridge>(platform, console), input_device_registry)),
           dispatchable{std::make_shared<md::MultiplexingDispatchable>()} {}
 
     rust::Box<PlatformRs> platform_impl;
