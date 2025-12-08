@@ -92,8 +92,7 @@ add_custom_target(
         --library-name miroil
         --version ${MIROIL_VERSION}
         --symbols-map-path="${CMAKE_CURRENT_SOURCE_DIR}/symbols.map"
-        --external-headers-directory="${PROJECT_SOURCE_DIR}/include/miroil"
-        --include-dirs "$<JOIN:$<TARGET_PROPERTY:miroil,INCLUDE_DIRECTORIES>,:>"
+        --include-dirs "$<JOIN:$<TARGET_PROPERTY:miroil,INTERFACE_INCLUDE_DIRECTORIES>,:>"
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
 
 add_custom_target(
@@ -102,8 +101,7 @@ add_custom_target(
         --library-name miroil
         --version ${MIROIL_VERSION}
         --symbols-map-path="${CMAKE_CURRENT_SOURCE_DIR}/symbols.map"
-        --external-headers-directory="${PROJECT_SOURCE_DIR}/include/miroil"
-        --include-dirs "$<JOIN:$<TARGET_PROPERTY:miroil,INCLUDE_DIRECTORIES>,:>"
+        --include-dirs "$<JOIN:$<TARGET_PROPERTY:miroil,INTERFACE_INCLUDE_DIRECTORIES>,:>"
         --diff
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
 
