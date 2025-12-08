@@ -31,23 +31,31 @@ namespace geometry
 {
 namespace generic
 {
-// U is within T's representable range
-template<typename U, typename T>
+/// Concept guaranteeing a conversion From to To will
+/// be within To's representable range.
+///
+/// This may lose precision in the case of integer<->float
+/// conversions, but will not lose range.
+template<typename From, typename To>
 concept ConversionWithinBounds = requires
 {
-    // T can store the minimum value representible in U, and...
-    requires std::numeric_limits<T>::lowest() <= std::numeric_limits<U>::lowest();
-    // T can store the maximum value representible in U.
-    requires std::numeric_limits<T>::max() >= std::numeric_limits<U>::max();
+    // To can store the minimum value representible in From, and...
+    requires std::numeric_limits<To>::lowest() <= std::numeric_limits<From>::lowest();
+    // To can store the maximum value representible in From.
+    requires std::numeric_limits<To>::max() >= std::numeric_limits<From>::max();
 };
 
-// Concept guaranteeing conversion from U to T is lossless
-template<typename U, typename T>
+/// Concept guaranteeing conversion From to To is lossless
+///
+/// That is, a conversion from From to To and back to From is an
+/// identity transform.
+template<typename From, typename To>
 concept ConversionIsLossless = requires
 {
-    // T has at least as many digits of precision as U, and...
-    requires std::numeric_limits<T>::digits >= std::numeric_limits<U>::digits;
-    requires ConversionWithinBounds<U, T>;
+    // To has at least as many digits of precision as From, and...
+    requires std::numeric_limits<To>::digits >= std::numeric_limits<From>::digits;
+    // To's representable range is at least as large as From's
+    requires ConversionWithinBounds<From, To>;
 };
 
 template<typename T, typename Tag>
