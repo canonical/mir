@@ -111,13 +111,13 @@ impl PlatformRs {
     }
 
     pub unsafe fn libinput_fd(&mut self) -> i32 {
-        self.state
-            .as_mut()
-            .unwrap()
-            .lock()
-            .unwrap()
-            .libinput
-            .as_raw_fd()
+        match self.state.as_mut() {
+            Some(state_arc) => match state_arc.lock() {
+                Ok(state) => state.libinput.as_raw_fd(),
+                Err(_) => -1,
+            },
+            None => -1,
+        }
     }
 
     pub fn continue_after_config(&self) {}
@@ -130,27 +130,32 @@ impl PlatformRs {
         // Note: When the main loop exits, we need to remove all devices from the device registry
         // or else Mir will try to free the devices later but we won't have access to the platform
         // code at that point. This results in a segfault.
-        for device_info in self
-            .state
-            .as_mut()
-            .unwrap()
-            .lock()
-            .unwrap()
-            .known_devices
-            .iter_mut()
-            .rev()
-        {
-            println!("Removing device id {} from registry", device_info.id);
-            device_info.input_sink = None;
-            device_info.event_builder = None;
-            // # Safety
-            //
-            // Because we need to use pin_mut_unchecked, this is unsafe.
-            unsafe {
-                self.device_registry
-                    .clone()
-                    .pin_mut_unchecked()
-                    .remove_device(&device_info.input_device);
+        let state_opt = self.state.as_mut();
+        if state_opt.is_none() {
+            // Platform not started or already stopped.
+            self.state = None;
+            return;
+        }
+
+        match state_opt.unwrap().lock() {
+            Ok(mut state_guard) => {
+                for device_info in state_guard.known_devices.iter_mut().rev() {
+                    println!("Removing device id {} from registry", device_info.id);
+                    device_info.input_sink = None;
+                    device_info.event_builder = None;
+                    // # Safety
+                    //
+                    // Because we need to use pin_mut_unchecked, this is unsafe.
+                    unsafe {
+                        self.device_registry
+                            .clone()
+                            .pin_mut_unchecked()
+                            .remove_device(&device_info.input_device);
+                    }
+                }
+            }
+            Err(_) => {
+                println!("Unable to gain access to device info; lock poisoned");
             }
         }
 
@@ -162,9 +167,45 @@ impl PlatformRs {
     }
 
     fn create_input_device(&mut self, device_id: i32) -> Box<InputDeviceRs> {
+        let state_arc = match self.state.as_mut() {
+            Some(s) => s.clone(),
+            None => {
+                println!(
+                    "PlatformRs::create_input_device: state not initialized; creating fallback state"
+                );
+                let mut libinput = input::Libinput::new_with_udev(LibinputInterfaceImpl {
+                    bridge: self.bridge.clone(),
+                    fds: Vec::new(),
+                });
+
+                let started = match libinput.udev_assign_seat("seat0") {
+                    Err(_) => false,
+                    _ => true,
+                };
+                if !started {
+                    println!(
+                        "PlatformRs::create_input_device: failed to assign seat for fallback state"
+                    );
+                }
+
+                Arc::new(Mutex::new(LibinputLoopState {
+                    libinput,
+                    known_devices: Vec::new(),
+                    next_device_id: 0,
+                    button_state: 0,
+                    pointer_x: 0.0,
+                    pointer_y: 0.0,
+                    scroll_axis_x_accum: 0.0,
+                    scroll_axis_y_accum: 0.0,
+                    x_scroll_scale: 1.0,
+                    y_scroll_scale: 1.0,
+                }))
+            }
+        };
+
         Box::new(InputDeviceRs {
-            device_id: device_id,
-            state: self.state.as_mut().unwrap().clone(),
+            device_id,
+            state: state_arc,
             bridge: self.bridge.clone(),
         })
     }
@@ -291,18 +332,20 @@ impl PlatformRs {
                         match pointer_event {
                             event::PointerEvent::Motion(motion_event) => {
                                 if let Some(event_builder) = &mut device_info.event_builder {
-                                    let pointer_event = PointerEventDataRs{
+                                    let pointer_event = PointerEventDataRs {
                                         has_time: true,
                                         time_microseconds: motion_event.time_usec(),
-                                        action: ffi::MirPointerAction::mir_pointer_action_motion.repr,
+                                        action: ffi::MirPointerAction::mir_pointer_action_motion
+                                            .repr,
                                         buttons: state.button_state,
                                         has_position: false,
                                         position_x: 0 as f32,
                                         position_y: 0 as f32,
                                         displacement_x: motion_event.dx() as f32,
                                         displacement_y: motion_event.dy() as f32,
-                                        axis_source: ffi::MirPointerAxisSource::mir_pointer_axis_source_none
-                                            .repr,
+                                        axis_source:
+                                            ffi::MirPointerAxisSource::mir_pointer_axis_source_none
+                                                .repr,
                                         precise_x: 0.0,
                                         discrete_x: 0,
                                         value120_x: 0,
@@ -414,17 +457,20 @@ impl PlatformRs {
                                             (0.0, 0.0, 0.0, true)
                                         };
 
-                                    let pointer_event = PointerEventDataRs{
+                                    let pointer_event = PointerEventDataRs {
                                         has_time: true,
                                         time_microseconds: scroll_wheel_event.time_usec(),
-                                        action: ffi::MirPointerAction::mir_pointer_action_motion.repr,
+                                        action: ffi::MirPointerAction::mir_pointer_action_motion
+                                            .repr,
                                         buttons: state.button_state,
                                         has_position: false,
                                         position_x: 0.0,
                                         position_y: 0.0,
                                         displacement_x: 0.0,
                                         displacement_y: 0.0,
-                                        axis_source: ffi::MirPointerAxisSource::mir_pointer_axis_source_wheel.repr,
+                                        axis_source:
+                                            ffi::MirPointerAxisSource::mir_pointer_axis_source_wheel
+                                                .repr,
                                         precise_x: precise_x as f32,
                                         discrete_x: discrete_x as i32,
                                         value120_x: value120_x as i32,
@@ -481,17 +527,20 @@ impl PlatformRs {
                                             (0.0, 0.0, 0.0, true)
                                         };
 
-                                    let pointer_event = PointerEventDataRs{
+                                    let pointer_event = PointerEventDataRs {
                                         has_time: true,
                                         time_microseconds: scroll_continuous_event.time_usec(),
-                                        action: ffi::MirPointerAction::mir_pointer_action_motion.repr,
+                                        action: ffi::MirPointerAction::mir_pointer_action_motion
+                                            .repr,
                                         buttons: state.button_state,
                                         has_position: false,
                                         position_x: 0.0,
                                         position_y: 0.0,
                                         displacement_x: 0.0,
                                         displacement_y: 0.0,
-                                        axis_source: ffi::MirPointerAxisSource::mir_pointer_axis_source_wheel.repr,
+                                        axis_source:
+                                            ffi::MirPointerAxisSource::mir_pointer_axis_source_wheel
+                                                .repr,
                                         precise_x: precise_x as f32,
                                         discrete_x: discrete_x as i32,
                                         value120_x: value120_x as i32,
@@ -546,17 +595,20 @@ impl PlatformRs {
                                             (0.0, 0.0, 0.0, true)
                                         };
 
-                                    let pointer_event = PointerEventDataRs{
+                                    let pointer_event = PointerEventDataRs {
                                         has_time: true,
                                         time_microseconds: scroll_finger_event.time_usec(),
-                                        action: ffi::MirPointerAction::mir_pointer_action_motion.repr,
+                                        action: ffi::MirPointerAction::mir_pointer_action_motion
+                                            .repr,
                                         buttons: state.button_state,
                                         has_position: false,
                                         position_x: 0.0,
                                         position_y: 0.0,
                                         displacement_x: 0.0,
                                         displacement_y: 0.0,
-                                        axis_source: ffi::MirPointerAxisSource::mir_pointer_axis_source_wheel.repr,
+                                        axis_source:
+                                            ffi::MirPointerAxisSource::mir_pointer_axis_source_wheel
+                                                .repr,
                                         precise_x: precise_x as f32,
                                         discrete_x: discrete_x as i32,
                                         value120_x: value120_x as i32,
@@ -626,7 +678,7 @@ impl PlatformRs {
                                         ffi::MirPointerAction::mir_pointer_action_button_up
                                     };
 
-                                    let pointer_event = PointerEventDataRs{
+                                    let pointer_event = PointerEventDataRs {
                                         has_time: true,
                                         time_microseconds: button_event.time_usec(),
                                         action: action.repr,
@@ -636,7 +688,9 @@ impl PlatformRs {
                                         position_y: 0.0,
                                         displacement_x: 0.0,
                                         displacement_y: 0.0,
-                                        axis_source: ffi::MirPointerAxisSource::mir_pointer_axis_source_none.repr,
+                                        axis_source:
+                                            ffi::MirPointerAxisSource::mir_pointer_axis_source_none
+                                                .repr,
                                         precise_x: 0.0,
                                         discrete_x: 0,
                                         value120_x: 0,
@@ -677,13 +731,14 @@ impl PlatformRs {
                                 };
 
                                 if let Some(event_builder) = &mut device_info.event_builder {
-                                    let key_event_data = ffi::KeyEventData{
+                                    let key_event_data = ffi::KeyEventData {
                                         has_time: true,
                                         time_microseconds: key_event.time_usec(),
                                         action: keyboard_action.repr,
                                         scancode: key_event.key(),
                                     };
-                                    let created = event_builder.pin_mut().key_event(&key_event_data);
+                                    let created =
+                                        event_builder.pin_mut().key_event(&key_event_data);
 
                                     if let Some(input_sink) = &mut device_info.input_sink {
                                         input_sink.handle_input(&created);
@@ -885,132 +940,194 @@ impl InputDeviceRs {
         input_sink: *mut ffi::InputSink,
         event_builder: *mut ffi::EventBuilder,
     ) {
-        if let Some(device_info) = self.state.lock().unwrap().find_device_by_id(self.device_id) {
-            device_info.input_sink =
-                Some(InputSinkPtr(std::ptr::NonNull::new(input_sink).unwrap()));
+        let lock = self.state.lock();
+        match lock {
+            Ok(mut guard) => {
+                if let Some(device_info) = guard.find_device_by_id(self.device_id) {
+                    match std::ptr::NonNull::new(input_sink) {
+                        Some(nn) => {
+                            device_info.input_sink = Some(InputSinkPtr(nn));
+                        }
+                        None => {
+                            println!("InputDeviceRs::start: input_sink pointer is null; not starting sink");
+                        }
+                    }
 
-            // # Safety
-            //
-            // Calling as_ptr on a NonNull is unsafe.
-            device_info.event_builder =
-                Some(unsafe { self.bridge.create_event_builder_wrapper(event_builder) });
+                    if event_builder.is_null() {
+                        println!("InputDeviceRs::start: event_builder pointer is null; not creating event builder");
+                    } else {
+                        // # Safety
+                        //
+                        // Calling create_event_builder_wrapper with a raw pointer is unsafe.
+                        device_info.event_builder = Some(unsafe {
+                            self.bridge.create_event_builder_wrapper(event_builder)
+                        });
+                    }
+                } else {
+                    println!(
+                        "InputDeviceRs::start: device id {} not found",
+                        self.device_id
+                    );
+                }
+            }
+            Err(_) => {
+                println!("InputDeviceRs::start: unable to acquire state lock; lock poisoned");
+            }
         }
     }
 
     pub fn stop(&mut self) {}
 
     pub fn get_device_info(&self) -> Box<InputDeviceInfoRs> {
-        if let Some(device_info) = self.state.lock().unwrap().find_device_by_id(self.device_id) {
-            let mut capabilities: u32 = 0;
-            if device_info
-                .device
-                .has_capability(input::DeviceCapability::Keyboard)
-            {
-                capabilities = capabilities
-                    | ffi::DeviceCapability::keyboard.repr
-                    | ffi::DeviceCapability::alpha_numeric.repr;
-            }
-            if device_info
-                .device
-                .has_capability(input::DeviceCapability::Pointer)
-            {
-                capabilities = capabilities | ffi::DeviceCapability::pointer.repr;
-            }
-            if device_info
-                .device
-                .has_capability(input::DeviceCapability::Touch)
-            {
-                capabilities = capabilities
-                    | ffi::DeviceCapability::touchpad.repr
-                    | ffi::DeviceCapability::pointer.repr;
-            }
+        match self.state.lock() {
+            Ok(mut guard) => {
+                if let Some(device_info) = guard.find_device_by_id(self.device_id) {
+                    let mut capabilities: u32 = 0;
+                    if device_info
+                        .device
+                        .has_capability(input::DeviceCapability::Keyboard)
+                    {
+                        capabilities = capabilities
+                            | ffi::DeviceCapability::keyboard.repr
+                            | ffi::DeviceCapability::alpha_numeric.repr;
+                    }
+                    if device_info
+                        .device
+                        .has_capability(input::DeviceCapability::Pointer)
+                    {
+                        capabilities = capabilities | ffi::DeviceCapability::pointer.repr;
+                    }
+                    if device_info
+                        .device
+                        .has_capability(input::DeviceCapability::Touch)
+                    {
+                        capabilities = capabilities
+                            | ffi::DeviceCapability::touchpad.repr
+                            | ffi::DeviceCapability::pointer.repr;
+                    }
 
-            let info = InputDeviceInfoRs {
-                name: device_info.device.name().to_string(),
-                unique_id: device_info.device.name().to_string()
-                    + &device_info.device.sysname().to_string()
-                    + &device_info.device.id_vendor().to_string()
-                    + &device_info.device.id_product().to_string(),
-                capabilities: capabilities,
-                valid: true,
-            };
-            return Box::new(info);
-        } else {
-            let info = InputDeviceInfoRs {
-                name: "".to_string(),
-                unique_id: "".to_string(),
-                capabilities: 0,
-                valid: false,
-            };
-            return Box::new(info);
+                    let info = InputDeviceInfoRs {
+                        name: device_info.device.name().to_string(),
+                        unique_id: device_info.device.name().to_string()
+                            + &device_info.device.sysname().to_string()
+                            + &device_info.device.id_vendor().to_string()
+                            + &device_info.device.id_product().to_string(),
+                        capabilities: capabilities,
+                        valid: true,
+                    };
+                    Box::new(info)
+                } else {
+                    println!(
+                        "InputDeviceRs::get_device_info: device id {} not found",
+                        self.device_id
+                    );
+                    Box::new(InputDeviceInfoRs {
+                        name: "".to_string(),
+                        unique_id: "".to_string(),
+                        capabilities: 0,
+                        valid: false,
+                    })
+                }
+            }
+            Err(_) => {
+                println!(
+                    "InputDeviceRs::get_device_info: unable to acquire state lock; lock poisoned"
+                );
+                Box::new(InputDeviceInfoRs {
+                    name: "".to_string(),
+                    unique_id: "".to_string(),
+                    capabilities: 0,
+                    valid: false,
+                })
+            }
         }
     }
 
     pub fn get_pointer_settings(&self) -> Box<ffi::PointerSettingsRs> {
-        let mut state = self.state.lock().unwrap();
-        if let Some(device_info) = state.find_device_by_id(self.device_id) {
-            match device_info
-                .device
-                .has_capability(input::DeviceCapability::Pointer)
-            {
-                true => {
-                    let handedness = if device_info.device.config_left_handed() {
-                        ffi::MirPointerHandedness::mir_pointer_handedness_left.repr
-                    } else {
-                        ffi::MirPointerHandedness::mir_pointer_handedness_right.repr
-                    };
-
-                    let acceleration =
-                        if let Some(accel_profile) = device_info.device.config_accel_profile() {
-                            if accel_profile == input::AccelProfile::Adaptive {
-                                ffi::MirPointerAcceleration::mir_pointer_acceleration_adaptive.repr
+        let lock = self.state.lock();
+        match lock {
+            Ok(mut state) => {
+                if let Some(device_info) = state.find_device_by_id(self.device_id) {
+                    match device_info
+                        .device
+                        .has_capability(input::DeviceCapability::Pointer)
+                    {
+                        true => {
+                            let handedness = if device_info.device.config_left_handed() {
+                                ffi::MirPointerHandedness::mir_pointer_handedness_left.repr
                             } else {
+                                ffi::MirPointerHandedness::mir_pointer_handedness_right.repr
+                            };
+
+                            let acceleration = if let Some(accel_profile) =
+                                device_info.device.config_accel_profile()
+                            {
+                                if accel_profile == input::AccelProfile::Adaptive {
+                                    ffi::MirPointerAcceleration::mir_pointer_acceleration_adaptive
+                                        .repr
+                                } else {
+                                    ffi::MirPointerAcceleration::mir_pointer_acceleration_none.repr
+                                }
+                            } else {
+                                eprintln!("Acceleration profile should be provided, but none is.");
                                 ffi::MirPointerAcceleration::mir_pointer_acceleration_none.repr
-                            }
-                        } else {
-                            eprintln!("Acceleration profile should be provided, but none is.");
-                            ffi::MirPointerAcceleration::mir_pointer_acceleration_none.repr
-                        };
+                            };
 
-                    let acceleration_bias = device_info.device.config_accel_speed() as f64;
+                            let acceleration_bias = device_info.device.config_accel_speed() as f64;
 
-                    return Box::new(ffi::PointerSettingsRs {
-                        is_set: true,
-                        handedness: handedness,
-                        cursor_acceleration_bias: acceleration_bias,
-                        acceleration: acceleration,
-                        horizontal_scroll_scale: state.x_scroll_scale,
-                        vertical_scroll_scale: state.y_scroll_scale,
-                        has_error: false,
-                    });
-                }
-                false => {
-                    eprintln!("Attempting to get pointer settings from a device that is not pointer capable.");
-                    return Box::new(ffi::PointerSettingsRs::empty());
+                            return Box::new(ffi::PointerSettingsRs {
+                                is_set: true,
+                                handedness: handedness,
+                                cursor_acceleration_bias: acceleration_bias,
+                                acceleration: acceleration,
+                                horizontal_scroll_scale: state.x_scroll_scale,
+                                vertical_scroll_scale: state.y_scroll_scale,
+                                has_error: false,
+                            });
+                        }
+                        false => {
+                            eprintln!("Attempting to get pointer settings from a device that is not pointer capable.");
+                            return Box::new(ffi::PointerSettingsRs::empty());
+                        }
+                    }
+                } else {
+                    eprintln!("Calling get pointer settings on a device that is not registered.");
+                    let mut settings = ffi::PointerSettingsRs::empty();
+                    settings.has_error = true;
+                    return Box::new(settings);
                 }
             }
-        } else {
-            eprintln!("Calling get pointer settings on a device that is not registered.");
-            let mut settings = ffi::PointerSettingsRs::empty();
-            settings.has_error = true;
-            return Box::new(settings);
+            Err(_) => {
+                println!(
+                    "InputDeviceRs::get_pointer_settings: unable to acquire state lock; lock poisoned"
+                );
+                let mut settings = ffi::PointerSettingsRs::empty();
+                settings.has_error = true;
+                Box::new(settings)
+            }
         }
     }
 
     pub fn set_pointer_settings(&self, settings: &ffi::PointerSettings) {
-        let mut state = self.state.lock().unwrap();
-        if let Some(device_info) = state.find_device_by_id(self.device_id) {
-            if device_info
-                .device
-                .has_capability(input::DeviceCapability::Pointer)
-            {
-                let left_handed = match settings.handedness {
-                    x if x == ffi::MirPointerHandedness::mir_pointer_handedness_left.repr => true,
-                    _ => false,
-                };
-                let _ = device_info.device.config_left_handed_set(left_handed);
+        let lock = self.state.lock();
+        match lock {
+            Ok(mut state) => {
+                if let Some(device_info) = state.find_device_by_id(self.device_id) {
+                    if device_info
+                        .device
+                        .has_capability(input::DeviceCapability::Pointer)
+                    {
+                        let left_handed = match settings.handedness {
+                            x if x
+                                == ffi::MirPointerHandedness::mir_pointer_handedness_left.repr =>
+                            {
+                                true
+                            }
+                            _ => false,
+                        };
+                        let _ = device_info.device.config_left_handed_set(left_handed);
 
-                let accel_profile = match settings.acceleration {
+                        let accel_profile = match settings.acceleration {
                     x if x
                         == ffi::MirPointerAcceleration::mir_pointer_acceleration_adaptive.repr =>
                     {
@@ -1018,17 +1135,26 @@ impl InputDeviceRs {
                     }
                     _ => input::AccelProfile::Flat,
                 };
-                let _ = device_info.device.config_accel_set_profile(accel_profile);
-                let _ = device_info
-                    .device
-                    .config_accel_set_speed(settings.cursor_acceleration_bias as f64);
-                state.x_scroll_scale = settings.horizontal_scroll_scale;
-                state.y_scroll_scale = settings.vertical_scroll_scale;
-            } else {
-                eprintln!("Device does not have the pointer capability.");
+                        let _ = device_info.device.config_accel_set_profile(accel_profile);
+                        let _ = device_info
+                            .device
+                            .config_accel_set_speed(settings.cursor_acceleration_bias as f64);
+                        state.x_scroll_scale = settings.horizontal_scroll_scale;
+                        state.y_scroll_scale = settings.vertical_scroll_scale;
+                    } else {
+                        eprintln!("Device does not have the pointer capability.");
+                    }
+                } else {
+                    eprintln!(
+                        "Unable to set the pointer settings because the device was not found."
+                    );
+                }
             }
-        } else {
-            eprintln!("Unable to set the pointer settings because the device was not found.");
+            Err(_) => {
+                println!(
+                    "InputDeviceRs::set_pointer_settings: unable to acquire state lock; lock poisoned"
+                );
+            }
         }
     }
 }
@@ -1063,8 +1189,7 @@ unsafe impl ExternType for KeyEventData {
 
 #[repr(C)]
 #[derive(Copy, Clone)]
-pub struct PointerEventDataRs
-{
+pub struct PointerEventDataRs {
     pub has_time: bool,
     pub time_microseconds: u64,
     pub action: i32,
@@ -1295,7 +1420,10 @@ mod ffi {
             major: i32,
             minor: i32,
         ) -> UniquePtr<DeviceWrapper>;
-        fn bounding_rectangle(self: &PlatformBridge, sink: &InputSink) -> UniquePtr<RectangleWrapper>;
+        fn bounding_rectangle(
+            self: &PlatformBridge,
+            sink: &InputSink,
+        ) -> UniquePtr<RectangleWrapper>;
         fn create_input_device(self: &PlatformBridge, device_id: i32) -> SharedPtr<InputDevice>;
         fn raw_fd(self: &DeviceWrapper) -> i32;
 
@@ -1309,11 +1437,10 @@ mod ffi {
 
         fn pointer_event(
             self: &EventBuilderWrapper,
-            data: &PointerEventData) -> SharedPtr<MirEvent>;
+            data: &PointerEventData,
+        ) -> SharedPtr<MirEvent>;
 
-        fn key_event(
-            self: &EventBuilderWrapper,
-            data: &KeyEventData) -> SharedPtr<MirEvent>;
+        fn key_event(self: &EventBuilderWrapper, data: &KeyEventData) -> SharedPtr<MirEvent>;
 
         #[namespace = "mir::input"]
         fn add_device(
