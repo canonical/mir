@@ -14,64 +14,37 @@ This audit examined 83 C/C++ source files across 10 subdirectories in the `src/p
 **Key Findings:**
 - **Critical Issues:** 2 (EINTR handling, file descriptor management)
 - **Medium Priority:** 5 (RAII improvements, resource management)
-- **Low Priority:** 3 (code style improvements)
-- **Safe Patterns:** Multiple instances of proper RAII usage and bounds checking
+- **Low Priority:** 2 (code style improvements)
 
 ---
-
-## Directory: src/platforms/atomic-kms/server
-
-| Function Name / Call Site | Issue | Suggested Fix | Code Fix |
-| :--- | :--- | :--- | :--- |
-| `open` (display_helpers.cpp:191) | Unchecked return value - error handling exists but relies on errno | Pattern is correct - wrapped in mir::Fd and checked | N/A (Already properly handled) |
 
 ## Directory: src/platforms/atomic-kms/server/kms
 
 | Function Name / Call Site | Issue | Suggested Fix | Code Fix |
 | :--- | :--- | :--- | :--- |
-| `memcpy/memset` (cursor.cpp:205-273) | Multiple unbounded memory operations on cursor buffer | Bounds are calculated from buffer dimensions - verified safe | N/A (Calculations verified against buffer size) |
 | `free` (display.cpp:474) | Manual memory management of C string from DRM library | Use RAII wrapper (std::unique_ptr with custom deleter) | `std::unique_ptr<char[], CStrFree> str{drmGetPrimaryDeviceNameFromFd(fd)};` |
-| `memset` (display_buffer.cpp:82) | memset on mapped buffer - bounds from mapping->len() | Verify mapping size is correct | N/A (Bounds from mapping interface) |
 
 ## Directory: src/platforms/common/server/kms-utils
 
 | Function Name / Call Site | Issue | Suggested Fix | Code Fix |
 | :--- | :--- | :--- | :--- |
-| `malloc (comments)` (drm_mode_resources.cpp:39,57,151,169,187,205,224,245) | Comments reference malloc failures from libdrm functions | Already handled - errno set to ENOMEM on NULL | N/A (Proper error handling in place) |
 | `read` (threaded_drm_event_handler.cpp:50) | **CRITICAL:** read() may be interrupted by signals (EINTR not handled) | Wrap in loop to handle EINTR | `while ((ret = ::read(read, &buffer, sizeof(buffer))) != sizeof(buffer) && errno == EINTR);` |
 | `write` (threaded_drm_event_handler.cpp:59) | **CRITICAL:** write() may be interrupted by signals (EINTR not handled) | Wrap in loop to handle EINTR | `while ((ret = ::write(write, &data, sizeof(data))) != sizeof(data) && errno == EINTR);` |
 | `memset` (threaded_drm_event_handler.cpp:163) | Clearing struct - acceptable pattern for C structures | Consider using value initialization | `drmEventContext ctx{};` |
-
-## Directory: src/platforms/eglstream-kms/server
-
-| Function Name / Call Site | Issue | Suggested Fix | Code Fix |
-| :--- | :--- | :--- | :--- |
-| `memset` (egl_output.cpp:85) | Clearing mapped DRM buffer with unchecked size | Size comes from pitch_ * height - verify calculation | N/A (Pitch and height from DRM) |
-| `sscanf` (utils.cpp:69) | Format string parsing - potential buffer overflow if format changes | Return value checked - safe if input format is controlled | N/A (Input from GL_VERSION - controlled) |
-
-## Directory: src/platforms/gbm-kms/server
-
-| Function Name / Call Site | Issue | Suggested Fix | Code Fix |
-| :--- | :--- | :--- | :--- |
-| `open` (display_helpers.cpp:192) | Unchecked return - error handling exists but uses errno | Pattern is correct - wrapped and error checked | N/A (Already properly handled) |
 
 ## Directory: src/platforms/gbm-kms/server/kms
 
 | Function Name / Call Site | Issue | Suggested Fix | Code Fix |
 | :--- | :--- | :--- | :--- |
-| `memcpy/memset` (cursor.cpp:206-274) | Multiple unbounded memory operations | Bounds calculated from buffer - verified safe | N/A (Calculations verified) |
 | `free` (display.cpp:507) | Manual memory management of DRM C string | Use RAII wrapper | `std::unique_ptr<char[], CStrFree> str{...};` |
 | `memset` (display_buffer.cpp:90) | Constant value (24) used - seems questionable | Should be 0 for clearing? Verify intent | `::memset(mapping->data(), 0, mapping->len());` |
 | `memset` (kms_page_flipper.cpp:92) | Clearing C struct | Use value initialization | `drmEventContext evctx{};` |
-| `open` (platform.cpp:154) | Error handling present but could be clearer | Already handled correctly | N/A (RAII + exception on error) |
-| `open` (platform_symbols.cpp:411) | Direct open call | Already wrapped in mir::Fd | N/A (Already correct) |
 
 ## Directory: src/platforms/wayland
 
 | Function Name / Call Site | Issue | Suggested Fix | Code Fix |
 | :--- | :--- | :--- | :--- |
 | `free` (cursor.cpp:48) | Manual free after strdup - mixing malloc/free with C++ | Use std::string or RAII wrapper | `auto filename = std::make_unique<char[]>(...); or use std::string` |
-| `memcpy` (cursor.cpp:104) | Copying cursor buffer data | Size calculated from width*height - verify bounds | N/A (Size is 4*width*height, verified) |
 | `close` (displayclient.cpp:608) | **CRITICAL:** Direct close() instead of RAII | Use mir::Fd or unique_fd | `mir::Fd fd{...}; // Auto-closes on destruction` |
 
 ## Directory: src/platforms/x11
@@ -156,7 +129,9 @@ Uses `memset(&ctx, 0, sizeof(ctx))` for C struct initialization.
 
 **Recommendation:** Use C++11 value initialization: `drmEventContext ctx{};`
 
-### Safe Patterns Identified
+### Safe Patterns Verified (Not Included Above)
+
+The following patterns were audited and verified as safe, and are therefore not included in the issue tables above:
 
 ✅ **All `open()` calls** are properly wrapped in `mir::Fd` RAII wrapper  
 ✅ **All `memcpy()` operations** have verified bounds calculations  
@@ -206,4 +181,4 @@ Total files scanned: 83 C/C++ source files
 
 ## Conclusion
 
-The `src/platforms` code generally follows good practices with extensive use of RAII wrappers and proper error handling. The critical issues identified are specific, localized, and can be fixed without major architectural changes. Most flagged instances were false positives where proper bounds checking or error handling was already in place.
+The `src/platforms` code generally follows good practices with extensive use of RAII wrappers and proper error handling. The issues identified above are specific, localized, and can be fixed without major architectural changes. Many flagged instances during initial scanning were determined to be false positives where proper bounds checking or error handling was already in place - these have been excluded from this report and documented in the "Safe Patterns Verified" section.
