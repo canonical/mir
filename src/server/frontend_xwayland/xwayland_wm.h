@@ -86,6 +86,8 @@ private:
     XWaylandWM& operator=(XWaylandWM const&) = delete;
 
     void restack_surfaces();
+    void update_client_list();
+    void update_client_list_stacking();
 
     /// Called for all windows at startup and whenever a window is created
     /// May occasionally be called multiple times for the same window
