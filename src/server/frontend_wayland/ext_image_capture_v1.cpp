@@ -286,9 +286,9 @@ bool mf::ExtImageCopyBackend::has_damage()
 }
 
 mf::ExtOutputImageCopyBackend::ExtOutputImageCopyBackend(
-    ExtImageCopyCaptureSessionV1 *session,
+    ExtImageCopyCaptureSessionV1* session,
     bool overlay_cursor,
-    OutputGlobal *output,
+    OutputGlobal* output,
     std::shared_ptr<ExtImageCaptureV1Ctx> const& ctx)
     : ExtImageCopyBackend{session, overlay_cursor},
       output{output},
