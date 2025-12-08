@@ -184,7 +184,7 @@ void mi::ExternalInputDeviceHub::Internal::changes_complete()
 
                 for (auto const& dev : removed)
                 {
-                    handles.erase(remove(begin(handles), end(handles), dev), end(handles));
+                    std::erase(handles, dev);
                 }
 
                 for (auto const& dev : added)
@@ -517,9 +517,8 @@ void mi::DefaultInputDeviceHub::remove_device(std::shared_ptr<InputDevice> const
 
     std::lock_guard lock{mutex};
 
-    auto pos = remove_if(
-        begin(devices),
-        end(devices),
+    auto const removed = std::erase_if(
+        devices,
         [&](auto const& item)
         {
             if (item->device_matches(device))
@@ -542,13 +541,11 @@ void mi::DefaultInputDeviceHub::remove_device(std::shared_ptr<InputDevice> const
             }
             return false;
         });
-    if (pos == end(devices))
+    if (!removed)
     {
         log_error("Input device %s not found", device->get_device_info().name.c_str());
         BOOST_THROW_EXCEPTION(std::logic_error("Input device not managed by server"));
     }
-
-    devices.erase(pos, end(devices));
 }
 
 mi::DefaultInputDeviceHub::RegisteredDevice::RegisteredDevice(
@@ -718,21 +715,19 @@ void mi::DefaultInputDeviceHub::remove_device_handle(std::lock_guard<std::recurs
 {
     std::vector<std::shared_ptr<Device>> removed_devices;
 
-    auto handle_it = remove_if(
-        begin(handles),
-        end(handles),
+    auto const num_removed = std::erase_if(
+        handles,
         [&](auto const& handle)
-            {
+        {
             if (handle->id() != id)
                 return false;
             removed_devices.push_back(handle);
             return true;
-            });
+        });
 
-    if (handle_it == end(handles))
+    if (num_removed == 0)
         return;
 
-    handles.erase(handle_it, end(handles));
     auto const no_of_devices = handles.size();
 
     for (auto const& handle : removed_devices)
@@ -811,9 +806,8 @@ auto mi::DefaultInputDeviceHub::get_stored_device_config(
     std::string const& id) -> std::optional<MirInputDevice>
 {
     std::optional<MirInputDevice> optional_config;
-    auto pos = remove_if(
-        begin(stored_devices),
-        end(stored_devices),
+    std::erase_if(
+        stored_devices,
         [&optional_config,id](auto const& handle)
         {
             if (id == handle.unique_id())
@@ -823,7 +817,6 @@ auto mi::DefaultInputDeviceHub::get_stored_device_config(
             }
             return false;
         });
-    stored_devices.erase(pos, end(stored_devices));
 
     return optional_config;
 }

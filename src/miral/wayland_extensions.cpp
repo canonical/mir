@@ -86,9 +86,7 @@ struct StaticExtensionTracker
     {
         std::lock_guard lock{mutex};
 
-        extensions.erase(
-            remove_if(begin(extensions), end(extensions), [extension](auto& x) { return x.extension == extension; }),
-            end(extensions));
+        std::erase_if(extensions, [extension](auto& x) { return x.extension == extension; });
     }
 
 private:
