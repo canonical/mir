@@ -688,6 +688,11 @@ public:
             mir::log_error("Failed to create shutdown notifier");
     }
 
+    ~Self()
+    {
+        stop();
+    }
+
     void run_client(wl_display* display)
     {
         {
@@ -795,7 +800,6 @@ miral::ApplicationSwitcher::ApplicationSwitcher()
 
 miral::ApplicationSwitcher::~ApplicationSwitcher()
 {
-    self->stop();
 }
 
 miral::ApplicationSwitcher::ApplicationSwitcher(ApplicationSwitcher const&) = default;
