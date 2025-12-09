@@ -21,6 +21,7 @@
 #include <mir/executor.h>
 #include <mir/compositor/screen_shooter.h>
 #include <mir/compositor/screen_shooter_factory.h>
+#include <mir/fatal.h>
 #include <mir/frontend/surface_stack.h>
 #include <mir/geometry/rectangles.h>
 #include <mir/renderer/sw/pixel_source.h>
@@ -393,7 +394,8 @@ void mf::ExtOutputImageCopyBackend::begin_capture(
     switch (damage_amount)
     {
     case DamageAmount::none:
-        BOOST_THROW_EXCEPTION(std::logic_error("ExtImageCopyBackend::begin_capture called when there is no damage available"));
+        // This should never happen as maybe_capture_frame() checks has_damage() before calling begin_capture()
+        fatal_error_abort("begin_capture() called with no damage - this is a precondition violation");
         break;
 
     case DamageAmount::partial:
