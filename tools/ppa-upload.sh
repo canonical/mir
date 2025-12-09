@@ -2,6 +2,11 @@
 
 set -e
 
+MAIN_RE='^(refs/heads/)?main$'  # main branch
+VERSION_RE='v(([0-9]+)\.([0-9]+)\.([0-9]+))'  # version format vX.Y.Z (note not matching start/end)
+RELEASE_RE="^(refs/heads/)?release/[0-9]+\.[0-9]+\$|^(refs/tags/)?${VERSION_RE}\$"  # release branch or tag
+SUFFIX_RE='([0-9]+)-g[0-9a-f]+$'
+
 LP_CREDS="$1"
 if [ -z "${LP_CREDS}" ]; then
   echo "ERROR: pass the Launchpad credentials file as argument" >&2
@@ -16,7 +21,7 @@ fi
 
 GIT_BRANCH=${GITHUB_REF-$( git rev-parse --abbrev-ref HEAD )}
 # determine the patch release
-if ! [[ "${GIT_BRANCH}" =~ ^(refs/(heads|tags)/)?(main|(release/|v)([0-9\.]+))$ ]]; then
+if ! [[ "${GIT_BRANCH}" =~ ${MAIN_RE} ]] && ! [[ "${GIT_BRANCH}" =~ ${RELEASE_RE} ]]; then
   echo "ERROR: This script should only run on main or release tags" >&2
   echo "  or branches." >&2
   exit 3
@@ -45,34 +50,26 @@ fi
 
 GIT_REVISION=$( git rev-parse --short HEAD )
 
-if [[ "${GIT_BRANCH}" =~ ^(refs/(heads|tags)/)?(release/|v)([0-9\.]+)$ ]]; then
+if [[ "${GIT_BRANCH}" =~ ${RELEASE_RE} ]]; then
   # we're on a release branch
   TARGET_PPA=ppa:mir-team/rc
-  MIR_SERIES=${BASH_REMATCH[4]}
-  if [[ "$( git describe --tags --exact-match )" =~ ^v([0-9\.]+)$ ]]; then
+  if [[ "$( git describe --tags --exact-match )" =~ ^${VERSION_RE}$ ]]; then
     # this is a final release, use the tag version
     MIR_VERSION=${BASH_REMATCH[1]}
   else
-    # find the last tagged patch version
-    PATCH_VERSION=$( git describe --abbrev=0 --match "v${MIR_SERIES}*" \
-                     2> /dev/null | sed 's/^v//')
-    if [ -z "${PATCH_VERSION}" ]; then
-      # start with patch version 0
-      MIR_VERSION=${MIR_SERIES}.0
+    # determine the release candidate version string
+    if [[ "$( git describe --match="*-rc" )" =~ ^${VERSION_RE}-rc-${SUFFIX_RE} ]]; then
+      MIR_VERSION="${BASH_REMATCH[1]}~rc${BASH_REMATCH[2]}"
     else
-      # increment the patch version
-      MIR_VERSION=$( echo ${PATCH_VERSION} | perl -pe 's/^((\d+\.)*)(\d+)$/$1.($3+1)/e' )
+      echo "ERROR: could not parse git describe output" >&2
+      exit 4
     fi
-
-    # use the number of commits since main
-    GIT_COMMITS=$( git rev-list --count origin/main..HEAD )
-    MIR_VERSION=${MIR_VERSION}~rc${GIT_COMMITS}-g${GIT_REVISION}
   fi
 else
   # look for a release tag within parents 2..n
   PARENT=2
   while git rev-parse HEAD^${PARENT} >/dev/null 2>&1; do
-    if [[ "$( git describe --exact-match HEAD^${PARENT} )" =~ ^v([0-9\.]+)$ ]]; then
+    if [[ "$( git describe --exact-match HEAD^${PARENT} )" =~ ^${VERSION_RE}$ ]]; then
       # copy packages from ppa:mir-team/rc to ppa:mir-team/release_ppa
       RELEASE_VERSION=${BASH_REMATCH[1]}-0ubuntu${UBUNTU_VERSION}
       echo "Copying mir_${RELEASE_VERSION} from ppa:mir-team/rc to ppa:mir-team/release…"
@@ -122,8 +119,13 @@ EOF
 
   # upload to dev PPA
   TARGET_PPA=ppa:mir-team/dev
-  GIT_VERSION=$( git describe | sed 's/^v//' )
-  MIR_VERSION=${GIT_VERSION/-/+dev}
+  # determine the dev version string
+  if [[ "$( git describe --match="*-dev" )" =~ ^${VERSION_RE}-dev-${SUFFIX_RE} ]]; then
+    MIR_VERSION="${BASH_REMATCH[1]}~dev${BASH_REMATCH[2]}"
+  else
+    echo "ERROR: could not parse git describe output" >&2
+    exit 5
+  fi
 fi
 
 PPA_VERSION=${MIR_VERSION}-0ubuntu${UBUNTU_VERSION}
