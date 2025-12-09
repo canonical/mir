@@ -523,44 +523,40 @@ void mircv::XKBMapper::XkbMappingState::update_modifier_from_xkb_state()
             new_modifier_state |= mir_input_event_modifier_ctrl_right;
     }
     
-    // Check alt modifier - this is where altwin:swap_alt_win affects behavior
-    // XKB tells us if Alt is active, we determine left/right based on which keys are pressed
-    if (mod_index_alt != XKB_MOD_INVALID &&
-        xkb_state_mod_index_is_active(state.get(), mod_index_alt, XKB_STATE_MODS_EFFECTIVE))
-    {
-        new_modifier_state |= mir_input_event_modifier_alt;
-        // With altwin:swap_alt_win, the physical Win keys will activate Alt
-        // Check all keys that could activate Alt modifier
-        for (auto scan_code : pressed_scancodes)
-        {
-            auto keysym = xkb_state_key_get_one_sym(state.get(), scan_code);
-            if (keysym == XKB_KEY_Alt_L)
-            {
-                new_modifier_state |= mir_input_event_modifier_alt_left;
-            }
-            else if (keysym == XKB_KEY_Alt_R)
-            {
-                new_modifier_state |= mir_input_event_modifier_alt_right;
-            }
-        }
-    }
+    // Check alt and meta modifiers - these are where altwin:swap_alt_win affects behavior
+    // XKB tells us if Alt/Meta are active, we determine left/right based on keysyms of pressed keys
+    bool const alt_active = mod_index_alt != XKB_MOD_INVALID &&
+        xkb_state_mod_index_is_active(state.get(), mod_index_alt, XKB_STATE_MODS_EFFECTIVE);
+    bool const meta_active = mod_index_logo != XKB_MOD_INVALID &&
+        xkb_state_mod_index_is_active(state.get(), mod_index_logo, XKB_STATE_MODS_EFFECTIVE);
     
-    // Check logo/meta/super modifier (Win key) - also affected by altwin:swap_alt_win
-    if (mod_index_logo != XKB_MOD_INVALID &&
-        xkb_state_mod_index_is_active(state.get(), mod_index_logo, XKB_STATE_MODS_EFFECTIVE))
+    if (alt_active || meta_active)
     {
-        new_modifier_state |= mir_input_event_modifier_meta;
-        // With altwin:swap_alt_win, the physical Alt keys will activate Super/Meta
+        if (alt_active)
+            new_modifier_state |= mir_input_event_modifier_alt;
+        if (meta_active)
+            new_modifier_state |= mir_input_event_modifier_meta;
+        
+        // Single iteration to check all pressed keys for both Alt and Meta modifiers
+        // With altwin:swap_alt_win, physical Win keys produce Alt keysyms, physical Alt keys produce Meta keysyms
         for (auto scan_code : pressed_scancodes)
         {
             auto keysym = xkb_state_key_get_one_sym(state.get(), scan_code);
-            if (keysym == XKB_KEY_Super_L || keysym == XKB_KEY_Meta_L)
+            
+            if (alt_active)
             {
-                new_modifier_state |= mir_input_event_modifier_meta_left;
+                if (keysym == XKB_KEY_Alt_L)
+                    new_modifier_state |= mir_input_event_modifier_alt_left;
+                else if (keysym == XKB_KEY_Alt_R)
+                    new_modifier_state |= mir_input_event_modifier_alt_right;
             }
-            else if (keysym == XKB_KEY_Super_R || keysym == XKB_KEY_Meta_R)
+            
+            if (meta_active)
             {
-                new_modifier_state |= mir_input_event_modifier_meta_right;
+                if (keysym == XKB_KEY_Super_L || keysym == XKB_KEY_Meta_L)
+                    new_modifier_state |= mir_input_event_modifier_meta_left;
+                else if (keysym == XKB_KEY_Super_R || keysym == XKB_KEY_Meta_R)
+                    new_modifier_state |= mir_input_event_modifier_meta_right;
             }
         }
     }

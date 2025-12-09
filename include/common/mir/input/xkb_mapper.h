@@ -103,9 +103,14 @@ private:
         std::shared_ptr<xkb_keymap> const compiled_keymap;
         XKBStatePtr state;
         MirInputEventModifiers modifier_state{0};
+        
+        // Tracks physically pressed keys (as XKB scan codes) to determine which physical keys
+        // are pressed when querying XKB state. Used to distinguish left/right modifier variants.
         std::unordered_set<uint32_t> pressed_scancodes;
         
-        // Cached XKB modifier indices
+        // Cached XKB modifier indices for performance. These are looked up once during
+        // construction from standard XKB modifier names and used to efficiently query
+        // XKB state for active modifiers.
         xkb_mod_index_t mod_index_shift{XKB_MOD_INVALID};
         xkb_mod_index_t mod_index_ctrl{XKB_MOD_INVALID};
         xkb_mod_index_t mod_index_alt{XKB_MOD_INVALID};
