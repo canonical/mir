@@ -38,14 +38,15 @@ namespace debug
 struct CircleDrawCommand
 {
     mir::geometry::Point center;
-    float radius;
-    glm::vec4 color;
-    std::chrono::milliseconds lifetime;
+    float radius{50};
+    glm::vec4 color{1.0f, 0.0f, 1.0f, 1.0f}; // TODO does alpha matter here?
+    std::chrono::milliseconds lifetime{1000};
+};
 };
 
 using DrawCommand = std::variant<CircleDrawCommand>;
 
-void draw_circle(mir::geometry::Point center, float radius, glm::vec4 color, std::chrono::milliseconds lifetime);
+void draw_circle(CircleDrawCommand&&);
 
 auto get_draw_commands() -> mir::Synchronised<std::vector<DrawCommand>>&;
 }

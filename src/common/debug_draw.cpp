@@ -22,11 +22,9 @@
 
 mir::Synchronised<std::vector<mir::debug::DrawCommand>> draw_commands{};
 
-void mir::debug::draw_circle(
-
-    mir::geometry::Point center, float radius, glm::vec4 color, std::chrono::milliseconds lifetime)
+void mir::debug::draw_circle(mir::debug::CircleDrawCommand&& command)
 {
-    draw_commands.lock()->push_back(CircleDrawCommand{center, radius, color, lifetime});
+    draw_commands.lock()->push_back(std::move(command));
 }
 
 auto mir::debug::get_draw_commands() -> mir::Synchronised<std::vector<mir::debug::DrawCommand>>&
