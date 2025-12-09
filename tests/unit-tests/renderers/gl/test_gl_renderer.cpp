@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <EGL/egl.h>
 #include <stdexcept>
 #include <glm/ext/matrix_transform.hpp>
 #include <gtest/gtest.h>
@@ -304,15 +305,24 @@ TEST_F(GLRenderer, clears_to_opaque_black)
 TEST_F(GLRenderer, makes_display_buffer_current_when_created)
 {
     auto mock_output_surface = make_output_surface();
+    // We move the output_surface into the Renderer on construction, but want to validate the
+    // expectations before destruction; we need to hold a non-owning ptr to it.
+    auto raw_surface = mock_output_surface.get();
 
     EXPECT_CALL(*mock_output_surface, make_current());
 
     mrg::Renderer renderer(gl_platform, std::move(mock_output_surface));
+
+    // Teardown might make further GL calls; we don't care about them here.
+    testing::Mock::VerifyAndClearExpectations(raw_surface);
 }
 
 TEST_F(GLRenderer, makes_display_buffer_current_before_rendering)
 {
     auto mock_output_surface = make_output_surface();
+    // We move the output_surface into the Renderer on construction, but want to validate the
+    // expectations before destruction; we need to hold a non-owning ptr to it.
+    auto raw_surface = mock_output_surface.get();
 
     InSequence seq;
     EXPECT_CALL(*mock_output_surface, make_current()).Times(AnyNumber());
@@ -321,6 +331,9 @@ TEST_F(GLRenderer, makes_display_buffer_current_before_rendering)
     mrg::Renderer renderer(gl_platform, std::move(mock_output_surface));
 
     renderer.render(renderable_list);
+
+    // Teardown might make further GL calls; we don't care about them here.
+    testing::Mock::VerifyAndClearExpectations(raw_surface);
 }
 
 TEST_F(GLRenderer, swaps_buffers_after_rendering)
@@ -530,6 +543,10 @@ TEST_F(GLRenderer, sets_viewport_downscaled_wide)
 TEST_F(GLRenderer, binds_surface_on_set_viewport)
 {
     auto output_surface = make_output_surface();
+    // We move the output_surface into the Renderer on construction, but want to validate the
+    // expectations before destruction; we need to hold a non-owning ptr to it.
+    auto raw_surface = output_surface.get();
+
     InSequence seq;
     EXPECT_CALL(*output_surface, make_current())
         .Times(2);  // Once during construction, and once when we update the viewport
@@ -539,4 +556,40 @@ TEST_F(GLRenderer, binds_surface_on_set_viewport)
     mir::geometry::Rectangle constexpr view_area{{0,0}, {1920,1080}};
     mrg::Renderer renderer(gl_platform, std::move(output_surface));
     renderer.set_viewport(view_area);
+
+    // Teardown might make further GL calls; we don't care about them here.
+    testing::Mock::VerifyAndClearExpectations(raw_surface);
+}
+
+TEST_F(GLRenderer, destroys_gl_resources_with_current_context)
+{
+    auto mock_output_surface = make_output_surface();
+
+    auto const dummy_dpy = reinterpret_cast<EGLDisplay>(0x0000110011);
+    auto const dummy_ctx = reinterpret_cast<EGLContext>(0x00ffaa1122);
+
+    ON_CALL(*mock_output_surface, make_current())
+        .WillByDefault(
+            [dummy_dpy, dummy_ctx]()
+            {
+               eglMakeCurrent(dummy_dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, dummy_ctx);
+            });
+
+    mrg::Renderer renderer(gl_platform, std::move(mock_output_surface));
+
+    eglMakeCurrent(dummy_dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+
+    // All cleanup should be done with a current context
+    EXPECT_CALL(mock_gl, glDeleteShader(_))
+        .WillRepeatedly(
+            [dummy_ctx](auto)
+            {
+               EXPECT_THAT(eglGetCurrentContext(), testing::Eq(dummy_ctx));
+            });
+    EXPECT_CALL(mock_gl, glDeleteProgram(_))
+        .WillRepeatedly(
+            [dummy_ctx](auto)
+            {
+               EXPECT_THAT(eglGetCurrentContext(), testing::Eq(dummy_ctx));
+            });
 }

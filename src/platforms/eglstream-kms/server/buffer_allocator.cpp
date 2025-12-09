@@ -19,6 +19,7 @@
 
 #include "buffer_allocator.h"
 #include "cpu_copy_output_surface.h"
+#include "egl_helpers.h"
 #include <mir/anonymous_shm_file.h>
 #include <mir/graphics/display_sink.h>
 #include <mir/graphics/drm_formats.h>
@@ -41,12 +42,14 @@
 #include <mir/wayland/protocol_error.h>
 #include <mir/wayland/wayland_base.h>
 #include <mir/renderer/gl/gl_surface.h>
+#include <optional>
 
 #define MIR_LOG_COMPONENT "platform-eglstream-kms"
 #include <mir/log.h>
 
 #include <wayland-server-core.h>
 
+#include <cstdint>
 #include <mutex>
 #include <drm_fourcc.h>
 
@@ -96,7 +99,7 @@ namespace
 
 GLuint gen_texture_handle()
 {
-    GLuint tex;
+    GLuint tex{0};
     glGenTextures(1, &tex);
     return tex;
 }
@@ -173,7 +176,7 @@ struct BoundEGLStream
 {
     static void associate_stream(wl_resource* buffer, std::shared_ptr<mir::renderer::gl::Context> ctx, EGLStreamKHR stream)
     {
-        BoundEGLStream* me;
+        BoundEGLStream* me{nullptr};
         if (auto notifier = wl_resource_get_destroy_listener(buffer, &on_buffer_destroyed))
         {
             /* We're associating a buffer which has an existing stream with a new stream?
@@ -261,8 +264,7 @@ struct BoundEGLStream
     {
         if (auto notifier = wl_resource_get_destroy_listener(buffer, &on_buffer_destroyed))
         {
-            BoundEGLStream* me;
-            me = wl_container_of(notifier, me, destruction_listener);
+            BoundEGLStream* me = wl_container_of(notifier, me, destruction_listener);
             return TextureHandle{me->consumer_sync, me->producer};
         }
         BOOST_THROW_EXCEPTION((std::runtime_error{"Buffer does not have an associated EGLStream"}));
@@ -274,14 +276,13 @@ private:
             std::is_standard_layout<BoundEGLStream>::value,
             "BoundEGLStream must be Standard Layout for wl_container_of to be defined behaviour");
 
-        BoundEGLStream* me;
-        me = wl_container_of(listener, me, destruction_listener);
+        BoundEGLStream* me = wl_container_of(listener, me, destruction_listener);
         delete me;
     }
 
     std::shared_ptr<Sync> const consumer_sync{std::make_shared<Sync>()};
     std::shared_ptr<EGLStreamTextureConsumer const> producer;
-    wl_listener destruction_listener;
+    wl_listener destruction_listener = {};
 };
 }
 
@@ -296,7 +297,7 @@ try
         wl_resource_get_user_data(eglstream_controller_resource));
 
     EGLAttrib const attribs[] = {
-        EGL_WAYLAND_EGLSTREAM_WL, (EGLAttrib)buffer,
+        EGL_WAYLAND_EGLSTREAM_WL, reinterpret_cast<EGLAttrib>(buffer), //TICS !cppcoreguidelines-pro-type-reinterpret-cast: EGLAttrib is intptr_t, and the API requires that we pass the buffer pointer in
         EGL_NONE
     };
 
@@ -329,7 +330,8 @@ void mge::BufferAllocator::bind_eglstream_controller(
     uint32_t version,
     uint32_t id)
 {
-    auto resource = wl_resource_create(client, &wl_eglstream_controller_interface, version, id);
+    auto const resolved_version = static_cast<int>(version);    // Wayland inexplicably passes version as a uint32_t, but uses `int` in wl_resource_create
+    auto resource = wl_resource_create(client, &wl_eglstream_controller_interface, resolved_version, id);
 
     if (resource == nullptr)
     {
@@ -570,14 +572,15 @@ std::shared_ptr<mir::graphics::Buffer>
 mir::graphics::eglstream::BufferAllocator::buffer_from_resource(
     wl_resource* buffer,
     std::function<void()>&& on_consumed,
-    std::function<void()>&& /*on_release*/)
+    std::function<void()>&& /*on_release*/) //TICS !cppcoreguidelines-rvalue-reference-param-not-moved: We don't use this parameter *at all*.
 {
+
     auto context_guard = mir::raii::paired_calls(
         [this]() { wayland_ctx->make_current(); },
         [this]() { wayland_ctx->release_current(); });
     auto dpy = eglGetCurrentDisplay();
 
-    EGLint width, height;
+    EGLint width{0}, height{0};
     if (extensions(dpy).eglQueryWaylandBufferWL(dpy, buffer, EGL_WIDTH, &width) != EGL_TRUE)
     {
         BOOST_THROW_EXCEPTION(mg::egl_error("Failed to query Wayland buffer width"));
@@ -589,7 +592,7 @@ mir::graphics::eglstream::BufferAllocator::buffer_from_resource(
     mg::gl::Texture::Layout const layout =
         [&]()
         {
-            EGLint y_inverted;
+            EGLint y_inverted{false};
             if (extensions(dpy).eglQueryWaylandBufferWL(dpy, buffer, EGL_WAYLAND_Y_INVERTED_WL, &y_inverted) != EGL_TRUE)
             {
                 // If querying Y_INVERTED fails, we must have the default, GL, layout
@@ -658,7 +661,7 @@ public:
     }
 
 private:
-    GLuint id;
+    GLuint id{0};
 };
 
 using TextureHandle = GLHandle<&glGenTextures, &glDeleteTextures>;
@@ -718,6 +721,28 @@ public:
           size_{std::move(size)}
     {
         eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+    }
+
+    ~EGLStreamOutputSurface()
+    {
+        // Capture current EGL state to restore, if the current context is not the one we're destroying
+        auto const egl_restore =
+            [this]() -> std::optional<mgc::CacheEglState>
+            {
+                if (ctx != eglGetCurrentContext())
+                {
+                    return {mgc::CacheEglState{}};
+                }
+
+                // We *are* the current context; release the current context, so we can destroy resources.
+                eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+                // We don't need to restore EGL state
+                return std::nullopt;
+            }();
+
+        // Free our EGL resources
+        eglDestroySurface(dpy, surface);
+        eglDestroyContext(dpy, ctx);
     }
 
     void bind() override
@@ -780,7 +805,7 @@ auto pick_stream_surface_config(EGLDisplay dpy, mg::GLConfig const& gl_config) -
         EGL_NONE
     };
 
-    EGLConfig egl_config;
+    EGLConfig egl_config{nullptr};
     EGLint num_egl_configs{0};
 
     if (eglChooseConfig(dpy, config_attr, &egl_config, 1, &num_egl_configs) == EGL_FALSE ||

@@ -39,6 +39,8 @@
 #include <cmath>
 #include <sstream>
 #include <mutex>
+#include <ranges>
+#include <type_traits>
 
 namespace mg = mir::graphics;
 namespace mgl = mir::gl;
@@ -156,6 +158,12 @@ const GLchar* const vertex_shader_src =
     "   v_texcoord = texcoord;\n"
     "}\n"
 };
+
+template<typename Index, typename Range>
+    requires std::integral<Index>
+auto enumerate_with_idx_type(Range&& range) {
+    return std::views::zip(std::views::iota(Index{0}), std::forward<Range>(range));
+}
 }
 
 class mrg::Renderer::ProgramFactory : public mir::graphics::gl::ProgramFactory
@@ -249,7 +257,7 @@ private:
 
         glShaderSource(id, 1, &src, NULL);
         glCompileShader(id);
-        GLint ok;
+        GLint ok{0};
         glGetShaderiv(id, GL_COMPILE_STATUS, &ok);
         if (!ok)
         {
@@ -271,7 +279,7 @@ private:
         glAttachShader(program, fragment_shader);
         glAttachShader(program, vertex_shader);
         glLinkProgram(program);
-        GLint ok;
+        GLint ok{0};
         glGetProgramiv(program, GL_LINK_STATUS, &ok);
         if (!ok)
         {
@@ -293,7 +301,7 @@ private:
 };
 
 // Shader that converts colors to grayscale.
-const GLchar* grayscale_src =
+GLchar const* const grayscale_src =
     "uniform sampler2D tex;\n"
     "vec4 sample_to_rgba(in vec2 texcoord) {\n"
     "   vec4 col = texture2D(tex, texcoord);\n"
@@ -302,7 +310,7 @@ const GLchar* grayscale_src =
     "}\n";
 
 // Shader that inverts colors.
-const GLchar* invert_src =
+GLchar const* const invert_src =
     "uniform sampler2D tex;\n"
     "vec4 sample_to_rgba(in vec2 texcoord) {\n"
     "   vec4 col = texture2D(tex, texcoord);\n"
@@ -425,7 +433,7 @@ private:
 
         glShaderSource(id, 1, &src, NULL);
         glCompileShader(id);
-        GLint ok;
+        GLint ok{0};
         glGetShaderiv(id, GL_COMPILE_STATUS, &ok);
         if (!ok)
         {
@@ -473,7 +481,7 @@ private:
         glAttachShader(program, fragment_shader);
         glAttachShader(program, vertex_shader);
         glLinkProgram(program);
-        GLint ok;
+        GLint ok{0};
         glGetProgramiv(program, GL_LINK_STATUS, &ok);
         if (!ok)
         {
@@ -490,7 +498,7 @@ private:
 
    static GLuint make_texture(mir::geometry::Size size)
     {
-        GLuint tex;
+        GLuint tex{0};
         glGenTextures(1, &tex);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, tex);
@@ -509,7 +517,7 @@ private:
 
     static GLuint make_framebuffer(GLuint tex)
     {
-        GLuint fb;
+        GLuint fb{0};
         glGenFramebuffers(1, &fb);
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fb);
         glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex, 0);
@@ -532,13 +540,13 @@ mrg::Renderer::Program::Program(GLuint program_id)
     id = program_id;
     position_attr = glGetAttribLocation(id, "position");
     texcoord_attr = glGetAttribLocation(id, "texcoord");
-    for (auto i = 0u; i < tex_uniforms.size() ; ++i)
+    for (auto const [index, uniform] : enumerate_with_idx_type<GLint>(tex_uniforms))
     {
         /* You can reference uniform arrays as tex[0], tex[1], tex[2], … until you
          * hit the end of the array, which will return -1 as the location.
          */
-        auto const uniform_name = std::string{"tex["} + std::to_string(i) + "]";
-        tex_uniforms[i] = glGetUniformLocation(id, uniform_name.c_str());
+        auto const uniform_name = std::string{"tex["} + std::to_string(index) + "]";
+        uniform = glGetUniformLocation(id, uniform_name.c_str());
     }
     centre_uniform = glGetUniformLocation(id, "centre");
     oriented_centre = glGetUniformLocation(id, "oriented_centre");
@@ -564,6 +572,7 @@ mrg::Renderer::Renderer(
     : output_surface{std::make_unique<OutputFilter>(make_output_current(std::move(output)))},
       clear_color{0.0f, 0.0f, 0.0f, 1.0f},
       program_factory{std::make_unique<ProgramFactory>()},
+      screen_to_gl_coords(0),
       display_transform(1),
       gl_interface{std::move(gl_interface)}
 {
@@ -596,7 +605,7 @@ mrg::Renderer::Renderer(
 
     for (auto& s : glstrings)
     {
-        auto val = reinterpret_cast<char const*>(glGetString(s.id));
+        auto val = reinterpret_cast<char const*>(glGetString(s.id)); //TICS !cppcoreguidelines-pro-type-reinterpret-cast: glGetString returns an ASCII string, guaranteed not to have the high-bit set, so it's representationally-identical to signed char
         mir::log_info(std::string(s.label) + ": " + (val ? val : ""));
     }
 
@@ -619,6 +628,28 @@ mrg::Renderer::Renderer(
 
 mrg::Renderer::~Renderer()
 {
+    auto prev_dpy = eglGetCurrentDisplay();
+    auto prev_ctx = eglGetCurrentContext();
+    auto prev_read = eglGetCurrentSurface(EGL_READ);
+    auto prev_draw = eglGetCurrentSurface(EGL_DRAW);
+
+    // We are going to be releasing GL resources; that means we have to have a current context
+    // We've allocated all our resources on the context of output_surface; release them there, too.
+    output_surface->make_current();
+
+    auto const output_surf_ctx = eglGetCurrentContext();
+
+    program_factory.reset();
+
+    // OutputSurface destructor correctly cleans up, leaving no EGL context current
+    output_surface.reset();
+
+    // If our output surface was not previously current, restore EGL state
+    // (If the output surface *was* current, then it's not a good idea to try and restore that state!)
+    if (prev_ctx != output_surf_ctx)
+    {
+        eglMakeCurrent(prev_dpy, prev_draw, prev_read, prev_ctx);
+    }
 }
 
 void mrg::Renderer::tessellate(std::vector<mgl::Primitive>& primitives,
@@ -713,11 +744,11 @@ void mrg::Renderer::draw(mg::Renderable const& renderable) const
     {   // Avoid reloading the screen-global uniforms on every renderable
         // TODO: We actually only need to bind these *once*, right? Not once per frame?
         prog->last_used_frameno = frameno;
-        for (auto i = 0u; i < prog->tex_uniforms.size(); ++i)
+        for (auto const [index, uniform] : enumerate_with_idx_type<GLint>(prog->tex_uniforms))
         {
-            if (prog->tex_uniforms[i] != -1)
+            if (uniform != -1)
             {
-                glUniform1i(prog->tex_uniforms[i], i);
+                glUniform1i(uniform, index);
             }
         }
         glUniformMatrix4fv(prog->display_transform_uniform, 1, GL_FALSE,
@@ -729,10 +760,10 @@ void mrg::Renderer::draw(mg::Renderable const& renderable) const
     glActiveTexture(GL_TEXTURE0);
 
     auto const& rect = renderable.screen_position();
-    GLfloat centrex = rect.top_left.x.as_int() +
-                      rect.size.width.as_int() / 2.0f;
-    GLfloat centrey = rect.top_left.y.as_int() +
-                      rect.size.height.as_int() / 2.0f;
+    GLfloat centrex = rect.top_left.x.round_to<GLfloat>() +
+                      rect.size.width.round_to<GLfloat>() / 2.0f;
+    GLfloat centrey = rect.top_left.y.round_to<GLfloat>() +
+                      rect.size.height.round_to<GLfloat>() / 2.0f;
     glUniform2f(prog->centre_uniform, centrex, centrey);
 
     // Wayland surfaces may specify an orientation that matches the output
@@ -749,10 +780,10 @@ void mrg::Renderer::draw(mg::Renderable const& renderable) const
     auto const orientation = renderable.orientation();
     if (orientation == mir_orientation_left || orientation == mir_orientation_right)
     {
-        centrex = rect.top_left.x.as_int() +
-                        rect.size.height.as_int() / 2.0f;
-        centrey = rect.top_left.y.as_int() +
-                        rect.size.width.as_int() / 2.0f;
+        centrex = rect.top_left.x.round_to<GLfloat>() +
+                        rect.size.height.round_to<GLfloat>() / 2.0f;
+        centrey = rect.top_left.y.round_to<GLfloat>() +
+                        rect.size.width.round_to<GLfloat>() / 2.0f;
     }
     glUniform2f(prog->oriented_centre, centrex, centrey);
 
@@ -889,17 +920,17 @@ void mrg::Renderer::set_viewport(geometry::Rectangle const& rect)
 
     float const vertical_fov_degrees = 30.0f;
     float const near =
-        (rect.size.height.as_int() / 2.0f) /
+        (rect.size.height.round_to<float>() / 2.0f) /
         std::tan((vertical_fov_degrees * M_PI / 180.0f) / 2.0f);
     float const far = -near;
 
     screen_to_gl_coords = glm::scale(screen_to_gl_coords,
-            glm::vec3{2.0f / rect.size.width.as_int(),
-                      -2.0f / rect.size.height.as_int(),
+            glm::vec3{2.0f / rect.size.width.round_to<float>(),
+                      -2.0f / rect.size.height.round_to<float>(),
                       2.0f / (near - far)});
     screen_to_gl_coords = glm::translate(screen_to_gl_coords,
-            glm::vec3{-rect.top_left.x.as_int(),
-                      -rect.top_left.y.as_int(),
+            glm::vec3{-rect.top_left.x.round_to<float>(),
+                      -rect.top_left.y.round_to<float>(),
                       0.0f});
 
     viewport = rect;
@@ -931,9 +962,9 @@ void mrg::Renderer::update_gl_viewport()
         GLint reduced_width = output_width, reduced_height = output_height;
         // if viewport_aspect_ratio >= output_aspect_ratio
         if (viewport_width * output_height >= output_width * viewport_height)
-            reduced_height = output_width * viewport_height / viewport_width;
+            reduced_height = static_cast<GLint>(output_width * viewport_height / viewport_width);
         else
-            reduced_width = output_height * viewport_width / viewport_height;
+            reduced_width = static_cast<GLint>(output_height * viewport_width / viewport_height);
 
         GLint offset_x = (output_width - reduced_width) / 2;
         GLint offset_y = (output_height - reduced_height) / 2;

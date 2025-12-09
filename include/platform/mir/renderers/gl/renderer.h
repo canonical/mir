@@ -75,7 +75,7 @@ public:
     };
 private:
     class OutputFilter;
-    std::unique_ptr<OutputFilter> const output_surface;
+    std::unique_ptr<OutputFilter> output_surface;
 
 protected:
     /**
@@ -107,7 +107,7 @@ private:
     void update_gl_viewport();
 
     class ProgramFactory;
-    std::unique_ptr<ProgramFactory> const program_factory;
+    std::unique_ptr<ProgramFactory> program_factory;
     geometry::Rectangle viewport;
     glm::mat4 screen_to_gl_coords;
     glm::mat4 display_transform;

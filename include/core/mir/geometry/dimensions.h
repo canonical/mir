@@ -31,16 +31,31 @@ namespace geometry
 {
 namespace generic
 {
-// Concept guaranteeing conversion from U to T is lossless
-template<typename U, typename T>
+/// Concept guaranteeing a conversion From to To will
+/// be within To's representable range.
+///
+/// This may lose precision in the case of integer<->float
+/// conversions, but will not lose range.
+template<typename From, typename To>
+concept ConversionWithinBounds = requires
+{
+    // To can store the minimum value representible in From, and...
+    requires std::numeric_limits<To>::lowest() <= std::numeric_limits<From>::lowest();
+    // To can store the maximum value representible in From.
+    requires std::numeric_limits<To>::max() >= std::numeric_limits<From>::max();
+};
+
+/// Concept guaranteeing conversion From to To is lossless
+///
+/// That is, a conversion from From to To and back to From is an
+/// identity transform.
+template<typename From, typename To>
 concept ConversionIsLossless = requires
 {
-    // T has at least as many digits of precision as U, and...
-    requires std::numeric_limits<T>::digits >= std::numeric_limits<U>::digits;
-    // T can store the minimum value representible in U, and...
-    requires std::numeric_limits<T>::lowest() <= std::numeric_limits<U>::lowest();
-    // T can store the maximum value representible in U.
-    requires std::numeric_limits<T>::max() >= std::numeric_limits<U>::max();
+    // To has at least as many digits of precision as From, and...
+    requires std::numeric_limits<To>::digits >= std::numeric_limits<From>::digits;
+    // To's representable range is at least as large as From's
+    requires ConversionWithinBounds<From, To>;
 };
 
 template<typename T, typename Tag>
@@ -82,6 +97,18 @@ struct Value
     {
         return this->value;
     }
+
+    /// Convert to a different type, possibly losing precision but not range
+    ///
+    /// The round_to<Q> accessor will exist for any numeric type Q
+    /// that have enough range to represent any valid ValueType.
+    template <typename Q>
+        requires ConversionWithinBounds<T, Q>
+    constexpr Q round_to() const
+    {
+        return static_cast<Q>(this->value);
+    }
+
 
     constexpr T as_value() const noexcept
     {
