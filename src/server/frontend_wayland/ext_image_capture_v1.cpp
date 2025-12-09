@@ -21,6 +21,7 @@
 #include <mir/executor.h>
 #include <mir/compositor/screen_shooter.h>
 #include <mir/compositor/screen_shooter_factory.h>
+#include <mir/fatal.h>
 #include <mir/frontend/surface_stack.h>
 #include <mir/geometry/rectangles.h>
 #include <mir/renderer/sw/pixel_source.h>
@@ -28,8 +29,6 @@
 #include <mir/wayland/protocol_error.h>
 #include <mir/wayland/weak.h>
 #include "output_manager.h"
-
-#include <cassert>
 #include "shm.h"
 #include "wayland_timespec.h"
 
@@ -396,12 +395,7 @@ void mf::ExtOutputImageCopyBackend::begin_capture(
     {
     case DamageAmount::none:
         // This should never happen as maybe_capture_frame() checks has_damage() before calling begin_capture()
-        assert(false && "begin_capture() called with no damage - this is a precondition violation");
-        // Fall through to full damage as a recovery mechanism in release builds
-        [[fallthrough]];
-
-    case DamageAmount::full:
-        buffer_space_damage = {{}, buffer_size};
+        fatal_error_abort("begin_capture() called with no damage - this is a precondition violation");
         break;
 
     case DamageAmount::partial:
@@ -409,6 +403,10 @@ void mf::ExtOutputImageCopyBackend::begin_capture(
             output_space_damage,
             output_space_area,
             {{}, buffer_size});
+        break;
+
+    case DamageAmount::full:
+        buffer_space_damage = {{}, buffer_size};
         break;
     }
 
