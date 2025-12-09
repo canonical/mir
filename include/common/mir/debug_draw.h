@@ -34,6 +34,7 @@ class SceneElement;
 }
 namespace debug
 {
+// TODO handling multiple monitors?
 
 struct CircleDrawCommand
 {
@@ -42,11 +43,22 @@ struct CircleDrawCommand
     glm::vec4 color{1.0f, 0.0f, 1.0f, 1.0f}; // TODO does alpha matter here?
     std::chrono::milliseconds lifetime{1000};
 };
+
+struct LineDrawCommand
+{
+    mir::geometry::Point start;
+    mir::geometry::Point end;
+    float thickness{10.0f};
+    glm::vec4 color{1.0f, 0.0f, 1.0f, 1.0f};
+    std::chrono::milliseconds lifetime{1000};
 };
 
-using DrawCommand = std::variant<CircleDrawCommand>;
+using DrawCommand = std::variant<CircleDrawCommand, LineDrawCommand>;
 
+// TODO: Required parameters + Options struct?
 void draw_circle(CircleDrawCommand&&);
+
+void draw_line(LineDrawCommand&&);
 
 auto get_draw_commands() -> mir::Synchronised<std::vector<DrawCommand>>&;
 }

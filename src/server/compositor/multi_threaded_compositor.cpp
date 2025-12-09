@@ -250,6 +250,93 @@ auto draw_command_to_scene_element(
             // Create a scene element from the renderable
             return std::make_shared<DebugSceneElement>(std::make_shared<DebugRenderable>(buffer, rect));
         }
+
+        auto operator()(mir::debug::LineDrawCommand const& command)
+        {
+            auto const& start = command.start;
+            auto const& end = command.end;
+            auto const thickness = command.thickness;
+            auto const half_thickness = thickness / 2.0f;
+
+            // Calculate bounding box
+            auto min_x = std::min(start.x.as_int(), end.x.as_int()) - static_cast<int>(std::ceil(half_thickness));
+            auto min_y = std::min(start.y.as_int(), end.y.as_int()) - static_cast<int>(std::ceil(half_thickness));
+            auto max_x = std::max(start.x.as_int(), end.x.as_int()) + static_cast<int>(std::ceil(half_thickness));
+            auto max_y = std::max(start.y.as_int(), end.y.as_int()) + static_cast<int>(std::ceil(half_thickness));
+
+            auto width = max_x - min_x;
+            auto height = max_y - min_y;
+
+            // Ensure valid dimensions
+            if (width <= 0)
+                width = 1;
+            if (height <= 0)
+                height = 1;
+
+            mir::geometry::Rectangle rect{mir::geometry::Point{min_x, min_y}, mir::geometry::Size{width, height}};
+
+            // Allocate a software buffer
+            auto buffer = allocator->alloc_software_buffer(
+                mir::geometry::Size{mir::geometry::Width{width}, mir::geometry::Height{height}},
+                mir_pixel_format_argb_8888);
+
+            auto mapped = mir::renderer::software::as_write_mappable(buffer);
+            auto writable = mapped->map_writeable();
+            auto stride = mapped->stride().as_int();
+
+            // Precompute line segment vectors
+            float lx = static_cast<float>(end.x.as_int() - start.x.as_int());
+            float ly = static_cast<float>(end.y.as_int() - start.y.as_int());
+            float len_sq = lx * lx + ly * ly;
+
+            // Color
+            uint8_t a = static_cast<uint8_t>(command.color.a * 255.0f);
+            uint8_t r = static_cast<uint8_t>(command.color.r * 255.0f);
+            uint8_t g = static_cast<uint8_t>(command.color.g * 255.0f);
+            uint8_t b = static_cast<uint8_t>(command.color.b * 255.0f);
+            uint32_t color_val = (a << 24) | (r << 16) | (g << 8) | b;
+
+            for (int y = 0; y < height; ++y)
+            {
+                for (int x = 0; x < width; ++x)
+                {
+                    // Pixel position in global coords (center of pixel)
+                    float px = static_cast<float>(min_x + x) + 0.5f;
+                    float py = static_cast<float>(min_y + y) + 0.5f;
+
+                    // Vector from start to pixel
+                    float dx = px - static_cast<float>(start.x.as_int());
+                    float dy = py - static_cast<float>(start.y.as_int());
+
+                    // Project onto line segment
+                    float t = 0.0f;
+                    if (len_sq > 0.0f)
+                        t = (dx * lx + dy * ly) / len_sq;
+
+                    t = std::max(0.0f, std::min(1.0f, t));
+
+                    // Closest point on segment
+                    float cx = static_cast<float>(start.x.as_int()) + t * lx;
+                    float cy = static_cast<float>(start.y.as_int()) + t * ly;
+
+                    // Distance squared
+                    float dist_sq = (px - cx) * (px - cx) + (py - cy) * (py - cy);
+
+                    uint32_t* pixel = reinterpret_cast<uint32_t*>(writable->data() + y * stride + x * 4);
+
+                    if (dist_sq <= half_thickness * half_thickness)
+                    {
+                        *pixel = color_val;
+                    }
+                    else
+                    {
+                        *pixel = 0x00000000;
+                    }
+                }
+            }
+
+            return std::make_shared<DebugSceneElement>(std::make_shared<DebugRenderable>(buffer, rect));
+        }
     };
 
     return std::visit(DrawCommandVisitor{allocator}, command);
