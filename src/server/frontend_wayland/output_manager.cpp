@@ -220,7 +220,7 @@ void mf::OutputGlobal::instance_destroyed(OutputInstance* instance)
         return;
     }
     auto& vec = iter->second;
-    std::erase(vec, instance);
+    std::erase_if(vec, [&](auto candidate) { return candidate == instance; });
     if (vec.empty())
     {
         instances.erase(iter);
