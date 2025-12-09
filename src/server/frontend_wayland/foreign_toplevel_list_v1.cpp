@@ -138,7 +138,7 @@ private:
 }
 
 /// Informs a client about toplevels from itself and other clients
-/// The Wayland objects it creates for each toplevel can be used to aquire information and control that toplevel
+/// The Wayland objects it creates for each toplevel can be used to acquire information
 /// Useful for task bars and app switchers
 class ExtForeignToplevelListV1Global
     : public wayland::ExtForeignToplevelListV1::Global

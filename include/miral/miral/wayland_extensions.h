@@ -131,6 +131,7 @@ public:
     /// Allows a client to list toplevels of all clients.
     /// Similar to zwlr_foreign_toplevel_manager_v1, but without the ability to control toplevels.
     /// Could allow a client to extract information about other programs the user is running.
+    /// \remark Since MirAL 5.6
     static char const* const ext_foreign_toplevel_list_v1;
 
     /// Allows clients to act as a virtual keyboard, useful for on-screen keyboards.
