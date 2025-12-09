@@ -21,10 +21,6 @@ jobs:
 
     runs-on: ubuntu-latest
 
-    env:
-      DEBFULLNAME: "Mir CI Bot"
-      DEBEMAIL: "mir-ci-bot@canonical.com"
-
     steps:
     - name: Import GPG key
       uses: crazy-max/ghaction-import-gpg@v6
