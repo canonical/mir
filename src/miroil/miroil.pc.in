@@ -2,7 +2,7 @@ prefix=@CMAKE_INSTALL_PREFIX@
 libdir=@PKGCONFIG_LIBDIR@
 includedir=@PKGCONFIG_INCLUDEDIR@/miroil
 
-Name: miral
+Name: miroil
 Description: Mir "OIL" (lomiri support) library
 Version: @MIROIL_VERSION@
 Requires: mircommon
