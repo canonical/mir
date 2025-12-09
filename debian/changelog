@@ -1,5 +1,12 @@
-mir (2.23.0) UNRELEASED; urgency=medium
+mir (2.25.0~dev) UNRELEASED; urgency=medium
 
+  * Begin development for 2.25.0 release
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Wed, 10 Dec 2025 14:39:09 +0100
+
+mir (2.23.0) noble; urgency=medium
+
+  [ Alan Griffiths ]
   * New upstream release 2.23.0
 
     - A big focus on documentation.
@@ -75,7 +82,7 @@ mir (2.23.0) UNRELEASED; urgency=medium
         split how some how-tos (#4173)
 
 
- -- Alan Griffiths <alan.griffiths@canonical.com>  Mon, 06 Oct 2025 12:17:00 +0100
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Tue, 09 Dec 2025 17:25:18 +0100
 
 mir (2.22.2) UNRELEASED; urgency=medium
 
