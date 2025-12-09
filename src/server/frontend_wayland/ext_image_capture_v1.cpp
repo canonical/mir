@@ -28,6 +28,8 @@
 #include <mir/wayland/protocol_error.h>
 #include <mir/wayland/weak.h>
 #include "output_manager.h"
+
+#include <cassert>
 #include "shm.h"
 #include "wayland_timespec.h"
 
@@ -393,7 +395,13 @@ void mf::ExtOutputImageCopyBackend::begin_capture(
     switch (damage_amount)
     {
     case DamageAmount::none:
-        BOOST_THROW_EXCEPTION(std::logic_error("ExtImageCopyBackend::begin_capture called when there is no damage available"));
+        // This should never happen as maybe_capture_frame() checks has_damage() before calling begin_capture()
+        assert(false && "begin_capture() called with no damage - this is a precondition violation");
+        // Fall through to full damage as a recovery mechanism in release builds
+        [[fallthrough]];
+
+    case DamageAmount::full:
+        buffer_space_damage = {{}, buffer_size};
         break;
 
     case DamageAmount::partial:
@@ -401,10 +409,6 @@ void mf::ExtOutputImageCopyBackend::begin_capture(
             output_space_damage,
             output_space_area,
             {{}, buffer_size});
-        break;
-
-    case DamageAmount::full:
-        buffer_space_damage = {{}, buffer_size};
         break;
     }
 
