@@ -505,9 +505,9 @@ void mircv::XKBMapper::XkbMappingState::update_modifier_from_xkb_state()
     {
         new_modifier_state |= mir_input_event_modifier_shift;
         // Check which physical shift keys are pressed
-        if (pressed_scancodes.count(to_xkb_scan_code(KEY_LEFTSHIFT)))
+        if (pressed_scancodes.find(to_xkb_scan_code(KEY_LEFTSHIFT)) != pressed_scancodes.end())
             new_modifier_state |= mir_input_event_modifier_shift_left;
-        if (pressed_scancodes.count(to_xkb_scan_code(KEY_RIGHTSHIFT)))
+        if (pressed_scancodes.find(to_xkb_scan_code(KEY_RIGHTSHIFT)) != pressed_scancodes.end())
             new_modifier_state |= mir_input_event_modifier_shift_right;
     }
     
@@ -517,9 +517,9 @@ void mircv::XKBMapper::XkbMappingState::update_modifier_from_xkb_state()
     {
         new_modifier_state |= mir_input_event_modifier_ctrl;
         // Check which physical ctrl keys are pressed
-        if (pressed_scancodes.count(to_xkb_scan_code(KEY_LEFTCTRL)))
+        if (pressed_scancodes.find(to_xkb_scan_code(KEY_LEFTCTRL)) != pressed_scancodes.end())
             new_modifier_state |= mir_input_event_modifier_ctrl_left;
-        if (pressed_scancodes.count(to_xkb_scan_code(KEY_RIGHTCTRL)))
+        if (pressed_scancodes.find(to_xkb_scan_code(KEY_RIGHTCTRL)) != pressed_scancodes.end())
             new_modifier_state |= mir_input_event_modifier_ctrl_right;
     }
     
@@ -537,8 +537,10 @@ void mircv::XKBMapper::XkbMappingState::update_modifier_from_xkb_state()
         if (meta_active)
             new_modifier_state |= mir_input_event_modifier_meta;
         
-        // Single iteration to check all pressed keys for both Alt and Meta modifiers
-        // With altwin:swap_alt_win, physical Win keys produce Alt keysyms, physical Alt keys produce Meta keysyms
+        // Single iteration to check all pressed keys for both Alt and Meta modifiers.
+        // We query the keysym of each pressed key because XKB options like altwin:swap_alt_win
+        // change which keysyms are produced (e.g., physical Win key produces Alt_L keysym).
+        // This allows us to correctly determine left/right variants after key remapping.
         for (auto scan_code : pressed_scancodes)
         {
             auto keysym = xkb_state_key_get_one_sym(state.get(), scan_code);
