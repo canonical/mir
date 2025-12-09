@@ -5,6 +5,6 @@ includedir=@PKGCONFIG_INCLUDEDIR@/mirtest
 Name: mirtest
 Description: Mir test assist library
 Version: @MIR_VERSION@
-Requires: miral mirserver mirplatform mircommon mir-renderer-gl-dev
+Requires: miral mirserver mirplatform mircommon libmirplatform-dev
 Libs: -L${libdir} -lmir-test-assist -ldl -lboost_filesystem -lboost_system
 Cflags: -I${includedir}
