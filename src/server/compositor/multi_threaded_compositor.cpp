@@ -35,13 +35,17 @@
 #include <mir/signal.h>
 #include <mir/log.h>
 #include <mir/debug_draw.h>
+#include <mir/time/clock.h>
 
 #include <atomic>
-#include <thread>
 #include <chrono>
 #include <future>
-#include <boost/throw_exception.hpp>
+#include <ranges>
+#include <thread>
 #include <variant>
+#include <vector>
+
+#include <boost/throw_exception.hpp>
 
 using namespace std::literals::chrono_literals;
 
@@ -268,7 +272,8 @@ public:
         std::chrono::milliseconds fixed_composite_delay,
         std::shared_ptr<CompositorReport> const& report,
         std::shared_ptr<mg::Cursor> const& cursor,
-        std::shared_ptr<mg::GraphicBufferAllocator> const& allocator) :
+        std::shared_ptr<mg::GraphicBufferAllocator> const& allocator,
+        std::shared_ptr<time::Clock> const& clock) :
         compositor_factory{db_compositor_factory},
         group(group),
         scene(scene),
@@ -279,7 +284,8 @@ public:
         cursor{cursor},
         started_future{started.get_future()},
         stopped_future{stopped.get_future()},
-        allocator{allocator}
+        allocator{allocator},
+        clock{clock}
     {
     }
 
@@ -370,11 +376,14 @@ public:
                                 scene_elements.push_back(std::make_shared<CursorSceneElement>(cursor_renderable));
                         }
 
-                        for(auto const& debug_draw_command: *mir::debug::get_draw_commands().lock())
-                        {
-                            auto const scene_element = draw_command_to_scene_element(debug_draw_command, allocator);
-                            scene_elements.push_back(scene_element);
-                        }
+                        auto const now = clock->now();
+                        // Clamping to account for times when the compositor is asleep
+                        auto const dt = std::clamp(
+                            std::chrono::duration_cast<std::chrono::milliseconds>(now - last_render_time),
+                            0ms,
+                            16ms);
+                        scene_elements.append_range(process_debug_draw(dt));
+                        last_render_time = now;
 
                         if (compositor->composite(std::move(scene_elements)))
                             needs_post = true;
@@ -447,6 +456,42 @@ public:
         stopped_future.get();
     }
 
+    auto process_debug_draw(std::chrono::milliseconds dt) -> SceneElementSequence
+    {
+        auto draw_commands = mir::debug::get_draw_commands().lock();
+
+        // Remove elements whose lifetime has expired
+        // TODO: maybe an alarm would work better
+        // TODO: When an object is added or removed, we need to force a
+        // recomposite. Which is not possible right now with the design I have.
+        //
+        // TODO Maybe add a `DebugDrawManager` that gets a reference to the
+        // compositor(s) and does the above? The debug API just needs to get a
+        // referenence to that somehow.. Can be done by adding an init function
+        // to it and calling it during server init or debug manager init.
+        std::erase_if(
+            *draw_commands,
+            [&](auto& draw_command)
+            {
+                return std::visit(
+                    [&](auto& cmd)
+                    {
+                        cmd.lifetime -= dt;
+                        return cmd.lifetime < 0ms;
+                    },
+                    draw_command);
+            });
+
+        // Convert to scene elements
+        return *draw_commands |
+            std::views::transform(
+                [this](auto const& draw_command)
+                {
+                    return draw_command_to_scene_element(draw_command, allocator);
+                }) |
+            std::ranges::to<std::vector>();
+    }
+
 private:
     std::shared_ptr<mc::DisplayBufferCompositorFactory> const compositor_factory;
     mg::DisplaySyncGroup& group;
@@ -461,7 +506,11 @@ private:
     std::future<void> started_future;
     std::promise<void> stopped;
     std::future<void> stopped_future;
+
+    // TODO all debug draw stuff should probably go elsewhere
     std::shared_ptr<mg::GraphicBufferAllocator> const allocator;
+    std::shared_ptr<time::Clock> const clock;
+    mir::time::Timestamp last_render_time{};
 };
 
 }
@@ -476,7 +525,8 @@ mc::MultiThreadedCompositor::MultiThreadedCompositor(
     std::shared_ptr<mg::Cursor> const& cursor,
     std::chrono::milliseconds fixed_composite_delay,
     bool compose_on_start,
-    std::shared_ptr<mg::GraphicBufferAllocator> const& allocator)
+    std::shared_ptr<mg::GraphicBufferAllocator> const& allocator,
+    std::shared_ptr<time::Clock> const& clock)
     : display{display},
       display_buffer_compositor_factory{db_compositor_factory},
       scene{scene},
@@ -484,6 +534,7 @@ mc::MultiThreadedCompositor::MultiThreadedCompositor(
       report{compositor_report},
       cursor{cursor},
       allocator{allocator},
+      clock{clock},
       state{CompositorState::stopped},
       fixed_composite_delay{fixed_composite_delay},
       compose_on_start{compose_on_start}
@@ -580,7 +631,7 @@ void mc::MultiThreadedCompositor::create_compositing_threads()
     {
         auto thread_functor = std::make_unique<mc::CompositingFunctor>(
             display_buffer_compositor_factory, group, scene, display_listener,
-            fixed_composite_delay, report, cursor, allocator);
+            fixed_composite_delay, report, cursor, allocator, clock);
 
         mir::thread_pool_executor.spawn(std::ref(*thread_functor));
         thread_functors.push_back(std::move(thread_functor));

@@ -37,6 +37,10 @@ namespace scene
 {
 class Observer;
 }
+namespace time
+{
+class Clock;
+}
 
 namespace compositor
 {
@@ -67,7 +71,8 @@ public:
         std::shared_ptr<graphics::Cursor> const& cursor,
         std::chrono::milliseconds fixed_composite_delay,  // -1 = automatic
         bool compose_on_start,
-        std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator);
+        std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
+        std::shared_ptr<time::Clock> const& clock);
     ~MultiThreadedCompositor();
 
     void start();
@@ -84,6 +89,7 @@ private:
     std::shared_ptr<CompositorReport> const report;
     std::shared_ptr<graphics::Cursor> const cursor;
     std::shared_ptr<graphics::GraphicBufferAllocator> const allocator;
+    std::shared_ptr<time::Clock> const clock;
 
     std::vector<std::unique_ptr<CompositingFunctor>> thread_functors;
 

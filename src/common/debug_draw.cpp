@@ -29,7 +29,7 @@ void mir::debug::draw_circle(
     draw_commands.lock()->push_back(CircleDrawCommand{center, radius, color, lifetime});
 }
 
-auto mir::debug::get_draw_commands() -> mir::Synchronised<std::vector<mir::debug::DrawCommand>> const&
+auto mir::debug::get_draw_commands() -> mir::Synchronised<std::vector<mir::debug::DrawCommand>>&
 {
     return draw_commands;
 }

@@ -47,7 +47,7 @@ using DrawCommand = std::variant<CircleDrawCommand>;
 
 void draw_circle(mir::geometry::Point center, float radius, glm::vec4 color, std::chrono::milliseconds lifetime);
 
-auto get_draw_commands() -> mir::Synchronised<std::vector<DrawCommand>> const&;
+auto get_draw_commands() -> mir::Synchronised<std::vector<DrawCommand>>&;
 }
 }
 
