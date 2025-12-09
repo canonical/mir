@@ -300,6 +300,13 @@ mircv::XKBMapper::XkbMappingState::XkbMappingState(
       compiled_keymap{std::move(compiled_keymap)},
       state{make_unique_state(this->compiled_keymap.get())}
 {
+    // Cache XKB modifier indices for efficient lookup
+    mod_index_shift = xkb_keymap_mod_get_index(this->compiled_keymap.get(), XKB_MOD_NAME_SHIFT);
+    mod_index_ctrl = xkb_keymap_mod_get_index(this->compiled_keymap.get(), XKB_MOD_NAME_CTRL);
+    mod_index_alt = xkb_keymap_mod_get_index(this->compiled_keymap.get(), XKB_MOD_NAME_ALT);
+    mod_index_logo = xkb_keymap_mod_get_index(this->compiled_keymap.get(), XKB_MOD_NAME_LOGO);
+    mod_index_caps = xkb_keymap_mod_get_index(this->compiled_keymap.get(), XKB_MOD_NAME_CAPS);
+    mod_index_num = xkb_keymap_mod_get_index(this->compiled_keymap.get(), XKB_MOD_NAME_NUM);
 }
 
 void mircv::XKBMapper::XkbMappingState::set_key_state(std::vector<uint32_t> const& key_state)
@@ -365,18 +372,10 @@ auto mircv::XKBMapper::XkbMappingState::update_state(
 -> std::pair<xkb_keysym_t, bool>
 {
     auto keysym = xkb_state_key_get_one_sym(state.get(), scan_code);
-    auto const mod_change = modifier_from_xkb_scan_code(scan_code);
-
-    // Occasionally, we see XKB_KEY_Meta_L where XKB_KEY_Alt_L is correct
-    if (mod_change == mir_input_event_modifier_alt_left)
-    {
-        keysym = XKB_KEY_Alt_L;
-    }
 
     if(action == mir_keyboard_action_down || action == mir_keyboard_action_repeat)
     {
         char buffer[7];
-        // scan code? really? not keysym?
         xkb_state_key_get_utf8(state.get(), scan_code, buffer, sizeof(buffer));
         text = buffer;
     }
@@ -388,16 +387,16 @@ auto mircv::XKBMapper::XkbMappingState::update_state(
     if (action == mir_keyboard_action_up)
     {
         mask = xkb_state_update_key(state.get(), scan_code, XKB_KEY_UP);
-        // TODO get the modifier state from xkbcommon and apply it
-        // for all other modifiers manually track them here:
-        release_modifier(mod_change);
+        pressed_scancodes.erase(scan_code);
+        // Query XKB for the actual modifier state after key update
+        update_modifier_from_xkb_state();
     }
     else if (action == mir_keyboard_action_down)
     {
         mask = xkb_state_update_key(state.get(), scan_code, XKB_KEY_DOWN);
-        // TODO get the modifier state from xkbcommon and apply it
-        // for all other modifiers manually track them here:
-        press_modifier(mod_change);
+        pressed_scancodes.insert(scan_code);
+        // Query XKB for the actual modifier state after key update
+        update_modifier_from_xkb_state();
     }
 
     bool const xkb_modifiers_changed =
@@ -494,6 +493,94 @@ xkb_keysym_t mircv::XKBMapper::ComposeState::update_state(xkb_keysym_t mapped_ke
     return mapped_key;
 }
 
+void mircv::XKBMapper::XkbMappingState::update_modifier_from_xkb_state()
+{
+    // Query XKB for the actual modifier state instead of tracking manually by scan codes
+    // This ensures that XKB options like altwin:swap_alt_win are properly respected
+    MirInputEventModifiers new_modifier_state = mir_input_event_modifier_none;
+    
+    // Check shift modifier and determine left/right based on which physical keys are pressed
+    if (mod_index_shift != XKB_MOD_INVALID && 
+        xkb_state_mod_index_is_active(state.get(), mod_index_shift, XKB_STATE_MODS_EFFECTIVE))
+    {
+        new_modifier_state |= mir_input_event_modifier_shift;
+        // Check which physical shift keys are pressed
+        if (pressed_scancodes.count(to_xkb_scan_code(KEY_LEFTSHIFT)))
+            new_modifier_state |= mir_input_event_modifier_shift_left;
+        if (pressed_scancodes.count(to_xkb_scan_code(KEY_RIGHTSHIFT)))
+            new_modifier_state |= mir_input_event_modifier_shift_right;
+    }
+    
+    // Check ctrl modifier
+    if (mod_index_ctrl != XKB_MOD_INVALID &&
+        xkb_state_mod_index_is_active(state.get(), mod_index_ctrl, XKB_STATE_MODS_EFFECTIVE))
+    {
+        new_modifier_state |= mir_input_event_modifier_ctrl;
+        // Check which physical ctrl keys are pressed
+        if (pressed_scancodes.count(to_xkb_scan_code(KEY_LEFTCTRL)))
+            new_modifier_state |= mir_input_event_modifier_ctrl_left;
+        if (pressed_scancodes.count(to_xkb_scan_code(KEY_RIGHTCTRL)))
+            new_modifier_state |= mir_input_event_modifier_ctrl_right;
+    }
+    
+    // Check alt modifier - this is where altwin:swap_alt_win affects behavior
+    // XKB tells us if Alt is active, we determine left/right based on which keys are pressed
+    if (mod_index_alt != XKB_MOD_INVALID &&
+        xkb_state_mod_index_is_active(state.get(), mod_index_alt, XKB_STATE_MODS_EFFECTIVE))
+    {
+        new_modifier_state |= mir_input_event_modifier_alt;
+        // With altwin:swap_alt_win, the physical Win keys will activate Alt
+        // Check all keys that could activate Alt modifier
+        for (auto scan_code : pressed_scancodes)
+        {
+            auto keysym = xkb_state_key_get_one_sym(state.get(), scan_code);
+            if (keysym == XKB_KEY_Alt_L)
+            {
+                new_modifier_state |= mir_input_event_modifier_alt_left;
+            }
+            else if (keysym == XKB_KEY_Alt_R)
+            {
+                new_modifier_state |= mir_input_event_modifier_alt_right;
+            }
+        }
+    }
+    
+    // Check logo/meta/super modifier (Win key) - also affected by altwin:swap_alt_win
+    if (mod_index_logo != XKB_MOD_INVALID &&
+        xkb_state_mod_index_is_active(state.get(), mod_index_logo, XKB_STATE_MODS_EFFECTIVE))
+    {
+        new_modifier_state |= mir_input_event_modifier_meta;
+        // With altwin:swap_alt_win, the physical Alt keys will activate Super/Meta
+        for (auto scan_code : pressed_scancodes)
+        {
+            auto keysym = xkb_state_key_get_one_sym(state.get(), scan_code);
+            if (keysym == XKB_KEY_Super_L || keysym == XKB_KEY_Meta_L)
+            {
+                new_modifier_state |= mir_input_event_modifier_meta_left;
+            }
+            else if (keysym == XKB_KEY_Super_R || keysym == XKB_KEY_Meta_R)
+            {
+                new_modifier_state |= mir_input_event_modifier_meta_right;
+            }
+        }
+    }
+    
+    // Check caps lock
+    if (mod_index_caps != XKB_MOD_INVALID &&
+        xkb_state_mod_index_is_active(state.get(), mod_index_caps, XKB_STATE_MODS_EFFECTIVE))
+    {
+        new_modifier_state |= mir_input_event_modifier_caps_lock;
+    }
+    
+    // Check num lock
+    if (mod_index_num != XKB_MOD_INVALID &&
+        xkb_state_mod_index_is_active(state.get(), mod_index_num, XKB_STATE_MODS_EFFECTIVE))
+    {
+        new_modifier_state |= mir_input_event_modifier_num_lock;
+    }
+    
+    modifier_state = new_modifier_state;
+}
 
 void mircv::XKBMapper::XkbMappingState::press_modifier(MirInputEventModifiers mod)
 {

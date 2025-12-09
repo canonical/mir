@@ -97,11 +97,21 @@ private:
             std::string& text) -> std::pair<xkb_keysym_t, bool>;
         void press_modifier(MirInputEventModifiers mod);
         void release_modifier(MirInputEventModifiers mod);
+        void update_modifier_from_xkb_state();
 
         std::shared_ptr<Keymap> const keymap;
         std::shared_ptr<xkb_keymap> const compiled_keymap;
         XKBStatePtr state;
         MirInputEventModifiers modifier_state{0};
+        std::unordered_set<uint32_t> pressed_scancodes;
+        
+        // Cached XKB modifier indices
+        xkb_mod_index_t mod_index_shift{XKB_MOD_INVALID};
+        xkb_mod_index_t mod_index_ctrl{XKB_MOD_INVALID};
+        xkb_mod_index_t mod_index_alt{XKB_MOD_INVALID};
+        xkb_mod_index_t mod_index_logo{XKB_MOD_INVALID};
+        xkb_mod_index_t mod_index_caps{XKB_MOD_INVALID};
+        xkb_mod_index_t mod_index_num{XKB_MOD_INVALID};
     };
 
     XkbMappingState* get_keymapping_state(MirInputDeviceId id);
