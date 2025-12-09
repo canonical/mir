@@ -35,16 +35,12 @@ void mtd::TriggeredMainLoop::register_fd_handler(std::initializer_list<int> fds,
 void mtd::TriggeredMainLoop::unregister_fd_handler(void const* owner)
 {
     base::unregister_fd_handler(owner);
-    fd_callbacks.erase(
-        remove_if(
-            begin(fd_callbacks),
-            end(fd_callbacks),
-            [owner](Item const& item)
-            {
-                return item.owner == owner;
-            }),
-        end(fd_callbacks)
-        );
+    std::erase_if(
+        fd_callbacks,
+        [owner](Item const& item)
+        {
+            return item.owner == owner;
+        });
 }
 
 void mtd::TriggeredMainLoop::trigger_pending_fds()

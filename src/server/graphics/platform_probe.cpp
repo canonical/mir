@@ -413,15 +413,12 @@ auto mg::select_display_modules(
      * This lets us assume, from here on in, that everything in platforms is
      * a graphics module (and hence contains a `describe_graphics_module` symbol, etc)
      */
-    platforms.erase(
-        std::remove_if(
-            platforms.begin(),
-            platforms.end(),
-            [](auto const& module)
-            {
-                return !is_graphics_module(*module);
-            }),
-        platforms.end());
+    std::erase_if(
+        platforms,
+        [](auto const& module)
+        {
+            return !is_graphics_module(*module);
+        });
 
     /* Sort the platform modules by DSO filename.
      *

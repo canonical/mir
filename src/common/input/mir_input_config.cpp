@@ -271,11 +271,7 @@ MirInputDevice const& MirInputConfig::get_device_config_by_index(size_t pos) con
 
 void MirInputConfig::remove_device_by_id(MirInputDeviceId id)
 {
-    impl->devices.erase(
-        remove_if(begin(impl->devices), end(impl->devices),
-                  [id](auto const & conf){ return conf.id() ==id; }),
-        end(impl->devices)
-        );
+    std::erase_if(impl->devices, [id](auto const & conf){ return conf.id() == id; });
 }
 
 bool MirInputConfig::operator==(MirInputConfig const& rhs) const

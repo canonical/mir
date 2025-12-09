@@ -32,13 +32,13 @@ bool visible(miral::Window const& window)
 
 void miral::MRUWindowList::push(Window const& window)
 {
-    windows.erase(remove(begin(windows), end(windows), window), end(windows));
+    std::erase(windows, window);
     windows.push_back(window);
 }
 
 void miral::MRUWindowList::insert_below_top(Window const& window)
 {
-    windows.erase(remove(begin(windows), end(windows), window), end(windows));
+    std::erase(windows, window);
     if(!windows.empty())
         windows.insert(windows.end()-1, window);
     else
@@ -47,7 +47,7 @@ void miral::MRUWindowList::insert_below_top(Window const& window)
 
 void miral::MRUWindowList::erase(Window const& window)
 {
-    windows.erase(remove(begin(windows), end(windows), window), end(windows));
+    std::erase(windows, window);
 }
 
 auto miral::MRUWindowList::top() const -> Window
