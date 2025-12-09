@@ -67,7 +67,6 @@ public:
     auto stride() const -> mir::geometry::Stride override;
     auto format() const -> MirPixelFormat override;
 
-    auto map_readable() -> std::unique_ptr<mrs::Mapping<std::byte const>> override;
     auto map_writeable() -> std::unique_ptr<mrs::Mapping<std::byte>> override;
     auto map_rw() -> std::unique_ptr<mrs::Mapping<std::byte>> override;
 
@@ -116,7 +115,7 @@ public:
         return parent.size();
     }
 
-    auto data() -> T* override
+    auto data() const -> T* override
     {
         return reinterpret_cast<T*>(mapping->data());
     }
@@ -187,11 +186,6 @@ auto ErrorNotifyingRWMappableBuffer::format() const -> MirPixelFormat
 auto ErrorNotifyingRWMappableBuffer::map_rw() -> std::unique_ptr<mrs::Mapping<std::byte>>
 {
     return std::make_unique<ErrorNotifyingMapping<std::byte>>(data->map_rw(), *this);
-}
-
-auto ErrorNotifyingRWMappableBuffer::map_readable() -> std::unique_ptr<mrs::Mapping<std::byte const>>
-{
-    return std::make_unique<ErrorNotifyingMapping<std::byte const>>(data->map_ro(), *this);
 }
 
 auto ErrorNotifyingRWMappableBuffer::map_writeable() -> std::unique_ptr<mrs::Mapping<std::byte>>
