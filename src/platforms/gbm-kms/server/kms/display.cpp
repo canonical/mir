@@ -388,7 +388,7 @@ void mgg::Display::configure_locked(
         {
             auto bounding_rect = group.bounding_rectangle();
             std::vector<std::shared_ptr<KMSOutput>> kms_outputs;
-            glm::mat2 transformation;
+            glm::mat2 transformation{1};
             geom::Size current_mode_resolution;
 
             group.for_each_output(
