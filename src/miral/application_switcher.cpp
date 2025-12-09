@@ -318,6 +318,18 @@ public:
         roundtrip();
     }
 
+    ~WaylandApp() override
+    {
+        for (auto const& toplevel : toplevels_in_focus_order)
+        {
+            if (toplevel.handle)
+            {
+                zwlr_foreign_toplevel_handle_v1_destroy(toplevel.handle);
+            }
+        }
+        toplevels_in_focus_order.clear();
+    }
+
     void add(zwlr_foreign_toplevel_handle_v1* toplevel)
     {
         std::lock_guard lock{mutex};
@@ -584,6 +596,7 @@ private:
     {
         auto const self = static_cast<WaylandApp*>(data);
         self->remove(handle);
+        zwlr_foreign_toplevel_handle_v1_destroy(handle);
     }
 
     zwlr_foreign_toplevel_handle_v1_listener toplevel_handle_listener = {
