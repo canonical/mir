@@ -722,6 +722,7 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
         XWaylandSurfaceRole::populate_surface_data_scaled(wl_surface, scale, spec, keep_alive_until_spec_is_used);
 
         // May be overridden by anything in the pending spec
+        spec.top_left = cached.geometry.top_left;
         spec.width = cached.geometry.size.width;
         spec.height = cached.geometry.size.height;
         spec.type = mir_window_type_freestyle;
