@@ -15,24 +15,31 @@
  */
 
 #include "mir/debug_draw.h"
-#include "mir/synchronised.h"
 
-#include <chrono>
-#include <glm/vec4.hpp>
+#include <memory>
 
-mir::Synchronised<std::vector<mir::debug::DrawCommand>> draw_commands{};
+namespace
+{
+std::weak_ptr<mir::debug::DebugDrawHandler> debug_draw_handler;
+}
+
+void mir::debug::init(std::shared_ptr<mir::debug::DebugDrawHandler> const& handler)
+{
+    debug_draw_handler = handler;
+}
 
 void mir::debug::draw_circle(mir::debug::CircleDrawCommand&& command)
 {
-    draw_commands.lock()->push_back(std::move(command));
+    if (auto handler = debug_draw_handler.lock())
+    {
+        handler->add(std::move(command));
+    }
 }
 
 void mir::debug::draw_line(mir::debug::LineDrawCommand&& command)
 {
-    draw_commands.lock()->push_back(std::move(command));
-}
-
-auto mir::debug::get_draw_commands() -> mir::Synchronised<std::vector<mir::debug::DrawCommand>>&
-{
-    return draw_commands;
+    if (auto handler = debug_draw_handler.lock())
+    {
+        handler->add(std::move(command));
+    }
 }

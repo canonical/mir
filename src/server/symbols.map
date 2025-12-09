@@ -266,6 +266,8 @@ global:
     mir::compositor::CompositorReport::?CompositorReport*;
     mir::compositor::CompositorReport::CompositorReport*;
     mir::compositor::CompositorReport::operator*;
+    mir::compositor::DebugDrawManager::?DebugDrawManager*;
+    mir::compositor::DebugDrawManager::process_commands*;
     mir::compositor::DisplayBufferCompositor::?DisplayBufferCompositor*;
     mir::compositor::DisplayBufferCompositor::DisplayBufferCompositor*;
     mir::compositor::DisplayBufferCompositor::operator*;
@@ -948,6 +950,8 @@ global:
     non-virtual?thunk?to?mir::compositor::BufferStream::Submission::?Submission*;
     non-virtual?thunk?to?mir::compositor::Compositor::?Compositor*;
     non-virtual?thunk?to?mir::compositor::CompositorReport::?CompositorReport*;
+    non-virtual?thunk?to?mir::compositor::DebugDrawManager::?DebugDrawManager*;
+    non-virtual?thunk?to?mir::compositor::DebugDrawManager::process_commands*;
     non-virtual?thunk?to?mir::compositor::DisplayBufferCompositor::?DisplayBufferCompositor*;
     non-virtual?thunk?to?mir::compositor::DisplayBufferCompositorFactory::?DisplayBufferCompositorFactory*;
     non-virtual?thunk?to?mir::compositor::DisplayListener::?DisplayListener*;
@@ -1310,6 +1314,7 @@ global:
     typeinfo?for?mir::compositor::BufferStream;
     typeinfo?for?mir::compositor::Compositor;
     typeinfo?for?mir::compositor::CompositorReport;
+    typeinfo?for?mir::compositor::DebugDrawManager;
     typeinfo?for?mir::compositor::DisplayBufferCompositor;
     typeinfo?for?mir::compositor::DisplayBufferCompositorFactory;
     typeinfo?for?mir::compositor::DisplayListener;
@@ -1529,6 +1534,7 @@ global:
     vtable?for?mir::compositor::BufferStream;
     vtable?for?mir::compositor::Compositor;
     vtable?for?mir::compositor::CompositorReport;
+    vtable?for?mir::compositor::DebugDrawManager;
     vtable?for?mir::compositor::DisplayBufferCompositor;
     vtable?for?mir::compositor::DisplayBufferCompositorFactory;
     vtable?for?mir::compositor::DisplayListener;

@@ -17,21 +17,18 @@
 #ifndef MIR_DEBUG_DRAW_H_
 #define MIR_DEBUG_DRAW_H_
 
-#include "mir/synchronised.h"
 #include <mir/geometry/point.h>
 
 #include <chrono>
 #include <variant>
+#include <memory>
 
 #include <glm/vec4.hpp>
 
 namespace mir
 {
 class Server;
-namespace compositor
-{
-class SceneElement;
-}
+
 namespace debug
 {
 // TODO handling multiple monitors?
@@ -55,12 +52,24 @@ struct LineDrawCommand
 
 using DrawCommand = std::variant<CircleDrawCommand, LineDrawCommand>;
 
+class DebugDrawHandler
+{
+public:
+    virtual ~DebugDrawHandler() = default;
+    virtual void add(DrawCommand&& command) = 0;
+
+protected:
+    DebugDrawHandler() = default;
+    DebugDrawHandler(DebugDrawHandler const&) = delete;
+    DebugDrawHandler& operator=(DebugDrawHandler const&) = delete;
+};
+
 // TODO: Required parameters + Options struct?
 void draw_circle(CircleDrawCommand&&);
 
 void draw_line(LineDrawCommand&&);
 
-auto get_draw_commands() -> mir::Synchronised<std::vector<DrawCommand>>&;
+void init(std::shared_ptr<DebugDrawHandler> const&);
 }
 }
 

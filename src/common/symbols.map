@@ -603,6 +603,7 @@ global:
     mir::debug::get_draw_commands*; # TODO move them to a new stanza
     mir::debug::draw_circle*;
     mir::debug::draw_line*;
+    mir::debug::init*;
     mir::input::KeyMapper::?KeyMapper*;
     mir::input::KeyMapper::KeyMapper*;
     mir::input::KeyMapper::operator*;

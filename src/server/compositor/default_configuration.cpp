@@ -21,6 +21,8 @@
 #include "default_display_buffer_compositor_factory.h"
 #include <mir/executor.h>
 #include "multi_threaded_compositor.h"
+#include <mir/compositor/debug_draw_manager.h>
+#include <mir/debug_draw.h>
 #include <mir/renderers/gl/renderer_factory.h>
 #include "basic_screen_shooter.h"
 #include "basic_screen_shooter_factory.h"
@@ -31,7 +33,6 @@
 #include <mir/options/configuration.h>
 
 namespace mc = mir::compositor;
-namespace ms = mir::scene;
 namespace mg = mir::graphics;
 
 std::shared_ptr<mc::DisplayBufferCompositorFactory>
@@ -85,8 +86,18 @@ mir::DefaultServerConfiguration::the_compositor()
                 the_cursor(),
                 composite_delay,
                 true,
-                the_buffer_allocator(),
-                the_clock());
+                the_debug_draw_manager());
+        });
+}
+
+std::shared_ptr<mc::DebugDrawManager> mir::DefaultServerConfiguration::the_debug_draw_manager()
+{
+    return debug_draw_manager(
+        [this]()
+        {
+            auto manager = std::make_shared<mc::DebugDrawManager>(the_buffer_allocator(), the_clock());
+            mir::debug::init(manager);
+            return manager;
         });
 }
 

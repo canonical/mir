@@ -50,6 +50,7 @@ class DisplayListener;
 class CompositingFunctor;
 class Scene;
 class CompositorReport;
+class DebugDrawManager;
 
 enum class CompositorState
 {
@@ -71,8 +72,7 @@ public:
         std::shared_ptr<graphics::Cursor> const& cursor,
         std::chrono::milliseconds fixed_composite_delay,  // -1 = automatic
         bool compose_on_start,
-        std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
-        std::shared_ptr<time::Clock> const& clock);
+        std::shared_ptr<DebugDrawManager> const& debug_draw_manager);
     ~MultiThreadedCompositor();
 
     void start();
@@ -88,8 +88,7 @@ private:
     std::shared_ptr<DisplayListener> const display_listener;
     std::shared_ptr<CompositorReport> const report;
     std::shared_ptr<graphics::Cursor> const cursor;
-    std::shared_ptr<graphics::GraphicBufferAllocator> const allocator;
-    std::shared_ptr<time::Clock> const clock;
+    std::shared_ptr<DebugDrawManager> const debug_draw_manager;
 
     std::vector<std::unique_ptr<CompositingFunctor>> thread_functors;
 

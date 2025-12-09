@@ -50,6 +50,7 @@ class Scene;
 class DisplayBufferCompositorFactory;
 class Compositor;
 class CompositorReport;
+class DebugDrawManager;
 }
 namespace frontend
 {
@@ -175,6 +176,7 @@ public:
     std::shared_ptr<frontend::Connector>    the_xwayland_connector() override;
     std::shared_ptr<graphics::Display>      the_display() override;
     std::shared_ptr<compositor::Compositor> the_compositor() override;
+    std::shared_ptr<compositor::DebugDrawManager> the_debug_draw_manager();
     std::shared_ptr<compositor::ScreenShooter> the_screen_shooter() override;
     std::shared_ptr<compositor::ScreenShooterFactory> the_screen_shooter_factory() override;
     std::shared_ptr<input::InputManager>    the_input_manager() override;
@@ -429,6 +431,7 @@ protected:
     CachedPtr<shell::DisplayLayout>     shell_display_layout;
     CachedPtr<compositor::DisplayBufferCompositorFactory> display_buffer_compositor_factory;
     CachedPtr<compositor::Compositor> compositor;
+    CachedPtr<compositor::DebugDrawManager> debug_draw_manager;
     CachedPtr<compositor::CompositorReport> compositor_report;
     CachedPtr<compositor::ScreenShooter> screen_shooter;
     CachedPtr<compositor::ScreenShooterFactory> screen_shooter_factory;

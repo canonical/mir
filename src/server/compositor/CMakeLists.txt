@@ -13,6 +13,7 @@ set(
   null_screen_shooter.cpp
   basic_screen_shooter_factory.cpp
   null_screen_shooter_factory.cpp
+  debug_draw_manager.cpp
 )
 
 ADD_LIBRARY(
