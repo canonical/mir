@@ -2,7 +2,7 @@ pkg_check_modules(FREETYPE freetype2 REQUIRED IMPORTED_TARGET) # For rendering d
 
 add_compile_definitions(
   MIR_LOG_COMPONENT_FALLBACK="mirserver"
-  MIR_VERSION="${MIR_VERSION}"
+  MIR_VERSION="${PROJECT_VERSION}"
 )
 
 add_compile_definitions(MIR_SERVER_INPUT_PLATFORM_VERSION="${MIR_SERVER_INPUT_PLATFORM_VERSION}")
@@ -171,7 +171,7 @@ install(DIRECTORY
     ${CMAKE_SOURCE_DIR}/src/include/server/mir DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/mirserver-internal"
 )
 
-set(MIRSERVER_ABI 66) # Be sure to increment MIR_VERSION_MINOR at the same time
+set(MIRSERVER_ABI 66) # Be sure to increment PROJECT_VERSION_MINOR at the same time
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 
 set_target_properties(
@@ -195,7 +195,7 @@ add_custom_target(
     generate-mirserver-symbols-map
     COMMAND ${PROJECT_SOURCE_DIR}/tools/symbols_map_generator/main.py
         --library-name mir_server
-        --version ${MIR_VERSION_MAJOR}.${MIR_VERSION_MINOR}
+        --version ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
         --symbols-map-path="${CMAKE_CURRENT_SOURCE_DIR}/symbols.map"
         --include-dirs="$<JOIN:$<TARGET_PROPERTY:mirserver,INCLUDE_DIRECTORIES>,:>"
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
@@ -204,7 +204,7 @@ add_custom_target(
   check-mirserver-symbols-map
   COMMAND ${PROJECT_SOURCE_DIR}/tools/symbols_map_generator/main.py
       --library-name mir_server
-      --version ${MIR_VERSION_MAJOR}.${MIR_VERSION_MINOR}
+      --version ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
       --symbols-map-path="${CMAKE_CURRENT_SOURCE_DIR}/symbols.map"
       --include-dirs "$<JOIN:$<TARGET_PROPERTY:mirserver,INCLUDE_DIRECTORIES>,:>"
       --diff
