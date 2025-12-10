@@ -90,7 +90,8 @@ jobs:
               repo: context.repo.repo,
               title: title,
               body: body,
-              assignees: ["copilot"]
+              assignees: ["copilot-swe-agent[bot]"],
+              agent_assignment: {"target_repo":"${{ github.repository }}", "base_branch":"${{ steps.version.outputs.release_branch }}","custom_instructions":"","custom_agent":""}
             });
 
             console.log(`:info: Created issue ${issue.data.html_url}`);
