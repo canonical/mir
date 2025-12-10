@@ -117,26 +117,6 @@
       <arg name="activation_token" type="string" summary="an xdg_activation token"/>
     </event>
 
-    <event name="activated">
-      <description summary="activate the input action">
-        The input trigger has been activated. This can be on the leading or
-        trailing edge of the input being pressed. It's up to the user to
-        configure this as they see fit.
-
-        The app may interpret this as a request to perform the action it
-        associates with the trigger.
-
-        The time argument is a timestamp with millisecond granularity, with an
-        undefined base. clients must not assume any relation to wall-clock
-        time; timestamps are only valid for comparison/deltas.
-
-        The activation token argument is a short-lived opaque token that may be
-        used with `xdg_activation_v1` to request to focus another surface.
-      </description>
-      <arg name="time" type="uint" summary="timestamp with millisecond granularity"/>
-      <arg name="activation_token" type="string" summary="an xdg_activation token"/>
-    </event>
-
     <event name="unavailable">
       <description summary="the input action is (or has become) unavailable">
         Sent if the token is or becomes unavailable.
