@@ -189,9 +189,9 @@ mod ffi_bridge {
         pub type EventBuilderWrapper;
         pub type RectangleWrapper;
         // Map C++ KeyEventData to the Rust struct
-        type KeyEventData = crate::KeyEventData;
+        type KeyEventData = crate::ffi::KeyEventData;
         // Map C++ PointerEventData to the Rust struct
-        type PointerEventData = crate::PointerEventDataRs;
+        type PointerEventData = crate::ffi::PointerEventDataRs;
 
         #[namespace = "mir::input"]
         pub type Device;
