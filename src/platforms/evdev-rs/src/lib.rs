@@ -300,4 +300,3 @@ unsafe impl Send for InputSink {}
 unsafe impl Sync for InputSink {}
 unsafe impl Send for EventBuilder {}
 unsafe impl Sync for EventBuilder {}
-
