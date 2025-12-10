@@ -81,8 +81,7 @@ mir (2.23.0) noble; urgency=medium
       . Refactor the getting-started-with-mir tutorial to improve language +
         split how some how-tos (#4173)
 
-
- -- Michał Sawicz <michal.sawicz@canonical.com>  Tue, 09 Dec 2025 17:25:18 +0100
+ -- Alan Griffiths <alan.griffiths@canonical.com>  Mon, 06 Oct 2025 12:17:00 +0100
 
 mir (2.22.2) UNRELEASED; urgency=medium
 
