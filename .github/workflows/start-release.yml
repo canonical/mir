@@ -35,8 +35,8 @@ jobs:
 
       - name: Configure git user
         run: |
-          git config user.name "$DEBFULLNAME"
-          git config user.email "$DEBEMAIL"
+          git config user.name "${{ vars.DEBFULLNAME }}"
+          git config user.email "${{ vars.DEBEMAIL }}"
 
       - name: Validate version and extract components
         id: version
@@ -53,7 +53,7 @@ jobs:
 
       - name: Create release branch
         run: |
-          git checkout --create ${{ steps.version.outputs.release_branch }}
+          git checkout -b ${{ steps.version.outputs.release_branch }}
 
       - name: Create release tag
         run: |

@@ -51,6 +51,8 @@ jobs:
     - name: Upload to PPA
       env:
         RELEASE: ${{ matrix.release }}
+        DEBFULLNAME: ${{ vars.DEBFULLNAME }}
+        DEBEMAIL: ${{ vars.DEBEMAIL }}
       run: tools/ppa-upload.sh ${{ github.workspace }}/../lp_credentials
 
     - if: ${{ failure() && runner.debug }}
