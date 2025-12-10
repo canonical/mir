@@ -193,18 +193,19 @@ std::shared_ptr<mg::CursorImage> miral::XCursorLoader::image(
     std::string const& cursor_name,
     geom::Size const& /*size*/)
 {
-    auto xcursor_name = xcursor_name_for_mir_cursor(cursor_name);
+
+    auto const potential_cursor_names = {
+        cursor_name,
+        xcursor_name_for_mir_cursor(cursor_name),
+        std::string{"arrow"},
+    };
 
     std::lock_guard lg(guard);
-
-    auto it = loaded_images.find(xcursor_name);
-    if (it != loaded_images.end())
-        return it->second;
-
-    // Fall back
-    it = loaded_images.find("arrow");
-    if (it != loaded_images.end())
-        return it->second;
+    for(auto const& name : potential_cursor_names)
+    {
+        if (auto it = loaded_images.find(name); it != loaded_images.end())
+            return it->second;
+    }
 
     return nullptr;
 }
