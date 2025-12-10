@@ -39,8 +39,8 @@ try:
     release = subprocess.check_output(["git", "describe", "--always"], encoding="utf-8").strip()
 except (FileNotFoundError, subprocess.CalledProcessError):
     with open(Path(__file__).parents[2] / "CMakeLists.txt", encoding="utf-8") as cmake:
-        matches = re.findall(r"set\(MIR_VERSION_(MAJOR|MINOR|PATCH) (\d+)\)", cmake.read())
-    release = "v{MAJOR}.{MINOR}.{PATCH}".format(**dict(matches))
+        match = re.search(r"^\s*VERSION (\d+\.\d+\.\d+)$", cmake.read())
+    release = f"v{match.group(1)}" if match else "unknown"
 html_title = f'{project} {release} documentation'
 
 
