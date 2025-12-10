@@ -30,9 +30,7 @@ mod libinput_interface;
 mod platform;
 
 use crate::device::{DeviceObserverRs, InputDeviceInfoRs, InputDeviceRs};
-use crate::ffi::{KeyEventData, PointerEventDataRs};
 use crate::platform::PlatformRs;
-use cxx::ExternType;
 
 #[cxx::bridge(namespace = "mir::input::evdev_rs")]
 mod ffi_bridge {

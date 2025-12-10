@@ -23,6 +23,7 @@ use input::event::keyboard;
 use input::event::keyboard::KeyboardEventTrait;
 use input::event::pointer;
 use input::event::pointer::PointerEventTrait;
+use input::event::pointer::PointerScrollEvent;
 use input::event::EventTrait;
 use input::AsRaw;
 use std::thread;
