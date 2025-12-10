@@ -14,7 +14,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-use crate::ffi::bridge;
 use cxx;
 use input;
 use libc;
@@ -25,13 +24,13 @@ use std::os::unix::io;
 
 pub struct LibinputInterfaceImpl {
     /// The bridge used to acquire the device.
-    pub bridge: cxx::SharedPtr<bridge::PlatformBridge>,
+    pub bridge: cxx::SharedPtr<crate::PlatformBridge>,
 
     /// The list of opened devices.
     ///
     /// Mir expects the caller who acquired the device to keep it alive until the device
     /// is closed. To do this, we keep it in the vector.
-    pub fds: Vec<cxx::UniquePtr<bridge::DeviceWrapper>>,
+    pub fds: Vec<cxx::UniquePtr<crate::DeviceWrapper>>,
 }
 
 impl input::LibinputInterface for LibinputInterfaceImpl {

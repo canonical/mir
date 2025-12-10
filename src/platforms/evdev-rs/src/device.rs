@@ -14,7 +14,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-use crate::ffi::bridge;
 use cxx::SharedPtr;
 use input;
 use std::sync::Arc;
@@ -23,9 +22,9 @@ use std::sync::Mutex;
 pub struct DeviceInfo {
     pub id: i32,
     pub device: input::Device,
-    pub input_device: cxx::SharedPtr<bridge::InputDevice>,
+    pub input_device: cxx::SharedPtr<crate::InputDevice>,
     pub input_sink: Option<InputSinkPtr>,
-    pub event_builder: Option<cxx::UniquePtr<bridge::EventBuilderWrapper>>,
+    pub event_builder: Option<cxx::UniquePtr<crate::EventBuilderWrapper>>,
 }
 
 // Because *mut InputSink and *mut EventBuilder are raw pointers, Rust assumes
@@ -34,9 +33,9 @@ pub struct DeviceInfo {
 // that these pointers are Send and Sync. We cannot define Send and Sync on the
 // raw types to fix the issue unfortunately, so we have to wrap them in a new type
 // and define Send and Sync on that.
-pub struct InputSinkPtr(pub std::ptr::NonNull<bridge::InputSink>);
+pub struct InputSinkPtr(pub std::ptr::NonNull<crate::InputSink>);
 impl InputSinkPtr {
-    pub fn handle_input(&mut self, event: &cxx::SharedPtr<bridge::MirEvent>) {
+    pub fn handle_input(&mut self, event: &cxx::SharedPtr<crate::MirEvent>) {
         // # Safety
         //
         // Calling new_unchecked is unsafe.
@@ -118,14 +117,14 @@ impl LibinputLoopState {
 pub struct InputDeviceRs {
     pub device_id: i32,
     pub state: Arc<Mutex<LibinputLoopState>>,
-    pub bridge: SharedPtr<bridge::PlatformBridge>,
+    pub bridge: SharedPtr<crate::PlatformBridge>,
 }
 
 impl InputDeviceRs {
     pub fn start(
         &mut self,
-        input_sink: *mut bridge::InputSink,
-        event_builder: *mut bridge::EventBuilder,
+        input_sink: *mut crate::InputSink,
+        event_builder: *mut crate::EventBuilder,
     ) {
         let lock = self.state.lock();
         match lock {
@@ -175,22 +174,22 @@ impl InputDeviceRs {
                         .has_capability(input::DeviceCapability::Keyboard)
                     {
                         capabilities = capabilities
-                            | bridge::DeviceCapability::keyboard.repr
-                            | bridge::DeviceCapability::alpha_numeric.repr;
+                            | crate::DeviceCapability::keyboard.repr
+                            | crate::DeviceCapability::alpha_numeric.repr;
                     }
                     if device_info
                         .device
                         .has_capability(input::DeviceCapability::Pointer)
                     {
-                        capabilities = capabilities | bridge::DeviceCapability::pointer.repr;
+                        capabilities = capabilities | crate::DeviceCapability::pointer.repr;
                     }
                     if device_info
                         .device
                         .has_capability(input::DeviceCapability::Touch)
                     {
                         capabilities = capabilities
-                            | bridge::DeviceCapability::touchpad.repr
-                            | bridge::DeviceCapability::pointer.repr;
+                            | crate::DeviceCapability::touchpad.repr
+                            | crate::DeviceCapability::pointer.repr;
                     }
 
                     let info = InputDeviceInfoRs {
@@ -230,7 +229,7 @@ impl InputDeviceRs {
         }
     }
 
-    pub fn get_pointer_settings(&self) -> Box<bridge::PointerSettingsRs> {
+    pub fn get_pointer_settings(&self) -> Box<crate::PointerSettingsRs> {
         let lock = self.state.lock();
         match lock {
             Ok(mut state) => {
@@ -241,28 +240,28 @@ impl InputDeviceRs {
                     {
                         true => {
                             let handedness = if device_info.device.config_left_handed() {
-                                bridge::MirPointerHandedness::mir_pointer_handedness_left.repr
+                                crate::MirPointerHandedness::mir_pointer_handedness_left.repr
                             } else {
-                                bridge::MirPointerHandedness::mir_pointer_handedness_right.repr
+                                crate::MirPointerHandedness::mir_pointer_handedness_right.repr
                             };
 
                             let acceleration = if let Some(accel_profile) =
                                 device_info.device.config_accel_profile()
                             {
                                 if accel_profile == input::AccelProfile::Adaptive {
-                                    bridge::MirPointerAcceleration::mir_pointer_acceleration_adaptive
+                                    crate::MirPointerAcceleration::mir_pointer_acceleration_adaptive
                                         .repr
                                 } else {
-                                    bridge::MirPointerAcceleration::mir_pointer_acceleration_none.repr
+                                    crate::MirPointerAcceleration::mir_pointer_acceleration_none.repr
                                 }
                             } else {
                                 eprintln!("Acceleration profile should be provided, but none is.");
-                                bridge::MirPointerAcceleration::mir_pointer_acceleration_none.repr
+                                crate::MirPointerAcceleration::mir_pointer_acceleration_none.repr
                             };
 
                             let acceleration_bias = device_info.device.config_accel_speed() as f64;
 
-                            return Box::new(bridge::PointerSettingsRs {
+                            return Box::new(crate::PointerSettingsRs {
                                 is_set: true,
                                 handedness: handedness,
                                 cursor_acceleration_bias: acceleration_bias,
@@ -274,12 +273,12 @@ impl InputDeviceRs {
                         }
                         false => {
                             eprintln!("Attempting to get pointer settings from a device that is not pointer capable.");
-                            return Box::new(bridge::PointerSettingsRs::empty());
+                            return Box::new(crate::PointerSettingsRs::empty());
                         }
                     }
                 } else {
                     eprintln!("Calling get pointer settings on a device that is not registered.");
-                    let mut settings = bridge::PointerSettingsRs::empty();
+                    let mut settings = crate::PointerSettingsRs::empty();
                     settings.has_error = true;
                     return Box::new(settings);
                 }
@@ -288,14 +287,14 @@ impl InputDeviceRs {
                 println!(
                     "InputDeviceRs::get_pointer_settings: unable to acquire state lock; lock poisoned"
                 );
-                let mut settings = bridge::PointerSettingsRs::empty();
+                let mut settings = crate::PointerSettingsRs::empty();
                 settings.has_error = true;
                 Box::new(settings)
             }
         }
     }
 
-    pub fn set_pointer_settings(&self, settings: &bridge::PointerSettings) {
+    pub fn set_pointer_settings(&self, settings: &crate::PointerSettings) {
         let lock = self.state.lock();
         match lock {
             Ok(mut state) => {
@@ -306,7 +305,7 @@ impl InputDeviceRs {
                     {
                         let left_handed = match settings.handedness {
                             x if x
-                                == bridge::MirPointerHandedness::mir_pointer_handedness_left.repr =>
+                                == crate::MirPointerHandedness::mir_pointer_handedness_left.repr =>
                             {
                                 true
                             }
@@ -316,7 +315,7 @@ impl InputDeviceRs {
 
                         let accel_profile = match settings.acceleration {
                     x if x
-                        == bridge::MirPointerAcceleration::mir_pointer_acceleration_adaptive.repr =>
+                        == crate::MirPointerAcceleration::mir_pointer_acceleration_adaptive.repr =>
                     {
                         input::AccelProfile::Adaptive
                     }

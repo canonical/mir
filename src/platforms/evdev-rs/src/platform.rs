@@ -16,7 +16,6 @@
 
 use crate::device::{DeviceObserverRs, InputDeviceRs, LibinputLoopState};
 use crate::event_processing::process_libinput_events;
-use crate::ffi::bridge;
 use crate::libinput_interface::LibinputInterfaceImpl;
 use cxx;
 use input;
@@ -27,18 +26,18 @@ use std::sync::Mutex;
 
 pub struct PlatformRs {
     /// The platform bridge provides access to functionality that must happen in C++.
-    bridge: cxx::SharedPtr<bridge::PlatformBridge>,
+    bridge: cxx::SharedPtr<crate::PlatformBridge>,
 
     /// The input device registry is used for registering and unregistering input devices.
-    device_registry: cxx::SharedPtr<bridge::InputDeviceRegistry>,
+    device_registry: cxx::SharedPtr<crate::InputDeviceRegistry>,
 
     state: Option<Arc<Mutex<LibinputLoopState>>>,
 }
 
 impl PlatformRs {
     pub fn new(
-        bridge: cxx::SharedPtr<bridge::PlatformBridge>,
-        device_registry: cxx::SharedPtr<bridge::InputDeviceRegistry>,
+        bridge: cxx::SharedPtr<crate::PlatformBridge>,
+        device_registry: cxx::SharedPtr<crate::InputDeviceRegistry>,
     ) -> Self {
         PlatformRs {
             bridge,
