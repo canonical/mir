@@ -338,32 +338,6 @@ public:
             tentative_focus_index = 0;
     }
 
-    void app_id(zwlr_foreign_toplevel_handle_v1* toplevel, char const* app_id)
-    {
-        std::lock_guard lock{mutex};
-        auto const it = std::ranges::find_if(toplevels_in_focus_order, [toplevel](auto const& element)
-        {
-            return element.handle == toplevel;
-        });
-        if (it != toplevels_in_focus_order.end())
-        {
-            it->app_id = app_id;
-        }
-    }
-
-    void window_title(zwlr_foreign_toplevel_handle_v1* toplevel, char const* window_title)
-    {
-        std::lock_guard lock{mutex};
-        auto const it = std::ranges::find_if(toplevels_in_focus_order, [toplevel](auto const& element)
-        {
-            return element.handle == toplevel;
-        });
-        if (it != toplevels_in_focus_order.end())
-        {
-            it->window_title = window_title;
-        }
-    }
-
     void focus(zwlr_foreign_toplevel_handle_v1* toplevel)
     {
         auto const it = std::ranges::find_if(toplevels_in_focus_order, [toplevel](auto const& element)
@@ -380,24 +354,6 @@ public:
         else
         {
             toplevels_in_focus_order.insert(toplevels_in_focus_order.begin(), ToplevelInfo{toplevel, "<unset>", "<unset>"});
-        }
-    }
-
-    void remove(zwlr_foreign_toplevel_handle_v1* toplevel)
-    {
-        std::lock_guard lock{mutex};
-        auto const it = std::ranges::find_if(toplevels_in_focus_order, [toplevel](auto const& element)
-        {
-            return element.handle == toplevel;
-        });
-        if (it != toplevels_in_focus_order.end())
-        {
-            toplevels_in_focus_order.erase(it);
-
-            if (toplevels_in_focus_order.empty())
-                tentative_focus_index = std::nullopt;
-            else if (!tentative_focus_index || *tentative_focus_index == toplevels_in_focus_order.size())
-                tentative_focus_index = toplevels_in_focus_order.size() - 1;
         }
     }
 
@@ -564,49 +520,72 @@ private:
         handle_finished
     };
 
-    static void handle_title(void* data, zwlr_foreign_toplevel_handle_v1* handle, char const* window_title)
+    void app_id(zwlr_foreign_toplevel_handle_v1* toplevel, char const* app_id)
     {
-        auto const self = static_cast<WaylandApp*>(data);
-        self->window_title(handle, window_title);
-    }
-    static void handle_output_enter(void*, zwlr_foreign_toplevel_handle_v1*, wl_output*) {}
-    static void handle_output_leave(void*, zwlr_foreign_toplevel_handle_v1*, wl_output*) {}
-    static void handle_toplevel_done(void*, zwlr_foreign_toplevel_handle_v1*) {}
-    static void handle_app_id(void* data, zwlr_foreign_toplevel_handle_v1* handle, char const* app_id)
-    {
-        auto const self = static_cast<WaylandApp*>(data);
-        self->app_id(handle, app_id);
+        std::lock_guard lock{mutex};
+        auto const it = std::ranges::find_if(toplevels_in_focus_order, [toplevel](auto const& element)
+        {
+            return element.handle == toplevel;
+        });
+        if (it != toplevels_in_focus_order.end())
+        {
+            it->app_id = app_id;
+        }
     }
 
-    static void handle_state(void* data, zwlr_foreign_toplevel_handle_v1* handle, wl_array* states)
+    void window_title(zwlr_foreign_toplevel_handle_v1* toplevel, char const* window_title)
     {
-        auto const self = static_cast<WaylandApp*>(data);
+        std::lock_guard lock{mutex};
+        auto const it = std::ranges::find_if(toplevels_in_focus_order, [toplevel](auto const& element)
+        {
+            return element.handle == toplevel;
+        });
+        if (it != toplevels_in_focus_order.end())
+        {
+            it->window_title = window_title;
+        }
+    }
+
+    void state(zwlr_foreign_toplevel_handle_v1* handle, wl_array* states)
+    {
         auto const* states_casted = static_cast<zwlr_foreign_toplevel_handle_v1_state*>(states->data);
         for (size_t i = 0; i < states->size / sizeof(zwlr_foreign_toplevel_handle_v1_state); i++)
         {
             if (states_casted[i] == ZWLR_FOREIGN_TOPLEVEL_HANDLE_V1_STATE_ACTIVATED)
             {
-                self->focus(handle);
+                focus(handle);
                 break;
             }
         }
     }
 
-    static void handle_closed(void* data, zwlr_foreign_toplevel_handle_v1* handle)
+    void remove(zwlr_foreign_toplevel_handle_v1* toplevel)
     {
-        auto const self = static_cast<WaylandApp*>(data);
-        self->remove(handle);
-        zwlr_foreign_toplevel_handle_v1_destroy(handle);
+        std::lock_guard lock{mutex};
+        auto const it = std::ranges::find_if(toplevels_in_focus_order, [toplevel](auto const& element)
+        {
+            return element.handle == toplevel;
+        });
+        if (it != toplevels_in_focus_order.end())
+        {
+            toplevels_in_focus_order.erase(it);
+
+            if (toplevels_in_focus_order.empty())
+                tentative_focus_index = std::nullopt;
+            else if (!tentative_focus_index || *tentative_focus_index == toplevels_in_focus_order.size())
+                tentative_focus_index = toplevels_in_focus_order.size() - 1;
+        }
+        zwlr_foreign_toplevel_handle_v1_destroy(toplevel);
     }
 
     zwlr_foreign_toplevel_handle_v1_listener toplevel_handle_listener = {
-        .title = handle_title,
-        .app_id = handle_app_id,
-        .output_enter = handle_output_enter,
-        .output_leave = handle_output_leave,
-        .state = handle_state,
-        .done = handle_toplevel_done,
-        .closed = handle_closed
+        .title = [](void* data, auto... args) { static_cast<WaylandApp*>(data)->window_title(args...); },
+        .app_id = [](void* data, auto... args) { static_cast<WaylandApp*>(data)->app_id(args...); },
+        .output_enter = [](void*, auto*, wl_output*) {},
+        .output_leave = [](void*, auto*, wl_output*) {},
+        .state = [](void* data, auto... args) { static_cast<WaylandApp*>(data)->state(args...); },
+        .done = [](void*, auto*) {},
+        .closed = [](void* data, auto... args) { static_cast<WaylandApp*>(data)->remove(args...); },
     };
 
     /// Starts the application switcher if it isn't already running.
