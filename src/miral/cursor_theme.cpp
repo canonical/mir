@@ -71,6 +71,7 @@ void miral::CursorTheme::operator()(mir::Server& server) const
                 if ((i = j) != std::end(themes)) ++i;
             }
 
-            BOOST_THROW_EXCEPTION(std::runtime_error(("Failed to load cursor theme: " + themes).c_str()));
+            mir::log_warning("Failed to load any cursor theme! Using built-in cursors.");
+            return std::shared_ptr<mi::CursorImages>{};
         });
 }
