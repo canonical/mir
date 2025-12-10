@@ -1211,7 +1211,10 @@ CursorData{"crosshair", 13, 13,
     "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\1\0\0\0\2\0\0\0\2\0\0\0\2\0\0\0\1"
     "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
 },
-// CSS cursor name aliases
+// CSS cursor name aliases for CSS3 standard compliance
+// Note: These entries duplicate pixel data from xcursor names (bottom_left_corner, top_left_corner)
+// due to the initializer_list structure. The duplication ensures CSS cursor names work
+// with BuiltinCursorImages fallback, maintaining compatibility across all configurations.
 CursorData{"sw-resize", 22, 5,
     "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
     "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
