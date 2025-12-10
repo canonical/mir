@@ -28,7 +28,6 @@ set(MIR_SERVER_PLATFORM_PATH
 )
 
 set(server_common_include_dirs
-  ${PROJECT_SOURCE_DIR}/include/renderers/gl
   ${CMAKE_CURRENT_SOURCE_DIR}/common/server
 )
 

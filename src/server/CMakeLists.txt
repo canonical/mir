@@ -2,15 +2,9 @@ pkg_check_modules(FREETYPE freetype2 REQUIRED IMPORTED_TARGET) # For rendering d
 
 add_compile_definitions(
   MIR_LOG_COMPONENT_FALLBACK="mirserver"
-  MIR_VERSION="${MIR_VERSION}"
+  MIR_VERSION="${PROJECT_VERSION}"
 )
 
-include_directories(
-  ${PROJECT_SOURCE_DIR}/include/server
-  ${PROJECT_SOURCE_DIR}/include/renderer
-  ${PROJECT_SOURCE_DIR}/include/renderers/gl
-  ${PROJECT_SOURCE_DIR}/src/include/server
-)
 add_compile_definitions(MIR_SERVER_INPUT_PLATFORM_VERSION="${MIR_SERVER_INPUT_PLATFORM_VERSION}")
 
 add_compile_definitions(MIR_SERVER_PLATFORM_PATH="${MIR_SERVER_PLATFORM_PATH}")
@@ -46,7 +40,6 @@ configure_file(
 
 add_library(mirserverobjects OBJECT
   run_mir.cpp
-  report_exception.cpp
   terminate_with_current_exception.cpp
   display_server.cpp
   default_server_configuration.cpp
@@ -64,6 +57,13 @@ add_library(mirserverobjects OBJECT
   ${PROJECT_SOURCE_DIR}/src/include/server/mir/observer_multiplexer.h
   ${PROJECT_SOURCE_DIR}/src/include/server/mir/glib_main_loop.h
   ${PROJECT_SOURCE_DIR}/src/include/server/mir/glib_main_loop_sources.h
+)
+
+target_include_directories(mirserverobjects
+  PUBLIC
+    ${PROJECT_SOURCE_DIR}/include/server
+  PRIVATE
+    ${PROJECT_SOURCE_DIR}/src/include/server
 )
 
 target_link_libraries(mirserverobjects
@@ -107,9 +107,6 @@ set(MIR_SERVER_REFERENCES
   mirnullreport
   mirconsole
   mirservertime
-
-  mirrenderergl
-  mirgl
 
   PkgConfig::DRM
   PkgConfig::EGL
@@ -161,8 +158,6 @@ if (MIR_USE_APPARMOR)
   target_link_libraries(mirserver PUBLIC PkgConfig::APPARMOR)
 endif()
 
-set(MIRSERVER_INCLUDE_DIRS ${UUID_INCLUDE_DIRS} PARENT_SCOPE)
-
 install(TARGETS mirserver
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
@@ -176,7 +171,7 @@ install(DIRECTORY
     ${CMAKE_SOURCE_DIR}/src/include/server/mir DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/mirserver-internal"
 )
 
-set(MIRSERVER_ABI 66) # Be sure to increment MIR_VERSION_MINOR at the same time
+set(MIRSERVER_ABI 66) # Be sure to increment PROJECT_VERSION_MINOR at the same time
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 
 set_target_properties(
@@ -200,9 +195,8 @@ add_custom_target(
     generate-mirserver-symbols-map
     COMMAND ${PROJECT_SOURCE_DIR}/tools/symbols_map_generator/main.py
         --library-name mir_server
-        --version ${MIR_VERSION_MAJOR}.${MIR_VERSION_MINOR}
+        --version ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
         --symbols-map-path="${CMAKE_CURRENT_SOURCE_DIR}/symbols.map"
-        --internal-headers-directory="${PROJECT_SOURCE_DIR}/src/include/server"
         --include-dirs="$<JOIN:$<TARGET_PROPERTY:mirserver,INCLUDE_DIRECTORIES>,:>"
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
 
@@ -210,9 +204,8 @@ add_custom_target(
   check-mirserver-symbols-map
   COMMAND ${PROJECT_SOURCE_DIR}/tools/symbols_map_generator/main.py
       --library-name mir_server
-      --version ${MIR_VERSION_MAJOR}.${MIR_VERSION_MINOR}
+      --version ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
       --symbols-map-path="${CMAKE_CURRENT_SOURCE_DIR}/symbols.map"
-      --internal-headers-directory="${PROJECT_SOURCE_DIR}/src/include/server"
       --include-dirs "$<JOIN:$<TARGET_PROPERTY:mirserver,INCLUDE_DIRECTORIES>,:>"
       --diff
   WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")

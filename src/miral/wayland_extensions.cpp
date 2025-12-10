@@ -37,6 +37,7 @@ namespace mo = mir::options;
 char const* const miral::WaylandExtensions::zwlr_layer_shell_v1{"zwlr_layer_shell_v1"};
 char const* const miral::WaylandExtensions::zxdg_output_manager_v1{"zxdg_output_manager_v1"};
 char const* const miral::WaylandExtensions::zwlr_foreign_toplevel_manager_v1{"zwlr_foreign_toplevel_manager_v1"};
+char const* const miral::WaylandExtensions::ext_foreign_toplevel_list_v1{"ext_foreign_toplevel_list_v1"};
 char const* const miral::WaylandExtensions::zwp_virtual_keyboard_manager_v1{"zwp_virtual_keyboard_manager_v1"};
 char const* const miral::WaylandExtensions::zwp_input_method_v1{"zwp_input_method_v1"};
 char const* const miral::WaylandExtensions::zwp_input_panel_v1{"zwp_input_panel_v1"};
@@ -86,9 +87,7 @@ struct StaticExtensionTracker
     {
         std::lock_guard lock{mutex};
 
-        extensions.erase(
-            remove_if(begin(extensions), end(extensions), [extension](auto& x) { return x.extension == extension; }),
-            end(extensions));
+        std::erase_if(extensions, [extension](auto& x) { return x.extension == extension; });
     }
 
 private:

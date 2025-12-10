@@ -170,18 +170,14 @@ void mi::Validator::handle_touch_event(MirEvent const& event)
 
     dispatch_valid_event(event);
 
-    new_state.erase(
-        remove_if(
-            begin(new_state),
-            end(new_state),
-            [](auto& item)
-            {
-                if (item.action == mir_touch_action_down)
-                   item.action = mir_touch_action_change;
-                return item.action == mir_touch_action_up;
-            }),
-        end(new_state)
-        );
+    std::erase_if(
+        new_state,
+        [](auto& item)
+        {
+            if (item.action == mir_touch_action_down)
+                item.action = mir_touch_action_change;
+            return item.action == mir_touch_action_up;
+        });
 
     last_event_by_device[id] = new_state;
 }

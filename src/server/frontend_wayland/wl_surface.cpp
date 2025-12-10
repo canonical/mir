@@ -48,6 +48,7 @@
 #include <chrono>
 #include <ranges>
 #include <boost/throw_exception.hpp>
+#include <algorithm>
 #include <cmath>
 #include <limits>
 #include <optional>
@@ -220,12 +221,81 @@ void mf::WlSurface::add_subsurface(WlSubsurface* child)
 
 void mf::WlSurface::remove_subsurface(WlSubsurface* child)
 {
-    children.erase(
-        std::remove(
-            children.begin(),
-            children.end(),
-            child),
-        children.end());
+    auto it = std::find(children.begin(), children.end(), child);
+    if (it != children.end())
+    {
+        // Adjust parent_z_index if we're removing a child from before it
+        if (it - children.begin() < parent_z_index)
+        {
+            parent_z_index--;
+        }
+        children.erase(it);
+    }
+}
+
+bool mf::WlSurface::has_subsurface_with_surface(WlSurface* surface) const
+{
+    return std::any_of(
+        children.begin(),
+        children.end(),
+        [surface](auto const* child) { return child->get_surface() == surface; });
+}
+
+void mf::WlSurface::reorder_subsurface(WlSubsurface* child, WlSurface* sibling_surface, SubsurfacePlacement placement)
+{
+    if (!pending_surface_order)
+    {
+        std::list<WlSubsurface*> surfaces(children.begin(), children.begin()+parent_z_index);
+        surfaces.push_back(nullptr); // Special entry marking the parent position
+        surfaces.insert(surfaces.end(), children.begin()+parent_z_index, children.end());
+
+        pending_surface_order = surfaces;
+    }
+
+    // Find the child in the pending order
+    if (auto const child_pos = std::find(pending_surface_order->begin(), pending_surface_order->end(), child);
+        child_pos == pending_surface_order->end())
+    {
+        log_warning(
+            "Subsurface (wl_surface@%u) attempted to reorder but not found in parent's (wl_surface@%u) children list",
+            wl_resource_get_id(child->get_surface()->raw_resource()),
+            wl_resource_get_id(raw_resource()));
+        return;
+    }
+    else
+    {
+        pending_surface_order->erase(child_pos);
+    }
+
+    // If sibling is this surface (the parent) use nullptr to represent it
+    auto const target = (sibling_surface != this) ? sibling_surface : nullptr;
+
+    // Find which subsurface has this sibling surface
+    auto sibling_it = std::find_if(
+        pending_surface_order->begin(),
+        pending_surface_order->end(),
+        [target](auto const* s) { return s ? s->get_surface() == target : target == nullptr; });
+
+    if (sibling_it == pending_surface_order->end())
+    {
+        log_warning(
+            "Subsurface (wl_surface@%u) attempted to reorder relative to a sibling (wl_surface@%u) not found in parent's (wl_surface@%u) children list",
+            wl_resource_get_id(child->get_surface()->raw_resource()),
+            wl_resource_get_id(sibling_surface->raw_resource()),
+            wl_resource_get_id(raw_resource()));
+        return;
+    }
+
+    if (placement == SubsurfacePlacement::above)
+    {
+        // Place just above sibling (after it in the list, higher z-order)
+        pending_surface_order->insert(std::next(sibling_it), child);
+    }
+    else
+    {
+        // Place just below sibling (before it in the list, lower z-order)
+        pending_surface_order->insert(sibling_it, child);
+    }
 }
 
 void mf::WlSurface::refresh_surface_data_now()
@@ -237,7 +307,14 @@ void mf::WlSurface::populate_surface_data(std::vector<shell::StreamSpecification
                                           std::vector<geom::Rectangle>& input_shape_accumulator,
                                           geometry::Displacement const& parent_offset) const
 {
-    geometry::Displacement offset = parent_offset + offset_;
+    auto const offset = parent_offset + offset_;
+    std::span const children_below_parent{children.begin(), children.begin() + parent_z_index};
+    std::span const children_above_parent{children.begin() + parent_z_index, children.end()};
+
+    for (auto const& c : children_below_parent)
+    {
+        c->populate_surface_data(buffer_streams, input_shape_accumulator, offset);
+    }
 
     buffer_streams.push_back(msh::StreamSpecification{stream, offset});
     geom::Rectangle surface_rect = {geom::Point{} + offset, buffer_size_.value_or(geom::Size{})};
@@ -264,9 +341,9 @@ void mf::WlSurface::populate_surface_data(std::vector<shell::StreamSpecification
         input_shape_accumulator.push_back(surface_rect);
     }
 
-    for (WlSubsurface* subsurface : children)
+    for (auto const& c : children_above_parent)
     {
-        subsurface->populate_surface_data(buffer_streams, input_shape_accumulator, offset);
+        c->populate_surface_data(buffer_streams, input_shape_accumulator, offset);
     }
 }
 
@@ -665,6 +742,22 @@ void mf::WlSurface::commit()
 
 void mf::WlSurface::complete_commit(WlSurface* surf)
 {
+    // Apply pending subsurface z-order changes BEFORE role->commit()
+    // Per Wayland spec, subsurface state changes (z-order, position) are applied
+    // immediately on parent commit, even if the parent is a synchronized subsurface
+    if (surf->pending_surface_order)
+    {
+        // Convert list back to vector
+        surf->children.assign(surf->pending_surface_order->begin(), surf->pending_surface_order->end());
+
+        // Update parent_z_index and clear the parent marker
+        auto const parent_marker = std::find(surf->children.begin(), surf->children.end(), nullptr);
+        surf->parent_z_index = parent_marker - surf->children.begin();
+        surf->children.erase(parent_marker);
+
+        surf->pending_surface_order = std::nullopt;
+    }
+
     // order is important
     auto const state = std::move(surf->pending);
     surf->pending = WlSurfaceState();

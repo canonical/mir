@@ -255,6 +255,12 @@ public:
     ~GBMOutputSurface()
     {
         quirks->egl_destroy_surface(dpy, egl_surf);
+
+        // If we're the current context, release it so that resources can be destroyed.
+        if (eglGetCurrentContext() == ctx)
+        {
+            eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+        }
         eglDestroyContext(dpy, ctx);
     }
 
@@ -293,7 +299,7 @@ public:
 
     auto size() const -> geom::Size override
     {
-        EGLint width, height;
+        EGLint width{0}, height{0};
         if (eglQuerySurface(dpy, egl_surf, EGL_WIDTH, &width) != EGL_TRUE)
         {
             BOOST_THROW_EXCEPTION((mg::egl_error("Failed to query surface width")));
@@ -313,7 +319,7 @@ public:
 private:
     static auto get_matching_configs(EGLDisplay dpy, EGLint const attr[]) -> std::vector<EGLConfig>
     {
-        EGLint num_egl_configs;
+        EGLint num_egl_configs{0};
 
         // First query the number of matching configs…
         if ((eglChooseConfig(dpy, attr, nullptr, 0, &num_egl_configs) == EGL_FALSE) ||
@@ -356,7 +362,7 @@ private:
 
         for (auto const& config : get_matching_configs(dpy, config_attr))
         {
-            EGLint id;
+            EGLint id{DRM_FORMAT_INVALID};
             if (eglGetConfigAttrib(dpy, config, EGL_NATIVE_VISUAL_ID, &id) == EGL_FALSE)
             {
                 mir::log_warning(
@@ -545,7 +551,7 @@ auto mgg::GLRenderingProvider::surface_for_sink(
 auto mgg::GLRenderingProvider::import_syncobj(Fd const& syncobj_fd)
     -> std::unique_ptr<drm::Syncobj>
 {
-    uint32_t handle;
+    uint32_t handle{0};
     if (auto err = drmSyncobjFDToHandle(drm_fd, syncobj_fd, &handle))
     {
         BOOST_THROW_EXCEPTION((

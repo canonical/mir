@@ -332,7 +332,7 @@ void mi::SeatInputDeviceTracker::DeviceData::update_scan_codes(MirKeyboardEvent 
     if (action == mir_keyboard_action_down)
         scan_codes.push_back(scan_code);
     else if (action == mir_keyboard_action_up)
-        scan_codes.erase(remove(begin(scan_codes), end(scan_codes), scan_code), end(scan_codes));
+        std::erase(scan_codes, scan_code);
 }
 
 void mi::SeatInputDeviceTracker::set_key_state(MirInputDeviceId id, std::vector<uint32_t> const& scan_codes)

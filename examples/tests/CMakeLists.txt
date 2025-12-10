@@ -1,7 +1,3 @@
-string(REPLACE "-fno-lto" "" NO_NO_LTO_FLAGS ${CMAKE_C_FLAGS})
-set(CMAKE_C_FLAGS ${NO_NO_LTO_FLAGS})
-string(REPLACE "-fno-lto" "" NO_NO_LTO_FLAGS ${CMAKE_CXX_FLAGS})
-set(CMAKE_CXX_FLAGS ${NO_NO_LTO_FLAGS})
 
 mir_add_wrapped_executable(mir_examples_tests NOINSTALL
   test_floating_window_manager.cpp)

@@ -28,6 +28,7 @@
 
 #include "ext_image_capture_v1.h"
 #include "foreign_toplevel_manager_v1.h"
+#include "foreign_toplevel_list_v1.h"
 #include "idle_inhibit_v1.h"
 #include "input_method_v1.h"
 #include "input_method_v2.h"
@@ -135,6 +136,14 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
                 ctx.surface_stack,
                 ctx.desktop_file_manager);
         }),
+    make_extension_builder<mw::ExtForeignToplevelListV1>([](auto const& ctx)
+	{
+            return create_ext_foreign_toplevel_list_v1(
+                ctx.display,
+                ctx.wayland_executor,
+                ctx.surface_stack,
+                ctx.desktop_file_manager);
+	}),
     make_extension_builder<mw::RelativePointerManagerV1>([](auto const& ctx)
         {
             return mf::create_relative_pointer_unstable_v1(ctx.display, ctx.shell);
@@ -281,7 +290,8 @@ ExtensionBuilder const xwayland_builder {
                 ctx.session_authorizer,
                 ctx.main_clipboard,
                 *ctx.seat,
-                ctx.surface_stack);
+                ctx.surface_stack,
+                ctx.surface_registry);
         }
 };
 

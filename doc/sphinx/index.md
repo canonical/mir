@@ -63,4 +63,5 @@ explanation/index
 reference/index
 configuring/index
 contributing/index
+release-notes
 ```

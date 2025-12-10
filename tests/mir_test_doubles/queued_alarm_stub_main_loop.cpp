@@ -60,12 +60,9 @@ std::unique_ptr<mir::time::Alarm> mir::test::doubles::QueuedAlarmStubMainLoop::c
         },
         [this](StubNotifyingAlarm const* alarm)
         {
-            pending.erase(
-                std::remove_if(
-                    pending.begin(),
-                    pending.end(),
-                    [alarm](std::shared_ptr<AlarmData> const& data) { return data->alarm == alarm; }),
-                pending.end());
+            std::erase_if(
+                pending,
+                [alarm](std::shared_ptr<AlarmData> const& data) { return data->alarm == alarm; });
         });
 }
 

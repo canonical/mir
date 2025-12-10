@@ -45,7 +45,6 @@ jobs:
                 "lxd:ubuntu-24.04:spread/build/sbuild:ubuntu_armhf"
                 "lxd:ubuntu-24.04:spread/build/ubuntu:clang"
                 "lxd:ubuntu-24.04:spread/build/ubuntu:mold"
-                "lxd:fedora-41:spread/build/fedora:amd64"
                 "lxd:fedora-42:spread/build/fedora:amd64"
                 "lxd:fedora-43:spread/build/fedora:amd64"
                 "lxd:fedora-43:spread/build/fedora:clang"

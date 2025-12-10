@@ -43,11 +43,7 @@ void mw::Client::register_client(wl_client* raw, std::shared_ptr<Client> const& 
 void mw::Client::unregister_client(wl_client* raw)
 {
     auto const map = client_map.lock();
-    map->erase(remove_if(
-            begin(*map),
-            end(*map),
-            [&](auto& item){ return item.first == raw; }),
-        end(*map));
+    std::erase_if(*map, [&](auto const& item){ return item.first == raw; });
 }
 
 auto mw::Client::shared_from(wl_client* client) -> std::shared_ptr<Client>

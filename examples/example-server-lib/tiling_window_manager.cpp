@@ -54,13 +54,13 @@ inline Rectangle const& tile_for(Info const& info)
 
 void TilingWindowManagerPolicy::MRUTileList::push(std::shared_ptr<void> const& tile)
 {
-    tiles.erase(remove(begin(tiles), end(tiles), tile), end(tiles));
+    std::erase(tiles, tile);
     tiles.push_back(tile);
 }
 
 void TilingWindowManagerPolicy::MRUTileList::erase(std::shared_ptr<void> const& tile)
 {
-    tiles.erase(remove(begin(tiles), end(tiles), tile), end(tiles));
+    std::erase(tiles, tile);
 }
 
 void TilingWindowManagerPolicy::MRUTileList::enumerate(Enumerator const& enumerator) const

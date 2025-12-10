@@ -28,6 +28,13 @@ add_library(mirfrontend-xwayland OBJECT
   ${XWAYLAND_SOURCES}
 )
 
+target_include_directories(mirfrontend-xwayland
+  PUBLIC
+    ${PROJECT_SOURCE_DIR}/include/server
+  PRIVATE
+    ${PROJECT_SOURCE_DIR}/src/include/server
+)
+
 target_link_libraries(mirfrontend-xwayland
   PUBLIC
     mirplatform

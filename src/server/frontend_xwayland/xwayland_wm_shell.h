@@ -40,6 +40,7 @@ class WlSeat;
 class WlSurface;
 class XWaylandSurface;
 class SessionAuthorizer;
+class SurfaceRegistry;
 
 class XWaylandWMShell
 {
@@ -50,13 +51,15 @@ public:
         std::shared_ptr<SessionAuthorizer> const& session_authorizer,
         std::shared_ptr<scene::Clipboard> const& clipboard,
         WlSeat& seat,
-        std::shared_ptr<SurfaceStack> const& surface_stack)
+        std::shared_ptr<SurfaceStack> const& surface_stack,
+        std::shared_ptr<SurfaceRegistry> const& surface_registry)
         : wayland_executor{wayland_executor},
           shell{shell},
           session_authorizer{session_authorizer},
           clipboard{clipboard},
           seat{seat},
-          surface_stack{surface_stack}
+          surface_stack{surface_stack},
+          surface_registry{surface_registry}
     {
     }
 
@@ -66,6 +69,7 @@ public:
     std::shared_ptr<scene::Clipboard> const clipboard;
     WlSeat& seat;
     std::shared_ptr<SurfaceStack> const surface_stack;
+    std::shared_ptr<SurfaceRegistry> const surface_registry;
 };
 
 } /* frontend*/

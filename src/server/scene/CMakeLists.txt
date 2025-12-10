@@ -11,7 +11,6 @@ ADD_LIBRARY(
   session_manager.cpp
   surface_allocator.cpp
   surface_stack.cpp
-  surface_event_source.cpp
   null_surface_observer.cpp
   null_observer.cpp
   scene_change_notification.cpp
@@ -26,6 +25,13 @@ ADD_LIBRARY(
   basic_text_input_hub.cpp
   basic_idle_hub.cpp
   ${CMAKE_SOURCE_DIR}/src/include/server/mir/scene/surface_observer.h
+)
+
+target_include_directories(mirscene
+  PUBLIC
+    ${PROJECT_SOURCE_DIR}/include/server
+  PRIVATE
+    ${PROJECT_SOURCE_DIR}/src/include/server
 )
 
 target_link_libraries(mirscene

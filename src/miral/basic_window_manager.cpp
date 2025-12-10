@@ -2749,17 +2749,14 @@ void miral::BasicWindowManager::remove_output_from_display_areas(Locker const&, 
     // Remove the output from all areas that contain it
     for (auto const& area : display_areas)
     {
-        auto const removed = std::remove_if(
-            area->contained_outputs.begin(),
-            area->contained_outputs.end(),
+        auto const num_removed = std::erase_if(
+            area->contained_outputs,
             [&](Output const& area_output)
             {
                 return area_output.is_same_output(output);
             });
-        bool const output_removed{removed != area->contained_outputs.end()};
-        area->contained_outputs.erase(removed, area->contained_outputs.end());
 
-        if (output_removed)
+        if (num_removed > 0)
         {
             area->area = area->bounding_rectangle_of_contained_outputs();
         }
