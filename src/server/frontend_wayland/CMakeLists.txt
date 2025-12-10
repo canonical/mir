@@ -68,7 +68,7 @@ set(
   surface_registry.cpp          surface_registry.h
 )
 
-if("${CMAKE_CXX_COMPILER}" MATCHES "clang" AND $(CMAKE_CXX_COMPILER_VERSION) VERSION_LESS_EQUAL 18.1)
+if (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" AND ${CMAKE_CXX_COMPILER_VERSION} VERSION_LESS 18.2)
   # ext_image_capture_v1.cpp uses std::expected, which libstdc++ only supports with __cpp_concepts=202002L
   set_source_files_properties(ext_image_capture_v1.cpp
     PROPERTIES COMPILE_FLAGS -Wno-builtin-macro-redefined
