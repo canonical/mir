@@ -217,7 +217,7 @@ void md::MultiplexingDispatchable::remove_watch(Fd const& fd)
     }
 
     std::unique_lock lock{lifetime_mutex};
-    dispatchee_holder.remove_if([&fd](std::pair<std::shared_ptr<Dispatchable>,bool> const& candidate)
+    std::erase_if(dispatchee_holder, [&fd](auto const& candidate)
     {
         return candidate.first->watch_fd() == fd;
     });

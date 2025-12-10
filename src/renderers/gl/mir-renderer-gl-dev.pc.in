@@ -1,8 +1,0 @@
-prefix=@CMAKE_INSTALL_PREFIX@
-includedir=@PKGCONFIG_INCLUDEDIR@/mirrenderer
-
-Name: mir-renderer-gl-dev
-Description: Mir GL renderer development files
-Version: @MIR_VERSION@
-Requires: mircore
-Cflags: -I${includedir}

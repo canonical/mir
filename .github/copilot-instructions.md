@@ -144,7 +144,7 @@ Use these standard aliases in `.cpp` files for brevity:
 
 - **Exceptions**: Functions should throw exceptions when they cannot meet post-conditions
 - **Exception safety**: Provide at least the basic exception safety guarantee
-- **Preconditions**: May be verified using `assert` but are not required to be checked
+- **Preconditions**: May be verified using `fatal_error_abort()` for fatal errors. Do not use `assert()` as its behavior differs between debug and release builds.
 - **Pointers**: Assumed to be valid unless explicitly documented otherwise
 
 ### Comments

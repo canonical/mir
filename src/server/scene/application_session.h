@@ -32,7 +32,6 @@ namespace graphics
 class GraphicBufferAllocator;
 }
 namespace shell { class SurfaceStack; }
-namespace frontend { class EventSink; }
 namespace scene
 {
 class SessionListener;
@@ -49,7 +48,6 @@ public:
         Fd socket_fd,
         std::string const& session_name,
         std::shared_ptr<SessionListener> const& session_listener,
-        std::shared_ptr<frontend::EventSink> const& sink,
         std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator);
 
     ~ApplicationSession();
@@ -95,7 +93,6 @@ private:
     Fd socket_fd_;
     std::string const session_name;
     std::shared_ptr<SessionListener> const session_listener;
-    std::shared_ptr<frontend::EventSink> const event_sink;
     std::shared_ptr<graphics::GraphicBufferAllocator> const gralloc;
 
     std::vector<std::shared_ptr<Surface>> surfaces;

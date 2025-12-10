@@ -1,4 +1,4 @@
-find_program(CARGO_EXECUTABLE cargo)
+find_program(CARGO_EXECUTABLE cargo REQUIRED)
 
 function(add_rust_cxx_library target)
   set(one_value_args CRATE CXX_BRIDGE_SOURCE_FILE)
@@ -15,14 +15,14 @@ function(add_rust_cxx_library target)
 
   set(rust_target_dir "${CMAKE_BINARY_DIR}/target")
   if("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
-    set(rust_binary_dir "${rust_target_dir}/release")
+    set(rust_binary_dir "${rust_target_dir}/$ENV{DEB_HOST_RUST_TYPE}/release")
     set(cargo_release_flag "--release")
   else()
-    set(rust_binary_dir "${rust_target_dir}/debug")
+    set(rust_binary_dir "${rust_target_dir}/$ENV{DEB_HOST_RUST_TYPE}/debug")
     set(cargo_release_flag "")
   endif()
 
-  set(cxxbridge_include_dir "${rust_target_dir}/cxxbridge")
+  set(cxxbridge_include_dir "${rust_target_dir}/$ENV{DEB_HOST_RUST_TYPE}/cxxbridge")
   set(cxxbridge_header "${cxxbridge_include_dir}/${arg_CRATE}/${arg_CXX_BRIDGE_SOURCE_FILE}.h")
   set(cxxbridge_source "${cxxbridge_include_dir}/${arg_CRATE}/${arg_CXX_BRIDGE_SOURCE_FILE}.cc")
   set(crate_staticlib "${rust_binary_dir}/lib${arg_CRATE}.a")
@@ -38,7 +38,7 @@ function(add_rust_cxx_library target)
   set_target_properties(${target}-rust PROPERTIES
     IMPORTED_LOCATION ${crate_staticlib})
 
-  add_library(${target}-cxxbridge
+  add_library(${target}-cxxbridge STATIC
     ${cxxbridge_source} ${cxxbridge_header})
 
   if(arg_INCLUDES)
@@ -55,20 +55,22 @@ function(add_rust_cxx_library target)
     endforeach ()
   endif()
 
-  # rust-cxx generates symbols named like "cxxbridge1$foo", which
-  # triggers a warning in Clang.
-  check_cxx_compiler_flag(-Wdollar-in-identifier-extension SUPPORTS_DOLLAR_IN_ID_WARNING)
-  if(SUPPORTS_DOLLAR_IN_ID_WARNING)
-    target_compile_options(${target}-cxxbridge
-      PRIVATE -Wno-error=dollar-in-identifier-extension)
-  endif()
-
   add_library(${target} INTERFACE)
   target_include_directories(${target} INTERFACE ${cxxbridge_include_dir})
   if(arg_INCLUDES)
     foreach(inc_dir IN LISTS arg_INCLUDES)
       target_include_directories(${target} INTERFACE "${inc_dir}")
     endforeach()
+  endif()
+
+  # rust-cxx generates symbols named like "cxxbridge1$foo", which
+  # triggers a warning in Clang.
+  check_cxx_compiler_flag(-Wdollar-in-identifier-extension SUPPORTS_DOLLAR_IN_ID_WARNING)
+  if(SUPPORTS_DOLLAR_IN_ID_WARNING)
+    target_compile_options(${target}-cxxbridge
+      PRIVATE -Wno-error=dollar-in-identifier-extension)
+    target_compile_options(${target}
+      INTERFACE -Wno-error=dollar-in-identifier-extension)
   endif()
 
   # As described in https://cxx.rs/build/other.html#linking-the-c-and-rust-together

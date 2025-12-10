@@ -186,7 +186,7 @@ If `MIROIL_ABI` needed to be updated, you should also run:
 
 1. Make the additive change to the interface (e.g. by adding a new method
    to an existing class)
-1. If not already bumped in this release cycle, bump `MIR_VERSION_MINOR`
+1. If not already bumped in this release cycle, bump minor number in `project(VERSION)`
    in `CMakeLists.txt`
 1. If not already bumped in this release cycle, bump `MIRSERVER_ABI` in
    `src/server/CMakeLists.txt`

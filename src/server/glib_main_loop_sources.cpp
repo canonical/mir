@@ -451,14 +451,12 @@ void md::FdSources::remove_all_owned_by(void const* owner)
 {
     std::lock_guard lock{sources_mutex};
 
-    auto const new_end = std::remove_if(
-        sources.begin(), sources.end(),
+    std::erase_if(
+        sources,
         [&] (std::unique_ptr<FdSource> const& fd_source)
         {
             return fd_source->owner == owner;
         });
-
-    sources.erase(new_end, sources.end());
 }
 
 /*****************

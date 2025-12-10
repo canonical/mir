@@ -14,11 +14,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "src/server/report/null_report_factory.h"
+
 #include <mir/events/event_builders.h>
 #include <mir/scene/output_properties_cache.h>
 #include <mir/scene/basic_surface.h>
-#include "src/server/report/null_report_factory.h"
-#include <mir/scene/surface_event_source.h>
+#include <mir/scene/null_surface_observer.h>
 
 #include <mir/test/doubles/fake_display_configuration_observer_registrar.h>
 #include <mir/test/doubles/mock_event_sink.h>
@@ -26,6 +27,7 @@
 #include <mir/test/doubles/mock_input_surface.h>
 #include <mir/test/doubles/stub_buffer.h>
 #include <mir/test/doubles/explicit_executor.h>
+#include <mir/test/doubles/test_surface_observer.h>
 #include <mir/test/event_matchers.h>
 
 #include <gmock/gmock.h>
@@ -46,6 +48,7 @@ namespace mr = mir::report;
 
 namespace
 {
+
 struct SurfaceCreation : public ::testing::Test
 {
     SurfaceCreation()
@@ -76,9 +79,8 @@ struct SurfaceCreation : public ::testing::Test
     std::shared_ptr<ms::SceneReport> const report = mr::null_scene_report();
     ms::BasicSurface surface;
     std::shared_ptr<mt::doubles::MockEventSink> const mock_event_sink = std::make_shared<mt::doubles::MockEventSink>();
-    ms::OutputPropertiesCache cache;
-    std::shared_ptr<ms::SurfaceEventSource> observer =
-        std::make_shared<ms::SurfaceEventSource>(mf::SurfaceId(), cache, mock_event_sink);
+    std::shared_ptr<mtd::TestSurfaceObserver> observer =
+        std::make_shared<mtd::TestSurfaceObserver>(mf::SurfaceId(), mock_event_sink);
     mtd::ExplicitExecutor executor;
 };
 

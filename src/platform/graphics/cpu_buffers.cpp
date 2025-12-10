@@ -66,7 +66,7 @@ public:
         return buffer->size();
     }
 
-    auto data() -> DataType* override
+    auto data() const -> DataType* override
     {
         return bounce_buffer.get();
     }
@@ -80,11 +80,6 @@ private:
     std::unique_ptr<std::byte[]> const bounce_buffer;
 };
 
-void read_from_buffer(mrs::ReadTransferable& buffer, std::byte* scratch_buffer)
-{
-    buffer.transfer_from_buffer(scratch_buffer);
-}
-
 void write_to_buffer(mrs::WriteTransferable& buffer, std::byte const* scratch_buffer)
 {
     buffer.transfer_into_buffer(scratch_buffer);
@@ -95,49 +90,6 @@ void noop(Buffer&, DataType*)
 {
 }
 
-}
-
-auto mrs::as_read_mappable(
-    std::shared_ptr<mg::Buffer> const& buffer) -> std::shared_ptr<ReadMappable>
-{
-    class CopyingWrapper : public ReadMappable
-    {
-    public:
-        explicit CopyingWrapper(std::shared_ptr<ReadTransferable> underlying_buffer)
-            : buffer{std::move(underlying_buffer)}
-        {
-        }
-
-        std::unique_ptr<Mapping<std::byte const>> map_readable() override
-        {
-            return std::make_unique<
-                CopyMap<
-                    ReadTransferable,
-                    std::byte const,
-                    &read_from_buffer,
-                    &noop>>(buffer);
-        }
-
-        auto format() const -> MirPixelFormat override { return buffer->format(); }
-        auto stride() const -> geometry::Stride override { return buffer->stride(); }
-        auto size() const -> geometry::Size override { return buffer->size(); }
-
-    private:
-        std::shared_ptr<ReadTransferable> const buffer;
-
-    };
-
-    if (auto mappable_buffer = dynamic_cast<ReadMappable*>(buffer->native_buffer_base()))
-    {
-        return std::shared_ptr<ReadMappable>{buffer, mappable_buffer};
-    }
-    else if (auto transferable_buffer = dynamic_cast<ReadTransferable*>(buffer->native_buffer_base()))
-    {
-        return std::make_shared<CopyingWrapper>(
-            std::shared_ptr<ReadTransferable>{buffer, transferable_buffer});
-    }
-
-    BOOST_THROW_EXCEPTION((std::runtime_error{"Buffer does not support CPU access"}));
 }
 
 auto mrs::as_write_mappable(

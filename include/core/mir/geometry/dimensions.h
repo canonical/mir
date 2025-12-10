@@ -18,10 +18,12 @@
 #define MIR_GEOMETRY_DIMENSIONS_H_
 
 #include "forward.h"
+#include "mir/geometry/size.h"
 
 #include <iosfwd>
 #include <type_traits>
 #include <cstdint>
+#include <limits>
 
 namespace mir
 {
@@ -29,6 +31,33 @@ namespace geometry
 {
 namespace generic
 {
+/// Concept guaranteeing a conversion From to To will
+/// be within To's representable range.
+///
+/// This may lose precision in the case of integer<->float
+/// conversions, but will not lose range.
+template<typename From, typename To>
+concept ConversionWithinBounds = requires
+{
+    // To can store the minimum value representible in From, and...
+    requires std::numeric_limits<To>::lowest() <= std::numeric_limits<From>::lowest();
+    // To can store the maximum value representible in From.
+    requires std::numeric_limits<To>::max() >= std::numeric_limits<From>::max();
+};
+
+/// Concept guaranteeing conversion From to To is lossless
+///
+/// That is, a conversion from From to To and back to From is an
+/// identity transform.
+template<typename From, typename To>
+concept ConversionIsLossless = requires
+{
+    // To has at least as many digits of precision as From, and...
+    requires std::numeric_limits<To>::digits >= std::numeric_limits<From>::digits;
+    // To's representable range is at least as large as From's
+    requires ConversionWithinBounds<From, To>;
+};
+
 template<typename T, typename Tag>
 /// Wraps a geometry value and prevents it from being accidentally used for invalid operations (such as setting a
 /// width to a height or adding two x positions together). Of course, explicit casts are possible to get around
@@ -49,6 +78,37 @@ struct Value
     {
         return this->value;
     }
+
+    /// Losslessly extract the underlying value
+    ///
+    /// The as<Q> accessor will exist for any numeric type Q
+    /// that can exactly represent any valid ValueType
+    ///
+    /// For example, if ValueType is int32_t, then
+    /// as<int64_t> and as<double> both exist
+    /// as an i32 is exactly representable in a double, but
+    /// as<uint64_t> and as<float> do not exist,
+    /// as int32_t can contain negative values not representable
+    /// in uint64_t, and float does not have sufficient precision
+    /// to exactly represent any int32_t value.
+    template <typename Q>
+        requires ConversionIsLossless<T, Q>
+    constexpr Q as() const
+    {
+        return this->value;
+    }
+
+    /// Convert to a different type, possibly losing precision but not range
+    ///
+    /// The round_to<Q> accessor will exist for any numeric type Q
+    /// that have enough range to represent any valid ValueType.
+    template <typename Q>
+        requires ConversionWithinBounds<T, Q>
+    constexpr Q round_to() const
+    {
+        return static_cast<Q>(this->value);
+    }
+
 
     constexpr T as_value() const noexcept
     {

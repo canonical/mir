@@ -18,6 +18,13 @@ add_library(
   ${DECORATION_SOURCES}
 )
 
+target_include_directories(mirshelldecoration
+  PUBLIC
+    ${PROJECT_SOURCE_DIR}/include/server
+  PRIVATE
+    ${PROJECT_SOURCE_DIR}/src/include/server
+)
+
 target_link_libraries(mirshelldecoration
   PUBLIC
     mirplatform

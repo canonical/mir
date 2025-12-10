@@ -14,8 +14,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "renderer_factory.h"
-#include "renderer.h"
+#include <mir/renderers/gl/renderer_factory.h>
+#include <mir/renderers/gl/renderer.h>
 #include <mir/graphics/platform.h>
 #include <mir/renderer/gl/gl_surface.h>
 

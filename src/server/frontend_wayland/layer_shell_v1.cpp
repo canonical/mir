@@ -592,12 +592,7 @@ void mf::LayerSurfaceV1::get_popup(struct wl_resource* popup)
 
     // Ideally we'd do this in a callback when popups are destroyed, but in practice waiting until a new popup is
     // created to clear out the destroyed ones is fine
-    popups.erase(
-        std::remove_if(
-            popups.begin(),
-            popups.end(),
-            [](auto popup) { return !popup; }),
-        popups.end());
+    std::erase_if(popups, [](auto const& popup) { return !popup; });
     popups.push_back(mw::make_weak(popup_window_role));
 }
 
