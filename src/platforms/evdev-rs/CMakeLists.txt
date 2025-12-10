@@ -2,6 +2,7 @@ add_definitions(-DMIR_LOG_COMPONENT_FALLBACK="evdev-input-rs")
 
 add_library(mirplatforminputevdevrsobjects OBJECT
   platform.cpp
+  platform_bridge.cpp platform_bridge.h
 )
 
 target_link_libraries(mirplatforminputevdevrsobjects
@@ -37,7 +38,11 @@ target_link_libraries(mirplatforminputevdevrs
 
 add_rust_cxx_library(mirplatforminputevdevrs_rust
   CRATE mir_platforms_evdev_rs
-  DEPENDS Cargo.toml src/lib.rs)
+  DEPENDS Cargo.toml src/lib.rs
+  LIBRARIES PkgConfig::UDEV PkgConfig::LIBINPUT mircommon mirplatform
+  INCLUDES
+    ${PROJECT_SOURCE_DIR}/src/platforms/evdev-rs
+)
 
 target_link_libraries(mirplatforminputevdevrsobjects
   PRIVATE

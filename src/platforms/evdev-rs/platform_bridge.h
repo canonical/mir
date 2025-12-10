@@ -1,0 +1,125 @@
+/*
+ * Copyright © Canonical Ltd.
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License version 2 or 3,
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#ifndef MIR_INPUT_EVDEV_RS_PLATFORM_BRIDGE_H
+#define MIR_INPUT_EVDEV_RS_PLATFORM_BRIDGE_H
+
+#include <mir/console_services.h>
+#include <mir/input/input_device.h>
+#include <mir/input/event_builder.h>
+#include <mir/geometry/rectangle.h>
+#include <memory>
+
+namespace mir
+{
+class Device;
+
+namespace input
+{
+namespace evdev_rs
+{
+class Platform;
+
+/// Wraps a #mir::Device so that it can be kept alive in rust.
+///
+/// The platform must maintain a reference to the #mir::Device
+/// or else the device will be destroyed.
+class DeviceWrapper
+{
+public:
+    DeviceWrapper(std::unique_ptr<Device> device, int fd);
+    int raw_fd() const;
+
+private:
+    std::unique_ptr<Device> device;
+    int fd;
+};
+
+struct PointerEventData
+{
+    bool has_time;
+    uint64_t time_microseconds;
+    int32_t action;
+    uint32_t buttons;
+    bool has_position;
+    float position_x;
+    float position_y;
+    float displacement_x;
+    float displacement_y;
+    int32_t axis_source;
+    float precise_x;
+    int discrete_x;
+    int value120_x;
+    bool scroll_stop_x;
+    float precise_y;
+    int discrete_y;
+    int value120_y;
+    bool scroll_stop_y;
+};
+
+struct KeyEventData
+{
+    bool has_time;
+    uint64_t time_microseconds;
+    int32_t action;
+    uint32_t scancode;
+};
+
+class EventBuilderWrapper
+{
+public:
+    explicit EventBuilderWrapper(EventBuilder* event_builder);
+    std::shared_ptr<MirEvent> pointer_event(PointerEventData const&) const;
+    std::shared_ptr<MirEvent> key_event(KeyEventData const&) const;
+
+private:
+    EventBuilder* event_builder;
+};
+
+class RectangleWrapper
+{
+public:
+    explicit RectangleWrapper(geometry::Rectangle&& rect);
+    int32_t x() const;
+    int32_t y() const;
+    int32_t width() const;
+    int32_t height() const;
+
+private:
+    geometry::Rectangle rect;
+};
+
+/// Bridge allowing conversion from Rust to C++.
+///
+/// The rust code may use this bridge to request things from the system.
+class PlatformBridge
+{
+public:
+    PlatformBridge(Platform* platform, std::shared_ptr<mir::ConsoleServices> const& console);
+    std::unique_ptr<DeviceWrapper> acquire_device(int major, int minor) const;
+    std::shared_ptr<InputDevice> create_input_device(int device_id) const;
+    std::unique_ptr<EventBuilderWrapper> create_event_builder_wrapper(EventBuilder* event_builder) const;
+    std::unique_ptr<RectangleWrapper> bounding_rectangle(InputSink const&) const;
+
+private:
+    Platform* platform;
+    std::shared_ptr<mir::ConsoleServices> console;
+};
+}
+}
+}
+
+#endif // MIR_INPUT_EVDEV_RS_PLATFORM_BRIDGE_H
