@@ -223,7 +223,7 @@ int main(int argc, char const* argv[])
                         if (magnification >= 5)
                         {
                             magnification = 5;
-                            break;
+                            return true;
                         }
 
                         magnifier.magnification(magnification);
@@ -233,7 +233,7 @@ int main(int argc, char const* argv[])
                         if (magnification <= 1)
                         {
                             magnification = 1;
-                            break;
+                            return true;
                         }
 
                         magnifier.magnification(magnification);
