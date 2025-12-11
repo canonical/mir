@@ -67,9 +67,9 @@ public:
         }
 
         void register_keyboard_sym_trigger(
-            uint32_t modifiers, uint32_t keysym, uint32_t type, struct wl_resource* id) override;
+            uint32_t modifiers, uint32_t keysym, struct wl_resource* id) override;
         void register_keyboard_code_trigger(
-            uint32_t modifiers, uint32_t keycode, uint32_t type, struct wl_resource* id) override;
+            uint32_t modifiers, uint32_t keycode, struct wl_resource* id) override;
         void get_action_control(std::string const& name, struct wl_resource* id) override;
 
     private:
@@ -139,9 +139,9 @@ private:
 
 // The trigger is registered with the composite event filter when its added to a control object
 void InputTriggerRegistrationManagerV1::Instance::register_keyboard_sym_trigger(
-    uint32_t modifiers, uint32_t keysym, uint32_t type, struct wl_resource* id)
+    uint32_t modifiers, uint32_t keysym, struct wl_resource* id)
 {
-    auto const* keyboard_trigger = new KeyboardSymTrigger{modifiers, keysym, id, type};
+    auto const* keyboard_trigger = new KeyboardSymTrigger{modifiers, keysym, id};
 
     // TODO validation before done event: Make sure no other keyboard triggers
     // use the same modifier + keysym combo.
@@ -149,7 +149,7 @@ void InputTriggerRegistrationManagerV1::Instance::register_keyboard_sym_trigger(
 }
 
 void InputTriggerRegistrationManagerV1::Instance::register_keyboard_code_trigger(
-    uint32_t, uint32_t, uint32_t, struct wl_resource*)
+    uint32_t, uint32_t, struct wl_resource*)
 {
 }
 
@@ -158,19 +158,6 @@ void InputTriggerRegistrationManagerV1::Instance::get_action_control(std::string
 {
     new ActionControl{itd, token_authority, id};
 }
-}
-
-auto KeyboardSymTrigger::to_registration_type(uint32_t type) -> RegistrationType
-{
-    switch (type)
-    {
-    case wayland::InputTriggerRegistrationManagerV1::RegistrationType::tap:
-        return RegistrationType::tap;
-    case wayland::InputTriggerRegistrationManagerV1::RegistrationType::hold:
-        return RegistrationType::hold;
-    default:
-        throw std::invalid_argument{"Unknown registration type"};
-    }
 }
 
 auto KeyboardSymTrigger::to_mir_modifiers(uint32_t protocol_modifiers, uint32_t keysym) -> MirInputEventModifiers

@@ -75,19 +75,13 @@ static void action_end(
     std::cout << ctx->end_msg << "\n" << std::flush;
 }
 
-static void action_activated(
-    void* /*data*/, ext_input_trigger_action_v1* /*action*/, uint32_t /*serial*/, char const* /*message*/)
-{
-    std::cout << "Activated!!!\n" << std::flush;
-}
-
 static void action_unavailable(void* /*data*/, ext_input_trigger_action_v1* /*action*/)
 {
     std::cerr << "Action unavailable\n" << std::flush;
 }
 
 static ext_input_trigger_action_v1_listener const action_listener = {
-    .begin = action_begin, .end = action_end, .activated = action_activated, .unavailable = action_unavailable};
+    .begin = action_begin, .end = action_end, .unavailable = action_unavailable};
 
 static void control_done(void* data, ext_input_trigger_action_control_v1* /*control*/, char const* token)
 {
@@ -102,7 +96,6 @@ void register_trigger(
     wl_display* display,
     uint32_t modifiers,
     uint32_t key,
-    uint32_t type,
     ActionContext* ctx,
     ext_input_trigger_v1** out_trigger,
     ext_input_trigger_action_v1** out_action)
@@ -110,7 +103,7 @@ void register_trigger(
     std::cout << "Registering " << ctx->name << " trigger...\n";
 
     *out_trigger = ext_input_trigger_registration_manager_v1_register_keyboard_sym_trigger(
-        registration_manager, modifiers, key, type);
+        registration_manager, modifiers, key);
 
     ext_input_trigger_v1_add_listener(*out_trigger, &trigger_listener, nullptr);
 
@@ -163,7 +156,7 @@ int main(int /*argc*/, char** /*argv*/)
         return EXIT_FAILURE;
     }
 
-    ActionContext hold_ctx{"hold", "Hello from hold", "Bye from hold"};
+    ActionContext hold_ctx{"CTRL + SHIFT + C", "Hello from CTRL + SHIFT + C", "Bye from CTRL + SHIFT + C"};
     ext_input_trigger_v1* hold_trigger = nullptr;
     ext_input_trigger_action_v1* hold_action = nullptr;
 
@@ -171,13 +164,12 @@ int main(int /*argc*/, char** /*argv*/)
         display,
         EXT_INPUT_TRIGGER_REGISTRATION_MANAGER_V1_MODIFIERS_SHIFT | EXT_INPUT_TRIGGER_REGISTRATION_MANAGER_V1_MODIFIERS_CTRL,
         XKB_KEY_C,
-        EXT_INPUT_TRIGGER_REGISTRATION_MANAGER_V1_REGISTRATION_TYPE_HOLD,
         &hold_ctx,
         &hold_trigger,
         &hold_action
     );
 
-    ActionContext tap_ctx{"tap", "Hello from tap", "Bye from tap"};
+    ActionContext tap_ctx{"ALT + x", "Hello from ALT + x", "Bye from ALT + x"};
     ext_input_trigger_v1* tap_trigger = nullptr;
     ext_input_trigger_action_v1* tap_action = nullptr;
 
@@ -185,7 +177,6 @@ int main(int /*argc*/, char** /*argv*/)
         display,
         EXT_INPUT_TRIGGER_REGISTRATION_MANAGER_V1_MODIFIERS_ALT,
         XKB_KEY_x,
-        EXT_INPUT_TRIGGER_REGISTRATION_MANAGER_V1_REGISTRATION_TYPE_TAP,
         &tap_ctx,
         &tap_trigger,
         &tap_action

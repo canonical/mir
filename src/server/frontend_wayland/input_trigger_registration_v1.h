@@ -49,26 +49,18 @@ auto create_input_trigger_registration_manager_v1(
 class KeyboardSymTrigger : public wayland::InputTriggerV1
 {
 public:
-    enum class RegistrationType : uint32_t
-    {
-        tap = wayland::InputTriggerRegistrationManagerV1::RegistrationType::tap,
-        hold = wayland::InputTriggerRegistrationManagerV1::RegistrationType::hold,
-    };
 
-    KeyboardSymTrigger(uint32_t modifiers, uint32_t keysym, struct wl_resource* id, uint32_t type) :
+    KeyboardSymTrigger(uint32_t modifiers, uint32_t keysym, struct wl_resource* id) :
         InputTriggerV1{id, Version<1>{}},
         keysym{keysym},
-        type{to_registration_type(type)},
         modifiers{to_mir_modifiers(modifiers, keysym)}
     {
     }
 
     uint32_t const keysym;
-    RegistrationType const type;
     MirInputEventModifiers const modifiers;
 
 private:
-    static auto to_registration_type(uint32_t type) -> RegistrationType;
     static auto to_mir_modifiers(uint32_t protocol_modifiers, uint32_t keysym) -> MirInputEventModifiers;
 };
 }

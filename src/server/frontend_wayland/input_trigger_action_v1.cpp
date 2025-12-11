@@ -240,97 +240,31 @@ private:
             auto const keysym_matches =
                 keysym_exists_in_set(trigger.value().keysym, pressed_keysyms, trigger_mods_contain_shift);
 
-            // TODO single activation path
-            // TODO maybe taps and holds should be different filters?
-            using RegistrationType = KeyboardSymTrigger::RegistrationType;
             if (trigger)
             {
-                switch (trigger.value().type)
+                if (!modifiers_match || !keysym_matches)
                 {
-                case RegistrationType::tap:
+                    if (began)
                     {
-                        if (!modifiers_match || !keysym_matches)
-                        {
-                            if (began)
-                            {
-                                action.value().send_end_event(bogus_time, bogus_activation_token);
-                                began = false;
-                            }
-
-                            return false;
-                        }
-
-                        // If the trigger keysym is pressed (either just pressed or was already pressed),
-                        // ensure we send a begin event if we haven't already.
-                        if (!began)
-                        {
-                            action.value().send_begin_event(bogus_time, bogus_activation_token);
-                            began = true;
-                            return true;
-                        }
-
-                        return false;
+                        action.value().send_end_event(bogus_time, bogus_activation_token);
+                        began = false;
                     }
-                case RegistrationType::hold:
-                    {
-                        using namespace std::literals;
-                        auto constexpr hold_time = 500ms;
 
-                        switch (key_event->action())
-                        {
-                        case mir_keyboard_action_down:
-                            {
-                                if (modifiers_match && keysym_matches && !hold_alarm)
-                                {
-                                    // If we haven't already began, then set up a wayland alarm to send the begin
-                                    // event after the hold time
-                                    // TODO specify the hold time
-                                    // TODO find some way of clearing the alarm after it fires
-
-                                    hold_alarm = context.alarm_factory->create_alarm(
-                                        [=, this]
-                                        {
-                                            context.wayland_executor->spawn(
-                                                [this, bogus_activation_token]
-                                                {
-                                                    action.value().send_begin_event(bogus_time, bogus_activation_token);
-                                                    began = true;
-                                                });
-                                        });
-
-                                    hold_alarm->reschedule_in(hold_time);
-                                }
-                                break;
-                            }
-                        case mir_keyboard_action_up:
-                            {
-                                // If we began, then send end immediately. Otherwise, do nothing (released before
-                                // hold time)
-                                if ((!modifiers_match || !keysym_matches) && hold_alarm)
-                                {
-                                    hold_alarm->cancel();
-                                    hold_alarm.reset();
-                                    // FIXME Possible TOCTOU
-                                    if (began)
-                                    {
-                                        action.value().send_end_event(bogus_time, bogus_activation_token);
-                                        began = false;
-                                    }
-                                }
-                                break;
-                            }
-                        default:
-                            break;
-                        }
-
-                        return false;
-                    }
+                    return false;
                 }
+
+                // If the trigger keysym is pressed (either just pressed or was already pressed),
+                // ensure we send a begin event if we haven't already.
+                if (!began)
+                {
+                    action.value().send_begin_event(bogus_time, bogus_activation_token);
+                    began = true;
+                    return true;
+                }
+
+                return false;
             }
 
-            return false;
-
-            // Invalid token
             return false;
         }
 
