@@ -1,8 +1,3 @@
-include_directories(
-  ${PROJECT_SOURCE_DIR}/src/include/server
-  ${CMAKE_SOURCE_DIR}
-)
-
 add_compile_definitions(
     MIR_SERVER_PLATFORM_PATH="${MIR_SERVER_PLATFORM_PATH}"
     MIR_SERVER_GRAPHICS_PLATFORM_ABI_STRING="${MIR_SERVER_GRAPHICS_PLATFORM_ABI}"
