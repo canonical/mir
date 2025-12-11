@@ -50,6 +50,15 @@ add_library(mir-public-test-framework OBJECT
   window_management_test_harness.cpp ${PROJECT_SOURCE_DIR}/include/test/mir_test_framework/window_management_test_harness.h
 )
 
+set_source_files_properties(
+    stubbed_server_configuration.cpp
+    test_display_server.cpp
+    window_management_test_harness.cpp
+    fake_input_device_impl.cpp
+  PROPERTIES
+    INCLUDE_DIRECTORIES ${PROJECT_SOURCE_DIR}
+)
+
 target_link_libraries(mir-public-test-framework
   PUBLIC
     miral
