@@ -5,7 +5,7 @@ set -e
 MAIN_RE='^(refs/heads/)?main$'  # main branch
 VERSION_RE='v(([0-9]+)\.([0-9]+)\.([0-9]+))'  # version format vX.Y.Z (note not matching start/end)
 RELEASE_RE="^(refs/heads/)?release/[0-9]+\.[0-9]+\$|^(refs/tags/)?${VERSION_RE}\$"  # release branch or tag
-SUFFIX_RE='([0-9]+)-g[0-9a-f]+$'
+SUFFIX_RE='([0-9]+)-(g[0-9a-f]+)$'
 
 LP_CREDS="$1"
 if [ -z "${LP_CREDS}" ]; then
@@ -121,7 +121,7 @@ EOF
   TARGET_PPA=ppa:mir-team/dev
   # determine the dev version string
   if [[ "$( git describe --match="*-dev" )" =~ ^${VERSION_RE}-dev-${SUFFIX_RE} ]]; then
-    MIR_VERSION="${BASH_REMATCH[1]}~dev${BASH_REMATCH[2]}"
+    MIR_VERSION="${BASH_REMATCH[1]}~dev${BASH_REMATCH[5]}-${BASH_REMATCH[6]}"
   else
     echo "ERROR: could not parse git describe output" >&2
     exit 5
