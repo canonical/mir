@@ -1,7 +1,3 @@
-include_directories(
-  ${server_common_include_dirs}
-)
-
 add_library(
   mirplatforminputx11objects OBJECT
 

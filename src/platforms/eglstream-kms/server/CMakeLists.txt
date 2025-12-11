@@ -1,7 +1,3 @@
-include_directories(
-  ${server_common_include_dirs}
-)
-
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map.in
   ${CMAKE_CURRENT_BINARY_DIR}/symbols.map
@@ -28,6 +24,8 @@ target_link_libraries(mirplatformgraphicseglstreamkmsobjects
     mirplatform
     mircommon
     mircore
+  PRIVATE
+    server_platform_common
 )
 
 add_library(mirplatformgraphicseglstreamkms MODULE)

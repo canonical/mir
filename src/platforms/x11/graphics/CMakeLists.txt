@@ -1,7 +1,3 @@
-include_directories(
-  ${server_common_include_dirs}
-)
-
 add_library(
   mirplatformgraphicsx11objects OBJECT
 
@@ -23,6 +19,8 @@ target_link_libraries(mirplatformgraphicsx11objects-symbols
     mirplatform
     mircommon
     mircore
+  PRIVATE
+    server_platform_common
 )
 
 target_link_libraries(
@@ -30,4 +28,5 @@ target_link_libraries(
 
   PRIVATE
     mirplatform
+    server_platform_common
 )
