@@ -6,26 +6,26 @@ kill-timeout: 60m
 execute: |
     echo "defaultyes=True" >> /etc/dnf/dnf.conf
 
-    PACKAGES=(
-      ccache
+    TEST_PKGS=(
       cmake
       createrepo
-      mock
-      rpmdevtools
     )
 
     if [ "${CLANG}" -eq 1 ]; then
-        PACKAGES+=( clang )
         RPMBUILD_EXTRA_OPTIONS+=(--with clang)
+        TEST_PKGS+=( clang )
+        CMAKE_EXTRA_OPTIONS+=(-DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++)
     else
-        PACKAGES+=( gcc gcc-c++ )
+        TEST_PKGS+=( gcc gcc-c++ )
     fi
 
     if [ "${LINKER}" != "ld" ]; then
         RPMBUILD_EXTRA_OPTIONS+=(--with ${LINKER})
+        TEST_PKGS+=( ${LINKER} )
+        CMAKE_EXTRA_OPTIONS+=(-DMIR_USE_LINKER={LINKER})
     fi
 
-    dnf install "${PACKAGES[@]}"
+    dnf install ccache mock rpmdevtools
 
     rpmdev-setuptree
     cp ${SPREAD_PATH}/mir-*.tar.xz ~/rpmbuild/SOURCES
@@ -34,6 +34,7 @@ execute: |
 
     mock \
       --root fedora-${RELEASE}-x86_64 \
+      --resultdir ~/rpmbuild/RPMS \
       --verbose \
       --enable-plugin=ccache \
       --plugin-option=ccache:dir=${CCACHE_DIR} \
@@ -47,12 +48,13 @@ execute: |
     ccache --show-stats --zero-stats > ${CCACHE_DIR}/ccache.stats
 
     if [ "${SPREAD_SYSTEM}" = "${SPREAD_VARIANT/_/-}" ]; then
+      dnf install ${TEST_PKGS[@]}
 
       # build the local repository for end-to-end tests
-      createrepo /root/rpmbuild
+      createrepo ~/rpmbuild
       dnf config-manager addrepo \
          --id=mirpr \
-         --set=baseurl="file:///root/rpmbuild" \
+         --set=baseurl="file://${HOME}/rpmbuild" \
          --set=gpgcheck=0 \
          --set=priority=90 \
          --set=enabled=1 \
@@ -64,6 +66,8 @@ execute: |
       # [doc:first-compositor:fedora-dependencies-install-end]
 
       cd ${SPREAD_PATH}/doc/sphinx/tutorial/first-wayland-compositor
+
+      cmake "${CMAKE_EXTRA_OPTIONS[@]}" .
 
       # [doc:first-compositor:build]
       cmake .
@@ -83,7 +87,7 @@ execute: |
         WAYLAND_DISPLAY=wayland-99 ./demo-mir-compositor &
         # [doc:first-compositor:run-end]
 
-        # wait for the the socket
+        # wait for the socket
         timeout --preserve-status 3 bash -c "while [ ! -S $XDG_RUNTIME_DIR/wayland-99 ]; do sleep 0.1; done"
 
         # [doc:first-compositor:run-client]
