@@ -114,7 +114,9 @@ public:
                             static_cast<void*>(trigger),
                             static_cast<std::string>(token).c_str());
                     else
-                        mir::log_debug("Input trigger (%p) already registered!", static_cast<void*>(trigger));
+                        mir::log_debug(
+                            "Input trigger (%p) already registered! Will not revoke token",
+                            static_cast<void*>(trigger));
                 });
             mir::log_debug("Registered input trigger action with token %s", static_cast<std::string>(token).c_str());
 
