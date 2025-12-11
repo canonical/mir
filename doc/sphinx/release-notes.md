@@ -56,13 +56,9 @@
     - Tidy up GL code and eliminate circular dependencies (#4475)
 
   - Bugs fixed:
-    - Fix XWayland keyboard input by registering surfaces with SurfaceRegistry (#4479)
     - Fix XWayland menu positioning by initializing spec from cached geometry (#4512)
     - Fix clip_area scaling with display scale factor (#4486)
     - Fix magnifier filter not consuming events at max/min magnifications (#4523)
-    - Destroy toplevel handles on application switcher destruction (#4518)
-    - Fix application switcher stopping only when Self is destroyed (#4509)
-    - Fix use-after-return in BasicApplicationSwitcher (#4505)
     - Renderer: Ensure current EGL context when destroying GL resources (#4460)
     - Don't give up if specified cursor theme is not found (#4520)
     - Modify XCursorLoader::image to check the given name first (#4522)
