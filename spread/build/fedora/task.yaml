@@ -22,7 +22,7 @@ execute: |
     if [ "${LINKER}" != "ld" ]; then
         RPMBUILD_EXTRA_OPTIONS+=(--with ${LINKER})
         TEST_PKGS+=( ${LINKER} )
-        CMAKE_EXTRA_OPTIONS+=(-DMIR_USE_LINKER={LINKER})
+        CMAKE_EXTRA_OPTIONS+=(-DMIR_USE_LINKER=${LINKER})
     fi
 
     dnf install ccache mock rpmdevtools
