@@ -331,8 +331,9 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/miral-shell.desktop
 
 
 %changelog
-* Wed Dec 10 2025 Michał Sawicz <michal.sawicz@canonical.com> - 2.25.0~dev-1
+* Thu Dec 11 2025 Michał Sawicz <michal.sawicz@canonical.com> - 2.25.0~rc-1
 - Begin development for 2.25.0 release
+- Begin Release Candidate for 2.25.0 release
 
 * Fri Nov 21 2025 Michał Sawicz <michal.sawicz@canonical.com> - 2.23.0-1
 - Update to 2.23.0

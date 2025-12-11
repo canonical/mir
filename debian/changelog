@@ -1,8 +1,9 @@
-mir (2.25.0~dev) UNRELEASED; urgency=medium
+mir (2.25.0~rc) UNRELEASED; urgency=medium
 
   * Begin development for 2.25.0 release
+  * Begin Release Candidate for 2.25.0 release
 
- -- Michał Sawicz <michal.sawicz@canonical.com>  Wed, 10 Dec 2025 14:39:09 +0100
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Thu, 11 Dec 2025 10:28:19 +0100
 
 mir (2.23.0) noble; urgency=medium
 
