@@ -439,6 +439,7 @@ global:
     mir::input::VirtualInputDevice::VirtualInputDevice*;
     mir::input::VirtualInputDevice::if_started_then*;
     mir::input::default_cursor_size*;
+    mir::input::expand_modifiers*;
     mir::input::input_platform_from_graphics_module*;
     mir::input::make_unique_context*;
     mir::input::probe_input_platforms*;
