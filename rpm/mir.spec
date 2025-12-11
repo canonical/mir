@@ -237,7 +237,6 @@ Mir unit and integration tests.
 	%{!?with_debug:-DMIR_FATAL_COMPILE_WARNINGS=OFF} \
 	%{?with_lld:-DMIR_USE_LD=lld} \
 	%{?with_mold:-DMIR_USE_LD=mold} \
-	-DMIR_ENABLE_RUST=ON \
 	-DMIR_USE_PRECOMPILED_HEADERS=OFF \
 	-DCMAKE_INSTALL_LIBEXECDIR="usr/libexec/mir" \
 	-DMIR_PLATFORM="atomic-kms;gbm-kms;wayland;x11"
