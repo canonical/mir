@@ -46,7 +46,7 @@ execute: |
 
     ccache --show-stats --zero-stats > ${CCACHE_DIR}/ccache.stats
 
-    if [ "${SPREAD_VARIANT}" = "fedora_43" ]; then
+    if [ "${SPREAD_SYSTEM}" = "${SPREAD_VARIANT/_/-}" ]; then
 
       # build the local repository for end-to-end tests
       createrepo /root/rpmbuild
