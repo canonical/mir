@@ -45,10 +45,10 @@ jobs:
                 "lxd:ubuntu-24.04:spread/build/sbuild:ubuntu_armhf"
                 "lxd:ubuntu-24.04:spread/build/ubuntu:clang"
                 "lxd:ubuntu-24.04:spread/build/ubuntu:mold"
-                "lxd:fedora-42:spread/build/fedora:amd64"
-                "lxd:fedora-43:spread/build/fedora:amd64"
-                "lxd:fedora-43:spread/build/fedora:clang"
-                "lxd:fedora-rawhide:spread/build/fedora:amd64"
+                "lxd:...:fedora_42"
+                "lxd:...:fedora_43"
+                "lxd:...:fedora_clang"
+                "lxd:...:fedora_rawhide"
                 "lxd:ubuntu-24.04:spread/build/sbuild:ubuntu_devel"
                 "lxd:ubuntu-24.04:spread/build/sbuild:ubuntu_proposed"
                 "lxd:ubuntu-24.04:spread/build/ubuntu:asan"
@@ -117,7 +117,9 @@ jobs:
         echo "max_size = 800M" > ${CCACHE_DIR}/ccache.conf
 
     - name: Run Spread task
-      run: snap run spread-mir-ci.spread -reuse -v ${{ matrix.spread-task }}
+      run: |
+        tools/make_release_tarball --skip-checks
+        snap run spread-mir-ci.spread -reuse -v ${{ matrix.spread-task }}
 
     - name: CCache stats
       run: cat ${CCACHE_DIR}/ccache.stats
