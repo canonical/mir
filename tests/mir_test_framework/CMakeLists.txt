@@ -50,6 +50,7 @@ add_library(mir-public-test-framework OBJECT
   window_management_test_harness.cpp ${PROJECT_SOURCE_DIR}/include/test/mir_test_framework/window_management_test_harness.h
 )
 
+# These files include headers from the main source tree
 set_source_files_properties(
     stubbed_server_configuration.cpp
     test_display_server.cpp
