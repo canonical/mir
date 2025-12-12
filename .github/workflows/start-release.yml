@@ -68,7 +68,7 @@ jobs:
 
       - name: Create issue for release notes
         id: create_issue
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const title = `Draft release notes for Mir ${{ inputs.version }}`;
@@ -97,7 +97,7 @@ jobs:
             return issue.data.html_url;
 
       - name: Create draft GitHub release
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const release = await github.rest.repos.createRelease({
