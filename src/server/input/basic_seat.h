@@ -50,7 +50,6 @@ public:
     BasicSeat(std::shared_ptr<InputDispatcher> const& dispatcher,
               std::shared_ptr<TouchVisualizer> const& touch_visualizer,
               std::shared_ptr<CursorObserver> const& cursor_observer,
-              std::shared_ptr<CursorObserverMultiplexer> const& cursor_observer_multiplexer,
               std::shared_ptr<Registrar> const& registrar,
               std::shared_ptr<KeyMapper> const& key_mapper,
               std::shared_ptr<time::Clock> const& clock,
