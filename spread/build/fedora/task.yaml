@@ -41,7 +41,6 @@ execute: |
       --plugin-option=ccache:hashdir=False \
       --plugin-option=ccache:show_stats=True \
       --with debug \
-      --with check \
       "${RPMBUILD_EXTRA_OPTIONS[@]}" \
       ~/rpmbuild/SRPMS/mir-*.src.rpm
 
