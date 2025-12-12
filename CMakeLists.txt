@@ -245,11 +245,7 @@ foreach(platform IN LISTS MIR_PLATFORM)
   endif()
 endforeach(platform)
 
-set(MIR_ENABLE_RUST OFF CACHE BOOL "Enable Rust support")
-if (MIR_ENABLE_RUST)
-  include(cmake/RustLibrary.cmake)
-  add_compile_definitions(MIR_ENABLE_RUST)
-endif()
+set(MIR_ENABLE_RUST ON CACHE BOOL "Enable Rust support")
 
 pkg_check_modules(GLM glm)
 if(NOT GLM_FOUND)

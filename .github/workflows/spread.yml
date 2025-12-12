@@ -54,8 +54,7 @@ jobs:
                 "lxd:ubuntu-24.04:spread/build/ubuntu:asan"
                 "lxd:ubuntu-24.04:spread/build/ubuntu:asan_clang"
                 "lxd:ubuntu-24.04:spread/build/ubuntu:ubsan"
-                "lxd:ubuntu-24.04:spread/build/ubuntu:ubsan_clang"
-                "lxd:ubuntu-24.04:spread/build/ubuntu:rust"'
+                "lxd:ubuntu-24.04:spread/build/ubuntu:ubsan_clang"'
 
         echo ${TASKS:-} | jq -cs '{ "spread-task": .  }' | awk '{ print "matrix=" $0 }' >> $GITHUB_OUTPUT
 
