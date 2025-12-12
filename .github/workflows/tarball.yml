@@ -51,3 +51,47 @@ jobs:
         path: |
           mir-${{ steps.get-version.outputs.version }}.tar.xz
           mir-${{ steps.get-version.outputs.version }}.tar.xz.asc
+
+    - name: Upload tarball to release
+      if: github.event_name == 'push'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          const version = "${{ steps.get-version.outputs.version }}";
+          const tag = `v${version}`;
+
+          // Get the release by tag
+          let release;
+          const response = await github.rest.repos.getReleaseByTag({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            tag: tag
+          });
+          release = response.data;
+
+          // Upload tarball
+          const tarballPath = `mir-${version}.tar.xz`;
+          const tarballData = fs.readFileSync(tarballPath);
+
+          await github.rest.repos.uploadReleaseAsset({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            release_id: release.id,
+            name: tarballPath,
+            data: tarballData
+          });
+
+          // Upload signature
+          const signaturePath = `${tarballPath}.asc`;
+          const signatureData = fs.readFileSync(signaturePath);
+
+          await github.rest.repos.uploadReleaseAsset({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            release_id: release.id,
+            name: signaturePath,
+            data: signatureData
+          });
+
+          console.log(`:notice: Uploaded tarball and signature to release ${release.html_url}`);
