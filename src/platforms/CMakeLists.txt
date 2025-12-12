@@ -27,10 +27,6 @@ set(MIR_SERVER_PLATFORM_PATH
   PARENT_SCOPE
 )
 
-set(server_common_include_dirs
-  ${CMAKE_CURRENT_SOURCE_DIR}/common/server
-)
-
 set(server_symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/common/server/symbols.map)
 
 add_subdirectory(common/)
