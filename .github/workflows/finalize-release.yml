@@ -151,7 +151,7 @@ jobs:
             release = releases.data.find(r => r.tag_name === tag);
 
             if (!release) {
-              console.log(`:error: No draft release found with tag ${tag}`);
+              console.error(`:error: No draft release found with tag ${tag}`);
               process.exit(1);
             }
 

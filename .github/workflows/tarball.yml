@@ -63,17 +63,12 @@ jobs:
 
           // Get the release by tag
           let release;
-          try {
-            const response = await github.rest.repos.getReleaseByTag({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              tag: tag
-            });
-            release = response.data;
-          } catch (error) {
-            console.log(`:error: No release found with tag ${tag}`);
-            process.exit(1);
-          }
+          const response = await github.rest.repos.getReleaseByTag({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            tag: tag
+          });
+          release = response.data;
 
           // Upload tarball
           const tarballPath = `mir-${version}.tar.xz`;
