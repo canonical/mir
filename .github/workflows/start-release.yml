@@ -96,6 +96,22 @@ jobs:
             console.log(`:info: Created issue ${issue.data.html_url}`);
             return issue.data.html_url;
 
+      - name: Create draft GitHub release
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const release = await github.rest.repos.createRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag_name: `v${{ inputs.version }}`,
+              target_commitish: `${{ steps.version.outputs.release_branch }}`,
+              name: `Mir ${{ inputs.version }}`,
+              draft: true,
+              prerelease: false
+            });
+
+            console.log(`:notice: Created draft release ${release.data.html_url}`);
+
       - name: Push branch and tag
         run: |
           git push origin "v${{ inputs.version }}-rc"
