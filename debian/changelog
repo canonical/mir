@@ -1,8 +1,6 @@
 mir (2.25.0) noble; urgency=medium
 
-  
-  [ Michał Sawicz ]
-  * New upstream release 2.25.0
+    * New upstream release 2.25.0
   
     - ABI summary:
       - miral ABI unchanged at 7
