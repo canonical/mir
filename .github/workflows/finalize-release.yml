@@ -97,10 +97,38 @@ jobs:
 
           dch --release ""
 
+      - name: Update RPM spec
+        run: |
+          DATE_STR=$(date '+%a %b %d %Y')
+
+          # Update Version field and remove "Begin" lines, then append release notes
+          awk --include=inplace --assign date_str="$DATE_STR" '
+            /^Version:/ {
+              print "Version:        ${{ steps.version.outputs.version }}"
+              next
+            }
+            /\* .* - .*${{ steps.version.outputs.version }}~rc-/ {
+              in_target = 1
+              # Replace with release entry
+              print "* " date_str " ${{ vars.DEBFULLNAME }} <${{ vars.DEBEMAIL }}> - ${{ steps.version.outputs.version }}-1"
+              next
+            }
+            in_target && /^\* / {
+              while ((getline line < "/tmp/release-notes-section.md") > 0) {
+                print line
+              }
+              close("/tmp/release-notes-section.md")
+              in_target = 0
+              print ""
+            }
+            in_target && (/^$/ || /Begin development/ || /Begin Release Candidate/) { next }
+            { print }
+          ' rpm/mir.spec
+
       - name: Commit and push changelog
         run: |
-          git add debian/changelog
-          git commit --gpg-sign --message "Update debian changelog for ${{ steps.version.outputs.version }}"
+          git add debian/changelog rpm/mir.spec
+          git commit --gpg-sign --message "Update changelogs for ${{ steps.version.outputs.version }}"
           git push origin "${{ inputs.release_branch }}"
 
       - name: Finalize GitHub release
