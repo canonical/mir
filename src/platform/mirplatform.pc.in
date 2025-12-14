@@ -4,7 +4,7 @@ includedir=@PKGCONFIG_INCLUDEDIR@
 
 Name: mirplatform
 Description: Mir platform library
-Version: @MIR_VERSION@
+Version: @PROJECT_VERSION@
 Requires: mircommon, mircore
 Libs: -L${libdir} -lmirplatform
 Cflags: -I${includedir}/mirplatform
