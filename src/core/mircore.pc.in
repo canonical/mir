@@ -4,6 +4,6 @@ includedir=@PKGCONFIG_INCLUDEDIR@/mircore
 
 Name: mircore
 Description: Mir core library
-Version: @MIR_VERSION@
+Version: @PROJECT_VERSION@
 Libs: -L${libdir} -lmircore
 Cflags: -I${includedir}

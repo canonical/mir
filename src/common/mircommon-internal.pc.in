@@ -3,6 +3,6 @@ includedir=@PKGCONFIG_INCLUDEDIR@/mircommon-internal
 
 Name: mircommon-internal
 Description: Mir common internal headers
-Version: @MIR_VERSION@
+Version: @PROJECT_VERSION@
 Requires: mircommon mircore
 Cflags: -I${includedir}
