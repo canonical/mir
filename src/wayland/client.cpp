@@ -49,11 +49,11 @@ void mw::Client::unregister_client(wl_client* raw)
 auto mw::Client::shared_from(wl_client* client) -> std::shared_ptr<Client>
 {
     auto const locked = client_map.lock();
-    for (auto& info : *locked)
+    for (auto& [wlc, wmc] : *locked)
     {
-        if (info.first == client)
+        if (wlc == client)
         {
-            if (auto const shared = info.second.lock())
+            if (auto const shared = wmc.lock())
             {
                 return shared;
             }
@@ -61,7 +61,7 @@ auto mw::Client::shared_from(wl_client* client) -> std::shared_ptr<Client>
             {
                 // The client should remove itself from the map in it's destructor and should be destroyed/accessed on a
                 // single thread, so this should never happen
-                mir::fatal_error("wl_client %p expired");
+                mir::fatal_error("client_map has stale entry for wl_client %p", static_cast<void*>(client));
             }
         }
     }
