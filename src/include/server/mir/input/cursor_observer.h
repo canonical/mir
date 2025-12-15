@@ -17,8 +17,14 @@
 #ifndef MIR_INPUT_CURSOR_OBSERVER_H_
 #define MIR_INPUT_CURSOR_OBSERVER_H_
 
+#include <memory>
+
 namespace mir
 {
+namespace graphics
+{
+class CursorImage;
+}
 namespace input
 {
 
@@ -31,6 +37,12 @@ public:
     virtual void cursor_moved_to(float abs_x, float abs_y) = 0;
     virtual void pointer_usable() = 0;
     virtual void pointer_unusable() = 0;
+    /**
+     * Called when a new cursor image is set
+     *
+     * \param [in] new_image    The new cursor image. May be NULL if there is no current cursor image
+     */
+    virtual void image_set_to(std::shared_ptr<graphics::CursorImage> new_image) = 0;
 };
 
 }

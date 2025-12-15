@@ -381,6 +381,7 @@ global:
     mir::input::CursorObserverMultiplexer::?CursorObserverMultiplexer*;
     mir::input::CursorObserverMultiplexer::CursorObserverMultiplexer*;
     mir::input::CursorObserverMultiplexer::cursor_moved_to*;
+    mir::input::CursorObserverMultiplexer::image_set_to*;
     mir::input::CursorObserverMultiplexer::operator*;
     mir::input::CursorObserverMultiplexer::pointer_unusable*;
     mir::input::CursorObserverMultiplexer::pointer_usable*;
@@ -998,6 +999,7 @@ global:
     non-virtual?thunk?to?mir::input::CursorObserverMultiplexer::cursor_moved_to*;
     non-virtual?thunk?to?mir::input::CursorObserverMultiplexer::pointer_unusable*;
     non-virtual?thunk?to?mir::input::CursorObserverMultiplexer::pointer_usable*;
+    non-virtual?thunk?to?mir::input::CursorObserverMultiplexer::image_set_to*;
     non-virtual?thunk?to?mir::input::Device::?Device*;
     non-virtual?thunk?to?mir::input::EventFilter::?EventFilter*;
     non-virtual?thunk?to?mir::input::InputDeviceHub::?InputDeviceHub*;

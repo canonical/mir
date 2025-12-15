@@ -60,12 +60,14 @@ public:
 
     void pointer_unusable() override;
 
+    void image_set_to(std::shared_ptr<graphics::CursorImage> new_image) override;
+
     void set_drag_icon(std::weak_ptr<scene::Surface> icon) override;
 
 private:
     std::shared_ptr<Scene> const input_targets;
     std::shared_ptr<graphics::Cursor> const cursor;
-    std::shared_ptr<graphics::CursorImage> const default_cursor_image;
+    std::shared_ptr<graphics::CursorImage> default_cursor_image;
     std::shared_ptr<CursorObserver> const cursor_observer;
     std::weak_ptr<scene::Observer> observer;    // Not mutated after construction
 
