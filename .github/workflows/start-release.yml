@@ -4,10 +4,10 @@ on:
   workflow_dispatch:
     inputs:
       sha:
-        description: 'Commit SHA to release'
+        description: 'Commit-ish to release'
         required: true
         type: string
-        default: 'main'
+        default: 'HEAD'
       version:
         description: 'Release version (e.g., 2.24.0)'
         required: true
@@ -20,6 +20,10 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
+
+    env:
+      DEBFULLNAME: ${{ vars.DEBFULLNAME }}
+      DEBEMAIL: ${{ vars.DEBEMAIL }}
 
     steps:
       - name: Import GPG key
@@ -51,13 +55,18 @@ jobs:
             exit 1
           fi
 
-      - name: Create release branch
+      - name: Update CMake version
         run: |
-          git checkout -b ${{ steps.version.outputs.release_branch }}
+          sed -E 's/(VERSION\s+)[0-9]+\.[0-9]+\.[0-9]+/\1${{ inputs.version }}/' --inplace CMakeLists.txt
+
+          if [ -n "$(git status --porcelain CMakeLists.txt)" ]; then
+            git add CMakeLists.txt
+            git commit -m "Begin Release Candidate for ${{ inputs.version }} release"
+          fi
 
       - name: Create release tag
         run: |
-          git tag --annotate "v${{ inputs.version }}-rc" --message "Release candidate ${{ inputs.version }}" --sign "${{ inputs.sha }}"
+          git tag --annotate "v${{ inputs.version }}-rc" --message "Release candidate ${{ inputs.version }}" --sign
 
       - name: Find previous release tag
         id: previous_tag
@@ -66,53 +75,35 @@ jobs:
           PREVIOUS_TAG=$(git describe --abbrev=0 --exclude="*-rc" --exclude="*-dev" "${{ inputs.sha }}" 2>/dev/null || echo "")
           echo "tag=$PREVIOUS_TAG" | tee --append $GITHUB_OUTPUT
 
-      - name: Create issue for release notes
-        id: create_issue
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const title = `Draft release notes for Mir ${{ inputs.version }}`;
-            const lines = [
-              `Please draft release notes for Mir ${{ inputs.version }} since ${{ steps.previous_tag.outputs.tag }}.`,
-              ``,
-              `Use the template at the beginning of \`doc/sphinx/release-notes.md\` to structure the release notes, and place them after the template.`,
-              ``,
-              `Target the pull request to the \`${{ steps.version.outputs.release_branch }}\` branch.`,
-              ``,
-              `Reference commit: ${{ inputs.sha }}`,
-              `Release tag: v${{ inputs.version }}-rc`,
-              `Previous release: ${{ steps.previous_tag.outputs.tag }}`
-            ];
-            const body = lines.join('\n');
-
-            const issue = await github.rest.issues.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              title: title,
-              body: body,
-              assignees: ["copilot"]
-            });
-
-            console.log(`:info: Created issue ${issue.data.html_url}`);
-            return issue.data.html_url;
+      - name: Push to the release branch
+        run: |
+          git push origin "HEAD:${{ steps.version.outputs.release_branch }}"
 
       - name: Create draft GitHub release
         uses: actions/github-script@v7
         with:
           script: |
+            const generatedNotes = await github.rest.repos.generateReleaseNotes({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag_name: `v${{ inputs.version }}`,
+              target_commitish: `${{ steps.version.outputs.release_branch }}`,
+              previous_tag_name: `${{ steps.previous_tag.outputs.tag }}`
+            });
+
             const release = await github.rest.repos.createRelease({
               owner: context.repo.owner,
               repo: context.repo.repo,
               tag_name: `v${{ inputs.version }}`,
               target_commitish: `${{ steps.version.outputs.release_branch }}`,
               name: `Mir ${{ inputs.version }}`,
+              body: generatedNotes.data.body,
               draft: true,
               prerelease: false
             });
 
             console.log(`:notice: Created draft release ${release.data.html_url}`);
 
-      - name: Push branch and tag
+      - name: Push the Release Candidate tag
         run: |
           git push origin "v${{ inputs.version }}-rc"
-          git push origin "${{ steps.version.outputs.release_branch }}"
