@@ -22,6 +22,5 @@ target_include_directories(
 target_link_libraries(
   mirsharedgbmservercommon-static
 
-  server_platform_common
   mirplatform
 )

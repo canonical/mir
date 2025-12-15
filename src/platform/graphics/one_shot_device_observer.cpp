@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "one_shot_device_observer.h"
+#include <mir/graphics/one_shot_device_observer.h>
 
 #include <mir/fd.h>
 

@@ -27,7 +27,7 @@
 #include <mir/libname.h>
 #include <mir/log.h>
 #include <mir/graphics/egl_error.h>
-#include "one_shot_device_observer.h"
+#include <mir/graphics/one_shot_device_observer.h>
 #include <mir/raii.h>
 #include <mir/graphics/kms/drm_mode_resources.h>
 #include <mir/graphics/egl_logger.h>

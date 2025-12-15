@@ -23,7 +23,7 @@
 #include <mir/graphics/dmabuf_buffer.h>
 #include <mir/renderer/sw/pixel_source.h>
 #include <mir/graphics/platform.h>
-#include "shm_buffer.h"
+#include <mir/graphics/shm_buffer.h>
 #include <mir/graphics/egl_context_executor.h>
 #include <mir/graphics/egl_extensions.h>
 #include <mir/graphics/egl_error.h>
@@ -37,7 +37,7 @@
 #include "kms/egl_helper.h"
 #include <mir/graphics/drm_formats.h>
 #include <mir/graphics/egl_error.h>
-#include "cpu_copy_output_surface.h"
+#include <mir/graphics/cpu_copy_output_surface.h>
 #include "surfaceless_egl_context.h"
 #include <mir/graphics/drm_syncobj.h>
 

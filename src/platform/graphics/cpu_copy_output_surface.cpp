@@ -27,8 +27,8 @@
 #include <mir/graphics/gl_config.h>
 #include <mir/log.h>
 
-#include "cpu_copy_output_surface.h"
-#include "egl_helpers.h"
+#include <mir/graphics/cpu_copy_output_surface.h>
+#include <mir/graphics/egl_helpers.h>
 
 namespace mg = mir::graphics;
 namespace mgc = mg::common;

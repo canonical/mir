@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "kms_cpu_addressable_display_provider.h"
-#include "cpu_addressable_fb.h"
+#include <mir/graphics/kms_cpu_addressable_display_provider.h>
+#include <mir/graphics/cpu_addressable_fb.h>
 #include <drm_fourcc.h>
 #include <xf86drm.h>
 
