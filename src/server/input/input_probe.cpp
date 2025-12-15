@@ -98,7 +98,7 @@ mir::UniqueModulePtr<mi::Platform> mi::probe_input_platforms(
     std::vector<std::shared_ptr<SharedLibrary>> const& loaded_platforms,
     mir::SharedLibraryProberReport& prober_report)
 {
-    auto reject_platform_priority = mi::PlatformPriority::dummy;
+    auto reject_platform_priority = mi::PlatformPriority::experimental;
 
     std::shared_ptr<mir::SharedLibrary> platform_module;
     std::vector<std::string> module_names;
