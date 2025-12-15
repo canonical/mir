@@ -106,27 +106,45 @@ jobs:
         run: |
           DATE_STR=$(date '+%a %b %d %Y')
 
-          # Update Version field and remove "Begin" lines, then append release notes
+          # Update Version field and insert release notes
           awk --include=inplace --assign date_str="$DATE_STR" '
+            function print_notes() {
+                  while ((getline line < "/tmp/release-notes-section.md") > 0) {
+                  print line
+                }
+                close("/tmp/release-notes-section.md")
+                print ""
+            }
+
+            function print_header() {
+              print "* " date_str " ${{ vars.DEBFULLNAME }} <${{ vars.DEBEMAIL }}> - ${{ steps.version.outputs.version }}-1"
+            }
+
             /^Version:/ {
               print "Version:        ${{ steps.version.outputs.version }}"
               next
             }
-            /\* .* - .*${{ steps.version.outputs.version }}~rc-/ {
-              in_target = 1
-              # Replace with release entry
-              print "* " date_str " ${{ vars.DEBFULLNAME }} <${{ vars.DEBEMAIL }}> - ${{ steps.version.outputs.version }}-1"
-              next
-            }
-            in_target && /^\* / {
-              while ((getline line < "/tmp/release-notes-section.md") > 0) {
-                print line
+
+            /%changelog/ {
+              print
+              getline
+              if ($0 ~ /^\*.*${{ steps.version.outputs.version }}~dev-/) {
+                # Replace existing ~dev entry
+                print_header()
+                getline
+                while ($0 !~ /^\* /) {
+                  if ($0 !~ /^$/ && $0 !~ /Begin development/) {
+                    print
+                  }
+                  getline
+                }
+                print_notes()
+              } else {
+                # Prepend a new release entry
+                print_header()
+                print_notes()
               }
-              close("/tmp/release-notes-section.md")
-              in_target = 0
-              print ""
             }
-            in_target && (/^$/ || /Begin development/ || /Begin Release Candidate/) { next }
             { print }
           ' rpm/mir.spec
 
