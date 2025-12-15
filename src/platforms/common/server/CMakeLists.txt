@@ -1,7 +1,3 @@
-if (MIR_BUILD_PLATFORM_GBM_KMS OR MIR_BUILD_PLATFORM_GBM_X11 OR MIR_BUILD_PLATFORM_EGLSTREAM_KMS)
-  add_subdirectory(kms-utils/)
-endif()
-
 add_compile_definitions(MIR_LOG_COMPONENT_FALLBACK="server_platform_common")
 
 add_library(server_platform_common STATIC
@@ -34,7 +30,6 @@ target_link_libraries(server_platform_common
     mirplatform
     mircommon
     mircore
-    kms_utils
     PkgConfig::WAYLAND_SERVER
     PkgConfig::GLESv2
 )
