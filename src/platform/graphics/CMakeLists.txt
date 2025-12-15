@@ -1,3 +1,5 @@
+add_subdirectory(kms/)
+
 set(DRM_FORMATS_FILE ${CMAKE_CURRENT_BINARY_DIR}/drm-formats)
 set(DRM_FORMATS_BIG_ENDIAN_FILE ${CMAKE_CURRENT_BINARY_DIR}/drm-formats-big-endian)
 
@@ -115,6 +117,7 @@ target_link_libraries(
   PUBLIC
     mirwayland
     mircommon
+    kms_utils
     PkgConfig::EGL
     PkgConfig::GLESv2
   PRIVATE
