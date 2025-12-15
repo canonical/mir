@@ -18,7 +18,7 @@
 #define MIR_GRAPHICS_GBM_REAL_KMS_OUTPUT_H_
 
 #include "kms_output.h"
-#include "kms-utils/drm_mode_resources.h"
+#include <mir/graphics/kms/drm_mode_resources.h>
 
 #include <memory>
 #include <mutex>

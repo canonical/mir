@@ -45,8 +45,8 @@
 #include <xf86drm.h>
 #define MIR_LOG_COMPONENT "gbm-kms"
 #include <mir/log.h>
-#include "kms-utils/drm_mode_resources.h"
-#include "kms-utils/kms_connector.h"
+#include <mir/graphics/kms/drm_mode_resources.h>
+#include <mir/graphics/kms/kms_connector.h>
 
 #include <drm_fourcc.h>
 #include <drm.h>

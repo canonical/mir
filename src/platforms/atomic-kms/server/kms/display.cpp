@@ -37,8 +37,8 @@
 #include <system_error>
 #include <xf86drm.h>
 #include <mir/log.h>
-#include "kms-utils/drm_mode_resources.h"
-#include "kms-utils/kms_connector.h"
+#include <mir/graphics/kms/drm_mode_resources.h>
+#include <mir/graphics/kms/kms_connector.h>
 
 #include <drm_fourcc.h>
 #include <drm.h>

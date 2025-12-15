@@ -23,9 +23,9 @@
 #include "kms_framebuffer.h"
 #include "kms_cpu_addressable_display_provider.h"
 
-#include "kms-utils/drm_mode_resources.h"
+#include <mir/graphics/kms/drm_mode_resources.h>
 #include <mir/graphics/platform.h>
-#include "kms-utils/threaded_drm_event_handler.h"
+#include <mir/graphics/kms/threaded_drm_event_handler.h>
 
 #include <mir/graphics/display_configuration.h>
 #include <mir/graphics/display_configuration_policy.h>

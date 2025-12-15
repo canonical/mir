@@ -15,13 +15,13 @@
  */
 
 #include "atomic_kms_output.h"
-#include "kms-utils/drm_mode_resources.h"
+#include <mir/graphics/kms/drm_mode_resources.h>
 #include "kms_framebuffer.h"
 #include <mir/graphics/display_configuration.h>
 #include <mir/graphics/drm_formats.h>
 #include <mir/graphics/gamma_curves.h>
 #include <mir_toolkit/common.h>
-#include "kms-utils/kms_connector.h"
+#include <mir/graphics/kms/kms_connector.h>
 #include <mir/errno_utils.h>
 #include <mir/fatal.h>
 #include <mir/log.h>

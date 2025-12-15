@@ -21,7 +21,7 @@
 #include "platform.h"
 #include "display_helpers.h"
 #include "quirks.h"
-#include "kms-utils/drm_mode_resources.h"
+#include <mir/graphics/kms/drm_mode_resources.h>
 #include <mir/errno_utils.h>
 #include <mir/options/program_option.h>
 #include <mir/options/option.h>

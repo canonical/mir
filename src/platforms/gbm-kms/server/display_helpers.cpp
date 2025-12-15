@@ -17,7 +17,7 @@
 #include "display_helpers.h"
 #include "one_shot_device_observer.h"
 
-#include "kms-utils/drm_mode_resources.h"
+#include <mir/graphics/kms/drm_mode_resources.h>
 #include <mir/graphics/egl_error.h>
 #include "kms/quirks.h"
 

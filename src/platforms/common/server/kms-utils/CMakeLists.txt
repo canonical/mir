@@ -1,15 +1,16 @@
 add_library(kms_utils STATIC
   drm_mode_resources.cpp
-  drm_mode_resources.h
+  ${PROJECT_SOURCE_DIR}/include/platform/mir/graphics/kms/drm_mode_resources.h
   kms_connector.cpp
-  kms_connector.h
-  drm_event_handler.h
-  threaded_drm_event_handler.h
+  ${PROJECT_SOURCE_DIR}/include/platform/mir/graphics/kms/kms_connector.h
+  ${PROJECT_SOURCE_DIR}/include/platform/mir/graphics/kms/drm_event_handler.h
+  ${PROJECT_SOURCE_DIR}/include/platform/mir/graphics/kms/threaded_drm_event_handler.h
   threaded_drm_event_handler.cpp
 )
 
 target_include_directories(kms_utils
-  PUBLIC ${server_common_include_dirs}
+  PUBLIC
+    ${PROJECT_SOURCE_DIR}/include/platform
 )
 
 target_link_libraries(kms_utils
