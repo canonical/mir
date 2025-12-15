@@ -55,38 +55,14 @@ jobs:
             exit 1
           fi
 
-      - name: Bump version across metadata files
+      - name: Update CMake version
         run: |
-          sudo apt-get update
-          sudo apt-get install --yes devscripts
+          sed -E 's/(VERSION\s+)[0-9]+\.[0-9]+\.[0-9]+/\1${{ inputs.version }}/' --inplace CMakeLists.txt
 
-          awk -i inplace '
-            /project\(/ {
-              in_target = 1
-            }
-            in_target && /VERSION/ {
-              # Retain indentation
-              sub(/VERSION .*/, "VERSION ${{ inputs.version }}")
-              in_target = 0
-            }
-            { print }
-          ' CMakeLists.txt
-
-          dch --newversion ${{ inputs.version }}~rc "Begin Release Candidate for ${{ inputs.version }} release"
-
-          awk -i inplace "
-            /^%changelog/ {
-              print
-              print \"* $( date '+%a %b %d %Y' ) ${{ vars.DEBFULLNAME }} <${{ vars.DEBEMAIL }}> - ${{ inputs.version }}~rc-1\"
-              print \"- Begin Release Candidate for ${{ inputs.version }} release\"
-              print \"\"
-              next
-            }
-            { print }
-            " rpm/mir.spec
-
-          git add debian/changelog rpm/mir.spec CMakeLists.txt
-          git commit -m "Begin Release Candidate for ${{ inputs.version }} release"
+          if [ -n "$(git status --porcelain CMakeLists.txt)" ]; then
+            git add CMakeLists.txt
+            git commit -m "Begin Release Candidate for ${{ inputs.version }} release"
+          fi
 
       - name: Create release tag
         run: |
