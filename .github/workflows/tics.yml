@@ -45,7 +45,7 @@ jobs:
     timeout-minutes: 360
     steps:
     - name: Check out code
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
       with:
         # So we can determine the merge base
         fetch-depth: 0
