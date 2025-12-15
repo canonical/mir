@@ -352,7 +352,7 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/miral-shell.desktop
   - Enhancements:
     - [Wayland] Add support for the ext_foreign_toplevel_list_v1 extension
     - [Wayland] Implement ext-data-control
-    - [Wayland] Partial implementation of ext-image-capture-source and 
+    - [Wayland] Partial implementation of ext-image-capture-source and
       ext-image-copy-capture Wayland extensions
     - Rework wayland extension management so that connections originating from
       the server can always use the required extensions
@@ -364,7 +364,7 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/miral-shell.desktop
     - Implement LocatePointer
     - Implement ApplicationSwitcher
     - Implement the StandardApplicationSwitcher for ease of use
-    - New FloatingWindowManager and deprecate MinimalWindowManager 
+    - New FloatingWindowManager and deprecate MinimalWindowManager
     - Handle opaque regions of transparent surfaces
     - Log security events according to OWASP format
     - Add geometry::Value generic accessors for type-safe value conversion
@@ -372,7 +372,7 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/miral-shell.desktop
 
   - Bugs fixed:
     - Cursor icons don't change with XTerm (#4134)
-    - Fix magnifier filter not consuming events when magnifications is 
+    - Fix magnifier filter not consuming events when magnifications is
       greater/less than the max/min (#4386)
     - If no specified cursor theme loads, then internal theme (#439)
     - Renderer: Ensure current EGL context when destroying GL resources (#4460)
@@ -381,7 +381,7 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/miral-shell.desktop
     - [Wayland] Implement wl_subsurface.place_above and place_below with parent
       z-ordering (#4332)
     - WindowInfo::clip_area is incorrect if the output is scaled (#4484)
-    - Check DRM_CAP_SYNCOBJ_TIMELINE in platform layer before providing 
+    - Check DRM_CAP_SYNCOBJ_TIMELINE in platform layer before providing
       DRMRenderingProvider
     - Fix cursor size getting truncated after scaling leading to crash (#4377)
     - Intermittent crash (#4323)
