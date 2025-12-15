@@ -25,7 +25,7 @@ then
 fi
 
 set -e
-TAG=$( git describe --abbrev=0 "${RELEASE_TAG}")
+TAG=$( git describe --tags --abbrev=0 "${RELEASE_TAG}")
 if [[ "${TAG}" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)(-(dev|rc))?$ ]]; then
   VERSION_MAJOR=${BASH_REMATCH[1]}
   VERSION_MINOR=${BASH_REMATCH[2]}
