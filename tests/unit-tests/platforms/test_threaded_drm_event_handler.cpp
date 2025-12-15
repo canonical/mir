@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "src/platforms/common/server/kms-utils/threaded_drm_event_handler.h"
+#include <mir/graphics/kms/threaded_drm_event_handler.h>
 
 #include <mir/test/doubles/mock_drm.h>
 

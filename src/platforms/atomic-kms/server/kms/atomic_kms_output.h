@@ -18,7 +18,7 @@
 #define MIR_GRAPHICS_GBM_ATOMIC_KMS_ATOMIC_OUTPUT_H_
 
 #include "kms_output.h"
-#include "kms-utils/drm_mode_resources.h"
+#include <mir/graphics/kms/drm_mode_resources.h>
 #include <mir/fd.h>
 #include <mir/synchronised.h>
 
