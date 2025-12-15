@@ -30,7 +30,7 @@
 
 ## Mir 2.25.1
 
-- Bugfix for PkgConf files missing versions [#4554](https://github.com/canonical/mir/pull/4554)\]
+- Bugfix for PkgConf files missing versions [#4554](https://github.com/canonical/mir/pull/4554)
 
 ## Mir 2.25.0
 
