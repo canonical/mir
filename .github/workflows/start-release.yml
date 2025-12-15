@@ -4,10 +4,10 @@ on:
   workflow_dispatch:
     inputs:
       sha:
-        description: 'Commit SHA to release'
+        description: 'Commit-ish to release'
         required: true
         type: string
-        default: 'main'
+        default: 'HEAD'
       version:
         description: 'Release version (e.g., 2.24.0)'
         required: true
@@ -20,6 +20,10 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
+
+    env:
+      DEBFULLNAME: ${{ vars.DEBFULLNAME }}
+      DEBEMAIL: ${{ vars.DEBEMAIL }}
 
     steps:
       - name: Import GPG key
@@ -54,6 +58,39 @@ jobs:
       - name: Create release branch
         run: |
           git checkout -b ${{ steps.version.outputs.release_branch }}
+
+      - name: Bump version across metadata files
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes devscripts
+
+          awk -i inplace '
+            /project\(/ {
+              in_target = 1
+            }
+            in_target && /VERSION/ {
+              # Retain indentation
+              sub(/VERSION .*/, "VERSION ${{ inputs.version }}")
+              in_target = 0
+            }
+            { print }
+          ' CMakeLists.txt
+
+          dch --newversion ${{ inputs.version }}~rc "Begin Release Candidate for ${{ inputs.version }} release"
+
+          awk -i inplace "
+            /^%changelog/ {
+              print
+              print \"* $( date '+%a %b %d %Y' ) ${{ vars.DEBFULLNAME }} <${{ vars.DEBEMAIL }}> - ${{ inputs.version }}~rc-1\"
+              print \"- Begin Release Candidate for ${{ inputs.version }} release\"
+              print \"\"
+              next
+            }
+            { print }
+            " rpm/mir.spec
+
+          git add debian/changelog rpm/mir.spec CMakeLists.txt
+          git commit -m "Begin Release Candidate for ${{ inputs.version }} release"
 
       - name: Create release tag
         run: |
