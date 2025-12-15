@@ -331,6 +331,9 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/miral-shell.desktop
 
 
 %changelog
+* Mon Dec 15 2025 Mir CI Bot <mir-ci-bot@canonical.com> - 2.25.1~rc-1
+- Begin Release Candidate for 2.25.1 release
+
 * Fri Dec 12 2025 Mir CI Bot <mir-ci-bot@canonical.com> - 2.25.0-1
 
 - New upstream release 2.25.0
