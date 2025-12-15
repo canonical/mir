@@ -38,7 +38,7 @@
 %global mirplatforminput_sover 10
 
 Name:           mir
-Version:        2.25.0
+Version:        2.25.1
 Release:        0%{?dist}
 Summary:        Next generation Wayland display server toolkit
 
@@ -331,8 +331,10 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/miral-shell.desktop
 
 
 %changelog
-* Mon Dec 15 2025 Mir CI Bot <mir-ci-bot@canonical.com> - 2.25.1~rc-1
-- Begin Release Candidate for 2.25.1 release
+* Mon Dec 15 2025 Mir CI Bot <mir-ci-bot@canonical.com> - 2.25.1-1
+
+- Bugfix for PkgConf files missing versions [#4554](https://github.com/canonical/mir/pull/4554)
+
 
 * Fri Dec 12 2025 Mir CI Bot <mir-ci-bot@canonical.com> - 2.25.0-1
 

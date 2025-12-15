@@ -1,8 +1,10 @@
-mir (2.25.1~rc) UNRELEASED; urgency=medium
+mir (2.25.1) noble; urgency=medium
 
-  * Begin Release Candidate for 2.25.1 release
+  
+  * Bugfix for PkgConf files missing versions [#4554](https://github.com/canonical/mir/pull/4554)
+  
 
- -- Mir CI Bot <mir-ci-bot@canonical.com>  Mon, 15 Dec 2025 09:58:14 +0000
+ -- Mir CI Bot <mir-ci-bot@canonical.com>  Mon, 15 Dec 2025 15:56:21 +0000
 
 mir (2.25.0) noble; urgency=medium
 
