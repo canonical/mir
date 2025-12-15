@@ -37,11 +37,11 @@ jobs:
     - name: Check out code
       uses: actions/checkout@v5
       with:
-        ref: v${{ steps.get-version.outputs.version }}
+        fetch-depth: 0
 
     - name: Build the tarball
       run: |
-        ./tools/make_release_tarball --skip-checks
+        ./tools/make_release_tarball --skip-checks --release-tag v${{ steps.get-version.outputs.version }}
         gpg --detach-sig --sign --output mir-${{ steps.get-version.outputs.version }}.tar.xz.asc mir-${{ steps.get-version.outputs.version }}.tar.xz
 
     - name: Store the tarball and signature
