@@ -20,7 +20,7 @@
 #include <mir/anonymous_shm_file.h>
 #include <mir/renderer/sw/pixel_source.h>
 #include <mir/graphics/platform.h>
-#include "shm_buffer.h"
+#include <mir/graphics/shm_buffer.h>
 #include <mir/graphics/egl_context_executor.h>
 #include <mir/graphics/egl_extensions.h>
 #include <mir/graphics/egl_error.h>
@@ -34,7 +34,7 @@
 #include <mir/graphics/display_sink.h>
 #include <mir/graphics/drm_formats.h>
 #include <mir/graphics/egl_error.h>
-#include "cpu_copy_output_surface.h"
+#include <mir/graphics/cpu_copy_output_surface.h>
 
 #include <boost/throw_exception.hpp>
 #include <boost/exception/errinfo_errno.hpp>

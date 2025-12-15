@@ -39,7 +39,6 @@ target_link_libraries(
   xkbcommon-x11
   X11
   X11-xcb
-  server_platform_common
   Boost::program_options
 )
 

@@ -15,7 +15,7 @@
  */
 
 #include "gbm_display_allocator.h"
-#include "kms_framebuffer.h"
+#include <mir/graphics/kms_framebuffer.h>
 
 #include <drm_fourcc.h>
 #include <xf86drmMode.h>
