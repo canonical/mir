@@ -17,7 +17,7 @@
 
 #include <mir/test/doubles/stub_buffer_allocator.h>
 #include <mir/test/doubles/stub_buffer.h>
-#include "src/platforms/common/server/shm_buffer.h"
+#include <mir/graphics/shm_buffer.h>
 #include <mir/graphics/egl_context_executor.h>
 #include <mir/test/doubles/null_gl_context.h>
 #include <mir/renderer/sw/pixel_source.h>

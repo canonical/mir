@@ -32,11 +32,11 @@
 #include <mir/console_services.h>
 #include <mir/constexpr_utils.h>
 #include <mir/errno_utils.h>
-#include "one_shot_device_observer.h"
+#include <mir/graphics/one_shot_device_observer.h>
 #include <mir/graphics/egl_error.h>
 #include <mir/graphics/gl_config.h>
 #include <mir/graphics/egl_logger.h>
-#include "quirk_common.h"
+#include <mir/graphics/quirk_common.h>
 
 #include <EGL/egl.h>
 #include <GLES2/gl2.h>

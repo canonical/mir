@@ -20,8 +20,8 @@
 
 #include "display.h"
 #include "egl_output.h"
-#include "kms_framebuffer.h"
-#include "kms_cpu_addressable_display_provider.h"
+#include <mir/graphics/kms_framebuffer.h>
+#include <mir/graphics/kms_cpu_addressable_display_provider.h>
 
 #include <mir/graphics/kms/drm_mode_resources.h>
 #include <mir/graphics/platform.h>

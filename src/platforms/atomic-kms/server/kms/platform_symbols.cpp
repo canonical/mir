@@ -31,7 +31,7 @@
 #include <mir/assert_module_entry_point.h>
 #include <mir/libname.h>
 #include <mir/console_services.h>
-#include "one_shot_device_observer.h"
+#include <mir/graphics/one_shot_device_observer.h>
 #include <mir/graphics/egl_error.h>
 #include <mir/graphics/gl_config.h>
 #include <mir/graphics/egl_logger.h>

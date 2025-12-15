@@ -18,7 +18,7 @@
 #define MIR_GRAPHICS_EGLSTREAM_KMS_OUTPUT_H_
 
 #include <mir/graphics/kms/drm_mode_resources.h>
-#include "kms_framebuffer.h"
+#include <mir/graphics/kms_framebuffer.h>
 #include <mir/geometry/size.h>
 #include <mir/geometry/point.h>
 #include <mir/geometry/displacement.h>

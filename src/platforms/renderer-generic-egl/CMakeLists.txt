@@ -18,7 +18,6 @@ target_link_libraries(
 
   PRIVATE
     mirplatform
-    server_platform_common
     PkgConfig::EGL
     PkgConfig::GLESv2
     PkgConfig::WAYLAND_SERVER

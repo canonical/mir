@@ -16,7 +16,7 @@
 
 #include "atomic_kms_output.h"
 #include <mir/graphics/kms/drm_mode_resources.h>
-#include "kms_framebuffer.h"
+#include <mir/graphics/kms_framebuffer.h>
 #include <mir/graphics/display_configuration.h>
 #include <mir/graphics/drm_formats.h>
 #include <mir/graphics/gamma_curves.h>
