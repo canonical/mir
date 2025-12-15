@@ -1,8 +1,3 @@
-include_directories(
-  ${PROJECT_SOURCE_DIR}/src/include/server
-  ${CMAKE_SOURCE_DIR}
-)
-
 add_compile_definitions(
     MIR_SERVER_PLATFORM_PATH="${MIR_SERVER_PLATFORM_PATH}"
     MIR_SERVER_GRAPHICS_PLATFORM_ABI_STRING="${MIR_SERVER_GRAPHICS_PLATFORM_ABI}"
@@ -53,6 +48,16 @@ add_library(mir-public-test-framework OBJECT
   ${PROJECT_SOURCE_DIR}/tests/include/mir_test_framework/mmap_wrapper.h
   mmap_wrapper.cpp
   window_management_test_harness.cpp ${PROJECT_SOURCE_DIR}/include/test/mir_test_framework/window_management_test_harness.h
+)
+
+# These files include headers from the main source tree
+set_source_files_properties(
+    stubbed_server_configuration.cpp
+    test_display_server.cpp
+    window_management_test_harness.cpp
+    fake_input_device_impl.cpp
+  PROPERTIES
+    INCLUDE_DIRECTORIES ${PROJECT_SOURCE_DIR}
 )
 
 target_link_libraries(mir-public-test-framework
@@ -134,17 +139,17 @@ target_link_libraries(mir-test-input-framework
     mircore
 )
 
-add_library(
-  mirplatforminputstub MODULE)
+add_library(mirplatforminputstub MODULE)
+
 target_link_libraries(mirplatforminputstub
-  mir-test-input-framework
-  mirevdevutilsobjects
-  mir-stub-input-platform
-  mircommon
+  PRIVATE
+    mir-test-input-framework
+    mirevdevutilsobjects
+    mir-stub-input-platform
+    mircommon
 )
 
-set_target_properties(
-  mirplatforminputstub PROPERTIES
+set_target_properties(mirplatforminputstub PROPERTIES
   LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/server-modules
   OUTPUT_NAME input-stub
   PREFIX ""
@@ -155,26 +160,22 @@ set_target_properties(
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/symbols-server.map.in
     ${CMAKE_CURRENT_BINARY_DIR}/symbols-server.map)
 set(server_symbol_map ${CMAKE_CURRENT_BINARY_DIR}/symbols-server.map)
-add_library(
-  mirplatformgraphicsstub MODULE
+add_library(mirplatformgraphicsstub MODULE
 
   platform_graphics_dummy.cpp
   stubbed_graphics_platform.cpp
 )
 
-target_link_libraries(
-  mirplatformgraphicsstub
-
+target_link_libraries(mirplatformgraphicsstub
   PRIVATE
-  mir-test-static
-  mir-test-framework-static
-  mir-test-doubles-static
+    mir-test-static
+    mir-test-framework-static
+    mir-test-doubles-static
   PUBLIC
-  PkgConfig::UMOCKDEV
+    PkgConfig::UMOCKDEV
 )
 
-set_target_properties(
-  mirplatformgraphicsstub PROPERTIES;
+set_target_properties(mirplatformgraphicsstub PROPERTIES
   LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/server-modules
   OUTPUT_NAME graphics-dummy
   PREFIX ""
@@ -185,19 +186,16 @@ set_target_properties(
 install(TARGETS mirplatformgraphicsstub LIBRARY DESTINATION ${MIR_SERVER_PLATFORM_PATH})
 install(TARGETS mirplatforminputstub LIBRARY DESTINATION ${MIR_SERVER_PLATFORM_PATH})
 
-add_library(
-  mirplatformgraphicsthrow MODULE
+add_library(mirplatformgraphicsthrow MODULE
   platform_graphics_throw.cpp
 )
 
-target_link_libraries(
-  mirplatformgraphicsthrow
-
-  mirplatform
+target_link_libraries(mirplatformgraphicsthrow
+  PRIVATE
+    mirplatform
 )
 
-set_target_properties(
-  mirplatformgraphicsthrow PROPERTIES;
+set_target_properties(mirplatformgraphicsthrow PROPERTIES
   LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/server-modules
   OUTPUT_NAME graphics-throw
   PREFIX ""
