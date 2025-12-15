@@ -33,6 +33,7 @@
 #include <mir/test/doubles/mock_input_device_registry.h>
 #include "src/platforms/evdev/platform.h"
 #include "src/platforms/x11/input/input_platform.h"
+#include "src/platforms/evdev-rs/platform.h"
 #include <mir/test/fake_shared.h>
 
 namespace mt = mir::test;
@@ -40,6 +41,7 @@ namespace mtd = mt::doubles;
 namespace mi = mir::input;
 namespace mr = mir::report;
 namespace mtf = mir_test_framework;
+namespace miers = mir::input::evdev_rs;
 
 using namespace ::testing;
 
@@ -185,3 +187,22 @@ TEST_F(InputPlatformProbe, allows_forcing_stub_input_platform)
             *stub_prober_report);
     EXPECT_THAT(platform, OfPtrType<mtf::StubInputPlatform>());
 }
+
+#ifdef MIR_ENABLE_EVDEV_RS
+TEST_F(InputPlatformProbe, allows_forcing_of_evdev_rs_platform)
+{
+    ON_CALL(mock_options, is_set(StrEq(platform_input_lib))).WillByDefault(Return(true));
+    platform_input_lib_value = "mir:evdev-input-rs";
+    platform_input_lib_value_as_any = platform_input_lib_value;
+    auto const platform =
+        mi::probe_input_platforms(
+            mock_options,
+            mt::fake_shared(stub_emergency),
+            mt::fake_shared(mock_registry),
+            null_console,
+            mr::null_input_report(),
+            empty_loaded_module_list,
+            *stub_prober_report);
+    EXPECT_THAT(platform, OfPtrType<miers::Platform>());
+}
+#endif

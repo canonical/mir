@@ -249,6 +249,9 @@ set(MIR_ENABLE_RUST OFF CACHE BOOL "Enable Rust support")
 if (MIR_ENABLE_RUST)
   include(cmake/RustLibrary.cmake)
   add_compile_definitions(MIR_ENABLE_RUST)
+
+  option(MIR_ENABLE_EVDEV_RS "Enable the experimental evdev-rs platform" ON)
+  add_compile_definitions(MIR_ENABLE_EVDEV_RS)
 endif()
 
 pkg_check_modules(GLM glm)

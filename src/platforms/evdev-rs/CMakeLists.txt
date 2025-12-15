@@ -10,6 +10,7 @@ target_link_libraries(mirplatforminputevdevrsobjects
   mirplatform
   mircommon
   mircore
+  Boost::program_options
 )
 
 add_library(mirplatforminputevdevrs MODULE
