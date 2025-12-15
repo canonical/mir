@@ -68,9 +68,13 @@ jobs:
           sudo apt-get update
           sudo apt-get install --yes devscripts
 
+          # Ensure there's a matching "Begin development" entry
+          dch --newversion "${{ steps.version.outputs.version }}~dev" \
+            "Begin development for ${{ steps.version.outputs.version }} release"
+
           # Remove "Begin" lines and append release notes
           awk --include=inplace '
-            /^mir \(${{ steps.version.outputs.version }}~rc\)/ {
+            /^mir \(${{ steps.version.outputs.version }}~dev\)/ {
               in_target = 1
               print
               print ""
@@ -80,13 +84,14 @@ jobs:
               while ((getline line < "/tmp/release-notes-section.md") > 0) {
                 gsub(/^- /, "* ", line)
                 gsub(/^      - /, "      . ", line)
-                print "  " line
+                if (line != "") print "  " line
+                else print ""
               }
               close("/tmp/release-notes-section.md")
               in_target = 0
               print ""
             }
-            in_target && (/^$/ || /Begin development/ || /Begin Release Candidate/) { next }
+            in_target && (/^$/ || /Begin development/) { next }
             { print }
           ' debian/changelog
 
