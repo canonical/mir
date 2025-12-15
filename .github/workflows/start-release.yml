@@ -94,7 +94,7 @@ jobs:
 
       - name: Create release tag
         run: |
-          git tag --annotate "v${{ inputs.version }}-rc" --message "Release candidate ${{ inputs.version }}" --sign "${{ inputs.sha }}"
+          git tag --annotate "v${{ inputs.version }}-rc" --message "Release candidate ${{ inputs.version }}" --sign
 
       - name: Find previous release tag
         id: previous_tag
