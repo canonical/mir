@@ -37,7 +37,6 @@ target_link_libraries(
   mirplatformgraphicseglstreamkmsobjects
   mirplatform
   server_platform_common
-  kms_utils
   Boost::program_options
   PkgConfig::DRM
   PkgConfig::EGL

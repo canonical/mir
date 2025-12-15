@@ -23,6 +23,5 @@ target_link_libraries(
   mirsharedgbmservercommon-static
 
   server_platform_common
-  kms_utils
   mirplatform
 )
