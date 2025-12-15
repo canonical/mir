@@ -55,10 +55,6 @@ jobs:
             exit 1
           fi
 
-      - name: Create release branch
-        run: |
-          git checkout -b ${{ steps.version.outputs.release_branch }}
-
       - name: Bump version across metadata files
         run: |
           sudo apt-get update
@@ -103,9 +99,9 @@ jobs:
           PREVIOUS_TAG=$(git describe --abbrev=0 --exclude="*-rc" --exclude="*-dev" "${{ inputs.sha }}" 2>/dev/null || echo "")
           echo "tag=$PREVIOUS_TAG" | tee --append $GITHUB_OUTPUT
 
-      - name: Push the release branch
+      - name: Push to the release branch
         run: |
-          git push origin "${{ steps.version.outputs.release_branch }}"
+          git push origin "HEAD:${{ steps.version.outputs.release_branch }}"
 
       - name: Create draft GitHub release
         uses: actions/github-script@v7
