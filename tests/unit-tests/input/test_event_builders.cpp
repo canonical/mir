@@ -15,7 +15,6 @@
  */
 
 #include <mir/events/event_builders.h>
-#include <mir/events/event_private.h> // only needed to validate motion_up/down mapping
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

@@ -9,6 +9,9 @@ crate-type = ["staticlib"]
 
 [dependencies]
 cxx.workspace = true
+input.workspace = true
+libc.workspace = true
+nix.workspace = true
 
 [build-dependencies]
 cxx-build.workspace = true

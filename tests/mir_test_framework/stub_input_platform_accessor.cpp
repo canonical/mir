@@ -73,14 +73,11 @@ void mir_test_framework::StubInputPlatformAccessor::remove(std::shared_ptr<mir::
         BOOST_THROW_EXCEPTION(std::runtime_error("No stub input platform available"));
 
     std::lock_guard lk{StaticDeviceStore::device_store_guard};
-    StaticDeviceStore::device_store.erase(
-        std::remove_if(begin(StaticDeviceStore::device_store),
-                       end(StaticDeviceStore::device_store),
-                       [dev](auto weak_dev)
-                       {
-                           return (weak_dev.lock() == dev);
-                       }),
-        end(StaticDeviceStore::device_store));
+    std::erase_if(StaticDeviceStore::device_store,
+        [dev](auto const& weak_dev)
+        {
+            return (weak_dev.lock() == dev);
+        });
     input_platform->remove(dev);
 }
 

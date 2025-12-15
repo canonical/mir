@@ -1,6 +1,5 @@
 include_directories(
   ${PROJECT_SOURCE_DIR}/src/include/server
-  ${PROJECT_SOURCE_DIR}/include/renderer
 )
 
 set(MIRAL_ABI 7)
@@ -240,8 +239,7 @@ add_custom_target(
             --library-name miral
             --version ${MIRAL_VERSION}
             --symbols-map-path="${CMAKE_CURRENT_SOURCE_DIR}/symbols.map"
-            --external-headers-directory="${PROJECT_SOURCE_DIR}/include/miral"
-            --include-dirs "$<JOIN:$<TARGET_PROPERTY:miral,INCLUDE_DIRECTORIES>,:>"
+            --include-dirs "$<JOIN:$<TARGET_PROPERTY:miral,INTERFACE_INCLUDE_DIRECTORIES>,:>"
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
 
 add_custom_target(
@@ -251,7 +249,7 @@ add_custom_target(
         --version ${MIRAL_VERSION}
         --symbols-map-path="${CMAKE_CURRENT_SOURCE_DIR}/symbols.map"
         --external-headers-directory="${PROJECT_SOURCE_DIR}/include/miral"
-        --include-dirs "$<JOIN:$<TARGET_PROPERTY:miral,INCLUDE_DIRECTORIES>,:>"
+        --include-dirs "$<JOIN:$<TARGET_PROPERTY:miral,INTERFACE_INCLUDE_DIRECTORIES>,:>"
         --diff
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
 

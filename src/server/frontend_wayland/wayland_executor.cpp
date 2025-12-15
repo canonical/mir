@@ -23,6 +23,7 @@
 
 #include <boost/throw_exception.hpp>
 
+#include <atomic>
 #include <cstring>
 #include <deque>
 #include <functional>
@@ -72,10 +73,13 @@ public:
             return;
         }
 
-        std::lock_guard lock{mutex};
         if (state == ExecutionState::Running)
         {
-            workqueue.emplace_back(std::move(work));
+            std::lock_guard lock{mutex};
+            if (state == ExecutionState::Running)
+            {
+                workqueue.emplace_back(std::move(work));
+            }
         }
         // If we've been terminated then drop the work on the floor, letting the
         // std::function destructor clean up any necessary state.
@@ -132,7 +136,14 @@ public:
 private:
     static thread_local bool on_wayland_thread;
     std::mutex mutex;
-    ExecutionState state{ExecutionState::Running};
+    /*
+     * `state` is atomic because it is used in a double-checked locking pattern in `enqueue()`.
+     * The first check of `state` (outside the mutex) allows fast-path rejection of work when
+     * the executor is not running, avoiding unnecessary locking. The second check (inside the mutex)
+     * ensures correctness in the presence of concurrent state changes. This pattern requires `state`
+     * to be atomic to prevent data races and ensure thread safety.
+     */
+    std::atomic<ExecutionState> state{ExecutionState::Running};
     wl_event_loop* const loop;
     std::deque<std::function<void()>> workqueue;
 };

@@ -1,5 +1,5 @@
 # We need MIRPLATFORM_ABI in both libmirplatform and the platform implementations.
-set(MIRPLATFORM_ABI 33)
+set(MIRPLATFORM_ABI 34)
 
 set(MIRAL_VERSION_MAJOR 5)
 set(MIRAL_VERSION_MINOR 6)
@@ -24,9 +24,6 @@ add_subdirectory(wayland/)
 add_subdirectory(server/)
 add_subdirectory(miral/)
 add_subdirectory(miroil/)
-add_subdirectory(renderer/)
-add_subdirectory(renderers/)
-add_subdirectory(gl/)
 
 add_executable(wrapper wrapper.c)
 target_compile_definitions(wrapper PUBLIC
@@ -36,7 +33,6 @@ target_compile_definitions(wrapper PUBLIC
 
 set(MIR_SERVER_REFERENCES ${MIR_SERVER_REFERENCES} PARENT_SCOPE)
 set(MIR_SERVER_PLATFORM_PATH ${MIR_SERVER_PLATFORM_PATH} PARENT_SCOPE)
-set(MIRSERVER_INCLUDE_DIRS ${MIRSERVER_INCLUDE_DIRS} PARENT_SCOPE)
 
 # We need the ABI versions in the tests
 set(MIR_SERVER_GRAPHICS_PLATFORM_ABI ${MIR_SERVER_GRAPHICS_PLATFORM_ABI} PARENT_SCOPE)

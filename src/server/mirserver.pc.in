@@ -4,7 +4,7 @@ includedir=@PKGCONFIG_INCLUDEDIR@/mirserver
 
 Name: mirserver
 Description: Mir server library
-Version: @MIR_VERSION@
+Version: @PROJECT_VERSION@
 Requires.private: mircommon
 Requires: mirplatform uuid mircore
 Libs: -L${libdir} -lmirserver

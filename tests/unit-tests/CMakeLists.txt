@@ -23,9 +23,7 @@ endif()
 include_directories(
   ${CMAKE_SOURCE_DIR}
 
-  ${PROJECT_SOURCE_DIR}/include/renderers/sw
   ${PROJECT_SOURCE_DIR}/src/include/server
-  ${PROJECT_SOURCE_DIR}/src/include/gl
   ${CMAKE_BINARY_DIR}/src/server/console
 )
 

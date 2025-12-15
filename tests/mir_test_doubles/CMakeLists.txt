@@ -1,10 +1,3 @@
-include_directories(
-  ${PROJECT_SOURCE_DIR}/include/renderers/sw
-  ${PROJECT_SOURCE_DIR}/src/include/server
-
-  ${CMAKE_SOURCE_DIR}
-)
-
 add_library(mir-protected-test-doubles OBJECT
   mock_input_device.cpp
   triggered_main_loop.cpp
@@ -25,6 +18,10 @@ add_library(mir-protected-test-doubles OBJECT
   ${PROJECT_SOURCE_DIR}/tests/include/mir/test/doubles/mock_output_surface.h
   stub_notifying_alarm.cpp
   queued_alarm_stub_main_loop.cpp
+)
+
+set_source_files_properties(stub_buffer_allocator.cpp PROPERTIES
+  INCLUDE_DIRECTORIES "${CMAKE_SOURCE_DIR}"
 )
 
 target_link_libraries(mir-protected-test-doubles
@@ -71,22 +68,26 @@ set(
 )
 
 if (MIR_BUILD_PLATFORM_X11)
-  include_directories(
-          ${PROJECT_SOURCE_DIR}/src/platforms/gbm-kms/server
-  )
   list(APPEND MIR_TEST_DOUBLES_PLATFORM_SRCS
     ${CMAKE_CURRENT_SOURCE_DIR}/mock_x11.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/mock_xkb.cpp
   )
+  set_source_files_properties(
+      ${CMAKE_CURRENT_SOURCE_DIR}/mock_x11.cpp
+      ${CMAKE_CURRENT_SOURCE_DIR}/mock_xkb.cpp
+    PROPERTIES
+      INCLUDE_DIRECTORIES ${PROJECT_SOURCE_DIR}/src/platforms/gbm-kms/server
+  )
 endif()
 
 if (MIR_BUILD_PLATFORM_GBM_KMS OR MIR_BUILD_PLATFORM_ATOMIC_KMS)
-  include_directories(
-          ${PROJECT_SOURCE_DIR}/src/platforms/gbm-kms/server
-    ${CMAKE_SOURCE_DIR}
-  )
   list(APPEND MIR_TEST_DOUBLES_PLATFORM_SRCS
     ${CMAKE_CURRENT_SOURCE_DIR}/mock_gbm.cpp
+  )
+  set_source_files_properties(
+      ${CMAKE_CURRENT_SOURCE_DIR}/mock_gbm.cpp
+    PROPERTIES
+      INCLUDE_DIRECTORIES "${PROJECT_SOURCE_DIR}/src/platforms/gbm-kms/server"
   )
 endif()
 

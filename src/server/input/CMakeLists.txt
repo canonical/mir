@@ -1,4 +1,3 @@
-include_directories(${PROJECT_SOURCE_DIR}/include/renderers/sw)
 set(
   INPUT_SOURCES
 
@@ -44,6 +43,13 @@ add_library(
   mirinput OBJECT
 
   ${INPUT_SOURCES}
+)
+
+target_include_directories(mirinput
+  PUBLIC
+    ${PROJECT_SOURCE_DIR}/include/server
+  PRIVATE
+    ${PROJECT_SOURCE_DIR}/src/include/server
 )
 
 target_link_libraries(mirinput

@@ -68,7 +68,7 @@ if (CMAKE_COMPILER_IS_GNUCXX   AND  # clang generates slightly different symbols
     if (MIR_DPKG_GENSYMBOLS)
         add_custom_target(check-miroil-symbols ALL
             DEPENDS miroil ${PROJECT_SOURCE_DIR}/debian/libmiroil${MIROIL_ABI}.symbols
-            COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/check-and-update-debian-symbols.py ${CMAKE_LIBRARY_OUTPUT_DIRECTORY} miroil ${MIR_VERSION} ${MIROIL_ABI} ${MIROIL_VERSION_MINOR}
+            COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/check-and-update-debian-symbols.py ${CMAKE_LIBRARY_OUTPUT_DIRECTORY} miroil ${PROJECT_VERSION} ${MIROIL_ABI} ${MIROIL_VERSION_MINOR}
             WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
             VERBATIM)
     endif()
@@ -92,8 +92,7 @@ add_custom_target(
         --library-name miroil
         --version ${MIROIL_VERSION}
         --symbols-map-path="${CMAKE_CURRENT_SOURCE_DIR}/symbols.map"
-        --external-headers-directory="${PROJECT_SOURCE_DIR}/include/miroil"
-        --include-dirs "$<JOIN:$<TARGET_PROPERTY:miroil,INCLUDE_DIRECTORIES>,:>"
+        --include-dirs "$<JOIN:$<TARGET_PROPERTY:miroil,INTERFACE_INCLUDE_DIRECTORIES>,:>"
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
 
 add_custom_target(
@@ -102,8 +101,7 @@ add_custom_target(
         --library-name miroil
         --version ${MIROIL_VERSION}
         --symbols-map-path="${CMAKE_CURRENT_SOURCE_DIR}/symbols.map"
-        --external-headers-directory="${PROJECT_SOURCE_DIR}/include/miroil"
-        --include-dirs "$<JOIN:$<TARGET_PROPERTY:miroil,INCLUDE_DIRECTORIES>,:>"
+        --include-dirs "$<JOIN:$<TARGET_PROPERTY:miroil,INTERFACE_INCLUDE_DIRECTORIES>,:>"
         --diff
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
 

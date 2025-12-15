@@ -10,6 +10,7 @@ add_library(mircore SHARED
     depth_layer.cpp
     geometry/rectangles.cpp
     input/mousekeys_keymap.cpp
+    report_exception.cpp ${PROJECT_SOURCE_DIR}/include/core/mir/report_exception.h
     ${PROJECT_SOURCE_DIR}/include/core/mir/anonymous_shm_file.h
     ${PROJECT_SOURCE_DIR}/include/core/mir/int_wrapper.h
     ${PROJECT_SOURCE_DIR}/include/core/mir/optional_value.h

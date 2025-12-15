@@ -60,7 +60,7 @@ void FdManager::unregister_handler(void const* owner)
     else
     {
         // Remove all entries with same owner from backlog
-        backlog.erase(remove_if(begin(backlog), end(backlog), [&](auto& info){ return info.owner == owner; }), end(backlog));
+        std::erase_if(backlog, [&](auto& info){ return info.owner == owner; });
     }
 }
 

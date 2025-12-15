@@ -4,10 +4,6 @@ add_compile_definitions(MIR_LOG_COMPONENT_FALLBACK="mircommon")
 
 set(MIR_COMMON_SOURCES)
 
-include_directories(
-  ${PROJECT_SOURCE_DIR}/include/common
-)
-
 add_subdirectory(events)
 add_subdirectory(logging)
 add_subdirectory(report/lttng)
@@ -61,6 +57,8 @@ add_library(mircommon SHARED
 target_include_directories(mircommon
   PUBLIC
     ${PROJECT_SOURCE_DIR}/include/common
+  PRIVATE
+    ${PROJECT_SOURCE_DIR}/src/include/common
 )
 
 target_link_libraries(mircommon
@@ -122,21 +120,17 @@ add_custom_target(
     generate-mircommon-symbols-map
     COMMAND ${PROJECT_SOURCE_DIR}/tools/symbols_map_generator/main.py
         --library-name mir_common
-        --version ${MIR_VERSION_MAJOR}.${MIR_VERSION_MINOR}
+        --version ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
         --symbols-map-path="${CMAKE_CURRENT_SOURCE_DIR}/symbols.map"
-        --external-headers-directory="${PROJECT_SOURCE_DIR}/include/common"
-        --internal-headers-directory="${PROJECT_SOURCE_DIR}/src/include/common"
-        --include-dirs="$<JOIN:$<TARGET_PROPERTY:mirserver,INCLUDE_DIRECTORIES>,:>"
+        --include-dirs="$<JOIN:$<TARGET_PROPERTY:mircommon,INTERFACE_INCLUDE_DIRECTORIES>,:>"
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
 
 add_custom_target(
     check-mircommon-symbols-map
     COMMAND ${PROJECT_SOURCE_DIR}/tools/symbols_map_generator/main.py
         --library-name mir_common
-        --version ${MIR_VERSION_MAJOR}.${MIR_VERSION_MINOR}
+        --version ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
         --symbols-map-path="${CMAKE_CURRENT_SOURCE_DIR}/symbols.map"
-        --external-headers-directory="${PROJECT_SOURCE_DIR}/include/common"
-        --internal-headers-directory="${PROJECT_SOURCE_DIR}/src/include/common"
-        --include-dirs="$<JOIN:$<TARGET_PROPERTY:mirserver,INCLUDE_DIRECTORIES>,:>"
+        --include-dirs="$<JOIN:$<TARGET_PROPERTY:mircommon,INTERFACE_INCLUDE_DIRECTORIES>,:>"
         --diff
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")

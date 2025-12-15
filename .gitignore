@@ -15,3 +15,4 @@ __pycache__/
 
 tools/bot-data.tar.xz
 _codeql_detected_source_root
+target/

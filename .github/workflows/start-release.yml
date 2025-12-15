@@ -1,0 +1,109 @@
+name: Start Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: 'Commit-ish to release'
+        required: true
+        type: string
+        default: 'HEAD'
+      version:
+        description: 'Release version (e.g., 2.24.0)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    env:
+      DEBFULLNAME: ${{ vars.DEBFULLNAME }}
+      DEBEMAIL: ${{ vars.DEBEMAIL }}
+
+    steps:
+      - name: Import GPG key
+        uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          gpg_private_key: ${{ secrets.MIR_BOT_GPG_PRIVATE_KEY }}
+
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.sha }}
+
+      - name: Configure git user
+        run: |
+          git config user.name "${{ vars.DEBFULLNAME }}"
+          git config user.email "${{ vars.DEBEMAIL }}"
+
+      - name: Validate version and extract components
+        id: version
+        run: |
+          if [[ "${{ inputs.version }}" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+            echo "major=${BASH_REMATCH[1]}" | tee --append $GITHUB_OUTPUT
+            echo "minor=${BASH_REMATCH[2]}" | tee --append $GITHUB_OUTPUT
+            echo "patch=${BASH_REMATCH[3]}" | tee --append $GITHUB_OUTPUT
+            echo "release_branch=release/${BASH_REMATCH[1]}.${BASH_REMATCH[2]}" | tee --append $GITHUB_OUTPUT
+          else
+            echo ":error: Version '${{ inputs.version }}' is not in the format X.Y.Z"
+            exit 1
+          fi
+
+      - name: Update CMake version
+        run: |
+          sed -E 's/(VERSION\s+)[0-9]+\.[0-9]+\.[0-9]+/\1${{ inputs.version }}/' --inplace CMakeLists.txt
+
+          if [ -n "$(git status --porcelain CMakeLists.txt)" ]; then
+            git add CMakeLists.txt
+            git commit -m "Begin Release Candidate for ${{ inputs.version }} release"
+          fi
+
+      - name: Create release tag
+        run: |
+          git tag --annotate "v${{ inputs.version }}-rc" --message "Release candidate ${{ inputs.version }}" --sign
+
+      - name: Find previous release tag
+        id: previous_tag
+        run: |
+          # Get the most recent tag excluding -rc and -dev tags
+          PREVIOUS_TAG=$(git describe --abbrev=0 --exclude="*-rc" --exclude="*-dev" "${{ inputs.sha }}" 2>/dev/null || echo "")
+          echo "tag=$PREVIOUS_TAG" | tee --append $GITHUB_OUTPUT
+
+      - name: Push to the release branch
+        run: |
+          git push origin "HEAD:${{ steps.version.outputs.release_branch }}"
+
+      - name: Create draft GitHub release
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const generatedNotes = await github.rest.repos.generateReleaseNotes({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag_name: `v${{ inputs.version }}`,
+              target_commitish: `${{ steps.version.outputs.release_branch }}`,
+              previous_tag_name: `${{ steps.previous_tag.outputs.tag }}`
+            });
+
+            const release = await github.rest.repos.createRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag_name: `v${{ inputs.version }}`,
+              target_commitish: `${{ steps.version.outputs.release_branch }}`,
+              name: `Mir ${{ inputs.version }}`,
+              body: generatedNotes.data.body,
+              draft: true,
+              prerelease: false
+            });
+
+            console.log(`:notice: Created draft release ${release.data.html_url}`);
+
+      - name: Push the Release Candidate tag
+        run: |
+          git push origin "v${{ inputs.version }}-rc"

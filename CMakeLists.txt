@@ -19,22 +19,21 @@ cmake_policy(SET CMP0022 NEW)
 
 set(CMAKE_GCOV gcov)
 
-project(Mir)
+project(
+  Mir
+  VERSION 2.26.0
+  DESCRIPTION "Mir compositor library"
+  LANGUAGES C CXX
+)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
-set(MIR_VERSION_MAJOR 2)
-set(MIR_VERSION_MINOR 23)
-set(MIR_VERSION_PATCH 0)
-
-add_compile_definitions(MIR_VERSION_MAJOR=${MIR_VERSION_MAJOR})
-add_compile_definitions(MIR_VERSION_MINOR=${MIR_VERSION_MINOR})
-add_compile_definitions(MIR_VERSION_MICRO=${MIR_VERSION_PATCH})
+add_compile_definitions(MIR_VERSION_MAJOR=${PROJECT_VERSION_MAJOR})
+add_compile_definitions(MIR_VERSION_MINOR=${PROJECT_VERSION_MINOR})
+add_compile_definitions(MIR_VERSION_MICRO=${PROJECT_VERSION_PATCH})
 add_compile_definitions(_GNU_SOURCE)
 add_compile_definitions(_FILE_OFFSET_BITS=64)
-
-set(MIR_VERSION ${MIR_VERSION_MAJOR}.${MIR_VERSION_MINOR}.${MIR_VERSION_PATCH})
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 execute_process(

@@ -1,9 +1,6 @@
 # Force out of source build
 %undefine __cmake_in_source_build
 
-# Use ccache
-%bcond ccache 0
-
 # Use clang
 %bcond clang 0
 
@@ -31,14 +28,14 @@
 %global mircommon_sover 11
 %global mircore_sover 2
 %global miroil_sover 8
-%global mirplatform_sover 33
+%global mirplatform_sover 34
 %global mirserver_sover 66
 %global mirwayland_sover 5
 %global mirplatformgraphics_sover 23
 %global mirplatforminput_sover 10
 
 Name:           mir
-Version:        2.23.0
+Version:        2.26.0~dev
 Release:        0%{?dist}
 Summary:        Next generation Wayland display server toolkit
 
@@ -47,9 +44,6 @@ License:        (GPL-2.0-only or GPL-3.0-only) and (LGPL-2.1-only or LGPL-3.0-on
 URL:            https://canonical.com/mir
 Source0:        https://github.com/canonical/%{name}/releases/download/v%{version}/%{name}-%{version}.tar.xz
 
-%if %{with ccache}
-BuildRequires:  ccache
-%endif
 %if %{with clang}
 BuildRequires:  clang
 %else
@@ -233,7 +227,6 @@ Mir unit and integration tests.
 
 %conf
 %cmake	-GNinja \
-	%{?with_ccache:-DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache} \
 	%{?with_debug:-DCMAKE_BUILD_TYPE=Debug} \
 	%{!?with_debug:-DMIR_FATAL_COMPILE_WARNINGS=OFF} \
 	%{?with_lld:-DMIR_USE_LD=lld} \
@@ -331,6 +324,12 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/miral-shell.desktop
 
 
 %changelog
+* Thu Dec 11 2025 Michał Sawicz <michal.sawicz@canonical.com> - 2.26.0~dev-1
+- Begin development for 2.26.0 release
+
+* Wed Dec 10 2025 Michał Sawicz <michal.sawicz@canonical.com> - 2.25.0~dev-1
+- Begin development for 2.25.0 release
+
 * Fri Nov 21 2025 Michał Sawicz <michal.sawicz@canonical.com> - 2.23.0-1
 - Update to 2.23.0
 

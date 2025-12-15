@@ -43,15 +43,12 @@ namespace geom = mir::geometry;
 mi::SeatInputDeviceTracker::SeatInputDeviceTracker(std::shared_ptr<InputDispatcher> const& dispatcher,
                                                    std::shared_ptr<TouchVisualizer> const& touch_visualizer,
                                                    std::shared_ptr<CursorObserver> const& cursor_observer,
-                                                   std::shared_ptr<CursorObserverMultiplexer> const& cursor_observer_multiplexer,
                                                    std::shared_ptr<KeyMapper> const& key_mapper,
                                                    std::shared_ptr<time::Clock> const& clock,
                                                    std::shared_ptr<SeatObserver> const& observer)
     : dispatcher{dispatcher}, touch_visualizer{touch_visualizer}, cursor_observer{cursor_observer},
-      cursor_observer_multiplexer{cursor_observer_multiplexer}, key_mapper{key_mapper}, clock{clock},
-      observer{observer}, buttons{0}
+      key_mapper{key_mapper}, clock{clock}, observer{observer}, buttons{0}
 {
-    cursor_observer_multiplexer->register_interest(cursor_observer);
 }
 
 void mi::SeatInputDeviceTracker::add_device(MirInputDeviceId id)
@@ -262,7 +259,7 @@ void mi::SeatInputDeviceTracker::update_cursor(MirPointerEvent const* event)
 
     confine_pointer();
 
-    cursor_observer_multiplexer->cursor_moved_to(cursor_x, cursor_y);
+    cursor_observer->cursor_moved_to(cursor_x, cursor_y);
 }
 
 mir::EventUPtr mi::SeatInputDeviceTracker::create_device_state() const
@@ -332,7 +329,7 @@ void mi::SeatInputDeviceTracker::DeviceData::update_scan_codes(MirKeyboardEvent 
     if (action == mir_keyboard_action_down)
         scan_codes.push_back(scan_code);
     else if (action == mir_keyboard_action_up)
-        scan_codes.erase(remove(begin(scan_codes), end(scan_codes), scan_code), end(scan_codes));
+        std::erase(scan_codes, scan_code);
 }
 
 void mi::SeatInputDeviceTracker::set_key_state(MirInputDeviceId id, std::vector<uint32_t> const& scan_codes)
@@ -378,7 +375,7 @@ void mir::input::SeatInputDeviceTracker::add_pointing_device()
 {
     if (!num_pointing_devices++)
     {
-        cursor_observer_multiplexer->pointer_usable();
+        cursor_observer->pointer_usable();
     }
 }
 
@@ -386,7 +383,7 @@ void mir::input::SeatInputDeviceTracker::remove_pointing_device()
 {
     if (!--num_pointing_devices)
     {
-        cursor_observer_multiplexer->pointer_unusable();
+        cursor_observer->pointer_unusable();
     }
 }
 

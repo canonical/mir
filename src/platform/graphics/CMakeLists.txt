@@ -102,14 +102,11 @@ add_custom_command(
        ${DRM_MODIFIERS_FILE}"
 )
 
-target_include_directories(
-  mirplatformgraphicscommon
+target_include_directories(mirplatformgraphicscommon
 
   PUBLIC
     ${CMAKE_CURRENT_BINARY_DIR}
     ${PROJECT_SOURCE_DIR}/include/platform
-  PRIVATE
-    ${PROJECT_SOURCE_DIR}/include/renderers/gl
 )
 
 target_link_libraries(

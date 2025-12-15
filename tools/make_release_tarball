@@ -25,12 +25,18 @@ then
 fi
 
 set -e
+TAG=$( git describe --tags --abbrev=0 "${RELEASE_TAG}")
+if [[ "${TAG}" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)(-(dev|rc))?$ ]]; then
+  VERSION_MAJOR=${BASH_REMATCH[1]}
+  VERSION_MINOR=${BASH_REMATCH[2]}
+  VERSION_PATCH=${BASH_REMATCH[3]}
+  VERSION_SUFFIX=${BASH_REMATCH[5]}
+else
+  echo "Error: Could not determine version for ${RELEASE_TAG} )"
+  exit 1
+fi
 
-VERSION_MAJOR=$(git show ${RELEASE_TAG}:CMakeLists.txt | grep set.MIR_VERSION_MAJOR | cut -f2 -d' ' | tr -d \))
-VERSION_MINOR=$(git show ${RELEASE_TAG}:CMakeLists.txt | grep set.MIR_VERSION_MINOR | cut -f2 -d' ' | tr -d \))
-VERSION_PATCH=$(git show ${RELEASE_TAG}:CMakeLists.txt | grep set.MIR_VERSION_PATCH | cut -f2 -d' ' | tr -d \))
-
-VERSIONED_NAME=mir-$VERSION_MAJOR.$VERSION_MINOR.$VERSION_PATCH
+VERSIONED_NAME=mir-$VERSION_MAJOR.$VERSION_MINOR.$VERSION_PATCH${VERSION_SUFFIX:+~$VERSION_SUFFIX}
 
 SCRATCH_DIR=$(mktemp -d)
 BUILD_DIR=$(mktemp -d)

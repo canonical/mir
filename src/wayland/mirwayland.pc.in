@@ -4,7 +4,7 @@ includedir=@PKGCONFIG_INCLUDEDIR@/mirwayland
 
 Name: mirwayland
 Description: Mir Wayland library
-Version: @MIR_VERSION@
+Version: @PROJECT_VERSION@
 Requires: mircore wayland-server
 Libs: -L${libdir} -lmirwayland
 Cflags: -I${includedir}

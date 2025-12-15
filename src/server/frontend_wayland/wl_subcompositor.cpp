@@ -20,7 +20,9 @@
 #include "wl_surface.h"
 
 #include <mir/wayland/client.h>
+#include <mir/wayland/protocol_error.h>
 #include <mir/geometry/rectangle.h>
+#include <boost/throw_exception.hpp>
 
 namespace mf = mir::frontend;
 namespace geom = mir::geometry;
@@ -137,14 +139,60 @@ void mf::WlSubsurface::set_position(int32_t x, int32_t y)
 
 void mf::WlSubsurface::place_above(struct wl_resource* sibling)
 {
-    (void)sibling;
-    log_warning("TODO: wl_subsurface.place_above not implemented");
+    if (!parent)
+    {
+        // Parent has been destroyed, ignore
+        return;
+    }
+
+    WlSurface* sibling_surface = WlSurface::from(sibling);
+
+    if (sibling_surface == surface)
+    {
+        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+            resource,
+            mw::Subsurface::Error::bad_surface,
+            "wl_subsurface.place_above: sibling cannot be the subsurface itself"));
+    }
+
+    if (sibling_surface != &parent.value() && !parent.value().has_subsurface_with_surface(sibling_surface))
+    {
+        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+            resource,
+            mw::Subsurface::Error::bad_surface,
+            "wl_subsurface.place_above: sibling must be the parent or a sibling subsurface"));
+    }
+
+    parent.value().reorder_subsurface(this, sibling_surface, WlSurface::SubsurfacePlacement::above);
 }
 
 void mf::WlSubsurface::place_below(struct wl_resource* sibling)
 {
-    (void)sibling;
-    log_warning("TODO: wl_subsurface.place_below not implemented");
+    if (!parent)
+    {
+        // Parent has been destroyed, ignore
+        return;
+    }
+
+    WlSurface* sibling_surface = WlSurface::from(sibling);
+
+    if (sibling_surface == surface)
+    {
+        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+            resource,
+            mw::Subsurface::Error::bad_surface,
+            "wl_subsurface.place_below: sibling cannot be the subsurface itself"));
+    }
+
+    if (sibling_surface != &parent.value() && !parent.value().has_subsurface_with_surface(sibling_surface))
+    {
+        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+            resource,
+            mw::Subsurface::Error::bad_surface,
+            "wl_subsurface.place_below: sibling must be the parent or a sibling subsurface"));
+    }
+
+    parent.value().reorder_subsurface(this, sibling_surface, WlSurface::SubsurfacePlacement::below);
 }
 
 void mf::WlSubsurface::set_sync()

@@ -31,7 +31,7 @@
  *
  * See also: http://semver.org/
  */
-#define MIR_SERVER_MAJOR_VERSION (@MIR_VERSION_MAJOR@)
+#define MIR_SERVER_MAJOR_VERSION (@PROJECT_VERSION_MAJOR@)
 
 /**
  * MIR_SERVER_MINOR_VERSION
@@ -41,7 +41,7 @@
  *
  * See also: http://semver.org/
  */
-#define MIR_SERVER_MINOR_VERSION (@MIR_VERSION_MINOR@)
+#define MIR_SERVER_MINOR_VERSION (@PROJECT_VERSION_MINOR@)
 
 /**
  * MIR_SERVER_MICRO_VERSION
@@ -52,7 +52,7 @@
  *
  * This corresponds to the PATCH field of http://semver.org/
  */
-#define MIR_SERVER_MICRO_VERSION (@MIR_VERSION_PATCH@)
+#define MIR_SERVER_MICRO_VERSION (@PROJECT_VERSION_PATCH@)
 
 /**
  * MIR_SERVER_VERSION

@@ -854,6 +854,7 @@ miral::TestWlcsDisplayServer::TestWlcsDisplayServer(int argc, char const** argv)
     WlcsDisplayServer::create_pointer = &wlcs_server_create_pointer;
     WlcsDisplayServer::create_touch = &wlcs_server_create_touch;
 
+    add_to_environment("MIR_SERVER_CURSOR", "null");
     add_to_environment("MIR_SERVER_ENABLE_KEY_REPEAT", "false");
     char buffer[32];
     snprintf(buffer, sizeof buffer, "wlcs-tests-%d", getpid());

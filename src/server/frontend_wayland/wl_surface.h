@@ -34,6 +34,7 @@
 
 #include <atomic>
 #include <vector>
+#include <list>
 #include <map>
 
 namespace mir
@@ -147,6 +148,10 @@ public:
     void set_pending_offset(std::optional<geometry::Displacement> const& offset);
     void add_subsurface(WlSubsurface* child);
     void remove_subsurface(WlSubsurface* child);
+    bool has_subsurface_with_surface(WlSurface* surface) const;
+    enum class SubsurfacePlacement { above, below };
+
+    void reorder_subsurface(WlSubsurface* child, WlSurface* sibling, SubsurfacePlacement placement);
     void refresh_surface_data_now();
     void pending_invalidate_surface_data() { pending.invalidate_surface_data(); }
     void populate_surface_data(std::vector<shell::StreamSpecification>& buffer_streams,
@@ -198,6 +203,7 @@ private:
     NullWlSurfaceRole null_role;
     WlSurfaceRole* role;
     std::vector<WlSubsurface*> children; // ordering is from bottom to top
+    ptrdiff_t parent_z_index{0}; // index in children where parent surface renders (subsurfaces before this are below parent)
     /* We might need to resubmit the current buffer, but with different metadata
      * For example: if a client commits a wl_surface.buffer_scale() without attaching
      * a new buffer, we need to generate a new frame with the same content, but at the
@@ -217,6 +223,10 @@ private:
     static void complete_commit(WlSurface* surf);
 
     WlSurfaceState pending;
+    // Subsurface z-order state (plus a nullptr representing the parent surface)
+    // This is separate from WlSurfaceState because it must be applied immediately on commit,
+    // even if the parent surface is a synchronized subsurface (per Wayland spec)
+    std::optional<std::list<WlSubsurface*>> pending_surface_order;
     geometry::Displacement offset_;
     float scale{1};
     std::optional<geometry::Size> buffer_size_;

@@ -34,6 +34,7 @@ set(
   mir_shell.cpp                 mir_shell.h
   resource_lifetime_tracker.cpp resource_lifetime_tracker.h
   wl_region.cpp                 wl_region.h
+  foreign_toplevel_list_v1.cpp  foreign_toplevel_list_v1.h
   foreign_toplevel_manager_v1.cpp foreign_toplevel_manager_v1.h
   desktop_file_manager.cpp      desktop_file_manager.h
   frame_executor.cpp            frame_executor.h
@@ -83,13 +84,6 @@ add_custom_command(
     ${CMAKE_CURRENT_SOURCE_DIR}/wayland_frontend.tp
 )
 
-# Inconveniently, GCC on 16.04 hits an ICE when attempting to use LTO
-# on the tracepoints. Fortunately we can turn it off for just that translation
-# unit.
-if (CMAKE_COMPILER_IS_GNUCXX AND (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 6))
-  set(TRACEPOINT_COMPILE_FLAGS "-fno-lto")
-endif()
-
 check_cxx_compiler_flag(-Wgnu-empty-initializer HAS_W_GNU_EMPTY_INITIALIZER)
 if (HAS_W_GNU_EMPTY_INITIALIZER)
   set(TRACEPOINT_COMPILE_FLAGS "${TRACEPOINT_COMPILE_FLAGS} -Wno-error=gnu-empty-initializer")
@@ -105,6 +99,13 @@ set_source_files_properties(
 add_library(mirfrontend-wayland OBJECT
 
   ${WAYLAND_SOURCES}
+)
+
+target_include_directories(mirfrontend-wayland
+  PUBLIC
+    ${PROJECT_SOURCE_DIR}/include/server
+  PRIVATE
+    ${PROJECT_SOURCE_DIR}/src/include/server
 )
 
 target_link_libraries(mirfrontend-wayland

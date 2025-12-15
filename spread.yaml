@@ -10,11 +10,7 @@ backends:
             - alpine-3.21
             - alpine-edge
             - ubuntu-24.04
-            - fedora-41
-            - fedora-42
             - fedora-43
-            - fedora-rawhide:
-                image: images:fedora/43
 
 environment:
     ARCH: amd64
@@ -28,10 +24,14 @@ environment:
     RELEASE/ubuntu_questing: questing
     RELEASE/ubuntu_devel: resolute
     RELEASE/debian_sid: sid
+    RELEASE/fedora_42: 42
+    RELEASE/fedora_43: 43
+    RELEASE/fedora_rawhide: rawhide
+    RELEASE/fedora_clang: 43
     PROPOSED: false
     PROPOSED/ubuntu_proposed: true
     CLANG: 0
-    CLANG/clang,asan_clang,tsan_clang,ubsan_clang: 1
+    CLANG/clang,asan_clang,tsan_clang,ubsan_clang,fedora_clang: 1
     VALGRIND: 0
     VALGRIND/valgrind: 1
     BUILD_TYPE: RelWithDebInfo

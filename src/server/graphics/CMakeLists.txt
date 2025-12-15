@@ -1,7 +1,3 @@
-include_directories(
-  ${PROJECT_SOURCE_DIR}/include/renderers/sw
-)
-
 add_library(
   mirgraphics OBJECT
 
@@ -19,6 +15,13 @@ add_library(
   multiplexing_hw_cursor.cpp
   default_output_filter.h
   default_output_filter.cpp
+)
+
+target_include_directories(mirgraphics
+  PUBLIC
+    ${PROJECT_SOURCE_DIR}/include/server
+  PRIVATE
+    ${PROJECT_SOURCE_DIR}/src/include/server
 )
 
 target_link_libraries(mirgraphics
