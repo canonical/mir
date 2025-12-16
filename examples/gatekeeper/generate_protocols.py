@@ -9,9 +9,9 @@ def main():
     # and protocols are in mir/wayland-protocols/
     project_root = os.path.abspath(os.path.join(script_dir, "../.."))
     protocols_path = os.path.join(project_root, "wayland-protocols")
-    
+
     output_path = os.path.join(script_dir, "protocols")
-    
+
     if not os.path.exists(output_path):
         os.makedirs(output_path)
         # Create __init__.py to make it a package
@@ -33,10 +33,10 @@ def main():
         if not os.path.exists(input_file):
             print(f"Error: {input_file} does not exist.")
             continue
-            
+
         protocol = Protocol.parse_file(input_file)
         parsed_protocols.append((protocol_file, protocol))
-        
+
         # Assuming the generated module name matches the protocol name
         module_name = protocol.name.replace("-", "_")
         for interface in protocol.interface:
