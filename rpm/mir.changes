@@ -1,0 +1,314 @@
+-------------------------------------------------------------------
+Mon Oct 13 17:34:41 UTC 2025 - Shawn Dunn <sfalken@opensuse.org>
+
+- Update to 2.23.0:
+  * mirplatform ABI bumped to 33
+  * Clearer naming in mirplatform API (gh#canonical/mir#4293,#4316)
+  * Bugs Fixed:
+    - Don't close the magnifier whenever live config settings are
+      reloaded (gh#canonical/mir#4308)
+    - libmiral should have no public dependency on libmircommon
+      (gh#canonical/mir#4303)
+    - mirwayland should not have public dependencies on mircommon
+      (gh#canonical/mir#4313)
+    - Frame segfault in
+      miral::WindowManagementTrace::place_and_size_for_state
+      (gh#canonical/mir#4281)
+    - Fill out missing input options in live config
+      (gh#canonical/mir#4133)
+    - graphics: pass correct options to manually-selected platforms
+      (gh#canonical/mir#4130)
+    - Check for EGL_WL_bind_wayland_display when probing EGLStream
+      display platform (gh#canonical/mir#4147)
+  * Many documentation updates
+  * Drop 0001-Disable-boost_system.patch
+
+-------------------------------------------------------------------
+Fri Oct  3 23:34:59 UTC 2025 - Shawn Dunn <sfalken@opensuse.org>
+
+- Update to 2.22.2:
+  * Bugs Fixed:
+    - Revert "Check DRM for supported formats
+      (gh#canonical/mir#3950)" (gh#canonical/mir#4294)
+- Added 0001-Disable-boost_system.patch
+
+-------------------------------------------------------------------
+Tue Sep 16 15:04:03 UTC 2025 - Shawn Dunn <sfalken@opensuse.org>
+
+- Update to 2.22.1:
+  * Bugs Fixed:
+    - debian: drop extra symbol (gh#canonical/mir#4153)
+    - Fix some memory leaks (gh#canonical/mir#4158)
+    - Changing cursor_scale causes weird cursors and crashes
+      (gh#canonical/mir#4157)
+    - on Ubuntu 25.10 wf-recorder y-inverts some frames
+      (gh#canonical/mir#4160)
+    - use-pkgconfig-better (gh#canonical/mir#4194)
+    - Check for WL_bind_wayland_display when probing eglstream-kms
+      support platform (gh#canonical/mir#4155)
+    - Platform-specific options not passed through if platforms not
+      probed (gh#canonical/mir#4130)
+    - mircommon: Add xkbcommon to pkgconfig dependency
+      (gh#canonical/mir#4240)
+  * Drop 0001-Fix-include-paths.patch
+-------------------------------------------------------------------
+Wed Sep  3 17:55:44 UTC 2025 - Shawn Dunn <sfalken@opensuse.org>
+
+- Update to 2.22.0:
+  * Breaking Changes:
+    - Consolidation of EDID Parsing
+      * User-.. and DisplayConfigurationOutput::edid replaced with
+        ::display_info
+      * mir::graphics::Edid removed
+      * miroil::Edid::Descriptor removed
+    - Nvidia 565+ breaks EGLStream support (gh#canonical/mir#4147)
+      * Use --platform-display-libs mir:atomic-kms
+        --platform-rendering-libs mir:gbm-kms to use our (unstable)
+        Nvidia-on-GBM support.  We'll follow up with a point
+        release to make this the default
+  * ABI summary:
+    - miral ABI unchanged at 7
+    - mircommon ABI unchanged at 11
+    - mircore ABI unchanged at 2
+    - miroil ABI bumped to 8
+    - mirplatform ABI bumped to 32
+    - mirserver ABI bumped to 65
+    - mirwayland ABI unchanged at 5
+    - mirplatformgraphics ABI unchanged at 23
+    - mirinputplatform ABI unchanged at 10
+  * Enhancements:
+    - static_config_display: add property-based display config
+      support (gh#canonical/mir#3872)
+    - Implement Simulated Secondary Click (gh#canonical/mir#3873)
+    - DRM: Explicit Synchronization Support (gh#canonical/mir#3717)
+    - live configuration facilites (gh#canonical/mir#3995)
+    - Atomic KMS: enable bypass (gh#canonical/mir#3595)
+    - fix: move minimized windows to the back of the Z stack
+      (gh#canonical/#4000)
+    - Implement the 'overlay_cursor' flag for WlrScreencopy
+      (gh#canonical/mir#4013)
+    - Support Nvidia through the atomic-kms/gbm platforms
+      (gh#canonical/mir#3979#4060#4070)
+    - Implement hover click (gh#canonical/mir#3928)
+    - server: add --vt-switching option (gh#canonical/mir#4033)
+    - Improve support for bespoke Wayland extensions
+      (gh#canonical/mir#4018)
+    - Update linux_dmabuf_v1 to version 5 (gh#canonical/mir#4001)
+    - Implement bounce keys (gh#canonical/mir#3934)
+    - Implement slow keys (gh#canonical/mir#3945)
+    - Implement magnifier accessibility feature
+      (gh#canonical/mir#3976)
+    - feature: implement sticky keys accessibility feature
+      (gh#canonical/mir#4076)
+    - Integrate some Rust code into the Mir build
+      (gh#canonical/mir#4022)
+    - (gh#canonical/mir#4078) package mir-platform-graphics-stub
+      and mir-platform-input-stub (gh#canonical/mir#4080)
+    - graphics: introduce EDID parsing in
+      DisplayConfigurationOutput (gh#canonical/mir#4099)
+    - Add live_config support to miral::Keymap
+      (gh#canonical/mir#4088)
+    - Add tracking keymap from locale1 (gh#canonical/mir#4111)
+  * Bugs fixed:
+    - Don't raise the parent of windows sent to the back
+      (gh#canonical/mir#4008)
+    - Update wl_output::geometry to include the correct
+      transformation (gh#canonical/mir#4062)
+    - BasicScreenshooter does not take the output transformation
+      into account (gh#canonical/mir#4086)
+    - Screenshots wrong when display rotated (again)
+      (gh#canonical/mir#3909)
+    - Docking kgx left/right in miriway is misplaced
+      (gh#canonical/mir#4023)
+  * Documentation:
+    - HACKING.md: Add some instructions for MESA debugging
+      (gh#canonical/mir#3992)
+    - doc: add Debugging section to CI docs (gh#canonical/mir#4034)
+
+-------------------------------------------------------------------
+Thu Jul 10 17:07:29 UTC 2025 - Shawn Dunn <sfalken@opensuse.org>
+
+- Update to 2.21.1:
+  * Incorporate fixes needed to build for Ubuntu 25.10
+    - binutils 2.44.50.20250616 for arm64 still breaks LTO builds
+    - Turn off workaround for now-fixed GLib bug
+
+-------------------------------------------------------------------
+Sat Jun 28 07:05:48 UTC 2025 - Shawn Dunn <sfalken@opensuse.org>
+
+- Update to 2.21.0
+  * Enhancements:
+    - Cursor scaling support (gh#canonical/mir#3735)
+    - Implement mousekeys (gh#canonical/mir/#3757)
+    - Add key repeat rate/delay config options and properly merge
+      config settings (gh#canonical/mir#3830)
+    - add the ability to associate a layout with custom user data
+      (gh#canonical/mir#3869)
+    - static_display_config: add display properties to output
+      (gh#canonical/mir#3903)
+    - implement xdg toplevel tiled states (gh#canonical/mir#3920)
+    - Update of core wayland extensions (gh#canonical/mir#3927)
+    - refactor 'BasicSurface' so that it can be used internally by
+      shell authors (gh#canonical/mir#3948)
+    - Check DRM for supported formats (gh#canonical/mir#3950)
+    - Add an output filter for the purposes of accessibility
+      (gh#canonical/mir#3911)
+  * Bugs fixed:
+    - Texture allocation happens with an incorrect context for the
+      renderer that needs it (gh#canonical/mir#3933)
+  * Documentation:
+    - Screencasting how-to (gh#canonical/mir#3874)
+    - How to speed up compliation using ccache and mold
+      (gh#canonical/mir#3946)
+  * Testing:
+    - add tests for 'FloatingWindowManagementPolicy' and expose
+      externally (gh#canonical/mir#3840#3848#3878#3879#3913)
+  * Deprecations:
+    - Deprecate "persistent" surface IDs (gh#canonical/mir#3852)
+
+-------------------------------------------------------------------
+Wed Apr 16 15:22:03 UTC 2025 - Shawn Dunn <sfalken@opensuse.org>
+
+- Update to 2.20.2:
+  * miroil: add ending gestures (gh#canonical/mir#3845)
+
+-------------------------------------------------------------------
+Thu Mar 20 16:51:40 UTC 2025 - Shawn Dunn <sfalken@opensuse.org>
+
+- Update to 2.20.1:
+  * miroil::GLBuffer was dropped in 2.20 (gh#canonical/mir#3813)
+  * Do not mutate a container whilst interating over it
+    (gh#canonical/mir#3819)
+  * Crash when disconnecting monitors (gh#canonical/mir#3816)
+  * Policy destructors do not get called when a surface has been
+    launched on the desktop (gh#canonical/mir#3823)
+
+-------------------------------------------------------------------
+Wed Mar 12 14:55:48 UTC 2025 - Shawn Dunn <sfalken@opensuse.org>
+
+- Update to 2.20.0:
+  * For detailed changelog see:
+    https://github.com/canonical/mir/releases/tag/v2.20.0
+- Enhancements:
+  * Extract rendering strategy for decorations
+  * MirOIL updates for post-new-Platform-API QtMir
+  * feature: adding an is_above method to the SurfaceStack
+  * Implement focus stealing prevention, Turn it on with
+    --focus-stealing-prevention true on supported compositors
+  * Pass XDG_ACTIVATION_TOKEN to apps launched via launch_app_env
+  * Publish mir*-internal libraries
+  * Make key repeat and delay configurable
+  * Improve Firefox surface.frame event quirk
+  * Workaround for LXQt Panel
+  * Fix SSD Text
+- Bugs Fixed:
+  * TilingWindowManagerPolicy assumes that the windows size is
+    always specified (gh#canonical/mir#3989)
+  * OSK hides a half second after popping up on some input fields
+    with zqp_text_input_v1 (Electron) (gh#canonical/mir#3580)
+  * Closing a window brings one of the remaining windows of the
+    same client to the front (gh#canonical/mir#3309)
+  * Closing a window causes minimized windows to be focused
+    (gh#canonical/mir#3408)
+  * atomic-kms: hardware cursor disappears crossing screen
+    boundaries (gh#canonical/mir#3677)
+  * Crash on display unplug (gh#canonical/mir#3729)
+  * Crash when pcmanfm-qt does DnD (gh#canonical/mir#3765)
+  * The check for "implicit grab" for drag-and-drop is too strict
+    (gh#canonical/mir#3769)
+  * The cursor icons for top-left and bottom-left resize are wrong
+    for server-side decorations (gh#canonical/mir#3776)
+  * Incorrectly sizes some windows with server-side decorations
+    (gh#canonical/mir#3778)
+- Drop:
+  * 0003-workaround-for-LXQt-panel.patch
+  * 0004-check-buffer-size.patch
+
+-------------------------------------------------------------------
+Thu Feb 20 17:04:43 UTC 2025 - Shawn Dunn <sfalken@opensuse.org>
+
+- Add:
+  - 0003-workaround-for-LXQt-panel.patch (gh#canonical/mir#3764)
+  - 0004-check-buffer-size.patch (gh#canonical/mir#3766)
+
+-------------------------------------------------------------------
+Mon Jan 20 16:20:10 UTC 2025 - Shawn Dunn <sfalken@opensuse.org>
+
+- Update to 2.19.3:
+  * Don't leak VirtualInputDevice keyboards (#3720)
+  * kms: skip simple-framebuffer devices (#3721)
+- Add:
+  * 0002-remove-use-of-env-to-call-bash.patch
+
+-------------------------------------------------------------------
+Wed Dec 25 18:44:49 UTC 2024 - Shawn Dunn <sfalken@opensuse.org>
+
+- Added Requires: for libmirserver, without them, you end up with
+  a non-functional Mir after install.
+
+-------------------------------------------------------------------
+Thu Dec 19 21:38:02 UTC 2024 - Shawn Dunn <sfalken@opensuse.org>
+
+- Created libmirserverplatform22 and libmirevdev10 subpackages to
+  align with shlib packaging policy, and clear conflicts with
+  libmirserver61
+
+-------------------------------------------------------------------
+Wed Dec  4 21:14:47 UTC 2024 - Shawn Dunn <sfalken@opensuse.org>
+
+- Update to 2.19.2:
+  * Fix: mirserver ABI should have been bumped to 62 in 2.19.0
+  * v2.19.1 was burned/skipped
+
+-------------------------------------------------------------------
+Mon Dec  2 22:13:35 UTC 2024 - Richard Rahl <rrahl0@opensuse.org>
+
+- update to 2.19.0:
+  * mirplatform ABI bumped to 30
+  * mirserver ABI bumped to 61
+  * [x11-kiosk] defer fullscreening of applications until they are placed once
+  * [x11-kiosk] Ensure windows are placed and repainted on X11 "CONFIGURE"
+  * [x11-kiosk] change enable-x11 default to true
+  * Initial atomic-kms platform
+  * [Wayland] Add support for xdg_activation_v1
+  * Do not default window size (especially to weird values)
+  * DesktopFileManager::resolve_app_id no longer returns an app id with a
+    .desktop file suffix
+  * [Configuration] Split options into global and per-module configuration
+  * Ensure we always send an initial output enter
+  * Fix stuck-frame-after-mode-switch bug
+  * Fix rendering of resized XWayland applications with client side decorations
+  * Aspect ratios shouldn't contain zero
+  * Use PkgConfig to find development headers
+  * Fix the inotify event handling in
+    ReloadingYamlFileDisplayConfig::auto_reload()
+  * The miral::ConfigFile "Watcher" can be destroyed before the main loop
+  * [xwayland] Don't allow clients to place X11 windows
+  * Surfaces track scale changes on outputs they appear on
+  * New attached windows need to be placed
+- switch to new upstream url
+- use only the default Pillow package as BR, not all versions
+- adapt 0001-Fix-include-paths.patch
+
+-------------------------------------------------------------------
+Thu Oct 31 17:03:03 UTC 2024 - Shawn Dunn <sfalken@opensuse.org>
+
+- Refactor packaging to conform with openSUSE shared library
+  packaging practices
+- Move some stuff around, so we don't have 30 subpackages
+
+-------------------------------------------------------------------
+Thu Oct 31 10:33:45 UTC 2024 - Jan Engelhardt <jengelh@inai.de>
+
+- Update descriptions
+
+-------------------------------------------------------------------
+Tue Oct 29 22:06:28 UTC 2024 - Shawn Dunn <sfalken@opensuse.org>
+
+- Added:
+  * 0001-Fix-include-paths.patch
+
+-------------------------------------------------------------------
+Tue Oct 29 15:00:18 UTC 2024 - Shawn Dunn <sfalken@opensuse.org>
+
+- Initial commit
