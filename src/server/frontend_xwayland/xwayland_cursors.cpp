@@ -24,6 +24,8 @@
 
 #include <boost/throw_exception.hpp>
 
+#include <charconv>
+
 namespace mf = mir::frontend;
 
 // Cursor names that may be useful in the future:
@@ -122,7 +124,14 @@ auto mf::XWaylandCursors::Loader::get_xcursor_size() -> int
     int result = 0;
     if (size_env_var_string)
     {
-        result = atoi(size_env_var_string);
+        int parsed_value = 0;
+        auto const [end, err] = std::from_chars(size_env_var_string,
+                                                size_env_var_string + strlen(size_env_var_string),
+                                                parsed_value);
+        if ((err == std::errc{}))
+        {
+            result = parsed_value;
+        }
     }
     if (result == 0)
     {
