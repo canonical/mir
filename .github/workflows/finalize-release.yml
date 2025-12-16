@@ -95,7 +95,7 @@ jobs:
             { print }
           ' debian/changelog
 
-          dch --newversion "${{ steps.version.outputs.version }}" \
+          dch --newversion "${{ steps.version.outputs.version }}-0ubuntu24.04" \
               --distribution noble \
               --force-distribution \
               ""
