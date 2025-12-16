@@ -74,6 +74,10 @@ void parse_options(int argc, char* argv[])
                 {
                     main_width = parsed_value;
                 }
+                else
+                {
+                    printf("Could not parse option %s with arg %s\n", long_options[option_index].name, optarg);
+                }
             }
             else if (option_main_height == long_options[option_index].name)
             {
@@ -82,6 +86,10 @@ void parse_options(int argc, char* argv[])
                 if (ec == std::errc())
                 {
                     main_height = parsed_value;
+                }
+                else
+                {
+                    printf("Could not parse option %s with arg %s\n", long_options[option_index].name, optarg);
                 }
             }
             else

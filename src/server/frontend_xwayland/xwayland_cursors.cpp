@@ -132,6 +132,10 @@ auto mf::XWaylandCursors::Loader::get_xcursor_size() -> int
         {
             result = parsed_value;
         }
+        else
+        {
+            log_warning("Could not parse XCURSOR_SIZE='%s'", size_env_var_string);
+        }
     }
     if (result == 0)
     {
