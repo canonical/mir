@@ -133,6 +133,9 @@ PPA_VERSION=${MIR_VERSION}-0ubuntu${UBUNTU_VERSION}
 echo "Setting version to:"
 echo "  ${PPA_VERSION}"
 
+# unrelease the latest entry to retain release changelog
+awk --include=inplace 'BEGIN { getline; print $1, $2, "UNRELEASED;", $4 }; { print }' debian/changelog
+
 debchange \
   --newversion ${PPA_VERSION} \
   --force-bad-version \
