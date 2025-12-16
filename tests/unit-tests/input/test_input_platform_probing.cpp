@@ -188,7 +188,7 @@ TEST_F(InputPlatformProbe, allows_forcing_stub_input_platform)
     EXPECT_THAT(platform, OfPtrType<mtf::StubInputPlatform>());
 }
 
-#ifdef MIR_ENABLE_EVDEV_RS
+#ifdef MIR_ENABLE_RUST
 TEST_F(InputPlatformProbe, allows_forcing_of_evdev_rs_platform)
 {
     ON_CALL(mock_options, is_set(StrEq(platform_input_lib))).WillByDefault(Return(true));

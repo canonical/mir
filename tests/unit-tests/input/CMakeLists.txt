@@ -40,7 +40,7 @@ list(APPEND UMOCK_UNIT_TEST_REFERENCES
 )
 endif()
 
-if (MIR_ENABLE_EVDEV_RS)
+if (MIR_ENABLE_RUST)
   list(APPEND UMOCK_UNIT_TEST_REFERENCES
     mirplatforminputevdevrsobjects
   )
