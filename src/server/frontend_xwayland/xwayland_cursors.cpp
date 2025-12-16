@@ -128,7 +128,7 @@ auto mf::XWaylandCursors::Loader::get_xcursor_size() -> int
         auto const [end, err] = std::from_chars(size_env_var_string,
                                                 size_env_var_string + strlen(size_env_var_string),
                                                 parsed_value);
-        if ((err == std::errc{}))
+        if (err == std::errc{})
         {
             result = parsed_value;
         }

@@ -68,7 +68,7 @@ void parse_options(int argc, char* argv[])
         case 0:
             if (option_main_width == long_options[option_index].name)
             {
-                int32_t parsed_value;
+                int32_t parsed_value = 0;
                 auto [end, ec] = std::from_chars(optarg, optarg + strlen(optarg), parsed_value);
                 if (ec == std::errc())
                 {
@@ -77,7 +77,7 @@ void parse_options(int argc, char* argv[])
             }
             else if (option_main_height == long_options[option_index].name)
             {
-                int32_t parsed_value;
+                int32_t parsed_value = 0;
                 auto [end, ec] = std::from_chars(optarg, optarg + strlen(optarg), parsed_value);
                 if (ec == std::errc())
                 {
