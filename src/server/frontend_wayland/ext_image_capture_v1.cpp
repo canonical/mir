@@ -231,6 +231,7 @@ private:
     void capture() override;
 
     bool capture_has_been_called = false;
+    bool capture_has_begun = false;
     wayland::Weak<wayland::Buffer> target;
     geom::Rectangle frame_damage;
 
@@ -683,11 +684,12 @@ void mf::ExtImageCopyCaptureFrameV1::capture()
 
 bool mf::ExtImageCopyCaptureFrameV1::is_ready() const
 {
-    return capture_has_been_called;
+    return capture_has_been_called && !capture_has_begun;
 }
 
 void mf::ExtImageCopyCaptureFrameV1::begin_capture(ExtImageCopyBackend& backend)
 {
+    capture_has_begun = true;
     // Check buffer constraints
     auto shm_buffer = dynamic_cast<ShmBuffer*>(wayland::as_nullable_ptr(target));
     if (!shm_buffer)
@@ -705,7 +707,6 @@ void mf::ExtImageCopyCaptureFrameV1::begin_capture(ExtImageCopyBackend& backend)
                     frame.value().report_result(result);
                 }
             });
-    frame_damage = geom::Rectangle{};
 }
 
 void mf::ExtImageCopyCaptureFrameV1::report_result(
