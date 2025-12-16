@@ -5,6 +5,7 @@ variants: [amd64, "*ld"]
 execute: |
     apk add \
         boost-dev \
+        cargo \
         ccache \
         cmake \
         coreutils \
@@ -44,13 +45,16 @@ execute: |
     fi
 
     BUILD_DIR=$PWD/../build
-    cmake \
-        -H$SPREAD_PATH -B$BUILD_DIR \
-        -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
-        -DMIR_USE_LD=${LINKER} \
-        -DMIR_ENABLE_WLCS_TESTS=OFF \
-        -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+    CMAKE_OPTIONS=(
+        -H$SPREAD_PATH -B$BUILD_DIR
+        -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
+        -DMIR_USE_LD=${LINKER}
+        -DMIR_ENABLE_WLCS_TESTS=OFF
+        -DCMAKE_C_COMPILER_LAUNCHER=ccache
         -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+    )
+    [ "${SPREAD_SYSTEM}" == "alpine-3.20" ] && CMAKE_OPTIONS+=( -DMIR_ENABLE_RUST=OFF )
+    cmake "${CMAKE_OPTIONS[@]}"
     export VERBOSE=1
     cmake --build $BUILD_DIR -- -j`nproc`
 
