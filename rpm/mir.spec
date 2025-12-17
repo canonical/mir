@@ -32,17 +32,6 @@
 %endif
 
 # Track various library soversions
-%if 0%{?suse_version}
-%global commonlibsover 11
-%global mircoresover 2
-%global mirplatformsover 33
-%global lomirisover 8
-%global miralsover 7
-%global mirserversover 65
-%global mirwaylandsover 5
-%global mirserverplatformsover 23
-%global mirevdevsover 10
-%else
 %global miral_sover 7
 %global mircommon_sover 11
 %global mircore_sover 2
@@ -52,7 +41,6 @@
 %global mirwayland_sover 5
 %global mirplatformgraphics_sover 23
 %global mirplatforminput_sover 10
-%endif
 
 Name:           mir
 Version:        2.26.0~dev
@@ -193,11 +181,11 @@ and a well-defined driver model.
 Summary:       Development files for Mir
 %if 0%{?suse_version}
 Requires:       %{name}-test-libs-static = %{version}
-Requires:       libmircommon%{commonlibsover} = %{version}
-Requires:       libmirevdev%{mirevdevsover} = %{version}
-Requires:       libmiroil%{lomirisover} = %{version}
-Requires:       libmirserver%{mirserversover} = %{version}
-Requires:       libmirserverplatform%{mirserverplatformsover} = %{version}
+Requires:       libmircommon%{mircommon_sover} = %{version}
+Requires:       libmirevdev%{mirplatforminput_sover} = %{version}
+Requires:       libmiroil%{miroil_sover} = %{version}
+Requires:       libmirserver%{mirserver_sover} = %{version}
+Requires:       libmirserverplatform%{mirplatformgraphics_sover} = %{version}
 %else
 Requires:      %{name}-common-libs%{?_isa} = %{?epoch:%{epoch}:}%{version}-%{release}
 Requires:      %{name}-server-libs%{?_isa} = %{?epoch:%{epoch}:}%{version}-%{release}
@@ -211,93 +199,14 @@ Obsoletes:     %{name}-doc < 2.15.0
 This package provides the development files to create compositors
 built on Mir.
 
-%if 0%{suse_version}
-%package private-devel
-Summary:        Development files for Mir exposing private internals
-Requires:       %{name}-devel = %{version}
-
-%description private-devel
-This package provides extra development files to create compositors built on
-Mir that need acces to private internal interfaces
-
-%else
-
 %package internal-devel
 Summary:       Development files for Mir exposing private internals
 Requires:      %{name}-devel%{?_isa} = %{?epoch:%{epoch}:}%{version}-%{release}
+Provides:      %{name}-private-devel = %{version}
 
 %description internal-devel
 This package provides extra development files to create compositors
 built on Mir that need access to private internal interfaces.
-%endif
-
-%if 0%{?suse_version}
-%package -n libmircommon%{commonlibsover}
-Summary:        Mir server library
-License:        LGPL-2.1-only OR LGPL-3.0-only
-
-%description -n libmircommon%{commonlibsover}
-Component library of the Mir compositing stack
-
-%package -n libmircore%{mircoresover}
-Summary:        Mir core library
-License:        LGPL-2.1-only OR LGPL-3.0-only
-
-%description -n libmircore%{mircoresover}
-Component library of the Mir compositing stack
-
-%package -n libmirplatform%{mirplatformsover}
-Summary:        Mir platform library
-License:        LGPL-2.1-only OR LGPL-3.0-only
-
-%description -n libmirplatform%{mirplatformsover}
-Component library of the Mir compositing stack
-
-%package -n libmiroil%{lomirisover}
-Summary:        Lomiri compatibility libraries for Mir
-License:        LGPL-2.1-only OR LGPL-3.0-only
-
-%description -n libmiroil%{lomirisover}
-This package provides the libraries for Lomiri to use Mir as a Wayland compositor
-
-%package -n libmiral%{miralsover}
-Summary:        Mir Abstraction Layer library
-License:        LGPL-2.1-only OR LGPL-3.0-only
-
-%description -n libmiral%{miralsover}
-Component library of the Mir compositing stack
-
-%package -n libmirserver%{mirserversover}
-Summary:        Mir server library
-License:        GPL-2.0-only OR GPL-3.0-only
-Requires:       libmirevdev%{mirevdevsover}
-Requires:       libmirserverplatform%{mirserverplatformsover}
-
-%description -n libmirserver%{mirserversover}
-Component library of the Mir compositing stack
-
-%package -n libmirwayland%{mirwaylandsover}
-Summary:        Mir Wayland library
-License:        LGPL-2.1-only OR LGPL-3.0-only
-
-%description -n libmirwayland%{mirwaylandsover}
-Component library of the Mir compositing stack
-
-%package -n libmirserverplatform%{mirserverplatformsover}
-Summary:        Mir Server Platform Library
-License:        LGPL-2.1-only OR LGPL-3.0-only
-
-%description -n libmirserverplatform%{mirserverplatformsover}
-Component library of the Mir server platform
-
-%package -n libmirevdev%{mirevdevsover}
-Summary:        Evdev support for Mir
-License:        LGPL-2.1-only OR LGPL-3.0-only
-
-%description -n libmirevdev%{mirevdevsover}
-evdev support library for the Mir server platform
-
-%else
 
 %package common-libs
 Summary:       Common libraries for Mir
@@ -310,6 +219,9 @@ Obsoletes:     %{name}-client-libs-debugext < 1.6.0
 Obsoletes:     %{name}-utils < 2.0.0
 # Ensure older mirclient doesn't mix in
 Conflicts:     %{name}-client-libs < 2.6.0
+Provides:      libmircore%{mircore_sover} = %{version}
+Provides:      libmircommon%{mircommon_sover} = %{version}
+Provides:      libmirplatform%{mirplatform_sover} = %{version}
 
 %description common-libs
 This package provides the libraries common to be used
@@ -320,6 +232,7 @@ Summary:       Lomiri compatibility libraries for Mir
 License:       GPL-2.0-only or GPL-3.0-only
 Requires:      %{name}-common-libs%{?_isa} = %{?epoch:%{epoch}:}%{version}-%{release}
 Requires:      %{name}-server-libs%{?_isa} = %{?epoch:%{epoch}:}%{version}-%{release}
+Provides:      libmiroil%{miroil_sover} = %{version}
 
 %description lomiri-libs
 This package provides the libraries for Lomiri to use Mir
@@ -329,17 +242,21 @@ as a Wayland compositor.
 Summary:       Server libraries for Mir
 License:       GPL-2.0-only or GPL-3.0-only
 Requires:      %{name}-common-libs%{?_isa} = %{?epoch:%{epoch}:}%{version}-%{release}
+Provides:      libmiral%{miral_sover} = %{version}
+Provides:      libmirserver%{mirserver_sover} = %{version}
+Provides:      libmirwayland%{mirwayland_sover} = %{version}
+Provides:      libmirserverplatform%{mirplatformgraphics_sover} = %{version}
+Provides:      libmirevdev%{mirplatforminput_sover} = %{version}
 
 %description server-libs
 This package provides the libraries for applications
 that use the Mir server.
-%endif
 
 %package test-tools
 Summary:       Testing tools for Mir
 License:       GPL-2.0-only or GPL-3.0-only
 %if 0%{?suse_version}
-Requires:      libmirserver%{mirserversover} = %{version}
+Requires:      libmirserver%{mirserver_sover} = %{version}
 Recommends:    xwayland
 %else
 Requires:      %{name}-server-libs%{?_isa} = %{?epoch:%{epoch}:}%{version}-%{release}
@@ -364,7 +281,7 @@ Requires:       bash
 Requires:       gnu-free-fonts
 Requires:       hicolor-icon-theme
 Requires:       inotify-tools
-Requires:       libmirserver%{mirserversover} = %{version}
+Requires:       libmirserver%{mirserver_sover} = %{version}
 Requires:       xkeyboard-config
 Requires:       xwayland
 %else
@@ -444,15 +361,9 @@ rm -rf $XDG_RUNTIME_DIR
 desktop-file-validate %{buildroot}%{_datadir}/applications/miral-shell.desktop
 
 %if 0%{?suse_version}
-%ldconfig_scriptlets -n libmircommon%{commonlibsover}
-%ldconfig_scriptlets -n libmircore%{mircoresover}
-%ldconfig_scriptlets -n libmirplatform%{mirplatformsover}
-%ldconfig_scriptlets -n libmiroil%{lomirisover}
-%ldconfig_scriptlets -n libmiral%{miralsover}
-%ldconfig_scriptlets -n libmirserver%{mirserversover}
-%ldconfig_scriptlets -n libmirwayland%{mirwaylandsover}
-%ldconfig_scriptlets -n libmirserverplatform%{mirserverplatformsover}
-%ldconfig_scriptlets -n libmirevdev%{mirevdevsover}
+%ldconfig_scriptlets common-libs
+%ldconfig_scriptlets lomiri-libs
+%ldconfig_scriptlets server-libs
 %endif
 
 
@@ -465,63 +376,10 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/miral-shell.desktop
 %{_includedir}/mir*/
 %exclude %{_includedir}/mir*internal/
 
-%if 0%{?suse_version}
-%files private-devel
-%license COPYING.*
-%{_libdir}/pkgconfig/mir*internal.pc
-%{_includedir}/mir*internal/
-%else
 %files internal-devel
 %license COPYING.*
 %{_libdir}/pkgconfig/mir*internal.pc
 %{_includedir}/mir*internal/
-%endif
-
-%if 0%{?suse_version}
-%files -n libmircommon%{commonlibsover}
-%license COPYING.LGPL*
-%doc README.md
-%dir %{_libdir}/mir
-%{_libdir}/libmircommon.so.%{commonlibsover}
-%{_libdir}/mir/miral*.so
-
-%files -n libmircore%{mircoresover}
-%{_libdir}/libmircore.so.%{mircoresover}
-
-%files -n libmirplatform%{mirplatformsover}
-%{_libdir}/libmirplatform.so.%{mirplatformsover}
-
-%files -n libmiroil%{lomirisover}
-%{_libdir}/libmiroil.so.%{lomirisover}
-
-%files -n libmiral%{miralsover}
-%{_libdir}/libmiral.so.%{miralsover}
-
-%files -n libmirserver%{mirserversover}
-%license COPYING.GPL*
-%doc README.md
-%{_libdir}/libmirserver.so.%{mirserversover}
-
-%files -n libmirwayland%{mirwaylandsover}
-%{_libdir}/libmirwayland.so.%{mirwaylandsover}
-
-%files -n libmirserverplatform%{mirserverplatformsover}
-%license COPYING.GPL*
-%doc README.md
-%dir %{_libdir}/mir/server-platform
-%{_libdir}/mir/server-platform/graphics-eglstream-kms.so.%{mirserverplatformsover}
-%{_libdir}/mir/server-platform/graphics-gbm-kms.so.%{mirserverplatformsover}
-%{_libdir}/mir/server-platform/graphics-wayland.so.%{mirserverplatformsover}
-%{_libdir}/mir/server-platform/renderer-egl-generic.so.%{mirserverplatformsover}
-%{_libdir}/mir/server-platform/server-virtual.so.%{mirserverplatformsover}
-%{_libdir}/mir/server-platform/server-x11.so.%{mirserverplatformsover}
-
-%files -n libmirevdev%{mirevdevsover}
-%license COPYING.GPL*
-%doc README.md
-%{_libdir}/mir/server-platform/input-evdev.so.%{mirevdevsover}
-
-%else
 
 %files common-libs
 %license COPYING.LGPL*
@@ -551,20 +409,8 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/miral-shell.desktop
 %{_libdir}/%{name}/server-platform/renderer-egl-generic.so.%{mirplatformgraphics_sover}
 %{_libdir}/%{name}/server-platform/server-virtual.so.%{mirplatformgraphics_sover}
 %{_libdir}/%{name}/server-platform/server-x11.so.%{mirplatformgraphics_sover}
-%endif
 
 %files test-tools
-%if 0%{?suse_version}
-%license COPYING.GPL*
-%dir %{_libdir}/mir
-%dir %{_libdir}/mir/tools
-%dir %{_libdir}/mir/server-platform
-%{_bindir}/mir-*test*
-%{_bindir}/mir_*test*
-%{_libdir}/mir/tools/libmirserverlttng.so
-%{_libdir}/mir/server-platform/graphics-dummy.so.%{mirserverplatformsover}
-%{_libdir}/mir/server-platform/input-stub.so.%{mirevdevsover}
-%else
 %license COPYING.GPL*
 %{_bindir}/mir-*test*
 %{_bindir}/mir_*test*
@@ -576,7 +422,6 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/miral-shell.desktop
 %{_libdir}/%{name}/server-platform/graphics-dummy.so.%{mirplatformgraphics_sover}
 %{_libdir}/%{name}/server-platform/input-stub.so.%{mirplatforminput_sover}
 %{_datadir}/%{name}/expected_wlcs_failures.list
-%endif
 
 %files test-libs-static
 %license COPYING.GPL*
@@ -584,17 +429,6 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/miral-shell.desktop
 %{_libdir}/libmir-test-assist-internal.a
 
 %files demos
-%if 0%{?suse_version}
-%license COPYING.GPL*
-%doc README.md
-%dir %{_datadir}/%{name}
-%{_bindir}/mir_demo_*
-%{_bindir}/mir-x11-kiosk*
-%{_bindir}/miral-*
-%{_datadir}/applications/miral-shell.desktop
-%{_datadir}/icons/hicolor/scalable/apps/spiral-logo.svg
-%{_datadir}/%{name}/expected_wlcs_failures.list
-%else
 %license COPYING.GPL*
 %doc README.md
 %{_bindir}/mir_demo_*
@@ -602,7 +436,6 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/miral-shell.desktop
 %{_bindir}/miral-*
 %{_datadir}/applications/miral-shell.desktop
 %{_datadir}/icons/hicolor/scalable/apps/spiral-logo.svg
-%endif
 
 %if 0%{?suse_version}
 %changelog
