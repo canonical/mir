@@ -34,27 +34,27 @@ jobs:
                  "lxd:ubuntu-24.04:spread/build/ubuntu:tsan_clang"'
         fi
 
-        TASKS+='"lxd:alpine-3.20:spread/build/alpine:amd64"
-                "lxd:alpine-3.21:spread/build/alpine:amd64"
-                "lxd:alpine-edge:spread/build/alpine:amd64"
-                "lxd:ubuntu-24.04:spread/build/sbuild:debian_sid"
-                "lxd:ubuntu-24.04:spread/build/sbuild:ubuntu"
-                "lxd:ubuntu-24.04:spread/build/sbuild:ubuntu_plucky"
-                "lxd:ubuntu-24.04:spread/build/sbuild:ubuntu_questing"
-                "lxd:ubuntu-24.04:spread/build/sbuild:ubuntu_arm64"
-                "lxd:ubuntu-24.04:spread/build/sbuild:ubuntu_armhf"
-                "lxd:ubuntu-24.04:spread/build/ubuntu:clang"
-                "lxd:ubuntu-24.04:spread/build/ubuntu:mold"
+        TASKS+='"lxd:...:debian_sid"
                 "lxd:...:fedora_42"
                 "lxd:...:fedora_43"
                 "lxd:...:fedora_clang"
                 "lxd:...:fedora_rawhide"
-                "lxd:ubuntu-24.04:spread/build/sbuild:ubuntu_devel"
-                "lxd:ubuntu-24.04:spread/build/sbuild:ubuntu_proposed"
-                "lxd:ubuntu-24.04:spread/build/ubuntu:asan"
-                "lxd:ubuntu-24.04:spread/build/ubuntu:asan_clang"
-                "lxd:ubuntu-24.04:spread/build/ubuntu:ubsan"
-                "lxd:ubuntu-24.04:spread/build/ubuntu:ubsan_clang"'
+                "lxd:...:spread/ubuntu:asan"
+                "lxd:...:spread/ubuntu:asan_clang"
+                "lxd:...:spread/ubuntu:clang"
+                "lxd:...:spread/ubuntu:mold"
+                "lxd:...:spread/ubuntu:ubsan"
+                "lxd:...:spread/ubuntu:ubsan_clang"
+                "lxd:...:ubuntu"
+                "lxd:...:ubuntu_arm64"
+                "lxd:...:ubuntu_armhf"
+                "lxd:...:ubuntu_devel"
+                "lxd:...:ubuntu_plucky"
+                "lxd:...:ubuntu_proposed"
+                "lxd:...:ubuntu_questing"
+                "lxd:alpine-3.20:...:amd64"
+                "lxd:alpine-3.21:...:amd64"
+                "lxd:alpine-edge:...:amd64"'
 
         echo ${TASKS:-} | jq -cs '{ "spread-task": .  }' | awk '{ print "matrix=" $0 }' >> $GITHUB_OUTPUT
 
