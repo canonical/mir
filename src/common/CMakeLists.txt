@@ -51,6 +51,7 @@ add_library(mircommon SHARED
   ${PROJECT_SOURCE_DIR}/include/common/mir/input/mir_touchscreen_config.h
   ${PROJECT_SOURCE_DIR}/include/common/mir/input/mir_keyboard_config.h
   ${PROJECT_SOURCE_DIR}/include/common/mir/input/keyboard_leds.h
+  ${PROJECT_SOURCE_DIR}/include/common/mir/constexpr_strlen.h
   ${MIR_COMMON_SOURCES}
 )
 
