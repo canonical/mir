@@ -21,7 +21,7 @@ set(CMAKE_GCOV gcov)
 
 project(
   Mir
-  VERSION 2.25.1
+  VERSION 2.25.2
   DESCRIPTION "Mir compositor library"
   LANGUAGES C CXX
 )
