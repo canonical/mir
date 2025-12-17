@@ -67,7 +67,7 @@ prepare: |
     EOF
 
 suites:
-    spread/build/:
+    spread/:
         summary: Build Mir
 
 path:
