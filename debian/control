@@ -700,3 +700,15 @@ Depends: ${misc:Depends},
 Description: Display server for Ubuntu - kiosk hosting X11 apps
  .
  Contains an "X11 kiosk" compositor based on the Mir display server
+
+Package: mir-renderer-gl-dev
+Section: oldlibs
+Architecture: linux-any
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
+Depends: libmirplatform-dev (>= 2.24),
+         ${misc:Depends},
+Description: transitional package for libmirplatform-dev
+ This is a transitional package. It can safely be removed.
+ .
+ The mir-renderer-gl-dev package has been merged into libmirplatform-dev.
