@@ -24,7 +24,7 @@
 #include <mir/raii.h>
 #include <mir/emergency_cleanup.h>
 #include <mir/executor.h>
-#include <mir/constexpr_strlen.h>
+#include <mir/constexpr_utils.h>
 
 #include <atomic>
 #include <mutex>

@@ -22,7 +22,7 @@
 #include "ioctl_vt_switcher.h"
 #include <mir/raii.h>
 #include <mir/synchronised.h>
-#include <mir/constexpr_strlen.h>
+#include <mir/constexpr_utils.h>
 
 #define MIR_LOG_COMPONTENT "VT-handler"
 #include <mir/log.h>

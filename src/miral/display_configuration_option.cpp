@@ -21,7 +21,7 @@
 #include <mir/graphics/display_configuration.h>
 #include <mir/options/option.h>
 #include <mir/server.h>
-#include <mir/constexpr_strlen.h>
+#include <mir/constexpr_utils.h>
 
 #include <algorithm>
 #include <format>

@@ -34,7 +34,7 @@
 #include <mir/graphics/egl_error.h>
 #include <mir/graphics/gl_config.h>
 #include <mir/graphics/egl_logger.h>
-#include <mir/constexpr_strlen.h>
+#include <mir/constexpr_utils.h>
 #include "quirk_common.h"
 
 #include <EGL/egl.h>

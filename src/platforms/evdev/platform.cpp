@@ -25,7 +25,7 @@
 #include <mir/dispatch/multiplexing_dispatchable.h>
 #include <mir/dispatch/action_queue.h>
 #include <mir/console_services.h>
-#include <mir/constexpr_strlen.h>
+#include <mir/constexpr_utils.h>
 
 #include <mir/input/input_device_registry.h>
 #include <mir/input/input_report.h>

@@ -17,7 +17,7 @@
 #include "minimal_console_services.h"
 
 #include <mir/log.h>
-#include <mir/constexpr_strlen.h>
+#include <mir/constexpr_utils.h>
 
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/exception/errinfo_file_name.hpp>

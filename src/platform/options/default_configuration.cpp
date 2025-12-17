@@ -22,7 +22,7 @@
 #include <mir/abnormal_exit.h>
 #include <mir/shared_library_prober.h>
 #include <mir/logging/null_shared_library_prober_report.h>
-#include <mir/constexpr_strlen.h>
+#include <mir/constexpr_utils.h>
 
 #include <algorithm>
 #include <format>

@@ -21,7 +21,7 @@
 #include <mir/events/keyboard_event.h>
 #include <mir/input/seat.h>
 #include <mir/fatal.h>
-#include <mir/constexpr_strlen.h>
+#include <mir/constexpr_utils.h>
 
 #include <cstring> // memcpy
 #include <unordered_set>

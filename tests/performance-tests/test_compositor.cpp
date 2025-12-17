@@ -16,7 +16,7 @@
 
 #include "system_performance_test.h"
 
-#include <mir/constexpr_strlen.h>
+#include <mir/constexpr_utils.h>
 
 #include <fstream>
 #include <string>

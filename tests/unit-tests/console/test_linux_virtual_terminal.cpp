@@ -27,7 +27,7 @@
 #include <mir/test/doubles/null_device_observer.h>
 #include <mir/test/doubles/simple_device_observer.h>
 #include <mir/test/doubles/null_emergency_cleanup.h>
-#include <mir/constexpr_strlen.h>
+#include <mir/constexpr_utils.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

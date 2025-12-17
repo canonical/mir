@@ -18,7 +18,7 @@
 #include <mir_test_framework/mmap_wrapper.h>
 #include <mir_test_framework/open_wrapper.h>
 #include <mir/geometry/size.h>
-#include <mir/constexpr_strlen.h>
+#include <mir/constexpr_utils.h>
 #include <gtest/gtest.h>
 
 #include <stdexcept>

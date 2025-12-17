@@ -29,7 +29,7 @@
 #include <mir/log.h>
 #include <mir/executor.h>
 #include <mir/main_loop.h>
-#include <mir/constexpr_strlen.h>
+#include <mir/constexpr_utils.h>
 
 #include <algorithm>
 #include <mutex>

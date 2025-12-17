@@ -31,7 +31,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <mir/abnormal_exit.h>
-#include <mir/constexpr_strlen.h>
+#include <mir/constexpr_utils.h>
 
 using namespace testing;
 

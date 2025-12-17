@@ -17,7 +17,7 @@
 #include "src/server/console/minimal_console_services.h"
 #include <mir_test_framework/open_wrapper.h>
 #include <mir/test/doubles/mock_drm.h>
-#include <mir/constexpr_strlen.h>
+#include <mir/constexpr_utils.h>
 #include <mir/test/doubles/simple_device_observer.h>
 
 #include <mir/anonymous_shm_file.h>
