@@ -26,6 +26,7 @@
 #include <getopt.h>
 #include <linux/input-event-codes.h>
 
+#include <charconv>
 #include <list>
 #include <map>
 #include <memory>
@@ -67,11 +68,29 @@ void parse_options(int argc, char* argv[])
         case 0:
             if (option_main_width == long_options[option_index].name)
             {
-                main_width = atoi(optarg);
+                int32_t parsed_value = 0;
+                auto [end, ec] = std::from_chars(optarg, optarg + strlen(optarg), parsed_value);
+                if (ec == std::errc())
+                {
+                    main_width = parsed_value;
+                }
+                else
+                {
+                    printf("Could not parse option %s with arg %s\n", long_options[option_index].name, optarg);
+                }
             }
             else if (option_main_height == long_options[option_index].name)
             {
-                main_height = atoi(optarg);
+                int32_t parsed_value = 0;
+                auto [end, ec] = std::from_chars(optarg, optarg + strlen(optarg), parsed_value);
+                if (ec == std::errc())
+                {
+                    main_height = parsed_value;
+                }
+                else
+                {
+                    printf("Could not parse option %s with arg %s\n", long_options[option_index].name, optarg);
+                }
             }
             else
             {
