@@ -59,7 +59,16 @@ Build-Depends: cmake,
                wlcs (>= 1.8~),
                libapparmor-dev,
                libpixman-1-dev,
-               xwayland
+               xwayland,
+               cargo:native,
+               rustc:native (>= 1.81.0),
+               libstd-rust-dev,
+               librust-cxx-1+default-dev (>= 1.0.167-~~),
+               librust-cxx-build-1+default-dev,
+               librust-input-0.9+default-dev (>= 0.9.0-~~),
+               librust-libc-0.2+default-dev (>= 0.2.175-~~),
+               librust-nix-0.30+default-dev (>= 0.30-~~),
+               librust-nix-0.30+poll-dev (>= 0.30-~~)
 Standards-Version: 4.6.1
 Homepage: https://mir-server.io/
 Vcs-Browser: https://github.com/canonical/mir/
