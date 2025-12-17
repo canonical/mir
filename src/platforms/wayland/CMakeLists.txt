@@ -1,6 +1,4 @@
-pkg_check_modules(WAYLAND_CLIENT REQUIRED IMPORTED_TARGET wayland-client)
 pkg_check_modules(WAYLAND_EGL REQUIRED IMPORTED_TARGET wayland-egl)
-pkg_check_modules(XKBCOMMON xkbcommon REQUIRED IMPORTED_TARGET)
 
 add_compile_definitions(MIR_LOG_COMPONENT_FALLBACK="wayland")
 
