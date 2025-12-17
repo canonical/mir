@@ -38,7 +38,7 @@
 %global mirplatforminput_sover 10
 
 Name:           mir
-Version:        2.25.1
+Version:        2.25.2
 Release:        0%{?dist}
 Summary:        Next generation Wayland display server toolkit
 
@@ -331,6 +331,13 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/miral-shell.desktop
 
 
 %changelog
+* Wed Dec 17 2025 Mir CI Bot <mir-ci-bot@canonical.com> - 2.25.2-1
+
+- Bugs fixed:
+  - Pkgconfig isn't finding xkbcommon.h on openSUSE Tumbleweed [#4544](https://github.com/canonical/mir/pull/4544)
+  - libmirplatform-dev does not upgrade if mir-renderer-gl-dev is instaled [#4563](https://github.com/canonical/mir/pull/4563)
+
+
 * Mon Dec 15 2025 Mir CI Bot <mir-ci-bot@canonical.com> - 2.25.1-1
 
 - Bugfix for PkgConf files missing versions [#4554](https://github.com/canonical/mir/pull/4554)
