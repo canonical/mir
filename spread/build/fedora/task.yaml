@@ -1,6 +1,6 @@
 summary: Build Fedora packages
 systems: [fedora-*]
-variants: [fedora_*]
+variants: [fedora_*, opensuse_*]
 kill-timeout: 60m
 
 execute: |
@@ -33,7 +33,7 @@ execute: |
     rpmbuild -bs ~/rpmbuild/SPECS/mir.spec
 
     mock \
-      --root fedora-${RELEASE}-x86_64 \
+      --root ${RELEASE}-x86_64 \
       --resultdir ~/rpmbuild/RPMS \
       --verbose \
       --enable-plugin=ccache \

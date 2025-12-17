@@ -24,10 +24,11 @@ environment:
     RELEASE/ubuntu_questing: questing
     RELEASE/ubuntu_devel: resolute
     RELEASE/debian_sid: sid
-    RELEASE/fedora_42: 42
-    RELEASE/fedora_43: 43
-    RELEASE/fedora_rawhide: rawhide
-    RELEASE/fedora_clang: 43
+    RELEASE/fedora_42: fedora-42
+    RELEASE/fedora_43: fedora-43
+    RELEASE/fedora_rawhide: fedora-rawhide
+    RELEASE/fedora_clang: fedora-43
+    RELEASE/opensuse_tumbleweed: opensuse-tumbleweed
     PROPOSED: false
     PROPOSED/ubuntu_proposed: true
     CLANG: 0
