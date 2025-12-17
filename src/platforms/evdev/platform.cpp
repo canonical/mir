@@ -25,6 +25,7 @@
 #include <mir/dispatch/multiplexing_dispatchable.h>
 #include <mir/dispatch/action_queue.h>
 #include <mir/console_services.h>
+#include <mir/constexpr_strlen.h>
 
 #include <mir/input/input_device_registry.h>
 #include <mir/input/input_report.h>
@@ -310,7 +311,7 @@ void mie::Platform::start()
 
                         std::string devnode{workaround_device->devnode()};
                         // Libinput filters out anything without “event” as its name
-                        if (strncmp(workaround_device->sysname(), "event", strlen("event")) != 0)
+                        if (strncmp(workaround_device->sysname(), "event", constexpr_strlen("event")) != 0)
                         {
                             return;
                         }

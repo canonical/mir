@@ -16,6 +16,8 @@
 
 #include "system_performance_test.h"
 
+#include <mir/constexpr_strlen.h>
+
 #include <fstream>
 #include <string>
 
@@ -73,11 +75,11 @@ struct CompositorPerformance : SystemPerformanceTest
             }
             if (char const* renderer = strstr(line, "GL renderer: "))
             {
-                server_renderer.assign(renderer + 13, strlen(renderer) - 14);
+                server_renderer.assign(renderer + 13, constexpr_strlen(renderer) - 14);
             }
             if (char const* mode = strstr(line, "Current mode"))
             {
-                server_mode.assign(mode + 13, strlen(mode) - 14);
+                server_mode.assign(mode + 13, constexpr_strlen(mode) - 14);
             }
         }
     }

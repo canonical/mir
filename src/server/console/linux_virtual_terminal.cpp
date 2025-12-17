@@ -22,6 +22,7 @@
 #include "ioctl_vt_switcher.h"
 #include <mir/raii.h>
 #include <mir/synchronised.h>
+#include <mir/constexpr_strlen.h>
 
 #define MIR_LOG_COMPONTENT "VT-handler"
 #include <mir/log.h>
@@ -658,9 +659,9 @@ std::future<std::unique_ptr<mir::Device>> mir::LinuxVirtualTerminal::acquire_dev
 
             while (uevent.getline(line_buffer, sizeof(line_buffer)))
             {
-                if (strncmp(line_buffer, "DEVNAME=", strlen("DEVNAME=")) == 0)
+                if (strncmp(line_buffer, "DEVNAME=", constexpr_strlen("DEVNAME=")) == 0)
                 {
-                    return std::string{"/dev/"} + std::string{line_buffer + strlen("DEVNAME=")};
+                    return std::string{"/dev/"} + std::string{line_buffer + constexpr_strlen("DEVNAME=")};
                 }
             }
             BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to read DEVNAME"}));

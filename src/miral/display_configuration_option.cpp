@@ -21,6 +21,7 @@
 #include <mir/graphics/display_configuration.h>
 #include <mir/options/option.h>
 #include <mir/server.h>
+#include <mir/constexpr_strlen.h>
 
 #include <algorithm>
 #include <format>
@@ -226,13 +227,13 @@ void miral::display_configuration_options(mir::Server& server)
             {
                 layout_selector = std::make_shared<mg::SingleDisplayConfigurationPolicy>();
             }
-            else if (display_layout.compare(0, strlen(static_opt_val), static_opt_val) == 0)
+            else if (display_layout.compare(0, constexpr_strlen(static_opt_val), static_opt_val) == 0)
             {
                 if (scale != 1.0)
                 {
                     mir::fatal_error("Display scale option can't be used with static display configuration");
                 }
-                auto sdc = std::make_shared<StaticDisplayConfig>(display_layout.substr(strlen(static_opt_val)));
+                auto sdc = std::make_shared<StaticDisplayConfig>(display_layout.substr(constexpr_strlen(static_opt_val)));
                 server.add_init_callback([sdc, &server]{ sdc->init_auto_reload(server); });
                 layout_selector = std::move(sdc);
             }
@@ -249,7 +250,7 @@ void miral::display_configuration_options(mir::Server& server)
                     mir::fatal_error("Display scale option can't be used with autoscale");
                 }
 
-                if (display_layout.compare(0, strlen(static_opt_val), static_opt_val) == 0)
+                if (display_layout.compare(0, constexpr_strlen(static_opt_val), static_opt_val) == 0)
                 {
                     mir::fatal_error("Display autoscale option can't be used with static display configuration");
                 }

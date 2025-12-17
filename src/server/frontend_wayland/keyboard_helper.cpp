@@ -21,6 +21,7 @@
 #include <mir/events/keyboard_event.h>
 #include <mir/input/seat.h>
 #include <mir/fatal.h>
+#include <mir/constexpr_strlen.h>
 
 #include <cstring> // memcpy
 #include <unordered_set>
@@ -144,7 +145,7 @@ void mf::KeyboardHelper::set_keymap(std::shared_ptr<mi::Keymap> const& new_keyma
         XKB_KEYMAP_FORMAT_TEXT_V1),
         free};
     // so the null terminator is included
-    auto length = strlen(buffer.get()) + 1;
+    auto length = constexpr_strlen(buffer.get()) + 1;
 
     mir::AnonymousShmFile shm_buffer{length};
     memcpy(shm_buffer.base_ptr(), buffer.get(), length);

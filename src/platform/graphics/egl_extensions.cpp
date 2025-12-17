@@ -15,6 +15,7 @@
  */
 
 #include <mir/graphics/egl_extensions.h>
+#include <mir/constexpr_strlen.h>
 #include <EGL/egl.h>
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -34,7 +35,7 @@ auto mg::has_egl_extension(EGLDisplay dpy, char const* extension) -> bool
     while (found_substring)
     {
         // Check that we haven't found a prefix of our extension name
-        auto end_of_match = found_substring + strlen(extension);
+        auto end_of_match = found_substring + constexpr_strlen(extension);
         // It's a match if it terminates with the end of the extension string, or with a space
         if (*end_of_match == '\0' || *end_of_match == ' ')
         {

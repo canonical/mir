@@ -34,6 +34,7 @@
 #include <mir/graphics/egl_error.h>
 #include <mir/graphics/gl_config.h>
 #include <mir/graphics/egl_logger.h>
+#include <mir/constexpr_strlen.h>
 #include "quirk_common.h"
 
 #include <EGL/egl.h>
@@ -452,7 +453,7 @@ auto probe_rendering_platform(
                 if (strncmp(
                     "llvmpipe",
                     renderer_string,
-                    strlen("llvmpipe")) == 0)
+                    constexpr_strlen("llvmpipe")) == 0)
                 {
                     mir::log_info("Detected software renderer: %s", renderer_string);
                     // Leave the priority at ::unsupported; if we've got a software renderer then
