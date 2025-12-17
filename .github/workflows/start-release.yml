@@ -57,7 +57,7 @@ jobs:
 
       - name: Update CMake version
         run: |
-          sed -E 's/(VERSION\s+)[0-9]+\.[0-9]+\.[0-9]+/\1${{ inputs.version }}/' --inplace CMakeLists.txt
+          sed --in-place -E 's/(VERSION\s+)[0-9]+\.[0-9]+\.[0-9]+/\1${{ inputs.version }}/' CMakeLists.txt
 
           if [ -n "$(git status --porcelain CMakeLists.txt)" ]; then
             git add CMakeLists.txt
