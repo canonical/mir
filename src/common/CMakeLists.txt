@@ -1,5 +1,3 @@
-pkg_check_modules(XKBCOMMON REQUIRED IMPORTED_TARGET xkbcommon)
-
 add_compile_definitions(MIR_LOG_COMPONENT_FALLBACK="mircommon")
 
 set(MIR_COMMON_SOURCES)

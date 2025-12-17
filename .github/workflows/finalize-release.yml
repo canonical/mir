@@ -95,7 +95,7 @@ jobs:
             { print }
           ' debian/changelog
 
-          dch --newversion "${{ steps.version.outputs.version }}" \
+          dch --newversion "${{ steps.version.outputs.version }}-0ubuntu24.04" \
               --distribution noble \
               --force-distribution \
               ""
@@ -155,7 +155,7 @@ jobs:
           git push origin "${{ inputs.release_branch }}"
 
       - name: Finalize GitHub release
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const tag = `v${{ steps.version.outputs.version }}`;

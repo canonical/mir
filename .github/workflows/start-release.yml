@@ -57,7 +57,7 @@ jobs:
 
       - name: Update CMake version
         run: |
-          sed -E 's/(VERSION\s+)[0-9]+\.[0-9]+\.[0-9]+/\1${{ inputs.version }}/' --inplace CMakeLists.txt
+          sed --in-place -E 's/(VERSION\s+)[0-9]+\.[0-9]+\.[0-9]+/\1${{ inputs.version }}/' CMakeLists.txt
 
           if [ -n "$(git status --porcelain CMakeLists.txt)" ]; then
             git add CMakeLists.txt
@@ -80,7 +80,7 @@ jobs:
           git push origin "HEAD:${{ steps.version.outputs.release_branch }}"
 
       - name: Create draft GitHub release
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const generatedNotes = await github.rest.repos.generateReleaseNotes({
