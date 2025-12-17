@@ -1,5 +1,3 @@
-pkg_check_modules(FREETYPE freetype2 REQUIRED IMPORTED_TARGET) # For rendering decorated window titles
-
 add_compile_definitions(
   MIR_LOG_COMPONENT_FALLBACK="mirserver"
   MIR_VERSION="${PROJECT_VERSION}"

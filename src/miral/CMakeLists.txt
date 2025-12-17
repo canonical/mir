@@ -8,7 +8,6 @@ set(miral_include ${PROJECT_SOURCE_DIR}/include/miral)
 
 pkg_check_modules(YAML REQUIRED IMPORTED_TARGET yaml-cpp)
 pkg_check_modules(GIO REQUIRED IMPORTED_TARGET gio-2.0 gio-unix-2.0)
-pkg_check_modules(FREETYPE freetype2 REQUIRED IMPORTED_TARGET)
 
 add_compile_definitions(MIR_LOG_COMPONENT_FALLBACK="miral" MIRAL_ENABLE_DEPRECATIONS=0)
 
@@ -208,6 +207,7 @@ target_link_libraries(miral-external
 target_link_libraries(miral
     PUBLIC
         miral-external
+        PkgConfig::XKBCOMMON
     PRIVATE
         miral-internal
 )
