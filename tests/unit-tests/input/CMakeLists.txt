@@ -36,14 +36,9 @@ list(APPEND UMOCK_UNIT_TEST_SOURCES
 )
 list(APPEND UMOCK_UNIT_TEST_REFERENCES
     mirplatformserverx11sharedresources
+    mirplatforminputevdevrsobjects
     mirplatforminputx11objects
 )
-endif()
-
-if (MIR_ENABLE_RUST)
-  list(APPEND UMOCK_UNIT_TEST_REFERENCES
-    mirplatforminputevdevrsobjects
-  )
 endif()
 
 set(UNIT_TEST_SOURCES ${UNIT_TEST_SOURCES} PARENT_SCOPE)
