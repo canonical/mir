@@ -121,7 +121,8 @@ execute: |
       apt-get install \
         build-essential \
         cmake \
-        pkg-config
+        pkg-config \
+        libxkbcommon-dev
 
       # [doc:first-compositor:debian-dependencies-install]
       apt-get install libmiral-dev mir-graphics-drivers-desktop
