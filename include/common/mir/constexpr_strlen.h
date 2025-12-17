@@ -18,5 +18,4 @@
 
 using namespace std;
 
-// replaces strlen() across codebase
 inline constexpr size_t constexpr_strlen(string_view str) { return str.size(); }
