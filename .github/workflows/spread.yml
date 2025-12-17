@@ -49,6 +49,7 @@ jobs:
                 "lxd:...:fedora_43"
                 "lxd:...:fedora_clang"
                 "lxd:...:fedora_rawhide"
+                "lxd:...:opensuse_tumbleweed"
                 "lxd:ubuntu-24.04:spread/build/sbuild:ubuntu_devel"
                 "lxd:ubuntu-24.04:spread/build/sbuild:ubuntu_proposed"
                 "lxd:ubuntu-24.04:spread/build/ubuntu:asan"
