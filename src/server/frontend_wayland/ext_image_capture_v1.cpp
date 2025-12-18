@@ -224,6 +224,7 @@ public:
     ExtImageCopyCaptureFrameV1(wl_resource* resource, ExtImageCopyCaptureSessionV1* session);
 
     bool is_ready() const;
+    // \pre backend.has_damage() == true
     void begin_capture(ExtImageCopyBackend& backend);
     void report_result(ExtImageCopyBackend::CaptureResult const& result);
 
