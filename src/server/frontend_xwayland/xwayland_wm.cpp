@@ -35,7 +35,6 @@
 #include <mir/scene/null_observer.h>
 
 #include <cstring>
-#include <ranges>
 #include <boost/throw_exception.hpp>
 
 namespace mf = mir::frontend;
@@ -482,7 +481,12 @@ void mf::XWaylandWM::update_client_list()
     auto const windows = [&]
     {
         std::lock_guard lock{mutex};
-        return std::views::keys(surfaces) | std::ranges::to<std::vector>();
+        std::vector<xcb_window_t> result;
+        for (auto const& [window, _] : surfaces)
+        {
+            result.push_back(window);
+        }
+        return result;
     }();
 
     connection->set_property<XCBType::WINDOW>(
