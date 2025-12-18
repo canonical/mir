@@ -659,9 +659,9 @@ std::future<std::unique_ptr<mir::Device>> mir::LinuxVirtualTerminal::acquire_dev
 
             while (uevent.getline(line_buffer, sizeof(line_buffer)))
             {
-                if (strncmp(line_buffer, "DEVNAME=", constexpr_strlen("DEVNAME=")) == 0)
+                if (strncmp(line_buffer, "DEVNAME=", strlen_c("DEVNAME=")) == 0)
                 {
-                    return std::string{"/dev/"} + std::string{line_buffer + constexpr_strlen("DEVNAME=")};
+                    return std::string{"/dev/"} + std::string{line_buffer + strlen_c("DEVNAME=")};
                 }
             }
             BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to read DEVNAME"}));

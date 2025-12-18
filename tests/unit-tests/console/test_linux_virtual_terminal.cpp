@@ -778,8 +778,8 @@ void set_expectations_for_uevent_probe(
     std::stringstream expected_filename;
     expected_filename << "/sys/dev/char/" << major << ":" << minor << "/uevent";
 
-    auto uevent = std::make_shared<mir::AnonymousShmFile>(constexpr_strlen(content));
-    ::memcpy(uevent->base_ptr(), content, constexpr_strlen(content));
+    auto uevent = std::make_shared<mir::AnonymousShmFile>(mir::strlen_c(content));
+    ::memcpy(uevent->base_ptr(), content, mir::strlen_c(content));
 
     EXPECT_CALL(fops, open(StrEq(expected_filename.str()), FlagsSet(O_RDONLY, O_CLOEXEC)))
         .WillRepeatedly(InvokeWithoutArgs(
@@ -792,7 +792,7 @@ std::string uevent_content_for_device(
 {
     std::stringstream content;
 
-    if (strncmp(device_name, "/dev/", constexpr_strlen("/dev/")) != 0)
+    if (strncmp(device_name, "/dev/", mir::strlen_c("/dev/")) != 0)
     {
         throw std::logic_error{"device_name is expected to be the fully-qualified /dev/foo path"};
     }
@@ -932,8 +932,8 @@ TEST_F(LinuxVirtualTerminalTest, throws_error_when_parsing_fails)
         "MINOR=61\n"
         "I_AINT_NO_DEVNAME=fb0";
 
-    mir::AnonymousShmFile uevent{constexpr_strlen(uevent_content)};
-    ::memcpy(uevent.base_ptr(), uevent_content, constexpr_strlen(uevent_content));
+    mir::AnonymousShmFile uevent{mir::strlen_c(uevent_content)};
+    ::memcpy(uevent.base_ptr(), uevent_content, mir::strlen_c(uevent_content));
 
     EXPECT_CALL(*fops, open(StrEq(expected_filename), FlagsSet(O_RDONLY, O_CLOEXEC)))
         .WillOnce(Return(uevent.fd()));

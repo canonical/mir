@@ -14,8 +14,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+ #ifndef CONSTEXPR_UTILS_H
+ #define CONSTEXPR_UTILS_H
+
 #include <string_view>
 
-using namespace std;
+namespace mir 
+{
 
-inline constexpr size_t constexpr_strlen(string_view str) { return str.size(); }
+inline constexpr std::size_t strlen_c(std::string_view str) { return str.size(); }
+
+}
+
+#endif

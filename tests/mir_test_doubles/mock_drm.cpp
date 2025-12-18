@@ -236,7 +236,7 @@ mtd::MockDRM::MockDRM()
         [this](char const* path, int flags, std::optional<mode_t>) -> std::optional<int>
         {
             char const* const drm_prefix = "/dev/dri/";
-            if (!strncmp(path, drm_prefix, constexpr_strlen(drm_prefix)))
+            if (!strncmp(path, drm_prefix, strlen_c(drm_prefix)))
             {
                 // I don't think we need to be able to distinguish based on mode. ppc64el (at least) *does*
                 // call the 3-parameter open()
@@ -374,11 +374,11 @@ mtd::MockDRM::MockDRM()
         1,
         2,
         3,
-        static_cast<int>(constexpr_strlen("mock_driver")),
+        static_cast<int>(strlen_c("mock_driver")),
         const_cast<char*>("mock_driver"),
-        static_cast<int>(constexpr_strlen("1 Jan 1970")),
+        static_cast<int>(strlen_c("1 Jan 1970")),
         const_cast<char*>("1 Jan 1970"),
-        static_cast<int>(constexpr_strlen("Not really a driver")),
+        static_cast<int>(strlen_c("Not really a driver")),
         const_cast<char*>("Not really a driver")
     };
     ON_CALL(*this, drmGetVersion(_))

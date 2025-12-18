@@ -16,13 +16,13 @@
 
 #include <mir/options/default_configuration.h>
 
+#include <mir/abnormal_exit.h>
+#include <mir/constexpr_utils.h>
+#include <mir/graphics/platform.h>
+#include <mir/logging/null_shared_library_prober_report.h>
 #include <mir/options/program_option.h>
 #include <mir/shared_library.h>
-#include <mir/graphics/platform.h>
-#include <mir/abnormal_exit.h>
 #include <mir/shared_library_prober.h>
-#include <mir/logging/null_shared_library_prober_report.h>
-#include <mir/constexpr_utils.h>
 
 #include <algorithm>
 #include <format>
@@ -574,7 +574,7 @@ void mo::DefaultConfiguration::parse_environment(
         [=, this](std::string const& from) -> std::string
         {
             auto const prefix = "MIR_SERVER_";
-            auto const sizeof_prefix = constexpr_strlen(prefix);
+            auto const sizeof_prefix = strlen_c(prefix);
 
             if (!from.starts_with(prefix))
             {

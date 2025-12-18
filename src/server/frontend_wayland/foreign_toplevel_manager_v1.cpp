@@ -582,7 +582,7 @@ void mf::GDesktopFileCache::refresh_app_cache()
         // it out since that isn't useful in this context.
         const char* const DESKTOP_PREFIX = ".desktop";
         if (id.ends_with(DESKTOP_PREFIX))
-            id.erase(id.length() - constexpr_strlen(DESKTOP_PREFIX));
+            id.erase(id.length() - strlen_c(DESKTOP_PREFIX));
 
         std::shared_ptr<DesktopFile> file = std::make_shared<DesktopFile>(id.c_str(), wm_class, exec);
         if (g_app_info_should_show(app_info))

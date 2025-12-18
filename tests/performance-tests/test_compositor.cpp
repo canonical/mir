@@ -75,11 +75,11 @@ struct CompositorPerformance : SystemPerformanceTest
             }
             if (char const* renderer = strstr(line, "GL renderer: "))
             {
-                server_renderer.assign(renderer + 13, constexpr_strlen(renderer) - 14);
+                server_renderer.assign(renderer + 13, mir::strlen_c(renderer) - 14);
             }
             if (char const* mode = strstr(line, "Current mode"))
             {
-                server_mode.assign(mode + 13, constexpr_strlen(mode) - 14);
+                server_mode.assign(mode + 13, mir::strlen_c(mode) - 14);
             }
         }
     }

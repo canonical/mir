@@ -43,7 +43,7 @@ std::string uevent_content_for_device(
 {
     std::stringstream content;
 
-    if (strncmp(device_name, "/dev/", constexpr_strlen("/dev/")) != 0)
+    if (strncmp(device_name, "/dev/", mir::strlen_c("/dev/")) != 0)
     {
         throw std::logic_error{"device_name is expected to be the fully-qualified /dev/foo path"};
     }
@@ -51,7 +51,7 @@ std::string uevent_content_for_device(
     content
         << "MAJOR=" << major << "\n"
         << "MINOR=" << minor << "\n"
-        << "DEVNAME=" << device_name + strlen ("/dev/") << "\n";
+        << "DEVNAME=" << device_name + mir::strlen_c("/dev/") << "\n";
 
     return content.str();
 }
@@ -108,8 +108,8 @@ private:
         std::stringstream expected_filename;
         expected_filename << "/sys/dev/char/" << major << ":" << minor << "/uevent";
 
-        auto uevent = std::make_shared<mir::AnonymousShmFile>(constexpr_strlen(sysfile_content));
-        ::memcpy(uevent->base_ptr(), sysfile_content, constexpr_strlen(sysfile_content));
+        auto uevent = std::make_shared<mir::AnonymousShmFile>(mir::strlen_c(sysfile_content));
+        ::memcpy(uevent->base_ptr(), sysfile_content, mir::strlen_c(sysfile_content));
 
         expectations.emplace_back(
             mtf::add_open_handler(
@@ -277,7 +277,7 @@ TEST_F(MinimalConsoleServicesTest, failure_to_open_sys_file_results_in_immediate
     auto error_on_device_open = mtf::add_open_handler(
         [](char const* path, int, std::optional<mode_t>) -> std::optional<int>
         {
-            if (!strncmp("/sys", path, constexpr_strlen("/sys")))
+            if (!strncmp("/sys", path, mir::strlen_c("/sys")))
             {
                 errno = EINVAL;
                 return {-1};
