@@ -386,13 +386,13 @@ void mf::XWaylandWM::set_focus(xcb_window_t xcb_window, bool should_be_focused)
 
 void mf::XWaylandWM::remember_scene_surface(std::weak_ptr<scene::Surface> const& scene_surface, xcb_window_t window)
 {
-    std::vector<xcb_window_t> stacking_order;
-    {
-        std::lock_guard lock{mutex};
-        scene_surfaces.insert(std::make_pair(scene_surface, window));
-        scene_surface_set.insert(scene_surface);
-        stacking_order = recalculate_client_stacking_list_locked();
-    }
+    auto const stacking_order =
+        [this, lock=std::lock_guard{mutex}, &scene_surface, window]()
+        {
+            scene_surfaces.insert(std::make_pair(scene_surface, window));
+            scene_surface_set.insert(scene_surface);
+            return recalculate_client_stacking_list_locked();
+        }();
 
     // Update _NET_CLIENT_LIST_STACKING when a new surface is tracked
     update_client_list_stacking(stacking_order);
@@ -401,13 +401,13 @@ void mf::XWaylandWM::remember_scene_surface(std::weak_ptr<scene::Surface> const&
 
 void mf::XWaylandWM::forget_scene_surface(std::weak_ptr<scene::Surface> const& scene_surface)
 {
-    std::vector<xcb_window_t> stacking_order;
-    {
-        std::lock_guard lock{mutex};
-        scene_surfaces.erase(scene_surface);
-        scene_surface_set.erase(scene_surface);
-        stacking_order = recalculate_client_stacking_list_locked();
-    }
+    auto const stacking_order =
+        [this, lock=std::lock_guard{mutex}, &scene_surface]()
+        {
+            scene_surfaces.erase(scene_surface);
+            scene_surface_set.erase(scene_surface);
+            return recalculate_client_stacking_list_locked();
+        }();
 
     // Update _NET_CLIENT_LIST_STACKING when a surface is no longer tracked
     update_client_list_stacking(stacking_order);
