@@ -88,6 +88,7 @@ private:
     void restack_surfaces();
     void update_client_list();
     void update_client_list_stacking();
+    void update_client_list_stacking(std::vector<xcb_window_t> const& windows);
 
     /// Called for all windows at startup and whenever a window is created
     /// May occasionally be called multiple times for the same window
