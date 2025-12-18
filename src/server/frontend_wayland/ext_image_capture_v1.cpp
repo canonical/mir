@@ -83,6 +83,8 @@ public:
     ExtImageCopyBackend& operator=(ExtImageCopyBackend const&) = delete;
 
     virtual bool has_damage();
+
+    // \pre has_damage() == true
     virtual void begin_capture(
         std::shared_ptr<renderer::software::RWMappable> const& shm_data,
         geom::Rectangle const& frame_damage,
