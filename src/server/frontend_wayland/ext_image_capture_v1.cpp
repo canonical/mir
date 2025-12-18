@@ -76,7 +76,7 @@ public:
     using CaptureResult = std::expected<std::tuple<time::Timestamp, geom::Rectangle>, uint32_t>;
     using CaptureCallback = std::function<void(CaptureResult const&)>;
 
-    ExtImageCopyBackend(ExtImageCopyCaptureSessionV1 *session, bool overlay_cursor);
+    ExtImageCopyBackend(ExtImageCopyCaptureSessionV1* session, bool overlay_cursor);
     virtual ~ExtImageCopyBackend() = default;
 
     ExtImageCopyBackend(ExtImageCopyBackend const&) = delete;
