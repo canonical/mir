@@ -29,7 +29,7 @@
 %global mircore_sover 2
 %global miroil_sover 8
 %global mirplatform_sover 34
-%global mirserver_sover 66
+%global mirserver_sover 67
 %global mirwayland_sover 5
 %global mirplatformgraphics_sover 23
 %global mirplatforminput_sover 10
