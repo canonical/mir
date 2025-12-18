@@ -14,17 +14,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <mir/run_mir.h>
-#include <mir/terminate_with_current_exception.h>
+#include <mir/constexpr_utils.h>
 #include <mir/display_server.h>
-#include <mir/fatal.h>
-#include <mir/main_loop.h>
-#include <mir/server_configuration.h>
-#include <mir/frontend/connector.h>
-#include <mir/raii.h>
 #include <mir/emergency_cleanup.h>
 #include <mir/executor.h>
-#include <mir/constexpr_utils.h>
+#include <mir/fatal.h>
+#include <mir/frontend/connector.h>
+#include <mir/main_loop.h>
+#include <mir/raii.h>
+#include <mir/run_mir.h>
+#include <mir/server_configuration.h>
+#include <mir/terminate_with_current_exception.h>
 
 #include <atomic>
 #include <mutex>

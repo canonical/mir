@@ -15,14 +15,15 @@
  */
 
 #include "linux_virtual_terminal.h"
+#include "ioctl_vt_switcher.h"
+
+#include <mir/constexpr_utils.h>
+#include <mir/emergency_cleanup_registry.h>
+#include <mir/fd.h>
 #include <mir/graphics/display_report.h>
 #include <mir/graphics/event_handler_register.h>
-#include <mir/fd.h>
-#include <mir/emergency_cleanup_registry.h>
-#include "ioctl_vt_switcher.h"
 #include <mir/raii.h>
 #include <mir/synchronised.h>
-#include <mir/constexpr_utils.h>
 
 #define MIR_LOG_COMPONTENT "VT-handler"
 #include <mir/log.h>
