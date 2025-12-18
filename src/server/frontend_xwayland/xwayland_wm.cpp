@@ -438,20 +438,8 @@ void mf::XWaylandWM::surfaces_reordered(scene::SurfaceSet const& affected_surfac
 
 void mf::XWaylandWM::restack_surfaces()
 {
-    std::vector<xcb_window_t> new_order;
-
-    {
-        std::lock_guard lock{mutex};
-        auto const new_surface_order = wm_shell->surface_stack->stacking_order_of(scene_surface_set);
-        for (auto const& surface : new_surface_order)
-        {
-            auto const surface_window = scene_surfaces.find(surface);
-            if (surface_window != scene_surfaces.end())
-            {
-                new_order.push_back(surface_window->second);
-            }
-        }
-    }
+    auto const new_order = [this, lock=std::lock_guard{mutex}]()
+        { return recalculate_client_stacking_list_locked(); }();
 
     xcb_window_t window_below = 0;
     for (auto const& window : new_order)
