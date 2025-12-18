@@ -482,6 +482,7 @@ void mf::XWaylandWM::update_client_list()
     {
         std::lock_guard lock{mutex};
         std::vector<xcb_window_t> result;
+        // Extract window IDs from surfaces map
         for (auto const& [window, _] : surfaces)
         {
             result.push_back(window);
