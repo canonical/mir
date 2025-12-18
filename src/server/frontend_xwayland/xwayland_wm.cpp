@@ -560,28 +560,27 @@ void mf::XWaylandWM::manage_window(xcb_window_t window, geom::Rectangle const& g
         }
     }
 
-    std::vector<xcb_window_t> client_list;
-    {
-        std::lock_guard lock{mutex};
-
-        if (surfaces.find(window) != surfaces.end())
+    auto const client_list =
+        [this, lock=std::lock_guard{mutex}, &window, &geometry, override_redirect]()
         {
-            // If a window is created during startup, we may be double-notified of it
-            return;
-        }
+            if (surfaces.find(window) != surfaces.end())
+            {
+                // If a window is created during startup, we may be double-notified of it
+                return std::vector<xcb_window_t>{};
+            }
 
-        surfaces[window] = std::make_shared<XWaylandSurface>(
-            this,
-            connection,
-            *wm_shell,
-            client_manager,
-            window,
-            geometry,
-            override_redirect,
-            assumed_surface_scale);
+            surfaces[window] = std::make_shared<XWaylandSurface>(
+                this,
+                connection,
+                *wm_shell,
+                client_manager,
+                window,
+                geometry,
+                override_redirect,
+                assumed_surface_scale);
 
-        client_list = recalculate_client_list_locked();
-    }
+            return recalculate_client_list_locked();
+        }();
 
     // Update _NET_CLIENT_LIST after adding the window
     update_client_list(client_list);
