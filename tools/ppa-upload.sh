@@ -69,7 +69,7 @@ else
   # look for a release tag within parents 2..n
   PARENT=2
   while git rev-parse HEAD^${PARENT} >/dev/null 2>&1; do
-    if [[ "$( git describe --exact-match HEAD^${PARENT} )" =~ ^${VERSION_RE}$ ]]; then
+    if [[ "$( git describe --tags --exact-match HEAD^${PARENT} )" =~ ^${VERSION_RE}$ ]]; then
       # copy packages from ppa:mir-team/rc to ppa:mir-team/release_ppa
       RELEASE_VERSION=${BASH_REMATCH[1]}-0ubuntu${UBUNTU_VERSION}
       echo "Copying mir_${RELEASE_VERSION} from ppa:mir-team/rc to ppa:mir-team/release…"
