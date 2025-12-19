@@ -49,7 +49,7 @@ sudo dnf --assumeyes builddep --allowerasing rpm/mir.spec
 :sync: alpine
 
 As we build Alpine in Mir's CI you can copy the `apk add` command
-from `spread/build/alpine/task.yaml`.
+from `spread/alpine/task.yaml`.
 
 `````
 
