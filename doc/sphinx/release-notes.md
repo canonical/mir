@@ -31,12 +31,12 @@
 ## Mir 2.25.2
 
 - Bugs fixed:
-  - Pkgconfig isn't finding xkbcommon.h on openSUSE Tumbleweed [#4544](https://github.com/canonical/mir/pull/4544)
-  - libmirplatform-dev does not upgrade if mir-renderer-gl-dev is instaled [#4563](https://github.com/canonical/mir/pull/4563)
+  - PkgConf isn't finding xkbcommon.h on openSUSE Tumbleweed [#4544](https://github.com/canonical/mir/pull/4544)
+  - libmirplatform-dev does not upgrade if mir-renderer-gl-dev is installed [#4563](https://github.com/canonical/mir/pull/4563)
 
 ## Mir 2.25.1
 
-- Bugfix for PkgConf files missing versions [#4544](https://github.com/canonical/mir/pull/4544)
+- Bug fix for PkgConf files missing versions [#4544](https://github.com/canonical/mir/pull/4544)
 
 ## Mir 2.25.0
 

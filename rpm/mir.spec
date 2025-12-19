@@ -339,13 +339,13 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/miral-shell.desktop
 * Wed Dec 17 2025 Mir CI Bot <mir-ci-bot@canonical.com> - 2.25.2-1
 
 - Bugs fixed:
-  - Pkgconfig isn't finding xkbcommon.h on openSUSE Tumbleweed [#4544](https://github.com/canonical/mir/pull/4544)
-  - libmirplatform-dev does not upgrade if mir-renderer-gl-dev is instaled [#4563](https://github.com/canonical/mir/pull/4563)
+  - PkgConf isn't finding xkbcommon.h on openSUSE Tumbleweed [#4544](https://github.com/canonical/mir/pull/4544)
+  - libmirplatform-dev does not upgrade if mir-renderer-gl-dev is installed [#4563](https://github.com/canonical/mir/pull/4563)
 
 
 * Mon Dec 15 2025 Mir CI Bot <mir-ci-bot@canonical.com> - 2.25.1-1
 
-- Bugfix for PkgConf files missing versions [#4554](https://github.com/canonical/mir/pull/4554)
+- Bug fix for PkgConf files missing versions [#4554](https://github.com/canonical/mir/pull/4554)
 
 
 * Fri Dec 12 2025 Mir CI Bot <mir-ci-bot@canonical.com> - 2.25.0-1

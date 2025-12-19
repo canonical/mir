@@ -35,13 +35,13 @@ Mir provides LTTng tracepoints for various interesting events. You can enable
 LTTng tracing for a Mir component by using the corresponding command-line
 option or environment variable for that component's report:
 
-```
-$ lttng create mirsession -o /tmp/mirsession
-$ lttng enable-event -u -a
-$ lttng start
-$ mir_demo_server --compositor-report=lttng
-$ lttng stop
-$ babeltrace /tmp/mirsession/<trace-subdir>
+```shell
+lttng create mirsession -o /tmp/mirsession
+lttng enable-event -u -a
+lttng start
+mir_demo_server --compositor-report=lttng
+lttng stop
+babeltrace /tmp/mirsession/<trace-subdir>
 ```
 
 LTTng-UST versions up to and including 2.1.2, and up to and including 2.2-rc2
@@ -50,6 +50,6 @@ provider is dlopen()-ed at runtime, like in the case of Mir. If you have a
 version of LTTng affected by this bug, you need to preload the server
 tracepoint provider library:
 
-```
-$ LD_PRELOAD=libmirserverlttng.so mir_demo_server --compositor-report=lttng
+```shell
+LD_PRELOAD=libmirserverlttng.so mir_demo_server --compositor-report=lttng
 ```
