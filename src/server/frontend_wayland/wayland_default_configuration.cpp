@@ -439,7 +439,8 @@ std::shared_ptr<mf::Connector>
                 the_decoration_strategy(),
                 the_session_coordinator(),
                 the_token_authority(),
-                the_rendering_platforms());
+                the_rendering_platforms(),
+                the_cursor_observer_multiplexer());
         });
 }
 
