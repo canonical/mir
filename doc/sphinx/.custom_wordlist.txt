@@ -4,6 +4,7 @@ accessor
 Accessors
 Actions
 adapter
+alia
 alloca
 another's
 API
@@ -74,6 +75,7 @@ enum
 Enums
 etnaviv
 Etnaviv
+evdev
 evdi
 Fedora
 filesystem
@@ -148,9 +150,11 @@ MirAL
 mirco
 mircommon
 mircore
+mirinputplatform
 Miriway
 miroil
 mirplatform
+mirplatformgraphics
 mirserver
 mirserverlttng
 mirwayland

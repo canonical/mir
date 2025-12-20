@@ -185,6 +185,7 @@ redirects = {
     'reference/continuous-integration': '../contributing/reference/continuous-integration',
     'reference/dso_versioning_guide': '../contributing/reference/dso-versioning-guide',
     'explanation/mir-graphics-support': 'explanation/platform-support',
+    'explanation/driver-quriks': 'explanation/driver-quirks',
 }
 
 
