@@ -32,18 +32,18 @@ mtd::FakeX11Resources::FakeX11Resources()
     : display{reinterpret_cast<Display*>(0x12345678)},
       window{reinterpret_cast<Window>((long unsigned int)9876543210)}
 {
-    std::memset(&keypress_event_return, 0, sizeof(XEvent));
-    std::memset(&key_release_event_return, 0, sizeof(XEvent));
-    std::memset(&button_release_event_return, 0, sizeof(XEvent));
-    std::memset(&expose_event_return, 0, sizeof(XEvent));
-    std::memset(&focus_in_event_return, 0, sizeof(XEvent));
-    std::memset(&focus_out_event_return, 0, sizeof(XEvent));
-    std::memset(&vscroll_event_return, 0, sizeof(XEvent));
-    std::memset(&motion_event_return, 0, sizeof(XEvent));
-    std::memset(&enter_notify_event_return, 0, sizeof(XEvent));
-    std::memset(&leave_notify_event_return, 0, sizeof(XEvent));
-    std::memset(&visual_info, 0, sizeof(XVisualInfo));
-    std::memset(&screen, 0, sizeof screen);
+    keypress_event_return = {};
+    key_release_event_return = {};
+    button_release_event_return = {};
+    expose_event_return = {};
+    focus_in_event_return = {};
+    focus_out_event_return = {};
+    vscroll_event_return = {};
+    motion_event_return = {};
+    enter_notify_event_return = {};
+    leave_notify_event_return = {};
+    visual_info = {};
+    screen = {};
     visual_info.red_mask = 0xFF0000;
     keypress_event_return.type = KeyPress;
     key_release_event_return.type = KeyRelease;
