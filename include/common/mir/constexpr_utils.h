@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
- #ifndef CONSTEXPR_UTILS_H
- #define CONSTEXPR_UTILS_H
+ #ifndef MIR_CONSTEXPR_UTILS_H_
+ #define MIR_CONSTEXPR_UTILS_H_
 
 #include <string_view>
 
