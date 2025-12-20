@@ -778,8 +778,8 @@ void set_expectations_for_uevent_probe(
     std::stringstream expected_filename;
     expected_filename << "/sys/dev/char/" << major << ":" << minor << "/uevent";
 
-    auto uevent = std::make_shared<mir::AnonymousShmFile>(mir::strlen_c(content));
-    ::memcpy(uevent->base_ptr(), content, mir::strlen_c(content));
+    auto uevent = std::make_shared<mir::AnonymousShmFile>(strlen(content));
+    ::memcpy(uevent->base_ptr(), content, strlen(content));
 
     EXPECT_CALL(fops, open(StrEq(expected_filename.str()), FlagsSet(O_RDONLY, O_CLOEXEC)))
         .WillRepeatedly(InvokeWithoutArgs(
@@ -800,7 +800,7 @@ std::string uevent_content_for_device(
     content
         << "MAJOR=" << major << "\n"
         << "MINOR=" << minor << "\n"
-        << "DEVNAME=" << device_name + strlen ("/dev/") << "\n";
+        << "DEVNAME=" << device_name + mir::strlen_c("/dev/") << "\n";
 
     return content.str();
 }

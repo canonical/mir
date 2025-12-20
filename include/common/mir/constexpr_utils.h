@@ -14,15 +14,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
- #ifndef MIR_CONSTEXPR_UTILS_H_
- #define MIR_CONSTEXPR_UTILS_H_
+
+#ifndef MIR_CONSTEXPR_UTILS_H_
+#define MIR_CONSTEXPR_UTILS_H_
 
 #include <string_view>
 
-namespace mir 
-{
+namespace mir {
 
-inline constexpr std::size_t strlen_c(std::string_view str) { return str.size(); }
+inline constexpr std::size_t strlen_c(std::string_view str) {
+  return str.size();
+}
 
 }
 
