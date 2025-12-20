@@ -698,7 +698,7 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
     if (verbose_xwayland_logging_enabled())
     {
         log_debug(
-            "Attaching wl_surface@%d to %s...",
+            "Attaching wl_surface@%u to %s...",
             wl_resource_get_id(wl_surface->resource),
             connection->window_debug_string(window).c_str());
     }

@@ -841,7 +841,7 @@ void mf::XWaylandWM::handle_surface_id(
                         if (verbose_xwayland_logging_enabled())
                         {
                             log_debug(
-                                "wl_surface@%d created but surface or shell has been destroyed",
+                                "wl_surface@%u created but surface or shell has been destroyed",
                                 wl_resource_get_id(wl_surface->resource));
                         }
                     }
