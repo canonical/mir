@@ -20,12 +20,12 @@
 
 #include <string_view>
 
-namespace mir {
-
-inline constexpr std::size_t strlen_c(std::string_view str) {
+namespace mir 
+{
+inline constexpr std::size_t strlen_c(std::string_view str)
+{
   return str.size();
 }
-
 }
 
 #endif

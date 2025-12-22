@@ -31,7 +31,6 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <mir/abnormal_exit.h>
-#include <mir/constexpr_utils.h>
 
 using namespace testing;
 
@@ -190,7 +189,7 @@ std::vector<std::string> run_client_enumerator(mir::Server& server)
     char line[256];
     while (fgets(line, sizeof(line), stream))
     {
-        size_t const len = mir::strlen_c(line);
+        size_t const len = strlen(line);
         interfaces.emplace_back(line, line + len - 1);
     }
     fclose(stream);

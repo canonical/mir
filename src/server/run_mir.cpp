@@ -16,7 +16,6 @@
 
 #include <mir/run_mir.h>
 #include <mir/terminate_with_current_exception.h>
-#include <mir/constexpr_utils.h>
 #include <mir/display_server.h>
 #include <mir/emergency_cleanup.h>
 #include <mir/executor.h>
@@ -175,7 +174,7 @@ extern "C" [[noreturn]] void fatal_signal_cleanup(int sig, siginfo_t* info, void
     n = write(STDERR_FILENO, security_mid, sizeof(security_mid) - 1);
     if (program_invocation_short_name)
     {
-        n = write(STDERR_FILENO, program_invocation_short_name, mir::strlen_c(program_invocation_short_name));
+        n = write(STDERR_FILENO, program_invocation_short_name, strlen(program_invocation_short_name));
     }
     else
     {

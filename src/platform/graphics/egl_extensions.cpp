@@ -15,7 +15,6 @@
  */
 
 #include <mir/graphics/egl_extensions.h>
-#include <mir/constexpr_utils.h>
 #include <EGL/egl.h>
 #include <boost/throw_exception.hpp>
 #include <stdexcept>

@@ -108,8 +108,8 @@ private:
         std::stringstream expected_filename;
         expected_filename << "/sys/dev/char/" << major << ":" << minor << "/uevent";
 
-        auto uevent = std::make_shared<mir::AnonymousShmFile>(mir::strlen_c(sysfile_content));
-        ::memcpy(uevent->base_ptr(), sysfile_content, mir::strlen_c(sysfile_content));
+        auto uevent = std::make_shared<mir::AnonymousShmFile>(strlen(sysfile_content));
+        ::memcpy(uevent->base_ptr(), sysfile_content, strlen(sysfile_content));
 
         expectations.emplace_back(
             mtf::add_open_handler(

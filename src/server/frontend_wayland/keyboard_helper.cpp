@@ -17,7 +17,6 @@
 #include "keyboard_helper.h"
 
 #include <mir/anonymous_shm_file.h>
-#include <mir/constexpr_utils.h>
 #include <mir/events/keyboard_event.h>
 #include <mir/fatal.h>
 #include <mir/input/keymap.h>
@@ -145,7 +144,7 @@ void mf::KeyboardHelper::set_keymap(std::shared_ptr<mi::Keymap> const& new_keyma
         XKB_KEYMAP_FORMAT_TEXT_V1),
         free};
     // so the null terminator is included
-    auto length = strlen_c(buffer.get()) + 1;
+    auto length = strlen(buffer.get()) + 1;
 
     mir::AnonymousShmFile shm_buffer{length};
     memcpy(shm_buffer.base_ptr(), buffer.get(), length);
