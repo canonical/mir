@@ -9,7 +9,8 @@ backends:
             - alpine-3.20
             - alpine-3.21
             - alpine-edge
-            - ubuntu-24.04
+            - ubuntu-devel:
+                image: ubuntu-daily:devel
             - fedora-43
 
 environment:
@@ -18,8 +19,8 @@ environment:
     ARCH/ubuntu_armhf: armhf
     DISTRO: ubuntu
     DISTRO/debian_sid: debian
-    RELEASE: noble
-    RELEASE/ubuntu: noble
+    RELEASE: resolute
+    RELEASE/ubuntu: resolute
     RELEASE/ubuntu_plucky: plucky
     RELEASE/ubuntu_questing: questing
     RELEASE/ubuntu_devel: resolute
