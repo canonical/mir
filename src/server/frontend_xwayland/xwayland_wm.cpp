@@ -162,8 +162,6 @@ mf::XWaylandWM::XWaylandWM(
     Not supported:
     _NET_WM_STATE_FOCUSED
     _NET_WM_STATE_MODAL
-    _NET_CLIENT_LIST
-    _NET_CLIENT_LIST_STACKING
     */
     xcb_atom_t const supported[]{
         connection->_NET_WM_MOVERESIZE,
@@ -172,7 +170,9 @@ mf::XWaylandWM::XWaylandWM(
         connection->_NET_WM_STATE_FULLSCREEN,
         connection->_NET_WM_STATE_MAXIMIZED_VERT,
         connection->_NET_WM_STATE_MAXIMIZED_HORZ,
-        connection->_NET_ACTIVE_WINDOW};
+        connection->_NET_ACTIVE_WINDOW,
+        connection->_NET_CLIENT_LIST,
+        connection->_NET_CLIENT_LIST_STACKING};
 
     connection->set_property<XCBType::ATOM>(connection->root_window(), connection->_NET_SUPPORTED, supported);
 
@@ -180,6 +180,17 @@ mf::XWaylandWM::XWaylandWM(
         connection->root_window(),
         connection->_NET_ACTIVE_WINDOW,
         static_cast<xcb_window_t>(XCB_WINDOW_NONE));
+
+    // Initialize client list properties to empty
+    std::vector<xcb_window_t> const empty_list;
+    connection->set_property<XCBType::WINDOW>(
+        connection->root_window(),
+        connection->_NET_CLIENT_LIST,
+        empty_list);
+    connection->set_property<XCBType::WINDOW>(
+        connection->root_window(),
+        connection->_NET_CLIENT_LIST_STACKING,
+        empty_list);
 
     connection->flush();
 
@@ -375,16 +386,32 @@ void mf::XWaylandWM::set_focus(xcb_window_t xcb_window, bool should_be_focused)
 
 void mf::XWaylandWM::remember_scene_surface(std::weak_ptr<scene::Surface> const& scene_surface, xcb_window_t window)
 {
-    std::lock_guard lock{mutex};
-    scene_surfaces.insert(std::make_pair(scene_surface, window));
-    scene_surface_set.insert(scene_surface);
+    auto const stacking_order =
+        [this, lock=std::lock_guard{mutex}, &scene_surface, window]()
+        {
+            scene_surfaces.insert(std::make_pair(scene_surface, window));
+            scene_surface_set.insert(scene_surface);
+            return recalculate_client_stacking_list_locked();
+        }();
+
+    // Update _NET_CLIENT_LIST_STACKING when a new surface is tracked
+    update_client_list_stacking(stacking_order);
+    connection->flush();
 }
 
 void mf::XWaylandWM::forget_scene_surface(std::weak_ptr<scene::Surface> const& scene_surface)
 {
-    std::lock_guard lock{mutex};
-    scene_surfaces.erase(scene_surface);
-    scene_surface_set.erase(scene_surface);
+    auto const stacking_order =
+        [this, lock=std::lock_guard{mutex}, &scene_surface]()
+        {
+            scene_surfaces.erase(scene_surface);
+            scene_surface_set.erase(scene_surface);
+            return recalculate_client_stacking_list_locked();
+        }();
+
+    // Update _NET_CLIENT_LIST_STACKING when a surface is no longer tracked
+    update_client_list_stacking(stacking_order);
+    connection->flush();
 }
 
 void mf::XWaylandWM::surfaces_reordered(scene::SurfaceSet const& affected_surfaces)
@@ -411,20 +438,8 @@ void mf::XWaylandWM::surfaces_reordered(scene::SurfaceSet const& affected_surfac
 
 void mf::XWaylandWM::restack_surfaces()
 {
-    std::vector<xcb_window_t> new_order;
-
-    {
-        std::lock_guard lock{mutex};
-        auto const new_surface_order = wm_shell->surface_stack->stacking_order_of(scene_surface_set);
-        for (auto const& surface : new_surface_order)
-        {
-            auto const surface_window = scene_surfaces.find(surface);
-            if (surface_window != scene_surfaces.end())
-            {
-                new_order.push_back(surface_window->second);
-            }
-        }
-    }
+    auto const new_order = [this, lock=std::lock_guard{mutex}]()
+        { return recalculate_client_stacking_list_locked(); }();
 
     xcb_window_t window_below = 0;
     for (auto const& window : new_order)
@@ -449,7 +464,50 @@ void mf::XWaylandWM::restack_surfaces()
         window_below = window;
     }
 
+    update_client_list_stacking(new_order);
     connection->flush();
+}
+
+void mf::XWaylandWM::update_client_list(std::vector<xcb_window_t> const& windows)
+{
+    connection->set_property<XCBType::WINDOW>(
+        connection->root_window(),
+        connection->_NET_CLIENT_LIST,
+        windows);
+}
+
+auto mir::frontend::XWaylandWM::recalculate_client_list_locked() const -> std::vector<xcb_window_t>
+{
+    std::vector<xcb_window_t> windows;
+    // Extract window IDs from surfaces map
+    for (auto const& [window, _] : surfaces)
+    {
+        windows.push_back(window);
+    }
+    return windows;
+}
+
+auto mir::frontend::XWaylandWM::recalculate_client_stacking_list_locked() const -> std::vector<xcb_window_t>
+{
+    std::vector<xcb_window_t> windows;
+    auto const surface_order = wm_shell->surface_stack->stacking_order_of(scene_surface_set);
+    for (auto const& surface : surface_order)
+    {
+        auto const surface_window = scene_surfaces.find(surface);
+        if (surface_window != scene_surfaces.end())
+        {
+            windows.push_back(surface_window->second);
+        }
+    }
+    return windows;
+}
+
+void mf::XWaylandWM::update_client_list_stacking(std::vector<xcb_window_t> const& windows)
+{
+    connection->set_property<XCBType::WINDOW>(
+        connection->root_window(),
+        connection->_NET_CLIENT_LIST_STACKING,
+        windows);
 }
 
 void mf::XWaylandWM::manage_window(xcb_window_t window, geom::Rectangle const& geometry, bool override_redirect)
@@ -502,23 +560,31 @@ void mf::XWaylandWM::manage_window(xcb_window_t window, geom::Rectangle const& g
         }
     }
 
-    std::lock_guard lock{mutex};
+    auto const client_list =
+        [this, lock=std::lock_guard{mutex}, &window, &geometry, override_redirect]()
+        {
+            if (surfaces.find(window) != surfaces.end())
+            {
+                // If a window is created during startup, we may be double-notified of it
+                return std::vector<xcb_window_t>{};
+            }
 
-    if (surfaces.find(window) != surfaces.end())
-    {
-        // If a window is created during startup, we may be double-notified of it
-        return;
-    }
+            surfaces[window] = std::make_shared<XWaylandSurface>(
+                this,
+                connection,
+                *wm_shell,
+                client_manager,
+                window,
+                geometry,
+                override_redirect,
+                assumed_surface_scale);
 
-    surfaces[window] = std::make_shared<XWaylandSurface>(
-        this,
-        connection,
-        *wm_shell,
-        client_manager,
-        window,
-        geometry,
-        override_redirect,
-        assumed_surface_scale);
+            return recalculate_client_list_locked();
+        }();
+
+    // Update _NET_CLIENT_LIST after adding the window
+    update_client_list(client_list);
+    connection->flush();
 }
 
 void mf::XWaylandWM::handle_event(xcb_generic_event_t* event)
@@ -728,6 +794,7 @@ void mf::XWaylandWM::handle_destroy_notify(xcb_destroy_notify_event_t *event)
 
     std::shared_ptr<XWaylandSurface> surface{nullptr};
 
+    std::vector<xcb_window_t> client_list;
     {
         std::lock_guard lock{mutex};
         auto iter = surfaces.find(event->window);
@@ -736,10 +803,17 @@ void mf::XWaylandWM::handle_destroy_notify(xcb_destroy_notify_event_t *event)
             surface = iter->second;
             surfaces.erase(iter);
         }
+
+        client_list = recalculate_client_list_locked();
     }
 
     if (surface)
+    {
         surface->close();
+        // Update _NET_CLIENT_LIST after removing the window
+        update_client_list(client_list);
+        connection->flush();
+    }
 }
 
 void mf::XWaylandWM::handle_map_request(xcb_map_request_event_t *event)
