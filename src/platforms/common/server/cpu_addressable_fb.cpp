@@ -16,6 +16,7 @@
 
 #include "cpu_addressable_fb.h"
 
+#include <mir/errno_utils.h>
 #include <mir/log.h>
 #include <mir_toolkit/common.h>
 
@@ -51,7 +52,7 @@ class mg::CPUAddressableFB::Buffer : public mir::renderer::software::RWMappable
             if (::munmap(const_cast<typename std::remove_const<T>::type *>(data_), len_) == -1)
             {
                 // It's unclear how this could happen, but tell *someone* about it if it does!
-                log_error("Failed to unmap CPU buffer: %s (%i)", strerror(errno), errno);
+                log_error("Failed to unmap CPU buffer: %s (%i)", mir::errno_to_cstr(errno), errno);
             }
         }
 
@@ -100,7 +101,7 @@ public:
 
         if (auto const err = drmIoctl(drm_fd, DRM_IOCTL_MODE_DESTROY_DUMB, &params))
         {
-            log_error("Failed destroy CPU-accessible buffer: %s (%i)", strerror(-err), -err);
+            log_error("Failed destroy CPU-accessible buffer: %s (%i)", mir::errno_to_cstr(-err), -err);
         }
     }
 

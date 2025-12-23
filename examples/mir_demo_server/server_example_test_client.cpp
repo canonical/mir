@@ -15,6 +15,7 @@
  */
 
 #include "server_example_test_client.h"
+#include <mir/errno_utils.h>
 #include <mir/fd.h>
 #include <mir/server.h>
 #include <mir/main_loop.h>
@@ -146,7 +147,7 @@ void me::TestClientRunner::operator()(mir::Server& server)
                 execlp(client.c_str(), client.c_str(), static_cast<char const*>(nullptr));
                 // If execl() returns then something is badly wrong
                 log(logging::Severity::critical, "mir::examples",
-                    "Failed to execute client (%s) error: %s", client.c_str(), strerror(errno));
+                    "Failed to execute client (%s) error: %s", client.c_str(), mir::errno_to_cstr(errno));
                 abort();
             }
             else if (pid > 0)

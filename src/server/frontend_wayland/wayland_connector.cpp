@@ -34,6 +34,7 @@
 #include "linux_drm_syncobj.h"
 #include "surface_registry.h"
 
+#include <mir/errno_utils.h>
 #include <mir/main_loop.h>
 #include <mir/thread_name.h>
 #include <mir/log.h>
@@ -473,7 +474,7 @@ void mf::WaylandConnector::stop()
 {
     if (eventfd_write(pause_signal, 1) < 0)
     {
-        log_error("WaylandConnector::stop() failed to send IPC eventloop pause signal: %s (%i)", strerror(errno), errno);
+        log_error("WaylandConnector::stop() failed to send IPC eventloop pause signal: %s (%i)", mir::errno_to_cstr(errno), errno);
     }
     if (dispatch_thread.joinable())
     {
@@ -507,7 +508,7 @@ int mf::WaylandConnector::client_socket_fd() const
                     {
                         mir::log_error(
                             "Failed to create Wayland client object: %s (errno %i)",
-                            strerror(errno),
+                            mir::errno_to_cstr(errno),
                             errno);
                     }
                 });
@@ -541,7 +542,7 @@ int mf::WaylandConnector::client_socket_fd(
                         {
                             mir::log_error(
                                 "Failed to create Wayland client object: %s (errno %i)",
-                                strerror(errno),
+                                mir::errno_to_cstr(errno),
                                 errno);
                         }
                     });

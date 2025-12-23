@@ -69,6 +69,7 @@ set(
   test_shm_backing.cpp
   test_signal.cpp
   test_default_server_configuration.cpp
+  test_errno_utils.cpp
 )
 
 set(UNIT_TEST_REFERENCES)

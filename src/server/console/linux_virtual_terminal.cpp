@@ -19,6 +19,7 @@
 
 #include <mir/constexpr_utils.h>
 #include <mir/emergency_cleanup_registry.h>
+#include <mir/errno_utils.h>
 #include <mir/fd.h>
 #include <mir/graphics/display_report.h>
 #include <mir/graphics/event_handler_register.h>
@@ -263,7 +264,7 @@ protected:
                  * It might result in this Mir server receiving unexpected input, however, so
                  * we should log something.
                  */
-                mir::log_warning("Failed to revoke input access: %s (%i)", strerror(errno), errno);
+                mir::log_warning("Failed to revoke input access: %s (%i)", mir::errno_to_cstr(errno), errno);
             }
         }
         // Don't keep the device FD open if nothing else needs it now.

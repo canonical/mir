@@ -16,6 +16,7 @@
 
 #include "display_report.h"
 
+#include <mir/errno_utils.h>
 #include <mir/report/lttng/mir_tracepoint.h>
 
 #define TRACEPOINT_DEFINE
@@ -42,7 +43,7 @@ void mir::report::lttng::DisplayReport::report_egl_configuration(EGLDisplay /*di
 
 void mir::report::lttng::DisplayReport::report_drm_master_failure(int error)
 {
-    mir_tracepoint(mir_server_display, report_drm_master_failure, strerror(error));
+    mir_tracepoint(mir_server_display, report_drm_master_failure, mir::errno_to_cstr(error));
 }
 
 void mir::report::lttng::DisplayReport::report_vsync(unsigned int output_id,

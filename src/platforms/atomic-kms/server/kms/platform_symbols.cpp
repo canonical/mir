@@ -22,6 +22,7 @@
 #include "display_helpers.h"
 #include "quirks.h"
 #include "kms-utils/drm_mode_resources.h"
+#include <mir/errno_utils.h>
 #include <mir/options/program_option.h>
 #include <mir/options/option.h>
 #include <mir/options/configuration.h>
@@ -286,7 +287,7 @@ auto probe_display_platform(
 
                     default:
                         mir::log_warning("Unexpected error from drmCheckModesettingSupported(): %s (%i), "
-                                         "but continuing anyway", strerror(err), err);
+                                         "but continuing anyway", mir::errno_to_cstr(err), err);
                         mir::log_warning("Please file a bug at "
                                          "https://github.com/canonical/mir/issues containing this message");
                         supported_devices.back().support_level = mg::probe::supported;

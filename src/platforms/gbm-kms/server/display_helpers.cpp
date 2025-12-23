@@ -21,6 +21,7 @@
 #include <mir/graphics/egl_error.h>
 #include "kms/quirks.h"
 
+#include <mir/errno_utils.h>
 #include <mir/udev/wrapper.h>
 #include <mir/console_services.h>
 
@@ -114,7 +115,7 @@ mgmh::DRMHelper::open_all_devices(
                 "Failed to set DRM interface version on device %s: %i (%s)",
                 device.devnode(),
                 error,
-                strerror(error));
+                mir::errno_to_cstr(error));
             continue;
         }
 
@@ -151,7 +152,7 @@ mgmh::DRMHelper::open_all_devices(
 
             default:
                 mir::log_warning("Unexpected error from drmCheckModesettingSupported(): %s (%i), but continuing anyway",
-                    strerror(err), err);
+                    mir::errno_to_cstr(err), err);
                 mir::log_warning("Please file a bug at https://github.com/canonical/mir/issues containing this message");
             }
         }

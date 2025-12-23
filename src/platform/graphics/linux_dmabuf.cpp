@@ -22,6 +22,7 @@
 
 #include <mir/synchronised.h>
 #include <mir_toolkit/common.h>
+#include <mir/errno_utils.h>
 #include "wayland_wrapper.h"
 #include <mir/wayland/protocol_error.h>
 #include <mir/wayland/client.h>
@@ -1456,7 +1457,7 @@ dev_t get_devnum(EGLDisplay dpy)
         if (stat(device_path, &device_stat) == -1)
         {
             mir::log_info(
-                "Unable to determine linux-dmabuf device: unable to stat device path: %s", strerror(errno));
+                "Unable to determine linux-dmabuf device: unable to stat device path: %s", mir::errno_to_cstr(errno));
             return 0;
         }
 
