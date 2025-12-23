@@ -17,13 +17,13 @@
 #include <mir/run_mir.h>
 #include <mir/terminate_with_current_exception.h>
 #include <mir/display_server.h>
+#include <mir/fatal.h>
+#include <mir/main_loop.h>
+#include <mir/server_configuration.h>
+#include <mir/frontend/connector.h>
+#include <mir/raii.h>
 #include <mir/emergency_cleanup.h>
 #include <mir/executor.h>
-#include <mir/fatal.h>
-#include <mir/frontend/connector.h>
-#include <mir/main_loop.h>
-#include <mir/raii.h>
-#include <mir/server_configuration.h>
 
 #include <atomic>
 #include <mutex>
@@ -174,7 +174,7 @@ extern "C" [[noreturn]] void fatal_signal_cleanup(int sig, siginfo_t* info, void
     n = write(STDERR_FILENO, security_mid, sizeof(security_mid) - 1);
     if (program_invocation_short_name)
     {
-        n = write(STDERR_FILENO, program_invocation_short_name, strlen(program_invocation_short_name));
+        n = write(STDERR_FILENO, program_invocation_short_name, std::strlen(program_invocation_short_name));
     }
     else
     {
