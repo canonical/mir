@@ -20,7 +20,7 @@
 
 #include <string_view>
 
-namespace mir 
+namespace mir
 {
 inline constexpr std::size_t strlen_c(std::string_view str)
 {
