@@ -77,7 +77,6 @@ auto create_wm_window(mf::XCBConnection const& connection) -> xcb_window_t
 auto init_xfixes(mf::XCBConnection const& connection) -> xcb_query_extension_reply_t const*
 {
     xcb_xfixes_query_version_cookie_t xfixes_cookie;
-    xcb_xfixes_query_version_reply_t *xfixes_reply;
 
     xcb_prefetch_extension_data(connection, &xcb_xfixes_id);
     xcb_prefetch_extension_data(connection, &xcb_composite_id);
@@ -90,14 +89,13 @@ auto init_xfixes(mf::XCBConnection const& connection) -> xcb_query_extension_rep
     }
 
     xfixes_cookie = xcb_xfixes_query_version(connection, XCB_XFIXES_MAJOR_VERSION, XCB_XFIXES_MINOR_VERSION);
-    xfixes_reply = xcb_xfixes_query_version_reply(connection, xfixes_cookie, NULL);
+    auto const xfixes_reply = mir::make_unique_cptr(xcb_xfixes_query_version_reply(connection, xfixes_cookie, NULL));
 
     if (mir::verbose_xwayland_logging_enabled())
     {
         mir::log_debug("xfixes version: %d.%d", xfixes_reply->major_version, xfixes_reply->minor_version);
     }
 
-    free(xfixes_reply);
     return xfixes;
 }
 
