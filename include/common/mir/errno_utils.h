@@ -69,4 +69,3 @@ namespace mir
 }
 
 #endif /* MIR_ERRNO_UTILS_H_ */
-

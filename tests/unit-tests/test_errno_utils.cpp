@@ -85,4 +85,3 @@ TEST(ErrnoToCstr, ThreadLocalIsolation_NoCrossThreadClobber) {
     // clobber thread 1’s TLS storage, these copies should match.
     EXPECT_EQ(t1_first, t1_second);
 }
-
