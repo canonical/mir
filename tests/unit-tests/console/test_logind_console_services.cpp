@@ -36,6 +36,7 @@
 #include <mir/test/doubles/null_device_observer.h>
 #include <mir/test/doubles/stub_session_lock.h>
 
+#include "mir/errno_utils.h"
 #include "src/server/console/logind_console_services.h"
 
 namespace mtf = mir_test_framework;
@@ -216,7 +217,7 @@ public:
             if (bytes_read < 0)
             {
                 std::cout << "Failed to read dbusmock output: "
-                    << strerror(errno)
+                    << mir::errno_to_string(errno)
                     << "(" << errno << ")" << std::endl;
             }
             std::cout << "Errors from DBusMock: " << std::endl;
@@ -227,7 +228,7 @@ public:
             if (bytes_read < 0)
             {
                 std::cout << "Failed to read dbusmock error output: "
-                          << strerror(errno)
+                          << mir::errno_to_string(errno)
                           << "(" << errno << ")" << std::endl;
             }
         }

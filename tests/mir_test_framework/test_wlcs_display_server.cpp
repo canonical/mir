@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "mir/errno_utils.h"
 #include <miral/test_wlcs_display_server.h>
 #include <wlcs/pointer.h>
 #include <wlcs/touch.h>
@@ -275,7 +276,7 @@ private:
                 mir::logging::Severity::error,
                 "wlcs-integration",
                 "eventfd_read failed to consume wakeup notification: %s (%i)",
-                strerror(err),
+                mir::errno_to_cstr(err),
                 err);
         }
 

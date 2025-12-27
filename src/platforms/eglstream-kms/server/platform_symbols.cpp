@@ -16,6 +16,7 @@
 
 #include <epoxy/egl.h>
 
+#include "mir/errno_utils.h"
 #include "platform.h"
 #include "utils.h"
 #include <mir/graphics/platform.h>
@@ -413,7 +414,7 @@ auto probe_display_platform(
                     mir::log_warning(
                         "Failed to set DRM interface version on device: %i (%s)",
                         error,
-                        strerror(error));
+                        mir::errno_to_cstr(error));
                     continue;
                 }
 
@@ -433,7 +434,7 @@ auto probe_display_platform(
                         mir::log_warning(
                             "Failed to check DRM modesetting support for device %s: %s (%i)",
                             busid.get(),
-                            strerror(-err),
+                            mir::errno_to_cstr(-err),
                             -err);
                     }
                     continue;

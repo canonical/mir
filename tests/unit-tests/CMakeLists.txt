@@ -60,7 +60,7 @@ set(
   test_shared_library_prober.cpp
   test_lockable_callback.cpp
   test_module_deleter.cpp
-    test_posix_rw_mutex.cpp
+  test_posix_rw_mutex.cpp
   test_posix_timestamp.cpp
   test_observer_multiplexer.cpp
   test_report_exception.cpp
@@ -69,6 +69,7 @@ set(
   test_shm_backing.cpp
   test_signal.cpp
   test_default_server_configuration.cpp
+  test_errno_utils.cpp
 )
 
 set(UNIT_TEST_REFERENCES)

@@ -20,6 +20,7 @@
 #include <mir/fd.h>
 #include <mir/emergency_cleanup_registry.h>
 #include "ioctl_vt_switcher.h"
+#include "mir/errno_utils.h"
 #include <mir/raii.h>
 #include <mir/synchronised.h>
 
@@ -261,7 +262,7 @@ protected:
                  * It might result in this Mir server receiving unexpected input, however, so
                  * we should log something.
                  */
-                mir::log_warning("Failed to revoke input access: %s (%i)", strerror(errno), errno);
+                mir::log_warning("Failed to revoke input access: %s (%i)", mir::errno_to_cstr(errno), errno);
             }
         }
         // Don't keep the device FD open if nothing else needs it now.
