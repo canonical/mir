@@ -21,8 +21,6 @@ target_link_libraries(mirplatformgraphicsvirtualobjects
     mirplatform
     mircommon
     mircore
-  PRIVATE
-    server_platform_common
 )
 
 add_library(mirplatformvirtual MODULE
@@ -33,7 +31,6 @@ target_link_libraries(
 
     PRIVATE
     mirplatform
-    server_platform_common
     mirplatformgraphicsvirtualobjects
 )
 

@@ -18,7 +18,7 @@
 #define MIR_GRAPHICS_GBM_REAL_KMS_DISPLAY_CONFIGURATION_H_
 
 #include "kms_display_configuration.h"
-#include "kms-utils/drm_mode_resources.h"
+#include <mir/graphics/kms/drm_mode_resources.h>
 
 #include <xf86drmMode.h>
 

@@ -25,7 +25,7 @@
 
 #include <mir/console_services.h>
 #include <mir/graphics/platform.h>
-#include "quirk_common.h"
+#include <mir/graphics/quirk_common.h>
 #include <mir/options/configuration.h>
 #include <mir/options/default_configuration.h>
 #include <mir/options/option.h>

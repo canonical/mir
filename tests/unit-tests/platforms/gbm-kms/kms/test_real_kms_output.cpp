@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "kms_framebuffer.h"
+#include <mir/graphics/kms_framebuffer.h>
 #include "src/platforms/gbm-kms/server/kms/real_kms_output.h"
 #include "src/platforms/gbm-kms/server/kms/page_flipper.h"
 #include <mir/fatal.h>

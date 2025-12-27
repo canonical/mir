@@ -128,7 +128,6 @@ target_link_libraries(mirserver
     mircommon
     mirwayland
 
-    server_platform_common
     Boost::iostreams
     PkgConfig::DRM
     PkgConfig::EGL

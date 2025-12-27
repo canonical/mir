@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "options_parsing_helpers.h"
+#include <mir/graphics/options_parsing_helpers.h>
 #include <stdexcept>
 #include <boost/throw_exception.hpp>
 

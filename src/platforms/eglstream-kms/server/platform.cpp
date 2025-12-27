@@ -21,9 +21,9 @@
 #include "display.h"
 #include <mir/graphics/platform.h>
 #include "utils.h"
-#include "kms_cpu_addressable_display_provider.h"
+#include <mir/graphics/kms_cpu_addressable_display_provider.h>
 
-#include "one_shot_device_observer.h"
+#include <mir/graphics/one_shot_device_observer.h>
 
 #include <mir/console_services.h>
 #include <mir/graphics/egl_error.h>

@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "threaded_drm_event_handler.h"
+#include <mir/graphics/kms/threaded_drm_event_handler.h>
 
 #include <boost/throw_exception.hpp>
 #include <boost/exception/enable_error_info.hpp>

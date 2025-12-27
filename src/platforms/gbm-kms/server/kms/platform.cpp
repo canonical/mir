@@ -28,11 +28,11 @@
 #include <mir/udev/wrapper.h>
 #include <mir/graphics/egl_error.h>
 #include <mir/graphics/egl_extensions.h>
-#include "one_shot_device_observer.h"
+#include <mir/graphics/one_shot_device_observer.h>
 #include <mir/graphics/linux_dmabuf.h>
 #include <mir/graphics/egl_context_executor.h>
 #include <mir/graphics/drm_syncobj.h>
-#include "kms_cpu_addressable_display_provider.h"
+#include <mir/graphics/kms_cpu_addressable_display_provider.h>
 #include "surfaceless_egl_context.h"
 #include <boost/throw_exception.hpp>
 #include <drm.h>

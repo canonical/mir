@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "egl_helpers.h"
+#include <mir/graphics/egl_helpers.h>
 #include <utility>
 
 namespace mgc = mir::graphics::common;
