@@ -138,7 +138,7 @@ private:
         auto prop =
             std::unique_ptr<drmModePropertyRes, void (*)(drmModePropertyPtr)>(new drmModePropertyRes, &::drmModeFreeProperty);
 
-        memset(prop.get(), 0, sizeof(*prop));
+        *prop = {};
 
         prop->prop_id = id;
         strncpy(prop->name, property.c_str(), sizeof(prop->name) - 1);

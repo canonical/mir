@@ -277,7 +277,7 @@ mtd::MockDRM::MockDRM()
 
     global_mock = this;
 
-    memset(&empty_object_props, 0, sizeof(empty_object_props));
+    empty_object_props = {};
 
     ON_CALL(*this, open(_,_))
         .WillByDefault(

@@ -40,18 +40,18 @@ public:
 
     Display *display;
     Window window;
-    Screen screen;
-    XVisualInfo visual_info;
-    XEvent keypress_event_return = { 0 };
-    XEvent key_release_event_return = { 0 };
-    XEvent button_release_event_return = { 0 };
-    XEvent expose_event_return = { 0 };
-    XEvent focus_in_event_return = { 0 };
-    XEvent focus_out_event_return = { 0 };
-    XEvent vscroll_event_return = { 0 };
-    XEvent motion_event_return = { 0 };
-    XEvent enter_notify_event_return = { 0 };
-    XEvent leave_notify_event_return = { 0 };
+    Screen screen = {};
+    XVisualInfo visual_info = {};
+    XEvent keypress_event_return = {};
+    XEvent key_release_event_return = {};
+    XEvent button_release_event_return = {};
+    XEvent expose_event_return = {};
+    XEvent focus_in_event_return = {};
+    XEvent focus_out_event_return = {};
+    XEvent vscroll_event_return = {};
+    XEvent motion_event_return = {};
+    XEvent enter_notify_event_return = {};
+    XEvent leave_notify_event_return = {};
     int pending_events = 1;
 };
 
