@@ -16,6 +16,7 @@
 
 
 #define MIR_LOG_COMPONENT "x11-error"
+#include <mir/c_memory.h>
 #include <mir/log.h>
 
 #include "x11_resources.h"
@@ -97,9 +98,8 @@ public:
     auto intern_atom(std::string const& name) const -> xcb_atom_t override
     {
         auto const cookie = xcb_intern_atom(conn, 0, name.size(), name.c_str());
-        auto const reply = xcb_intern_atom_reply(conn, cookie, nullptr);
+        auto const reply = mir::make_unique_cptr(xcb_intern_atom_reply(conn, cookie, nullptr));
         auto const atom = reply->atom;
-        free(reply);
         return atom;
     }
 
@@ -107,9 +107,9 @@ public:
     {
         // I'm assuming we handle xcb errors somewhere with events.
         auto ver_cookie = xcb_randr_query_version_unchecked(conn, 1, 2);
-        xcb_randr_query_version_reply(conn, ver_cookie,nullptr);
+        auto const version_reply = mir::make_unique_cptr(xcb_randr_query_version_reply(conn, ver_cookie,nullptr));
         auto screen_cookie = xcb_randr_get_screen_info_unchecked(conn,screen_->root);
-        auto screen_reply = xcb_randr_get_screen_info_reply(conn, screen_cookie, nullptr);
+        auto const screen_reply = mir::make_unique_cptr(xcb_randr_get_screen_info_reply(conn, screen_cookie, nullptr));
         auto refresh_rate = static_cast<double>(screen_reply->rate);
         mir::log_debug("Detected %.2fHz host output refresh rate.", refresh_rate);
         return screen_reply->rate;
