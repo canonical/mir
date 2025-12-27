@@ -16,9 +16,10 @@
 
 #include "src/server/console/linux_virtual_terminal.h"
 #include "src/server/report/null_report_factory.h"
-#include <mir/graphics/event_handler_register.h>
 #include <mir/anonymous_shm_file.h>
+#include <mir/constexpr_utils.h>
 #include <mir/emergency_cleanup_registry.h>
+#include <mir/graphics/event_handler_register.h>
 
 #include <mir/test/fake_shared.h>
 #include <mir/test/doubles/mock_display_report.h>
@@ -791,7 +792,7 @@ std::string uevent_content_for_device(
 {
     std::stringstream content;
 
-    if (strncmp(device_name, "/dev/", strlen("/dev/")) != 0)
+    if (strncmp(device_name, "/dev/", mir::strlen_c("/dev/")) != 0)
     {
         throw std::logic_error{"device_name is expected to be the fully-qualified /dev/foo path"};
     }
@@ -799,7 +800,7 @@ std::string uevent_content_for_device(
     content
         << "MAJOR=" << major << "\n"
         << "MINOR=" << minor << "\n"
-        << "DEVNAME=" << device_name + strlen ("/dev/") << "\n";
+        << "DEVNAME=" << device_name + mir::strlen_c("/dev/") << "\n";
 
     return content.str();
 }
@@ -931,8 +932,8 @@ TEST_F(LinuxVirtualTerminalTest, throws_error_when_parsing_fails)
         "MINOR=61\n"
         "I_AINT_NO_DEVNAME=fb0";
 
-    mir::AnonymousShmFile uevent{strlen(uevent_content)};
-    ::memcpy(uevent.base_ptr(), uevent_content, strlen(uevent_content));
+    mir::AnonymousShmFile uevent{mir::strlen_c(uevent_content)};
+    ::memcpy(uevent.base_ptr(), uevent_content, mir::strlen_c(uevent_content));
 
     EXPECT_CALL(*fops, open(StrEq(expected_filename), FlagsSet(O_RDONLY, O_CLOEXEC)))
         .WillOnce(Return(uevent.fd()));

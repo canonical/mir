@@ -30,6 +30,7 @@
 #include <mir/assert_module_entry_point.h>
 #include <mir/libname.h>
 #include <mir/console_services.h>
+#include <mir/constexpr_utils.h>
 #include "one_shot_device_observer.h"
 #include <mir/graphics/egl_error.h>
 #include <mir/graphics/gl_config.h>
@@ -452,7 +453,7 @@ auto probe_rendering_platform(
                 if (strncmp(
                     "llvmpipe",
                     renderer_string,
-                    strlen("llvmpipe")) == 0)
+                    mir::strlen_c("llvmpipe")) == 0)
                 {
                     mir::log_info("Detected software renderer: %s", renderer_string);
                     // Leave the priority at ::unsupported; if we've got a software renderer then
