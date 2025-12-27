@@ -34,6 +34,7 @@ struct MockCursorObserver : public input::CursorObserver
     MOCK_METHOD(void, cursor_moved_to, (float, float), (override));
     MOCK_METHOD(void, pointer_usable, (), (override));
     MOCK_METHOD(void, pointer_unusable, (), (override));
+    MOCK_METHOD(void, image_set_to, (std::shared_ptr<graphics::CursorImage>), (override));
 };
 
 }

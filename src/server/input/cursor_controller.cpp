@@ -231,9 +231,13 @@ void mi::CursorController::set_cursor_image_locked(std::unique_lock<std::mutex>&
     {
         if (usable)
             cursor->show(image);
+        cursor_observer->image_set_to(image);
     }
     else
+    {
         cursor->hide();
+        cursor_observer->image_set_to(nullptr);
+    }
 }
 
 void mi::CursorController::update_cursor_image_locked(std::unique_lock<std::mutex>& lock)
@@ -324,6 +328,13 @@ void mir::input::CursorController::pointer_unusable()
     {
         cursor_observer->pointer_unusable();
     }
+}
+
+void mir::input::CursorController::image_set_to(std::shared_ptr<mg::CursorImage> new_image)
+{
+    std::unique_lock lock{cursor_state_guard};
+    default_cursor_image = new_image;
+    update_cursor_image_locked(lock);
 }
 
 void mir::input::CursorController::set_drag_icon(std::weak_ptr<scene::Surface> icon)

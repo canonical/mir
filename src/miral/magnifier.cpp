@@ -32,6 +32,7 @@
 namespace mi = mir::input;
 namespace ms = mir::scene;
 namespace geom = mir::geometry;
+namespace mg = mir::graphics;
 
 namespace
 {
@@ -141,6 +142,7 @@ private:
 
         void pointer_usable() override {}
         void pointer_unusable() override {}
+        void image_set_to(std::shared_ptr<mg::CursorImage>) override {}
 
         static geom::Point cursor_position_to_capture_position(
             geom::Size const& window_size,

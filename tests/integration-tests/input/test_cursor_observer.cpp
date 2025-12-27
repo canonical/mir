@@ -49,6 +49,7 @@ struct MockCursorObserver : public mi::CursorObserver
 
     void pointer_usable() {}
     void pointer_unusable() {}
+    void image_set_to(std::shared_ptr<mir::graphics::CursorImage>) {}
 };
 
 struct CursorObserverIntegrationTest : testing::Test, mtf::FakeInputServerConfiguration
