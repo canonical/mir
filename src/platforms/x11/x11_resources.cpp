@@ -177,7 +177,7 @@ public:
 
     void destroy_window(xcb_window_t window) const override
     {
-        xcb_map_window(conn, window);
+        xcb_destroy_window(conn, window);
     }
 
     void flush() const override
