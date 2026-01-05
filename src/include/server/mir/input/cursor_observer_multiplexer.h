@@ -34,6 +34,7 @@ public:
     virtual void cursor_moved_to(float abs_x, float abs_y) override;
     virtual void pointer_usable() override;
     virtual void pointer_unusable() override;
+    virtual void image_set_to(std::shared_ptr<graphics::CursorImage> new_image) override;
 
 protected:
     CursorObserverMultiplexer(CursorObserverMultiplexer const&) = delete;

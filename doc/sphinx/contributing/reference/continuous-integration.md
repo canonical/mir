@@ -23,7 +23,7 @@ is correct by building the code and running our test suite. To facilitate this, 
 [lightly patched version](https://snapcraft.io/spread-mir-ci)) to build Mir across a number of
 environments. [`spread.yaml`](https://github.com/canonical/mir/blob/main/spread.yaml) holds
 environment definitions, while the actual build tasks are maintained under
-[`spread/build`](https://github.com/canonical/mir/tree/main/spread/build).
+[`spread`](https://github.com/canonical/mir/tree/main/spread).
 
 Our focus of development is the most recent Ubuntu LTS, and we maintain builds for any more recent,
 supported Ubuntu releases. We also build for stable releases of other Linux distributions that

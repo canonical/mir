@@ -39,3 +39,8 @@ void mi::CursorObserverMultiplexer::pointer_unusable()
 {
     for_each_observer(&CursorObserver::pointer_unusable);
 }
+
+void mi::CursorObserverMultiplexer::image_set_to(std::shared_ptr<graphics::CursorImage> cursor)
+{
+    for_each_observer(&CursorObserver::image_set_to, std::move(cursor));
+}

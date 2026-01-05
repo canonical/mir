@@ -25,7 +25,7 @@ API.
 
 ## Packaging status
 
-[![Packaging status](https://repology.org/badge/vertical-allrepos/mir.svg)](https://repology.org/project/mir/versions)
+[![Packaging status](https://repology.org/badge/vertical-allrepos/mir.svg?exclude_unsupported=1)](https://repology.org/project/mir/versions)
 
 ## Copyright and License
 

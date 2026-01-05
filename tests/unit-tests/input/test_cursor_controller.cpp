@@ -418,14 +418,16 @@ TEST_F(TestCursorController, moves_cursor)
 
 TEST_F(TestCursorController, updates_cursor_image_when_entering_surface)
 {
-    StubInputSurface surface{rect_1_1_1_1,
-        std::make_shared<NamedCursorImage>(cursor_name_1)};
+    auto cursor_image = std::make_shared<NamedCursorImage>(cursor_name_1);
+    StubInputSurface surface{rect_1_1_1_1, cursor_image};
     StubScene targets({mt::fake_shared(surface)});
 
     TestController controller{targets, cursor, default_cursor_image, cursor_observer};
 
+    // The controller should update the Cursor and also notify observers
     EXPECT_CALL(cursor, move_to(_)).Times(AtLeast(1));
     EXPECT_CALL(cursor, show(CursorNamed(cursor_name_1))).Times(1);
+    EXPECT_CALL(*cursor_observer, image_set_to(Eq(cursor_image)));
 
     controller.cursor_moved_to(1.0f, 1.0f);
 }
@@ -440,6 +442,7 @@ TEST_F(TestCursorController, surface_with_no_cursor_image_hides_cursor)
 
     EXPECT_CALL(cursor, move_to(_)).Times(AtLeast(1));
     EXPECT_CALL(cursor, hide()).Times(1);
+    EXPECT_CALL(*cursor_observer, image_set_to(IsNull()));
 
     controller.cursor_moved_to(1.0f, 1.0f);
 }
@@ -454,6 +457,7 @@ TEST_F(TestCursorController, takes_cursor_image_from_topmost_surface)
 
     EXPECT_CALL(cursor, move_to(_)).Times(AtLeast(1));
     EXPECT_CALL(cursor, show(CursorNamed(cursor_name_2))).Times(1);
+    EXPECT_CALL(*cursor_observer, image_set_to(CursorNamed(cursor_name_2))).Times(1);
 
     controller.cursor_moved_to(1.0f, 1.0f);
 }
@@ -472,6 +476,11 @@ TEST_F(TestCursorController, restores_cursor_when_leaving_surface)
         InSequence seq;
         EXPECT_CALL(cursor, show(CursorNamed(cursor_name_1))).Times(1);
         EXPECT_CALL(cursor, show(DefaultCursorImage())).Times(1);
+    }
+    {
+        InSequence seq;
+        EXPECT_CALL(*cursor_observer, image_set_to(CursorNamed(cursor_name_1)));
+        EXPECT_CALL(*cursor_observer, image_set_to(DefaultCursorImage()));
     }
 
     controller.cursor_moved_to(1.0f, 1.0f);
@@ -492,6 +501,11 @@ TEST_F(TestCursorController, change_in_cursor_request_triggers_image_update_with
         EXPECT_CALL(cursor, show(CursorNamed(cursor_name_1))).Times(1);
         EXPECT_CALL(cursor, show(CursorNamed(cursor_name_2))).Times(1);
     }
+    {
+        InSequence seq;
+        EXPECT_CALL(*cursor_observer, image_set_to(CursorNamed(cursor_name_1))).Times(1);
+        EXPECT_CALL(*cursor_observer, image_set_to(CursorNamed(cursor_name_2))).Times(1);
+    }
 
     controller.cursor_moved_to(1.0f, 1.0f);
     surface.set_cursor_image(std::make_shared<NamedCursorImage>(cursor_name_2));
@@ -507,6 +521,7 @@ TEST_F(TestCursorController, change_in_scene_triggers_image_update)
     TestController controller{targets, cursor, default_cursor_image, cursor_observer};
 
     EXPECT_CALL(cursor, show(CursorNamed(cursor_name_1))).Times(1);
+    EXPECT_CALL(*cursor_observer, image_set_to(CursorNamed(cursor_name_1))).Times(1);
 
     targets.add_surface(mt::fake_shared(surface));
 }
@@ -523,6 +538,7 @@ TEST_F(TestCursorController, cursor_image_not_reset_needlessly)
     TestController controller{targets, cursor, default_cursor_image, cursor_observer};
 
     EXPECT_CALL(cursor, show(CursorNamed(cursor_name_1))).Times(1);
+    EXPECT_CALL(*cursor_observer, image_set_to(CursorNamed(cursor_name_1))).Times(1);
 
     targets.add_surface(mt::fake_shared(surface1));
     targets.add_surface(mt::fake_shared(surface2));
@@ -541,11 +557,14 @@ TEST_F(TestCursorController, updates_cursor_image_when_surface_posts_first_frame
 
     // First post should lead to cursor update
     EXPECT_CALL(cursor, show(CursorNamed(cursor_name_2))).Times(1);
+    EXPECT_CALL(*cursor_observer, image_set_to(CursorNamed(cursor_name_2))).Times(1);
     surface.post_frame();
     Mock::VerifyAndClearExpectations(&cursor);
+    Mock::VerifyAndClearExpectations(cursor_observer.get());
 
     // Second post should have no effect
     EXPECT_CALL(cursor, show(_)).Times(0);
+    EXPECT_CALL(*cursor_observer, image_set_to(_)).Times(0);
     surface.post_frame();
 }
 
@@ -560,6 +579,7 @@ TEST_F(TestCursorController, zero_sized_image_hides_cursor)
     TestController controller{targets, cursor, default_cursor_image, cursor_observer};
 
     EXPECT_CALL(cursor, hide()).Times(1);
+    EXPECT_CALL(*cursor_observer, image_set_to(IsNull())).Times(1);
 
     targets.add_surface(mt::fake_shared(surface));
 }

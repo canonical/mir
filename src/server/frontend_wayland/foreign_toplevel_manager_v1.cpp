@@ -581,9 +581,10 @@ void mf::GDesktopFileCache::refresh_app_cache()
 
         // It is likely that [id] ends in a .desktop suffix. If that's the case, we will strip
         // it out since that isn't useful in this context.
-        const char* const DESKTOP_PREFIX = ".desktop";
-        if (id.ends_with(DESKTOP_PREFIX))
-            id.erase(id.length() - strlen_c(DESKTOP_PREFIX));
+
+        const char* const desktop_suffix = ".desktop";
+        if (id.ends_with(desktop_suffix))
+            id.erase(id.length() - strlen_c(desktop_suffix));
 
         std::shared_ptr<DesktopFile> file = std::make_shared<DesktopFile>(id.c_str(), wm_class, exec);
         if (g_app_info_should_show(app_info))

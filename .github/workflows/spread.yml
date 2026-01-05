@@ -30,8 +30,8 @@ jobs:
         set -euo pipefail
 
         if ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}; then
-          TASKS='"lxd:ubuntu-24.04:spread/build/ubuntu:tsan"
-                 "lxd:ubuntu-24.04:spread/build/ubuntu:tsan_clang"'
+          TASKS='"lxd:...:spread/ubuntu:tsan"
+                 "lxd:...:spread/ubuntu:tsan_clang"'
         fi
 
         TASKS+='"lxd:...:debian_sid"
@@ -82,6 +82,15 @@ jobs:
         sudo snap install spread-mir-ci
         sudo snap connect spread-mir-ci:lxd lxd:lxd
         lxc profile set default security.privileged=true security.nesting=true
+
+        # Mock defaults to 12 loop devices
+        # https://github.com/canonical/lxd/issues/16070
+        lxc profile device add default loop-control unix-char path=/dev/loop-control
+        for i in $(seq 0 11); do
+          [ -e /dev/loop$i ] || sudo mknod -m 660 /dev/loop$i b 7 $i
+          lxc profile device add default loop$i unix-block source=/dev/loop$i
+        done
+
         sudo apt-get update
         sudo apt-get install --yes binfmt-support qemu-user-static
         echo "LXD_DIR=/var/snap/lxd/common/lxd" >> $GITHUB_ENV

@@ -31,7 +31,7 @@ For Debian and its derivatives, we only need two small packages:
   different graphics drivers
 * `bomber` - a Qt-based game we'll use to validate the compositor
 
-```{literalinclude} ../../../spread/build/sbuild/task.yaml
+```{literalinclude} ../../../spread/sbuild/task.yaml
 :language: bash
 :start-after: [doc:first-compositor:debian-dependencies-install]
 :end-before: [doc:first-compositor:debian-dependencies-install-end]
@@ -42,7 +42,7 @@ For Debian and its derivatives, we only need two small packages:
 ````{tab-item} Fedora
 :sync: fedora
 
-```{literalinclude} ../../../spread/build/fedora/task.yaml
+```{literalinclude} ../../../spread/fedora/task.yaml
 :language: bash
 :start-after: [doc:first-compositor:fedora-dependencies-install]
 :end-before: [doc:first-compositor:fedora-dependencies-install-end]
@@ -103,7 +103,7 @@ screen capture, pointer confinement, and so on.
 
 Finally, build the cmake project:
 
-```{literalinclude} ../../../spread/build/sbuild/task.yaml
+```{literalinclude} ../../../spread/sbuild/task.yaml
 ---
 language: bash
 start-after: [doc:first-compositor:build]
@@ -121,7 +121,7 @@ Mir](getting-started-with-mir.md).
 For development, it is very useful to run your compositor within an existing
 Wayland session, so let's do that first. To do this, run:
 
-```{literalinclude} ../../../spread/build/sbuild/task.yaml
+```{literalinclude} ../../../spread/sbuild/task.yaml
 ---
 language: bash
 start-after: [doc:first-compositor:run]
@@ -136,7 +136,7 @@ Next, let's open up an application in our compositor, namely the `bomber` arcade
 game.
 From another terminal, run:
 
-```{literalinclude} ../../../spread/build/sbuild/task.yaml
+```{literalinclude} ../../../spread/sbuild/task.yaml
 ---
 language: bash
 start-after: [doc:first-compositor:run-client]

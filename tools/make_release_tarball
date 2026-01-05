@@ -2,7 +2,11 @@
 
 set -ex
 
-RELEASE_TAG=HEAD
+VERSION_RE='v(([0-9]+)\.([0-9]+)\.([0-9]+))'  # version format vX.Y.Z (note not matching start/end)
+RELEASE_RE="^(refs/heads/)?release/[0-9]+\.[0-9]+\$|^(refs/tags/)?${VERSION_RE}\$"  # release branch or tag
+
+# by default, match the dev tag
+DESCRIBE_FLAGS=( --match=*-dev )
 
 while [ $# -gt 0 ]
 do
@@ -14,9 +18,19 @@ do
   then
     shift
     RELEASE_TAG=$1
+    DESCRIBE_FLAGS=( --match=v*.*.* )
   fi
   shift
 done
+
+GIT_BRANCH=${GITHUB_REF-$( git rev-parse --abbrev-ref HEAD )}
+if ! [ -v RELEASE_TAG ]; then
+  RELEASE_TAG="HEAD"
+  # if we're on a release branch or tag, exclude dev tags instead
+  if [[ "${GIT_BRANCH}" =~ ${RELEASE_RE} ]]; then
+    DESCRIBE_FLAGS=( --exclude=*-dev )
+  fi
+fi
 
 if [ ! -e tools/make_release_tarball  -o  "$1" != "" ]
 then
@@ -25,7 +39,7 @@ then
 fi
 
 set -e
-TAG=$( git describe --tags --abbrev=0 "${RELEASE_TAG}")
+TAG=$( git describe --tags --abbrev=0 "${DESCRIBE_FLAGS[@]}" "${RELEASE_TAG}")
 if [[ "${TAG}" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)(-(dev|rc))?$ ]]; then
   VERSION_MAJOR=${BASH_REMATCH[1]}
   VERSION_MINOR=${BASH_REMATCH[2]}
