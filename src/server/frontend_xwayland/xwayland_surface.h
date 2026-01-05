@@ -154,6 +154,9 @@ private:
     auto scene_surface() const -> std::optional<std::shared_ptr<scene::Surface>> override;
     /// @}
 
+    /// Updates pointer confinement based on surface state and focus
+    void update_pointer_confinement();
+
     /// Creates a pending spec if needed and returns a reference
     auto pending_spec(ProofOfMutexLock const&) -> shell::SurfaceSpecification&;
 
