@@ -25,6 +25,7 @@ namespace msh = mir::shell;
 namespace mi = mir::input;
 namespace mt = mir::time;
 namespace mev = mir::events;
+namespace mg = mir::graphics;
 
 class msh::BasicHoverClickTransformer::CursorObserver : public mi::CursorObserver
 {
@@ -87,6 +88,10 @@ public:
     }
 
     void pointer_unusable() override
+    {
+    }
+
+    void image_set_to(std::shared_ptr<mg::CursorImage>) override
     {
     }
 
