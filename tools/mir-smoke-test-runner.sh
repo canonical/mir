@@ -68,8 +68,11 @@ else
 
   if [ -z "$XDG_CURRENT_DESKTOP" ]
   then
-    echo Test gbm-kms platform
-    run_tests gbm-kms
+    if readlink -f /sys/class/drm/*/device/driver | grep -vq nvidia$
+    then
+      echo Test gbm-kms platform
+      run_tests gbm-kms
+    fi
 
     echo Test atomic-kms platform
     run_tests atomic-kms
