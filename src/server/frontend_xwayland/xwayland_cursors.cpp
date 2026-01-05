@@ -22,6 +22,7 @@
 #include "xwayland_cursors.h"
 #include "xwayland_log.h"
 
+#include <mir/c_memory.h>
 #include <boost/throw_exception.hpp>
 
 #include <charconv>
@@ -90,11 +91,10 @@ mf::XWaylandCursors::Loader::Loader(std::shared_ptr<XCBConnection> const& connec
 auto mf::XWaylandCursors::Loader::query_formats(std::shared_ptr<XCBConnection> const& connection) -> Loader::Formats
 {
     auto const formats_cookie = xcb_render_query_pict_formats(*connection);
-    auto const formats_reply = xcb_render_query_pict_formats_reply(*connection, formats_cookie, 0);
     mf::XWaylandCursors::Loader::Formats result;
-    if (formats_reply)
+    if (auto const formats_reply = mir::make_unique_cptr(xcb_render_query_pict_formats_reply(*connection, formats_cookie, 0)))
     {
-        auto const formats = xcb_render_query_pict_formats_formats(formats_reply);
+        auto const formats = xcb_render_query_pict_formats_formats(formats_reply.get());
         for (unsigned i = 0; i < formats_reply->num_formats; i++)
         {
             if (formats[i].direct.red_mask != 0xff && formats[i].direct.red_shift != 16)
@@ -109,7 +109,6 @@ auto mf::XWaylandCursors::Loader::query_formats(std::shared_ptr<XCBConnection> c
             }
         }
 
-        free(formats_reply);
     }
     else
     {

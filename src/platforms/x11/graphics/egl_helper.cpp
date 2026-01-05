@@ -15,8 +15,8 @@
  */
 
 #include "egl_helper.h"
-#include "mir/c_memory.h"
 
+#include <mir/c_memory.h>
 #include <mir/graphics/gl_config.h>
 #include <mir/graphics/egl_error.h>
 
@@ -177,7 +177,7 @@ namespace
 auto size_for_x_win(xcb_connection_t* xcb_conn, xcb_window_t win) -> mir::geometry::Size
 {
     auto cookie = xcb_get_geometry(xcb_conn, win);
-    if (auto const reply = mir::make_unique_cptr(xcb_get_geometry_reply(xcb_conn, cookie, nullptr)); reply)
+    if (auto const reply = mir::make_unique_cptr(xcb_get_geometry_reply(xcb_conn, cookie, nullptr)))
     {
         mir::geometry::Size const window_size{reply->width, reply->height};
         return window_size;
