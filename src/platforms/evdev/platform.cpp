@@ -19,12 +19,13 @@
 #include "libinput_ptr.h"
 #include "fd_store.h"
 
-#include <mir/udev/wrapper.h>
+#include <mir/console_services.h>
+#include <mir/constexpr_utils.h>
 #include <mir/dispatch/dispatchable.h>
 #include <mir/dispatch/readable_fd.h>
 #include <mir/dispatch/multiplexing_dispatchable.h>
 #include <mir/dispatch/action_queue.h>
-#include <mir/console_services.h>
+#include <mir/udev/wrapper.h>
 
 #include <mir/input/input_device_registry.h>
 #include <mir/input/input_report.h>
@@ -310,7 +311,7 @@ void mie::Platform::start()
 
                         std::string devnode{workaround_device->devnode()};
                         // Libinput filters out anything without “event” as its name
-                        if (strncmp(workaround_device->sysname(), "event", strlen("event")) != 0)
+                        if (strncmp(workaround_device->sysname(), "event", strlen_c("event")) != 0)
                         {
                             return;
                         }

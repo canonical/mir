@@ -16,6 +16,7 @@
 
 #include "minimal_console_services.h"
 
+#include <mir/constexpr_utils.h>
 #include <mir/log.h>
 
 #include <boost/exception/errinfo_errno.hpp>
@@ -104,9 +105,9 @@ std::future<std::unique_ptr<mir::Device>> mir::MinimalConsoleServices::acquire_d
 
         while (uevent.getline(line_buffer, sizeof(line_buffer)))
         {
-            if (strncmp(line_buffer, "DEVNAME=", strlen("DEVNAME=")) == 0)
+            if (strncmp(line_buffer, "DEVNAME=", strlen_c("DEVNAME=")) == 0)
             {
-                return std::string{"/dev/"} + std::string{line_buffer + strlen("DEVNAME=")};
+                return std::string{"/dev/"} + std::string{line_buffer + strlen_c("DEVNAME=")};
             }
         }
         BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to read DEVNAME"}));

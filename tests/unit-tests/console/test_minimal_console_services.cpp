@@ -18,6 +18,7 @@
 #include <mir_test_framework/open_wrapper.h>
 #include <mir/test/doubles/mock_drm.h>
 #include <mir/test/doubles/simple_device_observer.h>
+#include <mir/constexpr_utils.h>
 
 #include <mir/anonymous_shm_file.h>
 
@@ -42,7 +43,7 @@ std::string uevent_content_for_device(
 {
     std::stringstream content;
 
-    if (strncmp(device_name, "/dev/", strlen("/dev/")) != 0)
+    if (strncmp(device_name, "/dev/", mir::strlen_c("/dev/")) != 0)
     {
         throw std::logic_error{"device_name is expected to be the fully-qualified /dev/foo path"};
     }
@@ -50,7 +51,7 @@ std::string uevent_content_for_device(
     content
         << "MAJOR=" << major << "\n"
         << "MINOR=" << minor << "\n"
-        << "DEVNAME=" << device_name + strlen ("/dev/") << "\n";
+        << "DEVNAME=" << device_name + mir::strlen_c("/dev/") << "\n";
 
     return content.str();
 }
@@ -276,7 +277,7 @@ TEST_F(MinimalConsoleServicesTest, failure_to_open_sys_file_results_in_immediate
     auto error_on_device_open = mtf::add_open_handler(
         [](char const* path, int, std::optional<mode_t>) -> std::optional<int>
         {
-            if (!strncmp("/sys", path, strlen("/sys")))
+            if (!strncmp("/sys", path, mir::strlen_c("/sys")))
             {
                 errno = EINVAL;
                 return {-1};

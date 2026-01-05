@@ -27,9 +27,10 @@
 
 #include "logind-session.h"
 
+#include <mir/constexpr_utils.h>
 #include <mir/fd.h>
-#include <mir/main_loop.h>
 #include <mir/glib_main_loop.h>
+#include <mir/main_loop.h>
 
 #define MIR_LOG_COMPONTENT "logind"
 #include <mir/log.h>
@@ -265,7 +266,7 @@ mir::LogindConsoleServices::LogindConsoleServices(
             session_path.c_str())},
       switch_away{[](){ return true; }},
       switch_to{[](){ return true; }},
-      active{strncmp("active", logind_session_get_state(session_proxy.get()), strlen("active")) == 0}
+      active{strncmp("active", logind_session_get_state(session_proxy.get()), strlen_c("active")) == 0}
 {
     GErrorPtr error;
 
@@ -789,7 +790,7 @@ GDBusMessage* mir::LogindConsoleServices::resume_device_dbus_filter(
         return message;
 
     // …if it's a signal, but it's not ResumeDevice, we don't need to process it.
-    if (strncmp(g_dbus_message_get_member(message), "ResumeDevice", strlen("ResumeDevice")) != 0)
+    if (strncmp(g_dbus_message_get_member(message), "ResumeDevice", strlen_c("ResumeDevice")) != 0)
         return message;
 
     // We've definitely got a ResumeDevice signal! Now to extract the parameters, and
