@@ -1042,24 +1042,28 @@ void mf::XWaylandSurface::scene_surface_close_requested()
 
 void mf::XWaylandSurface::update_pointer_confinement()
 {
-    std::lock_guard lock{mutex};
-    auto const scene_surface = weak_scene_surface.lock();
+    std::shared_ptr<scene::Surface> scene_surface;
+    MirPointerConfinementState desired_state;
+    bool should_update = false;
     
-    if (!scene_surface)
-        return;
-    
-    // Lock pointer when the surface is fullscreen and focused
-    bool const is_fullscreen = cached.state.active_mir_state() == mir_window_state_fullscreen;
-    bool const is_focused = scene_surface->focus_state() == mir_window_focus_state_focused;
-    bool const should_lock = is_fullscreen && is_focused;
-    
-    MirPointerConfinementState const current_state = scene_surface->confine_pointer_state();
-    MirPointerConfinementState const desired_state = should_lock ? 
-        mir_pointer_locked_persistent : mir_pointer_unconfined;
-    
-    if (current_state != desired_state)
     {
-        if (verbose_xwayland_logging_enabled())
+        std::lock_guard lock{mutex};
+        scene_surface = weak_scene_surface.lock();
+        
+        if (!scene_surface)
+            return;
+        
+        // Lock pointer when the surface is fullscreen and focused
+        bool const is_fullscreen = cached.state.active_mir_state() == mir_window_state_fullscreen;
+        bool const is_focused = scene_surface->focus_state() == mir_window_focus_state_focused;
+        bool const should_lock = is_fullscreen && is_focused;
+        
+        MirPointerConfinementState const current_state = scene_surface->confine_pointer_state();
+        desired_state = should_lock ? mir_pointer_locked_persistent : mir_pointer_unconfined;
+        
+        should_update = (current_state != desired_state);
+        
+        if (should_update && verbose_xwayland_logging_enabled())
         {
             log_debug(
                 "%s pointer confinement: %s -> %s (fullscreen=%d, focused=%d)",
@@ -1069,7 +1073,10 @@ void mf::XWaylandSurface::update_pointer_confinement()
                 is_fullscreen,
                 is_focused);
         }
-        
+    }
+    
+    if (should_update)
+    {
         msh::SurfaceSpecification mods;
         mods.confine_pointer = desired_state;
         shell->modify_surface(scene_surface->session().lock(), scene_surface, mods);
