@@ -16,6 +16,7 @@
 
 #include <mir/logging/input_timestamp.h>
 #include <cstdio>
+#include <cstdlib>
 
 using namespace std::chrono;
 std::string mir::logging::input_timestamp(nanoseconds when)

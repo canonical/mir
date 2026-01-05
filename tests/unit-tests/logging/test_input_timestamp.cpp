@@ -17,33 +17,34 @@
 #include <mir/logging/input_timestamp.h>
 
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 #include <chrono>
 #include <string>
-#include <cstdio>
 
 using namespace std::chrono;
+using namespace testing;
 namespace ml = mir::logging;
 
-class TimestampTest : public ::testing::Test {
-};
-
-TEST_F(TimestampTest, HandlesPastTime) {
+TEST(TimestampTest, past_time_is_correctly_formatted) 
+{
     auto now = steady_clock::now().time_since_epoch();
     nanoseconds past_event = duration_cast<nanoseconds>(now - milliseconds(500));
 
     std::string out = ml::input_timestamp(past_event);
 
-    EXPECT_EQ(out.find(".-"), std::string::npos);
-    EXPECT_NE(out.find("500.000000ms ago"), std::string::npos);
+    EXPECT_THAT(out, Not(HasSubstr(".-")));
+    EXPECT_THAT(out, HasSubstr("500.000000ms ago"));
 }
 
-TEST_F(TimestampTest, HandlesFutureTime) {
+TEST(TimestampTest, future_time_is_correctly_formatted) 
+{
     auto now = steady_clock::now().time_since_epoch();
     nanoseconds future_event = duration_cast<nanoseconds>(now + nanoseconds(1000000123LL));
 
     std::string out = ml::input_timestamp(future_event);
 
-    EXPECT_EQ(out.find(".-"), std::string::npos);
-    EXPECT_NE(out.find("in future"), std::string::npos);
-    EXPECT_NE(out.find("1000.000123ms"), std::string::npos);
+    EXPECT_THAT(out, Not(HasSubstr(".-")));
+    EXPECT_THAT(out, HasSubstr("in future"));
+    EXPECT_THAT(out, HasSubstr("1000.000123ms"));
+    
 }
