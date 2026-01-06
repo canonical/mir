@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <mir/signal_blocker.h>
+#include "signal_blocker.h"
 
 #include <system_error>
 #include <signal.h>
