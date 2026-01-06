@@ -4,16 +4,17 @@ add_compile_definitions(MIR_LOG_COMPONENT_FALLBACK="mirwayland")
 
 add_subdirectory(generator/)
 
-set(STANDARD_SOURCES
+add_rust_cxx_library(mirwayland_rs
+  CRATE wayland_rs
+  DEPENDS Cargo.toml src/lib.rs
+)
+
+add_library(mirwayland SHARED
   lifetime_tracker.cpp
   resource.cpp
   global.cpp
   protocol_error.cpp
   client.cpp
-)
-
-add_library(mirwayland SHARED
-    ${STANDARD_SOURCES}
 )
 
 mir_generate_protocol_wrapper(mirwayland "wl_" wayland.xml)
@@ -54,6 +55,7 @@ target_link_libraries(mirwayland
     PkgConfig::WAYLAND_SERVER
   PRIVATE
     mircommon
+    mirwayland_rs
 )
 
 target_include_directories(mirwayland
