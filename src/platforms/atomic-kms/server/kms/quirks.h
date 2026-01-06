@@ -52,7 +52,6 @@ public:
 
     GbmQuirks(std::unique_ptr<SurfaceHasFreeBuffersQuirk> surface_has_free_buffers);
 
-    auto gbm_create_surface_flags() const -> uint32_t;
     auto gbm_surface_has_free_buffers(gbm_surface* gbm_surface) const -> int;
 
 private:
