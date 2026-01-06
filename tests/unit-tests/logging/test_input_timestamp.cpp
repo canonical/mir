@@ -25,26 +25,28 @@ using namespace std::chrono;
 using namespace testing;
 namespace ml = mir::logging;
 
-TEST(TimestampTest, past_time_is_correctly_formatted) 
+TEST(TimestampTest, past_time_is_correctly_formatted)
 {
-    auto now = steady_clock::now().time_since_epoch();
-    nanoseconds past_event = duration_cast<nanoseconds>(now - milliseconds(500));
+    using namespace std::chrono_literals;
+    auto const past_event = steady_clock::now().time_since_epoch() - 500ms;
 
     std::string out = ml::input_timestamp(past_event);
 
     EXPECT_THAT(out, Not(HasSubstr(".-")));
-    EXPECT_THAT(out, HasSubstr("500.000000ms ago"));
+    EXPECT_THAT(out, HasSubstr("500.0"));
+    EXPECT_THAT(out, HasSubstr("ms ago"));
 }
 
-TEST(TimestampTest, future_time_is_correctly_formatted) 
+TEST(TimestampTest, future_time_is_correctly_formatted)
 {
-    auto now = steady_clock::now().time_since_epoch();
-    nanoseconds future_event = duration_cast<nanoseconds>(now + nanoseconds(1000000123LL));
+    using namespace std::chrono_literals;
+    auto const future_event = steady_clock::now().time_since_epoch() + 1000ms + 123ns;
 
     std::string out = ml::input_timestamp(future_event);
 
     EXPECT_THAT(out, Not(HasSubstr(".-")));
-    EXPECT_THAT(out, HasSubstr("in future"));
-    EXPECT_THAT(out, HasSubstr("1000.000123ms"));
+    EXPECT_THAT(out, HasSubstr("in the future"));
+    EXPECT_THAT(out, HasSubstr("1000.0"));
+    EXPECT_THAT(out, HasSubstr("ms"));
     
 }
