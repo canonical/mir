@@ -1,8 +1,7 @@
 add_compile_definitions(MIR_LOG_COMPONENT_FALLBACK="mircommon")
 
-set(MIR_COMMON_SOURCES)
-
 add_subdirectory(events)
+add_subdirectory(input)
 add_subdirectory(logging)
 add_subdirectory(report/lttng)
 add_subdirectory(sharedlibrary)
@@ -10,47 +9,26 @@ add_subdirectory(thread)
 add_subdirectory(time)
 add_subdirectory(dispatch)
 
-list(APPEND MIR_COMMON_SOURCES
-  ${CMAKE_CURRENT_SOURCE_DIR}/output_type_names.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/log.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/libname.cpp
-  ${PROJECT_SOURCE_DIR}/include/common/mir/libname.h
-  ${PROJECT_SOURCE_DIR}/include/common/mir/posix_rw_mutex.h
-  posix_rw_mutex.cpp
-  default_font.cpp
-  event.cpp
-  event_printer.cpp
-  mir_cursor_api.cpp
-  thread_pool_executor.cpp
-  linearising_executor.cpp
-  immediate_executor.cpp
-  ${PROJECT_SOURCE_DIR}/include/common/mir/signal.h
-  signal.cpp
-)
-
-
 # TODO we need a place to manage ABI and related versioning but use this as placeholder
 set(MIRCOMMON_ABI 11)
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 
 add_library(mircommon SHARED
-  input/mir_input_config.cpp
-  input/mir_touchpad_config.cpp
-  input/mir_pointer_config.cpp
-  input/mir_keyboard_config.cpp
-  input/mir_touchscreen_config.cpp
-  input/input_event.cpp
-  input/xkb_mapper.cpp
-  input/parameter_keymap.cpp
+  default_font.cpp
+  event.cpp
+  event_printer.cpp
+  immediate_executor.cpp
+  libname.cpp                       ${PROJECT_SOURCE_DIR}/include/common/mir/libname.h
+  linearising_executor.cpp
+  log.cpp
+  mir_cursor_api.cpp
+  output_type_names.cpp
+  posix_rw_mutex.cpp                ${PROJECT_SOURCE_DIR}/include/common/mir/posix_rw_mutex.h
+  signal.cpp                        ${PROJECT_SOURCE_DIR}/include/common/mir/signal.h
+  thread_pool_executor.cpp
   input/buffer_keymap.cpp
-  ${PROJECT_SOURCE_DIR}/include/common/mir/input/mir_input_config.h
-  ${PROJECT_SOURCE_DIR}/include/common/mir/input/mir_pointer_config.h
-  ${PROJECT_SOURCE_DIR}/include/common/mir/input/mir_touchpad_config.h
-  ${PROJECT_SOURCE_DIR}/include/common/mir/input/mir_touchscreen_config.h
-  ${PROJECT_SOURCE_DIR}/include/common/mir/input/mir_keyboard_config.h
-  ${PROJECT_SOURCE_DIR}/include/common/mir/input/keyboard_leds.h
+  input/input_event.cpp
   ${PROJECT_SOURCE_DIR}/include/common/mir/constexpr_utils.h
-  ${MIR_COMMON_SOURCES}
 )
 
 target_include_directories(mircommon
@@ -62,6 +40,8 @@ target_include_directories(mircommon
 
 target_link_libraries(mircommon
   PUBLIC
+    mircommondispatch
+    mircommoninput
     mirsharedlogging
     mirsharedlttng
     mirsharedsharedlibrary
