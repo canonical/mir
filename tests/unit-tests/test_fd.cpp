@@ -85,3 +85,30 @@ TEST_F(Fd, moves_around)
     fd2 = mir::Fd(-1);
     EXPECT_FALSE(fd_is_open(raw_fd));
 }
+
+TEST_F(Fd, borrowed_fd_can_be_copied)
+{
+    EXPECT_TRUE(fd_is_open(raw_fd));
+    mir::Fd fd1 = mir::Fd::borrow(raw_fd);
+    mir::Fd fd2 = fd1;  // Copy borrowed Fd
+    mir::Fd fd3(fd2);   // Copy construct from borrowed Fd
+    
+    // All should refer to the same FD value
+    EXPECT_EQ(static_cast<int>(fd1), raw_fd);
+    EXPECT_EQ(static_cast<int>(fd2), raw_fd);
+    EXPECT_EQ(static_cast<int>(fd3), raw_fd);
+    
+    // FD should remain open after all borrowed references go out of scope
+    fd1 = mir::Fd(-1);
+    fd2 = mir::Fd(-1);
+    fd3 = mir::Fd(-1);
+    EXPECT_TRUE(fd_is_open(raw_fd));
+}
+
+TEST_F(Fd, borrowed_fd_converts_to_int)
+{
+    mir::Fd borrowed = mir::Fd::borrow(raw_fd);
+    int extracted_fd = static_cast<int>(borrowed);
+    EXPECT_EQ(extracted_fd, raw_fd);
+    EXPECT_TRUE(fd_is_open(raw_fd));
+}
