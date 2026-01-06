@@ -92,12 +92,12 @@ TEST_F(Fd, borrowed_fd_can_be_copied)
     mir::Fd fd1 = mir::Fd::borrow(raw_fd);
     mir::Fd fd2 = fd1;  // Copy borrowed Fd
     mir::Fd fd3(fd2);   // Copy construct from borrowed Fd
-    
+
     // All should refer to the same FD value
     EXPECT_EQ(static_cast<int>(fd1), raw_fd);
     EXPECT_EQ(static_cast<int>(fd2), raw_fd);
     EXPECT_EQ(static_cast<int>(fd3), raw_fd);
-    
+
     // FD should remain open after all borrowed references go out of scope
     fd1 = mir::Fd(-1);
     fd2 = mir::Fd(-1);
