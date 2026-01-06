@@ -16,7 +16,8 @@
 
 #include <mir/events/event_builders.h>
 
-#include <mir/events/event_private.h>
+#include "event_private.h"
+
 #include <mir/events/window_placement_event.h>
 #include <mir/input/xkb_mapper.h>
 
