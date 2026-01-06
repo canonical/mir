@@ -67,11 +67,6 @@ install(
 )
 
 install(
-  DIRECTORY ${CMAKE_SOURCE_DIR}/src/include/common/mir
-  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/mircommon-internal"
-)
-
-install(
   DIRECTORY ${CMAKE_SOURCE_DIR}/include/common/mir_toolkit
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/mircommon"
 )
@@ -81,21 +76,12 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/mircommon.pc.in
   @ONLY
 )
 
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/mircommon-internal.pc.in
-  ${CMAKE_CURRENT_BINARY_DIR}/mircommon-internal.pc
-  @ONLY
-)
-
 install(
   FILES ${CMAKE_CURRENT_BINARY_DIR}/mircommon.pc
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
 )
-install(
-  FILES ${CMAKE_CURRENT_BINARY_DIR}/mircommon-internal.pc
-  DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
-)
-
 add_custom_target(
+
     generate-mircommon-symbols-map
     COMMAND ${PROJECT_SOURCE_DIR}/tools/symbols_map_generator/main.py
         --library-name mir_common

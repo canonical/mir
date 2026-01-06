@@ -116,8 +116,11 @@ Depends: libmircommon11 (= ${binary:Version}),
          libmircore-dev (= ${binary:Version}),
          libxkbcommon-dev,
          ${misc:Depends},
-Breaks: mircommon-dev (<< 0.6)
-Replaces: mircommon-dev (<< 0.6)
+Breaks: mircommon-dev (<< 0.6),
+        libmircommon-internal-dev (<< 2.25)
+Replaces: mircommon-dev (<< 0.6),
+          libmircommon-internal-dev (<< 2.25)
+Provides: libmircommon-internal-dev
 Description: Display server for Ubuntu - development headers
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
@@ -125,19 +128,16 @@ Description: Display server for Ubuntu - development headers
  Contains header files required for server and/or client development.
 
 Package: libmircommon-internal-dev
-Section: libdevel
+Section: oldlibs
 Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmircommon-dev (= ${binary:Version}),
-         libxkbcommon-dev,
+Depends: libmircommon-dev (>= 2.26),
          ${misc:Depends},
-Description: Display server for Ubuntu - development headers
- Mir is a display server running on linux systems, with a focus on efficiency,
- robust operation and a well-defined driver model.
+Description: transitional package for libmircommon-dev
+ This is a transitional package. It can safely be removed.
  .
- This package contains internal headers with no stability guarantee, for servers
- that wish to use functionality for which no public API exists yet.
+ The libmircommon-internal-dev package has been merged into libmircommon-dev.
 
 Package: libmirplatform-dev
 Section: libdevel
