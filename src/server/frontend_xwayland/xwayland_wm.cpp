@@ -77,7 +77,6 @@ auto create_wm_window(mf::XCBConnection const& connection) -> xcb_window_t
 auto init_xfixes(mf::XCBConnection const& connection) -> xcb_query_extension_reply_t const*
 {
     xcb_xfixes_query_version_cookie_t xfixes_cookie;
-    xcb_xfixes_query_version_reply_t *xfixes_reply;
 
     xcb_prefetch_extension_data(connection, &xcb_xfixes_id);
     xcb_prefetch_extension_data(connection, &xcb_composite_id);
@@ -90,14 +89,13 @@ auto init_xfixes(mf::XCBConnection const& connection) -> xcb_query_extension_rep
     }
 
     xfixes_cookie = xcb_xfixes_query_version(connection, XCB_XFIXES_MAJOR_VERSION, XCB_XFIXES_MINOR_VERSION);
-    xfixes_reply = xcb_xfixes_query_version_reply(connection, xfixes_cookie, NULL);
+    auto const xfixes_reply = mir::make_unique_cptr(xcb_xfixes_query_version_reply(connection, xfixes_cookie, NULL));
 
     if (mir::verbose_xwayland_logging_enabled())
     {
         mir::log_debug("xfixes version: %d.%d", xfixes_reply->major_version, xfixes_reply->minor_version);
     }
 
-    free(xfixes_reply);
     return xfixes;
 }
 
@@ -289,11 +287,11 @@ void mf::XWaylandWM::handle_events()
 
     connection->verify_not_in_error_state();
 
-    while (xcb_generic_event_t* const event = xcb_poll_for_event(*connection))
+    while (auto const event = mir::make_unique_cptr(xcb_poll_for_event(*connection)))
     {
         try
         {
-            handle_event(event);
+            handle_event(event.get());
         }
         catch (...)
         {
@@ -303,7 +301,6 @@ void mf::XWaylandWM::handle_events()
                 std::current_exception(),
                 "Error processing XCB event");
         }
-        free(event);
         got_events = true;
     }
 
@@ -515,14 +512,13 @@ void mf::XWaylandWM::manage_window(xcb_window_t window, geom::Rectangle const& g
     if (verbose_xwayland_logging_enabled())
     {
         auto const props_cookie = xcb_list_properties(*connection, window);
-        auto const props_reply = xcb_list_properties_reply(*connection, props_cookie, nullptr);
-        if (props_reply)
+        if (auto const props_reply = mir::make_unique_cptr(xcb_list_properties_reply(*connection, props_cookie, nullptr)))
         {
             std::vector<std::function<void()>> functions;
-            int const prop_count = xcb_list_properties_atoms_length(props_reply);
+            int const prop_count = xcb_list_properties_atoms_length(props_reply.get());
             for (int i = 0; i < prop_count; i++)
             {
-                auto const atom = xcb_list_properties_atoms(props_reply)[i];
+                auto const atom = xcb_list_properties_atoms(props_reply.get())[i];
 
                 auto const log_prop = [this, atom](std::string const& value)
                     {
@@ -548,7 +544,6 @@ void mf::XWaylandWM::manage_window(xcb_window_t window, geom::Rectangle const& g
                         }
                     }));
             }
-            free(props_reply);
 
             log_debug("%s has %d initial propertie(s):", connection->window_debug_string(window).c_str(), prop_count);
             for (auto const& f : functions)
