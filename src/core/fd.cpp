@@ -33,6 +33,7 @@ mir::Fd::Fd(int raw_fd) :
 {
 }
 
+// Private constructor for borrowed FDs - creates a non-owning reference
 mir::Fd::Fd(int raw_fd, BorrowTag) :
     fd{std::make_shared<int>(raw_fd)}
 {
