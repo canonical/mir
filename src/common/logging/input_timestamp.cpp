@@ -30,7 +30,7 @@ std::string mir::logging::input_timestamp(nanoseconds when)
     long long const abs_age_ns = std::llabs(age_ns);
     long long const milliseconds = abs_age_ns / 1000000LL;
     long long const sub_milliseconds = abs_age_ns % 1000000LL;
-    
+
     char const* sign_suffix = (age_ns < 0) ? "in future" : "ago";
 
     char str[64];

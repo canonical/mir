@@ -25,7 +25,7 @@ using namespace std::chrono;
 using namespace testing;
 namespace ml = mir::logging;
 
-TEST(TimestampTest, past_time_is_correctly_formatted) 
+TEST(TimestampTest, past_time_is_correctly_formatted)
 {
     auto now = steady_clock::now().time_since_epoch();
     nanoseconds past_event = duration_cast<nanoseconds>(now - milliseconds(500));
@@ -36,7 +36,7 @@ TEST(TimestampTest, past_time_is_correctly_formatted)
     EXPECT_THAT(out, HasSubstr("500.000000ms ago"));
 }
 
-TEST(TimestampTest, future_time_is_correctly_formatted) 
+TEST(TimestampTest, future_time_is_correctly_formatted)
 {
     auto now = steady_clock::now().time_since_epoch();
     nanoseconds future_event = duration_cast<nanoseconds>(now + nanoseconds(1000000123LL));
@@ -46,5 +46,5 @@ TEST(TimestampTest, future_time_is_correctly_formatted)
     EXPECT_THAT(out, Not(HasSubstr(".-")));
     EXPECT_THAT(out, HasSubstr("in future"));
     EXPECT_THAT(out, HasSubstr("1000.000123ms"));
-    
+
 }
