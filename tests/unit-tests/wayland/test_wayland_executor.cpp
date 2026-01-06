@@ -31,14 +31,14 @@ using namespace testing;
 
 MATCHER(FdIsReadable, "")
 {
-    return mt::fd_is_readable(mir::Fd{mir::IntOwnedFd{arg}});
+    return mt::fd_is_readable(mir::Fd::borrow(arg));
 }
 
 class WaylandExecutorTest : public Test {
 public:
     WaylandExecutorTest()
         : the_event_loop{wl_event_loop_create()},
-          event_loop_fd{mir::IntOwnedFd{wl_event_loop_get_fd(the_event_loop)}}
+          event_loop_fd{mir::Fd::borrow(wl_event_loop_get_fd(the_event_loop))}
     {
     }
 

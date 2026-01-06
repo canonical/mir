@@ -436,7 +436,7 @@ auto mgg::RenderingPlatform::maybe_create_provider(
     if (dynamic_cast<mg::GLRenderingProvider::Tag const*>(&type_tag))
     {
         return std::make_shared<mgg::GLRenderingProvider>(
-            Fd{IntOwnedFd{gbm_device_get_fd(device.get())}},
+            Fd::borrow(gbm_device_get_fd(device.get())),
             bound_display,
             egl_delegate,
             dmabuf_provider,
@@ -462,7 +462,7 @@ auto mgg::RenderingPlatform::maybe_create_provider(
         }
         // Device supports syncobj timeline, create the provider
         return std::make_shared<mgg::GLRenderingProvider>(
-            Fd{IntOwnedFd{gbm_device_get_fd(device.get())}},
+            Fd::borrow(gbm_device_get_fd(device.get())),
             bound_display,
             egl_delegate,
             dmabuf_provider,

@@ -149,7 +149,7 @@ void mf::KeyboardHelper::set_keymap(std::shared_ptr<mi::Keymap> const& new_keyma
     mir::AnonymousShmFile shm_buffer{length};
     memcpy(shm_buffer.base_ptr(), buffer.get(), length);
 
-    callbacks->send_keymap_xkb_v1(Fd{IntOwnedFd{shm_buffer.fd()}}, length);
+    callbacks->send_keymap_xkb_v1(Fd::borrow(shm_buffer.fd()), length);
 }
 
 void mf::KeyboardHelper::set_modifiers(MirXkbModifiers const& new_modifiers)

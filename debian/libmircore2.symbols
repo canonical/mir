@@ -8,7 +8,7 @@ libmircore.so.2 libmircore2 #MINVER#
  (c++)"mir::Fd::Fd()@MIR_CORE_2.9" 2.8.0
  (c++)"mir::Fd::Fd(int)@MIR_CORE_2.9" 2.8.0
  (c++)"mir::Fd::Fd(mir::Fd&&)@MIR_CORE_2.9" 2.8.0
- (c++)"mir::Fd::Fd(mir::IntOwnedFd)@MIR_CORE_2.9" 2.8.0
+ (c++)"mir::Fd::borrow(int)@MIR_CORE_2.9" 2.8.0
  (c++)"mir::Fd::operator int() const@MIR_CORE_2.9" 2.8.0
  (c++)"mir::Fd::operator=(mir::Fd)@MIR_CORE_2.9" 2.8.0
  (c++)"mir::fatal_error@MIR_CORE_2.9" 2.8.0

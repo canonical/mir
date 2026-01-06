@@ -411,7 +411,7 @@ auto export_egl_image(
                 BOOST_THROW_EXCEPTION((std::runtime_error{"Driver has a broken EGL_MESA_image_dma_buf_export extension"}));
             }
             fds[i] = fds[i - 1];
-            fd = mir::Fd{mir::IntOwnedFd{fds[i]}};
+            fd = mir::Fd::borrow(fds[i]);
         }
         else
         {
@@ -917,7 +917,7 @@ public:
         }
 
         {
-            send_format_table_event(mir::Fd{mir::IntOwnedFd{shm_buffer.fd()}}, format_table_length * sizeof(Format));
+            send_format_table_event(mir::Fd::borrow(shm_buffer.fd()), format_table_length * sizeof(Format));
             wl_array main_device = {};
             wl_array_init(&main_device);
             wl_array_add<dev_t>(&main_device, this->provider->devnum());

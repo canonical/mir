@@ -186,7 +186,7 @@ void miers::Platform::start()
     self->platform_impl->start();
 
     self->libinput_dispatch = std::make_shared<md::ReadableFd>(
-        Fd{IntOwnedFd{self->platform_impl->libinput_fd()}},
+        Fd::borrow(self->platform_impl->libinput_fd()),
         [&]() { self->platform_impl->process(); });
     self->dispatchable->add_watch(self->libinput_dispatch);
 }

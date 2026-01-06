@@ -45,11 +45,11 @@ struct Fd : public testing::Test
 };
 }
 
-TEST_F(Fd, does_not_close_if_construction_doesnt_intend_to_transfer_ownership)
+TEST_F(Fd, does_not_close_if_fd_is_borrowed)
 {
     EXPECT_TRUE(fd_is_open(raw_fd));
     {
-        mir::Fd fd(mir::IntOwnedFd{raw_fd});
+        mir::Fd fd = mir::Fd::borrow(raw_fd);
     }
     EXPECT_TRUE(fd_is_open(raw_fd));
 }

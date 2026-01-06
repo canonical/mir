@@ -159,7 +159,7 @@ mix::XInputPlatform::XInputPlatform(std::shared_ptr<mi::InputDeviceRegistry> con
                                     std::shared_ptr<mir::X::X11Resources> const& x11_resources) :
     x11_resources{x11_resources},
     xcon_dispatchable(std::make_shared<md::ReadableFd>(
-        mir::Fd{mir::IntOwnedFd{x11_resources->conn->get_file_descriptor()}}, [this]()
+        mir::Fd::borrow(x11_resources->conn->get_file_descriptor()), [this]()
         {
             process_input_events();
         })),

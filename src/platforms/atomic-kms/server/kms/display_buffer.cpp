@@ -217,7 +217,7 @@ void mga::DisplaySink::schedule_set_crtc()
 
 auto mga::DisplaySink::drm_fd() const -> mir::Fd
 {
-    return mir::Fd{mir::IntOwnedFd{output->drm_fd()}};
+    return mir::Fd::borrow(output->drm_fd());
 }
 
 auto mga::DisplaySink::gbm_device() const -> std::shared_ptr<struct gbm_device>

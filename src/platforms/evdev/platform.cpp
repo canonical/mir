@@ -99,7 +99,7 @@ public:
     {
         // The mu::Monitor owns the file descriptor; don't close it
         // (cf: https://github.com/canonical/mir/issues/684 )
-        return mir::Fd{mir::IntOwnedFd{monitor.fd()}};
+        return mir::Fd::borrow(monitor.fd());
     }
 
     bool dispatch(md::FdEvents events) override
@@ -276,7 +276,7 @@ void mie::Platform::start()
     lib = make_libinput(&device_fds);
     libinput_dispatchable =
         std::make_shared<md::ReadableFd>(
-            Fd{IntOwnedFd{libinput_get_fd(lib.get())}}, [this]{process_input_events();}
+            Fd::borrow(libinput_get_fd(lib.get())), [this]{process_input_events();}
         );
     action_queue = std::make_shared<md::ActionQueue>();
     udev_dispatchable =

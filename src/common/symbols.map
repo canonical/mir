@@ -504,7 +504,6 @@ global:
     typeinfo?for?MirTouchscreenConfig;
     typeinfo?for?mir::DeleteCPtr;
     typeinfo?for?mir::Executor;
-    typeinfo?for?mir::IntOwnedFd;
     typeinfo?for?mir::NonBlockingExecutor;
     typeinfo?for?mir::PosixRWMutex;
     typeinfo?for?mir::SharedLibrary::Handle::HandleHash;
@@ -543,7 +542,6 @@ global:
     vtable?for?MirPointerEvent;
     vtable?for?MirTouchEvent;
     vtable?for?mir::Executor;
-    vtable?for?mir::IntOwnedFd;
     vtable?for?mir::PosixRWMutex;
     vtable?for?mir::SharedLibrary;
     vtable?for?mir::SharedLibraryProberReport;

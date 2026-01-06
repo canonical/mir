@@ -25,7 +25,7 @@ TEST(ReadableFd, executes_action_when_readable)
 {
     using namespace testing;
     bool action_triggered = false;
-    md::ReadableFd dispatchable(mir::Fd{mir::IntOwnedFd{0}},
+    md::ReadableFd dispatchable(mir::Fd::borrow(0),
                                 [&action_triggered](){ action_triggered = true;});
     dispatchable.dispatch(md::FdEvent::readable);
     EXPECT_THAT(action_triggered, Eq(true));

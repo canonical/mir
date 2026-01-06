@@ -22,11 +22,6 @@ mir::Fd::Fd() :
 {
 }
 
-mir::Fd::Fd(IntOwnedFd fd) :
-    fd{std::make_shared<int>(fd.int_owned_fd)}
-{
-}
-
 mir::Fd::Fd(int raw_fd) :
     fd{new int{raw_fd},
         [](int* fd)
@@ -36,6 +31,16 @@ mir::Fd::Fd(int raw_fd) :
             delete fd;
         }}
 {
+}
+
+mir::Fd::Fd(int raw_fd, BorrowTag) :
+    fd{std::make_shared<int>(raw_fd)}
+{
+}
+
+auto mir::Fd::borrow(int raw_fd) -> Fd
+{
+    return Fd{raw_fd, BorrowTag::Borrow};
 }
 
 mir::Fd::Fd(Fd&& other) :

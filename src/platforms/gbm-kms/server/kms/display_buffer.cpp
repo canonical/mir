@@ -311,7 +311,7 @@ void mgg::DisplaySink::schedule_set_crtc()
 
 auto mgg::DisplaySink::drm_fd() const -> mir::Fd
 {
-    return mir::Fd{mir::IntOwnedFd{outputs.front()->drm_fd()}};
+    return mir::Fd::borrow(outputs.front()->drm_fd());
 }
 
 auto mgg::DisplaySink::gbm_device() const -> std::shared_ptr<struct gbm_device>

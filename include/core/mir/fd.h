@@ -20,21 +20,33 @@
 
 namespace mir
 {
-//TODO: remove once mir::Fd is used more pervasively.
-//      some existing code does not really allow us to transfer or share the ownership
-//      of the fd. Constructing using mir::Fd(IntOwnedFd(int)) will help transition the existing
-//      code to using the mir::Fd type properly.
-struct IntOwnedFd
-{
-    int int_owned_fd;
-};
+/**
+ * RAII wrapper for file descriptors.
+ *
+ * Supports three ownership models:
+ * 1. Owned: Fd takes ownership and will close the FD when all references are destroyed
+ * 2. Shared: Multiple Fd instances share ownership via reference counting
+ * 3. Borrowed: Fd does not own the FD and will not close it
+ */
 class Fd
 {
 public:
-    //transfer ownership of the POD-int to the object. The int no longer needs close()ing,
-    //and has the lifetime of the Fd object.
+    /**
+     * Transfer ownership of a file descriptor.
+     * The Fd will close the file descriptor when all references are destroyed.
+     * \param fd The file descriptor to take ownership of
+     */
     explicit Fd(int fd);
-    explicit Fd(IntOwnedFd);
+
+    /**
+     * Create a non-owning reference to a file descriptor.
+     * The Fd will NOT close the file descriptor - the caller retains ownership.
+     * Use this when you need to pass a borrowed FD that is owned elsewhere.
+     * \param fd The file descriptor to borrow
+     * \return A non-owning Fd instance
+     */
+    static auto borrow(int fd) -> Fd;
+
     static int const invalid{-1};
     Fd(); //Initializes fd to the mir::Fd::invalid;
     Fd(Fd&&);
@@ -47,6 +59,10 @@ public:
     /// Prevent accidental calling of ::close()
     friend auto close(Fd const& fd) -> int = delete;
 private:
+    // Private constructor for borrowed FDs
+    enum class BorrowTag { Borrow };
+    Fd(int fd, BorrowTag);
+
     std::shared_ptr<int> fd;
 };
 } // namespace mir
