@@ -80,9 +80,11 @@ endif()
 # They are notorious for false-positives, particularly with GCC 16+
 # (We particularly hit https://gcc.gnu.org/bugzilla/show_bug.cgi?id=111415)
 # These must come AFTER -Werror to override it for specific warnings
-if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-  if (NOT (CMAKE_BUILD_TYPE MATCHES "Debug"))
+if (NOT (CMAKE_BUILD_TYPE MATCHES "Debug"))
+  if (CMAKE_C_COMPILER_ID MATCHES "GNU")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-error=maybe-uninitialized -Wno-error=array-bounds")
+  endif()
+  if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=maybe-uninitialized -Wno-error=array-bounds")
   endif()
 endif()
