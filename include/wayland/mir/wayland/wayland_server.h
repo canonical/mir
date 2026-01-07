@@ -46,6 +46,7 @@ wl_event_source* wl_event_loop_add_idle(
     wl_event_loop_idle_func_t func,
     void *data);
 int wl_event_loop_dispatch(wl_event_loop* loop, int timeout);
+int wl_event_loop_get_fd(wl_event_loop* loop);
 
 // wl_event_source
 int wl_event_source_remove(wl_event_source* source);

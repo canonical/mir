@@ -105,6 +105,11 @@ int wl_event_loop_dispatch(wl_event_loop* loop, int timeout)
     return loop->event_loop->dispatch(timeout);
 }
 
+int wl_event_loop_get_fd(wl_event_loop* loop)
+{
+    return loop->event_loop->get_fd();
+}
+
 int wl_event_source_remove(wl_event_source* source)
 {
     if (source->event_loop)

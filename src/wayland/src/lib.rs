@@ -188,6 +188,10 @@ impl EventLoop {
         0
     }
     
+    pub fn get_fd(&self) -> i32 {
+        self.epoll_fd
+    }
+    
     pub fn dispatch(&self, timeout: i32) -> i32 {
         if *self.terminated.lock().unwrap() {
             return -1;
@@ -281,6 +285,8 @@ mod ffi {
         unsafe fn add_idle(self: &EventLoop, func: usize, data: usize) -> u64;
         
         fn dispatch_idle(self: &EventLoop) -> i32;
+        
+        fn get_fd(self: &EventLoop) -> i32;
         
         fn dispatch(self: &EventLoop, timeout: i32) -> i32;
     }
