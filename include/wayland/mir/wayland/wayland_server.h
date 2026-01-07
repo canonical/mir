@@ -35,6 +35,8 @@ void wl_display_destroy(wl_display* display);
 wl_event_loop* wl_display_get_event_loop(wl_display* display);
 void wl_display_add_socket(wl_display* display, const char* name);
 void wl_display_terminate(wl_display* display);
+void wl_display_run(wl_display* display);
+void wl_display_flush_clients(wl_display* display);
 
 // wl_event_loop
 typedef int (*wl_event_loop_fd_func_t)(int fd, uint32_t mask, void *data);

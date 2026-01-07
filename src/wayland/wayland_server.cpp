@@ -75,6 +75,16 @@ void wl_display_terminate(wl_display* display)
     display->event_loop.event_loop->terminate();
 }
 
+void wl_display_run(wl_display* display)
+{
+    display->wrapper->run();
+}
+
+void wl_display_flush_clients(wl_display* display)
+{
+    display->wrapper->flush_clients();
+}
+
 wl_event_loop* wl_event_loop_create()
 {
     auto owned = create_event_loop();
