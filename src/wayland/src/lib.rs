@@ -8,6 +8,8 @@ pub struct DisplayWrapper {
     display: Display<()>,
     eventloop: EventLoop,
     serial: AtomicU32,
+    destroy_listeners: Arc<Mutex<HashMap<SourceId, DestroyListener>>>,
+    next_listener_id: Arc<Mutex<SourceId>>,
 }
 
 impl DisplayWrapper {
@@ -34,6 +36,24 @@ impl DisplayWrapper {
     
     pub fn next_serial(&self) -> u32 {
         self.serial.fetch_add(1, Ordering::SeqCst).wrapping_add(1)
+    }
+    
+    pub fn add_destroy_listener(&self, func: usize, data: usize) -> u64 {
+        // Generate unique ID
+        let id = {
+            let mut next_id = self.next_listener_id.lock().unwrap();
+            let id = *next_id;
+            *next_id += 1;
+            id
+        };
+        
+        let listener = DestroyListener { func, data };
+        self.destroy_listeners.lock().unwrap().insert(id, listener);
+        id
+    }
+    
+    pub fn remove_destroy_listener(&self, listener_id: u64) -> bool {
+        self.destroy_listeners.lock().unwrap().remove(&listener_id).is_some()
     }
     
     pub fn run(&mut self) {
@@ -118,6 +138,8 @@ pub fn create_display_wrapper() -> Box<DisplayWrapper> {
         display: Display::new().expect("Failed to create wayland display"),
         eventloop: EventLoop::new(),
         serial: AtomicU32::new(0),
+        destroy_listeners: Arc::new(Mutex::new(HashMap::new())),
+        next_listener_id: Arc::new(Mutex::new(1)),
     })
 }
 
@@ -374,6 +396,25 @@ impl EventLoop {
     }
 }
 
+impl Drop for DisplayWrapper {
+    fn drop(&mut self) {
+        // Call all destroy listeners before cleaning up
+        let listeners: Vec<_> = {
+            let mut destroy_listeners = self.destroy_listeners.lock().unwrap();
+            destroy_listeners.drain().map(|(_, l)| l).collect()
+        };
+        
+        for listener in listeners {
+            unsafe {
+                let func: unsafe extern "C" fn(*mut std::ffi::c_void) 
+                    = std::mem::transmute(listener.func);
+                let data = listener.data as *mut std::ffi::c_void;
+                func(data);
+            }
+        }
+    }
+}
+
 impl Drop for EventLoop {
     fn drop(&mut self) {
         // Call all destroy listeners before cleaning up
@@ -418,6 +459,10 @@ mod ffi {
         fn run(self: &mut DisplayWrapper);
         
         fn next_serial(self: &DisplayWrapper) -> u32;
+        
+        unsafe fn add_destroy_listener(self: &DisplayWrapper, func: usize, data: usize) -> u64;
+        
+        fn remove_destroy_listener(self: &DisplayWrapper, listener_id: u64) -> bool;
 
         fn create_event_loop() -> Box<EventLoop>;
         

@@ -32,6 +32,7 @@ struct wl_display
 {
     rust::Box<DisplayWrapper> wrapper;
     wl_event_loop event_loop; // Embedded event loop that borrows from wrapper
+    std::map<uint64_t, wl_listener*> destroy_listeners;
 };
 
 struct wl_event_source
@@ -45,7 +46,8 @@ wl_display* wl_display_create()
     auto result = new wl_display
     {
         create_display_wrapper(),
-        wl_event_loop{} // Will be initialized below
+        wl_event_loop{},
+        {}
     };
     
     // Initialize the embedded event loop to borrow from the display wrapper
@@ -174,6 +176,51 @@ wl_listener* wl_event_loop_get_destroy_listener(
 {
     // Search for a listener with the matching notify function
     for (const auto& listener: loop->destroy_listeners | std::views::values)
+    {
+        if (listener->notify == notify)
+        {
+            return listener;
+        }
+    }
+    return nullptr;
+}
+
+// Wrapper callback that Rust will call for display destroy, which then calls the wl_listener's notify
+static void display_destroy_listener_wrapper(void* data)
+{
+    auto* context = static_cast<std::pair<wl_display*, wl_listener*>*>(data);
+    auto* display = context->first;
+    auto* listener = context->second;
+    
+    // Call the listener's notify function with the listener and display as data
+    listener->notify(listener, display);
+    
+    delete context;
+}
+
+void wl_display_add_destroy_listener(
+    wl_display *display,
+    wl_listener *listener)
+{
+    // Create context to pass both display and listener to the wrapper
+    auto* context = new std::pair<wl_display*, wl_listener*>(display, listener);
+    
+    // Register with Rust display wrapper
+    uint64_t id = display->wrapper->add_destroy_listener(
+        reinterpret_cast<size_t>(&display_destroy_listener_wrapper),
+        reinterpret_cast<size_t>(context)
+    );
+    
+    // Store the listener so we can find it later
+    display->destroy_listeners[id] = listener;
+}
+
+wl_listener* wl_display_get_destroy_listener(
+    wl_display *display,
+    wl_notify_func_t notify)
+{
+    // Search for a listener with the matching notify function
+    for (const auto& listener: display->destroy_listeners | std::views::values)
     {
         if (listener->notify == notify)
         {
