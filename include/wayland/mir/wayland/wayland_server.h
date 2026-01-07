@@ -24,6 +24,7 @@ typedef void (*wl_notify_func_t)(struct wl_listener *listener, void *data);
 struct wl_display;
 struct wl_event_loop;
 struct wl_event_source;
+struct wl_global;
 struct wl_listener
 {
     wl_notify_func_t notify;
@@ -39,6 +40,9 @@ void wl_display_run(wl_display* display);
 void wl_display_flush_clients(wl_display* display);
 void wl_display_destroy_clients(wl_display* display);
 uint32_t wl_display_next_serial(wl_display* display);
+void wl_display_add_destroy_listener(
+    wl_display *display,
+    wl_listener *listener);
 
 // wl_event_loop
 typedef int (*wl_event_loop_fd_func_t)(int fd, uint32_t mask, void *data);

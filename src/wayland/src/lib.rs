@@ -1,23 +1,75 @@
-use wayland_server::{Display};
+use wayland_server::{protocol::wl_compositor::WlCompositor, Display, DisplayHandle, GlobalDispatch, Dispatch, DataInit, Client, New, Resource};
 use std::os::unix::io::{AsRawFd, RawFd};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicU32, Ordering};
 
+struct ServerState {
+}
+
+impl ServerState {
+    pub fn new() -> Self {
+        ServerState {}
+    }
+}
+
+impl GlobalDispatch<WlCompositor, ()> for ServerState {
+    fn bind(
+        _state: &mut Self,
+        _handle: &DisplayHandle,
+        _client: &Client,
+        resource: New<WlCompositor>,
+        _global_data: &(),
+        data_init: &mut DataInit<'_, Self>,
+    ) {
+        // Initialize the resource when a client binds to this global
+        data_init.init(resource, ());
+    }
+}
+
+impl Dispatch<WlCompositor, ()> for ServerState {
+    fn request(
+        _state: &mut Self,
+        _client: &Client,
+        _resource: &WlCompositor,
+        _request: <WlCompositor as Resource>::Request,
+        _data: &(),
+        _dhandle: &DisplayHandle,
+        _data_init: &mut DataInit<'_, Self>,
+    ) {
+        // Handle compositor requests here
+    }
+}
+// TODO: Rename to Server
 pub struct DisplayWrapper {
-    display: Display<()>,
+    state: ServerState,
+    display: Display<ServerState>,
     eventloop: EventLoop,
     serial: AtomicU32,
     destroy_listeners: Arc<Mutex<HashMap<SourceId, DestroyListener>>>,
     next_listener_id: Arc<Mutex<SourceId>>,
 }
 
+
+
 impl DisplayWrapper {
+    pub fn new() -> Self {
+        DisplayWrapper {
+            state: ServerState::new(),
+            display: Display::new().expect("Failed to create wayland display"),
+            eventloop: EventLoop::new(),
+            serial: AtomicU32::new(0),
+            destroy_listeners: Arc::new(Mutex::new(HashMap::new())),
+            next_listener_id: Arc::new(Mutex::new(1)),
+        }
+    }
+
     pub fn terminate(self: Box<Self>) {
     }
     
     pub fn dispatch_pending(&mut self) -> i32 {
-        match self.display.dispatch_clients(&mut ()) {
+        let mut state = &mut self.state;
+        match self.display.dispatch_clients(&mut state) {
             Ok(_) => 0,
             Err(_) => -1,
         }
@@ -134,13 +186,7 @@ impl DisplayWrapper {
 }
 
 pub fn create_display_wrapper() -> Box<DisplayWrapper> {
-    Box::new(DisplayWrapper {
-        display: Display::new().expect("Failed to create wayland display"),
-        eventloop: EventLoop::new(),
-        serial: AtomicU32::new(0),
-        destroy_listeners: Arc::new(Mutex::new(HashMap::new())),
-        next_listener_id: Arc::new(Mutex::new(1)),
-    })
+    Box::new(DisplayWrapper::new())
 }
 
 struct FdHandler {

@@ -215,22 +215,6 @@ void wl_display_add_destroy_listener(
     display->destroy_listeners[id] = listener;
 }
 
-wl_listener* wl_display_get_destroy_listener(
-    wl_display *display,
-    wl_notify_func_t notify)
-{
-    // Search for a listener with the matching notify function
-    for (const auto& listener: display->destroy_listeners | std::views::values)
-    {
-        if (listener->notify == notify)
-        {
-            return listener;
-        }
-    }
-    return nullptr;
-}
-
-
 int wl_event_source_remove(wl_event_source* source)
 {
     if (source->event_loop)
