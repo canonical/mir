@@ -85,6 +85,17 @@ void wl_display_flush_clients(wl_display* display)
     display->wrapper->flush_clients();
 }
 
+void wl_display_destroy_clients(wl_display* display)
+{
+    // TODO: noop in rust
+    (void)display;
+}
+
+uint32_t wl_display_next_serial(wl_display* display)
+{
+    return display->wrapper->next_serial();
+}
+
 wl_event_loop* wl_event_loop_create()
 {
     auto owned = create_event_loop();

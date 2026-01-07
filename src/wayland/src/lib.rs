@@ -2,10 +2,12 @@ use wayland_server::{Display};
 use std::os::unix::io::{AsRawFd, RawFd};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
+use std::sync::atomic::{AtomicU32, Ordering};
 
 pub struct DisplayWrapper {
     display: Display<()>,
-    eventloop: EventLoop
+    eventloop: EventLoop,
+    serial: AtomicU32,
 }
 
 impl DisplayWrapper {
@@ -28,6 +30,10 @@ impl DisplayWrapper {
     
     pub fn get_eventloop(&mut self) -> &mut EventLoop {
         &mut self.eventloop
+    }
+    
+    pub fn next_serial(&self) -> u32 {
+        self.serial.fetch_add(1, Ordering::SeqCst).wrapping_add(1)
     }
     
     pub fn run(&mut self) {
@@ -111,6 +117,7 @@ pub fn create_display_wrapper() -> Box<DisplayWrapper> {
     Box::new(DisplayWrapper {
         display: Display::new().expect("Failed to create wayland display"),
         eventloop: EventLoop::new(),
+        serial: AtomicU32::new(0),
     })
 }
 
@@ -409,6 +416,8 @@ mod ffi {
         fn get_eventloop(self: &mut DisplayWrapper) -> &mut EventLoop;
         
         fn run(self: &mut DisplayWrapper);
+        
+        fn next_serial(self: &DisplayWrapper) -> u32;
 
         fn create_event_loop() -> Box<EventLoop>;
         
