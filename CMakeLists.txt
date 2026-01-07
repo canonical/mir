@@ -70,20 +70,21 @@ set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -Wl,--as-needed")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--as-needed")
 
 
-# Disable maybe-uninitialized and array-bounds warnings on GCC when optimisation is enabled
-# They are notorious for false-positives
-# (We particularly hit https://gcc.gnu.org/bugzilla/show_bug.cgi?id=111415)
-if ((CMAKE_C_COMPILER_ID MATCHES "GNU") AND NOT (CMAKE_BUILD_TYPE MATCHES "Debug"))
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-maybe-uninitialized -Wno-array-bounds")
-endif()
-if ((CMAKE_CXX_COMPILER_ID MATCHES "GNU") AND NOT (CMAKE_BUILD_TYPE MATCHES "Debug"))
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-maybe-uninitialized -Wno-array-bounds")
-endif()
-
 set(MIR_FATAL_COMPILE_WARNINGS ON CACHE BOOL "Should compiler warnings fail the build")
 if(MIR_FATAL_COMPILE_WARNINGS)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
+endif()
+
+# Disable maybe-uninitialized and array-bounds errors on GCC when optimisation is enabled
+# They are notorious for false-positives, particularly with GCC 16+
+# (We particularly hit https://gcc.gnu.org/bugzilla/show_bug.cgi?id=111415)
+# These must come AFTER -Werror to override it for specific warnings
+if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+  if (NOT (CMAKE_BUILD_TYPE MATCHES "Debug"))
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-error=maybe-uninitialized -Wno-error=array-bounds")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=maybe-uninitialized -Wno-error=array-bounds")
+  endif()
 endif()
 
 include(CheckCXXCompilerFlag)
