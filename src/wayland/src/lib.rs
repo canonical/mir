@@ -5,16 +5,112 @@ use std::sync::{Arc, Mutex};
 
 pub struct DisplayWrapper {
     display: Display<()>,
+    eventloop: EventLoop
 }
 
 impl DisplayWrapper {
     pub fn terminate(self: Box<Self>) {
+    }
+    
+    pub fn dispatch_pending(&mut self) -> i32 {
+        match self.display.dispatch_clients(&mut ()) {
+            Ok(_) => 0,
+            Err(_) => -1,
+        }
+    }
+    
+    pub fn flush_clients(&mut self) -> i32 {
+        match self.display.flush_clients() {
+            Ok(_) => 0,
+            Err(_) => -1,
+        }
+    }
+    
+    pub fn get_eventloop(&mut self) -> &mut EventLoop {
+        &mut self.eventloop
+    }
+    
+    pub fn run(&mut self) {
+        let poll_fd = self.display.backend().poll_fd();
+        let display_fd = poll_fd.as_raw_fd();
+        
+        loop {
+            // Check if terminated
+            if *self.eventloop.terminated.lock().unwrap() {
+                break;
+            }
+            
+            // Dispatch any pending wayland client events
+            if self.dispatch_pending() < 0 {
+                break;
+            }
+            
+            // Flush events to clients
+            if self.flush_clients() < 0 {
+                break;
+            }
+            
+            // Wait for events with a timeout of -1 (infinite)
+            const MAX_EVENTS: usize = 32;
+            let mut events: [libc::epoll_event; MAX_EVENTS] = unsafe { std::mem::zeroed() };
+            
+            let nfds = unsafe {
+                libc::epoll_wait(
+                    self.eventloop.epoll_fd,
+                    events.as_mut_ptr(),
+                    MAX_EVENTS as i32,
+                    -1,
+                )
+            };
+            
+            if nfds < 0 {
+                break;
+            }
+            
+            // Process events
+            let handlers = self.eventloop.fd_handlers.lock().unwrap();
+            
+            for i in 0..nfds as usize {
+                let event = &events[i];
+                let fd = event.u64 as i32;
+                
+                // Check if this is the display fd
+                if fd == display_fd {
+                    // This is handled by dispatch_pending above, skip it here
+                    continue;
+                }
+                
+                let mut mask = 0u32;
+                
+                // Convert epoll events to mask
+                if event.events & libc::EPOLLIN as u32 != 0 {
+                    mask |= 1; // WL_EVENT_READABLE
+                }
+                if event.events & libc::EPOLLOUT as u32 != 0 {
+                    mask |= 2; // WL_EVENT_WRITABLE
+                }
+                if event.events & (libc::EPOLLERR as u32 | libc::EPOLLHUP as u32) != 0 {
+                    mask |= 4; // WL_EVENT_ERROR
+                }
+                
+                // Find and call handler
+                if let Some(handler) = handlers.values().find(|h| h.fd == fd) {
+                    unsafe {
+                        let func: unsafe extern "C" fn(i32, u32, *mut std::ffi::c_void) -> i32 
+                            = std::mem::transmute(handler.func);
+                        let data = handler.data as *mut std::ffi::c_void;
+                        func(fd, mask, data);
+                    }
+                }
+            }
+        }
     }
 }
 
 pub fn create_display_wrapper() -> Box<DisplayWrapper> {
     Box::new(DisplayWrapper {
         display: Display::new().expect("Failed to create wayland display"),
+        eventloop: EventLoop::new(),
     })
 }
 
@@ -305,6 +401,14 @@ mod ffi {
         type EventLoop;
         
         fn create_display_wrapper() -> Box<DisplayWrapper>;
+        
+        fn dispatch_pending(self: &mut DisplayWrapper) -> i32;
+        
+        fn flush_clients(self: &mut DisplayWrapper) -> i32;
+        
+        fn get_eventloop(self: &mut DisplayWrapper) -> &mut EventLoop;
+        
+        fn run(self: &mut DisplayWrapper);
 
         fn create_event_loop() -> Box<EventLoop>;
         

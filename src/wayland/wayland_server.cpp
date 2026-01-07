@@ -22,14 +22,16 @@
 // loop is handled in the display.
 struct wl_event_loop
 {
-    rust::Box<EventLoop> event_loop;
+    EventLoop* event_loop; // Raw pointer  to event loop, may be owned or borrowed
+    std::optional<rust::Box<EventLoop>> owned_loop; // Owned reference, only set when event loops are manually created.
+
     std::map<uint64_t, wl_listener*> destroy_listeners;
 };
 
 struct wl_display
 {
     rust::Box<DisplayWrapper> wrapper;
-    wl_event_loop event_loop;
+    wl_event_loop event_loop; // Embedded event loop that borrows from wrapper
 };
 
 struct wl_event_source
@@ -40,13 +42,14 @@ struct wl_event_source
 
 wl_display* wl_display_create()
 {
-    auto const result = new wl_display
+    auto result = new wl_display
     {
         create_display_wrapper(),
-        {create_event_loop(), {}}
+        wl_event_loop{} // Will be initialized below
     };
-
-    result->event_loop.event_loop->add_display_fd(*result->wrapper.into_raw());
+    
+    // Initialize the embedded event loop to borrow from the display wrapper
+    result->event_loop.event_loop = &result->wrapper->get_eventloop();
     return result;
 }
 
@@ -74,7 +77,8 @@ void wl_display_terminate(wl_display* display)
 
 wl_event_loop* wl_event_loop_create()
 {
-    return new wl_event_loop{create_event_loop(), {}};
+    auto owned = create_event_loop();
+    return new wl_event_loop{owned.into_raw(), std::move(owned), {}};
 }
 
 void wl_event_loop_destroy(wl_event_loop* event_loop)
