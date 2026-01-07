@@ -26,6 +26,7 @@ struct FdHandler {
 pub struct EventLoop {
     epoll_fd: RawFd,
     handlers: Arc<Mutex<HashMap<RawFd, FdHandler>>>,
+    terminated: Arc<Mutex<bool>>,
 }
 
 impl EventLoop {
@@ -41,6 +42,7 @@ impl EventLoop {
         EventLoop {
             epoll_fd,
             handlers: Arc::new(Mutex::new(HashMap::new())),
+            terminated: Arc::new(Mutex::new(false)),
         }
     }
     
@@ -123,7 +125,15 @@ impl EventLoop {
         self.handlers.lock().unwrap().remove(&fd);
     }
     
+    pub fn terminate(&self) {
+        *self.terminated.lock().unwrap() = true;
+    }
+    
     pub fn dispatch(&self, timeout: i32) -> i32 {
+        if *self.terminated.lock().unwrap() {
+            return -1;
+        }
+        
         const MAX_EVENTS: usize = 32;
         let mut events: [libc::epoll_event; MAX_EVENTS] = unsafe { std::mem::zeroed() };
         
@@ -205,6 +215,8 @@ mod ffi {
         ) -> bool;
         
         fn remove_fd(self: &EventLoop, fd: i32);
+        
+        fn terminate(self: &EventLoop);
         
         fn dispatch(self: &EventLoop, timeout: i32) -> i32;
     }

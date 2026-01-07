@@ -59,12 +59,14 @@ wl_event_loop* wl_display_get_event_loop(wl_display* display)
 
 void wl_display_add_socket(wl_display* display, const char* name)
 {
-
+    // TODO
+    (void)(display);
+    (void)(name);
 }
 
 void wl_display_terminate(wl_display* display)
 {
-
+    display->event_loop.event_loop->terminate();
 }
 
 wl_event_loop* wl_event_loop_create()
