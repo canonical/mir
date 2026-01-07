@@ -982,7 +982,7 @@ void mf::XWaylandSurface::scene_surface_state_set(MirWindowState new_state)
             std::nullopt,
             XCB_STACK_MODE_BELOW);
     }
-    
+
     update_pointer_confinement();
 }
 
@@ -1045,24 +1045,24 @@ void mf::XWaylandSurface::update_pointer_confinement()
     std::shared_ptr<scene::Surface> scene_surface;
     MirPointerConfinementState desired_state;
     bool should_update = false;
-    
+
     {
         std::lock_guard lock{mutex};
         scene_surface = weak_scene_surface.lock();
-        
+
         if (!scene_surface)
             return;
-        
+
         // Lock pointer when the surface is fullscreen and focused
         bool const is_fullscreen = cached.state.active_mir_state() == mir_window_state_fullscreen;
         bool const is_focused = scene_surface->focus_state() == mir_window_focus_state_focused;
         bool const should_lock = is_fullscreen && is_focused;
-        
+
         MirPointerConfinementState const current_state = scene_surface->confine_pointer_state();
         desired_state = should_lock ? mir_pointer_locked_persistent : mir_pointer_unconfined;
-        
+
         should_update = (current_state != desired_state);
-        
+
         if (should_update && verbose_xwayland_logging_enabled())
         {
             log_debug(
@@ -1074,7 +1074,7 @@ void mf::XWaylandSurface::update_pointer_confinement()
                 is_focused);
         }
     }
-    
+
     if (should_update)
     {
         msh::SurfaceSpecification mods;
