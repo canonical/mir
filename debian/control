@@ -120,7 +120,6 @@ Breaks: mircommon-dev (<< 0.6),
         libmircommon-internal-dev (<< 2.25)
 Replaces: mircommon-dev (<< 0.6),
           libmircommon-internal-dev (<< 2.25)
-Provides: libmircommon-internal-dev
 Description: Display server for Ubuntu - development headers
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
