@@ -18,6 +18,8 @@
 
 #include <mir/frontend/pointer_input_dispatcher.h>
 
+#include <mutex>
+
 namespace
 {
 struct PointerGestureEnder : mir::frontend::PointerInputDispatcher

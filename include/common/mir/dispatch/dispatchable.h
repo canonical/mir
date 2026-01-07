@@ -18,6 +18,7 @@
 #define MIR_DISPATCH_DISPATCHABLE_H_
 
 #include <mir/fd.h>
+#include <cstdint>
 
 namespace mir
 {
