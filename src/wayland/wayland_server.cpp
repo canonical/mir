@@ -15,12 +15,15 @@
  */
 #include "mir/wayland/wayland_server.h"
 #include "wayland_rs/src/lib.rs.h"
+#include <map>
+#include <ranges>
 
 // In the Rust version of wayland-server, the event
 // loop is handled in the display.
 struct wl_event_loop
 {
     rust::Box<EventLoop> event_loop;
+    std::map<uint64_t, wl_listener*> destroy_listeners;
 };
 
 struct wl_display
@@ -40,7 +43,7 @@ wl_display* wl_display_create()
     auto const result = new wl_display
     {
         create_display_wrapper(),
-        {create_event_loop()}
+        {create_event_loop(), {}}
     };
 
     result->event_loop.event_loop->add_display_fd(*result->wrapper.into_raw());
@@ -71,7 +74,7 @@ void wl_display_terminate(wl_display* display)
 
 wl_event_loop* wl_event_loop_create()
 {
-    return new wl_event_loop{create_event_loop()};
+    return new wl_event_loop{create_event_loop(), {}};
 }
 
 void wl_event_loop_destroy(wl_event_loop* event_loop)
@@ -109,6 +112,52 @@ int wl_event_loop_get_fd(wl_event_loop* loop)
 {
     return loop->event_loop->get_fd();
 }
+
+// Wrapper callback that Rust will call, which then calls the wl_listener's notify
+static void destroy_listener_wrapper(void* data)
+{
+    auto* context = static_cast<std::pair<wl_event_loop*, wl_listener*>*>(data);
+    auto* loop = context->first;
+    auto* listener = context->second;
+    
+    // Call the listener's notify function with the listener and loop as data
+    listener->notify(listener, loop);
+    
+    delete context;
+}
+
+void wl_event_loop_add_destroy_listener(
+    wl_event_loop *loop,
+    wl_listener *listener)
+{
+    // Create context to pass both loop and listener to the wrapper
+    auto* context = new std::pair<wl_event_loop*, wl_listener*>(loop, listener);
+    
+    // Register with Rust event loop
+    uint64_t id = loop->event_loop->add_destroy_listener(
+        reinterpret_cast<size_t>(&destroy_listener_wrapper),
+        reinterpret_cast<size_t>(context)
+    );
+    
+    // Store the listener so we can find it later
+    loop->destroy_listeners[id] = listener;
+}
+
+wl_listener* wl_event_loop_get_destroy_listener(
+    wl_event_loop *loop,
+    wl_notify_func_t notify)
+{
+    // Search for a listener with the matching notify function
+    for (const auto& listener: loop->destroy_listeners | std::views::values)
+    {
+        if (listener->notify == notify)
+        {
+            return listener;
+        }
+    }
+    return nullptr;
+}
+
 
 int wl_event_source_remove(wl_event_source* source)
 {

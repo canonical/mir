@@ -29,6 +29,11 @@ struct IdleHandler {
     data: usize, // Data pointer as usize
 }
 
+struct DestroyListener {
+    func: usize, // Function pointer as usize
+    data: usize, // Data pointer as usize
+}
+
 type SourceId = u64;
 
 pub struct EventLoop {
@@ -36,6 +41,7 @@ pub struct EventLoop {
     next_id: Arc<Mutex<SourceId>>,
     fd_handlers: Arc<Mutex<HashMap<SourceId, FdHandler>>>,
     idle_handlers: Arc<Mutex<HashMap<SourceId, IdleHandler>>>,
+    destroy_listeners: Arc<Mutex<HashMap<SourceId, DestroyListener>>>,
     terminated: Arc<Mutex<bool>>,
 }
 
@@ -54,6 +60,7 @@ impl EventLoop {
             next_id: Arc::new(Mutex::new(1)),
             fd_handlers: Arc::new(Mutex::new(HashMap::new())),
             idle_handlers: Arc::new(Mutex::new(HashMap::new())),
+            destroy_listeners: Arc::new(Mutex::new(HashMap::new())),
             terminated: Arc::new(Mutex::new(false)),
         }
     }
@@ -188,6 +195,24 @@ impl EventLoop {
         0
     }
     
+    pub fn add_destroy_listener(&self, func: usize, data: usize) -> u64 {
+        // Generate unique ID
+        let id = {
+            let mut next_id = self.next_id.lock().unwrap();
+            let id = *next_id;
+            *next_id += 1;
+            id
+        };
+        
+        let listener = DestroyListener { func, data };
+        self.destroy_listeners.lock().unwrap().insert(id, listener);
+        id
+    }
+    
+    pub fn remove_destroy_listener(&self, listener_id: u64) -> bool {
+        self.destroy_listeners.lock().unwrap().remove(&listener_id).is_some()
+    }
+    
     pub fn get_fd(&self) -> i32 {
         self.epoll_fd
     }
@@ -248,6 +273,21 @@ impl EventLoop {
 
 impl Drop for EventLoop {
     fn drop(&mut self) {
+        // Call all destroy listeners before cleaning up
+        let listeners: Vec<_> = {
+            let mut destroy_listeners = self.destroy_listeners.lock().unwrap();
+            destroy_listeners.drain().map(|(_, l)| l).collect()
+        };
+        
+        for listener in listeners {
+            unsafe {
+                let func: unsafe extern "C" fn(*mut std::ffi::c_void) 
+                    = std::mem::transmute(listener.func);
+                let data = listener.data as *mut std::ffi::c_void;
+                func(data);
+            }
+        }
+        
         unsafe {
             libc::close(self.epoll_fd);
         }
@@ -285,6 +325,10 @@ mod ffi {
         unsafe fn add_idle(self: &EventLoop, func: usize, data: usize) -> u64;
         
         fn dispatch_idle(self: &EventLoop) -> i32;
+        
+        unsafe fn add_destroy_listener(self: &EventLoop, func: usize, data: usize) -> u64;
+        
+        fn remove_destroy_listener(self: &EventLoop, listener_id: u64) -> bool;
         
         fn get_fd(self: &EventLoop) -> i32;
         

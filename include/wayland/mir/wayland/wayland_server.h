@@ -19,9 +19,15 @@
 
 #include <cstdint>
 
+typedef void (*wl_notify_func_t)(struct wl_listener *listener, void *data);
+
 struct wl_display;
 struct wl_event_loop;
 struct wl_event_source;
+struct wl_listener
+{
+    wl_notify_func_t notify;
+};
 
 // wl_display
 wl_display* wl_display_create();
@@ -47,6 +53,12 @@ wl_event_source* wl_event_loop_add_idle(
     void *data);
 int wl_event_loop_dispatch(wl_event_loop* loop, int timeout);
 int wl_event_loop_get_fd(wl_event_loop* loop);
+void wl_event_loop_add_destroy_listener(
+    wl_event_loop *loop,
+    wl_listener *listener);
+wl_listener* wl_event_loop_get_destroy_listener(
+    wl_event_loop *loop,
+    wl_notify_func_t notify);
 
 // wl_event_source
 int wl_event_source_remove(wl_event_source* source);
