@@ -40,5 +40,9 @@ wl_event_source* wl_event_loop_add_fd(
     uint32_t mask,
     wl_event_loop_fd_func_t func,
     void *data);
+int wl_event_loop_dispatch(wl_event_loop* loop, int timeout);
+
+// wl_event_source
+int wl_event_source_remove(wl_event_source* source);
 
 #endif

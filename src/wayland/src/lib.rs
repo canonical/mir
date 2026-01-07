@@ -67,7 +67,7 @@ impl EventLoop {
         }
     }
 
-    pub fn add_fd(&self, fd: i32, mask: u32, func: usize, data: usize) {
+    pub fn add_fd(&self, fd: i32, mask: u32, func: usize, data: usize) -> bool {
         let mut events = 0u32;
         
         // Convert mask to epoll events
@@ -95,12 +95,32 @@ impl EventLoop {
         
         if result < 0 {
             eprintln!("Failed to add fd {} to epoll", fd);
-            return;
+            return false;
         }
         
         // Store the handler
         let handler = FdHandler { func, data };
         self.handlers.lock().unwrap().insert(fd, handler);
+        true
+    }
+    
+    pub fn remove_fd(&self, fd: i32) {
+        let result = unsafe {
+            libc::epoll_ctl(
+                self.epoll_fd,
+                libc::EPOLL_CTL_DEL,
+                fd,
+                std::ptr::null_mut(),
+            )
+        };
+        
+        if result < 0 {
+            eprintln!("Failed to remove fd {} from epoll", fd);
+            return;
+        }
+        
+        // Remove the handler
+        self.handlers.lock().unwrap().remove(&fd);
     }
     
     pub fn dispatch(&self, timeout: i32) -> i32 {
@@ -182,7 +202,9 @@ mod ffi {
             mask: u32, 
             func: usize,
             data: usize
-        );
+        ) -> bool;
+        
+        fn remove_fd(self: &EventLoop, fd: i32);
         
         fn dispatch(self: &EventLoop, timeout: i32) -> i32;
     }
