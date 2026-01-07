@@ -19,13 +19,23 @@ pub fn create_display_wrapper() -> Box<DisplayWrapper> {
 }
 
 struct FdHandler {
+    fd: RawFd,
     func: usize, // Function pointer as usize
     data: usize, // Data pointer as usize
 }
 
+struct IdleHandler {
+    func: usize, // Function pointer as usize
+    data: usize, // Data pointer as usize
+}
+
+type SourceId = u64;
+
 pub struct EventLoop {
     epoll_fd: RawFd,
-    handlers: Arc<Mutex<HashMap<RawFd, FdHandler>>>,
+    next_id: Arc<Mutex<SourceId>>,
+    fd_handlers: Arc<Mutex<HashMap<SourceId, FdHandler>>>,
+    idle_handlers: Arc<Mutex<HashMap<SourceId, IdleHandler>>>,
     terminated: Arc<Mutex<bool>>,
 }
 
@@ -41,7 +51,9 @@ impl EventLoop {
         
         EventLoop {
             epoll_fd,
-            handlers: Arc::new(Mutex::new(HashMap::new())),
+            next_id: Arc::new(Mutex::new(1)),
+            fd_handlers: Arc::new(Mutex::new(HashMap::new())),
+            idle_handlers: Arc::new(Mutex::new(HashMap::new())),
             terminated: Arc::new(Mutex::new(false)),
         }
     }
@@ -69,7 +81,7 @@ impl EventLoop {
         }
     }
 
-    pub fn add_fd(&self, fd: i32, mask: u32, func: usize, data: usize) -> bool {
+    pub fn add_fd(&self, fd: i32, mask: u32, func: usize, data: usize) -> u64 {
         let mut events = 0u32;
         
         // Convert mask to epoll events
@@ -97,36 +109,83 @@ impl EventLoop {
         
         if result < 0 {
             eprintln!("Failed to add fd {} to epoll", fd);
-            return false;
+            return 0; // Return 0 as error indicator
         }
         
-        // Store the handler
-        let handler = FdHandler { func, data };
-        self.handlers.lock().unwrap().insert(fd, handler);
-        true
-    }
-    
-    pub fn remove_fd(&self, fd: i32) {
-        let result = unsafe {
-            libc::epoll_ctl(
-                self.epoll_fd,
-                libc::EPOLL_CTL_DEL,
-                fd,
-                std::ptr::null_mut(),
-            )
+        // Generate unique ID and store the handler
+        let id = {
+            let mut next_id = self.next_id.lock().unwrap();
+            let id = *next_id;
+            *next_id += 1;
+            id
         };
         
-        if result < 0 {
-            eprintln!("Failed to remove fd {} from epoll", fd);
-            return;
+        let handler = FdHandler { fd, func, data };
+        self.fd_handlers.lock().unwrap().insert(id, handler);
+        id
+    }
+    
+    pub fn remove_source(&self, source_id: u64) -> bool {
+        // Try to remove from fd_handlers first
+        if let Some(handler) = self.fd_handlers.lock().unwrap().remove(&source_id) {
+            let result = unsafe {
+                libc::epoll_ctl(
+                    self.epoll_fd,
+                    libc::EPOLL_CTL_DEL,
+                    handler.fd,
+                    std::ptr::null_mut(),
+                )
+            };
+            
+            if result < 0 {
+                eprintln!("Failed to remove fd {} from epoll", handler.fd);
+                return false;
+            }
+            return true;
         }
         
-        // Remove the handler
-        self.handlers.lock().unwrap().remove(&fd);
+        // Try to remove from idle_handlers
+        if self.idle_handlers.lock().unwrap().remove(&source_id).is_some() {
+            return true;
+        }
+        
+        false
     }
     
     pub fn terminate(&self) {
         *self.terminated.lock().unwrap() = true;
+    }
+    
+    pub fn add_idle(&self, func: usize, data: usize) -> u64 {
+        // Generate unique ID
+        let id = {
+            let mut next_id = self.next_id.lock().unwrap();
+            let id = *next_id;
+            *next_id += 1;
+            id
+        };
+        
+        let handler = IdleHandler { func, data };
+        self.idle_handlers.lock().unwrap().insert(id, handler);
+        id
+    }
+    
+    pub fn dispatch_idle(&self) -> i32 {
+        let handlers: Vec<_> = {
+            let mut idle_handlers = self.idle_handlers.lock().unwrap();
+            idle_handlers.drain().map(|(_, h)| h).collect()
+        };
+        
+        for handler in handlers {
+            unsafe {
+                let func: unsafe extern "C" fn(*mut std::ffi::c_void) 
+                    = std::mem::transmute(handler.func);
+                let data = handler.data as *mut std::ffi::c_void;
+                func(data);
+            }
+        }
+        
+        0
     }
     
     pub fn dispatch(&self, timeout: i32) -> i32 {
@@ -150,7 +209,7 @@ impl EventLoop {
             return -1;
         }
         
-        let handlers = self.handlers.lock().unwrap();
+        let handlers = self.fd_handlers.lock().unwrap();
         
         for i in 0..nfds as usize {
             let event = &events[i];
@@ -168,7 +227,8 @@ impl EventLoop {
                 mask |= 4; // WL_EVENT_ERROR or similar
             }
             
-            if let Some(handler) = handlers.get(&fd) {
+            // Find handler by fd
+            if let Some(handler) = handlers.values().find(|h| h.fd == fd) {
                 unsafe {
                     let func: unsafe extern "C" fn(i32, u32, *mut std::ffi::c_void) -> i32 
                         = std::mem::transmute(handler.func);
@@ -212,11 +272,15 @@ mod ffi {
             mask: u32, 
             func: usize,
             data: usize
-        ) -> bool;
+        ) -> u64;
         
-        fn remove_fd(self: &EventLoop, fd: i32);
+        fn remove_source(self: &EventLoop, source_id: u64) -> bool;
         
         fn terminate(self: &EventLoop);
+        
+        unsafe fn add_idle(self: &EventLoop, func: usize, data: usize) -> u64;
+        
+        fn dispatch_idle(self: &EventLoop) -> i32;
         
         fn dispatch(self: &EventLoop, timeout: i32) -> i32;
     }

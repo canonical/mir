@@ -32,7 +32,7 @@ struct wl_display
 struct wl_event_source
 {
     wl_event_loop* event_loop;
-    int fd;
+    uint64_t source;
 };
 
 wl_display* wl_display_create()
@@ -86,14 +86,15 @@ wl_event_source* wl_event_loop_add_fd(
     wl_event_loop_fd_func_t func,
     void *data)
 {
-    if (loop->event_loop->add_fd(
+    uint64_t source = loop->event_loop->add_fd(
         fd,
         mask,
         reinterpret_cast<size_t>(func),
         reinterpret_cast<size_t>(data)
-    ))
+    );
+    if (source > 0)
     {
-        return new wl_event_source(loop, fd);
+        return new wl_event_source(loop, source);
     }
 
     return nullptr;
@@ -107,7 +108,7 @@ int wl_event_loop_dispatch(wl_event_loop* loop, int timeout)
 int wl_event_source_remove(wl_event_source* source)
 {
     if (source->event_loop)
-        source->event_loop->event_loop->remove_fd(source->fd);
+        source->event_loop->event_loop->remove_source(source->source);
     delete source;
     return 0;
 }

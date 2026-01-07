@@ -32,6 +32,7 @@ void wl_display_terminate(wl_display* display);
 
 // wl_event_loop
 typedef int (*wl_event_loop_fd_func_t)(int fd, uint32_t mask, void *data);
+typedef void (*wl_event_loop_idle_func_t)(void *data);
 wl_event_loop* wl_event_loop_create();
 void wl_event_loop_destroy(wl_event_loop* loop);
 wl_event_source* wl_event_loop_add_fd(
@@ -39,6 +40,10 @@ wl_event_source* wl_event_loop_add_fd(
     int fd,
     uint32_t mask,
     wl_event_loop_fd_func_t func,
+    void *data);
+wl_event_source* wl_event_loop_add_idle(
+    wl_event_loop *loop,
+    wl_event_loop_idle_func_t func,
     void *data);
 int wl_event_loop_dispatch(wl_event_loop* loop, int timeout);
 
