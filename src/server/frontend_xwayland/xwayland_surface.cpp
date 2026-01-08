@@ -1062,9 +1062,9 @@ void mf::XWaylandSurface::update_pointer_confinement()
         bool const is_focused = scene_surface->focus_state() == mir_window_focus_state_focused;
         bool const is_override_redirect = cached.override_redirect;
         bool const decorations_disabled = cached.motif_decorations_disabled;
-        
+
         // Lock if: (fullscreen + focused + decorations disabled) OR (override_redirect + focused)
-        bool const should_lock = is_focused && 
+        bool const should_lock = is_focused &&
             ((is_fullscreen && decorations_disabled) || is_override_redirect);
 
         MirPointerConfinementState const current_state = scene_surface->confine_pointer_state();
