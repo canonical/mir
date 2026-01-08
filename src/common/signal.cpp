@@ -23,12 +23,15 @@ mir::Signal::Signal()
 
 void mir::Signal::raise()
 {
-    raised = true;
+    raised.store(true);
     raised.notify_all();
 }
 
 void mir::Signal::wait()
 {
-    raised.wait(false);
-    raised = false;
+    while (!raised.load())
+    {
+        raised.wait(false);
+    }
+    raised.store(false);
 }
