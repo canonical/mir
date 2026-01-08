@@ -1053,10 +1053,19 @@ void mf::XWaylandSurface::update_pointer_confinement()
         if (!scene_surface)
             return;
 
-        // Lock pointer when the surface is fullscreen and focused
+        // Lock pointer for focused fullscreen windows that have decorations disabled.
+        // This heuristic captures games (which disable decorations) but not browsers
+        // (which keep decorations even in fullscreen).
+        // Additionally, lock pointer for override_redirect windows when focused,
+        // as these are often used by games for pointer capture.
         bool const is_fullscreen = cached.state.active_mir_state() == mir_window_state_fullscreen;
         bool const is_focused = scene_surface->focus_state() == mir_window_focus_state_focused;
-        bool const should_lock = is_fullscreen && is_focused;
+        bool const is_override_redirect = cached.override_redirect;
+        bool const decorations_disabled = cached.motif_decorations_disabled;
+        
+        // Lock if: (fullscreen + focused + decorations disabled) OR (override_redirect + focused)
+        bool const should_lock = is_focused && 
+            ((is_fullscreen && decorations_disabled) || is_override_redirect);
 
         MirPointerConfinementState const current_state = scene_surface->confine_pointer_state();
         desired_state = should_lock ? mir_pointer_locked_persistent : mir_pointer_unconfined;
@@ -1066,12 +1075,14 @@ void mf::XWaylandSurface::update_pointer_confinement()
         if (should_update && verbose_xwayland_logging_enabled())
         {
             log_debug(
-                "%s pointer confinement: %s -> %s (fullscreen=%d, focused=%d)",
+                "%s pointer confinement: %s -> %s (fullscreen=%d, focused=%d, override_redirect=%d, decorations_disabled=%d)",
                 connection->window_debug_string(window).c_str(),
                 current_state == mir_pointer_unconfined ? "unconfined" : "locked",
                 desired_state == mir_pointer_unconfined ? "unconfined" : "locked",
                 is_fullscreen,
-                is_focused);
+                is_focused,
+                is_override_redirect,
+                decorations_disabled);
         }
     }
 
