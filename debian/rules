@@ -2,8 +2,16 @@
 
 include /usr/share/dpkg/default.mk
 include debian/opts.mk
+include /usr/share/rustc/architecture.mk
 
 export DPKG_GENSYMBOLS_CHECK_LEVEL = 4
+export DEB_HOST_RUST_TYPE DEB_HOST_GNU_TYPE
+export PATH := /usr/share/cargo/bin:$(PATH)
+export CARGO=/usr/share/cargo/bin/cargo
+export CARGO_HOME=$(CURDIR)/debian/cargo_home
+export CARGO_REGISTRY=$(CURDIR)/debian/cargo_registry
+export DEB_CARGO_CRATE=$(DEB_SOURCE)_$(DEB_VERSION_UPSTREAM)
+export DEB_BUILD_MAINT_OPTIONS=hardening=+bindnow
 
 # Needed for ccache to work in case the build directory changed
 # (https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=810871)
@@ -27,7 +35,6 @@ else
 endif
 
 COMMON_CONFIGURE_OPTIONS = \
-  -DMIR_ENABLE_RUST=OFF\
   -DCMAKE_INSTALL_LIBEXECDIR="lib/$(DEB_HOST_MULTIARCH)/mir"\
   -DMIR_BUILD_INTERPROCESS_TESTS=OFF\
 
@@ -113,3 +120,10 @@ override_dh_shlibdeps:
 override_dh_gencontrol:
 	dh_gencontrol -Nlibmiral7 -Nlibmiral-dev
 	dh_gencontrol -plibmiral7 -plibmiral-dev -- -v$(MIRAL_VERSION) -V'libmiral7:Version=$(MIRAL_VERSION)'
+
+execute_after_dh_auto_clean:
+	rm -rf debian/cargo_registry
+
+execute_before_dh_auto_configure:
+	$(CARGO) prepare-debian debian/cargo_registry --link-from-system
+	rm -f Cargo.lock

@@ -1,6 +1,5 @@
 include(RustLibrary)
 
-add_compile_definitions(MIR_ENABLE_RUST)
 add_definitions(-DMIR_LOG_COMPONENT_FALLBACK="evdev-input-rs")
 
 add_library(mirplatforminputevdevrsobjects OBJECT

@@ -25,9 +25,9 @@ execute: |
         fakeroot \
         nullmailer \
         qemu-user-static \
-        sbuild \
-        schroot \
-        ubuntu-dev-tools
+        sbuild-schroot \
+        ubuntu-dev-tools \
+        util-linux-extra
 
     printf "\$mailto = 'null@example.com';\n1;\n" > ~/.sbuildrc
 
@@ -54,6 +54,8 @@ execute: |
     )
 
     SBUILD_OPTS=(
+      --chroot-mode=schroot
+      --no-clean-source
       --jobs=$(nproc)
       --verbose
       --dist=${RELEASE}
