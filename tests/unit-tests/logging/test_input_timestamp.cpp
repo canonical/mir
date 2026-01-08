@@ -48,5 +48,5 @@ TEST(TimestampTest, future_time_is_correctly_formatted)
     EXPECT_THAT(out, HasSubstr("in the future"));
     EXPECT_THAT(out, HasSubstr("1000.0"));
     EXPECT_THAT(out, HasSubstr("ms"));
-    
+
 }
