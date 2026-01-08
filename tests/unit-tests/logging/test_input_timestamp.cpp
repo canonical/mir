@@ -22,12 +22,12 @@
 #include <string>
 
 using namespace std::chrono;
+using namespace std::chrono_literals;
 using namespace testing;
 namespace ml = mir::logging;
 
 TEST(TimestampTest, past_time_is_correctly_formatted)
 {
-    using namespace std::chrono_literals;
     auto const past_event = steady_clock::now().time_since_epoch() - 500ms;
 
     std::string out = ml::input_timestamp(past_event);
@@ -40,7 +40,7 @@ TEST(TimestampTest, past_time_is_correctly_formatted)
 TEST(TimestampTest, future_time_is_correctly_formatted)
 {
     using namespace std::chrono_literals;
-    auto const future_event = steady_clock::now().time_since_epoch() + 1000ms + 123ns;
+    auto const future_event = steady_clock::now().time_since_epoch() + 1000ms + 10us;
 
     std::string out = ml::input_timestamp(future_event);
 
