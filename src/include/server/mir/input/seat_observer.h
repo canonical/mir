@@ -18,6 +18,7 @@
 #ifndef MIR_INPUT_SEAT_OBSERVER_H_
 #define MIR_INPUT_SEAT_OBSERVER_H_
 
+#include <cstdint>
 #include <string>
 #include <vector>
 #include <memory>

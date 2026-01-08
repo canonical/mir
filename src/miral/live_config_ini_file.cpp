@@ -22,6 +22,7 @@
 #include <format>
 #include <list>
 #include <map>
+#include <mutex>
 
 namespace mlc = miral::live_config;
 
