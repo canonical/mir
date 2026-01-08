@@ -1,8 +1,11 @@
-use wayland_server::{protocol::wl_compositor::WlCompositor, Display, DisplayHandle, GlobalDispatch, Dispatch, DataInit, Client, New, Resource};
+mod protocol;
+
+use wayland_server::{Display, DisplayHandle, GlobalDispatch, Dispatch, DataInit, Client, New, Resource};
 use std::os::unix::io::{AsRawFd, RawFd};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicU32, Ordering};
+use crate::protocol::wl_compositor::WlCompositor;
 
 struct ServerState {
 }

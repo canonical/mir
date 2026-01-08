@@ -8,9 +8,13 @@ rust-version.workspace = true
 crate-type = ["staticlib"]
 
 [dependencies]
-wayland-server.workspace = true
+wayland-server = "0.31"
+wayland-backend = "0.3.7"
 cxx.workspace = true
 libc = "0.2"
+wayland-scanner = "0.31"
+bitflags = "2.4"
+wayland-protocols = "0.32.10"
 
 [build-dependencies]
 cxx-build.workspace = true
