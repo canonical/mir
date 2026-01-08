@@ -16,6 +16,7 @@ add_library(mirwayland SHARED
   protocol_error.cpp
   client.cpp
   wayland_server.cpp
+  wayland_bridge.h
 )
 
 mir_generate_protocol_wrapper(mirwayland "wl_" wayland.xml)

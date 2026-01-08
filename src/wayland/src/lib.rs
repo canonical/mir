@@ -5,7 +5,8 @@ use std::os::unix::io::{AsRawFd, RawFd};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicU32, Ordering};
-use crate::protocol::wl_compositor::WlCompositor;
+use wayland_server::protocol::wl_compositor::WlCompositor;
+use wayland_server::protocol::wl_surface::WlSurface;
 
 struct ServerState {
 }
@@ -25,6 +26,19 @@ impl GlobalDispatch<WlCompositor, ()> for ServerState {
         _global_data: &(),
         data_init: &mut DataInit<'_, Self>,
     ) {
+        // From C++, we call wl_global_create with a bind thunk. This should call
+        // into the DisplayHandle to create a new global.
+        //
+        // When a Wayland object is bound, we should call back the bind thunk.
+        //
+        // This bind_think will create the resource for that object with the
+        // provided interface of callbacks using 'wl_resource_create'.
+
+        // Wait... but this already creates the resource! Yes, because it
+        // sets up the Dispatch impl internally.
+        //
+        // So we will need to update the C++ generator.
+
         // Initialize the resource when a client binds to this global
         data_init.init(resource, ());
     }
@@ -35,14 +49,64 @@ impl Dispatch<WlCompositor, ()> for ServerState {
         _state: &mut Self,
         _client: &Client,
         _resource: &WlCompositor,
-        _request: <WlCompositor as Resource>::Request,
+        request: <WlCompositor as Resource>::Request,
         _data: &(),
         _dhandle: &DisplayHandle,
         _data_init: &mut DataInit<'_, Self>,
     ) {
+        use wayland_server::{
+            protocol::wl_compositor::{WlCompositor, Request},
+        };
+
         // Handle compositor requests here
+        match request {
+            Request::CreateSurface { id } => {
+                // Initialize the new surface object
+                _data_init.init(id, ());
+            }
+            Request::CreateRegion { id } => {
+                _data_init.init(id, ());
+            }
+        }
     }
 }
+
+// OKIE DOKIE MATT.
+//
+// Here is the game plan.
+//
+// So the paradigm for what we want to do here is different, so let's recap the steps:
+//
+// 1. Generate a Dispatch impl for each protocol object we want to handle (via the existing Wayland generator).
+// 2. Match each request on that object (again, this should be generated)
+// 3. Use the data field when initing the object to point to a shared_ptr that is shared between Rust and C++
+// 4. In the request handler, we can then call methods on that shared_ptr to handle the request
+
+impl Dispatch<WlSurface, ()> for ServerState {
+    fn request(
+        _state: &mut Self,
+        _client: &Client,
+        _resource: &WlSurface,
+        _request: <WlSurface as Resource>::Request,
+        _data: &(),
+        _dhandle: &DisplayHandle,
+        _data_init: &mut DataInit<'_, Self>,
+    ) {
+        // Handle surface requests 
+        use wayland_server::{
+            protocol::wl_surface::{WlSurface, Request},
+        };
+        match _request {
+            Request::Destroy => {
+                // Handle surface destruction if needed
+            }
+            Request::Attach { buffer, x, y } {
+
+            }
+        }
+    }
+}
+
 // TODO: Rename to Server
 pub struct DisplayWrapper {
     state: ServerState,
@@ -52,8 +116,6 @@ pub struct DisplayWrapper {
     destroy_listeners: Arc<Mutex<HashMap<SourceId, DestroyListener>>>,
     next_listener_id: Arc<Mutex<SourceId>>,
 }
-
-
 
 impl DisplayWrapper {
     pub fn new() -> Self {
