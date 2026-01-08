@@ -15,8 +15,10 @@
  */
 
 #include <mir/input/xkb_mapper.h>
+
+#include "../events/event_private.h"
+
 #include <mir/input/keymap.h>
-#include <mir/events/event_private.h>
 #include <mir/events/event_builders.h>
 
 #include <linux/input-event-codes.h>

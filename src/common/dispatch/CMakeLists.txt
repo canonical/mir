@@ -12,13 +12,21 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-list(
-  APPEND MIR_COMMON_SOURCES
-  ${CMAKE_CURRENT_SOURCE_DIR}/action_queue.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/multiplexing_dispatchable.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/readable_fd.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/threaded_dispatcher.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/utils.cpp
+add_library(mircommondispatch OBJECT
+  action_queue.cpp
+  multiplexing_dispatchable.cpp
+  readable_fd.cpp
+  threaded_dispatcher.cpp
+  utils.cpp
+  signal_blocker.cpp
 )
 
-set(MIR_COMMON_SOURCES ${MIR_COMMON_SOURCES} PARENT_SCOPE)
+target_include_directories(mircommondispatch
+  PUBLIC
+    ${PROJECT_SOURCE_DIR}/include/common
+)
+
+target_link_libraries(mircommondispatch
+  PUBLIC
+    mircore
+)

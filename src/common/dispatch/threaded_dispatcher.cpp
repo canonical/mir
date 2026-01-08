@@ -15,8 +15,10 @@
  */
 
 #include <mir/dispatch/threaded_dispatcher.h>
+
+#include "signal_blocker.h"
+
 #include <mir/dispatch/dispatchable.h>
-#include <mir/signal_blocker.h>
 #include <mir/thread_name.h>
 
 #include <mir/raii.h>
