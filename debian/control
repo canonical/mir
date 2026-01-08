@@ -126,18 +126,6 @@ Description: Display server for Ubuntu - development headers
  .
  Contains header files required for server and/or client development.
 
-Package: libmircommon-internal-dev
-Section: oldlibs
-Architecture: linux-any
-Multi-Arch: same
-Pre-Depends: ${misc:Pre-Depends}
-Depends: libmircommon-dev (>= 2.26),
-         ${misc:Depends},
-Description: transitional package for libmircommon-dev
- This is a transitional package. It can safely be removed.
- .
- The libmircommon-internal-dev package has been merged into libmircommon-dev.
-
 Package: libmirplatform-dev
 Section: libdevel
 Architecture: linux-any
