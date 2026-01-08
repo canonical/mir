@@ -17,7 +17,6 @@
 #include <miral/floating_window_manager.h>
 #include <miral/toolkit_event.h>
 #include <linux/input.h>
-#include <gmpxx.h>
 
 using namespace miral::toolkit;
 
