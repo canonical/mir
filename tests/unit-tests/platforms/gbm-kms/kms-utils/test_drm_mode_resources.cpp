@@ -135,32 +135,25 @@ private:
     {
         auto const& property = properties.at(id);
 
-        auto prop =
-            std::unique_ptr<drmModePropertyRes, void (*)(drmModePropertyPtr)>(new drmModePropertyRes, &::drmModeFreeProperty);
-
-        memset(prop.get(), 0, sizeof(*prop));
-
-        prop->prop_id = id;
+        auto prop = std::make_unique<drmModePropertyRes>(id);
         strncpy(prop->name, property.c_str(), sizeof(prop->name) - 1);
 
-        allocated_props.insert(prop.get());
-        return prop.release();
+        return allocated_props.emplace(prop.get(), std::move(prop)).first->first;
     }
 
     void free_property(
         drmModePropertyPtr prop)
     {
-        if (allocated_props.count(prop) == 0)
+        if (auto n = allocated_props.erase(prop); n == 0)
         {
             BOOST_THROW_EXCEPTION(std::runtime_error{"Freeing invalid drmModePropertyPtr"});
         }
-        delete prop;
     }
 
     std::unordered_map<uint32_t, DRMObjectWithProperties> objects;
     std::unordered_map<uint32_t, std::string> properties;
     std::unordered_set<drmModeObjectPropertiesPtr> allocated_obj_props;
-    std::unordered_set<drmModePropertyPtr> allocated_props;
+    std::unordered_map<drmModePropertyPtr, std::unique_ptr<drmModePropertyRes>> allocated_props;
     uint32_t next_id{1};
 };
 }
