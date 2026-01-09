@@ -928,6 +928,54 @@ public:
         glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     }
 
+    DMABufTex(
+        mg::DMABufBuffer const& dma_buf,
+        BufferGLDescription const& descriptor,
+        std::shared_ptr<mgc::EGLContextExecutor> egl_delegate,
+        void const* data,
+        GLenum format,
+        GLenum type,
+        int stride_bytes,
+        int bpp)
+        : tex{get_tex_id()},
+          desc{descriptor},
+          layout_{mg::gl::Texture::Layout::TopRowFirst},
+          egl_delegate{std::move(egl_delegate)}
+    {
+        auto const target = descriptor.target;
+        int width = dma_buf.size().width.as_int();
+        int height = dma_buf.size().height.as_int();
+        void const* src_data = data;
+        std::vector<uint8_t> buffer;
+
+        glBindTexture(target, tex);
+        glTexParameteri(target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        if (stride_bytes != width * bpp)
+        {
+            buffer.resize(width * height * bpp);
+            uint8_t* dst = buffer.data();
+            uint8_t const* src = static_cast<uint8_t const*>(data);
+            for(int y = 0; y < height; ++y)
+            {
+                std::memcpy(dst + y * width * bpp, src + y * stride_bytes, width * bpp);
+            }
+            src_data = buffer.data();
+            glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+        }
+        else
+        {
+             if ((width * bpp) % 4 != 0) glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+             else glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+        }
+
+        glTexImage2D(target, 0, GL_RGBA, width, height, 0, format, type, src_data);
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+    }
+
     ~DMABufTex() override
     {
         egl_delegate->spawn(
@@ -1403,77 +1451,7 @@ namespace
 #define GL_BGRA_EXT 0x80E1
 #endif
 
-class CpuTexture : public mg::gl::Texture
-{
-public:
-    CpuTexture(mir::geometry::Size size, void const* data, GLenum format, GLenum type, int stride_bytes, int bpp)
-    {
-        glGenTextures(1, &tex);
-        glBindTexture(GL_TEXTURE_2D, tex);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-        int width = size.width.as_int();
-        int height = size.height.as_int();
-        void const* src_data = data;
-        std::vector<uint8_t> buffer;
-
-        if (stride_bytes != width * bpp)
-        {
-            buffer.resize(width * height * bpp);
-            uint8_t* dst = buffer.data();
-            uint8_t const* src = static_cast<uint8_t const*>(data);
-            for(int y = 0; y < height; ++y)
-            {
-                std::memcpy(dst + y * width * bpp, src + y * stride_bytes, width * bpp);
-            }
-            src_data = buffer.data();
-            glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-        }
-        else
-        {
-             if ((width * bpp) % 4 != 0) glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-             else glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-        }
-
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, format, type, src_data);
-        glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-    }
-
-    ~CpuTexture() override
-    {
-        glDeleteTextures(1, &tex);
-    }
-
-    auto shader(mg::gl::ProgramFactory& factory) const -> mg::gl::Program const& override
-    {
-         static char const* const fragment_shader =
-            "vec4 sample_to_rgba(vec2 texcoord) {\n"
-            "   return texture2D(tex[0], texcoord);\n"
-            "}\n";
-        static char const id = 0;
-        return factory.compile_fragment_shader(&id, nullptr, fragment_shader);
-    }
-
-    auto layout() const -> Layout override { return Layout::TopRowFirst; }
-
-    void bind() override
-    {
-        glBindTexture(GL_TEXTURE_2D, tex);
-    }
-
-    auto tex_id() const -> GLuint override
-    {
-        return tex;
-    }
-
-    void add_syncpoint() override {}
-
-private:
-    GLuint tex{0};
-};
 }
 
 mg::DMABufEGLProvider::DMABufEGLProvider(
@@ -1596,7 +1574,15 @@ auto mg::DMABufEGLProvider::as_texture(std::shared_ptr<NativeBufferBase> buffer)
             gl_format = GL_RGBA;
         }
 
-        return std::make_shared<CpuTexture>(dmabuf_tex->size(), mapping->data(), gl_format, gl_type, mapping->stride().as_int(), bpp);
+        return std::make_shared<DMABufTex>(
+            *dmabuf_tex,
+            Tex2D,
+            egl_delegate,
+            mapping->data(),
+            gl_format,
+            gl_type,
+            mapping->stride().as_int(),
+            bpp);
     }
     return nullptr;
 }
