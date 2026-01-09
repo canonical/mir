@@ -1,4 +1,5 @@
 mod protocols;
+mod dispatchers;
 
 use wayland_server::{Display, DisplayHandle, GlobalDispatch, Dispatch, DataInit, Client, New, Resource};
 use std::os::unix::io::{AsRawFd, RawFd};
