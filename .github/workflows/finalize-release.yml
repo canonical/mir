@@ -15,27 +15,21 @@ jobs:
   finalize:
     runs-on: ubuntu-latest
 
-    env:
-        DEBFULLNAME: ${{ vars.DEBFULLNAME }}
-        DEBEMAIL: ${{ vars.DEBEMAIL }}
-
     steps:
       - name: Import GPG key
+        id: gpg
         uses: crazy-max/ghaction-import-gpg@v6
         with:
           gpg_private_key: ${{ secrets.MIR_BOT_GPG_PRIVATE_KEY }}
           passphrase: ${{ secrets.MIR_BOT_GPG_PASSPHRASE }}
+          git_user_signingkey: true
+          git_commit_gpgsign: true
 
       - name: Checkout repository
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
           ref: ${{ inputs.release_branch }}
-
-      - name: Configure git user
-        run: |
-          git config user.name "${{ vars.DEBFULLNAME }}"
-          git config user.email "${{ vars.DEBEMAIL }}"
 
       - name: Determine version
         id: version
@@ -65,6 +59,9 @@ jobs:
           ' doc/sphinx/release-notes.md > /tmp/release-notes-section.md
 
       - name: Update Debian changelog
+        env:
+          DEBFULLNAME: ${{ steps.gpg.outputs.name }}
+          DEBEMAIL: ${{ steps.gpg.outputs.email }}
         run: |
           sudo apt-get update
           sudo apt-get install --yes devscripts
@@ -118,7 +115,7 @@ jobs:
             }
 
             function print_header() {
-              print "* " date_str " ${{ vars.DEBFULLNAME }} <${{ vars.DEBEMAIL }}> - ${{ steps.version.outputs.version }}-1"
+              print "* " date_str " ${{ steps.gpg.outputs.name }} <${{ steps.gpg.outputs.email }}> - ${{ steps.version.outputs.version }}-1"
             }
 
             /^Version:/ {
@@ -152,7 +149,7 @@ jobs:
       - name: Commit and push changelog
         run: |
           git add debian/changelog rpm/mir.spec
-          git commit --gpg-sign --message "Update changelogs for ${{ steps.version.outputs.version }}"
+          git commit --message "Update changelogs for ${{ steps.version.outputs.version }}"
           git push origin "${{ inputs.release_branch }}"
 
       - name: Finalize GitHub release
