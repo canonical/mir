@@ -39,7 +39,6 @@ TEST(TimestampTest, past_time_is_correctly_formatted)
 
 TEST(TimestampTest, future_time_is_correctly_formatted)
 {
-    using namespace std::chrono_literals;
     auto const future_event = steady_clock::now().time_since_epoch() + 1000ms + 10us;
 
     std::string out = ml::input_timestamp(future_event);
