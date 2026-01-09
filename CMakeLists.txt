@@ -32,7 +32,6 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 add_compile_definitions(MIR_VERSION_MAJOR=${PROJECT_VERSION_MAJOR})
 add_compile_definitions(MIR_VERSION_MINOR=${PROJECT_VERSION_MINOR})
 add_compile_definitions(MIR_VERSION_MICRO=${PROJECT_VERSION_PATCH})
-add_compile_definitions(_GNU_SOURCE)
 add_compile_definitions(_FILE_OFFSET_BITS=64)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)

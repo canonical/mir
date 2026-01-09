@@ -25,6 +25,7 @@ add_library(mir_demo_wayland_extensions STATIC
         ${MIR_SHELL_C} ${MIR_SHELL_H}
         make_shm_pool.c make_shm_pool.h
 )
+set_source_files_properties(make_shm_pool.c PROPERTIES COMPILE_DEFINITIONS _GNU_SOURCE)
 set_target_properties     (mir_demo_wayland_extensions PROPERTIES COMPILE_FLAGS "${CMAKE_CFLAGS}  -fvisibility=hidden")
 target_include_directories(mir_demo_wayland_extensions PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 target_link_libraries     (mir_demo_wayland_extensions PUBLIC PkgConfig::WAYLAND_CLIENT)
