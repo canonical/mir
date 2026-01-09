@@ -159,8 +159,7 @@ void mge::ThreadedDRMEventHandler::cancel_flip_events(KMSCrtcId id)
 
 void mge::ThreadedDRMEventHandler::event_loop() noexcept
 {
-    drmEventContext ctx;
-    ::memset(&ctx, 0, sizeof(ctx));
+    drmEventContext ctx{};
     ctx.version = 3;
     ctx.page_flip_handler2 = &flip_handler;
 
