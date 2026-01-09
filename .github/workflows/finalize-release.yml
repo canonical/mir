@@ -24,6 +24,7 @@ jobs:
         uses: crazy-max/ghaction-import-gpg@v6
         with:
           gpg_private_key: ${{ secrets.MIR_BOT_GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.MIR_BOT_GPG_PASSPHRASE }}
 
       - name: Checkout repository
         uses: actions/checkout@v6
