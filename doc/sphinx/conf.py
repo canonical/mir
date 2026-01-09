@@ -36,11 +36,14 @@ author = "Canonical Ltd."
 # You might want to include a version number here.
 # To not display any title, set this option to an empty string.
 try:
-    release = subprocess.check_output(["git", "describe", "--always"], encoding="utf-8").strip()
-except (FileNotFoundError, subprocess.CalledProcessError):
-    with open(Path(__file__).parents[2] / "CMakeLists.txt", encoding="utf-8") as cmake:
-        match = re.search(r"^\s*VERSION (\d+\.\d+\.\d+)$", cmake.read())
-    release = f"v{match.group(1)}" if match else "unknown"
+    release = subprocess.check_output(["git", "describe", "--tags", "--exact"], encoding="utf-8").strip()
+except subprocess.CalledProcessError:
+    try:
+        release = subprocess.check_output(["git", "describe", "--tags", "--match", "*-dev"], encoding="utf-8").strip()
+    except (FileNotFoundError, subprocess.CalledProcessError):
+        with open(Path(__file__).parents[2] / "CMakeLists.txt", encoding="utf-8") as cmake:
+            match = re.search(r"^\s*VERSION (\d+\.\d+\.\d+)$", cmake.read())
+        release = f"v{match.group(1)}" if match else "unknown"
 html_title = f'{project} {release} documentation'
 
 
