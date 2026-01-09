@@ -771,6 +771,7 @@ TEST_F(BasicSurfaceTest, stores_parent)
 {
     auto parent = mt::fake_shared(surface);
     ms::BasicSurface child{
+        nullptr,
         name,
         geom::Rectangle{{0,0}, {100,100}},
         parent,
@@ -1350,6 +1351,7 @@ TEST_F(BasicSurfaceTest, registers_frame_callbacks_on_construction)
         .Times(AtLeast(1));
 
     ms::BasicSurface child{
+        nullptr,
         name,
         geom::Rectangle{{0,0}, {100,100}},
         std::weak_ptr<ms::Surface>{},
