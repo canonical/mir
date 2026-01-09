@@ -1,4 +1,4 @@
-mod protocol;
+mod protocols;
 
 use wayland_server::{Display, DisplayHandle, GlobalDispatch, Dispatch, DataInit, Client, New, Resource};
 use std::os::unix::io::{AsRawFd, RawFd};
@@ -17,59 +17,60 @@ impl ServerState {
     }
 }
 
-impl GlobalDispatch<WlCompositor, ()> for ServerState {
-    fn bind(
-        _state: &mut Self,
-        _handle: &DisplayHandle,
-        _client: &Client,
-        resource: New<WlCompositor>,
-        _global_data: &(),
-        data_init: &mut DataInit<'_, Self>,
-    ) {
-        // From C++, we call wl_global_create with a bind thunk. This should call
-        // into the DisplayHandle to create a new global.
-        //
-        // When a Wayland object is bound, we should call back the bind thunk.
-        //
-        // This bind_think will create the resource for that object with the
-        // provided interface of callbacks using 'wl_resource_create'.
+// impl GlobalDispatch<WlCompositor, ()> for ServerState {
+//     fn bind(
+//         _state: &mut Self,
+//         _handle: &DisplayHandle,
+//         _client: &Client,
+//         resource: New<WlCompositor>,
+//         _global_data: &(),
+//         data_init: &mut DataInit<'_, Self>,
+//     ) {
+//         // From C++, we call wl_global_create with a bind thunk. This should call
+//         // into the DisplayHandle to create a new global.
+//         //
+//         // When a Wayland object is bound, we should call back the bind thunk.
+//         //
+//         // This bind_think will create the resource for that object with the
+//         // provided interface of callbacks using 'wl_resource_create'.
 
-        // Wait... but this already creates the resource! Yes, because it
-        // sets up the Dispatch impl internally.
-        //
-        // So we will need to update the C++ generator.
+//         // Wait... but this already creates the resource! Yes, because it
+//         // sets up the Dispatch impl internally.
+//         //
+//         // So we will need to update the C++ generator.
 
-        // Initialize the resource when a client binds to this global
-        data_init.init(resource, ());
-    }
-}
+//         // Initialize the resource when a client binds to this global
+//         data_init.init(resource, ());
+//     }
+// }
 
-impl Dispatch<WlCompositor, ()> for ServerState {
-    fn request(
-        _state: &mut Self,
-        _client: &Client,
-        _resource: &WlCompositor,
-        request: <WlCompositor as Resource>::Request,
-        _data: &(),
-        _dhandle: &DisplayHandle,
-        _data_init: &mut DataInit<'_, Self>,
-    ) {
-        use wayland_server::{
-            protocol::wl_compositor::{WlCompositor, Request},
-        };
+// impl Dispatch<WlCompositor, ()> for ServerState {
+//     fn request(
+//         _state: &mut Self,
+//         _client: &Client,
+//         _resource: &WlCompositor,
+//         request: <WlCompositor as Resource>::Request,
+//         _data: &(),
+//         _dhandle: &DisplayHandle,
+//         _data_init: &mut DataInit<'_, Self>,
+//     ) {
+//         use wayland_server::{
+//             protocol::wl_compositor::{WlCompositor, Request},
+//         };
 
-        // Handle compositor requests here
-        match request {
-            Request::CreateSurface { id } => {
-                // Initialize the new surface object
-                _data_init.init(id, ());
-            }
-            Request::CreateRegion { id } => {
-                _data_init.init(id, ());
-            }
-        }
-    }
-}
+//         // Handle compositor requests here
+//         match request {
+//             Request::CreateSurface { id } => {
+//                 // Initialize the new surface object
+//                 _data_init.init(id, ());
+//             }
+//             Request::CreateRegion { id } => {
+//                 _data_init.init(id, ());
+//             }
+//             _ => {}
+//         }
+//     }
+// }
 
 // OKIE DOKIE MATT.
 //
@@ -82,30 +83,31 @@ impl Dispatch<WlCompositor, ()> for ServerState {
 // 3. Use the data field when initing the object to point to a shared_ptr that is shared between Rust and C++
 // 4. In the request handler, we can then call methods on that shared_ptr to handle the request
 
-impl Dispatch<WlSurface, ()> for ServerState {
-    fn request(
-        _state: &mut Self,
-        _client: &Client,
-        _resource: &WlSurface,
-        _request: <WlSurface as Resource>::Request,
-        _data: &(),
-        _dhandle: &DisplayHandle,
-        _data_init: &mut DataInit<'_, Self>,
-    ) {
-        // Handle surface requests 
-        use wayland_server::{
-            protocol::wl_surface::{WlSurface, Request},
-        };
-        match _request {
-            Request::Destroy => {
-                // Handle surface destruction if needed
-            }
-            Request::Attach { buffer, x, y } {
+// impl Dispatch<WlSurface, ()> for ServerState {
+//     fn request(
+//         _state: &mut Self,
+//         _client: &Client,
+//         _resource: &WlSurface,
+//         _request: <WlSurface as Resource>::Request,
+//         _data: &(),
+//         _dhandle: &DisplayHandle,
+//         _data_init: &mut DataInit<'_, Self>,
+//     ) {
+//         // Handle surface requests 
+//         use wayland_server::{
+//             protocol::wl_surface::{WlSurface, Request},
+//         };
+//         match _request {
+//             Request::Destroy => {
+//                 // Handle surface destruction if needed
+//             }
+//             Request::Attach { buffer, x, y } => {
 
-            }
-        }
-    }
-}
+//             }
+//             _ => {}
+//         }
+//     }
+// }
 
 // TODO: Rename to Server
 pub struct DisplayWrapper {
