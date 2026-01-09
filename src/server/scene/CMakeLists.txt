@@ -3,7 +3,6 @@ ADD_LIBRARY(
 
   application_session.cpp
   basic_surface.cpp
-  wayland_basic_surface.cpp
   broadcasting_session_event_sink.cpp
   default_configuration.cpp
   session_container.cpp

@@ -18,7 +18,7 @@
 #include <mir/scene/surface_observer.h>
 #include <mir/shell/surface_specification.h>
 #include <mir/input/cursor_images.h>
-#include "src/server/scene/wayland_basic_surface.h"
+#include <mir/scene/basic_surface.h>
 #include "src/server/report/null_report_factory.h"
 
 #include <mir/test/fake_shared.h>
@@ -75,13 +75,14 @@ struct StubCursorImages
 };
 
 struct MockSurface
-    : ms::WaylandBasicSurface
+    : ms::BasicSurface
 {
     MockSurface(std::shared_ptr<ms::Session> const& session, mir::Executor& executor)
-        : ms::WaylandBasicSurface{
+        : ms::BasicSurface{
               session,
               {},
               {{},{}},
+              {},
               mir_pointer_unconfined,
               { { std::make_shared<testing::NiceMock<mtd::MockBufferStream>>(), {0, 0}} },
               {},
@@ -93,7 +94,7 @@ struct MockSurface
 
     void register_interest(std::weak_ptr<ms::SurfaceObserver> const& observer)
     {
-        WaylandBasicSurface::register_interest(observer, executor);
+        BasicSurface::register_interest(observer, executor);
     }
 
     void register_interest(std::weak_ptr<ms::SurfaceObserver> const& observer, mir::Executor&)
