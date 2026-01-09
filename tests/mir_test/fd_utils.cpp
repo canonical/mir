@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <mir/errno_utils.h>
 #include <mir/test/fd_utils.h>
 
 ::testing::AssertionResult mir::test::std_call_succeeded(int retval)
@@ -27,7 +28,7 @@
         return ::testing::AssertionFailure() << "errno: "
                                              << errno
                                              << " ["
-                                             << strerror(errno)
+                                             << mir::errno_to_cstr(errno)
                                              << "]";
     }
 }

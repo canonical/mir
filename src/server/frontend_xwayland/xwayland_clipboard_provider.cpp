@@ -18,6 +18,7 @@
 #include "xwayland_clipboard_source.h"
 
 #include "xwayland_log.h"
+#include <mir/errno_utils.h>
 #include <mir/scene/clipboard.h>
 #include <mir/dispatch/multiplexing_dispatchable.h>
 
@@ -133,7 +134,7 @@ private:
                 if (len < 0)
                 {
                     // Error reading from fd
-                    notify_cancelled(strerror(errno));
+                    notify_cancelled(mir::errno_to_cstr(errno));
                     return false;
                 }
                 data_size += len;
@@ -444,7 +445,7 @@ void mf::XWaylandClipboardProvider::send_data(
 
     if (pipe2(fds, O_CLOEXEC) != 0)
     {
-        log_warning("failed to send clipboard data to X11 client: pipe2 error: %s", strerror(errno));
+        log_warning("failed to send clipboard data to X11 client: pipe2 error: %s", mir::errno_to_cstr(errno));
         send_selection_notify(*connection, time, requester, XCB_ATOM_NONE, connection->CLIPBOARD, target);
         return;
     }

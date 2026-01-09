@@ -703,3 +703,11 @@ global:
     mir::security_log*;
   };
 } MIR_COMMON_INTERNAL_2.22;
+
+
+MIR_COMMON_2.26 {
+global:
+  extern "C++" {
+    mir::errno_to_cstr*;
+  };
+} MIR_COMMON_INTERNAL_2.24;

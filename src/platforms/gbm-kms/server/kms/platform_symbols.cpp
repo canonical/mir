@@ -31,6 +31,7 @@
 #include <mir/libname.h>
 #include <mir/console_services.h>
 #include <mir/constexpr_utils.h>
+#include <mir/errno_utils.h>
 #include "one_shot_device_observer.h"
 #include <mir/graphics/egl_error.h>
 #include <mir/graphics/gl_config.h>
@@ -295,7 +296,7 @@ auto probe_display_platform(
 
                     default:
                         mir::log_warning("Unexpected error from drmCheckModesettingSupported(): %s (%i), "
-                                         "but continuing anyway", strerror(err), err);
+                                         "but continuing anyway", mir::errno_to_cstr(err), err);
                         mir::log_warning("Please file a bug at "
                                          "https://github.com/canonical/mir/issues containing this message");
                         supported_devices.back().support_level = mg::probe::supported;

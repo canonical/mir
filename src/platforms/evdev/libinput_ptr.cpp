@@ -18,6 +18,8 @@
 #include "libinput_ptr.h"
 #include "fd_store.h"
 
+#include <mir/errno_utils.h>
+
 #include <fcntl.h>
 #include <iostream>
 #include <cstring>
@@ -34,7 +36,7 @@ int fd_open(const char* path, int flags, void* userdata)
 
     if (fcntl(fd, F_SETFL, flags) == -1)
     {
-        std::cerr << "Failed to set flags: " << strerror(errno) << " (" << errno << ")" << std::endl;
+        std::cerr << "Failed to set flags: " << mir::errno_to_cstr(errno) << " (" << errno << ")" << std::endl;
     }
 
     return fd_store->take_fd(path);

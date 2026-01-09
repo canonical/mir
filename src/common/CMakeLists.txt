@@ -25,9 +25,11 @@ add_library(mircommon SHARED
   output_type_names.cpp
   posix_rw_mutex.cpp                ${PROJECT_SOURCE_DIR}/include/common/mir/posix_rw_mutex.h
   signal.cpp                        ${PROJECT_SOURCE_DIR}/include/common/mir/signal.h
+  errno_utils.cpp
   thread_pool_executor.cpp
   input/buffer_keymap.cpp
   input/input_event.cpp
+
   ${PROJECT_SOURCE_DIR}/include/common/mir/constexpr_utils.h
 )
 

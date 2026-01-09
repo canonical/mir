@@ -17,6 +17,7 @@
 #include "real_kms_output.h"
 #include "kms_framebuffer.h"
 #include <mir/graphics/display_configuration.h>
+#include <mir/errno_utils.h>
 #include "page_flipper.h"
 #include "kms-utils/kms_connector.h"
 #include <mir/fatal.h>
@@ -161,7 +162,7 @@ bool mgg::RealKMSOutput::set_crtc(FBHandle const& fb)
                               &connector->modes[mode_index]);
     if (ret)
     {
-        mir::log_error("Failed to set CRTC: %s (%i)", strerror(-ret), -ret);
+        mir::log_error("Failed to set CRTC: %s (%i)", mir::errno_to_cstr(-ret), -ret);
         current_crtc = nullptr;
         return false;
     }
@@ -213,7 +214,7 @@ void mgg::RealKMSOutput::clear_crtc()
              */
             mir::log_info("Couldn't clear output %s (drmModeSetCrtc: %s (%i))",
                 mgk::connector_name(connector).c_str(),
-                strerror(-result),
+                mir::errno_to_cstr(-result),
                 -result);
         }
         else
@@ -272,7 +273,7 @@ bool mgg::RealKMSOutput::set_cursor_image(gbm_bo* buffer)
         {
             has_cursor_ = false;
             mir::log_warning("set_cursor: drmModeSetCursor failed (%s)",
-                             strerror(-result));
+                             mir::errno_to_cstr(-result));
         }
     }
     return !result;
@@ -287,7 +288,7 @@ void mgg::RealKMSOutput::move_cursor(geometry::Point destination)
                                             destination.y.as_int()))
         {
             mir::log_warning("move_cursor: drmModeMoveCursor failed (%s)",
-                             strerror(-result));
+                             mir::errno_to_cstr(-result));
         }
     }
 }
@@ -301,7 +302,7 @@ bool mgg::RealKMSOutput::clear_cursor()
 
         if (result)
             mir::log_warning("clear_cursor: drmModeSetCursor failed (%s)",
-                             strerror(-result));
+                             mir::errno_to_cstr(-result));
         has_cursor_ = false;
     }
 
@@ -390,7 +391,7 @@ void mgg::RealKMSOutput::set_gamma(mg::GammaCurves const& gamma)
 
     int err = -ret;
     if (err)
-        mir::log_warning("drmModeCrtcSetGamma failed: %s", strerror(err));
+        mir::log_warning("drmModeCrtcSetGamma failed: %s", mir::errno_to_cstr(err));
 
     // TODO: return bool in future? Then do what with it?
 }
@@ -479,7 +480,7 @@ std::vector<uint8_t> edid_for_connector(int drm_fd, uint32_t connector_id)
                 "Failed to get EDID property for connector %u: %i (%s)",
                 connector_id,
                 errno,
-                ::strerror(errno));
+                mir::errno_to_cstr(errno));
             return edid;
         }
 
@@ -511,7 +512,7 @@ std::vector<uint8_t> edid_for_connector(int drm_fd, uint32_t connector_id)
                 "Failed to get EDID property blob for connector %u: %i (%s)",
                 connector_id,
                 errno,
-                ::strerror(errno));
+                mir::errno_to_cstr(errno));
 
             return edid;
         }

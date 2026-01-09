@@ -15,6 +15,7 @@
  */
 
 #include "display_report.h"
+#include <mir/errno_utils.h>
 #include <mir/logging/logger.h>
 #include <EGL/eglext.h>
 #include <sstream>
@@ -69,7 +70,7 @@ void mrl::DisplayReport::report_successful_display_construction()
 void mrl::DisplayReport::report_drm_master_failure(int error)
 {
     std::stringstream ss;
-    ss << "Failed to change ownership of DRM master (error: " << strerror(error) << ").";
+    ss << "Failed to change ownership of DRM master (error: " << mir::errno_to_cstr(error) << ").";
     if (error == EPERM || error == EACCES)
         ss << " Try running Mir with root privileges.";
 

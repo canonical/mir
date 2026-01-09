@@ -16,6 +16,7 @@
 
 #include "wayland_executor.h"
 
+#include <mir/errno_utils.h>
 #include <mir/fd.h>
 #include <mir/log.h>
 
@@ -238,7 +239,7 @@ int mf::WaylandExecutor::State::on_notify(int fd, uint32_t, void* data)
     {
         mir::log_error(
             "eventfd_read failed to consume wakeup notification: %s (%i)",
-            strerror(err),
+            mir::errno_to_cstr(err),
             err);
     }
 
@@ -328,7 +329,7 @@ mf::WaylandExecutor::~WaylandExecutor()
     {
         mir::log_critical(
             "Failed to create event notification for ~WaylandExecutor: %s (%i)",
-            strerror(err),
+            mir::errno_to_cstr(err),
             err);
     }
 }
