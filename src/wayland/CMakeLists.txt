@@ -7,6 +7,8 @@ add_subdirectory(generator/)
 add_rust_cxx_library(mirwayland_rs
   CRATE wayland_rs
   DEPENDS Cargo.toml src/lib.rs
+  INCLUDES
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/wayland/CMakeLists.txt
 )
 
 add_library(mirwayland SHARED
@@ -16,7 +18,6 @@ add_library(mirwayland SHARED
   protocol_error.cpp
   client.cpp
   wayland_server.cpp
-  wayland_bridge.h
 )
 
 mir_generate_protocol_wrapper(mirwayland "wl_" wayland.xml)
