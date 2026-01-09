@@ -1,6 +1,8 @@
-use std::env;
 use std::path::Path;
 use std::fs;
+use std::collections::HashSet;
+use quick_xml::Reader;
+use quick_xml::events::Event;
 
 fn main() {
     cxx_build::bridge("src/lib.rs")
@@ -59,12 +61,170 @@ fn main() {
             // Next, generate the dispatchers.
             // TODO: This should include the "wayland" protocol as well.
             
+            // Parse the XML to generate dispatcher implementations
+            let mut reader = Reader::from_file(&path).expect("Failed to open XML file");
+            reader.config_mut().trim_text(true);
+            
+            let mut interfaces = Vec::new();
+            let mut created_interfaces = HashSet::new();
+            let mut buf = Vec::new();
+            let mut in_protocol = false;
+            let mut in_interface = false;
+            let mut in_request_or_event = false;
+            let mut current_interface = String::new();
+            let mut depth = 0;
+            
+            // First pass: collect all interfaces and find which ones are created by others
+            loop {
+                match reader.read_event_into(&mut buf) {
+                    Ok(Event::Start(ref e)) => {
+                        depth += 1;
+                        match e.name().as_ref() {
+                            b"protocol" => in_protocol = true,
+                            b"interface" if depth == 2 && in_protocol => {
+                                in_interface = true;
+                                if let Some(name_attr) = e.attributes()
+                                    .filter_map(|a| a.ok())
+                                    .find(|a| a.key.as_ref() == b"name") {
+                                    current_interface = String::from_utf8_lossy(&name_attr.value).to_string();
+                                    interfaces.push(current_interface.clone());
+                                }
+                            },
+                            b"request" | b"event" if in_interface => in_request_or_event = true,
+                            b"arg" if in_request_or_event => {
+                                // Check if this argument references an interface
+                                let mut arg_interface = None;
+                                for attr in e.attributes().filter_map(|a| a.ok()) {
+                                    if attr.key.as_ref() == b"interface" {
+                                        arg_interface = Some(String::from_utf8_lossy(&attr.value).to_string());
+                                        break;
+                                    }
+                                }
+                                if let Some(iface) = arg_interface {
+                                    created_interfaces.insert(iface);
+                                }
+                            },
+                            _ => {}
+                        }
+                    },
+                    Ok(Event::Empty(ref e)) => {
+                        // Handle self-closing tags (like <arg ... />)
+                        match e.name().as_ref() {
+                            b"arg" if in_request_or_event => {
+                                // Check if this argument references an interface
+                                let mut arg_interface = None;
+                                for attr in e.attributes().filter_map(|a| a.ok()) {
+                                    if attr.key.as_ref() == b"interface" {
+                                        arg_interface = Some(String::from_utf8_lossy(&attr.value).to_string());
+                                        break;
+                                    }
+                                }
+                                if let Some(iface) = arg_interface {
+                                    created_interfaces.insert(iface);
+                                }
+                            },
+                            _ => {}
+                        }
+                    },
+                    Ok(Event::End(ref e)) => {
+                        match e.name().as_ref() {
+                            b"protocol" => in_protocol = false,
+                            b"interface" => {
+                                in_interface = false;
+                                current_interface.clear();
+                            },
+                            b"request" | b"event" => in_request_or_event = false,
+                            _ => {}
+                        }
+                        depth -= 1;
+                    },
+                    Ok(Event::Eof) => break,
+                    Err(e) => panic!("Error parsing XML at position {}: {:?}", reader.buffer_position(), e),
+                    _ => {}
+                }
+                buf.clear();
+            }
+            
+            // Helper function to convert snake_case to PascalCase
+            let to_pascal_case = |s: &str| -> String {
+                s.split('_')
+                    .map(|word| {
+                        let mut chars = word.chars();
+                        match chars.next() {
+                            None => String::new(),
+                            Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
+                        }
+                    })
+                    .collect()
+            };
+            
+            // Generate imports for this protocol's interfaces
+            for interface in &interfaces {
+                let type_name = to_pascal_case(interface);
+                dispatchers_rs_str.push_str(&format!(
+                    "use crate::protocols::{}::{}::{};\n",
+                    protocol_name.replace('-', "_"),
+                    interface,
+                    type_name
+                ));
+            }
+            dispatchers_rs_str.push('\n');
+            
+            // Generate trait implementations
+            for interface in &interfaces {
+                let type_name = to_pascal_case(interface);
+                let is_global = !created_interfaces.contains(interface);
+                
+                // Generate GlobalDispatch for globals only
+                if is_global {
+                    dispatchers_rs_str.push_str(&format!(
+                        "impl wayland_server::GlobalDispatch<{}, ()> for crate::ServerState {{\n",
+                        type_name
+                    ));
+                    dispatchers_rs_str.push_str("    fn bind(\n");
+                    dispatchers_rs_str.push_str("        _state: &mut Self,\n");
+                    dispatchers_rs_str.push_str("        _handle: &wayland_server::DisplayHandle,\n");
+                    dispatchers_rs_str.push_str("        _client: &wayland_server::Client,\n");
+                    dispatchers_rs_str.push_str(&format!("        resource: wayland_server::New<{}>,\n", type_name));
+                    dispatchers_rs_str.push_str("        _global_data: &(),\n");
+                    dispatchers_rs_str.push_str("        data_init: &mut wayland_server::DataInit<'_, Self>,\n");
+                    dispatchers_rs_str.push_str("    ) {\n");
+                    dispatchers_rs_str.push_str("        data_init.init(resource, ());\n");
+                    dispatchers_rs_str.push_str("    }\n");
+                    dispatchers_rs_str.push_str("}\n\n");
+                }
+                
+                // Generate Dispatch for all interfaces
+                dispatchers_rs_str.push_str(&format!(
+                    "impl wayland_server::Dispatch<{}, ()> for crate::ServerState {{\n",
+                    type_name
+                ));
+                dispatchers_rs_str.push_str("    fn request(\n");
+                dispatchers_rs_str.push_str("        _state: &mut Self,\n");
+                dispatchers_rs_str.push_str("        _client: &wayland_server::Client,\n");
+                dispatchers_rs_str.push_str(&format!("        _resource: &{},\n", type_name));
+                dispatchers_rs_str.push_str(&format!("        request: <{} as wayland_server::Resource>::Request,\n", type_name));
+                dispatchers_rs_str.push_str("        _data: &(),\n");
+                dispatchers_rs_str.push_str("        _dhandle: &wayland_server::DisplayHandle,\n");
+                dispatchers_rs_str.push_str("        _data_init: &mut wayland_server::DataInit<'_, Self>,\n");
+                dispatchers_rs_str.push_str("    ) {\n");
+                dispatchers_rs_str.push_str("        match request {\n");
+                dispatchers_rs_str.push_str("            _ => {}\n");
+                dispatchers_rs_str.push_str("        }\n");
+                dispatchers_rs_str.push_str("    }\n");
+                dispatchers_rs_str.push_str("}\n\n");
+            }
+
         }
     }
 
     fs::write(
         &protocol_dest_path,
         protocol_rs_str
+    ).unwrap();
+    fs::write(
+        &dispatchers_dest_path,
+        dispatchers_rs_str
     ).unwrap();
 
     println!("cargo:rerun-if-changed=src/lib.rs");

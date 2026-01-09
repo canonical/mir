@@ -18,3 +18,4 @@ wayland-protocols = "0.32.10"
 
 [build-dependencies]
 cxx-build.workspace = true
+quick-xml = "0.36"
