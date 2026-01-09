@@ -1,5 +1,7 @@
 mod protocols;
 mod dispatchers;
+mod ffi_rust;
+mod ffi_cpp;
 
 use wayland_server::{Display, DisplayHandle, GlobalDispatch, Dispatch, DataInit, Client, New, Resource};
 use std::os::unix::io::{AsRawFd, RawFd};
@@ -17,98 +19,6 @@ impl ServerState {
         ServerState {}
     }
 }
-
-// impl GlobalDispatch<WlCompositor, ()> for ServerState {
-//     fn bind(
-//         _state: &mut Self,
-//         _handle: &DisplayHandle,
-//         _client: &Client,
-//         resource: New<WlCompositor>,
-//         _global_data: &(),
-//         data_init: &mut DataInit<'_, Self>,
-//     ) {
-//         // From C++, we call wl_global_create with a bind thunk. This should call
-//         // into the DisplayHandle to create a new global.
-//         //
-//         // When a Wayland object is bound, we should call back the bind thunk.
-//         //
-//         // This bind_think will create the resource for that object with the
-//         // provided interface of callbacks using 'wl_resource_create'.
-
-//         // Wait... but this already creates the resource! Yes, because it
-//         // sets up the Dispatch impl internally.
-//         //
-//         // So we will need to update the C++ generator.
-
-//         // Initialize the resource when a client binds to this global
-//         data_init.init(resource, ());
-//     }
-// }
-
-// impl Dispatch<WlCompositor, ()> for ServerState {
-//     fn request(
-//         _state: &mut Self,
-//         _client: &Client,
-//         _resource: &WlCompositor,
-//         request: <WlCompositor as Resource>::Request,
-//         _data: &(),
-//         _dhandle: &DisplayHandle,
-//         _data_init: &mut DataInit<'_, Self>,
-//     ) {
-//         use wayland_server::{
-//             protocol::wl_compositor::{WlCompositor, Request},
-//         };
-
-//         // Handle compositor requests here
-//         match request {
-//             Request::CreateSurface { id } => {
-//                 // Initialize the new surface object
-//                 _data_init.init(id, ());
-//             }
-//             Request::CreateRegion { id } => {
-//                 _data_init.init(id, ());
-//             }
-//             _ => {}
-//         }
-//     }
-// }
-
-// OKIE DOKIE MATT.
-//
-// Here is the game plan.
-//
-// So the paradigm for what we want to do here is different, so let's recap the steps:
-//
-// 1. Generate a Dispatch impl for each protocol object we want to handle (via the existing Wayland generator).
-// 2. Match each request on that object (again, this should be generated)
-// 3. Use the data field when initing the object to point to a shared_ptr that is shared between Rust and C++
-// 4. In the request handler, we can then call methods on that shared_ptr to handle the request
-
-// impl Dispatch<WlSurface, ()> for ServerState {
-//     fn request(
-//         _state: &mut Self,
-//         _client: &Client,
-//         _resource: &WlSurface,
-//         _request: <WlSurface as Resource>::Request,
-//         _data: &(),
-//         _dhandle: &DisplayHandle,
-//         _data_init: &mut DataInit<'_, Self>,
-//     ) {
-//         // Handle surface requests 
-//         use wayland_server::{
-//             protocol::wl_surface::{WlSurface, Request},
-//         };
-//         match _request {
-//             Request::Destroy => {
-//                 // Handle surface destruction if needed
-//             }
-//             Request::Attach { buffer, x, y } => {
-
-//             }
-//             _ => {}
-//         }
-//     }
-// }
 
 // TODO: Rename to Server
 pub struct DisplayWrapper {
@@ -556,54 +466,4 @@ pub fn create_event_loop() -> Box<EventLoop> {
     Box::new(EventLoop::new())
 }
 
-#[cxx::bridge]
-mod ffi {
-    extern "Rust" {
-        type DisplayWrapper;
-        type EventLoop;
-        
-        fn create_display_wrapper() -> Box<DisplayWrapper>;
-        
-        fn dispatch_pending(self: &mut DisplayWrapper) -> i32;
-        
-        fn flush_clients(self: &mut DisplayWrapper) -> i32;
-        
-        fn get_eventloop(self: &mut DisplayWrapper) -> &mut EventLoop;
-        
-        fn run(self: &mut DisplayWrapper);
-        
-        fn next_serial(self: &DisplayWrapper) -> u32;
-        
-        unsafe fn add_destroy_listener(self: &DisplayWrapper, func: usize, data: usize) -> u64;
-        
-        fn remove_destroy_listener(self: &DisplayWrapper, listener_id: u64) -> bool;
 
-        fn create_event_loop() -> Box<EventLoop>;
-        
-        fn add_display_fd(self: &EventLoop, display: &mut DisplayWrapper);
-        
-        unsafe fn add_fd(
-            self: &EventLoop, 
-            fd: i32, 
-            mask: u32, 
-            func: usize,
-            data: usize
-        ) -> u64;
-        
-        fn remove_source(self: &EventLoop, source_id: u64) -> bool;
-        
-        fn terminate(self: &EventLoop);
-        
-        unsafe fn add_idle(self: &EventLoop, func: usize, data: usize) -> u64;
-        
-        fn dispatch_idle(self: &EventLoop) -> i32;
-        
-        unsafe fn add_destroy_listener(self: &EventLoop, func: usize, data: usize) -> u64;
-        
-        fn remove_destroy_listener(self: &EventLoop, listener_id: u64) -> bool;
-        
-        fn get_fd(self: &EventLoop) -> i32;
-        
-        fn dispatch(self: &EventLoop, timeout: i32) -> i32;
-    }
-}
