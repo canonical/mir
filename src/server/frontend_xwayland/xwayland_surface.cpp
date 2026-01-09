@@ -964,6 +964,7 @@ auto mf::XWaylandSurface::StateTracker::with_net_wm_state_change(
 void mf::XWaylandSurface::scene_surface_focus_set(bool has_focus)
 {
     xwm->set_focus(window, has_focus);
+    update_pointer_confinement();
 }
 
 void mf::XWaylandSurface::scene_surface_state_set(MirWindowState new_state)
@@ -981,6 +982,8 @@ void mf::XWaylandSurface::scene_surface_state_set(MirWindowState new_state)
             std::nullopt,
             XCB_STACK_MODE_BELOW);
     }
+
+    update_pointer_confinement();
 }
 
 void mf::XWaylandSurface::scene_surface_resized(geometry::Size const& new_size)
@@ -1035,6 +1038,60 @@ void mf::XWaylandSurface::scene_surface_close_requested()
         }
     }
     connection->flush();
+}
+
+void mf::XWaylandSurface::update_pointer_confinement()
+{
+    std::shared_ptr<scene::Surface> scene_surface;
+    MirPointerConfinementState desired_state;
+    bool should_update = false;
+
+    {
+        std::lock_guard lock{mutex};
+        scene_surface = weak_scene_surface.lock();
+
+        if (!scene_surface)
+            return;
+
+        // Lock pointer for focused fullscreen windows that have decorations disabled.
+        // This heuristic captures games (which disable decorations) but not browsers
+        // (which keep decorations even in fullscreen).
+        // Additionally, lock pointer for override_redirect windows when focused,
+        // as these are often used by games for pointer capture.
+        bool const is_fullscreen = cached.state.active_mir_state() == mir_window_state_fullscreen;
+        bool const is_focused = scene_surface->focus_state() == mir_window_focus_state_focused;
+        bool const is_override_redirect = cached.override_redirect;
+        bool const decorations_disabled = cached.motif_decorations_disabled;
+
+        // Lock if: (fullscreen + focused + decorations disabled) OR (override_redirect + focused)
+        bool const should_lock = is_focused &&
+            ((is_fullscreen && decorations_disabled) || is_override_redirect);
+
+        MirPointerConfinementState const current_state = scene_surface->confine_pointer_state();
+        desired_state = should_lock ? mir_pointer_locked_persistent : mir_pointer_unconfined;
+
+        should_update = (current_state != desired_state);
+
+        if (should_update && verbose_xwayland_logging_enabled())
+        {
+            log_debug(
+                "%s pointer confinement: %s -> %s (fullscreen=%d, focused=%d, override_redirect=%d, decorations_disabled=%d)",
+                connection->window_debug_string(window).c_str(),
+                current_state == mir_pointer_unconfined ? "unconfined" : "locked",
+                desired_state == mir_pointer_unconfined ? "unconfined" : "locked",
+                is_fullscreen,
+                is_focused,
+                is_override_redirect,
+                decorations_disabled);
+        }
+    }
+
+    if (should_update)
+    {
+        msh::SurfaceSpecification mods;
+        mods.confine_pointer = desired_state;
+        shell->modify_surface(scene_surface->session().lock(), scene_surface, mods);
+    }
 }
 
 void mf::XWaylandSurface::wl_surface_destroyed()
