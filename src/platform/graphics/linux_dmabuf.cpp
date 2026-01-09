@@ -1525,39 +1525,6 @@ auto mg::DMABufEGLProvider::as_texture(std::shared_ptr<NativeBufferBase> buffer)
 {
     if (auto dmabuf_tex = std::dynamic_pointer_cast<DmabufTexBuffer>(buffer))
     {
-        if (dmabuf_tex->on_same_egl_display(dpy))
-        {
-            auto tex = dmabuf_tex->as_texture();
-            return std::shared_ptr<gl::Texture>(std::move(dmabuf_tex), tex);
-        }
-        else if (auto descriptor = descriptor_for_format_and_modifiers(
-                    dmabuf_tex->format(),
-                    dmabuf_tex->modifier().value_or(DRM_FORMAT_MOD_INVALID),
-                    *this))
-        {
-            // Cross-GPU import requires explicit modifiers; MOD_INVALID will not work
-            if (dmabuf_tex->modifier().value_or(DRM_FORMAT_MOD_INVALID) != DRM_FORMAT_MOD_INVALID)
-            {
-                mir::log_debug("Importing dma-buf: Cross-GPU (direct import)");
-                /* We're being naughty here and using the fact that `as_texture()` has a side-effect
-                 * of invoking the buffer's `on_consumed()` callback.
-                 */
-                dmabuf_tex->as_texture();
-                return std::make_shared<DMABufTex>(
-                    dpy,
-                    *egl_extensions,
-                    *dmabuf_tex,
-                    *descriptor,
-                    egl_delegate);
-            }
-            mir::log_debug("Importing dma-buf: Descriptor found but modifier invalid. Falling back to copy.");
-        }
-        /* Oh, no. We've got a dma-buf in a format that our rendering GPU can't handle.
-         *
-         * In this case we'll need to get the *importing* GPU to blit to a format
-         * we *can* handle.
-         */
-        mir::log_debug("Importing dma-buf: Cross-GPU (CPU copy)");
         auto mapping = dmabuf_tex->map_readable();
 
         GLenum gl_format = GL_RGBA;
