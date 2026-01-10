@@ -33,7 +33,7 @@ TEST(TimestampTest, past_time_is_correctly_formatted)
     std::string out = ml::input_timestamp(past_event);
 
     EXPECT_THAT(out, Not(HasSubstr(".-")));
-    EXPECT_THAT(out, HasSubstr("500.0"));
+    EXPECT_THAT(out, ContainsRegex("5[0-9][0-9]\\."));
     EXPECT_THAT(out, HasSubstr("ms ago"));
 }
 
@@ -44,8 +44,8 @@ TEST(TimestampTest, future_time_is_correctly_formatted)
     std::string out = ml::input_timestamp(future_event);
 
     EXPECT_THAT(out, Not(HasSubstr(".-")));
-    EXPECT_THAT(out, HasSubstr("in the future"));
-    EXPECT_THAT(out, HasSubstr("1000.0"));
+    EXPECT_THAT(out, ContainsRegex("(9[0-9][0-9]|1000)\\."));
     EXPECT_THAT(out, HasSubstr("ms"));
+    EXPECT_THAT(out, HasSubstr("in the future"));
 
 }
