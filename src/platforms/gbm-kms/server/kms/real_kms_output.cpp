@@ -15,11 +15,11 @@
  */
 
 #include "real_kms_output.h"
-#include "kms_framebuffer.h"
+#include <mir/graphics/kms_framebuffer.h>
 #include <mir/graphics/display_configuration.h>
 #include <mir/errno_utils.h>
 #include "page_flipper.h"
-#include "kms-utils/kms_connector.h"
+#include <mir/graphics/kms/kms_connector.h>
 #include <mir/fatal.h>
 #include <mir/log.h>
 #include <string.h> // strcmp

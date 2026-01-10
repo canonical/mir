@@ -18,7 +18,5 @@ target_include_directories(
 target_link_libraries(
   mirsharedatomickmscommon-static
 
-  server_platform_common
-  kms_utils
   mirplatform
 )

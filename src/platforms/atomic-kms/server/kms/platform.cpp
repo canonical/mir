@@ -20,7 +20,7 @@
 #include <mir/emergency_cleanup_registry.h>
 #include <mir/graphics/platform.h>
 #include <mir/udev/wrapper.h>
-#include "one_shot_device_observer.h"
+#include <mir/graphics/one_shot_device_observer.h>
 #include <boost/throw_exception.hpp>
 #include <system_error>
 #include <xf86drm.h>

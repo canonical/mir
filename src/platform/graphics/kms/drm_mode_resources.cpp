@@ -14,7 +14,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "drm_mode_resources.h"
+#include <mir/graphics/kms/drm_mode_resources.h>
 
 #include <boost/throw_exception.hpp>
 #include <drm_mode.h>

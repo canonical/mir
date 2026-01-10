@@ -17,7 +17,7 @@
 #include <epoxy/egl.h>
 
 #include "kms_display_configuration.h"
-#include "kms-utils/drm_mode_resources.h"
+#include <mir/graphics/kms/drm_mode_resources.h>
 #include <mir/graphics/pixel_format_utils.h>
 #include <mir/graphics/egl_error.h>
 #include <mir/graphics/pixel_format_utils.h>
