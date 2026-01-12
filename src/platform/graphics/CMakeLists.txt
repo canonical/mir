@@ -1,6 +1,6 @@
 add_subdirectory(kms/)
 
-add_library(server_platform_common STATIC
+add_library(graphics_platform_common STATIC
     shm_buffer.cpp
     ${PROJECT_SOURCE_DIR}/include/platform/mir/graphics/one_shot_device_observer.h
     one_shot_device_observer.cpp
@@ -19,12 +19,12 @@ add_library(server_platform_common STATIC
     egl_helpers.cpp
 )
 
-target_include_directories(server_platform_common
+target_include_directories(graphics_platform_common
   PUBLIC
     ${PROJECT_SOURCE_DIR}/include/platform
 )
 
-target_link_libraries(server_platform_common
+target_link_libraries(graphics_platform_common
   PUBLIC
     mircommon
     mircore
