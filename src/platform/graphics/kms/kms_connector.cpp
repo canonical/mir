@@ -149,15 +149,7 @@ auto mgk::find_crtc_with_primary_plane(
     int drm_fd,
     mgk::DRMModeConnectorUPtr const& connector) -> std::pair<DRMModeCrtcUPtr, DRMModePlaneUPtr>
 {
-    /*
-     * TODO: This currently has a sequential find-crtc-then-find-primary-plane-for-it algorithm.
-     * This is needlessly restrictive - it will fail if the first available CRTC found doesn't have
-     * an appropriate primary plane, even if other CRTCs are available and do have an appropriate plane.
-     */
-    DRMModeCrtcUPtr crtc;
-
     DRMModeResources resources{drm_fd};
-    int crtc_index{-1};
 
     /* If there's already a CRTC connected, find it */
     if (connector->encoder_id)
@@ -177,29 +169,61 @@ auto mgk::find_crtc_with_primary_plane(
             {
                 BOOST_THROW_EXCEPTION(std::runtime_error{"Failed to find index of CRTC?!"});
             }
-            crtc = std::move(*our_crtc);
-            crtc_index = std::distance(resources.crtcs().begin(), our_crtc);
+            auto crtc_index = std::distance(resources.crtcs().begin(), our_crtc);
+
+            /* Now find a compatible primary plane for this CRTC */
+            mgk::PlaneResources plane_res{drm_fd};
+            for (auto& plane : plane_res.planes())
+            {
+                if (plane->possible_crtcs & (1 << crtc_index))
+                {
+                    ObjectProperties plane_props{drm_fd, plane->plane_id, DRM_MODE_OBJECT_PLANE};
+                    if (plane_props["type"] == DRM_PLANE_TYPE_PRIMARY)
+                    {
+                        return std::make_pair(std::move(*our_crtc), std::move(plane));
+                    }
+                }
+            }
+            BOOST_THROW_EXCEPTION(std::runtime_error{"Could not find primary plane for existing CRTC"});
         }
     }
 
-    if (!crtc)
-    {
-        std::tie(crtc, crtc_index) = find_crtc_and_index_for_connector(resources, connector);
-    }
-
+    /* No existing CRTC, so find a compatible CRTC-plane combination */
     mgk::PlaneResources plane_res{drm_fd};
 
+    /* Find all primary planes first */
     for (auto& plane : plane_res.planes())
     {
-        if (plane->possible_crtcs & (1 << crtc_index))
+        ObjectProperties plane_props{drm_fd, plane->plane_id, DRM_MODE_OBJECT_PLANE};
+        if (plane_props["type"] != DRM_PLANE_TYPE_PRIMARY)
         {
-            ObjectProperties plane_props{drm_fd, plane->plane_id, DRM_MODE_OBJECT_PLANE};
-            if (plane_props["type"] == DRM_PLANE_TYPE_PRIMARY)
+            continue;
+        }
+
+        /* For all encoders attached to the passed connector */
+        for (int i = 0; i < connector->count_encoders; i++)
+        {
+            auto encoder = resources.encoder(connector->encoders[i]);
+
+            /* For every nonzero bit in plane->possible_crtcs & encoder->possible_crtcs */
+            uint32_t compatible_crtcs = plane->possible_crtcs & encoder->possible_crtcs;
+            uint32_t crtc_index = 0;
+
+            for (auto& crtc : resources.crtcs())
             {
-                return std::make_pair(std::move(crtc), std::move(plane));
+                if (compatible_crtcs & (1 << crtc_index))
+                {
+                    /* Check if the CRTC is not used */
+                    if (!crtc_is_used(resources, crtc->crtc_id))
+                    {
+                        /* Found a valid combination! */
+                        return std::make_pair(std::move(crtc), std::move(plane));
+                    }
+                }
+                crtc_index++;
             }
         }
     }
 
-    BOOST_THROW_EXCEPTION(std::runtime_error{"Could not find primary plane for CRTC"});
+    BOOST_THROW_EXCEPTION(std::runtime_error{"Could not find compatible CRTC and primary plane for connector"});
 }
