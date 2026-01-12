@@ -10,6 +10,7 @@ struct RequestArg {
     arg_type: String,
     interface: Option<String>,
     allow_null: bool,
+    enum_type: Option<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -162,6 +163,7 @@ fn main() {
                                     let mut arg_type = String::new();
                                     let mut arg_interface: Option<String> = None;
                                     let mut allow_null = false;
+                                    let mut enum_type: Option<String> = None;
                                     
                                     for attr in e.attributes().filter_map(|a| a.ok()) {
                                         match attr.key.as_ref() {
@@ -175,6 +177,9 @@ fn main() {
                                             b"allow-null" => {
                                                 allow_null = String::from_utf8_lossy(&attr.value) == "true";
                                             },
+                                            b"enum" => {
+                                                enum_type = Some(String::from_utf8_lossy(&attr.value).to_string());
+                                            },
                                             _ => {}
                                         }
                                     }
@@ -184,6 +189,7 @@ fn main() {
                                         arg_type,
                                         interface: arg_interface,
                                         allow_null,
+                                        enum_type,
                                     });
                                 }
                             },
@@ -199,6 +205,7 @@ fn main() {
                                     let mut arg_type = String::new();
                                     let mut arg_interface: Option<String> = None;
                                     let mut allow_null = false;
+                                    let mut enum_type: Option<String> = None;
                                     
                                     for attr in e.attributes().filter_map(|a| a.ok()) {
                                         match attr.key.as_ref() {
@@ -212,6 +219,9 @@ fn main() {
                                             b"allow-null" => {
                                                 allow_null = String::from_utf8_lossy(&attr.value) == "true";
                                             },
+                                            b"enum" => {
+                                                enum_type = Some(String::from_utf8_lossy(&attr.value).to_string());
+                                            },
                                             _ => {}
                                         }
                                     }
@@ -221,6 +231,7 @@ fn main() {
                                         arg_type,
                                         interface: arg_interface,
                                         allow_null,
+                                        enum_type,
                                     });
                                 }
                             },
@@ -498,7 +509,12 @@ fn main() {
                                         dispatchers_rs_str.push_str(&format!("{}.as_raw_fd()", arg.name));
                                     },
                                     _ => {
-                                        dispatchers_rs_str.push_str(&arg.name);
+                                        // Use .into() for enum types
+                                        if arg.enum_type.is_some() {
+                                            dispatchers_rs_str.push_str(&format!("{}.into()", arg.name));
+                                        } else {
+                                            dispatchers_rs_str.push_str(&arg.name);
+                                        }
                                     }
                                 }
                             }
