@@ -62,7 +62,7 @@ class TestClient:
         session_path = "/org/freedesktop/portal/desktop/session/test_client/1"
         print(f"📡 Registering D-Bus object at path: {session_path}")
         print(f"   This allows Gatekeeper to send Activated/Deactivated events back to us")
-        
+
         node_info = Gio.DBusNodeInfo.new_for_xml(CLIENT_XML)
         try:
             registration_id = self.bus.register_object(
@@ -102,7 +102,7 @@ class TestClient:
         print("=" * 60)
         print("🚀 Starting Test Client")
         print("=" * 60)
-        
+
         print("\n📞 Step 1: Creating session...")
         print(f"   App ID: {self.app_id}")
         session_handle = "/org/freedesktop/portal/desktop/session/test_client/1"
@@ -145,7 +145,7 @@ class TestClient:
                 "preferred_trigger": GLib.Variant("s", "<Control>q")
             })
         ]
-        
+
         print(f"   Requesting shortcuts:")
         for shortcut_id, data in shortcuts:
             desc = data['description'].get_string()
@@ -171,10 +171,10 @@ class TestClient:
                 None
             )
             response, results = ret.unpack()
-            
+
             print(f"\n📋 BindShortcuts response received:")
             print(f"   Response code: {response}")
-            
+
             if response != 0:
                 print(f"❌ BindShortcuts failed with response code: {response}")
                 print(f"   (0 = success, 1 = user cancelled, 2 = other error)")
@@ -204,7 +204,7 @@ class TestClient:
         print("=" * 60)
         print("Press your registered shortcuts to see Activated/Deactivated events")
         print()
-        
+
         loop = GLib.MainLoop()
         try:
             loop.run()
