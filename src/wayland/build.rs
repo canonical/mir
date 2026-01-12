@@ -131,8 +131,15 @@ fn main() {
                                     .filter_map(|a| a.ok())
                                     .find(|a| a.key.as_ref() == b"name") {
                                     current_interface = String::from_utf8_lossy(&name_attr.value).to_string();
-                                    interfaces.push(current_interface.clone());
-                                    interface_requests.insert(current_interface.clone(), Vec::new());
+
+                                    if current_interface == "wl_display" || current_interface == "wl_registry" {
+                                        // Skip wl_display and wl_registry interfaces
+                                        in_interface = false;
+                                        current_interface.clear();
+                                    } else {
+                                        interfaces.push(current_interface.clone());
+                                        interface_requests.insert(current_interface.clone(), Vec::new());
+                                    }
                                 }
                             },
                             b"request" if in_interface => {
