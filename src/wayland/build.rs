@@ -54,7 +54,9 @@ fn main() {
     ffi_cpp_rs_str.push_str("        pub is_null: bool,\n");
     ffi_cpp_rs_str.push_str("    }\n\n");
     ffi_cpp_rs_str.push_str("    unsafe extern \"C++\" {\n");
-    ffi_cpp_rs_str.push_str("        include!(\"/home/matthew/Github/mir/src/wayland/src/wayland_bridge_cpp.h\");\n\n");
+
+    // TODO: Readd this back
+    ffi_cpp_rs_str.push_str("        include!(\"src/wayland_bridge_cpp.h\");\n\n");
 
     let mut all_interface_info: HashMap<String, InterfaceInfo> = HashMap::new();
     
@@ -300,7 +302,7 @@ fn main() {
             for interface in &interfaces {
                 let type_name = to_pascal_case(interface);
                 let is_global = !created_interfaces.contains(interface);
-                let handler_type = format!("cxx::SharedPtr<crate::ffi_cpp::ffi_cpp::{}Handler>", type_name);
+                let handler_type = format!("*mut crate::ffi_cpp::ffi_cpp::{}Handler", type_name);
                 
                 // Generate GlobalDispatch for globals only
                 if is_global {
@@ -367,7 +369,9 @@ fn main() {
                             }
                             
                             // Generate handler call
-                            dispatchers_rs_str.push_str(&format!("                data.handle_{}(", request.name));
+                            dispatchers_rs_str.push_str("                unsafe {\n");
+                            dispatchers_rs_str.push_str("                    if let Some(handler) = data.as_ref() {\n");
+                            dispatchers_rs_str.push_str(&format!("                        handler.handle_{}(", request.name));
                             
                             for (i, arg) in request.args.iter().enumerate() {
                                 if i > 0 {
@@ -382,12 +386,12 @@ fn main() {
                                     "object" | "new_id" => {
                                         if arg.allow_null {
                                             dispatchers_rs_str.push_str(&format!(
-                                                "OptionalWaylandResource {{ object_id: {}.map(|o| o.id().protocol_id()).unwrap_or(0), is_null: {}.is_none() }}",
+                                                "&OptionalWaylandResource {{ object_id: {}.map(|o| o.id().protocol_id()).unwrap_or(0), is_null: {}.is_none() }}",
                                                 arg.name, arg.name
                                             ));
                                         } else {
                                             dispatchers_rs_str.push_str(&format!(
-                                                "WaylandResource {{ object_id: {}.id().protocol_id() }}",
+                                                "&WaylandResource {{ object_id: {}.id().protocol_id() }}",
                                                 arg.name
                                             ));
                                         }
@@ -402,6 +406,8 @@ fn main() {
                             }
                             
                             dispatchers_rs_str.push_str(");\n");
+                            dispatchers_rs_str.push_str("                    }\n");
+                            dispatchers_rs_str.push_str("                }\n");
                             dispatchers_rs_str.push_str("            }\n");
                         }
                         
@@ -447,9 +453,9 @@ fn main() {
             "string" => "&str".to_string(),
             "object" | "new_id" => {
                 if allow_null {
-                    "OptionalWaylandResource".to_string()
+                    "&OptionalWaylandResource".to_string()
                 } else {
-                    "WaylandResource".to_string()
+                    "&WaylandResource".to_string()
                 }
             },
             "array" => "&[u8]".to_string(),
@@ -518,9 +524,9 @@ fn main() {
             "string" => "rust::Str".to_string(),
             "object" | "new_id" => {
                 if allow_null {
-                    "OptionalWaylandResource".to_string()
+                    "OptionalWaylandResource const&".to_string()
                 } else {
-                    "WaylandResource".to_string()
+                    "WaylandResource const&".to_string()
                 }
             },
             "array" => "rust::Slice<const uint8_t>".to_string(),
