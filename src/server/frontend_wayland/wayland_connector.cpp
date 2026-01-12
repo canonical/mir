@@ -338,6 +338,7 @@ mf::WaylandConnector::WaylandConnector(
         allocator,
         screen_shooter_factory,
         main_loop,
+        clock,
         desktop_file_manager,
         session_lock_,
         decoration_strategy,

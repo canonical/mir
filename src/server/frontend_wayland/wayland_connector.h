@@ -118,6 +118,7 @@ public:
         std::shared_ptr<graphics::GraphicBufferAllocator> graphic_buffer_allocator;
         std::shared_ptr<compositor::ScreenShooterFactory> screen_shooter_factory;
         std::shared_ptr<MainLoop> main_loop;
+        std::shared_ptr<time::Clock> clock;
         std::shared_ptr<DesktopFileManager> desktop_file_manager;
         std::shared_ptr<scene::SessionLock> session_lock;
         std::shared_ptr<mir::DecorationStrategy> decoration_strategy;
