@@ -207,10 +207,11 @@ auto mgk::find_crtc_with_primary_plane(
 
             /* For every nonzero bit in plane->possible_crtcs & encoder->possible_crtcs */
             uint32_t compatible_crtcs = plane->possible_crtcs & encoder->possible_crtcs;
-            uint32_t crtc_index = 0;
 
+            auto crtc_iter = resources.crtcs().begin();
             for (auto& crtc : resources.crtcs())
             {
+                auto crtc_index = std::distance(resources.crtcs().begin(), crtc_iter);
                 if (compatible_crtcs & (1 << crtc_index))
                 {
                     /* Check if the CRTC is not used */
@@ -220,7 +221,7 @@ auto mgk::find_crtc_with_primary_plane(
                         return std::make_pair(std::move(crtc), std::move(plane));
                     }
                 }
-                crtc_index++;
+                ++crtc_iter;
             }
         }
     }
