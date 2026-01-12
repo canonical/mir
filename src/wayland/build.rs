@@ -478,7 +478,11 @@ fn main() {
                                 // Convert arguments as needed
                                 match arg.arg_type.as_str() {
                                     "string" => {
-                                        dispatchers_rs_str.push_str(&format!("{}.as_str()", arg.name));
+                                        if arg.allow_null {
+                                            dispatchers_rs_str.push_str(&format!("{}.as_deref().unwrap_or(\"\")", arg.name));
+                                        } else {
+                                            dispatchers_rs_str.push_str(&format!("{}.as_str()", arg.name));
+                                        }
                                     },
                                     "new_id" => {
                                         dispatchers_rs_str.push_str(&format!(
@@ -489,7 +493,7 @@ fn main() {
                                     "object" => {
                                         if arg.allow_null {
                                             dispatchers_rs_str.push_str(&format!(
-                                                "&OptionalWaylandResource {{ object_id: {}.map(|o| o.id().protocol_id()).unwrap_or(0), is_null: {}.is_none() }}",
+                                                "&OptionalWaylandResource {{ object_id: {}.as_ref().map(|o| o.id().protocol_id()).unwrap_or(0), is_null: {}.is_none() }}",
                                                 arg.name, arg.name
                                             ));
                                         } else {
@@ -509,9 +513,10 @@ fn main() {
                                         dispatchers_rs_str.push_str(&format!("{}.as_raw_fd()", arg.name));
                                     },
                                     _ => {
-                                        // Use .into() for enum types
+                                        // Use special handling for enum types (WEnum)
                                         if arg.enum_type.is_some() {
-                                            dispatchers_rs_str.push_str(&format!("{}.into()", arg.name));
+                                            // WEnum types need to be converted with .into_result().map(|v| v as i32).unwrap_or(0)
+                                            dispatchers_rs_str.push_str(&format!("{}.into_result().map(|v| v as i32).unwrap_or(0)", arg.name));
                                         } else {
                                             dispatchers_rs_str.push_str(&arg.name);
                                         }
