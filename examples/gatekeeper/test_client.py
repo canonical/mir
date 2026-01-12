@@ -120,7 +120,7 @@ class TestClient:
                     {}
                 )),
                 Gio.DBusCallFlags.NONE,
-                -1,
+                GLib.MAXINT,
                 None
             )
             response, results = ret.unpack()
@@ -167,7 +167,7 @@ class TestClient:
                     {}
                 )),
                 Gio.DBusCallFlags.NONE,
-                -1,
+                GLib.MAXINT,
                 None
             )
             response, results = ret.unpack()
