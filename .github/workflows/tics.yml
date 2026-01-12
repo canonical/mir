@@ -21,6 +21,14 @@ on:
         description: "Detach TICS QServer before the run"
         required: false
         default: "false"
+      calc:
+        description: "Comma-separated list of metrics to be calculated."
+        required: false
+        default: "ALL"
+      nocalc:
+        description: "Comma-separated list of metrics to not be calculated."
+        required: false
+        default: ""
 
 concurrency:
   group: ${{ github.workflow }}${{ github.event.number && format('-pr{0}', github.event.number) || '' }}
@@ -139,6 +147,8 @@ jobs:
       timeout-minutes: 300  # avoid global job timeout to perform cleanup below
       with:
         mode: ${{ contains(fromJSON('["pull_request", "merge_group"]'), github.event_name) && 'client' || 'qserver' }}
+        calc: ${{ github.event.inputs.calc }}
+        nocalc: ${{ github.event.inputs.nocalc }}
         project: ${{ env.PROJECT }}
         viewerUrl: https://canonical.tiobe.com/tiobeweb/TICS/api/cfg?name=default
         ticsAuthToken: ${{ secrets.TICSAUTHTOKEN }}
