@@ -9,16 +9,16 @@ use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicU32, Ordering};
 use wayland_server::protocol::wl_compositor::WlCompositor;
 use wayland_server::protocol::wl_surface::WlSurface;
-use cxx;
+use cxx::{UniquePtr}
 
 struct ServerState {
-    handler_factory: *const ffi_cpp::ffi_cpp::HandlerFactory,
+    handler_factory: UniquePtr<ffi_cpp::ffi_cpp::HandlerFactory>,
 }
 
 impl ServerState {
     pub fn new() -> Self {
         ServerState {
-            handler_factory: std::ptr::null(),
+            handler_factory: UniquePtr::null(),
         }
     }
     
@@ -28,13 +28,13 @@ impl ServerState {
         }
     }
     
-    pub fn set_handler_factory(&mut self, factory: *const ffi_cpp::ffi_cpp::HandlerFactory) {
+    pub fn set_handler_factory(&mut self, factory: UniquePtr<ffi_cpp::ffi_cpp::HandlerFactory>) {
         self.handler_factory = factory;
     }
 }
 
 // TODO: Rename to Server
-pub struct DisplayWrapper {
+pub struct WaylandServer {
     state: ServerState,
     display: Display<ServerState>,
     eventloop: EventLoop,
@@ -43,9 +43,9 @@ pub struct DisplayWrapper {
     next_listener_id: Arc<Mutex<SourceId>>,
 }
 
-impl DisplayWrapper {
+impl WaylandServer {
     pub fn new() -> Self {
-        DisplayWrapper {
+        WaylandServer {
             state: ServerState::new(),
             display: Display::new().expect("Failed to create wayland display"),
             eventloop: EventLoop::new(),
@@ -176,8 +176,8 @@ impl DisplayWrapper {
     }
 }
 
-pub fn create_display_wrapper() -> Box<DisplayWrapper> {
-    Box::new(DisplayWrapper::new())
+pub fn create_wayland_server() -> Box<WaylandServer> {
+    Box::new(WaylandServer::new())
 }
 
 struct FdHandler {
@@ -227,7 +227,7 @@ impl EventLoop {
         }
     }
     
-    pub fn add_display_fd(&self, display: &mut DisplayWrapper) {
+    pub fn add_display_fd(&self, display: &mut WaylandServer) {
         let poll_fd = display.display.backend().poll_fd();
         let fd = poll_fd.as_raw_fd();
         
@@ -433,7 +433,7 @@ impl EventLoop {
     }
 }
 
-impl Drop for DisplayWrapper {
+impl Drop for WaylandServer {
     fn drop(&mut self) {
         // Call all destroy listeners before cleaning up
         let listeners: Vec<_> = {
@@ -483,28 +483,28 @@ pub fn create_event_loop() -> Box<EventLoop> {
 #[cxx::bridge]
 mod ffi_rust {
     extern "Rust" {
-        type DisplayWrapper;
+        type WaylandServer;
         type EventLoop;
         
-        fn create_display_wrapper() -> Box<DisplayWrapper>;
+        fn create_wayland_server() -> Box<WaylandServer>;
         
-        fn dispatch_pending(self: &mut DisplayWrapper) -> i32;
+        fn dispatch_pending(self: &mut WaylandServer) -> i32;
         
-        fn flush_clients(self: &mut DisplayWrapper) -> i32;
+        fn flush_clients(self: &mut WaylandServer) -> i32;
         
-        fn get_eventloop(self: &mut DisplayWrapper) -> &mut EventLoop;
+        fn get_eventloop(self: &mut WaylandServer) -> &mut EventLoop;
         
-        fn run(self: &mut DisplayWrapper);
+        fn run(self: &mut WaylandServer);
         
-        fn next_serial(self: &DisplayWrapper) -> u32;
+        fn next_serial(self: &WaylandServer) -> u32;
         
-        unsafe fn add_destroy_listener(self: &DisplayWrapper, func: usize, data: usize) -> u64;
+        unsafe fn add_destroy_listener(self: &WaylandServer, func: usize, data: usize) -> u64;
         
-        fn remove_destroy_listener(self: &DisplayWrapper, listener_id: u64) -> bool;
+        fn remove_destroy_listener(self: &WaylandServer, listener_id: u64) -> bool;
 
         fn create_event_loop() -> Box<EventLoop>;
         
-        fn add_display_fd(self: &EventLoop, display: &mut DisplayWrapper);
+        fn add_display_fd(self: &EventLoop, display: &mut WaylandServer);
         
         unsafe fn add_fd(
             self: &EventLoop, 

@@ -30,7 +30,7 @@ struct wl_event_loop
 
 struct wl_display
 {
-    rust::Box<DisplayWrapper> wrapper;
+    rust::Box<WaylandServer> wrapper;
     wl_event_loop event_loop; // Embedded event loop that borrows from wrapper
     std::map<uint64_t, wl_listener*> destroy_listeners;
 };
@@ -45,7 +45,7 @@ wl_display* wl_display_create()
 {
     auto result = new wl_display
     {
-        create_display_wrapper(),
+        create_wayland_server(),
         wl_event_loop{},
         {}
     };
