@@ -1,0 +1,61 @@
+/*
+ * Copyright © Canonical Ltd.
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 or 3,
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#ifndef MIR_SERVER_FRONTEND_INPUT_TRIGGER_ACTION_V1_H_
+#define MIR_SERVER_FRONTEND_INPUT_TRIGGER_ACTION_V1_H_
+
+#include "ext-input-trigger-action-v1_wrapper.h"
+
+namespace mir
+{
+class Executor;
+namespace time
+{
+class AlarmFactory;
+class Clock;
+}
+namespace input
+{
+class CompositeEventFilter;
+}
+namespace shell
+{
+class TokenAuthority;
+}
+namespace frontend
+{
+class InputTriggerData;
+auto create_input_trigger_action_manager_v1(
+    wl_display*,
+    std::shared_ptr<InputTriggerData> const& itd,
+    std::shared_ptr<input::CompositeEventFilter> const& cef,
+    std::shared_ptr<Executor> const& wayland_executor,
+    std::shared_ptr<time::AlarmFactory> const& alarm_factory,
+    std::shared_ptr<time::Clock> const& clock,
+    std::shared_ptr<shell::TokenAuthority> const& token_authority)
+    -> std::shared_ptr<wayland::InputTriggerActionManagerV1::Global>;
+
+class InputTriggerActionV1 : public wayland::InputTriggerActionV1
+{
+public:
+    InputTriggerActionV1(wl_resource* id) :
+        wayland::InputTriggerActionV1{id, Version<1>{}}
+    {
+    }
+};
+}
+}
+#endif
