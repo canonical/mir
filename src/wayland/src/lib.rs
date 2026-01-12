@@ -11,18 +11,25 @@ use wayland_server::protocol::wl_compositor::WlCompositor;
 use wayland_server::protocol::wl_surface::WlSurface;
 use cxx;
 
-unsafe impl Send for ffi_cpp::ffi_cpp::ZwlrForeignToplevelManagerV1Handler {}
-unsafe impl Sync for ffi_cpp::ffi_cpp::ZwlrForeignToplevelManagerV1Handler {}
-
-
-fn x(cxx: cxx::SharedPtr<ffi_cpp::ffi_cpp::ZwlrForeignToplevelManagerV1Handler>) {
-}
 struct ServerState {
+    handler_factory: *const ffi_cpp::ffi_cpp::HandlerFactory,
 }
 
 impl ServerState {
     pub fn new() -> Self {
-        ServerState {}
+        ServerState {
+            handler_factory: std::ptr::null(),
+        }
+    }
+    
+    pub fn get_handler_factory(&self) -> &ffi_cpp::ffi_cpp::HandlerFactory {
+        unsafe {
+            self.handler_factory.as_ref().expect("HandlerFactory not set")
+        }
+    }
+    
+    pub fn set_handler_factory(&mut self, factory: *const ffi_cpp::ffi_cpp::HandlerFactory) {
+        self.handler_factory = factory;
     }
 }
 

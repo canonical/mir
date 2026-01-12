@@ -298,11 +298,33 @@ fn main() {
             }
             dispatchers_rs_str.push('\n');
             
+            // Generate Send/Sync trait implementations for handler types
+            for interface in &interfaces {
+                let type_name = to_pascal_case(interface);
+                dispatchers_rs_str.push_str(&format!("unsafe impl Send for crate::ffi_cpp::ffi_cpp::{}Handler {{}}\n", type_name));
+                dispatchers_rs_str.push_str(&format!("unsafe impl Sync for crate::ffi_cpp::ffi_cpp::{}Handler {{}}\n", type_name));
+            }
+            dispatchers_rs_str.push('\n');
+            
+            // Generate wrapper types for handler pointers (to make them Send/Sync)
+            for interface in &interfaces {
+                let type_name = to_pascal_case(interface);
+                dispatchers_rs_str.push_str(&format!("#[repr(transparent)]\n"));
+                dispatchers_rs_str.push_str(&format!("pub struct {}HandlerPtr(*mut crate::ffi_cpp::ffi_cpp::{}Handler);\n", type_name, type_name));
+                dispatchers_rs_str.push_str(&format!("unsafe impl Send for {}HandlerPtr {{}}\n", type_name));
+                dispatchers_rs_str.push_str(&format!("unsafe impl Sync for {}HandlerPtr {{}}\n", type_name));
+                dispatchers_rs_str.push_str(&format!("impl std::ops::Deref for {}HandlerPtr {{\n", type_name));
+                dispatchers_rs_str.push_str(&format!("    type Target = *mut crate::ffi_cpp::ffi_cpp::{}Handler;\n", type_name));
+                dispatchers_rs_str.push_str("    fn deref(&self) -> &Self::Target { &self.0 }\n");
+                dispatchers_rs_str.push_str("}\n");
+            }
+            dispatchers_rs_str.push('\n');
+            
             // Generate trait implementations
             for interface in &interfaces {
                 let type_name = to_pascal_case(interface);
                 let is_global = !created_interfaces.contains(interface);
-                let handler_type = format!("*mut crate::ffi_cpp::ffi_cpp::{}Handler", type_name);
+                let handler_wrapper_type = format!("{}HandlerPtr", type_name);
                 
                 // Generate GlobalDispatch for globals only
                 if is_global {
@@ -318,8 +340,13 @@ fn main() {
                     dispatchers_rs_str.push_str("        _global_data: &(),\n");
                     dispatchers_rs_str.push_str("        data_init: &mut wayland_server::DataInit<'_, Self>,\n");
                     dispatchers_rs_str.push_str("    ) {\n");
-                    dispatchers_rs_str.push_str("        // TODO: Create handler instance\n");
-                    dispatchers_rs_str.push_str("        // data_init.init(resource, handler);\n");
+                    dispatchers_rs_str.push_str("        use crate::ffi_cpp::ffi_cpp::HandlerFactory;\n");
+                    dispatchers_rs_str.push_str("        let factory = _state.get_handler_factory();\n");
+                    dispatchers_rs_str.push_str(&format!(
+                        "        let handler = factory.create_{}_handler();\n",
+                        interface
+                    ));
+                    dispatchers_rs_str.push_str(&format!("        data_init.init(resource, {}HandlerPtr(handler));\n", type_name));
                     dispatchers_rs_str.push_str("    }\n");
                     dispatchers_rs_str.push_str("}\n\n");
                 }
@@ -327,17 +354,20 @@ fn main() {
                 // Generate Dispatch for all interfaces
                 dispatchers_rs_str.push_str(&format!(
                     "impl wayland_server::Dispatch<{}, {}> for crate::ServerState {{\n",
-                    type_name, handler_type
+                    type_name, handler_wrapper_type
                 ));
                 dispatchers_rs_str.push_str("    fn request(\n");
                 dispatchers_rs_str.push_str("        _state: &mut Self,\n");
                 dispatchers_rs_str.push_str("        _client: &wayland_server::Client,\n");
                 dispatchers_rs_str.push_str(&format!("        _resource: &{},\n", type_name));
                 dispatchers_rs_str.push_str(&format!("        request: <{} as wayland_server::Resource>::Request,\n", type_name));
-                dispatchers_rs_str.push_str(&format!("        data: &{},\n", handler_type));
+                dispatchers_rs_str.push_str(&format!("        data: &{},\n", handler_wrapper_type));
                 dispatchers_rs_str.push_str("        _dhandle: &wayland_server::DisplayHandle,\n");
                 dispatchers_rs_str.push_str("        _data_init: &mut wayland_server::DataInit<'_, Self>,\n");
                 dispatchers_rs_str.push_str("    ) {\n");
+                dispatchers_rs_str.push_str("        use crate::ffi_cpp::ffi_cpp::HandlerFactory;\n");
+                dispatchers_rs_str.push_str("        let factory = _state.get_handler_factory();\n");
+                dispatchers_rs_str.push('\n');
                 
                 // Get the requests for this interface
                 let interface_info = all_interface_info.get(interface);
@@ -375,10 +405,23 @@ fn main() {
                                 dispatchers_rs_str.push_str("                // Initialize new resources\n");
                                 for arg in &request.args {
                                     if arg.arg_type == "new_id" {
-                                        dispatchers_rs_str.push_str(&format!(
-                                            "                let {}_initialized = _data_init.init({}, _);\n",
-                                            arg.name, arg.name
-                                        ));
+                                        if let Some(interface_name) = &arg.interface {
+                                            let child_type_name = to_pascal_case(interface_name);
+                                            dispatchers_rs_str.push_str(&format!(
+                                                "                let {}_handler = factory.create_{}_handler();\n",
+                                                arg.name, interface_name
+                                            ));
+                                            dispatchers_rs_str.push_str(&format!(
+                                                "                let {}_initialized = _data_init.init({}, {}HandlerPtr({}_handler));\n",
+                                                arg.name, arg.name, child_type_name, arg.name
+                                            ));
+                                        } else {
+                                            // No interface means generic object - we can't create a handler yet
+                                            dispatchers_rs_str.push_str(&format!(
+                                                "                let {}_initialized = _data_init.init({}, std::ptr::null_mut());\n",
+                                                arg.name, arg.name
+                                            ));
+                                        }
                                     }
                                 }
                                 dispatchers_rs_str.push('\n');
@@ -386,7 +429,7 @@ fn main() {
                             
                             // Generate handler call
                             dispatchers_rs_str.push_str("                unsafe {\n");
-                            dispatchers_rs_str.push_str("                    if let Some(handler) = data.as_ref() {\n");
+                            dispatchers_rs_str.push_str("                    if let Some(handler) = data.0.as_ref() {\n");
                             dispatchers_rs_str.push_str(&format!("                        handler.handle_{}(", request.name));
                             
                             for (i, arg) in request.args.iter().enumerate() {
@@ -527,6 +570,18 @@ fn main() {
         ffi_cpp_rs_str.push('\n');
     }
     
+    // Declare HandlerFactory type and methods
+    ffi_cpp_rs_str.push_str("        pub type HandlerFactory;\n");
+    for interface_name in all_interface_info.keys() {
+        let type_name = to_pascal_case(interface_name);
+        let factory_method_name = format!("create_{}_handler", interface_name);
+        ffi_cpp_rs_str.push_str(&format!(
+            "        pub fn {}(self: &HandlerFactory) -> *mut {}Handler;\n",
+            factory_method_name, type_name
+        ));
+    }
+    ffi_cpp_rs_str.push('\n');
+    
     ffi_cpp_rs_str.push_str("    }\n");
     ffi_cpp_rs_str.push_str("}\n");
     
@@ -534,7 +589,8 @@ fn main() {
     let mut cpp_header_str = String::from("// This file is autogenerated by build.rs\n\n");
     cpp_header_str.push_str("#ifndef MIR_WAYLAND_BRIDGE_CPP_H\n#define MIR_WAYLAND_BRIDGE_CPP_H\n\n");
     cpp_header_str.push_str("#include <cstdint>\n\n");
-    cpp_header_str.push_str("#include <rust/cxx.h>\n\n");
+    cpp_header_str.push_str("#include <rust/cxx.h>\n");
+    cpp_header_str.push_str("#include <wayland-server-core.h>\n\n");
     cpp_header_str.push_str("namespace mir::wayland_rs::cpp {\n\n");
     cpp_header_str.push_str("    // Forward declarations for wrapper types\n");
     cpp_header_str.push_str("    struct WaylandResource;\n");
@@ -589,6 +645,26 @@ fn main() {
         
         cpp_header_str.push_str("};\n\n");
     }
+    
+    // Generate HandlerFactory base class
+    cpp_header_str.push_str("/// Factory for creating protocol handlers\n");
+    cpp_header_str.push_str("/// Implementors must override all virtual methods to provide handler instances\n");
+    cpp_header_str.push_str("class HandlerFactory {\n");
+    cpp_header_str.push_str("public:\n");
+    cpp_header_str.push_str("    virtual ~HandlerFactory() = default;\n\n");
+    
+    // Generate factory method for each interface
+    for interface_name in all_interface_info.keys() {
+        let type_name = to_pascal_case(interface_name);
+        let factory_method_name = format!("create_{}_handler", interface_name);
+        
+        cpp_header_str.push_str(&format!(
+            "    virtual {}Handler* {}() const = 0;\n",
+            type_name, factory_method_name
+        ));
+    }
+    
+    cpp_header_str.push_str("};\n\n");
     
     // Close namespace
     cpp_header_str.push_str("}  // namespace mir::wayland_rs::cpp\n\n");
