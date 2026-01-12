@@ -1762,3 +1762,28 @@ TEST_F(LogindConsoleServices, destroying_device_handle_releases_logind_device)
 
     stop_mainloop();
 }
+
+TEST_F(LogindConsoleServices, destroying_console_services_disconnects_signal_handlers)
+{
+    ensure_mock_logind();
+    auto const session_path = add_any_active_session();
+
+    {
+        auto services = mir::LogindConsoleServices::create(the_main_loop(), the_session_lock());
+        
+        // Wait for the services to be fully initialized
+        wait_for_dbus_sync_point(30s);
+        
+        // Destroy the services object
+    }
+    
+    // After destruction, emit signals that would have triggered the handlers
+    // If signal handlers weren't properly disconnected, this would cause a use-after-free
+    set_logind_session_state(session_path, SessionState::Online);
+    
+    // Give time for any potential signal processing
+    wait_for_dbus_sync_point(5s);
+    
+    // If we get here without crashing, the test passes
+    stop_mainloop();
+}
