@@ -284,19 +284,19 @@ mir::LogindConsoleServices::LogindConsoleServices(
         mir::log_debug("Failed to set logind session type: %s", error ? error->message : "unknown error");
     }
 
-    g_signal_connect(
+    state_change_handler_id = g_signal_connect(
         G_OBJECT(session_proxy.get()),
         "notify::active",
         G_CALLBACK(&LogindConsoleServices::on_state_change),
         this);
-    g_signal_connect(
+    pause_device_handler_id = g_signal_connect(
         G_OBJECT(session_proxy.get()),
         "pause-device",
         G_CALLBACK(&LogindConsoleServices::on_pause_device),
         this);
 
 #ifdef MIR_GDBUS_SIGNALS_SUPPORT_FDS
-    g_signal_connect(
+    resume_device_handler_id = g_signal_connect(
         G_OBJECT(session_proxy.get()),
         "resume-device",
         G_CALLBACK(&LogindConsoleServices::on_resume_device),
@@ -308,19 +308,19 @@ mir::LogindConsoleServices::LogindConsoleServices(
      * We need to use a manual filter to slurp up the incoming Signal messages,
      * check if they're for ResumeDevice, and process them directly if so.
      */
-    g_dbus_connection_add_filter(
+    resume_device_filter_id = g_dbus_connection_add_filter(
         connection.get(),
         &LogindConsoleServices::resume_device_dbus_filter,
         this,
         nullptr);
 #endif
 
-    g_signal_connect(
+    lock_handler_id = g_signal_connect(
         G_OBJECT(session_proxy.get()),
         "lock",
         G_CALLBACK(&LogindConsoleServices::request_lock),
         this);
-    g_signal_connect(
+    unlock_handler_id = g_signal_connect(
         G_OBJECT(session_proxy.get()),
         "unlock",
         G_CALLBACK(&LogindConsoleServices::request_unlock),
@@ -922,6 +922,17 @@ std::unique_ptr<mir::VTSwitcher> mir::LogindConsoleServices::create_vt_switcher(
 
 mir::LogindConsoleServices::~LogindConsoleServices()
 {
+    // Disconnect signal handlers to prevent use-after-free
+    g_signal_handler_disconnect(session_proxy.get(), state_change_handler_id);
+    g_signal_handler_disconnect(session_proxy.get(), pause_device_handler_id);
+#ifdef MIR_GDBUS_SIGNALS_SUPPORT_FDS
+    g_signal_handler_disconnect(session_proxy.get(), resume_device_handler_id);
+#else
+    g_dbus_connection_remove_filter(connection.get(), resume_device_filter_id);
+#endif
+    g_signal_handler_disconnect(session_proxy.get(), lock_handler_id);
+    g_signal_handler_disconnect(session_proxy.get(), unlock_handler_id);
+    
     restore();
 }
 

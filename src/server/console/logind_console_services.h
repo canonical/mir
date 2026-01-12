@@ -98,6 +98,17 @@ private:
     std::function<bool()> switch_to;
     bool active;
     std::unordered_map<dev_t, Device const* const> acquired_devices;
+    
+    // Signal handler IDs for cleanup
+    gulong state_change_handler_id;
+    gulong pause_device_handler_id;
+#ifdef MIR_GDBUS_SIGNALS_SUPPORT_FDS
+    gulong resume_device_handler_id;
+#else
+    guint resume_device_filter_id;
+#endif
+    gulong lock_handler_id;
+    gulong unlock_handler_id;
 };
 }
 
