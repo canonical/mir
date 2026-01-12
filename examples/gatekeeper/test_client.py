@@ -60,14 +60,22 @@ class TestClient:
         # We simply register the object. Gatekeeper knows our bus unique name (e.g. :1.99)
         # because it captured it when we called CreateSession.
         session_path = "/org/freedesktop/portal/desktop/session/test_client/1"
+        print(f"📡 Registering D-Bus object at path: {session_path}")
+        print(f"   This allows Gatekeeper to send Activated/Deactivated events back to us")
+        
         node_info = Gio.DBusNodeInfo.new_for_xml(CLIENT_XML)
-        self.bus.register_object(
-            session_path,
-            node_info.interfaces[0],
-            self.on_client_method_call,
-            None,
-            None
-        )
+        try:
+            registration_id = self.bus.register_object(
+                session_path,
+                node_info.interfaces[0],
+                self.on_client_method_call,
+                None,
+                None
+            )
+            print(f"✅ Successfully registered D-Bus object (ID: {registration_id})")
+        except Exception as e:
+            print(f"❌ Failed to register D-Bus object: {e}")
+            raise
 
     def on_client_method_call(self, connection, sender, object_path, interface_name, method_name, parameters, invocation):
         # Handle the callbacks from Gatekeeper
@@ -91,9 +99,16 @@ class TestClient:
             print(f"    Data: {data}")
 
     def run(self):
-        print("Creating session...")
+        print("=" * 60)
+        print("🚀 Starting Test Client")
+        print("=" * 60)
+        
+        print("\n📞 Step 1: Creating session...")
+        print(f"   App ID: {self.app_id}")
         session_handle = "/org/freedesktop/portal/desktop/session/test_client/1"
         request_handle = "/org/freedesktop/portal/desktop/request/test_client/1"
+        print(f"   Session handle: {session_handle}")
+        print(f"   Request handle: {request_handle}")
 
         try:
             ret = self.proxy.call_sync(
@@ -110,15 +125,16 @@ class TestClient:
             )
             response, results = ret.unpack()
             if response != 0:
-                print(f"CreateSession failed with response {response}")
+                print(f"❌ CreateSession failed with response code: {response}")
                 return
-            print("Session created successfully.")
+            print(f"✅ Session created successfully!")
+            print(f"   Response: {response}, Results: {results}")
         except Exception as e:
-            print(f"Error calling CreateSession: {e}")
-            print("Make sure gatekeeper.py is running.")
+            print(f"❌ Error calling CreateSession: {e}")
+            print("   Make sure gatekeeper.py is running.")
             return
 
-        print("Binding shortcuts...")
+        print("\n⌨️  Step 2: Binding shortcuts...")
         shortcuts = [
             ("screenshot", {
                 "description": GLib.Variant("s", "Take a screenshot"),
@@ -129,11 +145,18 @@ class TestClient:
                 "preferred_trigger": GLib.Variant("s", "<Control>q")
             })
         ]
+        
+        print(f"   Requesting shortcuts:")
+        for shortcut_id, data in shortcuts:
+            desc = data['description'].get_string()
+            trigger = data['preferred_trigger'].get_string()
+            print(f"   - '{shortcut_id}': {desc} ({trigger})")
 
         request_handle_bind = "/org/freedesktop/portal/desktop/request/test_client/2"
+        print(f"   Request handle: {request_handle_bind}")
 
         try:
-            print("Please check the Gatekeeper window to confirm shortcuts...")
+            print("\n⏳ Waiting for user confirmation in Gatekeeper window...")
             ret = self.proxy.call_sync(
                 "BindShortcuts",
                 GLib.Variant("(ooa(sa{sv})sa{sv})", (
@@ -148,27 +171,45 @@ class TestClient:
                 None
             )
             response, results = ret.unpack()
+            
+            print(f"\n📋 BindShortcuts response received:")
+            print(f"   Response code: {response}")
+            
             if response != 0:
-                print(f"BindShortcuts failed with response {response}")
+                print(f"❌ BindShortcuts failed with response code: {response}")
+                print(f"   (0 = success, 1 = user cancelled, 2 = other error)")
                 return
 
-            print("BindShortcuts successful!")
-            print("Registered Shortcuts:")
+            print(f"✅ BindShortcuts successful!")
+            print(f"\n📝 Registered Shortcuts:")
             shortcuts_list = results.get('shortcuts', [])
-            for s_id, data in shortcuts_list:
-                print(f"  ID: {s_id}")
-                print(f"  Token: {data.get('trigger_action_token', 'N/A')}")
+            if shortcuts_list:
+                for s_id, data in shortcuts_list:
+                    print(f"   ✓ ID: '{s_id}'")
+                    token = data.get('trigger_action_token')
+                    if token:
+                        print(f"     Token: {token}")
+                    trigger = data.get('trigger_description')
+                    if trigger:
+                        print(f"     Trigger: {trigger}")
+            else:
+                print("   (No shortcuts returned in results)")
 
         except Exception as e:
-            print(f"Error calling BindShortcuts: {e}")
+            print(f"❌ Error calling BindShortcuts: {e}")
             return
 
-        print("\nListening for updates (Ctrl+C to exit)...")
+        print("\n" + "=" * 60)
+        print("👂 Listening for shortcut events (Ctrl+C to exit)...")
+        print("=" * 60)
+        print("Press your registered shortcuts to see Activated/Deactivated events")
+        print()
+        
         loop = GLib.MainLoop()
         try:
             loop.run()
         except KeyboardInterrupt:
-            pass
+            print("\n\n🛑 Shutting down...")
 
 if __name__ == "__main__":
     signal.signal(signal.SIGINT, signal.SIG_DFL)
