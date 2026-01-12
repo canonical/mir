@@ -266,7 +266,16 @@ mir::LogindConsoleServices::LogindConsoleServices(
             session_path.c_str())},
       switch_away{[](){ return true; }},
       switch_to{[](){ return true; }},
-      active{strncmp("active", logind_session_get_state(session_proxy.get()), strlen_c("active")) == 0}
+      active{strncmp("active", logind_session_get_state(session_proxy.get()), strlen_c("active")) == 0},
+      state_change_handler_id{0},
+      pause_device_handler_id{0},
+#ifdef MIR_GDBUS_SIGNALS_SUPPORT_FDS
+      resume_device_handler_id{0},
+#else
+      resume_device_filter_id{0},
+#endif
+      lock_handler_id{0},
+      unlock_handler_id{0}
 {
     GErrorPtr error;
 
@@ -923,15 +932,21 @@ std::unique_ptr<mir::VTSwitcher> mir::LogindConsoleServices::create_vt_switcher(
 mir::LogindConsoleServices::~LogindConsoleServices()
 {
     // Disconnect signal handlers to prevent use-after-free
-    g_signal_handler_disconnect(session_proxy.get(), state_change_handler_id);
-    g_signal_handler_disconnect(session_proxy.get(), pause_device_handler_id);
+    if (state_change_handler_id)
+        g_signal_handler_disconnect(session_proxy.get(), state_change_handler_id);
+    if (pause_device_handler_id)
+        g_signal_handler_disconnect(session_proxy.get(), pause_device_handler_id);
 #ifdef MIR_GDBUS_SIGNALS_SUPPORT_FDS
-    g_signal_handler_disconnect(session_proxy.get(), resume_device_handler_id);
+    if (resume_device_handler_id)
+        g_signal_handler_disconnect(session_proxy.get(), resume_device_handler_id);
 #else
-    g_dbus_connection_remove_filter(connection.get(), resume_device_filter_id);
+    if (resume_device_filter_id)
+        g_dbus_connection_remove_filter(connection.get(), resume_device_filter_id);
 #endif
-    g_signal_handler_disconnect(session_proxy.get(), lock_handler_id);
-    g_signal_handler_disconnect(session_proxy.get(), unlock_handler_id);
+    if (lock_handler_id)
+        g_signal_handler_disconnect(session_proxy.get(), lock_handler_id);
+    if (unlock_handler_id)
+        g_signal_handler_disconnect(session_proxy.get(), unlock_handler_id);
     
     restore();
 }
