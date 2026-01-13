@@ -32,15 +32,13 @@ mtd::FakeX11Resources::FakeX11Resources()
     : display{reinterpret_cast<Display*>(0x12345678)},
       window{reinterpret_cast<Window>((long unsigned int)9876543210)}
 {
-    // XEvent members and screen/visual_info already zero-initialized in header with default member initializers
-    // Set the specific fields for screen and visual_info
+    // Initialize screen and visual_info fields
     screen.width = 2880;
     screen.height = 1800;
     screen.mwidth = 338;
     screen.mheight = 270;
     visual_info.red_mask = 0xFF0000;
 
-    // Set the specific type fields for each event
     keypress_event_return.type = KeyPress;
     key_release_event_return.type = KeyRelease;
     button_release_event_return.type = ButtonRelease;
