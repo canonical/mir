@@ -271,14 +271,13 @@ mtd::MockDRM::MockDRM()
                 return this->munmap(addr, length);
             }
             return std::nullopt;
-        })}
+        })},
+      empty_object_props{}
 {
     using namespace testing;
     assert(global_mock == NULL && "Only one mock object per process is allowed");
 
     global_mock = this;
-
-    memset(&empty_object_props, 0, sizeof(empty_object_props));
 
     ON_CALL(*this, open(_,_))
         .WillByDefault(
