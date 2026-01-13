@@ -72,7 +72,7 @@ We also run these on a number of hardware platforms in our testing lab for every
 ## TiCS
 
 All code goes through analysis in the [TIOBE TiCS software quality framework](https://www.tiobe.com/products/tics/).
-Pull requests are gated on any violations of different quality metrics.
+Pull requests are gated on violations of selected quality metrics from the [TiCS set](https://ticsdocumentation.tiobe.com/latest/docs/index.html#doc=user/clientoptions.html%23ListOfMetrics).
 
 ## Sanitizer runs
 
