@@ -210,6 +210,7 @@ linkcheck_anchors_ignore_for_url = [
     "https://github.com/*",
     "https://manpages.ubuntu.com/*",
     "https://matrix.to*",
+    "https://ticsdocumentation.tiobe.com/*",
 ]
 
 # give linkcheck multiple tries on failure
