@@ -65,6 +65,8 @@ fn main() {
     ffi_cpp_rs_str.push_str("        include!(\"src/wayland_bridge_cpp.h\");\n\n");
 
     let mut all_interface_info: HashMap<String, InterfaceInfo> = HashMap::new();
+    // Track which interfaces create which child interfaces (parent -> Vec<child>)
+    let mut parent_to_children: HashMap<String, Vec<(String, String)>> = HashMap::new(); // parent -> Vec<(child_interface, request_name)>
     
     for protocol_file in wayland_protocols_xml_dir {
         let path = protocol_file.unwrap().path();
@@ -292,9 +294,24 @@ fn main() {
                     .collect()
             };
             
-            // Store interface info for later use
+            // Store interface info for later use and build parent-child relationships
             for interface in &interfaces {
                 let requests = interface_requests.get(interface).cloned().unwrap_or_default();
+                
+                // Track which child interfaces this interface creates
+                for request in &requests {
+                    for arg in &request.args {
+                        if arg.arg_type == "new_id" {
+                            if let Some(child_interface) = &arg.interface {
+                                parent_to_children
+                                    .entry(interface.clone())
+                                    .or_insert_with(Vec::new)
+                                    .push((child_interface.clone(), request.name.clone()));
+                            }
+                        }
+                    }
+                }
+                
                 all_interface_info.insert(
                     interface.clone(),
                     InterfaceInfo {
@@ -444,16 +461,41 @@ fn main() {
                                 dispatchers_rs_str.push_str("                // Initialize new resources\n");
                                 for arg in &request.args {
                                     if arg.arg_type == "new_id" {
-                                        if let Some(interface_name) = &arg.interface {
-                                            let child_type_name = to_pascal_case(interface_name);
-                                            dispatchers_rs_str.push_str(&format!(
-                                                "                let {}_handler = factory.create_{}_handler();\n",
-                                                arg.name, interface_name
-                                            ));
-                                            dispatchers_rs_str.push_str(&format!(
-                                                "                let {}_initialized = _data_init.init({}, {}HandlerPtr({}_handler));\n",
-                                                arg.name, arg.name, child_type_name, arg.name
-                                            ));
+                                        if let Some(child_interface_name) = &arg.interface {
+                                            let child_type_name = to_pascal_case(child_interface_name);
+                                            
+                                            // Determine if this child is created by the parent handler or factory
+                                            let is_child_of_parent = parent_to_children
+                                                .get(interface)
+                                                .map(|children| children.iter().any(|(child, _)| child == child_interface_name))
+                                                .unwrap_or(false);
+                                            
+                                            if is_child_of_parent {
+                                                // Child is created by parent handler
+                                                dispatchers_rs_str.push_str("                let ");
+                                                dispatchers_rs_str.push_str(&format!("{}_handler", arg.name));
+                                                dispatchers_rs_str.push_str(" = unsafe {\n");
+                                                dispatchers_rs_str.push_str("                    let parent_handler = data.0.as_ref().expect(\"handler should not be null\");\n");
+                                                dispatchers_rs_str.push_str(&format!(
+                                                    "                    parent_handler.create_{}()\n",
+                                                    child_interface_name
+                                                ));
+                                                dispatchers_rs_str.push_str("                };\n");
+                                                dispatchers_rs_str.push_str(&format!(
+                                                    "                let {}_initialized = _data_init.init({}, {}HandlerPtr({}_handler));\n",
+                                                    arg.name, arg.name, child_type_name, arg.name
+                                                ));
+                                            } else {
+                                                // Child is a global, created by factory
+                                                dispatchers_rs_str.push_str(&format!(
+                                                    "                let {}_handler = factory.create_{}_handler();\n",
+                                                    arg.name, child_interface_name
+                                                ));
+                                                dispatchers_rs_str.push_str(&format!(
+                                                    "                let {}_initialized = _data_init.init({}, {}HandlerPtr({}_handler));\n",
+                                                    arg.name, arg.name, child_type_name, arg.name
+                                                ));
+                                            }
                                         } else {
                                             // No interface means generic object - we can't create a handler yet
                                             dispatchers_rs_str.push_str(&format!(
@@ -619,18 +661,48 @@ fn main() {
             ffi_cpp_rs_str.push_str(");\n");
         }
         
+        // Add child creation methods for interfaces this handler can create
+        if let Some(children) = parent_to_children.get(interface_name) {
+            // Deduplicate children (same interface might be created by multiple requests)
+            let mut unique_children = HashSet::new();
+            for (child_interface, _) in children {
+                unique_children.insert(child_interface);
+            }
+            
+            for child_interface in unique_children {
+                let child_type_name = to_pascal_case(child_interface);
+                ffi_cpp_rs_str.push_str(&format!(
+                    "        pub fn create_{}(self: &{}Handler) -> *mut {}Handler;\n",
+                    child_interface, type_name, child_type_name
+                ));
+            }
+        }
+        
         ffi_cpp_rs_str.push('\n');
     }
     
     // Declare HandlerFactory type and methods
+    // Factory should only create global interfaces (not those created by other interfaces)
     ffi_cpp_rs_str.push_str("        pub type HandlerFactory;\n");
+    
+    // Collect all child interfaces (those created by other interfaces)
+    let mut child_interfaces = HashSet::new();
+    for (_, children) in &parent_to_children {
+        for (child_interface, _) in children {
+            child_interfaces.insert(child_interface.as_str());
+        }
+    }
+    
+    // Only create factory methods for non-child interfaces (globals)
     for interface_name in all_interface_info.keys() {
-        let type_name = to_pascal_case(interface_name);
-        let factory_method_name = format!("create_{}_handler", interface_name);
-        ffi_cpp_rs_str.push_str(&format!(
-            "        pub fn {}(self: &HandlerFactory) -> *mut {}Handler;\n",
-            factory_method_name, type_name
-        ));
+        if !child_interfaces.contains(interface_name.as_str()) {
+            let type_name = to_pascal_case(interface_name);
+            let factory_method_name = format!("create_{}_handler", interface_name);
+            ffi_cpp_rs_str.push_str(&format!(
+                "        pub fn {}(self: &HandlerFactory) -> *mut {}Handler;\n",
+                factory_method_name, type_name
+            ));
+        }
     }
     ffi_cpp_rs_str.push('\n');
     
@@ -647,6 +719,14 @@ fn main() {
     cpp_header_str.push_str("    // Forward declarations for wrapper types\n");
     cpp_header_str.push_str("    struct WaylandResource;\n");
     cpp_header_str.push_str("    struct OptionalWaylandResource;\n\n");
+    
+    // Add forward declarations for all handler types
+    cpp_header_str.push_str("    // Forward declarations for all handler types\n");
+    for interface_name in all_interface_info.keys() {
+        let type_name = to_pascal_case(interface_name);
+        cpp_header_str.push_str(&format!("    class {}Handler;\n", type_name));
+    }
+    cpp_header_str.push_str("\n");
     
     // Helper function to convert Wayland type to C++ type
     let wayland_type_to_cpp = |arg_type: &str, allow_null: bool| -> String {
@@ -695,25 +775,55 @@ fn main() {
             cpp_header_str.push_str(") const = 0;\n");
         }
         
+        // Add child creation methods for interfaces this handler can create
+        if let Some(children) = parent_to_children.get(interface_name) {
+            cpp_header_str.push_str("\n    // Child object creation methods\n");
+            
+            // Deduplicate children (same interface might be created by multiple requests)
+            let mut unique_children = HashSet::new();
+            for (child_interface, _) in children {
+                unique_children.insert(child_interface);
+            }
+            
+            for child_interface in unique_children {
+                let child_type_name = to_pascal_case(child_interface);
+                cpp_header_str.push_str(&format!(
+                    "    virtual {}Handler* create_{}() const = 0;\n",
+                    child_type_name, child_interface
+                ));
+            }
+        }
+        
         cpp_header_str.push_str("};\n\n");
     }
     
     // Generate HandlerFactory base class
     cpp_header_str.push_str("/// Factory for creating protocol handlers\n");
     cpp_header_str.push_str("/// Implementors must override all virtual methods to provide handler instances\n");
+    cpp_header_str.push_str("/// Factory only creates handlers for global interfaces; child interfaces are created by their parent handlers\n");
     cpp_header_str.push_str("class HandlerFactory {\n");
     cpp_header_str.push_str("public:\n");
     cpp_header_str.push_str("    virtual ~HandlerFactory() = default;\n\n");
     
-    // Generate factory method for each interface
+    // Collect all child interfaces (those created by other interfaces)
+    let mut child_interfaces_cpp = HashSet::new();
+    for (_, children) in &parent_to_children {
+        for (child_interface, _) in children {
+            child_interfaces_cpp.insert(child_interface.as_str());
+        }
+    }
+    
+    // Generate factory method only for global interfaces (not children)
     for interface_name in all_interface_info.keys() {
-        let type_name = to_pascal_case(interface_name);
-        let factory_method_name = format!("create_{}_handler", interface_name);
-        
-        cpp_header_str.push_str(&format!(
-            "    virtual {}Handler* {}() const = 0;\n",
-            type_name, factory_method_name
-        ));
+        if !child_interfaces_cpp.contains(interface_name.as_str()) {
+            let type_name = to_pascal_case(interface_name);
+            let factory_method_name = format!("create_{}_handler", interface_name);
+            
+            cpp_header_str.push_str(&format!(
+                "    virtual {}Handler* {}() const = 0;\n",
+                type_name, factory_method_name
+            ));
+        }
     }
     
     cpp_header_str.push_str("};\n\n");
