@@ -14,7 +14,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "kms_connector.h"
+#include <mir/graphics/kms/kms_connector.h>
 #include <mir/output_type_names.h>
 
 #include <boost/throw_exception.hpp>

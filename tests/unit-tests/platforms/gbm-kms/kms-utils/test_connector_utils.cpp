@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "kms-utils/kms_connector.h"
+#include <mir/graphics/kms/kms_connector.h>
 
 #include <mir/geometry/size.h>
 #include <mir/test/doubles/mock_drm.h>

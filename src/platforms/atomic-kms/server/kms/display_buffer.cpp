@@ -15,9 +15,9 @@
  */
 
 #include "display_sink.h"
-#include "kms_cpu_addressable_display_provider.h"
+#include <mir/graphics/kms_cpu_addressable_display_provider.h>
 #include "kms_output.h"
-#include "cpu_addressable_fb.h"
+#include <mir/graphics/cpu_addressable_fb.h>
 #include "gbm_display_allocator.h"
 #include <mir/errno_utils.h>
 #include <mir/fd.h>

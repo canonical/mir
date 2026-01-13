@@ -15,7 +15,7 @@
  */
 
 #include "quirks.h"
-#include "quirk_common.h"
+#include <mir/graphics/quirk_common.h>
 
 #include <mir/log.h>
 #include <mir/options/option.h>

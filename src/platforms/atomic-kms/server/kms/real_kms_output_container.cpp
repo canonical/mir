@@ -17,7 +17,7 @@
 #include <algorithm>
 #include "real_kms_output_container.h"
 #include "atomic_kms_output.h"
-#include "kms-utils/drm_mode_resources.h"
+#include <mir/graphics/kms/drm_mode_resources.h>
 
 namespace mga = mir::graphics::atomic;
 

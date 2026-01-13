@@ -16,7 +16,7 @@ target_link_libraries(
   mirplatformgraphicsatomickmsobjects
   mirsharedatomickmscommon-static
   mirsharedgbmservercommon-static
-  server_platform_common # force this to be linked before the test doubles
+  graphics_platform_common # force this to be linked before the test doubles
   mir-umock-test-framework
   mir-test-static
   mir-test-framework-static

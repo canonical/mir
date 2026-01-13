@@ -27,7 +27,7 @@
 #include <mir/graphics/overlapping_output_grouping.h>
 #include <mir/graphics/event_handler_register.h>
 
-#include "kms_framebuffer.h"
+#include <mir/graphics/kms_framebuffer.h>
 #include <mir/graphics/display_report.h>
 #include <mir/graphics/display_configuration_policy.h>
 #include <mir/graphics/transformation.h>
@@ -45,8 +45,8 @@
 #include <xf86drm.h>
 #define MIR_LOG_COMPONENT "gbm-kms"
 #include <mir/log.h>
-#include "kms-utils/drm_mode_resources.h"
-#include "kms-utils/kms_connector.h"
+#include <mir/graphics/kms/drm_mode_resources.h>
+#include <mir/graphics/kms/kms_connector.h>
 
 #include <drm_fourcc.h>
 #include <drm.h>

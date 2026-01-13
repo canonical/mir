@@ -24,7 +24,7 @@
 #include <mir/graphics/frame.h>
 #include <mir/graphics/dmabuf_buffer.h>
 #include <mir_toolkit/common.h>
-#include "kms-utils/drm_mode_resources.h"
+#include <mir/graphics/kms/drm_mode_resources.h>
 
 #include <gbm.h>
 
