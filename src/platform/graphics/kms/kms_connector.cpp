@@ -21,6 +21,7 @@
 #include <algorithm>
 #include <stdexcept>
 #include <optional>
+#include <ranges>
 
 namespace mgk = mir::graphics::kms;
 
@@ -105,14 +106,14 @@ std::optional<uint32_t> find_crtc_index(
     mgk::DRMModeResources const& resources,
     uint32_t crtc_id)
 {
-    uint32_t index = 0;
-    for (auto const& crtc : resources.crtcs())
+    auto const& crtcs = resources.crtcs();
+    auto it = std::ranges::find_if(crtcs, [crtc_id](auto const& crtc) {
+        return crtc->crtc_id == crtc_id;
+    });
+    
+    if (it != crtcs.end())
     {
-        if (crtc->crtc_id == crtc_id)
-        {
-            return index;
-        }
-        ++index;
+        return std::distance(crtcs.begin(), it);
     }
     return std::nullopt;
 }
@@ -122,48 +123,65 @@ std::optional<mgk::DRMModePlaneUPtr> find_primary_plane_for_crtc(
     mgk::PlaneResources& plane_res,
     uint32_t crtc_index)
 {
-    for (auto& plane : plane_res.planes())
+    auto& planes = plane_res.planes();
+    auto it = std::ranges::find_if(planes, [drm_fd, crtc_index](auto& plane) {
+        return plane_compatible_with_crtc(plane, crtc_index) && is_primary_plane(drm_fd, plane);
+    });
+    
+    if (it != planes.end())
     {
-        if (plane_compatible_with_crtc(plane, crtc_index) && is_primary_plane(drm_fd, plane))
-        {
-            return std::move(plane);
-        }
+        return std::move(*it);
     }
     return std::nullopt;
 }
 
-struct CrtcPlanePair
+std::vector<mgk::DRMModeCrtcUPtr*> find_compatible_crtcs(
+    uint32_t plane_crtcs,
+    uint32_t encoder_crtcs,
+    mgk::DRMModeResources& resources)
 {
-    mgk::DRMModeCrtcUPtr crtc;
-    mgk::DRMModePlaneUPtr plane;
-};
+    std::vector<mgk::DRMModeCrtcUPtr*> compatible;
+    uint32_t compatible_mask = plane_crtcs & encoder_crtcs;
+    
+    uint32_t crtc_index = 0;
+    for (auto& crtc : resources.crtcs())
+    {
+        if (compatible_mask & (1 << crtc_index))
+        {
+            compatible.push_back(&crtc);
+        }
+        ++crtc_index;
+    }
+    return compatible;
+}
 
-std::optional<CrtcPlanePair> find_compatible_crtc_plane(
+std::optional<std::pair<mgk::DRMModeCrtcUPtr, mgk::DRMModePlaneUPtr>> find_compatible_crtc_plane(
     int drm_fd,
     mgk::DRMModeResources& resources,
     mgk::PlaneResources& plane_res,
     mgk::DRMModeConnectorUPtr const& connector)
 {
-    for (auto& plane : plane_res.planes())
-    {
-        if (!is_primary_plane(drm_fd, plane))
-        {
-            continue;
-        }
+    auto& planes = plane_res.planes();
+    auto primary_planes = planes | std::views::filter([drm_fd](auto& plane) {
+        return is_primary_plane(drm_fd, plane);
+    });
 
+    for (auto& plane : primary_planes)
+    {
         for (int i = 0; i < connector->count_encoders; i++)
         {
             auto encoder = resources.encoder(connector->encoders[i]);
-            uint32_t compatible_crtcs = plane->possible_crtcs & encoder->possible_crtcs;
+            auto compatible_crtcs = find_compatible_crtcs(
+                plane->possible_crtcs, 
+                encoder->possible_crtcs, 
+                resources);
 
-            uint32_t crtc_index = 0;
-            for (auto& crtc : resources.crtcs())
+            for (auto* crtc_ptr : compatible_crtcs)
             {
-                if ((compatible_crtcs & (1 << crtc_index)) && !crtc_is_used(resources, crtc->crtc_id))
+                if (!crtc_is_used(resources, (*crtc_ptr)->crtc_id))
                 {
-                    return CrtcPlanePair{std::move(crtc), std::move(plane)};
+                    return std::make_pair(std::move(*crtc_ptr), std::move(plane));
                 }
-                ++crtc_index;
             }
         }
     }
@@ -239,26 +257,22 @@ auto mgk::find_crtc_with_primary_plane(
         auto encoder = resources.encoder(connector->encoder_id);
         if (encoder->crtc_id)
         {
-            auto crtc_index = find_crtc_index(resources, encoder->crtc_id);
-            if (!crtc_index)
+            if (auto const crtc_index = find_crtc_index(resources, encoder->crtc_id))
             {
-                BOOST_THROW_EXCEPTION(std::runtime_error{"Failed to find index of CRTC?!"});
+                if (auto plane = find_primary_plane_for_crtc(drm_fd, plane_res, *crtc_index))
+                {
+                    return std::make_pair(resources.crtc(encoder->crtc_id), std::move(*plane));
+                }
+                BOOST_THROW_EXCEPTION(std::runtime_error{"Could not find primary plane for existing CRTC"});
             }
-
-            auto plane = find_primary_plane_for_crtc(drm_fd, plane_res, *crtc_index);
-            if (plane)
-            {
-                return std::make_pair(resources.crtc(encoder->crtc_id), std::move(*plane));
-            }
-            BOOST_THROW_EXCEPTION(std::runtime_error{"Could not find primary plane for existing CRTC"});
+            BOOST_THROW_EXCEPTION(std::runtime_error{"Failed to find index of CRTC?!"});
         }
     }
 
     /* No existing CRTC, so find a compatible CRTC-plane combination */
-    auto result = find_compatible_crtc_plane(drm_fd, resources, plane_res, connector);
-    if (result)
+    if (auto result = find_compatible_crtc_plane(drm_fd, resources, plane_res, connector))
     {
-        return std::make_pair(std::move(result->crtc), std::move(result->plane));
+        return std::move(*result);
     }
 
     BOOST_THROW_EXCEPTION(std::runtime_error{"Could not find compatible CRTC and primary plane for connector"});
