@@ -110,7 +110,7 @@ std::optional<uint32_t> find_crtc_index(
     auto it = std::ranges::find_if(crtcs, [crtc_id](auto const& crtc) {
         return crtc->crtc_id == crtc_id;
     });
-    
+
     if (it != crtcs.end())
     {
         return std::distance(crtcs.begin(), it);
@@ -127,7 +127,7 @@ std::optional<mgk::DRMModePlaneUPtr> find_primary_plane_for_crtc(
     auto it = std::ranges::find_if(planes, [drm_fd, crtc_index](auto& plane) {
         return plane_compatible_with_crtc(plane, crtc_index) && is_primary_plane(drm_fd, plane);
     });
-    
+
     if (it != planes.end())
     {
         return std::move(*it);
