@@ -457,8 +457,10 @@ fn main() {
                             // Check if we need to initialize any new_id resources first
                             let has_new_id = request.args.iter().any(|arg| arg.arg_type == "new_id");
                             
+                            // Two-phase initialization for new_id resources
+                            // Phase 1: Call handle_* method to get handler (or create from factory)
                             if has_new_id {
-                                dispatchers_rs_str.push_str("                // Initialize new resources\n");
+                                dispatchers_rs_str.push_str("                // Phase 1: Get handler from handle_* method or factory\n");
                                 for arg in &request.args {
                                     if arg.arg_type == "new_id" {
                                         if let Some(child_interface_name) = &arg.interface {
@@ -471,19 +473,10 @@ fn main() {
                                                 .unwrap_or(false);
                                             
                                             if is_child_of_parent {
-                                                // Child is created by parent handler
-                                                dispatchers_rs_str.push_str("                let ");
-                                                dispatchers_rs_str.push_str(&format!("{}_handler", arg.name));
-                                                dispatchers_rs_str.push_str(" = unsafe {\n");
-                                                dispatchers_rs_str.push_str("                    let parent_handler = data.0.as_ref().expect(\"handler should not be null\");\n");
+                                                // Child handler will be returned by handle_* method
                                                 dispatchers_rs_str.push_str(&format!(
-                                                    "                    parent_handler.create_{}()\n",
-                                                    child_interface_name
-                                                ));
-                                                dispatchers_rs_str.push_str("                };\n");
-                                                dispatchers_rs_str.push_str(&format!(
-                                                    "                let {}_initialized = _data_init.init({}, {}HandlerPtr({}_handler));\n",
-                                                    arg.name, arg.name, child_type_name, arg.name
+                                                    "                let mut {}_handler: *mut crate::ffi_cpp::ffi_cpp::{}Handler = std::ptr::null_mut();\n",
+                                                    arg.name, child_type_name
                                                 ));
                                             } else {
                                                 // Child is a global, created by factory
@@ -491,16 +484,12 @@ fn main() {
                                                     "                let {}_handler = factory.create_{}_handler();\n",
                                                     arg.name, child_interface_name
                                                 ));
-                                                dispatchers_rs_str.push_str(&format!(
-                                                    "                let {}_initialized = _data_init.init({}, {}HandlerPtr({}_handler));\n",
-                                                    arg.name, arg.name, child_type_name, arg.name
-                                                ));
                                             }
                                         } else {
                                             // No interface means generic object - we can't create a handler yet
                                             dispatchers_rs_str.push_str(&format!(
-                                                "                let {}_initialized = _data_init.init({}, std::ptr::null_mut());\n",
-                                                arg.name, arg.name
+                                                "                let {}_handler = std::ptr::null_mut();\n",
+                                                arg.name
                                             ));
                                         }
                                     }
@@ -511,12 +500,35 @@ fn main() {
                             // Generate handler call
                             dispatchers_rs_str.push_str("                unsafe {\n");
                             dispatchers_rs_str.push_str("                    if let Some(handler) = data.0.as_ref() {\n");
-                            dispatchers_rs_str.push_str(&format!("                        handler.handle_{}(", request.name));
                             
-                            for (i, arg) in request.args.iter().enumerate() {
-                                if i > 0 {
+                            // If this creates a new_id from parent, capture the return value
+                            let creates_child_from_parent = has_new_id && request.args.iter().any(|arg| {
+                                arg.arg_type == "new_id" && arg.interface.is_some() &&
+                                parent_to_children.get(interface)
+                                    .map(|children| children.iter().any(|(child, _)| Some(child) == arg.interface.as_ref()))
+                                    .unwrap_or(false)
+                            });
+                            
+                            if creates_child_from_parent {
+                                let new_id_arg = request.args.iter().find(|arg| {
+                                    arg.arg_type == "new_id" && arg.interface.is_some()
+                                }).unwrap();
+                                dispatchers_rs_str.push_str(&format!("                        {}_handler = handler.handle_{}(", new_id_arg.name, request.name));
+                            } else {
+                                dispatchers_rs_str.push_str(&format!("                        handler.handle_{}(", request.name));
+                            }
+                            
+                            let mut first_arg = true;
+                            for arg in &request.args {
+                                // Skip new_id args - they're not passed to handle_* anymore
+                                if arg.arg_type == "new_id" {
+                                    continue;
+                                }
+                                
+                                if !first_arg {
                                     dispatchers_rs_str.push_str(", ");
                                 }
+                                first_arg = false;
                                 
                                 // Convert arguments as needed
                                 match arg.arg_type.as_str() {
@@ -526,12 +538,6 @@ fn main() {
                                         } else {
                                             dispatchers_rs_str.push_str(&format!("{}.as_str()", arg.name));
                                         }
-                                    },
-                                    "new_id" => {
-                                        dispatchers_rs_str.push_str(&format!(
-                                            "&WaylandResource {{ object_id: {}_initialized.id().protocol_id() }}",
-                                            arg.name
-                                        ));
                                     },
                                     "object" => {
                                         if arg.allow_null {
@@ -570,6 +576,46 @@ fn main() {
                             dispatchers_rs_str.push_str(");\n");
                             dispatchers_rs_str.push_str("                    }\n");
                             dispatchers_rs_str.push_str("                }\n");
+                            
+                            // Phase 2: Initialize resources with handlers
+                            if has_new_id {
+                                dispatchers_rs_str.push_str("\n                // Phase 2: Initialize resources\n");
+                                for arg in &request.args {
+                                    if arg.arg_type == "new_id" {
+                                        if arg.interface.is_some() {
+                                            let child_type_name = to_pascal_case(arg.interface.as_ref().unwrap());
+                                            dispatchers_rs_str.push_str(&format!(
+                                                "                let {}_initialized = _data_init.init({}, {}HandlerPtr({}_handler));\n",
+                                                arg.name, arg.name, child_type_name, arg.name
+                                            ));
+                                        } else {
+                                            dispatchers_rs_str.push_str(&format!(
+                                                "                let {}_initialized = _data_init.init({}, std::ptr::null_mut());\n",
+                                                arg.name, arg.name
+                                            ));
+                                        }
+                                    }
+                                }
+                                
+                                // Phase 3: Set resource IDs on handlers
+                                dispatchers_rs_str.push_str("\n                // Phase 3: Set resource IDs on handlers\n");
+                                for arg in &request.args {
+                                    if arg.arg_type == "new_id" && arg.interface.is_some() {
+                                        dispatchers_rs_str.push_str("                unsafe {\n");
+                                        dispatchers_rs_str.push_str(&format!(
+                                            "                    if let Some(handler) = {}_handler.as_ref() {{\n",
+                                            arg.name
+                                        ));
+                                        dispatchers_rs_str.push_str(&format!(
+                                            "                        handler.set_resource_id({}_initialized.id().protocol_id());\n",
+                                            arg.name
+                                        ));
+                                        dispatchers_rs_str.push_str("                    }\n");
+                                        dispatchers_rs_str.push_str("                }\n");
+                                    }
+                                }
+                            }
+                            
                             dispatchers_rs_str.push_str("            }\n");
                         }
                         
@@ -649,16 +695,31 @@ fn main() {
         // Declare handler methods for each request
         for request in &interface_info.requests {
             let method_name = format!("handle_{}", request.name);
+            
+            // Check if this request creates a new_id (returns handler pointer)
+            let creates_new_id = request.args.iter().any(|arg| arg.arg_type == "new_id" && arg.interface.is_some());
+            let return_type = if creates_new_id {
+                // Find the new_id arg to get the interface type
+                let new_id_arg = request.args.iter().find(|arg| arg.arg_type == "new_id" && arg.interface.is_some()).unwrap();
+                let child_type_name = to_pascal_case(new_id_arg.interface.as_ref().unwrap());
+                format!(" -> *mut {}Handler", child_type_name)
+            } else {
+                String::new()
+            };
+            
             ffi_cpp_rs_str.push_str(&format!("        pub fn {}(self: &{}Handler", method_name, type_name));
             
-            // Add parameters
+            // Add parameters, skipping new_id args
             for arg in &request.args {
-                let rust_type = wayland_type_to_rust(&arg.arg_type, arg.allow_null);
-                let arg_name = sanitize_arg_name(&arg.name);
-                ffi_cpp_rs_str.push_str(&format!(", {}: {}", arg_name, rust_type));
+                if arg.arg_type != "new_id" {
+                    let rust_type = wayland_type_to_rust(&arg.arg_type, arg.allow_null);
+                    let arg_name = sanitize_arg_name(&arg.name);
+                    ffi_cpp_rs_str.push_str(&format!(", {}: {}", arg_name, rust_type));
+                }
             }
             
-            ffi_cpp_rs_str.push_str(");\n");
+            ffi_cpp_rs_str.push_str(&format!("){}", return_type));
+            ffi_cpp_rs_str.push_str(";\n");
         }
         
         // Add child creation methods for interfaces this handler can create
@@ -669,14 +730,13 @@ fn main() {
                 unique_children.insert(child_interface);
             }
             
-            for child_interface in unique_children {
-                let child_type_name = to_pascal_case(child_interface);
-                ffi_cpp_rs_str.push_str(&format!(
-                    "        pub fn create_{}(self: &{}Handler) -> *mut {}Handler;\n",
-                    child_interface, type_name, child_type_name
-                ));
-            }
         }
+        
+        // Add set_resource_id method for all handlers
+        ffi_cpp_rs_str.push_str(&format!(
+            "        pub fn set_resource_id(self: &{}Handler, resource_id: u32);\n",
+            type_name
+        ));
         
         ffi_cpp_rs_str.push('\n');
     }
@@ -760,39 +820,40 @@ fn main() {
         // Generate virtual methods for each request
         for request in &interface_info.requests {
             let method_name = format!("handle_{}", request.name);
-            cpp_header_str.push_str(&format!("    virtual void {}(", method_name));
             
-            // Add parameters
-            for (i, arg) in request.args.iter().enumerate() {
-                if i > 0 {
-                    cpp_header_str.push_str(", ");
+            // Check if this request creates a new_id (returns handler pointer)
+            let creates_new_id = request.args.iter().any(|arg| arg.arg_type == "new_id" && arg.interface.is_some());
+            let return_type = if creates_new_id {
+                // Find the new_id arg to get the interface type
+                let new_id_arg = request.args.iter().find(|arg| arg.arg_type == "new_id" && arg.interface.is_some()).unwrap();
+                let child_type_name = to_pascal_case(new_id_arg.interface.as_ref().unwrap());
+                format!("{}Handler*", child_type_name)
+            } else {
+                "void".to_string()
+            };
+            
+            cpp_header_str.push_str(&format!("    virtual {} {}(", return_type, method_name));
+            
+            // Add parameters, skipping new_id args
+            let mut first_param = true;
+            for arg in &request.args {
+                if arg.arg_type != "new_id" {
+                    if !first_param {
+                        cpp_header_str.push_str(", ");
+                    }
+                    first_param = false;
+                    
+                    let cpp_type = wayland_type_to_cpp(&arg.arg_type, arg.allow_null);
+                    let arg_name = sanitize_arg_name(&arg.name);
+                    cpp_header_str.push_str(&format!("{} {}", cpp_type, arg_name));
                 }
-                let cpp_type = wayland_type_to_cpp(&arg.arg_type, arg.allow_null);
-                let arg_name = sanitize_arg_name(&arg.name);
-                cpp_header_str.push_str(&format!("{} {}", cpp_type, arg_name));
             }
             
             cpp_header_str.push_str(") const = 0;\n");
         }
         
-        // Add child creation methods for interfaces this handler can create
-        if let Some(children) = parent_to_children.get(interface_name) {
-            cpp_header_str.push_str("\n    // Child object creation methods\n");
-            
-            // Deduplicate children (same interface might be created by multiple requests)
-            let mut unique_children = HashSet::new();
-            for (child_interface, _) in children {
-                unique_children.insert(child_interface);
-            }
-            
-            for child_interface in unique_children {
-                let child_type_name = to_pascal_case(child_interface);
-                cpp_header_str.push_str(&format!(
-                    "    virtual {}Handler* create_{}() const = 0;\n",
-                    child_type_name, child_interface
-                ));
-            }
-        }
+        cpp_header_str.push_str("\n    /// Set the resource ID after initialization\n");
+        cpp_header_str.push_str("    virtual void set_resource_id(uint32_t resource_id) const = 0;\n");
         
         cpp_header_str.push_str("};\n\n");
     }
