@@ -49,7 +49,7 @@ wl_display* wl_display_create()
         wl_event_loop{},
         {}
     };
-    
+
     // Initialize the embedded event loop to borrow from the display wrapper
     result->event_loop.event_loop = &result->wrapper->get_eventloop();
     return result;
@@ -146,10 +146,10 @@ static void destroy_listener_wrapper(void* data)
     auto* context = static_cast<std::pair<wl_event_loop*, wl_listener*>*>(data);
     auto* loop = context->first;
     auto* listener = context->second;
-    
+
     // Call the listener's notify function with the listener and loop as data
     listener->notify(listener, loop);
-    
+
     delete context;
 }
 
@@ -159,13 +159,13 @@ void wl_event_loop_add_destroy_listener(
 {
     // Create context to pass both loop and listener to the wrapper
     auto* context = new std::pair<wl_event_loop*, wl_listener*>(loop, listener);
-    
+
     // Register with Rust event loop
     uint64_t id = loop->event_loop->add_destroy_listener(
         reinterpret_cast<size_t>(&destroy_listener_wrapper),
         reinterpret_cast<size_t>(context)
     );
-    
+
     // Store the listener so we can find it later
     loop->destroy_listeners[id] = listener;
 }
@@ -191,10 +191,10 @@ static void display_destroy_listener_wrapper(void* data)
     auto* context = static_cast<std::pair<wl_display*, wl_listener*>*>(data);
     auto* display = context->first;
     auto* listener = context->second;
-    
+
     // Call the listener's notify function with the listener and display as data
     listener->notify(listener, display);
-    
+
     delete context;
 }
 
@@ -204,13 +204,13 @@ void wl_display_add_destroy_listener(
 {
     // Create context to pass both display and listener to the wrapper
     auto* context = new std::pair<wl_display*, wl_listener*>(display, listener);
-    
+
     // Register with Rust display wrapper
     uint64_t id = display->wrapper->add_destroy_listener(
         reinterpret_cast<size_t>(&display_destroy_listener_wrapper),
         reinterpret_cast<size_t>(context)
     );
-    
+
     // Store the listener so we can find it later
     display->destroy_listeners[id] = listener;
 }

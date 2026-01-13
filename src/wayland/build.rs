@@ -37,7 +37,7 @@ fn main() {
     let globals_dest_path = Path::new(&wayland_generated_dir).join(globals_filename);
     let ffi_bridge_filename = "generated_ffi_bridge.rs";
     let ffi_bridge_dest_path = Path::new(&wayland_generated_dir).join(ffi_bridge_filename);
-    
+
     let wayland_protocols_xml_dir = fs::read_dir("../../wayland-protocols").unwrap();
 
     // Build the wayland protocols and the dispatchers module
@@ -67,7 +67,7 @@ fn main() {
     let mut all_interface_info: HashMap<String, InterfaceInfo> = HashMap::new();
     // Track which interfaces create which child interfaces (parent -> Vec<child>)
     let mut parent_to_children: HashMap<String, Vec<(String, String)>> = HashMap::new(); // parent -> Vec<(child_interface, request_name)>
-    
+
     for protocol_file in wayland_protocols_xml_dir {
         let path = protocol_file.unwrap().path();
         if path.extension().and_then(|s| s.to_str()) == Some("xml") {
@@ -78,26 +78,26 @@ fn main() {
                 protocol_rs_str.push_str("    use wayland_server;\n");
                 protocol_rs_str.push_str("    use wayland_server::protocol::*;\n");
                 protocol_rs_str.push_str("    use wayland_server::protocol::__interfaces::*;\n");
-    
+
                 // TODO: We can probably be smarter and read the protocol to parse out its dependencies,
                 // but this is easy enough for now.
                 if protocol_name == "xdg-decoration-unstable-v1" || protocol_name == "xdg-activation-v1" || protocol_name == "wlr-layer-shell-unstable-v1" {
                     protocol_rs_str.push_str("    use crate::protocols::xdg_shell::*;\n");
                 }
-    
+
                 if protocol_name == "input-method-unstable-v2" {
                     protocol_rs_str.push_str("    use crate::protocols::text_input_unstable_v3::*;\n");
                 }
-    
+
                 if protocol_name == "ext-image-capture-source-v1" {
                     protocol_rs_str.push_str("    use crate::protocols::ext_foreign_toplevel_list_v1::*;\n");
                 }
-    
+
                 if protocol_name == "ext-image-copy-capture-v1" {
                     protocol_rs_str.push_str("    use crate::protocols::ext_image_capture_source_v1::*;\n");
                     protocol_rs_str.push_str("    use crate::protocols::ext_image_capture_source_v1::ext_image_capture_source_v1::*;\n");
                 }
-    
+
                 protocol_rs_str.push_str("    wayland_scanner::generate_interfaces!(\"");
                 protocol_rs_str.push_str(&format!("../../wayland-protocols/{}.xml\");\n", protocol_name));
                 protocol_rs_str.push_str("    wayland_scanner::generate_server_code!(\"");
@@ -108,11 +108,11 @@ fn main() {
 
             // Next, generate the dispatchers.
             // TODO: This should include the "wayland" protocol as well.
-            
+
             // Parse the XML to generate dispatcher implementations
             let mut reader = Reader::from_file(&path).expect("Failed to open XML file");
             reader.config_mut().trim_text(true);
-            
+
             let mut interfaces = Vec::new();
             let mut created_interfaces = HashSet::new();
             let mut buf = Vec::new();
@@ -123,7 +123,7 @@ fn main() {
             let mut current_request: Option<Request> = None;
             let mut interface_requests: HashMap<String, Vec<Request>> = HashMap::new();
             let mut depth = 0;
-            
+
             // First pass: collect all interfaces, created interfaces, and requests
             loop {
                 match reader.read_event_into(&mut buf) {
@@ -165,7 +165,7 @@ fn main() {
                                     let mut arg_interface: Option<String> = None;
                                     let mut allow_null = false;
                                     let mut enum_type: Option<String> = None;
-                                    
+
                                     for attr in e.attributes().filter_map(|a| a.ok()) {
                                         match attr.key.as_ref() {
                                             b"name" => arg_name = String::from_utf8_lossy(&attr.value).to_string(),
@@ -184,7 +184,7 @@ fn main() {
                                             _ => {}
                                         }
                                     }
-                                    
+
                                     req.args.push(RequestArg {
                                         name: arg_name,
                                         arg_type,
@@ -207,7 +207,7 @@ fn main() {
                                     let mut arg_interface: Option<String> = None;
                                     let mut allow_null = false;
                                     let mut enum_type: Option<String> = None;
-                                    
+
                                     for attr in e.attributes().filter_map(|a| a.ok()) {
                                         match attr.key.as_ref() {
                                             b"name" => arg_name = String::from_utf8_lossy(&attr.value).to_string(),
@@ -226,7 +226,7 @@ fn main() {
                                             _ => {}
                                         }
                                     }
-                                    
+
                                     req.args.push(RequestArg {
                                         name: arg_name,
                                         arg_type,
@@ -280,7 +280,7 @@ fn main() {
                 }
                 buf.clear();
             }
-            
+
             // Helper function to convert snake_case to PascalCase
             let to_pascal_case = |s: &str| -> String {
                 s.split('_')
@@ -293,11 +293,11 @@ fn main() {
                     })
                     .collect()
             };
-            
+
             // Store interface info for later use and build parent-child relationships
             for interface in &interfaces {
                 let requests = interface_requests.get(interface).cloned().unwrap_or_default();
-                
+
                 // Track which child interfaces this interface creates
                 for request in &requests {
                     for arg in &request.args {
@@ -311,7 +311,7 @@ fn main() {
                         }
                     }
                 }
-                
+
                 all_interface_info.insert(
                     interface.clone(),
                     InterfaceInfo {
@@ -320,7 +320,7 @@ fn main() {
                     }
                 );
             }
-            
+
             // Generate imports for this protocol's interfaces
             for interface in &interfaces {
                 let type_name = to_pascal_case(interface);
@@ -340,7 +340,7 @@ fn main() {
                 }
             }
             dispatchers_rs_str.push('\n');
-            
+
             // Generate Send/Sync trait implementations for handler types
             for interface in &interfaces {
                 let type_name = to_pascal_case(interface);
@@ -348,7 +348,7 @@ fn main() {
                 dispatchers_rs_str.push_str(&format!("unsafe impl Sync for crate::ffi_cpp::ffi_cpp::{}Handler {{}}\n", type_name));
             }
             dispatchers_rs_str.push('\n');
-            
+
             // Generate wrapper types for handler pointers (to make them Send/Sync)
             for interface in &interfaces {
                 let type_name = to_pascal_case(interface);
@@ -362,7 +362,7 @@ fn main() {
                 dispatchers_rs_str.push_str("}\n");
             }
             dispatchers_rs_str.push('\n');
-            
+
             // Generate trait implementations
             for interface in &interfaces {
                 let type_name = to_pascal_case(interface);
@@ -370,7 +370,7 @@ fn main() {
                 let always_global = interface == "wl_output" || interface == "wl_seat";
                 let is_global = always_global || !created_interfaces.contains(interface);
                 let handler_wrapper_type = format!("{}HandlerPtr", type_name);
-                
+
                 // Generate GlobalDispatch for globals only
                 if is_global {
                     dispatchers_rs_str.push_str(&format!(
@@ -395,7 +395,7 @@ fn main() {
                     dispatchers_rs_str.push_str("    }\n");
                     dispatchers_rs_str.push_str("}\n\n");
                 }
-                
+
                 // Generate Dispatch for all interfaces
                 dispatchers_rs_str.push_str(&format!(
                     "impl wayland_server::Dispatch<{}, {}> for crate::ServerState {{\n",
@@ -413,7 +413,7 @@ fn main() {
                 dispatchers_rs_str.push_str("        use crate::ffi_cpp::ffi_cpp::GlobalHandlerFactory;\n");
                 dispatchers_rs_str.push_str("        let factory = _state.get_handler_factory();\n");
                 dispatchers_rs_str.push('\n');
-                
+
                 // Get the requests for this interface
                 let interface_info = all_interface_info.get(interface);
                 if let Some(info) = interface_info {
@@ -436,11 +436,11 @@ fn main() {
                         }
 
                         dispatchers_rs_str.push_str("        match request {\n");
-                        
+
                         for request in &info.requests {
                             let request_variant = to_pascal_case(&request.name);
                             dispatchers_rs_str.push_str(&format!("            {}Request::{}", type_name, request_variant));
-                            
+
                             if request.args.is_empty() {
                                 dispatchers_rs_str.push_str(" => {\n");
                             } else {
@@ -453,10 +453,10 @@ fn main() {
                                 }
                                 dispatchers_rs_str.push_str(" } => {\n");
                             }
-                            
+
                             // Check if we need to initialize any new_id resources first
                             let has_new_id = request.args.iter().any(|arg| arg.arg_type == "new_id");
-                            
+
                             // Two-phase initialization for new_id resources
                             // Phase 1: Call handle_* method to get handler (or create from factory)
                             if has_new_id {
@@ -465,13 +465,13 @@ fn main() {
                                     if arg.arg_type == "new_id" {
                                         if let Some(child_interface_name) = &arg.interface {
                                             let child_type_name = to_pascal_case(child_interface_name);
-                                            
+
                                             // Determine if this child is created by the parent handler or factory
                                             let is_child_of_parent = parent_to_children
                                                 .get(interface)
                                                 .map(|children| children.iter().any(|(child, _)| child == child_interface_name))
                                                 .unwrap_or(false);
-                                            
+
                                             if is_child_of_parent {
                                                 // Child handler will be returned by handle_* method
                                                 dispatchers_rs_str.push_str(&format!(
@@ -496,11 +496,11 @@ fn main() {
                                 }
                                 dispatchers_rs_str.push('\n');
                             }
-                            
+
                             // Generate handler call
                             dispatchers_rs_str.push_str("                unsafe {\n");
                             dispatchers_rs_str.push_str("                    if let Some(handler) = data.0.as_ref() {\n");
-                            
+
                             // If this creates a new_id from parent, capture the return value
                             let creates_child_from_parent = has_new_id && request.args.iter().any(|arg| {
                                 arg.arg_type == "new_id" && arg.interface.is_some() &&
@@ -508,7 +508,7 @@ fn main() {
                                     .map(|children| children.iter().any(|(child, _)| Some(child) == arg.interface.as_ref()))
                                     .unwrap_or(false)
                             });
-                            
+
                             if creates_child_from_parent {
                                 let new_id_arg = request.args.iter().find(|arg| {
                                     arg.arg_type == "new_id" && arg.interface.is_some()
@@ -517,19 +517,19 @@ fn main() {
                             } else {
                                 dispatchers_rs_str.push_str(&format!("                        handler.handle_{}(", request.name));
                             }
-                            
+
                             let mut first_arg = true;
                             for arg in &request.args {
                                 // Skip new_id args - they're not passed to handle_* anymore
                                 if arg.arg_type == "new_id" {
                                     continue;
                                 }
-                                
+
                                 if !first_arg {
                                     dispatchers_rs_str.push_str(", ");
                                 }
                                 first_arg = false;
-                                
+
                                 // Convert arguments as needed
                                 match arg.arg_type.as_str() {
                                     "string" => {
@@ -572,11 +572,11 @@ fn main() {
                                     }
                                 }
                             }
-                            
+
                             dispatchers_rs_str.push_str(");\n");
                             dispatchers_rs_str.push_str("                    }\n");
                             dispatchers_rs_str.push_str("                }\n");
-                            
+
                             // Phase 2: Initialize resources with handlers
                             if has_new_id {
                                 dispatchers_rs_str.push_str("\n                // Phase 2: Initialize resources\n");
@@ -596,7 +596,7 @@ fn main() {
                                         }
                                     }
                                 }
-                                
+
                                 // Phase 3: Set resource IDs on handlers
                                 dispatchers_rs_str.push_str("\n                // Phase 3: Set resource IDs on handlers\n");
                                 for arg in &request.args {
@@ -615,10 +615,10 @@ fn main() {
                                     }
                                 }
                             }
-                            
+
                             dispatchers_rs_str.push_str("            }\n");
                         }
-                        
+
                         dispatchers_rs_str.push_str("            _ => {}\n");
                         dispatchers_rs_str.push_str("        }\n");
                     } else {
@@ -631,14 +631,14 @@ fn main() {
                     dispatchers_rs_str.push_str("            _ => {}\n");
                     dispatchers_rs_str.push_str("        }\n");
                 }
-                
+
                 dispatchers_rs_str.push_str("    }\n");
                 dispatchers_rs_str.push_str("}\n\n");
             }
 
         }
     }
-    
+
     // Helper function to convert snake_case to PascalCase
     let to_pascal_case = |s: &str| -> String {
         s.split('_')
@@ -651,7 +651,7 @@ fn main() {
             })
             .collect()
     };
-    
+
     // Helper function to convert Wayland type to Rust type for cxx
     let wayland_type_to_rust = |arg_type: &str, allow_null: bool| -> String {
         match arg_type {
@@ -671,7 +671,7 @@ fn main() {
             _ => "i32".to_string(),  // Default fallback
         }
     };
-    
+
     // Helper function to sanitize argument names (avoid C++ keywords)
     let sanitize_arg_name = |name: &str| -> String {
         match name {
@@ -684,18 +684,18 @@ fn main() {
             _ => name.to_string(),
         }
     };
-    
+
     // Generate ffi_cpp handler types and methods
     for (interface_name, interface_info) in &all_interface_info {
         let type_name = to_pascal_case(interface_name);
-        
+
         // Declare handler type
         ffi_cpp_rs_str.push_str(&format!("        pub type {}Handler;\n", type_name));
-        
+
         // Declare handler methods for each request
         for request in &interface_info.requests {
             let method_name = format!("handle_{}", request.name);
-            
+
             // Check if this request creates a new_id (returns handler pointer)
             let creates_new_id = request.args.iter().any(|arg| arg.arg_type == "new_id" && arg.interface.is_some());
             let return_type = if creates_new_id {
@@ -706,9 +706,9 @@ fn main() {
             } else {
                 String::new()
             };
-            
+
             ffi_cpp_rs_str.push_str(&format!("        pub fn {}(self: &{}Handler", method_name, type_name));
-            
+
             // Add parameters, skipping new_id args
             for arg in &request.args {
                 if arg.arg_type != "new_id" {
@@ -717,11 +717,11 @@ fn main() {
                     ffi_cpp_rs_str.push_str(&format!(", {}: {}", arg_name, rust_type));
                 }
             }
-            
+
             ffi_cpp_rs_str.push_str(&format!("){}", return_type));
             ffi_cpp_rs_str.push_str(";\n");
         }
-        
+
         // Add child creation methods for interfaces this handler can create
         if let Some(children) = parent_to_children.get(interface_name) {
             // Deduplicate children (same interface might be created by multiple requests)
@@ -729,22 +729,22 @@ fn main() {
             for (child_interface, _) in children {
                 unique_children.insert(child_interface);
             }
-            
+
         }
-        
+
         // Add set_resource_id method for all handlers
         ffi_cpp_rs_str.push_str(&format!(
             "        pub fn set_resource_id(self: &{}Handler, resource_id: u32);\n",
             type_name
         ));
-        
+
         ffi_cpp_rs_str.push('\n');
     }
-    
+
     // Declare GlobalHandlerFactory type and methods
     // Factory should only create global interfaces (not those created by other interfaces)
     ffi_cpp_rs_str.push_str("        pub type GlobalHandlerFactory;\n");
-    
+
     // Collect all child interfaces (those created by other interfaces)
     let mut child_interfaces = HashSet::new();
     for (_, children) in &parent_to_children {
@@ -752,7 +752,7 @@ fn main() {
             child_interfaces.insert(child_interface.as_str());
         }
     }
-    
+
     // Only create factory methods for non-child interfaces (globals)
     for interface_name in all_interface_info.keys() {
         if !child_interfaces.contains(interface_name.as_str()) {
@@ -765,10 +765,10 @@ fn main() {
         }
     }
     ffi_cpp_rs_str.push('\n');
-    
+
     ffi_cpp_rs_str.push_str("    }\n");
     ffi_cpp_rs_str.push_str("}\n");
-    
+
     // Generate C++ header file
     let mut cpp_header_str = String::from("// This file is autogenerated by build.rs\n\n");
     cpp_header_str.push_str("#ifndef MIR_WAYLAND_BRIDGE_CPP_H\n#define MIR_WAYLAND_BRIDGE_CPP_H\n\n");
@@ -779,7 +779,7 @@ fn main() {
     cpp_header_str.push_str("    // Forward declarations for wrapper types\n");
     cpp_header_str.push_str("    struct WaylandResource;\n");
     cpp_header_str.push_str("    struct OptionalWaylandResource;\n\n");
-    
+
     // Add forward declarations for all handler types
     cpp_header_str.push_str("    // Forward declarations for all handler types\n");
     for interface_name in all_interface_info.keys() {
@@ -787,7 +787,7 @@ fn main() {
         cpp_header_str.push_str(&format!("    class {}Handler;\n", type_name));
     }
     cpp_header_str.push_str("\n");
-    
+
     // Helper function to convert Wayland type to C++ type
     let wayland_type_to_cpp = |arg_type: &str, allow_null: bool| -> String {
         match arg_type {
@@ -807,20 +807,20 @@ fn main() {
             _ => "int32_t".to_string(),
         }
     };
-    
+
     // Generate handler base classes
     for (interface_name, interface_info) in &all_interface_info {
         let type_name = to_pascal_case(interface_name);
-        
+
         cpp_header_str.push_str(&format!("/// Handler for {} Wayland protocol interface\n", interface_name));
         cpp_header_str.push_str(&format!("class {}Handler {{\n", type_name));
         cpp_header_str.push_str("public:\n");
         cpp_header_str.push_str(&format!("    virtual ~{}Handler() = default;\n\n", type_name));
-        
+
         // Generate virtual methods for each request
         for request in &interface_info.requests {
             let method_name = format!("handle_{}", request.name);
-            
+
             // Check if this request creates a new_id (returns handler pointer)
             let creates_new_id = request.args.iter().any(|arg| arg.arg_type == "new_id" && arg.interface.is_some());
             let return_type = if creates_new_id {
@@ -831,9 +831,9 @@ fn main() {
             } else {
                 "void".to_string()
             };
-            
+
             cpp_header_str.push_str(&format!("    virtual {} {}(", return_type, method_name));
-            
+
             // Add parameters, skipping new_id args
             let mut first_param = true;
             for arg in &request.args {
@@ -842,22 +842,22 @@ fn main() {
                         cpp_header_str.push_str(", ");
                     }
                     first_param = false;
-                    
+
                     let cpp_type = wayland_type_to_cpp(&arg.arg_type, arg.allow_null);
                     let arg_name = sanitize_arg_name(&arg.name);
                     cpp_header_str.push_str(&format!("{} {}", cpp_type, arg_name));
                 }
             }
-            
+
             cpp_header_str.push_str(") const = 0;\n");
         }
-        
+
         cpp_header_str.push_str("\n    /// Set the resource ID after initialization\n");
         cpp_header_str.push_str("    virtual void set_resource_id(uint32_t resource_id) const = 0;\n");
-        
+
         cpp_header_str.push_str("};\n\n");
     }
-    
+
     // Generate GlobalHandlerFactory base class
     cpp_header_str.push_str("/// Factory for creating global protocol handlers\n");
     cpp_header_str.push_str("/// Implementors must override all virtual methods to provide handler instances\n");
@@ -865,7 +865,7 @@ fn main() {
     cpp_header_str.push_str("class GlobalHandlerFactory {\n");
     cpp_header_str.push_str("public:\n");
     cpp_header_str.push_str("    virtual ~GlobalHandlerFactory() = default;\n\n");
-    
+
     // Collect all child interfaces (those created by other interfaces)
     let mut child_interfaces_cpp = HashSet::new();
     for (_, children) in &parent_to_children {
@@ -873,31 +873,31 @@ fn main() {
             child_interfaces_cpp.insert(child_interface.as_str());
         }
     }
-    
+
     // Generate factory method only for global interfaces (not children)
     for interface_name in all_interface_info.keys() {
         if !child_interfaces_cpp.contains(interface_name.as_str()) {
             let type_name = to_pascal_case(interface_name);
             let factory_method_name = format!("create_{}_handler", interface_name);
-            
+
             cpp_header_str.push_str(&format!(
                 "    virtual {}Handler* {}() const = 0;\n",
                 type_name, factory_method_name
             ));
         }
     }
-    
+
     cpp_header_str.push_str("};\n\n");
-    
+
     // Close namespace
     cpp_header_str.push_str("}  // namespace mir::wayland_rs::cpp\n\n");
-    
+
     cpp_header_str.push_str("\n#endif // MIR_WAYLAND_BRIDGE_CPP_H\n");
 
     // Generate global creation methods
     let mut globals_rs_str = String::from("// This file is autogenerated by build.rs\n\n");
     globals_rs_str.push_str("impl WaylandServer {\n");
-    
+
     // Collect global interfaces (those not created by other interfaces)
     let mut global_interfaces = Vec::new();
     for (interface_name, _) in &all_interface_info {
@@ -925,21 +925,21 @@ fn main() {
                     break;
                 }
             }
-            
+
             if !is_created_by_other {
                 global_interfaces.push(interface_name.clone());
             }
         }
     }
-    
+
     // Sort for consistent output
     global_interfaces.sort();
-    
+
     // Generate a method for each global interface
     for interface_name in &global_interfaces {
         let type_name = to_pascal_case(interface_name);
         let method_name = format!("create_{}_global", interface_name);
-        
+
         // Determine the import path
         let import_path = if interface_name.starts_with("wl_") {
             format!("wayland_server::protocol::{}::{}", interface_name, type_name)
@@ -977,7 +977,7 @@ fn main() {
                     }
                 }
             }
-            
+
             if let Some(protocol) = protocol_name {
                 format!("crate::protocols::{}::{}::{}", protocol.replace('-', "_"), interface_name, type_name)
             } else {
@@ -985,7 +985,7 @@ fn main() {
                 format!("{}::{}", interface_name, type_name)
             }
         };
-        
+
         globals_rs_str.push_str(&format!("    /// Create a global for the {} protocol\n", interface_name));
         globals_rs_str.push_str(&format!("    /// Returns a unique ID that maps to the GlobalId internally\n"));
         globals_rs_str.push_str(&format!("    pub fn {}(&mut self, version: u32) -> u64 {{\n", method_name));
@@ -1008,13 +1008,13 @@ fn main() {
         globals_rs_str.push_str("        id\n");
         globals_rs_str.push_str("    }\n\n");
     }
-    
+
     globals_rs_str.push_str("}\n");
-    
+
     // Generate FFI bridge declarations for all global creation methods
     let mut ffi_bridge_str = String::from("// This file is autogenerated by build.rs\n");
     ffi_bridge_str.push_str("// Include this in the extern \"Rust\" block of the ffi_rust bridge\n\n");
-    
+
     for interface_name in &global_interfaces {
         let method_name = format!("create_{}_global", interface_name);
         ffi_bridge_str.push_str(&format!("        fn {}(self: &mut WaylandServer, version: u32) -> u64;\n", method_name));
@@ -1044,7 +1044,7 @@ fn main() {
         &ffi_bridge_dest_path,
         ffi_bridge_str
     ).unwrap();
-    
+
     // Now build the cxx bridges after generating the required files
     // The lib.rs file includes both ffif_rust and ffi_cpp modules
     cxx_build::bridges(vec!["src/lib.rs", "src/ffi_cpp.rs"])
