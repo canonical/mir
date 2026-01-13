@@ -31,10 +31,11 @@ mtd::MockX11* global_mock = nullptr;
 mtd::FakeX11Resources::FakeX11Resources()
     : display{reinterpret_cast<Display*>(0x12345678)},
       window{reinterpret_cast<Window>((long unsigned int)9876543210)},
-      screen{},
-      visual_info{}
+      screen{.width = 2880, .height = 1800, .mwidth = 338, .mheight = 270},
+      visual_info{.red_mask = 0xFF0000}
 {
-    visual_info.red_mask = 0xFF0000;
+    // XEvent members already zero-initialized in header with = { 0 }
+    // Set the specific type fields for each event
     keypress_event_return.type = KeyPress;
     key_release_event_return.type = KeyRelease;
     button_release_event_return.type = ButtonRelease;
@@ -43,15 +44,10 @@ mtd::FakeX11Resources::FakeX11Resources()
     focus_in_event_return.type = FocusIn;
     focus_out_event_return.type = FocusOut;
     vscroll_event_return.type = ButtonPress;
-    XButtonEvent& xbev = (XButtonEvent&)vscroll_event_return;
-    xbev.button = Button4;
+    static_cast<XButtonEvent&>(vscroll_event_return).button = Button4;
     motion_event_return.type = MotionNotify;
     enter_notify_event_return.type = EnterNotify;
     leave_notify_event_return.type = LeaveNotify;
-    screen.width = 2880;
-    screen.height = 1800;
-    screen.mwidth = 338;
-    screen.mwidth = 270;
 }
 
 mtd::MockX11::MockX11()
