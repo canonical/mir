@@ -42,7 +42,7 @@ mtd::FakeX11Resources::FakeX11Resources()
     focus_in_event_return.type = FocusIn;
     focus_out_event_return.type = FocusOut;
     vscroll_event_return.type = ButtonPress;
-    static_cast<XButtonEvent&>(vscroll_event_return).button = Button4;
+    vscroll_event_return.xbutton.button = Button4;
     motion_event_return.type = MotionNotify;
     enter_notify_event_return.type = EnterNotify;
     leave_notify_event_return.type = LeaveNotify;
