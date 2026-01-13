@@ -236,7 +236,7 @@ auto mgk::find_crtc_with_primary_plane(
     /* If there's already a CRTC connected, find a compatible primary plane for it */
     if (connector->encoder_id)
     {
-        auto encoder = get_encoder(drm_fd, connector->encoder_id);
+        auto encoder = resources.encoder(connector->encoder_id);
         if (encoder->crtc_id)
         {
             auto crtc_index = find_crtc_index(resources, encoder->crtc_id);
