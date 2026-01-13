@@ -135,26 +135,6 @@ std::optional<mgk::DRMModePlaneUPtr> find_primary_plane_for_crtc(
     return std::nullopt;
 }
 
-std::vector<mgk::DRMModeCrtcUPtr*> find_compatible_crtcs(
-    uint32_t plane_crtcs,
-    uint32_t encoder_crtcs,
-    mgk::DRMModeResources& resources)
-{
-    std::vector<mgk::DRMModeCrtcUPtr*> compatible;
-    uint32_t compatible_mask = plane_crtcs & encoder_crtcs;
-    
-    uint32_t crtc_index = 0;
-    for (auto& crtc : resources.crtcs())
-    {
-        if (compatible_mask & (1 << crtc_index))
-        {
-            compatible.push_back(&crtc);
-        }
-        ++crtc_index;
-    }
-    return compatible;
-}
-
 std::optional<std::pair<mgk::DRMModeCrtcUPtr, mgk::DRMModePlaneUPtr>> find_compatible_crtc_plane(
     int drm_fd,
     mgk::DRMModeResources& resources,
@@ -171,17 +151,16 @@ std::optional<std::pair<mgk::DRMModeCrtcUPtr, mgk::DRMModePlaneUPtr>> find_compa
         for (int i = 0; i < connector->count_encoders; i++)
         {
             auto encoder = resources.encoder(connector->encoders[i]);
-            auto compatible_crtcs = find_compatible_crtcs(
-                plane->possible_crtcs, 
-                encoder->possible_crtcs, 
-                resources);
+            uint32_t compatible_mask = plane->possible_crtcs & encoder->possible_crtcs;
 
-            for (auto* crtc_ptr : compatible_crtcs)
+            uint32_t crtc_index = 0;
+            for (auto& crtc : resources.crtcs())
             {
-                if (!crtc_is_used(resources, (*crtc_ptr)->crtc_id))
+                if ((compatible_mask & (1 << crtc_index)) && !crtc_is_used(resources, crtc->crtc_id))
                 {
-                    return std::make_pair(std::move(*crtc_ptr), std::move(plane));
+                    return std::make_pair(std::move(crtc), std::move(plane));
                 }
+                ++crtc_index;
             }
         }
     }
