@@ -39,7 +39,7 @@ mtd::FakeX11Resources::FakeX11Resources()
     screen.mwidth = 338;
     screen.mheight = 270;
     visual_info.red_mask = 0xFF0000;
-    
+
     // Set the specific type fields for each event
     keypress_event_return.type = KeyPress;
     key_release_event_return.type = KeyRelease;
