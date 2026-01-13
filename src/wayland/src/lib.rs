@@ -9,16 +9,20 @@ use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicU32, Ordering};
 use wayland_server::protocol::wl_compositor::WlCompositor;
 use wayland_server::protocol::wl_surface::WlSurface;
-use cxx::{UniquePtr}
+use wayland_server::backend::GlobalId;
+use cxx::{UniquePtr};
+
+// Include generated global creation methods
+include!("generated_globals.rs");
 
 struct ServerState {
-    handler_factory: UniquePtr<ffi_cpp::ffi_cpp::HandlerFactory>,
+    handler_factory: *const ffi_cpp::ffi_cpp::HandlerFactory,
 }
 
 impl ServerState {
     pub fn new() -> Self {
         ServerState {
-            handler_factory: UniquePtr::null(),
+            handler_factory: std::ptr::null(),
         }
     }
     
@@ -28,12 +32,11 @@ impl ServerState {
         }
     }
     
-    pub fn set_handler_factory(&mut self, factory: UniquePtr<ffi_cpp::ffi_cpp::HandlerFactory>) {
+    pub fn set_handler_factory(&mut self, factory: *const ffi_cpp::ffi_cpp::HandlerFactory) {
         self.handler_factory = factory;
     }
 }
 
-// TODO: Rename to Server
 pub struct WaylandServer {
     state: ServerState,
     display: Display<ServerState>,
@@ -41,6 +44,8 @@ pub struct WaylandServer {
     serial: AtomicU32,
     destroy_listeners: Arc<Mutex<HashMap<SourceId, DestroyListener>>>,
     next_listener_id: Arc<Mutex<SourceId>>,
+    globals: Arc<Mutex<HashMap<u64, GlobalId>>>,
+    next_global_id: Arc<Mutex<u64>>,
 }
 
 impl WaylandServer {
@@ -52,6 +57,8 @@ impl WaylandServer {
             serial: AtomicU32::new(0),
             destroy_listeners: Arc::new(Mutex::new(HashMap::new())),
             next_listener_id: Arc::new(Mutex::new(1)),
+            globals: Arc::new(Mutex::new(HashMap::new())),
+            next_global_id: Arc::new(Mutex::new(1)),
         }
     }
 
@@ -501,6 +508,14 @@ mod ffi_rust {
         unsafe fn add_destroy_listener(self: &WaylandServer, func: usize, data: usize) -> u64;
         
         fn remove_destroy_listener(self: &WaylandServer, listener_id: u64) -> bool;
+        
+        // Global creation methods
+        fn create_wl_compositor_global(self: &mut WaylandServer, version: u32) -> u64;
+        fn create_wl_shm_global(self: &mut WaylandServer, version: u32) -> u64;
+        fn create_wl_seat_global(self: &mut WaylandServer, version: u32) -> u64;
+        fn create_wl_output_global(self: &mut WaylandServer, version: u32) -> u64;
+        fn create_wl_data_device_manager_global(self: &mut WaylandServer, version: u32) -> u64;
+        fn create_wl_subcompositor_global(self: &mut WaylandServer, version: u32) -> u64;
 
         fn create_event_loop() -> Box<EventLoop>;
         
