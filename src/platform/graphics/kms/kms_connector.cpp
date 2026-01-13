@@ -21,7 +21,6 @@
 #include <algorithm>
 #include <stdexcept>
 #include <optional>
-#include <ranges>
 
 namespace mgk = mir::graphics::kms;
 
@@ -106,8 +105,8 @@ std::optional<uint32_t> find_crtc_index(
     mgk::DRMModeResources const& resources,
     uint32_t crtc_id)
 {
-    auto const& crtcs = resources.crtcs();
-    auto it = std::ranges::find_if(crtcs, [crtc_id](auto const& crtc) {
+    auto crtcs = resources.crtcs();
+    auto it = std::find_if(crtcs.begin(), crtcs.end(), [crtc_id](auto const& crtc) {
         return crtc->crtc_id == crtc_id;
     });
 
@@ -123,8 +122,8 @@ std::optional<mgk::DRMModePlaneUPtr> find_primary_plane_for_crtc(
     mgk::PlaneResources& plane_res,
     uint32_t crtc_index)
 {
-    auto& planes = plane_res.planes();
-    auto it = std::ranges::find_if(planes, [drm_fd, crtc_index](auto& plane) {
+    auto planes = plane_res.planes();
+    auto it = std::find_if(planes.begin(), planes.end(), [drm_fd, crtc_index](auto& plane) {
         return plane_compatible_with_crtc(plane, crtc_index) && is_primary_plane(drm_fd, plane);
     });
 
