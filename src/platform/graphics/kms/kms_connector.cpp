@@ -141,13 +141,13 @@ std::optional<std::pair<mgk::DRMModeCrtcUPtr, mgk::DRMModePlaneUPtr>> find_compa
     mgk::PlaneResources& plane_res,
     mgk::DRMModeConnectorUPtr const& connector)
 {
-    auto& planes = plane_res.planes();
-    auto primary_planes = planes | std::views::filter([drm_fd](auto& plane) {
-        return is_primary_plane(drm_fd, plane);
-    });
-
-    for (auto& plane : primary_planes)
+    for (auto& plane : plane_res.planes())
     {
+        if (!is_primary_plane(drm_fd, plane))
+        {
+            continue;
+        }
+
         for (int i = 0; i < connector->count_encoders; i++)
         {
             auto encoder = resources.encoder(connector->encoders[i]);
