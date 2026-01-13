@@ -232,7 +232,8 @@ drmModeModeInfo mtd::FakeDRMResources::create_mode(uint16_t hdisplay, uint16_t v
 }
 
 mtd::MockDRM::MockDRM()
-    : open_interposer{mir_test_framework::add_open_handler(
+    : empty_object_props{},
+      open_interposer{mir_test_framework::add_open_handler(
         [this](char const* path, int flags, std::optional<mode_t>) -> std::optional<int>
         {
             char const* const drm_prefix = "/dev/dri/";
@@ -271,8 +272,7 @@ mtd::MockDRM::MockDRM()
                 return this->munmap(addr, length);
             }
             return std::nullopt;
-        })},
-      empty_object_props{}
+        })}
 {
     using namespace testing;
     assert(global_mock == NULL && "Only one mock object per process is allowed");

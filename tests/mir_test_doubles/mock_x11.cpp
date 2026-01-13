@@ -30,11 +30,9 @@ mtd::MockX11* global_mock = nullptr;
 
 mtd::FakeX11Resources::FakeX11Resources()
     : display{reinterpret_cast<Display*>(0x12345678)},
-      window{reinterpret_cast<Window>((long unsigned int)9876543210)},
-      screen{.width = 2880, .height = 1800, .mwidth = 338, .mheight = 270},
-      visual_info{.red_mask = 0xFF0000}
+      window{reinterpret_cast<Window>((long unsigned int)9876543210)}
 {
-    // XEvent members already zero-initialized in header with = { 0 }
+    // XEvent members and screen/visual_info already initialized in header with default member initializers
     // Set the specific type fields for each event
     keypress_event_return.type = KeyPress;
     key_release_event_return.type = KeyRelease;
