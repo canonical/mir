@@ -16,7 +16,7 @@ use cxx::{UniquePtr};
 include!("generated_globals.rs");
 
 struct ServerState {
-    handler_factory: *const ffi_cpp::ffi_cpp::HandlerFactory,
+    handler_factory: *const ffi_cpp::ffi_cpp::GlobalHandlerFactory,
 }
 
 impl ServerState {
@@ -26,13 +26,13 @@ impl ServerState {
         }
     }
     
-    pub fn get_handler_factory(&self) -> &ffi_cpp::ffi_cpp::HandlerFactory {
+    pub fn get_handler_factory(&self) -> &ffi_cpp::ffi_cpp::GlobalHandlerFactory {
         unsafe {
-            self.handler_factory.as_ref().expect("HandlerFactory not set")
+            self.handler_factory.as_ref().expect("GlobalHandlerFactory not set")
         }
     }
     
-    pub fn set_handler_factory(&mut self, factory: *const ffi_cpp::ffi_cpp::HandlerFactory) {
+    pub fn set_handler_factory(&mut self, factory: *const ffi_cpp::ffi_cpp::GlobalHandlerFactory) {
         self.handler_factory = factory;
     }
 }

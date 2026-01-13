@@ -385,7 +385,7 @@ fn main() {
                     dispatchers_rs_str.push_str("        _global_data: &(),\n");
                     dispatchers_rs_str.push_str("        data_init: &mut wayland_server::DataInit<'_, Self>,\n");
                     dispatchers_rs_str.push_str("    ) {\n");
-                    dispatchers_rs_str.push_str("        use crate::ffi_cpp::ffi_cpp::HandlerFactory;\n");
+                    dispatchers_rs_str.push_str("        use crate::ffi_cpp::ffi_cpp::GlobalHandlerFactory;\n");
                     dispatchers_rs_str.push_str("        let factory = _state.get_handler_factory();\n");
                     dispatchers_rs_str.push_str(&format!(
                         "        let handler = factory.create_{}_handler();\n",
@@ -410,7 +410,7 @@ fn main() {
                 dispatchers_rs_str.push_str("        _dhandle: &wayland_server::DisplayHandle,\n");
                 dispatchers_rs_str.push_str("        _data_init: &mut wayland_server::DataInit<'_, Self>,\n");
                 dispatchers_rs_str.push_str("    ) {\n");
-                dispatchers_rs_str.push_str("        use crate::ffi_cpp::ffi_cpp::HandlerFactory;\n");
+                dispatchers_rs_str.push_str("        use crate::ffi_cpp::ffi_cpp::GlobalHandlerFactory;\n");
                 dispatchers_rs_str.push_str("        let factory = _state.get_handler_factory();\n");
                 dispatchers_rs_str.push('\n');
                 
@@ -681,9 +681,9 @@ fn main() {
         ffi_cpp_rs_str.push('\n');
     }
     
-    // Declare HandlerFactory type and methods
+    // Declare GlobalHandlerFactory type and methods
     // Factory should only create global interfaces (not those created by other interfaces)
-    ffi_cpp_rs_str.push_str("        pub type HandlerFactory;\n");
+    ffi_cpp_rs_str.push_str("        pub type GlobalHandlerFactory;\n");
     
     // Collect all child interfaces (those created by other interfaces)
     let mut child_interfaces = HashSet::new();
@@ -699,7 +699,7 @@ fn main() {
             let type_name = to_pascal_case(interface_name);
             let factory_method_name = format!("create_{}_handler", interface_name);
             ffi_cpp_rs_str.push_str(&format!(
-                "        pub fn {}(self: &HandlerFactory) -> *mut {}Handler;\n",
+                "        pub fn {}(self: &GlobalHandlerFactory) -> *mut {}Handler;\n",
                 factory_method_name, type_name
             ));
         }
@@ -797,13 +797,13 @@ fn main() {
         cpp_header_str.push_str("};\n\n");
     }
     
-    // Generate HandlerFactory base class
-    cpp_header_str.push_str("/// Factory for creating protocol handlers\n");
+    // Generate GlobalHandlerFactory base class
+    cpp_header_str.push_str("/// Factory for creating global protocol handlers\n");
     cpp_header_str.push_str("/// Implementors must override all virtual methods to provide handler instances\n");
     cpp_header_str.push_str("/// Factory only creates handlers for global interfaces; child interfaces are created by their parent handlers\n");
-    cpp_header_str.push_str("class HandlerFactory {\n");
+    cpp_header_str.push_str("class GlobalHandlerFactory {\n");
     cpp_header_str.push_str("public:\n");
-    cpp_header_str.push_str("    virtual ~HandlerFactory() = default;\n\n");
+    cpp_header_str.push_str("    virtual ~GlobalHandlerFactory() = default;\n\n");
     
     // Collect all child interfaces (those created by other interfaces)
     let mut child_interfaces_cpp = HashSet::new();
