@@ -13,5 +13,7 @@ The change here is that:
     - This should remove the need for "Thunks"
     - The handler should be a `friend` class of the `Global` here
 - Update the poor C-casted parameters to be virtual classes that wrap callbacks
+
 - Major cleanups
+
 - Add a way to remove a global from C++
