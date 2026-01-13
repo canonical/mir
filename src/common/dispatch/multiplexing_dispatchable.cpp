@@ -165,8 +165,7 @@ void md::MultiplexingDispatchable::add_watch(std::shared_ptr<md::Dispatchable> c
                                                reentrancy == DispatchReentrancy::sequential);
     }
 
-    epoll_event e;
-    ::memset(&e, 0, sizeof(e));
+    epoll_event e{};
 
     e.events = fd_event_to_epoll(dispatchee->relevant_events());
     if (reentrancy == DispatchReentrancy::sequential)
