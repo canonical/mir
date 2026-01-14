@@ -20,6 +20,11 @@
 
 using namespace std::chrono;
 
+namespace mir
+{
+namespace logging
+{
+
 template<typename Clock>
 std::string input_timestamp(Clock const& clock, std::chrono::nanoseconds when)
 {
@@ -39,4 +44,7 @@ std::string input_timestamp(Clock const& clock, std::chrono::nanoseconds when)
              when_ns, milliseconds, sub_milliseconds, sign_suffix);
 
     return std::string(str);
+}
+
+}
 }
