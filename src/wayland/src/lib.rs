@@ -16,24 +16,12 @@ use cxx::{UniquePtr};
 include!("generated_globals.rs");
 
 struct ServerState {
-    handler_factory: *const ffi_cpp::ffi_cpp::GlobalHandlerFactory,
 }
 
 impl ServerState {
     pub fn new() -> Self {
         ServerState {
-            handler_factory: std::ptr::null(),
         }
-    }
-
-    pub fn get_handler_factory(&self) -> &ffi_cpp::ffi_cpp::GlobalHandlerFactory {
-        unsafe {
-            self.handler_factory.as_ref().expect("GlobalHandlerFactory not set")
-        }
-    }
-
-    pub fn set_handler_factory(&mut self, factory: *const ffi_cpp::ffi_cpp::GlobalHandlerFactory) {
-        self.handler_factory = factory;
     }
 }
 
@@ -509,52 +497,52 @@ mod ffi_rust {
 
         fn remove_destroy_listener(self: &WaylandServer, listener_id: u64) -> bool;
 
-        // Global creation methods - auto-generated in build.rs (from src/generated_ffi_bridge.rs)
-        fn create_ext_data_control_manager_v1_global(self: &mut WaylandServer, version: u32) -> u64;
-        fn create_ext_data_control_offer_v1_global(self: &mut WaylandServer, version: u32) -> u64;
-        fn create_ext_foreign_toplevel_handle_v1_global(self: &mut WaylandServer, version: u32) -> u64;
-        fn create_ext_foreign_toplevel_image_capture_source_manager_v1_global(self: &mut WaylandServer, version: u32) -> u64;
-        fn create_ext_foreign_toplevel_list_v1_global(self: &mut WaylandServer, version: u32) -> u64;
-        fn create_ext_image_copy_capture_manager_v1_global(self: &mut WaylandServer, version: u32) -> u64;
-        fn create_ext_output_image_capture_source_manager_v1_global(self: &mut WaylandServer, version: u32) -> u64;
-        fn create_ext_session_lock_manager_v1_global(self: &mut WaylandServer, version: u32) -> u64;
-        fn create_mir_shell_v1_global(self: &mut WaylandServer, version: u32) -> u64;
-        fn create_org_kde_kwin_server_decoration_manager_global(self: &mut WaylandServer, version: u32) -> u64;
-        fn create_wl_compositor_global(self: &mut WaylandServer, version: u32) -> u64;
-        fn create_wl_data_device_manager_global(self: &mut WaylandServer, version: u32) -> u64;
-        fn create_wl_data_offer_global(self: &mut WaylandServer, version: u32) -> u64;
-        fn create_wl_output_global(self: &mut WaylandServer, version: u32) -> u64;
-        fn create_wl_seat_global(self: &mut WaylandServer, version: u32) -> u64;
-        fn create_wl_shell_global(self: &mut WaylandServer, version: u32) -> u64;
-        fn create_wl_shm_global(self: &mut WaylandServer, version: u32) -> u64;
-        fn create_wl_subcompositor_global(self: &mut WaylandServer, version: u32) -> u64;
-        fn create_wp_fractional_scale_manager_v1_global(self: &mut WaylandServer, version: u32) -> u64;
-        fn create_wp_linux_drm_syncobj_manager_v1_global(self: &mut WaylandServer, version: u32) -> u64;
-        fn create_wp_viewporter_global(self: &mut WaylandServer, version: u32) -> u64;
-        fn create_xdg_activation_v1_global(self: &mut WaylandServer, version: u32) -> u64;
-        fn create_xdg_wm_base_global(self: &mut WaylandServer, version: u32) -> u64;
-        fn create_zwlr_foreign_toplevel_handle_v1_global(self: &mut WaylandServer, version: u32) -> u64;
-        fn create_zwlr_foreign_toplevel_manager_v1_global(self: &mut WaylandServer, version: u32) -> u64;
-        fn create_zwlr_layer_shell_v1_global(self: &mut WaylandServer, version: u32) -> u64;
-        fn create_zwlr_screencopy_manager_v1_global(self: &mut WaylandServer, version: u32) -> u64;
-        fn create_zwlr_virtual_pointer_manager_v1_global(self: &mut WaylandServer, version: u32) -> u64;
-        fn create_zwp_idle_inhibit_manager_v1_global(self: &mut WaylandServer, version: u32) -> u64;
-        fn create_zwp_input_method_context_v1_global(self: &mut WaylandServer, version: u32) -> u64;
-        fn create_zwp_input_method_manager_v2_global(self: &mut WaylandServer, version: u32) -> u64;
-        fn create_zwp_input_method_v1_global(self: &mut WaylandServer, version: u32) -> u64;
-        fn create_zwp_input_panel_v1_global(self: &mut WaylandServer, version: u32) -> u64;
-        fn create_zwp_linux_dmabuf_v1_global(self: &mut WaylandServer, version: u32) -> u64;
-        fn create_zwp_pointer_constraints_v1_global(self: &mut WaylandServer, version: u32) -> u64;
-        fn create_zwp_primary_selection_device_manager_v1_global(self: &mut WaylandServer, version: u32) -> u64;
-        fn create_zwp_primary_selection_offer_v1_global(self: &mut WaylandServer, version: u32) -> u64;
-        fn create_zwp_relative_pointer_manager_v1_global(self: &mut WaylandServer, version: u32) -> u64;
-        fn create_zwp_text_input_manager_v1_global(self: &mut WaylandServer, version: u32) -> u64;
-        fn create_zwp_text_input_manager_v2_global(self: &mut WaylandServer, version: u32) -> u64;
-        fn create_zwp_text_input_manager_v3_global(self: &mut WaylandServer, version: u32) -> u64;
-        fn create_zwp_virtual_keyboard_manager_v1_global(self: &mut WaylandServer, version: u32) -> u64;
-        fn create_zxdg_decoration_manager_v1_global(self: &mut WaylandServer, version: u32) -> u64;
-        fn create_zxdg_output_manager_v1_global(self: &mut WaylandServer, version: u32) -> u64;
-        fn create_zxdg_shell_v6_global(self: &mut WaylandServer, version: u32) -> u64;
+        // Global creation methods - binder passed as usize to avoid CXX cross-bridge type issues
+        unsafe fn create_ext_data_control_manager_v1_global(self: &mut WaylandServer, version: u32, binder: usize) -> u64;
+        unsafe fn create_ext_data_control_offer_v1_global(self: &mut WaylandServer, version: u32, binder: usize) -> u64;
+        unsafe fn create_ext_foreign_toplevel_handle_v1_global(self: &mut WaylandServer, version: u32, binder: usize) -> u64;
+        unsafe fn create_ext_foreign_toplevel_image_capture_source_manager_v1_global(self: &mut WaylandServer, version: u32, binder: usize) -> u64;
+        unsafe fn create_ext_foreign_toplevel_list_v1_global(self: &mut WaylandServer, version: u32, binder: usize) -> u64;
+        unsafe fn create_ext_image_copy_capture_manager_v1_global(self: &mut WaylandServer, version: u32, binder: usize) -> u64;
+        unsafe fn create_ext_output_image_capture_source_manager_v1_global(self: &mut WaylandServer, version: u32, binder: usize) -> u64;
+        unsafe fn create_ext_session_lock_manager_v1_global(self: &mut WaylandServer, version: u32, binder: usize) -> u64;
+        unsafe fn create_mir_shell_v1_global(self: &mut WaylandServer, version: u32, binder: usize) -> u64;
+        unsafe fn create_org_kde_kwin_server_decoration_manager_global(self: &mut WaylandServer, version: u32, binder: usize) -> u64;
+        unsafe fn create_wl_compositor_global(self: &mut WaylandServer, version: u32, binder: usize) -> u64;
+        unsafe fn create_wl_data_device_manager_global(self: &mut WaylandServer, version: u32, binder: usize) -> u64;
+        unsafe fn create_wl_data_offer_global(self: &mut WaylandServer, version: u32, binder: usize) -> u64;
+        unsafe fn create_wl_output_global(self: &mut WaylandServer, version: u32, binder: usize) -> u64;
+        unsafe fn create_wl_seat_global(self: &mut WaylandServer, version: u32, binder: usize) -> u64;
+        unsafe fn create_wl_shell_global(self: &mut WaylandServer, version: u32, binder: usize) -> u64;
+        unsafe fn create_wl_shm_global(self: &mut WaylandServer, version: u32, binder: usize) -> u64;
+        unsafe fn create_wl_subcompositor_global(self: &mut WaylandServer, version: u32, binder: usize) -> u64;
+        unsafe fn create_wp_fractional_scale_manager_v1_global(self: &mut WaylandServer, version: u32, binder: usize) -> u64;
+        unsafe fn create_wp_linux_drm_syncobj_manager_v1_global(self: &mut WaylandServer, version: u32, binder: usize) -> u64;
+        unsafe fn create_wp_viewporter_global(self: &mut WaylandServer, version: u32, binder: usize) -> u64;
+        unsafe fn create_xdg_activation_v1_global(self: &mut WaylandServer, version: u32, binder: usize) -> u64;
+        unsafe fn create_xdg_wm_base_global(self: &mut WaylandServer, version: u32, binder: usize) -> u64;
+        unsafe fn create_zwlr_foreign_toplevel_handle_v1_global(self: &mut WaylandServer, version: u32, binder: usize) -> u64;
+        unsafe fn create_zwlr_foreign_toplevel_manager_v1_global(self: &mut WaylandServer, version: u32, binder: usize) -> u64;
+        unsafe fn create_zwlr_layer_shell_v1_global(self: &mut WaylandServer, version: u32, binder: usize) -> u64;
+        unsafe fn create_zwlr_screencopy_manager_v1_global(self: &mut WaylandServer, version: u32, binder: usize) -> u64;
+        unsafe fn create_zwlr_virtual_pointer_manager_v1_global(self: &mut WaylandServer, version: u32, binder: usize) -> u64;
+        unsafe fn create_zwp_idle_inhibit_manager_v1_global(self: &mut WaylandServer, version: u32, binder: usize) -> u64;
+        unsafe fn create_zwp_input_method_context_v1_global(self: &mut WaylandServer, version: u32, binder: usize) -> u64;
+        unsafe fn create_zwp_input_method_manager_v2_global(self: &mut WaylandServer, version: u32, binder: usize) -> u64;
+        unsafe fn create_zwp_input_method_v1_global(self: &mut WaylandServer, version: u32, binder: usize) -> u64;
+        unsafe fn create_zwp_input_panel_v1_global(self: &mut WaylandServer, version: u32, binder: usize) -> u64;
+        unsafe fn create_zwp_linux_dmabuf_v1_global(self: &mut WaylandServer, version: u32, binder: usize) -> u64;
+        unsafe fn create_zwp_pointer_constraints_v1_global(self: &mut WaylandServer, version: u32, binder: usize) -> u64;
+        unsafe fn create_zwp_primary_selection_device_manager_v1_global(self: &mut WaylandServer, version: u32, binder: usize) -> u64;
+        unsafe fn create_zwp_primary_selection_offer_v1_global(self: &mut WaylandServer, version: u32, binder: usize) -> u64;
+        unsafe fn create_zwp_relative_pointer_manager_v1_global(self: &mut WaylandServer, version: u32, binder: usize) -> u64;
+        unsafe fn create_zwp_text_input_manager_v1_global(self: &mut WaylandServer, version: u32, binder: usize) -> u64;
+        unsafe fn create_zwp_text_input_manager_v2_global(self: &mut WaylandServer, version: u32, binder: usize) -> u64;
+        unsafe fn create_zwp_text_input_manager_v3_global(self: &mut WaylandServer, version: u32, binder: usize) -> u64;
+        unsafe fn create_zwp_virtual_keyboard_manager_v1_global(self: &mut WaylandServer, version: u32, binder: usize) -> u64;
+        unsafe fn create_zxdg_decoration_manager_v1_global(self: &mut WaylandServer, version: u32, binder: usize) -> u64;
+        unsafe fn create_zxdg_output_manager_v1_global(self: &mut WaylandServer, version: u32, binder: usize) -> u64;
+        unsafe fn create_zxdg_shell_v6_global(self: &mut WaylandServer, version: u32, binder: usize) -> u64;
 
         fn create_event_loop() -> Box<EventLoop>;
 

@@ -363,6 +363,43 @@ fn main() {
             }
             dispatchers_rs_str.push('\n');
 
+            // Determine which interfaces are globals (not created by requests)
+            // First collect all interfaces created by requests
+            let mut created_by_request = HashSet::new();
+            for interface in &interfaces {
+                if let Some(info) = all_interface_info.get(interface) {
+                    for request in &info.requests {
+                        for arg in &request.args {
+                            if arg.arg_type == "new_id" {
+                                if let Some(child_interface) = &arg.interface {
+                                    created_by_request.insert(child_interface.clone());
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Generate Send/Sync binder wrapper types for global interfaces
+            for interface in &interfaces {
+                let always_global = interface == "wl_output" || interface == "wl_seat";
+                let is_global = always_global || !created_by_request.contains(interface);
+                if is_global {
+                    let type_name = to_pascal_case(interface);
+                    dispatchers_rs_str.push_str(&format!("unsafe impl Send for crate::ffi_cpp::ffi_cpp::{}Binder {{}}\n", type_name));
+                    dispatchers_rs_str.push_str(&format!("unsafe impl Sync for crate::ffi_cpp::ffi_cpp::{}Binder {{}}\n", type_name));
+                    dispatchers_rs_str.push_str(&format!("#[repr(transparent)]\n"));
+                    dispatchers_rs_str.push_str(&format!("pub struct {}BinderPtr(pub *const crate::ffi_cpp::ffi_cpp::{}Binder);\n", type_name, type_name));
+                    dispatchers_rs_str.push_str(&format!("unsafe impl Send for {}BinderPtr {{}}\n", type_name));
+                    dispatchers_rs_str.push_str(&format!("unsafe impl Sync for {}BinderPtr {{}}\n", type_name));
+                    dispatchers_rs_str.push_str(&format!("impl std::ops::Deref for {}BinderPtr {{\n", type_name));
+                    dispatchers_rs_str.push_str(&format!("    type Target = *const crate::ffi_cpp::ffi_cpp::{}Binder;\n", type_name));
+                    dispatchers_rs_str.push_str("    fn deref(&self) -> &Self::Target { &self.0 }\n");
+                    dispatchers_rs_str.push_str("}\n");
+                }
+            }
+            dispatchers_rs_str.push('\n');
+
             // Generate trait implementations
             for interface in &interfaces {
                 let type_name = to_pascal_case(interface);
@@ -374,23 +411,19 @@ fn main() {
                 // Generate GlobalDispatch for globals only
                 if is_global {
                     dispatchers_rs_str.push_str(&format!(
-                        "impl wayland_server::GlobalDispatch<{}, ()> for crate::ServerState {{\n",
-                        type_name
+                        "impl wayland_server::GlobalDispatch<{}, {}BinderPtr> for crate::ServerState {{\n",
+                        type_name, type_name
                     ));
                     dispatchers_rs_str.push_str("    fn bind(\n");
                     dispatchers_rs_str.push_str("        _state: &mut Self,\n");
                     dispatchers_rs_str.push_str("        _handle: &wayland_server::DisplayHandle,\n");
                     dispatchers_rs_str.push_str("        _client: &wayland_server::Client,\n");
                     dispatchers_rs_str.push_str(&format!("        resource: wayland_server::New<{}>,\n", type_name));
-                    dispatchers_rs_str.push_str("        _global_data: &(),\n");
+                    dispatchers_rs_str.push_str(&format!("        _global_data: &{}BinderPtr,\n", type_name));
                     dispatchers_rs_str.push_str("        data_init: &mut wayland_server::DataInit<'_, Self>,\n");
                     dispatchers_rs_str.push_str("    ) {\n");
-                    dispatchers_rs_str.push_str("        use crate::ffi_cpp::ffi_cpp::GlobalHandlerFactory;\n");
-                    dispatchers_rs_str.push_str("        let factory = _state.get_handler_factory();\n");
-                    dispatchers_rs_str.push_str(&format!(
-                        "        let handler = factory.create_{}_handler();\n",
-                        interface
-                    ));
+                    dispatchers_rs_str.push_str("        let binder = unsafe { (**_global_data).as_ref().expect(\"Binder pointer is null\") };\n");
+                    dispatchers_rs_str.push_str("        let handler = binder.create_handler();\n");
                     dispatchers_rs_str.push_str(&format!("        data_init.init(resource, {}HandlerPtr(handler));\n", type_name));
                     dispatchers_rs_str.push_str("    }\n");
                     dispatchers_rs_str.push_str("}\n\n");
@@ -410,8 +443,6 @@ fn main() {
                 dispatchers_rs_str.push_str("        _dhandle: &wayland_server::DisplayHandle,\n");
                 dispatchers_rs_str.push_str("        _data_init: &mut wayland_server::DataInit<'_, Self>,\n");
                 dispatchers_rs_str.push_str("    ) {\n");
-                dispatchers_rs_str.push_str("        use crate::ffi_cpp::ffi_cpp::GlobalHandlerFactory;\n");
-                dispatchers_rs_str.push_str("        let factory = _state.get_handler_factory();\n");
                 dispatchers_rs_str.push('\n');
 
                 // Get the requests for this interface
@@ -741,10 +772,8 @@ fn main() {
         ffi_cpp_rs_str.push('\n');
     }
 
-    // Declare GlobalHandlerFactory type and methods
-    // Factory should only create global interfaces (not those created by other interfaces)
-    ffi_cpp_rs_str.push_str("        pub type GlobalHandlerFactory;\n");
-
+    // Declare Binder types for global interfaces
+    // Binder types are used to create handlers when clients bind to globals
     // Collect all child interfaces (those created by other interfaces)
     let mut child_interfaces = HashSet::new();
     for (_, children) in &parent_to_children {
@@ -753,14 +782,14 @@ fn main() {
         }
     }
 
-    // Only create factory methods for non-child interfaces (globals)
+    // Create Binder type for each global interface
     for interface_name in all_interface_info.keys() {
         if !child_interfaces.contains(interface_name.as_str()) {
             let type_name = to_pascal_case(interface_name);
-            let factory_method_name = format!("create_{}_handler", interface_name);
+            ffi_cpp_rs_str.push_str(&format!("        pub type {}Binder;\n", type_name));
             ffi_cpp_rs_str.push_str(&format!(
-                "        pub fn {}(self: &GlobalHandlerFactory) -> *mut {}Handler;\n",
-                factory_method_name, type_name
+                "        pub fn create_handler(self: &{}Binder) -> *mut {}Handler;\n",
+                type_name, type_name
             ));
         }
     }
@@ -858,14 +887,8 @@ fn main() {
         cpp_header_str.push_str("};\n\n");
     }
 
-    // Generate GlobalHandlerFactory base class
-    cpp_header_str.push_str("/// Factory for creating global protocol handlers\n");
-    cpp_header_str.push_str("/// Implementors must override all virtual methods to provide handler instances\n");
-    cpp_header_str.push_str("/// Factory only creates handlers for global interfaces; child interfaces are created by their parent handlers\n");
-    cpp_header_str.push_str("class GlobalHandlerFactory {\n");
-    cpp_header_str.push_str("public:\n");
-    cpp_header_str.push_str("    virtual ~GlobalHandlerFactory() = default;\n\n");
-
+    // Generate Binder classes for global interfaces
+    // Each Binder is an abstract class with a single create_handler() method
     // Collect all child interfaces (those created by other interfaces)
     let mut child_interfaces_cpp = HashSet::new();
     for (_, children) in &parent_to_children {
@@ -874,20 +897,29 @@ fn main() {
         }
     }
 
-    // Generate factory method only for global interfaces (not children)
+    // Generate Binder class for each global interface
     for interface_name in all_interface_info.keys() {
         if !child_interfaces_cpp.contains(interface_name.as_str()) {
             let type_name = to_pascal_case(interface_name);
-            let factory_method_name = format!("create_{}_handler", interface_name);
 
             cpp_header_str.push_str(&format!(
-                "    virtual {}Handler* {}() const = 0;\n",
-                type_name, factory_method_name
+                "/// Binder for creating {} handlers when clients bind to the global\n",
+                interface_name
             ));
+            cpp_header_str.push_str(&format!(
+                "/// Passed to create_{}_global() and called when a client binds\n",
+                interface_name
+            ));
+            cpp_header_str.push_str(&format!("class {}Binder {{\n", type_name));
+            cpp_header_str.push_str("public:\n");
+            cpp_header_str.push_str(&format!("    virtual ~{}Binder() = default;\n\n", type_name));
+            cpp_header_str.push_str(&format!(
+                "    virtual {}Handler* create_handler() const = 0;\n",
+                type_name
+            ));
+            cpp_header_str.push_str("};\n\n");
         }
     }
-
-    cpp_header_str.push_str("};\n\n");
 
     // Close namespace
     cpp_header_str.push_str("}  // namespace mir::wayland_rs::cpp\n\n");
@@ -987,14 +1019,17 @@ fn main() {
         };
 
         globals_rs_str.push_str(&format!("    /// Create a global for the {} protocol\n", interface_name));
+        globals_rs_str.push_str(&format!("    /// The binder is called when clients bind to this global to create handler instances\n"));
         globals_rs_str.push_str(&format!("    /// Returns a unique ID that maps to the GlobalId internally\n"));
-        globals_rs_str.push_str(&format!("    pub fn {}(&mut self, version: u32) -> u64 {{\n", method_name));
+        globals_rs_str.push_str(&format!("    pub fn {}(&mut self, version: u32, binder: usize) -> u64 {{\n", method_name));
         globals_rs_str.push_str(&format!("        use {};\n", import_path));
+        globals_rs_str.push_str(&format!("        use crate::dispatchers::{}BinderPtr;\n", type_name));
         globals_rs_str.push_str("        \n");
+        globals_rs_str.push_str(&format!("        let binder_ptr = binder as *const crate::ffi_cpp::ffi_cpp::{}Binder;\n", type_name));
         globals_rs_str.push_str("        let display_handle = self.display.handle();\n");
         globals_rs_str.push_str(&format!(
-            "        let global_id = display_handle.create_global::<crate::ServerState, {}, ()>(version, ());\n",
-            type_name
+            "        let global_id = display_handle.create_global::<crate::ServerState, {}, {}BinderPtr>(version, {}BinderPtr(binder_ptr));\n",
+            type_name, type_name, type_name
         ));
         globals_rs_str.push_str("        \n");
         globals_rs_str.push_str("        // Store the GlobalId and return a unique integer ID\n");
@@ -1016,8 +1051,9 @@ fn main() {
     ffi_bridge_str.push_str("// Include this in the extern \"Rust\" block of the ffi_rust bridge\n\n");
 
     for interface_name in &global_interfaces {
+        let type_name = to_pascal_case(interface_name);
         let method_name = format!("create_{}_global", interface_name);
-        ffi_bridge_str.push_str(&format!("        fn {}(self: &mut WaylandServer, version: u32) -> u64;\n", method_name));
+        ffi_bridge_str.push_str(&format!("        fn {}(self: &mut WaylandServer, version: u32, binder: *const {}Binder) -> u64;\n", method_name, type_name));
     }
 
     fs::write(
