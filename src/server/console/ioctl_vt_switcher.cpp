@@ -15,6 +15,7 @@
  */
 
 #include "ioctl_vt_switcher.h"
+#include <mir/errno_utils.h>
 #include <mir/log.h>
 
 #include <sys/ioctl.h>
@@ -31,6 +32,6 @@ void mir::console::IoctlVTSwitcher::switch_to(
 {
     if (ioctl(vt_fd, VT_ACTIVATE, vt_number) == -1)
     {
-        mir::log_error("%s:%d: Kernel request to change VT switch failed: %s", __FILE__, __LINE__, strerror(errno));
+        mir::log_error("%s:%d: Kernel request to change VT switch failed: %s", __FILE__, __LINE__, mir::errno_to_cstr(errno));
     }
 }

@@ -22,6 +22,7 @@
 #include <fcntl.h>
 #include <boost/throw_exception.hpp>
 
+#include <mir/errno_utils.h>
 #include <mir/time/steady_clock.h>
 #include <mir/glib_main_loop.h>
 #include <mir/anonymous_shm_file.h>
@@ -216,7 +217,7 @@ public:
             if (bytes_read < 0)
             {
                 std::cout << "Failed to read dbusmock output: "
-                    << strerror(errno)
+                    << mir::errno_to_cstr(errno)
                     << "(" << errno << ")" << std::endl;
             }
             std::cout << "Errors from DBusMock: " << std::endl;
@@ -227,7 +228,7 @@ public:
             if (bytes_read < 0)
             {
                 std::cout << "Failed to read dbusmock error output: "
-                          << strerror(errno)
+                          << mir::errno_to_cstr(errno)
                           << "(" << errno << ")" << std::endl;
             }
         }

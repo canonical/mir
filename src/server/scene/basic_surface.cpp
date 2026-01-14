@@ -187,6 +187,7 @@ public:
 };
 
 ms::BasicSurface::BasicSurface(
+    std::shared_ptr<Session> const& session,
     std::string const& name,
     geometry::Rectangle rect,
     std::weak_ptr<Surface> const& parent,
@@ -212,7 +213,8 @@ ms::BasicSurface::BasicSurface(
     report(report),
     parent_(parent),
     display_config_registrar{display_config_registrar},
-    display_config_monitor{std::make_shared<DisplayConfigurationEarlyListener>(this)}
+    display_config_monitor{std::make_shared<DisplayConfigurationEarlyListener>(this)},
+    session_{session}
 {
     auto state = synchronised_state.lock();
     update_frame_posted_callbacks(*state);
@@ -229,6 +231,7 @@ ms::BasicSurface::BasicSurface(
     std::shared_ptr<SceneReport> const& report,
     std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> const& display_config_registrar) :
     BasicSurface(
+        nullptr,
         name,
         rect,
         std::shared_ptr<Surface>{nullptr},
@@ -998,7 +1001,7 @@ void mir::scene::BasicSurface::set_application_id(std::string const& application
 
 auto mir::scene::BasicSurface::session() const -> std::weak_ptr<Session>
 {
-    return {};
+    return session_;
 }
 
 void mir::scene::BasicSurface::set_window_margins(

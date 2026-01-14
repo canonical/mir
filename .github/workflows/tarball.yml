@@ -33,6 +33,7 @@ jobs:
       uses: crazy-max/ghaction-import-gpg@v6
       with:
         gpg_private_key: ${{ secrets.MIR_BOT_GPG_PRIVATE_KEY }}
+        passphrase: ${{ secrets.MIR_BOT_GPG_PASSPHRASE }}
 
     - name: Check out code
       uses: actions/checkout@v6

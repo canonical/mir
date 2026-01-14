@@ -19,7 +19,6 @@
 #include <miral/application_info.h>
 #include "application_selector.h"
 #include <linux/input.h>
-#include <gmpxx.h>
 
 using namespace miral::toolkit;
 

@@ -23,7 +23,7 @@
 #include "egl_helper.h"
 #include <mir/graphics/platform.h>
 #include "platform_common.h"
-#include "kms_framebuffer.h"
+#include <mir/graphics/kms_framebuffer.h>
 
 #include <vector>
 #include <memory>

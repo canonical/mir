@@ -69,6 +69,7 @@ set(
   test_shm_backing.cpp
   test_signal.cpp
   test_default_server_configuration.cpp
+  test_errno_utils.cpp
 )
 
 set(UNIT_TEST_REFERENCES)
@@ -168,7 +169,7 @@ target_link_libraries(
   ${UNIT_TEST_REFERENCES}
   exampleserverconfig
   mircommon
-  server_platform_common
+  graphics_platform_common
 
   mir-test-static
   mir-test-framework-static

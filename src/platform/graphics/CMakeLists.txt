@@ -1,3 +1,40 @@
+add_subdirectory(kms/)
+
+add_library(graphics_platform_common STATIC
+    shm_buffer.cpp
+    ${PROJECT_SOURCE_DIR}/include/platform/mir/graphics/one_shot_device_observer.h
+    one_shot_device_observer.cpp
+    cpu_copy_output_surface.cpp
+    ${PROJECT_SOURCE_DIR}/include/platform/mir/graphics/cpu_copy_output_surface.h
+    kms_cpu_addressable_display_provider.cpp
+    ${PROJECT_SOURCE_DIR}/include/platform/mir/graphics/kms_cpu_addressable_display_provider.h
+    cpu_addressable_fb.cpp
+    ${PROJECT_SOURCE_DIR}/include/platform/mir/graphics/cpu_addressable_fb.h
+    ${PROJECT_SOURCE_DIR}/include/platform/mir/graphics/kms_framebuffer.h
+    ${PROJECT_SOURCE_DIR}/include/platform/mir/graphics/options_parsing_helpers.h
+    options_parsing_helpers.cpp
+    ${PROJECT_SOURCE_DIR}/include/platform/mir/graphics/quirk_common.h
+    quirk_common.cpp
+    ${PROJECT_SOURCE_DIR}/include/platform/mir/graphics/egl_helpers.h
+    egl_helpers.cpp
+)
+
+target_include_directories(graphics_platform_common
+  PUBLIC
+    ${PROJECT_SOURCE_DIR}/include/platform
+)
+
+target_link_libraries(graphics_platform_common
+  PUBLIC
+    mircommon
+    mircore
+  PRIVATE
+    PkgConfig::WAYLAND_SERVER
+    PkgConfig::GLESv2
+    PkgConfig::DRM
+    PkgConfig::EGL
+)
+
 set(DRM_FORMATS_FILE ${CMAKE_CURRENT_BINARY_DIR}/drm-formats)
 set(DRM_FORMATS_BIG_ENDIAN_FILE ${CMAKE_CURRENT_BINARY_DIR}/drm-formats-big-endian)
 
@@ -115,6 +152,7 @@ target_link_libraries(
   PUBLIC
     mirwayland
     mircommon
+    kms_utils
     PkgConfig::EGL
     PkgConfig::GLESv2
   PRIVATE

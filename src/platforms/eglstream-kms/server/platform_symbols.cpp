@@ -18,6 +18,7 @@
 
 #include "platform.h"
 #include "utils.h"
+#include <mir/errno_utils.h>
 #include <mir/graphics/platform.h>
 #include <mir/options/option.h>
 #include <mir/options/configuration.h>
@@ -26,9 +27,9 @@
 #include <mir/libname.h>
 #include <mir/log.h>
 #include <mir/graphics/egl_error.h>
-#include "one_shot_device_observer.h"
+#include <mir/graphics/one_shot_device_observer.h>
 #include <mir/raii.h>
-#include "kms-utils/drm_mode_resources.h"
+#include <mir/graphics/kms/drm_mode_resources.h>
 #include <mir/graphics/egl_logger.h>
 #include <mir/udev/wrapper.h>
 
@@ -413,7 +414,7 @@ auto probe_display_platform(
                     mir::log_warning(
                         "Failed to set DRM interface version on device: %i (%s)",
                         error,
-                        strerror(error));
+                        mir::errno_to_cstr(error));
                     continue;
                 }
 
@@ -433,7 +434,7 @@ auto probe_display_platform(
                         mir::log_warning(
                             "Failed to check DRM modesetting support for device %s: %s (%i)",
                             busid.get(),
-                            strerror(-err),
+                            mir::errno_to_cstr(-err),
                             -err);
                     }
                     continue;

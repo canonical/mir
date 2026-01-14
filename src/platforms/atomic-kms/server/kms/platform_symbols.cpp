@@ -21,7 +21,8 @@
 #include "platform.h"
 #include "display_helpers.h"
 #include "quirks.h"
-#include "kms-utils/drm_mode_resources.h"
+#include <mir/graphics/kms/drm_mode_resources.h>
+#include <mir/errno_utils.h>
 #include <mir/options/program_option.h>
 #include <mir/options/option.h>
 #include <mir/options/configuration.h>
@@ -30,7 +31,7 @@
 #include <mir/assert_module_entry_point.h>
 #include <mir/libname.h>
 #include <mir/console_services.h>
-#include "one_shot_device_observer.h"
+#include <mir/graphics/one_shot_device_observer.h>
 #include <mir/graphics/egl_error.h>
 #include <mir/graphics/gl_config.h>
 #include <mir/graphics/egl_logger.h>
@@ -286,7 +287,7 @@ auto probe_display_platform(
 
                     default:
                         mir::log_warning("Unexpected error from drmCheckModesettingSupported(): %s (%i), "
-                                         "but continuing anyway", strerror(err), err);
+                                         "but continuing anyway", mir::errno_to_cstr(err), err);
                         mir::log_warning("Please file a bug at "
                                          "https://github.com/canonical/mir/issues containing this message");
                         supported_devices.back().support_level = mg::probe::supported;

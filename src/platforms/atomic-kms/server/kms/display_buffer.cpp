@@ -15,10 +15,11 @@
  */
 
 #include "display_sink.h"
-#include "kms_cpu_addressable_display_provider.h"
+#include <mir/graphics/kms_cpu_addressable_display_provider.h>
 #include "kms_output.h"
-#include "cpu_addressable_fb.h"
+#include <mir/graphics/cpu_addressable_fb.h>
 #include "gbm_display_allocator.h"
+#include <mir/errno_utils.h>
 #include <mir/fd.h>
 #include <mir/graphics/display_report.h>
 #include <mir/graphics/drm_formats.h>
@@ -296,7 +297,7 @@ auto import_gbm_bo(
             "Failed to import buffer type %s:%s (%s [%i])",
             buffer->format().name(),
             mg::drm_modifier_to_string(buffer->modifier().value_or(DRM_FORMAT_MOD_INVALID)).c_str(),
-            strerror(errno),
+            mir::errno_to_cstr(errno),
             errno);
         return {};
     }

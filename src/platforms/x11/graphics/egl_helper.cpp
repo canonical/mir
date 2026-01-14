@@ -16,6 +16,7 @@
 
 #include "egl_helper.h"
 
+#include <mir/c_memory.h>
 #include <mir/graphics/gl_config.h>
 #include <mir/graphics/egl_error.h>
 
@@ -176,10 +177,9 @@ namespace
 auto size_for_x_win(xcb_connection_t* xcb_conn, xcb_window_t win) -> mir::geometry::Size
 {
     auto cookie = xcb_get_geometry(xcb_conn, win);
-    if (auto reply = xcb_get_geometry_reply(xcb_conn, cookie, nullptr))
+    if (auto const reply = mir::make_unique_cptr(xcb_get_geometry_reply(xcb_conn, cookie, nullptr)))
     {
         mir::geometry::Size const window_size{reply->width, reply->height};
-        free(reply);
         return window_size;
     }
     BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to get X11 window size"}));

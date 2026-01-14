@@ -19,7 +19,7 @@
 #include "kms_output.h"
 #include "kms_output_container.h"
 #include "kms_display_configuration.h"
-#include "shm_buffer.h"
+#include <mir/graphics/shm_buffer.h>
 #include <mir/geometry/rectangle.h>
 #include <mir/graphics/cursor_image.h>
 #include <mir/graphics/pixman_image_scaling.h>

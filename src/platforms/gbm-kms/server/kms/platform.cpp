@@ -28,11 +28,12 @@
 #include <mir/udev/wrapper.h>
 #include <mir/graphics/egl_error.h>
 #include <mir/graphics/egl_extensions.h>
-#include "one_shot_device_observer.h"
+#include <mir/errno_utils.h>
+#include <mir/graphics/one_shot_device_observer.h>
 #include <mir/graphics/linux_dmabuf.h>
 #include <mir/graphics/egl_context_executor.h>
 #include <mir/graphics/drm_syncobj.h>
-#include "kms_cpu_addressable_display_provider.h"
+#include <mir/graphics/kms_cpu_addressable_display_provider.h>
 #include "surfaceless_egl_context.h"
 #include <boost/throw_exception.hpp>
 #include <drm.h>
@@ -452,7 +453,7 @@ auto mgg::RenderingPlatform::maybe_create_provider(
         auto cap_result = drmGetCap(raw_fd, DRM_CAP_SYNCOBJ_TIMELINE, &has_timeline);
         if (cap_result != 0)
         {
-            mir::log_debug("Failed to query DRM_CAP_SYNCOBJ_TIMELINE: %s", strerror(-cap_result));
+            mir::log_debug("Failed to query DRM_CAP_SYNCOBJ_TIMELINE: %s", mir::errno_to_cstr(-cap_result));
             return nullptr;
         }
         if (!has_timeline)

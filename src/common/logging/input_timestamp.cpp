@@ -16,6 +16,7 @@
 
 #include <mir/logging/input_timestamp.h>
 #include <cstdio>
+#include <cstdlib>
 
 using namespace std::chrono;
 std::string mir::logging::input_timestamp(nanoseconds when)
@@ -26,9 +27,15 @@ std::string mir::logging::input_timestamp(nanoseconds when)
     long long const now_ns = duration_cast<nanoseconds>(now).count();
     long long const age_ns = now_ns - when_ns;
 
+    long long const abs_age_ns = std::llabs(age_ns);
+    long long const milliseconds = abs_age_ns / 1000000LL;
+    long long const sub_milliseconds = abs_age_ns % 1000000LL;
+
+    char const* sign_suffix = (age_ns < 0) ? "in the future" : "ago";
+
     char str[64];
-    snprintf(str, sizeof str, "%lld (%lld.%06lldms ago)",
-             when_ns, age_ns / 1000000LL, age_ns % 1000000LL);
+    snprintf(str, sizeof str, "%lld (%lld.%06lldms %s)",
+             when_ns, milliseconds, sub_milliseconds, sign_suffix);
 
     return std::string(str);
 }

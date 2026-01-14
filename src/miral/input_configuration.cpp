@@ -27,6 +27,7 @@
 #include <algorithm>
 #include <format>
 #include <memory>
+#include <mutex>
 
 class miral::InputConfiguration::Mouse::Self : public MouseInputConfiguration
 {

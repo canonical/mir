@@ -15,6 +15,7 @@
  */
 
 #include "launch_app.h"
+#include <mir/errno_utils.h>
 #include <mir/log.h>
 
 #include <boost/throw_exception.hpp>
@@ -134,7 +135,7 @@ auto execute_with_environment(std::vector<std::string> const app, Environment& a
         // unnecessary
         execvpe(exec_args[0], const_cast<char* const*>(exec_args.data()), const_cast<char* const*>(exec_env.data()));
 
-        mir::log_warning("Failed to execute client (\"%s\") error: %s", exec_args[0], strerror(errno));
+        mir::log_warning("Failed to execute client (\"%s\") error: %s", exec_args[0], mir::errno_to_cstr(errno));
         _exit(EXIT_FAILURE);
     }
 

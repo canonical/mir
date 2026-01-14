@@ -64,6 +64,7 @@ public:
         std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> const& display_config_registrar);
 
     BasicSurface(
+        std::shared_ptr<Session> const& session,
         std::string const& name,
         geometry::Rectangle rect,
         std::weak_ptr<Surface> const& parent,
@@ -254,6 +255,7 @@ private:
     std::shared_ptr<graphics::DisplayConfiguration const> display_config;
     std::unordered_map<graphics::DisplayConfigurationOutputId, float> tracked_output_scales;
     wayland::Weak<frontend::WlSurface> weak_surface;
+    std::weak_ptr<Session> const session_;
 };
 
 }

@@ -19,6 +19,7 @@
 
 struct wl_client;
 
+#include <cstdint>
 #include <memory>
 #include <optional>
 

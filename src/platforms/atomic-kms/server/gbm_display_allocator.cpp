@@ -15,7 +15,7 @@
  */
 
 #include "gbm_display_allocator.h"
-#include "kms_framebuffer.h"
+#include <mir/graphics/kms_framebuffer.h>
 #include "kms/quirks.h"
 
 #include <mir/log.h>

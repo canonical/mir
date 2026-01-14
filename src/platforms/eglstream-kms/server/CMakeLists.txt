@@ -24,8 +24,6 @@ target_link_libraries(mirplatformgraphicseglstreamkmsobjects
     mirplatform
     mircommon
     mircore
-  PRIVATE
-    server_platform_common
 )
 
 add_library(mirplatformgraphicseglstreamkms MODULE)
@@ -36,8 +34,6 @@ target_link_libraries(
   PRIVATE
   mirplatformgraphicseglstreamkmsobjects
   mirplatform
-  server_platform_common
-  kms_utils
   Boost::program_options
   PkgConfig::DRM
   PkgConfig::EGL

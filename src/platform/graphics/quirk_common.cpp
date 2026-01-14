@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "quirk_common.h"
+#include <mir/graphics/quirk_common.h>
 
 mir::graphics::common::AllowList::AllowList(std::unordered_set<std::string>&& drivers_to_skip) :
     skipped_drivers{std::move(drivers_to_skip)}

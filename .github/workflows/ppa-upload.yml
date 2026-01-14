@@ -23,9 +23,11 @@ jobs:
 
     steps:
     - name: Import GPG key
+      id: gpg
       uses: crazy-max/ghaction-import-gpg@v6
       with:
         gpg_private_key: ${{ secrets.MIR_BOT_GPG_PRIVATE_KEY }}
+        passphrase: ${{ secrets.MIR_BOT_GPG_PASSPHRASE }}
 
     - name: Check out code
       uses: actions/checkout@v6
@@ -51,8 +53,8 @@ jobs:
     - name: Upload to PPA
       env:
         RELEASE: ${{ matrix.release }}
-        DEBFULLNAME: ${{ vars.DEBFULLNAME }}
-        DEBEMAIL: ${{ vars.DEBEMAIL }}
+        DEBFULLNAME: ${{ steps.gpg.outputs.name }}
+        DEBEMAIL: ${{ steps.gpg.outputs.email }}
       run: tools/ppa-upload.sh ${{ github.workspace }}/../lp_credentials
 
     - if: ${{ failure() && runner.debug }}

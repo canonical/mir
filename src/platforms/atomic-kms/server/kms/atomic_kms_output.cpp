@@ -15,13 +15,14 @@
  */
 
 #include "atomic_kms_output.h"
-#include "kms-utils/drm_mode_resources.h"
-#include "kms_framebuffer.h"
+#include <mir/graphics/kms/drm_mode_resources.h>
+#include <mir/graphics/kms_framebuffer.h>
 #include <mir/graphics/display_configuration.h>
 #include <mir/graphics/drm_formats.h>
 #include <mir/graphics/gamma_curves.h>
 #include <mir_toolkit/common.h>
-#include "kms-utils/kms_connector.h"
+#include <mir/graphics/kms/kms_connector.h>
+#include <mir/errno_utils.h>
 #include <mir/fatal.h>
 #include <mir/log.h>
 #include <drm_fourcc.h>
@@ -162,7 +163,7 @@ public:
         {
             mir::log_warning(
                 "Failed to free DRM property blob: %s (%i)",
-                strerror(-err),
+                mir::errno_to_cstr(-err),
                 -err);
         }
     }
@@ -249,7 +250,7 @@ void mga::AtomicKMSOutput::reset()
 
             if (auto err = drmModeAtomicCommit(drm_fd(), update, DRM_MODE_ATOMIC_ALLOW_MODESET, nullptr))
             {
-                mir::log_warning("Failed release resources for disconnected output: %s (%i)", strerror(-err), -err);
+                mir::log_warning("Failed release resources for disconnected output: %s (%i)", mir::errno_to_cstr(-err), -err);
             }
 
             conf->crtc_props = nullptr;
@@ -338,7 +339,7 @@ bool mga::AtomicKMSOutput::set_crtc(FBHandle const& fb)
     auto ret = drmModeAtomicCommit(drm_fd_, update, DRM_MODE_ATOMIC_ALLOW_MODESET, nullptr);
     if (ret)
     {
-        mir::log_error("Failed to set CRTC: %s (%i)", strerror(-ret), -ret);
+        mir::log_error("Failed to set CRTC: %s (%i)", mir::errno_to_cstr(-ret), -ret);
         conf->current_crtc = nullptr;
         return false;
     }
@@ -401,7 +402,7 @@ void mga::AtomicKMSOutput::clear_crtc()
              */
             mir::log_info("Couldn't clear output %s (drmModeSetCrtc: %s (%i))",
                 mgk::connector_name(conf->connector).c_str(),
-                strerror(-result),
+                mir::errno_to_cstr(-result),
                 -result);
         }
         else
@@ -468,7 +469,7 @@ bool mga::AtomicKMSOutput::page_flip(FBHandle const& fb)
         nullptr);
     if (ret)
     {
-        mir::log_error("Failed to schedule page flip: %s (%i)", strerror(-ret), -ret);
+        mir::log_error("Failed to schedule page flip: %s (%i)", mir::errno_to_cstr(-ret), -ret);
         conf->current_crtc = nullptr;
         return false;
     }
@@ -488,7 +489,7 @@ void mga::AtomicKMSOutput::set_cursor_image(gbm_bo* buffer)
             gbm_bo_get_width(buffer),
             gbm_bo_get_height(buffer)))
         {
-            mir::log_warning("set_cursor: drmModeSetCursor failed (%s)", strerror(-result));
+            mir::log_warning("set_cursor: drmModeSetCursor failed (%s)", mir::errno_to_cstr(-result));
         }
         cursor_image_set = true;
     }
@@ -501,7 +502,7 @@ void mga::AtomicKMSOutput::move_cursor(geometry::Point destination)
         if (auto result =
                 drmModeMoveCursor(drm_fd_, conf->current_crtc->crtc_id, destination.x.as_int(), destination.y.as_int()))
         {
-            mir::log_warning("move_cursor: drmModeMoveCursor failed (%s)", strerror(-result));
+            mir::log_warning("move_cursor: drmModeMoveCursor failed (%s)", mir::errno_to_cstr(-result));
         }
     }
 }
@@ -514,7 +515,7 @@ bool mga::AtomicKMSOutput::clear_cursor()
         result = drmModeSetCursor(drm_fd_, conf->current_crtc->crtc_id, 0, 0, 0);
 
         if (result)
-            mir::log_warning("clear_cursor: drmModeSetCursor failed (%s)", strerror(-result));
+            mir::log_warning("clear_cursor: drmModeSetCursor failed (%s)", mir::errno_to_cstr(-result));
     }
 
     cursor_image_set = false;
@@ -575,7 +576,7 @@ void mga::AtomicKMSOutput::set_power_mode(MirPowerMode mode)
         update.add_property(*conf->crtc_props, "ACTIVE", should_be_active);
         if (auto err = drmModeAtomicCommit(drm_fd_, update, DRM_MODE_ATOMIC_ALLOW_MODESET, nullptr))
         {
-            mir::log_warning("Failed to set DPMS %s (%s [%i])", should_be_active ? "active" : "off", strerror(-err), -err);
+            mir::log_warning("Failed to set DPMS %s (%s [%i])", should_be_active ? "active" : "off", mir::errno_to_cstr(-err), -err);
         }
     }
     else if (should_be_active)
@@ -723,7 +724,7 @@ std::vector<uint8_t> edid_for_connector(mir::Fd const& drm_fd, uint32_t connecto
                 "Failed to get EDID property for connector %u: %i (%s)",
                 connector_id,
                 errno,
-                ::strerror(errno));
+                mir::errno_to_cstr(errno));
             return edid;
         }
 

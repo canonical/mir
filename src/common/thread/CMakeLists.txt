@@ -15,7 +15,6 @@
 add_library(mirsharedthread OBJECT
   thread_name.cpp
   recursive_read_write_mutex.cpp
-  signal_blocker.cpp
 )
 
 target_include_directories(mirsharedthread

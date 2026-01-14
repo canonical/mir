@@ -19,7 +19,7 @@
 #include <mir/graphics/platform.h>
 #include <mir/graphics/egl_error.h>
 #include <mir/log.h>
-#include "options_parsing_helpers.h"
+#include <mir/graphics/options_parsing_helpers.h>
 #include <drm_fourcc.h>
 
 namespace mg = mir::graphics;

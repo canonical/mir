@@ -17,6 +17,7 @@
 #include "xwayland_clipboard_source.h"
 
 #include "xwayland_log.h"
+#include <mir/errno_utils.h>
 #include <mir/scene/clipboard.h>
 #include <mir/dispatch/multiplexing_dispatchable.h>
 
@@ -175,7 +176,7 @@ private:
             auto const len = write(destination_fd, &data[0], data.size());
             if (len < 0)
             {
-                mir::log_error("failed to send X11 clipboard data: %s", strerror(errno));
+                mir::log_error("failed to send X11 clipboard data: %s", mir::errno_to_cstr(errno));
                 return false;
             }
             data.erase(data.begin(), data.begin() + len);

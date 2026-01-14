@@ -26,6 +26,7 @@
 #include <mir/test/null_input_device_observer.h>
 
 #include <mir/executor.h>
+#include <mir/errno_utils.h>
 #include <mir/fd.h>
 #include <mir/compositor/buffer_stream.h>
 #include <mir/input/cursor_observer.h>
@@ -275,7 +276,7 @@ private:
                 mir::logging::Severity::error,
                 "wlcs-integration",
                 "eventfd_read failed to consume wakeup notification: %s (%i)",
-                strerror(err),
+                mir::errno_to_cstr(err),
                 err);
         }
 
