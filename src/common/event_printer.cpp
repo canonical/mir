@@ -208,7 +208,7 @@ std::ostream& mir::operator<<(std::ostream& out, MirWindowState state)
 
 std::ostream& mir::operator<<(std::ostream& out, MirInputEvent const& event)
 {
-    auto event_time = mir::logging::input_timestamp(std::chrono::nanoseconds(mir_input_event_get_event_time(&event)));
+    auto event_time = mir::logging::input_timestamp(std::chrono::steady_clock{}, std::chrono::nanoseconds(mir_input_event_get_event_time(&event)));
     auto device_id = mir_input_event_get_device_id(&event);
     auto window_id = event.window_id();
     switch (mir_input_event_get_type(&event))

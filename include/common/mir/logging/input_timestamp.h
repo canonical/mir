@@ -25,7 +25,8 @@ namespace mir
 namespace logging
 {
 
-std::string input_timestamp(std::chrono::nanoseconds when);
+template<typename Clock>
+std::string input_timestamp(Clock const& clock, std::chrono::nanoseconds when);
 
 }
 }

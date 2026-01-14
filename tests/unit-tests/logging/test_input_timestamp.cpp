@@ -26,26 +26,39 @@ using namespace std::chrono_literals;
 using namespace testing;
 namespace ml = mir::logging;
 
+struct FakeClock
+{
+    using time_point = steady_clock::time_point;
+
+    time_point now() const
+    {
+        return current_time;
+    }
+
+    time_point current_time{};
+};
+
 TEST(TimestampTest, past_time_is_correctly_formatted)
 {
-    auto const past_event = steady_clock::now().time_since_epoch() - 500ms;
+    FakeClock clock;
+    clock.current_time = time_point(1000ms);
+    auto const past_event = 250ms;
 
-    std::string out = ml::input_timestamp(past_event);
+    std::string out = ml::input_timestamp(clock, past_event);
 
-    EXPECT_THAT(out, Not(HasSubstr(".-")));
-    EXPECT_THAT(out, ContainsRegex("5[0-9][0-9]\\."));
+    EXPECT_THAT(out, HasSubstr("750"));
     EXPECT_THAT(out, HasSubstr("ms ago"));
 }
 
 TEST(TimestampTest, future_time_is_correctly_formatted)
 {
-    auto const future_event = steady_clock::now().time_since_epoch() + 1000ms + 10us;
+    FakeClock clock;
+    clock.current_time = time_point(1000ms);
+    auto const future_event = 750ms;
 
-    std::string out = ml::input_timestamp(future_event);
+    std::string out = ml::input_timestamp(clock, future_event);
 
-    EXPECT_THAT(out, Not(HasSubstr(".-")));
-    EXPECT_THAT(out, ContainsRegex("(9[0-9][0-9]|1000)\\."));
+    EXPECT_THAT(out, HasSubstr("250"));
     EXPECT_THAT(out, HasSubstr("ms"));
     EXPECT_THAT(out, HasSubstr("in the future"));
-
 }

@@ -111,12 +111,12 @@ std::string print_evdev_code(int type, int code)
 }
 }
 
-void mrl::InputReport::received_event_from_kernel(int64_t when, int type, int code, int value)
+void mrl::InputReport::received_event_from_kernel(std::chrono::nanoseconds when, int type, int code, int value)
 {
     std::stringstream ss;
 
     ss << "Received event"
-       << " time=" << ml::input_timestamp(std::chrono::nanoseconds(when))
+       << " time=" << ml::input_timestamp(std::chrono::steady_clock{}, when)
        << " type=" << print_evdev_type(type)
        << " code=" << print_evdev_code(type, code)
        << " value=" << value;
