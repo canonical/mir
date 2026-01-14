@@ -17,4 +17,3 @@
 #include <mir/logging/input_timestamp.h>
 
 // Template definition is in the header file for proper instantiation across all translation units
-
