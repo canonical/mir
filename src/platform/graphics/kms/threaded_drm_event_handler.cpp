@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "threaded_drm_event_handler.h"
+#include <mir/graphics/kms/threaded_drm_event_handler.h>
 
 #include <boost/throw_exception.hpp>
 #include <boost/exception/enable_error_info.hpp>
@@ -159,8 +159,7 @@ void mge::ThreadedDRMEventHandler::cancel_flip_events(KMSCrtcId id)
 
 void mge::ThreadedDRMEventHandler::event_loop() noexcept
 {
-    drmEventContext ctx;
-    ::memset(&ctx, 0, sizeof(ctx));
+    drmEventContext ctx{};
     ctx.version = 3;
     ctx.page_flip_handler2 = &flip_handler;
 

@@ -21,27 +21,21 @@ jobs:
   release:
     runs-on: ubuntu-latest
 
-    env:
-      DEBFULLNAME: ${{ vars.DEBFULLNAME }}
-      DEBEMAIL: ${{ vars.DEBEMAIL }}
-
     steps:
       - name: Import GPG key
         uses: crazy-max/ghaction-import-gpg@v6
         with:
           gpg_private_key: ${{ secrets.MIR_BOT_GPG_PRIVATE_KEY }}
           passphrase: ${{ secrets.MIR_BOT_GPG_PASSPHRASE }}
+          git_user_signingkey: true
+          git_commit_gpgsign: true
+          git_tag_gpgsign: true
 
       - name: Checkout repository
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
           ref: ${{ inputs.sha }}
-
-      - name: Configure git user
-        run: |
-          git config user.name "${{ vars.DEBFULLNAME }}"
-          git config user.email "${{ vars.DEBEMAIL }}"
 
       - name: Validate version and extract components
         id: version
@@ -67,7 +61,7 @@ jobs:
 
       - name: Create release tag
         run: |
-          git tag --annotate "v${{ inputs.version }}-rc" --message "Release candidate ${{ inputs.version }}" --sign
+          git tag --annotate "v${{ inputs.version }}-rc" --message "Release candidate ${{ inputs.version }}"
 
       - name: Find previous release tag
         id: previous_tag

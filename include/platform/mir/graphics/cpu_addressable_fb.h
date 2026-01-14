@@ -20,7 +20,7 @@
 #include <mir/fd.h>
 #include <mir/graphics/platform.h>
 
-#include "kms_framebuffer.h"
+#include <mir/graphics/kms_framebuffer.h>
 
 namespace mir::graphics
 {

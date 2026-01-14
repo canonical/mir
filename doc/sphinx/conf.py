@@ -171,24 +171,24 @@ sitemap_show_lastmod = True
 #       the sphinx_reredirects extension will be disabled.
 redirects = {
     '_static/cppguide': '../../reference/cppguide',
-    'explanation/architecture': '../contributing/explanation/architecture',
-    'explanation/component_reports': '../configuring/explanation/component_reports',
-    'explanation/libraries': '../contributing/explanation/libraries',
+    'explanation/architecture': '../../contributing/explanation/architecture',
+    'explanation/component_reports': '../../configuring/explanation/component-reports',
+    'explanation/libraries': '../../contributing/explanation/libraries',
     'explanation/ok-so-what-is-this-wayland-thing-anyway': '../../tutorial/write-your-first-wayland-compositor',
     'how-to/developing-a-wayland-compositor-using-mir': '../../tutorial/write-your-first-wayland-compositor',
     'how-to/developing-wayland-extension-protocols-for-mir-servers' : '../how-to/how-to-integrate-a-custom-wayland-protocol',
-    'how-to/getting_involved_in_mir': '../contributing/how-to/getting-involved-in-mir',
-    'how-to/how-to-calibrate-a-touchscreen-device': '../configuring/how-to/calibrate-a-touchscreen-device',
-    'how-to/how-to-enable-graphics-core22-on-a-device': '../contributing/how-to/enable-graphics-for-snaps-on-a-device',
-    'how-to/how-to-enable-remote-desktop': '../configuring/how-to/enable-remote-desktop',
-    'how-to/how-to-enable-screencasting': '../configuring/how-to/enable-screencasting',
-    'how-to/how-to-test-mir-for-a-release': '../contributing/how-to/test-mir-for-a-release',
-    'how-to/how-to-update-symbols-map': '../contributing/how-to/update-symbols-map',
-    'how-to/how-to-use-checkbox-mir': '../contributing/how-to/use-checkbox-mir',
-    'reference/continuous-integration': '../contributing/reference/continuous-integration',
-    'reference/dso_versioning_guide': '../contributing/reference/dso-versioning-guide',
-    'explanation/mir-graphics-support': 'explanation/platform-support',
-    'explanation/driver-quriks': 'explanation/driver-quirks',
+    'how-to/getting_involved_in_mir': '../../contributing/how-to/getting-involved-in-mir',
+    'how-to/how-to-calibrate-a-touchscreen-device': '../../configuring/how-to/calibrate-a-touchscreen-device',
+    'how-to/how-to-enable-graphics-core22-on-a-device': '../../contributing/how-to/enable-graphics-for-snaps-on-a-device',
+    'how-to/how-to-enable-remote-desktop': '../../configuring/how-to/enable-remote-desktop',
+    'how-to/how-to-enable-screencasting': '../../configuring/how-to/enable-screencasting',
+    'how-to/how-to-test-mir-for-a-release': '../../contributing/how-to/test-mir-for-a-release',
+    'how-to/how-to-update-symbols-map': '../../contributing/how-to/update-symbols-map',
+    'how-to/how-to-use-checkbox-mir': '../../contributing/how-to/use-checkbox-mir',
+    'reference/continuous-integration': '../../contributing/reference/continuous-integration',
+    'reference/dso_versioning_guide': '../../contributing/reference/dso-versioning-guide',
+    'explanation/mir-graphics-support': '../../explanation/platform-support',
+    'explanation/driver-quriks': '../../explanation/driver-quirks',
 }
 
 
@@ -210,6 +210,7 @@ linkcheck_anchors_ignore_for_url = [
     "https://github.com/*",
     "https://manpages.ubuntu.com/*",
     "https://matrix.to*",
+    "https://ticsdocumentation.tiobe.com/*",
 ]
 
 # give linkcheck multiple tries on failure

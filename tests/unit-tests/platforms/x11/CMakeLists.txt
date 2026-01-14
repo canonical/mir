@@ -25,7 +25,7 @@ target_link_libraries(
   mir-test-doubles-static
   mir-test-doubles-platform-static
   mir-test-framework-static
-  server_platform_common
+  graphics_platform_common
 )
 
 if (MIR_RUN_UNIT_TESTS)

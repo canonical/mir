@@ -18,8 +18,8 @@
 #include <epoxy/gl.h>
 
 #include "buffer_allocator.h"
-#include "cpu_copy_output_surface.h"
-#include "egl_helpers.h"
+#include <mir/graphics/cpu_copy_output_surface.h>
+#include <mir/graphics/egl_helpers.h>
 #include <mir/anonymous_shm_file.h>
 #include <mir/graphics/display_sink.h>
 #include <mir/graphics/drm_formats.h>
@@ -27,7 +27,7 @@
 #include <mir/graphics/egl_resources.h>
 #include <mir/graphics/gl_config.h>
 #include <mir/graphics/platform.h>
-#include "shm_buffer.h"
+#include <mir/graphics/shm_buffer.h>
 #include <mir/graphics/buffer_properties.h>
 #include <mir/renderer/gl/context.h>
 #include <mir/graphics/display.h>

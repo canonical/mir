@@ -17,7 +17,7 @@
 #include <mir/graphics/gl_format.h>
 #include <mir/renderer/sw/pixel_source.h>
 #include <mir/graphics/ptr_backed_mapping.h>
-#include "shm_buffer.h"
+#include <mir/graphics/shm_buffer.h>
 #include <mir/graphics/program_factory.h>
 #include <mir/graphics/egl_context_executor.h>
 
