@@ -230,7 +230,10 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
     make_extension_builder<mw::ImageCopyCaptureManagerV1>([](auto const& ctx)
         {
             return mf::create_ext_image_copy_capture_manager_v1(
-                ctx.display);
+                ctx.display,
+                ctx.wayland_executor,
+                ctx.cursor_observer_multiplexer,
+                ctx.clock);
         }),
     make_extension_builder<mw::PrimarySelectionDeviceManagerV1>([](auto const& ctx)
         {
