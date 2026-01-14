@@ -19,6 +19,8 @@
 
 #include <string>
 #include <chrono>
+#include <cstdio>
+#include <cstdlib>
 
 namespace mir
 {

@@ -53,7 +53,7 @@ TEST(TimestampTest, past_time_is_correctly_formatted)
 TEST(TimestampTest, future_time_is_correctly_formatted)
 {
     FakeClock clock;
-    clock.current_time = steady_clock::time_point(1000ms);
+    clock.current_time = steady_clock::time_point(500ms);
     auto const future_event = 750ms;
 
     std::string out = ml::input_timestamp(clock, future_event);
