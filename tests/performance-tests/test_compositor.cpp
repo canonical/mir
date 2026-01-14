@@ -63,12 +63,15 @@ struct CompositorPerformance : SystemPerformanceTest
 
             if (char const* perf = strstr(line, "averaged "))
             {
-                float fps, render_time;
-                if (2 == sscanf(perf, "averaged %f FPS, %f ms/frame",
-                                &fps, &render_time))
+                float fps, render_time, latency, frames, seconds;
+                if (5 == sscanf(perf, "averaged %f FPS, %f ms/frame, latency %f ms, %f frames over %f sec",
+                                &fps, &render_time, &latency, &frames, &seconds))
                 {
-                    compositor_fps = fps;
-                    compositor_render_time = render_time;
+                    if (frames > 0.0 && seconds > 0.0)
+                    {
+                        compositor_fps = fps;
+                        compositor_render_time = render_time;
+                    }
                 }
             }
             if (char const* renderer = strstr(line, "GL renderer: "))
