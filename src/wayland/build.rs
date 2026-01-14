@@ -26,13 +26,14 @@ struct InterfaceInfo {
 }
 
 fn main() {
+    let out_dir = std::env::var("OUT_DIR").unwrap();
     let wayland_generated_dir = "src";
     let protocol_filename = "protocols.rs";
     let protocol_dest_path = Path::new(&wayland_generated_dir).join(protocol_filename);
     let dispatchers_filename = "dispatchers.rs";
     let dispatchers_dest_path = Path::new(&wayland_generated_dir).join(dispatchers_filename);
     let ffi_cpp_dest_path = Path::new(&wayland_generated_dir).join("ffi_cpp.rs");
-    let cpp_header_path = Path::new(&wayland_generated_dir).join("wayland_bridge_cpp.h");
+    let cpp_header_path = Path::new(&out_dir).join("wayland_bridge_cpp.h");
     let globals_filename = "generated_globals.rs";
     let globals_dest_path = Path::new(&wayland_generated_dir).join(globals_filename);
     let ffi_bridge_filename = "generated_ffi_bridge.rs";
@@ -62,7 +63,7 @@ fn main() {
     ffi_cpp_rs_str.push_str("    unsafe extern \"C++\" {\n");
 
     // TODO: Readd this back
-    ffi_cpp_rs_str.push_str("        include!(\"src/wayland_bridge_cpp.h\");\n\n");
+    ffi_cpp_rs_str.push_str("        include!(\"wayland_bridge_cpp.h\");\n\n");
 
     let mut all_interface_info: HashMap<String, InterfaceInfo> = HashMap::new();
     // Track which interfaces create which child interfaces (parent -> Vec<child>)
@@ -1084,7 +1085,7 @@ fn main() {
     // Now build the cxx bridges after generating the required files
     // The lib.rs file includes both ffif_rust and ffi_cpp modules
     cxx_build::bridges(vec!["src/lib.rs", "src/ffi_cpp.rs"])
-        .include(".") // Include current directory for wayland_bridge_cpp.h
+        .include(&out_dir) // Include OUT_DIR for wayland_bridge_cpp.h
         .compile("wayland_rs");
 
     println!("cargo:rerun-if-changed=src/lib.rs");

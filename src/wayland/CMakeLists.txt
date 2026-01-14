@@ -4,11 +4,20 @@ add_compile_definitions(MIR_LOG_COMPONENT_FALLBACK="mirwayland")
 
 add_subdirectory(generator/)
 
+# Determine the Rust OUT_DIR where wayland_bridge_cpp.h is generated
+set(rust_target_dir "${CMAKE_BINARY_DIR}/target")
+if("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
+  set(rust_binary_dir "${rust_target_dir}/$ENV{DEB_HOST_RUST_TYPE}/release")
+else()
+  set(rust_binary_dir "${rust_target_dir}/$ENV{DEB_HOST_RUST_TYPE}/debug")
+endif()
+file(GLOB wayland_out_dir "${rust_binary_dir}/build/wayland_rs-*/out")
+
 add_rust_cxx_library(mirwayland_rs
   CRATE wayland_rs
   DEPENDS Cargo.toml src/lib.rs
   INCLUDES
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/wayland/CMakeLists.txt
+    ${wayland_out_dir}
 )
 
 add_library(mirwayland SHARED

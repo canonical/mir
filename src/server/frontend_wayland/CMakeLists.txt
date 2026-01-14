@@ -122,4 +122,5 @@ target_link_libraries(mirfrontend-wayland
     mircore
   PRIVATE
     PkgConfig::GIOUnix
+    mirwayland_rs
 )

@@ -1,5 +1,4 @@
 src/dispatchers.rs
 src/protocols.rs
 src/ffi_cpp.rs
-src/wayland_bridge_cpp.h
 src/generated_globals.rs
