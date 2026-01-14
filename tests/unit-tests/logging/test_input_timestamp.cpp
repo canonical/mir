@@ -41,7 +41,7 @@ struct FakeClock
 TEST(TimestampTest, past_time_is_correctly_formatted)
 {
     FakeClock clock;
-    clock.current_time = time_point(1000ms);
+    clock.current_time = steady_clock::time_point(1000ms);
     auto const past_event = 250ms;
 
     std::string out = ml::input_timestamp(clock, past_event);
@@ -53,7 +53,7 @@ TEST(TimestampTest, past_time_is_correctly_formatted)
 TEST(TimestampTest, future_time_is_correctly_formatted)
 {
     FakeClock clock;
-    clock.current_time = time_point(1000ms);
+    clock.current_time = steady_clock::time_point(1000ms);
     auto const future_event = 750ms;
 
     std::string out = ml::input_timestamp(clock, future_event);
