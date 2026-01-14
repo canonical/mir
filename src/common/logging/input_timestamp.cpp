@@ -46,5 +46,9 @@ std::string input_timestamp(Clock const& clock, std::chrono::nanoseconds when)
     return std::string(str);
 }
 
+template std::string input_timestamp<std::chrono::steady_clock>(
+    std::chrono::steady_clock const&,
+    std::chrono::nanoseconds);
+
 }
 }
