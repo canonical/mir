@@ -102,7 +102,7 @@ public:
         LayerShellV1 const& layer_shell,
         MirDepthLayer layer);
 
-    ~LayerSurfaceV1() = default;
+    ~LayerSurfaceV1() override = default;
     void handle_set_size(uint32_t width, uint32_t height) override;
     void handle_set_anchor(uint32_t anchor) override;
     void handle_set_exclusive_zone(int32_t zone) override;
@@ -260,7 +260,7 @@ auto mf::LayerShellV1::get_window(wl_resource* surface) -> std::shared_ptr<ms::S
 
 mir::wayland_rs::cpp::ZwlrForeignToplevelHandleV1Handler* mf::LayerShellV1::create_handler() const
 {
-    return new Instance{new_resource, this};
+    return new Instance{this};
 }
 
 mw::ZwlrLayerSurfaceV1Handler* handle_get_layer_surface(
