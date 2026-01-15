@@ -18,6 +18,7 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include <mir/time/clock.h>
 #include <chrono>
 #include <string>
 
@@ -26,22 +27,25 @@ using namespace std::chrono_literals;
 using namespace testing;
 namespace ml = mir::logging;
 
-struct FakeClock
+struct FakeClock : mir::time::Clock
 {
-    using time_point = steady_clock::time_point;
+    mir::time::Timestamp current_time_value{};
 
-    time_point now() const
+    mir::time::Timestamp now() const override
     {
-        return current_time;
+        return current_time_value;
     }
 
-    time_point current_time{};
+    mir::time::Duration min_wait_until(mir::time::Timestamp) const override
+    {
+        return mir::time::Duration::zero();
+    }
 };
 
 TEST(TimestampTest, past_time_is_correctly_formatted)
 {
     FakeClock clock;
-    clock.current_time = steady_clock::time_point(1000ms);
+    clock.current_time_value = steady_clock::time_point(1000ms);
     auto const past_event = 250ms;
 
     std::string out = ml::input_timestamp(clock, past_event);
@@ -53,7 +57,7 @@ TEST(TimestampTest, past_time_is_correctly_formatted)
 TEST(TimestampTest, future_time_is_correctly_formatted)
 {
     FakeClock clock;
-    clock.current_time = steady_clock::time_point(500ms);
+    clock.current_time_value = steady_clock::time_point(500ms);
     auto const future_event = 750ms;
 
     std::string out = ml::input_timestamp(clock, future_event);

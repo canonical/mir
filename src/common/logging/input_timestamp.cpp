@@ -15,5 +15,35 @@
  */
 
 #include <mir/logging/input_timestamp.h>
+#include <cstdio>
+#include <cstdlib>
 
-// Template definition is in the header file for proper instantiation across all translation units
+using namespace std::chrono;
+
+namespace mir
+{
+namespace logging
+{
+
+std::string input_timestamp(mir::time::Clock const& clock, std::chrono::nanoseconds when)
+{
+    auto const now = clock.now().time_since_epoch();
+    long long const when_ns = when.count();
+    long long const now_ns = duration_cast<nanoseconds>(now).count();
+    long long const age_ns = now_ns - when_ns;
+
+    long long const abs_age_ns = std::llabs(age_ns);
+    long long const milliseconds = abs_age_ns / 1000000LL;
+    long long const sub_milliseconds = abs_age_ns % 1000000LL;
+
+    char const* sign_suffix = (age_ns < 0) ? "in the future" : "ago";
+
+    char str[64];
+    snprintf(str, sizeof str, "%lld (%lld.%06lldms %s)",
+             when_ns, milliseconds, sub_milliseconds, sign_suffix);
+
+    return std::string(str);
+}
+
+}
+}
