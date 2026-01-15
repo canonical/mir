@@ -21,6 +21,8 @@
 #include "xdg_shell_stable.h"
 #include "wayland_utils.h"
 #include "output_manager.h"
+#include "zwlr_layer_shell_v1_handler.h"
+#include "wayland_rs/src/lib.rs.h"
 
 #include <mir/shell/surface_specification.h>
 #include <mir/log.h>
@@ -31,6 +33,8 @@
 #include <deque>
 #include <vector>
 #include <algorithm>
+
+#include "mir/wayland/wayland_server.h"
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
@@ -65,7 +69,7 @@ namespace mir
 namespace frontend
 {
 
-class LayerShellV1::Instance : wayland::LayerShellV1
+class LayerShellV1::Instance : wayland_rs::cpp::ZwlrLayerShellV1Handler
 {
 public:
     Instance(wl_resource* new_resource, mf::LayerShellV1* shell)
@@ -224,13 +228,13 @@ mf::LayerShellV1::LayerShellV1(
     WlSeat& seat,
     OutputManager* output_manager,
     std::shared_ptr<SurfaceRegistry> const& surface_registry)
-    : Global(display, Version<4>()),
-      wayland_executor{wayland_executor},
+    : wayland_executor{wayland_executor},
       shell{shell},
       seat{seat},
       output_manager{output_manager},
       surface_registry{surface_registry}
 {
+    wl_display_create_zwlr_layer_shell_v1_global(display, 4, this);
 }
 
 auto mf::LayerShellV1::get_window(wl_resource* surface) -> std::shared_ptr<ms::Surface>
@@ -253,9 +257,9 @@ auto mf::LayerShellV1::get_window(wl_resource* surface) -> std::shared_ptr<ms::S
     return {};
 }
 
-void mf::LayerShellV1::bind(wl_resource* new_resource)
+mir::wayland_rs::cpp::ZwlrForeignToplevelHandleV1Handler* mf::LayerShellV1::create_handler() const
 {
-    new Instance{new_resource, this};
+    return new Instance{new_resource, this};
 }
 
 void mf::LayerShellV1::Instance::get_layer_surface(

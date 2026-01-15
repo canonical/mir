@@ -17,7 +17,8 @@
 #ifndef MIR_FRONTEND_LAYER_SHELL_V1_H
 #define MIR_FRONTEND_LAYER_SHELL_V1_H
 
-#include "wlr-layer-shell-unstable-v1_wrapper.h"
+#include "zwlr_foreign_toplevel_handle_v1_binder.h"
+#include <memory>
 
 namespace mir
 {
@@ -37,7 +38,7 @@ class WlSeat;
 class OutputManager;
 class SurfaceRegistry;
 
-class LayerShellV1 : public wayland::LayerShellV1::Global
+class LayerShellV1 : public wayland_rs::cpp::ZwlrForeignToplevelHandleV1Binder
 {
 public:
     LayerShellV1(
@@ -55,6 +56,8 @@ public:
     WlSeat& seat;
     OutputManager* const output_manager;
     std::shared_ptr<SurfaceRegistry> const surface_registry;
+
+    wayland_rs::cpp::ZwlrForeignToplevelHandleV1Handler* create_handler() const override;
 
 private:
     class Instance;

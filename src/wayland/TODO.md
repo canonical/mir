@@ -4,6 +4,7 @@
 1. When bound, the C++ global returns a new "Instance" of that Global which will extend
    the `*Handler` class. The C++ global defines a factory for this.
 1. Now, other interfaces can be made off of that global very easily!
+1. Generated globals should end up in their own file
 
 The change here is that:
 

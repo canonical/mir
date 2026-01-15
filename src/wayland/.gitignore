@@ -2,3 +2,4 @@ src/dispatchers.rs
 src/protocols.rs
 src/ffi_cpp.rs
 src/generated_globals.rs
+generated_headers/

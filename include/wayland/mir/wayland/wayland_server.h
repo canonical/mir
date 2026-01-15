@@ -19,6 +19,14 @@
 
 #include <cstdint>
 
+// TODO: A lot of methods in here might be useless nowadays
+// TODO: Maybe the original wrapper idea is silly, we can just expose our own C++ compatibility layer instead
+
+namespace mir::wayland_rs::cpp
+{
+class ZwlrForeignToplevelHandleV1Binder;
+}
+
 typedef void (*wl_notify_func_t)(struct wl_listener *listener, void *data);
 
 struct wl_display;
@@ -43,6 +51,12 @@ uint32_t wl_display_next_serial(wl_display* display);
 void wl_display_add_destroy_listener(
     wl_display *display,
     wl_listener *listener);
+
+// TODO: Can these be generated?
+uint64_t wl_display_create_zwlr_layer_shell_v1_global(
+    wl_display* display,
+    uint32_t version,
+    mir::wayland_rs::cpp::ZwlrForeignToplevelHandleV1Binder* binder);
 
 // wl_event_loop
 typedef int (*wl_event_loop_fd_func_t)(int fd, uint32_t mask, void *data);

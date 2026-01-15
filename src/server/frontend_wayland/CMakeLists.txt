@@ -113,6 +113,7 @@ target_include_directories(mirfrontend-wayland
     ${PROJECT_SOURCE_DIR}/include/server
   PRIVATE
     ${PROJECT_SOURCE_DIR}/src/include/server
+    ${PROJECT_SOURCE_DIR}/src/wayland/generated_headers
 )
 
 target_link_libraries(mirfrontend-wayland
