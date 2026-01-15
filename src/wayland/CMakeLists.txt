@@ -4,7 +4,7 @@ add_compile_definitions(MIR_LOG_COMPONENT_FALLBACK="mirwayland")
 
 add_subdirectory(generator/)
 
-# Determine the Rust OUT_DIR where wayland_bridge_cpp.h is generated
+# Determine the Rust OUT_DIR where generated handler headers are located
 set(rust_target_dir "${CMAKE_BINARY_DIR}/target")
 if("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
   set(rust_binary_dir "${rust_target_dir}/$ENV{DEB_HOST_RUST_TYPE}/release")
