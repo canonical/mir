@@ -60,7 +60,7 @@ series (see previous section).
 1. Confirm that the output of the test ends with: `I: compositor testing complete with returncode 0`.
    The preceding line confirms the compositors tested. E.g.
 
-   ```plain
+   ```text
    I: The following compositors executed successfully: /usr/bin/miral-system-compositor /usr/bin/miral-kiosk /usr/bin/miral-shell
    ```
 
