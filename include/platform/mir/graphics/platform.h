@@ -152,6 +152,8 @@ public:
             -> std::unique_ptr<Framebuffer> = 0;
     };
 
+    virtual auto debug() const -> std::string = 0;
+
     /**
      * Check how well this Renderer can support a particular display sink
      */

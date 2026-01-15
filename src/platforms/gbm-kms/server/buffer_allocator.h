@@ -99,6 +99,8 @@ public:
         EGLContext ctx,
         std::shared_ptr<GbmQuirks> const& quirks);
 
+    auto debug() const -> std::string override;
+
     auto make_framebuffer_provider(DisplaySink& sink)
         -> std::unique_ptr<FramebufferProvider> override;
 

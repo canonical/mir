@@ -15,6 +15,7 @@
  */
 
 #include <epoxy/egl.h>
+#include <epoxy/egl_generated.h>
 #include <epoxy/gl.h>
 
 #include "buffer_allocator.h"
@@ -827,6 +828,13 @@ mge::GLRenderingProvider::GLRenderingProvider(
 }
 
 mge::GLRenderingProvider::~GLRenderingProvider() = default;
+
+auto mge::GLRenderingProvider::debug() const -> std::string
+{
+    return std::format("EGLStream GLRenderingProvider: {} {}",
+        eglQueryString(dpy, EGL_VENDOR),
+        eglQueryString(dpy, EGL_VERSION));
+}
 
 auto mir::graphics::eglstream::GLRenderingProvider::as_texture(std::shared_ptr<Buffer> buffer)
     -> std::shared_ptr<gl::Texture>

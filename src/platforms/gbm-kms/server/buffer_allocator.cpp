@@ -563,6 +563,14 @@ auto mgg::GLRenderingProvider::import_syncobj(Fd const& syncobj_fd)
     return std::make_unique<drm::Syncobj>(drm_fd, handle);
 }
 
+auto mgg::GLRenderingProvider::debug() const -> std::string
+{
+    return std::format("GBM GLRenderingProvider: {} {} ({})",
+        eglQueryString(dpy, EGL_VENDOR),
+        eglQueryString(dpy, EGL_VERSION),
+        drmGetPrimaryDeviceNameFromFd(drm_fd));
+}
+
 auto mgg::GLRenderingProvider::make_framebuffer_provider(DisplaySink& sink)
     -> std::unique_ptr<FramebufferProvider>
 {

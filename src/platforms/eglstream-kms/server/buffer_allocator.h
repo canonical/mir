@@ -98,6 +98,8 @@ public:
     GLRenderingProvider(EGLDisplay dpy, std::unique_ptr<renderer::gl::Context> ctx);
     ~GLRenderingProvider();
 
+    auto debug() const -> std::string override;
+
     auto as_texture(std::shared_ptr<Buffer> buffer) -> std::shared_ptr<gl::Texture> override;
 
     auto suitability_for_allocator(std::shared_ptr<GraphicBufferAllocator> const& target) -> probe::Result override;

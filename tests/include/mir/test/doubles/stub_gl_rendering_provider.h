@@ -58,6 +58,11 @@ public:
         return std::make_unique<testing::NiceMock<MockOutputSurface>>();
     }
 
+    auto debug() const -> std::string override
+    {
+        return "StubGLRenderingProvider";
+    }
+    
     auto suitability_for_allocator(std::shared_ptr<graphics::GraphicBufferAllocator> const& /*sink*/)
         -> graphics::probe::Result override
     {

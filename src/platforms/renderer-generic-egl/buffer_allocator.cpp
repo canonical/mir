@@ -426,6 +426,13 @@ auto mge::GLRenderingProvider::surface_for_sink(
         config);
 }
 
+auto mge::GLRenderingProvider::debug() const -> std::string
+{
+    return std::format("Generic EGL/GLRenderingProvider: {} {}",
+        eglQueryString(dpy, EGL_VENDOR),
+        eglQueryString(dpy, EGL_VERSION));
+}
+
 auto mge::GLRenderingProvider::make_framebuffer_provider(DisplaySink& /*sink*/)
     -> std::unique_ptr<FramebufferProvider>
 {
