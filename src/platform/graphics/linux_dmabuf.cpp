@@ -45,6 +45,7 @@
 #include <sys/stat.h>
 #include <system_error>
 #include <linux/dma-buf.h>
+#include <xf86drm.h>
 
 #define MIR_LOG_COMPONENT "linux-dmabuf-import"
 #include <mir/log.h>
@@ -1413,6 +1414,12 @@ mg::LinuxDmaBuf::LinuxDmaBuf(
     : mir::wayland::LinuxDmabufV1::Global(display, Version<5>{}),
       provider{std::move(provider)}
 {
+    drmDevicePtr d;
+    drmGetDeviceFromDevId(this->provider->devnum(), DRM_DEVICE_GET_PCI_REVISION, &d);
+    mir::log_debug(
+        "Initialised linux_dmabuf on %s",
+        d->nodes[0]);
+    drmFreeDevice(&d);
 }
 
 auto mg::LinuxDmaBuf::buffer_from_resource(
