@@ -640,10 +640,12 @@ public:
         temporary_env.emplace_back(std::make_unique<mtf::TemporaryEnvironmentValue>("MIR_SERVER_VIRTUAL_OUTPUT", "1280x1024"));
     }
 
+#if defined(MIR_BUILD_PLATFORM_WAYLAND)
     void enable_host_wayland()
     {
         temporary_env.push_back(std::make_unique<mtf::TemporaryEnvironmentValue>("MIR_SERVER_WAYLAND_HOST", "WAYLAND-0"));
      }
+#endif
 
     auto the_options() -> mir::options::Option const&
     {
@@ -863,6 +865,7 @@ TEST_F(FullProbeStack, when_all_of_gbm_and_x11_and_virtual_are_available_select_
 }
 #endif
 
+#if defined(MIR_BUILD_PLATFORM_WAYLAND)
 TEST_F(FullProbeStack, select_display_modules_loads_wayland_platform_even_when_gbm_is_available)
 {
     using namespace testing;
@@ -907,8 +910,9 @@ TEST_F(FullProbeStack, when_all_of_gbm_and_wayland_and_virtual_are_available_sel
     // We also expect the Virtual platform to load
     EXPECT_THAT(devices, Contains(Pair(_, ModuleNameMatches(StrEq("mir:virtual")))));
 }
+#endif
 
-#if defined(MIR_BUILD_PLATFORM_X11)
+#if defined(MIR_BUILD_PLATFORM_X11) && defined(MIR_BUILD_PLATFORM_WAYLAND)
 TEST_F(FullProbeStack, when_both_wayland_and_x11_are_supported_x11_is_chosen)
 {
     using namespace testing;
@@ -923,7 +927,7 @@ TEST_F(FullProbeStack, when_both_wayland_and_x11_are_supported_x11_is_chosen)
 }
 #endif
 
-#if defined(MIR_BUILD_PLATFORM_X11)
+#if defined(MIR_BUILD_PLATFORM_X11) && defined(MIR_BUILD_PLATFORM_WAYLAND)
 TEST_F(FullProbeStack, instantiates_all_manually_selected_platforms)
 {
     using namespace testing;
@@ -1016,7 +1020,7 @@ TEST_F(FullProbeStack, instantiates_all_manually_selected_platforms_and_virtual_
 }
 #endif
 
-#if defined(MIR_BUILD_PLATFORM_X11)
+#if defined(MIR_BUILD_PLATFORM_X11) && defined(MIR_BUILD_PLATFORM_WAYLAND)
 TEST_F(FullProbeStack, selects_only_gbm_when_manually_specified_even_if_x11_and_wayland_are_supported)
 {
     using namespace testing;
