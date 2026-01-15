@@ -20,9 +20,25 @@ struct Request {
 }
 
 #[derive(Debug, Clone)]
+struct EnumEntry {
+    name: String,
+    value: String,
+    summary: Option<String>,
+}
+
+#[derive(Debug, Clone)]
+struct EnumInfo {
+    name: String,
+    description: Option<String>,
+    entries: Vec<EnumEntry>,
+    is_bitfield: bool,
+}
+
+#[derive(Debug, Clone)]
 struct InterfaceInfo {
     name: String,
     requests: Vec<Request>,
+    enums: Vec<EnumInfo>,
 }
 
 fn main() {
@@ -119,9 +135,13 @@ fn main() {
             let mut in_protocol = false;
             let mut in_interface = false;
             let mut in_request = false;
+            let mut in_enum = false;
+            let mut in_enum_entry = false;
             let mut current_interface = String::new();
             let mut current_request: Option<Request> = None;
+            let mut current_enum: Option<EnumInfo> = None;
             let mut interface_requests: HashMap<String, Vec<Request>> = HashMap::new();
+            let mut interface_enums: HashMap<String, Vec<EnumInfo>> = HashMap::new();
             let mut depth = 0;
 
             // First pass: collect all interfaces, created interfaces, and requests
@@ -141,7 +161,47 @@ fn main() {
                                     if current_interface != "wl_display" && current_interface != "wl_registry" {
                                         interfaces.push(current_interface.clone());
                                         interface_requests.insert(current_interface.clone(), Vec::new());
+                                        interface_enums.insert(current_interface.clone(), Vec::new());
                                     }
+                                }
+                            },
+                            b"enum" if in_interface => {
+                                in_enum = true;
+                                let mut enum_name = String::new();
+                                let mut is_bitfield = false;
+                                for attr in e.attributes().filter_map(|a| a.ok()) {
+                                    match attr.key.as_ref() {
+                                        b"name" => enum_name = String::from_utf8_lossy(&attr.value).to_string(),
+                                        b"bitfield" => is_bitfield = String::from_utf8_lossy(&attr.value) == "true",
+                                        _ => {}
+                                    }
+                                }
+                                current_enum = Some(EnumInfo {
+                                    name: enum_name,
+                                    description: None,
+                                    entries: Vec::new(),
+                                    is_bitfield,
+                                });
+                            },
+                            b"entry" if in_enum => {
+                                in_enum_entry = true;
+                                if let Some(ref mut enum_info) = current_enum {
+                                    let mut entry_name = String::new();
+                                    let mut entry_value = String::new();
+                                    let mut entry_summary: Option<String> = None;
+                                    for attr in e.attributes().filter_map(|a| a.ok()) {
+                                        match attr.key.as_ref() {
+                                            b"name" => entry_name = String::from_utf8_lossy(&attr.value).to_string(),
+                                            b"value" => entry_value = String::from_utf8_lossy(&attr.value).to_string(),
+                                            b"summary" => entry_summary = Some(String::from_utf8_lossy(&attr.value).to_string()),
+                                            _ => {}
+                                        }
+                                    }
+                                    enum_info.entries.push(EnumEntry {
+                                        name: entry_name,
+                                        value: entry_value,
+                                        summary: entry_summary,
+                                    });
                                 }
                             },
                             b"request" if in_interface => {
@@ -198,8 +258,29 @@ fn main() {
                         }
                     },
                     Ok(Event::Empty(ref e)) => {
-                        // Handle self-closing tags (like <arg ... />)
+                        // Handle self-closing tags (like <arg ... /> or <entry ... />)
                         match e.name().as_ref() {
+                            b"entry" if in_enum => {
+                                // Self-closing entry
+                                if let Some(ref mut enum_info) = current_enum {
+                                    let mut entry_name = String::new();
+                                    let mut entry_value = String::new();
+                                    let mut entry_summary: Option<String> = None;
+                                    for attr in e.attributes().filter_map(|a| a.ok()) {
+                                        match attr.key.as_ref() {
+                                            b"name" => entry_name = String::from_utf8_lossy(&attr.value).to_string(),
+                                            b"value" => entry_value = String::from_utf8_lossy(&attr.value).to_string(),
+                                            b"summary" => entry_summary = Some(String::from_utf8_lossy(&attr.value).to_string()),
+                                            _ => {}
+                                        }
+                                    }
+                                    enum_info.entries.push(EnumEntry {
+                                        name: entry_name,
+                                        value: entry_value,
+                                        summary: entry_summary,
+                                    });
+                                }
+                            },
                             b"arg" if in_request => {
                                 if let Some(ref mut req) = current_request {
                                     let mut arg_name = String::new();
@@ -262,6 +343,17 @@ fn main() {
                                 in_interface = false;
                                 current_interface.clear();
                             },
+                            b"enum" => {
+                                if let Some(enum_info) = current_enum.take() {
+                                    if let Some(enums) = interface_enums.get_mut(&current_interface) {
+                                        enums.push(enum_info);
+                                    }
+                                }
+                                in_enum = false;
+                            },
+                            b"entry" => {
+                                in_enum_entry = false;
+                            },
                             b"request" => {
                                 if let Some(req) = current_request.take() {
                                     if let Some(requests) = interface_requests.get_mut(&current_interface) {
@@ -297,6 +389,7 @@ fn main() {
             // Store interface info for later use and build parent-child relationships
             for interface in &interfaces {
                 let requests = interface_requests.get(interface).cloned().unwrap_or_default();
+                let enums = interface_enums.get(interface).cloned().unwrap_or_default();
 
                 // Track which child interfaces this interface creates
                 for request in &requests {
@@ -317,6 +410,7 @@ fn main() {
                     InterfaceInfo {
                         name: interface.clone(),
                         requests,
+                        enums,
                     }
                 );
             }
@@ -716,6 +810,31 @@ fn main() {
         }
     };
 
+    // Helper function to sanitize enum entry names (avoid C++ keywords and numeric start)
+    let sanitize_enum_entry_name = |name: &str| -> String {
+        // If the name starts with a digit, prefix with underscore
+        let name_str = if name.chars().next().map_or(false, |c| c.is_ascii_digit()) {
+            format!("_{}", name)
+        } else {
+            name.to_string()
+        };
+        
+        // Check for C++ keywords
+        match name_str.as_str() {
+            "not" => "not_".to_string(),
+            "and" => "and_".to_string(),
+            "or" => "or_".to_string(),
+            "xor" => "xor_".to_string(),
+            "namespace" => "namespace_".to_string(),
+            "class" => "class_".to_string(),
+            "template" => "template_".to_string(),
+            "operator" => "operator_".to_string(),
+            "delete" => "delete_".to_string(),
+            "new" => "new_".to_string(),
+            _ => name_str,
+        }
+    };
+
     // Generate ffi_cpp handler types and methods
     for (interface_name, interface_info) in &all_interface_info {
         let type_name = to_pascal_case(interface_name);
@@ -834,7 +953,7 @@ fn main() {
     for (interface_name, interface_info) in &all_interface_info {
         let type_name = to_pascal_case(interface_name);
         let header_filename = format!("{}_handler.h", interface_name);
-        let header_path = Path::new(&out_dir).join(&header_filename);
+        let header_path = Path::new("generated_headers").join(&header_filename);
 
         let mut cpp_header_str = String::from("// This file is autogenerated by build.rs\n\n");
         let header_guard = format!("MIR_WAYLAND_{}_HANDLER_H", interface_name.to_uppercase());
@@ -868,6 +987,46 @@ fn main() {
                 cpp_header_str.push_str(&format!("class {}Handler;\n", child_type));
             }
             cpp_header_str.push_str("\n");
+        }
+
+        // Generate enums for this interface
+        if !interface_info.enums.is_empty() {
+            cpp_header_str.push_str(&format!("// Enums for {} interface\n", interface_name));
+            for enum_info in &interface_info.enums {
+                // Generate enum name scoped to the interface to avoid collisions
+                // e.g., wl_surface::Error becomes WlSurfaceError
+                let enum_type_name = format!("{}{}", type_name, to_pascal_case(&enum_info.name));
+                
+                // Add description if available (single line, sanitized)
+                if let Some(desc) = &enum_info.description {
+                    // Replace newlines with spaces for single-line comment
+                    let single_line_desc = desc.replace('\n', " ").replace('\r', " ");
+                    cpp_header_str.push_str(&format!("/// {}\n", single_line_desc));
+                }
+                
+                // Determine if this is a bitfield (use uint32_t) or regular enum (use int32_t)
+                if enum_info.is_bitfield {
+                    cpp_header_str.push_str(&format!("enum class {} : uint32_t {{\n", enum_type_name));
+                } else {
+                    cpp_header_str.push_str(&format!("enum class {} : int32_t {{\n", enum_type_name));
+                }
+                
+                // Generate enum entries
+                for entry in &enum_info.entries {
+                    // Sanitize and convert entry name for C++
+                    let entry_name = sanitize_enum_entry_name(&to_pascal_case(&entry.name));
+                    
+                    if let Some(summary) = &entry.summary {
+                        // Sanitize summary for single-line comment
+                        let single_line_summary = summary.replace('\n', " ").replace('\r', " ");
+                        cpp_header_str.push_str(&format!("    {} = {}, ///< {}\n", entry_name, entry.value, single_line_summary));
+                    } else {
+                        cpp_header_str.push_str(&format!("    {} = {},\n", entry_name, entry.value));
+                    }
+                }
+                
+                cpp_header_str.push_str("};\n\n");
+            }
         }
 
         // Generate handler class
@@ -908,11 +1067,11 @@ fn main() {
                 }
             }
 
-            cpp_header_str.push_str(") const = 0;\n");
+            cpp_header_str.push_str(") = 0;\n");
         }
 
         cpp_header_str.push_str("\n    /// Set the resource ID after initialization\n");
-        cpp_header_str.push_str("    virtual void set_resource_id(uint32_t resource_id) const = 0;\n");
+        cpp_header_str.push_str("    virtual void set_resource_id(uint32_t resource_id) = 0;\n");
 
         cpp_header_str.push_str("};\n\n");
 
@@ -930,7 +1089,7 @@ fn main() {
         if !child_interfaces_cpp.contains(interface_name.as_str()) {
             let type_name = to_pascal_case(interface_name);
             let binder_filename = format!("{}_binder.h", interface_name);
-            let binder_path = Path::new(&out_dir).join(&binder_filename);
+            let binder_path = Path::new("generated_headers").join(&binder_filename);
 
             let mut cpp_binder_str = String::from("// This file is autogenerated by build.rs\n\n");
             let header_guard = format!("MIR_WAYLAND_{}_BINDER_H", interface_name.to_uppercase());
