@@ -818,7 +818,7 @@ fn main() {
         } else {
             name.to_string()
         };
-        
+
         // Check for C++ keywords
         match name_str.as_str() {
             "not" => "not_".to_string(),
@@ -996,26 +996,26 @@ fn main() {
                 // Generate enum name scoped to the interface to avoid collisions
                 // e.g., wl_surface::Error becomes WlSurfaceError
                 let enum_type_name = format!("{}{}", type_name, to_pascal_case(&enum_info.name));
-                
+
                 // Add description if available (single line, sanitized)
                 if let Some(desc) = &enum_info.description {
                     // Replace newlines with spaces for single-line comment
                     let single_line_desc = desc.replace('\n', " ").replace('\r', " ");
                     cpp_header_str.push_str(&format!("/// {}\n", single_line_desc));
                 }
-                
+
                 // Determine if this is a bitfield (use uint32_t) or regular enum (use int32_t)
                 if enum_info.is_bitfield {
                     cpp_header_str.push_str(&format!("enum class {} : uint32_t {{\n", enum_type_name));
                 } else {
                     cpp_header_str.push_str(&format!("enum class {} : int32_t {{\n", enum_type_name));
                 }
-                
+
                 // Generate enum entries
                 for entry in &enum_info.entries {
                     // Sanitize and convert entry name for C++
                     let entry_name = sanitize_enum_entry_name(&to_pascal_case(&entry.name));
-                    
+
                     if let Some(summary) = &entry.summary {
                         // Sanitize summary for single-line comment
                         let single_line_summary = summary.replace('\n', " ").replace('\r', " ");
@@ -1024,7 +1024,7 @@ fn main() {
                         cpp_header_str.push_str(&format!("    {} = {},\n", entry_name, entry.value));
                     }
                 }
-                
+
                 cpp_header_str.push_str("};\n\n");
             }
         }
