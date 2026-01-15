@@ -275,6 +275,38 @@ private:
     mir::geometry::Size size_;
 };
 
+auto gbm_bo_allocate_no_modifiers_linear(auto gbm, auto size, auto format) -> struct gbm_bo*
+{
+
+    auto const gbm_bo = gbm_bo_create(
+        gbm, size.width.as_uint32_t(), size.height.as_uint32_t(), format, GBM_BO_USE_RENDERING | GBM_BO_USE_LINEAR);
+
+    if (!gbm_bo)
+    {
+        BOOST_THROW_EXCEPTION(
+            (std::system_error{errno, std::system_category(), "Failed to allocate GBM BO without modifiers"}));
+    }
+
+    return gbm_bo;
+}
+
+auto gbm_bo_allocate_with_modifiers_no_flags(auto gbm, auto modifiers, auto size, auto format)
+{
+    auto const gbm_bo = gbm_bo_create_with_modifiers2(
+        gbm, size.width.as_uint32_t(), size.height.as_uint32_t(), format, modifiers.data(), modifiers.size(), 0);
+
+    if (!gbm_bo)
+    {
+        BOOST_THROW_EXCEPTION((
+            std::system_error{
+                errno,
+                std::system_category(),
+                "Failed to allocate GBM BO with modifiers and no flags"}));
+    }
+
+    return gbm_bo;
+}
+
 auto gbm_bo_with_modifiers_or_linear(
     gbm_device* gbm,
     mg::DRMFormat format,
@@ -282,41 +314,34 @@ auto gbm_bo_with_modifiers_or_linear(
     mir::geometry::Size size) -> std::unique_ptr<struct gbm_bo, decltype(&gbm_bo_destroy)>
 {
     errno = 0;
+
     auto gbm_bo = gbm_bo_create_with_modifiers2(
         gbm,
         size.width.as_uint32_t(), size.height.as_uint32_t(),
         format,
         modifiers.data(), modifiers.size(),
         GBM_BO_USE_RENDERING);
-    if (!gbm_bo && errno != ENOSYS)
-    {
-        BOOST_THROW_EXCEPTION((
-            std::system_error{
-                errno,
-                std::system_category(),
-                "Failed to allocate GBM bo"}));
-    }
-    else if (!gbm_bo)
-    {
-        // We get ENOSYS if the GBM implementation can't handle modifiers
-        if (std::find(modifiers.begin(), modifiers.end(), DRM_FORMAT_MOD_LINEAR) == modifiers.end())
-        {
-            // Shouldn't happen, but if LINEAR isn't one of the requested modifiers we can't allocate something compatible
-            BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to allocate GBM bo: non-linear modifier requested, but implementation does not support modifiers"}));
-        }
 
-        gbm_bo = gbm_bo_create(
-            gbm,
-            size.width.as_uint32_t(), size.height.as_uint32_t(),
-            format,
-            GBM_BO_USE_RENDERING | GBM_BO_USE_LINEAR);
-        if (!gbm_bo)
+    if (!gbm_bo)
+    {
+        switch(errno)
         {
-            BOOST_THROW_EXCEPTION((
-                std::system_error{
-                    errno,
-                    std::system_category(),
-                    "Failed to allocate GBM bo without modifiers"}));
+        case ENOSYS:
+            // We get ENOSYS if the GBM implementation can't handle modifiers
+            if (std::ranges::contains(modifiers, DRM_FORMAT_MOD_LINEAR))
+            {
+                // Shouldn't happen, but if LINEAR isn't one of the requested modifiers we can't allocate
+                // something compatible
+                BOOST_THROW_EXCEPTION(
+                    (std::runtime_error{"Failed to allocate GBM bo: non-linear modifier requested, but "
+                                        "implementation does not support modifiers"}));
+            }
+            gbm_bo = gbm_bo_allocate_no_modifiers_linear(gbm, size, format);
+            break;
+        default:
+            // Special case: Nvidia fails to allocate with flags
+            gbm_bo = gbm_bo_allocate_with_modifiers_no_flags(gbm, modifiers, size, format);
+            break;
         }
     }
 
