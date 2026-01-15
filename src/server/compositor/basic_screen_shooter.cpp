@@ -252,10 +252,15 @@ auto mc::BasicScreenShooter::select_provider(
          * For now, just use the first that claims to work.
          */
         auto suitability = provider->suitability_for_display(temp_db);
+        mir::log_debug(
+            "Querying GLRenderingProvider: %s. Suitability for display %i",
+            provider->debug().c_str(),
+            suitability);
         // We also need to make sure that the GLRenderingProvider can access client buffers...
         if (provider->suitability_for_allocator(buffer_allocator) > mg::probe::unsupported &&
             suitability > best_provider.first)
         {
+            mir::log_debug("...Also suitable for allocator");
             best_provider = std::make_pair(suitability, provider);
         }
     }
@@ -263,6 +268,8 @@ auto mc::BasicScreenShooter::select_provider(
     {
         BOOST_THROW_EXCEPTION((std::runtime_error{"No rendering provider claims to support a CPU addressable target"}));
     }
+
+    mir::log_debug("Selected provider: %s", best_provider.second->debug().c_str());
 
     return best_provider.second;
 }
