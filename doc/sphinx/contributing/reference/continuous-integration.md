@@ -69,6 +69,11 @@ performs end-to-end - and verifying that it works in the first place.
 
 We also run these on a number of hardware platforms in our testing lab for every build of `main`.
 
+## TiCS
+
+All code goes through analysis in the [TIOBE TiCS software quality framework](https://www.tiobe.com/products/tics/).
+Pull requests are gated on violations of selected quality metrics from the [TiCS set](https://ticsdocumentation.tiobe.com/latest/docs/index.html#doc=user/clientoptions.html%23ListOfMetrics).
+
 ## Sanitizer runs
 
 In addition to the above, for every merge to `main` we build and run the tests using the following

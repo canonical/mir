@@ -23,7 +23,7 @@ on:
         default: "false"
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.number && format('pr{0}', github.event.number) || github.ref }}
+  group: ${{ github.workflow }}${{ github.event.number && format('-pr{0}', github.event.number) || '' }}
   # Don't interrupt QServer runs as that can corrupt the TICS database
   cancel-in-progress: ${{ github.event_name != 'push' }}
 

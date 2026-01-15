@@ -21,7 +21,7 @@
 
 #include "egl_output.h"
 #include <mir/graphics/egl_error.h>
-#include "kms-utils/kms_connector.h"
+#include <mir/graphics/kms/kms_connector.h>
 
 #include <cstring>
 #include <drm.h>

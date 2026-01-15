@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "cpu_addressable_fb.h"
+#include <mir/graphics/cpu_addressable_fb.h>
 
 #include <mir/errno_utils.h>
 #include <mir/log.h>

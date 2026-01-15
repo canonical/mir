@@ -40,8 +40,8 @@ public:
 
     Display *display;
     Window window;
-    Screen screen;
-    XVisualInfo visual_info;
+    Screen screen{};
+    XVisualInfo visual_info{};
     XEvent keypress_event_return = { 0 };
     XEvent key_release_event_return = { 0 };
     XEvent button_release_event_return = { 0 };

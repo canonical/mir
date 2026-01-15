@@ -5,7 +5,7 @@
 #include <mir/graphics/platform.h>
 #include <EGL/egl.h>
 #include <wayland-egl-core.h>
-#include "egl_helpers.h"
+#include <mir/graphics/egl_helpers.h>
 
 #include <mutex>
 #include <optional>

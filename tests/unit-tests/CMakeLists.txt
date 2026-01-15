@@ -169,7 +169,7 @@ target_link_libraries(
   ${UNIT_TEST_REFERENCES}
   exampleserverconfig
   mircommon
-  server_platform_common
+  graphics_platform_common
 
   mir-test-static
   mir-test-framework-static

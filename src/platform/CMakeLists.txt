@@ -30,6 +30,7 @@ target_link_libraries(mirplatform
   PUBLIC
     mirwayland
     mirplatformgraphicscommon
+    graphics_platform_common
     miroptions
     mirudev
     PkgConfig::EPOXY
