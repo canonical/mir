@@ -698,6 +698,7 @@ private:
     mtf::UdevEnvironment udev_env;
 
 #if defined(MIR_BUILD_PLATFORM_X11)
+    // MockX11 is needed to test X11 platform probing when X11 platform support is built
     testing::NiceMock<mtd::MockX11> x11;
 #endif
     testing::NiceMock<mtd::MockEGL> egl;
