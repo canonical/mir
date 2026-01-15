@@ -287,7 +287,7 @@ auto gbm_bo_with_modifiers_or_linear(
         size.width.as_uint32_t(), size.height.as_uint32_t(),
         format,
         modifiers.data(), modifiers.size(),
-        GBM_BO_USE_RENDERING);
+        0);
     if (!gbm_bo && errno != ENOSYS)
     {
         BOOST_THROW_EXCEPTION((
