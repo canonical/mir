@@ -18,6 +18,7 @@
 
 #include <mir/logging/logger.h>
 #include <mir/logging/input_timestamp.h>
+#include <mir/time/steady_clock.h>
 
 #include <linux/input.h>
 
@@ -116,7 +117,7 @@ void mrl::InputReport::received_event_from_kernel(std::chrono::nanoseconds when,
     std::stringstream ss;
 
     ss << "Received event"
-       << " time=" << ml::input_timestamp(std::chrono::steady_clock{}, when)
+       << " time=" << ml::input_timestamp(mir::time::SteadyClock{}, when)
        << " type=" << print_evdev_type(type)
        << " code=" << print_evdev_code(type, code)
        << " value=" << value;
