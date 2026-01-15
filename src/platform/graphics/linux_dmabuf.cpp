@@ -358,83 +358,83 @@ private:
     geom::Size const size_;
 };
 
-auto export_egl_image(
-    mg::EGLExtensions::MESADmaBufExport const& ext,
-    EGLDisplay dpy,
-    EGLImage image,
-    geom::Size size) -> std::unique_ptr<mg::DMABufBuffer>
-{
-    constexpr int const max_planes = 4;
+// auto export_egl_image(
+//     mg::EGLExtensions::MESADmaBufExport const& ext,
+//     EGLDisplay dpy,
+//     EGLImage image,
+//     geom::Size size) -> std::unique_ptr<mg::DMABufBuffer>
+// {
+//     constexpr int const max_planes = 4;
 
-    int fourcc;
-    int num_planes;
-    std::array<uint64_t, max_planes> modifiers;
-    if (ext.eglExportDMABUFImageQueryMESA(dpy, image, &fourcc, &num_planes, modifiers.data()) != EGL_TRUE)
-    {
-        BOOST_THROW_EXCEPTION((mg::egl_error("Failed to query EGLImage for dma-buf export")));
-    }
+//     int fourcc;
+//     int num_planes;
+//     std::array<uint64_t, max_planes> modifiers;
+//     if (ext.eglExportDMABUFImageQueryMESA(dpy, image, &fourcc, &num_planes, modifiers.data()) != EGL_TRUE)
+//     {
+//         BOOST_THROW_EXCEPTION((mg::egl_error("Failed to query EGLImage for dma-buf export")));
+//     }
 
-    /* There's only a single modifier for a logical buffer. For some reason the EGL interface
-     * decided to return one modifier per plane, but they are always the same.
-     *
-     * We handle DRM_FORMAT_MOD_INVALID as an empty modifier; fix that up here if we get it.
-     */
-    auto modifier =
-        [](uint64_t egl_modifier) -> std::optional<uint64_t>
-        {
-            if (egl_modifier == DRM_FORMAT_MOD_INVALID)
-            {
-                return std::nullopt;
-            }
-            return egl_modifier;
-        }(modifiers[0]);
+//     /* There's only a single modifier for a logical buffer. For some reason the EGL interface
+//      * decided to return one modifier per plane, but they are always the same.
+//      *
+//      * We handle DRM_FORMAT_MOD_INVALID as an empty modifier; fix that up here if we get it.
+//      */
+//     auto modifier =
+//         [](uint64_t egl_modifier) -> std::optional<uint64_t>
+//         {
+//             if (egl_modifier == DRM_FORMAT_MOD_INVALID)
+//             {
+//                 return std::nullopt;
+//             }
+//             return egl_modifier;
+//         }(modifiers[0]);
 
-    std::array<int, max_planes> fds;
-    std::array<EGLint, max_planes> strides;
-    std::array<EGLint, max_planes> offsets;
+//     std::array<int, max_planes> fds;
+//     std::array<EGLint, max_planes> strides;
+//     std::array<EGLint, max_planes> offsets;
 
-    if (ext.eglExportDMABUFImageMESA(dpy, image, fds.data(), strides.data(), offsets.data()) != EGL_TRUE)
-    {
-        BOOST_THROW_EXCEPTION((mg::egl_error("Failed to export EGLImage to dma-buf(s)")));
-    }
+//     if (ext.eglExportDMABUFImageMESA(dpy, image, fds.data(), strides.data(), offsets.data()) != EGL_TRUE)
+//     {
+//         BOOST_THROW_EXCEPTION((mg::egl_error("Failed to export EGLImage to dma-buf(s)")));
+//     }
 
-    std::vector<PlaneInfo> planes;
-    planes.reserve(num_planes);
-    for (int i = 0; i < num_planes; ++i)
-    {
-        mir::Fd fd;
-        // If multiple planes use the same buffer, the fds array will be filled with -1 for subsequent
-        // planes.
-        if (fds[i] == -1)
-        {
-            // Paranoia
-            if (i == 0)
-            {
-                BOOST_THROW_EXCEPTION((std::runtime_error{"Driver has a broken EGL_MESA_image_dma_buf_export extension"}));
-            }
-            fds[i] = fds[i - 1];
-            fd = mir::Fd{mir::IntOwnedFd{fds[i]}};
-        }
-        else
-        {
-            // We own these FDs now.
-            fd = mir::Fd{fds[i]};
-        }
-        planes.push_back(
-            PlaneInfo {
-                .dma_buf = std::move(fd),
-                .stride = static_cast<uint32_t>(strides[i]),
-                .offset = static_cast<uint32_t>(offsets[i])
-            });
-    }
+//     std::vector<PlaneInfo> planes;
+//     planes.reserve(num_planes);
+//     for (int i = 0; i < num_planes; ++i)
+//     {
+//         mir::Fd fd;
+//         // If multiple planes use the same buffer, the fds array will be filled with -1 for subsequent
+//         // planes.
+//         if (fds[i] == -1)
+//         {
+//             // Paranoia
+//             if (i == 0)
+//             {
+//                 BOOST_THROW_EXCEPTION((std::runtime_error{"Driver has a broken EGL_MESA_image_dma_buf_export extension"}));
+//             }
+//             fds[i] = fds[i - 1];
+//             fd = mir::Fd{mir::IntOwnedFd{fds[i]}};
+//         }
+//         else
+//         {
+//             // We own these FDs now.
+//             fd = mir::Fd{fds[i]};
+//         }
+//         planes.push_back(
+//             PlaneInfo {
+//                 .dma_buf = std::move(fd),
+//                 .stride = static_cast<uint32_t>(strides[i]),
+//                 .offset = static_cast<uint32_t>(offsets[i])
+//             });
+//     }
 
-    return std::make_unique<DMABuf>(
-        mg::DRMFormat{static_cast<uint32_t>(fourcc)},
-        modifier,
-        std::move(planes),
-        mg::gl::Texture::Layout::TopRowFirst,
-        size);
-}
+//     return std::make_unique<DMABuf>(
+//         mg::DRMFormat{static_cast<uint32_t>(fourcc)},
+//         modifier,
+//         std::move(planes),
+//         mg::gl::Texture::Layout::TopRowFirst,
+//         size);
+// }
 
 /**
  * Reimport dmabufs into EGL
@@ -1545,6 +1545,197 @@ void mg::DMABufEGLProvider::validate_import(DMABufBuffer const& dma_buf)
     }
 }
 
+namespace
+{
+GLuint new_texture()
+{
+    GLuint tex;
+    glGenTextures(1, &tex);
+
+    glBindTexture(GL_TEXTURE_2D, tex);
+    // The ShmBuffer *should* be immutable, so we can just set up the properties once
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    return tex;
+}
+
+bool get_gl_pixel_format(MirPixelFormat mir_format,
+                         GLenum& gl_format, GLenum& gl_type)
+{
+#if __BYTE_ORDER == __LITTLE_ENDIAN
+    GLenum const argb = GL_BGRA_EXT;
+    GLenum const abgr = GL_RGBA;
+#elif __BYTE_ORDER == __BIG_ENDIAN
+    // TODO: Big endian support
+    GLenum const argb = GL_INVALID_ENUM;
+    GLenum const abgr = GL_INVALID_ENUM;
+    //GLenum const rgba = GL_RGBA;
+    //GLenum const bgra = GL_BGRA_EXT;
+#endif
+
+    static const struct
+    {
+        MirPixelFormat mir_format;
+        GLenum gl_format, gl_type;
+    } mapping[mir_pixel_formats] =
+    {
+        {mir_pixel_format_invalid,   GL_INVALID_ENUM, GL_INVALID_ENUM},
+        {mir_pixel_format_abgr_8888, abgr,            GL_UNSIGNED_BYTE},
+        {mir_pixel_format_xbgr_8888, abgr,            GL_UNSIGNED_BYTE},
+        {mir_pixel_format_argb_8888, argb,            GL_UNSIGNED_BYTE},
+        {mir_pixel_format_xrgb_8888, argb,            GL_UNSIGNED_BYTE},
+        {mir_pixel_format_bgr_888,   GL_INVALID_ENUM, GL_INVALID_ENUM},
+        {mir_pixel_format_rgb_888,   GL_RGB,          GL_UNSIGNED_BYTE},
+        {mir_pixel_format_rgb_565,   GL_RGB,          GL_UNSIGNED_SHORT_5_6_5},
+        {mir_pixel_format_rgba_5551, GL_RGBA,         GL_UNSIGNED_SHORT_5_5_5_1},
+        {mir_pixel_format_rgba_4444, GL_RGBA,         GL_UNSIGNED_SHORT_4_4_4_4},
+    };
+
+    if (mir_format > mir_pixel_format_invalid &&
+        mir_format < mir_pixel_formats &&
+        mapping[mir_format].mir_format == mir_format) // just a sanity check
+    {
+        gl_format = mapping[mir_format].gl_format;
+        gl_type = mapping[mir_format].gl_type;
+    }
+    else
+    {
+        gl_format = GL_INVALID_ENUM;
+        gl_type = GL_INVALID_ENUM;
+    }
+
+    return gl_format != GL_INVALID_ENUM && gl_type != GL_INVALID_ENUM;
+}
+
+class ShmBufferTexture : public mg::gl::Texture
+{
+public:
+    explicit ShmBufferTexture(std::shared_ptr<mgc::EGLContextExecutor> const& egl_delegate)
+        : egl_delegate(egl_delegate),
+            tex_id_(new_texture())
+    {
+    }
+    ~ShmBufferTexture() override
+    {
+        egl_delegate->spawn(
+            [id=tex_id()]
+            {
+                glDeleteTextures(1, &id);
+            });
+    }
+
+    void bind() override
+    {
+        glBindTexture(GL_TEXTURE_2D, tex_id());
+    }
+
+    auto tex_id() const -> GLuint override
+    {
+        return tex_id_;
+    }
+
+    mg::gl::Program const& shader(mg::gl::ProgramFactory& cache) const override
+    {
+        static int argb_shader{0};
+        return cache.compile_fragment_shader(
+            &argb_shader,
+            "",
+            "uniform sampler2D tex;\n"
+            "vec4 sample_to_rgba(in vec2 texcoord)\n"
+            "{\n"
+            "    return texture2D(tex, texcoord);\n"
+            "}\n");
+    }
+
+    Layout layout() const override
+    {
+        return Layout::GL;
+    }
+    void add_syncpoint() override
+    {
+    }
+
+    void try_upload_to_texture(
+        mg::BufferID id, void const* pixels, geom::Size const& size,
+        geom::Stride const& stride, MirPixelFormat pixel_format)
+    {
+        std::lock_guard lock{uploaded_mutex};
+        if (uploaded)
+            return;
+
+        bind();
+        GLenum format, type;
+
+        if (get_gl_pixel_format(pixel_format, format, type))
+        {
+            auto const stride_in_px =
+                stride.as_int() / MIR_BYTES_PER_PIXEL(pixel_format);
+            /*
+                * We assume (as does Weston, AFAICT) that stride is
+                * a multiple of whole pixels, but it need not be.
+                *
+                * TODO: Handle non-pixel-multiple strides.
+                * This should be possible by calculating GL_UNPACK_ALIGNMENT
+                * to match the size of the partial-pixel-stride().
+                */
+
+            glPixelStorei(GL_UNPACK_ROW_LENGTH_EXT, stride_in_px);
+            glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+            glTexImage2D(
+                GL_TEXTURE_2D,
+                0,
+                format,
+                size.width.as_int(), size.height.as_int(),
+                0,
+                format,
+                type,
+                pixels);
+            // Be nice to other users of the GL context by reverting our changes to shared state
+            glPixelStorei(GL_UNPACK_ROW_LENGTH_EXT, 0);     // 0 is default, meaning “use width”
+            glPixelStorei(GL_UNPACK_ALIGNMENT, 4);          // 4 is default; word alignment.
+            glFinish();
+        }
+        else
+        {
+            mir::log_error(
+                "Buffer %i has non-GL-compatible pixel format %i; rendering will be incomplete",
+                id.as_value(),
+                pixel_format);
+        }
+
+        uploaded = true;
+    }
+
+    void mark_dirty()
+    {
+        std::lock_guard lock{uploaded_mutex};
+        uploaded = false;
+    }
+
+private:
+    std::shared_ptr<mgc::EGLContextExecutor> egl_delegate;
+    GLuint tex_id_;
+    std::mutex uploaded_mutex;
+    bool uploaded = false;
+};
+
+auto drm_node_for_device(dev_t device) -> std::string
+{
+    drmDevicePtr d;
+
+    drmGetDeviceFromDevId(device, DRM_DEVICE_GET_PCI_REVISION, &d);
+    std::string node = d->nodes[0];
+
+    drmFreeDevice(&d);
+
+    return node;
+}
+
+}
+
 auto mg::DMABufEGLProvider::as_texture(std::shared_ptr<NativeBufferBase> buffer)
     -> std::shared_ptr<gl::Texture>
 {
@@ -1586,88 +1777,110 @@ auto mg::DMABufEGLProvider::as_texture(std::shared_ptr<NativeBufferBase> buffer)
 
         auto importing_provider = dmabuf_tex->provider();
 
-        if (!importing_provider->dmabuf_export_ext)
-        {
-            mir::log_warning("EGL implementation does not handle cross-GPU buffer export");
-            return nullptr;
-        }
+        mir::log_debug(
+            "Bouncing from %s to %s",
+            drm_node_for_device(importing_provider->devnum()).c_str(),
+            drm_node_for_device(devnum()).c_str());
+        mir::log_debug(
+            "Source format is %s:%s",
+            dmabuf_tex->format().name(),
+            mg::drm_modifier_to_string(dmabuf_tex->modifier().value_or(DRM_FORMAT_MOD_INVALID)).c_str());
 
-        /* TODO: Be smarter about finding a shared pixel format; everything *should* do
-         * ARGB8888, but if the buffer is in a higher bitdepth this will lose colour information
-         */
-        auto const& supported_formats = *formats;
-        auto const& modifiers =
-            [&supported_formats]() -> std::vector<uint64_t> const&
-            {
-                for (size_t i = 0; i < supported_formats.num_formats(); ++i)
-                {
-                    if (supported_formats[i].format == DRM_FORMAT_ARGB8888)
-                    {
-                        return supported_formats[i].modifiers;
-                    }
-                }
-                BOOST_THROW_EXCEPTION((std::runtime_error{"Platform doesn't support ARGB8888?!"}));
-            }();
+        mir::log_debug("HACK: Doing CPU download -> CPU upload");
+        
+        auto buf = std::make_shared<ShmBufferTexture>(egl_delegate);
+        auto mapping = dmabuf_tex->map_readable();
 
-        auto importable_buf = importing_provider->allocate_importable_image(
-            mg::DRMFormat{DRM_FORMAT_ARGB8888},
-            std::span<uint64_t const>{modifiers.data(), modifiers.size()},
-            dmabuf_tex->size());
+        buf->try_upload_to_texture(
+            BufferID{0xfade},
+            mapping->data(),
+            mapping->size(),
+            mapping->stride(),
+            mapping->format());
 
-        if (!importable_buf)
-        {
-            mir::log_warning("Failed to allocate common-format buffer for cross-GPU buffer import");
-            return nullptr;
-        }
+        return buf;
+        // if (!importing_provider->dmabuf_export_ext)
+        // {
+        //     mir::log_warning("EGL implementation does not handle cross-GPU buffer export");
+        //     return nullptr;
+        // }
 
-        auto src_image = import_egl_image(
-            dmabuf_tex->size().width.as_int(), dmabuf_tex->size().height.as_int(),
-            dmabuf_tex->format(),
-            dmabuf_tex->modifier(),
-            dmabuf_tex->planes(),
-            importing_provider->dpy,
-            *importing_provider->egl_extensions);
-        auto importable_image = import_egl_image(
-            importable_buf->size().width.as_int(), importable_buf->size().height.as_int(),
-            importable_buf->format(),
-            importable_buf->modifier(),
-            importable_buf->planes(),
-            importing_provider->dpy,
-            *importing_provider->egl_extensions);
-        auto sync = importing_provider->blitter->blit(src_image, importable_image, dmabuf_tex->size());
-        if (sync)
-        {
-            BOOST_THROW_EXCEPTION((std::logic_error{"EGL_ANDROID_native_fence_sync support not implemented yet"}));
-        }
-        auto importable_dmabuf = export_egl_image(*importing_provider->dmabuf_export_ext, importing_provider->dpy, importable_image, dmabuf_tex->size());
+        // /* TODO: Be smarter about finding a shared pixel format; everything *should* do
+        //  * ARGB8888, but if the buffer is in a higher bitdepth this will lose colour information
+        //  */
+        // auto const& supported_formats = *formats;
+        // auto const& modifiers =
+        //     [&supported_formats]() -> std::vector<uint64_t> const&
+        //     {
+        //         for (size_t i = 0; i < supported_formats.num_formats(); ++i)
+        //         {
+        //             if (supported_formats[i].format == DRM_FORMAT_ARGB8888)
+        //             {
+        //                 return supported_formats[i].modifiers;
+        //             }
+        //         }
+        //         BOOST_THROW_EXCEPTION((std::runtime_error{"Platform doesn't support ARGB8888?!"}));
+        //     }();
 
-        auto base_extension = importing_provider->egl_extensions->base(importing_provider->dpy);
-        base_extension.eglDestroyImageKHR(importing_provider->dpy, src_image);
-        base_extension.eglDestroyImageKHR(importing_provider->dpy, importable_image);
+        // auto importable_buf = importing_provider->allocate_importable_image(
+        //     mg::DRMFormat{DRM_FORMAT_ARGB8888},
+        //     std::span<uint64_t const>{modifiers.data(), modifiers.size()},
+        //     dmabuf_tex->size());
 
-        if (auto descriptor = descriptor_for_format_and_modifiers(
-                    importable_dmabuf->format(),
-                    importable_dmabuf->modifier().value_or(DRM_FORMAT_MOD_INVALID),
-                    *this))
-        {
-            /* We're being naughty here and using the fact that `as_texture()` has a side-effect
-             * of invoking the buffer's `on_consumed()` callback.
-             */
-            dmabuf_tex->as_texture();
-            return std::make_shared<DMABufTex>(
-                dpy,
-                *egl_extensions,
-                *importable_dmabuf,
-                *descriptor,
-                egl_delegate);
-        }
+        // if (!importable_buf)
+        // {
+        //     mir::log_warning("Failed to allocate common-format buffer for cross-GPU buffer import");
+        //     return nullptr;
+        // }
 
-        /* To get here we have to have failed to find the format/modifier descriptor for a
-         * buffer that we've explicitly allocated to be importable by us.
-         *
-         * This is a logic bug, so go noisily.
-         */
-        BOOST_THROW_EXCEPTION((std::logic_error{"Failed to find import parameterns for buffer we explicitly allocated for import"}));
+        // auto src_image = import_egl_image(
+        //     dmabuf_tex->size().width.as_int(), dmabuf_tex->size().height.as_int(),
+        //     dmabuf_tex->format(),
+        //     dmabuf_tex->modifier(),
+        //     dmabuf_tex->planes(),
+        //     importing_provider->dpy,
+        //     *importing_provider->egl_extensions);
+        // auto importable_image = import_egl_image(
+        //     importable_buf->size().width.as_int(), importable_buf->size().height.as_int(),
+        //     importable_buf->format(),
+        //     importable_buf->modifier(),
+        //     importable_buf->planes(),
+        //     importing_provider->dpy,
+        //     *importing_provider->egl_extensions);
+        // auto sync = importing_provider->blitter->blit(src_image, importable_image, dmabuf_tex->size());
+        // if (sync)
+        // {
+        //     BOOST_THROW_EXCEPTION((std::logic_error{"EGL_ANDROID_native_fence_sync support not implemented yet"}));
+        // }
+        // auto importable_dmabuf = export_egl_image(*importing_provider->dmabuf_export_ext, importing_provider->dpy, importable_image, dmabuf_tex->size());
+
+        // auto base_extension = importing_provider->egl_extensions->base(importing_provider->dpy);
+        // base_extension.eglDestroyImageKHR(importing_provider->dpy, src_image);
+        // base_extension.eglDestroyImageKHR(importing_provider->dpy, importable_image);
+
+        // if (auto descriptor = descriptor_for_format_and_modifiers(
+        //             importable_dmabuf->format(),
+        //             importable_dmabuf->modifier().value_or(DRM_FORMAT_MOD_INVALID),
+        //             *this))
+        // {
+        //     /* We're being naughty here and using the fact that `as_texture()` has a side-effect
+        //      * of invoking the buffer's `on_consumed()` callback.
+        //      */
+        //     dmabuf_tex->as_texture();
+        //     return std::make_shared<DMABufTex>(
+        //         dpy,
+        //         *egl_extensions,
+        //         *importable_dmabuf,
+        //         *descriptor,
+        //         egl_delegate);
+        // }
+
+        // /* To get here we have to have failed to find the format/modifier descriptor for a
+        //  * buffer that we've explicitly allocated to be importable by us.
+        //  *
+        //  * This is a logic bug, so go noisily.
+        //  */
+        // BOOST_THROW_EXCEPTION((std::logic_error{"Failed to find import parameterns for buffer we explicitly allocated for import"}));
     }
     return nullptr;
 }
