@@ -312,7 +312,7 @@ auto mge::GLRenderingProvider::as_texture(std::shared_ptr<Buffer> buffer) -> std
     std::shared_ptr<NativeBufferBase> native_buffer{buffer, buffer->native_buffer_base()};
     if (dmabuf_provider)
     {
-        if (auto tex = dmabuf_provider->as_texture(native_buffer))
+        if (auto tex = dmabuf_provider->as_texture(buffer))
         {
             return tex;
         }

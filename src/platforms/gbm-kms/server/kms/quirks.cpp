@@ -53,7 +53,12 @@ public:
             boost::split(tokens, option_value, boost::is_any_of(":"));
 
             auto static const available_options = std::set<std::string>{
-                "skip", "allow", "disable-kms-probe", "egl-destroy-surface", "gbm-surface-has-free-buffers"};
+                "skip",
+                "allow",
+                "disable-kms-probe",
+                "egl-destroy-surface",
+                "gbm-surface-has-free-buffers",
+                "gbm-buffer-transfer-strategy"};
             auto const structure = mgc::validate_structure(tokens, available_options);
             if(!structure)
                 return false;
@@ -85,6 +90,11 @@ public:
                 gbm_surface_has_free_buffers.add(specifier, specifier_value, tokens[3]);
                 return true;
             }
+            else if (mgc::matches(tokens, "gbm-buffer-transfer-strategy", {"default", "cpu"}))
+            {
+                gbm_buffer_transfer_strategy.add(specifier, specifier_value, tokens[3]);
+                return true;
+            }
 
             return false;
         };
@@ -100,7 +110,8 @@ public:
                     "(expects value of the form “{skip, allow}:{driver,devnode}:<driver or devnode>”"
                     ", “disable-kms-probe:{driver,devnode}:<driver or devnode>”, "
                     "“egl-destroy-surface:{driver,devnode}:{default:leak}”), "
-                    "or “gbm-surface-has-free-buffers:{driver,devnode}:<driver or devnode>:{default,skip}”)",
+                    "or “gbm-surface-has-free-buffers:{driver,devnode}:<driver or devnode>:{default,skip}”)"
+                    "or “gbm-buffer-transfer-strategy:{driver,devnode}:<driver or devnode>:{default,cpu}”",
                     quirks_option_name,
                     quirk.c_str());
             }
@@ -219,7 +230,26 @@ public:
             return std::make_unique<DefaultGbmSurfaceHasFreeBuffers>();
         }();
 
-        return std::make_shared<GbmQuirks>(std::move(egl_destroy_surface_impl), std::move(surface_has_free_buffers_impl));
+        mir::log_debug("Quirks(gbm-buffer-transfer-strategy): checking device with devnode: %s, driver %s", devnode, driver);
+
+        auto gbm_buffer_transfer_strategy_name = mgc::apply_quirk(
+            devnode,
+            driver,
+            gbm_buffer_transfer_strategy.devnodes,
+            gbm_buffer_transfer_strategy.drivers,
+            "gbm-buffer-transfer-strategy");
+
+        auto gbm_buffer_transfer_strategy = [&]() -> GbmQuirks::BufferTransferStrategy
+        {
+            if (gbm_buffer_transfer_strategy_options.contains(gbm_buffer_transfer_strategy_name))
+                return GbmQuirks::BufferTransferStrategy::cpu;
+            return GbmQuirks::BufferTransferStrategy::dma;
+        }();
+
+        return std::make_shared<GbmQuirks>(
+            std::move(egl_destroy_surface_impl),
+            std::move(surface_has_free_buffers_impl),
+            gbm_buffer_transfer_strategy);
     }
 private:
     /* AST is a simple 2D output device, built into some motherboards.
@@ -241,6 +271,9 @@ private:
 
     inline static std::set<std::string_view> const gbm_surface_has_free_buffers_always_true_options{"skip", "nvidia"};
     mgc::ValuedOption gbm_surface_has_free_buffers;
+
+    inline static std::set<std::string_view> const gbm_buffer_transfer_strategy_options{"cpu", "nvidia"};
+    mgc::ValuedOption gbm_buffer_transfer_strategy;
 };
 
 mgg::Quirks::Quirks(const options::Option& options)
@@ -288,9 +321,11 @@ auto mir::graphics::gbm::Quirks::gbm_quirks_for(udev::Device const& device) -> s
 }
 
 mir::graphics::gbm::GbmQuirks::GbmQuirks(std::unique_ptr<EglDestroySurfaceQuirk> egl_destroy_surface,
-                                         std::unique_ptr<SurfaceHasFreeBuffersQuirk> surface_has_free_buffers) :
+                                         std::unique_ptr<SurfaceHasFreeBuffersQuirk> surface_has_free_buffers,
+                                         BufferTransferStrategy buffer_transfer_strategy) :
     egl_destroy_surface_{std::move(egl_destroy_surface)},
-    surface_has_free_buffers_{std::move(surface_has_free_buffers)}
+    surface_has_free_buffers_{std::move(surface_has_free_buffers)},
+    buffer_transfer_strategy_{buffer_transfer_strategy}
 {
 }
 
@@ -302,4 +337,9 @@ void mir::graphics::gbm::GbmQuirks::egl_destroy_surface(EGLDisplay dpy, EGLSurfa
 auto mir::graphics::gbm::GbmQuirks::gbm_surface_has_free_buffers(gbm_surface* gbm_surface) const -> int
 {
     return surface_has_free_buffers_->gbm_surface_has_free_buffers(gbm_surface);
+}
+
+auto mir::graphics::gbm::GbmQuirks::gbm_buffer_transfer_strategy() const -> BufferTransferStrategy
+{
+    return buffer_transfer_strategy_;
 }
