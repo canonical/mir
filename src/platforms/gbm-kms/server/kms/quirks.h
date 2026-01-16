@@ -17,6 +17,8 @@
 #ifndef MIR_GRAPHICS_GBM_KMS_QUIRKS_H_
 #define MIR_GRAPHICS_GBM_KMS_QUIRKS_H_
 
+#include "mir/graphics/linux_dmabuf.h"
+
 #include <EGL/egl.h>
 
 #include <memory>
@@ -37,8 +39,6 @@ class Device;
 
 namespace graphics::gbm
 {
-// Maybe overkill for just one quirk, but we'll be really glad if we decide to
-// add another..
 class GbmQuirks
 {
 public:
@@ -66,17 +66,21 @@ public:
         virtual auto gbm_surface_has_free_buffers(gbm_surface* gbm_surface) const -> int = 0;
     };
 
+    using BufferTransferStrategy = DMABufEGLProvider::BufferTransferStrategy;
     GbmQuirks(
         std::unique_ptr<EglDestroySurfaceQuirk> create_surface_flags,
-        std::unique_ptr<SurfaceHasFreeBuffersQuirk> surface_has_free_buffers
+        std::unique_ptr<SurfaceHasFreeBuffersQuirk> surface_has_free_buffers,
+        BufferTransferStrategy gbm_buffer_transfer_strategy
     );
 
     void egl_destroy_surface(EGLDisplay dpy, EGLSurface surf) const;
     auto gbm_surface_has_free_buffers(gbm_surface* gbm_surface) const -> int;
+    auto gbm_buffer_transfer_strategy() const -> BufferTransferStrategy;
 
 private:
     std::unique_ptr<EglDestroySurfaceQuirk> const egl_destroy_surface_;
     std::unique_ptr<SurfaceHasFreeBuffersQuirk> const surface_has_free_buffers_;
+    BufferTransferStrategy const buffer_transfer_strategy_;
 };
 
 /**

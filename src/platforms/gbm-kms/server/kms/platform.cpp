@@ -17,6 +17,7 @@
 #include "platform.h"
 #include "buffer_allocator.h"
 #include "display.h"
+#include "kms/quirks.h"
 #include <mir/console_services.h>
 #include <mir/emergency_cleanup_registry.h>
 #include <mir/fd.h>
@@ -42,11 +43,18 @@
 #include <system_error>
 #include <xf86drm.h>
 
+#include <boost/throw_exception.hpp>
+#include <drm.h>
+#include <drm_fourcc.h>
+#include <gbm.h>
+#include <system_error>
+#include <xf86drm.h>
+
 #define MIR_LOG_COMPONENT "platform-graphics-gbm-kms"
 #include <mir/log.h>
 
-#include <fcntl.h>
 #include <boost/exception/all.hpp>
+#include <fcntl.h>
 
 namespace mg = mir::graphics;
 namespace mgg = mg::gbm;
@@ -393,7 +401,8 @@ auto maybe_make_dmabuf_provider(
     std::shared_ptr<gbm_device> gbm,
     EGLDisplay dpy,
     std::shared_ptr<mg::EGLExtensions> egl_extensions,
-    std::shared_ptr<mg::common::EGLContextExecutor> egl_delegate)
+    std::shared_ptr<mg::common::EGLContextExecutor> egl_delegate,
+    std::shared_ptr<mgg::GbmQuirks> quirks)
     -> std::shared_ptr<mg::DMABufEGLProvider>
 {
     try
@@ -408,7 +417,8 @@ auto maybe_make_dmabuf_provider(
                 -> std::shared_ptr<mg::DMABufBuffer>
             {
                 return alloc_dma_buf(gbm.get(), format, modifiers, size);
-            });
+            },
+            quirks->gbm_buffer_transfer_strategy());
     }
     catch (std::runtime_error const& error)
     {
@@ -440,7 +450,7 @@ mgg::RenderingPlatform::RenderingPlatform(
       bound_display{std::visit(display_provider_or_nothing{}, hw)},
       share_ctx{std::make_unique<SurfacelessEGLContext>(dpy)},
       egl_delegate{std::make_shared<mg::common::EGLContextExecutor>(share_ctx->make_share_context())},
-      dmabuf_provider{maybe_make_dmabuf_provider(device, share_ctx->egl_display(), std::make_shared<mg::EGLExtensions>(), egl_delegate)},
+      dmabuf_provider{maybe_make_dmabuf_provider(device, share_ctx->egl_display(), std::make_shared<mg::EGLExtensions>(), egl_delegate, quirks)},
       quirks{std::move(quirks)}
 {
 }

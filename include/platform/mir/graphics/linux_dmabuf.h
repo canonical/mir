@@ -59,12 +59,20 @@ class DMABufEGLProvider : public std::enable_shared_from_this<DMABufEGLProvider>
 public:
     using EGLImageAllocator =
         std::function<std::shared_ptr<DMABufBuffer>(DRMFormat, std::span<uint64_t const>, geometry::Size)>;
+
+    enum class BufferTransferStrategy
+    {
+        cpu,
+        dma,
+    };
+
     DMABufEGLProvider(
         EGLDisplay dpy,
         std::shared_ptr<EGLExtensions> egl_extensions,
         EGLExtensions::EXTImageDmaBufImportModifiers const& dmabuf_ext,
         std::shared_ptr<common::EGLContextExecutor> egl_delegate,
-        EGLImageAllocator allocate_importable_image);
+        EGLImageAllocator allocate_importable_image,
+        BufferTransferStrategy buffer_transfer_strategy);
 
     ~DMABufEGLProvider();
 
@@ -89,15 +97,20 @@ public:
         -> std::shared_ptr<gl::Texture>;
 
      auto supported_formats() const -> DmaBufFormatDescriptors const&;
-private:
-    EGLDisplay const dpy;
-    std::shared_ptr<EGLExtensions> const egl_extensions;
-    std::optional<EGLExtensions::MESADmaBufExport> const dmabuf_export_ext;
-    dev_t const devnum_;
-    std::unique_ptr<DmaBufFormatDescriptors> const formats;
-    std::shared_ptr<common::EGLContextExecutor> const egl_delegate;
-    EGLImageAllocator allocate_importable_image;
-    std::unique_ptr<EGLBufferCopier> const blitter;
+ private:
+     class DmabufTexBuffer;
+     auto cpu_transfer(std::shared_ptr<DmabufTexBuffer> const& dmabuf_tex) -> std::shared_ptr<gl::Texture>;
+     auto dma_transfer(std::shared_ptr<DmabufTexBuffer> const& dmabuf_tex) -> std::shared_ptr<gl::Texture>;
+
+     EGLDisplay const dpy;
+     std::shared_ptr<EGLExtensions> const egl_extensions;
+     std::optional<EGLExtensions::MESADmaBufExport> const dmabuf_export_ext;
+     dev_t const devnum_;
+     std::unique_ptr<DmaBufFormatDescriptors> const formats;
+     std::shared_ptr<common::EGLContextExecutor> const egl_delegate;
+     EGLImageAllocator allocate_importable_image;
+     std::unique_ptr<EGLBufferCopier> const blitter;
+     BufferTransferStrategy const buffer_transfer_strategy;
 };
 
 class LinuxDmaBuf : public mir::wayland::LinuxDmabufV1::Global
