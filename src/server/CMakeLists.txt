@@ -69,8 +69,8 @@ target_link_libraries(mirserverobjects
     mirplatform
     mircommon
     mircore
-  PRIVATE
     PkgConfig::GLIB
+  PRIVATE
     PkgConfig::GIO
 )
 
@@ -105,30 +105,13 @@ set(MIR_SERVER_REFERENCES
   mirnullreport
   mirconsole
   mirservertime
-
-  PkgConfig::DRM
-  PkgConfig::EGL
-  PkgConfig::GLESv2
-  PkgConfig::UDEV
-  PkgConfig::GLIB
-  PkgConfig::GIO
-  PkgConfig::UUID
-  PkgConfig::LTTNG_UST
 )
 
 add_library(mirserver SHARED)
-
-target_link_libraries(mirserver
-  PUBLIC
-    ${MIR_SERVER_REFERENCES}
-)
-
 add_library(mirserver-static STATIC)
 
-target_link_libraries(mirserver-static
-  PUBLIC
-    ${MIR_SERVER_REFERENCES}
-)
+target_link_libraries(mirserver PUBLIC ${MIR_SERVER_REFERENCES})
+target_link_libraries(mirserver-static PUBLIC ${MIR_SERVER_REFERENCES})
 
 if (MIR_USE_APPARMOR)
   target_link_libraries(mirserver PUBLIC PkgConfig::APPARMOR)

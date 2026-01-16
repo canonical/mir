@@ -18,11 +18,8 @@
 #define MIR_FRONTEND_DESKTOP_FILE_MANAGER_H
 
 #include <mir/fd.h>
-#include <vector>
 #include <string>
 #include <memory>
-#include <map>
-#include <gio/gdesktopappinfo.h>
 
 namespace mir
 {
