@@ -43,7 +43,6 @@
         set, then triggers can be set.
       </description>
       <entry name="keyboard" value="0x01" summary="key combinations can be used as triggers"/>
-      <entry name="modifiers" value="0x02" summary="keyboard modifiers can be used as triggers"/>
     </enum>
 
     <event name="capabilities">
