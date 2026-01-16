@@ -368,7 +368,7 @@ TEST_P(WindowPlacementAttached, window_respects_exclusive_zone_when_maximized)
     EXPECT_THAT(normal.size(), Eq(zone.size));
 }
 
-TEST_P(WindowPlacementAttached, fullscreen_window_ignores_exclusive_zone)
+TEST_P(WindowPlacementAttached, fullscreen_window_respects_exclusive_zone)
 {
     AttachedEdges edges = GetParam();
     Size window_size{120, 80};
@@ -380,6 +380,7 @@ TEST_P(WindowPlacementAttached, fullscreen_window_ignores_exclusive_zone)
         params.attached_edges = edges;
         params.set_size(window_size);
         params.exclusive_rect = exclusive_rect;
+        params.depth_layer = mir_depth_layer_above;
         create_window(params);
     }
 
@@ -389,12 +390,13 @@ TEST_P(WindowPlacementAttached, fullscreen_window_ignores_exclusive_zone)
         params.state = mir_window_state_fullscreen;
         normal = create_window(params);
     }
+    Rectangle zone = apply_exclusive_zone(display_area, exclusive_rect, window_size, edges);
 
-    EXPECT_THAT(normal.top_left(), Eq(display_area.top_left));
-    EXPECT_THAT(normal.size(), Eq(display_area.size));
+    EXPECT_THAT(normal.top_left(), Eq(zone.top_left));
+    EXPECT_THAT(normal.size(), Eq(zone.size));
 }
 
-TEST_P(WindowPlacementAttached, window_ignores_exclusive_zone_when_fullscreened)
+TEST_P(WindowPlacementAttached, window_respects_exclusive_zone_when_fullscreened)
 {
     AttachedEdges edges = GetParam();
     Size window_size{120, 80};
@@ -406,6 +408,7 @@ TEST_P(WindowPlacementAttached, window_ignores_exclusive_zone_when_fullscreened)
         params.attached_edges = edges;
         params.set_size(window_size);
         params.exclusive_rect = exclusive_rect;
+        params.depth_layer = mir_depth_layer_above;
         create_window(params);
     }
 
@@ -420,8 +423,10 @@ TEST_P(WindowPlacementAttached, window_ignores_exclusive_zone_when_fullscreened)
     spec.state = mir_window_state_fullscreen;
     basic_window_manager.modify_surface(session, normal, spec);
 
-    EXPECT_THAT(normal.top_left(), Eq(display_area.top_left));
-    EXPECT_THAT(normal.size(), Eq(display_area.size));
+    Rectangle zone = apply_exclusive_zone(display_area, exclusive_rect, window_size, edges);
+
+    EXPECT_THAT(normal.top_left(), Eq(zone.top_left));
+    EXPECT_THAT(normal.size(), Eq(zone.size));
 }
 
 TEST_P(WindowPlacementAttached, stretched_attached_window_respects_exclusive_zone)
