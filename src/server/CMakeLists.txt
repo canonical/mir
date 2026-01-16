@@ -108,7 +108,7 @@ set(MIR_SERVER_REFERENCES
 )
 
 add_library(mirserver SHARED)
-add_library(mirserver-static STATIC)
+add_library(mirserver-static STATIC) # Internal-only use: For linking into test binaries
 
 target_link_libraries(mirserver PUBLIC ${MIR_SERVER_REFERENCES})
 target_link_libraries(mirserver-static PUBLIC ${MIR_SERVER_REFERENCES})
