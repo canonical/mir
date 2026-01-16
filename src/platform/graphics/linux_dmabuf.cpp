@@ -358,83 +358,83 @@ private:
     geom::Size const size_;
 };
 
-auto export_egl_image(
-    mg::EGLExtensions::MESADmaBufExport const& ext,
-    EGLDisplay dpy,
-    EGLImage image,
-    geom::Size size) -> std::unique_ptr<mg::DMABufBuffer>
-{
-    constexpr int const max_planes = 4;
+// auto export_egl_image(
+//     mg::EGLExtensions::MESADmaBufExport const& ext,
+//     EGLDisplay dpy,
+//     EGLImage image,
+//     geom::Size size) -> std::unique_ptr<mg::DMABufBuffer>
+// {
+//     constexpr int const max_planes = 4;
 
-    int fourcc;
-    int num_planes;
-    std::array<uint64_t, max_planes> modifiers;
-    if (ext.eglExportDMABUFImageQueryMESA(dpy, image, &fourcc, &num_planes, modifiers.data()) != EGL_TRUE)
-    {
-        BOOST_THROW_EXCEPTION((mg::egl_error("Failed to query EGLImage for dma-buf export")));
-    }
+//     int fourcc;
+//     int num_planes;
+//     std::array<uint64_t, max_planes> modifiers;
+//     if (ext.eglExportDMABUFImageQueryMESA(dpy, image, &fourcc, &num_planes, modifiers.data()) != EGL_TRUE)
+//     {
+//         BOOST_THROW_EXCEPTION((mg::egl_error("Failed to query EGLImage for dma-buf export")));
+//     }
 
-    /* There's only a single modifier for a logical buffer. For some reason the EGL interface
-     * decided to return one modifier per plane, but they are always the same.
-     *
-     * We handle DRM_FORMAT_MOD_INVALID as an empty modifier; fix that up here if we get it.
-     */
-    auto modifier =
-        [](uint64_t egl_modifier) -> std::optional<uint64_t>
-        {
-            if (egl_modifier == DRM_FORMAT_MOD_INVALID)
-            {
-                return std::nullopt;
-            }
-            return egl_modifier;
-        }(modifiers[0]);
+//     /* There's only a single modifier for a logical buffer. For some reason the EGL interface
+//      * decided to return one modifier per plane, but they are always the same.
+//      *
+//      * We handle DRM_FORMAT_MOD_INVALID as an empty modifier; fix that up here if we get it.
+//      */
+//     auto modifier =
+//         [](uint64_t egl_modifier) -> std::optional<uint64_t>
+//         {
+//             if (egl_modifier == DRM_FORMAT_MOD_INVALID)
+//             {
+//                 return std::nullopt;
+//             }
+//             return egl_modifier;
+//         }(modifiers[0]);
 
-    std::array<int, max_planes> fds;
-    std::array<EGLint, max_planes> strides;
-    std::array<EGLint, max_planes> offsets;
+//     std::array<int, max_planes> fds;
+//     std::array<EGLint, max_planes> strides;
+//     std::array<EGLint, max_planes> offsets;
 
-    if (ext.eglExportDMABUFImageMESA(dpy, image, fds.data(), strides.data(), offsets.data()) != EGL_TRUE)
-    {
-        BOOST_THROW_EXCEPTION((mg::egl_error("Failed to export EGLImage to dma-buf(s)")));
-    }
+//     if (ext.eglExportDMABUFImageMESA(dpy, image, fds.data(), strides.data(), offsets.data()) != EGL_TRUE)
+//     {
+//         BOOST_THROW_EXCEPTION((mg::egl_error("Failed to export EGLImage to dma-buf(s)")));
+//     }
 
-    std::vector<PlaneInfo> planes;
-    planes.reserve(num_planes);
-    for (int i = 0; i < num_planes; ++i)
-    {
-        mir::Fd fd;
-        // If multiple planes use the same buffer, the fds array will be filled with -1 for subsequent
-        // planes.
-        if (fds[i] == -1)
-        {
-            // Paranoia
-            if (i == 0)
-            {
-                BOOST_THROW_EXCEPTION((std::runtime_error{"Driver has a broken EGL_MESA_image_dma_buf_export extension"}));
-            }
-            fds[i] = fds[i - 1];
-            fd = mir::Fd{mir::IntOwnedFd{fds[i]}};
-        }
-        else
-        {
-            // We own these FDs now.
-            fd = mir::Fd{fds[i]};
-        }
-        planes.push_back(
-            PlaneInfo {
-                .dma_buf = std::move(fd),
-                .stride = static_cast<uint32_t>(strides[i]),
-                .offset = static_cast<uint32_t>(offsets[i])
-            });
-    }
+//     std::vector<PlaneInfo> planes;
+//     planes.reserve(num_planes);
+//     for (int i = 0; i < num_planes; ++i)
+//     {
+//         mir::Fd fd;
+//         // If multiple planes use the same buffer, the fds array will be filled with -1 for subsequent
+//         // planes.
+//         if (fds[i] == -1)
+//         {
+//             // Paranoia
+//             if (i == 0)
+//             {
+//                 BOOST_THROW_EXCEPTION((std::runtime_error{"Driver has a broken EGL_MESA_image_dma_buf_export extension"}));
+//             }
+//             fds[i] = fds[i - 1];
+//             fd = mir::Fd{mir::IntOwnedFd{fds[i]}};
+//         }
+//         else
+//         {
+//             // We own these FDs now.
+//             fd = mir::Fd{fds[i]};
+//         }
+//         planes.push_back(
+//             PlaneInfo {
+//                 .dma_buf = std::move(fd),
+//                 .stride = static_cast<uint32_t>(strides[i]),
+//                 .offset = static_cast<uint32_t>(offsets[i])
+//             });
+//     }
 
-    return std::make_unique<DMABuf>(
-        mg::DRMFormat{static_cast<uint32_t>(fourcc)},
-        modifier,
-        std::move(planes),
-        mg::gl::Texture::Layout::TopRowFirst,
-        size);
-}
+//     return std::make_unique<DMABuf>(
+//         mg::DRMFormat{static_cast<uint32_t>(fourcc)},
+//         modifier,
+//         std::move(planes),
+//         mg::gl::Texture::Layout::TopRowFirst,
+//         size);
+// }
 
 /**
  * Reimport dmabufs into EGL
@@ -1283,6 +1283,7 @@ private:
         void* data_;
     };
 
+    
     friend class GLMapping;
     class GLMapping : public mrs::Mapping<std::byte const>
     {
@@ -1743,6 +1744,133 @@ auto drm_node_for_device(dev_t device) -> std::string
     return node;
 }
 
+class DmaBufWriteMapping : public mrs::Mapping<std::byte>
+{
+public:
+    DmaBufWriteMapping(mg::DMABufBuffer const& parent)
+        : parent{parent}
+    {
+        if (!parent.format().as_mir_format().has_value())
+        {
+            BOOST_THROW_EXCEPTION((mg::UnmappableBuffer{"Format unrepresentable in mir_pixel_format"}));
+        }
+        if (parent.planes().size() != 1)
+        {
+            BOOST_THROW_EXCEPTION((mg::UnmappableBuffer{"Multiplanar formats not supported"}));
+        }
+        auto& info = parent.planes().front();
+        data_ = ::mmap(
+            nullptr,
+            info.stride * parent.size().height.as<size_t>(),
+            PROT_WRITE,
+            MAP_SHARED_VALIDATE,
+            info.dma_buf,
+            info.offset);
+        if (data_ == MAP_FAILED)
+        {
+            BOOST_THROW_EXCEPTION((
+                std::system_error{
+                    errno,
+                    std::system_category(),
+                    "Failed to map DMABuf"}));
+        }
+        struct dma_buf_sync sync{.flags = DMA_BUF_SYNC_WRITE | DMA_BUF_SYNC_START};
+        if (ioctl(info.dma_buf, DMA_BUF_IOCTL_SYNC, &sync) == -1)
+        {
+            // TODO: ioctl documentation says we should retry on EAGAIN and EINTR
+            BOOST_THROW_EXCEPTION((
+                std::system_error{
+                    errno,
+                    std::system_category(),
+                    "Failed to notify kernel of dma-buf CPU read"
+                }
+            ));
+        }
+    }
+
+    ~DmaBufWriteMapping()
+    {
+        struct dma_buf_sync sync{.flags = DMA_BUF_SYNC_END};
+        ioctl(parent.planes().front().dma_buf, DMA_BUF_IOCTL_SYNC, &sync);
+
+        munmap(data_, len());
+    }
+
+    auto data() const -> std::byte* override
+    {
+        return static_cast<std::byte*>(data_);
+    }
+
+    auto len() const -> size_t override
+    {
+        return size().height.as<size_t>() * stride().as<size_t>();
+    }
+
+    auto format() const -> MirPixelFormat override
+    {
+       return parent.format().as_mir_format().value_or(mir_pixel_format_invalid);
+    }
+
+    auto stride() const -> geom::Stride override
+    {
+        return geom::Stride{parent.planes().front().stride};
+    }
+
+    auto size() const -> geom::Size override
+    {
+        return parent.size();
+    }
+private:
+    mg::DMABufBuffer const& parent;
+    void* data_;
+};
+
+std::byte fill_colour_for(int x, int y)
+{
+
+    if ((x / 20) % 2 == 1)
+    {
+        if ((y / 20) % 2 == 1)
+        {
+            return std::byte{0xff};
+        }
+        else
+        {
+            return std::byte{0};
+        }
+    }
+    else
+    {
+        if ((y / 20) % 2 == 1)
+        {
+            return std::byte{0x0};
+        }
+        else
+        {
+            return std::byte{0xff};
+        }
+    }
+}
+
+auto fill_checkerboard(geom::Size size) -> std::unique_ptr<std::byte[]>
+{
+    auto checkerboard = std::make_unique<std::byte[]>(size.width.as<size_t>() * size.height.as<size_t>() * 4);
+
+    for (int x = 0; x < size.width.as<int>(); ++x)
+    {
+        for (int y = 0; y < size.height.as<int>(); ++y)
+        {
+            auto const fill = fill_colour_for(x, y);
+
+            auto pixel_start = checkerboard.get() + ((y * size.width.as<int>()) + x) * 4;
+            *pixel_start = fill;
+            *(pixel_start + 1) = fill;
+            *(pixel_start + 2) = fill;
+            *(pixel_start + 3) = fill;
+        }
+    }
+    return checkerboard;
+}
 }
 
 auto mg::DMABufEGLProvider::as_texture(std::shared_ptr<NativeBufferBase> buffer)
@@ -1853,22 +1981,36 @@ auto mg::DMABufEGLProvider::as_texture(std::shared_ptr<NativeBufferBase> buffer)
             importable_buf->planes(),
             importing_provider->dpy,
             *importing_provider->egl_extensions);
-        mir::log_debug("Blitting to bounce buffer");
-        auto sync = importing_provider->blitter->blit(src_image, importable_image, dmabuf_tex->size());
-        if (sync)
+        mir::log_debug("Filling bounce buffer with checkerboard");
+
         {
-            BOOST_THROW_EXCEPTION((std::logic_error{"EGL_ANDROID_native_fence_sync support not implemented yet"}));
-        }
-        mir::log_debug("Exporting bounce buffer to DMA-buf");
-        auto importable_dmabuf = export_egl_image(*importing_provider->dmabuf_export_ext, importing_provider->dpy, importable_image, dmabuf_tex->size());
+            DmaBufWriteMapping mapping{*importable_buf};
+            auto line_base = mapping.data();
+            auto width = importable_buf->size().width.as<int>();
+            auto checkerboard = fill_checkerboard(importable_buf->size());
+        
+            for (auto line = 0; line < importable_buf->size().height.as<int>(); ++line)
+            {
+                memcpy(line_base, checkerboard.get() + (line * width * 4), width * 4);
+                line_base += mapping.stride().as<size_t>();
+            }
+        }        
+        
+        // auto sync = importing_provider->blitter->blit(src_image, importable_image, dmabuf_tex->size());
+        // if (sync)
+        // {
+        //     BOOST_THROW_EXCEPTION((std::logic_error{"EGL_ANDROID_native_fence_sync support not implemented yet"}));
+        // }
+        // mir::log_debug("Exporting bounce buffer to DMA-buf");
+        // auto importable_dmabuf = export_egl_image(*importing_provider->dmabuf_export_ext, importing_provider->dpy, importable_image, dmabuf_tex->size());
 
         auto base_extension = importing_provider->egl_extensions->base(importing_provider->dpy);
         base_extension.eglDestroyImageKHR(importing_provider->dpy, src_image);
         base_extension.eglDestroyImageKHR(importing_provider->dpy, importable_image);
 
         if (auto descriptor = descriptor_for_format_and_modifiers(
-                    importable_dmabuf->format(),
-                    importable_dmabuf->modifier().value_or(DRM_FORMAT_MOD_INVALID),
+                    importable_buf->format(),
+                    importable_buf->modifier().value_or(DRM_FORMAT_MOD_INVALID),
                     *this))
         {
             /* We're being naughty here and using the fact that `as_texture()` has a side-effect
@@ -1879,7 +2021,7 @@ auto mg::DMABufEGLProvider::as_texture(std::shared_ptr<NativeBufferBase> buffer)
             return std::make_shared<DMABufTex>(
                 dpy,
                 *egl_extensions,
-                *importable_dmabuf,
+                *importable_buf,
                 *descriptor,
                 egl_delegate);
         }

@@ -374,7 +374,7 @@ auto alloc_dma_buf(
         format,
         modifier,
         std::move(planes),
-        mg::gl::Texture::Layout::GL,
+        mg::gl::Texture::Layout::TopRowFirst,
         size);
 }
 
