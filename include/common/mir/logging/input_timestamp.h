@@ -19,13 +19,14 @@
 
 #include <string>
 #include <chrono>
+#include <mir/time/clock.h>
 
 namespace mir
 {
 namespace logging
 {
 
-std::string input_timestamp(std::chrono::nanoseconds when);
+std::string input_timestamp(mir::time::Clock const& clock, std::chrono::nanoseconds when);
 
 }
 }

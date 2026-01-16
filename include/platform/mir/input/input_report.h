@@ -19,6 +19,7 @@
 #define MIR_INPUT_INPUT_REPORT_H_
 
 #include <stdint.h>
+#include <chrono>
 
 namespace mir
 {
@@ -30,7 +31,7 @@ class InputReport
 public:
     virtual ~InputReport() = default;
 
-    virtual void received_event_from_kernel(int64_t when, int type, int code, int value) = 0;
+    virtual void received_event_from_kernel(std::chrono::nanoseconds when, int type, int code, int value) = 0;
 
 protected:
     InputReport() = default;

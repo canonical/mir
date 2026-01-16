@@ -33,7 +33,7 @@ public:
     InputReport() = default;
     virtual ~InputReport() noexcept = default;
 
-    void received_event_from_kernel(int64_t when, int type, int code, int value) override;
+    void received_event_from_kernel(std::chrono::nanoseconds when, int type, int code, int value) override;
 };
 
 }

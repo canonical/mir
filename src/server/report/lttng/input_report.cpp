@@ -22,7 +22,7 @@
 #define TRACEPOINT_PROBE_DYNAMIC_LINKAGE
 #include "input_report_tp.h"
 
-void mir::report::lttng::InputReport::received_event_from_kernel(int64_t when, int type, int code, int value)
+void mir::report::lttng::InputReport::received_event_from_kernel(std::chrono::nanoseconds when, int type, int code, int value)
 {
-    mir_tracepoint(mir_server_input, received_event_from_kernel, when, type, code, value);
+    mir_tracepoint(mir_server_input, received_event_from_kernel, when.count(), type, code, value);
 }
