@@ -25,7 +25,7 @@ namespace mir
 namespace logging
 {
 
-std::string input_timestamp(mir::time::Clock const& clock, std::chrono::nanoseconds when)
+std::string mir::logging::input_timestamp(mir::time::Clock const& clock, std::chrono::nanoseconds when)
 {
     auto const now = clock.now().time_since_epoch();
     long long const when_ns = when.count();
