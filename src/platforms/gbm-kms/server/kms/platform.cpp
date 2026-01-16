@@ -288,13 +288,27 @@ auto gbm_bo_with_modifiers_or_linear(
         format,
         modifiers.data(), modifiers.size(),
         GBM_BO_USE_RENDERING);
-    if (!gbm_bo && errno != ENOSYS)
+    if (!gbm_bo && (errno != ENOSYS || errno == EINVAL))
     {
+        // Stupid NVIDIA stupid flags stupid stupid
+        if (errno == EINVAL)
+        {
+            gbm_bo = gbm_bo_create_with_modifiers2(
+                gbm,
+                size.width.as_uint32_t(), size.height.as_uint32_t(),
+                format,
+                modifiers.data(), modifiers.size(),
+                0);
+        }
+        if (!gbm_bo && errno != ENOSYS)
+        {
         BOOST_THROW_EXCEPTION((
             std::system_error{
                 errno,
                 std::system_category(),
                 "Failed to allocate GBM bo"}));
+        }
+        mir::log_debug("Using NVIDIA no-flags path");
     }
     else if (!gbm_bo)
     {

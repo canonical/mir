@@ -258,6 +258,11 @@ public:
         egl_delegate->spawn([state = std::move(state)]() mutable { state = nullptr; });
     }
 
+#define LOG_IF_GL_ERROR() \
+  if (auto err = glGetError()) {\
+    mir::log_debug("GL error at %i: %s", __LINE__, mg::gl_category().message(err).c_str()); }
+  
+
     auto blit(EGLImage from, EGLImage to, geometry::Size size) -> std::optional<mir::Fd>
     {
         /* TODO: It *must* be possible to create the fence FD first and *then*
@@ -270,41 +275,65 @@ public:
             [sync = std::move(sync_promise), from, to, state = state, size]()
             {
                 glUseProgram(state->prog);
+                LOG_IF_GL_ERROR();
 
                 TextureHandle tex;
+                LOG_IF_GL_ERROR();
                 RenderbufferHandle renderbuffer;
+                LOG_IF_GL_ERROR();
                 FramebufferHandle fbo;
+                LOG_IF_GL_ERROR();
 
                 glActiveTexture(GL_TEXTURE0);
+                LOG_IF_GL_ERROR();
                 glBindTexture(GL_TEXTURE_2D, tex);
+                LOG_IF_GL_ERROR();
                 state->glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, from);
+                LOG_IF_GL_ERROR();
 
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+                LOG_IF_GL_ERROR();
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+                LOG_IF_GL_ERROR();
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+                LOG_IF_GL_ERROR();
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+                LOG_IF_GL_ERROR();
 
                 glBindRenderbuffer(GL_RENDERBUFFER, renderbuffer);
+                LOG_IF_GL_ERROR();
                 state->glEGLImageTargetRenderbufferStorageOES(GL_RENDERBUFFER, to);
+                LOG_IF_GL_ERROR();
 
                 glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+                LOG_IF_GL_ERROR();
                 glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, renderbuffer);
+                LOG_IF_GL_ERROR();
 
                 glBindBuffer(GL_ARRAY_BUFFER, state->vert_data);
+                LOG_IF_GL_ERROR();
                 glVertexAttribPointer (state->attrpos, 2, GL_FLOAT, GL_FALSE, 0, 0);
+                LOG_IF_GL_ERROR();
 
                 glBindBuffer(GL_ARRAY_BUFFER, state->tex_data);
+                LOG_IF_GL_ERROR();
                 glVertexAttribPointer (state->attrtex, 2, GL_FLOAT, GL_FALSE, 0, 0);
+                LOG_IF_GL_ERROR();
 
                 glEnableVertexAttribArray(state->attrpos);
+                LOG_IF_GL_ERROR();
                 glEnableVertexAttribArray(state->attrtex);
+                LOG_IF_GL_ERROR();
 
                 glViewport(0, 0, size.width.as_int(), size.height.as_int());
+                LOG_IF_GL_ERROR();
                 GLubyte const idx[] = { 0, 1, 3, 2 };
                 glDrawElements (GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_BYTE, idx);
+                LOG_IF_GL_ERROR();
 
                 // TODO: Actually use the sync
                 glFinish();
+                LOG_IF_GL_ERROR();
                 sync->set_value({});
 
                 // Unbind all our resources

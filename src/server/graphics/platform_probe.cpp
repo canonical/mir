@@ -607,7 +607,7 @@ auto mg::select_buffer_allocating_renderer(
     // Now, find the best platform out of the ones that support the most Sinks
     auto const best_provider = std::max_element(
         providers.begin(), last_good_provider,
-        [](auto const& a, auto const&b) { return a.best_count < b.best_count; });
+        [](auto const& a, auto const&b) { return a.best_count <= b.best_count; });
 
     return best_provider->platform;
 }
