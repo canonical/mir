@@ -20,10 +20,9 @@ target_compile_definitions(
 target_link_libraries(
   mir_platform_graphics_test_harness
     PRIVATE
-      ${MIR_SERVER_REFERENCES}
       # We pull in mirserver here not to actually link it, but to use the
       # list of library dependencies associated with the target
-      mirserver
+      mirserver-static
       PkgConfig::EGL
       PkgConfig::GLESv2
 )

@@ -12,7 +12,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-set(EVENT_SOURCES
+add_library(mirevents OBJECT
   close_window_event.cpp
   event.cpp
   event_builders.cpp
@@ -29,10 +29,6 @@ set(EVENT_SOURCES
   window_output_event.cpp
   event_helpers.cpp
   window_placement_event.cpp ${PROJECT_SOURCE_DIR}/include/common/mir/events/window_placement_event.h
-)
-
-add_library(mirevents OBJECT
-  ${EVENT_SOURCES}
 )
 
 target_include_directories(mirevents

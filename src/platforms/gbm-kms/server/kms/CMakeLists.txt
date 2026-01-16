@@ -64,7 +64,6 @@ target_link_libraries(
     mirplatformgraphicsgbmkmsobjects
     mirsharedgbmservercommon-static
     Boost::program_options
-    Boost::iostreams
     PkgConfig::DRM
     PkgConfig::GBM
     PkgConfig::EGL

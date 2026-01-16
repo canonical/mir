@@ -20,6 +20,10 @@
 #include <mir/log.h>
 #include <mir/scene/surface.h>
 #include <mir/scene/session.h>
+
+#include <gio/gdesktopappinfo.h>
+
+#include <cstring>
 #include <fstream>
 #include <filesystem>
 
