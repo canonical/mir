@@ -61,7 +61,7 @@ When using versioned symbols the linker adds an extra, special symbol containing
 the version(s) exported from the library. Consumers of the library resolve this
 on library load. For example:
 
-```
+```text
 $ objdump -C -T lib/libmirclient.so
 …
 00000000002a2080  w   DO .data.rel.ro   0000000000000080  MIR_CLIENT_8 vtable for mir::client::DefaultConnectionConfiguration
