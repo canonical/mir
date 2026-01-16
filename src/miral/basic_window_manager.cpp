@@ -2675,24 +2675,24 @@ auto miral::BasicWindowManager::calculate_application_zone_for_depth_layer(
         if (window)
         {
             auto const& info = info_for(window);
-            
+
             // Only apply exclusion zones from windows in higher layers
             if (info.depth_layer() <= target_depth_layer)
                 continue;
-                
-            if (info.state() == mir_window_state_attached && 
-                !info.ignore_exclusion_zones() && 
+
+            if (info.state() == mir_window_state_attached &&
+                !info.ignore_exclusion_zones() &&
                 info.exclusive_rect().is_set())
             {
                 Rectangle exclusive_rect{
                     info.exclusive_rect().value().top_left + as_displacement(info.window().top_left()),
                     info.exclusive_rect().value().size};
-                    
+
                 zone_rect = apply_exclusive_rect_to_application_zone(zone_rect, exclusive_rect, info.attached_edges());
             }
         }
     }
-    
+
     return zone_rect;
 }
 
