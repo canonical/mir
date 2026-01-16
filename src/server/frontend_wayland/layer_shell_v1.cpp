@@ -21,6 +21,9 @@
 #include "xdg_shell_stable.h"
 #include "wayland_utils.h"
 #include "output_manager.h"
+#include "zwlr_layer_shell_v1_handler.h"
+#include "zwlr_layer_surface_v1_handler.h"
+#include "wayland_rs/src/lib.rs.h"
 
 #include <mir/shell/surface_specification.h>
 #include <mir/log.h>
@@ -32,11 +35,13 @@
 #include <vector>
 #include <algorithm>
 
+#include "mir/wayland/wayland_server.h"
+
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace geom = mir::geometry;
-namespace mw = mir::wayland;
+namespace mw = mir::wayland_rs::cpp;
 
 namespace
 {
@@ -45,13 +50,13 @@ auto layer_shell_layer_to_mir_depth_layer(uint32_t layer) -> MirDepthLayer
 {
     switch (layer)
     {
-    case mw::LayerShellV1::Layer::background:
+    case std::to_underlying(mw::ZwlrLayerShellV1Layer::Background):
         return mir_depth_layer_background;
-    case mw::LayerShellV1::Layer::bottom:
+    case std::to_underlying(mw::ZwlrLayerShellV1Layer::Bottom):
         return mir_depth_layer_below;
-    case mw::LayerShellV1::Layer::top:
+    case std::to_underlying(mw::ZwlrLayerShellV1Layer::Top):
         return mir_depth_layer_above;
-    case mw::LayerShellV1::Layer::overlay:
+    case std::to_underlying(mw::ZwlrLayerShellV1Layer::Overlay):
         return mir_depth_layer_overlay;
     default:
         BOOST_THROW_EXCEPTION(std::runtime_error("Invalid Layer Shell layer " + std::to_string(layer)));
@@ -65,27 +70,29 @@ namespace mir
 namespace frontend
 {
 
-class LayerShellV1::Instance : wayland::LayerShellV1
+class LayerShellV1::Instance : public mw::ZwlrLayerShellV1Handler
 {
 public:
-    Instance(wl_resource* new_resource, mf::LayerShellV1* shell)
-        : LayerShellV1{new_resource, Version<4>()},
-          shell{shell}
+    Instance(mf::LayerShellV1* shell)
+        : shell{shell}
     {
     }
 
-private:
-    void get_layer_surface(
-        wl_resource* new_layer_surface,
-        wl_resource* surface,
-        std::optional<wl_resource*> const& output,
+    mw::ZwlrLayerSurfaceV1Handler* handle_get_layer_surface(mw::WaylandResource const& surface,
+        mw::OptionalWaylandResource const& output,
         uint32_t layer,
-        std::string const& namespace_) override;
+        rust::Str namespace_) override;
 
+    void handle_destroy() override
+    {
+        // No-op
+    }
+
+private:
     mf::LayerShellV1* const shell;
 };
 
-class LayerSurfaceV1 : public wayland::LayerSurfaceV1, public WindowWlSurfaceRole
+class LayerSurfaceV1 : public mw::ZwlrLayerSurfaceV1Handler, public WindowWlSurfaceRole
 {
 public:
     LayerSurfaceV1(
@@ -95,7 +102,15 @@ public:
         LayerShellV1 const& layer_shell,
         MirDepthLayer layer);
 
-    ~LayerSurfaceV1() = default;
+    ~LayerSurfaceV1() override = default;
+    void handle_set_size(uint32_t width, uint32_t height) override;
+    void handle_set_anchor(uint32_t anchor) override;
+    void handle_set_exclusive_zone(int32_t zone) override;
+    void handle_set_margin(int32_t top, int32_t right, int32_t bottom, int32_t left) override;
+    void handle_set_keyboard_interactivity(uint32_t keyboard_interactivity) override;
+    void handle_get_popup(mw::WaylandResource const& popup) override;
+    void handle_ack_configure(uint32_t serial) override;
+    void handle_set_layer(uint32_t layer) override;
 
     static auto from(wl_resource* surface) -> std::optional<LayerSurfaceV1*>;
 
@@ -171,16 +186,6 @@ private:
     /// Sends a configure event if needed
     void configure();
 
-    // from wayland::LayerSurfaceV1
-    void set_size(uint32_t width, uint32_t height) override;
-    void set_anchor(uint32_t anchor) override;
-    void set_exclusive_zone(int32_t zone) override;
-    void set_margin(int32_t top, int32_t right, int32_t bottom, int32_t left) override;
-    void set_keyboard_interactivity(uint32_t keyboard_interactivity) override;
-    void get_popup(wl_resource* popup) override;
-    void ack_configure(uint32_t serial) override;
-    void set_layer(uint32_t layer) override;
-
     // from WindowWlSurfaceRole
     void handle_commit() override;
     void handle_state_change(MirWindowState /*new_state*/) override {};
@@ -224,13 +229,13 @@ mf::LayerShellV1::LayerShellV1(
     WlSeat& seat,
     OutputManager* output_manager,
     std::shared_ptr<SurfaceRegistry> const& surface_registry)
-    : Global(display, Version<4>()),
-      wayland_executor{wayland_executor},
+    : wayland_executor{wayland_executor},
       shell{shell},
       seat{seat},
       output_manager{output_manager},
       surface_registry{surface_registry}
 {
+    wl_display_create_zwlr_layer_shell_v1_global(display, 4, this);
 }
 
 auto mf::LayerShellV1::get_window(wl_resource* surface) -> std::shared_ptr<ms::Surface>
@@ -253,21 +258,20 @@ auto mf::LayerShellV1::get_window(wl_resource* surface) -> std::shared_ptr<ms::S
     return {};
 }
 
-void mf::LayerShellV1::bind(wl_resource* new_resource)
+mir::wayland_rs::cpp::ZwlrForeignToplevelHandleV1Handler* mf::LayerShellV1::create_handler() const
 {
-    new Instance{new_resource, this};
+    return new Instance{this};
 }
 
-void mf::LayerShellV1::Instance::get_layer_surface(
-    wl_resource* new_layer_surface,
-    wl_resource* surface,
-    std::optional<wl_resource*> const& output,
+mw::ZwlrLayerSurfaceV1Handler* handle_get_layer_surface(
+    mw::WaylandResource const& surface,
+    mw::OptionalWaylandResource const& output,
     uint32_t layer,
-    std::string const& namespace_)
+    rust::Str namespace_)
 {
     (void)namespace_; // Can be ignored if no special behavior is required;
 
-    new LayerSurfaceV1(
+    return new LayerSurfaceV1(
         new_layer_surface,
         WlSurface::from(surface),
         OutputManager::output_id_for(output),
@@ -283,8 +287,7 @@ mf::LayerSurfaceV1::LayerSurfaceV1(
     std::optional<graphics::DisplayConfigurationOutputId> output_id,
     LayerShellV1 const& layer_shell,
     MirDepthLayer layer)
-    : mw::LayerSurfaceV1(new_resource, Version<4>()),
-      WindowWlSurfaceRole(
+    : WindowWlSurfaceRole(
           layer_shell.wayland_executor,
           &layer_shell.seat,
           wayland::LayerSurfaceV1::client,
@@ -491,7 +494,7 @@ void mf::LayerSurfaceV1::configure()
         configure_size.height.value_or(geom::Height{0}).as_uint32_t());
 }
 
-void mf::LayerSurfaceV1::set_size(uint32_t width, uint32_t height)
+void mf::LayerSurfaceV1::handle_set_size(uint32_t width, uint32_t height)
 {
     width_set_by_client = width > 0;
     height_set_by_client = height > 0;
@@ -519,7 +522,7 @@ void mf::LayerSurfaceV1::set_size(uint32_t width, uint32_t height)
     configure_on_next_commit = true;
 }
 
-void mf::LayerSurfaceV1::set_anchor(uint32_t anchor)
+void mf::LayerSurfaceV1::handle_set_anchor(uint32_t anchor)
 {
     anchors.set_pending(Anchors{
         static_cast<bool>(anchor & Anchor::left),
@@ -529,13 +532,13 @@ void mf::LayerSurfaceV1::set_anchor(uint32_t anchor)
     inform_window_role_of_pending_placement();
 }
 
-void mf::LayerSurfaceV1::set_exclusive_zone(int32_t zone)
+void mf::LayerSurfaceV1::handle_set_exclusive_zone(int32_t zone)
 {
     exclusive_zone.set_pending(zone);
     inform_window_role_of_pending_placement();
 }
 
-void mf::LayerSurfaceV1::set_margin(int32_t top, int32_t right, int32_t bottom, int32_t left)
+void mf::LayerSurfaceV1::handle_set_margin(int32_t top, int32_t right, int32_t bottom, int32_t left)
 {
     margin.set_pending(Margin{
         geom::DeltaX{left},
@@ -545,7 +548,7 @@ void mf::LayerSurfaceV1::set_margin(int32_t top, int32_t right, int32_t bottom, 
     inform_window_role_of_pending_placement();
 }
 
-void mf::LayerSurfaceV1::set_keyboard_interactivity(uint32_t keyboard_interactivity)
+void mf::LayerSurfaceV1::handle_set_keyboard_interactivity(uint32_t keyboard_interactivity)
 {
     switch (keyboard_interactivity)
     {
@@ -573,7 +576,7 @@ void mf::LayerSurfaceV1::set_keyboard_interactivity(uint32_t keyboard_interactiv
     apply_spec(spec);
 }
 
-void mf::LayerSurfaceV1::get_popup(struct wl_resource* popup)
+void mf::LayerSurfaceV1::handle_get_popup(mw::WaylandResource const& popup)
 {
     auto const scene_surface_ = scene_surface();
     if (!scene_surface_)
@@ -596,7 +599,7 @@ void mf::LayerSurfaceV1::get_popup(struct wl_resource* popup)
     popups.push_back(mw::make_weak(popup_window_role));
 }
 
-void mf::LayerSurfaceV1::ack_configure(uint32_t serial)
+void mf::LayerSurfaceV1::handle_ack_configure(uint32_t serial)
 {
     auto const acked_event = std::find_if(
         std::begin(inflight_configures),
@@ -633,7 +636,7 @@ void mf::LayerSurfaceV1::ack_configure(uint32_t serial)
     inform_window_role_of_pending_placement();
 }
 
-void mf::LayerSurfaceV1::set_layer(uint32_t layer)
+void mf::LayerSurfaceV1::handle_set_layer(uint32_t layer)
 {
     shell::SurfaceSpecification spec;
     spec.depth_layer = layer_shell_layer_to_mir_depth_layer(layer);

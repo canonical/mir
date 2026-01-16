@@ -1,0 +1,21 @@
+[package]
+name = "wayland_rs"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[lib]
+crate-type = ["staticlib"]
+
+[dependencies]
+wayland-server = "0.31"
+wayland-backend = "0.3.7"
+cxx.workspace = true
+libc = "0.2"
+wayland-scanner = "0.31"
+bitflags = "2.4"
+wayland-protocols = "0.32.10"
+
+[build-dependencies]
+cxx-build.workspace = true
+quick-xml = "0.36"
