@@ -20,11 +20,6 @@
 
 using namespace std::chrono;
 
-namespace mir
-{
-namespace logging
-{
-
 std::string mir::logging::input_timestamp(mir::time::Clock const& clock, std::chrono::nanoseconds when)
 {
     auto const now = clock.now().time_since_epoch();
@@ -43,7 +38,4 @@ std::string mir::logging::input_timestamp(mir::time::Clock const& clock, std::ch
              when_ns, milliseconds, sub_milliseconds, sign_suffix);
 
     return std::string(str);
-}
-
-}
 }
