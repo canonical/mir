@@ -1654,6 +1654,84 @@ private:
     mg::BufferID const buffer_id_;
     geom::Size const buffer_size_;
 };
+
+auto export_egl_image(
+    mg::EGLExtensions::MESADmaBufExport const& ext,
+    EGLDisplay dpy,
+    EGLImage image,
+    geom::Size size) -> std::unique_ptr<mg::DMABufBuffer>
+{
+    constexpr int const max_planes = 4;
+
+    int fourcc;
+    int num_planes;
+    std::array<uint64_t, max_planes> modifiers;
+    if (ext.eglExportDMABUFImageQueryMESA(dpy, image, &fourcc, &num_planes, modifiers.data()) != EGL_TRUE)
+    {
+        BOOST_THROW_EXCEPTION((mg::egl_error("Failed to query EGLImage for dma-buf export")));
+    }
+
+    /* There's only a single modifier for a logical buffer. For some reason the EGL interface
+     * decided to return one modifier per plane, but they are always the same.
+     *
+     * We handle DRM_FORMAT_MOD_INVALID as an empty modifier; fix that up here if we get it.
+     */
+    auto modifier =
+        [](uint64_t egl_modifier) -> std::optional<uint64_t>
+        {
+            if (egl_modifier == DRM_FORMAT_MOD_INVALID)
+            {
+                return std::nullopt;
+            }
+            return egl_modifier;
+        }(modifiers[0]);
+
+    std::array<int, max_planes> fds;
+    std::array<EGLint, max_planes> strides;
+    std::array<EGLint, max_planes> offsets;
+
+    if (ext.eglExportDMABUFImageMESA(dpy, image, fds.data(), strides.data(), offsets.data()) != EGL_TRUE)
+    {
+        BOOST_THROW_EXCEPTION((mg::egl_error("Failed to export EGLImage to dma-buf(s)")));
+    }
+
+    std::vector<PlaneInfo> planes;
+    planes.reserve(num_planes);
+    for (int i = 0; i < num_planes; ++i)
+    {
+        mir::Fd fd;
+        // If multiple planes use the same buffer, the fds array will be filled with -1 for subsequent
+        // planes.
+        if (fds[i] == -1)
+        {
+            // Paranoia
+            if (i == 0)
+            {
+                BOOST_THROW_EXCEPTION((std::runtime_error{"Driver has a broken EGL_MESA_image_dma_buf_export extension"}));
+            }
+            fds[i] = fds[i - 1];
+            fd = mir::Fd{mir::IntOwnedFd{fds[i]}};
+        }
+        else
+        {
+            // We own these FDs now.
+            fd = mir::Fd{fds[i]};
+        }
+        planes.push_back(
+            PlaneInfo {
+                .dma_buf = std::move(fd),
+                .stride = static_cast<uint32_t>(strides[i]),
+                .offset = static_cast<uint32_t>(offsets[i])
+            });
+    }
+
+    return std::make_unique<DMABuf>(
+        mg::DRMFormat{static_cast<uint32_t>(fourcc)},
+        modifier,
+        std::move(planes),
+        mg::gl::Texture::Layout::TopRowFirst,
+        size);
+}
 }
 
 auto mg::DMABufEGLProvider::cpu_transfer(std::shared_ptr<DmabufTexBuffer> const& dmabuf_tex) -> std::shared_ptr<mg::gl::Texture>
@@ -1751,18 +1829,21 @@ auto mg::DMABufEGLProvider::dma_transfer(std::shared_ptr<DmabufTexBuffer> const&
     {
         BOOST_THROW_EXCEPTION((std::logic_error{"EGL_ANDROID_native_fence_sync support not implemented yet"}));
     }
+    auto importable_dmabuf = export_egl_image(
+        *importing_provider->dmabuf_export_ext, importing_provider->dpy, importable_image, dmabuf_tex->size());
+
     auto base_extension = importing_provider->egl_extensions->base(importing_provider->dpy);
     base_extension.eglDestroyImageKHR(importing_provider->dpy, src_image);
     base_extension.eglDestroyImageKHR(importing_provider->dpy, importable_image);
 
     if (auto descriptor = descriptor_for_format_and_modifiers(
-            importable_buf->format(), importable_buf->modifier().value_or(DRM_FORMAT_MOD_INVALID), *this))
+            importable_dmabuf->format(), importable_dmabuf->modifier().value_or(DRM_FORMAT_MOD_INVALID), *this))
     {
         /* We're being naughty here and using the fact that `as_texture()` has a side-effect
          * of invoking the buffer's `on_consumed()` callback.
          */
         dmabuf_tex->as_texture();
-        return std::make_shared<DMABufTex>(dpy, *egl_extensions, *importable_buf, *descriptor, egl_delegate);
+        return std::make_shared<DMABufTex>(dpy, *egl_extensions, *importable_dmabuf, *descriptor, egl_delegate);
     }
 
     /* To get here we have to have failed to find the format/modifier descriptor for a
