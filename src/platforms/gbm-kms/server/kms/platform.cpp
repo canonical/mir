@@ -43,13 +43,6 @@
 #include <system_error>
 #include <xf86drm.h>
 
-#include <boost/throw_exception.hpp>
-#include <drm.h>
-#include <drm_fourcc.h>
-#include <gbm.h>
-#include <system_error>
-#include <xf86drm.h>
-
 #define MIR_LOG_COMPONENT "platform-graphics-gbm-kms"
 #include <mir/log.h>
 
