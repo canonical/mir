@@ -276,7 +276,7 @@ private:
     mir::geometry::Size size_;
 };
 
-auto gbm_bo_allocate_no_modifiers_linear(auto gbm, auto size, auto format) -> struct gbm_bo*
+auto gbm_bo_allocate_no_modifiers_linear(gbm_device* gbm, mir::geometry::Size size, uint32_t format) -> struct gbm_bo*
 {
 
     auto const gbm_bo = gbm_bo_create(
@@ -291,7 +291,7 @@ auto gbm_bo_allocate_no_modifiers_linear(auto gbm, auto size, auto format) -> st
     return gbm_bo;
 }
 
-auto gbm_bo_allocate_with_modifiers_no_flags(auto gbm, auto modifiers, auto size, auto format)
+auto gbm_bo_allocate_with_modifiers_no_flags(gbm_device* gbm, std::span<uint64_t const> modifiers, mir::geometry::Size size, uint32_t format)
 {
     auto const gbm_bo = gbm_bo_create_with_modifiers2(
         gbm, size.width.as_uint32_t(), size.height.as_uint32_t(), format, modifiers.data(), modifiers.size(), 0);
