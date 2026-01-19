@@ -329,7 +329,7 @@ auto gbm_bo_with_modifiers_or_linear(
         {
         case ENOSYS:
             // We get ENOSYS if the GBM implementation can't handle modifiers
-            if (std::ranges::contains(modifiers, DRM_FORMAT_MOD_LINEAR))
+            if (!std::ranges::contains(modifiers, DRM_FORMAT_MOD_LINEAR))
             {
                 // Shouldn't happen, but if LINEAR isn't one of the requested modifiers we can't allocate
                 // something compatible
