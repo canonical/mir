@@ -109,9 +109,9 @@ public:
                     "Ignoring unexpected value for %s option: %s "
                     "(expects value of the form “{skip, allow}:{driver,devnode}:<driver or devnode>”"
                     ", “disable-kms-probe:{driver,devnode}:<driver or devnode>”, "
-                    "“egl-destroy-surface:{driver,devnode}:{default:leak}”), "
-                    "or “gbm-surface-has-free-buffers:{driver,devnode}:<driver or devnode>:{default,skip}”)"
-                    "or “gbm-buffer-transfer-strategy:{driver,devnode}:<driver or devnode>:{default,cpu}”",
+                    "“egl-destroy-surface:{driver,devnode}:{default:leak}”, "
+                    "or “gbm-surface-has-free-buffers:{driver,devnode}:<driver or devnode>:{default,skip}”"
+                    "or “gbm-buffer-transfer-strategy:{driver,devnode}:<driver or devnode>:{default,cpu}”)",
                     quirks_option_name,
                     quirk.c_str());
             }
