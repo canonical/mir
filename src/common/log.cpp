@@ -20,7 +20,6 @@
 #include <cstdio>
 #include <exception>
 #include <format>
-#include <iostream>
 #include <sstream>
 
 #include <boost/exception/diagnostic_information.hpp>

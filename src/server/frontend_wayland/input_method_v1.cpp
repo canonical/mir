@@ -395,7 +395,6 @@ void mf::InputMethodV1::bind(wl_resource *new_resource)
     new Instance{new_resource, text_input_hub, wayland_executor};
 }
 
-#include <iostream>
 /// Provides access to the InputPanelSurface when the get_input_panel_surface action is triggered
 class mf::InputPanelV1::Instance : wayland::InputPanelV1
 {
