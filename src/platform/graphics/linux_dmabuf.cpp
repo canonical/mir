@@ -45,6 +45,7 @@
 #include <sys/stat.h>
 #include <system_error>
 #include <linux/dma-buf.h>
+#include <xf86drm.h>
 
 #define MIR_LOG_COMPONENT "linux-dmabuf-import"
 #include <mir/log.h>
@@ -55,6 +56,9 @@
 #include <algorithm>
 #include <drm_fourcc.h>
 #include <wayland-server.h>
+
+#include <stdio.h>
+#include <fcntl.h>
 
 namespace mg = mir::graphics;
 namespace mgc = mg::common;
@@ -1457,7 +1461,7 @@ mg::DMABufEGLProvider::DMABufEGLProvider(
     mg::EGLExtensions::EXTImageDmaBufImportModifiers const& dmabuf_ext,
     std::shared_ptr<mgc::EGLContextExecutor> egl_delegate,
     EGLImageAllocator allocate_importable_image,
-    BufferTransferStrategy buffer_transfer_strategy):
+    TransferStrategySelector strategy_selector):
     dpy{dpy},
     egl_extensions{std::move(egl_extensions)},
     dmabuf_export_ext{mg::EGLExtensions::MESADmaBufExport::extension_if_supported(dpy)},
@@ -1466,7 +1470,7 @@ mg::DMABufEGLProvider::DMABufEGLProvider(
     egl_delegate{std::move(egl_delegate)},
     allocate_importable_image{std::move(allocate_importable_image)},
     blitter{std::make_unique<mg::EGLBufferCopier>(this->egl_delegate)},
-    buffer_transfer_strategy{std::move(buffer_transfer_strategy)}
+    strategy_selector_{std::move(strategy_selector)}
 {
 }
 
@@ -1740,6 +1744,36 @@ auto export_egl_image(
         mg::gl::Texture::Layout::TopRowFirst,
         size);
 }
+
+// Pretty sure this isn't the best idea, but it works for now.
+auto eglDisplayToDrmName(EGLDisplay display) -> std::string
+{
+    try
+    {
+        mg::EGLExtensions::DeviceQuery device_query_ext;
+
+        EGLDeviceEXT device;
+        device_query_ext.eglQueryDisplayAttribEXT(display, EGL_DEVICE_EXT, (EGLAttrib*)&device);
+
+        // Returns "/dev/dri/card0" or similar
+        char const* drm_device = device_query_ext.eglQueryDeviceStringEXT(device, EGL_DRM_DEVICE_FILE_EXT);
+
+        // Then use DRM ioctls to query the device
+        int fd = open(drm_device, O_RDWR);
+
+        using DrmVersion = std::unique_ptr<drmVersion, decltype(&drmFreeVersion)>;
+        auto version = DrmVersion{drmGetVersion(fd), drmFreeVersion};
+
+        // Copy the name before the pointer is freed
+        return std::string{version->name, static_cast<size_t>(version->name_len)};
+    }
+    catch (...)
+    {
+        mir::log_error("Failed to get DRM device name from EGL display");
+    }
+
+    return "unknown";
+}
 }
 
 auto mg::DMABufEGLProvider::cpu_transfer(std::shared_ptr<DmabufTexBuffer> const& dmabuf_tex) -> std::shared_ptr<mg::gl::Texture>
@@ -1870,22 +1904,24 @@ auto mg::DMABufEGLProvider::as_texture(std::shared_ptr<Buffer> buffer) -> std::s
     if (auto const dmabuf_tex = std::dynamic_pointer_cast<DmabufTexBuffer>(native_buf))
     {
         auto const source_dpy = dmabuf_tex->provider()->dpy;
-        auto const source_vendor = eglQueryString(source_dpy, EGL_VENDOR);
+        auto const source_vendor = eglDisplayToDrmName(source_dpy);
 
         auto const importing_dpy = dpy;
-        auto const importing_vendor = eglQueryString(importing_dpy, EGL_VENDOR);
+        auto const importing_vendor = eglDisplayToDrmName(importing_dpy);
 
-        auto const importing_strategy = dmabuf_tex->provider()->buffer_transfer_strategy;
+        // Use strategy selector if provided, otherwise use default strategy
+        auto const importing_strategy = strategy_selector_
+            ? strategy_selector_(source_vendor, importing_vendor)
+            : BufferTransferStrategy::dma;
+
         auto const strategy_name =
             importing_strategy == BufferTransferStrategy::cpu ? "CPU" :
             importing_strategy == BufferTransferStrategy::dma ? "DMA" :
             "Unknown";
         mir::log_debug(
-            "DMABufEGLProvider::as_texture: (%p:%s -> %p:%s) importing buffer %p using %s strategy",
-            source_dpy,
-            source_vendor,
-            importing_dpy,
-            importing_vendor,
+            "DMABufEGLProvider::as_texture: (%s -> %s) importing buffer %p using %s strategy",
+            source_vendor.empty() ? "unknown" : source_vendor.data(),
+            importing_vendor.empty() ? "unknown" : importing_vendor.data(),
             static_cast<void const*>(dmabuf_tex.get()),
             strategy_name);
 

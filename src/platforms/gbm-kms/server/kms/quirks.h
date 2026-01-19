@@ -67,20 +67,28 @@ public:
     };
 
     using BufferTransferStrategy = DMABufEGLProvider::BufferTransferStrategy;
+
+    struct VendorPairConfig
+    {
+        std::unordered_map<std::string, BufferTransferStrategy> vendor_pairs;
+    };
+
     GbmQuirks(
         std::unique_ptr<EglDestroySurfaceQuirk> create_surface_flags,
         std::unique_ptr<SurfaceHasFreeBuffersQuirk> surface_has_free_buffers,
-        BufferTransferStrategy gbm_buffer_transfer_strategy
+        VendorPairConfig vendor_pair_config
     );
 
     void egl_destroy_surface(EGLDisplay dpy, EGLSurface surf) const;
     auto gbm_surface_has_free_buffers(gbm_surface* gbm_surface) const -> int;
-    auto gbm_buffer_transfer_strategy() const -> BufferTransferStrategy;
+
+    auto make_transfer_strategy_selector() const
+        -> DMABufEGLProvider::TransferStrategySelector;
 
 private:
     std::unique_ptr<EglDestroySurfaceQuirk> const egl_destroy_surface_;
     std::unique_ptr<SurfaceHasFreeBuffersQuirk> const surface_has_free_buffers_;
-    BufferTransferStrategy const buffer_transfer_strategy_;
+    VendorPairConfig const vendor_pair_config_;
 };
 
 /**

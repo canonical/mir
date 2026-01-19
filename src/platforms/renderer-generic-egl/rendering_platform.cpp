@@ -182,7 +182,7 @@ auto maybe_make_dmabuf_provider(
             {
                 return nullptr;    // We can't (portably) allocate dmabufs, but we also shouldn't need to
             },
-            mg::DMABufEGLProvider::BufferTransferStrategy::cpu);
+            nullptr);  // No strategy selector for generic EGL platform
     }
     catch (std::runtime_error const& error)
     {

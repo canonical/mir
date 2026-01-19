@@ -401,6 +401,8 @@ auto maybe_make_dmabuf_provider(
     try
     {
         mg::EGLExtensions::EXTImageDmaBufImportModifiers modifier_ext{dpy};
+        auto strategy_selector = quirks->make_transfer_strategy_selector();
+        
         return std::make_shared<mg::DMABufEGLProvider>(
             dpy,
             std::move(egl_extensions),
@@ -411,7 +413,7 @@ auto maybe_make_dmabuf_provider(
             {
                 return alloc_dma_buf(gbm.get(), format, modifiers, size);
             },
-            quirks->gbm_buffer_transfer_strategy());
+            std::move(strategy_selector));
     }
     catch (std::runtime_error const& error)
     {

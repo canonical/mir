@@ -66,13 +66,16 @@ public:
         dma,
     };
 
+    using TransferStrategySelector =
+        std::function<BufferTransferStrategy(std::string_view source_vendor, std::string_view dest_vendor)>;
+
     DMABufEGLProvider(
         EGLDisplay dpy,
         std::shared_ptr<EGLExtensions> egl_extensions,
         EGLExtensions::EXTImageDmaBufImportModifiers const& dmabuf_ext,
         std::shared_ptr<common::EGLContextExecutor> egl_delegate,
         EGLImageAllocator allocate_importable_image,
-        BufferTransferStrategy buffer_transfer_strategy);
+        TransferStrategySelector strategy_selector);
 
     ~DMABufEGLProvider();
 
@@ -110,7 +113,7 @@ public:
      std::shared_ptr<common::EGLContextExecutor> const egl_delegate;
      EGLImageAllocator allocate_importable_image;
      std::unique_ptr<EGLBufferCopier> const blitter;
-     BufferTransferStrategy const buffer_transfer_strategy;
+     TransferStrategySelector const strategy_selector_;
 };
 
 class LinuxDmaBuf : public mir::wayland::LinuxDmabufV1::Global
