@@ -402,7 +402,7 @@ auto maybe_make_dmabuf_provider(
     {
         mg::EGLExtensions::EXTImageDmaBufImportModifiers modifier_ext{dpy};
         auto strategy_selector = quirks->make_transfer_strategy_selector();
-        
+
         return std::make_shared<mg::DMABufEGLProvider>(
             dpy,
             std::move(egl_extensions),
