@@ -106,6 +106,7 @@ public:
      auto dma_transfer(std::shared_ptr<DmabufTexBuffer> const& dmabuf_tex) -> std::shared_ptr<gl::Texture>;
 
      EGLDisplay const dpy;
+     std::string const vendor_drm_name;
      std::shared_ptr<EGLExtensions> const egl_extensions;
      std::optional<EGLExtensions::MESADmaBufExport> const dmabuf_export_ext;
      dev_t const devnum_;

@@ -1453,6 +1453,35 @@ dev_t get_devnum(EGLDisplay dpy)
         return 0;
     }
 }
+
+auto egl_display_to_drm_name(EGLDisplay display) -> std::string
+{
+    try
+    {
+        mg::EGLExtensions::DeviceQuery device_query_ext;
+
+        EGLDeviceEXT device;
+        device_query_ext.eglQueryDisplayAttribEXT(display, EGL_DEVICE_EXT, (EGLAttrib*)&device);
+
+        // Returns "/dev/dri/card0" or similar
+        char const* drm_device = device_query_ext.eglQueryDeviceStringEXT(device, EGL_DRM_DEVICE_FILE_EXT);
+
+        // Then use DRM ioctls to query the device
+        int fd = open(drm_device, O_RDWR);
+
+        using DrmVersion = std::unique_ptr<drmVersion, decltype(&drmFreeVersion)>;
+        auto version = DrmVersion{drmGetVersion(fd), drmFreeVersion};
+
+        // Copy the name before the pointer is freed
+        return std::string{version->name, static_cast<size_t>(version->name_len)};
+    }
+    catch (...)
+    {
+        mir::log_error("Failed to get DRM device name from EGL display");
+    }
+
+    return "unknown";
+}
 }
 
 mg::DMABufEGLProvider::DMABufEGLProvider(
@@ -1463,6 +1492,7 @@ mg::DMABufEGLProvider::DMABufEGLProvider(
     EGLImageAllocator allocate_importable_image,
     TransferStrategySelector strategy_selector):
     dpy{dpy},
+    vendor_drm_name{egl_display_to_drm_name(dpy)},
     egl_extensions{std::move(egl_extensions)},
     dmabuf_export_ext{mg::EGLExtensions::MESADmaBufExport::extension_if_supported(dpy)},
     devnum_{get_devnum(dpy)},
@@ -1746,34 +1776,6 @@ auto export_egl_image(
 }
 
 // Pretty sure this isn't the best idea, but it works for now.
-auto eglDisplayToDrmName(EGLDisplay display) -> std::string
-{
-    try
-    {
-        mg::EGLExtensions::DeviceQuery device_query_ext;
-
-        EGLDeviceEXT device;
-        device_query_ext.eglQueryDisplayAttribEXT(display, EGL_DEVICE_EXT, (EGLAttrib*)&device);
-
-        // Returns "/dev/dri/card0" or similar
-        char const* drm_device = device_query_ext.eglQueryDeviceStringEXT(device, EGL_DRM_DEVICE_FILE_EXT);
-
-        // Then use DRM ioctls to query the device
-        int fd = open(drm_device, O_RDWR);
-
-        using DrmVersion = std::unique_ptr<drmVersion, decltype(&drmFreeVersion)>;
-        auto version = DrmVersion{drmGetVersion(fd), drmFreeVersion};
-
-        // Copy the name before the pointer is freed
-        return std::string{version->name, static_cast<size_t>(version->name_len)};
-    }
-    catch (...)
-    {
-        mir::log_error("Failed to get DRM device name from EGL display");
-    }
-
-    return "unknown";
-}
 }
 
 auto mg::DMABufEGLProvider::cpu_transfer(std::shared_ptr<DmabufTexBuffer> const& dmabuf_tex) -> std::shared_ptr<mg::gl::Texture>
@@ -1903,11 +1905,8 @@ auto mg::DMABufEGLProvider::as_texture(std::shared_ptr<Buffer> buffer) -> std::s
 
     if (auto const dmabuf_tex = std::dynamic_pointer_cast<DmabufTexBuffer>(native_buf))
     {
-        auto const source_dpy = dmabuf_tex->provider()->dpy;
-        auto const source_vendor = eglDisplayToDrmName(source_dpy);
-
-        auto const importing_dpy = dpy;
-        auto const importing_vendor = eglDisplayToDrmName(importing_dpy);
+        auto const source_vendor = dmabuf_tex->provider()->vendor_drm_name;
+        auto const importing_vendor = vendor_drm_name;
 
         // Use strategy selector if provided, otherwise use default strategy
         auto const importing_strategy = strategy_selector_
