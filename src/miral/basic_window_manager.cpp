@@ -1423,7 +1423,10 @@ void miral::BasicWindowManager::place_and_size_for_state(
 
     case mir_window_state_fullscreen:
     {
-        rect = policy->confirm_placement_on_display(window_info, new_state, display_area->area);
+        auto const fullscreen_area = window_info.ignore_exclusion_zones()
+            ? display_area->area
+            : calculate_application_zone_for_depth_layer(*display_area, window_info.depth_layer());
+        rect = policy->confirm_placement_on_display(window_info, new_state, fullscreen_area);
         break;
     }
 
@@ -1956,9 +1959,15 @@ auto miral::BasicWindowManager::place_new_surface(WindowSpecification parameters
         switch (parameters.state().value())
         {
         case mir_window_state_fullscreen:
-            parameters.top_left() = display_area->area.top_left;
-            parameters.size() = display_area->area.size;
-            break;
+            {
+                auto const target_depth = parameters.depth_layer().value_or(mir_depth_layer_application);
+                auto const fullscreen_area = parameters.ignore_exclusion_zones().value_or(false)
+                    ? display_area->area
+                    : calculate_application_zone_for_depth_layer(*display_area, target_depth);
+                parameters.top_left() = fullscreen_area.top_left;
+                parameters.size() = fullscreen_area.size;
+                break;
+            }
 
         case mir_window_state_maximized:
             parameters.top_left() = application_zone.top_left;
@@ -2654,6 +2663,39 @@ void miral::BasicWindowManager::for_each_window_in_workspace(
         callback(kv->second);
 }
 
+auto miral::BasicWindowManager::calculate_application_zone_for_depth_layer(
+    DisplayArea const& display_area,
+    MirDepthLayer target_depth_layer) const -> Rectangle
+{
+    Rectangle zone_rect = display_area.area;
+
+    // Only consider exclusive zones from attached windows in layers above the target layer
+    for (auto const& window : display_area.attached_windows)
+    {
+        if (window)
+        {
+            auto const& info = info_for(window);
+            
+            // Only apply exclusion zones from windows in higher layers
+            if (info.depth_layer() <= target_depth_layer)
+                continue;
+                
+            if (info.state() == mir_window_state_attached && 
+                !info.ignore_exclusion_zones() && 
+                info.exclusive_rect().is_set())
+            {
+                Rectangle exclusive_rect{
+                    info.exclusive_rect().value().top_left + as_displacement(info.window().top_left()),
+                    info.exclusive_rect().value().size};
+                    
+                zone_rect = apply_exclusive_rect_to_application_zone(zone_rect, exclusive_rect, info.attached_edges());
+            }
+        }
+    }
+    
+    return zone_rect;
+}
+
 auto miral::BasicWindowManager::apply_exclusive_rect_to_application_zone(
     Rectangle const& original_zone,
     Rectangle const& exclusive_rect,
@@ -2872,18 +2914,6 @@ void miral::BasicWindowManager::update_application_zones_and_attached_windows()
         }
     }
 
-    // Fullscreen surface should fill the whole area (does not depend on what the zones end up being)
-    for (auto const& window : fullscreen_surfaces)
-    {
-        if (window)
-        {
-            auto& info = info_for(window);
-            auto const rect =
-                policy->confirm_placement_on_display(info, mir_window_state_fullscreen, display_area_for(info)->area);
-            place_and_size(info, rect.top_left, rect.size);
-        }
-    }
-
     for (auto const& area : display_areas)
     {
         Rectangle zone_rect = area->area;
@@ -2980,6 +3010,23 @@ void miral::BasicWindowManager::update_application_zones_and_attached_windows()
             policy->advise_application_zone_update(area->application_zone, area->zone_policy_knows_about.value());
         }
         area->zone_policy_knows_about = area->application_zone;
+    }
+
+    // Fullscreen surfaces should respect exclusion zones unless they explicitly ignore them
+    // This must be done after application zones are calculated to ensure correct sizing
+    for (auto const& window : fullscreen_surfaces)
+    {
+        if (window)
+        {
+            auto& info = info_for(window);
+            auto const display_area = display_area_for(info);
+            auto const fullscreen_area = info.ignore_exclusion_zones()
+                ? display_area->area
+                : calculate_application_zone_for_depth_layer(*display_area, info.depth_layer());
+            auto const rect =
+                policy->confirm_placement_on_display(info, mir_window_state_fullscreen, fullscreen_area);
+            place_and_size(info, rect.top_left, rect.size);
+        }
     }
 }
 

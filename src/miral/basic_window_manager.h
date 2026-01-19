@@ -310,6 +310,12 @@ private:
     auto display_area_for_output_id(int output_id) const -> std::shared_ptr<DisplayArea>; ///< returns null if not found
     auto display_area_for(WindowInfo const& info) const -> std::shared_ptr<DisplayArea>;
     auto display_area_for(Rectangle const& rect) const -> std::optional<std::shared_ptr<DisplayArea>>;
+    
+    /// Calculates the application zone for a specific depth layer, considering only exclusion zones from higher layers
+    auto calculate_application_zone_for_depth_layer(
+        DisplayArea const& display_area,
+        MirDepthLayer target_depth_layer) const -> mir::geometry::Rectangle;
+    
     /// Returns the application zone area after shrinking it for the exclusive zone if needed
     static auto apply_exclusive_rect_to_application_zone(
         mir::geometry::Rectangle const& original_zone,
