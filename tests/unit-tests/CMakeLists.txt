@@ -177,10 +177,10 @@ target_link_libraries(
   mir-test-doubles-udev
 
   mircommon
+  mirserver-static
 
   PkgConfig::LIBINPUT
   PkgConfig::WAYLAND_SERVER
-  ${MIR_SERVER_REFERENCES}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
 
@@ -205,14 +205,13 @@ target_link_libraries(
   ${UMOCK_UNIT_TEST_REFERENCES}
   exampleserverconfig
   mircommon
+  mirserver-static
 
   mir-test-static
   mir-test-framework-static
   mir-umock-test-framework
 
   PkgConfig::UMOCKDEV
-  PkgConfig::LIBINPUT
-  ${MIR_SERVER_REFERENCES}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
 

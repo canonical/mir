@@ -204,7 +204,7 @@ mir::EventUPtr mie::LibInputDevice::convert_event(libinput_event_keyboard* keybo
                       mir_keyboard_action_down :
                       mir_keyboard_action_up;
     auto const code = libinput_event_keyboard_get_key(keyboard);
-    report->received_event_from_kernel(time.count(), EV_KEY, code, action);
+    report->received_event_from_kernel(time, EV_KEY, code, action);
 
     return builder->key_event(time, action, xkb_keysym_t{0}, code);
 }
@@ -219,7 +219,7 @@ mir::EventUPtr mie::LibInputDevice::convert_button_event(libinput_event_pointer*
     auto const do_not_swap_buttons = mir_pointer_handedness_right;
     auto const pointer_button = mie::to_pointer_button(button, do_not_swap_buttons);
 
-    report->received_event_from_kernel(time.count(), EV_KEY, pointer_button, action);
+    report->received_event_from_kernel(time, EV_KEY, pointer_button, action);
 
     if (action == mir_pointer_action_button_down)
         button_state = MirPointerButton(button_state | uint32_t(pointer_button));
@@ -242,7 +242,7 @@ mir::EventUPtr mie::LibInputDevice::convert_motion_event(libinput_event_pointer*
     std::chrono::nanoseconds const time = std::chrono::microseconds(libinput_event_pointer_get_time_usec(pointer));
     auto const action = mir_pointer_action_motion;
 
-    report->received_event_from_kernel(time.count(), EV_REL, 0, 0);
+    report->received_event_from_kernel(time, EV_REL, 0, 0);
 
     return builder->pointer_event(
         time,
@@ -265,7 +265,7 @@ mir::EventUPtr mie::LibInputDevice::convert_absolute_motion_event(libinput_event
     uint32_t const width = screen.size.width.as_int();
     uint32_t const height = screen.size.height.as_int();
 
-    report->received_event_from_kernel(time.count(), EV_ABS, 0, 0);
+    report->received_event_from_kernel(time, EV_ABS, 0, 0);
 
     auto const old_pointer_pos = pointer_pos;
     pointer_pos = {
@@ -302,7 +302,7 @@ mir::EventUPtr mie::LibInputDevice::convert_axis_event(libinput_event_pointer* p
         vertical_scroll_scale);
     auto const axis_source = get_axis_source(pointer);
 
-    report->received_event_from_kernel(time.count(), EV_REL, 0, 0);
+    report->received_event_from_kernel(time, EV_REL, 0, 0);
 
     return builder->pointer_event(
         time,
@@ -318,7 +318,7 @@ mir::EventUPtr mie::LibInputDevice::convert_axis_event(libinput_event_pointer* p
 mir::EventUPtr mie::LibInputDevice::convert_touch_frame(libinput_event_touch* touch)
 {
     std::chrono::nanoseconds const time = std::chrono::microseconds(libinput_event_touch_get_time_usec(touch));
-    report->received_event_from_kernel(time.count(), EV_SYN, 0, 0);
+    report->received_event_from_kernel(time, EV_SYN, 0, 0);
 
     // TODO make libinput indicate tool type
     auto const tool = mir_touch_tooltype_finger;

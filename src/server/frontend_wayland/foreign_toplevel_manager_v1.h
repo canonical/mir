@@ -21,6 +21,7 @@
 #include "desktop_file_manager.h"
 #include <mir/synchronised.h>
 
+#include <map>
 #include <memory>
 #include <mutex>
 
