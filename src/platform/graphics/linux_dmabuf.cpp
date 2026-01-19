@@ -1852,7 +1852,7 @@ auto mg::DMABufEGLProvider::dma_transfer(std::shared_ptr<DmabufTexBuffer> const&
      * This is a logic bug, so go noisily.
      */
     BOOST_THROW_EXCEPTION(
-        (std::logic_error{"Failed to find import parameterns for buffer we explicitly allocated for import"}));
+        (std::logic_error{"Failed to find import parameters for buffer we explicitly allocated for import"}));
 }
 
 auto mg::DMABufEGLProvider::as_texture(std::shared_ptr<Buffer> buffer) -> std::shared_ptr<gl::Texture>
