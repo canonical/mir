@@ -63,8 +63,6 @@ auto is_intel(std::string_view vendor) -> bool
 struct VendorPairTransferStrategy
 {
     void add(std::string_view source_vendor, std::string_view dest_vendor, std::string_view strategy);
-    auto get_strategy(std::string_view source_vendor, std::string_view dest_vendor) const
-        -> std::optional<mgg::GbmQuirks::BufferTransferStrategy>;
 
     // Map from "source:dest" to strategy
     std::unordered_map<std::string, mgg::GbmQuirks::BufferTransferStrategy> vendor_pairs;
@@ -99,18 +97,6 @@ void VendorPairTransferStrategy::add(
             std::string{source_vendor}.c_str(),
             std::string{dest_vendor}.c_str());
     }
-}
-
-auto VendorPairTransferStrategy::get_strategy(std::string_view source_vendor, std::string_view dest_vendor) const
-    -> std::optional<mgg::GbmQuirks::BufferTransferStrategy>
-{
-    auto key = std::string{source_vendor} + ":" + std::string{dest_vendor};
-    auto it = vendor_pairs.find(key);
-    if (it != vendor_pairs.end())
-    {
-        return it->second;
-    }
-    return std::nullopt;
 }
 
 auto parse_vendor_pair_quirk(
