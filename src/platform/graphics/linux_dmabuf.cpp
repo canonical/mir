@@ -1268,7 +1268,15 @@ private:
                     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
                     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, parent.tex.tex_id(), 0);
 
-                    glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels.get());
+                    if(auto const gl_pixel_format = get_gl_pixel_format(parent.pixel_format())) {
+                        auto const [format, type] = *gl_pixel_format;
+                        glReadPixels(0, 0, width, height, format, type, pixels.get());
+                    } else {
+                        mir::log_debug(
+                            "GLMapping: Unsupported pixel format %d, defaulting to RGBA8 readback",
+                            parent.pixel_format());
+                        glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels.get());
+                    }
 
                     glBindFramebuffer(GL_FRAMEBUFFER, 0);
                     glDeleteFramebuffers(1, &fbo);
