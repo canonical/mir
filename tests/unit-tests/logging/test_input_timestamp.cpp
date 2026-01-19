@@ -48,9 +48,7 @@ TEST(TimestampTest, past_time_is_correctly_formatted)
     clock.current_time_value = steady_clock::time_point(1000ms);
     auto const past_event = 250ms;
 
-    std::string out = ml::input_timestamp(clock, past_event);
-
-    EXPECT_THAT(out, AllOf(HasSubstr("750"), HasSubstr("ms ago")));
+    EXPECT_THAT(ml::input_timestamp(clock, past_event), HasSubstr("750.000000ms ago"));
 }
 
 TEST(TimestampTest, future_time_is_correctly_formatted)
@@ -59,7 +57,5 @@ TEST(TimestampTest, future_time_is_correctly_formatted)
     clock.current_time_value = steady_clock::time_point(500ms);
     auto const future_event = 750ms;
 
-    std::string out = ml::input_timestamp(clock, future_event);
-
-    EXPECT_THAT(out, AllOf(HasSubstr("250"), HasSubstr("ms"), HasSubstr("in the future")));
+    EXPECT_THAT(ml::input_timestamp(clock, future_event), AllOf(HasSubstr("250.000000ms in the future")));
 }
