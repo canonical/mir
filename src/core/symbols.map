@@ -63,4 +63,3 @@ MIR_CORE_2.26 {
       vtable?for?mir::logging::Logger;
     };
 } MIR_CORE_2.24;
-
