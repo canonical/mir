@@ -270,6 +270,54 @@ BufferGLDescription const ExternalOES = {
     "}\n"
 };
 
+struct GLPixelFormat
+{
+    GLenum gl_format;
+    GLenum gl_type;
+};
+
+auto get_gl_pixel_format(MirPixelFormat mir_format) -> std::optional<GLPixelFormat>
+{
+#if __BYTE_ORDER == __LITTLE_ENDIAN
+    GLenum const argb = GL_BGRA_EXT;
+    GLenum const abgr = GL_RGBA;
+#elif __BYTE_ORDER == __BIG_ENDIAN
+    // TODO: Big endian support
+    GLenum const argb = GL_INVALID_ENUM;
+    GLenum const abgr = GL_INVALID_ENUM;
+    // GLenum const rgba = GL_RGBA;
+    // GLenum const bgra = GL_BGRA_EXT;
+#endif
+
+    static const struct
+    {
+        MirPixelFormat mir_format;
+        GLenum gl_format, gl_type;
+    } mapping[mir_pixel_formats] =
+    {
+        {mir_pixel_format_invalid,   GL_INVALID_ENUM, GL_INVALID_ENUM},
+        {mir_pixel_format_abgr_8888, abgr,            GL_UNSIGNED_BYTE},
+        {mir_pixel_format_xbgr_8888, abgr,            GL_UNSIGNED_BYTE},
+        {mir_pixel_format_argb_8888, argb,            GL_UNSIGNED_BYTE},
+        {mir_pixel_format_xrgb_8888, argb,            GL_UNSIGNED_BYTE},
+        {mir_pixel_format_bgr_888,   GL_INVALID_ENUM, GL_INVALID_ENUM},
+        {mir_pixel_format_rgb_888,   GL_RGB,          GL_UNSIGNED_BYTE},
+        {mir_pixel_format_rgb_565,   GL_RGB,          GL_UNSIGNED_SHORT_5_6_5},
+        {mir_pixel_format_rgba_5551, GL_RGBA,         GL_UNSIGNED_SHORT_5_5_5_1},
+        {mir_pixel_format_rgba_4444, GL_RGBA,         GL_UNSIGNED_SHORT_4_4_4_4},
+    };
+
+    std::optional<GLPixelFormat> ret;
+
+    if (mir_format > mir_pixel_format_invalid && mir_format < mir_pixel_formats &&
+        mapping[mir_format].mir_format == mir_format) // just a sanity check
+    {
+        ret = {mapping[mir_format].gl_format, mapping[mir_format].gl_type};
+    }
+
+    return ret;
+}
+
 namespace
 {
 struct EGLPlaneAttribs
@@ -1181,7 +1229,7 @@ private:
 
         auto format() const -> MirPixelFormat override
         {
-           return parent.format_.as_mir_format().value_or(mir_pixel_format_invalid);
+            return parent.format_.as_mir_format().value_or(mir_pixel_format_invalid);
         }
 
         auto stride() const -> geom::Stride override
@@ -1479,54 +1527,6 @@ GLuint new_texture()
     return tex;
 }
 
-bool get_gl_pixel_format(MirPixelFormat mir_format,
-                         GLenum& gl_format, GLenum& gl_type)
-{
-#if __BYTE_ORDER == __LITTLE_ENDIAN
-    GLenum const argb = GL_BGRA_EXT;
-    GLenum const abgr = GL_RGBA;
-#elif __BYTE_ORDER == __BIG_ENDIAN
-    // TODO: Big endian support
-    GLenum const argb = GL_INVALID_ENUM;
-    GLenum const abgr = GL_INVALID_ENUM;
-    //GLenum const rgba = GL_RGBA;
-    //GLenum const bgra = GL_BGRA_EXT;
-#endif
-
-    static const struct
-    {
-        MirPixelFormat mir_format;
-        GLenum gl_format, gl_type;
-    } mapping[mir_pixel_formats] =
-    {
-        {mir_pixel_format_invalid,   GL_INVALID_ENUM, GL_INVALID_ENUM},
-        {mir_pixel_format_abgr_8888, abgr,            GL_UNSIGNED_BYTE},
-        {mir_pixel_format_xbgr_8888, abgr,            GL_UNSIGNED_BYTE},
-        {mir_pixel_format_argb_8888, argb,            GL_UNSIGNED_BYTE},
-        {mir_pixel_format_xrgb_8888, argb,            GL_UNSIGNED_BYTE},
-        {mir_pixel_format_bgr_888,   GL_INVALID_ENUM, GL_INVALID_ENUM},
-        {mir_pixel_format_rgb_888,   GL_RGB,          GL_UNSIGNED_BYTE},
-        {mir_pixel_format_rgb_565,   GL_RGB,          GL_UNSIGNED_SHORT_5_6_5},
-        {mir_pixel_format_rgba_5551, GL_RGBA,         GL_UNSIGNED_SHORT_5_5_5_1},
-        {mir_pixel_format_rgba_4444, GL_RGBA,         GL_UNSIGNED_SHORT_4_4_4_4},
-    };
-
-    if (mir_format > mir_pixel_format_invalid &&
-        mir_format < mir_pixel_formats &&
-        mapping[mir_format].mir_format == mir_format) // just a sanity check
-    {
-        gl_format = mapping[mir_format].gl_format;
-        gl_type = mapping[mir_format].gl_type;
-    }
-    else
-    {
-        gl_format = GL_INVALID_ENUM;
-        gl_type = GL_INVALID_ENUM;
-    }
-
-    return gl_format != GL_INVALID_ENUM && gl_type != GL_INVALID_ENUM;
-}
-
 class ShmBufferTexture : public mg::gl::Texture
 {
 public:
@@ -1595,10 +1595,10 @@ public:
             return;
 
         bind();
-        GLenum format, type;
 
-        if (get_gl_pixel_format(pixel_format, format, type))
+        if (auto const gl_pixel_format = get_gl_pixel_format(pixel_format))
         {
+            auto const [format, type] = *gl_pixel_format;
             auto const stride_in_px =
                 stride.as_int() / MIR_BYTES_PER_PIXEL(pixel_format);
             /*
