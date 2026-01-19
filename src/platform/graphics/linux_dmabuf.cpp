@@ -1461,16 +1461,38 @@ auto egl_display_to_drm_name(EGLDisplay display) -> std::string
         mg::EGLExtensions::DeviceQuery device_query_ext;
 
         EGLDeviceEXT device;
-        device_query_ext.eglQueryDisplayAttribEXT(display, EGL_DEVICE_EXT, (EGLAttrib*)&device);
+        if (device_query_ext.eglQueryDisplayAttribEXT(display, EGL_DEVICE_EXT, (EGLAttrib*)&device) == EGL_FALSE ||
+            device == nullptr)
+        {
+            mir::log_debug("eglQueryDisplayAttribEXT EGL_DEVICE_EXT failed");
+            return "unknown";
+        }
 
         // Returns "/dev/dri/card0" or similar
         char const* drm_device = device_query_ext.eglQueryDeviceStringEXT(device, EGL_DRM_DEVICE_FILE_EXT);
+        if(drm_device == nullptr)
+        {
+            mir::log_debug("eglQueryDeviceStringEXT EGL_DRM_DEVICE_FILE_EXT returned nullptr");
+            return "unknown";
+        }
 
         // Then use DRM ioctls to query the device
         int fd = open(drm_device, O_RDWR);
 
         using DrmVersion = std::unique_ptr<drmVersion, decltype(&drmFreeVersion)>;
         auto version = DrmVersion{drmGetVersion(fd), drmFreeVersion};
+
+        if(version == nullptr)
+        {
+            mir::log_debug("drmGetVersion returned nullptr");
+            return "unknown";
+        }
+
+        if(version->name == nullptr || version->name_len == 0)
+        {
+            mir::log_debug("drmGetVersion returned empty name");
+            return "unknown";
+        }
 
         // Copy the name before the pointer is freed
         return std::string{version->name, static_cast<size_t>(version->name_len)};
