@@ -1869,11 +1869,11 @@ auto mg::DMABufEGLProvider::as_texture(std::shared_ptr<Buffer> buffer) -> std::s
 
     if (auto const dmabuf_tex = std::dynamic_pointer_cast<DmabufTexBuffer>(native_buf))
     {
-        auto const source_dpy = dpy;
-        auto const source_vendor = eglQueryString(dpy, EGL_VENDOR);
+        auto const source_dpy = dmabuf_tex->provider()->dpy;
+        auto const source_vendor = eglQueryString(source_dpy, EGL_VENDOR);
 
-        auto const importing_dpy = dmabuf_tex->provider()->dpy;
-        auto const importing_vendor = eglQueryString(dmabuf_tex->provider()->dpy, EGL_VENDOR);
+        auto const importing_dpy = dpy;
+        auto const importing_vendor = eglQueryString(importing_dpy, EGL_VENDOR);
 
         auto const importing_strategy = dmabuf_tex->provider()->buffer_transfer_strategy;
         auto const strategy_name =
