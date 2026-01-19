@@ -325,7 +325,7 @@ auto gbm_bo_with_modifiers_or_linear(
 
     if (!gbm_bo)
     {
-        switch(errno)
+        switch (errno)
         {
         case ENOSYS:
             // We get ENOSYS if the GBM implementation can't handle modifiers
