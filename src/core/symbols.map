@@ -45,3 +45,22 @@ global:
     mir::report_exception*;
   };
 } MIR_CORE_2.21;
+
+MIR_CORE_2.26 {
+  global:
+    extern "C++" {
+      mir::log*;
+      mir::logging::DumbConsoleLogger::log*;
+      mir::logging::Logger::?Logger*;
+      mir::logging::Logger::Logger*;
+      mir::logging::Logger::log*;
+      mir::logging::Logger::operator*;
+      mir::security_log*;
+      non-virtual?thunk?to?mir::logging::DumbConsoleLogger::log*;
+      typeinfo?for?mir::logging::DumbConsoleLogger;
+      typeinfo?for?mir::logging::Logger;
+      vtable?for?mir::logging::DumbConsoleLogger;
+      vtable?for?mir::logging::Logger;
+    };
+} MIR_CORE_2.24;
+
