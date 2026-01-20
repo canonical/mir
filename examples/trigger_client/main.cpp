@@ -12,8 +12,8 @@
 
 /*
  * Standalone Wayland client that registers:
- * 1. A keyboard-sym trigger for Ctrl+Shift+C (HOLD)
- * 2. A keyboard-sym trigger for Alt+X (TAP)
+ * 1. A keyboard-sym trigger for Ctrl+Shift+C
+ * 2. A keyboard-sym trigger for Alt+X
  *
  * It prints specific messages for begin/end events for each trigger.
  */
@@ -156,31 +156,31 @@ int main(int /*argc*/, char** /*argv*/)
         return EXIT_FAILURE;
     }
 
-    ActionContext hold_ctx{"hold", "Hello from hold", "Bye from hold"};
-    ext_input_trigger_v1* hold_trigger = nullptr;
-    ext_input_trigger_action_v1* hold_action = nullptr;
+    ActionContext ctrl_shift_c_ctx{"CTRL + SHIFT + c (AKA CTRL + C)", "Hello from CTRL + SHIFT + c", "Bye from CTRL + SHIFT + c"};
+    ext_input_trigger_v1* ctrl_shift_c_trigger = nullptr;
+    ext_input_trigger_action_v1* ctrl_shift_c_action = nullptr;
 
     // Register keyboard sym trigger: Ctrl + Shift + C
     register_trigger(
         display,
         EXT_INPUT_TRIGGER_REGISTRATION_MANAGER_V1_MODIFIERS_SHIFT | EXT_INPUT_TRIGGER_REGISTRATION_MANAGER_V1_MODIFIERS_CTRL,
         XKB_KEY_C,
-        &hold_ctx,
-        &hold_trigger,
-        &hold_action
+        &ctrl_shift_c_ctx,
+        &ctrl_shift_c_trigger,
+        &ctrl_shift_c_action
     );
 
-    ActionContext tap_ctx{"tap", "Hello from tap", "Bye from tap"};
-    ext_input_trigger_v1* tap_trigger = nullptr;
-    ext_input_trigger_action_v1* tap_action = nullptr;
+    ActionContext alt_x_ctx{"ALT + x", "Hello from ALT + x", "Bye from ALT + x"};
+    ext_input_trigger_v1* alt_x_trigger = nullptr;
+    ext_input_trigger_action_v1* alt_x_action = nullptr;
 
     register_trigger(
         display,
         EXT_INPUT_TRIGGER_REGISTRATION_MANAGER_V1_MODIFIERS_ALT,
         XKB_KEY_x,
-        &tap_ctx,
-        &tap_trigger,
-        &tap_action
+        &alt_x_ctx,
+        &alt_x_trigger,
+        &alt_x_action
     );
 
     // Enter the dispatch loop
@@ -188,10 +188,10 @@ int main(int /*argc*/, char** /*argv*/)
     {
     }
 
-    if (hold_action) ext_input_trigger_action_v1_destroy(hold_action);
-    if (hold_trigger) ext_input_trigger_v1_destroy(hold_trigger);
-    if (tap_action) ext_input_trigger_action_v1_destroy(tap_action);
-    if (tap_trigger) ext_input_trigger_v1_destroy(tap_trigger);
+    if (ctrl_shift_c_action) ext_input_trigger_action_v1_destroy(ctrl_shift_c_action);
+    if (ctrl_shift_c_trigger) ext_input_trigger_v1_destroy(ctrl_shift_c_trigger);
+    if (alt_x_action) ext_input_trigger_action_v1_destroy(alt_x_action);
+    if (alt_x_trigger) ext_input_trigger_v1_destroy(alt_x_trigger);
 
     if (registration_manager)
         ext_input_trigger_registration_manager_v1_destroy(registration_manager);
