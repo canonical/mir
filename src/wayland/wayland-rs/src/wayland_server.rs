@@ -101,8 +101,8 @@ impl WaylandServer {
 }
 
 /// Create a new wayland server.
-pub fn create_wayland_server() -> WaylandServer {
-    WaylandServer::new()
+pub fn create_wayland_server() -> Box<WaylandServer> {
+    Box::new(WaylandServer::new())
 }
 
 /// The state of the wayland server.
