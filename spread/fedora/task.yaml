@@ -10,7 +10,7 @@ execute: |
       cmake
       createrepo
     )
-    CMAKE_EXTRA_OPTIONS+=(-DMIR_ENABLE_RUST=OFF)
+
     if [ "${CLANG}" -eq 1 ]; then
         RPMBUILD_EXTRA_OPTIONS+=(--with clang)
         TEST_PKGS+=( clang )
