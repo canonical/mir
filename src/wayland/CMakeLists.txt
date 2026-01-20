@@ -16,6 +16,11 @@ add_library(mirwayland SHARED
     ${STANDARD_SOURCES}
 )
 
+add_rust_cxx_library(mirwayland_rs
+  CRATE wayland_rs
+  DEPENDS wayland_rs/Cargo.toml wayland_rs/src/lib.rs wayland_rs/src/wayland_server.rs wayland_rs/src/ffi_rust.rs
+)
+
 mir_generate_protocol_wrapper(mirwayland "wl_" wayland.xml)
 mir_generate_protocol_wrapper(mirwayland "z" xdg-shell-unstable-v6.xml)
 mir_generate_protocol_wrapper(mirwayland "" xdg-shell.xml)
