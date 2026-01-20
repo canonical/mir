@@ -79,4 +79,4 @@ install(TARGETS     mirwayland                           LIBRARY DESTINATION "${
 install(FILES       ${CMAKE_CURRENT_BINARY_DIR}/mirwayland.pc    DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
 install(DIRECTORY   ${CMAKE_SOURCE_DIR}/include/wayland/mir      DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/mirwayland")
 
-add_subdirectory(wayland_rs)
+add_subdirectory(wayland_rs/)
