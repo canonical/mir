@@ -55,10 +55,6 @@ auto is_nvidia(std::string_view vendor) -> bool
     return contains_case_insensitive(vendor, "nvidia");
 }
 
-auto is_intel(std::string_view vendor) -> bool
-{
-    return contains_case_insensitive(vendor, "intel") || contains_case_insensitive(vendor, "i915");
-}
 
 struct VendorPairTransferStrategy
 {
@@ -453,18 +449,17 @@ auto mir::graphics::gbm::GbmQuirks::make_transfer_strategy_selector() const
             return it->second;
         }
 
+        // Fallback: * -> NVIDIA: Use CPU transfer (known bug)
+        if (is_nvidia(dest_view))
+        {
+            mir::log_info("Using CPU transfer for Intel -> NVIDIA import (workaround for known issue)");
+            return DMABufEGLProvider::BufferTransferStrategy::cpu;
+        }
+
         // If vendors are the same, use default
         if (source_view == dest_view)
         {
             return default_strategy;
-        }
-
-
-        // Fallback: Intel -> NVIDIA: Use CPU transfer (known bug)
-        if (is_intel(source_view) && is_nvidia(dest_view))
-        {
-            mir::log_info("Using CPU transfer for Intel -> NVIDIA import (workaround for known issue)");
-            return DMABufEGLProvider::BufferTransferStrategy::cpu;
         }
 
         // All other combinations: use default
