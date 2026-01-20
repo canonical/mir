@@ -69,8 +69,8 @@ target_link_libraries(mirserverobjects
     mirplatform
     mircommon
     mircore
-  PRIVATE
     PkgConfig::GLIB
+  PRIVATE
     PkgConfig::GIO
 )
 
@@ -105,54 +105,17 @@ set(MIR_SERVER_REFERENCES
   mirnullreport
   mirconsole
   mirservertime
-
-  PkgConfig::DRM
-  PkgConfig::EGL
-  PkgConfig::GLESv2
-  PkgConfig::UDEV
-  PkgConfig::GLIB
-  PkgConfig::GIO
-  PkgConfig::UUID
-  PkgConfig::LTTNG_UST
 )
-
-set(MIR_SERVER_REFERENCES ${MIR_SERVER_REFERENCES} PARENT_SCOPE)
 
 add_library(mirserver SHARED)
+add_library(mirserver-static STATIC) # Internal-only use: For linking into test binaries
 
-target_link_libraries(mirserver
-  PUBLIC
-
-
-    mirplatform
-    mircommon
-    mirwayland
-
-    Boost::iostreams
-    PkgConfig::DRM
-    PkgConfig::EGL
-    PkgConfig::GLESv2
-    PkgConfig::UDEV
-    PkgConfig::GLIB
-    PkgConfig::GIO
-    PkgConfig::UUID
-    PkgConfig::XCB
-    PkgConfig::XCB_COMPOSITE
-    PkgConfig::XCB_XFIXES
-    PkgConfig::XCB_RANDR
-    PkgConfig::XCB_RENDER
-    PkgConfig::XCB_RES
-    PkgConfig::X11_XCURSOR
-    PkgConfig::LTTNG_UST
-    PkgConfig::FREETYPE
-    atomic
-
-  PRIVATE
-    ${MIR_SERVER_REFERENCES}
-)
+target_link_libraries(mirserver PUBLIC ${MIR_SERVER_REFERENCES})
+target_link_libraries(mirserver-static PUBLIC ${MIR_SERVER_REFERENCES})
 
 if (MIR_USE_APPARMOR)
   target_link_libraries(mirserver PUBLIC PkgConfig::APPARMOR)
+  target_link_libraries(mirserver-static PUBLIC PkgConfig::APPARMOR)
 endif()
 
 install(TARGETS mirserver

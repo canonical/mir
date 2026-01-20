@@ -19,10 +19,10 @@
 #include <cstdlib>
 
 using namespace std::chrono;
-std::string mir::logging::input_timestamp(nanoseconds when)
+
+std::string mir::logging::input_timestamp(mir::time::Clock const& clock, std::chrono::nanoseconds when)
 {
-    // Input events use CLOCK_MONOTONIC, and so we must...
-    auto const now = steady_clock::now().time_since_epoch();
+    auto const now = clock.now().time_since_epoch();
     long long const when_ns = when.count();
     long long const now_ns = duration_cast<nanoseconds>(now).count();
     long long const age_ns = now_ns - when_ns;

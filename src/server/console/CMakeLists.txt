@@ -43,6 +43,7 @@ target_link_libraries(mirconsole
     mircore
   PRIVATE
     PkgConfig::GIO
+    Boost::iostreams
 )
 
 set_property(
