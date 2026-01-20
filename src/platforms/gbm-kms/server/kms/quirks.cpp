@@ -449,10 +449,13 @@ auto mir::graphics::gbm::GbmQuirks::make_transfer_strategy_selector() const
             return it->second;
         }
 
-        // Fallback: * -> NVIDIA: Use CPU transfer (known bug)
-        if (is_nvidia(dest_view))
+        // Fallback: * -> NVIDIA or NVIDIA -> *: Use CPU transfer (known bug)
+        if (is_nvidia(source_view) || is_nvidia(dest_view))
         {
-            mir::log_info("Using CPU transfer for Intel -> NVIDIA import (workaround for known issue)");
+            mir::log_info(
+                "Using CPU transfer for %s -> %s import (workaround for known issue)",
+                source_vendor.data(),
+                dest_vendor.data());
             return DMABufEGLProvider::BufferTransferStrategy::cpu;
         }
 
