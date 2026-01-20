@@ -9,5 +9,6 @@ mod ffi_rust {
 
         fn create_wayland_server() -> Box<WaylandServer>;
         fn run(self: &mut WaylandServer, socket: &str);
+        fn stop(self: &mut WaylandServer);
     }
 }

@@ -1,5 +1,7 @@
 use calloop::{generic::Generic, EventLoop, Interest, Mode, PostAction};
 use std::os::unix::io::AsRawFd;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
 use std::time::Duration;
 use wayland_server::{
     backend::{ClientData, ClientId, DisconnectReason},
@@ -13,6 +15,9 @@ pub struct WaylandServer {
 
     /// The global state for the server.
     state: ServerState,
+
+    // Stop flag
+    stop_requested: Arc<AtomicBool>,
 }
 
 impl WaylandServer {
@@ -21,6 +26,7 @@ impl WaylandServer {
         WaylandServer {
             display: Display::new().expect("Failed to create Wayland display"),
             state: ServerState {},
+            stop_requested: Arc::new(AtomicBool::new(false)),
         }
     }
 
@@ -41,11 +47,8 @@ impl WaylandServer {
             .insert_source(
                 Generic::new(listener, Interest::READ, Mode::Level),
                 |_, listener, server: &mut WaylandServer| {
-                    // Accept new connections and associate them with the display
                     if let Ok(stream) = listener.accept() {
                         if let Some(stream) = stream {
-                            println!("Accepted new connection");
-
                             // Insert the client into the display.
                             // This registers the client's socket with the Display's internal backend.
                             if let Err(e) = server
@@ -85,6 +88,10 @@ impl WaylandServer {
             .expect("Failed to insert backend source into event loop");
 
         loop {
+            if self.stop_requested.load(Ordering::Acquire) {
+                break;
+            }
+
             // 1. Dispatch events
             // The event loop borrows `server` temporarily to run the callbacks
             event_loop
@@ -97,6 +104,13 @@ impl WaylandServer {
                 .flush_clients()
                 .expect("Failed to flush clients");
         }
+
+        self.stop_requested.store(false, Ordering::SeqCst);
+    }
+
+    /// Stops the wayland server if it is running.
+    pub fn stop(&mut self) {
+        self.stop_requested.store(true, Ordering::Release);
     }
 }
 
@@ -112,11 +126,7 @@ struct ServerState;
 struct ClientState;
 
 impl ClientData for ClientState {
-    fn initialized(&self, _client_id: ClientId) {
-        println!("New client initialized");
-    }
+    fn initialized(&self, _client_id: ClientId) {}
 
-    fn disconnected(&self, _client_id: ClientId, _reason: DisconnectReason) {
-        println!("Client disconnected");
-    }
+    fn disconnected(&self, _client_id: ClientId, _reason: DisconnectReason) {}
 }

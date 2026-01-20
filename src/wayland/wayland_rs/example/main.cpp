@@ -21,15 +21,12 @@
 
 auto const WAYLAND_SOCKET = "wayland-98";
 
-void run_server()
+void run_server(rust::Box<mir::wayland_rs::WaylandServer>& server)
 {
-    auto server = mir::wayland_rs::create_wayland_server();
-    rust::Str const socket = WAYLAND_SOCKET;
-
-    server->run(socket);
+    server->run(WAYLAND_SOCKET);
 }
 
-int run_client()
+void run_client()
 {
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
@@ -37,20 +34,30 @@ int run_client()
     if (!display)
     {
         std::print("Failed to connect to Wayland display\n");
-        return 1;
+        return;
     }
     
     wl_display_disconnect(display);
-    return 0;
 }
 
 int main()
 {
-    std::thread server_thread(run_server);
+    std::print("This is a demo of the C++ bindings to the wayland_rs crate.\n");
+    std::print("The program is successful if the following happens:\n\n");
+    std::print("    1) The Wayland server gracefully starts on wayland-98.\n");
+    std::print("    2) The client connects to the server.\n");
+    std::print("    3) The server stops.\n");
+    std::print("    4) We exit with exit code 0.\n\n");
+
+    auto server = mir::wayland_rs::create_wayland_server();
+    std::thread server_thread([&] { run_server(server); });
 
     run_client();
-    std::print("Running wayland server, use Ctrl + C to exit\n");
+
+    server->stop();
     server_thread.join();
+
+    std::print("Success!\n");
 
     return 0;
 }
