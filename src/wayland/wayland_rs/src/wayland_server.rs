@@ -32,7 +32,7 @@ pub struct WaylandServer {
     /// The global state for the server.
     state: ServerState,
 
-    // Stop flag
+    /// Stop flag
     stop_requested: Arc<AtomicBool>,
 }
 

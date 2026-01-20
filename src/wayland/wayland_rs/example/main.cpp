@@ -19,18 +19,18 @@
 #include <iostream>
 #include <thread>
 
-auto const WAYLAND_SOCKET = "wayland-98";
+auto const wayland_socket = "wayland-98";
 
 void run_server(rust::Box<mir::wayland_rs::WaylandServer>& server)
 {
-    server->run(WAYLAND_SOCKET);
+    server->run(wayland_socket);
 }
 
 void run_client()
 {
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-    auto const display = wl_display_connect(WAYLAND_SOCKET);
+    auto const display = wl_display_connect(wayland_socket);
     if (!display)
     {
         std::cout << "Failed to connect to Wayland display" << std::endl;
