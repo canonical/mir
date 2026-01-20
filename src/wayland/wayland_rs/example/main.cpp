@@ -36,7 +36,7 @@ void run_client()
         std::print("Failed to connect to Wayland display\n");
         return;
     }
-    
+
     wl_display_disconnect(display);
 }
 
