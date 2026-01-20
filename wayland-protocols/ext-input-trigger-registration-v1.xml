@@ -64,7 +64,7 @@
 
     <enum name="modifiers" bitfield="true">
       <description summary="modifier keys">
-        The various shift modifiers on the keyboard
+        The various modifiers on the keyboard
       </description>
       <entry name="alt" value="0x01" summary="any Alt key"/>
       <entry name="alt_left" value="0x02" summary="left Alt key"/>
