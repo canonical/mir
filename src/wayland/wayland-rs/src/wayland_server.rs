@@ -1,0 +1,121 @@
+use calloop::{generic::Generic, EventLoop, Interest, Mode, PostAction};
+use std::os::unix::io::AsRawFd;
+use std::time::Duration;
+use wayland_server::{
+    backend::{ClientData, ClientId, DisconnectReason},
+    Display, ListeningSocket,
+};
+
+/// The wayland server.
+pub struct WaylandServer {
+    /// The display.
+    display: Display<ServerState>,
+
+    /// The global state for the server.
+    state: ServerState,
+}
+
+impl WaylandServer {
+    /// Create a new wayland server.
+    pub fn new() -> Self {
+        WaylandServer {
+            display: Display::new().expect("Failed to create Wayland display"),
+            state: ServerState {},
+        }
+    }
+
+    /// Run the wayland server.
+    ///
+    /// This function will block the current thread.
+    ///
+    /// # Arguments
+    /// * `socket` - The name of the socket to bind to (e.g. "wayland-0").
+    pub fn run(&mut self, socket: &str) {
+        let mut event_loop: EventLoop<'_, WaylandServer> =
+            EventLoop::try_new().expect("Failed to create event loop");
+        let loop_handle = event_loop.handle();
+
+        // First, add the listener to the event loop.
+        let listener = ListeningSocket::bind(socket).expect("Failed to bind Wayland socket");
+        loop_handle
+            .insert_source(
+                Generic::new(listener, Interest::READ, Mode::Level),
+                |_, listener, server: &mut WaylandServer| {
+                    // Accept new connections and associate them with the display
+                    if let Ok(stream) = listener.accept() {
+                        if let Some(stream) = stream {
+                            println!("Accepted new connection");
+
+                            // Insert the client into the display.
+                            // This registers the client's socket with the Display's internal backend.
+                            if let Err(e) = server
+                                .display
+                                .handle()
+                                .insert_client(stream, std::sync::Arc::new(ClientState))
+                            {
+                                eprintln!("Failed to add client: {}", e);
+                            }
+                        }
+                    }
+                    Ok(PostAction::Continue)
+                },
+            )
+            .expect("Failed to insert listener into event loop");
+
+        // Next, get the raw file descriptor from the display's backend and add it to the event loop.
+        // We need to get the fd without holding a borrow of the display.
+        let display_fd = unsafe {
+            let raw_fd = self.display.backend().poll_fd().as_raw_fd();
+            std::os::fd::BorrowedFd::borrow_raw(raw_fd)
+        };
+        loop_handle
+            .insert_source(
+                Generic::new(display_fd, Interest::READ, Mode::Level),
+                |_, _, server: &mut WaylandServer| {
+                    // This function processes requests from all connected clients
+                    match server.display.dispatch_clients(&mut server.state) {
+                        Ok(_) => Ok(PostAction::Continue),
+                        Err(e) => {
+                            eprintln!("Dispatch error: {}", e);
+                            Ok(PostAction::Continue)
+                        }
+                    }
+                },
+            )
+            .expect("Failed to insert backend source into event loop");
+
+        loop {
+            // 1. Dispatch events
+            // The event loop borrows `server` temporarily to run the callbacks
+            event_loop
+                .dispatch(Some(Duration::from_millis(16)), self)
+                .expect("Failed to dispatch event loop");
+
+            // 2. Flush clients
+            // Because `event_loop.dispatch` only borrowed `server`, we get it back here.
+            self.display
+                .flush_clients()
+                .expect("Failed to flush clients");
+        }
+    }
+}
+
+/// Create a new wayland server.
+pub fn create_wayland_server() -> WaylandServer {
+    WaylandServer::new()
+}
+
+/// The state of the wayland server.
+struct ServerState;
+
+/// The state of a wayland client.
+struct ClientState;
+
+impl ClientData for ClientState {
+    fn initialized(&self, _client_id: ClientId) {
+        println!("New client initialized");
+    }
+    fn disconnected(&self, _client_id: ClientId, _reason: DisconnectReason) {
+        println!("Client disconnected");
+    }
+}
