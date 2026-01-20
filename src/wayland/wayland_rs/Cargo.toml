@@ -10,7 +10,6 @@ crate-type = ["staticlib"]
 [dependencies]
 wayland-server.workspace = true
 cxx.workspace = true
-libc.workspace = true
 calloop.workspace = true
 
 [build-dependencies]
