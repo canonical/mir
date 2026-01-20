@@ -16,7 +16,7 @@
 
 #include "wayland_rs/src/lib.rs.h"
 #include <wayland-client.h>
-#include <print>
+#include <iostream>
 #include <thread>
 
 auto const WAYLAND_SOCKET = "wayland-98";
@@ -33,7 +33,7 @@ void run_client()
     auto const display = wl_display_connect(WAYLAND_SOCKET);
     if (!display)
     {
-        std::print("Failed to connect to Wayland display\n");
+        std::cout << "Failed to connect to Wayland display" << std::endl;
         return;
     }
 
@@ -42,12 +42,12 @@ void run_client()
 
 int main()
 {
-    std::print("This is a demo of the C++ bindings to the wayland_rs crate.\n");
-    std::print("The program is successful if the following happens:\n\n");
-    std::print("    1) The Wayland server gracefully starts on wayland-98.\n");
-    std::print("    2) The client connects to the server.\n");
-    std::print("    3) The server stops.\n");
-    std::print("    4) We exit with exit code 0.\n\n");
+    std::cout << "This is a demo of the C++ bindings to the wayland_rs crate." << std::endl;
+    std::cout << "The program is successful if the following happens:" << std::endl;
+    std::cout << "    1) The Wayland server gracefully starts on wayland-98." << std::endl;
+    std::cout << "    2) The client connects to the server." << std::endl;
+    std::cout << "    3) The server stops." << std::endl;
+    std::cout << "    4) We exit with exit code 0." << std::endl;
 
     auto server = mir::wayland_rs::create_wayland_server();
     std::thread server_thread([&] { run_server(server); });
@@ -57,7 +57,7 @@ int main()
     server->stop();
     server_thread.join();
 
-    std::print("Success!\n");
+    std::cout << "Success!" << std::endl;
 
     return 0;
 }
