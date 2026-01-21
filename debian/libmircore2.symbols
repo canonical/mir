@@ -45,13 +45,16 @@ libmircore.so.2 libmircore2 #MINVER#
  (c++)"mir::log(mir::logging::Severity, char const*, std::__exception_ptr::exception_ptr const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)@MIR_CORE_2.26" 2.26.0~dev
  (c++)"mir::log(mir::logging::Severity, char const*, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)@MIR_CORE_2.26" 2.26.0~dev
  (c++)"mir::log(mir::logging::Severity, char const*, char const*, ...)@MIR_CORE_2.26" 2.26.0~dev
- (c++)"mir::logv(mir::logging::Severity, char const*, char const*, __va_list_tag*)@MIR_CORE_2.26" 2.26.0~dev
+ (c++|optional)"mir::logv(mir::logging::Severity, char const*, char const*, __va_list_tag*)@MIR_CORE_2.26" 2.26.0~dev
+ (c++|optional)"mir::logv(mir::logging::Severity, char const*, char const*, std::__va_list)@MIR_CORE_2.26" 2.26.0~dev
  (c++)"mir::logging::set_logger(std::shared_ptr<mir::logging::Logger> const&)@MIR_CORE_2.26" 2.26.0~dev
  (c++)"mir::logging::format_message(std::basic_ostream<char, std::char_traits<char> >&, mir::logging::Severity, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)@MIR_CORE_2.26" 2.26.0~dev
  (c++)"mir::logging::DumbConsoleLogger::log(mir::logging::Severity, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)@MIR_CORE_2.26" 2.26.0~dev
+ (c++)"mir::logging::DumbConsoleLogger::~DumbConsoleLogger()@MIR_CORE_2.26" 2.26.0~dev
  (c++)"mir::logging::log(mir::logging::Severity, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)@MIR_CORE_2.26" 2.26.0~dev
  (c++)"mir::logging::log(mir::logging::Severity, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)@MIR_CORE_2.26" 2.26.0~dev
  (c++)"mir::logging::Logger::log(char const*, mir::logging::Severity, char const*, ...)@MIR_CORE_2.26" 2.26.0~dev
+ (c++)"mir::security_log(mir::logging::Severity, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)@MIR_CORE_2.26" 2.26.0~dev
  (c++)"typeinfo for mir::logging::DumbConsoleLogger@MIR_CORE_2.26" 2.26.0~dev
  (c++)"typeinfo for mir::logging::Logger@MIR_CORE_2.26" 2.26.0~dev
  (c++)"vtable for mir::logging::DumbConsoleLogger@MIR_CORE_2.26" 2.26.0~dev
