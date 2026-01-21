@@ -16,6 +16,10 @@ if (MIR_BUILD_PLATFORM_X11)
   add_compile_definitions(MIR_BUILD_PLATFORM_X11)
 endif()
 
+if (MIR_BUILD_PLATFORM_WAYLAND)
+  add_compile_definitions(MIR_BUILD_PLATFORM_WAYLAND)
+endif()
+
 if (MIR_BUILD_PLATFORM_EGLSTREAM_KMS)
   add_compile_definitions(MIR_BUILD_PLATFORM_EGLSTREAM_KMS)
 endif()
