@@ -286,9 +286,9 @@ public:
 
                 glActiveTexture(GL_TEXTURE0);
                 LOG_IF_GL_ERROR();
-                glBindTexture(GL_TEXTURE_2D, tex);
+                glBindTexture(GL_TEXTURE_EXTERNAL_OES, tex);
                 LOG_IF_GL_ERROR();
-                state->glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, from);
+                state->glEGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, from);
                 LOG_IF_GL_ERROR();
 
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
