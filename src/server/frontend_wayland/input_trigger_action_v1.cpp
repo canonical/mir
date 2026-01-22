@@ -30,7 +30,6 @@
 #include <mir/time/clock.h>
 #include <mir/wayland/weak.h>
 
-#include <atomic>
 #include <unordered_set>
 
 namespace mi = mir::input;
@@ -74,7 +73,7 @@ private:
         wayland::Weak<wayland::InputTriggerActionV1> const action;
         FilterContext const context;
 
-        std::atomic<bool> began{false};
+        bool began{false};
         // This extends slightly before `began`. It is set when the key combo
         // is first completed, instead of being set after the hold delay.
         std::unique_ptr<time::Alarm> hold_alarm;
