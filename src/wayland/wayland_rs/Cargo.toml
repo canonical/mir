@@ -11,7 +11,7 @@ crate-type = ["staticlib"]
 wayland-server.workspace = true
 cxx.workspace = true
 calloop.workspace = true
-nix.workspace = true
+nix = { workspace = true, features = ["event"] }
 
 [build-dependencies]
 cxx-build.workspace = true
