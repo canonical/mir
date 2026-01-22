@@ -15,6 +15,7 @@
  */
 
 use calloop::{generic::Generic, EventLoop, Interest, Mode, PostAction};
+use log::error;
 use nix::sys::eventfd::{EfdFlags, EventFd};
 use std::os::fd::BorrowedFd;
 use std::os::unix::io::AsRawFd;
@@ -23,7 +24,6 @@ use wayland_server::{
     backend::{ClientData, ClientId, DisconnectReason},
     Display, ListeningSocket,
 };
-use log::{error};
 
 /// The wayland server.
 pub struct WaylandServer {
