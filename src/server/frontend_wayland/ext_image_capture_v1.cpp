@@ -121,7 +121,7 @@ public:
     using CaptureResult = std::expected<std::tuple<time::Timestamp, geom::Rectangle>, uint32_t>;
     using CaptureCallback = std::function<void(CaptureResult const&)>;
 
-    ExtImageCopyCursorBackend(ExtImageCopyCaptureCursorSessionV1* session);
+    explicit ExtImageCopyCursorBackend(ExtImageCopyCaptureCursorSessionV1* session);
     virtual ~ExtImageCopyCursorBackend() = default;
 
     ExtImageCopyCursorBackend(ExtImageCopyCursorBackend const&) = delete;
@@ -594,7 +594,8 @@ auto mf::ExtOutputImageCaptureSourceManagerV1::CursorBackend::map_position(
     }
     auto const config = output.value().current_config();
     auto const output_space_area = config.extents();
-    if (!output_space_area.contains(geom::Point{abs_x, abs_y}))
+    geom::Point const abs_pos{abs_x, abs_y};
+    if (!output_space_area.contains(abs_pos))
     {
         return std::nullopt;
     }
@@ -602,13 +603,14 @@ auto mf::ExtOutputImageCaptureSourceManagerV1::CursorBackend::map_position(
     // Translate pointer coordinates to buffer space. We don't take
     // rotations/flips into account because our image copy backend is
     // producing untransformed frames.
+
     auto const buffer_size = config.modes[config.current_mode_index].size;
     auto const x_scale = static_cast<double>(buffer_size.width.as_value()) / output_space_area.size.width.as_value();
     auto const y_scale = static_cast<double>(buffer_size.height.as_value()) / output_space_area.size.height.as_value();
-    return geom::Point{
-        (abs_x - output_space_area.left().as_value()) * x_scale,
-        (abs_y - output_space_area.top().as_value()) * y_scale
-    };
+
+    auto const raw_offset = abs_pos - output_space_area.top_left;
+    decltype(raw_offset) const scaled_offset{x_scale * raw_offset.dx, y_scale * raw_offset.dy};
+    return as_point(scaled_offset);
 }
 
 
@@ -928,7 +930,6 @@ class mf::ExtImageCopyCaptureCursorSessionV1::ImageCopyBackend
 public:
     ImageCopyBackend(ExtImageCopyCaptureSessionV1 *session,
                      std::shared_ptr<time::Clock> const& clock);
-    //~ImageCopyBackend();
 
     void begin_capture(
         std::shared_ptr<renderer::software::RWMappable> const& shm_data,
@@ -958,7 +959,6 @@ void mf::ExtImageCopyCaptureCursorSessionV1::ImageCopyBackend::begin_capture(
     auto data = mapping->data();
     auto size = mapping->size();
     auto stride = mapping->stride();
-    printf("Buffer length is %d (%dx%d, stride %d)\n", (int)mapping->len(), size.width.as_int(), size.height.as_int(), stride.as_int());
     for (int y = 0; y < size.height.as_int(); y++)
     {
         for (int x = 0; x < size.width.as_int(); x++)
@@ -981,8 +981,6 @@ void mf::ExtImageCopyCaptureCursorSessionV1::ImageCopyBackend::begin_capture(
             }
         }
     }
-    // TODO: get a real timestamp from the clock
-    printf("Sending cursor image\n");
     callback({{clock->now(), {{0, 0}, size}}});
     damage_amount = DamageAmount::none;
 }
@@ -1043,12 +1041,9 @@ void mf::ExtImageCopyCaptureCursorSessionV1::cursor_moved_to(
         auto const& point = position.value();
         send_position_event(point.x.as_int(), point.y.as_int());
     }
-    else
+    else if (was_visible)
     {
-        if (was_visible)
-        {
-            send_leave_event();
-        }
+        send_leave_event();
     }
 }
 
