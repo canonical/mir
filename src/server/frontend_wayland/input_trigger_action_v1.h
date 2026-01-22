@@ -19,40 +19,20 @@
 
 #include "ext-input-trigger-action-v1_wrapper.h"
 
+#include <memory>
+
 namespace mir
 {
-class Executor;
-namespace time
-{
-class AlarmFactory;
-class Clock;
-}
 namespace input
 {
-class CompositeEventFilter;
-}
-namespace shell
-{
-class TokenAuthority;
+class EventFilter;
 }
 namespace frontend
 {
 class InputTriggerData;
-auto create_input_trigger_action_manager_v1(
-    wl_display*,
-    std::shared_ptr<InputTriggerData> const& itd,
-    std::shared_ptr<input::CompositeEventFilter> const& cef,
-    std::shared_ptr<shell::TokenAuthority> const& token_authority)
-    -> std::shared_ptr<wayland::InputTriggerActionManagerV1::Global>;
 
-class InputTriggerActionV1 : public wayland::InputTriggerActionV1
-{
-public:
-    InputTriggerActionV1(wl_resource* id) :
-        wayland::InputTriggerActionV1{id, Version<1>{}}
-    {
-    }
-};
+auto create_input_trigger_action_manager_v1(wl_display*, std::shared_ptr<InputTriggerData> const& itd)
+    -> std::shared_ptr<wayland::InputTriggerActionManagerV1::Global>;
 }
 }
 #endif

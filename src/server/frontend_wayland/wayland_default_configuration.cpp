@@ -285,15 +285,14 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
             return mf::create_input_trigger_registration_manager_v1(
                     ctx.display,
                     ctx.input_trigger_data,
-                    ctx.token_authority);
+                    ctx.token_authority,
+                    ctx.composite_event_filter);
         }),
     make_extension_builder<mw::InputTriggerActionManagerV1>([](auto const& ctx)
         {
             return mf::create_input_trigger_action_manager_v1(
                     ctx.display,
-                    ctx.input_trigger_data,
-                    ctx.composite_event_filter,
-                    ctx.token_authority);
+                    ctx.input_trigger_data);
         }),
 };
 

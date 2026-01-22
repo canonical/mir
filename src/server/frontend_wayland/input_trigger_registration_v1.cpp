@@ -15,6 +15,7 @@
  */
 
 #include "input_trigger_registration_v1.h"
+#include "ext-input-trigger-action-v1_wrapper.h"
 #include "input_trigger_action_v1.h"
 #include "input_trigger_data.h"
 
@@ -39,16 +40,71 @@ namespace mir
 namespace frontend
 {
 
+class KeyboardSymTrigger : public wayland::InputTriggerV1
+{
+public:
+    KeyboardSymTrigger(uint32_t modifiers, uint32_t keysym, struct wl_resource* id) :
+        InputTriggerV1{id, Version<1>{}},
+        keysym{keysym},
+        modifiers{to_mir_modifiers(modifiers, keysym)}
+    {
+    }
+
+    static auto from(wayland::InputTriggerV1* trigger)
+    {
+        return static_cast<KeyboardSymTrigger*>(trigger);
+    }
+
+    static auto from(wayland::InputTriggerV1 const* trigger)
+    {
+        return static_cast<KeyboardSymTrigger const*>(trigger);
+    }
+
+    uint32_t const keysym;
+    MirInputEventModifiers const modifiers;
+
+private:
+    static auto to_mir_modifiers(uint32_t protocol_modifiers, uint32_t keysym) -> MirInputEventModifiers;
+};
+
+struct KeyboardEventFilter : public input::EventFilter
+{
+    wayland::Weak<wayland::InputTriggerActionV1 const> const action;
+    wayland::Weak<frontend::KeyboardSymTrigger const> const trigger;
+    std::shared_ptr<shell::TokenAuthority> const token_authority;
+
+    bool began{false};
+
+    // TODO key state tracking should be moved into its own class, to be shared with all active filters
+    std::unordered_set<uint32_t> pressed_keysyms;
+
+    explicit KeyboardEventFilter(
+        wayland::Weak<wayland::InputTriggerActionV1 const> action,
+        wayland::Weak<frontend::KeyboardSymTrigger const> trigger,
+        std::shared_ptr<shell::TokenAuthority> const& token_authority);
+
+    ~KeyboardEventFilter();
+
+    static bool protocol_and_event_modifiers_match(uint32_t protocol_modifiers, MirInputEventModifiers event_mods);
+
+    bool handle(MirEvent const& event) override;
+
+    static auto keysym_exists_in_set(
+        uint32_t keysym, std::unordered_set<uint32_t> const& pressed, bool case_insensitive) -> bool;
+};
+
 class InputTriggerRegistrationManagerV1 : public wayland::InputTriggerRegistrationManagerV1::Global
 {
 public:
     InputTriggerRegistrationManagerV1(
         wl_display* display,
         std::shared_ptr<InputTriggerData> const& itd,
-        std::shared_ptr<msh::TokenAuthority> const& token_authority) :
+        std::shared_ptr<msh::TokenAuthority> const& ta,
+        std::shared_ptr<mi::CompositeEventFilter> const& cef) :
         Global{display, Version<1>{}},
         itd{itd},
-        token_authority{token_authority}
+        ta{ta},
+        cef{cef}
     {
     }
 
@@ -58,10 +114,12 @@ public:
         Instance(
             wl_resource* new_ext_input_trigger_registration_manager_v1,
             std::shared_ptr<InputTriggerData> const& itd,
-            std::shared_ptr<msh::TokenAuthority> const& token_authority) :
+            std::shared_ptr<msh::TokenAuthority> const& token_authority,
+            std::shared_ptr<input::CompositeEventFilter> const& cef) :
             wayland::InputTriggerRegistrationManagerV1{new_ext_input_trigger_registration_manager_v1, Version<1>{}},
             itd{itd},
-            token_authority{token_authority}
+            ta{token_authority},
+            cef{cef}
         {
         }
 
@@ -71,70 +129,349 @@ public:
 
     private:
         std::shared_ptr<InputTriggerData> const itd;
-        std::shared_ptr<msh::TokenAuthority> const token_authority;
+        std::shared_ptr<msh::TokenAuthority> const ta;
+        std::shared_ptr<input::CompositeEventFilter> const cef;
     };
 
     void bind(wl_resource* new_ext_input_trigger_registration_manager_v1) override
     {
-        new Instance{new_ext_input_trigger_registration_manager_v1, itd, token_authority};
+        new Instance{new_ext_input_trigger_registration_manager_v1, itd, ta, cef};
     }
 
 private:
     std::shared_ptr<InputTriggerData> const itd;
-    std::shared_ptr<msh::TokenAuthority> const token_authority;
+    std::shared_ptr<msh::TokenAuthority> const ta;
+    std::shared_ptr<input::CompositeEventFilter> const cef;
 };
 
-class ActionControl : public wayland::InputTriggerActionControlV1
+KeyboardEventFilter::KeyboardEventFilter(
+    wayland::Weak<wayland::InputTriggerActionV1 const> action,
+    wayland::Weak<frontend::KeyboardSymTrigger const> trigger,
+    std::shared_ptr<shell::TokenAuthority> const& token_authority) :
+    action{action},
+    trigger{std::move(trigger)},
+    token_authority{token_authority}
 {
-public:
-    ActionControl(
-        std::shared_ptr<InputTriggerData> const& itd,
-        std::shared_ptr<msh::TokenAuthority> const& token_authority,
-        struct wl_resource* id) :
-        mir::wayland::InputTriggerActionControlV1{id, Version<1>{}},
-        itd{itd},
-        token_authority{token_authority}
-    {
-    }
+}
 
-    void add_input_trigger_event(struct wl_resource* trigger) override
+KeyboardEventFilter::~KeyboardEventFilter()
+{
+    mir::log_debug("KeyboardEventFilter::~KeyboardEventFilter");
+}
+
+bool KeyboardEventFilter::protocol_and_event_modifiers_match(
+    uint32_t protocol_modifiers, MirInputEventModifiers event_mods)
+{
+    using ProtocolModifiers = wayland::InputTriggerRegistrationManagerV1::Modifiers;
+
+    // Canonicalise event modifiers to match how Mir represents them elsewhere.
+    event_mods = mi::expand_modifiers(event_mods);
+
+    MirInputEventModifiers required = 0;
+    MirInputEventModifiers allowed = 0;
+
+    // Pure function: compute per-kind (required, allowed) masks and return them.
+    auto handle_kind =
+        [&](uint32_t protocol_generic,
+            uint32_t protocol_left,
+            uint32_t protocol_right,
+            MirInputEventModifiers mir_generic,
+            MirInputEventModifiers mir_left,
+            MirInputEventModifiers mir_right) -> std::pair<MirInputEventModifiers, MirInputEventModifiers>
     {
-        if (auto const input_trigger = wayland::InputTriggerV1::from(trigger))
+        MirInputEventModifiers req = 0;
+        MirInputEventModifiers allow = 0;
+
+        // Did the client specify a generic modifier? or a specific side?
+        bool p_generic = (protocol_modifiers & protocol_generic) != 0;
+        bool p_left = (protocol_left != 0 && (protocol_modifiers & protocol_left) != 0);
+        bool p_right = (protocol_right != 0 && (protocol_modifiers & protocol_right) != 0);
+
+        // Client explicitly requested side(s): require those sides and the generic bit.
+        if (p_left || p_right)
         {
-            auto const token = token_authority->issue_token(
-                [itd = itd, trigger](auto const& token)
-                {
-                    auto const num_erased = itd->pending_actions.lock()->erase(static_cast<std::string>(token));
-                    if (num_erased > 0)
-                        mir::log_debug(
-                            "Input trigger (%p) action with token %s has been revoked",
-                            static_cast<void*>(trigger),
-                            static_cast<std::string>(token).c_str());
-                    else
-                        mir::log_debug(
-                            "Input trigger (%p) already registered! Will not revoke token",
-                            static_cast<void*>(trigger));
-                });
-            mir::log_debug("Registered input trigger action with token %s", static_cast<std::string>(token).c_str());
+            if (p_left)
+                req |= mir_left;
+            if (p_right)
+                req |= mir_right;
+            req |= mir_generic;
 
-            itd->pending_actions.lock()->emplace(token, wayland::make_weak(input_trigger));
-
-            // Tell the client that the action has been successfully registered.
-            // They then should call
-            // `InputTriggerActionManagerV1::get_input_trigger_action` using the
-            // token we supply here.
-            send_done_event(static_cast<std::string>(token));
+            // Allow generic and both side bits.
+            allow |= mir_generic | mir_left | mir_right;
         }
-    }
-    virtual void drop_input_trigger_event(struct wl_resource* /*trigger*/) override
+        else if (p_generic)
+        {
+            // Client requested generic only -> require generic, but allow either side.
+            req |= mir_generic;
+            allow |= mir_generic | mir_left | mir_right;
+        }
+        // else: client didn't request this kind -> leave both masks zero (disallow).
+
+        return {req, allow};
+    };
+
+    struct Kind
     {
+        uint32_t protocol_generic;
+        uint32_t protocol_left;
+        uint32_t protocol_right;
+        MirInputEventModifiers mir_generic;
+        MirInputEventModifiers mir_left;
+        MirInputEventModifiers mir_right;
+    };
+
+    constexpr Kind kinds[] = {
+        // ctrl
+        {ProtocolModifiers::ctrl,
+         ProtocolModifiers::ctrl_left,
+         ProtocolModifiers::ctrl_right,
+         mir_input_event_modifier_ctrl,
+         mir_input_event_modifier_ctrl_left,
+         mir_input_event_modifier_ctrl_right},
+
+        // alt
+        {ProtocolModifiers::alt,
+         ProtocolModifiers::alt_left,
+         ProtocolModifiers::alt_right,
+         mir_input_event_modifier_alt,
+         mir_input_event_modifier_alt_left,
+         mir_input_event_modifier_alt_right},
+
+        // shift
+        {ProtocolModifiers::shift,
+         ProtocolModifiers::shift_left,
+         ProtocolModifiers::shift_right,
+         mir_input_event_modifier_shift,
+         mir_input_event_modifier_shift_left,
+         mir_input_event_modifier_shift_right},
+
+        // meta
+        {ProtocolModifiers::meta,
+         ProtocolModifiers::meta_left,
+         ProtocolModifiers::meta_right,
+         mir_input_event_modifier_meta,
+         mir_input_event_modifier_meta_left,
+         mir_input_event_modifier_meta_right},
+
+        // sym (protocol-generic only; left/right fields = 0)
+        {ProtocolModifiers::sym, 0, 0, mir_input_event_modifier_sym, 0, 0},
+
+        // function (protocol-generic only)
+        {ProtocolModifiers::function, 0, 0, mir_input_event_modifier_function, 0, 0},
+    };
+
+    // Given the client specified modifier, construct a mask containing the required bits (if a side is
+    // defined), and a mask containing the allowed bits (if a side is not defined)
+    for (auto const& k : kinds)
+    {
+        auto p =
+            handle_kind(k.protocol_generic, k.protocol_left, k.protocol_right, k.mir_generic, k.mir_left, k.mir_right);
+        required |= p.first;
+        allowed |= p.second;
     }
 
-private:
-    std::shared_ptr<InputTriggerData> const itd;
-    std::shared_ptr<msh::TokenAuthority> const token_authority;
-    std::shared_ptr<mi::EventFilter> trigger_filter;
-};
+    // Required bits must be present
+    if ((event_mods & required) != required)
+        return false;
+
+    // No bits are allowed outside 'allowed'
+    if ((event_mods & ~allowed) != 0)
+        return false;
+
+    return true;
+}
+
+bool KeyboardEventFilter::handle(MirEvent const& event)
+{
+    mir::log_debug("KeyboardEventFilter::handle");
+
+    if (event.type() != mir_event_type_input)
+        return false;
+
+    auto const* input_event = event.to_input();
+    if (input_event->input_type() != mir_input_event_type_key)
+        return false;
+
+    auto const* key_event = input_event->to_keyboard();
+
+    if (key_event->action() == mir_keyboard_action_down)
+        pressed_keysyms.insert(key_event->keysym());
+    else if (key_event->action() == mir_keyboard_action_up)
+        pressed_keysyms.erase(key_event->keysym());
+
+    auto const event_mods = mi::expand_modifiers(key_event->modifiers());
+    auto const trigger_mods = mi::expand_modifiers(trigger.value().modifiers);
+    auto const modifiers_match = protocol_and_event_modifiers_match(trigger_mods, event_mods);
+
+    auto const trigger_mods_contain_shift =
+        ((trigger_mods & mir_input_event_modifier_shift) | (trigger_mods & mir_input_event_modifier_shift_left) |
+         (trigger_mods & mir_input_event_modifier_shift_right)) != 0;
+
+    auto const keysym_matches =
+        keysym_exists_in_set(trigger.value().keysym, pressed_keysyms, trigger_mods_contain_shift);
+
+    mir::log_debug("modifiers_match: %s, keysym_matches: %s", modifiers_match ? "true" : "false", keysym_matches ? "true" : "false");
+    if (trigger)
+    {
+        if (!modifiers_match || !keysym_matches)
+        {
+            if (began)
+            {
+                auto const activation_token = std::string{token_authority->issue_token(std::nullopt)};
+                auto const timestamp = mir_input_event_get_wayland_timestamp(mir_keyboard_event_input_event(key_event));
+                action.value().send_end_event(timestamp, activation_token);
+                began = false;
+            }
+
+            return false;
+        }
+
+        // If the trigger keysym is pressed (either just pressed or was already pressed),
+        // ensure we send a begin event if we haven't already.
+        if (!began)
+        {
+            auto const activation_token = std::string{token_authority->issue_token(std::nullopt)};
+            auto const timestamp = mir_input_event_get_wayland_timestamp(mir_keyboard_event_input_event(key_event));
+            action.value().send_begin_event(timestamp, activation_token);
+            began = true;
+            return true;
+        }
+
+        return false;
+    }
+
+    return false;
+}
+
+auto KeyboardEventFilter::keysym_exists_in_set(
+    uint32_t keysym, std::unordered_set<uint32_t> const& pressed, bool case_insensitive) -> bool
+{
+    if (!case_insensitive)
+        return pressed.find(keysym) != pressed.end();
+
+    // Only perform case mapping for ASCII letters. For other keysyms, fall back to exact match.
+    uint32_t lower = keysym;
+    uint32_t upper = keysym;
+
+    if (keysym >= XKB_KEY_A && keysym <= XKB_KEY_Z)
+    {
+        lower = keysym + (XKB_KEY_a - XKB_KEY_A);
+    }
+    else if (keysym >= XKB_KEY_a && keysym <= XKB_KEY_z)
+    {
+        upper = keysym - (XKB_KEY_a - XKB_KEY_A);
+    }
+
+    return pressed.find(lower) != pressed.end() || pressed.find(upper) != pressed.end();
+}
+
+ActionControl::ActionControl(
+    std::shared_ptr<InputTriggerData> const& itd,
+    std::shared_ptr<msh::TokenAuthority> const& ta,
+    std::shared_ptr<mi::CompositeEventFilter> const& cef,
+    std::string_view token,
+    struct wl_resource* id) :
+    mir::wayland::InputTriggerActionControlV1{id, Version<1>{}},
+    itd{itd},
+    ta{ta},
+    cef{cef},
+    token{token}
+{
+}
+
+ActionControl::~ActionControl()
+{
+    mir::log_debug("ActionControl::~ActionControl");
+}
+
+void ActionControl::add_trigger_pending(wayland::InputTriggerV1 const* trigger)
+{
+    pending_triggers.insert(trigger);
+}
+
+void ActionControl::add_trigger_immediate(wayland::InputTriggerV1 const* trigger)
+{
+    if (!action)
+    {
+        mir::log_error("No action installed in ActionControl when adding trigger immediately");
+        return;
+    };
+
+    if (auto const* keyboard_trigger = KeyboardSymTrigger::from(trigger))
+    {
+        mir::log_debug("Adding keyboard trigger to action control");
+        auto const filter = std::make_shared<KeyboardEventFilter>(
+            wayland::make_weak<wayland::InputTriggerActionV1 const>(&action.value()),
+            wayland::make_weak<KeyboardSymTrigger const>(keyboard_trigger),
+            ta);
+
+        action.value().trigger_filters.push_back(filter);
+        cef->prepend(filter);
+    }
+}
+
+void ActionControl::drop_trigger_pending(wayland::InputTriggerV1 const* trigger)
+{
+    pending_triggers.erase(trigger);
+}
+
+void ActionControl::drop_trigger_immediate(wayland::InputTriggerV1 const* trigger)
+{
+    if (auto const keyboard_trigger = KeyboardSymTrigger::from(trigger))
+    {
+        auto& trigger_filters = action.value().trigger_filters;
+        trigger_filters.erase(
+            std::remove_if(
+                trigger_filters.begin(),
+                trigger_filters.end(),
+                [&](auto const& filter)
+                {
+                    if (auto const kf = std::dynamic_pointer_cast<KeyboardEventFilter>(filter))
+                    {
+                        return kf->trigger.is(*keyboard_trigger);
+                    }
+                    return false;
+                }),
+            trigger_filters.end());
+    }
+}
+
+void ActionControl::add_input_trigger_event(struct wl_resource* trigger)
+{
+    if(auto const* input_trigger = wayland::InputTriggerV1::from(trigger))
+    {
+        if (!action)
+            add_trigger_pending(input_trigger);
+        else
+            add_trigger_immediate(input_trigger);
+    }
+}
+
+void ActionControl::drop_input_trigger_event(struct wl_resource* trigger)
+{
+    if(auto const* input_trigger = wayland::InputTriggerV1::from(trigger))
+    {
+        if (!action)
+            drop_trigger_pending(input_trigger);
+        else
+            drop_trigger_immediate(input_trigger);
+    }
+}
+
+void ActionControl::install_action(wayland::Weak<frontend::InputTriggerActionV1> action)
+{
+    this->action = action;
+
+    mir::log_debug("num pending triggers: %zu", pending_triggers.size());
+
+    // Add the pending triggers to the composite event filter
+    for (auto const* trigger : pending_triggers)
+        add_trigger_immediate(trigger);
+
+    // Don't need this anymore
+    pending_triggers.clear();
+
+}
 
 // The trigger is registered with the composite event filter when its added to a control object
 void InputTriggerRegistrationManagerV1::Instance::register_keyboard_sym_trigger(
@@ -155,8 +492,22 @@ void InputTriggerRegistrationManagerV1::Instance::register_keyboard_code_trigger
 // TODO: Store the description string
 void InputTriggerRegistrationManagerV1::Instance::get_action_control(std::string const&, struct wl_resource* id)
 {
-    new ActionControl{itd, token_authority, id};
-}
+    auto const token = ta->issue_token(
+        [itd = itd](auto const&)
+        {
+            // TODO track issued and revoked tokens
+        });
+
+    auto const token_string = static_cast<std::string>(token);
+    auto const action_control = new ActionControl{itd, ta, cef, token_string, id};
+
+    itd->action_controls.lock()->insert({token_string, wayland::make_weak(action_control)});
+
+    // Tell the client that the action has been successfully registered.
+    // They then should call
+    // `InputTriggerActionManagerV1::get_input_trigger_action` using the
+    // token we supply here.
+    action_control->send_done_event(token_string);
 }
 
 auto KeyboardSymTrigger::to_mir_modifiers(uint32_t protocol_modifiers, uint32_t keysym) -> MirInputEventModifiers
@@ -207,13 +558,15 @@ auto KeyboardSymTrigger::to_mir_modifiers(uint32_t protocol_modifiers, uint32_t 
 
     return result;
 }
-}
 
-auto mf::create_input_trigger_registration_manager_v1(
+auto create_input_trigger_registration_manager_v1(
     wl_display* display,
     std::shared_ptr<InputTriggerData> const& itd,
-    std::shared_ptr<msh::TokenAuthority> const& token_authority)
+    std::shared_ptr<msh::TokenAuthority> const& ta,
+    std::shared_ptr<mi::CompositeEventFilter> const& cef)
     -> std::shared_ptr<wayland::InputTriggerRegistrationManagerV1::Global>
 {
-    return std::make_shared<mf::InputTriggerRegistrationManagerV1>(display, itd, token_authority);
+    return std::make_shared<mf::InputTriggerRegistrationManagerV1>(display, itd, ta, cef);
+}
+}
 }
