@@ -18,12 +18,20 @@
 #include <wayland-client.h>
 #include <iostream>
 #include <thread>
+#include <rust/cxx.h>
 
 auto const wayland_socket = "wayland-98";
 
 void run_server(rust::Box<mir::wayland_rs::WaylandServer>& server)
 {
-    server->run(wayland_socket);
+    try
+    {
+        server->run(wayland_socket);
+    }
+    catch (rust::Error const& error)
+    {
+        std::cerr << "Failed to run server: " << error.what() << std::endl;
+    }
 }
 
 void run_client()

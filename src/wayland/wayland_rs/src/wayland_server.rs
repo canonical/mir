@@ -59,13 +59,14 @@ impl WaylandServer {
     ///
     /// # Arguments
     /// * `socket` - The name of the socket to bind to (e.g. "wayland-0").
-    pub fn run(&mut self, socket: &str) {
+    pub fn run(&mut self, socket: &str) -> Result<(), &'static str> {
         let mut event_loop: EventLoop<'_, WaylandServer> =
-            EventLoop::try_new().expect("Failed to create event loop");
+            EventLoop::try_new().map_err(|_| "Failed to create event loop")?;
         let loop_handle = event_loop.handle();
 
         // First, add the listener to the event loop.
-        let listener = ListeningSocket::bind(socket).expect("Failed to bind Wayland socket");
+        let listener =
+            ListeningSocket::bind(socket).map_err(|_| "Failed to bind Wayland socket")?;
         loop_handle
             .insert_source(
                 Generic::new(listener, Interest::READ, Mode::Level),
@@ -86,7 +87,7 @@ impl WaylandServer {
                     Ok(PostAction::Continue)
                 },
             )
-            .expect("Failed to insert listener into event loop");
+            .map_err(|_| "Failed to insert listener into event loop")?;
 
         // Next, get the raw file descriptor from the display's backend and add it to the event loop.
         // We need to get the fd without holding a borrow of the display.
@@ -108,7 +109,7 @@ impl WaylandServer {
                     }
                 },
             )
-            .expect("Failed to insert backend source into event loop");
+            .map_err(|_| "Failed to insert backend source into event loop")?;
 
         // Add stop eventfd to wake and terminate the loop.
         let stop_fd = unsafe { BorrowedFd::borrow_raw(self.stop_event.as_raw_fd()) };
@@ -123,24 +124,24 @@ impl WaylandServer {
                     Ok(PostAction::Continue)
                 },
             )
-            .expect("Failed to insert stop eventfd into event loop");
+            .map_err(|_| "Failed to insert stop eventfd into event loop")?;
 
         while !self.stop_requested {
-
             // 1. Dispatch events
             // The event loop borrows `server` temporarily to run the callbacks
             event_loop
                 .dispatch(None, self)
-                .expect("Failed to dispatch event loop");
+                .map_err(|_| "Failed to dispatch event loop")?;
 
             // 2. Flush clients
             // Because `event_loop.dispatch` only borrowed `server`, we get it back here.
             self.display
                 .flush_clients()
-                .expect("Failed to flush clients");
+                .map_err(|_| "Failed to flush clients")?;
         }
 
         self.stop_requested = false;
+        Ok(())
     }
 
     /// Stops the wayland server if it is running.

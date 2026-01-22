@@ -24,7 +24,7 @@ mod ffi_rust {
         type WaylandServer;
 
         fn create_wayland_server() -> Box<WaylandServer>;
-        fn run(self: &mut WaylandServer, socket: &str);
+        fn run(self: &mut WaylandServer, socket: &str) -> Result<()>;
         fn stop(self: &mut WaylandServer);
     }
 }
