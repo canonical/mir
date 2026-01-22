@@ -41,11 +41,12 @@ void run_client()
     auto const display = wl_display_connect(wayland_socket);
     if (!display)
     {
-        std::cout << "Failed to connect to Wayland display" << std::endl;
+        std::cerr << "Failed to connect to Wayland display." << std::endl;
         return;
     }
 
     wl_display_disconnect(display);
+    std::cout << "Client successfully connected." << std::endl;
 }
 
 int main()
@@ -55,7 +56,7 @@ int main()
     std::cout << "    1) The Wayland server gracefully starts on wayland-98." << std::endl;
     std::cout << "    2) The client connects to the server." << std::endl;
     std::cout << "    3) The server stops." << std::endl;
-    std::cout << "    4) We exit with exit code 0." << std::endl;
+    std::cout << "    4) We exit with exit code 0." << std::endl << std::endl;
 
     auto server = mir::wayland_rs::create_wayland_server();
     std::thread server_thread([&] { run_server(server); });

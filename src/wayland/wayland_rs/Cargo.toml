@@ -12,6 +12,7 @@ wayland-server.workspace = true
 cxx.workspace = true
 calloop.workspace = true
 nix = { workspace = true, features = ["event"] }
+log.workspace = true
 
 [build-dependencies]
 cxx-build.workspace = true
