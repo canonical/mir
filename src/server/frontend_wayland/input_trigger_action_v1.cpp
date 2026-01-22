@@ -74,9 +74,6 @@ private:
         FilterContext const context;
 
         bool began{false};
-        // This extends slightly before `began`. It is set when the key combo
-        // is first completed, instead of being set after the hold delay.
-        std::unique_ptr<time::Alarm> hold_alarm;
 
         // TODO key state tracking should be moved into its own class, to be shared with all active filters
         std::unordered_set<uint32_t> pressed_keysyms;
