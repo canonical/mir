@@ -18,7 +18,6 @@ use calloop::{generic::Generic, EventLoop, Interest, Mode, PostAction};
 use std::os::unix::io::AsRawFd;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
-use std::time::Duration;
 use wayland_server::{
     backend::{ClientData, ClientId, DisconnectReason},
     Display, ListeningSocket,
@@ -111,7 +110,7 @@ impl WaylandServer {
             // 1. Dispatch events
             // The event loop borrows `server` temporarily to run the callbacks
             event_loop
-                .dispatch(Some(Duration::from_millis(16)), self)
+                .dispatch(None, self)
                 .expect("Failed to dispatch event loop");
 
             // 2. Flush clients

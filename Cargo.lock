@@ -562,6 +562,7 @@ dependencies = [
  "calloop",
  "cxx",
  "cxx-build",
+ "nix 0.30.1",
  "wayland-server",
 ]
 
