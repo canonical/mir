@@ -15,7 +15,7 @@
  */
 
 use calloop::{generic::Generic, EventLoop, Interest, Mode, PostAction};
-use log::error;
+use log;
 use nix::sys::eventfd::{EfdFlags, EventFd};
 use std::os::fd::BorrowedFd;
 use std::os::unix::io::AsRawFd;
@@ -81,7 +81,7 @@ impl WaylandServer {
                                 .handle()
                                 .insert_client(stream, std::sync::Arc::new(ClientState))
                             {
-                                error!("Failed to add client: {}", e);
+                                log::error!("Failed to add client: {}", e);
                             }
                         }
                     }
@@ -104,7 +104,7 @@ impl WaylandServer {
                     match server.display.dispatch_clients(&mut server.state) {
                         Ok(_) => Ok(PostAction::Continue),
                         Err(e) => {
-                            log::warn!("Error dispatching wayland clients: {}", e);
+                            log::error!("Error dispatching wayland clients: {}", e);
                             Ok(PostAction::Continue)
                         }
                     }
@@ -120,7 +120,7 @@ impl WaylandServer {
                 |_, _, server: &mut WaylandServer| {
                     match server.stop_event.read() {
                         Ok(_) => server.stop_requested = true,
-                        Err(e) => error!("Failed to read stop eventfd: {}", e),
+                        Err(e) => log::error!("Failed to read stop eventfd: {}", e),
                     }
                     Ok(PostAction::Continue)
                 },
@@ -148,7 +148,7 @@ impl WaylandServer {
     /// Stops the wayland server if it is running.
     pub fn stop(&mut self) {
         if let Err(e) = self.stop_event.write(1) {
-            error!("Failed to signal stop eventfd: {}", e);
+            log::error!("Failed to signal stop eventfd: {}", e);
         }
     }
 }
