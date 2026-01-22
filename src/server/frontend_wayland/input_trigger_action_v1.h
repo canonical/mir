@@ -42,9 +42,6 @@ auto create_input_trigger_action_manager_v1(
     wl_display*,
     std::shared_ptr<InputTriggerData> const& itd,
     std::shared_ptr<input::CompositeEventFilter> const& cef,
-    std::shared_ptr<Executor> const& wayland_executor,
-    std::shared_ptr<time::AlarmFactory> const& alarm_factory,
-    std::shared_ptr<time::Clock> const& clock,
     std::shared_ptr<shell::TokenAuthority> const& token_authority)
     -> std::shared_ptr<wayland::InputTriggerActionManagerV1::Global>;
 
