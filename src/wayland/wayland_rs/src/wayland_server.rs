@@ -17,7 +17,7 @@
 use calloop::{generic::Generic, EventLoop, Interest, Mode, PostAction};
 use log;
 use nix::sys::eventfd::{EfdFlags, EventFd};
-use std::os::fd::BorrowedFd;
+use std::os::fd::AsFd;
 use std::os::unix::io::AsRawFd;
 use std::sync::Arc;
 use wayland_server::{
@@ -92,10 +92,7 @@ impl WaylandServer {
 
         // Next, get the raw file descriptor from the display's backend and add it to the event loop.
         // We need to get the fd without holding a borrow of the display.
-        let display_fd = unsafe {
-            let raw_fd = self.display.backend().poll_fd().as_raw_fd();
-            BorrowedFd::borrow_raw(raw_fd)
-        };
+        let display_fd = self.display.as_fd().as_raw_fd();
         loop_handle
             .insert_source(
                 Generic::new(display_fd, Interest::READ, Mode::Level),
@@ -113,7 +110,7 @@ impl WaylandServer {
             .map_err(|_| "Failed to insert backend source into event loop")?;
 
         // Add stop eventfd to wake and terminate the loop.
-        let stop_fd = unsafe { BorrowedFd::borrow_raw(self.stop_event.as_raw_fd()) };
+        let stop_fd = self.stop_event.as_raw_fd();
         loop_handle
             .insert_source(
                 Generic::new(stop_fd, Interest::READ, Mode::Level),
