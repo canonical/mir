@@ -16,6 +16,7 @@
 
 #include "input_trigger_action_v1.h"
 #include "input_trigger_data.h"
+#include "mir/wayland/protocol_error.h"
 
 namespace mir
 {
@@ -38,8 +39,15 @@ private:
 
         void get_input_trigger_action(std::string const& token, struct wl_resource* id) override
         {
+            auto const revoked_tokens = itd->revoked_tokens.lock();
+            if (revoked_tokens->contains(token))
+            {
+                auto const action = new InputTriggerActionV1(id);
+                action->send_unavailable_event();
+                return;
+            }
+
             auto const action_controls = itd->action_controls.lock();
-            // TODO validate if token was issued before and not valid anymore or was never issued.
             if (auto const it = action_controls->find(token); it != action_controls->end())
             {
                 auto const action = wayland::make_weak(new InputTriggerActionV1(id));
@@ -52,8 +60,13 @@ private:
             }
             else
             {
-                auto const action = new InputTriggerActionV1(id);
-                action->send_unavailable_event();
+                // Token is not currently valid, nor is was it previously revoked. It must be an invalid token.
+                BOOST_THROW_EXCEPTION(
+                    wayland::ProtocolError(
+                        resource,
+                        Error::invalid_token,
+                        "InputTriggerActionManagerV1::get_input_trigger_action: trying to use a token we never "
+                        "issued"));
             }
         }
 

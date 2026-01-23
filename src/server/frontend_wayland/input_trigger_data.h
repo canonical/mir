@@ -21,12 +21,47 @@
 #include "input_trigger_registration_v1.h"
 #include "mir/synchronised.h"
 #include "mir/wayland/weak.h"
+#include <algorithm>
+#include <deque>
 #include <unordered_map>
 
 namespace mir
 {
 namespace frontend
 {
+
+template <typename T> class BoundedQueue
+{
+public:
+    explicit BoundedQueue(size_t max_size) :
+        max_size{max_size}
+    {
+    }
+
+    void enqueue(T const& item)
+    {
+        queue.push_back(item);
+
+        if (queue.size() > max_size)
+        {
+            queue.pop_front();
+        }
+    }
+
+    auto contains(T const& item) const -> bool
+    {
+        return std::find(queue.begin(), queue.end(), item) != queue.end();
+    }
+
+    auto size() const -> size_t
+    {
+        return queue.size();
+    }
+
+private:
+    size_t const max_size;
+    std::deque<T> queue;
+};
 
 class InputTriggerActionV1 : public wayland::InputTriggerActionV1
 {
@@ -70,7 +105,6 @@ private:
     // If we have an active action, we immediate add or drop the triggers.
     std::unordered_set<wayland::InputTriggerV1 const*> pending_triggers;
 
-
     std::string const token;
     wayland::Weak<frontend::InputTriggerActionV1> action;
 };
@@ -78,8 +112,15 @@ private:
 struct InputTriggerData
 {
     using Token = std::string;
+
+    InputTriggerData() :
+        revoked_tokens{BoundedQueue<Token>{32}}
+    {
+    }
+
     mir::Synchronised<std::unordered_map<Token, wayland::Weak<ActionControl>>> action_controls;
     mir::Synchronised<std::unordered_map<Token, wayland::Weak<InputTriggerActionV1>>> actions;
+    mir::Synchronised<BoundedQueue<Token>> revoked_tokens;
 };
 
 }

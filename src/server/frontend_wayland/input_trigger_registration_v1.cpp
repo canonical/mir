@@ -493,9 +493,19 @@ void InputTriggerRegistrationManagerV1::Instance::register_keyboard_code_trigger
 void InputTriggerRegistrationManagerV1::Instance::get_action_control(std::string const&, struct wl_resource* id)
 {
     auto const token = ta->issue_token(
-        [itd = itd](auto const&)
+        [itd = itd](auto const& token)
         {
-            // TODO track issued and revoked tokens
+            // If the token becomes invalid before an action is associated with
+            // it, we should clean up the action control object.
+            // When the client tries obtaining the action object using the token,
+            // they will get an `unavailable` event.
+            auto const actions = itd->actions.lock();
+            auto const action_controls = itd->action_controls.lock();
+            auto const token_string = std::string{token};
+            if(!actions->contains(token_string))
+                action_controls->erase(token_string);
+
+            itd->revoked_tokens.lock()->enqueue(token_string);
         });
 
     auto const token_string = static_cast<std::string>(token);
