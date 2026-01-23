@@ -294,7 +294,9 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
                     ctx.input_trigger_data,
                     ctx.composite_event_filter,
                     ctx.wayland_executor,
-                    ctx.main_loop);
+                    ctx.main_loop,
+                    ctx.clock,
+                    ctx.token_authority);
         }),
 };
 

@@ -24,8 +24,10 @@
 #include <mir/input/composite_event_filter.h>
 #include <mir/input/event_filter.h>
 #include <mir/input/xkb_mapper.h>
+#include <mir/shell/token_authority.h>
 #include <mir/time/alarm.h>
 #include <mir/time/alarm_factory.h>
+#include <mir/time/clock.h>
 #include <mir/wayland/weak.h>
 
 #include <atomic>
@@ -42,6 +44,8 @@ struct FilterContext
 {
     std::shared_ptr<mir::Executor> const wayland_executor;
     std::shared_ptr<time::AlarmFactory> const alarm_factory;
+    std::shared_ptr<time::Clock> const clock;
+    std::shared_ptr<shell::TokenAuthority> const token_authority;
 };
 
 struct ManagerContext
@@ -50,14 +54,14 @@ struct ManagerContext
     std::shared_ptr<mi::CompositeEventFilter> const cef;
     std::shared_ptr<mir::Executor> const wayland_executor;
     std::shared_ptr<time::AlarmFactory> const alarm_factory;
+    std::shared_ptr<time::Clock> const clock;
+    std::shared_ptr<shell::TokenAuthority> const token_authority;
 };
 
 class InputTriggerActionManagerV1 : public wayland::InputTriggerActionManagerV1::Global
 {
 public:
-    InputTriggerActionManagerV1(
-        wl_display* display,
-        ManagerContext const& context) :
+    InputTriggerActionManagerV1(wl_display* display, ManagerContext const& context) :
         Global{display, Version<1>{}},
         context{context}
     {
@@ -225,10 +229,6 @@ private:
             else if (key_event->action() == mir_keyboard_action_up)
                 pressed_keysyms.erase(key_event->keysym());
 
-            // TODO pass the clock and the token authority
-            auto const bogus_activation_token = "foobar";
-            auto const bogus_time = 0;
-
             auto const event_mods = mi::expand_modifiers(key_event->modifiers());
             auto const trigger_mods = mi::expand_modifiers(trigger.value().modifiers);
             auto const modifiers_match = protocol_and_event_modifiers_match(trigger_mods, event_mods);
@@ -246,7 +246,10 @@ private:
                 {
                     if (began)
                     {
-                        action.value().send_end_event(bogus_time, bogus_activation_token);
+                        auto const activation_token = std::string{context.token_authority->issue_token(std::nullopt)};
+                        auto const timestamp =
+                            mir_input_event_get_wayland_timestamp(mir_keyboard_event_input_event(key_event));
+                        action.value().send_end_event(timestamp, activation_token);
                         began = false;
                     }
 
@@ -257,7 +260,10 @@ private:
                 // ensure we send a begin event if we haven't already.
                 if (!began)
                 {
-                    action.value().send_begin_event(bogus_time, bogus_activation_token);
+                    auto const activation_token = std::string{context.token_authority->issue_token(std::nullopt)};
+                    auto const timestamp =
+                        mir_input_event_get_wayland_timestamp(mir_keyboard_event_input_event(key_event));
+                    action.value().send_begin_event(timestamp, activation_token);
                     began = true;
                     return true;
                 }
@@ -265,9 +271,6 @@ private:
                 return false;
             }
 
-            return false;
-
-            // Invalid token
             return false;
         }
 
@@ -314,7 +317,8 @@ private:
                     auto const filter = std::make_shared<KeyboardEventFilter>(
                         action,
                         wayland::make_weak(keyboard_trigger),
-                        FilterContext{context.wayland_executor, context.alarm_factory});
+                        FilterContext{
+                            context.wayland_executor, context.alarm_factory, context.clock, context.token_authority});
                     trigger_filters.emplace_back();
                     context.cef->prepend(filter);
 
@@ -337,9 +341,7 @@ private:
         }
 
     public:
-        Instance(
-            wl_resource* new_ext_input_trigger_action_manager_v1,
-            ManagerContext const& context) :
+        Instance(wl_resource* new_ext_input_trigger_action_manager_v1, ManagerContext const& context) :
             InputTriggerActionManagerV1{new_ext_input_trigger_action_manager_v1, Version<1>{}},
             context{context}
         {
@@ -359,12 +361,13 @@ auto create_input_trigger_action_manager_v1(
     std::shared_ptr<InputTriggerData> const& itd,
     std::shared_ptr<mi::CompositeEventFilter> const& cef,
     std::shared_ptr<mir::Executor> const& wayland_executor,
-    std::shared_ptr<time::AlarmFactory> const& alarm_factory)
+    std::shared_ptr<time::AlarmFactory> const& alarm_factory,
+    std::shared_ptr<time::Clock> const& clock,
+    std::shared_ptr<shell::TokenAuthority> const& token_authority)
     -> std::shared_ptr<wayland::InputTriggerActionManagerV1::Global>
 {
     return std::make_shared<InputTriggerActionManagerV1>(
-        display,
-        ManagerContext{itd, cef, wayland_executor, alarm_factory});
+        display, ManagerContext{itd, cef, wayland_executor, alarm_factory, clock, token_authority});
 }
 }
 }

@@ -346,7 +346,8 @@ mf::WaylandConnector::WaylandConnector(
         keyboard_observer_registrar,
         token_authority,
         surface_registry,
-        std::make_shared<frontend::InputTriggerData>()});
+        std::make_shared<frontend::InputTriggerData>(),
+        clock});
 
     shm_global = std::make_unique<WlShm>(display.get(), executor);
 
