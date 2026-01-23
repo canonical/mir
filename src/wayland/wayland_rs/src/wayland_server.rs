@@ -14,43 +14,27 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+use calloop::ping::Ping;
 use calloop::{generic::Generic, EventLoop, Interest, Mode, PostAction};
 use log;
-use nix::sys::eventfd::{EfdFlags, EventFd};
-use std::os::fd::AsFd;
-use std::os::unix::io::AsRawFd;
-use std::sync::Arc;
+use std::error;
+use std::option::Option;
+use std::sync::Mutex;
 use wayland_server::{
     backend::{ClientData, ClientId, DisconnectReason},
-    Display, ListeningSocket,
+    Display, DisplayHandle, ListeningSocket,
 };
 
 /// The wayland server.
 pub struct WaylandServer {
-    /// The display.
-    display: Display<ServerState>,
-
-    /// The global state for the server.
-    state: ServerState,
-
-    /// Stop eventfd used to wake the event loop.
-    stop_event: Arc<EventFd>,
-
-    /// Stop flag set by the event loop callback.
-    stop_requested: bool,
+    stop_signal: Mutex<Option<Ping>>,
 }
 
 impl WaylandServer {
     /// Create a new wayland server.
     pub fn new() -> Self {
         WaylandServer {
-            display: Display::new().expect("Failed to create Wayland display"),
-            state: ServerState {},
-            stop_event: Arc::new(
-                EventFd::from_value_and_flags(0, EfdFlags::EFD_CLOEXEC | EfdFlags::EFD_NONBLOCK)
-                    .expect("Failed to create stop eventfd"),
-            ),
-            stop_requested: false,
+            stop_signal: Mutex::new(None),
         }
     }
 
@@ -60,92 +44,95 @@ impl WaylandServer {
     ///
     /// # Arguments
     /// * `socket` - The name of the socket to bind to (e.g. "wayland-0").
-    pub fn run(&mut self, socket: &str) -> Result<(), &'static str> {
-        let mut event_loop: EventLoop<'_, WaylandServer> =
-            EventLoop::try_new().map_err(|_| "Failed to create event loop")?;
+    pub fn run(&mut self, socket: &str) -> Result<(), Box<dyn error::Error>> {
+        let display = Display::<ServerState>::new()?;
+        let mut event_loop: EventLoop<'_, ServerState> = EventLoop::try_new()?;
         let loop_handle = event_loop.handle();
+        let mut state = ServerState {
+            handle: display.handle(),
+            stop_requested: false,
+        };
 
         // First, add the listener to the event loop.
-        let listener =
-            ListeningSocket::bind(socket).map_err(|_| "Failed to bind Wayland socket")?;
-        loop_handle
-            .insert_source(
-                Generic::new(listener, Interest::READ, Mode::Level),
-                |_, listener, server: &mut WaylandServer| {
-                    if let Ok(stream) = listener.accept() {
-                        if let Some(stream) = stream {
-                            // Insert the client into the display.
-                            // This registers the client's socket with the Display's internal backend.
-                            if let Err(e) = server
-                                .display
-                                .handle()
-                                .insert_client(stream, std::sync::Arc::new(ClientState))
-                            {
-                                log::error!("Failed to add client: {}", e);
-                            }
+        let listener = ListeningSocket::bind(socket)?;
+        loop_handle.insert_source(
+            Generic::new(listener, Interest::READ, Mode::Level),
+            |_, listener, state: &mut ServerState| {
+                if let Ok(stream) = listener.accept() {
+                    if let Some(stream) = stream {
+                        // Insert the client into the display.
+                        // This registers the client's socket with the Display's internal backend.
+                        if let Err(e) = state
+                            .handle
+                            .insert_client(stream, std::sync::Arc::new(ClientState))
+                        {
+                            log::error!("Failed to add client: {}", e);
                         }
                     }
-                    Ok(PostAction::Continue)
-                },
-            )
-            .map_err(|_| "Failed to insert listener into event loop")?;
+                }
+                Ok(PostAction::Continue)
+            },
+        )?;
 
-        // Next, get the raw file descriptor from the display's backend and add it to the event loop.
-        // We need to get the fd without holding a borrow of the display.
-        let display_fd = self.display.as_fd().as_raw_fd();
-        loop_handle
-            .insert_source(
-                Generic::new(display_fd, Interest::READ, Mode::Level),
-                |_, _, server: &mut WaylandServer| {
-                    // This function processes requests from all connected clients
-                    match server.display.dispatch_clients(&mut server.state) {
-                        Ok(_) => Ok(PostAction::Continue),
-                        Err(e) => {
-                            log::error!("Error dispatching wayland clients: {}", e);
-                            Ok(PostAction::Continue)
-                        }
-                    }
-                },
-            )
-            .map_err(|_| "Failed to insert backend source into event loop")?;
+        loop_handle.insert_source(
+            Generic::new(display, Interest::READ, Mode::Level),
+            |_, server, state: &mut ServerState| {
+                // This function processes requests from all connected clients
 
-        // Add stop eventfd to wake and terminate the loop.
-        let stop_fd = self.stop_event.as_raw_fd();
-        loop_handle
-            .insert_source(
-                Generic::new(stop_fd, Interest::READ, Mode::Level),
-                |_, _, server: &mut WaylandServer| {
-                    match server.stop_event.read() {
-                        Ok(_) => server.stop_requested = true,
-                        Err(e) => log::error!("Failed to read stop eventfd: {}", e),
+                // SAFETY:
+                // NoIoDrop<Display> exposes `get_mut` as unsafe because we could use a mutable
+                // reference to drop or close the underlying IO object.
+                // We are not doing that; this upholds the required invariant
+                unsafe {
+                    if let Err(e) = server.get_mut().dispatch_clients(state) {
+                        log::error!("Error dispatching wayland clients: {}", e);
                     }
-                    Ok(PostAction::Continue)
-                },
-            )
+                }
+                Ok(PostAction::Continue)
+            },
+        )?;
+
+        // Add stop_signal to wake and terminate the loop.
+        let (pinger, ping_source) = calloop::ping::make_ping()?;
+
+        *self
+            .stop_signal
+            .lock()
+            .expect("No recovery from lock poisioning") = Some(pinger);
+
+        loop_handle
+            .insert_source(ping_source, |_, _, server: &mut ServerState| {
+                server.stop_requested = true;
+            })
             .map_err(|_| "Failed to insert stop eventfd into event loop")?;
 
-        while !self.stop_requested {
+        while !state.stop_requested {
             // 1. Dispatch events
             // The event loop borrows `server` temporarily to run the callbacks
             event_loop
-                .dispatch(None, self)
+                .dispatch(None, &mut state)
                 .map_err(|_| "Failed to dispatch event loop")?;
 
             // 2. Flush clients
             // Because `event_loop.dispatch` only borrowed `server`, we get it back here.
-            self.display
+            state
+                .handle
                 .flush_clients()
                 .map_err(|_| "Failed to flush clients")?;
         }
 
-        self.stop_requested = false;
         Ok(())
     }
 
     /// Stops the wayland server if it is running.
-    pub fn stop(&mut self) {
-        if let Err(e) = self.stop_event.write(1) {
-            log::error!("Failed to signal stop eventfd: {}", e);
+    pub fn stop(&self) {
+        if let Some(signal) = self
+            .stop_signal
+            .lock()
+            .expect("No way to recover from lock poisioning")
+            .as_ref()
+        {
+            signal.ping();
         }
     }
 }
@@ -156,7 +143,10 @@ pub fn create_wayland_server() -> Box<WaylandServer> {
 }
 
 /// The state of the wayland server.
-struct ServerState;
+struct ServerState {
+    handle: DisplayHandle,
+    stop_requested: bool,
+}
 
 /// The state of a wayland client.
 struct ClientState;
