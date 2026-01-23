@@ -86,8 +86,6 @@ public:
         std::string_view token,
         struct wl_resource* id);
 
-    ~ActionControl() override;
-
     void add_trigger_pending(wayland::InputTriggerV1 const* trigger);
     void add_trigger_immediate(wayland::InputTriggerV1 const* trigger);
     void drop_trigger_pending(wayland::InputTriggerV1 const* trigger);

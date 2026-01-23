@@ -154,11 +154,6 @@ KeyboardEventFilter::KeyboardEventFilter(
 {
 }
 
-KeyboardEventFilter::~KeyboardEventFilter()
-{
-    mir::log_debug("KeyboardEventFilter::~KeyboardEventFilter");
-}
-
 bool KeyboardEventFilter::protocol_and_event_modifiers_match(
     uint32_t protocol_modifiers, MirInputEventModifiers event_mods)
 {
@@ -283,8 +278,6 @@ bool KeyboardEventFilter::protocol_and_event_modifiers_match(
 
 bool KeyboardEventFilter::handle(MirEvent const& event)
 {
-    mir::log_debug("KeyboardEventFilter::handle");
-
     if (event.type() != mir_event_type_input)
         return false;
 
@@ -310,7 +303,6 @@ bool KeyboardEventFilter::handle(MirEvent const& event)
     auto const keysym_matches =
         keysym_exists_in_set(trigger.value().keysym, pressed_keysyms, trigger_mods_contain_shift);
 
-    mir::log_debug("modifiers_match: %s, keysym_matches: %s", modifiers_match ? "true" : "false", keysym_matches ? "true" : "false");
     if (trigger)
     {
         if (!modifiers_match || !keysym_matches)
@@ -379,11 +371,6 @@ ActionControl::ActionControl(
 {
 }
 
-ActionControl::~ActionControl()
-{
-    mir::log_debug("ActionControl::~ActionControl");
-}
-
 void ActionControl::add_trigger_pending(wayland::InputTriggerV1 const* trigger)
 {
     pending_triggers.insert(trigger);
@@ -399,7 +386,6 @@ void ActionControl::add_trigger_immediate(wayland::InputTriggerV1 const* trigger
 
     if (auto const* keyboard_trigger = KeyboardSymTrigger::from(trigger))
     {
-        mir::log_debug("Adding keyboard trigger to action control");
         auto const filter = std::make_shared<KeyboardEventFilter>(
             wayland::make_weak<wayland::InputTriggerActionV1 const>(&action.value()),
             wayland::make_weak<KeyboardSymTrigger const>(keyboard_trigger),
@@ -461,8 +447,6 @@ void ActionControl::drop_input_trigger_event(struct wl_resource* trigger)
 void ActionControl::install_action(wayland::Weak<frontend::InputTriggerActionV1> action)
 {
     this->action = action;
-
-    mir::log_debug("num pending triggers: %zu", pending_triggers.size());
 
     // Add the pending triggers to the composite event filter
     for (auto const* trigger : pending_triggers)
