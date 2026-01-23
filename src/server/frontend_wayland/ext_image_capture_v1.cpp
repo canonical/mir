@@ -841,37 +841,28 @@ class mf::ExtImageCopyCaptureCursorSessionV1::CursorObserver
     : public mi::CursorObserver
 {
 public:
-    CursorObserver(ExtImageCopyCaptureCursorSessionV1* session)
+    CursorObserver(ExtImageCopyCaptureCursorSessionV1& session)
         : session{session}
     {
     }
     void cursor_moved_to(float abs_x, float abs_y) override
     {
-        if (session)
-        {
-            session.value().cursor_moved_to(abs_x, abs_y);
-        }
+        session.cursor_moved_to(abs_x, abs_y);
     }
     void pointer_usable() override
     {
-        if (session)
-        {
-            session.value().pointer_usable();
-        }
+        session.pointer_usable();
     }
     void pointer_unusable() override
     {
-        if (session)
-        {
-            session.value().pointer_unusable();
-        }
+        session.pointer_unusable();
     }
     void image_set_to(std::shared_ptr<mg::CursorImage>) override
     {
     }
 
 private:
-    wayland::Weak<ExtImageCopyCaptureCursorSessionV1> const session;
+    ExtImageCopyCaptureCursorSessionV1& session;
 };
 
 class mf::ExtImageCopyCaptureCursorSessionV1::ImageCopyBackend
@@ -943,7 +934,7 @@ mf::ExtImageCopyCaptureCursorSessionV1::ExtImageCopyCaptureCursorSessionV1(
     ExtImageCopyCursorMapPosition const& map_position)
     : wayland::ImageCopyCaptureCursorSessionV1{resource, Version<1>{}},
       cursor_observer_multiplexer{cursor_observer_multiplexer},
-      cursor_observer{std::make_shared<CursorObserver>(this)},
+      cursor_observer{std::make_shared<CursorObserver>(*this)},
       clock{clock},
       map_position{map_position}
 {
