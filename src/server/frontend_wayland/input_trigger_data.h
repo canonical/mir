@@ -19,10 +19,13 @@
 
 #include "ext-input-trigger-action-v1_wrapper.h"
 #include "input_trigger_registration_v1.h"
-#include "mir/wayland/weak.h"
+
+#include <mir/wayland/weak.h>
+
 #include <algorithm>
 #include <deque>
 #include <unordered_map>
+#include <unordered_set>
 
 namespace mir
 {

@@ -16,7 +16,8 @@
 
 #include "input_trigger_action_v1.h"
 #include "input_trigger_data.h"
-#include "mir/wayland/protocol_error.h"
+
+#include <mir/wayland/protocol_error.h>
 
 namespace mir
 {

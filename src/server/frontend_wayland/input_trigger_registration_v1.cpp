@@ -25,12 +25,11 @@
 #include <mir/input/composite_event_filter.h>
 #include <mir/input/event_filter.h>
 #include <mir/input/xkb_mapper.h>
+#include <mir/log.h>
 #include <mir/shell/token_authority.h>
+#include <mir/synchronised.h>
 #include <mir/wayland/weak.h>
-
-#include "mir/log.h"
-#include "mir/synchronised.h"
-#include "mir_toolkit/events/enums.h"
+#include <mir_toolkit/events/enums.h>
 
 namespace mf = mir::frontend;
 namespace mi = mir::input;

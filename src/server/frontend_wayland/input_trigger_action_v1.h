@@ -18,7 +18,8 @@
 #define MIR_SERVER_FRONTEND_INPUT_TRIGGER_ACTION_V1_H_
 
 #include "ext-input-trigger-action-v1_wrapper.h"
-#include "mir/synchronised.h"
+
+#include <mir/synchronised.h>
 
 #include <memory>
 

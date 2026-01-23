@@ -19,9 +19,8 @@
 #define MIR_SERVER_FRONTEND_INPUT_TRIGGER_REGISTRATION_V1_H_
 
 #include "ext-input-trigger-registration-v1_wrapper.h"
-#include "mir/synchronised.h"
-#include "mir/wayland/weak.h"
-#include <unordered_set>
+
+#include <mir/synchronised.h>
 
 namespace mir
 {
