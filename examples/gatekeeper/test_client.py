@@ -143,6 +143,10 @@ class TestClient:
             ("quit", {
                 "description": GLib.Variant("s", "Quit Application"),
                 "preferred_trigger": GLib.Variant("s", "<Control>q")
+            }),
+            ("duplicate-quit", {
+                "description": GLib.Variant("s", "Quit Application"),
+                "preferred_trigger": GLib.Variant("s", "<Control>q")
             })
         ]
 

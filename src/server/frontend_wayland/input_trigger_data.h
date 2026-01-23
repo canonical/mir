@@ -20,6 +20,7 @@
 #include "ext-input-trigger-action-v1_wrapper.h"
 #include "input_trigger_registration_v1.h"
 
+#include <mir/input/event_filter.h>
 #include <mir/wayland/weak.h>
 
 #include <algorithm>
@@ -32,6 +33,7 @@ namespace mir
 namespace frontend
 {
 
+struct KeyboardSymTrigger;
 template <typename T> class BoundedQueue
 {
 public:
@@ -65,6 +67,46 @@ private:
     std::deque<T> queue;
 };
 
+// Forces trigger implementations to provide a to_string method for logging
+class InputTriggerV1 : public wayland::InputTriggerV1
+{
+public:
+    using wayland::InputTriggerV1::InputTriggerV1;
+    virtual auto to_string() const -> std::string = 0;
+};
+
+// Forces trigger filters to provide a way to identify the trigger they correspond to
+class InputTriggerFilter : public input::EventFilter
+{
+public:
+    virtual auto is_same_trigger(wayland::InputTriggerV1 const* trigger) const -> bool = 0;
+};
+
+struct KeyboardEventFilter : public InputTriggerFilter
+{
+    wayland::Weak<wayland::InputTriggerActionV1 const> const action;
+    wayland::Weak<frontend::KeyboardSymTrigger const> const trigger;
+    std::shared_ptr<shell::TokenAuthority> const token_authority;
+
+    bool began{false};
+
+    // TODO key state tracking should be moved into its own class, to be shared with all active filters
+    std::unordered_set<uint32_t> pressed_keysyms;
+
+    explicit KeyboardEventFilter(
+        wayland::Weak<wayland::InputTriggerActionV1 const> action,
+        wayland::Weak<frontend::KeyboardSymTrigger const> trigger,
+        std::shared_ptr<shell::TokenAuthority> const& token_authority);
+
+    static bool protocol_and_event_modifiers_match(uint32_t protocol_modifiers, MirInputEventModifiers event_mods);
+
+    bool handle(MirEvent const& event) override;
+    auto is_same_trigger(wayland::InputTriggerV1 const* trigger) const -> bool override;
+
+    static auto keysym_exists_in_set(
+        uint32_t keysym, std::unordered_set<uint32_t> const& pressed, bool case_insensitive) -> bool;
+};
+
 class InputTriggerActionV1 : public wayland::InputTriggerActionV1
 {
 public:
@@ -73,7 +115,13 @@ public:
     {
     }
 
-    std::vector<std::shared_ptr<input::EventFilter>> trigger_filters;
+    auto has_trigger(wayland::InputTriggerV1 const* trigger) const -> bool
+    {
+        return std::ranges::any_of(
+            trigger_filters, [trigger](auto const& trigger_filter) { return trigger_filter->is_same_trigger(trigger); });
+    }
+
+    std::vector<std::shared_ptr<InputTriggerFilter>> trigger_filters;
 };
 
 class ActionControl : public wayland::InputTriggerActionControlV1

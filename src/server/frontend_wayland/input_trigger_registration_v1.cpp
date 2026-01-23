@@ -40,7 +40,7 @@ namespace mir
 namespace frontend
 {
 
-class KeyboardSymTrigger : public wayland::InputTriggerV1
+class KeyboardSymTrigger : public frontend::InputTriggerV1
 {
 public:
     KeyboardSymTrigger(uint32_t modifiers, uint32_t keysym, struct wl_resource* id) :
@@ -60,37 +60,16 @@ public:
         return static_cast<KeyboardSymTrigger const*>(trigger);
     }
 
+    auto to_string() const -> std::string override
+    {
+        return "KeyboardSymTrigger{keysym=" + std::to_string(keysym) + ", modifiers=" + std::to_string(modifiers) + "}";
+    }
+
     uint32_t const keysym;
     MirInputEventModifiers const modifiers;
 
 private:
     static auto to_mir_modifiers(uint32_t protocol_modifiers, uint32_t keysym) -> MirInputEventModifiers;
-};
-
-struct KeyboardEventFilter : public input::EventFilter
-{
-    wayland::Weak<wayland::InputTriggerActionV1 const> const action;
-    wayland::Weak<frontend::KeyboardSymTrigger const> const trigger;
-    std::shared_ptr<shell::TokenAuthority> const token_authority;
-
-    bool began{false};
-
-    // TODO key state tracking should be moved into its own class, to be shared with all active filters
-    std::unordered_set<uint32_t> pressed_keysyms;
-
-    explicit KeyboardEventFilter(
-        wayland::Weak<wayland::InputTriggerActionV1 const> action,
-        wayland::Weak<frontend::KeyboardSymTrigger const> trigger,
-        std::shared_ptr<shell::TokenAuthority> const& token_authority);
-
-    ~KeyboardEventFilter();
-
-    static bool protocol_and_event_modifiers_match(uint32_t protocol_modifiers, MirInputEventModifiers event_mods);
-
-    bool handle(MirEvent const& event) override;
-
-    static auto keysym_exists_in_set(
-        uint32_t keysym, std::unordered_set<uint32_t> const& pressed, bool case_insensitive) -> bool;
 };
 
 class InputTriggerRegistrationManagerV1 : public wayland::InputTriggerRegistrationManagerV1::Global
@@ -128,6 +107,8 @@ public:
         void get_action_control(std::string const& name, struct wl_resource* id) override;
 
     private:
+        auto has_trigger(wayland::InputTriggerV1 const*) const -> bool;
+
         std::shared_ptr<mir::Synchronised<InputTriggerData>> const itd;
         std::shared_ptr<msh::TokenAuthority> const ta;
         std::shared_ptr<input::CompositeEventFilter> const cef;
@@ -335,6 +316,16 @@ bool KeyboardEventFilter::handle(MirEvent const& event)
     return false;
 }
 
+auto KeyboardEventFilter::is_same_trigger(wayland::InputTriggerV1 const* other) const -> bool
+{
+    if (auto const other_keyboard_trigger = KeyboardSymTrigger::from(other))
+    {
+        return trigger && trigger.value().keysym == other_keyboard_trigger->keysym &&
+               trigger.value().modifiers == other_keyboard_trigger->modifiers;
+    }
+    return false;
+}
+
 auto KeyboardEventFilter::keysym_exists_in_set(
     uint32_t keysym, std::unordered_set<uint32_t> const& pressed, bool case_insensitive) -> bool
 {
@@ -463,9 +454,13 @@ void InputTriggerRegistrationManagerV1::Instance::register_keyboard_sym_trigger(
 {
     auto const* keyboard_trigger = new KeyboardSymTrigger{modifiers, keysym, id};
 
-    // TODO validation before done event: Make sure no other keyboard triggers
-    // use the same modifier + keysym combo.
-    keyboard_trigger->send_done_event();
+    if(has_trigger(keyboard_trigger))
+    {
+        mir::log_debug("%s already registered", keyboard_trigger->to_string().c_str());
+        keyboard_trigger->send_failed_event();
+    }
+    else
+        keyboard_trigger->send_done_event();
 }
 
 void InputTriggerRegistrationManagerV1::Instance::register_keyboard_code_trigger(
@@ -505,6 +500,15 @@ void InputTriggerRegistrationManagerV1::Instance::get_action_control(std::string
     // `InputTriggerActionManagerV1::get_input_trigger_action` using the
     // token we supply here.
     action_control->send_done_event(token_string);
+}
+
+auto InputTriggerRegistrationManagerV1::Instance::has_trigger(wayland::InputTriggerV1 const* trigger) const -> bool
+{
+    auto const itd_ = itd->lock();
+    auto const& actions = itd_->actions;
+
+    return std::ranges::any_of(
+        actions, [trigger](auto const pair) { return pair.second.value().has_trigger(trigger); });
 }
 
 auto KeyboardSymTrigger::to_mir_modifiers(uint32_t protocol_modifiers, uint32_t keysym) -> MirInputEventModifiers
