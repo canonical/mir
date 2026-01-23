@@ -18,6 +18,7 @@
 #define MIR_FRONTEND_WAYLAND_CONNECTOR_H_
 
 #include <mir/shell/token_authority.h>
+#include "mir/synchronised.h"
 #include "wayland_wrapper.h"
 
 #include <mir/fd.h>
@@ -125,7 +126,7 @@ public:
         std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> keyboard_observer_registrar;
         std::shared_ptr<shell::TokenAuthority> token_authority;
         std::shared_ptr<SurfaceRegistry> surface_registry;
-        std::shared_ptr<InputTriggerData> input_trigger_data;
+        std::shared_ptr<mir::Synchronised<InputTriggerData>> input_trigger_data;
         std::shared_ptr<time::Clock> clock;
     };
 

@@ -19,6 +19,7 @@
 #define MIR_SERVER_FRONTEND_INPUT_TRIGGER_REGISTRATION_V1_H_
 
 #include "ext-input-trigger-registration-v1_wrapper.h"
+#include "mir/synchronised.h"
 #include "mir/wayland/weak.h"
 #include <unordered_set>
 
@@ -44,7 +45,7 @@ class InputTriggerData;
 
 auto create_input_trigger_registration_manager_v1(
     wl_display*,
-    std::shared_ptr<InputTriggerData> const&,
+    std::shared_ptr<mir::Synchronised<InputTriggerData>> const&,
     std::shared_ptr<shell::TokenAuthority> const&,
     std::shared_ptr<input::CompositeEventFilter> const&)
     -> std::shared_ptr<wayland::InputTriggerRegistrationManagerV1::Global>;

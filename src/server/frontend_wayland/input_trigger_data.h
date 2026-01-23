@@ -19,7 +19,6 @@
 
 #include "ext-input-trigger-action-v1_wrapper.h"
 #include "input_trigger_registration_v1.h"
-#include "mir/synchronised.h"
 #include "mir/wayland/weak.h"
 #include <algorithm>
 #include <deque>
@@ -78,7 +77,7 @@ class ActionControl : public wayland::InputTriggerActionControlV1
 {
 public:
     ActionControl(
-        std::shared_ptr<frontend::InputTriggerData> const& itd,
+        std::shared_ptr<mir::Synchronised<frontend::InputTriggerData>> const& itd,
         std::shared_ptr<shell::TokenAuthority> const& ta,
         std::shared_ptr<input::CompositeEventFilter> const& cef,
         std::string_view token,
@@ -97,7 +96,7 @@ public:
     void install_action(wayland::Weak<frontend::InputTriggerActionV1>);
 
 private:
-    std::shared_ptr<frontend::InputTriggerData> const itd;
+    std::shared_ptr<mir::Synchronised<frontend::InputTriggerData>> const itd;
     std::shared_ptr<shell::TokenAuthority> const ta;
     std::shared_ptr<input::CompositeEventFilter> const cef;
 
@@ -118,9 +117,9 @@ struct InputTriggerData
     {
     }
 
-    mir::Synchronised<std::unordered_map<Token, wayland::Weak<ActionControl>>> action_controls;
-    mir::Synchronised<std::unordered_map<Token, wayland::Weak<InputTriggerActionV1>>> actions;
-    mir::Synchronised<BoundedQueue<Token>> revoked_tokens;
+    std::unordered_map<Token, wayland::Weak<ActionControl>> action_controls;
+    std::unordered_map<Token, wayland::Weak<InputTriggerActionV1>> actions;
+    BoundedQueue<Token> revoked_tokens;
 };
 
 }

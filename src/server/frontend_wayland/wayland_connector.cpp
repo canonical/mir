@@ -322,6 +322,7 @@ mf::WaylandConnector::WaylandConnector(
         std::move(drag_icon_controller),
         std::move(pointer_input_dispatcher));
 
+    auto const input_trigger_data = std::make_shared<mir::Synchronised<frontend::InputTriggerData>>();
     extensions->init(WaylandExtensions::Context{
         display.get(),
         executor,
@@ -346,7 +347,7 @@ mf::WaylandConnector::WaylandConnector(
         keyboard_observer_registrar,
         token_authority,
         surface_registry,
-        std::make_shared<frontend::InputTriggerData>(),
+        input_trigger_data,
         clock});
 
     shm_global = std::make_unique<WlShm>(display.get(), executor);

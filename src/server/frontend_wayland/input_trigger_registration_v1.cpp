@@ -29,6 +29,7 @@
 #include <mir/wayland/weak.h>
 
 #include "mir/log.h"
+#include "mir/synchronised.h"
 #include "mir_toolkit/events/enums.h"
 
 namespace mf = mir::frontend;
@@ -98,7 +99,7 @@ class InputTriggerRegistrationManagerV1 : public wayland::InputTriggerRegistrati
 public:
     InputTriggerRegistrationManagerV1(
         wl_display* display,
-        std::shared_ptr<InputTriggerData> const& itd,
+        std::shared_ptr<mir::Synchronised<InputTriggerData>> const& itd,
         std::shared_ptr<msh::TokenAuthority> const& ta,
         std::shared_ptr<mi::CompositeEventFilter> const& cef) :
         Global{display, Version<1>{}},
@@ -113,7 +114,7 @@ public:
     public:
         Instance(
             wl_resource* new_ext_input_trigger_registration_manager_v1,
-            std::shared_ptr<InputTriggerData> const& itd,
+            std::shared_ptr<mir::Synchronised<InputTriggerData>> const& itd,
             std::shared_ptr<msh::TokenAuthority> const& token_authority,
             std::shared_ptr<input::CompositeEventFilter> const& cef) :
             wayland::InputTriggerRegistrationManagerV1{new_ext_input_trigger_registration_manager_v1, Version<1>{}},
@@ -128,7 +129,7 @@ public:
         void get_action_control(std::string const& name, struct wl_resource* id) override;
 
     private:
-        std::shared_ptr<InputTriggerData> const itd;
+        std::shared_ptr<mir::Synchronised<InputTriggerData>> const itd;
         std::shared_ptr<msh::TokenAuthority> const ta;
         std::shared_ptr<input::CompositeEventFilter> const cef;
     };
@@ -139,7 +140,7 @@ public:
     }
 
 private:
-    std::shared_ptr<InputTriggerData> const itd;
+    std::shared_ptr<mir::Synchronised<InputTriggerData>> const itd;
     std::shared_ptr<msh::TokenAuthority> const ta;
     std::shared_ptr<input::CompositeEventFilter> const cef;
 };
@@ -366,7 +367,7 @@ auto KeyboardEventFilter::keysym_exists_in_set(
 }
 
 ActionControl::ActionControl(
-    std::shared_ptr<InputTriggerData> const& itd,
+    std::shared_ptr<mir::Synchronised<InputTriggerData>> const& itd,
     std::shared_ptr<msh::TokenAuthority> const& ta,
     std::shared_ptr<mi::CompositeEventFilter> const& cef,
     std::string_view token,
@@ -499,19 +500,22 @@ void InputTriggerRegistrationManagerV1::Instance::get_action_control(std::string
             // it, we should clean up the action control object.
             // When the client tries obtaining the action object using the token,
             // they will get an `unavailable` event.
-            auto const actions = itd->actions.lock();
-            auto const action_controls = itd->action_controls.lock();
-            auto const token_string = std::string{token};
-            if(!actions->contains(token_string))
-                action_controls->erase(token_string);
+            auto const itd_ = itd->lock();
+            auto const& actions = itd_->actions;
+            auto& action_controls = itd_->action_controls;
+            auto& revoked_tokens = itd_->revoked_tokens;
 
-            itd->revoked_tokens.lock()->enqueue(token_string);
+            auto const token_string = std::string{token};
+            if(!actions.contains(token_string))
+                action_controls.erase(token_string);
+
+            revoked_tokens.enqueue(token_string);
         });
 
     auto const token_string = static_cast<std::string>(token);
     auto const action_control = new ActionControl{itd, ta, cef, token_string, id};
 
-    itd->action_controls.lock()->insert({token_string, wayland::make_weak(action_control)});
+    itd->lock()->action_controls.insert({token_string, wayland::make_weak(action_control)});
 
     // Tell the client that the action has been successfully registered.
     // They then should call
@@ -571,7 +575,7 @@ auto KeyboardSymTrigger::to_mir_modifiers(uint32_t protocol_modifiers, uint32_t 
 
 auto create_input_trigger_registration_manager_v1(
     wl_display* display,
-    std::shared_ptr<InputTriggerData> const& itd,
+    std::shared_ptr<mir::Synchronised<InputTriggerData>> const& itd,
     std::shared_ptr<msh::TokenAuthority> const& ta,
     std::shared_ptr<mi::CompositeEventFilter> const& cef)
     -> std::shared_ptr<wayland::InputTriggerRegistrationManagerV1::Global>
