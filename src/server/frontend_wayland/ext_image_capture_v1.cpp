@@ -115,24 +115,6 @@ protected:
 
 class ExtImageCopyCaptureCursorSessionV1;
 
-class ExtImageCopyCursorBackend
-{
-public:
-    using CaptureResult = std::expected<std::tuple<time::Timestamp, geom::Rectangle>, uint32_t>;
-    using CaptureCallback = std::function<void(CaptureResult const&)>;
-
-    explicit ExtImageCopyCursorBackend(ExtImageCopyCaptureCursorSessionV1* session);
-    virtual ~ExtImageCopyCursorBackend() = default;
-
-    ExtImageCopyCursorBackend(ExtImageCopyCursorBackend const&) = delete;
-    ExtImageCopyCursorBackend& operator=(ExtImageCopyCursorBackend const&) = delete;
-
-    virtual auto map_position(float abs_x, float abs_y) -> std::optional<geom::Point> = 0;
-
-protected:
-    ExtImageCopyCaptureCursorSessionV1* const session;
-};
-
 class ExtOutputImageCopyBackend
     : public ExtImageCopyBackend, public OutputConfigListener
 {
@@ -159,7 +141,7 @@ private:
 };
 
 using ExtImageCopyBackendFactory = std::function<std::unique_ptr<ExtImageCopyBackend>(ExtImageCopyCaptureSessionV1*,bool)>;
-using ExtImageCopyCursorBackendFactory = std::function<std::unique_ptr<ExtImageCopyCursorBackend>(ExtImageCopyCaptureCursorSessionV1*)>;
+using ExtImageCopyCursorMapPosition = std::function<std::optional<geom::Point>(float abs_x, float abs_y)>;
 
 /* Image capture sources */
 class ExtOutputImageCaptureSourceManagerV1Global
@@ -181,8 +163,6 @@ public:
     ExtOutputImageCaptureSourceManagerV1(wl_resource *resource, std::shared_ptr<ExtImageCaptureV1Ctx> const& ctx);
 
 private:
-    class CursorBackend;
-
     void create_source(wl_resource* new_resource, wl_resource* output) override;
 
     std::shared_ptr<ExtImageCaptureV1Ctx> const ctx;
@@ -194,12 +174,12 @@ class ExtImageCaptureSourceV1
 public:
     ExtImageCaptureSourceV1(wl_resource* resource,
                             ExtImageCopyBackendFactory const& backend_factory,
-                            ExtImageCopyCursorBackendFactory const& cursor_backend_factory);
+                            ExtImageCopyCursorMapPosition const& cursor_map_position);
 
     static ExtImageCaptureSourceV1* from_or_throw(wl_resource* resource);
 
     ExtImageCopyBackendFactory const backend_factory;
-    ExtImageCopyCursorBackendFactory const cursor_backend_factory;
+    ExtImageCopyCursorMapPosition const cursor_map_position;
 };
 
 
@@ -291,11 +271,11 @@ class ExtImageCopyCaptureCursorSessionV1
 {
 public:
   ExtImageCopyCaptureCursorSessionV1(
-      wl_resource *resource, Executor &wayland_executor,
+      wl_resource* resource, Executor& wayland_executor,
       std::shared_ptr<input::CursorObserverMultiplexer> const&
           cursor_observer_multiplexer,
       std::shared_ptr<time::Clock> const& clock,
-      ExtImageCopyCursorBackendFactory const &cursor_backend_factory);
+      ExtImageCopyCursorMapPosition const& map_position);
   ~ExtImageCopyCaptureCursorSessionV1();
 
 private:
@@ -316,7 +296,7 @@ private:
     std::shared_ptr<input::CursorObserverMultiplexer> const cursor_observer_multiplexer;
     std::shared_ptr<CursorObserver> const cursor_observer;
     std::shared_ptr<time::Clock> const clock;
-    std::unique_ptr<ExtImageCopyCursorBackend> backend;
+    ExtImageCopyCursorMapPosition const map_position;
 };
 
 }
@@ -391,12 +371,6 @@ mf::ExtOutputImageCopyBackend::ExtOutputImageCopyBackend(
     {
         session->set_stopped();
     }
-}
-
-mf::ExtImageCopyCursorBackend::ExtImageCopyCursorBackend(
-    ExtImageCopyCaptureCursorSessionV1 *session)
-    : session{session}
-{
 }
 
 mf::ExtOutputImageCopyBackend::~ExtOutputImageCopyBackend()
@@ -548,17 +522,6 @@ void mf::ExtOutputImageCaptureSourceManagerV1Global::bind(wl_resource* new_resou
     new ExtOutputImageCaptureSourceManagerV1{new_resource, ctx};
 }
 
-class mf::ExtOutputImageCaptureSourceManagerV1::CursorBackend
-    : public ExtImageCopyCursorBackend
-{
-public:
-    CursorBackend(ExtImageCopyCaptureCursorSessionV1 *session, OutputGlobal* output);
-    auto map_position(float abs_x, float abs_y) -> std::optional<geom::Point> override;
-
-private:
-    wayland::Weak<OutputGlobal> const output;
-};
-
 mf::ExtOutputImageCaptureSourceManagerV1::ExtOutputImageCaptureSourceManagerV1(
     wl_resource* resource,
     std::shared_ptr<ExtImageCaptureV1Ctx> const& ctx)
@@ -573,54 +536,41 @@ void mf::ExtOutputImageCaptureSourceManagerV1::create_source(wl_resource* new_re
     ExtImageCopyBackendFactory backend_factory = [output=wayland::make_weak(&output_global), ctx=ctx](auto *session, bool overlay_cursor) {
         return std::make_unique<ExtOutputImageCopyBackend>(session, overlay_cursor, wayland::as_nullable_ptr(output), ctx);
     };
-    ExtImageCopyCursorBackendFactory cursor_backend_factory = [output=wayland::make_weak(&output_global)](auto *session) {
-        return std::make_unique<CursorBackend>(session, wayland::as_nullable_ptr(output));
+    ExtImageCopyCursorMapPosition cursor_map_position = [output=wayland::make_weak(&output_global)](float abs_x, float abs_y) -> std::optional<geom::Point> {
+        if (!output)
+        {
+            return std::nullopt;
+        }
+        auto const config = output.value().current_config();
+        auto const output_space_area = config.extents();
+        geom::Point const abs_pos{abs_x, abs_y};
+        if (!output_space_area.contains(abs_pos))
+        {
+            return std::nullopt;
+        }
+
+        // Translate pointer coordinates to buffer space. We don't take
+        // rotations/flips into account because our image copy backend is
+        // producing untransformed frames.
+        auto const buffer_size = config.modes[config.current_mode_index].size;
+        auto const x_scale = static_cast<double>(buffer_size.width.as_value()) / output_space_area.size.width.as_value();
+        auto const y_scale = static_cast<double>(buffer_size.height.as_value()) / output_space_area.size.height.as_value();
+
+        auto const raw_offset = abs_pos - output_space_area.top_left;
+        decltype(raw_offset) const scaled_offset{x_scale * raw_offset.dx, y_scale * raw_offset.dy};
+        return as_point(scaled_offset);
     };
-    new ExtImageCaptureSourceV1{new_resource, backend_factory, cursor_backend_factory};
-}
-
-mf::ExtOutputImageCaptureSourceManagerV1::CursorBackend::CursorBackend(
-    ExtImageCopyCaptureCursorSessionV1 *session, OutputGlobal *output)
-    : ExtImageCopyCursorBackend(session), output(output)
-{
-}
-
-auto mf::ExtOutputImageCaptureSourceManagerV1::CursorBackend::map_position(
-    float abs_x, float abs_y) -> std::optional<geom::Point>
-{
-    if (!output)
-    {
-        return std::nullopt;
-    }
-    auto const config = output.value().current_config();
-    auto const output_space_area = config.extents();
-    geom::Point const abs_pos{abs_x, abs_y};
-    if (!output_space_area.contains(abs_pos))
-    {
-        return std::nullopt;
-    }
-
-    // Translate pointer coordinates to buffer space. We don't take
-    // rotations/flips into account because our image copy backend is
-    // producing untransformed frames.
-
-    auto const buffer_size = config.modes[config.current_mode_index].size;
-    auto const x_scale = static_cast<double>(buffer_size.width.as_value()) / output_space_area.size.width.as_value();
-    auto const y_scale = static_cast<double>(buffer_size.height.as_value()) / output_space_area.size.height.as_value();
-
-    auto const raw_offset = abs_pos - output_space_area.top_left;
-    decltype(raw_offset) const scaled_offset{x_scale * raw_offset.dx, y_scale * raw_offset.dy};
-    return as_point(scaled_offset);
+    new ExtImageCaptureSourceV1{new_resource, backend_factory, cursor_map_position};
 }
 
 
 mf::ExtImageCaptureSourceV1::ExtImageCaptureSourceV1(
     wl_resource* resource,
     ExtImageCopyBackendFactory const& backend_factory,
-    ExtImageCopyCursorBackendFactory const& cursor_backend_factory)
+    ExtImageCopyCursorMapPosition const& cursor_map_position)
     : wayland::ImageCaptureSourceV1{resource, Version<1>()},
           backend_factory{backend_factory},
-          cursor_backend_factory{cursor_backend_factory}
+          cursor_map_position{cursor_map_position}
 {
 }
 
@@ -695,7 +645,7 @@ void mf::ExtImageCopyCaptureManagerV1::create_pointer_cursor_session(
     [[maybe_unused]] wl_resource* pointer)
 {
     auto const source_instance = ExtImageCaptureSourceV1::from_or_throw(source);
-    new ExtImageCopyCaptureCursorSessionV1{new_resource, *wayland_executor, cursor_observer_multiplexer, clock, source_instance->cursor_backend_factory};
+    new ExtImageCopyCaptureCursorSessionV1{new_resource, *wayland_executor, cursor_observer_multiplexer, clock, source_instance->cursor_map_position};
 }
 
 mf::ExtImageCopyCaptureSessionV1::ExtImageCopyCaptureSessionV1(
@@ -986,16 +936,16 @@ void mf::ExtImageCopyCaptureCursorSessionV1::ImageCopyBackend::begin_capture(
 }
 
 mf::ExtImageCopyCaptureCursorSessionV1::ExtImageCopyCaptureCursorSessionV1(
-    wl_resource *resource,
+    wl_resource* resource,
     Executor& wayland_executor,
     std::shared_ptr<input::CursorObserverMultiplexer> const& cursor_observer_multiplexer,
     std::shared_ptr<time::Clock> const& clock,
-    ExtImageCopyCursorBackendFactory const& cursor_backend_factory)
+    ExtImageCopyCursorMapPosition const& map_position)
     : wayland::ImageCopyCaptureCursorSessionV1{resource, Version<1>{}},
       cursor_observer_multiplexer{cursor_observer_multiplexer},
       cursor_observer{std::make_shared<CursorObserver>(this)},
       clock{clock},
-      backend{cursor_backend_factory(this)}
+      map_position{map_position}
 {
     cursor_observer_multiplexer->register_interest(cursor_observer, wayland_executor);
     // TODO: placeholder until we have the hotspot of the real cursor
@@ -1031,7 +981,7 @@ void mf::ExtImageCopyCaptureCursorSessionV1::cursor_moved_to(
 {
     // TODO: offset position based on position of source (output, toplevel, etc)
     bool was_visible = pointer_is_usable && pointer_in_source;
-    auto position = backend->map_position(abs_x, abs_y);
+    auto position = map_position(abs_x, abs_y);
     pointer_in_source = bool(position);
     if (position) {
         if (!was_visible && pointer_is_usable)
