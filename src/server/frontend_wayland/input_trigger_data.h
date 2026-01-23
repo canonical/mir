@@ -82,29 +82,48 @@ public:
     virtual auto is_same_trigger(wayland::InputTriggerV1 const* trigger) const -> bool = 0;
 };
 
+/// Tracks keyboard state shared among all keyboard event filters
+class KeyboardStateTracker
+{
+public:
+    KeyboardStateTracker() = default;
+
+    /// Update pressed keysyms on key down
+    void on_key_down(uint32_t keysym);
+
+    /// Update pressed keysyms on key up
+    void on_key_up(uint32_t keysym);
+
+    /// Check if a keysym exists in the pressed set
+    auto keysym_is_pressed(uint32_t keysym, bool case_insensitive) const -> bool;
+
+    /// Check if protocol modifiers match event modifiers
+    static auto protocol_and_event_modifiers_match(uint32_t protocol_modifiers, MirInputEventModifiers event_mods)
+        -> bool;
+
+private:
+    std::unordered_set<uint32_t> pressed_keysyms;
+};
+
 struct KeyboardEventFilter : public InputTriggerFilter
 {
     wayland::Weak<wayland::InputTriggerActionV1 const> const action;
     wayland::Weak<frontend::KeyboardSymTrigger const> const trigger;
     std::shared_ptr<shell::TokenAuthority> const token_authority;
+    std::shared_ptr<KeyboardStateTracker> const keyboard_state;
 
     bool began{false};
-
-    // TODO key state tracking should be moved into its own class, to be shared with all active filters
-    std::unordered_set<uint32_t> pressed_keysyms;
 
     explicit KeyboardEventFilter(
         wayland::Weak<wayland::InputTriggerActionV1 const> action,
         wayland::Weak<frontend::KeyboardSymTrigger const> trigger,
-        std::shared_ptr<shell::TokenAuthority> const& token_authority);
+        std::shared_ptr<shell::TokenAuthority> const& token_authority,
+        std::shared_ptr<KeyboardStateTracker> const& keyboard_state);
 
-    static bool protocol_and_event_modifiers_match(uint32_t protocol_modifiers, MirInputEventModifiers event_mods);
+    ~KeyboardEventFilter();
 
     bool handle(MirEvent const& event) override;
     auto is_same_trigger(wayland::InputTriggerV1 const* trigger) const -> bool override;
-
-    static auto keysym_exists_in_set(
-        uint32_t keysym, std::unordered_set<uint32_t> const& pressed, bool case_insensitive) -> bool;
 };
 
 class InputTriggerActionV1 : public wayland::InputTriggerActionV1
@@ -135,14 +154,17 @@ public:
         struct wl_resource* id);
 
     void add_trigger_pending(wayland::InputTriggerV1 const* trigger);
-    void add_trigger_immediate(wayland::InputTriggerV1 const* trigger);
+    void add_trigger_immediate(
+        wayland::InputTriggerV1 const* trigger,
+        std::shared_ptr<KeyboardStateTracker> const& keyboard_state);
     void drop_trigger_pending(wayland::InputTriggerV1 const* trigger);
     void drop_trigger_immediate(wayland::InputTriggerV1 const* trigger);
 
     void add_input_trigger_event(struct wl_resource* trigger) override;
     void drop_input_trigger_event(struct wl_resource* trigger) override;
 
-    void install_action(wayland::Weak<frontend::InputTriggerActionV1>);
+    void install_action(
+        wayland::Weak<frontend::InputTriggerActionV1>, std::shared_ptr<KeyboardStateTracker> const& keyboard_state);
 
 private:
     std::shared_ptr<mir::Synchronised<frontend::InputTriggerData>> const itd;
@@ -162,13 +184,15 @@ struct InputTriggerData
     using Token = std::string;
 
     InputTriggerData() :
-        revoked_tokens{BoundedQueue<Token>{32}}
+        revoked_tokens{BoundedQueue<Token>{32}},
+        keyboard_state{std::make_shared<KeyboardStateTracker>()}
     {
     }
 
     std::unordered_map<Token, wayland::Weak<ActionControl>> action_controls;
     std::unordered_map<Token, wayland::Weak<InputTriggerActionV1>> actions;
     BoundedQueue<Token> revoked_tokens;
+    std::shared_ptr<KeyboardStateTracker> keyboard_state;
 };
 
 }

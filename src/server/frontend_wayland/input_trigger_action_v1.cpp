@@ -57,7 +57,7 @@ private:
 
                 auto& [_, action_control] = *it;
                 if (action_control)
-                    action_control.value().install_action(action);
+                    action_control.value().install_action(action, itd_->keyboard_state);
 
                 actions.insert({token, action});
             }

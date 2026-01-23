@@ -128,14 +128,49 @@ private:
 KeyboardEventFilter::KeyboardEventFilter(
     wayland::Weak<wayland::InputTriggerActionV1 const> action,
     wayland::Weak<frontend::KeyboardSymTrigger const> trigger,
-    std::shared_ptr<shell::TokenAuthority> const& token_authority) :
+    std::shared_ptr<shell::TokenAuthority> const& token_authority,
+    std::shared_ptr<KeyboardStateTracker> const& keyboard_state) :
     action{action},
     trigger{std::move(trigger)},
-    token_authority{token_authority}
+    token_authority{token_authority},
+    keyboard_state{keyboard_state}
 {
 }
 
-bool KeyboardEventFilter::protocol_and_event_modifiers_match(
+KeyboardEventFilter::~KeyboardEventFilter() = default;
+
+void KeyboardStateTracker::on_key_down(uint32_t keysym)
+{
+    pressed_keysyms.insert(keysym);
+}
+
+void KeyboardStateTracker::on_key_up(uint32_t keysym)
+{
+    pressed_keysyms.erase(keysym);
+}
+
+auto KeyboardStateTracker::keysym_is_pressed(uint32_t keysym, bool case_insensitive) const -> bool
+{
+    if (!case_insensitive)
+        return pressed_keysyms.find(keysym) != pressed_keysyms.end();
+
+    // Only perform case mapping for ASCII letters. For other keysyms, fall back to exact match.
+    uint32_t lower = keysym;
+    uint32_t upper = keysym;
+
+    if (keysym >= XKB_KEY_A && keysym <= XKB_KEY_Z)
+    {
+        lower = keysym + (XKB_KEY_a - XKB_KEY_A);
+    }
+    else if (keysym >= XKB_KEY_a && keysym <= XKB_KEY_z)
+    {
+        upper = keysym - (XKB_KEY_a - XKB_KEY_A);
+    }
+
+    return pressed_keysyms.find(lower) != pressed_keysyms.end() || pressed_keysyms.find(upper) != pressed_keysyms.end();
+}
+
+bool KeyboardStateTracker::protocol_and_event_modifiers_match(
     uint32_t protocol_modifiers, MirInputEventModifiers event_mods)
 {
     using ProtocolModifiers = wayland::InputTriggerRegistrationManagerV1::Modifiers;
@@ -269,20 +304,20 @@ bool KeyboardEventFilter::handle(MirEvent const& event)
     auto const* key_event = input_event->to_keyboard();
 
     if (key_event->action() == mir_keyboard_action_down)
-        pressed_keysyms.insert(key_event->keysym());
+        keyboard_state->on_key_down(key_event->keysym());
     else if (key_event->action() == mir_keyboard_action_up)
-        pressed_keysyms.erase(key_event->keysym());
+        keyboard_state->on_key_up(key_event->keysym());
 
     auto const event_mods = mi::expand_modifiers(key_event->modifiers());
     auto const trigger_mods = mi::expand_modifiers(trigger.value().modifiers);
-    auto const modifiers_match = protocol_and_event_modifiers_match(trigger_mods, event_mods);
+    auto const modifiers_match = KeyboardStateTracker::protocol_and_event_modifiers_match(trigger_mods, event_mods);
 
     auto const trigger_mods_contain_shift =
         ((trigger_mods & mir_input_event_modifier_shift) | (trigger_mods & mir_input_event_modifier_shift_left) |
          (trigger_mods & mir_input_event_modifier_shift_right)) != 0;
 
     auto const keysym_matches =
-        keysym_exists_in_set(trigger.value().keysym, pressed_keysyms, trigger_mods_contain_shift);
+        keyboard_state->keysym_is_pressed(trigger.value().keysym, trigger_mods_contain_shift);
 
     if (trigger)
     {
@@ -326,28 +361,6 @@ auto KeyboardEventFilter::is_same_trigger(wayland::InputTriggerV1 const* other) 
     return false;
 }
 
-auto KeyboardEventFilter::keysym_exists_in_set(
-    uint32_t keysym, std::unordered_set<uint32_t> const& pressed, bool case_insensitive) -> bool
-{
-    if (!case_insensitive)
-        return pressed.find(keysym) != pressed.end();
-
-    // Only perform case mapping for ASCII letters. For other keysyms, fall back to exact match.
-    uint32_t lower = keysym;
-    uint32_t upper = keysym;
-
-    if (keysym >= XKB_KEY_A && keysym <= XKB_KEY_Z)
-    {
-        lower = keysym + (XKB_KEY_a - XKB_KEY_A);
-    }
-    else if (keysym >= XKB_KEY_a && keysym <= XKB_KEY_z)
-    {
-        upper = keysym - (XKB_KEY_a - XKB_KEY_A);
-    }
-
-    return pressed.find(lower) != pressed.end() || pressed.find(upper) != pressed.end();
-}
-
 ActionControl::ActionControl(
     std::shared_ptr<mir::Synchronised<InputTriggerData>> const& itd,
     std::shared_ptr<msh::TokenAuthority> const& ta,
@@ -367,7 +380,9 @@ void ActionControl::add_trigger_pending(wayland::InputTriggerV1 const* trigger)
     pending_triggers.insert(trigger);
 }
 
-void ActionControl::add_trigger_immediate(wayland::InputTriggerV1 const* trigger)
+void ActionControl::add_trigger_immediate(
+    wayland::InputTriggerV1 const* trigger,
+    std::shared_ptr<KeyboardStateTracker> const& keyboard_state)
 {
     if (!action)
     {
@@ -380,7 +395,8 @@ void ActionControl::add_trigger_immediate(wayland::InputTriggerV1 const* trigger
         auto const filter = std::make_shared<KeyboardEventFilter>(
             wayland::make_weak<wayland::InputTriggerActionV1 const>(&action.value()),
             wayland::make_weak<KeyboardSymTrigger const>(keyboard_trigger),
-            ta);
+            ta,
+            keyboard_state);
 
         action.value().trigger_filters.push_back(filter);
         cef->prepend(filter);
@@ -418,9 +434,14 @@ void ActionControl::add_input_trigger_event(struct wl_resource* trigger)
     if(auto const* input_trigger = wayland::InputTriggerV1::from(trigger))
     {
         if (!action)
+        {
             add_trigger_pending(input_trigger);
+        }
         else
-            add_trigger_immediate(input_trigger);
+        {
+            auto itd_lock = itd->lock();
+            add_trigger_immediate(input_trigger, itd_lock->keyboard_state);
+        }
     }
 }
 
@@ -435,13 +456,13 @@ void ActionControl::drop_input_trigger_event(struct wl_resource* trigger)
     }
 }
 
-void ActionControl::install_action(wayland::Weak<frontend::InputTriggerActionV1> action)
+void ActionControl::install_action(wayland::Weak<frontend::InputTriggerActionV1> action, std::shared_ptr<KeyboardStateTracker> const& keyboard_state)
 {
     this->action = action;
 
     // Add the pending triggers to the composite event filter
     for (auto const* trigger : pending_triggers)
-        add_trigger_immediate(trigger);
+        add_trigger_immediate(trigger, keyboard_state);
 
     // Don't need this anymore
     pending_triggers.clear();
