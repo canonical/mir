@@ -31,3 +31,8 @@ repos:
     args:
     - --config=doc/sphinx/.sphinx/.pymarkdown.json
     - fix
+
+- repo: https://github.com/AndrejOrsula/pre-commit-cargo
+  rev: 0.4.0
+  hooks:
+  - id: cargo-fmt

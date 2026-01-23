@@ -49,7 +49,6 @@ jobs:
                 "lxd:...:ubuntu_arm64"
                 "lxd:...:ubuntu_armhf"
                 "lxd:...:ubuntu_devel"
-                "lxd:...:ubuntu_plucky"
                 "lxd:...:ubuntu_proposed"
                 "lxd:...:ubuntu_questing"
                 "lxd:alpine-3.20:...:amd64"

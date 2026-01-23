@@ -252,7 +252,8 @@ impl InputDeviceRs {
                                     crate::MirPointerAcceleration::mir_pointer_acceleration_adaptive
                                         .repr
                                 } else {
-                                    crate::MirPointerAcceleration::mir_pointer_acceleration_none.repr
+                                    crate::MirPointerAcceleration::mir_pointer_acceleration_none
+                                        .repr
                                 }
                             } else {
                                 eprintln!("Acceleration profile should be provided, but none is.");
@@ -305,7 +306,8 @@ impl InputDeviceRs {
                     {
                         let left_handed = match settings.handedness {
                             x if x
-                                == crate::MirPointerHandedness::mir_pointer_handedness_left.repr =>
+                                == crate::MirPointerHandedness::mir_pointer_handedness_left
+                                    .repr =>
                             {
                                 true
                             }

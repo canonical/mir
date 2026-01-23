@@ -132,16 +132,16 @@ pub fn process_libinput_events(
                                 let pointer_event = PointerEventDataRs {
                                     has_time: true,
                                     time_microseconds: motion_event.time_usec(),
-                                    action: crate::MirPointerAction::mir_pointer_action_motion
-                                        .repr,
+                                    action: crate::MirPointerAction::mir_pointer_action_motion.repr,
                                     buttons: state.button_state,
                                     has_position: false,
                                     position_x: 0 as f32,
                                     position_y: 0 as f32,
                                     displacement_x: motion_event.dx() as f32,
                                     displacement_y: motion_event.dy() as f32,
-                                    axis_source: crate::MirPointerAxisSource::mir_pointer_axis_source_none
-                                        .repr,
+                                    axis_source:
+                                        crate::MirPointerAxisSource::mir_pointer_axis_source_none
+                                            .repr,
                                     precise_x: 0.0,
                                     discrete_x: 0,
                                     value120_x: 0,
@@ -172,12 +172,10 @@ pub fn process_libinput_events(
 
                                     let old_x = state.pointer_x;
                                     let old_y = state.pointer_y;
-                                    state.pointer_x = absolute_motion_event
-                                        .absolute_x_transformed(width)
-                                        as f32;
-                                    state.pointer_y = absolute_motion_event
-                                        .absolute_y_transformed(height)
-                                        as f32;
+                                    state.pointer_x =
+                                        absolute_motion_event.absolute_x_transformed(width) as f32;
+                                    state.pointer_y =
+                                        absolute_motion_event.absolute_y_transformed(height) as f32;
 
                                     let movement_x = state.pointer_x - old_x;
                                     let movement_y = state.pointer_y - old_y;
@@ -219,9 +217,8 @@ pub fn process_libinput_events(
                                             .scroll_value_v120(
                                                 input::event::pointer::Axis::Horizontal,
                                             );
-                                        let scroll_value_x = scroll_wheel_event.scroll_value(
-                                            input::event::pointer::Axis::Horizontal,
-                                        );
+                                        let scroll_value_x = scroll_wheel_event
+                                            .scroll_value(input::event::pointer::Axis::Horizontal);
                                         get_scroll_axis(
                                             scroll_value120_x,
                                             scroll_value_x,
@@ -240,9 +237,8 @@ pub fn process_libinput_events(
                                             .scroll_value_v120(
                                                 input::event::pointer::Axis::Vertical,
                                             );
-                                        let scroll_value_y = scroll_wheel_event.scroll_value(
-                                            input::event::pointer::Axis::Vertical,
-                                        );
+                                        let scroll_value_y = scroll_wheel_event
+                                            .scroll_value(input::event::pointer::Axis::Vertical);
                                         get_scroll_axis(
                                             scroll_value120_y,
                                             scroll_value_y,
@@ -256,16 +252,16 @@ pub fn process_libinput_events(
                                 let pointer_event = PointerEventDataRs {
                                     has_time: true,
                                     time_microseconds: scroll_wheel_event.time_usec(),
-                                    action: crate::MirPointerAction::mir_pointer_action_motion
-                                        .repr,
+                                    action: crate::MirPointerAction::mir_pointer_action_motion.repr,
                                     buttons: state.button_state,
                                     has_position: false,
                                     position_x: 0.0,
                                     position_y: 0.0,
                                     displacement_x: 0.0,
                                     displacement_y: 0.0,
-                                    axis_source: crate::MirPointerAxisSource::mir_pointer_axis_source_wheel
-                                        .repr,
+                                    axis_source:
+                                        crate::MirPointerAxisSource::mir_pointer_axis_source_wheel
+                                            .repr,
                                     precise_x: precise_x as f32,
                                     discrete_x: discrete_x as i32,
                                     value120_x: value120_x as i32,
@@ -289,9 +285,8 @@ pub fn process_libinput_events(
                                         .has_axis(input::event::pointer::Axis::Horizontal)
                                     {
                                         let scroll_value120_x = 0.0;
-                                        let scroll_value_x = scroll_continuous_event.scroll_value(
-                                            input::event::pointer::Axis::Horizontal,
-                                        );
+                                        let scroll_value_x = scroll_continuous_event
+                                            .scroll_value(input::event::pointer::Axis::Horizontal);
                                         get_scroll_axis(
                                             scroll_value120_x,
                                             scroll_value_x,
@@ -307,9 +302,8 @@ pub fn process_libinput_events(
                                         .has_axis(input::event::pointer::Axis::Vertical)
                                     {
                                         let scroll_value120_y = 0.0;
-                                        let scroll_value_y = scroll_continuous_event.scroll_value(
-                                            input::event::pointer::Axis::Vertical,
-                                        );
+                                        let scroll_value_y = scroll_continuous_event
+                                            .scroll_value(input::event::pointer::Axis::Vertical);
                                         get_scroll_axis(
                                             scroll_value120_y,
                                             scroll_value_y,
@@ -323,16 +317,16 @@ pub fn process_libinput_events(
                                 let pointer_event = PointerEventDataRs {
                                     has_time: true,
                                     time_microseconds: scroll_continuous_event.time_usec(),
-                                    action: crate::MirPointerAction::mir_pointer_action_motion
-                                        .repr,
+                                    action: crate::MirPointerAction::mir_pointer_action_motion.repr,
                                     buttons: state.button_state,
                                     has_position: false,
                                     position_x: 0.0,
                                     position_y: 0.0,
                                     displacement_x: 0.0,
                                     displacement_y: 0.0,
-                                    axis_source: crate::MirPointerAxisSource::mir_pointer_axis_source_wheel
-                                        .repr,
+                                    axis_source:
+                                        crate::MirPointerAxisSource::mir_pointer_axis_source_wheel
+                                            .repr,
                                     precise_x: precise_x as f32,
                                     discrete_x: discrete_x as i32,
                                     value120_x: value120_x as i32,
@@ -356,9 +350,8 @@ pub fn process_libinput_events(
                                         .has_axis(input::event::pointer::Axis::Horizontal)
                                     {
                                         let scroll_value120_x = 0.0;
-                                        let scroll_value_x = scroll_finger_event.scroll_value(
-                                            input::event::pointer::Axis::Horizontal,
-                                        );
+                                        let scroll_value_x = scroll_finger_event
+                                            .scroll_value(input::event::pointer::Axis::Horizontal);
                                         get_scroll_axis(
                                             scroll_value120_x,
                                             scroll_value_x,
@@ -374,9 +367,8 @@ pub fn process_libinput_events(
                                         .has_axis(input::event::pointer::Axis::Vertical)
                                     {
                                         let scroll_value120_y = 0.0;
-                                        let scroll_value_y = scroll_finger_event.scroll_value(
-                                            input::event::pointer::Axis::Vertical,
-                                        );
+                                        let scroll_value_y = scroll_finger_event
+                                            .scroll_value(input::event::pointer::Axis::Vertical);
                                         get_scroll_axis(
                                             scroll_value120_y,
                                             scroll_value_y,
@@ -390,16 +382,16 @@ pub fn process_libinput_events(
                                 let pointer_event = PointerEventDataRs {
                                     has_time: true,
                                     time_microseconds: scroll_finger_event.time_usec(),
-                                    action: crate::MirPointerAction::mir_pointer_action_motion
-                                        .repr,
+                                    action: crate::MirPointerAction::mir_pointer_action_motion.repr,
                                     buttons: state.button_state,
                                     has_position: false,
                                     position_x: 0.0,
                                     position_y: 0.0,
                                     displacement_x: 0.0,
                                     displacement_y: 0.0,
-                                    axis_source: crate::MirPointerAxisSource::mir_pointer_axis_source_wheel
-                                        .repr,
+                                    axis_source:
+                                        crate::MirPointerAxisSource::mir_pointer_axis_source_wheel
+                                            .repr,
                                     precise_x: precise_x as f32,
                                     discrete_x: discrete_x as i32,
                                     value120_x: value120_x as i32,
@@ -450,15 +442,12 @@ pub fn process_libinput_events(
                                         crate::MirPointerButton::mir_pointer_button_forward
                                     }
                                     BTN_SIDE => crate::MirPointerButton::mir_pointer_button_side,
-                                    BTN_EXTRA => {
-                                        crate::MirPointerButton::mir_pointer_button_extra
-                                    }
+                                    BTN_EXTRA => crate::MirPointerButton::mir_pointer_button_extra,
                                     BTN_TASK => crate::MirPointerButton::mir_pointer_button_task,
                                     _ => crate::MirPointerButton::mir_pointer_button_primary,
                                 };
 
-                                let action: crate::MirPointerAction = if button_event
-                                    .button_state()
+                                let action: crate::MirPointerAction = if button_event.button_state()
                                     == pointer::ButtonState::Pressed
                                 {
                                     state.button_state = state.button_state | mir_button.repr;
@@ -478,8 +467,9 @@ pub fn process_libinput_events(
                                     position_y: 0.0,
                                     displacement_x: 0.0,
                                     displacement_y: 0.0,
-                                    axis_source: crate::MirPointerAxisSource::mir_pointer_axis_source_none
-                                        .repr,
+                                    axis_source:
+                                        crate::MirPointerAxisSource::mir_pointer_axis_source_none
+                                            .repr,
                                     precise_x: 0.0,
                                     discrete_x: 0,
                                     value120_x: 0,
