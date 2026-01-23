@@ -33,29 +33,27 @@ namespace mir
 {
 namespace frontend
 {
+struct Context
+{
+    std::shared_ptr<mi::CompositeEventFilter> const cef;
+    std::shared_ptr<InputTriggerData> const itd;
+};
+
 class InputTriggerRegistrationManagerV1 : public wayland::InputTriggerRegistrationManagerV1::Global
 {
 public:
-    InputTriggerRegistrationManagerV1(
-        wl_display* display,
-        std::shared_ptr<mi::CompositeEventFilter> const& cef,
-        std::shared_ptr<InputTriggerData> const& itd) :
+    InputTriggerRegistrationManagerV1(wl_display* display, Context const& context) :
         Global{display, Version<1>{}},
-        cef{cef},
-        itd{itd}
+        context{context}
     {
     }
 
     class Instance : public wayland::InputTriggerRegistrationManagerV1
     {
     public:
-        Instance(
-            wl_resource* new_ext_input_trigger_registration_manager_v1,
-            std::shared_ptr<mi::CompositeEventFilter> const& cef,
-            std::shared_ptr<InputTriggerData> const& itd) :
+        Instance(wl_resource* new_ext_input_trigger_registration_manager_v1, Context const& context) :
             wayland::InputTriggerRegistrationManagerV1{new_ext_input_trigger_registration_manager_v1, Version<1>{}},
-            cef{cef},
-            itd{itd}
+            context{context}
         {
         }
 
@@ -64,18 +62,16 @@ public:
         void get_action_control(std::string const& name, struct wl_resource* id) override;
 
     private:
-        std::shared_ptr<mi::CompositeEventFilter> const cef;
-        std::shared_ptr<InputTriggerData> const itd;
+        Context const& context;
     };
 
     void bind(wl_resource* new_ext_input_trigger_registration_manager_v1) override
     {
-        new Instance{new_ext_input_trigger_registration_manager_v1, cef, itd};
+        new Instance{new_ext_input_trigger_registration_manager_v1, context};
     }
 
 private:
-    std::shared_ptr<mi::CompositeEventFilter> const cef;
-    std::shared_ptr<InputTriggerData> const itd;
+    Context const context;
 };
 
 class KeyboardSymTrigger : public wayland::InputTriggerV1
@@ -90,7 +86,6 @@ public:
 
     uint32_t const keysym;
     MirInputEventModifiers const modifiers;
-
 
     static auto to_mir_modifiers(uint32_t protocol_modifiers, uint32_t keysym) -> MirInputEventModifiers
     {
@@ -145,13 +140,9 @@ public:
 class ActionControl : public wayland::InputTriggerActionControlV1
 {
 public:
-    ActionControl(
-        std::shared_ptr<mi::CompositeEventFilter> const& cef,
-        std::shared_ptr<InputTriggerData> const& itd,
-        struct wl_resource* id) :
+    ActionControl(Context const& context, struct wl_resource* id) :
         mir::wayland::InputTriggerActionControlV1{id, Version<1>{}},
-        cef{cef},
-        itd{itd}
+        context{context}
     {
     }
 
@@ -160,9 +151,10 @@ public:
         if (auto const keyboard_trigger = static_cast<KeyboardSymTrigger*>(wayland::InputTriggerV1::from(trigger)))
         {
             auto const token = "foo";
-            trigger_filter = std::make_shared<KeyboardEventFilter>(wayland::make_weak(keyboard_trigger), token, itd);
+            trigger_filter =
+                std::make_shared<KeyboardEventFilter>(wayland::make_weak(keyboard_trigger), token, context);
 
-            cef->prepend(trigger_filter);
+            context.cef->prepend(trigger_filter);
 
             // Tell the client that the action has been successfully registered.
             // They then should call
@@ -180,18 +172,18 @@ private:
     {
         wayland::Weak<KeyboardSymTrigger> const trigger;
         std::string const token;
-        std::shared_ptr<InputTriggerData> const itd;
+        Context const& context;
 
         bool began{false};
+
+        // TODO key state tracking should be moved into its own class, to be shared with all active filters
         std::unordered_set<uint32_t> pressed_keysyms;
 
         explicit KeyboardEventFilter(
-            wayland::Weak<KeyboardSymTrigger> trigger,
-            std::string const& token,
-            std::shared_ptr<InputTriggerData> const& itd) :
+            wayland::Weak<KeyboardSymTrigger> trigger, std::string const& token, Context const& context) :
             trigger{std::move(trigger)},
             token{token},
-            itd{itd}
+            context{context}
         {
         }
 
@@ -334,9 +326,8 @@ private:
             else if (key_event->action() == mir_keyboard_action_up)
                 pressed_keysyms.erase(key_event->keysym());
 
-            auto const input_trigger_data = itd->registered_actions.lock();
-            if (auto const action_iter = input_trigger_data->find(token);
-                action_iter != input_trigger_data->end())
+            auto const input_trigger_data = context.itd->registered_actions.lock();
+            if (auto const action_iter = input_trigger_data->find(token); action_iter != input_trigger_data->end())
             {
                 auto const [_, action] = *action_iter;
                 // TODO pass the clock and the token authority
@@ -354,24 +345,31 @@ private:
                 auto const keysym_matches =
                     keysym_exists_in_set(trigger.value().keysym, pressed_keysyms, trigger_mods_contain_shift);
 
-                if (!modifiers_match || !keysym_matches)
+                // TODO single activation path
+                // TODO maybe taps and holds should be different filters?
+                if (trigger)
                 {
-                    if (began)
+                    if (!modifiers_match || !keysym_matches)
                     {
-                        action.value().send_end_event(bogus_time, bogus_activation_token);
-                        began = false;
+                        if (began)
+                        {
+                            action.value().send_end_event(bogus_time, bogus_activation_token);
+                            began = false;
+                        }
+
+                        return false;
+                    }
+
+                    // If the trigger keysym is pressed (either just pressed or was already pressed),
+                    // ensure we send a begin event if we haven't already.
+                    if (!began)
+                    {
+                        action.value().send_begin_event(bogus_time, bogus_activation_token);
+                        began = true;
+                        return true;
                     }
 
                     return false;
-                }
-
-                // If the trigger keysym is pressed (either just pressed or was already pressed),
-                // ensure we send a begin event if we haven't already.
-                if (!began)
-                {
-                    action.value().send_begin_event(bogus_time, bogus_activation_token);
-                    began = true;
-                    return true;
                 }
 
                 return false;
@@ -404,8 +402,7 @@ private:
         }
     };
 
-    std::shared_ptr<mi::CompositeEventFilter> const cef;
-    std::shared_ptr<InputTriggerData> const itd;
+    Context const& context;
     std::shared_ptr<mi::EventFilter> trigger_filter;
 };
 
@@ -427,7 +424,7 @@ void InputTriggerRegistrationManagerV1::Instance::register_keyboard_code_trigger
 // TODO: Store the description string
 void InputTriggerRegistrationManagerV1::Instance::get_action_control(std::string const&, struct wl_resource* id)
 {
-    new ActionControl{cef, itd, id};
+    new ActionControl{context, id};
 }
 }
 }
@@ -435,7 +432,9 @@ void InputTriggerRegistrationManagerV1::Instance::get_action_control(std::string
 auto mf::create_input_trigger_registration_manager_v1(
     wl_display* display,
     std::shared_ptr<mi::CompositeEventFilter> const& cef,
-    std::shared_ptr<InputTriggerData> const& itd) -> std::shared_ptr<wayland::InputTriggerRegistrationManagerV1::Global>
+    std::shared_ptr<InputTriggerData> const& itd)
+    -> std::shared_ptr<wayland::InputTriggerRegistrationManagerV1::Global>
 {
-    return std::make_shared<mf::InputTriggerRegistrationManagerV1>(display, cef, itd);
+    return std::make_shared<mf::InputTriggerRegistrationManagerV1>(
+        display, mf::Context{cef, itd});
 }

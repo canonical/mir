@@ -22,16 +22,22 @@
 
 namespace mir
 {
+class Executor;
 namespace input
 {
 class CompositeEventFilter;
+}
+namespace time
+{
+class AlarmFactory;
 }
 namespace frontend
 {
 class InputTriggerData;
 auto create_input_trigger_registration_manager_v1(
-    wl_display*, std::shared_ptr<mir::input::CompositeEventFilter> const&, std::shared_ptr<InputTriggerData> const&)
-    -> std::shared_ptr<wayland::InputTriggerRegistrationManagerV1::Global>;
+    wl_display*,
+    std::shared_ptr<mir::input::CompositeEventFilter> const&,
+    std::shared_ptr<InputTriggerData> const&) -> std::shared_ptr<wayland::InputTriggerRegistrationManagerV1::Global>;
 }
 }
 #endif
