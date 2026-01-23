@@ -10,7 +10,7 @@ add_subdirectory(time)
 add_subdirectory(dispatch)
 
 # TODO we need a place to manage ABI and related versioning but use this as placeholder
-set(MIRCOMMON_ABI 11)
+set(MIRCOMMON_ABI 12)
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 
 add_library(mircommon SHARED
@@ -20,7 +20,6 @@ add_library(mircommon SHARED
   immediate_executor.cpp
   libname.cpp                       ${PROJECT_SOURCE_DIR}/include/common/mir/libname.h
   linearising_executor.cpp
-  log.cpp
   mir_cursor_api.cpp
   output_type_names.cpp
   posix_rw_mutex.cpp                ${PROJECT_SOURCE_DIR}/include/common/mir/posix_rw_mutex.h

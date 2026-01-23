@@ -25,7 +25,7 @@
 
 # Track various library soversions
 %global miral_sover 7
-%global mircommon_sover 11
+%global mircommon_sover 12
 %global mircore_sover 2
 %global miroil_sover 8
 %global mirplatform_sover 34
@@ -333,7 +333,7 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/miral-shell.desktop
 
 
 %changelog
-* Thu Dec 11 2025 Michał Sawicz <michal.sawicz@canonical.com> - 2.26.0~dev-1
+* Fri, 19 2025 Michał Sawicz <michal.sawicz@canonical.com> - 2.26.0~dev-1
 - Begin development for 2.26.0 release
 
 * Wed Dec 17 2025 Mir CI Bot <mir-ci-bot@canonical.com> - 2.25.2-1
