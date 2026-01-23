@@ -20,3 +20,5 @@ nix = { version = "0.30.1", features = ["poll"] }
 wayland-server = "0.31"
 calloop = { version = ">=0.10, <0.15" }
 log = "0.4"
+serde = { version = "1", features = ["derive"] }
+quick-xml = { version = "0.31", features = ["serialize"] }
