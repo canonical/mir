@@ -30,7 +30,7 @@ namespace doubles
 class StubScene : public compositor::Scene
 {
 public:
-    compositor::SceneElementSequence scene_elements_for(compositor::CompositorID) override
+    compositor::SceneElementSequence scene_elements_for(compositor::CompositorID, geometry::Rectangle const&) override
     {
         return {};
     }

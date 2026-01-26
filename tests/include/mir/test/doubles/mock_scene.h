@@ -32,11 +32,11 @@ class MockScene : public compositor::Scene
 public:
     MockScene()
     {
-        ON_CALL(*this, scene_elements_for(testing::_))
+        ON_CALL(*this, scene_elements_for(testing::_, testing::_))
             .WillByDefault(testing::Return(compositor::SceneElementSequence{}));
     }
 
-    MOCK_METHOD(compositor::SceneElementSequence, scene_elements_for, (compositor::CompositorID), (override));
+    MOCK_METHOD(compositor::SceneElementSequence, scene_elements_for, (compositor::CompositorID, geometry::Rectangle const&), (override));
     MOCK_METHOD(void, register_compositor, (compositor::CompositorID), (override));
     MOCK_METHOD(void, unregister_compositor, (compositor::CompositorID), (override));
 
