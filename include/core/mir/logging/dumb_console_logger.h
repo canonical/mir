@@ -26,6 +26,7 @@ namespace logging
 class DumbConsoleLogger : public Logger
 {
 public:
+    ~DumbConsoleLogger() override;
 
 protected:
     void log(Severity severity, const std::string& message, const std::string& component) override;
