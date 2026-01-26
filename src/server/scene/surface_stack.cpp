@@ -811,7 +811,7 @@ void ms::SurfaceStack::set_focused_surface(std::shared_ptr<Surface> const& surfa
         RecursiveWriteLock lg(guard);
         focus_surface = surface;
     }
-    
+
     update_focused_fullscreen_tracking(surface);
 }
 
@@ -820,23 +820,23 @@ void ms::SurfaceStack::update_focused_fullscreen_tracking(std::shared_ptr<Surfac
     bool changed = false;
     {
         RecursiveWriteLock lg(guard);
-        
+
         auto old_fullscreen = focused_fullscreen_surface.lock();
         std::shared_ptr<Surface> new_fullscreen;
-        
+
         if (surface && surface->state() == mir_window_state_fullscreen)
         {
             new_fullscreen = surface;
         }
-        
+
         if (old_fullscreen != new_fullscreen)
         {
             focused_fullscreen_surface = new_fullscreen;
             changed = true;
-            
+
             // Clear the filter list when fullscreen state changes
             above_surfaces_to_filter.clear();
-            
+
             // If entering fullscreen, capture current above layer surfaces to filter
             if (new_fullscreen)
             {
@@ -855,7 +855,7 @@ void ms::SurfaceStack::update_focused_fullscreen_tracking(std::shared_ptr<Surfac
             }
         }
     }
-    
+
     // Trigger scene update to refresh rendering/input routing
     // Must be called outside the lock to avoid deadlock
     if (changed)

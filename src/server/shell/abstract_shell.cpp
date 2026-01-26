@@ -516,7 +516,7 @@ void msh::AbstractShell::set_focus_to(
 
         update_focus_locked(lock, new_focus_session, new_focus_surface);
     }
-    
+
     // Update fullscreen tracking for per-output layer filtering
     // Must be called outside focus_mutex to avoid lock ordering issues
     // Cast to scene::SurfaceStack since shell::SurfaceStack doesn't have this method
