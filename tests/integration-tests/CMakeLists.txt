@@ -48,7 +48,7 @@ target_link_libraries(
 
   mircommon
 
-  ${MIR_SERVER_REFERENCES}
+  mirserver-static
   # GBM platform dependencies
   PkgConfig::DRM
   # Shared platform dependencies

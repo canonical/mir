@@ -18,7 +18,6 @@
 #define MIR_UNWIND_HELPERS_H_
 
 #include <stdexcept>
-#include <iostream>
 
 namespace mir
 {

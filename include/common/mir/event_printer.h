@@ -19,7 +19,7 @@
 
 #include <mir_toolkit/event.h>
 
-#include <iostream>
+#include <ostream>
 
 namespace mir
 {

@@ -30,7 +30,6 @@
 #include <boost/throw_exception.hpp>
 
 #include <linux/input.h>
-#include <iostream>
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
