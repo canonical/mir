@@ -199,18 +199,19 @@ mc::SceneElementSequence ms::SurfaceStack::scene_elements_for(
     {
         for (auto const& surface : layer)
         {
-            // Skip "above" layer surfaces if there's a fullscreen on this output
+            // Skip "above" layer surfaces if they're in the pre-existing filter list
             if (has_fullscreen_on_output &&
-                surface->depth_layer() == mir_depth_layer_above)
+                surface->depth_layer() == mir_depth_layer_above &&
+                above_surfaces_to_filter.count(surface.get()) > 0)
             {
-                mir::log_debug("Checking 'above' layer surface '%s' on output with fullscreen", surface->name().c_str());
+                mir::log_debug("Checking pre-existing 'above' layer surface '%s' on output with fullscreen", surface->name().c_str());
                 // Check if this surface is also on this output
                 auto const surface_bounds = surface->input_bounds();
                 auto const overlap = intersection_of(surface_bounds, output_area);
                 if (overlap.size.width.as_int() > 0 && overlap.size.height.as_int() > 0)
                 {
-                    // Surface is on same output as fullscreen - skip it
-                    mir::log_debug("Skipping 'above' layer surface '%s' on output with fullscreen", surface->name().c_str());
+                    // Surface is on same output as fullscreen and was pre-existing - skip it
+                    mir::log_debug("Skipping pre-existing 'above' layer surface '%s' on output with fullscreen", surface->name().c_str());
                     continue;
                 }
             }
@@ -318,6 +319,8 @@ void ms::SurfaceStack::remove_surface(std::weak_ptr<Surface> const& surface)
                 layer.erase(surface);
                 rendering_trackers.erase(keep_alive.get());
                 keep_alive->unregister_interest(*surface_observer);
+                // Also remove from fullscreen filter set if present
+                above_surfaces_to_filter.erase(keep_alive.get());
                 found_surface = true;
                 break;
             }
@@ -370,17 +373,17 @@ auto ms::SurfaceStack::surface_at(geometry::Point cursor) const
     {
         for (auto const& surface : in_reverse(layer))
         {
-            // Skip "above" layer surfaces if there's a fullscreen and this surface
-            // is on the same output as the fullscreen
+            // Skip "above" layer surfaces if they're in the pre-existing filter list
             if (has_fullscreen &&
-                surface->depth_layer() == mir_depth_layer_above)
+                surface->depth_layer() == mir_depth_layer_above &&
+                above_surfaces_to_filter.count(surface.get()) > 0)
             {
                 // Check if this surface overlaps with the fullscreen surface's output
                 auto const surface_bounds = surface->input_bounds();
                 auto const overlap = intersection_of(surface_bounds, fullscreen_area);
                 if (overlap.size.width.as_int() > 0 && overlap.size.height.as_int() > 0)
                 {
-                    // Surface is on same output as fullscreen - skip it for input
+                    // Surface is on same output as fullscreen and was pre-existing - skip it for input
                     continue;
                 }
             }
@@ -830,6 +833,26 @@ void ms::SurfaceStack::update_focused_fullscreen_tracking(std::shared_ptr<Surfac
         {
             focused_fullscreen_surface = new_fullscreen;
             changed = true;
+            
+            // Clear the filter list when fullscreen state changes
+            above_surfaces_to_filter.clear();
+            
+            // If entering fullscreen, capture current above layer surfaces to filter
+            if (new_fullscreen)
+            {
+                mir::log_debug("Capturing above layer surfaces for fullscreen filtering");
+                for (auto const& layer : surface_layers)
+                {
+                    for (auto const& surf : layer)
+                    {
+                        if (surf->depth_layer() == mir_depth_layer_above)
+                        {
+                            above_surfaces_to_filter.insert(surf.get());
+                            mir::log_debug("Will filter above layer surface: %s", surf->name().c_str());
+                        }
+                    }
+                }
+            }
         }
     }
     

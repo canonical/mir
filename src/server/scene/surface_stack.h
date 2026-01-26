@@ -179,6 +179,8 @@ private:
     std::atomic<bool> is_locked = false;
     std::weak_ptr<Surface> focused_fullscreen_surface;
     std::weak_ptr<Surface> focus_surface;
+    /// Set of above-layer surfaces that existed when fullscreen was activated (to be filtered)
+    std::set<Surface*> above_surfaces_to_filter;
     std::shared_ptr<SurfaceObserver> surface_observer;
     SessionLockObserverMultiplexer multiplexer;
 };
