@@ -523,5 +523,27 @@ auto create_input_trigger_registration_manager_v1(
 {
     return std::make_shared<mf::InputTriggerRegistrationManagerV1>(display, itd, ta, cef);
 }
+
+KeyboardSymTrigger::KeyboardSymTrigger(uint32_t modifiers, uint32_t keysym, struct wl_resource* id) :
+    InputTriggerV1{id, Version<1>{}},
+    keysym{keysym},
+    modifiers{to_mir_modifiers(modifiers, keysym)}
+{
+}
+
+auto KeyboardSymTrigger::from(wayland::InputTriggerV1* trigger) -> KeyboardSymTrigger*
+{
+    return static_cast<KeyboardSymTrigger*>(trigger);
+}
+
+auto KeyboardSymTrigger::from(wayland::InputTriggerV1 const* trigger) -> KeyboardSymTrigger const*
+{
+    return static_cast<KeyboardSymTrigger const*>(trigger);
+}
+
+auto KeyboardSymTrigger::to_string() const -> std::string
+{
+    return "KeyboardSymTrigger{keysym=" + std::to_string(keysym) + ", modifiers=" + std::to_string(modifiers) + "}";
+}
 }
 }

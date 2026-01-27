@@ -109,27 +109,13 @@ private:
 class KeyboardSymTrigger : public frontend::InputTriggerV1
 {
 public:
-    KeyboardSymTrigger(uint32_t modifiers, uint32_t keysym, struct wl_resource* id) :
-        InputTriggerV1{id, Version<1>{}},
-        keysym{keysym},
-        modifiers{to_mir_modifiers(modifiers, keysym)}
-    {
-    }
+    KeyboardSymTrigger(uint32_t modifiers, uint32_t keysym, struct wl_resource* id);
 
-    static auto from(wayland::InputTriggerV1* trigger)
-    {
-        return static_cast<KeyboardSymTrigger*>(trigger);
-    }
+    static auto from(wayland::InputTriggerV1* trigger) -> KeyboardSymTrigger*;
 
-    static auto from(wayland::InputTriggerV1 const* trigger)
-    {
-        return static_cast<KeyboardSymTrigger const*>(trigger);
-    }
+    static auto from(wayland::InputTriggerV1 const* trigger) -> KeyboardSymTrigger const*;
 
-    auto to_string() const -> std::string override
-    {
-        return "KeyboardSymTrigger{keysym=" + std::to_string(keysym) + ", modifiers=" + std::to_string(modifiers) + "}";
-    }
+    auto to_string() const -> std::string override;
 
     uint32_t const keysym;
     MirInputEventModifiers const modifiers;
