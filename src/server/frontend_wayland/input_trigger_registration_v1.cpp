@@ -404,7 +404,7 @@ void InputTriggerRegistrationManagerV1::Instance::register_keyboard_sym_trigger(
 
     if(has_trigger(keyboard_trigger))
     {
-        mir::log_debug("%s already registered", keyboard_trigger->to_string().c_str());
+        mir::log_error("%s already registered", keyboard_trigger->to_string().c_str());
         keyboard_trigger->send_failed_event();
     }
     else
