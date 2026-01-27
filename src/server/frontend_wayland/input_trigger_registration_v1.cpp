@@ -391,7 +391,6 @@ void ActionControl::install_action(wayland::Weak<frontend::InputTriggerActionV1>
 
     // Don't need this anymore
     pending_triggers.clear();
-
 }
 
 // The trigger is registered with the composite event filter when its added to a control object
