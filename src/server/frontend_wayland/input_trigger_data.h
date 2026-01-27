@@ -172,7 +172,7 @@ private:
     std::shared_ptr<input::CompositeEventFilter> const cef;
 
     // Keeps track of the triggers added or removed while we don't have a valid action
-    // If we have an active action, we immediate add or drop the triggers.
+    // If we have an active action, we immediately add or drop the triggers.
     std::unordered_set<wayland::InputTriggerV1 const*> pending_triggers;
 
     std::string const token;
