@@ -453,8 +453,14 @@ void InputTriggerRegistrationManagerV1::Instance::get_action_control(std::string
 auto InputTriggerRegistrationManagerV1::Instance::has_trigger(wayland::InputTriggerV1 const* trigger) const -> bool
 {
     auto const itd_ = itd->lock();
-    auto const& actions = itd_->actions;
+    auto& actions = itd_->actions;
+    auto& action_controls = itd_->action_controls;
 
+    // Do some housekeeping
+    std::erase_if(actions, [](auto const& pair) { return !pair.second; });
+    std::erase_if(action_controls, [](auto const& pair) { return !pair.second; });
+
+    // All elements are should be valid now
     return std::ranges::any_of(
         actions, [trigger](auto const pair) { return pair.second.value().has_trigger(trigger); });
 }
