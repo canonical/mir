@@ -49,11 +49,22 @@ auto InputTriggerActionV1::has_trigger(wayland::InputTriggerV1 const* trigger) c
 
 void InputTriggerActionV1::add_trigger(wayland::InputTriggerV1 const* trigger)
 {
-    if (auto const* keyboard_trigger = KeyboardSymTrigger::from(trigger))
+    if (auto const* keyboard_sym_trigger = KeyboardSymTrigger::from(trigger))
     {
         auto const filter = std::make_shared<KeyboardEventFilter>(
             wayland::make_weak<wayland::InputTriggerActionV1 const>(this),
-            wayland::make_weak<KeyboardSymTrigger const>(keyboard_trigger),
+            wayland::make_weak<KeyboardTrigger const>(keyboard_sym_trigger),
+            ta,
+            keyboard_state);
+
+        trigger_filters.push_back(filter);
+        cef->prepend(filter);
+    }
+    else if (auto const* keyboard_code_trigger = KeyboardCodeTrigger::from(trigger))
+    {
+        auto const filter = std::make_shared<KeyboardEventFilter>(
+            wayland::make_weak<wayland::InputTriggerActionV1 const>(this),
+            wayland::make_weak<KeyboardTrigger const>(keyboard_code_trigger),
             ta,
             keyboard_state);
 
@@ -64,7 +75,7 @@ void InputTriggerActionV1::add_trigger(wayland::InputTriggerV1 const* trigger)
 
 void InputTriggerActionV1::drop_trigger(wayland::InputTriggerV1 const* trigger)
 {
-    if (auto const keyboard_trigger = KeyboardSymTrigger::from(trigger))
+    if (KeyboardSymTrigger::from(trigger) || KeyboardCodeTrigger::from(trigger))
     {
         std::erase_if(
             trigger_filters,
@@ -72,7 +83,7 @@ void InputTriggerActionV1::drop_trigger(wayland::InputTriggerV1 const* trigger)
             {
                 if (auto const kf = std::dynamic_pointer_cast<KeyboardEventFilter>(filter))
                 {
-                    return kf->is_same_trigger(keyboard_trigger);
+                    return kf->is_same_trigger(trigger);
                 }
                 return false;
             });

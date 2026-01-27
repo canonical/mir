@@ -14,6 +14,7 @@
  * Standalone Wayland client that registers:
  * 1. A keyboard-sym trigger for Ctrl+Shift+C
  * 2. A keyboard-sym trigger for Alt+X
+ * 3. A keyboard-code trigger for Alt+Z (scancode 44)
  *
  * It prints specific messages for begin/end events for each trigger.
  */
@@ -134,6 +135,48 @@ void register_trigger(
     ext_input_trigger_action_control_v1_destroy(control);
 }
 
+void register_keycode_trigger(
+    wl_display* display,
+    uint32_t modifiers,
+    uint32_t scancode,
+    ActionContext* ctx,
+    ext_input_trigger_v1** out_trigger,
+    ext_input_trigger_action_v1** out_action)
+{
+    std::cout << "Registering " << ctx->name << " keycode trigger (scancode " << scancode << ")...\n";
+
+    *out_trigger = ext_input_trigger_registration_manager_v1_register_keyboard_code_trigger(
+        registration_manager, modifiers, scancode);
+
+    ext_input_trigger_v1_add_listener(*out_trigger, &trigger_listener, nullptr);
+
+    ext_input_trigger_action_control_v1* control =
+        ext_input_trigger_registration_manager_v1_get_action_control(registration_manager, ctx->name.c_str());
+
+    std::string token;
+    ext_input_trigger_action_control_v1_add_listener(control, &control_listener, &token);
+
+    ext_input_trigger_action_control_v1_add_input_trigger_event(control, *out_trigger);
+
+    // Roundtrip to ensure we get the token
+    wl_display_roundtrip(display);
+
+    if (token.empty()) {
+        std::cerr << "Failed to get token for " << ctx->name << "\n";
+        return;
+    }
+
+    *out_action = ext_input_trigger_action_manager_v1_get_input_trigger_action(action_manager, token.c_str());
+    if (*out_action) {
+        std::cout << "Got " << ctx->name << " action\n";
+        ext_input_trigger_action_v1_add_listener(*out_action, &action_listener, ctx);
+    } else {
+        std::cerr << "Failed to get action for " << ctx->name << "\n";
+    }
+
+    ext_input_trigger_action_control_v1_destroy(control);
+}
+
 int main(int /*argc*/, char** /*argv*/)
 {
     wl_display* display = wl_display_connect(nullptr);
@@ -183,6 +226,31 @@ int main(int /*argc*/, char** /*argv*/)
         &alt_x_action
     );
 
+    // Register keyboard code trigger: Alt + Z (scancode 44)
+    // This demonstrates keycode triggers work regardless of layout
+    // Scancode 44 is the physical 'Z' key position on QWERTY keyboards
+    ActionContext alt_z_ctx{
+        "ALT + Z (scancode 44)", 
+        "Hello from ALT + Z (keycode trigger)", 
+        "Bye from ALT + Z (keycode trigger)"
+    };
+    ext_input_trigger_v1* alt_backtick_trigger = nullptr;
+    ext_input_trigger_action_v1* alt_backtick_action = nullptr;
+
+    register_keycode_trigger(
+        display,
+        EXT_INPUT_TRIGGER_REGISTRATION_MANAGER_V1_MODIFIERS_ALT,
+        44,  // scancode for Z key position
+        &alt_z_ctx,
+        &alt_backtick_trigger,
+        &alt_backtick_action
+    );
+
+    std::cout << "\nAll triggers registered:\n";
+    std::cout << "  - Ctrl+Shift+C (keysym trigger)\n";
+    std::cout << "  - Alt+X (keysym trigger)\n";
+    std::cout << "  - Alt+Z (keycode trigger - works regardless of layout)\n\n";
+
     // Enter the dispatch loop
     while (wl_display_dispatch(display) != -1)
     {
@@ -192,6 +260,8 @@ int main(int /*argc*/, char** /*argv*/)
     if (ctrl_shift_c_trigger) ext_input_trigger_v1_destroy(ctrl_shift_c_trigger);
     if (alt_x_action) ext_input_trigger_action_v1_destroy(alt_x_action);
     if (alt_x_trigger) ext_input_trigger_v1_destroy(alt_x_trigger);
+    if (alt_backtick_action) ext_input_trigger_action_v1_destroy(alt_backtick_action);
+    if (alt_backtick_trigger) ext_input_trigger_v1_destroy(alt_backtick_trigger);
 
     if (registration_manager)
         ext_input_trigger_registration_manager_v1_destroy(registration_manager);

@@ -95,7 +95,7 @@ private:
 
 KeyboardEventFilter::KeyboardEventFilter(
     wayland::Weak<wayland::InputTriggerActionV1 const> const& action,
-    wayland::Weak<frontend::KeyboardSymTrigger const> const& trigger,
+    wayland::Weak<frontend::KeyboardTrigger const> const& trigger,
     std::shared_ptr<shell::TokenAuthority> const& token_authority,
     std::shared_ptr<KeyboardStateTracker> const& keyboard_state) :
     action{action},
@@ -105,14 +105,16 @@ KeyboardEventFilter::KeyboardEventFilter(
 {
 }
 
-void KeyboardStateTracker::on_key_down(uint32_t keysym)
+void KeyboardStateTracker::on_key_down(uint32_t keysym, uint32_t scancode)
 {
     pressed_keysyms.insert(keysym);
+    pressed_scancodes.insert(scancode);
 }
 
-void KeyboardStateTracker::on_key_up(uint32_t keysym)
+void KeyboardStateTracker::on_key_up(uint32_t keysym, uint32_t scancode)
 {
     pressed_keysyms.erase(keysym);
+    pressed_scancodes.erase(scancode);
 }
 
 auto KeyboardStateTracker::keysym_is_pressed(uint32_t keysym, bool case_insensitive) const -> bool
@@ -134,6 +136,11 @@ auto KeyboardStateTracker::keysym_is_pressed(uint32_t keysym, bool case_insensit
     }
 
     return pressed_keysyms.find(lower) != pressed_keysyms.end() || pressed_keysyms.find(upper) != pressed_keysyms.end();
+}
+
+auto KeyboardStateTracker::scancode_is_pressed(uint32_t scancode) const -> bool
+{
+    return pressed_scancodes.find(scancode) != pressed_scancodes.end();
 }
 
 bool KeyboardStateTracker::protocol_and_event_modifiers_match(
@@ -273,22 +280,16 @@ bool KeyboardEventFilter::handle(MirEvent const& event)
     auto const* key_event = input_event->to_keyboard();
 
     if (key_event->action() == mir_keyboard_action_down)
-        keyboard_state->on_key_down(key_event->keysym());
+        keyboard_state->on_key_down(key_event->keysym(), key_event->scan_code());
     else if (key_event->action() == mir_keyboard_action_up)
-        keyboard_state->on_key_up(key_event->keysym());
+        keyboard_state->on_key_up(key_event->keysym(), key_event->scan_code());
 
     auto const event_mods = mi::expand_modifiers(key_event->modifiers());
-    auto const trigger_mods = mi::expand_modifiers(trigger.value().modifiers);
-    auto const modifiers_match = KeyboardStateTracker::protocol_and_event_modifiers_match(trigger_mods, event_mods);
+    auto const modifiers_match = KeyboardStateTracker::protocol_and_event_modifiers_match(trigger.value().modifiers, event_mods);
 
-    auto const trigger_mods_contain_shift =
-        ((trigger_mods & mir_input_event_modifier_shift) | (trigger_mods & mir_input_event_modifier_shift_left) |
-         (trigger_mods & mir_input_event_modifier_shift_right)) != 0;
+    auto const key_matches = trigger.value().matches(keyboard_state, event_mods);
 
-    auto const keysym_matches =
-        keyboard_state->keysym_is_pressed(trigger.value().keysym, trigger_mods_contain_shift);
-
-    if (!modifiers_match || !keysym_matches)
+    if (!modifiers_match || !key_matches)
     {
         if (began)
         {
@@ -317,10 +318,23 @@ bool KeyboardEventFilter::handle(MirEvent const& event)
 
 auto KeyboardEventFilter::is_same_trigger(wayland::InputTriggerV1 const* other) const -> bool
 {
-    if (auto const other_keyboard_trigger = KeyboardSymTrigger::from(other))
+    // Check if both triggers are KeyboardSymTrigger
+    if (auto const this_sym = dynamic_cast<KeyboardSymTrigger const*>(trigger ? &trigger.value() : nullptr))
     {
-        return trigger && trigger.value().keysym == other_keyboard_trigger->keysym &&
-               trigger.value().modifiers == other_keyboard_trigger->modifiers;
+        if (auto const other_sym = KeyboardSymTrigger::from(other))
+        {
+            return this_sym->keysym == other_sym->keysym && 
+                   this_sym->modifiers == other_sym->modifiers;
+        }
+    }
+    // Check if both triggers are KeyboardCodeTrigger
+    else if (auto const this_code = dynamic_cast<KeyboardCodeTrigger const*>(trigger ? &trigger.value() : nullptr))
+    {
+        if (auto const other_code = KeyboardCodeTrigger::from(other))
+        {
+            return this_code->scancode == other_code->scancode && 
+                   this_code->modifiers == other_code->modifiers;
+        }
     }
     return false;
 }
@@ -412,8 +426,17 @@ void InputTriggerRegistrationManagerV1::Instance::register_keyboard_sym_trigger(
 }
 
 void InputTriggerRegistrationManagerV1::Instance::register_keyboard_code_trigger(
-    uint32_t, uint32_t, struct wl_resource*)
+    uint32_t modifiers, uint32_t keycode, struct wl_resource* id)
 {
+    auto const* keyboard_trigger = new KeyboardCodeTrigger{modifiers, keycode, id};
+
+    if(has_trigger(keyboard_trigger))
+    {
+        mir::log_error("%s already registered", keyboard_trigger->to_string().c_str());
+        keyboard_trigger->send_failed_event();
+    }
+    else
+        keyboard_trigger->send_done_event();
 }
 
 // TODO: Store the description string
@@ -465,7 +488,14 @@ auto InputTriggerRegistrationManagerV1::Instance::has_trigger(wayland::InputTrig
         actions, [trigger](auto const pair) { return pair.second.value().has_trigger(trigger); });
 }
 
-auto KeyboardSymTrigger::to_mir_modifiers(uint32_t protocol_modifiers, uint32_t keysym) -> MirInputEventModifiers
+// Base KeyboardTrigger implementation
+KeyboardTrigger::KeyboardTrigger(uint32_t modifiers, struct wl_resource* id) :
+    InputTriggerV1{id, Version<1>{}},
+    modifiers{to_mir_modifiers(modifiers, 0)}
+{
+}
+
+auto KeyboardTrigger::to_mir_modifiers(uint32_t protocol_modifiers, uint32_t keysym) -> MirInputEventModifiers
 {
     using PM = wayland::InputTriggerRegistrationManagerV1::Modifiers;
 
@@ -524,11 +554,16 @@ auto create_input_trigger_registration_manager_v1(
     return std::make_shared<mf::InputTriggerRegistrationManagerV1>(display, itd, ta, cef);
 }
 
+// KeyboardSymTrigger implementation
 KeyboardSymTrigger::KeyboardSymTrigger(uint32_t modifiers, uint32_t keysym, struct wl_resource* id) :
-    InputTriggerV1{id, Version<1>{}},
-    keysym{keysym},
-    modifiers{to_mir_modifiers(modifiers, keysym)}
+    KeyboardTrigger{modifiers, id},
+    keysym{keysym}
 {
+    // Apply keysym-specific modifier adjustments (uppercase letters imply shift)
+    if (keysym >= XKB_KEY_A && keysym <= XKB_KEY_Z)
+    {
+        const_cast<MirInputEventModifiers&>(this->modifiers) |= mir_input_event_modifier_shift;
+    }
 }
 
 auto KeyboardSymTrigger::from(wayland::InputTriggerV1* trigger) -> KeyboardSymTrigger*
@@ -544,6 +579,42 @@ auto KeyboardSymTrigger::from(wayland::InputTriggerV1 const* trigger) -> Keyboar
 auto KeyboardSymTrigger::to_string() const -> std::string
 {
     return "KeyboardSymTrigger{keysym=" + std::to_string(keysym) + ", modifiers=" + std::to_string(modifiers) + "}";
+}
+
+auto KeyboardSymTrigger::matches(std::shared_ptr<KeyboardStateTracker> const& keyboard_state, MirInputEventModifiers /*event_mods*/) const -> bool
+{
+    auto const trigger_mods_contain_shift =
+        ((modifiers & mir_input_event_modifier_shift) | (modifiers & mir_input_event_modifier_shift_left) |
+         (modifiers & mir_input_event_modifier_shift_right)) != 0;
+
+    return keyboard_state->keysym_is_pressed(keysym, trigger_mods_contain_shift);
+}
+
+// KeyboardCodeTrigger implementation
+KeyboardCodeTrigger::KeyboardCodeTrigger(uint32_t modifiers, uint32_t scancode, struct wl_resource* id) :
+    KeyboardTrigger{modifiers, id},
+    scancode{scancode}
+{
+}
+
+auto KeyboardCodeTrigger::from(wayland::InputTriggerV1* trigger) -> KeyboardCodeTrigger*
+{
+    return dynamic_cast<KeyboardCodeTrigger*>(trigger);
+}
+
+auto KeyboardCodeTrigger::from(wayland::InputTriggerV1 const* trigger) -> KeyboardCodeTrigger const*
+{
+    return dynamic_cast<KeyboardCodeTrigger const*>(trigger);
+}
+
+auto KeyboardCodeTrigger::to_string() const -> std::string
+{
+    return "KeyboardCodeTrigger{scancode=" + std::to_string(scancode) + ", modifiers=" + std::to_string(modifiers) + "}";
+}
+
+auto KeyboardCodeTrigger::matches(std::shared_ptr<KeyboardStateTracker> const& keyboard_state, MirInputEventModifiers /*event_mods*/) const -> bool
+{
+    return keyboard_state->scancode_is_pressed(scancode);
 }
 }
 }

@@ -92,13 +92,16 @@ public:
     KeyboardStateTracker() = default;
 
     /// Update pressed keysyms on key down
-    void on_key_down(uint32_t keysym);
+    void on_key_down(uint32_t keysym, uint32_t scancode);
 
     /// Update pressed keysyms on key up
-    void on_key_up(uint32_t keysym);
+    void on_key_up(uint32_t keysym, uint32_t scancode);
 
     /// Check if a keysym exists in the pressed set
     auto keysym_is_pressed(uint32_t keysym, bool case_insensitive) const -> bool;
+
+    /// Check if a scancode exists in the pressed set
+    auto scancode_is_pressed(uint32_t scancode) const -> bool;
 
     /// Check if protocol modifiers match event modifiers
     static auto protocol_and_event_modifiers_match(uint32_t protocol_modifiers, MirInputEventModifiers event_mods)
@@ -106,10 +109,25 @@ public:
 
 private:
     std::unordered_set<uint32_t> pressed_keysyms;
+    std::unordered_set<uint32_t> pressed_scancodes;
 };
 
+/// Base class for keyboard triggers with shared modifier logic
+class KeyboardTrigger : public frontend::InputTriggerV1
+{
+public:
+    KeyboardTrigger(uint32_t modifiers, struct wl_resource* id);
 
-class KeyboardSymTrigger : public frontend::InputTriggerV1
+    /// Check if this trigger matches the current keyboard state
+    virtual auto matches(std::shared_ptr<KeyboardStateTracker> const& keyboard_state, MirInputEventModifiers event_mods) const -> bool = 0;
+
+    MirInputEventModifiers const modifiers;
+
+protected:
+    static auto to_mir_modifiers(uint32_t protocol_modifiers, uint32_t keysym) -> MirInputEventModifiers;
+};
+
+class KeyboardSymTrigger : public KeyboardTrigger
 {
 public:
     KeyboardSymTrigger(uint32_t modifiers, uint32_t keysym, struct wl_resource* id);
@@ -120,11 +138,25 @@ public:
 
     auto to_string() const -> std::string override;
 
-    uint32_t const keysym;
-    MirInputEventModifiers const modifiers;
+    auto matches(std::shared_ptr<KeyboardStateTracker> const& keyboard_state, MirInputEventModifiers event_mods) const -> bool override;
 
-private:
-    static auto to_mir_modifiers(uint32_t protocol_modifiers, uint32_t keysym) -> MirInputEventModifiers;
+    uint32_t const keysym;
+};
+
+class KeyboardCodeTrigger : public KeyboardTrigger
+{
+public:
+    KeyboardCodeTrigger(uint32_t modifiers, uint32_t scancode, struct wl_resource* id);
+
+    static auto from(wayland::InputTriggerV1* trigger) -> KeyboardCodeTrigger*;
+
+    static auto from(wayland::InputTriggerV1 const* trigger) -> KeyboardCodeTrigger const*;
+
+    auto to_string() const -> std::string override;
+
+    auto matches(std::shared_ptr<KeyboardStateTracker> const& keyboard_state, MirInputEventModifiers event_mods) const -> bool override;
+
+    uint32_t const scancode;
 };
 
 struct KeyboardEventFilter : public InputTriggerFilter
@@ -132,7 +164,7 @@ struct KeyboardEventFilter : public InputTriggerFilter
 public:
     explicit KeyboardEventFilter(
         wayland::Weak<wayland::InputTriggerActionV1 const> const& action,
-        wayland::Weak<frontend::KeyboardSymTrigger const> const& trigger,
+        wayland::Weak<frontend::KeyboardTrigger const> const& trigger,
         std::shared_ptr<shell::TokenAuthority> const& token_authority,
         std::shared_ptr<KeyboardStateTracker> const& keyboard_state);
 
@@ -141,7 +173,7 @@ public:
 
 private:
     wayland::Weak<wayland::InputTriggerActionV1 const> const action;
-    wayland::Weak<frontend::KeyboardSymTrigger const> const trigger;
+    wayland::Weak<frontend::KeyboardTrigger const> const trigger;
     std::shared_ptr<shell::TokenAuthority> const token_authority;
     std::shared_ptr<KeyboardStateTracker> const keyboard_state;
 
