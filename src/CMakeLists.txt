@@ -31,7 +31,6 @@ target_compile_definitions(wrapper PUBLIC
     _DEFAULT_SOURCE
     _BSD_SOURCE)
 
-set(MIR_SERVER_REFERENCES ${MIR_SERVER_REFERENCES} PARENT_SCOPE)
 set(MIR_SERVER_PLATFORM_PATH ${MIR_SERVER_PLATFORM_PATH} PARENT_SCOPE)
 
 # We need the ABI versions in the tests

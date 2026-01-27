@@ -34,8 +34,6 @@
 #include <codecvt>
 #include <filesystem>
 #include <locale>
-#include <glib.h>
-#include <gio/gio.h>
 
 #include "layer_shell_wayland_surface.h"
 #include <mir/server.h>

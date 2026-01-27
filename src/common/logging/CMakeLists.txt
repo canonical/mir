@@ -13,15 +13,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 add_library(mirsharedlogging OBJECT
-  dumb_console_logger.cpp
   file_logger.cpp
   input_timestamp.cpp
   multi_logger.cpp
   shared_library_prober_report.cpp
-  logger.cpp
 )
 
 target_include_directories(mirsharedlogging
     PUBLIC
         ${PROJECT_SOURCE_DIR}/include/common
+        ${PROJECT_SOURCE_DIR}/include/core
 )

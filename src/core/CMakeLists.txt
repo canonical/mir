@@ -10,6 +10,9 @@ add_library(mircore SHARED
     depth_layer.cpp
     geometry/rectangles.cpp
     input/mousekeys_keymap.cpp
+    log.cpp
+    logging/dumb_console_logger.cpp
+    logging/logger.cpp
     report_exception.cpp ${PROJECT_SOURCE_DIR}/include/core/mir/report_exception.h
     ${PROJECT_SOURCE_DIR}/include/core/mir/anonymous_shm_file.h
     ${PROJECT_SOURCE_DIR}/include/core/mir/int_wrapper.h
@@ -23,6 +26,9 @@ add_library(mircore SHARED
     ${PROJECT_SOURCE_DIR}/include/core/mir/geometry/size.h
     ${PROJECT_SOURCE_DIR}/include/core/mir/geometry/forward.h
     ${PROJECT_SOURCE_DIR}/include/core/mir/geometry/dimensions.h
+    ${PROJECT_SOURCE_DIR}/include/core/mir/log.h
+    ${PROJECT_SOURCE_DIR}/include/core/mir/logging/dumb_console_logger.h
+    ${PROJECT_SOURCE_DIR}/include/core/mir/logging/logger.h
     ${PROJECT_SOURCE_DIR}/include/core/mir/shm_file.h
     ${PROJECT_SOURCE_DIR}/include/core/mir/depth_layer.h
     ${PROJECT_SOURCE_DIR}/include/core/mir_toolkit/common.h

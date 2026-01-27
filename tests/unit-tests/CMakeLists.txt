@@ -16,6 +16,10 @@ if (MIR_BUILD_PLATFORM_X11)
   add_compile_definitions(MIR_BUILD_PLATFORM_X11)
 endif()
 
+if (MIR_BUILD_PLATFORM_WAYLAND)
+  add_compile_definitions(MIR_BUILD_PLATFORM_WAYLAND)
+endif()
+
 if (MIR_BUILD_PLATFORM_EGLSTREAM_KMS)
   add_compile_definitions(MIR_BUILD_PLATFORM_EGLSTREAM_KMS)
 endif()
@@ -177,10 +181,10 @@ target_link_libraries(
   mir-test-doubles-udev
 
   mircommon
+  mirserver-static
 
   PkgConfig::LIBINPUT
   PkgConfig::WAYLAND_SERVER
-  ${MIR_SERVER_REFERENCES}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
 
@@ -205,14 +209,13 @@ target_link_libraries(
   ${UMOCK_UNIT_TEST_REFERENCES}
   exampleserverconfig
   mircommon
+  mirserver-static
 
   mir-test-static
   mir-test-framework-static
   mir-umock-test-framework
 
   PkgConfig::UMOCKDEV
-  PkgConfig::LIBINPUT
-  ${MIR_SERVER_REFERENCES}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
 
