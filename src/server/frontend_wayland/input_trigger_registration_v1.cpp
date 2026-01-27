@@ -137,8 +137,6 @@ KeyboardEventFilter::KeyboardEventFilter(
 {
 }
 
-KeyboardEventFilter::~KeyboardEventFilter() = default;
-
 void KeyboardStateTracker::on_key_down(uint32_t keysym)
 {
     pressed_keysyms.insert(keysym);

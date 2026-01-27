@@ -120,8 +120,6 @@ struct KeyboardEventFilter : public InputTriggerFilter
         std::shared_ptr<shell::TokenAuthority> const& token_authority,
         std::shared_ptr<KeyboardStateTracker> const& keyboard_state);
 
-    ~KeyboardEventFilter();
-
     bool handle(MirEvent const& event) override;
     auto is_same_trigger(wayland::InputTriggerV1 const* trigger) const -> bool override;
 };
