@@ -19,6 +19,7 @@
 
 #include "ext-input-trigger-action-v1_wrapper.h"
 #include "input_trigger_registration_v1.h"
+#include "mir/input/composite_event_filter.h"
 
 #include <mir/input/event_filter.h>
 #include <mir/wayland/weak.h>
@@ -124,12 +125,56 @@ struct KeyboardEventFilter : public InputTriggerFilter
     auto is_same_trigger(wayland::InputTriggerV1 const* trigger) const -> bool override;
 };
 
+class KeyboardSymTrigger : public frontend::InputTriggerV1
+{
+public:
+    KeyboardSymTrigger(uint32_t modifiers, uint32_t keysym, struct wl_resource* id) :
+        InputTriggerV1{id, Version<1>{}},
+        keysym{keysym},
+        modifiers{to_mir_modifiers(modifiers, keysym)}
+    {
+    }
+
+    static auto from(wayland::InputTriggerV1* trigger)
+    {
+        return static_cast<KeyboardSymTrigger*>(trigger);
+    }
+
+    static auto from(wayland::InputTriggerV1 const* trigger)
+    {
+        return static_cast<KeyboardSymTrigger const*>(trigger);
+    }
+
+    auto to_string() const -> std::string override
+    {
+        return "KeyboardSymTrigger{keysym=" + std::to_string(keysym) + ", modifiers=" + std::to_string(modifiers) + "}";
+    }
+
+    uint32_t const keysym;
+    MirInputEventModifiers const modifiers;
+
+private:
+    static auto to_mir_modifiers(uint32_t protocol_modifiers, uint32_t keysym) -> MirInputEventModifiers;
+};
+
 class InputTriggerActionV1 : public wayland::InputTriggerActionV1
 {
 public:
-    InputTriggerActionV1(wl_resource* id) :
-        wayland::InputTriggerActionV1{id, Version<1>{}}
+    InputTriggerActionV1(
+        std::shared_ptr<shell::TokenAuthority> const& ta,
+        std::shared_ptr<input::CompositeEventFilter> const& cef,
+        std::shared_ptr<KeyboardStateTracker> const& keyboard_state,
+        wl_resource* id) :
+        wayland::InputTriggerActionV1{id, Version<1>{}},
+        ta{ta},
+        cef{cef},
+        keyboard_state{keyboard_state}
     {
+    }
+
+    static auto dummy(wl_resource* id) -> InputTriggerActionV1*
+    {
+        return new InputTriggerActionV1{id};
     }
 
     auto has_trigger(wayland::InputTriggerV1 const* trigger) const -> bool
@@ -138,7 +183,54 @@ public:
             trigger_filters, [trigger](auto const& trigger_filter) { return trigger_filter->is_same_trigger(trigger); });
     }
 
+    void add_trigger(wayland::InputTriggerV1 const* trigger)
+    {
+        if (auto const* keyboard_trigger = KeyboardSymTrigger::from(trigger))
+        {
+            auto const filter = std::make_shared<KeyboardEventFilter>(
+                wayland::make_weak<wayland::InputTriggerActionV1 const>(this),
+                wayland::make_weak<KeyboardSymTrigger const>(keyboard_trigger),
+                ta,
+                keyboard_state);
+
+            trigger_filters.push_back(filter);
+            cef->prepend(filter);
+        }
+    }
+
+    void drop_trigger(wayland::InputTriggerV1 const* trigger)
+    {
+        if (auto const keyboard_trigger = KeyboardSymTrigger::from(trigger))
+        {
+            trigger_filters.erase(
+                std::remove_if(
+                    trigger_filters.begin(),
+                    trigger_filters.end(),
+                    [&](auto const& filter)
+                    {
+                        if (auto const kf = std::dynamic_pointer_cast<KeyboardEventFilter>(filter))
+                        {
+                            return kf->trigger.is(*keyboard_trigger);
+                        }
+                        return false;
+                    }),
+                trigger_filters.end());
+        }
+    }
+
+private:
+    InputTriggerActionV1(wl_resource* id) :
+        wayland::InputTriggerActionV1{id, Version<1>{}},
+        ta{nullptr},
+        cef{nullptr},
+        keyboard_state{nullptr}
+    {
+    }
+
     std::vector<std::shared_ptr<InputTriggerFilter>> trigger_filters;
+    std::shared_ptr<shell::TokenAuthority> const ta;
+    std::shared_ptr<input::CompositeEventFilter> const cef;
+    std::shared_ptr<KeyboardStateTracker> const keyboard_state;
 };
 
 class ActionControl : public wayland::InputTriggerActionControlV1
@@ -154,14 +246,11 @@ public:
     void add_input_trigger_event(struct wl_resource* trigger) override;
     void drop_input_trigger_event(struct wl_resource* trigger) override;
 
-    void install_action(
-        wayland::Weak<frontend::InputTriggerActionV1>, std::shared_ptr<KeyboardStateTracker> const& keyboard_state);
+    void install_action(wayland::Weak<frontend::InputTriggerActionV1>);
 
 private:
     void add_trigger_pending(wayland::InputTriggerV1 const* trigger);
-    void add_trigger_immediate(
-        wayland::InputTriggerV1 const* trigger,
-        std::shared_ptr<KeyboardStateTracker> const& keyboard_state);
+    void add_trigger_immediate(wayland::InputTriggerV1 const* trigger);
     void drop_trigger_pending(wayland::InputTriggerV1 const* trigger);
     void drop_trigger_immediate(wayland::InputTriggerV1 const* trigger);
 

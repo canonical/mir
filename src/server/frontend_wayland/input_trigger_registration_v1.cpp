@@ -40,38 +40,6 @@ namespace mir
 namespace frontend
 {
 
-class KeyboardSymTrigger : public frontend::InputTriggerV1
-{
-public:
-    KeyboardSymTrigger(uint32_t modifiers, uint32_t keysym, struct wl_resource* id) :
-        InputTriggerV1{id, Version<1>{}},
-        keysym{keysym},
-        modifiers{to_mir_modifiers(modifiers, keysym)}
-    {
-    }
-
-    static auto from(wayland::InputTriggerV1* trigger)
-    {
-        return static_cast<KeyboardSymTrigger*>(trigger);
-    }
-
-    static auto from(wayland::InputTriggerV1 const* trigger)
-    {
-        return static_cast<KeyboardSymTrigger const*>(trigger);
-    }
-
-    auto to_string() const -> std::string override
-    {
-        return "KeyboardSymTrigger{keysym=" + std::to_string(keysym) + ", modifiers=" + std::to_string(modifiers) + "}";
-    }
-
-    uint32_t const keysym;
-    MirInputEventModifiers const modifiers;
-
-private:
-    static auto to_mir_modifiers(uint32_t protocol_modifiers, uint32_t keysym) -> MirInputEventModifiers;
-};
-
 class InputTriggerRegistrationManagerV1 : public wayland::InputTriggerRegistrationManagerV1::Global
 {
 public:
@@ -376,27 +344,9 @@ void ActionControl::add_trigger_pending(wayland::InputTriggerV1 const* trigger)
     pending_triggers.insert(trigger);
 }
 
-void ActionControl::add_trigger_immediate(
-    wayland::InputTriggerV1 const* trigger,
-    std::shared_ptr<KeyboardStateTracker> const& keyboard_state)
+void ActionControl::add_trigger_immediate(wayland::InputTriggerV1 const* trigger)
 {
-    if (!action)
-    {
-        mir::log_error("No action installed in ActionControl when adding trigger immediately");
-        return;
-    };
-
-    if (auto const* keyboard_trigger = KeyboardSymTrigger::from(trigger))
-    {
-        auto const filter = std::make_shared<KeyboardEventFilter>(
-            wayland::make_weak<wayland::InputTriggerActionV1 const>(&action.value()),
-            wayland::make_weak<KeyboardSymTrigger const>(keyboard_trigger),
-            ta,
-            keyboard_state);
-
-        action.value().trigger_filters.push_back(filter);
-        cef->prepend(filter);
-    }
+    action.value().add_trigger(trigger);
 }
 
 void ActionControl::drop_trigger_pending(wayland::InputTriggerV1 const* trigger)
@@ -406,23 +356,7 @@ void ActionControl::drop_trigger_pending(wayland::InputTriggerV1 const* trigger)
 
 void ActionControl::drop_trigger_immediate(wayland::InputTriggerV1 const* trigger)
 {
-    if (auto const keyboard_trigger = KeyboardSymTrigger::from(trigger))
-    {
-        auto& trigger_filters = action.value().trigger_filters;
-        trigger_filters.erase(
-            std::remove_if(
-                trigger_filters.begin(),
-                trigger_filters.end(),
-                [&](auto const& filter)
-                {
-                    if (auto const kf = std::dynamic_pointer_cast<KeyboardEventFilter>(filter))
-                    {
-                        return kf->trigger.is(*keyboard_trigger);
-                    }
-                    return false;
-                }),
-            trigger_filters.end());
-    }
+    action.value().drop_trigger(trigger);
 }
 
 void ActionControl::add_input_trigger_event(struct wl_resource* trigger)
@@ -430,14 +364,9 @@ void ActionControl::add_input_trigger_event(struct wl_resource* trigger)
     if(auto const* input_trigger = wayland::InputTriggerV1::from(trigger))
     {
         if (!action)
-        {
             add_trigger_pending(input_trigger);
-        }
         else
-        {
-            auto itd_lock = itd->lock();
-            add_trigger_immediate(input_trigger, itd_lock->keyboard_state);
-        }
+            add_trigger_immediate(input_trigger);
     }
 }
 
@@ -452,13 +381,13 @@ void ActionControl::drop_input_trigger_event(struct wl_resource* trigger)
     }
 }
 
-void ActionControl::install_action(wayland::Weak<frontend::InputTriggerActionV1> action, std::shared_ptr<KeyboardStateTracker> const& keyboard_state)
+void ActionControl::install_action(wayland::Weak<frontend::InputTriggerActionV1> action)
 {
     this->action = action;
 
     // Add the pending triggers to the composite event filter
     for (auto const* trigger : pending_triggers)
-        add_trigger_immediate(trigger, keyboard_state);
+        add_trigger_immediate(trigger);
 
     // Don't need this anymore
     pending_triggers.clear();
