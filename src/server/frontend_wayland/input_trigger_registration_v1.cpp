@@ -323,7 +323,7 @@ auto KeyboardEventFilter::is_same_trigger(wayland::InputTriggerV1 const* other) 
     {
         if (auto const other_sym = KeyboardSymTrigger::from(other))
         {
-            return this_sym->keysym == other_sym->keysym && 
+            return this_sym->keysym == other_sym->keysym &&
                    this_sym->modifiers == other_sym->modifiers;
         }
     }
@@ -332,7 +332,7 @@ auto KeyboardEventFilter::is_same_trigger(wayland::InputTriggerV1 const* other) 
     {
         if (auto const other_code = KeyboardCodeTrigger::from(other))
         {
-            return this_code->scancode == other_code->scancode && 
+            return this_code->scancode == other_code->scancode &&
                    this_code->modifiers == other_code->modifiers;
         }
     }

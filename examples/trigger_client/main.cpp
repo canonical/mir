@@ -230,8 +230,8 @@ int main(int /*argc*/, char** /*argv*/)
     // This demonstrates keycode triggers work regardless of layout
     // Scancode 44 is the physical 'Z' key position on QWERTY keyboards
     ActionContext alt_z_ctx{
-        "ALT + Z (scancode 44)", 
-        "Hello from ALT + Z (keycode trigger)", 
+        "ALT + Z (scancode 44)",
+        "Hello from ALT + Z (keycode trigger)",
         "Bye from ALT + Z (keycode trigger)"
     };
     ext_input_trigger_v1* alt_backtick_trigger = nullptr;
