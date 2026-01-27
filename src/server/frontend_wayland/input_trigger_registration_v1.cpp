@@ -393,7 +393,10 @@ void ActionControl::install_action(wayland::Weak<frontend::InputTriggerActionV1>
     pending_triggers.clear();
 }
 
-// The trigger is registered with the composite event filter when its added to a control object
+// The filter is corresponding to this trigger is registered with the composite
+// event filter when the client gets the owning action. Which requires the
+// client to obtain an action control object, add add triggers to it, and then
+// get the action using the token provided by the action control object.
 void InputTriggerRegistrationManagerV1::Instance::register_keyboard_sym_trigger(
     uint32_t modifiers, uint32_t keysym, struct wl_resource* id)
 {
