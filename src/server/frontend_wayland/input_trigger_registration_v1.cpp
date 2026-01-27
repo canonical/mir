@@ -126,12 +126,12 @@ private:
 };
 
 KeyboardEventFilter::KeyboardEventFilter(
-    wayland::Weak<wayland::InputTriggerActionV1 const> action,
-    wayland::Weak<frontend::KeyboardSymTrigger const> trigger,
+    wayland::Weak<wayland::InputTriggerActionV1 const> const& action,
+    wayland::Weak<frontend::KeyboardSymTrigger const> const& trigger,
     std::shared_ptr<shell::TokenAuthority> const& token_authority,
     std::shared_ptr<KeyboardStateTracker> const& keyboard_state) :
     action{action},
-    trigger{std::move(trigger)},
+    trigger{trigger},
     token_authority{token_authority},
     keyboard_state{keyboard_state}
 {

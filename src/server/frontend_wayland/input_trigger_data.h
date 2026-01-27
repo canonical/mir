@@ -115,8 +115,8 @@ struct KeyboardEventFilter : public InputTriggerFilter
     bool began{false};
 
     explicit KeyboardEventFilter(
-        wayland::Weak<wayland::InputTriggerActionV1 const> action,
-        wayland::Weak<frontend::KeyboardSymTrigger const> trigger,
+        wayland::Weak<wayland::InputTriggerActionV1 const> const& action,
+        wayland::Weak<frontend::KeyboardSymTrigger const> const& trigger,
         std::shared_ptr<shell::TokenAuthority> const& token_authority,
         std::shared_ptr<KeyboardStateTracker> const& keyboard_state);
 
