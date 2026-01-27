@@ -164,68 +164,18 @@ public:
         std::shared_ptr<shell::TokenAuthority> const& ta,
         std::shared_ptr<input::CompositeEventFilter> const& cef,
         std::shared_ptr<KeyboardStateTracker> const& keyboard_state,
-        wl_resource* id) :
-        wayland::InputTriggerActionV1{id, Version<1>{}},
-        ta{ta},
-        cef{cef},
-        keyboard_state{keyboard_state}
-    {
-    }
+        wl_resource* id);
 
-    static auto dummy(wl_resource* id) -> InputTriggerActionV1*
-    {
-        return new InputTriggerActionV1{id};
-    }
+    static auto dummy(wl_resource* id) -> InputTriggerActionV1*;
 
-    auto has_trigger(wayland::InputTriggerV1 const* trigger) const -> bool
-    {
-        return std::ranges::any_of(
-            trigger_filters, [trigger](auto const& trigger_filter) { return trigger_filter->is_same_trigger(trigger); });
-    }
+    auto has_trigger(wayland::InputTriggerV1 const* trigger) const -> bool;
 
-    void add_trigger(wayland::InputTriggerV1 const* trigger)
-    {
-        if (auto const* keyboard_trigger = KeyboardSymTrigger::from(trigger))
-        {
-            auto const filter = std::make_shared<KeyboardEventFilter>(
-                wayland::make_weak<wayland::InputTriggerActionV1 const>(this),
-                wayland::make_weak<KeyboardSymTrigger const>(keyboard_trigger),
-                ta,
-                keyboard_state);
+    void add_trigger(wayland::InputTriggerV1 const* trigger);
 
-            trigger_filters.push_back(filter);
-            cef->prepend(filter);
-        }
-    }
-
-    void drop_trigger(wayland::InputTriggerV1 const* trigger)
-    {
-        if (auto const keyboard_trigger = KeyboardSymTrigger::from(trigger))
-        {
-            trigger_filters.erase(
-                std::remove_if(
-                    trigger_filters.begin(),
-                    trigger_filters.end(),
-                    [&](auto const& filter)
-                    {
-                        if (auto const kf = std::dynamic_pointer_cast<KeyboardEventFilter>(filter))
-                        {
-                            return kf->trigger.is(*keyboard_trigger);
-                        }
-                        return false;
-                    }),
-                trigger_filters.end());
-        }
-    }
+    void drop_trigger(wayland::InputTriggerV1 const* trigger);
 
 private:
-    InputTriggerActionV1(wl_resource* id) :
-        wayland::InputTriggerActionV1{id, Version<1>{}},
-        ta{nullptr},
-        cef{nullptr},
-        keyboard_state{nullptr}
-    {
-    }
+    InputTriggerActionV1(wl_resource* id);
 
     std::vector<std::shared_ptr<InputTriggerFilter>> trigger_filters;
     std::shared_ptr<shell::TokenAuthority> const ta;
