@@ -66,19 +66,16 @@ void InputTriggerActionV1::drop_trigger(wayland::InputTriggerV1 const* trigger)
 {
     if (auto const keyboard_trigger = KeyboardSymTrigger::from(trigger))
     {
-        trigger_filters.erase(
-            std::remove_if(
-                trigger_filters.begin(),
-                trigger_filters.end(),
-                [&](auto const& filter)
+        std::erase_if(
+            trigger_filters,
+            [&](auto const& filter)
+            {
+                if (auto const kf = std::dynamic_pointer_cast<KeyboardEventFilter>(filter))
                 {
-                    if (auto const kf = std::dynamic_pointer_cast<KeyboardEventFilter>(filter))
-                    {
-                        return kf->is_same_trigger(keyboard_trigger);
-                    }
-                    return false;
-                }),
-            trigger_filters.end());
+                    return kf->is_same_trigger(keyboard_trigger);
+                }
+                return false;
+            });
     }
 }
 
