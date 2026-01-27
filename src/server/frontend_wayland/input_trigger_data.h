@@ -153,13 +153,6 @@ public:
         std::string_view token,
         struct wl_resource* id);
 
-    void add_trigger_pending(wayland::InputTriggerV1 const* trigger);
-    void add_trigger_immediate(
-        wayland::InputTriggerV1 const* trigger,
-        std::shared_ptr<KeyboardStateTracker> const& keyboard_state);
-    void drop_trigger_pending(wayland::InputTriggerV1 const* trigger);
-    void drop_trigger_immediate(wayland::InputTriggerV1 const* trigger);
-
     void add_input_trigger_event(struct wl_resource* trigger) override;
     void drop_input_trigger_event(struct wl_resource* trigger) override;
 
@@ -167,6 +160,13 @@ public:
         wayland::Weak<frontend::InputTriggerActionV1>, std::shared_ptr<KeyboardStateTracker> const& keyboard_state);
 
 private:
+    void add_trigger_pending(wayland::InputTriggerV1 const* trigger);
+    void add_trigger_immediate(
+        wayland::InputTriggerV1 const* trigger,
+        std::shared_ptr<KeyboardStateTracker> const& keyboard_state);
+    void drop_trigger_pending(wayland::InputTriggerV1 const* trigger);
+    void drop_trigger_immediate(wayland::InputTriggerV1 const* trigger);
+
     std::shared_ptr<mir::Synchronised<frontend::InputTriggerData>> const itd;
     std::shared_ptr<shell::TokenAuthority> const ta;
     std::shared_ptr<input::CompositeEventFilter> const cef;
