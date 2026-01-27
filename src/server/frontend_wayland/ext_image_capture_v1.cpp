@@ -949,7 +949,7 @@ mf::ExtImageCopyCaptureCursorSessionV1::~ExtImageCopyCaptureCursorSessionV1()
 }
 
 void mf::ExtImageCopyCaptureCursorSessionV1::get_capture_session(
-    [[maybe_unused]] wl_resource* session)
+    wl_resource* session)
 {
     if (cursor_image_session)
     {
@@ -966,11 +966,9 @@ void mf::ExtImageCopyCaptureCursorSessionV1::get_capture_session(
         new ExtImageCopyCaptureSessionV1{session, false, backend_factory});
 }
 
-// From CursorObserver
 void mf::ExtImageCopyCaptureCursorSessionV1::cursor_moved_to(
     float abs_x, float abs_y)
 {
-    // TODO: offset position based on position of source (output, toplevel, etc)
     bool was_visible = pointer_is_usable && pointer_in_source;
     auto position = map_position(abs_x, abs_y);
     pointer_in_source = bool(position);
