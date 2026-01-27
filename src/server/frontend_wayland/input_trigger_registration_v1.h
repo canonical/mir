@@ -24,19 +24,13 @@
 
 namespace mir
 {
-class Executor;
 namespace input
 {
 class CompositeEventFilter;
-class EventFilter;
 }
 namespace shell
 {
 class TokenAuthority;
-}
-namespace wayland
-{
-class InputTriggerActionV1;
 }
 namespace frontend
 {
