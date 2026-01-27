@@ -292,6 +292,9 @@ bool KeyboardStateTracker::protocol_and_event_modifiers_match(
 
 bool KeyboardEventFilter::handle(MirEvent const& event)
 {
+    if (!trigger)
+        return false;
+
     if (event.type() != mir_event_type_input)
         return false;
 
@@ -317,33 +320,28 @@ bool KeyboardEventFilter::handle(MirEvent const& event)
     auto const keysym_matches =
         keyboard_state->keysym_is_pressed(trigger.value().keysym, trigger_mods_contain_shift);
 
-    if (trigger)
+    if (!modifiers_match || !keysym_matches)
     {
-        if (!modifiers_match || !keysym_matches)
-        {
-            if (began)
-            {
-                auto const activation_token = std::string{token_authority->issue_token(std::nullopt)};
-                auto const timestamp = mir_input_event_get_wayland_timestamp(mir_keyboard_event_input_event(key_event));
-                action.value().send_end_event(timestamp, activation_token);
-                began = false;
-            }
-
-            return false;
-        }
-
-        // If the trigger keysym is pressed (either just pressed or was already pressed),
-        // ensure we send a begin event if we haven't already.
-        if (!began)
+        if (began)
         {
             auto const activation_token = std::string{token_authority->issue_token(std::nullopt)};
             auto const timestamp = mir_input_event_get_wayland_timestamp(mir_keyboard_event_input_event(key_event));
-            action.value().send_begin_event(timestamp, activation_token);
-            began = true;
-            return true;
+            action.value().send_end_event(timestamp, activation_token);
+            began = false;
         }
 
         return false;
+    }
+
+    // If the trigger keysym is pressed (either just pressed or was already pressed),
+    // ensure we send a begin event if we haven't already.
+    if (!began)
+    {
+        auto const activation_token = std::string{token_authority->issue_token(std::nullopt)};
+        auto const timestamp = mir_input_event_get_wayland_timestamp(mir_keyboard_event_input_event(key_event));
+        action.value().send_begin_event(timestamp, activation_token);
+        began = true;
+        return true;
     }
 
     return false;
