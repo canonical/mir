@@ -29,11 +29,8 @@
 #include <unordered_map>
 #include <unordered_set>
 
-namespace mir
+namespace
 {
-namespace frontend
-{
-
 template <typename T> class BoundedQueue
 {
 public:
@@ -66,6 +63,12 @@ private:
     size_t const max_size;
     std::deque<T> queue;
 };
+}
+
+namespace mir
+{
+namespace frontend
+{
 
 // Forces trigger implementations to provide a to_string method for logging
 class InputTriggerV1 : public wayland::InputTriggerV1
