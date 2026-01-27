@@ -29,42 +29,6 @@
 #include <unordered_map>
 #include <unordered_set>
 
-namespace
-{
-template <typename T> class BoundedQueue
-{
-public:
-    explicit BoundedQueue(size_t max_size) :
-        max_size{max_size}
-    {
-    }
-
-    void enqueue(T const& item)
-    {
-        queue.push_back(item);
-
-        if (queue.size() > max_size)
-        {
-            queue.pop_front();
-        }
-    }
-
-    auto contains(T const& item) const -> bool
-    {
-        return std::find(queue.begin(), queue.end(), item) != queue.end();
-    }
-
-    auto size() const -> size_t
-    {
-        return queue.size();
-    }
-
-private:
-    size_t const max_size;
-    std::deque<T> queue;
-};
-}
-
 namespace mir
 {
 namespace frontend
@@ -243,6 +207,39 @@ struct InputTriggerData
 {
     using Token = std::string;
 
+    template <typename T> class BoundedQueue
+    {
+    public:
+        explicit BoundedQueue(size_t max_size) :
+            max_size{max_size}
+        {
+        }
+
+        void enqueue(T const& item)
+        {
+            queue.push_back(item);
+
+            if (queue.size() > max_size)
+            {
+                queue.pop_front();
+            }
+        }
+
+        auto contains(T const& item) const -> bool
+        {
+            return std::find(queue.begin(), queue.end(), item) != queue.end();
+        }
+
+        auto size() const -> size_t
+        {
+            return queue.size();
+        }
+
+    private:
+        size_t const max_size;
+        std::deque<T> queue;
+    };
+
     InputTriggerData() :
         revoked_tokens{BoundedQueue<Token>{32}},
         keyboard_state{std::make_shared<KeyboardStateTracker>()}
@@ -251,10 +248,11 @@ struct InputTriggerData
 
     std::unordered_map<Token, wayland::Weak<ActionControl>> action_controls;
     std::unordered_map<Token, wayland::Weak<InputTriggerActionV1>> actions;
+
     BoundedQueue<Token> revoked_tokens;
     std::shared_ptr<KeyboardStateTracker> keyboard_state;
-};
 
+};
 }
 }
 
