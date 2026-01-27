@@ -34,7 +34,6 @@ namespace mir
 namespace frontend
 {
 
-struct KeyboardSymTrigger;
 template <typename T> class BoundedQueue
 {
 public:
@@ -106,24 +105,6 @@ private:
     std::unordered_set<uint32_t> pressed_keysyms;
 };
 
-struct KeyboardEventFilter : public InputTriggerFilter
-{
-    wayland::Weak<wayland::InputTriggerActionV1 const> const action;
-    wayland::Weak<frontend::KeyboardSymTrigger const> const trigger;
-    std::shared_ptr<shell::TokenAuthority> const token_authority;
-    std::shared_ptr<KeyboardStateTracker> const keyboard_state;
-
-    bool began{false};
-
-    explicit KeyboardEventFilter(
-        wayland::Weak<wayland::InputTriggerActionV1 const> const& action,
-        wayland::Weak<frontend::KeyboardSymTrigger const> const& trigger,
-        std::shared_ptr<shell::TokenAuthority> const& token_authority,
-        std::shared_ptr<KeyboardStateTracker> const& keyboard_state);
-
-    bool handle(MirEvent const& event) override;
-    auto is_same_trigger(wayland::InputTriggerV1 const* trigger) const -> bool override;
-};
 
 class KeyboardSymTrigger : public frontend::InputTriggerV1
 {
@@ -155,6 +136,25 @@ public:
 
 private:
     static auto to_mir_modifiers(uint32_t protocol_modifiers, uint32_t keysym) -> MirInputEventModifiers;
+};
+
+struct KeyboardEventFilter : public InputTriggerFilter
+{
+    wayland::Weak<wayland::InputTriggerActionV1 const> const action;
+    wayland::Weak<frontend::KeyboardSymTrigger const> const trigger;
+    std::shared_ptr<shell::TokenAuthority> const token_authority;
+    std::shared_ptr<KeyboardStateTracker> const keyboard_state;
+
+    bool began{false};
+
+    explicit KeyboardEventFilter(
+        wayland::Weak<wayland::InputTriggerActionV1 const> const& action,
+        wayland::Weak<frontend::KeyboardSymTrigger const> const& trigger,
+        std::shared_ptr<shell::TokenAuthority> const& token_authority,
+        std::shared_ptr<KeyboardStateTracker> const& keyboard_state);
+
+    bool handle(MirEvent const& event) override;
+    auto is_same_trigger(wayland::InputTriggerV1 const* trigger) const -> bool override;
 };
 
 class InputTriggerActionV1 : public wayland::InputTriggerActionV1
