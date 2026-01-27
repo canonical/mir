@@ -25,10 +25,6 @@
 
 namespace mir
 {
-namespace input
-{
-class EventFilter;
-}
 namespace frontend
 {
 class InputTriggerData;
