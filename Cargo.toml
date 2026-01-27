@@ -9,7 +9,7 @@ resolver = "2"
 name = "mir"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.81.0"
+rust-version = "1.82.0"
 
 [workspace.dependencies]
 cxx = "1.0"
