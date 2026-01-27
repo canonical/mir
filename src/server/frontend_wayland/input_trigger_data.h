@@ -126,13 +126,7 @@ private:
 
 struct KeyboardEventFilter : public InputTriggerFilter
 {
-    wayland::Weak<wayland::InputTriggerActionV1 const> const action;
-    wayland::Weak<frontend::KeyboardSymTrigger const> const trigger;
-    std::shared_ptr<shell::TokenAuthority> const token_authority;
-    std::shared_ptr<KeyboardStateTracker> const keyboard_state;
-
-    bool began{false};
-
+public:
     explicit KeyboardEventFilter(
         wayland::Weak<wayland::InputTriggerActionV1 const> const& action,
         wayland::Weak<frontend::KeyboardSymTrigger const> const& trigger,
@@ -141,6 +135,14 @@ struct KeyboardEventFilter : public InputTriggerFilter
 
     bool handle(MirEvent const& event) override;
     auto is_same_trigger(wayland::InputTriggerV1 const* trigger) const -> bool override;
+
+private:
+    wayland::Weak<wayland::InputTriggerActionV1 const> const action;
+    wayland::Weak<frontend::KeyboardSymTrigger const> const trigger;
+    std::shared_ptr<shell::TokenAuthority> const token_authority;
+    std::shared_ptr<KeyboardStateTracker> const keyboard_state;
+
+    bool began{false};
 };
 
 class InputTriggerActionV1 : public wayland::InputTriggerActionV1

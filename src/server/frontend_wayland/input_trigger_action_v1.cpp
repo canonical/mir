@@ -74,7 +74,7 @@ void InputTriggerActionV1::drop_trigger(wayland::InputTriggerV1 const* trigger)
                 {
                     if (auto const kf = std::dynamic_pointer_cast<KeyboardEventFilter>(filter))
                     {
-                        return kf->trigger.is(*keyboard_trigger);
+                        return kf->is_same_trigger(keyboard_trigger);
                     }
                     return false;
                 }),
