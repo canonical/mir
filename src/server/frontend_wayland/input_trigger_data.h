@@ -210,6 +210,8 @@ struct InputTriggerData
 
     auto add_new_action(std::string const& token, struct wl_resource* id) -> bool
     {
+        std::unique_lock lock{mutex};
+
         if (revoked_tokens.contains(token))
         {
             auto const action = InputTriggerActionV1::dummy(id);
@@ -238,6 +240,8 @@ struct InputTriggerData
     // they will get an `unavailable` event.
     void token_revoked(std::string const& token)
     {
+        std::unique_lock lock{mutex};
+
         if (!actions.contains(token))
             action_controls.erase(token);
 
@@ -246,18 +250,16 @@ struct InputTriggerData
 
     void add_new_action_control(std::string const& token, struct wl_resource* id)
     {
+        std::unique_lock lock{mutex};
+
         auto const action_control = wayland::make_weak(new ActionControl{token, id});
         action_controls.insert({token, action_control});
     }
 
-    void erase_expired_entries()
-    {
-        std::erase_if(actions, [](auto const& pair) { return !pair.second; });
-        std::erase_if(action_controls, [](auto const& pair) { return !pair.second; });
-    }
-
     auto has_trigger(wayland::InputTriggerV1 const* trigger) -> bool
     {
+        std::unique_lock lock{mutex};
+
         erase_expired_entries();
 
         // All elements are should be valid now
@@ -298,6 +300,14 @@ private:
         size_t const max_size;
         std::deque<T> queue;
     };
+
+    void erase_expired_entries()
+    {
+        std::erase_if(actions, [](auto const& pair) { return !pair.second; });
+        std::erase_if(action_controls, [](auto const& pair) { return !pair.second; });
+    }
+
+    std::mutex mutex;
 
     std::shared_ptr<shell::TokenAuthority> const ta;
     std::shared_ptr<input::CompositeEventFilter> const cef;
