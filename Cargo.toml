@@ -1,6 +1,7 @@
 [workspace]
 members = [
   "src/platforms/evdev-rs",
+  "src/wayland"
 ]
 resolver = "2"
 
