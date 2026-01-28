@@ -61,7 +61,7 @@ TEST_F(RenderSceneIntoSurfaceTest, set_capture_area_before_starting)
 
     start_server();
     auto const scene = server().the_scene();
-    auto const elements = scene->scene_elements_for(this);
+    auto const elements = scene->scene_elements_for(this, {{0, 0}, {10000, 10000}});
     EXPECT_THAT(elements.size(), Eq(1));
     auto const& element = elements.at(0);
     EXPECT_THAT(element->renderable()->screen_position(), Eq(Rectangle(
@@ -78,7 +78,7 @@ TEST_F(RenderSceneIntoSurfaceTest, set_capture_area_after_starting)
         Size(200, 200)
     ));
     auto const scene = server().the_scene();
-    auto const elements = scene->scene_elements_for(this);
+    auto const elements = scene->scene_elements_for(this, {{0, 0}, {10000, 10000}});
     EXPECT_THAT(elements.size(), Eq(1));
     auto const& element = elements.at(0);
     EXPECT_THAT(element->renderable()->screen_position(), Eq(Rectangle(

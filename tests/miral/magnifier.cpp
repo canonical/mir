@@ -54,7 +54,7 @@ TEST_F(MagnifierTest, magnifier_disabled_by_default)
     add_start_callback([&]
     {
         auto const scene = server().the_scene();
-        auto const elements = scene->scene_elements_for(this);
+        auto const elements = scene->scene_elements_for(this, {{0, 0}, {10000, 10000}});
         EXPECT_THAT(elements.size(), Eq(0));
     });
     start_server();
@@ -66,7 +66,7 @@ TEST_F(MagnifierTest, can_start_enabled)
     add_start_callback([&]
     {
         auto const scene = server().the_scene();
-        auto const elements = scene->scene_elements_for(this);
+        auto const elements = scene->scene_elements_for(this, {{0, 0}, {10000, 10000}});
         EXPECT_THAT(elements.size(), Eq(1));
     });
     start_server();
@@ -79,7 +79,7 @@ TEST_F(MagnifierTest, magnification_results_in_scaled_transform)
     add_start_callback([&]
     {
         auto const scene = server().the_scene();
-        auto const elements = scene->scene_elements_for(this);
+        auto const elements = scene->scene_elements_for(this, {{0, 0}, {10000, 10000}});
         EXPECT_THAT(elements.size(), Eq(1));
         auto const expected = glm::scale(glm::mat4(1.0), glm::vec3(2, 2, 1));
 
@@ -95,7 +95,7 @@ TEST_F(MagnifierTest, can_set_capture_size)
     add_start_callback([&]
     {
         auto const scene = server().the_scene();
-        auto const elements = scene->scene_elements_for(this);
+        auto const elements = scene->scene_elements_for(this, {{0, 0}, {10000, 10000}});
         EXPECT_THAT(elements.size(), Eq(1));
         EXPECT_THAT(elements.at(0)->renderable()->screen_position().size, Eq(Size(500, 500)));
     });

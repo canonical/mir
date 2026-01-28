@@ -123,6 +123,20 @@ struct SurfaceDepthLayerObserver : ms::NullSurfaceObserver
         stack->raise(surface);
     }
 
+    void attrib_changed(ms::Surface const* surface, MirWindowAttrib attrib, int value) override
+    {
+        (void)value;  // Unused parameter
+        if (attrib == mir_window_attrib_state)
+        {
+            // Check if this is the focused surface and update fullscreen tracking
+            auto focused = stack->get_focused_surface();
+            if (focused.get() == surface)
+            {
+                stack->update_focused_fullscreen_tracking(focused);
+            }
+        }
+    }
+
 private:
     ms::SurfaceStack* stack;
 };
@@ -147,15 +161,61 @@ ms::SurfaceStack::~SurfaceStack() noexcept(true)
     }
 }
 
-mc::SceneElementSequence ms::SurfaceStack::scene_elements_for(mc::CompositorID id)
+mc::SceneElementSequence ms::SurfaceStack::scene_elements_for(
+    mc::CompositorID id,
+    geom::Rectangle const& output_area)
 {
     RecursiveReadLock lg(guard);
+
+    // Check if there's a focused fullscreen surface on this output
+    auto focused_fs = focused_fullscreen_surface.lock();
+    bool has_fullscreen_on_output = false;
+
+    mir::log_debug("Fullscreen surface: %s", focused_fs ? focused_fs->name().c_str() : "none");
+    mir::log_debug("Fullscreen surface bounds: x=%d,y=%d,w=%d,h=%d",
+        focused_fs ? focused_fs->input_bounds().top_left.x.as_int() : 0,
+        focused_fs ? focused_fs->input_bounds().top_left.y.as_int() : 0,
+        focused_fs ? focused_fs->input_bounds().size.width.as_int() : 0,
+        focused_fs ? focused_fs->input_bounds().size.height.as_int() : 0);
+    mir::log_debug("Output area: x=%d,y=%d,w=%d,h=%d",
+        output_area.top_left.x.as_int(),
+        output_area.top_left.y.as_int(),
+        output_area.size.width.as_int(),
+        output_area.size.height.as_int());
+
+    if (focused_fs && focused_fs->state() == mir_window_state_fullscreen)
+    {
+        // Check if the fullscreen surface overlaps with this output
+        auto const fs_bounds = focused_fs->input_bounds();
+        auto const overlap = intersection_of(fs_bounds, output_area);
+        if (overlap.size.width.as_int() > 0 && overlap.size.height.as_int() > 0)
+        {
+            has_fullscreen_on_output = true;
+        }
+    }
 
     mc::SceneElementSequence elements;
     for (auto const& layer : surface_layers)
     {
         for (auto const& surface : layer)
         {
+            // Skip "above" layer surfaces if they're in the pre-existing filter list
+            if (has_fullscreen_on_output &&
+                surface->depth_layer() == mir_depth_layer_above &&
+                above_surfaces_to_filter.count(surface.get()) > 0)
+            {
+                mir::log_debug("Checking pre-existing 'above' layer surface '%s' on output with fullscreen", surface->name().c_str());
+                // Check if this surface is also on this output
+                auto const surface_bounds = surface->input_bounds();
+                auto const overlap = intersection_of(surface_bounds, output_area);
+                if (overlap.size.width.as_int() > 0 && overlap.size.height.as_int() > 0)
+                {
+                    // Surface is on same output as fullscreen and was pre-existing - skip it
+                    mir::log_debug("Skipping pre-existing 'above' layer surface '%s' on output with fullscreen", surface->name().c_str());
+                    continue;
+                }
+            }
+
             if (surface_can_be_shown(surface) && surface->visible())
             {
                 for (auto& renderable : surface->generate_renderables(id))
@@ -176,7 +236,6 @@ mc::SceneElementSequence ms::SurfaceStack::scene_elements_for(mc::CompositorID i
     }
     return elements;
 }
-
 void ms::SurfaceStack::register_compositor(mc::CompositorID cid)
 {
     RecursiveWriteLock lg(guard);
@@ -260,6 +319,8 @@ void ms::SurfaceStack::remove_surface(std::weak_ptr<Surface> const& surface)
                 layer.erase(surface);
                 rendering_trackers.erase(keep_alive.get());
                 keep_alive->unregister_interest(*surface_observer);
+                // Also remove from fullscreen filter set if present
+                above_surfaces_to_filter.erase(keep_alive.get());
                 found_surface = true;
                 break;
             }
@@ -296,10 +357,37 @@ auto ms::SurfaceStack::surface_at(geometry::Point cursor) const
 -> std::shared_ptr<Surface>
 {
     RecursiveReadLock lg(guard);
+
+    // Check if there's a focused fullscreen surface
+    auto focused_fs = focused_fullscreen_surface.lock();
+    geom::Rectangle fullscreen_area{};
+    bool has_fullscreen = false;
+
+    if (focused_fs && focused_fs->state() == mir_window_state_fullscreen)
+    {
+        has_fullscreen = true;
+        fullscreen_area = focused_fs->input_bounds();
+    }
+
     for (auto const& layer : in_reverse(surface_layers))
     {
         for (auto const& surface : in_reverse(layer))
         {
+            // Skip "above" layer surfaces if they're in the pre-existing filter list
+            if (has_fullscreen &&
+                surface->depth_layer() == mir_depth_layer_above &&
+                above_surfaces_to_filter.count(surface.get()) > 0)
+            {
+                // Check if this surface overlaps with the fullscreen surface's output
+                auto const surface_bounds = surface->input_bounds();
+                auto const overlap = intersection_of(surface_bounds, fullscreen_area);
+                if (overlap.size.width.as_int() > 0 && overlap.size.height.as_int() > 0)
+                {
+                    // Surface is on same output as fullscreen and was pre-existing - skip it for input
+                    continue;
+                }
+            }
+
             // TODO There's a lack of clarity about how the input area will
             // TODO be maintained and whether this test will detect clicks on
             // TODO decorations (it should) as these may be outside the area
@@ -311,7 +399,6 @@ auto ms::SurfaceStack::surface_at(geometry::Point cursor) const
 
     return {};
 }
-
 auto ms::SurfaceStack::input_surface_at(geometry::Point point) const -> std::shared_ptr<input::Surface>
 {
     return surface_at(point);
@@ -716,4 +803,69 @@ void ms::SessionLockObserverMultiplexer::on_lock()
 void ms::SessionLockObserverMultiplexer::on_unlock()
 {
     for_each_observer(&SessionLockObserver::on_unlock);
+}
+
+void ms::SurfaceStack::set_focused_surface(std::shared_ptr<Surface> const& surface)
+{
+    {
+        RecursiveWriteLock lg(guard);
+        focus_surface = surface;
+    }
+
+    update_focused_fullscreen_tracking(surface);
+}
+
+void ms::SurfaceStack::update_focused_fullscreen_tracking(std::shared_ptr<Surface> const& surface)
+{
+    bool changed = false;
+    {
+        RecursiveWriteLock lg(guard);
+
+        auto old_fullscreen = focused_fullscreen_surface.lock();
+        std::shared_ptr<Surface> new_fullscreen;
+
+        if (surface && surface->state() == mir_window_state_fullscreen)
+        {
+            new_fullscreen = surface;
+        }
+
+        if (old_fullscreen != new_fullscreen)
+        {
+            focused_fullscreen_surface = new_fullscreen;
+            changed = true;
+
+            // Clear the filter list when fullscreen state changes
+            above_surfaces_to_filter.clear();
+
+            // If entering fullscreen, capture current above layer surfaces to filter
+            if (new_fullscreen)
+            {
+                mir::log_debug("Capturing above layer surfaces for fullscreen filtering");
+                for (auto const& layer : surface_layers)
+                {
+                    for (auto const& surf : layer)
+                    {
+                        if (surf->depth_layer() == mir_depth_layer_above)
+                        {
+                            above_surfaces_to_filter.insert(surf.get());
+                            mir::log_debug("Will filter above layer surface: %s", surf->name().c_str());
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Trigger scene update to refresh rendering/input routing
+    // Must be called outside the lock to avoid deadlock
+    if (changed)
+    {
+        emit_scene_changed();
+    }
+}
+
+auto ms::SurfaceStack::get_focused_surface() const -> std::shared_ptr<Surface>
+{
+    RecursiveReadLock lg(guard);
+    return focus_surface.lock();
 }

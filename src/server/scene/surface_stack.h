@@ -87,7 +87,9 @@ public:
     virtual ~SurfaceStack() noexcept(true);
 
     // From Scene
-    compositor::SceneElementSequence scene_elements_for(compositor::CompositorID id) override;
+    compositor::SceneElementSequence scene_elements_for(
+        compositor::CompositorID id,
+        geometry::Rectangle const& output_area) override;
     void register_compositor(compositor::CompositorID id) override;
     void unregister_compositor(compositor::CompositorID id) override;
 
@@ -113,6 +115,12 @@ public:
     void add_observer(std::shared_ptr<Observer> const& observer) override;
     void remove_observer(std::weak_ptr<Observer> const& observer) override;
 
+    /// Update the focused fullscreen surface for per-output layer filtering
+    void set_focused_surface(std::shared_ptr<Surface> const& surface);
+    /// Update fullscreen tracking based on current focused surface state
+    void update_focused_fullscreen_tracking(std::shared_ptr<Surface> const& surface);
+    /// Get the currently focused surface
+    auto get_focused_surface() const -> std::shared_ptr<Surface>;
     auto stacking_order_of(SurfaceSet const& surfaces) const -> SurfaceList override;
     auto screen_is_locked() const -> bool override;
 
@@ -169,6 +177,10 @@ private:
     Observers observers;
     /// If not expired the screen is locked (and only surfaces that appear on the lock screen should be shown)
     std::atomic<bool> is_locked = false;
+    std::weak_ptr<Surface> focused_fullscreen_surface;
+    std::weak_ptr<Surface> focus_surface;
+    /// Set of above-layer surfaces that existed when fullscreen was activated (to be filtered)
+    std::set<Surface*> above_surfaces_to_filter;
     std::shared_ptr<SurfaceObserver> surface_observer;
     SessionLockObserverMultiplexer multiplexer;
 };

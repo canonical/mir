@@ -52,7 +52,7 @@ struct BasicScreenShooter : Test
 {
     BasicScreenShooter()
     {
-        ON_CALL(*scene, scene_elements_for(_)).WillByDefault(Return(scene_elements));
+        ON_CALL(*scene, scene_elements_for(_, _)).WillByDefault(Return(scene_elements));
         ON_CALL(*renderer_factory, create_renderer_for(_,_)).WillByDefault(
                 [this](auto output_surface, auto)
                 {
@@ -164,7 +164,7 @@ TEST_F(BasicScreenShooter, renders_scene_elements)
             callback.Call(time);
         });
     InSequence seq;
-    EXPECT_CALL(*scene, scene_elements_for(_)).WillOnce(Return(scene_elements));
+    EXPECT_CALL(*scene, scene_elements_for(_, _)).WillOnce(Return(scene_elements));
     EXPECT_THAT(renderables.size(), Gt(0));
     EXPECT_CALL(*next_renderer, render(Eq(renderables)));
     EXPECT_CALL(callback, Call(std::make_optional(clock->now())));
@@ -178,7 +178,7 @@ TEST_F(BasicScreenShooter, render_curor_when_overlay_cursor_is_true)
             callback.Call(time);
         });
     InSequence seq;
-    EXPECT_CALL(*scene, scene_elements_for(_)).WillOnce(Return(scene_elements));
+    EXPECT_CALL(*scene, scene_elements_for(_, _)).WillOnce(Return(scene_elements));
     auto const cursor_renderable = std::make_shared<mtd::StubRenderable>();
     EXPECT_CALL(*cursor, renderable()).WillOnce(Return(cursor_renderable));
     auto renderables_with_cursor = renderables;
@@ -214,7 +214,7 @@ TEST_F(BasicScreenShooter, graceful_failure_on_zero_sized_buffer)
 
 TEST_F(BasicScreenShooter, throw_in_scene_elements_for_causes_graceful_failure)
 {
-    ON_CALL(*scene, scene_elements_for(_)).WillByDefault(Invoke([](auto) -> mc::SceneElementSequence
+    ON_CALL(*scene, scene_elements_for(_, _)).WillByDefault(Invoke([](auto, auto) -> mc::SceneElementSequence
         {
             throw std::runtime_error{"throw in scene_elements_for()!"};
         }));
