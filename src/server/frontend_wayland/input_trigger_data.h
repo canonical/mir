@@ -197,8 +197,6 @@ private:
 
 struct InputTriggerData
 {
-    using Token = std::string;
-
     InputTriggerData(
         std::shared_ptr<shell::TokenAuthority> const& ta, std::shared_ptr<input::CompositeEventFilter> const& cef) :
         ta{ta},
@@ -268,6 +266,8 @@ struct InputTriggerData
     }
 
 private:
+    using Token = std::string;
+
     template <typename T> class BoundedQueue
     {
     public:
