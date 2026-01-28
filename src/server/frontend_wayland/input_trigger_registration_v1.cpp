@@ -45,13 +45,9 @@ class InputTriggerRegistrationManagerV1 : public wayland::InputTriggerRegistrati
 public:
     InputTriggerRegistrationManagerV1(
         wl_display* display,
-        std::shared_ptr<mir::Synchronised<InputTriggerData>> const& itd,
-        std::shared_ptr<msh::TokenAuthority> const& ta,
-        std::shared_ptr<mi::CompositeEventFilter> const& cef) :
+        std::shared_ptr<mir::Synchronised<InputTriggerData>> const& itd) :
         Global{display, Version<1>{}},
-        itd{itd},
-        ta{ta},
-        cef{cef}
+        itd{itd}
     {
     }
 
@@ -60,13 +56,9 @@ public:
     public:
         Instance(
             wl_resource* new_ext_input_trigger_registration_manager_v1,
-            std::shared_ptr<mir::Synchronised<InputTriggerData>> const& itd,
-            std::shared_ptr<msh::TokenAuthority> const& token_authority,
-            std::shared_ptr<input::CompositeEventFilter> const& cef) :
+            std::shared_ptr<mir::Synchronised<InputTriggerData>> const& itd) :
             wayland::InputTriggerRegistrationManagerV1{new_ext_input_trigger_registration_manager_v1, Version<1>{}},
-            itd{itd},
-            ta{token_authority},
-            cef{cef}
+            itd{itd}
         {
         }
 
@@ -84,13 +76,11 @@ public:
 
     void bind(wl_resource* new_ext_input_trigger_registration_manager_v1) override
     {
-        new Instance{new_ext_input_trigger_registration_manager_v1, itd, ta, cef};
+        new Instance{new_ext_input_trigger_registration_manager_v1, itd};
     }
 
 private:
     std::shared_ptr<mir::Synchronised<InputTriggerData>> const itd;
-    std::shared_ptr<msh::TokenAuthority> const ta;
-    std::shared_ptr<input::CompositeEventFilter> const cef;
 };
 
 KeyboardEventFilter::KeyboardEventFilter(
@@ -339,16 +329,8 @@ auto KeyboardEventFilter::is_same_trigger(wayland::InputTriggerV1 const* other) 
     return false;
 }
 
-ActionControl::ActionControl(
-    std::shared_ptr<mir::Synchronised<InputTriggerData>> const& itd,
-    std::shared_ptr<msh::TokenAuthority> const& ta,
-    std::shared_ptr<mi::CompositeEventFilter> const& cef,
-    std::string_view token,
-    struct wl_resource* id) :
+ActionControl::ActionControl(std::string_view token, struct wl_resource* id) :
     mir::wayland::InputTriggerActionControlV1{id, Version<1>{}},
-    itd{itd},
-    ta{ta},
-    cef{cef},
     token{token}
 {
 }
@@ -445,47 +427,17 @@ void InputTriggerRegistrationManagerV1::Instance::get_action_control(std::string
     auto const token = ta->issue_token(
         [itd = itd](auto const& token)
         {
-            // If the token becomes invalid before an action is associated with
-            // it, we should clean up the action control object.
-            // When the client tries obtaining the action object using the token,
-            // they will get an `unavailable` event.
-            auto const itd_ = itd->lock();
-            auto const& actions = itd_->actions;
-            auto& action_controls = itd_->action_controls;
-            auto& revoked_tokens = itd_->revoked_tokens;
-
-            auto const token_string = std::string{token};
-            if(!actions.contains(token_string))
-                action_controls.erase(token_string);
-
-            revoked_tokens.enqueue(token_string);
+            itd->lock()->token_revoked(std::string{token});
         });
 
     auto const token_string = static_cast<std::string>(token);
-    auto const action_control = new ActionControl{itd, ta, cef, token_string, id};
+    itd->lock()->add_new_action_control(token_string, id);
 
-    itd->lock()->action_controls.insert({token_string, wayland::make_weak(action_control)});
-
-    // Tell the client that the action has been successfully registered.
-    // They then should call
-    // `InputTriggerActionManagerV1::get_input_trigger_action` using the
-    // token we supply here.
-    action_control->send_done_event(token_string);
 }
 
 auto InputTriggerRegistrationManagerV1::Instance::has_trigger(wayland::InputTriggerV1 const* trigger) const -> bool
 {
-    auto const itd_ = itd->lock();
-    auto& actions = itd_->actions;
-    auto& action_controls = itd_->action_controls;
-
-    // Do some housekeeping
-    std::erase_if(actions, [](auto const& pair) { return !pair.second; });
-    std::erase_if(action_controls, [](auto const& pair) { return !pair.second; });
-
-    // All elements are should be valid now
-    return std::ranges::any_of(
-        actions, [trigger](auto const pair) { return pair.second.value().has_trigger(trigger); });
+    return itd->lock()->has_trigger(trigger);
 }
 
 // Base KeyboardTrigger implementation
@@ -546,12 +498,10 @@ auto KeyboardTrigger::to_mir_modifiers(uint32_t protocol_modifiers, uint32_t key
 
 auto create_input_trigger_registration_manager_v1(
     wl_display* display,
-    std::shared_ptr<mir::Synchronised<InputTriggerData>> const& itd,
-    std::shared_ptr<msh::TokenAuthority> const& ta,
-    std::shared_ptr<mi::CompositeEventFilter> const& cef)
+    std::shared_ptr<mir::Synchronised<InputTriggerData>> const& itd)
     -> std::shared_ptr<wayland::InputTriggerRegistrationManagerV1::Global>
 {
-    return std::make_shared<mf::InputTriggerRegistrationManagerV1>(display, itd, ta, cef);
+    return std::make_shared<mf::InputTriggerRegistrationManagerV1>(display, itd);
 }
 
 // KeyboardSymTrigger implementation

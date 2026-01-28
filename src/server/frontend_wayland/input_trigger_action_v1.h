@@ -25,22 +25,12 @@
 
 namespace mir
 {
-namespace shell
-{
-class TokenAuthority;
-}
-namespace input
-{
-class CompositeEventFilter;
-}
 namespace frontend
 {
 class InputTriggerData;
 
 auto create_input_trigger_action_manager_v1(
-    wl_display*, std::shared_ptr<mir::Synchronised<InputTriggerData>> const& itd,
-    std::shared_ptr<shell::TokenAuthority> const& ta,
-    std::shared_ptr<input::CompositeEventFilter> const& cef)
+    wl_display*, std::shared_ptr<mir::Synchronised<InputTriggerData>> const& itd)
     -> std::shared_ptr<wayland::InputTriggerActionManagerV1::Global>;
 }
 }

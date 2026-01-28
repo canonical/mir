@@ -19,9 +19,10 @@
 
 #include "ext-input-trigger-action-v1_wrapper.h"
 #include "input_trigger_registration_v1.h"
-#include "mir/input/composite_event_filter.h"
 
+#include <mir/input/composite_event_filter.h>
 #include <mir/input/event_filter.h>
+#include <mir/shell/token_authority.h>
 #include <mir/wayland/weak.h>
 
 #include <algorithm>
@@ -173,12 +174,7 @@ private:
 class ActionControl : public wayland::InputTriggerActionControlV1
 {
 public:
-    ActionControl(
-        std::shared_ptr<mir::Synchronised<frontend::InputTriggerData>> const& itd,
-        std::shared_ptr<shell::TokenAuthority> const& ta,
-        std::shared_ptr<input::CompositeEventFilter> const& cef,
-        std::string_view token,
-        struct wl_resource* id);
+    ActionControl(std::string_view token, struct wl_resource* id);
 
     void add_input_trigger_event(struct wl_resource* trigger) override;
     void drop_input_trigger_event(struct wl_resource* trigger) override;
@@ -190,10 +186,6 @@ private:
     void add_trigger_immediate(wayland::InputTriggerV1 const* trigger);
     void drop_trigger_pending(wayland::InputTriggerV1 const* trigger);
     void drop_trigger_immediate(wayland::InputTriggerV1 const* trigger);
-
-    std::shared_ptr<mir::Synchronised<frontend::InputTriggerData>> const itd;
-    std::shared_ptr<shell::TokenAuthority> const ta;
-    std::shared_ptr<input::CompositeEventFilter> const cef;
 
     // Keeps track of the triggers added or removed while we don't have a valid action
     // If we have an active action, we immediately add or drop the triggers.
@@ -207,6 +199,73 @@ struct InputTriggerData
 {
     using Token = std::string;
 
+    InputTriggerData(
+        std::shared_ptr<shell::TokenAuthority> const& ta, std::shared_ptr<input::CompositeEventFilter> const& cef) :
+        ta{ta},
+        cef{cef},
+        revoked_tokens{BoundedQueue<Token>{32}},
+        keyboard_state{std::make_shared<KeyboardStateTracker>()}
+    {
+    }
+
+    auto add_new_action(std::string const& token, struct wl_resource* id) -> bool
+    {
+        if (revoked_tokens.contains(token))
+        {
+            auto const action = InputTriggerActionV1::dummy(id);
+            action->send_unavailable_event();
+            return true;
+        }
+
+        if (auto const it = action_controls.find(token); it != action_controls.end())
+        {
+            auto const action = wayland::make_weak(new InputTriggerActionV1(ta, cef, keyboard_state, id));
+
+            auto& [_, action_control] = *it;
+            if (action_control)
+                action_control.value().install_action(action);
+
+            actions.insert({token, action});
+            return true;
+        }
+
+        return false;
+    }
+
+    // If the token becomes invalid before an action is associated with
+    // it, we should clean up the action control object.
+    // When the client tries obtaining the action object using the token,
+    // they will get an `unavailable` event.
+    void token_revoked(std::string const& token)
+    {
+        if (!actions.contains(token))
+            action_controls.erase(token);
+
+        revoked_tokens.enqueue(token);
+    }
+
+    void add_new_action_control(std::string const& token, struct wl_resource* id)
+    {
+        auto const action_control = wayland::make_weak(new ActionControl{token, id});
+        action_controls.insert({token, action_control});
+    }
+
+    void erase_expired_entries()
+    {
+        std::erase_if(actions, [](auto const& pair) { return !pair.second; });
+        std::erase_if(action_controls, [](auto const& pair) { return !pair.second; });
+    }
+
+    auto has_trigger(wayland::InputTriggerV1 const* trigger) -> bool
+    {
+        erase_expired_entries();
+
+        // All elements are should be valid now
+        return std::ranges::any_of(
+            actions, [trigger](auto const pair) { return pair.second.value().has_trigger(trigger); });
+    }
+
+private:
     template <typename T> class BoundedQueue
     {
     public:
@@ -240,11 +299,8 @@ struct InputTriggerData
         std::deque<T> queue;
     };
 
-    InputTriggerData() :
-        revoked_tokens{BoundedQueue<Token>{32}},
-        keyboard_state{std::make_shared<KeyboardStateTracker>()}
-    {
-    }
+    std::shared_ptr<shell::TokenAuthority> const ta;
+    std::shared_ptr<input::CompositeEventFilter> const cef;
 
     std::unordered_map<Token, wayland::Weak<ActionControl>> action_controls;
     std::unordered_map<Token, wayland::Weak<InputTriggerActionV1>> actions;
