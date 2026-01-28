@@ -709,5 +709,6 @@ MIR_COMMON_2.26 {
 global:
   extern "C++" {
     mir::errno_to_cstr*;
+    mir::input::expand_modifiers*;
   };
 } MIR_COMMON_INTERNAL_2.24;
