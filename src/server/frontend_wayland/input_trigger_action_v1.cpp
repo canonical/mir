@@ -19,85 +19,12 @@
 
 #include <mir/wayland/protocol_error.h>
 
+#include <algorithm>
+
 namespace mir
 {
 namespace frontend
 {
-
-InputTriggerActionV1::InputTriggerActionV1(
-    std::shared_ptr<shell::TokenAuthority> const& ta,
-    std::shared_ptr<input::CompositeEventFilter> const& cef,
-    std::shared_ptr<KeyboardStateTracker> const& keyboard_state,
-    wl_resource* id) :
-    wayland::InputTriggerActionV1{id, Version<1>{}},
-    ta{ta},
-    cef{cef},
-    keyboard_state{keyboard_state}
-{
-}
-
-auto InputTriggerActionV1::dummy(wl_resource* id) -> InputTriggerActionV1*
-{
-    return new InputTriggerActionV1{id};
-}
-
-auto InputTriggerActionV1::has_trigger(wayland::InputTriggerV1 const* trigger) const -> bool
-{
-    return std::ranges::any_of(
-        trigger_filters, [trigger](auto const& trigger_filter) { return trigger_filter->is_same_trigger(trigger); });
-}
-
-void InputTriggerActionV1::add_trigger(wayland::InputTriggerV1 const* trigger)
-{
-    if (auto const* keyboard_sym_trigger = KeyboardSymTrigger::from(trigger))
-    {
-        auto const filter = std::make_shared<KeyboardEventFilter>(
-            wayland::make_weak<wayland::InputTriggerActionV1 const>(this),
-            wayland::make_weak<KeyboardTrigger const>(keyboard_sym_trigger),
-            ta,
-            keyboard_state);
-
-        trigger_filters.push_back(filter);
-        cef->prepend(filter);
-    }
-    else if (auto const* keyboard_code_trigger = KeyboardCodeTrigger::from(trigger))
-    {
-        auto const filter = std::make_shared<KeyboardEventFilter>(
-            wayland::make_weak<wayland::InputTriggerActionV1 const>(this),
-            wayland::make_weak<KeyboardTrigger const>(keyboard_code_trigger),
-            ta,
-            keyboard_state);
-
-        trigger_filters.push_back(filter);
-        cef->prepend(filter);
-    }
-}
-
-void InputTriggerActionV1::drop_trigger(wayland::InputTriggerV1 const* trigger)
-{
-    if (KeyboardSymTrigger::from(trigger) || KeyboardCodeTrigger::from(trigger))
-    {
-        std::erase_if(
-            trigger_filters,
-            [&](auto const& filter)
-            {
-                if (auto const kf = std::dynamic_pointer_cast<KeyboardEventFilter>(filter))
-                {
-                    return kf->is_same_trigger(trigger);
-                }
-                return false;
-            });
-    }
-}
-
-InputTriggerActionV1::InputTriggerActionV1(wl_resource* id) :
-    wayland::InputTriggerActionV1{id, Version<1>{}},
-    ta{nullptr},
-    cef{nullptr},
-    keyboard_state{nullptr}
-{
-}
-
 class InputTriggerActionManagerV1 : public wayland::InputTriggerActionManagerV1::Global
 {
 public:

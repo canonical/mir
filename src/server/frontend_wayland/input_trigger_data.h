@@ -25,7 +25,6 @@
 #include <mir/shell/token_authority.h>
 #include <mir/wayland/weak.h>
 
-#include <algorithm>
 #include <deque>
 #include <unordered_map>
 #include <unordered_set>
@@ -198,72 +197,19 @@ private:
 struct InputTriggerData
 {
     InputTriggerData(
-        std::shared_ptr<shell::TokenAuthority> const& ta, std::shared_ptr<input::CompositeEventFilter> const& cef) :
-        ta{ta},
-        cef{cef},
-        revoked_tokens{BoundedQueue<Token>{32}},
-        keyboard_state{std::make_shared<KeyboardStateTracker>()}
-    {
-    }
+        std::shared_ptr<shell::TokenAuthority> const& ta, std::shared_ptr<input::CompositeEventFilter> const& cef);
 
-    auto add_new_action(std::string const& token, struct wl_resource* id) -> bool
-    {
-        std::unique_lock lock{mutex};
-
-        if (revoked_tokens.contains(token))
-        {
-            auto const action = InputTriggerActionV1::dummy(id);
-            action->send_unavailable_event();
-            return true;
-        }
-
-        if (auto const it = action_controls.find(token); it != action_controls.end())
-        {
-            auto const action = wayland::make_weak(new InputTriggerActionV1(ta, cef, keyboard_state, id));
-
-            auto& [_, action_control] = *it;
-            if (action_control)
-                action_control.value().install_action(action);
-
-            actions.insert({token, action});
-            return true;
-        }
-
-        return false;
-    }
+    auto add_new_action(std::string const& token, struct wl_resource* id) -> bool;
 
     // If the token becomes invalid before an action is associated with
     // it, we should clean up the action control object.
     // When the client tries obtaining the action object using the token,
     // they will get an `unavailable` event.
-    void token_revoked(std::string const& token)
-    {
-        std::unique_lock lock{mutex};
+    void token_revoked(std::string const& token);
 
-        if (!actions.contains(token))
-            action_controls.erase(token);
+    void add_new_action_control(std::string const& token, struct wl_resource* id);
 
-        revoked_tokens.enqueue(token);
-    }
-
-    void add_new_action_control(std::string const& token, struct wl_resource* id)
-    {
-        std::unique_lock lock{mutex};
-
-        auto const action_control = wayland::make_weak(new ActionControl{token, id});
-        action_controls.insert({token, action_control});
-    }
-
-    auto has_trigger(wayland::InputTriggerV1 const* trigger) -> bool
-    {
-        std::unique_lock lock{mutex};
-
-        erase_expired_entries();
-
-        // All elements are should be valid now
-        return std::ranges::any_of(
-            actions, [trigger](auto const pair) { return pair.second.value().has_trigger(trigger); });
-    }
+    auto has_trigger(wayland::InputTriggerV1 const* trigger) -> bool;
 
 private:
     using Token = std::string;
@@ -301,11 +247,7 @@ private:
         std::deque<T> queue;
     };
 
-    void erase_expired_entries()
-    {
-        std::erase_if(actions, [](auto const& pair) { return !pair.second; });
-        std::erase_if(action_controls, [](auto const& pair) { return !pair.second; });
-    }
+    void erase_expired_entries();
 
     std::mutex mutex;
 
