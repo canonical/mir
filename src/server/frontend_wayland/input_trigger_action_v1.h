@@ -19,8 +19,6 @@
 
 #include "ext-input-trigger-action-v1_wrapper.h"
 
-#include <mir/synchronised.h>
-
 #include <memory>
 
 namespace mir
@@ -30,7 +28,7 @@ namespace frontend
 class InputTriggerData;
 
 auto create_input_trigger_action_manager_v1(
-    wl_display*, std::shared_ptr<mir::Synchronised<InputTriggerData>> const& itd)
+    wl_display*, std::shared_ptr<InputTriggerData> const& itd)
     -> std::shared_ptr<wayland::InputTriggerActionManagerV1::Global>;
 }
 }

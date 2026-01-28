@@ -45,7 +45,7 @@ class InputTriggerRegistrationManagerV1 : public wayland::InputTriggerRegistrati
 public:
     InputTriggerRegistrationManagerV1(
         wl_display* display,
-        std::shared_ptr<mir::Synchronised<InputTriggerData>> const& itd) :
+        std::shared_ptr<InputTriggerData> const& itd) :
         Global{display, Version<1>{}},
         itd{itd}
     {
@@ -56,7 +56,7 @@ public:
     public:
         Instance(
             wl_resource* new_ext_input_trigger_registration_manager_v1,
-            std::shared_ptr<mir::Synchronised<InputTriggerData>> const& itd) :
+            std::shared_ptr<InputTriggerData> const& itd) :
             wayland::InputTriggerRegistrationManagerV1{new_ext_input_trigger_registration_manager_v1, Version<1>{}},
             itd{itd}
         {
@@ -69,7 +69,7 @@ public:
     private:
         auto has_trigger(wayland::InputTriggerV1 const*) const -> bool;
 
-        std::shared_ptr<mir::Synchronised<InputTriggerData>> const itd;
+        std::shared_ptr<InputTriggerData> const itd;
         std::shared_ptr<msh::TokenAuthority> const ta;
         std::shared_ptr<input::CompositeEventFilter> const cef;
     };
@@ -80,7 +80,7 @@ public:
     }
 
 private:
-    std::shared_ptr<mir::Synchronised<InputTriggerData>> const itd;
+    std::shared_ptr<InputTriggerData> const itd;
 };
 
 KeyboardEventFilter::KeyboardEventFilter(
@@ -427,17 +427,17 @@ void InputTriggerRegistrationManagerV1::Instance::get_action_control(std::string
     auto const token = ta->issue_token(
         [itd = itd](auto const& token)
         {
-            itd->lock()->token_revoked(std::string{token});
+            itd->token_revoked(std::string{token});
         });
 
     auto const token_string = static_cast<std::string>(token);
-    itd->lock()->add_new_action_control(token_string, id);
+    itd->add_new_action_control(token_string, id);
 
 }
 
 auto InputTriggerRegistrationManagerV1::Instance::has_trigger(wayland::InputTriggerV1 const* trigger) const -> bool
 {
-    return itd->lock()->has_trigger(trigger);
+    return itd->has_trigger(trigger);
 }
 
 // Base KeyboardTrigger implementation
@@ -498,7 +498,7 @@ auto KeyboardTrigger::to_mir_modifiers(uint32_t protocol_modifiers, uint32_t key
 
 auto create_input_trigger_registration_manager_v1(
     wl_display* display,
-    std::shared_ptr<mir::Synchronised<InputTriggerData>> const& itd)
+    std::shared_ptr<InputTriggerData> const& itd)
     -> std::shared_ptr<wayland::InputTriggerRegistrationManagerV1::Global>
 {
     return std::make_shared<mf::InputTriggerRegistrationManagerV1>(display, itd);

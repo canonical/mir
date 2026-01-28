@@ -322,8 +322,8 @@ mf::WaylandConnector::WaylandConnector(
         std::move(drag_icon_controller),
         std::move(pointer_input_dispatcher));
 
-    auto const input_trigger_data = std::make_shared<mir::Synchronised<frontend::InputTriggerData>>(
-        frontend::InputTriggerData{token_authority, composite_event_filter});
+    auto const input_trigger_data =
+        std::make_shared<frontend::InputTriggerData>(token_authority, composite_event_filter);
 
     extensions->init(WaylandExtensions::Context{
         display.get(),
