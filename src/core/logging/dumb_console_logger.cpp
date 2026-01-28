@@ -28,3 +28,7 @@ void ml::DumbConsoleLogger::log(Severity severity,
 
     format_message(out, severity, message, component);
 }
+
+mir::logging::DumbConsoleLogger::~DumbConsoleLogger()
+{
+}

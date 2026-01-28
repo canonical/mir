@@ -51,5 +51,6 @@ target_include_directories(mirsharedsharedlibrary
 
 target_link_libraries(mirsharedsharedlibrary
   PUBLIC
+    mircore
     dl
 )

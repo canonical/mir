@@ -103,7 +103,7 @@ jobs:
 
         sudo --preserve-env apt-get build-dep --yes ./
 
-        echo PATH=${PATH}:/usr/lib/rust-1.82/bin >> $GITHUB_ENV
+        echo PATH=/usr/lib/rust-1.82/bin:${PATH} >> $GITHUB_ENV
 
     - name: Configure
       run: >

@@ -34,7 +34,9 @@
 #include <mir/test/doubles/fake_display.h>
 #include <mir/test/doubles/mock_gl_rendering_provider.h>
 #include <mir/test/doubles/mock_udev_device.h>
+#if defined(MIR_BUILD_PLATFORM_X11)
 #include <mir/test/doubles/mock_x11.h>
+#endif
 #include <mir/test/doubles/null_platform.h>
 #include <mir/test/doubles/stub_console_services.h>
 #include <mir_test_framework/temporary_environment_value.h>
@@ -609,6 +611,7 @@ public:
             .WillByDefault(Return(reinterpret_cast<GLubyte const*>("Not A Software Renderer, Honest!")));
     }
 
+#if defined(MIR_BUILD_PLATFORM_X11)
     void enable_host_x11()
     {
         using namespace testing;
@@ -625,6 +628,7 @@ public:
                     return reply;
                 });
     }
+#endif
 
     void set_display_libs_option(char const* value)
     {
@@ -636,10 +640,12 @@ public:
         temporary_env.emplace_back(std::make_unique<mtf::TemporaryEnvironmentValue>("MIR_SERVER_VIRTUAL_OUTPUT", "1280x1024"));
     }
 
+#if defined(MIR_BUILD_PLATFORM_WAYLAND)
     void enable_host_wayland()
     {
         temporary_env.push_back(std::make_unique<mtf::TemporaryEnvironmentValue>("MIR_SERVER_WAYLAND_HOST", "WAYLAND-0"));
      }
+#endif
 
     auto the_options() -> mir::options::Option const&
     {
@@ -693,8 +699,10 @@ private:
     std::vector<std::unique_ptr<mtf::TemporaryEnvironmentValue>> temporary_env;
     mtf::UdevEnvironment udev_env;
 
-    // We unconditionally need an X11 mock as the platform unconditionally calls libX11 functions to probe
+#if defined(MIR_BUILD_PLATFORM_X11)
+    // MockX11 is needed to test X11 platform probing when X11 platform support is built
     testing::NiceMock<mtd::MockX11> x11;
+#endif
     testing::NiceMock<mtd::MockEGL> egl;
     testing::NiceMock<mtd::MockGL> gl;
 #if defined(MIR_BUILD_PLATFORM_GBM_KMS) || defined(MIR_BUILD_PLATFORM_ATOMIC_KMS)
@@ -810,6 +818,7 @@ TEST_F(FullProbeStack, select_display_loads_gbm_platform_for_each_kms_device)
     }
 }
 
+#if defined(MIR_BUILD_PLATFORM_X11)
 TEST_F(FullProbeStack, select_display_modules_loads_x11_platform_even_when_gbm_is_available)
 {
     using namespace testing;
@@ -854,7 +863,9 @@ TEST_F(FullProbeStack, when_all_of_gbm_and_x11_and_virtual_are_available_select_
     // We also expect the Virtual platform to load
     EXPECT_THAT(devices, Contains(Pair(_, ModuleNameMatches(StrEq("mir:virtual")))));
 }
+#endif
 
+#if defined(MIR_BUILD_PLATFORM_WAYLAND)
 TEST_F(FullProbeStack, select_display_modules_loads_wayland_platform_even_when_gbm_is_available)
 {
     using namespace testing;
@@ -899,7 +910,9 @@ TEST_F(FullProbeStack, when_all_of_gbm_and_wayland_and_virtual_are_available_sel
     // We also expect the Virtual platform to load
     EXPECT_THAT(devices, Contains(Pair(_, ModuleNameMatches(StrEq("mir:virtual")))));
 }
+#endif
 
+#if defined(MIR_BUILD_PLATFORM_X11) && defined(MIR_BUILD_PLATFORM_WAYLAND)
 TEST_F(FullProbeStack, when_both_wayland_and_x11_are_supported_x11_is_chosen)
 {
     using namespace testing;
@@ -912,7 +925,9 @@ TEST_F(FullProbeStack, when_both_wayland_and_x11_are_supported_x11_is_chosen)
     EXPECT_THAT(devices, Not(Contains(Pair(_, ModuleNameMatches(StrEq("mir:wayland"))))));
     EXPECT_THAT(devices, Contains(Pair(_, ModuleNameMatches(StrEq("mir:x11")))));
 }
+#endif
 
+#if defined(MIR_BUILD_PLATFORM_X11) && defined(MIR_BUILD_PLATFORM_WAYLAND)
 TEST_F(FullProbeStack, instantiates_all_manually_selected_platforms)
 {
     using namespace testing;
@@ -1003,7 +1018,9 @@ TEST_F(FullProbeStack, instantiates_all_manually_selected_platforms_and_virtual_
             ));
     }
 }
+#endif
 
+#if defined(MIR_BUILD_PLATFORM_X11) && defined(MIR_BUILD_PLATFORM_WAYLAND)
 TEST_F(FullProbeStack, selects_only_gbm_when_manually_specified_even_if_x11_and_wayland_are_supported)
 {
     using namespace testing;
@@ -1078,6 +1095,7 @@ TEST_F(FullProbeStack, manually_selecting_only_virtual_platform_with_required_op
     ASSERT_THAT(devices.size(), Eq(1));
     EXPECT_THAT(devices.front(), Pair(_, ModuleNameMatches(StrEq("mir:virtual"))));
 }
+#endif
 
 TEST_F(FullProbeStack, gbm_kms_is_not_selected_for_nvidia_driver_by_default)
 {
