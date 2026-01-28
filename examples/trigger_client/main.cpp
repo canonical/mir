@@ -19,8 +19,10 @@
  * It prints specific messages for begin/end events for each trigger.
  */
 
-static ext_input_trigger_registration_manager_v1* registration_manager = nullptr;
-static ext_input_trigger_action_manager_v1* action_manager = nullptr;
+namespace
+{
+ext_input_trigger_registration_manager_v1* registration_manager = nullptr;
+ext_input_trigger_action_manager_v1* action_manager = nullptr;
 
 struct ActionContext
 {
@@ -29,7 +31,7 @@ struct ActionContext
     std::string end_msg;
 };
 
-static void registry_global(
+void registry_global(
     void* /*data*/, struct wl_registry* registry, uint32_t name, char const* interface, uint32_t version)
 {
     if (strcmp(interface, "ext_input_trigger_registration_manager_v1") == 0)
@@ -44,55 +46,66 @@ static void registry_global(
     }
 }
 
-static void registry_global_remove(void*, struct wl_registry*, uint32_t)
+void registry_global_remove(void*, struct wl_registry*, uint32_t)
 {
 }
 
-static wl_registry_listener const registry_listener = {registry_global, registry_global_remove};
-
-static void trigger_done(void* /*data*/, ext_input_trigger_v1* /*trigger*/)
+void trigger_done(void* /*data*/, ext_input_trigger_v1* /*trigger*/)
 {
     // std::cout << "Trigger registration done\n" << std::flush;
 }
 
-static void trigger_failed(void* /*data*/, ext_input_trigger_v1* /*trigger*/)
+void trigger_failed(void* /*data*/, ext_input_trigger_v1* /*trigger*/)
 {
     std::cerr << "Trigger registration failed\n" << std::flush;
     std::exit(EXIT_FAILURE);
 }
 
-static ext_input_trigger_v1_listener const trigger_listener = {.done = trigger_done, .failed = trigger_failed};
-
-static void action_begin(
+void action_begin(
     void* data, ext_input_trigger_action_v1* /*action*/, uint32_t /*serial*/, char const* /*token*/)
 {
     auto* ctx = static_cast<ActionContext*>(data);
     std::cout << ctx->begin_msg << "\n" << std::flush;
 }
 
-static void action_end(
+void action_end(
     void* data, ext_input_trigger_action_v1* /*action*/, uint32_t /*serial*/, char const* /*message*/)
 {
     auto* ctx = static_cast<ActionContext*>(data);
     std::cout << ctx->end_msg << "\n" << std::flush;
 }
 
-static void action_unavailable(void* /*data*/, ext_input_trigger_action_v1* /*action*/)
+void action_unavailable(void* /*data*/, ext_input_trigger_action_v1* /*action*/)
 {
     std::cerr << "Action unavailable\n" << std::flush;
 }
 
-static ext_input_trigger_action_v1_listener const action_listener = {
-    .begin = action_begin, .end = action_end, .unavailable = action_unavailable};
-
-static void control_done(void* data, ext_input_trigger_action_control_v1* /*control*/, char const* token)
+void control_done(void* data, ext_input_trigger_action_control_v1* /*control*/, char const* token)
 {
     auto* target_str = static_cast<std::string*>(data);
     std::cerr << "Received token: " << token << '\n';
     *target_str = token;
 }
 
-static ext_input_trigger_action_control_v1_listener const control_listener = {.done = control_done};
+wl_registry_listener const registry_listener = {
+    registry_global,
+    registry_global_remove,
+};
+
+ext_input_trigger_v1_listener const trigger_listener = {
+    .done = trigger_done,
+    .failed = trigger_failed,
+};
+
+ext_input_trigger_action_v1_listener const action_listener = {
+    .begin = action_begin,
+    .end = action_end,
+    .unavailable = action_unavailable,
+};
+
+ext_input_trigger_action_control_v1_listener const control_listener = {
+    .done = control_done,
+};
 
 void register_trigger(
     wl_display* display,
@@ -138,6 +151,7 @@ void register_trigger(
     }
 
     ext_input_trigger_action_control_v1_destroy(control);
+}
 }
 
 void register_keycode_trigger(
