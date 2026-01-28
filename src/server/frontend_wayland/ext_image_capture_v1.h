@@ -29,6 +29,14 @@ namespace compositor
 {
 class ScreenShooterFactory;
 }
+namespace input
+{
+class CursorObserverMultiplexer;
+}
+namespace time
+{
+class Clock;
+}
 namespace frontend
 {
 class SurfaceStack;
@@ -41,7 +49,10 @@ auto create_ext_output_image_capture_source_manager_v1(
 -> std::shared_ptr<wayland::OutputImageCaptureSourceManagerV1::Global>;
 
 auto create_ext_image_copy_capture_manager_v1(
-    wl_display* display)
+    wl_display* display,
+    std::shared_ptr<Executor> const& wayland_executor,
+    std::shared_ptr<input::CursorObserverMultiplexer> const& cursor_observer_multiplexer,
+    std::shared_ptr<time::Clock> const& clock)
 -> std::shared_ptr<wayland::ImageCopyCaptureManagerV1::Global>;
 
 }
