@@ -7,8 +7,8 @@
 #include <wayland-client.h>
 #include <xkbcommon/xkbcommon-keysyms.h>
 
-#include "ext-input-trigger-registration-v1-client-protocol.h"
 #include "ext-input-trigger-action-v1-client-protocol.h"
+#include "ext-input-trigger-registration-v1-client-protocol.h"
 
 /*
  * Standalone Wayland client that registers:
@@ -22,7 +22,8 @@
 static ext_input_trigger_registration_manager_v1* registration_manager = nullptr;
 static ext_input_trigger_action_manager_v1* action_manager = nullptr;
 
-struct ActionContext {
+struct ActionContext
+{
     std::string name;
     std::string begin_msg;
     std::string end_msg;
@@ -91,7 +92,7 @@ static void control_done(void* data, ext_input_trigger_action_control_v1* /*cont
     *target_str = token;
 }
 
-static ext_input_trigger_action_control_v1_listener const control_listener = { .done = control_done };
+static ext_input_trigger_action_control_v1_listener const control_listener = {.done = control_done};
 
 void register_trigger(
     wl_display* display,
@@ -103,8 +104,8 @@ void register_trigger(
 {
     std::cout << "Registering " << ctx->name << " trigger...\n";
 
-    *out_trigger = ext_input_trigger_registration_manager_v1_register_keyboard_sym_trigger(
-        registration_manager, modifiers, key);
+    *out_trigger =
+        ext_input_trigger_registration_manager_v1_register_keyboard_sym_trigger(registration_manager, modifiers, key);
 
     ext_input_trigger_v1_add_listener(*out_trigger, &trigger_listener, nullptr);
 
@@ -119,16 +120,20 @@ void register_trigger(
     // Roundtrip to ensure we get the token
     wl_display_roundtrip(display);
 
-    if (token.empty()) {
+    if (token.empty())
+    {
         std::cerr << "Failed to get token for " << ctx->name << "\n";
         return;
     }
 
     *out_action = ext_input_trigger_action_manager_v1_get_input_trigger_action(action_manager, token.c_str());
-    if (*out_action) {
+    if (*out_action)
+    {
         std::cout << "Got " << ctx->name << " action\n";
         ext_input_trigger_action_v1_add_listener(*out_action, &action_listener, ctx);
-    } else {
+    }
+    else
+    {
         std::cerr << "Failed to get action for " << ctx->name << "\n";
     }
 
@@ -161,16 +166,20 @@ void register_keycode_trigger(
     // Roundtrip to ensure we get the token
     wl_display_roundtrip(display);
 
-    if (token.empty()) {
+    if (token.empty())
+    {
         std::cerr << "Failed to get token for " << ctx->name << "\n";
         return;
     }
 
     *out_action = ext_input_trigger_action_manager_v1_get_input_trigger_action(action_manager, token.c_str());
-    if (*out_action) {
+    if (*out_action)
+    {
         std::cout << "Got " << ctx->name << " action\n";
         ext_input_trigger_action_v1_add_listener(*out_action, &action_listener, ctx);
-    } else {
+    }
+    else
+    {
         std::cerr << "Failed to get action for " << ctx->name << "\n";
     }
 
@@ -199,19 +208,20 @@ int main(int /*argc*/, char** /*argv*/)
         return EXIT_FAILURE;
     }
 
-    ActionContext ctrl_shift_c_ctx{"CTRL + SHIFT + c (AKA CTRL + C)", "Hello from CTRL + SHIFT + c", "Bye from CTRL + SHIFT + c"};
+    ActionContext ctrl_shift_c_ctx{
+        "CTRL + SHIFT + c (AKA CTRL + C)", "Hello from CTRL + SHIFT + c", "Bye from CTRL + SHIFT + c"};
     ext_input_trigger_v1* ctrl_shift_c_trigger = nullptr;
     ext_input_trigger_action_v1* ctrl_shift_c_action = nullptr;
 
     // Register keyboard sym trigger: Ctrl + Shift + C
     register_trigger(
         display,
-        EXT_INPUT_TRIGGER_REGISTRATION_MANAGER_V1_MODIFIERS_SHIFT | EXT_INPUT_TRIGGER_REGISTRATION_MANAGER_V1_MODIFIERS_CTRL,
+        EXT_INPUT_TRIGGER_REGISTRATION_MANAGER_V1_MODIFIERS_SHIFT |
+            EXT_INPUT_TRIGGER_REGISTRATION_MANAGER_V1_MODIFIERS_CTRL,
         XKB_KEY_C,
         &ctrl_shift_c_ctx,
         &ctrl_shift_c_trigger,
-        &ctrl_shift_c_action
-    );
+        &ctrl_shift_c_action);
 
     ActionContext alt_x_ctx{"ALT + x", "Hello from ALT + x", "Bye from ALT + x"};
     ext_input_trigger_v1* alt_x_trigger = nullptr;
@@ -223,28 +233,23 @@ int main(int /*argc*/, char** /*argv*/)
         XKB_KEY_x,
         &alt_x_ctx,
         &alt_x_trigger,
-        &alt_x_action
-    );
+        &alt_x_action);
 
     // Register keyboard code trigger: Alt + Z (scancode 44)
     // This demonstrates keycode triggers work regardless of layout
     // Scancode 44 is the physical 'Z' key position on QWERTY keyboards
     ActionContext alt_z_ctx{
-        "ALT + Z (scancode 44)",
-        "Hello from ALT + Z (keycode trigger)",
-        "Bye from ALT + Z (keycode trigger)"
-    };
+        "ALT + Z (scancode 44)", "Hello from ALT + Z (keycode trigger)", "Bye from ALT + Z (keycode trigger)"};
     ext_input_trigger_v1* alt_backtick_trigger = nullptr;
     ext_input_trigger_action_v1* alt_backtick_action = nullptr;
 
     register_keycode_trigger(
         display,
         EXT_INPUT_TRIGGER_REGISTRATION_MANAGER_V1_MODIFIERS_ALT,
-        44,  // scancode for Z key position
+        44, // scancode for Z key position
         &alt_z_ctx,
         &alt_backtick_trigger,
-        &alt_backtick_action
-    );
+        &alt_backtick_action);
 
     std::cout << "\nAll triggers registered:\n";
     std::cout << "  - Ctrl+Shift+C (keysym trigger)\n";
@@ -256,12 +261,18 @@ int main(int /*argc*/, char** /*argv*/)
     {
     }
 
-    if (ctrl_shift_c_action) ext_input_trigger_action_v1_destroy(ctrl_shift_c_action);
-    if (ctrl_shift_c_trigger) ext_input_trigger_v1_destroy(ctrl_shift_c_trigger);
-    if (alt_x_action) ext_input_trigger_action_v1_destroy(alt_x_action);
-    if (alt_x_trigger) ext_input_trigger_v1_destroy(alt_x_trigger);
-    if (alt_backtick_action) ext_input_trigger_action_v1_destroy(alt_backtick_action);
-    if (alt_backtick_trigger) ext_input_trigger_v1_destroy(alt_backtick_trigger);
+    if (ctrl_shift_c_action)
+        ext_input_trigger_action_v1_destroy(ctrl_shift_c_action);
+    if (ctrl_shift_c_trigger)
+        ext_input_trigger_v1_destroy(ctrl_shift_c_trigger);
+    if (alt_x_action)
+        ext_input_trigger_action_v1_destroy(alt_x_action);
+    if (alt_x_trigger)
+        ext_input_trigger_v1_destroy(alt_x_trigger);
+    if (alt_backtick_action)
+        ext_input_trigger_action_v1_destroy(alt_backtick_action);
+    if (alt_backtick_trigger)
+        ext_input_trigger_v1_destroy(alt_backtick_trigger);
 
     if (registration_manager)
         ext_input_trigger_registration_manager_v1_destroy(registration_manager);
