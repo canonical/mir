@@ -31,6 +31,7 @@ easier to read.
 @@ -1,10 +1,15 @@
  #include <miral/runner.h>
 +#include <miral/append_keyboard_event_filter.h>
++#include <miral/external_client.h>
  #include <miral/minimal_window_manager.h>
  #include <miral/set_window_management_policy.h>
 +#include <miral/toolkit_event.h>
@@ -50,7 +51,7 @@ This big block of code can be broken down into three parts:
 
 ```diff
 +    std::string terminal_cmd{"kgx"};
-+    miral::ExternalClientLauncher external_client_launcher;
++    ExternalClientLauncher external_client_launcher;
 +
 +    auto const builtin_keybinds = [&](MirKeyboardEvent const* event)
 +        {
