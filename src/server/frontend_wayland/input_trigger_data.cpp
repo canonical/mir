@@ -71,9 +71,6 @@ bool KeyboardStateTracker::protocol_and_event_modifiers_match(
 {
     using ProtocolModifiers = wayland::InputTriggerRegistrationManagerV1::Modifiers;
 
-    // Canonicalise event modifiers to match how Mir represents them elsewhere.
-    event_mods = input::expand_modifiers(event_mods);
-
     MirInputEventModifiers required = 0;
     MirInputEventModifiers allowed = 0;
 
@@ -338,6 +335,7 @@ bool KeyboardEventFilter::handle(MirEvent const& event)
     else if (key_event->action() == mir_keyboard_action_up)
         keyboard_state->on_key_up(key_event->keysym(), key_event->scan_code());
 
+    // Canonicalise event modifiers to match how Mir represents them elsewhere.
     auto const event_mods = input::expand_modifiers(key_event->modifiers());
     auto const modifiers_match = KeyboardStateTracker::protocol_and_event_modifiers_match(trigger.value().modifiers, event_mods);
 
