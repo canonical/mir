@@ -598,4 +598,3 @@ void InputTriggerData::erase_expired_entries()
 }
 }
 }
-
