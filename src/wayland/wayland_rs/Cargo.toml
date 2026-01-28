@@ -13,8 +13,15 @@ cxx.workspace = true
 calloop.workspace = true
 nix = { workspace = true, features = ["event"] }
 log.workspace = true
+wayland-scanner = "0.31.8"
+wayland-backend = "0.3.12"
+bitflags = "2.10.0"
 
 [build-dependencies]
 cxx-build.workspace = true
 serde.workspace = true
 quick-xml.workspace = true
+quote = "1.0.44"
+proc-macro2 = "1.0.106"
+prettyplease = "0.2"
+syn = { version = "2.0", features = ["full", "parsing"] }
