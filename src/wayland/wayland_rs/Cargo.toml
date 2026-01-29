@@ -1,0 +1,18 @@
+[package]
+name = "wayland_rs"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[lib]
+crate-type = ["staticlib"]
+
+[dependencies]
+wayland-server.workspace = true
+cxx.workspace = true
+calloop.workspace = true
+nix = { workspace = true, features = ["event"] }
+log.workspace = true
+
+[build-dependencies]
+cxx-build.workspace = true
