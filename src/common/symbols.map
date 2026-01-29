@@ -452,6 +452,7 @@ global:
     mir::input::ParameterKeymap::model*;
     mir::input::ParameterKeymap::with_layout*;
     mir::input::deserialize_input_config*;
+    mir::input::expand_modifiers*;
     mir::input::make_unique_context*;
     mir::input::mir_enable_enum_bit_operators*;
     mir::input::receiver::XKBMapper::?XKBMapper*;
