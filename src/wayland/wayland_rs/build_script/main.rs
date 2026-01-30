@@ -44,11 +44,6 @@ fn write_protocols_rs(protocols: &Vec<(WaylandProtocolMetadata, WaylandProtocol)
         let struct_name = format_ident!("{}", protocol.name.replace('-', "_"));
         let path = &metadata.path;
 
-        let mut server_code_use_statements = quote! {
-            use super::wayland_server;
-            use self::interfaces::*;
-        };
-
         // Add use statements for other protocol dependencies
         let protocol_dependencies: std::collections::HashSet<String> = metadata
             .dependencies
@@ -66,6 +61,11 @@ fn write_protocols_rs(protocols: &Vec<(WaylandProtocolMetadata, WaylandProtocol)
                     .map(|(_, dep_protocol)| dep_protocol.name.clone())
             })
             .collect();
+
+        let mut server_code_use_statements = quote! {
+            use super::wayland_server;
+            use self::interfaces::*;
+        };
 
         for dependency in &protocol_dependencies {
             let dep_struct_name = format_ident!("{}", dependency.replace('-', "_"));
@@ -94,8 +94,17 @@ fn write_protocols_rs(protocols: &Vec<(WaylandProtocolMetadata, WaylandProtocol)
                         use wayland_server::protocol::__interfaces::*;
                     };
                 } else {
+                    // Note: #[allow(unused_imports)] is used here to suppress warnings in case some protocols
+                    // do not actually use any interfaces from their dependencies. This only happens in a
+                    // input-method-unstable-v2 because it uses the enums from text-input-unstable-v3 but not
+                    // the interface name or anything else.
+                    //
+                    // This is much simpler than piping the data through the protocol parser, so let's keep things
+                    // straightforward for now.
                     interface_code_use_statements = quote! {
                         #interface_code_use_statements
+
+                        #[allow(unused_imports)]
                         use super::super::#dep_struct_name::interfaces::*;
                     };
                 }
@@ -118,7 +127,6 @@ fn write_protocols_rs(protocols: &Vec<(WaylandProtocolMetadata, WaylandProtocol)
     });
 
     let generated_protocol_rs = quote! {
-        use wayland_scanner;
         use wayland_server;
 
         #(#generated_protocols)*
