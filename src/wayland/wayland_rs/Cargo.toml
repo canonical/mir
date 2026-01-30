@@ -3,6 +3,7 @@ name = "wayland_rs"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
+build = "build_script/main.rs"
 
 [lib]
 crate-type = ["staticlib"]
