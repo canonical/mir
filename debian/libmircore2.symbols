@@ -47,6 +47,8 @@ libmircore.so.2 libmircore2 #MINVER#
  (c++)"mir::log(mir::logging::Severity, char const*, char const*, ...)@MIR_CORE_2.26" 2.26.0~dev
  (c++|optional)"mir::logv(mir::logging::Severity, char const*, char const*, __va_list_tag*)@MIR_CORE_2.26" 2.26.0~dev
  (c++|optional)"mir::logv(mir::logging::Severity, char const*, char const*, std::__va_list)@MIR_CORE_2.26" 2.26.0~dev
+ (c++|optional)"mir::logv(mir::logging::Severity, char const*, char const*, char*)@MIR_CORE_2.26" 2.26.0~dev
+ (c++|optional)"mir::logv(mir::logging::Severity, char const*, char const*, void*)@MIR_CORE_2.26" 2.26.0~dev
  (c++)"mir::logging::set_logger(std::shared_ptr<mir::logging::Logger> const&)@MIR_CORE_2.26" 2.26.0~dev
  (c++)"mir::logging::format_message(std::basic_ostream<char, std::char_traits<char> >&, mir::logging::Severity, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)@MIR_CORE_2.26" 2.26.0~dev
  (c++)"mir::logging::DumbConsoleLogger::log(mir::logging::Severity, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)@MIR_CORE_2.26" 2.26.0~dev

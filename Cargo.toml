@@ -1,6 +1,7 @@
 [workspace]
 members = [
   "src/platforms/evdev-rs",
+  "src/wayland/wayland_rs"
 ]
 resolver = "2"
 
@@ -8,11 +9,14 @@ resolver = "2"
 name = "mir"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.75.0"
+rust-version = "1.82.0"
 
 [workspace.dependencies]
-cxx = "1.0"
-cxx-build = "1.0"
+cxx = { version = ">=1.0.167" }
+cxx-build = { version = ">=1.0.167" }
 input = { version = ">=0.8.3, <0.10", features = ["libinput_1_19"] }
 libc = "0.2.175"
 nix = { version = ">=0.30, <0.32", features = ["poll"] }
+wayland-server = "0.31"
+calloop = { version = ">=0.10, <0.15" }
+log = "0.4"
