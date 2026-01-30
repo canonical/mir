@@ -21,6 +21,7 @@
 #include <mir/shell/surface_specification.h>
 #include <mir/shell/surface_stack.h>
 #include <mir/shell/window_manager.h>
+#include "../scene/surface_stack.h"
 #include <mir/scene/prompt_session.h>
 #include <mir/scene/prompt_session_manager.h>
 #include <mir/scene/null_surface_observer.h>
@@ -495,24 +496,28 @@ void msh::AbstractShell::set_focus_to(
     std::shared_ptr<ms::Session> const& new_focus_session,
     std::shared_ptr<ms::Surface> const& new_focus_surface)
 {
-    std::unique_lock lock(focus_mutex);
-
-    if (last_requested_focus_surface.lock() != new_focus_surface)
     {
-        last_requested_focus_surface = new_focus_surface;
-        auto new_active_surfaces = get_ancestry(new_focus_surface);
+        std::unique_lock lock(focus_mutex);
 
-        /// HACK: Grabbing popups (menus, in Mir terminology) should be given keyboard focus according to xdg-shell,
-        /// however, giving menus keyboard focus breaks Qt submenus. As of February 2022 Weston and other compositors
-        /// disobey the protocol by not giving keyboard focus to grabbing popups, so we do the same thing. The behavior
-        /// is subject change. See: https://github.com/canonical/mir/issues/2324.
-        auto const new_keyboard_focus_surface = get_non_popup_parent(new_focus_surface);
+        if (last_requested_focus_surface.lock() != new_focus_surface)
+        {
+            last_requested_focus_surface = new_focus_surface;
+            auto new_active_surfaces = get_ancestry(new_focus_surface);
 
-        notify_active_surfaces(lock, new_keyboard_focus_surface, std::move(new_active_surfaces));
-        set_keyboard_focus_surface(lock, new_keyboard_focus_surface);
+            /// HACK: Grabbing popups (menus, in Mir terminology) should be given keyboard focus according to xdg-shell,
+            /// however, giving menus keyboard focus breaks Qt submenus. As of February 2022 Weston and other compositors
+            /// disobey the protocol by not giving keyboard focus to grabbing popups, so we do the same thing. The behavior
+            /// is subject change. See: https://github.com/canonical/mir/issues/2324.
+            auto const new_keyboard_focus_surface = get_non_popup_parent(new_focus_surface);
+
+            notify_active_surfaces(lock, new_keyboard_focus_surface, std::move(new_active_surfaces));
+            set_keyboard_focus_surface(lock, new_keyboard_focus_surface);
+        }
+
+        update_focus_locked(lock, new_focus_session, new_focus_surface);
     }
 
-    update_focus_locked(lock, new_focus_session, new_focus_surface);
+    surface_stack->update_fullscreen_filtering(new_focus_surface.get());
 }
 
 void msh::AbstractShell::notify_active_surfaces(

@@ -18,6 +18,7 @@
 #define MIR_COMPOSITOR_SCENE_H_
 
 #include "compositor_id.h"
+#include <mir/geometry/rectangle.h>
 
 #include <memory>
 #include <vector>
@@ -41,16 +42,21 @@ public:
 
     /**
      * Generate a valid sequence of scene elements based on the current state of the Scene.
-     * \param [in] id      An arbitrary unique identifier used to distinguish
-     *                     separate compositors which need to receive a sequence
-     *                     for rendering. Calling with the same id will return
-     *                     a new (different) sequence to that user each time. For
-     *                     consistency, all callers need to determine their id
-     *                     in the same way (e.g. always use "this" pointer).
+     * \param [in] id          An arbitrary unique identifier used to distinguish
+     *                         separate compositors which need to receive a sequence
+     *                         for rendering. Calling with the same id will return
+     *                         a new (different) sequence to that user each time. For
+     *                         consistency, all callers need to determine their id
+     *                         in the same way (e.g. always use "this" pointer).
+     * \param [in] output_area The view area of the output being composited. Used for
+     *                         per-output filtering (e.g., hiding panels above fullscreen
+     *                         windows only on the output containing the fullscreen window).
      * \returns a sequence of SceneElements for the compositor id. The
      *          sequence is in stacking order from back to front.
      */
-    virtual SceneElementSequence scene_elements_for(CompositorID id) = 0;
+    virtual SceneElementSequence scene_elements_for(
+        CompositorID id,
+        geometry::Rectangle const& output_area) = 0;
 
     virtual void register_compositor(CompositorID id) = 0;
     virtual void unregister_compositor(CompositorID id) = 0;

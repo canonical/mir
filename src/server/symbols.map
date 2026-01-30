@@ -1638,3 +1638,10 @@ global:
   };
 local: *;
 };
+
+MIR_SERVER_INTERNAL_2.27 {
+global:
+  extern "C++" {
+    mir::shell::SurfaceStackWrapper::update_fullscreen_filtering*;
+  };
+};

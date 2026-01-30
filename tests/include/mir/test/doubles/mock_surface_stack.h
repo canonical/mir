@@ -41,6 +41,7 @@ struct MockSurfaceStack : public shell::SurfaceStack
     MOCK_METHOD(void, swap_z_order, (scene::SurfaceSet const&, scene::SurfaceSet const&), (override));
     MOCK_METHOD(void, send_to_back, (scene::SurfaceSet const&), (override));
     MOCK_METHOD(bool, is_above, (std::weak_ptr<scene::Surface> const& a, std::weak_ptr<scene::Surface> const& b), (const, override));
+    MOCK_METHOD(void, update_fullscreen_filtering,(scene::Surface const* surface), (override));
 };
 
 }

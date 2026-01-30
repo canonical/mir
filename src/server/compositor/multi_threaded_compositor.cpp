@@ -157,9 +157,9 @@ public:
              * loop below we will pull the most recently submitted frame from
              * each surface (either the “current” frame, or the ”next” frame).
              */
-            for (auto const& [_, compositor] : compositors)
+            for (auto const& [sink, compositor] : compositors)
             {
-                auto elements = scene->scene_elements_for(compositor.get());
+                auto elements = scene->scene_elements_for(compositor.get(), sink->view_area());
                 for (auto const& element : elements)
                 {
                     // We need to actually access the buffer in order for it to be marked in use.
@@ -179,10 +179,9 @@ public:
                 if (running)
                 {
                     bool needs_post = false;
-                    for (auto& tuple : compositors)
+                    for (auto& [sink, compositor] : compositors)
                     {
-                        auto& compositor = std::get<1>(tuple);
-                        auto scene_elements = scene->scene_elements_for(compositor.get());
+                        auto scene_elements = scene->scene_elements_for(compositor.get(), sink->view_area());
                         if (cursor->needs_compositing())
                         {
                             if (auto const cursor_renderable = cursor->renderable())

@@ -43,6 +43,10 @@ namespace graphics
 {
 class Renderable;
 }
+namespace shell
+{
+class FocusController;
+}
 /// Management of Surface objects. Includes the model (SurfaceStack and Surface
 /// classes) and controller (SurfaceController) elements of an MVC design.
 namespace scene
@@ -86,8 +90,13 @@ public:
     SurfaceStack(std::shared_ptr<SceneReport> const& report);
     virtual ~SurfaceStack() noexcept(true);
 
+    /// Set the FocusController to query for focused surface
+    void set_focus_controller(std::shared_ptr<shell::FocusController> const& focus_controller);
+
     // From Scene
-    compositor::SceneElementSequence scene_elements_for(compositor::CompositorID id) override;
+    compositor::SceneElementSequence scene_elements_for(
+        compositor::CompositorID id,
+        geometry::Rectangle const& output_area) override;
     void register_compositor(compositor::CompositorID id) override;
     void unregister_compositor(compositor::CompositorID id) override;
 
@@ -112,6 +121,9 @@ public:
 
     void add_observer(std::shared_ptr<Observer> const& observer) override;
     void remove_observer(std::weak_ptr<Observer> const& observer) override;
+
+    /// Notify SurfaceStack that focus has changed
+    void update_fullscreen_filtering(Surface const* surface) override;
 
     auto stacking_order_of(SurfaceSet const& surfaces) const -> SurfaceList override;
     auto screen_is_locked() const -> bool override;
@@ -141,6 +153,8 @@ private:
     void update_rendering_tracker_compositors();
     void insert_surface_at_top_of_depth_layer(std::shared_ptr<Surface> const& surface);
     auto surface_can_be_shown(std::shared_ptr<Surface> const& surface) const -> bool;
+    auto has_fullscreen_on_output(geometry::Rectangle const&) const -> bool;
+    auto should_skip_surface(std::shared_ptr<Surface> const&, geometry::Rectangle const&) const -> bool;
 
     RecursiveReadWriteMutex mutable guard;
 
@@ -169,6 +183,18 @@ private:
     Observers observers;
     /// If not expired the screen is locked (and only surfaces that appear on the lock screen should be shown)
     std::atomic<bool> is_locked = false;
+
+    /// FocusController to query the currently focused surface
+    /// This is a weak_ptr to break circular dependency (shell owns SurfaceStack and implements FocusController)
+    /// SurfaceStack queries this on-demand rather than tracking focus state itself
+    std::weak_ptr<shell::FocusController> focus_controller;
+
+    /// Cached fullscreen surface to track state changes and avoid unnecessary scene updates
+    Surface const* cached_fullscreen_surface;
+
+    /// Set of above-layer surfaces that existed when fullscreen was activated
+    /// These surfaces are filtered per-output when a fullscreen surface is focused on that output
+    std::set<std::weak_ptr<Surface>, std::owner_less<>> above_surfaces_to_filter;
     std::shared_ptr<SurfaceObserver> surface_observer;
     SessionLockObserverMultiplexer multiplexer;
 };

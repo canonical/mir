@@ -16,6 +16,7 @@
 
 #include <mir/default_server_configuration.h>
 
+#include "../scene/surface_stack.h"
 #include "basic_accessibility_manager.h"
 #include "basic_idle_handler.h"
 #include "decoration/basic_decoration.h"
@@ -58,6 +59,16 @@ auto mir::DefaultServerConfiguration::the_shell() -> std::shared_ptr<msh::Shell>
 
             the_composite_event_filter()->prepend(result);
             the_decoration_manager()->init(result);
+
+            // Set the FocusController on the SurfaceStack to enable per-output fullscreen filtering
+            // This is done after shell creation to break the circular dependency:
+            // - Shell construction requires surface_stack (called above)
+            // - SurfaceStack needs FocusController (which is the shell) for filtering
+            // - We inject it here after both exist
+            if (auto scene_stack = std::dynamic_pointer_cast<ms::SurfaceStack>(the_scene()))
+            {
+                scene_stack->set_focus_controller(result);
+            }
 
             return result;
         });
