@@ -21,6 +21,7 @@
 #include <mir/shell/surface_specification.h>
 #include <mir/shell/surface_stack.h>
 #include <mir/shell/window_manager.h>
+#include <mir/shell/focus_observer.h>
 #include "../scene/surface_stack.h"
 #include <mir/scene/prompt_session.h>
 #include <mir/scene/prompt_session_manager.h>
@@ -29,6 +30,7 @@
 #include <mir/scene/session.h>
 #include <mir/scene/surface.h>
 #include <mir/input/seat.h>
+#include <mir/executor.h>
 #include <mir/wayland/weak.h>
 #include "decoration/manager.h"
 
@@ -162,7 +164,8 @@ msh::AbstractShell::AbstractShell(
     std::shared_ptr<ShellReport> const& report,
     std::function<std::shared_ptr<shell::WindowManager>(FocusController* focus_controller)> const& wm_builder,
     std::shared_ptr<mi::Seat> const& seat,
-    std::shared_ptr<decoration::Manager> const& decoration_manager) :
+    std::shared_ptr<decoration::Manager> const& decoration_manager,
+    Executor& observer_executor) :
     input_targeter(input_targeter),
     surface_stack(surface_stack),
     session_coordinator(session_coordinator),
@@ -171,6 +174,7 @@ msh::AbstractShell::AbstractShell(
     seat(seat),
     report(report),
     surface_confinement_updater(std::make_shared<SurfaceConfinementUpdater>(seat.get())),
+    focus_observers(observer_executor),
     decoration_manager(decoration_manager)
 {
 }
@@ -517,7 +521,8 @@ void msh::AbstractShell::set_focus_to(
         update_focus_locked(lock, new_focus_session, new_focus_surface);
     }
 
-    surface_stack->update_fullscreen_filtering(new_focus_surface.get());
+    // Notify focus observers (e.g., SurfaceStack for fullscreen filtering)
+    notify_focus_observers(new_focus_surface);
 }
 
 void msh::AbstractShell::notify_active_surfaces(
@@ -747,3 +752,21 @@ auto msh::AbstractShell::is_above(std::weak_ptr<scene::Surface> const& a, std::w
 {
    return surface_stack->is_above(a, b);
 }
+
+void msh::AbstractShell::register_focus_observer(
+    std::weak_ptr<FocusObserver> const& observer,
+    Executor& executor)
+{
+    focus_observers.register_interest(observer, executor);
+}
+
+void msh::AbstractShell::unregister_focus_observer(FocusObserver const& observer)
+{
+    focus_observers.unregister_interest(observer);
+}
+
+void msh::AbstractShell::notify_focus_observers(std::shared_ptr<scene::Surface> const& surface)
+{
+    focus_observers.focus_changed(surface);
+}
+

@@ -26,10 +26,12 @@
 
 namespace mir
 {
+class Executor;
 namespace scene { class Session; class Surface; }
 
 namespace shell
 {
+class FocusObserver;
 using SurfaceSet = std::set<std::weak_ptr<scene::Surface>, std::owner_less<std::weak_ptr<scene::Surface>>>;
 
 class FocusController
@@ -62,6 +64,14 @@ public:
     /// Returns true if surface [a] is above surface [b].
     virtual auto is_above(std::weak_ptr<scene::Surface> const& a, std::weak_ptr<scene::Surface> const& b) const
         -> bool = 0;
+
+    /// Register an observer to be notified of focus changes
+    virtual void register_focus_observer(
+        std::weak_ptr<FocusObserver> const& observer,
+        Executor& executor) = 0;
+    
+    /// Unregister a previously registered observer
+    virtual void unregister_focus_observer(FocusObserver const& observer) = 0;
 
 protected:
     FocusController() = default;

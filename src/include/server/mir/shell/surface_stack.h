@@ -58,9 +58,6 @@ public:
     virtual auto is_above(std::weak_ptr<scene::Surface> const& a, std::weak_ptr<scene::Surface> const& b) const
         -> bool = 0;
 
-    virtual auto update_fullscreen_filtering(scene::Surface const* surface)
-        -> void = 0;
-
 protected:
     SurfaceStack() = default;
     virtual ~SurfaceStack() = default;

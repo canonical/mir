@@ -20,6 +20,7 @@
 #include <mir/shell/shell.h>
 #include <mir/shell/window_manager_builder.h>
 #include <mir/scene/surface_observer.h>
+#include <mir/observer_multiplexer.h>
 
 #include <mutex>
 
@@ -40,6 +41,7 @@ class ShellReport;
 class WindowManager;
 class InputTargeter;
 class SurfaceStack;
+class FocusObserver;
 namespace decoration
 {
 class Manager;
@@ -57,7 +59,8 @@ public:
         std::shared_ptr<ShellReport> const& report,
         WindowManagerBuilder const& wm_builder,
         std::shared_ptr<input::Seat> const& seat,
-        std::shared_ptr<decoration::Manager> const& decoration_manager);
+        std::shared_ptr<decoration::Manager> const& decoration_manager,
+        Executor& observer_executor);
 
     ~AbstractShell() noexcept;
 
@@ -138,6 +141,11 @@ public:
     void swap_z_order(SurfaceSet const& first, SurfaceSet const& second) override;
     void send_to_back(SurfaceSet const& surfaces) override;
     auto is_above(std::weak_ptr<scene::Surface> const& a, std::weak_ptr<scene::Surface> const& b) const -> bool override;
+    
+    void register_focus_observer(
+        std::weak_ptr<FocusObserver> const& observer,
+        Executor& executor) override;
+    void unregister_focus_observer(FocusObserver const& observer) override;
 /** @} */
 
     void add_display(geometry::Rectangle const& area) override;
@@ -167,6 +175,7 @@ private:
     std::weak_ptr<scene::Surface> popup_parent;
     std::vector<std::weak_ptr<scene::Surface>> grabbing_popups;
     std::shared_ptr<SurfaceConfinementUpdater> const surface_confinement_updater;
+    ObserverMultiplexer<FocusObserver> focus_observers;
 
     void notify_active_surfaces(
         std::unique_lock<std::mutex> const&,
@@ -187,6 +196,8 @@ private:
     void add_grabbing_popup(std::shared_ptr<scene::Surface> const& popup);
 
     void update_confinement_for(std::shared_ptr<scene::Surface> const& surface) const;
+    
+    void notify_focus_observers(std::shared_ptr<scene::Surface> const& surface);
 
     std::shared_ptr<decoration::Manager> decoration_manager;
 };

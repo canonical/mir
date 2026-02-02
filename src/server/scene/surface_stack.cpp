@@ -146,12 +146,6 @@ ms::SurfaceStack::SurfaceStack(std::shared_ptr<SceneReport> const& report) :
 {
 }
 
-void ms::SurfaceStack::set_focus_controller(std::shared_ptr<msh::FocusController> const& fc)
-{
-    RecursiveWriteLock lg(guard);
-    focus_controller = fc;
-}
-
 ms::SurfaceStack::~SurfaceStack() noexcept(true)
 {
     RecursiveWriteLock lg(guard);
@@ -321,12 +315,11 @@ auto ms::SurfaceStack::surface_at(geometry::Point cursor) const
 {
     RecursiveReadLock lg(guard);
 
-    // Query the focused surface from FocusController
+    // Check for fullscreen filtering
     auto const fullscreen_area = [&]
         -> std::optional<geom::Rectangle>
     {
-        auto fc = focus_controller.lock();
-        auto focused_fs = fc ? fc->focused_surface() : nullptr;
+        auto focused_fs = cached_fullscreen_surface.lock();
 
         if (focused_fs && focused_fs->state() == mir_window_state_fullscreen)
         {
@@ -762,51 +755,52 @@ void ms::SessionLockObserverMultiplexer::on_unlock()
     for_each_observer(&SessionLockObserver::on_unlock);
 }
 
-void ms::SurfaceStack::update_fullscreen_filtering(Surface const* focused)
+void ms::SurfaceStack::focus_changed(std::shared_ptr<Surface> const& surface)
+{
+    update_fullscreen_filtering(surface);
+}
+
+void ms::SurfaceStack::update_fullscreen_filtering(std::shared_ptr<Surface> const& focused)
 {
     bool changed = false;
     {
         RecursiveWriteLock lg(guard);
-        Surface const* new_fullscreen{nullptr};
-
-        if (focused && focused->state() == mir_window_state_fullscreen)
-            new_fullscreen = focused;
-
-        if (cached_fullscreen_surface == new_fullscreen)
+        
+        // Get the actual surface pointer from weak_ptr
+        auto cached = cached_fullscreen_surface.lock();
+        bool was_fullscreen = cached && cached->state() == mir_window_state_fullscreen;
+        bool is_fullscreen = focused && focused->state() == mir_window_state_fullscreen;
+        
+        if (cached == focused && was_fullscreen == is_fullscreen)
             return;
-
-        cached_fullscreen_surface = new_fullscreen;
+            
+        cached_fullscreen_surface = focused;
         changed = true;
-
+        
         // Clear the filter list when fullscreen state changes
         above_surfaces_to_filter.clear();
-
-        if (!new_fullscreen)
+        
+        if (!is_fullscreen)
             return;
-
-        // If entering fullscreen, capture current above layer surfaces to filter
+        
+        // Capture current above-layer surfaces to filter
         for (auto const& layer : surface_layers)
         {
             for (auto const& surf : layer)
             {
                 if (surf->depth_layer() == mir_depth_layer_above)
                     above_surfaces_to_filter.insert(surf);
-           }
+            }
         }
     }
-
-    // Trigger scene update to refresh rendering/input routing
-    // Must be called outside the lock to avoid deadlock
+    
     if (changed)
-    {
         emit_scene_changed();
-    }
 }
 
 auto ms::SurfaceStack::has_fullscreen_on_output(geom::Rectangle const& output_area) const -> bool
 {
-    auto fc = focus_controller.lock();
-    auto focused_fs = fc ? fc->focused_surface() : nullptr;
+    auto focused_fs = cached_fullscreen_surface.lock();
 
     if (focused_fs && focused_fs->state() == mir_window_state_fullscreen)
     {
