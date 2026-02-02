@@ -16,3 +16,5 @@ log.workspace = true
 
 [build-dependencies]
 cxx-build.workspace = true
+serde.workspace = true
+quick-xml.workspace = true
