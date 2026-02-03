@@ -125,15 +125,6 @@ struct SurfaceDepthLayerObserver : ms::NullSurfaceObserver
         stack->raise(surface);
     }
 
-    void attrib_changed(ms::Surface const* surface, MirWindowAttrib attrib, int /*value*/) override
-    {
-        if (attrib == mir_window_attrib_state)
-        {
-            // Trigger fullscreen tracking update for the focused surface
-            stack->update_fullscreen_filtering(surface);
-        }
-    }
-
 private:
     ms::SurfaceStack* stack;
 };
@@ -282,8 +273,6 @@ void ms::SurfaceStack::remove_surface(std::weak_ptr<Surface> const& surface)
                 layer.erase(surface);
                 rendering_trackers.erase(keep_alive.get());
                 keep_alive->unregister_interest(*surface_observer);
-                // Also remove from fullscreen filter set if present
-                above_surfaces_to_filter.erase(keep_alive);
                 found_surface = true;
                 break;
             }
@@ -762,36 +751,6 @@ void ms::SessionLockObserverMultiplexer::on_unlock()
     for_each_observer(&SessionLockObserver::on_unlock);
 }
 
-void ms::SurfaceStack::update_fullscreen_filtering(Surface const* focused)
-{
-    RecursiveWriteLock lg(guard);
-    Surface const* new_fullscreen{nullptr};
-
-    if (focused && focused->state() == mir_window_state_fullscreen)
-        new_fullscreen = focused;
-
-    if (cached_fullscreen_surface == new_fullscreen)
-        return;
-
-    cached_fullscreen_surface = new_fullscreen;
-
-    // Clear the filter list when fullscreen state changes
-    above_surfaces_to_filter.clear();
-
-    if (!new_fullscreen)
-        return;
-
-    // If entering fullscreen, capture current above layer surfaces to filter
-    for (auto const& layer : surface_layers)
-    {
-        for (auto const& surf : layer)
-        {
-            if (surf->depth_layer() == mir_depth_layer_above)
-                above_surfaces_to_filter.insert(surf);
-        }
-    }
-}
-
 auto ms::SurfaceStack::has_fullscreen_on_output(geom::Rectangle const& output_area) const -> bool
 {
     auto fc = focus_controller.lock();
@@ -813,15 +772,14 @@ auto ms::SurfaceStack::has_fullscreen_on_output(geom::Rectangle const& output_ar
 auto ms::SurfaceStack::should_skip_surface(
     std::shared_ptr<Surface> const& surface, geom::Rectangle const& output_area) const -> bool
 {
-    // Skip "above" layer surfaces if they're in the pre-existing filter list
-    if (has_fullscreen_on_output(output_area) && above_surfaces_to_filter.count(surface) > 0)
+    if (surface->depth_layer() == mir_depth_layer_above && has_fullscreen_on_output(output_area))
     {
         // Check if this surface is also on this output
         auto const surface_bounds = surface->input_bounds();
         auto const overlap = intersection_of(surface_bounds, output_area);
         if (overlap.size.width.as_int() > 0 && overlap.size.height.as_int() > 0)
         {
-            // Surface is on same output as fullscreen and was pre-existing - skip it
+            // Surface is on same output as fullscreen
             return true;
         }
     }

@@ -516,8 +516,6 @@ void msh::AbstractShell::set_focus_to(
 
         update_focus_locked(lock, new_focus_session, new_focus_surface);
     }
-
-    surface_stack->update_fullscreen_filtering(new_focus_surface.get());
 }
 
 void msh::AbstractShell::notify_active_surfaces(

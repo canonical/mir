@@ -70,8 +70,3 @@ auto msh::SurfaceStackWrapper::is_above(
 {
     return wrapped->is_above(a, b);
 }
-
-auto msh::SurfaceStackWrapper::update_fullscreen_filtering(scene::Surface const* surface) -> void
-{
-    wrapped->update_fullscreen_filtering(surface);
-}

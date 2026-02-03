@@ -91,10 +91,6 @@ struct StubSurfaceStack : public msh::SurfaceStack
     {
         return false;
     }
-
-    auto update_fullscreen_filtering(ms::Surface const*) -> void override
-    {
-    }
 };
 
 struct ApplicationSession : public testing::Test

@@ -46,8 +46,6 @@ public:
 
     auto is_above(std::weak_ptr<scene::Surface> const& a, std::weak_ptr<scene::Surface> const& b) const -> bool override;
 
-    auto update_fullscreen_filtering(scene::Surface const* surface) -> void override;
-
 protected:
     std::shared_ptr<SurfaceStack> const wrapped;
 };

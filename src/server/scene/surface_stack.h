@@ -122,9 +122,6 @@ public:
     void add_observer(std::shared_ptr<Observer> const& observer) override;
     void remove_observer(std::weak_ptr<Observer> const& observer) override;
 
-    /// Notify SurfaceStack that focus has changed
-    void update_fullscreen_filtering(Surface const* surface) override;
-
     auto stacking_order_of(SurfaceSet const& surfaces) const -> SurfaceList override;
     auto screen_is_locked() const -> bool override;
 
@@ -189,12 +186,6 @@ private:
     /// SurfaceStack queries this on-demand rather than tracking focus state itself
     std::weak_ptr<shell::FocusController> focus_controller;
 
-    /// Cached fullscreen surface to track state changes and avoid unnecessary scene updates
-    Surface const* cached_fullscreen_surface;
-
-    /// Set of above-layer surfaces that existed when fullscreen was activated
-    /// These surfaces are filtered per-output when a fullscreen surface is focused on that output
-    std::set<std::weak_ptr<Surface>, std::owner_less<>> above_surfaces_to_filter;
     std::shared_ptr<SurfaceObserver> surface_observer;
     SessionLockObserverMultiplexer multiplexer;
 };
