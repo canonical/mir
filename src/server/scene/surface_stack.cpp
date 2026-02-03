@@ -758,13 +758,34 @@ auto ms::SurfaceStack::has_fullscreen_on_output(geom::Rectangle const& output_ar
 
     if (focused_fs && focused_fs->state() == mir_window_state_fullscreen)
     {
+        auto const renderables = focused_fs->generate_renderables(compositor::CompositorID{0});
+        auto const maybe_shaped = std::ranges::any_of(
+            renderables, [](auto const& renderable) {
+                return renderable->shaped();
+            });
+
+        if (maybe_shaped)
+        {
+            return std::ranges::any_of(
+                renderables,
+                [&output_area](auto const& renderable)
+                {
+                    auto const opaque_region = renderable->opaque_region();
+                    if (!opaque_region)
+                        return false; // Shaped but no opaque region = transparent
+
+                    return std::ranges::any_of(
+                        *opaque_region,
+                        [&output_area](auto const& opaque_rect) { return opaque_rect.contains(output_area); });
+                });
+        }
+
         // Check if the fullscreen surface overlaps with this output
         auto const fs_bounds = focused_fs->input_bounds();
         auto const overlap = intersection_of(fs_bounds, output_area);
-        if (overlap.size.width.as_int() > 0 && overlap.size.height.as_int() > 0)
-        {
-            return true;
-        }
+        auto const full_overlap = overlap.size.width.as_int() > 0 && overlap.size.height.as_int() > 0;
+
+        return full_overlap;
     }
     return false;
 }
