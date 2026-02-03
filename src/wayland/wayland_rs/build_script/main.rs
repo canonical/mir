@@ -44,7 +44,7 @@ fn write_protocols_rs(protocols: &Vec<(WaylandProtocolMetadata, WaylandProtocol)
         let struct_name = format_ident!("{}", protocol.name.replace('-', "_"));
         let path = &metadata.path;
 
-        // Add use statements for other protocol dependencies
+        // Add use statements for other protocol dependencies.
         let protocol_dependencies: std::collections::HashSet<String> = metadata
             .dependencies
             .iter()
