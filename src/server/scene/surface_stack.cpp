@@ -814,8 +814,7 @@ auto ms::SurfaceStack::should_skip_surface(
     std::shared_ptr<Surface> const& surface, geom::Rectangle const& output_area) const -> bool
 {
     // Skip "above" layer surfaces if they're in the pre-existing filter list
-    if (has_fullscreen_on_output(output_area) && surface->depth_layer() == mir_depth_layer_above &&
-        above_surfaces_to_filter.count(surface) > 0)
+    if (has_fullscreen_on_output(output_area) && above_surfaces_to_filter.count(surface) > 0)
     {
         // Check if this surface is also on this output
         auto const surface_bounds = surface->input_bounds();
