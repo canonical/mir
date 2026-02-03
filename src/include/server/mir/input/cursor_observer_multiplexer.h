@@ -31,6 +31,12 @@ public:
     explicit CursorObserverMultiplexer(Executor& default_executor);
     virtual ~CursorObserverMultiplexer();
 
+    void register_interest(std::weak_ptr<CursorObserver> const& observer, Executor& executor) override;
+    void register_early_observer(std::weak_ptr<CursorObserver> const& observer, Executor& executor) override;
+    // Make the other overloads from the base class vislble
+    using ObserverMultiplexer<CursorObserver>::register_interest;
+    using ObserverMultiplexer<CursorObserver>::register_early_observer;
+
     virtual void cursor_moved_to(float abs_x, float abs_y) override;
     virtual void pointer_usable() override;
     virtual void pointer_unusable() override;
@@ -39,6 +45,14 @@ public:
 protected:
     CursorObserverMultiplexer(CursorObserverMultiplexer const&) = delete;
     CursorObserverMultiplexer& operator=(CursorObserverMultiplexer const&) = delete;
+
+private:
+    void send_initial_state_locked(std::lock_guard<std::mutex> const& lg, std::weak_ptr<CursorObserver> const& observer);
+
+    std::mutex mutex;
+    float last_abs_x = 0.0f, last_abs_y = 0.0f;
+    bool pointer_is_usable = false;
+    std::shared_ptr<graphics::CursorImage> cursor_image;
 };
 
 }
