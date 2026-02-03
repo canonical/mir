@@ -42,10 +42,9 @@ struct wl_shm_pool* make_shm_pool(struct wl_shm* shm, int size, void **data)
     static auto const template_filename =
         std::string{getenv("XDG_RUNTIME_DIR")} + "/wayland-cursor-shared-XXXXXX";
 
-    auto const filename = strdup(template_filename.c_str());
-    mir::Fd const fd{mkostemp(filename, O_CLOEXEC)};
-    unlink(filename);
-    free(filename);
+    std::string filename = template_filename;
+    mir::Fd const fd{mkostemp(filename.data(), O_CLOEXEC)};
+    unlink(filename.c_str());
 
     if (fd < 0) {
         BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), "Failed to open shm buffer"}));
