@@ -764,42 +764,31 @@ void ms::SessionLockObserverMultiplexer::on_unlock()
 
 void ms::SurfaceStack::update_fullscreen_filtering(Surface const* focused)
 {
-    bool changed = false;
+    RecursiveWriteLock lg(guard);
+    Surface const* new_fullscreen{nullptr};
+
+    if (focused && focused->state() == mir_window_state_fullscreen)
+        new_fullscreen = focused;
+
+    if (cached_fullscreen_surface == new_fullscreen)
+        return;
+
+    cached_fullscreen_surface = new_fullscreen;
+
+    // Clear the filter list when fullscreen state changes
+    above_surfaces_to_filter.clear();
+
+    if (!new_fullscreen)
+        return;
+
+    // If entering fullscreen, capture current above layer surfaces to filter
+    for (auto const& layer : surface_layers)
     {
-        RecursiveWriteLock lg(guard);
-        Surface const* new_fullscreen{nullptr};
-
-        if (focused && focused->state() == mir_window_state_fullscreen)
-            new_fullscreen = focused;
-
-        if (cached_fullscreen_surface == new_fullscreen)
-            return;
-
-        cached_fullscreen_surface = new_fullscreen;
-        changed = true;
-
-        // Clear the filter list when fullscreen state changes
-        above_surfaces_to_filter.clear();
-
-        if (!new_fullscreen)
-            return;
-
-        // If entering fullscreen, capture current above layer surfaces to filter
-        for (auto const& layer : surface_layers)
+        for (auto const& surf : layer)
         {
-            for (auto const& surf : layer)
-            {
-                if (surf->depth_layer() == mir_depth_layer_above)
-                    above_surfaces_to_filter.insert(surf);
-           }
+            if (surf->depth_layer() == mir_depth_layer_above)
+                above_surfaces_to_filter.insert(surf);
         }
-    }
-
-    // Trigger scene update to refresh rendering/input routing
-    // Must be called outside the lock to avoid deadlock
-    if (changed)
-    {
-        emit_scene_changed();
     }
 }
 
