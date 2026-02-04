@@ -207,6 +207,10 @@ private:
         {
         }
 
+        void hide_all_attached(BasicWindowManager&);
+
+        void restore_all_attached(BasicWindowManager&);
+
         /// Returns the bounding rectangle of the extents of all contained outputs
         auto bounding_rectangle_of_contained_outputs() const -> Rectangle;
 
@@ -227,6 +231,11 @@ private:
         /// Only set if this display area represents a logical group of multiple outputs
         std::optional<int> logical_output_group_id;
         std::set<Window> attached_windows; ///< Maximized/anchored/etc windows attached to this area
+
+        /// Keeps track of window states for hidden attached windows. Recorded
+        /// when a window is fullscreened, restored and cleared when the window
+        /// is un-fullscreened.
+        std::vector<std::pair<Window, MirWindowState>> hidden_attached_window_states;
     };
 
     using SurfaceInfoMap = std::map<std::weak_ptr<mir::scene::Surface>, WindowInfo, std::owner_less<std::weak_ptr<mir::scene::Surface>>>;
