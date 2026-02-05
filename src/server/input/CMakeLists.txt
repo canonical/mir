@@ -10,7 +10,6 @@ set(
   default_input_device_hub.cpp
   default_input_manager.cpp
   event_filter_chain_dispatcher.cpp
-  input_modifier_utils.cpp
   input_probe.cpp
   key_repeat_dispatcher.cpp
   keyboard_resync_dispatcher.cpp

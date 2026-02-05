@@ -26,7 +26,7 @@
 #include <mir/events/pointer_event.h>
 #include <mir/time/clock.h>
 
-#include "input_modifier_utils.h"
+#include "mir/input/xkb_mapper.h"
 
 #include <boost/throw_exception.hpp>
 #include <linux/input.h>

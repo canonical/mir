@@ -76,26 +76,6 @@ bool is_toggle_modifier(MirInputEventModifiers key)
         key == mir_input_event_modifier_num_lock;
 }
 
-MirInputEventModifiers expand_modifiers(MirInputEventModifiers modifiers)
-{
-    if (modifiers == 0)
-        return mir_input_event_modifier_none;
-
-    if ((modifiers & mir_input_event_modifier_alt_left) || (modifiers & mir_input_event_modifier_alt_right))
-        modifiers |= mir_input_event_modifier_alt;
-
-    if ((modifiers & mir_input_event_modifier_ctrl_left) || (modifiers & mir_input_event_modifier_ctrl_right))
-        modifiers |= mir_input_event_modifier_ctrl;
-
-    if ((modifiers & mir_input_event_modifier_shift_left) || (modifiers & mir_input_event_modifier_shift_right))
-        modifiers |= mir_input_event_modifier_shift;
-
-    if ((modifiers & mir_input_event_modifier_meta_left) || (modifiers & mir_input_event_modifier_meta_right))
-        modifiers |= mir_input_event_modifier_meta;
-
-    return modifiers;
-}
-
 mi::XKBComposeStatePtr make_unique_compose_state(mi::XKBComposeTablePtr const& table)
 {
     return {xkb_compose_state_new(table.get(), XKB_COMPOSE_STATE_NO_FLAGS), &xkb_compose_state_unref};
@@ -114,6 +94,26 @@ mi::XKBStatePtr make_unique_state(xkb_keymap* keymap)
 {
     return {xkb_state_new(keymap), xkb_state_unref};
 }
+}
+
+MirInputEventModifiers mi::expand_modifiers(MirInputEventModifiers modifiers)
+{
+    if (modifiers == 0)
+        return mir_input_event_modifier_none;
+
+    if ((modifiers & mir_input_event_modifier_alt_left) || (modifiers & mir_input_event_modifier_alt_right))
+        modifiers |= mir_input_event_modifier_alt;
+
+    if ((modifiers & mir_input_event_modifier_ctrl_left) || (modifiers & mir_input_event_modifier_ctrl_right))
+        modifiers |= mir_input_event_modifier_ctrl;
+
+    if ((modifiers & mir_input_event_modifier_shift_left) || (modifiers & mir_input_event_modifier_shift_right))
+        modifiers |= mir_input_event_modifier_shift;
+
+    if ((modifiers & mir_input_event_modifier_meta_left) || (modifiers & mir_input_event_modifier_meta_right))
+        modifiers |= mir_input_event_modifier_meta;
+
+    return modifiers;
 }
 
 mi::XKBContextPtr mi::make_unique_context()
