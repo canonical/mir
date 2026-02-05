@@ -9,6 +9,12 @@ pub struct WaylandProtocol {
 
     #[serde(rename = "interface")]
     pub interfaces: Vec<WaylandInterface>,
+
+    #[serde(skip)]
+    pub path: String,
+
+    #[serde(skip)]
+    pub dependencies: Vec<String>, // interface names this protocol depends on
 }
 
 /// Representation of a Wayland interface in a protocol XML file.
@@ -160,12 +166,7 @@ pub struct WaylandEnumEntry {
     pub summary: Option<String>,
 }
 
-pub struct WaylandProtocolMetadata {
-    pub path: String,
-    pub dependencies: Vec<String>, // interface names this protocol depends on
-}
-
-pub fn parse_protocols() -> Vec<(WaylandProtocolMetadata, WaylandProtocol)> {
+pub fn parse_protocols() -> Vec<WaylandProtocol> {
     let mut protocols = Vec::new();
     let paths = fs::read_dir("../../../wayland-protocols").unwrap();
     for file in paths {
@@ -181,24 +182,22 @@ pub fn parse_protocols() -> Vec<(WaylandProtocolMetadata, WaylandProtocol)> {
                     )
                 })
                 .unwrap();
-            let mut metadata: WaylandProtocolMetadata = WaylandProtocolMetadata {
-                path: fs::canonicalize(entry.path())
-                    .unwrap()
-                    .to_str()
-                    .unwrap()
-                    .to_string(),
-                dependencies: Vec::new(),
-            };
+            protocol.path = fs::canonicalize(entry.path())
+                .unwrap()
+                .to_str()
+                .unwrap()
+                .to_string();
+            protocol.dependencies = Vec::new();
 
-            fn add_interface_for_arg(arg: &WaylandArg, metadata: &mut WaylandProtocolMetadata) {
+            fn add_interface_for_arg(arg: &WaylandArg, dependencies: &mut Vec<String>) {
                 if let Some(interface_name) = &arg.interface {
-                    metadata.dependencies.push(interface_name.clone());
+                    dependencies.push(interface_name.clone());
                 }
                 if let Some(enm) = &arg.enum_ {
                     let split = enm.split(".").collect::<Vec<&str>>();
                     if split.len() == 2 {
                         let interface_name = split[0];
-                        metadata.dependencies.push(interface_name.to_string());
+                        dependencies.push(interface_name.to_string());
                     }
                 }
             }
@@ -209,12 +208,12 @@ pub fn parse_protocols() -> Vec<(WaylandProtocolMetadata, WaylandProtocol)> {
                     match item {
                         InterfaceItem::Request(req) => {
                             for arg in &req.args {
-                                add_interface_for_arg(arg, &mut metadata);
+                                add_interface_for_arg(arg, &mut protocol.dependencies);
                             }
                         }
                         InterfaceItem::Event(evt) => {
                             for arg in &evt.args {
-                                add_interface_for_arg(arg, &mut metadata);
+                                add_interface_for_arg(arg, &mut protocol.dependencies);
                             }
                         }
                         _ => {}
@@ -239,11 +238,16 @@ pub fn parse_protocols() -> Vec<(WaylandProtocolMetadata, WaylandProtocol)> {
                                                 && arg.type_ == "new_id"
                                             {
                                                 is_global = false;
+                                                break;
                                             }
                                         }
                                     }
                                 }
                                 _ => {}
+                            }
+
+                            if is_global == false {
+                                break;
                             }
                         }
                     }
@@ -255,7 +259,7 @@ pub fn parse_protocols() -> Vec<(WaylandProtocolMetadata, WaylandProtocol)> {
                 interface.is_global = is_global;
             }
 
-            protocols.push((metadata, protocol));
+            protocols.push(protocol);
         }
     }
     protocols

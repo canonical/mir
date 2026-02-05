@@ -17,7 +17,7 @@
 mod protocol_parser;
 
 use proc_macro2::TokenStream;
-use protocol_parser::{parse_protocols, WaylandProtocol, WaylandProtocolMetadata};
+use protocol_parser::{parse_protocols, WaylandProtocol};
 use quote::{format_ident, quote};
 use std::fs;
 
@@ -28,7 +28,7 @@ fn main() {
     println!("cargo:rerun-if-changed=src/wayland_server.rs");
 
     // First, parse the protocol XML files.
-    let protocols: Vec<(WaylandProtocolMetadata, WaylandProtocol)> = parse_protocols();
+    let protocols: Vec<WaylandProtocol> = parse_protocols();
 
     // Next, generate the protocols.rs file.
     write_protocols_rs(&protocols);
@@ -37,31 +37,31 @@ fn main() {
     write_dispatch_rs(&protocols);
 }
 
-fn write_protocols_rs(protocols: &Vec<(WaylandProtocolMetadata, WaylandProtocol)>) {
-    let generated_protocols = protocols.iter().map(|(metadata, protocol)| {
+fn write_protocols_rs(protocols: &Vec<WaylandProtocol>) {
+    let generated_protocols = protocols.iter().map(|protocol| {
         // We rely on the wayland_server crate for the core Wayland protocol.
         if protocol.name == "wayland" {
             return quote! {};
         }
 
         let struct_name = format_ident!("{}", protocol.name.replace('-', "_"));
-        let path = &metadata.path;
+        let path = &protocol.path;
 
         // Add use statements for other protocol dependencies.
-        let protocol_dependencies: std::collections::HashSet<String> = metadata
+        let protocol_dependencies: std::collections::HashSet<String> = protocol
             .dependencies
             .iter()
             .filter_map(|dependency| {
                 protocols
                     .iter()
-                    .find(|(_, dep_protocol)| {
+                    .find(|dep_protocol| {
                         dep_protocol.name != protocol.name
                             && dep_protocol
                                 .interfaces
                                 .iter()
                                 .any(|iface| iface.name == *dependency)
                     })
-                    .map(|(_, dep_protocol)| dep_protocol.name.clone())
+                    .map(|dep_protocol| dep_protocol.name.clone())
             })
             .collect();
 
@@ -138,9 +138,9 @@ fn write_protocols_rs(protocols: &Vec<(WaylandProtocolMetadata, WaylandProtocol)
     write_generated_rust_file(generated_protocol_rs, "protocols.rs");
 }
 
-fn write_dispatch_rs(protocols: &Vec<(WaylandProtocolMetadata, WaylandProtocol)>) {
+fn write_dispatch_rs(protocols: &Vec<WaylandProtocol>) {
     // Generate the GlobalDispatch and Dispatch implementations for each protocol.
-    let generated_dispatch_implementations = protocols.iter().map(|(_metadata, protocol)| {
+    let generated_dispatch_implementations = protocols.iter().map(|protocol| {
         let namespace_name = if protocol.name == "wayland" {
             quote! { wayland_server::protocol }
         } else {
