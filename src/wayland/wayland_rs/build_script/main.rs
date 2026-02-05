@@ -32,6 +32,9 @@ fn main() {
 
     // Next, generate the protocols.rs file.
     write_protocols_rs(&protocols);
+
+    // Next, generate the dispatch and global dispatch methods.
+    write_dispatch_rs(&protocols);
 }
 
 fn write_protocols_rs(protocols: &Vec<(WaylandProtocolMetadata, WaylandProtocol)>) {
@@ -135,6 +138,98 @@ fn write_protocols_rs(protocols: &Vec<(WaylandProtocolMetadata, WaylandProtocol)
     write_generated_rust_file(generated_protocol_rs, "protocols.rs");
 }
 
+fn write_dispatch_rs(protocols: &Vec<(WaylandProtocolMetadata, WaylandProtocol)>) {
+    // Generate the global dispatch implementations for each protocol that require it.
+
+    // Generate the dispatch implementations for each protocol.
+    let generated_dispatch_implementations = protocols.iter().map(|(_metadata, protocol)| {
+        let namespace_name = if protocol.name == "wayland" {
+            quote! { wayland_server::protocol }
+        } else {
+            let protocol_module = format_ident!("{}", protocol.name.replace('-', "_"));
+            quote! { protocols::#protocol_module }
+        };
+
+        let dispatch_impls = protocol.interfaces.iter().map(|interface| {
+            let interface_name = format_ident!("{}", interface.name.replace('-', "_"));
+            if interface_name == "wl_display" {
+                // wl_display is handled specially in wayland_server crate via the 'Display' struct.
+                return quote! {};
+            }
+
+            let interface_struct_name = format_ident!("{}", snake_to_pascal(&interface.name));
+
+            let request_handler_arms = interface.items.iter().filter_map(|item| {
+                if let protocol_parser::InterfaceItem::Request(request) = item {
+                    let request_name = format_ident!("{}", snake_to_pascal(&request.name));
+                    let arg_names: Vec<proc_macro2::TokenStream> = request
+                        .args
+                        .iter()
+                        .map(|arg| {
+                            let arg_name = format_ident!("{}", arg.name.replace('-', "_"));
+                            quote! { #arg_name: _ }
+                        })
+                        .collect();
+
+                    Some(quote! {
+                        #namespace_name::#interface_name::Request::#request_name { #( #arg_names ),* } => {
+                            // Handle the #request_name request here
+                        }
+                    })
+                } else {
+                    None
+                }
+            });
+
+            // If the interface comes form wayland, we need to generate an empty arm because the
+            // enum is marked as non-exhaustive.
+            let request_handler_arms = if protocol.name == "wayland" {
+                let mut arms = request_handler_arms.collect::<Vec<_>>();
+                arms.push(quote! {
+                    _ => {}
+                });
+                arms
+            } else {
+                request_handler_arms.collect::<Vec<_>>()
+            };
+
+            quote! {
+                impl Dispatch<#namespace_name::#interface_name::#interface_struct_name, ()>
+                    for AppState
+                {
+                    fn request(
+                        _state: &mut Self,
+                        _client: &Client,
+                        _resource: &#namespace_name::#interface_name::#interface_struct_name,
+                        request: <#namespace_name::#interface_name::#interface_struct_name as wayland_server::Resource>::Request,
+                        _data: &(),
+                        _dhandle: &DisplayHandle,
+                        _data_init: &mut DataInit<'_, Self>,
+                    ) {
+                        match request {
+                            #(#request_handler_arms),*
+                        }
+                    }
+                }
+            }
+        });
+
+        return quote! {
+            #(#dispatch_impls)*
+        };
+    });
+
+    let generated_protocol_rs = quote! {
+        use wayland_server::{Client, DataInit, Dispatch, GlobalDispatch, New, DisplayHandle};
+        use crate::protocols;
+        use crate::app_state::AppState;
+
+        #(#generated_dispatch_implementations)*
+    };
+
+    write_generated_rust_file(generated_protocol_rs, "dispatch.rs");
+}
+
 /// Write the generated Rust code to a file with proper formatting.
 fn write_generated_rust_file(tokens: proc_macro2::TokenStream, filename: &str) {
     let out_dir = "src";
@@ -144,4 +239,16 @@ fn write_generated_rust_file(tokens: proc_macro2::TokenStream, filename: &str) {
     let formatted_code = prettyplease::unparse(&syntax_tree);
 
     fs::write(dest_path, formatted_code).unwrap();
+}
+
+fn snake_to_pascal(s: &str) -> String {
+    s.split('_')
+        .map(|word| {
+            let mut chars = word.chars();
+            match chars.next() {
+                None => String::new(),
+                Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
+            }
+        })
+        .collect()
 }
