@@ -22,3 +22,10 @@ calloop = { version = ">=0.10, <0.15" }
 log = "0.4"
 serde = { version = "1", features = ["derive"] }
 quick-xml = { version = "0.31", features = ["serialize"] }
+wayland-scanner = "0.31"
+wayland-backend = "0.3"
+bitflags = "2"
+quote = "1"
+proc-macro2 = "1"
+prettyplease = "0.2"
+syn = { version = "2", features = ["full", "parsing"] }
