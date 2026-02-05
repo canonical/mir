@@ -139,9 +139,7 @@ fn write_protocols_rs(protocols: &Vec<(WaylandProtocolMetadata, WaylandProtocol)
 }
 
 fn write_dispatch_rs(protocols: &Vec<(WaylandProtocolMetadata, WaylandProtocol)>) {
-    // Generate the global dispatch implementations for each protocol that require it.
-
-    // Generate the dispatch implementations for each protocol.
+    // Generate the GlobalDispatch and Dispatch implementations for each protocol.
     let generated_dispatch_implementations = protocols.iter().map(|(_metadata, protocol)| {
         let namespace_name = if protocol.name == "wayland" {
             quote! { wayland_server::protocol }
@@ -149,6 +147,39 @@ fn write_dispatch_rs(protocols: &Vec<(WaylandProtocolMetadata, WaylandProtocol)>
             let protocol_module = format_ident!("{}", protocol.name.replace('-', "_"));
             quote! { protocols::#protocol_module }
         };
+
+        let global_interfaces: Vec<&protocol_parser::WaylandInterface> = protocol
+            .interfaces
+            .iter()
+            .filter(|interface| interface.is_global)
+            .collect();
+
+        let global_dispatch_impls = global_interfaces.iter().map(|interface| {
+            let interface_name = format_ident!("{}", interface.name.replace('-', "_"));
+            let interface_struct_name = format_ident!("{}", snake_to_pascal(&interface.name));
+
+            if interface_name == "wl_display" {
+                // wl_display is handled specially in wayland_server crate via the 'Display' struct.
+                return quote! {};
+            }
+
+            quote! {
+                impl GlobalDispatch<#namespace_name::#interface_name::#interface_struct_name, ()>
+                    for ServerState
+                {
+                    fn bind(
+                        _state: &mut Self,
+                        _handle: &wayland_server::DisplayHandle,
+                        _client: &wayland_server::Client,
+                        resource: New<#namespace_name::#interface_name::#interface_struct_name>,
+                        _global_data: &(),
+                        data_init: &mut wayland_server::DataInit<'_, Self>,
+                    ) {
+                        data_init.init(resource, ());
+                    }
+                }
+            }
+        });
 
         let dispatch_impls = protocol.interfaces.iter().map(|interface| {
             let interface_name = format_ident!("{}", interface.name.replace('-', "_"));
@@ -195,7 +226,7 @@ fn write_dispatch_rs(protocols: &Vec<(WaylandProtocolMetadata, WaylandProtocol)>
 
             quote! {
                 impl Dispatch<#namespace_name::#interface_name::#interface_struct_name, ()>
-                    for AppState
+                    for ServerState
                 {
                     fn request(
                         _state: &mut Self,
@@ -215,6 +246,7 @@ fn write_dispatch_rs(protocols: &Vec<(WaylandProtocolMetadata, WaylandProtocol)>
         });
 
         return quote! {
+            #(#global_dispatch_impls)*
             #(#dispatch_impls)*
         };
     });
@@ -222,7 +254,7 @@ fn write_dispatch_rs(protocols: &Vec<(WaylandProtocolMetadata, WaylandProtocol)>
     let generated_protocol_rs = quote! {
         use wayland_server::{Client, DataInit, Dispatch, GlobalDispatch, New, DisplayHandle};
         use crate::protocols;
-        use crate::app_state::AppState;
+        use crate::wayland_server::ServerState;
 
         #(#generated_dispatch_implementations)*
     };

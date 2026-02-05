@@ -20,6 +20,9 @@ pub struct WaylandInterface {
     #[serde(rename = "@version")]
     pub version: u32,
 
+    #[serde(skip)]
+    pub is_global: bool,
+
     // $value tells quick-xml to put ALL child elements into this Vec,
     // maintaining their exact order.
     //
@@ -169,7 +172,7 @@ pub fn parse_protocols() -> Vec<(WaylandProtocolMetadata, WaylandProtocol)> {
         if let Ok(entry) = file {
             let xml_content =
                 fs::read_to_string(entry.path()).expect("Failed to read protocol XML file");
-            let protocol: WaylandProtocol = quick_xml::de::from_str(&xml_content)
+            let mut protocol: WaylandProtocol = quick_xml::de::from_str(&xml_content)
                 .map_err(|e| {
                     panic!(
                         "Failed to parse protocol XML file {}: {}",
@@ -217,6 +220,39 @@ pub fn parse_protocols() -> Vec<(WaylandProtocolMetadata, WaylandProtocol)> {
                         _ => {}
                     }
                 }
+            }
+
+            // Check if the interface is global or not.
+            // An interface is considered global if it is not created by any other interface's request or event.
+            let global_interfaces: Vec<bool> = protocol
+                .interfaces
+                .iter()
+                .map(|interface| {
+                    let mut is_global = true;
+                    for other_interface in &protocol.interfaces {
+                        for item in &other_interface.items {
+                            match item {
+                                InterfaceItem::Request(req) => {
+                                    for arg in &req.args {
+                                        if let Some(interface_name) = &arg.interface {
+                                            if interface_name == &interface.name
+                                                && arg.type_ == "new_id"
+                                            {
+                                                is_global = false;
+                                            }
+                                        }
+                                    }
+                                }
+                                _ => {}
+                            }
+                        }
+                    }
+                    is_global
+                })
+                .collect();
+
+            for (interface, is_global) in protocol.interfaces.iter_mut().zip(global_interfaces) {
+                interface.is_global = is_global;
             }
 
             protocols.push((metadata, protocol));

@@ -143,7 +143,7 @@ pub fn create_wayland_server() -> Box<WaylandServer> {
 }
 
 /// The state of the wayland server.
-struct ServerState {
+pub struct ServerState {
     handle: DisplayHandle,
     stop_requested: bool,
 }

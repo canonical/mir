@@ -14,7 +14,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-mod app_state;
 mod dispatch;
 mod protocols;
 mod wayland_server;
