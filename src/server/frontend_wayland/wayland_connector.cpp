@@ -34,6 +34,7 @@
 #include "wp_viewporter.h"
 #include "linux_drm_syncobj.h"
 #include "surface_registry.h"
+#include "input_triggers/input_trigger_data.h"
 
 #include <mir/errno_utils.h>
 #include <mir/main_loop.h>
@@ -323,6 +324,9 @@ mf::WaylandConnector::WaylandConnector(
         std::move(drag_icon_controller),
         std::move(pointer_input_dispatcher));
 
+    auto const input_trigger_data =
+        std::make_shared<frontend::InputTriggerData>(token_authority, composite_event_filter);
+
     extensions->init(WaylandExtensions::Context{
         display.get(),
         executor,
@@ -348,7 +352,8 @@ mf::WaylandConnector::WaylandConnector(
         token_authority,
         surface_registry,
         clock,
-        cursor_observer_multiplexer});
+        cursor_observer_multiplexer,
+        input_trigger_data});
 
     shm_global = std::make_unique<WlShm>(display.get(), executor);
 
