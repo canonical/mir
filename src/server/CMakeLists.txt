@@ -96,6 +96,7 @@ set(MIR_SERVER_REFERENCES
   mircompositor
   mirgraphics
   mirfrontend-wayland
+  mirfrontend-wayland-input-trigger
   mirfrontend-xwayland
   mirshell
   mirshelldecoration
