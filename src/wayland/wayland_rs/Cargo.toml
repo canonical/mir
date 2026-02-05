@@ -3,6 +3,7 @@ name = "wayland_rs"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
+build = "build_script/main.rs"
 
 [lib]
 crate-type = ["staticlib"]
@@ -13,8 +14,15 @@ cxx.workspace = true
 calloop.workspace = true
 nix = { workspace = true, features = ["event"] }
 log.workspace = true
+wayland-scanner.workspace = true
+wayland-backend.workspace = true
+bitflags.workspace = true
 
 [build-dependencies]
 cxx-build.workspace = true
 serde.workspace = true
 quick-xml.workspace = true
+quote.workspace = true
+proc-macro2.workspace = true
+prettyplease.workspace = true
+syn.workspace = true
