@@ -108,6 +108,13 @@ protected:
     bool begin_touch_move(WindowInfo const& window_info, MirInputEvent const* input_event);
     bool begin_touch_resize(WindowInfo const& window_info, MirInputEvent const* input_event, MirResizeEdge const& edge);
 
+    /// Helper methods to interact with application_selector
+    /// These can be overridden by subclasses to customize behavior
+    /// \remark Since MirAL 6.2
+    virtual void application_selector_advise_focus_gained(WindowInfo const& window_info);
+    virtual void application_selector_advise_focus_lost(WindowInfo const& window_info);
+    virtual void application_selector_advise_delete_window(WindowInfo const& window_info);
+
 private:
     struct Impl;
     Impl* const self;
