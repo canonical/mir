@@ -232,10 +232,10 @@ private:
         std::optional<int> logical_output_group_id;
         std::set<Window> attached_windows; ///< Maximized/anchored/etc windows attached to this area
 
-        /// Keeps track of window states for hidden attached windows. Recorded
-        /// when a window is fullscreened, restored and cleared when the window
-        /// is un-fullscreened.
-        std::vector<std::pair<Window, MirWindowState>> hidden_attached_window_states;
+        /// Keeps track of hidden attached windows. Recorded when a window is
+        /// fullscreened, restored and cleared when the window is
+        /// un-fullscreened.
+        std::vector<Window> hidden_attached_windows;
     };
 
     using SurfaceInfoMap = std::map<std::weak_ptr<mir::scene::Surface>, WindowInfo, std::owner_less<std::weak_ptr<mir::scene::Surface>>>;

@@ -69,36 +69,33 @@ auto is_window_or_parent_fullscreen(miral::Window const& window, miral::BasicWin
 
 void miral::BasicWindowManager::DisplayArea::hide_all_attached(BasicWindowManager& bwm)
 {
+    // Copy as `set_state` may modify `attached_windows` and invalidate the iterator.
+    auto const attached_windows = this->attached_windows;
+
     for (auto& window : attached_windows)
     {
         auto& info = bwm.info_for(window);
+
         if (info.depth_layer() != mir_depth_layer_above)
             continue;
 
-        hidden_attached_window_states.push_back({window, info.state()});
-        bwm.policy->advise_state_change(info, mir_window_state_hidden);
-        info.state(mir_window_state_hidden);
-        auto const mir_surface = std::shared_ptr<scene::Surface>(window);
-        mir_surface->hide();
+        hidden_attached_windows.push_back(window);
+        bwm.set_state(info, mir_window_state_hidden);
     }
 }
 
 void miral::BasicWindowManager::DisplayArea::restore_all_attached(BasicWindowManager& bwm)
 {
-    for (auto& [window, prev_state] : hidden_attached_window_states)
+    for (auto& window : hidden_attached_windows)
     {
         if(!window)
             continue;
 
         auto& info = bwm.info_for(window);
-
-        bwm.policy->advise_state_change(info, mir_window_state_hidden);
-        info.state(prev_state);
-        auto const mir_surface = std::shared_ptr<scene::Surface>(window);
-        mir_surface->show();
+        bwm.set_state(info, mir_window_state_attached);
     }
 
-    hidden_attached_window_states.clear();
+    hidden_attached_windows.clear();
 }
 
 auto miral::BasicWindowManager::DisplayArea::bounding_rectangle_of_contained_outputs() const -> Rectangle
