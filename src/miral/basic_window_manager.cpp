@@ -728,11 +728,11 @@ auto miral::BasicWindowManager::display_area_for(WindowInfo const& info) const -
 
     for (auto& area : display_areas)
     {
-        for (auto& area_window : area->attached_windows)
-        {
-            if (area_window == window)
-                return area;
-        }
+        if(std::ranges::contains(area->attached_windows, window))
+            return area;
+
+        if(std::ranges::contains(area->hidden_attached_windows, window))
+            return area;
     }
 
     // If the window is not explicity attached to any area, find the area it overlaps most with
