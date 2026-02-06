@@ -1758,19 +1758,39 @@ auto miral::BasicWindowManager::select_active_window(Window const& hint) -> mira
 
         policy->advise_focus_gained(info_for_hint);
 
-        // Handle showing/hiding attached surfaces based on focus changes
-        auto const prev_is_fullscreen = is_window_or_parent_fullscreen(prev_window, *this);
-        auto const hint_is_fullscreen = is_window_or_parent_fullscreen(hint, *this);
+        if(prev_window != hint)
+        {
+            // Handle showing/hiding attached surfaces based on focus changes
+            auto const prev_is_fullscreen = is_window_or_parent_fullscreen(prev_window, *this);
+            auto const hint_is_fullscreen = is_window_or_parent_fullscreen(hint, *this);
 
-        if (!prev_is_fullscreen && hint_is_fullscreen)
-        {
-            auto display_area = display_area_for(info_for_hint);
-            display_area->hide_all_attached(*this);
+            if (!prev_is_fullscreen && hint_is_fullscreen)
+            {
+                auto display_area = display_area_for(info_for_hint);
+                display_area->hide_all_attached(*this);
+            }
+            else if (prev_is_fullscreen && !hint_is_fullscreen)
+            {
+                auto display_area = display_area_for(info_for_hint);
+                display_area->restore_all_attached(*this);
+            }
         }
-        else if (prev_is_fullscreen && !hint_is_fullscreen)
+        else
         {
-            auto display_area = display_area_for(info_for_hint);
-            display_area->restore_all_attached(*this);
+            // Special case, previous window just got removed. prev is the same
+            // as hint because the real previous window got removed off the top
+            // MRU window stack, leaving `active_window()` as the top, which is
+            // coincidentally the hint because we're traversing the window
+            // stack from top to bottom.
+            //
+            // Fun for the whole family!
+            //
+            // Need to check if the new active window is fullscreen and hide
+            // attached windows if so.
+            {
+                auto display_area = display_area_for(info_for_hint);
+                display_area->hide_all_attached(*this);
+            }
         }
 
         return hint;
