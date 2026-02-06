@@ -1494,8 +1494,9 @@ public:
     {
         return [this](miral::WindowManagerTools const& tools)
         {
-            custom_wm = new CustomMinimalWindowManager(tools, focus_stealing());
-            return std::unique_ptr<miral::WindowManagementPolicy>(custom_wm);
+            auto wm = std::make_unique<CustomMinimalWindowManager>(tools, focus_stealing());
+            custom_wm = wm.get();
+            return wm;
         };
     }
 
