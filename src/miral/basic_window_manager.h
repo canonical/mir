@@ -207,8 +207,13 @@ private:
         {
         }
 
+        // Precondition: `hidden_attached_windows` is empty.
+        //
+        // In other words, this should not be called if there are any currently
+        // fullscreened windows attached to this area.
         void hide_all_attached(BasicWindowManager&);
 
+        // Postcondition: `hidden_attached_windows` is empty.
         void restore_all_attached(BasicWindowManager&);
 
         bool is_hidden_attached(WindowInfo const& window_info) const;
