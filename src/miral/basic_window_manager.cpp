@@ -330,7 +330,10 @@ void miral::BasicWindowManager::remove_window(Application const& application, mi
     mru_active_windows.erase(info.window());
     fullscreen_surfaces.erase(info.window());
     for (auto& area : display_areas)
+    {
         area->attached_windows.erase(info.window());
+        std::erase(area->hidden_attached_windows, info.window());
+    }
     if (info.state() == mir_window_state_attached &&
         info.exclusive_rect().is_set())
     {
