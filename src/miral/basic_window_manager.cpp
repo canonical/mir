@@ -87,6 +87,9 @@ void miral::BasicWindowManager::DisplayArea::restore_all_attached(BasicWindowMan
 {
     for (auto& [window, prev_state] : hidden_attached_window_states)
     {
+        if(!window)
+            continue;
+
         auto& info = bwm.info_for(window);
 
         bwm.policy->advise_state_change(info, mir_window_state_hidden);
