@@ -211,6 +211,8 @@ private:
 
         void restore_all_attached(BasicWindowManager&);
 
+        bool is_hidden_attached(WindowInfo const& window_info) const;
+
         /// Returns the bounding rectangle of the extents of all contained outputs
         auto bounding_rectangle_of_contained_outputs() const -> Rectangle;
 

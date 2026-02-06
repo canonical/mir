@@ -98,6 +98,11 @@ void miral::BasicWindowManager::DisplayArea::restore_all_attached(BasicWindowMan
     hidden_attached_windows.clear();
 }
 
+bool miral::BasicWindowManager::DisplayArea::is_hidden_attached(WindowInfo const& window_info) const
+{
+    return std::ranges::contains(hidden_attached_windows, window_info.window());
+}
+
 auto miral::BasicWindowManager::DisplayArea::bounding_rectangle_of_contained_outputs() const -> Rectangle
 {
     Rectangles box;
@@ -268,6 +273,13 @@ void miral::BasicWindowManager::modify_surface(
     auto& info = info_for(surface);
     WindowSpecification mods{modifications};
     validate_modification_request(mods, info);
+
+    // If a layer shell surface (waybar) tries to submit a buffer while
+    // its hidden (in favor of another fullscreen surface), don't try
+    // to modify its placement.
+    if (display_area_for(info)->is_hidden_attached(info))
+        mods.state().consume();
+
     place_and_size_for_state(mods, info);
     if (!mods.state() && info.state() == mir_window_state_fullscreen)
     {
