@@ -1513,19 +1513,10 @@ void miral::BasicWindowManager::update_attached_and_fullscreen_sets(WindowInfo c
     if (state == mir_window_state_fullscreen)
     {
         fullscreen_surfaces.insert(window);
-
-        // Hide everyone else
-        if(window_info.depth_layer() == mir_depth_layer_application)
-            display_area->hide_all_attached(*this);
     }
     else
     {
         fullscreen_surfaces.erase(window);
-
-        // Account for when a child window pops up (menubar dropdowns, etc..)
-        auto const any_parent_is_fullscreen = is_window_or_parent_fullscreen(window, *this);
-        if(!any_parent_is_fullscreen && window_info.depth_layer() == mir_depth_layer_application)
-            display_area->restore_all_attached(*this);
     }
 
     for (auto& area : display_areas)
@@ -1558,8 +1549,17 @@ void miral::BasicWindowManager::set_state(miral::WindowInfo& window_info, MirWin
     auto const mir_surface = std::shared_ptr<scene::Surface>(window);
     bool const was_hidden = window_info.state() == mir_window_state_hidden ||
                             window_info.state() == mir_window_state_minimized;
+    auto const has_focus = active_window() == window;
+    auto const display_area = display_area_for(window_info);
 
     policy->advise_state_change(window_info, value);
+
+    // Focused app left fullscreen, restore any attached surfaces on the same display
+    if (has_focus && window_info.state() == mir_window_state_fullscreen && value != mir_window_state_fullscreen &&
+        window_info.depth_layer() == mir_depth_layer_application)
+    {
+        display_area->restore_all_attached(*this);
+    }
 
     switch (value)
     {
@@ -1622,6 +1622,10 @@ void miral::BasicWindowManager::set_state(miral::WindowInfo& window_info, MirWin
         mir_surface->hide();
 
         break;
+    case mir_window_state_fullscreen:
+        // Focused app went fullsreen, hide any attached surfaces on the same display
+        if (has_focus && window_info.depth_layer() == mir_depth_layer_application)
+            display_area->hide_all_attached(*this);
 
     default:
         bool const can_become_active =
