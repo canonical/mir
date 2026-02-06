@@ -1507,7 +1507,7 @@ TEST_F(CustomMinimalWindowManagerTest, application_selector_helpers_are_accessib
 {
     // Test that subclasses can use the protected helper methods
     // to interact with application_selector
-    
+
     // Create first window
     auto const app1 = open_application("app1");
     miral::WindowSpecification spec;
@@ -1537,7 +1537,7 @@ TEST_F(CustomMinimalWindowManagerTest, sloppy_focus_does_not_raise_tree)
 {
     // Test that customized advise_focus_gained without raise_tree
     // results in sloppy focus behavior (focus without raising)
-    
+
     auto const app1 = open_application("app1");
     miral::WindowSpecification spec;
     spec.size() = { geom::Width{100}, geom::Height{100} };
@@ -1556,7 +1556,7 @@ TEST_F(CustomMinimalWindowManagerTest, sloppy_focus_does_not_raise_tree)
     // With sloppy focus (our custom behavior), window1 should NOT be raised
     // so window2 should still be above window1
     EXPECT_TRUE(is_above(window2, window1));
-    
+
     // But window1 should have focus
     EXPECT_TRUE(focused(window1));
 }
