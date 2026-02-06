@@ -75,7 +75,6 @@ void miral::BasicWindowManager::DisplayArea::hide_all_attached(BasicWindowManage
         if (info.depth_layer() != mir_depth_layer_above)
             continue;
 
-
         hidden_attached_window_states.push_back({window, info.state()});
         bwm.policy->advise_state_change(info, mir_window_state_hidden);
         info.state(mir_window_state_hidden);
@@ -1516,7 +1515,6 @@ void miral::BasicWindowManager::update_attached_and_fullscreen_sets(WindowInfo c
         if(!any_parent_is_fullscreen && window_info.depth_layer() == mir_depth_layer_application)
             display_area->restore_all_attached(*this);
     }
-
 
     for (auto& area : display_areas)
         area->attached_windows.erase(window);
