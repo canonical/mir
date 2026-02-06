@@ -310,7 +310,7 @@ void miral::BasicWindowManager::remove_surface(
 
 void miral::BasicWindowManager::remove_window(Application const& application, miral::WindowInfo const& info)
 {
-    bool const is_active_window{active_window() == info.window()};
+    bool const was_active_window{active_window() == info.window()};
     auto const workspaces_containing_window = workspaces_containing(info.window());
 
     {
@@ -339,20 +339,30 @@ void miral::BasicWindowManager::remove_window(Application const& application, mi
 
     application->destroy_surface(info.window());
 
-    // If a fullscreen window is closed, restore any hidden attached surfaces
-    bool const was_fullscreen{info.state() == mir_window_state_fullscreen};
-    if (was_fullscreen)
-    {
-        auto display_area = display_area_for(info);
-        display_area->restore_all_attached(*this);
-    }
-
+    bool const prev_was_fullscreen{info.state() == mir_window_state_fullscreen};
     // NB erase() invalidates info, but we want to keep access to "parent".
     auto const parent = info.parent();
+    auto const prev_display_area = display_area_for(info);
     erase(info);
 
-    if (is_active_window)
+    if (was_active_window)
     {
+        if(auto const current_active = active_window())
+        {
+            auto const& info_for_current = info_for(current_active);
+            bool const current_is_fullscreen = info_for_current.state() == mir_window_state_fullscreen;
+
+            if (prev_was_fullscreen && !current_is_fullscreen)
+                display_area_for(info_for_current)->restore_all_attached(*this);
+            else if (!prev_was_fullscreen && current_is_fullscreen)
+                display_area_for(info_for_current)->hide_all_attached(*this);
+        }
+        else
+        {
+            // No currently active window, restore prev?
+            prev_display_area->restore_all_attached(*this);
+        }
+
         refocus(application, parent, workspaces_containing_window);
     }
 }
@@ -1773,23 +1783,6 @@ auto miral::BasicWindowManager::select_active_window(Window const& hint) -> mira
             {
                 auto display_area = display_area_for(info_for_hint);
                 display_area->restore_all_attached(*this);
-            }
-        }
-        else
-        {
-            // Special case, previous window just got removed. prev is the same
-            // as hint because the real previous window got removed off the top
-            // MRU window stack, leaving `active_window()` as the top, which is
-            // coincidentally the hint because we're traversing the window
-            // stack from top to bottom.
-            //
-            // Fun for the whole family!
-            //
-            // Need to check if the new active window is fullscreen and hide
-            // attached windows if so.
-            {
-                auto display_area = display_area_for(info_for_hint);
-                display_area->hide_all_attached(*this);
             }
         }
 
