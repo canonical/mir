@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "src/server/frontend_wayland/input_triggers/input_trigger_data.h"
+#include "src/server/frontend_wayland/input_trigger_data.h"
 
 #include <xkbcommon/xkbcommon-keysyms.h>
 

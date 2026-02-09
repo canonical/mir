@@ -56,8 +56,8 @@
 #include "xdg_shell_v6.h"
 #include "xwayland_wm_shell.h"
 #include "data_control_v1.h"
-#include "input_triggers/input_trigger_registration_v1.h"
-#include "input_triggers/input_trigger_action_v1.h"
+#include "input_trigger_registration_v1.h"
+#include "input_trigger_action_v1.h"
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
