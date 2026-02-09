@@ -764,3 +764,12 @@ global:
     vtable?for?miral::FloatingWindowManager;
   };
 } MIRAL_5.5;
+
+MIRAL_5.7 {
+global:
+  extern "C++" {
+    miral::MinimalWindowManager::application_selector_advise_delete_window*;
+    miral::MinimalWindowManager::application_selector_advise_focus_gained*;
+    miral::MinimalWindowManager::application_selector_advise_focus_lost*;
+  };
+} MIRAL_5.6;
