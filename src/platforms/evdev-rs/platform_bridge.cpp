@@ -114,6 +114,30 @@ std::shared_ptr<MirEvent> miers::EventBuilderWrapper::key_event(KeyEventData con
     );
 }
 
+std::shared_ptr<MirEvent> miers::EventBuilderWrapper::touch_event(TouchEventData const& data) const
+{
+    std::vector<events::TouchContact> contacts;
+    for (auto const& contact : data.contacts)
+    {
+        contacts.push_back(events::TouchContact(
+            static_cast<MirTouchId>(contact.touch_id),
+            static_cast<MirTouchAction>(contact.action),
+            static_cast<MirTouchTooltype>(contact.tooltype),
+            geom::PointF(contact.position_x, contact.position_y),
+            contact.pressure,
+            contact.touch_major,
+            contact.touch_minor,
+            contact.orientation
+        ));
+    }
+    return event_builder->touch_event(
+        data.has_time
+          ? std::chrono::microseconds(data.time_microseconds)
+          : std::optional<EventBuilder::Timestamp>(std::nullopt),
+          contacts
+    );
+}
+
 miers::RectangleWrapper::RectangleWrapper(geometry::Rectangle&& rect)
     : rect{std::move(rect)}
 {

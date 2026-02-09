@@ -16,8 +16,11 @@
 
 use cxx::SharedPtr;
 use input;
+use std::collections::HashMap;
 use std::sync::Arc;
 use std::sync::Mutex;
+
+use crate::{MirTouchAction, MirTouchTooltype};
 
 pub struct DeviceInfo {
     pub id: i32,
@@ -95,6 +98,34 @@ impl DeviceObserverRs {
     }
 }
 
+pub struct ContactData {
+    pub action: MirTouchAction,
+    pub tooltype: MirTouchTooltype,
+    pub x: f32,
+    pub y: f32,
+    pub major: f32,
+    pub minor: f32,
+    pub pressure: f32,
+    pub orientation: f32,
+    pub down_notified: bool,
+}
+
+impl ContactData {
+    pub fn default() -> ContactData {
+        ContactData {
+            action: MirTouchAction::mir_touch_action_change,
+            tooltype: MirTouchTooltype::mir_touch_tooltype_unknown,
+            x: 0.0,
+            y: 0.0,
+            major: 0.0,
+            minor: 0.0,
+            pressure: 0.0,
+            orientation: 0.0,
+            down_notified: false,
+        }
+    }
+}
+
 pub struct LibinputLoopState {
     pub libinput: input::Libinput,
     pub known_devices: Vec<DeviceInfo>,
@@ -106,6 +137,7 @@ pub struct LibinputLoopState {
     pub scroll_axis_y_accum: f64,
     pub x_scroll_scale: f64,
     pub y_scroll_scale: f64,
+    pub touch_properties: HashMap<u32, ContactData>,
 }
 
 impl LibinputLoopState {
