@@ -78,12 +78,34 @@ struct KeyEventData
     uint32_t scancode;
 };
 
+struct TouchContactData
+{
+    int32_t touch_id;
+    int32_t action;
+    int32_t tooltype;
+    float position_x;
+    float position_y;
+    float pressure;
+    float touch_major;
+    float touch_minor;
+    float orientation;
+};
+
+
+struct TouchEventData
+{
+    bool has_time;
+    uint64_t time_microseconds;
+    std::vector<TouchContactData> contacts;
+};
+
 class EventBuilderWrapper
 {
 public:
     explicit EventBuilderWrapper(EventBuilder* event_builder);
     std::shared_ptr<MirEvent> pointer_event(PointerEventData const&) const;
     std::shared_ptr<MirEvent> key_event(KeyEventData const&) const;
+    std::shared_ptr<MirEvent> touch_event(TouchEventData const&) const;
 
 private:
     EventBuilder* event_builder;

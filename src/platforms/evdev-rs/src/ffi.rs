@@ -57,3 +57,29 @@ unsafe impl ExternType for PointerEventDataRs {
     type Id = cxx::type_id!("mir::input::evdev_rs::PointerEventData");
     type Kind = cxx::kind::Trivial;
 }
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct TouchEventContactRs {
+    pub touch_id: u32,
+    pub action: i32,
+    pub tooltype: i32,
+    pub position_x: f32,
+    pub position_y: f32,
+    pub pressure: f32,
+    pub touch_major: f32,
+    pub touch_minor: f32,
+    pub orientation: f32,
+}
+
+#[repr(C)]
+pub struct TouchEventDataRs {
+    pub has_time: bool,
+    pub time_microseconds: u64,
+    pub contacts: Vec<TouchEventContactRs>,
+}
+
+unsafe impl ExternType for TouchEventDataRs {
+    type Id = cxx::type_id!("mir::input::evdev_rs::TouchEventData");
+    type Kind = cxx::kind::Trivial;
+}
