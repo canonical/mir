@@ -284,7 +284,6 @@ private:
 
     void get_capture_session(wl_resource* session) override;
 
-    // From CursorObserver
     void cursor_moved_to(float abs_x, float abs_y);
     void pointer_usable();
     void pointer_unusable();
@@ -841,7 +840,7 @@ class mf::ExtImageCopyCaptureCursorSessionV1::CursorObserver
     : public mi::CursorObserver
 {
 public:
-    CursorObserver(ExtImageCopyCaptureCursorSessionV1& session)
+    explicit CursorObserver(ExtImageCopyCaptureCursorSessionV1& session)
         : session{session}
     {
     }
