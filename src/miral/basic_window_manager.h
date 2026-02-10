@@ -350,6 +350,8 @@ private:
     auto collect_windows(WindowInfo const& info) -> SurfaceSet;
 
     void handle_attached_surfaces_for_focus_change(Window const& prev, Window const& current);
+    void handle_attached_surfaces_for_window_removal(
+        bool prev_was_fullscreen, std::shared_ptr<DisplayArea> const& prev_display_area);
 };
 }
 

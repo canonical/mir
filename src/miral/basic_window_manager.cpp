@@ -312,6 +312,8 @@ void miral::BasicWindowManager::remove_window(Application const& application, mi
 {
     bool const was_active_window{active_window() == info.window()};
     auto const workspaces_containing_window = workspaces_containing(info.window());
+    bool const prev_was_fullscreen{info.state() == mir_window_state_fullscreen};
+    auto const prev_display_area = display_area_for(info);
 
     {
         std::vector<Window> const windows_removed{info.window()};
@@ -342,30 +344,13 @@ void miral::BasicWindowManager::remove_window(Application const& application, mi
 
     application->destroy_surface(info.window());
 
-    bool const prev_was_fullscreen{info.state() == mir_window_state_fullscreen};
     // NB erase() invalidates info, but we want to keep access to "parent".
     auto const parent = info.parent();
-    auto const prev_display_area = display_area_for(info);
     erase(info);
 
     if (was_active_window)
     {
-        if(auto const current_active = active_window())
-        {
-            auto const& info_for_current = info_for(current_active);
-            bool const current_is_fullscreen = info_for_current.state() == mir_window_state_fullscreen;
-
-            if (prev_was_fullscreen && !current_is_fullscreen)
-                display_area_for(info_for_current)->restore_all_attached(*this);
-            else if (!prev_was_fullscreen && current_is_fullscreen)
-                display_area_for(info_for_current)->hide_all_attached(*this);
-        }
-        else
-        {
-            // No currently active window, restore prev?
-            prev_display_area->restore_all_attached(*this);
-        }
-
+        handle_attached_surfaces_for_window_removal(prev_was_fullscreen, prev_display_area);
         refocus(application, parent, workspaces_containing_window);
     }
 }
@@ -1049,6 +1034,34 @@ void miral::BasicWindowManager::handle_attached_surfaces_for_focus_change(Window
         else if (!prev_was_fullscreen && current_is_fullscreen)
             current_display_area->hide_all_attached(*this);
     }
+}
+
+void miral::BasicWindowManager::handle_attached_surfaces_for_window_removal(
+    bool prev_was_fullscreen, std::shared_ptr<DisplayArea> const& prev_display_area)
+{
+        if(auto const current_active = active_window())
+        {
+            // Account for the possibility for multiple fullscreen windows on the same display
+            auto const any_fullscreen_apps_on_prev = std::ranges::any_of(
+                fullscreen_surfaces,
+                [&](Window const& fs)
+                {
+                    auto const& info = info_for(fs);
+                    return info.depth_layer() == mir_depth_layer_application &&
+                           display_area_for(info) == prev_display_area;
+                });
+
+            if (prev_was_fullscreen && !any_fullscreen_apps_on_prev)
+                prev_display_area->restore_all_attached(*this);
+            else if (!prev_was_fullscreen && any_fullscreen_apps_on_prev)
+                prev_display_area->hide_all_attached(*this);
+        }
+        else
+        {
+            // No currently active window, restore prev?
+            prev_display_area->restore_all_attached(*this);
+        }
+
 }
 
 void miral::BasicWindowManager::raise_tree(Window const& root)
@@ -1817,22 +1830,7 @@ auto miral::BasicWindowManager::select_active_window(Window const& hint) -> mira
         policy->advise_focus_gained(info_for_hint);
 
         if(prev_window != hint)
-        {
-            // Handle showing/hiding attached surfaces based on focus changes
-            auto const prev_is_fullscreen = is_window_or_parent_fullscreen(prev_window, *this);
-            auto const hint_is_fullscreen = is_window_or_parent_fullscreen(hint, *this);
-
-            if (!prev_is_fullscreen && hint_is_fullscreen)
-            {
-                auto display_area = display_area_for(info_for_hint);
-                display_area->hide_all_attached(*this);
-            }
-            else if (prev_is_fullscreen && !hint_is_fullscreen)
-            {
-                auto display_area = display_area_for(info_for_hint);
-                display_area->restore_all_attached(*this);
-            }
-        }
+            handle_attached_surfaces_for_focus_change(prev_window, hint);
 
         return hint;
     }
