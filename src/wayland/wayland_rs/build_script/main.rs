@@ -14,13 +14,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+mod cpp_builder;
 mod protocol_parser;
 
+use cpp_builder::CppBuilder;
 use proc_macro2::TokenStream;
 use protocol_parser::{parse_protocols, WaylandProtocol};
 use quote::{format_ident, quote};
 use std::fs;
 use syn::Ident;
+
+use crate::{
+    cpp_builder::{CppArg, CppClass, CppMethod, CppNamespace, CppType},
+    protocol_parser::{WaylandArg, WaylandInterface, WaylandRequest},
+};
 
 fn main() {
     cxx_build::bridges(vec!["src/lib.rs"]).compile("wayland_rs");
@@ -36,6 +43,9 @@ fn main() {
 
     // Next, generate the dispatch and global dispatch methods.
     write_dispatch_rs(&protocols);
+
+    // Next, generate a C++ abstract class for each interface.
+    write_cpp_protocol_headers(&protocols);
 }
 
 fn write_protocols_rs(protocols: &Vec<WaylandProtocol>) {
@@ -45,7 +55,7 @@ fn write_protocols_rs(protocols: &Vec<WaylandProtocol>) {
             return quote! {};
         }
 
-        let struct_name = dash_name_to_snake_case_ident(&protocol.name);
+        let struct_name = dash_to_snake_ident(&protocol.name);
         let path = &protocol.path;
 
         // Add use statements for other protocol dependencies.
@@ -72,7 +82,7 @@ fn write_protocols_rs(protocols: &Vec<WaylandProtocol>) {
         };
 
         for dependency in &protocol_dependencies {
-            let dep_struct_name = dash_name_to_snake_case_ident(dependency);
+            let dep_struct_name = dash_to_snake_ident(dependency);
             if dep_struct_name != struct_name {
                 if dep_struct_name == "wayland" {
                     server_code_use_statements = quote! {
@@ -90,7 +100,7 @@ fn write_protocols_rs(protocols: &Vec<WaylandProtocol>) {
 
         let mut interface_code_use_statements: TokenStream = quote! {};
         for dependency in &protocol_dependencies {
-            let dep_struct_name = dash_name_to_snake_case_ident(dependency);
+            let dep_struct_name = dash_to_snake_ident(dependency);
             if dep_struct_name != struct_name {
                 if dep_struct_name == "wayland" {
                     interface_code_use_statements = quote! {
@@ -144,7 +154,7 @@ fn generate_namespace(protocol: &WaylandProtocol) -> TokenStream {
     if protocol.name == "wayland" {
         quote! { wayland_server::protocol }
     } else {
-        let protocol_module = dash_name_to_snake_case_ident(&protocol.name);
+        let protocol_module = dash_to_snake_ident(&protocol.name);
         quote! { protocols::#protocol_module }
     }
 }
@@ -154,7 +164,7 @@ fn generate_global_dispatch_impl(
     interface: &protocol_parser::WaylandInterface,
     namespace_name: &TokenStream,
 ) -> TokenStream {
-    let interface_name = dash_name_to_snake_case_ident(&interface.name.to_string());
+    let interface_name = dash_to_snake_ident(&interface.name.to_string());
     let interface_struct_name = format_ident!("{}", snake_to_pascal(&interface.name));
 
     if interface_name == "wl_display" {
@@ -219,7 +229,7 @@ fn generate_dispatch_impl(
     namespace_name: &TokenStream,
     is_wayland_protocol: bool,
 ) -> TokenStream {
-    let interface_name = dash_name_to_snake_case_ident(&interface.name);
+    let interface_name = dash_to_snake_ident(&interface.name);
 
     if interface_name == "wl_display" || interface_name == "wl_registry" {
         // wl_display and wl_registry are handled specially in wayland_server crate via the 'Display' struct.
@@ -302,8 +312,75 @@ fn write_dispatch_rs(protocols: &Vec<WaylandProtocol>) {
     write_generated_rust_file(generated_protocol_rs, "dispatch.rs");
 }
 
-fn dash_name_to_snake_case_ident(name: &String) -> Ident {
-    format_ident!("{}", name.replace('-', "_"))
+/// Write a header file for each protocol containing abstract classes per-interface.
+fn write_cpp_protocol_headers(protocols: &Vec<WaylandProtocol>) {
+    protocols
+        .iter()
+        .for_each(|protocol| write_cpp_protocol_header(protocol));
+}
+
+fn write_cpp_protocol_header(protocol: &WaylandProtocol) {
+    let guard = format!("MIR_WAYLANDRS_{}", protocol.name.to_uppercase());
+    let mut builder = CppBuilder::new(guard);
+    let mut namespace = CppNamespace::new(vec!["mir".to_string(), "wayland_rs".to_string()]);
+
+    let classes = protocol
+        .interfaces
+        .iter()
+        .map(|interface| wayland_interface_to_cpp_class(interface));
+
+    for class in classes {
+        namespace.add_class(class);
+    }
+    builder.add_namespace(namespace);
+    builder.add_include("<rust/cxx.h>".to_string());
+
+    let filename = format!("{}.h", protocol.name);
+    write_generated_cpp_file(&builder.to_string(), filename.as_str());
+}
+
+fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
+    let mut class = CppClass::new(snake_to_pascal(&interface.name));
+    let methods = interface.items.iter().filter_map(|item| {
+        if let protocol_parser::InterfaceItem::Request(request) = item {
+            Some(wayland_request_to_cpp_method(request))
+        } else {
+            None
+        }
+    });
+
+    for method in methods {
+        class.add_method(method);
+    }
+
+    class
+}
+
+fn wayland_request_to_cpp_method(method: &WaylandRequest) -> CppMethod {
+    let mut cpp_method = CppMethod::new(method.name.clone());
+    let args = method.args.iter().map(|arg| {
+        let type_ = match arg.type_.as_str() {
+            "int" => CppType::CppI32,
+            "uint" => CppType::CppU32,
+            "fixed" => CppType::CppF32,
+            "string" => CppType::String,
+            "object" => {
+                CppType::Object(arg.interface.clone().expect("Object is missing interface"))
+            }
+            "new_id" => CppType::NewId(arg.interface.clone().expect("New id is missing interface")),
+            "array" => CppType::Array,
+            "fd" => CppType::Fd,
+            _ => panic!("Unknown type: {}", arg.type_),
+        };
+
+        CppArg::new(type_, arg.name.clone())
+    });
+
+    for arg in args {
+        cpp_method.add_arg(arg);
+    }
+
+    cpp_method
 }
 
 /// Write the generated Rust code to a file with proper formatting.
@@ -315,6 +392,23 @@ fn write_generated_rust_file(tokens: proc_macro2::TokenStream, filename: &str) {
     let formatted_code = prettyplease::unparse(&syntax_tree);
 
     fs::write(dest_path, formatted_code).unwrap();
+}
+
+/// Write the generated C++ code to the correct directory.
+fn write_generated_cpp_file(content: &str, filename: &str) {
+    let out_dir = "include";
+    let dest_path = std::path::Path::new(&out_dir).join(filename);
+
+    fs::create_dir_all(&out_dir).unwrap();
+    fs::write(dest_path, content).unwrap();
+}
+
+fn dash_to_snake(name: &str) -> String {
+    name.replace('-', "_")
+}
+
+fn dash_to_snake_ident(name: &str) -> Ident {
+    format_ident!("{}", dash_to_snake(name))
 }
 
 fn snake_to_pascal(s: &str) -> String {

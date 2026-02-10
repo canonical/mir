@@ -1,0 +1,180 @@
+pub struct CppBuilder {
+    guards: String,
+    namespaces: Vec<CppNamespace>,
+    includes: Vec<String>,
+}
+
+impl CppBuilder {
+    pub fn new(guards: String) -> CppBuilder {
+        CppBuilder {
+            guards,
+            namespaces: vec![],
+            includes: vec![],
+        }
+    }
+
+    /// Add a new namespace to the builder.
+    ///
+    /// Returns the added namespace.
+    pub fn add_namespace(&mut self, namespace: CppNamespace) -> &mut CppNamespace {
+        self.namespaces.push(namespace);
+        self.namespaces
+            .last_mut()
+            .expect("namespaces cannot be empty after push")
+    }
+
+    pub fn add_include(&mut self, include: String) {
+        self.includes.push(include);
+    }
+
+    pub fn to_string(&self) -> String {
+        let mut result = String::new();
+
+        // Add include guards
+        result.push_str(&format!("#ifndef {}\n", self.guards));
+        result.push_str(&format!("#define {}\n\n", self.guards));
+
+        for include in &self.includes {
+            result.push_str(&format!("#include {}\n", include));
+        }
+
+        for namespace in &self.namespaces {
+            // Open namespace(s)
+            for name in &namespace.name {
+                result.push_str(&format!("namespace {}\n{{\n", name));
+            }
+
+            // Generate classes
+            for class in &namespace.classes {
+                result.push_str(&format!("class {}\n", class.name));
+                result.push_str("{\n");
+                result.push_str("public:\n");
+
+                // Virtual destructor
+                result.push_str(&format!("    virtual ~{}() = default;\n\n", class.name));
+
+                // Generate methods
+                for method in &class.methods {
+                    let args: Vec<String> = method
+                        .args
+                        .iter()
+                        .map(|arg| format!("{} {}", cpp_type_to_string(&arg.cpp_type), arg.name))
+                        .collect();
+                    let args_str = args.join(", ");
+
+                    result.push_str(&format!(
+                        "    virtual auto {}({}) = 0;\n",
+                        method.name, args_str
+                    ));
+                }
+
+                result.push_str("};\n\n");
+            }
+
+            // Close namespace(s)
+            for _ in &namespace.name {
+                result.push_str("}\n");
+            }
+        }
+
+        // Close include guards
+        result.push_str(&format!("\n#endif  // {}\n", self.guards));
+
+        result
+    }
+}
+
+pub struct CppNamespace {
+    pub name: Vec<String>,
+    pub classes: Vec<CppClass>,
+}
+
+impl CppNamespace {
+    pub fn new(name: Vec<String>) -> CppNamespace {
+        CppNamespace {
+            name: name,
+            classes: vec![],
+        }
+    }
+
+    pub fn add_class(&mut self, class: CppClass) -> &mut CppClass {
+        self.classes.push(class);
+        self.classes
+            .last_mut()
+            .expect("classes cannot be empty after push")
+    }
+}
+
+pub struct CppClass {
+    pub name: String,
+    pub methods: Vec<CppMethod>,
+}
+
+impl CppClass {
+    pub fn new(name: String) -> CppClass {
+        CppClass {
+            name,
+            methods: vec![],
+        }
+    }
+
+    pub fn add_method(&mut self, method: CppMethod) -> &mut CppMethod {
+        self.methods.push(method);
+        self.methods
+            .last_mut()
+            .expect("methods cannot be empty after push")
+    }
+}
+
+pub struct CppMethod {
+    pub name: String,
+    pub args: Vec<CppArg>,
+}
+
+impl CppMethod {
+    pub fn new(name: String) -> CppMethod {
+        CppMethod { name, args: vec![] }
+    }
+
+    pub fn add_arg(&mut self, arg: CppArg) -> &mut CppArg {
+        self.args.push(arg);
+        self.args
+            .last_mut()
+            .expect("args cannot be empty after push")
+    }
+}
+
+pub enum CppType {
+    CppI32,
+    CppU32,
+    CppF32,
+    String,
+    Object(String), // TODO: Support null
+    NewId(String),
+    Array,
+    Fd,
+}
+
+fn cpp_type_to_string(cpp_type: &CppType) -> String {
+    match cpp_type {
+        CppType::CppI32 => "int32_t".to_string(),
+        CppType::CppU32 => "uint32_t".to_string(),
+        CppType::CppF32 => "float".to_string(),
+        CppType::String => "rust::Str const&".to_string(),
+        CppType::Object(name) => name.clone() + " const&",
+        CppType::NewId(interface) => "int32_t".to_string(), // TODO
+        CppType::Array => "rust::Vec<uint8_t> const&".to_string(),
+        CppType::Fd => "int32_t".to_string(), // TODO
+    }
+}
+
+pub struct CppArg {
+    pub cpp_type: CppType,
+    pub name: String,
+}
+
+impl CppArg {
+    pub fn new(cpp_type: CppType, name: String) -> CppArg {
+        CppArg { cpp_type, name }
+    }
+}
