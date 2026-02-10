@@ -72,14 +72,9 @@ pub struct TouchEventContactRs {
     pub orientation: f32,
 }
 
-#[repr(C)]
-pub struct TouchEventDataRs {
-    pub has_time: bool,
-    pub time_microseconds: u64,
-    pub contacts: Vec<TouchEventContactRs>,
-}
-
-unsafe impl ExternType for TouchEventDataRs {
-    type Id = cxx::type_id!("mir::input::evdev_rs::TouchEventData");
+unsafe impl ExternType for TouchEventContactRs {
+    type Id = cxx::type_id!("mir::input::evdev_rs::TouchContactData");
     type Kind = cxx::kind::Trivial;
 }
+
+// TouchEventDataRs is no longer used - TouchEventData is defined in the bridge instead
