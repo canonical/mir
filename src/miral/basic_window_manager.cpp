@@ -1799,9 +1799,6 @@ auto miral::BasicWindowManager::select_active_window(Window const& hint) -> mira
             return select_active_window(parent);
     }
 
-    if (prev_window && is_window_or_parent_fullscreen(prev_window, *this))
-        display_area_for(info_for(prev_window))->restore_all_attached(*this);
-
     focus_controller->set_popup_grab_tree({});
     return {};
 }
