@@ -16,8 +16,8 @@
 
 use crate::device::{ContactData, DeviceInfo, InputSinkPtr, LibinputLoopState};
 use crate::ffi::PointerEventDataRs;
-use crate::{MirPointerAcceleration, MirTouchAction, MirTouchTooltype};
-use cxx::{self, UniquePtr, Vector};
+use crate::MirTouchAction;
+use cxx::{self, UniquePtr};
 use input;
 use input::event;
 use input::event::keyboard;
@@ -180,52 +180,50 @@ pub fn process_libinput_events(
 
                         event::PointerEvent::MotionAbsolute(absolute_motion_event) => {
                             if let Some(event_builder) = &mut device_info.event_builder {
-                                if let Some(input_sink) = &mut device_info.input_sink {
-                                    let bounding_rect = get_bounding_rectangle(
-                                        &mut device_info.input_sink,
-                                        &bridge,
-                                    );
+                                let bounding_rect =
+                                    get_bounding_rectangle(&mut device_info.input_sink, &bridge);
 
-                                    if bounding_rect.is_null() {
-                                        break;
-                                    }
-                                    let width = bounding_rect.width() as u32;
-                                    let height = bounding_rect.height() as u32;
-
-                                    let old_x = device_info.pointer_x;
-                                    let old_y = device_info.pointer_y;
-                                    device_info.pointer_x =
-                                        absolute_motion_event.absolute_x_transformed(width) as f32;
-                                    device_info.pointer_y =
-                                        absolute_motion_event.absolute_y_transformed(height) as f32;
-
-                                    let movement_x = device_info.pointer_x - old_x;
-                                    let movement_y = device_info.pointer_y - old_y;
-                                    let pointer_event = PointerEventDataRs {
-                                        has_time: true,
-                                        time_microseconds: absolute_motion_event.time_usec(),
-                                        action: crate::MirPointerAction::mir_pointer_action_motion.repr,
-                                        buttons: device_info.button_state,
-                                        has_position: true,
-                                        position_x: device_info.pointer_x,
-                                        position_y: device_info.pointer_y,
-                                        displacement_x: movement_x,
-                                        displacement_y: movement_y,
-                                        axis_source: crate::MirPointerAxisSource::mir_pointer_axis_source_none.repr,
-                                        precise_x: 0.0,
-                                        discrete_x: 0,
-                                        value120_x: 0,
-                                        scroll_stop_x: false,
-                                        precise_y: 0.0,
-                                        discrete_y: 0,
-                                        value120_y: 0,
-                                        scroll_stop_y: false,
-                                    };
-                                    handle_input(
-                                        &mut device_info.input_sink,
-                                        event_builder.pin_mut().pointer_event(&pointer_event),
-                                    );
+                                if bounding_rect.is_null() {
+                                    break;
                                 }
+                                let width = bounding_rect.width() as u32;
+                                let height = bounding_rect.height() as u32;
+
+                                let old_x = device_info.pointer_x;
+                                let old_y = device_info.pointer_y;
+                                device_info.pointer_x =
+                                    absolute_motion_event.absolute_x_transformed(width) as f32;
+                                device_info.pointer_y =
+                                    absolute_motion_event.absolute_y_transformed(height) as f32;
+
+                                let movement_x = device_info.pointer_x - old_x;
+                                let movement_y = device_info.pointer_y - old_y;
+                                let pointer_event = PointerEventDataRs {
+                                    has_time: true,
+                                    time_microseconds: absolute_motion_event.time_usec(),
+                                    action: crate::MirPointerAction::mir_pointer_action_motion.repr,
+                                    buttons: device_info.button_state,
+                                    has_position: true,
+                                    position_x: device_info.pointer_x,
+                                    position_y: device_info.pointer_y,
+                                    displacement_x: movement_x,
+                                    displacement_y: movement_y,
+                                    axis_source:
+                                        crate::MirPointerAxisSource::mir_pointer_axis_source_none
+                                            .repr,
+                                    precise_x: 0.0,
+                                    discrete_x: 0,
+                                    value120_x: 0,
+                                    scroll_stop_x: false,
+                                    precise_y: 0.0,
+                                    discrete_y: 0,
+                                    value120_y: 0,
+                                    scroll_stop_y: false,
+                                };
+                                handle_input(
+                                    &mut device_info.input_sink,
+                                    event_builder.pin_mut().pointer_event(&pointer_event),
+                                );
                             }
                         }
 
