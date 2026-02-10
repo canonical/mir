@@ -120,7 +120,7 @@ std::shared_ptr<MirEvent> miers::EventBuilderWrapper::touch_event(TouchEventData
     std::vector<events::TouchContact> contacts;
     for (auto const& contact : data.contacts)
     {
-        contacts.push_back(events::TouchContact(
+        contacts.emplace_back(
             static_cast<MirTouchId>(contact.touch_id),
             static_cast<::MirTouchAction>(contact.action),
             static_cast<::MirTouchTooltype>(contact.tooltype),
@@ -129,7 +129,7 @@ std::shared_ptr<MirEvent> miers::EventBuilderWrapper::touch_event(TouchEventData
             contact.touch_major,
             contact.touch_minor,
             contact.orientation
-        ));
+        );
     }
     return event_builder->touch_event(
         data.has_time
