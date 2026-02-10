@@ -1640,6 +1640,7 @@ void miral::BasicWindowManager::set_state(miral::WindowInfo& window_info, MirWin
         if (has_focus && window_info.depth_layer() == mir_depth_layer_application)
             display_area->hide_all_attached(*this);
 
+        [[fallthrough]];
     default:
         bool const can_become_active =
             !active_window() ||
