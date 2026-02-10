@@ -14,8 +14,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-mod dispatch;
-mod protocols;
+// We use include! here so that "rustfmt" does not get angry with us if
+// we just mod libraries.
+#[allow(dead_code, unused_imports)]
+mod dispatch {
+    include!("dispatch.rs");
+}
+#[allow(dead_code, unused_imports)]
+mod protocols {
+    include!("protocols.rs");
+}
 mod wayland_server;
 
 use crate::wayland_server::{create_wayland_server, WaylandServer};
