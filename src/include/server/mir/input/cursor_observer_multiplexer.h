@@ -35,7 +35,6 @@ public:
     void register_early_observer(std::weak_ptr<CursorObserver> const& observer, Executor& executor) override;
     // Make the other overloads from the base class vislble
     using ObserverMultiplexer<CursorObserver>::register_interest;
-    using ObserverMultiplexer<CursorObserver>::register_early_observer;
 
     virtual void cursor_moved_to(float abs_x, float abs_y) override;
     virtual void pointer_usable() override;
