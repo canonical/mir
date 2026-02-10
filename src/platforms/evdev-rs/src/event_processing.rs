@@ -623,10 +623,10 @@ pub fn process_libinput_events(
                             }
                         }
                         event::TouchEvent::Frame(frame_event) => {
-                            let mut contacts: Vec<crate::ffi::TouchEventContactRs> = vec![];
+                            let mut contacts: Vec<crate::TouchContactData> = vec![];
                             for (slot, contact_data) in &mut state.touch_properties {
-                                contacts.push(crate::ffi::TouchEventContactRs {
-                                    touch_id: *slot,
+                                contacts.push(crate::TouchContactData {
+                                    touch_id: *slot as i32,
                                     action: contact_data.action.repr,
                                     tooltype: contact_data.tooltype.repr,
                                     position_x: contact_data.x,

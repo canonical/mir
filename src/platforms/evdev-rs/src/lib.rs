@@ -150,6 +150,26 @@ mod ffi_bridge {
 
     // KeyEventData is declared as an extern C++ type mapped to the Rust struct above
 
+    // TouchContactData and TouchEventData defined as shared structs
+    #[derive(Copy, Clone)]
+    pub struct TouchContactData {
+        pub touch_id: i32,
+        pub action: i32,
+        pub tooltype: i32,
+        pub position_x: f32,
+        pub position_y: f32,
+        pub pressure: f32,
+        pub touch_major: f32,
+        pub touch_minor: f32,
+        pub orientation: f32,
+    }
+
+    pub struct TouchEventData {
+        pub has_time: bool,
+        pub time_microseconds: u64,
+        pub contacts: Vec<TouchContactData>,
+    }
+
     extern "Rust" {
         type PlatformRs;
         type DeviceObserverRs;
@@ -211,8 +231,7 @@ mod ffi_bridge {
         type KeyEventData = crate::ffi::KeyEventData;
         // Map C++ PointerEventData to the Rust struct
         type PointerEventData = crate::ffi::PointerEventDataRs;
-        // Map C++ TouchEventData to the Rust struct.
-        type TouchEventData = crate::ffi::TouchEventDataRs;
+        // TouchContactData and TouchEventData are defined above in the bridge
 
         #[namespace = "mir::input"]
         pub type Device;
