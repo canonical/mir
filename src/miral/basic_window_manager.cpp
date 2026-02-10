@@ -1007,6 +1007,50 @@ auto miral::BasicWindowManager::collect_windows(const miral::WindowInfo &info) -
     return windows;
 }
 
+void miral::BasicWindowManager::handle_attached_surfaces_for_focus_change(Window const& prev, Window const& current)
+{
+    if(!prev || !current)
+        return;
+
+    auto const& prev_info = info_for(prev);
+    auto const& current_info = info_for(current);
+
+    if (prev_info.depth_layer() != mir_depth_layer_application ||
+        current_info.depth_layer() != mir_depth_layer_application)
+        return;
+
+    auto const prev_was_fullscreen = is_window_or_parent_fullscreen(prev_info.window(), *this);
+    auto const prev_display_area = display_area_for(prev_info);
+    auto const current_is_fullscreen = is_window_or_parent_fullscreen(current_info.window(), *this);
+    auto const current_display_area = display_area_for(current_info);
+
+    if (prev_display_area != current_display_area)
+    {
+        // Check if prev_display_area contains any fullscreen surfaces
+        auto const any_fullscreen_on_prev = std::ranges::any_of(
+            fullscreen_surfaces,
+            [&](Window const& fs)
+            {
+                auto const& info = info_for(fs);
+                return info.depth_layer() == mir_depth_layer_application && display_area_for(info) == prev_display_area;
+            });
+
+        if(!any_fullscreen_on_prev)
+            prev_display_area->restore_all_attached(*this);
+
+        if (current_is_fullscreen)
+            current_display_area->hide_all_attached(*this);
+    }
+    else
+    {
+        // One display area
+        if (prev_was_fullscreen && !current_is_fullscreen)
+            current_display_area->restore_all_attached(*this);
+        else if (!prev_was_fullscreen && current_is_fullscreen)
+            current_display_area->hide_all_attached(*this);
+    }
+}
+
 void miral::BasicWindowManager::raise_tree(Window const& root)
 {
     auto const& info = info_for(root);

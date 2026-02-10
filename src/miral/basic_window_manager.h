@@ -348,6 +348,8 @@ private:
     void for_each_descendent_in(WindowInfo const& info, std::function<void(const Window&)> func);
     /// Gathers windows provided WindowInfo
     auto collect_windows(WindowInfo const& info) -> SurfaceSet;
+
+    void handle_attached_surfaces_for_focus_change(Window const& prev, Window const& current);
 };
 }
 
