@@ -219,11 +219,13 @@ TEST(ServerPlatformProbe, ConstructingWithNoModulesIsAnError)
 #if defined(MIR_BUILD_PLATFORM_GBM_KMS) || defined(MIR_BUILD_PLATFORM_ATOMIC_KMS)
 TEST_F(ServerPlatformProbeMockDRM, LoadsMesaPlatformWhenDrmMasterCanBeAcquired)
 {
+    // MUST be the first variable to ensure it's destroyed last, lest we attempt to
+    // call destructors in DSOs we've unloaded.
+    auto modules = available_platforms();
+
     using namespace testing;
     StubOptionsProvider options;
     auto fake_mesa = ensure_mesa_probing_succeeds();
-
-    auto modules = available_platforms();
 
     auto selection_result = mir::graphics::display_modules_for_device(
         modules,
@@ -243,13 +245,15 @@ TEST_F(ServerPlatformProbeMockDRM, LoadsMesaPlatformWhenDrmMasterCanBeAcquired)
 
 TEST_F(ServerPlatformProbeMockDRM, DoesNotLoadDummyPlatformWhenBetterPlatformExists)
 {
-    using namespace testing;
-    StubOptionsProvider options;
-    auto fake_mesa = ensure_mesa_probing_succeeds();
-
+    // MUST be the first variable to ensure it's destroyed last, lest we attempt to
+    // call destructors in DSOs we've unloaded.
     auto modules = available_platforms();
     add_dummy_platform(modules);
     add_broken_platform(modules);
+
+    using namespace testing;
+    StubOptionsProvider options;
+    auto fake_mesa = ensure_mesa_probing_succeeds();
 
     auto selection_result = mir::graphics::display_modules_for_device(
         modules,
@@ -266,12 +270,14 @@ TEST_F(ServerPlatformProbeMockDRM, DoesNotLoadDummyPlatformWhenBetterPlatformExi
 
 TEST(ServerPlatformProbe, ThrowsExceptionWhenNothingProbesSuccessfully)
 {
+    // MUST be the first variable to ensure it's destroyed last, lest we attempt to
+    // call destructors in DSOs we've unloaded.
+    auto modules = available_platforms();
+    add_broken_platform(modules);
+
     using namespace testing;
     StubOptionsProvider options;
     auto block_mesa = ensure_mesa_probing_fails();
-
-    auto modules = available_platforms();
-    add_broken_platform(modules);
 
     EXPECT_THROW(
         mir::graphics::display_modules_for_device(
@@ -283,12 +289,14 @@ TEST(ServerPlatformProbe, ThrowsExceptionWhenNothingProbesSuccessfully)
 
 TEST(ServerPlatformProbe, LoadsSupportedModuleWhenNoBestModule)
 {
+    // MUST be the first variable to ensure it's destroyed last, lest we attempt to
+    // call destructors in DSOs we've unloaded.
+    auto modules = available_platforms();
+    add_dummy_platform(modules);
+
     using namespace testing;
     StubOptionsProvider options;
     auto block_mesa = ensure_mesa_probing_fails();
-
-    auto modules = available_platforms();
-    add_dummy_platform(modules);
 
     auto selection_result = mir::graphics::display_modules_for_device(
         modules,
