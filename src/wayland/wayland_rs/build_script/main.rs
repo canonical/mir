@@ -221,8 +221,8 @@ fn generate_dispatch_impl(
 ) -> TokenStream {
     let interface_name = dash_name_to_snake_case_ident(&interface.name);
 
-    if interface_name == "wl_display" {
-        // wl_display is handled specially in wayland_server crate via the 'Display' struct.
+    if interface_name == "wl_display" || interface_name == "wl_registry" {
+        // wl_display and wl_registry are handled specially in wayland_server crate via the 'Display' struct.
         return quote! {};
     }
 
