@@ -535,7 +535,8 @@ void mf::ExtOutputImageCaptureSourceManagerV1::create_source(wl_resource* new_re
     ExtImageCopyBackendFactory backend_factory = [output=wayland::make_weak(&output_global), ctx=ctx](auto *session, bool overlay_cursor) {
         return std::make_unique<ExtOutputImageCopyBackend>(session, overlay_cursor, wayland::as_nullable_ptr(output), ctx);
     };
-    ExtImageCopyCursorMapPosition cursor_map_position = [output=wayland::make_weak(&output_global)](float abs_x, float abs_y) -> std::optional<geom::Point> {
+    ExtImageCopyCursorMapPosition cursor_map_position = [output=wayland::make_weak(&output_global)](float abs_x, float abs_y) -> std::optional<geom::Point>
+{
         if (!output)
         {
             return std::nullopt;
