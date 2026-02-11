@@ -1011,7 +1011,6 @@ void miral::BasicWindowManager::handle_attached_surfaces_for_focus_change(Window
 void miral::BasicWindowManager::handle_attached_surfaces_for_window_removal(
     bool prev_was_fullscreen, std::shared_ptr<DisplayArea> const& prev_display_area)
 {
-
     auto const current = active_window();
 
     if (!current)
