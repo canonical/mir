@@ -626,13 +626,17 @@ pub fn process_libinput_events(
                             }
                         }
                         event::TouchEvent::Frame(frame_event) => {
-                            // If we have no contacts, don't send a touch event.
-                            if state.touch_properties.is_empty() {
-                                break;
-                            }
-
                             let mut contacts: Vec<crate::TouchContactData> = vec![];
                             for (slot, contact_data) in &mut state.touch_properties {
+                                // Note: This was logic taken from the existing evdev implementation, and we are
+                                // keeping it for backwards compatibilty.
+                                // Sanity check: Bogus panels are sending sometimes empty events that all point
+                                // to (0, 0) coordinates. Detect those and drop the whole frame in this case.
+                                // Also drop touch frames with no contacts inside
+                                if contact_data.x == 0.0 && contact_data.y == 0.0 {
+                                    continue;
+                                }
+
                                 contacts.push(crate::TouchContactData {
                                     touch_id: *slot as i32,
                                     action: contact_data.action.repr,
@@ -652,9 +656,14 @@ pub fn process_libinput_events(
 
                             // Remove any property that is now "up" so that we do not keep sending
                             // the up notification.
-                            state.touch_properties.retain(|&_slot, element| {
-                                element.action != MirTouchAction::mir_touch_action_up
+                            state.touch_properties.retain(|&_slot, contact_data| {
+                                contact_data.action != MirTouchAction::mir_touch_action_up
                             });
+
+                            // If we have no contacts, don't send a touch event.
+                            if contacts.is_empty() {
+                                break;
+                            }
 
                             let touch_event_data = crate::TouchEventData {
                                 has_time: true,
