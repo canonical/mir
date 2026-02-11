@@ -1039,29 +1039,27 @@ void miral::BasicWindowManager::handle_attached_surfaces_for_focus_change(Window
 void miral::BasicWindowManager::handle_attached_surfaces_for_window_removal(
     bool prev_was_fullscreen, std::shared_ptr<DisplayArea> const& prev_display_area)
 {
-        if(auto const current_active = active_window())
-        {
-            // Account for the possibility for multiple fullscreen windows on the same display
-            auto const any_fullscreen_apps_on_prev = std::ranges::any_of(
-                fullscreen_surfaces,
-                [&](Window const& fs)
-                {
-                    auto const& info = info_for(fs);
-                    return info.depth_layer() == mir_depth_layer_application &&
-                           display_area_for(info) == prev_display_area;
-                });
+    if (auto const current_active = active_window())
+    {
+        // Account for the possibility for multiple fullscreen windows on the same display
+        auto const any_fullscreen_apps_on_prev = std::ranges::any_of(
+            fullscreen_surfaces,
+            [&](Window const& fs)
+            {
+                auto const& info = info_for(fs);
+                return info.depth_layer() == mir_depth_layer_application && display_area_for(info) == prev_display_area;
+            });
 
-            if (prev_was_fullscreen && !any_fullscreen_apps_on_prev)
-                prev_display_area->restore_all_attached(*this);
-            else if (!prev_was_fullscreen && any_fullscreen_apps_on_prev)
-                prev_display_area->hide_all_attached(*this);
-        }
-        else
-        {
-            // No currently active window, restore prev?
+        if (prev_was_fullscreen && !any_fullscreen_apps_on_prev)
             prev_display_area->restore_all_attached(*this);
-        }
-
+        else if (!prev_was_fullscreen && any_fullscreen_apps_on_prev)
+            prev_display_area->hide_all_attached(*this);
+    }
+    else
+    {
+        // No currently active window, restore prev?
+        prev_display_area->restore_all_attached(*this);
+    }
 }
 
 void miral::BasicWindowManager::raise_tree(Window const& root)
