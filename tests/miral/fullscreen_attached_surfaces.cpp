@@ -195,6 +195,28 @@ TEST_F(FullscreenAttachedSurfaces, closing_fullscreen_restores_attached_above_su
     EXPECT_THAT(bar_info.state(), Eq(mir_window_state_attached));
 }
 
+TEST_F(FullscreenAttachedSurfaces, closing_fullscreen_restores_attached_above_surfaces_on_same_output_only)
+{
+    set_dual_outputs();
+
+    auto const [bar1_session, bar1] = create_window(make_bar_spec(primary_output, mg::DisplayConfigurationOutputId{1}));
+    auto const [bar2_session, bar2] = create_window(make_bar_spec(secondary_output, mg::DisplayConfigurationOutputId{2}));
+    auto const [fullscreen_session, fullscreen] = create_window(make_app_spec(mg::DisplayConfigurationOutputId{1}));
+
+    auto const& bar1_info = basic_window_manager.info_for(bar1);
+    auto const& bar2_info = basic_window_manager.info_for(bar2);
+
+    modify_window(fullscreen, {mir_window_state_fullscreen});
+
+    EXPECT_THAT(bar1_info.state(), Eq(mir_window_state_hidden));
+    EXPECT_THAT(bar2_info.state(), Eq(mir_window_state_attached));
+
+    basic_window_manager.remove_surface(fullscreen_session, std::weak_ptr<ms::Surface>{std::shared_ptr<ms::Surface>(fullscreen)});
+
+    EXPECT_THAT(bar1_info.state(), Eq(mir_window_state_attached));
+    EXPECT_THAT(bar2_info.state(), Eq(mir_window_state_attached));
+}
+
 TEST_F(FullscreenAttachedSurfaces, removing_non_fullscreen_rehides_bar_when_fullscreen_remains)
 {
     set_single_output();
