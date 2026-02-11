@@ -1011,18 +1011,6 @@ void miral::BasicWindowManager::handle_attached_surfaces_for_focus_change(Window
 
     if (prev_display_area != current_display_area)
     {
-        // Check if prev_display_area contains any fullscreen surfaces
-        auto const any_fullscreen_on_prev = std::ranges::any_of(
-            fullscreen_surfaces,
-            [&](Window const& fs)
-            {
-                auto const& info = info_for(fs);
-                return info.depth_layer() == mir_depth_layer_application && display_area_for(info) == prev_display_area;
-            });
-
-        if(!any_fullscreen_on_prev)
-            prev_display_area->restore_all_attached(*this);
-
         if (current_is_fullscreen)
             current_display_area->hide_all_attached(*this);
     }
