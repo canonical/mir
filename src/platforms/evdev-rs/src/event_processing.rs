@@ -626,6 +626,11 @@ pub fn process_libinput_events(
                             }
                         }
                         event::TouchEvent::Frame(frame_event) => {
+                            // If we have no contacts, don't send a touch event.
+                            if state.touch_properties.is_empty() {
+                                break;
+                            }
+
                             let mut contacts: Vec<crate::TouchContactData> = vec![];
                             for (slot, contact_data) in &mut state.touch_properties {
                                 contacts.push(crate::TouchContactData {
@@ -644,6 +649,13 @@ pub fn process_libinput_events(
                                     contact_data.down_notified = true;
                                 }
                             }
+
+                            // Remove any property that is now "up" so that we do not keep sending
+                            // the up notification.
+                            state.touch_properties.retain(|&_slot, element| {
+                                element.action != MirTouchAction::mir_touch_action_up
+                            });
+
                             let touch_event_data = crate::TouchEventData {
                                 has_time: true,
                                 time_microseconds: frame_event.time_usec(),
