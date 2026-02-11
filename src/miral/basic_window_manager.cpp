@@ -998,14 +998,35 @@ void miral::BasicWindowManager::handle_attached_surfaces_for_focus_change(Window
         return;
 
     auto const& prev_info = info_for(prev);
-    auto const& current_info = info_for(current);
 
-    if (prev_info.depth_layer() != mir_depth_layer_application ||
-        current_info.depth_layer() != mir_depth_layer_application)
+    if (prev_info.depth_layer() != mir_depth_layer_application)
         return;
 
     auto const prev_was_fullscreen = is_window_or_parent_fullscreen(prev_info.window(), *this);
     auto const prev_display_area = display_area_for(prev_info);
+
+    handle_attached_surfaces_for_window_removal(prev_was_fullscreen, prev_display_area);
+}
+
+void miral::BasicWindowManager::handle_attached_surfaces_for_window_removal(
+    bool prev_was_fullscreen, std::shared_ptr<DisplayArea> const& prev_display_area)
+{
+
+    auto const current = active_window();
+
+    if (!current)
+    {
+        if(prev_was_fullscreen)
+            prev_display_area->restore_all_attached(*this);
+
+        return;
+    }
+
+    auto const& current_info = info_for(current);
+
+    if(current_info.depth_layer() != mir_depth_layer_application)
+            return;
+
     auto const current_is_fullscreen = is_window_or_parent_fullscreen(current_info.window(), *this);
     auto const current_display_area = display_area_for(current_info);
 
@@ -1021,25 +1042,6 @@ void miral::BasicWindowManager::handle_attached_surfaces_for_focus_change(Window
             current_display_area->restore_all_attached(*this);
         else if (!prev_was_fullscreen && current_is_fullscreen)
             current_display_area->hide_all_attached(*this);
-    }
-}
-
-void miral::BasicWindowManager::handle_attached_surfaces_for_window_removal(
-    bool prev_was_fullscreen, std::shared_ptr<DisplayArea> const& prev_display_area)
-{
-    if (auto const current_active = active_window())
-    {
-        auto const current_is_fullscreen = is_window_or_parent_fullscreen(current_active, *this);
-
-        if (prev_was_fullscreen && !current_is_fullscreen)
-            prev_display_area->restore_all_attached(*this);
-        else if (!prev_was_fullscreen && current_is_fullscreen)
-            prev_display_area->hide_all_attached(*this);
-    }
-    else
-    {
-        // No currently active window, restore prev?
-        prev_display_area->restore_all_attached(*this);
     }
 }
 
