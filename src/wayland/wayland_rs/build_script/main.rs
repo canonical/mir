@@ -335,6 +335,10 @@ fn write_cpp_protocol_header(protocol: &WaylandProtocol) {
     builder.add_namespace(namespace);
     builder.add_include("<rust/cxx.h>".to_string());
 
+    for interface in &protocol.dependencies {
+        builder.add_forward_declaration_class(&snake_to_pascal(interface));
+    }
+
     let filename = format!("{}.h", protocol.name);
     write_generated_cpp_file(&builder.to_string(), filename.as_str());
 }
@@ -364,10 +368,18 @@ fn wayland_request_to_cpp_method(method: &WaylandRequest) -> CppMethod {
             "uint" => CppType::CppU32,
             "fixed" => CppType::CppF32,
             "string" => CppType::String,
-            "object" => {
-                CppType::Object(arg.interface.clone().expect("Object is missing interface"))
-            }
-            "new_id" => CppType::NewId(arg.interface.clone().expect("New id is missing interface")),
+            "object" => CppType::Object(snake_to_pascal(
+                arg.interface
+                    .clone()
+                    .expect("Object is missing interface")
+                    .as_str(),
+            )),
+            "new_id" => CppType::NewId(snake_to_pascal(
+                arg.interface
+                    .clone()
+                    .expect("New id is missing interface")
+                    .as_str(),
+            )),
             "array" => CppType::Array,
             "fd" => CppType::Fd,
             _ => panic!("Unknown type: {}", arg.type_),

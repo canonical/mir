@@ -2,6 +2,7 @@ pub struct CppBuilder {
     guards: String,
     namespaces: Vec<CppNamespace>,
     includes: Vec<String>,
+    forward_declarations: Vec<String>,
 }
 
 impl CppBuilder {
@@ -10,6 +11,7 @@ impl CppBuilder {
             guards,
             namespaces: vec![],
             includes: vec![],
+            forward_declarations: vec![],
         }
     }
 
@@ -27,6 +29,10 @@ impl CppBuilder {
         self.includes.push(include);
     }
 
+    pub fn add_forward_declaration_class(&mut self, name: &str) {
+        self.forward_declarations.push(format!("class {}", name));
+    }
+
     pub fn to_string(&self) -> String {
         let mut result = String::new();
 
@@ -34,6 +40,7 @@ impl CppBuilder {
         result.push_str(&format!("#ifndef {}\n", self.guards));
         result.push_str(&format!("#define {}\n\n", self.guards));
 
+        // Add includes
         for include in &self.includes {
             result.push_str(&format!("#include {}\n", include));
         }
@@ -42,6 +49,11 @@ impl CppBuilder {
             // Open namespace(s)
             for name in &namespace.name {
                 result.push_str(&format!("namespace {}\n{{\n", name));
+            }
+
+            // Add forward declarations.
+            for forward in &self.forward_declarations {
+                result.push_str(&format!("{};\n", forward));
             }
 
             // Generate classes
@@ -161,7 +173,7 @@ fn cpp_type_to_string(cpp_type: &CppType) -> String {
         CppType::CppU32 => "uint32_t".to_string(),
         CppType::CppF32 => "float".to_string(),
         CppType::String => "rust::Str const&".to_string(),
-        CppType::Object(name) => name.clone() + " const&",
+        CppType::Object(name) => format!("rust::SharedPtr<{}> const&", name),
         CppType::NewId(interface) => "int32_t".to_string(), // TODO
         CppType::Array => "rust::Vec<uint8_t> const&".to_string(),
         CppType::Fd => "int32_t".to_string(), // TODO
