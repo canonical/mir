@@ -1012,19 +1012,25 @@ void miral::BasicWindowManager::handle_attached_surfaces_for_window_removal(
     bool prev_was_fullscreen, std::shared_ptr<DisplayArea> const& prev_display_area)
 {
     auto const current = active_window();
+    auto const cleanup = [prev_was_fullscreen, prev_display_area, this]()
+    {
+        if (prev_was_fullscreen)
+            prev_display_area->restore_all_attached(*this);
+    };
 
     if (!current)
     {
-        if(prev_was_fullscreen)
-            prev_display_area->restore_all_attached(*this);
-
+        cleanup();
         return;
     }
 
     auto const& current_info = info_for(current);
 
-    if(current_info.depth_layer() != mir_depth_layer_application)
-            return;
+    if (current_info.depth_layer() != mir_depth_layer_application)
+    {
+        cleanup();
+        return;
+    }
 
     auto const current_is_fullscreen = is_window_or_parent_fullscreen(current_info.window(), *this);
     auto const current_display_area = display_area_for(current_info);
