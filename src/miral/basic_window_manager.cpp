@@ -1041,18 +1041,11 @@ void miral::BasicWindowManager::handle_attached_surfaces_for_window_removal(
 {
     if (auto const current_active = active_window())
     {
-        // Account for the possibility for multiple fullscreen windows on the same display
-        auto const any_fullscreen_apps_on_prev = std::ranges::any_of(
-            fullscreen_surfaces,
-            [&](Window const& fs)
-            {
-                auto const& info = info_for(fs);
-                return info.depth_layer() == mir_depth_layer_application && display_area_for(info) == prev_display_area;
-            });
+        auto const current_is_fullscreen = is_window_or_parent_fullscreen(current_active, *this);
 
-        if (prev_was_fullscreen && !any_fullscreen_apps_on_prev)
+        if (prev_was_fullscreen && !current_is_fullscreen)
             prev_display_area->restore_all_attached(*this);
-        else if (!prev_was_fullscreen && any_fullscreen_apps_on_prev)
+        else if (!prev_was_fullscreen && current_is_fullscreen)
             prev_display_area->hide_all_attached(*this);
     }
     else
