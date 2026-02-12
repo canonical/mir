@@ -349,6 +349,7 @@ private:
     void handle_attached_surfaces_for_window_removal(
         bool prev_was_fullscreen, std::shared_ptr<DisplayArea> const& prev_display_area);
     void hide_attached_windows_for_fullscreen(std::shared_ptr<DisplayArea> const& display_area);
+    bool is_window_or_parent_fullscreen(miral::Window const& window);
 };
 }
 

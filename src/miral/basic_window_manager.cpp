@@ -49,21 +49,6 @@ void clamp_top(Rectangle const& zone, Rectangle& rect)
 {
     rect.top_left.y = zone.top_left.y + 0.5 * std::max(DeltaY{}, zone.size.height - rect.size.height);
 }
-
-auto is_window_or_parent_fullscreen(miral::Window const& window, miral::BasicWindowManager& bwm) -> bool
-{
-    if (!window)
-        return false;
-
-    auto& info = bwm.info_for(window);
-    for (auto current = window; current; current = info.parent())
-    {
-        info = bwm.info_for(current);
-        if (info.state() == mir_window_state_fullscreen)
-            return true;
-    }
-    return false;
-}
 }
 
 void miral::BasicWindowManager::DisplayArea::hide_attached(std::move_only_function<bool(Window const&)> predicate)
@@ -999,7 +984,7 @@ void miral::BasicWindowManager::handle_attached_surfaces_for_focus_change(Window
     if (prev_info.depth_layer() != mir_depth_layer_application)
         return;
 
-    auto const prev_was_fullscreen = is_window_or_parent_fullscreen(prev_info.window(), *this);
+    auto const prev_was_fullscreen = is_window_or_parent_fullscreen(prev_info.window());
     auto const prev_display_area = display_area_for(prev_info);
 
     handle_attached_surfaces_for_window_removal(prev_was_fullscreen, prev_display_area);
@@ -1029,7 +1014,7 @@ void miral::BasicWindowManager::handle_attached_surfaces_for_window_removal(
         return;
     }
 
-    auto const current_is_fullscreen = is_window_or_parent_fullscreen(current_info.window(), *this);
+    auto const current_is_fullscreen = is_window_or_parent_fullscreen(current_info.window());
     auto const current_display_area = display_area_for(current_info);
 
     if (prev_display_area != current_display_area)
@@ -1060,6 +1045,21 @@ void miral::BasicWindowManager::hide_attached_windows_for_fullscreen(std::shared
             set_state(info, mir_window_state_hidden);
             return true;
         });
+}
+
+bool miral::BasicWindowManager::is_window_or_parent_fullscreen(miral::Window const& window)
+{
+    if (!window)
+        return false;
+
+    auto& info = info_for(window);
+    for (auto current = window; current; current = info.parent())
+    {
+        info = info_for(current);
+        if (info.state() == mir_window_state_fullscreen)
+            return true;
+    }
+    return false;
 }
 
 void miral::BasicWindowManager::raise_tree(Window const& root)
