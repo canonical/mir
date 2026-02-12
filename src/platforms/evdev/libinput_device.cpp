@@ -80,10 +80,10 @@ double libinput_event_touch_get_pressure(libinput_event_touch*)
 std::vector<uint32_t> query_kernel_keystate(char const* devnode)
 {
     std::vector<uint32_t> pressed_keys;
-    
+
     if (!devnode)
         return pressed_keys;
-    
+
     // Open the device node to query its state
     mir::Fd const device_fd{open(devnode, O_RDONLY | O_NONBLOCK)};
     if (device_fd < 0)
@@ -91,26 +91,26 @@ std::vector<uint32_t> query_kernel_keystate(char const* devnode)
         mir::log_debug("Unable to open '%s' to query key state", devnode);
         return pressed_keys;
     }
-    
+
 
     // Query the key state bit array from the kernel
     // EVIOCGKEY returns a bit array where bit N represents scan code N
     constexpr size_t key_state_size = (KEY_CNT + 7) / 8; // Number of bytes needed for all key bits
     uint8_t key_state[key_state_size] = {0};
-    
+
     if (ioctl(device_fd, EVIOCGKEY(sizeof(key_state)), key_state) < 0)
     {
         mir::log_debug("Failed to query '%s' for key state", devnode);
         return pressed_keys;
     }
-    
+
     // Convert the bit array to a vector of pressed scan codes
     for (size_t byte_idx = 0; byte_idx < key_state_size; ++byte_idx)
     {
         uint8_t byte = key_state[byte_idx];
         if (byte == 0)
             continue;
-            
+
         for (size_t bit_idx = 0; bit_idx < 8; ++bit_idx)
         {
             if (byte & (1 << bit_idx))
@@ -120,12 +120,12 @@ std::vector<uint32_t> query_kernel_keystate(char const* devnode)
             }
         }
     }
-    
+
     if (!pressed_keys.empty())
     {
         mir::log_debug("Device '%s' has %zu keys pressed on startup", devnode, pressed_keys.size());
     }
-    
+
     return pressed_keys;
 }
 
@@ -195,7 +195,7 @@ void mie::LibInputDevice::start(InputSink* sink, EventBuilder* builder)
 {
     this->sink = sink;
     this->builder = builder;
-    
+
     // Synchronize keyboard state with the kernel when starting the device.
     // This is critical when the compositor starts after another session (e.g., GDM)
     // has been using the keyboard, as we need to know which keys are already pressed.
