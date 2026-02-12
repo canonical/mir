@@ -108,7 +108,7 @@ public:
 class KeyboardStateTracker
 {
 public:
-    KeyboardStateTracker(std::shared_ptr<input::CompositeEventFilter> const &cef);
+    KeyboardStateTracker(std::shared_ptr<input::CompositeEventFilter> const& composite_event_filter);
 
     void on_key_down(uint32_t keysym, uint32_t scancode);
     void on_key_up(uint32_t keysym, uint32_t scancode);
@@ -202,8 +202,8 @@ class InputTriggerActionV1 : public wayland::InputTriggerActionV1
 {
 public:
     InputTriggerActionV1(
-        std::shared_ptr<shell::TokenAuthority> const& ta,
-        std::shared_ptr<input::CompositeEventFilter> const& cef,
+        std::shared_ptr<shell::TokenAuthority> const& token_authority,
+        std::shared_ptr<input::CompositeEventFilter> const& composite_event_filter,
         std::shared_ptr<KeyboardStateTracker> const& keyboard_state,
         wl_resource* id);
 
@@ -215,8 +215,8 @@ public:
 
 private:
     std::vector<std::shared_ptr<InputTriggerFilter>> trigger_filters;
-    std::shared_ptr<shell::TokenAuthority> const ta;
-    std::shared_ptr<input::CompositeEventFilter> const cef;
+    std::shared_ptr<shell::TokenAuthority> const token_authority;
+    std::shared_ptr<input::CompositeEventFilter> const composite_event_filter;
     std::shared_ptr<KeyboardStateTracker> const keyboard_state;
 };
 
@@ -270,7 +270,8 @@ private:
 struct InputTriggerData
 {
     InputTriggerData(
-        std::shared_ptr<shell::TokenAuthority> const& ta, std::shared_ptr<input::CompositeEventFilter> const& cef);
+        std::shared_ptr<shell::TokenAuthority> const& token_authority,
+        std::shared_ptr<input::CompositeEventFilter> const& composite_event_filter);
 
     auto add_new_action(std::string const& token, struct wl_resource* id) -> bool;
 
@@ -286,8 +287,8 @@ private:
 
     std::mutex mutex;
 
-    std::shared_ptr<shell::TokenAuthority> const ta;
-    std::shared_ptr<input::CompositeEventFilter> const cef;
+    std::shared_ptr<shell::TokenAuthority> const token_authority;
+    std::shared_ptr<input::CompositeEventFilter> const composite_event_filter;
 
     std::unordered_map<Token, wayland::Weak<ActionControl>> action_controls;
     std::unordered_map<Token, wayland::Weak<InputTriggerActionV1>> actions;

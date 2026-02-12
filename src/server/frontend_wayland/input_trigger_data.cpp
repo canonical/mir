@@ -173,10 +173,11 @@ struct KeyboardStateTrackerFilter : public mi::EventFilter
 };
 }
 
-mf::KeyboardStateTracker::KeyboardStateTracker(std::shared_ptr<mi::CompositeEventFilter> const& cef) :
+mf::KeyboardStateTracker::KeyboardStateTracker(
+    std::shared_ptr<mi::CompositeEventFilter> const& composite_event_filter) :
     filter{std::make_shared<KeyboardStateTrackerFilter>(*this)}
 {
-    cef->prepend(filter);
+    composite_event_filter->prepend(filter);
 }
 
 void mf::KeyboardStateTracker::on_key_down(uint32_t keysym, uint32_t scancode)
@@ -511,13 +512,13 @@ bool mf::KeyboardEventFilter::protocol_and_event_modifiers_match(
 }
 
 mf::InputTriggerActionV1::InputTriggerActionV1(
-    std::shared_ptr<msh::TokenAuthority> const& ta,
-    std::shared_ptr<mi::CompositeEventFilter> const& cef,
+    std::shared_ptr<msh::TokenAuthority> const& token_authority,
+    std::shared_ptr<mi::CompositeEventFilter> const& composite_event_filter,
     std::shared_ptr<KeyboardStateTracker> const& keyboard_state,
     wl_resource* id) :
     mw::InputTriggerActionV1{id, Version<1>{}},
-    ta{ta},
-    cef{cef},
+    token_authority{token_authority},
+    composite_event_filter{composite_event_filter},
     keyboard_state{keyboard_state}
 {
 }
@@ -537,7 +538,7 @@ void mf::InputTriggerActionV1::add_trigger(mw::InputTriggerV1 const* trigger)
             return std::make_shared<KeyboardEventFilter>(
                 mw::make_weak<mw::InputTriggerActionV1 const>(this),
                 mw::make_weak<KeyboardTrigger const>(keyboard_trigger),
-                ta,
+                token_authority,
                 keyboard_state);
         }
         else if (auto const* input_trigger = dynamic_cast<frontend::InputTriggerV1 const*>(trigger))
@@ -554,7 +555,7 @@ void mf::InputTriggerActionV1::add_trigger(mw::InputTriggerV1 const* trigger)
         return;
 
     trigger_filters.push_back(filter);
-    cef->append(filter);
+    composite_event_filter->append(filter);
 }
 
 void mf::InputTriggerActionV1::drop_trigger(mw::InputTriggerV1 const* trigger)
@@ -623,9 +624,10 @@ void mf::ActionControl::install_action(mw::Weak<mf::InputTriggerActionV1> action
 }
 
 mf::InputTriggerData::InputTriggerData(
-    std::shared_ptr<msh::TokenAuthority> const& ta, std::shared_ptr<mi::CompositeEventFilter> const& cef) :
-    ta{ta},
-    cef{cef}
+    std::shared_ptr<msh::TokenAuthority> const& token_authority,
+    std::shared_ptr<mi::CompositeEventFilter> const& composite_event_filter) :
+    token_authority{token_authority},
+    composite_event_filter{composite_event_filter}
 {
 }
 
@@ -648,14 +650,15 @@ auto mf::InputTriggerData::add_new_action(Token const& token, struct wl_resource
         {
             if (keyboard_state.expired())
             {
-                auto const kb_state = std::make_shared<KeyboardStateTracker>(cef);
+                auto const kb_state = std::make_shared<KeyboardStateTracker>(composite_event_filter);
                 keyboard_state = kb_state;
                 return kb_state;
             }
             return keyboard_state.lock();
         }();
 
-        auto const action = wayland::make_weak(new InputTriggerActionV1(ta, cef, kb_state, id));
+        auto const action =
+            wayland::make_weak(new InputTriggerActionV1(token_authority, composite_event_filter, kb_state, id));
 
         auto& [_, action_control] = *it;
         if (action_control)
@@ -674,7 +677,7 @@ void mf::InputTriggerData::add_new_action_control(struct wl_resource* id)
 
     erase_expired_entries();
 
-    auto const token = ta->issue_token([this](auto const& token) { token_revoked(Token{token}); });
+    auto const token = token_authority->issue_token([this](auto const& token) { token_revoked(Token{token}); });
 
     auto const token_string = static_cast<Token>(token);
 
