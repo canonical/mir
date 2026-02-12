@@ -206,8 +206,6 @@ public:
         std::shared_ptr<KeyboardStateTracker> const& keyboard_state,
         wl_resource* id);
 
-    static auto dummy(wl_resource* id) -> InputTriggerActionV1*;
-
     auto has_trigger(wayland::InputTriggerV1 const* trigger) const -> bool;
 
     void add_trigger(wayland::InputTriggerV1 const* trigger);
@@ -215,12 +213,31 @@ public:
     void drop_trigger(wayland::InputTriggerV1 const* trigger);
 
 private:
-    InputTriggerActionV1(wl_resource* id);
-
     std::vector<std::shared_ptr<InputTriggerFilter>> trigger_filters;
     std::shared_ptr<shell::TokenAuthority> const ta;
     std::shared_ptr<input::CompositeEventFilter> const cef;
     std::shared_ptr<KeyboardStateTracker> const keyboard_state;
+};
+
+// Used in `add_new_action` when a client provides a revoked token to call
+// `send_unavailable_event`.
+class NullInputTriggerActionV1 : public wayland::InputTriggerActionV1
+{
+public:
+    NullInputTriggerActionV1(wl_resource* id) :
+        wayland::InputTriggerActionV1{id, Version<1>{}}
+    {
+    }
+
+    auto has_trigger(wayland::InputTriggerV1 const*) const
+    {
+    }
+    void add_trigger(wayland::InputTriggerV1 const*)
+    {
+    }
+    void drop_trigger(wayland::InputTriggerV1 const*)
+    {
+    }
 };
 
 class ActionControl : public wayland::InputTriggerActionControlV1
