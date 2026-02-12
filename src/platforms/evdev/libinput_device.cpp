@@ -215,13 +215,9 @@ void mie::LibInputDevice::start(InputSink* sink, EventBuilder* builder)
     {
         auto dev = device();
         auto const udev_device = mir::raii::deleter_for(libinput_device_get_udev_device(dev), &udev_device_unref);
-        if (auto const devnode = udev_device_get_devnode(udev_device.get()))
+        if (udev_device && (auto const devnode = udev_device_get_devnode(udev_device.get())))
         {
-            auto pressed_keys = query_kernel_keystate(devnode);
-            if (!pressed_keys.empty())
-            {
-                sink->key_state(pressed_keys);
-            }
+            sink->key_state(query_kernel_keystate(devnode));
         }
     }
 }
