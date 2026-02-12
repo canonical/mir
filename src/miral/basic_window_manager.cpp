@@ -66,15 +66,18 @@ void miral::BasicWindowManager::DisplayArea::hide_attached(std::move_only_functi
     this->hidden_attached_windows = std::move(hidden_attached_windows);
 }
 
-void miral::BasicWindowManager::DisplayArea::attach_all_hidden(BasicWindowManager& bwm)
+auto miral::BasicWindowManager::DisplayArea::consume_hidden_attached() -> std::vector<Window>
 {
-    for (auto& window : hidden_attached_windows)
-    {
-        auto& info = bwm.info_for(window);
-        bwm.set_state(info, mir_window_state_attached);
-    }
+    return std::exchange(hidden_attached_windows, {});
+}
 
-    hidden_attached_windows.clear();
+void miral::BasicWindowManager::attach_all_hidden(std::shared_ptr<DisplayArea> const& display_area)
+{
+    for (auto& window : display_area->consume_hidden_attached())
+    {
+        auto& info = info_for(window);
+        set_state(info, mir_window_state_attached);
+    }
 }
 
 bool miral::BasicWindowManager::DisplayArea::is_hidden_attached(WindowInfo const& window_info) const
@@ -994,7 +997,7 @@ void miral::BasicWindowManager::handle_attached_surfaces_for_window_removal(
     auto const cleanup = [prev_was_fullscreen, prev_display_area, this]()
     {
         if (prev_was_fullscreen)
-            prev_display_area->attach_all_hidden(*this);
+            attach_all_hidden(prev_display_area);
     };
 
     if (!current)
@@ -1023,7 +1026,7 @@ void miral::BasicWindowManager::handle_attached_surfaces_for_window_removal(
     {
         // One display area
         if (prev_was_fullscreen && !current_is_fullscreen)
-            current_display_area->attach_all_hidden(*this);
+            attach_all_hidden(current_display_area);
         else if (!prev_was_fullscreen && current_is_fullscreen)
             hide_attached_windows_for_fullscreen(current_display_area);
     }
@@ -1623,7 +1626,7 @@ void miral::BasicWindowManager::set_state(miral::WindowInfo& window_info, MirWin
     if (has_focus && window_info.state() == mir_window_state_fullscreen && value != mir_window_state_fullscreen &&
         window_info.depth_layer() == mir_depth_layer_application)
     {
-        display_area->attach_all_hidden(*this);
+        attach_all_hidden(display_area);
     }
 
     switch (value)

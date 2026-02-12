@@ -209,8 +209,7 @@ private:
 
         void hide_attached(std::move_only_function<bool(Window const&)> predicate);
 
-        // Postcondition: `hidden_attached_windows` is empty.
-        void attach_all_hidden(BasicWindowManager& bwm);
+        auto consume_hidden_attached() -> std::vector<Window>;
 
         bool is_hidden_attached(WindowInfo const& window_info) const;
 
@@ -349,6 +348,7 @@ private:
     void handle_attached_surfaces_for_window_removal(
         bool prev_was_fullscreen, std::shared_ptr<DisplayArea> const& prev_display_area);
     void hide_attached_windows_for_fullscreen(std::shared_ptr<DisplayArea> const& display_area);
+    void attach_all_hidden(std::shared_ptr<DisplayArea> const& display_area);
     bool is_window_or_parent_fullscreen(miral::Window const& window);
 };
 }
