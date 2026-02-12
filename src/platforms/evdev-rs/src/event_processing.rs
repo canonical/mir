@@ -67,7 +67,8 @@ fn get_bounding_rectangle(
     if let Some(input_sink) = input_sink {
         // # Safety
         //
-        // Calling as_ref on a NonNull is unsafe.
+        // InputSink is a C++ class, so it is inherently unsafe to be accessing
+        // it directly as a reference pointer.
         let sink_ref: &crate::InputSink = unsafe { input_sink.0.as_ref() };
         bridge.bounding_rectangle(sink_ref)
     } else {
@@ -555,27 +556,27 @@ pub fn process_libinput_events(
                                 let bounding =
                                     get_bounding_rectangle(&mut device_info.input_sink, &bridge);
 
-                                if bounding.is_null() {
-                                    break;
-                                }
+                                if !bounding.is_null() {
+                                    if !state.touch_properties.contains_key(&slot) {
+                                        state.touch_properties.insert(slot, ContactData::default());
+                                    }
 
-                                if !state.touch_properties.contains_key(&slot) {
-                                    state.touch_properties.insert(slot, ContactData::default());
+                                    // We make sure that we only notify of "down" touch events once. Everything
+                                    // after that is considered a simple "change".
+                                    let data = state
+                                        .touch_properties
+                                        .entry(slot)
+                                        .or_insert(ContactData::default());
+                                    data.action = if data.down_notified {
+                                        MirTouchAction::mir_touch_action_change
+                                    } else {
+                                        MirTouchAction::mir_touch_action_down
+                                    };
+                                    data.x =
+                                        down_event.x_transformed(bounding.width() as u32) as f32;
+                                    data.y =
+                                        down_event.y_transformed(bounding.height() as u32) as f32;
                                 }
-
-                                // We make sure that we only notify of "down" touch events once. Everything
-                                // after that is considered a simple "change".
-                                let data = state
-                                    .touch_properties
-                                    .get_mut(&slot)
-                                    .expect("This has been checked");
-                                data.action = if data.down_notified {
-                                    MirTouchAction::mir_touch_action_down
-                                } else {
-                                    MirTouchAction::mir_touch_action_change
-                                };
-                                data.x = down_event.x_transformed(bounding.width() as u32) as f32;
-                                data.y = down_event.y_transformed(bounding.height() as u32) as f32;
                             }
                         }
                         event::TouchEvent::Motion(motion_event) => {
@@ -584,21 +585,21 @@ pub fn process_libinput_events(
                                 let bounding =
                                     get_bounding_rectangle(&mut device_info.input_sink, &bridge);
 
-                                if bounding.is_null() {
-                                    break;
-                                }
+                                if !bounding.is_null() {
+                                    if !state.touch_properties.contains_key(&slot) {
+                                        state.touch_properties.insert(slot, ContactData::default());
+                                    }
 
-                                if !state.touch_properties.contains_key(&slot) {
-                                    state.touch_properties.insert(slot, ContactData::default());
+                                    let data = state
+                                        .touch_properties
+                                        .entry(slot)
+                                        .or_insert(ContactData::default());
+                                    data.action = MirTouchAction::mir_touch_action_change;
+                                    data.x =
+                                        motion_event.x_transformed(bounding.width() as u32) as f32;
+                                    data.y =
+                                        motion_event.y_transformed(bounding.height() as u32) as f32;
                                 }
-
-                                let data = state
-                                    .touch_properties
-                                    .get_mut(&slot)
-                                    .expect("This has been checked");
-                                data.action = MirTouchAction::mir_touch_action_change;
-                                data.x = motion_event.x() as f32;
-                                data.y = motion_event.y() as f32;
                             }
                         }
                         event::TouchEvent::Up(up_event) => {
@@ -607,11 +608,7 @@ pub fn process_libinput_events(
                                 // By design, "up" is only notified a single time. Hence, we only
                                 // notify "up" if "down" has been sent. Otherwise, we remove the
                                 // entry altogether.
-                                if state.touch_properties.contains_key(&slot) {
-                                    let data = state
-                                        .touch_properties
-                                        .get_mut(&slot)
-                                        .expect("This has been checked");
+                                if let Some(data) = state.touch_properties.get_mut(&slot) {
                                     if data.down_notified {
                                         data.action = MirTouchAction::mir_touch_action_up;
                                     } else {
@@ -624,7 +621,7 @@ pub fn process_libinput_events(
                             let mut contacts: Vec<crate::TouchContactData> = vec![];
                             for (slot, contact_data) in &mut state.touch_properties {
                                 // Note: This was logic taken from the existing evdev implementation, and we are
-                                // keeping it for backwards compatibilty.
+                                // keeping it for backwards compatibility.
                                 // Sanity check: Bogus panels are sending sometimes empty events that all point
                                 // to (0, 0) coordinates. Detect those and drop the whole frame in this case.
                                 // Also drop touch frames with no contacts inside

@@ -61,7 +61,7 @@ unsafe impl ExternType for PointerEventDataRs {
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct TouchEventContactRs {
-    pub touch_id: u32,
+    pub touch_id: i32,
     pub action: i32,
     pub tooltype: i32,
     pub position_x: f32,
