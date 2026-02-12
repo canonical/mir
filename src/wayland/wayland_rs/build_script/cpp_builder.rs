@@ -62,6 +62,21 @@ impl CppBuilder {
                 result.push_str("{\n");
                 result.push_str("public:\n");
 
+                // Generate enums
+                for enum_ in &class.enums {
+                    result.push_str(&format!("    enum class {}\n", enum_.name));
+                    result.push_str("    {\n");
+
+                    for option in &enum_.options {
+                        result.push_str(&format!(
+                            "        {} = {},\n",
+                            option.name,
+                            option.value.to_string(),
+                        ));
+                    }
+                    result.push_str("    };\n");
+                }
+
                 // Virtual destructor
                 result.push_str(&format!("    virtual ~{}() = default;\n\n", class.name));
 
@@ -120,6 +135,7 @@ impl CppNamespace {
 pub struct CppClass {
     pub name: String,
     pub methods: Vec<CppMethod>,
+    pub enums: Vec<CppEnum>,
 }
 
 impl CppClass {
@@ -127,6 +143,7 @@ impl CppClass {
         CppClass {
             name,
             methods: vec![],
+            enums: vec![],
         }
     }
 
@@ -136,6 +153,39 @@ impl CppClass {
             .last_mut()
             .expect("methods cannot be empty after push")
     }
+
+    pub fn add_enum(&mut self, cpp_enum: CppEnum) -> &mut CppEnum {
+        self.enums.push(cpp_enum);
+        self.enums
+            .last_mut()
+            .expect("enums cannot be empty after push")
+    }
+}
+
+pub struct CppEnum {
+    pub name: String,
+    pub options: Vec<CppEnumOption>,
+}
+
+impl CppEnum {
+    pub fn new(name: String) -> CppEnum {
+        CppEnum {
+            name,
+            options: vec![],
+        }
+    }
+
+    pub fn add_option(&mut self, option: CppEnumOption) -> &mut CppEnumOption {
+        self.options.push(option);
+        self.options
+            .last_mut()
+            .expect("enums cannot be empty after push")
+    }
+}
+
+pub struct CppEnumOption {
+    pub name: String,
+    pub value: u32,
 }
 
 pub struct CppMethod {

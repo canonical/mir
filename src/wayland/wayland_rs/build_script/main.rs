@@ -20,13 +20,14 @@ mod protocol_parser;
 use cpp_builder::CppBuilder;
 use proc_macro2::TokenStream;
 use protocol_parser::{parse_protocols, WaylandProtocol};
+use quick_xml::name;
 use quote::{format_ident, quote};
 use std::fs;
 use syn::Ident;
 
 use crate::{
-    cpp_builder::{CppArg, CppClass, CppMethod, CppNamespace, CppType},
-    protocol_parser::{WaylandArg, WaylandInterface, WaylandRequest},
+    cpp_builder::{CppArg, CppClass, CppEnum, CppEnumOption, CppMethod, CppNamespace, CppType},
+    protocol_parser::{WaylandArg, WaylandEnum, WaylandInterface, WaylandRequest},
 };
 
 fn main() {
@@ -353,11 +354,38 @@ fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
         }
     });
 
+    for enum_ in wayland_interface_to_enums(interface) {
+        class.add_enum(enum_);
+    }
+
     for method in methods {
         class.add_method(method);
     }
 
     class
+}
+
+fn wayland_interface_to_enums(interface: &WaylandInterface) -> impl Iterator<Item = CppEnum> + '_ {
+    interface.items.iter().filter_map(|item| {
+        if let protocol_parser::InterfaceItem::Enum(enum_) = item {
+            Some(wayland_enum_to_cpp_enum(enum_))
+        } else {
+            None
+        }
+    })
+}
+
+fn wayland_enum_to_cpp_enum(enum_: &WaylandEnum) -> CppEnum {
+    let mut result = CppEnum::new(snake_to_pascal(enum_.name.as_str()));
+
+    for option in &enum_.entries {
+        result.add_option(CppEnumOption {
+            name: snake_to_pascal(option.name.as_str()),
+            value: option.value as u32,
+        });
+    }
+
+    result
 }
 
 fn wayland_request_to_cpp_method(method: &WaylandRequest) -> CppMethod {
