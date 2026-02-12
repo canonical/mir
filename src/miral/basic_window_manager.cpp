@@ -55,13 +55,12 @@ auto is_window_or_parent_fullscreen(miral::Window const& window, miral::BasicWin
     if (!window)
         return false;
 
-    auto current = window;
-    while (current)
+    auto& info = bwm.info_for(window);
+    for (auto current = window; current; current = info.parent())
     {
-        auto& info = bwm.info_for(current);
+        info = bwm.info_for(current);
         if (info.state() == mir_window_state_fullscreen)
             return true;
-        current = info.parent();
     }
     return false;
 }
