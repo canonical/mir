@@ -140,7 +140,7 @@ private:
     auto output_config_changed(graphics::DisplayConfigurationOutput const& config) -> bool override;
 };
 
-using ExtImageCopyBackendFactory = std::function<std::unique_ptr<ExtImageCopyBackend>(ExtImageCopyCaptureSessionV1*,bool)>;
+using ExtImageCopyBackendFactory = std::function<std::shared_ptr<ExtImageCopyBackend>(ExtImageCopyCaptureSessionV1*,bool)>;
 using ExtImageCopyCursorMapPosition = std::function<std::optional<geom::Point>(float abs_x, float abs_y)>;
 
 /* Image capture sources */
@@ -239,7 +239,7 @@ private:
     bool stopped = false;
     wayland::Weak<ExtImageCopyCaptureFrameV1> current_frame;
 
-    std::unique_ptr<ExtImageCopyBackend> backend;
+    std::shared_ptr<ExtImageCopyBackend> backend;
 };
 
 class ExtImageCopyCaptureFrameV1
@@ -533,7 +533,7 @@ void mf::ExtOutputImageCaptureSourceManagerV1::create_source(wl_resource* new_re
 {
     auto& output_global = OutputGlobal::from_or_throw(output);
     ExtImageCopyBackendFactory backend_factory = [output=wayland::make_weak(&output_global), ctx=ctx](auto *session, bool overlay_cursor) {
-        return std::make_unique<ExtOutputImageCopyBackend>(session, overlay_cursor, wayland::as_nullable_ptr(output), ctx);
+        return std::make_shared<ExtOutputImageCopyBackend>(session, overlay_cursor, wayland::as_nullable_ptr(output), ctx);
     };
     ExtImageCopyCursorMapPosition cursor_map_position = [output=wayland::make_weak(&output_global)](float abs_x, float abs_y) -> std::optional<geom::Point>
 {
@@ -960,7 +960,7 @@ void mf::ExtImageCopyCaptureCursorSessionV1::get_capture_session(
     }
     auto backend_factory = [clock=clock](auto *session, [[maybe_unused]] bool overlay_cursor)
         {
-            return std::make_unique<ImageCopyBackend>(session, clock);
+            return std::make_shared<ImageCopyBackend>(session, clock);
         };
     cursor_image_session = wayland::make_weak(
         new ExtImageCopyCaptureSessionV1{session, false, backend_factory});
