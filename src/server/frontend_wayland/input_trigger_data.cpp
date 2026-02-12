@@ -475,11 +475,6 @@ mf::InputTriggerActionV1::InputTriggerActionV1(
 {
 }
 
-auto mf::InputTriggerActionV1::dummy(wl_resource* id) -> InputTriggerActionV1*
-{
-    return new InputTriggerActionV1{id};
-}
-
 auto mf::InputTriggerActionV1::has_trigger(mw::InputTriggerV1 const* trigger) const -> bool
 {
     return std::ranges::any_of(
@@ -518,14 +513,6 @@ void mf::InputTriggerActionV1::add_trigger(mw::InputTriggerV1 const* trigger)
 void mf::InputTriggerActionV1::drop_trigger(mw::InputTriggerV1 const* trigger)
 {
     std::erase_if(trigger_filters, [&](auto const& filter) { return filter->is_same_trigger(trigger); });
-}
-
-mf::InputTriggerActionV1::InputTriggerActionV1(wl_resource* id) :
-    mw::InputTriggerActionV1{id, Version<1>{}},
-    ta{nullptr},
-    cef{nullptr},
-    keyboard_state{nullptr}
-{
 }
 
 mf::ActionControl::ActionControl(std::string_view token, struct wl_resource* id) :
@@ -604,7 +591,7 @@ auto mf::InputTriggerData::add_new_action(Token const& token, struct wl_resource
 
     if (revoked_tokens.contains(token))
     {
-        auto const action = InputTriggerActionV1::dummy(id);
+        auto const action = new NullInputTriggerActionV1{id};
         action->send_unavailable_event();
         return true;
     }
