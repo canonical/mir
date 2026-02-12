@@ -95,14 +95,15 @@ std::vector<uint32_t> query_kernel_keystate(char const* devnode)
         return pressed_keys;
     }
     
+    // Ensure the FD is closed when we return
     mir::raii::PairedFd device_fd{fd};
     
     // Query the key state bit array from the kernel
     // EVIOCGKEY returns a bit array where bit N represents scan code N
-    constexpr size_t key_state_size = KEY_CNT / 8 + 1; // Number of bytes needed for all key bits
+    constexpr size_t key_state_size = (KEY_CNT + 7) / 8; // Number of bytes needed for all key bits
     uint8_t key_state[key_state_size] = {0};
     
-    if (ioctl(fd, EVIOCGKEY(sizeof(key_state)), key_state) < 0)
+    if (ioctl(device_fd, EVIOCGKEY(sizeof(key_state)), key_state) < 0)
     {
         mir::log(
             mir::logging::Severity::debug,
@@ -213,8 +214,8 @@ void mie::LibInputDevice::start(InputSink* sink, EventBuilder* builder)
     if (sink && contains(info.capabilities, mi::DeviceCapability::keyboard))
     {
         auto dev = device();
-        auto const u_dev = mir::raii::deleter_for(libinput_device_get_udev_device(dev), &udev_device_unref);
-        if (auto const devnode = udev_device_get_devnode(u_dev.get()))
+        auto const udev_device = mir::raii::deleter_for(libinput_device_get_udev_device(dev), &udev_device_unref);
+        if (auto const devnode = udev_device_get_devnode(udev_device.get()))
         {
             auto pressed_keys = query_kernel_keystate(devnode);
             if (!pressed_keys.empty())
