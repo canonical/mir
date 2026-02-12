@@ -309,11 +309,8 @@ bool mf::KeyboardEventFilter::handle(MirEvent const& event)
     else if (key_event->action() == mir_keyboard_action_up)
         keyboard_state->on_key_up(key_event->keysym(), key_event->scan_code());
 
-    // Canonicalise event modifiers to match how Mir represents them elsewhere.
-    auto const event_mods = mi::expand_modifiers(key_event->modifiers());
-
     auto modifiers_match =
-        protocol_and_event_modifiers_match(trigger.value().modifiers, InputTriggerModifiers{event_mods});
+        protocol_and_event_modifiers_match(trigger.value().modifiers, InputTriggerModifiers{key_event->modifiers()});
 
     auto const key_matches = trigger.value().matches(keyboard_state);
 
