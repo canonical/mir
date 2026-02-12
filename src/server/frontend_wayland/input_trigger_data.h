@@ -108,7 +108,7 @@ public:
 class KeyboardStateTracker
 {
 public:
-    KeyboardStateTracker() = default;
+    KeyboardStateTracker(std::shared_ptr<input::CompositeEventFilter> const &cef);
 
     void on_key_down(uint32_t keysym, uint32_t scancode);
     void on_key_up(uint32_t keysym, uint32_t scancode);
@@ -121,6 +121,7 @@ public:
     auto scancode_is_pressed(uint32_t scancode) const -> bool;
 
 private:
+    std::shared_ptr<input::EventFilter> const filter;
     std::unordered_set<uint32_t> pressed_keysyms;
     std::unordered_set<uint32_t> pressed_scancodes;
 };
@@ -292,7 +293,11 @@ private:
     std::unordered_map<Token, wayland::Weak<InputTriggerActionV1>> actions;
 
     RecentTokens revoked_tokens;
-    std::shared_ptr<KeyboardStateTracker> keyboard_state;
+
+    // Only filters keep a reference to the keyboard state. It's lazily created
+    // when the first filter is created and shared among all filters, and
+    // destroyed when the last filter is destroyed.
+    std::weak_ptr<KeyboardStateTracker> keyboard_state;
 };
 }
 }

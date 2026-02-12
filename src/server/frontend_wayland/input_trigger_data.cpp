@@ -137,6 +137,48 @@ auto mf::InputTriggerModifiers::from_protocol(uint32_t protocol_mods, bool shift
     return InputTriggerModifiers{result};
 }
 
+namespace
+{
+struct KeyboardStateTrackerFilter : public mi::EventFilter
+{
+    mf::KeyboardStateTracker& parent;
+
+    explicit KeyboardStateTrackerFilter(mf::KeyboardStateTracker& parent) :
+        parent{parent}
+    {
+    }
+
+    bool handle(MirEvent const& event) override
+    {
+        if (event.type() != mir_event_type_input)
+            return false;
+
+        auto const* input_event = event.to_input();
+
+        if (input_event->input_type() != mir_input_event_type_key)
+            return false;
+
+        auto const* key_event = input_event->to_keyboard();
+        auto const keysym = key_event->keysym();
+        auto const scancode = key_event->scan_code();
+        auto const action = key_event->action();
+
+        if (action == mir_keyboard_action_down)
+            parent.on_key_down(keysym, scancode);
+        else if (action == mir_keyboard_action_up)
+            parent.on_key_up(keysym, scancode);
+
+        return false;
+    }
+};
+}
+
+mf::KeyboardStateTracker::KeyboardStateTracker(std::shared_ptr<mi::CompositeEventFilter> const& cef) :
+    filter{std::make_shared<KeyboardStateTrackerFilter>(*this)}
+{
+    cef->prepend(filter);
+}
+
 void mf::KeyboardStateTracker::on_key_down(uint32_t keysym, uint32_t scancode)
 {
     pressed_keysyms.insert(keysym);
@@ -303,11 +345,6 @@ bool mf::KeyboardEventFilter::handle(MirEvent const& event)
         return false;
 
     auto const* key_event = input_event->to_keyboard();
-
-    if (key_event->action() == mir_keyboard_action_down)
-        keyboard_state->on_key_down(key_event->keysym(), key_event->scan_code());
-    else if (key_event->action() == mir_keyboard_action_up)
-        keyboard_state->on_key_up(key_event->keysym(), key_event->scan_code());
 
     auto modifiers_match =
         protocol_and_event_modifiers_match(trigger.value().modifiers, InputTriggerModifiers{key_event->modifiers()});
@@ -578,8 +615,7 @@ void mf::ActionControl::install_action(mw::Weak<mf::InputTriggerActionV1> action
 mf::InputTriggerData::InputTriggerData(
     std::shared_ptr<msh::TokenAuthority> const& ta, std::shared_ptr<mi::CompositeEventFilter> const& cef) :
     ta{ta},
-    cef{cef},
-    keyboard_state{std::make_shared<KeyboardStateTracker>()}
+    cef{cef}
 {
 }
 
@@ -598,7 +634,18 @@ auto mf::InputTriggerData::add_new_action(Token const& token, struct wl_resource
 
     if (auto const it = action_controls.find(token); it != action_controls.end())
     {
-        auto const action = wayland::make_weak(new InputTriggerActionV1(ta, cef, keyboard_state, id));
+        auto const kb_state = [&]()
+        {
+            if (keyboard_state.expired())
+            {
+                auto const kb_state = std::make_shared<KeyboardStateTracker>(cef);
+                keyboard_state = kb_state;
+                return kb_state;
+            }
+            return keyboard_state.lock();
+        }();
+
+        auto const action = wayland::make_weak(new InputTriggerActionV1(ta, cef, kb_state, id));
 
         auto& [_, action_control] = *it;
         if (action_control)
