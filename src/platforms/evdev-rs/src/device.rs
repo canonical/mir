@@ -113,9 +113,9 @@ pub struct ContactData {
     pub down_notified: bool,
 }
 
-impl ContactData {
-    pub fn default() -> ContactData {
-        ContactData {
+impl Default for ContactData {
+    fn default() -> Self {
+        Self {
             action: MirTouchAction::mir_touch_action_change,
             tooltype: MirTouchTooltype::mir_touch_tooltype_unknown,
             x: 0.0,
