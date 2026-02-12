@@ -40,6 +40,9 @@
 #include <chrono>
 #include <sstream>
 #include <algorithm>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/ioctl.h>
 
 namespace md = mir::dispatch;
 namespace mi = mir::input;
@@ -63,6 +66,78 @@ double libinput_event_touch_get_touch_minor_transformed(libinput_event_touch*, u
 double libinput_event_touch_get_pressure(libinput_event_touch*)
 {
     return 0.8;
+}
+
+/**
+ * Query the kernel for currently pressed keys on a keyboard device.
+ * This is necessary when the compositor starts or resumes, as the kernel
+ * may have key state (e.g., from another session like GDM) that we need
+ * to synchronize with.
+ *
+ * \param devnode The device node path (e.g., /dev/input/event3)
+ * \return Vector of currently pressed scan codes, or empty on error
+ */
+std::vector<uint32_t> query_kernel_keystate(char const* devnode)
+{
+    std::vector<uint32_t> pressed_keys;
+    
+    if (!devnode)
+        return pressed_keys;
+    
+    // Open the device node to query its state
+    int fd = open(devnode, O_RDONLY | O_NONBLOCK);
+    if (fd < 0)
+    {
+        mir::log(
+            mir::logging::Severity::debug,
+            "evdev",
+            std::string("Unable to open ") + devnode + " to query key state");
+        return pressed_keys;
+    }
+    
+    mir::raii::PairedFd device_fd{fd};
+    
+    // Query the key state bit array from the kernel
+    // EVIOCGKEY returns a bit array where bit N represents scan code N
+    constexpr size_t key_state_size = KEY_CNT / 8 + 1; // Number of bytes needed for all key bits
+    uint8_t key_state[key_state_size] = {0};
+    
+    if (ioctl(fd, EVIOCGKEY(sizeof(key_state)), key_state) < 0)
+    {
+        mir::log(
+            mir::logging::Severity::debug,
+            "evdev",
+            std::string("Failed to query key state for ") + devnode);
+        return pressed_keys;
+    }
+    
+    // Convert the bit array to a vector of pressed scan codes
+    for (size_t byte_idx = 0; byte_idx < key_state_size; ++byte_idx)
+    {
+        uint8_t byte = key_state[byte_idx];
+        if (byte == 0)
+            continue;
+            
+        for (size_t bit_idx = 0; bit_idx < 8; ++bit_idx)
+        {
+            if (byte & (1 << bit_idx))
+            {
+                uint32_t scan_code = byte_idx * 8 + bit_idx;
+                pressed_keys.push_back(scan_code);
+            }
+        }
+    }
+    
+    if (!pressed_keys.empty())
+    {
+        mir::log(
+            mir::logging::Severity::debug,
+            "evdev",
+            std::string("Device ") + devnode + " has " + 
+            std::to_string(pressed_keys.size()) + " keys pressed on startup");
+    }
+    
+    return pressed_keys;
 }
 
 template<typename Tag>
@@ -131,6 +206,23 @@ void mie::LibInputDevice::start(InputSink* sink, EventBuilder* builder)
 {
     this->sink = sink;
     this->builder = builder;
+    
+    // Synchronize keyboard state with the kernel when starting the device.
+    // This is critical when the compositor starts after another session (e.g., GDM)
+    // has been using the keyboard, as we need to know which keys are already pressed.
+    if (sink && contains(info.capabilities, mi::DeviceCapability::keyboard))
+    {
+        auto dev = device();
+        auto const u_dev = mir::raii::deleter_for(libinput_device_get_udev_device(dev), &udev_device_unref);
+        if (auto const devnode = udev_device_get_devnode(u_dev.get()))
+        {
+            auto pressed_keys = query_kernel_keystate(devnode);
+            if (!pressed_keys.empty())
+            {
+                sink->key_state(pressed_keys);
+            }
+        }
+    }
 }
 
 void mie::LibInputDevice::stop()
