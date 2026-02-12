@@ -620,7 +620,7 @@ pub fn process_libinput_events(
                         event::TouchEvent::Frame(frame_event) => {
                             let mut contacts: Vec<crate::TouchContactData> = vec![];
                             let mut empty_touches = 0;
-                            
+
                             for (slot, contact_data) in &mut state.touch_properties {
                                 // Note: This was logic taken from the existing evdev implementation, and we are
                                 // keeping it for backwards compatibility.
