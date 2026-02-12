@@ -35,14 +35,15 @@
 #include <libinput.h>
 #include <linux/input.h>  // only used to get constants for input reports
 
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/ioctl.h>
+
 #include <boost/exception/diagnostic_information.hpp>
 #include <cstring>
 #include <chrono>
 #include <sstream>
 #include <algorithm>
-#include <fcntl.h>
-#include <unistd.h>
-#include <sys/ioctl.h>
 
 namespace md = mir::dispatch;
 namespace mi = mir::input;
@@ -75,7 +76,7 @@ double libinput_event_touch_get_pressure(libinput_event_touch*)
  * to synchronize with.
  *
  * \param devnode The device node path (e.g., /dev/input/event3)
- * \return Vector of currently pressed scan codes, or empty on error
+ * \return Vector of currently pressed Linux input key codes (KEY_*), or empty on error
  */
 std::vector<uint32_t> query_kernel_keystate(char const* devnode)
 {
@@ -85,16 +86,18 @@ std::vector<uint32_t> query_kernel_keystate(char const* devnode)
         return pressed_keys;
 
     // Open the device node to query its state
-    mir::Fd const device_fd{open(devnode, O_RDONLY | O_NONBLOCK)};
-    if (device_fd < 0)
+    int const raw_fd = open(devnode, O_RDONLY | O_NONBLOCK);
+    if (raw_fd < 0)
     {
         mir::log_debug("Unable to open '%s' to query key state", devnode);
         return pressed_keys;
     }
-
+    
+    // Take ownership of the file descriptor
+    mir::Fd const device_fd{mir::IntOwnedFd{raw_fd}};
 
     // Query the key state bit array from the kernel
-    // EVIOCGKEY returns a bit array where bit N represents scan code N
+    // EVIOCGKEY returns a bit array where bit N represents Linux input key code N
     constexpr size_t key_state_size = (KEY_CNT + 7) / 8; // Number of bytes needed for all key bits
     uint8_t key_state[key_state_size] = {0};
 
@@ -104,7 +107,7 @@ std::vector<uint32_t> query_kernel_keystate(char const* devnode)
         return pressed_keys;
     }
 
-    // Convert the bit array to a vector of pressed scan codes
+    // Convert the bit array to a vector of pressed key codes
     for (size_t byte_idx = 0; byte_idx < key_state_size; ++byte_idx)
     {
         uint8_t byte = key_state[byte_idx];
@@ -115,8 +118,10 @@ std::vector<uint32_t> query_kernel_keystate(char const* devnode)
         {
             if (byte & (1 << bit_idx))
             {
-                uint32_t scan_code = byte_idx * 8 + bit_idx;
-                pressed_keys.push_back(scan_code);
+                uint32_t const key_code = static_cast<uint32_t>(byte_idx * 8 + bit_idx);
+                // Filter out padding bits beyond KEY_CNT
+                if (key_code < KEY_CNT)
+                    pressed_keys.push_back(key_code);
             }
         }
     }
