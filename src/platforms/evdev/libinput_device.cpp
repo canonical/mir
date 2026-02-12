@@ -96,7 +96,7 @@ std::vector<uint32_t> query_kernel_keystate(char const* devnode)
     }
     
     // Ensure the FD is closed when we return
-    mir::raii::PairedFd device_fd{fd};
+    mir::Fd device_fd{mir::IntOwnedFd{fd}};
     
     // Query the key state bit array from the kernel
     // EVIOCGKEY returns a bit array where bit N represents scan code N
