@@ -66,7 +66,7 @@ void miral::BasicWindowManager::DisplayArea::hide_attached(std::move_only_functi
     this->hidden_attached_windows = std::move(hidden_attached_windows);
 }
 
-void miral::BasicWindowManager::DisplayArea::restore_all_attached(BasicWindowManager& bwm)
+void miral::BasicWindowManager::DisplayArea::attach_all_hidden(BasicWindowManager& bwm)
 {
     for (auto& window : hidden_attached_windows)
     {
@@ -994,7 +994,7 @@ void miral::BasicWindowManager::handle_attached_surfaces_for_window_removal(
     auto const cleanup = [prev_was_fullscreen, prev_display_area, this]()
     {
         if (prev_was_fullscreen)
-            prev_display_area->restore_all_attached(*this);
+            prev_display_area->attach_all_hidden(*this);
     };
 
     if (!current)
@@ -1023,7 +1023,7 @@ void miral::BasicWindowManager::handle_attached_surfaces_for_window_removal(
     {
         // One display area
         if (prev_was_fullscreen && !current_is_fullscreen)
-            current_display_area->restore_all_attached(*this);
+            current_display_area->attach_all_hidden(*this);
         else if (!prev_was_fullscreen && current_is_fullscreen)
             hide_attached_windows_for_fullscreen(current_display_area);
     }
@@ -1623,7 +1623,7 @@ void miral::BasicWindowManager::set_state(miral::WindowInfo& window_info, MirWin
     if (has_focus && window_info.state() == mir_window_state_fullscreen && value != mir_window_state_fullscreen &&
         window_info.depth_layer() == mir_depth_layer_application)
     {
-        display_area->restore_all_attached(*this);
+        display_area->attach_all_hidden(*this);
     }
 
     switch (value)

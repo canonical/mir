@@ -210,7 +210,7 @@ private:
         void hide_attached(std::move_only_function<bool(Window const&)> predicate);
 
         // Postcondition: `hidden_attached_windows` is empty.
-        void restore_all_attached(BasicWindowManager& bwm);
+        void attach_all_hidden(BasicWindowManager& bwm);
 
         bool is_hidden_attached(WindowInfo const& window_info) const;
 
