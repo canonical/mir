@@ -185,7 +185,7 @@ pub fn process_libinput_events(
                                     get_bounding_rectangle(&mut device_info.input_sink, &bridge);
 
                                 if bounding_rect.is_null() {
-                                    break;
+                                    continue;
                                 }
                                 let width = bounding_rect.width() as u32;
                                 let height = bounding_rect.height() as u32;
@@ -659,7 +659,7 @@ pub fn process_libinput_events(
 
                             // If we have no contacts, don't send a touch event.
                             if contacts.is_empty() {
-                                break;
+                                continue;
                             }
 
                             let touch_event_data = crate::TouchEventData {
