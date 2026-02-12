@@ -554,7 +554,7 @@ void mf::InputTriggerActionV1::add_trigger(mw::InputTriggerV1 const* trigger)
         return;
 
     trigger_filters.push_back(filter);
-    cef->prepend(filter);
+    cef->append(filter);
 }
 
 void mf::InputTriggerActionV1::drop_trigger(mw::InputTriggerV1 const* trigger)
