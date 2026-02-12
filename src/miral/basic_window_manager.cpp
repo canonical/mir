@@ -991,7 +991,7 @@ void miral::BasicWindowManager::handle_attached_surfaces_for_window_removal(
     bool prev_was_fullscreen, std::shared_ptr<DisplayArea> const& prev_display_area)
 {
     auto const current = active_window();
-    auto const cleanup = [prev_was_fullscreen, prev_display_area, this]()
+    auto const cleanup = [prev_was_fullscreen, &prev_display_area, this]()
     {
         if (prev_was_fullscreen)
             attach_all_hidden(prev_display_area);
