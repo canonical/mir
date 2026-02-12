@@ -101,7 +101,12 @@ std::vector<uint32_t> query_kernel_keystate(char const* devnode)
     constexpr size_t key_state_size = (KEY_CNT + 7) / 8; // Number of bytes needed for all key bits
     uint8_t key_state[key_state_size] = {0};
 
+    // EVIOCGKEY macro expands to unsigned long, but ioctl() signature varies by platform
+    // (unsigned long on glibc, int on musl). Explicit cast avoids overflow warning.
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Woverflow"
     if (ioctl(device_fd, EVIOCGKEY(sizeof(key_state)), key_state) < 0)
+#pragma GCC diagnostic pop
     {
         mir::log_debug("Failed to query '%s' for key state", devnode);
         return pressed_keys;
