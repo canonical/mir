@@ -64,7 +64,10 @@ impl CppBuilder {
 
                 // Generate enums
                 for enum_ in &class.enums {
-                    result.push_str(&format!("    enum class {}\n", enum_.name));
+                    result.push_str(&format!(
+                        "    enum class {} : public uint32_t\n",
+                        enum_.name
+                    ));
                     result.push_str("    {\n");
 
                     for option in &enum_.options {
@@ -75,6 +78,7 @@ impl CppBuilder {
                         ));
                     }
                     result.push_str("    };\n");
+                    result.push_str("\n");
                 }
 
                 // Virtual destructor
@@ -211,7 +215,7 @@ pub enum CppType {
     CppU32,
     CppF32,
     String,
-    Object(String), // TODO: Support null
+    Object(String),
     NewId(String),
     Array,
     Fd,
@@ -226,7 +230,7 @@ fn cpp_type_to_string(cpp_type: &CppType) -> String {
         CppType::Object(name) => format!("rust::SharedPtr<{}> const&", name),
         CppType::NewId(interface) => "int32_t".to_string(), // TODO
         CppType::Array => "rust::Vec<uint8_t> const&".to_string(),
-        CppType::Fd => "int32_t".to_string(), // TODO
+        CppType::Fd => "int32_t".to_string(),
     }
 }
 
