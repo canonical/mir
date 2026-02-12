@@ -86,15 +86,12 @@ std::vector<uint32_t> query_kernel_keystate(char const* devnode)
         return pressed_keys;
 
     // Open the device node to query its state
-    int const raw_fd = open(devnode, O_RDONLY | O_NONBLOCK);
-    if (raw_fd < 0)
+    mir::Fd const device_fd{open(devnode, O_RDONLY | O_NONBLOCK)};
+    if (device_fd < 0)
     {
         mir::log_debug("Unable to open '%s' to query key state", devnode);
         return pressed_keys;
     }
-    
-    // Take ownership of the file descriptor
-    mir::Fd const device_fd{mir::IntOwnedFd{raw_fd}};
 
     // Query the key state bit array from the kernel
     // EVIOCGKEY returns a bit array where bit N represents Linux input key code N
