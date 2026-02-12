@@ -349,9 +349,7 @@ bool mf::KeyboardEventFilter::handle(MirEvent const& event)
     auto modifiers_match =
         protocol_and_event_modifiers_match(trigger.value().modifiers, InputTriggerModifiers{key_event->modifiers()});
 
-    auto const key_matches = trigger.value().matches(keyboard_state);
-
-    if (!modifiers_match || !key_matches)
+    auto const end_if_began = [&]()
     {
         if (began)
         {
@@ -360,7 +358,19 @@ bool mf::KeyboardEventFilter::handle(MirEvent const& event)
             action.value().send_end_event(timestamp, activation_token);
             began = false;
         }
+    };
 
+    if (!modifiers_match)
+    {
+        end_if_began();
+        return false;
+    }
+
+    auto const key_matches = trigger.value().matches(keyboard_state);
+
+    if (!key_matches)
+    {
+        end_if_began();
         return false;
     }
 
