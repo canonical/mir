@@ -619,14 +619,16 @@ pub fn process_libinput_events(
                         }
                         event::TouchEvent::Frame(frame_event) => {
                             let mut contacts: Vec<crate::TouchContactData> = vec![];
+                            let mut empty_touches = 0;
+                            
                             for (slot, contact_data) in &mut state.touch_properties {
                                 // Note: This was logic taken from the existing evdev implementation, and we are
                                 // keeping it for backwards compatibility.
                                 // Sanity check: Bogus panels are sending sometimes empty events that all point
                                 // to (0, 0) coordinates. Detect those and drop the whole frame in this case.
-                                // Also drop touch frames with no contacts inside
+                                // Count touches at (0, 0) but still include them in contacts for now.
                                 if contact_data.x == 0.0 && contact_data.y == 0.0 {
-                                    continue;
+                                    empty_touches += 1;
                                 }
 
                                 contacts.push(crate::TouchContactData {
@@ -652,8 +654,9 @@ pub fn process_libinput_events(
                                 contact_data.action != MirTouchAction::mir_touch_action_up
                             });
 
-                            // If we have no contacts, don't send a touch event.
-                            if contacts.is_empty() {
+                            // Drop the frame if we have no contacts or more than one touch at (0, 0).
+                            // A single touch at (0, 0) could be legitimate (top-left corner).
+                            if contacts.is_empty() || empty_touches > 1 {
                                 continue;
                             }
 
