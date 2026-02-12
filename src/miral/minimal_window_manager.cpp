@@ -315,7 +315,7 @@ void miral::MinimalWindowManager::advise_new_window(miral::WindowInfo const& win
 void miral::MinimalWindowManager::advise_focus_gained(WindowInfo const& window_info)
 {
     tools.raise_tree(window_info.window());
-    self->application_selector.advise_focus_gained(window_info);
+    application_selector_advise_focus_gained(window_info);
 }
 
 void miral::MinimalWindowManager::advise_new_app(miral::ApplicationInfo&){}
@@ -323,12 +323,12 @@ void miral::MinimalWindowManager::advise_delete_app(miral::ApplicationInfo const
 
 void  miral::MinimalWindowManager::advise_focus_lost(const miral::WindowInfo &window_info)
 {
-    self->application_selector.advise_focus_lost(window_info);
+    application_selector_advise_focus_lost(window_info);
 }
 
 void miral::MinimalWindowManager::advise_delete_window(miral::WindowInfo const& window_info)
 {
-    self->application_selector.advise_delete_window(window_info);
+    application_selector_advise_delete_window(window_info);
 }
 
 bool miral::MinimalWindowManager::Impl::prepare_for_gesture(
@@ -653,4 +653,19 @@ bool miral::MinimalWindowManager::Impl::advise_new_window(WindowInfo const& info
     application_selector.advise_new_window(info, should_receive_focus);
 
     return should_receive_focus;
+}
+
+void miral::MinimalWindowManager::application_selector_advise_focus_gained(WindowInfo const& window_info)
+{
+    self->application_selector.advise_focus_gained(window_info);
+}
+
+void miral::MinimalWindowManager::application_selector_advise_focus_lost(WindowInfo const& window_info)
+{
+    self->application_selector.advise_focus_lost(window_info);
+}
+
+void miral::MinimalWindowManager::application_selector_advise_delete_window(WindowInfo const& window_info)
+{
+    self->application_selector.advise_delete_window(window_info);
 }

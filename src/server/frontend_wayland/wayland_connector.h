@@ -50,6 +50,7 @@ namespace input
 class InputDeviceHub;
 class InputDeviceRegistry;
 class Seat;
+class CursorObserverMultiplexer;
 class CompositeEventFilter;
 class KeyboardObserver;
 }
@@ -125,6 +126,8 @@ public:
         std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> keyboard_observer_registrar;
         std::shared_ptr<shell::TokenAuthority> token_authority;
         std::shared_ptr<SurfaceRegistry> surface_registry;
+        std::shared_ptr<time::Clock> clock;
+        std::shared_ptr<input::CursorObserverMultiplexer> cursor_observer_multiplexer;
         std::shared_ptr<InputTriggerData> input_trigger_data;
     };
 
@@ -181,7 +184,8 @@ public:
         std::shared_ptr<DecorationStrategy> const& decoration_strategy,
         std::shared_ptr<scene::SessionCoordinator> const& session_coordinator,
         std::shared_ptr<shell::TokenAuthority> const& token_authority,
-        std::vector<std::shared_ptr<graphics::RenderingPlatform>> const& render_platforms);
+        std::vector<std::shared_ptr<graphics::RenderingPlatform>> const& render_platforms,
+        std::shared_ptr<input::CursorObserverMultiplexer> const& cursor_observer_multiplexer);
 
     ~WaylandConnector() override;
 
