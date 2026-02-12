@@ -207,11 +207,7 @@ private:
         {
         }
 
-        // Precondition: `hidden_attached_windows` is empty.
-        //
-        // In other words, this should not be called if there are any currently
-        // fullscreened windows attached to this area.
-        void hide_all_attached(BasicWindowManager& bwm);
+        void hide_attached(std::move_only_function<bool(Window const&)> predicate);
 
         // Postcondition: `hidden_attached_windows` is empty.
         void restore_all_attached(BasicWindowManager& bwm);
@@ -352,6 +348,7 @@ private:
     void handle_attached_surfaces_for_focus_change(Window const& prev, Window const& current);
     void handle_attached_surfaces_for_window_removal(
         bool prev_was_fullscreen, std::shared_ptr<DisplayArea> const& prev_display_area);
+    void hide_attached_windows_for_fullscreen(std::shared_ptr<DisplayArea> const& display_area);
 };
 }
 
