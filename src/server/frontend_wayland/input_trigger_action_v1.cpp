@@ -45,8 +45,8 @@ private:
                     mw::ProtocolError(
                         resource,
                         Error::invalid_token,
-                        "InputTriggerActionManagerV1::get_input_trigger_action: trying to use a token (%s) we never "
-                        "issued",
+                        "ext_input_trigger_action_manager_v1.get_input_trigger_action: trying to use a token (%s) we "
+                        "never issued",
                         token.c_str()));
             }
         }
