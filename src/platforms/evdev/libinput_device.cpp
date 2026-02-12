@@ -85,19 +85,14 @@ std::vector<uint32_t> query_kernel_keystate(char const* devnode)
         return pressed_keys;
     
     // Open the device node to query its state
-    int fd = open(devnode, O_RDONLY | O_NONBLOCK);
-    if (fd < 0)
+    mir::Fd const device_fd{open(devnode, O_RDONLY | O_NONBLOCK)};
+    if (device_fd < 0)
     {
-        mir::log(
-            mir::logging::Severity::debug,
-            "evdev",
-            std::string("Unable to open ") + devnode + " to query key state");
+        mir::log_debug("Unable to open '%s' to query key state", devnode);
         return pressed_keys;
     }
     
-    // Ensure the FD is closed when we return
-    mir::Fd device_fd{mir::IntOwnedFd{fd}};
-    
+
     // Query the key state bit array from the kernel
     // EVIOCGKEY returns a bit array where bit N represents scan code N
     constexpr size_t key_state_size = (KEY_CNT + 7) / 8; // Number of bytes needed for all key bits
@@ -105,10 +100,7 @@ std::vector<uint32_t> query_kernel_keystate(char const* devnode)
     
     if (ioctl(device_fd, EVIOCGKEY(sizeof(key_state)), key_state) < 0)
     {
-        mir::log(
-            mir::logging::Severity::debug,
-            "evdev",
-            std::string("Failed to query key state for ") + devnode);
+        mir::log_debug("Failed to query '%s' for key state", devnode);
         return pressed_keys;
     }
     
@@ -131,11 +123,7 @@ std::vector<uint32_t> query_kernel_keystate(char const* devnode)
     
     if (!pressed_keys.empty())
     {
-        mir::log(
-            mir::logging::Severity::debug,
-            "evdev",
-            std::string("Device ") + devnode + " has " + 
-            std::to_string(pressed_keys.size()) + " keys pressed on startup");
+        mir::log_debug("Device '%s' has %zu keys pressed on startup", devnode, pressed_keys.size());
     }
     
     return pressed_keys;
@@ -213,9 +201,7 @@ void mie::LibInputDevice::start(InputSink* sink, EventBuilder* builder)
     // has been using the keyboard, as we need to know which keys are already pressed.
     if (sink && contains(info.capabilities, mi::DeviceCapability::keyboard))
     {
-        auto dev = device();
-        auto const udev_device = mir::raii::deleter_for(libinput_device_get_udev_device(dev), &udev_device_unref);
-        if (udev_device)
+        if (auto const udev_device = mir::raii::deleter_for(libinput_device_get_udev_device(device()), &udev_device_unref))
         {
             if (auto const devnode = udev_device_get_devnode(udev_device.get()))
             {
