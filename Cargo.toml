@@ -17,8 +17,15 @@ cxx-build = { version = ">=1.0.167" }
 input = { version = ">=0.8.3, <0.10", features = ["libinput_1_19"] }
 libc = "0.2.175"
 nix = { version = ">=0.30, <0.32", features = ["poll"] }
-wayland-server = "0.31"
+wayland-server = { version = ">=0.31" }
 calloop = { version = ">=0.10, <0.15" }
 log = "0.4"
 serde = { version = "1", features = ["derive"] }
 quick-xml = { version = "0.31", features = ["serialize"] }
+wayland-scanner = { version = ">=0.31" }
+wayland-backend = { version = ">=0.3" }
+bitflags = "2"
+quote = "1"
+proc-macro2 = "1"
+prettyplease = "0.2"
+syn = { version = "2", features = ["full", "parsing"] }
