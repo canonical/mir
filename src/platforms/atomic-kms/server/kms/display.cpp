@@ -216,7 +216,7 @@ void mga::Display::register_configuration_change_handler(
                 monitor.process_events([conf_change_handler, this]
                                        (mir::udev::Monitor::EventType type, mir::udev::Device const& device)
                                        {
-                                            mir::log_debug("Processing UDEV event for %s: %i", device.syspath(), type);
+                                            mir::log_debug("Processing UDEV event for {}: {}", device.syspath(), static_cast<int>(type));
                                             dirty_configuration = true;
                                             conf_change_handler();
                                        });

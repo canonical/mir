@@ -186,7 +186,7 @@ std::string object_path_for_current_session(LogindSeat* seat_proxy)
         BOOST_THROW_EXCEPTION((std::runtime_error{"Seat has no active session"}));
     }
 
-    mir::log_debug("Discovered object path for current session = %s", object_path);
+    mir::log_debug("Discovered object path for current session = {}", object_path);
     return {object_path};
 }
 
@@ -281,7 +281,7 @@ mir::LogindConsoleServices::LogindConsoleServices(
 
     if (!logind_session_call_set_type_sync(session_proxy.get(), "wayland", nullptr, &error))
     {
-        mir::log_debug("Failed to set logind session type: %s", error ? error->message : "unknown error");
+        mir::log_debug("Failed to set logind session type: {}", error ? error->message : "unknown error");
     }
 
     g_signal_connect(
@@ -733,9 +733,7 @@ void mir::LogindConsoleServices::on_pause_device(
                  * A DRM device is quite unlikely to *actually* be gone, so just ignore
                  * PauseDevice("gone") signals for DRM devices.
                  */
-                mir::log_debug(
-                    "Ignoring logind PauseDevice(\"gone\") event for DRM device %i:%i",
-                    major, minor);
+                mir::log_debug("Ignoring logind PauseDevice(\"gone\") event for DRM device {}:{}", major, minor);
                 return;
             }
             it->second->emit_removed();

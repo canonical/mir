@@ -230,7 +230,7 @@ void mgg::Display::register_configuration_change_handler(
                 monitor.process_events([conf_change_handler, this]
                                        (mir::udev::Monitor::EventType type, mir::udev::Device const& device)
                                        {
-                                            mir::log_debug("Processing UDEV event for %s: %i", device.syspath(), type);
+                                            mir::log_debug("Processing UDEV event for {}: {}", device.syspath(), static_cast<int>(type));
                                             dirty_configuration = true;
                                             conf_change_handler();
                                        });
@@ -512,7 +512,7 @@ auto mgg::GBMDisplayProvider::is_same_device(mir::udev::Device const& render_dev
     std::unique_ptr<char[], CStrFree> primary_node{drmGetPrimaryDeviceNameFromFd(fd)};
     std::unique_ptr<char[], CStrFree> render_node{drmGetRenderDeviceNameFromFd(fd)};
 
-    mir::log_debug("Checking whether %s is the same device as (%s, %s)...", render_device.devnode(), primary_node.get(), render_node.get());
+    mir::log_debug("Checking whether {} is the same device as ({}, {})...", render_device.devnode(), primary_node.get(), render_node.get());
 
     if (primary_node)
     {

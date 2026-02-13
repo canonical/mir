@@ -131,10 +131,7 @@ void miral::BasicWindowManager::remove_session(std::shared_ptr<scene::Session> c
     auto info = app_info.find(session);
     if (info == app_info.end())
     {
-        log_debug(
-            "BasicWindowManager::remove_session() called with unknown or already removed session %s (PID: %d)",
-            session->name().c_str(),
-            session->process_id());
+        log_debug("BasicWindowManager::remove_session() called with unknown or already removed session {} (PID: {})", session->name(), session->process_id());
         return;
     }
     policy->advise_delete_app(info->second);
@@ -236,10 +233,7 @@ void miral::BasicWindowManager::remove_surface(
     Locker lock{this};
     if (app_info.find(session) == app_info.end())
     {
-        log_debug(
-            "BasicWindowManager::remove_surface() called with unknown or already removed session %s (PID: %d)",
-            session->name().c_str(),
-            session->process_id());
+        log_debug("BasicWindowManager::remove_surface() called with unknown or already removed session {} (PID: {})", session->name(), session->process_id());
         return;
     }
 
@@ -1773,10 +1767,7 @@ auto miral::BasicWindowManager::surface_known(
         else
             description = "null surface";
 
-        log_debug(
-            "%s requested on %s",
-            action.c_str(),
-            description.c_str());
+        log_debug("{} requested on {}", action, description);
 
         return false;
     }

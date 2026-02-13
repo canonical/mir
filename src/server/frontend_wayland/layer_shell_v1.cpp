@@ -247,7 +247,7 @@ auto mf::LayerShellV1::get_window(wl_resource* surface) -> std::shared_ptr<ms::S
             }
         }
 
-        log_debug("No window currently associated with wayland::LayerSurfaceV1 %p", static_cast<void*>(surface));
+        log_debug("No window currently associated with wayland::LayerSurfaceV1 {}", static_cast<void*>(surface));
     }
 
     return {};

@@ -573,7 +573,7 @@ void md::SignalSources::dispatch_pending_signal()
     auto const sig = read_pending_signal();
     if (sig.sig != -1)
     {
-        mir::log_debug("Handling %s from pid=%d", strsignal(sig.sig), sig.pid);
+        mir::log_debug("Handling {} from pid={}", strsignal(sig.sig), sig.pid);
         dispatch_signal(sig.sig);
     }
 }
