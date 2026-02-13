@@ -25,19 +25,6 @@
 
 namespace ml = mir::logging;
 
-void ml::Logger::log(char const* component, Severity severity, char const* format, ...)
-{
-    auto const bufsize = 4096;
-    va_list va;
-    va_start(va, format);
-    char message[bufsize];
-    vsnprintf(message, bufsize, format, va);
-    va_end(va);
-
-    // Inefficient, but maintains API: Constructing a std::string for message/component.
-    log(severity, std::string{message}, std::string{component});
-}
-
 namespace
 {
 std::mutex log_mutex;
