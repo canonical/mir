@@ -561,22 +561,19 @@ pub fn process_libinput_events(
                                 let bounding =
                                     get_bounding_rectangle(&mut device_info.input_sink, &bridge);
 
+                                // We make sure that we only notify of "down" touch events once. Everything
+                                // after that is considered a simple "change".
+                                let data = state
+                                    .touch_properties
+                                    .entry(slot)
+                                    .or_insert(ContactData::default());
+                                data.action = if data.down_notified {
+                                    MirTouchAction::mir_touch_action_change
+                                } else {
+                                    MirTouchAction::mir_touch_action_down
+                                };
+                                
                                 if !bounding.is_null() {
-                                    if !state.touch_properties.contains_key(&slot) {
-                                        state.touch_properties.insert(slot, ContactData::default());
-                                    }
-
-                                    // We make sure that we only notify of "down" touch events once. Everything
-                                    // after that is considered a simple "change".
-                                    let data = state
-                                        .touch_properties
-                                        .entry(slot)
-                                        .or_insert(ContactData::default());
-                                    data.action = if data.down_notified {
-                                        MirTouchAction::mir_touch_action_change
-                                    } else {
-                                        MirTouchAction::mir_touch_action_down
-                                    };
                                     data.x =
                                         down_event.x_transformed(bounding.width() as u32) as f32;
                                     data.y =
@@ -590,16 +587,13 @@ pub fn process_libinput_events(
                                 let bounding =
                                     get_bounding_rectangle(&mut device_info.input_sink, &bridge);
 
+                                let data = state
+                                    .touch_properties
+                                    .entry(slot)
+                                    .or_insert(ContactData::default());
+                                data.action = MirTouchAction::mir_touch_action_change;
+                                
                                 if !bounding.is_null() {
-                                    if !state.touch_properties.contains_key(&slot) {
-                                        state.touch_properties.insert(slot, ContactData::default());
-                                    }
-
-                                    let data = state
-                                        .touch_properties
-                                        .entry(slot)
-                                        .or_insert(ContactData::default());
-                                    data.action = MirTouchAction::mir_touch_action_change;
                                     data.x =
                                         motion_event.x_transformed(bounding.width() as u32) as f32;
                                     data.y =
@@ -631,8 +625,10 @@ pub fn process_libinput_events(
                                 // keeping it for backwards compatibility.
                                 // Sanity check: Bogus panels are sending sometimes empty events that all point
                                 // to (0, 0) coordinates. Detect those and drop the whole frame in this case.
-                                // Count touches at (0, 0) but still include them in contacts for now.
-                                if contact_data.x == 0.0 && contact_data.y == 0.0 {
+                                // Count touches at (0, 0) but only after they've been sent (action != down).
+                                // This avoids counting touches that simply haven't received coordinates yet.
+                                if contact_data.action != MirTouchAction::mir_touch_action_down 
+                                    && contact_data.x == 0.0 && contact_data.y == 0.0 {
                                     empty_touches += 1;
                                 }
 
