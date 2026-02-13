@@ -99,7 +99,7 @@ auto mf::XWaylandClientManager::session_for_client(pid_t client_pid) -> std::sha
 
         if (!session_authorizer->connection_is_allowed({client_pid, proc_stat.st_uid, proc_stat.st_gid}))
         {
-            log_error("X11 session not authorized for PID %d, rejecting!", client_pid);
+            log_error("X11 session not authorized for PID {}, rejecting!", client_pid);
             return nullptr;
         }
         session = std::make_shared<Session>(this, client_pid);

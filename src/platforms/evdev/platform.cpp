@@ -440,7 +440,7 @@ void mie::Platform::device_added(libinput_device* dev)
     }
     catch(...)
     {
-        log_error("Failure opening device %s", describe(dev).c_str());
+        log_error("Failure opening device {}", describe(dev));
     }
 }
 

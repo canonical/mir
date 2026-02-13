@@ -112,7 +112,7 @@ std::unique_ptr<LogindSession, decltype(&g_object_unref)> simple_proxy_on_system
 
             if (error)
             {
-                mir::log_error("Proxy is non-null, but has error set?! Error: %s", error->message);
+                mir::log_error("Proxy is non-null, but has error set?! Error: {}", error->message);
             }
             return proxy;
 
@@ -153,7 +153,7 @@ std::unique_ptr<LogindSeat, decltype(&g_object_unref)> simple_seat_proxy_on_syst
 
             if (error)
             {
-                mir::log_error("Proxy is non-null, but has error set?! Error: %s", error->message);
+                mir::log_error("Proxy is non-null, but has error set?! Error: {}", error->message);
             }
 
             return proxy;
@@ -896,7 +896,7 @@ private:
            result,
            &error))
         {
-            mir::log_error("%s:%d: Logind request to switch vt failed: %s", __FILE__, __LINE__, error->message);
+            mir::log_error("{}:{}: Logind request to switch vt failed: {}", __FILE__, __LINE__, error->message);
         }
     }
 

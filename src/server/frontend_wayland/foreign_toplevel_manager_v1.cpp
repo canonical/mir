@@ -263,9 +263,7 @@ void mf::ForeignSceneObserver::surface_removed(std::shared_ptr<scene::Surface> c
     auto const iter = surface_observers.find(surface);
     if (iter == surface_observers.end())
     {
-        log_error(
-            "Can not remove ForeignSurfaceObserver: surface %p not in observers map",
-            static_cast<void*>(surface.get()));
+        log_error("Can not remove ForeignSurfaceObserver: surface {} not in observers map", static_cast<void*>(surface.get()));
     }
     else
     {
@@ -292,9 +290,7 @@ void mf::ForeignSceneObserver::create_surface_observer(std::shared_ptr<scene::Su
     auto insert_result = surface_observers.insert(std::make_pair(surface, observer));
     if (!insert_result.second)
     {
-        log_error(
-            "Can not add ForeignSurfaceObserver: surface %p already in the observers map",
-            static_cast<void*>(surface.get()));
+        log_error("Can not add ForeignSurfaceObserver: surface {} already in the observers map", static_cast<void*>(surface.get()));
         observer->cease_and_desist();
     }
 }
@@ -525,7 +521,7 @@ mf::GDesktopFileCache::GDesktopFileCache(const std::shared_ptr<MainLoop> &main_l
 
         if (config_path_wd < 0)
         {
-            mir::log_error("Unable to watch directory %s", application_directory.c_str());
+            mir::log_error("Unable to watch directory {}", application_directory);
             continue;
         }
 

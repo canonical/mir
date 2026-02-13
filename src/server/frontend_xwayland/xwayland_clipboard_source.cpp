@@ -101,7 +101,7 @@ public:
             auto const target_type = mime_types_map.find(mime_type);
             if (target_type == mime_types_map.end())
             {
-                log_error("X11 clipboard source given invalid mime type %s", mime_type.c_str());
+                log_error("X11 clipboard source given invalid mime type {}", mime_type);
                 return;
             }
             owner->initiate_send(target_type->second, receiver_fd);
@@ -176,7 +176,7 @@ private:
             auto const len = write(destination_fd, &data[0], data.size());
             if (len < 0)
             {
-                mir::log_error("failed to send X11 clipboard data: %s", mir::errno_to_cstr(errno));
+                mir::log_error("failed to send X11 clipboard data: {}", mir::errno_to_cstr(errno));
                 return false;
             }
             data.erase(data.begin(), data.begin() + len);
@@ -432,7 +432,7 @@ void mf::XWaylandClipboardSource::read_and_send_wl_selection_data(std::lock_guar
         },
         [&](const std::string& error_message)
         {
-            log_error("Error getting selection property: %s", error_message.c_str());
+            log_error("Error getting selection property: {}", error_message);
             in_progress_send.reset();
         }});
 

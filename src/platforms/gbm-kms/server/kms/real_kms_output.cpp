@@ -151,8 +151,7 @@ bool mgg::RealKMSOutput::set_crtc(FBHandle const& fb)
 {
     if (!ensure_crtc())
     {
-        mir::log_error("Output %s has no associated CRTC to set a framebuffer on",
-                       mgk::connector_name(connector).c_str());
+        mir::log_error("Output {} has no associated CRTC to set a framebuffer on", mgk::connector_name(connector));
         return false;
     }
 
@@ -162,7 +161,7 @@ bool mgg::RealKMSOutput::set_crtc(FBHandle const& fb)
                               &connector->modes[mode_index]);
     if (ret)
     {
-        mir::log_error("Failed to set CRTC: %s (%i)", mir::errno_to_cstr(-ret), -ret);
+        mir::log_error("Failed to set CRTC: {} ({})", mir::errno_to_cstr(-ret), -ret);
         current_crtc = nullptr;
         return false;
     }
@@ -175,7 +174,7 @@ bool mgg::RealKMSOutput::has_crtc_mismatch()
 {
     if (!ensure_crtc())
     {
-        mir::log_error("Output %s has no associated CRTC to get ", mgk::connector_name(connector).c_str());
+        mir::log_error("Output {} has no associated CRTC to get ", mgk::connector_name(connector));
         return true;
     }
 
@@ -231,8 +230,7 @@ bool mgg::RealKMSOutput::schedule_page_flip(FBHandle const& fb)
         return true;
     if (!current_crtc)
     {
-        mir::log_error("Output %s has no associated CRTC to schedule page flips on",
-                       mgk::connector_name(connector).c_str());
+        mir::log_error("Output {} has no associated CRTC to schedule page flips on", mgk::connector_name(connector));
         return false;
     }
     return page_flipper->schedule_flip(
