@@ -573,12 +573,11 @@ pub fn process_libinput_events(
                                     MirTouchAction::mir_touch_action_down
                                 };
                                 
-                                if !bounding.is_null() {
-                                    data.x =
-                                        down_event.x_transformed(bounding.width() as u32) as f32;
-                                    data.y =
-                                        down_event.y_transformed(bounding.height() as u32) as f32;
-                                }
+                                // Set coordinates. In normal operation, bounding rectangle should always be valid.
+                                data.x =
+                                    down_event.x_transformed(bounding.width() as u32) as f32;
+                                data.y =
+                                    down_event.y_transformed(bounding.height() as u32) as f32;
                             }
                         }
                         event::TouchEvent::Motion(motion_event) => {
@@ -593,12 +592,11 @@ pub fn process_libinput_events(
                                     .or_insert(ContactData::default());
                                 data.action = MirTouchAction::mir_touch_action_change;
                                 
-                                if !bounding.is_null() {
-                                    data.x =
-                                        motion_event.x_transformed(bounding.width() as u32) as f32;
-                                    data.y =
-                                        motion_event.y_transformed(bounding.height() as u32) as f32;
-                                }
+                                // Set coordinates. In normal operation, bounding rectangle should always be valid.
+                                data.x =
+                                    motion_event.x_transformed(bounding.width() as u32) as f32;
+                                data.y =
+                                    motion_event.y_transformed(bounding.height() as u32) as f32;
                             }
                         }
                         event::TouchEvent::Up(up_event) => {
@@ -625,10 +623,8 @@ pub fn process_libinput_events(
                                 // keeping it for backwards compatibility.
                                 // Sanity check: Bogus panels are sending sometimes empty events that all point
                                 // to (0, 0) coordinates. Detect those and drop the whole frame in this case.
-                                // Count touches at (0, 0) but only after they've been sent (action != down).
-                                // This avoids counting touches that simply haven't received coordinates yet.
-                                if contact_data.action != MirTouchAction::mir_touch_action_down 
-                                    && contact_data.x == 0.0 && contact_data.y == 0.0 {
+                                // Count touches at (0, 0) but still include them in contacts for now.
+                                if contact_data.x == 0.0 && contact_data.y == 0.0 {
                                     empty_touches += 1;
                                 }
 
