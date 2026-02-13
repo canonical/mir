@@ -257,7 +257,7 @@ auto mir::DefaultServerConfiguration::the_rendering_platforms() ->
                             MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
                         auto const descriptor = describe_module();
 
-                        mir::log_warning("Manually-specified rendering platform %s does not claim to support this system. Trying anyway...", descriptor->name);
+                        mir::log_warning("Manually-specified rendering platform {} does not claim to support this system. Trying anyway...", descriptor->name);
                     }
                 }
             }

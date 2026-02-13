@@ -408,10 +408,7 @@ auto probe_display_platform(
 
                 if (auto error = -drmSetInterfaceVersion(drm_fd, &sv))
                 {
-                    mir::log_warning(
-                        "Failed to set DRM interface version on device: %i (%s)",
-                        error,
-                        mir::errno_to_cstr(error));
+                    mir::log_warning("Failed to set DRM interface version on device: {} ({})", error, mir::errno_to_cstr(error));
                     continue;
                 }
 
@@ -428,11 +425,7 @@ auto probe_display_platform(
                     }
                     else
                     {
-                        mir::log_warning(
-                            "Failed to check DRM modesetting support for device %s: %s (%i)",
-                            busid.get(),
-                            mir::errno_to_cstr(-err),
-                            -err);
+                        mir::log_warning("Failed to check DRM modesetting support for device {}: {} ({})", busid.get(), mir::errno_to_cstr(-err), -err);
                     }
                     continue;
                 }
@@ -513,7 +506,7 @@ auto probe_display_platform(
 
                 if (ctx == EGL_NO_CONTEXT)
                 {
-                    mir::log_warning("Failed to create EGL context: %s", mg::egl_category().message(eglGetError()).c_str());
+                    mir::log_warning("Failed to create EGL context: {}", mg::egl_category().message(eglGetError()));
                     continue;
                 }
 
@@ -529,14 +522,9 @@ auto probe_display_platform(
                     mir::log_debug("Detected NVIDIA driver version {}.{}", version->major, version->minor);
                     if (version->major < 396)
                     {
-                        mir::log_warning(
-                            "Detected NVIDIA driver version %i.%i is older than 396.xx",
-                            version->major,
-                            version->minor);
-                        mir::log_warning(
-                            "This driver is known to interact badly with Mir. See https://github.com/canonical/mir/issues/650");
-                        mir::log_warning(
-                            "Mir will not auto-load the eglstream-kms platform on this driver. To proceed anyway, manually specify the platform library.");
+                        mir::log_warning("Detected NVIDIA driver version {}.{} is older than 396.xx", version->major, version->minor);
+                        mir::log_warning("This driver is known to interact badly with Mir. See https://github.com/canonical/mir/issues/650");
+                        mir::log_warning("Mir will not auto-load the eglstream-kms platform on this driver. To proceed anyway, manually specify the platform library.");
                         continue;
                     }
                 }

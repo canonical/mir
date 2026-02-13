@@ -439,7 +439,7 @@ void miral::YamlFileDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
         }
         else
         {
-            mir::log_warning("Display config does not contain layout '%s'", layout.c_str());
+            mir::log_warning("Display config does not contain layout '{}'", layout);
             mir::log_debug("Display config using layout strategy: 'default'");
             apply_default_configuration(conf);
         }
@@ -617,13 +617,18 @@ void miral::YamlFileDisplayConfig::apply_to_output(mg::UserDisplayConfigurationO
             {
                 if (conf.refresh.is_set())
                 {
-                    mir::log_warning("Display config contains unmatched mode: '%dx%d@%2.1f'",
-                        conf.size.value().width.as_int(), conf.size.value().height.as_int(), conf.refresh.value());
+                    mir::log_warning(
+                        "Display config contains unmatched mode: '{}x{}@{:2.1f}'",
+                        conf.size.value().width.as_int(),
+                        conf.size.value().height.as_int(),
+                        conf.refresh.value());
                 }
                 else
                 {
-                    mir::log_warning("Display config contains unmatched mode: '%dx%d'",
-                                     conf.size.value().width.as_int(), conf.size.value().height.as_int());
+                    mir::log_warning(
+                        "Display config contains unmatched mode: '{}x{}'",
+                        conf.size.value().width.as_int(),
+                        conf.size.value().height.as_int());
                 }
             }
         }
@@ -690,7 +695,7 @@ auto miral::YamlFileDisplayConfig::layout_userdata(std::string const& key) -> st
         }
     }
 
-    mir::log_warning("Parsing display configuration: Cannot find layout: %s", layout.c_str());
+    mir::log_warning("Parsing display configuration: Cannot find layout: {}", layout);
     return std::nullopt;
 }
 
@@ -841,7 +846,7 @@ void miral::ReloadingYamlFileDisplayConfig::auto_reload()
                             }
                             else
                             {
-                                mir::log_warning("Failed to open display configuration: %s", filename.c_str());
+                                mir::log_warning("Failed to open display configuration: {}", filename);
                             }
                         }
                         else if (event.name == basename + layout_suffix)
@@ -862,7 +867,7 @@ void miral::ReloadingYamlFileDisplayConfig::auto_reload()
                     }
                     catch (mir::AbnormalExit const& except)
                     {
-                        mir::log_warning("Failed to reload display configuration: %s", except.what());
+                        mir::log_warning("Failed to reload display configuration: {}", except.what());
                     }
 
                     raw_buffer += sizeof_inotify_event+event.len;

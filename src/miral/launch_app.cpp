@@ -135,7 +135,7 @@ auto execute_with_environment(std::vector<std::string> const app, Environment& a
         // unnecessary
         execvpe(exec_args[0], const_cast<char* const*>(exec_args.data()), const_cast<char* const*>(exec_env.data()));
 
-        mir::log_warning("Failed to execute client (\"%s\") error: %s", exec_args[0], mir::errno_to_cstr(errno));
+        mir::log_warning("Failed to execute client (\"{}\") error: {}", exec_args[0], mir::errno_to_cstr(errno));
         _exit(EXIT_FAILURE);
     }
 

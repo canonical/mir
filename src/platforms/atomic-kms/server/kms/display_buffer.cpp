@@ -346,7 +346,7 @@ auto drm_fb_id_from_dma_buffer(
 
     if (ret)
     {
-        mir::log_warning("drmModeAddFB2WithModifiers returned an error: %d", ret);
+        mir::log_warning("drmModeAddFB2WithModifiers returned an error: {}", ret);
         return {};
     }
 

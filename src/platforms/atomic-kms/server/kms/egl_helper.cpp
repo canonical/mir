@@ -260,9 +260,7 @@ auto mgmh::EGLHelper::egl_config_for_format(EGLint gbm_format) -> EGLConfig
         EGLint id;
         if (eglGetConfigAttrib(egl_display, config, EGL_NATIVE_VISUAL_ID, &id) == EGL_FALSE)
         {
-            mir::log_warning(
-                "Failed to query GBM format of EGLConfig: %s",
-                mg::egl_category().message(eglGetError()).c_str());
+            mir::log_warning("Failed to query GBM format of EGLConfig: {}", mg::egl_category().message(eglGetError()));
             continue;
         }
 

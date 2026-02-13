@@ -267,8 +267,7 @@ bool mgg::RealKMSOutput::set_cursor_image(gbm_bo* buffer)
         if (result)
         {
             has_cursor_ = false;
-            mir::log_warning("set_cursor: drmModeSetCursor failed (%s)",
-                             mir::errno_to_cstr(-result));
+            mir::log_warning("set_cursor: drmModeSetCursor failed ({})", mir::errno_to_cstr(-result));
         }
     }
     return !result;
@@ -282,8 +281,7 @@ void mgg::RealKMSOutput::move_cursor(geometry::Point destination)
                                             destination.x.as_int(),
                                             destination.y.as_int()))
         {
-            mir::log_warning("move_cursor: drmModeMoveCursor failed (%s)",
-                             mir::errno_to_cstr(-result));
+            mir::log_warning("move_cursor: drmModeMoveCursor failed ({})", mir::errno_to_cstr(-result));
         }
     }
 }
@@ -296,8 +294,7 @@ bool mgg::RealKMSOutput::clear_cursor()
         result = drmModeSetCursor(drm_fd_, current_crtc->crtc_id, 0, 0, 0);
 
         if (result)
-            mir::log_warning("clear_cursor: drmModeSetCursor failed (%s)",
-                             mir::errno_to_cstr(-result));
+            mir::log_warning("clear_cursor: drmModeSetCursor failed ({})", mir::errno_to_cstr(-result));
         has_cursor_ = false;
     }
 
@@ -364,8 +361,7 @@ void mgg::RealKMSOutput::set_gamma(mg::GammaCurves const& gamma)
 
     if (!ensure_crtc())
     {
-        mir::log_warning("Output %s has no associated CRTC to set gamma on",
-                         mgk::connector_name(connector).c_str());
+        mir::log_warning("Output {} has no associated CRTC to set gamma on", mgk::connector_name(connector));
         return;
     }
 
@@ -386,7 +382,7 @@ void mgg::RealKMSOutput::set_gamma(mg::GammaCurves const& gamma)
 
     int err = -ret;
     if (err)
-        mir::log_warning("drmModeCrtcSetGamma failed: %s", mir::errno_to_cstr(err));
+        mir::log_warning("drmModeCrtcSetGamma failed: {}", mir::errno_to_cstr(err));
 
     // TODO: return bool in future? Then do what with it?
 }
@@ -472,7 +468,7 @@ std::vector<uint8_t> edid_for_connector(int drm_fd, uint32_t connector_id)
         if (!property)
         {
             mir::log_warning(
-                "Failed to get EDID property for connector %u: %i (%s)",
+                "Failed to get EDID property for connector {}: {} ({})",
                 connector_id,
                 errno,
                 mir::errno_to_cstr(errno));
@@ -481,10 +477,7 @@ std::vector<uint8_t> edid_for_connector(int drm_fd, uint32_t connector_id)
 
         if (!drm_property_type_is(property.get(), DRM_MODE_PROP_BLOB))
         {
-            mir::log_warning(
-                "EDID property on connector %u has unexpected type %u",
-                connector_id,
-                property->flags);
+            mir::log_warning("EDID property on connector {} has unexpected type {}", connector_id, property->flags);
             return edid;
         }
 
@@ -504,7 +497,7 @@ std::vector<uint8_t> edid_for_connector(int drm_fd, uint32_t connector_id)
         if (!blob)
         {
             mir::log_warning(
-                "Failed to get EDID property blob for connector %u: %i (%s)",
+                "Failed to get EDID property blob for connector {}: {} ({})",
                 connector_id,
                 errno,
                 mir::errno_to_cstr(errno));

@@ -132,8 +132,8 @@ mf::XdgOutputV1::XdgOutputV1(
         else
         {
             log_warning(
-                "xdg_output_v1 is v%d (meaning Mir must send wl_output.done), "
-                "but wl_output is only v%d (meaning it can't)",
+                "xdg_output_v1 is v{} (meaning Mir must send wl_output.done), "
+                "but wl_output is only v{} (meaning it can't)",
                 wl_resource_get_version(resource),
                 wl_resource_get_version(wl_output_resource));
         }

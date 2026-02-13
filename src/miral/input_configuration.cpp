@@ -115,10 +115,7 @@ public:
                 else if (value == "left")
                     mouse.handedness(mir_pointer_handedness_left);
                 else
-                    mir::log_warning(
-                        "Config key '%s' has invalid value: %s",
-                        key.to_string().c_str(),
-                        std::format("{}",*val).c_str());
+                    mir::log_warning("Config key '{}' has invalid value: {}", key.to_string(), std::format("{}", *val));
             }
         }
 
@@ -137,10 +134,7 @@ public:
                 else if (value == "button_down")
                     touchpad.scroll_mode(mir_touchpad_scroll_mode_button_down_scroll);
                 else
-                    mir::log_warning(
-                        "Config key '%s' has invalid value: %s",
-                        key.to_string().c_str(),
-                        std::format("{}",*val).c_str());
+                    mir::log_warning("Config key '{}' has invalid value: {}", key.to_string(), std::format("{}", *val));
             }
         }
 
@@ -156,8 +150,9 @@ public:
                 else
                 {
                     mir::log_warning(
-                        "Config value %s does not support negative values. Ignoring the supplied value (%d)...",
-                        key.to_string().c_str(), *val);
+                        "Config value {} does not support negative values. Ignoring the supplied value ({})...",
+                        key.to_string(),
+                        *val);
                 }
             }
         }
@@ -174,8 +169,9 @@ public:
                 else
                 {
                     mir::log_warning(
-                        "Config value %s does not support negative values. Ignoring the supplied value (%d)...",
-                        key.to_string().c_str(), *val);
+                        "Config value {} does not support negative values. Ignoring the supplied value ({})...",
+                        key.to_string(),
+                        *val);
                 }
             }
         }
@@ -198,10 +194,7 @@ public:
                 }
                 else
                 {
-                    mir::log_warning(
-                        "Config key '%s' has invalid value: %s",
-                        key.to_string().c_str(),
-                        std::format("{}",val).c_str());
+                    mir::log_warning("Config key '{}' has invalid value: {}", key.to_string(), std::format("{}", val));
                 }
             }
         };
@@ -260,10 +253,7 @@ public:
                 }
                 else
                 {
-                    mir::log_warning(
-                        "Config key '%s' has invalid value: %s",
-                        key.to_string().c_str(),
-                        std::format("{}",val).c_str());
+                    mir::log_warning("Config key '{}' has invalid value: {}", key.to_string(), std::format("{}", val));
                 }
             }
         };
@@ -309,9 +299,7 @@ public:
                 else
                 {
                     mir::log_warning(
-                        "Config key '%s' has invalid string value: %s",
-                        key.to_string().c_str(),
-                        std::format("{}",val).c_str());
+                        "Config key '{}' has invalid string value: {}", key.to_string(), std::format("{}", val));
                 }
             }
         }
@@ -329,10 +317,8 @@ public:
 
             if (clamped_value != opt_val)
             {
-                mir::log_warning("Config key '%s' value %f clamped to %f",
-                    key.to_string().c_str(),
-                    opt_val.value(),
-                    clamped_value.value());
+                mir::log_warning(
+                    "Config key '{}' value {} clamped to {}", key.to_string(), opt_val.value(), clamped_value.value());
             }
 
             return clamped_value;

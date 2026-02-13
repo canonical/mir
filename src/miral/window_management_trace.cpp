@@ -40,7 +40,7 @@ catch (std::exception const& x)\
 {\
     std::stringstream out;\
     mir::report_exception(out);\
-    mir::log_warning("%s throws %s", __func__, out.str().c_str());\
+    mir::log_warning("{} throws {}", __func__, out.str());\
     throw;\
 }
 

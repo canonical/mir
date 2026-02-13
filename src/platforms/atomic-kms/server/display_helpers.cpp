@@ -84,9 +84,7 @@ mgmh::DRMHelper::open_all_devices(
         catch (std::exception const& error)
         {
             mir::log_warning(
-                "Failed to open DRM device node %s: %s",
-                device.devnode(),
-                boost::diagnostic_information(error).c_str());
+                "Failed to open DRM device node {}: {}", device.devnode(), boost::diagnostic_information(error));
             continue;
         }
 
@@ -111,7 +109,7 @@ mgmh::DRMHelper::open_all_devices(
         if ((error = -drmSetInterfaceVersion(tmp_fd, &sv)))
         {
             mir::log_warning(
-                "Failed to set DRM interface version on device %s: %i (%s)",
+                "Failed to set DRM interface version on device {}: {} ({})",
                 device.devnode(),
                 error,
                 mir::errno_to_cstr(error));
@@ -124,9 +122,7 @@ mgmh::DRMHelper::open_all_devices(
 
         if (!busid)
         {
-            mir::log_warning(
-                "Failed to query BusID for device %s; cannot check if KMS is available",
-                device.devnode());
+            mir::log_warning("Failed to query BusID for device {}; cannot check if KMS is available", device.devnode());
         }
         else
         {
@@ -145,13 +141,14 @@ mgmh::DRMHelper::open_all_devices(
                 [[fallthrough]];
             case EINVAL:
                 mir::log_warning(
-                    "Failed to detect whether device %s supports KMS, but continuing anyway",
-                    device.devnode());
+                    "Failed to detect whether device {} supports KMS, but continuing anyway", device.devnode());
                 break;
 
             default:
-                mir::log_warning("Unexpected error from drmCheckModesettingSupported(): %s (%i), but continuing anyway",
-                    mir::errno_to_cstr(err), err);
+                mir::log_warning(
+                    "Unexpected error from drmCheckModesettingSupported(): {} ({}), but continuing anyway",
+                    mir::errno_to_cstr(err),
+                    err);
                 mir::log_warning("Please file a bug at https://github.com/canonical/mir/issues containing this message");
             }
         }

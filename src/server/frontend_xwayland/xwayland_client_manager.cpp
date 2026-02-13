@@ -60,7 +60,7 @@ mf::XWaylandClientManager::~XWaylandClientManager()
     if (!sessions_by_pid.empty())
     {
         log_warning(
-            "XWaylandClientManager destroyed with %zu sessions in the map; "
+            "XWaylandClientManager destroyed with {} sessions in the map; "
             "if any XWaylandClientManager::Sessions are still alive, a crash is likely when they are destroyed",
             sessions_by_pid.size());
     }
