@@ -304,8 +304,7 @@ bool mga::AtomicKMSOutput::set_crtc(FBHandle const& fb)
     auto conf = configuration.lock();
     if (!ensure_crtc(*conf))
     {
-        mir::log_error("Output %s has no associated CRTC to set a framebuffer on",
-                       mgk::connector_name(conf->connector).c_str());
+        mir::log_error("Output {} has no associated CRTC to set a framebuffer on", mgk::connector_name(conf->connector));
         return false;
     }
 
@@ -339,7 +338,7 @@ bool mga::AtomicKMSOutput::set_crtc(FBHandle const& fb)
     auto ret = drmModeAtomicCommit(drm_fd_, update, DRM_MODE_ATOMIC_ALLOW_MODESET, nullptr);
     if (ret)
     {
-        mir::log_error("Failed to set CRTC: %s (%i)", mir::errno_to_cstr(-ret), -ret);
+        mir::log_error("Failed to set CRTC: {} ({})", mir::errno_to_cstr(-ret), -ret);
         conf->current_crtc = nullptr;
         return false;
     }
@@ -356,7 +355,7 @@ bool mga::AtomicKMSOutput::has_crtc_mismatch()
     auto conf = configuration.lock();
     if (!ensure_crtc(*conf))
     {
-        mir::log_error("Output %s has no associated CRTC to get ", mgk::connector_name(conf->connector).c_str());
+        mir::log_error("Output {} has no associated CRTC to get ", mgk::connector_name(conf->connector));
         return true;
     }
 
@@ -417,8 +416,7 @@ bool mga::AtomicKMSOutput::page_flip(FBHandle const& fb)
     auto conf = configuration.lock();
     if (!ensure_crtc(*conf))
     {
-        mir::log_error("Output %s has no associated CRTC to set a framebuffer on",
-                       mgk::connector_name(conf->connector).c_str());
+        mir::log_error("Output {} has no associated CRTC to set a framebuffer on", mgk::connector_name(conf->connector));
         return false;
     }
 
@@ -466,7 +464,7 @@ bool mga::AtomicKMSOutput::page_flip(FBHandle const& fb)
         nullptr);
     if (ret)
     {
-        mir::log_error("Failed to schedule page flip: %s (%i)", mir::errno_to_cstr(-ret), -ret);
+        mir::log_error("Failed to schedule page flip: {} ({})", mir::errno_to_cstr(-ret), -ret);
         conf->current_crtc = nullptr;
         return false;
     }

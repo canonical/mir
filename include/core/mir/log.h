@@ -77,14 +77,12 @@ inline void log_info(std::format_string<Args...> fmt, Args&&... args)
                std::format(fmt, std::forward<Args>(args)...));
 }
 
-[[gnu::format (printf, 1, 2)]]
-inline void log_error(char const* fmt, ...)
+template<typename... Args>
+inline void log_error(std::format_string<Args...> fmt, Args&&... args)
 {
-    va_list va;
-    va_start(va, fmt);
-    ::mir::logv(::mir::logging::Severity::error,
-                MIR_LOG_COMPONENT, fmt, va);
-    va_end(va);
+    ::mir::log(::mir::logging::Severity::error,
+               MIR_LOG_COMPONENT,
+               std::format(fmt, std::forward<Args>(args)...));
 }
 
 template<typename... Args>
