@@ -556,27 +556,23 @@ pub fn process_libinput_events(
                                 let bounding =
                                     get_bounding_rectangle(&mut device_info.input_sink, &bridge);
 
-                                if !bounding.is_null() {
-                                    if !state.touch_properties.contains_key(&slot) {
-                                        state.touch_properties.insert(slot, ContactData::default());
-                                    }
-
-                                    // We make sure that we only notify of "down" touch events once. Everything
-                                    // after that is considered a simple "change".
-                                    let data = state
-                                        .touch_properties
-                                        .entry(slot)
-                                        .or_insert(ContactData::default());
-                                    data.action = if data.down_notified {
-                                        MirTouchAction::mir_touch_action_change
-                                    } else {
-                                        MirTouchAction::mir_touch_action_down
-                                    };
-                                    data.x =
-                                        down_event.x_transformed(bounding.width() as u32) as f32;
-                                    data.y =
-                                        down_event.y_transformed(bounding.height() as u32) as f32;
-                                }
+                                // We make sure that we only notify of "down" touch events once. Everything
+                                // after that is considered a simple "change".
+                                let data = state
+                                    .touch_properties
+                                    .entry(slot)
+                                    .or_insert(ContactData::default());
+                                data.action = if data.down_notified {
+                                    MirTouchAction::mir_touch_action_change
+                                } else {
+                                    MirTouchAction::mir_touch_action_down
+                                };
+                                
+                                // Set coordinates. In normal operation, bounding rectangle should always be valid.
+                                data.x =
+                                    down_event.x_transformed(bounding.width() as u32) as f32;
+                                data.y =
+                                    down_event.y_transformed(bounding.height() as u32) as f32;
                             }
                         }
                         event::TouchEvent::Motion(motion_event) => {
@@ -585,21 +581,17 @@ pub fn process_libinput_events(
                                 let bounding =
                                     get_bounding_rectangle(&mut device_info.input_sink, &bridge);
 
-                                if !bounding.is_null() {
-                                    if !state.touch_properties.contains_key(&slot) {
-                                        state.touch_properties.insert(slot, ContactData::default());
-                                    }
-
-                                    let data = state
-                                        .touch_properties
-                                        .entry(slot)
-                                        .or_insert(ContactData::default());
-                                    data.action = MirTouchAction::mir_touch_action_change;
-                                    data.x =
-                                        motion_event.x_transformed(bounding.width() as u32) as f32;
-                                    data.y =
-                                        motion_event.y_transformed(bounding.height() as u32) as f32;
-                                }
+                                let data = state
+                                    .touch_properties
+                                    .entry(slot)
+                                    .or_insert(ContactData::default());
+                                data.action = MirTouchAction::mir_touch_action_change;
+                                
+                                // Set coordinates. In normal operation, bounding rectangle should always be valid.
+                                data.x =
+                                    motion_event.x_transformed(bounding.width() as u32) as f32;
+                                data.y =
+                                    motion_event.y_transformed(bounding.height() as u32) as f32;
                             }
                         }
                         event::TouchEvent::Up(up_event) => {
@@ -644,6 +636,7 @@ pub fn process_libinput_events(
                                 });
 
                                 if contact_data.action == MirTouchAction::mir_touch_action_down {
+                                    contact_data.action = MirTouchAction::mir_touch_action_change;
                                     contact_data.down_notified = true;
                                 }
                             }
