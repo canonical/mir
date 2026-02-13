@@ -137,49 +137,6 @@ auto mf::InputTriggerModifiers::from_protocol(uint32_t protocol_mods, bool shift
     return InputTriggerModifiers{result};
 }
 
-namespace
-{
-struct KeyboardStateTrackerFilter : public mi::EventFilter
-{
-    mf::KeyboardStateTracker& parent;
-
-    explicit KeyboardStateTrackerFilter(mf::KeyboardStateTracker& parent) :
-        parent{parent}
-    {
-    }
-
-    bool handle(MirEvent const& event) override
-    {
-        if (event.type() != mir_event_type_input)
-            return false;
-
-        auto const* input_event = event.to_input();
-
-        if (input_event->input_type() != mir_input_event_type_key)
-            return false;
-
-        auto const* key_event = input_event->to_keyboard();
-        auto const keysym = key_event->keysym();
-        auto const scancode = key_event->scan_code();
-        auto const action = key_event->action();
-
-        if (action == mir_keyboard_action_down)
-            parent.on_key_down(keysym, scancode);
-        else if (action == mir_keyboard_action_up)
-            parent.on_key_up(keysym, scancode);
-
-        return false;
-    }
-};
-}
-
-mf::KeyboardStateTracker::KeyboardStateTracker(
-    std::shared_ptr<mi::CompositeEventFilter> const& composite_event_filter) :
-    filter{std::make_shared<KeyboardStateTrackerFilter>(*this)}
-{
-    composite_event_filter->prepend(filter);
-}
-
 void mf::KeyboardStateTracker::on_key_down(uint32_t keysym, uint32_t scancode)
 {
     pressed_keysyms.insert(keysym);
@@ -218,195 +175,25 @@ auto mf::KeyboardStateTracker::scancode_is_pressed(uint32_t scancode) const -> b
     return pressed_scancodes.contains(scancode);
 }
 
+
 mf::KeyboardTrigger::KeyboardTrigger(InputTriggerModifiers modifiers, struct wl_resource* id) :
     InputTriggerV1{id, Version<1>{}},
     modifiers{modifiers}
 {
 }
 
-mf::KeyboardSymTrigger::KeyboardSymTrigger(
-    mf::InputTriggerModifiers modifiers, uint32_t keysym, struct wl_resource* id) :
-    KeyboardTrigger{modifiers, id},
-    keysym{keysym}
-{
-}
-
-auto mf::KeyboardSymTrigger::from(mw::InputTriggerV1* trigger) -> KeyboardSymTrigger*
-{
-    return static_cast<KeyboardSymTrigger*>(trigger);
-}
-
-auto mf::KeyboardSymTrigger::from(mw::InputTriggerV1 const* trigger) -> KeyboardSymTrigger const*
-{
-    return static_cast<KeyboardSymTrigger const*>(trigger);
-}
-
-auto mf::KeyboardSymTrigger::to_c_str() const -> char const*
-{
-    static char buf[256];
-
-    auto const end = std::format_to(
-        buf,
-        "KeyboardSymTrigger{{client={}, keysym={}, modifiers={}}}",
-        static_cast<void*>(wl_resource_get_client(resource)),
-        keysym,
-        modifiers.to_string());
-    *end = '\0';
-
-    return buf;
-}
-
-auto mf::KeyboardSymTrigger::matches(std::shared_ptr<KeyboardStateTracker> const& keyboard_state) const -> bool
-{
-    auto const mods_value = modifiers.raw_value();
-
-    auto const trigger_mods_contain_shift =
-        ((mods_value & mir_input_event_modifier_shift) | (mods_value & mir_input_event_modifier_shift_left) |
-         (mods_value & mir_input_event_modifier_shift_right)) != 0;
-
-    return keyboard_state->keysym_is_pressed(keysym, trigger_mods_contain_shift);
-}
-
-bool mir::frontend::KeyboardSymTrigger::is_same_trigger(wayland::InputTriggerV1 const* other) const
-{
-    if (auto const other_sym = KeyboardSymTrigger::from(other))
-    {
-        return keysym == other_sym->keysym && modifiers == other_sym->modifiers;
-    }
-
-    return false;
-}
-
-mf::KeyboardCodeTrigger::KeyboardCodeTrigger(
-    InputTriggerModifiers modifiers, uint32_t scancode, struct wl_resource* id) :
-    KeyboardTrigger{modifiers, id},
-    scancode{scancode}
-{
-}
-
-auto mf::KeyboardCodeTrigger::from(mw::InputTriggerV1* trigger) -> KeyboardCodeTrigger*
-{
-    return static_cast<KeyboardCodeTrigger*>(trigger);
-}
-
-auto mf::KeyboardCodeTrigger::from(mw::InputTriggerV1 const* trigger) -> KeyboardCodeTrigger const*
-{
-    return static_cast<KeyboardCodeTrigger const*>(trigger);
-}
-
-auto mf::KeyboardCodeTrigger::to_c_str() const -> char const*
-{
-    static char buf[256];
-
-    auto const end = std::format_to(
-        buf,
-        "KeyboardCodeTrigger{{client={}, scancode={}, modifiers={}}}",
-        static_cast<void*>(wl_resource_get_client(resource)),
-        scancode,
-        modifiers.to_string());
-    *end = '\0';
-
-    return buf;
-}
-
-auto mf::KeyboardCodeTrigger::matches(std::shared_ptr<KeyboardStateTracker> const& keyboard_state) const -> bool
-{
-    return keyboard_state->scancode_is_pressed(scancode);
-}
-
-auto mf::KeyboardCodeTrigger::is_same_trigger(wayland::InputTriggerV1 const* other) const -> bool
-{
-    if (auto const other_code = KeyboardCodeTrigger::from(other))
-    {
-        return scancode == other_code->scancode && modifiers == other_code->modifiers;
-    }
-
-    return false;
-}
-
-mf::KeyboardEventFilter::KeyboardEventFilter(
-    mw::Weak<mw::InputTriggerActionV1 const> const& action,
-    mw::Weak<mf::KeyboardTrigger const> const& trigger,
-    std::shared_ptr<msh::TokenAuthority> const& token_authority,
-    std::shared_ptr<KeyboardStateTracker> const& keyboard_state) :
-    action{action},
-    trigger{trigger},
-    token_authority{token_authority},
-    keyboard_state{keyboard_state}
-{
-}
-
-bool mf::KeyboardEventFilter::handle(MirEvent const& event)
-{
-    if (event.type() != mir_event_type_input)
-        return false;
-
-    auto const* input_event = event.to_input();
-    if (input_event->input_type() != mir_input_event_type_key)
-        return false;
-
-    auto const* key_event = input_event->to_keyboard();
-
-    auto modifiers_match =
-        protocol_and_event_modifiers_match(trigger.value().modifiers, InputTriggerModifiers{key_event->modifiers()});
-
-    auto const end_if_began = [&]()
-    {
-        if (began)
-        {
-            auto const activation_token = std::string{token_authority->issue_token(std::nullopt)};
-            auto const timestamp = mir_input_event_get_wayland_timestamp(mir_keyboard_event_input_event(key_event));
-            action.value().send_end_event(timestamp, activation_token);
-            began = false;
-        }
-    };
-
-    if (!modifiers_match)
-    {
-        end_if_began();
-        return false;
-    }
-
-    auto const key_matches = trigger.value().matches(keyboard_state);
-
-    if (!key_matches)
-    {
-        end_if_began();
-        return false;
-    }
-
-    // If the trigger keysym is pressed (either just pressed or was already pressed),
-    // ensure we send a begin event if we haven't already.
-    if (!began)
-    {
-        auto const activation_token = std::string{token_authority->issue_token(std::nullopt)};
-        auto const timestamp = mir_input_event_get_wayland_timestamp(mir_keyboard_event_input_event(key_event));
-        action.value().send_begin_event(timestamp, activation_token);
-        began = true;
-        return true;
-    }
-
-    return false;
-}
-
-auto mf::KeyboardEventFilter::is_same_trigger(mw::InputTriggerV1 const* other_trigger) const -> bool
-{
-    return trigger.value().is_same_trigger(other_trigger);
-}
-
-bool mf::KeyboardEventFilter::protocol_and_event_modifiers_match(
-    InputTriggerModifiers protocol_modifiers, InputTriggerModifiers event_mods)
+bool mf::KeyboardTrigger::modifiers_match(mf::InputTriggerModifiers modifiers, mf::InputTriggerModifiers event_mods)
 {
     // Special case, if the event comes explicitly with no modifiers, it should
     // only match if the protocol also specified no modifiers.
     if (event_mods.raw_value() == MirInputEventModifier::mir_input_event_modifier_none)
-        return protocol_modifiers.raw_value() == MirInputEventModifier::mir_input_event_modifier_none;
+        return modifiers.raw_value() == MirInputEventModifier::mir_input_event_modifier_none;
 
     MirInputEventModifiers required = 0;
     MirInputEventModifiers allowed = 0;
 
     // Pure function: compute per-kind (required, allowed) masks and return them.
-    auto const protocol_value = protocol_modifiers.raw_value();
+    auto const protocol_value = modifiers.raw_value();
     auto handle_kind =
         [&](MirInputEventModifiers mir_generic,
             MirInputEventModifiers mir_left,
@@ -511,14 +298,120 @@ bool mf::KeyboardEventFilter::protocol_and_event_modifiers_match(
     return true;
 }
 
+mf::KeyboardSymTrigger::KeyboardSymTrigger(
+    mf::InputTriggerModifiers modifiers, uint32_t keysym, struct wl_resource* id) :
+    KeyboardTrigger{modifiers, id},
+    keysym{keysym}
+{
+}
+
+auto mf::KeyboardSymTrigger::from(mw::InputTriggerV1* trigger) -> KeyboardSymTrigger*
+{
+    return static_cast<KeyboardSymTrigger*>(trigger);
+}
+
+auto mf::KeyboardSymTrigger::from(mw::InputTriggerV1 const* trigger) -> KeyboardSymTrigger const*
+{
+    return static_cast<KeyboardSymTrigger const*>(trigger);
+}
+
+auto mf::KeyboardSymTrigger::to_c_str() const -> char const*
+{
+    static char buf[256];
+
+    auto const end = std::format_to(
+        buf,
+        "KeyboardSymTrigger{{client={}, keysym={}, modifiers={}}}",
+        static_cast<void*>(wl_resource_get_client(resource)),
+        keysym,
+        modifiers.to_string());
+    *end = '\0';
+
+    return buf;
+}
+
+auto mf::KeyboardSymTrigger::matches(
+    MirEvent const& ev, std::shared_ptr<KeyboardStateTracker> const& keyboard_state) const -> bool
+{
+    auto const event_modifiers = InputTriggerModifiers{ev.to_input()->to_keyboard()->modifiers()};
+    if (!KeyboardTrigger::modifiers_match(modifiers, event_modifiers))
+        return false;
+
+    auto const mods_value = modifiers.raw_value();
+    auto const trigger_mods_contain_shift =
+        ((mods_value & mir_input_event_modifier_shift) | (mods_value & mir_input_event_modifier_shift_left) |
+         (mods_value & mir_input_event_modifier_shift_right)) != 0;
+
+    return keyboard_state->keysym_is_pressed(keysym, trigger_mods_contain_shift);
+}
+
+bool mir::frontend::KeyboardSymTrigger::is_same_trigger(wayland::InputTriggerV1 const* other) const
+{
+    if (auto const other_sym = KeyboardSymTrigger::from(other))
+    {
+        return keysym == other_sym->keysym && modifiers == other_sym->modifiers;
+    }
+
+    return false;
+}
+
+mf::KeyboardCodeTrigger::KeyboardCodeTrigger(
+    InputTriggerModifiers modifiers, uint32_t scancode, struct wl_resource* id) :
+    KeyboardTrigger{modifiers, id},
+    scancode{scancode}
+{
+}
+
+auto mf::KeyboardCodeTrigger::from(mw::InputTriggerV1* trigger) -> KeyboardCodeTrigger*
+{
+    return static_cast<KeyboardCodeTrigger*>(trigger);
+}
+
+auto mf::KeyboardCodeTrigger::from(mw::InputTriggerV1 const* trigger) -> KeyboardCodeTrigger const*
+{
+    return static_cast<KeyboardCodeTrigger const*>(trigger);
+}
+
+auto mf::KeyboardCodeTrigger::to_c_str() const -> char const*
+{
+    static char buf[256];
+
+    auto const end = std::format_to(
+        buf,
+        "KeyboardCodeTrigger{{client={}, scancode={}, modifiers={}}}",
+        static_cast<void*>(wl_resource_get_client(resource)),
+        scancode,
+        modifiers.to_string());
+    *end = '\0';
+
+    return buf;
+}
+
+auto mf::KeyboardCodeTrigger::matches(
+    MirEvent const& ev, std::shared_ptr<KeyboardStateTracker> const& keyboard_state) const -> bool
+{
+    auto const event_modifiers = InputTriggerModifiers{ev.to_input()->to_keyboard()->modifiers()};
+    if (!KeyboardTrigger::modifiers_match(modifiers, event_modifiers))
+        return false;
+
+    return keyboard_state->scancode_is_pressed(scancode);
+}
+
+auto mf::KeyboardCodeTrigger::is_same_trigger(wayland::InputTriggerV1 const* other) const -> bool
+{
+    if (auto const other_code = KeyboardCodeTrigger::from(other))
+    {
+        return scancode == other_code->scancode && modifiers == other_code->modifiers;
+    }
+
+    return false;
+}
 mf::InputTriggerActionV1::InputTriggerActionV1(
     std::shared_ptr<msh::TokenAuthority> const& token_authority,
-    std::shared_ptr<mi::CompositeEventFilter> const& composite_event_filter,
     std::shared_ptr<KeyboardStateTracker> const& keyboard_state,
     wl_resource* id) :
     mw::InputTriggerActionV1{id, Version<1>{}},
     token_authority{token_authority},
-    composite_event_filter{composite_event_filter},
     keyboard_state{keyboard_state}
 {
 }
@@ -526,41 +419,54 @@ mf::InputTriggerActionV1::InputTriggerActionV1(
 auto mf::InputTriggerActionV1::has_trigger(mw::InputTriggerV1 const* trigger) const -> bool
 {
     return std::ranges::any_of(
-        trigger_filters, [trigger](auto const& trigger_filter) { return trigger_filter->is_same_trigger(trigger); });
+        triggers, [trigger](auto const& action_trigger) { return action_trigger.value().is_same_trigger(trigger); });
 }
 
 void mf::InputTriggerActionV1::add_trigger(mw::InputTriggerV1 const* trigger)
 {
-    auto const filter = [&]
+    if (auto const* input_trigger = dynamic_cast<frontend::InputTriggerV1 const*>(trigger))
     {
-        if (auto const* keyboard_trigger = dynamic_cast<KeyboardTrigger const*>(trigger))
-        {
-            return std::make_shared<KeyboardEventFilter>(
-                mw::make_weak<mw::InputTriggerActionV1 const>(this),
-                mw::make_weak<KeyboardTrigger const>(keyboard_trigger),
-                token_authority,
-                keyboard_state);
-        }
-        else if (auto const* input_trigger = dynamic_cast<frontend::InputTriggerV1 const*>(trigger))
-        {
-            mir::log_error("Unsupported trigger type added: %s", input_trigger->to_c_str());
-            return std::shared_ptr<KeyboardEventFilter>{};
-        }
-
-        mir::log_error("Invalid trigger provided");
-        return std::shared_ptr<KeyboardEventFilter>{};
-    }();
-
-    if (!filter)
+        triggers.push_back(wayland::make_weak(input_trigger));
         return;
+    }
 
-    trigger_filters.push_back(filter);
-    composite_event_filter->append(filter);
+    mir::log_error("Invalid trigger provided");
 }
 
 void mf::InputTriggerActionV1::drop_trigger(mw::InputTriggerV1 const* trigger)
 {
-    std::erase_if(trigger_filters, [&](auto const& filter) { return filter->is_same_trigger(trigger); });
+    std::erase_if(
+        triggers, [&](auto const& action_trigger) { return action_trigger.value().is_same_trigger(trigger); });
+}
+
+bool mf::InputTriggerActionV1::matches(MirEvent const& event)
+{
+    auto const matched = std::ranges::any_of(
+        triggers, [&](auto const& action_trigger) { return action_trigger.value().matches(event, keyboard_state); });
+
+    if (!matched)
+    {
+        if (began)
+        {
+            auto const activation_token = std::string{token_authority->issue_token(std::nullopt)};
+            auto const timestamp = mir_input_event_get_wayland_timestamp(event.to_input());
+            send_end_event(timestamp, activation_token);
+            began = false;
+        }
+
+        return false;
+    }
+
+    if (!began)
+    {
+        auto const activation_token = std::string{token_authority->issue_token(std::nullopt)};
+        auto const timestamp = mir_input_event_get_wayland_timestamp(event.to_input());
+        send_begin_event(timestamp, activation_token);
+        began = true;
+        return true;
+    }
+
+    return false;
 }
 
 mf::ActionControl::ActionControl(std::string_view token, struct wl_resource* id) :
@@ -627,8 +533,9 @@ mf::InputTriggerData::InputTriggerData(
     std::shared_ptr<msh::TokenAuthority> const& token_authority,
     std::shared_ptr<mi::CompositeEventFilter> const& composite_event_filter) :
     token_authority{token_authority},
-    composite_event_filter{composite_event_filter}
+    filter{std::make_shared<Filter>(actions)}
 {
+    composite_event_filter->append(filter);
 }
 
 auto mf::InputTriggerData::add_new_action(Token const& token, struct wl_resource* id) -> bool
@@ -646,19 +553,7 @@ auto mf::InputTriggerData::add_new_action(Token const& token, struct wl_resource
 
     if (auto const it = action_controls.find(token); it != action_controls.end())
     {
-        auto const kb_state = [&]()
-        {
-            if (keyboard_state.expired())
-            {
-                auto const kb_state = std::make_shared<KeyboardStateTracker>(composite_event_filter);
-                keyboard_state = kb_state;
-                return kb_state;
-            }
-            return keyboard_state.lock();
-        }();
-
-        auto const action =
-            wayland::make_weak(new InputTriggerActionV1(token_authority, composite_event_filter, kb_state, id));
+        auto const action = wayland::make_weak(new InputTriggerActionV1(token_authority, filter->keyboard_state, id));
 
         auto& [_, action_control] = *it;
         if (action_control)
@@ -718,4 +613,44 @@ void mf::InputTriggerData::token_revoked(Token const& token)
         action_controls.erase(token);
 
     revoked_tokens.add(token);
+}
+
+mf::InputTriggerData::Filter::Filter(ActionMap& actions) :
+    actions{actions},
+    keyboard_state{std::make_shared<KeyboardStateTracker>()}
+{
+}
+
+bool mf::InputTriggerData::Filter::handle(MirEvent const& event)
+{
+    if (event.type() != mir_event_type_input)
+        return false;
+
+    auto const& input_event = event.to_input();
+
+    if(input_event->input_type() != mir_input_event_type_key)
+        return false;
+
+    auto const* key_event = input_event->to_keyboard();
+    auto const keysym = key_event->keysym();
+    auto const scancode = key_event->scan_code();
+    auto const action = key_event->action();
+
+    if (action == mir_keyboard_action_down)
+        keyboard_state->on_key_down(keysym, scancode);
+    else if (action == mir_keyboard_action_up)
+        keyboard_state->on_key_up(keysym, scancode);
+    else
+        return false;
+
+    for (auto const& [_, action] : actions)
+    {
+        if (action)
+        {
+            if (action.value().matches(event))
+                return true;
+        }
+    }
+
+    return false;
 }

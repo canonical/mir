@@ -55,7 +55,7 @@ class KeyboardStateTrackerTest : public Test
 {
 public:
     std::shared_ptr<StubCompositeEventFilter> cef = std::make_shared<StubCompositeEventFilter>();
-    mf::KeyboardStateTracker tracker{cef};
+    mf::KeyboardStateTracker tracker;
 };
 
 TEST_F(KeyboardStateTrackerTest, initially_no_keys_pressed)

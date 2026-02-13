@@ -67,7 +67,7 @@ TEST_P(ProtocolModifierMatchParametricTest, modifier_matching)
     auto const& param = GetParam();
 
     auto const protocol_modifiers = mf::InputTriggerModifiers::from_protocol(param.protocol_modifiers);
-    bool result = mf::KeyboardEventFilter::protocol_and_event_modifiers_match(
+    bool result = mf::KeyboardTrigger::modifiers_match(
         protocol_modifiers, mf::InputTriggerModifiers{param.event_modifiers});
 
     EXPECT_EQ(result, param.should_match);
