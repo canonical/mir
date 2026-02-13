@@ -92,7 +92,7 @@ mgmh::DRMHelper::open_all_devices(
         if (tmp_fd == mir::Fd::invalid)
         {
             mir::log_critical(
-                "Opening the DRM device %s succeeded, but provided an invalid descriptor!",
+                "Opening the DRM device {} succeeded, but provided an invalid descriptor!",
                 device.devnode());
             mir::log_critical(
                 "This is probably a logic error in Mir, please report to https://github.com/canonical/mir/issues");
