@@ -50,7 +50,7 @@ template<class Observer>
 class ObserverMultiplexer : public ObserverRegistrar<Observer>, public Observer
 {
 public:
-    void register_interest(std::weak_ptr<Observer> const& observer) override;
+    void register_interest(std::weak_ptr<Observer> const& observer) override final;
     void register_interest(
         std::weak_ptr<Observer> const& observer,
         Executor& executor) override;
