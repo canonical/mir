@@ -193,7 +193,10 @@ public:
         }
         else
         {
-            mir::log_error("Buffer {} has non-GL-compatible pixel format {}; rendering will be incomplete", id.as_value(), static_cast<int>(pixel_format));
+            mir::log_error(
+                "Buffer {} has non-GL-compatible pixel format {}; rendering will be incomplete",
+                id.as_value(),
+                static_cast<int>(pixel_format));
         }
 
         uploaded = true;
