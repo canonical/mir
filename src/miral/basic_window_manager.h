@@ -207,6 +207,12 @@ private:
         {
         }
 
+        void hide_attached(std::move_only_function<bool(Window const&)> predicate);
+
+        auto consume_hidden_attached() -> std::vector<Window>;
+
+        bool is_hidden_attached(WindowInfo const& window_info) const;
+
         /// Returns the bounding rectangle of the extents of all contained outputs
         auto bounding_rectangle_of_contained_outputs() const -> Rectangle;
 
@@ -227,6 +233,11 @@ private:
         /// Only set if this display area represents a logical group of multiple outputs
         std::optional<int> logical_output_group_id;
         std::set<Window> attached_windows; ///< Maximized/anchored/etc windows attached to this area
+
+        /// Keeps track of hidden attached windows. Recorded when a window is
+        /// fullscreened, restored and cleared when the window is
+        /// un-fullscreened.
+        std::vector<Window> hidden_attached_windows;
     };
 
     using SurfaceInfoMap = std::map<std::weak_ptr<mir::scene::Surface>, WindowInfo, std::owner_less<std::weak_ptr<mir::scene::Surface>>>;
@@ -332,6 +343,13 @@ private:
     void for_each_descendent_in(WindowInfo const& info, std::function<void(const Window&)> func);
     /// Gathers windows provided WindowInfo
     auto collect_windows(WindowInfo const& info) -> SurfaceSet;
+
+    void handle_attached_surfaces_for_focus_change(Window const& prev, Window const& current);
+    void handle_attached_surfaces_for_window_removal(
+        bool prev_was_fullscreen, std::shared_ptr<DisplayArea> const& prev_display_area);
+    void hide_attached_windows_for_fullscreen(std::shared_ptr<DisplayArea> const& display_area);
+    void attach_all_hidden(std::shared_ptr<DisplayArea> const& display_area);
+    bool is_window_or_parent_fullscreen(miral::Window const& window);
 };
 }
 

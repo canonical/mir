@@ -55,6 +55,40 @@ void center_vertically_with_clamp_top(Rectangle const& zone, Rectangle& rect)
 }
 }
 
+void miral::BasicWindowManager::DisplayArea::hide_attached(std::move_only_function<bool(Window const&)> predicate)
+{
+    // Copy as `set_state` may modify `attached_windows` and invalidate the iterator.
+    auto const attached_windows = this->attached_windows;
+    decltype(this->hidden_attached_windows) hidden_attached_windows;
+
+    for (auto& window : attached_windows)
+    {
+        if (predicate(window))
+            hidden_attached_windows.push_back(window);
+    }
+
+    this->hidden_attached_windows = std::move(hidden_attached_windows);
+}
+
+auto miral::BasicWindowManager::DisplayArea::consume_hidden_attached() -> std::vector<Window>
+{
+    return std::exchange(hidden_attached_windows, {});
+}
+
+void miral::BasicWindowManager::attach_all_hidden(std::shared_ptr<DisplayArea> const& display_area)
+{
+    for (auto& window : display_area->consume_hidden_attached())
+    {
+        auto& info = info_for(window);
+        set_state(info, mir_window_state_attached);
+    }
+}
+
+bool miral::BasicWindowManager::DisplayArea::is_hidden_attached(WindowInfo const& window_info) const
+{
+    return std::ranges::contains(hidden_attached_windows, window_info.window());
+}
+
 auto miral::BasicWindowManager::DisplayArea::bounding_rectangle_of_contained_outputs() const -> Rectangle
 {
     Rectangles box;
@@ -225,6 +259,13 @@ void miral::BasicWindowManager::modify_surface(
     auto& info = info_for(surface);
     WindowSpecification mods{modifications};
     validate_modification_request(mods, info);
+
+    // If a layer shell surface (waybar) tries to submit a buffer while
+    // its hidden (in favor of another fullscreen surface), don't try
+    // to modify its placement.
+    if (display_area_for(info)->is_hidden_attached(info))
+        mods.state().consume();
+
     place_and_size_for_state(mods, info);
     if (!mods.state() && info.state() == mir_window_state_fullscreen)
     {
@@ -255,8 +296,10 @@ void miral::BasicWindowManager::remove_surface(
 
 void miral::BasicWindowManager::remove_window(Application const& application, miral::WindowInfo const& info)
 {
-    bool const is_active_window{active_window() == info.window()};
+    bool const was_active_window{active_window() == info.window()};
     auto const workspaces_containing_window = workspaces_containing(info.window());
+    bool const prev_was_fullscreen{info.state() == mir_window_state_fullscreen};
+    auto const prev_display_area = display_area_for(info);
 
     {
         std::vector<Window> const windows_removed{info.window()};
@@ -275,7 +318,10 @@ void miral::BasicWindowManager::remove_window(Application const& application, mi
     mru_active_windows.erase(info.window());
     fullscreen_surfaces.erase(info.window());
     for (auto& area : display_areas)
+    {
         area->attached_windows.erase(info.window());
+        std::erase(area->hidden_attached_windows, info.window());
+    }
     if (info.state() == mir_window_state_attached &&
         info.exclusive_rect().is_set())
     {
@@ -288,8 +334,9 @@ void miral::BasicWindowManager::remove_window(Application const& application, mi
     auto const parent = info.parent();
     erase(info);
 
-    if (is_active_window)
+    if (was_active_window)
     {
+        handle_attached_surfaces_for_window_removal(prev_was_fullscreen, prev_display_area);
         refocus(application, parent, workspaces_containing_window);
     }
 }
@@ -677,11 +724,8 @@ auto miral::BasicWindowManager::display_area_for(WindowInfo const& info) const -
 
     for (auto& area : display_areas)
     {
-        for (auto& area_window : area->attached_windows)
-        {
-            if (area_window == window)
-                return area;
-        }
+        if(std::ranges::contains(area->attached_windows, window))
+            return area;
     }
 
     // If the window is not explicity attached to any area, find the area it overlaps most with
@@ -929,6 +973,92 @@ auto miral::BasicWindowManager::collect_windows(const miral::WindowInfo &info) -
     });
 
     return windows;
+}
+
+void miral::BasicWindowManager::handle_attached_surfaces_for_focus_change(Window const& prev, Window const& current)
+{
+    if(!prev || !current)
+        return;
+
+    auto const& prev_info = info_for(prev);
+
+    if (prev_info.depth_layer() != mir_depth_layer_application)
+        return;
+
+    auto const prev_was_fullscreen = is_window_or_parent_fullscreen(prev_info.window());
+    auto const prev_display_area = display_area_for(prev_info);
+
+    handle_attached_surfaces_for_window_removal(prev_was_fullscreen, prev_display_area);
+}
+
+void miral::BasicWindowManager::handle_attached_surfaces_for_window_removal(
+    bool prev_was_fullscreen, std::shared_ptr<DisplayArea> const& prev_display_area)
+{
+    auto const current = active_window();
+    auto const cleanup = [prev_was_fullscreen, &prev_display_area, this]()
+    {
+        if (prev_was_fullscreen)
+            attach_all_hidden(prev_display_area);
+    };
+
+    if (!current)
+    {
+        cleanup();
+        return;
+    }
+
+    auto const& current_info = info_for(current);
+
+    if (current_info.depth_layer() != mir_depth_layer_application)
+    {
+        cleanup();
+        return;
+    }
+
+    auto const current_is_fullscreen = is_window_or_parent_fullscreen(current_info.window());
+    auto const current_display_area = display_area_for(current_info);
+
+    if (prev_display_area != current_display_area)
+    {
+        if (current_is_fullscreen)
+            hide_attached_windows_for_fullscreen(current_display_area);
+    }
+    else
+    {
+        // One display area
+        if (prev_was_fullscreen && !current_is_fullscreen)
+            attach_all_hidden(current_display_area);
+        else if (!prev_was_fullscreen && current_is_fullscreen)
+            hide_attached_windows_for_fullscreen(current_display_area);
+    }
+}
+
+void miral::BasicWindowManager::hide_attached_windows_for_fullscreen(std::shared_ptr<DisplayArea> const& display_area)
+{
+    display_area->hide_attached(
+        [this](Window const& window)
+        {
+            auto& info = info_for(window);
+
+            if (info.depth_layer() != mir_depth_layer_above)
+                return false;
+
+            set_state(info, mir_window_state_hidden);
+            return true;
+        });
+}
+
+bool miral::BasicWindowManager::is_window_or_parent_fullscreen(miral::Window const& window)
+{
+    if (!window)
+        return false;
+
+    for (auto current = window; current; current = info_for(current).parent())
+    {
+        if (info_for(current).state() == mir_window_state_fullscreen)
+            return true;
+    }
+    return false;
 }
 
 void miral::BasicWindowManager::raise_tree(Window const& root)
@@ -1445,6 +1575,7 @@ void miral::BasicWindowManager::update_attached_and_fullscreen_sets(WindowInfo c
 {
     auto const state = window_info.state();
     auto const window = window_info.window();
+    auto const display_area = display_area_for(window_info);
 
     if (state == mir_window_state_fullscreen)
     {
@@ -1485,8 +1616,17 @@ void miral::BasicWindowManager::set_state(miral::WindowInfo& window_info, MirWin
     auto const mir_surface = std::shared_ptr<scene::Surface>(window);
     bool const was_hidden = window_info.state() == mir_window_state_hidden ||
                             window_info.state() == mir_window_state_minimized;
+    auto const has_focus = active_window() == window;
+    auto const display_area = display_area_for(window_info);
 
     policy->advise_state_change(window_info, value);
+
+    // Focused app left fullscreen, restore any attached surfaces on the same display
+    if (has_focus && window_info.state() == mir_window_state_fullscreen && value != mir_window_state_fullscreen &&
+        window_info.depth_layer() == mir_depth_layer_application)
+    {
+        attach_all_hidden(display_area);
+    }
 
     switch (value)
     {
@@ -1549,7 +1689,12 @@ void miral::BasicWindowManager::set_state(miral::WindowInfo& window_info, MirWin
         mir_surface->hide();
 
         break;
+    case mir_window_state_fullscreen:
+        // Focused app went fullsreen, hide any attached surfaces on the same display
+        if (has_focus && window_info.depth_layer() == mir_depth_layer_application)
+            hide_attached_windows_for_fullscreen(display_area);
 
+        [[fallthrough]];
     default:
         bool const can_become_active =
             !active_window() ||
@@ -1680,6 +1825,10 @@ auto miral::BasicWindowManager::select_active_window(Window const& hint) -> mira
             policy->advise_focus_lost(info_for(prev_window));
 
         policy->advise_focus_gained(info_for_hint);
+
+        if(prev_window != hint)
+            handle_attached_surfaces_for_focus_change(prev_window, hint);
+
         return hint;
     }
     else
