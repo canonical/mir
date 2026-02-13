@@ -1049,11 +1049,9 @@ bool miral::BasicWindowManager::is_window_or_parent_fullscreen(miral::Window con
     if (!window)
         return false;
 
-    auto& info = info_for(window);
-    for (auto current = window; current; current = info.parent())
+    for (auto current = window; current; current = info_for(current).parent())
     {
-        info = info_for(current);
-        if (info.state() == mir_window_state_fullscreen)
+        if (info_for(current).state() == mir_window_state_fullscreen)
             return true;
     }
     return false;
