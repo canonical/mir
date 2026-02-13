@@ -16,7 +16,9 @@ cmake_minimum_required(VERSION 3.28)
 
 cmake_policy(SET CMP0015 NEW)
 cmake_policy(SET CMP0022 NEW)
-cmake_policy(SET CMP0167 NEW)
+if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.30")
+    cmake_policy(SET CMP0167 NEW)
+endif()
 
 set(CMAKE_GCOV gcov)
 
