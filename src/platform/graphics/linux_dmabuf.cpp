@@ -820,7 +820,7 @@ private:
             /* The client should handle this fine, but let's make sure we can see
              * any failures that might happen.
              */
-            mir::log_debug("Failed to import client dmabufs: %s", err.what());
+            mir::log_debug("Failed to import client dmabufs: {}", err.what());
             send_failed_event();
         }
         consumed = true;

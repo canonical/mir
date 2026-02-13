@@ -385,7 +385,7 @@ void miral::TouchpadInputConfiguration::apply_to(mi::Device& device) const
 {
     if (contains(device.capabilities(), mi::DeviceCapability::touchpad))
     {
-        mir::log_debug("Configuring touchpad: '%s'", device.name().c_str());
+        mir::log_debug("Configuring touchpad: '{}'", device.name());
         if (auto const optional_pointer_config = device.pointer_configuration(); optional_pointer_config.is_set())
         {
             MirPointerConfig pointer_config( optional_pointer_config.value() );
@@ -415,7 +415,7 @@ void miral::MouseInputConfiguration::apply_to(mi::Device& device) const
 {
     if (contains(device.capabilities(), mi::DeviceCapability::pointer))
     {
-        mir::log_debug("Configuring pointer: '%s'", device.name().c_str());
+        mir::log_debug("Configuring pointer: '{}'", device.name());
         if (auto optional_pointer_config = device.pointer_configuration(); optional_pointer_config.is_set())
         {
             MirPointerConfig pointer_config( optional_pointer_config.value() );

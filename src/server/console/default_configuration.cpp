@@ -114,9 +114,7 @@ std::shared_ptr<mir::ConsoleServices> mir::DefaultServerConfiguration::the_conso
                     }
                     catch (std::exception const& e)
                     {
-                        mir::log_debug(
-                            "Not using logind for session management: %s",
-                            e.what());
+                        mir::log_debug("Not using logind for session management: {}", e.what());
                         throw;
                     }
                 };
@@ -137,9 +135,7 @@ std::shared_ptr<mir::ConsoleServices> mir::DefaultServerConfiguration::the_conso
                     }
                     catch (std::exception const& e)
                     {
-                        mir::log_debug(
-                            "Not using Linux VT subsystem for session management: %s",
-                            e.what());
+                        mir::log_debug("Not using Linux VT subsystem for session management: {}", e.what());
                         throw;
                     }
                 };

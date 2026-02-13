@@ -744,7 +744,7 @@ std::vector<uint8_t> edid_for_connector(mir::Fd const& drm_fd, uint32_t connecto
              * Log a debug message only. This will trigger for broken monitors which
              * don't provide an EDID, which is not as unusual as you might think...
              */
-            mir::log_debug("No EDID data available on connector %u", connector_id);
+            mir::log_debug("No EDID data available on connector {}", connector_id);
             return edid;
         }
 

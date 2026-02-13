@@ -21,6 +21,8 @@
 
 #include <mir/logging/logger.h>  // for Severity
 #include <string>
+#include <format>
+#include <utility>
 #include <cstdarg>
 #include <exception>
 
@@ -87,14 +89,12 @@ inline void log_error(char const* fmt, ...)
     va_end(va);
 }
 
-[[gnu::format (printf, 1, 2)]]
-inline void log_debug(char const* fmt, ...)
+template<typename... Args>
+inline void log_debug(std::format_string<Args...> fmt, Args&&... args)
 {
-    va_list va;
-    va_start(va, fmt);
-    ::mir::logv(::mir::logging::Severity::debug,
-               MIR_LOG_COMPONENT, fmt, va);
-    va_end(va);
+    ::mir::log(::mir::logging::Severity::debug,
+               MIR_LOG_COMPONENT,
+               std::format(fmt, std::forward<Args>(args)...));
 }
 
 inline void log_critical(std::string const& message)

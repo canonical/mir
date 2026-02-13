@@ -426,7 +426,7 @@ void mie::Platform::device_added(libinput_device* dev)
     auto device_it = find_device(device_ptr.get());
     if (end(devices) != device_it)
     {
-        log_debug("Device %s is an already opened device", libinput_device_get_sysname(dev));
+        log_debug("Device {} is an already opened device", libinput_device_get_sysname(dev));
         return;
     }
 
