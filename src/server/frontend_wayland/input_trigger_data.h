@@ -88,27 +88,11 @@ private:
     decltype(tokens)::iterator current{tokens.begin()};
 };
 
-class InputTriggerV1 : public wayland::InputTriggerV1
-{
-public:
-    using wayland::InputTriggerV1::InputTriggerV1;
-    virtual auto to_c_str() const -> char const* = 0;
-    virtual bool is_same_trigger(wayland::InputTriggerV1 const* other) const = 0;
-};
-
-class InputTriggerFilter : public input::EventFilter
-{
-public:
-    // Given an input trigger, checks if the underlying trigger this filter
-    // contains is the same. Used when checking if a trigger is already registered.
-    virtual auto is_same_trigger(wayland::InputTriggerV1 const* trigger) const -> bool = 0;
-};
-
 /// Tracks keyboard state shared among all keyboard event filters
 class KeyboardStateTracker
 {
 public:
-    KeyboardStateTracker(std::shared_ptr<input::CompositeEventFilter> const& composite_event_filter);
+    KeyboardStateTracker() = default;
 
     void on_key_down(uint32_t keysym, uint32_t scancode);
     void on_key_up(uint32_t keysym, uint32_t scancode);
@@ -120,10 +104,20 @@ public:
 
     auto scancode_is_pressed(uint32_t scancode) const -> bool;
 
+    auto to_string() const -> std::string;
+
 private:
-    std::shared_ptr<input::EventFilter> const filter;
     std::unordered_set<uint32_t> pressed_keysyms;
     std::unordered_set<uint32_t> pressed_scancodes;
+};
+
+class InputTriggerV1 : public wayland::InputTriggerV1
+{
+public:
+    using wayland::InputTriggerV1::InputTriggerV1;
+    virtual auto to_c_str() const -> char const* = 0;
+    virtual bool is_same_trigger(wayland::InputTriggerV1 const* other) const = 0;
+    virtual bool matches(MirEvent const& event, std::shared_ptr<KeyboardStateTracker> const&) const = 0;
 };
 
 class KeyboardTrigger : public frontend::InputTriggerV1
@@ -131,7 +125,7 @@ class KeyboardTrigger : public frontend::InputTriggerV1
 public:
     KeyboardTrigger(InputTriggerModifiers modifiers, struct wl_resource* id);
 
-    virtual auto matches(std::shared_ptr<KeyboardStateTracker> const& keyboard_state) const -> bool = 0;
+    static bool modifiers_match(InputTriggerModifiers protocol_modifiers, InputTriggerModifiers event_mods);
 
     InputTriggerModifiers const modifiers;
 };
@@ -147,8 +141,7 @@ public:
 
     auto to_c_str() const -> char const* override;
 
-    auto matches(std::shared_ptr<KeyboardStateTracker> const& keyboard_state) const -> bool override;
-
+    auto matches(MirEvent const& ev, std::shared_ptr<KeyboardStateTracker> const& keyboard_state) const -> bool override;
     bool is_same_trigger(wayland::InputTriggerV1 const* other) const override;
 
     uint32_t const keysym;
@@ -165,37 +158,11 @@ public:
 
     auto to_c_str() const -> char const* override;
 
-    auto matches(std::shared_ptr<KeyboardStateTracker> const& keyboard_state) const -> bool override;
+    auto matches(MirEvent const& ev, std::shared_ptr<KeyboardStateTracker> const& keyboard_state) const -> bool override;
 
     bool is_same_trigger(wayland::InputTriggerV1 const* other) const override;
 
     uint32_t const scancode;
-};
-
-struct KeyboardEventFilter : public InputTriggerFilter
-{
-public:
-    explicit KeyboardEventFilter(
-        wayland::Weak<wayland::InputTriggerActionV1 const> const& action,
-        wayland::Weak<frontend::KeyboardTrigger const> const& trigger,
-        std::shared_ptr<shell::TokenAuthority> const& token_authority,
-        std::shared_ptr<KeyboardStateTracker> const& keyboard_state);
-
-    bool handle(MirEvent const& event) override;
-    auto is_same_trigger(wayland::InputTriggerV1 const* trigger) const -> bool override;
-
-    static auto protocol_and_event_modifiers_match(
-        InputTriggerModifiers protocol_modifiers, InputTriggerModifiers event_mods) -> bool;
-
-private:
-    wayland::Weak<wayland::InputTriggerActionV1 const> const action;
-    wayland::Weak<frontend::KeyboardTrigger const> const trigger;
-    std::shared_ptr<shell::TokenAuthority> const token_authority;
-    std::shared_ptr<KeyboardStateTracker> const keyboard_state;
-
-    // Set when all keys in the trigger are pressed. Cleared when any key in
-    // the trigger is released.
-    bool began{false};
 };
 
 class InputTriggerActionV1 : public wayland::InputTriggerActionV1
@@ -203,7 +170,6 @@ class InputTriggerActionV1 : public wayland::InputTriggerActionV1
 public:
     InputTriggerActionV1(
         std::shared_ptr<shell::TokenAuthority> const& token_authority,
-        std::shared_ptr<input::CompositeEventFilter> const& composite_event_filter,
         std::shared_ptr<KeyboardStateTracker> const& keyboard_state,
         wl_resource* id);
 
@@ -213,11 +179,14 @@ public:
 
     void drop_trigger(wayland::InputTriggerV1 const* trigger);
 
+    bool matches(MirEvent const& event);
+
 private:
-    std::vector<std::shared_ptr<InputTriggerFilter>> trigger_filters;
+    std::vector<wayland::Weak<InputTriggerV1 const>> triggers;
     std::shared_ptr<shell::TokenAuthority> const token_authority;
-    std::shared_ptr<input::CompositeEventFilter> const composite_event_filter;
     std::shared_ptr<KeyboardStateTracker> const keyboard_state;
+
+    bool began{false};
 };
 
 // Used in `add_new_action` when a client provides a revoked token to call
@@ -281,6 +250,20 @@ struct InputTriggerData
 
 private:
     using Token = std::string;
+    using ActionMap = std::unordered_map<Token, wayland::Weak<InputTriggerActionV1>>;
+
+    struct Filter: public input::EventFilter
+    {
+        ActionMap& actions;
+
+        // Only filters keep a reference to the keyboard state. It's lazily created
+        // when the first filter is created and shared among all filters, and
+        // destroyed when the last filter is destroyed.
+        std::shared_ptr<KeyboardStateTracker> const keyboard_state;
+
+        Filter(ActionMap& actions);
+        bool handle(MirEvent const& event) override;
+    };
 
     void erase_expired_entries();
     void token_revoked(Token const& token);
@@ -288,17 +271,13 @@ private:
     std::mutex mutex;
 
     std::shared_ptr<shell::TokenAuthority> const token_authority;
-    std::shared_ptr<input::CompositeEventFilter> const composite_event_filter;
+    std::shared_ptr<Filter> const filter;
 
     std::unordered_map<Token, wayland::Weak<ActionControl>> action_controls;
-    std::unordered_map<Token, wayland::Weak<InputTriggerActionV1>> actions;
+    ActionMap actions;
 
     RecentTokens revoked_tokens;
 
-    // Only filters keep a reference to the keyboard state. It's lazily created
-    // when the first filter is created and shared among all filters, and
-    // destroyed when the last filter is destroyed.
-    std::weak_ptr<KeyboardStateTracker> keyboard_state;
 };
 }
 }
