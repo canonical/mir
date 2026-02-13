@@ -546,10 +546,7 @@ std::future<std::unique_ptr<mir::Device>> mir::LogindConsoleServices::acquire_de
                             nullptr,
                             &error))
                         {
-                            mir::log_info("Failed to release device %i:%i: %s",
-                                major(devnum),
-                                minor(devnum),
-                                error->message);
+                            mir::log_info("Failed to release device {}:{}: {}", major(devnum), minor(devnum), error->message);
                         }
                     }
                 }
@@ -702,7 +699,7 @@ void mir::LogindConsoleServices::on_pause_device(
         using namespace std::literals::string_literals;
         if ("pause"s == suspend_type)
         {
-            mir::log_info("Received logind pause event for device %i:%i", major, minor);
+            mir::log_info("Received logind pause event for device {}:{}", major, minor);
             it->second->emit_suspended();
             logind_session_call_pause_device_complete(
                 me->session_proxy.get(),
@@ -713,7 +710,7 @@ void mir::LogindConsoleServices::on_pause_device(
         }
         else if ("force"s == suspend_type)
         {
-            mir::log_info("Received logind force-pause event for device %i:%i", major, minor);
+            mir::log_info("Received logind force-pause event for device {}:{}", major, minor);
             it->second->emit_suspended();
         }
         else if ("gone"s == suspend_type)

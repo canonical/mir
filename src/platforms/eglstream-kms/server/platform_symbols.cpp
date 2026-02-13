@@ -158,8 +158,7 @@ auto probe_rendering_platform(
     if (eglQueryDevicesEXT(0, nullptr, &device_count) != EGL_TRUE)
     {
         mir::log_info("Platform claims to support EGL_EXT_device_base, but "
-                      "eglQueryDevicesEXT falied: %s",
-                      mg::egl_category().message(eglGetError()).c_str());
+                      "eglQueryDevicesEXT falied: {{}}", mg::egl_category().message(eglGetError()));
         return {};
     }
 
@@ -255,7 +254,7 @@ auto probe_rendering_platform(
 
             for (auto const missing_extension: missing_extensions)
             {
-                mir::log_info("EGLDevice found but unsuitable. Missing extension %s", missing_extension);
+                mir::log_info("EGLDevice found but unsuitable. Missing extension {}", missing_extension);
             }
 
             if (missing_extensions.empty())
@@ -345,8 +344,7 @@ auto probe_display_platform(
     if (eglQueryDevicesEXT(0, nullptr, &device_count) != EGL_TRUE)
     {
         mir::log_info("Platform claims to support EGL_EXT_device_base, but "
-                      "eglQueryDevicesEXT falied: %s",
-                      mg::egl_category().message(eglGetError()).c_str());
+                      "eglQueryDevicesEXT falied: {{}}", mg::egl_category().message(eglGetError()));
         return {};
     }
 
@@ -388,7 +386,7 @@ auto probe_display_platform(
                 }
                 catch (std::exception const& e)
                 {
-                    mir::log_info("Failed to query DRM node for EGLDevice: %s", e.what());
+                    mir::log_info("Failed to query DRM node for EGLDevice: {}", e.what());
                     continue;
                 }
                 if (drm_fd == mir::Fd::invalid)

@@ -68,7 +68,7 @@ mgmh::DRMHelper::open_all_devices(
     {
         if (quirks.should_skip(device))
         {
-            mir::log_info("Ignoring device %s due to specified quirk", device.devnode());
+            mir::log_info("Ignoring device {} due to specified quirk", device.devnode());
             continue;
         }
 
@@ -137,7 +137,7 @@ mgmh::DRMHelper::open_all_devices(
             case ENOSYS:
                 if (quirks.require_modesetting_support(device))
                 {
-                    mir::log_info("Ignoring non-KMS DRM device %s", device.devnode());
+                    mir::log_info("Ignoring non-KMS DRM device {}", device.devnode());
                     error = ENOSYS;
                     continue;
                 }
@@ -162,7 +162,7 @@ mgmh::DRMHelper::open_all_devices(
                 new DRMHelper{
                     std::move(tmp_fd),
                     std::move(device_handle)}});
-        mir::log_info("Using DRM device %s", device.devnode());
+        mir::log_info("Using DRM device {}", device.devnode());
     }
 
     if (opened_devices.size() == 0)

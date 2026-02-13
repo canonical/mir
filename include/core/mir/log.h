@@ -69,14 +69,12 @@ inline void log_info(std::string const& message)
                MIR_LOG_COMPONENT, message);
 }
 
-[[gnu::format (printf, 1, 2)]]
-inline void log_info(char const* fmt, ...)
+template<typename... Args>
+inline void log_info(std::format_string<Args...> fmt, Args&&... args)
 {
-    va_list va;
-    va_start(va, fmt);
-    ::mir::logv(::mir::logging::Severity::informational,
-                MIR_LOG_COMPONENT, fmt, va);
-    va_end(va);
+    ::mir::log(::mir::logging::Severity::informational,
+               MIR_LOG_COMPONENT,
+               std::format(fmt, std::forward<Args>(args)...));
 }
 
 [[gnu::format (printf, 1, 2)]]

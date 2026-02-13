@@ -606,7 +606,7 @@ TEST_P(WindowPlacementAttached, exclusive_zone_is_cleared_when_exclusive_rect_cl
     }
 
     mir::shell::SurfaceSpecification spec;
-    spec.exclusive_rect = mir::optional_value<mir::optional_value<Rectangle>>{{}};
+    spec.exclusive_rect = mir::optional_value<mir::optional_value<Rectangle>>{};
     basic_window_manager.modify_surface(session, attached, spec);
 
     EXPECT_THAT(normal.top_left(), Eq(display_area.top_left));

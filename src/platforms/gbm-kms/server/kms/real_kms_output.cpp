@@ -212,10 +212,7 @@ void mgg::RealKMSOutput::clear_crtc()
              *
              * Whatever we're switching to can handle the CRTCs; this should not be fatal.
              */
-            mir::log_info("Couldn't clear output %s (drmModeSetCrtc: %s (%i))",
-                mgk::connector_name(connector).c_str(),
-                mir::errno_to_cstr(-result),
-                -result);
+            mir::log_info("Couldn't clear output {} (drmModeSetCrtc: {} ({}))", mgk::connector_name(connector), mir::errno_to_cstr(-result), -result);
         }
         else
         {

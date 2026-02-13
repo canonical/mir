@@ -389,7 +389,7 @@ void mf::XWaylandClipboardSource::create_source(xcb_timestamp_t timestamp, std::
         {
             msg += "\n    " + pair.first + ": " + connection.query_name(pair.second);
         }
-        log_info(msg);
+        log_info("{}", msg);
     }
 
     auto const source = std::make_shared<ClipboardSource>(std::move(mime_types), this);
@@ -456,7 +456,7 @@ void mf::XWaylandClipboardSource::add_data_to_in_progress_send(
         std::vector<uint8_t> data{data_ptr, data_ptr + data_size};
         if (verbose_xwayland_logging_enabled())
         {
-            log_info("Writing %zu bytes of clipboard data from X11", data.size());
+            log_info("Writing {} bytes of clipboard data from X11", data.size());
         }
 
         if (in_progress_send->add_data(std::move(data)))

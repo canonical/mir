@@ -118,13 +118,13 @@ public:
         bool const should_skip_devnode = completely_skip.skipped_devnodes.contains(devnode);
         if (should_skip_devnode)
         {
-            mir::log_info("Quirks(skip/allow): skipping device %s (matches devnode quirk %s)", devnode, devnode);
+            mir::log_info("Quirks(skip/allow): skipping device {} (matches devnode quirk {})", devnode, devnode);
         }
 
         bool const should_skip_driver = completely_skip.skipped_drivers.contains(driver);
         if (should_skip_driver)
         {
-            mir::log_info("Quirks(skip/allow): skipping device %s (matches driver quirk %s)", devnode, driver);
+            mir::log_info("Quirks(skip/allow): skipping device {} (matches driver quirk {})", devnode, driver);
         }
 
         return should_skip_driver || should_skip_devnode;
@@ -140,13 +140,13 @@ public:
         bool const should_skip_devnode = disable_kms_probe.skipped_devnodes.contains(devnode);
         if (should_skip_devnode)
         {
-            mir::log_info("Quirks(disable-kms-probe): skipping device %s (matches devnode quirk %s)", devnode, devnode);
+            mir::log_info("Quirks(disable-kms-probe): skipping device {} (matches devnode quirk {})", devnode, devnode);
         }
 
         bool const should_skip_driver = disable_kms_probe.skipped_drivers.contains(driver);
         if (should_skip_driver)
         {
-            mir::log_info("Quirks(disable-kms-probe): skipping device %s (matches driver quirk %s)", devnode, driver);
+            mir::log_info("Quirks(disable-kms-probe): skipping device {} (matches driver quirk {})", devnode, driver);
         }
 
         return !(should_skip_driver || should_skip_devnode);
