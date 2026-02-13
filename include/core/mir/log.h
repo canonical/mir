@@ -121,14 +121,12 @@ inline void log_warning(std::string const& message)
                MIR_LOG_COMPONENT, message);
 }
 
-[[gnu::format(printf, 1, 2)]]
-inline void log_warning(char const* fmt, ...)
+template<typename... Args>
+inline void log_warning(std::format_string<Args...> fmt, Args&&... args)
 {
-    va_list va;
-    va_start(va, fmt);
-    ::mir::logv(::mir::logging::Severity::warning,
-               MIR_LOG_COMPONENT, fmt, va);
-    va_end(va);
+    ::mir::log(::mir::logging::Severity::warning,
+               MIR_LOG_COMPONENT,
+               std::format(fmt, std::forward<Args>(args)...));
 }
 } // (nested anonymous) namespace
 #endif

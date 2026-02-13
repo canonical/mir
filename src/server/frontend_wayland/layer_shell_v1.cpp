@@ -707,7 +707,7 @@ void mf::LayerSurfaceV1::surface_destroyed()
         // Until it gets fixed we ignore this error for layer shell specifically.
         // See: https://gitlab.gnome.org/World/Phosh/squeekboard/-/issues/285
         log_warning(
-            "Ignoring layer shell protocol violation: wl_surface destroyed before associated zwlr_layer_surface_v1@%u",
+            "Ignoring layer shell protocol violation: wl_surface destroyed before associated zwlr_layer_surface_v1@{}",
             wl_resource_get_id(resource));
     }
 }

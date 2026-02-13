@@ -245,9 +245,7 @@ auto probe_display_platform(
 
                 if (!busid)
                 {
-                    mir::log_warning(
-                        "Failed to query BusID for device %s; cannot check if KMS is available",
-                        device.devnode());
+                    mir::log_warning("Failed to query BusID for device {}; cannot check if KMS is available", device.devnode());
                     supported_devices.back().support_level = mg::probe::supported;
                 }
                 else
@@ -279,14 +277,12 @@ auto probe_display_platform(
 
                         [[fallthrough]];
                     case EINVAL:
-                        mir::log_warning(
-                            "Failed to detect whether device %s supports KMS, continuing with lower confidence",
-                            device.devnode());
+                        mir::log_warning("Failed to detect whether device {} supports KMS, continuing with lower confidence", device.devnode());
                         supported_devices.back().support_level = mg::probe::supported;
                         break;
 
                     default:
-                        mir::log_warning("Unexpected error from drmCheckModesettingSupported(): %s (%i), "
+                        mir::log_warning("Unexpected error from drmCheckModesettingSupported(): {} ({}), "
                                          "but continuing anyway", mir::errno_to_cstr(err), err);
                         mir::log_warning("Please file a bug at "
                                          "https://github.com/canonical/mir/issues containing this message");

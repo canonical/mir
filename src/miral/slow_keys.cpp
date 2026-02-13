@@ -95,8 +95,8 @@ miral::SlowKeys::SlowKeys(miral::live_config::Store& config_store) :
                 else
                 {
                     mir::log_warning(
-                        "Config value %s does not support negative values. Ignoring the supplied value (%d)...",
-                        key.to_string().c_str(),
+                        "Config value {} does not support negative values. Ignoring the supplied value ({})...",
+                        key.to_string(),
                         *val);
                 }
             }

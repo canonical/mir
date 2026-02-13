@@ -141,7 +141,7 @@ std::string mf::DesktopFileManager::resolve_app_id(const scene::Surface* surface
     // 1. Resolving from the list of internally running apps using the PID
     // 2. Resolving via a startup notification
     // 3. Resolving from a GApplicationID, which GTK sends over DBUS
-    mir::log_warning("Failed to resolve app id, returning %s", app_id.c_str());
+    mir::log_warning("Failed to resolve app id, returning {}", app_id);
     return app_id;
 }
 
@@ -228,7 +228,8 @@ std::shared_ptr<mf::DesktopFile> mf::DesktopFileManager::resolve_if_snap(int pid
     std::string attr_file = "/proc/" + std::to_string(pid) + "/attr/current";
     if (!std::filesystem::exists(attr_file))
     {
-        mir::log_warning("Failed to resolve desktop file via proc directory for pid %d: %s does not exist", pid, attr_file.c_str());
+        mir::log_warning(
+            "Failed to resolve desktop file via proc directory for pid {}: {} does not exist", pid, attr_file);
         return nullptr;
     }
 

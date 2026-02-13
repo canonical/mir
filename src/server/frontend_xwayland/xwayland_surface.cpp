@@ -844,7 +844,7 @@ void mf::XWaylandSurface::move_resize(uint32_t detail)
     }
     else
     {
-        mir::log_warning("XWaylandSurface::move_resize() called with unknown detail %d", detail);
+        mir::log_warning("XWaylandSurface::move_resize() called with unknown detail {}", detail);
     }
 }
 
@@ -1149,7 +1149,7 @@ void mf::XWaylandSurface::inform_client_of_geometry(
     while (inflight_configures.size() > 1000)
     {
         inflight_configures.pop_front();
-        log_warning("%s inflight_configures buffer capped", connection->window_debug_string(window).c_str());
+        log_warning("{} inflight_configures buffer capped", connection->window_debug_string(window));
     }
     lock.unlock();
 
