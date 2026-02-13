@@ -22,6 +22,7 @@
 #include "mir/fd.h"
 #include "mir/input/input_sink.h"
 #include "mir/geometry/forward.h"
+#include <mir_platforms_evdev_rs/src/lib.rs.h>
 
 namespace mi = mir::input;
 namespace miers = mir::input::evdev_rs;
@@ -82,13 +83,13 @@ std::shared_ptr<MirEvent> miers::EventBuilderWrapper::pointer_event(PointerEvent
         data.has_time
             ? std::chrono::microseconds(data.time_microseconds)
             : std::optional<EventBuilder::Timestamp>(std::nullopt),
-        static_cast<MirPointerAction>(data.action),
+        static_cast<::MirPointerAction>(data.action),
         data.buttons,
         data.has_position
             ? geometry::PointF(data.position_x, data.position_y)
             : std::optional<geometry::PointF>(std::nullopt),
         geometry::DisplacementF(data.displacement_x, data.displacement_y),
-        static_cast<MirPointerAxisSource>(data.axis_source),
+        static_cast<::MirPointerAxisSource>(data.axis_source),
         events::ScrollAxisH(
             geom::generic::Value<float, geom::DeltaXTag>(data.precise_x),
             geom::generic::Value<int, geom::DeltaXTag>(data.discrete_x),
@@ -108,9 +109,33 @@ std::shared_ptr<MirEvent> miers::EventBuilderWrapper::key_event(KeyEventData con
         data.has_time
             ? std::chrono::microseconds(data.time_microseconds)
             : std::optional<EventBuilder::Timestamp>(std::nullopt),
-        static_cast<MirKeyboardAction>(data.action),
+        static_cast<::MirKeyboardAction>(data.action),
         xkb_keysym_t{0},
         static_cast<int>(data.scancode)
+    );
+}
+
+std::shared_ptr<MirEvent> miers::EventBuilderWrapper::touch_event(TouchEventData const& data) const
+{
+    std::vector<events::TouchContact> contacts;
+    for (auto const& contact : data.contacts)
+    {
+        contacts.emplace_back(
+            static_cast<MirTouchId>(contact.touch_id),
+            static_cast<::MirTouchAction>(contact.action),
+            static_cast<::MirTouchTooltype>(contact.tooltype),
+            geom::PointF(contact.position_x, contact.position_y),
+            contact.pressure,
+            contact.touch_major,
+            contact.touch_minor,
+            contact.orientation
+        );
+    }
+    return event_builder->touch_event(
+        data.has_time
+          ? std::chrono::microseconds(data.time_microseconds)
+          : std::optional<EventBuilder::Timestamp>(std::nullopt),
+          contacts
     );
 }
 

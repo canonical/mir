@@ -14,9 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-use crate::device::{DeviceInfo, InputSinkPtr, LibinputLoopState};
+use crate::device::{ContactData, DeviceInfo, InputSinkPtr, LibinputLoopState};
 use crate::ffi::PointerEventDataRs;
-use cxx;
+use crate::MirTouchAction;
+use cxx::{self, UniquePtr};
 use input;
 use input::event;
 use input::event::keyboard;
@@ -24,6 +25,7 @@ use input::event::keyboard::KeyboardEventTrait;
 use input::event::pointer;
 use input::event::pointer::PointerEventTrait;
 use input::event::pointer::PointerScrollEvent;
+use input::event::touch::{TouchEventPosition, TouchEventSlot, TouchEventTrait};
 use input::event::EventTrait;
 use input::AsRaw;
 use std::thread;
@@ -56,6 +58,22 @@ fn get_device_info_from_libinput_device<'a>(
     known_devices
         .iter_mut()
         .find(|d| d.device.as_raw() == libinput_device.as_raw())
+}
+
+fn get_bounding_rectangle(
+    input_sink: &mut Option<InputSinkPtr>,
+    bridge: &cxx::SharedPtr<crate::PlatformBridge>,
+) -> cxx::UniquePtr<crate::RectangleWrapper> {
+    if let Some(input_sink) = input_sink {
+        // # Safety
+        //
+        // InputSink is a C++ class, so it is inherently unsafe to be accessing
+        // it directly as a reference pointer.
+        let sink_ref: &crate::InputSink = unsafe { input_sink.0.as_ref() };
+        bridge.bounding_rectangle(sink_ref)
+    } else {
+        UniquePtr::null()
+    }
 }
 
 pub fn process_libinput_events(
@@ -160,50 +178,50 @@ pub fn process_libinput_events(
 
                         event::PointerEvent::MotionAbsolute(absolute_motion_event) => {
                             if let Some(event_builder) = &mut device_info.event_builder {
-                                if let Some(input_sink) = &mut device_info.input_sink {
-                                    // # Safety
-                                    //
-                                    // Calling as_ref on a NonNull is unsafe.
-                                    let sink_ref: &crate::InputSink =
-                                        unsafe { input_sink.0.as_ref() };
-                                    let bounding_rect = bridge.bounding_rectangle(sink_ref);
-                                    let width = bounding_rect.width() as u32;
-                                    let height = bounding_rect.height() as u32;
+                                let bounding_rect =
+                                    get_bounding_rectangle(&mut device_info.input_sink, &bridge);
 
-                                    let old_x = state.pointer_x;
-                                    let old_y = state.pointer_y;
-                                    state.pointer_x =
-                                        absolute_motion_event.absolute_x_transformed(width) as f32;
-                                    state.pointer_y =
-                                        absolute_motion_event.absolute_y_transformed(height) as f32;
-
-                                    let movement_x = state.pointer_x - old_x;
-                                    let movement_y = state.pointer_y - old_y;
-                                    let pointer_event = PointerEventDataRs {
-                                        has_time: true,
-                                        time_microseconds: absolute_motion_event.time_usec(),
-                                        action: crate::MirPointerAction::mir_pointer_action_motion.repr,
-                                        buttons: state.button_state,
-                                        has_position: true,
-                                        position_x: state.pointer_x,
-                                        position_y: state.pointer_y,
-                                        displacement_x: movement_x,
-                                        displacement_y: movement_y,
-                                        axis_source: crate::MirPointerAxisSource::mir_pointer_axis_source_none.repr,
-                                        precise_x: 0.0,
-                                        discrete_x: 0,
-                                        value120_x: 0,
-                                        scroll_stop_x: false,
-                                        precise_y: 0.0,
-                                        discrete_y: 0,
-                                        value120_y: 0,
-                                        scroll_stop_y: false,
-                                    };
-                                    handle_input(
-                                        &mut device_info.input_sink,
-                                        event_builder.pin_mut().pointer_event(&pointer_event),
-                                    );
+                                if bounding_rect.is_null() {
+                                    continue;
                                 }
+                                let width = bounding_rect.width() as u32;
+                                let height = bounding_rect.height() as u32;
+
+                                let old_x = state.pointer_x;
+                                let old_y = state.pointer_y;
+                                state.pointer_x =
+                                    absolute_motion_event.absolute_x_transformed(width) as f32;
+                                state.pointer_y =
+                                    absolute_motion_event.absolute_y_transformed(height) as f32;
+
+                                let movement_x = state.pointer_x - old_x;
+                                let movement_y = state.pointer_y - old_y;
+                                let pointer_event = PointerEventDataRs {
+                                    has_time: true,
+                                    time_microseconds: absolute_motion_event.time_usec(),
+                                    action: crate::MirPointerAction::mir_pointer_action_motion.repr,
+                                    buttons: state.button_state,
+                                    has_position: true,
+                                    position_x: state.pointer_x,
+                                    position_y: state.pointer_y,
+                                    displacement_x: movement_x,
+                                    displacement_y: movement_y,
+                                    axis_source:
+                                        crate::MirPointerAxisSource::mir_pointer_axis_source_none
+                                            .repr,
+                                    precise_x: 0.0,
+                                    discrete_x: 0,
+                                    value120_x: 0,
+                                    scroll_stop_x: false,
+                                    precise_y: 0.0,
+                                    discrete_y: 0,
+                                    value120_y: 0,
+                                    scroll_stop_y: false,
+                                };
+                                handle_input(
+                                    &mut device_info.input_sink,
+                                    event_builder.pin_mut().pointer_event(&pointer_event),
+                                );
                             }
                         }
 
@@ -527,7 +545,139 @@ pub fn process_libinput_events(
                 }
             }
 
-            input::Event::Touch(_) => println!("TODO: Handle touch events"),
+            input::Event::Touch(touch_event) => {
+                if let Some(device_info) =
+                    get_device_info_from_libinput_device(&mut state.known_devices, &libinput_device)
+                {
+                    match touch_event {
+                        event::TouchEvent::Down(down_event) => {
+                            let slot = down_event.slot();
+                            if let Some(slot) = slot {
+                                let bounding =
+                                    get_bounding_rectangle(&mut device_info.input_sink, &bridge);
+
+                                if !bounding.is_null() {
+                                    if !state.touch_properties.contains_key(&slot) {
+                                        state.touch_properties.insert(slot, ContactData::default());
+                                    }
+
+                                    // We make sure that we only notify of "down" touch events once. Everything
+                                    // after that is considered a simple "change".
+                                    let data = state
+                                        .touch_properties
+                                        .entry(slot)
+                                        .or_insert(ContactData::default());
+                                    data.action = if data.down_notified {
+                                        MirTouchAction::mir_touch_action_change
+                                    } else {
+                                        MirTouchAction::mir_touch_action_down
+                                    };
+                                    data.x =
+                                        down_event.x_transformed(bounding.width() as u32) as f32;
+                                    data.y =
+                                        down_event.y_transformed(bounding.height() as u32) as f32;
+                                }
+                            }
+                        }
+                        event::TouchEvent::Motion(motion_event) => {
+                            let slot = motion_event.slot();
+                            if let Some(slot) = slot {
+                                let bounding =
+                                    get_bounding_rectangle(&mut device_info.input_sink, &bridge);
+
+                                if !bounding.is_null() {
+                                    if !state.touch_properties.contains_key(&slot) {
+                                        state.touch_properties.insert(slot, ContactData::default());
+                                    }
+
+                                    let data = state
+                                        .touch_properties
+                                        .entry(slot)
+                                        .or_insert(ContactData::default());
+                                    data.action = MirTouchAction::mir_touch_action_change;
+                                    data.x =
+                                        motion_event.x_transformed(bounding.width() as u32) as f32;
+                                    data.y =
+                                        motion_event.y_transformed(bounding.height() as u32) as f32;
+                                }
+                            }
+                        }
+                        event::TouchEvent::Up(up_event) => {
+                            let slot = up_event.slot();
+                            if let Some(slot) = slot {
+                                // By design, "up" is only notified a single time. Hence, we only
+                                // notify "up" if "down" has been sent. Otherwise, we remove the
+                                // entry altogether.
+                                if let Some(data) = state.touch_properties.get_mut(&slot) {
+                                    if data.down_notified {
+                                        data.action = MirTouchAction::mir_touch_action_up;
+                                    } else {
+                                        state.touch_properties.remove(&slot);
+                                    }
+                                }
+                            }
+                        }
+                        event::TouchEvent::Frame(frame_event) => {
+                            let mut contacts: Vec<crate::TouchContactData> = vec![];
+                            let mut empty_touches = 0;
+
+                            for (slot, contact_data) in &mut state.touch_properties {
+                                // Note: This was logic taken from the existing evdev implementation, and we are
+                                // keeping it for backwards compatibility.
+                                // Sanity check: Bogus panels are sending sometimes empty events that all point
+                                // to (0, 0) coordinates. Detect those and drop the whole frame in this case.
+                                // Count touches at (0, 0) but still include them in contacts for now.
+                                if contact_data.x == 0.0 && contact_data.y == 0.0 {
+                                    empty_touches += 1;
+                                }
+
+                                contacts.push(crate::TouchContactData {
+                                    touch_id: *slot as i32,
+                                    action: contact_data.action.repr,
+                                    tooltype: contact_data.tooltype.repr,
+                                    position_x: contact_data.x,
+                                    position_y: contact_data.y,
+                                    pressure: contact_data.pressure,
+                                    touch_major: contact_data.major,
+                                    touch_minor: contact_data.minor,
+                                    orientation: contact_data.orientation,
+                                });
+
+                                if contact_data.action == MirTouchAction::mir_touch_action_down {
+                                    contact_data.down_notified = true;
+                                }
+                            }
+
+                            // Remove any property that is now "up" so that we do not keep sending
+                            // the up notification.
+                            state.touch_properties.retain(|&_slot, contact_data| {
+                                contact_data.action != MirTouchAction::mir_touch_action_up
+                            });
+
+                            // Drop the frame if we have no contacts or more than one touch at (0, 0).
+                            // A single touch at (0, 0) could be legitimate (top-left corner).
+                            if contacts.is_empty() || empty_touches > 1 {
+                                continue;
+                            }
+
+                            let touch_event_data = crate::TouchEventData {
+                                has_time: true,
+                                time_microseconds: frame_event.time_usec(),
+                                contacts: contacts,
+                            };
+                            if let Some(event_builder) = &mut device_info.event_builder {
+                                let created =
+                                    event_builder.pin_mut().touch_event(&touch_event_data);
+
+                                if let Some(input_sink) = &mut device_info.input_sink {
+                                    input_sink.handle_input(&created);
+                                }
+                            }
+                        }
+                        _ => {}
+                    }
+                }
+            }
 
             input::Event::Tablet(_) => println!("TODO: Handle tablet events"),
 

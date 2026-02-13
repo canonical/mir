@@ -34,6 +34,7 @@ use crate::platform::PlatformRs;
 
 #[cxx::bridge(namespace = "mir::input::evdev_rs")]
 mod ffi_bridge {
+
     #[repr(u32)]
     #[derive(Debug, Copy, Clone, PartialEq, Eq)]
     pub enum DeviceCapability {
@@ -57,6 +58,24 @@ mod ffi_bridge {
         mir_keyboard_action_repeat,
         mir_keyboard_action_modifiers,
         mir_keyboard_actions,
+    }
+
+    #[repr(i32)]
+    #[derive(Debug, Copy, Clone, PartialEq, Eq)]
+    pub enum MirTouchAction {
+        mir_touch_action_up = 0,
+        mir_touch_action_down = 1,
+        mir_touch_action_change = 2,
+        mir_touch_actions,
+    }
+
+    #[repr(i32)]
+    #[derive(Debug, Copy, Clone, PartialEq, Eq)]
+    pub enum MirTouchTooltype {
+        mir_touch_tooltype_unknown = 0,
+        mir_touch_tooltype_finger = 1,
+        mir_touch_tooltype_stylus = 2,
+        mir_touch_tooltypes,
     }
 
     #[repr(i32)]
@@ -131,6 +150,26 @@ mod ffi_bridge {
 
     // KeyEventData is declared as an extern C++ type mapped to the Rust struct above
 
+    // TouchContactData and TouchEventData defined as shared structs
+    #[derive(Copy, Clone)]
+    pub struct TouchContactData {
+        pub touch_id: i32,
+        pub action: i32,
+        pub tooltype: i32,
+        pub position_x: f32,
+        pub position_y: f32,
+        pub pressure: f32,
+        pub touch_major: f32,
+        pub touch_minor: f32,
+        pub orientation: f32,
+    }
+
+    pub struct TouchEventData {
+        pub has_time: bool,
+        pub time_microseconds: u64,
+        pub contacts: Vec<TouchContactData>,
+    }
+
     extern "Rust" {
         type PlatformRs;
         type DeviceObserverRs;
@@ -192,6 +231,7 @@ mod ffi_bridge {
         type KeyEventData = crate::ffi::KeyEventData;
         // Map C++ PointerEventData to the Rust struct
         type PointerEventData = crate::ffi::PointerEventDataRs;
+        // TouchContactData and TouchEventData are defined above in the bridge
 
         #[namespace = "mir::input"]
         pub type Device;
@@ -238,6 +278,10 @@ mod ffi_bridge {
         ) -> SharedPtr<MirEvent>;
 
         pub fn key_event(self: &EventBuilderWrapper, data: &KeyEventData) -> SharedPtr<MirEvent>;
+        pub fn touch_event(
+            self: &EventBuilderWrapper,
+            data: &TouchEventData,
+        ) -> SharedPtr<MirEvent>;
 
         #[namespace = "mir::input"]
         pub fn add_device(
