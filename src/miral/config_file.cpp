@@ -105,7 +105,7 @@ Watcher::Watcher(path file, miral::ConfigFile::Loader load_config) :
 {
     if (directory_watch_descriptor.has_value())
     {
-        mir::log_debug("Monitoring {} for configuration changes", (directory.value()/filename).string());
+        mir::log_debug("Monitoring {} for configuration changes", (directory.value() / filename).string());
     }
 }
 

@@ -180,7 +180,8 @@ public:
 
         auto const driver = mgc::get_device_driver(device.parent().get());
         auto const devnode = device.devnode();
-        mir::log_debug("Quirks(gbm-surface-has-free-buffers): checking device with devnode: {}, driver {}", devnode, driver);
+        mir::log_debug(
+            "Quirks(gbm-surface-has-free-buffers): checking device with devnode: {}, driver {}", devnode, driver);
 
         auto surface_has_free_buffers_impl_name = mgc::apply_quirk(
             devnode,

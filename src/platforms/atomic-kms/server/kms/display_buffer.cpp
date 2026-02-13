@@ -293,7 +293,12 @@ auto import_gbm_bo(
     auto* gbm_bo = gbm_bo_import(gbm.get(), GBM_BO_IMPORT_FD_MODIFIER, (void*)&import_data, GBM_BO_USE_SCANOUT);
     if (!gbm_bo)
     {
-        mir::log_debug("Failed to import buffer type {}:{} ({} [{}])", buffer->format().name(), mg::drm_modifier_to_string(buffer->modifier().value_or(DRM_FORMAT_MOD_INVALID)), mir::errno_to_cstr(errno), errno);
+        mir::log_debug(
+            "Failed to import buffer type {}:{} ({} [{}])",
+            buffer->format().name(),
+            mg::drm_modifier_to_string(buffer->modifier().value_or(DRM_FORMAT_MOD_INVALID)),
+            mir::errno_to_cstr(errno),
+            errno);
         return {};
     }
     return std::shared_ptr<struct gbm_bo>(gbm_bo, &gbm_bo_destroy);
