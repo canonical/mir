@@ -34,6 +34,7 @@
 #include "wp_viewporter.h"
 #include "linux_drm_syncobj.h"
 #include "surface_registry.h"
+#include "shell_with_surface_registry.h"
 
 #include <mir/errno_utils.h>
 #include <mir/main_loop.h>
@@ -299,6 +300,7 @@ mf::WaylandConnector::WaylandConnector(
         this->allocator);
     subcompositor_global = std::make_unique<mf::WlSubcompositor>(display.get());
     auto const surface_registry = std::make_shared<mf::SurfaceRegistry>();
+    auto const shell_with_registry = std::make_shared<mf::ShellWithSurfaceRegistry>(shell, surface_registry);
     seat_global = std::make_unique<mf::WlSeat>(
         display.get(),
         *executor,
@@ -326,7 +328,7 @@ mf::WaylandConnector::WaylandConnector(
     extensions->init(WaylandExtensions::Context{
         display.get(),
         executor,
-        shell,
+        shell_with_registry,
         session_authorizer,
         main_clipboard,
         primary_selection_clipboard,

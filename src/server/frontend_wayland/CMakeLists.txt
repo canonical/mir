@@ -67,6 +67,7 @@ set(
   linux_drm_syncobj.cpp         linux_drm_syncobj.h
   data_control_v1.cpp           data_control_v1.h
   surface_registry.cpp          surface_registry.h
+  shell_with_surface_registry.cpp shell_with_surface_registry.h
 )
 
 if (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" AND ${CMAKE_CXX_COMPILER_VERSION} VERSION_LESS 18.2)
