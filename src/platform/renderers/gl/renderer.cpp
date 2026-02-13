@@ -678,7 +678,7 @@ auto mrg::Renderer::render(mg::RenderableList const& renderables) const -> std::
 
     // Report any GL errors after commit, to catch any *during* commit
     while (auto const gl_error = glGetError())
-        mir::log_debug("GL error: %d", gl_error);
+        mir::log_debug("GL error: {}", gl_error);
 
     return output;
 }

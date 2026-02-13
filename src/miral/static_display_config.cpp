@@ -343,7 +343,7 @@ try
 
     std::lock_guard lock{mutex};
     config = new_config;
-    mir::log_debug("Loaded display configuration file: %s", filename.c_str());
+    mir::log_debug("Loaded display configuration file: {}", filename);
 }
 catch (YAML::Exception const& x)
 {
@@ -365,7 +365,7 @@ void miral::YamlFileDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
 
     if (current_config != end(config))
     {
-        mir::log_debug("Display config using layout: '%s'", layout.c_str());
+        mir::log_debug("Display config using layout: '{}'", layout);
 
         conf.for_each_output([&config=current_config->second.matchers2config](mg::UserDisplayConfigurationOutput& conf_output)
             {
@@ -435,7 +435,7 @@ void miral::YamlFileDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
 
         if (i != std::end(layout_strategies))
         {
-            mir::log_debug("Display config using layout strategy: '%s'", layout.c_str());
+            mir::log_debug("Display config using layout strategy: '{}'", layout);
         }
         else
         {
@@ -773,10 +773,7 @@ void miral::ReloadingYamlFileDisplayConfig::confirm(mir::graphics::DisplayConfig
                 serialize_configuration(out, *resulting_layout);
             }
 
-            mir::log_debug(
-                "%s display configuration template: %s",
-                out ? "Wrote" : "Failed writing",
-                filename.c_str());
+            mir::log_debug("{} display configuration template: {}", out ? "Wrote" : "Failed writing", filename);
         }
     }
 }

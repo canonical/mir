@@ -294,7 +294,7 @@ auto mf::get_wl_shell_window(wl_resource* surface) -> std::shared_ptr<ms::Surfac
             return scene_surface.value();
         }
 
-        log_debug("No window currently associated with wayland::Surface %p", static_cast<void*>(surface));
+        log_debug("No window currently associated with wayland::Surface {}", static_cast<void*>(surface));
     }
 
     return {};

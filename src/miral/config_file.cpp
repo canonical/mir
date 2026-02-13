@@ -105,7 +105,7 @@ Watcher::Watcher(path file, miral::ConfigFile::Loader load_config) :
 {
     if (directory_watch_descriptor.has_value())
     {
-        mir::log_debug("Monitoring %s for configuration changes", (directory.value()/filename).c_str());
+        mir::log_debug("Monitoring {} for configuration changes", (directory.value() / filename).string());
     }
 }
 
@@ -143,7 +143,7 @@ miral::ConfigFile::Self::Self(MirRunner& runner, path file, Mode mode, Loader lo
         if (std::ifstream config_file{filepath})
         {
             load_config(config_file, filepath);
-            mir::log_debug("Loaded %s", filepath.c_str());
+            mir::log_debug("Loaded {}", filepath.string());
             break;
         }
     }
@@ -213,11 +213,11 @@ void Watcher::handler(int) const
                     if (std::ifstream config_file{file})
                     {
                         load_config(config_file, file);
-                        mir::log_debug("(Re)loaded %s", file.c_str());
+                        mir::log_debug("(Re)loaded {}", file.string());
                     }
                     else
                     {
-                        mir::log_debug("Failed to open %s", file.c_str());
+                        mir::log_debug("Failed to open {}", file.string());
                     }
                 }
             }

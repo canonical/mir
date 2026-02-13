@@ -115,17 +115,17 @@ auto mir::graphics::common::apply_quirk(
 {
     if (auto p = devnode_quirks.find(std::string{devnode}); p != devnode_quirks.end())
     {
-        mir::log_debug("Quirks(%s): forcing %s implementation", message, p->second.c_str());
+        mir::log_debug("Quirks({}): forcing {} implementation", message, p->second);
         return p->second;
     }
 
     if (auto p = driver_quirks.find(std::string{driver}); p != driver_quirks.end())
     {
-        mir::log_debug("Quirks(%s): forcing %s implementation", message, p->second.c_str());
+        mir::log_debug("Quirks({}): forcing {} implementation", message, p->second);
         return p->second;
     }
 
-    log_debug("Quirks(%s): using default implementation for %s driver", message, driver);
+    log_debug("Quirks({}): using default implementation for {} driver", message, driver);
 
     // Not specified
     return std::string{driver};

@@ -453,7 +453,7 @@ auto mgg::RenderingPlatform::maybe_create_provider(
         auto cap_result = drmGetCap(raw_fd, DRM_CAP_SYNCOBJ_TIMELINE, &has_timeline);
         if (cap_result != 0)
         {
-            mir::log_debug("Failed to query DRM_CAP_SYNCOBJ_TIMELINE: %s", mir::errno_to_cstr(-cap_result));
+            mir::log_debug("Failed to query DRM_CAP_SYNCOBJ_TIMELINE: {}", mir::errno_to_cstr(-cap_result));
             return nullptr;
         }
         if (!has_timeline)
