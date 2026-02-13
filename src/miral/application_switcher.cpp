@@ -79,7 +79,7 @@ struct ToplevelInfoPrinter
 
         if (FT_New_Face(lib, mir::default_font().c_str(), 0, &face))
         {
-            mir::log_error("Failed to load find: %s", mir::default_font().c_str());
+            mir::log_error("Failed to load find: {}", mir::default_font());
             FT_Done_FreeType(lib);
             return;
         }

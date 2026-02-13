@@ -117,7 +117,7 @@ auto miral::Output::attribute(std::string const& key) const -> std::optional<std
     }
     else
     {
-        mir::log_warning("Attempt to read custom output attribute (%s) that wasn't added", key.c_str());
+        mir::log_warning("Attempt to read custom output attribute ({}) that wasn't added", key);
         return std::nullopt;
     }
 }

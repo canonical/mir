@@ -148,8 +148,7 @@ void mgg::BufferAllocator::bind_display(wl_display* display, std::shared_ptr<Exe
     }
     catch (std::runtime_error const& error)
     {
-        mir::log_info(
-            "Cannot enable linux-dmabuf import support: %s", error.what());
+        mir::log_info("Cannot enable linux-dmabuf import support: {}", error.what());
         mir::log(
             mir::logging::Severity::debug,
             MIR_LOG_COMPONENT,
@@ -366,8 +365,7 @@ private:
             if (eglGetConfigAttrib(dpy, config, EGL_NATIVE_VISUAL_ID, &id) == EGL_FALSE)
             {
                 mir::log_warning(
-                    "Failed to query GBM format of EGLConfig: %s",
-                    mg::egl_category().message(eglGetError()).c_str());
+                    "Failed to query GBM format of EGLConfig: {}", mg::egl_category().message(eglGetError()));
                 continue;
             }
 

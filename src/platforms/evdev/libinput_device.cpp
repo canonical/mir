@@ -617,7 +617,11 @@ void apply_scroll_mode(libinput_device* dev, MirTouchpadScrollMode scroll_mode)
         if (LIBINPUT_CONFIG_STATUS_SUCCESS != libinput_device_config_scroll_set_method(dev, method))
         {
             auto const default_method = libinput_device_config_scroll_get_default_method(dev);
-            mir::log_info("On device '%s': Failed to set scroll method to %d, using default (%d)", libinput_device_get_name(dev), method, default_method);
+            mir::log_info(
+                "On device '{}': Failed to set scroll method to {}, using default ({})",
+                libinput_device_get_name(dev),
+                static_cast<int>(method),
+                static_cast<int>(default_method));
             libinput_device_config_scroll_set_method(dev, default_method);
         }
     };
@@ -649,7 +653,11 @@ void apply_click_mode(libinput_device* dev, MirTouchpadClickMode click_mode)
         if (LIBINPUT_CONFIG_STATUS_SUCCESS != libinput_device_config_click_set_method(dev, method))
         {
             auto const default_method = libinput_device_config_click_get_default_method(dev);
-            mir::log_info("On device '%s': Failed to set click method to %d, using default (%d)", libinput_device_get_name(dev), method, default_method);
+            mir::log_info(
+                "On device '{}': Failed to set click method to {}, using default ({})",
+                libinput_device_get_name(dev),
+                static_cast<int>(method),
+                static_cast<int>(default_method));
             libinput_device_config_click_set_method(dev, default_method);
         }
     };

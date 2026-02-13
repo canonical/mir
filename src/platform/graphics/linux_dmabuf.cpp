@@ -101,7 +101,7 @@ public:
         if (returned_formats != num_formats)
         {
             mir::log_warning(
-                "eglQueryDmaBufFormats returned unexpected number of formats (got %i, expected %i)",
+                "eglQueryDmaBufFormats returned unexpected number of formats (got {}, expected {})",
                 returned_formats,
                 num_formats);
             resize(returned_formats);
@@ -121,9 +121,10 @@ public:
                     nullptr,
                     &num_modifiers) != EGL_TRUE)
             {
-                mir::log_warning("eglQueryDmaBufModifiers failed for format %s: %s",
+                mir::log_warning(
+                    "eglQueryDmaBufModifiers failed for format {}: {}",
                     mg::drm_format_to_string(static_cast<uint32_t>(format)),
-                    mg::egl_category().message(eglGetError()).c_str());
+                    mg::egl_category().message(eglGetError()));
 
                 // Remove that format and its modifiers from our list
                 formats.erase(formats.begin() + i);
@@ -151,8 +152,8 @@ public:
             if (returned_modifiers != num_modifiers)
             {
                 mir::log_warning(
-                    "eglQueryDmaBufModifiers return unexpected number of modifiers for format 0x%ux"
-                    " (expected %i, got %i)",
+                    "eglQueryDmaBufModifiers return unexpected number of modifiers for format 0x{}x"
+                    " (expected {}, got {})",
                     format,
                     returned_modifiers,
                     num_modifiers);
@@ -820,7 +821,7 @@ private:
             /* The client should handle this fine, but let's make sure we can see
              * any failures that might happen.
              */
-            mir::log_debug("Failed to import client dmabufs: %s", err.what());
+            mir::log_debug("Failed to import client dmabufs: {}", err.what());
             send_failed_event();
         }
         consumed = true;
@@ -1449,15 +1450,13 @@ dev_t get_devnum(EGLDisplay dpy)
         const char *device_path = device_query_ext.eglQueryDeviceStringEXT(device, EGL_DRM_DEVICE_FILE_EXT);
         if (device_path == nullptr)
         {
-            mir::log_info(
-                "Unable to determine linux-dmabuf device: no device path returned from EGL");
+            mir::log_info("Unable to determine linux-dmabuf device: no device path returned from EGL");
             return 0;
         }
         struct stat device_stat = {};
         if (stat(device_path, &device_stat) == -1)
         {
-            mir::log_info(
-                "Unable to determine linux-dmabuf device: unable to stat device path: %s", mir::errno_to_cstr(errno));
+            mir::log_info("Unable to determine linux-dmabuf device: unable to stat device path: {}", mir::errno_to_cstr(errno));
             return 0;
         }
 
@@ -1465,8 +1464,7 @@ dev_t get_devnum(EGLDisplay dpy)
     }
     catch (std::runtime_error const& error)
     {
-        mir::log_info(
-            "Unable to determine linux-dmabuf device: %s", error.what());
+        mir::log_info("Unable to determine linux-dmabuf device: {}", error.what());
         return 0;
     }
 }

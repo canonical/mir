@@ -190,7 +190,7 @@ void mi::ExternalInputDeviceHub::Internal::changes_complete()
                 for (auto const& dev : added)
                 {
                     if (auto handle = std::dynamic_pointer_cast<DefaultDevice>(dev))
-                        log_info(std::format("Device configuration: {}", handle));
+                        log_info("Device configuration: {}", handle);
                     handles.push_back(dev);
                 }
             });
@@ -505,7 +505,7 @@ auto mi::DefaultInputDeviceHub::add_device(std::shared_ptr<InputDevice> const& d
     }
     else
     {
-        log_error("Input device %s added twice", device->get_device_info().name.c_str());
+        log_error("Input device {} added twice", device->get_device_info().name);
         BOOST_THROW_EXCEPTION(std::logic_error("Input device already managed by server"));
     }
 }
@@ -543,7 +543,7 @@ void mi::DefaultInputDeviceHub::remove_device(std::shared_ptr<InputDevice> const
         });
     if (!removed)
     {
-        log_error("Input device %s not found", device->get_device_info().name.c_str());
+        log_error("Input device {} not found", device->get_device_info().name);
         BOOST_THROW_EXCEPTION(std::logic_error("Input device not managed by server"));
     }
 }

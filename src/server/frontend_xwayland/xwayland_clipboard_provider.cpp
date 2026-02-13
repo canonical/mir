@@ -255,7 +255,7 @@ private:
 
     void notify_cancelled(const char* reason) const
     {
-        mir::log_warning("failed to send clipboard data to X11 client: %s", reason);
+        mir::log_warning("failed to send clipboard data to X11 client: {}", reason);
         send_selection_notify(*connection, time, requester, XCB_ATOM_NONE, selection, target);
         connection->flush();
     }
@@ -322,7 +322,7 @@ mf::XWaylandClipboardProvider::~XWaylandClipboardProvider()
     if (!pending_incremental_sends.empty())
     {
         log_warning(
-            "XWaylandClipboardProvider destroyed with %zu incremental sends in progress",
+            "XWaylandClipboardProvider destroyed with {} incremental sends in progress",
             pending_incremental_sends.size());
     }
     clipboard->unregister_interest(*clipboard_observer);
@@ -370,9 +370,7 @@ void mf::XWaylandClipboardProvider::selection_request_event(xcb_selection_reques
         // This seems to happen during normal operation
         if (verbose_xwayland_logging_enabled())
         {
-            log_info(
-                "XWayland selection request event with invalid target %s",
-                connection->query_name(event->target).c_str());
+            log_info("XWayland selection request event with invalid target {}", connection->query_name(event->target));
         }
         send_selection_notify(*connection, event->time, event->requestor, XCB_ATOM_NONE, event->selection, event->target);
     }
@@ -445,7 +443,7 @@ void mf::XWaylandClipboardProvider::send_data(
 
     if (pipe2(fds, O_CLOEXEC) != 0)
     {
-        log_warning("failed to send clipboard data to X11 client: pipe2 error: %s", mir::errno_to_cstr(errno));
+        log_warning("failed to send clipboard data to X11 client: pipe2 error: {}", mir::errno_to_cstr(errno));
         send_selection_notify(*connection, time, requester, XCB_ATOM_NONE, connection->CLIPBOARD, target);
         return;
     }

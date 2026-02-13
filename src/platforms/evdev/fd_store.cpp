@@ -40,10 +40,10 @@ mir::Fd mie::FdStore::take_fd(char const* path)
     {
         if (removed.first == path)
         {
-            mir::log_warning("Requested fd for path %s was removed", path);
+            mir::log_warning("Requested fd for path {} was removed", path);
             return fds.insert(std::move(removed)).first->second;
         }
-        mir::log_warning("Failed to find requested fd for path %s", path);
+        mir::log_warning("Failed to find requested fd for path {}", path);
     }
     return mir::Fd{};
 }
@@ -60,7 +60,7 @@ void mie::FdStore::remove_fd(int fd)
 
     if (element == fds.end())
     {
-        mir::log_warning("Attempted to remove unmanaged fd %i", fd);
+        mir::log_warning("Attempted to remove unmanaged fd {}", fd);
     }
     else
     {

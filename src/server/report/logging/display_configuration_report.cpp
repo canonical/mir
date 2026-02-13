@@ -68,13 +68,13 @@ void mrl::DisplayConfigurationReport::base_configuration_updated(
 void mrl::DisplayConfigurationReport::session_configuration_applied(std::shared_ptr<ms::Session> const& session,
                                    std::shared_ptr<mg::DisplayConfiguration> const& config)
 {
-    logger->log(component, severity, "Session %s applied display configuration", session->name().c_str());
+    logger->log(component, severity, "Session {} applied display configuration", session->name());
     log_configuration(severity, *config);
 }
 
 void mrl::DisplayConfigurationReport::session_configuration_removed(std::shared_ptr<ms::Session> const& session)
 {
-    logger->log(component, severity, "Session %s removed display configuration", session->name().c_str());
+    logger->log(component, severity, "Session {} removed display configuration", session->name());
 }
 
 void mrl::DisplayConfigurationReport::configuration_failed(
@@ -84,7 +84,7 @@ void mrl::DisplayConfigurationReport::configuration_failed(
     logger->log(component, ml::Severity::error, "Failed to apply display configuration:");
     log_configuration(ml::Severity::error, *attempted);
     logger->log(component, ml::Severity::error, "Error details:");
-    logger->log(component, ml::Severity::error, "%s", boost::diagnostic_information(error).c_str());
+    logger->log(component, ml::Severity::error, "{}", boost::diagnostic_information(error));
 }
 
 void mrl::DisplayConfigurationReport::log_configuration(
@@ -98,7 +98,7 @@ void mrl::DisplayConfigurationReport::log_configuration(
         char const indent[] = ". |_ ";
 
         logger->log(component, severity,
-                    "* Output %d: %s %s",
+                    "* Output {}: {} {}",
                     out_id, type,
                     !out.connected ? "disconnected" :
                                      out.used ? "connected, used" :
@@ -109,22 +109,22 @@ void mrl::DisplayConfigurationReport::log_configuration(
             if (out.display_info.model)
             {
                 logger->log(component, severity,
-                            "%sEDID monitor name: %s", indent, out.display_info.model->c_str());
+                            "{}EDID monitor name: {}", indent, *out.display_info.model);
             }
             if (out.display_info.vendor)
             {
                 logger->log(component, severity,
-                            "%sEDID manufacturer: %s", indent, out.display_info.vendor->c_str());
+                            "{}EDID manufacturer: {}", indent, *out.display_info.vendor);
             }
             if (out.display_info.product_code)
             {
                 logger->log(component, severity,
-                            "%sEDID product code: %hu", indent, *out.display_info.product_code);
+                            "{}EDID product code: {}", indent, *out.display_info.product_code);
             }
             if (out.display_info.serial)
             {
                 logger->log(component, severity,
-                            "%sEDID serial number: %s", indent, out.display_info.serial->c_str());
+                            "{}EDID serial number: {}", indent, *out.display_info.serial);
             }
 
             int width_mm = out.physical_size_mm.width.as_int();
@@ -133,13 +133,13 @@ void mrl::DisplayConfigurationReport::log_configuration(
                 sqrtf(width_mm * width_mm + height_mm * height_mm) / 25.4;
 
             logger->log(component, severity,
-                        "%sPhysical size %.1f\" %dx%dmm",
+                        "{}Physical size {:.1f}\" {}x{}mm",
                         indent, inches, width_mm, height_mm);
 
             static const char* const power_mode[] =
                 {"on", "in standby", "suspended", "off"};
             logger->log(component, severity,
-                        "%sPower is %s", indent, power_mode[out.power_mode]);
+                        "{}Power is {}", indent, power_mode[out.power_mode]);
 
             if (out.used)
             {
@@ -147,7 +147,7 @@ void mrl::DisplayConfigurationReport::log_configuration(
                 {
                     auto const& mode = out.modes[out.current_mode_index];
                     logger->log(component, severity,
-                                "%sCurrent mode %dx%d %.2fHz",
+                                "{}Current mode {}x{} {:.2f}Hz",
                                 indent,
                                 mode.size.width.as_int(),
                                 mode.size.height.as_int(),
@@ -158,7 +158,7 @@ void mrl::DisplayConfigurationReport::log_configuration(
                 {
                     auto const& mode = out.modes[out.preferred_mode_index];
                     logger->log(component, severity,
-                                "%sPreferred mode %dx%d %.2fHz",
+                                "{}Preferred mode {}x{} {:.2f}Hz",
                                 indent,
                                 mode.size.width.as_int(),
                                 mode.size.height.as_int(),
@@ -169,24 +169,24 @@ void mrl::DisplayConfigurationReport::log_configuration(
                     {"normal", "left", "inverted", "right"};
                 int degrees_ccw = out.orientation;
                 logger->log(component, severity,
-                            "%sOrientation %s",
+                            "{}Orientation {}",
                             indent,
                             orientation[degrees_ccw / 90]);
 
                 logger->log(component, severity,
-                            "%sLogical size %dx%d",
+                            "{}Logical size {}x{}",
                             indent,
                             out.extents().size.width.as_int(),
                             out.extents().size.height.as_int());
 
                 logger->log(component, severity,
-                            "%sLogical position %+d%+d",
+                            "{}Logical position {:+d}{:+d}",
                             indent,
                             out.top_left.x.as_int(),
                             out.top_left.y.as_int());
 
                 logger->log(component, severity,
-                            "%sScaling factor: %.2f",
+                            "{}Scaling factor: {:.2f}",
                             indent,
                             out.scale);
             }
@@ -202,12 +202,12 @@ void mrl::DisplayConfigurationReport::catastrophic_configuration_error(
     logger->log(component, ml::Severity::critical, "Attempted to fall back to configuration:");
     log_configuration(ml::Severity::critical, *failed_fallback);
     logger->log(component, ml::Severity::critical, "Error details:");
-    logger->log(component, ml::Severity::critical, "%s", boost::diagnostic_information(error).c_str());
+    logger->log(component, ml::Severity::critical, "{}", boost::diagnostic_information(error));
 }
 
 void mrl::DisplayConfigurationReport::configuration_updated_for_session(
     std::shared_ptr<scene::Session> const& session,
     std::shared_ptr<graphics::DisplayConfiguration const> const& /*config*/)
 {
-    logger->log(component, severity, "Sending display configuration to session %s:", session->name().c_str());
+    logger->log(component, severity, "Sending display configuration to session {}:", session->name());
 }

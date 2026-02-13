@@ -314,7 +314,7 @@ void mf::InputMethodV2::commit(uint32_t serial)
     }
     else
     {
-        log_warning("%s: invalid commit serial %d", interface_name, serial);
+        log_warning("{}: invalid commit serial {}", interface_name, serial);
     }
     pending_change = ms::TextInputChange{{}};
 }

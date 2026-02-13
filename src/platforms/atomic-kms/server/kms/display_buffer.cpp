@@ -294,9 +294,9 @@ auto import_gbm_bo(
     if (!gbm_bo)
     {
         mir::log_debug(
-            "Failed to import buffer type %s:%s (%s [%i])",
+            "Failed to import buffer type {}:{} ({} [{}])",
             buffer->format().name(),
-            mg::drm_modifier_to_string(buffer->modifier().value_or(DRM_FORMAT_MOD_INVALID)).c_str(),
+            mg::drm_modifier_to_string(buffer->modifier().value_or(DRM_FORMAT_MOD_INVALID)),
             mir::errno_to_cstr(errno),
             errno);
         return {};
@@ -346,7 +346,7 @@ auto drm_fb_id_from_dma_buffer(
 
     if (ret)
     {
-        mir::log_warning("drmModeAddFB2WithModifiers returned an error: %d", ret);
+        mir::log_warning("drmModeAddFB2WithModifiers returned an error: {}", ret);
         return {};
     }
 

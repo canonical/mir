@@ -336,8 +336,14 @@ auto read_keymap(Connection const& connection) -> std::optional<std::string>
 
     if (error)
     {
-        mir::log_info("Dbus error=%s, dest=%s, object_path=%s, properties_interface=%s, method_name=%s, interface_name=%s",
-                      error->message, bus_name, object_path, properties_interface, method_name, interface_name);
+        mir::log_info(
+            "Dbus error={}, dest={}, object_path={}, properties_interface={}, method_name={}, interface_name={}",
+            error->message,
+            bus_name,
+            object_path,
+            properties_interface,
+            method_name,
+            interface_name);
     }
 
     return std::nullopt;

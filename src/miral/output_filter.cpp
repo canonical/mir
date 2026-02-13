@@ -82,10 +82,7 @@ miral::OutputFilter::OutputFilter(live_config::Store& config_store) : OutputFilt
                 }
                 else
                 {
-                    mir::log_warning(
-                        "Config key '%s' has invalid value: %s",
-                        key.to_string().c_str(),
-                        std::format("{}",*val).c_str());
+                    mir::log_warning("Config key '{}' has invalid value: {}", key.to_string(), std::format("{}", *val));
                 }
                 self->filter(new_filter);
             }

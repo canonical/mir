@@ -44,8 +44,11 @@ mir::UniqueModulePtr<mi::Platform> create_input_platform(
     auto result = create(options, cleanup_registry, registry, console, report);
 
     mir::log_info(
-        "Selected input driver: %s (version: %d.%d.%d)",
-        desc->name, desc->major_version, desc->minor_version, desc->micro_version);
+        "Selected input driver: {} (version: {}.{}.{})",
+        desc->name,
+        desc->major_version,
+        desc->minor_version,
+        desc->micro_version);
 
     return result;
 }

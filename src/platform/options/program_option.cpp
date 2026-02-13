@@ -95,7 +95,7 @@ void mo::ProgramOption::parse_file(
         }
         catch (const po::error& error)
         {
-            log_warning("Error in %s: %s", filename.c_str(), error.what());
+            log_warning("Error in {}: {}", filename, error.what());
         }
     }
 

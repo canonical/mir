@@ -901,7 +901,7 @@ auto mf::XdgShellStable::get_window(wl_resource* surface) -> std::shared_ptr<sce
             }
         }
 
-        log_debug("No window currently associated with wayland::XdgSurface %p", static_cast<void*>(surface));
+        log_debug("No window currently associated with wayland::XdgSurface {}", static_cast<void*>(surface));
     }
 
     return {};

@@ -35,7 +35,7 @@ namespace
 
 struct DefaultEventBuilder : public Test
 {
-    mtd::AdvanceableClock clock{{}};
+    mtd::AdvanceableClock clock{};
     mir::input::DefaultEventBuilder builder{
         0,
         mt::fake_shared(clock)};

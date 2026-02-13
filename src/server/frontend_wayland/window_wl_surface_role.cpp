@@ -417,8 +417,9 @@ void mf::WindowWlSurfaceRole::surface_destroyed()
         // "When a client wants to destroy a wl_surface, they must destroy this 'role object' before the wl_surface"
         // NOTE: the wl_shell_surface specification seems contradictory, so this method is overridden in its implementation
         // NOTE: it's also overridden in layer shell, for reasons explained there
-        log_warning("wl_surface@%s destroyed before associated role",
-                    (surface ? std::to_string(wl_resource_get_id(surface.value().resource)) : "?").c_str());
+        log_warning(
+            "wl_surface@{} destroyed before associated role",
+            (surface ? std::to_string(wl_resource_get_id(surface.value().resource)) : "?"));
 
         // This isn't strictly correct (as it only applies to wl-shell) but is commonly assumed (e.g. by SDL2) and
         // implemented (e.g. Mutter for xdg-shell)

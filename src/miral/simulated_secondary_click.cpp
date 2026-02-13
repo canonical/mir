@@ -77,8 +77,8 @@ miral::SimulatedSecondaryClick::SimulatedSecondaryClick(live_config::Store& conf
             if (*val < 0)
             {
                 mir::log_warning(
-                    "Config value %s does not support negative values. Ignoring the supplied value (%f)...",
-                    key.to_string().c_str(),
+                    "Config value {} does not support negative values. Ignoring the supplied value ({})...",
+                    key.to_string(),
                     *val);
                 return;
             }
@@ -97,8 +97,8 @@ miral::SimulatedSecondaryClick::SimulatedSecondaryClick(live_config::Store& conf
             if (*val < 0)
             {
                 mir::log_warning(
-                    "Config value %s does not support negative values. Ignoring the supplied value (%d)...",
-                    key.to_string().c_str(),
+                    "Config value {} does not support negative values. Ignoring the supplied value ({})...",
+                    key.to_string(),
                     *val);
                 return;
             }

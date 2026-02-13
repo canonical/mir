@@ -144,8 +144,7 @@ auto probe_display_platform(
         // …maybe we support the old pre-standardised Mesa GBM platform?
         if (strstr(client_extensions, "EGL_MESA_platform_gbm") == nullptr)
         {
-            mir::log_info(
-                "Unsupported: EGL platform supports neither EGL_KHR_platform_gbm nor EGL_MESA_platform_gbm");
+            mir::log_info("Unsupported: EGL platform supports neither EGL_KHR_platform_gbm nor EGL_MESA_platform_gbm");
             return {};
         }
     }
@@ -158,7 +157,7 @@ auto probe_display_platform(
     {
         if (quirks.should_skip(device))
         {
-            mir::log_info("Not probing device %s due to specified quirk", device.devnode());
+            mir::log_info("Not probing device {} due to specified quirk", device.devnode());
             continue;
         }
 
@@ -207,7 +206,7 @@ auto probe_display_platform(
 
                 if (!mgk::get_cap_checked(tmp_fd, DRM_CLIENT_CAP_ATOMIC))
                 {
-                    mir::log_info("KMS device %s does not support Atomic KMS", device.devnode());
+                    mir::log_info("KMS device {} does not support Atomic KMS", device.devnode());
                     continue;
                 }
 
@@ -229,7 +228,8 @@ auto probe_display_platform(
                 using namespace std::literals::string_literals;
                 if ("llvmpipe"s == renderer_string)
                 {
-                    mir::log_info("KMS device only has associated software renderer: %s, device unsuitable", renderer_string);
+                    mir::log_info(
+                        "KMS device only has associated software renderer: {}, device unsuitable", renderer_string);
                     supported_devices.back().support_level = mg::probe::unsupported;
                     continue;
                 }
@@ -245,9 +245,7 @@ auto probe_display_platform(
 
                 if (!busid)
                 {
-                    mir::log_warning(
-                        "Failed to query BusID for device %s; cannot check if KMS is available",
-                        device.devnode());
+                    mir::log_warning("Failed to query BusID for device {}; cannot check if KMS is available", device.devnode());
                     supported_devices.back().support_level = mg::probe::supported;
                 }
                 else
@@ -279,14 +277,12 @@ auto probe_display_platform(
 
                         [[fallthrough]];
                     case EINVAL:
-                        mir::log_warning(
-                            "Failed to detect whether device %s supports KMS, continuing with lower confidence",
-                            device.devnode());
+                        mir::log_warning("Failed to detect whether device {} supports KMS, continuing with lower confidence", device.devnode());
                         supported_devices.back().support_level = mg::probe::supported;
                         break;
 
                     default:
-                        mir::log_warning("Unexpected error from drmCheckModesettingSupported(): %s (%i), "
+                        mir::log_warning("Unexpected error from drmCheckModesettingSupported(): {} ({}), "
                                          "but continuing anyway", mir::errno_to_cstr(err), err);
                         mir::log_warning("Please file a bug at "
                                          "https://github.com/canonical/mir/issues containing this message");

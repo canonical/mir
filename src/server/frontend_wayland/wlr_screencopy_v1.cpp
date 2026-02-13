@@ -422,7 +422,8 @@ void mf::WlrScreencopyFrameV1::capture(geom::Rectangle buffer_space_damage)
 {
     if (!target)
     {
-        log_error("WlrScreencopyFrameV1::capture() called without a target, copy %s been called",
+        log_error(
+            "WlrScreencopyFrameV1::capture() called without a target, copy {} been called",
             copy_has_been_called ? "has" : "has not");
         report_result(std::nullopt, buffer_space_damage);
         return;

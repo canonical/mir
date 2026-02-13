@@ -70,13 +70,13 @@ std::string mf::DesktopFileManager::resolve_app_id(const scene::Surface* surface
     // https://gitlab.gnome.org/GNOME/gnome-shell/-/blob/main/src/shell-window-tracker.c?ref_type=heads#L387
     auto app_id = surface->application_id();
     rtrim(app_id); // Sometimes, the app id has a space at the end
-    mir::log_info("Attempting to resolve app id from app_id=%s", app_id.c_str());
+    mir::log_info("Attempting to resolve app id from app_id={}", app_id);
 
     // First, let's see if this is just a WM_CLASS
     auto app = cache->lookup_by_wm_class(app_id);
     if (app)
     {
-        mir::log_info("Successfully resolved app id from wm_class, id=%s", app->id.c_str());
+        mir::log_info("Successfully resolved app id from wm_class, id={}", app->id);
         return app->id;
     }
 
@@ -84,7 +84,7 @@ std::string mf::DesktopFileManager::resolve_app_id(const scene::Surface* surface
     {
         if (q.first == app_id)
         {
-            mir::log_info("Successfully resolved app id from quirk, id=%s", q.second.c_str());
+            mir::log_info("Successfully resolved app id from quirk, id={}", q.second);
             return q.second;
         }
     }
@@ -93,7 +93,7 @@ std::string mf::DesktopFileManager::resolve_app_id(const scene::Surface* surface
     auto found = lookup_basename(app_id);
     if (found)
     {
-        mir::log_info("Successfully resolved app id from basename, id=%s", found->id.c_str());
+        mir::log_info("Successfully resolved app id from basename, id={}", found->id);
         return found->id;
     }
 
@@ -105,7 +105,7 @@ std::string mf::DesktopFileManager::resolve_app_id(const scene::Surface* surface
     found = lookup_basename(lowercase_desktop_file);
     if (found)
     {
-        mir::log_info("Successfully resolved app id from lowercase basename, id=%s", found->id.c_str());
+        mir::log_info("Successfully resolved app id from lowercase basename, id={}", found->id);
         return found->id;
     }
 
@@ -117,7 +117,7 @@ std::string mf::DesktopFileManager::resolve_app_id(const scene::Surface* surface
     found = resolve_if_snap(pid, socket_fd);
     if (found)
     {
-        mir::log_info("Successfully resolved app id from snap, id=%s", found->id.c_str());
+        mir::log_info("Successfully resolved app id from snap, id={}", found->id);
         return found->id;
     }
 
@@ -125,7 +125,7 @@ std::string mf::DesktopFileManager::resolve_app_id(const scene::Surface* surface
     found = resolve_if_flatpak(pid);
     if (found)
     {
-        mir::log_info("Successfully resolved app id from flatpak, id=%s", found->id.c_str());
+        mir::log_info("Successfully resolved app id from flatpak, id={}", found->id);
         return found->id;
     }
 
@@ -133,7 +133,7 @@ std::string mf::DesktopFileManager::resolve_app_id(const scene::Surface* surface
     found = resolve_if_executable_matches(pid);
     if (found)
     {
-        mir::log_info("Successfully resolved app id from executable, id=%s", found->id.c_str());
+        mir::log_info("Successfully resolved app id from executable, id={}", found->id);
         return found->id;
     }
 
@@ -141,7 +141,7 @@ std::string mf::DesktopFileManager::resolve_app_id(const scene::Surface* surface
     // 1. Resolving from the list of internally running apps using the PID
     // 2. Resolving via a startup notification
     // 3. Resolving from a GApplicationID, which GTK sends over DBUS
-    mir::log_warning("Failed to resolve app id, returning %s", app_id.c_str());
+    mir::log_warning("Failed to resolve app id, returning {}", app_id);
     return app_id;
 }
 
@@ -199,7 +199,7 @@ std::shared_ptr<mf::DesktopFile> mf::DesktopFileManager::resolve_if_snap(int pid
 
     if (aa_getpeercon(socket_fd, &label_cstr, &mode_cstr) >= 0)
     {
-        mir::log_info("Attempting to resolve desktop file via AppArmor for pid: %d", pid);
+        mir::log_info("Attempting to resolve desktop file via AppArmor for pid: {}", pid);
         std::string const label{label_cstr};
         free(label_cstr);
         // mode_cstr should NOT be freed, as it's from the same buffer as label_cstr
@@ -209,7 +209,7 @@ std::shared_ptr<mf::DesktopFile> mf::DesktopFileManager::resolve_if_snap(int pid
         {
             if (auto file = cache->lookup_by_app_id(sandboxed_app_id))
             {
-                mir::log_info("Successfully resolved desktop file via AppArmor for pid: %d", pid);
+                mir::log_info("Successfully resolved desktop file via AppArmor for pid: {}", pid);
                 return file;
             }
         }
@@ -224,11 +224,12 @@ std::shared_ptr<mf::DesktopFile> mf::DesktopFileManager::resolve_if_snap(int pid
 #endif
 
     // If that fails, try to read /proc/<PID>/attr/current
-    mir::log_info("Attempting to resolve desktop file via proc directory for pid: %d", pid);
+    mir::log_info("Attempting to resolve desktop file via proc directory for pid: {}", pid);
     std::string attr_file = "/proc/" + std::to_string(pid) + "/attr/current";
     if (!std::filesystem::exists(attr_file))
     {
-        mir::log_warning("Failed to resolve desktop file via proc directory for pid %d: %s does not exist", pid, attr_file.c_str());
+        mir::log_warning(
+            "Failed to resolve desktop file via proc directory for pid {}: {} does not exist", pid, attr_file);
         return nullptr;
     }
 
@@ -238,7 +239,7 @@ std::shared_ptr<mf::DesktopFile> mf::DesktopFileManager::resolve_if_snap(int pid
     auto sandboxed_app_id = parse_snap_security_profile_to_desktop_id(contents);
     if (sandboxed_app_id.empty())
     {
-        mir::log_info("Failed to resolve desktop file from sandboxed_app_id  for pid %d", pid);
+        mir::log_info("Failed to resolve desktop file from sandboxed_app_id  for pid {}", pid);
         return nullptr;
     }
 
@@ -247,7 +248,7 @@ std::shared_ptr<mf::DesktopFile> mf::DesktopFileManager::resolve_if_snap(int pid
     auto file = cache->lookup_by_app_id(sandboxed_app_id);
     if (file)
     {
-        mir::log_info("Successfully resolved desktop file via proc directory for pid: %d", pid);
+        mir::log_info("Successfully resolved desktop file via proc directory for pid: {}", pid);
         return file;
     }
 
