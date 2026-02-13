@@ -230,7 +230,9 @@ mf::XWaylandWM::XWaylandWM(
                         }
                         else
                         {
-                            log_warning("Failed to load geometry and attributes for {}", connection->window_debug_string(window));
+                            log_warning(
+                                "Failed to load geometry and attributes for {}",
+                                connection->window_debug_string(window));
                         }
                     });
             }

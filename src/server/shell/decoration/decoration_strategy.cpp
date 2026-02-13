@@ -906,7 +906,8 @@ void RendererStrategy::redraw_titlebar_buttons(geom::Size const scaled_titlebar_
         }
         else
         {
-            mir::log_warning("Could not render decoration button with unknown function {}\n", static_cast<int>(button.function));
+            mir::log_warning(
+                "Could not render decoration button with unknown function {}\n", static_cast<int>(button.function));
         }
     }
 }
@@ -937,7 +938,8 @@ auto RendererStrategy::make_buffer(MirPixelFormat format, mir::geometry::Size si
 
     if (sizeof(Pixel) != MIR_BYTES_PER_PIXEL(buffer_format))
     {
-        mir::log_warning("Failed to draw SSD: tried to create buffer with unsupported format: {}", static_cast<int>(buffer_format));
+        mir::log_warning(
+            "Failed to draw SSD: tried to create buffer with unsupported format: {}", static_cast<int>(buffer_format));
         return std::nullopt;
     }
 

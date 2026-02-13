@@ -228,7 +228,8 @@ std::shared_ptr<mf::DesktopFile> mf::DesktopFileManager::resolve_if_snap(int pid
     std::string attr_file = "/proc/" + std::to_string(pid) + "/attr/current";
     if (!std::filesystem::exists(attr_file))
     {
-        mir::log_warning("Failed to resolve desktop file via proc directory for pid {}: {} does not exist", pid, attr_file);
+        mir::log_warning(
+            "Failed to resolve desktop file via proc directory for pid {}: {} does not exist", pid, attr_file);
         return nullptr;
     }
 

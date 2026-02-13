@@ -321,7 +321,9 @@ mf::XWaylandClipboardProvider::~XWaylandClipboardProvider()
     }
     if (!pending_incremental_sends.empty())
     {
-        log_warning("XWaylandClipboardProvider destroyed with {} incremental sends in progress", pending_incremental_sends.size());
+        log_warning(
+            "XWaylandClipboardProvider destroyed with {} incremental sends in progress",
+            pending_incremental_sends.size());
     }
     clipboard->unregister_interest(*clipboard_observer);
     xcb_destroy_window(*connection, selection_window);

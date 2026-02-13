@@ -247,7 +247,8 @@ void mga::AtomicKMSOutput::reset()
 
             if (auto err = drmModeAtomicCommit(drm_fd(), update, DRM_MODE_ATOMIC_ALLOW_MODESET, nullptr))
             {
-                mir::log_warning("Failed release resources for disconnected output: {} ({})", mir::errno_to_cstr(-err), -err);
+                mir::log_warning(
+                    "Failed release resources for disconnected output: {} ({})", mir::errno_to_cstr(-err), -err);
             }
 
             conf->crtc_props = nullptr;
@@ -568,7 +569,8 @@ void mga::AtomicKMSOutput::set_power_mode(MirPowerMode mode)
         update.add_property(*conf->crtc_props, "ACTIVE", should_be_active);
         if (auto err = drmModeAtomicCommit(drm_fd_, update, DRM_MODE_ATOMIC_ALLOW_MODESET, nullptr))
         {
-            mir::log_warning("Failed to set DPMS {} ({} [{}])", should_be_active ? "active" : "off", mir::errno_to_cstr(-err), -err);
+            mir::log_warning(
+                "Failed to set DPMS {} ({} [{}])", should_be_active ? "active" : "off", mir::errno_to_cstr(-err), -err);
         }
     }
     else if (should_be_active)
@@ -711,7 +713,11 @@ std::vector<uint8_t> edid_for_connector(mir::Fd const& drm_fd, uint32_t connecto
 
         if (!property)
         {
-            mir::log_warning("Failed to get EDID property for connector {}: {} ({})", connector_id, errno, mir::errno_to_cstr(errno));
+            mir::log_warning(
+                "Failed to get EDID property for connector {}: {} ({})",
+                connector_id,
+                errno,
+                mir::errno_to_cstr(errno));
             return edid;
         }
 
@@ -743,7 +749,11 @@ std::vector<uint8_t> edid_for_connector(mir::Fd const& drm_fd, uint32_t connecto
         catch (std::system_error const& err)
         {
             // Failing to read the EDID property is weird, but shouldn't be fatal
-            mir::log_warning("Failed to get EDID property blob for connector {}: {} ({})", connector_id, err.code().value(), err.what());
+            mir::log_warning(
+                "Failed to get EDID property blob for connector {}: {} ({})",
+                connector_id,
+                err.code().value(),
+                err.what());
 
             return edid;
         }

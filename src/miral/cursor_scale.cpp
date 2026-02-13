@@ -156,7 +156,10 @@ miral::CursorScale::CursorScale(live_config::Store& config_store) : miral::Curso
                 }
                 else
                 {
-                    mir::log_warning("Config value {} does not support negative values. Ignoring the supplied value ({})...", key.to_string(), *val);
+                    mir::log_warning(
+                        "Config value {} does not support negative values. Ignoring the supplied value ({})...",
+                        key.to_string(),
+                        *val);
                 }
             }
             else

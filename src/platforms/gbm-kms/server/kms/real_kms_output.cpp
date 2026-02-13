@@ -467,7 +467,11 @@ std::vector<uint8_t> edid_for_connector(int drm_fd, uint32_t connector_id)
 
         if (!property)
         {
-            mir::log_warning("Failed to get EDID property for connector {}: {} ({})", connector_id, errno, mir::errno_to_cstr(errno));
+            mir::log_warning(
+                "Failed to get EDID property for connector {}: {} ({})",
+                connector_id,
+                errno,
+                mir::errno_to_cstr(errno));
             return edid;
         }
 
@@ -492,7 +496,11 @@ std::vector<uint8_t> edid_for_connector(int drm_fd, uint32_t connector_id)
 
         if (!blob)
         {
-            mir::log_warning("Failed to get EDID property blob for connector {}: {} ({})", connector_id, errno, mir::errno_to_cstr(errno));
+            mir::log_warning(
+                "Failed to get EDID property blob for connector {}: {} ({})",
+                connector_id,
+                errno,
+                mir::errno_to_cstr(errno));
 
             return edid;
         }

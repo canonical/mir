@@ -617,11 +617,18 @@ void miral::YamlFileDisplayConfig::apply_to_output(mg::UserDisplayConfigurationO
             {
                 if (conf.refresh.is_set())
                 {
-                    mir::log_warning("Display config contains unmatched mode: '{}x{}@{:2.1f}'", conf.size.value().width.as_int(), conf.size.value().height.as_int(), conf.refresh.value());
+                    mir::log_warning(
+                        "Display config contains unmatched mode: '{}x{}@{:2.1f}'",
+                        conf.size.value().width.as_int(),
+                        conf.size.value().height.as_int(),
+                        conf.refresh.value());
                 }
                 else
                 {
-                    mir::log_warning("Display config contains unmatched mode: '{}x{}'", conf.size.value().width.as_int(), conf.size.value().height.as_int());
+                    mir::log_warning(
+                        "Display config contains unmatched mode: '{}x{}'",
+                        conf.size.value().width.as_int(),
+                        conf.size.value().height.as_int());
                 }
             }
         }

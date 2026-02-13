@@ -89,7 +89,8 @@ auto create_socket(std::vector<mir::Fd>& fds, struct sockaddr_un *addr, size_t p
 
     if (fd < 0)
     {
-        mir::log_warning("Failed to create socket {}{}", addr->sun_path[0] ? addr->sun_path[0] : '@', addr->sun_path + 1);
+        mir::log_warning(
+            "Failed to create socket {}{}", addr->sun_path[0] ? addr->sun_path[0] : '@', addr->sun_path + 1);
         return;
     }
 
@@ -115,7 +116,8 @@ auto create_socket(std::vector<mir::Fd>& fds, struct sockaddr_un *addr, size_t p
 
     if (listen(fd, 1) < 0)
     {
-        mir::log_warning("Failed to listen to socket {}{}", addr->sun_path[0] ? addr->sun_path[0] : '@', addr->sun_path + 1);
+        mir::log_warning(
+            "Failed to listen to socket {}{}", addr->sun_path[0] ? addr->sun_path[0] : '@', addr->sun_path + 1);
         if (addr->sun_path[0])
         {
             unlink(addr->sun_path);

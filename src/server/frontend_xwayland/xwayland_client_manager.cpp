@@ -59,8 +59,10 @@ mf::XWaylandClientManager::~XWaylandClientManager()
     // drop_expired() should have been called for every owner before destroying
     if (!sessions_by_pid.empty())
     {
-        log_warning("XWaylandClientManager destroyed with {} sessions in the map; "
-            "if any XWaylandClientManager::Sessions are still alive, a crash is likely when they are destroyed", sessions_by_pid.size());
+        log_warning(
+            "XWaylandClientManager destroyed with {} sessions in the map; "
+            "if any XWaylandClientManager::Sessions are still alive, a crash is likely when they are destroyed",
+            sessions_by_pid.size());
     }
 }
 
