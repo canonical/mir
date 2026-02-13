@@ -100,10 +100,7 @@ public:
         // Paranoia: what if the EGL returns a different number of formats in the second call?
         if (returned_formats != num_formats)
         {
-            mir::log_warning(
-                "eglQueryDmaBufFormats returned unexpected number of formats (got %i, expected %i)",
-                returned_formats,
-                num_formats);
+            mir::log_warning("eglQueryDmaBufFormats returned unexpected number of formats (got {}, expected {})", returned_formats, num_formats);
             resize(returned_formats);
         }
 
@@ -121,9 +118,7 @@ public:
                     nullptr,
                     &num_modifiers) != EGL_TRUE)
             {
-                mir::log_warning("eglQueryDmaBufModifiers failed for format %s: %s",
-                    mg::drm_format_to_string(static_cast<uint32_t>(format)),
-                    mg::egl_category().message(eglGetError()).c_str());
+                mir::log_warning("eglQueryDmaBufModifiers failed for format {}: {}", mg::drm_format_to_string(static_cast<uint32_t>(format)), mg::egl_category().message(eglGetError()));
 
                 // Remove that format and its modifiers from our list
                 formats.erase(formats.begin() + i);
@@ -150,12 +145,8 @@ public:
             }
             if (returned_modifiers != num_modifiers)
             {
-                mir::log_warning(
-                    "eglQueryDmaBufModifiers return unexpected number of modifiers for format 0x%ux"
-                    " (expected %i, got %i)",
-                    format,
-                    returned_modifiers,
-                    num_modifiers);
+                mir::log_warning("eglQueryDmaBufModifiers return unexpected number of modifiers for format 0x{}x"
+                    " (expected {}, got {})", format, returned_modifiers, num_modifiers);
                 modifiers.resize(returned_modifiers);
                 external_only.resize(returned_modifiers);
             }

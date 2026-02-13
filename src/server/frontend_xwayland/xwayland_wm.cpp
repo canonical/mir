@@ -230,9 +230,7 @@ mf::XWaylandWM::XWaylandWM(
                         }
                         else
                         {
-                            log_warning(
-                                "Failed to load geometry and attributes for %s",
-                                connection->window_debug_string(window).c_str());
+                            log_warning("Failed to load geometry and attributes for {}", connection->window_debug_string(window));
                         }
                     });
             }
@@ -736,7 +734,7 @@ void mf::XWaylandWM::handle_create_notify(xcb_create_notify_event_t *event)
         log_debug("                  override_redirect: {}", event->override_redirect ? "yes" : "no");
 
         if (event->border_width)
-            log_warning("border width unsupported (border width %d)", event->border_width);
+            log_warning("border width unsupported (border width {})", event->border_width);
     }
 
     if (!connection->is_ours(event->window))
@@ -897,7 +895,7 @@ void mf::XWaylandWM::handle_configure_request(xcb_configure_request_event_t *eve
         log_debug("                      size: {}x{}", event->width, event->height);
 
         if (event->border_width)
-            log_warning("border width unsupported (border width %d)", event->border_width);
+            log_warning("border width unsupported (border width {})", event->border_width);
     }
 
     if (auto const surface = get_wm_surface(event->window))
@@ -918,7 +916,7 @@ void mf::XWaylandWM::handle_configure_notify(xcb_configure_notify_event_t *event
         log_debug("                     override_redirect: {}", event->override_redirect ? "yes" : "no");
 
         if (event->border_width)
-            log_warning("border width unsupported (border width %d)", event->border_width);
+            log_warning("border width unsupported (border width {})", event->border_width);
     }
 
     if (auto const surface = get_wm_surface(event->window))
@@ -948,6 +946,6 @@ void mf::XWaylandWM::handle_error(xcb_generic_error_t* event)
 {
     if (verbose_xwayland_logging_enabled())
     {
-        log_warning("XWayland XCB error: %s", connection->error_debug_string(event).c_str());
+        log_warning("XWayland XCB error: {}", connection->error_debug_string(event));
     }
 }

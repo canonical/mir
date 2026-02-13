@@ -249,7 +249,7 @@ void mf::VirtualPointerV1::button(uint32_t time, uint32_t button, uint32_t state
     else
     {
         // Since the set of allowed buttons is not clearly defined, we warn instead of throwing a protocol error
-        log_warning("%s.button given unknown button %d", interface_name, button);
+        log_warning("{}.button given unknown button {}", interface_name, button);
     }
 }
 

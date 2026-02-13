@@ -66,7 +66,7 @@ void miral::CursorTheme::operator()(mir::Server& server) const
                 if (has_default_cursor(*xcursor_loader))
                     return xcursor_loader;
 
-                mir::log_warning("Failed to load cursor theme: %s", theme.c_str());
+                mir::log_warning("Failed to load cursor theme: {}", theme);
 
                 if ((i = j) != std::end(themes)) ++i;
             }

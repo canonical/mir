@@ -74,7 +74,7 @@ void mlc::IniFile::Self::add_key(
     if (attribute_handlers.erase(key) || array_attribute_handlers.erase(key))
     {
         // if a key is registered multiple times, the last time is used: drop existing earlier registrations
-        mir::log_warning("Config attribute handler for '%s' overwritten", key.to_string().c_str());
+        mir::log_warning("Config attribute handler for '{}' overwritten", key.to_string());
     }
 
     attribute_handlers.emplace(key, AttributeDetails{handler, std::string{description}, preset, std::nullopt});
@@ -94,7 +94,7 @@ void mlc::IniFile::Self::add_key(Key const& key, std::string_view description,
     if (attribute_handlers.erase(key) || array_attribute_handlers.erase(key))
     {
         // if a key is registered multiple times, the last time is used: drop existing earlier registrations
-        mir::log_warning("Config attribute handler for '%s' overwritten", key.to_string().c_str());
+        mir::log_warning("Config attribute handler for '{}' overwritten", key.to_string());
     }
 
     array_attribute_handlers.emplace(key, ArrayAttributeDetails{handler, std::string{description}, preset, std::vector<std::string>{}});
@@ -134,7 +134,7 @@ void mlc::IniFile::Self::load_file(std::istream& istream, std::filesystem::path 
         }
         catch (const std::exception& e)
         {
-            mir::log_warning("Error processing '%s': %s", path.c_str(), e.what());
+            mir::log_warning("Error processing '{}': {}", path.string(), e.what());
         }
     }
 
@@ -145,7 +145,7 @@ void mlc::IniFile::Self::load_file(std::istream& istream, std::filesystem::path 
     }
     catch (const std::exception& e)
     {
-        mir::log_warning("Error processing '%s': %s", path.c_str(), e.what());
+        mir::log_warning("Error processing '{}': {}", path.string(), e.what());
     }
 
     for (auto const& [key, details] : array_attribute_handlers)
@@ -155,7 +155,7 @@ void mlc::IniFile::Self::load_file(std::istream& istream, std::filesystem::path 
     }
     catch (const std::exception& e)
     {
-        mir::log_warning("Error processing '%s': %s", path.c_str(), e.what());
+        mir::log_warning("Error processing '{}': {}", path.string(), e.what());
     }
 
     for (auto const& h : done_handlers)
@@ -165,7 +165,7 @@ void mlc::IniFile::Self::load_file(std::istream& istream, std::filesystem::path 
     }
     catch (const std::exception& e)
     {
-        mir::log_warning("Error processing '%s': %s", path.c_str(), e.what());
+        mir::log_warning("Error processing '{}': {}", path.string(), e.what());
     }
 }
 
@@ -238,7 +238,7 @@ void process_as(std::function<void(mlc::Key const&, std::optional<std::span<Type
             }
             else
             {
-                mir::log_warning("Config key '%s' has invalid value: %s", key.to_string().c_str(), v.c_str());
+                mir::log_warning("Config key '{}' has invalid value: {}", key.to_string(), v);
             }
         }
 

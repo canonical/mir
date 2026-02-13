@@ -490,9 +490,7 @@ void complete_release_device_call(
     {
         auto const error_message = error ? error->message : "unknown error";
 
-        mir::log_warning(
-            "ReleaseDevice call failed: %s",
-            error_message);
+        mir::log_warning("ReleaseDevice call failed: {}", error_message);
     }
 }
 }
@@ -679,7 +677,7 @@ void complete_pause_device_complete(
         result,
         &err))
     {
-        mir::log_warning("PauseDeviceComplete failed: %s", err->message);
+        mir::log_warning("PauseDeviceComplete failed: {}", err->message);
     }
 }
 }
@@ -748,7 +746,7 @@ void mir::LogindConsoleServices::on_pause_device(
         }
         else
         {
-            mir::log_warning("Received unhandled PauseDevice type: %s", suspend_type);
+            mir::log_warning("Received unhandled PauseDevice type: {}", suspend_type);
         }
     }
 }

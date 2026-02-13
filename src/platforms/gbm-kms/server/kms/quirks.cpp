@@ -95,14 +95,11 @@ public:
             {
                 // If we didn't process above, we're ignoring...
                 // clangd really can't format this...
-                mir::log_warning(
-                    "Ignoring unexpected value for %s option: %s "
-                    "(expects value of the form “{skip, allow}:{driver,devnode}:<driver or devnode>”"
-                    ", “disable-kms-probe:{driver,devnode}:<driver or devnode>”, "
-                    "“egl-destroy-surface:{driver,devnode}:{default:leak}”), "
-                    "or “gbm-surface-has-free-buffers:{driver,devnode}:<driver or devnode>:{default,skip}”)",
-                    quirks_option_name,
-                    quirk.c_str());
+                mir::log_warning("Ignoring unexpected value for {} option: {} "
+                    "(expects value of the form “{{skip, allow}}:{{driver,devnode}}:<driver or devnode>”"
+                    ", “disable-kms-probe:{{driver,devnode}}:<driver or devnode>”, "
+                    "“egl-destroy-surface:{{driver,devnode}}:{{default:leak}}”), "
+                    "or “gbm-surface-has-free-buffers:{{driver,devnode}}:<driver or devnode>:{{default,skip}}”)", quirks_option_name, quirk);
             }
         }
     }
