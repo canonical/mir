@@ -54,9 +54,7 @@ void egl_debug_logger(
                 case EGL_DEBUG_MSG_CRITICAL_KHR:
                 return mir::logging::Severity::critical;
                 default:
-                mir::log_error(
-                    "Unexpected EGL log level encountered: %i. This is a Mir programming error.",
-                    egl_severity);
+                mir::log_error("Unexpected EGL log level encountered: {}. This is a Mir programming error.", egl_severity);
                 // Shrug. Let's pick error?
                 return mir::logging::Severity::error;
             }

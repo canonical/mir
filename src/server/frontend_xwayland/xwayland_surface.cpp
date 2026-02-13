@@ -1396,7 +1396,7 @@ void mf::XWaylandSurface::wm_size_hints(std::vector<int32_t> const& hints)
     std::lock_guard lock{mutex};
     if (hints.size() != WmSizeHintsIndices::END)
     {
-        log_error("WM_NORMAL_HINTS only has %zu element(s)", hints.size());
+        log_error("WM_NORMAL_HINTS only has {} element(s)", hints.size());
         return;
     }
     auto const flags = static_cast<uint32_t>(hints[WmSizeHintsIndices::FLAGS]);
@@ -1433,7 +1433,7 @@ void mf::XWaylandSurface::motif_wm_hints(std::vector<uint32_t> const& hints)
     std::lock_guard lock{mutex};
     if (hints.size() != MotifWmHintsIndices::END)
     {
-        log_error("_MOTIF_WM_HINTS value has incorrect size %zu", hints.size());
+        log_error("_MOTIF_WM_HINTS value has incorrect size {}", hints.size());
         return;
     }
     if (MotifWmHintsFlags::DECORATIONS & hints[MotifWmHintsIndices::FLAGS])

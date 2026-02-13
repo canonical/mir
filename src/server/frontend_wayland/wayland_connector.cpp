@@ -478,7 +478,10 @@ void mf::WaylandConnector::stop()
 {
     if (eventfd_write(pause_signal, 1) < 0)
     {
-        log_error("WaylandConnector::stop() failed to send IPC eventloop pause signal: %s (%i)", mir::errno_to_cstr(errno), errno);
+        log_error(
+            "WaylandConnector::stop() failed to send IPC eventloop pause signal: {} ({})",
+            mir::errno_to_cstr(errno),
+            errno);
     }
     if (dispatch_thread.joinable())
     {
@@ -511,9 +514,7 @@ int mf::WaylandConnector::client_socket_fd() const
                     if (!wl_client_create(display, socket))
                     {
                         mir::log_error(
-                            "Failed to create Wayland client object: %s (errno %i)",
-                            mir::errno_to_cstr(errno),
-                            errno);
+                            "Failed to create Wayland client object: {} (errno {})", mir::errno_to_cstr(errno), errno);
                     }
                 });
     }
@@ -545,7 +546,7 @@ int mf::WaylandConnector::client_socket_fd(
                         if (!wl_client_create(display, socket))
                         {
                             mir::log_error(
-                                "Failed to create Wayland client object: %s (errno %i)",
+                                "Failed to create Wayland client object: {} (errno {})",
                                 mir::errno_to_cstr(errno),
                                 errno);
                         }
