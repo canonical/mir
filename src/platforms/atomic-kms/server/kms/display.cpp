@@ -93,7 +93,7 @@ void log_drm_details(mir::Fd const& drm_fd)
     };
 
     mir::log_info(
-        "%s: using driver %s [%s] (version: %i.%i.%i driver date: %s)",
+        "{}: using driver {} [{}] (version: {}.{}.{} driver date: {})",
         device_name.get(),
         version->name,
         version->desc,
@@ -108,13 +108,11 @@ void log_drm_details(mir::Fd const& drm_fd)
         for (auto const& connector : resources.connectors())
         {
             mir::log_info(
-                "\tOutput: %s (%s)",
-                mg::kms::connector_name(connector).c_str(),
-                describe_connection_status(*connector));
+                "\tOutput: {} ({})", mg::kms::connector_name(connector), describe_connection_status(*connector));
             for (auto i = 0; i < connector->count_modes; ++i)
             {
                 mir::log_info(
-                    "\t\tMode: %i×%i@%.2f",
+                    "\t\tMode: {}×{}@{:.2f}",
                     connector->modes[i].hdisplay,
                     connector->modes[i].vdisplay,
                     calculate_vrefresh_hz(connector->modes[i]));
@@ -123,9 +121,7 @@ void log_drm_details(mir::Fd const& drm_fd)
     }
     catch (std::exception const& error)
     {
-        mir::log_info(
-            "\tKMS not supported (%s)",
-            error.what());
+        mir::log_info("\tKMS not supported ({})", error.what());
     }
 }
 

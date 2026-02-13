@@ -590,7 +590,7 @@ mrg::Renderer::Renderer(
         for (auto& s : eglstrings)
         {
             auto val = eglQueryString(disp, s.id);
-            mir::log_info(std::string(s.label) + ": " + (val ? val : ""));
+            mir::log_info("{}", std::string(s.label) + ": " + (val ? val : ""));
         }
     }
 
@@ -606,12 +606,12 @@ mrg::Renderer::Renderer(
     for (auto& s : glstrings)
     {
         auto val = reinterpret_cast<char const*>(glGetString(s.id)); //TICS !cppcoreguidelines-pro-type-reinterpret-cast: glGetString returns an ASCII string, guaranteed not to have the high-bit set, so it's representationally-identical to signed char
-        mir::log_info(std::string(s.label) + ": " + (val ? val : ""));
+        mir::log_info("{}", std::string(s.label) + ": " + (val ? val : ""));
     }
 
     GLint max_texture_size = 0;
     glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_texture_size);
-    mir::log_info("GL max texture size = %d", max_texture_size);
+    mir::log_info("GL max texture size = {}", max_texture_size);
 
     GLint rbits = 0, gbits = 0, bbits = 0, abits = 0, dbits = 0, sbits = 0;
     glGetIntegerv(GL_RED_BITS, &rbits);
@@ -620,8 +620,7 @@ mrg::Renderer::Renderer(
     glGetIntegerv(GL_ALPHA_BITS, &abits);
     glGetIntegerv(GL_DEPTH_BITS, &dbits);
     glGetIntegerv(GL_STENCIL_BITS, &sbits);
-    mir::log_info("GL framebuffer bits: RGBA=%d%d%d%d, depth=%d, stencil=%d",
-                  rbits, gbits, bbits, abits, dbits, sbits);
+    mir::log_info("GL framebuffer bits: RGBA={}{}{}{}, depth={}, stencil={}", rbits, gbits, bbits, abits, dbits, sbits);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }

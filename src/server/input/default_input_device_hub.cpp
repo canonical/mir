@@ -190,7 +190,7 @@ void mi::ExternalInputDeviceHub::Internal::changes_complete()
                 for (auto const& dev : added)
                 {
                     if (auto handle = std::dynamic_pointer_cast<DefaultDevice>(dev))
-                        log_info(std::format("Device configuration: {}", handle));
+                        log_info("Device configuration: {}", handle);
                     handles.push_back(dev);
                 }
             });

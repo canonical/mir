@@ -856,9 +856,7 @@ auto mge::GLRenderingProvider::surface_for_sink(
         }
         catch (std::exception const& err)
         {
-            mir::log_info(
-                "Failed to create EGLStream-backed output surface: %s",
-                err.what());
+            mir::log_info("Failed to create EGLStream-backed output surface: {}", err.what());
         }
     }
     if (auto cpu_provider = sink.acquire_compatible_allocator<CPUAddressableDisplayAllocator>())

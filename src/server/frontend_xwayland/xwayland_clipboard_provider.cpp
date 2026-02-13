@@ -370,9 +370,7 @@ void mf::XWaylandClipboardProvider::selection_request_event(xcb_selection_reques
         // This seems to happen during normal operation
         if (verbose_xwayland_logging_enabled())
         {
-            log_info(
-                "XWayland selection request event with invalid target %s",
-                connection->query_name(event->target).c_str());
+            log_info("XWayland selection request event with invalid target {}", connection->query_name(event->target));
         }
         send_selection_notify(*connection, event->time, event->requestor, XCB_ATOM_NONE, event->selection, event->target);
     }

@@ -1449,15 +1449,13 @@ dev_t get_devnum(EGLDisplay dpy)
         const char *device_path = device_query_ext.eglQueryDeviceStringEXT(device, EGL_DRM_DEVICE_FILE_EXT);
         if (device_path == nullptr)
         {
-            mir::log_info(
-                "Unable to determine linux-dmabuf device: no device path returned from EGL");
+            mir::log_info("Unable to determine linux-dmabuf device: no device path returned from EGL");
             return 0;
         }
         struct stat device_stat = {};
         if (stat(device_path, &device_stat) == -1)
         {
-            mir::log_info(
-                "Unable to determine linux-dmabuf device: unable to stat device path: %s", mir::errno_to_cstr(errno));
+            mir::log_info("Unable to determine linux-dmabuf device: unable to stat device path: {}", mir::errno_to_cstr(errno));
             return 0;
         }
 
@@ -1465,8 +1463,7 @@ dev_t get_devnum(EGLDisplay dpy)
     }
     catch (std::runtime_error const& error)
     {
-        mir::log_info(
-            "Unable to determine linux-dmabuf device: %s", error.what());
+        mir::log_info("Unable to determine linux-dmabuf device: {}", error.what());
         return 0;
     }
 }
