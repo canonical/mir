@@ -649,6 +649,7 @@ pub fn process_libinput_events(
                                 });
 
                                 if contact_data.action == MirTouchAction::mir_touch_action_down {
+                                    contact_data.action = MirTouchAction::mir_touch_action_change;
                                     contact_data.down_notified = true;
                                 }
                             }
