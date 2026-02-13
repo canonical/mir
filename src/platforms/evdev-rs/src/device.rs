@@ -25,6 +25,9 @@ pub struct DeviceInfo {
     pub input_device: cxx::SharedPtr<crate::InputDevice>,
     pub input_sink: Option<InputSinkPtr>,
     pub event_builder: Option<cxx::UniquePtr<crate::EventBuilderWrapper>>,
+    pub button_state: u32,
+    pub pointer_x: f32,
+    pub pointer_y: f32,
 }
 
 // Because *mut InputSink and *mut EventBuilder are raw pointers, Rust assumes
@@ -99,9 +102,6 @@ pub struct LibinputLoopState {
     pub libinput: input::Libinput,
     pub known_devices: Vec<DeviceInfo>,
     pub next_device_id: i32,
-    pub button_state: u32,
-    pub pointer_x: f32,
-    pub pointer_y: f32,
     pub scroll_axis_x_accum: f64,
     pub scroll_axis_y_accum: f64,
     pub x_scroll_scale: f64,
