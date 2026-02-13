@@ -325,7 +325,7 @@ mf::WaylandExecutor::~WaylandExecutor()
     if (auto err = eventfd_write(notify_fd, 1))
     {
         mir::log_critical(
-            "Failed to create event notification for ~WaylandExecutor: %s (%i)",
+            "Failed to create event notification for ~WaylandExecutor: {} ({})",
             mir::errno_to_cstr(err),
             err);
     }

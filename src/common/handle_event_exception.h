@@ -23,6 +23,6 @@
     }                                    \
     catch(std::exception const& e)       \
     {                                    \
-        mir::log_critical("%s", e.what());     \
+        mir::log_critical("{}", e.what());     \
         abort();                         \
     }
