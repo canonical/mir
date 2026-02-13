@@ -44,7 +44,13 @@ auto probe_module(
         MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
 
     auto desc = describe();
-    mir::log_info("Found {} driver: {} (version {}.{}.{})", platform_type_name, desc->name, desc->major_version, desc->minor_version, desc->micro_version);
+    mir::log_info(
+        "Found {} driver: {} (version {}.{}.{})",
+        platform_type_name,
+        desc->name,
+        desc->major_version,
+        desc->minor_version,
+        desc->micro_version);
 
     auto supported_devices = probe();
     if (supported_devices.empty())

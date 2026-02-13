@@ -172,7 +172,9 @@ auto probe_display_platform(
         auto driver_name = mg::common::get_device_driver(device.parent().get());
         if(std::strcmp(driver_name, "nvidia") == 0)
         {
-            mir::log_info("Not probing device {} due to the GBM display platform being incompatible with Nvidia", device.devnode());
+            mir::log_info(
+                "Not probing device {} due to the GBM display platform being incompatible with Nvidia",
+                device.devnode());
             continue;
         }
 
@@ -237,7 +239,8 @@ auto probe_display_platform(
                 using namespace std::literals::string_literals;
                 if ("llvmpipe"s == renderer_string)
                 {
-                    mir::log_info("KMS device only has associated software renderer: {}, device unsuitable", renderer_string);
+                    mir::log_info(
+                        "KMS device only has associated software renderer: {}, device unsuitable", renderer_string);
                     supported_devices.back().support_level = mg::probe::unsupported;
                     continue;
                 }

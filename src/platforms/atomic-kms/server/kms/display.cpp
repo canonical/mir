@@ -92,17 +92,30 @@ void log_drm_details(mir::Fd const& drm_fd)
         &free
     };
 
-    mir::log_info("{}: using driver {} [{}] (version: {}.{}.{} driver date: {})", device_name.get(), version->name, version->desc, version->version_major, version->version_minor, version->version_patchlevel, version->date);
+    mir::log_info(
+        "{}: using driver {} [{}] (version: {}.{}.{} driver date: {})",
+        device_name.get(),
+        version->name,
+        version->desc,
+        version->version_major,
+        version->version_minor,
+        version->version_patchlevel,
+        version->date);
 
     try
     {
         mg::kms::DRMModeResources resources{drm_fd};
         for (auto const& connector : resources.connectors())
         {
-            mir::log_info("\tOutput: {} ({})", mg::kms::connector_name(connector), describe_connection_status(*connector));
+            mir::log_info(
+                "\tOutput: {} ({})", mg::kms::connector_name(connector), describe_connection_status(*connector));
             for (auto i = 0; i < connector->count_modes; ++i)
             {
-                mir::log_info("\t\tMode: {}×{}@{}", connector->modes[i].hdisplay, connector->modes[i].vdisplay, calculate_vrefresh_hz(connector->modes[i]));
+                mir::log_info(
+                    "\t\tMode: {}×{}@{}",
+                    connector->modes[i].hdisplay,
+                    connector->modes[i].vdisplay,
+                    calculate_vrefresh_hz(connector->modes[i]));
             }
         }
     }

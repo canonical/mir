@@ -228,7 +228,8 @@ auto probe_display_platform(
                 using namespace std::literals::string_literals;
                 if ("llvmpipe"s == renderer_string)
                 {
-                    mir::log_info("KMS device only has associated software renderer: {}, device unsuitable", renderer_string);
+                    mir::log_info(
+                        "KMS device only has associated software renderer: {}, device unsuitable", renderer_string);
                     supported_devices.back().support_level = mg::probe::unsupported;
                     continue;
                 }

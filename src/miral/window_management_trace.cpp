@@ -667,7 +667,11 @@ MIRAL_TRACE_EXCEPTION
 void miral::WindowManagementTrace::move_workspace_content_to_workspace(
     std::shared_ptr<Workspace> const& to_workspace, std::shared_ptr<Workspace> const& from_workspace)
 try {
-    mir::log_info("{} to_workspace={}, from_workspace={}", __func__, static_cast<void*>(to_workspace.get()), static_cast<void*>(from_workspace.get()));
+    mir::log_info(
+        "{} to_workspace={}, from_workspace={}",
+        __func__,
+        static_cast<void*>(to_workspace.get()),
+        static_cast<void*>(from_workspace.get()));
     wrapped.move_workspace_content_to_workspace(to_workspace, from_workspace);
 }
 MIRAL_TRACE_EXCEPTION
@@ -693,7 +697,12 @@ auto miral::WindowManagementTrace::place_new_window(
     WindowSpecification const& requested_specification) -> WindowSpecification
 try {
     auto const result = policy->place_new_window(app_info, requested_specification);
-    mir::log_info("{} app_info={}, requested_specification={} -> {}", __func__, dump_of(app_info), dump_of(requested_specification), dump_of(result));
+    mir::log_info(
+        "{} app_info={}, requested_specification={} -> {}",
+        __func__,
+        dump_of(app_info),
+        dump_of(requested_specification),
+        dump_of(result));
     return result;
 }
 MIRAL_TRACE_EXCEPTION
@@ -891,7 +900,13 @@ auto miral::WindowManagementTrace::confirm_placement_on_display(
     Rectangle const& new_placement) -> Rectangle
 try {
     auto const& result = policy->confirm_placement_on_display(window_info, new_state, new_placement);
-    mir::log_info("{} window_info={}, new_state= {}, new_placement= {} -> {}", __func__, dump_of(window_info), dump_of(new_state), dump_of(new_placement), dump_of(result));
+    mir::log_info(
+        "{} window_info={}, new_state= {}, new_placement= {} -> {}",
+        __func__,
+        dump_of(window_info),
+        dump_of(new_state),
+        dump_of(new_placement),
+        dump_of(result));
     return result;
 }
 MIRAL_TRACE_EXCEPTION

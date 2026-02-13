@@ -157,8 +157,10 @@ auto probe_rendering_platform(
     int device_count{0};
     if (eglQueryDevicesEXT(0, nullptr, &device_count) != EGL_TRUE)
     {
-        mir::log_info("Platform claims to support EGL_EXT_device_base, but "
-                      "eglQueryDevicesEXT falied: {{}}", mg::egl_category().message(eglGetError()));
+        mir::log_info(
+            "Platform claims to support EGL_EXT_device_base, but "
+            "eglQueryDevicesEXT falied: {{}}",
+            mg::egl_category().message(eglGetError()));
         return {};
     }
 
@@ -343,8 +345,10 @@ auto probe_display_platform(
     int device_count{0};
     if (eglQueryDevicesEXT(0, nullptr, &device_count) != EGL_TRUE)
     {
-        mir::log_info("Platform claims to support EGL_EXT_device_base, but "
-                      "eglQueryDevicesEXT falied: {{}}", mg::egl_category().message(eglGetError()));
+        mir::log_info(
+            "Platform claims to support EGL_EXT_device_base, but "
+            "eglQueryDevicesEXT falied: {{}}",
+            mg::egl_category().message(eglGetError()));
         return {};
     }
 
