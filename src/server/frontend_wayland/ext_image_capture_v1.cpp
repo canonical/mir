@@ -877,7 +877,6 @@ public:
     ImageCopyBackend(ExtImageCopyCaptureSessionV1 *session,
                      std::shared_ptr<time::Clock> const& clock);
 
-    bool has_damage() override;
     void begin_capture(
         std::shared_ptr<renderer::software::RWMappable> const& shm_data,
         geom::Rectangle const& frame_damage,
@@ -906,10 +905,8 @@ void mf::ExtImageCopyCaptureCursorSessionV1::ImageCopyBackend::image_set_to(
     std::shared_ptr<mg::CursorImage> image)
 {
     cursor_image = image;
-    if (!image)
-        return;
 
-    auto const size = image->size();
+    auto const size = image ? image->size() : geom::Size{1, 1};
     if (size != output_space_area.size)
     {
         output_space_area = geom::Rectangle{{0, 0}, size};
@@ -918,35 +915,27 @@ void mf::ExtImageCopyCaptureCursorSessionV1::ImageCopyBackend::image_set_to(
     apply_damage(std::nullopt);
 }
 
-bool mf::ExtImageCopyCaptureCursorSessionV1::ImageCopyBackend::has_damage()
-{
-    if (!cursor_image)
-        return false;
-
-    return ExtImageCopyBackend::has_damage();
-}
-
 void mf::ExtImageCopyCaptureCursorSessionV1::ImageCopyBackend::begin_capture(
         std::shared_ptr<renderer::software::RWMappable> const& shm_data,
         [[maybe_unused]] geom::Rectangle const& frame_damage,
         CaptureCallback const& callback)
 {
-    auto const cursor_size = cursor_image->size();
-    auto cursor_stride = cursor_size.width.as_int() * MIR_BYTES_PER_PIXEL(mir_pixel_format_argb_8888);
-
-    auto mapping = shm_data->map_writeable();
-    auto shm_size = mapping->size();
-    auto shm_stride = mapping->stride();
+    auto const cursor_size = cursor_image ? cursor_image->size() : geom::Size{1, 1};
+    geom::Stride const cursor_stride{cursor_size.width.as_int() * MIR_BYTES_PER_PIXEL(mir_pixel_format_argb_8888)};
 
     using FailureReason = wayland::ImageCopyCaptureFrameV1::FailureReason;
     // TODO: handle mismatched strides?
-    if (shm_data->format() != mir_pixel_format_argb_8888 || shm_size != cursor_size || shm_stride.as_int() != cursor_stride)
+    if (shm_data->format() != mir_pixel_format_argb_8888 || shm_data->size() != cursor_size || shm_data->stride() != cursor_stride)
     {
         callback(std::unexpected(FailureReason::buffer_constraints));
         return;
     }
 
-    memcpy(mapping->data(), cursor_image->as_argb_8888(), mapping->len());
+    auto mapping = shm_data->map_writeable();
+    if (cursor_image)
+        memcpy(mapping->data(), cursor_image->as_argb_8888(), mapping->len());
+    else
+        memset(mapping->data(), 0, mapping->len());
     callback({{clock->now(), {{0, 0}, cursor_size}}});
     damage_amount = DamageAmount::none;
 }
@@ -1038,8 +1027,6 @@ void mf::ExtImageCopyCaptureCursorSessionV1::pointer_unusable()
 
 void mf::ExtImageCopyCaptureCursorSessionV1::image_set_to(std::shared_ptr<mg::CursorImage> image)
 {
-    if (!image)
-        return;
-    auto const hotspot = image->hotspot();
+    auto const hotspot = image ? image->hotspot() : geom::Displacement{0, 0};
     send_hotspot_event(hotspot.dx.as_int(), hotspot.dy.as_int());
 }
