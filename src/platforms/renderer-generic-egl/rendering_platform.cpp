@@ -184,8 +184,7 @@ auto maybe_make_dmabuf_provider(
     }
     catch (std::runtime_error const& error)
     {
-        mir::log_info(
-            "Cannot enable linux-dmabuf import support: %s", error.what());
+        mir::log_info("Cannot enable linux-dmabuf import support: {}", error.what());
         mir::log(
             mir::logging::Severity::debug,
             MIR_LOG_COMPONENT,

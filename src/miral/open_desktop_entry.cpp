@@ -103,8 +103,14 @@ void miral::open_desktop_entry(std::string const& desktop_file)
 
     if (error)
     {
-        mir::log_info("Dbus error=%s, dest=%s, object_path=%s, interface_name=%s, method_name=%s, id=%s",
-                      error->message, dest, object_path, interface_name, method_name, id.c_str());
+        mir::log_info(
+            "Dbus error={}, dest={}, object_path={}, interface_name={}, method_name={}, id={}",
+            error->message,
+            dest,
+            object_path,
+            interface_name,
+            method_name,
+            id);
         g_error_free(error);
     }
 }

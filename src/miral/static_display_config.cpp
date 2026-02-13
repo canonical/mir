@@ -130,7 +130,7 @@ miral::StaticDisplayConfig::StaticDisplayConfig(std::string const& filename) :
     }
     else
     {
-        mir::log_info("Cannot read static display configuration file: '" + filename + "'");
+        mir::log_info("Cannot read static display configuration file: '{}'", filename);
     }
 }
 namespace
@@ -685,7 +685,7 @@ auto miral::YamlFileDisplayConfig::layout_userdata(std::string const& key) -> st
             if (second.userdata.contains(key))
                 return second.userdata.at(key);
 
-            mir::log_info("Parsing display configuration: No user data on layout=%s for key=%s", layout.c_str(), key.c_str());
+            mir::log_info("Parsing display configuration: No user data on layout={} for key={}", layout, key);
             return std::nullopt;
         }
     }
