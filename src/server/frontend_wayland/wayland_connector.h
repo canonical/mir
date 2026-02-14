@@ -95,6 +95,7 @@ class WpViewporter;
 class LinuxDRMSyncobjManager;
 class DesktopFileManager;
 class SurfaceRegistry;
+class InputTriggerData;
 
 class WaylandExtensions
 {
@@ -127,6 +128,7 @@ public:
         std::shared_ptr<SurfaceRegistry> surface_registry;
         std::shared_ptr<time::Clock> clock;
         std::shared_ptr<input::CursorObserverMultiplexer> cursor_observer_multiplexer;
+        std::shared_ptr<InputTriggerData> input_trigger_data;
     };
 
     WaylandExtensions() = default;
