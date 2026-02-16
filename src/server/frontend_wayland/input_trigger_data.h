@@ -236,8 +236,10 @@ private:
     wayland::Weak<frontend::InputTriggerActionV1> action;
 };
 
-struct InputTriggerData
+
+class InputTriggerData
 {
+public:
     InputTriggerData(
         std::shared_ptr<shell::TokenAuthority> const& token_authority,
         std::shared_ptr<input::CompositeEventFilter> const& composite_event_filter);
