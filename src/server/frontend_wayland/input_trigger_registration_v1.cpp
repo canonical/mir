@@ -46,7 +46,7 @@ public:
         void get_action_control(std::string const& name, struct wl_resource* id) override;
 
     private:
-        auto has_trigger(mw::InputTriggerV1 const*) const -> bool;
+        auto has_trigger(mf::InputTriggerV1 const*) const -> bool;
 
         std::shared_ptr<mf::InputTriggerData> const itd;
     };
@@ -100,7 +100,7 @@ void InputTriggerRegistrationManagerV1::Instance::get_action_control(std::string
     itd->add_new_action_control(id);
 }
 
-auto InputTriggerRegistrationManagerV1::Instance::has_trigger(mw::InputTriggerV1 const* trigger) const -> bool
+auto InputTriggerRegistrationManagerV1::Instance::has_trigger(mf::InputTriggerV1 const* trigger) const -> bool
 {
     return itd->has_trigger(trigger);
 }

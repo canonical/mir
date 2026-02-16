@@ -174,6 +174,15 @@ auto mf::KeyboardStateTracker::scancode_is_pressed(uint32_t scancode) const -> b
     return pressed_scancodes.contains(scancode);
 }
 
+auto mf::InputTriggerV1::from(struct wl_resource* resource) -> InputTriggerV1*
+{
+    if (auto* frontend_trigger = wayland::InputTriggerV1::from(resource))
+        return dynamic_cast<InputTriggerV1*>(frontend_trigger);
+
+    mir::log_error("Non-InputTriggerV1 resource passed to InputTriggerV1::from");
+    return nullptr;
+}
+
 mf::KeyboardTrigger::KeyboardTrigger(InputTriggerModifiers modifiers, struct wl_resource* id) :
     InputTriggerV1{id, Version<1>{}},
     modifiers{modifiers}
@@ -303,16 +312,6 @@ mf::KeyboardSymTrigger::KeyboardSymTrigger(
 {
 }
 
-auto mf::KeyboardSymTrigger::from(mw::InputTriggerV1* trigger) -> KeyboardSymTrigger*
-{
-    return static_cast<KeyboardSymTrigger*>(trigger);
-}
-
-auto mf::KeyboardSymTrigger::from(mw::InputTriggerV1 const* trigger) -> KeyboardSymTrigger const*
-{
-    return static_cast<KeyboardSymTrigger const*>(trigger);
-}
-
 auto mf::KeyboardSymTrigger::to_c_str() const -> char const*
 {
     static char buf[256];
@@ -343,14 +342,14 @@ auto mf::KeyboardSymTrigger::matches(
     return keyboard_state.keysym_is_pressed(keysym, trigger_mods_contain_shift);
 }
 
-bool mir::frontend::KeyboardSymTrigger::is_same_trigger(wayland::InputTriggerV1 const* other) const
+bool mf::KeyboardSymTrigger::is_same_trigger(InputTriggerV1 const* other) const
 {
-    if (auto const other_sym = KeyboardSymTrigger::from(other))
-    {
-        return keysym == other_sym->keysym && modifiers == other_sym->modifiers;
-    }
+    return other->is_same_trigger(this);
+}
 
-    return false;
+bool mf::KeyboardSymTrigger::is_same_trigger(KeyboardSymTrigger const* other) const
+{
+    return other && keysym == other->keysym && modifiers == other->modifiers;
 }
 
 mf::KeyboardCodeTrigger::KeyboardCodeTrigger(
@@ -358,16 +357,6 @@ mf::KeyboardCodeTrigger::KeyboardCodeTrigger(
     KeyboardTrigger{modifiers, id},
     scancode{scancode}
 {
-}
-
-auto mf::KeyboardCodeTrigger::from(mw::InputTriggerV1* trigger) -> KeyboardCodeTrigger*
-{
-    return static_cast<KeyboardCodeTrigger*>(trigger);
-}
-
-auto mf::KeyboardCodeTrigger::from(mw::InputTriggerV1 const* trigger) -> KeyboardCodeTrigger const*
-{
-    return static_cast<KeyboardCodeTrigger const*>(trigger);
 }
 
 auto mf::KeyboardCodeTrigger::to_c_str() const -> char const*
@@ -395,15 +384,16 @@ auto mf::KeyboardCodeTrigger::matches(
     return keyboard_state.scancode_is_pressed(scancode);
 }
 
-auto mf::KeyboardCodeTrigger::is_same_trigger(wayland::InputTriggerV1 const* other) const -> bool
+bool mf::KeyboardCodeTrigger::is_same_trigger(InputTriggerV1 const* other) const
 {
-    if (auto const other_code = KeyboardCodeTrigger::from(other))
-    {
-        return scancode == other_code->scancode && modifiers == other_code->modifiers;
-    }
-
-    return false;
+    return other->is_same_trigger(this);
 }
+
+bool mf::KeyboardCodeTrigger::is_same_trigger(KeyboardCodeTrigger const* other) const
+{
+    return other && scancode == other->scancode && modifiers == other->modifiers;
+}
+
 mf::InputTriggerActionV1::InputTriggerActionV1(
     std::shared_ptr<msh::TokenAuthority> const& token_authority, wl_resource* id) :
     mw::InputTriggerActionV1{id, Version<1>{}},
@@ -411,13 +401,13 @@ mf::InputTriggerActionV1::InputTriggerActionV1(
 {
 }
 
-auto mf::InputTriggerActionV1::has_trigger(mw::InputTriggerV1 const* trigger) const -> bool
+auto mf::InputTriggerActionV1::has_trigger(mf::InputTriggerV1 const* trigger) const -> bool
 {
     return std::ranges::any_of(
         triggers, [trigger](auto const& action_trigger) { return action_trigger.value().is_same_trigger(trigger); });
 }
 
-void mf::InputTriggerActionV1::add_trigger(mw::InputTriggerV1 const* trigger)
+void mf::InputTriggerActionV1::add_trigger(mf::InputTriggerV1 const* trigger)
 {
     if (auto const* input_trigger = dynamic_cast<frontend::InputTriggerV1 const*>(trigger))
     {
@@ -428,7 +418,7 @@ void mf::InputTriggerActionV1::add_trigger(mw::InputTriggerV1 const* trigger)
     mir::log_error("Invalid trigger provided");
 }
 
-void mf::InputTriggerActionV1::drop_trigger(mw::InputTriggerV1 const* trigger)
+void mf::InputTriggerActionV1::drop_trigger(mf::InputTriggerV1 const* trigger)
 {
     std::erase_if(
         triggers, [&](auto const& action_trigger) { return action_trigger.value().is_same_trigger(trigger); });
@@ -470,29 +460,29 @@ mf::ActionControl::ActionControl(std::string_view token, struct wl_resource* id)
 {
 }
 
-void mf::ActionControl::add_trigger_pending(mw::InputTriggerV1 const* trigger)
+void mf::ActionControl::add_trigger_pending(mf::InputTriggerV1 const* trigger)
 {
     pending_triggers.insert(trigger);
 }
 
-void mf::ActionControl::add_trigger_immediate(mw::InputTriggerV1 const* trigger)
+void mf::ActionControl::add_trigger_immediate(mf::InputTriggerV1 const* trigger)
 {
     action.value().add_trigger(trigger);
 }
 
-void mf::ActionControl::drop_trigger_pending(mw::InputTriggerV1 const* trigger)
+void mf::ActionControl::drop_trigger_pending(mf::InputTriggerV1 const* trigger)
 {
     pending_triggers.erase(trigger);
 }
 
-void mf::ActionControl::drop_trigger_immediate(mw::InputTriggerV1 const* trigger)
+void mf::ActionControl::drop_trigger_immediate(mf::InputTriggerV1 const* trigger)
 {
     action.value().drop_trigger(trigger);
 }
 
 void mf::ActionControl::add_input_trigger_event(struct wl_resource* trigger)
 {
-    if (auto const* input_trigger = mw::InputTriggerV1::from(trigger))
+    if (auto const* input_trigger = mf::InputTriggerV1::from(trigger))
     {
         if (!action)
             add_trigger_pending(input_trigger);
@@ -503,7 +493,7 @@ void mf::ActionControl::add_input_trigger_event(struct wl_resource* trigger)
 
 void mf::ActionControl::drop_input_trigger_event(struct wl_resource* trigger_id)
 {
-    if (auto const* input_trigger = mw::InputTriggerV1::from(trigger_id))
+    if (auto const* input_trigger = mf::InputTriggerV1::from(trigger_id))
     {
         if (!action)
             drop_trigger_pending(input_trigger);
@@ -573,7 +563,7 @@ void mf::InputTriggerData::add_new_action_control(struct wl_resource* id)
     action_control.value().send_done_event(token_string);
 }
 
-auto mf::InputTriggerData::has_trigger(mw::InputTriggerV1 const* trigger) -> bool
+auto mf::InputTriggerData::has_trigger(mf::InputTriggerV1 const* trigger) -> bool
 {
     std::unique_lock lock{mutex};
 

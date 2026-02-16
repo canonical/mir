@@ -111,12 +111,21 @@ private:
     std::unordered_set<uint32_t> pressed_scancodes;
 };
 
+class KeyboardSymTrigger;
+class KeyboardCodeTrigger;
 class InputTriggerV1 : public wayland::InputTriggerV1
 {
 public:
     using wayland::InputTriggerV1::InputTriggerV1;
+
+    static auto from(struct wl_resource* resource) -> InputTriggerV1*;
+
     virtual auto to_c_str() const -> char const* = 0;
-    virtual bool is_same_trigger(wayland::InputTriggerV1 const* other) const = 0;
+
+    virtual bool is_same_trigger(InputTriggerV1 const* other) const = 0;
+    virtual bool is_same_trigger(KeyboardSymTrigger const*) const { return false; };
+    virtual bool is_same_trigger(KeyboardCodeTrigger const*) const { return false; };
+
     virtual bool matches(MirEvent const& event, KeyboardStateTracker const& keyboard_state) const = 0;
 };
 
@@ -135,14 +144,12 @@ class KeyboardSymTrigger : public KeyboardTrigger
 public:
     KeyboardSymTrigger(InputTriggerModifiers modifiers, uint32_t keysym, struct wl_resource* id);
 
-    static auto from(wayland::InputTriggerV1* trigger) -> KeyboardSymTrigger*;
-
-    static auto from(wayland::InputTriggerV1 const* trigger) -> KeyboardSymTrigger const*;
-
     auto to_c_str() const -> char const* override;
 
     auto matches(MirEvent const& ev, KeyboardStateTracker const& keyboard_state) const -> bool override;
-    bool is_same_trigger(wayland::InputTriggerV1 const* other) const override;
+
+    bool is_same_trigger(InputTriggerV1 const* other) const override;
+    bool is_same_trigger(KeyboardSymTrigger const* other) const override;
 
     uint32_t const keysym;
 };
@@ -152,15 +159,12 @@ class KeyboardCodeTrigger : public KeyboardTrigger
 public:
     KeyboardCodeTrigger(InputTriggerModifiers modifiers, uint32_t scancode, struct wl_resource* id);
 
-    static auto from(wayland::InputTriggerV1* trigger) -> KeyboardCodeTrigger*;
-
-    static auto from(wayland::InputTriggerV1 const* trigger) -> KeyboardCodeTrigger const*;
-
     auto to_c_str() const -> char const* override;
 
     auto matches(MirEvent const& ev, KeyboardStateTracker const& keyboard_state) const -> bool override;
 
-    bool is_same_trigger(wayland::InputTriggerV1 const* other) const override;
+    bool is_same_trigger(InputTriggerV1 const* other) const override;
+    bool is_same_trigger(KeyboardCodeTrigger const* other) const override;
 
     uint32_t const scancode;
 };
@@ -170,11 +174,11 @@ class InputTriggerActionV1 : public wayland::InputTriggerActionV1
 public:
     InputTriggerActionV1(std::shared_ptr<shell::TokenAuthority> const& token_authority, wl_resource* id);
 
-    auto has_trigger(wayland::InputTriggerV1 const* trigger) const -> bool;
+    auto has_trigger(frontend::InputTriggerV1 const* trigger) const -> bool;
 
-    void add_trigger(wayland::InputTriggerV1 const* trigger);
+    void add_trigger(frontend::InputTriggerV1 const* trigger);
 
-    void drop_trigger(wayland::InputTriggerV1 const* trigger);
+    void drop_trigger(frontend::InputTriggerV1 const* trigger);
 
     bool matches(MirEvent const& event, KeyboardStateTracker const& keyboard_state);
 
@@ -217,16 +221,16 @@ public:
     void install_action(wayland::Weak<frontend::InputTriggerActionV1>);
 
 private:
-    void add_trigger_pending(wayland::InputTriggerV1 const* trigger);
-    void add_trigger_immediate(wayland::InputTriggerV1 const* trigger);
-    void drop_trigger_pending(wayland::InputTriggerV1 const* trigger);
-    void drop_trigger_immediate(wayland::InputTriggerV1 const* trigger);
+    void add_trigger_pending(frontend::InputTriggerV1 const* trigger);
+    void add_trigger_immediate(frontend::InputTriggerV1 const* trigger);
+    void drop_trigger_pending(frontend::InputTriggerV1 const* trigger);
+    void drop_trigger_immediate(frontend::InputTriggerV1 const* trigger);
 
     // If a client hasn't grabbed a reference to the corresponding action
     // through `token`, we track which triggers are added or dropped. When a
     // client grabs a reference to the action, we add all pending triggers and
     // clear the set. Otherwise, we immediately add or drop the triggers.
-    std::unordered_set<wayland::InputTriggerV1 const*> pending_triggers;
+    std::unordered_set<frontend::InputTriggerV1 const*> pending_triggers;
 
     std::string const token;
     wayland::Weak<frontend::InputTriggerActionV1> action;
@@ -243,7 +247,7 @@ public:
 
     void add_new_action_control(struct wl_resource* id);
 
-    auto has_trigger(wayland::InputTriggerV1 const* trigger) -> bool;
+    auto has_trigger(frontend::InputTriggerV1 const* trigger) -> bool;
 
     bool matches(MirEvent const& event);
 
