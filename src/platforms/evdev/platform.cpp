@@ -365,8 +365,10 @@ void mie::Platform::start()
             }
             catch (std::exception const&)
             {
-                auto const message = "Failed to handle UDev " + event_type + " event for " + device.syspath();
-                log(logging::Severity::warning, MIR_LOG_COMPONENT, std::current_exception(), message);
+                log(logging::Severity::warning,
+                    MIR_LOG_COMPONENT,
+                    std::current_exception(),
+                    std::format("Failed to handle UDev {} event for {}", event_type, device.syspath()));
             }
         });
 

@@ -63,7 +63,7 @@ void egl_debug_logger(
     mir::log(
         severity,
         MIR_LOG_COMPONENT,
-        "[%s] on [%s]: %s (%s): %s",
+        "[{}] on [{}]: {} ({}): {}",
         thread_id,
         object_id,
         command,

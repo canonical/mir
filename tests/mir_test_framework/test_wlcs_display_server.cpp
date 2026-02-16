@@ -275,7 +275,7 @@ private:
             mir::log(
                 mir::logging::Severity::error,
                 "wlcs-integration",
-                "eventfd_read failed to consume wakeup notification: %s (%i)",
+                "eventfd_read failed to consume wakeup notification: {} ({})",
                 mir::errno_to_cstr(err),
                 err);
         }

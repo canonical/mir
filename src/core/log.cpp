@@ -17,7 +17,6 @@
 #include <mir/log.h>
 #include <mir/logging/logger.h>
 #include <chrono>
-#include <cstdio>
 #include <exception>
 #include <format>
 #include <sstream>
@@ -27,35 +26,11 @@
 
 namespace mir {
 
-void logv(logging::Severity sev, char const* component,
-          char const* fmt, va_list va)
-{
-    char message[1024];
-    int max = sizeof(message) - 1;
-    int len = vsnprintf(message, max, fmt, va);
-    if (len > max)
-        len = max;
-    message[len] = '\0';
-
-    // Suboptimal: Constructing a std::string for message/component.
-    logging::log(sev, message, component);
-}
-
-void log(logging::Severity sev, char const* component,
-         char const* fmt, ...)
-{
-    va_list va;
-    va_start(va, fmt);
-    logv(sev, component, fmt, va);
-    va_end(va);
-}
-
 void log(logging::Severity sev, char const* component,
          std::string const& message)
 {
     logging::log(sev, message, component);
 }
-
 
 void log(
     logging::Severity severity,
@@ -71,20 +46,22 @@ void log(
     {
         // TODO: We can probably format this better by pulling out
         // the boost::errinfo's ourselves.
-        mir::log(
+        logging::log(
             severity,
             component,
-            "%s: %s",
-            message.c_str(),
-            boost::diagnostic_information(err).c_str());
+            std::format(
+                "{}: {}",
+                message.c_str(),
+                boost::diagnostic_information(err).c_str()));
     }
     catch(...)
     {
-        mir::log(
+        logging::log(
             severity,
             component,
-            "%s: unknown exception",
-            message.c_str());
+            std::format(
+                "{}: unknown exception",
+                message));
     }
 }
 

@@ -97,7 +97,7 @@ mir::DefaultServerConfiguration::the_event_filter_chain_dispatcher()
                         mir::log(
                             mir::logging::Severity::informational,
                             "VT switch key handler",
-                            "No VT switching support available: %s",
+                            "No VT switching support available: {}",
                             err.what());
                         return {};
                     }

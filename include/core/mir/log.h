@@ -23,17 +23,10 @@
 #include <string>
 #include <format>
 #include <utility>
-#include <cstdarg>
 #include <exception>
 
 namespace mir
 {
-[[gnu::format (printf, 3, 0)]]
-void logv(logging::Severity sev, const char *component,
-          char const* fmt, va_list va);
-[[gnu::format (printf, 3, 4)]]
-void log(logging::Severity sev, const char *component,
-         char const* fmt, ...);
 void log(logging::Severity sev, const char *component,
          std::string const& message);
 void log(
@@ -41,6 +34,13 @@ void log(
     char const* component,
     std::exception_ptr const& exception,
     std::string const& message);
+
+template <typename... Args>
+inline void log(
+    logging::Severity sev, std::string_view const component, std::format_string<Args...> fmt, Args&&... args)
+{
+    log(sev, component.data(), std::format(fmt, std::forward<Args>(args)...));
+}
 
 /// Log a security event according to the OWASP specification
 ///
