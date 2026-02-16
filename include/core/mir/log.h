@@ -72,25 +72,19 @@ inline void log_info(std::string const& message)
 template<typename... Args>
 inline void log_info(std::format_string<Args...> fmt, Args&&... args)
 {
-    ::mir::log(::mir::logging::Severity::informational,
-               MIR_LOG_COMPONENT,
-               std::format(fmt, std::forward<Args>(args)...));
+    ::mir::log(::mir::logging::Severity::informational, MIR_LOG_COMPONENT, fmt, std::forward<Args>(args)...);
 }
 
 template<typename... Args>
 inline void log_error(std::format_string<Args...> fmt, Args&&... args)
 {
-    ::mir::log(::mir::logging::Severity::error,
-               MIR_LOG_COMPONENT,
-               std::format(fmt, std::forward<Args>(args)...));
+    ::mir::log(::mir::logging::Severity::error, MIR_LOG_COMPONENT, fmt, std::forward<Args>(args)...);
 }
 
 template<typename... Args>
 inline void log_debug(std::format_string<Args...> fmt, Args&&... args)
 {
-    ::mir::log(::mir::logging::Severity::debug,
-               MIR_LOG_COMPONENT,
-               std::format(fmt, std::forward<Args>(args)...));
+    ::mir::log(::mir::logging::Severity::debug, MIR_LOG_COMPONENT, fmt, std::forward<Args>(args)...);
 }
 
 inline void log_critical(std::string const& message)
@@ -102,9 +96,7 @@ inline void log_critical(std::string const& message)
 template<typename... Args>
 inline void log_critical(std::format_string<Args...> fmt, Args&&... args)
 {
-    ::mir::log(::mir::logging::Severity::critical,
-               MIR_LOG_COMPONENT,
-               std::format(fmt, std::forward<Args>(args)...));
+    ::mir::log(::mir::logging::Severity::critical, MIR_LOG_COMPONENT, fmt, std::forward<Args>(args)...);
 }
 
 inline void log_error(std::string const& message)
@@ -122,9 +114,7 @@ inline void log_warning(std::string const& message)
 template<typename... Args>
 inline void log_warning(std::format_string<Args...> fmt, Args&&... args)
 {
-    ::mir::log(::mir::logging::Severity::warning,
-               MIR_LOG_COMPONENT,
-               std::format(fmt, std::forward<Args>(args)...));
+    ::mir::log(::mir::logging::Severity::warning, MIR_LOG_COMPONENT, fmt, std::forward<Args>(args)...);
 }
 } // (nested anonymous) namespace
 #endif
