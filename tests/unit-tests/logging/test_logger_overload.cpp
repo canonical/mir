@@ -17,30 +17,16 @@
 #include <mir/logging/logger.h>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
-#include <cstdarg>
 
 namespace ml = mir::logging;
 using namespace testing;
 
 namespace
 {
-constexpr size_t LOG_MESSAGE_BUFFER_SIZE = 4096;
-
 class RecordingLogger : public ml::Logger
 {
 public:
     MOCK_METHOD(void, log, (ml::Severity severity, const std::string& message, const std::string& component), (override));
-    
-    // Provide implementation for the deprecated variadic method
-    void log(char const* component, ml::Severity severity, char const* format, ...) override
-    {
-        char message[LOG_MESSAGE_BUFFER_SIZE];
-        va_list va;
-        va_start(va, format);
-        vsnprintf(message, sizeof(message), format, va);
-        va_end(va);
-        log(severity, std::string{message}, std::string{component});
-    }
 };
 
 struct LoggerOverloadTest : public testing::Test
@@ -68,14 +54,4 @@ TEST_F(LoggerOverloadTest, multiple_args_format_string_uses_new_api)
     EXPECT_CALL(*logger, log(ml::Severity::informational, "Values: 42 and hello", "component"));
     
     logger->log("component", ml::Severity::informational, "Values: {} and {}", 42, "hello");
-}
-
-TEST_F(LoggerOverloadTest, old_printf_style_still_works)
-{
-    EXPECT_CALL(*logger, log(ml::Severity::informational, "Value: 42", "component"));
-    
-    #pragma GCC diagnostic push
-    #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    logger->log("component", ml::Severity::informational, "Value: %d", 42);
-    #pragma GCC diagnostic pop
 }
