@@ -29,7 +29,6 @@
 #include <vector>
 
 namespace mf = mir::frontend;
-namespace mi = mir::input;
 namespace msh = mir::shell;
 namespace mw = mir::wayland;
 
@@ -529,13 +528,10 @@ void mf::ActionControl::install_action(mw::Weak<mf::InputTriggerActionV1> action
     pending_triggers.clear();
 }
 
-mf::InputTriggerData::InputTriggerData(
-    std::shared_ptr<msh::TokenAuthority> const& token_authority,
-    std::shared_ptr<mi::CompositeEventFilter> const& composite_event_filter) :
+mf::InputTriggerData::InputTriggerData(std::shared_ptr<msh::TokenAuthority> const& token_authority) :
     token_authority{token_authority},
-    filter{std::make_shared<Filter>(actions)}
+    keyboard_state{std::make_shared<KeyboardStateTracker>()}
 {
-    composite_event_filter->append(filter);
 }
 
 auto mf::InputTriggerData::add_new_action(Token const& token, struct wl_resource* id) -> bool
@@ -553,7 +549,7 @@ auto mf::InputTriggerData::add_new_action(Token const& token, struct wl_resource
 
     if (auto const it = action_controls.find(token); it != action_controls.end())
     {
-        auto const action = wayland::make_weak(new InputTriggerActionV1(token_authority, filter->keyboard_state, id));
+        auto const action = wayland::make_weak(new InputTriggerActionV1(token_authority, keyboard_state, id));
 
         auto& [_, action_control] = *it;
         if (action_control)
@@ -615,20 +611,14 @@ void mf::InputTriggerData::token_revoked(Token const& token)
     revoked_tokens.add(token);
 }
 
-mf::InputTriggerData::Filter::Filter(ActionMap& actions) :
-    actions{actions},
-    keyboard_state{std::make_shared<KeyboardStateTracker>()}
-{
-}
-
-bool mf::InputTriggerData::Filter::handle(MirEvent const& event)
+bool mf::InputTriggerData::matches(MirEvent const& event)
 {
     if (event.type() != mir_event_type_input)
         return false;
 
     auto const& input_event = event.to_input();
 
-    if(input_event->input_type() != mir_input_event_type_key)
+    if (input_event->input_type() != mir_input_event_type_key)
         return false;
 
     auto const* key_event = input_event->to_keyboard();
@@ -643,6 +633,7 @@ bool mf::InputTriggerData::Filter::handle(MirEvent const& event)
     else
         return false;
 
+    std::unique_lock lock{mutex};
     for (auto const& [_, action] : actions)
     {
         if (action)

@@ -300,6 +300,9 @@ mf::WaylandConnector::WaylandConnector(
         this->allocator);
     subcompositor_global = std::make_unique<mf::WlSubcompositor>(display.get());
     auto const surface_registry = std::make_shared<mf::SurfaceRegistry>();
+
+    auto const input_trigger_data =
+        std::make_shared<frontend::InputTriggerData>(token_authority);
     seat_global = std::make_unique<mf::WlSeat>(
         display.get(),
         *executor,
@@ -308,7 +311,8 @@ mf::WaylandConnector::WaylandConnector(
         keyboard_observer_registrar,
         seat,
         accessibility_manager,
-        surface_registry);
+        surface_registry,
+        input_trigger_data);
     output_manager = std::make_unique<mf::OutputManager>(
         display.get(),
         executor,
@@ -323,9 +327,6 @@ mf::WaylandConnector::WaylandConnector(
         main_clipboard,
         std::move(drag_icon_controller),
         std::move(pointer_input_dispatcher));
-
-    auto const input_trigger_data =
-        std::make_shared<frontend::InputTriggerData>(token_authority, composite_event_filter);
 
     extensions->init(WaylandExtensions::Context{
         display.get(),

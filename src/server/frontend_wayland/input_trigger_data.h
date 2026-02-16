@@ -241,8 +241,7 @@ class InputTriggerData
 {
 public:
     InputTriggerData(
-        std::shared_ptr<shell::TokenAuthority> const& token_authority,
-        std::shared_ptr<input::CompositeEventFilter> const& composite_event_filter);
+        std::shared_ptr<shell::TokenAuthority> const& token_authority);
 
     auto add_new_action(std::string const& token, struct wl_resource* id) -> bool;
 
@@ -250,36 +249,25 @@ public:
 
     auto has_trigger(wayland::InputTriggerV1 const* trigger) -> bool;
 
+    bool matches(MirEvent const& event);
+
 private:
     using Token = std::string;
-    using ActionMap = std::unordered_map<Token, wayland::Weak<InputTriggerActionV1>>;
-
-    struct Filter: public input::EventFilter
-    {
-        ActionMap& actions;
-
-        // Only filters keep a reference to the keyboard state. It's lazily created
-        // when the first filter is created and shared among all filters, and
-        // destroyed when the last filter is destroyed.
-        std::shared_ptr<KeyboardStateTracker> const keyboard_state;
-
-        Filter(ActionMap& actions);
-        bool handle(MirEvent const& event) override;
-    };
 
     void erase_expired_entries();
     void token_revoked(Token const& token);
 
+    // This data can be modified from three threads:
+    //  1. The main thread when a token is revoked
+    //  2. The wayland thread in response to a client request
+    //  3. The input thread when an input event is received
     std::mutex mutex;
-
-    std::shared_ptr<shell::TokenAuthority> const token_authority;
-    std::shared_ptr<Filter> const filter;
-
     std::unordered_map<Token, wayland::Weak<ActionControl>> action_controls;
-    ActionMap actions;
-
+    std::unordered_map<Token, wayland::Weak<InputTriggerActionV1>> actions;
     RecentTokens revoked_tokens;
 
+    std::shared_ptr<shell::TokenAuthority> const token_authority;
+    std::shared_ptr<KeyboardStateTracker> const keyboard_state;
 };
 }
 }
