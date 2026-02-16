@@ -524,15 +524,15 @@ void mf::ActionControl::install_action(mw::Weak<mf::InputTriggerActionV1> action
     pending_triggers.clear();
 }
 
-mf::InputTriggerData::InputTriggerData(std::shared_ptr<msh::TokenAuthority> const& token_authority) :
-    token_authority{token_authority}
+mf::InputTriggerData::InputTriggerData(
+    std::shared_ptr<msh::TokenAuthority> const& token_authority, Executor& wayland_executor) :
+    token_authority{token_authority},
+    wayland_executor{wayland_executor}
 {
 }
 
 auto mf::InputTriggerData::add_new_action(Token const& token, struct wl_resource* id) -> bool
 {
-    std::unique_lock lock{mutex};
-
     erase_expired_entries();
 
     if (revoked_tokens.contains(token))
@@ -559,11 +559,10 @@ auto mf::InputTriggerData::add_new_action(Token const& token, struct wl_resource
 
 void mf::InputTriggerData::add_new_action_control(struct wl_resource* id)
 {
-    std::unique_lock lock{mutex};
-
     erase_expired_entries();
 
-    auto const token = token_authority->issue_token([this](auto const& token) { token_revoked(Token{token}); });
+    auto const token = token_authority->issue_token(
+        [this](auto const& token) { wayland_executor.spawn([this, token] { token_revoked(Token{token}); }); });
 
     auto const token_string = static_cast<Token>(token);
 
@@ -575,8 +574,6 @@ void mf::InputTriggerData::add_new_action_control(struct wl_resource* id)
 
 auto mf::InputTriggerData::has_trigger(mf::InputTriggerV1 const* trigger) -> bool
 {
-    std::unique_lock lock{mutex};
-
     erase_expired_entries();
 
     // All elements are should be valid now
@@ -596,9 +593,6 @@ void mf::InputTriggerData::erase_expired_entries()
 // they will receive an `unavailable` event.
 void mf::InputTriggerData::token_revoked(Token const& token)
 {
-    std::unique_lock lock{mutex};
-
-    erase_expired_entries();
 
     if (!actions.contains(token))
         action_controls.erase(token);
@@ -628,7 +622,6 @@ bool mf::InputTriggerData::matches(MirEvent const& event)
     else
         return false;
 
-    std::unique_lock lock{mutex};
     for (auto const& [_, action] : actions)
     {
         if (action)

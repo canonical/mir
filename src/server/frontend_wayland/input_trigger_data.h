@@ -20,6 +20,7 @@
 #include "ext-input-trigger-action-v1_wrapper.h"
 #include "input_trigger_registration_v1.h"
 
+#include <mir/executor.h>
 #include <mir/input/composite_event_filter.h>
 #include <mir/input/event_filter.h>
 #include <mir/shell/token_authority.h>
@@ -251,8 +252,7 @@ private:
 class InputTriggerData
 {
 public:
-    InputTriggerData(
-        std::shared_ptr<shell::TokenAuthority> const& token_authority);
+    InputTriggerData(std::shared_ptr<shell::TokenAuthority> const& token_authority, Executor& wayland_executor);
 
     auto add_new_action(std::string const& token, struct wl_resource* id) -> bool;
 
@@ -268,16 +268,13 @@ private:
     void erase_expired_entries();
     void token_revoked(Token const& token);
 
-    // This data can be modified from three threads:
-    //  1. The main thread when a token is revoked
-    //  2. The wayland thread in response to a client request
-    //  3. The input thread when an input event is received
-    std::mutex mutex;
     std::unordered_map<Token, wayland::Weak<ActionControl>> action_controls;
     std::unordered_map<Token, wayland::Weak<InputTriggerActionV1>> actions;
     RecentTokens revoked_tokens;
 
     std::shared_ptr<shell::TokenAuthority> const token_authority;
+    Executor& wayland_executor;
+
     KeyboardStateTracker keyboard_state;
 };
 }
