@@ -56,7 +56,18 @@ public:
     /// Explicit conversion from ProtocolModifiers
     static auto from_protocol(uint32_t protocol_mods) -> InputTriggerModifiers;
 
-    /// Explicit conversion from ProtocolModifiers with keysym for shift adjustment
+    /// Explicit conversion from ProtocolModifiers with keysym for shift
+    /// adjustment.
+    ///
+    /// `protocol_mods` is a mask containing the protocol modifier flags (e.g.
+    /// Shift, Ctrl, Alt) as defined in ext_input_trigger_registeration_v1. A
+    /// client could request a trigger with an uppercase letter keysym, but not
+    /// provide a shift modifier. "Ctrl + E" for example. The keysym
+    /// corresponding to "E" only appears in input events if Shift is pressed.
+    /// But since the client did not specify Shift in their original request,
+    /// the protocol modifier mask will not contain Shift, and the event
+    /// modifier mask will contain Shift, and the trigger won't match. To
+    /// account for this, we patch the protocol modifiers at registration time.
     static auto from_protocol(uint32_t protocol_mods, bool shift_adjustment) -> InputTriggerModifiers;
 
     auto operator==(InputTriggerModifiers const& other) const -> bool = default;
