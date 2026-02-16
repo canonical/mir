@@ -117,7 +117,7 @@ public:
     using wayland::InputTriggerV1::InputTriggerV1;
     virtual auto to_c_str() const -> char const* = 0;
     virtual bool is_same_trigger(wayland::InputTriggerV1 const* other) const = 0;
-    virtual bool matches(MirEvent const& event, std::shared_ptr<KeyboardStateTracker> const&) const = 0;
+    virtual bool matches(MirEvent const& event, KeyboardStateTracker const& keyboard_state) const = 0;
 };
 
 class KeyboardTrigger : public frontend::InputTriggerV1
@@ -141,7 +141,7 @@ public:
 
     auto to_c_str() const -> char const* override;
 
-    auto matches(MirEvent const& ev, std::shared_ptr<KeyboardStateTracker> const& keyboard_state) const -> bool override;
+    auto matches(MirEvent const& ev, KeyboardStateTracker const& keyboard_state) const -> bool override;
     bool is_same_trigger(wayland::InputTriggerV1 const* other) const override;
 
     uint32_t const keysym;
@@ -158,7 +158,7 @@ public:
 
     auto to_c_str() const -> char const* override;
 
-    auto matches(MirEvent const& ev, std::shared_ptr<KeyboardStateTracker> const& keyboard_state) const -> bool override;
+    auto matches(MirEvent const& ev, KeyboardStateTracker const& keyboard_state) const -> bool override;
 
     bool is_same_trigger(wayland::InputTriggerV1 const* other) const override;
 
@@ -168,10 +168,7 @@ public:
 class InputTriggerActionV1 : public wayland::InputTriggerActionV1
 {
 public:
-    InputTriggerActionV1(
-        std::shared_ptr<shell::TokenAuthority> const& token_authority,
-        std::shared_ptr<KeyboardStateTracker> const& keyboard_state,
-        wl_resource* id);
+    InputTriggerActionV1(std::shared_ptr<shell::TokenAuthority> const& token_authority, wl_resource* id);
 
     auto has_trigger(wayland::InputTriggerV1 const* trigger) const -> bool;
 
@@ -179,12 +176,11 @@ public:
 
     void drop_trigger(wayland::InputTriggerV1 const* trigger);
 
-    bool matches(MirEvent const& event);
+    bool matches(MirEvent const& event, KeyboardStateTracker const& keyboard_state);
 
 private:
     std::vector<wayland::Weak<InputTriggerV1 const>> triggers;
     std::shared_ptr<shell::TokenAuthority> const token_authority;
-    std::shared_ptr<KeyboardStateTracker> const keyboard_state;
 
     bool began{false};
 };
@@ -267,7 +263,7 @@ private:
     RecentTokens revoked_tokens;
 
     std::shared_ptr<shell::TokenAuthority> const token_authority;
-    std::shared_ptr<KeyboardStateTracker> const keyboard_state;
+    KeyboardStateTracker keyboard_state;
 };
 }
 }

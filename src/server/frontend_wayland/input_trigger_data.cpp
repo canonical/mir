@@ -19,8 +19,8 @@
 #include <mir/events/input_event.h>
 #include <mir/events/keyboard_event.h>
 #include <mir/input/xkb_mapper.h>
-#include <mir_toolkit/events/enums.h>
 #include <mir/log.h>
+#include <mir_toolkit/events/enums.h>
 
 #include <wayland-server-core.h>
 
@@ -173,7 +173,6 @@ auto mf::KeyboardStateTracker::scancode_is_pressed(uint32_t scancode) const -> b
 {
     return pressed_scancodes.contains(scancode);
 }
-
 
 mf::KeyboardTrigger::KeyboardTrigger(InputTriggerModifiers modifiers, struct wl_resource* id) :
     InputTriggerV1{id, Version<1>{}},
@@ -330,7 +329,7 @@ auto mf::KeyboardSymTrigger::to_c_str() const -> char const*
 }
 
 auto mf::KeyboardSymTrigger::matches(
-    MirEvent const& ev, std::shared_ptr<KeyboardStateTracker> const& keyboard_state) const -> bool
+    MirEvent const& ev, KeyboardStateTracker const& keyboard_state) const -> bool
 {
     auto const event_modifiers = InputTriggerModifiers{ev.to_input()->to_keyboard()->modifiers()};
     if (!KeyboardTrigger::modifiers_match(modifiers, event_modifiers))
@@ -341,7 +340,7 @@ auto mf::KeyboardSymTrigger::matches(
         ((mods_value & mir_input_event_modifier_shift) | (mods_value & mir_input_event_modifier_shift_left) |
          (mods_value & mir_input_event_modifier_shift_right)) != 0;
 
-    return keyboard_state->keysym_is_pressed(keysym, trigger_mods_contain_shift);
+    return keyboard_state.keysym_is_pressed(keysym, trigger_mods_contain_shift);
 }
 
 bool mir::frontend::KeyboardSymTrigger::is_same_trigger(wayland::InputTriggerV1 const* other) const
@@ -387,13 +386,13 @@ auto mf::KeyboardCodeTrigger::to_c_str() const -> char const*
 }
 
 auto mf::KeyboardCodeTrigger::matches(
-    MirEvent const& ev, std::shared_ptr<KeyboardStateTracker> const& keyboard_state) const -> bool
+    MirEvent const& ev, KeyboardStateTracker const& keyboard_state) const -> bool
 {
     auto const event_modifiers = InputTriggerModifiers{ev.to_input()->to_keyboard()->modifiers()};
     if (!KeyboardTrigger::modifiers_match(modifiers, event_modifiers))
         return false;
 
-    return keyboard_state->scancode_is_pressed(scancode);
+    return keyboard_state.scancode_is_pressed(scancode);
 }
 
 auto mf::KeyboardCodeTrigger::is_same_trigger(wayland::InputTriggerV1 const* other) const -> bool
@@ -406,12 +405,9 @@ auto mf::KeyboardCodeTrigger::is_same_trigger(wayland::InputTriggerV1 const* oth
     return false;
 }
 mf::InputTriggerActionV1::InputTriggerActionV1(
-    std::shared_ptr<msh::TokenAuthority> const& token_authority,
-    std::shared_ptr<KeyboardStateTracker> const& keyboard_state,
-    wl_resource* id) :
+    std::shared_ptr<msh::TokenAuthority> const& token_authority, wl_resource* id) :
     mw::InputTriggerActionV1{id, Version<1>{}},
-    token_authority{token_authority},
-    keyboard_state{keyboard_state}
+    token_authority{token_authority}
 {
 }
 
@@ -438,7 +434,7 @@ void mf::InputTriggerActionV1::drop_trigger(mw::InputTriggerV1 const* trigger)
         triggers, [&](auto const& action_trigger) { return action_trigger.value().is_same_trigger(trigger); });
 }
 
-bool mf::InputTriggerActionV1::matches(MirEvent const& event)
+bool mf::InputTriggerActionV1::matches(MirEvent const& event, KeyboardStateTracker const& keyboard_state)
 {
     auto const matched = std::ranges::any_of(
         triggers, [&](auto const& action_trigger) { return action_trigger.value().matches(event, keyboard_state); });
@@ -529,8 +525,7 @@ void mf::ActionControl::install_action(mw::Weak<mf::InputTriggerActionV1> action
 }
 
 mf::InputTriggerData::InputTriggerData(std::shared_ptr<msh::TokenAuthority> const& token_authority) :
-    token_authority{token_authority},
-    keyboard_state{std::make_shared<KeyboardStateTracker>()}
+    token_authority{token_authority}
 {
 }
 
@@ -549,7 +544,7 @@ auto mf::InputTriggerData::add_new_action(Token const& token, struct wl_resource
 
     if (auto const it = action_controls.find(token); it != action_controls.end())
     {
-        auto const action = wayland::make_weak(new InputTriggerActionV1(token_authority, keyboard_state, id));
+        auto const action = wayland::make_weak(new InputTriggerActionV1(token_authority, id));
 
         auto& [_, action_control] = *it;
         if (action_control)
@@ -627,9 +622,9 @@ bool mf::InputTriggerData::matches(MirEvent const& event)
     auto const action = key_event->action();
 
     if (action == mir_keyboard_action_down)
-        keyboard_state->on_key_down(keysym, scancode);
+        keyboard_state.on_key_down(keysym, scancode);
     else if (action == mir_keyboard_action_up)
-        keyboard_state->on_key_up(keysym, scancode);
+        keyboard_state.on_key_up(keysym, scancode);
     else
         return false;
 
@@ -638,7 +633,7 @@ bool mf::InputTriggerData::matches(MirEvent const& event)
     {
         if (action)
         {
-            if (action.value().matches(event))
+            if (action.value().matches(event, keyboard_state))
                 return true;
         }
     }
