@@ -32,10 +32,10 @@ public:
     // Provide implementation for the deprecated variadic method
     void log(char const* component, ml::Severity severity, char const* format, ...) override
     {
+        char message[4096];
         va_list va;
         va_start(va, format);
-        char message[4096];
-        vsnprintf(message, 4096, format, va);
+        vsnprintf(message, sizeof(message), format, va);
         va_end(va);
         log(severity, std::string{message}, std::string{component});
     }

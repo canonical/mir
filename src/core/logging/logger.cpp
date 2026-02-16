@@ -25,16 +25,20 @@
 
 namespace ml = mir::logging;
 
+namespace
+{
+constexpr size_t LOG_MESSAGE_BUFFER_SIZE = 4096;
+}
+
 void ml::Logger::log(char const* component, Severity severity, char const* format, ...)
 {
-    auto const bufsize = 4096;
     va_list va;
     va_start(va, format);
-    char message[bufsize];
-    vsnprintf(message, bufsize, format, va);
+    char message[LOG_MESSAGE_BUFFER_SIZE];
+    vsnprintf(message, sizeof(message), format, va);
     va_end(va);
 
-    // Inefficient, but maintains API: Constructing a std::string for message/component.
+    // Inefficient, but maintains API: constructing a std::string for message/component.
     log(severity, std::string{message}, std::string{component});
 }
 
