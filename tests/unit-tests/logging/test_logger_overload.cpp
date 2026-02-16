@@ -24,6 +24,8 @@ using namespace testing;
 
 namespace
 {
+constexpr size_t LOG_MESSAGE_BUFFER_SIZE = 4096;
+
 class RecordingLogger : public ml::Logger
 {
 public:
@@ -32,7 +34,7 @@ public:
     // Provide implementation for the deprecated variadic method
     void log(char const* component, ml::Severity severity, char const* format, ...) override
     {
-        char message[4096];
+        char message[LOG_MESSAGE_BUFFER_SIZE];
         va_list va;
         va_start(va, format);
         vsnprintf(message, sizeof(message), format, va);
