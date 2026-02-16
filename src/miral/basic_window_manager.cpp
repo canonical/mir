@@ -40,12 +40,16 @@ using namespace mir::geometry;
 
 namespace
 {
-void clamp_left(Rectangle const& zone, Rectangle& rect)
+// Attempts to center the given rect horizontally within the given zone, but
+// clamps to the left edge of the zone if the rect is wider than the zone.
+void center_horizontally_with_clamp_left(Rectangle const& zone, Rectangle& rect)
 {
     rect.top_left.x = zone.top_left.x + 0.5 * std::max(DeltaX{}, zone.size.width - rect.size.width);
 }
 
-void clamp_top(Rectangle const& zone, Rectangle& rect)
+// Attempts to center the given rect vertically within the given zone, but
+// clamps to the top edge of the zone if the rect is taller than the zone.
+void center_vertically_with_clamp_top(Rectangle const& zone, Rectangle& rect)
 {
     rect.top_left.y = zone.top_left.y + 0.5 * std::max(DeltaY{}, zone.size.height - rect.size.height);
 }
@@ -1521,8 +1525,8 @@ void miral::BasicWindowManager::place_and_size_for_state(
         rect = restore_rect;
         if (!rect.overlaps(application_zone))
         {
-            clamp_left(application_zone, rect);
-            clamp_top(application_zone, rect);
+            center_horizontally_with_clamp_left(application_zone, rect);
+            center_vertically_with_clamp_top(application_zone, rect);
         }
         rect = policy->confirm_placement_on_display(window_info, new_state, rect);
         break;
@@ -1536,7 +1540,7 @@ void miral::BasicWindowManager::place_and_size_for_state(
         rect.size = {application_zone.size.width, restore_rect.size.height};
         if (!rect.overlaps(application_zone))
         {
-            clamp_top(application_zone, rect);
+            center_vertically_with_clamp_top(application_zone, rect);
         }
         rect = policy->confirm_placement_on_display(window_info, new_state, rect);
         break;
@@ -1546,7 +1550,7 @@ void miral::BasicWindowManager::place_and_size_for_state(
         rect.size = {restore_rect.size.width, application_zone.size.height};
         if (!rect.overlaps(application_zone))
         {
-            clamp_left(application_zone, rect);
+            center_horizontally_with_clamp_left(application_zone, rect);
         }
         rect = policy->confirm_placement_on_display(window_info, new_state, rect);
         break;

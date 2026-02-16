@@ -3,6 +3,7 @@ add_subdirectory(evdev)
 list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_event_filter_chain_dispatcher.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_cursor_controller.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_cursor_observer_multiplexer.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_touchspot_controller.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_input_event.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_event_builders.cpp
