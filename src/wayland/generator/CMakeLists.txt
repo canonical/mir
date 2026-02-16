@@ -1,4 +1,4 @@
-pkg_check_modules(XMLPP libxml++-2.6 REQUIRED IMPORTED_TARGET)
+pkg_check_modules(XMLPP libxml++-5.0 REQUIRED IMPORTED_TARGET)
 
 add_executable(mir_wayland_generator
   wrapper_generator.cpp
