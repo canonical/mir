@@ -183,6 +183,16 @@ auto mf::InputTriggerV1::from(struct wl_resource* resource) -> InputTriggerV1*
     return nullptr;
 }
 
+bool mir::frontend::InputTriggerV1::is_same_trigger(KeyboardSymTrigger const*) const
+{
+    return false;
+}
+
+bool mir::frontend::InputTriggerV1::is_same_trigger(KeyboardCodeTrigger const*) const
+{
+    return false;
+}
+
 mf::KeyboardTrigger::KeyboardTrigger(InputTriggerModifiers modifiers, struct wl_resource* id) :
     InputTriggerV1{id, Version<1>{}},
     modifiers{modifiers}

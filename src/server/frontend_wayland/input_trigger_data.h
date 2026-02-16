@@ -134,8 +134,8 @@ public:
     virtual auto to_c_str() const -> char const* = 0;
 
     virtual bool is_same_trigger(InputTriggerV1 const* other) const = 0;
-    virtual bool is_same_trigger(KeyboardSymTrigger const*) const { return false; };
-    virtual bool is_same_trigger(KeyboardCodeTrigger const*) const { return false; };
+    virtual bool is_same_trigger(KeyboardSymTrigger const*) const;
+    virtual bool is_same_trigger(KeyboardCodeTrigger const*) const;
 
     virtual bool matches(MirEvent const& event, KeyboardStateTracker const& keyboard_state) const = 0;
 };
