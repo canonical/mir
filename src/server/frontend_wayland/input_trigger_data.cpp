@@ -59,6 +59,17 @@ private:
     std::shared_ptr<InputTriggerLifetimeTracker> const lifetime_tracker;
 };
 
+mf::InputTriggerModifiers::InputTriggerModifiers(MirInputEventModifiers value) :
+    value{value}
+{
+}
+
+auto mf::InputTriggerModifiers::raw_value() const -> MirInputEventModifiers
+{
+    return value;
+}
+
+
 auto mf::InputTriggerModifiers::to_string() const -> std::string
 {
     if (value == mir_input_event_modifier_none)
@@ -161,6 +172,21 @@ auto mf::InputTriggerModifiers::from_protocol(uint32_t protocol_mods, bool shift
         result |= mir_input_event_modifier_shift;
 
     return InputTriggerModifiers{result};
+}
+
+void mf::RecentTokens::add(std::string_view token)
+{
+    *current = token;
+
+    if (++current == tokens.end())
+    {
+        current = tokens.begin();
+    }
+}
+
+auto mf::RecentTokens::contains(std::string_view token) const -> bool
+{
+    return std::find(tokens.begin(), tokens.end(), token) != tokens.end();
 }
 
 void mf::KeyboardStateTracker::on_key_down(uint32_t keysym, uint32_t scancode)

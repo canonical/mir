@@ -35,22 +35,15 @@ namespace mir
 namespace frontend
 {
 
-// TODO move impl to source file
 /// Strong type representing modifier flags used internally by Mir.
 class InputTriggerModifiers
 {
 public:
     /// Explicit construction from MirInputEventModifiers
-    explicit InputTriggerModifiers(MirInputEventModifiers value) :
-        value{value}
-    {
-    }
+    explicit InputTriggerModifiers(MirInputEventModifiers value);
 
     /// Get the raw MirInputEventModifiers value (for internal use)
-    auto raw_value() const -> MirInputEventModifiers
-    {
-        return value;
-    }
+    auto raw_value() const -> MirInputEventModifiers;
 
     /// Convert to string for debugging
     auto to_string() const -> std::string;
@@ -78,24 +71,12 @@ private:
     MirInputEventModifiers value;
 };
 
-// TODO move impl to source file
 class RecentTokens
 {
 public:
-    void add(std::string_view token)
-    {
-        *current = token;
+    void add(std::string_view token);
 
-        if (++current == tokens.end())
-        {
-            current = tokens.begin();
-        }
-    }
-
-    auto contains(std::string_view token) const
-    {
-        return std::find(tokens.begin(), tokens.end(), token) != tokens.end();
-    }
+    auto contains(std::string_view token) const -> bool;
 
     static constexpr auto capacity = 32;
 private:
