@@ -53,15 +53,15 @@ TEST(RecentTokensTest, evicts_oldest_when_exceeding_max_size)
     mf::RecentTokens tokens;
 
     // Add 33 tokens to exceed the capacity of 32
-    for (int i = 1; i <= 33; ++i)
+    for (int i = 0; i <= mf::RecentTokens::capacity; ++i)
     {
         tokens.add("token" + std::to_string(i));
     }
 
-    EXPECT_FALSE(tokens.contains("token1"));
-    EXPECT_TRUE(tokens.contains("token2"));
+    EXPECT_FALSE(tokens.contains("token0"));
+    EXPECT_TRUE(tokens.contains("token1"));
+    EXPECT_TRUE(tokens.contains("token31"));
     EXPECT_TRUE(tokens.contains("token32"));
-    EXPECT_TRUE(tokens.contains("token33"));
 }
 
 TEST(RecentTokensTest, evicts_in_fifo_order)
@@ -69,15 +69,15 @@ TEST(RecentTokensTest, evicts_in_fifo_order)
     mf::RecentTokens tokens;
 
     // Add 34 tokens to test FIFO eviction
-    for (int i = 1; i <= 34; ++i)
+    for (int i = 0; i <= mf::RecentTokens::capacity + 1; ++i)
     {
         tokens.add("token" + std::to_string(i));
     }
 
     EXPECT_FALSE(tokens.contains("token1"));
-    EXPECT_FALSE(tokens.contains("token2"));
+    EXPECT_FALSE(tokens.contains("token1"));
+    EXPECT_TRUE(tokens.contains("token32"));
     EXPECT_TRUE(tokens.contains("token33"));
-    EXPECT_TRUE(tokens.contains("token34"));
 }
 
 TEST(RecentTokensTest, allows_duplicate_items)

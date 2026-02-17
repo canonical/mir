@@ -95,8 +95,9 @@ public:
         return std::find(tokens.begin(), tokens.end(), token) != tokens.end();
     }
 
+    static constexpr auto capacity = 32;
 private:
-    std::array<std::string, 32> tokens;
+    std::array<std::string, capacity> tokens;
     decltype(tokens)::iterator current{tokens.begin()};
 };
 
