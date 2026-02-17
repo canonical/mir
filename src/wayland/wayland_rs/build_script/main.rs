@@ -400,12 +400,11 @@ fn wayland_request_to_cpp_method(method: &WaylandRequest) -> CppMethod {
                     .expect("Object is missing interface")
                     .as_str(),
             )),
-            "new_id" => CppType::NewId(snake_to_pascal(
-                arg.interface
-                    .clone()
-                    .expect("New id is missing interface")
-                    .as_str(),
-            )),
+            "new_id" => CppType::NewId(if let Some(interface) = arg.interface.clone() {
+                Some(snake_to_pascal(interface.as_str()))
+            } else {
+                None
+            }), // Note: WlRegistry allows for a bind without a defined interface
             "array" => CppType::Array,
             "fd" => CppType::Fd,
             _ => panic!("Unknown type: {}", arg.type_),

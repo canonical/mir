@@ -216,7 +216,7 @@ pub enum CppType {
     CppF32,
     String,
     Object(String),
-    NewId(String),
+    NewId(Option<String>),
     Array,
     Fd,
 }
@@ -232,7 +232,7 @@ fn cpp_type_to_string(cpp_type: &CppType) -> String {
         // TODO: The precise form that the NewId type will take is unknown at the moment and
         // will be implemented when we implement the Rust side of things. It may end up being
         // a plain integer or it may end up being something more complicated.
-        CppType::NewId(interface) => "int32_t".to_string(),
+        CppType::NewId(_interface) => "int32_t".to_string(),
         CppType::Array => "rust::Vec<uint8_t> const&".to_string(),
         CppType::Fd => "int32_t".to_string(),
     }
