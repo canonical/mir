@@ -569,11 +569,34 @@ void mf::XdgToplevelStable::unset_maximized()
 
 void mf::XdgToplevelStable::set_fullscreen(std::optional<struct wl_resource*> const& output)
 {
+    // Send configure immediately WITH fullscreen state to ensure protocol compliance for Chromium.
+    // This must happen BEFORE calling set_fullscreen() to ensure Chrome sees the fullscreen state
+    // before any intermediate configures are sent during state transition processing.
+    // See: https://github.com/pop-os/cosmic-comp/pull/2099
+    {
+        wl_array states{};
+        wl_array_init(&states);
+
+        // Include activated state if currently active
+        if (is_active())
+        {
+            if (uint32_t *state = static_cast<decltype(state)>(wl_array_add(&states, sizeof *state)))
+                *state = State::activated;
+        }
+
+        // Force-include fullscreen state regardless of current surface state
+        if (uint32_t *state = static_cast<decltype(state)>(wl_array_add(&states, sizeof *state)))
+            *state = State::fullscreen;
+
+        // Send the configure with fullscreen state
+        geom::Size size = requested_window_size().value_or(geom::Size{0, 0});
+        send_configure_event(size.width.as_int(), size.height.as_int(), &states);
+        wl_array_release(&states);
+
+        if (xdg_surface) xdg_surface.value().send_configure();
+    }
+
     WindowWlSurfaceRole::set_fullscreen(output);
-    // Send configure immediately with fullscreen state to ensure protocol compliance for Chromium.
-    // This prevents Chromium from interpreting intermediate configure events (without fullscreen)
-    // as a refusal to go fullscreen when transitioning from maximized/snapped states.
-    send_toplevel_configure();
 }
 
 void mf::XdgToplevelStable::unset_fullscreen()
@@ -581,8 +604,6 @@ void mf::XdgToplevelStable::unset_fullscreen()
     // We must process this request immediately (i.e. don't defer until commit())
     // TODO: should we instead restore the previous state?
     remove_state_now(mir_window_state_fullscreen);
-    // Send configure immediately to ensure protocol compliance for Chromium.
-    send_toplevel_configure();
 }
 
 void mf::XdgToplevelStable::set_minimized()
