@@ -60,9 +60,12 @@ private:
     std::shared_ptr<mf::InputTriggerData> const itd;
 };
 
-// Event filters are not immediately added to the composite event filter. They
-// are added after the trigger is added to an action control object, and the
-// corresponding action is obtained by the client.
+// Triggers are stored in the action control object until the corresponding
+// action is obtained by the client. In that state, they are "inactive" and are
+// not checked for matching or duplicates.
+//
+// Once a client obtains the action, the triggers become "active" and are
+// checked for matching and duplicates.
 void InputTriggerRegistrationManagerV1::Instance::register_keyboard_sym_trigger(
     uint32_t modifiers, uint32_t keysym, struct wl_resource* id)
 {

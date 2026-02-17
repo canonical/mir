@@ -35,6 +35,7 @@ namespace mir
 namespace frontend
 {
 
+// TODO move impl to source file
 /// Strong type representing modifier flags used internally by Mir.
 class InputTriggerModifiers
 {
@@ -77,6 +78,7 @@ private:
     MirInputEventModifiers value;
 };
 
+// TODO move impl to source file
 class RecentTokens
 {
 public:
@@ -185,21 +187,7 @@ public:
 class InputTriggerActionV1 : public wayland::InputTriggerActionV1
 {
 public:
-    InputTriggerActionV1(std::shared_ptr<shell::TokenAuthority> const& token_authority, wl_resource* id);
-
-    auto has_trigger(frontend::InputTriggerV1 const* trigger) const -> bool;
-
-    void add_trigger(frontend::InputTriggerV1 const* trigger);
-
-    void drop_trigger(frontend::InputTriggerV1 const* trigger);
-
-    bool matches(MirEvent const& event, KeyboardStateTracker const& keyboard_state);
-
-private:
-    std::vector<wayland::Weak<InputTriggerV1 const>> triggers;
-    std::shared_ptr<shell::TokenAuthority> const token_authority;
-
-    bool began{false};
+    InputTriggerActionV1(wl_resource* id);
 };
 
 // Used in `add_new_action` when a client provides a revoked token to call
@@ -211,44 +199,7 @@ public:
         wayland::InputTriggerActionV1{id, Version<1>{}}
     {
     }
-
-    auto has_trigger(wayland::InputTriggerV1 const*) const
-    {
-    }
-    void add_trigger(wayland::InputTriggerV1 const*)
-    {
-    }
-    void drop_trigger(wayland::InputTriggerV1 const*)
-    {
-    }
 };
-
-class ActionControl : public wayland::InputTriggerActionControlV1
-{
-public:
-    ActionControl(std::string_view token, struct wl_resource* id);
-
-    void add_input_trigger_event(struct wl_resource* trigger) override;
-    void drop_input_trigger_event(struct wl_resource* trigger) override;
-
-    void install_action(wayland::Weak<frontend::InputTriggerActionV1>);
-
-private:
-    void add_trigger_pending(frontend::InputTriggerV1 const* trigger);
-    void add_trigger_immediate(frontend::InputTriggerV1 const* trigger);
-    void drop_trigger_pending(frontend::InputTriggerV1 const* trigger);
-    void drop_trigger_immediate(frontend::InputTriggerV1 const* trigger);
-
-    // If a client hasn't grabbed a reference to the corresponding action
-    // through `token`, we track which triggers are added or dropped. When a
-    // client grabs a reference to the action, we add all pending triggers and
-    // clear the set. Otherwise, we immediately add or drop the triggers.
-    std::unordered_set<frontend::InputTriggerV1 const*> pending_triggers;
-
-    std::string const token;
-    wayland::Weak<frontend::InputTriggerActionV1> action;
-};
-
 
 class InputTriggerData
 {
@@ -266,11 +217,66 @@ public:
 private:
     using Token = std::string;
 
+    class TokenData
+    {
+    public:
+        bool is_valid(Token const& token) const;
+
+        void add_action(Token const& token, struct wl_resource* id);
+
+        void add_action_control(Token const& token, struct wl_resource* id);
+
+        bool has_trigger(frontend::InputTriggerV1 const* trigger) const;
+
+        void erase_expired_entries();
+
+        bool has_action_or_control(Token const& token) const;
+
+        void erase(Token const& token);
+
+        bool matches(
+            MirEvent const& event, KeyboardStateTracker const& keyboard_state, shell::TokenAuthority& token_authority);
+
+    private:
+
+        using TriggerList = std::vector<wayland::Weak<InputTriggerV1 const>>;
+        class ActionControl;
+
+        struct ActionGroup
+        {
+        public:
+            void add(wayland::Weak<frontend::InputTriggerActionV1 const> action);
+
+            auto began() const -> bool;
+
+            void end(std::string const& activation_token, uint32_t wayland_timestamp);
+
+            void begin(std::string const& activation_token, uint32_t wayland_timestamp);
+
+            void erase_expired_entries();
+
+            auto empty() const -> bool;
+
+        private:
+            std::vector<wayland::Weak<InputTriggerActionV1 const>> actions;
+            bool began_{false};
+        };
+
+        struct Entry
+        {
+            TriggerList trigger_list;
+            ActionGroup action_group;
+            wayland::Weak<ActionControl> action_control;
+        };
+
+        std::unordered_map<Token, Entry> token_data;
+    };
+
     void erase_expired_entries();
     void token_revoked(Token const& token);
 
-    std::unordered_map<Token, wayland::Weak<ActionControl>> action_controls;
-    std::unordered_map<Token, wayland::Weak<InputTriggerActionV1>> actions;
+
+    TokenData token_data;
     RecentTokens revoked_tokens;
 
     std::shared_ptr<shell::TokenAuthority> const token_authority;
