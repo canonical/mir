@@ -150,17 +150,17 @@ auto probe_rendering_platform(
             message << " " << missing_extension;
         }
 
-        mir::log_debug("EGLStream platform is unsupported: %s",
-                       message.str().c_str());
+        mir::log_debug("EGLStream platform is unsupported: {}", message.str());
         return {};
     }
 
     int device_count{0};
     if (eglQueryDevicesEXT(0, nullptr, &device_count) != EGL_TRUE)
     {
-        mir::log_info("Platform claims to support EGL_EXT_device_base, but "
-                      "eglQueryDevicesEXT falied: %s",
-                      mg::egl_category().message(eglGetError()).c_str());
+        mir::log_info(
+            "Platform claims to support EGL_EXT_device_base, but "
+            "eglQueryDevicesEXT falied: {}",
+            mg::egl_category().message(eglGetError()));
         return {};
     }
 
@@ -184,7 +184,7 @@ auto probe_rendering_platform(
         }
         catch (std::exception const& e)
         {
-            mir::log_debug("Failed to find kernel device for EGLDevice: %s", e.what());
+            mir::log_debug("Failed to find kernel device for EGLDevice: {}", e.what());
             continue;
         }
 
@@ -215,7 +215,7 @@ auto probe_rendering_platform(
 
             if (display == EGL_NO_DISPLAY)
             {
-                mir::log_debug("Failed to create EGLDisplay: %s", mg::egl_category().message(eglGetError()).c_str());
+                mir::log_debug("Failed to create EGLDisplay: {}", mg::egl_category().message(eglGetError()));
                 continue;
             }
         }
@@ -227,7 +227,7 @@ auto probe_rendering_platform(
                     EGLint major_ver{1}, minor_ver{4};
                     if (!eglInitialize(display, &major_ver, &minor_ver))
                     {
-                        mir::log_debug("Failed to initialise EGL: %s", mg::egl_category().message(eglGetError()).c_str());
+                        mir::log_debug("Failed to initialise EGL: {}", mg::egl_category().message(eglGetError()));
                         display = EGL_NO_DISPLAY;
                     }
                 }
@@ -256,7 +256,7 @@ auto probe_rendering_platform(
 
             for (auto const missing_extension: missing_extensions)
             {
-                mir::log_info("EGLDevice found but unsuitable. Missing extension %s", missing_extension);
+                mir::log_info("EGLDevice found but unsuitable. Missing extension {}", missing_extension);
             }
 
             if (missing_extensions.empty())
@@ -284,8 +284,7 @@ auto probe_rendering_platform(
             return device.support_level > mg::probe::unsupported;
         }))
     {
-        mir::log_debug(
-            "EGLDeviceEXTs found, but none are suitable for Mir");
+        mir::log_debug("EGLDeviceEXTs found, but none are suitable for Mir");
     }
 
     return supported_devices;
@@ -339,17 +338,17 @@ auto probe_display_platform(
             message << " " << missing_extension;
         }
 
-        mir::log_debug("EGLStream platform is unsupported: %s",
-                       message.str().c_str());
+        mir::log_debug("EGLStream platform is unsupported: {}", message.str());
         return {};
     }
 
     int device_count{0};
     if (eglQueryDevicesEXT(0, nullptr, &device_count) != EGL_TRUE)
     {
-        mir::log_info("Platform claims to support EGL_EXT_device_base, but "
-                      "eglQueryDevicesEXT falied: %s",
-                      mg::egl_category().message(eglGetError()).c_str());
+        mir::log_info(
+            "Platform claims to support EGL_EXT_device_base, but "
+            "eglQueryDevicesEXT falied: {}",
+            mg::egl_category().message(eglGetError()));
         return {};
     }
 
@@ -366,8 +365,7 @@ auto probe_display_platform(
         auto device_extensions = eglQueryDeviceStringEXT(device, EGL_EXTENSIONS);
         if (device_extensions)
         {
-            mir::log_debug("Found EGLDeviceEXT with device extensions: %s",
-                           device_extensions);
+            mir::log_debug("Found EGLDeviceEXT with device extensions: {}", device_extensions);
             // TODO: This test is not strictly correct (will incorrectly match
             // EGL_EXT_device_drmish_but_not_drm)
             if (strstr(device_extensions, "EGL_EXT_device_drm") != NULL)
@@ -392,13 +390,12 @@ auto probe_display_platform(
                 }
                 catch (std::exception const& e)
                 {
-                    mir::log_info("Failed to query DRM node for EGLDevice: %s", e.what());
+                    mir::log_info("Failed to query DRM node for EGLDevice: {}", e.what());
                     continue;
                 }
                 if (drm_fd == mir::Fd::invalid)
                 {
-                    mir::log_debug(
-                        "EGL_EXT_device_drm found, but can't acquire DRM node.");
+                    mir::log_debug("EGL_EXT_device_drm found, but can't acquire DRM node.");
                     continue;
                 }
 
@@ -411,10 +408,7 @@ auto probe_display_platform(
 
                 if (auto error = -drmSetInterfaceVersion(drm_fd, &sv))
                 {
-                    mir::log_warning(
-                        "Failed to set DRM interface version on device: %i (%s)",
-                        error,
-                        mir::errno_to_cstr(error));
+                    mir::log_warning("Failed to set DRM interface version on device: {} ({})", error, mir::errno_to_cstr(error));
                     continue;
                 }
 
@@ -431,11 +425,7 @@ auto probe_display_platform(
                     }
                     else
                     {
-                        mir::log_warning(
-                            "Failed to check DRM modesetting support for device %s: %s (%i)",
-                            busid.get(),
-                            mir::errno_to_cstr(-err),
-                            -err);
+                        mir::log_warning("Failed to check DRM modesetting support for device {}: {} ({})", busid.get(), mir::errno_to_cstr(-err), -err);
                     }
                     continue;
                 }
@@ -455,7 +445,7 @@ auto probe_display_platform(
 
                 if (display == EGL_NO_DISPLAY)
                 {
-                    mir::log_debug("Failed to create EGLDisplay: %s", mg::egl_category().message(eglGetError()).c_str());
+                    mir::log_debug("Failed to create EGLDisplay: {}", mg::egl_category().message(eglGetError()));
                     continue;
                 }
 
@@ -465,7 +455,7 @@ auto probe_display_platform(
                         EGLint major_ver{1}, minor_ver{4};
                         if (!eglInitialize(display, &major_ver, &minor_ver))
                         {
-                            mir::log_debug("Failed to initialise EGL: %s", mg::egl_category().message(eglGetError()).c_str());
+                            mir::log_debug("Failed to initialise EGL: {}", mg::egl_category().message(eglGetError()));
                             display = EGL_NO_DISPLAY;
                         }
                     },
@@ -516,7 +506,7 @@ auto probe_display_platform(
 
                 if (ctx == EGL_NO_CONTEXT)
                 {
-                    mir::log_warning("Failed to create EGL context: %s", mg::egl_category().message(eglGetError()).c_str());
+                    mir::log_warning("Failed to create EGL context: {}", mg::egl_category().message(eglGetError()));
                     continue;
                 }
 
@@ -529,17 +519,12 @@ auto probe_display_platform(
                 }
                 else if (auto version = mge::parse_nvidia_version(gl_version))
                 {
-                    mir::log_debug("Detected NVIDIA driver version %i.%i", version->major, version->minor);
+                    mir::log_debug("Detected NVIDIA driver version {}.{}", version->major, version->minor);
                     if (version->major < 396)
                     {
-                        mir::log_warning(
-                            "Detected NVIDIA driver version %i.%i is older than 396.xx",
-                            version->major,
-                            version->minor);
-                        mir::log_warning(
-                            "This driver is known to interact badly with Mir. See https://github.com/canonical/mir/issues/650");
-                        mir::log_warning(
-                            "Mir will not auto-load the eglstream-kms platform on this driver. To proceed anyway, manually specify the platform library.");
+                        mir::log_warning("Detected NVIDIA driver version {}.{} is older than 396.xx", version->major, version->minor);
+                        mir::log_warning("This driver is known to interact badly with Mir. See https://github.com/canonical/mir/issues/650");
+                        mir::log_warning("Mir will not auto-load the eglstream-kms platform on this driver. To proceed anyway, manually specify the platform library.");
                         continue;
                     }
                 }
@@ -557,7 +542,7 @@ auto probe_display_platform(
                 else
                 {
                     mir::log_debug("EGL_EXT_device_drm found, but missing EGL_EXT_output_base extension.");
-                    mir::log_debug("Available extensions are: %s", eglQueryString(display, EGL_EXTENSIONS));
+                    mir::log_debug("Available extensions are: {}", eglQueryString(display, EGL_EXTENSIONS));
                 }
             }
         }
@@ -568,8 +553,7 @@ auto probe_display_platform(
     }
     if (supported_devices.empty())
     {
-        mir::log_debug(
-            "EGLDeviceEXTs found, but none are suitable for Mir");
+        mir::log_debug("EGLDeviceEXTs found, but none are suitable for Mir");
     }
 
     return supported_devices;

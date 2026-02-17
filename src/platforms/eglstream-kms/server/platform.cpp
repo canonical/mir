@@ -99,7 +99,7 @@ public:
     {
         if (eglDestroyContext(dpy, ctx) != EGL_TRUE)
         {
-            mir::log_critical("Failed to destroy EGLContext: %s", mg::egl_category().message(eglGetError()).c_str());
+            mir::log_critical("Failed to destroy EGLContext: {}", mg::egl_category().message(eglGetError()));
         }
     }
 

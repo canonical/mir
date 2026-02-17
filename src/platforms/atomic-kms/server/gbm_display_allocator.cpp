@@ -156,8 +156,7 @@ auto create_gbm_surface(
 
     if (!surface)
     {
-        mir::log_info(
-            "Failed to create display buffer surface with correct flags. Attempting to create one without flags");
+        mir::log_info("Failed to create display buffer surface with correct flags. Attempting to create one without flags");
         // Try allocating without flags
         // Covers Nvidia cards before 575
         surface = try_create_surface(0);

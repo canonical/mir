@@ -60,7 +60,7 @@ mf::XWaylandClientManager::~XWaylandClientManager()
     if (!sessions_by_pid.empty())
     {
         log_warning(
-            "XWaylandClientManager destroyed with %zu sessions in the map; "
+            "XWaylandClientManager destroyed with {} sessions in the map; "
             "if any XWaylandClientManager::Sessions are still alive, a crash is likely when they are destroyed",
             sessions_by_pid.size());
     }
@@ -81,7 +81,7 @@ auto mf::XWaylandClientManager::session_for_client(pid_t client_pid) -> std::sha
     {
         if (verbose_xwayland_logging_enabled())
         {
-            log_info("Returning existing XWayland session for PID %d (use count %lu)", client_pid, session.use_count());
+            log_info("Returning existing XWayland session for PID {} (use count {})", client_pid, session.use_count());
         }
     }
     else
@@ -91,8 +91,7 @@ auto mf::XWaylandClientManager::session_for_client(pid_t client_pid) -> std::sha
         struct stat proc_stat{};
         if (stat(proc.c_str(), &proc_stat) == -1)
         {
-            log_debug("Failed to get uid & gid for PID %d using stat(%s, ...), falling back to get(uid,gid)",
-                      client_pid, proc.c_str());
+            log_debug("Failed to get uid & gid for PID {} using stat({}, ...), falling back to get(uid,gid)", client_pid, proc);
 
             proc_stat.st_uid = getuid();
             proc_stat.st_gid = getgid();
@@ -100,14 +99,14 @@ auto mf::XWaylandClientManager::session_for_client(pid_t client_pid) -> std::sha
 
         if (!session_authorizer->connection_is_allowed({client_pid, proc_stat.st_uid, proc_stat.st_gid}))
         {
-            log_error("X11 session not authorized for PID %d, rejecting!", client_pid);
+            log_error("X11 session not authorized for PID {}, rejecting!", client_pid);
             return nullptr;
         }
         session = std::make_shared<Session>(this, client_pid);
         sessions_by_pid[client_pid] = session;
         if (verbose_xwayland_logging_enabled())
         {
-            log_info("Created new XWayland session for PID %d", client_pid);
+            log_info("Created new XWayland session for PID {}", client_pid);
         }
     }
 
@@ -128,11 +127,11 @@ void mf::XWaylandClientManager::drop_expired(pid_t client_pid)
         sessions_by_pid.erase(iter);
         if (verbose_xwayland_logging_enabled())
         {
-            log_info("Closed XWayland session for PID %d", client_pid);
+            log_info("Closed XWayland session for PID {}", client_pid);
         }
     }
     else if (verbose_xwayland_logging_enabled())
     {
-        log_info("XWaylandClientManager::drop_expired() called with PID %d, which is not expired", client_pid);
+        log_info("XWaylandClientManager::drop_expired() called with PID {}, which is not expired", client_pid);
     }
 }

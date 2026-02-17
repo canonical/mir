@@ -252,7 +252,7 @@ private:
             }
             else
             {
-                log_warning("%s: invalid commit serial %d", interface_name, serial);
+                log_warning("{}: invalid commit serial {}", interface_name, serial);
             }
 
             change.reset();
@@ -537,7 +537,7 @@ private:
                 spec.attached_edges = MirPlacementGravity::mir_placement_gravity_south;
             }
             else
-                log_warning("Invalid position: %u", position);
+                log_warning("Invalid position: {}", position);
 
             apply_spec(spec);
             show();

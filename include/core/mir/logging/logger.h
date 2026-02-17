@@ -17,6 +17,7 @@
 #ifndef MIR_LOGGING_LOGGER_H_
 #define MIR_LOGGING_LOGGER_H_
 
+#include <format>
 #include <memory>
 #include <string>
 #include <iosfwd>
@@ -44,15 +45,11 @@ public:
                      const std::string& message,
                      const std::string& component) = 0;
 
-    /*
-     * Those playing at home may wonder why we're saying the 4th argument is the format string,
-     * when it's the 3rd argument in the signature.
-     *
-     * The answer, of course, is that the attribute doesn't know about the implicit
-     * 'this' first parameter of C++!
-     */
-    virtual void log(char const* component, Severity severity, char const* format, ...)
-         __attribute__ ((format (printf, 4, 5)));
+    template <typename... Args>
+    void log(char const* component, Severity severity, std::format_string<Args...> fmt, Args&&... args)
+    {
+        log(severity, std::format(fmt, std::forward<Args>(args)...), component);
+    }
 
 protected:
     Logger() {}

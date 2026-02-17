@@ -96,13 +96,13 @@ public:
                 // If we didn't process above, we're ignoring...
                 // clangd really can't format this...
                 mir::log_warning(
-                    "Ignoring unexpected value for %s option: %s "
-                    "(expects value of the form “{skip, allow}:{driver,devnode}:<driver or devnode>”"
-                    ", “disable-kms-probe:{driver,devnode}:<driver or devnode>”, "
-                    "“egl-destroy-surface:{driver,devnode}:{default:leak}”), "
-                    "or “gbm-surface-has-free-buffers:{driver,devnode}:<driver or devnode>:{default,skip}”)",
+                    "Ignoring unexpected value for {} option: {} "
+                    "(expects value of the form “{{skip, allow}}:{{driver,devnode}}:<driver or devnode>”"
+                    ", “disable-kms-probe:{{driver,devnode}}:<driver or devnode>”, "
+                    "“egl-destroy-surface:{{driver,devnode}}:{{default:leak}}”), "
+                    "or “gbm-surface-has-free-buffers:{{driver,devnode}}:<driver or devnode>:{{default,skip}}”)",
                     quirks_option_name,
-                    quirk.c_str());
+                    quirk);
             }
         }
     }
@@ -113,18 +113,18 @@ public:
         auto const parent_device = device.parent();
         auto const driver = mgc::get_device_driver(parent_device.get());
 
-        mir::log_debug("Quirks(skip/allow): checking device with devnode: %s, driver %s", device.devnode(), driver);
+        mir::log_debug("Quirks(skip/allow): checking device with devnode: {}, driver {}", devnode, driver);
 
         bool const should_skip_devnode = completely_skip.skipped_devnodes.contains(devnode);
         if (should_skip_devnode)
         {
-            mir::log_info("Quirks(skip/allow): skipping device %s (matches devnode quirk %s)", devnode, devnode);
+            mir::log_info("Quirks(skip/allow): skipping device {} (matches devnode quirk {})", devnode, devnode);
         }
 
         bool const should_skip_driver = completely_skip.skipped_drivers.contains(driver);
         if (should_skip_driver)
         {
-            mir::log_info("Quirks(skip/allow): skipping device %s (matches driver quirk %s)", devnode, driver);
+            mir::log_info("Quirks(skip/allow): skipping device {} (matches driver quirk {})", devnode, driver);
         }
 
         return should_skip_driver || should_skip_devnode;
@@ -135,19 +135,18 @@ public:
         auto const devnode = mgc::value_or(device.devnode(), "");
         auto const parent_device = device.parent();
         auto const driver = mgc::get_device_driver(parent_device.get());
-        mir::log_debug(
-            "Quirks(disable-kms-probe): checking device with devnode: %s, driver %s", device.devnode(), driver);
+        mir::log_debug("Quirks(disable-kms-probe): checking device with devnode: {}, driver {}", devnode, driver);
 
         bool const should_skip_devnode = disable_kms_probe.skipped_devnodes.contains(devnode);
         if (should_skip_devnode)
         {
-            mir::log_info("Quirks(disable-kms-probe): skipping device %s (matches devnode quirk %s)", devnode, devnode);
+            mir::log_info("Quirks(disable-kms-probe): skipping device {} (matches devnode quirk {})", devnode, devnode);
         }
 
         bool const should_skip_driver = disable_kms_probe.skipped_drivers.contains(driver);
         if (should_skip_driver)
         {
-            mir::log_info("Quirks(disable-kms-probe): skipping device %s (matches driver quirk %s)", devnode, driver);
+            mir::log_info("Quirks(disable-kms-probe): skipping device {} (matches driver quirk {})", devnode, driver);
         }
 
         return !(should_skip_driver || should_skip_devnode);
@@ -173,8 +172,8 @@ public:
         };
 
         auto const driver = mgc::get_device_driver(device.parent().get());
-        auto const devnode = device.devnode();
-        mir::log_debug("Quirks(egl-destroy-surface): checking device with devnode: %s, driver %s", devnode, driver);
+        auto const devnode = mgc::value_or(device.devnode(), "");
+        mir::log_debug("Quirks(egl-destroy-surface): checking device with devnode: {}, driver {}", devnode, driver);
 
         auto egl_destroy_surface_impl_name = mgc::apply_quirk(
             devnode, driver, egl_destroy_surface.devnodes, egl_destroy_surface.drivers, "egl-destroy-surface");
@@ -203,7 +202,7 @@ public:
             }
         };
 
-        mir::log_debug("Quirks(gbm-surface-has-free-buffers): checking device with devnode: %s, driver %s", devnode, driver);
+        mir::log_debug("Quirks(gbm-surface-has-free-buffers): checking device with devnode: {}, driver {}", devnode, driver);
 
         auto surface_has_free_buffers_impl_name = mgc::apply_quirk(
             devnode,

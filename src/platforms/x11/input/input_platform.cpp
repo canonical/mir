@@ -129,8 +129,7 @@ auto get_pos_on_output(mir::X::X11Resources* x11_resources, xcb_window_t x11_win
             else
             {
                 mir::log_warning(
-                    "X11 window %d does not map to any known output, not applying input transformation",
-                    x11_window);
+                    "X11 window {} does not map to any known output, not applying input transformation", x11_window);
             }
         });
     return pos;

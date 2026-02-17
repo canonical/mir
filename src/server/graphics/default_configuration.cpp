@@ -158,7 +158,7 @@ auto mir::DefaultServerConfiguration::the_display_platforms() -> std::vector<std
                 if (!device.device)
                 {
                     mir::log_info(
-                        "Selected display driver: %s (version %d.%d.%d) for platform",
+                        "Selected display driver: {} (version {}.{}.{}) for platform",
                         description->name,
                         description->major_version,
                         description->minor_version,
@@ -167,7 +167,7 @@ auto mir::DefaultServerConfiguration::the_display_platforms() -> std::vector<std
                 else
                 {
                     mir::log_info(
-                        "Selected display driver: %s (version %d.%d.%d) for device (%s: %s)",
+                        "Selected display driver: {} (version {}.{}.{}) for device ({}: {})",
                         description->name,
                         description->major_version,
                         description->minor_version,
@@ -257,7 +257,7 @@ auto mir::DefaultServerConfiguration::the_rendering_platforms() ->
                             MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
                         auto const descriptor = describe_module();
 
-                        mir::log_warning("Manually-specified rendering platform %s does not claim to support this system. Trying anyway...", descriptor->name);
+                        mir::log_warning("Manually-specified rendering platform {} does not claim to support this system. Trying anyway...", descriptor->name);
                     }
                 }
             }
@@ -280,7 +280,7 @@ auto mir::DefaultServerConfiguration::the_rendering_platforms() ->
                 if (!device.device)
                 {
                     mir::log_info(
-                        "Selected rendering driver: %s (version %d.%d.%d) for platform",
+                        "Selected rendering driver: {} (version {}.{}.{}) for platform",
                         description->name,
                         description->major_version,
                         description->minor_version,
@@ -289,7 +289,7 @@ auto mir::DefaultServerConfiguration::the_rendering_platforms() ->
                 else
                 {
                     mir::log_info(
-                        "Selected rendering driver: %s (version %d.%d.%d) for device (%s: %s)",
+                        "Selected rendering driver: {} (version {}.{}.{}) for device ({}: {})",
                         description->name,
                         description->major_version,
                         description->minor_version,

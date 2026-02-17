@@ -121,7 +121,7 @@ public:
             : on_success{std::move(on_success)},
               on_error{[](std::string const& message)
                   {
-                      log_error("XCB error: %s", message.c_str());
+                      log_error("XCB error: {}", message);
                   }}
         {
         }

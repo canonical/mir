@@ -93,7 +93,7 @@ auto init_xfixes(mf::XCBConnection const& connection) -> xcb_query_extension_rep
 
     if (mir::verbose_xwayland_logging_enabled())
     {
-        mir::log_debug("xfixes version: %d.%d", xfixes_reply->major_version, xfixes_reply->minor_version);
+        mir::log_debug("xfixes version: {}.{}", xfixes_reply->major_version, xfixes_reply->minor_version);
     }
 
     return xfixes;
@@ -209,7 +209,7 @@ mf::XWaylandWM::XWaylandWM(
             {
                 if (verbose_xwayland_logging_enabled())
                 {
-                    log_debug("Window %s already exists", connection->window_debug_string(window).c_str());
+                    log_debug("Window {} already exists", connection->window_debug_string(window));
                 }
 
                 auto const geometry_cookie = xcb_get_geometry(*connection, window);
@@ -231,8 +231,8 @@ mf::XWaylandWM::XWaylandWM(
                         else
                         {
                             log_warning(
-                                "Failed to load geometry and attributes for %s",
-                                connection->window_debug_string(window).c_str());
+                                "Failed to load geometry and attributes for {}",
+                                connection->window_debug_string(window));
                         }
                     });
             }
@@ -263,7 +263,7 @@ mf::XWaylandWM::~XWaylandWM()
     }
 
     if (verbose_xwayland_logging_enabled())
-        log_debug("Closing %zu XWayland surface(s)...", local_surfaces.size());
+        log_debug("Closing {} XWayland surface(s)...", local_surfaces.size());
 
     for (auto const& surface : local_surfaces)
     {
@@ -336,11 +336,7 @@ void mf::XWaylandWM::set_focus(xcb_window_t xcb_window, bool should_be_focused)
 
         if (verbose_xwayland_logging_enabled())
         {
-            log_debug(
-                "%s %s %s...",
-                should_be_focused ? "Focusing" : "Unfocusing",
-                was_focused ? "focused" : "unfocused",
-                connection->window_debug_string(xcb_window).c_str());
+            log_debug("{} {} {}...", should_be_focused ? "Focusing" : "Unfocusing", was_focused ? "focused" : "unfocused", connection->window_debug_string(xcb_window));
         }
 
         if (should_be_focused == was_focused)
@@ -445,10 +441,7 @@ void mf::XWaylandWM::restack_surfaces()
         {
             if (verbose_xwayland_logging_enabled())
             {
-                log_debug(
-                    "Stacking %s on top of %s",
-                    connection->window_debug_string(window).c_str(),
-                    connection->window_debug_string(window_below).c_str());
+                log_debug("Stacking {} on top of {}", connection->window_debug_string(window), connection->window_debug_string(window_below));
             }
 
             connection->configure_window(
@@ -523,10 +516,7 @@ void mf::XWaylandWM::manage_window(xcb_window_t window, geom::Rectangle const& g
                 auto const log_prop = [this, atom](std::string const& value)
                     {
                         auto const prop_name = connection->query_name(atom);
-                        log_debug(
-                            "  | %s: %s",
-                            prop_name.c_str(),
-                            value.c_str());
+                        log_debug("  | {}: {}", prop_name, value);
                     };
 
                 functions.push_back(connection->read_property(
@@ -545,13 +535,13 @@ void mf::XWaylandWM::manage_window(xcb_window_t window, geom::Rectangle const& g
                     }));
             }
 
-            log_debug("%s has %d initial propertie(s):", connection->window_debug_string(window).c_str(), prop_count);
+            log_debug("{} has {} initial propertie(s):", connection->window_debug_string(window), prop_count);
             for (auto const& f : functions)
                 f();
         }
         else
         {
-            log_debug("%s's initial properties failed to load", connection->window_debug_string(window).c_str());
+            log_debug("{}'s initial properties failed to load", connection->window_debug_string(window));
         }
     }
 
@@ -688,21 +678,14 @@ void mf::XWaylandWM::handle_property_notify(xcb_property_notify_event_t *event)
     {
         if (event->state == XCB_PROPERTY_DELETE)
         {
-            log_debug(
-                "XCB_PROPERTY_NOTIFY (%s).%s: deleted",
-                connection->window_debug_string(event->window).c_str(),
-                connection->query_name(event->atom).c_str());
+            log_debug("XCB_PROPERTY_NOTIFY ({}).{}: deleted", connection->window_debug_string(event->window), connection->query_name(event->atom));
         }
         else
         {
             auto const log_prop = [this, event](std::string const& value)
                 {
                     auto const prop_name = connection->query_name(event->atom);
-                    log_debug(
-                        "XCB_PROPERTY_NOTIFY (%s).%s: %s",
-                        connection->window_debug_string(event->window).c_str(),
-                        prop_name.c_str(),
-                        value.c_str());
+                    log_debug("XCB_PROPERTY_NOTIFY ({}).{}: {}", connection->window_debug_string(event->window), prop_name, value);
                 };
 
             auto const reply_function = connection->read_property(
@@ -746,14 +729,14 @@ void mf::XWaylandWM::handle_create_notify(xcb_create_notify_event_t *event)
 {
     if (verbose_xwayland_logging_enabled())
     {
-        log_debug("XCB_CREATE_NOTIFY parent: %s", connection->window_debug_string(event->parent).c_str());
-        log_debug("                  window: %s", connection->window_debug_string(event->window).c_str());
-        log_debug("                  position: %d, %d", event->x, event->y);
-        log_debug("                  size: %dx%d", event->width, event->height);
-        log_debug("                  override_redirect: %s", event->override_redirect ? "yes" : "no");
+        log_debug("XCB_CREATE_NOTIFY parent: {}", connection->window_debug_string(event->parent));
+        log_debug("                  window: {}", connection->window_debug_string(event->window));
+        log_debug("                  position: {}, {}", event->x, event->y);
+        log_debug("                  size: {}x{}", event->width, event->height);
+        log_debug("                  override_redirect: {}", event->override_redirect ? "yes" : "no");
 
         if (event->border_width)
-            log_warning("border width unsupported (border width %d)", event->border_width);
+            log_warning("border width unsupported (border width {})", event->border_width);
     }
 
     if (!connection->is_ours(event->window))
@@ -769,11 +752,11 @@ void mf::XWaylandWM::handle_motion_notify(xcb_motion_notify_event_t *event)
 {
     if (verbose_xwayland_logging_enabled())
     {
-        log_debug("XCB_MOTION_NOTIFY root: %s", connection->window_debug_string(event->root).c_str());
-        log_debug("                  event: %s", connection->window_debug_string(event->event).c_str());
-        log_debug("                  child: %s", connection->window_debug_string(event->child).c_str());
-        log_debug("                  root pos: %d, %d", event->root_x, event->root_y);
-        log_debug("                  event pos: %d, %d", event->event_x, event->event_y);
+        log_debug("XCB_MOTION_NOTIFY root: {}", connection->window_debug_string(event->root));
+        log_debug("                  event: {}", connection->window_debug_string(event->event));
+        log_debug("                  child: {}", connection->window_debug_string(event->child));
+        log_debug("                  root pos: {}, {}", event->root_x, event->root_y);
+        log_debug("                  event pos: {}, {}", event->event_x, event->event_y);
     }
 }
 
@@ -781,10 +764,7 @@ void mf::XWaylandWM::handle_destroy_notify(xcb_destroy_notify_event_t *event)
 {
     if (verbose_xwayland_logging_enabled())
     {
-        log_debug(
-            "XCB_DESTROY_NOTIFY window: %s, event: %s",
-            connection->window_debug_string(event->window).c_str(),
-            connection->window_debug_string(event->event).c_str());
+        log_debug("XCB_DESTROY_NOTIFY window: {}, event: {}", connection->window_debug_string(event->window), connection->window_debug_string(event->event));
     }
 
     std::shared_ptr<XWaylandSurface> surface{nullptr};
@@ -815,10 +795,7 @@ void mf::XWaylandWM::handle_map_request(xcb_map_request_event_t *event)
 {
     if (verbose_xwayland_logging_enabled())
     {
-        log_debug(
-            "XCB_MAP_REQUEST %s with parent %s",
-            connection->window_debug_string(event->window).c_str(),
-            connection->window_debug_string(event->parent).c_str());
+        log_debug("XCB_MAP_REQUEST {} with parent {}", connection->window_debug_string(event->window), connection->window_debug_string(event->parent));
     }
 
     if (auto const surface = get_wm_surface(event->window))
@@ -831,10 +808,7 @@ void mf::XWaylandWM::handle_unmap_notify(xcb_unmap_notify_event_t *event)
 {
     if (verbose_xwayland_logging_enabled())
     {
-        log_debug(
-            "XCB_UNMAP_NOTIFY %s with event %s",
-            connection->window_debug_string(event->window).c_str(),
-            connection->window_debug_string(event->event).c_str());
+        log_debug("XCB_UNMAP_NOTIFY {} with event {}", connection->window_debug_string(event->window), connection->window_debug_string(event->event));
     }
 
     if (connection->is_ours(event->window))
@@ -850,11 +824,7 @@ void mf::XWaylandWM::handle_client_message(xcb_client_message_event_t *event)
 {
     if (verbose_xwayland_logging_enabled())
     {
-        log_debug(
-            "XCB_CLIENT_MESSAGE %s on %s: %s",
-            connection->query_name(event->type).c_str(),
-            connection->window_debug_string(event->window).c_str(),
-            connection->client_message_debug_string(event).c_str());
+        log_debug("XCB_CLIENT_MESSAGE {} on {}: {}", connection->query_name(event->type), connection->window_debug_string(event->window), connection->client_message_debug_string(event));
     }
 
     if (auto const surface = get_wm_surface(event->window))
@@ -909,9 +879,7 @@ void mf::XWaylandWM::handle_surface_id(
                     {
                         if (verbose_xwayland_logging_enabled())
                         {
-                            log_debug(
-                                "wl_surface@%u created but surface or shell has been destroyed",
-                                wl_resource_get_id(wl_surface->resource));
+                            log_debug("wl_surface@{} created but surface or shell has been destroyed", wl_resource_get_id(wl_surface->resource));
                         }
                     }
                 });
@@ -922,14 +890,14 @@ void mf::XWaylandWM::handle_configure_request(xcb_configure_request_event_t *eve
 {
     if (verbose_xwayland_logging_enabled())
     {
-        log_debug("XCB_CONFIGURE_REQUEST parent: %s", connection->window_debug_string(event->parent).c_str());
-        log_debug("                      window: %s", connection->window_debug_string(event->window).c_str());
-        log_debug("                      sibling: %s", connection->window_debug_string(event->sibling).c_str());
-        log_debug("                      position: %d, %d", event->x, event->y);
-        log_debug("                      size: %dx%d", event->width, event->height);
+        log_debug("XCB_CONFIGURE_REQUEST parent: {}", connection->window_debug_string(event->parent));
+        log_debug("                      window: {}", connection->window_debug_string(event->window));
+        log_debug("                      sibling: {}", connection->window_debug_string(event->sibling));
+        log_debug("                      position: {}, {}", event->x, event->y);
+        log_debug("                      size: {}x{}", event->width, event->height);
 
         if (event->border_width)
-            log_warning("border width unsupported (border width %d)", event->border_width);
+            log_warning("border width unsupported (border width {})", event->border_width);
     }
 
     if (auto const surface = get_wm_surface(event->window))
@@ -942,15 +910,15 @@ void mf::XWaylandWM::handle_configure_notify(xcb_configure_notify_event_t *event
 {
     if (verbose_xwayland_logging_enabled())
     {
-        log_debug("XCB_CONFIGURE_NOTIFY event: %s", connection->window_debug_string(event->event).c_str());
-        log_debug("                     window: %s", connection->window_debug_string(event->window).c_str());
-        log_debug("                     above_sibling: %s", connection->window_debug_string(event->above_sibling).c_str());
-        log_debug("                     position: %d, %d", event->x, event->y);
-        log_debug("                     size: %dx%d", event->width, event->height);
-        log_debug("                     override_redirect: %s", event->override_redirect ? "yes" : "no");
+        log_debug("XCB_CONFIGURE_NOTIFY event: {}", connection->window_debug_string(event->event));
+        log_debug("                     window: {}", connection->window_debug_string(event->window));
+        log_debug("                     above_sibling: {}", connection->window_debug_string(event->above_sibling));
+        log_debug("                     position: {}, {}", event->x, event->y);
+        log_debug("                     size: {}x{}", event->width, event->height);
+        log_debug("                     override_redirect: {}", event->override_redirect ? "yes" : "no");
 
         if (event->border_width)
-            log_warning("border width unsupported (border width %d)", event->border_width);
+            log_warning("border width unsupported (border width {})", event->border_width);
     }
 
     if (auto const surface = get_wm_surface(event->window))
@@ -963,10 +931,7 @@ void mf::XWaylandWM::handle_focus_in(xcb_focus_in_event_t* event)
 {
     if (verbose_xwayland_logging_enabled())
     {
-        log_debug(
-            "XCB_FOCUS_IN %s on %s",
-            focus_mode_to_string(event->mode).c_str(),
-            connection->window_debug_string(event->event).c_str());
+        log_debug("XCB_FOCUS_IN {} on {}", focus_mode_to_string(event->mode), connection->window_debug_string(event->event));
     }
 
     // Ignore grabs
@@ -983,6 +948,6 @@ void mf::XWaylandWM::handle_error(xcb_generic_error_t* event)
 {
     if (verbose_xwayland_logging_enabled())
     {
-        log_warning("XWayland XCB error: %s", connection->error_debug_string(event).c_str());
+        log_warning("XWayland XCB error: {}", connection->error_debug_string(event));
     }
 }

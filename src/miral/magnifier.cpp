@@ -196,9 +196,7 @@ miral::Magnifier::Magnifier(live_config::Store& config_store)
         {
             if (val.has_value() && *val <= 1.f)
             {
-                mir::log_warning(
-                    "Config key '%s' should be greater than or equal to 1",
-                    key.to_string().c_str());
+                mir::log_warning("Config key '{}' should be greater than or equal to 1", key.to_string());
                 return;
             }
 
@@ -212,9 +210,7 @@ miral::Magnifier::Magnifier(live_config::Store& config_store)
         {
             if (val.has_value() && *val <= 0)
             {
-                mir::log_warning(
-                    "Config key '%s' should be greater than 0",
-                    key.to_string().c_str());
+                mir::log_warning("Config key '{}' should be greater than 0", key.to_string());
                 return;
             }
 
@@ -233,9 +229,7 @@ miral::Magnifier::Magnifier(live_config::Store& config_store)
         {
             if (val.has_value() && *val <= 0)
             {
-                mir::log_warning(
-                    "Config key '%s' should be greater than 0",
-                    key.to_string().c_str());
+                mir::log_warning("Config key '{}' should be greater than 0", key.to_string());
                 return;
             }
 
@@ -258,8 +252,7 @@ miral::Magnifier& miral::Magnifier::magnification(float magnification)
 {
     if (magnification <= 1.f)
     {
-        mir::log_warning(
-            "Magnification should be greater than or equal to 1");
+        mir::log_warning("Magnification should be greater than or equal to 1");
         return *this;
     }
 

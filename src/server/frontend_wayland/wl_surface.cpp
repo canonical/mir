@@ -212,7 +212,8 @@ void mf::WlSurface::add_subsurface(WlSubsurface* child)
 {
     if (std::find(children.begin(), children.end(), child) != children.end())
     {
-        log_warning("Subsurface %p added to surface %p multiple times", static_cast<void*>(child), static_cast<void*>(this));
+        log_warning(
+            "Subsurface {} added to surface {} multiple times", static_cast<void*>(child), static_cast<void*>(this));
         return;
     }
 
@@ -257,7 +258,7 @@ void mf::WlSurface::reorder_subsurface(WlSubsurface* child, WlSurface* sibling_s
         child_pos == pending_surface_order->end())
     {
         log_warning(
-            "Subsurface (wl_surface@%u) attempted to reorder but not found in parent's (wl_surface@%u) children list",
+            "Subsurface (wl_surface@{}) attempted to reorder but not found in parent's (wl_surface@{}) children list",
             wl_resource_get_id(child->get_surface()->raw_resource()),
             wl_resource_get_id(raw_resource()));
         return;
@@ -279,7 +280,8 @@ void mf::WlSurface::reorder_subsurface(WlSubsurface* child, WlSurface* sibling_s
     if (sibling_it == pending_surface_order->end())
     {
         log_warning(
-            "Subsurface (wl_surface@%u) attempted to reorder relative to a sibling (wl_surface@%u) not found in parent's (wl_surface@%u) children list",
+            "Subsurface (wl_surface@{}) attempted to reorder relative to a sibling (wl_surface@{}) not found in "
+            "parent's (wl_surface@{}) children list",
             wl_resource_get_id(child->get_surface()->raw_resource()),
             wl_resource_get_id(sibling_surface->raw_resource()),
             wl_resource_get_id(raw_resource()));

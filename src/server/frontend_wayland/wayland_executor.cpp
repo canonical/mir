@@ -237,10 +237,7 @@ int mf::WaylandExecutor::State::on_notify(int fd, uint32_t, void* data)
     eventfd_t unused;
     if (auto err = eventfd_read(fd, &unused))
     {
-        mir::log_error(
-            "eventfd_read failed to consume wakeup notification: %s (%i)",
-            mir::errno_to_cstr(err),
-            err);
+        mir::log_error("eventfd_read failed to consume wakeup notification: {} ({})", mir::errno_to_cstr(err), err);
     }
 
     while (auto work = state->get_work())
@@ -328,7 +325,7 @@ mf::WaylandExecutor::~WaylandExecutor()
     if (auto err = eventfd_write(notify_fd, 1))
     {
         mir::log_critical(
-            "Failed to create event notification for ~WaylandExecutor: %s (%i)",
+            "Failed to create event notification for ~WaylandExecutor: {} ({})",
             mir::errno_to_cstr(err),
             err);
     }

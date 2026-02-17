@@ -130,12 +130,12 @@ void mf::WlTouch::motion(
 
     if (touch == touch_id_to_surface.end())
     {
-        log_warning("WlTouch::motion(): invalid ID %d", touch_id);
+        log_warning("WlTouch::motion(): invalid ID {}", touch_id);
         return;
     }
     else if (!touch->second.surface)
     {
-        log_warning("WlTouch::motion(): ID %d maps to destroyed surface", touch_id);
+        log_warning("WlTouch::motion(): ID {} maps to destroyed surface", touch_id);
         return;
     }
 
@@ -168,7 +168,7 @@ void mf::WlTouch::up(uint32_t serial, std::chrono::milliseconds const& ms, int32
     }
     else
     {
-        log_warning("WlTouch::up() called with invalid ID %d", touch_id);
+        log_warning("WlTouch::up() called with invalid ID {}", touch_id);
     }
 }
 

@@ -611,7 +611,7 @@ mrg::Renderer::Renderer(
 
     GLint max_texture_size = 0;
     glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_texture_size);
-    mir::log_info("GL max texture size = %d", max_texture_size);
+    mir::log_info("GL max texture size = {}", max_texture_size);
 
     GLint rbits = 0, gbits = 0, bbits = 0, abits = 0, dbits = 0, sbits = 0;
     glGetIntegerv(GL_RED_BITS, &rbits);
@@ -620,8 +620,7 @@ mrg::Renderer::Renderer(
     glGetIntegerv(GL_ALPHA_BITS, &abits);
     glGetIntegerv(GL_DEPTH_BITS, &dbits);
     glGetIntegerv(GL_STENCIL_BITS, &sbits);
-    mir::log_info("GL framebuffer bits: RGBA=%d%d%d%d, depth=%d, stencil=%d",
-                  rbits, gbits, bbits, abits, dbits, sbits);
+    mir::log_info("GL framebuffer bits: RGBA={}{}{}{}, depth={}, stencil={}", rbits, gbits, bbits, abits, dbits, sbits);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
@@ -678,7 +677,7 @@ auto mrg::Renderer::render(mg::RenderableList const& renderables) const -> std::
 
     // Report any GL errors after commit, to catch any *during* commit
     while (auto const gl_error = glGetError())
-        mir::log_debug("GL error: %d", gl_error);
+        mir::log_debug("GL error: {}", gl_error);
 
     return output;
 }

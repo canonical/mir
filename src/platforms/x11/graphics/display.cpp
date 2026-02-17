@@ -218,7 +218,7 @@ void mgx::Display::configure(mg::DisplayConfiguration const& new_configuration)
         }
 
         if (!found_info)
-            mir::log_error("Could not find info for output %d", conf_output.id.as_value());
+            mir::log_error("Could not find info for output {}", conf_output.id.as_value());
     });
 }
 

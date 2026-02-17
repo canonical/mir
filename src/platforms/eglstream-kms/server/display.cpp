@@ -254,9 +254,7 @@ public:
                      *
                      * We've failed to submit the flip, though, so cancel the pending flip event
                      */
-                    mir::log_info("Failed to submit page flip (%s (%i))",
-                        error->message().c_str(),
-                        error->value());
+                    mir::log_info("Failed to submit page flip ({} ({}))", error->message(), error->value());
                     event_handler->cancel_flip_events(output->crtc_id());
                     return;
                 }
@@ -291,9 +289,7 @@ public:
                      *
                      * Assume this is a transient VT-switch failure :(
                      */
-                    mir::log_info("Failed to submit page flip (%s (%i))",
-                        error->message().c_str(),
-                        error->value());
+                    mir::log_info("Failed to submit page flip ({} ({}))", error->message(), error->value());
                     event_handler->cancel_flip_events(output->crtc_id());
                     return;
                 }

@@ -69,7 +69,7 @@ mgmh::DRMHelper::open_all_devices(
     {
         if (quirks.should_skip(device))
         {
-            mir::log_info("Ignoring device %s due to specified quirk", device.devnode());
+            mir::log_info("Ignoring device {} due to specified quirk", device.devnode());
             continue;
         }
 
@@ -85,9 +85,7 @@ mgmh::DRMHelper::open_all_devices(
         catch (std::exception const& error)
         {
             mir::log_warning(
-                "Failed to open DRM device node %s: %s",
-                device.devnode(),
-                boost::diagnostic_information(error).c_str());
+                "Failed to open DRM device node {}: {}", device.devnode(), boost::diagnostic_information(error));
             continue;
         }
 
@@ -95,7 +93,7 @@ mgmh::DRMHelper::open_all_devices(
         if (tmp_fd == mir::Fd::invalid)
         {
             mir::log_critical(
-                "Opening the DRM device %s succeeded, but provided an invalid descriptor!",
+                "Opening the DRM device {} succeeded, but provided an invalid descriptor!",
                 device.devnode());
             mir::log_critical(
                 "This is probably a logic error in Mir, please report to https://github.com/canonical/mir/issues");
@@ -112,7 +110,7 @@ mgmh::DRMHelper::open_all_devices(
         if ((error = -drmSetInterfaceVersion(tmp_fd, &sv)))
         {
             mir::log_warning(
-                "Failed to set DRM interface version on device %s: %i (%s)",
+                "Failed to set DRM interface version on device {}: {} ({})",
                 device.devnode(),
                 error,
                 mir::errno_to_cstr(error));
@@ -125,9 +123,7 @@ mgmh::DRMHelper::open_all_devices(
 
         if (!busid)
         {
-            mir::log_warning(
-                "Failed to query BusID for device %s; cannot check if KMS is available",
-                device.devnode());
+            mir::log_warning("Failed to query BusID for device {}; cannot check if KMS is available", device.devnode());
         }
         else
         {
@@ -138,7 +134,7 @@ mgmh::DRMHelper::open_all_devices(
             case ENOSYS:
                 if (quirks.require_modesetting_support(device))
                 {
-                    mir::log_info("Ignoring non-KMS DRM device %s", device.devnode());
+                    mir::log_info("Ignoring non-KMS DRM device {}", device.devnode());
                     error = ENOSYS;
                     continue;
                 }
@@ -146,13 +142,14 @@ mgmh::DRMHelper::open_all_devices(
                 [[fallthrough]];
             case EINVAL:
                 mir::log_warning(
-                    "Failed to detect whether device %s supports KMS, but continuing anyway",
-                    device.devnode());
+                    "Failed to detect whether device {} supports KMS, but continuing anyway", device.devnode());
                 break;
 
             default:
-                mir::log_warning("Unexpected error from drmCheckModesettingSupported(): %s (%i), but continuing anyway",
-                    mir::errno_to_cstr(err), err);
+                mir::log_warning(
+                    "Unexpected error from drmCheckModesettingSupported(): {} ({}), but continuing anyway",
+                    mir::errno_to_cstr(err),
+                    err);
                 mir::log_warning("Please file a bug at https://github.com/canonical/mir/issues containing this message");
             }
         }
@@ -163,7 +160,7 @@ mgmh::DRMHelper::open_all_devices(
                 new DRMHelper{
                     std::move(tmp_fd),
                     std::move(device_handle)}});
-        mir::log_info("Using DRM device %s", device.devnode());
+        mir::log_info("Using DRM device {}", device.devnode());
     }
 
     if (opened_devices.size() == 0)

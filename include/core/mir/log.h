@@ -21,17 +21,12 @@
 
 #include <mir/logging/logger.h>  // for Severity
 #include <string>
-#include <cstdarg>
+#include <format>
+#include <utility>
 #include <exception>
 
 namespace mir
 {
-[[gnu::format (printf, 3, 0)]]
-void logv(logging::Severity sev, const char *component,
-          char const* fmt, va_list va);
-[[gnu::format (printf, 3, 4)]]
-void log(logging::Severity sev, const char *component,
-         char const* fmt, ...);
 void log(logging::Severity sev, const char *component,
          std::string const& message);
 void log(
@@ -39,6 +34,13 @@ void log(
     char const* component,
     std::exception_ptr const& exception,
     std::string const& message);
+
+template <typename... Args>
+inline void log(
+    logging::Severity sev, std::string_view const component, std::format_string<Args...> fmt, Args&&... args)
+{
+    log(sev, component.data(), std::format(fmt, std::forward<Args>(args)...));
+}
 
 /// Log a security event according to the OWASP specification
 ///
@@ -67,34 +69,22 @@ inline void log_info(std::string const& message)
                MIR_LOG_COMPONENT, message);
 }
 
-[[gnu::format (printf, 1, 2)]]
-inline void log_info(char const* fmt, ...)
+template<typename... Args>
+inline void log_info(std::format_string<Args...> fmt, Args&&... args)
 {
-    va_list va;
-    va_start(va, fmt);
-    ::mir::logv(::mir::logging::Severity::informational,
-                MIR_LOG_COMPONENT, fmt, va);
-    va_end(va);
+    ::mir::log(::mir::logging::Severity::informational, MIR_LOG_COMPONENT, fmt, std::forward<Args>(args)...);
 }
 
-[[gnu::format (printf, 1, 2)]]
-inline void log_error(char const* fmt, ...)
+template<typename... Args>
+inline void log_error(std::format_string<Args...> fmt, Args&&... args)
 {
-    va_list va;
-    va_start(va, fmt);
-    ::mir::logv(::mir::logging::Severity::error,
-                MIR_LOG_COMPONENT, fmt, va);
-    va_end(va);
+    ::mir::log(::mir::logging::Severity::error, MIR_LOG_COMPONENT, fmt, std::forward<Args>(args)...);
 }
 
-[[gnu::format (printf, 1, 2)]]
-inline void log_debug(char const* fmt, ...)
+template<typename... Args>
+inline void log_debug(std::format_string<Args...> fmt, Args&&... args)
 {
-    va_list va;
-    va_start(va, fmt);
-    ::mir::logv(::mir::logging::Severity::debug,
-               MIR_LOG_COMPONENT, fmt, va);
-    va_end(va);
+    ::mir::log(::mir::logging::Severity::debug, MIR_LOG_COMPONENT, fmt, std::forward<Args>(args)...);
 }
 
 inline void log_critical(std::string const& message)
@@ -103,14 +93,10 @@ inline void log_critical(std::string const& message)
                MIR_LOG_COMPONENT, message);
 }
 
-[[gnu::format(printf, 1, 2)]]
-inline void log_critical(char const* fmt, ...)
+template<typename... Args>
+inline void log_critical(std::format_string<Args...> fmt, Args&&... args)
 {
-    va_list va;
-    va_start(va, fmt);
-    ::mir::logv(::mir::logging::Severity::critical,
-               MIR_LOG_COMPONENT, fmt, va);
-    va_end(va);
+    ::mir::log(::mir::logging::Severity::critical, MIR_LOG_COMPONENT, fmt, std::forward<Args>(args)...);
 }
 
 inline void log_error(std::string const& message)
@@ -125,14 +111,10 @@ inline void log_warning(std::string const& message)
                MIR_LOG_COMPONENT, message);
 }
 
-[[gnu::format(printf, 1, 2)]]
-inline void log_warning(char const* fmt, ...)
+template<typename... Args>
+inline void log_warning(std::format_string<Args...> fmt, Args&&... args)
 {
-    va_list va;
-    va_start(va, fmt);
-    ::mir::logv(::mir::logging::Severity::warning,
-               MIR_LOG_COMPONENT, fmt, va);
-    va_end(va);
+    ::mir::log(::mir::logging::Severity::warning, MIR_LOG_COMPONENT, fmt, std::forward<Args>(args)...);
 }
 } // (nested anonymous) namespace
 #endif

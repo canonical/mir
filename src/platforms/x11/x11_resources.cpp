@@ -111,7 +111,7 @@ public:
         auto screen_cookie = xcb_randr_get_screen_info_unchecked(conn,screen_->root);
         auto const screen_reply = mir::make_unique_cptr(xcb_randr_get_screen_info_reply(conn, screen_cookie, nullptr));
         auto refresh_rate = static_cast<double>(screen_reply->rate);
-        mir::log_debug("Detected %.2fHz host output refresh rate.", refresh_rate);
+        mir::log_debug("Detected {:.2}Hz host output refresh rate.", refresh_rate);
         return screen_reply->rate;
     }
 

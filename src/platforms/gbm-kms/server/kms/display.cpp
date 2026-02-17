@@ -104,7 +104,7 @@ void log_drm_details(mir::Fd const& drm_fd)
     };
 
     mir::log_info(
-        "%s: using driver %s [%s] (version: %i.%i.%i driver date: %s)",
+        "{}: using driver {} [{}] (version: {}.{}.{} driver date: {})",
         device_name.get(),
         version->name,
         version->desc,
@@ -119,13 +119,11 @@ void log_drm_details(mir::Fd const& drm_fd)
         for (auto const& connector : resources.connectors())
         {
             mir::log_info(
-                "\tOutput: %s (%s)",
-                mg::kms::connector_name(connector).c_str(),
-                describe_connection_status(*connector));
+                "\tOutput: {} ({})", mg::kms::connector_name(connector), describe_connection_status(*connector));
             for (auto i = 0; i < connector->count_modes; ++i)
             {
                 mir::log_info(
-                    "\t\tMode: %i×%i@%.2f",
+                    "\t\tMode: {}×{}@{:.2f}",
                     connector->modes[i].hdisplay,
                     connector->modes[i].vdisplay,
                     calculate_vrefresh_hz(connector->modes[i]));
@@ -134,9 +132,7 @@ void log_drm_details(mir::Fd const& drm_fd)
     }
     catch (std::exception const& error)
     {
-        mir::log_info(
-            "\tKMS not supported (%s)",
-            error.what());
+        mir::log_info("\tKMS not supported ({})", error.what());
     }
 }
 
@@ -230,7 +226,7 @@ void mgg::Display::register_configuration_change_handler(
                 monitor.process_events([conf_change_handler, this]
                                        (mir::udev::Monitor::EventType type, mir::udev::Device const& device)
                                        {
-                                            mir::log_debug("Processing UDEV event for %s: %i", device.syspath(), type);
+                                            mir::log_debug("Processing UDEV event for {}: {}", device.syspath(), static_cast<int>(type));
                                             dirty_configuration = true;
                                             conf_change_handler();
                                        });
@@ -512,7 +508,7 @@ auto mgg::GBMDisplayProvider::is_same_device(mir::udev::Device const& render_dev
     std::unique_ptr<char[], CStrFree> primary_node{drmGetPrimaryDeviceNameFromFd(fd)};
     std::unique_ptr<char[], CStrFree> render_node{drmGetRenderDeviceNameFromFd(fd)};
 
-    mir::log_debug("Checking whether %s is the same device as (%s, %s)...", render_device.devnode(), primary_node.get(), render_node.get());
+    mir::log_debug("Checking whether {} is the same device as ({}, {})...", render_device.devnode(), primary_node.get(), render_node.get());
 
     if (primary_node)
     {

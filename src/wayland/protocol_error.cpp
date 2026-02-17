@@ -78,7 +78,7 @@ void mw::tried_to_send_unsupported_event(wl_client* client, wl_resource* resourc
         required_version);
 
     log_critical(
-        "Tried to send %s@%u.%s to object with version %d (requires version %d)",
+        "Tried to send {}@{}.{} to object with version {} (requires version {})",
         wl_resource_get_class(resource),
         wl_resource_get_id(resource),
         event,
