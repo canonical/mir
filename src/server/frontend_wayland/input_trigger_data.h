@@ -184,10 +184,14 @@ public:
     uint32_t const scancode;
 };
 
+class InputTriggerLifetimeTracker;
 class InputTriggerActionV1 : public wayland::InputTriggerActionV1
 {
 public:
-    InputTriggerActionV1(wl_resource* id);
+    InputTriggerActionV1(wl_resource* id, std::shared_ptr<InputTriggerLifetimeTracker> const& lifetime_tracker);
+
+private:
+    std::shared_ptr<InputTriggerLifetimeTracker> const lifetime_tracker;
 };
 
 // Used in `add_new_action` when a client provides a revoked token to call
@@ -204,6 +208,8 @@ public:
 class InputTriggerData
 {
 public:
+    using Token = std::string;
+
     InputTriggerData(std::shared_ptr<shell::TokenAuthority> const& token_authority, Executor& wayland_executor);
 
     auto add_new_action(std::string const& token, struct wl_resource* id) -> bool;
@@ -214,8 +220,9 @@ public:
 
     bool matches(MirEvent const& event);
 
+    void erase(Token const& token);
+
 private:
-    using Token = std::string;
 
     class TokenData
     {
@@ -224,18 +231,17 @@ private:
 
         void add_action(Token const& token, struct wl_resource* id);
 
-        void add_action_control(Token const& token, struct wl_resource* id);
+        void add_action_control(
+            Token const& token,
+            std::shared_ptr<InputTriggerLifetimeTracker> const& lifetime_tracker,
+            struct wl_resource* id);
 
         bool has_trigger(frontend::InputTriggerV1 const* trigger) const;
 
-        void erase_expired_entries();
-
-        bool has_action_or_control(Token const& token) const;
-
-        void erase(Token const& token);
-
         bool matches(
             MirEvent const& event, KeyboardStateTracker const& keyboard_state, shell::TokenAuthority& token_authority);
+
+        void erase(Token const& token);
 
     private:
 
@@ -253,28 +259,33 @@ private:
 
             void begin(std::string const& activation_token, uint32_t wayland_timestamp);
 
-            void erase_expired_entries();
-
-            auto empty() const -> bool;
-
         private:
             std::vector<wayland::Weak<InputTriggerActionV1 const>> actions;
             bool began_{false};
         };
 
+        // All the data associated with a token that we need to keep track of.
         struct Entry
         {
+            // Used by action controls to add or drop triggers, and by
+            // TokenData::matches to check for matches when input events
+            // arrive.
             TriggerList trigger_list;
+
+            // List of actions associated with the token. Used to send begin
+            // and end events when matches are made and broken.
             ActionGroup action_group;
-            wayland::Weak<ActionControl> action_control;
+
+            // Passed to action controls and actions as a shared_ptr. When the
+            // last reference is destroyed, removes the entry from the
+            // token_data map.
+            std::weak_ptr<InputTriggerLifetimeTracker> lifetime_tracker;
         };
 
-        std::unordered_map<Token, Entry> token_data;
+        std::unordered_map<Token, Entry> entries;
     };
 
-    void erase_expired_entries();
     void token_revoked(Token const& token);
-
 
     TokenData token_data;
     RecentTokens revoked_tokens;

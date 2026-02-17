@@ -36,7 +36,7 @@ namespace mw = mir::wayland;
 class mf::InputTriggerData::TokenData::ActionControl : public mw::InputTriggerActionControlV1
 {
 public:
-    ActionControl(std::string_view token, TriggerList& triggers, struct wl_resource* id);
+    ActionControl(TriggerList& triggers, std::shared_ptr<InputTriggerLifetimeTracker> const&, struct wl_resource* id);
 
     void add_input_trigger_event(struct wl_resource* trigger) override;
     void drop_input_trigger_event(struct wl_resource* trigger) override;
@@ -45,14 +45,10 @@ private:
     void add_trigger(frontend::InputTriggerV1 const* trigger);
     void drop_trigger(frontend::InputTriggerV1 const* trigger);
 
-    std::string const token;
     TriggerList& triggers;
+    std::shared_ptr<InputTriggerLifetimeTracker> const lifetime_tracker;
 };
 
-mir::frontend::InputTriggerModifiers::InputTriggerModifiers(MirInputEventModifiers value) :
-    value{value}
-{
-}
 auto mf::InputTriggerModifiers::to_string() const -> std::string
 {
     if (value == mir_input_event_modifier_none)
@@ -425,8 +421,29 @@ bool mf::KeyboardCodeTrigger::is_same_trigger(KeyboardCodeTrigger const* other) 
     return other && scancode == other->scancode && modifiers == other->modifiers;
 }
 
-mf::InputTriggerActionV1::InputTriggerActionV1(wl_resource* id) :
-    mw::InputTriggerActionV1{id, Version<1>{}}
+class mf::InputTriggerLifetimeTracker
+{
+public:
+    InputTriggerLifetimeTracker(std::function<void()> on_destroy);
+    ~InputTriggerLifetimeTracker();
+
+private:
+    std::function<void()> on_destroy;
+};
+
+mf::InputTriggerLifetimeTracker::InputTriggerLifetimeTracker(std::function<void()> on_destroy) :
+    on_destroy{std::move(on_destroy)}
+{
+}
+
+mf::InputTriggerLifetimeTracker::~InputTriggerLifetimeTracker()
+{
+    on_destroy();
+}
+
+mf::InputTriggerActionV1::InputTriggerActionV1(wl_resource* id, std::shared_ptr<InputTriggerLifetimeTracker> const& foo) :
+    wayland::InputTriggerActionV1{id, Version<1>{}},
+    lifetime_tracker{foo}
 {
 }
 
@@ -442,39 +459,39 @@ auto mf::InputTriggerData::TokenData::ActionGroup::began() const -> bool
 
 void mf::InputTriggerData::TokenData::ActionGroup::end(std::string const& activation_token, uint32_t wayland_timestamp)
 {
-    erase_expired_entries();
-
     for (auto const& action : actions)
+    {
+        if (!action)
+            continue;
         action.value().send_end_event(wayland_timestamp, activation_token);
+    }
 
     began_ = false;
 }
 
-void mf::InputTriggerData::TokenData::ActionGroup::begin(std::string const& activation_token, uint32_t wayland_timestamp)
+void mf::InputTriggerData::TokenData::ActionGroup::begin(
+    std::string const& activation_token, uint32_t wayland_timestamp)
 {
-    erase_expired_entries();
-
     for (auto const& action : actions)
+    {
+        if (!action)
+            continue;
         action.value().send_begin_event(wayland_timestamp, activation_token);
+    }
 
     began_ = true;
 }
 
-void mf::InputTriggerData::TokenData::ActionGroup::erase_expired_entries()
+void mf::InputTriggerData::TokenData::erase(Token const& token)
 {
-    std::erase_if(actions, [](auto const& action) { return !action; });
-}
-
-auto mf::InputTriggerData::TokenData::ActionGroup::empty() const -> bool
-{
-    return actions.empty();
+    entries.erase(token);
 }
 
 mf::InputTriggerData::TokenData::ActionControl::ActionControl(
-    std::string_view token, TriggerList& triggers, struct wl_resource* id) :
+    TriggerList& triggers, std::shared_ptr<InputTriggerLifetimeTracker> const& foo, struct wl_resource* id) :
     mw::InputTriggerActionControlV1{id, Version<1>{}},
-    token{token},
-    triggers{triggers}
+    triggers{triggers},
+    lifetime_tracker{foo}
 {
 }
 
@@ -513,8 +530,6 @@ mf::InputTriggerData::InputTriggerData(
 
 auto mf::InputTriggerData::add_new_action(Token const& token, struct wl_resource* id) -> bool
 {
-    erase_expired_entries();
-
     if (revoked_tokens.contains(token))
     {
         auto const action = new NullInputTriggerActionV1{id};
@@ -533,27 +548,19 @@ auto mf::InputTriggerData::add_new_action(Token const& token, struct wl_resource
 
 void mf::InputTriggerData::add_new_action_control(struct wl_resource* id)
 {
-    erase_expired_entries();
-
     auto const token = token_authority->issue_token(
         [this](auto const& token) { wayland_executor.spawn([this, token] { token_revoked(Token{token}); }); });
 
     auto const token_string = static_cast<Token>(token);
 
-    token_data.add_action_control(token_string, id);
+    auto const lifetime_tracker =
+        std::make_shared<InputTriggerLifetimeTracker>([this, token_string] { token_data.erase(token_string); });
+    token_data.add_action_control(token_string, lifetime_tracker, id);
 }
 
 auto mf::InputTriggerData::has_trigger(mf::InputTriggerV1 const* trigger) -> bool
 {
-    erase_expired_entries();
-
-    // All elements are should be valid now
     return token_data.has_trigger(trigger);
-}
-
-void mf::InputTriggerData::erase_expired_entries()
-{
-    token_data.erase_expired_entries();
 }
 
 // If the token becomes invalid before an action or action control object is
@@ -562,12 +569,6 @@ void mf::InputTriggerData::erase_expired_entries()
 // receive an `unavailable` event.
 void mf::InputTriggerData::token_revoked(Token const& token)
 {
-    if (token_data.is_valid(token))
-    {
-        if (!token_data.has_action_or_control(token))
-            token_data.erase(token);
-    }
-
     revoked_tokens.add(token);
 }
 
@@ -596,21 +597,31 @@ bool mf::InputTriggerData::matches(MirEvent const& event)
     return token_data.matches(event, keyboard_state, *token_authority);
 }
 
+void mf::InputTriggerData::erase(Token const& token)
+{
+    token_data.erase(token);
+}
+
 bool mf::InputTriggerData::TokenData::is_valid(Token const& token) const
 {
-    return token_data.contains(token);
+    return entries.contains(token);
 }
 
 void mf::InputTriggerData::TokenData::add_action(Token const& token, struct wl_resource* id)
 {
-    auto const action = wayland::make_weak(new InputTriggerActionV1 const{id});
-    token_data[token].action_group.add(action);
+    auto& td = entries[token];
+
+    auto const action = wayland::make_weak(new InputTriggerActionV1 const{id, td.lifetime_tracker.lock()});
+    td.action_group.add(action);
 }
 
-void mf::InputTriggerData::TokenData::add_action_control(Token const& token, struct wl_resource* id)
+void mf::InputTriggerData::TokenData::add_action_control(
+    Token const& token, std::shared_ptr<InputTriggerLifetimeTracker> const& lifetime_tracker, struct wl_resource* id)
 {
-    auto& [trigger_list, _, action_control] = token_data[token];
-    action_control = wayland::make_weak(new ActionControl{token, trigger_list,  id});
+    auto& [trigger_list, _, weak_lifetime_tracker] = entries[token];
+
+    weak_lifetime_tracker = lifetime_tracker;
+    auto const action_control = wayland::make_weak(new ActionControl{trigger_list, lifetime_tracker,  id});
     action_control.value().send_done_event(token);
 }
 
@@ -624,41 +635,14 @@ bool mf::InputTriggerData::TokenData::has_trigger(frontend::InputTriggerV1 const
     };
 
     return std::ranges::any_of(
-        std::ranges::views::values(token_data), [&](auto const& entry) { return entry_has_trigger(entry, trigger); });
-}
-
-void mf::InputTriggerData::TokenData::erase_expired_entries()
-{
-    std::ranges::for_each(
-        std::views::values(token_data),
-        [](auto& entry)
-        {
-            entry.action_group.erase_expired_entries();
-            std::erase_if(entry.trigger_list, [](auto const& trigger) { return !trigger; });
-        });
-}
-
-bool mf::InputTriggerData::TokenData::has_action_or_control(Token const& token) const
-{
-    if (auto const it = token_data.find(token); it != token_data.end())
-    {
-        auto const& [__, action_group, action_control] = it->second;
-        return !action_group.empty() || action_control;
-    }
-
-    return false;
-}
-
-void mf::InputTriggerData::TokenData::erase(Token const& token)
-{
-    token_data.erase(token);
+        std::ranges::views::values(entries), [&](auto const& entry) { return entry_has_trigger(entry, trigger); });
 }
 
 bool mf::InputTriggerData::TokenData::matches(
     MirEvent const& event, KeyboardStateTracker const& keyboard_state, shell::TokenAuthority& token_authority)
 {
     return std::ranges::any_of(
-        std::ranges::views::values(token_data),
+        std::ranges::views::values(entries),
         [&](auto& entry)
         {
             auto const matched = std::ranges::any_of(
