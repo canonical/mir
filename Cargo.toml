@@ -21,7 +21,7 @@ wayland-server = { version = ">=0.31" }
 calloop = { version = ">=0.10, <0.15" }
 log = "0.4"
 serde = { version = "1", features = ["derive"] }
-quick-xml = { version = "0.31", features = ["serialize"] }
+quick-xml = { version = "0.39", features = ["serialize"] }
 wayland-scanner = { version = ">=0.31" }
 wayland-backend = { version = ">=0.3" }
 bitflags = "2"
