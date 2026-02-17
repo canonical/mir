@@ -1,14 +1,14 @@
 pub struct CppBuilder {
-    guards: String,
+    guard_name: String,
     namespaces: Vec<CppNamespace>,
     includes: Vec<String>,
     forward_declarations: Vec<String>,
 }
 
 impl CppBuilder {
-    pub fn new(guards: String) -> CppBuilder {
+    pub fn new(guard_name: String) -> CppBuilder {
         CppBuilder {
-            guards,
+            guard_name,
             namespaces: vec![],
             includes: vec![],
             forward_declarations: vec![],
@@ -36,9 +36,9 @@ impl CppBuilder {
     pub fn to_string(&self) -> String {
         let mut result = String::new();
 
-        // Add include guards
-        result.push_str(&format!("#ifndef {}\n", self.guards));
-        result.push_str(&format!("#define {}\n\n", self.guards));
+        // Add include guard_name
+        result.push_str(&format!("#ifndef {}\n", self.guard_name));
+        result.push_str(&format!("#define {}\n\n", self.guard_name));
 
         // Add includes
         for include in &self.includes {
@@ -108,8 +108,8 @@ impl CppBuilder {
             }
         }
 
-        // Close include guards
-        result.push_str(&format!("\n#endif  // {}\n", self.guards));
+        // Close include guard_name
+        result.push_str(&format!("\n#endif  // {}\n", self.guard_name));
 
         result
     }
@@ -228,7 +228,11 @@ fn cpp_type_to_string(cpp_type: &CppType) -> String {
         CppType::CppF32 => "float".to_string(),
         CppType::String => "rust::Str const&".to_string(),
         CppType::Object(name) => format!("rust::SharedPtr<{}> const&", name),
-        CppType::NewId(interface) => "int32_t".to_string(), // TODO
+
+        // TODO: The precise form that the NewId type will take is unknown at the moment and
+        // will be implemented when we implement the Rust side of things. It may end up being
+        // a plain integer or it may end up being something more complicated.
+        CppType::NewId(interface) => "int32_t".to_string(),
         CppType::Array => "rust::Vec<uint8_t> const&".to_string(),
         CppType::Fd => "int32_t".to_string(),
     }

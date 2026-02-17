@@ -17,18 +17,16 @@
 mod cpp_builder;
 mod protocol_parser;
 
-use cpp_builder::CppBuilder;
+use cpp_builder::{
+    CppArg, CppBuilder, CppClass, CppEnum, CppEnumOption, CppMethod, CppNamespace, CppType,
+};
 use proc_macro2::TokenStream;
-use protocol_parser::{parse_protocols, WaylandProtocol};
-use quick_xml::name;
+use protocol_parser::{
+    parse_protocols, WaylandEnum, WaylandInterface, WaylandProtocol, WaylandRequest,
+};
 use quote::{format_ident, quote};
 use std::fs;
 use syn::Ident;
-
-use crate::{
-    cpp_builder::{CppArg, CppClass, CppEnum, CppEnumOption, CppMethod, CppNamespace, CppType},
-    protocol_parser::{WaylandArg, WaylandEnum, WaylandInterface, WaylandRequest},
-};
 
 fn main() {
     cxx_build::bridges(vec!["src/lib.rs"]).compile("wayland_rs");
