@@ -259,6 +259,8 @@ private:
 
             void begin(std::string const& activation_token, uint32_t wayland_timestamp);
 
+            bool empty() const;
+
         private:
             std::vector<wayland::Weak<InputTriggerActionV1 const>> actions;
             bool began_{false};
@@ -275,6 +277,12 @@ private:
             // List of actions associated with the token. Used to send begin
             // and end events when matches are made and broken.
             ActionGroup action_group;
+
+            // If no actions are yet associated with the token, triggers are
+            // added and dropped from this pending list, which is copied over to
+            // the trigger list once the first action is added. After that,
+            // triggers are added and dropped from the active list directly.
+            TriggerList pending_triggers;
 
             // Passed to action controls and actions as a shared_ptr. When the
             // last reference is destroyed, removes the entry from the
