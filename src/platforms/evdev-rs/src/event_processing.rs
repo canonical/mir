@@ -453,10 +453,12 @@ pub fn process_libinput_events(
                                 let action: crate::MirPointerAction = if button_event.button_state()
                                     == pointer::ButtonState::Pressed
                                 {
-                                    device_info.button_state = device_info.button_state | mir_button.repr;
+                                    device_info.button_state =
+                                        device_info.button_state | mir_button.repr;
                                     crate::MirPointerAction::mir_pointer_action_button_down
                                 } else {
-                                    device_info.button_state = device_info.button_state & !(mir_button.repr);
+                                    device_info.button_state =
+                                        device_info.button_state & !(mir_button.repr);
                                     crate::MirPointerAction::mir_pointer_action_button_up
                                 };
 
