@@ -570,6 +570,10 @@ void mf::XdgToplevelStable::unset_maximized()
 void mf::XdgToplevelStable::set_fullscreen(std::optional<struct wl_resource*> const& output)
 {
     WindowWlSurfaceRole::set_fullscreen(output);
+    // Send configure immediately with fullscreen state to ensure protocol compliance for Chromium.
+    // This prevents Chromium from interpreting intermediate configure events (without fullscreen)
+    // as a refusal to go fullscreen when transitioning from maximized/snapped states.
+    send_toplevel_configure();
 }
 
 void mf::XdgToplevelStable::unset_fullscreen()
@@ -577,6 +581,8 @@ void mf::XdgToplevelStable::unset_fullscreen()
     // We must process this request immediately (i.e. don't defer until commit())
     // TODO: should we instead restore the previous state?
     remove_state_now(mir_window_state_fullscreen);
+    // Send configure immediately to ensure protocol compliance for Chromium.
+    send_toplevel_configure();
 }
 
 void mf::XdgToplevelStable::set_minimized()
