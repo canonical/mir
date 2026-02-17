@@ -517,7 +517,7 @@ void mf::InputTriggerData::TokenData::ActionGroup::begin(
 
     began_ = true;
 }
-bool mir::frontend::InputTriggerData::TokenData::ActionGroup::empty() const
+bool mf::InputTriggerData::TokenData::ActionGroup::empty() const
 {
     return actions.empty();
 }
