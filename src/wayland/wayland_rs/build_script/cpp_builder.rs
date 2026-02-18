@@ -130,42 +130,46 @@ impl CppBuilder {
         let header_name = std::path::absolute(format!("include/{}.h", self.filename));
         let header_lit = Literal::string(header_name.unwrap().to_str().unwrap());
 
-        let mut extern_blocks = Vec::new();
+        self.namespaces
+            .iter()
+            .map(|namespace| {
+                // Build namespace string
+                let namespace_str = namespace.name.join("::");
 
-        for namespace in &self.namespaces {
-            // Build namespace string
-            let namespace_str = namespace.name.join("::");
+                namespace
+                    .classes
+                    .iter()
+                    .map(|class| {
+                        let class_name = format_ident!("{}", class.name);
 
-            for class in &namespace.classes {
-                let class_name = format_ident!("{}", class.name);
+                        // Generate methods for this class
+                        let methods = class.methods.iter().map(|method| {
+                            let method_name =
+                                format_ident!("{}", sanitize_identifier(&method.name));
+                            let args = method.args.iter().map(|arg| {
+                                let arg_name = format_ident!("{}", sanitize_identifier(&arg.name));
+                                let arg_type = cpp_type_to_rust_type(&arg.cpp_type);
+                                quote! { #arg_name: #arg_type }
+                            });
 
-                // Generate methods for this class
-                let methods = class.methods.iter().map(|method| {
-                    let method_name = format_ident!("{}", sanitize_identifier(&method.name));
-                    let args = method.args.iter().map(|arg| {
-                        let arg_name = format_ident!("{}", sanitize_identifier(&arg.name));
-                        let arg_type = cpp_type_to_rust_type(&arg.cpp_type);
-                        quote! { #arg_name: #arg_type }
-                    });
+                            quote! {
+                                pub fn #method_name(self: &#class_name, #(#args),*);
+                            }
+                        });
 
-                    quote! {
-                        pub fn #method_name(self: &#class_name, #(#args),*);
-                    }
-                });
+                        // Create a separate extern "C++" block for this class
+                        quote! {
+                            include!(#header_lit);
 
-                // Create a separate extern "C++" block for this class
-                extern_blocks.push(quote! {
-                    include!(#header_lit);
+                            #[namespace = #namespace_str]
+                            pub type #class_name;
 
-                    #[namespace = #namespace_str]
-                    pub type #class_name;
-
-                    #(#methods)*
-                });
-            }
-        }
-
-        extern_blocks
+                            #(#methods)*
+                        }
+                    })
+                    .collect()
+            })
+            .collect()
     }
 }
 
