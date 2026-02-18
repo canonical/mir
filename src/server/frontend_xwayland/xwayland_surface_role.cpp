@@ -135,13 +135,14 @@ void mf::XWaylandSurfaceRole::commit(WlSurfaceState const& state)
 
         bool const is_mapped = surface.value()->visible();
         bool const should_be_mapped = static_cast<bool>(wl_surface->buffer_size());
-        if (!is_mapped && should_be_mapped && surface.value()->state() == mir_window_state_hidden)
+        auto const state_tracker = surface.value()->state_tracker();
+        if (!is_mapped && should_be_mapped && state_tracker.has(mir_window_state_hidden))
         {
-            spec.state = mir_window_state_restored;
+            spec.state = state_tracker.without(mir_window_state_hidden).active_state();
         }
         else if (is_mapped && !should_be_mapped)
         {
-            spec.state = mir_window_state_hidden;
+            spec.state = state_tracker.with(mir_window_state_hidden).active_state();
         }
 
         std::vector<std::shared_ptr<void>> keep_alive_until_spec_is_used;
