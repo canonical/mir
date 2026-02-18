@@ -1452,3 +1452,111 @@ TEST_F(MinimalWindowManagerTest, raising_tree_changes_z_order)
     tools().raise_tree(window1);
     EXPECT_TRUE(is_above(window1, window2));
 }
+
+namespace
+{
+// Custom window manager that tracks application_selector method calls
+class CustomMinimalWindowManager : public miral::MinimalWindowManager
+{
+public:
+    using MinimalWindowManager::MinimalWindowManager;
+
+    int focus_gained_calls = 0;
+    int focus_lost_calls = 0;
+    int delete_window_calls = 0;
+
+    void advise_focus_gained(miral::WindowInfo const& window_info) override
+    {
+        // Custom behavior: don't raise the tree (for "sloppy focus")
+        // But still update the application_selector using the protected helper
+        application_selector_advise_focus_gained(window_info);
+        focus_gained_calls++;
+    }
+
+    void advise_focus_lost(miral::WindowInfo const& window_info) override
+    {
+        application_selector_advise_focus_lost(window_info);
+        focus_lost_calls++;
+    }
+
+    void advise_delete_window(miral::WindowInfo const& window_info) override
+    {
+        application_selector_advise_delete_window(window_info);
+        delete_window_calls++;
+    }
+};
+}
+
+class CustomMinimalWindowManagerTest : public MinimalWindowManagerTest
+{
+public:
+    auto get_builder() -> mir_test_framework::WindowManagementPolicyBuilder override
+    {
+        return [this](miral::WindowManagerTools const& tools)
+        {
+            auto wm = std::make_unique<CustomMinimalWindowManager>(tools, focus_stealing());
+            custom_wm = wm.get();
+            return wm;
+        };
+    }
+
+    CustomMinimalWindowManager* custom_wm = nullptr;
+};
+
+TEST_F(CustomMinimalWindowManagerTest, application_selector_helpers_are_accessible_to_subclasses)
+{
+    // Test that subclasses can use the protected helper methods
+    // to interact with application_selector
+
+    // Create first window
+    auto const app1 = open_application("app1");
+    miral::WindowSpecification spec;
+    spec.size() = { geom::Width{100}, geom::Height{100} };
+    spec.depth_layer() = mir_depth_layer_application;
+    auto window1 = create_window(app1, spec);
+
+    // Should have triggered focus_gained
+    EXPECT_EQ(custom_wm->focus_gained_calls, 1);
+
+    // Create second window in different app
+    auto const app2 = open_application("app2");
+    auto window2 = create_window(app2, spec);
+
+    // Should have triggered focus_lost on first window and focus_gained on second
+    EXPECT_EQ(custom_wm->focus_lost_calls, 1);
+    EXPECT_EQ(custom_wm->focus_gained_calls, 2);
+
+    // Close first window
+    tools().ask_client_to_close(window1);
+
+    // Should have triggered delete_window
+    EXPECT_EQ(custom_wm->delete_window_calls, 1);
+}
+
+TEST_F(CustomMinimalWindowManagerTest, sloppy_focus_does_not_raise_tree)
+{
+    // Test that customized advise_focus_gained without raise_tree
+    // results in sloppy focus behavior (focus without raising)
+
+    auto const app1 = open_application("app1");
+    miral::WindowSpecification spec;
+    spec.size() = { geom::Width{100}, geom::Height{100} };
+    spec.depth_layer() = mir_depth_layer_application;
+    auto window1 = create_window(app1, spec);
+
+    auto const app2 = open_application("app2");
+    auto window2 = create_window(app2, spec);
+
+    // window2 should be above window1 (created later)
+    ASSERT_TRUE(is_above(window2, window1));
+
+    // Give focus back to window1
+    tools().select_active_window(window1);
+
+    // With sloppy focus (our custom behavior), window1 should NOT be raised
+    // so window2 should still be above window1
+    EXPECT_TRUE(is_above(window2, window1));
+
+    // But window1 should have focus
+    EXPECT_TRUE(focused(window1));
+}

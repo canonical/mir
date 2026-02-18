@@ -108,6 +108,18 @@ protected:
     bool begin_touch_move(WindowInfo const& window_info, MirInputEvent const* input_event);
     bool begin_touch_resize(WindowInfo const& window_info, MirInputEvent const* input_event, MirResizeEdge const& edge);
 
+    /// Helper method to interact with application_selector for focus gained events
+    /// \remark Since MirAL 5.7
+    void application_selector_advise_focus_gained(WindowInfo const& window_info);
+
+    /// Helper method to interact with application_selector for focus lost events
+    /// \remark Since MirAL 5.7
+    void application_selector_advise_focus_lost(WindowInfo const& window_info);
+
+    /// Helper method to interact with application_selector for delete window events
+    /// \remark Since MirAL 5.7
+    void application_selector_advise_delete_window(WindowInfo const& window_info);
+
 private:
     struct Impl;
     Impl* const self;
