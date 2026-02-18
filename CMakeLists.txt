@@ -12,10 +12,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.28)
 
 cmake_policy(SET CMP0015 NEW)
 cmake_policy(SET CMP0022 NEW)
+if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.30")
+    cmake_policy(SET CMP0167 NEW)
+endif()
 
 set(CMAKE_GCOV gcov)
 
@@ -147,7 +150,7 @@ enable_testing()
 find_package(PkgConfig)
 
 # Check for boost
-find_package(Boost 1.48.0 COMPONENTS program_options iostreams REQUIRED)
+find_package(Boost 1.70.0 COMPONENTS program_options iostreams REQUIRED)
 
 add_compile_definitions(EGL_NO_X11)
 

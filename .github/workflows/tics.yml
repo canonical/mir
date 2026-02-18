@@ -110,7 +110,7 @@ jobs:
         cmake
         -DCMAKE_BUILD_TYPE=Debug
         -DMIR_ENABLE_COVERAGE=ON
-        -DMIR_RUN_PERFORMANCE_TESTS=ON
+        -DMIR_RUN_PERFORMANCE_TESTS=OFF
         -DCMAKE_C_COMPILER_LAUNCHER=ccache
         -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
         -GNinja

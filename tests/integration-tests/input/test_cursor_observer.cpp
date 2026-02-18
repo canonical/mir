@@ -63,7 +63,12 @@ struct CursorObserverIntegrationTest : testing::Test, mtf::FakeInputServerConfig
         input_manager->start();
         input_dispatcher->start();
 
+        // Register observer, and verify initial state delivered
+        auto signal = std::make_shared<mt::Signal>();
+        EXPECT_CALL(*cursor_observer, cursor_moved_to(_, _)).Times(1).WillOnce(mt::WakeUp(signal));
         cursor_observer_multiplexer->register_interest(cursor_observer);
+        signal->wait_for(std::chrono::seconds{10});
+        Mock::VerifyAndClearExpectations(cursor_observer.get());
     }
 
     void TearDown() override
@@ -100,7 +105,6 @@ TEST_F(CursorObserverIntegrationTest, cursor_observer_receives_motion)
 
     static const float x = 100.f;
     static const float y = 100.f;
-
     EXPECT_CALL(*cursor_observer, cursor_moved_to(x, y)).Times(1).WillOnce(mt::WakeUp(signal));
 
     fake_mouse->emit_event(mis::a_pointer_event().with_movement(x, y));

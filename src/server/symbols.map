@@ -380,6 +380,8 @@ global:
     mir::input::CursorObserver::?CursorObserver*;
     mir::input::CursorObserverMultiplexer::?CursorObserverMultiplexer*;
     mir::input::CursorObserverMultiplexer::CursorObserverMultiplexer*;
+    mir::input::CursorObserverMultiplexer::register_interest*;
+    mir::input::CursorObserverMultiplexer::register_early_observer*;
     mir::input::CursorObserverMultiplexer::cursor_moved_to*;
     mir::input::CursorObserverMultiplexer::image_set_to*;
     mir::input::CursorObserverMultiplexer::operator*;
