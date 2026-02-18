@@ -31,6 +31,7 @@ pub struct DeviceInfo {
     pub button_state: u32,
     pub pointer_x: f32,
     pub pointer_y: f32,
+    pub touch_properties: HashMap<u32, ContactData>,
 }
 
 // Because *mut InputSink and *mut EventBuilder are raw pointers, Rust assumes
@@ -137,7 +138,6 @@ pub struct LibinputLoopState {
     pub scroll_axis_y_accum: f64,
     pub x_scroll_scale: f64,
     pub y_scroll_scale: f64,
-    pub touch_properties: HashMap<u32, ContactData>,
 }
 
 impl LibinputLoopState {

@@ -28,6 +28,7 @@ use input::event::pointer::PointerScrollEvent;
 use input::event::touch::{TouchEventPosition, TouchEventSlot, TouchEventTrait};
 use input::event::EventTrait;
 use input::AsRaw;
+use std::collections::HashMap;
 use std::thread;
 
 fn handle_input(input_sink: &mut Option<InputSinkPtr>, event: cxx::SharedPtr<crate::MirEvent>) {
@@ -101,6 +102,7 @@ pub fn process_libinput_events(
                         button_state: 0,
                         pointer_x: 0.0,
                         pointer_y: 0.0,
+                        touch_properties: HashMap::new(),
                     });
 
                     // The device registry may call back into the input device, but the input device
@@ -559,7 +561,7 @@ pub fn process_libinput_events(
 
                                 // We make sure that we only notify of "down" touch events once. Everything
                                 // after that is considered a simple "change".
-                                let data = state
+                                let data = device_info
                                     .touch_properties
                                     .entry(slot)
                                     .or_insert(ContactData::default());
@@ -568,12 +570,10 @@ pub fn process_libinput_events(
                                 } else {
                                     MirTouchAction::mir_touch_action_down
                                 };
-                                
+
                                 // Set coordinates. In normal operation, bounding rectangle should always be valid.
-                                data.x =
-                                    down_event.x_transformed(bounding.width() as u32) as f32;
-                                data.y =
-                                    down_event.y_transformed(bounding.height() as u32) as f32;
+                                data.x = down_event.x_transformed(bounding.width() as u32) as f32;
+                                data.y = down_event.y_transformed(bounding.height() as u32) as f32;
                             }
                         }
                         event::TouchEvent::Motion(motion_event) => {
@@ -582,15 +582,14 @@ pub fn process_libinput_events(
                                 let bounding =
                                     get_bounding_rectangle(&mut device_info.input_sink, &bridge);
 
-                                let data = state
+                                let data = device_info
                                     .touch_properties
                                     .entry(slot)
                                     .or_insert(ContactData::default());
                                 data.action = MirTouchAction::mir_touch_action_change;
-                                
+
                                 // Set coordinates. In normal operation, bounding rectangle should always be valid.
-                                data.x =
-                                    motion_event.x_transformed(bounding.width() as u32) as f32;
+                                data.x = motion_event.x_transformed(bounding.width() as u32) as f32;
                                 data.y =
                                     motion_event.y_transformed(bounding.height() as u32) as f32;
                             }
@@ -601,11 +600,11 @@ pub fn process_libinput_events(
                                 // By design, "up" is only notified a single time. Hence, we only
                                 // notify "up" if "down" has been sent. Otherwise, we remove the
                                 // entry altogether.
-                                if let Some(data) = state.touch_properties.get_mut(&slot) {
+                                if let Some(data) = device_info.touch_properties.get_mut(&slot) {
                                     if data.down_notified {
                                         data.action = MirTouchAction::mir_touch_action_up;
                                     } else {
-                                        state.touch_properties.remove(&slot);
+                                        device_info.touch_properties.remove(&slot);
                                     }
                                 }
                             }
@@ -614,7 +613,7 @@ pub fn process_libinput_events(
                             let mut contacts: Vec<crate::TouchContactData> = vec![];
                             let mut empty_touches = 0;
 
-                            for (slot, contact_data) in &mut state.touch_properties {
+                            for (slot, contact_data) in &mut device_info.touch_properties {
                                 // Note: This was logic taken from the existing evdev implementation, and we are
                                 // keeping it for backwards compatibility.
                                 // Sanity check: Bogus panels are sending sometimes empty events that all point
@@ -644,7 +643,7 @@ pub fn process_libinput_events(
 
                             // Remove any property that is now "up" so that we do not keep sending
                             // the up notification.
-                            state.touch_properties.retain(|&_slot, contact_data| {
+                            device_info.touch_properties.retain(|&_slot, contact_data| {
                                 contact_data.action != MirTouchAction::mir_touch_action_up
                             });
 
