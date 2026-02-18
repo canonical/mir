@@ -568,12 +568,10 @@ pub fn process_libinput_events(
                                 } else {
                                     MirTouchAction::mir_touch_action_down
                                 };
-                                
+
                                 // Set coordinates. In normal operation, bounding rectangle should always be valid.
-                                data.x =
-                                    down_event.x_transformed(bounding.width() as u32) as f32;
-                                data.y =
-                                    down_event.y_transformed(bounding.height() as u32) as f32;
+                                data.x = down_event.x_transformed(bounding.width() as u32) as f32;
+                                data.y = down_event.y_transformed(bounding.height() as u32) as f32;
                             }
                         }
                         event::TouchEvent::Motion(motion_event) => {
@@ -587,10 +585,9 @@ pub fn process_libinput_events(
                                     .entry(slot)
                                     .or_insert(ContactData::default());
                                 data.action = MirTouchAction::mir_touch_action_change;
-                                
+
                                 // Set coordinates. In normal operation, bounding rectangle should always be valid.
-                                data.x =
-                                    motion_event.x_transformed(bounding.width() as u32) as f32;
+                                data.x = motion_event.x_transformed(bounding.width() as u32) as f32;
                                 data.y =
                                     motion_event.y_transformed(bounding.height() as u32) as f32;
                             }
