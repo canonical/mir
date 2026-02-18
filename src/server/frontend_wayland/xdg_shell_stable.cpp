@@ -681,7 +681,7 @@ void mf::XdgToplevelStable::send_toplevel_configure()
     }
 
     // 0 sizes means default for toplevel configure
-    auto size= opt_window_size.value_or(geom::Size{0, 0});
+    auto size = opt_window_size.value_or(geom::Size{0, 0});
 
     send_configure_event(size.width.as_int(), size.height.as_int(), &states);
     wl_array_release(&states);
