@@ -123,51 +123,43 @@ impl CppBuilder {
 
     /// Generate Rust bindings for this C++ header.
     ///
-    /// Returns a Vec of TokenStreams, each representing a set of tokens for this C++ class.
+    /// Returns a Vec of TokenStreams representing the Rust bindings for this C++ class.
     /// This method does NOT add the `mod ffi` or `unsafe extern "C++"` blocks around the
     /// class bindings. Callers should add these themselves.
     pub fn to_rust_bindings(&self) -> Vec<TokenStream> {
-        let header_name = std::path::absolute(format!("include/{}.h", self.filename));
-        let header_lit = Literal::string(header_name.unwrap().to_str().unwrap());
+        let header_name = Literal::string(format!("include/{}.h", self.filename).as_str());
 
         self.namespaces
             .iter()
-            .map(|namespace| {
-                // Build namespace string
-                let namespace_str = namespace.name.join("::");
+            .flat_map(|namespace| {
+                namespace.classes.iter().map(|class| {
+                    let namespace_str = namespace.name.join("::");
+                    let class_name = format_ident!("{}", class.name);
 
-                namespace
-                    .classes
-                    .iter()
-                    .map(|class| {
-                        let class_name = format_ident!("{}", class.name);
-
-                        // Generate methods for this class
-                        let methods = class.methods.iter().map(|method| {
-                            let method_name =
-                                format_ident!("{}", sanitize_identifier(&method.name));
-                            let args = method.args.iter().map(|arg| {
-                                let arg_name = format_ident!("{}", sanitize_identifier(&arg.name));
-                                let arg_type = cpp_type_to_rust_type(&arg.cpp_type);
-                                quote! { #arg_name: #arg_type }
-                            });
-
-                            quote! {
-                                pub fn #method_name(self: &#class_name, #(#args),*);
-                            }
+                    // Generate methods for this class
+                    let methods = class.methods.iter().map(|method| {
+                        let method_name = format_ident!("{}", sanitize_identifier(&method.name));
+                        let args = method.args.iter().map(|arg| {
+                            let arg_name = format_ident!("{}", sanitize_identifier(&arg.name));
+                            let arg_type = cpp_type_to_rust_type(&arg.cpp_type);
+                            quote! { #arg_name: #arg_type }
                         });
 
-                        // Create a separate extern "C++" block for this class
                         quote! {
-                            include!(#header_lit);
-
-                            #[namespace = #namespace_str]
-                            pub type #class_name;
-
-                            #(#methods)*
+                            pub fn #method_name(self: &#class_name, #(#args),*);
                         }
-                    })
-                    .collect()
+                    });
+
+                    // Create a separate extern "C++" block for this class
+                    quote! {
+                        include!(#header_name);
+
+                        #[namespace = #namespace_str]
+                        pub type #class_name;
+
+                        #(#methods)*
+                    }
+                })
             })
             .collect()
     }
