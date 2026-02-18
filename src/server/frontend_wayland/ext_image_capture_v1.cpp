@@ -926,8 +926,7 @@ void mf::ExtImageCopyCaptureCursorSessionV1::ImageCopyBackend::begin_capture(
     geom::Stride const cursor_stride{cursor_size.width.as_int() * MIR_BYTES_PER_PIXEL(mir_pixel_format_argb_8888)};
 
     using FailureReason = wayland::ImageCopyCaptureFrameV1::FailureReason;
-    // TODO: handle mismatched strides?
-    if (shm_data->format() != mir_pixel_format_argb_8888 || shm_data->size() != cursor_size || shm_data->stride() != cursor_stride)
+    if (shm_data->format() != mir_pixel_format_argb_8888 || shm_data->size() != cursor_size)
     {
         callback(std::unexpected(FailureReason::buffer_constraints));
         return;
@@ -935,9 +934,29 @@ void mf::ExtImageCopyCaptureCursorSessionV1::ImageCopyBackend::begin_capture(
 
     auto mapping = shm_data->map_writeable();
     if (cursor_image)
-        memcpy(mapping->data(), cursor_image->as_argb_8888(), mapping->len());
+    {
+        auto const dest_stride = mapping->stride();
+        auto const cursor_data = reinterpret_cast<char const*>(cursor_image->as_argb_8888());
+        if (dest_stride == cursor_stride)
+        {
+            memcpy(mapping->data(), cursor_data, mapping->len());
+        }
+        else
+        {
+            // strides don't match: copy data in rows
+            for (auto y = 0u; y < cursor_size.height.as_uint32_t(); ++y)
+            {
+                memcpy(mapping->data() + (dest_stride.as_uint32_t() * y),
+                       cursor_data + (cursor_stride.as_uint32_t() * y),
+                       cursor_stride.as_uint32_t());
+            }
+        }
+    }
     else
+    {
+        // No cursor set: send a transparent cursor
         memset(mapping->data(), 0, mapping->len());
+    }
 
     // The hotspot event on the cursor_session must be sent before the
     // ready event on the image capture session.
