@@ -289,7 +289,6 @@ private:
     void cursor_moved_to(float abs_x, float abs_y);
     void pointer_usable();
     void pointer_unusable();
-    void image_set_to(std::shared_ptr<mg::CursorImage> image);
 
     bool pointer_is_usable = true;
     bool pointer_in_source = false;
@@ -861,9 +860,8 @@ public:
     {
         session.pointer_unusable();
     }
-    void image_set_to(std::shared_ptr<mg::CursorImage> image) override
+    void image_set_to(std::shared_ptr<mg::CursorImage>) override
     {
-        session.image_set_to(image);
     }
 
 private:
@@ -874,7 +872,8 @@ class mf::ExtImageCopyCaptureCursorSessionV1::ImageCopyBackend
     : public ExtImageCopyBackend, public mi::CursorObserver
 {
 public:
-    ImageCopyBackend(ExtImageCopyCaptureSessionV1 *session,
+    ImageCopyBackend(ExtImageCopyCaptureSessionV1*session,
+                     ExtImageCopyCaptureCursorSessionV1& cursor_session,
                      std::shared_ptr<time::Clock> const& clock);
 
     void begin_capture(
@@ -889,14 +888,17 @@ public:
     void image_set_to(std::shared_ptr<mg::CursorImage> image) override;
 
 private:
+    wayland::Weak<ExtImageCopyCaptureCursorSessionV1> cursor_session;
     std::shared_ptr<time::Clock> const clock;
     std::shared_ptr<mg::CursorImage> cursor_image;
 };
 
 mf::ExtImageCopyCaptureCursorSessionV1::ImageCopyBackend::ImageCopyBackend(
-    ExtImageCopyCaptureSessionV1 *session,
+    ExtImageCopyCaptureSessionV1* session,
+    ExtImageCopyCaptureCursorSessionV1& cursor_session,
     std::shared_ptr<time::Clock> const& clock)
     : ExtImageCopyBackend{session, false},
+      cursor_session{&cursor_session},
       clock{clock}
 {
 }
@@ -936,6 +938,15 @@ void mf::ExtImageCopyCaptureCursorSessionV1::ImageCopyBackend::begin_capture(
         memcpy(mapping->data(), cursor_image->as_argb_8888(), mapping->len());
     else
         memset(mapping->data(), 0, mapping->len());
+
+    // The hotspot event on the cursor_session must be sent before the
+    // ready event on the image capture session.
+    if (cursor_session)
+    {
+        auto const hotspot = cursor_image ? cursor_image->hotspot() : geom::Displacement{0, 0};
+        cursor_session.value().send_hotspot_event(hotspot.dx.as_int(), hotspot.dy.as_int());
+    }
+
     callback({{clock->now(), {{0, 0}, cursor_size}}});
     damage_amount = DamageAmount::none;
 }
@@ -971,11 +982,9 @@ void mf::ExtImageCopyCaptureCursorSessionV1::get_capture_session(
             "An ext_image_copy_capture_session_v1 already exists for this "
             "ext_image_copy_capture_cursor_session_v1"));
     }
-    auto backend_factory = [cursor_observer_multiplexer=cursor_observer_multiplexer,
-                            wayland_executor=wayland_executor,
-                            clock=clock](auto *session, [[maybe_unused]] bool overlay_cursor)
+    auto backend_factory = [this](auto *session, [[maybe_unused]] bool overlay_cursor)
         {
-            auto backend = std::make_shared<ImageCopyBackend>(session, clock);
+            auto backend = std::make_shared<ImageCopyBackend>(session, *this, clock);
             cursor_observer_multiplexer->register_interest(backend, *wayland_executor);
             return backend;
         };
@@ -1023,10 +1032,4 @@ void mf::ExtImageCopyCaptureCursorSessionV1::pointer_unusable()
     {
         send_leave_event();
     }
-}
-
-void mf::ExtImageCopyCaptureCursorSessionV1::image_set_to(std::shared_ptr<mg::CursorImage> image)
-{
-    auto const hotspot = image ? image->hotspot() : geom::Displacement{0, 0};
-    send_hotspot_event(hotspot.dx.as_int(), hotspot.dy.as_int());
 }
