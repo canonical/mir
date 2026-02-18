@@ -566,7 +566,20 @@ void mf::XdgToplevelV6::send_toplevel_configure()
     }
 
     // 0 sizes means default for toplevel configure
-    geom::Size size = requested_window_size().value_or(geom::Size{0, 0});
+    // If requested_window_size() is not set yet, try to get it from the scene surface
+    geom::Size size;
+    if (auto const requested_size = requested_window_size())
+    {
+        size = requested_size.value();
+    }
+    else if (auto const surface = scene_surface())
+    {
+        size = surface.value()->window_size();
+    }
+    else
+    {
+        size = geom::Size{0, 0};
+    }
 
     send_configure_event(size.width.as_int(), size.height.as_int(), &states);
     wl_array_release(&states);
