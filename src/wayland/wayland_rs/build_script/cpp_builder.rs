@@ -1,4 +1,4 @@
-use proc_macro2::{Literal, Span, TokenStream};
+use proc_macro2::{Literal, TokenStream};
 use quote::{format_ident, quote};
 use syn::Ident;
 
@@ -121,15 +121,14 @@ impl CppBuilder {
         result
     }
 
-    /// Output the C++ content to corresponding rust bindings.
     /// Generate Rust bindings for this C++ header.
     ///
-    /// Returns a Vec of TokenStreams, each representing a separate extern "C++" block
-    /// for a single type. This avoids name collisions for methods with the same name
-    /// on different types (e.g., destroy).
+    /// Returns a Vec of TokenStreams, each representing a set of tokens for this C++ class.
+    /// This method does NOT add the `mod ffi` or `unsafe extern "C++"` blocks around the
+    /// class bindings. Callers should add these themselves.
     pub fn to_rust_bindings(&self) -> Vec<TokenStream> {
-        let header_name = format!("../include/{}.h", self.filename);
-        let header_lit = Literal::string(&header_name);
+        let header_name = std::path::absolute(format!("include/{}.h", self.filename));
+        let header_lit = Literal::string(header_name.unwrap().to_str().unwrap());
 
         let mut extern_blocks = Vec::new();
 
@@ -156,14 +155,12 @@ impl CppBuilder {
 
                 // Create a separate extern "C++" block for this class
                 extern_blocks.push(quote! {
-                    unsafe extern "C++" {
-                        include!(#header_lit);
+                    include!(#header_lit);
 
-                        #[namespace = #namespace_str]
-                        pub type #class_name;
+                    #[namespace = #namespace_str]
+                    pub type #class_name;
 
-                        #(#methods)*
-                    }
+                    #(#methods)*
                 });
             }
         }

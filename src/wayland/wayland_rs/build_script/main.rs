@@ -29,7 +29,9 @@ use std::fs;
 use syn::Ident;
 
 fn main() {
-    cxx_build::bridges(vec!["src/lib.rs"]).compile("wayland_rs");
+    cxx_build::bridges(vec!["src/lib.rs"])
+        .include("include")
+        .compile("wayland_rs");
 
     println!("cargo:rerun-if-changed=src/lib.rs");
     println!("cargo:rerun-if-changed=src/wayland_server.rs");
@@ -330,8 +332,11 @@ fn write_cpp_protocol_headers(protocols: &Vec<WaylandProtocol>) {
         .collect();
 
     let cpp_ffi_rs = quote! {
+        #[cxx::bridge]
         mod ffi_cpp {
-            #(#extern_blocks)*
+            unsafe extern "C++" {
+                #(#extern_blocks)*
+            }
         }
     };
     write_generated_rust_file(cpp_ffi_rs, "ffi_cpp.rs");
