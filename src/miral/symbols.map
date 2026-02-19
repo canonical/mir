@@ -775,4 +775,3 @@ global:
     miral::WindowSpecification::alpha*;
   };
 } MIRAL_5.6;
-
