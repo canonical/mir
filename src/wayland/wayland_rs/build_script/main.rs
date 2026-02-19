@@ -25,12 +25,15 @@ use protocol_parser::{
     parse_protocols, WaylandEnum, WaylandInterface, WaylandProtocol, WaylandRequest,
 };
 use quote::{format_ident, quote};
-use std::fs;
+use std::{env, fs, path::Path};
 use syn::Ident;
 
 fn main() {
+    let manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
+    let include_path = Path::new(&manifest_dir).join("include");
+
     cxx_build::bridges(vec!["src/lib.rs"])
-        .include("include")
+        .include(&include_path)
         .compile("wayland_rs");
 
     println!("cargo:rerun-if-changed=src/lib.rs");
@@ -315,20 +318,23 @@ fn write_dispatch_rs(protocols: &Vec<WaylandProtocol>) {
 
 /// Write a header file for each protocol containing abstract classes per-interface.
 fn write_cpp_protocol_headers(protocols: &Vec<WaylandProtocol>) {
-    let builders = protocols
+    let builders: Vec<CppBuilder> = protocols
         .iter()
-        .map(|protocol| create_cpp_builder(protocol));
+        .map(|protocol| create_cpp_builder(protocol))
+        .collect();
 
     // Write the protocol headers
-    for builder in builders.clone() {
+    for builder in &builders {
         write_cpp_protocol_header(&builder);
     }
 
-    // Write the rust ffi glue code.
-    // Each builder returns a Vec of extern blocks (one per type),
-    // so we flatten them all into a single Vec.
+    // Write the Rust FFI glue code.
+    // Each builder returns a Vec of C++ type declarations (one per type),
+    // intended to be placed inside an extern "C++" block, so we flatten
+    // them all into a single Vec.
     let extern_blocks: Vec<TokenStream> = builders
-        .flat_map(|builder| builder.to_rust_bindings())
+        .into_iter()
+        .flat_map(|builder: CppBuilder| builder.to_rust_bindings())
         .collect();
 
     let cpp_ffi_rs = quote! {
