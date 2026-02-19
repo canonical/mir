@@ -131,6 +131,19 @@ TEST_F(OcclusionFilterTest, shaped_window_with_opaque_region_occludes_something)
     EXPECT_THAT(renderables_from(elements), ElementsAre(top));
 }
 
+TEST_F(OcclusionFilterTest, shaped_translucent_window_with_opaque_region_occludes_nothing)
+{
+    // A window with opaque_region but uniform alpha < 1.0 should NOT occlude
+    auto top = std::make_shared<mtd::FakeRenderable>(
+        Rectangle{{10, 10}, {10, 10}}, 0.5f, false, Rectangles{Rectangle{{11, 11}, {9, 9}}});
+    auto bottom = std::make_shared<mtd::FakeRenderable>(12, 12, 5, 5);
+
+    auto const& [occlusions, elements] = split_occluded_and_visible(scene_elements_from({bottom, top}), monitor_rect);
+
+    EXPECT_THAT(renderables_from(occlusions), IsEmpty());
+    EXPECT_THAT(renderables_from(elements), ElementsAre(bottom, top));
+}
+
 TEST_F(OcclusionFilterTest, identical_window_occluded)
 {
     auto top = std::make_shared<mtd::FakeRenderable>(10, 10, 10, 10);
