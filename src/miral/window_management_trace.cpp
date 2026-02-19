@@ -894,7 +894,7 @@ auto miral::WindowManagementTrace::confirm_placement_on_display(
     Rectangle const& new_placement) -> Rectangle
 try {
     auto const& result = policy->confirm_placement_on_display(window_info, new_state, new_placement);
-    mir::log_info("%s window_info=%s, new_state= %s, new_placement= %s -> %s", __func__,
+    mir::log_info("%s window_info=%s, new_state=%s, new_placement=%s -> %s", __func__,
         dump_of(window_info).c_str(), dump_of(new_state).c_str(), dump_of(new_placement).c_str(), dump_of(result).c_str());
     return result;
 }
