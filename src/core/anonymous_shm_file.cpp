@@ -54,8 +54,11 @@ mir::Fd create_anonymous_file(off_t size)
             {
                 if (unlink(template_filename) < 0)
                 {
+                    // Save errno before close() can overwrite it with an unrelated error
+                    int const original_errno = errno;
                     close(raw_fd);
                     raw_fd = -1;
+                    errno = original_errno;
                 }
             }
         }

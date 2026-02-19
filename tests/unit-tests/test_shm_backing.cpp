@@ -59,8 +59,11 @@ auto make_shm_fd(size_t size) -> mir::Fd
             {
                 if (unlink(template_filename) < 0)
                 {
+                    // Save errno before close() can overwrite it with an unrelated error
+                    int const original_errno = errno;
                     close(fd);
                     fd = -1;
+                    errno = original_errno;
                 }
             }
         }
@@ -74,9 +77,11 @@ auto make_shm_fd(size_t size) -> mir::Fd
 
     if (ftruncate(fd, size) == -1)
     {
+        // Save errno before close() can overwrite it with an unrelated error
+        int const original_errno = errno;
         close(fd);
         BOOST_THROW_EXCEPTION(
-            std::system_error(errno, std::system_category(), "Failed to resize temporary file"));
+            std::system_error(original_errno, std::system_category(), "Failed to resize temporary file"));
     }
 
     return mir::Fd{fd};
