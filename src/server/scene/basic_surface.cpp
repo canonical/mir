@@ -435,8 +435,14 @@ bool ms::BasicSurface::input_area_contains(geom::Point const& point) const
     return false;
 }
 
+float mir::scene::BasicSurface::alpha() const
+{
+    return synchronised_state.lock()->surface_alpha;
+}
+
 void ms::BasicSurface::set_alpha(float alpha)
 {
+    alpha = std::clamp(alpha, 0.f, 1.f);
     synchronised_state.lock()->surface_alpha = alpha;
     observers->alpha_set_to(this, alpha);
 }

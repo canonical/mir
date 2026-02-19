@@ -96,6 +96,7 @@ public:
     /// Given value is the frame size of the window
     virtual void resize(geometry::Size const& window_size) = 0;
     virtual void set_transformation(glm::mat4 const& t) = 0;
+    virtual float alpha() const = 0;
     virtual void set_alpha(float alpha) = 0;
     virtual void set_orientation(MirOrientation orientation) = 0;
     virtual void set_mirror_mode(MirMirrorMode mirror_mode) = 0;

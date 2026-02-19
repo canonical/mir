@@ -474,6 +474,16 @@ auto miral::WindowSpecification::tiled_edges() -> mir::optional_value<mir::Flags
     return self->tiled_edges;
 }
 
+auto miral::WindowSpecification::alpha() -> mir::optional_value<float>&
+{
+    return self->opacity;
+}
+
+auto miral::WindowSpecification::alpha() const -> mir::optional_value<float> const&
+{
+    return self->opacity;
+}
+
 auto miral::WindowSpecification::userdata() -> mir::optional_value<std::shared_ptr<void>>&
 {
     return self->userdata;

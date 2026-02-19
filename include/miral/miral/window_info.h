@@ -377,6 +377,14 @@ struct WindowInfo
     /// \sa MirTiledEdges - the tiled edge options
     auto tiled_edges() const -> mir::Flags<MirTiledEdge>;
 
+    /// The alpha of the window.
+    ///
+    /// This value is between [0, 1].
+    ///
+    /// \returns the window alpha
+    /// \remark Since MirAL 5.7
+    auto alpha() const -> float;
+
 private:
     friend class BasicWindowManager;
     void name(std::string const& name);
