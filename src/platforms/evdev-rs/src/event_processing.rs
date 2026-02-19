@@ -61,6 +61,7 @@ fn get_device_info_from_libinput_device<'a>(
         .find(|d| d.device.as_raw() == libinput_device.as_raw())
 }
 
+/// Retrieve the bounding rectangle for the provided input sink.
 fn get_bounding_rectangle(
     input_sink: &mut Option<InputSinkPtr>,
     bridge: &cxx::SharedPtr<crate::PlatformBridge>,
@@ -562,6 +563,9 @@ pub fn process_libinput_events(
                             if let Some(slot) = slot {
                                 let bounding =
                                     get_bounding_rectangle(&mut device_info.input_sink, &bridge);
+                                if bounding.is_null() {
+                                    continue;
+                                }
 
                                 // We make sure that we only notify of "down" touch events once. Everything
                                 // after that is considered a simple "change".
@@ -585,6 +589,9 @@ pub fn process_libinput_events(
                             if let Some(slot) = slot {
                                 let bounding =
                                     get_bounding_rectangle(&mut device_info.input_sink, &bridge);
+                                if bounding.is_null() {
+                                    continue;
+                                }
 
                                 let data = device_info
                                     .touch_properties
@@ -660,7 +667,7 @@ pub fn process_libinput_events(
                             let touch_event_data = crate::TouchEventData {
                                 has_time: true,
                                 time_microseconds: frame_event.time_usec(),
-                                contacts: contacts,
+                                contacts,
                             };
                             if let Some(event_builder) = &mut device_info.event_builder {
                                 let created =
