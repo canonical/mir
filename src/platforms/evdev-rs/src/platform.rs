@@ -19,7 +19,6 @@ use crate::event_processing::process_libinput_events;
 use crate::libinput_interface::LibinputInterfaceImpl;
 use cxx;
 use input;
-use std::collections::HashMap;
 use std::os::fd::AsRawFd;
 use std::sync::Arc;
 use std::sync::Mutex;
