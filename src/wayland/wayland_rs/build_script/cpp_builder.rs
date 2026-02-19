@@ -121,9 +121,12 @@ impl CppBuilder {
         result
     }
 
-    /// Returns a Vec of TokenStreams representing the Rust bindings for this C++ header.
-    /// This method does NOT add the `mod ffi` or `unsafe extern "C++"` blocks around the
-    /// bindings. Callers should add these themselves.
+    /// Generate Rust binding declarations for this C++ header.
+    ///
+    /// Returns a `Vec<TokenStream>` where each element contains the `include!` directive,
+    /// type declaration, and methods for a single C++ class, intended to be placed inside
+    /// an `unsafe extern "C++"` block. This method does NOT add the surrounding `mod ffi`
+    /// or `unsafe extern "C++"` blocks; callers are responsible for adding those themselves.
     pub fn to_rust_bindings(&self) -> Vec<TokenStream> {
         let header_name = Literal::string(format!("include/{}.h", self.filename).as_str());
         // Include the corresponding C++ header once per protocol/header.
