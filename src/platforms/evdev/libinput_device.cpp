@@ -158,16 +158,15 @@ void mie::LibInputDevice::query_and_sync_keyboard_state()
     }
     
     // Query the current key state using EVIOCGKEY ioctl
-    // The kernel uses a bitmap to represent pressed keys (KEY_MAX bits)
-    constexpr size_t KEY_MAX = 0x2ff;  // Maximum key code
-    constexpr size_t KEY_BYTES = (KEY_MAX + 7) / 8;  // Number of bytes needed
-    uint8_t key_states[KEY_BYTES] = {0};
+    // The kernel uses a bitmap to represent pressed keys (KEY_MAX is defined in linux/input.h)
+    constexpr size_t key_bytes = (KEY_MAX + 7) / 8;  // Number of bytes needed for bitmap
+    uint8_t key_states[key_bytes] = {0};
     
     if (ioctl(fd, EVIOCGKEY(sizeof(key_states)), key_states) >= 0)
     {
         // Convert the bitmap to a list of pressed scan codes
         std::vector<uint32_t> pressed_keys;
-        for (size_t byte_idx = 0; byte_idx < KEY_BYTES; ++byte_idx)
+        for (size_t byte_idx = 0; byte_idx < key_bytes; ++byte_idx)
         {
             if (key_states[byte_idx] == 0)
                 continue;
