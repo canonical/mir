@@ -147,10 +147,15 @@ void mie::LibInputDevice::query_and_sync_keyboard_state()
     if (!devnode)
         return;
     
-    // Open the device to query its state
+    // Try to open the device to query its state
+    // Use O_RDONLY since we're only querying state, not consuming events
     int fd = open(devnode, O_RDONLY | O_NONBLOCK);
     if (fd < 0)
+    {
+        // Device may not be accessible - this is not an error as it may be
+        // opened exclusively by libinput or we may lack permissions
         return;
+    }
     
     // Query the current key state using EVIOCGKEY ioctl
     // The kernel uses a bitmap to represent pressed keys (KEY_MAX bits)
