@@ -172,22 +172,18 @@ impl InputDeviceRs {
         device: &input::Device,
         input_sink: std::ptr::NonNull<crate::InputSink>,
     ) {
-        // Get the device path
-        let devnode = device.devnode();
-        if devnode.is_none() {
-            return;
-        }
-        let devnode = devnode.unwrap();
+        // Construct the device path from sysname (e.g., "event5" -> "/dev/input/event5")
+        let sysname = device.sysname();
+        let devnode = format!("/dev/input/{}", sysname);
         
         // Try to open the device to query its state
         use std::os::unix::io::AsRawFd;
-        use std::fs::File;
         use std::os::unix::fs::OpenOptionsExt;
         
         let file = std::fs::OpenOptions::new()
             .read(true)
             .custom_flags(libc::O_NONBLOCK)
-            .open(devnode);
+            .open(&devnode);
         
         if file.is_err() {
             // Device may not be accessible - not an error
