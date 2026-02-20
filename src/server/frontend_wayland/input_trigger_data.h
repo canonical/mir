@@ -238,6 +238,7 @@ private:
     public:
         bool is_valid(Token const& token) const;
 
+        // Precondition: token is valid (i.e. an entry exists for it)
         void add_action(Token const& token, struct wl_resource* id);
 
         void add_action_control(

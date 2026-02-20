@@ -644,8 +644,7 @@ bool mf::InputTriggerData::TokenData::is_valid(Token const& token) const
 
 void mf::InputTriggerData::TokenData::add_action(Token const& token, struct wl_resource* id)
 {
-    // Precondition: token is valid (i.e. an entry exists for it)
-    auto e = entries[token].lock();
+    auto const e = entries.at(token).lock();
 
     auto const action = wayland::make_weak(new InputTriggerActionV1 const {e, id});
     e->action_group.add(action);
