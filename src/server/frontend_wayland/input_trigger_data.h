@@ -100,6 +100,7 @@ public:
 
     auto scancode_is_pressed(uint32_t scancode) const -> bool;
 
+    // TODO remove this
     auto to_string() const -> std::string;
 
 private:
@@ -165,16 +166,6 @@ public:
     uint32_t const scancode;
 };
 
-class InputTriggerLifetimeTracker;
-class InputTriggerActionV1 : public wayland::InputTriggerActionV1
-{
-public:
-    InputTriggerActionV1(wl_resource* id, std::shared_ptr<InputTriggerLifetimeTracker> const& lifetime_tracker);
-
-private:
-    std::shared_ptr<InputTriggerLifetimeTracker> const lifetime_tracker;
-};
-
 // Used in `add_new_action` when a client provides a revoked token to call
 // `send_unavailable_event`.
 class NullInputTriggerActionV1 : public wayland::InputTriggerActionV1
@@ -186,10 +177,51 @@ public:
     }
 };
 
+class InputTriggerActionV1;
 class InputTriggerData
 {
+private:
+    using TriggerList = std::vector<wayland::Weak<InputTriggerV1 const>>;
+
+    struct ActionGroup
+    {
+    public:
+        void add(wayland::Weak<frontend::InputTriggerActionV1 const> action);
+
+        auto began() const -> bool;
+
+        void end(std::string const& activation_token, uint32_t wayland_timestamp);
+
+        void begin(std::string const& activation_token, uint32_t wayland_timestamp);
+
+        bool empty() const;
+
+    private:
+        std::vector<wayland::Weak<InputTriggerActionV1 const>> actions;
+        bool began_{false};
+    };
+
 public:
     using Token = std::string;
+
+    // All the data associated with a token that we need to keep track of.
+    struct Entry
+    {
+        // Used by action controls to add or drop triggers, and by
+        // TokenData::matches to check for matches when input events
+        // arrive.
+        TriggerList trigger_list;
+
+        // List of actions associated with the token. Used to send begin
+        // and end events when matches are made and broken.
+        ActionGroup action_group;
+
+        // If no actions are yet associated with the token, triggers are
+        // added and dropped from this pending list, which is copied over to
+        // the trigger list once the first action is added. After that,
+        // triggers are added and dropped from the active list directly.
+        TriggerList pending_triggers;
+    };
 
     InputTriggerData(std::shared_ptr<shell::TokenAuthority> const& token_authority, Executor& wayland_executor);
 
@@ -213,9 +245,7 @@ private:
         void add_action(Token const& token, struct wl_resource* id);
 
         void add_action_control(
-            Token const& token,
-            std::shared_ptr<InputTriggerLifetimeTracker> const& lifetime_tracker,
-            struct wl_resource* id);
+            Token const& token, std::shared_ptr<Entry> const entry, struct wl_resource* id);
 
         bool has_trigger(frontend::InputTriggerV1 const* trigger) const;
 
@@ -225,53 +255,8 @@ private:
         void erase(Token const& token);
 
     private:
-
-        using TriggerList = std::vector<wayland::Weak<InputTriggerV1 const>>;
         class ActionControl;
-
-        struct ActionGroup
-        {
-        public:
-            void add(wayland::Weak<frontend::InputTriggerActionV1 const> action);
-
-            auto began() const -> bool;
-
-            void end(std::string const& activation_token, uint32_t wayland_timestamp);
-
-            void begin(std::string const& activation_token, uint32_t wayland_timestamp);
-
-            bool empty() const;
-
-        private:
-            std::vector<wayland::Weak<InputTriggerActionV1 const>> actions;
-            bool began_{false};
-        };
-
-        // All the data associated with a token that we need to keep track of.
-        struct Entry
-        {
-            // Used by action controls to add or drop triggers, and by
-            // TokenData::matches to check for matches when input events
-            // arrive.
-            TriggerList trigger_list;
-
-            // List of actions associated with the token. Used to send begin
-            // and end events when matches are made and broken.
-            ActionGroup action_group;
-
-            // If no actions are yet associated with the token, triggers are
-            // added and dropped from this pending list, which is copied over to
-            // the trigger list once the first action is added. After that,
-            // triggers are added and dropped from the active list directly.
-            TriggerList pending_triggers;
-
-            // Passed to action controls and actions as a shared_ptr. When the
-            // last reference is destroyed, removes the entry from the
-            // token_data map.
-            std::weak_ptr<InputTriggerLifetimeTracker> lifetime_tracker;
-        };
-
-        std::unordered_map<Token, Entry> entries;
+        std::unordered_map<Token, std::weak_ptr<Entry>> entries;
     };
 
     void token_revoked(Token const& token);
