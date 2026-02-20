@@ -215,7 +215,7 @@ public:
         // If no actions are yet associated with the token, triggers are
         // added and dropped from this pending list, which is copied over to
         // the trigger list once the first action is added. After that,
-        // triggers are added and dropped from the active list directly.
+        // triggers are added and dropped from the trigger list directly.
         TriggerList pending_triggers;
     };
 
