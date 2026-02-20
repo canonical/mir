@@ -60,7 +60,7 @@ std::unique_ptr<miers::RectangleWrapper> miers::PlatformBridge::bounding_rectang
     return std::make_unique<RectangleWrapper>(input_sink.bounding_rectangle());
 }
 
-void miers::PlatformBridge::sync_key_state(InputSink& sink, rust::Vec<uint32_t> const& scan_codes) const
+void miers::PlatformBridge::sync_key_state(InputSink& sink, rust::cxxbridge1::Vec<std::uint32_t> const& scan_codes) const
 {
     std::vector<uint32_t> cpp_scan_codes;
     cpp_scan_codes.reserve(scan_codes.size());
