@@ -94,8 +94,7 @@ public:
     void on_key_up(uint32_t keysym, uint32_t scancode);
 
     /// Check if a keysym exists in the pressed set. If `case_insensitive` is
-    /// true, also check for the opposite case of the keysym (if it's an ASCII
-    /// letter)
+    /// true, also check for the opposite case of the keysym (for a-z, A-Z).
     auto keysym_is_pressed(uint32_t keysym, bool case_insensitive) const -> bool;
 
     auto scancode_is_pressed(uint32_t scancode) const -> bool;
