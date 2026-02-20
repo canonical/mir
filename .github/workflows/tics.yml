@@ -31,9 +31,9 @@ on:
         default: ""
 
 concurrency:
-  group: ${{ github.workflow }}${{ github.event.number && format('-pr{0}', github.event.number) || '' }}
-  # Don't interrupt QServer runs as that can corrupt the TICS database
-  cancel-in-progress: ${{ github.event_name != 'push' }}
+  # Group and interrupt pull requests and merge queue runs, everything else needs to queue
+  group: ${{ github.workflow }}-${{ contains(fromJSON('["pull_request", "merge_group"]'), github.event_name) && github.ref || 'qserver' }}
+  cancel-in-progress: ${{ !contains(fromJSON('["pull_request", "merge_group"]'), github.event_name) }}
 
 jobs:
   TICS:
