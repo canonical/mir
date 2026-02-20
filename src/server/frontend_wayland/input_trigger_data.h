@@ -100,9 +100,6 @@ public:
 
     auto scancode_is_pressed(uint32_t scancode) const -> bool;
 
-    // TODO remove this
-    auto to_string() const -> std::string;
-
 private:
     std::unordered_set<uint32_t> pressed_keysyms;
     std::unordered_set<uint32_t> pressed_scancodes;
