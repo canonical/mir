@@ -17,6 +17,7 @@
 #include <miral/test_wlcs_display_server.h>
 #include <wlcs/pointer.h>
 #include <wlcs/touch.h>
+#include <wlcs/keyboard.h>
 
 #include <mir_test_framework/executable_path.h>
 #include <mir_test_framework/fake_input_device.h>
@@ -749,6 +750,14 @@ struct FakeTouch : public WlcsTouch
     miral::TestWlcsDisplayServer* runner;
 };
 
+struct FakeKeyboard : public WlcsKeyboard
+{
+    FakeKeyboard();
+
+    decltype(mtf::add_fake_input_device(mi::InputDeviceInfo())) keyboard;
+    miral::TestWlcsDisplayServer* runner;
+};
+
 namespace
 {
 
@@ -810,6 +819,46 @@ FakeTouch::FakeTouch()
 
 namespace
 {
+
+void wlcs_destroy_keyboard(WlcsKeyboard* keyboard)
+{
+    delete static_cast<FakeKeyboard*>(keyboard);
+}
+
+void wlcs_keyboard_key_down(WlcsKeyboard* keyboard, int key_code)
+{
+    auto device = static_cast<FakeKeyboard*>(keyboard);
+
+    auto event = mir::input::synthesis::a_key_down_event()
+                    .of_scancode(key_code);
+
+    emit_mir_event(device->runner, device->keyboard, event);
+}
+
+void wlcs_keyboard_key_up(WlcsKeyboard* keyboard, int key_code)
+{
+    auto device = static_cast<FakeKeyboard*>(keyboard);
+
+    auto event = mir::input::synthesis::a_key_up_event()
+                    .of_scancode(key_code);
+
+    emit_mir_event(device->runner, device->keyboard, event);
+}
+
+}
+
+FakeKeyboard::FakeKeyboard()
+{
+    version = WLCS_KEYBOARD_VERSION;
+
+    key_down = &wlcs_keyboard_key_down;
+    key_up = &wlcs_keyboard_key_up;
+
+    destroy = &wlcs_destroy_keyboard;
+}
+
+namespace
+{
 void wlcs_server_start(WlcsDisplayServer* server)
 {
     static_cast<miral::TestWlcsDisplayServer*>(server)->start_server();
@@ -840,6 +889,11 @@ WlcsTouch* wlcs_server_create_touch(WlcsDisplayServer* server)
 {
     return static_cast<miral::TestWlcsDisplayServer*>(server)->create_touch();
 }
+
+WlcsKeyboard* wlcs_server_create_keyboard(WlcsDisplayServer* server)
+{
+    return static_cast<miral::TestWlcsDisplayServer*>(server)->create_keyboard();
+}
 }
 
 miral::TestWlcsDisplayServer::TestWlcsDisplayServer(int argc, char const** argv) :
@@ -847,13 +901,14 @@ miral::TestWlcsDisplayServer::TestWlcsDisplayServer(int argc, char const** argv)
     resource_mapper{std::make_shared<ResourceMapper>()},
     event_listener{std::make_shared<InputEventListener>(*this)}
 {
-    WlcsDisplayServer::version = 2;
+    WlcsDisplayServer::version = 4;
     WlcsDisplayServer::start = &wlcs_server_start;
     WlcsDisplayServer::stop = &wlcs_server_stop;
     WlcsDisplayServer::create_client_socket = &wlcs_server_create_client_socket;
     WlcsDisplayServer::position_window_absolute = &wlcs_server_position_window_absolute;
     WlcsDisplayServer::create_pointer = &wlcs_server_create_pointer;
     WlcsDisplayServer::create_touch = &wlcs_server_create_touch;
+    WlcsDisplayServer::create_keyboard = &wlcs_server_create_keyboard;
 
     add_to_environment("MIR_SERVER_CURSOR", "null");
     add_to_environment("MIR_SERVER_ENABLE_KEY_REPEAT", "false");
@@ -1042,4 +1097,51 @@ WlcsTouch* miral::TestWlcsDisplayServer::create_touch()
 std::shared_ptr<mir::test::Signal> miral::TestWlcsDisplayServer::expect_event_with_time(std::chrono::nanoseconds event_time)
 {
     return event_listener->expect_event_with_time(event_time);
+}
+
+WlcsKeyboard* miral::TestWlcsDisplayServer::create_keyboard()
+{
+    auto constexpr uid = "keyboard-uid";
+
+    class DeviceObserver : public mir::input::NullInputDeviceObserver
+    {
+    public:
+        DeviceObserver(std::shared_ptr<mir::test::Signal> const& done)
+            : done{done}
+        {
+        }
+
+        void device_added(std::shared_ptr<mir::input::Device> const& device) override
+        {
+            if (device->unique_id() == uid)
+                seen_device = true;
+        }
+
+        void changes_complete() override
+        {
+            if (seen_device)
+                done->raise();
+        }
+
+    private:
+        std::shared_ptr<mir::test::Signal> const done;
+        bool seen_device{false};
+    };
+
+    auto keyboard_added = std::make_shared<mir::test::Signal>();
+    auto observer = std::make_shared<DeviceObserver>(keyboard_added);
+    mir_server->the_input_device_hub()->add_observer(observer);
+
+    auto fake_keyboard_dev = mtf::add_fake_input_device(
+        mi::InputDeviceInfo{"keyboard", uid, mi::DeviceCapability::keyboard});
+
+    keyboard_added->wait_for(a_long_time);
+    executor->spawn([observer=std::move(observer), the_input_device_hub=mir_server->the_input_device_hub()]
+                        { the_input_device_hub->remove_observer(observer); });
+
+    auto fake_keyboard = new FakeKeyboard;
+    fake_keyboard->runner = this;
+    fake_keyboard->keyboard = std::move(fake_keyboard_dev);
+
+    return static_cast<WlcsKeyboard*>(fake_keyboard);
 }
