@@ -113,6 +113,7 @@ public:
     std::shared_ptr<InputDevice> create_input_device(int device_id) const;
     std::unique_ptr<EventBuilderWrapper> create_event_builder_wrapper(EventBuilder* event_builder) const;
     std::unique_ptr<RectangleWrapper> bounding_rectangle(InputSink const&) const;
+    void sync_key_state(InputSink& sink, rust::Vec<uint32_t> const& scan_codes) const;
 
 private:
     Platform* platform;

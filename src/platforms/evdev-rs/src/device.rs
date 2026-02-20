@@ -133,6 +133,11 @@ impl InputDeviceRs {
                     match std::ptr::NonNull::new(input_sink) {
                         Some(nn) => {
                             device_info.input_sink = Some(InputSinkPtr(nn));
+                            
+                            // Query and sync keyboard state if this is a keyboard device
+                            if device_info.device.has_capability(input::DeviceCapability::Keyboard) {
+                                Self::query_and_sync_keyboard_state(&self.bridge, &mut device_info.device, nn);
+                            }
                         }
                         None => {
                             println!("InputDeviceRs::start: input_sink pointer is null; not starting sink");
@@ -158,6 +163,84 @@ impl InputDeviceRs {
             }
             Err(_) => {
                 println!("InputDeviceRs::start: unable to acquire state lock; lock poisoned");
+            }
+        }
+    }
+    
+    fn query_and_sync_keyboard_state(
+        bridge: &cxx::SharedPtr<crate::PlatformBridge>,
+        device: &input::Device,
+        input_sink: std::ptr::NonNull<crate::InputSink>,
+    ) {
+        // Get the device path
+        let devnode = device.devnode();
+        if devnode.is_none() {
+            return;
+        }
+        let devnode = devnode.unwrap();
+        
+        // Try to open the device to query its state
+        use std::os::unix::io::AsRawFd;
+        use std::fs::File;
+        use std::os::unix::fs::OpenOptionsExt;
+        
+        let file = std::fs::OpenOptions::new()
+            .read(true)
+            .custom_flags(libc::O_NONBLOCK)
+            .open(devnode);
+        
+        if file.is_err() {
+            // Device may not be accessible - not an error
+            return;
+        }
+        let file = file.unwrap();
+        let fd = file.as_raw_fd();
+        
+        // Query the current key state using EVIOCGKEY ioctl
+        const KEY_MAX: usize = 0x2ff;
+        const KEY_BYTES: usize = (KEY_MAX + 7) / 8;
+        let mut key_states = [0u8; KEY_BYTES];
+        
+        // EVIOCGKEY macro expansion: _IOR('E', 0x18, sizeof(buffer))
+        const EVIOC_MAGIC: u32 = b'E' as u32;
+        const EVIOCGKEY_NR: u32 = 0x18;
+        const IOC_READ: u32 = 2;
+        const IOC_NRBITS: u32 = 8;
+        const IOC_TYPEBITS: u32 = 8;
+        const IOC_SIZEBITS: u32 = 14;
+        const IOC_NRSHIFT: u32 = 0;
+        const IOC_TYPESHIFT: u32 = IOC_NRSHIFT + IOC_NRBITS;
+        const IOC_SIZESHIFT: u32 = IOC_TYPESHIFT + IOC_TYPEBITS;
+        const IOC_DIRSHIFT: u32 = IOC_SIZESHIFT + IOC_SIZEBITS;
+        
+        let ioc_cmd = (IOC_READ << IOC_DIRSHIFT) |
+                      (EVIOC_MAGIC << IOC_TYPESHIFT) |
+                      (EVIOCGKEY_NR << IOC_NRSHIFT) |
+                      ((KEY_BYTES as u32) << IOC_SIZESHIFT);
+        
+        unsafe {
+            let result = libc::ioctl(fd, ioc_cmd as libc::c_ulong, key_states.as_mut_ptr());
+            if result >= 0 {
+                // Convert the bitmap to a list of pressed scan codes
+                let mut pressed_keys = Vec::new();
+                for byte_idx in 0..KEY_BYTES {
+                    if key_states[byte_idx] == 0 {
+                        continue;
+                    }
+                    
+                    for bit_idx in 0..8 {
+                        if (key_states[byte_idx] & (1 << bit_idx)) != 0 {
+                            let scan_code = (byte_idx * 8 + bit_idx) as u32;
+                            pressed_keys.push(scan_code);
+                        }
+                    }
+                }
+                
+                // Sync the keyboard state with the input system
+                if !pressed_keys.is_empty() {
+                    let pinned = std::pin::Pin::new_unchecked(input_sink.as_mut());
+                    bridge.sync_key_state(pinned, &pressed_keys);
+                }
             }
         }
     }
