@@ -79,6 +79,7 @@ private:
     void update_device_info();
     bool is_output_active() const;
     OutputInfo get_output_info() const;
+    void query_and_sync_keyboard_state();
 
     std::shared_ptr<InputReport> const report;
     LibInputDevicePtr const device_;

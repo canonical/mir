@@ -40,6 +40,9 @@
 #include <chrono>
 #include <sstream>
 #include <algorithm>
+#include <sys/ioctl.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 namespace md = mir::dispatch;
 namespace mi = mir::input;
@@ -127,10 +130,73 @@ mie::LibInputDevice::LibInputDevice(std::shared_ptr<mi::InputReport> const& repo
 
 mie::LibInputDevice::~LibInputDevice() = default;
 
+void mie::LibInputDevice::query_and_sync_keyboard_state()
+{
+    if (!sink)
+        return;
+    
+    // Get the device path from udev
+    auto const u_dev = mir::raii::deleter_for(
+        libinput_device_get_udev_device(device()),
+        &udev_device_unref);
+    
+    if (!u_dev)
+        return;
+    
+    char const* devnode = udev_device_get_devnode(u_dev.get());
+    if (!devnode)
+        return;
+    
+    // Open the device to query its state
+    int fd = open(devnode, O_RDONLY | O_NONBLOCK);
+    if (fd < 0)
+        return;
+    
+    // Query the current key state using EVIOCGKEY ioctl
+    // The kernel uses a bitmap to represent pressed keys (KEY_MAX bits)
+    constexpr size_t KEY_MAX = 0x2ff;  // Maximum key code
+    constexpr size_t KEY_BYTES = (KEY_MAX + 7) / 8;  // Number of bytes needed
+    uint8_t key_states[KEY_BYTES] = {0};
+    
+    if (ioctl(fd, EVIOCGKEY(sizeof(key_states)), key_states) >= 0)
+    {
+        // Convert the bitmap to a list of pressed scan codes
+        std::vector<uint32_t> pressed_keys;
+        for (size_t byte_idx = 0; byte_idx < KEY_BYTES; ++byte_idx)
+        {
+            if (key_states[byte_idx] == 0)
+                continue;
+            
+            for (size_t bit_idx = 0; bit_idx < 8; ++bit_idx)
+            {
+                if (key_states[byte_idx] & (1 << bit_idx))
+                {
+                    uint32_t scan_code = byte_idx * 8 + bit_idx;
+                    pressed_keys.push_back(scan_code);
+                }
+            }
+        }
+        
+        // Sync the keyboard state with the input system
+        if (!pressed_keys.empty())
+        {
+            sink->key_state(pressed_keys);
+        }
+    }
+    
+    close(fd);
+}
+
 void mie::LibInputDevice::start(InputSink* sink, EventBuilder* builder)
 {
     this->sink = sink;
     this->builder = builder;
+    
+    // Query and sync keyboard state if this is a keyboard device
+    if (contains(info.capabilities, mi::DeviceCapability::keyboard))
+    {
+        query_and_sync_keyboard_state();
+    }
 }
 
 void mie::LibInputDevice::stop()
