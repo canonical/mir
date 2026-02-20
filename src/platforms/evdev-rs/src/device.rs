@@ -170,7 +170,7 @@ impl InputDeviceRs {
     fn query_and_sync_keyboard_state(
         bridge: &cxx::SharedPtr<crate::PlatformBridge>,
         device: &input::Device,
-        input_sink: std::ptr::NonNull<crate::InputSink>,
+        mut input_sink: std::ptr::NonNull<crate::InputSink>,
     ) {
         // Construct the device path from sysname (e.g., "event5" -> "/dev/input/event5")
         let sysname = device.sysname();
@@ -238,7 +238,7 @@ impl InputDeviceRs {
                     //
                     // Calling new_unchecked is unsafe. This follows the same pattern
                     // as InputSinkPtr::handle_input() in this file.
-                    let pinned = unsafe { std::pin::Pin::new_unchecked(input_sink.as_mut()) };
+                    let pinned = std::pin::Pin::new_unchecked(input_sink.as_mut());
                     bridge.sync_key_state(pinned, &pressed_keys);
                 }
             }
