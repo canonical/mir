@@ -308,12 +308,6 @@ fn sanitize_identifier(name: &str) -> String {
         return "_empty".to_string();
     }
 
-    // First check if it starts with a digit
-    let first_char = name.chars().next().unwrap();
-    if first_char.is_ascii_digit() {
-        return format!("_{}", name);
-    }
-
     // Try to parse as a regular identifier
     // If it fails (e.g., it's a keyword), use raw identifier
     match syn::parse_str::<Ident>(name) {
