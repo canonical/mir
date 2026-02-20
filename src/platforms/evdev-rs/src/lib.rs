@@ -220,11 +220,6 @@ mod ffi_bridge {
             self: &PlatformBridge,
             sink: &InputSink,
         ) -> UniquePtr<RectangleWrapper>;
-        pub fn sync_key_state(
-            self: &PlatformBridge,
-            sink: Pin<&mut InputSink>,
-            scan_codes: &Vec<u32>,
-        );
         pub fn create_input_device(self: &PlatformBridge, device_id: i32)
             -> SharedPtr<InputDevice>;
         pub fn raw_fd(self: &DeviceWrapper) -> i32;
