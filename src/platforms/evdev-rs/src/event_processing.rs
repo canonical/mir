@@ -80,6 +80,9 @@ pub fn process_libinput_events(
                         input_device: bridge.create_input_device(state.next_device_id),
                         input_sink: None,
                         event_builder: None,
+                        button_state: 0,
+                        pointer_x: 0.0,
+                        pointer_y: 0.0,
                     });
 
                     // The device registry may call back into the input device, but the input device
@@ -133,7 +136,7 @@ pub fn process_libinput_events(
                                     has_time: true,
                                     time_microseconds: motion_event.time_usec(),
                                     action: crate::MirPointerAction::mir_pointer_action_motion.repr,
-                                    buttons: state.button_state,
+                                    buttons: device_info.button_state,
                                     has_position: false,
                                     position_x: 0 as f32,
                                     position_y: 0 as f32,
@@ -170,23 +173,23 @@ pub fn process_libinput_events(
                                     let width = bounding_rect.width() as u32;
                                     let height = bounding_rect.height() as u32;
 
-                                    let old_x = state.pointer_x;
-                                    let old_y = state.pointer_y;
-                                    state.pointer_x =
+                                    let old_x = device_info.pointer_x;
+                                    let old_y = device_info.pointer_y;
+                                    device_info.pointer_x =
                                         absolute_motion_event.absolute_x_transformed(width) as f32;
-                                    state.pointer_y =
+                                    device_info.pointer_y =
                                         absolute_motion_event.absolute_y_transformed(height) as f32;
 
-                                    let movement_x = state.pointer_x - old_x;
-                                    let movement_y = state.pointer_y - old_y;
+                                    let movement_x = device_info.pointer_x - old_x;
+                                    let movement_y = device_info.pointer_y - old_y;
                                     let pointer_event = PointerEventDataRs {
                                         has_time: true,
                                         time_microseconds: absolute_motion_event.time_usec(),
                                         action: crate::MirPointerAction::mir_pointer_action_motion.repr,
-                                        buttons: state.button_state,
+                                        buttons: device_info.button_state,
                                         has_position: true,
-                                        position_x: state.pointer_x,
-                                        position_y: state.pointer_y,
+                                        position_x: device_info.pointer_x,
+                                        position_y: device_info.pointer_y,
                                         displacement_x: movement_x,
                                         displacement_y: movement_y,
                                         axis_source: crate::MirPointerAxisSource::mir_pointer_axis_source_none.repr,
@@ -253,7 +256,7 @@ pub fn process_libinput_events(
                                     has_time: true,
                                     time_microseconds: scroll_wheel_event.time_usec(),
                                     action: crate::MirPointerAction::mir_pointer_action_motion.repr,
-                                    buttons: state.button_state,
+                                    buttons: device_info.button_state,
                                     has_position: false,
                                     position_x: 0.0,
                                     position_y: 0.0,
@@ -318,7 +321,7 @@ pub fn process_libinput_events(
                                     has_time: true,
                                     time_microseconds: scroll_continuous_event.time_usec(),
                                     action: crate::MirPointerAction::mir_pointer_action_motion.repr,
-                                    buttons: state.button_state,
+                                    buttons: device_info.button_state,
                                     has_position: false,
                                     position_x: 0.0,
                                     position_y: 0.0,
@@ -383,7 +386,7 @@ pub fn process_libinput_events(
                                     has_time: true,
                                     time_microseconds: scroll_finger_event.time_usec(),
                                     action: crate::MirPointerAction::mir_pointer_action_motion.repr,
-                                    buttons: state.button_state,
+                                    buttons: device_info.button_state,
                                     has_position: false,
                                     position_x: 0.0,
                                     position_y: 0.0,
@@ -450,10 +453,12 @@ pub fn process_libinput_events(
                                 let action: crate::MirPointerAction = if button_event.button_state()
                                     == pointer::ButtonState::Pressed
                                 {
-                                    state.button_state = state.button_state | mir_button.repr;
+                                    device_info.button_state =
+                                        device_info.button_state | mir_button.repr;
                                     crate::MirPointerAction::mir_pointer_action_button_down
                                 } else {
-                                    state.button_state = state.button_state & !(mir_button.repr);
+                                    device_info.button_state =
+                                        device_info.button_state & !(mir_button.repr);
                                     crate::MirPointerAction::mir_pointer_action_button_up
                                 };
 
@@ -461,7 +466,7 @@ pub fn process_libinput_events(
                                     has_time: true,
                                     time_microseconds: button_event.time_usec(),
                                     action: action.repr,
-                                    buttons: state.button_state,
+                                    buttons: device_info.button_state,
                                     has_position: false,
                                     position_x: 0.0,
                                     position_y: 0.0,

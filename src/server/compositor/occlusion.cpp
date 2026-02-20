@@ -54,7 +54,7 @@ bool renderable_is_occluded(
         }
     }
 
-    if (!occluded)
+    if (!occluded && renderable.alpha() == 1.0f)
     {
         if (renderable.shaped())
         {
@@ -68,7 +68,7 @@ bool renderable_is_occluded(
             }
             // Client didn't send an opaque region
         }
-        else if (renderable.alpha() == 1.0f)
+        else
         {
             coverage.push_back(clipped_window);
         }
