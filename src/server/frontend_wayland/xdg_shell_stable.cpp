@@ -623,9 +623,13 @@ void mf::XdgToplevelStable::send_toplevel_configure()
             *state = State::activated;
     }
 
+    auto opt_window_size = requested_window_size();
+
     if (auto const surface = scene_surface())
     {
-        auto const state = surface.value()->state_tracker();
+        auto const s = surface.value();
+        auto const state = s->state_tracker();
+
         if (state.has_any({
             mir_window_state_maximized,
             mir_window_state_horizmaximized,
@@ -641,7 +645,7 @@ void mf::XdgToplevelStable::send_toplevel_configure()
                 *state = State::fullscreen;
         }
 
-        auto tiled_edges = surface.value()->tiled_edges();
+        auto tiled_edges = s->tiled_edges();
         if (tiled_edges & mir_tiled_edge_north)
         {
             if (uint32_t *state = static_cast<decltype(state)>(wl_array_add(&states, sizeof *state)))
@@ -663,11 +667,21 @@ void mf::XdgToplevelStable::send_toplevel_configure()
                 *state = State::tiled_left;
         }
 
+        if (state.has_any({
+            mir_window_state_maximized,
+            mir_window_state_horizmaximized,
+            mir_window_state_vertmaximized,
+            mir_window_state_fullscreen}) ||
+                tiled_edges != mir_tiled_edge_none)
+        {
+            opt_window_size = s->content_size();
+        }
+
         // TODO: plumb resizing state through Mir?
     }
 
     // 0 sizes means default for toplevel configure
-    geom::Size size = requested_window_size().value_or(geom::Size{0, 0});
+    auto size = opt_window_size.value_or(geom::Size{0, 0});
 
     send_configure_event(size.width.as_int(), size.height.as_int(), &states);
     wl_array_release(&states);
