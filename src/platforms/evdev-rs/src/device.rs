@@ -238,7 +238,11 @@ impl InputDeviceRs {
                 
                 // Sync the keyboard state with the input system
                 if !pressed_keys.is_empty() {
-                    let pinned = std::pin::Pin::new_unchecked(input_sink.as_mut());
+                    // # Safety
+                    //
+                    // Calling new_unchecked is unsafe. This follows the same pattern
+                    // as InputSinkPtr::handle_input() in this file.
+                    let pinned = unsafe { std::pin::Pin::new_unchecked(input_sink.as_mut()) };
                     bridge.sync_key_state(pinned, &pressed_keys);
                 }
             }
