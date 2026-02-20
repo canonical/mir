@@ -162,7 +162,8 @@ void mie::LibInputDevice::query_and_sync_keyboard_state()
     constexpr size_t key_bytes = (KEY_MAX + 7) / 8;  // Number of bytes needed for bitmap
     uint8_t key_states[key_bytes] = {0};
     
-    if (ioctl(fd, EVIOCGKEY(sizeof(key_states)), key_states) >= 0)
+    // Cast to unsigned long to avoid overflow warning on musl where ioctl request is signed
+    if (ioctl(fd, static_cast<unsigned long>(EVIOCGKEY(sizeof(key_states))), key_states) >= 0)
     {
         // Convert the bitmap to a list of pressed scan codes
         std::vector<uint32_t> pressed_keys;
