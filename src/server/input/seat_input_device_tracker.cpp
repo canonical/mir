@@ -319,6 +319,7 @@ mir::EventUPtr mi::SeatInputDeviceTracker::create_device_state() const
 
 auto mi::SeatInputDeviceTracker::xkb_modifiers() const -> MirXkbModifiers
 {
+    std::lock_guard lock(device_state_mutex);
     return key_mapper->xkb_modifiers();
 }
 
