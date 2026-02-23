@@ -61,6 +61,19 @@ pub struct WaylandDescription {
     pub text: String,
 }
 
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "snake_case")]
+pub enum WaylandArgType {
+    Int,
+    Uint,
+    Fixed,
+    String,
+    Object,
+    NewId,
+    Array,
+    Fd,
+}
+
 /// Representation of a Wayland request on an interface.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct WaylandRequest {
@@ -107,7 +120,7 @@ pub struct WaylandArg {
     pub name: String,
 
     #[serde(rename = "@type")]
-    pub type_: String,
+    pub type_: WaylandArgType,
 
     #[serde(rename = "@enum")]
     pub enum_: Option<String>,
@@ -235,7 +248,7 @@ pub fn parse_protocols() -> Vec<WaylandProtocol> {
                                     for arg in &req.args {
                                         if let Some(interface_name) = &arg.interface {
                                             if interface_name == &interface.name
-                                                && arg.type_ == "new_id"
+                                                && arg.type_ == WaylandArgType::NewId
                                             {
                                                 is_global = false;
                                                 break;

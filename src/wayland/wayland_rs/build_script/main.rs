@@ -18,11 +18,13 @@ mod cpp_builder;
 mod protocol_parser;
 
 use cpp_builder::{
-    CppArg, CppBuilder, CppClass, CppEnum, CppEnumOption, CppMethod, CppNamespace, CppType,
+    sanitize_identifier, CppArg, CppBuilder, CppClass, CppEnum, CppEnumOption, CppMethod,
+    CppNamespace, CppType,
 };
 use proc_macro2::TokenStream;
 use protocol_parser::{
-    parse_protocols, WaylandEnum, WaylandInterface, WaylandProtocol, WaylandRequest,
+    parse_protocols, InterfaceItem, WaylandArg, WaylandArgType, WaylandEnum, WaylandInterface,
+    WaylandProtocol, WaylandRequest,
 };
 use quote::{format_ident, quote};
 use std::{env, fs, path::Path};
@@ -45,11 +47,11 @@ fn main() {
     // Next, generate the protocols.rs file.
     write_protocols_rs(&protocols);
 
-    // Next, generate the dispatch and global dispatch methods.
-    write_dispatch_rs(&protocols);
-
     // Next, generate a C++ abstract class for each interface.
     write_cpp_protocol_headers(&protocols);
+
+    // Next, generate the dispatch and global dispatch methods.
+    write_dispatch_rs(&protocols);
 }
 
 fn write_protocols_rs(protocols: &Vec<WaylandProtocol>) {
@@ -169,27 +171,133 @@ fn generate_global_dispatch_impl(
     namespace_name: &TokenStream,
 ) -> TokenStream {
     let interface_name = dash_to_snake_ident(&interface.name.to_string());
-    let interface_struct_name = format_ident!("{}", snake_to_pascal(&interface.name));
 
     if interface_name == "wl_display" {
         // wl_display is handled specially in wayland_server crate via the 'Display' struct.
         return quote! {};
     }
 
+    let interface_struct_name = format_ident!("{}", snake_to_pascal(&interface.name));
+    let create_global_method = format_ident!("create_{}", &interface.name);
     quote! {
-        impl GlobalDispatch<#namespace_name::#interface_name::#interface_struct_name, ()>
+        impl GlobalDispatch<#namespace_name::#interface_name::#interface_struct_name, ffi_cpp::GlobalFactory>
             for ServerState
         {
+
             fn bind(
                 _state: &mut Self,
                 _handle: &wayland_server::DisplayHandle,
                 _client: &wayland_server::Client,
                 resource: New<#namespace_name::#interface_name::#interface_struct_name>,
-                _global_data: &(),
+                global_data: &ffi_cpp::GlobalFactory,
                 data_init: &mut wayland_server::DataInit<'_, Self>,
             ) {
-                data_init.init(resource, ());
+                use ffi_cpp;
+                let global = global_data.#create_global_method();
+                data_init.init(resource, global);
             }
+        }
+    }
+}
+
+/// Generate a TokenStream that transforms a single argument for crossing the Rust/C++ boundary.
+fn transform_argument_for_cpp(arg: &WaylandArg) -> Option<TokenStream> {
+    let arg_name = format_ident!("{}", arg.name);
+
+    // Enums are provided as WlEnum, so we need to cast them to u32 so that
+    // they can be sent across the barrier.
+    if arg.enum_.is_some() {
+        return match arg.type_ {
+            // The "int" appears to be a faff on the `WlSurface.set_buffer_transform` call,
+            // since most enums are u32s, so much so that the wayland Rust crate assumes
+            // that this is always the case.
+            WaylandArgType::Int => Some(quote! {
+                let #arg_name = u32::from(#arg_name) as i32;
+            }),
+            _ => Some(quote! {
+                let #arg_name = u32::from(#arg_name);
+            }),
+        };
+    }
+
+    match arg.type_ {
+        // The Wayland Rust crate will provide us with raw Wayland Rust objects.
+        // C++ expects the shared_ptr data that backs these rust objects to be sent
+        // as parameters for objects.
+        WaylandArgType::Object => {
+            let arg_type = format_ident!(
+                "{}",
+                snake_to_pascal(arg.interface.clone().unwrap().as_str())
+            );
+            if arg.allow_null.unwrap_or(false) {
+                let null_ptr_name = format_ident!("__{}_null_ptr", arg.name.replace('-', "_"));
+                Some(quote! {
+                    let #null_ptr_name = cxx::SharedPtr::<ffi_cpp::#arg_type>::null();
+                    let #arg_name: &cxx::SharedPtr<ffi_cpp::#arg_type> = match #arg_name.as_ref() {
+                        Some(o) => o.data().unwrap(),
+                        None => &#null_ptr_name
+                    };
+                })
+            } else {
+                Some(quote! {
+                    let #arg_name: &cxx::SharedPtr<ffi_cpp::#arg_type> = #arg_name.data().unwrap();
+                })
+            }
+        }
+        WaylandArgType::Fd => Some(quote! {
+            let #arg_name = #arg_name.as_raw_fd();
+        }),
+        WaylandArgType::String if arg.allow_null.unwrap_or(false) => Some(quote! {
+            let #arg_name = match #arg_name {
+                Some(o) => o,
+                None => String::new()
+            };
+        }),
+        _ => None,
+    }
+}
+
+/// Generate the body of a request handler arm.
+///
+/// Requests come in two distinct forms:
+/// 1. Regular requests that ferry their data directly into the C++ method.
+/// 2. Resource creation requests which ask the C++ interface to create
+///    the resource for them. These methods MUST call data_init.init()
+///    with the newly created C++ resource.
+fn generate_request_body(request: &WaylandRequest) -> TokenStream {
+    let snake_request_name = dash_to_snake_ident(&sanitize_identifier(request.name.as_str()));
+    let new_id_arg = request
+        .args
+        .iter()
+        .find(|arg| arg.type_ == WaylandArgType::NewId);
+
+    if let Some(new_id_arg) = new_id_arg {
+        let new_id_name = format_ident!("{}", new_id_arg.name);
+        let call_arg_names: Vec<TokenStream> = request
+            .args
+            .iter()
+            .filter(|arg| arg.type_ != WaylandArgType::NewId)
+            .map(|arg| {
+                let arg_name = format_ident!("{}", arg.name.as_str());
+                quote! { #arg_name }
+            })
+            .collect();
+
+        quote! {
+            data_init.init(#new_id_name, data.#snake_request_name(#( #call_arg_names ),*));
+        }
+    } else {
+        let call_arg_names: Vec<TokenStream> = request
+            .args
+            .iter()
+            .map(|arg| {
+                let arg_name = format_ident!("{}", arg.name.as_str());
+                quote! { #arg_name }
+            })
+            .collect();
+
+        quote! {
+            data.#snake_request_name(#( #call_arg_names ),*);
         }
     }
 }
@@ -204,25 +312,34 @@ fn generate_request_handler_arms(
         .items
         .iter()
         .filter_map(|item| {
-            if let protocol_parser::InterfaceItem::Request(request) = item {
-                let request_name = format_ident!("{}", snake_to_pascal(&request.name));
-                let arg_names: Vec<proc_macro2::TokenStream> = request
-                    .args
-                    .iter()
-                    .map(|arg| {
-                        let arg_name = format_ident!("{}", arg.name.replace('-', "_"));
-                        quote! { #arg_name: _ }
-                    })
-                    .collect();
+            let protocol_parser::InterfaceItem::Request(request) = item else {
+                return None;
+            };
 
-                Some(quote! {
-                    #namespace_name::#interface_name::Request::#request_name { #( #arg_names ),* } => {
-                        // Handle the #request_name request here
-                    }
+            let request_name = format_ident!("{}", snake_to_pascal(&request.name));
+            let arg_names: Vec<TokenStream> = request
+                .args
+                .iter()
+                .map(|arg| {
+                    let arg_name = format_ident!("{}", arg.name.as_str());
+                    quote! { #arg_name }
                 })
-            } else {
-                None
-            }
+                .collect();
+
+            let transformed_args: Vec<TokenStream> = request
+                .args
+                .iter()
+                .filter_map(transform_argument_for_cpp)
+                .collect();
+
+            let body = generate_request_body(request);
+
+            Some(quote! {
+                #namespace_name::#interface_name::Request::#request_name { #( #arg_names ),* } => {
+                    #( #transformed_args )*
+                    #body
+                }
+            })
         })
         .collect()
 }
@@ -253,8 +370,47 @@ fn generate_dispatch_impl(
         });
     }
 
+    // This snippet checks if any request on the interface creates a new Wayland object.
+    // If none do, then we can add the underscore in front of _data_init to show that it is
+    // not used.
+    let interface_creates_wayland_objects = interface.items.iter().any(|item| match item {
+        InterfaceItem::Request(request) => request
+            .args
+            .iter()
+            .any(|arg| arg.type_ == WaylandArgType::NewId),
+        _ => false,
+    });
+
+    let data_init_name = format_ident!(
+        "{}",
+        if interface_creates_wayland_objects {
+            "data_init"
+        } else {
+            "_data_init"
+        }
+    );
+
+    // This snippet checks if the interface has any requests at all. If not, then data
+    // will be prefixed with an underscore.
+    let interface_has_requests = interface.items.iter().any(|item| match item {
+        InterfaceItem::Request(_) => true,
+        _ => false,
+    });
+
+    let data_name = format_ident!(
+        "{}",
+        if interface_has_requests {
+            "data"
+        } else {
+            "_data"
+        }
+    );
+
     quote! {
-        impl Dispatch<#namespace_name::#interface_name::#interface_struct_name, ()>
+        unsafe impl Send for ffi_cpp::#interface_struct_name {}
+        unsafe impl Sync for ffi_cpp::#interface_struct_name {}
+
+        impl Dispatch<#namespace_name::#interface_name::#interface_struct_name, cxx::SharedPtr<ffi_cpp::#interface_struct_name>>
             for ServerState
         {
             fn request(
@@ -262,9 +418,9 @@ fn generate_dispatch_impl(
                 _client: &Client,
                 _resource: &#namespace_name::#interface_name::#interface_struct_name,
                 request: <#namespace_name::#interface_name::#interface_struct_name as wayland_server::Resource>::Request,
-                _data: &(),
+                #data_name: &cxx::SharedPtr<ffi_cpp::#interface_struct_name>,
                 _dhandle: &DisplayHandle,
-                _data_init: &mut DataInit<'_, Self>,
+                #data_init_name: &mut DataInit<'_, Self>,
             ) {
                 match request {
                     #(#request_handler_arms),*
@@ -306,9 +462,11 @@ fn write_dispatch_rs(protocols: &Vec<WaylandProtocol>) {
         .map(|protocol| generate_dispatch_implementations(protocol));
 
     let generated_protocol_rs = quote! {
-        use wayland_server::{Client, DataInit, Dispatch, GlobalDispatch, New, DisplayHandle};
+        use wayland_server::{Client, DataInit, Dispatch, GlobalDispatch, New, DisplayHandle, Resource};
         use crate::protocols;
         use crate::wayland_server::ServerState;
+        use crate::ffi_cpp;
+        use std::os::fd::{AsRawFd, RawFd};
 
         #(#generated_dispatch_implementations)*
     };
@@ -316,16 +474,50 @@ fn write_dispatch_rs(protocols: &Vec<WaylandProtocol>) {
     write_generated_rust_file(generated_protocol_rs, "dispatch.rs");
 }
 
+fn create_global_factory(protocols: &Vec<WaylandProtocol>) -> CppBuilder {
+    let mut builder: CppBuilder = CppBuilder::new(
+        "MIR_WAYLANDRS_GLOBALS".to_string(),
+        "global_factory".to_string(),
+    );
+    builder.add_include("<memory>".to_string());
+    let mut namespace = CppNamespace::new(vec!["mir".to_string(), "wayland_rs".to_string()]);
+    let mut class = CppClass::new("GlobalFactory".to_string());
+    protocols.iter().for_each(|protocol| {
+        protocol
+            .interfaces
+            .iter()
+            .filter(|interface| interface.is_global)
+            .filter(|interface| interface.name != "wl_display" && interface.name != "wl_registry")
+            .for_each(|global_interface| {
+                let pascal_name = snake_to_pascal(&global_interface.name);
+                namespace.add_forward_declaration_class(&pascal_name);
+
+                let method = CppMethod::new(
+                    format!("create_{}", global_interface.name),
+                    Some(CppType::Object(pascal_name)),
+                );
+                class.add_method(method);
+            })
+    });
+    namespace.add_class(class);
+    builder.add_namespace(namespace);
+    builder
+}
+
 /// Write a header file for each protocol containing abstract classes per-interface.
 fn write_cpp_protocol_headers(protocols: &Vec<WaylandProtocol>) {
-    let builders: Vec<CppBuilder> = protocols
+    // First, create the global factory.
+    let global_builder = create_global_factory(protocols);
+
+    let mut builders: Vec<CppBuilder> = protocols
         .iter()
         .map(|protocol| create_cpp_builder(protocol))
         .collect();
+    builders.push(global_builder);
 
     // Write the protocol headers
     for builder in &builders {
-        write_cpp_protocol_header(&builder);
+        write_cpp_header(&builder);
     }
 
     // Write the Rust FFI glue code.
@@ -356,22 +548,23 @@ fn create_cpp_builder(protocol: &WaylandProtocol) -> CppBuilder {
     let classes = protocol
         .interfaces
         .iter()
+        .filter(|interface| interface.name != "wl_registry" && interface.name != "wl_display")
         .map(|interface| wayland_interface_to_cpp_class(interface));
 
     for class in classes {
         namespace.add_class(class);
     }
+    for interface in &protocol.dependencies {
+        namespace.add_forward_declaration_class(&snake_to_pascal(interface));
+    }
     builder.add_namespace(namespace);
     builder.add_include("<rust/cxx.h>".to_string());
-
-    for interface in &protocol.dependencies {
-        builder.add_forward_declaration_class(&snake_to_pascal(interface));
-    }
+    builder.add_include("<memory>".to_string());
 
     builder
 }
 
-fn write_cpp_protocol_header(builder: &CppBuilder) {
+fn write_cpp_header(builder: &CppBuilder) {
     let filename = format!("{}.h", builder.filename);
     write_generated_cpp_file(&builder.to_cpp_header(), filename.as_str());
 }
@@ -421,27 +614,46 @@ fn wayland_enum_to_cpp_enum(enum_: &WaylandEnum) -> CppEnum {
 }
 
 fn wayland_request_to_cpp_method(method: &WaylandRequest) -> CppMethod {
-    let mut cpp_method = CppMethod::new(method.name.clone());
-    let args = method.args.iter().map(|arg| {
-        let type_ = match arg.type_.as_str() {
-            "int" => CppType::CppI32,
-            "uint" => CppType::CppU32,
-            "fixed" => CppType::CppF32,
-            "string" => CppType::String,
-            "object" => CppType::Object(snake_to_pascal(
+    // Methods will have a return value in C++ if they are creating a new Wayland object.
+    // Otherwsie they always return void.
+    let retval = match method
+        .args
+        .iter()
+        .find(|arg| arg.type_ == WaylandArgType::NewId)
+    {
+        Some(new_id_arg) => {
+            let name = snake_to_pascal(new_id_arg.interface.clone().unwrap().as_str());
+            Some(CppType::Object(name))
+        }
+        None => None,
+    };
+
+    let mut cpp_method = CppMethod::new(method.name.clone(), retval);
+    let args = method.args.iter()
+        .filter(|arg| arg.type_ != WaylandArgType::NewId)
+        .map(|arg| {
+        let type_ = match arg.type_ {
+            WaylandArgType::Int => CppType::CppI32,
+            WaylandArgType::Uint => CppType::CppU32,
+            WaylandArgType::Fixed => CppType::CppF64,
+            WaylandArgType::String => CppType::String,
+            WaylandArgType::Object => CppType::Object(snake_to_pascal(
                 arg.interface
                     .clone()
                     .expect("Object is missing interface")
                     .as_str(),
             )),
-            "new_id" => CppType::NewId(if let Some(interface) = arg.interface.clone() {
-                Some(snake_to_pascal(interface.as_str()))
+            WaylandArgType::NewId => CppType::NewId(if let Some(interface) = arg.interface.clone() {
+                snake_to_pascal(interface.as_str())
             } else {
-                None
-            }), // Note: WlRegistry allows for a bind without a defined interface
-            "array" => CppType::Array,
-            "fd" => CppType::Fd,
-            _ => panic!("Unknown type: {}", arg.type_),
+                // Note: WlRegistry allows for a bind without a defined interface.
+                // WlRegistry should never generate cpp classes to begin with however,
+                // so this should NOT be an issue in practice. If it is an issue, we want
+                // to know about it immediately, so let's panic for now.
+                panic!("NewId lacks an interface. This should not happen except for WlRegistry.");
+            }),
+            WaylandArgType::Array => CppType::Array,
+            WaylandArgType::Fd => CppType::Fd,
         };
 
         CppArg::new(type_, arg.name.clone())
