@@ -94,6 +94,7 @@ jobs:
         sudo --preserve-env apt-get install --yes --no-install-recommends \
           cargo-1.82 \
           clang \
+          clang-tools \
           dmz-cursor-theme \
           flake8 \
           gcovr \
