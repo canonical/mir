@@ -936,7 +936,7 @@ void mf::ExtImageCopyCaptureCursorSessionV1::ImageCopyBackend::begin_capture(
     if (cursor_image)
     {
         auto const dest_stride = mapping->stride();
-        auto const cursor_data = reinterpret_cast<char const*>(cursor_image->as_argb_8888());
+        auto const cursor_data = static_cast<char const*>(cursor_image->as_argb_8888());
         if (dest_stride == cursor_stride)
         {
             memcpy(mapping->data(), cursor_data, mapping->len());
@@ -944,7 +944,7 @@ void mf::ExtImageCopyCaptureCursorSessionV1::ImageCopyBackend::begin_capture(
         else
         {
             // strides don't match: copy data in rows
-            for (auto y = 0u; y < cursor_size.height.as_uint32_t(); ++y)
+            for (size_t y = 0u; y < cursor_size.height.as_uint32_t(); ++y)
             {
                 memcpy(mapping->data() + (dest_stride.as_uint32_t() * y),
                        cursor_data + (cursor_stride.as_uint32_t() * y),
