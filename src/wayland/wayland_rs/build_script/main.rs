@@ -232,15 +232,15 @@ fn transform_argument_for_cpp(arg: &WaylandArg) -> Option<TokenStream> {
             if arg.allow_null.unwrap_or(false) {
                 let null_ptr_name = format_ident!("__{}_null_ptr", arg.name.replace('-', "_"));
                 Some(quote! {
-                    let #null_ptr_name = cxx::SharedPtr::<ffi_cpp::#arg_type>::null();
-                    let #arg_name: &cxx::SharedPtr<ffi_cpp::#arg_type> = match #arg_name.as_ref() {
+                    let #null_ptr_name = cxx::UniquePtr::<ffi_cpp::#arg_type>::null();
+                    let #arg_name: &cxx::UniquePtr<ffi_cpp::#arg_type> = match #arg_name.as_ref() {
                         Some(o) => o.data().unwrap(),
                         None => &#null_ptr_name
                     };
                 })
             } else {
                 Some(quote! {
-                    let #arg_name: &cxx::SharedPtr<ffi_cpp::#arg_type> = #arg_name.data().unwrap();
+                    let #arg_name: &cxx::UniquePtr<ffi_cpp::#arg_type> = #arg_name.data().unwrap();
                 })
             }
         }
@@ -410,7 +410,7 @@ fn generate_dispatch_impl(
         unsafe impl Send for ffi_cpp::#interface_struct_name {}
         unsafe impl Sync for ffi_cpp::#interface_struct_name {}
 
-        impl Dispatch<#namespace_name::#interface_name::#interface_struct_name, cxx::SharedPtr<ffi_cpp::#interface_struct_name>>
+        impl Dispatch<#namespace_name::#interface_name::#interface_struct_name, cxx::UniquePtr<ffi_cpp::#interface_struct_name>>
             for ServerState
         {
             fn request(
@@ -418,7 +418,7 @@ fn generate_dispatch_impl(
                 _client: &Client,
                 _resource: &#namespace_name::#interface_name::#interface_struct_name,
                 request: <#namespace_name::#interface_name::#interface_struct_name as wayland_server::Resource>::Request,
-                #data_name: &cxx::SharedPtr<ffi_cpp::#interface_struct_name>,
+                #data_name: &cxx::UniquePtr<ffi_cpp::#interface_struct_name>,
                 _dhandle: &DisplayHandle,
                 #data_init_name: &mut DataInit<'_, Self>,
             ) {

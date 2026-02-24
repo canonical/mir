@@ -289,7 +289,7 @@ fn cpp_type_to_string(cpp_type: &CppType) -> String {
         CppType::CppU32 => "uint32_t".to_string(),
         CppType::CppF64 => "double".to_string(),
         CppType::String => "rust::String const&".to_string(),
-        CppType::Object(name) => format!("std::shared_ptr<{}> const&", name),
+        CppType::Object(name) => format!("std::unique_ptr<{}> const&", name),
         CppType::Array => "rust::Vec<uint8_t> const&".to_string(),
         CppType::Fd => "int32_t".to_string(),
     }
@@ -304,9 +304,9 @@ fn cpp_type_to_rust_type(cpp_type: &CppType, is_retval: bool) -> TokenStream {
         CppType::Object(name) => {
             let type_name = format_ident!("{}", name);
             if is_retval {
-                quote! { SharedPtr<#type_name> }
+                quote! { UniquePtr<#type_name> }
             } else {
-                quote! { &SharedPtr<#type_name> }
+                quote! { &UniquePtr<#type_name> }
             }
         }
         CppType::Array => quote! { Vec<u8> },
