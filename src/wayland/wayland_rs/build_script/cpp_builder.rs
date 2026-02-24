@@ -91,11 +91,11 @@ impl CppBuilder {
                         .collect();
                     let args_str = args.join(", ");
 
-                    let retstring = if let Some(retval) = &method.retval {
-                        cpp_type_to_string(retval)
-                    } else {
-                        "void".to_string()
-                    };
+                    let retstring = method
+                        .retval
+                        .as_ref()
+                        .map(cpp_type_to_string)
+                        .unwrap_or("void".to_string());
 
                     let method_name = sanitize_identifier(&method.name);
                     result.push_str(&format!(
@@ -279,7 +279,6 @@ pub enum CppType {
     CppF64,
     String,
     Object(String),
-    NewId(String),
     Array,
     Fd,
 }
@@ -291,7 +290,6 @@ fn cpp_type_to_string(cpp_type: &CppType) -> String {
         CppType::CppF64 => "double".to_string(),
         CppType::String => "rust::String const&".to_string(),
         CppType::Object(name) => format!("std::shared_ptr<{}> const&", name),
-        CppType::NewId(interface) => format!("std::shared_ptr<{}> const&", interface),
         CppType::Array => "rust::Vec<uint8_t> const&".to_string(),
         CppType::Fd => "int32_t".to_string(),
     }
@@ -305,14 +303,6 @@ fn cpp_type_to_rust_type(cpp_type: &CppType, is_retval: bool) -> TokenStream {
         CppType::String => quote! { String },
         CppType::Object(name) => {
             let type_name = format_ident!("{}", name);
-            if is_retval {
-                quote! { SharedPtr<#type_name> }
-            } else {
-                quote! { &SharedPtr<#type_name> }
-            }
-        }
-        CppType::NewId(interface) => {
-            let type_name = format_ident!("{}", interface);
             if is_retval {
                 quote! { SharedPtr<#type_name> }
             } else {
