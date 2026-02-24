@@ -47,11 +47,11 @@ fn main() {
     // Next, generate the protocols.rs file.
     write_protocols_rs(&protocols);
 
-    // Next, generate a C++ abstract class for each interface.
-    write_cpp_protocol_headers(&protocols);
-
     // Next, generate the dispatch and global dispatch methods.
     write_dispatch_rs(&protocols);
+
+    // Next, generate a C++ abstract class for each interface.
+    write_cpp_protocol_headers(&protocols);
 }
 
 fn write_protocols_rs(protocols: &Vec<WaylandProtocol>) {
@@ -629,35 +629,29 @@ fn wayland_request_to_cpp_method(method: &WaylandRequest) -> CppMethod {
     };
 
     let mut cpp_method = CppMethod::new(method.name.clone(), retval);
-    let args = method.args.iter()
+    let args = method
+        .args
+        .iter()
         .filter(|arg| arg.type_ != WaylandArgType::NewId)
         .map(|arg| {
-        let type_ = match arg.type_ {
-            WaylandArgType::Int => CppType::CppI32,
-            WaylandArgType::Uint => CppType::CppU32,
-            WaylandArgType::Fixed => CppType::CppF64,
-            WaylandArgType::String => CppType::String,
-            WaylandArgType::Object => CppType::Object(snake_to_pascal(
-                arg.interface
-                    .clone()
-                    .expect("Object is missing interface")
-                    .as_str(),
-            )),
-            WaylandArgType::NewId => CppType::NewId(if let Some(interface) = arg.interface.clone() {
-                snake_to_pascal(interface.as_str())
-            } else {
-                // Note: WlRegistry allows for a bind without a defined interface.
-                // WlRegistry should never generate cpp classes to begin with however,
-                // so this should NOT be an issue in practice. If it is an issue, we want
-                // to know about it immediately, so let's panic for now.
-                panic!("NewId lacks an interface. This should not happen except for WlRegistry.");
-            }),
-            WaylandArgType::Array => CppType::Array,
-            WaylandArgType::Fd => CppType::Fd,
-        };
+            let type_ = match arg.type_ {
+                WaylandArgType::Int => CppType::CppI32,
+                WaylandArgType::Uint => CppType::CppU32,
+                WaylandArgType::Fixed => CppType::CppF64,
+                WaylandArgType::String => CppType::String,
+                WaylandArgType::Object => CppType::Object(snake_to_pascal(
+                    arg.interface
+                        .clone()
+                        .expect("Object is missing interface")
+                        .as_str(),
+                )),
+                WaylandArgType::Array => CppType::Array,
+                WaylandArgType::Fd => CppType::Fd,
+                _ => panic!("Unhandled argument type"),
+            };
 
-        CppArg::new(type_, arg.name.clone())
-    });
+            CppArg::new(type_, arg.name.clone())
+        });
 
     for arg in args {
         cpp_method.add_arg(arg);
