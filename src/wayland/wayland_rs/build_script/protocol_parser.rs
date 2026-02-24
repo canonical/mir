@@ -114,7 +114,7 @@ pub struct WaylandEvent {
 }
 
 /// Representation of an argument on a Wayland request or event.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize)]
 pub struct WaylandArg {
     #[serde(rename = "@name")]
     pub name: String,
@@ -130,6 +130,41 @@ pub struct WaylandArg {
 
     #[serde(rename = "@allow-null", default)]
     pub allow_null: Option<bool>,
+}
+
+impl<'de> Deserialize<'de> for WaylandArg {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        struct RawWaylandArg {
+            #[serde(rename = "@name")]
+            name: String,
+            #[serde(rename = "@type")]
+            type_: WaylandArgType,
+            #[serde(rename = "@enum")]
+            enum_: Option<String>,
+            #[serde(rename = "@interface")]
+            interface: Option<String>,
+            #[serde(rename = "@allow-null", default)]
+            allow_null: Option<bool>,
+        }
+
+        // If the argument is an enum, we always make the type be a uint.
+        let raw = RawWaylandArg::deserialize(deserializer)?;
+        Ok(WaylandArg {
+            type_: if raw.enum_.is_some() {
+                WaylandArgType::Uint
+            } else {
+                raw.type_
+            },
+            name: raw.name,
+            enum_: raw.enum_,
+            interface: raw.interface,
+            allow_null: raw.allow_null,
+        })
+    }
 }
 
 /// Representation of an enum.
