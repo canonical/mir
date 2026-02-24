@@ -1,14 +1,20 @@
+use proc_macro2::{Literal, TokenStream};
+use quote::{format_ident, quote};
+use syn::Ident;
+
 pub struct CppBuilder {
     guard_name: String,
+    pub filename: String,
     namespaces: Vec<CppNamespace>,
     includes: Vec<String>,
     forward_declarations: Vec<String>,
 }
 
 impl CppBuilder {
-    pub fn new(guard_name: String) -> CppBuilder {
+    pub fn new(guard_name: String, filename: String) -> CppBuilder {
         CppBuilder {
             guard_name,
+            filename,
             namespaces: vec![],
             includes: vec![],
             forward_declarations: vec![],
@@ -33,7 +39,8 @@ impl CppBuilder {
         self.forward_declarations.push(format!("class {}", name));
     }
 
-    pub fn to_string(&self) -> String {
+    /// Output the C++ content to a string for the header file.
+    pub fn to_cpp_header(&self) -> String {
         let mut result = String::new();
 
         // Add include guard_name
@@ -112,6 +119,45 @@ impl CppBuilder {
         result.push_str(&format!("\n#endif  // {}\n", self.guard_name));
 
         result
+    }
+
+    /// Generate Rust binding declarations for this C++ header.
+    ///
+    /// Returns a `Vec<TokenStream>` where each element contains the `include!` directive,
+    /// type declaration, and methods for a single C++ class, intended to be placed inside
+    /// an `unsafe extern "C++"` block. This method does NOT add the surrounding `mod ffi`
+    /// or `unsafe extern "C++"` blocks; callers are responsible for adding those themselves.
+    pub fn to_rust_bindings(&self) -> Vec<TokenStream> {
+        let header_name = Literal::string(format!("include/{}.h", self.filename).as_str());
+        // Include the corresponding C++ header once per protocol/header.
+        let mut tokens: Vec<TokenStream> = Vec::new();
+        tokens.push(quote! {
+            include!(#header_name);
+        });
+        for namespace in &self.namespaces {
+            let namespace_str = namespace.name.join("::");
+            for class in &namespace.classes {
+                let class_name = format_ident!("{}", class.name);
+                // Generate methods for this class
+                let methods = class.methods.iter().map(|method| {
+                    let method_name = format_ident!("{}", sanitize_identifier(&method.name));
+                    let args = method.args.iter().map(|arg| {
+                        let arg_name = format_ident!("{}", sanitize_identifier(&arg.name));
+                        let arg_type = cpp_type_to_rust_type(&arg.cpp_type);
+                        quote! { #arg_name: #arg_type }
+                    });
+                    quote! {
+                        pub fn #method_name(self: &#class_name, #(#args),*);
+                    }
+                });
+                tokens.push(quote! {
+                    #[namespace = #namespace_str]
+                    pub type #class_name;
+                    #(#methods)*
+                });
+            }
+        }
+        tokens
     }
 }
 
@@ -235,6 +281,38 @@ fn cpp_type_to_string(cpp_type: &CppType) -> String {
         CppType::NewId(_interface) => "int32_t".to_string(),
         CppType::Array => "rust::Vec<uint8_t> const&".to_string(),
         CppType::Fd => "int32_t".to_string(),
+    }
+}
+
+fn cpp_type_to_rust_type(cpp_type: &CppType) -> TokenStream {
+    match cpp_type {
+        CppType::CppI32 => quote! { i32 },
+        CppType::CppU32 => quote! { u32 },
+        CppType::CppF32 => quote! { f32 },
+        CppType::String => quote! { &str },
+        CppType::Object(name) => {
+            let type_name = format_ident!("{}", name);
+            quote! { &SharedPtr<#type_name> }
+        }
+        CppType::NewId(_interface) => quote! { i32 },
+        CppType::Array => quote! { &Vec<u8> },
+        CppType::Fd => quote! { i32 },
+    }
+}
+
+/// Sanitize an identifier to ensure it's valid for Rust.
+/// If the identifier starts with a digit, prefix it with an underscore.
+/// If the identifier is a Rust keyword, prefix it with r#.
+fn sanitize_identifier(name: &str) -> String {
+    if name.is_empty() {
+        return "_empty".to_string();
+    }
+
+    // Try to parse as a regular identifier
+    // If it fails (e.g., it's a keyword), use raw identifier
+    match syn::parse_str::<Ident>(name) {
+        Ok(_) => name.to_string(),
+        Err(_) => format!("r#{}", name),
     }
 }
 

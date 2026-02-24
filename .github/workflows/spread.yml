@@ -110,13 +110,19 @@ jobs:
         echo "merge-base=$( git merge-base origin/main ${{ github.sha }} )" >> $GITHUB_OUTPUT
 
     - name: CCache
+      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
       uses: actions/cache@v5
-      with:
+      with: &ccache_with
         key: ccache-${{ matrix.spread-task }}-${{ steps.setup-ccache.outputs.merge-base }}
         # if exact match isn't found, use the most recent entry for the task
         restore-keys: |
           ccache-${{ matrix.spread-task }}-
         path: ${{ env.CCACHE_DIR }}
+
+    - name: Restore CCache
+      if: ${{ github.event_name != 'push' || github.ref != 'refs/heads/main' }}
+      uses: actions/cache/restore@v5
+      with: *ccache_with
 
     - name: Ensure ccache size
       run: |

@@ -1,3 +1,4 @@
 src/protocols.rs
 src/dispatch.rs
+src/ffi_cpp.rs
 include/*

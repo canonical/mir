@@ -16,8 +16,11 @@
 
 use cxx::SharedPtr;
 use input;
+use std::collections::HashMap;
 use std::sync::Arc;
 use std::sync::Mutex;
+
+use crate::{MirTouchAction, MirTouchTooltype};
 
 pub struct DeviceInfo {
     pub id: i32,
@@ -28,6 +31,7 @@ pub struct DeviceInfo {
     pub button_state: u32,
     pub pointer_x: f32,
     pub pointer_y: f32,
+    pub touch_properties: HashMap<u32, ContactData>,
 }
 
 // Because *mut InputSink and *mut EventBuilder are raw pointers, Rust assumes
@@ -95,6 +99,34 @@ impl DeviceObserverRs {
 
     pub fn removed(&mut self) {
         self.fd = None;
+    }
+}
+
+pub struct ContactData {
+    pub action: MirTouchAction,
+    pub tooltype: MirTouchTooltype,
+    pub x: f32,
+    pub y: f32,
+    pub major: f32,
+    pub minor: f32,
+    pub pressure: f32,
+    pub orientation: f32,
+    pub down_notified: bool,
+}
+
+impl Default for ContactData {
+    fn default() -> Self {
+        Self {
+            action: MirTouchAction::mir_touch_action_change,
+            tooltype: MirTouchTooltype::mir_touch_tooltype_unknown,
+            x: 0.0,
+            y: 0.0,
+            major: 0.0,
+            minor: 0.0,
+            pressure: 0.0,
+            orientation: 0.0,
+            down_notified: false,
+        }
     }
 }
 
