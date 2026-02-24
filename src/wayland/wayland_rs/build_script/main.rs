@@ -208,15 +208,10 @@ fn transform_argument_for_cpp(arg: &WaylandArg) -> Option<TokenStream> {
     // they can be sent across the barrier.
     if arg.enum_.is_some() {
         return match arg.type_ {
-            // The "int" appears to be a faff on the `WlSurface.set_buffer_transform` call,
-            // since most enums are u32s, so much so that the wayland Rust crate assumes
-            // that this is always the case.
-            WaylandArgType::Int => Some(quote! {
-                let #arg_name = u32::from(#arg_name) as i32;
-            }),
-            _ => Some(quote! {
+            WaylandArgType::Uint => Some(quote! {
                 let #arg_name = u32::from(#arg_name);
             }),
+            _ => None,
         };
     }
 
