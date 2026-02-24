@@ -25,16 +25,15 @@
 
 mod device;
 mod event_processing;
-pub mod ffi;
+mod ffi;
 mod libinput_interface;
 mod platform;
 
-use crate::device::{DeviceObserverRs, InputDeviceInfoRs, InputDeviceRs};
+use crate::device::{LibinputDevice, LibinputDeviceMetadata, LibinputDeviceObserver};
 use crate::platform::PlatformRs;
 
 #[cxx::bridge(namespace = "mir::input::evdev_rs")]
 mod ffi_bridge {
-
     #[repr(u32)]
     #[derive(Debug, Copy, Clone, PartialEq, Eq)]
     pub enum DeviceCapability {
@@ -61,17 +60,19 @@ mod ffi_bridge {
     }
 
     #[repr(i32)]
-    #[derive(Debug, Copy, Clone, PartialEq, Eq)]
+    #[derive(Debug, Copy, Clone, PartialEq, Eq, Default)]
     pub enum MirTouchAction {
         mir_touch_action_up = 0,
         mir_touch_action_down = 1,
         mir_touch_action_change = 2,
+        #[default]
         mir_touch_actions,
     }
 
     #[repr(i32)]
-    #[derive(Debug, Copy, Clone, PartialEq, Eq)]
+    #[derive(Debug, Copy, Clone, PartialEq, Eq, Default)]
     pub enum MirTouchTooltype {
+        #[default]
         mir_touch_tooltype_unknown = 0,
         mir_touch_tooltype_finger = 1,
         mir_touch_tooltype_stylus = 2,
@@ -172,9 +173,9 @@ mod ffi_bridge {
 
     extern "Rust" {
         type PlatformRs;
-        type DeviceObserverRs;
-        type InputDeviceRs;
-        type InputDeviceInfoRs;
+        type LibinputDeviceObserver;
+        type LibinputDevice;
+        type LibinputDeviceMetadata;
 
         fn start(self: &mut PlatformRs);
         fn continue_after_config(self: &PlatformRs);
@@ -182,30 +183,30 @@ mod ffi_bridge {
         fn stop(self: &mut PlatformRs);
         unsafe fn libinput_fd(self: &mut PlatformRs) -> i32;
         pub fn process(self: &mut PlatformRs);
-        fn create_device_observer(self: &PlatformRs) -> Box<DeviceObserverRs>;
-        fn create_input_device(self: &mut PlatformRs, device_id: i32) -> Box<InputDeviceRs>;
+        fn create_device_observer(self: &PlatformRs) -> Box<LibinputDeviceObserver>;
+        fn create_input_device(self: &mut PlatformRs, device_id: i32) -> Box<LibinputDevice>;
 
-        fn activated(self: &mut DeviceObserverRs, fd: i32);
-        fn suspended(self: &mut DeviceObserverRs);
-        fn removed(self: &mut DeviceObserverRs);
+        fn activated(self: &mut LibinputDeviceObserver, fd: i32);
+        fn suspended(self: &mut LibinputDeviceObserver);
+        fn removed(self: &mut LibinputDeviceObserver);
 
         /// # Safety
         ///
         /// This is unsafe because it is receiving raw pointers from C++ as parameters.
         unsafe fn start(
-            self: &mut InputDeviceRs,
+            self: &mut LibinputDevice,
             input_sink: *mut InputSink,
             event_builder: *mut EventBuilder,
         );
-        fn stop(self: &mut InputDeviceRs);
-        fn get_device_info(self: &InputDeviceRs) -> Box<InputDeviceInfoRs>;
+        fn stop(self: &mut LibinputDevice);
+        fn get_device_info(self: &LibinputDevice) -> Box<LibinputDeviceMetadata>;
 
-        fn valid(self: &InputDeviceInfoRs) -> bool;
-        fn name(self: &InputDeviceInfoRs) -> &str;
-        fn unique_id(self: &InputDeviceInfoRs) -> &str;
-        fn capabilities(self: &InputDeviceInfoRs) -> u32;
-        fn get_pointer_settings(self: &InputDeviceRs) -> Box<PointerSettingsRs>;
-        fn set_pointer_settings(self: &InputDeviceRs, settings: &PointerSettings);
+        fn valid(self: &LibinputDeviceMetadata) -> bool;
+        fn name(self: &LibinputDeviceMetadata) -> &str;
+        fn unique_id(self: &LibinputDeviceMetadata) -> &str;
+        fn capabilities(self: &LibinputDeviceMetadata) -> u32;
+        fn get_pointer_settings(self: &LibinputDevice) -> Box<PointerSettingsRs>;
+        fn set_pointer_settings(self: &LibinputDevice, settings: &PointerSettings);
 
         fn evdev_rs_create(
             bridge: SharedPtr<PlatformBridge>,
