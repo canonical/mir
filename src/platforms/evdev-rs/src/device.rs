@@ -105,9 +105,7 @@ impl LibinputDevice {
             .device
             .has_capability(input::DeviceCapability::Keyboard)
         {
-            capabilities = capabilities
-                | DeviceCapability::keyboard.repr
-                | DeviceCapability::alpha_numeric.repr;
+            capabilities |= DeviceCapability::keyboard.repr | DeviceCapability::alpha_numeric.repr;
         }
         if device_info
             .device
@@ -119,16 +117,18 @@ impl LibinputDevice {
             .device
             .has_capability(input::DeviceCapability::Touch)
         {
-            capabilities =
-                capabilities | DeviceCapability::touchpad.repr | DeviceCapability::pointer.repr;
+            capabilities |= DeviceCapability::touchpad.repr | DeviceCapability::pointer.repr;
         }
 
         return Box::new(LibinputDeviceMetadata {
             name: device_info.device.name().to_string(),
-            unique_id: device_info.device.name().to_string()
-                + &device_info.device.sysname().to_string()
-                + &device_info.device.id_vendor().to_string()
-                + &device_info.device.id_product().to_string(),
+            unique_id: format!(
+                "{} {} {} {}",
+                device_info.device.name(),
+                device_info.device.sysname(),
+                device_info.device.id_vendor(),
+                device_info.device.id_product()
+            ),
             capabilities: capabilities,
             valid: true,
         });
@@ -167,15 +167,15 @@ impl LibinputDevice {
             MirPointerHandedness::mir_pointer_handedness_right.repr
         };
 
-        let acceleration = if let Some(accel_profile) = device_info.device.config_accel_profile() {
-            if accel_profile == input::AccelProfile::Adaptive {
+        let acceleration = match device_info.device.config_accel_profile() {
+            Some(input::AccelProfile::Adaptive) => {
                 MirPointerAcceleration::mir_pointer_acceleration_adaptive.repr
-            } else {
+            }
+            Some(_) => MirPointerAcceleration::mir_pointer_acceleration_none.repr,
+            None => {
+                eprintln!("Acceleration profile should be provided, but none is.");
                 MirPointerAcceleration::mir_pointer_acceleration_none.repr
             }
-        } else {
-            eprintln!("Acceleration profile should be provided, but none is.");
-            MirPointerAcceleration::mir_pointer_acceleration_none.repr
         };
 
         let acceleration_bias = device_info.device.config_accel_speed() as f64;
@@ -213,12 +213,8 @@ impl LibinputDevice {
             return;
         }
 
-        let left_handed = match settings.handedness {
-            handedness if handedness == MirPointerHandedness::mir_pointer_handedness_left.repr => {
-                true
-            }
-            _ => false,
-        };
+        let left_handed =
+            settings.handedness == MirPointerHandedness::mir_pointer_handedness_left.repr;
         let _ = device_info.device.config_left_handed_set(left_handed);
 
         let accel_profile = match settings.acceleration {
@@ -279,7 +275,7 @@ pub struct ContactData {
 
 /// Metadata about a libinput device.
 ///
-/// This is provided to Mir upn request.
+/// This is provided to Mir upon request.
 pub struct LibinputDeviceMetadata {
     name: String,
     unique_id: String,
