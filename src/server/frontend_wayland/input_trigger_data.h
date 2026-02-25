@@ -189,8 +189,18 @@ struct InputTriggerTokenData
 public:
     void add_action(wayland::Weak<frontend::InputTriggerActionV1 const> action);
 
-    // TODO make members private
+    void add_trigger(wayland::Weak<frontend::InputTriggerV1 const> trigger);
+    void drop_trigger(wayland::Weak<frontend::InputTriggerV1 const> trigger);
 
+    bool has_trigger(frontend::InputTriggerV1 const* trigger) const;
+
+    bool matches(MirEvent const& event, KeyboardStateTracker const& keyboard_state) const;
+
+    bool began() const;
+    void begin(std::string const& activation_token, uint32_t wayland_timestamp);
+    void end(std::string const& activation_token, uint32_t wayland_timestamp);
+
+private:
     // Used by action controls to add or drop triggers, and by
     // TokenData::matches to check for matches when input events
     // arrive.

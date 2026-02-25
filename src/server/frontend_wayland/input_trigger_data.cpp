@@ -494,6 +494,56 @@ void mf::InputTriggerTokenData::add_action(wayland::Weak<frontend::InputTriggerA
     pending_triggers.clear();
 }
 
+void mf::InputTriggerTokenData::add_trigger(wayland::Weak<frontend::InputTriggerV1 const> trigger)
+{
+    if (action_group.empty())
+        pending_triggers.push_back(trigger);
+    else
+        trigger_list.push_back(trigger);
+}
+
+void mf::InputTriggerTokenData::drop_trigger(wayland::Weak<frontend::InputTriggerV1 const> trigger)
+{
+    if (action_group.empty())
+        std::erase(pending_triggers, trigger);
+    else
+        std::erase(trigger_list, trigger);
+}
+
+bool mf::InputTriggerTokenData::has_trigger(frontend::InputTriggerV1 const* trigger) const
+{
+    auto const has_in_list = [trigger](auto const& list)
+    {
+        return sr::any_of(
+            list,
+            [trigger](auto const& t) { return t.value().is_same_trigger(trigger); });
+    };
+
+    return has_in_list(trigger_list) || has_in_list(pending_triggers);
+}
+
+bool mf::InputTriggerTokenData::matches(MirEvent const& event, KeyboardStateTracker const& keyboard_state) const
+{
+    return sr::any_of(
+        trigger_list,
+        [&](auto const& trigger) { return trigger.value().matches(event, keyboard_state); });
+}
+
+bool mf::InputTriggerTokenData::began() const
+{
+    return action_group.began();
+}
+
+void mf::InputTriggerTokenData::begin(std::string const& activation_token, uint32_t wayland_timestamp)
+{
+    action_group.begin(activation_token, wayland_timestamp);
+}
+
+void mf::InputTriggerTokenData::end(std::string const& activation_token, uint32_t wayland_timestamp)
+{
+    action_group.end(activation_token, wayland_timestamp);
+}
+
 void mf::InputTriggerData::TokenData::erase(Token const& token)
 {
     entries.erase(token);
@@ -513,34 +563,11 @@ mf::InputTriggerData::TokenData::ActionControl::ActionControl(
 {
 }
 
-void mf::InputTriggerData::TokenData::ActionControl::add_trigger_pending(mf::InputTriggerV1 const* trigger)
-{
-    entry->pending_triggers.push_back(wayland::make_weak(trigger));
-}
-
-void mf::InputTriggerData::TokenData::ActionControl::add_trigger_immediate(mf::InputTriggerV1 const* trigger)
-{
-    entry->trigger_list.push_back(wayland::make_weak(trigger));
-}
-
-void mf::InputTriggerData::TokenData::ActionControl::drop_trigger_pending(mf::InputTriggerV1 const* trigger)
-{
-    std::erase(entry->pending_triggers, wayland::make_weak(trigger));
-}
-
-void mf::InputTriggerData::TokenData::ActionControl::drop_trigger_immediate(mf::InputTriggerV1 const* trigger)
-{
-    std::erase(entry->trigger_list, wayland::make_weak(trigger));
-}
-
 void mf::InputTriggerData::TokenData::ActionControl::add_input_trigger_event(struct wl_resource* trigger)
 {
     if (auto const* input_trigger = mf::InputTriggerV1::from(trigger))
     {
-        if (entry->action_group.empty())
-            add_trigger_pending(input_trigger);
-        else
-            add_trigger_immediate(input_trigger);
+        entry->add_trigger(mw::make_weak(input_trigger));
     }
 }
 
@@ -548,10 +575,7 @@ void mf::InputTriggerData::TokenData::ActionControl::drop_input_trigger_event(st
 {
     if (auto const* input_trigger = mf::InputTriggerV1::from(trigger_id))
     {
-        if (entry->action_group.empty())
-            drop_trigger_pending(input_trigger);
-        else
-            drop_trigger_immediate(input_trigger);
+        entry->drop_trigger(mw::make_weak(input_trigger));
     }
 }
 
@@ -644,16 +668,9 @@ void mf::InputTriggerData::TokenData::add_action_control(
 
 bool mf::InputTriggerData::TokenData::has_trigger(frontend::InputTriggerV1 const* trigger) const
 {
-    auto const entry_has_trigger = [](auto const& entry, auto const* trigger)
+    for (auto const& [_, entry_weak] : entries)
     {
-        return sr::any_of(
-            entry.trigger_list,
-            [trigger](auto const& action_trigger) { return action_trigger.value().is_same_trigger(trigger); });
-    };
-
-    for(auto const& [_, entry_weak] : entries)
-    {
-        if (auto entry = entry_weak.lock(); entry && entry_has_trigger(*entry, trigger))
+        if (auto entry = entry_weak.lock(); entry && entry->has_trigger(trigger))
             return true;
     }
 
@@ -674,27 +691,25 @@ bool mf::InputTriggerData::TokenData::matches(
             continue;
         }
 
-        auto const matched = sr::any_of(
-            e->trigger_list,
-            [&](auto const& trigger) { return trigger.value().matches(event, keyboard_state); });
+        auto const matched = e->matches(event, keyboard_state);
 
         if (!matched)
         {
-            if (e->action_group.began())
+            if (e->began())
             {
                 auto const activation_token = std::string{token_authority.issue_token(std::nullopt)};
                 auto const timestamp = mir_input_event_get_wayland_timestamp(event.to_input());
-                e->action_group.end(activation_token, timestamp);
+                e->end(activation_token, timestamp);
             }
             ++it;
             continue;
         }
 
-        if (!e->action_group.began())
+        if (!e->began())
         {
             auto const activation_token = std::string{token_authority.issue_token(std::nullopt)};
             auto const timestamp = mir_input_event_get_wayland_timestamp(event.to_input());
-            e->action_group.begin(activation_token, timestamp);
+            e->begin(activation_token, timestamp);
             any_matched = true;
             ++it;
             continue;
