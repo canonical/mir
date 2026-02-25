@@ -22,6 +22,13 @@
 namespace mf = mir::frontend;
 namespace mw = mir::wayland;
 
+mf::InputTriggerActionV1::InputTriggerActionV1(std::shared_ptr<InputTriggerTokenData> const& token_data, wl_resource* id) :
+    wayland::InputTriggerActionV1{id, Version<1>{}},
+    token_data{token_data}
+{
+    token_data->add_action(wayland::make_weak<InputTriggerActionV1 const>(this));
+}
+
 class InputTriggerActionManagerV1 : public mw::InputTriggerActionManagerV1::Global
 {
 public:
@@ -38,7 +45,14 @@ private:
 
         void get_input_trigger_action(std::string const& token, struct wl_resource* id) override
         {
-            if (!itd->add_new_action(token, id))
+            if (itd->was_revoked(token))
+                new mf::NullInputTriggerActionV1{id}; // Sends `unavailable`
+
+            if (auto const& token_data = itd->find(token))
+            {
+                new mf:: InputTriggerActionV1 const{token_data, id};
+            }
+            else
             {
                 // Token is not currently valid, nor is was it previously revoked. It must be an invalid token.
                 BOOST_THROW_EXCEPTION(

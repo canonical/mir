@@ -34,19 +34,10 @@ namespace msh = mir::shell;
 namespace mw = mir::wayland;
 namespace sr = std::ranges;
 
-class mf::InputTriggerActionV1 : public mw::InputTriggerActionV1
-{
-public:
-    InputTriggerActionV1(std::shared_ptr<InputTriggerData::Entry> const& lifetime_tracker, wl_resource* id);
-
-private:
-    std::shared_ptr<InputTriggerData::Entry> const entry;
-};
-
 class mf::InputTriggerData::TokenData::ActionControl : public mw::InputTriggerActionControlV1
 {
 public:
-    ActionControl(std::shared_ptr<Entry> const& entry, struct wl_resource* id);
+    ActionControl(std::shared_ptr<InputTriggerTokenData> const& entry, struct wl_resource* id);
 
     void add_input_trigger_event(struct wl_resource* trigger) override;
     void drop_input_trigger_event(struct wl_resource* trigger) override;
@@ -57,7 +48,7 @@ private:
     void drop_trigger_pending(frontend::InputTriggerV1 const* trigger);
     void drop_trigger_immediate(frontend::InputTriggerV1 const* trigger);
 
-    std::shared_ptr<Entry> const entry;
+    std::shared_ptr<InputTriggerTokenData> const entry;
 };
 
 mf::InputTriggerModifiers::InputTriggerModifiers(MirInputEventModifiers value) :
@@ -457,23 +448,17 @@ bool mf::KeyboardCodeTrigger::is_same_trigger(KeyboardCodeTrigger const* other) 
     return other && scancode == other->scancode && modifiers == other->modifiers;
 }
 
-mf::InputTriggerActionV1::InputTriggerActionV1(std::shared_ptr<InputTriggerData::Entry> const& foo, wl_resource* id) :
-    wayland::InputTriggerActionV1{id, Version<1>{}},
-    entry{foo}
-{
-}
-
-void mf::InputTriggerData::ActionGroup::add(wayland::Weak<frontend::InputTriggerActionV1 const> action)
+void mf::ActionGroup::add(wayland::Weak<frontend::InputTriggerActionV1 const> action)
 {
     actions.push_back(action);
 }
 
-auto mf::InputTriggerData::ActionGroup::began() const -> bool
+auto mf::ActionGroup::began() const -> bool
 {
     return began_;
 }
 
-void mf::InputTriggerData::ActionGroup::end(std::string const& activation_token, uint32_t wayland_timestamp)
+void mf::ActionGroup::end(std::string const& activation_token, uint32_t wayland_timestamp)
 {
     for (auto const& action : actions)
     {
@@ -485,7 +470,7 @@ void mf::InputTriggerData::ActionGroup::end(std::string const& activation_token,
     began_ = false;
 }
 
-void mf::InputTriggerData::ActionGroup::begin(std::string const& activation_token, uint32_t wayland_timestamp)
+void mf::ActionGroup::begin(std::string const& activation_token, uint32_t wayland_timestamp)
 {
     for (auto const& action : actions)
     {
@@ -497,9 +482,16 @@ void mf::InputTriggerData::ActionGroup::begin(std::string const& activation_toke
     began_ = true;
 }
 
-bool mf::InputTriggerData::ActionGroup::empty() const
+bool mf::ActionGroup::empty() const
 {
     return actions.empty();
+}
+
+void mf::InputTriggerTokenData::add_action(wayland::Weak<frontend::InputTriggerActionV1 const> action)
+{
+    action_group.add(action);
+    trigger_list.insert(trigger_list.end(), pending_triggers.begin(), pending_triggers.end());
+    pending_triggers.clear();
 }
 
 void mf::InputTriggerData::TokenData::erase(Token const& token)
@@ -507,8 +499,15 @@ void mf::InputTriggerData::TokenData::erase(Token const& token)
     entries.erase(token);
 }
 
+auto mf::InputTriggerData::TokenData::find(Token const& token) -> std::shared_ptr<InputTriggerTokenData> const
+{
+    if (auto it = entries.find(token); it != entries.end())
+        return it->second.lock();
+    return nullptr;
+}
+
 mf::InputTriggerData::TokenData::ActionControl::ActionControl(
-    std::shared_ptr<Entry> const& entry, struct wl_resource* id) :
+    std::shared_ptr<InputTriggerTokenData> const& entry, struct wl_resource* id) :
     mw::InputTriggerActionControlV1{id, Version<1>{}},
     entry{entry}
 {
@@ -563,23 +562,6 @@ mf::InputTriggerData::InputTriggerData(
 {
 }
 
-auto mf::InputTriggerData::add_new_action(Token const& token, struct wl_resource* id) -> bool
-{
-    if (revoked_tokens.contains(token))
-    {
-        new NullInputTriggerActionV1{id};
-        return true;
-    }
-
-    if (token_data.is_valid(token))
-    {
-        token_data.add_action(token, id);
-        return true;
-    }
-
-    return false;
-}
-
 void mf::InputTriggerData::add_new_action_control(struct wl_resource* id)
 {
     // An entry's lifetime is tied to three things: the token it is associated
@@ -588,7 +570,7 @@ void mf::InputTriggerData::add_new_action_control(struct wl_resource* id)
     //
     // Here we capture a pointer to the entry which will _at least_ keep it
     // alive until the token is revoked.
-    auto const entry = std::make_shared<Entry>();
+    auto const entry = std::make_shared<InputTriggerTokenData>();
     auto const token = token_authority->issue_token(
         [this, entry](auto const& token)
         { wayland_executor.spawn([this, token, entry] { token_revoked(Token{token}); }); });
@@ -636,24 +618,23 @@ void mf::InputTriggerData::erase(Token const& token)
     token_data.erase(token);
 }
 
+bool mf::InputTriggerData::was_revoked(Token const& token) const
+{
+    return revoked_tokens.contains(token);
+}
+
+auto mf::InputTriggerData::find(Token const& token) -> std::shared_ptr<InputTriggerTokenData> const
+{
+    return token_data.find(token);
+}
+
 bool mf::InputTriggerData::TokenData::is_valid(Token const& token) const
 {
     return entries.contains(token);
 }
 
-void mf::InputTriggerData::TokenData::add_action(Token const& token, struct wl_resource* id)
-{
-    auto const e = entries.at(token).lock();
-
-    auto const action = wayland::make_weak(new InputTriggerActionV1 const {e, id});
-    e->action_group.add(action);
-
-    e->trigger_list.insert(e->trigger_list.end(), e->pending_triggers.begin(), e->pending_triggers.end());
-    e->pending_triggers.clear();
-}
-
 void mf::InputTriggerData::TokenData::add_action_control(
-    Token const& token, std::shared_ptr<Entry> const entry, struct wl_resource* id)
+    Token const& token, std::shared_ptr<InputTriggerTokenData> const entry, struct wl_resource* id)
 {
     entries.emplace(token, entry);
 

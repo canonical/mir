@@ -27,6 +27,28 @@ namespace frontend
 {
 class InputTriggerData;
 
+class InputTriggerTokenData;
+class InputTriggerActionV1 : public wayland::InputTriggerActionV1
+{
+public:
+    InputTriggerActionV1(std::shared_ptr<InputTriggerTokenData> const& token_data, wl_resource* id);
+
+private:
+    std::shared_ptr<InputTriggerTokenData> const token_data;
+};
+
+// Used  when a client provides a revoked token to call
+// `send_unavailable_event`.
+class NullInputTriggerActionV1 : public wayland::InputTriggerActionV1
+{
+public:
+    NullInputTriggerActionV1(wl_resource* id) :
+        wayland::InputTriggerActionV1{id, Version<1>{}}
+    {
+        send_unavailable_event();
+    }
+};
+
 auto create_input_trigger_action_manager_v1(wl_display*, std::shared_ptr<InputTriggerData> const& itd)
     -> std::shared_ptr<wayland::InputTriggerActionManagerV1::Global>;
 }
