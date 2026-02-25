@@ -165,13 +165,6 @@ jobs:
         additionalFlags: ${{ contains(fromJSON('["pull_request", "merge_group"]'), github.event_name) && '-resultdir build' || '' }}
         tmpdir: ${{ runner.debug && env.TICS_TMPDIR || null }}
 
-    - if: ${{ always() && runner.debug }}
-      uses: actions/upload-artifact@v6
-      with:
-        name: TICS tmpdir
-        path: ${{ env.TICS_TMPDIR }}
-        if-no-files-found: error
-
     - if: ${{ contains(fromJSON('["push", "workflow_dispatch"]'), github.event_name) && cancelled() }}
       name: Detach TICS QServer to prevent "project already connected" issue
       env:

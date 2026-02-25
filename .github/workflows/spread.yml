@@ -75,6 +75,8 @@ jobs:
     steps:
     - name: Set up LXD
       uses: canonical/setup-lxd@main
+      with:
+        channel: stable
 
     - name: Set up Spread
       run: |
