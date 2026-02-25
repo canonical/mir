@@ -567,8 +567,7 @@ auto mf::InputTriggerData::add_new_action(Token const& token, struct wl_resource
 {
     if (revoked_tokens.contains(token))
     {
-        auto const action = new NullInputTriggerActionV1{id};
-        action->send_unavailable_event();
+        new NullInputTriggerActionV1{id};
         return true;
     }
 

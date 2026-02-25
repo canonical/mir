@@ -170,6 +170,7 @@ public:
     NullInputTriggerActionV1(wl_resource* id) :
         wayland::InputTriggerActionV1{id, Version<1>{}}
     {
+        send_unavailable_event();
     }
 };
 
