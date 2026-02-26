@@ -32,7 +32,6 @@ namespace mir
 {
 namespace frontend
 {
-class InputTriggerActionV1;
 class InputTriggerV1;
 
 class RecentTokens
