@@ -106,6 +106,11 @@ execute: |
     mkdir --parents ${CCACHE_DIR}
     echo "${CCACHE_DIR} ${CCACHE_DIR} none rw,bind 0 0" >> /etc/schroot/sbuild/fstab
 
+    # Vendor Rust crates so they're available in the sbuild chroot
+    # (which has no network access)
+    apt-get install --yes cargo
+    cargo vendor debian/rust-vendor
+
     sbuild "${SBUILD_OPTS[@]}"
 
     schroot -c chroot:${SCHROOT_NAME} --directory /build -- env CCACHE_DIR=${CCACHE_DIR} ccache --show-stats --zero-stats > ${CCACHE_DIR}/ccache.stats
