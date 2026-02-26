@@ -109,7 +109,21 @@ execute: |
     # Vendor Rust crates so they're available in the sbuild chroot
     # (which has no network access)
     apt-get install --yes cargo
+    rm -rf debian/rust-vendor
     cargo vendor debian/rust-vendor
+
+    # Remove test data from vendored crates to reduce source package size
+    for crate in debian/rust-vendor/*/; do
+      rm -rf "${crate}tests"
+    done
+
+    # Clear per-file checksums to allow the above modifications
+    for crate in debian/rust-vendor/*/; do
+      checksum_file="${crate}.cargo-checksum.json"
+      if [ -f "${checksum_file}" ]; then
+        sed -i 's/^{"files":.*"package":"\([a-z0-9]\+\)"}$/{"files":{},"package":"\1"}/' "${checksum_file}"
+      fi
+    done
 
     sbuild "${SBUILD_OPTS[@]}"
 
