@@ -15,7 +15,6 @@
  */
 
 #include "input_trigger_v1.h"
-#include "input_trigger_registry.h"
 
 #include <mir/log.h>
 
