@@ -45,9 +45,7 @@ public:
 
     static auto from(struct wl_resource* resource) -> InputTriggerV1*;
 
-    // TODO the usage of a static buffer was a bad idea. Two invocations on the
-    // same line clobber each other.
-    virtual auto to_c_str() const -> char const* = 0;
+    virtual auto to_string() const -> std::string = 0;
 
     virtual bool is_same_trigger(InputTriggerV1 const* other) const = 0;
     virtual bool is_same_trigger(KeyboardSymTrigger const* sym_trigger) const;

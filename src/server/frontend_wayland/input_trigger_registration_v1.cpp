@@ -49,7 +49,7 @@ class mf::KeyboardSymTrigger : public KeyboardTrigger
 public:
     KeyboardSymTrigger(InputTriggerModifiers modifiers, uint32_t keysym, struct wl_resource* id);
 
-    auto to_c_str() const -> char const* override;
+    auto to_string() const -> std::string override;
 
     auto matches(MirEvent const& ev, KeyboardStateTracker const& keyboard_state) const -> bool override;
 
@@ -64,7 +64,7 @@ class mf::KeyboardCodeTrigger : public KeyboardTrigger
 public:
     KeyboardCodeTrigger(InputTriggerModifiers modifiers, uint32_t scancode, struct wl_resource* id);
 
-    auto to_c_str() const -> char const* override;
+    auto to_string() const -> std::string override;
 
     auto matches(MirEvent const& ev, KeyboardStateTracker const& keyboard_state) const -> bool override;
 
@@ -81,19 +81,13 @@ mf::KeyboardSymTrigger::KeyboardSymTrigger(
 {
 }
 
-auto mf::KeyboardSymTrigger::to_c_str() const -> char const*
+auto mf::KeyboardSymTrigger::to_string() const -> std::string
 {
-    static char buf[256];
-
-    auto const end = std::format_to(
-        buf,
+    return std::format(
         "KeyboardSymTrigger{{client={}, keysym={}, modifiers={}}}",
         static_cast<void*>(wl_resource_get_client(resource)),
         keysym,
         modifiers.to_string());
-    *end = '\0';
-
-    return buf;
 }
 
 auto mf::KeyboardSymTrigger::matches(MirEvent const& ev, KeyboardStateTracker const& keyboard_state) const -> bool
@@ -127,19 +121,13 @@ mf::KeyboardCodeTrigger::KeyboardCodeTrigger(
 {
 }
 
-auto mf::KeyboardCodeTrigger::to_c_str() const -> char const*
+auto mf::KeyboardCodeTrigger::to_string() const -> std::string
 {
-    static char buf[256];
-
-    auto const end = std::format_to(
-        buf,
+    return std::format(
         "KeyboardCodeTrigger{{client={}, scancode={}, modifiers={}}}",
         static_cast<void*>(wl_resource_get_client(resource)),
         scancode,
         modifiers.to_string());
-    *end = '\0';
-
-    return buf;
 }
 
 auto mf::KeyboardCodeTrigger::matches(MirEvent const& ev, KeyboardStateTracker const& keyboard_state) const -> bool
@@ -250,7 +238,7 @@ void InputTriggerRegistrationManagerV1::Instance::register_keyboard_sym_trigger(
 
     if (!input_trigger_registry->register_trigger(keyboard_trigger))
     {
-        mir::log_warning("register_keyboard_sym_trigger: %s already registered", keyboard_trigger->to_c_str());
+        mir::log_warning("register_keyboard_sym_trigger: %s already registered", keyboard_trigger->to_string().c_str());
         keyboard_trigger->send_failed_event();
     }
     else
@@ -265,7 +253,7 @@ void InputTriggerRegistrationManagerV1::Instance::register_keyboard_code_trigger
 
     if (!input_trigger_registry->register_trigger(keyboard_trigger))
     {
-        mir::log_warning("register_keyboard_code_trigger: %s already registered", keyboard_trigger->to_c_str());
+        mir::log_warning("register_keyboard_code_trigger: %s already registered", keyboard_trigger->to_string().c_str());
         keyboard_trigger->send_failed_event();
     }
     else
