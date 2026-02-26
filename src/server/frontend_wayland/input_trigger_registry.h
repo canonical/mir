@@ -17,12 +17,10 @@
 #ifndef MIR_SERVER_FRONTEND_INPUT_TRIGGER_REGISTRY_H_
 #define MIR_SERVER_FRONTEND_INPUT_TRIGGER_REGISTRY_H_
 
-#include "ext-input-trigger-registration-v1_wrapper.h"
-
+#include <mir/events/event.h>
 #include <mir/executor.h>
 #include <mir/shell/token_authority.h>
 #include <mir/wayland/weak.h>
-#include <mir/events/event.h>
 
 #include <string>
 #include <unordered_map>
@@ -33,42 +31,7 @@ namespace mir
 namespace frontend
 {
 class InputTriggerActionV1;
-
-/// Strong type representing modifier flags used internally by Mir.
-class InputTriggerModifiers
-{
-public:
-    /// Explicit construction from MirInputEventModifiers
-    explicit InputTriggerModifiers(MirInputEventModifiers value);
-
-    /// Get the raw MirInputEventModifiers value (for internal use)
-    auto raw_value() const -> MirInputEventModifiers;
-
-    /// Convert to string for debugging
-    auto to_string() const -> std::string;
-
-    /// Explicit conversion from ProtocolModifiers
-    static auto from_protocol(uint32_t protocol_mods) -> InputTriggerModifiers;
-
-    /// Explicit conversion from ProtocolModifiers with keysym for shift
-    /// adjustment.
-    ///
-    /// `protocol_mods` is a mask containing the protocol modifier flags (e.g.
-    /// Shift, Ctrl, Alt) as defined in ext_input_trigger_registration_v1. A
-    /// client could request a trigger with an uppercase letter keysym, but not
-    /// provide a shift modifier. "Ctrl + E" for example. The keysym
-    /// corresponding to "E" only appears in input events if Shift is pressed.
-    /// But since the client did not specify Shift in their original request,
-    /// the protocol modifier mask will not contain Shift, and the event
-    /// modifier mask will contain Shift, and the trigger won't match. To
-    /// account for this, we patch the protocol modifiers at registration time.
-    static auto from_protocol(uint32_t protocol_mods, bool shift_adjustment) -> InputTriggerModifiers;
-
-    auto operator==(InputTriggerModifiers const& other) const -> bool = default;
-
-private:
-    MirInputEventModifiers value;
-};
+class InputTriggerV1;
 
 class RecentTokens
 {
@@ -101,64 +64,6 @@ public:
 private:
     std::unordered_set<uint32_t> pressed_keysyms;
     std::unordered_set<uint32_t> pressed_scancodes;
-};
-
-class KeyboardSymTrigger;
-class KeyboardCodeTrigger;
-class InputTriggerV1 : public wayland::InputTriggerV1
-{
-public:
-    using wayland::InputTriggerV1::InputTriggerV1;
-
-    static auto from(struct wl_resource* resource) -> InputTriggerV1*;
-
-    virtual auto to_c_str() const -> char const* = 0;
-
-    virtual bool is_same_trigger(InputTriggerV1 const* other) const = 0;
-    virtual bool is_same_trigger(KeyboardSymTrigger const*) const;
-    virtual bool is_same_trigger(KeyboardCodeTrigger const*) const;
-
-    virtual bool matches(MirEvent const& event, KeyboardStateTracker const& keyboard_state) const = 0;
-};
-
-class KeyboardTrigger : public frontend::InputTriggerV1
-{
-public:
-    KeyboardTrigger(InputTriggerModifiers modifiers, struct wl_resource* id);
-
-    static bool modifiers_match(InputTriggerModifiers protocol_modifiers, InputTriggerModifiers event_mods);
-
-    InputTriggerModifiers const modifiers;
-};
-
-class KeyboardSymTrigger : public KeyboardTrigger
-{
-public:
-    KeyboardSymTrigger(InputTriggerModifiers modifiers, uint32_t keysym, struct wl_resource* id);
-
-    auto to_c_str() const -> char const* override;
-
-    auto matches(MirEvent const& ev, KeyboardStateTracker const& keyboard_state) const -> bool override;
-
-    bool is_same_trigger(InputTriggerV1 const* other) const override;
-    bool is_same_trigger(KeyboardSymTrigger const* other) const override;
-
-    uint32_t const keysym;
-};
-
-class KeyboardCodeTrigger : public KeyboardTrigger
-{
-public:
-    KeyboardCodeTrigger(InputTriggerModifiers modifiers, uint32_t scancode, struct wl_resource* id);
-
-    auto to_c_str() const -> char const* override;
-
-    auto matches(MirEvent const& ev, KeyboardStateTracker const& keyboard_state) const -> bool override;
-
-    bool is_same_trigger(InputTriggerV1 const* other) const override;
-    bool is_same_trigger(KeyboardCodeTrigger const* other) const override;
-
-    uint32_t const scancode;
 };
 
 
