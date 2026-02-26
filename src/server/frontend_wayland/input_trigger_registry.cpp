@@ -16,15 +16,12 @@
 
 #include "input_trigger_registry.h"
 #include "input_trigger_v1.h"
-#include "mir/wayland/weak.h"
 
 #include <mir/events/input_event.h>
 #include <mir/events/keyboard_event.h>
 #include <mir/input/xkb_mapper.h>
 #include <mir/log.h>
 #include <mir_toolkit/events/enums.h>
-
-#include <wayland-server-core.h>
 
 #include <algorithm>
 #include <string>
