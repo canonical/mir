@@ -20,7 +20,6 @@
 #include "ext-input-trigger-registration-v1_wrapper.h"
 #include "input_trigger_registry.h"
 
-#include <cstdint>
 #include <string>
 
 namespace mir
