@@ -51,12 +51,46 @@ auto mf::RecentTokens::contains(std::string_view token) const -> bool
 
 void mf::KeyboardStateTracker::on_key_down(uint32_t keysym, uint32_t scancode)
 {
+    // Set all lowercase keys to uppercase
+    if (keysym == XKB_KEY_Shift_L || keysym == XKB_KEY_Shift_R)
+    {
+        std::unordered_set<xkb_keysym_t> to_replace;
+        for (auto const key : pressed_keysyms)
+        {
+            if (key >= XKB_KEY_a && key <= XKB_KEY_z)
+                to_replace.insert(key);
+        }
+
+        for (auto const key : to_replace)
+        {
+            pressed_keysyms.erase(key);
+            pressed_keysyms.insert(xkb_keysym_to_upper(key));
+        }
+    }
+
     pressed_keysyms.insert(keysym);
     pressed_scancodes.insert(scancode);
 }
 
 void mf::KeyboardStateTracker::on_key_up(uint32_t keysym, uint32_t scancode)
 {
+    // Set all uppercase keys to lowercase
+    if (keysym == XKB_KEY_Shift_L || keysym == XKB_KEY_Shift_R)
+    {
+        std::unordered_set<xkb_keysym_t> to_replace;
+        for (auto const key : pressed_keysyms)
+        {
+            if (key >= XKB_KEY_A && key <= XKB_KEY_Z)
+                to_replace.insert(key);
+        }
+
+        for (auto const key : to_replace)
+        {
+            pressed_keysyms.erase(key);
+            pressed_keysyms.insert(xkb_keysym_to_lower(key));
+        }
+    }
+
     pressed_keysyms.erase(keysym);
     pressed_scancodes.erase(scancode);
 }
