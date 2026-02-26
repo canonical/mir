@@ -32,6 +32,34 @@ class KeyboardSymTrigger;
 class KeyboardCodeTrigger;
 class KeyboardStateTracker;
 
+class InputTriggerV1 : public wayland::InputTriggerV1
+{
+public:
+    using wayland::InputTriggerV1::InputTriggerV1;
+
+    void associate_with_action_group(std::shared_ptr<frontend::ActionGroup> action_group);
+    void unassociate_with_action_group(std::shared_ptr<frontend::ActionGroup> action_group);
+
+    bool active() const;
+    void begin(std::string const& token, uint32_t wayland_timestamp);
+    void end(std::string const& token, uint32_t wayland_timestamp);
+
+    static auto from(struct wl_resource* resource) -> InputTriggerV1*;
+
+    // TODO the usage of a static buffer was a bad idea. Two invocations on the
+    // same line clobber each other.
+    virtual auto to_c_str() const -> char const* = 0;
+
+    virtual bool is_same_trigger(InputTriggerV1 const* other) const = 0;
+    // TODO parameter names
+    virtual bool is_same_trigger(KeyboardSymTrigger const*) const;
+    virtual bool is_same_trigger(KeyboardCodeTrigger const*) const;
+
+    virtual bool matches(MirEvent const& event, KeyboardStateTracker const& keyboard_state) const = 0;
+private:
+    std::shared_ptr<frontend::ActionGroup> action_group;
+};
+
 /// Strong type representing modifier flags used internally by Mir.
 class InputTriggerModifiers
 {
@@ -66,34 +94,6 @@ public:
 
 private:
     MirInputEventModifiers value;
-};
-
-class InputTriggerV1 : public wayland::InputTriggerV1
-{
-public:
-    using wayland::InputTriggerV1::InputTriggerV1;
-
-    void associate_with_action_group(std::shared_ptr<frontend::ActionGroup> action_group);
-    void unassociate_with_action_group(std::shared_ptr<frontend::ActionGroup> action_group);
-
-    bool active() const;
-    void begin(std::string const& token, uint32_t wayland_timestamp);
-    void end(std::string const& token, uint32_t wayland_timestamp);
-
-    static auto from(struct wl_resource* resource) -> InputTriggerV1*;
-
-    // TODO the usage of a static buffer was a bad idea. Two invocations on the
-    // same line clobber each other.
-    virtual auto to_c_str() const -> char const* = 0;
-
-    virtual bool is_same_trigger(InputTriggerV1 const* other) const = 0;
-    // TODO parameter names
-    virtual bool is_same_trigger(KeyboardSymTrigger const*) const;
-    virtual bool is_same_trigger(KeyboardCodeTrigger const*) const;
-
-    virtual bool matches(MirEvent const& event, KeyboardStateTracker const& keyboard_state) const = 0;
-private:
-    std::shared_ptr<frontend::ActionGroup> action_group;
 };
 
 class KeyboardTrigger : public frontend::InputTriggerV1
