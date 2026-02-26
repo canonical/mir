@@ -352,14 +352,11 @@ void emit_mir_event(miral::TestWlcsDisplayServer* runner,
 
 /// end of anon
 
-class miral::TestWlcsDisplayServer::RunnerCursorObserver : public mir::input::CursorObserverMultiplexer
+class miral::TestWlcsDisplayServer::RunnerCursorObserver : public mir::input::CursorObserver
 {
 public:
-    RunnerCursorObserver(
-        TestWlcsDisplayServer* runner, std::shared_ptr<mir::input::CursorObserverMultiplexer> wrapped) :
-        mi::CursorObserverMultiplexer{mir::immediate_executor},
-        runner{runner},
-        wrapped{std::move(wrapped)}
+    RunnerCursorObserver(TestWlcsDisplayServer* runner) :
+        runner{runner}
     {
     }
 
@@ -367,23 +364,22 @@ public:
     {
         runner->cursor_x = abs_x;
         runner->cursor_y = abs_y;
-
-        wrapped->cursor_moved_to(abs_x, abs_y);
     }
 
     void pointer_usable() override
     {
-        wrapped->pointer_usable();
     }
 
     void pointer_unusable() override
     {
-        wrapped->pointer_unusable();
+    }
+
+    void image_set_to(std::shared_ptr<mir::graphics::CursorImage>) override
+    {
     }
 
 private:
     TestWlcsDisplayServer* const runner;
-    std::shared_ptr<mi::CursorObserverMultiplexer> const wrapped;
 };
 
 class miral::TestWlcsDisplayServer::ResourceMapper : public mir::scene::SessionListener
@@ -871,8 +867,10 @@ miral::TestWlcsDisplayServer::TestWlcsDisplayServer(int argc, char const** argv)
             server.wrap_cursor_observer_multiplexer(
                 [this](auto existing_cursor_multiplexer)
                 {
-                    cursor_observer = std::make_shared<RunnerCursorObserver>(this, existing_cursor_multiplexer);
-                    return cursor_observer;
+                    cursor_observer = std::make_shared<RunnerCursorObserver>(this);
+                    existing_cursor_multiplexer->register_early_observer(
+                        cursor_observer, mir::immediate_executor);
+                    return existing_cursor_multiplexer;
                 });
 
             mir_server = &server;
