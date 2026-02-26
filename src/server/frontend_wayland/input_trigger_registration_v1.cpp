@@ -71,8 +71,6 @@ public:
         void get_action_control(std::string const& name, struct wl_resource* id) override;
 
     private:
-        auto has_trigger(mf::InputTriggerV1 const*) const -> bool;
-
         std::shared_ptr<mf::InputTriggerRegistry> const input_trigger_registry;
     };
 
@@ -98,7 +96,7 @@ void InputTriggerRegistrationManagerV1::Instance::register_keyboard_sym_trigger(
     auto const* keyboard_trigger =
         new mf::KeyboardSymTrigger{mf::InputTriggerModifiers::from_protocol(modifiers, shift_adjustment), keysym, id};
 
-    if (has_trigger(keyboard_trigger))
+    if (input_trigger_registry->has_trigger(keyboard_trigger))
     {
         mir::log_error("register_keyboard_sym_trigger: %s already registered", keyboard_trigger->to_c_str());
         keyboard_trigger->send_failed_event();
@@ -113,7 +111,7 @@ void InputTriggerRegistrationManagerV1::Instance::register_keyboard_code_trigger
     auto const* keyboard_trigger =
         new mf::KeyboardCodeTrigger{mf::InputTriggerModifiers::from_protocol(modifiers), keycode, id};
 
-    if (has_trigger(keyboard_trigger))
+    if (input_trigger_registry->has_trigger(keyboard_trigger))
     {
         mir::log_error("register_keyboard_code_trigger: %s already registered", keyboard_trigger->to_c_str());
         keyboard_trigger->send_failed_event();
@@ -128,11 +126,6 @@ void InputTriggerRegistrationManagerV1::Instance::get_action_control(std::string
     auto const [token, entry] = input_trigger_registry->create_new_token_data();
     auto const action_control = new mf::ActionControl{entry, id};
     action_control->send_done_event(token);
-}
-
-auto InputTriggerRegistrationManagerV1::Instance::has_trigger(mf::InputTriggerV1 const* trigger) const -> bool
-{
-    return input_trigger_registry->has_trigger(trigger);
 }
 
 auto mf::create_input_trigger_registration_manager_v1(wl_display* display, std::shared_ptr<InputTriggerRegistry> const& input_trigger_registry)
