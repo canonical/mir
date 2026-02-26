@@ -91,11 +91,16 @@ auto mf::KeyboardStateTracker::scancode_is_pressed(uint32_t scancode) const -> b
 void mf::InputTriggerTokenData::ActionGroup::add(wayland::Weak<frontend::InputTriggerActionV1 const> action)
 {
     actions.push_back(action);
+    if(timestamp_and_trigger)
+    {
+        auto const& [timestamp, token] = timestamp_and_trigger.value();
+        action.value().send_begin_event(timestamp, token);
+    }
 }
 
 auto mf::InputTriggerTokenData::ActionGroup::began() const -> bool
 {
-    return began_;
+    return timestamp_and_trigger.has_value();
 }
 
 namespace
@@ -121,16 +126,15 @@ void mf::InputTriggerTokenData::ActionGroup::end(std::string const& activation_t
     iterate_and_erase_expired_actions(
         actions, [&](auto const& valid_action) { valid_action.send_end_event(wayland_timestamp, activation_token); });
 
-    began_ = false;
+    timestamp_and_trigger = {};
 }
 
 void mf::InputTriggerTokenData::ActionGroup::begin(std::string const& activation_token, uint32_t wayland_timestamp)
 {
+    timestamp_and_trigger = {wayland_timestamp, activation_token};
 
     iterate_and_erase_expired_actions(
         actions, [&](auto const& valid_action) { valid_action.send_begin_event(wayland_timestamp, activation_token); });
-
-    began_ = true;
 }
 
 bool mf::InputTriggerTokenData::ActionGroup::empty() const

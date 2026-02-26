@@ -102,7 +102,7 @@ private:
 
     private:
         std::vector<wayland::Weak<InputTriggerActionV1 const>> actions;
-        bool began_{false};
+        std::optional<std::pair<uint32_t, std::string>> timestamp_and_trigger;
     };
 
     // Used by action controls to add or drop triggers, and to check for
