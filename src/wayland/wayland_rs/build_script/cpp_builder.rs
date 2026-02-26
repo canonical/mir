@@ -7,7 +7,6 @@ pub struct CppBuilder {
     pub filename: String,
     namespaces: Vec<CppNamespace>,
     includes: Vec<String>,
-    forward_declarations: Vec<String>,
 }
 
 impl CppBuilder {
@@ -17,7 +16,6 @@ impl CppBuilder {
             filename,
             namespaces: vec![],
             includes: vec![],
-            forward_declarations: vec![],
         }
     }
 
@@ -33,10 +31,6 @@ impl CppBuilder {
 
     pub fn add_include(&mut self, include: String) {
         self.includes.push(include);
-    }
-
-    pub fn add_forward_declaration_class(&mut self, name: &str) {
-        self.forward_declarations.push(format!("class {}", name));
     }
 
     /// Output the C++ content to a string for the header file.
@@ -59,7 +53,7 @@ impl CppBuilder {
             }
 
             // Add forward declarations.
-            for forward in &self.forward_declarations {
+            for forward in &namespace.forward_declarations {
                 result.push_str(&format!("{};\n", forward));
             }
 
@@ -71,10 +65,7 @@ impl CppBuilder {
 
                 // Generate enums
                 for enum_ in &class.enums {
-                    result.push_str(&format!(
-                        "    enum class {} : public uint32_t\n",
-                        enum_.name
-                    ));
+                    result.push_str(&format!("    enum class {} : uint32_t\n", enum_.name));
                     result.push_str("    {\n");
 
                     for option in &enum_.options {
@@ -100,9 +91,16 @@ impl CppBuilder {
                         .collect();
                     let args_str = args.join(", ");
 
+                    let retstring = method
+                        .retval
+                        .as_ref()
+                        .map(cpp_type_to_string)
+                        .unwrap_or("void".to_string());
+
+                    let method_name = sanitize_identifier(&method.name);
                     result.push_str(&format!(
-                        "    virtual auto {}({}) = 0;\n",
-                        method.name, args_str
+                        "    virtual auto {}({}) -> {} = 0;\n",
+                        method_name, args_str, retstring
                     ));
                 }
 
@@ -143,11 +141,19 @@ impl CppBuilder {
                     let method_name = format_ident!("{}", sanitize_identifier(&method.name));
                     let args = method.args.iter().map(|arg| {
                         let arg_name = format_ident!("{}", sanitize_identifier(&arg.name));
-                        let arg_type = cpp_type_to_rust_type(&arg.cpp_type);
+                        let arg_type = cpp_type_to_rust_type(&arg.cpp_type, false);
                         quote! { #arg_name: #arg_type }
                     });
-                    quote! {
-                        pub fn #method_name(self: &#class_name, #(#args),*);
+
+                    if let Some(retval) = &method.retval {
+                        let retval = cpp_type_to_rust_type(retval, true);
+                        quote! {
+                            pub fn #method_name(self: &#class_name, #(#args),*) -> #retval;
+                        }
+                    } else {
+                        quote! {
+                            pub fn #method_name(self: &#class_name, #(#args),*);
+                        }
                     }
                 });
                 tokens.push(quote! {
@@ -164,6 +170,7 @@ impl CppBuilder {
 pub struct CppNamespace {
     pub name: Vec<String>,
     pub classes: Vec<CppClass>,
+    forward_declarations: Vec<String>,
 }
 
 impl CppNamespace {
@@ -171,6 +178,7 @@ impl CppNamespace {
         CppNamespace {
             name: name,
             classes: vec![],
+            forward_declarations: vec![],
         }
     }
 
@@ -179,6 +187,10 @@ impl CppNamespace {
         self.classes
             .last_mut()
             .expect("classes cannot be empty after push")
+    }
+
+    pub fn add_forward_declaration_class(&mut self, name: &str) {
+        self.forward_declarations.push(format!("class {}", name));
     }
 }
 
@@ -241,11 +253,16 @@ pub struct CppEnumOption {
 pub struct CppMethod {
     pub name: String,
     pub args: Vec<CppArg>,
+    pub retval: Option<CppType>,
 }
 
 impl CppMethod {
-    pub fn new(name: String) -> CppMethod {
-        CppMethod { name, args: vec![] }
+    pub fn new(name: String, retval: Option<CppType>) -> CppMethod {
+        CppMethod {
+            name,
+            args: vec![],
+            retval,
+        }
     }
 
     pub fn add_arg(&mut self, arg: CppArg) -> &mut CppArg {
@@ -259,10 +276,9 @@ impl CppMethod {
 pub enum CppType {
     CppI32,
     CppU32,
-    CppF32,
+    CppF64,
     String,
     Object(String),
-    NewId(Option<String>),
     Array,
     Fd,
 }
@@ -271,31 +287,29 @@ fn cpp_type_to_string(cpp_type: &CppType) -> String {
     match cpp_type {
         CppType::CppI32 => "int32_t".to_string(),
         CppType::CppU32 => "uint32_t".to_string(),
-        CppType::CppF32 => "float".to_string(),
-        CppType::String => "rust::Str const&".to_string(),
-        CppType::Object(name) => format!("rust::SharedPtr<{}> const&", name),
-
-        // TODO: The precise form that the NewId type will take is unknown at the moment and
-        // will be implemented when we implement the Rust side of things. It may end up being
-        // a plain integer or it may end up being something more complicated.
-        CppType::NewId(_interface) => "int32_t".to_string(),
+        CppType::CppF64 => "double".to_string(),
+        CppType::String => "rust::String const&".to_string(),
+        CppType::Object(name) => format!("std::unique_ptr<{}> const&", name),
         CppType::Array => "rust::Vec<uint8_t> const&".to_string(),
         CppType::Fd => "int32_t".to_string(),
     }
 }
 
-fn cpp_type_to_rust_type(cpp_type: &CppType) -> TokenStream {
+fn cpp_type_to_rust_type(cpp_type: &CppType, is_retval: bool) -> TokenStream {
     match cpp_type {
         CppType::CppI32 => quote! { i32 },
         CppType::CppU32 => quote! { u32 },
-        CppType::CppF32 => quote! { f32 },
-        CppType::String => quote! { &str },
+        CppType::CppF64 => quote! { f64 },
+        CppType::String => quote! { String },
         CppType::Object(name) => {
             let type_name = format_ident!("{}", name);
-            quote! { &SharedPtr<#type_name> }
+            if is_retval {
+                quote! { UniquePtr<#type_name> }
+            } else {
+                quote! { &UniquePtr<#type_name> }
+            }
         }
-        CppType::NewId(_interface) => quote! { i32 },
-        CppType::Array => quote! { &Vec<u8> },
+        CppType::Array => quote! { Vec<u8> },
         CppType::Fd => quote! { i32 },
     }
 }
@@ -303,7 +317,7 @@ fn cpp_type_to_rust_type(cpp_type: &CppType) -> TokenStream {
 /// Sanitize an identifier to ensure it's valid for Rust.
 /// If the identifier starts with a digit, prefix it with an underscore.
 /// If the identifier is a Rust keyword, prefix it with r#.
-fn sanitize_identifier(name: &str) -> String {
+pub fn sanitize_identifier(name: &str) -> String {
     if name.is_empty() {
         return "_empty".to_string();
     }
