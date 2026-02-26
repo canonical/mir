@@ -68,7 +68,6 @@ private:
     std::unordered_set<uint32_t> pressed_scancodes;
 };
 
-// TODO rename to InputTriggerActionGroup?
 class ActionGroup
 {
 public:

@@ -194,7 +194,6 @@ auto mf::InputTriggerRegistry::create_new_action_group() -> std::pair<Token, std
             delete action_group;
         });
 
-    // TODO rethink lifetimes
     auto const token = token_authority->issue_token(
         [this, ag](auto const& token)
         { wayland_executor.spawn([this, token, ag] { token_revoked(Token{token}); }); });
