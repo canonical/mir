@@ -17,8 +17,6 @@
 #include "input_trigger_v1.h"
 #include "input_trigger_registry.h"
 
-#include <mir/events/input_event.h>
-#include <mir/events/keyboard_event.h>
 #include <mir/log.h>
 
 namespace mf = mir::frontend;
@@ -132,63 +130,7 @@ auto mf::InputTriggerModifiers::from_protocol(uint32_t protocol_mods, bool shift
     return InputTriggerModifiers{result};
 }
 
-void mf::InputTriggerV1::associate_with_action_group(std::shared_ptr<frontend::ActionGroup> action_group)
-{
-    this->action_group = action_group;
-}
-
-void mf::InputTriggerV1::unassociate_with_action_group(std::shared_ptr<frontend::ActionGroup> action_group)
-{
-    if (this->action_group == action_group)
-        this->action_group.reset();
-}
-
-bool mf::InputTriggerV1::active() const
-{
-    if(action_group)
-        return action_group->any_trigger_active();
-
-    return false;
-}
-
-void mf::InputTriggerV1::begin(std::string const& token, uint32_t wayland_timestamp)
-{
-    if (action_group)
-        action_group->begin(token, wayland_timestamp);
-}
-
-void mf::InputTriggerV1::end(std::string const& token, uint32_t wayland_timestamp)
-{
-    if (action_group)
-        action_group->end(token, wayland_timestamp);
-}
-
-auto mf::InputTriggerV1::from(struct wl_resource* resource) -> InputTriggerV1*
-{
-    if (auto* frontend_trigger = wayland::InputTriggerV1::from(resource))
-        return dynamic_cast<InputTriggerV1*>(frontend_trigger);
-
-    mir::log_error("Non-InputTriggerV1 resource passed to InputTriggerV1::from");
-    return nullptr;
-}
-
-bool mf::InputTriggerV1::is_same_trigger(KeyboardSymTrigger const*) const
-{
-    return false;
-}
-
-bool mf::InputTriggerV1::is_same_trigger(KeyboardCodeTrigger const*) const
-{
-    return false;
-}
-
-mf::KeyboardTrigger::KeyboardTrigger(InputTriggerModifiers modifiers, struct wl_resource* id) :
-    InputTriggerV1{id, Version<1>{}},
-    modifiers{modifiers}
-{
-}
-
-bool mf::KeyboardTrigger::modifiers_match(mf::InputTriggerModifiers modifiers, mf::InputTriggerModifiers event_mods)
+bool mf::InputTriggerModifiers::modifiers_match(mf::InputTriggerModifiers modifiers, mf::InputTriggerModifiers event_mods)
 {
     // Special case, if the event comes explicitly with no modifiers, it should
     // only match if the protocol also specified no modifiers.
@@ -304,91 +246,52 @@ bool mf::KeyboardTrigger::modifiers_match(mf::InputTriggerModifiers modifiers, m
     return true;
 }
 
-mf::KeyboardSymTrigger::KeyboardSymTrigger(
-    mf::InputTriggerModifiers modifiers, uint32_t keysym, struct wl_resource* id) :
-    KeyboardTrigger{modifiers, id},
-    keysym{keysym}
+void mf::InputTriggerV1::associate_with_action_group(std::shared_ptr<frontend::ActionGroup> action_group)
 {
+    this->action_group = action_group;
 }
 
-auto mf::KeyboardSymTrigger::to_c_str() const -> char const*
+void mf::InputTriggerV1::unassociate_with_action_group(std::shared_ptr<frontend::ActionGroup> action_group)
 {
-    static char buf[256];
-
-    auto const end = std::format_to(
-        buf,
-        "KeyboardSymTrigger{{client={}, keysym={}, modifiers={}}}",
-        static_cast<void*>(wl_resource_get_client(resource)),
-        keysym,
-        modifiers.to_string());
-    *end = '\0';
-
-    return buf;
+    if (this->action_group == action_group)
+        this->action_group.reset();
 }
 
-auto mf::KeyboardSymTrigger::matches(
-    MirEvent const& ev, KeyboardStateTracker const& keyboard_state) const -> bool
+bool mf::InputTriggerV1::active() const
 {
-    auto const event_modifiers = InputTriggerModifiers{ev.to_input()->to_keyboard()->modifiers()};
-    if (!KeyboardTrigger::modifiers_match(modifiers, event_modifiers))
-        return false;
+    if(action_group)
+        return action_group->any_trigger_active();
 
-    auto const mods_value = modifiers.raw_value();
-    auto const trigger_mods_contain_shift =
-        ((mods_value & mir_input_event_modifier_shift) | (mods_value & mir_input_event_modifier_shift_left) |
-         (mods_value & mir_input_event_modifier_shift_right)) != 0;
-
-    return keyboard_state.keysym_is_pressed(keysym, trigger_mods_contain_shift);
+    return false;
 }
 
-bool mf::KeyboardSymTrigger::is_same_trigger(InputTriggerV1 const* other) const
+void mf::InputTriggerV1::begin(std::string const& token, uint32_t wayland_timestamp)
 {
-    return other->is_same_trigger(this);
+    if (action_group)
+        action_group->begin(token, wayland_timestamp);
 }
 
-bool mf::KeyboardSymTrigger::is_same_trigger(KeyboardSymTrigger const* other) const
+void mf::InputTriggerV1::end(std::string const& token, uint32_t wayland_timestamp)
 {
-    return other && keysym == other->keysym && modifiers == other->modifiers;
+    if (action_group)
+        action_group->end(token, wayland_timestamp);
 }
 
-mf::KeyboardCodeTrigger::KeyboardCodeTrigger(
-    InputTriggerModifiers modifiers, uint32_t scancode, struct wl_resource* id) :
-    KeyboardTrigger{modifiers, id},
-    scancode{scancode}
+auto mf::InputTriggerV1::from(struct wl_resource* resource) -> InputTriggerV1*
 {
+    if (auto* frontend_trigger = wayland::InputTriggerV1::from(resource))
+        return dynamic_cast<InputTriggerV1*>(frontend_trigger);
+
+    mir::log_error("Non-InputTriggerV1 resource passed to InputTriggerV1::from");
+    return nullptr;
 }
 
-auto mf::KeyboardCodeTrigger::to_c_str() const -> char const*
+bool mf::InputTriggerV1::is_same_trigger(KeyboardSymTrigger const*) const
 {
-    static char buf[256];
-
-    auto const end = std::format_to(
-        buf,
-        "KeyboardCodeTrigger{{client={}, scancode={}, modifiers={}}}",
-        static_cast<void*>(wl_resource_get_client(resource)),
-        scancode,
-        modifiers.to_string());
-    *end = '\0';
-
-    return buf;
+    return false;
 }
 
-auto mf::KeyboardCodeTrigger::matches(
-    MirEvent const& ev, KeyboardStateTracker const& keyboard_state) const -> bool
+bool mf::InputTriggerV1::is_same_trigger(KeyboardCodeTrigger const*) const
 {
-    auto const event_modifiers = InputTriggerModifiers{ev.to_input()->to_keyboard()->modifiers()};
-    if (!KeyboardTrigger::modifiers_match(modifiers, event_modifiers))
-        return false;
-
-    return keyboard_state.scancode_is_pressed(scancode);
-}
-
-bool mf::KeyboardCodeTrigger::is_same_trigger(InputTriggerV1 const* other) const
-{
-    return other->is_same_trigger(this);
-}
-
-bool mf::KeyboardCodeTrigger::is_same_trigger(KeyboardCodeTrigger const* other) const
-{
-    return other && scancode == other->scancode && modifiers == other->modifiers;
+    return false;
 }

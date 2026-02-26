@@ -21,7 +21,6 @@
 #include "input_trigger_registry.h"
 
 #include <cstdint>
-#include <mir/events/event.h>
 #include <string>
 
 namespace mir
@@ -90,50 +89,12 @@ public:
     /// account for this, we patch the protocol modifiers at registration time.
     static auto from_protocol(uint32_t protocol_mods, bool shift_adjustment) -> InputTriggerModifiers;
 
-    auto operator==(InputTriggerModifiers const& other) const -> bool = default;
+    bool operator==(InputTriggerModifiers const& other) const = default;
+
+    static auto modifiers_match(InputTriggerModifiers modifiers, InputTriggerModifiers event_mods) -> bool;
 
 private:
     MirInputEventModifiers value;
-};
-
-class KeyboardTrigger : public frontend::InputTriggerV1
-{
-public:
-    KeyboardTrigger(InputTriggerModifiers modifiers, struct wl_resource* id);
-
-    static bool modifiers_match(InputTriggerModifiers protocol_modifiers, InputTriggerModifiers event_mods);
-
-    InputTriggerModifiers const modifiers;
-};
-
-class KeyboardSymTrigger : public KeyboardTrigger
-{
-public:
-    KeyboardSymTrigger(InputTriggerModifiers modifiers, uint32_t keysym, struct wl_resource* id);
-
-    auto to_c_str() const -> char const* override;
-
-    auto matches(MirEvent const& ev, KeyboardStateTracker const& keyboard_state) const -> bool override;
-
-    bool is_same_trigger(InputTriggerV1 const* other) const override;
-    bool is_same_trigger(KeyboardSymTrigger const* other) const override;
-
-    uint32_t const keysym;
-};
-
-class KeyboardCodeTrigger : public KeyboardTrigger
-{
-public:
-    KeyboardCodeTrigger(InputTriggerModifiers modifiers, uint32_t scancode, struct wl_resource* id);
-
-    auto to_c_str() const -> char const* override;
-
-    auto matches(MirEvent const& ev, KeyboardStateTracker const& keyboard_state) const -> bool override;
-
-    bool is_same_trigger(InputTriggerV1 const* other) const override;
-    bool is_same_trigger(KeyboardCodeTrigger const* other) const override;
-
-    uint32_t const scancode;
 };
 }
 }

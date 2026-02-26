@@ -25,7 +25,6 @@
 #include <mir/log.h>
 #include <mir_toolkit/events/enums.h>
 
-#include <ranges>
 #include <wayland-server-core.h>
 
 #include <algorithm>
