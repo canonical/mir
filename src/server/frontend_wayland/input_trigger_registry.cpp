@@ -15,6 +15,7 @@
  */
 
 #include "input_trigger_registry.h"
+#include "input_trigger_action_v1.h"
 
 #include <mir/events/input_event.h>
 #include <mir/events/keyboard_event.h>
@@ -22,7 +23,6 @@
 #include <mir/log.h>
 #include <mir_toolkit/events/enums.h>
 
-#include <ranges>
 #include <wayland-server-core.h>
 
 #include <algorithm>

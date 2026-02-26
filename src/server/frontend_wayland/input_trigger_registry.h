@@ -17,15 +17,12 @@
 #ifndef MIR_SERVER_FRONTEND_INPUT_TRIGGER_REGISTRY_H_
 #define MIR_SERVER_FRONTEND_INPUT_TRIGGER_REGISTRY_H_
 
-#include "ext-input-trigger-action-v1_wrapper.h"
-#include "input_trigger_registration_v1.h"
-#include "input_trigger_action_v1.h"
+#include "ext-input-trigger-registration-v1_wrapper.h"
 
 #include <mir/executor.h>
-#include <mir/input/composite_event_filter.h>
-#include <mir/input/event_filter.h>
 #include <mir/shell/token_authority.h>
 #include <mir/wayland/weak.h>
+#include <mir/events/event.h>
 
 #include <string>
 #include <unordered_map>
@@ -35,6 +32,7 @@ namespace mir
 {
 namespace frontend
 {
+class InputTriggerActionV1;
 
 /// Strong type representing modifier flags used internally by Mir.
 class InputTriggerModifiers

@@ -14,6 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "input_trigger_registration_v1.h"
+
 #include "input_trigger_registry.h"
 
 #include <mir/log.h>

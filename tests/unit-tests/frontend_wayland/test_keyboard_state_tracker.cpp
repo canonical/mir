@@ -17,6 +17,7 @@
 #include "src/server/frontend_wayland/input_trigger_registry.h"
 
 #include <xkbcommon/xkbcommon-keysyms.h>
+#include <mir/input/composite_event_filter.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
