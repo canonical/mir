@@ -23,14 +23,27 @@
 namespace mf = mir::frontend;
 namespace mw = mir::wayland;
 
-mf::ActionControl::ActionControl(
-    std::shared_ptr<InputTriggerTokenData> const& entry, struct wl_resource* id) :
+namespace
+{
+class ActionControl : public mw::InputTriggerActionControlV1
+{
+public:
+    ActionControl(std::shared_ptr<mf::InputTriggerTokenData> const& entry, struct wl_resource* id);
+
+    void add_input_trigger_event(struct wl_resource* trigger) override;
+    void drop_input_trigger_event(struct wl_resource* trigger) override;
+
+private:
+    std::shared_ptr<mf::InputTriggerTokenData> const entry;
+};
+
+ActionControl::ActionControl(std::shared_ptr<mf::InputTriggerTokenData> const& entry, struct wl_resource* id) :
     mw::InputTriggerActionControlV1{id, Version<1>{}},
     entry{entry}
 {
 }
 
-void mf::ActionControl::add_input_trigger_event(struct wl_resource* trigger)
+void ActionControl::add_input_trigger_event(struct wl_resource* trigger)
 {
     if (auto const* input_trigger = mf::InputTriggerV1::from(trigger))
     {
@@ -38,7 +51,7 @@ void mf::ActionControl::add_input_trigger_event(struct wl_resource* trigger)
     }
 }
 
-void mf::ActionControl::drop_input_trigger_event(struct wl_resource* trigger_id)
+void ActionControl::drop_input_trigger_event(struct wl_resource* trigger_id)
 {
     if (auto const* input_trigger = mf::InputTriggerV1::from(trigger_id))
     {
@@ -46,6 +59,7 @@ void mf::ActionControl::drop_input_trigger_event(struct wl_resource* trigger_id)
     }
 }
 
+}
 
 class InputTriggerRegistrationManagerV1 : public mw::InputTriggerRegistrationManagerV1::Global
 {
@@ -126,7 +140,7 @@ void InputTriggerRegistrationManagerV1::Instance::register_keyboard_code_trigger
 void InputTriggerRegistrationManagerV1::Instance::get_action_control(std::string const&, struct wl_resource* id)
 {
     auto const [token, entry] = input_trigger_registry->create_new_token_data();
-    auto const action_control = new mf::ActionControl{entry, id};
+    auto const action_control = new ActionControl{entry, id};
     action_control->send_done_event(token);
 }
 
