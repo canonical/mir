@@ -23,14 +23,12 @@ use cpp_builder::{
 };
 use proc_macro2::TokenStream;
 use protocol_parser::{
-    parse_protocols, InterfaceItem, WaylandArg, WaylandArgType, WaylandEnum, WaylandInterface,
-    WaylandProtocol, WaylandRequest,
+    parse_protocols, InterfaceItem, WaylandArg, WaylandArgType, WaylandEnum, WaylandEvent,
+    WaylandInterface, WaylandProtocol, WaylandRequest,
 };
 use quote::{format_ident, quote};
 use std::{env, fs, path::Path};
 use syn::Ident;
-
-use crate::protocol_parser::WaylandEvent;
 
 fn main() {
     let manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap();

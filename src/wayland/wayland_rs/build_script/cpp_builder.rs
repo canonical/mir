@@ -33,6 +33,23 @@ impl CppBuilder {
         self.includes.push(include);
     }
 
+    fn build_ret_string(method: &CppMethod) -> String {
+        method
+            .retval
+            .as_ref()
+            .map(cpp_type_to_string)
+            .unwrap_or("void".to_string())
+    }
+
+    fn build_arg_str(method: &CppMethod) -> String {
+        let args: Vec<String> = method
+            .args
+            .iter()
+            .map(|arg| format!("{} {}", cpp_type_to_string(&arg.cpp_type), arg.name))
+            .collect();
+        args.join(", ")
+    }
+
     /// Generates the .h file contents corresponding to the information in this builder.
     pub fn to_cpp_header(&self) -> String {
         let mut result = String::new();
@@ -84,19 +101,8 @@ impl CppBuilder {
 
                 // Generate methods
                 for method in &class.methods {
-                    let args: Vec<String> = method
-                        .args
-                        .iter()
-                        .map(|arg| format!("{} {}", cpp_type_to_string(&arg.cpp_type), arg.name))
-                        .collect();
-                    let args_str = args.join(", ");
-
-                    let retstring = method
-                        .retval
-                        .as_ref()
-                        .map(cpp_type_to_string)
-                        .unwrap_or("void".to_string());
-
+                    let args_str = Self::build_arg_str(method);
+                    let retstring = Self::build_ret_string(method);
                     let method_name = sanitize_identifier(&method.name);
                     if method.is_virtual {
                         result.push_str(&format!(
@@ -139,18 +145,8 @@ impl CppBuilder {
                         continue;
                     }
 
-                    let args: Vec<String> = method
-                        .args
-                        .iter()
-                        .map(|arg| format!("{} {}", cpp_type_to_string(&arg.cpp_type), arg.name))
-                        .collect();
-                    let args_str = args.join(", ");
-
-                    let retstring = method
-                        .retval
-                        .as_ref()
-                        .map(cpp_type_to_string)
-                        .unwrap_or("void".to_string());
+                    let args_str = Self::build_arg_str(method);
+                    let retstring = Self::build_ret_string(method);
 
                     result.push_str(&format!(
                         "auto {}::{}::{}({}) -> {}\n",
