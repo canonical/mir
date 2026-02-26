@@ -17,7 +17,6 @@
 #include "src/server/frontend_wayland/input_trigger_registry.h"
 
 #include <xkbcommon/xkbcommon-keysyms.h>
-#include <mir/input/composite_event_filter.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -36,26 +35,9 @@ constexpr uint32_t KEY_B_SCANCODE = 48;
 
 constexpr uint32_t KEY_CTRL_L_SCANCODE = 37;
 
-struct StubCompositeEventFilter: public mir::input::CompositeEventFilter
-{
-    void append(std::weak_ptr<mir::input::EventFilter> const&) override
-    {
-    }
-
-    void prepend(std::weak_ptr<mir::input::EventFilter> const&) override
-    {
-    }
-
-    bool handle(MirEvent const&) override
-    {
-        return false;
-    }
-};
-
 class KeyboardStateTrackerTest : public Test
 {
 public:
-    std::shared_ptr<StubCompositeEventFilter> cef = std::make_shared<StubCompositeEventFilter>();
     mf::KeyboardStateTracker tracker;
 };
 
