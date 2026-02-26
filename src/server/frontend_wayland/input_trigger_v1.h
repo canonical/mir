@@ -50,9 +50,8 @@ public:
     virtual auto to_c_str() const -> char const* = 0;
 
     virtual bool is_same_trigger(InputTriggerV1 const* other) const = 0;
-    // TODO parameter names
-    virtual bool is_same_trigger(KeyboardSymTrigger const*) const;
-    virtual bool is_same_trigger(KeyboardCodeTrigger const*) const;
+    virtual bool is_same_trigger(KeyboardSymTrigger const* sym_trigger) const;
+    virtual bool is_same_trigger(KeyboardCodeTrigger const* code_trigger) const;
 
     virtual bool matches(MirEvent const& event, KeyboardStateTracker const& keyboard_state) const = 0;
 private:
