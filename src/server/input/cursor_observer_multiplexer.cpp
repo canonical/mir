@@ -44,13 +44,12 @@ void mi::CursorObserverMultiplexer::send_initial_state_locked(std::lock_guard<st
     auto const shared = observer.lock();
     if (shared)
     {
-        for_single_observer(*shared, &mi::CursorObserver::cursor_moved_to, last_abs_x, last_abs_y);
         if (pointer_is_usable)
             for_single_observer(*shared, &mi::CursorObserver::pointer_usable);
         else
             for_single_observer(*shared, &mi::CursorObserver::pointer_unusable);
-        if (cursor_image)
-            for_single_observer(*shared, &mi::CursorObserver::image_set_to, cursor_image);
+        for_single_observer(*shared, &mi::CursorObserver::cursor_moved_to, last_abs_x, last_abs_y);
+        for_single_observer(*shared, &mi::CursorObserver::image_set_to, cursor_image);
     }
 }
 
