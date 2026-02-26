@@ -48,7 +48,7 @@ private:
             if (input_trigger_registry->was_revoked(token))
                 new mf::NullInputTriggerActionV1{id}; // Sends `unavailable`
 
-            if (auto const& token_data = input_trigger_registry->find(token))
+            if (auto const& token_data = input_trigger_registry->get_token_data(token))
             {
                 new mf:: InputTriggerActionV1 const{token_data, id};
             }

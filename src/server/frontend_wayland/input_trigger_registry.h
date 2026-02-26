@@ -231,7 +231,7 @@ public:
 
     bool was_revoked(Token const& token) const;
 
-    auto find(Token const& token) -> std::shared_ptr<InputTriggerTokenData> const;
+    auto get_token_data(Token const& token) -> std::shared_ptr<InputTriggerTokenData> const;
 
 private:
     void token_revoked(Token const& token);

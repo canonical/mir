@@ -639,7 +639,7 @@ bool mf::InputTriggerRegistry::was_revoked(Token const& token) const
     return revoked_tokens.contains(token);
 }
 
-auto mf::InputTriggerRegistry::find(Token const& token) -> std::shared_ptr<InputTriggerTokenData> const
+auto mf::InputTriggerRegistry::get_token_data(Token const& token) -> std::shared_ptr<InputTriggerTokenData> const
 {
     if (auto const iter = token_data.find(token); iter != token_data.end())
         return iter->second.lock();
