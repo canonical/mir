@@ -24,6 +24,8 @@
 #include <mir/events/input_event.h>
 #include <mir/events/xkb_modifiers.h>
 
+#include <xkbcommon/xkbcommon.h>
+
 namespace mir
 {
 namespace input
@@ -40,8 +42,8 @@ struct MirKeyboardEvent : MirInputEvent
     MirKeyboardAction action() const;
     void set_action(MirKeyboardAction action);
 
-    int32_t keysym() const;
-    void set_keysym(int32_t keysym);
+    xkb_keysym_t keysym() const;
+    void set_keysym(xkb_keysym_t keysym);
 
     int32_t scan_code() const;
     void set_scan_code(int32_t scan_code);
@@ -57,7 +59,7 @@ struct MirKeyboardEvent : MirInputEvent
 
 private:
     MirKeyboardAction action_ = {};
-    int32_t keysym_ = 0;
+    xkb_keysym_t keysym_ = 0;
     int32_t scan_code_ = 0;
     std::string text_ = {};
     std::shared_ptr<mir::input::Keymap> keymap_;
