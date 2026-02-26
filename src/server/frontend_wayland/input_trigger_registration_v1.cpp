@@ -114,7 +114,7 @@ void InputTriggerRegistrationManagerV1::Instance::register_keyboard_sym_trigger(
 
     if (!input_trigger_registry->register_trigger(keyboard_trigger))
     {
-        mir::log_error("register_keyboard_sym_trigger: %s already registered", keyboard_trigger->to_c_str());
+        mir::log_warning("register_keyboard_sym_trigger: %s already registered", keyboard_trigger->to_c_str());
         keyboard_trigger->send_failed_event();
     }
     else
@@ -129,7 +129,7 @@ void InputTriggerRegistrationManagerV1::Instance::register_keyboard_code_trigger
 
     if (!input_trigger_registry->register_trigger(keyboard_trigger))
     {
-        mir::log_error("register_keyboard_code_trigger: %s already registered", keyboard_trigger->to_c_str());
+        mir::log_warning("register_keyboard_code_trigger: %s already registered", keyboard_trigger->to_c_str());
         keyboard_trigger->send_failed_event();
     }
     else
