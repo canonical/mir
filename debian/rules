@@ -27,7 +27,7 @@ else
 endif
 
 COMMON_CONFIGURE_OPTIONS = \
-  -DMIR_ENABLE_RUST=OFF\
+  -DMIR_ENABLE_RUST=ON\
   -DCMAKE_INSTALL_LIBEXECDIR="lib/$(DEB_HOST_MULTIARCH)/mir"\
   -DMIR_BUILD_INTERPROCESS_TESTS=OFF\
 
@@ -65,6 +65,8 @@ $(info DEB_BUILD_MAINT_OPTIONS: ${DEB_BUILD_MAINT_OPTIONS})
 AVAILABLE_PLATFORMS=atomic-kms\;gbm-kms\;x11\;wayland\;eglstream-kms
 
 override_dh_auto_configure:
+	mkdir -p .cargo
+	printf '[source.crates-io]\nreplace-with = "vendored-sources"\n\n[source.vendored-sources]\ndirectory = "debian/rust-vendor"\n' > .cargo/config.toml
 ifneq ($(filter armhf,$(DEB_HOST_ARCH)),)
 	dh_auto_configure -- \
 	  $(COMMON_CONFIGURE_OPTIONS) \
