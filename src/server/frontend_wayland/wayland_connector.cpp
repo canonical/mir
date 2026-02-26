@@ -34,7 +34,7 @@
 #include "wp_viewporter.h"
 #include "linux_drm_syncobj.h"
 #include "surface_registry.h"
-#include "input_trigger_data.h"
+#include "input_trigger_registry.h"
 
 #include <mir/errno_utils.h>
 #include <mir/main_loop.h>
@@ -301,7 +301,7 @@ mf::WaylandConnector::WaylandConnector(
     subcompositor_global = std::make_unique<mf::WlSubcompositor>(display.get());
     auto const surface_registry = std::make_shared<mf::SurfaceRegistry>();
 
-    auto const input_trigger_data = std::make_shared<frontend::InputTriggerData>(token_authority, *executor);
+    auto const input_trigger_registry = std::make_shared<frontend::InputTriggerRegistry>(token_authority, *executor);
     seat_global = std::make_unique<mf::WlSeat>(
         display.get(),
         *executor,
@@ -311,7 +311,7 @@ mf::WaylandConnector::WaylandConnector(
         seat,
         accessibility_manager,
         surface_registry,
-        input_trigger_data);
+        input_trigger_registry);
     output_manager = std::make_unique<mf::OutputManager>(
         display.get(),
         executor,
@@ -353,7 +353,7 @@ mf::WaylandConnector::WaylandConnector(
         surface_registry,
         clock,
         cursor_observer_multiplexer,
-        input_trigger_data});
+        input_trigger_registry});
 
     shm_global = std::make_unique<WlShm>(display.get(), executor);
 

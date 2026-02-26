@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "input_trigger_data.h"
+#include "input_trigger_registry.h"
 
 #include <mir/events/input_event.h>
 #include <mir/events/keyboard_event.h>
@@ -528,14 +528,14 @@ void mf::InputTriggerTokenData::end(std::string const& activation_token, uint32_
     action_group.end(activation_token, wayland_timestamp);
 }
 
-mf::InputTriggerData::InputTriggerData(
+mf::InputTriggerRegistry::InputTriggerRegistry(
     std::shared_ptr<msh::TokenAuthority> const& token_authority, Executor& wayland_executor) :
     token_authority{token_authority},
     wayland_executor{wayland_executor}
 {
 }
 
-auto mf::InputTriggerData::create_new_token_data() -> std::pair<Token, std::shared_ptr<InputTriggerTokenData>>
+auto mf::InputTriggerRegistry::create_new_token_data() -> std::pair<Token, std::shared_ptr<InputTriggerTokenData>>
 {
     auto const td = std::make_shared<mf::InputTriggerTokenData>();
 
@@ -554,7 +554,7 @@ auto mf::InputTriggerData::create_new_token_data() -> std::pair<Token, std::shar
     return {static_cast<std::string>(token), td};
 }
 
-auto mf::InputTriggerData::has_trigger(mf::InputTriggerV1 const* trigger) -> bool
+auto mf::InputTriggerRegistry::has_trigger(mf::InputTriggerV1 const* trigger) -> bool
 {
     return sr::any_of(
         token_data,
@@ -567,12 +567,12 @@ auto mf::InputTriggerData::has_trigger(mf::InputTriggerV1 const* trigger) -> boo
         });
 }
 
-void mf::InputTriggerData::token_revoked(Token const& token)
+void mf::InputTriggerRegistry::token_revoked(Token const& token)
 {
     revoked_tokens.add(token);
 }
 
-bool mf::InputTriggerData::matches(MirEvent const& event)
+bool mf::InputTriggerRegistry::matches(MirEvent const& event)
 {
     if (event.type() != mir_event_type_input)
         return false;
@@ -634,12 +634,12 @@ bool mf::InputTriggerData::matches(MirEvent const& event)
     return any_matched;
 }
 
-bool mf::InputTriggerData::was_revoked(Token const& token) const
+bool mf::InputTriggerRegistry::was_revoked(Token const& token) const
 {
     return revoked_tokens.contains(token);
 }
 
-auto mf::InputTriggerData::find(Token const& token) -> std::shared_ptr<InputTriggerTokenData> const
+auto mf::InputTriggerRegistry::find(Token const& token) -> std::shared_ptr<InputTriggerTokenData> const
 {
     if (auto const iter = token_data.find(token); iter != token_data.end())
         return iter->second.lock();

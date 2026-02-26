@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "input_trigger_data.h"
+#include "input_trigger_registry.h"
 
 #include <mir/log.h>
 
@@ -48,9 +48,10 @@ void mf::ActionControl::drop_input_trigger_event(struct wl_resource* trigger_id)
 class InputTriggerRegistrationManagerV1 : public mw::InputTriggerRegistrationManagerV1::Global
 {
 public:
-    InputTriggerRegistrationManagerV1(wl_display* display, std::shared_ptr<mf::InputTriggerData> const& itd) :
+    InputTriggerRegistrationManagerV1(
+        wl_display* display, std::shared_ptr<mf::InputTriggerRegistry> const& input_trigger_registry) :
         Global{display, Version<1>{}},
-        itd{itd}
+        input_trigger_registry{input_trigger_registry}
     {
     }
 
@@ -59,9 +60,9 @@ public:
     public:
         Instance(
             wl_resource* new_ext_input_trigger_registration_manager_v1,
-            std::shared_ptr<mf::InputTriggerData> const& itd) :
+            std::shared_ptr<mf::InputTriggerRegistry> const& input_trigger_registry) :
             mw::InputTriggerRegistrationManagerV1{new_ext_input_trigger_registration_manager_v1, Version<1>{}},
-            itd{itd}
+            input_trigger_registry{input_trigger_registry}
         {
         }
 
@@ -72,16 +73,16 @@ public:
     private:
         auto has_trigger(mf::InputTriggerV1 const*) const -> bool;
 
-        std::shared_ptr<mf::InputTriggerData> const itd;
+        std::shared_ptr<mf::InputTriggerRegistry> const input_trigger_registry;
     };
 
     void bind(wl_resource* new_ext_input_trigger_registration_manager_v1) override
     {
-        new Instance{new_ext_input_trigger_registration_manager_v1, itd};
+        new Instance{new_ext_input_trigger_registration_manager_v1, input_trigger_registry};
     }
 
 private:
-    std::shared_ptr<mf::InputTriggerData> const itd;
+    std::shared_ptr<mf::InputTriggerRegistry> const input_trigger_registry;
 };
 
 // Triggers are stored in the action control object until the corresponding
@@ -124,18 +125,18 @@ void InputTriggerRegistrationManagerV1::Instance::register_keyboard_code_trigger
 // TODO: Store the description string
 void InputTriggerRegistrationManagerV1::Instance::get_action_control(std::string const&, struct wl_resource* id)
 {
-    auto const [token, entry] = itd->create_new_token_data();
+    auto const [token, entry] = input_trigger_registry->create_new_token_data();
     auto const action_control = new mf::ActionControl{entry, id};
     action_control->send_done_event(token);
 }
 
 auto InputTriggerRegistrationManagerV1::Instance::has_trigger(mf::InputTriggerV1 const* trigger) const -> bool
 {
-    return itd->has_trigger(trigger);
+    return input_trigger_registry->has_trigger(trigger);
 }
 
-auto mf::create_input_trigger_registration_manager_v1(wl_display* display, std::shared_ptr<InputTriggerData> const& itd)
+auto mf::create_input_trigger_registration_manager_v1(wl_display* display, std::shared_ptr<InputTriggerRegistry> const& input_trigger_registry)
     -> std::shared_ptr<mw::InputTriggerRegistrationManagerV1::Global>
 {
-    return std::make_shared<InputTriggerRegistrationManagerV1>(display, itd);
+    return std::make_shared<InputTriggerRegistrationManagerV1>(display, input_trigger_registry);
 }

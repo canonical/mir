@@ -15,7 +15,7 @@
  */
 
 #include "input_trigger_action_v1.h"
-#include "input_trigger_data.h"
+#include "input_trigger_registry.h"
 
 #include <mir/wayland/protocol_error.h>
 
@@ -32,23 +32,23 @@ mf::InputTriggerActionV1::InputTriggerActionV1(std::shared_ptr<InputTriggerToken
 class InputTriggerActionManagerV1 : public mw::InputTriggerActionManagerV1::Global
 {
 public:
-    InputTriggerActionManagerV1(wl_display* display, std::shared_ptr<mf::InputTriggerData> const& itd) :
+    InputTriggerActionManagerV1(wl_display* display, std::shared_ptr<mf::InputTriggerRegistry> const& input_trigger_registry) :
         Global{display, Version<1>{}},
-        itd{itd}
+        input_trigger_registry{input_trigger_registry}
     {
     }
 
 private:
     class Instance : public mir::wayland::InputTriggerActionManagerV1
     {
-        std::shared_ptr<mf::InputTriggerData> const itd;
+        std::shared_ptr<mf::InputTriggerRegistry> const input_trigger_registry;
 
         void get_input_trigger_action(std::string const& token, struct wl_resource* id) override
         {
-            if (itd->was_revoked(token))
+            if (input_trigger_registry->was_revoked(token))
                 new mf::NullInputTriggerActionV1{id}; // Sends `unavailable`
 
-            if (auto const& token_data = itd->find(token))
+            if (auto const& token_data = input_trigger_registry->find(token))
             {
                 new mf:: InputTriggerActionV1 const{token_data, id};
             }
@@ -67,23 +67,23 @@ private:
 
     public:
         Instance(
-            wl_resource* new_ext_input_trigger_action_manager_v1, std::shared_ptr<mf::InputTriggerData> const& itd) :
+            wl_resource* new_ext_input_trigger_action_manager_v1, std::shared_ptr<mf::InputTriggerRegistry> const& input_trigger_registry) :
             InputTriggerActionManagerV1{new_ext_input_trigger_action_manager_v1, Version<1>{}},
-            itd{itd}
+            input_trigger_registry{input_trigger_registry}
         {
         }
     };
 
     void bind(wl_resource* new_ext_input_trigger_action_manager_v1) override
     {
-        new Instance{new_ext_input_trigger_action_manager_v1, itd};
+        new Instance{new_ext_input_trigger_action_manager_v1, input_trigger_registry};
     }
 
-    std::shared_ptr<mf::InputTriggerData> const itd;
+    std::shared_ptr<mf::InputTriggerRegistry> const input_trigger_registry;
 };
 
-auto mf::create_input_trigger_action_manager_v1(wl_display* display, std::shared_ptr<InputTriggerData> const& itd)
+auto mf::create_input_trigger_action_manager_v1(wl_display* display, std::shared_ptr<InputTriggerRegistry> const& input_trigger_registry)
     -> std::shared_ptr<mw::InputTriggerActionManagerV1::Global>
 {
-    return std::make_shared<InputTriggerActionManagerV1>(display, itd);
+    return std::make_shared<InputTriggerActionManagerV1>(display, input_trigger_registry);
 }

@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_SERVER_FRONTEND_INPUT_TRIGGER_DATA_H_
-#define MIR_SERVER_FRONTEND_INPUT_TRIGGER_DATA_H_
+#ifndef MIR_SERVER_FRONTEND_INPUT_TRIGGER_REGISTRY_H_
+#define MIR_SERVER_FRONTEND_INPUT_TRIGGER_REGISTRY_H_
 
 #include "ext-input-trigger-action-v1_wrapper.h"
 #include "input_trigger_registration_v1.h"
@@ -216,12 +216,12 @@ private:
     TriggerList pending_triggers;
 };
 
-class InputTriggerData
+class InputTriggerRegistry
 {
 public:
     using Token = std::string;
 
-    InputTriggerData(std::shared_ptr<shell::TokenAuthority> const& token_authority, Executor& wayland_executor);
+    InputTriggerRegistry(std::shared_ptr<shell::TokenAuthority> const& token_authority, Executor& wayland_executor);
 
     auto create_new_token_data() -> std::pair<Token, std::shared_ptr<InputTriggerTokenData>>;
 

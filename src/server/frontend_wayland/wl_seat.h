@@ -54,7 +54,7 @@ class WlDataDevice;
 class KeyboardCallbacks;
 class KeyboardHelper;
 class SurfaceRegistry;
-class InputTriggerData;
+class InputTriggerRegistry;
 
 class PointerEventDispatcher
 {
@@ -82,7 +82,7 @@ public:
         std::shared_ptr<mir::input::Seat> const& seat,
         std::shared_ptr<shell::AccessibilityManager> const& accessibility_manager,
         std::shared_ptr<SurfaceRegistry> const& surface_registry,
-        std::shared_ptr<InputTriggerData> const& input_trigger_actions);
+        std::shared_ptr<InputTriggerRegistry> const& input_trigger_registry);
 
     ~WlSeat();
 

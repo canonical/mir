@@ -23,7 +23,7 @@ namespace mir
 {
 namespace frontend
 {
-class InputTriggerData;
+class InputTriggerRegistry;
 class InputTriggerTokenData;
 
 class ActionControl : public wayland::InputTriggerActionControlV1
@@ -38,7 +38,8 @@ private:
     std::shared_ptr<frontend::InputTriggerTokenData> const entry;
 };
 
-auto create_input_trigger_registration_manager_v1(wl_display*, std::shared_ptr<InputTriggerData> const&)
+auto create_input_trigger_registration_manager_v1(
+    wl_display* display, std::shared_ptr<InputTriggerRegistry> const& input_trigger_registry)
     -> std::shared_ptr<wayland::InputTriggerRegistrationManagerV1::Global>;
 }
 }
