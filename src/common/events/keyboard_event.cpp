@@ -37,12 +37,12 @@ void MirKeyboardEvent::set_action(MirKeyboardAction action)
     action_ = action;
 }
 
-int32_t MirKeyboardEvent::keysym() const
+xkb_keysym_t MirKeyboardEvent::keysym() const
 {
     return keysym_;
 }
 
-void MirKeyboardEvent::set_keysym(int32_t keysym)
+void MirKeyboardEvent::set_keysym(xkb_keysym_t keysym)
 {
     keysym_ = keysym;
 }
