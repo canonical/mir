@@ -227,7 +227,7 @@ public:
 
     auto has_trigger(frontend::InputTriggerV1 const* trigger) -> bool;
 
-    bool matches(MirEvent const& event);
+    bool matches_any_trigger(MirEvent const& event);
 
     bool was_revoked(Token const& token) const;
 

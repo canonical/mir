@@ -572,7 +572,7 @@ void mf::InputTriggerRegistry::token_revoked(Token const& token)
     revoked_tokens.add(token);
 }
 
-bool mf::InputTriggerRegistry::matches(MirEvent const& event)
+bool mf::InputTriggerRegistry::matches_any_trigger(MirEvent const& event)
 {
     if (event.type() != mir_event_type_input)
         return false;
