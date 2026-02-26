@@ -107,12 +107,6 @@ auto mf::InputTriggerModifiers::from_protocol(uint32_t protocol_mods, bool shift
     if (protocol_mods == 0)
         return InputTriggerModifiers{mir_input_event_modifier_none};
 
-    struct Mapping
-    {
-        uint32_t protocol_modifier;
-        MirInputEventModifiers mir_modifier;
-    };
-
     // clang-format off
     constexpr std::array<std::pair<uint32_t, MirInputEventModifiers>, 14> mappings = {
         std::pair{ PM::alt,         mir_input_event_modifier_alt },
