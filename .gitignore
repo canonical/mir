@@ -3,7 +3,6 @@
 .cache
 benchmarks/mir_perf_framework_setup.py
 debian/*.log
-debian/rust-vendor/
 include/server/mir/version.h
 include/client/mir_toolkit/version.h
 include/miral/miral/version.h
