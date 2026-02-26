@@ -22,6 +22,21 @@
 namespace mf = mir::frontend;
 namespace mw = mir::wayland;
 
+namespace
+{
+// Used  when a client provides a revoked token to call
+// `send_unavailable_event`.
+class NullInputTriggerActionV1 : public mw::InputTriggerActionV1
+{
+public:
+    NullInputTriggerActionV1(wl_resource* id) :
+        mw::InputTriggerActionV1{id, Version<1>{}}
+    {
+        send_unavailable_event();
+    }
+};
+}
+
 mf::InputTriggerActionV1::InputTriggerActionV1(std::shared_ptr<InputTriggerTokenData> const& token_data, wl_resource* id) :
     wayland::InputTriggerActionV1{id, Version<1>{}},
     token_data{token_data}
@@ -47,7 +62,7 @@ private:
         {
             if (input_trigger_registry->was_revoked(token))
             {
-                new mf::NullInputTriggerActionV1{id}; // Sends `unavailable`
+                new NullInputTriggerActionV1{id}; // Sends `unavailable`
                 return;
             }
 

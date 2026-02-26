@@ -37,18 +37,6 @@ private:
     std::shared_ptr<InputTriggerTokenData> const token_data;
 };
 
-// Used  when a client provides a revoked token to call
-// `send_unavailable_event`.
-class NullInputTriggerActionV1 : public wayland::InputTriggerActionV1
-{
-public:
-    NullInputTriggerActionV1(wl_resource* id) :
-        wayland::InputTriggerActionV1{id, Version<1>{}}
-    {
-        send_unavailable_event();
-    }
-};
-
 auto create_input_trigger_action_manager_v1(
     wl_display* display, std::shared_ptr<InputTriggerRegistry> const& input_trigger_registry)
     -> std::shared_ptr<wayland::InputTriggerActionManagerV1::Global>;
