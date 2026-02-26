@@ -50,7 +50,7 @@ private:
 
             if (auto const& token_data = input_trigger_registry->get_token_data(token))
             {
-                new mf:: InputTriggerActionV1 const{token_data, id};
+                new mf::InputTriggerActionV1 const{token_data, id};
             }
             else
             {
