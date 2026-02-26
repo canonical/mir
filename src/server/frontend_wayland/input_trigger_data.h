@@ -201,9 +201,8 @@ public:
     void end(std::string const& activation_token, uint32_t wayland_timestamp);
 
 private:
-    // Used by action controls to add or drop triggers, and by
-    // TokenData::matches to check for matches when input events
-    // arrive.
+    // Used by action controls to add or drop triggers, and to check for
+    // matches when input events arrive.
     TriggerList trigger_list;
 
     // List of actions associated with the token. Used to send begin
@@ -217,7 +216,6 @@ private:
     TriggerList pending_triggers;
 };
 
-class InputTriggerActionV1;
 class InputTriggerData
 {
 public:
@@ -225,45 +223,20 @@ public:
 
     InputTriggerData(std::shared_ptr<shell::TokenAuthority> const& token_authority, Executor& wayland_executor);
 
-    void add_new_action_control(struct wl_resource* id);
+    auto create_new_token_data() -> std::pair<Token, std::shared_ptr<InputTriggerTokenData>>;
 
     auto has_trigger(frontend::InputTriggerV1 const* trigger) -> bool;
 
     bool matches(MirEvent const& event);
-
-    void erase(Token const& token);
 
     bool was_revoked(Token const& token) const;
 
     auto find(Token const& token) -> std::shared_ptr<InputTriggerTokenData> const;
 
 private:
-
-    class TokenData
-    {
-    public:
-        bool is_valid(Token const& token) const;
-
-        void add_action_control(
-            Token const& token, std::shared_ptr<InputTriggerTokenData> const foo, struct wl_resource* id);
-
-        bool has_trigger(frontend::InputTriggerV1 const* trigger) const;
-
-        bool matches(
-            MirEvent const& event, KeyboardStateTracker const& keyboard_state, shell::TokenAuthority& token_authority);
-
-        void erase(Token const& token);
-
-        auto find (Token const& token) -> std::shared_ptr<InputTriggerTokenData> const;
-
-    private:
-        class ActionControl;
-        std::unordered_map<Token, std::weak_ptr<InputTriggerTokenData>> entries;
-    };
-
     void token_revoked(Token const& token);
 
-    TokenData token_data;
+    std::unordered_map<Token, std::weak_ptr<InputTriggerTokenData>> token_data;
     RecentTokens revoked_tokens;
 
     std::shared_ptr<shell::TokenAuthority> const token_authority;

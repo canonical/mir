@@ -24,6 +24,19 @@ namespace mir
 namespace frontend
 {
 class InputTriggerData;
+class InputTriggerTokenData;
+
+class ActionControl : public wayland::InputTriggerActionControlV1
+{
+public:
+    ActionControl(std::shared_ptr<frontend::InputTriggerTokenData> const& entry, struct wl_resource* id);
+
+    void add_input_trigger_event(struct wl_resource* trigger) override;
+    void drop_input_trigger_event(struct wl_resource* trigger) override;
+
+private:
+    std::shared_ptr<frontend::InputTriggerTokenData> const entry;
+};
 
 auto create_input_trigger_registration_manager_v1(wl_display*, std::shared_ptr<InputTriggerData> const&)
     -> std::shared_ptr<wayland::InputTriggerRegistrationManagerV1::Global>;
