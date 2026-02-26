@@ -46,7 +46,10 @@ private:
         void get_input_trigger_action(std::string const& token, struct wl_resource* id) override
         {
             if (input_trigger_registry->was_revoked(token))
+            {
                 new mf::NullInputTriggerActionV1{id}; // Sends `unavailable`
+                return;
+            }
 
             if (auto const& token_data = input_trigger_registry->get_token_data(token))
             {
