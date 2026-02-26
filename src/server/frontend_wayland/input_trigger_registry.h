@@ -163,7 +163,7 @@ public:
 
 
 // All the data associated with a token that we need to keep track of.
-struct InputTriggerTokenData
+class InputTriggerTokenData
 {
 public:
     void add_action(wayland::Weak<frontend::InputTriggerActionV1 const> action);
@@ -182,7 +182,7 @@ public:
 private:
     using TriggerList = std::vector<wayland::Weak<InputTriggerV1 const>>;
 
-    struct ActionGroup
+    class ActionGroup
     {
     public:
         void add(wayland::Weak<frontend::InputTriggerActionV1 const> action);
