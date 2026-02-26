@@ -59,7 +59,6 @@ void InputTriggerActionControlV1::drop_input_trigger_event(struct wl_resource* t
         input_trigger->unassociate_with_action_group(action_group);
     }
 }
-}
 
 class InputTriggerRegistrationManagerV1 : public mw::InputTriggerRegistrationManagerV1::Global
 {
@@ -142,6 +141,7 @@ void InputTriggerRegistrationManagerV1::Instance::get_action_control(std::string
     auto const [token, action_group] = input_trigger_registry->create_new_action_group();
     auto const action_control = new InputTriggerActionControlV1{action_group, id};
     action_control->send_done_event(token);
+}
 }
 
 auto mf::create_input_trigger_registration_manager_v1(wl_display* display, std::shared_ptr<InputTriggerRegistry> const& input_trigger_registry)
