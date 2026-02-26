@@ -37,11 +37,6 @@ public:
     }
 };
 
-mf::InputTriggerActionV1::InputTriggerActionV1(wl_resource* id) :
-    wayland::InputTriggerActionV1{id, Version<1>{}}
-{
-}
-
 class InputTriggerActionManagerV1 : public mw::InputTriggerActionManagerV1::Global
 {
 public:
@@ -66,7 +61,7 @@ private:
 
             if (auto const& action_group = input_trigger_registry->get_action_group(token))
             {
-                auto const action = new mf::InputTriggerActionV1 const {id};
+                auto const action = new mw::InputTriggerActionV1 const {id, Version<1>{}};
                 action_group->add(mw::make_weak(action));
             }
             else

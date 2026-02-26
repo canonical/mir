@@ -17,6 +17,8 @@
 #ifndef MIR_SERVER_FRONTEND_INPUT_TRIGGER_REGISTRY_H_
 #define MIR_SERVER_FRONTEND_INPUT_TRIGGER_REGISTRY_H_
 
+#include "ext-input-trigger-action-v1_wrapper.h"
+
 #include <mir/events/event.h>
 #include <mir/executor.h>
 #include <mir/shell/token_authority.h>
@@ -70,7 +72,7 @@ private:
 class ActionGroup
 {
 public:
-    void add(wayland::Weak<frontend::InputTriggerActionV1 const> action);
+    void add(wayland::Weak<wayland::InputTriggerActionV1 const> action);
 
     auto any_trigger_active() const -> bool;
 
@@ -79,7 +81,7 @@ public:
     void begin(std::string const& activation_token, uint32_t wayland_timestamp);
 
 private:
-    std::vector<wayland::Weak<InputTriggerActionV1 const>> actions;
+    std::vector<wayland::Weak<wayland::InputTriggerActionV1 const>> actions;
     std::optional<std::pair<uint32_t, std::string>> timestamp_and_trigger;
 };
 

@@ -27,13 +27,6 @@ namespace frontend
 {
 class InputTriggerRegistry;
 
-class InputTriggerTokenData;
-class InputTriggerActionV1 : public wayland::InputTriggerActionV1
-{
-public:
-    InputTriggerActionV1(wl_resource* id);
-};
-
 auto create_input_trigger_action_manager_v1(
     wl_display* display, std::shared_ptr<InputTriggerRegistry> const& input_trigger_registry)
     -> std::shared_ptr<wayland::InputTriggerActionManagerV1::Global>;
