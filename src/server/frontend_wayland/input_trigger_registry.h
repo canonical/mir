@@ -163,25 +163,6 @@ public:
     uint32_t const scancode;
 };
 
-using TriggerList = std::vector<wayland::Weak<InputTriggerV1 const>>;
-
-struct ActionGroup
-{
-public:
-    void add(wayland::Weak<frontend::InputTriggerActionV1 const> action);
-
-    auto began() const -> bool;
-
-    void end(std::string const& activation_token, uint32_t wayland_timestamp);
-
-    void begin(std::string const& activation_token, uint32_t wayland_timestamp);
-
-    bool empty() const;
-
-private:
-    std::vector<wayland::Weak<InputTriggerActionV1 const>> actions;
-    bool began_{false};
-};
 
 // All the data associated with a token that we need to keep track of.
 struct InputTriggerTokenData
@@ -201,6 +182,26 @@ public:
     void end(std::string const& activation_token, uint32_t wayland_timestamp);
 
 private:
+    using TriggerList = std::vector<wayland::Weak<InputTriggerV1 const>>;
+
+    struct ActionGroup
+    {
+    public:
+        void add(wayland::Weak<frontend::InputTriggerActionV1 const> action);
+
+        auto began() const -> bool;
+
+        void end(std::string const& activation_token, uint32_t wayland_timestamp);
+
+        void begin(std::string const& activation_token, uint32_t wayland_timestamp);
+
+        bool empty() const;
+
+    private:
+        std::vector<wayland::Weak<InputTriggerActionV1 const>> actions;
+        bool began_{false};
+    };
+
     // Used by action controls to add or drop triggers, and to check for
     // matches when input events arrive.
     TriggerList trigger_list;

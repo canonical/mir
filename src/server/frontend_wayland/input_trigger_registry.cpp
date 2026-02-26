@@ -432,17 +432,17 @@ bool mf::KeyboardCodeTrigger::is_same_trigger(KeyboardCodeTrigger const* other) 
     return other && scancode == other->scancode && modifiers == other->modifiers;
 }
 
-void mf::ActionGroup::add(wayland::Weak<frontend::InputTriggerActionV1 const> action)
+void mf::InputTriggerTokenData::ActionGroup::add(wayland::Weak<frontend::InputTriggerActionV1 const> action)
 {
     actions.push_back(action);
 }
 
-auto mf::ActionGroup::began() const -> bool
+auto mf::InputTriggerTokenData::ActionGroup::began() const -> bool
 {
     return began_;
 }
 
-void mf::ActionGroup::end(std::string const& activation_token, uint32_t wayland_timestamp)
+void mf::InputTriggerTokenData::ActionGroup::end(std::string const& activation_token, uint32_t wayland_timestamp)
 {
     for (auto const& action : actions)
     {
@@ -454,7 +454,7 @@ void mf::ActionGroup::end(std::string const& activation_token, uint32_t wayland_
     began_ = false;
 }
 
-void mf::ActionGroup::begin(std::string const& activation_token, uint32_t wayland_timestamp)
+void mf::InputTriggerTokenData::ActionGroup::begin(std::string const& activation_token, uint32_t wayland_timestamp)
 {
     for (auto const& action : actions)
     {
@@ -466,7 +466,7 @@ void mf::ActionGroup::begin(std::string const& activation_token, uint32_t waylan
     began_ = true;
 }
 
-bool mf::ActionGroup::empty() const
+bool mf::InputTriggerTokenData::ActionGroup::empty() const
 {
     return actions.empty();
 }
