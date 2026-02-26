@@ -36,7 +36,6 @@ public:
         send_unavailable_event();
     }
 };
-}
 
 mf::InputTriggerActionV1::InputTriggerActionV1(wl_resource* id) :
     wayland::InputTriggerActionV1{id, Version<1>{}}
@@ -99,6 +98,7 @@ private:
 
     std::shared_ptr<mf::InputTriggerRegistry> const input_trigger_registry;
 };
+}
 
 auto mf::create_input_trigger_action_manager_v1(wl_display* display, std::shared_ptr<InputTriggerRegistry> const& input_trigger_registry)
     -> std::shared_ptr<mw::InputTriggerActionManagerV1::Global>
