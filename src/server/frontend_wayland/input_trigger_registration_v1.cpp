@@ -26,10 +26,10 @@ namespace mw = mir::wayland;
 
 namespace
 {
-class ActionControl : public mw::InputTriggerActionControlV1
+class InputTriggerActionControlV1 : public mw::InputTriggerActionControlV1
 {
 public:
-    ActionControl(std::shared_ptr<mf::ActionGroup> const& action_group, struct wl_resource* id);
+    InputTriggerActionControlV1(std::shared_ptr<mf::ActionGroup> const& action_group, struct wl_resource* id);
 
     void add_input_trigger_event(struct wl_resource* trigger) override;
     void drop_input_trigger_event(struct wl_resource* trigger) override;
@@ -38,13 +38,13 @@ private:
     std::shared_ptr<mf::ActionGroup> const action_group;
 };
 
-ActionControl::ActionControl(std::shared_ptr<mf::ActionGroup> const& action_group, struct wl_resource* id) :
+InputTriggerActionControlV1::InputTriggerActionControlV1(std::shared_ptr<mf::ActionGroup> const& action_group, struct wl_resource* id) :
     mw::InputTriggerActionControlV1{id, Version<1>{}},
     action_group{action_group}
 {
 }
 
-void ActionControl::add_input_trigger_event(struct wl_resource* trigger)
+void InputTriggerActionControlV1::add_input_trigger_event(struct wl_resource* trigger)
 {
     if (auto* input_trigger = mf::InputTriggerV1::from(trigger))
     {
@@ -52,7 +52,7 @@ void ActionControl::add_input_trigger_event(struct wl_resource* trigger)
     }
 }
 
-void ActionControl::drop_input_trigger_event(struct wl_resource* trigger_id)
+void InputTriggerActionControlV1::drop_input_trigger_event(struct wl_resource* trigger_id)
 {
     if (auto* input_trigger = mf::InputTriggerV1::from(trigger_id))
     {
@@ -140,7 +140,7 @@ void InputTriggerRegistrationManagerV1::Instance::register_keyboard_code_trigger
 void InputTriggerRegistrationManagerV1::Instance::get_action_control(std::string const&, struct wl_resource* id)
 {
     auto const [token, action_group] = input_trigger_registry->create_new_action_group();
-    auto const action_control = new ActionControl{action_group, id};
+    auto const action_control = new InputTriggerActionControlV1{action_group, id};
     action_control->send_done_event(token);
 }
 
