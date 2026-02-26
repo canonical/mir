@@ -30,6 +30,8 @@ use quote::{format_ident, quote};
 use std::{env, fs, path::Path};
 use syn::Ident;
 
+use crate::protocol_parser::WaylandEvent;
+
 fn main() {
     let manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
     let include_path = Path::new(&manifest_dir).join("include");
@@ -490,6 +492,7 @@ fn create_global_factory(protocols: &Vec<WaylandProtocol>) -> CppBuilder {
                 let method = CppMethod::new(
                     format!("create_{}", global_interface.name),
                     Some(CppType::Object(pascal_name)),
+                    true,
                 );
                 class.add_method(method);
             })
@@ -513,6 +516,7 @@ fn write_cpp_protocol_headers(protocols: &Vec<WaylandProtocol>) {
     // Write the protocol headers
     for builder in &builders {
         write_cpp_header(&builder);
+        write_cpp_source(&builder);
     }
 
     // Write the Rust FFI glue code.
@@ -521,7 +525,7 @@ fn write_cpp_protocol_headers(protocols: &Vec<WaylandProtocol>) {
     // them all into a single Vec.
     let extern_blocks: Vec<TokenStream> = builders
         .into_iter()
-        .flat_map(|builder: CppBuilder| builder.to_rust_bindings())
+        .flat_map(|builder: CppBuilder| builder.to_rust_cpp_bindings())
         .collect();
 
     let cpp_ffi_rs = quote! {
@@ -564,11 +568,20 @@ fn write_cpp_header(builder: &CppBuilder) {
     write_generated_cpp_file(&builder.to_cpp_header(), filename.as_str());
 }
 
+fn write_cpp_source(builder: &CppBuilder) {
+    let header_filename = format!("{}.h", builder.filename);
+
+    let filename = format!("{}.cpp", builder.filename);
+    write_generated_cpp_file(&builder.to_cpp_source(header_filename), filename.as_str());
+}
+
 fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
     let mut class = CppClass::new(snake_to_pascal(&interface.name));
     let methods = interface.items.iter().filter_map(|item| {
         if let protocol_parser::InterfaceItem::Request(request) = item {
             Some(wayland_request_to_cpp_method(request))
+        } else if let protocol_parser::InterfaceItem::Event(event) = item {
+            Some(wayland_event_to_cpp_method(event))
         } else {
             None
         }
@@ -608,9 +621,29 @@ fn wayland_enum_to_cpp_enum(enum_: &WaylandEnum) -> CppEnum {
     result
 }
 
+fn wayland_arg_to_cpp_arg(arg: &WaylandArg) -> CppArg {
+    let type_ = match arg.type_ {
+        WaylandArgType::Int => CppType::CppI32,
+        WaylandArgType::Uint => CppType::CppU32,
+        WaylandArgType::Fixed => CppType::CppF64,
+        WaylandArgType::String => CppType::String,
+        WaylandArgType::Object => CppType::Object(snake_to_pascal(
+            arg.interface
+                .clone()
+                .expect("Object is missing interface")
+                .as_str(),
+        )),
+        WaylandArgType::Array => CppType::Array,
+        WaylandArgType::Fd => CppType::Fd,
+        _ => panic!("Unhandled argument type"),
+    };
+
+    CppArg::new(type_, arg.name.clone())
+}
+
 fn wayland_request_to_cpp_method(method: &WaylandRequest) -> CppMethod {
     // Methods will have a return value in C++ if they are creating a new Wayland object.
-    // Otherwsie they always return void.
+    // Otherwise they always return void.
     let retval = match method
         .args
         .iter()
@@ -623,30 +656,27 @@ fn wayland_request_to_cpp_method(method: &WaylandRequest) -> CppMethod {
         None => None,
     };
 
-    let mut cpp_method = CppMethod::new(method.name.clone(), retval);
+    let mut cpp_method = CppMethod::new(method.name.clone(), retval, true);
     let args = method
         .args
         .iter()
         .filter(|arg| arg.type_ != WaylandArgType::NewId)
-        .map(|arg| {
-            let type_ = match arg.type_ {
-                WaylandArgType::Int => CppType::CppI32,
-                WaylandArgType::Uint => CppType::CppU32,
-                WaylandArgType::Fixed => CppType::CppF64,
-                WaylandArgType::String => CppType::String,
-                WaylandArgType::Object => CppType::Object(snake_to_pascal(
-                    arg.interface
-                        .clone()
-                        .expect("Object is missing interface")
-                        .as_str(),
-                )),
-                WaylandArgType::Array => CppType::Array,
-                WaylandArgType::Fd => CppType::Fd,
-                _ => panic!("Unhandled argument type"),
-            };
+        .map(wayland_arg_to_cpp_arg);
 
-            CppArg::new(type_, arg.name.clone())
-        });
+    for arg in args {
+        cpp_method.add_arg(arg);
+    }
+
+    cpp_method
+}
+
+fn wayland_event_to_cpp_method(event: &WaylandEvent) -> CppMethod {
+    let mut cpp_method = CppMethod::new(format!("send_{}", event.name), None, false);
+    let args = event
+        .args
+        .iter()
+        .filter(|arg| arg.type_ != WaylandArgType::NewId)
+        .map(wayland_arg_to_cpp_arg);
 
     for arg in args {
         cpp_method.add_arg(arg);
