@@ -175,7 +175,7 @@ auto mf::KeyboardStateTracker::keysym_is_pressed(uint32_t keysym, bool case_inse
     if (!case_insensitive)
         return pressed_keysyms.contains(keysym);
 
-    // Only perform case mapping only for a-z and A-Z
+    // Perform case mapping only for a-z and A-Z
     uint32_t lower = keysym;
     uint32_t upper = keysym;
 

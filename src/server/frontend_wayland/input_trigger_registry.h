@@ -54,7 +54,7 @@ public:
     /// adjustment.
     ///
     /// `protocol_mods` is a mask containing the protocol modifier flags (e.g.
-    /// Shift, Ctrl, Alt) as defined in ext_input_trigger_registeration_v1. A
+    /// Shift, Ctrl, Alt) as defined in ext_input_trigger_registration_v1. A
     /// client could request a trigger with an uppercase letter keysym, but not
     /// provide a shift modifier. "Ctrl + E" for example. The keysym
     /// corresponding to "E" only appears in input events if Shift is pressed.
