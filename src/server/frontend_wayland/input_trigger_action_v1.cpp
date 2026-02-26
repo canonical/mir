@@ -16,6 +16,7 @@
 
 #include "input_trigger_action_v1.h"
 #include "input_trigger_registry.h"
+#include "mir/wayland/weak.h"
 
 #include <mir/wayland/protocol_error.h>
 
@@ -37,11 +38,9 @@ public:
 };
 }
 
-mf::InputTriggerActionV1::InputTriggerActionV1(std::shared_ptr<InputTriggerTokenData> const& token_data, wl_resource* id) :
-    wayland::InputTriggerActionV1{id, Version<1>{}},
-    token_data{token_data}
+mf::InputTriggerActionV1::InputTriggerActionV1(wl_resource* id) :
+    wayland::InputTriggerActionV1{id, Version<1>{}}
 {
-    token_data->add_action(wayland::make_weak<InputTriggerActionV1 const>(this));
 }
 
 class InputTriggerActionManagerV1 : public mw::InputTriggerActionManagerV1::Global
@@ -66,9 +65,10 @@ private:
                 return;
             }
 
-            if (auto const& token_data = input_trigger_registry->get_token_data(token))
+            if (auto const& action_group = input_trigger_registry->get_action_group(token))
             {
-                new mf::InputTriggerActionV1 const{token_data, id};
+                auto const action = new mf::InputTriggerActionV1 const {id};
+                action_group->add(mw::make_weak(action));
             }
             else
             {

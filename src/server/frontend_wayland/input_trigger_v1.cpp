@@ -132,6 +132,37 @@ auto mf::InputTriggerModifiers::from_protocol(uint32_t protocol_mods, bool shift
     return InputTriggerModifiers{result};
 }
 
+void mf::InputTriggerV1::associate_with_action_group(std::shared_ptr<frontend::ActionGroup> action_group)
+{
+    this->action_group = action_group;
+}
+
+void mf::InputTriggerV1::unassociate_with_action_group(std::shared_ptr<frontend::ActionGroup> action_group)
+{
+    if (this->action_group == action_group)
+        this->action_group.reset();
+}
+
+bool mf::InputTriggerV1::active() const
+{
+    if(action_group)
+        return action_group->any_trigger_active();
+
+    return false;
+}
+
+void mf::InputTriggerV1::begin(std::string const& token, uint32_t wayland_timestamp)
+{
+    if (action_group)
+        action_group->begin(token, wayland_timestamp);
+}
+
+void mf::InputTriggerV1::end(std::string const& token, uint32_t wayland_timestamp)
+{
+    if (action_group)
+        action_group->end(token, wayland_timestamp);
+}
+
 auto mf::InputTriggerV1::from(struct wl_resource* resource) -> InputTriggerV1*
 {
     if (auto* frontend_trigger = wayland::InputTriggerV1::from(resource))

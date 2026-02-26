@@ -66,58 +66,21 @@ private:
     std::unordered_set<uint32_t> pressed_scancodes;
 };
 
-
-// All the data associated with a token that we need to keep track of.
-class InputTriggerTokenData
+// TODO rename to InputTriggerActionGroup?
+class ActionGroup
 {
 public:
-    void add_action(wayland::Weak<frontend::InputTriggerActionV1 const> action);
+    void add(wayland::Weak<frontend::InputTriggerActionV1 const> action);
 
-    void add_trigger(wayland::Weak<frontend::InputTriggerV1 const> trigger);
-    void drop_trigger(wayland::Weak<frontend::InputTriggerV1 const> trigger);
+    auto any_trigger_active() const -> bool;
 
-    bool has_trigger(frontend::InputTriggerV1 const* trigger) const;
-
-    bool matches(MirEvent const& event, KeyboardStateTracker const& keyboard_state) const;
-
-    bool any_trigger_active() const;
-    void begin(std::string const& activation_token, uint32_t wayland_timestamp);
     void end(std::string const& activation_token, uint32_t wayland_timestamp);
 
+    void begin(std::string const& activation_token, uint32_t wayland_timestamp);
+
 private:
-    using TriggerList = std::vector<wayland::Weak<InputTriggerV1 const>>;
-
-    class ActionGroup
-    {
-    public:
-        void add(wayland::Weak<frontend::InputTriggerActionV1 const> action);
-
-        auto any_trigger_active() const -> bool;
-
-        void end(std::string const& activation_token, uint32_t wayland_timestamp);
-
-        void begin(std::string const& activation_token, uint32_t wayland_timestamp);
-
-        bool empty() const;
-
-    private:
-        std::vector<wayland::Weak<InputTriggerActionV1 const>> actions;
-        std::optional<std::pair<uint32_t, std::string>> timestamp_and_trigger;
-    };
-
-    // Used by action controls to add or drop triggers, and to check for
-    // matches when input events arrive.
-    TriggerList trigger_list;
-
-    // List of actions associated with the token. Used to send begin
-    // and end events when matches are made and broken.
-    ActionGroup action_group;
-
-    // If no actions are yet associated with the token, triggers are
-    // added and dropped from this pending list, which is copied over to
-    // the trigger list once the first action is added. After that,
-    // triggers are added and dropped from the trigger list directly.
-    TriggerList pending_triggers;
+    std::vector<wayland::Weak<InputTriggerActionV1 const>> actions;
+    std::optional<std::pair<uint32_t, std::string>> timestamp_and_trigger;
 };
 
 class InputTriggerRegistry
@@ -127,20 +90,21 @@ public:
 
     InputTriggerRegistry(std::shared_ptr<shell::TokenAuthority> const& token_authority, Executor& wayland_executor);
 
-    auto create_new_token_data() -> std::pair<Token, std::shared_ptr<InputTriggerTokenData>>;
+    auto create_new_action_group() -> std::pair<Token, std::shared_ptr<ActionGroup>>;
 
-    auto has_trigger(frontend::InputTriggerV1 const* trigger) -> bool;
+    auto register_trigger(frontend::InputTriggerV1* trigger) -> bool;
 
     bool matches_any_trigger(MirEvent const& event);
 
     bool was_revoked(Token const& token) const;
 
-    auto get_token_data(Token const& token) -> std::shared_ptr<InputTriggerTokenData> const;
+    auto get_action_group(Token const& token) -> std::shared_ptr<ActionGroup> const;
 
 private:
     void token_revoked(Token const& token);
 
-    std::unordered_map<Token, std::weak_ptr<InputTriggerTokenData>> token_data;
+    std::unordered_map<Token, std::weak_ptr<ActionGroup>> action_groups;
+    std::vector<wayland::Weak<InputTriggerV1>> triggers;
     RecentTokens revoked_tokens;
 
     std::shared_ptr<shell::TokenAuthority> const token_authority;

@@ -31,10 +31,7 @@ class InputTriggerTokenData;
 class InputTriggerActionV1 : public wayland::InputTriggerActionV1
 {
 public:
-    InputTriggerActionV1(std::shared_ptr<InputTriggerTokenData> const& token_data, wl_resource* id);
-
-private:
-    std::shared_ptr<InputTriggerTokenData> const token_data;
+    InputTriggerActionV1(wl_resource* id);
 };
 
 auto create_input_trigger_action_manager_v1(
