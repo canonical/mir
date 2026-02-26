@@ -106,11 +106,11 @@ auto mf::KeyboardStateTracker::keysym_is_pressed(uint32_t keysym, bool case_inse
 
     if (keysym >= XKB_KEY_A && keysym <= XKB_KEY_Z)
     {
-        lower = keysym + (XKB_KEY_a - XKB_KEY_A);
+        lower = xkb_keysym_to_lower(keysym);
     }
     else if (keysym >= XKB_KEY_a && keysym <= XKB_KEY_z)
     {
-        upper = keysym - (XKB_KEY_a - XKB_KEY_A);
+        upper = xkb_keysym_to_upper(keysym);
     }
 
     return pressed_keysyms.contains(lower) || pressed_keysyms.contains(upper);
