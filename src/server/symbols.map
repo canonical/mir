@@ -380,13 +380,13 @@ global:
     mir::input::CursorObserver::?CursorObserver*;
     mir::input::CursorObserverMultiplexer::?CursorObserverMultiplexer*;
     mir::input::CursorObserverMultiplexer::CursorObserverMultiplexer*;
-    mir::input::CursorObserverMultiplexer::register_interest*;
-    mir::input::CursorObserverMultiplexer::register_early_observer*;
     mir::input::CursorObserverMultiplexer::cursor_moved_to*;
     mir::input::CursorObserverMultiplexer::image_set_to*;
     mir::input::CursorObserverMultiplexer::operator*;
     mir::input::CursorObserverMultiplexer::pointer_unusable*;
     mir::input::CursorObserverMultiplexer::pointer_usable*;
+    mir::input::CursorObserverMultiplexer::register_early_observer*;
+    mir::input::CursorObserverMultiplexer::register_interest*;
     mir::input::Device::?Device*;
     mir::input::Device::Device*;
     mir::input::EventFilter::?EventFilter*;
@@ -472,6 +472,7 @@ global:
     mir::scene::ApplicationNotRespondingDetectorWrapper::unregister_session*;
     mir::scene::BasicSurface::?BasicSurface*;
     mir::scene::BasicSurface::BasicSurface*;
+    mir::scene::BasicSurface::alpha*;
     mir::scene::BasicSurface::application_id*;
     mir::scene::BasicSurface::clip_area*;
     mir::scene::BasicSurface::configure*;
@@ -999,9 +1000,9 @@ global:
     non-virtual?thunk?to?mir::input::CursorObserver::?CursorObserver*;
     non-virtual?thunk?to?mir::input::CursorObserverMultiplexer::?CursorObserverMultiplexer*;
     non-virtual?thunk?to?mir::input::CursorObserverMultiplexer::cursor_moved_to*;
+    non-virtual?thunk?to?mir::input::CursorObserverMultiplexer::image_set_to*;
     non-virtual?thunk?to?mir::input::CursorObserverMultiplexer::pointer_unusable*;
     non-virtual?thunk?to?mir::input::CursorObserverMultiplexer::pointer_usable*;
-    non-virtual?thunk?to?mir::input::CursorObserverMultiplexer::image_set_to*;
     non-virtual?thunk?to?mir::input::Device::?Device*;
     non-virtual?thunk?to?mir::input::EventFilter::?EventFilter*;
     non-virtual?thunk?to?mir::input::InputDeviceHub::?InputDeviceHub*;
