@@ -98,26 +98,37 @@ auto mf::InputTriggerTokenData::ActionGroup::began() const -> bool
     return began_;
 }
 
+namespace
+{
+void iterate_and_erase_expired_actions(
+    std::vector<mir::wayland::Weak<mf::InputTriggerActionV1 const>>& actions, auto&& callback)
+{
+    std::erase_if(
+        actions,
+        [&](auto const& action)
+        {
+            if (!action)
+                return true; // Erase
+
+            callback(action.value());
+            return false; // Don't erase
+        });
+}
+}
+
 void mf::InputTriggerTokenData::ActionGroup::end(std::string const& activation_token, uint32_t wayland_timestamp)
 {
-    for (auto const& action : actions)
-    {
-        if (!action)
-            continue;
-        action.value().send_end_event(wayland_timestamp, activation_token);
-    }
+    iterate_and_erase_expired_actions(
+        actions, [&](auto const& valid_action) { valid_action.send_end_event(wayland_timestamp, activation_token); });
 
     began_ = false;
 }
 
 void mf::InputTriggerTokenData::ActionGroup::begin(std::string const& activation_token, uint32_t wayland_timestamp)
 {
-    for (auto const& action : actions)
-    {
-        if (!action)
-            continue;
-        action.value().send_begin_event(wayland_timestamp, activation_token);
-    }
+
+    iterate_and_erase_expired_actions(
+        actions, [&](auto const& valid_action) { valid_action.send_begin_event(wayland_timestamp, activation_token); });
 
     began_ = true;
 }
