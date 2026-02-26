@@ -124,7 +124,7 @@ auto mf::KeyboardStateTracker::scancode_is_pressed(uint32_t scancode) const -> b
 void mf::ActionGroup::add(wayland::Weak<wayland::InputTriggerActionV1 const> action)
 {
     actions.push_back(action);
-    if(timestamp_and_trigger)
+    if (timestamp_and_trigger)
     {
         auto const& [timestamp, token] = timestamp_and_trigger.value();
         action.value().send_begin_event(timestamp, token);

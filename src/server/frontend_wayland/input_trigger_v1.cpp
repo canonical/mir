@@ -259,7 +259,7 @@ void mf::InputTriggerV1::unassociate_with_action_group(std::shared_ptr<frontend:
 
 bool mf::InputTriggerV1::active() const
 {
-    if(action_group)
+    if (action_group)
         return action_group->any_trigger_active();
 
     return false;
