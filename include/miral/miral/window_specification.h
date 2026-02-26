@@ -646,7 +646,7 @@ public:
     /// This value is between [0, 1].
     ///
     /// \returns the alpha
-    /// \remark Since MirAL 5.6
+    /// \remark Since MirAL 5.7
     auto alpha() -> mir::optional_value<float>&;
 
     /// The alpha of the window.
