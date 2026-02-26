@@ -98,7 +98,7 @@ void mf::InputTriggerTokenData::ActionGroup::add(wayland::Weak<frontend::InputTr
     }
 }
 
-auto mf::InputTriggerTokenData::ActionGroup::began() const -> bool
+auto mf::InputTriggerTokenData::ActionGroup::any_trigger_active() const -> bool
 {
     return timestamp_and_trigger.has_value();
 }
@@ -184,9 +184,9 @@ bool mf::InputTriggerTokenData::matches(MirEvent const& event, KeyboardStateTrac
         [&](auto const& trigger) { return trigger.value().matches(event, keyboard_state); });
 }
 
-bool mf::InputTriggerTokenData::began() const
+bool mf::InputTriggerTokenData::any_trigger_active() const
 {
-    return action_group.began();
+    return action_group.any_trigger_active();
 }
 
 void mf::InputTriggerTokenData::begin(std::string const& activation_token, uint32_t wayland_timestamp)
@@ -280,7 +280,7 @@ bool mf::InputTriggerRegistry::matches_any_trigger(MirEvent const& event)
 
         if (!matched)
         {
-            if (e->began())
+            if (e->any_trigger_active())
             {
                 auto const activation_token = std::string{token_authority->issue_token(std::nullopt)};
                 auto const timestamp = mir_input_event_get_wayland_timestamp(event.to_input());
@@ -290,7 +290,7 @@ bool mf::InputTriggerRegistry::matches_any_trigger(MirEvent const& event)
             continue;
         }
 
-        if (!e->began())
+        if (!e->any_trigger_active())
         {
             auto const activation_token = std::string{token_authority->issue_token(std::nullopt)};
             auto const timestamp = mir_input_event_get_wayland_timestamp(event.to_input());

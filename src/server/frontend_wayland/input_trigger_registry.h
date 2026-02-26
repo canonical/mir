@@ -80,7 +80,7 @@ public:
 
     bool matches(MirEvent const& event, KeyboardStateTracker const& keyboard_state) const;
 
-    bool began() const;
+    bool any_trigger_active() const;
     void begin(std::string const& activation_token, uint32_t wayland_timestamp);
     void end(std::string const& activation_token, uint32_t wayland_timestamp);
 
@@ -92,7 +92,7 @@ private:
     public:
         void add(wayland::Weak<frontend::InputTriggerActionV1 const> action);
 
-        auto began() const -> bool;
+        auto any_trigger_active() const -> bool;
 
         void end(std::string const& activation_token, uint32_t wayland_timestamp);
 
