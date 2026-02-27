@@ -532,6 +532,7 @@ global:
     mir::scene::BasicSurface::set_tiled_edges*;
     mir::scene::BasicSurface::set_transformation*;
     mir::scene::BasicSurface::set_visible_on_lock_screen*;
+    mir::scene::BasicSurface::transformation*;
     mir::scene::BasicSurface::set_window_margins*;
     mir::scene::BasicSurface::show*;
     mir::scene::BasicSurface::state*;
@@ -1107,6 +1108,7 @@ global:
     non-virtual?thunk?to?mir::scene::BasicSurface::set_tiled_edges*;
     non-virtual?thunk?to?mir::scene::BasicSurface::set_transformation*;
     non-virtual?thunk?to?mir::scene::BasicSurface::set_visible_on_lock_screen*;
+    non-virtual?thunk?to?mir::scene::BasicSurface::transformation*;
     non-virtual?thunk?to?mir::scene::BasicSurface::set_window_margins*;
     non-virtual?thunk?to?mir::scene::BasicSurface::show*;
     non-virtual?thunk?to?mir::scene::BasicSurface::state*;

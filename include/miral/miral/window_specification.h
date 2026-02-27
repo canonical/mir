@@ -25,6 +25,8 @@
 #include <mir/int_wrapper.h>
 #include <mir/flags.h>
 
+#include <glm/glm.hpp>
+
 #include <memory>
 
 namespace mir
@@ -656,6 +658,22 @@ public:
     /// \returns the alpha
     /// \remark Since MirAL 5.7
     auto alpha() const -> mir::optional_value<float> const&;
+
+    /// The transformation matrix of the window.
+    ///
+    /// By default, the identity matrix is used.
+    ///
+    /// \returns the transformation matrix
+    /// \remark Since MirAL 5.7
+    auto transformation() -> mir::optional_value<glm::mat4>&;
+
+    /// The transformation matrix of the window.
+    ///
+    /// By default, the identity matrix is used.
+    ///
+    /// \returns the transformation matrix
+    /// \remark Since MirAL 5.7
+    auto transformation() const -> mir::optional_value<glm::mat4> const&;
 
     /// Create a [mir::shell::SurfaceSpecification] from this window spec.
     ///

@@ -1235,6 +1235,12 @@ void miral::BasicWindowManager::modify_window(WindowInfo& window_info, WindowSpe
 
     if (modifications.confine_pointer().is_set())
         std::shared_ptr<scene::Surface>(window)->set_confine_pointer_state(modifications.confine_pointer().value());
+
+    if (modifications.alpha().is_set())
+        std::shared_ptr<scene::Surface>(window)->set_alpha(modifications.alpha().value());
+
+    if (modifications.transformation().is_set())
+        std::shared_ptr<scene::Surface>(window)->set_transformation(modifications.transformation().value());
 }
 
 auto miral::BasicWindowManager::info_for_window_id(std::string const& id) const -> WindowInfo&

@@ -24,6 +24,8 @@
 #include <mir/optional_value.h>
 #include <mir/flags.h>
 
+#include <glm/glm.hpp>
+
 namespace miral
 {
 /// Provides additional information about a #miral::Window.
@@ -384,6 +386,14 @@ struct WindowInfo
     /// \returns the window alpha
     /// \remark Since MirAL 5.7
     auto alpha() const -> float;
+
+    /// The transformation matrix of the window.
+    ///
+    /// By default, the identity matrix is used.
+    ///
+    /// \returns the transformation matrix
+    /// \remark Since MirAL 5.7
+    auto transformation() const -> glm::mat4;
 
 private:
     friend class BasicWindowManager;
