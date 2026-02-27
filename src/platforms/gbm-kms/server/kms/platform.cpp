@@ -17,6 +17,7 @@
 #include "platform.h"
 #include "buffer_allocator.h"
 #include "display.h"
+#include "kms/quirks.h"
 #include <mir/console_services.h>
 #include <mir/emergency_cleanup_registry.h>
 #include <mir/fd.h>
@@ -45,8 +46,8 @@
 #define MIR_LOG_COMPONENT "platform-graphics-gbm-kms"
 #include <mir/log.h>
 
-#include <fcntl.h>
 #include <boost/exception/all.hpp>
+#include <fcntl.h>
 
 namespace mg = mir::graphics;
 namespace mgg = mg::gbm;
@@ -275,6 +276,38 @@ private:
     mir::geometry::Size size_;
 };
 
+auto gbm_bo_allocate_no_modifiers_linear(gbm_device* gbm, mir::geometry::Size size, uint32_t format) -> struct gbm_bo*
+{
+
+    auto const gbm_bo = gbm_bo_create(
+        gbm, size.width.as_uint32_t(), size.height.as_uint32_t(), format, GBM_BO_USE_RENDERING | GBM_BO_USE_LINEAR);
+
+    if (!gbm_bo)
+    {
+        BOOST_THROW_EXCEPTION(
+            (std::system_error{errno, std::system_category(), "Failed to allocate GBM BO without modifiers"}));
+    }
+
+    return gbm_bo;
+}
+
+auto gbm_bo_allocate_with_modifiers_no_flags(gbm_device* gbm, std::span<uint64_t const> modifiers, mir::geometry::Size size, uint32_t format)
+{
+    auto const gbm_bo = gbm_bo_create_with_modifiers2(
+        gbm, size.width.as_uint32_t(), size.height.as_uint32_t(), format, modifiers.data(), modifiers.size(), 0);
+
+    if (!gbm_bo)
+    {
+        BOOST_THROW_EXCEPTION((
+            std::system_error{
+                errno,
+                std::system_category(),
+                "Failed to allocate GBM BO with modifiers and no flags"}));
+    }
+
+    return gbm_bo;
+}
+
 auto gbm_bo_with_modifiers_or_linear(
     gbm_device* gbm,
     mg::DRMFormat format,
@@ -282,41 +315,34 @@ auto gbm_bo_with_modifiers_or_linear(
     mir::geometry::Size size) -> std::unique_ptr<struct gbm_bo, decltype(&gbm_bo_destroy)>
 {
     errno = 0;
+
     auto gbm_bo = gbm_bo_create_with_modifiers2(
         gbm,
         size.width.as_uint32_t(), size.height.as_uint32_t(),
         format,
         modifiers.data(), modifiers.size(),
         GBM_BO_USE_RENDERING);
-    if (!gbm_bo && errno != ENOSYS)
-    {
-        BOOST_THROW_EXCEPTION((
-            std::system_error{
-                errno,
-                std::system_category(),
-                "Failed to allocate GBM bo"}));
-    }
-    else if (!gbm_bo)
-    {
-        // We get ENOSYS if the GBM implementation can't handle modifiers
-        if (std::find(modifiers.begin(), modifiers.end(), DRM_FORMAT_MOD_LINEAR) == modifiers.end())
-        {
-            // Shouldn't happen, but if LINEAR isn't one of the requested modifiers we can't allocate something compatible
-            BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to allocate GBM bo: non-linear modifier requested, but implementation does not support modifiers"}));
-        }
 
-        gbm_bo = gbm_bo_create(
-            gbm,
-            size.width.as_uint32_t(), size.height.as_uint32_t(),
-            format,
-            GBM_BO_USE_RENDERING | GBM_BO_USE_LINEAR);
-        if (!gbm_bo)
+    if (!gbm_bo)
+    {
+        switch (errno)
         {
-            BOOST_THROW_EXCEPTION((
-                std::system_error{
-                    errno,
-                    std::system_category(),
-                    "Failed to allocate GBM bo without modifiers"}));
+        case ENOSYS:
+            // We get ENOSYS if the GBM implementation can't handle modifiers
+            if (!std::ranges::contains(modifiers, DRM_FORMAT_MOD_LINEAR))
+            {
+                // Shouldn't happen, but if LINEAR isn't one of the requested modifiers we can't allocate
+                // something compatible
+                BOOST_THROW_EXCEPTION(
+                    (std::runtime_error{"Failed to allocate GBM bo: non-linear modifier requested, but "
+                                        "implementation does not support modifiers"}));
+            }
+            gbm_bo = gbm_bo_allocate_no_modifiers_linear(gbm, size, format);
+            break;
+        default:
+            // Special case: Nvidia fails to allocate with flags
+            gbm_bo = gbm_bo_allocate_with_modifiers_no_flags(gbm, modifiers, size, format);
+            break;
         }
     }
 
@@ -368,12 +394,15 @@ auto maybe_make_dmabuf_provider(
     std::shared_ptr<gbm_device> gbm,
     EGLDisplay dpy,
     std::shared_ptr<mg::EGLExtensions> egl_extensions,
-    std::shared_ptr<mg::common::EGLContextExecutor> egl_delegate)
+    std::shared_ptr<mg::common::EGLContextExecutor> egl_delegate,
+    std::shared_ptr<mgg::GbmQuirks> quirks)
     -> std::shared_ptr<mg::DMABufEGLProvider>
 {
     try
     {
         mg::EGLExtensions::EXTImageDmaBufImportModifiers modifier_ext{dpy};
+        auto strategy_selector = quirks->make_transfer_strategy_selector();
+
         return std::make_shared<mg::DMABufEGLProvider>(
             dpy,
             std::move(egl_extensions),
@@ -383,7 +412,8 @@ auto maybe_make_dmabuf_provider(
                 -> std::shared_ptr<mg::DMABufBuffer>
             {
                 return alloc_dma_buf(gbm.get(), format, modifiers, size);
-            });
+            },
+            std::move(strategy_selector));
     }
     catch (std::runtime_error const& error)
     {
@@ -415,7 +445,7 @@ mgg::RenderingPlatform::RenderingPlatform(
       bound_display{std::visit(display_provider_or_nothing{}, hw)},
       share_ctx{std::make_unique<SurfacelessEGLContext>(dpy)},
       egl_delegate{std::make_shared<mg::common::EGLContextExecutor>(share_ctx->make_share_context())},
-      dmabuf_provider{maybe_make_dmabuf_provider(device, share_ctx->egl_display(), std::make_shared<mg::EGLExtensions>(), egl_delegate)},
+      dmabuf_provider{maybe_make_dmabuf_provider(device, share_ctx->egl_display(), std::make_shared<mg::EGLExtensions>(), egl_delegate, quirks)},
       quirks{std::move(quirks)}
 {
 }

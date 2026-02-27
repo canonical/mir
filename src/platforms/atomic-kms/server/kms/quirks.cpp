@@ -65,8 +65,15 @@ public:
             std::vector<std::string> tokens;
             boost::split(tokens, option_value, boost::is_any_of(":"));
 
-            auto static const available_options = std::set<std::string>{
-                "skip", "allow", "disable-kms-probe", "gbm-surface-has-free-buffers"};
+            auto static const available_options = std::unordered_map<std::string, mgc::OptionStructure>{
+                // option::{driver,devnode}:<specifier>[:value]
+                {"skip", mgc::OptionStructure{}},
+                {"allow", mgc::OptionStructure{}},
+                {"disable-kms-probe", mgc::OptionStructure{}},
+                {"egl-destroy-surface", mgc::OptionStructure{}},
+                {"gbm-surface-has-free-buffers", mgc::OptionStructure{}},
+            };
+
             auto const structure = mgc::validate_structure(tokens, available_options);
             if(!structure)
                 return false;

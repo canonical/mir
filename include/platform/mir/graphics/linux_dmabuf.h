@@ -59,12 +59,23 @@ class DMABufEGLProvider : public std::enable_shared_from_this<DMABufEGLProvider>
 public:
     using EGLImageAllocator =
         std::function<std::shared_ptr<DMABufBuffer>(DRMFormat, std::span<uint64_t const>, geometry::Size)>;
+
+    enum class BufferTransferStrategy
+    {
+        cpu,
+        dma,
+    };
+
+    using TransferStrategySelector =
+        std::function<BufferTransferStrategy(std::string_view source_vendor, std::string_view dest_vendor)>;
+
     DMABufEGLProvider(
         EGLDisplay dpy,
         std::shared_ptr<EGLExtensions> egl_extensions,
         EGLExtensions::EXTImageDmaBufImportModifiers const& dmabuf_ext,
         std::shared_ptr<common::EGLContextExecutor> egl_delegate,
-        EGLImageAllocator allocate_importable_image);
+        EGLImageAllocator allocate_importable_image,
+        TransferStrategySelector strategy_selector);
 
     ~DMABufEGLProvider();
 
@@ -85,19 +96,25 @@ public:
     void validate_import(DMABufBuffer const& dma_buf);
 
     auto as_texture(
-        std::shared_ptr<NativeBufferBase> buffer)
+        std::shared_ptr<Buffer> buffer)
         -> std::shared_ptr<gl::Texture>;
 
      auto supported_formats() const -> DmaBufFormatDescriptors const&;
-private:
-    EGLDisplay const dpy;
-    std::shared_ptr<EGLExtensions> const egl_extensions;
-    std::optional<EGLExtensions::MESADmaBufExport> const dmabuf_export_ext;
-    dev_t const devnum_;
-    std::unique_ptr<DmaBufFormatDescriptors> const formats;
-    std::shared_ptr<common::EGLContextExecutor> const egl_delegate;
-    EGLImageAllocator allocate_importable_image;
-    std::unique_ptr<EGLBufferCopier> const blitter;
+ private:
+     class DmabufTexBuffer;
+     auto cpu_transfer(std::shared_ptr<DmabufTexBuffer> const& dmabuf_tex) -> std::shared_ptr<gl::Texture>;
+     auto dma_transfer(std::shared_ptr<DmabufTexBuffer> const& dmabuf_tex) -> std::shared_ptr<gl::Texture>;
+
+     EGLDisplay const dpy;
+     std::string const vendor_drm_name;
+     std::shared_ptr<EGLExtensions> const egl_extensions;
+     std::optional<EGLExtensions::MESADmaBufExport> const dmabuf_export_ext;
+     dev_t const devnum_;
+     std::unique_ptr<DmaBufFormatDescriptors> const formats;
+     std::shared_ptr<common::EGLContextExecutor> const egl_delegate;
+     EGLImageAllocator allocate_importable_image;
+     std::unique_ptr<EGLBufferCopier> const blitter;
+     TransferStrategySelector const strategy_selector_;
 };
 
 class LinuxDmaBuf : public mir::wayland::LinuxDmabufV1::Global
