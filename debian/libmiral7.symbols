@@ -729,3 +729,6 @@ libmiral.so.7 libmiral7 #MINVER#
  (c++)"miral::WindowInfo::alpha() const@MIRAL_5.7" 5.7.0
  (c++)"miral::WindowSpecification::alpha() const@MIRAL_5.7" 5.7.0
  (c++)"miral::WindowSpecification::alpha()@MIRAL_5.7" 5.7.0
+ (c++)"miral::WindowInfo::transformation() const@MIRAL_5.7" 5.7.0
+ (c++)"miral::WindowSpecification::transformation() const@MIRAL_5.7" 5.7.0
+ (c++)"miral::WindowSpecification::transformation()@MIRAL_5.7" 5.7.0

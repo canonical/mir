@@ -459,6 +459,11 @@ void ms::BasicSurface::set_mirror_mode(MirMirrorMode mirror_mode)
     observers->mirror_mode_set_to(this, mirror_mode);
 }
 
+glm::mat4 ms::BasicSurface::transformation() const
+{
+    return synchronised_state.lock()->transformation_matrix;
+}
+
 void ms::BasicSurface::set_transformation(glm::mat4 const& t)
 {
     synchronised_state.lock()->transformation_matrix = t;
