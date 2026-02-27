@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "input_trigger_registry.h"
 #include "surface_registry.h"
 #include "wayland_wrapper.h"
 
@@ -144,14 +145,21 @@ class mf::WlSeat::KeyboardObserver
     : public input::KeyboardObserver
 {
 public:
-    KeyboardObserver(WlSeat& seat, std::shared_ptr<mf::SurfaceRegistry> const surface_registry) :
+    KeyboardObserver(
+        WlSeat& seat,
+        std::shared_ptr<mf::SurfaceRegistry> const surface_registry,
+        std::shared_ptr<InputTriggerRegistry> const& input_trigger_registry) :
         seat{seat},
-        surface_registry{surface_registry}
+        surface_registry{surface_registry},
+        input_trigger_registry{input_trigger_registry}
     {
     }
 
     void keyboard_event(std::shared_ptr<MirEvent const> const& event) override
     {
+        if (input_trigger_registry->matches_any_trigger(*event))
+            return;
+
         if (seat.focused_surface)
         {
             seat.for_each_listener(seat.focused_surface.value().client, [&](WlKeyboard* keyboard)
@@ -176,6 +184,7 @@ public:
 private:
     WlSeat& seat;
     std::shared_ptr<mf::SurfaceRegistry> const surface_registry;
+    std::shared_ptr<mf::InputTriggerRegistry> const input_trigger_registry;
 };
 
 class mf::WlSeat::Instance : public wayland::Seat
@@ -199,7 +208,8 @@ mf::WlSeat::WlSeat(
     std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> const& keyboard_observer_registrar,
     std::shared_ptr<mi::Seat> const& seat,
     std::shared_ptr<shell::AccessibilityManager> const& accessibility_manager,
-    std::shared_ptr<mf::SurfaceRegistry> const& surface_registry)
+    std::shared_ptr<mf::SurfaceRegistry> const& surface_registry,
+    std::shared_ptr<mf::InputTriggerRegistry> const& input_trigger_registry)
     :   Global(display, Version<9>()),
         keymap{std::make_shared<input::ParameterKeymap>()},
         config_observer{
@@ -210,7 +220,7 @@ mf::WlSeat::WlSeat(
                     keymap = new_keymap;
                 })},
         keyboard_observer_registrar{keyboard_observer_registrar},
-        keyboard_observer{std::make_shared<KeyboardObserver>(*this, surface_registry)},
+        keyboard_observer{std::make_shared<KeyboardObserver>(*this, surface_registry, input_trigger_registry)},
         focus_listeners{std::make_shared<ListenerList<FocusListener>>()},
         pointer_listeners{std::make_shared<ListenerList<PointerEventDispatcher>>()},
         keyboard_listeners{std::make_shared<ListenerList<WlKeyboard>>()},
