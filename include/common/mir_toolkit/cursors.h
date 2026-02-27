@@ -92,6 +92,16 @@ extern char const* const mir_diagonal_resize_bottom_to_top_cursor_name;
 extern char const* const mir_diagonal_resize_top_to_bottom_cursor_name;
 
 /**
+ * The cursor used to indicate diagonal resizing a top left corner.
+ */
+extern char const* const mir_diagonal_resize_top_to_left_cursor_name;
+
+/**
+ * The cursor used to indicate diagonal resizing a bottom left corner.
+ */
+extern char const* const mir_diagonal_resize_bottom_to_left_cursor_name;
+
+/**
  * The cursor used to indicate resize with no directional constraint.
  */
 extern char const* const mir_omnidirectional_resize_cursor_name;

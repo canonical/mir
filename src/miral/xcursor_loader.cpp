@@ -114,6 +114,14 @@ xcursor_name_for_mir_cursor(std::string const& mir_cursor_name)
     {
         return "bottom_right_corner";
     }
+    else if (mir_cursor_name == mir_diagonal_resize_top_to_left_cursor_name)
+    {
+        return "top_left_corner";
+    }
+    else if (mir_cursor_name == mir_diagonal_resize_bottom_to_left_cursor_name)
+    {
+        return "bottom_left_corner";
+    }
     else if (mir_cursor_name == mir_omnidirectional_resize_cursor_name)
     {
         return "fleur";
