@@ -606,6 +606,85 @@ XcursorFileLoadImages (FILE *file, int size)
 #define XCURSORPATH "~/.icons:/usr/share/icons:/usr/share/pixmaps:~/.cursors:/usr/share/cursors/xorg-x11:"ICONDIR
 #endif
 
+static char *
+_XcursorBuildXdgPath (void)
+{
+    char const *home = getenv ("HOME");
+    char const *xdg_data_dirs = getenv ("XDG_DATA_DIRS");
+    char const *p;
+    char *dynamic_path;
+    char *p_out;
+    size_t len = 0;
+    size_t remaining;
+    int written;
+
+    if (!xdg_data_dirs || xdg_data_dirs[0] == '\0')
+        xdg_data_dirs = "/usr/local/share:/usr/share";
+
+    /* $HOME/.icons: */
+    if (home)
+        len += strlen (home) + strlen ("/.icons") + 1; /* +1 for ':' */
+
+    /* $XDG_DATA_DIRS/icons: (one entry per dir in XDG_DATA_DIRS) */
+    p = xdg_data_dirs;
+    while (p && *p)
+    {
+        char const *colon = strchr (p, ':');
+        len += (colon ? (size_t)(colon - p) : strlen (p)) + strlen ("/icons") + 1;
+        p = colon ? colon + 1 : NULL;
+    }
+
+    /* /usr/share/pixmaps: */
+    len += strlen ("/usr/share/pixmaps") + 1;
+
+    /* legacy fallback XCURSORPATH + '\0' */
+    len += strlen (XCURSORPATH) + 1;
+
+    /* This allocation persists for the lifetime of the process (intentional). */
+    dynamic_path = malloc (len);
+    if (!dynamic_path)
+        return NULL;
+
+    p_out = dynamic_path;
+    remaining = len;
+
+    if (home)
+    {
+        written = snprintf (p_out, remaining, "%s/.icons:", home);
+        if (written < 0 || (size_t)written >= remaining) goto error;
+        p_out += written;
+        remaining -= (size_t)written;
+    }
+
+    p = xdg_data_dirs;
+    while (p && *p)
+    {
+        char const *colon = strchr (p, ':');
+        if (colon)
+        {
+            written = snprintf (p_out, remaining, "%.*s/icons:", (int)(colon - p), p);
+            p = colon + 1;
+        }
+        else
+        {
+            written = snprintf (p_out, remaining, "%s/icons:", p);
+            p = NULL;
+        }
+        if (written < 0 || (size_t)written >= remaining) goto error;
+        p_out += written;
+        remaining -= (size_t)written;
+    }
+
+    written = snprintf (p_out, remaining, "/usr/share/pixmaps:%s", XCURSORPATH);
+    if (written < 0 || (size_t)written >= remaining) goto error;
+
+    return dynamic_path;
+
+error:
+    free (dynamic_path);
+    return NULL;
+}
+
 static const char *
 XcursorLibraryPath (void)
 {
@@ -615,7 +694,11 @@ XcursorLibraryPath (void)
     {
 	path = getenv ("XCURSOR_PATH");
 	if (!path)
-	    path = XCURSORPATH;
+	{
+	    path = _XcursorBuildXdgPath ();
+	    if (!path)
+	        path = XCURSORPATH;
+	}
     }
     return path;
 }
