@@ -10,7 +10,8 @@ set(CMAKE_CXX_FLAGS ${NO_NO_LTO_FLAGS})
 
 mir_add_wrapped_executable(mir_window_management_tests NOINSTALL
   test_minimal_window_manager.cpp
-  test_floating_window_manager.cpp)
+  test_floating_window_manager.cpp
+  test_mir_runner_access.cpp)
 
 target_include_directories(mir_window_management_tests
   PRIVATE
