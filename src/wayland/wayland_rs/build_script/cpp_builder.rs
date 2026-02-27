@@ -33,7 +33,24 @@ impl CppBuilder {
         self.includes.push(include);
     }
 
-    /// Output the C++ content to a string for the header file.
+    fn build_ret_string(method: &CppMethod) -> String {
+        method
+            .retval
+            .as_ref()
+            .map(cpp_type_to_string)
+            .unwrap_or("void".to_string())
+    }
+
+    fn build_arg_str(method: &CppMethod) -> String {
+        let args: Vec<String> = method
+            .args
+            .iter()
+            .map(|arg| format!("{} {}", cpp_type_to_string(&arg.cpp_type), arg.name))
+            .collect();
+        args.join(", ")
+    }
+
+    /// Generates the .h file contents corresponding to the information in this builder.
     pub fn to_cpp_header(&self) -> String {
         let mut result = String::new();
 
@@ -84,24 +101,20 @@ impl CppBuilder {
 
                 // Generate methods
                 for method in &class.methods {
-                    let args: Vec<String> = method
-                        .args
-                        .iter()
-                        .map(|arg| format!("{} {}", cpp_type_to_string(&arg.cpp_type), arg.name))
-                        .collect();
-                    let args_str = args.join(", ");
-
-                    let retstring = method
-                        .retval
-                        .as_ref()
-                        .map(cpp_type_to_string)
-                        .unwrap_or("void".to_string());
-
+                    let args_str = Self::build_arg_str(method);
+                    let retstring = Self::build_ret_string(method);
                     let method_name = sanitize_identifier(&method.name);
-                    result.push_str(&format!(
-                        "    virtual auto {}({}) -> {} = 0;\n",
-                        method_name, args_str, retstring
-                    ));
+                    if method.is_virtual {
+                        result.push_str(&format!(
+                            "    virtual auto {}({}) -> {} = 0;\n",
+                            method_name, args_str, retstring
+                        ));
+                    } else {
+                        result.push_str(&format!(
+                            "    auto {}({}) -> {};\n",
+                            method_name, args_str, retstring
+                        ));
+                    }
                 }
 
                 result.push_str("};\n\n");
@@ -119,13 +132,46 @@ impl CppBuilder {
         result
     }
 
+    /// Generates the .cpp file contents corresponding to the information in this builder.
+    pub fn to_cpp_source(&self, header_path: String) -> String {
+        let mut result = String::new();
+        result.push_str(&format!("#include \"{}\"\n\n", header_path));
+
+        for namespace in &self.namespaces {
+            let namespace_str = namespace.name.join("::");
+            for class in &namespace.classes {
+                for method in &class.methods {
+                    if method.is_virtual {
+                        continue;
+                    }
+
+                    let args_str = Self::build_arg_str(method);
+                    let retstring = Self::build_ret_string(method);
+
+                    result.push_str(&format!(
+                        "auto {}::{}::{}({}) -> {}\n",
+                        namespace_str, class.name, method.name, args_str, retstring
+                    ));
+                    result.push_str("{\n");
+                    result.push_str("  // TODO: Call out to Rust code here.\n");
+
+                    result.push_str("}\n\n");
+                }
+            }
+        }
+
+        result
+    }
+
     /// Generate Rust binding declarations for this C++ header.
+    ///
+    /// The Rust side will use these bindings to call into C++.
     ///
     /// Returns a `Vec<TokenStream>` where each element contains the `include!` directive,
     /// type declaration, and methods for a single C++ class, intended to be placed inside
     /// an `unsafe extern "C++"` block. This method does NOT add the surrounding `mod ffi`
     /// or `unsafe extern "C++"` blocks; callers are responsible for adding those themselves.
-    pub fn to_rust_bindings(&self) -> Vec<TokenStream> {
+    pub fn to_rust_cpp_bindings(&self) -> Vec<TokenStream> {
         let header_name = Literal::string(format!("include/{}.h", self.filename).as_str());
         // Include the corresponding C++ header once per protocol/header.
         let mut tokens: Vec<TokenStream> = Vec::new();
@@ -254,14 +300,16 @@ pub struct CppMethod {
     pub name: String,
     pub args: Vec<CppArg>,
     pub retval: Option<CppType>,
+    pub is_virtual: bool,
 }
 
 impl CppMethod {
-    pub fn new(name: String, retval: Option<CppType>) -> CppMethod {
+    pub fn new(name: String, retval: Option<CppType>, is_virtual: bool) -> CppMethod {
         CppMethod {
             name,
             args: vec![],
             retval,
+            is_virtual,
         }
     }
 
