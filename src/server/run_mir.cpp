@@ -184,6 +184,12 @@ extern "C" [[noreturn]] void fatal_signal_cleanup(int sig, siginfo_t* info, void
 
     perform_emergency_cleanup();
 
+    // Unblock the signal that we're handling, so that if the handler tries to re-raise it (e.g. to dump core) then it will succeed.
+    sigset_t current_signal_mask;
+    sigemptyset(&current_signal_mask);
+    sigaddset(&current_signal_mask, sig);
+    sigprocmask(SIG_UNBLOCK, &current_signal_mask, nullptr);
+
     auto const old_handler = old_handlers.at(sig);
     sigaction(sig, old_handler, nullptr);
     if (old_handler->sa_flags & SA_SIGINFO)
