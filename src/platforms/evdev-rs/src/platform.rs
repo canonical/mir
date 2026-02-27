@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-use crate::device::{DeviceObserverRs, InputDeviceRs, LibinputLoopState};
+use crate::device::{LibinputDevice, LibinputDeviceObserver, LibinputDeviceState};
 use crate::event_processing::process_libinput_events;
 use crate::libinput_interface::LibinputInterfaceImpl;
 use cxx;
@@ -30,7 +30,7 @@ pub struct PlatformRs {
     /// The input device registry is used for registering and unregistering input devices.
     device_registry: cxx::SharedPtr<crate::InputDeviceRegistry>,
 
-    state: Option<Arc<Mutex<LibinputLoopState>>>,
+    state: Option<Arc<Mutex<LibinputDeviceState>>>,
 }
 
 impl PlatformRs {
@@ -69,7 +69,7 @@ impl PlatformRs {
             return;
         }
 
-        self.state = Some(Arc::new(Mutex::new(LibinputLoopState {
+        self.state = Some(Arc::new(Mutex::new(LibinputDeviceState {
             libinput: libinput,
             known_devices: Vec::new(),
             next_device_id: 0,
@@ -132,11 +132,11 @@ impl PlatformRs {
         self.state = None;
     }
 
-    pub fn create_device_observer(&self) -> Box<DeviceObserverRs> {
-        Box::new(DeviceObserverRs::new())
+    pub fn create_device_observer(&self) -> Box<LibinputDeviceObserver> {
+        Box::new(LibinputDeviceObserver::new())
     }
 
-    pub fn create_input_device(&mut self, device_id: i32) -> Box<InputDeviceRs> {
+    pub fn create_input_device(&mut self, device_id: i32) -> Box<LibinputDevice> {
         let state_arc = match self.state.as_mut() {
             Some(s) => s.clone(),
             None => {
@@ -158,7 +158,7 @@ impl PlatformRs {
                     );
                 }
 
-                Arc::new(Mutex::new(LibinputLoopState {
+                Arc::new(Mutex::new(LibinputDeviceState {
                     libinput,
                     known_devices: Vec::new(),
                     next_device_id: 0,
@@ -170,7 +170,7 @@ impl PlatformRs {
             }
         };
 
-        Box::new(InputDeviceRs {
+        Box::new(LibinputDevice {
             device_id,
             state: state_arc,
             bridge: self.bridge.clone(),
