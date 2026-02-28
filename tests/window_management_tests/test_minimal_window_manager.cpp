@@ -736,7 +736,7 @@ TEST_F(MinimalWindowManagerWithThreeWindows,
 }
 
 TEST_F(MinimalWindowManagerWithThreeWindows,
-    minimizing_the_active_window_selects_window_in_same_workspace_if_avalable)
+    minimizing_the_active_window_selects_window_in_same_workspace_if_available)
 {
     auto const workspace1 = tools().create_workspace();
     auto const workspace2 = tools().create_workspace();
