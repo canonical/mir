@@ -5,9 +5,9 @@ add_custom_command(
   OUTPUT "${GENERATED_HEADER}" "${GENERATED_SRC}"
   VERBATIM
   COMMAND "sh" "-c"
-  "${CMAKE_BINARY_DIR}/bin/mir_wayland_generator wl_ ${PROTOCOL_PATH} header > ${GENERATED_HEADER}"
+  "${MIR_WAYLAND_GENERATOR_EXECUTABLE} wl_ ${PROTOCOL_PATH} header > ${GENERATED_HEADER}"
   COMMAND "sh" "-c"
-  "${CMAKE_BINARY_DIR}/bin/mir_wayland_generator wl_ ${PROTOCOL_PATH} source > ${GENERATED_SRC}"
+  "${MIR_WAYLAND_GENERATOR_EXECUTABLE} wl_ ${PROTOCOL_PATH} source > ${GENERATED_SRC}"
   DEPENDS mir_wayland_generator "${PROTOCOL_PATH}"
 )
 add_custom_target(wayland_generator_test_generated_files ALL DEPENDS "${GENERATED_SRC}" "${GENERATED_HEADER}")
