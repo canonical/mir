@@ -315,6 +315,14 @@ function (mir_check_no_unreleased_symbols TARGET DEPENDENT_TARGET)
   add_dependencies(${DEPENDENT_TARGET} ${TARGET_NAME})
 endfunction()
 
+set(
+  MIR_WAYLAND_GENERATOR_EXECUTABLE
+  "${CMAKE_BINARY_DIR}/bin/mir_wayland_generator"
+  CACHE
+  STRING
+  "Location of an externally supplied mir_wayland_generator executable"
+)
+
 function (mir_generate_protocol_wrapper TARGET_NAME NAME_PREFIX PROTOCOL_FILE)
   if (NAME_PREFIX STREQUAL "")
     set(NAME_PREFIX "@") # won't match anything
@@ -327,9 +335,9 @@ function (mir_generate_protocol_wrapper TARGET_NAME NAME_PREFIX PROTOCOL_FILE)
     OUTPUT "${OUTPUT_PATH_HEADER}" "${OUTPUT_PATH_SRC}"
     VERBATIM
     COMMAND "sh" "-c"
-    "${CMAKE_BINARY_DIR}/bin/mir_wayland_generator ${NAME_PREFIX} ${PROTOCOL_PATH} header > ${OUTPUT_PATH_HEADER}"
+    "${MIR_WAYLAND_GENERATOR_EXECUTABLE} ${NAME_PREFIX} ${PROTOCOL_PATH} header > ${OUTPUT_PATH_HEADER}"
     COMMAND "sh" "-c"
-    "${CMAKE_BINARY_DIR}/bin/mir_wayland_generator ${NAME_PREFIX} ${PROTOCOL_PATH} source > ${OUTPUT_PATH_SRC}"
+    "${MIR_WAYLAND_GENERATOR_EXECUTABLE} ${NAME_PREFIX} ${PROTOCOL_PATH} source > ${OUTPUT_PATH_SRC}"
     DEPENDS mir_wayland_generator "${PROTOCOL_PATH}"
   )
   target_sources("${TARGET_NAME}" PRIVATE "${OUTPUT_PATH_HEADER}" "${OUTPUT_PATH_SRC}")
