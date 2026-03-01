@@ -47,6 +47,7 @@
 
 #include <chrono>
 #include <cstdlib>
+#include <format>
 #include <linux/input-event-codes.h>
 
 #include <miral/sticky_keys.h>
@@ -105,14 +106,13 @@ catch (mir::AbnormalExit const& /*error*/)
 }
 catch (std::exception const& error)
 {
-    char const command_fmt[] = "/usr/share/apport/recoverable_problem --pid %d";
-    char command[sizeof(command_fmt)+32];
-    snprintf(command, sizeof(command), command_fmt, getpid());
+    auto const command = std::format(
+        "/usr/share/apport/recoverable_problem --pid {}", getpid());
     char const options[] = "we";
     char const key[] = "UnhandledException";
     auto const value = boost::diagnostic_information(error);
 
-    if (auto const output = popen(command, options))
+    if (auto const output = popen(command.c_str(), options))
     {
         fwrite(key, sizeof(key), 1, output);            // the null terminator is used intentionally as a separator
         fwrite(value.c_str(), value.size(), 1, output);

@@ -15,8 +15,8 @@
  */
 
 #include <mir/logging/input_timestamp.h>
-#include <cstdio>
 #include <cstdlib>
+#include <format>
 
 using namespace std::chrono;
 
@@ -33,9 +33,8 @@ std::string mir::logging::input_timestamp(mir::time::Clock const& clock, std::ch
 
     char const* sign_suffix = (age_ns < 0) ? "in the future" : "ago";
 
-    char str[64];
-    snprintf(str, sizeof str, "%lld (%lld.%06lldms %s)",
-             when_ns, milliseconds, sub_milliseconds, sign_suffix);
+    auto const fmt_now = std::format("{} ({}.{:06}ms {})",            
+        when_ns, milliseconds, sub_milliseconds, sign_suffix);
 
-    return std::string(str);
+    return fmt_now;
 }

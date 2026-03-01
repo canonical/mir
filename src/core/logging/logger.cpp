@@ -18,6 +18,8 @@
 #include <mir/logging/logger.h>
 
 #include <iostream>
+#include <chrono>
+#include <format>
 #include <mutex>
 #include <cstdarg>
 #include <cstdio>
@@ -81,11 +83,10 @@ void ml::format_message(std::ostream& out, Severity severity, std::string const&
         "< - debug - > "
     };
 
-    timespec ts{};
-    clock_gettime(CLOCK_REALTIME, &ts);
-    char now[32];
-    auto offset = strftime(now, sizeof(now), "%F %T", localtime(&ts.tv_sec));
-    snprintf(now+offset, sizeof(now)-offset, ".%06ld", ts.tv_nsec / 1000);
+    auto now = std::chrono::system_clock::now();
+    auto now_us = std::chrono::time_point_cast<std::chrono::microseconds>(now);
+    auto local = std::chrono::zoned_time{std::chrono::current_zone(), now_us};
+    std::string fmt_now = std::format("{:%F %T}", local);
 
     if (!out || !out.good())
     {
@@ -94,7 +95,7 @@ void ml::format_message(std::ostream& out, Severity severity, std::string const&
     }
 
     out << "["
-        << now
+        << fmt_now
         << "] "
         << lut[static_cast<int>(severity)]
         << component

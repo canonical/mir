@@ -26,6 +26,8 @@
 #include <mir/fatal.h>
 #include <mir/thread_name.h>
 
+#include <format>
+#include <string_view>
 #include <fcntl.h>
 #include <sys/socket.h>
 #include <sys/un.h>
@@ -36,17 +38,15 @@ namespace md = mir::dispatch;
 
 namespace
 {
-auto const x11_lock_fmt = "/tmp/.X%d-lock";
-auto const x11_socket_fmt = "/tmp/.X11-unix/X%d";
+constexpr std::string_view x11_lock_fmt = "/tmp/.X{}-lock";
+constexpr std::string_view const x11_socket_fmt = "/tmp/.X11-unix/X{}";
 
 // TODO this can be written with more modern c++
 int create_lockfile(int xdisplay)
 {
-    char lockfile[256];
+    auto const lockfile = std::format(x11_lock_fmt, xdisplay);
 
-    snprintf(lockfile, sizeof lockfile, x11_lock_fmt, xdisplay);
-
-    mir::Fd const fd{open(lockfile, O_WRONLY | O_CLOEXEC | O_CREAT | O_EXCL, 0444)};
+    mir::Fd const fd{open(lockfile.c_str(), O_WRONLY | O_CLOEXEC | O_CREAT | O_EXCL, 0444)};
     if (fd < 0)
         return EEXIST;
 
@@ -58,12 +58,11 @@ int create_lockfile(int xdisplay)
     bool const success_writing_to_lock_file = dprintf(fd, "%10lu\n", (unsigned long) getpid()) == 11;
 
     // Check if anyone else has created the socket (even though we have the lockfile)
-    char x11_socket[256];
-    snprintf(x11_socket, sizeof x11_socket, x11_socket_fmt, xdisplay);
+    auto const x11_socket = std::format(x11_socket_fmt, xdisplay);
 
-    if (!success_writing_to_lock_file || access(x11_socket, F_OK) == 0)
+    if (!success_writing_to_lock_file || access(x11_socket.c_str(), F_OK) == 0)
     {
-        unlink(lockfile);
+        unlink(lockfile.c_str());
         return EEXIST;
     }
 
@@ -141,10 +140,16 @@ auto create_sockets(int xdisplay) -> std::vector<mir::Fd>
     struct sockaddr_un addr{ .sun_family = AF_UNIX, .sun_path = { 0 } };
     size_t path_size;
 
-    path_size = snprintf(addr.sun_path + 1, sizeof(addr.sun_path) - 1, x11_socket_fmt, xdisplay);
+    auto eoln = std::format_to_n(addr.sun_path + 1, sizeof(addr.sun_path) - 2,
+        x11_socket_fmt, xdisplay).out;
+    *eoln = '\0';
+    path_size = eoln - (addr.sun_path + 1);
     create_socket(result, &addr, path_size);
 
-    path_size = snprintf(addr.sun_path, sizeof(addr.sun_path), x11_socket_fmt, xdisplay);
+    eoln = std::format_to_n(addr.sun_path, sizeof(addr.sun_path) - 1,
+        x11_socket_fmt, xdisplay).out;
+    *eoln = '\0';
+    path_size = eoln - addr.sun_path;
     create_socket(result, &addr, path_size);
 
     return result;
@@ -194,11 +199,11 @@ mf::XWaylandSpawner::XWaylandSpawner(std::function<void()> spawn)
 
 mf::XWaylandSpawner::~XWaylandSpawner()
 {
-    char path[256];
-    snprintf(path, sizeof path, x11_lock_fmt, xdisplay);
-    unlink(path);
-    snprintf(path, sizeof path, x11_socket_fmt, xdisplay);
-    unlink(path);
+    std::string path;
+    path = std::format(x11_lock_fmt, xdisplay);
+    unlink(path.c_str());
+    path = std::format(x11_socket_fmt, xdisplay);
+    unlink(path.c_str());
 }
 
 auto mf::XWaylandSpawner::x11_display() const -> std::string
