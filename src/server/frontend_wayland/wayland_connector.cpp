@@ -302,7 +302,7 @@ mf::WaylandConnector::WaylandConnector(
     auto const surface_registry = std::make_shared<mf::SurfaceRegistry>();
 
     auto const action_group_manager = std::make_shared<frontend::ActionGroupManager>(token_authority, *executor);
-    auto const keyboard_trigger_registry = std::make_shared<frontend::KeyboardTriggerRegistry>(token_authority);
+    auto const keyboard_trigger_registry = std::make_shared<frontend::KeyboardTriggerRegistry>();
     seat_global = std::make_unique<mf::WlSeat>(
         display.get(),
         *executor,

@@ -17,7 +17,6 @@
 #include "input_trigger_registration_v1.h"
 
 #include "input_trigger_common.h"
-#include "input_trigger_v1.h"
 
 #include <mir/events/input_event.h>
 #include <mir/events/keyboard_event.h>
@@ -321,7 +320,7 @@ auto KeyboardTrigger::from(struct wl_resource* resource) -> KeyboardTrigger*
     if (auto* input_trigger = mw::InputTriggerV1::from(resource))
         return dynamic_cast<KeyboardTrigger*>(input_trigger);
 
-    mir::log_warning("Non-mw::InputTriggerV1 resource passed to KeyboardTrigger::from");
+    mir::log_warning("Non-mw::InputTriggerV1 resource passed to KeyboardTriggert:from");
     return nullptr;
 }
 }
@@ -337,12 +336,14 @@ public:
 
     auto to_string() const -> std::string override;
 
-    bool process(MirEvent const& event) override;
 
     bool is_same_trigger(InputTrigger const* other) const override;
     bool is_same_trigger(KeyboardSymTrigger const* other) const override;
 
     uint32_t const keysym;
+
+private:
+    bool do_process(MirEvent const& event) override;
 };
 
 class mf::KeyboardCodeTrigger : public KeyboardTrigger
@@ -356,12 +357,13 @@ public:
 
     auto to_string() const -> std::string override;
 
-    bool process(MirEvent const& event) override;
-
     bool is_same_trigger(InputTrigger const* other) const override;
     bool is_same_trigger(KeyboardCodeTrigger const* other) const override;
 
     uint32_t const scancode;
+
+private:
+    bool do_process(MirEvent const& event) override;
 };
 
 mf::KeyboardSymTrigger::KeyboardSymTrigger(
@@ -383,7 +385,7 @@ auto mf::KeyboardSymTrigger::to_string() const -> std::string
         modifiers.to_string());
 }
 
-bool mf::KeyboardSymTrigger::process(MirEvent const& event)
+bool mf::KeyboardSymTrigger::do_process(MirEvent const& event)
 {
     auto const event_modifiers = InputTriggerModifiers{event.to_input()->to_keyboard()->modifiers()};
     if (!InputTriggerModifiers::modifiers_match(modifiers, event_modifiers))
@@ -426,7 +428,7 @@ auto mf::KeyboardCodeTrigger::to_string() const -> std::string
         modifiers.to_string());
 }
 
-bool mf::KeyboardCodeTrigger::process(MirEvent const& event)
+bool mf::KeyboardCodeTrigger::do_process(MirEvent const& event)
 {
     auto const event_modifiers = InputTriggerModifiers{event.to_input()->to_keyboard()->modifiers()};
     if (!InputTriggerModifiers::modifiers_match(modifiers, event_modifiers))

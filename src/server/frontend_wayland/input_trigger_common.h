@@ -61,12 +61,15 @@ public:
 class ActionGroup
 {
 public:
+    ActionGroup(shell::TokenAuthority& token_authority);
+
     void add(wayland::Weak<InputTriggerAction const> action);
-    void end(std::string const& activation_token, uint32_t wayland_timestamp);
-    void begin(std::string const& activation_token, uint32_t wayland_timestamp);
+    void end(uint32_t wayland_timestamp);
+    void begin(uint32_t wayland_timestamp);
 
     auto any_trigger_active() const -> bool;
 private:
+    shell::TokenAuthority& token_authority;
     std::vector<wayland::Weak<InputTriggerAction const>> actions;
     std::optional<std::pair<uint32_t, std::string>> timestamp_and_token;
 };
@@ -79,11 +82,8 @@ public:
     void associate_with_action_group(std::shared_ptr<frontend::ActionGroup> action_group);
     void unassociate_with_action_group(std::shared_ptr<frontend::ActionGroup> action_group);
 
-    void begin(shell::TokenAuthority& token_authority, uint32_t wayland_timestamp);
-    void end(shell::TokenAuthority& token_authority, uint32_t wayland_timestamp);
-
     // \return true if event was handled, false otherwise.
-    virtual bool process(MirEvent const& event) = 0;
+    bool process(MirEvent const& event);
 
     virtual auto to_string() const -> std::string = 0;
 
@@ -92,6 +92,11 @@ public:
     virtual bool is_same_trigger(KeyboardCodeTrigger const* code_trigger) const;
 
 private:
+    void begin(uint32_t wayland_timestamp);
+    void end(uint32_t wayland_timestamp);
+
+    virtual bool do_process(MirEvent const& event) = 0;
+
     std::shared_ptr<frontend::ActionGroup> action_group;
     bool active{false};
 };
@@ -118,15 +123,14 @@ private:
 class KeyboardTriggerRegistry
 {
 public:
-    KeyboardTriggerRegistry(std::shared_ptr<shell::TokenAuthority> const& token_authority);
+    KeyboardTriggerRegistry();
+
     bool register_trigger(InputTrigger* trigger);
     bool matches_any_trigger(MirEvent const& event);
 
     auto keyboard_state_tracker() const -> KeyboardStateTracker const&;
 
 private:
-    std::shared_ptr<shell::TokenAuthority> const token_authority;
-
     std::vector<wayland::Weak<InputTrigger>> triggers;
     KeyboardStateTracker keyboard_state;
 };

@@ -15,7 +15,6 @@
  */
 
 #include "input_trigger_common.h"
-#include "input_trigger_v1.h"
 
 #include <mir/events/input_event.h>
 #include <mir/events/keyboard_event.h>
@@ -47,33 +46,46 @@ auto mf::RecentTokens::contains(std::string_view token) const -> bool
     return std::find(tokens.begin(), tokens.end(), token) != tokens.end();
 }
 
-void mf::InputTrigger::associate_with_action_group(std::shared_ptr<frontend::ActionGroup> action_group)
+void mf::InputTrigger::associate_with_action_group(std::shared_ptr<mf::ActionGroup> action_group)
 {
     this->action_group = action_group;
 }
 
-void mf::InputTrigger::unassociate_with_action_group(std::shared_ptr<frontend::ActionGroup> action_group)
+void mf::InputTrigger::unassociate_with_action_group(std::shared_ptr<mf::ActionGroup> action_group)
 {
     if (this->action_group == action_group)
         this->action_group.reset();
 }
 
-void mf::InputTrigger::begin(shell::TokenAuthority& token_authority, uint32_t wayland_timestamp)
+void mf::InputTrigger::begin(uint32_t wayland_timestamp)
 {
     if(active || !action_group)
         return;
 
     active = true;
-    action_group->begin(static_cast<std::string>(token_authority.issue_token(std::nullopt)), wayland_timestamp);
+    action_group->begin(wayland_timestamp);
 }
 
-void mf::InputTrigger::end(shell::TokenAuthority& token_authority, uint32_t wayland_timestamp)
+void mf::InputTrigger::end(uint32_t wayland_timestamp)
 {
     if (!active || !action_group)
         return;
 
     active = false;
-    action_group->end(static_cast<std::string>(token_authority.issue_token(std::nullopt)), wayland_timestamp);
+    action_group->end(wayland_timestamp);
+}
+
+bool mf::InputTrigger::process(MirEvent const& event)
+{
+    auto const matched = do_process(event);
+    auto const timestamp = mir_input_event_get_wayland_timestamp(event.to_input());
+
+    if (matched)
+        begin(timestamp);
+    else
+        end(timestamp);
+
+    return matched;
 }
 
 bool mf::InputTrigger::is_same_trigger(KeyboardSymTrigger const*) const
@@ -171,6 +183,11 @@ auto mf::KeyboardStateTracker::scancode_is_pressed(uint32_t scancode) const -> b
     return pressed_scancodes.contains(scancode);
 }
 
+mf::ActionGroup::ActionGroup(shell::TokenAuthority& token_authority)
+    : token_authority{token_authority}
+{
+}
+
 void mf::ActionGroup::add(wayland::Weak<InputTriggerAction const> action)
 {
     actions.push_back(action);
@@ -205,26 +222,25 @@ void iterate_and_erase_expired(
 }
 }
 
-void mf::ActionGroup::end(std::string const& activation_token, uint32_t wayland_timestamp)
+void mf::ActionGroup::end(uint32_t wayland_timestamp)
 {
+    auto const activation_token = static_cast<std::string>(token_authority.issue_token(std::nullopt));
     iterate_and_erase_expired(
         actions, [&](auto const& valid_action) { valid_action.end(wayland_timestamp, activation_token); });
 
     timestamp_and_token = {};
 }
 
-void mf::ActionGroup::begin(std::string const& activation_token, uint32_t wayland_timestamp)
+void mf::ActionGroup::begin(uint32_t wayland_timestamp)
 {
+    auto const activation_token = static_cast<std::string>(token_authority.issue_token(std::nullopt));
     timestamp_and_token = {wayland_timestamp, activation_token};
 
     iterate_and_erase_expired(
         actions, [&](auto const& valid_action) { valid_action.begin(wayland_timestamp, activation_token); });
 }
 
-mf::KeyboardTriggerRegistry::KeyboardTriggerRegistry(std::shared_ptr<msh::TokenAuthority> const& token_authority) :
-    token_authority{token_authority}
-{
-}
+mf::KeyboardTriggerRegistry::KeyboardTriggerRegistry() = default;
 
 bool mf::KeyboardTriggerRegistry::register_trigger(mf::InputTrigger* trigger)
 {
@@ -248,18 +264,11 @@ auto mf::KeyboardTriggerRegistry::matches_any_trigger(MirEvent const& event) -> 
 
     bool any_matched{false};
 
-    auto const timestamp = mir_input_event_get_wayland_timestamp(event.to_input());
     iterate_and_erase_expired(
         triggers,
         [&](auto& trigger)
         {
-            auto const matched = trigger.process(event);
-            if (matched)
-                trigger.begin(*token_authority, timestamp);
-            else
-                trigger.end(*token_authority, timestamp);
-
-            any_matched |= matched;
+            any_matched |= trigger.process(event);
         });
 
     return any_matched;
@@ -286,7 +295,7 @@ auto mf::ActionGroupManager::create_new_action_group() -> std::pair<std::string,
     // Create a pointer to an empty string, not an empty pointer to a string.
     auto token_ptr = std::make_shared<std::string>("");
     auto const ag = std::shared_ptr<mf::ActionGroup>(
-        new ActionGroup{},
+        new ActionGroup{*token_authority},
         [this, token_ptr](auto* action_group)
         {
             action_groups.erase(*token_ptr);
