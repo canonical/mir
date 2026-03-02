@@ -136,19 +136,19 @@ auto mf::KeyboardStateTracker::scancode_is_pressed(uint32_t scancode) const -> b
     return pressed_scancodes.contains(scancode);
 }
 
-void mf::ActionGroup::add(wayland::Weak<wayland::InputTriggerActionV1 const> action)
+void mf::ActionGroup::add(wayland::Weak<InputTriggerAction const> action)
 {
     actions.push_back(action);
-    if (timestamp_and_trigger)
+    if (timestamp_and_token)
     {
-        auto const& [timestamp, token] = timestamp_and_trigger.value();
-        action.value().send_begin_event(timestamp, token);
+        auto const& [timestamp, token] = timestamp_and_token.value();
+        action.value().begin(timestamp, token);
     }
 }
 
 auto mf::ActionGroup::any_trigger_active() const -> bool
 {
-    return timestamp_and_trigger.has_value();
+    return timestamp_and_token.has_value();
 }
 
 namespace
@@ -173,17 +173,17 @@ void iterate_and_erase_expired(
 void mf::ActionGroup::end(std::string const& activation_token, uint32_t wayland_timestamp)
 {
     iterate_and_erase_expired(
-        actions, [&](auto const& valid_action) { valid_action.send_end_event(wayland_timestamp, activation_token); });
+        actions, [&](auto const& valid_action) { valid_action.end(wayland_timestamp, activation_token); });
 
-    timestamp_and_trigger = {};
+    timestamp_and_token = {};
 }
 
 void mf::ActionGroup::begin(std::string const& activation_token, uint32_t wayland_timestamp)
 {
-    timestamp_and_trigger = {wayland_timestamp, activation_token};
+    timestamp_and_token = {wayland_timestamp, activation_token};
 
     iterate_and_erase_expired(
-        actions, [&](auto const& valid_action) { valid_action.send_begin_event(wayland_timestamp, activation_token); });
+        actions, [&](auto const& valid_action) { valid_action.begin(wayland_timestamp, activation_token); });
 }
 
 mf::KeyboardTriggerRegistry::KeyboardTriggerRegistry(std::shared_ptr<msh::TokenAuthority> const& token_authority) :
@@ -280,4 +280,3 @@ auto mf::InputTriggerRegistry::get_action_group(Token const& token) -> std::shar
         return iter->second.lock();
     return nullptr;
 }
-

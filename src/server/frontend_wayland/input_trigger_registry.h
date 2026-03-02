@@ -22,6 +22,7 @@
 #include <mir/events/event.h>
 #include <mir/executor.h>
 #include <mir/shell/token_authority.h>
+#include <mir/wayland/lifetime_tracker.h>
 #include <mir/wayland/weak.h>
 
 #include <string>
@@ -46,20 +47,27 @@ private:
     decltype(tokens)::iterator current{tokens.begin()};
 };
 
+// Version-agnostic interface
+class InputTriggerAction : public virtual wayland::LifetimeTracker
+{
+public:
+    virtual ~InputTriggerAction() = default;
+
+    virtual void end(uint32_t wayland_timestamp, std::string const& activation_token) const = 0;
+    virtual void begin(uint32_t wayland_timestamp, std::string const& activation_token) const = 0;
+};
+
 class ActionGroup
 {
 public:
-    void add(wayland::Weak<wayland::InputTriggerActionV1 const> action);
-
-    auto any_trigger_active() const -> bool;
-
+    void add(wayland::Weak<InputTriggerAction const> action);
     void end(std::string const& activation_token, uint32_t wayland_timestamp);
-
     void begin(std::string const& activation_token, uint32_t wayland_timestamp);
 
+    auto any_trigger_active() const -> bool;
 private:
-    std::vector<wayland::Weak<wayland::InputTriggerActionV1 const>> actions;
-    std::optional<std::pair<uint32_t, std::string>> timestamp_and_trigger;
+    std::vector<wayland::Weak<InputTriggerAction const>> actions;
+    std::optional<std::pair<uint32_t, std::string>> timestamp_and_token;
 };
 
 /// Tracks keyboard state shared among all keyboard event filters

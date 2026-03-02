@@ -25,6 +25,19 @@ namespace mw = mir::wayland;
 
 namespace
 {
+
+class InputTriggerActionV1 :
+    virtual public mf::InputTriggerAction,
+    virtual public mw::InputTriggerActionV1,
+    virtual public mw::LifetimeTracker
+{
+public:
+    using mw::InputTriggerActionV1::InputTriggerActionV1;
+
+    void end(uint32_t wayland_timestamp, std::string const& activation_token) const override;
+    void begin(uint32_t wayland_timestamp, std::string const& activation_token) const override;
+};
+
 // Used  when a client provides a revoked token to call
 // `send_unavailable_event`.
 class NullInputTriggerActionV1 : public mw::InputTriggerActionV1
@@ -61,8 +74,8 @@ private:
 
             if (auto const& action_group = input_trigger_registry->get_action_group(token))
             {
-                auto const action = new mw::InputTriggerActionV1 const {id, Version<1>{}};
-                action_group->add(mw::make_weak(action));
+                auto const action = new InputTriggerActionV1 const {id, Version<1>{}};
+                action_group->add(mw::make_weak<mf::InputTriggerAction const>(action));
             }
             else
             {
@@ -93,6 +106,16 @@ private:
 
     std::shared_ptr<mf::InputTriggerRegistry> const input_trigger_registry;
 };
+
+void InputTriggerActionV1::end(uint32_t wayland_timestamp, std::string const& activation_token) const
+{
+    send_end_event(wayland_timestamp, activation_token);
+}
+
+void InputTriggerActionV1::begin(uint32_t wayland_timestamp, std::string const& activation_token) const
+{
+    send_begin_event(wayland_timestamp, activation_token);
+}
 }
 
 auto mf::create_input_trigger_action_manager_v1(wl_display* display, std::shared_ptr<InputTriggerRegistry> const& input_trigger_registry)
