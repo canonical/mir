@@ -240,9 +240,9 @@ void mf::ActionGroup::begin(uint32_t wayland_timestamp)
         actions, [&](auto const& valid_action) { valid_action.begin(wayland_timestamp, activation_token); });
 }
 
-mf::KeyboardTriggerRegistry::KeyboardTriggerRegistry() = default;
+mf::InputTriggerRegistry::InputTriggerRegistry() = default;
 
-bool mf::KeyboardTriggerRegistry::register_trigger(mf::InputTrigger* trigger)
+bool mf::InputTriggerRegistry::register_trigger(mf::InputTrigger* trigger)
 {
     // Housekeeping
     std::erase_if(triggers, [](auto const& weak_trigger) { return !weak_trigger; });
@@ -257,7 +257,7 @@ bool mf::KeyboardTriggerRegistry::register_trigger(mf::InputTrigger* trigger)
     return true;
 }
 
-auto mf::KeyboardTriggerRegistry::matches_any_trigger(MirEvent const& event) -> bool
+auto mf::InputTriggerRegistry::matches_any_trigger(MirEvent const& event) -> bool
 {
     if (!keyboard_state.process(event))
         return false;
@@ -275,7 +275,7 @@ auto mf::KeyboardTriggerRegistry::matches_any_trigger(MirEvent const& event) -> 
 
 }
 
-auto mf::KeyboardTriggerRegistry::keyboard_state_tracker() const -> KeyboardStateTracker const&
+auto mf::InputTriggerRegistry::keyboard_state_tracker() const -> KeyboardStateTracker const&
 {
     return keyboard_state;
 }

@@ -336,7 +336,6 @@ public:
 
     auto to_string() const -> std::string override;
 
-
     bool is_same_trigger(InputTrigger const* other) const override;
     bool is_same_trigger(KeyboardSymTrigger const* other) const override;
 
@@ -490,10 +489,10 @@ public:
     InputTriggerRegistrationManagerV1(
         wl_display* display,
         std::shared_ptr<mf::ActionGroupManager> const& action_group_manager,
-        std::shared_ptr<mf::KeyboardTriggerRegistry> const& keyboard_trigger_registry) :
+        std::shared_ptr<mf::InputTriggerRegistry> const& input_trigger_registry) :
         Global{display, Version<1>{}},
         action_group_manager{action_group_manager},
-        keyboard_trigger_registry{keyboard_trigger_registry}
+        input_trigger_registry{input_trigger_registry}
     {
     }
 
@@ -503,10 +502,10 @@ public:
         Instance(
             wl_resource* new_ext_input_trigger_registration_manager_v1,
             std::shared_ptr<mf::ActionGroupManager> const& action_group_manager,
-            std::shared_ptr<mf::KeyboardTriggerRegistry> const& keyboard_trigger_registry) :
+            std::shared_ptr<mf::InputTriggerRegistry> const& input_trigger_registry) :
             mw::InputTriggerRegistrationManagerV1{new_ext_input_trigger_registration_manager_v1, Version<1>{}},
             action_group_manager{action_group_manager},
-            keyboard_trigger_registry{keyboard_trigger_registry}
+            input_trigger_registry{input_trigger_registry}
         {
         }
 
@@ -516,17 +515,17 @@ public:
 
     private:
         std::shared_ptr<mf::ActionGroupManager> const action_group_manager;
-        std::shared_ptr<mf::KeyboardTriggerRegistry> const keyboard_trigger_registry;
+        std::shared_ptr<mf::InputTriggerRegistry> const input_trigger_registry;
     };
 
     void bind(wl_resource* new_ext_input_trigger_registration_manager_v1) override
     {
-        new Instance{new_ext_input_trigger_registration_manager_v1, action_group_manager, keyboard_trigger_registry};
+        new Instance{new_ext_input_trigger_registration_manager_v1, action_group_manager, input_trigger_registry};
     }
 
 private:
     std::shared_ptr<mf::ActionGroupManager> const action_group_manager;
-    std::shared_ptr<mf::KeyboardTriggerRegistry> const keyboard_trigger_registry;
+    std::shared_ptr<mf::InputTriggerRegistry> const input_trigger_registry;
 };
 
 void InputTriggerRegistrationManagerV1::Instance::register_keyboard_sym_trigger(
@@ -536,10 +535,10 @@ void InputTriggerRegistrationManagerV1::Instance::register_keyboard_sym_trigger(
     auto* keyboard_trigger = new mf::KeyboardSymTrigger{
         InputTriggerModifiers::from_protocol(modifiers, shift_adjustment),
         keysym,
-        keyboard_trigger_registry->keyboard_state_tracker(),
+        input_trigger_registry->keyboard_state_tracker(),
         id};
 
-    if (!keyboard_trigger_registry->register_trigger(keyboard_trigger))
+    if (!input_trigger_registry->register_trigger(keyboard_trigger))
     {
         mir::log_warning("register_keyboard_sym_trigger: %s already registered", keyboard_trigger->to_string().c_str());
         keyboard_trigger->send_failed_event();
@@ -554,10 +553,10 @@ void InputTriggerRegistrationManagerV1::Instance::register_keyboard_code_trigger
     auto* keyboard_trigger = new mf::KeyboardCodeTrigger{
         InputTriggerModifiers::from_protocol(modifiers),
         keycode,
-        keyboard_trigger_registry->keyboard_state_tracker(),
+        input_trigger_registry->keyboard_state_tracker(),
         id};
 
-    if (!keyboard_trigger_registry->register_trigger(keyboard_trigger))
+    if (!input_trigger_registry->register_trigger(keyboard_trigger))
     {
         mir::log_warning(
             "register_keyboard_code_trigger: %s already registered", keyboard_trigger->to_string().c_str());
@@ -579,9 +578,9 @@ void InputTriggerRegistrationManagerV1::Instance::get_action_control(std::string
 auto mf::create_input_trigger_registration_manager_v1(
     wl_display* display,
     std::shared_ptr<ActionGroupManager> const& action_group_manager,
-    std::shared_ptr<KeyboardTriggerRegistry> const& keyboard_trigger_registry)
+    std::shared_ptr<InputTriggerRegistry> const& input_trigger_registry)
     -> std::shared_ptr<mw::InputTriggerRegistrationManagerV1::Global>
 {
     return std::make_shared<InputTriggerRegistrationManagerV1>(
-        display, action_group_manager, keyboard_trigger_registry);
+        display, action_group_manager, input_trigger_registry);
 }

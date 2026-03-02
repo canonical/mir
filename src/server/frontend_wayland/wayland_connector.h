@@ -96,7 +96,7 @@ class LinuxDRMSyncobjManager;
 class DesktopFileManager;
 class SurfaceRegistry;
 class ActionGroupManager;
-class KeyboardTriggerRegistry;
+class InputTriggerRegistry;
 
 class WaylandExtensions
 {
@@ -130,7 +130,7 @@ public:
         std::shared_ptr<time::Clock> clock;
         std::shared_ptr<input::CursorObserverMultiplexer> cursor_observer_multiplexer;
         std::shared_ptr<ActionGroupManager> action_group_manager;
-        std::shared_ptr<KeyboardTriggerRegistry> keyboard_trigger_registry;
+        std::shared_ptr<InputTriggerRegistry> input_trigger_registry;
     };
 
     WaylandExtensions() = default;

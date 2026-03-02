@@ -120,10 +120,10 @@ private:
     std::unordered_set<uint32_t> pressed_scancodes;
 };
 
-class KeyboardTriggerRegistry
+class InputTriggerRegistry
 {
 public:
-    KeyboardTriggerRegistry();
+    InputTriggerRegistry();
 
     bool register_trigger(InputTrigger* trigger);
     bool matches_any_trigger(MirEvent const& event);
