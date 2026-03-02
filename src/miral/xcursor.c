@@ -611,23 +611,18 @@ _XcursorBuildXdgPath (void)
 {
     char const *home = getenv ("HOME");
     char const *xdg_data_dirs = getenv ("XDG_DATA_DIRS");
-    char const *p;
-    char *dynamic_path;
-    char *p_out;
-    size_t len = 0;
-    size_t remaining;
-    int written;
 
     if (!xdg_data_dirs || xdg_data_dirs[0] == '\0')
         xdg_data_dirs = "/usr/local/share:/usr/share";
+
+    size_t len = 0;
 
     /* $HOME/.icons: */
     if (home)
         len += strlen (home) + strlen ("/.icons") + 1; /* +1 for ':' */
 
     /* $XDG_DATA_DIRS/icons: (one entry per dir in XDG_DATA_DIRS) */
-    p = xdg_data_dirs;
-    while (p && *p)
+    for (char const *p = xdg_data_dirs; p && *p; )
     {
         char const *colon = strchr (p, ':');
         len += (colon ? (size_t)(colon - p) : strlen (p)) + strlen ("/icons") + 1;
@@ -641,42 +636,37 @@ _XcursorBuildXdgPath (void)
     len += strlen (XCURSORPATH) + 1;
 
     /* This allocation persists for the lifetime of the process (intentional). */
-    dynamic_path = malloc (len);
+    char *dynamic_path = malloc (len);
     if (!dynamic_path)
         return NULL;
 
-    p_out = dynamic_path;
-    remaining = len;
+    char *p_out = dynamic_path;
+    size_t remaining = len;
 
     if (home)
     {
-        written = snprintf (p_out, remaining, "%s/.icons:", home);
+        int const written = snprintf (p_out, remaining, "%s/.icons:", home);
         if (written < 0 || (size_t)written >= remaining) goto error;
         p_out += written;
         remaining -= (size_t)written;
     }
 
-    p = xdg_data_dirs;
-    while (p && *p)
+    for (char const *p = xdg_data_dirs; p && *p; )
     {
         char const *colon = strchr (p, ':');
-        if (colon)
-        {
-            written = snprintf (p_out, remaining, "%.*s/icons:", (int)(colon - p), p);
-            p = colon + 1;
-        }
-        else
-        {
-            written = snprintf (p_out, remaining, "%s/icons:", p);
-            p = NULL;
-        }
+        int const written = colon
+            ? snprintf (p_out, remaining, "%.*s/icons:", (int)(colon - p), p)
+            : snprintf (p_out, remaining, "%s/icons:", p);
+        p = colon ? colon + 1 : NULL;
         if (written < 0 || (size_t)written >= remaining) goto error;
         p_out += written;
         remaining -= (size_t)written;
     }
 
-    written = snprintf (p_out, remaining, "/usr/share/pixmaps:%s", XCURSORPATH);
-    if (written < 0 || (size_t)written >= remaining) goto error;
+    {
+        int const written = snprintf (p_out, remaining, "/usr/share/pixmaps:%s", XCURSORPATH);
+        if (written < 0 || (size_t)written >= remaining) goto error;
+    }
 
     return dynamic_path;
 
