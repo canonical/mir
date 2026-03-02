@@ -102,10 +102,10 @@ private:
     KeyboardStateTracker keyboard_state;
 };
 
-class InputTriggerRegistry
+class ActionGroupManager
 {
 public:
-    InputTriggerRegistry(std::shared_ptr<shell::TokenAuthority> const& token_authority, Executor& wayland_executor);
+    ActionGroupManager(std::shared_ptr<shell::TokenAuthority> const& token_authority, Executor& wayland_executor);
 
     auto create_new_action_group() -> std::pair<std::string, std::shared_ptr<ActionGroup>>;
 

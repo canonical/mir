@@ -53,26 +53,26 @@ public:
 class InputTriggerActionManagerV1 : public mw::InputTriggerActionManagerV1::Global
 {
 public:
-    InputTriggerActionManagerV1(wl_display* display, std::shared_ptr<mf::InputTriggerRegistry> const& input_trigger_registry) :
+    InputTriggerActionManagerV1(wl_display* display, std::shared_ptr<mf::ActionGroupManager> const& action_group_manager) :
         Global{display, Version<1>{}},
-        input_trigger_registry{input_trigger_registry}
+        action_group_manager{action_group_manager}
     {
     }
 
 private:
     class Instance : public mir::wayland::InputTriggerActionManagerV1
     {
-        std::shared_ptr<mf::InputTriggerRegistry> const input_trigger_registry;
+        std::shared_ptr<mf::ActionGroupManager> const action_group_manager;
 
         void get_input_trigger_action(std::string const& token, struct wl_resource* id) override
         {
-            if (input_trigger_registry->was_revoked(token))
+            if (action_group_manager->was_revoked(token))
             {
                 new NullInputTriggerActionV1{id}; // Sends `unavailable`
                 return;
             }
 
-            if (auto const& action_group = input_trigger_registry->get_action_group(token))
+            if (auto const& action_group = action_group_manager->get_action_group(token))
             {
                 auto const action = new InputTriggerActionV1 const {id, Version<1>{}};
                 action_group->add(mw::make_weak<mf::InputTriggerAction const>(action));
@@ -92,19 +92,19 @@ private:
 
     public:
         Instance(
-            wl_resource* new_ext_input_trigger_action_manager_v1, std::shared_ptr<mf::InputTriggerRegistry> const& input_trigger_registry) :
+            wl_resource* new_ext_input_trigger_action_manager_v1, std::shared_ptr<mf::ActionGroupManager> const& action_group_manager) :
             InputTriggerActionManagerV1{new_ext_input_trigger_action_manager_v1, Version<1>{}},
-            input_trigger_registry{input_trigger_registry}
+            action_group_manager{action_group_manager}
         {
         }
     };
 
     void bind(wl_resource* new_ext_input_trigger_action_manager_v1) override
     {
-        new Instance{new_ext_input_trigger_action_manager_v1, input_trigger_registry};
+        new Instance{new_ext_input_trigger_action_manager_v1, action_group_manager};
     }
 
-    std::shared_ptr<mf::InputTriggerRegistry> const input_trigger_registry;
+    std::shared_ptr<mf::ActionGroupManager> const action_group_manager;
 };
 
 void InputTriggerActionV1::end(uint32_t wayland_timestamp, std::string const& activation_token) const
@@ -118,8 +118,8 @@ void InputTriggerActionV1::begin(uint32_t wayland_timestamp, std::string const& 
 }
 }
 
-auto mf::create_input_trigger_action_manager_v1(wl_display* display, std::shared_ptr<InputTriggerRegistry> const& input_trigger_registry)
+auto mf::create_input_trigger_action_manager_v1(wl_display* display, std::shared_ptr<ActionGroupManager> const& action_group_manager)
     -> std::shared_ptr<mw::InputTriggerActionManagerV1::Global>
 {
-    return std::make_shared<InputTriggerActionManagerV1>(display, input_trigger_registry);
+    return std::make_shared<InputTriggerActionManagerV1>(display, action_group_manager);
 }
