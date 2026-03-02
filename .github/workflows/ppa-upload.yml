@@ -23,7 +23,7 @@ jobs:
     steps:
     - name: Import GPG key
       id: gpg
-      uses: crazy-max/ghaction-import-gpg@v6
+      uses: crazy-max/ghaction-import-gpg@v7
       with:
         gpg_private_key: ${{ secrets.MIR_BOT_GPG_PRIVATE_KEY }}
         passphrase: ${{ secrets.MIR_BOT_GPG_PASSPHRASE }}
