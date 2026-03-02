@@ -17,8 +17,6 @@
 #ifndef MIR_SERVER_FRONTEND_INPUT_TRIGGER_COMMON_H_
 #define MIR_SERVER_FRONTEND_INPUT_TRIGGER_COMMON_H_
 
-#include "ext-input-trigger-action-v1_wrapper.h"
-
 #include <mir/events/event.h>
 #include <mir/executor.h>
 #include <mir/shell/token_authority.h>
