@@ -606,6 +606,11 @@ XcursorFileLoadImages (FILE *file, int size)
 #define XCURSORPATH "~/.icons:/usr/share/icons:/usr/share/pixmaps:~/.cursors:/usr/share/cursors/xorg-x11:"ICONDIR
 #endif
 
+/* Legacy-only entries from XCURSORPATH that are not already covered by the
+ * XDG spec search order (i.e. not $HOME/.icons, $XDG_DATA_DIRS/icons, or
+ * /usr/share/pixmaps — those are added explicitly by _XcursorBuildXdgPath). */
+#define XCURSORLEGACYPATH "~/.cursors:/usr/share/cursors/xorg-x11:"ICONDIR
+
 static char *
 _XcursorBuildXdgPath (void)
 {
@@ -632,8 +637,8 @@ _XcursorBuildXdgPath (void)
     /* /usr/share/pixmaps: */
     len += strlen ("/usr/share/pixmaps") + 1;
 
-    /* legacy fallback XCURSORPATH + '\0' */
-    len += strlen (XCURSORPATH) + 1;
+    /* legacy fallback entries not already covered above + '\0' */
+    len += strlen (XCURSORLEGACYPATH) + 1;
 
     /* This allocation persists for the lifetime of the process (intentional). */
     char *dynamic_path = malloc (len);
@@ -664,7 +669,7 @@ _XcursorBuildXdgPath (void)
     }
 
     {
-        int const written = snprintf (p_out, remaining, "/usr/share/pixmaps:%s", XCURSORPATH);
+        int const written = snprintf (p_out, remaining, "/usr/share/pixmaps:%s", XCURSORLEGACYPATH);
         if (written < 0 || (size_t)written >= remaining) goto error;
     }
 
