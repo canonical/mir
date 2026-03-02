@@ -113,6 +113,9 @@ struct SurfaceSpecification
 
     /// Describes which edges are touching part of the tiling grid
     optional_value<Flags<MirTiledEdge>> tiled_edges;
+
+    /// The opacity of the window.
+    optional_value<float> alpha;
 };
 bool operator==(SurfaceSpecification const& lhs, SurfaceSpecification const& rhs);
 bool operator!=(SurfaceSpecification const& lhs, SurfaceSpecification const& rhs);

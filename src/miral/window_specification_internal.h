@@ -76,6 +76,7 @@ struct WindowSpecification::Self
     mir::optional_value<bool> visible_on_lock_screen;
     mir::optional_value<mir::Flags<MirTiledEdge>> tiled_edges;
     mir::optional_value<std::shared_ptr<void>> userdata;
+    mir::optional_value<float> opacity;
 };
 
 auto make_surface_spec(WindowSpecification const& miral_spec) -> mir::shell::SurfaceSpecification;
