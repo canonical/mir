@@ -144,8 +144,6 @@ private:
     std::shared_ptr<shell::AccessibilityManager> const accessibility_manager;
 
     void bind(wl_resource* new_wl_seat) override;
-
-    std::shared_ptr<KeyboardTriggerRegistry> const keyboard_trigger_registry;
 };
 }
 }
