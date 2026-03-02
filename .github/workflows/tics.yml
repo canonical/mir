@@ -33,7 +33,7 @@ on:
 concurrency:
   # Group and interrupt pull requests and merge queue runs, everything else needs to queue
   group: ${{ github.workflow }}-${{ contains(fromJSON('["pull_request", "merge_group"]'), github.event_name) && github.ref || 'qserver' }}
-  cancel-in-progress: ${{ !contains(fromJSON('["pull_request", "merge_group"]'), github.event_name) }}
+  cancel-in-progress: ${{ contains(fromJSON('["pull_request", "merge_group"]'), github.event_name) }}
 
 jobs:
   TICS:
