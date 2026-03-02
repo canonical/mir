@@ -67,18 +67,15 @@ bool mf::KeyboardStateTracker::process(MirEvent const& event)
         // Set all lowercase keys to uppercase
         if (keysym == XKB_KEY_Shift_L || keysym == XKB_KEY_Shift_R)
         {
-            auto const lowercase_keysyms =
-                sr::views::filter(pressed_keysyms, [](auto key) { return key >= XKB_KEY_a && key <= XKB_KEY_z; }) |
-                sr::to<std::unordered_set<xkb_keysym_t>>();
-
-            // Doing `pressed_keysyms.erase(begin(), end())` crashes for some
-            // reason, so we have to do it one by one. Not sure if it's a me
-            // issue or a stdlib bug.
-            for (auto const key : lowercase_keysyms)
-                pressed_keysyms.erase(key);
-
-            auto const uppercase_keysyms = sr::views::transform(lowercase_keysyms, [](auto key) { return xkb_keysym_to_upper(key); });
-            pressed_keysyms.insert(uppercase_keysyms.begin(), uppercase_keysyms.end());
+            pressed_keysyms = sr::views::transform(
+                                  pressed_keysyms,
+                                  [](auto key)
+                                  {
+                                      if (key >= XKB_KEY_a && key <= XKB_KEY_z)
+                                          return xkb_keysym_to_upper(key);
+                                      return key;
+                                  }) |
+                              sr::to<std::unordered_set<xkb_keysym_t>>();
         }
 
         pressed_keysyms.insert(keysym);
@@ -90,16 +87,15 @@ bool mf::KeyboardStateTracker::process(MirEvent const& event)
         // Set all uppercase keys to lowercase
         if (keysym == XKB_KEY_Shift_L || keysym == XKB_KEY_Shift_R)
         {
-            auto const uppercase_keysyms =
-                sr::views::filter(pressed_keysyms, [](auto key) { return key >= XKB_KEY_A && key <= XKB_KEY_Z; }) |
-                sr::to<std::unordered_set<xkb_keysym_t>>();
-
-            for (auto const key : uppercase_keysyms)
-                pressed_keysyms.erase(key);
-
-            auto const lowercase_keysyms =
-                sr::views::transform(uppercase_keysyms, [](auto key) { return xkb_keysym_to_lower(key); });
-            pressed_keysyms.insert(lowercase_keysyms.begin(), lowercase_keysyms.end());
+            pressed_keysyms = sr::views::transform(
+                                  pressed_keysyms,
+                                  [](auto key)
+                                  {
+                                      if (key >= XKB_KEY_A && key <= XKB_KEY_Z)
+                                          return xkb_keysym_to_lower(key);
+                                      return key;
+                                  }) |
+                              sr::to<std::unordered_set<xkb_keysym_t>>();
         }
 
         pressed_keysyms.erase(keysym);
