@@ -118,15 +118,15 @@ bool mf::KeyboardStateTracker::process(MirEvent const& event)
         // Set all lowercase keys to uppercase
         if (keysym == XKB_KEY_Shift_L || keysym == XKB_KEY_Shift_R)
         {
-            pressed_keysyms = sr::views::transform(
-                                  pressed_keysyms,
-                                  [](auto key)
-                                  {
-                                      if (key >= XKB_KEY_a && key <= XKB_KEY_z)
-                                          return xkb_keysym_to_upper(key);
-                                      return key;
-                                  }) |
-                              sr::to<std::unordered_set<xkb_keysym_t>>();
+            auto const uppercase = sr::views::transform(
+                pressed_keysyms,
+                [](auto key)
+                {
+                    if (key >= XKB_KEY_a && key <= XKB_KEY_z)
+                        return xkb_keysym_to_upper(key);
+                    return key;
+                });
+            pressed_keysyms = std::unordered_set<xkb_keysym_t>(uppercase.begin(), uppercase.end());
         }
 
         pressed_keysyms.insert(keysym);
@@ -138,15 +138,15 @@ bool mf::KeyboardStateTracker::process(MirEvent const& event)
         // Set all uppercase keys to lowercase
         if (keysym == XKB_KEY_Shift_L || keysym == XKB_KEY_Shift_R)
         {
-            pressed_keysyms = sr::views::transform(
+            auto const lowercase = sr::views::transform(
                                   pressed_keysyms,
                                   [](auto key)
                                   {
                                       if (key >= XKB_KEY_A && key <= XKB_KEY_Z)
                                           return xkb_keysym_to_lower(key);
                                       return key;
-                                  }) |
-                              sr::to<std::unordered_set<xkb_keysym_t>>();
+                                  });
+            pressed_keysyms = std::unordered_set<xkb_keysym_t>(lowercase.begin(), lowercase.end());
         }
 
         pressed_keysyms.erase(keysym);
