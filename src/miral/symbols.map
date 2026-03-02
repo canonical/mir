@@ -777,4 +777,3 @@ global:
     miral::WindowSpecification::transformation*;
   };
 } MIRAL_5.6;
-
