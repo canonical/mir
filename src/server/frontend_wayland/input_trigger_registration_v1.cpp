@@ -320,7 +320,7 @@ auto KeyboardTrigger::from(struct wl_resource* resource) -> KeyboardTrigger*
     if (auto* input_trigger = mw::InputTriggerV1::from(resource))
         return dynamic_cast<KeyboardTrigger*>(input_trigger);
 
-    mir::log_warning("Non-mw::InputTriggerV1 resource passed to KeyboardTriggert:from");
+    mir::log_warning("Non-mw::InputTriggerV1 resource passed to KeyboardTrigger:from");
     return nullptr;
 }
 }
