@@ -287,7 +287,8 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
         {
             return mf::create_input_trigger_registration_manager_v1(
                     ctx.display,
-                    ctx.input_trigger_registry);
+                    ctx.input_trigger_registry,
+                    ctx.keyboard_trigger_registry);
         }),
     make_extension_builder<mw::InputTriggerActionManagerV1>([](auto const& ctx)
         {

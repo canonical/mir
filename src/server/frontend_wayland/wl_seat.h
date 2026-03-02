@@ -21,6 +21,7 @@
 #include <mir/wayland/weak.h>
 
 #include <functional>
+#include <unordered_set>
 
 struct MirPointerEvent;
 
@@ -54,7 +55,7 @@ class WlDataDevice;
 class KeyboardCallbacks;
 class KeyboardHelper;
 class SurfaceRegistry;
-class InputTriggerRegistry;
+class KeyboardTriggerRegistry;
 
 class PointerEventDispatcher
 {
@@ -82,7 +83,7 @@ public:
         std::shared_ptr<mir::input::Seat> const& seat,
         std::shared_ptr<shell::AccessibilityManager> const& accessibility_manager,
         std::shared_ptr<SurfaceRegistry> const& surface_registry,
-        std::shared_ptr<InputTriggerRegistry> const& input_trigger_registry);
+        std::shared_ptr<KeyboardTriggerRegistry> const& keyboard_trigger_registry);
 
     ~WlSeat();
 
@@ -143,6 +144,8 @@ private:
     std::shared_ptr<shell::AccessibilityManager> const accessibility_manager;
 
     void bind(wl_resource* new_wl_seat) override;
+
+    std::shared_ptr<KeyboardTriggerRegistry> const keyboard_trigger_registry;
 };
 }
 }

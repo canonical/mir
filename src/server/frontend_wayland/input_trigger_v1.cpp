@@ -256,24 +256,22 @@ void mf::InputTriggerV1::unassociate_with_action_group(std::shared_ptr<frontend:
         this->action_group.reset();
 }
 
-bool mf::InputTriggerV1::active() const
+void mf::InputTriggerV1::begin(shell::TokenAuthority& token_authority, uint32_t wayland_timestamp)
 {
-    if (action_group)
-        return action_group->any_trigger_active();
+    if(active || !action_group)
+        return;
 
-    return false;
+    active = true;
+    action_group->begin(static_cast<std::string>(token_authority.issue_token(std::nullopt)), wayland_timestamp);
 }
 
-void mf::InputTriggerV1::begin(std::string const& token, uint32_t wayland_timestamp)
+void mf::InputTriggerV1::end(shell::TokenAuthority& token_authority, uint32_t wayland_timestamp)
 {
-    if (action_group)
-        action_group->begin(token, wayland_timestamp);
-}
+    if (!active || !action_group)
+        return;
 
-void mf::InputTriggerV1::end(std::string const& token, uint32_t wayland_timestamp)
-{
-    if (action_group)
-        action_group->end(token, wayland_timestamp);
+    active = false;
+    action_group->end(static_cast<std::string>(token_authority.issue_token(std::nullopt)), wayland_timestamp);
 }
 
 auto mf::InputTriggerV1::from(struct wl_resource* resource) -> InputTriggerV1*
@@ -293,4 +291,12 @@ bool mf::InputTriggerV1::is_same_trigger(KeyboardSymTrigger const*) const
 bool mf::InputTriggerV1::is_same_trigger(KeyboardCodeTrigger const*) const
 {
     return false;
+}
+
+mf::KeyboardTrigger::KeyboardTrigger(
+    InputTriggerModifiers modifiers,
+    struct wl_resource* id) :
+    InputTriggerV1{id, Version<1>{}},
+    modifiers{modifiers}
+{
 }

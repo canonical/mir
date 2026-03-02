@@ -302,6 +302,7 @@ mf::WaylandConnector::WaylandConnector(
     auto const surface_registry = std::make_shared<mf::SurfaceRegistry>();
 
     auto const input_trigger_registry = std::make_shared<frontend::InputTriggerRegistry>(token_authority, *executor);
+    auto const keyboard_trigger_registry = std::make_shared<frontend::KeyboardTriggerRegistry>(token_authority);
     seat_global = std::make_unique<mf::WlSeat>(
         display.get(),
         *executor,
@@ -311,7 +312,7 @@ mf::WaylandConnector::WaylandConnector(
         seat,
         accessibility_manager,
         surface_registry,
-        input_trigger_registry);
+        keyboard_trigger_registry);
     output_manager = std::make_unique<mf::OutputManager>(
         display.get(),
         executor,
@@ -353,7 +354,8 @@ mf::WaylandConnector::WaylandConnector(
         surface_registry,
         clock,
         cursor_observer_multiplexer,
-        input_trigger_registry});
+        input_trigger_registry,
+        keyboard_trigger_registry});
 
     shm_global = std::make_unique<WlShm>(display.get(), executor);
 

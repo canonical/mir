@@ -26,13 +26,12 @@
 
 #include <string>
 #include <unordered_map>
-#include <unordered_set>
 
 namespace mir
 {
 namespace frontend
 {
-class InputTriggerV1;
+class KeyboardTrigger;
 
 class RecentTokens
 {
@@ -45,26 +44,6 @@ public:
 private:
     std::array<std::string, capacity> tokens;
     decltype(tokens)::iterator current{tokens.begin()};
-};
-
-/// Tracks keyboard state shared among all keyboard event filters
-class KeyboardStateTracker
-{
-public:
-    KeyboardStateTracker() = default;
-
-    void on_key_down(uint32_t keysym, uint32_t scancode);
-    void on_key_up(uint32_t keysym, uint32_t scancode);
-
-    /// Check if a keysym exists in the pressed set. If `case_insensitive` is
-    /// true, also check for the opposite case of the keysym (for a-z, A-Z).
-    auto keysym_is_pressed(uint32_t keysym, bool case_insensitive) const -> bool;
-
-    auto scancode_is_pressed(uint32_t scancode) const -> bool;
-
-private:
-    std::unordered_set<uint32_t> pressed_keysyms;
-    std::unordered_set<uint32_t> pressed_scancodes;
 };
 
 class ActionGroup
@@ -83,6 +62,38 @@ private:
     std::optional<std::pair<uint32_t, std::string>> timestamp_and_trigger;
 };
 
+/// Tracks keyboard state shared among all keyboard event filters
+class KeyboardStateTracker
+{
+public:
+    KeyboardStateTracker() = default;
+
+    bool process(MirEvent const& event);
+
+    /// Check if a keysym exists in the pressed set. If `case_insensitive` is
+    /// true, also check for the opposite case of the keysym (for a-z, A-Z).
+    auto keysym_is_pressed(uint32_t keysym, bool case_insensitive) const -> bool;
+
+    auto scancode_is_pressed(uint32_t scancode) const -> bool;
+
+private:
+    std::unordered_set<uint32_t> pressed_keysyms;
+    std::unordered_set<uint32_t> pressed_scancodes;
+};
+
+class KeyboardTriggerRegistry
+{
+public:
+    KeyboardTriggerRegistry(std::shared_ptr<shell::TokenAuthority> const& token_authority);
+    bool register_trigger(KeyboardTrigger* trigger);
+    bool matches_any_trigger(MirEvent const& event);
+private:
+    std::shared_ptr<shell::TokenAuthority> const token_authority;
+
+    std::vector<wayland::Weak<KeyboardTrigger>> triggers;
+    KeyboardStateTracker keyboard_state;
+};
+
 class InputTriggerRegistry
 {
 public:
@@ -92,10 +103,6 @@ public:
 
     auto create_new_action_group() -> std::pair<Token, std::shared_ptr<ActionGroup>>;
 
-    auto register_trigger(frontend::InputTriggerV1* trigger) -> bool;
-
-    bool matches_any_trigger(MirEvent const& event);
-
     bool was_revoked(Token const& token) const;
 
     auto get_action_group(Token const& token) -> std::shared_ptr<ActionGroup> const;
@@ -104,13 +111,10 @@ private:
     void token_revoked(Token const& token);
 
     std::unordered_map<Token, std::weak_ptr<ActionGroup>> action_groups;
-    std::vector<wayland::Weak<InputTriggerV1>> triggers;
     RecentTokens revoked_tokens;
 
     std::shared_ptr<shell::TokenAuthority> const token_authority;
     Executor& wayland_executor;
-
-    KeyboardStateTracker keyboard_state;
 };
 }
 }

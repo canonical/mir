@@ -24,6 +24,7 @@
 #include <mir_toolkit/events/enums.h>
 
 #include <algorithm>
+#include <ranges>
 #include <string>
 #include <vector>
 
@@ -46,50 +47,67 @@ auto mf::RecentTokens::contains(std::string_view token) const -> bool
     return std::find(tokens.begin(), tokens.end(), token) != tokens.end();
 }
 
-void mf::KeyboardStateTracker::on_key_down(uint32_t keysym, uint32_t scancode)
+bool mf::KeyboardStateTracker::process(MirEvent const& event)
 {
-    // Set all lowercase keys to uppercase
-    if (keysym == XKB_KEY_Shift_L || keysym == XKB_KEY_Shift_R)
+    if (event.type() != mir_event_type_input)
+        return false;
+
+    auto const& input_event = event.to_input();
+
+    if (input_event->input_type() != mir_input_event_type_key)
+        return false;
+
+    auto const* key_event = input_event->to_keyboard();
+    auto const keysym = key_event->keysym();
+    auto const scancode = key_event->scan_code();
+    auto const action = key_event->action();
+
+    if (action == mir_keyboard_action_down)
     {
-        std::unordered_set<xkb_keysym_t> to_replace;
-        for (auto const key : pressed_keysyms)
+        // Set all lowercase keys to uppercase
+        if (keysym == XKB_KEY_Shift_L || keysym == XKB_KEY_Shift_R)
         {
-            if (key >= XKB_KEY_a && key <= XKB_KEY_z)
-                to_replace.insert(key);
+            auto const lowercase_keysyms =
+                sr::views::filter(pressed_keysyms, [](auto key) { return key >= XKB_KEY_a && key <= XKB_KEY_z; }) |
+                sr::to<std::unordered_set<xkb_keysym_t>>();
+
+            // Doing `pressed_keysyms.erase(begin(), end())` crashes for some
+            // reason, so we have to do it one by one. Not sure if it's a me
+            // issue or a stdlib bug.
+            for (auto const key : lowercase_keysyms)
+                pressed_keysyms.erase(key);
+
+            auto const uppercase_keysyms = sr::views::transform(lowercase_keysyms, [](auto key) { return xkb_keysym_to_upper(key); });
+            pressed_keysyms.insert(uppercase_keysyms.begin(), uppercase_keysyms.end());
         }
 
-        for (auto const key : to_replace)
+        pressed_keysyms.insert(keysym);
+        pressed_scancodes.insert(scancode);
+        return true;
+    }
+    else if (action == mir_keyboard_action_up)
+    {
+        // Set all uppercase keys to lowercase
+        if (keysym == XKB_KEY_Shift_L || keysym == XKB_KEY_Shift_R)
         {
-            pressed_keysyms.erase(key);
-            pressed_keysyms.insert(xkb_keysym_to_upper(key));
+            auto const uppercase_keysyms =
+                sr::views::filter(pressed_keysyms, [](auto key) { return key >= XKB_KEY_A && key <= XKB_KEY_Z; }) |
+                sr::to<std::unordered_set<xkb_keysym_t>>();
+
+            for (auto const key : uppercase_keysyms)
+                pressed_keysyms.erase(key);
+
+            auto const lowercase_keysyms =
+                sr::views::transform(uppercase_keysyms, [](auto key) { return xkb_keysym_to_lower(key); });
+            pressed_keysyms.insert(lowercase_keysyms.begin(), lowercase_keysyms.end());
         }
+
+        pressed_keysyms.erase(keysym);
+        pressed_scancodes.erase(scancode);
+        return true;
     }
 
-    pressed_keysyms.insert(keysym);
-    pressed_scancodes.insert(scancode);
-}
-
-void mf::KeyboardStateTracker::on_key_up(uint32_t keysym, uint32_t scancode)
-{
-    // Set all uppercase keys to lowercase
-    if (keysym == XKB_KEY_Shift_L || keysym == XKB_KEY_Shift_R)
-    {
-        std::unordered_set<xkb_keysym_t> to_replace;
-        for (auto const key : pressed_keysyms)
-        {
-            if (key >= XKB_KEY_A && key <= XKB_KEY_Z)
-                to_replace.insert(key);
-        }
-
-        for (auto const key : to_replace)
-        {
-            pressed_keysyms.erase(key);
-            pressed_keysyms.insert(xkb_keysym_to_lower(key));
-        }
-    }
-
-    pressed_keysyms.erase(keysym);
-    pressed_scancodes.erase(scancode);
+    return false;
 }
 
 auto mf::KeyboardStateTracker::keysym_is_pressed(uint32_t keysym, bool case_insensitive) const -> bool
@@ -168,6 +186,51 @@ void mf::ActionGroup::begin(std::string const& activation_token, uint32_t waylan
         actions, [&](auto const& valid_action) { valid_action.send_begin_event(wayland_timestamp, activation_token); });
 }
 
+mf::KeyboardTriggerRegistry::KeyboardTriggerRegistry(std::shared_ptr<msh::TokenAuthority> const& token_authority) :
+    token_authority{token_authority}
+{
+}
+
+bool mf::KeyboardTriggerRegistry::register_trigger(mf::KeyboardTrigger* trigger)
+{
+    // Housekeeping
+    std::erase_if(triggers, [](auto const& weak_trigger) { return !weak_trigger; });
+
+    auto const already_registered = sr::any_of(
+        triggers, [trigger](auto const& other_trigger) { return trigger->is_same_trigger(&other_trigger.value()); });
+
+    if (already_registered)
+        return false;
+
+    triggers.push_back(wayland::make_weak(trigger));
+    return true;
+}
+
+auto mf::KeyboardTriggerRegistry::matches_any_trigger(MirEvent const& event) -> bool
+{
+    if (!keyboard_state.process(event))
+        return false;
+
+    bool any_matched{false};
+
+    auto const timestamp = mir_input_event_get_wayland_timestamp(event.to_input());
+    iterate_and_erase_expired(
+        triggers,
+        [&](auto& trigger)
+        {
+            auto const matched = trigger.process(event, keyboard_state);
+            if (matched)
+                trigger.begin(*token_authority, timestamp);
+            else
+                trigger.end(*token_authority, timestamp);
+
+            any_matched |= matched;
+        });
+
+    return any_matched;
+
+}
+
 mf::InputTriggerRegistry::InputTriggerRegistry(
     std::shared_ptr<msh::TokenAuthority> const& token_authority, Executor& wayland_executor) :
     token_authority{token_authority},
@@ -201,77 +264,9 @@ auto mf::InputTriggerRegistry::create_new_action_group() -> std::pair<Token, std
     return {static_cast<std::string>(token), ag};
 }
 
-auto mf::InputTriggerRegistry::register_trigger(mf::InputTriggerV1* trigger) -> bool
-{
-    // Housekeeping
-    std::erase_if(triggers, [](auto const& weak_trigger) { return !weak_trigger; });
-
-    auto const already_registered = sr::any_of(
-        triggers, [trigger](auto const& other_trigger) { return trigger->is_same_trigger(&other_trigger.value()); });
-
-    if (already_registered)
-        return false;
-
-    triggers.push_back(wayland::make_weak(trigger));
-    return true;
-}
-
 void mf::InputTriggerRegistry::token_revoked(Token const& token)
 {
     revoked_tokens.add(token);
-}
-
-bool mf::InputTriggerRegistry::matches_any_trigger(MirEvent const& event)
-{
-    if (event.type() != mir_event_type_input)
-        return false;
-
-    auto const& input_event = event.to_input();
-
-    if (input_event->input_type() != mir_input_event_type_key)
-        return false;
-
-    auto const* key_event = input_event->to_keyboard();
-    auto const keysym = key_event->keysym();
-    auto const scancode = key_event->scan_code();
-    auto const action = key_event->action();
-
-    if (action == mir_keyboard_action_down)
-        keyboard_state.on_key_down(keysym, scancode);
-    else if (action == mir_keyboard_action_up)
-        keyboard_state.on_key_up(keysym, scancode);
-    else
-        return false;
-
-    bool any_matched{false};
-
-    iterate_and_erase_expired(triggers, [&](auto& trigger) {
-        auto const matched = trigger.matches(event, keyboard_state);
-
-        if (!matched)
-        {
-            if (trigger.active())
-            {
-                auto const activation_token = std::string{token_authority->issue_token(std::nullopt)};
-                auto const timestamp = mir_input_event_get_wayland_timestamp(event.to_input());
-                trigger.end(activation_token, timestamp);
-            }
-
-            return;
-        }
-
-        if (!trigger.active())
-        {
-            auto const activation_token = std::string{token_authority->issue_token(std::nullopt)};
-            auto const timestamp = mir_input_event_get_wayland_timestamp(event.to_input());
-            trigger.begin(activation_token, timestamp);
-            any_matched = true;
-
-            return;
-        }
-    });
-
-    return any_matched;
 }
 
 bool mf::InputTriggerRegistry::was_revoked(Token const& token) const
@@ -285,3 +280,4 @@ auto mf::InputTriggerRegistry::get_action_group(Token const& token) -> std::shar
         return iter->second.lock();
     return nullptr;
 }
+

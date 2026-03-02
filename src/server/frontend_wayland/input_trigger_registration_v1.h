@@ -24,9 +24,12 @@ namespace mir
 namespace frontend
 {
 class InputTriggerRegistry;
+class KeyboardTriggerRegistry;
 
 auto create_input_trigger_registration_manager_v1(
-    wl_display* display, std::shared_ptr<InputTriggerRegistry> const& input_trigger_registry)
+    wl_display* display,
+    std::shared_ptr<InputTriggerRegistry> const& input_trigger_registry,
+    std::shared_ptr<KeyboardTriggerRegistry> const& keyboard_trigger_registry)
     -> std::shared_ptr<wayland::InputTriggerRegistrationManagerV1::Global>;
 }
 }

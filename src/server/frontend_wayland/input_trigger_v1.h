@@ -38,9 +38,8 @@ public:
     void associate_with_action_group(std::shared_ptr<frontend::ActionGroup> action_group);
     void unassociate_with_action_group(std::shared_ptr<frontend::ActionGroup> action_group);
 
-    bool active() const;
-    void begin(std::string const& token, uint32_t wayland_timestamp);
-    void end(std::string const& token, uint32_t wayland_timestamp);
+    void begin(shell::TokenAuthority& token_authority, uint32_t wayland_timestamp);
+    void end(shell::TokenAuthority& token_authority, uint32_t wayland_timestamp);
 
     static auto from(struct wl_resource* resource) -> InputTriggerV1*;
 
@@ -50,9 +49,9 @@ public:
     virtual bool is_same_trigger(KeyboardSymTrigger const* sym_trigger) const;
     virtual bool is_same_trigger(KeyboardCodeTrigger const* code_trigger) const;
 
-    virtual bool matches(MirEvent const& event, KeyboardStateTracker const& keyboard_state) const = 0;
 private:
     std::shared_ptr<frontend::ActionGroup> action_group;
+    bool active{false};
 };
 
 /// Strong type representing modifier flags used internally by Mir.
@@ -92,6 +91,18 @@ public:
 private:
     MirInputEventModifiers value;
 };
+
+class KeyboardTrigger : public InputTriggerV1
+{
+public:
+    KeyboardTrigger(InputTriggerModifiers modifiers, struct wl_resource* id);
+
+    // \return true if event was handled, false otherwise.
+    virtual bool process(MirEvent const& event, KeyboardStateTracker const& keyboard_state_tracker) = 0;
+
+    InputTriggerModifiers const modifiers;
+};
+
 }
 }
 

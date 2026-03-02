@@ -27,23 +27,6 @@
 namespace mf = mir::frontend;
 namespace mw = mir::wayland;
 
-namespace
-{
-class KeyboardTrigger : public mf::InputTriggerV1
-{
-public:
-    KeyboardTrigger(mf::InputTriggerModifiers modifiers, struct wl_resource* id);
-
-    mf::InputTriggerModifiers const modifiers;
-};
-
-KeyboardTrigger::KeyboardTrigger(mf::InputTriggerModifiers modifiers, struct wl_resource* id) :
-    InputTriggerV1{id, Version<1>{}},
-    modifiers{modifiers}
-{
-}
-}
-
 class mf::KeyboardSymTrigger : public KeyboardTrigger
 {
 public:
@@ -51,7 +34,7 @@ public:
 
     auto to_string() const -> std::string override;
 
-    auto matches(MirEvent const& ev, KeyboardStateTracker const& keyboard_state) const -> bool override;
+    bool process(MirEvent const& event, KeyboardStateTracker const& keyboard_state_tracker) override;
 
     bool is_same_trigger(InputTriggerV1 const* other) const override;
     bool is_same_trigger(KeyboardSymTrigger const* other) const override;
@@ -66,7 +49,7 @@ public:
 
     auto to_string() const -> std::string override;
 
-    auto matches(MirEvent const& ev, KeyboardStateTracker const& keyboard_state) const -> bool override;
+    bool process(MirEvent const& event, KeyboardStateTracker const& keyboard_state_tracker) override;
 
     bool is_same_trigger(InputTriggerV1 const* other) const override;
     bool is_same_trigger(KeyboardCodeTrigger const* other) const override;
@@ -90,9 +73,9 @@ auto mf::KeyboardSymTrigger::to_string() const -> std::string
         modifiers.to_string());
 }
 
-auto mf::KeyboardSymTrigger::matches(MirEvent const& ev, KeyboardStateTracker const& keyboard_state) const -> bool
+bool mf::KeyboardSymTrigger::process(MirEvent const& event, KeyboardStateTracker const& keyboard_state_tracker)
 {
-    auto const event_modifiers = InputTriggerModifiers{ev.to_input()->to_keyboard()->modifiers()};
+    auto const event_modifiers = InputTriggerModifiers{event.to_input()->to_keyboard()->modifiers()};
     if (!mf::InputTriggerModifiers::modifiers_match(modifiers, event_modifiers))
         return false;
 
@@ -101,7 +84,7 @@ auto mf::KeyboardSymTrigger::matches(MirEvent const& ev, KeyboardStateTracker co
         ((mods_value & mir_input_event_modifier_shift) | (mods_value & mir_input_event_modifier_shift_left) |
          (mods_value & mir_input_event_modifier_shift_right)) != 0;
 
-    return keyboard_state.keysym_is_pressed(keysym, trigger_mods_contain_shift);
+    return keyboard_state_tracker.keysym_is_pressed(keysym, trigger_mods_contain_shift);
 }
 
 bool mf::KeyboardSymTrigger::is_same_trigger(InputTriggerV1 const* other) const
@@ -130,13 +113,13 @@ auto mf::KeyboardCodeTrigger::to_string() const -> std::string
         modifiers.to_string());
 }
 
-auto mf::KeyboardCodeTrigger::matches(MirEvent const& ev, KeyboardStateTracker const& keyboard_state) const -> bool
+bool mf::KeyboardCodeTrigger::process(MirEvent const& event, KeyboardStateTracker const& keyboard_state_tracker)
 {
-    auto const event_modifiers = InputTriggerModifiers{ev.to_input()->to_keyboard()->modifiers()};
+    auto const event_modifiers = InputTriggerModifiers{event.to_input()->to_keyboard()->modifiers()};
     if (!mf::InputTriggerModifiers::modifiers_match(modifiers, event_modifiers))
         return false;
 
-    return keyboard_state.scancode_is_pressed(scancode);
+    return keyboard_state_tracker.scancode_is_pressed(scancode);
 }
 
 bool mf::KeyboardCodeTrigger::is_same_trigger(InputTriggerV1 const* other) const
@@ -163,7 +146,8 @@ private:
     std::shared_ptr<mf::ActionGroup> const action_group;
 };
 
-InputTriggerActionControlV1::InputTriggerActionControlV1(std::shared_ptr<mf::ActionGroup> const& action_group, struct wl_resource* id) :
+InputTriggerActionControlV1::InputTriggerActionControlV1(
+    std::shared_ptr<mf::ActionGroup> const& action_group, struct wl_resource* id) :
     mw::InputTriggerActionControlV1{id, Version<1>{}},
     action_group{action_group}
 {
@@ -189,9 +173,12 @@ class InputTriggerRegistrationManagerV1 : public mw::InputTriggerRegistrationMan
 {
 public:
     InputTriggerRegistrationManagerV1(
-        wl_display* display, std::shared_ptr<mf::InputTriggerRegistry> const& input_trigger_registry) :
+        wl_display* display,
+        std::shared_ptr<mf::InputTriggerRegistry> const& input_trigger_registry,
+        std::shared_ptr<mf::KeyboardTriggerRegistry> const& keyboard_trigger_registry) :
         Global{display, Version<1>{}},
-        input_trigger_registry{input_trigger_registry}
+        input_trigger_registry{input_trigger_registry},
+        keyboard_trigger_registry{keyboard_trigger_registry}
     {
     }
 
@@ -200,9 +187,11 @@ public:
     public:
         Instance(
             wl_resource* new_ext_input_trigger_registration_manager_v1,
-            std::shared_ptr<mf::InputTriggerRegistry> const& input_trigger_registry) :
+            std::shared_ptr<mf::InputTriggerRegistry> const& input_trigger_registry,
+            std::shared_ptr<mf::KeyboardTriggerRegistry> const& keyboard_trigger_registry) :
             mw::InputTriggerRegistrationManagerV1{new_ext_input_trigger_registration_manager_v1, Version<1>{}},
-            input_trigger_registry{input_trigger_registry}
+            input_trigger_registry{input_trigger_registry},
+            keyboard_trigger_registry{keyboard_trigger_registry}
         {
         }
 
@@ -212,15 +201,17 @@ public:
 
     private:
         std::shared_ptr<mf::InputTriggerRegistry> const input_trigger_registry;
+        std::shared_ptr<mf::KeyboardTriggerRegistry> const keyboard_trigger_registry;
     };
 
     void bind(wl_resource* new_ext_input_trigger_registration_manager_v1) override
     {
-        new Instance{new_ext_input_trigger_registration_manager_v1, input_trigger_registry};
+        new Instance{new_ext_input_trigger_registration_manager_v1, input_trigger_registry, keyboard_trigger_registry};
     }
 
 private:
     std::shared_ptr<mf::InputTriggerRegistry> const input_trigger_registry;
+    std::shared_ptr<mf::KeyboardTriggerRegistry> const keyboard_trigger_registry;
 };
 
 // Triggers are stored in the action control object until the corresponding
@@ -236,7 +227,7 @@ void InputTriggerRegistrationManagerV1::Instance::register_keyboard_sym_trigger(
     auto* keyboard_trigger =
         new mf::KeyboardSymTrigger{mf::InputTriggerModifiers::from_protocol(modifiers, shift_adjustment), keysym, id};
 
-    if (!input_trigger_registry->register_trigger(keyboard_trigger))
+    if (!keyboard_trigger_registry->register_trigger(keyboard_trigger))
     {
         mir::log_warning("register_keyboard_sym_trigger: %s already registered", keyboard_trigger->to_string().c_str());
         keyboard_trigger->send_failed_event();
@@ -251,9 +242,10 @@ void InputTriggerRegistrationManagerV1::Instance::register_keyboard_code_trigger
     auto* keyboard_trigger =
         new mf::KeyboardCodeTrigger{mf::InputTriggerModifiers::from_protocol(modifiers), keycode, id};
 
-    if (!input_trigger_registry->register_trigger(keyboard_trigger))
+    if (!keyboard_trigger_registry->register_trigger(keyboard_trigger))
     {
-        mir::log_warning("register_keyboard_code_trigger: %s already registered", keyboard_trigger->to_string().c_str());
+        mir::log_warning(
+            "register_keyboard_code_trigger: %s already registered", keyboard_trigger->to_string().c_str());
         keyboard_trigger->send_failed_event();
     }
     else
@@ -269,8 +261,12 @@ void InputTriggerRegistrationManagerV1::Instance::get_action_control(std::string
 }
 }
 
-auto mf::create_input_trigger_registration_manager_v1(wl_display* display, std::shared_ptr<InputTriggerRegistry> const& input_trigger_registry)
+auto mf::create_input_trigger_registration_manager_v1(
+    wl_display* display,
+    std::shared_ptr<InputTriggerRegistry> const& input_trigger_registry,
+    std::shared_ptr<KeyboardTriggerRegistry> const& keyboard_trigger_registry)
     -> std::shared_ptr<mw::InputTriggerRegistrationManagerV1::Global>
 {
-    return std::make_shared<InputTriggerRegistrationManagerV1>(display, input_trigger_registry);
+    return std::make_shared<InputTriggerRegistrationManagerV1>(
+        display, input_trigger_registry, keyboard_trigger_registry);
 }
