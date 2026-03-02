@@ -18,17 +18,24 @@
 #define MIR_SERVER_FRONTEND_INPUT_TRIGGER_V1_H_
 
 #include "ext-input-trigger-registration-v1_wrapper.h"
-#include "input_trigger_common.h"
+
+#include <mir_toolkit/events/event.h>
+#include <mir_toolkit/events/enums.h>
 
 #include <string>
 
 namespace mir
 {
+namespace shell
+{
+class TokenAuthority;
+}
 namespace frontend
 {
 class KeyboardSymTrigger;
 class KeyboardCodeTrigger;
 class KeyboardStateTracker;
+class ActionGroup;
 
 class InputTriggerV1 : public wayland::InputTriggerV1
 {
