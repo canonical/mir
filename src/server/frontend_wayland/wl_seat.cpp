@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "input_trigger_registry.h"
+#include "input_trigger_common.h"
 #include "surface_registry.h"
 #include "wayland_wrapper.h"
 

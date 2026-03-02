@@ -15,7 +15,7 @@
  */
 
 #include "input_trigger_action_v1.h"
-#include "input_trigger_registry.h"
+#include "input_trigger_common.h"
 #include "mir/wayland/weak.h"
 
 #include <mir/wayland/protocol_error.h>

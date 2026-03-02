@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_SERVER_FRONTEND_INPUT_TRIGGER_REGISTRY_H_
-#define MIR_SERVER_FRONTEND_INPUT_TRIGGER_REGISTRY_H_
+#ifndef MIR_SERVER_FRONTEND_INPUT_TRIGGER_COMMON_H_
+#define MIR_SERVER_FRONTEND_INPUT_TRIGGER_COMMON_H_
 
 #include "ext-input-trigger-action-v1_wrapper.h"
 

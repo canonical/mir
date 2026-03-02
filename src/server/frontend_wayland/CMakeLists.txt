@@ -69,7 +69,7 @@ set(
   surface_registry.cpp          surface_registry.h
   input_trigger_registration_v1.cpp input_trigger_registration_v1.h
   input_trigger_action_v1.cpp       input_trigger_action_v1.h
-  input_trigger_registry.cpp            input_trigger_registry.h
+  input_trigger_common.cpp            input_trigger_common.h
   input_trigger_v1.cpp            input_trigger_v1.h
 )
 

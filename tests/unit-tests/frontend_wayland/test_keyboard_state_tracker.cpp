@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "src/server/frontend_wayland/input_trigger_registry.h"
+#include "src/server/frontend_wayland/input_trigger_common.h"
 #include "src/server/input/default_event_builder.h"
 
 #include <mir/test/doubles/advanceable_clock.h>
