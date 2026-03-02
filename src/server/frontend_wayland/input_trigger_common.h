@@ -17,6 +17,7 @@
 #ifndef MIR_SERVER_FRONTEND_INPUT_TRIGGER_COMMON_H_
 #define MIR_SERVER_FRONTEND_INPUT_TRIGGER_COMMON_H_
 
+
 #include <mir/events/event.h>
 #include <mir/executor.h>
 #include <mir/shell/token_authority.h>
@@ -30,7 +31,9 @@ namespace mir
 {
 namespace frontend
 {
-class KeyboardTrigger;
+class KeyboardSymTrigger;
+class KeyboardCodeTrigger;
+class KeyboardStateTracker;
 
 class RecentTokens
 {
@@ -68,6 +71,31 @@ private:
     std::optional<std::pair<uint32_t, std::string>> timestamp_and_token;
 };
 
+class InputTrigger: public virtual wayland::LifetimeTracker
+{
+public:
+    virtual ~InputTrigger() = default;
+
+    void associate_with_action_group(std::shared_ptr<frontend::ActionGroup> action_group);
+    void unassociate_with_action_group(std::shared_ptr<frontend::ActionGroup> action_group);
+
+    void begin(shell::TokenAuthority& token_authority, uint32_t wayland_timestamp);
+    void end(shell::TokenAuthority& token_authority, uint32_t wayland_timestamp);
+
+    // \return true if event was handled, false otherwise.
+    virtual bool process(MirEvent const& event) = 0;
+
+    virtual auto to_string() const -> std::string = 0;
+
+    virtual bool is_same_trigger(InputTrigger const* other) const = 0;
+    virtual bool is_same_trigger(KeyboardSymTrigger const* sym_trigger) const;
+    virtual bool is_same_trigger(KeyboardCodeTrigger const* code_trigger) const;
+
+private:
+    std::shared_ptr<frontend::ActionGroup> action_group;
+    bool active{false};
+};
+
 /// Tracks keyboard state shared among all keyboard event filters
 class KeyboardStateTracker
 {
@@ -91,12 +119,15 @@ class KeyboardTriggerRegistry
 {
 public:
     KeyboardTriggerRegistry(std::shared_ptr<shell::TokenAuthority> const& token_authority);
-    bool register_trigger(KeyboardTrigger* trigger);
+    bool register_trigger(InputTrigger* trigger);
     bool matches_any_trigger(MirEvent const& event);
+
+    auto keyboard_state_tracker() const -> KeyboardStateTracker const&;
+
 private:
     std::shared_ptr<shell::TokenAuthority> const token_authority;
 
-    std::vector<wayland::Weak<KeyboardTrigger>> triggers;
+    std::vector<wayland::Weak<InputTrigger>> triggers;
     KeyboardStateTracker keyboard_state;
 };
 

@@ -47,6 +47,45 @@ auto mf::RecentTokens::contains(std::string_view token) const -> bool
     return std::find(tokens.begin(), tokens.end(), token) != tokens.end();
 }
 
+void mf::InputTrigger::associate_with_action_group(std::shared_ptr<frontend::ActionGroup> action_group)
+{
+    this->action_group = action_group;
+}
+
+void mf::InputTrigger::unassociate_with_action_group(std::shared_ptr<frontend::ActionGroup> action_group)
+{
+    if (this->action_group == action_group)
+        this->action_group.reset();
+}
+
+void mf::InputTrigger::begin(shell::TokenAuthority& token_authority, uint32_t wayland_timestamp)
+{
+    if(active || !action_group)
+        return;
+
+    active = true;
+    action_group->begin(static_cast<std::string>(token_authority.issue_token(std::nullopt)), wayland_timestamp);
+}
+
+void mf::InputTrigger::end(shell::TokenAuthority& token_authority, uint32_t wayland_timestamp)
+{
+    if (!active || !action_group)
+        return;
+
+    active = false;
+    action_group->end(static_cast<std::string>(token_authority.issue_token(std::nullopt)), wayland_timestamp);
+}
+
+bool mf::InputTrigger::is_same_trigger(KeyboardSymTrigger const*) const
+{
+    return false;
+}
+
+bool mf::InputTrigger::is_same_trigger(KeyboardCodeTrigger const*) const
+{
+    return false;
+}
+
 bool mf::KeyboardStateTracker::process(MirEvent const& event)
 {
     if (event.type() != mir_event_type_input)
@@ -187,7 +226,7 @@ mf::KeyboardTriggerRegistry::KeyboardTriggerRegistry(std::shared_ptr<msh::TokenA
 {
 }
 
-bool mf::KeyboardTriggerRegistry::register_trigger(mf::KeyboardTrigger* trigger)
+bool mf::KeyboardTriggerRegistry::register_trigger(mf::InputTrigger* trigger)
 {
     // Housekeeping
     std::erase_if(triggers, [](auto const& weak_trigger) { return !weak_trigger; });
@@ -214,7 +253,7 @@ auto mf::KeyboardTriggerRegistry::matches_any_trigger(MirEvent const& event) -> 
         triggers,
         [&](auto& trigger)
         {
-            auto const matched = trigger.process(event, keyboard_state);
+            auto const matched = trigger.process(event);
             if (matched)
                 trigger.begin(*token_authority, timestamp);
             else
@@ -225,6 +264,11 @@ auto mf::KeyboardTriggerRegistry::matches_any_trigger(MirEvent const& event) -> 
 
     return any_matched;
 
+}
+
+auto mf::KeyboardTriggerRegistry::keyboard_state_tracker() const -> KeyboardStateTracker const&
+{
+    return keyboard_state;
 }
 
 mf::ActionGroupManager::ActionGroupManager(
