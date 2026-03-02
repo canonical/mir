@@ -105,20 +105,18 @@ private:
 class InputTriggerRegistry
 {
 public:
-    using Token = std::string;
-
     InputTriggerRegistry(std::shared_ptr<shell::TokenAuthority> const& token_authority, Executor& wayland_executor);
 
-    auto create_new_action_group() -> std::pair<Token, std::shared_ptr<ActionGroup>>;
+    auto create_new_action_group() -> std::pair<std::string, std::shared_ptr<ActionGroup>>;
 
-    bool was_revoked(Token const& token) const;
+    bool was_revoked(std::string const& token) const;
 
-    auto get_action_group(Token const& token) -> std::shared_ptr<ActionGroup> const;
+    auto get_action_group(std::string const& token) -> std::shared_ptr<ActionGroup> const;
 
 private:
-    void token_revoked(Token const& token);
+    void token_revoked(std::string const& token);
 
-    std::unordered_map<Token, std::weak_ptr<ActionGroup>> action_groups;
+    std::unordered_map<std::string, std::weak_ptr<ActionGroup>> action_groups;
     RecentTokens revoked_tokens;
 
     std::shared_ptr<shell::TokenAuthority> const token_authority;

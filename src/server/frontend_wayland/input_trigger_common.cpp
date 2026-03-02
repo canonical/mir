@@ -234,7 +234,7 @@ mf::InputTriggerRegistry::InputTriggerRegistry(
 {
 }
 
-auto mf::InputTriggerRegistry::create_new_action_group() -> std::pair<Token, std::shared_ptr<ActionGroup>>
+auto mf::InputTriggerRegistry::create_new_action_group() -> std::pair<std::string, std::shared_ptr<ActionGroup>>
 {
     // Ugly, but we somehow need to tie the action group's lifetime to the
     // token, while using the token to remove the entry in action_groups.
@@ -251,7 +251,7 @@ auto mf::InputTriggerRegistry::create_new_action_group() -> std::pair<Token, std
 
     auto const token = token_authority->issue_token(
         [this, ag](auto const& token)
-        { wayland_executor.spawn([this, token, ag] { token_revoked(Token{token}); }); });
+        { wayland_executor.spawn([this, token, ag] { token_revoked(std::string{token}); }); });
 
     *token_ptr = static_cast<std::string>(token);
 
@@ -260,17 +260,17 @@ auto mf::InputTriggerRegistry::create_new_action_group() -> std::pair<Token, std
     return {static_cast<std::string>(token), ag};
 }
 
-void mf::InputTriggerRegistry::token_revoked(Token const& token)
+void mf::InputTriggerRegistry::token_revoked(std::string const& token)
 {
     revoked_tokens.add(token);
 }
 
-bool mf::InputTriggerRegistry::was_revoked(Token const& token) const
+bool mf::InputTriggerRegistry::was_revoked(std::string const& token) const
 {
     return revoked_tokens.contains(token);
 }
 
-auto mf::InputTriggerRegistry::get_action_group(Token const& token) -> std::shared_ptr<ActionGroup> const
+auto mf::InputTriggerRegistry::get_action_group(std::string const& token) -> std::shared_ptr<ActionGroup> const
 {
     if (auto const iter = action_groups.find(token); iter != action_groups.end())
         return iter->second.lock();
