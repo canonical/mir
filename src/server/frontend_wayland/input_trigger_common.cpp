@@ -139,13 +139,13 @@ bool mf::KeyboardStateTracker::process(MirEvent const& event)
         if (keysym == XKB_KEY_Shift_L || keysym == XKB_KEY_Shift_R)
         {
             auto const lowercase = sr::views::transform(
-                                  pressed_keysyms,
-                                  [](auto key)
-                                  {
-                                      if (key >= XKB_KEY_A && key <= XKB_KEY_Z)
-                                          return xkb_keysym_to_lower(key);
-                                      return key;
-                                  });
+                pressed_keysyms,
+                [](auto key)
+                {
+                    if (key >= XKB_KEY_A && key <= XKB_KEY_Z)
+                        return xkb_keysym_to_lower(key);
+                    return key;
+                });
             pressed_keysyms = std::unordered_set<xkb_keysym_t>(lowercase.begin(), lowercase.end());
         }
 
