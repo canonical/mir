@@ -59,7 +59,7 @@ void mf::InputTrigger::unassociate_with_action_group(std::shared_ptr<mf::ActionG
 
 void mf::InputTrigger::begin(uint32_t wayland_timestamp)
 {
-    if(active || !action_group)
+    if (active || !action_group)
         return;
 
     active = true;
