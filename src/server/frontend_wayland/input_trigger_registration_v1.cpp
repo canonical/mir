@@ -65,7 +65,7 @@ public:
     bool contains(std::initializer_list<MirInputEventModifier> mods) const;
 
 private:
-    MirInputEventModifiers value;
+    MirInputEventModifiers const value;
 };
 
 class KeyboardTrigger : public mf::InputTrigger, public mw::InputTriggerV1
