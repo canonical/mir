@@ -340,10 +340,11 @@ public:
     bool is_same_trigger(InputTrigger const* other) const override;
     bool is_same_trigger(KeyboardSymTrigger const* other) const override;
 
-    uint32_t const keysym;
 
 private:
     bool do_process(MirEvent const& event) override;
+
+    uint32_t const keysym;
 };
 
 class mf::KeyboardCodeTrigger : public KeyboardTrigger
@@ -360,10 +361,10 @@ public:
     bool is_same_trigger(InputTrigger const* other) const override;
     bool is_same_trigger(KeyboardCodeTrigger const* other) const override;
 
-    uint32_t const scancode;
-
 private:
     bool do_process(MirEvent const& event) override;
+
+    uint32_t const scancode;
 };
 
 mf::KeyboardSymTrigger::KeyboardSymTrigger(
