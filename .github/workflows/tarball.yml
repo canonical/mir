@@ -46,7 +46,7 @@ jobs:
         gpg --detach-sig --sign --output mir-${{ steps.get-version.outputs.version }}.tar.xz.asc mir-${{ steps.get-version.outputs.version }}.tar.xz
 
     - name: Store the tarball and signature
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       with:
         name: mir-${{ steps.get-version.outputs.version }}
         path: |
