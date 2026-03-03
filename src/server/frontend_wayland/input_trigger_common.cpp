@@ -304,7 +304,7 @@ auto mf::ActionGroupManager::create_new_action_group() -> std::pair<std::string,
 
     auto const token = token_authority->issue_token(
         [this, ag](auto const& token)
-        { wayland_executor.spawn([this, token, ag] { token_revoked(std::string{token}); }); });
+        { wayland_executor.spawn([this, token, ag] { token_revoked(static_cast<std::string>(token)); }); });
 
     *token_ptr = static_cast<std::string>(token);
 
