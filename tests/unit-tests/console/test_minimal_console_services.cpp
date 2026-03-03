@@ -26,6 +26,7 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include <string_view>
 
 namespace mtf = mir_test_framework;
 namespace mtd = mir::test::doubles;
@@ -43,7 +44,7 @@ std::string uevent_content_for_device(
 {
     std::stringstream content;
 
-    if (strncmp(device_name, "/dev/", mir::strlen_c("/dev/")) != 0)
+    if (!std::string_view{device_name}.starts_with("/dev/"))
     {
         throw std::logic_error{"device_name is expected to be the fully-qualified /dev/foo path"};
     }
@@ -235,7 +236,7 @@ TEST_F(MinimalConsoleServicesTest, failure_to_open_device_node_returns_exception
     auto error_on_device_open = mtf::add_open_handler(
         [device_path](char const* path, int, std::optional<mode_t>) -> std::optional<int>
         {
-            if (!strcmp(device_path, path))
+            if (std::string_view{device_path} == std::string_view{path})
             {
                 errno = ENODEV;
                 return {-1};
@@ -277,7 +278,7 @@ TEST_F(MinimalConsoleServicesTest, failure_to_open_sys_file_results_in_immediate
     auto error_on_device_open = mtf::add_open_handler(
         [](char const* path, int, std::optional<mode_t>) -> std::optional<int>
         {
-            if (!strncmp("/sys", path, mir::strlen_c("/sys")))
+            if (std::string_view{path}.starts_with("/sys"))
             {
                 errno = EINVAL;
                 return {-1};
@@ -329,7 +330,7 @@ TEST_F(MinimalConsoleServicesTest, opens_input_devices_in_nonblocking_mode)
             int flags,
             std::optional<mode_t>) -> std::optional<int>
         {
-            if (strcmp(path, device_path))
+            if (std::string_view{path} != std::string_view{device_path})
             {
                 return std::nullopt;
             }
@@ -368,7 +369,7 @@ TEST_F(MinimalConsoleServicesTest, does_not_open_drm_devices_in_nonblocking_mode
             int flags,
             std::optional<mode_t>) -> std::optional<int>
         {
-            if (strcmp(path, device_path))
+            if (std::string_view{path} != std::string_view{device_path})
             {
                 return std::nullopt;
             }

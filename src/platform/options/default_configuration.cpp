@@ -26,8 +26,10 @@
 
 #include <algorithm>
 #include <format>
+#include <string_view>
 
 namespace mo = mir::options;
+using namespace std::string_view_literals;
 
 char const* const mo::arw_server_socket_opt       = "arw-file";
 char const* const mo::enable_input_opt            = "enable-input,i";
@@ -404,7 +406,7 @@ auto compare_library_names(std::shared_ptr<mir::SharedLibrary> const& lhs, std::
     auto const lhs_desc = lhs->load_function<mir::graphics::DescribeModule>("describe_graphics_module", MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
     auto const rhs_desc = rhs->load_function<mir::graphics::DescribeModule>("describe_graphics_module", MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
 
-    return strcmp(rhs_desc()->name, lhs_desc()->name) > 0;
+    return std::string_view{rhs_desc()->name} > std::string_view{lhs_desc()->name};
 }
 
 auto option_default_to_string(boost::shared_ptr<boost::program_options::option_description> const& desc) -> std::string

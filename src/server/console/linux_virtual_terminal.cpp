@@ -25,6 +25,7 @@
 #include <mir/graphics/event_handler_register.h>
 #include <mir/raii.h>
 #include <mir/synchronised.h>
+#include <string_view>
 
 #define MIR_LOG_COMPONTENT "VT-handler"
 #include <mir/log.h>
@@ -661,7 +662,7 @@ std::future<std::unique_ptr<mir::Device>> mir::LinuxVirtualTerminal::acquire_dev
 
             while (uevent.getline(line_buffer, sizeof(line_buffer)))
             {
-                if (strncmp(line_buffer, "DEVNAME=", strlen_c("DEVNAME=")) == 0)
+                if (std::string_view{line_buffer}.starts_with("DEVNAME="))
                 {
                     return std::string{"/dev/"} + std::string{line_buffer + strlen_c("DEVNAME=")};
                 }
