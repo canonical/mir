@@ -147,8 +147,6 @@ public:
     auto get_action_group(std::string const& token) -> std::shared_ptr<ActionGroup> const;
 
 private:
-    void token_revoked(std::string const& token);
-
     std::unordered_map<std::string, std::weak_ptr<ActionGroup>> action_groups;
     RecentTokens revoked_tokens;
 

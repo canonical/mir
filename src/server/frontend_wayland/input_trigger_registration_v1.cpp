@@ -29,9 +29,10 @@
 namespace mf = mir::frontend;
 namespace mw = mir::wayland;
 
+// Putting these at the very top because KeyboardSymTrigger and
+// KeyboardCodeTrigger need to use them.
 namespace
 {
-
 /// Strong type representing modifier flags used internally by Mir.
 class InputTriggerModifiers
 {
@@ -92,7 +93,128 @@ public:
     InputTriggerModifiers const modifiers;
     mf::KeyboardStateTracker const& keyboard_state_tracker;
 };
+}
 
+class mf::KeyboardSymTrigger : public KeyboardTrigger
+{
+public:
+    KeyboardSymTrigger(
+        InputTriggerModifiers modifiers,
+        uint32_t keysym,
+        mf::KeyboardStateTracker const& keyboard_state_tracker,
+        struct wl_resource* id);
+
+    auto to_string() const -> std::string override;
+
+    bool is_same_trigger(InputTrigger const* other) const override;
+    bool is_same_trigger(KeyboardSymTrigger const* other) const override;
+
+
+private:
+    bool do_process(MirEvent const& event) override;
+
+    uint32_t const keysym;
+};
+
+class mf::KeyboardCodeTrigger : public KeyboardTrigger
+{
+public:
+    KeyboardCodeTrigger(
+        InputTriggerModifiers modifiers,
+        uint32_t scancode,
+        mf::KeyboardStateTracker const& keyboard_state_tracker,
+        struct wl_resource* id);
+
+    auto to_string() const -> std::string override;
+
+    bool is_same_trigger(InputTrigger const* other) const override;
+    bool is_same_trigger(KeyboardCodeTrigger const* other) const override;
+
+private:
+    bool do_process(MirEvent const& event) override;
+
+    uint32_t const scancode;
+};
+
+mf::KeyboardSymTrigger::KeyboardSymTrigger(
+    InputTriggerModifiers modifiers,
+    uint32_t keysym,
+    mf::KeyboardStateTracker const& keyboard_state_tracker,
+    struct wl_resource* id) :
+    KeyboardTrigger{modifiers, keyboard_state_tracker, id},
+    keysym{keysym}
+{
+}
+
+auto mf::KeyboardSymTrigger::to_string() const -> std::string
+{
+    return std::format(
+        "KeyboardSymTrigger{{client={}, keysym={}, modifiers={}}}",
+        static_cast<void*>(wl_resource_get_client(resource)),
+        keysym,
+        modifiers.to_string());
+}
+
+bool mf::KeyboardSymTrigger::do_process(MirEvent const& event)
+{
+    if (!InputTriggerModifiers::modifiers_match(modifiers, event.to_input()->to_keyboard()->modifiers()))
+        return false;
+
+    auto const trigger_mods_contain_shift = modifiers.contains(
+        {mir_input_event_modifier_shift, mir_input_event_modifier_shift_left, mir_input_event_modifier_shift_right});
+
+    return keyboard_state_tracker.keysym_is_pressed(keysym, trigger_mods_contain_shift);
+}
+
+bool mf::KeyboardSymTrigger::is_same_trigger(InputTrigger const* other) const
+{
+    return other->is_same_trigger(this);
+}
+
+bool mf::KeyboardSymTrigger::is_same_trigger(KeyboardSymTrigger const* other) const
+{
+    return other && keysym == other->keysym && modifiers == other->modifiers;
+}
+
+mf::KeyboardCodeTrigger::KeyboardCodeTrigger(
+    InputTriggerModifiers modifiers,
+    uint32_t scancode,
+    mf::KeyboardStateTracker const& keyboard_state_tracker,
+    struct wl_resource* id) :
+    KeyboardTrigger{modifiers, keyboard_state_tracker, id},
+    scancode{scancode}
+{
+}
+
+auto mf::KeyboardCodeTrigger::to_string() const -> std::string
+{
+    return std::format(
+        "KeyboardCodeTrigger{{client={}, scancode={}, modifiers={}}}",
+        static_cast<void*>(wl_resource_get_client(resource)),
+        scancode,
+        modifiers.to_string());
+}
+
+bool mf::KeyboardCodeTrigger::do_process(MirEvent const& event)
+{
+    if (!InputTriggerModifiers::modifiers_match(modifiers, event.to_input()->to_keyboard()->modifiers()))
+        return false;
+
+    return keyboard_state_tracker.scancode_is_pressed(scancode);
+}
+
+bool mf::KeyboardCodeTrigger::is_same_trigger(InputTrigger const* other) const
+{
+    return other->is_same_trigger(this);
+}
+
+bool mf::KeyboardCodeTrigger::is_same_trigger(KeyboardCodeTrigger const* other) const
+{
+    return other && scancode == other->scancode && modifiers == other->modifiers;
+}
+
+namespace
+{
 // Each entry describes one modifier family: { generic, left, right }.
 // left/right are 0 for families that have no sided variants (sym, function).
 // clang-format off
@@ -299,128 +421,7 @@ auto KeyboardTrigger::from(struct wl_resource* resource) -> KeyboardTrigger*
     mir::log_warning("Non-mw::InputTriggerV1 resource passed to KeyboardTrigger:from");
     return nullptr;
 }
-}
 
-class mf::KeyboardSymTrigger : public KeyboardTrigger
-{
-public:
-    KeyboardSymTrigger(
-        InputTriggerModifiers modifiers,
-        uint32_t keysym,
-        mf::KeyboardStateTracker const& keyboard_state_tracker,
-        struct wl_resource* id);
-
-    auto to_string() const -> std::string override;
-
-    bool is_same_trigger(InputTrigger const* other) const override;
-    bool is_same_trigger(KeyboardSymTrigger const* other) const override;
-
-
-private:
-    bool do_process(MirEvent const& event) override;
-
-    uint32_t const keysym;
-};
-
-class mf::KeyboardCodeTrigger : public KeyboardTrigger
-{
-public:
-    KeyboardCodeTrigger(
-        InputTriggerModifiers modifiers,
-        uint32_t scancode,
-        mf::KeyboardStateTracker const& keyboard_state_tracker,
-        struct wl_resource* id);
-
-    auto to_string() const -> std::string override;
-
-    bool is_same_trigger(InputTrigger const* other) const override;
-    bool is_same_trigger(KeyboardCodeTrigger const* other) const override;
-
-private:
-    bool do_process(MirEvent const& event) override;
-
-    uint32_t const scancode;
-};
-
-mf::KeyboardSymTrigger::KeyboardSymTrigger(
-    InputTriggerModifiers modifiers,
-    uint32_t keysym,
-    mf::KeyboardStateTracker const& keyboard_state_tracker,
-    struct wl_resource* id) :
-    KeyboardTrigger{modifiers, keyboard_state_tracker, id},
-    keysym{keysym}
-{
-}
-
-auto mf::KeyboardSymTrigger::to_string() const -> std::string
-{
-    return std::format(
-        "KeyboardSymTrigger{{client={}, keysym={}, modifiers={}}}",
-        static_cast<void*>(wl_resource_get_client(resource)),
-        keysym,
-        modifiers.to_string());
-}
-
-bool mf::KeyboardSymTrigger::do_process(MirEvent const& event)
-{
-    if (!InputTriggerModifiers::modifiers_match(modifiers, event.to_input()->to_keyboard()->modifiers()))
-        return false;
-
-    auto const trigger_mods_contain_shift = modifiers.contains(
-        {mir_input_event_modifier_shift, mir_input_event_modifier_shift_left, mir_input_event_modifier_shift_right});
-
-    return keyboard_state_tracker.keysym_is_pressed(keysym, trigger_mods_contain_shift);
-}
-
-bool mf::KeyboardSymTrigger::is_same_trigger(InputTrigger const* other) const
-{
-    return other->is_same_trigger(this);
-}
-
-bool mf::KeyboardSymTrigger::is_same_trigger(KeyboardSymTrigger const* other) const
-{
-    return other && keysym == other->keysym && modifiers == other->modifiers;
-}
-
-mf::KeyboardCodeTrigger::KeyboardCodeTrigger(
-    InputTriggerModifiers modifiers,
-    uint32_t scancode,
-    mf::KeyboardStateTracker const& keyboard_state_tracker,
-    struct wl_resource* id) :
-    KeyboardTrigger{modifiers, keyboard_state_tracker, id},
-    scancode{scancode}
-{
-}
-
-auto mf::KeyboardCodeTrigger::to_string() const -> std::string
-{
-    return std::format(
-        "KeyboardCodeTrigger{{client={}, scancode={}, modifiers={}}}",
-        static_cast<void*>(wl_resource_get_client(resource)),
-        scancode,
-        modifiers.to_string());
-}
-
-bool mf::KeyboardCodeTrigger::do_process(MirEvent const& event)
-{
-    if (!InputTriggerModifiers::modifiers_match(modifiers, event.to_input()->to_keyboard()->modifiers()))
-        return false;
-
-    return keyboard_state_tracker.scancode_is_pressed(scancode);
-}
-
-bool mf::KeyboardCodeTrigger::is_same_trigger(InputTrigger const* other) const
-{
-    return other->is_same_trigger(this);
-}
-
-bool mf::KeyboardCodeTrigger::is_same_trigger(KeyboardCodeTrigger const* other) const
-{
-    return other && scancode == other->scancode && modifiers == other->modifiers;
-}
-
-namespace
-{
 class InputTriggerActionControlV1 : public mw::InputTriggerActionControlV1
 {
 public:
@@ -501,6 +502,14 @@ private:
     std::shared_ptr<mf::InputTriggerRegistry> const input_trigger_registry;
 };
 
+// TODO: Store the description string
+void InputTriggerRegistrationManagerV1::Instance::get_action_control(std::string const&, struct wl_resource* id)
+{
+    auto const [token, action_group] = action_group_manager->create_new_action_group();
+    auto const action_control = new InputTriggerActionControlV1{action_group, id};
+    action_control->send_done_event(token);
+}
+
 void InputTriggerRegistrationManagerV1::Instance::register_keyboard_sym_trigger(
     uint32_t modifiers, uint32_t keysym, struct wl_resource* id)
 {
@@ -537,14 +546,6 @@ void InputTriggerRegistrationManagerV1::Instance::register_keyboard_code_trigger
     }
     else
         keyboard_trigger->send_done_event();
-}
-
-// TODO: Store the description string
-void InputTriggerRegistrationManagerV1::Instance::get_action_control(std::string const&, struct wl_resource* id)
-{
-    auto const [token, action_group] = action_group_manager->create_new_action_group();
-    auto const action_control = new InputTriggerActionControlV1{action_group, id};
-    action_control->send_done_event(token);
 }
 }
 
