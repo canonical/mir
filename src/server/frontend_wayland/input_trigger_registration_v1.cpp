@@ -23,6 +23,8 @@
 
 #include <mir/log.h>
 
+#include <algorithm>
+
 namespace mf = mir::frontend;
 namespace mw = mir::wayland;
 
@@ -35,9 +37,6 @@ class InputTriggerModifiers
 public:
     /// Explicit construction from MirInputEventModifiers
     explicit InputTriggerModifiers(MirInputEventModifiers value);
-
-    /// Get the raw MirInputEventModifiers value (for internal use)
-    auto raw_value() const -> MirInputEventModifiers;
 
     /// Convert to string for debugging
     auto to_string() const -> std::string;
@@ -63,6 +62,8 @@ public:
 
     static auto modifiers_match(InputTriggerModifiers modifiers, InputTriggerModifiers event_mods) -> bool;
 
+    bool contains(std::initializer_list<MirInputEventModifier> mods) const;
+
 private:
     MirInputEventModifiers value;
 };
@@ -84,11 +85,6 @@ public:
 InputTriggerModifiers::InputTriggerModifiers(MirInputEventModifiers value) :
     value{value}
 {
-}
-
-auto InputTriggerModifiers::raw_value() const -> MirInputEventModifiers
-{
-    return value;
 }
 
 auto InputTriggerModifiers::to_string() const -> std::string
@@ -193,14 +189,14 @@ bool InputTriggerModifiers::modifiers_match(InputTriggerModifiers modifiers, Inp
 {
     // Special case, if the event comes explicitly with no modifiers, it should
     // only match if the protocol also specified no modifiers.
-    if (event_mods.raw_value() == MirInputEventModifier::mir_input_event_modifier_none)
-        return modifiers.raw_value() == MirInputEventModifier::mir_input_event_modifier_none;
+    if (event_mods.value == MirInputEventModifier::mir_input_event_modifier_none)
+        return modifiers.value == MirInputEventModifier::mir_input_event_modifier_none;
 
     MirInputEventModifiers required = 0;
     MirInputEventModifiers allowed = 0;
 
     // Pure function: compute per-kind (required, allowed) masks and return them.
-    auto const protocol_value = modifiers.raw_value();
+    auto const protocol_value = modifiers.value;
     auto handle_kind =
         [&](MirInputEventModifiers mir_generic,
             MirInputEventModifiers mir_left,
@@ -295,14 +291,19 @@ bool InputTriggerModifiers::modifiers_match(InputTriggerModifiers modifiers, Inp
     }
 
     // Required bits must be present
-    if ((event_mods.raw_value() & required) != required)
+    if ((event_mods.value & required) != required)
         return false;
 
     // No bits are allowed outside 'allowed'
-    if ((event_mods.raw_value() & ~allowed) != 0)
+    if ((event_mods.value & ~allowed) != 0)
         return false;
 
     return true;
+}
+
+bool InputTriggerModifiers::contains(std::initializer_list<MirInputEventModifier> mods) const
+{
+    return std::ranges::any_of(mods, [this](auto mod) { return (value & mod) == mod; });
 }
 
 KeyboardTrigger::KeyboardTrigger(
@@ -390,10 +391,8 @@ bool mf::KeyboardSymTrigger::do_process(MirEvent const& event)
     if (!InputTriggerModifiers::modifiers_match(modifiers, event_modifiers))
         return false;
 
-    auto const mods_value = modifiers.raw_value();
-    auto const trigger_mods_contain_shift =
-        ((mods_value & mir_input_event_modifier_shift) | (mods_value & mir_input_event_modifier_shift_left) |
-         (mods_value & mir_input_event_modifier_shift_right)) != 0;
+    auto const trigger_mods_contain_shift = modifiers.contains(
+        {mir_input_event_modifier_shift, mir_input_event_modifier_shift_left, mir_input_event_modifier_shift_right});
 
     return keyboard_state_tracker.keysym_is_pressed(keysym, trigger_mods_contain_shift);
 }
