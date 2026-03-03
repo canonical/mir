@@ -128,7 +128,7 @@ mod ffi_bridge {
     }
 
     #[derive(Copy, Clone)]
-    pub struct PointerSettings {
+    pub struct SetPointerSettingsData {
         pub handedness: i32,
         pub cursor_acceleration_bias: f64,
         pub acceleration: i32,
@@ -137,7 +137,7 @@ mod ffi_bridge {
     }
 
     #[derive(Copy, Clone, Default)]
-    pub struct PointerSettingsRs {
+    pub struct PointerSettings {
         pub is_set: bool,
         pub handedness: i32,
         pub cursor_acceleration_bias: f64,
@@ -205,8 +205,8 @@ mod ffi_bridge {
         fn name(self: &LibinputDeviceMetadata) -> &str;
         fn unique_id(self: &LibinputDeviceMetadata) -> &str;
         fn capabilities(self: &LibinputDeviceMetadata) -> u32;
-        fn get_pointer_settings(self: &LibinputDevice) -> Box<PointerSettingsRs>;
-        fn set_pointer_settings(self: &LibinputDevice, settings: &PointerSettings);
+        fn get_pointer_settings(self: &LibinputDevice) -> Box<PointerSettings>;
+        fn set_pointer_settings(self: &LibinputDevice, settings: &SetPointerSettingsData);
 
         fn evdev_rs_create(
             bridge: SharedPtr<PlatformBridge>,
@@ -231,7 +231,7 @@ mod ffi_bridge {
         // Map C++ KeyEventData to the Rust struct
         type KeyEventData = crate::ffi::KeyEventData;
         // Map C++ PointerEventData to the Rust struct
-        type PointerEventData = crate::ffi::PointerEventDataRs;
+        type PointerEventData = crate::ffi::PointerEventData;
         // TouchContactData and TouchEventData are defined above in the bridge
 
         #[namespace = "mir::input"]
