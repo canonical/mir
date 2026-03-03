@@ -6,8 +6,10 @@ global:
   mir_closed_hand_cursor_name;
   mir_crosshair_cursor_name;
   mir_default_cursor_name;
+  mir_diagonal_resize_bottom_to_left_cursor_name;
   mir_diagonal_resize_bottom_to_top_cursor_name;
   mir_diagonal_resize_top_to_bottom_cursor_name;
+  mir_diagonal_resize_top_to_left_cursor_name;
   mir_event_get_input_device_state_event;
   mir_event_get_input_event;
   mir_event_get_type;

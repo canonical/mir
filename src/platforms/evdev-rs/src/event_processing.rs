@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-use crate::device::{ContactData, DeviceInfo, InputSinkPtr, LibinputLoopState};
+use crate::device::{ContactData, InputSinkPtr, LibinputDeviceInfo, LibinputDeviceState};
 use crate::ffi::PointerEventDataRs;
 use crate::MirTouchAction;
 use cxx::{self, UniquePtr};
@@ -53,9 +53,9 @@ fn get_scroll_axis(
 }
 
 fn get_device_info_from_libinput_device<'a>(
-    known_devices: &'a mut Vec<DeviceInfo>,
+    known_devices: &'a mut Vec<LibinputDeviceInfo>,
     libinput_device: &input::Device,
-) -> Option<&'a mut DeviceInfo> {
+) -> Option<&'a mut LibinputDeviceInfo> {
     known_devices
         .iter_mut()
         .find(|d| d.device.as_raw() == libinput_device.as_raw())
@@ -79,7 +79,7 @@ fn get_bounding_rectangle(
 }
 
 pub fn process_libinput_events(
-    state: &mut LibinputLoopState,
+    state: &mut LibinputDeviceState,
     device_registry: cxx::SharedPtr<crate::InputDeviceRegistry>,
     bridge: cxx::SharedPtr<crate::PlatformBridge>,
 ) {
@@ -94,7 +94,7 @@ pub fn process_libinput_events(
         match event {
             input::Event::Device(device_event) => match device_event {
                 event::DeviceEvent::Added(_) => {
-                    state.known_devices.push(DeviceInfo {
+                    state.known_devices.push(LibinputDeviceInfo {
                         id: state.next_device_id,
                         device: libinput_device,
                         input_device: bridge.create_input_device(state.next_device_id),
