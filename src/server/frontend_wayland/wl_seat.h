@@ -21,7 +21,6 @@
 #include <mir/wayland/weak.h>
 
 #include <functional>
-#include <unordered_set>
 
 struct MirPointerEvent;
 
