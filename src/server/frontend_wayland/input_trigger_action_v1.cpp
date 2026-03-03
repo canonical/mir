@@ -28,8 +28,7 @@ namespace
 
 class InputTriggerActionV1 :
     virtual public mf::InputTriggerAction,
-    virtual public mw::InputTriggerActionV1,
-    virtual public mw::LifetimeTracker
+    virtual public mw::InputTriggerActionV1
 {
 public:
     using mw::InputTriggerActionV1::InputTriggerActionV1;
