@@ -33,6 +33,7 @@
 #include <cstring>
 #include <latch>
 #include <stdexcept>
+#include <string_view>
 
 namespace mc = mir::compositor;
 namespace ms = mir::scene;
@@ -42,6 +43,7 @@ namespace mf = mir::frontend;
 namespace mw = mir::wayland;
 namespace geom = mir::geometry;
 namespace mrs = mir::renderer::software;
+using namespace std::string_view_literals;
 
 class ms::BasicSurface::DisplayConfigurationEarlyListener :  public mg::NullDisplayConfigurationObserver
 {
@@ -1218,7 +1220,7 @@ void mir::scene::BasicSurface::linearised_track_outputs()
             static size_t const max_thread_name_size = 16;
             char thread_name[max_thread_name_size];
             pthread_getname_np(pthread_self(), thread_name, sizeof thread_name);
-            return strcmp("Mir/Wayland", thread_name) == 0;
+            return "Mir/Wayland"sv == thread_name;
         }();
 
     if (on_wayland_thread)

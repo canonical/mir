@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <cstdlib>
 #include <miral/test_server.h>
 #include <miral/external_client.h>
 #include <miral/x11_support.h>
@@ -22,8 +23,10 @@
 #include <gmock/gmock.h>
 #include <filesystem>
 #include <fstream>
+#include <string_view>
 
 using namespace testing;
+using namespace std::string_view_literals;
 
 namespace
 {
@@ -79,7 +82,8 @@ struct ExternalClient : miral::TestServer
     bool cannot_start_X_server()
     {
         // Starting an X server on LP builder, or Fedora CI, doesn't work
-        auto const lp_fake_runtime_dir = strcmp(getenv("XDG_RUNTIME_DIR"), "/tmp") == 0;
+        auto const xdg_dir = getenv("XDG_RUNTIME_DIR");
+        auto const lp_fake_runtime_dir = xdg_dir && (xdg_dir ==  "/tmp"sv);
         auto const cannot_access_x11_unix = access("/tmp/.X11-unix/", W_OK) != 0;
 
         return lp_fake_runtime_dir || cannot_access_x11_unix;

@@ -27,6 +27,7 @@
 
 #include <sstream>
 
+#include <string_view>
 #include <xf86drm.h>
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -105,7 +106,7 @@ std::future<std::unique_ptr<mir::Device>> mir::MinimalConsoleServices::acquire_d
 
         while (uevent.getline(line_buffer, sizeof(line_buffer)))
         {
-            if (strncmp(line_buffer, "DEVNAME=", strlen_c("DEVNAME=")) == 0)
+            if (std::string_view{line_buffer}.starts_with("DEVNAME="))
             {
                 return std::string{"/dev/"} + std::string{line_buffer + strlen_c("DEVNAME=")};
             }
