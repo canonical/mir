@@ -16,8 +16,8 @@
 
 #include "input_trigger_action_v1.h"
 #include "input_trigger_common.h"
-#include "mir/wayland/weak.h"
 
+#include <mir/wayland/weak.h>
 #include <mir/wayland/protocol_error.h>
 
 namespace mf = mir::frontend;
