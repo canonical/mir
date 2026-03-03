@@ -136,7 +136,7 @@ mod ffi_bridge {
         pub vertical_scroll_scale: f64,
     }
 
-    #[derive(Copy, Clone)]
+    #[derive(Copy, Clone, Default)]
     pub struct PointerSettingsRs {
         pub is_set: bool,
         pub handedness: i32,
@@ -305,20 +305,6 @@ mod ffi_bridge {
 
 // Re-export the bridge module as ffi_bridge for easier access
 pub use ffi_bridge::*;
-
-impl PointerSettingsRs {
-    pub fn empty() -> Self {
-        PointerSettingsRs {
-            is_set: false,
-            handedness: 0,
-            cursor_acceleration_bias: 0.0,
-            acceleration: MirPointerAcceleration::mir_pointer_acceleration_none.repr,
-            horizontal_scroll_scale: 1.0,
-            vertical_scroll_scale: 1.0,
-            has_error: false,
-        }
-    }
-}
 
 /// Creates a platform on the Rust side of things.
 ///

@@ -79,12 +79,7 @@ impl LibinputDevice {
             eprintln!(
                 "LibinputDevice::get_device_info: unable to acquire state lock; lock poisoned"
             );
-            return Box::new(LibinputDeviceMetadata {
-                name: "".to_string(),
-                unique_id: "".to_string(),
-                capabilities: 0,
-                valid: false,
-            });
+            return Box::new(LibinputDeviceMetadata::default());
         };
 
         let Some(device_info) = guard.find_device_by_id(self.device_id) else {
@@ -92,12 +87,7 @@ impl LibinputDevice {
                 "LibinputDevice::get_device_info: device id {} not found",
                 self.device_id
             );
-            return Box::new(LibinputDeviceMetadata {
-                name: "".to_string(),
-                unique_id: "".to_string(),
-                capabilities: 0,
-                valid: false,
-            });
+            return Box::new(LibinputDeviceMetadata::default());
         };
 
         let mut capabilities: u32 = 0;
@@ -139,7 +129,7 @@ impl LibinputDevice {
             eprintln!(
                 "LibinputDevice::get_pointer_settings: unable to acquire state lock; lock poisoned"
             );
-            let mut settings = PointerSettingsRs::empty();
+            let mut settings = PointerSettingsRs::default();
             settings.has_error = true;
             return Box::new(settings);
         };
@@ -148,7 +138,7 @@ impl LibinputDevice {
             eprintln!(
                 "Attempting to get pointer settings from a device that is not pointer capable."
             );
-            return Box::new(PointerSettingsRs::empty());
+            return Box::new(PointerSettingsRs::default());
         };
 
         if !device_info
@@ -158,7 +148,7 @@ impl LibinputDevice {
             eprintln!(
                 "Attempting to get pointer settings from a device that is not pointer capable."
             );
-            return Box::new(PointerSettingsRs::empty());
+            return Box::new(PointerSettingsRs::default());
         }
 
         let handedness = if device_info.device.config_left_handed() {
@@ -276,6 +266,7 @@ pub struct ContactData {
 /// Metadata about a libinput device.
 ///
 /// This is provided to Mir upon request.
+#[derive(Default)]
 pub struct LibinputDeviceMetadata {
     name: String,
     unique_id: String,
