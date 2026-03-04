@@ -16,6 +16,8 @@
 
 #include <mir/graphics/quirk_common.h>
 
+#include <algorithm>
+
 mir::graphics::common::AllowList::AllowList(std::unordered_set<std::string>&& drivers_to_skip) :
     skipped_drivers{std::move(drivers_to_skip)}
 {
@@ -48,25 +50,43 @@ void mir::graphics::common::ValuedOption::add(
 
 
 auto mir::graphics::common::validate_structure(
-    std::vector<std::string> const& tokens, std::set<std::string> const& available_options)
+    std::vector<std::string> const& tokens, std::unordered_map<std::string, OptionStructure> const& available_options)
     -> std::optional<std::tuple<std::string, std::string, std::string>>
 {
     if (tokens.size() < 1)
         return {};
     auto const option = tokens[0];
 
-    if (!available_options.contains(option))
-        return {};
+    if (auto const iter = available_options.find(option); iter != available_options.end())
+    {
+        auto const& structure = iter->second;
+        if (tokens.size() != structure.expected_token_count)
+        {
+            mir::log_debug(
+                "Expected %zu tokens for option '%s', got %zu",
+                structure.expected_token_count,
+                option.c_str(),
+                tokens.size());
+            return {};
+        }
 
-    if (tokens.size() < 3)
-        return {};
-    auto const specifier = tokens[1];
-    auto const specifier_value = tokens[2];
+        // A bit hacky, but should work for now
+        if (!structure.check_specifiers)
+            return {{option, "", ""}}; // No specifier checking
 
-    if (specifier != "driver" && specifier != "devnode")
-        return {};
+        auto const specifier = tokens[1];
+        auto const specifier_value = tokens[2];
 
-    return {{option, specifier, specifier_value}};
+        if (specifier != "driver" && specifier != "devnode")
+        {
+            mir::log_debug("Invalid specifier '%s' for option '%s'", specifier.c_str(), option.c_str());
+            return {};
+        }
+
+        return {{option, specifier, specifier_value}};
+    }
+
+    return {};
 }
 
 auto mir::graphics::common::matches(
