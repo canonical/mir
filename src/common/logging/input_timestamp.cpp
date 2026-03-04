@@ -33,7 +33,7 @@ std::string mir::logging::input_timestamp(mir::time::Clock const& clock, std::ch
 
     char const* sign_suffix = (age_ns < 0) ? "in the future" : "ago";
 
-    auto const fmt_now = std::format("{} ({}.{:06}ms {})",            
+    auto const fmt_now = std::format("{} ({}.{:06}ms {})",
         when_ns, milliseconds, sub_milliseconds, sign_suffix);
 
     return fmt_now;
