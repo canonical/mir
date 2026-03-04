@@ -15,28 +15,28 @@
  */
 
 mod cpp_builder;
+mod helpers;
 mod protocol_parser;
+mod protocol_request_code_generation;
 
 use cpp_builder::{
     sanitize_identifier, CppArg, CppBuilder, CppClass, CppEnum, CppEnumOption, CppMethod,
     CppNamespace, CppType,
 };
+use helpers::*;
 use proc_macro2::TokenStream;
 use protocol_parser::{
     parse_protocols, InterfaceItem, WaylandArg, WaylandArgType, WaylandEnum, WaylandEvent,
     WaylandInterface, WaylandProtocol, WaylandRequest,
 };
+use protocol_request_code_generation::write_protocol_event_code;
 use quote::{format_ident, quote};
-use std::{env, fs, path::Path};
+use std::{env, path::Path};
 use syn::Ident;
 
 fn main() {
     let manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
     let include_path = Path::new(&manifest_dir).join("include");
-
-    cxx_build::bridges(vec!["src/lib.rs"])
-        .include(&include_path)
-        .compile("wayland_rs");
 
     println!("cargo:rerun-if-changed=src/lib.rs");
     println!("cargo:rerun-if-changed=src/wayland_server.rs");
@@ -50,8 +50,17 @@ fn main() {
     // Next, generate the dispatch and global dispatch methods.
     write_dispatch_rs(&protocols);
 
-    // Next, generate a C++ abstract class for each interface.
-    write_cpp_protocol_headers(&protocols);
+    // Next, generate C++ abstract classes for each interface
+    // as well as the FFI code.
+    write_cpp_protocol_implementations(&protocols);
+
+    // Next, generate Rust handlers for each send event method
+    // as well as FFI code.
+    write_protocol_event_code(&protocols);
+
+    cxx_build::bridges(vec!["src/ffi_rust.rs"])
+        .include(&include_path)
+        .compile("wayland_rs");
 }
 
 fn write_protocols_rs(protocols: &Vec<WaylandProtocol>) {
@@ -501,7 +510,7 @@ fn create_global_factory(protocols: &Vec<WaylandProtocol>) -> CppBuilder {
 }
 
 /// Write a header file for each protocol containing abstract classes per-interface.
-fn write_cpp_protocol_headers(protocols: &Vec<WaylandProtocol>) {
+fn write_cpp_protocol_implementations(protocols: &Vec<WaylandProtocol>) {
     // First, create the global factory.
     let global_builder = create_global_factory(protocols);
 
@@ -681,44 +690,4 @@ fn wayland_event_to_cpp_method(event: &WaylandEvent) -> CppMethod {
     }
 
     cpp_method
-}
-
-/// Write the generated Rust code to a file with proper formatting.
-fn write_generated_rust_file(tokens: proc_macro2::TokenStream, filename: &str) {
-    let out_dir = "src";
-    let dest_path = std::path::Path::new(&out_dir).join(filename);
-
-    let syntax_tree: syn::File = syn::parse2(tokens).unwrap();
-    let formatted_code = prettyplease::unparse(&syntax_tree);
-
-    fs::write(dest_path, formatted_code).unwrap();
-}
-
-/// Write the generated C++ code to the correct directory.
-fn write_generated_cpp_file(content: &str, filename: &str) {
-    let out_dir = "include";
-    let dest_path = std::path::Path::new(&out_dir).join(filename);
-
-    fs::create_dir_all(&out_dir).unwrap();
-    fs::write(dest_path, content).unwrap();
-}
-
-fn dash_to_snake(name: &str) -> String {
-    name.replace('-', "_")
-}
-
-fn dash_to_snake_ident(name: &str) -> Ident {
-    format_ident!("{}", dash_to_snake(name))
-}
-
-fn snake_to_pascal(s: &str) -> String {
-    s.split('_')
-        .map(|word| {
-            let mut chars = word.chars();
-            match chars.next() {
-                None => String::new(),
-                Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
-            }
-        })
-        .collect()
 }
