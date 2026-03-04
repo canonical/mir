@@ -17,6 +17,8 @@
 #include "compositor_report.h"
 #include <mir/logging/logger.h>
 
+#include <format>
+
 using namespace mir::time;
 namespace ml = mir::logging;
 namespace mrl = mir::report::logging;

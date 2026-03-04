@@ -48,6 +48,7 @@
 #include <sys/eventfd.h>
 
 #include <deque>
+#include <format>
 #include <optional>
 #include <unordered_map>
 

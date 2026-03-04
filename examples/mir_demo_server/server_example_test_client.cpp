@@ -88,7 +88,7 @@ void check_exit_status(pid_t pid, mir::Server& server, Self* self, int& countdow
     else if (WIFSIGNALED(status))
     {
         auto const signal = WTERMSIG(status);
-        auto const msg = std::format(" Client terminated by signal {}", signal);
+        auto const msg = std::format("Client terminated by signal {}", signal);
         ml::log(ml::Severity::informational, msg, component);
         self->test_failed = true;
     }

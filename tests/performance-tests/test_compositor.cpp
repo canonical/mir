@@ -16,6 +16,7 @@
 
 #include "system_performance_test.h"
 
+#include <format>
 #include <fstream>
 #include <string>
 

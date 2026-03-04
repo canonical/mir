@@ -26,6 +26,7 @@
 #include <mir/fatal.h>
 #include <mir/thread_name.h>
 
+#include <array>
 #include <format>
 #include <string_view>
 #include <fcntl.h>
@@ -39,9 +40,8 @@ namespace md = mir::dispatch;
 namespace
 {
 constexpr std::string_view x11_lock_fmt = "/tmp/.X{}-lock";
-constexpr std::string_view const x11_socket_fmt = "/tmp/.X11-unix/X{}";
+constexpr std::string_view x11_socket_fmt = "/tmp/.X11-unix/X{}";
 
-// TODO this can be written with more modern c++
 int create_lockfile(int xdisplay)
 {
     auto const lockfile = std::format(x11_lock_fmt, xdisplay);
@@ -140,16 +140,16 @@ auto create_sockets(int xdisplay) -> std::vector<mir::Fd>
     struct sockaddr_un addr{ .sun_family = AF_UNIX, .sun_path = { 0 } };
     size_t path_size;
 
-    auto eoln = std::format_to_n(addr.sun_path + 1, sizeof(addr.sun_path) - 2,
+    auto eos = std::format_to_n(addr.sun_path + 1, sizeof(addr.sun_path) - 2,
         x11_socket_fmt, xdisplay).out;
-    *eoln = '\0';
-    path_size = eoln - (addr.sun_path + 1);
+    *eos = '\0';
+    path_size = eos - (addr.sun_path + 1);
     create_socket(result, &addr, path_size);
 
-    eoln = std::format_to_n(addr.sun_path, sizeof(addr.sun_path) - 1,
+    eos = std::format_to_n(addr.sun_path, sizeof(addr.sun_path) - 1,
         x11_socket_fmt, xdisplay).out;
-    *eoln = '\0';
-    path_size = eoln - addr.sun_path;
+    *eos = '\0';
+    path_size = eos - addr.sun_path;
     create_socket(result, &addr, path_size);
 
     return result;
@@ -199,11 +199,15 @@ mf::XWaylandSpawner::XWaylandSpawner(std::function<void()> spawn)
 
 mf::XWaylandSpawner::~XWaylandSpawner()
 {
-    std::string path;
-    path = std::format(x11_lock_fmt, xdisplay);
-    unlink(path.c_str());
-    path = std::format(x11_socket_fmt, xdisplay);
-    unlink(path.c_str());
+    std::array<char, 256> buffer; // avoid allocation in noexcept code
+    auto eos = std::format_to_n(buffer.data(), buffer.size() - 1,
+        x11_lock_fmt, xdisplay).out;
+    *eos = '\0';
+    unlink(buffer.data());
+    eos = std::format_to_n(buffer.data(), buffer.size() - 1,
+        x11_socket_fmt, xdisplay).out;
+    *eos = '\0';
+    unlink(buffer.data());
 }
 
 auto mf::XWaylandSpawner::x11_display() const -> std::string

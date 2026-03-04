@@ -83,26 +83,40 @@ void ml::format_message(std::ostream& out, Severity severity, std::string const&
         "< - debug - > "
     };
 
-    auto now = std::chrono::system_clock::now();
-    auto now_us = std::chrono::time_point_cast<std::chrono::microseconds>(now);
-    auto local = std::chrono::zoned_time{std::chrono::current_zone(), now_us};
-    std::string fmt_now = std::format("{:%F %T}", local);
-
+    std::string fmt_now;
+    try
+    {
+        auto now = std::chrono::system_clock::now();
+        auto now_us =
+            std::chrono::time_point_cast<std::chrono::microseconds>(now);
+        auto local =
+            std::chrono::zoned_time{std::chrono::current_zone(), now_us};
+        fmt_now = std::format("{:%F %T}", local);
+    }
+    catch (...)
+    {
+        auto now = std::chrono::system_clock::now();
+        auto now_time_t = std::chrono::system_clock::to_time_t(now);
+        char buf[32]{};
+        std::tm tm{};
+        if (gmtime_r(&now_time_t, &tm) != nullptr &&
+            std::strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", &tm))
+        {
+            fmt_now = buf;
+        }
+        else
+        {
+            fmt_now = "unknown-time";
+        }
+    }
     if (!out || !out.good())
     {
         std::cerr << "Failed to write to log file: " << errno << std::endl;
         return;
     }
 
-    out << "["
-        << fmt_now
-        << "] "
-        << lut[static_cast<int>(severity)]
-        << component
-        << ": "
-        << message
-        << std::endl;
-
+    out << std::format("[{}] {}{}: {}\n",
+        fmt_now, lut[static_cast<int>(severity)], component, message);
 }
 
 namespace mir
