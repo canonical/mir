@@ -323,4 +323,3 @@ bool Trigger::is_same_trigger(KeyboardCodeTrigger const*) const
 {
     return false;
 }
-
