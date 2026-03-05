@@ -20,7 +20,7 @@
 
 #include <xkbcommon/xkbcommon-keysyms.h>
 
-#include <ranges>
+#include <algorithm>
 
 namespace mf = mir::frontend;
 
@@ -40,7 +40,7 @@ bool mf::KeyboardStateTracker::process(MirEvent const& event)
     auto const action = key_event->action();
     auto const modifiers = key_event->modifiers();
 
-    auto& [pressed_keysyms, pressed_scancodes, shift_state] = device_states[input_event->device_id()];
+    auto& [scancode_to_keysym, shift_state] = device_states[input_event->device_id()];
 
     auto const prev_shift_state = shift_state;
     shift_state = modifiers & (mir_input_event_modifier_shift | mir_input_event_modifier_shift_left |
@@ -49,30 +49,28 @@ bool mf::KeyboardStateTracker::process(MirEvent const& event)
     auto processed = false;
     if (action == mir_keyboard_action_down)
     {
-        pressed_keysyms.insert(keysym);
-        pressed_scancodes.insert(scancode);
+        scancode_to_keysym[scancode] = keysym;
         processed = true;
     }
     else if (action == mir_keyboard_action_up)
     {
-        pressed_keysyms.erase(keysym);
-        pressed_scancodes.erase(scancode);
+        // Remove by scancode so that a mismatched key-up keysym (caused by a
+        // modifier change while the key was held) does not leave stale entries.
+        scancode_to_keysym.erase(scancode);
         processed = true;
     }
 
     // Transitioned from no shift to at least one shift
     if (prev_shift_state == 0 && shift_state != 0)
     {
-        auto const uppercase =
-            std::ranges::views::transform(pressed_keysyms, [](auto key) { return xkb_keysym_to_upper(key); });
-        pressed_keysyms = std::unordered_set<xkb_keysym_t>(uppercase.begin(), uppercase.end());
+        for (auto& [sc, ks] : scancode_to_keysym)
+            ks = xkb_keysym_to_upper(ks);
     }
     else if (prev_shift_state != 0 && shift_state == 0)
     {
         // Transitioned from at least one shift to no shift
-        auto const lowercase =
-            std::ranges::views::transform(pressed_keysyms, [](auto key) { return xkb_keysym_to_lower(key); });
-        pressed_keysyms = std::unordered_set<xkb_keysym_t>(lowercase.begin(), lowercase.end());
+        for (auto& [sc, ks] : scancode_to_keysym)
+            ks = xkb_keysym_to_lower(ks);
     }
 
     return processed;
@@ -80,16 +78,17 @@ bool mf::KeyboardStateTracker::process(MirEvent const& event)
 
 auto mf::KeyboardStateTracker::keysym_is_pressed(MirInputDeviceId device, xkb_keysym_t keysym) const -> bool
 {
-    if(!device_states.contains(device)) return false;
+    if (!device_states.contains(device))
+        return false;
 
-    auto const& [pressed_keysyms, _, __] = device_states.at(device);
-    return pressed_keysyms.contains(keysym);
+    return std::ranges::any_of(
+        device_states.at(device).scancode_to_keysym, [keysym](auto const& pair) { return pair.second == keysym; });
 }
 
 auto mf::KeyboardStateTracker::scancode_is_pressed(MirInputDeviceId device, int32_t scancode) const -> bool
 {
-    if(!device_states.contains(device)) return false;
+    if (!device_states.contains(device))
+        return false;
 
-    auto const& [_, pressed_scancodes, __] = device_states.at(device);
-    return pressed_scancodes.contains(scancode);
+    return device_states.at(device).scancode_to_keysym.contains(scancode);
 }
