@@ -29,6 +29,10 @@
 namespace mf = mir::frontend;
 namespace mw = mir::wayland;
 
+using Trigger = mf::InputTriggerRegistry::Trigger;
+using ActionGroup = mf::InputTriggerRegistry::ActionGroup;
+using ActionGroupManager = mf::InputTriggerRegistry::ActionGroupManager;
+
 // Putting these at the very top because KeyboardSymTrigger and
 // KeyboardCodeTrigger need to use them.
 namespace
@@ -80,7 +84,7 @@ private:
     MirInputEventModifiers const allowed;
 };
 
-class KeyboardTrigger : public mf::InputTrigger, public mw::InputTriggerV1
+class KeyboardTrigger : public Trigger, public mw::InputTriggerV1
 {
 public:
     KeyboardTrigger(
@@ -106,7 +110,7 @@ public:
 
     auto to_string() const -> std::string override;
 
-    bool is_same_trigger(InputTrigger const* other) const override;
+    bool is_same_trigger(Trigger const* other) const override;
     bool is_same_trigger(KeyboardSymTrigger const* other) const override;
 
 
@@ -127,7 +131,7 @@ public:
 
     auto to_string() const -> std::string override;
 
-    bool is_same_trigger(InputTrigger const* other) const override;
+    bool is_same_trigger(Trigger const* other) const override;
     bool is_same_trigger(KeyboardCodeTrigger const* other) const override;
 
 private:
@@ -166,7 +170,7 @@ bool mf::KeyboardSymTrigger::do_process(MirEvent const& event)
     return keyboard_state_tracker.keysym_is_pressed(keysym, trigger_mods_contain_shift);
 }
 
-bool mf::KeyboardSymTrigger::is_same_trigger(InputTrigger const* other) const
+bool mf::KeyboardSymTrigger::is_same_trigger(Trigger const* other) const
 {
     return other->is_same_trigger(this);
 }
@@ -203,7 +207,7 @@ bool mf::KeyboardCodeTrigger::do_process(MirEvent const& event)
     return keyboard_state_tracker.scancode_is_pressed(scancode);
 }
 
-bool mf::KeyboardCodeTrigger::is_same_trigger(InputTrigger const* other) const
+bool mf::KeyboardCodeTrigger::is_same_trigger(Trigger const* other) const
 {
     return other->is_same_trigger(this);
 }
@@ -425,17 +429,17 @@ auto KeyboardTrigger::from(struct wl_resource* resource) -> KeyboardTrigger*
 class InputTriggerActionControlV1 : public mw::InputTriggerActionControlV1
 {
 public:
-    InputTriggerActionControlV1(std::shared_ptr<mf::ActionGroup> const& action_group, struct wl_resource* id);
+    InputTriggerActionControlV1(std::shared_ptr<ActionGroup> const& action_group, struct wl_resource* id);
 
     void add_input_trigger_event(struct wl_resource* trigger) override;
     void drop_input_trigger_event(struct wl_resource* trigger) override;
 
 private:
-    std::shared_ptr<mf::ActionGroup> const action_group;
+    std::shared_ptr<ActionGroup> const action_group;
 };
 
 InputTriggerActionControlV1::InputTriggerActionControlV1(
-    std::shared_ptr<mf::ActionGroup> const& action_group, struct wl_resource* id) :
+    std::shared_ptr<ActionGroup> const& action_group, struct wl_resource* id) :
     mw::InputTriggerActionControlV1{id, Version<1>{}},
     action_group{action_group}
 {
@@ -462,7 +466,7 @@ class InputTriggerRegistrationManagerV1 : public mw::InputTriggerRegistrationMan
 public:
     InputTriggerRegistrationManagerV1(
         wl_display* display,
-        std::shared_ptr<mf::ActionGroupManager> const& action_group_manager,
+        std::shared_ptr<ActionGroupManager> const& action_group_manager,
         std::shared_ptr<mf::InputTriggerRegistry> const& input_trigger_registry) :
         Global{display, Version<1>{}},
         action_group_manager{action_group_manager},
@@ -475,7 +479,7 @@ public:
     public:
         Instance(
             wl_resource* new_ext_input_trigger_registration_manager_v1,
-            std::shared_ptr<mf::ActionGroupManager> const& action_group_manager,
+            std::shared_ptr<ActionGroupManager> const& action_group_manager,
             std::shared_ptr<mf::InputTriggerRegistry> const& input_trigger_registry) :
             mw::InputTriggerRegistrationManagerV1{new_ext_input_trigger_registration_manager_v1, Version<1>{}},
             action_group_manager{action_group_manager},
@@ -488,7 +492,7 @@ public:
         void get_action_control(std::string const& name, struct wl_resource* id) override;
 
     private:
-        std::shared_ptr<mf::ActionGroupManager> const action_group_manager;
+        std::shared_ptr<ActionGroupManager> const action_group_manager;
         std::shared_ptr<mf::InputTriggerRegistry> const input_trigger_registry;
     };
 
@@ -498,7 +502,7 @@ public:
     }
 
 private:
-    std::shared_ptr<mf::ActionGroupManager> const action_group_manager;
+    std::shared_ptr<ActionGroupManager> const action_group_manager;
     std::shared_ptr<mf::InputTriggerRegistry> const input_trigger_registry;
 };
 

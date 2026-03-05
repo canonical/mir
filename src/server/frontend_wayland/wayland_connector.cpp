@@ -301,7 +301,8 @@ mf::WaylandConnector::WaylandConnector(
     subcompositor_global = std::make_unique<mf::WlSubcompositor>(display.get());
     auto const surface_registry = std::make_shared<mf::SurfaceRegistry>();
 
-    auto const action_group_manager = std::make_shared<frontend::ActionGroupManager>(token_authority, *executor);
+    auto const action_group_manager =
+        std::make_shared<InputTriggerRegistry::ActionGroupManager>(token_authority, *executor);
     auto const input_trigger_registry = std::make_shared<frontend::InputTriggerRegistry>();
     seat_global = std::make_unique<mf::WlSeat>(
         display.get(),

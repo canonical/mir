@@ -19,6 +19,7 @@
 
 #include <mir/shell/token_authority.h>
 #include "wayland_wrapper.h"
+#include "input_trigger_common.h"
 
 #include <mir/fd.h>
 #include <mir/frontend/connector.h>
@@ -95,7 +96,6 @@ class WpViewporter;
 class LinuxDRMSyncobjManager;
 class DesktopFileManager;
 class SurfaceRegistry;
-class ActionGroupManager;
 class InputTriggerRegistry;
 
 class WaylandExtensions
@@ -129,7 +129,7 @@ public:
         std::shared_ptr<SurfaceRegistry> surface_registry;
         std::shared_ptr<time::Clock> clock;
         std::shared_ptr<input::CursorObserverMultiplexer> cursor_observer_multiplexer;
-        std::shared_ptr<ActionGroupManager> action_group_manager;
+        std::shared_ptr<InputTriggerRegistry::ActionGroupManager> action_group_manager;
         std::shared_ptr<InputTriggerRegistry> input_trigger_registry;
     };
 

@@ -23,11 +23,14 @@
 namespace mf = mir::frontend;
 namespace mw = mir::wayland;
 
+using Action = mf::InputTriggerRegistry::Action;
+using ActionGroupManager = mf::InputTriggerRegistry::ActionGroupManager;
+
 namespace
 {
 
 class InputTriggerActionV1 :
-    virtual public mf::InputTriggerAction,
+    virtual public Action,
     virtual public mw::InputTriggerActionV1
 {
 public:
@@ -52,7 +55,7 @@ public:
 class InputTriggerActionManagerV1 : public mw::InputTriggerActionManagerV1::Global
 {
 public:
-    InputTriggerActionManagerV1(wl_display* display, std::shared_ptr<mf::ActionGroupManager> const& action_group_manager) :
+    InputTriggerActionManagerV1(wl_display* display, std::shared_ptr<ActionGroupManager> const& action_group_manager) :
         Global{display, Version<1>{}},
         action_group_manager{action_group_manager}
     {
@@ -61,7 +64,7 @@ public:
 private:
     class Instance : public mir::wayland::InputTriggerActionManagerV1
     {
-        std::shared_ptr<mf::ActionGroupManager> const action_group_manager;
+        std::shared_ptr<ActionGroupManager> const action_group_manager;
 
         void get_input_trigger_action(std::string const& token, struct wl_resource* id) override
         {
@@ -74,7 +77,7 @@ private:
             if (auto const& action_group = action_group_manager->get_action_group(token))
             {
                 auto const action = new InputTriggerActionV1 const {id, Version<1>{}};
-                action_group->add(mw::make_weak<mf::InputTriggerAction const>(action));
+                action_group->add(mw::make_weak<Action const>(action));
             }
             else
             {
@@ -91,7 +94,7 @@ private:
 
     public:
         Instance(
-            wl_resource* new_ext_input_trigger_action_manager_v1, std::shared_ptr<mf::ActionGroupManager> const& action_group_manager) :
+            wl_resource* new_ext_input_trigger_action_manager_v1, std::shared_ptr<ActionGroupManager> const& action_group_manager) :
             InputTriggerActionManagerV1{new_ext_input_trigger_action_manager_v1, Version<1>{}},
             action_group_manager{action_group_manager}
         {
@@ -103,7 +106,7 @@ private:
         new Instance{new_ext_input_trigger_action_manager_v1, action_group_manager};
     }
 
-    std::shared_ptr<mf::ActionGroupManager> const action_group_manager;
+    std::shared_ptr<ActionGroupManager> const action_group_manager;
 };
 
 void InputTriggerActionV1::end(uint32_t wayland_timestamp, std::string const& activation_token) const

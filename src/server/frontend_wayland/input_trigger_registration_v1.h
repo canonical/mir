@@ -18,17 +18,16 @@
 #define MIR_SERVER_FRONTEND_INPUT_TRIGGER_REGISTRATION_V1_H_
 
 #include "ext-input-trigger-registration-v1_wrapper.h"
+#include "input_trigger_common.h"
 
 namespace mir
 {
 namespace frontend
 {
-class ActionGroupManager;
-class InputTriggerRegistry;
 
 auto create_input_trigger_registration_manager_v1(
     wl_display* display,
-    std::shared_ptr<ActionGroupManager> const& action_group_manager,
+    std::shared_ptr<InputTriggerRegistry::ActionGroupManager> const& action_group_manager,
     std::shared_ptr<InputTriggerRegistry> const& input_trigger_registry)
     -> std::shared_ptr<wayland::InputTriggerRegistrationManagerV1::Global>;
 }

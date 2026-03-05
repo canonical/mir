@@ -18,6 +18,7 @@
 #define MIR_SERVER_FRONTEND_INPUT_TRIGGER_ACTION_V1_H_
 
 #include "ext-input-trigger-action-v1_wrapper.h"
+#include "input_trigger_common.h"
 
 #include <memory>
 
@@ -25,10 +26,9 @@ namespace mir
 {
 namespace frontend
 {
-class ActionGroupManager;
 
 auto create_input_trigger_action_manager_v1(
-    wl_display* display, std::shared_ptr<ActionGroupManager> const& action_group_manager)
+    wl_display* display, std::shared_ptr<InputTriggerRegistry::ActionGroupManager> const& action_group_manager)
     -> std::shared_ptr<wayland::InputTriggerActionManagerV1::Global>;
 }
 }

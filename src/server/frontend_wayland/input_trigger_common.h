@@ -48,58 +48,6 @@ private:
     decltype(tokens)::iterator current{tokens.begin()};
 };
 
-// Version-agnostic interface
-class InputTriggerAction : public virtual wayland::LifetimeTracker
-{
-public:
-    virtual ~InputTriggerAction() = default;
-
-    virtual void end(uint32_t wayland_timestamp, std::string const& activation_token) const = 0;
-    virtual void begin(uint32_t wayland_timestamp, std::string const& activation_token) const = 0;
-};
-
-class ActionGroup
-{
-public:
-    ActionGroup(shell::TokenAuthority& token_authority);
-
-    void add(wayland::Weak<InputTriggerAction const> action);
-    void end(uint32_t wayland_timestamp);
-    void begin(uint32_t wayland_timestamp);
-
-private:
-    shell::TokenAuthority& token_authority;
-    std::vector<wayland::Weak<InputTriggerAction const>> actions;
-    std::optional<std::pair<uint32_t, std::string>> timestamp_and_token;
-};
-
-class InputTrigger: public virtual wayland::LifetimeTracker
-{
-public:
-    virtual ~InputTrigger() = default;
-
-    void associate_with_action_group(std::shared_ptr<frontend::ActionGroup> action_group);
-    void unassociate_with_action_group(std::shared_ptr<frontend::ActionGroup> action_group);
-
-    // \return true if event was handled, false otherwise.
-    bool process(MirEvent const& event);
-
-    virtual auto to_string() const -> std::string = 0;
-
-    virtual bool is_same_trigger(InputTrigger const* other) const = 0;
-    virtual bool is_same_trigger(KeyboardSymTrigger const* sym_trigger) const;
-    virtual bool is_same_trigger(KeyboardCodeTrigger const* code_trigger) const;
-
-private:
-    void begin(uint32_t wayland_timestamp);
-    void end(uint32_t wayland_timestamp);
-
-    virtual bool do_process(MirEvent const& event) = 0;
-
-    std::shared_ptr<frontend::ActionGroup> action_group;
-    bool active{false};
-};
-
 /// Tracks keyboard state shared among all keyboard event filters
 class KeyboardStateTracker
 {
@@ -122,19 +70,49 @@ private:
 class InputTriggerRegistry
 {
 public:
+    class Action;
+    class ActionGroup;
+    class ActionGroupManager;
+    class Trigger;
+
     InputTriggerRegistry();
 
-    bool register_trigger(InputTrigger* trigger);
+    bool register_trigger(Trigger* trigger);
     bool matches_any_trigger(MirEvent const& event);
 
     auto keyboard_state_tracker() const -> KeyboardStateTracker const&;
 
 private:
-    std::vector<wayland::Weak<InputTrigger>> triggers;
+    std::vector<wayland::Weak<Trigger>> triggers;
     KeyboardStateTracker keyboard_state;
 };
 
-class ActionGroupManager
+// Version-agnostic interface
+class InputTriggerRegistry::Action : public virtual wayland::LifetimeTracker
+{
+public:
+    virtual ~Action() = default;
+
+    virtual void end(uint32_t wayland_timestamp, std::string const& activation_token) const = 0;
+    virtual void begin(uint32_t wayland_timestamp, std::string const& activation_token) const = 0;
+};
+
+class InputTriggerRegistry::ActionGroup
+{
+public:
+    ActionGroup(shell::TokenAuthority& token_authority);
+
+    void add(wayland::Weak<Action const> action);
+    void end(uint32_t wayland_timestamp);
+    void begin(uint32_t wayland_timestamp);
+
+private:
+    shell::TokenAuthority& token_authority;
+    std::vector<wayland::Weak<Action const>> actions;
+    std::optional<std::pair<uint32_t, std::string>> timestamp_and_token;
+};
+
+class InputTriggerRegistry::ActionGroupManager
 {
 public:
     ActionGroupManager(std::shared_ptr<shell::TokenAuthority> const& token_authority, Executor& wayland_executor);
@@ -152,6 +130,34 @@ private:
     std::shared_ptr<shell::TokenAuthority> const token_authority;
     Executor& wayland_executor;
 };
+
+class InputTriggerRegistry::Trigger: public virtual wayland::LifetimeTracker
+{
+public:
+    virtual ~Trigger() = default;
+
+    void associate_with_action_group(std::shared_ptr<ActionGroup> action_group);
+    void unassociate_with_action_group(std::shared_ptr<ActionGroup> action_group);
+
+    // \return true if event was handled, false otherwise.
+    bool process(MirEvent const& event);
+
+    virtual auto to_string() const -> std::string = 0;
+
+    virtual bool is_same_trigger(Trigger const* other) const = 0;
+    virtual bool is_same_trigger(KeyboardSymTrigger const* sym_trigger) const;
+    virtual bool is_same_trigger(KeyboardCodeTrigger const* code_trigger) const;
+
+private:
+    void begin(uint32_t wayland_timestamp);
+    void end(uint32_t wayland_timestamp);
+
+    virtual bool do_process(MirEvent const& event) = 0;
+
+    std::shared_ptr<ActionGroup> action_group;
+    bool active{false};
+};
+
 }
 }
 
