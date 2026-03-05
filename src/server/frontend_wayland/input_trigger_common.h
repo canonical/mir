@@ -67,7 +67,6 @@ public:
     void end(uint32_t wayland_timestamp);
     void begin(uint32_t wayland_timestamp);
 
-    auto any_trigger_active() const -> bool;
 private:
     shell::TokenAuthority& token_authority;
     std::vector<wayland::Weak<InputTriggerAction const>> actions;

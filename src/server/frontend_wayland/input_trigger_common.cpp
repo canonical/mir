@@ -198,11 +198,6 @@ void mf::ActionGroup::add(wayland::Weak<InputTriggerAction const> action)
     }
 }
 
-auto mf::ActionGroup::any_trigger_active() const -> bool
-{
-    return timestamp_and_token.has_value();
-}
-
 namespace
 {
 template <typename T>
