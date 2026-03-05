@@ -68,7 +68,9 @@ bool msh::SurfaceSpecification::is_empty() const
         !application_id.is_set() &&
         !server_side_decorated.is_set() &&
         !focus_mode.is_set() &&
-        !visible_on_lock_screen.is_set();
+        !visible_on_lock_screen.is_set() &&
+        !tiled_edges.is_set() &&
+        !alpha.is_set();
 }
 
 void msh::SurfaceSpecification::update_from(SurfaceSpecification const& that)
