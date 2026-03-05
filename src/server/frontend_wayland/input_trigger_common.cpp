@@ -111,25 +111,9 @@ bool mf::KeyboardStateTracker::process(MirEvent const& event)
     return false;
 }
 
-auto mf::KeyboardStateTracker::keysym_is_pressed(uint32_t keysym, bool case_insensitive) const -> bool
+auto mf::KeyboardStateTracker::keysym_is_pressed(uint32_t keysym) const -> bool
 {
-    if (!case_insensitive)
-        return pressed_keysyms.contains(keysym);
-
-    // Perform case mapping only for a-z and A-Z
-    uint32_t lower = keysym;
-    uint32_t upper = keysym;
-
-    if (keysym >= XKB_KEY_A && keysym <= XKB_KEY_Z)
-    {
-        lower = xkb_keysym_to_lower(keysym);
-    }
-    else if (keysym >= XKB_KEY_a && keysym <= XKB_KEY_z)
-    {
-        upper = xkb_keysym_to_upper(keysym);
-    }
-
-    return pressed_keysyms.contains(lower) || pressed_keysyms.contains(upper);
+    return pressed_keysyms.contains(keysym);
 }
 
 auto mf::KeyboardStateTracker::scancode_is_pressed(uint32_t scancode) const -> bool

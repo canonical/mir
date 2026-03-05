@@ -60,7 +60,7 @@ public:
 
 TEST_F(KeyboardStateTrackerTest, initially_no_keys_pressed)
 {
-    EXPECT_FALSE(tracker.keysym_is_pressed(XKB_KEY_a, false));
+    EXPECT_FALSE(tracker.keysym_is_pressed(XKB_KEY_a));
     EXPECT_FALSE(tracker.scancode_is_pressed(KEY_A_SCANCODE));
 }
 
@@ -68,7 +68,7 @@ TEST_F(KeyboardStateTrackerTest, tracks_key_down)
 {
     tracker.process(*key_down(XKB_KEY_a, KEY_A_SCANCODE));
 
-    EXPECT_TRUE(tracker.keysym_is_pressed(XKB_KEY_a, false));
+    EXPECT_TRUE(tracker.keysym_is_pressed(XKB_KEY_a));
     EXPECT_TRUE(tracker.scancode_is_pressed(KEY_A_SCANCODE));
 }
 
@@ -77,7 +77,7 @@ TEST_F(KeyboardStateTrackerTest, tracks_key_up)
     tracker.process(*key_down(XKB_KEY_a, KEY_A_SCANCODE));
     tracker.process(*key_up(XKB_KEY_a, KEY_A_SCANCODE));
 
-    EXPECT_FALSE(tracker.keysym_is_pressed(XKB_KEY_a, false));
+    EXPECT_FALSE(tracker.keysym_is_pressed(XKB_KEY_a));
     EXPECT_FALSE(tracker.scancode_is_pressed(KEY_A_SCANCODE));
 }
 
@@ -87,33 +87,25 @@ TEST_F(KeyboardStateTrackerTest, tracks_multiple_keys)
     tracker.process(*key_down(XKB_KEY_b, KEY_B_SCANCODE));
     tracker.process(*key_down(XKB_KEY_Control_L, KEY_CTRL_L_SCANCODE));
 
-    EXPECT_TRUE(tracker.keysym_is_pressed(XKB_KEY_a, false));
-    EXPECT_TRUE(tracker.keysym_is_pressed(XKB_KEY_b, false));
-    EXPECT_TRUE(tracker.keysym_is_pressed(XKB_KEY_Control_L, false));
+    EXPECT_TRUE(tracker.keysym_is_pressed(XKB_KEY_a));
+    EXPECT_TRUE(tracker.keysym_is_pressed(XKB_KEY_b));
+    EXPECT_TRUE(tracker.keysym_is_pressed(XKB_KEY_Control_L));
     EXPECT_TRUE(tracker.scancode_is_pressed(KEY_A_SCANCODE));
     EXPECT_TRUE(tracker.scancode_is_pressed(KEY_B_SCANCODE));
     EXPECT_TRUE(tracker.scancode_is_pressed(KEY_CTRL_L_SCANCODE));
 }
 
-TEST_F(KeyboardStateTrackerTest, case_sensitive_exact_match)
+TEST_F(KeyboardStateTrackerTest, lowercase_keysym_does_not_matche_uppercase)
 {
     tracker.process(*key_down(XKB_KEY_a, KEY_A_SCANCODE));
 
-    EXPECT_TRUE(tracker.keysym_is_pressed(XKB_KEY_a, false));
-    EXPECT_FALSE(tracker.keysym_is_pressed(XKB_KEY_A, false));
+    EXPECT_FALSE(tracker.keysym_is_pressed(XKB_KEY_A));
 }
 
-TEST_F(KeyboardStateTrackerTest, case_insensitive_lowercase_matches_uppercase)
-{
-    tracker.process(*key_down(XKB_KEY_a, KEY_A_SCANCODE));
-
-    EXPECT_TRUE(tracker.keysym_is_pressed(XKB_KEY_A, true));
-}
-
-TEST_F(KeyboardStateTrackerTest, case_insensitive_uppercase_matches_lowercase)
+TEST_F(KeyboardStateTrackerTest, uppercase_keysym_does_not_matche_lowercase)
 {
     tracker.process(*key_down(XKB_KEY_A, KEY_A_SCANCODE));
 
-    EXPECT_TRUE(tracker.keysym_is_pressed(XKB_KEY_a, true));
+    EXPECT_FALSE(tracker.keysym_is_pressed(XKB_KEY_a));
 }
 } // namespace

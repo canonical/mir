@@ -164,10 +164,7 @@ bool mf::KeyboardSymTrigger::do_process(MirEvent const& event)
     if (!InputTriggerModifiers::modifiers_match(modifiers, event.to_input()->to_keyboard()->modifiers()))
         return false;
 
-    auto const trigger_mods_contain_shift = modifiers.contains(
-        {mir_input_event_modifier_shift, mir_input_event_modifier_shift_left, mir_input_event_modifier_shift_right});
-
-    return keyboard_state_tracker.keysym_is_pressed(keysym, trigger_mods_contain_shift);
+    return keyboard_state_tracker.keysym_is_pressed(keysym);
 }
 
 bool mf::KeyboardSymTrigger::is_same_trigger(Trigger const* other) const
