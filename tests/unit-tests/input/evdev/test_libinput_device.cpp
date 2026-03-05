@@ -112,6 +112,7 @@ struct MockEventBuilder : mi::EventBuilder
     using EventBuilder::Timestamp;
 
     MOCK_METHOD(mir::EventUPtr, key_event, (std::optional<Timestamp>, MirKeyboardAction, xkb_keysym_t, int));
+    MOCK_METHOD(mir::EventUPtr, key_event, (std::optional<Timestamp>, MirKeyboardAction, xkb_keysym_t, int, MirInputEventModifiers));
 
     mir::EventUPtr touch_event(std::optional<Timestamp>, std::vector<mir::events::TouchContactV1> const&)
     {

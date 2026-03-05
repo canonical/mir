@@ -43,6 +43,18 @@ mir::EventUPtr mi::DefaultEventBuilder::key_event(
         device_id, timestamp, action, keysym, scan_code, mir_input_event_modifier_none);
 }
 
+mir::EventUPtr mi::DefaultEventBuilder::key_event(
+    std::optional<Timestamp> source_timestamp,
+    MirKeyboardAction action,
+    xkb_keysym_t keysym,
+    int scan_code,
+    MirInputEventModifiers modifiers)
+{
+    auto const timestamp = calibrate_timestamp(source_timestamp);
+    return me::make_key_event(
+        device_id, timestamp, action, keysym, scan_code, modifiers);
+}
+
 mir::EventUPtr mi::DefaultEventBuilder::pointer_event(
     std::optional<Timestamp> source_timestamp,
     MirPointerAction action,

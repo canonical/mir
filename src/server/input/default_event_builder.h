@@ -44,6 +44,13 @@ public:
         xkb_keysym_t keysym,
         int scan_code) override;
 
+    virtual EventUPtr key_event(
+        std::optional<Timestamp> timestamp,
+        MirKeyboardAction action,
+        xkb_keysym_t keysym,
+        int scan_code,
+        MirInputEventModifiers modifiers) override;
+
     EventUPtr touch_event(
         std::optional<Timestamp> source_timestamp,
         std::vector<events::TouchContactV1> const& contacts) override;

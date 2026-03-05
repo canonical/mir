@@ -47,6 +47,13 @@ public:
         xkb_keysym_t keysym,
         int scan_code) = 0;
 
+    virtual EventUPtr key_event(
+        std::optional<Timestamp> timestamp,
+        MirKeyboardAction action,
+        xkb_keysym_t keysym,
+        int scan_code,
+        MirInputEventModifiers modifiers) = 0;
+
     [[deprecated("use the pointer_event() that includes all properties instead")]]
     virtual EventUPtr pointer_event(
         std::optional<Timestamp> timestamp,
