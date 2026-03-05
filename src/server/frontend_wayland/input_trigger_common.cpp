@@ -52,58 +52,6 @@ auto mf::RecentTokens::contains(std::string_view token) const -> bool
     return std::find(tokens.begin(), tokens.end(), token) != tokens.end();
 }
 
-void Trigger::associate_with_action_group(std::shared_ptr<ActionGroup> action_group)
-{
-    this->action_group = action_group;
-}
-
-void Trigger::unassociate_with_action_group(std::shared_ptr<ActionGroup> action_group)
-{
-    if (this->action_group == action_group)
-        this->action_group.reset();
-}
-
-void Trigger::begin(uint32_t wayland_timestamp)
-{
-    if (active || !action_group)
-        return;
-
-    active = true;
-    action_group->begin(wayland_timestamp);
-}
-
-void Trigger::end(uint32_t wayland_timestamp)
-{
-    if (!active || !action_group)
-        return;
-
-    active = false;
-    action_group->end(wayland_timestamp);
-}
-
-bool Trigger::process(MirEvent const& event)
-{
-    auto const matched = do_process(event);
-    auto const timestamp = mir_input_event_get_wayland_timestamp(event.to_input());
-
-    if (matched)
-        begin(timestamp);
-    else
-        end(timestamp);
-
-    return matched;
-}
-
-bool Trigger::is_same_trigger(KeyboardSymTrigger const*) const
-{
-    return false;
-}
-
-bool Trigger::is_same_trigger(KeyboardCodeTrigger const*) const
-{
-    return false;
-}
-
 bool mf::KeyboardStateTracker::process(MirEvent const& event)
 {
     if (event.type() != mir_event_type_input)
@@ -189,23 +137,6 @@ auto mf::KeyboardStateTracker::scancode_is_pressed(uint32_t scancode) const -> b
     return pressed_scancodes.contains(scancode);
 }
 
-ActionGroup::ActionGroup(shell::TokenAuthority& token_authority)
-    : token_authority{token_authority}
-{
-}
-
-void ActionGroup::add(wayland::Weak<Action const> action)
-{
-    actions.push_back(action);
-    if (timestamp_and_token)
-    {
-        auto const& [timestamp, token] = timestamp_and_token.value();
-        action.value().begin(timestamp, token);
-    }
-}
-
-namespace
-{
 template <typename T>
 void iterate_and_erase_expired(
     std::vector<mir::wayland::Weak<T>>& vec, auto&& callback)
@@ -220,25 +151,6 @@ void iterate_and_erase_expired(
             callback(action.value());
             return false; // Don't erase
         });
-}
-}
-
-void ActionGroup::end(uint32_t wayland_timestamp)
-{
-    auto const activation_token = static_cast<std::string>(token_authority.issue_token(std::nullopt));
-    iterate_and_erase_expired(
-        actions, [&](auto const& valid_action) { valid_action.end(wayland_timestamp, activation_token); });
-
-    timestamp_and_token = {};
-}
-
-void ActionGroup::begin(uint32_t wayland_timestamp)
-{
-    auto const activation_token = static_cast<std::string>(token_authority.issue_token(std::nullopt));
-    timestamp_and_token = {wayland_timestamp, activation_token};
-
-    iterate_and_erase_expired(
-        actions, [&](auto const& valid_action) { valid_action.begin(wayland_timestamp, activation_token); });
 }
 
 mf::InputTriggerRegistry::InputTriggerRegistry() = default;
@@ -279,6 +191,40 @@ auto mf::InputTriggerRegistry::matches_any_trigger(MirEvent const& event) -> boo
 auto mf::InputTriggerRegistry::keyboard_state_tracker() const -> KeyboardStateTracker const&
 {
     return keyboard_state;
+}
+
+
+ActionGroup::ActionGroup(shell::TokenAuthority& token_authority)
+    : token_authority{token_authority}
+{
+}
+
+void ActionGroup::add(wayland::Weak<Action const> action)
+{
+    actions.push_back(action);
+    if (timestamp_and_token)
+    {
+        auto const& [timestamp, token] = timestamp_and_token.value();
+        action.value().begin(timestamp, token);
+    }
+}
+
+void ActionGroup::end(uint32_t wayland_timestamp)
+{
+    auto const activation_token = static_cast<std::string>(token_authority.issue_token(std::nullopt));
+    iterate_and_erase_expired(
+        actions, [&](auto const& valid_action) { valid_action.end(wayland_timestamp, activation_token); });
+
+    timestamp_and_token = {};
+}
+
+void ActionGroup::begin(uint32_t wayland_timestamp)
+{
+    auto const activation_token = static_cast<std::string>(token_authority.issue_token(std::nullopt));
+    timestamp_and_token = {wayland_timestamp, activation_token};
+
+    iterate_and_erase_expired(
+        actions, [&](auto const& valid_action) { valid_action.begin(wayland_timestamp, activation_token); });
 }
 
 ActionGroupManager::ActionGroupManager(
@@ -325,3 +271,56 @@ auto ActionGroupManager::get_action_group(std::string const& token) -> std::shar
         return iter->second.lock();
     return nullptr;
 }
+
+void Trigger::associate_with_action_group(std::shared_ptr<ActionGroup> action_group)
+{
+    this->action_group = action_group;
+}
+
+void Trigger::unassociate_with_action_group(std::shared_ptr<ActionGroup> action_group)
+{
+    if (this->action_group == action_group)
+        this->action_group.reset();
+}
+
+void Trigger::begin(uint32_t wayland_timestamp)
+{
+    if (active || !action_group)
+        return;
+
+    active = true;
+    action_group->begin(wayland_timestamp);
+}
+
+void Trigger::end(uint32_t wayland_timestamp)
+{
+    if (!active || !action_group)
+        return;
+
+    active = false;
+    action_group->end(wayland_timestamp);
+}
+
+bool Trigger::process(MirEvent const& event)
+{
+    auto const matched = do_process(event);
+    auto const timestamp = mir_input_event_get_wayland_timestamp(event.to_input());
+
+    if (matched)
+        begin(timestamp);
+    else
+        end(timestamp);
+
+    return matched;
+}
+
+bool Trigger::is_same_trigger(KeyboardSymTrigger const*) const
+{
+    return false;
+}
+
+bool Trigger::is_same_trigger(KeyboardCodeTrigger const*) const
+{
+    return false;
+}
+
