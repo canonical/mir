@@ -55,7 +55,7 @@ impl Default for ScrollAxisData {
             precise: 0.0,
             discrete: 0,
             value120: 0,
-            stop: true,
+            stop: false,
         }
     }
 }
@@ -614,36 +614,41 @@ fn handle_touch_frame(
     device_info: &mut LibinputDeviceInfo,
     frame_event: input::event::touch::TouchFrameEvent,
 ) -> bool {
-    let mut contacts: Vec<crate::TouchContactData> = vec![];
     let mut empty_touches = 0;
 
-    for (slot, contact_data) in &mut device_info.touch_properties {
-        // Note: This was logic taken from the existing evdev implementation, and we are
-        // keeping it for backwards compatibility.
-        // Sanity check: Bogus panels are sending sometimes empty events that all point
-        // to (0, 0) coordinates. Detect those and drop the whole frame in this case.
-        // Count touches at (0, 0) but still include them in contacts for now.
-        if contact_data.x == 0.0 && contact_data.y == 0.0 {
-            empty_touches += 1;
-        }
+    let contacts: Vec<crate::TouchContactData> = device_info
+        .touch_properties
+        .iter_mut()
+        .map(|(slot, contact_data)| {
+            // Note: This was logic taken from the existing evdev implementation, and we are
+            // keeping it for backwards compatibility.
+            // Sanity check: Bogus panels are sending sometimes empty events that all point
+            // to (0, 0) coordinates. Detect those and drop the whole frame in this case.
+            // Count touches at (0, 0) but still include them in contacts for now.
+            if contact_data.x == 0.0 && contact_data.y == 0.0 {
+                empty_touches += 1;
+            }
 
-        contacts.push(crate::TouchContactData {
-            touch_id: *slot as i32,
-            action: contact_data.action.repr,
-            tooltype: contact_data.tooltype.repr,
-            position_x: contact_data.x,
-            position_y: contact_data.y,
-            pressure: contact_data.pressure,
-            touch_major: contact_data.major,
-            touch_minor: contact_data.minor,
-            orientation: contact_data.orientation,
-        });
+            let contact = crate::TouchContactData {
+                touch_id: *slot as i32,
+                action: contact_data.action.repr,
+                tooltype: contact_data.tooltype.repr,
+                position_x: contact_data.x,
+                position_y: contact_data.y,
+                pressure: contact_data.pressure,
+                touch_major: contact_data.major,
+                touch_minor: contact_data.minor,
+                orientation: contact_data.orientation,
+            };
 
-        if contact_data.action == MirTouchAction::mir_touch_action_down {
-            contact_data.action = MirTouchAction::mir_touch_action_change;
-            contact_data.down_notified = true;
-        }
-    }
+            if contact_data.action == MirTouchAction::mir_touch_action_down {
+                contact_data.action = MirTouchAction::mir_touch_action_change;
+                contact_data.down_notified = true;
+            }
+
+            contact
+        })
+        .collect();
 
     // Remove any property that is now "up" so that we do not keep sending
     // the up notification.
