@@ -120,7 +120,7 @@ public:
 
     void apply_settings(mi::PointerSettings const& pointer_settings) override
     {
-        miers::PointerSettings pointer_settings_c;
+        miers::SetPointerSettingsData pointer_settings_c;
         pointer_settings_c.handedness = static_cast<MirPointerHandedness>(pointer_settings.handedness);
         pointer_settings_c.acceleration = static_cast<MirPointerAcceleration>(pointer_settings.acceleration);
         pointer_settings_c.cursor_acceleration_bias = pointer_settings.cursor_acceleration_bias;
