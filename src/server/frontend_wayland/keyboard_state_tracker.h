@@ -19,7 +19,7 @@
 
 #include <mir/events/event.h>
 
-#include <unordered_set>
+#include <unordered_map>
 
 namespace mir
 {
@@ -40,6 +40,11 @@ namespace frontend
 /// uppercase equivalents, and when all Shift keys are released they are
 /// demoted back. This keeps the stored keysyms consistent with what the
 /// keyboard layer reports as the logical key for subsequent events.
+///
+/// Keysyms are stored per scancode so that a key-up event always removes the
+/// keysym that was recorded at key-down, regardless of any modifier changes
+/// that occurred while the key was held (e.g. pressing Shift while holding
+/// a digit key).
 class KeyboardStateTracker
 {
 public:
@@ -54,8 +59,9 @@ public:
     auto scancode_is_pressed(uint32_t scancode) const -> bool;
 
 private:
-    std::unordered_set<uint32_t> pressed_keysyms;
-    std::unordered_set<uint32_t> pressed_scancodes;
+    /// Maps each currently-pressed scancode to the keysym that was recorded
+    /// when it was pressed (updated on shift-state transitions).
+    std::unordered_map<uint32_t, uint32_t> scancode_to_keysym;
     MirInputEventModifiers shift_state{0};
 };
 }
