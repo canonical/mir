@@ -209,7 +209,7 @@ void ActionGroup::add(wayland::Weak<Action const> action)
     }
 }
 
-void ActionGroup::end(uint32_t wayland_timestamp)
+void ActionGroup::send_end(uint32_t wayland_timestamp)
 {
     auto const activation_token = static_cast<std::string>(token_authority.issue_token(std::nullopt));
     iterate_and_erase_expired(
@@ -218,7 +218,7 @@ void ActionGroup::end(uint32_t wayland_timestamp)
     timestamp_and_token = {};
 }
 
-void ActionGroup::begin(uint32_t wayland_timestamp)
+void ActionGroup::send_begin(uint32_t wayland_timestamp)
 {
     auto const activation_token = static_cast<std::string>(token_authority.issue_token(std::nullopt));
     timestamp_and_token = {wayland_timestamp, activation_token};
@@ -289,7 +289,7 @@ void Trigger::begin(uint32_t wayland_timestamp)
         return;
 
     active = true;
-    action_group->begin(wayland_timestamp);
+    action_group->send_begin(wayland_timestamp);
 }
 
 void Trigger::end(uint32_t wayland_timestamp)
@@ -298,7 +298,7 @@ void Trigger::end(uint32_t wayland_timestamp)
         return;
 
     active = false;
-    action_group->end(wayland_timestamp);
+    action_group->send_end(wayland_timestamp);
 }
 
 bool Trigger::process(MirEvent const& event)

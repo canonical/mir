@@ -103,8 +103,8 @@ public:
     ActionGroup(shell::TokenAuthority& token_authority);
 
     void add(wayland::Weak<Action const> action);
-    void end(uint32_t wayland_timestamp);
-    void begin(uint32_t wayland_timestamp);
+    void send_end(uint32_t wayland_timestamp);
+    void send_begin(uint32_t wayland_timestamp);
 
 private:
     shell::TokenAuthority& token_authority;
