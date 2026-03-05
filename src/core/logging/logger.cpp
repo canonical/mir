@@ -84,24 +84,29 @@ void ml::format_message(std::ostream& out, Severity severity, std::string const&
     };
 
     std::string fmt_now;
+    auto now = std::chrono::system_clock::now();
+    auto now_us =
+        std::chrono::time_point_cast<std::chrono::microseconds>(now);
     try
     {
-        auto now = std::chrono::system_clock::now();
-        auto now_us =
-            std::chrono::time_point_cast<std::chrono::microseconds>(now);
         auto local =
             std::chrono::zoned_time{std::chrono::current_zone(), now_us};
         fmt_now = std::format("{:%F %T}", local);
     }
     catch (...)
     {
-        auto now = std::chrono::system_clock::now();
         auto now_time_t = std::chrono::system_clock::to_time_t(now);
+        auto micros = now_us.time_since_epoch().count() % 1000000;
         char buf[32]{};
         std::tm tm{};
+        size_t offset;
         if (gmtime_r(&now_time_t, &tm) != nullptr &&
-            std::strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", &tm))
+            (offset = std::strftime(
+                buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", &tm)))
         {
+            auto eos = std::format_to_n(buf + offset, sizeof(buf) - offset,
+                ".{:06}", micros).out;
+            *eos = '\0';
             fmt_now = buf;
         }
         else
