@@ -23,7 +23,7 @@ use std::sync::Mutex;
 use crate::{
     DeviceCapability, EventBuilder, EventBuilderWrapper, InputDevice, InputSink, MirEvent,
     MirPointerAcceleration, MirPointerHandedness, MirTouchAction, MirTouchTooltype, PlatformBridge,
-    PointerSettings, PointerSettingsRs,
+    PointerSettings, SetPointerSettingsData,
 };
 
 /// The libinput device.
@@ -124,12 +124,12 @@ impl LibinputDevice {
         });
     }
 
-    pub fn get_pointer_settings(&self) -> Box<PointerSettingsRs> {
+    pub fn get_pointer_settings(&self) -> Box<PointerSettings> {
         let Ok(mut guard) = self.state.lock() else {
             eprintln!(
                 "LibinputDevice::get_pointer_settings: unable to acquire state lock; lock poisoned"
             );
-            let mut settings = PointerSettingsRs::default();
+            let mut settings = PointerSettings::default();
             settings.has_error = true;
             return Box::new(settings);
         };
@@ -138,7 +138,7 @@ impl LibinputDevice {
             eprintln!(
                 "Attempting to get pointer settings from a device that is not pointer capable."
             );
-            return Box::new(PointerSettingsRs::default());
+            return Box::new(PointerSettings::default());
         };
 
         if !device_info
@@ -148,7 +148,7 @@ impl LibinputDevice {
             eprintln!(
                 "Attempting to get pointer settings from a device that is not pointer capable."
             );
-            return Box::new(PointerSettingsRs::default());
+            return Box::new(PointerSettings::default());
         }
 
         let handedness = if device_info.device.config_left_handed() {
@@ -170,7 +170,7 @@ impl LibinputDevice {
 
         let acceleration_bias = device_info.device.config_accel_speed() as f64;
 
-        return Box::new(PointerSettingsRs {
+        return Box::new(PointerSettings {
             is_set: true,
             handedness: handedness,
             cursor_acceleration_bias: acceleration_bias,
@@ -181,7 +181,7 @@ impl LibinputDevice {
         });
     }
 
-    pub fn set_pointer_settings(&self, settings: &PointerSettings) {
+    pub fn set_pointer_settings(&self, settings: &SetPointerSettingsData) {
         let Ok(mut guard) = self.state.lock() else {
             eprintln!(
                 "LibinputDevice::set_pointer_settings: unable to acquire state lock; lock poisoned"

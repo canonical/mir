@@ -32,7 +32,7 @@ unsafe impl ExternType for KeyEventData {
 
 #[repr(C)]
 #[derive(Copy, Clone)]
-pub struct PointerEventDataRs {
+pub struct PointerEventData {
     pub has_time: bool,
     pub time_microseconds: u64,
     pub action: i32,
@@ -53,7 +53,32 @@ pub struct PointerEventDataRs {
     pub scroll_stop_y: bool,
 }
 
-unsafe impl ExternType for PointerEventDataRs {
+impl Default for PointerEventData {
+    fn default() -> Self {
+        Self {
+            has_time: false,
+            time_microseconds: 0,
+            action: crate::MirPointerAction::mir_pointer_action_motion.repr,
+            buttons: 0,
+            has_position: false,
+            position_x: 0.0,
+            position_y: 0.0,
+            displacement_x: 0.0,
+            displacement_y: 0.0,
+            axis_source: crate::MirPointerAxisSource::mir_pointer_axis_source_none.repr,
+            precise_x: 0.0,
+            discrete_x: 0,
+            value120_x: 0,
+            scroll_stop_x: false,
+            precise_y: 0.0,
+            discrete_y: 0,
+            value120_y: 0,
+            scroll_stop_y: false,
+        }
+    }
+}
+
+unsafe impl ExternType for PointerEventData {
     type Id = cxx::type_id!("mir::input::evdev_rs::PointerEventData");
     type Kind = cxx::kind::Trivial;
 }
