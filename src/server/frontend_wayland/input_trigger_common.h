@@ -35,6 +35,11 @@ class KeyboardSymTrigger;
 class KeyboardCodeTrigger;
 class KeyboardStateTracker;
 
+/// A fixed-capacity circular buffer of recently seen tokens.
+///
+/// Tracks the last \c capacity tokens added, allowing efficient membership
+/// checks. Older tokens are evicted as new ones are inserted once the buffer
+/// is full.
 class RecentTokens
 {
 public:
