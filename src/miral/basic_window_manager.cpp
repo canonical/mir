@@ -724,7 +724,7 @@ auto miral::BasicWindowManager::display_area_for(WindowInfo const& info) const -
 
     for (auto& area : display_areas)
     {
-        if(std::ranges::contains(area->attached_windows, window))
+        if (std::ranges::contains(area->attached_windows, window))
             return area;
     }
 
