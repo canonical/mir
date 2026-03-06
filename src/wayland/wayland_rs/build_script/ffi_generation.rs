@@ -7,6 +7,8 @@
 //!
 //! These requests are sent from C++.
 
+use crate::cpp_builder::CppBuilder;
+
 use super::helpers::{snake_to_pascal, write_generated_rust_file};
 use super::{
     InterfaceItem, WaylandArg, WaylandArgType, WaylandEvent, WaylandInterface, WaylandProtocol,
@@ -14,21 +16,36 @@ use super::{
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-// Writes the Rust implementation for each protocol.
-// This includes the event glue code (i.e. send_x events)
-// as well as the code that will ferry that data onto the
-// Wayland thread.
-pub fn write_protocol_event_code(protocols: &Vec<WaylandProtocol>) {
+// Writes the ffi code.
+//
+// This includes Rust -> C++ with the help of the provided builders
+// and C++ -> Rust.
+pub fn generate_ffi(protocols: &Vec<WaylandProtocol>, builders: &Vec<CppBuilder>) -> TokenStream {
     // First, we need to generate the binding code on ffi_rust.rs.
+    let use_imports: Vec<TokenStream> = protocols
+        .iter()
+        .flat_map(generate_use_imports_for_protocol)
+        .collect();
     let event_ffi_tokens = protocols.iter().flat_map(generate_ffi_for_protocol);
 
-    let generated_protocol_rs = quote! {
+    // Write the Rust FFI glue code.
+    // Each builder returns a Vec of C++ type declarations (one per type),
+    // intended to be placed inside an extern "C++" block, so we flatten
+    // them all into a single Vec.
+    let extern_blocks: Vec<TokenStream> = builders
+        .into_iter()
+        .flat_map(|builder: &CppBuilder| builder.to_rust_cpp_bindings())
+        .collect();
+
+    quote! {
         use crate::wayland_server::*;
         use wayland_server::protocol::*;
         use cxx::{CxxString, CxxVector, SharedPtr};
 
+        #(#use_imports)*
+
         #[cxx::bridge(namespace = "mir::wayland_rs")]
-        mod ffi_rust {
+        mod ffi {
             extern "Rust" {
                 type WaylandServer;
                 fn create_wayland_server() -> Box<WaylandServer>;
@@ -37,10 +54,30 @@ pub fn write_protocol_event_code(protocols: &Vec<WaylandProtocol>) {
 
                 #(#event_ffi_tokens)*
             }
-        }
-    };
 
-    write_generated_rust_file(generated_protocol_rs, "ffi_rust.rs");
+            unsafe extern "C++" {
+                #(#extern_blocks)*
+            }
+        }
+    }
+}
+
+fn generate_use_imports_for_protocol(protocol: &WaylandProtocol) -> Vec<TokenStream> {
+    protocol
+        .interfaces
+        .iter()
+        .filter(|interface| interface.name != "wl_registry" && interface.name != "wl_display")
+        .map(|interface| {
+            let full_path: syn::Path = syn::parse_str(&format!(
+                "crate::protocols::{}::{}::{}",
+                protocol.name,
+                interface.name,
+                snake_to_pascal(&interface.name)
+            ))
+            .expect("Failed to parse full interface path");
+            quote! { use #full_path; }
+        })
+        .collect()
 }
 
 fn generate_ffi_for_protocol(protocol: &WaylandProtocol) -> TokenStream {

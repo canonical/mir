@@ -17,7 +17,7 @@
 mod cpp_builder;
 mod helpers;
 mod protocol_parser;
-mod protocol_request_code_generation;
+mod ffi_generation;
 
 use cpp_builder::{
     sanitize_identifier, CppArg, CppBuilder, CppClass, CppEnum, CppEnumOption, CppMethod,
@@ -29,7 +29,7 @@ use protocol_parser::{
     parse_protocols, InterfaceItem, WaylandArg, WaylandArgType, WaylandEnum, WaylandEvent,
     WaylandInterface, WaylandProtocol, WaylandRequest,
 };
-use protocol_request_code_generation::write_protocol_event_code;
+use ffi_generation::generate_ffi;
 use quote::{format_ident, quote};
 use std::{env, fmt::format, path::Path};
 use syn::Ident;
@@ -53,10 +53,6 @@ fn main() {
     // Next, generate C++ abstract classes for each interface
     // as well as the FFI code.
     write_cpp_protocol_implementations(&protocols);
-
-    // Next, generate Rust handlers for each send event method
-    // as well as FFI code.
-    write_protocol_event_code(&protocols);
 
     cxx_build::bridges(vec!["src/ffi_rust.rs"])
         .include(&include_path)
@@ -189,7 +185,7 @@ fn generate_global_dispatch_impl(
     let interface_struct_name = format_ident!("{}", snake_to_pascal(&interface.name));
     let create_global_method = format_ident!("create_{}", &interface.name);
     quote! {
-        impl GlobalDispatch<#namespace_name::#interface_name::#interface_struct_name, ffi_cpp::GlobalFactory>
+        impl GlobalDispatch<#namespace_name::#interface_name::#interface_struct_name, ffi::GlobalFactory>
             for ServerState
         {
 
@@ -198,10 +194,10 @@ fn generate_global_dispatch_impl(
                 _handle: &wayland_server::DisplayHandle,
                 _client: &wayland_server::Client,
                 resource: New<#namespace_name::#interface_name::#interface_struct_name>,
-                global_data: &ffi_cpp::GlobalFactory,
+                global_data: &ffi::GlobalFactory,
                 data_init: &mut wayland_server::DataInit<'_, Self>,
             ) {
-                use ffi_cpp;
+                use crate::ffi;
                 let global = global_data.#create_global_method();
                 let instance = data_init.init(resource, global);
                 let boxed = Box::new(instance);
@@ -237,15 +233,15 @@ fn transform_argument_for_cpp(arg: &WaylandArg) -> Option<TokenStream> {
             if arg.allow_null.unwrap_or(false) {
                 let null_ptr_name = format_ident!("__{}_null_ptr", arg.name.replace('-', "_"));
                 Some(quote! {
-                    let #null_ptr_name = cxx::UniquePtr::<ffi_cpp::#arg_type>::null();
-                    let #arg_name: &cxx::UniquePtr<ffi_cpp::#arg_type> = match #arg_name.as_ref() {
+                    let #null_ptr_name = cxx::UniquePtr::<ffi::#arg_type>::null();
+                    let #arg_name: &cxx::UniquePtr<ffi::#arg_type> = match #arg_name.as_ref() {
                         Some(o) => o.data().unwrap(),
                         None => &#null_ptr_name
                     };
                 })
             } else {
                 Some(quote! {
-                    let #arg_name: &cxx::UniquePtr<ffi_cpp::#arg_type> = #arg_name.data().unwrap();
+                    let #arg_name: &cxx::UniquePtr<ffi::#arg_type> = #arg_name.data().unwrap();
                 })
             }
         }
@@ -362,7 +358,7 @@ fn generate_dispatch_impl(
         return quote! {};
     }
 
-    let interface_struct_name = format_ident!("{}", format_cpp_class_name(&interface.name));
+    let interface_struct_name = format_ident!("{}", snake_to_pascal(&interface.name));
 
     let mut request_handler_arms =
         generate_request_handler_arms(interface, namespace_name, &interface_name);
@@ -412,10 +408,10 @@ fn generate_dispatch_impl(
     );
 
     quote! {
-        unsafe impl Send for ffi_cpp::#interface_struct_name {}
-        unsafe impl Sync for ffi_cpp::#interface_struct_name {}
+        unsafe impl Send for ffi::#interface_struct_name {}
+        unsafe impl Sync for ffi::#interface_struct_name {}
 
-        impl Dispatch<#namespace_name::#interface_name::#interface_struct_name, cxx::UniquePtr<ffi_cpp::#interface_struct_name>>
+        impl Dispatch<#namespace_name::#interface_name::#interface_struct_name, cxx::UniquePtr<ffi::#interface_struct_name>>
             for ServerState
         {
             fn request(
@@ -423,7 +419,7 @@ fn generate_dispatch_impl(
                 _client: &Client,
                 _resource: &#namespace_name::#interface_name::#interface_struct_name,
                 request: <#namespace_name::#interface_name::#interface_struct_name as wayland_server::Resource>::Request,
-                #data_name: &cxx::UniquePtr<ffi_cpp::#interface_struct_name>,
+                #data_name: &cxx::UniquePtr<ffi::#interface_struct_name>,
                 _dhandle: &DisplayHandle,
                 #data_init_name: &mut DataInit<'_, Self>,
             ) {
@@ -470,7 +466,7 @@ fn write_dispatch_rs(protocols: &Vec<WaylandProtocol>) {
         use wayland_server::{Client, DataInit, Dispatch, GlobalDispatch, New, DisplayHandle, Resource};
         use crate::protocols;
         use crate::wayland_server::ServerState;
-        use crate::ffi_cpp;
+        use crate::ffi::*;
         use std::os::fd::{AsRawFd, RawFd};
 
         #(#generated_dispatch_implementations)*
@@ -526,25 +522,9 @@ fn write_cpp_protocol_implementations(protocols: &Vec<WaylandProtocol>) {
         write_cpp_header(&builder);
         write_cpp_source(&builder);
     }
-
-    // Write the Rust FFI glue code.
-    // Each builder returns a Vec of C++ type declarations (one per type),
-    // intended to be placed inside an extern "C++" block, so we flatten
-    // them all into a single Vec.
-    let extern_blocks: Vec<TokenStream> = builders
-        .into_iter()
-        .flat_map(|builder: CppBuilder| builder.to_rust_cpp_bindings())
-        .collect();
-
-    let cpp_ffi_rs = quote! {
-        #[cxx::bridge]
-        mod ffi_cpp {
-            unsafe extern "C++" {
-                #(#extern_blocks)*
-            }
-        }
-    };
-    write_generated_rust_file(cpp_ffi_rs, "ffi_cpp.rs");
+    
+    let ffi = generate_ffi(&protocols,  &builders);
+    write_generated_rust_file(ffi, "ffi.rs");
 }
 
 fn create_cpp_builder(protocol: &WaylandProtocol) -> CppBuilder {

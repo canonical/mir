@@ -24,6 +24,7 @@ mod dispatch {
 mod protocols {
     include!("protocols.rs");
 }
-include!("ffi_cpp.rs");
-include!("ffi_rust.rs");
+mod ffi {
+    include!("ffi.rs");
+}
 mod wayland_server;
