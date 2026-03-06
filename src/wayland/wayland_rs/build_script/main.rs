@@ -31,7 +31,7 @@ use protocol_parser::{
 };
 use ffi_generation::generate_ffi;
 use quote::{format_ident, quote};
-use std::{env, fmt::format, path::Path};
+use std::{env, path::Path};
 use syn::Ident;
 
 fn main() {

@@ -9,7 +9,7 @@
 
 use crate::cpp_builder::CppBuilder;
 
-use super::helpers::{snake_to_pascal, write_generated_rust_file};
+use super::helpers::{snake_to_pascal};
 use super::{
     InterfaceItem, WaylandArg, WaylandArgType, WaylandEvent, WaylandInterface, WaylandProtocol,
 };
@@ -21,22 +21,27 @@ use quote::{format_ident, quote};
 // This includes Rust -> C++ with the help of the provided builders
 // and C++ -> Rust.
 pub fn generate_ffi(protocols: &Vec<WaylandProtocol>, builders: &Vec<CppBuilder>) -> TokenStream {
-    // First, we need to generate the binding code on ffi_rust.rs.
+    // First, generate the imports.
     let use_imports: Vec<TokenStream> = protocols
         .iter()
         .flat_map(generate_use_imports_for_protocol)
         .collect();
-    let event_ffi_tokens = protocols.iter().flat_map(generate_ffi_for_protocol);
 
-    // Write the Rust FFI glue code.
-    // Each builder returns a Vec of C++ type declarations (one per type),
-    // intended to be placed inside an extern "C++" block, so we flatten
-    // them all into a single Vec.
-    let extern_blocks: Vec<TokenStream> = builders
+    // Next, generate the C++ -> Rust side.
+    //
+    // Note that there is a complication here. Certain arguments on events will not
+    // be able to be ferried directly from C++ to Rust. For example, C++ can only
+    // call into Rust with C++ strings. Hence, while generating the code, some methods
+    // will generate "middleware" functions that will ferry the data to the interface.
+    let rust_tokens = protocols.iter().flat_map(generate_ffi_for_protocol);
+
+    // Next, generate the Rust -> C++ side.
+    let cpp_tokens: Vec<TokenStream> = builders
         .into_iter()
         .flat_map(|builder: &CppBuilder| builder.to_rust_cpp_bindings())
         .collect();
 
+    // Finally, build the file.
     quote! {
         use crate::wayland_server::*;
         use wayland_server::protocol::*;
@@ -52,11 +57,11 @@ pub fn generate_ffi(protocols: &Vec<WaylandProtocol>, builders: &Vec<CppBuilder>
                 fn run(self: &mut WaylandServer, socket: &str) -> Result<()>;
                 fn stop(self: &mut WaylandServer);
 
-                #(#event_ffi_tokens)*
+                #(#rust_tokens)*
             }
 
             unsafe extern "C++" {
-                #(#extern_blocks)*
+                #(#cpp_tokens)*
             }
         }
     }
@@ -129,7 +134,7 @@ fn wayland_arg_to_rust_str(arg: &WaylandArg) -> String {
         WaylandArgType::Int => format!("{}: {}", arg.name, "i32"),
         WaylandArgType::Uint => format!("{}: {}", arg.name, "u32"),
         WaylandArgType::Fixed => format!("{}: {}", arg.name, "f64"),
-        WaylandArgType::String => format!("{}: {}", arg.name, "&CxxString"),
+        WaylandArgType::String => format!("{}: {}", arg.name, "CxxString"),
         WaylandArgType::Object => format!(
             "{}: &Box<{}>",
             arg.name,
@@ -141,8 +146,7 @@ fn wayland_arg_to_rust_str(arg: &WaylandArg) -> String {
             )
         ),
         WaylandArgType::NewId => format!("{}: {}", arg.name, "i32"),
-        WaylandArgType::Array => format!("{}: {}", arg.name, "i32"),
-        WaylandArgType::Fd => format!("{}: {}", arg.name, "i32"),
-        _ => panic!("Unhandled argument type: {:?}", arg.type_),
+        WaylandArgType::Array => format!("{}: {}", arg.name, "Vec<u8>"),
+        WaylandArgType::Fd => format!("{}: {}", arg.name, "i32")
     }
 }
