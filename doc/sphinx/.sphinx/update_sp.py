@@ -18,7 +18,9 @@ import sys
 from requests.exceptions import RequestException
 from packaging.version import parse as parse_version
 
-SPHINX_DIR = os.path.join(os.getcwd(), ".sphinx")
+SPHINX_DIR = os.path.abspath(os.path.dirname(__file__))
+DOCS_DIR = os.path.abspath(os.path.join(SPHINX_DIR, '..'))
+REQUIREMENTS = os.path.join(DOCS_DIR, "requirements.txt")
 SPHINX_UPDATE_DIR = os.path.join(SPHINX_DIR, "update")
 GITHUB_REPO = "canonical/sphinx-docs-starter-pack"
 GITHUB_API_BASE = f"https://api.github.com/repos/{GITHUB_REPO}"
@@ -103,7 +105,7 @@ def main():
     # Check requirements are the same
     new_requirements = []
     try:
-        with open("requirements.txt", "r") as file:
+        with open(REQUIREMENTS, "r") as file:
             logging.debug("Checking requirements")
 
             local_reqs = set(file.read().splitlines()) - {""}
@@ -121,7 +123,7 @@ def main():
 
             if new_requirements != set():
                 print(
-                    "You may need to add the following pacakges to your requirements.txt file:"
+                    "You may need to add the following packages to your requirements.txt file:"
                 )
                 for r in new_requirements:
                     print(f"{r}\n")
@@ -206,7 +208,7 @@ def update_static_files():
     # Writes return value for parent function
     if new_file_list != []:
         # Provides more information on new files
-        with open("NEWFILES.txt", "w") as f:
+        with open(f"{SPHINX_DIR}/NEWFILES.txt", "w") as f:
             for entry in new_file_list:
                 f.write(f"{entry}\n")
         logging.debug("Some downloaded files are new")
@@ -228,7 +230,7 @@ def get_local_files_and_paths():
     try:
         files = []
         paths = []
-        patterns = [".*", "**.*", "metrics/**.*"]
+        patterns = [".*", "**.*"]
         files, paths = [], []
 
         for pattern in patterns:
