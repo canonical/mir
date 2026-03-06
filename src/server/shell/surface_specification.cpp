@@ -70,7 +70,8 @@ bool msh::SurfaceSpecification::is_empty() const
         !focus_mode.is_set() &&
         !visible_on_lock_screen.is_set() &&
         !tiled_edges.is_set() &&
-        !alpha.is_set();
+        !alpha.is_set() &&
+        !transformation.is_set();
 }
 
 void msh::SurfaceSpecification::update_from(SurfaceSpecification const& that)
@@ -161,6 +162,8 @@ void msh::SurfaceSpecification::update_from(SurfaceSpecification const& that)
         tiled_edges = that.tiled_edges;
     if (that.alpha.is_set())
         alpha = that.alpha;
+    if (that.transformation.is_set())
+        transformation = that.transformation;
 }
 
 bool msh::operator==(
@@ -213,7 +216,8 @@ bool msh::operator==(
         lhs.focus_mode == rhs.focus_mode &&
         lhs.visible_on_lock_screen == rhs.visible_on_lock_screen &&
         lhs.tiled_edges == rhs.tiled_edges &&
-        lhs.alpha == rhs.alpha;
+        lhs.alpha == rhs.alpha &&
+        lhs.transformation == rhs.transformation;
 }
 
 bool msh::operator!=(

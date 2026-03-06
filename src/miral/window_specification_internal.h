@@ -20,6 +20,8 @@
 #include <miral/window_specification.h>
 #include <mir/shell/surface_specification.h>
 
+#include <glm/glm.hpp>
+
 namespace miral
 {
 
@@ -77,6 +79,7 @@ struct WindowSpecification::Self
     mir::optional_value<mir::Flags<MirTiledEdge>> tiled_edges;
     mir::optional_value<std::shared_ptr<void>> userdata;
     mir::optional_value<float> opacity;
+    mir::optional_value<glm::mat4> transformation;
 };
 
 auto make_surface_spec(WindowSpecification const& miral_spec) -> mir::shell::SurfaceSpecification;

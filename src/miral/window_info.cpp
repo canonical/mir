@@ -533,3 +533,9 @@ auto miral::WindowInfo::alpha() const -> float
     std::shared_ptr<mir::scene::Surface> const surface = self->window;
     return surface ? surface->alpha() : 1.f;
 }
+
+auto miral::WindowInfo::transformation() const -> glm::mat4
+{
+    std::shared_ptr<mir::scene::Surface> const surface = self->window;
+    return surface ? surface->transformation() : glm::mat4{1};
+}

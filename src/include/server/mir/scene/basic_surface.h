@@ -112,6 +112,7 @@ public:
     void set_alpha(float alpha) override;
     void set_orientation(MirOrientation orientation) override;
     void set_mirror_mode(MirMirrorMode mirror_mode) override;
+    glm::mat4 transformation() const override;
     void set_transformation(glm::mat4 const&) override;
 
     bool visible() const override;

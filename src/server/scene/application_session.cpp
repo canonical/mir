@@ -138,6 +138,8 @@ auto ms::ApplicationSession::create_surface(
         surface->set_tiled_edges(params.tiled_edges.value());
     if (params.alpha.is_set())
         surface->set_alpha(params.alpha.value());
+    if (params.transformation.is_set())
+        surface->set_transformation(params.transformation.value());
 
     return surface;
 }

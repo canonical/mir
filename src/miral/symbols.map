@@ -772,6 +772,8 @@ global:
     miral::MinimalWindowManager::application_selector_advise_focus_gained*;
     miral::MinimalWindowManager::application_selector_advise_focus_lost*;
     miral::WindowInfo::alpha*;
+    miral::WindowInfo::transformation*;
     miral::WindowSpecification::alpha*;
+    miral::WindowSpecification::transformation*;
   };
 } MIRAL_5.6;

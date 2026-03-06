@@ -58,7 +58,8 @@ miral::WindowSpecification::Self::Self(mir::shell::SurfaceSpecification const& s
     focus_mode(spec.focus_mode),
     visible_on_lock_screen(spec.visible_on_lock_screen),
     tiled_edges(spec.tiled_edges),
-    opacity(spec.alpha)
+    opacity(spec.alpha),
+    transformation(spec.transformation)
 {
     if (spec.aux_rect_placement_offset_x.is_set() && spec.aux_rect_placement_offset_y.is_set())
         aux_rect_placement_offset = Displacement{spec.aux_rect_placement_offset_x.value(), spec.aux_rect_placement_offset_y.value()};
@@ -483,6 +484,16 @@ auto miral::WindowSpecification::alpha() -> mir::optional_value<float>&
 auto miral::WindowSpecification::alpha() const -> mir::optional_value<float> const&
 {
     return self->opacity;
+}
+
+auto miral::WindowSpecification::transformation() -> mir::optional_value<glm::mat4>&
+{
+    return self->transformation;
+}
+
+auto miral::WindowSpecification::transformation() const -> mir::optional_value<glm::mat4> const&
+{
+    return self->transformation;
 }
 
 auto miral::WindowSpecification::userdata() -> mir::optional_value<std::shared_ptr<void>>&

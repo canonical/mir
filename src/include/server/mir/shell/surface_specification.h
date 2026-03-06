@@ -26,6 +26,8 @@
 #include <mir/graphics/buffer_properties.h>
 #include <mir/graphics/display_configuration.h>
 
+#include <glm/glm.hpp>
+
 #include <string>
 #include <memory>
 
@@ -116,6 +118,9 @@ struct SurfaceSpecification
 
     /// The opacity of the window.
     optional_value<float> alpha;
+
+    /// The transformation matrix of the window.
+    optional_value<glm::mat4> transformation;
 };
 bool operator==(SurfaceSpecification const& lhs, SurfaceSpecification const& rhs);
 bool operator!=(SurfaceSpecification const& lhs, SurfaceSpecification const& rhs);

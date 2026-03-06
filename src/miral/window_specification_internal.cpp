@@ -101,6 +101,7 @@ auto miral::make_surface_spec(WindowSpecification const& miral_spec) -> mir::she
     copy_if_set(result.visible_on_lock_screen, spec.visible_on_lock_screen);
     copy_if_set(result.tiled_edges, spec.tiled_edges);
     copy_if_set(result.alpha, spec.opacity);
+    copy_if_set(result.transformation, spec.transformation);
 
     if (spec.size.is_set())
     {

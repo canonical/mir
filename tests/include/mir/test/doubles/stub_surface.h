@@ -50,6 +50,7 @@ struct StubSurface : scene::Surface
     void set_alpha(float) override {}
     void set_orientation(MirOrientation) override {}
     void set_mirror_mode(MirMirrorMode) override {}
+    glm::mat4 transformation() const override { return glm::mat4{1}; }
     void set_transformation(glm::mat4 const&) override {}
     bool visible() const override { return false; }
     graphics::RenderableList generate_renderables(compositor::CompositorID) const override { return {}; }
