@@ -5,6 +5,6 @@ includedir=@PKGCONFIG_INCLUDEDIR@/miral
 Name: miral
 Description: Mir Abstraction Layer library
 Version: @MIRAL_VERSION@
-Requires: mircore, xkbcommon
+Requires: mircore, xkbcommon @MIRAL_GLM_PC_REQUIRES@
 Libs: -L${libdir} -lmiral
 Cflags: -I${includedir}

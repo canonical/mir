@@ -254,6 +254,17 @@ pkg_check_modules(GLM glm)
 if(NOT GLM_FOUND)
   find_package(glm REQUIRED)  # There's no glm.pc on Fedora, but find_package(glm) fails on Ubuntu...
 endif()
+# Ensure a consistent glm::glm interface target exists.
+# pkg_check_modules does not create an imported target, but find_package(glm) does.
+if(GLM_FOUND AND NOT TARGET glm::glm)
+  add_library(glm::glm INTERFACE IMPORTED)
+  set_target_properties(glm::glm PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES "${GLM_INCLUDE_DIRS}")
+  # glm.pc exists on this platform, so downstream pkg-config consumers can find it
+  set(MIRAL_GLM_PC_REQUIRES "glm")
+else()
+  set(MIRAL_GLM_PC_REQUIRES "")
+endif()
 pkg_check_modules(DRM REQUIRED IMPORTED_TARGET libdrm)
 pkg_check_modules(EGL REQUIRED IMPORTED_TARGET egl)
 pkg_check_modules(EPOXY REQUIRED IMPORTED_TARGET epoxy)
