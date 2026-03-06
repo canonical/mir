@@ -33,7 +33,6 @@ namespace frontend
 {
 class KeyboardSymTrigger;
 class KeyboardCodeTrigger;
-class KeyboardStateTracker;
 
 /// A fixed-capacity circular buffer of recently seen tokens.
 ///
@@ -51,24 +50,6 @@ public:
 private:
     std::array<std::string, capacity> tokens;
     decltype(tokens)::iterator current{tokens.begin()};
-};
-
-/// Tracks keyboard state shared among all keyboard event filters
-class KeyboardStateTracker
-{
-public:
-    KeyboardStateTracker() = default;
-
-    bool process(MirEvent const& event);
-
-    /// Check if a keysym exists in the pressed set
-    auto keysym_is_pressed(uint32_t keysym) const -> bool;
-
-    auto scancode_is_pressed(uint32_t scancode) const -> bool;
-
-private:
-    std::unordered_set<uint32_t> pressed_keysyms;
-    std::unordered_set<uint32_t> pressed_scancodes;
 };
 
 class InputTriggerRegistry

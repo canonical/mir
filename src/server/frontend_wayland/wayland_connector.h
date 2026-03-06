@@ -97,6 +97,7 @@ class LinuxDRMSyncobjManager;
 class DesktopFileManager;
 class SurfaceRegistry;
 class InputTriggerRegistry;
+class KeyboardStateTracker;
 
 class WaylandExtensions
 {

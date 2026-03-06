@@ -15,6 +15,7 @@
  */
 
 #include "input_trigger_common.h"
+#include "keyboard_state_tracker.h"
 #include "surface_registry.h"
 #include "wayland_wrapper.h"
 

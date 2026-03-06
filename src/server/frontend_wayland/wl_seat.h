@@ -56,6 +56,7 @@ class KeyboardCallbacks;
 class KeyboardHelper;
 class SurfaceRegistry;
 class InputTriggerRegistry;
+class KeyboardStateTracker;
 
 class PointerEventDispatcher
 {

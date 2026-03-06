@@ -14,24 +14,37 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_SERVER_FRONTEND_INPUT_TRIGGER_REGISTRATION_V1_H_
-#define MIR_SERVER_FRONTEND_INPUT_TRIGGER_REGISTRATION_V1_H_
+#ifndef MIR_SERVER_FRONTEND_KEYBOARD_STATE_TRACKER_H_
+#define MIR_SERVER_FRONTEND_KEYBOARD_STATE_TRACKER_H_
 
-#include "ext-input-trigger-registration-v1_wrapper.h"
-#include "input_trigger_common.h"
+#include <mir/events/event.h>
+
+#include <unordered_set>
 
 namespace mir
 {
 namespace frontend
 {
-class KeyboardStateTracker;
 
-auto create_input_trigger_registration_manager_v1(
-    wl_display* display,
-    std::shared_ptr<InputTriggerRegistry::ActionGroupManager> const& action_group_manager,
-    std::shared_ptr<InputTriggerRegistry> const& input_trigger_registry,
-    std::shared_ptr<KeyboardStateTracker> const& keyboard_state_tracker)
-    -> std::shared_ptr<wayland::InputTriggerRegistrationManagerV1::Global>;
+/// Tracks keyboard state shared among all keyboard event filters
+class KeyboardStateTracker
+{
+public:
+    KeyboardStateTracker() = default;
+
+    bool process(MirEvent const& event);
+
+    /// Check if a keysym exists in the pressed set
+    auto keysym_is_pressed(uint32_t keysym) const -> bool;
+
+    auto scancode_is_pressed(uint32_t scancode) const -> bool;
+
+private:
+    std::unordered_set<uint32_t> pressed_keysyms;
+    std::unordered_set<uint32_t> pressed_scancodes;
+};
+
 }
 }
+
 #endif
