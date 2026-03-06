@@ -42,3 +42,7 @@ pub fn snake_to_pascal(s: &str) -> String {
         })
         .collect()
 }
+
+pub fn format_cpp_class_name(s: &String) -> String {
+    format!("{}Impl", snake_to_pascal(s))
+}

@@ -12,7 +12,7 @@ use super::{
     InterfaceItem, WaylandArg, WaylandArgType, WaylandEvent, WaylandInterface, WaylandProtocol,
 };
 use proc_macro2::TokenStream;
-use quote::{format_ident, quote, IdentFragment};
+use quote::{format_ident, quote};
 
 // Writes the Rust implementation for each protocol.
 // This includes the event glue code (i.e. send_x events)
@@ -43,7 +43,7 @@ pub fn write_protocol_event_code(protocols: &Vec<WaylandProtocol>) {
     write_generated_rust_file(generated_protocol_rs, "ffi_rust.rs");
 }
 
-fn generate_ffi_for_protocol(protocol: &WaylandProtocol) -> Vec<TokenStream> {
+fn generate_ffi_for_protocol(protocol: &WaylandProtocol) -> TokenStream {
     protocol
         .interfaces
         .iter()
@@ -52,19 +52,26 @@ fn generate_ffi_for_protocol(protocol: &WaylandProtocol) -> Vec<TokenStream> {
         .collect()
 }
 
-fn generate_ffi_for_interface(interface: &WaylandInterface) -> Vec<TokenStream> {
-    interface
+fn generate_ffi_for_interface(interface: &WaylandInterface) -> TokenStream {
+    let events: Vec<TokenStream>  = interface
         .items
         .iter()
         .filter_map(|item| match item {
             InterfaceItem::Event(request) => Some(generate_ffi_for_event(interface, request)),
             _ => None,
         })
-        .collect()
+        .collect();
+
+    let interface_name = format_ident!("{}", snake_to_pascal(&interface.name));
+    quote! {
+        type #interface_name;
+        #(#events)*
+    }
 }
 
-fn generate_ffi_for_event(protocol: &WaylandInterface, event: &WaylandEvent) -> TokenStream {
-    let name: syn::Ident = format_ident!("{}_send_{}", protocol.name, event.name);
+fn generate_ffi_for_event(interface: &WaylandInterface, event: &WaylandEvent) -> TokenStream {
+    let interface_name = format_ident!("{}", snake_to_pascal(&interface.name));
+    let event_name: syn::Ident = format_ident!("{}", event.name);
     let args: Vec<TokenStream> = event
         .args
         .iter()
@@ -76,7 +83,7 @@ fn generate_ffi_for_event(protocol: &WaylandInterface, event: &WaylandEvent) -> 
         .collect();
 
     quote! {
-        fn #name(self: &mut WaylandServer, #(#args),*);
+        fn #event_name(self: &mut #interface_name, #(#args),*);
     }
 }
 
@@ -87,7 +94,7 @@ fn wayland_arg_to_rust_str(arg: &WaylandArg) -> String {
         WaylandArgType::Fixed => format!("{}: {}", arg.name, "f64"),
         WaylandArgType::String => format!("{}: {}", arg.name, "&CxxString"),
         WaylandArgType::Object => format!(
-            "{}: &SharedPtr<{}>",
+            "{}: &Box<{}>",
             arg.name,
             snake_to_pascal(
                 arg.interface

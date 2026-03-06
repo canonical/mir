@@ -329,6 +329,7 @@ pub enum CppType {
     Object(String),
     Array,
     Fd,
+    Box(String)
 }
 
 fn cpp_type_to_string(cpp_type: &CppType) -> String {
@@ -340,6 +341,7 @@ fn cpp_type_to_string(cpp_type: &CppType) -> String {
         CppType::Object(name) => format!("std::unique_ptr<{}> const&", name),
         CppType::Array => "rust::Vec<uint8_t> const&".to_string(),
         CppType::Fd => "int32_t".to_string(),
+        CppType::Box(name) => format!("rust::Box<{}>", name)
     }
 }
 
@@ -359,6 +361,10 @@ fn cpp_type_to_rust_type(cpp_type: &CppType, is_retval: bool) -> TokenStream {
         }
         CppType::Array => quote! { Vec<u8> },
         CppType::Fd => quote! { i32 },
+        CppType::Box(name) => {
+            let type_name = format_ident!("{}", name);
+            quote! { Box<#type_name> }
+        }
     }
 }
 

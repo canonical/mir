@@ -31,7 +31,7 @@ use protocol_parser::{
 };
 use protocol_request_code_generation::write_protocol_event_code;
 use quote::{format_ident, quote};
-use std::{env, path::Path};
+use std::{env, fmt::format, path::Path};
 use syn::Ident;
 
 fn main() {
@@ -203,7 +203,8 @@ fn generate_global_dispatch_impl(
             ) {
                 use ffi_cpp;
                 let global = global_data.#create_global_method();
-                data_init.init(resource, global);
+                let instance = data_init.init(resource, global);
+                let boxed = Box::new(instance);
             }
         }
     }
@@ -361,7 +362,7 @@ fn generate_dispatch_impl(
         return quote! {};
     }
 
-    let interface_struct_name = format_ident!("{}", snake_to_pascal(&interface.name));
+    let interface_struct_name = format_ident!("{}", format_cpp_class_name(&interface.name));
 
     let mut request_handler_arms =
         generate_request_handler_arms(interface, namespace_name, &interface_name);
@@ -493,12 +494,12 @@ fn create_global_factory(protocols: &Vec<WaylandProtocol>) -> CppBuilder {
             .filter(|interface| interface.is_global)
             .filter(|interface| interface.name != "wl_display" && interface.name != "wl_registry")
             .for_each(|global_interface| {
-                let pascal_name = snake_to_pascal(&global_interface.name);
-                namespace.add_forward_declaration_class(&pascal_name);
+                let class_name = format_cpp_class_name(&global_interface.name);
+                namespace.add_forward_declaration_class(&class_name);
 
                 let method = CppMethod::new(
                     format!("create_{}", global_interface.name),
-                    Some(CppType::Object(pascal_name)),
+                    Some(CppType::Object(class_name)),
                     true,
                 );
                 class.add_method(method);
@@ -561,7 +562,8 @@ fn create_cpp_builder(protocol: &WaylandProtocol) -> CppBuilder {
         namespace.add_class(class);
     }
     for interface in &protocol.dependencies {
-        namespace.add_forward_declaration_class(&snake_to_pascal(interface));
+        let class_name = format_cpp_class_name(interface);
+        namespace.add_forward_declaration_class(&class_name);
     }
     builder.add_namespace(namespace);
     builder.add_include("<rust/cxx.h>".to_string());
@@ -583,7 +585,8 @@ fn write_cpp_source(builder: &CppBuilder) {
 }
 
 fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
-    let mut class = CppClass::new(snake_to_pascal(&interface.name));
+    let class_name = format_cpp_class_name(&interface.name);
+    let mut class = CppClass::new(class_name);
     let methods = interface.items.iter().filter_map(|item| {
         if let protocol_parser::InterfaceItem::Request(request) = item {
             Some(wayland_request_to_cpp_method(request))
@@ -597,6 +600,11 @@ fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
     for enum_ in wayland_interface_to_enums(interface) {
         class.add_enum(enum_);
     }
+
+    // Add the method that associates the boxed rust interface with the C++ class.
+    let mut associate_method = CppMethod::new("associate".to_string(), None, true);
+    associate_method.add_arg(CppArg { cpp_type: CppType::Box(snake_to_pascal(&interface.name)), name: "instance".to_string() });
+    class.add_method(associate_method);
 
     for method in methods {
         class.add_method(method);
@@ -634,11 +642,10 @@ fn wayland_arg_to_cpp_arg(arg: &WaylandArg) -> CppArg {
         WaylandArgType::Uint => CppType::CppU32,
         WaylandArgType::Fixed => CppType::CppF64,
         WaylandArgType::String => CppType::String,
-        WaylandArgType::Object => CppType::Object(snake_to_pascal(
-            arg.interface
+        WaylandArgType::Object => CppType::Object(format_cpp_class_name(
+            &arg.interface
                 .clone()
-                .expect("Object is missing interface")
-                .as_str(),
+                .expect("Object is missing interface"),
         )),
         WaylandArgType::Array => CppType::Array,
         WaylandArgType::Fd => CppType::Fd,
@@ -657,7 +664,7 @@ fn wayland_request_to_cpp_method(method: &WaylandRequest) -> CppMethod {
         .find(|arg| arg.type_ == WaylandArgType::NewId)
     {
         Some(new_id_arg) => {
-            let name = snake_to_pascal(new_id_arg.interface.clone().unwrap().as_str());
+            let name = format_cpp_class_name(&new_id_arg.interface.clone().unwrap());
             Some(CppType::Object(name))
         }
         None => None,
