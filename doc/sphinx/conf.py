@@ -25,6 +25,8 @@ from pathlib import Path
 #######################
 
 # Project name
+#
+# TODO: Update with the official name of your project or product
 
 project = "Mir"
 author = "Canonical Ltd."
@@ -32,9 +34,10 @@ author = "Canonical Ltd."
 
 # Sidebar documentation title; best kept reasonably short
 #
-# The title you want to display for the documentation in the sidebar.
-# You might want to include a version number here.
-# To not display any title, set this option to an empty string.
+# TODO: To include a version number, add it here (hardcoded or automated).
+#
+# TODO: To disable the title, set to an empty string.
+
 try:
     release = subprocess.check_output(["git", "describe", "--tags", "--exact"], encoding="utf-8").strip()
 except subprocess.CalledProcessError:
@@ -52,6 +55,11 @@ html_title = f'{project} {release} documentation'
 # Now, the starter pack uses CC-BY-SA as the license
 # and the current year as the copyright year.
 #
+# TODO: If your docs need another license, specify it instead of 'CC-BY-SA'.
+#
+# TODO: If your documentation is a part of the code repository of your project,
+#       it inherits the code license instead; specify it instead of 'CC-BY-SA'.
+#
 # NOTE: For static works, it is common to provide the first publication year.
 #       Another option is to provide both the first year of publication
 #       and the current year, especially for docs that frequently change,
@@ -64,25 +72,38 @@ html_title = f'{project} {release} documentation'
 #       curl -H 'Authorization: token <TOKEN>' \
 #         -H 'Accept: application/vnd.github.v3.raw' \
 #         https://api.github.com/repos/canonical/<REPO> | jq '.created_at'
+
 copyright = '%s, %s' % (datetime.date.today().year, author)
 
 
 # Documentation website URL
 #
+# TODO: Update with the official URL of your docs or leave empty if unsure.
+#
 # NOTE: The Open Graph Protocol (OGP) enhances page display in a social graph
 #       and is used by social media platforms; see https://ogp.me/
+
 ogp_site_url = "https://canonical-mir.readthedocs-hosted.com/"
 
 
 # Preview name of the documentation website
+#
+# TODO: To use a different name for the project in previews, update as needed.
+
 ogp_site_name = project
 
 
 # Preview image URL
+#
+# TODO: To customise the preview image, update as needed.
+
 ogp_image = "https://assets.ubuntu.com/v1/253da317-image-document-ubuntudocs.svg"
 
 
 # Product favicon; shown in bookmarks, browser tabs, etc.
+
+# TODO: To customise the favicon, uncomment and update as needed.
+
 html_favicon = 'favicon.ico'
 
 
@@ -91,44 +112,77 @@ html_favicon = 'favicon.ico'
 
 html_context = {
     # Product page URL; can be different from product docs URL
+    #
+    # TODO: Change to your product website URL,
+    #       dropping the 'https://' prefix, e.g. 'ubuntu.com/lxd'.
+    #
+    # TODO: If there's no such website,
+    #       remove the {{ product_page }} link from the page header template
+    #       (usually .sphinx/_templates/header.html; also, see README.rst).
     "product_page": "canonical.com/mir",
-
     # Product tag image; the orange part of your logo, shown in the page header
+    #
+    # TODO: To add a tag image, uncomment and update as needed.
     'product_tag': '_static/tag.png',
-
     # Your Discourse instance URL
-    'discourse': 'https://discourse.ubuntu.com/c/project/mir/15',
-
+    #
+    # TODO: Change to your Discourse instance URL or leave empty.
+    #
+    # NOTE: If set, adding ':discourse: 123' to an .rst file
+    #       will add a link to Discourse topic 123 at the bottom of the page.
+    "discourse": "https://discourse.ubuntu.com/c/project/mir/15",
     # Your Mattermost channel URL
+    #
+    # TODO: Change to your Mattermost channel URL or leave empty.
     "mattermost": '',
-
     # Your Matrix channel URL
+    #
+    # TODO: Change to your Matrix channel URL or leave empty.
     "matrix": "https://matrix.to/#/#mir-server:matrix.org",
-
     # Your documentation GitHub repository URL
+    #
+    # TODO: Change to your documentation GitHub repository URL or leave empty.
+    #
+    # NOTE: If set, links for viewing the documentation source files
+    #       and creating GitHub issues are added at the bottom of each page.
     "github_url": "https://github.com/canonical/mir",
-
     # Docs branch in the repo; used in links for viewing the source files
+    #
+    # TODO: To customise the branch, uncomment and update as needed.
     'repo_default_branch': 'main',
-
     # Docs location in the repo; used in links for viewing the source files
-    "repo_folder": "/doc/sphinx/",
+    #
 
-    # To enable or disable the Previous / Next buttons at the bottom of pages
+
+    # TODO: To customise the directory, uncomment and update as needed.
+    "repo_folder": "/doc/sphinx/",
+    # TODO: To enable or disable the Previous / Next buttons at the bottom of pages
     # Valid options: none, prev, next, both
     # "sequential_nav": "both",
+    # TODO: To enable listing contributors on individual pages, set to True
     "display_contributors": False,
 
     # Required for feedback button
     'github_issues': 'enabled',
 }
 
+# TODO: To enable the edit button on pages, uncomment and change the link to a
+# public repository on GitHub or Launchpad. Any of the following link domains
+# are accepted:
+# - https://github.com/example-org/example"
+# - https://launchpad.net/example
+# - https://git.launchpad.net/example
+#
 html_theme_options = {
-    'source_edit_link': 'https://github.com/canonical/mir',
+'source_edit_link': 'https://github.com/canonical/mir',
 }
 
 # Project slug; see https://meta.discourse.org/t/what-is-category-slug/87897
-slug = ''
+#
+# TODO: If your documentation is hosted on https://docs.ubuntu.com/,
+#       uncomment and update as needed.
+
+# slug = ''
 
 #######################
 # Sitemap configuration: https://sphinx-sitemap.readthedocs.io/
@@ -165,10 +219,13 @@ sitemap_show_lastmod = True
 
 # To set up redirects: https://documatt.gitlab.io/sphinx-reredirects/usage.html
 # For example: 'explanation/old-name.html': '../how-to/prettify.html',
+
 # To set up redirects in the Read the Docs project dashboard:
 # https://docs.readthedocs.io/en/stable/guides/redirects.html
+
 # NOTE: If undefined, set to None, or empty,
 #       the sphinx_reredirects extension will be disabled.
+
 redirects = {
     '_static/cppguide': '../../reference/cppguide',
     'explanation/architecture': '../../contributing/explanation/architecture',
@@ -197,6 +254,9 @@ redirects = {
 ###########################
 
 # A regex list of URLs that are ignored by 'make linkcheck'
+#
+# TODO: Remove or adjust the ACME entry after you update the contributing guide
+
 linkcheck_ignore = [
     "http://127.0.0.1:8000",
     "how-to/getting_involved_in_mir",
@@ -205,9 +265,10 @@ linkcheck_ignore = [
 
 
 # A regex list of URLs where anchors are ignored by 'make linkcheck'
+
 linkcheck_anchors_ignore_for_url = [
+    r"https://github\.com/.*",
     "https://docs.google.com/*",
-    "https://github.com/*",
     "https://manpages.ubuntu.com/*",
     "https://matrix.to*",
     "https://ticsdocumentation.tiobe.com/*",
@@ -235,6 +296,7 @@ myst_enable_extensions = set((
 
 # Custom Sphinx extensions; see
 # https://www.sphinx-doc.org/en/master/usage/extensions/index.html
+
 # NOTE: The canonical_sphinx extension is required for the starter pack.
 #       It automatically enables the following extensions:
 #       - custom-rst-roles
@@ -273,14 +335,40 @@ exclude_patterns = [
 ]
 
 # Adds custom CSS files, located under 'html_static_path'
-html_css_files = []
+
+# html_css_files = []
 
 
 # Adds custom JavaScript files, located under 'html_static_path'
-html_js_files = []
+
+# html_js_files = []
+
+
+# Specifies a reST snippet to be appended to each .rst file
+
+rst_epilog = """
+.. include:: /reuse/links.txt
+.. include:: /reuse/substitutions.txt
+"""
 
 # Feedback button at the top; enabled by default
-disable_feedback_button = False
+#
+# TODO: To disable the button, uncomment this.
+
+# disable_feedback_button = True
+
+
+# Your manpage URL
+#
+# TODO: To enable manpage links, uncomment and replace {codename} with required
+#       release, preferably an LTS release (e.g. noble). Do *not* substitute
+#       {section} or {page}; these will be replaced by sphinx at build time
+#
+# NOTE: If set, adding ':manpage:' to an .rst file
+#       adds a link to the corresponding man section at the bottom of the page.
+
+# manpages_url = 'https://manpages.ubuntu.com/manpages/{codename}/en/' + \
+#     'man{section}/{page}.{section}.html'
 
 
 # Specifies a reST snippet to be prepended to each .rst file
@@ -312,7 +400,6 @@ if os.path.exists('./reuse/substitutions.yaml'):
 # Add configuration for intersphinx mapping
 
 intersphinx_mapping = {
-    'starter-pack': ('https://canonical-example-product-documentation.readthedocs-hosted.com/en/latest', None),
     'checkbox': ("https://canonical-checkbox.readthedocs-hosted.com/latest/", None),
     'server': ('https://documentation.ubuntu.com/server/', None),
     'snapcraft': ('https://documentation.ubuntu.com/snapcraft/stable/', None),
