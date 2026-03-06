@@ -92,4 +92,3 @@ auto mf::KeyboardStateTracker::scancode_is_pressed(uint32_t scancode) const -> b
 {
     return pressed_scancodes.contains(scancode);
 }
-
