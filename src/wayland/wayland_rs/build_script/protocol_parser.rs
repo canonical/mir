@@ -61,6 +61,19 @@ pub struct WaylandDescription {
     pub text: String,
 }
 
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "snake_case")]
+pub enum WaylandArgType {
+    Int,
+    Uint,
+    Fixed,
+    String,
+    Object,
+    NewId,
+    Array,
+    Fd,
+}
+
 /// Representation of a Wayland request on an interface.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct WaylandRequest {
@@ -101,13 +114,13 @@ pub struct WaylandEvent {
 }
 
 /// Representation of an argument on a Wayland request or event.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize)]
 pub struct WaylandArg {
     #[serde(rename = "@name")]
     pub name: String,
 
     #[serde(rename = "@type")]
-    pub type_: String,
+    pub type_: WaylandArgType,
 
     #[serde(rename = "@enum")]
     pub enum_: Option<String>,
@@ -117,6 +130,41 @@ pub struct WaylandArg {
 
     #[serde(rename = "@allow-null", default)]
     pub allow_null: Option<bool>,
+}
+
+impl<'de> Deserialize<'de> for WaylandArg {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        struct RawWaylandArg {
+            #[serde(rename = "@name")]
+            name: String,
+            #[serde(rename = "@type")]
+            type_: WaylandArgType,
+            #[serde(rename = "@enum")]
+            enum_: Option<String>,
+            #[serde(rename = "@interface")]
+            interface: Option<String>,
+            #[serde(rename = "@allow-null", default)]
+            allow_null: Option<bool>,
+        }
+
+        // If the argument is an enum, we always make the type be a uint.
+        let raw = RawWaylandArg::deserialize(deserializer)?;
+        Ok(WaylandArg {
+            type_: if raw.enum_.is_some() {
+                WaylandArgType::Uint
+            } else {
+                raw.type_
+            },
+            name: raw.name,
+            enum_: raw.enum_,
+            interface: raw.interface,
+            allow_null: raw.allow_null,
+        })
+    }
 }
 
 /// Representation of an enum.
@@ -235,7 +283,7 @@ pub fn parse_protocols() -> Vec<WaylandProtocol> {
                                     for arg in &req.args {
                                         if let Some(interface_name) = &arg.interface {
                                             if interface_name == &interface.name
-                                                && arg.type_ == "new_id"
+                                                && arg.type_ == WaylandArgType::NewId
                                             {
                                                 is_global = false;
                                                 break;

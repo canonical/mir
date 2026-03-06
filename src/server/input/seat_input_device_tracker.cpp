@@ -26,7 +26,7 @@
 #include <mir/events/pointer_event.h>
 #include <mir/time/clock.h>
 
-#include "input_modifier_utils.h"
+#include "mir/input/xkb_mapper.h"
 
 #include <boost/throw_exception.hpp>
 #include <linux/input.h>
@@ -319,6 +319,7 @@ mir::EventUPtr mi::SeatInputDeviceTracker::create_device_state() const
 
 auto mi::SeatInputDeviceTracker::xkb_modifiers() const -> MirXkbModifiers
 {
+    std::lock_guard lock(device_state_mutex);
     return key_mapper->xkb_modifiers();
 }
 

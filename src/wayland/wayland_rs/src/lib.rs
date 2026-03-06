@@ -24,6 +24,7 @@ mod dispatch {
 mod protocols {
     include!("protocols.rs");
 }
+include!("ffi_cpp.rs");
 mod wayland_server;
 
 use crate::wayland_server::{create_wayland_server, WaylandServer};

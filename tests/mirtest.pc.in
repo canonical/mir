@@ -6,5 +6,5 @@ Name: mirtest
 Description: Mir test assist library
 Version: @PROJECT_VERSION@
 Requires: miral mirserver mirplatform mircommon
-Libs: -L${libdir} -lmir-test-assist -ldl -lboost_filesystem -lboost_system
+Libs: -L${libdir} -lmir-test-assist -ldl -lboost_filesystem
 Cflags: -I${includedir}

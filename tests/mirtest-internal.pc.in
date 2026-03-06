@@ -6,5 +6,5 @@ Name: mirtest-internal
 Description: Mir test assist internal library
 Version: @PROJECT_VERSION@
 Requires: mirtest mirserver mirserver-internal
-Libs: -L${libdir} -lmir-test-assist -lmir-test-assist-internal -ldl -lboost_filesystem -lboost_system
+Libs: -L${libdir} -lmir-test-assist -lmir-test-assist-internal -ldl -lboost_filesystem
 Cflags: -I${includedir}

@@ -641,6 +641,22 @@ public:
     /// \remark Since MirAL 5.3
     auto tiled_edges() -> mir::optional_value<mir::Flags<MirTiledEdge>>&;
 
+    /// The alpha of the window.
+    ///
+    /// This value is between [0, 1].
+    ///
+    /// \returns the alpha
+    /// \remark Since MirAL 5.7
+    auto alpha() -> mir::optional_value<float>&;
+
+    /// The alpha of the window.
+    ///
+    /// This value is between [0, 1].
+    ///
+    /// \returns the alpha
+    /// \remark Since MirAL 5.7
+    auto alpha() const -> mir::optional_value<float> const&;
+
     /// Create a [mir::shell::SurfaceSpecification] from this window spec.
     ///
     /// \returns a surface specification

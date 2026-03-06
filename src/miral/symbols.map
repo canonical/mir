@@ -771,5 +771,7 @@ global:
     miral::MinimalWindowManager::application_selector_advise_delete_window*;
     miral::MinimalWindowManager::application_selector_advise_focus_gained*;
     miral::MinimalWindowManager::application_selector_advise_focus_lost*;
+    miral::WindowInfo::alpha*;
+    miral::WindowSpecification::alpha*;
   };
 } MIRAL_5.6;

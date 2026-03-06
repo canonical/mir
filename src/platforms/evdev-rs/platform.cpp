@@ -120,7 +120,7 @@ public:
 
     void apply_settings(mi::PointerSettings const& pointer_settings) override
     {
-        miers::PointerSettings pointer_settings_c;
+        miers::SetPointerSettingsData pointer_settings_c;
         pointer_settings_c.handedness = static_cast<MirPointerHandedness>(pointer_settings.handedness);
         pointer_settings_c.acceleration = static_cast<MirPointerAcceleration>(pointer_settings.acceleration);
         pointer_settings_c.cursor_acceleration_bias = pointer_settings.cursor_acceleration_bias;
@@ -211,11 +211,11 @@ void miers::Platform::stop()
 
 std::unique_ptr<miers::DeviceObserverWithFd> miers::Platform::create_device_observer()
 {
-    return std::make_unique<DeviceObserverWrapper<DeviceObserverRs>>(
+    return std::make_unique<DeviceObserverWrapper<LibinputDeviceObserver>>(
         self->platform_impl->create_device_observer());
 }
 
 std::shared_ptr<mi::InputDevice> miers::Platform::create_input_device(int device_id) const
 {
-    return std::make_shared<::InputDevice<InputDeviceRs>>(self->platform_impl->create_input_device(device_id));
+    return std::make_shared<::InputDevice<LibinputDevice>>(self->platform_impl->create_input_device(device_id));
 }

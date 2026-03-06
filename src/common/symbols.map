@@ -6,8 +6,10 @@ global:
   mir_closed_hand_cursor_name;
   mir_crosshair_cursor_name;
   mir_default_cursor_name;
+  mir_diagonal_resize_bottom_to_left_cursor_name;
   mir_diagonal_resize_bottom_to_top_cursor_name;
   mir_diagonal_resize_top_to_bottom_cursor_name;
+  mir_diagonal_resize_top_to_left_cursor_name;
   mir_event_get_input_device_state_event;
   mir_event_get_input_event;
   mir_event_get_type;
@@ -452,6 +454,7 @@ global:
     mir::input::ParameterKeymap::model*;
     mir::input::ParameterKeymap::with_layout*;
     mir::input::deserialize_input_config*;
+    mir::input::expand_modifiers*;
     mir::input::make_unique_context*;
     mir::input::mir_enable_enum_bit_operators*;
     mir::input::receiver::XKBMapper::?XKBMapper*;

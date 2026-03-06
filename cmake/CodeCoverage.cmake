@@ -87,6 +87,9 @@
 #     - fix append_coverage_compiler_flags_to_target to correctly add flags
 #     - replace "-fprofile-arcs -ftest-coverage" with "--coverage" (equivalent)
 #
+# 2026-01-20, Michał Sawicz
+#     - add `-fprofile-update=atomic` flag, if supported, for concurrent test runs
+#
 # USAGE:
 #
 # 1. Copy this file into your cmake modules path.
@@ -185,6 +188,10 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
     if(HAVE_cxx_fprofile_abs_path)
         set(COVERAGE_CXX_COMPILER_FLAGS "${COVERAGE_CXX_COMPILER_FLAGS} -fprofile-abs-path")
     endif()
+    check_cxx_compiler_flag(-fprofile-update=atomic HAVE_cxx_fprofile_update_atomic)
+    if(HAVE_cxx_fprofile_update_atomic)
+        set(COVERAGE_CXX_COMPILER_FLAGS "${COVERAGE_CXX_COMPILER_FLAGS} -fprofile-update=atomic")
+    endif()
 endif()
 
 set(COVERAGE_C_COMPILER_FLAGS ${COVERAGE_COMPILER_FLAGS})
@@ -194,6 +201,10 @@ if(CMAKE_C_COMPILER_ID MATCHES "(GNU|Clang)")
     if(HAVE_c_fprofile_abs_path)
         set(COVERAGE_C_COMPILER_FLAGS "${COVERAGE_C_COMPILER_FLAGS} -fprofile-abs-path")
     endif()
+    check_c_compiler_flag(-fprofile-update=atomic HAVE_c_fprofile_update_atomic)
+    if(HAVE_c_fprofile_update_atomic)
+        set(COVERAGE_C_COMPILER_FLAGS "${COVERAGE_C_COMPILER_FLAGS} -fprofile-update=atomic")
+    endif()
 endif()
 
 set(COVERAGE_Fortran_COMPILER_FLAGS ${COVERAGE_COMPILER_FLAGS})
@@ -202,6 +213,10 @@ if(CMAKE_Fortran_COMPILER_ID MATCHES "(GNU|Clang)")
     check_fortran_compiler_flag(-fprofile-abs-path HAVE_fortran_fprofile_abs_path)
     if(HAVE_fortran_fprofile_abs_path)
         set(COVERAGE_Fortran_COMPILER_FLAGS "${COVERAGE_Fortran_COMPILER_FLAGS} -fprofile-abs-path")
+    endif()
+    check_fortran_compiler_flag(-fprofile-update=atomic HAVE_fortran_fprofile_update_atomic)
+    if(HAVE_fortran_fprofile_update_atomic)
+        set(COVERAGE_Fortran_COMPILER_FLAGS "${COVERAGE_Fortran_COMPILER_FLAGS} -fprofile-update=atomic")
     endif()
 endif()
 

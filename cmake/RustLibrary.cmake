@@ -40,6 +40,7 @@ function(add_rust_cxx_library target)
 
   add_library(${target}-cxxbridge STATIC
     ${cxxbridge_source} ${cxxbridge_header})
+  target_include_directories(${target}-cxxbridge PRIVATE ${cxxbridge_include_dir})
 
   if(arg_INCLUDES)
     foreach(inc_dir IN LISTS arg_INCLUDES)
