@@ -389,6 +389,9 @@ struct WindowInfo
 
     /// The transformation matrix of the window.
     ///
+    /// This matrix is applied to the window about its center point, before
+    /// the window is placed at its position in the scene.
+    ///
     /// By default, the identity matrix is used.
     ///
     /// \returns the transformation matrix
