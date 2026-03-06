@@ -28,7 +28,8 @@ namespace frontend
 auto create_input_trigger_registration_manager_v1(
     wl_display* display,
     std::shared_ptr<InputTriggerRegistry::ActionGroupManager> const& action_group_manager,
-    std::shared_ptr<InputTriggerRegistry> const& input_trigger_registry)
+    std::shared_ptr<InputTriggerRegistry> const& input_trigger_registry,
+    std::shared_ptr<KeyboardStateTracker> const& keyboard_state_tracker)
     -> std::shared_ptr<wayland::InputTriggerRegistrationManagerV1::Global>;
 }
 }

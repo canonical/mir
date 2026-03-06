@@ -464,10 +464,12 @@ public:
     InputTriggerRegistrationManagerV1(
         wl_display* display,
         std::shared_ptr<ActionGroupManager> const& action_group_manager,
-        std::shared_ptr<mf::InputTriggerRegistry> const& input_trigger_registry) :
+        std::shared_ptr<mf::InputTriggerRegistry> const& input_trigger_registry,
+        std::shared_ptr<mf::KeyboardStateTracker> const& keyboard_state_tracker) :
         Global{display, Version<1>{}},
         action_group_manager{action_group_manager},
-        input_trigger_registry{input_trigger_registry}
+        input_trigger_registry{input_trigger_registry},
+        keyboard_state_tracker{keyboard_state_tracker}
     {
     }
 
@@ -477,10 +479,12 @@ public:
         Instance(
             wl_resource* new_ext_input_trigger_registration_manager_v1,
             std::shared_ptr<ActionGroupManager> const& action_group_manager,
-            std::shared_ptr<mf::InputTriggerRegistry> const& input_trigger_registry) :
+            std::shared_ptr<mf::InputTriggerRegistry> const& input_trigger_registry,
+            std::shared_ptr<mf::KeyboardStateTracker> const& keyboard_state_tracker) :
             mw::InputTriggerRegistrationManagerV1{new_ext_input_trigger_registration_manager_v1, Version<1>{}},
             action_group_manager{action_group_manager},
-            input_trigger_registry{input_trigger_registry}
+            input_trigger_registry{input_trigger_registry},
+            keyboard_state_tracker{keyboard_state_tracker}
         {
         }
 
@@ -491,16 +495,22 @@ public:
     private:
         std::shared_ptr<ActionGroupManager> const action_group_manager;
         std::shared_ptr<mf::InputTriggerRegistry> const input_trigger_registry;
+        std::shared_ptr<mf::KeyboardStateTracker> const keyboard_state_tracker;
     };
 
     void bind(wl_resource* new_ext_input_trigger_registration_manager_v1) override
     {
-        new Instance{new_ext_input_trigger_registration_manager_v1, action_group_manager, input_trigger_registry};
+        new Instance{
+            new_ext_input_trigger_registration_manager_v1,
+            action_group_manager,
+            input_trigger_registry,
+            keyboard_state_tracker};
     }
 
 private:
     std::shared_ptr<ActionGroupManager> const action_group_manager;
     std::shared_ptr<mf::InputTriggerRegistry> const input_trigger_registry;
+    std::shared_ptr<mf::KeyboardStateTracker> const keyboard_state_tracker;
 };
 
 // TODO: Store the description string
@@ -518,7 +528,7 @@ void InputTriggerRegistrationManagerV1::Instance::register_keyboard_sym_trigger(
     auto* keyboard_trigger = new mf::KeyboardSymTrigger{
         InputTriggerModifiers::from_protocol(modifiers, shift_adjustment),
         keysym,
-        input_trigger_registry->keyboard_state_tracker(),
+        *keyboard_state_tracker,
         id};
 
     if (!input_trigger_registry->register_trigger(keyboard_trigger))
@@ -536,7 +546,7 @@ void InputTriggerRegistrationManagerV1::Instance::register_keyboard_code_trigger
     auto* keyboard_trigger = new mf::KeyboardCodeTrigger{
         InputTriggerModifiers::from_protocol(modifiers),
         keycode,
-        input_trigger_registry->keyboard_state_tracker(),
+        *keyboard_state_tracker,
         id};
 
     if (!input_trigger_registry->register_trigger(keyboard_trigger))
@@ -553,9 +563,10 @@ void InputTriggerRegistrationManagerV1::Instance::register_keyboard_code_trigger
 auto mf::create_input_trigger_registration_manager_v1(
     wl_display* display,
     std::shared_ptr<ActionGroupManager> const& action_group_manager,
-    std::shared_ptr<InputTriggerRegistry> const& input_trigger_registry)
+    std::shared_ptr<InputTriggerRegistry> const& input_trigger_registry,
+    std::shared_ptr<KeyboardStateTracker> const& keyboard_state_tracker)
     -> std::shared_ptr<mw::InputTriggerRegistrationManagerV1::Global>
 {
     return std::make_shared<InputTriggerRegistrationManagerV1>(
-        display, action_group_manager, input_trigger_registry);
+        display, action_group_manager, input_trigger_registry, keyboard_state_tracker);
 }

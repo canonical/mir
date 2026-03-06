@@ -131,6 +131,7 @@ public:
         std::shared_ptr<input::CursorObserverMultiplexer> cursor_observer_multiplexer;
         std::shared_ptr<InputTriggerRegistry::ActionGroupManager> action_group_manager;
         std::shared_ptr<InputTriggerRegistry> input_trigger_registry;
+        std::shared_ptr<KeyboardStateTracker> keyboard_state_tracker;
     };
 
     WaylandExtensions() = default;

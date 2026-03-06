@@ -156,9 +156,6 @@ bool mf::InputTriggerRegistry::register_trigger(Trigger* trigger)
 
 auto mf::InputTriggerRegistry::matches_any_trigger(MirEvent const& event) -> bool
 {
-    if (!keyboard_state.process(event))
-        return false;
-
     bool any_matched{false};
 
     iterate_and_erase_expired(
@@ -171,12 +168,6 @@ auto mf::InputTriggerRegistry::matches_any_trigger(MirEvent const& event) -> boo
     return any_matched;
 
 }
-
-auto mf::InputTriggerRegistry::keyboard_state_tracker() const -> KeyboardStateTracker const&
-{
-    return keyboard_state;
-}
-
 
 ActionGroup::ActionGroup(shell::TokenAuthority& token_authority)
     : token_authority{token_authority}

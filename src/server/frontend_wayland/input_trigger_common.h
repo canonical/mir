@@ -84,11 +84,8 @@ public:
     bool register_trigger(Trigger* trigger);
     bool matches_any_trigger(MirEvent const& event);
 
-    auto keyboard_state_tracker() const -> KeyboardStateTracker const&;
-
 private:
     std::vector<wayland::Weak<Trigger>> triggers;
-    KeyboardStateTracker keyboard_state;
 };
 
 // Version-agnostic interface
