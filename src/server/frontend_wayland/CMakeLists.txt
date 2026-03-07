@@ -67,6 +67,7 @@ set(
   linux_drm_syncobj.cpp         linux_drm_syncobj.h
   data_control_v1.cpp           data_control_v1.h
   surface_registry.cpp          surface_registry.h
+  keyboard_state_tracker.cpp    keyboard_state_tracker.h
 )
 
 if (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" AND ${CMAKE_CXX_COMPILER_VERSION} VERSION_LESS 18.2)
