@@ -384,32 +384,32 @@ void handle_registry_global(
     char const* interface,
     uint32_t version)
 {
-    if (strcmp(interface, "wl_compositor") == 0)
+    if (interface == "wl_compositor"sv)
     {
         globals::compositor = static_cast<wl_compositor*>(wl_registry_bind(
             registry, id, &wl_compositor_interface, std::min(version, 3u)));
     }
-    else if (strcmp(interface, "wl_shm") == 0)
+    else if (interface == "wl_shm"sv)
     {
         globals::shm = static_cast<wl_shm*>(wl_registry_bind(registry, id, &wl_shm_interface, std::min(version, 1u)));
         // Normally we'd add a listener to pick up the supported formats here
         // As luck would have it, I know that argb8888 is the only format we support :)
     }
-    else if (strcmp(interface, "wl_seat") == 0)
+    else if (interface == "wl_seat"sv)
     {
         globals::seat = static_cast<wl_seat*>(wl_registry_bind(registry, id, &wl_seat_interface, std::min(version, 4u)));
     }
-    else if (strcmp(interface, "wl_output") == 0)
+    else if (interface == "wl_output"sv)
     {
         globals::output = static_cast<wl_output*>(wl_registry_bind(
             registry, id, &wl_output_interface, std::min(version, 2u)));
     }
-    else if (strcmp(interface, xdg_wm_base_interface.name) == 0)
+    else if (std::string_view{interface} == std::string_view{xdg_wm_base_interface.name})
     {
         globals::wm_base = static_cast<xdg_wm_base*>(wl_registry_bind(
             registry, id, &xdg_wm_base_interface, std::min(version, 1u)));
     }
-    else if (strcmp(interface, mir_shell_v1_interface.name) == 0)
+    else if (std::string_view{interface} == std::string_view{mir_shell_v1_interface.name})
     {
         globals::mir_shell = static_cast<mir_shell_v1*>(wl_registry_bind(
             registry, id, &mir_shell_v1_interface, std::min(version, 1u)));

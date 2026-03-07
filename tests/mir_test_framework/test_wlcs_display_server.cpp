@@ -50,12 +50,14 @@
 #include <deque>
 #include <optional>
 #include <unordered_map>
+#include <string_view>
 
 
 namespace mtf = mir_test_framework;
 namespace mi = mir::input;
 namespace mf = mir::frontend;
 using namespace std::chrono_literals;
+using namespace std::string_view_literals;
 
 namespace std
 {
@@ -479,7 +481,7 @@ public:
 
     std::weak_ptr<mir::scene::Surface> surface_for_resource(wl_resource* surface)
     {
-        if (strcmp(wl_resource_get_class(surface), "wl_surface") != 0)
+        if (wl_resource_get_class(surface) != "wl_surface"sv)
         {
             BOOST_THROW_EXCEPTION((
                 std::logic_error{
@@ -552,12 +554,12 @@ private:
         resource_listener =
             wl_container_of(listener, resource_listener, resource_listener);
 
-        bool const is_surface = strcmp(wl_resource_get_class(resource), "wl_surface") == 0;
+        bool const is_surface = wl_resource_get_class(resource) == "wl_surface"sv;
 
-        bool const is_window = strcmp(wl_resource_get_class(resource), "wl_shell_surface") == 0 ||
-                               strcmp(wl_resource_get_class(resource), "zxdg_surface_v6") == 0 ||
-                               strcmp(wl_resource_get_class(resource), "xdg_surface") == 0 ||
-                               strcmp(wl_resource_get_class(resource), "zwlr_layer_surface_v1") == 0;
+        bool const is_window = wl_resource_get_class(resource) == "wl_shell_surface"sv ||
+                               wl_resource_get_class(resource) == "zxdg_surface_v6"sv ||
+                               wl_resource_get_class(resource) == "xdg_surface"sv ||
+                               wl_resource_get_class(resource) == "zwlr_layer_surface_v1"sv;
 
         if (is_surface)
         {

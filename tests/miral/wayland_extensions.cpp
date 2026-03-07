@@ -22,6 +22,7 @@
 #include <miral/internal_client.h>
 #include <miral/wayland_extensions.h>
 
+#include <string_view>
 #include <wayland-client.h>
 
 #include <memory>
@@ -246,19 +247,19 @@ struct ClientDecorationCreator
     {
         ClientDecorationCreator* self = static_cast<decltype(self)>(data);
 
-        if (strcmp(interface, wl_compositor_interface.name) == 0)
+        if (std::string_view{interface} == std::string_view{wl_compositor_interface.name})
         {
             self->compositor = static_cast<decltype(self->compositor)>
             (wl_registry_bind(registry, id, &wl_compositor_interface, 1));
         }
 
-        if (strcmp(interface, org_kde_kwin_server_decoration_manager_interface.name) == 0)
+        if (std::string_view{interface} == std::string_view{org_kde_kwin_server_decoration_manager_interface.name})
         {
             self->decoration_manager = static_cast<decltype(self->decoration_manager)>
                 (wl_registry_bind(registry, id, &org_kde_kwin_server_decoration_manager_interface, 1));
         }
 
-        if (strcmp(interface, wl_shell_interface.name) == 0)
+        if (std::string_view{interface} == std::string_view{wl_shell_interface.name})
         {
             self->shell = static_cast<decltype(self->shell)>(wl_registry_bind(registry, id, &wl_shell_interface, 1));
         }

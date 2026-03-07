@@ -43,11 +43,13 @@
 #include "egl_helper.h"
 #include <fcntl.h>
 #include <xf86drm.h>
+#include <string_view>
 
 namespace mg = mir::graphics;
 namespace mgg = mg::gbm;
 namespace mgc = mir::graphics::common;
 namespace mo = mir::options;
+using namespace std::string_view_literals;
 
 namespace
 {
@@ -171,7 +173,7 @@ auto probe_display_platform(
         }
 
         auto driver_name = mg::common::get_device_driver(device.parent().get());
-        if(std::strcmp(driver_name, "nvidia") == 0)
+        if(driver_name == "nvidia"sv)
         {
             mir::log_info("Not probing device %s due to the GBM display platform being incompatible with Nvidia", device.devnode());
             continue;
@@ -423,7 +425,7 @@ auto probe_rendering_platform(
             if (render_node)
             {
                 // We might already be probing a render node
-                if (strcmp(device_node, render_node.get()))
+                if (std::string_view{device_node} != std::string_view{render_node.get()})
                 {
                     // The render node of this device is not *this* device,
                     // so let's pass and let us open the render node later.
@@ -451,10 +453,7 @@ auto probe_rendering_platform(
 
                 // TODO: Probe for necessary EGL extensions (ie: at least one of WL_bind_display / dmabuf_import
 
-                if (strncmp(
-                    "llvmpipe",
-                    renderer_string,
-                    mir::strlen_c("llvmpipe")) == 0)
+                if (std::string_view{renderer_string}.starts_with("llvmpipe"))
                 {
                     mir::log_info("Detected software renderer: %s", renderer_string);
                     // Leave the priority at ::unsupported; if we've got a software renderer then

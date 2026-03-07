@@ -38,6 +38,7 @@
 #include <linux/kd.h>
 #include <linux/input.h>
 #include <fcntl.h>
+#include <string_view>
 
 namespace mg = mir::graphics;
 namespace mt = mir::test;
@@ -792,7 +793,7 @@ std::string uevent_content_for_device(
 {
     std::stringstream content;
 
-    if (strncmp(device_name, "/dev/", mir::strlen_c("/dev/")) != 0)
+    if (!std::string_view{device_name}.starts_with("/dev/"))
     {
         throw std::logic_error{"device_name is expected to be the fully-qualified /dev/foo path"};
     }
