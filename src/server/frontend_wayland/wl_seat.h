@@ -17,6 +17,7 @@
 #ifndef MIR_FRONTEND_WL_SEAT_H
 #define MIR_FRONTEND_WL_SEAT_H
 
+#include "input_trigger_common.h"
 #include "wayland_wrapper.h"
 #include <mir/wayland/weak.h>
 
@@ -54,6 +55,8 @@ class WlDataDevice;
 class KeyboardCallbacks;
 class KeyboardHelper;
 class SurfaceRegistry;
+class InputTriggerRegistry;
+class KeyboardStateTracker;
 
 class PointerEventDispatcher
 {
@@ -80,7 +83,9 @@ public:
         std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> const& keyboard_observer_registrar,
         std::shared_ptr<mir::input::Seat> const& seat,
         std::shared_ptr<shell::AccessibilityManager> const& accessibility_manager,
-        std::shared_ptr<SurfaceRegistry> const& surface_registry);
+        std::shared_ptr<SurfaceRegistry> const& surface_registry,
+        std::shared_ptr<InputTriggerRegistry> const& input_trigger_registry,
+        std::shared_ptr<KeyboardStateTracker> const& keyboard_state_tracker);
 
     ~WlSeat();
 
