@@ -44,6 +44,8 @@ struct TestWlcsDisplayServer : TestDisplayServer, public WlcsDisplayServer
 
     WlcsTouch* create_touch();
 
+    WlcsKeyboard* create_keyboard();
+
     std::shared_ptr<mir::test::Signal> expect_event_with_time(std::chrono::nanoseconds event_time);
 
     struct FakePointer;
