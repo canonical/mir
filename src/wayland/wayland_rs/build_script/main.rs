@@ -511,6 +511,11 @@ fn write_cpp_protocol_implementations(protocols: &Vec<WaylandProtocol>) {
     // First, create the global factory.
     let global_builder = create_global_factory(protocols);
 
+    // Generate ffi_fwd.h first so that protocol headers can include it without
+    // creating a circular dependency with the CXX-generated ffi.rs.h.
+    let ffi_fwd_builder = create_ffi_fwd_builder(protocols);
+    write_cpp_header(&ffi_fwd_builder);
+
     let mut builders: Vec<CppBuilder> = protocols
         .iter()
         .map(|protocol| create_cpp_builder(protocol))
@@ -525,6 +530,43 @@ fn write_cpp_protocol_implementations(protocols: &Vec<WaylandProtocol>) {
     
     let ffi = generate_ffi(&protocols,  &builders);
     write_generated_rust_file(ffi, "ffi.rs");
+}
+
+/// Create a lightweight header containing forward declarations for every Rust opaque
+/// type used as `rust::Box<T>` in the protocol headers.
+///
+/// Protocol headers include this header instead of the CXX-generated ffi.rs.h,
+/// which itself includes all protocol headers — inclusion of ffi.rs.h from a
+/// protocol header would create a circular dependency.
+///
+/// Plain `struct Foo;` forward declarations are sufficient because rust::Box<T>
+/// only stores a T* internally and does not require T to be a complete type at
+/// the point of a virtual function declaration.
+fn create_ffi_fwd_builder(protocols: &Vec<WaylandProtocol>) -> CppBuilder {
+    let mut builder = CppBuilder::new(
+        "MIR_WAYLANDRS_FFI_FWD".to_string(),
+        "ffi_fwd".to_string(),
+    );
+    // <rust/cxx.h> is included here so that protocol headers pulling in ffi_fwd.h
+    // have access to rust::Box, rust::String, etc. without a direct dependency on ffi.rs.h.
+    builder.add_include("<rust/cxx.h>".to_string());
+    let mut namespace = CppNamespace::new(vec!["mir".to_string(), "wayland_rs".to_string()]);
+
+    // WaylandServer is declared in ffi.rs but used nowhere in the protocol headers;
+    // include it for completeness so all Rust types are forward-declared.
+    namespace.add_forward_declaration_class("WaylandServer");
+
+    for protocol in protocols {
+        for interface in &protocol.interfaces {
+            if interface.name == "wl_registry" || interface.name == "wl_display" {
+                continue;
+            }
+            namespace.add_forward_declaration_class(&snake_to_pascal(&interface.name));
+        }
+    }
+
+    builder.add_namespace(namespace);
+    builder
 }
 
 fn create_cpp_builder(protocol: &WaylandProtocol) -> CppBuilder {
@@ -546,7 +588,10 @@ fn create_cpp_builder(protocol: &WaylandProtocol) -> CppBuilder {
         namespace.add_forward_declaration_class(&class_name);
     }
     builder.add_namespace(namespace);
-    builder.add_include("<rust/cxx.h>".to_string());
+    // Use ffi_fwd.h (generated alongside the protocol headers) instead of the
+    // CXX-generated ffi.rs.h to avoid a circular include dependency:
+    //   ffi.rs.h  →  include/*.h  →  ffi.rs.h
+    builder.add_include("\"ffi_fwd.h\"".to_string());
     builder.add_include("<memory>".to_string());
 
     builder

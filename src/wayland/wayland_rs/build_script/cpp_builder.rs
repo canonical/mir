@@ -37,7 +37,7 @@ impl CppBuilder {
         method
             .retval
             .as_ref()
-            .map(cpp_type_to_string)
+            .map(|retval| cpp_type_to_string(retval, true))
             .unwrap_or("void".to_string())
     }
 
@@ -45,7 +45,7 @@ impl CppBuilder {
         let args: Vec<String> = method
             .args
             .iter()
-            .map(|arg| format!("{} {}", cpp_type_to_string(&arg.cpp_type), arg.name))
+            .map(|arg| format!("{} {}", cpp_type_to_string(&arg.cpp_type, false), arg.name))
             .collect();
         args.join(", ")
     }
@@ -334,14 +334,18 @@ pub enum CppType {
     Box(String)
 }
 
-fn cpp_type_to_string(cpp_type: &CppType) -> String {
+fn cpp_type_to_string(cpp_type: &CppType, is_retval: bool) -> String {
     match cpp_type {
         CppType::CppI32 => "int32_t".to_string(),
         CppType::CppU32 => "uint32_t".to_string(),
         CppType::CppF64 => "double".to_string(),
-        CppType::String => "rust::String const&".to_string(),
-        CppType::Object(name) => format!("std::unique_ptr<{}> const&", name),
-        CppType::Array => "rust::Vec<uint8_t> const&".to_string(),
+        CppType::String => "rust::String".to_string(),
+        CppType::Object(name) => if is_retval {
+            format!("std::unique_ptr<{}>", name)
+        } else {
+            format!("std::unique_ptr<{}> const&", name)
+        },
+        CppType::Array => "rust::Vec<uint8_t>".to_string(),
         CppType::Fd => "int32_t".to_string(),
         CppType::Box(name) => format!("rust::Box<{}>", name)
     }
@@ -372,7 +376,7 @@ fn cpp_type_to_rust_type(cpp_type: &CppType, is_retval: bool) -> TokenStream {
 
 /// Sanitize an identifier to ensure it's valid for Rust.
 /// If the identifier starts with a digit, prefix it with an underscore.
-/// If the identifier is a Rust keyword, prefix it with r#.
+/// If the identifier is a Rust keyword, prefix it with r_.
 pub fn sanitize_identifier(name: &str) -> String {
     if name.is_empty() {
         return "_empty".to_string();
@@ -382,7 +386,7 @@ pub fn sanitize_identifier(name: &str) -> String {
     // If it fails (e.g., it's a keyword), use raw identifier
     match syn::parse_str::<Ident>(name) {
         Ok(_) => name.to_string(),
-        Err(_) => format!("r#{}", name),
+        Err(_) => format!("r_{}", name),
     }
 }
 
