@@ -64,9 +64,8 @@ struct AbstractGLMark2Test : testing::Test, mtf::AsyncServerRunner {
         auto const output_filename = std::format("/tmp/{}_{}.log",
                  test_info->test_case_name(), test_info->name());
 
-        printf("Saving GLMark2 detailed results to: %s\n",
-            output_filename.c_str());
-        // ^ Although I would vote to just print them to stdout instead
+        std::cout << std::format("Saving GLMark2 detailed results to: {}\n",
+            output_filename);
 
         std::string line;
         std::ofstream glmark2_output;
@@ -158,7 +157,7 @@ struct GLMark2Wayland : AbstractGLMark2Test
 struct HostedGLMark2Wayland : GLMark2Wayland
 {
     static char const* const host_socket;
-    const char *host_output_filename{nullptr};
+    std::string host_output_filename;
     pid_t pid = 0;
 
     HostedGLMark2Wayland()
@@ -166,9 +165,8 @@ struct HostedGLMark2Wayland : GLMark2Wayland
         const ::testing::TestInfo *const test_info =
             ::testing::UnitTest::GetInstance()->current_test_info();
 
-        s_host_output_filename = std::format("/tmp/{}_{}_host.log",
+        host_output_filename = std::format("/tmp/{}_{}_host.log",
                  test_info->test_case_name(), test_info->name());
-        host_output_filename = s_host_output_filename.c_str();
 
         if ((pid = fork()))
         {
@@ -182,9 +180,9 @@ struct HostedGLMark2Wayland : GLMark2Wayland
             std::string const server_path{mtf::executable_path() + "/mir_demo_server"};
             args[0] = server_path.c_str();
 
-            printf("Saving host output to: %s\n", host_output_filename);
-            if (freopen(host_output_filename, "a", stdout)) { /* (void)freopen(...); doesn't work */ };
-            if (freopen(host_output_filename, "a", stderr)) { /* (void)freopen(...); doesn't work */ };
+            std::cout << std::format("Saving host output to: {}\n", host_output_filename);
+            if (freopen(host_output_filename.c_str(), "a", stdout)) { /* (void)freopen(...); doesn't work */ };
+            if (freopen(host_output_filename.c_str(), "a", stderr)) { /* (void)freopen(...); doesn't work */ };
 
             execv(server_path.c_str(), const_cast<char* const*>(args.data()));
         }
@@ -224,8 +222,6 @@ struct HostedGLMark2Wayland : GLMark2Wayland
 
     std::vector<char const*> get_host_args() const;
     std::vector<char const*> get_nested_args() const;
-private:
-    std::string s_host_output_filename;
 };
 
 char const* const HostedGLMark2Wayland::host_socket = "GLMark2WaylandHost";
