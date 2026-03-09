@@ -543,10 +543,7 @@ fn write_cpp_protocol_implementations(protocols: &Vec<WaylandProtocol>) {
 /// only stores a T* internally and does not require T to be a complete type at
 /// the point of a virtual function declaration.
 fn create_ffi_fwd_builder(protocols: &Vec<WaylandProtocol>) -> CppBuilder {
-    let mut builder = CppBuilder::new(
-        "MIR_WAYLANDRS_FFI_FWD".to_string(),
-        "ffi_fwd".to_string(),
-    );
+    let mut builder = CppBuilder::new("MIR_WAYLANDRS_FFI_FWD".to_string(), "ffi_fwd".to_string());
     // <rust/cxx.h> is included here so that protocol headers pulling in ffi_fwd.h
     // have access to rust::Box, rust::String, etc. without a direct dependency on ffi.rs.h.
     builder.add_include("<rust/cxx.h>".to_string());

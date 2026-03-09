@@ -340,11 +340,13 @@ fn cpp_type_to_string(cpp_type: &CppType, is_retval: bool) -> String {
         CppType::CppU32 => "uint32_t".to_string(),
         CppType::CppF64 => "double".to_string(),
         CppType::String => "rust::String".to_string(),
-        CppType::Object(name) => if is_retval {
-            format!("std::unique_ptr<{}>", name)
-        } else {
-            format!("std::unique_ptr<{}> const&", name)
-        },
+        CppType::Object(name) => {
+            if is_retval {
+                format!("std::unique_ptr<{}>", name)
+            } else {
+                format!("std::unique_ptr<{}> const&", name)
+            }
+        }
         CppType::Array => "rust::Vec<uint8_t>".to_string(),
         CppType::Fd => "int32_t".to_string(),
         CppType::Box(name) => format!("rust::Box<{}>", name),
