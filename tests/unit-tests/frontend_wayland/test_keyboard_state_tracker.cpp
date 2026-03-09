@@ -17,6 +17,8 @@
 #include "src/server/frontend_wayland/keyboard_state_tracker.h"
 
 #include <mir/test/doubles/advanceable_clock.h>
+#include <mir/events/keyboard_event.h>
+#include <mir/input/parameter_keymap.h>
 
 #include <xkbcommon/xkbcommon-keysyms.h>
 
@@ -34,12 +36,13 @@ namespace
 /// Based on standard US QWERTY layout (PC keyboard / evdev scancodes)
 
 constexpr uint32_t key_1_scancode = 2;
+constexpr uint32_t key_0_scancode = 11;
 constexpr uint32_t a_scancode = 30;
 constexpr uint32_t b_scancode = 48;
 
-constexpr uint32_t ctrl_l_scancode = 37;
-constexpr uint32_t shift_l_scancode = 50;
-constexpr uint32_t shift_r_scancode = 62;
+constexpr uint32_t ctrl_l_scancode = 29;
+constexpr uint32_t shift_l_scancode = 42;
+constexpr uint32_t shift_r_scancode = 54;
 
 class KeyboardStateTrackerTest : public Test
 {
@@ -52,13 +55,15 @@ public:
         if (keysym == XKB_KEY_Shift_R)
             mod |= mir_input_event_modifier_shift_right;
 
-        return mir::events::make_key_event(
+        auto event = mir::events::make_key_event(
             id,
             clock.now().time_since_epoch(),
             mir_keyboard_action_down,
             keysym,
             scancode,
             mod);
+        event->to_input()->to_keyboard()->set_keymap(default_keymap);
+        return event;
     }
 
     auto key_up(uint32_t keysym, uint32_t scancode, MirInputDeviceId id = device_id) -> mir::EventUPtr
@@ -69,13 +74,15 @@ public:
         if (keysym == XKB_KEY_Shift_R)
             mod &= ~mir_input_event_modifier_shift_right;
 
-        return mir::events::make_key_event(
+        auto event = mir::events::make_key_event(
             id,
             clock.now().time_since_epoch(),
             mir_keyboard_action_up,
             keysym,
             scancode,
             mod);
+        event->to_input()->to_keyboard()->set_keymap(default_keymap);
+        return event;
     }
 
     auto static inline const device_id = MirInputDeviceId{0};
@@ -83,6 +90,12 @@ public:
 
     mtd::AdvanceableClock clock;
     mf::KeyboardStateTracker tracker;
+
+    // Default US QWERTY keymap attached to every test event so that the
+    // tracker's xkb_state is populated and shift-transition re-derivation
+    // via xkb_state_key_get_one_sym() works correctly.
+    std::shared_ptr<mir::input::Keymap> const default_keymap{
+        std::make_shared<mir::input::ParameterKeymap>()};
 
     // Track modifier state per device to emulate Mir's tracking of modifiers
     std::unordered_map<MirInputDeviceId, MirInputEventModifiers> modifier_states;
@@ -308,6 +321,29 @@ TEST_F(KeyboardStateTrackerTest, shift_release_on_one_device_does_not_demote_key
     EXPECT_FALSE(tracker.keysym_is_pressed(other_device_id, XKB_KEY_a));
 }
 
+TEST_F(KeyboardStateTrackerTest, pressing_shift_after_digit_promotes_to_symbol)
+{
+   tracker.process(*key_down(XKB_KEY_0, key_0_scancode));
+    EXPECT_TRUE(tracker.keysym_is_pressed(device_id, XKB_KEY_0));
+
+    tracker.process(*key_down(XKB_KEY_Shift_L, shift_l_scancode));
+
+    EXPECT_TRUE(tracker.keysym_is_pressed(device_id, XKB_KEY_parenright));
+    EXPECT_FALSE(tracker.keysym_is_pressed(device_id, XKB_KEY_0));
+}
+
+TEST_F(KeyboardStateTrackerTest, releasing_shift_after_digit_demotes_symbol_back_to_digit)
+{
+    // Shift held, '0' pressed (which the layout reports as ')'), then Shift
+    // released: the tracker should revert to '0'.
+    tracker.process(*key_down(XKB_KEY_Shift_L, shift_l_scancode));
+    tracker.process(*key_down(XKB_KEY_parenright, key_0_scancode));
+    tracker.process(*key_up(XKB_KEY_Shift_L, shift_l_scancode));
+
+    EXPECT_TRUE(tracker.keysym_is_pressed(device_id, XKB_KEY_0));
+    EXPECT_FALSE(tracker.keysym_is_pressed(device_id, XKB_KEY_parenright));
+}
+
 TEST_F(KeyboardStateTrackerTest, key_up_clears_key_when_modifier_changed_while_held)
 {
     // Simulate: '1' pressed (keysym = XKB_KEY_1), then Shift pressed, then '1'
@@ -320,11 +356,13 @@ TEST_F(KeyboardStateTrackerTest, key_up_clears_key_when_modifier_changed_while_h
 
     tracker.process(*key_down(XKB_KEY_Shift_L, shift_l_scancode));
 
-    // XKB_KEY_1 has no uppercase equivalent so it remains as XKB_KEY_1
-    EXPECT_TRUE(tracker.keysym_is_pressed(device_id, XKB_KEY_1));
+    // With a real xkb_state, pressing Shift re-derives '1' -> '!' correctly.
+    EXPECT_TRUE(tracker.keysym_is_pressed(device_id, XKB_KEY_exclam));
+    EXPECT_FALSE(tracker.keysym_is_pressed(device_id, XKB_KEY_1));
     EXPECT_TRUE(tracker.scancode_is_pressed(device_id, key_1_scancode));
 
-    // Key-up event reports XKB_KEY_exclam because Shift is still held
+    // Key-up event reports XKB_KEY_exclam because Shift is still held.
+    // The tracker must clear the entry by scancode, not by keysym.
     tracker.process(*key_up(XKB_KEY_exclam, key_1_scancode));
 
     EXPECT_FALSE(tracker.keysym_is_pressed(device_id, XKB_KEY_1));
