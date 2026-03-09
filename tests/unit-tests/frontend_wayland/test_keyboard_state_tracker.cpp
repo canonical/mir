@@ -33,6 +33,7 @@ namespace
 
 /// Based on standard US QWERTY layout (PC keyboard / evdev scancodes)
 
+constexpr uint32_t key_1_scancode = 2;
 constexpr uint32_t a_scancode = 30;
 constexpr uint32_t b_scancode = 48;
 
@@ -305,5 +306,29 @@ TEST_F(KeyboardStateTrackerTest, shift_release_on_one_device_does_not_demote_key
     // Shift was released only on device_id; other_device_id still has shift held
     EXPECT_TRUE(tracker.keysym_is_pressed(other_device_id, XKB_KEY_A));
     EXPECT_FALSE(tracker.keysym_is_pressed(other_device_id, XKB_KEY_a));
+}
+
+TEST_F(KeyboardStateTrackerTest, key_up_clears_key_when_modifier_changed_while_held)
+{
+    // Simulate: '1' pressed (keysym = XKB_KEY_1), then Shift pressed, then '1'
+    // released while Shift is held. The key-up event reports XKB_KEY_exclam
+    // ('!') because Shift is active. The tracker must still clear the pressed
+    // state using the stored scancode rather than the key-up keysym.
+    tracker.process(*key_down(XKB_KEY_1, key_1_scancode));
+    EXPECT_TRUE(tracker.keysym_is_pressed(device_id, XKB_KEY_1));
+    EXPECT_TRUE(tracker.scancode_is_pressed(device_id, key_1_scancode));
+
+    tracker.process(*key_down(XKB_KEY_Shift_L, shift_l_scancode));
+
+    // XKB_KEY_1 has no uppercase equivalent so it remains as XKB_KEY_1
+    EXPECT_TRUE(tracker.keysym_is_pressed(device_id, XKB_KEY_1));
+    EXPECT_TRUE(tracker.scancode_is_pressed(device_id, key_1_scancode));
+
+    // Key-up event reports XKB_KEY_exclam because Shift is still held
+    tracker.process(*key_up(XKB_KEY_exclam, key_1_scancode));
+
+    EXPECT_FALSE(tracker.keysym_is_pressed(device_id, XKB_KEY_1));
+    EXPECT_FALSE(tracker.keysym_is_pressed(device_id, XKB_KEY_exclam));
+    EXPECT_FALSE(tracker.scancode_is_pressed(device_id, key_1_scancode));
 }
 } // namespace
