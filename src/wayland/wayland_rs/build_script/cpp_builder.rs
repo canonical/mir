@@ -45,7 +45,7 @@ impl CppBuilder {
         let args: Vec<String> = method
             .args
             .iter()
-            .map(|arg| format!("{} {}", cpp_type_to_string(&arg.cpp_type, false), arg.name))
+            .map(|arg| format!("{} {}", cpp_type_to_string(&arg.cpp_type, false), sanitize_identifier(&arg.name)))
             .collect();
         args.join(", ")
     }
@@ -88,7 +88,7 @@ impl CppBuilder {
                     for option in &enum_.options {
                         result.push_str(&format!(
                             "        {} = {},\n",
-                            option.name,
+                            sanitize_identifier(&option.name),
                             option.value.to_string(),
                         ));
                     }
@@ -374,7 +374,7 @@ fn cpp_type_to_rust_type(cpp_type: &CppType, is_retval: bool) -> TokenStream {
     }
 }
 
-/// Sanitize an identifier to ensure it's valid for Rust.
+/// Sanitize an identifier to ensure it's valid for Rust and C++.
 /// If the identifier starts with a digit, prefix it with an underscore.
 /// If the identifier is a Rust keyword, prefix it with r_.
 pub fn sanitize_identifier(name: &str) -> String {
@@ -385,7 +385,7 @@ pub fn sanitize_identifier(name: &str) -> String {
     // Try to parse as a regular identifier
     // If it fails (e.g., it's a keyword), use raw identifier
     match syn::parse_str::<Ident>(name) {
-        Ok(_) => name.to_string(),
+        Ok(_) => if name == "namespace" { "namespace_".to_string() } else { name.to_string() },
         Err(_) => format!("r_{}", name),
     }
 }
