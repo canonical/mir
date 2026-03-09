@@ -191,14 +191,16 @@ impl CppBuilder {
                         quote! { #arg_name: #arg_type }
                     });
 
+                    // Note: When generating Rust bindings for C++ methods that will mutate the underlying
+                    // C++ class, cxx.rs enforces that we `Pin` them.
                     if let Some(retval) = &method.retval {
                         let retval = cpp_type_to_rust_type(retval, true);
                         quote! {
-                            pub fn #method_name(self: &#class_name, #(#args),*) -> #retval;
+                            pub fn #method_name(self: Pin<&mut #class_name>, #(#args),*) -> #retval;
                         }
                     } else {
                         quote! {
-                            pub fn #method_name(self: &#class_name, #(#args),*);
+                            pub fn #method_name(self: Pin<&mut #class_name>, #(#args),*);
                         }
                     }
                 });

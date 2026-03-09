@@ -36,7 +36,7 @@ use syn::Ident;
 
 fn main() {
     let manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
-    let include_path = Path::new(&manifest_dir).join("include");
+    let include_path = Path::new(&manifest_dir).join(".");
 
     println!("cargo:rerun-if-changed=src/lib.rs");
     println!("cargo:rerun-if-changed=src/wayland_server.rs");
@@ -54,7 +54,7 @@ fn main() {
     // as well as the FFI code.
     write_cpp_protocol_implementations(&protocols);
 
-    cxx_build::bridges(vec!["src/ffi_rust.rs"])
+    cxx_build::bridges(vec!["src/ffi.rs"])
         .include(&include_path)
         .compile("wayland_rs");
 }
