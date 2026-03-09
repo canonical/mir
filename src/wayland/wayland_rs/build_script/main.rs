@@ -15,21 +15,21 @@
  */
 
 mod cpp_builder;
+mod ffi_generation;
 mod helpers;
 mod protocol_parser;
-mod ffi_generation;
 
 use cpp_builder::{
     sanitize_identifier, CppArg, CppBuilder, CppClass, CppEnum, CppEnumOption, CppMethod,
     CppNamespace, CppType,
 };
+use ffi_generation::generate_ffi;
 use helpers::*;
 use proc_macro2::TokenStream;
 use protocol_parser::{
     parse_protocols, InterfaceItem, WaylandArg, WaylandArgType, WaylandEnum, WaylandEvent,
     WaylandInterface, WaylandProtocol, WaylandRequest,
 };
-use ffi_generation::generate_ffi;
 use quote::{format_ident, quote};
 use std::{env, path::Path};
 use syn::Ident;
@@ -527,8 +527,8 @@ fn write_cpp_protocol_implementations(protocols: &Vec<WaylandProtocol>) {
         write_cpp_header(&builder);
         write_cpp_source(&builder);
     }
-    
-    let ffi = generate_ffi(&protocols,  &builders);
+
+    let ffi = generate_ffi(&protocols, &builders);
     write_generated_rust_file(ffi, "ffi.rs");
 }
 
@@ -628,7 +628,10 @@ fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
 
     // Add the method that associates the boxed rust interface with the C++ class.
     let mut associate_method = CppMethod::new("associate".to_string(), None, true);
-    associate_method.add_arg(CppArg { cpp_type: CppType::Box(snake_to_pascal(&interface.name)), name: "instance".to_string() });
+    associate_method.add_arg(CppArg {
+        cpp_type: CppType::Box(snake_to_pascal(&interface.name)),
+        name: "instance".to_string(),
+    });
     class.add_method(associate_method);
 
     for method in methods {
@@ -668,9 +671,7 @@ fn wayland_arg_to_cpp_arg(arg: &WaylandArg) -> CppArg {
         WaylandArgType::Fixed => CppType::CppF64,
         WaylandArgType::String => CppType::String,
         WaylandArgType::Object => CppType::Object(format_cpp_class_name(
-            &arg.interface
-                .clone()
-                .expect("Object is missing interface"),
+            &arg.interface.clone().expect("Object is missing interface"),
         )),
         WaylandArgType::Array => CppType::Array,
         WaylandArgType::Fd => CppType::Fd,

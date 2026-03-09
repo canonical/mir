@@ -9,7 +9,7 @@
 
 use crate::cpp_builder::CppBuilder;
 
-use super::helpers::{snake_to_pascal};
+use super::helpers::snake_to_pascal;
 use super::{
     InterfaceItem, WaylandArg, WaylandArgType, WaylandEvent, WaylandInterface, WaylandProtocol,
 };
@@ -101,7 +101,7 @@ fn generate_extensions_for_protocol(protocol: &WaylandProtocol) -> TokenStream {
 }
 
 fn generate_extension_for_interface(interface: &WaylandInterface) -> Option<TokenStream> {
-    let event_extensions: Vec<(TokenStream, TokenStream)>  = interface
+    let event_extensions: Vec<(TokenStream, TokenStream)> = interface
         .items
         .iter()
         .filter_map(|item| match item {
@@ -111,7 +111,7 @@ fn generate_extension_for_interface(interface: &WaylandInterface) -> Option<Toke
         .collect();
 
     if event_extensions.is_empty() {
-        return None
+        return None;
     }
 
     let definitions = event_extensions.iter().map(|tuple| tuple.0.clone());
@@ -129,10 +129,16 @@ fn generate_extension_for_interface(interface: &WaylandInterface) -> Option<Toke
     })
 }
 
-fn generate_extension_method_for_event(interface: &WaylandInterface, event: &WaylandEvent) -> Option<(TokenStream, TokenStream)> {
+fn generate_extension_method_for_event(
+    interface: &WaylandInterface,
+    event: &WaylandEvent,
+) -> Option<(TokenStream, TokenStream)> {
     let needs_extension = event.args.iter().any(|arg| {
-        arg.allow_null.unwrap_or(false) || arg.enum_.is_some() || arg.type_ == WaylandArgType::Object
-            || arg.type_ == WaylandArgType::String || arg.type_ == WaylandArgType::Array
+        arg.allow_null.unwrap_or(false)
+            || arg.enum_.is_some()
+            || arg.type_ == WaylandArgType::Object
+            || arg.type_ == WaylandArgType::String
+            || arg.type_ == WaylandArgType::Array
     });
 
     if !needs_extension {
@@ -164,13 +170,16 @@ fn generate_extension_method_for_event(interface: &WaylandInterface, event: &Way
 
     // Generate the ffi code that will call into the underlying method that is defined on the object
     // The first item is the definition, and the second is the method declaration for the trait.
-    return Some((quote! {
-        fn #event_name(&mut self, #(#ffi_args),*) {
-            #interface_name::#event_name(self, #(#rust_args),*)
-        }
-    }, quote! {
-        fn #event_name(&mut self, #(#ffi_args),*);
-    }));
+    return Some((
+        quote! {
+            fn #event_name(&mut self, #(#ffi_args),*) {
+                #interface_name::#event_name(self, #(#rust_args),*)
+            }
+        },
+        quote! {
+            fn #event_name(&mut self, #(#ffi_args),*);
+        },
+    ));
 }
 
 fn generate_ffi_for_protocol(protocol: &WaylandProtocol) -> TokenStream {
@@ -183,7 +192,7 @@ fn generate_ffi_for_protocol(protocol: &WaylandProtocol) -> TokenStream {
 }
 
 fn generate_ffi_for_interface(interface: &WaylandInterface) -> TokenStream {
-    let events: Vec<TokenStream>  = interface
+    let events: Vec<TokenStream> = interface
         .items
         .iter()
         .filter_map(|item| match item {
@@ -235,7 +244,7 @@ fn wayland_arg_to_ffi_rust_str(arg: &WaylandArg) -> String {
         ),
         WaylandArgType::NewId => format!("{}: {}", arg.name, "i32"),
         WaylandArgType::Array => format!("{}: {}", arg.name, "&CxxVector<u8>"),
-        WaylandArgType::Fd => format!("{}: {}", arg.name, "i32")
+        WaylandArgType::Fd => format!("{}: {}", arg.name, "i32"),
     };
 
     if arg.allow_null.unwrap_or(false) {
@@ -254,13 +263,15 @@ fn wayland_arg_to_rust_param_str(arg: &WaylandArg) -> String {
         WaylandArgType::Object => arg.name.clone(),
         WaylandArgType::NewId => arg.name.clone(),
         WaylandArgType::Array => format!("{}.iter().collect()", arg.name),
-        WaylandArgType::Fd => arg.name.clone()
+        WaylandArgType::Fd => arg.name.clone(),
     };
 
     if arg.allow_null.unwrap_or(false) {
-        param = format!("if has_{} {{ Some({}) }} else {{ None }}", arg.name, arg.name);
+        param = format!(
+            "if has_{} {{ Some({}) }} else {{ None }}",
+            arg.name, arg.name
+        );
     }
 
     return param;
 }
-
