@@ -27,6 +27,7 @@
 
 #include <cstdio>
 #include <cstdlib>
+#include <format>
 #include <fstream>
 #include <string>
 
@@ -60,12 +61,11 @@ struct AbstractGLMark2Test : testing::Test, mtf::AsyncServerRunner {
         const ::testing::TestInfo *const test_info =
                 ::testing::UnitTest::GetInstance()->current_test_info();
 
-        char output_filename[256];
-        snprintf(output_filename, sizeof(output_filename) - 1,
-                 "/tmp/%s_%s.log",
+        auto const output_filename = std::format("/tmp/{}_{}.log",
                  test_info->test_case_name(), test_info->name());
 
-        printf("Saving GLMark2 detailed results to: %s\n", output_filename);
+        printf("Saving GLMark2 detailed results to: %s\n",
+            output_filename.c_str());
         // ^ Although I would vote to just print them to stdout instead
 
         std::string line;
@@ -158,7 +158,7 @@ struct GLMark2Wayland : AbstractGLMark2Test
 struct HostedGLMark2Wayland : GLMark2Wayland
 {
     static char const* const host_socket;
-    char host_output_filename[256];
+    const char *host_output_filename{nullptr};
     pid_t pid = 0;
 
     HostedGLMark2Wayland()
@@ -166,9 +166,9 @@ struct HostedGLMark2Wayland : GLMark2Wayland
         const ::testing::TestInfo *const test_info =
             ::testing::UnitTest::GetInstance()->current_test_info();
 
-        snprintf(host_output_filename, sizeof(host_output_filename) - 1,
-                 "/tmp/%s_%s_host.log",
+        s_host_output_filename = std::format("/tmp/{}_{}_host.log",
                  test_info->test_case_name(), test_info->name());
+        host_output_filename = s_host_output_filename.c_str();
 
         if ((pid = fork()))
         {
@@ -224,6 +224,8 @@ struct HostedGLMark2Wayland : GLMark2Wayland
 
     std::vector<char const*> get_host_args() const;
     std::vector<char const*> get_nested_args() const;
+private:
+    std::string s_host_output_filename;
 };
 
 char const* const HostedGLMark2Wayland::host_socket = "GLMark2WaylandHost";
