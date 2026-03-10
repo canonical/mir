@@ -3,10 +3,10 @@
 //! This module provides a method for generating middleware classes
 //! for each protocol. These classes ferry the data from C++ to Rust
 //! so that the interface at the ffi barrier is clean.
-//! 
+//!
 //! Each C++ interface will host a Box<...> of one of these extensions
 //! that it will use to call into the Rust code.
-//! 
+//!
 //! use crate::cpp_builder::CppBuilder;
 
 use super::helpers::snake_to_pascal;
@@ -75,7 +75,9 @@ fn generate_extension_for_interface(interface: &WaylandInterface) -> Option<Toke
         .items
         .iter()
         .filter_map(|item| match item {
-            InterfaceItem::Event(event) => Some(generate_extension_method_for_event(interface, event)),
+            InterfaceItem::Event(event) => {
+                Some(generate_extension_method_for_event(interface, event))
+            }
             _ => None,
         })
         .collect();
@@ -168,10 +170,7 @@ fn wayland_arg_to_rust_param_str(arg: &WaylandArg) -> String {
     };
 
     if arg.allow_null.unwrap_or(false) {
-        param = format!(
-            "if has_{} {{ Some({}) }} else {{ None }}",
-            arg.name, param
-        );
+        param = format!("if has_{} {{ Some({}) }} else {{ None }}", arg.name, param);
     }
 
     return param;

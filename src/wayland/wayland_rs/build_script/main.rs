@@ -17,17 +17,17 @@
 mod cpp_builder;
 mod ffi_generation;
 mod helpers;
-mod protocol_parser;
 mod protocol_middleware_generation;
+mod protocol_parser;
 
 use cpp_builder::{
     sanitize_identifier, CppArg, CppBuilder, CppClass, CppEnum, CppEnumOption, CppMethod,
     CppNamespace, CppType,
 };
 use ffi_generation::generate_ffi;
-use protocol_middleware_generation::generate_wayland_interface_middleware;
 use helpers::*;
 use proc_macro2::TokenStream;
+use protocol_middleware_generation::generate_wayland_interface_middleware;
 use protocol_parser::{
     parse_protocols, InterfaceItem, WaylandArg, WaylandArgType, WaylandEnum, WaylandEvent,
     WaylandInterface, WaylandProtocol, WaylandRequest,
@@ -513,7 +513,7 @@ fn create_global_factory(protocols: &Vec<WaylandProtocol>) -> CppBuilder {
 }
 
 fn write_protocol_middleware(protocols: &Vec<WaylandProtocol>) {
-    let middleware =generate_wayland_interface_middleware(protocols);
+    let middleware = generate_wayland_interface_middleware(protocols);
     write_generated_rust_file(middleware, "middleware.rs");
 }
 
@@ -554,10 +554,7 @@ fn write_cpp_protocol_implementations(protocols: &Vec<WaylandProtocol>) {
 /// only stores a T* internally and does not require T to be a complete type at
 /// the point of a virtual function declaration.
 fn create_ffi_fwd_builder(protocols: &Vec<WaylandProtocol>) -> CppBuilder {
-    let mut builder = CppBuilder::new(
-        "MIR_WAYLANDRS_FFI_FWD".to_string(),
-        "ffi_fwd".to_string(),
-    );
+    let mut builder = CppBuilder::new("MIR_WAYLANDRS_FFI_FWD".to_string(), "ffi_fwd".to_string());
     // <rust/cxx.h> is included here so that protocol headers pulling in ffi_fwd.h
     // have access to rust::Box, rust::String, etc. without a direct dependency on ffi.rs.h.
     builder.add_include("<rust/cxx.h>".to_string());

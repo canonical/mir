@@ -45,7 +45,13 @@ impl CppBuilder {
         let args: Vec<String> = method
             .args
             .iter()
-            .map(|arg| format!("{} {}", cpp_type_to_string(&arg.cpp_type, false), sanitize_identifier(&arg.name)))
+            .map(|arg| {
+                format!(
+                    "{} {}",
+                    cpp_type_to_string(&arg.cpp_type, false),
+                    sanitize_identifier(&arg.name)
+                )
+            })
             .collect();
         args.join(", ")
     }
@@ -340,11 +346,13 @@ fn cpp_type_to_string(cpp_type: &CppType, is_retval: bool) -> String {
         CppType::CppU32 => "uint32_t".to_string(),
         CppType::CppF64 => "double".to_string(),
         CppType::String => "rust::String".to_string(),
-        CppType::Object(name) => if is_retval {
-            format!("std::unique_ptr<{}>", name)
-        } else {
-            format!("std::unique_ptr<{}> const&", name)
-        },
+        CppType::Object(name) => {
+            if is_retval {
+                format!("std::unique_ptr<{}>", name)
+            } else {
+                format!("std::unique_ptr<{}> const&", name)
+            }
+        }
         CppType::Array => "rust::Vec<uint8_t>".to_string(),
         CppType::Fd => "int32_t".to_string(),
         CppType::Box(name) => format!("rust::Box<{}>", name),
@@ -385,7 +393,13 @@ pub fn sanitize_identifier(name: &str) -> String {
     // Try to parse as a regular identifier
     // If it fails (e.g., it's a keyword), use raw identifier
     match syn::parse_str::<Ident>(name) {
-        Ok(_) => if name == "namespace" { "namespace_".to_string() } else { name.to_string() },
+        Ok(_) => {
+            if name == "namespace" {
+                "namespace_".to_string()
+            } else {
+                name.to_string()
+            }
+        }
         Err(_) => format!("r_{}", name),
     }
 }
