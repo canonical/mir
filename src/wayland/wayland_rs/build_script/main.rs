@@ -18,12 +18,14 @@ mod cpp_builder;
 mod ffi_generation;
 mod helpers;
 mod protocol_parser;
+mod protocol_middleware_generation;
 
 use cpp_builder::{
     sanitize_identifier, CppArg, CppBuilder, CppClass, CppEnum, CppEnumOption, CppMethod,
     CppNamespace, CppType,
 };
 use ffi_generation::generate_ffi;
+use protocol_middleware_generation::generate_wayland_interface_middleware;
 use helpers::*;
 use proc_macro2::TokenStream;
 use protocol_parser::{
@@ -49,6 +51,9 @@ fn main() {
 
     // Next, generate the dispatch and global dispatch methods.
     write_dispatch_rs(&protocols);
+
+    // Next, generate the protocol middleware classes.
+    write_protocol_middleware(&protocols);
 
     // Next, generate C++ abstract classes for each interface
     // as well as the FFI code.
@@ -183,6 +188,7 @@ fn generate_global_dispatch_impl(
     }
 
     let interface_struct_name = format_ident!("{}", snake_to_pascal(&interface.name));
+    let ext_interface_struct_name = format_ident!("{}Ext", snake_to_pascal(&interface.name));
     let create_global_method = format_ident!("create_{}", &interface.name);
     quote! {
         impl GlobalDispatch<#namespace_name::#interface_name::#interface_struct_name, ffi::GlobalFactory>
@@ -200,7 +206,7 @@ fn generate_global_dispatch_impl(
                 use crate::ffi;
                 let global = global_data.#create_global_method();
                 let instance = data_init.init(resource, global);
-                let boxed = Box::new(instance);
+                let boxed = Box::new(crate::middleware::#ext_interface_struct_name{ wrapped: instance });
             }
         }
     }
@@ -506,6 +512,11 @@ fn create_global_factory(protocols: &Vec<WaylandProtocol>) -> CppBuilder {
     builder
 }
 
+fn write_protocol_middleware(protocols: &Vec<WaylandProtocol>) {
+    let middleware =generate_wayland_interface_middleware(protocols);
+    write_generated_rust_file(middleware, "middleware.rs");
+}
+
 /// Write a header file for each protocol containing abstract classes per-interface.
 fn write_cpp_protocol_implementations(protocols: &Vec<WaylandProtocol>) {
     // First, create the global factory.
@@ -561,7 +572,7 @@ fn create_ffi_fwd_builder(protocols: &Vec<WaylandProtocol>) -> CppBuilder {
             if interface.name == "wl_registry" || interface.name == "wl_display" {
                 continue;
             }
-            namespace.add_forward_declaration_class(&snake_to_pascal(&interface.name));
+            namespace.add_forward_declaration_class(&format_rust_ext_struct_name(&interface.name));
         }
     }
 
@@ -629,7 +640,7 @@ fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
     // Add the method that associates the boxed rust interface with the C++ class.
     let mut associate_method = CppMethod::new("associate".to_string(), None, true);
     associate_method.add_arg(CppArg {
-        cpp_type: CppType::Box(snake_to_pascal(&interface.name)),
+        cpp_type: CppType::Box(snake_to_pascal(&format!("{}Ext", &interface.name))),
         name: "instance".to_string(),
     });
     class.add_method(associate_method);

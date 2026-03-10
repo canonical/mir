@@ -46,3 +46,7 @@ pub fn snake_to_pascal(s: &str) -> String {
 pub fn format_cpp_class_name(s: &String) -> String {
     format!("{}Impl", snake_to_pascal(s))
 }
+
+pub fn format_rust_ext_struct_name(s: &String) -> String {
+    format!("{}Ext", snake_to_pascal(s))
+}

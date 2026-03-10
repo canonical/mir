@@ -24,7 +24,10 @@ mod dispatch {
 mod protocols {
     include!("protocols.rs");
 }
-mod ffi {
-    include!("ffi.rs");
+
+mod middleware {
+    include!("middleware.rs");
 }
+
+include!("ffi.rs");
 mod wayland_server;
