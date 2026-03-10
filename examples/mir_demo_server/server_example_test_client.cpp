@@ -24,6 +24,7 @@
 #include <mir/options/option.h>
 
 #include <chrono>
+#include <format>
 #include <future>
 
 #include <sys/wait.h>
@@ -78,20 +79,17 @@ void check_exit_status(pid_t pid, mir::Server& server, Self* self, int& countdow
         }
         else
         {
-            char const format[] = "Client has exited with status %d";
-            char buffer[sizeof format + 10];
-            snprintf(buffer, sizeof buffer, format, exit_status);
-            ml::log(ml::Severity::informational, buffer, component);
+            auto const msg =
+                std::format("Client has exited with status {}", exit_status);
+            ml::log(ml::Severity::informational, msg, component);
             self->test_failed = true;
         }
     }
     else if (WIFSIGNALED(status))
     {
         auto const signal = WTERMSIG(status);
-        char const format[] = "Client terminated by signal %d";
-        char buffer[sizeof format];
-        snprintf(buffer, sizeof buffer, format, signal);
-        ml::log(ml::Severity::informational, buffer, component);
+        auto const msg = std::format("Client terminated by signal {}", signal);
+        ml::log(ml::Severity::informational, msg, component);
         self->test_failed = true;
     }
     else
