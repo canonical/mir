@@ -17,6 +17,8 @@
 #include "compositor_report.h"
 #include <mir/logging/logger.h>
 
+#include <format>
+
 using namespace mir::time;
 namespace ml = mir::logging;
 namespace mrl = mir::report::logging;
@@ -43,9 +45,8 @@ mrl::CompositorReport::TimePoint mrl::CompositorReport::now() const
 
 void mrl::CompositorReport::added_display(int width, int height, int x, int y, SubCompositorId id)
 {
-    char msg[128];
-    snprintf(msg, sizeof msg, "Added display %p: %dx%d %+d%+d",
-             id, width, height, x, y);
+    auto const msg = std::format("Added display {}: {}x{} {:+d}{:+d}",
+             static_cast<const void*>(id), width, height, x, y);
     logger->log(ml::Severity::informational, msg, component);
 }
 
@@ -101,13 +102,13 @@ void mrl::CompositorReport::Instance::log(ml::Logger& logger, SubCompositorId id
         long avg_latency_usec = dn ? dl / dn : 0;
         long dt_msec = dt / 1000L;
 
-        char msg[128];
-        snprintf(msg, sizeof msg, "Display %p averaged %ld.%03ld FPS, "
-                 "%ld.%03ld ms/frame, "
-                 "latency %ld.%03ld ms, "
-                 "%ld frames over %ld.%03ld sec, "
-                 "%ld%% bypassed",
-                 id,
+        auto const msg = std::format(
+                 "Display {} averaged {}.{:03d} FPS, "
+                 "{}.{:03d} ms/frame, "
+                 "latency {}.{:03d} ms, "
+                 "{} frames over {}.{:03d} sec, "
+                 "{}% bypassed",
+                 static_cast<const void*>(id),
                  frames_per_1000sec / 1000,
                  frames_per_1000sec % 1000,
                  avg_render_time_usec / 1000,
@@ -156,9 +157,8 @@ void mrl::CompositorReport::finished_frame(SubCompositorId id)
 
     if (inst.bypassed != inst.prev_bypassed || inst.nframes == 1)
     {
-        char msg[128];
-        snprintf(msg, sizeof msg, "Display %p bypass %s",
-                 id, inst.bypassed ? "ON" : "OFF");
+        auto const msg = std::format("Display {} bypass {}",
+                 static_cast<const void*>(id), inst.bypassed ? "ON" : "OFF");
         logger->log(ml::Severity::informational, msg, component);
     }
     inst.prev_bypassed = inst.bypassed;
