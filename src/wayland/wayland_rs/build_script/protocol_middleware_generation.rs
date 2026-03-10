@@ -48,15 +48,25 @@ fn generate_use_imports_for_protocol(protocol: &WaylandProtocol) -> Vec<TokenStr
         .interfaces
         .iter()
         .filter(|interface| interface.name != "wl_registry" && interface.name != "wl_display")
-        .map(|interface| {
-            let full_path: syn::Path = syn::parse_str(&format!(
+        .flat_map(|interface| {
+            let interface_struct_path: syn::Path = syn::parse_str(&format!(
                 "crate::protocols::{}::{}::{}",
                 protocol.name,
                 interface.name,
                 snake_to_pascal(&interface.name)
             ))
             .expect("Failed to parse full interface path");
-            quote! { use #full_path; }
+
+            let interface_module_path: syn::Path = syn::parse_str(&format!(
+                "crate::protocols::{}::{}",
+                protocol.name, interface.name,
+            ))
+            .expect("Failed to parse interface module path");
+
+            vec![
+                quote! { use #interface_struct_path; },
+                quote! { use #interface_module_path; },
+            ]
         })
         .collect()
 }
@@ -76,7 +86,7 @@ fn generate_extension_for_interface(interface: &WaylandInterface) -> Option<Toke
         .iter()
         .filter_map(|item| match item {
             InterfaceItem::Event(event) => {
-                Some(generate_extension_method_for_event(interface, event))
+                Some(generate_extension_method_for_event(event, &interface.name))
             }
             _ => None,
         })
@@ -86,7 +96,7 @@ fn generate_extension_for_interface(interface: &WaylandInterface) -> Option<Toke
     let interface_name_ext = format_ident!("{}Ext", snake_to_pascal(&interface.name));
     Some(quote! {
         pub struct #interface_name_ext {
-            wrapped: #interface_name
+            pub wrapped: #interface_name
         }
 
         impl #interface_name_ext {
@@ -95,10 +105,7 @@ fn generate_extension_for_interface(interface: &WaylandInterface) -> Option<Toke
     })
 }
 
-fn generate_extension_method_for_event(
-    interface: &WaylandInterface,
-    event: &WaylandEvent,
-) -> TokenStream {
+fn generate_extension_method_for_event(event: &WaylandEvent, interface_name: &str) -> TokenStream {
     let event_name: syn::Ident = format_ident!("{}", event.name);
     let ffi_args: Vec<TokenStream> = event
         .args
@@ -114,7 +121,7 @@ fn generate_extension_method_for_event(
         .args
         .iter()
         .map(|arg| {
-            wayland_arg_to_rust_param_str(arg)
+            wayland_arg_to_rust_param_str(arg, interface_name)
                 .parse::<TokenStream>()
                 .expect("Failed to parse argument as TokenStream")
         })
@@ -129,7 +136,7 @@ fn generate_extension_method_for_event(
     }
 }
 
-fn wayland_arg_to_ffi_rust_str(arg: &WaylandArg) -> String {
+pub fn wayland_arg_to_ffi_rust_str(arg: &WaylandArg) -> String {
     let mut arg_str = match arg.type_ {
         WaylandArgType::Int => format!("{}: {}", arg.name, "i32"),
         WaylandArgType::Uint => format!("{}: {}", arg.name, "u32"),
@@ -145,7 +152,16 @@ fn wayland_arg_to_ffi_rust_str(arg: &WaylandArg) -> String {
                     .as_str(),
             )
         ),
-        WaylandArgType::NewId => format!("{}: {}", arg.name, "i32"),
+        WaylandArgType::NewId => format!(
+            "{}: &Box<{}Ext>",
+            arg.name,
+            snake_to_pascal(
+                arg.interface
+                    .clone()
+                    .expect("Object is missing interface")
+                    .as_str(),
+            )
+        ),
         WaylandArgType::Array => format!("{}: {}", arg.name, "&CxxVector<u8>"),
         WaylandArgType::Fd => format!("{}: {}", arg.name, "i32"),
     };
@@ -157,17 +173,31 @@ fn wayland_arg_to_ffi_rust_str(arg: &WaylandArg) -> String {
     arg_str
 }
 
-fn wayland_arg_to_rust_param_str(arg: &WaylandArg) -> String {
+fn wayland_arg_to_rust_param_str(arg: &WaylandArg, interface_name: &str) -> String {
     let mut param = match arg.type_ {
         WaylandArgType::Int => arg.name.clone(),
         WaylandArgType::Uint => arg.name.clone(),
         WaylandArgType::Fixed => arg.name.clone(),
         WaylandArgType::String => format!("{}.to_string()", arg.name),
-        WaylandArgType::Object => arg.name.clone(),
-        WaylandArgType::NewId => arg.name.clone(),
+        WaylandArgType::Object => format!("&{}.wrapped", arg.name.clone()),
+        WaylandArgType::NewId => format!("&{}.wrapped", arg.name.clone()),
         WaylandArgType::Array => format!("{}.iter().cloned().collect()", arg.name),
         WaylandArgType::Fd => arg.name.clone(),
     };
+
+    if let Some(e) = &arg.enum_ {
+        let rust_enum_path = if let Some(dot_pos) = e.find('.') {
+            let interface = &e[..dot_pos];
+            let enum_name = &e[dot_pos + 1..];
+            format!("{}::{}", interface, snake_to_pascal(enum_name))
+        } else {
+            format!("{}::{}", interface_name, snake_to_pascal(e))
+        };
+        param = format!(
+            "{}::try_from({}).unwrap_or({}::try_from(0).unwrap())",
+            rust_enum_path, param, rust_enum_path
+        );
+    }
 
     if arg.allow_null.unwrap_or(false) {
         param = format!("if has_{} {{ Some({}) }} else {{ None }}", arg.name, param);

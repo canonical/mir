@@ -10,9 +10,8 @@
 use crate::cpp_builder::CppBuilder;
 
 use super::helpers::snake_to_pascal;
-use super::{
-    InterfaceItem, WaylandArg, WaylandArgType, WaylandEvent, WaylandInterface, WaylandProtocol,
-};
+use super::protocol_middleware_generation::wayland_arg_to_ffi_rust_str;
+use super::{InterfaceItem, WaylandEvent, WaylandInterface, WaylandProtocol};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
@@ -87,7 +86,6 @@ fn generate_ffi_for_interface(interface: &WaylandInterface) -> TokenStream {
         })
         .collect();
 
-    let interface_name_ext = format_ident!("{}Ext", snake_to_pascal(&interface.name));
     quote! {
         #(#events)*
     }
@@ -109,32 +107,4 @@ fn generate_ffi_for_event(interface: &WaylandInterface, event: &WaylandEvent) ->
     quote! {
         fn #event_name(self: &mut #interface_name, #(#args),*);
     }
-}
-
-fn wayland_arg_to_ffi_rust_str(arg: &WaylandArg) -> String {
-    let mut arg_str = match arg.type_ {
-        WaylandArgType::Int => format!("{}: {}", arg.name, "i32"),
-        WaylandArgType::Uint => format!("{}: {}", arg.name, "u32"),
-        WaylandArgType::Fixed => format!("{}: {}", arg.name, "f64"),
-        WaylandArgType::String => format!("{}: {}", arg.name, "&CxxString"),
-        WaylandArgType::Object => format!(
-            "{}: &Box<{}Ext>",
-            arg.name,
-            snake_to_pascal(
-                arg.interface
-                    .clone()
-                    .expect("Object is missing interface")
-                    .as_str(),
-            )
-        ),
-        WaylandArgType::NewId => format!("{}: {}", arg.name, "i32"),
-        WaylandArgType::Array => format!("{}: {}", arg.name, "&CxxVector<u8>"),
-        WaylandArgType::Fd => format!("{}: {}", arg.name, "i32"),
-    };
-
-    if arg.allow_null.unwrap_or(false) {
-        arg_str += format!(", has_{}: bool", arg.name).as_str();
-    }
-
-    arg_str
 }
