@@ -35,7 +35,6 @@ pub fn generate_ffi(protocols: &Vec<WaylandProtocol>, builders: &Vec<CppBuilder>
     // Finally, build the file.
     quote! {
         use crate::wayland_server::*;
-        use cxx::{CxxString, CxxVector, SharedPtr};
         use crate::middleware::*;
 
         #[cxx::bridge(namespace = "mir::wayland_rs")]

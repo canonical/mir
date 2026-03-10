@@ -136,7 +136,7 @@ fn wayland_arg_to_ffi_rust_str(arg: &WaylandArg) -> String {
         WaylandArgType::Fixed => format!("{}: {}", arg.name, "f64"),
         WaylandArgType::String => format!("{}: {}", arg.name, "&CxxString"),
         WaylandArgType::Object => format!(
-            "{}: &Box<{}>",
+            "{}: &Box<{}Ext>",
             arg.name,
             snake_to_pascal(
                 arg.interface
