@@ -17,6 +17,7 @@
 #include <mir/input/xkb_mapper_registrar.h>
 #include <mir/input/keymap.h>
 #include <mir/input/keyboard_leds.h>
+#include <mir/input/xkb_mapper.h>
 #include <mir/events/keyboard_event.h>
 #include <mir/events/event_builders.h>
 
@@ -73,26 +74,6 @@ bool is_toggle_modifier(MirInputEventModifiers key)
     return key == mir_input_event_modifier_caps_lock ||
         key == mir_input_event_modifier_scroll_lock ||
         key == mir_input_event_modifier_num_lock;
-}
-
-MirInputEventModifiers expand_modifiers(MirInputEventModifiers modifiers)
-{
-    if (modifiers == 0)
-        return mir_input_event_modifier_none;
-
-    if ((modifiers & mir_input_event_modifier_alt_left) || (modifiers & mir_input_event_modifier_alt_right))
-        modifiers |= mir_input_event_modifier_alt;
-
-    if ((modifiers & mir_input_event_modifier_ctrl_left) || (modifiers & mir_input_event_modifier_ctrl_right))
-        modifiers |= mir_input_event_modifier_ctrl;
-
-    if ((modifiers & mir_input_event_modifier_shift_left) || (modifiers & mir_input_event_modifier_shift_right))
-        modifiers |= mir_input_event_modifier_shift;
-
-    if ((modifiers & mir_input_event_modifier_meta_left) || (modifiers & mir_input_event_modifier_meta_right))
-        modifiers |= mir_input_event_modifier_meta;
-
-    return modifiers;
 }
 
 mi::XKBComposeStatePtr make_unique_compose_state(mi::XKBComposeTablePtr const& table)
