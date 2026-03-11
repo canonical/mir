@@ -27,6 +27,7 @@
 #include <xkbcommon/xkbcommon-keysyms.h>
 
 #include <memory>
+#include <string_view>
 
 #include <gmock/gmock.h>
 
@@ -369,7 +370,7 @@ MATCHER_P(KeyWithText, text, "")
         return false;
 
     auto const actual_text = mir_keyboard_event_key_text(kev);
-    if(strcmp(actual_text, text))
+    if(std::string_view{actual_text} != std::string_view{text})
     {
         *result_listener << "Expected event text (" << text << ") does not match actual text (" << actual_text << ")";
         return false;

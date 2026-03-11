@@ -21,6 +21,7 @@
 #include <boost/throw_exception.hpp>
 
 #include <string>
+#include <string_view>
 #include <unistd.h>
 #include <signal.h>
 
@@ -49,7 +50,7 @@ Environment::Environment()
     for (auto var = environ; *var; ++var)
     {
         auto const var_begin = *var;
-        if (strncmp(var_begin, mir_prefix, sizeof(mir_prefix) - 1) != 0)
+        if (!std::string_view{var_begin}.starts_with(mir_prefix))
         {
             env_strings.emplace_back(var_begin);
         }
@@ -62,7 +63,7 @@ void Environment::setenv(std::string const& name, std::string const& value)
 
     for (auto& e : env_strings)
     {
-        if (strncmp(e.c_str(), name.c_str(), name.size()) == 0)
+        if (e.starts_with(name))
         {
             e = entry;
             return;
@@ -76,7 +77,7 @@ void Environment::unsetenv(std::string const& name)
 {
     for (auto it = env_strings.begin(); it != env_strings.end(); ++it)
     {
-        if (strncmp(it->c_str(), name.c_str(), name.size()) == 0)
+        if (it->starts_with(name))
         {
             env_strings.erase(it);
             return;

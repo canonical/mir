@@ -29,12 +29,14 @@
 #include <boost/throw_exception.hpp>
 #include <system_error>
 #include <sys/mman.h>
+#include <string_view>
 
 namespace mg = mir::graphics;
 namespace mge = mg::eglstream;
 namespace mgek = mge::kms;
 namespace mgk = mg::kms;
 namespace geom = mir::geometry;
+using namespace std::string_view_literals;
 
 namespace
 {
@@ -183,7 +185,7 @@ void mgek::EGLOutput::reset()
     {
         auto prop = drmModeGetProperty(drm_fd, connector->props[i]);
         if (prop && (prop->flags & DRM_MODE_PROP_ENUM)) {
-            if (!strcmp(prop->name, "DPMS"))
+            if (prop->name == "DPMS"sv)
             {
                 dpms_enum_id = connector->props[i];
                 drmModeFreeProperty(prop);

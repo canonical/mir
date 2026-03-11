@@ -35,9 +35,11 @@
 #include <cstring>
 #include <stdlib.h>
 #include <stdexcept>
+#include <string_view>
 
 namespace mgw = mir::graphics::wayland;
 namespace geom = mir::geometry;
+using namespace std::string_view_literals;
 
 class mgw::DisplayClient::Output  :
     public DisplaySyncGroup,
@@ -533,12 +535,12 @@ void mgw::DisplayClient::new_global(
     (void)version;
     DisplayClient* self = static_cast<decltype(self)>(data);
 
-    if (strcmp(interface, "wl_compositor") == 0)
+    if (interface == "wl_compositor"sv)
     {
         self->compositor =
             static_cast<decltype(self->compositor)>(wl_registry_bind(registry, id, &wl_compositor_interface, std::min(version, 3u)));
     }
-    else if (strcmp(interface, "wl_shm") == 0)
+    else if (interface == "wl_shm"sv)
     {
         self->shm = static_cast<decltype(self->shm)>(wl_registry_bind(registry, id, &wl_shm_interface, std::min(version, 1u)));
         // Normally we'd add a listener to pick up the supported formats here
@@ -546,13 +548,13 @@ void mgw::DisplayClient::new_global(
         // {arg} TODO needs fixing
         add_shm_listener(self, self->shm);
     }
-    else if (strcmp(interface, "wl_seat") == 0)
+    else if (interface == "wl_seat"sv)
     {
         if (version < 5) self->fake_pointer_frame = true;
         self->seat = static_cast<decltype(self->seat)>(wl_registry_bind(registry, id, &wl_seat_interface, std::min(version, 6u)));
         add_seat_listener(self, self->seat);
     }
-    else if (strcmp(interface, "wl_output") == 0)
+    else if (interface == "wl_output"sv)
     {
         auto output =
             static_cast<wl_output*>(wl_registry_bind(registry, id, &wl_output_interface, std::min(version, 2u)));
@@ -564,7 +566,7 @@ void mgw::DisplayClient::new_global(
                     output,
                     self)));
     }
-    else if (strcmp(interface, xdg_wm_base_interface.name) == 0)
+    else if (std::string_view{interface} == std::string_view{xdg_wm_base_interface.name})
     {
         static xdg_wm_base_listener const shell_listener{
             [](void*, xdg_wm_base* shell, uint32_t serial){ xdg_wm_base_pong(shell, serial); },
