@@ -596,7 +596,7 @@ fn create_ffi_fwd_builder(protocols: &Vec<WaylandProtocol>) -> CppBuilder {
             if interface.name == "wl_registry" || interface.name == "wl_display" {
                 continue;
             }
-            namespace.add_forward_declaration_class(
+            namespace.add_forward_declaration_struct(
                 &format_wayland_interface_to_rust_extension_struct(&interface.name),
             );
         }

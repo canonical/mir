@@ -243,6 +243,10 @@ impl CppNamespace {
             .expect("classes cannot be empty after push")
     }
 
+    pub fn add_forward_declaration_struct(&mut self, name: &str) {
+        self.forward_declarations.push(format!("struct {}", name));
+    }
+
     pub fn add_forward_declaration_class(&mut self, name: &str) {
         self.forward_declarations.push(format!("class {}", name));
     }
