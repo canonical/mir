@@ -204,7 +204,11 @@ fn generate_global_dispatch_impl(
                 data_init: &mut wayland_server::DataInit<'_, Self>,
             ) {
                 use crate::ffi;
-                let global = global_data.#create_global_method();
+                let global = unsafe {
+                    ::std::pin::Pin::new_unchecked(
+                        &mut *(global_data as *const ffi::GlobalFactory as *mut ffi::GlobalFactory)
+                    )
+                }.#create_global_method();
                 let instance = data_init.init(resource, global);
                 let boxed = Box::new(crate::middleware::#ext_interface_struct_name{ wrapped: instance });
             }
@@ -364,7 +368,8 @@ fn generate_dispatch_impl(
         return quote! {};
     }
 
-    let interface_struct_name = format_ident!("{}", snake_to_pascal(&interface.name));
+    let protocol_struct_name = format_ident!("{}", snake_to_pascal(&interface.name));
+    let ext_struct_name = format_ident!("{}Impl", snake_to_pascal(&interface.name));
 
     let mut request_handler_arms =
         generate_request_handler_arms(interface, namespace_name, &interface_name);
@@ -414,18 +419,18 @@ fn generate_dispatch_impl(
     );
 
     quote! {
-        unsafe impl Send for ffi::#interface_struct_name {}
-        unsafe impl Sync for ffi::#interface_struct_name {}
+        unsafe impl Send for ffi::#ext_struct_name {}
+        unsafe impl Sync for ffi::#ext_struct_name {}
 
-        impl Dispatch<#namespace_name::#interface_name::#interface_struct_name, cxx::UniquePtr<ffi::#interface_struct_name>>
+        impl Dispatch<#namespace_name::#interface_name::#protocol_struct_name, cxx::UniquePtr<ffi::#ext_struct_name>>
             for ServerState
         {
             fn request(
                 _state: &mut Self,
                 _client: &Client,
-                _resource: &#namespace_name::#interface_name::#interface_struct_name,
-                request: <#namespace_name::#interface_name::#interface_struct_name as wayland_server::Resource>::Request,
-                #data_name: &cxx::UniquePtr<ffi::#interface_struct_name>,
+                _resource: &#namespace_name::#interface_name::#protocol_struct_name,
+                request: <#namespace_name::#interface_name::#protocol_struct_name as wayland_server::Resource>::Request,
+                #data_name: &cxx::UniquePtr<ffi::#ext_struct_name>,
                 _dhandle: &DisplayHandle,
                 #data_init_name: &mut DataInit<'_, Self>,
             ) {
@@ -472,7 +477,7 @@ fn write_dispatch_rs(protocols: &Vec<WaylandProtocol>) {
         use wayland_server::{Client, DataInit, Dispatch, GlobalDispatch, New, DisplayHandle, Resource};
         use crate::protocols;
         use crate::wayland_server::ServerState;
-        use crate::ffi::*;
+        use crate::ffi;
         use std::os::fd::{AsRawFd, RawFd};
 
         #(#generated_dispatch_implementations)*
