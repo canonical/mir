@@ -37,6 +37,7 @@ pub fn generate_ffi(protocols: &Vec<WaylandProtocol>, builders: &Vec<CppBuilder>
         use crate::middleware::*;
 
         #[cxx::bridge(namespace = "mir::wayland_rs")]
+        #[allow(dead_code, unused_imports)]
         mod ffi {
             extern "Rust" {
                 type WaylandServer;

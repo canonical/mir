@@ -25,6 +25,7 @@ mod protocols {
     include!("protocols.rs");
 }
 
+#[allow(dead_code, unused_imports)]
 mod middleware {
     include!("middleware.rs");
 }
