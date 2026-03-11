@@ -191,25 +191,23 @@ fn generate_global_dispatch_impl(
     let ext_interface_struct_name = format_ident!("{}Ext", snake_to_pascal(&interface.name));
     let create_global_method = format_ident!("create_{}", &interface.name);
     quote! {
-        impl GlobalDispatch<#namespace_name::#interface_name::#interface_struct_name, ffi::GlobalFactory>
+        impl GlobalDispatch<#namespace_name::#interface_name::#interface_struct_name, Arc<Mutex<ffi::GlobalFactory>>>
             for ServerState
         {
-
             fn bind(
                 _state: &mut Self,
                 _handle: &wayland_server::DisplayHandle,
                 _client: &wayland_server::Client,
                 resource: New<#namespace_name::#interface_name::#interface_struct_name>,
-                global_data: &ffi::GlobalFactory,
+                global_data: &Arc<Mutex<ffi::GlobalFactory>>,
                 data_init: &mut wayland_server::DataInit<'_, Self>,
             ) {
                 use crate::ffi;
+                let mut guard = global_data.lock().unwrap();
                 let global = unsafe {
-                    ::std::pin::Pin::new_unchecked(
-                        &mut *(global_data as *const ffi::GlobalFactory as *mut ffi::GlobalFactory)
-                    )
+                    ::std::pin::Pin::new_unchecked(&mut *guard)
                 }.#create_global_method();
-                let instance = data_init.init(resource, global);
+                let instance = data_init.init(resource, Arc::new(Mutex::new(global)));
                 let boxed = Box::new(crate::middleware::#ext_interface_struct_name{ wrapped: instance });
             }
         }
@@ -295,10 +293,11 @@ fn generate_request_body(request: &WaylandRequest, ext_struct_name: &Ident) -> T
             .collect();
 
         quote! {
-            data_init.init(#new_id_name, unsafe {
-                &mut *(data as *const cxx::UniquePtr<ffi::#ext_struct_name>
-                    as *mut cxx::UniquePtr<ffi::#ext_struct_name>)
-            }.pin_mut().#snake_request_name(#( #call_arg_names ),*));
+            let mut guard = data.lock().unwrap();
+            let child = unsafe {
+                ::std::pin::Pin::new_unchecked(&mut *guard)
+            }.pin_mut().#snake_request_name(#( #call_arg_names ),*);
+            data_init.init(#new_id_name, Arc::new(Mutex::new(child)));
         }
     } else {
         let call_arg_names: Vec<TokenStream> = request
@@ -311,9 +310,9 @@ fn generate_request_body(request: &WaylandRequest, ext_struct_name: &Ident) -> T
             .collect();
 
         quote! {
+            let mut guard = data.lock().unwrap();
             unsafe {
-                &mut *(data as *const cxx::UniquePtr<ffi::#ext_struct_name>
-                    as *mut cxx::UniquePtr<ffi::#ext_struct_name>)
+                ::std::pin::Pin::new_unchecked(&mut *guard)
             }.pin_mut().#snake_request_name(#( #call_arg_names ),*);
         }
     }
@@ -429,7 +428,7 @@ fn generate_dispatch_impl(
         unsafe impl Send for ffi::#ext_struct_name {}
         unsafe impl Sync for ffi::#ext_struct_name {}
 
-        impl Dispatch<#namespace_name::#interface_name::#protocol_struct_name, cxx::UniquePtr<ffi::#ext_struct_name>>
+        impl Dispatch<#namespace_name::#interface_name::#protocol_struct_name, Arc<Mutex<cxx::UniquePtr<ffi::#ext_struct_name>>>>
             for ServerState
         {
             fn request(
@@ -437,7 +436,7 @@ fn generate_dispatch_impl(
                 _client: &Client,
                 _resource: &#namespace_name::#interface_name::#protocol_struct_name,
                 request: <#namespace_name::#interface_name::#protocol_struct_name as wayland_server::Resource>::Request,
-                #data_name: &cxx::UniquePtr<ffi::#ext_struct_name>,
+                #data_name: &Arc<Mutex<cxx::UniquePtr<ffi::#ext_struct_name>>>,
                 _dhandle: &DisplayHandle,
                 #data_init_name: &mut DataInit<'_, Self>,
             ) {
@@ -486,6 +485,7 @@ fn write_dispatch_rs(protocols: &Vec<WaylandProtocol>) {
         use crate::wayland_server::ServerState;
         use crate::ffi;
         use std::os::fd::{AsRawFd, RawFd};
+        use std::sync::{Arc, Mutex};
 
         #(#generated_dispatch_implementations)*
     };
