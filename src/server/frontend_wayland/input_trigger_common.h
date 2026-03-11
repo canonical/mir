@@ -100,7 +100,7 @@ public:
 class InputTriggerRegistry::ActionGroup
 {
 public:
-    ActionGroup(shell::TokenAuthority& token_authority, std::function<void()>&& on_destroy);
+    ActionGroup(std::shared_ptr<shell::TokenAuthority> const& token_authority, std::function<void()>&& on_destroy);
     ~ActionGroup();
 
     ActionGroup(ActionGroup const&) = delete;
@@ -112,7 +112,7 @@ public:
 
 private:
     std::function<void()> const on_destroy{};
-    shell::TokenAuthority& token_authority;
+    std::shared_ptr<shell::TokenAuthority> token_authority;
     std::vector<wayland::Weak<Action const>> actions;
     std::optional<ActivationToken> activation_token;
 };

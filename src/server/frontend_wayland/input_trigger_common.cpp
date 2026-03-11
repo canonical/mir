@@ -116,7 +116,8 @@ auto ActivationToken::token_string() const& -> char const*
     return token.c_str();
 }
 
-ActionGroup::ActionGroup(shell::TokenAuthority& token_authority, std::function<void()>&& on_destroy) :
+ActionGroup::ActionGroup(
+    std::shared_ptr<shell::TokenAuthority> const& token_authority, std::function<void()>&& on_destroy) :
     on_destroy{std::move(on_destroy)},
     token_authority{token_authority}
 {
@@ -140,7 +141,7 @@ void ActionGroup::send_end(MirEvent const& event)
 {
     iterate_and_erase_expired(
         actions,
-        [activation_token = ActivationToken{*event.to_input(), token_authority}](auto const& valid_action)
+        [activation_token = ActivationToken{*event.to_input(), *token_authority}](auto const& valid_action)
         { valid_action.end(activation_token); });
 
     activation_token.reset();
@@ -148,7 +149,7 @@ void ActionGroup::send_end(MirEvent const& event)
 
 void ActionGroup::send_begin(MirEvent const& event)
 {
-    activation_token = ActivationToken{*event.to_input(), token_authority};
+    activation_token = ActivationToken{*event.to_input(), *token_authority};
 
     iterate_and_erase_expired(
         actions, [&](auto const& valid_action) { valid_action.begin(*activation_token); });
@@ -168,7 +169,7 @@ auto ActionGroupManager::create_new_action_group() -> std::pair<std::string, std
 
     auto token_ptr = std::make_shared<std::string>();
     auto const ag = std::make_shared<ActionGroup>(
-        *token_authority,
+        token_authority,
         [this, token_ptr]()
         {
             action_groups.erase(*token_ptr);
