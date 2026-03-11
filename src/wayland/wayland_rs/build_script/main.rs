@@ -157,9 +157,12 @@ fn write_protocols_rs(protocols: &Vec<WaylandProtocol>) {
     });
 
     let generated_protocol_rs = quote! {
-        use wayland_server;
+        #[allow(dead_code, unused_imports)]
+        mod protocols {
+            use wayland_server;
 
-        #(#generated_protocols)*
+            #(#generated_protocols)*
+        }
     };
 
     write_generated_rust_file(generated_protocol_rs, "protocols.rs");
@@ -482,14 +485,17 @@ fn write_dispatch_rs(protocols: &Vec<WaylandProtocol>) {
         .map(|protocol| generate_dispatch_implementations(protocol));
 
     let generated_protocol_rs = quote! {
-        use wayland_server::{Client, DataInit, Dispatch, GlobalDispatch, New, DisplayHandle, Resource};
-        use crate::protocols;
-        use crate::wayland_server::ServerState;
-        use crate::ffi;
-        use std::os::fd::{AsRawFd, RawFd};
-        use std::sync::{Arc, Mutex};
+        #[allow(dead_code, unused_imports)]
+        mod dispatch {
+            use wayland_server::{Client, DataInit, Dispatch, GlobalDispatch, New, DisplayHandle, Resource};
+            use crate::protocols;
+            use crate::wayland_server::ServerState;
+            use crate::ffi;
+            use std::os::fd::{AsRawFd, RawFd};
+            use std::sync::{Arc, Mutex};
 
-        #(#generated_dispatch_implementations)*
+            #(#generated_dispatch_implementations)*
+        }
     };
 
     write_generated_rust_file(generated_protocol_rs, "dispatch.rs");

@@ -33,14 +33,16 @@ pub fn generate_wayland_interface_middleware(protocols: &Vec<WaylandProtocol>) -
     let extensions = protocols.iter().flat_map(generate_extensions_for_protocol);
 
     quote! {
-        use crate::wayland_server::*;
-        use wayland_server::protocol::*;
-        use cxx::{CxxString, CxxVector};
-        use std::os::unix::io::BorrowedFd;
+        #[allow(dead_code, unused_imports)]
+        mod middleware {
+            use crate::wayland_server::*;
+            use wayland_server::protocol::*;
+            use cxx::{CxxString, CxxVector};
+            use std::os::unix::io::BorrowedFd;
+            #(#use_imports)*
 
-        #(#use_imports)*
-
-        #(#extensions)*
+            #(#extensions)*
+        }
     }
 }
 
