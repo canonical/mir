@@ -92,6 +92,8 @@ public:
 
     Action(Action const&) = delete;
     auto operator=(Action const&) -> Action& = delete;
+    Action(Action&&) = delete;
+    auto operator=(Action&&) -> Action& = delete;
 
     virtual void end(ActivationToken const& activation_token) const = 0;
     virtual void begin(ActivationToken const& activation_token) const = 0;
@@ -105,6 +107,8 @@ public:
 
     ActionGroup(ActionGroup const&) = delete;
     auto operator=(ActionGroup const&) -> ActionGroup& = delete;
+    ActionGroup(ActionGroup&&) = delete;
+    auto operator=(ActionGroup&&) -> ActionGroup& = delete;
 
     void add(wayland::Weak<Action const> action);
     void send_end(MirEvent const& event);
@@ -151,6 +155,8 @@ public:
 
     Trigger(Trigger const&) = delete;
     auto operator=(Trigger const&) -> Trigger& = delete;
+    Trigger(Trigger&&) = delete;
+    auto operator=(Trigger&&) -> Trigger& = delete;
 
     void associate_with_action_group(std::shared_ptr<ActionGroup> action_group);
     void unassociate_with_action_group(std::shared_ptr<ActionGroup> action_group);
