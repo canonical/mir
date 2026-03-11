@@ -5,9 +5,12 @@ add_rust_cxx_library(mirwayland_rs
   INCLUDES ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
+file(GLOB WAYLAND_RS_INCLUDE_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/include/*.cpp")
+
 add_executable(
   mirwayland_rs-demo
   ${CMAKE_CURRENT_SOURCE_DIR}/example/main.cpp
+  ${WAYLAND_RS_INCLUDE_SOURCES}
 )
 
 target_include_directories(mirwayland_rs-demo
