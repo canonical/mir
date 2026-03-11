@@ -10,7 +10,6 @@
 use crate::cpp_builder::CppBuilder;
 use crate::helpers::format_wayland_interface_to_rust_extension_struct;
 
-use super::helpers::snake_to_pascal;
 use super::protocol_middleware_generation::wayland_arg_to_ffi_rust_str;
 use super::{InterfaceItem, WaylandEvent, WaylandInterface, WaylandProtocol};
 use proc_macro2::TokenStream;
