@@ -146,7 +146,11 @@ public:
         unchanged,    // trigger state did not change
     };
 
+    Trigger() = default;
     virtual ~Trigger() = default;
+
+    Trigger(Trigger const&) = delete;
+    auto operator=(Trigger const&) -> Trigger& = delete;
 
     void associate_with_action_group(std::shared_ptr<ActionGroup> action_group);
     void unassociate_with_action_group(std::shared_ptr<ActionGroup> action_group);
