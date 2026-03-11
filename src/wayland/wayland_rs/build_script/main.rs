@@ -237,7 +237,7 @@ fn transform_argument_for_cpp(arg: &WaylandArg) -> Option<TokenStream> {
         // as parameters for objects.
         WaylandArgType::Object => {
             let arg_type = format_ident!(
-                "{}",
+                "{}Impl",
                 snake_to_pascal(arg.interface.clone().unwrap().as_str())
             );
             if arg.allow_null.unwrap_or(false) {
