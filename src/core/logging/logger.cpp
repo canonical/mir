@@ -110,7 +110,7 @@ void ml::format_message(std::ostream& out, Severity severity, std::string const&
             (offset = std::strftime(
                 buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", &tm)))
         {
-            auto eos = std::format_to_n(buf + offset, sizeof(buf) - offset,
+            auto eos = std::format_to_n(buf + offset, sizeof(buf) - offset - 1,
                 ".{:06}", micros).out;
             *eos = '\0';
             fmt_now = buf;
@@ -123,7 +123,7 @@ void ml::format_message(std::ostream& out, Severity severity, std::string const&
 
     // From here, no dynamic allocations
     char ts_lut[64]; // "[yyyy:mm:dd HH:MM:SS.uuuuuu] < CRITICAL! >: "
-    auto ctx_eos = std::format_to_n(ts_lut, sizeof(ts_lut), "[{}] {}",
+    auto ctx_eos = std::format_to_n(ts_lut, sizeof(ts_lut) - 1, "[{}] {}",
         fmt_now, lut[static_cast<int>(severity)]).out;
     *ctx_eos = '\0';
     out << ts_lut << component << ": " << message << std::endl;
