@@ -72,23 +72,8 @@ void ml::set_logger(std::shared_ptr<Logger> const& new_logger)
     }
 }
 
-void ml::format_message(std::ostream& out, Severity severity, std::string const& message, std::string const& component)
+static std::string format_timestamp()
 {
-    static const char* lut[5] =
-    {
-        "< CRITICAL! > ",
-        "< - ERROR - > ",
-        "< -warning- > ",
-        "<information> ",
-        "< - debug - > "
-    };
-
-    if (!out || !out.good())
-    {
-        std::cerr << "Failed to write to log file: " << errno << std::endl;
-        return;
-    }
-
     std::string fmt_now;
     auto now = std::chrono::system_clock::now();
     auto now_us =
@@ -120,6 +105,26 @@ void ml::format_message(std::ostream& out, Severity severity, std::string const&
             fmt_now = "unknown-time";
         }
     }
+    return fmt_now;
+}
+
+void ml::format_message(std::ostream& out, Severity severity, std::string const& message, std::string const& component)
+{
+    static const char* lut[5] =
+    {
+        "< CRITICAL! > ",
+        "< - ERROR - > ",
+        "< -warning- > ",
+        "<information> ",
+        "< - debug - > "
+    };
+
+    if (!out || !out.good())
+    {
+        std::cerr << "Failed to write to log file: " << errno << std::endl;
+        return;
+    }
+    const auto fmt_now = format_timestamp();
 
     // From here, no dynamic allocations
     char ts_lut[64]; // "[yyyy-mm-dd HH:MM:SS.uuuuuu] < CRITICAL! >: "
