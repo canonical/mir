@@ -35,7 +35,8 @@ pub fn generate_wayland_interface_middleware(protocols: &Vec<WaylandProtocol>) -
     quote! {
         use crate::wayland_server::*;
         use wayland_server::protocol::*;
-        use cxx::{CxxString, CxxVector, SharedPtr};
+        use cxx::{CxxString, CxxVector};
+        use std::os::unix::io::BorrowedFd;
 
         #(#use_imports)*
 
@@ -182,7 +183,7 @@ fn wayland_arg_to_rust_param_str(arg: &WaylandArg, interface_name: &str) -> Stri
         WaylandArgType::Object => format!("&{}.wrapped", arg.name.clone()),
         WaylandArgType::NewId => format!("&{}.wrapped", arg.name.clone()),
         WaylandArgType::Array => format!("{}.iter().cloned().collect()", arg.name),
-        WaylandArgType::Fd => arg.name.clone(),
+        WaylandArgType::Fd => format!("unsafe {{ BorrowedFd::borrow_raw({}) }}", arg.name.clone()),
     };
 
     if let Some(e) = &arg.enum_ {
