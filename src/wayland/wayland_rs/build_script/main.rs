@@ -59,6 +59,9 @@ fn main() {
     // as well as the FFI code.
     write_cpp_protocol_implementations(&protocols);
 
+    // Finally, declare the bridges.
+    // This must happen last because `src/ffi.rs` is built by this script and
+    // it may not exist before the build is run.
     cxx_build::bridges(vec!["src/ffi.rs"])
         .include(&include_path)
         .compile("wayland_rs");
