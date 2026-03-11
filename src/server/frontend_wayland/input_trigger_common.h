@@ -103,6 +103,9 @@ public:
     ActionGroup(shell::TokenAuthority& token_authority, std::function<void()>&& on_destroy);
     ~ActionGroup();
 
+    ActionGroup(ActionGroup const&) = delete;
+    auto operator=(ActionGroup const&) -> ActionGroup& = delete;
+
     void add(wayland::Weak<Action const> action);
     void send_end(MirEvent const& event);
     void send_begin(MirEvent const& event);
