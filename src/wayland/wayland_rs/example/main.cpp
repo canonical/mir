@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "wayland_rs/src/lib.rs.h"
+#include "wayland_rs/src/ffi.rs.h"
 #include <wayland-client.h>
 #include <iostream>
 #include <thread>
