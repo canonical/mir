@@ -135,7 +135,7 @@ auto mf::KeyboardStateTracker::keysym_is_pressed(MirInputDeviceId device, xkb_ke
         device_states.at(device).scancode_to_keysym, [keysym](auto const& pair) { return pair.second == keysym; });
 }
 
-auto mf::KeyboardStateTracker::scancode_is_pressed(MirInputDeviceId device, int32_t scancode) const -> bool
+auto mf::KeyboardStateTracker::scancode_is_pressed(MirInputDeviceId device, uint32_t scancode) const -> bool
 {
     if (!device_states.contains(device))
         return false;

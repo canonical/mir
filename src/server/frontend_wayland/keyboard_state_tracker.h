@@ -58,7 +58,7 @@ public:
 
     auto keysym_is_pressed(MirInputDeviceId device, xkb_keysym_t keysym) const -> bool;
 
-    auto scancode_is_pressed(MirInputDeviceId device, int32_t scancode) const -> bool;
+    auto scancode_is_pressed(MirInputDeviceId device, uint32_t scancode) const -> bool;
 
 private:
     /// Owns the per-device XKB keymap and state used to resolve keysyms from
