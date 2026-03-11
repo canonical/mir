@@ -275,7 +275,7 @@ fn transform_argument_for_cpp(arg: &WaylandArg) -> Option<TokenStream> {
 /// 2. Resource creation requests which ask the C++ interface to create
 ///    the resource for them. These methods MUST call data_init.init()
 ///    with the newly created C++ resource.
-fn generate_request_body(request: &WaylandRequest) -> TokenStream {
+fn generate_request_body(request: &WaylandRequest, ext_struct_name: &Ident) -> TokenStream {
     let snake_request_name = dash_to_snake_ident(&sanitize_identifier(request.name.as_str()));
     let new_id_arg = request
         .args
@@ -295,7 +295,10 @@ fn generate_request_body(request: &WaylandRequest) -> TokenStream {
             .collect();
 
         quote! {
-            data_init.init(#new_id_name, data.#snake_request_name(#( #call_arg_names ),*));
+            data_init.init(#new_id_name, unsafe {
+                &mut *(data as *const cxx::UniquePtr<ffi::#ext_struct_name>
+                    as *mut cxx::UniquePtr<ffi::#ext_struct_name>)
+            }.pin_mut().#snake_request_name(#( #call_arg_names ),*));
         }
     } else {
         let call_arg_names: Vec<TokenStream> = request
@@ -308,7 +311,10 @@ fn generate_request_body(request: &WaylandRequest) -> TokenStream {
             .collect();
 
         quote! {
-            data.#snake_request_name(#( #call_arg_names ),*);
+            unsafe {
+                &mut *(data as *const cxx::UniquePtr<ffi::#ext_struct_name>
+                    as *mut cxx::UniquePtr<ffi::#ext_struct_name>)
+            }.pin_mut().#snake_request_name(#( #call_arg_names ),*);
         }
     }
 }
@@ -318,6 +324,7 @@ fn generate_request_handler_arms(
     interface: &protocol_parser::WaylandInterface,
     namespace_name: &TokenStream,
     interface_name: &Ident,
+    ext_struct_name: &Ident,
 ) -> Vec<TokenStream> {
     interface
         .items
@@ -343,7 +350,7 @@ fn generate_request_handler_arms(
                 .filter_map(transform_argument_for_cpp)
                 .collect();
 
-            let body = generate_request_body(request);
+            let body = generate_request_body(request, ext_struct_name);
 
             Some(quote! {
                 #namespace_name::#interface_name::Request::#request_name { #( #arg_names ),* } => {
@@ -372,7 +379,7 @@ fn generate_dispatch_impl(
     let ext_struct_name = format_ident!("{}Impl", snake_to_pascal(&interface.name));
 
     let mut request_handler_arms =
-        generate_request_handler_arms(interface, namespace_name, &interface_name);
+        generate_request_handler_arms(interface, namespace_name, &interface_name, &ext_struct_name);
 
     // If the interface comes from wayland, we need to generate an empty arm because the
     // enum is marked as non-exhaustive.
