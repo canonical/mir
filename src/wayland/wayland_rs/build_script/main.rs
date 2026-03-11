@@ -563,7 +563,8 @@ fn write_cpp_protocol_implementations(protocols: &Vec<WaylandProtocol>) {
     // Write the protocol headers
     for builder in &builders {
         write_cpp_header(&builder);
-        write_cpp_source(&builder);
+        // TODO: Write the C++ source later, as they are not connected at all yet.
+        // write_cpp_source(&builder);
     }
 
     let ffi = generate_ffi(&protocols, &builders);
@@ -753,7 +754,7 @@ fn wayland_request_to_cpp_method(method: &WaylandRequest) -> CppMethod {
 }
 
 fn wayland_event_to_cpp_method(event: &WaylandEvent) -> CppMethod {
-    let mut cpp_method = CppMethod::new(format!("send_{}", event.name), None, false);
+    let mut cpp_method = CppMethod::new(format!("send_{}", event.name), None, true);
     let args = event
         .args
         .iter()
