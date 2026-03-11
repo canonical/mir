@@ -59,11 +59,9 @@ fn generate_use_imports_for_protocol(protocol: &WaylandProtocol) -> Vec<TokenStr
                 ))
                 .expect("Failed to parse full interface path");
 
-                let module_path: syn::Path = syn::parse_str(&format!(
-                    "wayland_server::protocol::{}",
-                    interface.name,
-                ))
-                .expect("Failed to parse interface module path");
+                let module_path: syn::Path =
+                    syn::parse_str(&format!("wayland_server::protocol::{}", interface.name,))
+                        .expect("Failed to parse interface module path");
 
                 (struct_path, module_path)
             } else {
