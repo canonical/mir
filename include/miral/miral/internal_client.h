@@ -20,6 +20,7 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <type_traits>
 
 namespace mir { class Server; namespace scene { class Session; }}
 
@@ -89,6 +90,11 @@ public:
     ///
     /// \param client_object an object describing the client connection
     template <typename ClientObject>
+        requires requires(ClientObject& obj, struct ::wl_display* d, std::weak_ptr<mir::scene::Session> s)
+        {
+            obj(d);
+            obj(s);
+        }
     explicit StartupInternalClient(ClientObject const& client_object) :
         StartupInternalClient(client_object, client_object) {}
 
@@ -139,6 +145,11 @@ public:
     ///
     /// \param client_object an object describing the client connection
     template <typename ClientObject>
+        requires requires(ClientObject& obj, struct ::wl_display* d, std::weak_ptr<mir::scene::Session> s)
+        {
+            obj(d);
+            obj(s);
+        }
     void launch(ClientObject& client_object) const
     {
         launch(
