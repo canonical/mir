@@ -87,7 +87,11 @@ private:
 class InputTriggerRegistry::Action : public virtual wayland::LifetimeTracker
 {
 public:
+    Action() = default;
     virtual ~Action() = default;
+
+    Action(Action const&) = delete;
+    auto operator=(Action const&) -> Action& = delete;
 
     virtual void end(ActivationToken const& activation_token) const = 0;
     virtual void begin(ActivationToken const& activation_token) const = 0;
