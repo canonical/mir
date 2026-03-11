@@ -207,8 +207,11 @@ fn generate_global_dispatch_impl(
                 let global = unsafe {
                     ::std::pin::Pin::new_unchecked(&mut *guard)
                 }.#create_global_method();
-                let instance = data_init.init(resource, Arc::new(Mutex::new(global)));
+                let arc = Arc::new(Mutex::new(global));
+                let instance = data_init.init(resource, arc.clone());
                 let boxed = Box::new(crate::middleware::#ext_interface_struct_name{ wrapped: instance });
+                let mut guard = arc.lock().unwrap();
+                guard.pin_mut().associate(boxed);
             }
         }
     }
