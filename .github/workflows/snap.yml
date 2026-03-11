@@ -62,7 +62,7 @@ jobs:
         launchpad-credentials: ${{ secrets.LAUNCHPAD_CREDENTIALS }}
         launchpad-accept-public-upload: true
         publish: ${{ github.event_name == 'pull_request' && github.repository == github.event.pull_request.head.repo.full_name }}
-        publish-channel: 24/edge/pr${{ github.event.number }}
+        publish-channel: 26/edge/pr${{ github.event.number }}
 
   snap:
     # Only run if we have access to secrets.
@@ -85,11 +85,11 @@ jobs:
         architecture: ${{ fromJSON(needs.arches.outputs.arches) }}
         include:
         - snap: canonical/mir-test-tools
-          track: 24
+          track: 26
         - snap: canonical/confined-shell-wip
           track: latest
         - snap: canonical/ubuntu-frame
-          track: 24
+          track: 26
         - snap: Miriway/Miriway
           track: latest
           review-opts: --allow-classic
@@ -99,7 +99,7 @@ jobs:
       uses: actions/checkout@v6
       with:
         repository: ${{ matrix.snap }}
-        ref: mir-libs-build
+        ref: mir-libs-build-26
         fetch-depth: 0  # needed for version determination
 
     - name: Tweak the stage snap
