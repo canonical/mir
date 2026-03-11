@@ -9,6 +9,8 @@
 //!
 //! use crate::cpp_builder::CppBuilder;
 
+use crate::helpers::format_wayland_interface_to_rust_extension_struct;
+
 use super::helpers::snake_to_pascal;
 use super::{
     InterfaceItem, WaylandArg, WaylandArgType, WaylandEvent, WaylandInterface, WaylandProtocol,
@@ -114,7 +116,7 @@ fn generate_extension_for_interface(interface: &WaylandInterface) -> Option<Toke
         .collect();
 
     let interface_name = format_ident!("{}", snake_to_pascal(&interface.name));
-    let interface_name_ext = format_ident!("{}Ext", snake_to_pascal(&interface.name));
+    let interface_name_ext = format_wayland_interface_to_rust_extension_struct(&interface.name);
     Some(quote! {
         pub struct #interface_name_ext {
             pub wrapped: #interface_name
@@ -164,23 +166,17 @@ pub fn wayland_arg_to_ffi_rust_str(arg: &WaylandArg) -> String {
         WaylandArgType::Fixed => format!("{}: {}", arg.name, "f64"),
         WaylandArgType::String => format!("{}: {}", arg.name, "&CxxString"),
         WaylandArgType::Object => format!(
-            "{}: &Box<{}Ext>",
+            "{}: &Box<{}>",
             arg.name,
-            snake_to_pascal(
-                arg.interface
-                    .clone()
-                    .expect("Object is missing interface")
-                    .as_str(),
+            format_wayland_interface_to_rust_extension_struct(
+                &arg.interface.clone().expect("Object is missing interface")
             )
         ),
         WaylandArgType::NewId => format!(
-            "{}: &Box<{}Ext>",
+            "{}: &Box<{}>",
             arg.name,
-            snake_to_pascal(
-                arg.interface
-                    .clone()
-                    .expect("Object is missing interface")
-                    .as_str(),
+            format_wayland_interface_to_rust_extension_struct(
+                &arg.interface.clone().expect("Object is missing interface")
             )
         ),
         WaylandArgType::Array => format!("{}: {}", arg.name, "&CxxVector<u8>"),

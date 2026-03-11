@@ -43,10 +43,14 @@ pub fn snake_to_pascal(s: &str) -> String {
         .collect()
 }
 
-pub fn format_cpp_class_name(s: &String) -> String {
+/// Formats the Wayland interface name to the name of the class that
+/// provides its C++ implementation.
+pub fn format_wayland_interface_to_cpp_class(s: &String) -> String {
     format!("{}Impl", snake_to_pascal(s))
 }
 
-pub fn format_rust_ext_struct_name(s: &String) -> String {
+/// Formats the Wayland interface name to the name of the struct that
+/// provides its Rust extension implementation.
+pub fn format_wayland_interface_to_rust_extension_struct(s: &String) -> String {
     format!("{}Ext", snake_to_pascal(s))
 }

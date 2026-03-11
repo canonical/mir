@@ -8,6 +8,7 @@
 //! These requests are sent from C++.
 
 use crate::cpp_builder::CppBuilder;
+use crate::helpers::format_wayland_interface_to_rust_extension_struct;
 
 use super::helpers::snake_to_pascal;
 use super::protocol_middleware_generation::wayland_arg_to_ffi_rust_str;
@@ -62,7 +63,8 @@ fn generate_rust_types(protocol: &WaylandProtocol) -> Vec<TokenStream> {
         .iter()
         .filter(|interface| interface.name != "wl_registry" && interface.name != "wl_display")
         .map(|interface| {
-            let interface_name_ext = format_ident!("{}Ext", snake_to_pascal(&interface.name));
+            let interface_name_ext =
+                format_wayland_interface_to_rust_extension_struct(&interface.name);
             quote! { type #interface_name_ext; }
         })
         .collect()
@@ -93,7 +95,7 @@ fn generate_ffi_for_interface(interface: &WaylandInterface) -> TokenStream {
 }
 
 fn generate_ffi_for_event(interface: &WaylandInterface, event: &WaylandEvent) -> TokenStream {
-    let interface_name = format_ident!("{}Ext", snake_to_pascal(&interface.name));
+    let interface_name = format_wayland_interface_to_rust_extension_struct(&interface.name);
     let event_name: syn::Ident = format_ident!("{}", event.name);
     let args: Vec<TokenStream> = event
         .args

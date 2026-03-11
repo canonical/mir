@@ -191,7 +191,8 @@ fn generate_global_dispatch_impl(
     }
 
     let interface_struct_name = format_ident!("{}", snake_to_pascal(&interface.name));
-    let ext_interface_struct_name = format_ident!("{}Ext", snake_to_pascal(&interface.name));
+    let ext_interface_struct_name =
+        format_wayland_interface_to_rust_extension_struct(&interface.name);
     let create_global_method = format_ident!("create_{}", &interface.name);
     quote! {
         impl GlobalDispatch<#namespace_name::#interface_name::#interface_struct_name, Arc<Mutex<ffi::GlobalFactory>>>
@@ -240,10 +241,7 @@ fn transform_argument_for_cpp(arg: &WaylandArg) -> Option<TokenStream> {
         // C++ expects the shared_ptr data that backs these rust objects to be sent
         // as parameters for objects.
         WaylandArgType::Object => {
-            let arg_type = format_ident!(
-                "{}Impl",
-                snake_to_pascal(arg.interface.clone().unwrap().as_str())
-            );
+            let arg_type = format_wayland_interface_to_cpp_class(&arg.interface.clone().unwrap());
             if arg.allow_null.unwrap_or(false) {
                 let null_ptr_name = format_ident!("__{}_null_ptr", arg.name.replace('-', "_"));
                 Some(quote! {
@@ -380,7 +378,7 @@ fn generate_dispatch_impl(
     }
 
     let protocol_struct_name = format_ident!("{}", snake_to_pascal(&interface.name));
-    let ext_struct_name = format_ident!("{}Impl", snake_to_pascal(&interface.name));
+    let ext_struct_name = format_wayland_interface_to_cpp_class(&interface.name);
 
     let mut request_handler_arms =
         generate_request_handler_arms(interface, namespace_name, &interface_name);
@@ -516,7 +514,7 @@ fn create_global_factory(protocols: &Vec<WaylandProtocol>) -> CppBuilder {
             .filter(|interface| interface.is_global)
             .filter(|interface| interface.name != "wl_display" && interface.name != "wl_registry")
             .for_each(|global_interface| {
-                let class_name = format_cpp_class_name(&global_interface.name);
+                let class_name = format_wayland_interface_to_cpp_class(&global_interface.name);
                 namespace.add_forward_declaration_class(&class_name);
 
                 let method = CppMethod::new(
@@ -589,7 +587,9 @@ fn create_ffi_fwd_builder(protocols: &Vec<WaylandProtocol>) -> CppBuilder {
             if interface.name == "wl_registry" || interface.name == "wl_display" {
                 continue;
             }
-            namespace.add_forward_declaration_class(&format_rust_ext_struct_name(&interface.name));
+            namespace.add_forward_declaration_class(
+                &format_wayland_interface_to_rust_extension_struct(&interface.name),
+            );
         }
     }
 
@@ -612,7 +612,7 @@ fn create_cpp_builder(protocol: &WaylandProtocol) -> CppBuilder {
         namespace.add_class(class);
     }
     for interface in &protocol.dependencies {
-        let class_name = format_cpp_class_name(interface);
+        let class_name = format_wayland_interface_to_cpp_class(interface);
         namespace.add_forward_declaration_class(&class_name);
     }
     builder.add_namespace(namespace);
@@ -638,7 +638,7 @@ fn write_cpp_source(builder: &CppBuilder) {
 }
 
 fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
-    let class_name = format_cpp_class_name(&interface.name);
+    let class_name = format_wayland_interface_to_cpp_class(&interface.name);
     let mut class = CppClass::new(class_name);
     let methods = interface.items.iter().filter_map(|item| {
         if let protocol_parser::InterfaceItem::Request(request) = item {
@@ -657,7 +657,9 @@ fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
     // Add the method that associates the boxed rust interface with the C++ class.
     let mut associate_method = CppMethod::new("associate".to_string(), None, true);
     associate_method.add_arg(CppArg {
-        cpp_type: CppType::Box(snake_to_pascal(&format!("{}Ext", &interface.name))),
+        cpp_type: CppType::Box(snake_to_pascal(
+            &format_wayland_interface_to_rust_extension_struct(&interface.name),
+        )),
         name: "instance".to_string(),
     });
     class.add_method(associate_method);
@@ -698,7 +700,7 @@ fn wayland_arg_to_cpp_arg(arg: &WaylandArg) -> CppArg {
         WaylandArgType::Uint => CppType::CppU32,
         WaylandArgType::Fixed => CppType::CppF64,
         WaylandArgType::String => CppType::String,
-        WaylandArgType::Object => CppType::Object(format_cpp_class_name(
+        WaylandArgType::Object => CppType::Object(format_wayland_interface_to_cpp_class(
             &arg.interface.clone().expect("Object is missing interface"),
         )),
         WaylandArgType::Array => CppType::Array,
@@ -718,7 +720,8 @@ fn wayland_request_to_cpp_method(method: &WaylandRequest) -> CppMethod {
         .find(|arg| arg.type_ == WaylandArgType::NewId)
     {
         Some(new_id_arg) => {
-            let name = format_cpp_class_name(&new_id_arg.interface.clone().unwrap());
+            let name =
+                format_wayland_interface_to_cpp_class(&new_id_arg.interface.clone().unwrap());
             Some(CppType::Object(name))
         }
         None => None,
