@@ -563,8 +563,7 @@ fn write_cpp_protocol_implementations(protocols: &Vec<WaylandProtocol>) {
     // Write the protocol headers
     for builder in &builders {
         write_cpp_header(&builder);
-        // TODO: Write the C++ source later, as they are not connected at all yet.
-        // write_cpp_source(&builder);
+        write_cpp_source(&builder);
     }
 
     let ffi = generate_ffi(&protocols, &builders);
