@@ -45,24 +45,44 @@ pub fn generate_wayland_interface_middleware(protocols: &Vec<WaylandProtocol>) -
 }
 
 fn generate_use_imports_for_protocol(protocol: &WaylandProtocol) -> Vec<TokenStream> {
+    let is_core_wayland = protocol.name == "wayland";
     protocol
         .interfaces
         .iter()
         .filter(|interface| interface.name != "wl_registry" && interface.name != "wl_display")
         .flat_map(|interface| {
-            let interface_struct_path: syn::Path = syn::parse_str(&format!(
-                "crate::protocols::{}::{}::{}",
-                protocol.name,
-                interface.name,
-                snake_to_pascal(&interface.name)
-            ))
-            .expect("Failed to parse full interface path");
+            let (interface_struct_path, interface_module_path) = if is_core_wayland {
+                let struct_path: syn::Path = syn::parse_str(&format!(
+                    "wayland_server::protocol::{}::{}",
+                    interface.name,
+                    snake_to_pascal(&interface.name)
+                ))
+                .expect("Failed to parse full interface path");
 
-            let interface_module_path: syn::Path = syn::parse_str(&format!(
-                "crate::protocols::{}::{}",
-                protocol.name, interface.name,
-            ))
-            .expect("Failed to parse interface module path");
+                let module_path: syn::Path = syn::parse_str(&format!(
+                    "wayland_server::protocol::{}",
+                    interface.name,
+                ))
+                .expect("Failed to parse interface module path");
+
+                (struct_path, module_path)
+            } else {
+                let struct_path: syn::Path = syn::parse_str(&format!(
+                    "crate::protocols::{}::{}::{}",
+                    protocol.name,
+                    interface.name,
+                    snake_to_pascal(&interface.name)
+                ))
+                .expect("Failed to parse full interface path");
+
+                let module_path: syn::Path = syn::parse_str(&format!(
+                    "crate::protocols::{}::{}",
+                    protocol.name, interface.name,
+                ))
+                .expect("Failed to parse interface module path");
+
+                (struct_path, module_path)
+            };
 
             vec![
                 quote! { use #interface_struct_path; },
