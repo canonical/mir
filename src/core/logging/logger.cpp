@@ -18,6 +18,8 @@
 #include <mir/logging/logger.h>
 
 #include <iostream>
+#include <chrono>
+#include <format>
 #include <mutex>
 #include <cstdarg>
 #include <cstdio>
@@ -81,27 +83,50 @@ void ml::format_message(std::ostream& out, Severity severity, std::string const&
         "< - debug - > "
     };
 
-    timespec ts{};
-    clock_gettime(CLOCK_REALTIME, &ts);
-    char now[32];
-    auto offset = strftime(now, sizeof(now), "%F %T", localtime(&ts.tv_sec));
-    snprintf(now+offset, sizeof(now)-offset, ".%06ld", ts.tv_nsec / 1000);
-
     if (!out || !out.good())
     {
         std::cerr << "Failed to write to log file: " << errno << std::endl;
         return;
     }
 
-    out << "["
-        << now
-        << "] "
-        << lut[static_cast<int>(severity)]
-        << component
-        << ": "
-        << message
-        << std::endl;
+    std::string fmt_now;
+    auto now = std::chrono::system_clock::now();
+    auto now_us =
+        std::chrono::time_point_cast<std::chrono::microseconds>(now);
+    try
+    {
+        auto local =
+            std::chrono::zoned_time{std::chrono::current_zone(), now_us};
+        fmt_now = std::format("{:%F %T}", local);
+    }
+    catch (...)
+    {
+        auto now_time_t = std::chrono::system_clock::to_time_t(now);
+        auto micros = now_us.time_since_epoch().count() % 1000000;
+        char buf[32]{};
+        std::tm tm{};
+        size_t offset;
+        if (gmtime_r(&now_time_t, &tm) != nullptr &&
+            (offset = std::strftime(
+                buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", &tm)))
+        {
+            auto eos = std::format_to_n(buf + offset, sizeof(buf) - offset,
+                ".{:06}", micros).out;
+            *eos = '\0';
+            fmt_now = buf;
+        }
+        else
+        {
+            fmt_now = "unknown-time";
+        }
+    }
 
+    // From here, no dynamic allocations
+    char ts_lut[64]; // "[yyyy:mm:dd HH:MM:SS.uuuuuu] < CRITICAL! >: "
+    auto ctx_eos = std::format_to_n(ts_lut, sizeof(ts_lut), "[{}] {}",
+        fmt_now, lut[static_cast<int>(severity)]).out;
+    *ctx_eos = '\0';
+    out << ts_lut << component << ": " << message << std::endl;
 }
 
 namespace mir
