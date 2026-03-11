@@ -20,7 +20,6 @@
 #include <functional>
 #include <memory>
 #include <string>
-#include <type_traits>
 
 namespace mir { class Server; namespace scene { class Session; }}
 
