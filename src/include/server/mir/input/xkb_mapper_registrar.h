@@ -21,6 +21,7 @@
 #include <mir/input/key_mapper.h>
 #include <mir/input/keymap.h>
 #include <mir/input/keyboard_leds.h>
+#include <mir/input/xkb_mapper.h>
 #include <mir/optional_value.h>
 #include <mir/events/xkb_modifiers.h>
 #include <mir/observer_multiplexer.h>
@@ -36,14 +37,6 @@ namespace mir
 {
 namespace input
 {
-
-using XKBContextPtr = std::unique_ptr<xkb_context, void(*)(xkb_context*)>;
-XKBContextPtr make_unique_context();
-
-using XKBStatePtr = std::unique_ptr<xkb_state, void(*)(xkb_state*)>;
-using XKBComposeTablePtr = std::unique_ptr<xkb_compose_table, void(*)(xkb_compose_table*)>;
-using XKBComposeStatePtr = std::unique_ptr<xkb_compose_state, void(*)(xkb_compose_state*)>;
-
 namespace receiver
 {
 
