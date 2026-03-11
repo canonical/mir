@@ -8,7 +8,11 @@ pub fn write_generated_rust_file(tokens: TokenStream, filename: &str) {
     let out_dir = "src";
     let dest_path = std::path::Path::new(&out_dir).join(filename);
 
-    let syntax_tree: syn::File = syn::parse2(tokens).unwrap();
+    let syntax_tree: syn::File = syn::parse2(tokens.clone()).unwrap_or_else(|e| {
+        panic!(
+            "syn::parse2 failed while generating '{filename}': {e}\n\nGenerated tokens:\n{tokens}"
+        )
+    });
     let formatted_code = prettyplease::unparse(&syntax_tree);
 
     fs::write(dest_path, formatted_code).unwrap();

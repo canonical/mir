@@ -9,6 +9,7 @@
 //!
 //! use crate::cpp_builder::CppBuilder;
 
+use crate::cpp_builder::sanitize_identifier;
 use crate::helpers::format_wayland_interface_to_rust_extension_struct;
 
 use super::helpers::snake_to_pascal;
@@ -116,7 +117,10 @@ fn generate_extension_for_interface(interface: &WaylandInterface) -> Option<Toke
         .collect();
 
     let interface_name = format_ident!("{}", snake_to_pascal(&interface.name));
-    let interface_name_ext = format_wayland_interface_to_rust_extension_struct(&interface.name);
+    let interface_name_ext = format_ident!(
+        "{}",
+        format_wayland_interface_to_rust_extension_struct(&interface.name)
+    );
     Some(quote! {
         pub struct #interface_name_ext {
             pub wrapped: #interface_name
@@ -129,7 +133,7 @@ fn generate_extension_for_interface(interface: &WaylandInterface) -> Option<Toke
 }
 
 fn generate_extension_method_for_event(event: &WaylandEvent, interface_name: &str) -> TokenStream {
-    let event_name: syn::Ident = format_ident!("{}", event.name);
+    let event_name: syn::Ident = format_ident!("{}", sanitize_identifier(&event.name));
     let ffi_args: Vec<TokenStream> = event
         .args
         .iter()
@@ -160,27 +164,28 @@ fn generate_extension_method_for_event(event: &WaylandEvent, interface_name: &st
 }
 
 pub fn wayland_arg_to_ffi_rust_str(arg: &WaylandArg) -> String {
+    let name = sanitize_identifier(&arg.name);
     let mut arg_str = match arg.type_ {
-        WaylandArgType::Int => format!("{}: {}", arg.name, "i32"),
-        WaylandArgType::Uint => format!("{}: {}", arg.name, "u32"),
-        WaylandArgType::Fixed => format!("{}: {}", arg.name, "f64"),
-        WaylandArgType::String => format!("{}: {}", arg.name, "&CxxString"),
+        WaylandArgType::Int => format!("{}: {}", name, "i32"),
+        WaylandArgType::Uint => format!("{}: {}", name, "u32"),
+        WaylandArgType::Fixed => format!("{}: {}", name, "f64"),
+        WaylandArgType::String => format!("{}: {}", name, "&CxxString"),
         WaylandArgType::Object => format!(
             "{}: &Box<{}>",
-            arg.name,
+            name,
             format_wayland_interface_to_rust_extension_struct(
                 &arg.interface.clone().expect("Object is missing interface")
             )
         ),
         WaylandArgType::NewId => format!(
             "{}: &Box<{}>",
-            arg.name,
+            name,
             format_wayland_interface_to_rust_extension_struct(
                 &arg.interface.clone().expect("Object is missing interface")
             )
         ),
-        WaylandArgType::Array => format!("{}: {}", arg.name, "&CxxVector<u8>"),
-        WaylandArgType::Fd => format!("{}: {}", arg.name, "i32"),
+        WaylandArgType::Array => format!("{}: {}", name, "&CxxVector<u8>"),
+        WaylandArgType::Fd => format!("{}: {}", name, "i32"),
     };
 
     if arg.allow_null.unwrap_or(false) {
@@ -191,15 +196,16 @@ pub fn wayland_arg_to_ffi_rust_str(arg: &WaylandArg) -> String {
 }
 
 fn wayland_arg_to_rust_param_str(arg: &WaylandArg, interface_name: &str) -> String {
+    let name = sanitize_identifier(&arg.name);
     let mut param = match arg.type_ {
-        WaylandArgType::Int => arg.name.clone(),
-        WaylandArgType::Uint => arg.name.clone(),
-        WaylandArgType::Fixed => arg.name.clone(),
-        WaylandArgType::String => format!("{}.to_string()", arg.name),
-        WaylandArgType::Object => format!("&{}.wrapped", arg.name.clone()),
-        WaylandArgType::NewId => format!("&{}.wrapped", arg.name.clone()),
-        WaylandArgType::Array => format!("{}.iter().cloned().collect()", arg.name),
-        WaylandArgType::Fd => format!("unsafe {{ BorrowedFd::borrow_raw({}) }}", arg.name.clone()),
+        WaylandArgType::Int => name.clone(),
+        WaylandArgType::Uint => name.clone(),
+        WaylandArgType::Fixed => name.clone(),
+        WaylandArgType::String => format!("{}.to_string()", name),
+        WaylandArgType::Object => format!("&{}.wrapped", name),
+        WaylandArgType::NewId => format!("&{}.wrapped", name),
+        WaylandArgType::Array => format!("{}.iter().cloned().collect()", name),
+        WaylandArgType::Fd => format!("unsafe {{ BorrowedFd::borrow_raw({}) }}", name),
     };
 
     if let Some(e) = &arg.enum_ {
@@ -220,5 +226,5 @@ fn wayland_arg_to_rust_param_str(arg: &WaylandArg, interface_name: &str) -> Stri
         param = format!("if has_{} {{ Some({}) }} else {{ None }}", arg.name, param);
     }
 
-    return param;
+    param
 }

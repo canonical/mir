@@ -194,8 +194,10 @@ fn generate_global_dispatch_impl(
     }
 
     let interface_struct_name = format_ident!("{}", snake_to_pascal(&interface.name));
-    let ext_interface_struct_name =
-        format_wayland_interface_to_rust_extension_struct(&interface.name);
+    let ext_interface_struct_name = format_ident!(
+        "{}",
+        format_wayland_interface_to_rust_extension_struct(&interface.name)
+    );
     let create_global_method = format_ident!("create_{}", &interface.name);
     quote! {
         impl GlobalDispatch<#namespace_name::#interface_name::#interface_struct_name, Arc<Mutex<ffi::GlobalFactory>>>
@@ -244,7 +246,10 @@ fn transform_argument_for_cpp(arg: &WaylandArg) -> Option<TokenStream> {
         // C++ expects the shared_ptr data that backs these rust objects to be sent
         // as parameters for objects.
         WaylandArgType::Object => {
-            let arg_type = format_wayland_interface_to_cpp_class(&arg.interface.clone().unwrap());
+            let arg_type = format_ident!(
+                "{}",
+                format_wayland_interface_to_cpp_class(&arg.interface.clone().unwrap())
+            );
             if arg.allow_null.unwrap_or(false) {
                 let null_ptr_name = format_ident!("__{}_null_ptr", arg.name.replace('-', "_"));
                 Some(quote! {
@@ -381,7 +386,8 @@ fn generate_dispatch_impl(
     }
 
     let protocol_struct_name = format_ident!("{}", snake_to_pascal(&interface.name));
-    let ext_struct_name = format_wayland_interface_to_cpp_class(&interface.name);
+    let ext_struct_name =
+        format_ident!("{}", format_wayland_interface_to_cpp_class(&interface.name));
 
     let mut request_handler_arms =
         generate_request_handler_arms(interface, namespace_name, &interface_name);
