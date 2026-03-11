@@ -630,6 +630,8 @@ fn create_cpp_builder(protocol: &WaylandProtocol) -> CppBuilder {
     //   ffi.rs.h  →  include/*.h  →  ffi.rs.h
     builder.add_include("\"ffi_fwd.h\"".to_string());
     builder.add_include("<memory>".to_string());
+    builder.add_include("<cstdint>".to_string());
+    builder.add_include("<rust/cxx.h>".to_string());
 
     builder
 }
