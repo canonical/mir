@@ -66,7 +66,7 @@ private:
     struct XkbKeyState
     {
         /// Update the compiled keymap and XKB state when a new keymap arrives.
-        /// \param new_keymap  The keymap carried on the incoming event.
+        /// \param new_keymap  The keymap carried on the incoming event. Must not be null.
         /// \param context     The shared XKB context owned by the tracker.
         void update_keymap(std::shared_ptr<mir::input::Keymap> const& new_keymap, xkb_context* context);
 
