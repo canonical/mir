@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_INPUT_RECEIVER_XKB_MAPPER_H_
-#define MIR_INPUT_RECEIVER_XKB_MAPPER_H_
+#ifndef MIR_INPUT_RECEIVER_XKB_MAPPER_REGISTRAR_H_
+#define MIR_INPUT_RECEIVER_XKB_MAPPER_REGISTRAR_H_
 
 #include <mir/input/led_observer_registrar.h>
 #include <mir/input/key_mapper.h>
@@ -144,4 +144,4 @@ private:
 }
 }
 
-#endif // MIR_INPUT_RECEIVER_XKB_MAPPER_H_
+#endif // MIR_INPUT_RECEIVER_XKB_MAPPER_REGISTRAR_H_
