@@ -24,8 +24,15 @@
 #include <mir/wayland/lifetime_tracker.h>
 #include <mir/wayland/weak.h>
 
+#include <array>
+#include <functional>
+#include <memory>
+#include <optional>
 #include <string>
+#include <string_view>
 #include <unordered_map>
+#include <utility>
+#include <vector>
 
 namespace mir
 {
