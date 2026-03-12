@@ -90,6 +90,21 @@ void mf::KeyboardStateTracker::process(MirEvent const& event)
     auto& [scancode_to_keysym, shift_state, xkb_key_state] =
         device_states[input_event->device_id()];
 
+    if (action == mir_keyboard_action_down)
+    {
+        scancode_to_keysym[scancode] = keysym;
+    }
+    else if (action == mir_keyboard_action_up)
+    {
+        // Remove by scancode so that a mismatched key-up keysym (caused by a
+        // modifier change while the key was held) does not leave stale entries.
+        scancode_to_keysym.erase(scancode);
+    }
+    else
+    {
+        return;
+    }
+
     // Repeat events lack a keymap
     if (key_event->keymap())
         xkb_key_state.update_keymap(key_event->keymap(), context.get());
@@ -102,17 +117,6 @@ void mf::KeyboardStateTracker::process(MirEvent const& event)
     auto const prev_shift_state = shift_state;
     shift_state = modifiers & (mir_input_event_modifier_shift | mir_input_event_modifier_shift_left |
                                mir_input_event_modifier_shift_right);
-
-    if (action == mir_keyboard_action_down)
-    {
-        scancode_to_keysym[scancode] = keysym;
-    }
-    else if (action == mir_keyboard_action_up)
-    {
-        // Remove by scancode so that a mismatched key-up keysym (caused by a
-        // modifier change while the key was held) does not leave stale entries.
-        scancode_to_keysym.erase(scancode);
-    }
 
     // When the shift state changes, re-derive every pressed keysym from its
     // scancode using the layout-aware XKB state.
