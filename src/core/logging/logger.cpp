@@ -72,40 +72,23 @@ void ml::set_logger(std::shared_ptr<Logger> const& new_logger)
     }
 }
 
-static std::string format_timestamp()
+namespace {
+
+void format_timestamp(char *buffer, size_t bufsize)
 {
-    std::string fmt_now;
     auto now = std::chrono::system_clock::now();
-    auto now_us =
-        std::chrono::time_point_cast<std::chrono::microseconds>(now);
-    try
-    {
+    auto now_us = std::chrono::time_point_cast<std::chrono::microseconds>(now);
+    char *eos;
+    try {
         auto local =
             std::chrono::zoned_time{std::chrono::current_zone(), now_us};
-        fmt_now = std::format("{:%F %T}", local);
+        eos = std::format_to_n(buffer, bufsize - 1, "{:%F %T}", local).out;
+    } catch (...) {
+        eos = std::format_to_n(buffer, bufsize - 1, "{:%F %T} UTC", now_us).out;
     }
-    catch (...)
-    {
-        auto now_time_t = std::chrono::system_clock::to_time_t(now);
-        auto micros = now_us.time_since_epoch().count() % 1000000;
-        char buf[32]{};
-        std::tm tm{};
-        size_t offset;
-        if (localtime_r(&now_time_t, &tm) != nullptr &&
-            (offset = std::strftime(
-                buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", &tm)))
-        {
-            auto eos = std::format_to_n(buf + offset, sizeof(buf) - offset - 1,
-                ".{:06}", micros).out;
-            *eos = '\0';
-            fmt_now = buf;
-        }
-        else
-        {
-            fmt_now = "unknown-time";
-        }
-    }
-    return fmt_now;
+    *eos = '\0';
+}
+
 }
 
 void ml::format_message(std::ostream& out, Severity severity, std::string const& message, std::string const& component)
@@ -124,13 +107,13 @@ void ml::format_message(std::ostream& out, Severity severity, std::string const&
         std::cerr << "Failed to write to log file: " << errno << std::endl;
         return;
     }
-    const auto fmt_now = format_timestamp();
+    char time_stamp[64]; // "yyyy-mm-dd HH:MM:SS.uuuuuu UTC"
+    format_timestamp(time_stamp, sizeof(time_stamp));
 
-    // From here, no dynamic allocations
-    char ts_lut[64]; // "[yyyy-mm-dd HH:MM:SS.uuuuuu] < CRITICAL! >: "
-    auto ctx_eos = std::format_to_n(ts_lut, sizeof(ts_lut) - 1, "[{}] {}",
-        fmt_now, lut[static_cast<int>(severity)]).out;
-    *ctx_eos = '\0';
+    char ts_lut[64]; // "[yyyy-mm-dd HH:MM:SS.uuuuuu] UTC < severity! >: "
+    auto eos = std::format_to_n(ts_lut, sizeof(ts_lut) - 1, "[{}] {}",
+        time_stamp, lut[static_cast<int>(severity)]).out;
+    *eos = '\0';
     out << ts_lut << component << ": " << message << std::endl;
 }
 
