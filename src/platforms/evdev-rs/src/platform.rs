@@ -192,6 +192,7 @@ impl PlatformRs {
                     &mut *state,
                     self.device_registry.clone(),
                     self.bridge.clone(),
+                    &self.report
                 );
             }
             _ => {}

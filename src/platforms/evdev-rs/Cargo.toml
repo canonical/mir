@@ -12,6 +12,7 @@ cxx.workspace = true
 input.workspace = true
 libc.workspace = true
 nix.workspace = true
+input-event-codes.workspace = true
 
 [build-dependencies]
 cxx-build.workspace = true
