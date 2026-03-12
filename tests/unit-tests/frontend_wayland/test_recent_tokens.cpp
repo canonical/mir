@@ -74,7 +74,7 @@ TEST(RecentTokensTest, evicts_in_fifo_order)
         tokens.add("token" + std::to_string(i));
     }
 
-    EXPECT_FALSE(tokens.contains("token1"));
+    EXPECT_FALSE(tokens.contains("token0"));
     EXPECT_FALSE(tokens.contains("token1"));
     EXPECT_TRUE(tokens.contains("token32"));
     EXPECT_TRUE(tokens.contains("token33"));
