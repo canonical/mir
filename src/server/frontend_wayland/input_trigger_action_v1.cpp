@@ -84,7 +84,7 @@ private:
                     return;
                 }
 
-                auto const action = new InputTriggerActionV1 const {id, Version<1>{}};
+                auto* action = new InputTriggerActionV1{id, Version<1>{}};
                 action_group->add(mw::make_weak<Action const>(action));
             }
             else
