@@ -155,6 +155,24 @@ void ActionGroup::send_begin(MirEvent const& event)
         actions, [&](auto const& valid_action) { valid_action.begin(*activation_token); });
 }
 
+void ActionGroup::cancel()
+{
+    cancelled = true;
+
+    for (auto& action : actions)
+    {
+        if (action)
+            action.value().unavailable();
+    }
+
+    actions.clear();
+}
+
+bool mir::frontend::InputTriggerRegistry::ActionGroup::was_cancelled() const
+{
+    return cancelled;
+}
+
 ActionGroupManager::ActionGroupManager(
     std::shared_ptr<msh::TokenAuthority> const& token_authority, Executor& wayland_executor) :
     token_authority{token_authority},

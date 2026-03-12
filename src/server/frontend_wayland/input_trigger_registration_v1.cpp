@@ -454,6 +454,9 @@ public:
     void add_input_trigger_event(struct wl_resource* trigger) override;
     void drop_input_trigger_event(struct wl_resource* trigger) override;
 
+    void cancel() override;
+    void destroy() override;
+
 private:
     std::shared_ptr<ActionGroup> const action_group;
 };
@@ -479,6 +482,17 @@ void InputTriggerActionControlV1::drop_input_trigger_event(struct wl_resource* t
     {
         keyboard_trigger->unassociate_with_action_group(action_group);
     }
+}
+
+void InputTriggerActionControlV1::cancel()
+{
+    action_group->cancel();
+    delete this;
+}
+
+void InputTriggerActionControlV1::destroy()
+{
+    delete this;
 }
 
 class InputTriggerRegistrationManagerV1 : public mw::InputTriggerRegistrationManagerV1::Global

@@ -104,6 +104,7 @@ public:
 
     virtual void end(ActivationToken const& activation_token) const = 0;
     virtual void begin(ActivationToken const& activation_token) const = 0;
+    virtual void unavailable() const = 0;
 };
 
 class InputTriggerRegistry::ActionGroup
@@ -120,12 +121,15 @@ public:
     void add(wayland::Weak<Action const> action);
     void send_end(MirEvent const& event);
     void send_begin(MirEvent const& event);
+    void cancel();
+    bool was_cancelled() const;
 
 private:
     std::function<void()> const on_destroy{};
     std::shared_ptr<shell::TokenAuthority> token_authority;
     std::vector<wayland::Weak<Action const>> actions;
     std::optional<ActivationToken> activation_token;
+    bool cancelled{false};
 };
 
 class InputTriggerRegistry::ActionGroupManager

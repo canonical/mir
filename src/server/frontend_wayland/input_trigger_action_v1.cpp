@@ -39,6 +39,7 @@ public:
 
     void end(ActivationToken const& activation_token) const override;
     void begin(ActivationToken const& activation_token) const override;
+    void unavailable() const override;
 };
 
 // Used  when a client provides a revoked token to call
@@ -77,6 +78,12 @@ private:
 
             if (auto const& action_group = action_group_manager->get_action_group(token))
             {
+                if(action_group->was_cancelled())
+                {
+                    new NullInputTriggerActionV1{id};
+                    return;
+                }
+
                 auto const action = new InputTriggerActionV1 const {id, Version<1>{}};
                 action_group->add(mw::make_weak<Action const>(action));
             }
@@ -119,6 +126,11 @@ void InputTriggerActionV1::end(ActivationToken const& activation_token) const
 void InputTriggerActionV1::begin(ActivationToken const& activation_token) const
 {
     send_begin_event(activation_token.timestamp_ms(), activation_token.token_string());
+}
+
+void InputTriggerActionV1::unavailable() const
+{
+    send_unavailable_event();
 }
 }
 
