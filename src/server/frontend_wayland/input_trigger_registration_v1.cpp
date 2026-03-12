@@ -67,19 +67,9 @@ public:
     static auto modifiers_match(InputTriggerModifiers modifiers, MirInputEventModifiers event_mods) -> bool;
 
 private:
-    explicit InputTriggerModifiers(MirInputEventModifiers value);
+    explicit InputTriggerModifiers(MirInputEventModifiers required, MirInputEventModifiers allowed);
 
-    static auto compute_required_all(MirInputEventModifiers value) -> MirInputEventModifiers;
-    static auto compute_required_any(MirInputEventModifiers value) -> MirInputEventModifiers;
-    static auto compute_allowed(MirInputEventModifiers value) -> MirInputEventModifiers;
-
-    MirInputEventModifiers const value;
-
-    /// All of these bits must be present in the event.
-    MirInputEventModifiers const required_all;
-    /// At least one of these bits must be present in the event.
-    MirInputEventModifiers const required_any;
-    /// No bits outside these may be present in the event.
+    MirInputEventModifiers const required;
     MirInputEventModifiers const allowed;
 };
 
@@ -111,7 +101,7 @@ auto KeyboardTrigger::is_active() const -> bool
 
 auto KeyboardTrigger::check_transition(MirEvent const& event) -> Transition
 {
-    if (!InputTriggerModifiers::modifiers_match(modifiers, event.to_input()->to_keyboard()->modifiers()))
+    if (!InputTriggerModifiers::modifiers_match(modifiers, event.to_input()->to_keyboard()->modifiers() ))
     {
         if (!active)
             return Transition::unchanged;
@@ -244,76 +234,13 @@ bool mf::KeyboardCodeTrigger::is_same_trigger(KeyboardCodeTrigger const* other) 
 
 namespace
 {
-// Each entry describes one modifier family: { generic, left, right }.
-// left/right are 0 for families that have no sided variants (sym, function).
-// clang-format off
-constexpr std::array<std::array<MirInputEventModifiers, 3>, 6> modifier_kinds{{
-    { mir_input_event_modifier_ctrl,     mir_input_event_modifier_ctrl_left,   mir_input_event_modifier_ctrl_right  },
-    { mir_input_event_modifier_alt,      mir_input_event_modifier_alt_left,    mir_input_event_modifier_alt_right   },
-    { mir_input_event_modifier_shift,    mir_input_event_modifier_shift_left,  mir_input_event_modifier_shift_right },
-    { mir_input_event_modifier_meta,     mir_input_event_modifier_meta_left,   mir_input_event_modifier_meta_right  },
-    { mir_input_event_modifier_sym,      MirInputEventModifiers(0),            MirInputEventModifiers(0)            },
-    { mir_input_event_modifier_function, MirInputEventModifiers(0),            MirInputEventModifiers(0)            },
-}};
-// clang-format on
-
-auto InputTriggerModifiers::compute_required_all(MirInputEventModifiers value) -> MirInputEventModifiers
-{
-    MirInputEventModifiers required_all = 0;
-    for (auto const& [generic, left, right] : modifier_kinds)
-    {
-        MirInputEventModifiers const sides_set = value & (left | right);
-        if (sides_set)
-            // Specific side requested: require exactly that side.
-            required_all |= sides_set;
-        // Generic-only: no specific bit is unconditionally required (required_any handles it).
-    }
-    return required_all;
-}
-
-auto InputTriggerModifiers::compute_required_any(MirInputEventModifiers value) -> MirInputEventModifiers
-{
-    MirInputEventModifiers required_any = 0;
-    for (auto const& [generic, left, right] : modifier_kinds)
-    {
-        bool const has_generic = value & generic;
-        bool const has_sides = value & (left | right);
-        if (has_generic && !has_sides)
-            // Generic requested: at least one side must be present in the event.
-            required_any |= left | right;
-    }
-    return required_any;
-}
-
-auto InputTriggerModifiers::compute_allowed(MirInputEventModifiers value) -> MirInputEventModifiers
-{
-    MirInputEventModifiers allowed = 0;
-    for (auto const& [generic, left, right] : modifier_kinds)
-    {
-        bool const has_generic = value & generic;
-        bool const has_sides = value & (left | right);
-        if (has_generic && !has_sides)
-            // Generic requested: either side (and the generic bit) is permitted.
-            allowed |= generic | left | right;
-        else if (has_sides)
-            // Specific side(s) requested: allow only those sides plus the generic bit.
-            allowed |= generic | (value & (left | right));
-        // else: family not requested -> allow nothing.
-    }
-    // Unsided families (sym, function): if set in value, allow exactly that bit.
-    allowed |= value & (mir_input_event_modifier_sym | mir_input_event_modifier_function);
-    return allowed;
-}
-
-InputTriggerModifiers::InputTriggerModifiers(MirInputEventModifiers value) :
-    value{value},
-    required_all{compute_required_all(value)},
-    required_any{compute_required_any(value)},
-    allowed{compute_allowed(value)}
+InputTriggerModifiers::InputTriggerModifiers(MirInputEventModifiers required, MirInputEventModifiers allowed) :
+    required{required},
+    allowed{allowed}
 {
 }
 
-auto InputTriggerModifiers::to_string() const -> std::string
+auto to_string(MirInputEventModifiers value) -> std::string
 {
     if (value == mir_input_event_modifier_none)
         return "none";
@@ -363,6 +290,11 @@ auto InputTriggerModifiers::to_string() const -> std::string
     return result;
 }
 
+auto InputTriggerModifiers::to_string() const -> std::string
+{
+    return "required=" + ::to_string(required) + " allowed=" + ::to_string(allowed);
+}
+
 auto InputTriggerModifiers::from_protocol(uint32_t protocol_mods) -> InputTriggerModifiers
 {
     return from_protocol(protocol_mods, false);
@@ -372,59 +304,91 @@ auto InputTriggerModifiers::from_protocol(uint32_t protocol_mods, bool shift_adj
 {
     using PM = mw::InputTriggerRegistrationManagerV1::Modifiers;
 
-    if (protocol_mods == 0)
-        return InputTriggerModifiers{mir_input_event_modifier_none};
-
-    // Map each protocol bit to its corresponding Mir bit.
-    // Sided bits map only to their own Mir bit; the generic bit is not included here
-    // because required/allowed logic handles the generic bit independently.
-    // clang-format off
-    constexpr std::array<std::pair<uint32_t, MirInputEventModifiers>, 14> mappings = {
-        std::pair{ PM::alt,         mir_input_event_modifier_alt         },
-        std::pair{ PM::alt_left,    mir_input_event_modifier_alt_left    },
-        std::pair{ PM::alt_right,   mir_input_event_modifier_alt_right   },
-
-        std::pair{ PM::shift,       mir_input_event_modifier_shift       },
-        std::pair{ PM::shift_left,  mir_input_event_modifier_shift_left  },
-        std::pair{ PM::shift_right, mir_input_event_modifier_shift_right },
-
-        std::pair{ PM::sym,         mir_input_event_modifier_sym         },
-        std::pair{ PM::function,    mir_input_event_modifier_function    },
-
-        std::pair{ PM::ctrl,        mir_input_event_modifier_ctrl        },
-        std::pair{ PM::ctrl_left,   mir_input_event_modifier_ctrl_left   },
-        std::pair{ PM::ctrl_right,  mir_input_event_modifier_ctrl_right  },
-
-        std::pair{ PM::meta,        mir_input_event_modifier_meta        },
-        std::pair{ PM::meta_left,   mir_input_event_modifier_meta_left   },
-        std::pair{ PM::meta_right,  mir_input_event_modifier_meta_right  },
-    };
-    // clang-format on
-
-    MirInputEventModifiers result = mir_input_event_modifier_none;
-    for (auto const& [protocol_modifier, mir_modifier] : mappings)
+    if (protocol_mods == 0 && !shift_adjustment)
+        return InputTriggerModifiers{mir_input_event_modifier_none, mir_input_event_modifier_none};
+    struct ModifierGroup
     {
-        if (protocol_mods & protocol_modifier)
-            result |= mir_modifier;
+        uint32_t protocol_generic;
+        uint32_t protocol_left;
+        uint32_t protocol_right;
+        MirInputEventModifiers generic_bit;
+        MirInputEventModifiers left_bit;
+        MirInputEventModifiers right_bit;
+    };
+
+    constexpr std::array<ModifierGroup, 4> sided_groups = {
+        ModifierGroup{PM::shift, PM::shift_left, PM::shift_right,
+            mir_input_event_modifier_shift, mir_input_event_modifier_shift_left, mir_input_event_modifier_shift_right},
+        ModifierGroup{PM::ctrl, PM::ctrl_left, PM::ctrl_right,
+            mir_input_event_modifier_ctrl, mir_input_event_modifier_ctrl_left, mir_input_event_modifier_ctrl_right},
+        ModifierGroup{PM::alt, PM::alt_left, PM::alt_right,
+            mir_input_event_modifier_alt, mir_input_event_modifier_alt_left, mir_input_event_modifier_alt_right},
+        ModifierGroup{PM::meta, PM::meta_left, PM::meta_right,
+            mir_input_event_modifier_meta, mir_input_event_modifier_meta_left, mir_input_event_modifier_meta_right},
+    };
+
+    MirInputEventModifiers required = 0;
+    MirInputEventModifiers allowed = 0;
+
+    for (auto const& group : sided_groups)
+    {
+        bool const wants_generic = protocol_mods & group.protocol_generic;
+        bool const wants_left    = protocol_mods & group.protocol_left;
+        bool const wants_right   = protocol_mods & group.protocol_right;
+
+        if (wants_generic)
+        {
+            // The client accepts either side: require only the generic bit
+            // (always present in events alongside any side press), and allow
+            // all three bits (generic + left + right).
+            required |= group.generic_bit;
+            allowed  |= group.generic_bit | group.left_bit | group.right_bit;
+        }
+        else if (wants_left)
+        {
+            // Only the left side is acceptable: require the left-side bit, and
+            // allow both the left-side bit and the generic bit (which is always
+            // set alongside any side-specific press).
+            required |= group.left_bit;
+            allowed  |= group.left_bit | group.generic_bit;
+        }
+        else if (wants_right)
+        {
+            required |= group.right_bit;
+            allowed  |= group.right_bit | group.generic_bit;
+        }
     }
 
-    if (shift_adjustment)
-        result |= mir_input_event_modifier_shift;
+    // Non-sided modifiers: the required bit and allowed bit are identical.
+    if (protocol_mods & PM::sym)
+    {
+        required |= mir_input_event_modifier_sym;
+        allowed  |= mir_input_event_modifier_sym;
+    }
+    if (protocol_mods & PM::function)
+    {
+        required |= mir_input_event_modifier_function;
+        allowed  |= mir_input_event_modifier_function;
+    }
 
-    return InputTriggerModifiers{result};
+    // When shift_adjustment is active, the trigger was registered with an
+    // uppercase keysym but without an explicit shift modifier. Shift will be
+    // present in the event, so we must allow it without requiring it.
+    if (shift_adjustment)
+        allowed |= mir_input_event_modifier_shift | mir_input_event_modifier_shift_left | mir_input_event_modifier_shift_right;
+
+    return InputTriggerModifiers{required, allowed};
 }
 
 bool InputTriggerModifiers::modifiers_match(InputTriggerModifiers modifiers, MirInputEventModifiers event_mods)
 {
-    // Special case: an event with no modifiers only matches if the protocol also specified none.
-    if (event_mods == MirInputEventModifier::mir_input_event_modifier_none)
-        return modifiers.value == MirInputEventModifier::mir_input_event_modifier_none;
+    // All required modifier bits must be present in the event.
+    bool const all_required_present = (event_mods & modifiers.required) == modifiers.required;
 
-    // All required_all bits must be present, at least one required_any bit must be present
-    // (for generic-only families), and no bits outside 'allowed' may be set.
-    return (event_mods & modifiers.required_all) == modifiers.required_all
-        && (modifiers.required_any == 0 || (event_mods & modifiers.required_any) != 0)
-        && (event_mods & ~modifiers.allowed) == 0;
+    // No modifier bits outside of the allowed set may be present in the event.
+    bool const no_extra_modifiers = (event_mods & ~modifiers.allowed) == 0;
+
+    return all_required_present && no_extra_modifiers;
 }
 
 KeyboardTrigger::KeyboardTrigger(
