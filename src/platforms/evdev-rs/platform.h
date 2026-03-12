@@ -25,6 +25,7 @@ class ConsoleServices;
 namespace input
 {
 class InputDeviceRegistry;
+class InputReport;
 
 namespace evdev_rs
 {
@@ -38,7 +39,8 @@ class Platform : public input::Platform
 {
 public:
     Platform(std::shared_ptr<ConsoleServices> const& console,
-        std::shared_ptr<InputDeviceRegistry> const& input_device_registry);
+        std::shared_ptr<InputDeviceRegistry> const& input_device_registry,
+        std::shared_ptr<input::InputReport> const& report);
     std::shared_ptr<mir::dispatch::Dispatchable> dispatchable() override;
     void start() override;
     void stop() override;
