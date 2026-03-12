@@ -101,7 +101,13 @@ auto KeyboardTrigger::is_active() const -> bool
 
 auto KeyboardTrigger::check_transition(MirEvent const& event) -> Transition
 {
-    if (!InputTriggerModifiers::modifiers_match(modifiers, event.to_input()->to_keyboard()->modifiers() ))
+    // Remove caps, num, and scroll lock from the event modifiers, since those
+    // are not part of the trigger specification and would prevent matches.
+    auto constexpr modifiers_to_ignore =
+        mir_input_event_modifier_caps_lock | mir_input_event_modifier_num_lock | mir_input_event_modifier_scroll_lock;
+    auto const event_mods = event.to_input()->to_keyboard()->modifiers() & ~modifiers_to_ignore;
+
+    if (!InputTriggerModifiers::modifiers_match(modifiers, event_mods))
     {
         if (!active)
             return Transition::unchanged;
