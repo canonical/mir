@@ -30,6 +30,8 @@ pub struct PlatformRs {
     /// The input device registry is used for registering and unregistering input devices.
     device_registry: cxx::SharedPtr<crate::InputDeviceRegistry>,
 
+    report: cxx::UniquePtr<crate::InputReport>,
+
     state: Option<Arc<Mutex<LibinputDeviceState>>>,
 }
 
@@ -37,10 +39,12 @@ impl PlatformRs {
     pub fn new(
         bridge: cxx::SharedPtr<crate::PlatformBridge>,
         device_registry: cxx::SharedPtr<crate::InputDeviceRegistry>,
+        report: cxx::UniquePtr<crate::InputReport>
     ) -> Self {
         PlatformRs {
             bridge,
             device_registry,
+            report,
             state: None,
         }
     }
@@ -188,6 +192,7 @@ impl PlatformRs {
                     &mut *state,
                     self.device_registry.clone(),
                     self.bridge.clone(),
+                    &self.report
                 );
             }
             _ => {}

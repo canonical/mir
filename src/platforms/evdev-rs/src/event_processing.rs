@@ -31,16 +31,6 @@ use input::AsRaw;
 use std::collections::HashMap;
 use std::thread;
 
-// Linux input button codes.
-const BTN_LEFT: u32 = 0x110;
-const BTN_RIGHT: u32 = 0x111;
-const BTN_MIDDLE: u32 = 0x112;
-const BTN_SIDE: u32 = 0x113;
-const BTN_EXTRA: u32 = 0x114;
-const BTN_FORWARD: u32 = 0x115;
-const BTN_BACK: u32 = 0x116;
-const BTN_TASK: u32 = 0x117;
-
 /// Computed scroll axis values for a single axis.
 struct ScrollAxisData {
     precise: f32,
@@ -176,10 +166,14 @@ fn handle_device_event(
 fn handle_pointer_motion(
     device_info: &mut LibinputDeviceInfo,
     motion_event: pointer::PointerMotionEvent,
+    report: &crate::InputReport,
 ) {
     let Some(event_builder) = &mut device_info.event_builder else {
         return;
     };
+
+    report.received_event_from_kernel(
+        motion_event.time_usec(), input_event_codes::EV_REL!(), 0, 0);
 
     let pointer_event = PointerEventData {
         has_time: true,
@@ -203,10 +197,14 @@ fn handle_pointer_motion_absolute(
     device_info: &mut LibinputDeviceInfo,
     bridge: &cxx::SharedPtr<crate::PlatformBridge>,
     absolute_motion_event: pointer::PointerMotionAbsoluteEvent,
+    report: &crate::InputReport,
 ) -> bool {
     let Some(event_builder) = &mut device_info.event_builder else {
         return true;
     };
+
+    report.received_event_from_kernel(
+        absolute_motion_event.time_usec(), input_event_codes::EV_ABS!(), 0, 0);
 
     let bounding_rect = get_bounding_rectangle(&mut device_info.input_sink, bridge);
     if bounding_rect.is_null() {
@@ -271,10 +269,14 @@ fn handle_pointer_scroll(
     device_info: &mut LibinputDeviceInfo,
     scroll_state: &mut ScrollState,
     data: &ScrollEventData,
+    report: &crate::InputReport,
 ) {
     let Some(event_builder) = &mut device_info.event_builder else {
         return;
     };
+
+    report.received_event_from_kernel(
+        data.time_usec, input_event_codes::EV_REL!(), 0, 0);
 
     let x = compute_scroll_for_axis(
         data.has_horizontal,
@@ -316,32 +318,33 @@ fn handle_pointer_scroll(
 fn handle_pointer_button(
     device_info: &mut LibinputDeviceInfo,
     button_event: pointer::PointerButtonEvent,
+    report: &crate::InputReport,
 ) {
     let Some(event_builder) = &mut device_info.event_builder else {
         return;
     };
 
     let mir_button = match button_event.button() {
-        BTN_LEFT => {
+        input_event_codes::BTN_LEFT!() => {
             if device_info.device.config_left_handed() {
                 crate::MirPointerButton::mir_pointer_button_secondary
             } else {
                 crate::MirPointerButton::mir_pointer_button_primary
             }
         }
-        BTN_RIGHT => {
+        input_event_codes::BTN_RIGHT!() => {
             if device_info.device.config_left_handed() {
                 crate::MirPointerButton::mir_pointer_button_primary
             } else {
                 crate::MirPointerButton::mir_pointer_button_secondary
             }
         }
-        BTN_MIDDLE => crate::MirPointerButton::mir_pointer_button_tertiary,
-        BTN_BACK => crate::MirPointerButton::mir_pointer_button_back,
-        BTN_FORWARD => crate::MirPointerButton::mir_pointer_button_forward,
-        BTN_SIDE => crate::MirPointerButton::mir_pointer_button_side,
-        BTN_EXTRA => crate::MirPointerButton::mir_pointer_button_extra,
-        BTN_TASK => crate::MirPointerButton::mir_pointer_button_task,
+        input_event_codes::BTN_MIDDLE!() => crate::MirPointerButton::mir_pointer_button_tertiary,
+        input_event_codes::BTN_BACK!() => crate::MirPointerButton::mir_pointer_button_back,
+        input_event_codes::BTN_FORWARD!() => crate::MirPointerButton::mir_pointer_button_forward,
+        input_event_codes::BTN_SIDE!() => crate::MirPointerButton::mir_pointer_button_side,
+        input_event_codes::BTN_EXTRA!() => crate::MirPointerButton::mir_pointer_button_extra,
+        input_event_codes::BTN_TASK!() => crate::MirPointerButton::mir_pointer_button_task,
         _ => crate::MirPointerButton::mir_pointer_button_primary,
     };
 
@@ -352,6 +355,9 @@ fn handle_pointer_button(
         device_info.button_state &= !mir_button.repr;
         crate::MirPointerAction::mir_pointer_action_button_up
     };
+
+    report.received_event_from_kernel(
+        button_event.time_usec(), input_event_codes::EV_KEY!(), mir_button.repr, action.repr as u32);
 
     let pointer_event = PointerEventData {
         has_time: true,
@@ -382,14 +388,15 @@ fn handle_pointer_event(
     scroll_state: &mut ScrollState,
     bridge: &cxx::SharedPtr<crate::PlatformBridge>,
     pointer_event: event::PointerEvent,
+    report: &crate::InputReport,
 ) -> bool {
     match pointer_event {
         event::PointerEvent::Motion(motion_event) => {
-            handle_pointer_motion(device_info, motion_event);
+            handle_pointer_motion(device_info, motion_event, report);
         }
 
         event::PointerEvent::MotionAbsolute(absolute_motion_event) => {
-            if !handle_pointer_motion_absolute(device_info, bridge, absolute_motion_event) {
+            if !handle_pointer_motion_absolute(device_info, bridge, absolute_motion_event, report) {
                 return false;
             }
         }
@@ -426,6 +433,7 @@ fn handle_pointer_event(
                     },
                     axis_source: crate::MirPointerAxisSource::mir_pointer_axis_source_wheel.repr,
                 },
+                report,
             );
         }
 
@@ -453,6 +461,7 @@ fn handle_pointer_event(
                     value120_y: 0.0,
                     axis_source: crate::MirPointerAxisSource::mir_pointer_axis_source_wheel.repr,
                 },
+                report,
             );
         }
 
@@ -480,11 +489,12 @@ fn handle_pointer_event(
                     value120_y: 0.0,
                     axis_source: crate::MirPointerAxisSource::mir_pointer_axis_source_wheel.repr,
                 },
+                report,
             );
         }
 
         event::PointerEvent::Button(button_event) => {
-            handle_pointer_button(device_info, button_event);
+            handle_pointer_button(device_info, button_event, report);
         }
 
         #[allow(deprecated)]
@@ -499,6 +509,7 @@ fn handle_pointer_event(
 fn handle_keyboard_event(
     device_info: &mut LibinputDeviceInfo,
     keyboard_event: event::KeyboardEvent,
+    report: &crate::InputReport
 ) {
     let event::KeyboardEvent::Key(key_event) = keyboard_event else {
         return;
@@ -519,6 +530,10 @@ fn handle_keyboard_event(
         action: keyboard_action.repr,
         scancode: key_event.key(),
     };
+
+    report.received_event_from_kernel(
+        key_event.time_usec(), input_event_codes::EV_KEY!(), key_event.key(), keyboard_action.repr as u32);
+
     let created = event_builder.pin_mut().key_event(&key_event_data);
 
     if let Some(input_sink) = &mut device_info.input_sink {
@@ -534,6 +549,7 @@ fn handle_touch_event(
     device_info: &mut LibinputDeviceInfo,
     bridge: &cxx::SharedPtr<crate::PlatformBridge>,
     touch_event: event::TouchEvent,
+    report: &crate::InputReport
 ) -> bool {
     match touch_event {
         event::TouchEvent::Down(down_event) => {
@@ -599,7 +615,7 @@ fn handle_touch_event(
             }
         }
         event::TouchEvent::Frame(frame_event) => {
-            return handle_touch_frame(device_info, frame_event);
+            return handle_touch_frame(device_info, frame_event, report);
         }
         _ => {}
     }
@@ -613,6 +629,7 @@ fn handle_touch_event(
 fn handle_touch_frame(
     device_info: &mut LibinputDeviceInfo,
     frame_event: input::event::touch::TouchFrameEvent,
+    report: &crate::InputReport,
 ) -> bool {
     let mut empty_touches = 0;
 
@@ -662,9 +679,13 @@ fn handle_touch_frame(
         return false;
     }
 
+    let time_usec = frame_event.time_usec();
+    report.received_event_from_kernel(
+        time_usec, input_event_codes::EV_SYN!(), 0, 0);
+
     let touch_event_data = crate::TouchEventData {
         has_time: true,
-        time_microseconds: frame_event.time_usec(),
+        time_microseconds: time_usec,
         contacts,
     };
 
@@ -684,6 +705,7 @@ pub fn process_libinput_events(
     state: &mut LibinputDeviceState,
     device_registry: cxx::SharedPtr<crate::InputDeviceRegistry>,
     bridge: cxx::SharedPtr<crate::PlatformBridge>,
+    report: &crate::InputReport
 ) {
     if state.libinput.dispatch().is_err() {
         println!("Error dispatching libinput events");
@@ -721,7 +743,7 @@ pub fn process_libinput_events(
                 };
 
                 let should_continue =
-                    handle_pointer_event(device_info, &mut scroll_state, &bridge, pointer_event);
+                    handle_pointer_event(device_info, &mut scroll_state, &bridge, pointer_event, &report);
 
                 state.scroll_axis_x_accum = scroll_state.x_accum;
                 state.scroll_axis_y_accum = scroll_state.y_accum;
@@ -739,7 +761,7 @@ pub fn process_libinput_events(
                     continue;
                 };
 
-                handle_keyboard_event(device_info, keyboard_event);
+                handle_keyboard_event(device_info, keyboard_event, &report);
             }
 
             input::Event::Touch(touch_event) => {
@@ -750,7 +772,7 @@ pub fn process_libinput_events(
                     continue;
                 };
 
-                if !handle_touch_event(device_info, &bridge, touch_event) {
+                if !handle_touch_event(device_info, &bridge, touch_event, &report) {
                     continue;
                 }
             }
