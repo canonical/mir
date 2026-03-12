@@ -509,6 +509,7 @@ public:
             input_trigger_registry{input_trigger_registry},
             keyboard_state_tracker{keyboard_state_tracker}
         {
+            send_capabilities_event(Capability::keyboard);
         }
 
         void register_keyboard_sym_trigger(uint32_t modifiers, uint32_t keysym, struct wl_resource* id) override;
