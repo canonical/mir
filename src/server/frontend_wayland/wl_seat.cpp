@@ -160,7 +160,9 @@ public:
 
     void keyboard_event(std::shared_ptr<MirEvent const> const& event) override
     {
-        if (keyboard_state_tracker->process(*event) && input_trigger_registry->any_trigger_handled(*event))
+        keyboard_state_tracker->process(*event);
+
+        if (input_trigger_registry->any_trigger_handled(*event))
             return;
 
         if (seat.focused_surface)

@@ -74,15 +74,15 @@ mf::KeyboardStateTracker::KeyboardStateTracker()
         fatal_error("KeyboardStateTracker: failed to create XKB context");
 }
 
-bool mf::KeyboardStateTracker::process(MirEvent const& event)
+void mf::KeyboardStateTracker::process(MirEvent const& event)
 {
     if (event.type() != mir_event_type_input)
-        return false;
+        return;
 
     auto const& input_event = event.to_input();
 
     if (input_event->input_type() != mir_input_event_type_key)
-        return false;
+        return;
 
     auto const* key_event = input_event->to_keyboard();
     auto const keysym = key_event->keysym();
@@ -104,26 +104,21 @@ bool mf::KeyboardStateTracker::process(MirEvent const& event)
     shift_state = modifiers & (mir_input_event_modifier_shift | mir_input_event_modifier_shift_left |
                                mir_input_event_modifier_shift_right);
 
-    auto processed = false;
     if (action == mir_keyboard_action_down)
     {
         scancode_to_keysym[scancode] = keysym;
-        processed = true;
     }
     else if (action == mir_keyboard_action_up)
     {
         // Remove by scancode so that a mismatched key-up keysym (caused by a
         // modifier change while the key was held) does not leave stale entries.
         scancode_to_keysym.erase(scancode);
-        processed = true;
     }
 
     // When the shift state changes, re-derive every pressed keysym from its
     // scancode using the layout-aware XKB state.
     if (prev_shift_state != shift_state)
         xkb_key_state.rederive_keysyms_from_scancodes(scancode_to_keysym);
-
-    return processed;
 }
 
 auto mf::KeyboardStateTracker::keysym_is_pressed(MirInputDeviceId device, xkb_keysym_t keysym) const -> bool

@@ -52,9 +52,7 @@ class KeyboardStateTracker
 public:
     KeyboardStateTracker();
 
-    // Returns true if the passed in event was an up or down keyboard event and
-    // was processed, false otherwise.
-    bool process(MirEvent const& event);
+    void process(MirEvent const& event);
 
     auto keysym_is_pressed(MirInputDeviceId device, xkb_keysym_t keysym) const -> bool;
 
