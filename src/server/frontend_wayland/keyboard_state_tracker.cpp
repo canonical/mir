@@ -39,9 +39,6 @@ uint32_t constexpr to_xkb_scan_code(uint32_t evdev_scan_code)
 void mf::KeyboardStateTracker::XkbKeyState::update_keymap(
     std::shared_ptr<mir::input::Keymap> const& new_keymap, xkb_context* context)
 {
-    if (!new_keymap)
-        mir::fatal_error("KeyboardStateTracker: received null keymap");
-
     if (current_keymap && current_keymap->matches(*new_keymap))
         return;
 
@@ -93,7 +90,9 @@ void mf::KeyboardStateTracker::process(MirEvent const& event)
     auto& [scancode_to_keysym, shift_state, xkb_key_state] =
         device_states[input_event->device_id()];
 
-    xkb_key_state.update_keymap(key_event->keymap(), context.get());
+    // Repeat events lack a keymap
+    if (key_event->keymap())
+        xkb_key_state.update_keymap(key_event->keymap(), context.get());
 
     // Keep xkb_key_state in sync with every key event so that its modifier
     // tracking stays accurate for subsequent keysym queries.
