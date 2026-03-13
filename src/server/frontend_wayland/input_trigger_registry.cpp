@@ -259,6 +259,9 @@ bool Trigger::handle(MirEvent const& event)
            return false;
         case EventOutcome::consume:
             return true;
+        default:
+            // Unhandled case. Programmer error!
+            std::unreachable();
     }
 }
 
