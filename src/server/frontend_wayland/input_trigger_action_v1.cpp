@@ -93,7 +93,7 @@ private:
             }
             else
             {
-                // Token is not currently valid, nor is was it previously revoked. It must be an invalid token.
+                // Token is not currently valid, nor was it previously revoked. It must be an invalid token.
                 BOOST_THROW_EXCEPTION(
                     mw::ProtocolError(
                         resource,
