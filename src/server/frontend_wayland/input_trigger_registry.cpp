@@ -49,6 +49,9 @@ void mf::RecentTokens::add(std::string_view token)
 
 auto mf::RecentTokens::contains(std::string_view token) const -> bool
 {
+    if(token.empty())
+        return false;
+
     return std::find(tokens.begin(), tokens.end(), token) != tokens.end();
 }
 
