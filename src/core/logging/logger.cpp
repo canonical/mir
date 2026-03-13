@@ -17,6 +17,7 @@
 #include <mir/logging/dumb_console_logger.h>
 #include <mir/logging/logger.h>
 
+#include <array>
 #include <iostream>
 #include <chrono>
 #include <format>
@@ -74,21 +75,24 @@ void ml::set_logger(std::shared_ptr<Logger> const& new_logger)
 
 namespace {
 
-void format_timestamp(char *buffer, size_t bufsize)
+using TimeStampBuffer = std::array<char, 64>;
+
+void format_timestamp(TimeStampBuffer &buffer)
 {
     auto now = std::chrono::system_clock::now();
     auto now_us = std::chrono::time_point_cast<std::chrono::microseconds>(now);
+    auto data = buffer.data();
+    auto fmt_limit = buffer.size() - 1;
     char *eos;
     try {
         auto local =
             std::chrono::zoned_time{std::chrono::current_zone(), now_us};
-        eos = std::format_to_n(buffer, bufsize - 1, "{:%F %T}", local).out;
+        eos = std::format_to_n(data, fmt_limit, "{:%F %T}", local).out;
     } catch (...) {
-        eos = std::format_to_n(buffer, bufsize - 1, "{:%F %T} UTC", now_us).out;
+        eos = std::format_to_n(data, fmt_limit, "{:%F %T} UTC", now_us).out;
     }
     *eos = '\0';
 }
-
 }
 
 void ml::format_message(std::ostream& out, Severity severity, std::string const& message, std::string const& component)
@@ -107,12 +111,12 @@ void ml::format_message(std::ostream& out, Severity severity, std::string const&
         std::cerr << "Failed to write to log file: " << errno << std::endl;
         return;
     }
-    char time_stamp[64]; // "yyyy-mm-dd HH:MM:SS.uuuuuu UTC"
-    format_timestamp(time_stamp, sizeof(time_stamp));
+    TimeStampBuffer time_stamp; // "yyyy-mm-dd HH:MM:SS.uuuuuu UTC"
+    format_timestamp(time_stamp);
 
     char ts_lut[64]; // "[yyyy-mm-dd HH:MM:SS.uuuuuu] UTC < severity! >: "
     auto eos = std::format_to_n(ts_lut, sizeof(ts_lut) - 1, "[{}] {}",
-        time_stamp, lut[static_cast<int>(severity)]).out;
+        time_stamp.data(), lut[static_cast<int>(severity)]).out;
     *eos = '\0';
     out << ts_lut << component << ": " << message << std::endl;
 }
