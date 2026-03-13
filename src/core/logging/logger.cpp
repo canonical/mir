@@ -17,7 +17,10 @@
 #include <mir/logging/dumb_console_logger.h>
 #include <mir/logging/logger.h>
 
+#include <array>
 #include <iostream>
+#include <chrono>
+#include <format>
 #include <mutex>
 #include <cstdarg>
 #include <cstdio>
@@ -70,6 +73,28 @@ void ml::set_logger(std::shared_ptr<Logger> const& new_logger)
     }
 }
 
+namespace {
+
+using TimeStampBuffer = std::array<char, 64>;
+
+void format_timestamp(TimeStampBuffer &buffer)
+{
+    auto now = std::chrono::system_clock::now();
+    auto now_us = std::chrono::time_point_cast<std::chrono::microseconds>(now);
+    auto data = buffer.data();
+    auto fmt_limit = buffer.size() - 1;
+    char *eos;
+    try {
+        auto local =
+            std::chrono::zoned_time{std::chrono::current_zone(), now_us};
+        eos = std::format_to_n(data, fmt_limit, "{:%F %T}", local).out;
+    } catch (...) {
+        eos = std::format_to_n(data, fmt_limit, "{:%F %T} UTC", now_us).out;
+    }
+    *eos = '\0';
+}
+}
+
 void ml::format_message(std::ostream& out, Severity severity, std::string const& message, std::string const& component)
 {
     static const char* lut[5] =
@@ -81,27 +106,19 @@ void ml::format_message(std::ostream& out, Severity severity, std::string const&
         "< - debug - > "
     };
 
-    timespec ts{};
-    clock_gettime(CLOCK_REALTIME, &ts);
-    char now[32];
-    auto offset = strftime(now, sizeof(now), "%F %T", localtime(&ts.tv_sec));
-    snprintf(now+offset, sizeof(now)-offset, ".%06ld", ts.tv_nsec / 1000);
-
     if (!out || !out.good())
     {
         std::cerr << "Failed to write to log file: " << errno << std::endl;
         return;
     }
+    TimeStampBuffer time_stamp; // "yyyy-mm-dd HH:MM:SS.uuuuuu UTC"
+    format_timestamp(time_stamp);
 
-    out << "["
-        << now
-        << "] "
-        << lut[static_cast<int>(severity)]
-        << component
-        << ": "
-        << message
-        << std::endl;
-
+    char ts_lut[64]; // "[yyyy-mm-dd HH:MM:SS.uuuuuu] UTC < severity! >: "
+    auto eos = std::format_to_n(ts_lut, sizeof(ts_lut) - 1, "[{}] {}",
+        time_stamp.data(), lut[static_cast<int>(severity)]).out;
+    *eos = '\0';
+    out << ts_lut << component << ": " << message << std::endl;
 }
 
 namespace mir
