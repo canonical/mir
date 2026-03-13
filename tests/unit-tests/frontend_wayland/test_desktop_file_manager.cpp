@@ -24,7 +24,7 @@
 #include <filesystem>
 #include <fcntl.h>
 #include <gmock/gmock.h>
-#include <sstream>
+#include <format>
 #include <fstream>
 
 namespace mf = mir::frontend;
@@ -191,9 +191,7 @@ TEST_F(DesktopFileManager, can_resolve_from_valid_flatpak_info)
     const char* app_id = "test.application.name";
     const char* desktop_app_id = "test.application.name";
 
-    std::stringstream flatpak_info_path;
-    flatpak_info_path << "/proc/" << PID << "/root/.flatpak-info";
-    auto const flatpak_info = flatpak_info_path.str();
+    auto const flatpak_info = std::format("/proc/{}/root/.flatpak-info", PID);
     auto tmp_file_name = std::tmpnam(NULL);
     {
         std::ofstream tmp_file;
@@ -225,9 +223,7 @@ TEST_F(DesktopFileManager, app_id_will_not_resolve_from_flatpak_info_when_name_i
 {
     const char* desktop_app_id = "test.application.name";
 
-    std::stringstream flatpak_info_path;
-    flatpak_info_path << "/proc/" << PID << "/root/.flatpak-info";
-    auto const flatpak_info = flatpak_info_path.str();
+    auto const flatpak_info = std::format("/proc/{}/root/.flatpak-info", PID);
     auto tmp_file_name = std::tmpnam(NULL);
     {
         std::ofstream tmp_file;
