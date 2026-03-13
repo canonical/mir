@@ -89,6 +89,11 @@ public:
 
     ~WlSeat();
 
+    WlSeat(WlSeat const&) = delete;
+    WlSeat& operator=(WlSeat const&) = delete;
+    WlSeat(WlSeat&&) = delete;
+    WlSeat& operator=(WlSeat&&) = delete;
+
     static auto from(struct wl_resource* resource) -> WlSeat*;
 
     void for_each_listener(wayland::Client* client, std::function<void(PointerEventDispatcher*)> func);
@@ -106,6 +111,8 @@ public:
         virtual ~FocusListener() = default;
         FocusListener(FocusListener const&) = delete;
         FocusListener& operator=(FocusListener const&) = delete;
+        FocusListener(FocusListener&&) = delete;
+        FocusListener& operator=(FocusListener&&) = delete;
     };
 
     auto make_keyboard_helper(KeyboardCallbacks* callbacks) -> std::shared_ptr<KeyboardHelper>;
