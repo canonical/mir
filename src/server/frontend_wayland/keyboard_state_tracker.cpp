@@ -129,12 +129,11 @@ void mf::KeyboardStateTracker::process(MirEvent const& event)
     }
     else
     {
+        // We only care about up and down events.
         return;
     }
 
-    // Repeat events lack a keymap
-    if (key_event->keymap())
-        xkb_key_state.update_keymap(key_event->keymap(), context.get());
+    xkb_key_state.update_keymap(key_event->keymap(), context.get());
 
     // Keep xkb_key_state in sync with every key event so that its modifier
     // tracking stays accurate for subsequent keysym queries.
