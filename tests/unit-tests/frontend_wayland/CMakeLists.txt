@@ -6,6 +6,7 @@ list(
   ${CMAKE_CURRENT_SOURCE_DIR}/test_g_desktop_file_cache.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_output_manager.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_keyboard_state_tracker.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_recent_tokens.cpp
 )
 
 set(UNIT_TEST_SOURCES ${UNIT_TEST_SOURCES} PARENT_SCOPE)

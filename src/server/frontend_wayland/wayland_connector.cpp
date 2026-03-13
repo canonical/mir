@@ -34,6 +34,8 @@
 #include "wp_viewporter.h"
 #include "linux_drm_syncobj.h"
 #include "surface_registry.h"
+#include "input_trigger_registry.h"
+#include "keyboard_state_tracker.h"
 
 #include <mir/errno_utils.h>
 #include <mir/main_loop.h>
@@ -299,6 +301,11 @@ mf::WaylandConnector::WaylandConnector(
         this->allocator);
     subcompositor_global = std::make_unique<mf::WlSubcompositor>(display.get());
     auto const surface_registry = std::make_shared<mf::SurfaceRegistry>();
+
+    auto const action_group_manager =
+        std::make_shared<InputTriggerRegistry::ActionGroupManager>(token_authority, *executor);
+    auto const input_trigger_registry = std::make_shared<InputTriggerRegistry>();
+    auto const keyboard_state_tracker = std::make_shared<KeyboardStateTracker>();
     seat_global = std::make_unique<mf::WlSeat>(
         display.get(),
         *executor,
@@ -307,7 +314,9 @@ mf::WaylandConnector::WaylandConnector(
         keyboard_observer_registrar,
         seat,
         accessibility_manager,
-        surface_registry);
+        surface_registry,
+        input_trigger_registry,
+        keyboard_state_tracker);
     output_manager = std::make_unique<mf::OutputManager>(
         display.get(),
         executor,
@@ -348,7 +357,10 @@ mf::WaylandConnector::WaylandConnector(
         token_authority,
         surface_registry,
         clock,
-        cursor_observer_multiplexer});
+        cursor_observer_multiplexer,
+        action_group_manager,
+        input_trigger_registry,
+        keyboard_state_tracker});
 
     shm_global = std::make_unique<WlShm>(display.get(), executor);
 
