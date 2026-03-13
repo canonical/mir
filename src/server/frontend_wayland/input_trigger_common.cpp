@@ -209,7 +209,7 @@ bool ActionGroupManager::was_revoked(std::string const& token) const
     return revoked_tokens.contains(token);
 }
 
-auto ActionGroupManager::get_action_group(std::string const& token) -> std::shared_ptr<ActionGroup> const
+auto ActionGroupManager::get_action_group(std::string const& token) -> std::shared_ptr<ActionGroup>
 {
     if (auto const iter = action_groups.find(token); iter != action_groups.end())
         return iter->second.lock();

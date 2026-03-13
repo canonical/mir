@@ -141,7 +141,7 @@ public:
 
     bool was_revoked(std::string const& token) const;
 
-    auto get_action_group(std::string const& token) -> std::shared_ptr<ActionGroup> const;
+    auto get_action_group(std::string const& token) -> std::shared_ptr<ActionGroup>;
 
 private:
     std::unordered_map<std::string, std::weak_ptr<ActionGroup>> action_groups;
