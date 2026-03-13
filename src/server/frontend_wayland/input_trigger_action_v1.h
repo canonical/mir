@@ -26,7 +26,6 @@ namespace mir
 {
 namespace frontend
 {
-
 auto create_input_trigger_action_manager_v1(
     wl_display* display, std::shared_ptr<InputTriggerRegistry::ActionGroupManager> const& action_group_manager)
     -> std::shared_ptr<wayland::InputTriggerActionManagerV1::Global>;
