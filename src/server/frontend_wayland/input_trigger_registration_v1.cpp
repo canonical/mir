@@ -27,6 +27,8 @@
 
 #include <xkbcommon/xkbcommon.h>
 
+#include <algorithm>
+
 namespace mf = mir::frontend;
 namespace mw = mir::wayland;
 
@@ -65,6 +67,7 @@ public:
     bool operator==(InputTriggerModifiers const& other) const = default;
 
     static auto modifiers_match(InputTriggerModifiers modifiers, MirInputEventModifiers event_mods) -> bool;
+    static auto event_modifiers_are_superset(InputTriggerModifiers modifiers, MirInputEventModifiers event_mods) -> bool;
 
 private:
     explicit InputTriggerModifiers(MirInputEventModifiers required, MirInputEventModifiers allowed);
@@ -89,7 +92,9 @@ public:
 private:
     virtual auto is_active() const -> bool override;
     auto check_transition(MirEvent const& event) -> Transition override;
+
     virtual bool check_pressed(MirEvent const& event) const = 0;
+    virtual bool event_is_for_trigger_key(MirEvent const& event) const = 0;
 
     bool active{false};
 };
@@ -108,8 +113,15 @@ auto KeyboardTrigger::check_transition(MirEvent const& event) -> Transition
     // are not part of the trigger specification and would prevent matches.
     auto constexpr modifiers_to_ignore =
         mir_input_event_modifier_caps_lock | mir_input_event_modifier_num_lock | mir_input_event_modifier_scroll_lock;
-    auto const keyboard_event = *event.to_input()->to_keyboard();
+    auto const& keyboard_event = *event.to_input()->to_keyboard();
     auto const event_mods = keyboard_event.modifiers() & ~modifiers_to_ignore;
+
+    auto const event_is_for_trigger_key = this->event_is_for_trigger_key(event);
+    // For "Alt + s", handles the case where the user completes the combo, then
+    // presses "shift". Consumes up and down events of "s" until shift is let
+    // go.
+    if (InputTriggerModifiers::event_modifiers_are_superset(modifiers, event_mods) && event_is_for_trigger_key)
+        return Transition::consume;
 
     if (!InputTriggerModifiers::modifiers_match(modifiers, event_mods))
     {
@@ -175,6 +187,7 @@ public:
 
 private:
     bool check_pressed(MirEvent const& event) const override;
+    bool event_is_for_trigger_key(MirEvent const& event) const override;
 
     uint32_t const keysym;
 };
@@ -193,6 +206,7 @@ public:
 
 private:
     bool check_pressed(MirEvent const& event) const override;
+    bool event_is_for_trigger_key(MirEvent const& event) const override;
 
     uint32_t const scancode;
 };
@@ -210,6 +224,11 @@ mf::KeyboardSymTrigger::KeyboardSymTrigger(
 bool mf::KeyboardSymTrigger::check_pressed(MirEvent const& event) const
 {
     return keyboard_state_tracker->keysym_is_pressed(event.to_input()->device_id(), keysym);
+}
+
+bool mf::KeyboardSymTrigger::event_is_for_trigger_key(MirEvent const& event) const
+{
+    return keyboard_state_tracker->is_same_key(*event.to_input()->to_keyboard(), keysym);
 }
 
 bool mf::KeyboardSymTrigger::is_same_trigger(Trigger const* other) const
@@ -235,6 +254,12 @@ mf::KeyboardCodeTrigger::KeyboardCodeTrigger(
 bool mf::KeyboardCodeTrigger::check_pressed(MirEvent const& event) const
 {
     return keyboard_state_tracker->scancode_is_pressed(event.to_input()->device_id(), scancode);
+}
+
+bool mf::KeyboardCodeTrigger::event_is_for_trigger_key(MirEvent const& event) const
+{
+    auto const& keyboard_event = *event.to_input()->to_keyboard();
+    return static_cast<uint32_t>(keyboard_event.scan_code()) == scancode;
 }
 
 bool mf::KeyboardCodeTrigger::is_same_trigger(Trigger const* other) const
@@ -404,6 +429,28 @@ bool InputTriggerModifiers::modifiers_match(InputTriggerModifiers modifiers, Mir
     bool const no_extra_modifiers = (event_mods & ~modifiers.allowed) == 0;
 
     return all_required_present && no_extra_modifiers;
+}
+
+bool InputTriggerModifiers::event_modifiers_are_superset(InputTriggerModifiers modifiers, MirInputEventModifiers event_mods)
+{
+    // Superset check per modifier group
+    constexpr std::array<MirInputEventModifiers, 4> groups = {
+        mir_input_event_modifier_alt | mir_input_event_modifier_alt_left | mir_input_event_modifier_alt_right,
+        mir_input_event_modifier_ctrl | mir_input_event_modifier_ctrl_left | mir_input_event_modifier_ctrl_right,
+        mir_input_event_modifier_shift | mir_input_event_modifier_shift_left | mir_input_event_modifier_shift_right,
+        mir_input_event_modifier_meta | mir_input_event_modifier_meta_left | mir_input_event_modifier_meta_right,
+    };
+
+
+    // If the event contains any modifier group that the trigger doesn't, it's a superset
+    return std::ranges::any_of(
+        groups,
+        [&](auto const group)
+        {
+            auto const trigger_has_group = modifiers.allowed & group;
+            auto const event_has_group = event_mods & group;
+            return !trigger_has_group && event_has_group;
+        });
 }
 
 KeyboardTrigger::KeyboardTrigger(
