@@ -248,16 +248,16 @@ void Trigger::end(MirEvent const& event)
 
 bool Trigger::handle(MirEvent const& event)
 {
-    switch (check_transition(event)) {
-        case Transition::activated:
+    switch (check_event(event)) {
+        case EventOutcome::activated:
             begin(event);
             return true;
-        case Transition::deactivated:
+        case EventOutcome::deactivated:
             end(event);
             return true;
-        case Transition::pass:
+        case EventOutcome::pass:
            return false;
-        case Transition::consume:
+        case EventOutcome::consume:
             return true;
     }
 }

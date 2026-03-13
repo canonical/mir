@@ -154,12 +154,12 @@ private:
 class InputTriggerRegistry::Trigger: public virtual wayland::LifetimeTracker
 {
 public:
-    enum class Transition
+    enum class EventOutcome
     {
-        activated,    // trigger just transitioned from inactive → active (rising edge)
-        deactivated,  // trigger just transitioned from active → inactive (falling edge)
-        pass,
-        consume
+        activated,   // trigger just transitioned from inactive → active (rising edge)
+        deactivated, // trigger just transitioned from active → inactive (falling edge)
+        pass,        // event is not relevant to this trigger; let it through
+        consume,     // event is related to this trigger but doesn't change state; eat it silently
     };
 
     Trigger() = default;
@@ -186,7 +186,7 @@ private:
 
     virtual bool is_active() const = 0;
 
-    virtual auto check_transition(MirEvent const& event) -> Transition = 0;
+    virtual auto check_event(MirEvent const& event) -> EventOutcome = 0;
 
     std::shared_ptr<ActionGroup> action_group;
 };

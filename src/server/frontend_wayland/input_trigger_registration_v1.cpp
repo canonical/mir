@@ -91,7 +91,7 @@ public:
 
 private:
     virtual auto is_active() const -> bool override;
-    auto check_transition(MirEvent const& event) -> Transition override;
+    auto check_event(MirEvent const& event) -> EventOutcome override;
 
     virtual bool check_pressed(MirEvent const& event) const = 0;
     virtual bool event_is_for_trigger_key(MirEvent const& event) const = 0;
@@ -104,10 +104,10 @@ auto KeyboardTrigger::is_active() const -> bool
     return active;
 }
 
-auto KeyboardTrigger::check_transition(MirEvent const& event) -> Transition
+auto KeyboardTrigger::check_event(MirEvent const& event) -> EventOutcome
 {
     if (event.type() != mir_event_type_input || event.to_input()->input_type() != mir_input_event_type_key)
-        return Transition::pass;
+        return EventOutcome::pass;
 
     // Remove caps, num, and scroll lock from the event modifiers, since those
     // are not part of the trigger specification and would prevent matches.
@@ -121,36 +121,36 @@ auto KeyboardTrigger::check_transition(MirEvent const& event) -> Transition
     // presses "shift". Consumes up and down events of "s" until shift is let
     // go.
     if (InputTriggerModifiers::event_modifiers_are_superset(modifiers, event_mods) && event_is_for_trigger_key)
-        return Transition::consume;
+        return EventOutcome::consume;
 
     if (!InputTriggerModifiers::modifiers_match(modifiers, event_mods))
     {
         if (!active)
-            return Transition::pass;
+            return EventOutcome::pass;
 
         active = false;
-        return Transition::deactivated;
+        return EventOutcome::deactivated;
     }
 
     auto const pressed = check_pressed(event);
     if (active && !pressed)
     {
         active = false;
-        return Transition::deactivated;
+        return EventOutcome::deactivated;
     }
     else if (!active && pressed)
     {
         // If we matched because of a key release (like Alt + Shift + s
         // matching Alt + s on shift release), don't activate.
         if (keyboard_event.action() == mir_keyboard_action_up)
-            return Transition::pass;
+            return EventOutcome::pass;
 
         active = true;
-        return Transition::activated;
+        return EventOutcome::activated;
     }
     else
     {
-        return Transition::pass;
+        return EventOutcome::pass;
     }
 }
 
