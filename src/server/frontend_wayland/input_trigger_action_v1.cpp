@@ -72,8 +72,12 @@ private:
         {
             if (action_group_manager->was_revoked(token))
             {
-                new NullInputTriggerActionV1{id}; // Sends `unavailable`
-                return;
+                BOOST_THROW_EXCEPTION(
+                    mw::ProtocolError(
+                        resource,
+                        Error::invalid_token,
+                        "ext_input_trigger_action_manager_v1.get_input_trigger_action: trying to use a token (%s) that's no longer valid",
+                        token.c_str()));
             }
 
             if (auto const& action_group = action_group_manager->get_action_group(token))
