@@ -18,7 +18,7 @@
 #define MIR_SERVER_FRONTEND_INPUT_TRIGGER_REGISTRATION_V1_H_
 
 #include "ext-input-trigger-registration-v1_wrapper.h"
-#include "input_trigger_common.h"
+#include "input_trigger_registry.h"
 
 namespace mir
 {

@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "input_trigger_common.h"
+#include "input_trigger_registry.h"
 
 #include <mir/events/input_event.h>
 #include <mir/events/keyboard_event.h>

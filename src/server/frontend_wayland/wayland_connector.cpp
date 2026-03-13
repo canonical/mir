@@ -34,7 +34,7 @@
 #include "wp_viewporter.h"
 #include "linux_drm_syncobj.h"
 #include "surface_registry.h"
-#include "input_trigger_common.h"
+#include "input_trigger_registry.h"
 #include "keyboard_state_tracker.h"
 
 #include <mir/errno_utils.h>

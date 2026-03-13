@@ -70,7 +70,7 @@ set(
   keyboard_state_tracker.cpp    keyboard_state_tracker.h
   input_trigger_registration_v1.cpp input_trigger_registration_v1.h
   input_trigger_action_v1.cpp       input_trigger_action_v1.h
-  input_trigger_common.cpp          input_trigger_common.h
+  input_trigger_registry.cpp          input_trigger_registry.h
 )
 
 if (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" AND ${CMAKE_CXX_COMPILER_VERSION} VERSION_LESS 18.2)

@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_SERVER_FRONTEND_INPUT_TRIGGER_COMMON_H_
-#define MIR_SERVER_FRONTEND_INPUT_TRIGGER_COMMON_H_
+#ifndef MIR_SERVER_FRONTEND_INPUT_TRIGGER_REGISTRY_H_
+#define MIR_SERVER_FRONTEND_INPUT_TRIGGER_REGISTRY_H_
 
 
 #include <mir/events/event.h>

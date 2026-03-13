@@ -19,7 +19,7 @@
 
 #include <mir/shell/token_authority.h>
 #include "wayland_wrapper.h"
-#include "input_trigger_common.h"
+#include "input_trigger_registry.h"
 
 #include <mir/fd.h>
 #include <mir/frontend/connector.h>

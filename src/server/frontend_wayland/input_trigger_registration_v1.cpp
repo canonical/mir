@@ -16,7 +16,7 @@
 
 #include "input_trigger_registration_v1.h"
 
-#include "input_trigger_common.h"
+#include "input_trigger_registry.h"
 #include "keyboard_state_tracker.h"
 #include "mir_toolkit/events/enums.h"
 
