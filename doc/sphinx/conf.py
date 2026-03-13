@@ -166,7 +166,7 @@ html_context = {
     'github_issues': 'enabled',
 }
 
-html_extra_path = []
+html_extra_path = ["robots.txt", "sitemapindex.xml"]
 
 # Allow opt-in build of the OpenAPI "Hello" example so docs stay clean by default.
 if os.getenv("OPENAPI", ""):
