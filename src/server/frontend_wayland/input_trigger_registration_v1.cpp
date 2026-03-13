@@ -513,12 +513,10 @@ void InputTriggerActionControlV1::drop_input_trigger_event(struct wl_resource* t
 void InputTriggerActionControlV1::cancel()
 {
     action_group->cancel();
-    delete this;
 }
 
 void InputTriggerActionControlV1::destroy()
 {
-    delete this;
 }
 
 class InputTriggerRegistrationManagerV1 : public mw::InputTriggerRegistrationManagerV1::Global
