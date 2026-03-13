@@ -24,6 +24,7 @@
 #include <cstdlib>
 #include <filesystem>
 
+namespace fs = std::filesystem;
 namespace mf = mir::frontend;
 namespace mtd = mir::test::doubles;
 
@@ -42,10 +43,11 @@ struct GDesktopFileCache : Test
 
     static void SetUpTestSuite()
     {
-        // Establish the temporary directory
-        std::filesystem::path tmp_dir_path {std::filesystem::temp_directory_path() /= std::tmpnam(nullptr)};
-        std::filesystem::create_directories(tmp_dir_path);
-        std::string desktop_file_directory_name = tmp_dir_path;
+        std::filesystem::path fs_path {
+            fs::temp_directory_path() /= "mir_test_gdtp_fcache_XXXXXX"};
+        auto desktop_file_directory_name = fs_path.string();
+        auto path_ptr = ::mkdtemp(desktop_file_directory_name.data());
+        ASSERT_THAT(path_ptr, NotNull());
         setenv("XDG_DATA_DIRS", desktop_file_directory_name.c_str(), 1);
         applications_dir = desktop_file_directory_name + "/applications";
         mkdir(applications_dir.c_str(), S_IRWXU);
@@ -54,8 +56,8 @@ struct GDesktopFileCache : Test
     void TearDown() override
     {
         // Remove all files from the temporary directory
-        for (const auto& entry : std::filesystem::directory_iterator(applications_dir))
-            std::filesystem::remove_all(entry.path());
+        for (const auto& entry : fs::directory_iterator(applications_dir))
+            fs::remove_all(entry.path());
     }
 
     void write_desktop_file(const char* contents, const char* filename)
