@@ -16,6 +16,7 @@
 
 #include "rendering_platform.h"
 #include "buffer_allocator.h"
+#include "mir/graphics/linux_dmabuf.h"
 #include <mir/graphics/egl_extensions.h>
 #include <mir/graphics/platform.h>
 #include <mir/graphics/egl_error.h>
@@ -180,7 +181,8 @@ auto maybe_make_dmabuf_provider(
             [](mg::DRMFormat, std::span<uint64_t const>, geom::Size) -> std::shared_ptr<mg::DMABufBuffer>
             {
                 return nullptr;    // We can't (portably) allocate dmabufs, but we also shouldn't need to
-            });
+            },
+            nullptr);  // No strategy selector for generic EGL platform
     }
     catch (std::runtime_error const& error)
     {
