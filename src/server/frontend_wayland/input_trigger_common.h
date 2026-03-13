@@ -158,7 +158,8 @@ public:
     {
         activated,    // trigger just transitioned from inactive → active (rising edge)
         deactivated,  // trigger just transitioned from active → inactive (falling edge)
-        unchanged,    // trigger state did not change
+        pass,
+        consume
     };
 
     Trigger() = default;

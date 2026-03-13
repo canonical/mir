@@ -252,9 +252,10 @@ bool Trigger::handle(MirEvent const& event)
         case Transition::deactivated:
             end(event);
             return true;
-        case Transition::unchanged:
-        default:
-           return is_active();
+        case Transition::pass:
+           return false;
+        case Transition::consume:
+            return true;
     }
 }
 
