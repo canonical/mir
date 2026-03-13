@@ -108,7 +108,8 @@ auto KeyboardTrigger::check_transition(MirEvent const& event) -> Transition
     // are not part of the trigger specification and would prevent matches.
     auto constexpr modifiers_to_ignore =
         mir_input_event_modifier_caps_lock | mir_input_event_modifier_num_lock | mir_input_event_modifier_scroll_lock;
-    auto const event_mods = event.to_input()->to_keyboard()->modifiers() & ~modifiers_to_ignore;
+    auto const keyboard_event = *event.to_input()->to_keyboard();
+    auto const event_mods = keyboard_event.modifiers() & ~modifiers_to_ignore;
 
     if (!InputTriggerModifiers::modifiers_match(modifiers, event_mods))
     {
@@ -127,6 +128,11 @@ auto KeyboardTrigger::check_transition(MirEvent const& event) -> Transition
     }
     else if (!active && pressed)
     {
+        // If we matched because of a key release (like Alt + Shift + s
+        // matching Alt + s on shift release), don't activate.
+        if (keyboard_event.action() == mir_keyboard_action_up)
+            return Transition::pass;
+
         active = true;
         return Transition::activated;
     }
