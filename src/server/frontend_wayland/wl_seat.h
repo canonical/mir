@@ -17,7 +17,6 @@
 #ifndef MIR_FRONTEND_WL_SEAT_H
 #define MIR_FRONTEND_WL_SEAT_H
 
-#include "input_trigger_common.h"
 #include "wayland_wrapper.h"
 #include <mir/wayland/weak.h>
 
