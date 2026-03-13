@@ -1203,6 +1203,37 @@ INSTANTIATE_TEST_SUITE_P(FloatingWindowManagerMaximizedSurfaceExclusionZoneTest,
     )
 );
 
+TEST_F(FloatingWindowManagerTest, attached_above_layer_surface_hidden_when_fullscreen_and_restored_after_unfullscreen)
+{
+    auto const app = open_application("test");
+    auto const output_rectangles = get_initial_output_configs();
+    auto const& output_rectangle = output_rectangles[0];
+
+    auto layer_shell_spec = create_top_attached()(output_rectangle.extents().size);
+    layer_shell_spec.depth_layer() = mir_depth_layer_above;
+    auto const attached = create_window(app, layer_shell_spec);
+
+    miral::WindowSpecification normal_spec;
+    normal_spec.size() = geom::Size{200, 200};
+    auto const normal = create_window(app, normal_spec);
+
+    {
+        miral::WindowSpecification mods;
+        mods.state() = mir_window_state_fullscreen;
+        tools().modify_window(normal, mods);
+    }
+
+    EXPECT_FALSE(tools().info_for(attached).is_visible());
+
+    {
+        miral::WindowSpecification mods;
+        mods.state() = mir_window_state_restored;
+        tools().modify_window(normal, mods);
+    }
+
+    EXPECT_TRUE(tools().info_for(attached).is_visible());
+}
+
 TEST_F(FloatingWindowManagerTest, when_no_surface_is_focused_then_window_is_placed_on_output_of_cursor)
 {
     // Move the cursor to the second output
