@@ -23,6 +23,7 @@
 #include <gmock/gmock.h>
 #include <filesystem>
 #include <fstream>
+#include <stdexcept>
 #include <string_view>
 
 using namespace testing;
@@ -83,6 +84,8 @@ struct ExternalClient : miral::TestServer
     {
         // Starting an X server on LP builder, or Fedora CI, doesn't work
         auto const xdg_dir = getenv("XDG_RUNTIME_DIR");
+        if (!xdg_dir)
+            throw std::runtime_error("XDG_RUNTIME_DIR not found in environment");
         auto const lp_fake_runtime_dir = xdg_dir && (xdg_dir ==  "/tmp"sv);
         auto const cannot_access_x11_unix = access("/tmp/.X11-unix/", W_OK) != 0;
 
