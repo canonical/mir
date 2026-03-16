@@ -85,33 +85,9 @@ public:
 
     std::unique_ptr<miral::FdHandle> fd_handle;
 };
-}
 
-class miral::ConfigFile::Self
+auto get_config_roots(path const& file) -> std::vector<path>
 {
-public:
-    Self(MirRunner& runner, path file, Mode mode, Loader load_config);
-
-private:
-    std::shared_ptr<Watcher> watcher;
-};
-
-Watcher::Watcher(path file, miral::ConfigFile::Loader load_config) :
-    inotify_fd{inotify_init1(IN_CLOEXEC)},
-    load_config{load_config},
-    filename{file.filename()},
-    directory{config_directory(file)},
-    directory_watch_descriptor{watch_descriptor(inotify_fd, directory)}
-{
-    if (directory_watch_descriptor.has_value())
-    {
-        mir::log_debug("Monitoring %s for configuration changes", (directory.value()/filename).c_str());
-    }
-}
-
-miral::ConfigFile::Self::Self(MirRunner& runner, path file, Mode mode, Loader load_config)
-{
-    auto const filename{file.filename()};
     auto const directory{config_directory(file)};
 
     // With C++26 we should be able to use the optional directory as a range to
@@ -136,16 +112,53 @@ miral::ConfigFile::Self::Self(MirRunner& runner, path file, Mode mode, Loader lo
         config_roots.push_back("/etc/xdg");
     }
 
-    /* Read config file */
-    for (auto const& config_root : config_roots)
+    return config_roots;
+}
+
+auto find_config_file(path const& file) -> std::optional<path>
+{
+    auto const filename{file.filename()};
+    auto const config_roots = get_config_roots(file);
+    auto const first_existing_filepath = std::ranges::find_if(
+        config_roots, [&filename](path const& config_root) { return std::filesystem::exists(config_root / filename); });
+
+    if (first_existing_filepath != config_roots.end())
+        return *first_existing_filepath / filename;
+    else
+        return std::nullopt;
+}
+}
+
+class miral::ConfigFile::Self
+{
+public:
+    Self(MirRunner& runner, path file, Mode mode, Loader load_config);
+    Self(MirRunner& runner, path file, Mode mode, OverrideLoader load_config);
+
+private:
+    std::shared_ptr<Watcher> watcher;
+};
+
+Watcher::Watcher(path file, miral::ConfigFile::Loader load_config) :
+    inotify_fd{inotify_init1(IN_CLOEXEC)},
+    load_config{load_config},
+    filename{file.filename()},
+    directory{config_directory(file)},
+    directory_watch_descriptor{watch_descriptor(inotify_fd, directory)}
+{
+    if (directory_watch_descriptor.has_value())
     {
-        auto filepath = config_root / filename;
-        if (std::ifstream config_file{filepath})
-        {
-            load_config(config_file, filepath);
-            mir::log_debug("Loaded %s", filepath.c_str());
-            break;
-        }
+        mir::log_debug("Monitoring %s for configuration changes", (directory.value()/filename).c_str());
+    }
+}
+
+miral::ConfigFile::Self::Self(MirRunner& runner, path file, Mode mode, Loader load_config)
+{
+    if(auto const config_file = find_config_file(file))
+    {
+        std::ifstream config_stream{config_file.value()};
+        load_config(config_stream, *config_file);
+        mir::log_debug("Loaded %s", config_file->c_str());
     }
 
     switch (mode)
@@ -160,7 +173,45 @@ miral::ConfigFile::Self::Self(MirRunner& runner, path file, Mode mode, Loader lo
     }
 }
 
+miral::ConfigFile::Self::Self(MirRunner& /*runner*/, path file, Mode mode, OverrideLoader load_multi_configs)
+{
+    if(auto const config_file = find_config_file(file))
+    {
+        auto const override_directory = config_file->parent_path() / (file.filename().string() + ".d");
+        // Preallocate space for the base config file and any overrides in override_directory
+        std::vector<std::pair<std::unique_ptr<std::istream>, path>> config_streams;
+        config_streams.push_back(std::pair{std::make_unique<std::ifstream>(*config_file), *config_file});
+
+        // TODO handle symlink override directory
+        for (auto const& override_file : directory_iterator{override_directory})
+        {
+            // TODO handle symlink override files
+            if (std::filesystem::is_regular_file(override_file) && override_file.path().extension() == ".conf")
+                config_streams.emplace_back(std::make_unique<std::ifstream>(override_file.path()), override_file);
+        }
+
+        load_multi_configs(config_streams);
+        mir::log_debug("Loaded %s and %zu overrides", config_file->c_str(), config_streams.size() - 1);
+    }
+
+    switch (mode)
+    {
+    case Mode::no_reloading:
+        break;
+
+    case Mode::reload_on_change:
+        // watcher = std::make_shared<Watcher>(file, std::move(load_config));
+        // watcher->register_handler(runner);
+        break;
+    }
+}
+
 miral::ConfigFile::ConfigFile(MirRunner& runner, path file, Mode mode, Loader load_config) :
+    self{std::make_shared<Self>(runner, file, mode, load_config)}
+{
+}
+
+miral::ConfigFile::ConfigFile(MirRunner& runner, path file, Mode mode, OverrideLoader load_config) :
     self{std::make_shared<Self>(runner, file, mode, load_config)}
 {
 }
