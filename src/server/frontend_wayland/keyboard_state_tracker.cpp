@@ -55,6 +55,33 @@ void mf::KeyboardStateTracker::XkbKeyState::update_key(uint32_t xkb_keycode, Mir
     xkb_state_update_key(state.get(), xkb_keycode, action == mir_keyboard_action_down ? XKB_KEY_DOWN : XKB_KEY_UP);
 }
 
+auto mf::KeyboardStateTracker::XkbKeyState::scancode_produces_keysym(
+    uint32_t scancode, xkb_keysym_t keysym) const -> bool
+{
+    if (!compiled_keymap)
+        return false;
+
+    auto const xkb_keycode = to_xkb_scan_code(scancode);
+
+    auto const num_layouts = xkb_keymap_num_layouts_for_key(compiled_keymap.get(), xkb_keycode);
+    for (auto layout = 0u; layout < num_layouts; ++layout)
+    {
+        auto const num_levels = xkb_keymap_num_levels_for_key(compiled_keymap.get(), xkb_keycode, layout);
+        for (auto level = 0u; level < num_levels; ++level)
+        {
+            xkb_keysym_t const* syms{};
+            auto const num_syms = xkb_keymap_key_get_syms_by_level(
+                compiled_keymap.get(), xkb_keycode, layout, level, &syms);
+            for (auto i = 0; i < num_syms; ++i)
+            {
+                if (syms[i] == keysym)
+                    return true;
+            }
+        }
+    }
+    return false;
+}
+
 void mf::KeyboardStateTracker::XkbKeyState::rederive_keysyms_from_scancodes(
     std::unordered_map<uint32_t, xkb_keysym_t>& scancode_to_keysym) const
 {
@@ -141,4 +168,14 @@ auto mf::KeyboardStateTracker::scancode_is_pressed(MirInputDeviceId device, uint
         return false;
 
     return device_states.at(device).scancode_to_keysym.contains(scancode);
+}
+
+auto mf::KeyboardStateTracker::is_same_key(MirKeyboardEvent const& event, xkb_keysym_t keysym) const -> bool
+{
+    auto const& device = event.device_id();
+    if (!device_states.contains(device))
+        return false;
+
+    auto const& [scancode_to_keysym, _, xkb_key_state] = device_states.at(device);
+    return xkb_key_state.scancode_produces_keysym(event.scan_code(), keysym);
 }
