@@ -1,5 +1,6 @@
 User-agent: *
 
-Disallow: # Allow everything
+# Allow everything
+Disallow:
 
 Sitemap: https://canonical-mir.readthedocs-hosted.com/stable/sitemapindex.xml
