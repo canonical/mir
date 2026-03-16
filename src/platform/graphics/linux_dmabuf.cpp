@@ -1802,15 +1802,14 @@ auto export_egl_image(
 
 auto mg::DMABufEGLProvider::cpu_transfer(std::shared_ptr<DmabufTexBuffer> const& dmabuf_tex) -> std::shared_ptr<mg::gl::Texture>
 {
-    auto const pixel_format = mir_pixel_format_argb_8888;
-    auto const size = dmabuf_tex->size();
+    auto const map_readable = dmabuf_tex->map_readable();
     return std::make_shared<ShmBufferTexture>(
         egl_delegate,
         mg::BufferID{0xfade}, // TODO: BufferID registry to keep track of and generate new buffer IDs?
-        dmabuf_tex->map_readable()->data(),
-        size,
-        geom::Stride{size.width.as_int() * MIR_BYTES_PER_PIXEL(pixel_format)},
-        pixel_format);
+        map_readable->data(),
+        map_readable->size(),
+        map_readable->stride(),
+        map_readable->format());
 }
 
 auto mg::DMABufEGLProvider::dma_transfer(std::shared_ptr<DmabufTexBuffer> const& dmabuf_tex) -> std::shared_ptr<mg::gl::Texture>
