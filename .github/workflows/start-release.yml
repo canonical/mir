@@ -44,6 +44,7 @@ jobs:
             echo "minor=${BASH_REMATCH[2]}" | tee --append $GITHUB_OUTPUT
             echo "patch=${BASH_REMATCH[3]}" | tee --append $GITHUB_OUTPUT
             echo "release_branch=release/${BASH_REMATCH[1]}.${BASH_REMATCH[2]}" | tee --append $GITHUB_OUTPUT
+            echo "next_version=${BASH_REMATCH[1]}.$(( ${BASH_REMATCH[2]} + 1 )).0" | tee --append $GITHUB_OUTPUT
           else
             echo ":error: Version '${{ inputs.version }}' is not in the format X.Y.Z"
             exit 1
@@ -116,3 +117,64 @@ jobs:
       - name: Push the Release Candidate tag
         run: |
           git push origin "v${{ inputs.version }}-rc"
+
+      - name: Start development of next version
+        if: github.ref == 'refs/heads/main' && inputs.sha == ''
+        env:
+          DEBFULLNAME: ${{ steps.gpg.outputs.name }}
+          DEBEMAIL: ${{ steps.gpg.outputs.email }}
+        run: |
+          # Bump CMake version
+          sed --in-place -E 's/(VERSION\s+)[0-9]+\.[0-9]+\.[0-9]+/\1${{ steps.version.outputs.next_version }}/' CMakeLists.txt
+
+          # Add a Debian changelog entry
+          sudo apt-get install --yes --no-install-recommends devscripts
+          debchange --newversion '${{ steps.version.outputs.next_version }}~dev' ''
+
+          awk --include=inplace \
+            -v next_version='${{ steps.version.outputs.next_version }}' \
+            -v begin_pat='Begin development for ${{ steps.version.outputs.version }}' '
+            $0~begin_pat {
+              print "  * Begin development for " next_version " release"
+              in_release=1
+              next
+            }
+            in_release && /ABI summary/ {
+              abi_summary=1
+            }
+            abi_summary && /bumped to/ {
+              gsub(/bumped to/, "unchanged at")
+            }
+            abi_summary && /^$/ {
+              in_release=0
+              abi_summary=0
+            }
+            { print }
+          ' debian/changelog
+
+          # Update the RPM changelog
+          awk --include=inplace \
+            -v version_pat='${{ steps.version.outputs.version }}~dev-1$' \
+            -v begin_pat='Begin development for ${{ steps.version.outputs.version }}' \
+            -v next_version='${{ steps.version.outputs.next_version }}' \
+            -v name='${{ steps.gpg.outputs.name }}' \
+            -v email='${{ steps.gpg.outputs.email }}' \
+            -v date="$(date "+%a, %b %d %Y")" '
+            /^%changelog/ {
+              print
+              print "* " date " " name " <" email "> - " next_version "~dev-1"
+              print "- Begin development for " next_version " release"
+              next
+            }
+            $0~version_pat {
+              next
+            }
+            $0~begin_pat {
+              next
+            }
+            { print }
+          ' rpm/mir.spec
+
+          git add CMakeLists.txt debian/changelog rpm/mir.spec
+          git commit -m "Start development for ${NEXT_VERSION} release"
+          git push origin "HEAD:${{ github.ref }}"
