@@ -13,7 +13,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 #include "surface_registry.h"
 #include "wayland_wrapper.h"
 
@@ -25,6 +24,7 @@
 #include "wl_pointer.h"
 #include "wl_touch.h"
 #include "wl_data_device.h"
+#include "keyboard_state_tracker.h"
 
 #include <mir/executor.h>
 #include <mir/wayland/client.h>
@@ -38,6 +38,7 @@
 #include <mir/scene/surface.h>
 #include <mir/shell/accessibility_manager.h>
 #include <mir_toolkit/events/input/pointer_event.h>
+#include <mir/events/keyboard_event.h>
 
 #include <mutex>
 #include <algorithm>
@@ -144,14 +145,74 @@ class mf::WlSeat::KeyboardObserver
     : public input::KeyboardObserver
 {
 public:
-    KeyboardObserver(WlSeat& seat, std::shared_ptr<mf::SurfaceRegistry> const surface_registry) :
+    KeyboardObserver(
+        WlSeat& seat,
+        std::shared_ptr<mf::SurfaceRegistry> const surface_registry,
+        std::shared_ptr<InputTriggerRegistry> const& input_trigger_registry,
+        std::shared_ptr<KeyboardStateTracker> const& keyboard_state_tracker) :
         seat{seat},
-        surface_registry{surface_registry}
+        surface_registry{surface_registry},
+        input_trigger_registry{input_trigger_registry},
+        keyboard_state_tracker{keyboard_state_tracker}
     {
     }
 
+    class ConsumedKeyTracker
+    {
+    public:
+        bool should_consume_event(bool handled, MirEvent const& event)
+        {
+            if (event.type() != mir_event_type_input || event.to_input()->input_type() != mir_input_event_type_key)
+                return false;
+
+            auto const key_event = *event.to_input()->to_keyboard();
+            auto const scancode = key_event.scan_code();
+
+            switch (key_event.action())
+            {
+                case mir_keyboard_action_down:
+                    if (!handled)
+                        return false;
+                    consumed_down_scancodes.insert(scancode);
+                    return true;
+
+                case mir_keyboard_action_repeat:
+                    return consumed_down_scancodes.contains(scancode);
+
+                case mir_keyboard_action_up:
+                    // If the down event was consumed, consume the up event.
+                    // Otherwise, pass it to the client.
+                    if (consumed_down_scancodes.contains(scancode))
+                    {
+                        consumed_down_scancodes.erase(scancode);
+                        return true;
+                    }
+
+                    return false;
+                default:
+                    return false;
+            }
+
+            return false;
+        }
+
+    private:
+        std::unordered_set<uint32_t> consumed_down_scancodes;
+    };
+
     void keyboard_event(std::shared_ptr<MirEvent const> const& event) override
     {
+        keyboard_state_tracker->process(*event);
+
+        auto const handled = input_trigger_registry->any_trigger_handled(*event);
+
+        // Track which events were handled and consumed, and which were passed
+        // to the client. For consumed down events, their up counterparts will
+        // be consumed. For non-consumed events, their up counterparts will be
+        // passed to the client.
+        if(consumed_key_tracker.should_consume_event(handled, *event))
+            return;
+
         if (seat.focused_surface)
         {
             seat.for_each_listener(seat.focused_surface.value().client, [&](WlKeyboard* keyboard)
@@ -176,6 +237,9 @@ public:
 private:
     WlSeat& seat;
     std::shared_ptr<mf::SurfaceRegistry> const surface_registry;
+    std::shared_ptr<mf::InputTriggerRegistry> const input_trigger_registry;
+    std::shared_ptr<KeyboardStateTracker> const keyboard_state_tracker;
+    ConsumedKeyTracker consumed_key_tracker;
 };
 
 class mf::WlSeat::Instance : public wayland::Seat
@@ -199,7 +263,9 @@ mf::WlSeat::WlSeat(
     std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> const& keyboard_observer_registrar,
     std::shared_ptr<mi::Seat> const& seat,
     std::shared_ptr<shell::AccessibilityManager> const& accessibility_manager,
-    std::shared_ptr<mf::SurfaceRegistry> const& surface_registry)
+    std::shared_ptr<mf::SurfaceRegistry> const& surface_registry,
+    std::shared_ptr<mf::InputTriggerRegistry> const& input_trigger_registry,
+    std::shared_ptr<KeyboardStateTracker> const& keyboard_state_tracker)
     :   Global(display, Version<9>()),
         keymap{std::make_shared<input::ParameterKeymap>()},
         config_observer{
@@ -210,7 +276,7 @@ mf::WlSeat::WlSeat(
                     keymap = new_keymap;
                 })},
         keyboard_observer_registrar{keyboard_observer_registrar},
-        keyboard_observer{std::make_shared<KeyboardObserver>(*this, surface_registry)},
+        keyboard_observer{std::make_shared<KeyboardObserver>(*this, surface_registry, input_trigger_registry, keyboard_state_tracker)},
         focus_listeners{std::make_shared<ListenerList<FocusListener>>()},
         pointer_listeners{std::make_shared<ListenerList<PointerEventDispatcher>>()},
         keyboard_listeners{std::make_shared<ListenerList<WlKeyboard>>()},
