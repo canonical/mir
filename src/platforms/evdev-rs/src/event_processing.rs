@@ -216,12 +216,7 @@ fn handle_pointer_motion_absolute(
         return true;
     };
 
-    report.received_event_from_kernel(
-        absolute_motion_event.time_usec(),
-        EV_ABS,
-        0,
-        0,
-    );
+    report.received_event_from_kernel(absolute_motion_event.time_usec(), EV_ABS, 0, 0);
 
     let bounding_rect = get_bounding_rectangle(&mut device_info.input_sink, bridge);
     if bounding_rect.is_null() {
