@@ -39,7 +39,7 @@ impl PlatformRs {
     pub fn new(
         bridge: cxx::SharedPtr<crate::PlatformBridge>,
         device_registry: cxx::SharedPtr<crate::InputDeviceRegistry>,
-        report: cxx::UniquePtr<crate::InputReport>
+        report: cxx::UniquePtr<crate::InputReport>,
     ) -> Self {
         PlatformRs {
             bridge,
@@ -192,7 +192,7 @@ impl PlatformRs {
                     &mut *state,
                     self.device_registry.clone(),
                     self.bridge.clone(),
-                    &self.report
+                    &self.report,
                 );
             }
             _ => {}
