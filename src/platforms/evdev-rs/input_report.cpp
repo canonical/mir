@@ -22,14 +22,14 @@ namespace mi = mir::input;
 namespace miers = mir::input::evdev_rs;
 
 miers::InputReport::InputReport(std::shared_ptr<mi::InputReport> const& report)
-    : report(report) {}
+    : report{report} {}
 
-void miers::InputReport::received_event_from_kernel(uint64_t when_microseconds, int32_t type, uint32_t code, uint32_t value) const
+void miers::InputReport::received_event_from_kernel(uint64_t when_microseconds, int32_t type, int32_t code, int32_t value) const
 {
     report->received_event_from_kernel(
         std::chrono::microseconds(when_microseconds),
         type,
-        static_cast<int>(code),
-        static_cast<int>(value)
+        code,
+        value
     );
 }

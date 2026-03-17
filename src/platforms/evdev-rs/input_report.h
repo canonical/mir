@@ -32,7 +32,7 @@ class InputReport
 {
 public:
     explicit InputReport(std::shared_ptr<input::InputReport> const& report);
-    void received_event_from_kernel(uint64_t when_microseconds, int32_t type, uint32_t code, uint32_t value) const;
+    void received_event_from_kernel(uint64_t when_microseconds, int32_t type, int32_t code, int32_t value) const;
 
 private:
     std::shared_ptr<input::InputReport> report;

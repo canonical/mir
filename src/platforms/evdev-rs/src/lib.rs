@@ -303,7 +303,7 @@ mod ffi_bridge {
         pub fn width(self: &RectangleWrapper) -> i32;
         pub fn height(self: &RectangleWrapper) -> i32;
 
-        pub fn received_event_from_kernel(self: &InputReport, when_microseconds: u64, type_: i32, code: u32, value: u32);
+        pub fn received_event_from_kernel(self: &InputReport, when_microseconds: u64, type_: i32, code: i32, value: i32);
     }
 }
 

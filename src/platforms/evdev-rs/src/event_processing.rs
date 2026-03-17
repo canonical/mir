@@ -357,7 +357,7 @@ fn handle_pointer_button(
     };
 
     report.received_event_from_kernel(
-        button_event.time_usec(), input_event_codes::EV_KEY!(), mir_button.repr, action.repr as u32);
+        button_event.time_usec(), input_event_codes::EV_KEY!(), mir_button.repr as i32, action.repr as i32);
 
     let pointer_event = PointerEventData {
         has_time: true,
@@ -532,7 +532,7 @@ fn handle_keyboard_event(
     };
 
     report.received_event_from_kernel(
-        key_event.time_usec(), input_event_codes::EV_KEY!(), key_event.key(), keyboard_action.repr as u32);
+        key_event.time_usec(), input_event_codes::EV_KEY!(), key_event.key() as i32, keyboard_action.repr as i32);
 
     let created = event_builder.pin_mut().key_event(&key_event_data);
 
@@ -743,7 +743,7 @@ pub fn process_libinput_events(
                 };
 
                 let should_continue =
-                    handle_pointer_event(device_info, &mut scroll_state, &bridge, pointer_event, &report);
+                    handle_pointer_event(device_info, &mut scroll_state, &bridge, pointer_event, report);
 
                 state.scroll_axis_x_accum = scroll_state.x_accum;
                 state.scroll_axis_y_accum = scroll_state.y_accum;
