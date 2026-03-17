@@ -31,6 +31,20 @@ use input::AsRaw;
 use std::collections::HashMap;
 use std::thread;
 
+const EV_SYN: i32 = 0x00;
+const EV_KEY: i32 = 0x01;
+const EV_REL: i32 = 0x02;
+const EV_ABS: i32 = 0x03;
+
+const BTN_LEFT: u32 = 0x110;
+const BTN_RIGHT: u32 = 0x111;
+const BTN_MIDDLE: u32 = 0x112;
+const BTN_SIDE: u32 = 0x113;
+const BTN_EXTRA: u32 = 0x114;
+const BTN_FORWARD: u32 = 0x115;
+const BTN_BACK: u32 = 0x116;
+const BTN_TASK: u32 = 0x117;
+
 /// Computed scroll axis values for a single axis.
 struct ScrollAxisData {
     precise: f32,
@@ -172,7 +186,7 @@ fn handle_pointer_motion(
         return;
     };
 
-    report.received_event_from_kernel(motion_event.time_usec(), input_event_codes::EV_REL!(), 0, 0);
+    report.received_event_from_kernel(motion_event.time_usec(), EV_REL, 0, 0);
 
     let pointer_event = PointerEventData {
         has_time: true,
@@ -204,7 +218,7 @@ fn handle_pointer_motion_absolute(
 
     report.received_event_from_kernel(
         absolute_motion_event.time_usec(),
-        input_event_codes::EV_ABS!(),
+        EV_ABS,
         0,
         0,
     );
@@ -278,7 +292,7 @@ fn handle_pointer_scroll(
         return;
     };
 
-    report.received_event_from_kernel(data.time_usec, input_event_codes::EV_REL!(), 0, 0);
+    report.received_event_from_kernel(data.time_usec, EV_REL, 0, 0);
 
     let x = compute_scroll_for_axis(
         data.has_horizontal,
@@ -327,26 +341,26 @@ fn handle_pointer_button(
     };
 
     let mir_button = match button_event.button() {
-        input_event_codes::BTN_LEFT!() => {
+        BTN_LEFT => {
             if device_info.device.config_left_handed() {
                 crate::MirPointerButton::mir_pointer_button_secondary
             } else {
                 crate::MirPointerButton::mir_pointer_button_primary
             }
         }
-        input_event_codes::BTN_RIGHT!() => {
+        BTN_RIGHT => {
             if device_info.device.config_left_handed() {
                 crate::MirPointerButton::mir_pointer_button_primary
             } else {
                 crate::MirPointerButton::mir_pointer_button_secondary
             }
         }
-        input_event_codes::BTN_MIDDLE!() => crate::MirPointerButton::mir_pointer_button_tertiary,
-        input_event_codes::BTN_BACK!() => crate::MirPointerButton::mir_pointer_button_back,
-        input_event_codes::BTN_FORWARD!() => crate::MirPointerButton::mir_pointer_button_forward,
-        input_event_codes::BTN_SIDE!() => crate::MirPointerButton::mir_pointer_button_side,
-        input_event_codes::BTN_EXTRA!() => crate::MirPointerButton::mir_pointer_button_extra,
-        input_event_codes::BTN_TASK!() => crate::MirPointerButton::mir_pointer_button_task,
+        BTN_MIDDLE => crate::MirPointerButton::mir_pointer_button_tertiary,
+        BTN_BACK => crate::MirPointerButton::mir_pointer_button_back,
+        BTN_FORWARD => crate::MirPointerButton::mir_pointer_button_forward,
+        BTN_SIDE => crate::MirPointerButton::mir_pointer_button_side,
+        BTN_EXTRA => crate::MirPointerButton::mir_pointer_button_extra,
+        BTN_TASK => crate::MirPointerButton::mir_pointer_button_task,
         _ => crate::MirPointerButton::mir_pointer_button_primary,
     };
 
@@ -360,7 +374,7 @@ fn handle_pointer_button(
 
     report.received_event_from_kernel(
         button_event.time_usec(),
-        input_event_codes::EV_KEY!(),
+        EV_KEY,
         mir_button.repr as i32,
         action.repr as i32,
     );
@@ -539,7 +553,7 @@ fn handle_keyboard_event(
 
     report.received_event_from_kernel(
         key_event.time_usec(),
-        input_event_codes::EV_KEY!(),
+        EV_KEY,
         key_event.key() as i32,
         keyboard_action.repr as i32,
     );
@@ -690,7 +704,7 @@ fn handle_touch_frame(
     }
 
     let time_usec = frame_event.time_usec();
-    report.received_event_from_kernel(time_usec, input_event_codes::EV_SYN!(), 0, 0);
+    report.received_event_from_kernel(time_usec, EV_SYN, 0, 0);
 
     let touch_event_data = crate::TouchEventData {
         has_time: true,

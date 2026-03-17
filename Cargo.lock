@@ -239,12 +239,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "input-event-codes"
-version = "6.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d437b85b6856c30525a380e2de28d630cd2f03b4eec8e8a043d71d7e223792dd"
-
-[[package]]
 name = "input-sys"
 version = "1.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -311,7 +305,6 @@ dependencies = [
  "cxx",
  "cxx-build",
  "input",
- "input-event-codes",
  "libc",
  "nix",
 ]
