@@ -5,9 +5,8 @@ on:
     inputs:
       sha:
         description: 'Commit-ish to release'
-        required: true
+        required: false
         type: string
-        default: 'HEAD'
       version:
         description: 'Release version (e.g., 2.24.0)'
         required: true
