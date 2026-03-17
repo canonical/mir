@@ -172,8 +172,7 @@ fn handle_pointer_motion(
         return;
     };
 
-    report.received_event_from_kernel(
-        motion_event.time_usec(), input_event_codes::EV_REL!(), 0, 0);
+    report.received_event_from_kernel(motion_event.time_usec(), input_event_codes::EV_REL!(), 0, 0);
 
     let pointer_event = PointerEventData {
         has_time: true,
@@ -204,7 +203,11 @@ fn handle_pointer_motion_absolute(
     };
 
     report.received_event_from_kernel(
-        absolute_motion_event.time_usec(), input_event_codes::EV_ABS!(), 0, 0);
+        absolute_motion_event.time_usec(),
+        input_event_codes::EV_ABS!(),
+        0,
+        0,
+    );
 
     let bounding_rect = get_bounding_rectangle(&mut device_info.input_sink, bridge);
     if bounding_rect.is_null() {
@@ -275,8 +278,7 @@ fn handle_pointer_scroll(
         return;
     };
 
-    report.received_event_from_kernel(
-        data.time_usec, input_event_codes::EV_REL!(), 0, 0);
+    report.received_event_from_kernel(data.time_usec, input_event_codes::EV_REL!(), 0, 0);
 
     let x = compute_scroll_for_axis(
         data.has_horizontal,
@@ -357,7 +359,11 @@ fn handle_pointer_button(
     };
 
     report.received_event_from_kernel(
-        button_event.time_usec(), input_event_codes::EV_KEY!(), mir_button.repr as i32, action.repr as i32);
+        button_event.time_usec(),
+        input_event_codes::EV_KEY!(),
+        mir_button.repr as i32,
+        action.repr as i32,
+    );
 
     let pointer_event = PointerEventData {
         has_time: true,
@@ -509,7 +515,7 @@ fn handle_pointer_event(
 fn handle_keyboard_event(
     device_info: &mut LibinputDeviceInfo,
     keyboard_event: event::KeyboardEvent,
-    report: &crate::InputReport
+    report: &crate::InputReport,
 ) {
     let event::KeyboardEvent::Key(key_event) = keyboard_event else {
         return;
@@ -532,7 +538,11 @@ fn handle_keyboard_event(
     };
 
     report.received_event_from_kernel(
-        key_event.time_usec(), input_event_codes::EV_KEY!(), key_event.key() as i32, keyboard_action.repr as i32);
+        key_event.time_usec(),
+        input_event_codes::EV_KEY!(),
+        key_event.key() as i32,
+        keyboard_action.repr as i32,
+    );
 
     let created = event_builder.pin_mut().key_event(&key_event_data);
 
@@ -549,7 +559,7 @@ fn handle_touch_event(
     device_info: &mut LibinputDeviceInfo,
     bridge: &cxx::SharedPtr<crate::PlatformBridge>,
     touch_event: event::TouchEvent,
-    report: &crate::InputReport
+    report: &crate::InputReport,
 ) -> bool {
     match touch_event {
         event::TouchEvent::Down(down_event) => {
@@ -680,8 +690,7 @@ fn handle_touch_frame(
     }
 
     let time_usec = frame_event.time_usec();
-    report.received_event_from_kernel(
-        time_usec, input_event_codes::EV_SYN!(), 0, 0);
+    report.received_event_from_kernel(time_usec, input_event_codes::EV_SYN!(), 0, 0);
 
     let touch_event_data = crate::TouchEventData {
         has_time: true,
@@ -705,7 +714,7 @@ pub fn process_libinput_events(
     state: &mut LibinputDeviceState,
     device_registry: cxx::SharedPtr<crate::InputDeviceRegistry>,
     bridge: cxx::SharedPtr<crate::PlatformBridge>,
-    report: &crate::InputReport
+    report: &crate::InputReport,
 ) {
     if state.libinput.dispatch().is_err() {
         println!("Error dispatching libinput events");
@@ -742,8 +751,13 @@ pub fn process_libinput_events(
                     y_scroll_scale: state.y_scroll_scale as f64,
                 };
 
-                let should_continue =
-                    handle_pointer_event(device_info, &mut scroll_state, &bridge, pointer_event, report);
+                let should_continue = handle_pointer_event(
+                    device_info,
+                    &mut scroll_state,
+                    &bridge,
+                    pointer_event,
+                    report,
+                );
 
                 state.scroll_axis_x_accum = scroll_state.x_accum;
                 state.scroll_axis_y_accum = scroll_state.y_accum;

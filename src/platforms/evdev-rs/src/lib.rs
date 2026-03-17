@@ -210,7 +210,7 @@ mod ffi_bridge {
         fn evdev_rs_create(
             bridge: SharedPtr<PlatformBridge>,
             device_registry: SharedPtr<InputDeviceRegistry>,
-            reporter: UniquePtr<InputReport>
+            reporter: UniquePtr<InputReport>,
         ) -> Box<PlatformRs>;
     }
 
@@ -303,7 +303,13 @@ mod ffi_bridge {
         pub fn width(self: &RectangleWrapper) -> i32;
         pub fn height(self: &RectangleWrapper) -> i32;
 
-        pub fn received_event_from_kernel(self: &InputReport, when_microseconds: u64, type_: i32, code: i32, value: i32);
+        pub fn received_event_from_kernel(
+            self: &InputReport,
+            when_microseconds: u64,
+            type_: i32,
+            code: i32,
+            value: i32,
+        );
     }
 }
 
@@ -317,7 +323,7 @@ pub use ffi_bridge::*;
 pub fn evdev_rs_create(
     bridge: cxx::SharedPtr<PlatformBridge>,
     device_registry: cxx::SharedPtr<InputDeviceRegistry>,
-    report: cxx::UniquePtr<InputReport>
+    report: cxx::UniquePtr<InputReport>,
 ) -> Box<PlatformRs> {
     return Box::new(PlatformRs::new(bridge, device_registry, report));
 }
