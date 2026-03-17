@@ -27,6 +27,7 @@ jobs:
           ref: ${{ inputs.sha }}
 
       - name: Import GPG key
+        id: gpg
         uses: crazy-max/ghaction-import-gpg@v7
         with:
           gpg_private_key: ${{ secrets.MIR_BOT_GPG_PRIVATE_KEY }}
@@ -48,12 +49,27 @@ jobs:
             exit 1
           fi
 
+      - name: Release Debian symbols
+        run: |
+          awk --include=inplace \
+            -v version_pat='${{ inputs.version }}~dev$' \
+            -v version="${{ inputs.version }}" '
+            $0~version_pat {
+              gsub(version "~dev$", version)
+            }
+            { print }
+          ' debian/*.symbols
+
+          git add debian/*.symbols
+
       - name: Update CMake version
         run: |
           sed --in-place -E 's/(VERSION\s+)[0-9]+\.[0-9]+\.[0-9]+/\1${{ inputs.version }}/' CMakeLists.txt
+          git add CMakeLists.txt
 
-          if [ -n "$(git status --porcelain CMakeLists.txt)" ]; then
-            git add CMakeLists.txt
+      - name: Commit Release Candidate
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
             git commit -m "Begin Release Candidate for ${{ inputs.version }} release"
           fi
 
