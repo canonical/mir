@@ -453,38 +453,8 @@ void OverrideWatcher::handler(int)
                 })
             && std::string_view{event.name}.ends_with(".conf");
 
-        if (override_directory_deleted)
-        {
-            if (override_directory_watch_descriptor)
-                if (inotify_rm_watch(inotify_fd, *override_directory_watch_descriptor) != 0)
-                    mir::log_warning(
-                        "Failed to remove watch for override directory '%s': %s",
-                        override_directory.c_str(),
-                        strerror(errno));
-
-            override_directory_watch_descriptor = std::nullopt;
-            override_symlink_file_watch_descriptors.clear();
-        }
-
-        // Override directory created, or repointed if it was a symlink.
-        if (override_directory_created)
-        {
-            // If the gets repointed (fires IN_CREATE), we should remove the
-            // existing watch.
-            if (override_directory_watch_descriptor)
-                if (inotify_rm_watch(inotify_fd, *override_directory_watch_descriptor) != 0)
-                    mir::log_warning(
-                        "Failed to remove watch for override directory '%s': %s",
-                        override_directory.c_str(),
-                        strerror(errno));
-
-            override_directory_watch_descriptor =
-                watch_override_directory(inotify_fd, base_config_directory, override_directory);
-            override_symlink_file_watch_descriptors = watch_symlinked_override_files();
-        }
-
-        if (base_config_changed || override_file_changed || override_directory_created || override_file_deleted
-            || override_symlink_target_changed)
+        if (base_config_changed || override_file_changed || override_directory_created || override_directory_deleted
+            || override_file_deleted || override_symlink_target_changed)
             try
             {
                 auto const base_config = base_config_directory.value() / base_config_filename;
@@ -492,6 +462,30 @@ void OverrideWatcher::handler(int)
 
                 if (base_config_exists)
                 {
+                    // Clear and re-establish override directory watch and symlink watches
+                    if(override_directory_watch_descriptor)
+                    {
+                        if (inotify_rm_watch(inotify_fd, *override_directory_watch_descriptor) != 0)
+                            mir::log_warning(
+                                "Failed to remove watch for override directory '%s': %s",
+                                override_directory.c_str(),
+                                strerror(errno));
+
+                        // TODO this looks like it warrants an RAII wrapper
+                        for (auto const& watch : override_symlink_file_watch_descriptors)
+                        {
+                            if (inotify_rm_watch(inotify_fd, watch.watch_descriptor) != 0)
+                                mir::log_warning(
+                                    "Failed to remove watch for override symlink file '%s': %s",
+                                    watch.filepath.c_str(),
+                                    strerror(errno));
+                        }
+
+                        override_directory_watch_descriptor =
+                            watch_override_directory(inotify_fd, base_config_directory, override_directory);
+                        override_symlink_file_watch_descriptors = watch_symlinked_override_files();
+                    }
+
                     auto config_streams = collect_all_file_streams(base_config);
                     override_loader(config_streams);
 
