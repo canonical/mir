@@ -184,7 +184,6 @@ auto collect_all_file_streams(path const& config_file) -> std::vector<std::pair<
     {
         auto const override_files = collect_override_files(override_directory);
 
-        // TODO handle symlink override directory
         for (auto const& override_file : override_files)
         {
             if (std::filesystem::is_regular_file(override_file) && override_file.extension() == ".conf")
