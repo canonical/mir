@@ -134,7 +134,7 @@ jobs:
 
           awk --include=inplace \
             -v next_version='${{ steps.version.outputs.next_version }}' \
-            -v begin_pat='Begin development for ${{ steps.version.outputs.version }}' '
+            -v begin_pat='Begin development for ${{ inputs.version }}' '
             $0~begin_pat {
               print "  * Begin development for " next_version " release"
               in_release=1
