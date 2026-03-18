@@ -710,6 +710,24 @@ struct TestOverrideConfigFile : PendingLoad, miral::TestServer
         file << "updated base content";
     }
 
+    void delete_override_file(std::string const& filename)
+    {
+        mark_pending();
+        std::filesystem::remove(override_dir() / filename);
+    }
+
+    void rename_override_file(std::string const& from, std::string const& to)
+    {
+        mark_pending();
+        std::filesystem::rename(override_dir() / from, override_dir() / to);
+    }
+
+    void move_override_file_out(std::string const& filename)
+    {
+        mark_pending();
+        std::filesystem::rename(override_dir() / filename, std::filesystem::path{symlink_targets_dir} / filename);
+    }
+
     void SetUp() override
     {
         miral::TestServer::SetUp();
@@ -1213,4 +1231,116 @@ TEST_F(TestOverrideConfigFile, no_reloading_mode_does_not_reload_on_override_cha
     write_override_file("20-second.conf");
     wait_for_load();
     EXPECT_THAT(load_call_count, testing::Eq(1));
+}
+
+TEST_F(TestOverrideConfigFile, no_reloading_mode_does_not_reload_on_base_config_change)
+{
+    write_base_config();
+
+    invoke_runner([this](miral::MirRunner& runner)
+    {
+        config = ConfigFile{
+            runner,
+            override_config_file,
+            ConfigFile::Mode::no_reloading,
+            [this](auto streams) { record_load(streams); }};
+    });
+
+    wait_for_load();
+    EXPECT_THAT(load_call_count, testing::Eq(1));
+
+    rewrite_base_config();
+    wait_for_load();
+    EXPECT_THAT(load_call_count, testing::Eq(1));
+}
+
+TEST_F(TestOverrideConfigFile, reloads_when_override_file_is_deleted)
+{
+    write_base_config();
+    write_override_file("10-first.conf");
+    write_override_file("20-second.conf");
+
+    invoke_runner([this](miral::MirRunner& runner)
+    {
+        config = ConfigFile{
+            runner,
+            override_config_file,
+            ConfigFile::Mode::reload_on_change,
+            [this](auto streams) { record_load(streams); }};
+    });
+
+    wait_for_load();
+    EXPECT_THAT(last_load_stream_count, testing::Eq(3u)); // base + 2 overrides
+
+    delete_override_file("10-first.conf");
+    wait_for_load();
+    EXPECT_THAT(last_load_stream_count, testing::Eq(2u)); // base + 1 remaining override
+}
+
+TEST_F(TestOverrideConfigFile, reloads_when_override_file_is_moved_out_of_directory)
+{
+    write_base_config();
+    write_override_file("10-first.conf");
+
+    invoke_runner([this](miral::MirRunner& runner)
+    {
+        config = ConfigFile{
+            runner,
+            override_config_file,
+            ConfigFile::Mode::reload_on_change,
+            [this](auto streams) { record_load(streams); }};
+    });
+
+    wait_for_load();
+    EXPECT_THAT(last_load_stream_count, testing::Eq(2u)); // base + 1 override
+
+    move_override_file_out("10-first.conf");
+    wait_for_load();
+    EXPECT_THAT(last_load_stream_count, testing::Eq(1u)); // base only
+}
+
+TEST_F(TestOverrideConfigFile, reloads_when_override_file_is_renamed_to_non_conf)
+{
+    write_base_config();
+    write_override_file("10-first.conf");
+
+    invoke_runner([this](miral::MirRunner& runner)
+    {
+        config = ConfigFile{
+            runner,
+            override_config_file,
+            ConfigFile::Mode::reload_on_change,
+            [this](auto streams) { record_load(streams); }};
+    });
+
+    wait_for_load();
+    EXPECT_THAT(last_load_stream_count, testing::Eq(2u)); // base + 1 override
+
+    // Renaming a .conf file away should trigger a reload without it
+    rename_override_file("10-first.conf", "10-first.conf.bak");
+    wait_for_load();
+    EXPECT_THAT(last_load_stream_count, testing::Eq(1u)); // base only
+}
+
+TEST_F(TestOverrideConfigFile, reloads_when_file_is_renamed_to_conf_in_override_directory)
+{
+    write_base_config();
+    write_override_file("10-first.conf.tmp");
+
+    invoke_runner([this](miral::MirRunner& runner)
+    {
+        config = ConfigFile{
+            runner,
+            override_config_file,
+            ConfigFile::Mode::reload_on_change,
+            [this](auto streams) { record_load(streams); }};
+    });
+
+    wait_for_load();
+    EXPECT_THAT(last_load_stream_count, testing::Eq(1u)); // base only, .tmp is ignored
+
+    // Atomically renaming a .tmp to .conf should trigger a reload including it
+    rename_override_file("10-first.conf.tmp", "10-first.conf");
+    wait_for_load();
+    EXPECT_THAT(last_load_stream_count, testing::Eq(2u)); // base + new override
 }
