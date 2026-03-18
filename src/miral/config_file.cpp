@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <filesystem>
 #include <miral/config_file.h>
 
 #include <miral/runner.h>
@@ -32,6 +33,8 @@
 #include <string>
 #include <sstream>
 #include <vector>
+#include <ranges>
+#include <algorithm>
 
 using namespace std::filesystem;
 
@@ -65,6 +68,7 @@ auto watch_descriptor(mir::Fd const& inotify_fd, std::optional<path> const& path
     if (inotify_fd < 0)
         BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), "Failed to initialize inotify_fd"}));
 
+    // TODO handle deletions (IN_DELETE and IN_MOVED_FROM)
     return inotify_add_watch(inotify_fd, path.value().c_str(), IN_CLOSE_WRITE | IN_CREATE | IN_MOVED_TO);
 }
 
@@ -84,6 +88,31 @@ public:
     void handler(int) const;
 
     std::unique_ptr<miral::FdHandle> fd_handle;
+};
+
+class OverrideWatcher : public std::enable_shared_from_this<OverrideWatcher>
+{
+public:
+    using OverrideLoader = miral::ConfigFile::OverrideLoader;
+    OverrideWatcher(path base_config, OverrideLoader load_config);
+
+    void register_handler(miral::MirRunner& runner);
+private:
+    void handler(int) const; // TODO
+
+    mir::Fd const inotify_fd;
+    std::unique_ptr<miral::FdHandle> fd_handle;
+
+    OverrideLoader const override_loader;
+
+    std::string const base_config_filename;
+    std::string const override_directory;
+    std::optional<path> const base_config_directory;
+
+    std::optional<int> base_config_directory_watch_descriptor;
+    std::optional<int> override_directory_watch_descriptor;
+    // std::vector<int> override_file_watch_descriptors;
+
 };
 
 auto get_config_roots(path const& file) -> std::vector<path>
@@ -127,6 +156,41 @@ auto find_config_file(path const& file) -> std::optional<path>
     else
         return std::nullopt;
 }
+
+auto collect_override_files(path const& override_directory) -> std::vector<path>
+{
+    auto unsorted =
+        directory_iterator{override_directory}
+        | std::views::filter([](auto const& f)
+                             { return std::filesystem::is_regular_file(f) && f.path().extension() == ".conf"; })
+        | std::views::transform([](auto const& f) { return f.path(); }) | std::ranges::to<std::vector>();
+
+    std::sort(unsorted.begin(), unsorted.end());
+    return unsorted;
+}
+
+auto collect_all_file_streams(path const& config_file) -> std::vector<std::pair<std::unique_ptr<std::istream>, path>>
+{
+    auto const override_directory = config_file.parent_path() / (config_file.filename().string() + ".d");
+
+    std::vector<std::pair<std::unique_ptr<std::istream>, path>> config_streams;
+    config_streams.push_back(std::pair{std::make_unique<std::ifstream>(config_file), config_file});
+
+    if (exists(override_directory))
+    {
+        auto const override_files = collect_override_files(override_directory);
+
+        // TODO handle symlink override directory
+        for (auto const& override_file : override_files)
+        {
+            // TODO handle symlink override files
+            if (std::filesystem::is_regular_file(override_file) && override_file.extension() == ".conf")
+                config_streams.emplace_back(std::make_unique<std::ifstream>(override_file), override_file);
+        }
+    }
+
+    return config_streams;
+}
 }
 
 class miral::ConfigFile::Self
@@ -137,6 +201,7 @@ public:
 
 private:
     std::shared_ptr<Watcher> watcher;
+    std::shared_ptr<OverrideWatcher> override_watcher;
 };
 
 Watcher::Watcher(path file, miral::ConfigFile::Loader load_config) :
@@ -173,25 +238,19 @@ miral::ConfigFile::Self::Self(MirRunner& runner, path file, Mode mode, Loader lo
     }
 }
 
-miral::ConfigFile::Self::Self(MirRunner& /*runner*/, path file, Mode mode, OverrideLoader load_multi_configs)
+miral::ConfigFile::Self::Self(MirRunner& runner, path file, Mode mode, OverrideLoader load_multi_configs)
 {
+    // TODO override directory might not exist at first. Need to watch for it
+    // being created, then add a watch on that when its created.
     if(auto const config_file = find_config_file(file))
     {
-        auto const override_directory = config_file->parent_path() / (file.filename().string() + ".d");
-        // Preallocate space for the base config file and any overrides in override_directory
-        std::vector<std::pair<std::unique_ptr<std::istream>, path>> config_streams;
-        config_streams.push_back(std::pair{std::make_unique<std::ifstream>(*config_file), *config_file});
-
-        // TODO handle symlink override directory
-        for (auto const& override_file : directory_iterator{override_directory})
-        {
-            // TODO handle symlink override files
-            if (std::filesystem::is_regular_file(override_file) && override_file.path().extension() == ".conf")
-                config_streams.emplace_back(std::make_unique<std::ifstream>(override_file.path()), override_file);
-        }
-
+        auto config_streams = collect_all_file_streams(*config_file);
         load_multi_configs(config_streams);
-        mir::log_debug("Loaded %s and %zu overrides", config_file->c_str(), config_streams.size() - 1);
+
+        auto const files_loaded = config_streams
+                                | std::views::transform([](auto const& pair) { return pair.second.string(); })
+                                | std::ranges::views::join_with(std::string{", "}) | std::ranges::to<std::string>();
+        mir::log_debug("Loaded [%s]", files_loaded.c_str());
     }
 
     switch (mode)
@@ -200,8 +259,8 @@ miral::ConfigFile::Self::Self(MirRunner& /*runner*/, path file, Mode mode, Overr
         break;
 
     case Mode::reload_on_change:
-        // watcher = std::make_shared<Watcher>(file, std::move(load_config));
-        // watcher->register_handler(runner);
+        override_watcher = std::make_shared<OverrideWatcher>(file, std::move(load_multi_configs));
+        override_watcher->register_handler(runner);
         break;
     }
 }
@@ -280,4 +339,155 @@ void Watcher::handler(int) const
 
         raw_buffer += sizeof_inotify_event+event.len;
     }
+}
+
+namespace
+{
+auto get_real_override_directory(path const& override_directory) -> std::optional<path>
+{
+    if (!exists(override_directory))
+        return std::nullopt;
+
+    // if (std::filesystem::is_symlink(override_directory))
+    // {
+    //     auto const real_override_directory = std::filesystem::read_symlink(override_directory);
+    //     return real_override_directory;
+    // }
+
+    if (!is_directory(override_directory))
+        return std::nullopt;
+
+    return override_directory;
+}
+}
+
+// Let's start simple
+//  Watch base config + override directory assuming nothing is a symlink
+//
+// TODO: account for the base config being a symlink
+//      Need to watch parent in case the symlink is changed (done)
+//      Need to watch the target in case its contents change
+// TODO: account for the override directory being a symlink
+//      Need to watch parent in case the symlink is changed (done)
+//      Need to watch the target in case its contents (override files) change
+// TODO: Account for override files being symlinks
+//      Need to watch the parent i n case the symlink is changed (done)
+//      Need to watch the target in case its contents (override files) change
+OverrideWatcher::OverrideWatcher(path base_config, OverrideLoader load_config)
+    : inotify_fd{inotify_init1(IN_CLOEXEC)},
+      override_loader{load_config},
+      base_config_filename{base_config.filename().string()},
+      override_directory{base_config_filename + ".d"},
+      base_config_directory{config_directory(base_config.filename())},
+      base_config_directory_watch_descriptor{watch_descriptor(inotify_fd, base_config_directory)},
+      override_directory_watch_descriptor{[&] -> std::optional<int> {
+          if (!base_config_directory)
+              return std::nullopt;
+
+          if (auto const real_override_directory = get_real_override_directory(*base_config_directory / override_directory))
+              return watch_descriptor(inotify_fd, real_override_directory);
+
+          mir::log_warning(
+              "Override directory '%s' is either does not exist, is not a symlink, or is not a directory, ignoring",
+              override_directory.c_str());
+          return std::nullopt;
+      }()}
+      // override_file_watch_descriptors{[&]{
+      //     std::vector<int> watch_descriptors{};
+
+      //     // Override directory has to be valid
+      //     if (!override_directory_watch_descriptor)
+      //         return watch_descriptors;
+
+      //     for (auto const& entry : std::filesystem::directory_iterator(*base_config_directory / override_directory))
+      //     {
+      //         if (is_symlink(entry))
+      //         {
+      //             auto const entry_parent = read_symlink(entry).parent_path();
+      //             if (auto const fd = watch_descriptor(inotify_fd, entry_parent))
+      //                 watch_descriptors.push_back(*fd);
+      //         }
+      //     }
+
+      //     return watch_descriptors;
+      // }()}
+{
+}
+
+void OverrideWatcher::register_handler(miral::MirRunner& runner)
+{
+    if (base_config_directory_watch_descriptor)
+    {
+        auto const weak_this = weak_from_this();
+        fd_handle = runner.register_fd_handler(inotify_fd, [weak_this] (int fd)
+        {
+            if (auto const strong_this = weak_this.lock())
+            {
+                strong_this->handler(fd);
+            }
+            else
+            {
+                mir::log_debug("OverrideWatcher has been removed, but handler invoked");
+            }
+        });
+    }
+}
+
+void OverrideWatcher::handler(int) const
+{
+    static size_t const sizeof_inotify_event = sizeof(inotify_event);
+
+    alignas(inotify_event) char buffer[sizeof(inotify_event) + NAME_MAX + 1];
+
+    auto const readsize = read(inotify_fd, buffer, sizeof(buffer));
+    if (readsize < static_cast<ssize_t>(sizeof_inotify_event))
+    {
+        return;
+    }
+
+    auto raw_buffer = buffer;
+    while (raw_buffer != buffer + readsize)
+    {
+        // This is safe because inotify_magic.buffer is aligned and event.len includes padding for alignment
+        auto const& event = reinterpret_cast<inotify_event&>(*raw_buffer);
+
+        // TODO handle creations (IN_CREATE)
+        auto const relevant_event = event.mask & (IN_CLOSE_WRITE | IN_MOVED_TO);
+        auto const base_config_changed = relevant_event && base_config_directory_watch_descriptor.has_value()
+                                      && event.wd == base_config_directory_watch_descriptor.value()
+                                      && event.name == base_config_filename;
+        auto const override_file_changed = relevant_event && override_directory_watch_descriptor.has_value()
+                                        && event.wd == override_directory_watch_descriptor.value()
+                                        && std::string_view{event.name}.ends_with(".conf");
+
+        if (base_config_changed || override_file_changed)
+            try
+            {
+                auto const base_config = base_config_directory.value() / base_config_filename;
+
+                if (exists(base_config))
+                {
+                    auto config_streams = collect_all_file_streams(base_config);
+                    override_loader(config_streams);
+
+                    auto const files_loaded =
+                        config_streams
+                        | std::views::transform([](auto const& pair) { return pair.second.string(); })
+                        | std::ranges::views::join_with(std::string{", "}) | std::ranges::to<std::string>();
+                    mir::log_debug("(Re)loaded [%s]", files_loaded.c_str());
+                }
+                else
+                {
+                    mir::log_debug("Failed to open %s", base_config.c_str());
+                }
+            }
+        catch (...)
+        {
+            mir::log(mir::logging::Severity::warning, MIR_LOG_COMPONENT, std::current_exception(),
+                     "Failed to reload configuration");
+        }
+
+        raw_buffer += sizeof_inotify_event+event.len;
+    }
+
 }
