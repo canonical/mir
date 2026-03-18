@@ -112,6 +112,10 @@ fn get_bounding_rectangle(
 }
 
 /// Handle device added/removed events.
+///
+/// Returns the `JoinHandle` for the device-registration thread when a device is added,
+/// or `None` for all other event variants. The caller is responsible for deciding
+/// whether to join (blocking, for startup) or drop (fire-and-forget, for hotplug).
 fn handle_device_event(
     known_devices: &mut Vec<LibinputDeviceInfo>,
     next_device_id: &mut i32,
@@ -119,7 +123,7 @@ fn handle_device_event(
     bridge: &cxx::SharedPtr<crate::PlatformBridge>,
     device_event: event::DeviceEvent,
     libinput_device: input::Device,
-) {
+) -> Option<thread::JoinHandle<()>> {
     match device_event {
         event::DeviceEvent::Added(_) => {
             known_devices.push(LibinputDeviceInfo {
@@ -143,7 +147,7 @@ fn handle_device_event(
 
             // # Safety
             //
-            thread::spawn(move || unsafe {
+            let handle = thread::spawn(move || unsafe {
                 device_registry
                     .clone()
                     .pin_mut_unchecked()
@@ -151,6 +155,7 @@ fn handle_device_event(
             });
 
             *next_device_id += 1;
+            Some(handle)
         }
         event::DeviceEvent::Removed(removed_event) => {
             let dev = removed_event.device();
@@ -158,7 +163,7 @@ fn handle_device_event(
                 .iter()
                 .position(|x| x.device.as_raw() == dev.as_raw())
             else {
-                return;
+                return None;
             };
 
             // # Safety
@@ -171,8 +176,12 @@ fn handle_device_event(
                     .remove_device(&known_devices[index].input_device);
             }
             known_devices.remove(index);
+            None
         }
-        _ => println!("TODO: Unhandled device event type"),
+        _ => {
+            println!("TODO: Unhandled device event type");
+            None
+        }
     }
 }
 
@@ -719,15 +728,24 @@ fn handle_touch_frame(
     true
 }
 
+/// Process all pending libinput events and return the `JoinHandle`s for any
+/// device-registration threads that were spawned for newly-added devices.
+///
+/// For *runtime hotplug* events the caller should drop the handles (fire-and-forget).
+/// For the *initial startup drain* the caller should join them after releasing the
+/// state lock, ensuring every device is fully started before the first real input
+/// event can arrive on the libinput fd.
 pub fn process_libinput_events(
     state: &mut LibinputDeviceState,
     device_registry: cxx::SharedPtr<crate::InputDeviceRegistry>,
     bridge: cxx::SharedPtr<crate::PlatformBridge>,
     report: &crate::InputReport,
-) {
+) -> Vec<thread::JoinHandle<()>> {
+    let mut handles = Vec::new();
+
     if state.libinput.dispatch().is_err() {
         println!("Error dispatching libinput events");
-        return;
+        return handles;
     }
 
     for event in &mut state.libinput {
@@ -735,14 +753,16 @@ pub fn process_libinput_events(
 
         match event {
             input::Event::Device(device_event) => {
-                handle_device_event(
+                if let Some(handle) = handle_device_event(
                     &mut state.known_devices,
                     &mut state.next_device_id,
                     &device_registry,
                     &bridge,
                     device_event,
                     libinput_device,
-                );
+                ) {
+                    handles.push(handle);
+                }
             }
 
             input::Event::Pointer(pointer_event) => {
@@ -811,4 +831,6 @@ pub fn process_libinput_events(
             _ => println!("TODO: Unhandled libinput event type"),
         }
     }
+
+    handles
 }
