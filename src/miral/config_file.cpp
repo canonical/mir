@@ -436,6 +436,9 @@ void OverrideWatcher::handler(int)
         auto const override_directory_created = create && base_config_directory_watch_descriptor.has_value()
                                                && event.wd == base_config_directory_watch_descriptor.value()
                                                && event.name == override_directory;
+        auto const override_directory_deleted = remove && base_config_directory_watch_descriptor.has_value()
+                                               && event.wd == base_config_directory_watch_descriptor.value()
+                                               && event.name == override_directory;
         auto const override_file_deleted = remove && override_directory_watch_descriptor.has_value()
                                           && event.wd == override_directory_watch_descriptor.value()
                                           && std::string_view{event.name}.ends_with(".conf");
@@ -449,6 +452,19 @@ void OverrideWatcher::handler(int)
                         && std::string_view{event.name} == watch.filepath.filename();
                 })
             && std::string_view{event.name}.ends_with(".conf");
+
+        if (override_directory_deleted)
+        {
+            if (override_directory_watch_descriptor)
+                if (inotify_rm_watch(inotify_fd, *override_directory_watch_descriptor) != 0)
+                    mir::log_warning(
+                        "Failed to remove watch for override directory '%s': %s",
+                        override_directory.c_str(),
+                        strerror(errno));
+
+            override_directory_watch_descriptor = std::nullopt;
+            override_symlink_file_watch_descriptors.clear();
+        }
 
         // Override directory created, or repointed if it was a symlink.
         if (override_directory_created)
