@@ -110,7 +110,7 @@ private:
     void handler(int);
 
     struct SymlinkWatch { int watch_descriptor; path filepath; };
-    auto watch_symlinked_override_files() -> std::vector<SymlinkWatch>;
+    auto watch_symlink_targets() -> std::vector<SymlinkWatch>;
 
     mir::Fd const inotify_fd;
     std::unique_ptr<miral::FdHandle> fd_handle;
@@ -124,7 +124,7 @@ private:
     std::optional<int> base_config_directory_watch_descriptor;
     std::optional<int> override_directory_watch_descriptor;
 
-    std::vector<SymlinkWatch> override_symlink_file_watch_descriptors;
+    std::vector<SymlinkWatch> symlink_file_watch_descriptors;
 };
 
 auto get_config_roots(path const& file) -> std::vector<path>
@@ -227,6 +227,20 @@ auto watch_override_directory(mir::Fd const& inotify_fd, std::optional<path> con
         "Override directory '%s' is either does not exist, is not a symlink, or is not a directory, ignoring",
         override_directory.c_str());
     return std::nullopt;
+}
+
+auto resolve_symlink(path const& symlink) -> path
+{
+    // If the symlink is relative, read it and make the result
+    // relative to the symlink itself.
+    //
+    // inotify assumes the path it's given is relative to the
+    // process's cwd.
+    auto const maybe_relative = read_symlink(symlink);
+    if (maybe_relative.is_relative())
+        return symlink.parent_path() / maybe_relative;
+    else
+        return maybe_relative;
 }
 }
 
@@ -390,7 +404,7 @@ OverrideWatcher::OverrideWatcher(path base_config, OverrideLoader load_config)
       base_config_directory{config_directory(base_config.filename())},
       base_config_directory_watch_descriptor{watch_descriptor(inotify_fd, base_config_directory)},
       override_directory_watch_descriptor{watch_override_directory(inotify_fd, base_config_directory, override_directory)},
-      override_symlink_file_watch_descriptors{watch_symlinked_override_files()}
+      symlink_file_watch_descriptors{watch_symlink_targets()}
 {
 }
 
@@ -453,7 +467,7 @@ void OverrideWatcher::handler(int)
         auto const override_symlink_target_changed =
             (write_or_move || remove)
             && std::ranges::any_of(
-                override_symlink_file_watch_descriptors,
+                symlink_file_watch_descriptors,
                 [&event](auto const& watch)
                 {
                     return event.wd == watch.watch_descriptor
@@ -480,7 +494,7 @@ void OverrideWatcher::handler(int)
                                 strerror(errno));
 
                         // TODO this looks like it warrants an RAII wrapper
-                        for (auto const& watch : override_symlink_file_watch_descriptors)
+                        for (auto const& watch : symlink_file_watch_descriptors)
                         {
                             if (inotify_rm_watch(inotify_fd, watch.watch_descriptor) != 0)
                                 mir::log_warning(
@@ -491,7 +505,7 @@ void OverrideWatcher::handler(int)
 
                         override_directory_watch_descriptor =
                             watch_override_directory(inotify_fd, base_config_directory, override_directory);
-                        override_symlink_file_watch_descriptors = watch_symlinked_override_files();
+                        symlink_file_watch_descriptors = watch_symlink_targets();
                     }
 
                     auto config_streams = collect_all_file_streams(base_config);
@@ -519,9 +533,17 @@ void OverrideWatcher::handler(int)
 
 }
 
-auto OverrideWatcher::watch_symlinked_override_files() -> std::vector<SymlinkWatch>
+auto OverrideWatcher::watch_symlink_targets() -> std::vector<SymlinkWatch>
 {
     std::vector<OverrideWatcher::SymlinkWatch> watch_descriptors{};
+
+    if (is_symlink(*base_config_directory / base_config_filename))
+    {
+        auto const base_config_target = resolve_symlink(*base_config_directory / base_config_filename);
+        auto const target_parent = base_config_target.parent_path();
+        if (auto const fd = watch_descriptor(inotify_fd, target_parent))
+            watch_descriptors.push_back({*fd, base_config_target});
+    }
 
     // Override directory has to be valid
     if (!override_directory_watch_descriptor)
@@ -531,20 +553,7 @@ auto OverrideWatcher::watch_symlinked_override_files() -> std::vector<SymlinkWat
     {
         if (is_symlink(entry))
         {
-            auto const target = [&entry]
-            {
-                // If the symlink is relative, read it and make the result
-                // relative to the symlink itself.
-                //
-                // inotify assumes the path it's given is relative to the
-                // process's cwd.
-                auto const maybe_relative = read_symlink(entry);
-                if (maybe_relative.is_relative())
-                    return entry.path().parent_path() / maybe_relative;
-                else
-                    return maybe_relative;
-            }();
-
+            auto const target = resolve_symlink(entry.path());
             auto const target_parent = target.parent_path();
             if (auto const fd = watch_descriptor(inotify_fd, target_parent))
                 watch_descriptors.push_back({*fd, target});
