@@ -738,6 +738,24 @@ struct TestOverrideConfigFile : PendingLoad, miral::TestServer
         std::filesystem::rename(override_dir() / filename, std::filesystem::path{symlink_targets_dir} / filename);
     }
 
+    auto base_config_path() -> std::filesystem::path
+    {
+        return std::filesystem::path{override_xdg_conf_home} / override_config_file;
+    }
+
+    void create_base_config_symlink(std::filesystem::path const& target)
+    {
+        mark_pending();
+        std::filesystem::remove(base_config_path());
+        std::filesystem::create_symlink(target, base_config_path());
+    }
+
+    void repoint_base_config_symlink(std::filesystem::path const& new_target)
+    {
+        mark_pending();
+        std::filesystem::remove(base_config_path());
+        std::filesystem::create_symlink(new_target, base_config_path());
+    }
     void delete_override_dir()
     {
         mark_pending();
@@ -1455,3 +1473,110 @@ TEST_F(TestOverrideConfigFile, reloads_when_file_is_renamed_to_conf_in_override_
     wait_for_load();
     EXPECT_THAT(last_load_stream_count, testing::Eq(2u)); // base + new override
 }
+
+TEST_F(TestOverrideConfigFile, symlinked_base_config_is_loaded_on_initial_load)
+{
+    auto const real_file = std::filesystem::path{symlink_targets_dir} / "real_base.config";
+    { std::ofstream{real_file} << "base content via symlink"; }
+
+    create_base_config_symlink(real_file);
+
+    invoke_runner([this](miral::MirRunner& runner)
+    {
+        config = ConfigFile{
+            runner,
+            override_config_file,
+            ConfigFile::Mode::no_reloading,
+            [this](auto streams) { record_load(streams); }};
+    });
+
+    wait_for_load();
+    EXPECT_THAT(last_load_stream_count, testing::Eq(1u));
+}
+
+TEST_F(TestOverrideConfigFile, reloads_when_symlinked_base_config_target_is_modified)
+{
+    auto const real_file = std::filesystem::path{symlink_targets_dir} / "real_base_modified.config";
+    { std::ofstream{real_file} << "original base content"; }
+
+    create_base_config_symlink(real_file);
+
+    invoke_runner([this](miral::MirRunner& runner)
+    {
+        config = ConfigFile{
+            runner,
+            override_config_file,
+            ConfigFile::Mode::reload_on_change,
+            [this](auto streams) { record_load(streams); }};
+    });
+
+    wait_for_load();
+    auto const count_after_initial = load_call_count;
+
+    // Modify the real file the base config symlink points to
+    write_real_file(real_file, "modified base content");
+    wait_for_load(FailOnTimeout::yes);
+    EXPECT_THAT(load_call_count, testing::Gt(count_after_initial));
+}
+
+TEST_F(TestOverrideConfigFile, reloads_when_base_config_symlink_is_repointed)
+{
+    auto const real_file_a = std::filesystem::path{symlink_targets_dir} / "base_a.config";
+    auto const real_file_b = std::filesystem::path{symlink_targets_dir} / "base_b.config";
+    { std::ofstream{real_file_a} << "content a"; }
+    { std::ofstream{real_file_b} << "content b"; }
+
+    create_base_config_symlink(real_file_a);
+
+    invoke_runner([this](miral::MirRunner& runner)
+    {
+        config = ConfigFile{
+            runner,
+            override_config_file,
+            ConfigFile::Mode::reload_on_change,
+            [this](auto streams) { record_load(streams); }};
+    });
+
+    wait_for_load();
+    auto const count_after_initial = load_call_count;
+
+    // Repoint the symlink to a different file
+    repoint_base_config_symlink(real_file_b);
+    wait_for_load();
+    EXPECT_THAT(load_call_count, testing::Gt(count_after_initial));
+}
+
+TEST_F(TestOverrideConfigFile, dangling_base_config_symlink_does_not_call_loader)
+{
+    // Create a symlink pointing at a nonexistent file
+    std::filesystem::create_symlink(
+        std::filesystem::path{symlink_targets_dir} / "nonexistent_base.config",
+        base_config_path());
+
+    invoke_runner([this](miral::MirRunner& runner)
+    {
+        config = ConfigFile{
+            runner,
+            override_config_file,
+            ConfigFile::Mode::no_reloading,
+            [this](auto streams) { record_load(streams); }};
+    });
+
+    EXPECT_THAT(load_call_count, testing::Eq(0));
+}
+
+TEST_F(TestOverrideConfigFile, missing_base_config_does_not_call_loader)
+{
+    // No base config file at all
+    invoke_runner([this](miral::MirRunner& runner)
+    {
+        config = ConfigFile{
+            runner,
+            override_config_file,
+            ConfigFile::Mode::no_reloading,
+            [this](auto streams) { record_load(streams); }};
+    });
+
+    EXPECT_THAT(load_call_count, testing::Eq(0));
+}
+
