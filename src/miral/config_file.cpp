@@ -523,7 +523,7 @@ auto OverrideWatcher::watch_symlinked_override_files() -> std::vector<SymlinkWat
     {
         if (is_symlink(entry))
         {
-            auto const target = read_symlink(entry);
+            auto const target = canonical(read_symlink(entry));
             auto const target_parent = target.parent_path();
             if (auto const fd = watch_descriptor(inotify_fd, target_parent))
                 watch_descriptors.push_back({*fd, target});
