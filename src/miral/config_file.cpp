@@ -472,8 +472,7 @@ void OverrideWatcher::handler(int)
                 {
                     return event.wd == watch.watch_descriptor
                         && std::string_view{event.name} == watch.filepath.filename();
-                })
-            && std::string_view{event.name}.ends_with(".conf");
+                });
 
         if (base_config_changed || override_file_changed || override_directory_created || override_directory_deleted
             || override_file_deleted || override_symlink_target_changed)
@@ -551,7 +550,7 @@ auto OverrideWatcher::watch_symlink_targets() -> std::vector<SymlinkWatch>
 
     for (auto const& entry : std::filesystem::directory_iterator(*base_config_directory / override_directory))
     {
-        if (is_symlink(entry))
+        if (is_symlink(entry) && entry.path().extension() == ".conf")
         {
             auto const target = resolve_symlink(entry.path());
             auto const target_parent = target.parent_path();
