@@ -925,6 +925,7 @@ TEST_F(TestOverrideConfigFile, reloads_when_base_config_is_rewritten)
 TEST_F(TestOverrideConfigFile, reloads_when_override_file_is_added)
 {
     write_base_config();
+    std::filesystem::create_directories(override_dir());
 
     invoke_runner([this](miral::MirRunner& runner)
     {
