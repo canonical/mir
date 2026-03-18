@@ -200,11 +200,7 @@ auto get_real_override_directory(path const& override_directory) -> std::optiona
     if (!exists(override_directory))
         return std::nullopt;
 
-    // if (std::filesystem::is_symlink(override_directory))
-    // {
-    //     auto const real_override_directory = std::filesystem::read_symlink(override_directory);
-    //     return real_override_directory;
-    // }
+    // Inotify follows symlinks, so we don't need to handle this here.
 
     if (!is_directory(override_directory))
         return std::nullopt;
@@ -379,9 +375,6 @@ void Watcher::handler(int) const
 // TODO: account for the base config being a symlink
 //      Need to watch parent in case the symlink is changed (done)
 //      Need to watch the target in case its contents change
-// TODO: account for the override directory being a symlink
-//      Need to watch parent in case the symlink is changed (done)
-//      Need to watch the target in case its contents (override files) change
 OverrideWatcher::OverrideWatcher(path base_config, OverrideLoader load_config)
     : inotify_fd{inotify_init1(IN_CLOEXEC)},
       override_loader{load_config},
