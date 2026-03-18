@@ -451,12 +451,13 @@ void OverrideWatcher::handler(int) const
         // This is safe because inotify_magic.buffer is aligned and event.len includes padding for alignment
         auto const& event = reinterpret_cast<inotify_event&>(*raw_buffer);
 
-        // TODO handle creations (IN_CREATE)
-        auto const relevant_event = event.mask & (IN_CLOSE_WRITE | IN_MOVED_TO);
-        auto const base_config_changed = relevant_event && base_config_directory_watch_descriptor.has_value()
+        auto const write_or_move = event.mask & (IN_CLOSE_WRITE | IN_MOVED_TO);
+        auto const create = event.mask & IN_CREATE;
+
+        auto const base_config_changed = write_or_move && base_config_directory_watch_descriptor.has_value()
                                       && event.wd == base_config_directory_watch_descriptor.value()
                                       && event.name == base_config_filename;
-        auto const override_file_changed = relevant_event && override_directory_watch_descriptor.has_value()
+        auto const override_file_changed = (write_or_move | create) && override_directory_watch_descriptor.has_value()
                                         && event.wd == override_directory_watch_descriptor.value()
                                         && std::string_view{event.name}.ends_with(".conf");
 
@@ -464,8 +465,9 @@ void OverrideWatcher::handler(int) const
             try
             {
                 auto const base_config = base_config_directory.value() / base_config_filename;
+                auto const base_config_exists = exists(base_config);
 
-                if (exists(base_config))
+                if (base_config_exists)
                 {
                     auto config_streams = collect_all_file_streams(base_config);
                     override_loader(config_streams);
