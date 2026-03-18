@@ -87,7 +87,7 @@ jobs:
 
       - name: Push to the release branch
         run: |
-          git push origin "HEAD:${{ steps.version.outputs.release_branch }}"
+          git push origin "HEAD:refs/heads/${{ steps.version.outputs.release_branch }}"
 
       - name: Create draft GitHub release
         uses: actions/github-script@v8
