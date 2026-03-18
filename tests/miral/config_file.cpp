@@ -46,7 +46,7 @@ public:
 
         if (!cv.wait_for(lock, std::chrono::milliseconds{10}, [this] { return !pending_loads; }))
         {
-            std::cerr << "wait_for_load() timed out" << std::endl;
+            FAIL() << "wait_for_load() timed out" << std::endl;
         }
     }
 
