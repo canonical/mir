@@ -465,6 +465,7 @@ void OverrideWatcher::handler(int)
 
             override_directory_watch_descriptor =
                 watch_override_directory(inotify_fd, base_config_directory, override_directory);
+            override_symlink_file_watch_descriptors = watch_symlinked_override_files();
         }
 
         if (base_config_changed || override_file_changed || override_directory_created || override_file_deleted
