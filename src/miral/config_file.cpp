@@ -98,7 +98,7 @@ public:
 
     void register_handler(miral::MirRunner& runner);
 private:
-    void handler(int) const; // TODO
+    void handler(int);
 
     mir::Fd const inotify_fd;
     std::unique_ptr<miral::FdHandle> fd_handle;
@@ -191,6 +191,37 @@ auto collect_all_file_streams(path const& config_file) -> std::vector<std::pair<
 
     return config_streams;
 }
+
+auto get_real_override_directory(path const& override_directory) -> std::optional<path>
+{
+    if (!exists(override_directory))
+        return std::nullopt;
+
+    // if (std::filesystem::is_symlink(override_directory))
+    // {
+    //     auto const real_override_directory = std::filesystem::read_symlink(override_directory);
+    //     return real_override_directory;
+    // }
+
+    if (!is_directory(override_directory))
+        return std::nullopt;
+
+    return override_directory;
+}
+
+auto watch_override_directory(mir::Fd const& inotify_fd, std::optional<path> const& base_config_directory, std::string const& override_directory) -> std::optional<int>
+{
+    if (!base_config_directory)
+        return std::nullopt;
+
+    if (auto const real_override_directory = get_real_override_directory(*base_config_directory / override_directory))
+        return watch_descriptor(inotify_fd, real_override_directory);
+
+    mir::log_warning(
+        "Override directory '%s' is either does not exist, is not a symlink, or is not a directory, ignoring",
+        override_directory.c_str());
+    return std::nullopt;
+}
 }
 
 class miral::ConfigFile::Self
@@ -240,8 +271,6 @@ miral::ConfigFile::Self::Self(MirRunner& runner, path file, Mode mode, Loader lo
 
 miral::ConfigFile::Self::Self(MirRunner& runner, path file, Mode mode, OverrideLoader load_multi_configs)
 {
-    // TODO override directory might not exist at first. Need to watch for it
-    // being created, then add a watch on that when its created.
     if(auto const config_file = find_config_file(file))
     {
         auto config_streams = collect_all_file_streams(*config_file);
@@ -341,26 +370,6 @@ void Watcher::handler(int) const
     }
 }
 
-namespace
-{
-auto get_real_override_directory(path const& override_directory) -> std::optional<path>
-{
-    if (!exists(override_directory))
-        return std::nullopt;
-
-    // if (std::filesystem::is_symlink(override_directory))
-    // {
-    //     auto const real_override_directory = std::filesystem::read_symlink(override_directory);
-    //     return real_override_directory;
-    // }
-
-    if (!is_directory(override_directory))
-        return std::nullopt;
-
-    return override_directory;
-}
-}
-
 // Let's start simple
 //  Watch base config + override directory assuming nothing is a symlink
 //
@@ -380,18 +389,7 @@ OverrideWatcher::OverrideWatcher(path base_config, OverrideLoader load_config)
       override_directory{base_config_filename + ".d"},
       base_config_directory{config_directory(base_config.filename())},
       base_config_directory_watch_descriptor{watch_descriptor(inotify_fd, base_config_directory)},
-      override_directory_watch_descriptor{[&] -> std::optional<int> {
-          if (!base_config_directory)
-              return std::nullopt;
-
-          if (auto const real_override_directory = get_real_override_directory(*base_config_directory / override_directory))
-              return watch_descriptor(inotify_fd, real_override_directory);
-
-          mir::log_warning(
-              "Override directory '%s' is either does not exist, is not a symlink, or is not a directory, ignoring",
-              override_directory.c_str());
-          return std::nullopt;
-      }()}
+      override_directory_watch_descriptor{watch_override_directory(inotify_fd, *base_config_directory, override_directory)}
       // override_file_watch_descriptors{[&]{
       //     std::vector<int> watch_descriptors{};
 
@@ -433,7 +431,7 @@ void OverrideWatcher::register_handler(miral::MirRunner& runner)
     }
 }
 
-void OverrideWatcher::handler(int) const
+void OverrideWatcher::handler(int)
 {
     static size_t const sizeof_inotify_event = sizeof(inotify_event);
 
@@ -460,8 +458,15 @@ void OverrideWatcher::handler(int) const
         auto const override_file_changed = (write_or_move | create) && override_directory_watch_descriptor.has_value()
                                         && event.wd == override_directory_watch_descriptor.value()
                                         && std::string_view{event.name}.ends_with(".conf");
+        auto const override_directory_created = create && base_config_directory_watch_descriptor.has_value()
+                                               && event.wd == base_config_directory_watch_descriptor.value()
+                                               && event.name == override_directory;
 
-        if (base_config_changed || override_file_changed)
+        if (override_directory_created)
+            override_directory_watch_descriptor =
+                watch_override_directory(inotify_fd, base_config_directory, override_directory);
+
+        if (base_config_changed || override_file_changed || override_directory_created)
             try
             {
                 auto const base_config = base_config_directory.value() / base_config_filename;
