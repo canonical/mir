@@ -382,7 +382,7 @@ OverrideWatcher::OverrideWatcher(path base_config, OverrideLoader load_config)
       override_directory{base_config_filename + ".d"},
       base_config_directory{config_directory(base_config.filename())},
       base_config_directory_watch_descriptor{watch_descriptor(inotify_fd, base_config_directory)},
-      override_directory_watch_descriptor{watch_override_directory(inotify_fd, *base_config_directory, override_directory)},
+      override_directory_watch_descriptor{watch_override_directory(inotify_fd, base_config_directory, override_directory)},
       override_symlink_file_watch_descriptors{watch_symlinked_override_files()}
 {
 }
