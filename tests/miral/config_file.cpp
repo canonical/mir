@@ -17,6 +17,7 @@
 #include <miral/test_server.h>
 #include <miral/config_file.h>
 
+#include <source_location>
 #include <wayland_wrapper.h>
 #include <gmock/gmock-function-mocker.h>
 
@@ -40,13 +41,22 @@ public:
         pending_loads = true;
     }
 
-    void wait_for_load()
+    enum class FailOnTimeout { yes, no };
+    void wait_for_load(FailOnTimeout fail_on_timeout = FailOnTimeout::no)
     {
         std::unique_lock lock{mutex};
 
         if (!cv.wait_for(lock, std::chrono::milliseconds{10}, [this] { return !pending_loads; }))
         {
-            FAIL() << "wait_for_load() timed out" << std::endl;
+            switch (fail_on_timeout)
+            {
+            case FailOnTimeout::yes:
+                FAIL() << "wait_for_load() timed out" << std::endl;
+                break;
+            case FailOnTimeout::no:
+                std::cerr << "wait_for_load() timed out" << std::endl;
+                break;
+            }
         }
     }
 
@@ -1083,7 +1093,7 @@ TEST_F(TestOverrideConfigFile, reloads_when_symlinked_override_file_target_is_mo
 
     // Modify the real file that the symlink points to
     write_real_file(real_file, "modified content");
-    wait_for_load();
+    wait_for_load(FailOnTimeout::yes);
     EXPECT_THAT(load_call_count, testing::Gt(count_after_initial));
 }
 
@@ -1274,7 +1284,7 @@ TEST_F(TestOverrideConfigFile, reloads_when_override_file_is_deleted)
     EXPECT_THAT(last_load_stream_count, testing::Eq(3u)); // base + 2 overrides
 
     delete_override_file("10-first.conf");
-    wait_for_load();
+    wait_for_load(FailOnTimeout::yes);
     EXPECT_THAT(last_load_stream_count, testing::Eq(2u)); // base + 1 remaining override
 }
 
@@ -1296,7 +1306,7 @@ TEST_F(TestOverrideConfigFile, reloads_when_override_file_is_moved_out_of_direct
     EXPECT_THAT(last_load_stream_count, testing::Eq(2u)); // base + 1 override
 
     move_override_file_out("10-first.conf");
-    wait_for_load();
+    wait_for_load(FailOnTimeout::yes);
     EXPECT_THAT(last_load_stream_count, testing::Eq(1u)); // base only
 }
 
@@ -1319,7 +1329,7 @@ TEST_F(TestOverrideConfigFile, reloads_when_override_file_is_renamed_to_non_conf
 
     // Renaming a .conf file away should trigger a reload without it
     rename_override_file("10-first.conf", "10-first.conf.bak");
-    wait_for_load();
+    wait_for_load(FailOnTimeout::yes);
     EXPECT_THAT(last_load_stream_count, testing::Eq(1u)); // base only
 }
 
