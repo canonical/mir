@@ -69,8 +69,16 @@ auto watch_descriptor(mir::Fd const& inotify_fd, std::optional<path> const& path
     if (inotify_fd < 0)
         BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), "Failed to initialize inotify_fd"}));
 
-    return inotify_add_watch(
+    auto const ret = inotify_add_watch(
         inotify_fd, path.value().c_str(), IN_CLOSE_WRITE | IN_CREATE | IN_MOVED_TO | IN_DELETE | IN_MOVED_FROM);
+
+    if (ret < 0)
+    {
+        mir::log_warning("Failed to add inotify watch for '%s': %s", path->c_str(), strerror(errno));
+        return std::nullopt;
+    }
+
+    return ret;
 }
 
 class Watcher : public std::enable_shared_from_this<Watcher>
