@@ -101,12 +101,35 @@ impl PlatformRs {
                 self.bridge.clone(),
                 &self.report,
             ),
-            Err(_) => Vec::new(),
+            Err(_) => {
+                eprintln!(
+                    "evdev-rs platform: LibinputDeviceState mutex poisoned during startup; \
+                      aborting start()"
+                );
+                return;
+            }
         };
 
         // State lock is released above; now safe to join the registration threads.
         for handle in handles {
-            let _ = handle.join();
+            if let Err(err) = handle.join() {
+                // Log panics in registration threads so startup issues are visible.
+                if let Some(message) = err.downcast_ref::<&str>() {
+                    eprintln!(
+                        "evdev-rs platform: device registration thread panicked with message: {}",
+                        message
+                    );
+                } else if let Some(message) = err.downcast_ref::<String>() {
+                    eprintln!(
+                        "evdev-rs platform: device registration thread panicked with message: {}",
+                        message
+                    );
+                } else {
+                    eprintln!(
+                         "evdev-rs platform: device registration thread panicked with non-string payload"
+                     );
+                }
+            }
         }
     }
 
