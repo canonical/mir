@@ -1579,4 +1579,3 @@ TEST_F(TestOverrideConfigFile, missing_base_config_does_not_call_loader)
 
     EXPECT_THAT(load_call_count, testing::Eq(0));
 }
-
