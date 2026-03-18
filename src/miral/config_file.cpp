@@ -68,8 +68,8 @@ auto watch_descriptor(mir::Fd const& inotify_fd, std::optional<path> const& path
     if (inotify_fd < 0)
         BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), "Failed to initialize inotify_fd"}));
 
-    // TODO handle deletions (IN_DELETE and IN_MOVED_FROM)
-    return inotify_add_watch(inotify_fd, path.value().c_str(), IN_CLOSE_WRITE | IN_CREATE | IN_MOVED_TO);
+    return inotify_add_watch(
+        inotify_fd, path.value().c_str(), IN_CLOSE_WRITE | IN_CREATE | IN_MOVED_TO | IN_DELETE | IN_MOVED_FROM);
 }
 
 class Watcher : public std::enable_shared_from_this<Watcher>
@@ -451,6 +451,7 @@ void OverrideWatcher::handler(int)
 
         auto const write_or_move = event.mask & (IN_CLOSE_WRITE | IN_MOVED_TO);
         auto const create = event.mask & IN_CREATE;
+        auto const remove = event.mask & (IN_DELETE | IN_MOVED_FROM);
 
         auto const base_config_changed = write_or_move && base_config_directory_watch_descriptor.has_value()
                                       && event.wd == base_config_directory_watch_descriptor.value()
@@ -461,12 +462,15 @@ void OverrideWatcher::handler(int)
         auto const override_directory_created = create && base_config_directory_watch_descriptor.has_value()
                                                && event.wd == base_config_directory_watch_descriptor.value()
                                                && event.name == override_directory;
+        auto const override_file_deleted = remove && override_directory_watch_descriptor.has_value()
+                                          && event.wd == override_directory_watch_descriptor.value()
+                                          && std::string_view{event.name}.ends_with(".conf");
 
         if (override_directory_created)
             override_directory_watch_descriptor =
                 watch_override_directory(inotify_fd, base_config_directory, override_directory);
 
-        if (base_config_changed || override_file_changed || override_directory_created)
+        if (base_config_changed || override_file_changed || override_directory_created || override_file_deleted)
             try
             {
                 auto const base_config = base_config_directory.value() / base_config_filename;
