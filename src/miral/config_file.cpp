@@ -430,7 +430,7 @@ void OverrideWatcher::handler(int)
         auto const base_config_changed = write_or_move && base_config_directory_watch_descriptor.has_value()
                                       && event.wd == base_config_directory_watch_descriptor.value()
                                       && event.name == base_config_filename;
-        auto const override_file_changed = (write_or_move | create) && override_directory_watch_descriptor.has_value()
+        auto const override_file_changed = (write_or_move || create) && override_directory_watch_descriptor.has_value()
                                         && event.wd == override_directory_watch_descriptor.value()
                                         && std::string_view{event.name}.ends_with(".conf");
         auto const override_directory_created = create && base_config_directory_watch_descriptor.has_value()
