@@ -161,6 +161,10 @@ jobs:
             -v name='${{ steps.gpg.outputs.name }}' \
             -v email='${{ steps.gpg.outputs.email }}' \
             -v date="$(date "+%a, %b %d %Y")" '
+            /^Version:/ {
+              print "Version: " next_version "~dev"
+              next
+            }
             /^%changelog/ {
               print
               print "* " date " " name " <" email "> - " next_version "~dev-1"
