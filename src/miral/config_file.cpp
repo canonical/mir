@@ -531,7 +531,20 @@ auto OverrideWatcher::watch_symlinked_override_files() -> std::vector<SymlinkWat
     {
         if (is_symlink(entry))
         {
-            auto const target = canonical(read_symlink(entry));
+            auto const target = [&entry]
+            {
+                // If the symlink is relative, read it and make the result
+                // relative to the symlink itself.
+                //
+                // inotify assumes the path it's given is relative to the
+                // process's cwd.
+                auto const maybe_relative = read_symlink(entry);
+                if (maybe_relative.is_relative())
+                    return entry.path().parent_path() / maybe_relative;
+                else
+                    return maybe_relative;
+            }();
+
             auto const target_parent = target.parent_path();
             if (auto const fd = watch_descriptor(inotify_fd, target_parent))
                 watch_descriptors.push_back({*fd, target});
