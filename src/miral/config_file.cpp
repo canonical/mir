@@ -458,9 +458,21 @@ void OverrideWatcher::handler(int)
                 })
             && std::string_view{event.name}.ends_with(".conf");
 
+        // Override directory created, or repointed if it was a symlink.
         if (override_directory_created)
+        {
+            // If the gets repointed (fires IN_CREATE), we should remove the
+            // existing watch.
+            if (override_directory_watch_descriptor)
+                if (inotify_rm_watch(inotify_fd, *override_directory_watch_descriptor) != 0)
+                    mir::log_warning(
+                        "Failed to remove watch for override directory '%s': %s",
+                        override_directory.c_str(),
+                        strerror(errno));
+
             override_directory_watch_descriptor =
                 watch_override_directory(inotify_fd, base_config_directory, override_directory);
+        }
 
         if (base_config_changed || override_file_changed || override_directory_created || override_file_deleted
             || override_symlink_target_changed)
