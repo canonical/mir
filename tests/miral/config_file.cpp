@@ -738,6 +738,23 @@ struct TestOverrideConfigFile : PendingLoad, miral::TestServer
         std::filesystem::rename(override_dir() / filename, std::filesystem::path{symlink_targets_dir} / filename);
     }
 
+    void delete_override_dir()
+    {
+        mark_pending();
+        std::filesystem::remove_all(override_dir());
+    }
+
+    void create_relative_file_symlink(std::filesystem::path const& target, std::string const& link_name)
+    {
+        mark_pending();
+        std::filesystem::create_directories(override_dir());
+        auto const link_path = override_dir() / link_name;
+        std::filesystem::remove(link_path);
+        // Compute the target path relative to the override directory so the symlink is relative
+        auto const relative_target = std::filesystem::relative(target, override_dir());
+        std::filesystem::create_symlink(relative_target, link_path);
+    }
+
     void SetUp() override
     {
         miral::TestServer::SetUp();
@@ -1331,6 +1348,89 @@ TEST_F(TestOverrideConfigFile, reloads_when_override_file_is_renamed_to_non_conf
     rename_override_file("10-first.conf", "10-first.conf.bak");
     wait_for_load(FailOnTimeout::yes);
     EXPECT_THAT(last_load_stream_count, testing::Eq(1u)); // base only
+}
+
+TEST_F(TestOverrideConfigFile, reloads_when_override_dir_is_deleted)
+{
+    write_base_config();
+    write_override_file("10-first.conf");
+
+    invoke_runner([this](miral::MirRunner& runner)
+    {
+        config = ConfigFile{
+            runner,
+            override_config_file,
+            ConfigFile::Mode::reload_on_change,
+            [this](auto streams) { record_load(streams); }};
+    });
+
+    wait_for_load();
+    EXPECT_THAT(last_load_stream_count, testing::Eq(2u)); // base + 1 override
+
+    delete_override_dir();
+    wait_for_load(FailOnTimeout::yes);
+    EXPECT_THAT(last_load_stream_count, testing::Eq(1u)); // base only
+}
+
+TEST_F(TestOverrideConfigFile, reloads_when_symlink_added_after_startup_and_target_is_modified)
+{
+    write_base_config();
+    std::filesystem::create_directories(override_dir());
+
+    auto const real_file = std::filesystem::path{symlink_targets_dir} / "late_symlink_target.conf";
+    { std::ofstream{real_file} << "original content"; }
+
+    invoke_runner([this](miral::MirRunner& runner)
+    {
+        config = ConfigFile{
+            runner,
+            override_config_file,
+            ConfigFile::Mode::reload_on_change,
+            [this](auto streams) { record_load(streams); }};
+    });
+
+    wait_for_load();
+    EXPECT_THAT(last_load_stream_count, testing::Eq(1u)); // base only
+
+    // Add a symlink after startup — the watcher must pick up the new target watch
+    create_file_symlink(real_file, "10-override.conf");
+    wait_for_load();
+    EXPECT_THAT(last_load_stream_count, testing::Eq(2u)); // base + symlinked override
+
+    auto const count_after_symlink = load_call_count;
+
+    // Now modify the target — must trigger a reload via the newly registered watch
+    write_real_file(real_file, "modified content");
+    wait_for_load(FailOnTimeout::yes);
+    EXPECT_THAT(load_call_count, testing::Gt(count_after_symlink));
+}
+
+TEST_F(TestOverrideConfigFile, reloads_when_relative_symlinked_override_file_target_is_modified)
+{
+    write_base_config();
+    std::filesystem::create_directories(override_dir());
+
+    auto const real_file = std::filesystem::path{symlink_targets_dir} / "relative_target.conf";
+    { std::ofstream{real_file} << "original content"; }
+
+    // Create a relative symlink (target path relative to the override directory)
+    create_relative_file_symlink(real_file, "10-override.conf");
+
+    invoke_runner([this](miral::MirRunner& runner)
+    {
+        config = ConfigFile{
+            runner,
+            override_config_file,
+            ConfigFile::Mode::reload_on_change,
+            [this](auto streams) { record_load(streams); }};
+    });
+
+    wait_for_load();
+    auto const count_after_initial = load_call_count;
+
+    write_real_file(real_file, "modified content");
+    wait_for_load(FailOnTimeout::yes);
+    EXPECT_THAT(load_call_count, testing::Gt(count_after_initial));
 }
 
 TEST_F(TestOverrideConfigFile, reloads_when_file_is_renamed_to_conf_in_override_directory)
