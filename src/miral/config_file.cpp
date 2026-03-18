@@ -35,6 +35,7 @@
 #include <vector>
 #include <ranges>
 #include <algorithm>
+#include <filesystem>
 
 using namespace std::filesystem;
 
@@ -100,6 +101,9 @@ public:
 private:
     void handler(int);
 
+    struct SymlinkWatch { int watch_descriptor; path filepath; };
+    auto watch_symlinked_override_files() -> std::vector<SymlinkWatch>;
+
     mir::Fd const inotify_fd;
     std::unique_ptr<miral::FdHandle> fd_handle;
 
@@ -111,8 +115,8 @@ private:
 
     std::optional<int> base_config_directory_watch_descriptor;
     std::optional<int> override_directory_watch_descriptor;
-    // std::vector<int> override_file_watch_descriptors;
 
+    std::vector<SymlinkWatch> override_symlink_file_watch_descriptors;
 };
 
 auto get_config_roots(path const& file) -> std::vector<path>
@@ -183,7 +187,6 @@ auto collect_all_file_streams(path const& config_file) -> std::vector<std::pair<
         // TODO handle symlink override directory
         for (auto const& override_file : override_files)
         {
-            // TODO handle symlink override files
             if (std::filesystem::is_regular_file(override_file) && override_file.extension() == ".conf")
                 config_streams.emplace_back(std::make_unique<std::ifstream>(override_file), override_file);
         }
@@ -379,9 +382,6 @@ void Watcher::handler(int) const
 // TODO: account for the override directory being a symlink
 //      Need to watch parent in case the symlink is changed (done)
 //      Need to watch the target in case its contents (override files) change
-// TODO: Account for override files being symlinks
-//      Need to watch the parent i n case the symlink is changed (done)
-//      Need to watch the target in case its contents (override files) change
 OverrideWatcher::OverrideWatcher(path base_config, OverrideLoader load_config)
     : inotify_fd{inotify_init1(IN_CLOEXEC)},
       override_loader{load_config},
@@ -389,26 +389,8 @@ OverrideWatcher::OverrideWatcher(path base_config, OverrideLoader load_config)
       override_directory{base_config_filename + ".d"},
       base_config_directory{config_directory(base_config.filename())},
       base_config_directory_watch_descriptor{watch_descriptor(inotify_fd, base_config_directory)},
-      override_directory_watch_descriptor{watch_override_directory(inotify_fd, *base_config_directory, override_directory)}
-      // override_file_watch_descriptors{[&]{
-      //     std::vector<int> watch_descriptors{};
-
-      //     // Override directory has to be valid
-      //     if (!override_directory_watch_descriptor)
-      //         return watch_descriptors;
-
-      //     for (auto const& entry : std::filesystem::directory_iterator(*base_config_directory / override_directory))
-      //     {
-      //         if (is_symlink(entry))
-      //         {
-      //             auto const entry_parent = read_symlink(entry).parent_path();
-      //             if (auto const fd = watch_descriptor(inotify_fd, entry_parent))
-      //                 watch_descriptors.push_back(*fd);
-      //         }
-      //     }
-
-      //     return watch_descriptors;
-      // }()}
+      override_directory_watch_descriptor{watch_override_directory(inotify_fd, *base_config_directory, override_directory)},
+      override_symlink_file_watch_descriptors{watch_symlinked_override_files()}
 {
 }
 
@@ -465,12 +447,23 @@ void OverrideWatcher::handler(int)
         auto const override_file_deleted = remove && override_directory_watch_descriptor.has_value()
                                           && event.wd == override_directory_watch_descriptor.value()
                                           && std::string_view{event.name}.ends_with(".conf");
+        auto const override_symlink_target_changed =
+            (write_or_move || remove)
+            && std::ranges::any_of(
+                override_symlink_file_watch_descriptors,
+                [&event](auto const& watch)
+                {
+                    return event.wd == watch.watch_descriptor
+                        && std::string_view{event.name} == watch.filepath.filename();
+                })
+            && std::string_view{event.name}.ends_with(".conf");
 
         if (override_directory_created)
             override_directory_watch_descriptor =
                 watch_override_directory(inotify_fd, base_config_directory, override_directory);
 
-        if (base_config_changed || override_file_changed || override_directory_created || override_file_deleted)
+        if (base_config_changed || override_file_changed || override_directory_created || override_file_deleted
+            || override_symlink_target_changed)
             try
             {
                 auto const base_config = base_config_directory.value() / base_config_filename;
@@ -501,4 +494,26 @@ void OverrideWatcher::handler(int)
         raw_buffer += sizeof_inotify_event+event.len;
     }
 
+}
+
+auto OverrideWatcher::watch_symlinked_override_files() -> std::vector<SymlinkWatch>
+{
+    std::vector<OverrideWatcher::SymlinkWatch> watch_descriptors{};
+
+    // Override directory has to be valid
+    if (!override_directory_watch_descriptor)
+        return watch_descriptors;
+
+    for (auto const& entry : std::filesystem::directory_iterator(*base_config_directory / override_directory))
+    {
+        if (is_symlink(entry))
+        {
+            auto const target = read_symlink(entry);
+            auto const target_parent = target.parent_path();
+            if (auto const fd = watch_descriptor(inotify_fd, target_parent))
+                watch_descriptors.push_back({*fd, target});
+        }
+    }
+
+    return watch_descriptors;
 }
