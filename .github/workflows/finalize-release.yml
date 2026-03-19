@@ -15,6 +15,9 @@ jobs:
   finalize:
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: write
+
     steps:
       - name: Import GPG key
         id: gpg
@@ -30,6 +33,7 @@ jobs:
         with:
           fetch-depth: 0
           ref: ${{ inputs.release_branch }}
+          persist-credentials: true
 
       - name: Determine version
         id: version
@@ -44,9 +48,11 @@ jobs:
           fi
 
       - name: Extract release notes
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
         run: |
           # Extract the section for this version from release-notes.md
-          awk -v version="${{ steps.version.outputs.version }}" '
+          awk -v version="${VERSION}" '
             /^## Mir / {
               if (in_section) exit
               if ($0 ~ version) {
@@ -62,17 +68,19 @@ jobs:
         env:
           DEBFULLNAME: ${{ steps.gpg.outputs.name }}
           DEBEMAIL: ${{ steps.gpg.outputs.email }}
+          VERSION: ${{ steps.version.outputs.version }}
         run: |
           sudo apt-get update
           sudo apt-get install --yes devscripts
 
           # Ensure there's a matching "Begin development" entry
-          dch --newversion "${{ steps.version.outputs.version }}~dev" \
-            "Begin development for ${{ steps.version.outputs.version }} release"
+          dch --newversion "${VERSION}~dev" \
+            "Begin development for ${VERSION} release"
 
           # Remove "Begin" lines and append release notes
-          awk --include=inplace '
-            /^mir \(${{ steps.version.outputs.version }}~dev\)/ {
+          awk --include=inplace \
+            --assign version_pat="^mir \\(${VERSION}~dev\\)" '
+            $0~version_pat {
               in_target = 1
               print
               print ""
@@ -93,7 +101,7 @@ jobs:
             { print }
           ' debian/changelog
 
-          dch --newversion "${{ steps.version.outputs.version }}-0ubuntu24.04" \
+          dch --newversion "${VERSION}-0ubuntu24.04" \
               --distribution noble \
               --force-distribution \
               ""
@@ -101,11 +109,19 @@ jobs:
           dch --release ""
 
       - name: Update RPM spec
+        env:
+          GPG_NAME: ${{ steps.gpg.outputs.name }}
+          GPG_EMAIL: ${{ steps.gpg.outputs.email }}
+          VERSION: ${{ steps.version.outputs.version }}
         run: |
           DATE_STR=$(date '+%a %b %d %Y')
 
           # Update Version field and insert release notes
-          awk --include=inplace --assign date_str="$DATE_STR" '
+          awk --include=inplace \
+            --assign date_str="$DATE_STR" \
+            --assign gpg_name="$GPG_NAME" \
+            --assign gpg_email="$GPG_EMAIL" \
+            --assign version="$VERSION" '
             function print_notes() {
                   while ((getline line < "/tmp/release-notes-section.md") > 0) {
                   print line
@@ -115,18 +131,19 @@ jobs:
             }
 
             function print_header() {
-              print "* " date_str " ${{ steps.gpg.outputs.name }} <${{ steps.gpg.outputs.email }}> - ${{ steps.version.outputs.version }}-1"
+              print "* " date_str " " gpg_name " <" gpg_email "> - " version "-1"
             }
 
             /^Version:/ {
-              print "Version:        ${{ steps.version.outputs.version }}"
+              print "Version:        " version
               next
             }
 
             /%changelog/ {
               print
               getline
-              if ($0 ~ /^\*.*${{ steps.version.outputs.version }}~dev-/) {
+              dev_pat = "^\\*.*" version "~dev-"
+              if ($0 ~ dev_pat) {
                 # Replace existing ~dev entry
                 print_header()
                 getline
@@ -147,16 +164,21 @@ jobs:
           ' rpm/mir.spec
 
       - name: Commit and push changelog
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          INPUTS_RELEASE_BRANCH: ${{ inputs.release_branch }}
         run: |
           git add debian/changelog rpm/mir.spec
-          git commit --message "Update changelogs for ${{ steps.version.outputs.version }}"
-          git push origin "${{ inputs.release_branch }}"
+          git commit --message "Update changelogs for ${VERSION}"
+          git push origin "${INPUTS_RELEASE_BRANCH}"
 
       - name: Finalize GitHub release
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
         with:
           script: |
-            const tag = `v${{ steps.version.outputs.version }}`;
+            const tag = `v${process.env.VERSION}`;
 
             const fs = require('fs');
             const releaseNotes = fs.readFileSync('/tmp/release-notes-section.md', 'utf8');

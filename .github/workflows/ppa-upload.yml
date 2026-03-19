@@ -8,8 +8,12 @@ on:
     tags:
     - v[0-9]+.[0-9]+.[0-9]+
 
+permissions: {}
+
 jobs:
   PPAUpload:
+    permissions:
+      contents: read
     strategy:
       fail-fast: true
       matrix:
@@ -33,6 +37,7 @@ jobs:
       with:
         # Need full history for version determination
         fetch-depth: 0
+        persist-credentials: false
 
     - name: Install dependencies
       run: |

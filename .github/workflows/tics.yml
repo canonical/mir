@@ -35,6 +35,8 @@ concurrency:
   group: ${{ github.workflow }}-${{ contains(fromJSON('["pull_request", "merge_group"]'), github.event_name) && github.ref || 'qserver' }}
   cancel-in-progress: ${{ contains(fromJSON('["pull_request", "merge_group"]'), github.event_name) }}
 
+permissions: {}
+
 jobs:
   TICS:
     # Only run if we have access to secrets.
@@ -42,6 +44,11 @@ jobs:
 
     runs-on: [self-hosted, reactive, amd64, 2xlarge-tiobe, noble]
 
+    permissions:
+      checks: write
+      contents: read
+      issues: write        # for commenting with TICS results
+      pull-requests: read  # to get the list of changed files
     env:
       PROJECT: mir
       CCACHE_DIR: "/tmp/ccache"
@@ -57,6 +64,7 @@ jobs:
       with:
         # So we can determine the merge base
         fetch-depth: 0
+        persist-credentials: false
 
     - name: Set up CCache
       id: setup-ccache

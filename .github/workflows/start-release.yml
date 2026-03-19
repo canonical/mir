@@ -12,19 +12,27 @@ on:
         required: false
         type: string
 
-permissions:
-  contents: write
+permissions: {}
+
+env:
+  INPUTS_VERSION: ${{ inputs.version }}
+  INPUTS_SHA: ${{ inputs.sha || github.sha }}
+  MAIN_REF: refs/heads/main
 
 jobs:
   release:
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
-          ref: ${{ inputs.sha || github.sha }}
+          ref: ${{ env.INPUTS_SHA }}
+          persist-credentials: true
 
       - name: Import GPG key
         id: gpg
@@ -39,22 +47,22 @@ jobs:
       - name: Validate version and extract components
         id: version
         run: |
-          if [[ "${{ inputs.version }}" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+          if [[ "${INPUTS_VERSION}" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
             echo "major=${BASH_REMATCH[1]}" | tee --append $GITHUB_OUTPUT
             echo "minor=${BASH_REMATCH[2]}" | tee --append $GITHUB_OUTPUT
             echo "patch=${BASH_REMATCH[3]}" | tee --append $GITHUB_OUTPUT
-            echo "release_branch=release/${BASH_REMATCH[1]}.${BASH_REMATCH[2]}" | tee --append $GITHUB_OUTPUT
+            echo "release_branch=refs/heads/release/${BASH_REMATCH[1]}.${BASH_REMATCH[2]}" | tee --append $GITHUB_OUTPUT
             echo "next_version=${BASH_REMATCH[1]}.$(( ${BASH_REMATCH[2]} + 1 )).0" | tee --append $GITHUB_OUTPUT
           else
-            echo ":error: Version '${{ inputs.version }}' is not in the format X.Y.Z"
+            echo ":error: Version '${INPUTS_VERSION}' is not in the format X.Y.Z"
             exit 1
           fi
 
       - name: Release Debian symbols
         run: |
           awk --include=inplace \
-            -v version_pat='${{ inputs.version }}~dev$' \
-            -v version="${{ inputs.version }}" '
+            -v version_pat="${INPUTS_VERSION}~dev$" \
+            -v version="${INPUTS_VERSION}" '
             $0~version_pat {
               gsub(version "~dev$", version)
             }
@@ -65,48 +73,53 @@ jobs:
 
       - name: Update CMake version
         run: |
-          sed --in-place -E 's/(VERSION\s+)[0-9]+\.[0-9]+\.[0-9]+/\1${{ inputs.version }}/' CMakeLists.txt
+          sed --in-place -E "s/(VERSION\s+)[0-9]+\.[0-9]+\.[0-9]+/\1${INPUTS_VERSION}/" CMakeLists.txt
           git add CMakeLists.txt
 
       - name: Commit Release Candidate
         run: |
           if [ -n "$(git status --porcelain)" ]; then
-            git commit -m "Begin Release Candidate for ${{ inputs.version }} release"
+            git commit -m "Begin Release Candidate for ${INPUTS_VERSION} release"
           fi
 
       - name: Create release tag
         run: |
-          git tag --annotate "v${{ inputs.version }}-rc" --message "Release candidate ${{ inputs.version }}"
+          git tag --annotate "v${INPUTS_VERSION}-rc" --message "Release candidate ${INPUTS_VERSION}"
 
       - name: Find previous release tag
         id: previous_tag
         run: |
           # Get the most recent tag excluding -rc and -dev tags
-          PREVIOUS_TAG=$(git describe --abbrev=0 --exclude="*-rc" --exclude="*-dev" "${{ inputs.sha || github.sha }}" 2>/dev/null || echo "")
+          PREVIOUS_TAG=$(git describe --abbrev=0 --exclude="*-rc" --exclude="*-dev" "${INPUTS_SHA}" 2>/dev/null || echo "")
           echo "tag=$PREVIOUS_TAG" | tee --append $GITHUB_OUTPUT
 
       - name: Push to the release branch
+        env:
+          RELEASE_BRANCH: ${{ steps.version.outputs.release_branch }}
         run: |
-          git push origin "HEAD:refs/heads/${{ steps.version.outputs.release_branch }}"
+          git push origin "HEAD:${RELEASE_BRANCH}"
 
       - name: Create draft GitHub release
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        env:
+          RELEASE_BRANCH: ${{ steps.version.outputs.release_branch }}
+          PREVIOUS_TAG: ${{ steps.previous_tag.outputs.tag }}
         with:
           script: |
             const generatedNotes = await github.rest.repos.generateReleaseNotes({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              tag_name: `v${{ inputs.version }}`,
-              target_commitish: `${{ steps.version.outputs.release_branch }}`,
-              previous_tag_name: `${{ steps.previous_tag.outputs.tag }}`
+              tag_name: `v${process.env.INPUTS_VERSION}`,
+              target_commitish: process.env.RELEASE_BRANCH,
+              previous_tag_name: process.env.PREVIOUS_TAG
             });
 
             const release = await github.rest.repos.createRelease({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              tag_name: `v${{ inputs.version }}`,
-              target_commitish: `${{ steps.version.outputs.release_branch }}`,
-              name: `Mir ${{ inputs.version }}`,
+              tag_name: `v${process.env.INPUTS_VERSION}`,
+              target_commitish: process.env.RELEASE_BRANCH,
+              name: `Mir ${process.env.INPUTS_VERSION}`,
               body: generatedNotes.data.body,
               draft: true,
               prerelease: false
@@ -116,25 +129,26 @@ jobs:
 
       - name: Push the Release Candidate tag
         run: |
-          git push origin "v${{ inputs.version }}-rc"
+          git push origin "v${INPUTS_VERSION}-rc"
 
       - name: Start development of next version
-        if: github.ref == 'refs/heads/main' && inputs.sha == ''
+        if: github.ref == env.MAIN_REF && inputs.sha == ''
         env:
           DEBFULLNAME: ${{ steps.gpg.outputs.name }}
           DEBEMAIL: ${{ steps.gpg.outputs.email }}
+          NEXT_VERSION: ${{ steps.version.outputs.next_version }}
         run: |
           # Bump CMake version
-          sed --in-place -E 's/(VERSION\s+)[0-9]+\.[0-9]+\.[0-9]+/\1${{ steps.version.outputs.next_version }}/' CMakeLists.txt
+          sed --in-place -E "s/(VERSION\s+)[0-9]+\.[0-9]+\.[0-9]+/\1${NEXT_VERSION}/" CMakeLists.txt
 
           # Add a Debian changelog entry
           sudo apt-get update
           sudo apt-get install --yes --no-install-recommends devscripts
-          debchange --newversion '${{ steps.version.outputs.next_version }}~dev' ''
+          debchange --newversion "${NEXT_VERSION}~dev" ''
 
           awk --include=inplace \
-            -v next_version='${{ steps.version.outputs.next_version }}' \
-            -v begin_pat='Begin development for ${{ inputs.version }}' '
+            -v next_version="${NEXT_VERSION}" \
+            -v begin_pat="Begin development for ${INPUTS_VERSION}" '
             $0~begin_pat {
               print "  * Begin development for " next_version " release"
               in_release=1
@@ -155,11 +169,11 @@ jobs:
 
           # Update the RPM changelog
           awk --include=inplace \
-            -v version_pat='${{ inputs.version }}~dev-1$' \
-            -v begin_pat='Begin development for ${{ inputs.version }}' \
-            -v next_version='${{ steps.version.outputs.next_version }}' \
-            -v name='${{ steps.gpg.outputs.name }}' \
-            -v email='${{ steps.gpg.outputs.email }}' \
+            -v version_pat="${INPUTS_VERSION}~dev-1$" \
+            -v begin_pat="Begin development for ${INPUTS_VERSION}" \
+            -v next_version="${NEXT_VERSION}" \
+            -v name="${DEBFULLNAME}" \
+            -v email="${DEBEMAIL}" \
             -v date="$(date "+%a %b %d %Y")" '
             /^Version:/ {
               sub(/[^[:space:]]+$/, next_version "~dev")
@@ -182,6 +196,6 @@ jobs:
           ' rpm/mir.spec
 
           git add CMakeLists.txt debian/changelog rpm/mir.spec
-          git commit -m 'Begin development for ${{ steps.version.outputs.next_version }} release'
-          git tag --annotate "v${{ steps.version.outputs.next_version }}~dev" --message "Begin development for ${{ steps.version.outputs.next_version }} release"
-          git push origin --tags "HEAD:${{ github.ref }}"
+          git commit --message "Begin development for ${NEXT_VERSION} release"
+          git tag --annotate "v${NEXT_VERSION}-dev" --message "Begin development for ${NEXT_VERSION} release"
+          git push --tags origin "HEAD:${MAIN_REF}"

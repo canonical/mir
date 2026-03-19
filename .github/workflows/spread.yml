@@ -16,6 +16,8 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.number && format('pr{0}', github.event.number) || github.run_id }}
   cancel-in-progress: true
 
+permissions: {}
+
 jobs:
   GetMatrix:
     runs-on: ubuntu-latest
@@ -66,6 +68,9 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: read
+
     env:
       DEBFULLNAME: "Mir CI Bot"
       DEBEMAIL: "mir-ci-bot@canonical.com"
@@ -100,6 +105,7 @@ jobs:
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       with:
         fetch-depth: 0
+        persist-credentials: false
 
     - name: Set up CCache
       id: setup-ccache
@@ -134,7 +140,9 @@ jobs:
     - name: Run Spread task
       run: |
         tools/make_release_tarball --skip-checks
-        snap run spread-mir-ci.spread -reuse -v ${{ matrix.spread-task }}
+        snap run spread-mir-ci.spread -reuse -v ${MATRIX_SPREAD_TASK}
+      env:
+        MATRIX_SPREAD_TASK: ${{ matrix.spread-task }}
 
     - name: CCache stats
       run: cat ${CCACHE_DIR}/ccache.stats

@@ -16,6 +16,8 @@ concurrency:
   group: ${{ github.workflow }}-pr${{ github.event.number }}
   cancel-in-progress: true
 
+permissions: {}
+
 jobs:
   arches:
     runs-on: ubuntu-latest
@@ -35,6 +37,8 @@ jobs:
   mir-libs:
     needs: [arches]
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     timeout-minutes: 360
 
@@ -48,6 +52,7 @@ jobs:
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       with:
         fetch-depth: 0  # needed for version determination
+        persist-credentials: false
 
     - name: Tweak the snapcraft.yaml
       run: |
@@ -71,6 +76,9 @@ jobs:
     needs: [arches, mir-libs]
 
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
 
     timeout-minutes: 60
 
@@ -101,6 +109,7 @@ jobs:
         repository: ${{ matrix.snap }}
         ref: mir-libs-build
         fetch-depth: 0  # needed for version determination
+        persist-credentials: false
 
     - name: Tweak the stage snap
       run: |

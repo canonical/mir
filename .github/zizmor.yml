@@ -1,0 +1,13 @@
+rules:
+  secrets-outside-env:  # repo automation doesn't yet support environments: canonical/canonical-repo-automation#364
+    ignore:
+    - close-snap.yml
+    - finalize-release.yml
+    - ppa-upload.yml
+    - snap.yml
+    - start-release.yml
+    - tarball.yml
+    - tics.yml
+  cache-poisoning:
+    ignore:
+    - spread.yml:122:7  # Not a release-producing workflow

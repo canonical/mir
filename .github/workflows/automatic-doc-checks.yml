@@ -9,8 +9,12 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.number && format('pr{0}', github.event.number) || github.run_id }}
   cancel-in-progress: true
 
+permissions: {}
+
 jobs:
   documentation-checks:
+    permissions:
+      contents: read
     uses: canonical/documentation-workflows/.github/workflows/documentation-checks.yaml@aaeaf091e8f55145184ad897cb9834f224bd31de # main @ 2026.02.11
     with:
       working-directory: doc/sphinx
