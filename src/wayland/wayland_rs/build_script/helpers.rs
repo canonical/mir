@@ -19,8 +19,7 @@ pub fn write_generated_rust_file(tokens: TokenStream, filename: &str) {
 }
 
 /// Write the generated C++ code to the correct directory.
-pub fn write_generated_cpp_file(content: &str, filename: &str) {
-    let out_dir = "include";
+pub fn write_generated_cpp_file(content: &str, out_dir: &str, filename: &str) {
     let dest_path = std::path::Path::new(&out_dir).join(filename);
 
     fs::create_dir_all(&out_dir).unwrap();

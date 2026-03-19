@@ -633,19 +633,21 @@ fn create_cpp_builder(protocol: &WaylandProtocol) -> CppBuilder {
     builder.add_include("<cstdint>".to_string());
     builder.add_include("<rust/cxx.h>".to_string());
 
+    builder.add_implementation_include("\"wayland_rs/src/ffi.rs.h\"".to_string());
+
     builder
 }
 
 fn write_cpp_header(builder: &CppBuilder) {
     let filename = format!("{}.h", builder.filename);
-    write_generated_cpp_file(&builder.to_cpp_header(), filename.as_str());
+    write_generated_cpp_file(&builder.to_cpp_header(), "wayland_rs_bridge/include", filename.as_str());
 }
 
 fn write_cpp_source(builder: &CppBuilder) {
     let header_filename = format!("{}.h", builder.filename);
 
     let filename = format!("{}.cpp", builder.filename);
-    write_generated_cpp_file(&builder.to_cpp_source(header_filename), filename.as_str());
+    write_generated_cpp_file(&builder.to_cpp_source(header_filename), "wayland_rs_bridge/src", filename.as_str());
 }
 
 fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
@@ -666,14 +668,21 @@ fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
     }
 
     // Add the method that associates the boxed rust interface with the C++ class.
-    let mut associate_method = CppMethod::new("associate".to_string(), None, true);
+    let mut associate_method = CppMethod::new("associate".to_string(), None, false);
     associate_method.add_arg(CppArg {
         cpp_type: CppType::Box(snake_to_pascal(
             &format_wayland_interface_to_rust_extension_struct(&interface.name),
         )),
         name: "instance".to_string(),
     });
+    associate_method.set_body("instance_ = std::move(instance);".to_string());
     class.add_method(associate_method);
+    class.add_private_member(CppArg {
+        cpp_type: CppType::Box(snake_to_pascal(
+            &format_wayland_interface_to_rust_extension_struct(&interface.name),
+        )),
+        name: "instance_".to_string(),
+    });
 
     for method in methods {
         class.add_method(method);
@@ -753,16 +762,18 @@ fn wayland_request_to_cpp_method(method: &WaylandRequest) -> CppMethod {
 }
 
 fn wayland_event_to_cpp_method(event: &WaylandEvent) -> CppMethod {
-    let mut cpp_method = CppMethod::new(format!("send_{}", event.name), None, true);
+    let mut cpp_method = CppMethod::new(format!("send_{}", event.name), None, false);
     let args = event
         .args
         .iter()
         .filter(|arg| arg.type_ != WaylandArgType::NewId)
         .map(wayland_arg_to_cpp_arg);
 
+    let sanitized_args: Vec<String> = args.clone().map(|arg| sanitize_identifier(&arg.name)).collect();
     for arg in args {
         cpp_method.add_arg(arg);
     }
 
+    cpp_method.set_body(format!("instance_->{}({});", event.name, sanitized_args.join(", ")));
     cpp_method
 }
