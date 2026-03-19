@@ -74,7 +74,7 @@ jobs:
 
     steps:
     - name: Set up LXD
-      uses: canonical/setup-lxd@main
+      uses: canonical/setup-lxd@d492474f6c8ceed1b716bb34c8f575a428871c70 # main @ 2026.02.06
       with:
         channel: stable
 
@@ -97,7 +97,7 @@ jobs:
         echo "LXD_DIR=/var/snap/lxd/common/lxd" >> $GITHUB_ENV
 
     - name: Check out code
-      uses: actions/checkout@v6
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       with:
         fetch-depth: 0
 
@@ -113,7 +113,7 @@ jobs:
 
     - name: CCache
       if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
-      uses: actions/cache@v5
+      uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
       with: &ccache_with
         key: ccache-${{ matrix.spread-task }}-${{ steps.setup-ccache.outputs.merge-base }}
         # if exact match isn't found, use the most recent entry for the task
@@ -123,7 +123,7 @@ jobs:
 
     - name: Restore CCache
       if: ${{ github.event_name != 'push' || github.ref != 'refs/heads/main' }}
-      uses: actions/cache/restore@v5
+      uses: actions/cache/restore@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
       with: *ccache_with
 
     - name: Ensure ccache size
@@ -141,6 +141,6 @@ jobs:
 
     - if: ${{ failure() && runner.debug }}
       name: Setup upterm session
-      uses: mxschmitt/action-tmate@v3
+      uses: mxschmitt/action-tmate@c0afd6f790e3a5564914980036ebf83216678101 # v3.23
       with:
         limit-access-to-actor: true

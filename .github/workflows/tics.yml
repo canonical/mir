@@ -53,7 +53,7 @@ jobs:
     timeout-minutes: 360
     steps:
     - name: Check out code
-      uses: actions/checkout@v6
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       with:
         # So we can determine the merge base
         fetch-depth: 0
@@ -70,7 +70,7 @@ jobs:
 
     - name: CCache
       if: ${{ github.event_name == 'push' }}
-      uses: actions/cache@v5
+      uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
       with: &ccache_with
         key: ccache-coverage-${{ steps.setup-ccache.outputs.merge-base }}
         # if exact match isn't found, use the most recent entry for the task
@@ -80,7 +80,7 @@ jobs:
 
     - name: Restore CCache
       if: ${{ github.event_name != 'push' }}
-      uses: actions/cache/restore@v5
+      uses: actions/cache/restore@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
       with: *ccache_with
 
     - name: Ensure ccache size
@@ -150,7 +150,7 @@ jobs:
         TICSMaintenance -project ${PROJECT} -detach
 
     - name: Run TICS analysis
-      uses: tiobe/tics-github-action@v3
+      uses: tiobe/tics-github-action@a53037a6bb9f71b6a97cdeb0ac41632266804b9e # v3.8.0
       timeout-minutes: 300  # avoid global job timeout to perform cleanup below
       with:
         mode: ${{ contains(fromJSON('["pull_request", "merge_group"]'), github.event_name) && 'client' || 'qserver' }}
@@ -173,6 +173,6 @@ jobs:
 
     - if: ${{ failure() && runner.debug }}
       name: Setup tmate session
-      uses: canonical/action-tmate@main
+      uses: canonical/action-tmate@bda82e73586a62bf621881aab872a527c8a46e2d # main @ 2026.03.02
       with:
         limit-access-to-actor: true

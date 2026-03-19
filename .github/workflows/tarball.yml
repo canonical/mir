@@ -30,13 +30,13 @@ jobs:
         [[ ${version} =~ ^[0-9]+.[0-9]+.[0-9]+$ ]] && echo "version=${version}" >> $GITHUB_OUTPUT
 
     - name: Import GPG key
-      uses: crazy-max/ghaction-import-gpg@v7
+      uses: crazy-max/ghaction-import-gpg@2dc316deee8e90f13e1a351ab510b4d5bc0c82cd # v7.0.0
       with:
         gpg_private_key: ${{ secrets.MIR_BOT_GPG_PRIVATE_KEY }}
         passphrase: ${{ secrets.MIR_BOT_GPG_PASSPHRASE }}
 
     - name: Check out code
-      uses: actions/checkout@v6
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       with:
         fetch-depth: 0
 
@@ -46,7 +46,7 @@ jobs:
         gpg --detach-sig --sign --output mir-${{ steps.get-version.outputs.version }}.tar.xz.asc mir-${{ steps.get-version.outputs.version }}.tar.xz
 
     - name: Store the tarball and signature
-      uses: actions/upload-artifact@v7
+      uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
       with:
         name: mir-${{ steps.get-version.outputs.version }}
         path: |
@@ -55,7 +55,7 @@ jobs:
 
     - name: Upload tarball to release
       if: github.event_name == 'push'
-      uses: actions/github-script@v8
+      uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
       with:
         script: |
           const fs = require('fs');

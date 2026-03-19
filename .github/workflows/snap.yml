@@ -45,7 +45,7 @@ jobs:
 
     steps:
     - name: Check out code
-      uses: actions/checkout@v6
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       with:
         fetch-depth: 0  # needed for version determination
 
@@ -55,7 +55,7 @@ jobs:
         sed -i 's@version: testing@version: '$(git describe)'@' snap/snapcraft.yaml
 
     - name: Build and publish the snap
-      uses: canonical/actions/build-snap@release
+      uses: canonical/actions/build-snap@bd56f0f0934af9edbbd49378645727d7ef7a4571 # release @ 2025.06.05
       with:
         architecture: ${{ matrix.architecture }}
         snapcraft-token: ${{ secrets.SNAPCRAFT_TOKEN }}
@@ -96,7 +96,7 @@ jobs:
 
     steps:
     - name: Check out code
-      uses: actions/checkout@v6
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       with:
         repository: ${{ matrix.snap }}
         ref: mir-libs-build
@@ -107,7 +107,7 @@ jobs:
         sed -i 's@- mir-libs.*$@\0/pr${{ github.event.number }}@' snap/snapcraft.yaml
 
     - name: Build and publish the snap
-      uses: canonical/actions/build-snap@release
+      uses: canonical/actions/build-snap@bd56f0f0934af9edbbd49378645727d7ef7a4571 # release @ 2025.06.05
       with:
         architecture: ${{ matrix.architecture }}
         review-opts: ${{ matrix.review-opts }}
