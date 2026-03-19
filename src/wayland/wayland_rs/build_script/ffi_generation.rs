@@ -41,7 +41,7 @@ pub fn generate_ffi(protocols: &Vec<WaylandProtocol>, builders: &Vec<CppBuilder>
         mod ffi {
             extern "Rust" {
                 type WaylandServer;
-                fn create_wayland_server() -> Box<WaylandServer>;
+                fn create_wayland_server(factory: UniquePtr<GlobalFactory>) -> Box<WaylandServer>;
                 fn run(self: &mut WaylandServer, socket: &str) -> Result<()>;
                 fn stop(self: &mut WaylandServer);
 

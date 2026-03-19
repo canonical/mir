@@ -200,7 +200,7 @@ fn generate_global_dispatch_impl(
     );
     let create_global_method = format_ident!("create_{}", &interface.name);
     quote! {
-        impl GlobalDispatch<#namespace_name::#interface_name::#interface_struct_name, Arc<Mutex<ffi::GlobalFactory>>>
+        impl GlobalDispatch<#namespace_name::#interface_name::#interface_struct_name, Arc<Mutex<cxx::UniquePtr<ffi::GlobalFactory>>>>
             for ServerState
         {
             fn bind(
@@ -208,15 +208,24 @@ fn generate_global_dispatch_impl(
                 _handle: &wayland_server::DisplayHandle,
                 _client: &wayland_server::Client,
                 resource: New<#namespace_name::#interface_name::#interface_struct_name>,
-                global_data: &Arc<Mutex<ffi::GlobalFactory>>,
+                // The global data is an Arc<Mutex<...>> instead of just a UniquePtr because it
+                // has to be accessed mutability in order to call methods across the Rust -> C++
+                // boundary.
+                global_data: &Arc<Mutex<cxx::UniquePtr<ffi::GlobalFactory>>>,
                 data_init: &mut wayland_server::DataInit<'_, Self>,
             ) {
                 use crate::ffi;
                 let mut guard = global_data.lock().unwrap();
-                let global = unsafe {
-                    ::std::pin::Pin::new_unchecked(&mut *guard)
-                }.#create_global_method();
+
+                // Methods on C++ classes must operate on Pin<&mut X> because those are the
+                // only ones that can cross the FFI boundary from Rust -> C++.
+                let global = (&mut *guard).pin_mut().#create_global_method();
                 let arc = Arc::new(Mutex::new(global));
+
+                // The initialization strategy here requires a "double initialization". First,
+                // we associate the C++ implementation with the Rust data. Afterwards, we wrap
+                // the Rust resource in an "extension" object that ferries the data from C++ -> Rust.
+                // Finally, we associate this "extension" object with our C++ object.
                 let instance = data_init.init(resource, arc.clone());
                 let boxed = Box::new(crate::middleware::#ext_interface_struct_name{ wrapped: instance });
                 let mut guard = arc.lock().unwrap();
@@ -306,9 +315,7 @@ fn generate_request_body(request: &WaylandRequest) -> TokenStream {
 
         quote! {
             let mut guard = data.lock().unwrap();
-            let child = unsafe {
-                ::std::pin::Pin::new_unchecked(&mut *guard)
-            }.pin_mut().#snake_request_name(#( #call_arg_names ),*);
+            let child = (&mut *guard).pin_mut().#snake_request_name(#( #call_arg_names ),*);
             data_init.init(#new_id_name, Arc::new(Mutex::new(child)));
         }
     } else {
@@ -323,9 +330,7 @@ fn generate_request_body(request: &WaylandRequest) -> TokenStream {
 
         quote! {
             let mut guard = data.lock().unwrap();
-            unsafe {
-                ::std::pin::Pin::new_unchecked(&mut *guard)
-            }.pin_mut().#snake_request_name(#( #call_arg_names ),*);
+            (&mut *guard).pin_mut().#snake_request_name(#( #call_arg_names ),*);
         }
     }
 }
@@ -514,6 +519,7 @@ fn create_global_factory(protocols: &Vec<WaylandProtocol>) -> CppBuilder {
         "global_factory".to_string(),
     );
     builder.add_include("<memory>".to_string());
+    builder.add_include("<rust/cxx.h>".to_string());
     let mut namespace = CppNamespace::new(vec!["mir".to_string(), "wayland_rs".to_string()]);
     let mut class = CppClass::new("GlobalFactory".to_string());
     protocols.iter().for_each(|protocol| {
