@@ -189,7 +189,7 @@ execute: |
         WAYLAND_DISPLAY=wayland-99 miral-app --add-wayland-extension=all &
 
         inotifywait --timeout 5 --event create --include 'wayland-99' "$XDG_RUNTIME_DIR" &
-        wait "$!" || { echo "miral-app failed to create Wayland socket at $XDG_RUNTIME_DIR/wayland-99"; exit 1; }
+        wait "$!" || [ -S "$XDG_RUNTIME_DIR/wayland-99" ] || { echo "miral-app failed to create Wayland socket at $XDG_RUNTIME_DIR/wayland-99"; exit 1; }
 
         WAYLAND_DISPLAY=wayland-99 wlprobe --unique | \
           jq --arg version "$MIR_VERSION" '{generationTimestamp, version:$version, globals}' \
