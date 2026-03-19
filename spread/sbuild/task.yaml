@@ -168,6 +168,7 @@ execute: |
       # Install Mir packages from the locally-built sbuild output in ../
       apt-get install --yes --no-install-recommends \
         cargo \
+        inotify-tools \
         jq
       apt-get install --yes --no-install-recommends \
         ${SPREAD_PATH}/../mir-demos_*.deb \
@@ -187,8 +188,8 @@ execute: |
 
         WAYLAND_DISPLAY=wayland-99 miral-app --add-wayland-extension=all &
 
-        timeout --preserve-status 5 bash -c "while [ ! -S $XDG_RUNTIME_DIR/wayland-99 ]; do sleep 0.1; done"
-        [ -S "$XDG_RUNTIME_DIR/wayland-99" ] || { echo "miral-app failed to create Wayland socket at $XDG_RUNTIME_DIR/wayland-99"; exit 1; }
+        inotifywait --timeout 5 --event create --include 'wayland-99' "$XDG_RUNTIME_DIR" &
+        wait "$!" || { echo "miral-app failed to create Wayland socket at $XDG_RUNTIME_DIR/wayland-99"; exit 1; }
 
         WAYLAND_DISPLAY=wayland-99 wlprobe --unique | \
           jq --arg version "$MIR_VERSION" '{generationTimestamp, version:$version, globals}' \
