@@ -169,11 +169,12 @@ execute: |
       # Install Mir packages from the locally-built sbuild output in ../
       apt-get install --yes --no-install-recommends \
         cargo \
-        jq \
-        mir-demos \
-        mir-platform-graphics-stub23 \
-        mir-platform-input-stub10 \
-        mir-platform-rendering-egl-generic
+        jq
+      apt-get install --yes --no-install-recommends \
+        ${SPREAD_PATH}/../mir-demos_*.deb \
+        ${SPREAD_PATH}/../mir-platform-graphics-stub*.deb \
+        ${SPREAD_PATH}/../mir-platform-input-stub*.deb \
+        ${SPREAD_PATH}/../mir-platform-rendering-egl-generic*.deb
 
       cargo install wlprobe
 
