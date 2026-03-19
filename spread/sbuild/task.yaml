@@ -165,7 +165,6 @@ execute: |
     fi
 
     if [ "${WLPROBE}" = "true" ]; then
-      # Regenerate the Wayland Explorer entry for Mir
       # Install Mir packages from the locally-built sbuild output in ../
       apt-get install --yes --no-install-recommends \
         cargo \
