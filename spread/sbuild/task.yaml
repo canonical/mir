@@ -177,7 +177,7 @@ execute: |
 
       cargo install wlprobe
 
-      MIR_VERSION=$(dpkg-query -W -f='${Version}' libmiral-dev | sed 's/-.*//')
+      MIR_VERSION=$(sed -n 's/.*VERSION \([0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\).*/\1/p' "$SPREAD_PATH/CMakeLists.txt" | head -1)
       MIR_JSON_OUTPUT="$SPREAD_PATH/$SPREAD_TASK/mir.json"
       export XDG_RUNTIME_DIR=/tmp MIR_VERSION MIR_JSON_OUTPUT PATH="$HOME/.cargo/bin:$PATH"
 
