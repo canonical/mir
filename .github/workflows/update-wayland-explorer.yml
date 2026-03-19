@@ -1,0 +1,256 @@
+name: Update Wayland Explorer
+
+on:
+  release:
+    types:
+    - published
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.release.tag_name }}
+  cancel-in-progress: false
+
+jobs:
+  DetermineReleaseEligibility:
+    runs-on: ubuntu-latest
+    outputs:
+      should_run: ${{ steps.gate.outputs.should_run }}
+      mir_version_major_minor: ${{ steps.gate.outputs.mir_version_major_minor }}
+      release_tag: ${{ steps.gate.outputs.release_tag }}
+      skip_reason: ${{ steps.gate.outputs.skip_reason }}
+
+    steps:
+    - name: Determine whether this release should update Wayland Explorer
+      id: gate
+      run: |
+        set -euo pipefail
+
+        release_tag='${{ github.event.release.tag_name }}'
+        prerelease='${{ github.event.release.prerelease }}'
+
+        echo "release_tag=${release_tag}" >> "$GITHUB_OUTPUT"
+        echo "mir_version_major_minor=" >> "$GITHUB_OUTPUT"
+
+        if [[ "${prerelease}" == "true" ]]; then
+          echo "should_run=false" >> "$GITHUB_OUTPUT"
+          echo "skip_reason=Release is marked as prerelease" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+
+        if [[ ! "${release_tag}" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+          echo "should_run=false" >> "$GITHUB_OUTPUT"
+          echo "skip_reason=Release tag '${release_tag}' is not in vX.Y.Z format" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+
+        major="${BASH_REMATCH[1]}"
+        minor="${BASH_REMATCH[2]}"
+        patch="${BASH_REMATCH[3]}"
+
+        if [[ "${patch}" != "0" ]]; then
+          echo "should_run=false" >> "$GITHUB_OUTPUT"
+          echo "skip_reason=Patch release ${major}.${minor}.${patch} is intentionally ignored" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+
+        echo "should_run=true" >> "$GITHUB_OUTPUT"
+        echo "mir_version_major_minor=${major}.${minor}" >> "$GITHUB_OUTPUT"
+        echo "skip_reason=" >> "$GITHUB_OUTPUT"
+
+    - name: Summarize release gate
+      run: |
+        {
+          echo "### Wayland Explorer update gate"
+          echo ""
+          echo "- Release tag: ${{ steps.gate.outputs.release_tag }}"
+          echo "- Should run: ${{ steps.gate.outputs.should_run }}"
+          if [[ "${{ steps.gate.outputs.should_run }}" == "true" ]]; then
+            echo "- Mir version for JSON: ${{ steps.gate.outputs.mir_version_major_minor }}"
+          else
+            echo "- Skip reason: ${{ steps.gate.outputs.skip_reason }}"
+          fi
+        } >> "$GITHUB_STEP_SUMMARY"
+
+  UpdateWaylandExplorer:
+    if: needs.DetermineReleaseEligibility.outputs.should_run == 'true'
+    needs: DetermineReleaseEligibility
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Validate cross-repository token
+      env:
+        WAYLAND_EXPLORER_TOKEN: ${{ secrets.WAYLAND_EXPLORER_TOKEN }}
+      run: |
+        set -euo pipefail
+
+        if [[ -z "${WAYLAND_EXPLORER_TOKEN}" ]]; then
+          echo ":error: Missing required secret WAYLAND_EXPLORER_TOKEN"
+          exit 1
+        fi
+
+    - name: Check out Mir release source
+      uses: actions/checkout@v6
+      with:
+        fetch-depth: 0
+        ref: refs/tags/${{ needs.DetermineReleaseEligibility.outputs.release_tag }}
+
+    - name: Set up Rust
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Install dependencies
+      run: |
+        set -euo pipefail
+
+        sudo apt-get update
+        sudo apt-get install --yes --no-install-recommends \
+          build-essential \
+          cmake \
+          ninja-build \
+          pkg-config \
+          jq \
+          git \
+          devscripts \
+          equivs
+
+    - name: Install Mir build dependencies from Debian metadata
+      run: |
+        set -euo pipefail
+
+        sudo mk-build-deps \
+          --install \
+          --remove \
+          --tool 'apt-get --yes --no-install-recommends' \
+          debian/control
+
+    - name: Build miral-shell and miral-app
+      run: |
+        set -euo pipefail
+
+        cmake -S . -B build -GNinja \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DMIR_ENABLE_TESTS=OFF
+        cmake --build build --target miral-shell miral-app --parallel "$(nproc)"
+
+    - name: Install wlprobe
+      run: |
+        set -euo pipefail
+
+        cargo install --locked --git https://github.com/PolyMeilex/wlprobe.git wlprobe
+
+    - name: Check out wayland-explorer
+      uses: actions/checkout@v6
+      with:
+        repository: vially/wayland-explorer
+        ref: main
+        path: wayland-explorer
+
+    - name: Generate Mir compositor JSON with wlprobe
+      env:
+        MIR_VERSION: ${{ needs.DetermineReleaseEligibility.outputs.mir_version_major_minor }}
+      run: |
+        set -euo pipefail
+
+        export XDG_RUNTIME_DIR=/tmp/xdg-runtime
+        mkdir --parents "${XDG_RUNTIME_DIR}"
+        chmod 700 "${XDG_RUNTIME_DIR}"
+
+        export WAYLAND_DISPLAY=wayland-98
+        mir_socket="${XDG_RUNTIME_DIR}/${WAYLAND_DISPLAY}"
+
+        MIR_SERVER_PLATFORM_PATH="${PWD}/build/lib/server-modules" \
+        MIR_SERVER_PLATFORM_DISPLAY_LIBS=mir:virtual \
+        MIR_SERVER_VIRTUAL_OUTPUT=1280x1024 \
+        WAYLAND_DISPLAY="${WAYLAND_DISPLAY}" \
+        ./build/bin/miral-shell --console-provider=none --add-wayland-extensions=all > /tmp/miral-shell.log 2>&1 &
+        mir_pid=$!
+
+        cleanup() {
+          if kill -0 "${mir_pid}" 2>/dev/null; then
+            kill "${mir_pid}" || true
+            wait "${mir_pid}" || true
+          fi
+        }
+        trap cleanup EXIT
+
+        for _ in $(seq 1 60); do
+          if [[ -S "${mir_socket}" ]]; then
+            break
+          fi
+
+          if ! kill -0 "${mir_pid}" 2>/dev/null; then
+            echo ":error: miral-shell exited before creating ${mir_socket}"
+            cat /tmp/miral-shell.log
+            exit 1
+          fi
+
+          sleep 1
+        done
+
+        if [[ ! -S "${mir_socket}" ]]; then
+          echo ":error: Timed out waiting for ${mir_socket}"
+          cat /tmp/miral-shell.log
+          exit 1
+        fi
+
+        WAYLAND_DISPLAY="${WAYLAND_DISPLAY}" "$HOME/.cargo/bin/wlprobe" --unique \
+          | jq --arg version "${MIR_VERSION}" '{generationTimestamp, version:$version, globals}' \
+          > wayland-explorer/src/data/compositors/mir.json
+
+    - name: Check whether compositor JSON changed
+      id: changes
+      working-directory: wayland-explorer
+      run: |
+        set -euo pipefail
+
+        if git diff --quiet -- src/data/compositors/mir.json; then
+          echo "changed=false" >> "$GITHUB_OUTPUT"
+        else
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: Summarize no-change result
+      if: steps.changes.outputs.changed != 'true'
+      run: |
+        {
+          echo "### Wayland Explorer update"
+          echo ""
+          echo "No changes detected in src/data/compositors/mir.json."
+        } >> "$GITHUB_STEP_SUMMARY"
+
+    - name: Create or update pull request
+      if: steps.changes.outputs.changed == 'true'
+      id: cpr
+      uses: peter-evans/create-pull-request@v7
+      with:
+        path: wayland-explorer
+        token: ${{ secrets.WAYLAND_EXPLORER_TOKEN }}
+        base: main
+        branch: automation/mir-wayland-explorer-v${{ needs.DetermineReleaseEligibility.outputs.mir_version_major_minor }}
+        push-to-fork: canonical/wayland-explorer
+        delete-branch: false
+        add-paths: |
+          src/data/compositors/mir.json
+        commit-message: Update Mir compositor data for ${{ needs.DetermineReleaseEligibility.outputs.mir_version_major_minor }}
+        title: Update Mir compositor data for ${{ needs.DetermineReleaseEligibility.outputs.mir_version_major_minor }}
+        body: |
+          This automated update refreshes `src/data/compositors/mir.json` for Mir ${{ needs.DetermineReleaseEligibility.outputs.mir_version_major_minor }}.
+
+          Source release tag: `${{ needs.DetermineReleaseEligibility.outputs.release_tag }}`
+          Source release: ${{ github.event.release.html_url }}
+          Source branch fork: `canonical/wayland-explorer`
+          Triggered by workflow run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+          This PR was created automatically by Mir release automation.
+
+    - name: Summarize pull request result
+      if: steps.changes.outputs.changed == 'true'
+      run: |
+        {
+          echo "### Wayland Explorer update"
+          echo ""
+          echo "- Pull request operation: ${{ steps.cpr.outputs.pull-request-operation }}"
+          echo "- Pull request number: ${{ steps.cpr.outputs.pull-request-number }}"
+          echo "- Pull request URL: ${{ steps.cpr.outputs.pull-request-url }}"
+        } >> "$GITHUB_STEP_SUMMARY"
