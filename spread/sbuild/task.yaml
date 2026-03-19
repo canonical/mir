@@ -177,8 +177,6 @@ execute: |
 
       cargo install wlprobe
 
-      git clone https://github.com/vially/wayland-explorer.git /tmp/wayland-explorer
-
       MIR_VERSION=$(dpkg-query -W -f='${Version}' libmiral-dev | sed 's/-.*//')
       MIR_JSON_OUTPUT="$SPREAD_PATH/$SPREAD_TASK/mir.json"
       export XDG_RUNTIME_DIR=/tmp MIR_VERSION MIR_JSON_OUTPUT PATH="$HOME/.cargo/bin:$PATH"
@@ -197,7 +195,5 @@ execute: |
           > "$MIR_JSON_OUTPUT"
 
     WLPROBE
-
-      diff /tmp/wayland-explorer/src/data/compositors/mir.json "$MIR_JSON_OUTPUT" || true
 
     fi

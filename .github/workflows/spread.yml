@@ -136,6 +136,14 @@ jobs:
         tools/make_release_tarball --skip-checks
         snap run spread-mir-ci.spread -reuse -v ${{ matrix.spread-task }}
 
+    - name: Upload Wayland Explorer JSON
+      if: endsWith(matrix['spread-task'], ':ubuntu')
+      uses: actions/upload-artifact@v4
+      with:
+        name: mir.json
+        path: ${{ env.SPREAD_PATH }}/spread/sbuild/mir.json
+        if-no-files-found: error
+
     - name: CCache stats
       run: cat ${CCACHE_DIR}/ccache.stats
 
