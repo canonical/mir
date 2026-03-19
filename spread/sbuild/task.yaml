@@ -166,31 +166,33 @@ execute: |
 
     if [ "${WAYLAND_EXPLORER}" = "true" ]; then
       # Regenerate the Wayland Explorer entry for Mir
-      apt-get install --yes --no-install-recommends cargo jq mir-demos
+      # Install Mir packages from the locally-built sbuild output in ../
+      apt-get install --yes --no-install-recommends \
+        cargo \
+        jq \
+        mir-demos \
+        mir-platform-graphics-stub23 \
+        mir-platform-input-stub10 \
+        mir-platform-rendering-egl-generic
 
-      git clone https://github.com/PolyMeilex/wlprobe.git /tmp/wlprobe
-      cargo install --path /tmp/wlprobe --root /tmp/wlprobe-install
+      cargo install wlprobe
 
       git clone https://github.com/vially/wayland-explorer.git /tmp/wayland-explorer
 
       MIR_VERSION=$(dpkg-query -W -f='${Version}' libmiral-dev | sed 's/-.*//')
       MIR_JSON_OUTPUT="$SPREAD_PATH/$SPREAD_TASK/mir.json"
-      export XDG_RUNTIME_DIR=/tmp MIR_VERSION MIR_JSON_OUTPUT
+      export XDG_RUNTIME_DIR=/tmp MIR_VERSION MIR_JSON_OUTPUT PATH="$HOME/.cargo/bin:$PATH"
 
       timeout 30 bash -e <<'WLPROBE'
 
         trap "jobs -p | xargs -r kill" SIGINT SIGTERM EXIT
-
-        export \
-          MIR_SERVER_PLATFORM_DISPLAY_LIBS=mir:virtual \
-          MIR_SERVER_VIRTUAL_OUTPUT=800x600
 
         WAYLAND_DISPLAY=wayland-99 miral-app --add-wayland-extension=all &
 
         timeout --preserve-status 5 bash -c "while [ ! -S $XDG_RUNTIME_DIR/wayland-99 ]; do sleep 0.1; done"
         [ -S "$XDG_RUNTIME_DIR/wayland-99" ] || { echo "miral-app failed to create Wayland socket at $XDG_RUNTIME_DIR/wayland-99"; exit 1; }
 
-        WAYLAND_DISPLAY=wayland-99 /tmp/wlprobe-install/bin/wlprobe --unique | \
+        WAYLAND_DISPLAY=wayland-99 wlprobe --unique | \
           jq --arg version "$MIR_VERSION" '{generationTimestamp, version:$version, globals}' \
           > "$MIR_JSON_OUTPUT"
 
