@@ -10,6 +10,9 @@ variants:
 summary: Build Deb packages
 kill-timeout: 90m
 
+artifacts:
+    - mir.json
+
 execute: |
     cd $SPREAD_PATH
 
@@ -158,5 +161,40 @@ execute: |
         WAYLAND_DISPLAY=wayland-99 bomber
         # [doc:first-compositor:run-client-end]
     EOF
+
+    fi
+
+    if [ "${WLPROBE}" = "true" ]; then
+      # Install Mir packages from the locally-built sbuild output in ../
+      apt-get install --yes --no-install-recommends \
+        cargo \
+        inotify-tools \
+        jq
+      apt-get install --yes --no-install-recommends \
+        ${SPREAD_PATH}/../mir-demos_*.deb \
+        ${SPREAD_PATH}/../mir-platform-graphics-stub*.deb \
+        ${SPREAD_PATH}/../mir-platform-input-stub*.deb \
+        ${SPREAD_PATH}/../mir-platform-rendering-egl-generic*.deb
+
+      cargo install wlprobe
+
+      MIR_VERSION=$(sed -n 's/.*VERSION \([0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\).*/\1/p' "$SPREAD_PATH/CMakeLists.txt" | head -1)
+      MIR_JSON_OUTPUT="$SPREAD_PATH/$SPREAD_TASK/mir.json"
+      export XDG_RUNTIME_DIR=/tmp MIR_VERSION MIR_JSON_OUTPUT PATH="$HOME/.cargo/bin:$PATH"
+
+      timeout 30 bash -e <<'WLPROBE'
+
+        trap "jobs -p | xargs -r kill" SIGINT SIGTERM EXIT
+
+        WAYLAND_DISPLAY=wayland-99 miral-app --add-wayland-extension=all &
+
+        inotifywait --timeout 5 --event create --include 'wayland-99' "$XDG_RUNTIME_DIR" &
+        wait "$!" || [ -S "$XDG_RUNTIME_DIR/wayland-99" ] || { echo "miral-app failed to create Wayland socket at $XDG_RUNTIME_DIR/wayland-99"; exit 1; }
+
+        WAYLAND_DISPLAY=wayland-99 wlprobe --unique | \
+          jq --arg version "$MIR_VERSION" '{generationTimestamp, version:$version, globals}' \
+          > "$MIR_JSON_OUTPUT"
+
+    WLPROBE
 
     fi

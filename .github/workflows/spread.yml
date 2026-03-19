@@ -134,7 +134,13 @@ jobs:
     - name: Run Spread task
       run: |
         tools/make_release_tarball --skip-checks
-        snap run spread-mir-ci.spread -reuse -v ${{ matrix.spread-task }}
+        snap run spread-mir-ci.spread -reuse -artifacts=./artifacts -v ${{ matrix.spread-task }}
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.spread-task }}-artifacts
+        path: artifacts/**
 
     - name: CCache stats
       run: cat ${CCACHE_DIR}/ccache.stats
