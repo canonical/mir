@@ -10,6 +10,9 @@ variants:
 summary: Build Deb packages
 kill-timeout: 90m
 
+artifacts:
+    - mir.json
+
 execute: |
     cd $SPREAD_PATH
 
@@ -159,6 +162,9 @@ execute: |
         # [doc:first-compositor:run-client-end]
     EOF
 
+    fi
+
+    if [ "${WAYLAND_EXPLORER}" = "true" ]; then
       # Regenerate the Wayland Explorer entry for Mir
       apt-get install --yes --no-install-recommends cargo jq mir-demos
 
@@ -168,7 +174,8 @@ execute: |
       git clone https://github.com/vially/wayland-explorer.git /tmp/wayland-explorer
 
       MIR_VERSION=$(dpkg-query -W -f='${Version}' libmiral-dev | sed 's/-.*//')
-      export XDG_RUNTIME_DIR=/tmp MIR_VERSION
+      MIR_JSON_OUTPUT="$SPREAD_PATH/$SPREAD_TASK/mir.json"
+      export XDG_RUNTIME_DIR=/tmp MIR_VERSION MIR_JSON_OUTPUT
 
       timeout 30 bash -e <<'WLPROBE'
 
@@ -185,10 +192,10 @@ execute: |
 
         WAYLAND_DISPLAY=wayland-99 /tmp/wlprobe-install/bin/wlprobe --unique | \
           jq --arg version "$MIR_VERSION" '{generationTimestamp, version:$version, globals}' \
-          > /tmp/mir.json
+          > "$MIR_JSON_OUTPUT"
 
     WLPROBE
 
-      diff /tmp/wayland-explorer/src/data/compositors/mir.json /tmp/mir.json || true
+      diff /tmp/wayland-explorer/src/data/compositors/mir.json "$MIR_JSON_OUTPUT" || true
 
     fi

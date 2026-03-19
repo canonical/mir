@@ -50,6 +50,8 @@ environment:
     CCACHE_DIR: /root/.ccache
     # Needed for precompiled headers (https://ccache.dev/manual/latest.html#_precompiled_headers)
     CCACHE_SLOPPINESS: time_macros,pch_defines,include_file_mtime,include_file_ctime
+    WAYLAND_EXPLORER: false
+    WAYLAND_EXPLORER/ubuntu: true
 
 prepare: |
     # NOTE: This part of the code needs to be in spread.yaml as it runs before
