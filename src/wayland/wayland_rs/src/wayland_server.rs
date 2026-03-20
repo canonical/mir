@@ -14,8 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+use crate::ffi::GlobalFactory;
 use calloop::ping::Ping;
 use calloop::{generic::Generic, EventLoop, Interest, Mode, PostAction};
+use cxx::UniquePtr;
 use log;
 use std::error;
 use std::option::Option;
@@ -138,7 +140,7 @@ impl WaylandServer {
 }
 
 /// Create a new wayland server.
-pub fn create_wayland_server() -> Box<WaylandServer> {
+pub fn create_wayland_server(_factory: UniquePtr<GlobalFactory>) -> Box<WaylandServer> {
     Box::new(WaylandServer::new())
 }
 
