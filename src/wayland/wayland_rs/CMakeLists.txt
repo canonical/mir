@@ -4,45 +4,45 @@ add_rust_cxx_library(mirwayland_rs
   DEPENDS Cargo.toml build_script/main.rs build_script/protocol_parser.rs src/lib.rs src/wayland_server.rs
   INCLUDES
     ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/wayland_rs_bridge/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/wayland_rs_cpp/include
 )
 
 target_sources(mirwayland_rs-cxxbridge
   PRIVATE
-    wayland_rs_bridge/src/ext_data_control_v1.cpp
-    wayland_rs_bridge/src/ext_foreign_toplevel_list_v1.cpp
-    wayland_rs_bridge/src/ext_image_capture_source_v1.cpp
-    wayland_rs_bridge/src/ext_image_copy_capture_v1.cpp
-    wayland_rs_bridge/src/ext_input_trigger_action_v1.cpp
-    wayland_rs_bridge/src/ext_input_trigger_registration_v1.cpp
-    wayland_rs_bridge/src/ext_session_lock_v1.cpp
-    wayland_rs_bridge/src/fractional_scale_v1.cpp
-    wayland_rs_bridge/src/global_factory.cpp
-    wayland_rs_bridge/src/idle_inhibit_unstable_v1.cpp
-    wayland_rs_bridge/src/input_method_unstable_v1.cpp
-    wayland_rs_bridge/src/input_method_unstable_v2.cpp
-    wayland_rs_bridge/src/linux_dmabuf_v1.cpp
-    wayland_rs_bridge/src/linux_drm_syncobj_v1.cpp
-    wayland_rs_bridge/src/mir_shell_unstable_v1.cpp
-    wayland_rs_bridge/src/pointer_constraints_unstable_v1.cpp
-    wayland_rs_bridge/src/relative_pointer_unstable_v1.cpp
-    wayland_rs_bridge/src/server_decoration.cpp
-    wayland_rs_bridge/src/text_input_unstable_v1.cpp
-    wayland_rs_bridge/src/text_input_unstable_v2.cpp
-    wayland_rs_bridge/src/text_input_unstable_v3.cpp
-    wayland_rs_bridge/src/viewporter.cpp
-    wayland_rs_bridge/src/virtual_keyboard_unstable_v1.cpp
-    wayland_rs_bridge/src/wayland.cpp
-    wayland_rs_bridge/src/wlr_foreign_toplevel_management_unstable_v1.cpp
-    wayland_rs_bridge/src/wlr_layer_shell_unstable_v1.cpp
-    wayland_rs_bridge/src/wlr_screencopy_unstable_v1.cpp
-    wayland_rs_bridge/src/wlr_virtual_pointer_unstable_v1.cpp
-    wayland_rs_bridge/src/wp_primary_selection_unstable_v1.cpp
-    wayland_rs_bridge/src/xdg_activation_v1.cpp
-    wayland_rs_bridge/src/xdg_decoration_unstable_v1.cpp
-    wayland_rs_bridge/src/xdg_output_unstable_v1.cpp
-    wayland_rs_bridge/src/xdg_shell.cpp
-    wayland_rs_bridge/src/xdg_shell_unstable_v6.cpp
+    wayland_rs_cpp/src/ext_data_control_v1.cpp
+    wayland_rs_cpp/src/ext_foreign_toplevel_list_v1.cpp
+    wayland_rs_cpp/src/ext_image_capture_source_v1.cpp
+    wayland_rs_cpp/src/ext_image_copy_capture_v1.cpp
+    wayland_rs_cpp/src/ext_input_trigger_action_v1.cpp
+    wayland_rs_cpp/src/ext_input_trigger_registration_v1.cpp
+    wayland_rs_cpp/src/ext_session_lock_v1.cpp
+    wayland_rs_cpp/src/fractional_scale_v1.cpp
+    wayland_rs_cpp/src/global_factory.cpp
+    wayland_rs_cpp/src/idle_inhibit_unstable_v1.cpp
+    wayland_rs_cpp/src/input_method_unstable_v1.cpp
+    wayland_rs_cpp/src/input_method_unstable_v2.cpp
+    wayland_rs_cpp/src/linux_dmabuf_v1.cpp
+    wayland_rs_cpp/src/linux_drm_syncobj_v1.cpp
+    wayland_rs_cpp/src/mir_shell_unstable_v1.cpp
+    wayland_rs_cpp/src/pointer_constraints_unstable_v1.cpp
+    wayland_rs_cpp/src/relative_pointer_unstable_v1.cpp
+    wayland_rs_cpp/src/server_decoration.cpp
+    wayland_rs_cpp/src/text_input_unstable_v1.cpp
+    wayland_rs_cpp/src/text_input_unstable_v2.cpp
+    wayland_rs_cpp/src/text_input_unstable_v3.cpp
+    wayland_rs_cpp/src/viewporter.cpp
+    wayland_rs_cpp/src/virtual_keyboard_unstable_v1.cpp
+    wayland_rs_cpp/src/wayland.cpp
+    wayland_rs_cpp/src/wlr_foreign_toplevel_management_unstable_v1.cpp
+    wayland_rs_cpp/src/wlr_layer_shell_unstable_v1.cpp
+    wayland_rs_cpp/src/wlr_screencopy_unstable_v1.cpp
+    wayland_rs_cpp/src/wlr_virtual_pointer_unstable_v1.cpp
+    wayland_rs_cpp/src/wp_primary_selection_unstable_v1.cpp
+    wayland_rs_cpp/src/xdg_activation_v1.cpp
+    wayland_rs_cpp/src/xdg_decoration_unstable_v1.cpp
+    wayland_rs_cpp/src/xdg_output_unstable_v1.cpp
+    wayland_rs_cpp/src/xdg_shell.cpp
+    wayland_rs_cpp/src/xdg_shell_unstable_v6.cpp
 )
 
 add_executable(

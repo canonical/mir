@@ -646,14 +646,22 @@ fn create_cpp_builder(protocol: &WaylandProtocol) -> CppBuilder {
 
 fn write_cpp_header(builder: &CppBuilder) {
     let filename = format!("{}.h", builder.filename);
-    write_generated_cpp_file(&builder.to_cpp_header(), "wayland_rs_bridge/include", filename.as_str());
+    write_generated_cpp_file(
+        &builder.to_cpp_header(),
+        "wayland_rs_cpp/include",
+        filename.as_str(),
+    );
 }
 
 fn write_cpp_source(builder: &CppBuilder) {
     let header_filename = format!("{}.h", builder.filename);
 
     let filename = format!("{}.cpp", builder.filename);
-    write_generated_cpp_file(&builder.to_cpp_source(header_filename), "wayland_rs_bridge/src", filename.as_str());
+    write_generated_cpp_file(
+        &builder.to_cpp_source(header_filename),
+        "wayland_rs_cpp/src",
+        filename.as_str(),
+    );
 }
 
 fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
@@ -680,6 +688,7 @@ fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
             &format_wayland_interface_to_rust_extension_struct(&interface.name),
         )),
         name: "instance".to_string(),
+        optional: false,
     });
     associate_method.set_body("instance_ = std::move(instance);".to_string());
     class.add_method(associate_method);
@@ -688,7 +697,20 @@ fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
             &format_wayland_interface_to_rust_extension_struct(&interface.name),
         )),
         name: "instance_".to_string(),
+        optional: false,
     });
+
+    // Add the "get_box" method that will return the boxes rust interface. This is used
+    // when sending a Box from C++ to Rust.
+    let mut get_box_method = CppMethod::new(
+        "get_box".to_string(),
+        Some(CppType::Box(snake_to_pascal(
+            &format_wayland_interface_to_rust_extension_struct(&interface.name),
+        ))),
+        false,
+    );
+    get_box_method.set_body("return instance_;".to_string());
+    class.add_method(get_box_method);
 
     for method in methods {
         class.add_method(method);
@@ -734,7 +756,7 @@ fn wayland_arg_to_cpp_arg(arg: &WaylandArg) -> CppArg {
         _ => panic!("Unhandled argument type"),
     };
 
-    CppArg::new(type_, arg.name.clone())
+    CppArg::new(type_, arg.name.clone(), arg.allow_null.unwrap_or(false))
 }
 
 fn wayland_request_to_cpp_method(method: &WaylandRequest) -> CppMethod {
@@ -775,11 +797,30 @@ fn wayland_event_to_cpp_method(event: &WaylandEvent) -> CppMethod {
         .filter(|arg| arg.type_ != WaylandArgType::NewId)
         .map(wayland_arg_to_cpp_arg);
 
-    let sanitized_args: Vec<String> = args.clone().map(|arg| sanitize_identifier(&arg.name)).collect();
+    let sanitized_args: Vec<String> = args
+        .clone()
+        .flat_map(|arg| {
+            let arg_name = match arg.cpp_type {
+                CppType::Object(_) => format!("{}->get_box()", sanitize_identifier(&arg.name)),
+                _ => sanitize_identifier(&arg.name),
+            };
+            if arg.optional {
+                let has_arg_name = format!("has_{}", arg.name);
+                vec![arg_name, sanitize_identifier(&has_arg_name)]
+            } else {
+                vec![arg_name]
+            }
+        })
+        .collect();
+
     for arg in args {
         cpp_method.add_arg(arg);
     }
 
-    cpp_method.set_body(format!("instance_->{}({});", event.name, sanitized_args.join(", ")));
+    cpp_method.set_body(format!(
+        "instance_->{}({});",
+        event.name,
+        sanitized_args.join(", ")
+    ));
     cpp_method
 }

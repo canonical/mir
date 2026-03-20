@@ -7,7 +7,7 @@ pub struct CppBuilder {
     pub filename: String,
     namespaces: Vec<CppNamespace>,
     includes: Vec<String>,
-    implementation_includes: Vec<String>
+    implementation_includes: Vec<String>,
 }
 
 impl CppBuilder {
@@ -17,7 +17,7 @@ impl CppBuilder {
             filename,
             namespaces: vec![],
             includes: vec![],
-            implementation_includes: vec![]
+            implementation_includes: vec![],
         }
     }
 
@@ -39,7 +39,7 @@ impl CppBuilder {
         self.implementation_includes.push(include);
     }
 
-    fn build_ret_string(method: &CppMethod, originates_from_rust: bool) -> String {
+    fn build_ret_string_for_cpp(method: &CppMethod, originates_from_rust: bool) -> String {
         method
             .retval
             .as_ref()
@@ -47,16 +47,24 @@ impl CppBuilder {
             .unwrap_or("void".to_string())
     }
 
-    fn build_arg_str(method: &CppMethod, originates_from_rust: bool) -> String {
+    fn build_arg_str_for_cpp(method: &CppMethod, originates_from_rust: bool) -> String {
         let args: Vec<String> = method
             .args
             .iter()
-            .map(|arg| {
-                format!(
+            .flat_map(|arg| {
+                let mut arg_strings: Vec<String> = vec![];
+                arg_strings.push(format!(
                     "{} {}",
                     cpp_type_to_string(&arg.cpp_type, false, originates_from_rust),
                     sanitize_identifier(&arg.name)
-                )
+                ));
+
+                if arg.optional {
+                    let has_name = format!("has_{}", arg.name);
+                    arg_strings.push(format!("bool {}", has_name));
+                }
+
+                arg_strings
             })
             .collect();
         args.join(", ")
@@ -113,8 +121,8 @@ impl CppBuilder {
 
                 // Generate methods
                 for method in &class.methods {
-                    let args_str = Self::build_arg_str(method, method.is_virtual);
-                    let retstring = Self::build_ret_string(method, method.is_virtual);
+                    let args_str = Self::build_arg_str_for_cpp(method, method.is_virtual);
+                    let retstring = Self::build_ret_string_for_cpp(method, method.is_virtual);
                     let method_name = sanitize_identifier(&method.name);
                     if method.is_virtual {
                         result.push_str(&format!(
@@ -170,15 +178,21 @@ impl CppBuilder {
                         continue;
                     }
 
-                    let args_str = Self::build_arg_str(method, method.is_virtual);
-                    let retstring = Self::build_ret_string(method, method.is_virtual);
+                    let args_str = Self::build_arg_str_for_cpp(method, method.is_virtual);
+                    let retstring = Self::build_ret_string_for_cpp(method, method.is_virtual);
 
                     result.push_str(&format!(
                         "auto {}::{}::{}({}) -> {}\n",
                         namespace_str, class.name, method.name, args_str, retstring
                     ));
                     result.push_str("{\n");
-                    result.push_str(&format!("  {}\n", method.body.clone().unwrap_or("// TODO: Call out to Rust code here.".to_string())));
+                    result.push_str(&format!(
+                        "  {}\n",
+                        method
+                            .body
+                            .clone()
+                            .unwrap_or("// TODO: Call out to Rust code here.".to_string())
+                    ));
                     result.push_str("}\n\n");
                 }
             }
@@ -196,7 +210,8 @@ impl CppBuilder {
     /// an `unsafe extern "C++"` block. This method does NOT add the surrounding `mod ffi`
     /// or `unsafe extern "C++"` blocks; callers are responsible for adding those themselves.
     pub fn to_rust_cpp_bindings(&self) -> Vec<TokenStream> {
-        let header_name = Literal::string(format!("wayland_rs_bridge/include/{}.h", self.filename).as_str());
+        let header_name =
+            Literal::string(format!("wayland_rs_cpp/include/{}.h", self.filename).as_str());
         // Include the corresponding C++ header once per protocol/header.
         let mut tokens: Vec<TokenStream> = Vec::new();
         tokens.push(quote! {
@@ -209,10 +224,18 @@ impl CppBuilder {
                 // Generate methods for this class
                 let methods = class.methods.iter().map(|method| {
                     let method_name = format_ident!("{}", sanitize_identifier(&method.name));
-                    let args = method.args.iter().map(|arg| {
+                    let args = method.args.iter().flat_map(|arg| {
                         let arg_name = format_ident!("{}", sanitize_identifier(&arg.name));
-                        let arg_type = cpp_type_to_rust_type(&arg.cpp_type, false, method.is_virtual);
-                        quote! { #arg_name: #arg_type }
+                        let arg_type =
+                            cpp_type_to_rust_type(&arg.cpp_type, false, method.is_virtual);
+                        let main_arg = quote! { #arg_name: #arg_type };
+                        if arg.optional {
+                            let has_arg_name =
+                                format_ident!("has_{}", sanitize_identifier(&arg.name));
+                            vec![main_arg, quote! { #has_arg_name: bool }]
+                        } else {
+                            vec![main_arg]
+                        }
                     });
 
                     // Note: When generating Rust bindings for C++ methods that will mutate the underlying
@@ -274,7 +297,7 @@ pub struct CppClass {
     pub name: String,
     pub methods: Vec<CppMethod>,
     pub enums: Vec<CppEnum>,
-    pub private_members: Vec<CppArg>
+    pub private_members: Vec<CppArg>,
 }
 
 impl CppClass {
@@ -283,7 +306,7 @@ impl CppClass {
             name,
             methods: vec![],
             enums: vec![],
-            private_members: vec![]
+            private_members: vec![],
         }
     }
 
@@ -303,7 +326,9 @@ impl CppClass {
 
     pub fn add_private_member(&mut self, member: CppArg) -> &mut CppArg {
         self.private_members.push(member);
-        self.private_members.last_mut().expect("members cannot be empty after push")
+        self.private_members
+            .last_mut()
+            .expect("members cannot be empty after push")
     }
 }
 
@@ -338,7 +363,7 @@ pub struct CppMethod {
     pub args: Vec<CppArg>,
     pub retval: Option<CppType>,
     pub is_virtual: bool,
-    pub body: Option<String>
+    pub body: Option<String>,
 }
 
 impl CppMethod {
@@ -348,7 +373,7 @@ impl CppMethod {
             args: vec![],
             retval,
             is_virtual,
-            body: None
+            body: None,
         }
     }
 
@@ -383,7 +408,13 @@ fn cpp_type_to_string(cpp_type: &CppType, is_retval: bool, originates_from_rust:
         CppType::CppI32 => "int32_t".to_string(),
         CppType::CppU32 => "uint32_t".to_string(),
         CppType::CppF64 => "double".to_string(),
-        CppType::String => if originates_from_rust { "rust::String".to_string() } else { "std::string const&".to_string() },
+        CppType::String => {
+            if originates_from_rust {
+                "rust::String".to_string()
+            } else {
+                "std::string const&".to_string()
+            }
+        }
         CppType::Object(name) => {
             if is_retval {
                 format!("std::unique_ptr<{}>", name)
@@ -391,18 +422,40 @@ fn cpp_type_to_string(cpp_type: &CppType, is_retval: bool, originates_from_rust:
                 format!("std::unique_ptr<{}> const&", name)
             }
         }
-        CppType::Array => if originates_from_rust { "rust::Vec<uint8_t>".to_string() } else { "std::vector<uint8_t>".to_string() },
+        CppType::Array => {
+            if originates_from_rust {
+                "rust::Vec<uint8_t>".to_string()
+            } else {
+                "std::vector<uint8_t> const&".to_string()
+            }
+        }
         CppType::Fd => "int32_t".to_string(),
-        CppType::Box(name) => format!("rust::Box<{}>", name),
+        CppType::Box(name) => {
+            if is_retval {
+                format!("rust::Box<{}> const&", name)
+            } else {
+                format!("rust::Box<{}>", name)
+            }
+        }
     }
 }
 
-fn cpp_type_to_rust_type(cpp_type: &CppType, is_retval: bool, originates_from_rust: bool) -> TokenStream {
+fn cpp_type_to_rust_type(
+    cpp_type: &CppType,
+    is_retval: bool,
+    originates_from_rust: bool,
+) -> TokenStream {
     match cpp_type {
         CppType::CppI32 => quote! { i32 },
         CppType::CppU32 => quote! { u32 },
         CppType::CppF64 => quote! { f64 },
-        CppType::String => if originates_from_rust { quote! { String } } else { quote! { &CxxString }},
+        CppType::String => {
+            if originates_from_rust {
+                quote! { String }
+            } else {
+                quote! { &CxxString }
+            }
+        }
         CppType::Object(name) => {
             let type_name = format_ident!("{}", name);
             if is_retval {
@@ -411,11 +464,21 @@ fn cpp_type_to_rust_type(cpp_type: &CppType, is_retval: bool, originates_from_ru
                 quote! { &UniquePtr<#type_name> }
             }
         }
-        CppType::Array => if originates_from_rust { quote! { Vec<u8> } } else { quote! { &CxxVector<u8> }},
+        CppType::Array => {
+            if originates_from_rust {
+                quote! { Vec<u8> }
+            } else {
+                quote! { &CxxVector<u8> }
+            }
+        }
         CppType::Fd => quote! { i32 },
         CppType::Box(name) => {
             let type_name = format_ident!("{}", name);
-            quote! { Box<#type_name> }
+            if is_retval {
+                quote! { &Box<#type_name> }
+            } else {
+                quote! { Box<#type_name> }
+            }
         }
     }
 }
@@ -445,10 +508,15 @@ pub fn sanitize_identifier(name: &str) -> String {
 pub struct CppArg {
     pub cpp_type: CppType,
     pub name: String,
+    pub optional: bool,
 }
 
 impl CppArg {
-    pub fn new(cpp_type: CppType, name: String) -> CppArg {
-        CppArg { cpp_type, name }
+    pub fn new(cpp_type: CppType, name: String, optional: bool) -> CppArg {
+        CppArg {
+            cpp_type,
+            name,
+            optional,
+        }
     }
 }
