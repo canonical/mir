@@ -58,7 +58,9 @@ int main()
     std::cout << "    3) The server stops." << std::endl;
     std::cout << "    4) We exit with exit code 0." << std::endl << std::endl;
 
-    auto server = mir::wayland_rs::create_wayland_server();
+    // TODO: Add a real GlobalFactory here, but we will keep it nullptr for the time being
+    // as that task is involved.
+    auto server = mir::wayland_rs::create_wayland_server(nullptr);
     std::thread server_thread([&] { run_server(server); });
 
     run_client();
