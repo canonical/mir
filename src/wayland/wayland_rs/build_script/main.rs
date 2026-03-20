@@ -773,7 +773,9 @@ fn wayland_arg_to_cpp_arg(arg: &WaylandArg) -> CppArg {
         )),
         WaylandArgType::Array => CppType::Array,
         WaylandArgType::Fd => CppType::Fd,
-        _ => panic!("Unhandled argument type"),
+        WaylandArgType::NewId => CppType::Box(format_wayland_interface_to_rust_extension_struct(
+            &arg.interface.clone().expect("NewId is missint interface"),
+        )),
     };
 
     CppArg::new(type_, arg.name.clone(), arg.allow_null.unwrap_or(false))
@@ -811,11 +813,7 @@ fn wayland_request_to_cpp_method(method: &WaylandRequest) -> CppMethod {
 
 fn wayland_event_to_cpp_method(event: &WaylandEvent) -> CppMethod {
     let mut cpp_method = CppMethod::new(format!("send_{}", event.name), None, false);
-    let args = event
-        .args
-        .iter()
-        .filter(|arg| arg.type_ != WaylandArgType::NewId)
-        .map(wayland_arg_to_cpp_arg);
+    let args = event.args.iter().map(wayland_arg_to_cpp_arg);
 
     let sanitized_args: Vec<String> = args
         .clone()
