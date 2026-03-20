@@ -43,7 +43,7 @@ impl CppBuilder {
         method
             .retval
             .as_ref()
-            .map(|retval| cpp_type_to_string(retval, true, originates_from_rust))
+            .map(|retval| cpp_type_to_cpp_string(retval, true, originates_from_rust))
             .unwrap_or("void".to_string())
     }
 
@@ -55,7 +55,7 @@ impl CppBuilder {
                 let mut arg_strings: Vec<String> = vec![];
                 arg_strings.push(format!(
                     "{} {}",
-                    cpp_type_to_string(&arg.cpp_type, false, originates_from_rust),
+                    cpp_type_to_cpp_string(&arg.cpp_type, false, originates_from_rust),
                     sanitize_identifier(&arg.name)
                 ));
 
@@ -141,7 +141,7 @@ impl CppBuilder {
                 for member in &class.private_members {
                     result.push_str(&format!(
                         "    {} {};\n",
-                        cpp_type_to_string(&member.cpp_type, false, true),
+                        cpp_type_to_cpp_string(&member.cpp_type, false, true),
                         sanitize_identifier(&member.name)
                     ));
                 }
@@ -187,7 +187,7 @@ impl CppBuilder {
                     ));
                     result.push_str("{\n");
                     result.push_str(&format!(
-                        "  {}\n",
+                        "    {}\n",
                         method
                             .body
                             .clone()
@@ -226,8 +226,11 @@ impl CppBuilder {
                     let method_name = format_ident!("{}", sanitize_identifier(&method.name));
                     let args = method.args.iter().flat_map(|arg| {
                         let arg_name = format_ident!("{}", sanitize_identifier(&arg.name));
+
+                        // If the argument is optional, we provide a boolean describing if it is set
+                        // or not, since `std::optional` cannot be ferried over the C++/Rust boundary.
                         let arg_type =
-                            cpp_type_to_rust_type(&arg.cpp_type, false, method.is_virtual);
+                            cpp_type_to_rust_code(&arg.cpp_type, false, method.is_virtual);
                         let main_arg = quote! { #arg_name: #arg_type };
                         if arg.optional {
                             let has_arg_name =
@@ -241,7 +244,7 @@ impl CppBuilder {
                     // Note: When generating Rust bindings for C++ methods that will mutate the underlying
                     // C++ class, cxx.rs enforces that we `Pin` them.
                     if let Some(retval) = &method.retval {
-                        let retval = cpp_type_to_rust_type(retval, true, method.is_virtual);
+                        let retval = cpp_type_to_rust_code(retval, true, method.is_virtual);
                         quote! {
                             pub fn #method_name(self: Pin<&mut #class_name>, #(#args),*) -> #retval;
                         }
@@ -403,13 +406,20 @@ pub enum CppType {
     Box(String),
 }
 
-fn cpp_type_to_string(cpp_type: &CppType, is_retval: bool, originates_from_rust: bool) -> String {
+// Generates the C++ side of the Rust <-> C++ method call.
+// When a method is virtual, it is called from Rust and thus
+// will be called with Rust types instead of C++ types.
+fn cpp_type_to_cpp_string(
+    cpp_type: &CppType,
+    is_retval: bool,
+    is_called_from_rust: bool,
+) -> String {
     match cpp_type {
         CppType::CppI32 => "int32_t".to_string(),
         CppType::CppU32 => "uint32_t".to_string(),
         CppType::CppF64 => "double".to_string(),
         CppType::String => {
-            if originates_from_rust {
+            if is_called_from_rust {
                 "rust::String".to_string()
             } else {
                 "std::string const&".to_string()
@@ -423,7 +433,7 @@ fn cpp_type_to_string(cpp_type: &CppType, is_retval: bool, originates_from_rust:
             }
         }
         CppType::Array => {
-            if originates_from_rust {
+            if is_called_from_rust {
                 "rust::Vec<uint8_t>".to_string()
             } else {
                 "std::vector<uint8_t> const&".to_string()
@@ -440,17 +450,20 @@ fn cpp_type_to_string(cpp_type: &CppType, is_retval: bool, originates_from_rust:
     }
 }
 
-fn cpp_type_to_rust_type(
+// Generates the Rust side of the Rust <-> C++ method call.
+// When a method is virtual, it is called from Rust and thus
+// will be called with Rust types instead of C++ types.
+fn cpp_type_to_rust_code(
     cpp_type: &CppType,
     is_retval: bool,
-    originates_from_rust: bool,
+    is_called_from_rust: bool,
 ) -> TokenStream {
     match cpp_type {
         CppType::CppI32 => quote! { i32 },
         CppType::CppU32 => quote! { u32 },
         CppType::CppF64 => quote! { f64 },
         CppType::String => {
-            if originates_from_rust {
+            if is_called_from_rust {
                 quote! { String }
             } else {
                 quote! { &CxxString }
@@ -465,7 +478,7 @@ fn cpp_type_to_rust_type(
             }
         }
         CppType::Array => {
-            if originates_from_rust {
+            if is_called_from_rust {
                 quote! { Vec<u8> }
             } else {
                 quote! { &CxxVector<u8> }

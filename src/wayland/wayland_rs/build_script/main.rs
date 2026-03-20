@@ -774,7 +774,7 @@ fn wayland_arg_to_cpp_arg(arg: &WaylandArg) -> CppArg {
         WaylandArgType::Array => CppType::Array,
         WaylandArgType::Fd => CppType::Fd,
         WaylandArgType::NewId => CppType::Box(format_wayland_interface_to_rust_extension_struct(
-            &arg.interface.clone().expect("NewId is missint interface"),
+            &arg.interface.clone().expect("NewId is missing interface"),
         )),
     };
 
