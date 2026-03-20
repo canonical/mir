@@ -14,10 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <mir/fatal.h>
 #include <mir/logging/dumb_console_logger.h>
 #include <mir/logging/logger.h>
 
-#include <array>
 #include <iostream>
 #include <chrono>
 #include <format>
@@ -25,6 +25,8 @@
 #include <cstdarg>
 #include <cstdio>
 #include <ctime>
+#include <iterator>
+#include <stdexcept>
 
 namespace ml = mir::logging;
 
@@ -75,23 +77,20 @@ void ml::set_logger(std::shared_ptr<Logger> const& new_logger)
 
 namespace {
 
-using TimeStampBuffer = std::array<char, 64>;
+using OutIter = std::ostreambuf_iterator<char>;
 
-void format_timestamp(TimeStampBuffer &buffer)
+OutIter format_timestamp(OutIter iter)
 {
     auto now = std::chrono::system_clock::now();
     auto now_us = std::chrono::time_point_cast<std::chrono::microseconds>(now);
-    auto data = buffer.data();
-    auto fmt_limit = buffer.size() - 1;
-    char *eos;
     try {
         auto local =
             std::chrono::zoned_time{std::chrono::current_zone(), now_us};
-        eos = std::format_to_n(data, fmt_limit, "{:%F %T}", local).out;
-    } catch (...) {
-        eos = std::format_to_n(data, fmt_limit, "{:%F %T} UTC", now_us).out;
+        iter = std::format_to(iter, "[{:%F %T}]", local);
+    } catch (std::runtime_error const& e) {
+        mir::fatal_error_abort("Cannot format timestamp: %s", e.what());
     }
-    *eos = '\0';
+    return iter;
 }
 }
 
@@ -111,14 +110,12 @@ void ml::format_message(std::ostream& out, Severity severity, std::string const&
         std::cerr << "Failed to write to log file: " << errno << std::endl;
         return;
     }
-    TimeStampBuffer time_stamp; // "yyyy-mm-dd HH:MM:SS.uuuuuu UTC"
-    format_timestamp(time_stamp);
 
-    char ts_lut[64]; // "[yyyy-mm-dd HH:MM:SS.uuuuuu] UTC < severity! >: "
-    auto eos = std::format_to_n(ts_lut, sizeof(ts_lut) - 1, "[{}] {}",
-        time_stamp.data(), lut[static_cast<int>(severity)]).out;
-    *eos = '\0';
-    out << ts_lut << component << ": " << message << std::endl;
+    OutIter iter{out};
+    iter = format_timestamp(iter);
+    format_to(iter, "{}{}: {}\n",
+        lut[static_cast<int>(severity)], component, message);
+    out.flush();
 }
 
 namespace mir
