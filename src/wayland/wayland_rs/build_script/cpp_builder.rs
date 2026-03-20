@@ -11,10 +11,10 @@ pub struct CppBuilder {
 }
 
 impl CppBuilder {
-    pub fn new(guard_name: String, filename: String) -> CppBuilder {
+    pub fn new(guard_name: impl Into<String>, filename: impl Into<String>) -> CppBuilder {
         CppBuilder {
-            guard_name,
-            filename,
+            guard_name: guard_name.into(),
+            filename: filename.into(),
             namespaces: vec![],
             includes: vec![],
             implementation_includes: vec![],
@@ -31,12 +31,12 @@ impl CppBuilder {
             .expect("namespaces cannot be empty after push")
     }
 
-    pub fn add_include(&mut self, include: String) {
-        self.includes.push(include);
+    pub fn add_include(&mut self, include: impl Into<String>) {
+        self.includes.push(include.into());
     }
 
-    pub fn add_implementation_include(&mut self, include: String) {
-        self.implementation_includes.push(include);
+    pub fn add_implementation_include(&mut self, include: impl Into<String>) {
+        self.implementation_includes.push(include.into());
     }
 
     fn build_ret_string_for_cpp(method: &CppMethod, originates_from_rust: bool) -> String {
@@ -48,25 +48,18 @@ impl CppBuilder {
     }
 
     fn build_arg_str_for_cpp(method: &CppMethod, originates_from_rust: bool) -> String {
-        let args: Vec<String> = method
-            .args
-            .iter()
-            .flat_map(|arg| {
-                let mut arg_strings: Vec<String> = vec![];
-                arg_strings.push(format!(
-                    "{} {}",
-                    cpp_type_to_cpp_string(&arg.cpp_type, false, originates_from_rust),
-                    sanitize_identifier(&arg.name)
-                ));
+        let mut args: Vec<String> = Vec::with_capacity(method.args.len() * 2);
+        for arg in &method.args {
+            args.push(format!(
+                "{} {}",
+                cpp_type_to_cpp_string(&arg.cpp_type, false, originates_from_rust),
+                sanitize_identifier(&arg.name)
+            ));
 
-                if arg.optional {
-                    let has_name = format!("has_{}", arg.name);
-                    arg_strings.push(format!("bool {}", has_name));
-                }
-
-                arg_strings
-            })
-            .collect();
+            if arg.optional {
+                args.push(format!("bool has_{}", arg.name));
+            }
+        }
         args.join(", ")
     }
 
@@ -109,7 +102,7 @@ impl CppBuilder {
                         result.push_str(&format!(
                             "        {} = {},\n",
                             sanitize_identifier(&option.name),
-                            option.value.to_string(),
+                            option.value,
                         ));
                     }
                     result.push_str("    };\n");
@@ -162,7 +155,7 @@ impl CppBuilder {
     }
 
     /// Generates the .cpp file contents corresponding to the information in this builder.
-    pub fn to_cpp_source(&self, header_path: String) -> String {
+    pub fn to_cpp_source(&self, header_path: &str) -> String {
         let mut result = String::new();
         result.push_str(&format!("#include \"{}\"\n", header_path));
 
@@ -186,13 +179,11 @@ impl CppBuilder {
                         namespace_str, class.name, method.name, args_str, retstring
                     ));
                     result.push_str("{\n");
-                    result.push_str(&format!(
-                        "    {}\n",
-                        method
-                            .body
-                            .clone()
-                            .unwrap_or("// TODO: Call out to Rust code here.".to_string())
-                    ));
+                    let body = method
+                        .body
+                        .as_deref()
+                        .unwrap_or("// TODO: Call out to Rust code here.");
+                    result.push_str(&format!("    {}\n", body));
                     result.push_str("}\n\n");
                 }
             }
@@ -272,9 +263,13 @@ pub struct CppNamespace {
 }
 
 impl CppNamespace {
-    pub fn new(name: Vec<String>) -> CppNamespace {
+    pub fn new<I, S>(name: I) -> CppNamespace
+    where
+        I: IntoIterator<Item = S>,
+        S: Into<String>,
+    {
         CppNamespace {
-            name: name,
+            name: name.into_iter().map(Into::into).collect(),
             classes: vec![],
             forward_declarations: vec![],
         }
@@ -304,9 +299,9 @@ pub struct CppClass {
 }
 
 impl CppClass {
-    pub fn new(name: String) -> CppClass {
+    pub fn new(name: impl Into<String>) -> CppClass {
         CppClass {
-            name,
+            name: name.into(),
             methods: vec![],
             enums: vec![],
             private_members: vec![],
@@ -341,9 +336,9 @@ pub struct CppEnum {
 }
 
 impl CppEnum {
-    pub fn new(name: String) -> CppEnum {
+    pub fn new(name: impl Into<String>) -> CppEnum {
         CppEnum {
-            name,
+            name: name.into(),
             options: vec![],
         }
     }
@@ -370,9 +365,9 @@ pub struct CppMethod {
 }
 
 impl CppMethod {
-    pub fn new(name: String, retval: Option<CppType>, is_virtual: bool) -> CppMethod {
+    pub fn new(name: impl Into<String>, retval: Option<CppType>, is_virtual: bool) -> CppMethod {
         CppMethod {
-            name,
+            name: name.into(),
             args: vec![],
             retval,
             is_virtual,
@@ -390,8 +385,8 @@ impl CppMethod {
     // Set the body of the method.
     // This may be a more complicated "builder" some day, but we are doing such
     // simple stuff for now that we might as well make it a string
-    pub fn set_body(&mut self, body: String) {
-        self.body = Some(body);
+    pub fn set_body(&mut self, body: impl Into<String>) {
+        self.body = Some(body.into());
     }
 }
 
@@ -525,10 +520,10 @@ pub struct CppArg {
 }
 
 impl CppArg {
-    pub fn new(cpp_type: CppType, name: String, optional: bool) -> CppArg {
+    pub fn new(cpp_type: CppType, name: impl Into<String>, optional: bool) -> CppArg {
         CppArg {
             cpp_type,
-            name,
+            name: name.into(),
             optional,
         }
     }

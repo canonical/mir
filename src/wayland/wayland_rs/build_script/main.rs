@@ -186,7 +186,7 @@ fn generate_global_dispatch_impl(
     interface: &protocol_parser::WaylandInterface,
     namespace_name: &TokenStream,
 ) -> TokenStream {
-    let interface_name = dash_to_snake_ident(&interface.name.to_string());
+    let interface_name = dash_to_snake_ident(&interface.name);
 
     if interface_name == "wl_display" {
         // wl_display is handled specially in wayland_server crate via the 'Display' struct.
@@ -257,7 +257,9 @@ fn transform_argument_for_cpp(arg: &WaylandArg) -> Option<TokenStream> {
         WaylandArgType::Object => {
             let arg_type = format_ident!(
                 "{}",
-                format_wayland_interface_to_cpp_class(&arg.interface.clone().unwrap())
+                format_wayland_interface_to_cpp_class(
+                    arg.interface.as_ref().expect("Object is missing interface"),
+                )
             );
             if arg.allow_null.unwrap_or(false) {
                 let null_ptr_name = format_ident!("__{}_null_ptr", arg.name.replace('-', "_"));
@@ -534,14 +536,11 @@ fn write_dispatch_rs(protocols: &Vec<WaylandProtocol>) {
 }
 
 fn create_global_factory(protocols: &Vec<WaylandProtocol>) -> CppBuilder {
-    let mut builder: CppBuilder = CppBuilder::new(
-        "MIR_WAYLANDRS_GLOBALS".to_string(),
-        "global_factory".to_string(),
-    );
-    builder.add_include("<memory>".to_string());
-    builder.add_include("<rust/cxx.h>".to_string());
-    let mut namespace = CppNamespace::new(vec!["mir".to_string(), "wayland_rs".to_string()]);
-    let mut class = CppClass::new("GlobalFactory".to_string());
+    let mut builder: CppBuilder = CppBuilder::new("MIR_WAYLANDRS_GLOBALS", "global_factory");
+    builder.add_include("<memory>");
+    builder.add_include("<rust/cxx.h>");
+    let mut namespace = CppNamespace::new(vec!["mir", "wayland_rs"]);
+    let mut class = CppClass::new("GlobalFactory");
     protocols.iter().for_each(|protocol| {
         protocol
             .interfaces
@@ -607,11 +606,11 @@ fn write_cpp_protocol_implementations(protocols: &Vec<WaylandProtocol>) {
 /// only stores a T* internally and does not require T to be a complete type at
 /// the point of a virtual function declaration.
 fn create_ffi_fwd_builder(protocols: &Vec<WaylandProtocol>) -> CppBuilder {
-    let mut builder = CppBuilder::new("MIR_WAYLANDRS_FFI_FWD".to_string(), "ffi_fwd".to_string());
+    let mut builder = CppBuilder::new("MIR_WAYLANDRS_FFI_FWD", "ffi_fwd");
     // <rust/cxx.h> is included here so that protocol headers pulling in ffi_fwd.h
     // have access to rust::Box, rust::String, etc. without a direct dependency on ffi.rs.h.
-    builder.add_include("<rust/cxx.h>".to_string());
-    let mut namespace = CppNamespace::new(vec!["mir".to_string(), "wayland_rs".to_string()]);
+    builder.add_include("<rust/cxx.h>");
+    let mut namespace = CppNamespace::new(vec!["mir", "wayland_rs"]);
 
     // WaylandServer is declared in ffi.rs but used nowhere in the protocol headers;
     // include it for completeness so all Rust types are forward-declared.
@@ -634,8 +633,8 @@ fn create_ffi_fwd_builder(protocols: &Vec<WaylandProtocol>) -> CppBuilder {
 
 fn create_cpp_builder(protocol: &WaylandProtocol) -> CppBuilder {
     let guard = format!("MIR_WAYLANDRS_{}", protocol.name.to_uppercase());
-    let mut builder = CppBuilder::new(guard, protocol.name.clone());
-    let mut namespace = CppNamespace::new(vec!["mir".to_string(), "wayland_rs".to_string()]);
+    let mut builder = CppBuilder::new(guard, protocol.name.as_str());
+    let mut namespace = CppNamespace::new(vec!["mir", "wayland_rs"]);
 
     let classes = protocol
         .interfaces
@@ -654,12 +653,12 @@ fn create_cpp_builder(protocol: &WaylandProtocol) -> CppBuilder {
     // Use ffi_fwd.h (generated alongside the protocol headers) instead of the
     // CXX-generated ffi.rs.h to avoid a circular include dependency:
     //   ffi.rs.h  →  include/*.h  →  ffi.rs.h
-    builder.add_include("\"ffi_fwd.h\"".to_string());
-    builder.add_include("<memory>".to_string());
-    builder.add_include("<cstdint>".to_string());
-    builder.add_include("<rust/cxx.h>".to_string());
+    builder.add_include("\"ffi_fwd.h\"");
+    builder.add_include("<memory>");
+    builder.add_include("<cstdint>");
+    builder.add_include("<rust/cxx.h>");
 
-    builder.add_implementation_include("\"wayland_rs/src/ffi.rs.h\"".to_string());
+    builder.add_implementation_include("\"wayland_rs/src/ffi.rs.h\"");
 
     builder
 }
@@ -678,7 +677,7 @@ fn write_cpp_source(builder: &CppBuilder) {
 
     let filename = format!("{}.cpp", builder.filename);
     write_generated_cpp_file(
-        &builder.to_cpp_source(header_filename),
+        &builder.to_cpp_source(&header_filename),
         "wayland_rs_cpp/src",
         filename.as_str(),
     );
@@ -702,34 +701,34 @@ fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
     }
 
     // Add the method that associates the boxed rust interface with the C++ class.
-    let mut associate_method = CppMethod::new("associate".to_string(), None, false);
-    associate_method.add_arg(CppArg {
-        cpp_type: CppType::Box(snake_to_pascal(
+    let mut associate_method = CppMethod::new("associate", None, false);
+    associate_method.add_arg(CppArg::new(
+        CppType::Box(snake_to_pascal(
             &format_wayland_interface_to_rust_extension_struct(&interface.name),
         )),
-        name: "instance".to_string(),
-        optional: false,
-    });
-    associate_method.set_body("instance_ = std::move(instance);".to_string());
+        "instance",
+        false,
+    ));
+    associate_method.set_body("instance_ = std::move(instance);");
     class.add_method(associate_method);
-    class.add_private_member(CppArg {
-        cpp_type: CppType::Box(snake_to_pascal(
+    class.add_private_member(CppArg::new(
+        CppType::Box(snake_to_pascal(
             &format_wayland_interface_to_rust_extension_struct(&interface.name),
         )),
-        name: "instance_".to_string(),
-        optional: false,
-    });
+        "instance_",
+        false,
+    ));
 
     // Add the "get_box" method that will return the boxes rust interface. This is used
     // when sending a Box from C++ to Rust.
     let mut get_box_method = CppMethod::new(
-        "get_box".to_string(),
+        "get_box",
         Some(CppType::Box(snake_to_pascal(
             &format_wayland_interface_to_rust_extension_struct(&interface.name),
         ))),
         false,
     );
-    get_box_method.set_body("return instance_;".to_string());
+    get_box_method.set_body("return instance_;");
     class.add_method(get_box_method);
 
     for method in methods {
@@ -769,16 +768,16 @@ fn wayland_arg_to_cpp_arg(arg: &WaylandArg) -> CppArg {
         WaylandArgType::Fixed => CppType::CppF64,
         WaylandArgType::String => CppType::String,
         WaylandArgType::Object => CppType::Object(format_wayland_interface_to_cpp_class(
-            &arg.interface.clone().expect("Object is missing interface"),
+            arg.interface.as_ref().expect("Object is missing interface"),
         )),
         WaylandArgType::Array => CppType::Array,
         WaylandArgType::Fd => CppType::Fd,
         WaylandArgType::NewId => CppType::Box(format_wayland_interface_to_rust_extension_struct(
-            &arg.interface.clone().expect("NewId is missing interface"),
+            arg.interface.as_ref().expect("NewId is missing interface"),
         )),
     };
 
-    CppArg::new(type_, arg.name.clone(), arg.allow_null.unwrap_or(false))
+    CppArg::new(type_, arg.name.as_str(), arg.allow_null.unwrap_or(false))
 }
 
 fn wayland_request_to_cpp_method(method: &WaylandRequest) -> CppMethod {
@@ -790,14 +789,18 @@ fn wayland_request_to_cpp_method(method: &WaylandRequest) -> CppMethod {
         .find(|arg| arg.type_ == WaylandArgType::NewId)
     {
         Some(new_id_arg) => {
-            let name =
-                format_wayland_interface_to_cpp_class(&new_id_arg.interface.clone().unwrap());
+            let name = format_wayland_interface_to_cpp_class(
+                new_id_arg
+                    .interface
+                    .as_ref()
+                    .expect("NewId is missing interface"),
+            );
             Some(CppType::Object(name))
         }
         None => None,
     };
 
-    let mut cpp_method = CppMethod::new(method.name.clone(), retval, true);
+    let mut cpp_method = CppMethod::new(method.name.as_str(), retval, true);
     let args = method
         .args
         .iter()
