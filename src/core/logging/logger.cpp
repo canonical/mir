@@ -14,9 +14,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <mir/fatal.h>
 #include <mir/logging/dumb_console_logger.h>
 #include <mir/logging/logger.h>
+#include <mir/fatal.h>
 
 #include <iostream>
 #include <chrono>
@@ -93,19 +93,18 @@ void ml::format_message(std::ostream& out, Severity severity, std::string const&
 
     try
     {
+        using namespace std::chrono;
         std::ostreambuf_iterator<char> iter{out};
-        auto now = std::chrono::system_clock::now();
-        auto now_us =
-            std::chrono::time_point_cast<std::chrono::microseconds>(now);
-        auto local =
-            std::chrono::zoned_time{std::chrono::current_zone(), now_us};
+        auto now = system_clock::now();
+        auto now_us = time_point_cast<microseconds>(now);
+        auto local = zoned_time{current_zone(), now_us};
         std::format_to(iter, "[{:%F %T}] {}{}: {}\n",
             local, lut[static_cast<int>(severity)], component, message);
         out.flush();
     }
     catch (std::runtime_error const& e)
     {
-        mir::fatal_error_abort("Cannot format message: %s", e.what());
+        mir::fatal_error_abort("Cannot format log message: %s", e.what());
     }
 }
 
