@@ -7,7 +7,7 @@ pub struct CppBuilder {
     pub filename: String,
     namespaces: Vec<CppNamespace>,
     includes: Vec<String>,
-    implementation_includes: Vec<String>
+    implementation_includes: Vec<String>,
 }
 
 impl CppBuilder {
@@ -17,7 +17,7 @@ impl CppBuilder {
             filename,
             namespaces: vec![],
             includes: vec![],
-            implementation_includes: vec![]
+            implementation_includes: vec![],
         }
     }
 
@@ -178,7 +178,13 @@ impl CppBuilder {
                         namespace_str, class.name, method.name, args_str, retstring
                     ));
                     result.push_str("{\n");
-                    result.push_str(&format!("  {}\n", method.body.clone().unwrap_or("// TODO: Call out to Rust code here.".to_string())));
+                    result.push_str(&format!(
+                        "  {}\n",
+                        method
+                            .body
+                            .clone()
+                            .unwrap_or("// TODO: Call out to Rust code here.".to_string())
+                    ));
                     result.push_str("}\n\n");
                 }
             }
@@ -196,7 +202,8 @@ impl CppBuilder {
     /// an `unsafe extern "C++"` block. This method does NOT add the surrounding `mod ffi`
     /// or `unsafe extern "C++"` blocks; callers are responsible for adding those themselves.
     pub fn to_rust_cpp_bindings(&self) -> Vec<TokenStream> {
-        let header_name = Literal::string(format!("wayland_rs_bridge/include/{}.h", self.filename).as_str());
+        let header_name =
+            Literal::string(format!("wayland_rs_bridge/include/{}.h", self.filename).as_str());
         // Include the corresponding C++ header once per protocol/header.
         let mut tokens: Vec<TokenStream> = Vec::new();
         tokens.push(quote! {
@@ -211,7 +218,8 @@ impl CppBuilder {
                     let method_name = format_ident!("{}", sanitize_identifier(&method.name));
                     let args = method.args.iter().map(|arg| {
                         let arg_name = format_ident!("{}", sanitize_identifier(&arg.name));
-                        let arg_type = cpp_type_to_rust_type(&arg.cpp_type, false, method.is_virtual);
+                        let arg_type =
+                            cpp_type_to_rust_type(&arg.cpp_type, false, method.is_virtual);
                         quote! { #arg_name: #arg_type }
                     });
 
@@ -274,7 +282,7 @@ pub struct CppClass {
     pub name: String,
     pub methods: Vec<CppMethod>,
     pub enums: Vec<CppEnum>,
-    pub private_members: Vec<CppArg>
+    pub private_members: Vec<CppArg>,
 }
 
 impl CppClass {
@@ -283,7 +291,7 @@ impl CppClass {
             name,
             methods: vec![],
             enums: vec![],
-            private_members: vec![]
+            private_members: vec![],
         }
     }
 
@@ -303,7 +311,9 @@ impl CppClass {
 
     pub fn add_private_member(&mut self, member: CppArg) -> &mut CppArg {
         self.private_members.push(member);
-        self.private_members.last_mut().expect("members cannot be empty after push")
+        self.private_members
+            .last_mut()
+            .expect("members cannot be empty after push")
     }
 }
 
@@ -338,7 +348,7 @@ pub struct CppMethod {
     pub args: Vec<CppArg>,
     pub retval: Option<CppType>,
     pub is_virtual: bool,
-    pub body: Option<String>
+    pub body: Option<String>,
 }
 
 impl CppMethod {
@@ -348,7 +358,7 @@ impl CppMethod {
             args: vec![],
             retval,
             is_virtual,
-            body: None
+            body: None,
         }
     }
 
@@ -383,7 +393,13 @@ fn cpp_type_to_string(cpp_type: &CppType, is_retval: bool, originates_from_rust:
         CppType::CppI32 => "int32_t".to_string(),
         CppType::CppU32 => "uint32_t".to_string(),
         CppType::CppF64 => "double".to_string(),
-        CppType::String => if originates_from_rust { "rust::String".to_string() } else { "std::string const&".to_string() },
+        CppType::String => {
+            if originates_from_rust {
+                "rust::String".to_string()
+            } else {
+                "std::string const&".to_string()
+            }
+        }
         CppType::Object(name) => {
             if is_retval {
                 format!("std::unique_ptr<{}>", name)
@@ -391,18 +407,34 @@ fn cpp_type_to_string(cpp_type: &CppType, is_retval: bool, originates_from_rust:
                 format!("std::unique_ptr<{}> const&", name)
             }
         }
-        CppType::Array => if originates_from_rust { "rust::Vec<uint8_t>".to_string() } else { "std::vector<uint8_t>".to_string() },
+        CppType::Array => {
+            if originates_from_rust {
+                "rust::Vec<uint8_t>".to_string()
+            } else {
+                "std::vector<uint8_t>".to_string()
+            }
+        }
         CppType::Fd => "int32_t".to_string(),
         CppType::Box(name) => format!("rust::Box<{}>", name),
     }
 }
 
-fn cpp_type_to_rust_type(cpp_type: &CppType, is_retval: bool, originates_from_rust: bool) -> TokenStream {
+fn cpp_type_to_rust_type(
+    cpp_type: &CppType,
+    is_retval: bool,
+    originates_from_rust: bool,
+) -> TokenStream {
     match cpp_type {
         CppType::CppI32 => quote! { i32 },
         CppType::CppU32 => quote! { u32 },
         CppType::CppF64 => quote! { f64 },
-        CppType::String => if originates_from_rust { quote! { String } } else { quote! { &CxxString }},
+        CppType::String => {
+            if originates_from_rust {
+                quote! { String }
+            } else {
+                quote! { &CxxString }
+            }
+        }
         CppType::Object(name) => {
             let type_name = format_ident!("{}", name);
             if is_retval {
@@ -411,7 +443,13 @@ fn cpp_type_to_rust_type(cpp_type: &CppType, is_retval: bool, originates_from_ru
                 quote! { &UniquePtr<#type_name> }
             }
         }
-        CppType::Array => if originates_from_rust { quote! { Vec<u8> } } else { quote! { &CxxVector<u8> }},
+        CppType::Array => {
+            if originates_from_rust {
+                quote! { Vec<u8> }
+            } else {
+                quote! { &CxxVector<u8> }
+            }
+        }
         CppType::Fd => quote! { i32 },
         CppType::Box(name) => {
             let type_name = format_ident!("{}", name);
