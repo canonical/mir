@@ -24,7 +24,6 @@
 #include <mutex>
 #include <cstdarg>
 #include <cstdio>
-#include <ctime>
 #include <iterator>
 #include <stdexcept>
 
@@ -75,25 +74,6 @@ void ml::set_logger(std::shared_ptr<Logger> const& new_logger)
     }
 }
 
-namespace {
-
-using OutIter = std::ostreambuf_iterator<char>;
-
-OutIter format_timestamp(OutIter iter)
-{
-    auto now = std::chrono::system_clock::now();
-    auto now_us = std::chrono::time_point_cast<std::chrono::microseconds>(now);
-    try {
-        auto local =
-            std::chrono::zoned_time{std::chrono::current_zone(), now_us};
-        iter = std::format_to(iter, "[{:%F %T}]", local);
-    } catch (std::runtime_error const& e) {
-        mir::fatal_error_abort("Cannot format timestamp: %s", e.what());
-    }
-    return iter;
-}
-}
-
 void ml::format_message(std::ostream& out, Severity severity, std::string const& message, std::string const& component)
 {
     static const char* lut[5] =
@@ -111,11 +91,22 @@ void ml::format_message(std::ostream& out, Severity severity, std::string const&
         return;
     }
 
-    OutIter iter{out};
-    iter = format_timestamp(iter);
-    format_to(iter, "{}{}: {}\n",
-        lut[static_cast<int>(severity)], component, message);
-    out.flush();
+    try
+    {
+        std::ostreambuf_iterator<char> iter{out};
+        auto now = std::chrono::system_clock::now();
+        auto now_us =
+            std::chrono::time_point_cast<std::chrono::microseconds>(now);
+        auto local =
+            std::chrono::zoned_time{std::chrono::current_zone(), now_us};
+        std::format_to(iter, "[{:%F %T}] {}{}: {}\n",
+            local, lut[static_cast<int>(severity)], component, message);
+        out.flush();
+    }
+    catch (std::runtime_error const& e)
+    {
+        mir::fatal_error_abort("Cannot format message: %s", e.what());
+    }
 }
 
 namespace mir
