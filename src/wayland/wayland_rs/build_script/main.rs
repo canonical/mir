@@ -261,12 +261,14 @@ fn transform_argument_for_cpp(arg: &WaylandArg) -> Option<TokenStream> {
             );
             if arg.allow_null.unwrap_or(false) {
                 let null_ptr_name = format_ident!("__{}_null_ptr", arg.name.replace('-', "_"));
+                let has_arg_name = format_ident!("has_{}", arg.name.replace('-', "_"));
                 Some(quote! {
                     let #null_ptr_name = cxx::UniquePtr::<ffi::#arg_type>::null();
                     let #arg_name: &cxx::UniquePtr<ffi::#arg_type> = match #arg_name.as_ref() {
                         Some(o) => o.data().unwrap(),
                         None => &#null_ptr_name
                     };
+                    let #has_arg_name = std::ptr::eq(#arg_name, &#null_ptr_name);
                 })
             } else {
                 Some(quote! {
@@ -277,12 +279,16 @@ fn transform_argument_for_cpp(arg: &WaylandArg) -> Option<TokenStream> {
         WaylandArgType::Fd => Some(quote! {
             let #arg_name = #arg_name.as_raw_fd();
         }),
-        WaylandArgType::String if arg.allow_null.unwrap_or(false) => Some(quote! {
-            let #arg_name = match #arg_name {
-                Some(o) => o,
-                None => String::new()
-            };
-        }),
+        WaylandArgType::String if arg.allow_null.unwrap_or(false) => {
+            let has_arg_name = format_ident!("has_{}", arg.name.replace('-', "_"));
+            Some(quote! {
+                let #has_arg_name = #arg_name.is_some();
+                let #arg_name = match #arg_name {
+                    Some(o) => o,
+                    None => String::new()
+                };
+            })
+        }
         _ => None,
     }
 }
@@ -307,9 +313,16 @@ fn generate_request_body(request: &WaylandRequest) -> TokenStream {
             .args
             .iter()
             .filter(|arg| arg.type_ != WaylandArgType::NewId)
-            .map(|arg| {
+            .flat_map(|arg| {
                 let arg_name = format_ident!("{}", arg.name.as_str());
-                quote! { #arg_name }
+                if arg.allow_null.unwrap_or(false)
+                    && matches!(arg.type_, WaylandArgType::Object | WaylandArgType::String)
+                {
+                    let has_arg_name = format_ident!("has_{}", arg.name.replace('-', "_"));
+                    vec![quote! { #arg_name }, quote! { #has_arg_name }]
+                } else {
+                    vec![quote! { #arg_name }]
+                }
             })
             .collect();
 
@@ -322,9 +335,16 @@ fn generate_request_body(request: &WaylandRequest) -> TokenStream {
         let call_arg_names: Vec<TokenStream> = request
             .args
             .iter()
-            .map(|arg| {
+            .flat_map(|arg| {
                 let arg_name = format_ident!("{}", arg.name.as_str());
-                quote! { #arg_name }
+                if arg.allow_null.unwrap_or(false)
+                    && matches!(arg.type_, WaylandArgType::Object | WaylandArgType::String)
+                {
+                    let has_arg_name = format_ident!("has_{}", arg.name.replace('-', "_"));
+                    vec![quote! { #arg_name }, quote! { #has_arg_name }]
+                } else {
+                    vec![quote! { #arg_name }]
+                }
             })
             .collect();
 
