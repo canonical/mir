@@ -30,6 +30,7 @@
 #include <algorithm>
 #include <mutex>
 #include <thread>
+#include <unistd.h>
 
 
 namespace mo = mir::options;
@@ -58,6 +59,7 @@ struct miral::MirRunner::Self
     char const** const argv;
     std::string const config_file;
     std::string const display_config_file;
+    bool const safe_mode{getenv("MIR_SAFE_MODE") != nullptr};
 
     std::mutex mutex;
     std::function<void()> start_callback{[]{}};
@@ -65,6 +67,20 @@ struct miral::MirRunner::Self
     std::function<void()> exception_handler{static_cast<void(*)()>(mir::report_exception)};
     std::weak_ptr<mir::Server> weak_server;
     std::shared_ptr<miral::FdManager> const fd_manager = std::make_shared<miral::FdManager>();
+
+    void reexec_in_safe_mode(std::string const& error)
+    {
+        fprintf(stderr, "\n[MIR SAFE MODE] Configration error: %s\n", error.c_str());
+        fprintf(stderr, "[MIR SAFE MODE] Restarting with minimal configuration...\n");
+
+        setenv("MIR_SAFE_MODE", "1", 1);
+        setenv("MIR_SAFE_MODE_ERROR", error.c_str(), 1);
+
+        std::vector<char const*> safe_argv{ argv[0], nullptr};
+        execvp(argv[0], const_cast<char**>(safe_argv.data()));
+
+        mir::report_exception();
+    }
 
     struct SignalInfo
     {
@@ -189,6 +205,19 @@ catch (mir::ExitWithOutput const&)
 {
     mir::report_exception();
     return EXIT_SUCCESS;
+}
+catch (mir::AbnormalExit const& e)
+{
+    if(!safe_mode)
+    {
+        reexec_in_safe_mode(e.what());
+    }
+    else
+    {
+        fprintf(stderr, "[MIR SAFE MODE] Failed even in safe mide: %s\n", e.what());
+        exception_handler();
+    }
+    return EXIT_FAILURE;
 }
 catch (...)
 {
