@@ -16,6 +16,7 @@
 
 #include "platform.h"
 #include "platform_bridge.h"
+#include "input_report.h"
 
 #include <mir/optional_value.h>
 #include <mir/dispatch/dispatchable.h>
@@ -160,8 +161,12 @@ class miers::Platform::Self
 {
 public:
     Self(Platform* platform, std::shared_ptr<ConsoleServices> const& console,
-        std::shared_ptr<InputDeviceRegistry> const& input_device_registry)
-        : platform_impl(evdev_rs_create(std::make_shared<PlatformBridge>(platform, console), input_device_registry)),
+        std::shared_ptr<InputDeviceRegistry> const& input_device_registry,
+        std::shared_ptr<mi::InputReport> const& report)
+        : platform_impl(evdev_rs_create(
+            std::make_shared<PlatformBridge>(platform, console),
+            input_device_registry,
+            std::make_unique<miers::InputReport>(report))),
           dispatchable{std::make_shared<md::MultiplexingDispatchable>()} {}
 
     rust::Box<PlatformRs> platform_impl;
@@ -171,8 +176,9 @@ public:
 
 miers::Platform::Platform(
     std::shared_ptr<ConsoleServices> const& console,
-    std::shared_ptr<InputDeviceRegistry> const& input_device_registry)
-    : self(std::make_shared<Self>(this, console, input_device_registry))
+    std::shared_ptr<InputDeviceRegistry> const& input_device_registry,
+    std::shared_ptr<mi::InputReport> const& report)
+    : self(std::make_shared<Self>(this, console, input_device_registry, report))
 {
 }
 

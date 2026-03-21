@@ -39,9 +39,6 @@ uint32_t constexpr to_xkb_scan_code(uint32_t evdev_scan_code)
 void mf::KeyboardStateTracker::XkbKeyState::update_keymap(
     std::shared_ptr<mir::input::Keymap> const& new_keymap, xkb_context* context)
 {
-    if (!new_keymap)
-        mir::fatal_error("KeyboardStateTracker: received null keymap");
-
     if (current_keymap && current_keymap->matches(*new_keymap))
         return;
 
@@ -53,6 +50,33 @@ void mf::KeyboardStateTracker::XkbKeyState::update_keymap(
 void mf::KeyboardStateTracker::XkbKeyState::update_key(uint32_t xkb_keycode, MirKeyboardAction action)
 {
     xkb_state_update_key(state.get(), xkb_keycode, action == mir_keyboard_action_down ? XKB_KEY_DOWN : XKB_KEY_UP);
+}
+
+auto mf::KeyboardStateTracker::XkbKeyState::scancode_produces_keysym(
+    uint32_t scancode, xkb_keysym_t keysym) const -> bool
+{
+    if (!compiled_keymap)
+        return false;
+
+    auto const xkb_keycode = to_xkb_scan_code(scancode);
+
+    auto const num_layouts = xkb_keymap_num_layouts_for_key(compiled_keymap.get(), xkb_keycode);
+    for (auto layout = 0u; layout < num_layouts; ++layout)
+    {
+        auto const num_levels = xkb_keymap_num_levels_for_key(compiled_keymap.get(), xkb_keycode, layout);
+        for (auto level = 0u; level < num_levels; ++level)
+        {
+            xkb_keysym_t const* syms{};
+            auto const num_syms = xkb_keymap_key_get_syms_by_level(
+                compiled_keymap.get(), xkb_keycode, layout, level, &syms);
+            for (auto i = 0; i < num_syms; ++i)
+            {
+                if (syms[i] == keysym)
+                    return true;
+            }
+        }
+    }
+    return false;
 }
 
 void mf::KeyboardStateTracker::XkbKeyState::rederive_keysyms_from_scancodes(
@@ -93,6 +117,22 @@ bool mf::KeyboardStateTracker::process(MirEvent const& event)
     auto& [scancode_to_keysym, shift_state, xkb_key_state] =
         device_states[input_event->device_id()];
 
+    if (action == mir_keyboard_action_down)
+    {
+        scancode_to_keysym[scancode] = keysym;
+    }
+    else if (action == mir_keyboard_action_up)
+    {
+        // Remove by scancode so that a mismatched key-up keysym (caused by a
+        // modifier change while the key was held) does not leave stale entries.
+        scancode_to_keysym.erase(scancode);
+    }
+    else
+    {
+        // We only care about up and down events.
+        return false;
+    }
+
     xkb_key_state.update_keymap(key_event->keymap(), context.get());
 
     // Keep xkb_key_state in sync with every key event so that its modifier
@@ -104,26 +144,12 @@ bool mf::KeyboardStateTracker::process(MirEvent const& event)
     shift_state = modifiers & (mir_input_event_modifier_shift | mir_input_event_modifier_shift_left |
                                mir_input_event_modifier_shift_right);
 
-    auto processed = false;
-    if (action == mir_keyboard_action_down)
-    {
-        scancode_to_keysym[scancode] = keysym;
-        processed = true;
-    }
-    else if (action == mir_keyboard_action_up)
-    {
-        // Remove by scancode so that a mismatched key-up keysym (caused by a
-        // modifier change while the key was held) does not leave stale entries.
-        scancode_to_keysym.erase(scancode);
-        processed = true;
-    }
-
     // When the shift state changes, re-derive every pressed keysym from its
     // scancode using the layout-aware XKB state.
     if (prev_shift_state != shift_state)
         xkb_key_state.rederive_keysyms_from_scancodes(scancode_to_keysym);
 
-    return processed;
+    return true;
 }
 
 auto mf::KeyboardStateTracker::keysym_is_pressed(MirInputDeviceId device, xkb_keysym_t keysym) const -> bool
@@ -141,4 +167,14 @@ auto mf::KeyboardStateTracker::scancode_is_pressed(MirInputDeviceId device, uint
         return false;
 
     return device_states.at(device).scancode_to_keysym.contains(scancode);
+}
+
+auto mf::KeyboardStateTracker::is_same_key(MirKeyboardEvent const& event, xkb_keysym_t keysym) const -> bool
+{
+    auto const& device = event.device_id();
+    if (!device_states.contains(device))
+        return false;
+
+    auto const& [scancode_to_keysym, _, xkb_key_state] = device_states.at(device);
+    return xkb_key_state.scancode_produces_keysym(event.scan_code(), keysym);
 }
