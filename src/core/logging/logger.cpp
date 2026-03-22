@@ -22,6 +22,7 @@
 #include <chrono>
 #include <format>
 #include <mutex>
+#include <cerrno>
 #include <cstdarg>
 #include <cstdio>
 #include <iterator>
