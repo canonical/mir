@@ -55,12 +55,12 @@
         This request creates an input trigger action object.
 
         The token should be one issued by the compositor. If the token was not
-        issued by the compositor, the compositor must raise an invalid_token
-        protocol error.
+        issued by the compositor, or is no longer valid, the compositor must
+        raise an invalid_token protocol error.
 
-        If the token has been issued by the compositor, but is no longer
-        available, then an ext_input_trigger_action_v1.unavailable event
-        should be sent immediately.
+        If the token has been issued by the compositor, is still valid, but is
+        no longer available, then an ext_input_trigger_action_v1.unavailable
+        event should be sent immediately.
       </description>
       <arg name="token" type="string" summary="the exported action token"/>
       <arg name="id" type="new_id" interface="ext_input_trigger_action_v1"/>

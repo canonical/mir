@@ -58,7 +58,9 @@ public:
 
     auto keysym_is_pressed(MirInputDeviceId device, xkb_keysym_t keysym) const -> bool;
 
-    auto scancode_is_pressed(MirInputDeviceId device, int32_t scancode) const -> bool;
+    auto scancode_is_pressed(MirInputDeviceId device, uint32_t scancode) const -> bool;
+
+    auto is_same_key(MirKeyboardEvent const& event, xkb_keysym_t keysym) const -> bool;
 
 private:
     /// Owns the per-device XKB keymap and state used to resolve keysyms from
@@ -80,6 +82,8 @@ private:
         /// using the current modifier state of the XKB state machine.
         void rederive_keysyms_from_scancodes(
             std::unordered_map<uint32_t, xkb_keysym_t>& scancode_to_keysym) const;
+
+        auto scancode_produces_keysym(uint32_t scancode, xkb_keysym_t keysym) const -> bool;
 
     private:
         /// The keymap currently in use for this device, used to detect keymap
