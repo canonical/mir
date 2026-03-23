@@ -189,11 +189,24 @@ std::shared_ptr<mir::dispatch::Dispatchable> miers::Platform::dispatchable()
 
 void miers::Platform::start()
 {
+    // Remove any stale fd watcher from a previous start() that was not followed by stop().
+    // This can happen if stop() was not called (e.g. due to an earlier deadlock), and prevents
+    // a second ReadableFd for the old (now closed) libinput fd from persisting in dispatchable.
+    if (self->libinput_dispatch)
+    {
+        self->dispatchable->remove_watch(self->libinput_dispatch);
+        self->libinput_dispatch.reset();
+    }
+
     self->platform_impl->start();
 
+    auto const libinput_fd = self->platform_impl->libinput_fd();
+    if (libinput_fd < 0)
+        return;
+
     self->libinput_dispatch = std::make_shared<md::ReadableFd>(
-        Fd{IntOwnedFd{self->platform_impl->libinput_fd()}},
-        [&]() { self->platform_impl->process(); });
+        Fd{IntOwnedFd{libinput_fd}},
+        [this]() { self->platform_impl->process(); });
     self->dispatchable->add_watch(self->libinput_dispatch);
 }
 

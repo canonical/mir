@@ -166,16 +166,25 @@ fn handle_device_event(
                 return None;
             };
 
+            // Remove from known_devices immediately (while holding the state lock), but
+            // spawn a thread to call remove_device() on the registry.  Calling remove_device()
+            // directly here would cause an ABBA deadlock with the InputDeviceHub mutex:
+            //   - This thread (input thread): holds Rust state mutex → waits for hub mutex
+            //   - Spawned add_device thread:  holds hub mutex       → waits for Rust state mutex
+            let input_device = known_devices[index].input_device.clone();
+            known_devices.remove(index);
+
+            let device_registry = device_registry.clone();
+
             // # Safety
             //
             // Because we need to use pin_mut_unchecked, this is unsafe.
-            unsafe {
+            thread::spawn(move || unsafe {
+                let mut device_registry = device_registry;
                 device_registry
-                    .clone()
                     .pin_mut_unchecked()
-                    .remove_device(&known_devices[index].input_device);
-            }
-            known_devices.remove(index);
+                    .remove_device(&input_device);
+            });
             None
         }
         _ => {

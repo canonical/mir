@@ -54,6 +54,14 @@ impl PlatformRs {
     /// This method will spawn a thread to handle input events from both
     /// libinput and Mir. The thread will run until `stop()` is called.
     pub fn start(&mut self) {
+        if self.state.is_some() {
+            // Already started; stop() was not called before start(). This is a
+            // programming error, but we handle it gracefully by doing nothing rather
+            // than creating a second libinput context and leaking the existing one.
+            eprintln!("evdev-rs: start() called while already started; ignoring");
+            return;
+        }
+
         println!("Starting the evdev-rs platform");
 
         let bridge = self.bridge.clone();
@@ -153,36 +161,43 @@ impl PlatformRs {
         // Note: When the main loop exits, we need to remove all devices from the device registry
         // or else Mir will try to free the devices later but we won't have access to the platform
         // code at that point. This results in a segfault.
-        let state_opt = self.state.as_mut();
-        if state_opt.is_none() {
+        let Some(state_arc) = self.state.take() else {
             // Platform not started or already stopped.
-            self.state = None;
             return;
-        }
+        };
 
-        match state_opt.unwrap().lock() {
-            Ok(mut state_guard) => {
-                for device_info in state_guard.known_devices.iter_mut().rev() {
-                    println!("Removing device id {} from registry", device_info.id);
-                    device_info.input_sink = None;
-                    device_info.event_builder = None;
-                    // # Safety
-                    //
-                    // Because we need to use pin_mut_unchecked, this is unsafe.
-                    unsafe {
-                        self.device_registry
-                            .clone()
-                            .pin_mut_unchecked()
-                            .remove_device(&device_info.input_device);
-                    }
+        // Collect the input devices to remove while holding the state lock.
+        // We must NOT hold the state lock while calling remove_device(), because that
+        // can cause an ABBA deadlock:
+        //   - This thread: holds Rust state mutex, waiting for InputDeviceHub mutex (in remove_device)
+        //   - A spawned add_device thread: holds InputDeviceHub mutex, waiting for Rust state mutex
+        //     (in LibinputDevice::start)
+        let devices_to_remove: Vec<cxx::SharedPtr<crate::InputDevice>> = {
+            match state_arc.lock() {
+                Ok(mut state_guard) => state_guard
+                    .known_devices
+                    .drain(..)
+                    .map(|info| info.input_device)
+                    .collect(),
+                Err(_) => {
+                    println!("Unable to gain access to device info; lock poisoned");
+                    return;
                 }
             }
-            Err(_) => {
-                println!("Unable to gain access to device info; lock poisoned");
+        };
+
+        // Remove devices from the registry WITHOUT holding the Rust state mutex.
+        for input_device in &devices_to_remove {
+            // # Safety
+            //
+            // Because we need to use pin_mut_unchecked, this is unsafe.
+            unsafe {
+                self.device_registry
+                    .clone()
+                    .pin_mut_unchecked()
+                    .remove_device(input_device);
             }
         }
-
-        self.state = None;
     }
 
     pub fn create_device_observer(&self) -> Box<LibinputDeviceObserver> {
