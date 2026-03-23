@@ -3,26 +3,31 @@ name: Start Release
 on:
   workflow_dispatch:
     inputs:
-      sha:
-        description: 'Commit-ish to release'
-        required: true
-        type: string
-        default: 'HEAD'
       version:
         description: 'Release version (e.g., 2.24.0)'
         required: true
         type: string
+      sha:
+        description: 'Commit-ish to release (defaults to branch tip)'
+        required: false
+        type: string
 
 permissions:
   contents: write
-  issues: write
 
 jobs:
   release:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.sha || github.sha }}
+
       - name: Import GPG key
+        id: gpg
         uses: crazy-max/ghaction-import-gpg@v7
         with:
           gpg_private_key: ${{ secrets.MIR_BOT_GPG_PRIVATE_KEY }}
@@ -30,12 +35,6 @@ jobs:
           git_user_signingkey: true
           git_commit_gpgsign: true
           git_tag_gpgsign: true
-
-      - name: Checkout repository
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-          ref: ${{ inputs.sha }}
 
       - name: Validate version and extract components
         id: version
@@ -45,17 +44,33 @@ jobs:
             echo "minor=${BASH_REMATCH[2]}" | tee --append $GITHUB_OUTPUT
             echo "patch=${BASH_REMATCH[3]}" | tee --append $GITHUB_OUTPUT
             echo "release_branch=release/${BASH_REMATCH[1]}.${BASH_REMATCH[2]}" | tee --append $GITHUB_OUTPUT
+            echo "next_version=${BASH_REMATCH[1]}.$(( ${BASH_REMATCH[2]} + 1 )).0" | tee --append $GITHUB_OUTPUT
           else
             echo ":error: Version '${{ inputs.version }}' is not in the format X.Y.Z"
             exit 1
           fi
 
+      - name: Release Debian symbols
+        run: |
+          awk --include=inplace \
+            -v version_pat='${{ inputs.version }}~dev$' \
+            -v version="${{ inputs.version }}" '
+            $0~version_pat {
+              gsub(version "~dev$", version)
+            }
+            { print }
+          ' debian/*.symbols
+
+          git add debian/*.symbols
+
       - name: Update CMake version
         run: |
           sed --in-place -E 's/(VERSION\s+)[0-9]+\.[0-9]+\.[0-9]+/\1${{ inputs.version }}/' CMakeLists.txt
+          git add CMakeLists.txt
 
-          if [ -n "$(git status --porcelain CMakeLists.txt)" ]; then
-            git add CMakeLists.txt
+      - name: Commit Release Candidate
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
             git commit -m "Begin Release Candidate for ${{ inputs.version }} release"
           fi
 
@@ -67,12 +82,12 @@ jobs:
         id: previous_tag
         run: |
           # Get the most recent tag excluding -rc and -dev tags
-          PREVIOUS_TAG=$(git describe --abbrev=0 --exclude="*-rc" --exclude="*-dev" "${{ inputs.sha }}" 2>/dev/null || echo "")
+          PREVIOUS_TAG=$(git describe --abbrev=0 --exclude="*-rc" --exclude="*-dev" "${{ inputs.sha || github.sha }}" 2>/dev/null || echo "")
           echo "tag=$PREVIOUS_TAG" | tee --append $GITHUB_OUTPUT
 
       - name: Push to the release branch
         run: |
-          git push origin "HEAD:${{ steps.version.outputs.release_branch }}"
+          git push origin "HEAD:refs/heads/${{ steps.version.outputs.release_branch }}"
 
       - name: Create draft GitHub release
         uses: actions/github-script@v8
@@ -102,3 +117,69 @@ jobs:
       - name: Push the Release Candidate tag
         run: |
           git push origin "v${{ inputs.version }}-rc"
+
+      - name: Start development of next version
+        if: github.ref == 'refs/heads/main' && inputs.sha == ''
+        env:
+          DEBFULLNAME: ${{ steps.gpg.outputs.name }}
+          DEBEMAIL: ${{ steps.gpg.outputs.email }}
+        run: |
+          # Bump CMake version
+          sed --in-place -E 's/(VERSION\s+)[0-9]+\.[0-9]+\.[0-9]+/\1${{ steps.version.outputs.next_version }}/' CMakeLists.txt
+
+          # Add a Debian changelog entry
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends devscripts
+          debchange --newversion '${{ steps.version.outputs.next_version }}~dev' ''
+
+          awk --include=inplace \
+            -v next_version='${{ steps.version.outputs.next_version }}' \
+            -v begin_pat='Begin development for ${{ inputs.version }}' '
+            $0~begin_pat {
+              print "  * Begin development for " next_version " release"
+              in_release=1
+              next
+            }
+            in_release && /ABI summary/ {
+              abi_summary=1
+            }
+            abi_summary && /bumped to/ {
+              gsub(/bumped to/, "unchanged at")
+            }
+            abi_summary && /^$/ {
+              in_release=0
+              abi_summary=0
+            }
+            { print }
+          ' debian/changelog
+
+          # Update the RPM changelog
+          awk --include=inplace \
+            -v version_pat='${{ inputs.version }}~dev-1$' \
+            -v begin_pat='Begin development for ${{ inputs.version }}' \
+            -v next_version='${{ steps.version.outputs.next_version }}' \
+            -v name='${{ steps.gpg.outputs.name }}' \
+            -v email='${{ steps.gpg.outputs.email }}' \
+            -v date="$(date "+%a, %b %d %Y")" '
+            /^Version:/ {
+              print "Version: " next_version "~dev"
+              next
+            }
+            /^%changelog/ {
+              print
+              print "* " date " " name " <" email "> - " next_version "~dev-1"
+              print "- Begin development for " next_version " release"
+              next
+            }
+            $0~version_pat {
+              next
+            }
+            $0~begin_pat {
+              next
+            }
+            { print }
+          ' rpm/mir.spec
+
+          git add CMakeLists.txt debian/changelog rpm/mir.spec
+          git commit -m 'Start development for ${{ steps.version.outputs.next_version }} release'
+          git push origin "HEAD:${{ github.ref }}"
