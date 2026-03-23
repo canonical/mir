@@ -3,7 +3,7 @@
 # - `git commit` to commit them
 # - rinse and repeat, if pre-commit wants / applied changes
 
-exclude: ^COPYING
+exclude: ^(COPYING|doc/sphinx/.sphinx.*)
 
 repos:
 - repo: https://github.com/pre-commit/pre-commit-hooks
