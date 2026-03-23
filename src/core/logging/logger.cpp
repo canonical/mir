@@ -16,12 +16,17 @@
 
 #include <mir/logging/dumb_console_logger.h>
 #include <mir/logging/logger.h>
+#include <mir/fatal.h>
 
 #include <iostream>
+#include <chrono>
+#include <format>
 #include <mutex>
+#include <cerrno>
 #include <cstdarg>
 #include <cstdio>
-#include <ctime>
+#include <iterator>
+#include <stdexcept>
 
 namespace ml = mir::logging;
 
@@ -81,27 +86,26 @@ void ml::format_message(std::ostream& out, Severity severity, std::string const&
         "< - debug - > "
     };
 
-    timespec ts{};
-    clock_gettime(CLOCK_REALTIME, &ts);
-    char now[32];
-    auto offset = strftime(now, sizeof(now), "%F %T", localtime(&ts.tv_sec));
-    snprintf(now+offset, sizeof(now)-offset, ".%06ld", ts.tv_nsec / 1000);
-
     if (!out || !out.good())
     {
         std::cerr << "Failed to write to log file: " << errno << std::endl;
         return;
     }
 
-    out << "["
-        << now
-        << "] "
-        << lut[static_cast<int>(severity)]
-        << component
-        << ": "
-        << message
-        << std::endl;
-
+    try
+    {
+        using namespace std::chrono;
+        auto now = system_clock::now();
+        auto now_us = time_point_cast<microseconds>(now);
+        auto local = zoned_time{current_zone(), now_us};
+        std::format_to(std::ostreambuf_iterator{out}, "[{:%F %T}] {}{}: {}\n",
+            local, lut[static_cast<int>(severity)], component, message);
+        out.flush();
+    }
+    catch (std::runtime_error const& e)
+    {
+        mir::fatal_error_abort("Cannot format log message: %s", e.what());
+    }
 }
 
 namespace mir
