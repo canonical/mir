@@ -51,6 +51,7 @@
 #include "xdg_activation_v1.h"
 #include "xdg-decoration-unstable-v1_wrapper.h"
 #include "xdg_decoration_unstable_v1.h"
+#include "xdg_dialog_v1.h"
 #include "xdg_output_v1.h"
 #include "xdg_shell_stable.h"
 #include "xdg_shell_v6.h"
@@ -261,6 +262,10 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
         {
             return mf::create_xdg_decoration_unstable_v1(ctx.display, ctx.decoration_strategy);
         }),
+    make_extension_builder<mw::XdgWmDialogV1>([](auto const& ctx)
+        {
+            return mf::create_xdg_dialog_v1(ctx.display);
+        }),
     make_extension_builder<mw::FractionalScaleManagerV1>([](auto const& ctx)
         {
             return mf::create_fractional_scale_v1(ctx.display);
@@ -399,6 +404,7 @@ auto mf::get_standard_extensions() -> std::vector<std::string>
         mw::TextInputManagerV3::interface_name,
         mw::MirShellV1::interface_name,
         mw::XdgDecorationManagerV1::interface_name,
+        mw::XdgWmDialogV1::interface_name,
         mw::XdgActivationV1::interface_name,
         mw::FractionalScaleManagerV1::interface_name};
 }
