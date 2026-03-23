@@ -16,26 +16,9 @@
 
 // We use include! here so that "rustfmt" does not get angry with us if
 // we just mod libraries.
-#[allow(dead_code, unused_imports)]
-mod dispatch {
-    include!("dispatch.rs");
-}
-#[allow(dead_code, unused_imports)]
-mod protocols {
-    include!("protocols.rs");
-}
-include!("ffi_cpp.rs");
+
+include!("dispatch.rs");
+include!("protocols.rs");
+include!("middleware.rs");
+include!("ffi.rs");
 mod wayland_server;
-
-use crate::wayland_server::{create_wayland_server, WaylandServer};
-
-#[cxx::bridge(namespace = "mir::wayland_rs")]
-mod ffi_rust {
-    extern "Rust" {
-        type WaylandServer;
-
-        fn create_wayland_server() -> Box<WaylandServer>;
-        fn run(self: &mut WaylandServer, socket: &str) -> Result<()>;
-        fn stop(self: &mut WaylandServer);
-    }
-}
