@@ -279,6 +279,7 @@ linkcheck_ignore = [
     r"https://.*\.sourceforge\.(net|io)/.*",
     "how-to/getting_involved_in_mir",
     "https://www.mail-archive.com",
+    "https://manpages.ubuntu.com",
     ]
 
 
