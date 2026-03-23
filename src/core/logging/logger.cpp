@@ -95,11 +95,11 @@ void ml::format_message(std::ostream& out, Severity severity, std::string const&
     try
     {
         using namespace std::chrono;
-        std::ostreambuf_iterator<char> iter{out};
         auto now = system_clock::now();
         auto now_us = time_point_cast<microseconds>(now);
         auto local = zoned_time{current_zone(), now_us};
-        std::format_to(iter, "[{:%F %T}] {}{}: {}\n",
+        std::format_to(std::ostreambuf_iterator<char>(out),
+            "[{:%F %T}] {}{}: {}\n",
             local, lut[static_cast<int>(severity)], component, message);
         out.flush();
     }
