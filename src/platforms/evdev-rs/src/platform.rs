@@ -82,6 +82,55 @@ impl PlatformRs {
             x_scroll_scale: 1.0,
             y_scroll_scale: 1.0,
         })));
+
+        // Eagerly drain the DEVICE_ADDED events that libinput pre-queued during
+        // udev_assign_seat. These events are held in libinput's internal buffer and
+        // do NOT make the epoll fd readable. Without this drain, they would only
+        // be processed when the first real input event wakes the fd watcher, causing
+        // a race: the initial key-down arrives in the same dispatch batch as the
+        // DEVICE_ADDED, but the device's event_builder is not yet set (the
+        // registration thread hasn't run), so the event is silently dropped.
+        //
+        // We collect the JoinHandles from the registration threads, then release the
+        // state lock BEFORE joining. The spawned threads need that same lock (inside
+        // LibinputDevice::start), so we must not hold it while waiting for them.
+        let handles = match self.state.as_mut().unwrap().lock() {
+            Ok(mut state) => process_libinput_events(
+                &mut *state,
+                self.device_registry.clone(),
+                self.bridge.clone(),
+                &self.report,
+            ),
+            Err(_) => {
+                eprintln!(
+                    "evdev-rs platform: LibinputDeviceState mutex poisoned during startup; \
+                      aborting start()"
+                );
+                return;
+            }
+        };
+
+        // State lock is released above; now safe to join the registration threads.
+        for handle in handles {
+            if let Err(err) = handle.join() {
+                // Log panics in registration threads so startup issues are visible.
+                if let Some(message) = err.downcast_ref::<&str>() {
+                    eprintln!(
+                        "evdev-rs platform: device registration thread panicked with message: {}",
+                        message
+                    );
+                } else if let Some(message) = err.downcast_ref::<String>() {
+                    eprintln!(
+                        "evdev-rs platform: device registration thread panicked with message: {}",
+                        message
+                    );
+                } else {
+                    eprintln!(
+                         "evdev-rs platform: device registration thread panicked with non-string payload"
+                     );
+                }
+            }
+        }
     }
 
     pub unsafe fn libinput_fd(&mut self) -> i32 {
@@ -188,7 +237,8 @@ impl PlatformRs {
 
         match self.state.as_mut().unwrap().try_lock() {
             Ok(mut state) => {
-                process_libinput_events(
+                // Drop handles: runtime hotplug registration is fire-and-forget.
+                let _ = process_libinput_events(
                     &mut *state,
                     self.device_registry.clone(),
                     self.bridge.clone(),
