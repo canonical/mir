@@ -162,7 +162,7 @@ jobs:
             -v email='${{ steps.gpg.outputs.email }}' \
             -v date="$(date "+%a %b %d %Y")" '
             /^Version:/ {
-              sub(/[^\s]*$/, next_version "~dev")
+              sub(/[^[:space:]]+$/, next_version "~dev")
               print
               next
             }
