@@ -158,6 +158,7 @@ impl PlatformRs {
     ///
     /// This method will signal the input thread to stop and wait for it to finish.
     pub fn stop(&mut self) {
+        println!("Stopping the evdev-rs platform");
         // Note: When the main loop exits, we need to remove all devices from the device registry
         // or else Mir will try to free the devices later but we won't have access to the platform
         // code at that point. This results in a segfault.
