@@ -645,23 +645,10 @@ struct CursorImageFromBuffer : public mg::CursorImage
     CursorImageFromBuffer(
         std::shared_ptr<mg::Buffer> buf,
         geom::Displacement const& hotspot)
-        : hotspot_(hotspot)
+        : CursorImageFromBuffer(make_init(std::move(buf)), hotspot)
     {
-        try
-        {
-            auto m = buf->map_readable();
-            size_ = m->size();
-            data = std::make_unique<std::byte[]>(m->len());
-            ::memcpy(data.get(), m->data(), m->len());
-        }
-        catch (mg::UnmappableBuffer const&)
-        {
-            // Buffer doesn't support CPU access (e.g. a hardware/EGL buffer).
-            // Store the buffer directly so it can be used as a renderable.
-            buffer_ = std::move(buf);
-            size_ = buffer_->size();
-        }
     }
+
     void const* as_argb_8888() const
     {
         return data.get();
@@ -683,10 +670,44 @@ struct CursorImageFromBuffer : public mg::CursorImage
     }
 
 private:
-    geom::Size size_;
-    std::unique_ptr<std::byte[]> data;
+    struct Init
+    {
+        geom::Size size;
+        std::unique_ptr<std::byte[]> data;
+        std::shared_ptr<mg::Buffer> buffer;
+    };
+
+    static auto make_init(std::shared_ptr<mg::Buffer> buf) -> Init
+    {
+        try
+        {
+            auto m = buf->map_readable();
+            Init init;
+            init.size = m->size();
+            init.data = std::make_unique<std::byte[]>(m->len());
+            ::memcpy(init.data.get(), m->data(), m->len());
+            return init;
+        }
+        catch (mg::UnmappableBuffer const&)
+        {
+            // Buffer doesn't support CPU access (e.g. a hardware/EGL buffer).
+            // Store the buffer directly so it can be used as a renderable.
+            return {buf->size(), nullptr, std::move(buf)};
+        }
+    }
+
+    CursorImageFromBuffer(Init init, geom::Displacement const& hotspot)
+        : size_{std::move(init.size)},
+          data{std::move(init.data)},
+          hotspot_(hotspot),
+          buffer_{std::move(init.buffer)}
+    {
+    }
+
+    geom::Size const size_;
+    std::unique_ptr<std::byte[]> const data;
     geom::Displacement const hotspot_;
-    std::shared_ptr<mg::Buffer> buffer_;
+    std::shared_ptr<mg::Buffer> const buffer_;
 };
 }
 
