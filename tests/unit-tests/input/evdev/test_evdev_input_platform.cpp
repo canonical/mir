@@ -32,6 +32,7 @@
 
 #include <memory>
 #include <vector>
+#include <string_view>
 
 namespace mi = mir::input;
 namespace mie = mi::evdev;
