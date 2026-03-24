@@ -1,6 +1,5 @@
 mir (2.27.0~dev) UNRELEASED; urgency=medium
 
-  [ Michał Sawicz ]
   * Begin development for 2.27.0 release
 
     - ABI summary:
@@ -16,7 +15,7 @@ mir (2.27.0~dev) UNRELEASED; urgency=medium
 
  -- Mir CI Bot <mir-ci-bot@canonical.com>  Tue, 24 Mar 2026 12:36:21 +0000
 
-mir (2.25.0~dev) UNRELEASED; urgency=medium
+mir (2.25.0) UNRELEASED; urgency=medium
 
     * New upstream release 2.25.0
 

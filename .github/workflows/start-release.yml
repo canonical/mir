@@ -160,9 +160,10 @@ jobs:
             -v next_version='${{ steps.version.outputs.next_version }}' \
             -v name='${{ steps.gpg.outputs.name }}' \
             -v email='${{ steps.gpg.outputs.email }}' \
-            -v date="$(date "+%a, %b %d %Y")" '
+            -v date="$(date "+%a %b %d %Y")" '
             /^Version:/ {
-              print "Version: " next_version "~dev"
+              sub(/[^\s]*$/, next_version "~dev")
+              print
               next
             }
             /^%changelog/ {
