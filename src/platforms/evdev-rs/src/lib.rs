@@ -176,7 +176,8 @@ mod ffi_bridge {
         type LibinputDevice;
         type LibinputDeviceMetadata;
 
-        fn start(self: &mut PlatformRs);
+        fn start(self: &mut PlatformRs) -> bool;
+        fn assign_seat(self: &mut PlatformRs);
         fn continue_after_config(self: &PlatformRs);
         fn pause_for_config(self: &PlatformRs);
         fn stop(self: &mut PlatformRs);
