@@ -70,11 +70,11 @@ jobs:
       id: setup-ccache
       run: |
         sudo apt-get --yes install ccache
-        mkdir --parents ${CCACHE_DIR}
+        mkdir --parents "${CCACHE_DIR}"
 
         # Find the merge base to avoid populating the cache with short lived cache entries
         # and evicting those we care for - from `main`
-        echo "merge-base=$( git merge-base origin/main ${{ github.sha }} )" >> $GITHUB_OUTPUT
+        echo "merge-base=$( git merge-base origin/main ${{ github.sha }} )" >> "$GITHUB_OUTPUT"
 
     - name: CCache
       if: ${{ github.event_name == 'push' }}
@@ -94,7 +94,7 @@ jobs:
     - name: Ensure ccache size
       run: |
         # a full build yielded 180M cache
-        echo "max_size = 250M" > ${CCACHE_DIR}/ccache.conf
+        echo "max_size = 250M" > "${CCACHE_DIR}/ccache.conf"
 
     - name: Install dependencies
       run: |
@@ -118,7 +118,7 @@ jobs:
 
         sudo --preserve-env apt-get build-dep --yes ./
 
-        echo PATH=/usr/lib/rust-1.82/bin:${PATH} >> $GITHUB_ENV
+        echo "PATH=/usr/lib/rust-1.82/bin:${PATH}" >> "$GITHUB_ENV"
 
     - name: Configure
       run: >
@@ -147,15 +147,16 @@ jobs:
       if: github.event_name == 'merge_group'
       run: |
         # Every merge_group event runs for one pull request, so we can diff against parent
-        git diff --name-only ${{ github.sha }}~1 ${{ github.sha }} >> $TICS_CHANGED_LIST
+        git diff --name-only ${{ github.sha }}~1 ${{ github.sha }} >> "$TICS_CHANGED_LIST"
 
     - if: ${{ github.event.inputs.detach == 'true' }}
       name: Detach TICS QServer to prevent "project already connected" issue
       env:
         TICSAUTHTOKEN: ${{ secrets.TICSAUTHTOKEN }}
       run: &tics-detach |
+        # shellcheck source=/dev/null
         source ~/.profile
-        TICSMaintenance -project ${PROJECT} -detach
+        TICSMaintenance -project "${PROJECT}" -detach
 
     - name: Run TICS analysis
       uses: tiobe/tics-github-action@a53037a6bb9f71b6a97cdeb0ac41632266804b9e # v3.8.0

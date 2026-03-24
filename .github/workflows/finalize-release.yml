@@ -41,7 +41,7 @@ jobs:
           DESCRIBE=$(git describe --match="*-rc" --abbrev=0)
           if [[ "$DESCRIBE" =~ ^v([0-9]+\.[0-9]+\.[0-9]+)-rc$ ]]; then
             VERSION="${BASH_REMATCH[1]}"
-            echo "version=$VERSION" | tee --append $GITHUB_OUTPUT
+            echo "version=$VERSION" | tee --append "$GITHUB_OUTPUT"
           else
             echo ":error: Failed to parse version from tag: $DESCRIBE"
             exit 1

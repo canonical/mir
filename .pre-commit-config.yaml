@@ -20,6 +20,11 @@ repos:
     args:
     - --fix
 
+- repo: https://github.com/rhysd/actionlint
+  rev: 393031adb9afb225ee52ae2ccd7a5af5525e03e8  # frozen: v1.7.11
+  hooks:
+  - id: actionlint
+
 - repo: https://github.com/executablebooks/mdformat
   rev: 2d496dbc18e31b83a1596685347ffe0b6041daf0  # frozen: 1.0.0
   hooks:

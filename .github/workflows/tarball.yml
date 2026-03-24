@@ -26,14 +26,14 @@ jobs:
         INPUTS_VERSION: ${{ inputs.version }}
       run: |
         if ${{ github.event_name == 'push' }}; then
-          version="$( echo "${GITHUB_REF}" | sed 's@^refs/tags/v@@' )"
+          version="${GITHUB_REF#refs/tags/v}"
         else
           version="${INPUTS_VERSION}"
         fi
 
         # assert it's a version number
         set -x
-        [[ ${version} =~ ^[0-9]+.[0-9]+.[0-9]+$ ]] && echo "version=${version}" >> $GITHUB_OUTPUT
+        [[ ${version} =~ ^[0-9]+.[0-9]+.[0-9]+$ ]] && echo "version=${version}" >> "$GITHUB_OUTPUT"
 
     - name: Import GPG key
       uses: crazy-max/ghaction-import-gpg@2dc316deee8e90f13e1a351ab510b4d5bc0c82cd # v7.0.0
@@ -51,8 +51,8 @@ jobs:
       env:
         VERSION: ${{ steps.get-version.outputs.version }}
       run: |
-        ./tools/make_release_tarball --skip-checks --release-tag v${VERSION}
-        gpg --detach-sig --sign --output mir-${VERSION}.tar.xz.asc mir-${VERSION}.tar.xz
+        ./tools/make_release_tarball --skip-checks --release-tag "v${VERSION}"
+        gpg --detach-sig --sign --output "mir-${VERSION}.tar.xz.asc" "mir-${VERSION}.tar.xz"
 
     - name: Store the tarball and signature
       uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0

@@ -10,4 +10,4 @@ rules:
     - tics.yml
   cache-poisoning:
     ignore:
-    - spread.yml:122:7  # Not a release-producing workflow
+    - spread.yml:127:7  # Not a release-producing workflow

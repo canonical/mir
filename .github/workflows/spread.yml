@@ -31,33 +31,38 @@ jobs:
       run: |
         set -euo pipefail
 
+        TASKS=()
         if ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}; then
-          TASKS='"lxd:...:spread/ubuntu:tsan"
-                 "lxd:...:spread/ubuntu:tsan_clang"'
+          TASKS+=(
+            "lxd:...:spread/ubuntu:tsan"
+            "lxd:...:spread/ubuntu:tsan_clang"
+          )
         fi
 
-        TASKS+='"lxd:...:debian_sid"
-                "lxd:...:fedora_42"
-                "lxd:...:fedora_43"
-                "lxd:...:fedora_clang"
-                "lxd:...:fedora_rawhide"
-                "lxd:...:spread/ubuntu:asan"
-                "lxd:...:spread/ubuntu:asan_clang"
-                "lxd:...:spread/ubuntu:clang"
-                "lxd:...:spread/ubuntu:mold"
-                "lxd:...:spread/ubuntu:ubsan"
-                "lxd:...:spread/ubuntu:ubsan_clang"
-                "lxd:...:ubuntu"
-                "lxd:...:ubuntu_arm64"
-                "lxd:...:ubuntu_armhf"
-                "lxd:...:ubuntu_devel"
-                "lxd:...:ubuntu_proposed"
-                "lxd:...:ubuntu_questing"
-                "lxd:alpine-3.20:...:amd64"
-                "lxd:alpine-3.21:...:amd64"
-                "lxd:alpine-edge:...:amd64"'
+        TASKS+=(
+          "lxd:...:debian_sid"
+          "lxd:...:fedora_42"
+          "lxd:...:fedora_43"
+          "lxd:...:fedora_clang"
+          "lxd:...:fedora_rawhide"
+          "lxd:...:spread/ubuntu:asan"
+          "lxd:...:spread/ubuntu:asan_clang"
+          "lxd:...:spread/ubuntu:clang"
+          "lxd:...:spread/ubuntu:mold"
+          "lxd:...:spread/ubuntu:ubsan"
+          "lxd:...:spread/ubuntu:ubsan_clang"
+          "lxd:...:ubuntu"
+          "lxd:...:ubuntu_arm64"
+          "lxd:...:ubuntu_armhf"
+          "lxd:...:ubuntu_devel"
+          "lxd:...:ubuntu_proposed"
+          "lxd:...:ubuntu_questing"
+          "lxd:alpine-3.20:...:amd64"
+          "lxd:alpine-3.21:...:amd64"
+          "lxd:alpine-edge:...:amd64"
+        )
 
-        echo ${TASKS:-} | jq -cs '{ "spread-task": .  }' | awk '{ print "matrix=" $0 }' >> $GITHUB_OUTPUT
+        jq -cn '{"spread-task": $ARGS.positional}' --args "${TASKS[@]}" | awk '{ print "matrix=" $0 }' >> "$GITHUB_OUTPUT"
 
   BuildAndTest:
     needs: GetMatrix
@@ -93,13 +98,13 @@ jobs:
         # https://github.com/canonical/lxd/issues/16070
         lxc profile device add default loop-control unix-char path=/dev/loop-control
         for i in $(seq 0 11); do
-          [ -e /dev/loop$i ] || sudo mknod -m 660 /dev/loop$i b 7 $i
-          lxc profile device add default loop$i unix-block source=/dev/loop$i
+          [ -e "/dev/loop${i}" ] || sudo mknod -m 660 "/dev/loop${i}" b 7 "${i}"
+          lxc profile device add default "loop${i}" unix-block "source=/dev/loop${i}"
         done
 
         sudo apt-get update
         sudo apt-get install --yes binfmt-support qemu-user-static
-        echo "LXD_DIR=/var/snap/lxd/common/lxd" >> $GITHUB_ENV
+        echo "LXD_DIR=/var/snap/lxd/common/lxd" >> "$GITHUB_ENV"
 
     - name: Check out code
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -110,12 +115,12 @@ jobs:
     - name: Set up CCache
       id: setup-ccache
       run: |
-        mkdir --parents ${CCACHE_DIR}
-        /snap/bin/lxc profile device add default ccache disk source=${CCACHE_DIR} path=/root/.ccache
+        mkdir --parents "${CCACHE_DIR}"
+        /snap/bin/lxc profile device add default ccache disk source="${CCACHE_DIR}" path=/root/.ccache
 
         # Find the merge base to avoid populating the cache with short lived cache entries
         # and evicting those we care for - from `main`
-        echo "merge-base=$( git merge-base origin/main ${{ github.sha }} )" >> $GITHUB_OUTPUT
+        echo "merge-base=$( git merge-base origin/main ${{ github.sha }} )" >> "$GITHUB_OUTPUT"
 
     - name: CCache
       if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
@@ -135,17 +140,17 @@ jobs:
     - name: Ensure ccache size
       run: |
         # a full build yielded at most 650M cache
-        echo "max_size = 800M" > ${CCACHE_DIR}/ccache.conf
+        echo "max_size = 800M" > "${CCACHE_DIR}/ccache.conf"
 
     - name: Run Spread task
       run: |
         tools/make_release_tarball --skip-checks
-        snap run spread-mir-ci.spread -reuse -v ${MATRIX_SPREAD_TASK}
+        snap run spread-mir-ci.spread -reuse -v "${MATRIX_SPREAD_TASK}"
       env:
         MATRIX_SPREAD_TASK: ${{ matrix.spread-task }}
 
     - name: CCache stats
-      run: cat ${CCACHE_DIR}/ccache.stats
+      run: cat "${CCACHE_DIR}/ccache.stats"
 
     - if: ${{ failure() && runner.debug }}
       name: Setup upterm session

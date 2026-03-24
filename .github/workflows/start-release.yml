@@ -48,11 +48,11 @@ jobs:
         id: version
         run: |
           if [[ "${INPUTS_VERSION}" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
-            echo "major=${BASH_REMATCH[1]}" | tee --append $GITHUB_OUTPUT
-            echo "minor=${BASH_REMATCH[2]}" | tee --append $GITHUB_OUTPUT
-            echo "patch=${BASH_REMATCH[3]}" | tee --append $GITHUB_OUTPUT
-            echo "release_branch=refs/heads/release/${BASH_REMATCH[1]}.${BASH_REMATCH[2]}" | tee --append $GITHUB_OUTPUT
-            echo "next_version=${BASH_REMATCH[1]}.$(( ${BASH_REMATCH[2]} + 1 )).0" | tee --append $GITHUB_OUTPUT
+            echo "major=${BASH_REMATCH[1]}" | tee --append "$GITHUB_OUTPUT"
+            echo "minor=${BASH_REMATCH[2]}" | tee --append "$GITHUB_OUTPUT"
+            echo "patch=${BASH_REMATCH[3]}" | tee --append "$GITHUB_OUTPUT"
+            echo "release_branch=refs/heads/release/${BASH_REMATCH[1]}.${BASH_REMATCH[2]}" | tee --append "$GITHUB_OUTPUT"
+            echo "next_version=${BASH_REMATCH[1]}.$(( BASH_REMATCH[2] + 1 )).0" | tee --append "$GITHUB_OUTPUT"
           else
             echo ":error: Version '${INPUTS_VERSION}' is not in the format X.Y.Z"
             exit 1
@@ -91,7 +91,7 @@ jobs:
         run: |
           # Get the most recent tag excluding -rc and -dev tags
           PREVIOUS_TAG=$(git describe --abbrev=0 --exclude="*-rc" --exclude="*-dev" "${INPUTS_SHA}" 2>/dev/null || echo "")
-          echo "tag=$PREVIOUS_TAG" | tee --append $GITHUB_OUTPUT
+          echo "tag=$PREVIOUS_TAG" | tee --append "$GITHUB_OUTPUT"
 
       - name: Push to the release branch
         env:
