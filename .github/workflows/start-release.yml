@@ -182,5 +182,6 @@ jobs:
           ' rpm/mir.spec
 
           git add CMakeLists.txt debian/changelog rpm/mir.spec
-          git commit -m 'Start development for ${{ steps.version.outputs.next_version }} release'
-          git push origin "HEAD:${{ github.ref }}"
+          git commit -m 'Begin development for ${{ steps.version.outputs.next_version }} release'
+          git tag --annotate "v${{ steps.version.outputs.next_version }}~dev" --message "Begin development for ${{ steps.version.outputs.next_version }} release"
+          git push origin --tags "HEAD:${{ github.ref }}"
