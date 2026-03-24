@@ -7,21 +7,21 @@ exclude: ^COPYING
 
 repos:
 - repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v6.0.0
+  rev: 3e8a8703264a2f4a69428a0aa4dcb512790b2c8c  # frozen: v6.0.0
   hooks:
   - id: trailing-whitespace
   - id: end-of-file-fixer
   - id: check-added-large-files
 
 - repo: https://github.com/zizmorcore/zizmor-pre-commit
-  rev: v1.23.1
+  rev: ea2eb407b4cbce87cf0d502f36578950494f5ac9  # frozen: v1.23.1
   hooks:
   - id: zizmor
     args:
     - --fix
 
 - repo: https://github.com/executablebooks/mdformat
-  rev: 0.7.22
+  rev: 2d496dbc18e31b83a1596685347ffe0b6041daf0  # frozen: 1.0.0
   hooks:
   - id: mdformat
     additional_dependencies:
@@ -32,7 +32,7 @@ repos:
     - setuptools # Necessary until beautysh fix their stuff, see: https://github.com/hukkin/mdformat/issues/442
 
 - repo: https://github.com/jackdewinter/pymarkdown
-  rev: v0.9.32
+  rev: 6d3c1b70d44ea2202b23552af93aca3b5017ee83  # frozen: v0.9.36
   hooks:
   - id: pymarkdown
     args:
@@ -40,6 +40,6 @@ repos:
     - fix
 
 - repo: https://github.com/AndrejOrsula/pre-commit-cargo
-  rev: 0.4.0
+  rev: 33ae92ed9b1a4392c8ac5fdef46887640d866e1e  # frozen: 0.5.0
   hooks:
   - id: cargo-fmt
