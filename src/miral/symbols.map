@@ -98,6 +98,7 @@ global:
     miral::MirRunner::add_stop_callback*;
     miral::MirRunner::config_file*;
     miral::MirRunner::display_config_file*;
+    miral::MirRunner::enable_safe_mode*;
     miral::MirRunner::register_fd_handler*;
     miral::MirRunner::register_signal_handler*;
     miral::MirRunner::run_with*;

@@ -16,6 +16,7 @@
 
 #include <mir/options/program_option.h>
 #include <mir/log.h>
+#include <mir/abnormal_exit.h>
 
 #include <boost/program_options/parsers.hpp>
 
@@ -91,11 +92,34 @@ void mo::ProgramOption::parse_file(
         try
         {
             std::ifstream file(filename);
-            po::store(po::parse_config_file(file, config_file_desc, true), options);
+            if (!file)
+            {
+                continue;
+            }
+            auto parsed = po::parse_config_file(file, config_file_desc, true);
+
+            auto const unrecognised = po::collect_unrecognized(parsed.options, po::exclude_positional);
+
+            if(!unrecognised.empty())
+            {
+                std::ostringstream error;
+                error << "Unrecognised options in " << filename << ": ";
+                for(auto const& opt : unrecognised)
+                {
+                    error << " " << opt;
+                }
+                BOOST_THROW_EXCEPTION(mir::AbnormalExit(error.str()));
+            }
+
+            po::store(parsed, options);
+        }
+        catch(mir::AbnormalExit const&)
+        {
+            throw;
         }
         catch (const po::error& error)
         {
-            log_warning("Error in %s: %s", filename.c_str(), error.what());
+            BOOST_THROW_EXCEPTION(mir::AbnormalExit(std::string{"Error in config file "} + filename + ": " + error.what()));
         }
     }
 

@@ -26,6 +26,7 @@
 #include <mir/main_loop.h>
 #include <mir/report_exception.h>
 #include <mir/options/option.h>
+#include <boost/program_options/errors.hpp>
 
 #include <algorithm>
 #include <mutex>
@@ -60,6 +61,7 @@ struct miral::MirRunner::Self
     std::string const config_file;
     std::string const display_config_file;
     bool const safe_mode{getenv("MIR_SAFE_MODE") != nullptr};
+    bool safe_mode_enabled{false};
 
     std::mutex mutex;
     std::function<void()> start_callback{[]{}};
@@ -208,13 +210,24 @@ catch (mir::ExitWithOutput const&)
 }
 catch (mir::AbnormalExit const& e)
 {
-    if(!safe_mode)
+    if(safe_mode_enabled && !safe_mode)
     {
         reexec_in_safe_mode(e.what());
     }
     else
     {
-        fprintf(stderr, "[MIR SAFE MODE] Failed even in safe mide: %s\n", e.what());
+        exception_handler();
+    }
+    return EXIT_FAILURE;
+}
+catch (boost::program_options::error const& e)
+{
+    if (safe_mode_enabled && !safe_mode)
+    {
+        reexec_in_safe_mode(e.what());
+    }
+    else
+    {
         exception_handler();
     }
     return EXIT_FAILURE;
@@ -223,6 +236,11 @@ catch (...)
 {
     exception_handler();
     return EXIT_FAILURE;
+}
+
+void miral::MirRunner::enable_safe_mode()
+{
+    self->safe_mode_enabled = true;
 }
 
 void miral::MirRunner::add_start_callback(std::function<void()> const& start_callback)

@@ -161,6 +161,15 @@ public:
     /// \sa miral::X11Support - provides X11 support to a Mir server
     auto x11_display() const -> mir::optional_value<std::string>;
 
+    /// Enable safe mode for this compositor.
+    ///
+    /// This is intended for use in embedded compositors (e.g. Ubuntu Frame)
+    /// where there is no terminal to display errors and the compositor must
+    /// start in order to show the error to the user.
+    ///
+    /// Safe mode is disabled by default.
+    void enable_safe_mode();
+
 private:
     MirRunner(MirRunner const&) = delete;
     MirRunner& operator=(MirRunner const&) = delete;

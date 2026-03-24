@@ -131,6 +131,7 @@ try
 
     miral::live_config::IniFile config_store;
     runner.set_exception_handler(exception_handler);
+    runner.enable_safe_mode();
 
     miral::CursorScale cursor_scale{config_store};
     miral::OutputFilter output_filter{config_store};
