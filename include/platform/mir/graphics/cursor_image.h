@@ -21,10 +21,14 @@
 #include <mir/geometry/size.h>
 #include <mir/geometry/displacement.h>
 
+#include <memory>
+
 namespace mir
 {
 namespace graphics
 {
+class Buffer;
+
 class CursorImage
 {
 public:
@@ -38,6 +42,14 @@ public:
     // location of the pointer.
     virtual geometry::Displacement hotspot() const = 0;
 
+    /// Returns the underlying graphics buffer if available.
+    ///
+    /// Some cursor images may be backed by a hardware buffer that cannot be
+    /// CPU-mapped. In this case, as_argb_8888() will return nullptr and the
+    /// buffer should be used for rendering directly.
+    ///
+    /// \returns The underlying buffer, or nullptr if the cursor uses CPU pixel data.
+    virtual auto buffer() const -> std::shared_ptr<Buffer> { return nullptr; }
 
 protected:
     CursorImage() = default;

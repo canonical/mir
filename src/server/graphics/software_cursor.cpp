@@ -185,13 +185,24 @@ mg::SoftwareCursor::create_scaled_renderable_for(CursorImage const& cursor_image
     if (cursor_image.size().width.as_uint32_t() == 0 || cursor_image.size().height.as_uint32_t() == 0)
         BOOST_THROW_EXCEPTION(std::logic_error("zero sized software cursor image is invalid"));
 
-    auto buffer = mrs::alloc_buffer_with_content(
-        *allocator,
-        static_cast<unsigned char const*>(cursor_image.as_argb_8888()),
-        cursor_image.size(),
-        geom::Stride{
-            cursor_image.size().width.as_uint32_t() * MIR_BYTES_PER_PIXEL(mir_pixel_format_argb_8888)},
-        mir_pixel_format_argb_8888);
+    std::shared_ptr<mg::Buffer> buffer;
+
+    if (auto hw_buffer = cursor_image.buffer())
+    {
+        // The cursor image is backed by a hardware buffer that cannot be CPU-mapped.
+        // Use it directly as the renderable buffer.
+        buffer = std::move(hw_buffer);
+    }
+    else
+    {
+        buffer = mrs::alloc_buffer_with_content(
+            *allocator,
+            static_cast<unsigned char const*>(cursor_image.as_argb_8888()),
+            cursor_image.size(),
+            geom::Stride{
+                cursor_image.size().width.as_uint32_t() * MIR_BYTES_PER_PIXEL(mir_pixel_format_argb_8888)},
+            mir_pixel_format_argb_8888);
+    }
 
     auto new_renderable = std::make_shared<detail::CursorRenderable>(
         std::move(buffer),

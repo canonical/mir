@@ -51,9 +51,23 @@ namespace
 class BufferCursorImage : public mg::CursorImage
 {
 public:
-    BufferCursorImage(std::shared_ptr<mg::Buffer> buffer, geom::Displacement const& hotspot)
-        : BufferCursorImage(buffer->map_readable(), hotspot)
+    BufferCursorImage(std::shared_ptr<mg::Buffer> buf, geom::Displacement const& hotspot)
+        : hotspot_{hotspot}
     {
+        try
+        {
+            auto mapping = buf->map_readable();
+            size_ = mapping->size();
+            data = std::make_unique<std::byte[]>(mapping->len());
+            ::memcpy(data.get(), mapping->data(), mapping->len());
+        }
+        catch (mg::UnmappableBuffer const&)
+        {
+            // Buffer doesn't support CPU access (e.g. a hardware/EGL buffer).
+            // Store the buffer directly so it can be used as a renderable.
+            buffer_ = std::move(buf);
+            size_ = buffer_->size();
+        }
     }
 
     auto as_argb_8888() const -> void const* override
@@ -71,18 +85,16 @@ public:
         return hotspot_;
     }
 
-private:
-    BufferCursorImage(std::unique_ptr<mrs::Mapping<std::byte const>> mapping, geom::Displacement const& hotspot)
-        : size_{mapping->size()},
-          data{std::make_unique<std::byte[]>(mapping->len())},
-          hotspot_{hotspot}
+    auto buffer() const -> std::shared_ptr<mg::Buffer> override
     {
-        ::memcpy(data.get(), mapping->data(), mapping->len());
+        return buffer_;
     }
 
-    geom::Size const size_;
-    std::unique_ptr<std::byte[]> const data;
+private:
+    geom::Size size_;
+    std::unique_ptr<std::byte[]> data;
     geom::Displacement const hotspot_;
+    std::shared_ptr<mg::Buffer> buffer_;
 };
 
 static auto const button_mapping = {

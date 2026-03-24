@@ -41,7 +41,6 @@ namespace mi = mir::input;
 namespace mf = mir::frontend;
 namespace mw = mir::wayland;
 namespace geom = mir::geometry;
-namespace mrs = mir::renderer::software;
 
 class ms::BasicSurface::DisplayConfigurationEarlyListener :  public mg::NullDisplayConfigurationObserver
 {
@@ -644,21 +643,33 @@ namespace
 struct CursorImageFromBuffer : public mg::CursorImage
 {
     CursorImageFromBuffer(
-        std::shared_ptr<mg::Buffer> buffer,
+        std::shared_ptr<mg::Buffer> buf,
         geom::Displacement const& hotspot)
-        : buffer{std::move(buffer)},
-          mapping{this->buffer->map_readable()},
-          hotspot_(hotspot)
+        : hotspot_(hotspot)
     {
+        try
+        {
+            auto m = buf->map_readable();
+            size_ = m->size();
+            data = std::make_unique<std::byte[]>(m->len());
+            ::memcpy(data.get(), m->data(), m->len());
+        }
+        catch (mg::UnmappableBuffer const&)
+        {
+            // Buffer doesn't support CPU access (e.g. a hardware/EGL buffer).
+            // Store the buffer directly so it can be used as a renderable.
+            buffer_ = std::move(buf);
+            size_ = buffer_->size();
+        }
     }
     void const* as_argb_8888() const
     {
-        return mapping->data();
+        return data.get();
     }
 
     geom::Size size() const
     {
-        return mapping->size();
+        return size_;
     }
 
     geom::Displacement hotspot() const
@@ -666,9 +677,16 @@ struct CursorImageFromBuffer : public mg::CursorImage
         return hotspot_;
     }
 
-    std::shared_ptr<mg::Buffer> const buffer;
-    std::unique_ptr<mrs::Mapping<std::byte const>> mapping;
+    auto buffer() const -> std::shared_ptr<mg::Buffer> override
+    {
+        return buffer_;
+    }
+
+private:
+    geom::Size size_;
+    std::unique_ptr<std::byte[]> data;
     geom::Displacement const hotspot_;
+    std::shared_ptr<mg::Buffer> buffer_;
 };
 }
 

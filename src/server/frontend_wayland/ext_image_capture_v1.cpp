@@ -937,7 +937,12 @@ void mf::ExtImageCopyCaptureCursorSessionV1::ImageCopyBackend::begin_capture(
     {
         auto const dest_stride = mapping->stride();
         auto const cursor_data = static_cast<char const*>(cursor_image->as_argb_8888());
-        if (dest_stride == cursor_stride)
+        if (!cursor_data)
+        {
+            // Hardware buffer cursor - cannot CPU-map pixel data, send transparent cursor
+            memset(mapping->data(), 0, mapping->len());
+        }
+        else if (dest_stride == cursor_stride)
         {
             memcpy(mapping->data(), cursor_data, mapping->len());
         }
