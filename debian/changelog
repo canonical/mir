@@ -1,4 +1,4 @@
-mir (2.26.0~dev) UNRELEASED; urgency=medium
+mir (2.26.0~rc) UNRELEASED; urgency=medium
 
   * Begin development for 2.26.0 release
 
@@ -13,9 +13,9 @@ mir (2.26.0~dev) UNRELEASED; urgency=medium
       - mirplatformgraphics ABI unchanged at 23
       - mirinputplatform ABI unchanged at 10
 
- -- Michał Sawicz <michal.sawicz@canonical.com>  Thu, 11 Dec 2025 10:56:11 +0100
+ -- Mir CI Bot <mir-ci-bot@canonical.com>  Tue, 24 Mar 2026 12:36:21 +0000
 
-mir (2.25.0~dev) UNRELEASED; urgency=medium
+mir (2.25.0) noble; urgency=medium
 
     * New upstream release 2.25.0
 
