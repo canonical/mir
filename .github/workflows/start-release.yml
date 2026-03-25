@@ -187,10 +187,34 @@ jobs:
               title: `Release ${process.env.INPUTS_VERSION}`,
               head: process.env.RELEASE_BRANCH,
               base: 'main',
-              body: `Release branch for ${process.env.INPUTS_VERSION}.`,
+              body: '',
             });
 
             console.log(`::notice Opened pull request at ${pr.data.html_url}`);
+
+            const fs = require('node:fs');
+            const releaseTestDocContent = fs.readFileSync('doc/sphinx/contributing/how-to/test-mir-for-a-release.md', 'utf8');
+            const markedSections = [...releaseTestDocContent.matchAll(/<!-- rc-testing:start -->\n([\s\S]*?)\n<!-- rc-testing:end -->/g)]
+              .map(match => match[1].trim())
+              .filter(section => section.length > 0);
+            if (!markedSections.length)
+            {
+              core.setFailed('Could not find rc-testing:start/end markers in test-mir-for-a-release.md');
+              return;
+            }
+
+            const commentBody = [
+              `## ${process.env.INPUTS_VERSION}~rc1`,
+              'Please test this release candidate following the [test-mir-for-a-release](https://canonical-mir.readthedocs.io/en/latest/contributing/how-to/test-mir-for-a-release.html) document.',
+              ...markedSections,
+            ].join('\n\n');
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.data.number,
+              body: commentBody,
+            });
 
   start-next:
     if: github.ref == 'refs/heads/main' && inputs.sha == ''
