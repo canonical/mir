@@ -19,6 +19,14 @@ jobs:
       contents: write
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.release_branch }}
+          token: ${{ secrets.MIR_BOT_PAT }}
+          persist-credentials: true
+
       - name: Import GPG key
         id: gpg
         uses: crazy-max/ghaction-import-gpg@2dc316deee8e90f13e1a351ab510b4d5bc0c82cd # v7.0.0
@@ -27,14 +35,7 @@ jobs:
           passphrase: ${{ secrets.MIR_BOT_GPG_PASSPHRASE }}
           git_user_signingkey: true
           git_commit_gpgsign: true
-
-      - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          fetch-depth: 0
-          ref: ${{ inputs.release_branch }}
-          token: ${{ secrets.MIR_BOT_PAT }}
-          persist-credentials: true
+          git_tag_gpgsign: true
 
       - name: Determine version
         id: version
@@ -170,18 +171,22 @@ jobs:
           ' rpm/mir.spec
 
       - name: Commit and push changelog
+        id: release
         env:
           VERSION: ${{ steps.version.outputs.version }}
           INPUTS_RELEASE_BRANCH: ${{ inputs.release_branch }}
         run: |
           git add debian/changelog rpm/mir.spec
           git commit --message "Update changelogs for ${VERSION}"
-          git push origin "${INPUTS_RELEASE_BRANCH}"
+          git tag --annotate "v${VERSION}" --message "Release ${VERSION}"
+          echo "sha=$(git rev-parse --verify HEAD)" | tee --append "$GITHUB_OUTPUT"
+          git push --tags origin "${INPUTS_RELEASE_BRANCH}"
 
       - name: Finalize GitHub release
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         env:
           VERSION: ${{ steps.version.outputs.version }}
+          SHA: ${{ steps.release.outputs.sha }}
         with:
           script: |
             const tag = `v${process.env.VERSION}`;
@@ -204,12 +209,13 @@ jobs:
               process.exit(1);
             }
 
-            await github.rest.repos.updateRelease({
+            const updatedRelease = await github.rest.repos.updateRelease({
               owner: context.repo.owner,
               repo: context.repo.repo,
               release_id: release.id,
+              target_commitish: process.env.SHA,
               body: releaseNotes,
-              draft: true, // Keep as draft to allow manual review, for now
+              draft: false,
               prerelease: false
             });
-            console.log(`:info: Updated release ${release.html_url}`);
+            console.log(`:info: Updated release ${updatedRelease.data.html_url}`);
