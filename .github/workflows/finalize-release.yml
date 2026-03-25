@@ -55,15 +55,9 @@ jobs:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
           # Extract the section for this version from release-notes.md
-          awk -v version="${VERSION}" '
-            /^## Mir / {
-              if (in_section) exit
-              if ($0 ~ version) {
-                in_section = 1
-                next
-              }
-            }
+          awk -v version_pat="## Mir ${VERSION}" '
             in_section && /^## Mir / { exit }
+            !in_section && $0 ~ version_pat { in_section = 1; next }
             in_section { print }
           ' doc/sphinx/release-notes.md > /tmp/release-notes-section.md
 
@@ -81,7 +75,7 @@ jobs:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
           sudo apt-get update
-          sudo apt-get install --yes devscripts
+          sudo apt-get install --yes --no-install-recommends devscripts
 
           # Ensure there's a matching "Begin Release Candidate" entry
           dch --newversion "${VERSION}~rc" ""
@@ -115,6 +109,7 @@ jobs:
               ""
 
           dch --release ""
+          git add debian/changelog
 
       - name: Update RPM spec
         env:
@@ -170,6 +165,7 @@ jobs:
             }
             { print }
           ' rpm/mir.spec
+          git add rpm/mir.spec
 
       - name: Commit and push changelog
         id: release
@@ -177,7 +173,6 @@ jobs:
           VERSION: ${{ steps.version.outputs.version }}
           INPUTS_RELEASE_BRANCH: ${{ inputs.release_branch }}
         run: |
-          git add debian/changelog rpm/mir.spec
           git commit --message "Update changelogs for ${VERSION}"
           git tag --annotate "v${VERSION}" --message "Release ${VERSION}"
           echo "sha=$(git rev-parse --verify HEAD)" | tee --append "$GITHUB_OUTPUT"
