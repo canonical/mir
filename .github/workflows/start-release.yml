@@ -71,13 +71,6 @@ jobs:
           sed --in-place -E "s/(VERSION\s+)[0-9]+\.[0-9]+\.[0-9]+/\1${INPUTS_VERSION}/" CMakeLists.txt
           git add CMakeLists.txt
 
-      - name: Find previous release tag
-        id: previous_tag
-        run: |
-          # Get the most recent tag excluding -rc and -dev tags
-          PREVIOUS_TAG=$(git describe --abbrev=0 --exclude="*-rc" --exclude="*-dev" "${INPUTS_SHA}" 2>/dev/null || echo "")
-          echo "tag=$PREVIOUS_TAG" | tee --append "$GITHUB_OUTPUT"
-
       - name: Import GPG key
         id: gpg
         uses: crazy-max/ghaction-import-gpg@2dc316deee8e90f13e1a351ab510b4d5bc0c82cd # v7.0.0
@@ -87,6 +80,62 @@ jobs:
           git_user_signingkey: true
           git_commit_gpgsign: true
           git_tag_gpgsign: true
+
+      - name: Update release notes version
+        run: |
+          sed --in-place -E "s/(^## Mir ${INPUTS_VERSION}).*/\1~rc/" doc/sphinx/release-notes.md
+          git add doc/sphinx/release-notes.md
+
+      - name: Add a Debian changelog entry
+        env:
+          DEBFULLNAME: ${{ steps.gpg.outputs.name }}
+          DEBEMAIL: ${{ steps.gpg.outputs.email }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends devscripts
+
+          debchange --newversion "${INPUTS_VERSION}~rc" "Begin Release Candidate for ${INPUTS_VERSION} release"
+          git add debian/changelog
+
+      - name: Update the RPM changelog
+        env:
+          DEBFULLNAME: ${{ steps.gpg.outputs.name }}
+          DEBEMAIL: ${{ steps.gpg.outputs.email }}
+        run: |
+          awk --include=inplace \
+            -v version_pat="${INPUTS_VERSION}~dev-1$" \
+            -v begin_pat="Begin development for ${INPUTS_VERSION}" \
+            -v version="${INPUTS_VERSION}" \
+            -v name="${DEBFULLNAME}" \
+            -v email="${DEBEMAIL}" \
+            -v date="$(date "+%a %b %d %Y")" '
+            /^Version:/ {
+              sub(/[^[:space:]]+$/, version "~rc")
+              print
+              next
+            }
+            /^%changelog/ {
+              print
+              print "* " date " " name " <" email "> - " version "~rc-1"
+              print "- Begin Release Candidate for " version " release"
+              next
+            }
+            $0~version_pat {
+              next
+            }
+            $0~begin_pat {
+              next
+            }
+            { print }
+          ' rpm/mir.spec
+          git add rpm/mir.spec
+
+      - name: Find previous release tag
+        id: previous_tag
+        run: |
+          # Get the most recent tag excluding -rc and -dev tags
+          PREVIOUS_TAG=$(git describe --abbrev=0 --exclude="*-rc" --exclude="*-dev" "${INPUTS_SHA}" 2>/dev/null || echo "")
+          echo "tag=$PREVIOUS_TAG" | tee --append "$GITHUB_OUTPUT"
 
       - name: Tag and push the Release Candidate
         env:
@@ -156,6 +205,53 @@ jobs:
           git_commit_gpgsign: true
           git_tag_gpgsign: true
 
+      - name: Insert next release notes section
+        run: |
+          awk --include=inplace \
+            -v current_pat="^## Mir ${INPUTS_VERSION}~dev$" \
+            -v current_version="${INPUTS_VERSION}~dev" \
+            -v next_version="${NEXT_VERSION}~dev" '
+
+            # Find the current release section
+            !in_target && $0 ~ current_pat {
+              in_target = 1
+              current_buffer = $0 ORS
+              next
+            }
+
+            in_target {
+              # At next release section, print the collected buffers
+              if ($0 ~ /^## Mir /) {
+                print "## Mir " next_version
+                print ""
+                print "- New upstream release " next_version
+                print ""
+                print "  - ABI summary:"
+                print ""
+                printf "%s", abi_buffer
+                print ""
+                printf "%s", current_buffer
+
+                print
+                in_target = 0
+                next
+              }
+
+              # Collect the current release section
+              current_buffer = current_buffer $0 ORS
+
+              # And the rewritten ABI summary
+              if ($0 ~ /unchanged at|bumped to/)
+              {
+                gsub(/bumped to/, "unchanged at", $0)
+                abi_buffer = abi_buffer $0 ORS
+              }
+              next
+            }
+            { print }
+          ' doc/sphinx/release-notes.md
+          git add doc/sphinx/release-notes.md
+
       - name: Add a Debian changelog entry
         env:
           DEBFULLNAME: ${{ steps.gpg.outputs.name }}
@@ -165,27 +261,6 @@ jobs:
           sudo apt-get install --yes --no-install-recommends devscripts
 
           debchange --newversion "${NEXT_VERSION}~dev" ''
-
-          awk --include=inplace \
-            -v next_version="${NEXT_VERSION}" \
-            -v begin_pat="Begin development for ${INPUTS_VERSION}" '
-            $0~begin_pat {
-              print "  * Begin development for " next_version " release"
-              in_release=1
-              next
-            }
-            in_release && /ABI summary/ {
-              abi_summary=1
-            }
-            abi_summary && /bumped to/ {
-              gsub(/bumped to/, "unchanged at")
-            }
-            abi_summary && /^$/ {
-              in_release=0
-              abi_summary=0
-            }
-            { print }
-          ' debian/changelog
           git add debian/changelog
 
       - name: Update the RPM changelog
