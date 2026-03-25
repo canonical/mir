@@ -173,7 +173,9 @@ jobs:
               prerelease: false
             });
 
-            console.log(`::notice Created draft release at ${release.data.html_url}`);
+            await core.summary
+              .addRaw(`- Draft release: [Mir v${process.env.INPUTS_VERSION}](${release.data.html_url})`, true)
+              .write();
 
       - name: Open pull request into main
         if: github.ref == env.MAIN_REF
@@ -191,7 +193,9 @@ jobs:
               body: '',
             });
 
-            console.log(`::notice Opened pull request at ${pr.data.html_url}`);
+            await core.summary
+              .addRaw(`- Release PR: [#${pr.data.number}](${pr.data.html_url})`, true)
+              .write();
 
             const fs = require('node:fs');
             const releaseTestDocContent = fs.readFileSync('doc/sphinx/contributing/how-to/test-mir-for-a-release.md', 'utf8');
@@ -352,6 +356,7 @@ jobs:
           git commit --message "Begin development for ${NEXT_VERSION} release"
           git tag --annotate "v${NEXT_VERSION}-dev" --message "Begin development for ${NEXT_VERSION} release"
           git push --tags origin "HEAD:${MAIN_REF}"
+          echo "- Development commit: [$(git rev-parse --short HEAD)](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/commit/$(git rev-parse HEAD))" >> "$GITHUB_STEP_SUMMARY"
 
       - if: ${{ failure() && runner.debug }}
         name: Setup upterm session

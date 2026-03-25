@@ -13,6 +13,7 @@ permissions:
 
 jobs:
   finalize:
+    name: Finalize Release on ${{ inputs.release_branch }}
     runs-on: ubuntu-latest
 
     permissions:
@@ -218,4 +219,6 @@ jobs:
               draft: false,
               prerelease: false
             });
-            console.log(`:info: Updated release ${updatedRelease.data.html_url}`);
+            await core.summary
+              .addRaw(`- Release: [Mir v${process.env.VERSION}](${updatedRelease.data.html_url})`, true)
+              .write();
