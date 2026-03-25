@@ -36,6 +36,7 @@ jobs:
 
     - name: Install dependencies
       run: |
+        sudo apt-get update
         sudo apt-get install --no-install-recommends --yes \
           debhelper \
           devscripts \
