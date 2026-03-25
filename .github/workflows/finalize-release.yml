@@ -64,6 +64,13 @@ jobs:
             in_section { print }
           ' doc/sphinx/release-notes.md > /tmp/release-notes-section.md
 
+      - name: Update release notes version
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          sed --in-place -E "s/(^## Mir ${VERSION}).*/\1/" doc/sphinx/release-notes.md
+          git add doc/sphinx/release-notes.md
+
       - name: Update Debian changelog
         env:
           DEBFULLNAME: ${{ steps.gpg.outputs.name }}
@@ -73,13 +80,12 @@ jobs:
           sudo apt-get update
           sudo apt-get install --yes devscripts
 
-          # Ensure there's a matching "Begin development" entry
-          dch --newversion "${VERSION}~dev" \
-            "Begin development for ${VERSION} release"
+          # Ensure there's a matching "Begin Release Candidate" entry
+          dch --newversion "${VERSION}~rc" ""
 
           # Remove "Begin" lines and append release notes
           awk --include=inplace \
-            --assign version_pat="^mir \\(${VERSION}~dev\\)" '
+            --assign version_pat="^mir \\\(${VERSION}~rc\\\)" '
             $0~version_pat {
               in_target = 1
               print
@@ -95,9 +101,8 @@ jobs:
               }
               close("/tmp/release-notes-section.md")
               in_target = 0
-              print ""
             }
-            in_target && (/^$/ || /Begin development/) { next }
+            in_target && (/^$/ || /Begin /) { next }
             { print }
           ' debian/changelog
 
