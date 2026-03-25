@@ -71,7 +71,7 @@ public:
         return hotspot_;
     }
 
-    auto buffer() const -> std::shared_ptr<mg::Buffer> override
+    auto buffer() const -> std::shared_ptr<mg::Buffer>
     {
         return buffer_;
     }

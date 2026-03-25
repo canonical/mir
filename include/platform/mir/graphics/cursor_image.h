@@ -49,7 +49,7 @@ public:
     /// buffer should be used for rendering directly.
     ///
     /// \returns The underlying buffer, or nullptr if the cursor uses CPU pixel data.
-    virtual auto buffer() const -> std::shared_ptr<Buffer> { return nullptr; }
+    auto buffer() const -> std::shared_ptr<Buffer> { return nullptr; }
 
 protected:
     CursorImage() = default;

@@ -28,13 +28,22 @@ mir::graphics::ARGB8Buffer mir::graphics::scale_cursor_image(
     mir::graphics::CursorImage const& cursor_image, float new_scale)
 {
     auto const [width, height] = cursor_image.size();
+    auto const pixel_data = cursor_image.as_argb_8888();
+
+    if (!pixel_data)
+    {
+        // Hardware-backed cursor image with no CPU pixel data available
+        // (e.g. an EGL buffer). Return a transparent placeholder.
+        auto const pixel_count = static_cast<size_t>(width.as_value()) * height.as_value();
+        return {std::make_unique<uint32_t[]>(pixel_count), {width, height}};
+    }
 
     // Special case: no resizing. Just copy the data.
     if(new_scale == 1.0f)
     {
         auto const pixel_count = width.as_value() * height.as_value();
         auto buf = std::make_unique<uint32_t[]>(pixel_count);
-        std::memcpy(buf.get(), cursor_image.as_argb_8888(), pixel_count * MIR_BYTES_PER_PIXEL(mir_pixel_format_argb_8888));
+        std::memcpy(buf.get(), pixel_data, pixel_count * MIR_BYTES_PER_PIXEL(mir_pixel_format_argb_8888));
         return {std::move(buf), {width, height}};
     }
 
@@ -45,7 +54,7 @@ mir::graphics::ARGB8Buffer mir::graphics::scale_cursor_image(
             PIXMAN_a8r8g8b8,
             width.as_int(),
             height.as_int(),
-            (uint32_t*)(cursor_image.as_argb_8888()),
+            (uint32_t*)(pixel_data),
             width.as_int() * MIR_BYTES_PER_PIXEL(mir_pixel_format_argb_8888)),
         &pixman_image_unref);
 
