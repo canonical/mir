@@ -76,16 +76,6 @@ jobs:
           sed --in-place -E "s/(VERSION\s+)[0-9]+\.[0-9]+\.[0-9]+/\1${INPUTS_VERSION}/" CMakeLists.txt
           git add CMakeLists.txt
 
-      - name: Commit Release Candidate
-        run: |
-          if [ -n "$(git status --porcelain)" ]; then
-            git commit -m "Begin Release Candidate for ${INPUTS_VERSION} release"
-          fi
-
-      - name: Create release tag
-        run: |
-          git tag --annotate "v${INPUTS_VERSION}-rc" --message "Release candidate ${INPUTS_VERSION}"
-
       - name: Find previous release tag
         id: previous_tag
         run: |
@@ -93,11 +83,13 @@ jobs:
           PREVIOUS_TAG=$(git describe --abbrev=0 --exclude="*-rc" --exclude="*-dev" "${INPUTS_SHA}" 2>/dev/null || echo "")
           echo "tag=$PREVIOUS_TAG" | tee --append "$GITHUB_OUTPUT"
 
-      - name: Push to the release branch
+      - name: Tag and push the Release Candidate
         env:
           RELEASE_BRANCH: ${{ steps.version.outputs.release_branch }}
         run: |
-          git push origin "HEAD:${RELEASE_BRANCH}"
+          git commit --message "Begin Release Candidate for ${INPUTS_VERSION} release"
+          git tag --annotate "v${INPUTS_VERSION}-rc" --message "Begin Release Candidate for ${INPUTS_VERSION} release"
+          git push --tags origin "HEAD:refs/heads/${RELEASE_BRANCH}"
 
       - name: Create draft GitHub release
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
@@ -126,10 +118,6 @@ jobs:
             });
 
             console.log(`:notice: Created draft release ${release.data.html_url}`);
-
-      - name: Push the Release Candidate tag
-        run: |
-          git push origin "v${INPUTS_VERSION}-rc"
 
       - name: Start development of next version
         if: github.ref == env.MAIN_REF && inputs.sha == ''
