@@ -20,6 +20,9 @@
 #include <miral/live_config.h>
 
 #include <filesystem>
+#include <istream>
+#include <memory>
+#include <utility>
 
 namespace miral::live_config
 {
@@ -51,6 +54,9 @@ public:
     void on_done(HandleDone handler) override;
 
     void load_file(std::istream& istream, std::filesystem::path const& path);
+
+    /// \remark Since MirAL 5.7
+    void load_files(std::span<std::pair<std::unique_ptr<std::istream>, std::filesystem::path>> config_streams);
 
 private:
     class Self;

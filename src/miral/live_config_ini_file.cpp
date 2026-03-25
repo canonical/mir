@@ -18,11 +18,15 @@
 
 #include <mir/log.h>
 
+#include <algorithm>
 #include <charconv>
 #include <format>
 #include <list>
 #include <map>
 #include <mutex>
+#include <ranges>
+#include <vector>
+#include <iterator>
 
 namespace mlc = miral::live_config;
 
@@ -35,18 +39,30 @@ public:
     void add_key(Key const& key, std::string_view description, std::optional<std::vector<std::string>> preset, HandleStrings handler);
 
     void load_file(std::istream& istream, std::filesystem::path const& path);
+    void load_files(std::span<std::pair<std::unique_ptr<std::istream>, std::filesystem::path>> config_streams);
     void on_done(HandleDone handler);
 
 private:
     Self(Self const&) = delete;
     Self& operator=(Self const&) = delete;
 
+    void clear_values();
+    void parse_one_file(std::istream& istream, std::filesystem::path const& path);
+    void call_attribute_handlers() const;
+    void call_done_handlers(std::string const& paths) const;
+
+    struct ScalarValue
+    {
+        std::string string_value;
+        std::filesystem::path path;
+    };
+
     struct AttributeDetails
     {
         HandleString const handler;
         std::string const description;
         std::optional<std::string> const preset;
-        std::optional<std::string> value;
+        std::optional<ScalarValue> value;
     };
 
     struct ArrayAttributeDetails
@@ -55,6 +71,8 @@ private:
         std::string const description;
         std::optional<std::vector<std::string>> const preset;
         std::vector<std::string> parsed_values;
+        std::vector<std::filesystem::path> modification_locations;
+        bool explicitly_cleared = false;
     };
 
     std::mutex mutex;
@@ -86,6 +104,132 @@ void miral::live_config::IniFile::Self::on_done(HandleDone handler)
     done_handlers.emplace_back(std::move(handler));
 }
 
+void mlc::IniFile::Self::clear_values()
+{
+    for (auto& [_, details] : attribute_handlers)
+        details.value = std::nullopt;
+
+    for (auto& [_, details] : array_attribute_handlers)
+    {
+        details.parsed_values.resize(0);
+        details.modification_locations.resize(0);
+        details.explicitly_cleared = false;
+    }
+}
+
+void mlc::IniFile::Self::parse_one_file(std::istream& istream, std::filesystem::path const& path)
+{
+    for (std::string line; std::getline(istream, line);)
+    {
+        if (!line.starts_with('#') && line.contains("="))
+            try
+            {
+                auto const eq = line.find_first_of("=");
+                auto const key = Key{line.substr(0, eq)};
+                auto const value = line.substr(eq + 1);
+
+                if (auto const details = attribute_handlers.find(key); details != attribute_handlers.end())
+                {
+                    details->second.value = {value, path};
+                }
+                else if (auto const details = array_attribute_handlers.find(key);
+                         details != array_attribute_handlers.end())
+                {
+                    auto& parsed_values = details->second.parsed_values;
+                    auto& modification_locations = details->second.modification_locations;
+
+                    if (!std::ranges::contains(modification_locations, path))
+                        modification_locations.push_back(path);
+
+                    if (value.empty())
+                    {
+                        parsed_values.resize(0);
+                        details->second.explicitly_cleared = true;
+                    }
+                    else
+                        parsed_values.push_back(value);
+                }
+            }
+            catch (std::exception const& e)
+            {
+                mir::log_warning("Error processing '%s': %s", path.c_str(), e.what());
+            }
+    }
+}
+
+void mlc::IniFile::Self::call_attribute_handlers() const
+{
+    for (auto const& [key, details] : attribute_handlers)
+    try
+    {
+        auto const value = [&details] -> std::optional<std::string_view>
+        {
+            if (details.value)
+                return details.value->string_value;
+            else if (details.preset)
+                // string -> string_view -> optional<string_view>
+                return *details.preset;
+
+            return std::nullopt;
+        }();
+
+        details.handler(key, value);
+    }
+    catch (const std::exception& e)
+    {
+        mir::log_warning(
+            "Error processing scalar '%s' with value '%s' set in file '%s': %s",
+            key.to_string().c_str(),
+            details.value ? details.value->string_value.c_str() : "",
+            details.value ? details.value->path.c_str() : "",
+            e.what());
+    }
+
+    for (auto const& [key, details] : array_attribute_handlers)
+    try
+    {
+        // If the user didn't explicitly clear the array and didn't provide any
+        // values, then we use the preset values.
+        if (!details.explicitly_cleared && details.parsed_values.empty())
+            details.handler(key, details.preset);
+        else
+            details.handler(key, details.parsed_values);
+    }
+    catch (const std::exception& e)
+    {
+        // Unfortunately, the GCC version used in CI does not support std::ranges::to...
+        auto const array_values = details.parsed_values | std::views::join_with(',');
+        auto const array_values_str = std::string{array_values.begin(), array_values.end()};
+
+        std::string modification_locations_str;
+        std::ranges::copy(
+            details.modification_locations |
+                std::views::transform([](auto const& p) { return p.string(); }) |
+                std::views::join_with(','),
+            std::back_inserter(modification_locations_str));
+
+        mir::log_warning(
+            "Error processing array '%s' with values [%s] modified in files [%s]: %s",
+            key.to_string().c_str(),
+            array_values_str.c_str(),
+            modification_locations_str.c_str(),
+            e.what());
+    }
+}
+
+void mlc::IniFile::Self::call_done_handlers(std::string const& paths) const
+{
+    for (auto const& h : done_handlers)
+    try
+    {
+        h();
+    }
+    catch (const std::exception& e)
+    {
+        mir::log_warning("Error processing file(s) [%s]: %s",  paths.c_str(), e.what());
+    }
+}
+
 void mlc::IniFile::Self::add_key(Key const& key, std::string_view description,
     std::optional<std::vector<std::string>> preset, HandleStrings handler)
 {
@@ -97,76 +241,43 @@ void mlc::IniFile::Self::add_key(Key const& key, std::string_view description,
         mir::log_warning("Config attribute handler for '%s' overwritten", key.to_string().c_str());
     }
 
-    array_attribute_handlers.emplace(key, ArrayAttributeDetails{handler, std::string{description}, preset, std::vector<std::string>{}});
+    array_attribute_handlers.emplace(
+        key,
+        ArrayAttributeDetails{
+            handler,
+            std::string{description},
+            preset,
+            std::vector<std::string>{},
+            std::vector<std::filesystem::path>{}});
 }
 
 void mlc::IniFile::Self::load_file(std::istream& istream, std::filesystem::path const& path)
 {
     std::lock_guard lock{mutex};
+    clear_values();
+    parse_one_file(istream, path);
+    call_attribute_handlers();
+    call_done_handlers(path.string());
+}
 
-    for (auto& [key, details] : attribute_handlers)
-    {
-        details.value = std::nullopt;
-    }
+void mlc::IniFile::Self::load_files(
+    std::span<std::pair<std::unique_ptr<std::istream>, std::filesystem::path>> config_streams)
+{
+    std::lock_guard lock{mutex};
+    clear_values();
 
-    for (auto& [key, details] : array_attribute_handlers)
-    {
-        details.parsed_values.resize(0);
-    }
+    for (auto const& [istream, path] : config_streams)
+        parse_one_file(*istream, path);
 
-    for (std::string line; std::getline(istream, line);)
-    {
-        if (!line.starts_with('#') && line.contains("="))
-        try
-        {
-            auto const eq = line.find_first_of("=");
-            auto const key = Key{line.substr(0, eq)};
-            auto const value = line.substr(eq+1);
+    call_attribute_handlers();
 
-            if (auto const details = attribute_handlers.find(key); details != attribute_handlers.end())
-            {
-                details->second.value = value;
-            }
-            else if (auto const details = array_attribute_handlers.find(key); details != array_attribute_handlers.end())
-            {
-                details->second.parsed_values.push_back(value);
-            }
-        }
-        catch (const std::exception& e)
-        {
-            mir::log_warning("Error processing '%s': %s", path.c_str(), e.what());
-        }
-    }
+    std::string paths_str;
+    std::ranges::copy(
+        config_streams | std::views::transform([](auto const& p) { return p.second.string(); }) |
+            std::views::join_with(','),
+        std::back_inserter(paths_str));
 
-    for (auto const& [key, details] : attribute_handlers)
-    try
-    {
-        details.handler(key, (details.value ? details.value : details.preset));
-    }
-    catch (const std::exception& e)
-    {
-        mir::log_warning("Error processing '%s': %s", path.c_str(), e.what());
-    }
-
-    for (auto const& [key, details] : array_attribute_handlers)
-    try
-    {
-        details.handler(key, (details.parsed_values.empty() ? details.preset : details.parsed_values));
-    }
-    catch (const std::exception& e)
-    {
-        mir::log_warning("Error processing '%s': %s", path.c_str(), e.what());
-    }
-
-    for (auto const& h : done_handlers)
-    try
-    {
-        h();
-    }
-    catch (const std::exception& e)
-    {
-        mir::log_warning("Error processing '%s': %s", path.c_str(), e.what());
-    }
+    call_done_handlers(paths_str);
 }
 
 namespace
@@ -386,4 +497,9 @@ void mlc::IniFile::on_done(HandleDone handler)
 void mlc::IniFile::load_file(std::istream& istream, std::filesystem::path const& path)
 {
     self->load_file(istream, path);
+}
+
+void mlc::IniFile::load_files(std::span<std::pair<std::unique_ptr<std::istream>, std::filesystem::path>> config_streams)
+{
+    self->load_files(config_streams);
 }
