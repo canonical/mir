@@ -38,6 +38,7 @@ jobs:
         with:
           fetch-depth: 0
           ref: ${{ env.INPUTS_SHA }}
+          token: ${{ secrets.MIR_BOT_PAT }}
           persist-credentials: true
 
       - name: Validate version and extract components
@@ -237,6 +238,7 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
+          token: ${{ secrets.MIR_BOT_PAT }}
           persist-credentials: true
 
       - name: Bump CMake version

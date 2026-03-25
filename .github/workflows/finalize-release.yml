@@ -33,6 +33,7 @@ jobs:
         with:
           fetch-depth: 0
           ref: ${{ inputs.release_branch }}
+          token: ${{ secrets.MIR_BOT_PAT }}
           persist-credentials: true
 
       - name: Determine version
