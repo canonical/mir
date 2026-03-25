@@ -20,11 +20,16 @@ env:
   MAIN_REF: refs/heads/main
 
 jobs:
-  release:
+  release-candidate:
+    name: Start Release Candidate for ${{ inputs.version }}
+
     runs-on: ubuntu-latest
 
     permissions:
       contents: write
+
+    outputs:
+      next_version: ${{ steps.version.outputs.next_version }}
 
     steps:
       - name: Checkout repository
@@ -33,16 +38,6 @@ jobs:
           fetch-depth: 0
           ref: ${{ env.INPUTS_SHA }}
           persist-credentials: true
-
-      - name: Import GPG key
-        id: gpg
-        uses: crazy-max/ghaction-import-gpg@2dc316deee8e90f13e1a351ab510b4d5bc0c82cd # v7.0.0
-        with:
-          gpg_private_key: ${{ secrets.MIR_BOT_GPG_PRIVATE_KEY }}
-          passphrase: ${{ secrets.MIR_BOT_GPG_PASSPHRASE }}
-          git_user_signingkey: true
-          git_commit_gpgsign: true
-          git_tag_gpgsign: true
 
       - name: Validate version and extract components
         id: version
@@ -83,6 +78,16 @@ jobs:
           PREVIOUS_TAG=$(git describe --abbrev=0 --exclude="*-rc" --exclude="*-dev" "${INPUTS_SHA}" 2>/dev/null || echo "")
           echo "tag=$PREVIOUS_TAG" | tee --append "$GITHUB_OUTPUT"
 
+      - name: Import GPG key
+        id: gpg
+        uses: crazy-max/ghaction-import-gpg@2dc316deee8e90f13e1a351ab510b4d5bc0c82cd # v7.0.0
+        with:
+          gpg_private_key: ${{ secrets.MIR_BOT_GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.MIR_BOT_GPG_PASSPHRASE }}
+          git_user_signingkey: true
+          git_commit_gpgsign: true
+          git_tag_gpgsign: true
+
       - name: Tag and push the Release Candidate
         env:
           RELEASE_BRANCH: ${{ steps.version.outputs.release_branch }}
@@ -119,19 +124,46 @@ jobs:
 
             console.log(`:notice: Created draft release ${release.data.html_url}`);
 
-      - name: Start development of next version
-        if: github.ref == env.MAIN_REF && inputs.sha == ''
+  start-next:
+    if: github.ref == 'refs/heads/main' && inputs.sha == ''
+    needs: [release-candidate]
+    name: Start development for ${{ needs.release-candidate.outputs.next_version }}
+
+    runs-on: ubuntu-latest
+
+    env:
+      NEXT_VERSION: ${{ needs.release-candidate.outputs.next_version }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Bump CMake version
+        run: |
+          sed --in-place -E "s/(VERSION\s+)[0-9]+\.[0-9]+\.[0-9]+/\1${NEXT_VERSION}/" CMakeLists.txt
+          git add CMakeLists.txt
+
+      - name: Import GPG key
+        id: gpg
+        uses: crazy-max/ghaction-import-gpg@2dc316deee8e90f13e1a351ab510b4d5bc0c82cd # v7.0.0
+        with:
+          gpg_private_key: ${{ secrets.MIR_BOT_GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.MIR_BOT_GPG_PASSPHRASE }}
+          git_user_signingkey: true
+          git_commit_gpgsign: true
+          git_tag_gpgsign: true
+
+      - name: Add a Debian changelog entry
         env:
           DEBFULLNAME: ${{ steps.gpg.outputs.name }}
           DEBEMAIL: ${{ steps.gpg.outputs.email }}
-          NEXT_VERSION: ${{ steps.version.outputs.next_version }}
         run: |
-          # Bump CMake version
-          sed --in-place -E "s/(VERSION\s+)[0-9]+\.[0-9]+\.[0-9]+/\1${NEXT_VERSION}/" CMakeLists.txt
-
-          # Add a Debian changelog entry
           sudo apt-get update
           sudo apt-get install --yes --no-install-recommends devscripts
+
           debchange --newversion "${NEXT_VERSION}~dev" ''
 
           awk --include=inplace \
@@ -154,8 +186,13 @@ jobs:
             }
             { print }
           ' debian/changelog
+          git add debian/changelog
 
-          # Update the RPM changelog
+      - name: Update the RPM changelog
+        env:
+          DEBFULLNAME: ${{ steps.gpg.outputs.name }}
+          DEBEMAIL: ${{ steps.gpg.outputs.email }}
+        run: |
           awk --include=inplace \
             -v version_pat="${INPUTS_VERSION}~dev-1$" \
             -v begin_pat="Begin development for ${INPUTS_VERSION}" \
@@ -182,8 +219,10 @@ jobs:
             }
             { print }
           ' rpm/mir.spec
+          git add rpm/mir.spec
 
-          git add CMakeLists.txt debian/changelog rpm/mir.spec
+      - name: Commit and push next development version
+        run: |
           git commit --message "Begin development for ${NEXT_VERSION} release"
           git tag --annotate "v${NEXT_VERSION}-dev" --message "Begin development for ${NEXT_VERSION} release"
           git push --tags origin "HEAD:${MAIN_REF}"
