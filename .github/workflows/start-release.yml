@@ -216,6 +216,12 @@ jobs:
               body: commentBody,
             });
 
+      - if: ${{ failure() && runner.debug }}
+        name: Setup upterm session
+        uses: mxschmitt/action-tmate@c0afd6f790e3a5564914980036ebf83216678101 # v3.23
+        with:
+          limit-access-to-actor: true
+
   start-next:
     if: github.ref == 'refs/heads/main' && inputs.sha == ''
     needs: [release-candidate]
@@ -344,3 +350,9 @@ jobs:
           git commit --message "Begin development for ${NEXT_VERSION} release"
           git tag --annotate "v${NEXT_VERSION}-dev" --message "Begin development for ${NEXT_VERSION} release"
           git push --tags origin "HEAD:${MAIN_REF}"
+
+      - if: ${{ failure() && runner.debug }}
+        name: Setup upterm session
+        uses: mxschmitt/action-tmate@c0afd6f790e3a5564914980036ebf83216678101 # v3.23
+        with:
+          limit-access-to-actor: true
