@@ -649,17 +649,17 @@ struct CursorImageFromBuffer : public mg::CursorImage
     {
     }
 
-    void const* as_argb_8888() const
+    void const* as_argb_8888() const override
     {
         return data.get();
     }
 
-    geom::Size size() const
+    geom::Size size() const override
     {
         return size_;
     }
 
-    geom::Displacement hotspot() const
+    geom::Displacement hotspot() const override
     {
         return hotspot_;
     }
