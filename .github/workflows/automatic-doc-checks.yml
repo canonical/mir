@@ -2,6 +2,9 @@ name: Main Documentation Checks
 
 on:
   pull_request:
+    paths:
+    - '.github/workflows/automatic-doc-checks.yaml'
+    - 'doc/sphinx/**'
   merge_group:
     types: [checks_requested]
 
