@@ -197,29 +197,26 @@ auto collect_all_file_streams(path const& config_file) -> std::vector<std::pair<
     return config_streams;
 }
 
-auto get_real_override_directory(path const& override_directory) -> std::optional<path>
-{
-    if (!exists(override_directory))
-        return std::nullopt;
-
-    if (!is_directory(override_directory))
-        return std::nullopt;
-
-    return override_directory;
-}
-
 auto watch_override_directory(mir::Fd const& inotify_fd, std::optional<path> const& base_config_directory, std::string const& override_directory) -> std::optional<int>
 {
     if (!base_config_directory)
         return std::nullopt;
 
-    if (auto const real_override_directory = get_real_override_directory(*base_config_directory / override_directory))
-        return watch_descriptor(inotify_fd, real_override_directory);
+    auto const override_directory_path = base_config_directory.value() / override_directory;
+    if (!exists(override_directory_path))
+    {
+        mir::log_warning("Override directory '%s' is either does not exist, ignoring", override_directory.c_str());
+        return std::nullopt;
+    }
 
-    mir::log_warning(
-        "Override directory '%s' is either does not exist or is not a directory, ignoring",
-        override_directory.c_str());
-    return std::nullopt;
+    if (!is_directory(override_directory_path))
+    {
+        mir::log_warning(
+            "Override directory path '%s' does not point to a directory, ignoring", override_directory.c_str());
+        return std::nullopt;
+    }
+
+    return watch_descriptor(inotify_fd, override_directory_path);
 }
 }
 
