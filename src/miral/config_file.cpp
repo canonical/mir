@@ -368,6 +368,7 @@ void Watcher::handler(int) const
 
 // Let's start simple
 //  Watch base config + override directory assuming nothing is a symlink
+//    Need to watch the base config parent directory, and the override directory.
 OverrideWatcher::OverrideWatcher(path base_config, OverrideLoader load_config)
     : inotify_fd{inotify_init1(IN_CLOEXEC)},
       override_loader{load_config},
@@ -420,24 +421,25 @@ void OverrideWatcher::handler(int)
         auto const create = event.mask & IN_CREATE;
         auto const remove = event.mask & (IN_DELETE | IN_MOVED_FROM);
 
-        auto const base_config_changed = write_or_move && base_config_directory_watch_descriptor.has_value()
-                                      && event.wd == base_config_directory_watch_descriptor.value()
-                                      && event.name == base_config_filename;
-        auto const override_file_changed = (write_or_move || create) && override_directory_watch_descriptor.has_value()
-                                        && event.wd == override_directory_watch_descriptor.value()
-                                        && std::string_view{event.name}.ends_with(".conf");
-        auto const override_directory_created = create && base_config_directory_watch_descriptor.has_value()
-                                               && event.wd == base_config_directory_watch_descriptor.value()
-                                               && event.name == override_directory;
-        auto const override_directory_deleted = remove && base_config_directory_watch_descriptor.has_value()
-                                               && event.wd == base_config_directory_watch_descriptor.value()
-                                               && event.name == override_directory;
-        auto const override_file_deleted = remove && override_directory_watch_descriptor.has_value()
-                                          && event.wd == override_directory_watch_descriptor.value()
-                                          && std::string_view{event.name}.ends_with(".conf");
+        auto const is_base_config_directory_event =
+            base_config_directory_watch_descriptor.transform([&event](auto base_wd) { return event.wd == base_wd; })
+                .value_or(false);
 
-        if (base_config_changed || override_file_changed || override_directory_created || override_directory_deleted
-            || override_file_deleted)
+        auto const is_override_directory_event =
+            override_directory_watch_descriptor
+                .transform([&event](auto override_wd) { return event.wd == override_wd; })
+                .value_or(false);
+
+        auto const base_config_changed =
+            write_or_move && is_base_config_directory_event && event.name == base_config_filename;
+        auto const override_directory_created_or_removed =
+            (create || remove) && is_base_config_directory_event && event.name == override_directory;
+
+        auto const is_conf_file = std::string_view{event.name}.ends_with(".conf");
+        auto const override_file_created_or_removed = (create || remove) && is_override_directory_event && is_conf_file;
+        auto const override_file_changed = (write_or_move) && is_override_directory_event && is_conf_file;
+
+        if (base_config_changed || override_file_changed || override_directory_created_or_removed)
             try
             {
                 auto const base_config = base_config_directory.value() / base_config_filename;
@@ -445,8 +447,10 @@ void OverrideWatcher::handler(int)
 
                 if (base_config_exists)
                 {
-                    // Clear and re-establish override directory watch
-                    if(override_directory_watch_descriptor)
+                    // Clear and re-establish override directory watch to
+                    // account for override files/directory being added/removed
+                    if (override_directory_created_or_removed
+                        || (override_directory_watch_descriptor && override_file_created_or_removed))
                     {
                         if (inotify_rm_watch(inotify_fd, *override_directory_watch_descriptor) != 0)
                             mir::log_warning(
@@ -469,6 +473,7 @@ void OverrideWatcher::handler(int)
                 }
                 else
                 {
+                    // TODO this needs updating
                     mir::log_debug("Failed to open %s", base_config.c_str());
                 }
             }
