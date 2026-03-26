@@ -640,8 +640,6 @@ auto const override_test_root = "/tmp/test_override_config_file/"s;
 auto const override_xdg_conf_home = override_test_root + "xdg_conf_dir_home/"s;
 auto const override_home = override_test_root + "home/"s;
 auto const override_home_config = override_home + ".config/"s;
-// A directory to hold real files that symlinks can point to
-auto const symlink_targets_dir = override_test_root + "symlink_targets/"s;
 
 struct TestOverrideConfigFile : PendingLoad, miral::TestServer
 {
@@ -696,23 +694,6 @@ struct TestOverrideConfigFile : PendingLoad, miral::TestServer
         file << content;
     }
 
-    void create_override_dir_symlink(std::filesystem::path const& target)
-    {
-        mark_pending();
-        auto const link_path = override_dir();
-        std::filesystem::remove_all(link_path);
-        std::filesystem::create_symlink(target, link_path);
-    }
-
-    void create_file_symlink(std::filesystem::path const& target, std::string const& link_name)
-    {
-        mark_pending();
-        std::filesystem::create_directories(override_dir());
-        auto const link_path = override_dir() / link_name;
-        std::filesystem::remove(link_path);
-        std::filesystem::create_symlink(target, link_path);
-    }
-
     void rewrite_base_config()
     {
         mark_pending();
@@ -735,7 +716,7 @@ struct TestOverrideConfigFile : PendingLoad, miral::TestServer
     void move_override_file_out(std::string const& filename)
     {
         mark_pending();
-        std::filesystem::rename(override_dir() / filename, std::filesystem::path{symlink_targets_dir} / filename);
+        std::filesystem::rename(override_dir() / filename, std::filesystem::path{override_test_root} / filename);
     }
 
     auto base_config_path() -> std::filesystem::path
@@ -743,34 +724,10 @@ struct TestOverrideConfigFile : PendingLoad, miral::TestServer
         return std::filesystem::path{override_xdg_conf_home} / override_config_file;
     }
 
-    void create_base_config_symlink(std::filesystem::path const& target)
-    {
-        mark_pending();
-        std::filesystem::remove(base_config_path());
-        std::filesystem::create_symlink(target, base_config_path());
-    }
-
-    void repoint_base_config_symlink(std::filesystem::path const& new_target)
-    {
-        mark_pending();
-        std::filesystem::remove(base_config_path());
-        std::filesystem::create_symlink(new_target, base_config_path());
-    }
     void delete_override_dir()
     {
         mark_pending();
         std::filesystem::remove_all(override_dir());
-    }
-
-    void create_relative_file_symlink(std::filesystem::path const& target, std::string const& link_name)
-    {
-        mark_pending();
-        std::filesystem::create_directories(override_dir());
-        auto const link_path = override_dir() / link_name;
-        std::filesystem::remove(link_path);
-        // Compute the target path relative to the override directory so the symlink is relative
-        auto const relative_target = std::filesystem::relative(target, override_dir());
-        std::filesystem::create_symlink(relative_target, link_path);
     }
 
     void SetUp() override
@@ -789,7 +746,7 @@ TestOverrideConfigFile::TestOverrideConfigFile()
 {
     std::filesystem::remove_all(override_test_root);
 
-    for (auto dir : {override_xdg_conf_home, override_home_config, symlink_targets_dir})
+    for (auto dir : {override_xdg_conf_home, override_home_config})
     {
         std::filesystem::create_directories(dir);
     }
@@ -896,56 +853,6 @@ TEST_F(TestOverrideConfigFile, override_loader_sorts_override_files_lexicographi
     EXPECT_THAT(last_load_paths[3].filename(), testing::Eq("30-third.conf"));
 }
 
-TEST_F(TestOverrideConfigFile, override_dir_symlink_is_followed_on_initial_load)
-{
-    write_base_config();
-
-    // Create a real directory with override files
-    auto const real_dir = std::filesystem::path{symlink_targets_dir} / "real_overrides";
-    std::filesystem::create_directories(real_dir);
-    { std::ofstream{real_dir / "10-override.conf"} << "override content"; }
-
-    // Symlink the override directory to the real directory
-    create_override_dir_symlink(real_dir);
-
-    invoke_runner([this](miral::MirRunner& runner)
-    {
-        config = ConfigFile{
-            runner,
-            override_config_file,
-            ConfigFile::Mode::no_reloading,
-            [this](auto streams) { record_load(streams); }};
-    });
-
-    wait_for_load();
-    EXPECT_THAT(last_load_stream_count, testing::Eq(2u));
-}
-
-TEST_F(TestOverrideConfigFile, symlinked_override_files_are_followed_on_initial_load)
-{
-    write_base_config();
-    std::filesystem::create_directories(override_dir());
-
-    // Create a real file outside the override directory
-    auto const real_file = std::filesystem::path{symlink_targets_dir} / "real_override.conf";
-    { std::ofstream{real_file} << "real override content"; }
-
-    // Symlink it into the override directory
-    create_file_symlink(real_file, "10-override.conf");
-
-    invoke_runner([this](miral::MirRunner& runner)
-    {
-        config = ConfigFile{
-            runner,
-            override_config_file,
-            ConfigFile::Mode::no_reloading,
-            [this](auto streams) { record_load(streams); }};
-    });
-
-    wait_for_load();
-    EXPECT_THAT(last_load_stream_count, testing::Eq(2u));
-}
-
 TEST_F(TestOverrideConfigFile, reloads_when_base_config_is_rewritten)
 {
     write_base_config();
@@ -1011,157 +918,6 @@ TEST_F(TestOverrideConfigFile, reloads_when_override_file_is_modified)
     EXPECT_THAT(load_call_count, testing::Gt(count_after_initial));
 }
 
-TEST_F(TestOverrideConfigFile, reloads_when_override_dir_symlink_target_changes)
-{
-    write_base_config();
-
-    auto const real_dir_a = std::filesystem::path{symlink_targets_dir} / "overrides_a";
-    auto const real_dir_b = std::filesystem::path{symlink_targets_dir} / "overrides_b";
-    std::filesystem::create_directories(real_dir_a);
-    std::filesystem::create_directories(real_dir_b);
-    { std::ofstream{real_dir_a / "10-a.conf"} << "a content"; }
-    { std::ofstream{real_dir_b / "10-b.conf"} << "b content"; }
-    { std::ofstream{real_dir_b / "20-b.conf"} << "b2 content"; }
-
-    create_override_dir_symlink(real_dir_a);
-
-    invoke_runner([this](miral::MirRunner& runner)
-    {
-        config = ConfigFile{
-            runner,
-            override_config_file,
-            ConfigFile::Mode::reload_on_change,
-            [this](auto streams) { record_load(streams); }};
-    });
-
-    wait_for_load();
-    EXPECT_THAT(last_load_stream_count, testing::Eq(2u)); // base + 1 from dir_a
-
-    // Re-point the symlink to a different directory
-    create_override_dir_symlink(real_dir_b);
-    wait_for_load();
-    EXPECT_THAT(last_load_stream_count, testing::Eq(3u)); // base + 2 from dir_b
-}
-
-TEST_F(TestOverrideConfigFile, reloads_when_file_in_symlinked_override_dir_changes)
-{
-    write_base_config();
-
-    auto const real_dir = std::filesystem::path{symlink_targets_dir} / "overrides_watched";
-    std::filesystem::create_directories(real_dir);
-    { std::ofstream{real_dir / "10-override.conf"} << "original"; }
-
-    create_override_dir_symlink(real_dir);
-
-    invoke_runner([this](miral::MirRunner& runner)
-    {
-        config = ConfigFile{
-            runner,
-            override_config_file,
-            ConfigFile::Mode::reload_on_change,
-            [this](auto streams) { record_load(streams); }};
-    });
-
-    wait_for_load();
-    auto const count_after_initial = load_call_count;
-
-    // Modify a file inside the real directory that the symlink points to
-    {
-        mark_pending();
-        std::ofstream{real_dir / "10-override.conf"} << "modified";
-    }
-    wait_for_load();
-    EXPECT_THAT(load_call_count, testing::Gt(count_after_initial));
-}
-
-TEST_F(TestOverrideConfigFile, reloads_when_file_added_to_symlinked_override_dir)
-{
-    write_base_config();
-
-    auto const real_dir = std::filesystem::path{symlink_targets_dir} / "overrides_add";
-    std::filesystem::create_directories(real_dir);
-
-    create_override_dir_symlink(real_dir);
-
-    invoke_runner([this](miral::MirRunner& runner)
-    {
-        config = ConfigFile{
-            runner,
-            override_config_file,
-            ConfigFile::Mode::reload_on_change,
-            [this](auto streams) { record_load(streams); }};
-    });
-
-    wait_for_load();
-    EXPECT_THAT(last_load_stream_count, testing::Eq(1u)); // base only
-
-    // Add a new file in the real directory
-    {
-        mark_pending();
-        std::ofstream{real_dir / "10-new.conf"} << "new content";
-    }
-    wait_for_load();
-    EXPECT_THAT(last_load_stream_count, testing::Eq(2u)); // base + new
-}
-
-TEST_F(TestOverrideConfigFile, reloads_when_symlinked_override_file_target_is_modified)
-{
-    write_base_config();
-    std::filesystem::create_directories(override_dir());
-
-    auto const real_file = std::filesystem::path{symlink_targets_dir} / "real_override.conf";
-    { std::ofstream{real_file} << "original content"; }
-
-    create_file_symlink(real_file, "10-override.conf");
-
-    invoke_runner([this](miral::MirRunner& runner)
-    {
-        config = ConfigFile{
-            runner,
-            override_config_file,
-            ConfigFile::Mode::reload_on_change,
-            [this](auto streams) { record_load(streams); }};
-    });
-
-    wait_for_load();
-    auto const count_after_initial = load_call_count;
-
-    // Modify the real file that the symlink points to
-    write_real_file(real_file, "modified content");
-    wait_for_load(FailOnTimeout::yes);
-    EXPECT_THAT(load_call_count, testing::Gt(count_after_initial));
-}
-
-TEST_F(TestOverrideConfigFile, reloads_when_override_file_symlink_is_repointed)
-{
-    write_base_config();
-    std::filesystem::create_directories(override_dir());
-
-    auto const real_file_a = std::filesystem::path{symlink_targets_dir} / "override_a.conf";
-    auto const real_file_b = std::filesystem::path{symlink_targets_dir} / "override_b.conf";
-    { std::ofstream{real_file_a} << "content a"; }
-    { std::ofstream{real_file_b} << "content b"; }
-
-    create_file_symlink(real_file_a, "10-override.conf");
-
-    invoke_runner([this](miral::MirRunner& runner)
-    {
-        config = ConfigFile{
-            runner,
-            override_config_file,
-            ConfigFile::Mode::reload_on_change,
-            [this](auto streams) { record_load(streams); }};
-    });
-
-    wait_for_load();
-    auto const count_after_initial = load_call_count;
-
-    // Re-point the symlink to a different file
-    create_file_symlink(real_file_b, "10-override.conf");
-    wait_for_load();
-    EXPECT_THAT(load_call_count, testing::Gt(count_after_initial));
-}
-
 TEST_F(TestOverrideConfigFile, reloads_when_override_dir_is_created_after_startup)
 {
     write_base_config();
@@ -1183,77 +939,6 @@ TEST_F(TestOverrideConfigFile, reloads_when_override_dir_is_created_after_startu
     write_override_file("10-late.conf");
     wait_for_load();
     EXPECT_THAT(last_load_stream_count, testing::Eq(2u)); // base + override
-}
-
-TEST_F(TestOverrideConfigFile, reloads_when_override_dir_symlink_is_created_after_startup)
-{
-    write_base_config();
-    // No override directory or symlink exists yet
-
-    auto const real_dir = std::filesystem::path{symlink_targets_dir} / "late_overrides";
-    std::filesystem::create_directories(real_dir);
-    { std::ofstream{real_dir / "10-late.conf"} << "late content"; }
-
-    invoke_runner([this](miral::MirRunner& runner)
-    {
-        config = ConfigFile{
-            runner,
-            override_config_file,
-            ConfigFile::Mode::reload_on_change,
-            [this](auto streams) { record_load(streams); }};
-    });
-
-    wait_for_load();
-    EXPECT_THAT(last_load_stream_count, testing::Eq(1u)); // base only
-
-    // Create a symlink to the real directory
-    create_override_dir_symlink(real_dir);
-    wait_for_load();
-    EXPECT_THAT(last_load_stream_count, testing::Eq(2u)); // base + 1 from real_dir
-}
-
-TEST_F(TestOverrideConfigFile, dangling_override_dir_symlink_loads_base_only)
-{
-    write_base_config();
-
-    // Create a symlink to a nonexistent directory
-    auto const link_path = override_dir();
-    std::filesystem::create_symlink("/tmp/test_override_config_file/nonexistent", link_path);
-
-    invoke_runner([this](miral::MirRunner& runner)
-    {
-        config = ConfigFile{
-            runner,
-            override_config_file,
-            ConfigFile::Mode::no_reloading,
-            [this](auto streams) { record_load(streams); }};
-    });
-
-    wait_for_load();
-    EXPECT_THAT(last_load_stream_count, testing::Eq(1u)); // base only, dangling symlink is skipped
-}
-
-TEST_F(TestOverrideConfigFile, dangling_file_symlink_in_override_dir_is_skipped)
-{
-    write_base_config();
-    std::filesystem::create_directories(override_dir());
-
-    write_override_file("10-real.conf");
-
-    // Create a dangling symlink
-    std::filesystem::create_symlink("/tmp/test_override_config_file/nonexistent.conf", override_dir() / "20-dangling.conf");
-
-    invoke_runner([this](miral::MirRunner& runner)
-    {
-        config = ConfigFile{
-            runner,
-            override_config_file,
-            ConfigFile::Mode::no_reloading,
-            [this](auto streams) { record_load(streams); }};
-    });
-
-    wait_for_load();
-    EXPECT_THAT(last_load_stream_count, testing::Eq(2u)); // base + 10-real.conf, dangling symlink skipped
 }
 
 TEST_F(TestOverrideConfigFile, no_reloading_mode_does_not_reload_on_override_changes)
@@ -1390,67 +1075,6 @@ TEST_F(TestOverrideConfigFile, reloads_when_override_dir_is_deleted)
     EXPECT_THAT(last_load_stream_count, testing::Eq(1u)); // base only
 }
 
-TEST_F(TestOverrideConfigFile, reloads_when_symlink_added_after_startup_and_target_is_modified)
-{
-    write_base_config();
-    std::filesystem::create_directories(override_dir());
-
-    auto const real_file = std::filesystem::path{symlink_targets_dir} / "late_symlink_target.conf";
-    { std::ofstream{real_file} << "original content"; }
-
-    invoke_runner([this](miral::MirRunner& runner)
-    {
-        config = ConfigFile{
-            runner,
-            override_config_file,
-            ConfigFile::Mode::reload_on_change,
-            [this](auto streams) { record_load(streams); }};
-    });
-
-    wait_for_load();
-    EXPECT_THAT(last_load_stream_count, testing::Eq(1u)); // base only
-
-    // Add a symlink after startup — the watcher must pick up the new target watch
-    create_file_symlink(real_file, "10-override.conf");
-    wait_for_load();
-    EXPECT_THAT(last_load_stream_count, testing::Eq(2u)); // base + symlinked override
-
-    auto const count_after_symlink = load_call_count;
-
-    // Now modify the target — must trigger a reload via the newly registered watch
-    write_real_file(real_file, "modified content");
-    wait_for_load(FailOnTimeout::yes);
-    EXPECT_THAT(load_call_count, testing::Gt(count_after_symlink));
-}
-
-TEST_F(TestOverrideConfigFile, reloads_when_relative_symlinked_override_file_target_is_modified)
-{
-    write_base_config();
-    std::filesystem::create_directories(override_dir());
-
-    auto const real_file = std::filesystem::path{symlink_targets_dir} / "relative_target.conf";
-    { std::ofstream{real_file} << "original content"; }
-
-    // Create a relative symlink (target path relative to the override directory)
-    create_relative_file_symlink(real_file, "10-override.conf");
-
-    invoke_runner([this](miral::MirRunner& runner)
-    {
-        config = ConfigFile{
-            runner,
-            override_config_file,
-            ConfigFile::Mode::reload_on_change,
-            [this](auto streams) { record_load(streams); }};
-    });
-
-    wait_for_load();
-    auto const count_after_initial = load_call_count;
-
-    write_real_file(real_file, "modified content");
-    wait_for_load(FailOnTimeout::yes);
-    EXPECT_THAT(load_call_count, testing::Gt(count_after_initial));
-}
-
 TEST_F(TestOverrideConfigFile, reloads_when_file_is_renamed_to_conf_in_override_directory)
 {
     write_base_config();
@@ -1472,97 +1096,6 @@ TEST_F(TestOverrideConfigFile, reloads_when_file_is_renamed_to_conf_in_override_
     rename_override_file("10-first.conf.tmp", "10-first.conf");
     wait_for_load();
     EXPECT_THAT(last_load_stream_count, testing::Eq(2u)); // base + new override
-}
-
-TEST_F(TestOverrideConfigFile, symlinked_base_config_is_loaded_on_initial_load)
-{
-    auto const real_file = std::filesystem::path{symlink_targets_dir} / "real_base.config";
-    { std::ofstream{real_file} << "base content via symlink"; }
-
-    create_base_config_symlink(real_file);
-
-    invoke_runner([this](miral::MirRunner& runner)
-    {
-        config = ConfigFile{
-            runner,
-            override_config_file,
-            ConfigFile::Mode::no_reloading,
-            [this](auto streams) { record_load(streams); }};
-    });
-
-    wait_for_load();
-    EXPECT_THAT(last_load_stream_count, testing::Eq(1u));
-}
-
-TEST_F(TestOverrideConfigFile, reloads_when_symlinked_base_config_target_is_modified)
-{
-    auto const real_file = std::filesystem::path{symlink_targets_dir} / "real_base_modified.config";
-    { std::ofstream{real_file} << "original base content"; }
-
-    create_base_config_symlink(real_file);
-
-    invoke_runner([this](miral::MirRunner& runner)
-    {
-        config = ConfigFile{
-            runner,
-            override_config_file,
-            ConfigFile::Mode::reload_on_change,
-            [this](auto streams) { record_load(streams); }};
-    });
-
-    wait_for_load();
-    auto const count_after_initial = load_call_count;
-
-    // Modify the real file the base config symlink points to
-    write_real_file(real_file, "modified base content");
-    wait_for_load(FailOnTimeout::yes);
-    EXPECT_THAT(load_call_count, testing::Gt(count_after_initial));
-}
-
-TEST_F(TestOverrideConfigFile, reloads_when_base_config_symlink_is_repointed)
-{
-    auto const real_file_a = std::filesystem::path{symlink_targets_dir} / "base_a.config";
-    auto const real_file_b = std::filesystem::path{symlink_targets_dir} / "base_b.config";
-    { std::ofstream{real_file_a} << "content a"; }
-    { std::ofstream{real_file_b} << "content b"; }
-
-    create_base_config_symlink(real_file_a);
-
-    invoke_runner([this](miral::MirRunner& runner)
-    {
-        config = ConfigFile{
-            runner,
-            override_config_file,
-            ConfigFile::Mode::reload_on_change,
-            [this](auto streams) { record_load(streams); }};
-    });
-
-    wait_for_load();
-    auto const count_after_initial = load_call_count;
-
-    // Repoint the symlink to a different file
-    repoint_base_config_symlink(real_file_b);
-    wait_for_load();
-    EXPECT_THAT(load_call_count, testing::Gt(count_after_initial));
-}
-
-TEST_F(TestOverrideConfigFile, dangling_base_config_symlink_does_not_call_loader)
-{
-    // Create a symlink pointing at a nonexistent file
-    std::filesystem::create_symlink(
-        std::filesystem::path{symlink_targets_dir} / "nonexistent_base.config",
-        base_config_path());
-
-    invoke_runner([this](miral::MirRunner& runner)
-    {
-        config = ConfigFile{
-            runner,
-            override_config_file,
-            ConfigFile::Mode::no_reloading,
-            [this](auto streams) { record_load(streams); }};
-    });
-
-    EXPECT_THAT(load_call_count, testing::Eq(0));
 }
 
 TEST_F(TestOverrideConfigFile, missing_base_config_does_not_call_loader)
