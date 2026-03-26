@@ -28,7 +28,7 @@
 
 #include <array>
 #include <format>
-#include <string_view>
+#include <string>
 #include <fcntl.h>
 #include <sys/socket.h>
 #include <sys/un.h>
@@ -39,46 +39,8 @@ namespace md = mir::dispatch;
 
 namespace
 {
-constexpr std::string_view x11_lock_fmt = "/tmp/.X{}-lock";
-constexpr std::string_view x11_socket_fmt = "/tmp/.X11-unix/X{}";
-
-int create_lockfile(int xdisplay)
-{
-    auto const lockfile = std::format(x11_lock_fmt, xdisplay);
-
-    mir::Fd const fd{open(lockfile.c_str(), O_WRONLY | O_CLOEXEC | O_CREAT | O_EXCL, 0444)};
-    if (fd < 0)
-        return EEXIST;
-
-    // We format for consistency with the corresponding code in xorg-server (os/utils.c) which
-    // requires 11 characters. Vis:
-    //
-    //    snprintf(pid_str, sizeof(pid_str), "%10lu\n", (unsigned long) getpid());
-    //    if (write(lfd, pid_str, 11) != 11)
-    bool const success_writing_to_lock_file = dprintf(fd, "%10lu\n", (unsigned long) getpid()) == 11;
-
-    // Check if anyone else has created the socket (even though we have the lockfile)
-    auto const x11_socket = std::format(x11_socket_fmt, xdisplay);
-
-    if (!success_writing_to_lock_file || access(x11_socket.c_str(), F_OK) == 0)
-    {
-        unlink(lockfile.c_str());
-        return EEXIST;
-    }
-
-    return 0;
-}
-
-auto choose_display() -> int
-{
-    for (auto xdisplay = 0; xdisplay != 10000; ++xdisplay)
-    {
-        if (create_lockfile(xdisplay) == 0) return xdisplay;
-    }
-
-    mir::fatal_error("Cannot create X11 lockfile!");
-    return -1;
-}
+auto constexpr x11_lock_fmt = "/tmp/.X{}-lock";
+auto constexpr x11_socket_fmt = "/tmp/.X11-unix/X{}";
 
 auto create_socket(std::vector<mir::Fd>& fds, struct sockaddr_un *addr, size_t path_size)
 {
@@ -134,19 +96,19 @@ auto create_socket(std::vector<mir::Fd>& fds, struct sockaddr_un *addr, size_t p
     fds.push_back(fd);
 }
 
-auto create_sockets(int xdisplay) -> std::vector<mir::Fd>
+auto create_sockets(const std::string &x11_socket) -> std::vector<mir::Fd>
 {
     std::vector<mir::Fd> result;
     struct sockaddr_un addr{ .sun_family = AF_UNIX, .sun_path = { 0 } };
 
-    for (size_t skip: {1, 0})
+    auto name_create_socket = [&](char *bos, size_t limit)
     {
-        char *bos = addr.sun_path + skip;
-        auto eos = std::format_to_n(bos, sizeof(addr.sun_path) - 1 - skip,
-            x11_socket_fmt, xdisplay).out;
+        auto eos = std::format_to_n(bos, limit, "{}", x11_socket).out;
         *eos = '\0';
         create_socket(result, &addr, eos - bos);
-    }
+    };
+    name_create_socket(addr.sun_path + 1, sizeof(addr.sun_path) - 2);
+    name_create_socket(addr.sun_path, sizeof(addr.sun_path) - 1);
 
     return result;
 }
@@ -164,9 +126,13 @@ auto create_dispatchers(
 }
 }
 
-mf::XWaylandSpawner::XWaylandSpawner(std::function<void()> spawn)
-    : xdisplay{choose_display()},
-      fds{create_sockets(xdisplay)},
+mf::XWaylandSpawner::XWaylandSpawner(
+    std::function<void()> spawn,
+    const XDisplayPaths &xp) :
+      xdisplay{xp.xdisplay},
+      lockfile{xp.lockfile},
+      x11_socket{xp.x11_socket},
+      fds{create_sockets(x11_socket)},
       dispatcher{std::make_shared<md::MultiplexingDispatchable>()},
       spawn_thread{std::make_unique<dispatch::ThreadedDispatcher>(
           "Mir/X11 Spawner",
@@ -195,15 +161,50 @@ mf::XWaylandSpawner::XWaylandSpawner(std::function<void()> spawn)
 
 mf::XWaylandSpawner::~XWaylandSpawner()
 {
-    std::array<char, 256> buffer; // avoid allocation in noexcept code
-    auto eos = std::format_to_n(buffer.data(), buffer.size() - 1,
-        x11_lock_fmt, xdisplay).out;
-    *eos = '\0';
-    unlink(buffer.data());
-    eos = std::format_to_n(buffer.data(), buffer.size() - 1,
-        x11_socket_fmt, xdisplay).out;
-    *eos = '\0';
-    unlink(buffer.data());
+    unlink(lockfile.c_str());
+    unlink(x11_socket.c_str());
+}
+
+int mf::XWaylandSpawner::create_lockfile(XDisplayPaths &xp)
+{
+    xp.lockfile = std::format(x11_lock_fmt, xp.xdisplay);
+
+    mir::Fd const fd{open(xp.lockfile.c_str(), O_WRONLY | O_CLOEXEC | O_CREAT | O_EXCL, 0444)};
+    if (fd < 0)
+    {
+        return EEXIST;
+    }
+
+    // We format for consistency with the corresponding code in xorg-server (os/utils.c) which
+    // requires 11 characters. Vis:
+    //
+    //    snprintf(pid_str, sizeof(pid_str), "%10lu\n", (unsigned long) getpid());
+    //    if (write(lfd, pid_str, 11) != 11)
+    bool const success_writing_to_lock_file = dprintf(fd, "%10lu\n", (unsigned long) getpid()) == 11;
+
+    // Check if anyone else has created the socket (even though we have the lockfile)
+    xp.x11_socket = std::format(x11_socket_fmt, xp.xdisplay);
+
+    if (!success_writing_to_lock_file ||
+        access(xp.x11_socket.c_str(), F_OK) == 0)
+    {
+        unlink(xp.lockfile.c_str());
+        return EEXIST;
+    }
+
+    return 0;
+}
+
+auto mf::XWaylandSpawner::choose_display() -> XDisplayPaths
+{
+    XDisplayPaths xp;
+    for (xp.xdisplay = 0; xp.xdisplay != 10000; ++xp.xdisplay)
+    {
+        if (create_lockfile(xp) == 0) return xp;
+    }
+
+    mir::fatal_error("Cannot create X11 lockfile!");
+    return XDisplayPaths();
 }
 
 auto mf::XWaylandSpawner::x11_display() const -> std::string
