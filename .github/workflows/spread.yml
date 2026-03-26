@@ -14,7 +14,7 @@ on:
     - '.github/**'
     - 'doc/sphinx/**'
     - 'snap/**'
-    - '!docs/sphinx/conf.py'
+    - '!doc/sphinx/conf.py'
     - '!.github/workflows/spread.yml'
 
 concurrency:
