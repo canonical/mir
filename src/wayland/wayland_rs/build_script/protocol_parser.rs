@@ -245,9 +245,7 @@ pub fn parse_protocols() -> Vec<WaylandProtocol> {
                 dependencies.push(interface_name.clone());
             }
             if let Some(enm) = &arg.enum_ {
-                let split = enm.split(".").collect::<Vec<&str>>();
-                if split.len() == 2 {
-                    let interface_name = split[0];
+                if let Some((interface_name, _)) = enm.split_once('.') {
                     dependencies.push(interface_name.to_string());
                 }
             }

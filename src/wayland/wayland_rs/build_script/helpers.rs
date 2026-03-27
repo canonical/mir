@@ -8,9 +8,10 @@ pub fn write_generated_rust_file(tokens: TokenStream, filename: &str) {
     let out_dir = "src";
     let dest_path = std::path::Path::new(&out_dir).join(filename);
 
-    let syntax_tree: syn::File = syn::parse2(tokens.clone()).unwrap_or_else(|e| {
+    let tokens_for_error = tokens.to_string();
+    let syntax_tree: syn::File = syn::parse2(tokens).unwrap_or_else(|e| {
         panic!(
-            "syn::parse2 failed while generating '{filename}': {e}\n\nGenerated tokens:\n{tokens}"
+            "syn::parse2 failed while generating '{filename}': {e}\n\nGenerated tokens:\n{tokens_for_error}"
         )
     });
     let formatted_code = prettyplease::unparse(&syntax_tree);
@@ -19,8 +20,7 @@ pub fn write_generated_rust_file(tokens: TokenStream, filename: &str) {
 }
 
 /// Write the generated C++ code to the correct directory.
-pub fn write_generated_cpp_file(content: &str, filename: &str) {
-    let out_dir = "include";
+pub fn write_generated_cpp_file(content: &str, out_dir: &str, filename: &str) {
     let dest_path = std::path::Path::new(&out_dir).join(filename);
 
     fs::create_dir_all(&out_dir).unwrap();
@@ -49,12 +49,12 @@ pub fn snake_to_pascal(s: &str) -> String {
 
 /// Formats the Wayland interface name to the name of the class that
 /// provides its C++ implementation.
-pub fn format_wayland_interface_to_cpp_class(s: &String) -> String {
+pub fn format_wayland_interface_to_cpp_class(s: &str) -> String {
     format!("{}Impl", snake_to_pascal(s))
 }
 
 /// Formats the Wayland interface name to the name of the struct that
 /// provides its Rust extension implementation.
-pub fn format_wayland_interface_to_rust_extension_struct(s: &String) -> String {
+pub fn format_wayland_interface_to_rust_extension_struct(s: &str) -> String {
     format!("{}Ext", snake_to_pascal(s))
 }
