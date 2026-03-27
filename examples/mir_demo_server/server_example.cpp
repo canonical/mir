@@ -17,10 +17,12 @@
 #include "server_example_input_event_filter.h"
 #include "server_example_input_filter.h"
 #include "server_example_test_client.h"
+#include "wlprobe.h"
 
 #include <miral/cursor_theme.h>
 #include <miral/display_configuration_option.h>
 #include <miral/input_configuration.h>
+#include <miral/internal_client.h>
 #include <miral/keymap.h>
 #include <miral/live_config.h>
 #include <miral/live_config_ini_file.h>
@@ -49,6 +51,7 @@
 #include <cstdlib>
 #include <format>
 #include <linux/input-event-codes.h>
+#include <optional>
 
 #include <miral/sticky_keys.h>
 
@@ -75,6 +78,31 @@ void add_timeout_option_to(mir::Server& server)
         {
             static auto const exit_action = server.the_main_loop()->create_alarm([&server] { server.stop(); });
             exit_action->reschedule_in(std::chrono::seconds(options->get<int>(timeout_opt)));
+        }
+    });
+}
+
+void add_wlprobe_option_to(
+    mir::Server& server,
+    miral::InternalClientLauncher const& launcher,
+    std::optional<me::WlProbe>& wlprobe)
+{
+    static const char* const wlprobe_opt = "wlprobe-output";
+    static const char* const wlprobe_descr = "Write Wayland globals to JSON file";
+
+    server.add_configuration_option(wlprobe_opt, wlprobe_descr, "");
+
+    server.add_init_callback([&launcher, &wlprobe, &server]
+    {
+        const auto options = server.get_options();
+        if (options->is_set(wlprobe_opt))
+        {
+            auto const output_file = options->get<std::string>(wlprobe_opt);
+            if (!output_file.empty())
+            {
+                wlprobe.emplace(output_file);
+                launcher.launch(*wlprobe, *wlprobe);
+            }
         }
     });
 }
@@ -141,6 +169,9 @@ try
     miral::Keymap keymap{config_store};
     miral::HoverClick hover_click{config_store};
 
+    std::optional<me::WlProbe> wlprobe;
+    miral::InternalClientLauncher launcher;
+
     miral::ConfigFile config_file{
         runner,
         "mir_demo_server.live-config",
@@ -165,6 +196,8 @@ try
         wayland_extensions,
         miral::set_window_management_policy<miral::FloatingWindowManager>(),
         add_timeout_option_to,
+        launcher,
+        [&launcher, &wlprobe](mir::Server& server) { add_wlprobe_option_to(server, launcher, wlprobe); },
         miral::CursorTheme{"default:DMZ-White"},
         input_filters,
         test_runner,
