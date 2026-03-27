@@ -56,7 +56,7 @@ public:
     void load_file(std::istream& istream, std::filesystem::path const& path);
 
     /// \remark Since MirAL 5.7
-    void load_files(std::span<std::pair<std::unique_ptr<std::istream>, std::filesystem::path>> config_streams);
+    void load_files(std::span<std::pair<std::reference_wrapper<std::istream>, std::filesystem::path>> config_streams);
 
 private:
     class Self;

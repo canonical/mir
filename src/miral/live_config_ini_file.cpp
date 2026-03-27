@@ -39,7 +39,7 @@ public:
     void add_key(Key const& key, std::string_view description, std::optional<std::vector<std::string>> preset, HandleStrings handler);
 
     void load_file(std::istream& istream, std::filesystem::path const& path);
-    void load_files(std::span<std::pair<std::unique_ptr<std::istream>, std::filesystem::path>> config_streams);
+    void load_files(std::span<std::pair<std::reference_wrapper<std::istream>, std::filesystem::path>> config_streams);
     void on_done(HandleDone handler);
 
 private:
@@ -261,13 +261,13 @@ void mlc::IniFile::Self::load_file(std::istream& istream, std::filesystem::path 
 }
 
 void mlc::IniFile::Self::load_files(
-    std::span<std::pair<std::unique_ptr<std::istream>, std::filesystem::path>> config_streams)
+    std::span<std::pair<std::reference_wrapper<std::istream>, std::filesystem::path>> config_streams)
 {
     std::lock_guard lock{mutex};
     clear_values();
 
-    for (auto const& [istream, path] : config_streams)
-        parse_one_file(*istream, path);
+    for (auto& [istream_ref, path] : config_streams)
+        parse_one_file(istream_ref.get(), path);
 
     call_attribute_handlers();
 
@@ -499,7 +499,7 @@ void mlc::IniFile::load_file(std::istream& istream, std::filesystem::path const&
     self->load_file(istream, path);
 }
 
-void mlc::IniFile::load_files(std::span<std::pair<std::unique_ptr<std::istream>, std::filesystem::path>> config_streams)
+void mlc::IniFile::load_files(std::span<std::pair<std::reference_wrapper<std::istream>, std::filesystem::path>> config_streams)
 {
     self->load_files(config_streams);
 }
