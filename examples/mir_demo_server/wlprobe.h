@@ -20,7 +20,7 @@
 #include <memory>
 #include <string>
 
-namespace mir { namespace scene { class Session; }}
+namespace mir::scene { class Session; }
 struct wl_display;
 
 namespace mir::examples

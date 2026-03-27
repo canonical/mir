@@ -101,7 +101,7 @@ void add_wlprobe_option_to(
             if (!output_file.empty())
             {
                 wlprobe.emplace(output_file);
-                launcher.launch(*wlprobe, *wlprobe);
+                launcher.launch(*wlprobe);
             }
         }
     });
