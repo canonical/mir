@@ -775,3 +775,10 @@ global:
     miral::WindowSpecification::alpha*;
   };
 } MIRAL_5.6;
+
+MIRAL_5.8 {
+global:
+  extern "C++" {
+    miral::live_config::IniFile::load_files*;
+  };
+} MIRAL_5.7;

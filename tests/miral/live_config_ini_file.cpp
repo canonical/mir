@@ -20,6 +20,8 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include <format>
+
 using namespace testing;
 using namespace std::string_literals;
 namespace mlc = miral::live_config;
@@ -389,4 +391,231 @@ TEST_F(LiveConfigIniFile, the_last_registration_of_a_key_is_used)
     EXPECT_CALL(*this, ints_handler(another_key, _)).Times(1);
 
     ini_file.load_file(istream, fake_filename());
+}
+
+TEST_F(LiveConfigIniFile, later_stream_overrides_earlier_scalar)
+{
+    ini_file.add_int_attribute(a_key, "a scoped int", [this](auto... args) { int_handler(args...); });
+
+    // Expect the value from stream2 to win
+    EXPECT_CALL(*this, int_handler(a_key, std::optional<int>{10})).Times(0);
+    EXPECT_CALL(*this, int_handler(a_key, std::optional<int>{99}));
+
+    std::istringstream stream1{a_key.to_string() + "=10\n"};
+    std::istringstream stream2{a_key.to_string() + "=99\n"};
+
+    std::vector<std::pair<std::reference_wrapper<std::istream>, std::filesystem::path>> streams;
+    streams.emplace_back(stream1, "base.conf");
+    streams.emplace_back(stream2, "base.conf.d/99-override.conf");
+
+    ini_file.load_files(streams);
+}
+
+TEST_F(LiveConfigIniFile, multiple_streams_call_handlers_exactly_once)
+{
+    ini_file.add_int_attribute(a_key, "a scoped int", [this](auto... args) { int_handler(args...); });
+    ini_file.add_ints_attribute(an_ints_key, "ints", [this](auto... args) { ints_handler(args...); });
+
+    auto constexpr num_streams = 7;
+    std::istringstream stream_objects[num_streams];
+    std::vector<std::pair<std::reference_wrapper<std::istream>, std::filesystem::path>> streams;
+    for (auto i = 0; i < num_streams; ++i)
+    {
+        stream_objects[i] = std::istringstream{
+            a_key.to_string() + "=10\n" + an_ints_key.to_string() + "=20\n" + an_ints_key.to_string() + "=30\n"};
+        auto const filepath = std::filesystem::path("base.conf.d/") / std::format("{:02}-override.conf", i);
+        streams.emplace_back(stream_objects[i], filepath);
+    }
+
+    EXPECT_CALL(*this, int_handler(a_key, _)).Times(1);
+    EXPECT_CALL(*this, ints_handler(an_ints_key, _)).Times(1);
+
+    ini_file.load_files(streams);
+}
+
+TEST_F(LiveConfigIniFile, done_handler_is_called_exactly_once_across_multiple_streams)
+{
+    int done_count = 0;
+    ini_file.on_done([&done_count] { done_count++; });
+
+    std::istringstream stream1{a_key.to_string() + "=1\n"};
+    std::istringstream stream2{a_key.to_string() + "=2\n"};
+    std::istringstream stream3{a_key.to_string() + "=3\n"};
+
+    std::vector<std::pair<std::reference_wrapper<std::istream>, std::filesystem::path>> streams;
+    streams.emplace_back(stream1, "base.conf");
+    streams.emplace_back(stream2, "base.conf.d/10-override.conf");
+    streams.emplace_back(stream3, "base.conf.d/20-override.conf");
+
+    ini_file.load_files(streams);
+
+    EXPECT_THAT(done_count, Eq(1));
+}
+
+TEST_F(LiveConfigIniFile, array_values_are_appended_across_streams)
+{
+    ini_file.add_strings_attribute(a_strings_key, "strings", [this](auto... args) { strings_handler(args...); });
+
+    std::istringstream stream1{a_strings_key.to_string() + "=foo\n"};
+    std::istringstream stream2{a_strings_key.to_string() + "=bar\n"};
+    std::istringstream stream3{a_strings_key.to_string() + "=baz\n"};
+
+    std::vector<std::pair<std::reference_wrapper<std::istream>, std::filesystem::path>> streams;
+    streams.emplace_back(stream1, "base.conf");
+    streams.emplace_back(stream2, "base.conf.d/10-override.conf");
+    streams.emplace_back(stream3, "base.conf.d/20-override.conf");
+
+    EXPECT_CALL(*this, strings_handler(a_strings_key, Optional(ElementsAre("foo", "bar", "baz"))));
+
+    ini_file.load_files(streams);
+}
+
+TEST_F(LiveConfigIniFile, unassigned_key_yields_nullopt_across_streams)
+{
+    ini_file.add_int_attribute(a_key, "a scoped int", [this](auto... args) { int_handler(args...); });
+
+    std::istringstream stream1{another_key.to_string() + "=42\n"};
+    std::istringstream stream2{another_key.to_string() + "=64\n"};
+
+    std::vector<std::pair<std::reference_wrapper<std::istream>, std::filesystem::path>> streams;
+    streams.emplace_back(stream1, "base.conf");
+    streams.emplace_back(stream2, "base.conf.d/10-override.conf");
+
+    EXPECT_CALL(*this, int_handler(a_key, std::optional<int>{std::nullopt}));
+
+    ini_file.load_files(streams);
+}
+
+TEST_F(LiveConfigIniFile, preset_is_used_by_load_files_when_no_stream_assigns_to_key)
+{
+    ini_file.add_int_attribute(a_key, "a scoped int", 13, [this](auto... args) { int_handler(args...); });
+
+    std::istringstream stream1{another_key.to_string() + "=42\n"};
+
+    std::vector<std::pair<std::reference_wrapper<std::istream>, std::filesystem::path>> streams;
+    streams.emplace_back(stream1, "base.conf");
+
+    EXPECT_CALL(*this, int_handler(a_key, std::optional<int>{13}));
+
+    ini_file.load_files(streams);
+}
+
+TEST_F(LiveConfigIniFile, load_file_resets_state_from_previous_load_files)
+{
+    ini_file.add_int_attribute(a_key, "a scoped int", [this](auto... args) { int_handler(args...); });
+    ini_file.add_strings_attribute(a_strings_key, "strings", [this](auto... args) { strings_handler(args...); });
+
+    std::istringstream stream1{};
+    std::istringstream stream2{
+        a_key.to_string() + "=42\n" + a_strings_key.to_string() + "=foo\n" + a_strings_key.to_string() + "=bar\n"};
+
+    std::vector<std::pair<std::reference_wrapper<std::istream>, std::filesystem::path>> streams;
+    streams.emplace_back(stream1, "base.conf");
+    streams.emplace_back(stream2, "base.conf.d/10-default.conf");
+    ini_file.load_files(streams);
+
+    // Second load via load_file with a stream that assigns new values to `a_key` and `a_strings_key`
+    std::istringstream second_stream{
+        a_key.to_string() + "=43\n" + a_strings_key.to_string() + "=baz\n" + a_strings_key.to_string() + "=qux\n"
+    };
+
+    // The value 42 from the first load must not leak through
+    EXPECT_CALL(*this, int_handler(a_key, Eq(43)));
+    EXPECT_CALL(*this, strings_handler(a_strings_key, Optional(ElementsAre("baz", "qux"))));
+
+    ini_file.load_file(second_stream, fake_filename());
+}
+
+TEST_F(LiveConfigIniFile, array_clears_override_defaults)
+{
+    ini_file.add_strings_attribute(
+        a_strings_key, "strings", {{"default1"s, "default2"s}}, [this](auto... args) { strings_handler(args...); });
+
+    std::istringstream stream1{a_strings_key.to_string() + "=foo\n" + a_strings_key.to_string() + "=bar\n"};
+    std::istringstream stream2{a_strings_key.to_string() + "=\n"};
+
+    std::vector<std::pair<std::reference_wrapper<std::istream>, std::filesystem::path>> streams;
+    streams.emplace_back(stream1, "base.conf");
+    // Override file clears the array but adds nothing back
+    streams.emplace_back(stream2, "base.conf.d/10-override.conf");
+
+    // parsed_values is empty after the clear, explicit clears override the preset
+    EXPECT_CALL(*this, strings_handler(a_strings_key, Optional(IsEmpty())));
+
+    ini_file.load_files(streams);
+}
+
+TEST_F(LiveConfigIniFile, done_handlers_run_last_with_load_files)
+{
+    ini_file.add_int_attribute(a_key, "a scoped int", [this](auto... args) { int_handler(args...); });
+    ini_file.add_strings_attribute(a_strings_key, "strings", [this](auto... args) { strings_handler(args...); });
+
+    bool done_called = false;
+    ini_file.on_done([&] { done_called = true; });
+
+    EXPECT_CALL(*this, int_handler(_, _)).WillOnce([&] { EXPECT_THAT(done_called, IsFalse()); });
+    EXPECT_CALL(*this, strings_handler(_, _)).WillOnce([&] { EXPECT_THAT(done_called, IsFalse()); });
+
+    std::istringstream stream1{a_key.to_string() + "=42\n" + a_strings_key.to_string() + "=foo\n"};
+
+    std::vector<std::pair<std::reference_wrapper<std::istream>, std::filesystem::path>> streams;
+    streams.emplace_back(stream1, "base.conf");
+
+    ini_file.load_files(streams);
+
+    EXPECT_THAT(done_called, IsTrue());
+}
+
+TEST_F(LiveConfigIniFile, empty_value_clears_earlier_array_entries_in_same_stream)
+{
+    ini_file.add_strings_attribute(a_strings_key, "strings", [this](auto... args) { strings_handler(args...); });
+
+    // An empty value for an array key clears all previously accumulated entries
+    std::istringstream stream{
+        a_strings_key.to_string() + "=foo\n" + a_strings_key.to_string() + "=bar\n" + a_strings_key.to_string() + "=\n"
+        + a_strings_key.to_string() + "=baz\n"};
+
+    EXPECT_CALL(*this, strings_handler(a_strings_key, Optional(ElementsAre("baz"))));
+
+    ini_file.load_file(stream, fake_filename());
+}
+
+TEST_F(LiveConfigIniFile, empty_value_in_later_stream_clears_entries_from_earlier_streams)
+{
+    ini_file.add_strings_attribute(a_strings_key, "strings", [this](auto... args) { strings_handler(args...); });
+
+    std::istringstream stream1{a_strings_key.to_string() + "=foo\n" + a_strings_key.to_string() + "=bar\n"};
+    std::istringstream stream2{a_strings_key.to_string() + "=\n" + a_strings_key.to_string() + "=baz\n"};
+
+    std::vector<std::pair<std::reference_wrapper<std::istream>, std::filesystem::path>> streams;
+    streams.emplace_back(stream1, "base.conf");
+    // An empty value assignment in an override file resets the accumulated list
+    streams.emplace_back(stream2, "base.conf.d/10-override.conf");
+
+    EXPECT_CALL(*this, strings_handler(a_strings_key, Optional(ElementsAre("baz"))));
+
+    ini_file.load_files(streams);
+}
+
+TEST_F(LiveConfigIniFile, load_files_with_empty_span_calls_handlers_with_nullopt)
+{
+    ini_file.add_int_attribute(a_key, "a scoped int", [this](auto... args) { int_handler(args...); });
+
+    std::vector<std::pair<std::reference_wrapper<std::istream>, std::filesystem::path>> streams;
+
+    EXPECT_CALL(*this, int_handler(a_key, std::optional<int>{std::nullopt}));
+
+    ini_file.load_files(streams);
+}
+
+TEST_F(LiveConfigIniFile, load_files_with_empty_span_calls_done_handler)
+{
+    int done_count = 0;
+    ini_file.on_done([&done_count] { done_count++; });
+
+    std::vector<std::pair<std::reference_wrapper<std::istream>, std::filesystem::path>> streams;
+
+    ini_file.load_files(streams);
+
+    EXPECT_THAT(done_count, Eq(1));
 }
