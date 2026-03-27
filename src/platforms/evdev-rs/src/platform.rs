@@ -219,6 +219,7 @@ impl PlatformRs {
                 }
                 Err(_) => {
                     println!("evdev-rs: assign_seat: state mutex poisoned during deferred event processing");
+                    self.state.take();
                 }
             }
         }
