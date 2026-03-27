@@ -90,7 +90,7 @@ void add_wlprobe_option_to(
     static const char* const wlprobe_opt = "wlprobe-output";
     static const char* const wlprobe_descr = "Write Wayland globals to JSON file";
 
-    server.add_configuration_option(wlprobe_opt, wlprobe_descr, "");
+    server.add_configuration_option(wlprobe_opt, wlprobe_descr, mir::OptionType::string);
 
     server.add_init_callback([&launcher, &wlprobe, &server]
     {

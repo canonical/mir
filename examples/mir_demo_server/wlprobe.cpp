@@ -83,7 +83,7 @@ struct mir::examples::WlProbe::Self
         std::ofstream out(output_file);
         if (!out)
         {
-            throw std::runtime_error("Failed to open output file: " + output_file);
+            throw std::runtime_error("Failed to open output file");
         }
 
         // Get current timestamp in milliseconds since epoch
@@ -128,10 +128,6 @@ mir::examples::WlProbe::~WlProbe() = default;
 
 void mir::examples::WlProbe::operator()(wl_display* display)
 {
-    if (self->output_file.empty())
-    {
-        return;
-    }
     try
     {
         self->display = display;
