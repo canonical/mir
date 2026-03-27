@@ -59,7 +59,7 @@ public:
     /// them. Streams are processed in lexicographical order, with later streams
     /// overriding values from earlier ones. Paths are used for error reporting.
     ///
-    /// \remark Since MirAL 5.7
+    /// \remark Since MirAL 5.8
     void load_files(std::span<std::pair<std::reference_wrapper<std::istream>, std::filesystem::path>> config_streams);
 
 private:
