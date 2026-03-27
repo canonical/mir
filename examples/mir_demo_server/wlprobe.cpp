@@ -16,12 +16,16 @@
 
 #include "wlprobe.h"
 
+#define MIR_LOG_COMPONENT "wlprobe"
+#include <mir/log.h>
+
 #include <wayland-client.h>
 
 #include <algorithm>
 #include <chrono>
 #include <fstream>
 #include <map>
+#include <stdexcept>
 
 struct mir::examples::WlProbe::Self
 {
@@ -128,10 +132,16 @@ void mir::examples::WlProbe::operator()(wl_display* display)
     {
         return;
     }
-
-    self->display = display;
-    self->query_globals();
-    self->write_json();
+    try
+    {
+        self->display = display;
+        self->query_globals();
+        self->write_json();
+    }
+    catch (std::exception const& e)
+    {
+        log_error("Failed to write JSON output to '%s': %s", self->output_file.c_str(), e.what());
+    }
 }
 
 void mir::examples::WlProbe::operator()(std::weak_ptr<mir::scene::Session> const& /*session*/)
