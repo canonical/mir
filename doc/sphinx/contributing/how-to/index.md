@@ -9,6 +9,7 @@ These how-to guides cover the key aspects of working on Mir.
 - [](howto-contribute)
 - [](how-to-update-symbols-maps)
 - [Enabling graphics on a device](how-to-enable-graphics-for-snaps-on-a-device)
+- [](how-to-update-wayland-explorer)
 
 ## Debugging
 
