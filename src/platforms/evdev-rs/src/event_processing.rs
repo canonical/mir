@@ -575,11 +575,6 @@ fn handle_keyboard_event(
 
     if let Some(input_sink) = &mut device_info.input_sink {
         input_sink.handle_input(&created);
-    } else {
-        eprintln!(
-            "evdev-rs: handle_keyboard_event: event created for key {} but input_sink is None — not dispatched",
-            key_event.key()
-        );
     }
 }
 
@@ -770,15 +765,12 @@ pub fn drain_initial_events(
     let mut deferred = Vec::new();
 
     if state.libinput.dispatch().is_err() {
-        println!("evdev-rs: libinput dispatch() failed in assign_seat(); aborting startup",);
         panic!("evdev-rs: libinput dispatch() failed in assign_seat()");
     }
 
-    let mut device_event_count = 0usize;
     while let Some(event) = state.libinput.next() {
         let libinput_device = event.device();
         if let input::Event::Device(device_event) = event {
-            device_event_count += 1;
             if let Some(handle) = handle_device_event(
                 &mut state.known_devices,
                 &mut state.next_device_id,
@@ -795,11 +787,6 @@ pub fn drain_initial_events(
         }
     }
 
-    println!(
-        "evdev-rs: drain_initial_events: done; {} device events, {} deferred input events",
-        device_event_count,
-        deferred.len()
-    );
     (handles, deferred)
 }
 
@@ -864,15 +851,15 @@ fn process_input_event(
 
         input::Event::Device(_) => {} // Callers must handle Device events before calling this function.
 
-        input::Event::Tablet(_) => {} // TODO: Handle tablet events.
+        input::Event::Tablet(_) => println!("TODO: Handle tablet events"),
 
-        input::Event::TabletPad(_) => {} // TODO: Handle tablet pad events.
+        input::Event::TabletPad(_) => println!("TODO: Handle tablet pad events"),
 
-        input::Event::Gesture(_) => {} // TODO: Handle gesture events.
+        input::Event::Gesture(_) => println!("TODO: Handle gesture events"),
 
-        input::Event::Switch(_) => {} // TODO: Handle switch events.
+        input::Event::Switch(_) => println!("TODO: Handle switch events"),
 
-        _ => {} // TODO: Unhandled libinput event type.
+        _ => println!("TODO: Unhandled libinput event type"),
     }
 }
 
@@ -890,7 +877,6 @@ pub fn process_deferred_events(
     for event in events {
         if let input::Event::Device(_) = event {
             // Device events should never appear in the deferred list; this is a programming error.
-            eprintln!("evdev-rs: unexpected Device event in process_deferred_events; ignoring",);
             continue;
         }
         process_input_event(state, bridge, event, report);
@@ -910,7 +896,7 @@ pub fn process_libinput_events(
     let mut handles = Vec::new();
 
     if state.libinput.dispatch().is_err() {
-        println!("evdev-rs: error dispatching libinput events");
+        println!("Error dispatching libinput events");
         return handles;
     }
 

@@ -196,8 +196,8 @@ void miers::Platform::start()
     // Phase 1 (non-blocking): create the libinput context without assigning a
     // seat.  This returns quickly so that start_platforms() can return and the
     // GLib main loop thread is no longer blocked.
-    // Returns false if already started (e.g. stop() was not called without an
-    // error); in that case skip the rest of start() to avoid tearing down the
+    // Returns false if already started (e.g. stop() was not called before
+    // this start()); in that case skip the rest of start() to avoid tearing down the
     // active watches or re-assigning the udev seat on an already-assigned
     // libinput context.
     if (!self->platform_impl->start())
@@ -238,14 +238,11 @@ void miers::Platform::start()
     // an ActionQueue so it executes on the input thread *after*
     // start_platforms() has returned — at which point the GLib main loop is
     // no longer blocked and can process those replies.
-    mir::log_info("evdev-rs: Platform::start(): enqueueing assign_seat on input thread (libinput fd=%d)", libinput_fd);
     self->assign_seat_queue = std::make_shared<md::ActionQueue>();
     self->assign_seat_queue->enqueue(
         [this]()
         {
-            mir::log_info("evdev-rs: assign_seat_queue action firing on input thread");
             self->platform_impl->assign_seat();
-            mir::log_info("evdev-rs: assign_seat_queue action complete");
         });
     self->dispatchable->add_watch(self->assign_seat_queue);
 }

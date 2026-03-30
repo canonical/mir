@@ -71,11 +71,10 @@ impl PlatformRs {
             // Already started; stop() was not called before start(). This is a
             // programming error, but we handle it gracefully by doing nothing rather
             // than creating a second libinput context and leaking the existing one.
-            println!("evdev-rs: start() called while already started; ignoring");
             return false;
         }
 
-        println!("evdev-rs: Starting the evdev-rs platform");
+        println!("Starting the evdev-rs platform");
 
         let bridge = self.bridge.clone();
         let libinput = input::Libinput::new_with_udev(LibinputInterfaceImpl {
@@ -130,12 +129,10 @@ impl PlatformRs {
         let state_arc = match &self.state {
             Some(arc) => arc.clone(),
             None => {
-                println!("evdev-rs: assign_seat() called before start(); ignoring");
                 return;
             }
         };
 
-        println!("evdev-rs: assign_seat: phase 1 — udev_assign_seat + drain");
         // Phase 1: assign the seat, dispatch once to surface DEVICE_ADDED events,
         // and split the resulting queue into device events (handled immediately)
         // and deferred input events.
@@ -148,7 +145,7 @@ impl PlatformRs {
             Ok(mut state) => {
                 // Note: udev_assign_seat returns Result<(), ()> — no error details are available.
                 if state.libinput.udev_assign_seat("seat0").is_err() {
-                    println!("evdev-rs: udev_assign_seat(\"seat0\") failed; input devices will not be available");
+                    eprintln!("Failed to call udev_assign_seat, not running the libinput loop");
                     None
                 } else {
                     Some(drain_initial_events(
@@ -161,7 +158,6 @@ impl PlatformRs {
             Err(_) => {
                 // A poisoned mutex means another thread panicked while holding it,
                 // leaving the state in an unknown condition.
-                println!("evdev-rs: assign_seat: state mutex poisoned; input devices will not be available");
                 None
             }
         };
@@ -177,11 +173,6 @@ impl PlatformRs {
             }
         };
 
-        println!(
-            "evdev-rs: assign_seat: phase 2 — joining {} registration threads, {} deferred events",
-            handles.len(),
-            deferred.len()
-        );
         // Phase 2: join registration threads so that event_builder is set for
         // all devices before we process any input events.
         for handle in handles {
@@ -205,10 +196,6 @@ impl PlatformRs {
             }
         }
 
-        println!(
-            "evdev-rs: assign_seat: phase 3 — processing {} deferred events",
-            deferred.len()
-        );
         // Phase 3: process any input events (keyboard, pointer, …) that arrived
         // in the same dispatch() batch as DEVICE_ADDED.  Now that event_builder
         // is set these events will be handled correctly rather than dropped.
@@ -218,12 +205,10 @@ impl PlatformRs {
                     process_deferred_events(&mut *state, &self.bridge, deferred, &self.report);
                 }
                 Err(_) => {
-                    println!("evdev-rs: assign_seat: state mutex poisoned during deferred event processing");
                     self.state.take();
                 }
             }
         }
-        println!("evdev-rs: assign_seat: complete");
     }
 
     pub unsafe fn libinput_fd(&mut self) -> i32 {
@@ -243,7 +228,6 @@ impl PlatformRs {
     ///
     /// This method will signal the input thread to stop and wait for it to finish.
     pub fn stop(&mut self) {
-        println!("evdev-rs: Stopping the evdev-rs platform");
         // Note: When the main loop exits, we need to remove all devices from the device registry
         // or else Mir will try to free the devices later but we won't have access to the platform
         // code at that point. This results in a segfault.
@@ -269,7 +253,6 @@ impl PlatformRs {
                     // The mutex was poisoned by a previous panic, but we still drain
                     // known_devices from the inner state to avoid leaving them registered
                     // in the InputDeviceRegistry, which can lead to segfaults later.
-                    println!("evdev-rs: stop(): state mutex poisoned; recovering inner state for cleanup");
                     let mut state_guard = poisoned.into_inner();
                     state_guard
                         .known_devices
