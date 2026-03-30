@@ -43,6 +43,7 @@ class Client : public wayland::LifetimeTracker
 public:
     /// Returns the Client object for the given libwayland client
     static auto from(wl_client* client) -> Client&;
+    static auto from(wl_client const* client) -> Client&;
 
     /// The underlying Wayland client
     virtual auto raw_client() const -> wl_client* = 0;
@@ -80,6 +81,7 @@ protected:
 private:
     friend Resource;
     static auto shared_from(wl_client* client) -> std::shared_ptr<Client>;
+    static auto shared_from(wl_client const* client) -> std::shared_ptr<Client>;
 };
 }
 }

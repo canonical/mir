@@ -35,6 +35,11 @@ auto mw::Client::from(wl_client* client) -> Client&
     return *shared_from(client);
 }
 
+auto mw::Client::from(wl_client const* client) -> Client&
+{
+    return *shared_from(client);
+}
+
 void mw::Client::register_client(wl_client* raw, std::shared_ptr<Client> const& shared)
 {
     client_map.lock()->push_back({raw, shared});
@@ -67,4 +72,10 @@ auto mw::Client::shared_from(wl_client* client) -> std::shared_ptr<Client>
     }
     mir::fatal_error("wl_client %p is %s", static_cast<void*>(client), client ? "unknown" : "null");
     abort(); // Make compiler happy
+}
+
+auto mw::Client::shared_from(wl_client const* client) -> std::shared_ptr<Client>
+{
+    // The lookup only does pointer comparison, so const_cast is safe here
+    return shared_from(const_cast<wl_client*>(client));
 }
