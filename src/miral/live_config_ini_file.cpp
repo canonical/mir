@@ -314,26 +314,6 @@ void mlc::IniFile::Self::load_file(std::istream& istream, std::filesystem::path 
     call_done_handlers(path.string());
 }
 
-void mlc::IniFile::Self::load_files(
-    std::span<std::pair<std::reference_wrapper<std::istream>, std::filesystem::path>> config_streams)
-{
-    std::lock_guard lock{mutex};
-    clear_values();
-
-    for (auto& [istream_ref, path] : config_streams)
-        parse_one_file(istream_ref.get(), path);
-
-    call_attribute_handlers();
-
-    std::string paths_str;
-    std::ranges::copy(
-        config_streams | std::views::transform([](auto const& p) { return p.second.string(); }) |
-            std::views::join_with(','),
-        std::back_inserter(paths_str));
-
-    call_done_handlers(paths_str);
-}
-
 namespace
 {
 template<typename Type>
@@ -551,9 +531,4 @@ void mlc::IniFile::on_done(HandleDone handler)
 void mlc::IniFile::load_file(std::istream& istream, std::filesystem::path const& path)
 {
     self->load_file(istream, path);
-}
-
-void mlc::IniFile::load_files(std::span<std::pair<std::reference_wrapper<std::istream>, std::filesystem::path>> config_streams)
-{
-    self->load_files(config_streams);
 }
