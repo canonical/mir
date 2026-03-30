@@ -24,6 +24,8 @@
 #include "null_input_dispatcher.h"
 #include "null_input_targeter.h"
 #include "builtin_cursor_images.h"
+#include <mir/input/runtime_cursor_images.h>
+#include "dynamic_default_cursor_image.h"
 #include "default_input_device_hub.h"
 #include "default_input_manager.h"
 #include "surface_input_dispatcher.h"
@@ -185,11 +187,29 @@ std::shared_ptr<mi::CursorController> mir::DefaultServerConfiguration::the_curso
     return cursor_controller(
         [this]()
         {
-            return std::make_shared<mi::CursorController>(
+            auto controller = std::make_shared<mi::CursorController>(
                 the_input_scene(),
                 the_cursor(),
                 the_default_cursor_image(),
                 the_cursor_observer_multiplexer());
+
+            auto cursor_images = the_cursor_images();
+            if (auto runtime = std::dynamic_pointer_cast<mi::RuntimeCursorImages>(cursor_images))
+            {
+                auto default_image =
+                    std::dynamic_pointer_cast<mi::DynamicDefaultCursorImage>(the_default_cursor_image());
+                auto weak_controller = std::weak_ptr<mi::CursorController>{controller};
+                runtime->register_change_callback(
+                    [default_image, weak_controller]
+                    {
+                        if (default_image)
+                            default_image->refresh();
+                        if (auto ctrl = weak_controller.lock())
+                            ctrl->force_update_cursor_image();
+                    });
+            }
+
+            return controller;
         });
 }
 
@@ -235,9 +255,9 @@ std::shared_ptr<mg::CursorImage>
 mir::DefaultServerConfiguration::the_default_cursor_image()
 {
     return default_cursor_image(
-        [this]()
+        [this]() -> std::shared_ptr<mg::CursorImage>
         {
-            return the_cursor_images()->image(mir_default_cursor_name, mi::default_cursor_size);
+            return std::make_shared<mi::DynamicDefaultCursorImage>(the_cursor_images());
         });
 }
 
@@ -247,7 +267,8 @@ mir::DefaultServerConfiguration::the_cursor_images()
     return cursor_images(
         []() -> std::shared_ptr<mi::CursorImages>
         {
-            return std::make_shared<mi::BuiltinCursorImages>();
+            return std::make_shared<mi::RuntimeCursorImages>(
+                std::make_shared<mi::BuiltinCursorImages>());
         });
 }
 

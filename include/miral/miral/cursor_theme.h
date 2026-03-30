@@ -17,12 +17,15 @@
 #ifndef MIRAL_CURSOR_THEME_H
 #define MIRAL_CURSOR_THEME_H
 
+#include <memory>
 #include <string>
 
 namespace mir { class Server; }
 
 namespace miral
 {
+namespace live_config { class Store; }
+
 /// Loads a cursor theme.
 ///
 /// Cursor themes are specified as a colon-separated list of theme names.
@@ -51,12 +54,31 @@ public:
     ///                            with a size of 24x24, this exception will be
     ///                            thrown
     explicit CursorTheme(std::string const& theme);
+
+    /// Construct registering with a configuration store.
+    ///
+    /// Available options:
+    ///     - {cursor, theme}: Sets the cursor theme at runtime. The value is
+    ///       a colon-separated list of theme names.
+    ///
+    /// \param theme default colon-separated cursor theme list
+    /// \param config_store the config store
+    /// \remark Since MirAL 5.8
+    CursorTheme(std::string const& theme, live_config::Store& config_store);
+
     ~CursorTheme();
 
     void operator()(mir::Server& server) const;
 
+    /// Change the cursor theme at runtime.
+    ///
+    /// \param theme A colon-separated list of cursor themes.
+    /// \remark Since MirAL 5.8
+    void set_theme(std::string const& theme) const;
+
 private:
-    std::string const theme;
+    struct Self;
+    std::shared_ptr<Self> self;
 };
 }
 

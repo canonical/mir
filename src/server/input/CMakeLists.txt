@@ -5,6 +5,8 @@ set(
   builtin_cursor_images.cpp
   cursor_controller.cpp
   default_configuration.cpp
+  dynamic_default_cursor_image.cpp
+  dynamic_default_cursor_image.h
   default_device.cpp
   default_event_builder.cpp
   default_input_device_hub.cpp
@@ -14,6 +16,7 @@ set(
   key_repeat_dispatcher.cpp
   keyboard_resync_dispatcher.cpp
   null_input_dispatcher.cpp
+  runtime_cursor_images.cpp
   seat_input_device_tracker.cpp
   surface_input_dispatcher.cpp
   touchspot_controller.cpp

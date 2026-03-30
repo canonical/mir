@@ -258,6 +258,24 @@ void mi::CursorController::update_cursor_image()
     update_cursor_image_locked(lock);
 }
 
+void mi::CursorController::force_update_cursor_image()
+{
+    std::shared_ptr<mg::CursorImage> image;
+    bool is_usable;
+    {
+        std::lock_guard lock(cursor_state_guard);
+        image = current_cursor;
+        is_usable = usable;
+    }
+
+    if (image && !is_empty(image))
+    {
+        if (is_usable)
+            cursor->show(image);
+        cursor_observer->image_set_to(image);
+    }
+}
+
 void mi::CursorController::cursor_moved_to(float abs_x, float abs_y)
 {
     auto const new_location = geom::Point{geom::X{abs_x}, geom::Y{abs_y}};

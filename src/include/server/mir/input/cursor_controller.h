@@ -56,6 +56,11 @@ public:
     // in response to scene changes.
     void update_cursor_image();
 
+    /// Force the cursor to re-show its current image, bypassing the cached
+    /// pointer equality check. Used after cursor theme changes where the
+    /// CursorImage object is the same but its content has changed.
+    void force_update_cursor_image();
+
     void pointer_usable() override;
 
     void pointer_unusable() override;

@@ -775,3 +775,11 @@ global:
     miral::WindowSpecification::alpha*;
   };
 } MIRAL_5.6;
+
+MIRAL_5.8 {
+global:
+  extern "C++" {
+    miral::CursorTheme::CursorTheme*;
+    miral::CursorTheme::set_theme*;
+  };
+} MIRAL_5.7;
