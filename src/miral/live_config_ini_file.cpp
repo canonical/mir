@@ -273,6 +273,13 @@ void mlc::IniFile::Self::parse_one_file(std::istream& istream, std::filesystem::
                 {
                     config_state.update_array_value(key, value, path);
                 }
+                else
+                {
+                    mir::log_warning(
+                        "Config key '%s' in file '%s' is not registered. Skipping.",
+                        key.to_string().c_str(),
+                        path.c_str());
+                }
             }
             catch (std::exception const& e)
             {
