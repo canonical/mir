@@ -627,11 +627,13 @@ _XcursorBuildXdgPath (void)
     if (home)
         len += strlen (home) + strlen ("/.icons") + 1; /* +1 for ':' */
 
-    /* $XDG_DATA_DIRS/icons: (one entry per dir in XDG_DATA_DIRS) */
+    /* $XDG_DATA_DIRS/icons: (one entry per non-empty dir in XDG_DATA_DIRS) */
     for (char const *p = xdg_data_dirs; p && *p; )
     {
         char const *colon = strchr (p, ':');
-        len += (colon ? (size_t)(colon - p) : strlen (p)) + strlen ("/icons") + 1;
+        size_t const component_len = colon ? (size_t)(colon - p) : strlen (p);
+        if (component_len > 0)
+            len += component_len + strlen ("/icons") + 1;
         p = colon ? colon + 1 : NULL;
     }
 
@@ -660,10 +662,12 @@ _XcursorBuildXdgPath (void)
     for (char const *p = xdg_data_dirs; p && *p; )
     {
         char const *colon = strchr (p, ':');
-        int const written = colon
-            ? snprintf (p_out, remaining, "%.*s/icons:", (int)(colon - p), p)
-            : snprintf (p_out, remaining, "%s/icons:", p);
+        size_t const component_len = colon ? (size_t)(colon - p) : strlen (p);
+        char const *component_start = p;
         p = colon ? colon + 1 : NULL;
+        if (component_len == 0)
+            continue;
+        int const written = snprintf (p_out, remaining, "%.*s/icons:", (int)component_len, component_start);
         if (written < 0 || (size_t)written >= remaining) goto error;
         p_out += written;
         remaining -= (size_t)written;
