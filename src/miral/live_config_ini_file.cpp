@@ -75,10 +75,162 @@ private:
         bool explicitly_cleared = false;
     };
 
+    class ConfigState
+    {
+    public:
+        auto add_scalar_attribute(Key const& key, AttributeDetails details) -> void
+        {
+            if (attribute_handlers.erase(key) || array_attribute_handlers.erase(key))
+            {
+                // if a key is registered multiple times, the last time is used: drop existing earlier registrations
+                mir::log_warning("Config attribute handler for '%s' overwritten", key.to_string().c_str());
+            }
+
+            attribute_handlers.emplace(key, std::move(details));
+        }
+
+        void clear()
+        {
+            for (auto& [_, details] : attribute_handlers)
+                details.value = std::nullopt;
+
+            for (auto& [_, details] : array_attribute_handlers)
+            {
+                details.parsed_values.resize(0);
+                details.modification_locations.resize(0);
+                details.explicitly_cleared = false;
+            }
+        }
+
+        bool is_scalar(Key const& key) const
+        {
+            return attribute_handlers.contains(key);
+        }
+
+        void update_scalar_value(Key const& key, std::string_view value, std::filesystem::path const& path)
+        {
+            auto& details = attribute_handlers.at(key);
+            details.value = ScalarValue{std::string{value}, path};
+        }
+
+        bool is_array(Key const& key) const
+        {
+            return array_attribute_handlers.contains(key);
+        }
+
+        void update_array_value(Key const& key, std::string_view value, std::filesystem::path const& path)
+        {
+            auto& details = array_attribute_handlers.at(key);
+            auto& parsed_values = details.parsed_values;
+            auto& modification_locations = details.modification_locations;
+
+            if (!std::ranges::contains(modification_locations, path))
+                modification_locations.push_back(path);
+
+            if (value.empty())
+            {
+                parsed_values.resize(0);
+                details.explicitly_cleared = true;
+            }
+            else
+                parsed_values.push_back(std::string{value});
+        }
+
+        void call_attribute_handlers() const
+        {
+            for (auto const& [key, details] : attribute_handlers)
+                try
+                {
+                    auto const value = [&details] -> std::optional<std::string_view>
+                    {
+                        if (details.value)
+                            return details.value->string_value;
+                        else if (details.preset)
+                            // string -> string_view -> optional<string_view>
+                            return *details.preset;
+
+                        return std::nullopt;
+                    }();
+
+                    details.handler(key, value);
+                }
+                catch (std::exception const& e)
+                {
+                    mir::log_warning(
+                        "Error processing scalar '%s' with value '%s' set in file '%s': %s",
+                        key.to_string().c_str(),
+                        details.value ? details.value->string_value.c_str() : "",
+                        details.value ? details.value->path.c_str() : "",
+                        e.what());
+                }
+
+            for (auto const& [key, details] : array_attribute_handlers)
+                try
+                {
+                    // If the user didn't explicitly clear the array and didn't provide any
+                    // values, then we use the preset values.
+                    if (!details.explicitly_cleared && details.parsed_values.empty())
+                        details.handler(key, details.preset);
+                    else
+                        details.handler(key, details.parsed_values);
+                }
+                catch (std::exception const& e)
+                {
+                    // Unfortunately, the GCC version used in CI does not support std::ranges::to...
+                    auto const array_values = details.parsed_values | std::views::join_with(',');
+                    auto const array_values_str = std::string{array_values.begin(), array_values.end()};
+
+                    std::string modification_locations_str;
+                    std::ranges::copy(
+                        details.modification_locations | std::views::transform([](auto const& p) { return p.string(); })
+                            | std::views::join_with(','),
+                        std::back_inserter(modification_locations_str));
+
+                    mir::log_warning(
+                        "Error processing array '%s' with values [%s] modified in files [%s]: %s",
+                        key.to_string().c_str(),
+                        array_values_str.c_str(),
+                        modification_locations_str.c_str(),
+                        e.what());
+                }
+        }
+
+        void add_array_attribute(Key const& key, ArrayAttributeDetails details)
+        {
+            if (attribute_handlers.erase(key) || array_attribute_handlers.erase(key))
+            {
+                // if a key is registered multiple times, the last time is used: drop existing earlier registrations
+                mir::log_warning("Config attribute handler for '%s' overwritten", key.to_string().c_str());
+            }
+
+            array_attribute_handlers.emplace(key, std::move(details));
+        }
+
+        void on_done(HandleDone handler)
+        {
+            done_handlers.push_back(std::move(handler));
+        }
+
+        void call_done_handlers(std::string const& paths) const
+        {
+            for (auto const& h : done_handlers)
+                try
+                {
+                    h();
+                }
+                catch (std::exception const& e)
+                {
+                    mir::log_warning("Error processing file(s) [%s]: %s", paths.c_str(), e.what());
+                }
+        }
+    private:
+        std::map<Key, AttributeDetails> attribute_handlers;
+        std::map<Key, ArrayAttributeDetails> array_attribute_handlers;
+        std::list<HandleDone> done_handlers;
+    };
+
     std::mutex mutex;
-    std::map<Key, AttributeDetails> attribute_handlers;
-    std::map<Key, ArrayAttributeDetails> array_attribute_handlers;
-    std::list<HandleDone> done_handlers;
+    ConfigState config_state;
 };
 
 void mlc::IniFile::Self::add_key(
@@ -88,33 +240,18 @@ void mlc::IniFile::Self::add_key(
     HandleString handler)
 {
     std::lock_guard lock{mutex};
-
-    if (attribute_handlers.erase(key) || array_attribute_handlers.erase(key))
-    {
-        // if a key is registered multiple times, the last time is used: drop existing earlier registrations
-        mir::log_warning("Config attribute handler for '%s' overwritten", key.to_string().c_str());
-    }
-
-    attribute_handlers.emplace(key, AttributeDetails{handler, std::string{description}, preset, std::nullopt});
+    config_state.add_scalar_attribute(key,  AttributeDetails{handler, std::string{description}, preset, std::nullopt});
 }
 
 void miral::live_config::IniFile::Self::on_done(HandleDone handler)
 {
     std::lock_guard lock{mutex};
-    done_handlers.emplace_back(std::move(handler));
+    config_state.on_done(std::move(handler));
 }
 
 void mlc::IniFile::Self::clear_values()
 {
-    for (auto& [_, details] : attribute_handlers)
-        details.value = std::nullopt;
-
-    for (auto& [_, details] : array_attribute_handlers)
-    {
-        details.parsed_values.resize(0);
-        details.modification_locations.resize(0);
-        details.explicitly_cleared = false;
-    }
+    config_state.clear();
 }
 
 void mlc::IniFile::Self::parse_one_file(std::istream& istream, std::filesystem::path const& path)
@@ -128,26 +265,13 @@ void mlc::IniFile::Self::parse_one_file(std::istream& istream, std::filesystem::
                 auto const key = Key{line.substr(0, eq)};
                 auto const value = line.substr(eq + 1);
 
-                if (auto const details = attribute_handlers.find(key); details != attribute_handlers.end())
+                if (config_state.is_scalar(key))
                 {
-                    details->second.value = {value, path};
+                    config_state.update_scalar_value(key, value, path);
                 }
-                else if (auto const details = array_attribute_handlers.find(key);
-                         details != array_attribute_handlers.end())
+                else if (config_state.is_array(key))
                 {
-                    auto& parsed_values = details->second.parsed_values;
-                    auto& modification_locations = details->second.modification_locations;
-
-                    if (!std::ranges::contains(modification_locations, path))
-                        modification_locations.push_back(path);
-
-                    if (value.empty())
-                    {
-                        parsed_values.resize(0);
-                        details->second.explicitly_cleared = true;
-                    }
-                    else
-                        parsed_values.push_back(value);
+                    config_state.update_array_value(key, value, path);
                 }
             }
             catch (std::exception const& e)
@@ -159,96 +283,19 @@ void mlc::IniFile::Self::parse_one_file(std::istream& istream, std::filesystem::
 
 void mlc::IniFile::Self::call_attribute_handlers() const
 {
-    for (auto const& [key, details] : attribute_handlers)
-    try
-    {
-        auto const value = [&details] -> std::optional<std::string_view>
-        {
-            if (details.value)
-                return details.value->string_value;
-            else if (details.preset)
-                // string -> string_view -> optional<string_view>
-                return *details.preset;
-
-            return std::nullopt;
-        }();
-
-        details.handler(key, value);
-    }
-    catch (const std::exception& e)
-    {
-        mir::log_warning(
-            "Error processing scalar '%s' with value '%s' set in file '%s': %s",
-            key.to_string().c_str(),
-            details.value ? details.value->string_value.c_str() : "",
-            details.value ? details.value->path.c_str() : "",
-            e.what());
-    }
-
-    for (auto const& [key, details] : array_attribute_handlers)
-    try
-    {
-        // If the user didn't explicitly clear the array and didn't provide any
-        // values, then we use the preset values.
-        if (!details.explicitly_cleared && details.parsed_values.empty())
-            details.handler(key, details.preset);
-        else
-            details.handler(key, details.parsed_values);
-    }
-    catch (const std::exception& e)
-    {
-        // Unfortunately, the GCC version used in CI does not support std::ranges::to...
-        auto const array_values = details.parsed_values | std::views::join_with(',');
-        auto const array_values_str = std::string{array_values.begin(), array_values.end()};
-
-        std::string modification_locations_str;
-        std::ranges::copy(
-            details.modification_locations |
-                std::views::transform([](auto const& p) { return p.string(); }) |
-                std::views::join_with(','),
-            std::back_inserter(modification_locations_str));
-
-        mir::log_warning(
-            "Error processing array '%s' with values [%s] modified in files [%s]: %s",
-            key.to_string().c_str(),
-            array_values_str.c_str(),
-            modification_locations_str.c_str(),
-            e.what());
-    }
+    config_state.call_attribute_handlers();
 }
 
 void mlc::IniFile::Self::call_done_handlers(std::string const& paths) const
 {
-    for (auto const& h : done_handlers)
-    try
-    {
-        h();
-    }
-    catch (const std::exception& e)
-    {
-        mir::log_warning("Error processing file(s) [%s]: %s",  paths.c_str(), e.what());
-    }
+    config_state.call_done_handlers(paths);
 }
 
 void mlc::IniFile::Self::add_key(Key const& key, std::string_view description,
     std::optional<std::vector<std::string>> preset, HandleStrings handler)
 {
     std::lock_guard lock{mutex};
-
-    if (attribute_handlers.erase(key) || array_attribute_handlers.erase(key))
-    {
-        // if a key is registered multiple times, the last time is used: drop existing earlier registrations
-        mir::log_warning("Config attribute handler for '%s' overwritten", key.to_string().c_str());
-    }
-
-    array_attribute_handlers.emplace(
-        key,
-        ArrayAttributeDetails{
-            handler,
-            std::string{description},
-            preset,
-            std::vector<std::string>{},
-            std::vector<std::filesystem::path>{}});
+    config_state.add_array_attribute(key, ArrayAttributeDetails{handler, std::string{description}, preset, {}, {}, false});
 }
 
 void mlc::IniFile::Self::load_file(std::istream& istream, std::filesystem::path const& path)
