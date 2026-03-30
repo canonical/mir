@@ -566,3 +566,98 @@ TEST_F(LiveConfigIniFile, done_handler_is_called_on_load_file)
 
     EXPECT_THAT(done_count, Eq(1));
 }
+
+TEST_F(LiveConfigIniFile, single_file_reload_updates_handler)
+{
+    mlc::Key const cursor_scale{"cursor_scale"};
+    ini_file.add_float_attribute(cursor_scale, "cursor scale", [this](auto... args) { float_handler(args...); });
+
+    EXPECT_CALL(*this, float_handler(_, _)).Times(AnyNumber());
+    std::istringstream initial{cursor_scale.to_string() + "=1.0\n"};
+    ini_file.load_file(initial, "base.conf");
+
+    EXPECT_CALL(*this, float_handler(cursor_scale, std::optional<float>{2.0f}));
+    std::istringstream updated{cursor_scale.to_string() + "=2.0\n"};
+    ini_file.load_file(updated, "base.conf");
+}
+
+TEST_F(LiveConfigIniFile, base_adding_new_key_does_not_affect_override_for_shared_key)
+{
+    mlc::Key const cursor_scale{"cursor_scale"};
+    mlc::Key const a_third_key{"a_third_key"};
+    ini_file.add_float_attribute(cursor_scale, "cursor scale", [this](auto... args) { float_handler(args...); });
+    ini_file.add_string_attribute(a_third_key, "a third key", [this](auto... args) { string_handler(args...); });
+
+    EXPECT_CALL(*this, float_handler(_, _)).Times(AnyNumber());
+    EXPECT_CALL(*this, string_handler(_, _)).Times(AnyNumber());
+    std::istringstream base{cursor_scale.to_string() + "=1.0\n"};
+    ini_file.load_file(base, "base.conf");
+    std::istringstream override_stream{cursor_scale.to_string() + "=2.0\n"};
+    ini_file.load_file(override_stream, "base.conf.d/99-override.conf");
+
+    std::istringstream updated_base{
+        cursor_scale.to_string() + "=1.0\n" + a_third_key.to_string() + "=hello\n"};
+    EXPECT_CALL(*this, float_handler(cursor_scale, std::optional<float>{2.0f})).Times(0);
+    EXPECT_CALL(*this, string_handler(a_third_key, std::optional<std::string_view const>{"hello"}));
+    ini_file.load_file(updated_base, "base.conf");
+}
+
+TEST_F(LiveConfigIniFile, base_removing_key_still_provided_by_override)
+{
+    mlc::Key const cursor_scale{"cursor_scale"};
+    ini_file.add_float_attribute(cursor_scale, "cursor scale", [this](auto... args) { float_handler(args...); });
+
+    EXPECT_CALL(*this, float_handler(_, _)).Times(AnyNumber());
+    std::istringstream base{cursor_scale.to_string() + "=1.0\n"};
+    ini_file.load_file(base, "base.conf");
+    std::istringstream override_stream{cursor_scale.to_string() + "=2.0\n"};
+    ini_file.load_file(override_stream, "base.conf.d/99-override.conf");
+
+    EXPECT_CALL(*this, float_handler(cursor_scale, std::optional<float>{2.0f}));
+    std::istringstream updated_base{""};
+    ini_file.load_file(updated_base, "base.conf");
+}
+
+TEST_F(LiveConfigIniFile, override_removing_key_falls_back_to_base_value)
+{
+    mlc::Key const cursor_scale{"cursor_scale"};
+    mlc::Key const some_other_key{"some_other_key"};
+    ini_file.add_float_attribute(cursor_scale, "cursor scale", [this](auto... args) { float_handler(args...); });
+    ini_file.add_string_attribute(some_other_key, "other key", [this](auto... args) { string_handler(args...); });
+
+    EXPECT_CALL(*this, float_handler(_, _)).Times(AnyNumber());
+    EXPECT_CALL(*this, string_handler(_, _)).Times(AnyNumber());
+    std::istringstream base{cursor_scale.to_string() + "=1.0\n"};
+    ini_file.load_file(base, "base.conf");
+    std::istringstream override_stream{
+        cursor_scale.to_string() + "=2.0\n" + some_other_key.to_string() + "=value\n"};
+    ini_file.load_file(override_stream, "base.conf.d/99-override.conf");
+
+    // Override no longer sets cursor_scale — base value of 1.0 should be restored
+    EXPECT_CALL(*this, float_handler(cursor_scale, std::optional<float>{1.0f}));
+    EXPECT_CALL(*this, string_handler(some_other_key, _)).Times(0);
+    std::istringstream updated_override{some_other_key.to_string() + "=value\n"};
+    ini_file.load_file(updated_override, "base.conf.d/99-override.conf");
+}
+
+TEST_F(LiveConfigIniFile, override_file_removed_reverts_keys_to_base_or_nullopt)
+{
+    mlc::Key const cursor_scale{"cursor_scale"};
+    mlc::Key const some_other_key{"some_other_key"};
+    ini_file.add_float_attribute(cursor_scale, "cursor scale", [this](auto... args) { float_handler(args...); });
+    ini_file.add_string_attribute(some_other_key, "other key", [this](auto... args) { string_handler(args...); });
+
+    EXPECT_CALL(*this, float_handler(_, _)).Times(AnyNumber());
+    EXPECT_CALL(*this, string_handler(_, _)).Times(AnyNumber());
+    std::istringstream base{cursor_scale.to_string() + "=1.0\n"};
+    ini_file.load_file(base, "base.conf");
+    std::istringstream override_stream{
+        cursor_scale.to_string() + "=2.0\n" + some_other_key.to_string() + "=value\n"};
+    ini_file.load_file(override_stream, "base.conf.d/99-override.conf");
+
+    // Override file is removed — simulate by reloading with an empty stream
+    EXPECT_CALL(*this, float_handler(cursor_scale, std::optional<float>{1.0f}));
+    EXPECT_CALL(*this, string_handler(some_other_key, std::optional<std::string_view const>{std::nullopt}));
+    std::istringstream empty{""};
+    ini_file.load_file(empty, "base.conf.d/99-override.conf");
+}
