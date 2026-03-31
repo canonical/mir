@@ -3,6 +3,14 @@ name: Close Snaps
 on:
   pull_request:
     types: [closed]
+    paths-ignore:
+    - '.github/**'
+    - 'debian/**'
+    - 'doc/**'
+    - 'spread**'
+    - 'tests/**'
+    - 'tools/**'
+    - '!.github/workflows/snap.yml'
 
 jobs:
   close:

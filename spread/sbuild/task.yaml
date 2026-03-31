@@ -18,6 +18,7 @@ execute: |
     apt-get install \
         --yes \
         --no-install-recommends \
+        autopkgtest \
         binfmt-support \
         debootstrap \
         debhelper \
@@ -70,8 +71,15 @@ execute: |
       SBUILD_OPTS+=(
         --extra-repository="deb http://ppa.launchpad.net/mir-team/dev/ubuntu ${RELEASE} main"
         --extra-repository-key=${SPREAD_PATH}/${SPREAD_TASK}/mir-team.asc
+        --autopkgtest-opt="--add-apt-source=ppa:mir-team/dev"
       )
     fi
+
+    # Run autopkgtests
+    SBUILD_OPTS+=(
+      --run-autopkgtest
+      --autopkgtest-opts="-- schroot %r-%a"
+    )
 
     # Cross building
     if [ "${DEB_BUILD_ARCH}" != "${DEB_HOST_ARCH}" ]; then

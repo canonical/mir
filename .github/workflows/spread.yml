@@ -10,7 +10,12 @@ on:
   merge_group:
     types: [checks_requested]
   pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
+    paths-ignore:
+    - '.github/**'
+    - 'doc/sphinx/**'
+    - 'snap/**'
+    - '!doc/sphinx/conf.py'
+    - '!.github/workflows/spread.yml'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.number && format('pr{0}', github.event.number) || github.run_id }}

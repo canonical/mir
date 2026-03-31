@@ -7,7 +7,9 @@ on:
   merge_group:
     types: [checks_requested]
   pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+    - '.github/workflows/symbols-check.yml'
+    - 'include/**.h'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.number && format('pr{0}', github.event.number) || github.ref_name }}

@@ -28,6 +28,7 @@
 #include <mir/input/touchpad_settings.h>
 #include <mir/input/touchscreen_settings.h>
 #include <mir/input/input_device_info.h>
+#include <mir/dispatch/action_queue.h>
 #include <mir/log.h>
 
 namespace mi = mir::input;
@@ -172,6 +173,9 @@ public:
     rust::Box<PlatformRs> platform_impl;
     std::shared_ptr<md::ReadableFd> libinput_dispatch;
     std::shared_ptr<md::MultiplexingDispatchable> dispatchable;
+    /// One-shot queue used to defer udev_assign_seat() until after
+    /// start_platforms() returns and the GLib main loop is free.
+    std::shared_ptr<md::ActionQueue> assign_seat_queue;
 };
 
 miers::Platform::Platform(
@@ -189,12 +193,58 @@ std::shared_ptr<mir::dispatch::Dispatchable> miers::Platform::dispatchable()
 
 void miers::Platform::start()
 {
-    self->platform_impl->start();
+    // Phase 1 (non-blocking): create the libinput context without assigning a
+    // seat.  This returns quickly so that start_platforms() can return and the
+    // GLib main loop thread is no longer blocked.
+    // Returns false if already started (e.g. stop() was not called before
+    // this start()); in that case skip the rest of start() to avoid tearing down the
+    // active watches or re-assigning the udev seat on an already-assigned
+    // libinput context.
+    if (!self->platform_impl->start())
+        return;
+
+    // Remove any stale fd watcher or assign_seat queue left over from a
+    // previous start()/stop() cycle where stop() may not have cleaned up
+    // (e.g. due to an earlier deadlock).  We only do this when start() actually
+    // created a fresh context (returned true) — when it returns false the
+    // platform is still running and removing its watchers would break dispatch.
+    if (self->assign_seat_queue)
+    {
+        self->dispatchable->remove_watch(self->assign_seat_queue);
+        self->assign_seat_queue.reset();
+    }
+    if (self->libinput_dispatch)
+    {
+        self->dispatchable->remove_watch(self->libinput_dispatch);
+        self->libinput_dispatch.reset();
+    }
+
+    auto const libinput_fd = self->platform_impl->libinput_fd();
+    if (libinput_fd < 0)
+    {
+        mir::log_error("evdev-rs platform: failed to obtain libinput fd after start(); resetting platform state");
+        self->platform_impl->stop();
+        return;
+    }
 
     self->libinput_dispatch = std::make_shared<md::ReadableFd>(
-        Fd{IntOwnedFd{self->platform_impl->libinput_fd()}},
-        [&]() { self->platform_impl->process(); });
+        Fd{IntOwnedFd{libinput_fd}},
+        [this]() { self->platform_impl->process(); });
     self->dispatchable->add_watch(self->libinput_dispatch);
+
+    // Phase 2 (deferred): assign the udev seat so that libinput opens input
+    // devices.  Opening each device requires a logind TakeDevice D-Bus call
+    // whose reply is processed by the GLib main loop.  We defer this work via
+    // an ActionQueue so it executes on the input thread *after*
+    // start_platforms() has returned — at which point the GLib main loop is
+    // no longer blocked and can process those replies.
+    self->assign_seat_queue = std::make_shared<md::ActionQueue>();
+    self->assign_seat_queue->enqueue(
+        [this]()
+        {
+            self->platform_impl->assign_seat();
+        });
+    self->dispatchable->add_watch(self->assign_seat_queue);
 }
 
 void miers::Platform::continue_after_config()
@@ -209,6 +259,11 @@ void miers::Platform::pause_for_config()
 
 void miers::Platform::stop()
 {
+    if (self->assign_seat_queue)
+    {
+        self->dispatchable->remove_watch(self->assign_seat_queue);
+        self->assign_seat_queue.reset();
+    }
     if (self->libinput_dispatch)
         self->dispatchable->remove_watch(self->libinput_dispatch);
     self->libinput_dispatch.reset();

@@ -15,6 +15,9 @@ endfunction()
 function(target_link_libraries)
   # Dummy
 endfunction()
+function(target_include_directories)
+  # Dummy
+endfunction()
 function(set_target_properties)
   # Dummy
 endfunction()
