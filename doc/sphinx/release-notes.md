@@ -28,6 +28,22 @@
 
 -->
 
+## Mir 2.26.0~rc
+
+- New upstream release X.YY.Z
+
+  - ABI summary:
+
+    - miral ABI unchanged at 7
+    - mircommon ABI unchanged at 12
+    - mircore ABI unchanged at 2
+    - miroil ABI unchanged at 8
+    - mirplatform ABI unchanged at 34
+    - mirserver ABI unchanged at 67
+    - mirwayland ABI unchanged at 5
+    - mirplatformgraphics ABI unchanged at 23
+    - mirinputplatform ABI unchanged at 10
+
 ## Mir 2.25.2
 
 - Bugs fixed:
