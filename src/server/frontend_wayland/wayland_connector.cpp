@@ -616,11 +616,6 @@ bool mf::WaylandConnector::wl_display_global_filter_func(wl_client const* client
     return extension_filter(session, interface->name);
 }
 
-auto mir::frontend::get_session(wl_client* wl_client) -> std::shared_ptr<scene::Session>
-{
-    return WlClient::from(wl_client).client_session();
-}
-
 auto mir::frontend::get_session(wl_client const* wl_client) -> std::shared_ptr<scene::Session>
 {
     return WlClient::from(wl_client).client_session();
