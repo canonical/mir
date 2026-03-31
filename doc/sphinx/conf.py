@@ -123,7 +123,7 @@ html_context = {
     # Product tag image; the orange part of your logo, shown in the page header
     #
     # TODO: To add a tag image, uncomment and update as needed.
-    'product_tag': '_static/tag.png',
+    # 'product_tag': '_static/tag.png',
     # Your Discourse instance URL
     #
     # TODO: Change to your Discourse instance URL or leave empty.
@@ -134,7 +134,7 @@ html_context = {
     # Your Mattermost channel URL
     #
     # TODO: Change to your Mattermost channel URL or leave empty.
-    "mattermost": '',
+    "mattermost": "https://chat.canonical.com/canonical/channels/mir-internal",
     # Your Matrix channel URL
     #
     # TODO: Change to your Matrix channel URL or leave empty.
@@ -353,8 +353,6 @@ exclude_patterns = [
 # Specifies a reST snippet to be appended to each .rst file
 
 rst_epilog = """
-.. include:: /reuse/links.txt
-.. include:: /reuse/substitutions.txt
 """
 
 # Feedback button at the top; enabled by default
