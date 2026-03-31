@@ -171,8 +171,7 @@ fn handle_device_event(
             // directly here would cause an ABBA deadlock with the InputDeviceHub mutex:
             //   - This thread (input thread): holds Rust state mutex → waits for hub mutex
             //   - Spawned add_device thread:  holds hub mutex       → waits for Rust state mutex
-            let input_device = known_devices[index].input_device.clone();
-            known_devices.remove(index);
+            let input_device = known_devices.swap_remove(index).input_device;
 
             let device_registry = device_registry.clone();
 
