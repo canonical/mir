@@ -152,16 +152,16 @@ int main(int argc, char const* argv[])
 
     auto toggle_mousekeys_filter = [mousekeys_on = initial_mousekeys_state, &mousekeys_config](MirKeyboardEvent const* key_event) mutable {
         auto const modifiers = mir_keyboard_event_modifiers(key_event);
+        auto const keysym = mir_keyboard_event_keysym(key_event);
+        auto const action = mir_keyboard_event_action(key_event);
 
-        if ((modifiers & mir_input_event_modifier_ctrl) && (modifiers & mir_input_event_modifier_shift) &&
-            (modifiers & mir_input_event_modifier_num_lock))
+        if ((modifiers & mir_input_event_modifier_ctrl) && (modifiers & mir_input_event_modifier_shift) && (keysym == XKB_KEY_F12)) 
         {
-            if (mir_keyboard_event_action(key_event) == mir_keyboard_action_down ||
-                mir_keyboard_event_action(key_event) == mir_keyboard_action_repeat)
+            if (action != mir_keyboard_action_down)
                 return true;
 
             mousekeys_on = !mousekeys_on;
-            if(mousekeys_on)
+            if (mousekeys_on)
                 mousekeys_config.enable();
             else
                 mousekeys_config.disable();
