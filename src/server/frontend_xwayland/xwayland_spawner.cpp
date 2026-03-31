@@ -28,6 +28,7 @@
 
 #include <array>
 #include <format>
+#include <iterator>
 #include <string>
 #include <fcntl.h>
 #include <sys/socket.h>
@@ -101,7 +102,8 @@ auto create_sockets(const std::string &x11_socket) -> std::vector<mir::Fd>
     std::vector<mir::Fd> result;
     struct sockaddr_un addr{ .sun_family = AF_UNIX, .sun_path = { 0 } };
 
-    auto name_create_socket = [&](char *bos, size_t limit)
+    auto name_create_socket = [&](
+        char *bos, std::iter_difference_t<char *> limit)
     {
         auto eos = std::format_to_n(bos, limit, "{}", x11_socket).out;
         *eos = '\0';
