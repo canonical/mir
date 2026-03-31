@@ -1,6 +1,6 @@
 # Environment
 *env*/
-.sphinx/venv/
+.venv/
 
 # Sphinx
 .sphinx/warnings.txt
