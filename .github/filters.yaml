@@ -1,0 +1,32 @@
+documentation:
+  - '.github/workflows/automatic-doc-checks.yml'
+  - 'doc/**'
+
+code:
+  - 'CMakeLists.txt'
+  - 'Cargo.*'
+  - 'cmake/**'
+  - 'debian/**'
+  - 'include/**'
+  - 'rpm/**'
+  - 'src/**'
+  - 'tests/**'
+
+snap:
+  - '.github/workflows/snap.yml'
+  - 'snap/**'
+
+spread:
+  - '.github/workflows/spread.yml'
+  - 'spread.yaml'
+  - 'spread/**'
+
+symbols:
+  - '.github/workflows/symbols-check.yml'
+  - 'include/**.h'
+
+tics:
+  - '.github/workflows/tics.yml'
+
+tools:
+  - 'tools/**'
