@@ -13,7 +13,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
+#include <mir/log.h>
 #include <miral/locate_pointer.h>
 #include <miral/minimal_window_manager.h>
 #include "tiling_window_manager.h"
@@ -150,25 +150,34 @@ int main(int argc, char const* argv[])
         return initial_mousekeys_state ? MouseKeysConfig::enabled() : MouseKeysConfig::disabled();
     }();
 
-    auto toggle_mousekeys_filter = [mousekeys_on = initial_mousekeys_state, &mousekeys_config](MirKeyboardEvent const* key_event) mutable {
+    auto toggle_mousekeys_filter = [mousekeys_on = false, &mousekeys_config](MirKeyboardEvent const* key_event) mutable {
+        using namespace miral::toolkit;
         auto const modifiers = mir_keyboard_event_modifiers(key_event);
+        auto const keysym = mir_keyboard_event_keysym(key_event);
+        auto const action = mir_keyboard_event_action(key_event);
 
-        if ((modifiers & mir_input_event_modifier_ctrl) && (modifiers & mir_input_event_modifier_shift) &&
-            (modifiers & mir_input_event_modifier_num_lock))
+        if (mousekeys_on && keysym == XKB_KEY_Num_Lock)
+            return true;
+
+        if ((modifiers & mir_input_event_modifier_ctrl) && (modifiers & mir_input_event_modifier_shift) && (keysym == XKB_KEY_Num_Lock))
         {
-            if (mir_keyboard_event_action(key_event) == mir_keyboard_action_down ||
-                mir_keyboard_event_action(key_event) == mir_keyboard_action_repeat)
+            if (action != mir_keyboard_action_down)
+            {
                 return true;
+            }
 
             mousekeys_on = !mousekeys_on;
-            if(mousekeys_on)
+            if (mousekeys_on)
+            {
                 mousekeys_config.enable();
+            }
             else
+            {
                 mousekeys_config.disable();
-
+            }
+            
             return true;
         }
-
         return false;
     };
 
