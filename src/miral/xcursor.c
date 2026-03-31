@@ -25,7 +25,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <dirent.h>
-#include <pthread.h>
 
 /*
  * From libXcursor/include/X11/extensions/Xcursor.h
@@ -608,9 +607,10 @@ XcursorFileLoadImages (FILE *file, int size)
 #endif
 
 /* Legacy-only entries from XCURSORPATH that are not already covered by the
- * XDG spec search order (i.e. not $HOME/.icons, $XDG_DATA_DIRS/icons, or
- * /usr/share/pixmaps — those are added explicitly by _XcursorBuildXdgPath). */
-#define XCURSORLEGACYPATH "~/.cursors:/usr/share/cursors/xorg-x11:"ICONDIR
+ * XDG spec search order (i.e. not $HOME/.icons, $HOME/.cursors,
+ * $XDG_DATA_DIRS/icons, or /usr/share/pixmaps — those are added explicitly
+ * by _XcursorBuildXdgPath). */
+#define XCURSORLEGACYPATH "/usr/share/cursors/xorg-x11:"ICONDIR
 
 static char *
 _XcursorBuildXdgPath (void)
@@ -623,9 +623,10 @@ _XcursorBuildXdgPath (void)
 
     size_t len = 0;
 
-    /* $HOME/.icons: */
+    /* $HOME/.icons: and $HOME/.cursors: */
     if (home)
-        len += strlen (home) + strlen ("/.icons") + 1; /* +1 for ':' */
+        len += strlen (home) + strlen ("/.icons") + 1   /* +1 for ':' */
+             + strlen (home) + strlen ("/.cursors") + 1;
 
     /* $XDG_DATA_DIRS/icons: (one entry per non-empty dir in XDG_DATA_DIRS) */
     for (char const *p = xdg_data_dirs; p && *p; )
@@ -674,7 +675,22 @@ _XcursorBuildXdgPath (void)
     }
 
     {
-        int const written = snprintf (p_out, remaining, "/usr/share/pixmaps:%s", XCURSORLEGACYPATH);
+        int const written = snprintf (p_out, remaining, "/usr/share/pixmaps:");
+        if (written < 0 || (size_t)written >= remaining) goto error;
+        p_out += written;
+        remaining -= (size_t)written;
+    }
+
+    if (home)
+    {
+        int const written = snprintf (p_out, remaining, "%s/.cursors:", home);
+        if (written < 0 || (size_t)written >= remaining) goto error;
+        p_out += written;
+        remaining -= (size_t)written;
+    }
+
+    {
+        int const written = snprintf (p_out, remaining, "%s", XCURSORLEGACYPATH);
         if (written < 0 || (size_t)written >= remaining) goto error;
     }
 
@@ -685,25 +701,25 @@ error:
     return NULL;
 }
 
-static pthread_once_t xcursor_path_once = PTHREAD_ONCE_INIT;
-static char const *xcursor_library_path = NULL;
-
-static void
+static const char *
 _XcursorInitPath (void)
 {
-    xcursor_library_path = getenv ("XCURSOR_PATH");
-    if (!xcursor_library_path)
+    char const *path = getenv ("XCURSOR_PATH");
+    if (!path)
     {
-        xcursor_library_path = _XcursorBuildXdgPath ();
-        if (!xcursor_library_path)
-            xcursor_library_path = XCURSORPATH;
+        path = _XcursorBuildXdgPath ();
+        if (!path)
+            path = XCURSORPATH;
     }
+    return path;
 }
 
 static const char *
 XcursorLibraryPath (void)
 {
-    pthread_once (&xcursor_path_once, _XcursorInitPath);
+    static char const *xcursor_library_path = NULL;
+    if (!xcursor_library_path)
+        xcursor_library_path = _XcursorInitPath ();
     return xcursor_library_path;
 }
 
