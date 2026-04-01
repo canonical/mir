@@ -19,6 +19,7 @@ mod ffi_generation;
 mod helpers;
 mod protocol_middleware_generation;
 mod protocol_parser;
+mod wayland_server_generation;
 
 use cpp_builder::{
     sanitize_identifier, CppArg, CppBuilder, CppClass, CppEnum, CppEnumOption, CppMethod,
@@ -35,6 +36,8 @@ use protocol_parser::{
 use quote::{format_ident, quote};
 use std::{env, path::Path};
 use syn::Ident;
+
+use crate::wayland_server_generation::generate_wayland_server_generated_rs;
 
 fn main() {
     let manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
@@ -58,6 +61,9 @@ fn main() {
     // Next, generate C++ abstract classes for each interface
     // as well as the FFI code.
     write_cpp_protocol_implementations(&protocols);
+
+    // Next, write the generated side of the WaylandServer module.
+    write_wayland_server_generated(&protocols);
 
     // Finally, declare the bridges.
     // This must happen last because `src/ffi.rs` is built by this script and
@@ -528,7 +534,7 @@ fn write_dispatch_rs(protocols: &Vec<WaylandProtocol>) {
         mod dispatch {
             use wayland_server::{Client, DataInit, Dispatch, GlobalDispatch, New, DisplayHandle, Resource};
             use crate::protocols;
-            use crate::wayland_server::ServerState;
+            use crate::wayland_server_core::ServerState;
             use crate::ffi;
             use std::os::fd::{AsRawFd, RawFd};
             use std::sync::{Arc, Mutex};
@@ -848,4 +854,9 @@ fn wayland_event_to_cpp_method(event: &WaylandEvent) -> CppMethod {
         sanitized_args.join(", ")
     ));
     cpp_method
+}
+
+fn write_wayland_server_generated(protocols: &Vec<WaylandProtocol>) {
+    let tokens = generate_wayland_server_generated_rs(&protocols);
+    write_generated_rust_file(tokens, "wayland_server_generated.rs");
 }
