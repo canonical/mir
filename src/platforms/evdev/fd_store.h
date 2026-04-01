@@ -43,12 +43,12 @@ private:
 
     std::unordered_map<std::string, mir::Fd> fds;
 
-    // LibInputPtr calls remove_fd() for touchpads on suspend but
-    // continues to use take_fd() to access the fd after resume!
-    // As a workaround, we remember the last removed fd and reinstate
-    // it if asked for.
+    // LibInputPtr calls remove_fd() for devices on suspend but
+    // calls take_fd() to access them again after resume.
+    // We remember all suspended fds and reinstate them if asked for.
     //                  https://github.com/canonical/mir/issues/1612
-    std::pair<std::string, mir::Fd> removed;
+    //                  https://github.com/canonical/mir/issues/3756
+    std::unordered_map<std::string, mir::Fd> suspended;
 };
 
 }

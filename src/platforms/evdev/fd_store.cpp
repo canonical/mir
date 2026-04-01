@@ -38,10 +38,12 @@ mir::Fd mie::FdStore::take_fd(char const* path)
     }
     catch (std::out_of_range const&)
     {
-        if (removed.first == path)
+        auto it = suspended.find(path);
+        if (it != suspended.end())
         {
-            mir::log_warning("Requested fd for path %s was removed", path);
-            return fds.insert(std::move(removed)).first->second;
+            mir::log_warning("Requested fd for path %s was suspended", path);
+            fds.insert(suspended.extract(it));
+            return fds.at(path);
         }
         mir::log_warning("Failed to find requested fd for path %s", path);
     }
@@ -64,8 +66,7 @@ void mie::FdStore::remove_fd(int fd)
     }
     else
     {
-        // We keep the last removed element in case libinput asks for it
-        removed = *element;
-        fds.erase(element);
+        // Keep the suspended fd so libinput can request it again on resume
+        suspended.insert(fds.extract(element));
     }
 }
