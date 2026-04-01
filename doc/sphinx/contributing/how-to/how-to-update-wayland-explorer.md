@@ -17,14 +17,14 @@ You can find it here: https://wayland.app/protocols/.
    cargo install wlprobe
    ```
 
-1. Run `miral-app` with all available Wayland extensions enabled:
+1. Run `mir_demo_server` with `wlprobe` as its client:
 
    ```sh
    env -u WAYLAND_DISPLAY mir_demo_server --test-client wlprobe --timeout 0
    ```
 
 1. Finally, go to https://github.com/vially/wayland-explorer/edit/main/src/data/compositors/mir.json,
-   replace the file content with your updated `mir.json` adding a `"version": "<MAJOR.MINOR>"` value, e.g.:
+   replace the file content with the printed JSON, adding a `"version": "<MAJOR.MINOR>"` value, e.g.:
 
    ```json
    {
