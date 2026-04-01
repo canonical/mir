@@ -26,7 +26,7 @@ repos:
   - id: actionlint
 
 - repo: https://github.com/executablebooks/mdformat
-  rev: 2d496dbc18e31b83a1596685347ffe0b6041daf0  # frozen: 1.0.0
+  rev: 82912cdaea4fb830f751504486a7879c70526547  # frozen: 1.0.0
   hooks:
   - id: mdformat
     additional_dependencies:
