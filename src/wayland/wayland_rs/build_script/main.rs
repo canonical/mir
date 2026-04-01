@@ -270,7 +270,7 @@ fn transform_argument_for_cpp(arg: &WaylandArg) -> Option<TokenStream> {
                         Some(o) => o.data().unwrap(),
                         None => &#null_ptr_name
                     };
-                    let #has_arg_name = std::ptr::eq(#arg_name, &#null_ptr_name);
+                    let #has_arg_name = !std::ptr::eq(#arg_name, &#null_ptr_name);
                 })
             } else {
                 Some(quote! {
