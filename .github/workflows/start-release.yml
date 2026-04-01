@@ -20,11 +20,17 @@ env:
   MAIN_REF: refs/heads/main
 
 jobs:
-  release:
+  release-candidate:
+    name: Start Release Candidate for ${{ inputs.version }}
+
     runs-on: ubuntu-latest
 
     permissions:
       contents: write
+      pull-requests: write
+
+    outputs:
+      next_version: ${{ steps.version.outputs.next_version }}
 
     steps:
       - name: Checkout repository
@@ -32,17 +38,8 @@ jobs:
         with:
           fetch-depth: 0
           ref: ${{ env.INPUTS_SHA }}
+          token: ${{ secrets.MIR_BOT_PAT }}
           persist-credentials: true
-
-      - name: Import GPG key
-        id: gpg
-        uses: crazy-max/ghaction-import-gpg@2dc316deee8e90f13e1a351ab510b4d5bc0c82cd # v7.0.0
-        with:
-          gpg_private_key: ${{ secrets.MIR_BOT_GPG_PRIVATE_KEY }}
-          passphrase: ${{ secrets.MIR_BOT_GPG_PASSPHRASE }}
-          git_user_signingkey: true
-          git_commit_gpgsign: true
-          git_tag_gpgsign: true
 
       - name: Validate version and extract components
         id: version
@@ -51,7 +48,7 @@ jobs:
             echo "major=${BASH_REMATCH[1]}" | tee --append "$GITHUB_OUTPUT"
             echo "minor=${BASH_REMATCH[2]}" | tee --append "$GITHUB_OUTPUT"
             echo "patch=${BASH_REMATCH[3]}" | tee --append "$GITHUB_OUTPUT"
-            echo "release_branch=refs/heads/release/${BASH_REMATCH[1]}.${BASH_REMATCH[2]}" | tee --append "$GITHUB_OUTPUT"
+            echo "release_branch=release/${BASH_REMATCH[1]}.${BASH_REMATCH[2]}" | tee --append "$GITHUB_OUTPUT"
             echo "next_version=${BASH_REMATCH[1]}.$(( BASH_REMATCH[2] + 1 )).0" | tee --append "$GITHUB_OUTPUT"
           else
             echo ":error: Version '${INPUTS_VERSION}' is not in the format X.Y.Z"
@@ -76,15 +73,64 @@ jobs:
           sed --in-place -E "s/(VERSION\s+)[0-9]+\.[0-9]+\.[0-9]+/\1${INPUTS_VERSION}/" CMakeLists.txt
           git add CMakeLists.txt
 
-      - name: Commit Release Candidate
-        run: |
-          if [ -n "$(git status --porcelain)" ]; then
-            git commit -m "Begin Release Candidate for ${INPUTS_VERSION} release"
-          fi
+      - name: Import GPG key
+        id: gpg
+        uses: crazy-max/ghaction-import-gpg@2dc316deee8e90f13e1a351ab510b4d5bc0c82cd # v7.0.0
+        with:
+          gpg_private_key: ${{ secrets.MIR_BOT_GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.MIR_BOT_GPG_PASSPHRASE }}
+          git_user_signingkey: true
+          git_commit_gpgsign: true
+          git_tag_gpgsign: true
 
-      - name: Create release tag
+      - name: Update release notes version
         run: |
-          git tag --annotate "v${INPUTS_VERSION}-rc" --message "Release candidate ${INPUTS_VERSION}"
+          sed --in-place -E "s/(^## Mir ${INPUTS_VERSION}).*/\1~rc/" doc/sphinx/release-notes.md
+          git add doc/sphinx/release-notes.md
+
+      - name: Add a Debian changelog entry
+        env:
+          DEBFULLNAME: ${{ steps.gpg.outputs.name }}
+          DEBEMAIL: ${{ steps.gpg.outputs.email }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends devscripts
+
+          debchange --newversion "${INPUTS_VERSION}~rc" "Begin Release Candidate for ${INPUTS_VERSION} release"
+          git add debian/changelog
+
+      - name: Update the RPM changelog
+        env:
+          DEBFULLNAME: ${{ steps.gpg.outputs.name }}
+          DEBEMAIL: ${{ steps.gpg.outputs.email }}
+        run: |
+          awk --include=inplace \
+            -v version_pat="${INPUTS_VERSION}~dev-1$" \
+            -v begin_pat="Begin development for ${INPUTS_VERSION}" \
+            -v version="${INPUTS_VERSION}" \
+            -v name="${DEBFULLNAME}" \
+            -v email="${DEBEMAIL}" \
+            -v date="$(date "+%a %b %d %Y")" '
+            /^Version:/ {
+              sub(/[^[:space:]]+$/, version "~rc")
+              print
+              next
+            }
+            /^%changelog/ {
+              print
+              print "* " date " " name " <" email "> - " version "~rc-1"
+              print "- Begin Release Candidate for " version " release"
+              next
+            }
+            $0~version_pat {
+              next
+            }
+            $0~begin_pat {
+              next
+            }
+            { print }
+          ' rpm/mir.spec
+          git add rpm/mir.spec
 
       - name: Find previous release tag
         id: previous_tag
@@ -93,16 +139,18 @@ jobs:
           PREVIOUS_TAG=$(git describe --abbrev=0 --exclude="*-rc" --exclude="*-dev" "${INPUTS_SHA}" 2>/dev/null || echo "")
           echo "tag=$PREVIOUS_TAG" | tee --append "$GITHUB_OUTPUT"
 
-      - name: Push to the release branch
+      - name: Tag and push the Release Candidate
         env:
           RELEASE_BRANCH: ${{ steps.version.outputs.release_branch }}
         run: |
-          git push origin "HEAD:${RELEASE_BRANCH}"
+          git commit --message "Begin Release Candidate for ${INPUTS_VERSION} release"
+          git tag --annotate "v${INPUTS_VERSION}-rc" --message "Begin Release Candidate for ${INPUTS_VERSION} release"
+          git push --tags origin "HEAD:refs/heads/${RELEASE_BRANCH}"
 
       - name: Create draft GitHub release
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         env:
-          RELEASE_BRANCH: ${{ steps.version.outputs.release_branch }}
+          RELEASE_BRANCH: refs/heads/${{ steps.version.outputs.release_branch }}
           PREVIOUS_TAG: ${{ steps.previous_tag.outputs.tag }}
         with:
           script: |
@@ -125,49 +173,156 @@ jobs:
               prerelease: false
             });
 
-            console.log(`:notice: Created draft release ${release.data.html_url}`);
+            await core.summary
+              .addRaw(`- Draft release: [Mir v${process.env.INPUTS_VERSION}](${release.data.html_url})`, true)
+              .write();
 
-      - name: Push the Release Candidate tag
+      - name: Open pull request into main
+        if: github.ref == env.MAIN_REF
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        env:
+          RELEASE_BRANCH: ${{ steps.version.outputs.release_branch }}
+        with:
+          script: |
+            const pr = await github.rest.pulls.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Release ${process.env.INPUTS_VERSION}`,
+              head: process.env.RELEASE_BRANCH,
+              base: 'main',
+              body: '',
+            });
+
+            await core.summary
+              .addRaw(`- Release PR: [#${pr.data.number}](${pr.data.html_url})`, true)
+              .write();
+
+            const fs = require('node:fs');
+            const releaseTestDocContent = fs.readFileSync('doc/sphinx/contributing/how-to/test-mir-for-a-release.md', 'utf8');
+            const markedSections = [...releaseTestDocContent.matchAll(/<!-- rc-testing:start -->\n([\s\S]*?)\n<!-- rc-testing:end -->/g)]
+              .map(match => match[1].trim())
+              .filter(section => section.length > 0);
+            if (!markedSections.length)
+            {
+              core.setFailed('Could not find rc-testing:start/end markers in test-mir-for-a-release.md');
+              return;
+            }
+
+            const commentBody = [
+              `## ${process.env.INPUTS_VERSION}~rc1`,
+              'Please test this release candidate following the [test-mir-for-a-release](https://canonical-mir.readthedocs.io/en/latest/contributing/how-to/test-mir-for-a-release.html) document.',
+              ...markedSections,
+            ].join('\n\n');
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.data.number,
+              body: commentBody,
+            });
+
+      - if: ${{ failure() && runner.debug }}
+        name: Setup upterm session
+        uses: mxschmitt/action-tmate@c0afd6f790e3a5564914980036ebf83216678101 # v3.23
+        with:
+          limit-access-to-actor: true
+
+  start-next:
+    if: github.ref == 'refs/heads/main' && inputs.sha == ''
+    needs: [release-candidate]
+    name: Start development for ${{ needs.release-candidate.outputs.next_version }}
+
+    runs-on: ubuntu-latest
+
+    env:
+      NEXT_VERSION: ${{ needs.release-candidate.outputs.next_version }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.MIR_BOT_PAT }}
+          persist-credentials: true
+
+      - name: Bump CMake version
         run: |
-          git push origin "v${INPUTS_VERSION}-rc"
+          sed --in-place -E "s/(VERSION\s+)[0-9]+\.[0-9]+\.[0-9]+/\1${NEXT_VERSION}/" CMakeLists.txt
+          git add CMakeLists.txt
 
-      - name: Start development of next version
-        if: github.ref == env.MAIN_REF && inputs.sha == ''
+      - name: Import GPG key
+        id: gpg
+        uses: crazy-max/ghaction-import-gpg@2dc316deee8e90f13e1a351ab510b4d5bc0c82cd # v7.0.0
+        with:
+          gpg_private_key: ${{ secrets.MIR_BOT_GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.MIR_BOT_GPG_PASSPHRASE }}
+          git_user_signingkey: true
+          git_commit_gpgsign: true
+          git_tag_gpgsign: true
+
+      - name: Insert next release notes section
+        run: |
+          awk --include=inplace \
+            -v current_pat="^## Mir ${INPUTS_VERSION}~dev$" \
+            -v current_version="${INPUTS_VERSION}~dev" \
+            -v next_version="${NEXT_VERSION}~dev" '
+
+            # Find the current release section
+            !in_target && $0 ~ current_pat {
+              in_target = 1
+              current_buffer = $0 ORS
+              next
+            }
+
+            in_target {
+              # At next release section, print the collected buffers
+              if ($0 ~ /^## Mir /) {
+                print "## Mir " next_version
+                print ""
+                print "- New upstream release " next_version
+                print ""
+                print "  - ABI summary:"
+                print ""
+                printf "%s", abi_buffer
+                print ""
+                printf "%s", current_buffer
+
+                print
+                in_target = 0
+                next
+              }
+
+              # Collect the current release section
+              current_buffer = current_buffer $0 ORS
+
+              # And the rewritten ABI summary
+              if ($0 ~ /unchanged at|bumped to/)
+              {
+                gsub(/bumped to/, "unchanged at", $0)
+                abi_buffer = abi_buffer $0 ORS
+              }
+              next
+            }
+            { print }
+          ' doc/sphinx/release-notes.md
+          git add doc/sphinx/release-notes.md
+
+      - name: Add a Debian changelog entry
         env:
           DEBFULLNAME: ${{ steps.gpg.outputs.name }}
           DEBEMAIL: ${{ steps.gpg.outputs.email }}
-          NEXT_VERSION: ${{ steps.version.outputs.next_version }}
         run: |
-          # Bump CMake version
-          sed --in-place -E "s/(VERSION\s+)[0-9]+\.[0-9]+\.[0-9]+/\1${NEXT_VERSION}/" CMakeLists.txt
-
-          # Add a Debian changelog entry
           sudo apt-get update
           sudo apt-get install --yes --no-install-recommends devscripts
+
           debchange --newversion "${NEXT_VERSION}~dev" ''
+          git add debian/changelog
 
-          awk --include=inplace \
-            -v next_version="${NEXT_VERSION}" \
-            -v begin_pat="Begin development for ${INPUTS_VERSION}" '
-            $0~begin_pat {
-              print "  * Begin development for " next_version " release"
-              in_release=1
-              next
-            }
-            in_release && /ABI summary/ {
-              abi_summary=1
-            }
-            abi_summary && /bumped to/ {
-              gsub(/bumped to/, "unchanged at")
-            }
-            abi_summary && /^$/ {
-              in_release=0
-              abi_summary=0
-            }
-            { print }
-          ' debian/changelog
-
-          # Update the RPM changelog
+      - name: Update the RPM changelog
+        env:
+          DEBFULLNAME: ${{ steps.gpg.outputs.name }}
+          DEBEMAIL: ${{ steps.gpg.outputs.email }}
+        run: |
           awk --include=inplace \
             -v version_pat="${INPUTS_VERSION}~dev-1$" \
             -v begin_pat="Begin development for ${INPUTS_VERSION}" \
@@ -194,8 +349,17 @@ jobs:
             }
             { print }
           ' rpm/mir.spec
+          git add rpm/mir.spec
 
-          git add CMakeLists.txt debian/changelog rpm/mir.spec
+      - name: Commit and push next development version
+        run: |
           git commit --message "Begin development for ${NEXT_VERSION} release"
           git tag --annotate "v${NEXT_VERSION}-dev" --message "Begin development for ${NEXT_VERSION} release"
           git push --tags origin "HEAD:${MAIN_REF}"
+          echo "- Development commit: [$(git rev-parse --short HEAD)](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/commit/$(git rev-parse HEAD))" >> "$GITHUB_STEP_SUMMARY"
+
+      - if: ${{ failure() && runner.debug }}
+        name: Setup upterm session
+        uses: mxschmitt/action-tmate@c0afd6f790e3a5564914980036ebf83216678101 # v3.23
+        with:
+          limit-access-to-actor: true
