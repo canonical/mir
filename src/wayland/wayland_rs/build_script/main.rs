@@ -839,13 +839,24 @@ fn wayland_event_to_cpp_method(event: &WaylandEvent) -> CppMethod {
     let sanitized_args: Vec<String> = args
         .clone()
         .flat_map(|arg| {
+            let sanitized_name = sanitize_identifier(&arg.name);
+            let has_arg_name = format_has_arg(&arg.name);
+            let sanitized_has_arg_name = sanitize_identifier(&has_arg_name);
+
             let arg_name = match arg.cpp_type {
-                CppType::Object(_) => format!("{}->get_box()", sanitize_identifier(&arg.name)),
-                _ => sanitize_identifier(&arg.name),
+                CppType::Object(_) if arg.optional => {
+                    // For optional object arguments, only call get_box() when the argument is present.
+                    format!(
+                        "{} ? {}->get_box() : nullptr",
+                        sanitized_has_arg_name, sanitized_name
+                    )
+                }
+                CppType::Object(_) => format!("{}->get_box()", sanitized_name),
+                _ => sanitized_name.clone(),
             };
+
             if arg.optional {
-                let has_arg_name = format_has_arg(&arg.name);
-                vec![arg_name, sanitize_identifier(&has_arg_name)]
+                vec![arg_name, sanitized_has_arg_name]
             } else {
                 vec![arg_name]
             }
