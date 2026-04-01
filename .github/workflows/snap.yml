@@ -60,7 +60,7 @@ jobs:
         sed -i "s@version: testing@version: $(git describe)@" snap/snapcraft.yaml
 
     - name: Build and publish the snap
-      uses: canonical/actions/build-snap@bd56f0f0934af9edbbd49378645727d7ef7a4571 # release @ 2025.06.05
+      uses: canonical/actions/build-snap@78e8dd5f693653767f2c60c4a6a421a1ebed35af # release @ 2025.06.05
       with:
         architecture: ${{ matrix.architecture }}
         snapcraft-token: ${{ secrets.SNAPCRAFT_TOKEN }}
@@ -117,7 +117,7 @@ jobs:
         sed -i 's@- mir-libs.*$@\0/pr${{ github.event.number }}@' snap/snapcraft.yaml
 
     - name: Build and publish the snap
-      uses: canonical/actions/build-snap@bd56f0f0934af9edbbd49378645727d7ef7a4571 # release @ 2025.06.05
+      uses: canonical/actions/build-snap@78e8dd5f693653767f2c60c4a6a421a1ebed35af # release @ 2025.06.05
       with:
         architecture: ${{ matrix.architecture }}
         review-opts: ${{ matrix.review-opts }}
