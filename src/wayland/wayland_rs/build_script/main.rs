@@ -311,6 +311,15 @@ fn generate_request_body(request: &WaylandRequest) -> TokenStream {
 
     if let Some(new_id_arg) = new_id_arg {
         let new_id_name = format_ident!("{}", new_id_arg.name);
+        let ext_interface_struct_name = format_ident!(
+            "{}",
+            format_wayland_interface_to_rust_extension_struct(
+                new_id_arg
+                    .interface
+                    .as_ref()
+                    .expect("NewId is missing interface")
+            )
+        );
         let call_arg_names: Vec<TokenStream> = request
             .args
             .iter()
@@ -331,7 +340,16 @@ fn generate_request_body(request: &WaylandRequest) -> TokenStream {
         quote! {
             let mut guard = data.lock().unwrap();
             let child = (&mut *guard).pin_mut().#snake_request_name(#( #call_arg_names ),*);
-            data_init.init(#new_id_name, Arc::new(Mutex::new(child)));
+            let arc = Arc::new(Mutex::new(child));
+
+            // The initialization strategy here mirrors the global bind flow: First,
+            // we associate the C++ implementation with the Rust data. Afterwards, we wrap
+            // the Rust resource in an "extension" object that ferries the data from C++ -> Rust.
+            // Finally, we associate this "extension" object with our C++ object.
+            let instance = data_init.init(#new_id_name, arc.clone());
+            let boxed = Box::new(crate::middleware::#ext_interface_struct_name{ wrapped: instance });
+            let mut guard = arc.lock().unwrap();
+            guard.pin_mut().associate(boxed);
         }
     } else {
         let call_arg_names: Vec<TokenStream> = request
