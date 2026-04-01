@@ -6,37 +6,37 @@ supports. You can find it here: https://wayland.app/protocols/.
 
 ## Updating for Mir
 
-1. First, clone and install `wlprobe`, which is required to get a JSON
-   file of the available protocols:
-   git clone https://github.com/PolyMeilex/wlprobe.git
+1. Install `wlprobe`, which is required to get a JSON file of the
+   available protocols:
 
    ```sh
-   git clone git@github.com:PolyMeilex/wlprobe.git
-   cargo install --path wlprobe
+   cargo install wlprobe
    ```
 
-   git clone https://github.com/vially/wayland-explorer.git
-
-   ```sh
-   git clone git@github.com:vially/wayland-explorer.git
-   ```
-
-1. Next, run `miral-app` with all available Wayland extensions enbled:
+1. Run `miral-app` with all available Wayland extensions enabled:
 
    ```sh
    WAYLAND_DISPLAY=wayland-98 miral-app --add-wayland-extension=all
    ```
 
-1. Then, run `wlprobe` from the `wayland-explorer` directory:
+1. Run `wlprobe` to generate the updated compositor JSON:
 
    ```sh
-   cd wayland-explorer
-   MIR_VERSION=2.26  # Set your Mir version to the current version
-   WAYLAND_DISPLAY=wayland-98 ~/.cargo/bin/wlprobe --unique | jq --arg version "$MIR_VERSION" '{generationTimestamp, version:$version, globals}' > src/data/compositors/mir.json
+   WAYLAND_DISPLAY=wayland-98 ~/.cargo/bin/wlprobe --unique > mir.json
    ```
 
-1. Finally, check the changes and open up a pull request
+1. Add a `"version"` field set to the current Mir version to `mir.json`,
+   e.g.:
 
-   ```sh
-   git diff src/data/compositors/mir.json
+   ```json
+   {
+     "version": "2.26",
+     "generationTimestamp": "...",
+     "globals": ["..."]
+   }
    ```
+
+1. Finally, go to
+   https://github.com/vially/wayland-explorer/edit/main/src/data/compositors/mir.json,
+   replace the file content with your updated `mir.json`, and open a
+   pull request.
