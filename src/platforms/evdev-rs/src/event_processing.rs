@@ -177,7 +177,9 @@ fn handle_device_event(
 
             // # Safety
             //
-            // Because we need to use pin_mut_unchecked, this is unsafe.
+            // InputDeviceRegistry is an opaque C++ type; cxx-rs guarantees that calling
+            // pin_mut_unchecked on a SharedPtr<Opaque> is safe for calling thread-safe
+            // non-const member functions (which `remove_device` is).
             thread::spawn(move || unsafe {
                 let mut device_registry = device_registry;
                 device_registry
