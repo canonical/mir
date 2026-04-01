@@ -15,7 +15,9 @@
  */
 
 use crate::device::{LibinputDevice, LibinputDeviceObserver, LibinputDeviceState};
-use crate::event_processing::process_libinput_events;
+use crate::event_processing::{
+    drain_initial_events, process_deferred_events, process_libinput_events,
+};
 use crate::libinput_interface::LibinputInterfaceImpl;
 use cxx;
 use input;
@@ -53,28 +55,35 @@ impl PlatformRs {
     ///
     /// This method will spawn a thread to handle input events from both
     /// libinput and Mir. The thread will run until `stop()` is called.
-    pub fn start(&mut self) {
+    ///
+    /// Note: this only creates the libinput context and does NOT call
+    /// `udev_assign_seat()`.  Seat assignment (and therefore device opening)
+    /// is deferred to `assign_seat()`, which must be called after this
+    /// function returns so that the GLib main loop is free to process the
+    /// logind `TakeDevice` D-Bus replies that opening each device requires.
+    ///
+    /// Returns `true` if a fresh context was created, `false` if the platform
+    /// was already started.  The caller must only schedule `assign_seat()` when
+    /// this returns `true` to avoid calling `udev_assign_seat()` on an already-
+    /// assigned libinput context.
+    pub fn start(&mut self) -> bool {
+        if self.state.is_some() {
+            // Already started; stop() was not called before start(). This is a
+            // programming error, but we handle it gracefully by doing nothing rather
+            // than creating a second libinput context and leaking the existing one.
+            return false;
+        }
+
         println!("Starting the evdev-rs platform");
 
         let bridge = self.bridge.clone();
-        let mut libinput = input::Libinput::new_with_udev(LibinputInterfaceImpl {
+        let libinput = input::Libinput::new_with_udev(LibinputInterfaceImpl {
             bridge: bridge.clone(),
             fds: Vec::new(),
         });
 
-        // TODO: This does not handle multi-seat. If/when we do multi-seat, this will need to be refactored.
-        let started = match libinput.udev_assign_seat("seat0") {
-            Err(_) => false,
-            _ => true,
-        };
-
-        if !started {
-            eprintln!("Failed to call udev_assign_seat, not running the libinput loop");
-            return;
-        }
-
         self.state = Some(Arc::new(Mutex::new(LibinputDeviceState {
-            libinput: libinput,
+            libinput,
             known_devices: Vec::new(),
             next_device_id: 0,
             scroll_axis_x_accum: 0.0,
@@ -82,6 +91,124 @@ impl PlatformRs {
             x_scroll_scale: 1.0,
             y_scroll_scale: 1.0,
         })));
+
+        true
+    }
+
+    /// Assign a udev seat so that libinput begins opening input devices.
+    ///
+    /// This must be called after `start()` **and** after `start_platforms()`
+    /// has returned to the caller, so that the GLib main loop is no longer
+    /// blocked and can process the logind `TakeDevice` D-Bus replies that
+    /// opening each input device requires.
+    ///
+    /// After `udev_assign_seat()` returns, `libinput_dispatch()` must be called
+    /// to make the `DEVICE_ADDED` events accessible.  Any input events buffered
+    /// in the kernel device fds while devices were being opened (e.g. a modifier
+    /// key held during a logind `TakeDevice` round-trip) also become available in
+    /// that same `dispatch()` call.  We split these two kinds of events:
+    ///
+    /// - `DEVICE_ADDED` events are processed immediately (registration threads
+    ///   spawned) while the state lock is held.
+    /// - Non-device input events are deferred to a Vec.
+    ///
+    /// The state lock is then released, registration threads are joined (so
+    /// `event_builder` is set for all devices), and only then the deferred input
+    /// events are processed.  This prevents the #4723 drop race where a buffered
+    /// key event would otherwise be processed in the same batch as `DEVICE_ADDED`
+    /// before `event_builder` is set.
+    ///
+    /// # Safety
+    /// This function calls into C++ (via `acquire_device`) while holding the
+    /// Rust state mutex, but no other Rust code that also needs the state
+    /// mutex can run concurrently on the input thread at this point.
+    pub fn assign_seat(&mut self) {
+        // Clone the Arc so we are not borrowing from self.state — this allows
+        // us to call self.state.take() on failure paths below without a
+        // borrow-check conflict.
+        let state_arc = match &self.state {
+            Some(arc) => arc.clone(),
+            None => {
+                return;
+            }
+        };
+
+        // Phase 1: assign the seat, dispatch once to surface DEVICE_ADDED events,
+        // and split the resulting queue into device events (handled immediately)
+        // and deferred input events.
+        //
+        // The state lock is held for the entire phase.  Registration threads are
+        // spawned but not yet joined — they need the same lock (inside
+        // LibinputDevice::start) so we must release it before joining.
+        // TODO: This does not handle multi-seat. If/when we do multi-seat, this will need to be refactored.
+        let phase1_result = match state_arc.lock() {
+            Ok(mut state) => {
+                // Note: udev_assign_seat returns Result<(), ()> — no error details are available.
+                if state.libinput.udev_assign_seat("seat0").is_err() {
+                    eprintln!("Failed to call udev_assign_seat, not running the libinput loop");
+                    None
+                } else {
+                    Some(drain_initial_events(
+                        &mut *state,
+                        self.device_registry.clone(),
+                        self.bridge.clone(),
+                    ))
+                }
+            }
+            Err(_) => {
+                // A poisoned mutex means another thread panicked while holding it,
+                // leaving the state in an unknown condition.
+                None
+            }
+        };
+        // State lock is released here.
+
+        let (handles, deferred) = match phase1_result {
+            Some(result) => result,
+            None => {
+                // On any failure, reset the platform state so that a subsequent
+                // start() call can create a fresh libinput context and retry.
+                self.state.take();
+                return;
+            }
+        };
+
+        // Phase 2: join registration threads so that event_builder is set for
+        // all devices before we process any input events.
+        for handle in handles {
+            if let Err(err) = handle.join() {
+                // Log panics in registration threads so startup issues are visible.
+                if let Some(message) = err.downcast_ref::<&str>() {
+                    eprintln!(
+                        "evdev-rs platform: device registration thread panicked with message: {}",
+                        message
+                    );
+                } else if let Some(message) = err.downcast_ref::<String>() {
+                    eprintln!(
+                        "evdev-rs platform: device registration thread panicked with message: {}",
+                        message
+                    );
+                } else {
+                    eprintln!(
+                         "evdev-rs platform: device registration thread panicked with non-string payload"
+                     );
+                }
+            }
+        }
+
+        // Phase 3: process any input events (keyboard, pointer, …) that arrived
+        // in the same dispatch() batch as DEVICE_ADDED.  Now that event_builder
+        // is set these events will be handled correctly rather than dropped.
+        if !deferred.is_empty() {
+            match state_arc.lock() {
+                Ok(mut state) => {
+                    process_deferred_events(&mut *state, &self.bridge, deferred, &self.report);
+                }
+                Err(_) => {
+                    self.state.take();
+                }
+            }
+        }
     }
 
     pub unsafe fn libinput_fd(&mut self) -> i32 {
@@ -104,36 +231,50 @@ impl PlatformRs {
         // Note: When the main loop exits, we need to remove all devices from the device registry
         // or else Mir will try to free the devices later but we won't have access to the platform
         // code at that point. This results in a segfault.
-        let state_opt = self.state.as_mut();
-        if state_opt.is_none() {
+        let Some(state_arc) = self.state.take() else {
             // Platform not started or already stopped.
-            self.state = None;
             return;
-        }
+        };
 
-        match state_opt.unwrap().lock() {
-            Ok(mut state_guard) => {
-                for device_info in state_guard.known_devices.iter_mut().rev() {
-                    println!("Removing device id {} from registry", device_info.id);
-                    device_info.input_sink = None;
-                    device_info.event_builder = None;
-                    // # Safety
-                    //
-                    // Because we need to use pin_mut_unchecked, this is unsafe.
-                    unsafe {
-                        self.device_registry
-                            .clone()
-                            .pin_mut_unchecked()
-                            .remove_device(&device_info.input_device);
-                    }
+        // Collect the input devices to remove while holding the state lock.
+        // We must NOT hold the state lock while calling remove_device(), because that
+        // can cause an ABBA deadlock:
+        //   - This thread: holds Rust state mutex, waiting for InputDeviceHub mutex (in remove_device)
+        //   - A spawned add_device thread: holds InputDeviceHub mutex, waiting for Rust state mutex
+        //     (in LibinputDevice::start)
+        let devices_to_remove: Vec<cxx::SharedPtr<crate::InputDevice>> = {
+            match state_arc.lock() {
+                Ok(mut state_guard) => state_guard
+                    .known_devices
+                    .drain(..)
+                    .map(|info| info.input_device)
+                    .collect(),
+                Err(poisoned) => {
+                    // The mutex was poisoned by a previous panic, but we still drain
+                    // known_devices from the inner state to avoid leaving them registered
+                    // in the InputDeviceRegistry, which can lead to segfaults later.
+                    let mut state_guard = poisoned.into_inner();
+                    state_guard
+                        .known_devices
+                        .drain(..)
+                        .map(|info| info.input_device)
+                        .collect()
                 }
             }
-            Err(_) => {
-                println!("Unable to gain access to device info; lock poisoned");
+        };
+
+        // Remove devices from the registry WITHOUT holding the Rust state mutex.
+        for input_device in &devices_to_remove {
+            // # Safety
+            //
+            // Because we need to use pin_mut_unchecked, this is unsafe.
+            unsafe {
+                self.device_registry
+                    .clone()
+                    .pin_mut_unchecked()
+                    .remove_device(input_device);
             }
         }
-
-        self.state = None;
     }
 
     pub fn create_device_observer(&self) -> Box<LibinputDeviceObserver> {
@@ -188,7 +329,8 @@ impl PlatformRs {
 
         match self.state.as_mut().unwrap().try_lock() {
             Ok(mut state) => {
-                process_libinput_events(
+                // Drop handles: runtime hotplug registration is fire-and-forget.
+                let _ = process_libinput_events(
                     &mut *state,
                     self.device_registry.clone(),
                     self.bridge.clone(),

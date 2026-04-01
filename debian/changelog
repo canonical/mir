@@ -1,21 +1,10 @@
-mir (2.26.0~dev) UNRELEASED; urgency=medium
+mir (2.27.0~dev) UNRELEASED; urgency=medium
 
-  * Begin development for 2.26.0 release
+  * Begin development for 2.27.0 release
 
-    - ABI summary:
-      - miral ABI unchanged at 7
-      - mircommon ABI bumped to 12
-      - mircore ABI unchanged at 2
-      - miroil ABI unchanged at 8
-      - mirplatform ABI unchanged at 34
-      - mirserver ABI bumped to 67
-      - mirwayland ABI unchanged at 5
-      - mirplatformgraphics ABI unchanged at 23
-      - mirinputplatform ABI unchanged at 10
+ -- Mir CI Bot <mir-ci-bot@canonical.com>  Tue, 24 Mar 2026 12:36:21 +0000
 
- -- Michał Sawicz <michal.sawicz@canonical.com>  Thu, 11 Dec 2025 10:56:11 +0100
-
-mir (2.25.0~dev) UNRELEASED; urgency=medium
+mir (2.25.0) UNRELEASED; urgency=medium
 
     * New upstream release 2.25.0
 

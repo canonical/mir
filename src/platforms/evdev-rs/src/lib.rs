@@ -15,7 +15,7 @@
  */
 
 // TODO: Report errors to Mir's logging facilities. We should do this following Mir's logging refactor.
-// TODO: Implement continue after_config and pause_for_config
+// TODO: Implement continue_after_config and pause_for_config
 
 // Some notes about the implementation here:
 // 1. CXX-Rust doesn't support passing Option<T> to C++ functions, so I use booleans
@@ -176,7 +176,8 @@ mod ffi_bridge {
         type LibinputDevice;
         type LibinputDeviceMetadata;
 
-        fn start(self: &mut PlatformRs);
+        fn start(self: &mut PlatformRs) -> bool;
+        fn assign_seat(self: &mut PlatformRs);
         fn continue_after_config(self: &PlatformRs);
         fn pause_for_config(self: &PlatformRs);
         fn stop(self: &mut PlatformRs);

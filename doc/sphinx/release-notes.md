@@ -7,6 +7,7 @@
 - New upstream release X.YY.Z
 
   - ABI summary:
+
     - miral ABI unchanged at <version>
     - mircommon ABI unchanged at <version>
     - mircore ABI bumped to <version>
@@ -18,15 +19,34 @@
     - mirinputplatform ABI bumped to <version>
 
   - Enhancements:
+
     - Pull request title (#<PR number>)
 
   - Bugs fixed:
+
     - Issue title (#<Issue number>)
 
   - Documentation:
+
     - Pull request title (#<PR number>)
 
 -->
+
+## Mir 2.27.0~dev
+
+- New upstream release 2.27.0
+
+  - ABI summary:
+
+    - miral ABI unchanged at 7
+    - mircommon ABI unchanged at 12
+    - mircore ABI unchanged at 2
+    - miroil ABI unchanged at 8
+    - mirplatform ABI unchanged at 34
+    - mirserver ABI unchanged at 67
+    - mirwayland ABI unchanged at 5
+    - mirplatformgraphics ABI unchanged at 23
+    - mirinputplatform ABI unchanged at 10
 
 ## Mir 2.25.2
 

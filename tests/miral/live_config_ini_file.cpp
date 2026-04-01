@@ -294,6 +294,34 @@ TEST_F(LiveConfigIniFile, a_bad_bool_value_is_ignored)
     ini_file.load_file(bad_istream, fake_filename());
 }
 
+TEST_F(LiveConfigIniFile, a_bad_integer_value_in_an_array_is_skipped)
+{
+    std::istringstream bad_istream{
+        an_ints_key.to_string()+"=1\n" +
+        an_ints_key.to_string()+"=42x\n" +
+        an_ints_key.to_string()+"=2"};
+
+    ini_file.add_ints_attribute(an_ints_key, "bad int array", [this](auto... args) { ints_handler(args...); });
+
+    EXPECT_CALL(*this, ints_handler(an_ints_key, Optional(ElementsAre(1, 2))));
+
+    ini_file.load_file(bad_istream, fake_filename());
+}
+
+TEST_F(LiveConfigIniFile, a_bad_float_value_in_an_array_is_skipped)
+{
+    std::istringstream bad_istream{
+        a_floats_key.to_string()+"=1.5\n" +
+        a_floats_key.to_string()+"=42x\n" +
+        a_floats_key.to_string()+"=2.5"};
+
+    ini_file.add_floats_attribute(a_floats_key, "bad float array", [this](auto... args) { floats_handler(args...); });
+
+    EXPECT_CALL(*this, floats_handler(a_floats_key, Optional(ElementsAre(1.5f, 2.5f))));
+
+    ini_file.load_file(bad_istream, fake_filename());
+}
+
 TEST_F(LiveConfigIniFile, done_handlers_run_last)
 {
     ini_file.add_strings_attribute(a_strings_key, "strings", [this](auto... args) { strings_handler(args...); });
