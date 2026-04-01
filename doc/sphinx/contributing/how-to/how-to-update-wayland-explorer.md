@@ -1,6 +1,6 @@
 ---
-html:
-  meta:
+myst:
+  html_meta:
     description: How to update the Wayland Explorer's view of protocols supported by a Mir server.
 ---
 
