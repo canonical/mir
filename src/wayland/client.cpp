@@ -27,26 +27,26 @@ namespace
 {
 /// All operations for the same display should happen on the same thread, but since in theory a single process could
 /// manage multiple Wayland displays, best to keep global state threadsafe.
-mir::Synchronised<std::vector<std::pair<wl_client*, std::weak_ptr<mw::Client>>>> client_map;
+mir::Synchronised<std::vector<std::pair<wl_client const*, std::weak_ptr<mw::Client>>>> client_map;
 }
 
-auto mw::Client::from(wl_client* client) -> Client&
+auto mw::Client::from(wl_client const* client) -> Client&
 {
     return *shared_from(client);
 }
 
-void mw::Client::register_client(wl_client* raw, std::shared_ptr<Client> const& shared)
+void mw::Client::register_client(wl_client const* raw, std::shared_ptr<Client> const& shared)
 {
     client_map.lock()->push_back({raw, shared});
 }
 
-void mw::Client::unregister_client(wl_client* raw)
+void mw::Client::unregister_client(wl_client const* raw)
 {
     auto const map = client_map.lock();
     std::erase_if(*map, [&](auto const& item){ return item.first == raw; });
 }
 
-auto mw::Client::shared_from(wl_client* client) -> std::shared_ptr<Client>
+auto mw::Client::shared_from(wl_client const* client) -> std::shared_ptr<Client>
 {
     auto const locked = client_map.lock();
     for (auto& [wlc, wmc] : *locked)
@@ -61,10 +61,10 @@ auto mw::Client::shared_from(wl_client* client) -> std::shared_ptr<Client>
             {
                 // The client should remove itself from the map in it's destructor and should be destroyed/accessed on a
                 // single thread, so this should never happen
-                mir::fatal_error("client_map has stale entry for wl_client %p", static_cast<void*>(client));
+                mir::fatal_error("client_map has stale entry for wl_client %p", static_cast<void const*>(client));
             }
         }
     }
-    mir::fatal_error("wl_client %p is %s", static_cast<void*>(client), client ? "unknown" : "null");
+    mir::fatal_error("wl_client %p is %s", static_cast<void const*>(client), client ? "unknown" : "null");
     abort(); // Make compiler happy
 }
