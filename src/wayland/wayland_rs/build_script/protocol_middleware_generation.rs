@@ -38,7 +38,7 @@ pub fn generate_wayland_interface_middleware(protocols: &Vec<WaylandProtocol>) -
     quote! {
         #[allow(dead_code, unused_imports)]
         mod middleware {
-            use crate::wayland_server::*;
+            use crate::wayland_server_core::*;
             use wayland_server::protocol::*;
             use cxx::{CxxString, CxxVector};
             use std::os::unix::io::BorrowedFd;

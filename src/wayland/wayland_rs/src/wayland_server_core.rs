@@ -21,7 +21,7 @@ use cxx::UniquePtr;
 use log;
 use std::error;
 use std::option::Option;
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 use wayland_server::{
     backend::{ClientData, ClientId, DisconnectReason},
     Display, DisplayHandle, ListeningSocket,
@@ -46,7 +46,11 @@ impl WaylandServer {
     ///
     /// # Arguments
     /// * `socket` - The name of the socket to bind to (e.g. "wayland-0").
-    pub fn run(&mut self, socket: &str) -> Result<(), Box<dyn error::Error>> {
+    pub fn run(
+        &mut self,
+        socket: &str,
+        factory: UniquePtr<GlobalFactory>,
+    ) -> Result<(), Box<dyn error::Error>> {
         let display = Display::<ServerState>::new()?;
         let mut event_loop: EventLoop<'_, ServerState> = EventLoop::try_new()?;
         let loop_handle = event_loop.handle();
@@ -108,6 +112,8 @@ impl WaylandServer {
             })
             .map_err(|_| "Failed to insert stop eventfd into event loop")?;
 
+        WaylandServer::register_globals(&state, Arc::new(Mutex::new(factory)));
+
         while !state.stop_requested {
             // 1. Dispatch events
             // The event loop borrows `server` temporarily to run the callbacks
@@ -140,13 +146,13 @@ impl WaylandServer {
 }
 
 /// Create a new wayland server.
-pub fn create_wayland_server(_factory: UniquePtr<GlobalFactory>) -> Box<WaylandServer> {
+pub fn create_wayland_server() -> Box<WaylandServer> {
     Box::new(WaylandServer::new())
 }
 
 /// The state of the wayland server.
 pub struct ServerState {
-    handle: DisplayHandle,
+    pub handle: DisplayHandle,
     stop_requested: bool,
 }
 
