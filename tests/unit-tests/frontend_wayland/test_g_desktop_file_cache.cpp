@@ -34,6 +34,7 @@ using ::testing::NotNull;
 
 namespace
 {
+static fs::path desktop_file_directory_path;
 static std::string applications_dir;
 }
 
@@ -48,9 +49,15 @@ struct GDesktopFileCache : Test
         auto desktop_file_directory_name = fs_path.string();
         auto path_ptr = ::mkdtemp(desktop_file_directory_name.data());
         ASSERT_THAT(path_ptr, NotNull());
+        desktop_file_directory_path = fs::path(path_ptr);
         setenv("XDG_DATA_DIRS", desktop_file_directory_name.c_str(), 1);
         applications_dir = desktop_file_directory_name + "/applications";
         mkdir(applications_dir.c_str(), S_IRWXU);
+    }
+
+    static void TearDownTestSuite()
+    {
+        fs::remove_all(desktop_file_directory_path);
     }
 
     void TearDown() override
