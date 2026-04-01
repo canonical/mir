@@ -11,7 +11,7 @@ SPHINX_OPTS      ?= -c . -d $(SPHINX_DOCTREES) -j auto $(EXTRA_SPHINXOPTS)
 SPHINX_BUILD     ?= $(DOCS_VENVDIR)/bin/sphinx-build
 SPHINX_HOST      ?= 127.0.0.1
 SPHINX_PORT      ?= 8000
-DOCS_VENVDIR     ?= $(SPHINX_DIR)/venv
+DOCS_VENVDIR     ?= .venv
 DOCS_VENV        ?= $(DOCS_VENVDIR)/bin/activate
 DOCS_SOURCEDIR   ?= .
 DOCS_BUILDDIR    ?= _build
@@ -21,7 +21,7 @@ VALE_DIR         ?= $(DOCS_VENVDIR)/lib/python*/site-packages/vale
 VALE_CONFIG      ?= $(SPHINX_DIR)/vale.ini
 PA11Y_CMD        ?= $(SPHINX_DIR)/node_modules/pa11y/bin/pa11y.js --config $(SPHINX_DIR)/pa11y.json
 CONFIRM_SUDO     ?= N
-CHECK_PATH       ?= *
+CHECK_PATH       ?= $(filter-out $(DOCS_VENVDIR),$(wildcard *))
 PROJECT_ROOT     ?= $(shell readlink -f ../../)
 
 export MIR_BUILD_API_DOCS
@@ -118,8 +118,25 @@ linkcheck-with-dependencies: install
 pa11y: pa11y-install html
 	find $(DOCS_BUILDDIR) -name *.html -print0 | xargs -n 1 -0 $(PA11Y_CMD)
 
+# Without --return-code-scheme explicit, pymarkdownlnt returns 1 for multiple scenarios
+# By using the explicit scheme, it only returns 1 when no files are found,
+# which should not result in failure
 lint-md: pymarkdownlnt-install
-	@. $(DOCS_VENV); pymarkdownlnt --config $(SPHINX_DIR)/.pymarkdown.json scan --recurse --exclude=$(SPHINX_DIR)/** $(DOCS_SOURCEDIR)
+	@. $(DOCS_VENV); pymarkdownlnt \
+		--config $(SPHINX_DIR)/.pymarkdown.json \
+		--return-code-scheme explicit \
+		scan \
+			--recurse \
+			--exclude=$(SPHINX_DIR)/** \
+			--exclude=$(DOCS_VENVDIR)/** \
+			$(DOCS_SOURCEDIR); \
+	status=$$?; \
+	if [ $$status -eq 1 ]; then \
+		echo "No Markdown files selected for linting"; \
+		exit 0; \
+	fi; \
+	echo "pymarkdownlnt exited with code $$status"; \
+	exit $$status;
 
 vale-install: install
 	@. $(DOCS_VENV); test -f $(VALE_CONFIG) || python3 $(SPHINX_DIR)/get_vale_conf.py
