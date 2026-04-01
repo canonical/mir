@@ -8,13 +8,14 @@ supports. You can find it here: https://wayland.app/protocols/.
 
 1. First, clone and install `wlprobe`, which is required to get a JSON
    file of the available protocols:
-    git clone https://github.com/PolyMeilex/wlprobe.git
+   git clone https://github.com/PolyMeilex/wlprobe.git
+
    ```sh
    git clone git@github.com:PolyMeilex/wlprobe.git
    cargo install --path wlprobe
    ```
 
-    git clone https://github.com/vially/wayland-explorer.git
+   git clone https://github.com/vially/wayland-explorer.git
 
    ```sh
    git clone git@github.com:vially/wayland-explorer.git
