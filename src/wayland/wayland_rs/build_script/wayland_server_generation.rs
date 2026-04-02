@@ -42,6 +42,10 @@ fn generate_register_globals_impl(protocol: &WaylandProtocol) -> Vec<TokenStream
             return None;
         }
 
+        if interface.name == "wl_display" {
+            return None;
+        }
+
         let interface_name = format_ident!("{}", interface.name);
         let interface_struct_name = format_ident!("{}", snake_to_pascal(&interface.name));
         let version = interface.version;
