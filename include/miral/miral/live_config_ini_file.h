@@ -53,14 +53,6 @@ public:
 
     void on_done(HandleDone handler) override;
 
-    /// Loads the configuration from the given stream. The path is used for
-    /// error reporting. Consequent calls to this method will add to the
-    /// existing configuration, with later values assigned to the same key
-    /// taking precedence over earlier ones for scalars, and appending onto
-    /// arrays.
-    ///
-    /// Arrays can be cleared by assigning an empty value to the key, e.g.
-    /// `my_array_key=`.
     void load_file(std::istream& istream, std::filesystem::path const& path) override;
 
 private:
