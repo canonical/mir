@@ -132,10 +132,17 @@ struct TypedConfigState
         details.explicitly_cleared = false;
     }
 
-    void clear_array_value(mlc::Key const& key)
+    template <typename T> void clear_array_value(mlc::Key const& key)
     {
         auto& details = array_attribute_handlers.at(key);
-        details.values = std::nullopt;
+
+        // A way of indicating a cleared array
+        // TODO maybe a tristate object is what we need (never assigned, cleared, assigned)
+        if(auto& vals = details.values)
+            std::get<std::vector<T>>(*vals).clear();
+        else
+            details.values = std::vector<T>{};
+
         details.explicitly_cleared = true;
     }
 
@@ -166,12 +173,15 @@ struct TypedConfigState
         for (auto const& [key, details] : array_attribute_handlers)
             try
             {
-                // If the user didn't explicitly clear the array and no values were provided,
-                // use the preset values.
-                if (!details.explicitly_cleared && !details.values.has_value())
-                    details.invoke(key, details.preset);
+                if (details.explicitly_cleared)
+                    details.invoke(key, *details.values);
                 else
-                    details.invoke(key, details.values);
+                {
+                    if (details.values)
+                        details.invoke(key, details.values);
+                    else
+                        details.invoke(key, details.preset);
+                }
             }
             catch (std::exception const& e)
             {
@@ -298,12 +308,15 @@ struct mlc::ConfigAggregator::Self
     template <typename T>
     auto update_or_clear_array() -> std::function<void(mlc::Key const&, std::optional<std::span<T const>>)>
     {
-        return [&](mlc::Key const& key, std::optional<std::span<T const>> value)
+        return [&](mlc::Key const& key, std::optional<std::span<T const>> maybe_value)
         {
-            if (value)
-                config_state.update_array_value(key, *value);
-            else
-                config_state.clear_array_value(key);
+            if (auto const value = maybe_value)
+            {
+                if (value->size() > 0)
+                    config_state.update_array_value(key, *maybe_value);
+                else
+                    config_state.clear_array_value<T>(key);
+            }
         };
     }
 
