@@ -70,3 +70,8 @@ void mie::FdStore::remove_fd(int fd)
         suspended.insert(fds.extract(element));
     }
 }
+
+void mie::FdStore::purge_fd(char const* path)
+{
+    suspended.erase(path);
+}
