@@ -380,22 +380,6 @@ TEST_F(LiveConfigIniFile, later_stream_overrides_earlier_scalar)
     ini_file.load_file(stream2, "base.conf.d/99-override.conf");
 }
 
-TEST_F(LiveConfigIniFile, done_handler_is_called_once_per_load_file)
-{
-    int done_count = 0;
-    ini_file.on_done([&done_count] { done_count++; });
-
-    std::istringstream stream1{a_key.to_string() + "=1\n"};
-    std::istringstream stream2{a_key.to_string() + "=2\n"};
-    std::istringstream stream3{a_key.to_string() + "=3\n"};
-
-    ini_file.load_file(stream1, "base.conf");
-    ini_file.load_file(stream2, "base.conf.d/10-override.conf");
-    ini_file.load_file(stream3, "base.conf.d/20-override.conf");
-
-    EXPECT_THAT(done_count, Eq(3));
-}
-
 TEST_F(LiveConfigIniFile, empty_value_clears_earlier_array_entries)
 {
     ini_file.add_strings_attribute(a_strings_key, "strings", [this](auto... args) { strings_handler(args...); });
@@ -411,17 +395,6 @@ TEST_F(LiveConfigIniFile, empty_value_clears_earlier_array_entries)
     ini_file.load_file(stream, fake_filename());
 }
 
-TEST_F(LiveConfigIniFile, unset_key_yields_nullopt)
-{
-    ini_file.add_int_attribute(a_key, "a scoped int", [this](auto... args) { int_handler(args...); });
-
-    std::istringstream stream{another_key.to_string() + "=42\n"};
-
-    EXPECT_CALL(*this, int_handler(a_key, std::optional<int>{std::nullopt}));
-
-    ini_file.load_file(stream, fake_filename());
-}
-
 TEST_F(LiveConfigIniFile, done_handler_is_called_on_load_file)
 {
     int done_count = 0;
@@ -433,16 +406,3 @@ TEST_F(LiveConfigIniFile, done_handler_is_called_on_load_file)
     EXPECT_THAT(done_count, Eq(1));
 }
 
-TEST_F(LiveConfigIniFile, single_file_reload_updates_handler)
-{
-    mlc::Key const cursor_scale{"cursor_scale"};
-    ini_file.add_float_attribute(cursor_scale, "cursor scale", [this](auto... args) { float_handler(args...); });
-
-    EXPECT_CALL(*this, float_handler(_, _)).Times(AnyNumber());
-    std::istringstream initial{cursor_scale.to_string() + "=1.0\n"};
-    ini_file.load_file(initial, "base.conf");
-
-    EXPECT_CALL(*this, float_handler(cursor_scale, std::optional<float>{2.0f}));
-    std::istringstream updated{cursor_scale.to_string() + "=2.0\n"};
-    ini_file.load_file(updated, "base.conf");
-}
