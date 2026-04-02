@@ -20,6 +20,9 @@ pub fn generate_wayland_server_generated_rs(protocols: &Vec<WaylandProtocol>) ->
         use cxx::UniquePtr;
         use std::sync::{Mutex, Arc};
 
+        // Rust cannot know that my GlobalFactory is thread-safe, despite being
+        // wrapped in an Arc<Mutex<...>>. As a result, we need to implement Send + Sync
+        // for it.
         unsafe impl Send for GlobalFactory {}
         unsafe impl Sync for GlobalFactory {}
 
