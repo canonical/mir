@@ -31,6 +31,7 @@
 #include <miral/window_manager_tools.h>
 #include <miral/set_window_management_policy.h>
 #include <miral/zone.h>
+#include <miral/runner.h>
 #include <mir/test/doubles/stub_display_configuration.h>
 #include <mir/graphics/display_configuration_observer.h>
 #include <mir/graphics/null_display_configuration_observer.h>
@@ -317,6 +318,9 @@ public:
               on_surface_closed(surf);
           }))
     {
+        // Initialize MirRunner with dummy args for delegation purposes
+        static char const* dummy_args[] = { "WindowManagementTestHarness", nullptr };
+        runner = std::make_unique<miral::MirRunner>(1, dummy_args);
     }
 
     void process_pending()
@@ -399,6 +403,9 @@ public:
     /// The solution is to push this action to a processing queue that will be cleared
     /// after each action.
     std::vector<std::function<void()>> pending_actions;
+
+    // MirRunner for API delegation
+    std::unique_ptr<miral::MirRunner> runner;
 
 };
 
@@ -613,4 +620,35 @@ auto mir_test_framework::WindowManagementTestHarness::output_configs_from_output
     }
 
     return outputs;
+}
+
+void mir_test_framework::WindowManagementTestHarness::add_start_callback(std::function<void()> const& start_callback)
+{
+    self->runner->add_start_callback(start_callback);
+}
+
+void mir_test_framework::WindowManagementTestHarness::add_stop_callback(std::function<void()> const& stop_callback)
+{
+    self->runner->add_stop_callback(stop_callback);
+}
+
+void mir_test_framework::WindowManagementTestHarness::register_signal_handler(
+    std::initializer_list<int> signals,
+    std::function<void(int)> const& handler)
+{
+    self->runner->register_signal_handler(signals, handler);
+}
+
+auto mir_test_framework::WindowManagementTestHarness::register_fd_handler(
+    mir::Fd fd, 
+    std::function<void(int)> const& handler)
+-> std::unique_ptr<miral::FdHandle>
+{
+    return self->runner->register_fd_handler(fd, handler);
+}
+
+void mir_test_framework::WindowManagementTestHarness::invoke_runner(
+    std::function<void(miral::MirRunner& runner)> const& f)
+{
+    f(*self->runner);
 }
