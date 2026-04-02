@@ -177,16 +177,6 @@ fn write_protocols_rs(protocols: &Vec<WaylandProtocol>) {
     write_generated_rust_file(generated_protocol_rs, "protocols.rs");
 }
 
-/// Generate the namespace token for a protocol (either wayland_server::protocol or protocols::module_name).
-fn generate_namespace(protocol: &WaylandProtocol) -> TokenStream {
-    if protocol.name == "wayland" {
-        quote! { wayland_server::protocol }
-    } else {
-        let protocol_module = dash_to_snake_ident(&protocol.name);
-        quote! { protocols::#protocol_module }
-    }
-}
-
 /// Generate a GlobalDispatch implementation for a single interface.
 fn generate_global_dispatch_impl(
     interface: &protocol_parser::WaylandInterface,
