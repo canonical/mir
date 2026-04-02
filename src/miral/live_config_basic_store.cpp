@@ -103,9 +103,17 @@ public:
             {
                 parsed_values.resize(0);
                 details.explicitly_cleared = true;
+
+                // Signal to the handler that the array was cleared. This is to fix the case
+                // where we clear then append in the same file. The append would overwrite the
+                // clear, and the client would recieve that as an append.
+                details.handler(key, std::span<std::string const>{});
             }
             else
+            {
                 parsed_values.push_back(std::string{value});
+                details.explicitly_cleared = false;
+            }
         }
 
         void call_attribute_handlers() const
