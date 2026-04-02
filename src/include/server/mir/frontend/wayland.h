@@ -38,7 +38,7 @@ namespace frontend
 {
 
 /// Utility function to recover the session associated with a wl_client
-auto get_session(wl_client* client) -> std::shared_ptr<scene::Session>;
+auto get_session(wl_client const* client) -> std::shared_ptr<scene::Session>;
 
 /// Utility function to recover the session associated with a wl_resource
 auto get_session(wl_resource* resource) -> std::shared_ptr<scene::Session>;

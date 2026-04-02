@@ -158,10 +158,10 @@ namespace
 {
 int halt_eventloop(int fd, uint32_t /*mask*/, void* data)
 {
-    auto display = reinterpret_cast<wl_display*>(data);
+    auto display = static_cast<wl_display*>(data);
     wl_display_terminate(display);
 
-    eventfd_t ignored;
+    eventfd_t ignored{};
     if (eventfd_read(fd, &ignored) < 0)
     {
         BOOST_THROW_EXCEPTION((std::system_error{
@@ -612,11 +612,11 @@ bool mf::WaylandConnector::wl_display_global_filter_func_thunk(wl_client const* 
 bool mf::WaylandConnector::wl_display_global_filter_func(wl_client const* client, wl_global const* global) const
 {
     auto const* const interface = wl_global_get_interface(global);
-    auto const session = get_session(const_cast<wl_client*>(client));
+    auto const session = get_session(client);
     return extension_filter(session, interface->name);
 }
 
-auto mir::frontend::get_session(wl_client* wl_client) -> std::shared_ptr<scene::Session>
+auto mir::frontend::get_session(wl_client const* wl_client) -> std::shared_ptr<scene::Session>
 {
     return WlClient::from(wl_client).client_session();
 }
