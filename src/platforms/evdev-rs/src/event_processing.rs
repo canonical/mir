@@ -166,16 +166,26 @@ fn handle_device_event(
                 return None;
             };
 
+            // Remove from known_devices immediately (while holding the state lock), but
+            // spawn a thread to call remove_device() on the registry.  Calling remove_device()
+            // directly here would cause an ABBA deadlock with the InputDeviceHub mutex:
+            //   - This thread (input thread): holds Rust state mutex → waits for hub mutex
+            //   - Spawned add_device thread:  holds hub mutex       → waits for Rust state mutex
+            let input_device = known_devices.swap_remove(index).input_device;
+
+            let device_registry = device_registry.clone();
+
             // # Safety
             //
-            // Because we need to use pin_mut_unchecked, this is unsafe.
-            unsafe {
+            // InputDeviceRegistry is an opaque C++ type; cxx-rs guarantees that calling
+            // pin_mut_unchecked on a SharedPtr<Opaque> is safe for calling thread-safe
+            // non-const member functions (which `remove_device` is).
+            thread::spawn(move || unsafe {
+                let mut device_registry = device_registry;
                 device_registry
-                    .clone()
                     .pin_mut_unchecked()
-                    .remove_device(&known_devices[index].input_device);
-            }
-            known_devices.remove(index);
+                    .remove_device(&input_device);
+            });
             None
         }
         _ => {
@@ -728,13 +738,156 @@ fn handle_touch_frame(
     true
 }
 
+/// Dispatch libinput once after `udev_assign_seat()` and drain all pending events,
+/// splitting them into two groups:
+///
+/// - **Device events** (`DEVICE_ADDED` / `DEVICE_REMOVED`): handled immediately so that
+///   every device is inserted into `known_devices` before this function returns.
+///   Registration-thread `JoinHandle`s are collected and returned so the caller can
+///   join them (ensuring `event_builder` is set) before touching the deferred events.
+///
+/// - **Non-device input events** (keyboard, pointer, touch, …): returned as a `Vec` of
+///   deferred events.  The caller must join the registration handles *first*, then
+///   call `process_deferred_events()` to handle these events — at which point
+///   `event_builder` is guaranteed to be set and no events will be silently dropped.
+///
+/// `dispatch()` is called here because `libinput_udev_assign_seat()` does not signal
+/// the epoll fd for `DEVICE_ADDED` events; they only become accessible after calling
+/// `libinput_dispatch()`.  Any input events that were buffered in the kernel device fds
+/// while devices were being opened (e.g. a modifier key held during the logind
+/// `TakeDevice` round-trip) are also returned as deferred events rather than being
+/// processed in the same pass as `DEVICE_ADDED`, preventing the #4723 drop race.
+pub fn drain_initial_events(
+    state: &mut LibinputDeviceState,
+    device_registry: cxx::SharedPtr<crate::InputDeviceRegistry>,
+    bridge: cxx::SharedPtr<crate::PlatformBridge>,
+) -> (Vec<thread::JoinHandle<()>>, Vec<input::Event>) {
+    let mut handles = Vec::new();
+    let mut deferred = Vec::new();
+
+    if state.libinput.dispatch().is_err() {
+        panic!("evdev-rs: libinput dispatch() failed in assign_seat()");
+    }
+
+    while let Some(event) = state.libinput.next() {
+        let libinput_device = event.device();
+        if let input::Event::Device(device_event) = event {
+            if let Some(handle) = handle_device_event(
+                &mut state.known_devices,
+                &mut state.next_device_id,
+                &device_registry,
+                &bridge,
+                device_event,
+                libinput_device,
+            ) {
+                handles.push(handle);
+            }
+        } else {
+            // Buffer input events for processing after registration threads complete.
+            deferred.push(event);
+        }
+    }
+
+    (handles, deferred)
+}
+
+/// Process a single non-Device libinput input event (Pointer, Keyboard, Touch, etc.).
+///
+/// Device events (hotplug) must be handled separately by the caller — callers should
+/// never pass a `Device` event to this function.
+fn process_input_event(
+    state: &mut LibinputDeviceState,
+    bridge: &cxx::SharedPtr<crate::PlatformBridge>,
+    event: input::Event,
+    report: &crate::InputReport,
+) {
+    let libinput_device = event.device();
+
+    match event {
+        input::Event::Pointer(pointer_event) => {
+            let Some(device_info) =
+                get_device_info_from_libinput_device(&mut state.known_devices, &libinput_device)
+            else {
+                return;
+            };
+
+            let mut scroll_state = ScrollState {
+                x_accum: state.scroll_axis_x_accum,
+                y_accum: state.scroll_axis_y_accum,
+                x_scroll_scale: state.x_scroll_scale as f64,
+                y_scroll_scale: state.y_scroll_scale as f64,
+            };
+
+            handle_pointer_event(
+                device_info,
+                &mut scroll_state,
+                bridge,
+                pointer_event,
+                report,
+            );
+
+            state.scroll_axis_x_accum = scroll_state.x_accum;
+            state.scroll_axis_y_accum = scroll_state.y_accum;
+        }
+
+        input::Event::Keyboard(keyboard_event) => {
+            let Some(device_info) =
+                get_device_info_from_libinput_device(&mut state.known_devices, &libinput_device)
+            else {
+                return;
+            };
+
+            handle_keyboard_event(device_info, keyboard_event, report);
+        }
+
+        input::Event::Touch(touch_event) => {
+            let Some(device_info) =
+                get_device_info_from_libinput_device(&mut state.known_devices, &libinput_device)
+            else {
+                return;
+            };
+
+            handle_touch_event(device_info, bridge, touch_event, report);
+        }
+
+        input::Event::Device(_) => {} // Callers must handle Device events before calling this function.
+
+        input::Event::Tablet(_) => println!("TODO: Handle tablet events"),
+
+        input::Event::TabletPad(_) => println!("TODO: Handle tablet pad events"),
+
+        input::Event::Gesture(_) => println!("TODO: Handle gesture events"),
+
+        input::Event::Switch(_) => println!("TODO: Handle switch events"),
+
+        _ => println!("TODO: Unhandled libinput event type"),
+    }
+}
+
+/// Process a batch of non-device input events that were collected by `drain_initial_events()`.
+///
+/// Must only be called **after** all registration-thread handles returned by
+/// `drain_initial_events()` have been joined, so that `event_builder` is guaranteed to
+/// be set for every device.
+pub fn process_deferred_events(
+    state: &mut LibinputDeviceState,
+    bridge: &cxx::SharedPtr<crate::PlatformBridge>,
+    events: Vec<input::Event>,
+    report: &crate::InputReport,
+) {
+    for event in events {
+        if let input::Event::Device(_) = event {
+            // Device events should never appear in the deferred list; this is a programming error.
+            continue;
+        }
+        process_input_event(state, bridge, event, report);
+    }
+}
+
 /// Process all pending libinput events and return the `JoinHandle`s for any
 /// device-registration threads that were spawned for newly-added devices.
 ///
 /// For *runtime hotplug* events the caller should drop the handles (fire-and-forget).
-/// For the *initial startup drain* the caller should join them after releasing the
-/// state lock, ensuring every device is fully started before the first real input
-/// event can arrive on the libinput fd.
 pub fn process_libinput_events(
     state: &mut LibinputDeviceState,
     device_registry: cxx::SharedPtr<crate::InputDeviceRegistry>,
@@ -748,11 +901,13 @@ pub fn process_libinput_events(
         return handles;
     }
 
-    for event in &mut state.libinput {
-        let libinput_device = event.device();
-
+    // Use .next() rather than `for event in &mut state.libinput` so that
+    // the borrow on state.libinput is released after each call and the loop
+    // body is free to borrow other fields of `state` via process_input_event.
+    while let Some(event) = state.libinput.next() {
         match event {
             input::Event::Device(device_event) => {
+                let libinput_device = device_event.device();
                 if let Some(handle) = handle_device_event(
                     &mut state.known_devices,
                     &mut state.next_device_id,
@@ -765,70 +920,9 @@ pub fn process_libinput_events(
                 }
             }
 
-            input::Event::Pointer(pointer_event) => {
-                let Some(device_info) = get_device_info_from_libinput_device(
-                    &mut state.known_devices,
-                    &libinput_device,
-                ) else {
-                    continue;
-                };
-
-                let mut scroll_state = ScrollState {
-                    x_accum: state.scroll_axis_x_accum,
-                    y_accum: state.scroll_axis_y_accum,
-                    x_scroll_scale: state.x_scroll_scale as f64,
-                    y_scroll_scale: state.y_scroll_scale as f64,
-                };
-
-                let should_continue = handle_pointer_event(
-                    device_info,
-                    &mut scroll_state,
-                    &bridge,
-                    pointer_event,
-                    report,
-                );
-
-                state.scroll_axis_x_accum = scroll_state.x_accum;
-                state.scroll_axis_y_accum = scroll_state.y_accum;
-
-                if !should_continue {
-                    continue;
-                }
+            other => {
+                process_input_event(state, &bridge, other, report);
             }
-
-            input::Event::Keyboard(keyboard_event) => {
-                let Some(device_info) = get_device_info_from_libinput_device(
-                    &mut state.known_devices,
-                    &libinput_device,
-                ) else {
-                    continue;
-                };
-
-                handle_keyboard_event(device_info, keyboard_event, &report);
-            }
-
-            input::Event::Touch(touch_event) => {
-                let Some(device_info) = get_device_info_from_libinput_device(
-                    &mut state.known_devices,
-                    &libinput_device,
-                ) else {
-                    continue;
-                };
-
-                if !handle_touch_event(device_info, &bridge, touch_event, &report) {
-                    continue;
-                }
-            }
-
-            input::Event::Tablet(_) => println!("TODO: Handle tablet events"),
-
-            input::Event::TabletPad(_) => println!("TODO: Handle tablet pad events"),
-
-            input::Event::Gesture(_) => println!("TODO: Handle gesture events"),
-
-            input::Event::Switch(_) => println!("TODO: Handle switch events"),
-
-            _ => println!("TODO: Unhandled libinput event type"),
         }
     }
 

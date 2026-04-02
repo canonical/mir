@@ -240,8 +240,8 @@ void mi::SeatInputDeviceTracker::confine_pointer()
     mir::geometry::Point const old{cursor_x, cursor_y};
     auto confined = old;
     confine_function(confined);
-    if (confined.x != old.x) cursor_x = confined.x.as_int();
-    if (confined.y != old.y) cursor_y = confined.y.as_int();
+    if (confined.x != old.x) cursor_x = confined.x.round_to<float>();
+    if (confined.y != old.y) cursor_y = confined.y.round_to<float>();
 }
 
 void mi::SeatInputDeviceTracker::update_cursor(MirPointerEvent const* event)

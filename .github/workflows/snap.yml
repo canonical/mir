@@ -16,6 +16,8 @@ concurrency:
   group: ${{ github.workflow }}-pr${{ github.event.number }}
   cancel-in-progress: true
 
+permissions: {}
+
 jobs:
   arches:
     runs-on: ubuntu-latest
@@ -30,11 +32,13 @@ jobs:
         if ${{ github.event_name == 'pull_request' && github.repository == github.event.pull_request.head.repo.full_name }}; then
           ARCHES+=( armhf arm64 )
         fi
-        jq --compact-output --null-input '$ARGS.positional' --args -- "${ARCHES[@]}" | awk '{ print "arches=" $0 }' >> $GITHUB_OUTPUT
+        jq --compact-output --null-input '$ARGS.positional' --args -- "${ARCHES[@]}" | awk '{ print "arches=" $0 }' >> "$GITHUB_OUTPUT"
 
   mir-libs:
     needs: [arches]
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     timeout-minutes: 360
 
@@ -45,17 +49,18 @@ jobs:
 
     steps:
     - name: Check out code
-      uses: actions/checkout@v6
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       with:
         fetch-depth: 0  # needed for version determination
+        persist-credentials: false
 
     - name: Tweak the snapcraft.yaml
       run: |
-        git config --global --add safe.directory $(pwd)
-        sed -i 's@version: testing@version: '$(git describe)'@' snap/snapcraft.yaml
+        git config --global --add safe.directory "$(pwd)"
+        sed -i "s@version: testing@version: $(git describe)@" snap/snapcraft.yaml
 
     - name: Build and publish the snap
-      uses: canonical/actions/build-snap@release
+      uses: canonical/actions/build-snap@bd56f0f0934af9edbbd49378645727d7ef7a4571 # release @ 2025.06.05
       with:
         architecture: ${{ matrix.architecture }}
         snapcraft-token: ${{ secrets.SNAPCRAFT_TOKEN }}
@@ -72,6 +77,9 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: read
+
     timeout-minutes: 60
 
     strategy:
@@ -82,6 +90,7 @@ jobs:
         - canonical/confined-shell-wip
         - canonical/ubuntu-frame
         - Miriway/Miriway
+        snapcraft-channel: [stable]
         architecture: ${{ fromJSON(needs.arches.outputs.arches) }}
         include:
         - snap: canonical/mir-test-tools
@@ -96,18 +105,19 @@ jobs:
 
     steps:
     - name: Check out code
-      uses: actions/checkout@v6
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       with:
         repository: ${{ matrix.snap }}
         ref: mir-libs-build
         fetch-depth: 0  # needed for version determination
+        persist-credentials: false
 
     - name: Tweak the stage snap
       run: |
         sed -i 's@- mir-libs.*$@\0/pr${{ github.event.number }}@' snap/snapcraft.yaml
 
     - name: Build and publish the snap
-      uses: canonical/actions/build-snap@release
+      uses: canonical/actions/build-snap@bd56f0f0934af9edbbd49378645727d7ef7a4571 # release @ 2025.06.05
       with:
         architecture: ${{ matrix.architecture }}
         review-opts: ${{ matrix.review-opts }}

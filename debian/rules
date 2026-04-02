@@ -30,6 +30,7 @@ COMMON_CONFIGURE_OPTIONS = \
   -DMIR_ENABLE_RUST=OFF\
   -DCMAKE_INSTALL_LIBEXECDIR="lib/$(DEB_HOST_MULTIARCH)/mir"\
   -DMIR_BUILD_INTERPROCESS_TESTS=OFF\
+  -DMIR_RUN_WLCS_TESTS=OFF\
 
 # Disable LTO on broken binutils
 # https://bugs.launchpad.net/ubuntu/+source/binutils/+bug/2070302
@@ -39,17 +40,10 @@ ifeq ($(filter arm64,$(DEB_HOST_ARCH)),arm64)
 	endif
 endif
 
-# We can't guarantee non-Ubuntu builds will build against WLCS packages we
-# control, so disable it on non-Ubuntu builds
-ifeq ($(filter Ubuntu,$(DEB_VENDOR)),)
-	COMMON_CONFIGURE_OPTIONS += -DMIR_RUN_WLCS_TESTS=OFF
-endif
-
 # Disable tests on Launchpad riscv64 (canonical/mir#3443, canonical/mir#3470)
 ifeq ($(USER) $(DEB_HOST_ARCH),buildd riscv64)
   COMMON_CONFIGURE_OPTIONS += -DMIR_RUN_MIRAL_TESTS=OFF
   COMMON_CONFIGURE_OPTIONS += -DMIR_RUN_WINDOW_MANAGEMENT_TESTS=OFF
-  COMMON_CONFIGURE_OPTIONS += -DMIR_RUN_WLCS_TESTS=OFF
 endif
 
 # Disable pre-compiled headers on GCC>=12

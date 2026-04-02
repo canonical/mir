@@ -24,8 +24,9 @@
 #include <filesystem>
 #include <fcntl.h>
 #include <gmock/gmock.h>
-#include <sstream>
+#include <format>
 #include <fstream>
+#include <cstdlib>
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
@@ -191,10 +192,13 @@ TEST_F(DesktopFileManager, can_resolve_from_valid_flatpak_info)
     const char* app_id = "test.application.name";
     const char* desktop_app_id = "test.application.name";
 
-    std::stringstream flatpak_info_path;
-    flatpak_info_path << "/proc/" << PID << "/root/.flatpak-info";
-    auto const flatpak_info = flatpak_info_path.str();
-    auto tmp_file_name = std::tmpnam(NULL);
+    auto const flatpak_info = std::format("/proc/{}/root/.flatpak-info", PID);
+    char tmp_file_name[] = "/tmp/mir_test_dtp_fmgr_can_XXXXXX";
+    {
+        auto fd_rw = ::mkstemp(tmp_file_name);
+        ASSERT_GE(fd_rw, 0);
+        ::close(fd_rw);
+    }
     {
         std::ofstream tmp_file;
         tmp_file.open(tmp_file_name);
@@ -219,16 +223,20 @@ TEST_F(DesktopFileManager, can_resolve_from_valid_flatpak_info)
     cache->files.push_back(new_file);
     auto found_app_id = file_manager->resolve_app_id(&surface);
     EXPECT_THAT(found_app_id, Eq(desktop_app_id));
+    ::unlink(tmp_file_name);
 }
 
 TEST_F(DesktopFileManager, app_id_will_not_resolve_from_flatpak_info_when_name_is_missing)
 {
     const char* desktop_app_id = "test.application.name";
 
-    std::stringstream flatpak_info_path;
-    flatpak_info_path << "/proc/" << PID << "/root/.flatpak-info";
-    auto const flatpak_info = flatpak_info_path.str();
-    auto tmp_file_name = std::tmpnam(NULL);
+    auto const flatpak_info = std::format("/proc/{}/root/.flatpak-info", PID);
+    char tmp_file_name[] = "/tmp/mir_test_dtp_fmgr_wont_XXXXXX";
+    {
+        auto fd_rw = ::mkstemp(tmp_file_name);
+        ASSERT_GE(fd_rw, 0);
+        ::close(fd_rw);
+    }
     {
         std::ofstream tmp_file;
         tmp_file.open(tmp_file_name);
@@ -254,4 +262,5 @@ TEST_F(DesktopFileManager, app_id_will_not_resolve_from_flatpak_info_when_name_i
     auto found_app_id = file_manager->resolve_app_id(&surface);
     EXPECT_NE(found_app_id, desktop_app_id);
     EXPECT_EQ(found_app_id, APPLICATION_ID);
+    ::unlink(tmp_file_name);
 }
