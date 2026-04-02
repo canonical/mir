@@ -61,7 +61,7 @@ int main()
     std::cout << "    4) We exit with exit code 0." << std::endl << std::endl;
 
     auto server = mir::wayland_rs::create_wayland_server();
-    std::thread server_thread([&] { run_server(server) });
+    std::thread server_thread([&] { run_server(server); });
 
     run_client();
 
