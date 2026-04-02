@@ -128,15 +128,25 @@ auto execute_with_environment(std::vector<std::string> const app, Environment& a
         BOOST_THROW_EXCEPTION((std::system_error{error, std::system_category(), "Failed to init spawn attributes"}));
     }
 
-    // Unblock all signals and reset their dispositions to defaults in the child
-    sigset_t all_signals;
-    sigfillset(&all_signals);
+    // Unblock all signals in the child, preserving their existing dispositions
     sigset_t no_signals;
     sigemptyset(&no_signals);
-    // These calls only fail if attr is null/invalid (it isn't) or if flags are invalid (they aren't)
-    posix_spawnattr_setsigdefault(&attr, &all_signals);
-    posix_spawnattr_setsigmask(&attr, &no_signals);
-    posix_spawnattr_setflags(&attr, POSIX_SPAWN_SETSIGDEF | POSIX_SPAWN_SETSIGMASK);
+
+    auto const check_spawn_attr = [&](int result, char const* what)
+    {
+        if (result != 0)
+        {
+            posix_spawnattr_destroy(&attr);
+            BOOST_THROW_EXCEPTION((std::system_error{result, std::system_category(), what}));
+        }
+    };
+
+    check_spawn_attr(
+        posix_spawnattr_setsigmask(&attr, &no_signals),
+        "Failed to set signal mask for spawned process");
+    check_spawn_attr(
+        posix_spawnattr_setflags(&attr, POSIX_SPAWN_SETSIGMASK),
+        "Failed to set spawn flags for spawned process");
 
     pid_t pid = -1;
     auto const error = posix_spawnp(
