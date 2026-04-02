@@ -54,6 +54,7 @@ public:
 
     void on_done(HandleDone handler) override;
 
+    // TODO should the protection level of these be changed?
     bool is_scalar(Key const& key) const;
     bool is_array(Key const& key) const;
 

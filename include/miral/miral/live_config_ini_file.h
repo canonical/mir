@@ -18,18 +18,18 @@
 #define MIRAL_LIVE_CONFIG_INI_FILE_H
 
 #include <miral/live_config.h>
+#include <miral/live_config_parsing_store.h>
 
 #include <filesystem>
 #include <istream>
 #include <memory>
-#include <utility>
 
 namespace miral::live_config
 {
 /// "ini file" implementation of a live configuration store.
 ///
 /// \remark Since MirAL 5.5
-class IniFile : public Store
+class IniFile : public ParsingStore
 {
 public:
     IniFile();
@@ -61,7 +61,7 @@ public:
     ///
     /// Arrays can be cleared by assigning an empty value to the key, e.g.
     /// `my_array_key=`.
-    void load_file(std::istream& istream, std::filesystem::path const& path);
+    void load_file(std::istream& istream, std::filesystem::path const& path) override;
 
 private:
     class Self;
