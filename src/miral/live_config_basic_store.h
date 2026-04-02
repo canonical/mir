@@ -17,7 +17,7 @@
 #ifndef MIRAL_LIVE_CONFIG_BASIC_STORE_H
 #define MIRAL_LIVE_CONFIG_BASIC_STORE_H
 
-#include "miral/live_config.h"
+#include <miral/live_config.h>
 #include <filesystem>
 
 namespace miral
@@ -54,7 +54,6 @@ public:
 
     void on_done(HandleDone handler) override;
 
-    // TODO should the protection level of these be changed?
     bool is_scalar(Key const& key) const;
     bool is_array(Key const& key) const;
 

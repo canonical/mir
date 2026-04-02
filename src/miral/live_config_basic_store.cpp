@@ -1,4 +1,4 @@
-#include "miral/live_config_basic_store.h"
+#include "live_config_basic_store.h"
 
 #include <charconv>
 #include <format>
