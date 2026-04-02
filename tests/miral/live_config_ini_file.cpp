@@ -495,7 +495,7 @@ TEST_F(LiveConfigIniFile, array_clears_override_defaults)
     std::istringstream stream2{a_strings_key.to_string() + "=\n"};
 
     // parsed_values is empty after the clear, explicit clears override the preset
-    EXPECT_CALL(*this, strings_handler(a_strings_key, Optional(IsEmpty())));
+    EXPECT_CALL(*this, strings_handler(a_strings_key, Optional(IsEmpty()))).Times(2);
     ini_file.load_file(stream2, "base.conf.d/10-override.conf");
 }
 
@@ -525,6 +525,7 @@ TEST_F(LiveConfigIniFile, empty_value_clears_earlier_array_entries_in_same_strea
         a_strings_key.to_string() + "=foo\n" + a_strings_key.to_string() + "=bar\n" + a_strings_key.to_string() + "=\n"
         + a_strings_key.to_string() + "=baz\n"};
 
+    EXPECT_CALL(*this, strings_handler(a_strings_key, Optional(IsEmpty())));
     EXPECT_CALL(*this, strings_handler(a_strings_key, Optional(ElementsAre("baz"))));
 
     ini_file.load_file(stream, fake_filename());
