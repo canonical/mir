@@ -28,7 +28,8 @@
 #include <drm_fourcc.h>
 #include <drm_mode.h>
 #include <span>
-#include <string.h> // strcmp
+#include <string.h>
+#include <string_view>
 
 #include <boost/throw_exception.hpp>
 #include <system_error>
@@ -39,6 +40,7 @@ namespace mg = mir::graphics;
 namespace mga = mg::atomic;
 namespace mgk = mg::kms;
 namespace geom = mir::geometry;
+using namespace std::string_view_literals;
 
 namespace
 {
@@ -902,7 +904,7 @@ void mga::AtomicKMSOutput::update_from_hardware_state(
         for (int m = 0; m != connector->count_modes; ++m) {
             drmModeModeInfo &mode_info = connector->modes[m];
 
-            if (strcmp(mode_info.name, "preferred") == 0)
+            if (mode_info.name == "preferred"sv)
                 current_mode_index = static_cast<uint32_t>(m);
         }
     }

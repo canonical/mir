@@ -20,8 +20,10 @@
 #include <boost/throw_exception.hpp>
 
 #include <stdexcept>
+#include <string_view>
 
 namespace mu = mir::udev;
+using namespace std::string_view_literals;
 
 /////////////////////
 //    Device
@@ -148,7 +150,7 @@ auto DeviceImpl::clone() const -> std::unique_ptr<Device>
 bool mu::operator==(mu::Device const& lhs, mu::Device const& rhs)
 {
     // The device path is unique
-    return strcmp(lhs.devpath(), rhs.devpath()) == 0;
+    return std::string_view{lhs.devpath()} == std::string_view{rhs.devpath()};
 }
 
 bool mu::operator!=(mu::Device const& lhs, mu::Device const& rhs)
@@ -335,11 +337,11 @@ void mu::Monitor::enable(void)
 
 static mu::Monitor::EventType action_to_event_type(const char* action)
 {
-    if (strcmp(action, "add") == 0)
+    if (action == "add"sv)
         return mu::Monitor::EventType::ADDED;
-    if (strcmp(action, "remove") == 0)
+    if (action == "remove"sv)
         return mu::Monitor::EventType::REMOVED;
-    if (strcmp(action, "change") == 0)
+    if (action == "change"sv)
         return mu::Monitor::EventType::CHANGED;
     BOOST_THROW_EXCEPTION(std::runtime_error(std::string("Unknown udev action encountered: ") + action));
 }

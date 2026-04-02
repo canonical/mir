@@ -32,6 +32,7 @@
 
 #include <memory>
 #include <vector>
+#include <string_view>
 
 namespace mi = mir::input;
 namespace mie = mi::evdev;
@@ -60,7 +61,7 @@ std::shared_ptr<udev_device> device_for_path(char const* devnode)
 
     for (auto const& device : devices)
     {
-        if (device.devnode() && strcmp(device.devnode(), devnode) == 0)
+        if (device.devnode() && std::string_view{device.devnode()} == std::string_view{devnode})
         {
             return device.as_raw();
         }

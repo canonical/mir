@@ -22,17 +22,19 @@
 #include <mir/graphics/kms/kms_connector.h>
 #include <mir/fatal.h>
 #include <mir/log.h>
-#include <string.h> // strcmp
+#include <string.h>
 
 #include <boost/throw_exception.hpp>
 #include <system_error>
 #include <xf86drm.h>
 #include <xf86drmMode.h>
+#include <string_view>
 
 namespace mg = mir::graphics;
 namespace mgg = mg::gbm;
 namespace mgk = mg::kms;
 namespace geom = mir::geometry;
+using namespace std::string_view_literals;
 
 
 namespace
@@ -110,7 +112,7 @@ void mgg::RealKMSOutput::reset()
         std::unique_ptr<drmModePropertyRes, decltype(&drmModeFreeProperty)>
             prop{drmModeGetProperty(drm_fd_, connector->props[i]), &drmModeFreeProperty};
         if (prop && (prop->flags & DRM_MODE_PROP_ENUM)) {
-            if (!strcmp(prop->name, "DPMS"))
+            if (prop->name == "DPMS"sv)
             {
                 dpms_enum_id = connector->props[i];
                 break;
@@ -586,7 +588,7 @@ void mgg::RealKMSOutput::update_from_hardware_state(
         for (int m = 0; m != connector->count_modes; ++m) {
             drmModeModeInfo &mode_info = connector->modes[m];
 
-            if (strcmp(mode_info.name, "preferred") == 0)
+            if (mode_info.name == "preferred"sv)
                 current_mode_index = m;
         }
     }
