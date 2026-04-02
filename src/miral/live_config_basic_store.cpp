@@ -85,6 +85,13 @@ public:
             details.value = ScalarValue{std::string{value}, path};
         }
 
+        void clear_array_value(Key const& key)
+        {
+            auto& details = array_attribute_handlers.at(key);
+            details.parsed_values.resize(0);
+            details.explicitly_cleared = true;
+        }
+
         bool is_array(Key const& key) const
         {
             return array_attribute_handlers.contains(key);
@@ -452,6 +459,11 @@ bool mlc::BasicStore::is_array(Key const& key) const
 void mlc::BasicStore::update_scalar_value(Key const& key, std::string_view value, std::filesystem::path const& path)
 {
     self->config_state.update_scalar_value(key, value, path);
+}
+
+void mlc::BasicStore::clear_array_value(Key const& key)
+{
+    self->config_state.clear_array_value(key);
 }
 
 void mlc::BasicStore::update_array_value(Key const& key, std::string_view value, std::filesystem::path const& path)
