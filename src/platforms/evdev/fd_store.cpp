@@ -66,12 +66,18 @@ void mie::FdStore::remove_fd(int fd)
     }
     else
     {
-        // Keep the suspended fd so libinput can request it again on resume
-        suspended.insert(fds.extract(element));
+        // Keep the suspended fd so libinput can request it again on resume.
+        // Overwrite any stale entry at the same path so a double-suspend always
+        // leaves the newest fd in the cache rather than silently dropping it.
+        suspended[element->first] = std::move(element->second);
+        fds.erase(element);
     }
 }
 
 void mie::FdStore::purge_fd(char const* path)
 {
+    // Remove from both maps: the device is permanently gone and its fd
+    // must not be returned to libinput under any circumstances.
+    fds.erase(path);
     suspended.erase(path);
 }
