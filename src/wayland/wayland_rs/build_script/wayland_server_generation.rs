@@ -2,7 +2,7 @@
 //!
 //! This module provides a generator for wayland_server_generated.rs.
 
-use crate::helpers::snake_to_pascal;
+use crate::helpers::{generate_namespace, snake_to_pascal};
 
 use super::WaylandProtocol;
 use proc_macro2::TokenStream;
@@ -36,17 +36,17 @@ pub fn generate_wayland_server_generated_rs(protocols: &Vec<WaylandProtocol>) ->
 /// These globals wil be outputted to a separate "wayland_server_globals.rs"
 /// file.
 fn generate_register_globals_impl(protocol: &WaylandProtocol) -> Vec<TokenStream> {
-    let protocol_name = format_ident!("{}", protocol.name);
+    let namespace_name = generate_namespace(protocol);
     protocol.interfaces.iter().filter_map(|interface| {
         if interface.is_global {
             return None;
         }
 
-        let namespace_name = format_ident!("{}", interface.name);
+        let interface_name = format_ident!("{}", interface.name);
         let interface_struct_name = format_ident!("{}", snake_to_pascal(&interface.name));
         let version = interface.version;
         Some(quote! {
-            handle.create_global::<ServerState, protocols::#protocol_name::#namespace_name::#interface_struct_name, Arc<Mutex<UniquePtr<GlobalFactory>>>>(#version, factory.clone());
+            handle.create_global::<ServerState, #namespace_name::#interface_name::#interface_struct_name, Arc<Mutex<UniquePtr<GlobalFactory>>>>(#version, factory.clone());
         })
     }).collect()
 }
