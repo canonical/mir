@@ -16,16 +16,15 @@ pub fn generate_wayland_server_generated_rs(protocols: &Vec<WaylandProtocol>) ->
     let registration_impls = protocols.iter().flat_map(generate_register_globals_impl);
 
     quote! {
-        use crate::wayland_server_core::*;
-        use wayland_server::DisplayHandle;
         use crate::ffi::GlobalFactory;
         use cxx::UniquePtr;
         use std::sync::{Mutex, Arc};
 
+        unsafe impl Send for GlobalFactory {}
+        unsafe impl Sync for GlobalFactory {}
+
         impl WaylandServer {
             pub fn register_globals(state: &ServerState, factory: Arc<Mutex<UniquePtr<GlobalFactory>>>) {
-                let handle = state.handle;
-
                 #(#registration_impls)*
             }
         }
@@ -50,7 +49,7 @@ fn generate_register_globals_impl(protocol: &WaylandProtocol) -> Vec<TokenStream
         let interface_struct_name = format_ident!("{}", snake_to_pascal(&interface.name));
         let version = interface.version;
         Some(quote! {
-            handle.create_global::<ServerState, #namespace_name::#interface_name::#interface_struct_name, Arc<Mutex<UniquePtr<GlobalFactory>>>>(#version, factory.clone());
+            state.handle.create_global::<ServerState, #namespace_name::#interface_name::#interface_struct_name, Arc<Mutex<UniquePtr<GlobalFactory>>>>(#version, factory.clone());
         })
     }).collect()
 }
