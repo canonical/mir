@@ -38,7 +38,7 @@ pub fn generate_wayland_server_generated_rs(protocols: &Vec<WaylandProtocol>) ->
 fn generate_register_globals_impl(protocol: &WaylandProtocol) -> Vec<TokenStream> {
     let namespace_name = generate_namespace(protocol);
     protocol.interfaces.iter().filter_map(|interface| {
-        if interface.is_global {
+        if !interface.is_global {
             return None;
         }
 
