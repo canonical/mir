@@ -15,12 +15,11 @@
  */
 
 #include "launch_app.h"
-#include <mir/errno_utils.h>
-#include <mir/log.h>
 
 #include <boost/throw_exception.hpp>
 
 #include <string>
+#include <spawn.h>
 #include <unistd.h>
 #include <signal.h>
 
@@ -118,25 +117,41 @@ auto execute_with_environment(std::vector<std::string> const app, Environment& a
 
     exec_args.push_back(nullptr);
 
-    pid_t pid = fork();
-
-    if (pid < 0)
+    // Use posix_spawnp() instead of fork()+exec() to avoid ASAN deadlocks.
+    // When fork() is called from a multithreaded process, ASAN's internal mutexes
+    // locked by other threads remain locked in the child, causing deadlock before
+    // exec() can run. posix_spawnp() uses vfork()/clone() internally, bypassing
+    // this issue.
+    posix_spawnattr_t attr;
+    if (auto const error = posix_spawnattr_init(&attr))
     {
-        BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), "Failed to fork process"}));
+        BOOST_THROW_EXCEPTION((std::system_error{error, std::system_category(), "Failed to init spawn attributes"}));
     }
 
-    if (pid == 0)
+    // Unblock all signals and reset their dispositions to defaults in the child
+    sigset_t all_signals;
+    sigfillset(&all_signals);
+    sigset_t no_signals;
+    sigemptyset(&no_signals);
+    // These calls only fail if attr is null/invalid (it isn't) or if flags are invalid (they aren't)
+    posix_spawnattr_setsigdefault(&attr, &all_signals);
+    posix_spawnattr_setsigmask(&attr, &no_signals);
+    posix_spawnattr_setflags(&attr, POSIX_SPAWN_SETSIGDEF | POSIX_SPAWN_SETSIGMASK);
+
+    pid_t pid = -1;
+    auto const error = posix_spawnp(
+        &pid,
+        exec_args[0],
+        nullptr,
+        &attr,
+        const_cast<char* const*>(exec_args.data()),
+        const_cast<char* const*>(exec_env.data()));
+
+    posix_spawnattr_destroy(&attr);
+
+    if (error != 0)
     {
-        sigset_t all_signals;
-        sigfillset(&all_signals);
-        pthread_sigmask(SIG_UNBLOCK, &all_signals, nullptr);
-
-        // execvpe() isn't listed as being async-signal-safe, but the implementation looks fine and rewriting seems
-        // unnecessary
-        execvpe(exec_args[0], const_cast<char* const*>(exec_args.data()), const_cast<char* const*>(exec_env.data()));
-
-        mir::log_warning("Failed to execute client (\"%s\") error: %s", exec_args[0], mir::errno_to_cstr(errno));
-        _exit(EXIT_FAILURE);
+        BOOST_THROW_EXCEPTION((std::system_error{error, std::system_category(), "Failed to spawn process"}));
     }
 
     return pid;
