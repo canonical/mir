@@ -23,11 +23,57 @@
 
 namespace mlc = miral::live_config;
 
+namespace
+{
+template <typename T>
+auto scalar_to_string(T const& v) -> std::string
+{
+    if constexpr (std::is_same_v<T, bool>)
+        return v ? "true" : "false";
+    else if constexpr (std::is_same_v<T, std::string_view> || std::is_same_v<T, std::string>)
+        return std::string{v};
+    else
+        return std::to_string(v);
+}
+} // namespace
+
 struct mlc::ConfigAggregator::Self
 {
     explicit Self(mlc::ParsingStore& parser) :
         parser{parser}
     {
+    }
+
+    /// Returns a handler suitable for registering on the parser that, when
+    /// called with a parsed scalar value, forwards it into the aggregated store
+    /// as a string for later typed dispatch.
+    template <typename T>
+    auto accumulate_scalar()
+    {
+        return [&store = this->store](mlc::Key const& key, std::optional<T> value)
+        {
+            if (value)
+                store.update_scalar_value(key, scalar_to_string(*value), {});
+        };
+    }
+
+    /// Returns a handler suitable for registering on the parser that, when
+    /// called with a parsed array span, appends each element into the
+    /// aggregated store, or clears the array if the span is empty.
+    template <typename T>
+    auto accumulate_array()
+    {
+        return [&store = this->store](mlc::Key const& key, std::optional<std::span<T const>> values)
+        {
+            if (values)
+            {
+                if (values->empty())
+                    store.clear_array_value(key);
+                else
+                    for (auto const& v : *values)
+                        store.update_array_value(key, scalar_to_string(v), {});
+            }
+        };
     }
 
     mlc::ParsingStore& parser;
@@ -63,186 +109,91 @@ void mlc::ConfigAggregator::load_all(
 void mlc::ConfigAggregator::add_int_attribute(
     live_config::Key const& key, std::string_view description, HandleInt handler)
 {
-    self->parser.add_int_attribute(key, description,
-        [&store = self->store](Key const& key, std::optional<int> value)
-        {
-            if (value)
-                store.update_scalar_value(key, std::to_string(*value), {});
-        });
+    self->parser.add_int_attribute(key, description, self->accumulate_scalar<int>());
     self->store.add_int_attribute(key, description, std::move(handler));
 }
 
 void mlc::ConfigAggregator::add_int_attribute(
     live_config::Key const& key, std::string_view description, int preset, HandleInt handler)
 {
-    self->parser.add_int_attribute(key, description, preset,
-        [&store = self->store](Key const& key, std::optional<int> value)
-        {
-            if (value)
-                store.update_scalar_value(key, std::to_string(*value), {});
-        });
+    self->parser.add_int_attribute(key, description, preset, self->accumulate_scalar<int>());
     self->store.add_int_attribute(key, description, preset, std::move(handler));
 }
 
 void mlc::ConfigAggregator::add_ints_attribute(
     live_config::Key const& key, std::string_view description, HandleInts handler)
 {
-    self->parser.add_ints_attribute(key, description,
-        [&store = self->store](Key const& key, std::optional<std::span<int const>> values)
-        {
-            if (values)
-            {
-                if (values->empty())
-                    store.clear_array_value(key);
-                else
-                    for (auto const v : *values)
-                        store.update_array_value(key, std::to_string(v), {});
-            }
-        });
+    self->parser.add_ints_attribute(key, description, self->accumulate_array<int>());
     self->store.add_ints_attribute(key, description, std::move(handler));
 }
 
 void mlc::ConfigAggregator::add_ints_attribute(
     live_config::Key const& key, std::string_view description, std::span<int const> preset, HandleInts handler)
 {
-    self->parser.add_ints_attribute(key, description, preset,
-        [&store = self->store](Key const& key, std::optional<std::span<int const>> values)
-        {
-            if (values)
-            {
-                if (values->empty())
-                    store.clear_array_value(key);
-                else
-                    for (auto const v : *values)
-                        store.update_array_value(key, std::to_string(v), {});
-            }
-        });
+    self->parser.add_ints_attribute(key, description, preset, self->accumulate_array<int>());
     self->store.add_ints_attribute(key, description, preset, std::move(handler));
 }
 
 void mlc::ConfigAggregator::add_bool_attribute(
     live_config::Key const& key, std::string_view description, HandleBool handler)
 {
-    self->parser.add_bool_attribute(key, description,
-        [&store = self->store](Key const& key, std::optional<bool> value)
-        {
-            if (value)
-                store.update_scalar_value(key, *value ? "true" : "false", {});
-        });
+    self->parser.add_bool_attribute(key, description, self->accumulate_scalar<bool>());
     self->store.add_bool_attribute(key, description, std::move(handler));
 }
 
 void mlc::ConfigAggregator::add_bool_attribute(
     live_config::Key const& key, std::string_view description, bool preset, HandleBool handler)
 {
-    self->parser.add_bool_attribute(key, description, preset,
-        [&store = self->store](Key const& key, std::optional<bool> value)
-        {
-            if (value)
-                store.update_scalar_value(key, *value ? "true" : "false", {});
-        });
+    self->parser.add_bool_attribute(key, description, preset, self->accumulate_scalar<bool>());
     self->store.add_bool_attribute(key, description, preset, std::move(handler));
 }
 
 void mlc::ConfigAggregator::add_float_attribute(
     live_config::Key const& key, std::string_view description, HandleFloat handler)
 {
-    self->parser.add_float_attribute(key, description,
-        [&store = self->store](Key const& key, std::optional<float> value)
-        {
-            if (value)
-                store.update_scalar_value(key, std::to_string(*value), {});
-        });
+    self->parser.add_float_attribute(key, description, self->accumulate_scalar<float>());
     self->store.add_float_attribute(key, description, std::move(handler));
 }
 
 void mlc::ConfigAggregator::add_float_attribute(
     live_config::Key const& key, std::string_view description, float preset, HandleFloat handler)
 {
-    self->parser.add_float_attribute(key, description, preset,
-        [&store = self->store](Key const& key, std::optional<float> value)
-        {
-            if (value)
-                store.update_scalar_value(key, std::to_string(*value), {});
-        });
+    self->parser.add_float_attribute(key, description, preset, self->accumulate_scalar<float>());
     self->store.add_float_attribute(key, description, preset, std::move(handler));
 }
 
 void mlc::ConfigAggregator::add_floats_attribute(
     live_config::Key const& key, std::string_view description, HandleFloats handler)
 {
-    self->parser.add_floats_attribute(key, description,
-        [&store = self->store](Key const& key, std::optional<std::span<float const>> values)
-        {
-            if (values)
-            {
-                if (values->empty())
-                    store.clear_array_value(key);
-                else
-                    for (auto const v : *values)
-                        store.update_array_value(key, std::to_string(v), {});
-            }
-        });
+    self->parser.add_floats_attribute(key, description, self->accumulate_array<float>());
     self->store.add_floats_attribute(key, description, std::move(handler));
 }
 
 void mlc::ConfigAggregator::add_floats_attribute(
     live_config::Key const& key, std::string_view description, std::span<float const> preset, HandleFloats handler)
 {
-    self->parser.add_floats_attribute(key, description, preset,
-        [&store = self->store](Key const& key, std::optional<std::span<float const>> values)
-        {
-            if (values)
-            {
-                if (values->empty())
-                    store.clear_array_value(key);
-                else
-                    for (auto const v : *values)
-                        store.update_array_value(key, std::to_string(v), {});
-            }
-        });
+    self->parser.add_floats_attribute(key, description, preset, self->accumulate_array<float>());
     self->store.add_floats_attribute(key, description, preset, std::move(handler));
 }
 
 void mlc::ConfigAggregator::add_string_attribute(
     live_config::Key const& key, std::string_view description, HandleString handler)
 {
-    self->parser.add_string_attribute(key, description,
-        [&store = self->store](Key const& key, std::optional<std::string_view> value)
-        {
-            if (value)
-                store.update_scalar_value(key, *value, {});
-        });
+    self->parser.add_string_attribute(key, description, self->accumulate_scalar<std::string_view>());
     self->store.add_string_attribute(key, description, std::move(handler));
 }
 
 void mlc::ConfigAggregator::add_string_attribute(
     live_config::Key const& key, std::string_view description, std::string_view preset, HandleString handler)
 {
-    self->parser.add_string_attribute(key, description, preset,
-        [&store = self->store](Key const& key, std::optional<std::string_view> value)
-        {
-            if (value)
-                store.update_scalar_value(key, *value, {});
-        });
+    self->parser.add_string_attribute(key, description, preset, self->accumulate_scalar<std::string_view>());
     self->store.add_string_attribute(key, description, preset, std::move(handler));
 }
 
 void mlc::ConfigAggregator::add_strings_attribute(
     live_config::Key const& key, std::string_view description, HandleStrings handler)
 {
-    self->parser.add_strings_attribute(key, description,
-        [&store = self->store](Key const& key, std::optional<std::span<std::string const>> values)
-        {
-            if (values)
-            {
-                if (values->empty())
-                    store.clear_array_value(key);
-                else
-                    for (auto const& v : *values)
-                        store.update_array_value(key, v, {});
-            }
-        });
+    self->parser.add_strings_attribute(key, description, self->accumulate_array<std::string>());
     self->store.add_strings_attribute(key, description, std::move(handler));
 }
 
@@ -252,18 +203,7 @@ void mlc::ConfigAggregator::add_strings_attribute(
     std::span<std::string const> preset,
     HandleStrings handler)
 {
-    self->parser.add_strings_attribute(key, description, preset,
-        [&store = self->store](Key const& key, std::optional<std::span<std::string const>> values)
-        {
-            if (values)
-            {
-                if (values->empty())
-                    store.clear_array_value(key);
-                else
-                    for (auto const& v : *values)
-                        store.update_array_value(key, v, {});
-            }
-        });
+    self->parser.add_strings_attribute(key, description, preset, self->accumulate_array<std::string>());
     self->store.add_strings_attribute(key, description, preset, std::move(handler));
 }
 
