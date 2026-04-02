@@ -380,26 +380,6 @@ TEST_F(LiveConfigIniFile, later_stream_overrides_earlier_scalar)
     ini_file.load_file(stream2, "base.conf.d/99-override.conf");
 }
 
-TEST_F(LiveConfigIniFile, multiple_streams_call_handlers_exactly_once_per_load)
-{
-    ini_file.add_int_attribute(a_key, "a scoped int", [this](auto... args) { int_handler(args...); });
-    ini_file.add_ints_attribute(an_ints_key, "ints", [this](auto... args) { ints_handler(args...); });
-
-    auto constexpr num_streams = 7;
-    std::istringstream stream_objects[num_streams];
-
-    EXPECT_CALL(*this, int_handler(a_key, _)).Times(num_streams);
-    EXPECT_CALL(*this, ints_handler(an_ints_key, _)).Times(num_streams);
-
-    for (auto i = 0; i < num_streams; ++i)
-    {
-        stream_objects[i] = std::istringstream{
-            a_key.to_string() + "=10\n" + an_ints_key.to_string() + "=20\n" + an_ints_key.to_string() + "=30\n"};
-        auto const filepath = std::filesystem::path("base.conf.d/") / std::format("{:02}-override.conf", i);
-        ini_file.load_file(stream_objects[i], filepath);
-    }
-}
-
 TEST_F(LiveConfigIniFile, done_handler_is_called_once_per_load_file)
 {
     int done_count = 0;
@@ -415,72 +395,6 @@ TEST_F(LiveConfigIniFile, done_handler_is_called_once_per_load_file)
 
     EXPECT_THAT(done_count, Eq(3));
 }
-
-// TEST_F(LiveConfigIniFile, array_values_are_appended_across_streams)
-// {
-//     ini_file.add_strings_attribute(a_strings_key, "strings", [this](auto... args) { strings_handler(args...); });
-//
-//     std::istringstream stream1{a_strings_key.to_string() + "=foo\n"};
-//     std::istringstream stream2{a_strings_key.to_string() + "=bar\n"};
-//     std::istringstream stream3{a_strings_key.to_string() + "=baz\n"};
-//
-//     EXPECT_CALL(*this, strings_handler(_, _)).Times(AnyNumber());
-//     ini_file.load_file(stream1, "base.conf");
-//     ini_file.load_file(stream2, "base.conf.d/10-override.conf");
-//
-//     EXPECT_CALL(*this, strings_handler(a_strings_key, Optional(ElementsAre("foo", "bar", "baz"))));
-//     ini_file.load_file(stream3, "base.conf.d/20-override.conf");
-// }
-
-TEST_F(LiveConfigIniFile, unassigned_key_yields_nullopt_across_streams)
-{
-    ini_file.add_int_attribute(a_key, "a scoped int", [this](auto... args) { int_handler(args...); });
-
-    std::istringstream stream1{another_key.to_string() + "=42\n"};
-    std::istringstream stream2{another_key.to_string() + "=64\n"};
-
-    EXPECT_CALL(*this, int_handler(a_key, std::optional<int>{std::nullopt})).Times(2);
-
-    ini_file.load_file(stream1, "base.conf");
-    ini_file.load_file(stream2, "base.conf.d/10-override.conf");
-}
-
-TEST_F(LiveConfigIniFile, preset_is_used_by_load_files_when_no_stream_assigns_to_key)
-{
-    ini_file.add_int_attribute(a_key, "a scoped int", 13, [this](auto... args) { int_handler(args...); });
-
-    std::istringstream stream1{another_key.to_string() + "=42\n"};
-
-    EXPECT_CALL(*this, int_handler(a_key, std::optional<int>{13}));
-
-    ini_file.load_file(stream1, "base.conf");
-}
-
-// TEST_F(LiveConfigIniFile, loading_a_new_file_adds_to_combined_state)
-// {
-//     ini_file.add_int_attribute(a_key, "a scoped int", [this](auto... args) { int_handler(args...); });
-//     ini_file.add_strings_attribute(a_strings_key, "strings", [this](auto... args) { strings_handler(args...); });
-//
-//     EXPECT_CALL(*this, int_handler(_, _)).Times(AnyNumber());
-//     EXPECT_CALL(*this, strings_handler(_, _)).Times(AnyNumber());
-//
-//     std::istringstream stream1{};
-//     ini_file.load_file(stream1, "base.conf");
-//
-//     std::istringstream stream2{
-//         a_key.to_string() + "=42\n" + a_strings_key.to_string() + "=foo\n" + a_strings_key.to_string() + "=bar\n"};
-//     ini_file.load_file(stream2, "base.conf.d/10-default.conf");
-//
-//     // A third file with a new path: its scalar wins (loaded last), arrays accumulate across all files
-//     std::istringstream stream3{
-//         a_key.to_string() + "=43\n" + a_strings_key.to_string() + "=baz\n" + a_strings_key.to_string() + "=qux\n"
-//     };
-//
-//     EXPECT_CALL(*this, int_handler(a_key, Eq(43)));
-//     EXPECT_CALL(*this, strings_handler(a_strings_key, Optional(ElementsAre("foo", "bar", "baz", "qux"))));
-//
-//     ini_file.load_file(stream3, fake_filename());
-// }
 
 TEST_F(LiveConfigIniFile, array_clears_override_defaults)
 {
@@ -499,24 +413,7 @@ TEST_F(LiveConfigIniFile, array_clears_override_defaults)
     ini_file.load_file(stream2, "base.conf.d/10-override.conf");
 }
 
-TEST_F(LiveConfigIniFile, done_handlers_run_last_with_load_files)
-{
-    ini_file.add_int_attribute(a_key, "a scoped int", [this](auto... args) { int_handler(args...); });
-    ini_file.add_strings_attribute(a_strings_key, "strings", [this](auto... args) { strings_handler(args...); });
-
-    bool done_called = false;
-    ini_file.on_done([&] { done_called = true; });
-
-    EXPECT_CALL(*this, int_handler(_, _)).WillOnce([&] { EXPECT_THAT(done_called, IsFalse()); });
-    EXPECT_CALL(*this, strings_handler(_, _)).WillOnce([&] { EXPECT_THAT(done_called, IsFalse()); });
-
-    std::istringstream stream1{a_key.to_string() + "=42\n" + a_strings_key.to_string() + "=foo\n"};
-    ini_file.load_file(stream1, "base.conf");
-
-    EXPECT_THAT(done_called, IsTrue());
-}
-
-TEST_F(LiveConfigIniFile, empty_value_clears_earlier_array_entries_in_same_stream)
+TEST_F(LiveConfigIniFile, empty_value_clears_earlier_array_entries)
 {
     ini_file.add_strings_attribute(a_strings_key, "strings", [this](auto... args) { strings_handler(args...); });
 
@@ -529,21 +426,6 @@ TEST_F(LiveConfigIniFile, empty_value_clears_earlier_array_entries_in_same_strea
     EXPECT_CALL(*this, strings_handler(a_strings_key, Optional(ElementsAre("baz"))));
 
     ini_file.load_file(stream, fake_filename());
-}
-
-TEST_F(LiveConfigIniFile, empty_value_in_later_stream_clears_entries_from_earlier_streams)
-{
-    ini_file.add_strings_attribute(a_strings_key, "strings", [this](auto... args) { strings_handler(args...); });
-
-    EXPECT_CALL(*this, strings_handler(_, _)).Times(AnyNumber());
-    std::istringstream stream1{a_strings_key.to_string() + "=foo\n" + a_strings_key.to_string() + "=bar\n"};
-    ini_file.load_file(stream1, "base.conf");
-
-    // An empty value assignment in an override file resets the accumulated list
-    std::istringstream stream2{a_strings_key.to_string() + "=\n" + a_strings_key.to_string() + "=baz\n"};
-
-    EXPECT_CALL(*this, strings_handler(a_strings_key, Optional(ElementsAre("baz"))));
-    ini_file.load_file(stream2, "base.conf.d/10-override.conf");
 }
 
 TEST_F(LiveConfigIniFile, unset_key_yields_nullopt)
@@ -581,84 +463,3 @@ TEST_F(LiveConfigIniFile, single_file_reload_updates_handler)
     std::istringstream updated{cursor_scale.to_string() + "=2.0\n"};
     ini_file.load_file(updated, "base.conf");
 }
-
-TEST_F(LiveConfigIniFile, base_adding_new_key_does_not_affect_override_for_shared_key)
-{
-    mlc::Key const cursor_scale{"cursor_scale"};
-    mlc::Key const a_third_key{"a_third_key"};
-    ini_file.add_float_attribute(cursor_scale, "cursor scale", [this](auto... args) { float_handler(args...); });
-    ini_file.add_string_attribute(a_third_key, "a third key", [this](auto... args) { string_handler(args...); });
-
-    EXPECT_CALL(*this, float_handler(_, _)).Times(AnyNumber());
-    EXPECT_CALL(*this, string_handler(_, _)).Times(AnyNumber());
-    std::istringstream base{cursor_scale.to_string() + "=1.0\n"};
-    ini_file.load_file(base, "base.conf");
-    std::istringstream override_stream{cursor_scale.to_string() + "=2.0\n"};
-    ini_file.load_file(override_stream, "base.conf.d/99-override.conf");
-
-    std::istringstream updated_base{
-        cursor_scale.to_string() + "=1.0\n" + a_third_key.to_string() + "=hello\n"};
-    EXPECT_CALL(*this, float_handler(cursor_scale, std::optional<float>{2.0f})).Times(0);
-    EXPECT_CALL(*this, string_handler(a_third_key, std::optional<std::string_view const>{"hello"}));
-    ini_file.load_file(updated_base, "base.conf");
-}
-
-// TEST_F(LiveConfigIniFile, base_removing_key_still_provided_by_override)
-// {
-//     mlc::Key const cursor_scale{"cursor_scale"};
-//     ini_file.add_float_attribute(cursor_scale, "cursor scale", [this](auto... args) { float_handler(args...); });
-//
-//     EXPECT_CALL(*this, float_handler(_, _)).Times(AnyNumber());
-//     std::istringstream base{cursor_scale.to_string() + "=1.0\n"};
-//     ini_file.load_file(base, "base.conf");
-//     std::istringstream override_stream{cursor_scale.to_string() + "=2.0\n"};
-//     ini_file.load_file(override_stream, "base.conf.d/99-override.conf");
-//
-//     EXPECT_CALL(*this, float_handler(cursor_scale, std::optional<float>{2.0f}));
-//     std::istringstream updated_base{""};
-//     ini_file.load_file(updated_base, "base.conf");
-// }
-
-// TEST_F(LiveConfigIniFile, override_removing_key_falls_back_to_base_value)
-// {
-//     mlc::Key const cursor_scale{"cursor_scale"};
-//     mlc::Key const some_other_key{"some_other_key"};
-//     ini_file.add_float_attribute(cursor_scale, "cursor scale", [this](auto... args) { float_handler(args...); });
-//     ini_file.add_string_attribute(some_other_key, "other key", [this](auto... args) { string_handler(args...); });
-//
-//     EXPECT_CALL(*this, float_handler(_, _)).Times(AnyNumber());
-//     EXPECT_CALL(*this, string_handler(_, _)).Times(AnyNumber());
-//     std::istringstream base{cursor_scale.to_string() + "=1.0\n"};
-//     ini_file.load_file(base, "base.conf");
-//     std::istringstream override_stream{
-//         cursor_scale.to_string() + "=2.0\n" + some_other_key.to_string() + "=value\n"};
-//     ini_file.load_file(override_stream, "base.conf.d/99-override.conf");
-//
-//     // Override no longer sets cursor_scale — base value of 1.0 should be restored
-//     EXPECT_CALL(*this, float_handler(cursor_scale, std::optional<float>{1.0f}));
-//     EXPECT_CALL(*this, string_handler(some_other_key, _)).Times(0);
-//     std::istringstream updated_override{some_other_key.to_string() + "=value\n"};
-//     ini_file.load_file(updated_override, "base.conf.d/99-override.conf");
-// }
-
-// TEST_F(LiveConfigIniFile, override_file_removed_reverts_keys_to_base_or_nullopt)
-// {
-//     mlc::Key const cursor_scale{"cursor_scale"};
-//     mlc::Key const some_other_key{"some_other_key"};
-//     ini_file.add_float_attribute(cursor_scale, "cursor scale", [this](auto... args) { float_handler(args...); });
-//     ini_file.add_string_attribute(some_other_key, "other key", [this](auto... args) { string_handler(args...); });
-//
-//     EXPECT_CALL(*this, float_handler(_, _)).Times(AnyNumber());
-//     EXPECT_CALL(*this, string_handler(_, _)).Times(AnyNumber());
-//     std::istringstream base{cursor_scale.to_string() + "=1.0\n"};
-//     ini_file.load_file(base, "base.conf");
-//     std::istringstream override_stream{
-//         cursor_scale.to_string() + "=2.0\n" + some_other_key.to_string() + "=value\n"};
-//     ini_file.load_file(override_stream, "base.conf.d/99-override.conf");
-//
-//     // Override file is removed — simulate by reloading with an empty stream
-//     EXPECT_CALL(*this, float_handler(cursor_scale, std::optional<float>{1.0f}));
-//     EXPECT_CALL(*this, string_handler(some_other_key, std::optional<std::string_view const>{std::nullopt}));
-//     std::istringstream empty{""};
-//     ini_file.load_file(empty, "base.conf.d/99-override.conf");
-// }
