@@ -20,6 +20,8 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include <cstdlib>
+#include <cstring>
 #include <filesystem>
 #include <fstream>
 
