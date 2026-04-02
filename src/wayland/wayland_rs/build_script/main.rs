@@ -44,7 +44,7 @@ fn main() {
     let include_path = Path::new(&manifest_dir).join(".");
 
     println!("cargo:rerun-if-changed=src/lib.rs");
-    println!("cargo:rerun-if-changed=src/wayland_server.rs");
+    println!("cargo:rerun-if-changed=src/wayland_server_core.rs");
 
     // First, parse the protocol XML files.
     let protocols: Vec<WaylandProtocol> = parse_protocols();
