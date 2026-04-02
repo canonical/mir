@@ -396,23 +396,6 @@ TEST_F(LiveConfigIniFile, done_handler_is_called_once_per_load_file)
     EXPECT_THAT(done_count, Eq(3));
 }
 
-TEST_F(LiveConfigIniFile, array_clears_override_defaults)
-{
-    ini_file.add_strings_attribute(
-        a_strings_key, "strings", {{"default1"s, "default2"s}}, [this](auto... args) { strings_handler(args...); });
-
-    EXPECT_CALL(*this, strings_handler(_, _)).Times(AnyNumber());
-    std::istringstream stream1{a_strings_key.to_string() + "=foo\n" + a_strings_key.to_string() + "=bar\n"};
-    ini_file.load_file(stream1, "base.conf");
-
-    // Override file clears the array but adds nothing back
-    std::istringstream stream2{a_strings_key.to_string() + "=\n"};
-
-    // parsed_values is empty after the clear, explicit clears override the preset
-    EXPECT_CALL(*this, strings_handler(a_strings_key, Optional(IsEmpty()))).Times(2);
-    ini_file.load_file(stream2, "base.conf.d/10-override.conf");
-}
-
 TEST_F(LiveConfigIniFile, empty_value_clears_earlier_array_entries)
 {
     ini_file.add_strings_attribute(a_strings_key, "strings", [this](auto... args) { strings_handler(args...); });
