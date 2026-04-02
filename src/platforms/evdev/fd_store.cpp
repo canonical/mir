@@ -19,9 +19,6 @@
 #include <mir/log.h>
 
 #include <algorithm>
-#include <boost/throw_exception.hpp>
-
-#include <stdexcept>
 
 namespace mie = mir::input::evdev;
 
@@ -32,22 +29,13 @@ void mie::FdStore::store_fd(char const* path, mir::Fd&& fd)
 
 mir::Fd mie::FdStore::take_fd(char const* path)
 {
-    try
+    auto it = fds.find(path);
+    if (it == fds.end())
     {
-        return fds.at(path);
-    }
-    catch (std::out_of_range const&)
-    {
-        auto it = suspended.find(path);
-        if (it != suspended.end())
-        {
-            mir::log_warning("Requested fd for path %s was suspended", path);
-            fds.insert(suspended.extract(it));
-            return fds.at(path);
-        }
         mir::log_warning("Failed to find requested fd for path %s", path);
+        return mir::Fd{};
     }
-    return mir::Fd{};
+    return it->second;
 }
 
 void mie::FdStore::remove_fd(int fd)
@@ -66,18 +54,6 @@ void mie::FdStore::remove_fd(int fd)
     }
     else
     {
-        // Keep the suspended fd so libinput can request it again on resume.
-        // Overwrite any stale entry at the same path so a double-suspend always
-        // leaves the newest fd in the cache rather than silently dropping it.
-        suspended[element->first] = std::move(element->second);
         fds.erase(element);
     }
-}
-
-void mie::FdStore::purge_fd(char const* path)
-{
-    // Remove from both maps: the device is permanently gone and its fd
-    // must not be returned to libinput under any circumstances.
-    fds.erase(path);
-    suspended.erase(path);
 }

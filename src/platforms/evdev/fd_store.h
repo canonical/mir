@@ -36,20 +36,12 @@ public:
     void store_fd(char const* path, mir::Fd&& fd);
     mir::Fd take_fd(char const* path);
     void remove_fd(int fd);
-    void purge_fd(char const* path);
 
 private:
     FdStore(FdStore const&) = delete;
     FdStore& operator=(FdStore const&) = delete;
 
     std::unordered_map<std::string, mir::Fd> fds;
-
-    // LibInputPtr calls remove_fd() for devices on suspend but
-    // calls take_fd() to access them again after resume.
-    // We remember all suspended fds and reinstate them if asked for.
-    //                  https://github.com/canonical/mir/issues/1612
-    //                  https://github.com/canonical/mir/issues/3756
-    std::unordered_map<std::string, mir::Fd> suspended;
 };
 
 }

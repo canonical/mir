@@ -238,9 +238,7 @@ public:
     {
         action_queue->enqueue(
             [
-                &device_fds = device_fds,
                 &devices = devices,
-                devnode = devnode,
                 syspath = syspath
             ]()
             {
@@ -256,10 +254,6 @@ public:
                         }
                     }
                 }
-                // The device is permanently gone; remove its FD from the suspended
-                // cache so we don't return a stale FD if a new device appears at
-                // the same path.
-                device_fds.purge_fd(devnode.c_str());
             });
     }
 
@@ -363,13 +357,6 @@ void mie::Platform::start()
                      * we do not have a valid udev_device attached to it.
                      */
                     device_watchers.erase(device.devnum());
-                    // The device is permanently gone; remove its FD from the
-                    // suspended cache so a future device at the same path doesn't
-                    // receive a stale FD from libinput.
-                    if (auto const devnode = device.devnode())
-                    {
-                        device_fds.purge_fd(devnode);
-                    }
                     break;
                 }
                 default:
