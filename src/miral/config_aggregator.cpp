@@ -117,11 +117,6 @@ struct TypedConfigState
         attribute_handlers.at(key).value = Scalar{value};
     }
 
-    void clear_scalar_value(mlc::Key const& key)
-    {
-        attribute_handlers.at(key).value = std::nullopt;
-    }
-
     template <typename T> void update_array_value(mlc::Key const& key, std::span<T const> values)
     {
         auto& details = array_attribute_handlers.at(key);
@@ -280,8 +275,6 @@ struct mlc::ConfigAggregator::Self
         {
             if (value)
                 config_state.update_scalar_value(key, *value);
-            else
-                config_state.clear_scalar_value(key);
         };
     }
 
