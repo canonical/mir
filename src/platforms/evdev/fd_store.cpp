@@ -69,3 +69,22 @@ void mie::FdStore::remove_fd(int fd)
         fds.erase(element);
     }
 }
+
+const std::string& mie::FdStore::path_for(int fd) const
+{
+    auto element = std::find_if(
+        fds.begin(),
+        fds.end(),
+        [fd](auto const& pair)
+        {
+            return pair.second == fd;
+        }
+    );
+
+    if (element == fds.end())
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Attempted to find path for unmanaged fd " + std::to_string(fd)));
+    }
+
+    return element->first;
+}
