@@ -20,8 +20,6 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include <format>
-
 using namespace testing;
 using namespace std::string_literals;
 namespace mlc = miral::live_config;
