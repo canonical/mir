@@ -116,9 +116,106 @@ std::string to_string(TypedArray const& typed_array)
         typed_array);
 }
 
-class ConfigState
+/// Parse a string into T using std::from_chars. Throws on failure.
+template <typename T> auto parse_scalar(std::string_view val, mlc::Key const& key) -> T
 {
-public:
+    T parsed{};
+    auto const [end, err] = std::from_chars(val.data(), val.data() + val.size(), parsed);
+    if ((err == std::errc{}) && (end == val.data() + val.size()))
+        return parsed;
+    throw std::runtime_error(std::format("Config key '{}' has invalid value: {}", key.to_string(), val));
+}
+
+template <> auto parse_scalar<bool>(std::string_view val, mlc::Key const& key) -> bool
+{
+    if (val == "true")
+        return true;
+    if (val == "false")
+        return false;
+    throw std::runtime_error(std::format("Config key '{}' has invalid value: {}", key.to_string(), val));
+}
+
+template <> auto parse_scalar<std::string>(std::string_view val, mlc::Key const&) -> std::string
+{
+    return std::string{val};
+}
+
+/// Dispatch a TypedScalar (or nullopt) to a typed handler, converting the
+/// stored variant alternative to the expected type T. Throws if the stored
+/// alternative is not compatible.
+template <typename T>
+void dispatch_scalar(
+    std::function<void(mlc::Key const&, std::optional<T>)> const& handler,
+    mlc::Key const& key,
+    std::optional<TypedScalar> const& value)
+{
+    if (!value)
+    {
+        handler(key, std::nullopt);
+        return;
+    }
+
+    if constexpr (std::is_same<T, std::string_view>::value)
+        handler(key, std::string_view{std::get<std::string>(*value)});
+    else
+        handler(key, std::get<T>(*value));
+}
+
+template <typename T>
+void dispatch_array(
+    std::function<void(mlc::Key const&, std::optional<std::span<T const>>)> const& handler,
+    mlc::Key const& key,
+    std::optional<TypedArray> const& values)
+{
+    if (!values)
+    {
+        handler(key, std::nullopt);
+        return;
+    }
+    auto const& vec = std::get<std::vector<T>>(*values);
+    handler(key, std::span<T const>{vec});
+}
+
+/// Build an AttributeDetails for a scalar attribute of stored type StoredT
+/// dispatched as DispatchT.  For int/bool/float: StoredT == DispatchT == T.
+/// For strings: StoredT = std::string, DispatchT = std::string_view.
+template <typename StoredT, typename DispatchT, typename Handler>
+auto make_scalar_attribute(std::string_view description, std::optional<StoredT> preset, Handler handler)
+    -> AttributeDetails
+{
+    auto const typed_preset = preset.transform([](auto const& p) { return TypedScalar{p}; });
+    return {
+        [handler](mlc::Key const& k, std::optional<TypedScalar> const& v)
+        { dispatch_scalar<DispatchT>(handler, k, v); },
+        [](std::string_view s, mlc::Key const& k) -> TypedScalar { return parse_scalar<StoredT>(s, k); },
+        std::string{description},
+        typed_preset,
+        std::nullopt};
+}
+
+/// Build an ArrayAttributeDetails for an array attribute with element type T.
+template <typename T, typename Handler>
+auto make_array_attribute(std::string_view description, std::optional<std::span<T const>> preset, Handler handler)
+    -> ArrayAttributeDetails
+{
+    auto const typed_preset = preset.transform([](auto p) { return TypedArray{std::vector<T>{p.begin(), p.end()}}; });
+    return {
+        [handler](mlc::Key const& k, std::optional<TypedArray> const& v) { dispatch_array<T>(handler, k, v); },
+        [](TypedArray& arr, std::string_view s, mlc::Key const& k)
+        { std::get<std::vector<T>>(arr).push_back(parse_scalar<T>(s, k)); },
+        TypedArray{std::vector<T>{}},
+        std::string{description},
+        std::move(typed_preset),
+        TypedArray{std::vector<T>{}},
+        {},
+        false};
+}
+}
+
+struct miral::live_config::BasicStore::Self
+{
+    std::mutex mutex;
+
     void add_scalar_attribute(mlc::Key const& key, AttributeDetails details)
     {
         if (attribute_handlers.erase(key) || array_attribute_handlers.erase(key))
@@ -339,115 +436,9 @@ public:
             }
     }
 
-private:
     std::map<mlc::Key, AttributeDetails> attribute_handlers;
     std::map<mlc::Key, ArrayAttributeDetails> array_attribute_handlers;
     std::list<mlc::Store::HandleDone> done_handlers;
-};
-
-/// Parse a string into T using std::from_chars. Throws on failure.
-template <typename T> auto parse_scalar(std::string_view val, mlc::Key const& key) -> T
-{
-    T parsed{};
-    auto const [end, err] = std::from_chars(val.data(), val.data() + val.size(), parsed);
-    if ((err == std::errc{}) && (end == val.data() + val.size()))
-        return parsed;
-    throw std::runtime_error(std::format("Config key '{}' has invalid value: {}", key.to_string(), val));
-}
-
-template <> auto parse_scalar<bool>(std::string_view val, mlc::Key const& key) -> bool
-{
-    if (val == "true")
-        return true;
-    if (val == "false")
-        return false;
-    throw std::runtime_error(std::format("Config key '{}' has invalid value: {}", key.to_string(), val));
-}
-
-template <> auto parse_scalar<std::string>(std::string_view val, mlc::Key const&) -> std::string
-{
-    return std::string{val};
-}
-
-/// Dispatch a TypedScalar (or nullopt) to a typed handler, converting the
-/// stored variant alternative to the expected type T. Throws if the stored
-/// alternative is not compatible.
-template <typename T>
-void dispatch_scalar(
-    std::function<void(mlc::Key const&, std::optional<T>)> const& handler,
-    mlc::Key const& key,
-    std::optional<TypedScalar> const& value)
-{
-    if (!value)
-    {
-        handler(key, std::nullopt);
-        return;
-    }
-
-    if constexpr (std::is_same<T, std::string_view>::value)
-        handler(key, std::string_view{std::get<std::string>(*value)});
-    else
-        handler(key, std::get<T>(*value));
-}
-
-template <typename T>
-void dispatch_array(
-    std::function<void(mlc::Key const&, std::optional<std::span<T const>>)> const& handler,
-    mlc::Key const& key,
-    std::optional<TypedArray> const& values)
-{
-    if (!values)
-    {
-        handler(key, std::nullopt);
-        return;
-    }
-    auto const& vec = std::get<std::vector<T>>(*values);
-    handler(key, std::span<T const>{vec});
-}
-
-/// Build an AttributeDetails for a scalar attribute of stored type StoredT
-/// dispatched as DispatchT.  For int/bool/float: StoredT == DispatchT == T.
-/// For strings: StoredT = std::string, DispatchT = std::string_view.
-template <typename StoredT, typename DispatchT, typename Handler>
-auto make_scalar_attribute(std::string_view description, std::optional<StoredT> preset, Handler handler)
-    -> AttributeDetails
-{
-    auto const typed_preset = preset.transform([](auto const& p) { return TypedScalar{p}; });
-    return {
-        [handler](mlc::Key const& k, std::optional<TypedScalar> const& v)
-        { dispatch_scalar<DispatchT>(handler, k, v); },
-        [](std::string_view s, mlc::Key const& k) -> TypedScalar { return parse_scalar<StoredT>(s, k); },
-        std::string{description},
-        typed_preset,
-        std::nullopt};
-}
-
-/// Build an ArrayAttributeDetails for an array attribute with element type T.
-template <typename T, typename Handler>
-auto make_array_attribute(std::string_view description, std::optional<std::span<T const>> preset, Handler handler)
-    -> ArrayAttributeDetails
-{
-    auto const typed_preset = preset.transform([](auto p) { return TypedArray{std::vector<T>{p.begin(), p.end()}}; });
-    return {
-        [handler](mlc::Key const& k, std::optional<TypedArray> const& v) { dispatch_array<T>(handler, k, v); },
-        [](TypedArray& arr, std::string_view s, mlc::Key const& k)
-        { std::get<std::vector<T>>(arr).push_back(parse_scalar<T>(s, k)); },
-        TypedArray{std::vector<T>{}},
-        std::string{description},
-        std::move(typed_preset),
-        TypedArray{std::vector<T>{}},
-        {},
-        false};
-}
-}
-
-struct miral::live_config::BasicStore::Self
-{
-public:
-    Self() = default;
-
-    std::mutex mutex; // TODO locking
-    ConfigState config_state;
 };
 
 mlc::BasicStore::BasicStore() :
@@ -458,44 +449,44 @@ mlc::BasicStore::BasicStore() :
 void mlc::BasicStore::add_int_attribute(Key const& key, std::string_view description, HandleInt handler)
 {
     std::lock_guard lock{self->mutex};
-    self->config_state.add_scalar_attribute(key, make_scalar_attribute<int, int>(description, std::nullopt, handler));
+    self->add_scalar_attribute(key, make_scalar_attribute<int, int>(description, std::nullopt, handler));
 }
 
 void mlc::BasicStore::add_int_attribute(Key const& key, std::string_view description, int preset, HandleInt handler)
 {
     std::lock_guard lock{self->mutex};
-    self->config_state.add_scalar_attribute(key, make_scalar_attribute<int, int>(description, preset, handler));
+    self->add_scalar_attribute(key, make_scalar_attribute<int, int>(description, preset, handler));
 }
 
 void mlc::BasicStore::add_ints_attribute(Key const& key, std::string_view description, HandleInts handler)
 {
     std::lock_guard lock{self->mutex};
-    self->config_state.add_array_attribute(key, make_array_attribute<int>(description, std::nullopt, handler));
+    self->add_array_attribute(key, make_array_attribute<int>(description, std::nullopt, handler));
 }
 
 void mlc::BasicStore::add_ints_attribute(
     Key const& key, std::string_view description, std::span<int const> preset, HandleInts handler)
 {
     std::lock_guard lock{self->mutex};
-    self->config_state.add_array_attribute(key, make_array_attribute<int>(description, preset, handler));
+    self->add_array_attribute(key, make_array_attribute<int>(description, preset, handler));
 }
 
 void mlc::BasicStore::add_bool_attribute(Key const& key, std::string_view description, HandleBool handler)
 {
     std::lock_guard lock{self->mutex};
-    self->config_state.add_scalar_attribute(key, make_scalar_attribute<bool, bool>(description, std::nullopt, handler));
+    self->add_scalar_attribute(key, make_scalar_attribute<bool, bool>(description, std::nullopt, handler));
 }
 
 void mlc::BasicStore::add_bool_attribute(Key const& key, std::string_view description, bool preset, HandleBool handler)
 {
     std::lock_guard lock{self->mutex};
-    self->config_state.add_scalar_attribute(key, make_scalar_attribute<bool, bool>(description, preset, handler));
+    self->add_scalar_attribute(key, make_scalar_attribute<bool, bool>(description, preset, handler));
 }
 
 void mlc::BasicStore::add_float_attribute(Key const& key, std::string_view description, HandleFloat handler)
 {
     std::lock_guard lock{self->mutex};
-    self->config_state.add_scalar_attribute(
+    self->add_scalar_attribute(
         key, make_scalar_attribute<float, float>(description, std::nullopt, handler));
 }
 
@@ -503,26 +494,26 @@ void mlc::BasicStore::add_float_attribute(
     Key const& key, std::string_view description, float preset, HandleFloat handler)
 {
     std::lock_guard lock{self->mutex};
-    self->config_state.add_scalar_attribute(key, make_scalar_attribute<float, float>(description, preset, handler));
+    self->add_scalar_attribute(key, make_scalar_attribute<float, float>(description, preset, handler));
 }
 
 void mlc::BasicStore::add_floats_attribute(Key const& key, std::string_view description, HandleFloats handler)
 {
     std::lock_guard lock{self->mutex};
-    self->config_state.add_array_attribute(key, make_array_attribute<float>(description, std::nullopt, handler));
+    self->add_array_attribute(key, make_array_attribute<float>(description, std::nullopt, handler));
 }
 
 void mlc::BasicStore::add_floats_attribute(
     Key const& key, std::string_view description, std::span<float const> preset, HandleFloats handler)
 {
     std::lock_guard lock{self->mutex};
-    self->config_state.add_array_attribute(key, make_array_attribute<float>(description, preset, handler));
+    self->add_array_attribute(key, make_array_attribute<float>(description, preset, handler));
 }
 
 void mlc::BasicStore::add_string_attribute(Key const& key, std::string_view description, HandleString handler)
 {
     std::lock_guard lock{self->mutex};
-    self->config_state.add_scalar_attribute(
+    self->add_scalar_attribute(
         key, make_scalar_attribute<std::string, std::string_view>(description, std::nullopt, handler));
 }
 
@@ -530,40 +521,40 @@ void mlc::BasicStore::add_string_attribute(
     Key const& key, std::string_view description, std::string_view preset, HandleString handler)
 {
     std::lock_guard lock{self->mutex};
-    self->config_state.add_scalar_attribute(
+    self->add_scalar_attribute(
         key, make_scalar_attribute<std::string, std::string_view>(description, std::string{preset}, handler));
 }
 
 void mlc::BasicStore::add_strings_attribute(Key const& key, std::string_view description, HandleStrings handler)
 {
     std::lock_guard lock{self->mutex};
-    self->config_state.add_array_attribute(key, make_array_attribute<std::string>(description, std::nullopt, handler));
+    self->add_array_attribute(key, make_array_attribute<std::string>(description, std::nullopt, handler));
 }
 
 void mlc::BasicStore::add_strings_attribute(
     Key const& key, std::string_view description, std::span<std::string const> preset, HandleStrings handler)
 {
     std::lock_guard lock{self->mutex};
-    self->config_state.add_array_attribute(key, make_array_attribute<std::string>(description, preset, handler));
+    self->add_array_attribute(key, make_array_attribute<std::string>(description, preset, handler));
 }
 
 void mlc::BasicStore::on_done(HandleDone handler)
 {
     std::lock_guard lock{self->mutex};
-    self->config_state.on_done(std::move(handler));
+    self->on_done(std::move(handler));
 }
 
 bool mlc::BasicStore::update_key(Key const& key, std::string_view value, std::filesystem::path modification_path)
 {
-    if (self->config_state.is_scalar(key))
+    if (self->is_scalar(key))
     {
-        self->config_state.update_scalar_value(key, value, modification_path);
+        self->update_scalar_value(key, value, modification_path);
         return true;
     }
 
-    if (self->config_state.is_array(key))
+    if (self->is_array(key))
     {
-        self->config_state.update_array_value(key, value, modification_path);
+        self->update_array_value(key, value, modification_path);
         return true;
     }
 
@@ -573,31 +564,31 @@ bool mlc::BasicStore::update_key(Key const& key, std::string_view value, std::fi
 void mlc::BasicStore::update_typed_value_impl(
     Key const& key, TypedScalar typed_value, std::filesystem::path const& path)
 {
-    self->config_state.update_typed_value(key, std::move(typed_value), path);
+    self->update_typed_value(key, std::move(typed_value), path);
 }
 
 void mlc::BasicStore::update_typed_array_value_impl(
     Key const& key, TypedArray single_element, std::filesystem::path const& path)
 {
-    self->config_state.update_typed_array_value(key, std::move(single_element), path);
+    self->update_typed_array_value(key, std::move(single_element), path);
 }
 
 void mlc::BasicStore::clear_array(Key const& key)
 {
-    self->config_state.clear_array_value(key);
+    self->clear_array_value(key);
 }
 
 void mlc::BasicStore::clear_values()
 {
-    self->config_state.clear();
+    self->clear();
 }
 
 void mlc::BasicStore::call_attribute_handlers() const
 {
-    self->config_state.call_attribute_handlers();
+    self->call_attribute_handlers();
 }
 
 void mlc::BasicStore::call_done_handlers(std::string const& paths) const
 {
-    self->config_state.call_done_handlers(paths);
+    self->call_done_handlers(paths);
 }
