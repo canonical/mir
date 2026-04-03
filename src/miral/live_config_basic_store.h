@@ -54,8 +54,8 @@ public:
 
     void on_done(HandleDone handler) override;
 
-    bool is_scalar(Key const& key) const;
-    bool is_array(Key const& key) const;
+    bool update_key(Key const& key, std::string_view value, std::filesystem::path modification_path);
+
 
     void update_scalar_value(Key const& key, std::string_view value, std::filesystem::path const& path);
     void clear_array_value(Key const& key);

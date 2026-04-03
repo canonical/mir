@@ -446,14 +446,21 @@ void mlc::BasicStore::on_done(HandleDone handler)
     self->config_state.on_done(std::move(handler));
 }
 
-bool mlc::BasicStore::is_scalar(Key const& key) const
+bool mlc::BasicStore::update_key(Key const& key, std::string_view value, std::filesystem::path modification_path)
 {
-    return self->config_state.is_scalar(key);
-}
+    if (self->config_state.is_scalar(key))
+    {
+        self->config_state.update_scalar_value(key, value, modification_path);
+        return true;
+    }
 
-bool mlc::BasicStore::is_array(Key const& key) const
-{
-    return self->config_state.is_array(key);
+    if (self->config_state.is_array(key))
+    {
+        self->config_state.update_array_value(key, value, modification_path);
+        return true;
+    }
+
+    return false;
 }
 
 void mlc::BasicStore::update_scalar_value(Key const& key, std::string_view value, std::filesystem::path const& path)

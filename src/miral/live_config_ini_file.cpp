@@ -39,15 +39,7 @@ void parse_one_file(mlc::BasicStore& store, std::istream& istream, std::filesyst
                 auto const key = mlc::Key{line.substr(0, eq)};
                 auto const value = line.substr(eq + 1);
 
-                if (store.is_scalar(key))
-                {
-                    store.update_scalar_value(key, value, path);
-                }
-                else if (store.is_array(key))
-                {
-                    store.update_array_value(key, value, path);
-                }
-                else
+                if(!store.update_key(key, value, path))
                 {
                     mir::log_warning(
                         "Config key '%s' in file '%s' is not registered. Skipping.",
