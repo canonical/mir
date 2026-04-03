@@ -39,7 +39,7 @@ author = "Canonical Ltd."
 # TODO: To disable the title, set to an empty string.
 
 try:
-    release = subprocess.check_output(["git", "describe", "--always"], encoding="utf-8").strip()
+    release = subprocess.check_output(["git", "describe", "--tags", "--abbrev=0"], encoding="utf-8").strip()
 except (FileNotFoundError, subprocess.CalledProcessError):
     with open(Path(__file__).parents[2] / "CMakeLists.txt", encoding="utf-8") as cmake:
         matches = re.findall(r"set\(MIR_VERSION_(MAJOR|MINOR|PATCH) (\d+)\)", cmake.read())
