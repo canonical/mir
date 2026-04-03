@@ -441,9 +441,7 @@ fn cpp_arg_type_to_cpp_source(cpp_type: &CppType, originates_from_rust: bool) ->
                 "std::string const&".to_string()
             }
         }
-        CppType::Object(name) => {
-            format!("std::unique_ptr<{}> const&", name)
-        }
+        CppType::Object(name) => format!("std::unique_ptr<{}> const&", name),
         CppType::Array => {
             if originates_from_rust {
                 "rust::Vec<uint8_t>".to_string()
@@ -452,9 +450,7 @@ fn cpp_arg_type_to_cpp_source(cpp_type: &CppType, originates_from_rust: bool) ->
             }
         }
         CppType::Fd => "int32_t".to_string(),
-        CppType::Box(name) => {
-            format!("rust::Box<{}>", name)
-        }
+        CppType::Box(name) => format!("rust::Box<{}>", name),
     }
 }
 
