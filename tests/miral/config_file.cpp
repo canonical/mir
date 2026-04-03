@@ -17,6 +17,7 @@
 #include <miral/test_server.h>
 #include <miral/config_file.h>
 
+#include <source_location>
 #include <wayland_wrapper.h>
 #include <gmock/gmock-function-mocker.h>
 
@@ -40,13 +41,22 @@ public:
         pending_loads = true;
     }
 
-    void wait_for_load()
+    enum class FailOnTimeout { yes, no };
+    void wait_for_load(FailOnTimeout fail_on_timeout = FailOnTimeout::no)
     {
         std::unique_lock lock{mutex};
 
         if (!cv.wait_for(lock, std::chrono::milliseconds{10}, [this] { return !pending_loads; }))
         {
-            std::cerr << "wait_for_load() timed out" << std::endl;
+            switch (fail_on_timeout)
+            {
+            case FailOnTimeout::yes:
+                FAIL() << "wait_for_load() timed out" << std::endl;
+                break;
+            case FailOnTimeout::no:
+                std::cerr << "wait_for_load() timed out" << std::endl;
+                break;
+            }
         }
     }
 
@@ -617,4 +627,488 @@ TEST_F(TestConfigFile, with_no_reloading_a_config_in_xdg_conf_dir2_is_loaded)
     });
 
     wait_for_load();
+}
+
+
+namespace
+{
+using namespace std::string_literals;
+// The override config file name must match the pattern: <name>.d/*.conf
+// For a config file named "test_override.config", the override directory is "test_override.config.d/"
+std::filesystem::path const override_config_file = "test_override.config";
+auto const override_test_root = "/tmp/test_override_config_file/"s;
+auto const override_xdg_conf_home = override_test_root + "xdg_conf_dir_home/"s;
+auto const override_home = override_test_root + "home/"s;
+auto const override_home_config = override_home + ".config/"s;
+
+struct TestOverrideConfigFile : PendingLoad, miral::TestServer
+{
+    TestOverrideConfigFile();
+
+    std::optional<ConfigFile> config;
+
+    // Track calls to the OverrideLoader
+    std::mutex load_mutex;
+    std::size_t last_load_stream_count{0};
+    std::vector<std::filesystem::path> last_load_paths;
+    int load_call_count{0};
+
+    void record_load(std::span<std::pair<std::unique_ptr<std::istream>, std::filesystem::path>> streams)
+    {
+        {
+            std::lock_guard lock{load_mutex};
+            last_load_stream_count = streams.size();
+            last_load_paths.clear();
+            for (auto const& [_, p] : streams)
+                last_load_paths.push_back(p);
+            ++load_call_count;
+        }
+        notify_load();
+    }
+
+    auto override_dir() -> std::filesystem::path
+    {
+        return std::filesystem::path{override_xdg_conf_home} / (override_config_file.string() + ".d");
+    }
+
+    void write_base_config()
+    {
+        mark_pending();
+        std::ofstream file{std::filesystem::path{override_xdg_conf_home} / override_config_file};
+        file << "base content";
+    }
+
+    void write_override_file(std::string const& filename, std::string const& content = "override content")
+    {
+        mark_pending();
+        std::filesystem::create_directories(override_dir());
+        std::ofstream file{override_dir() / filename};
+        file << content;
+    }
+
+    void write_real_file(std::filesystem::path const& filepath, std::string const& content = "real content")
+    {
+        mark_pending();
+        std::filesystem::create_directories(filepath.parent_path());
+        std::ofstream file{filepath};
+        file << content;
+    }
+
+    void rewrite_base_config()
+    {
+        mark_pending();
+        std::ofstream file{std::filesystem::path{override_xdg_conf_home} / override_config_file};
+        file << "updated base content";
+    }
+
+    void delete_override_file(std::string const& filename)
+    {
+        mark_pending();
+        std::filesystem::remove(override_dir() / filename);
+    }
+
+    void rename_override_file(std::string const& from, std::string const& to)
+    {
+        mark_pending();
+        std::filesystem::rename(override_dir() / from, override_dir() / to);
+    }
+
+    void move_override_file_out(std::string const& filename)
+    {
+        mark_pending();
+        std::filesystem::rename(override_dir() / filename, std::filesystem::path{override_test_root} / filename);
+    }
+
+    auto base_config_path() -> std::filesystem::path
+    {
+        return std::filesystem::path{override_xdg_conf_home} / override_config_file;
+    }
+
+    void delete_override_dir()
+    {
+        mark_pending();
+        std::filesystem::remove_all(override_dir());
+    }
+
+    void SetUp() override
+    {
+        miral::TestServer::SetUp();
+    }
+
+    void TearDown() override
+    {
+        config.reset();
+        miral::TestServer::TearDown();
+    }
+};
+
+TestOverrideConfigFile::TestOverrideConfigFile()
+{
+    std::filesystem::remove_all(override_test_root);
+
+    for (auto dir : {override_xdg_conf_home, override_home_config})
+    {
+        std::filesystem::create_directories(dir);
+    }
+
+    add_to_environment("HOME", override_home.c_str());
+    add_to_environment("XDG_CONFIG_HOME", override_xdg_conf_home.c_str());
+    add_to_environment("XDG_CONFIG_DIRS", "");
+}
+}
+
+TEST_F(TestOverrideConfigFile, override_loader_with_no_file_is_not_called)
+{
+    invoke_runner([this](miral::MirRunner& runner)
+    {
+        config = ConfigFile{
+            runner,
+            "no_such_file.config",
+            ConfigFile::Mode::no_reloading,
+            [this](auto streams) { record_load(streams); }};
+    });
+
+    EXPECT_THAT(load_call_count, testing::Eq(0));
+}
+
+TEST_F(TestOverrideConfigFile, override_loader_with_base_file_only_receives_one_stream)
+{
+    write_base_config();
+
+    invoke_runner([this](miral::MirRunner& runner)
+    {
+        config = ConfigFile{
+            runner,
+            override_config_file,
+            ConfigFile::Mode::no_reloading,
+            [this](auto streams) { record_load(streams); }};
+    });
+
+    wait_for_load();
+    EXPECT_THAT(last_load_stream_count, testing::Eq(1u));
+}
+
+TEST_F(TestOverrideConfigFile, override_loader_with_conf_files_receives_base_plus_overrides)
+{
+    write_base_config();
+    write_override_file("10-first.conf");
+    write_override_file("20-second.conf");
+
+    invoke_runner([this](miral::MirRunner& runner)
+    {
+        config = ConfigFile{
+            runner,
+            override_config_file,
+            ConfigFile::Mode::no_reloading,
+            [this](auto streams) { record_load(streams); }};
+    });
+
+    wait_for_load();
+    EXPECT_THAT(last_load_stream_count, testing::Eq(3u));
+}
+
+TEST_F(TestOverrideConfigFile, override_loader_ignores_non_conf_files)
+{
+    write_base_config();
+    write_override_file("10-first.conf");
+    write_override_file("README.txt");
+    write_override_file("backup.conf.bak");
+
+    invoke_runner([this](miral::MirRunner& runner)
+    {
+        config = ConfigFile{
+            runner,
+            override_config_file,
+            ConfigFile::Mode::no_reloading,
+            [this](auto streams) { record_load(streams); }};
+    });
+
+    wait_for_load();
+    EXPECT_THAT(last_load_stream_count, testing::Eq(2u));
+}
+
+TEST_F(TestOverrideConfigFile, override_loader_sorts_override_files_lexicographically)
+{
+    write_base_config();
+    write_override_file("30-third.conf");
+    write_override_file("10-first.conf");
+    write_override_file("20-second.conf");
+
+    invoke_runner([this](miral::MirRunner& runner)
+    {
+        config = ConfigFile{
+            runner,
+            override_config_file,
+            ConfigFile::Mode::no_reloading,
+            [this](auto streams) { record_load(streams); }};
+    });
+
+    wait_for_load();
+    ASSERT_THAT(last_load_paths.size(), testing::Eq(4u));
+    // First path is the base config
+    EXPECT_THAT(last_load_paths[0].filename(), testing::Eq(override_config_file));
+    // Overrides are sorted by filename
+    EXPECT_THAT(last_load_paths[1].filename(), testing::Eq("10-first.conf"));
+    EXPECT_THAT(last_load_paths[2].filename(), testing::Eq("20-second.conf"));
+    EXPECT_THAT(last_load_paths[3].filename(), testing::Eq("30-third.conf"));
+}
+
+TEST_F(TestOverrideConfigFile, reloads_when_base_config_is_rewritten)
+{
+    write_base_config();
+
+    invoke_runner([this](miral::MirRunner& runner)
+    {
+        config = ConfigFile{
+            runner,
+            override_config_file,
+            ConfigFile::Mode::reload_on_change,
+            [this](auto streams) { record_load(streams); }};
+    });
+
+    wait_for_load();
+    EXPECT_THAT(load_call_count, testing::Eq(1));
+
+    rewrite_base_config();
+    wait_for_load();
+    EXPECT_THAT(load_call_count, testing::Eq(2));
+}
+
+TEST_F(TestOverrideConfigFile, reloads_when_override_file_is_added)
+{
+    write_base_config();
+    std::filesystem::create_directories(override_dir());
+
+    invoke_runner([this](miral::MirRunner& runner)
+    {
+        config = ConfigFile{
+            runner,
+            override_config_file,
+            ConfigFile::Mode::reload_on_change,
+            [this](auto streams) { record_load(streams); }};
+    });
+
+    wait_for_load();
+    EXPECT_THAT(last_load_stream_count, testing::Eq(1u));
+
+    write_override_file("10-new.conf");
+    wait_for_load();
+    EXPECT_THAT(last_load_stream_count, testing::Eq(2u));
+}
+
+TEST_F(TestOverrideConfigFile, reloads_when_override_file_is_modified)
+{
+    write_base_config();
+    write_override_file("10-existing.conf", "original");
+
+    invoke_runner([this](miral::MirRunner& runner)
+    {
+        config = ConfigFile{
+            runner,
+            override_config_file,
+            ConfigFile::Mode::reload_on_change,
+            [this](auto streams) { record_load(streams); }};
+    });
+
+    wait_for_load();
+    auto const count_after_initial = load_call_count;
+
+    write_override_file("10-existing.conf", "modified");
+    wait_for_load();
+    EXPECT_THAT(load_call_count, testing::Gt(count_after_initial));
+}
+
+TEST_F(TestOverrideConfigFile, reloads_when_override_dir_is_created_after_startup)
+{
+    write_base_config();
+    // No override directory exists yet
+
+    invoke_runner([this](miral::MirRunner& runner)
+    {
+        config = ConfigFile{
+            runner,
+            override_config_file,
+            ConfigFile::Mode::reload_on_change,
+            [this](auto streams) { record_load(streams); }};
+    });
+
+    wait_for_load();
+    EXPECT_THAT(last_load_stream_count, testing::Eq(1u)); // base only
+
+    // Now create the override directory with a file
+    write_override_file("10-late.conf");
+    wait_for_load();
+    EXPECT_THAT(last_load_stream_count, testing::Eq(2u)); // base + override
+}
+
+TEST_F(TestOverrideConfigFile, no_reloading_mode_does_not_reload_on_override_changes)
+{
+    write_base_config();
+    write_override_file("10-first.conf");
+
+    invoke_runner([this](miral::MirRunner& runner)
+    {
+        config = ConfigFile{
+            runner,
+            override_config_file,
+            ConfigFile::Mode::no_reloading,
+            [this](auto streams) { record_load(streams); }};
+    });
+
+    wait_for_load();
+    EXPECT_THAT(load_call_count, testing::Eq(1));
+
+    // Write more files — should NOT trigger a reload
+    write_override_file("20-second.conf");
+    wait_for_load();
+    EXPECT_THAT(load_call_count, testing::Eq(1));
+}
+
+TEST_F(TestOverrideConfigFile, no_reloading_mode_does_not_reload_on_base_config_change)
+{
+    write_base_config();
+
+    invoke_runner([this](miral::MirRunner& runner)
+    {
+        config = ConfigFile{
+            runner,
+            override_config_file,
+            ConfigFile::Mode::no_reloading,
+            [this](auto streams) { record_load(streams); }};
+    });
+
+    wait_for_load();
+    EXPECT_THAT(load_call_count, testing::Eq(1));
+
+    rewrite_base_config();
+    wait_for_load();
+    EXPECT_THAT(load_call_count, testing::Eq(1));
+}
+
+TEST_F(TestOverrideConfigFile, reloads_when_override_file_is_deleted)
+{
+    write_base_config();
+    write_override_file("10-first.conf");
+    write_override_file("20-second.conf");
+
+    invoke_runner([this](miral::MirRunner& runner)
+    {
+        config = ConfigFile{
+            runner,
+            override_config_file,
+            ConfigFile::Mode::reload_on_change,
+            [this](auto streams) { record_load(streams); }};
+    });
+
+    wait_for_load();
+    EXPECT_THAT(last_load_stream_count, testing::Eq(3u)); // base + 2 overrides
+
+    delete_override_file("10-first.conf");
+    wait_for_load(FailOnTimeout::yes);
+    EXPECT_THAT(last_load_stream_count, testing::Eq(2u)); // base + 1 remaining override
+}
+
+TEST_F(TestOverrideConfigFile, reloads_when_override_file_is_moved_out_of_directory)
+{
+    write_base_config();
+    write_override_file("10-first.conf");
+
+    invoke_runner([this](miral::MirRunner& runner)
+    {
+        config = ConfigFile{
+            runner,
+            override_config_file,
+            ConfigFile::Mode::reload_on_change,
+            [this](auto streams) { record_load(streams); }};
+    });
+
+    wait_for_load();
+    EXPECT_THAT(last_load_stream_count, testing::Eq(2u)); // base + 1 override
+
+    move_override_file_out("10-first.conf");
+    wait_for_load(FailOnTimeout::yes);
+    EXPECT_THAT(last_load_stream_count, testing::Eq(1u)); // base only
+}
+
+TEST_F(TestOverrideConfigFile, reloads_when_override_file_is_renamed_to_non_conf)
+{
+    write_base_config();
+    write_override_file("10-first.conf");
+
+    invoke_runner([this](miral::MirRunner& runner)
+    {
+        config = ConfigFile{
+            runner,
+            override_config_file,
+            ConfigFile::Mode::reload_on_change,
+            [this](auto streams) { record_load(streams); }};
+    });
+
+    wait_for_load();
+    EXPECT_THAT(last_load_stream_count, testing::Eq(2u)); // base + 1 override
+
+    // Renaming a .conf file away should trigger a reload without it
+    rename_override_file("10-first.conf", "10-first.conf.bak");
+    wait_for_load(FailOnTimeout::yes);
+    EXPECT_THAT(last_load_stream_count, testing::Eq(1u)); // base only
+}
+
+TEST_F(TestOverrideConfigFile, reloads_when_override_dir_is_deleted)
+{
+    write_base_config();
+    write_override_file("10-first.conf");
+
+    invoke_runner([this](miral::MirRunner& runner)
+    {
+        config = ConfigFile{
+            runner,
+            override_config_file,
+            ConfigFile::Mode::reload_on_change,
+            [this](auto streams) { record_load(streams); }};
+    });
+
+    wait_for_load();
+    EXPECT_THAT(last_load_stream_count, testing::Eq(2u)); // base + 1 override
+
+    delete_override_dir();
+    wait_for_load(FailOnTimeout::yes);
+    EXPECT_THAT(last_load_stream_count, testing::Eq(1u)); // base only
+}
+
+TEST_F(TestOverrideConfigFile, reloads_when_file_is_renamed_to_conf_in_override_directory)
+{
+    write_base_config();
+    write_override_file("10-first.conf.tmp");
+
+    invoke_runner([this](miral::MirRunner& runner)
+    {
+        config = ConfigFile{
+            runner,
+            override_config_file,
+            ConfigFile::Mode::reload_on_change,
+            [this](auto streams) { record_load(streams); }};
+    });
+
+    wait_for_load();
+    EXPECT_THAT(last_load_stream_count, testing::Eq(1u)); // base only, .tmp is ignored
+
+    // Atomically renaming a .tmp to .conf should trigger a reload including it
+    rename_override_file("10-first.conf.tmp", "10-first.conf");
+    wait_for_load();
+    EXPECT_THAT(last_load_stream_count, testing::Eq(2u)); // base + new override
+}
+
+TEST_F(TestOverrideConfigFile, missing_base_config_does_not_call_loader)
+{
+    // No base config file at all
+    invoke_runner([this](miral::MirRunner& runner)
+    {
+        config = ConfigFile{
+            runner,
+            override_config_file,
+            ConfigFile::Mode::no_reloading,
+            [this](auto streams) { record_load(streams); }};
+    });
+
+    EXPECT_THAT(load_call_count, testing::Eq(0));
 }
