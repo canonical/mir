@@ -1,5 +1,6 @@
+use crate::protocol_parser::WaylandProtocol;
 use proc_macro2::TokenStream;
-use quote::format_ident;
+use quote::{format_ident, quote};
 use std::fs;
 use syn::Ident;
 
@@ -65,4 +66,13 @@ pub fn format_has_arg(s: &str) -> String {
 
 pub fn format_has_arg_ident(s: &str) -> Ident {
     format_ident!("has_{}", dash_to_snake(s))
+}
+/// Generate the namespace token for a protocol (either wayland_server::protocol or protocols::module_name).
+pub fn generate_namespace(protocol: &WaylandProtocol) -> TokenStream {
+    if protocol.name == "wayland" {
+        quote! { wayland_server::protocol }
+    } else {
+        let protocol_module = dash_to_snake_ident(&protocol.name);
+        quote! { protocols::#protocol_module }
+    }
 }
