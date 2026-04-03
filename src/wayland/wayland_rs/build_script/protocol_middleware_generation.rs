@@ -170,14 +170,7 @@ pub fn wayland_arg_to_ffi_rust_str(arg: &WaylandArg) -> String {
         WaylandArgType::Uint => format!("{}: {}", name, "u32"),
         WaylandArgType::Fixed => format!("{}: {}", name, "f64"),
         WaylandArgType::String => format!("{}: {}", name, "&CxxString"),
-        WaylandArgType::Object => format!(
-            "{}: &Box<{}>",
-            name,
-            format_wayland_interface_to_rust_extension_struct(
-                arg.interface.as_ref().expect("Object is missing interface")
-            )
-        ),
-        WaylandArgType::NewId => format!(
+        WaylandArgType::Object | WaylandArgType::NewId => format!(
             "{}: &Box<{}>",
             name,
             format_wayland_interface_to_rust_extension_struct(
@@ -200,8 +193,7 @@ fn wayland_arg_to_rust_param_str(arg: &WaylandArg, interface_name: &str) -> Stri
     let mut param = match arg.type_ {
         WaylandArgType::Int | WaylandArgType::Uint | WaylandArgType::Fixed => name,
         WaylandArgType::String => format!("{}.to_string()", name),
-        WaylandArgType::Object => format!("&{}.wrapped", name),
-        WaylandArgType::NewId => format!("&{}.wrapped", name),
+        WaylandArgType::Object | WaylandArgType::NewId => format!("&{}.wrapped", name),
         WaylandArgType::Array => format!("{}.iter().cloned().collect()", name),
         WaylandArgType::Fd => format!("unsafe {{ BorrowedFd::borrow_raw({}) }}", name),
     };

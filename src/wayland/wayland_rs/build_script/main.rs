@@ -309,6 +309,18 @@ fn generate_request_body(request: &WaylandRequest) -> TokenStream {
         .iter()
         .find(|arg| arg.type_ == WaylandArgType::NewId);
 
+    let arg_to_tokens = |arg: &WaylandArg| {
+        let arg_name = format_ident!("{}", arg.name.as_str());
+        if arg.allow_null.unwrap_or(false)
+            && matches!(arg.type_, WaylandArgType::Object | WaylandArgType::String)
+        {
+            let has_arg_name = format_has_arg_ident(&arg.name);
+            vec![quote! { #arg_name }, quote! { #has_arg_name }]
+        } else {
+            vec![quote! { #arg_name }]
+        }
+    };
+
     if let Some(new_id_arg) = new_id_arg {
         let new_id_name = format_ident!("{}", new_id_arg.name);
         let ext_interface_struct_name = format_ident!(
@@ -324,17 +336,7 @@ fn generate_request_body(request: &WaylandRequest) -> TokenStream {
             .args
             .iter()
             .filter(|arg| arg.type_ != WaylandArgType::NewId)
-            .flat_map(|arg| {
-                let arg_name = format_ident!("{}", arg.name.as_str());
-                if arg.allow_null.unwrap_or(false)
-                    && matches!(arg.type_, WaylandArgType::Object | WaylandArgType::String)
-                {
-                    let has_arg_name = format_has_arg_ident(&arg.name);
-                    vec![quote! { #arg_name }, quote! { #has_arg_name }]
-                } else {
-                    vec![quote! { #arg_name }]
-                }
-            })
+            .flat_map(arg_to_tokens)
             .collect();
 
         quote! {
@@ -352,21 +354,8 @@ fn generate_request_body(request: &WaylandRequest) -> TokenStream {
             guard.pin_mut().associate(boxed);
         }
     } else {
-        let call_arg_names: Vec<TokenStream> = request
-            .args
-            .iter()
-            .flat_map(|arg| {
-                let arg_name = format_ident!("{}", arg.name.as_str());
-                if arg.allow_null.unwrap_or(false)
-                    && matches!(arg.type_, WaylandArgType::Object | WaylandArgType::String)
-                {
-                    let has_arg_name = format_has_arg_ident(&arg.name);
-                    vec![quote! { #arg_name }, quote! { #has_arg_name }]
-                } else {
-                    vec![quote! { #arg_name }]
-                }
-            })
-            .collect();
+        let call_arg_names: Vec<TokenStream> =
+            request.args.iter().flat_map(arg_to_tokens).collect();
 
         quote! {
             let mut guard = data.lock().unwrap();
