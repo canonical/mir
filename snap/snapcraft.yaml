@@ -1,5 +1,6 @@
 name: mir-libs
-base: core24
+base: core26
+build-base: devel
 summary: The fast, open and secure display server for any device - build environment
 description: |
   Mir is a display server running on linux systems, with a focus on efficiency,
@@ -19,11 +20,9 @@ parts:
     - -DCMAKE_INSTALL_PREFIX=/usr
     - -DMIR_ENABLE_WLCS_TESTS=OFF
     - -DMIR_PLATFORM='atomic-kms;gbm-kms;eglstream-kms;x11;wayland'
-    build-environment:
-    - PATH: $PATH:/usr/lib/rust-1.82/bin
     build-packages:
     - build-essential
-    - cargo-1.82
+    - cargo
     - eglexternalplatform-dev
     - git
     - libboost-date-time-dev
@@ -61,10 +60,10 @@ parts:
     - libpixman-1-dev
     - xwayland
     stage-packages:
-    - libboost-iostreams1.83.0
-    - libboost-program-options1.83.0
+    - libboost-iostreams1.90.0
+    - libboost-program-options1.90.0
     - libdrm2
-    - libdisplay-info1
+    - libdisplay-info3
     - libegl1
     - libepoxy0
     - libevdev2
@@ -75,7 +74,7 @@ parts:
     - libglibmm-2.4-1t64
     - libglvnd0
     - libgudev-1.0-0
-    - libicu74
+    - libicu78
     - libinput10
     - liblttng-ust1t64
     - libmtdev1t64
@@ -103,7 +102,7 @@ parts:
     - libxkbcommon0
     - libxkbcommon-x11-0
     - libxml++2.6-2v5
-    - libxml2
+    - libxml2-16
     - libxrender1
     - libyaml-cpp0.8
     - libapparmor1
