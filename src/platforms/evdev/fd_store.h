@@ -36,19 +36,13 @@ public:
     void store_fd(char const* path, mir::Fd&& fd);
     mir::Fd take_fd(char const* path);
     void remove_fd(int fd);
+    const std::string& path_for(int fd) const;
 
 private:
     FdStore(FdStore const&) = delete;
     FdStore& operator=(FdStore const&) = delete;
 
     std::unordered_map<std::string, mir::Fd> fds;
-
-    // LibInputPtr calls remove_fd() for touchpads on suspend but
-    // continues to use take_fd() to access the fd after resume!
-    // As a workaround, we remember the last removed fd and reinstate
-    // it if asked for.
-    //                  https://github.com/canonical/mir/issues/1612
-    std::pair<std::string, mir::Fd> removed;
 };
 
 }
