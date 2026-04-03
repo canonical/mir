@@ -34,12 +34,18 @@ function(add_rust_cxx_library target)
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
     COMMENT "Building Rust crate ${arg_CRATE}")
 
+  # We build the Rust target first as it could potentially output C++ code
+  # during its build script that other targets depend on.
+  add_custom_target(${target}-rust-build
+    DEPENDS ${cxxbridge_header} ${cxxbridge_source} ${crate_staticlib})
+
   add_library(${target}-rust STATIC IMPORTED)
   set_target_properties(${target}-rust PROPERTIES
     IMPORTED_LOCATION ${crate_staticlib})
 
   add_library(${target}-cxxbridge STATIC
     ${cxxbridge_source} ${cxxbridge_header})
+  add_dependencies(${target}-cxxbridge ${target}-rust-build)
   target_include_directories(${target}-cxxbridge PRIVATE ${cxxbridge_include_dir})
 
   if(arg_INCLUDES)
