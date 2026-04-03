@@ -15,8 +15,7 @@
  */
 
 // TODO: Report errors to Mir's logging facilities. We should do this following Mir's logging refactor.
-// TODO: Need to set up reporting events when received from libinput (report->received_event_from_kernel)
-// TODO: Implement continue after_config and pause_for_config
+// TODO: Implement continue_after_config and pause_for_config
 
 // Some notes about the implementation here:
 // 1. CXX-Rust doesn't support passing Option<T> to C++ functions, so I use booleans
@@ -177,7 +176,8 @@ mod ffi_bridge {
         type LibinputDevice;
         type LibinputDeviceMetadata;
 
-        fn start(self: &mut PlatformRs);
+        fn start(self: &mut PlatformRs) -> bool;
+        fn assign_seat(self: &mut PlatformRs);
         fn continue_after_config(self: &PlatformRs);
         fn pause_for_config(self: &PlatformRs);
         fn stop(self: &mut PlatformRs);
@@ -211,11 +211,13 @@ mod ffi_bridge {
         fn evdev_rs_create(
             bridge: SharedPtr<PlatformBridge>,
             device_registry: SharedPtr<InputDeviceRegistry>,
+            reporter: UniquePtr<InputReport>,
         ) -> Box<PlatformRs>;
     }
 
     unsafe extern "C++" {
         include!("platform_bridge.h");
+        include!("input_report.h");
         include!("mir/input/input_device_registry.h");
         include!("mir/input/device_capability.h");
         include!("mir/input/input_sink.h");
@@ -225,6 +227,7 @@ mod ffi_bridge {
         include!("mir_toolkit/events/enums.h");
 
         pub type PlatformBridge;
+        pub type InputReport;
         pub type DeviceWrapper;
         pub type EventBuilderWrapper;
         pub type RectangleWrapper;
@@ -300,6 +303,14 @@ mod ffi_bridge {
         pub fn y(self: &RectangleWrapper) -> i32;
         pub fn width(self: &RectangleWrapper) -> i32;
         pub fn height(self: &RectangleWrapper) -> i32;
+
+        pub fn received_event_from_kernel(
+            self: &InputReport,
+            when_microseconds: u64,
+            type_: i32,
+            code: i32,
+            value: i32,
+        );
     }
 }
 
@@ -313,8 +324,9 @@ pub use ffi_bridge::*;
 pub fn evdev_rs_create(
     bridge: cxx::SharedPtr<PlatformBridge>,
     device_registry: cxx::SharedPtr<InputDeviceRegistry>,
+    report: cxx::UniquePtr<InputReport>,
 ) -> Box<PlatformRs> {
-    return Box::new(PlatformRs::new(bridge, device_registry));
+    return Box::new(PlatformRs::new(bridge, device_registry, report));
 }
 
 // # Safety

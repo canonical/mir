@@ -49,6 +49,7 @@
 #include <sys/eventfd.h>
 
 #include <deque>
+#include <format>
 #include <optional>
 #include <unordered_map>
 
@@ -908,9 +909,8 @@ miral::TestWlcsDisplayServer::TestWlcsDisplayServer(int argc, char const** argv)
 
     add_to_environment("MIR_SERVER_CURSOR", "null");
     add_to_environment("MIR_SERVER_ENABLE_KEY_REPEAT", "false");
-    char buffer[32];
-    snprintf(buffer, sizeof buffer, "wlcs-tests-%d", getpid());
-    add_to_environment("WAYLAND_DISPLAY", buffer);
+    const auto wayland_display = std::format("wlcs-tests-{}", getpid());
+    add_to_environment("WAYLAND_DISPLAY", wayland_display.c_str());
 
     add_server_init([this](mir::Server& server)
         {

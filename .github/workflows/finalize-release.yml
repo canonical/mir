@@ -13,23 +13,30 @@ permissions:
 
 jobs:
   finalize:
+    name: Finalize Release on ${{ inputs.release_branch }}
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: write
+
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.release_branch }}
+          token: ${{ secrets.MIR_BOT_PAT }}
+          persist-credentials: true
+
       - name: Import GPG key
         id: gpg
-        uses: crazy-max/ghaction-import-gpg@v7
+        uses: crazy-max/ghaction-import-gpg@2dc316deee8e90f13e1a351ab510b4d5bc0c82cd # v7.0.0
         with:
           gpg_private_key: ${{ secrets.MIR_BOT_GPG_PRIVATE_KEY }}
           passphrase: ${{ secrets.MIR_BOT_GPG_PASSPHRASE }}
           git_user_signingkey: true
           git_commit_gpgsign: true
-
-      - name: Checkout repository
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-          ref: ${{ inputs.release_branch }}
+          git_tag_gpgsign: true
 
       - name: Determine version
         id: version
@@ -37,42 +44,46 @@ jobs:
           DESCRIBE=$(git describe --match="*-rc" --abbrev=0)
           if [[ "$DESCRIBE" =~ ^v([0-9]+\.[0-9]+\.[0-9]+)-rc$ ]]; then
             VERSION="${BASH_REMATCH[1]}"
-            echo "version=$VERSION" | tee --append $GITHUB_OUTPUT
+            echo "version=$VERSION" | tee --append "$GITHUB_OUTPUT"
           else
             echo ":error: Failed to parse version from tag: $DESCRIBE"
             exit 1
           fi
 
       - name: Extract release notes
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
         run: |
           # Extract the section for this version from release-notes.md
-          awk -v version="${{ steps.version.outputs.version }}" '
-            /^## Mir / {
-              if (in_section) exit
-              if ($0 ~ version) {
-                in_section = 1
-                next
-              }
-            }
+          awk -v version_pat="## Mir ${VERSION}" '
             in_section && /^## Mir / { exit }
+            !in_section && $0 ~ version_pat { in_section = 1; next }
             in_section { print }
           ' doc/sphinx/release-notes.md > /tmp/release-notes-section.md
+
+      - name: Update release notes version
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          sed --in-place -E "s/(^## Mir ${VERSION}).*/\1/" doc/sphinx/release-notes.md
+          git add doc/sphinx/release-notes.md
 
       - name: Update Debian changelog
         env:
           DEBFULLNAME: ${{ steps.gpg.outputs.name }}
           DEBEMAIL: ${{ steps.gpg.outputs.email }}
+          VERSION: ${{ steps.version.outputs.version }}
         run: |
           sudo apt-get update
-          sudo apt-get install --yes devscripts
+          sudo apt-get install --yes --no-install-recommends devscripts
 
-          # Ensure there's a matching "Begin development" entry
-          dch --newversion "${{ steps.version.outputs.version }}~dev" \
-            "Begin development for ${{ steps.version.outputs.version }} release"
+          # Ensure there's a matching "Begin Release Candidate" entry
+          dch --newversion "${VERSION}~rc" ""
 
           # Remove "Begin" lines and append release notes
-          awk --include=inplace '
-            /^mir \(${{ steps.version.outputs.version }}~dev\)/ {
+          awk --include=inplace \
+            --assign version_pat="^mir \\\(${VERSION}~rc\\\)" '
+            $0~version_pat {
               in_target = 1
               print
               print ""
@@ -87,25 +98,33 @@ jobs:
               }
               close("/tmp/release-notes-section.md")
               in_target = 0
-              print ""
             }
-            in_target && (/^$/ || /Begin development/) { next }
+            in_target && (/^$/ || /Begin /) { next }
             { print }
           ' debian/changelog
 
-          dch --newversion "${{ steps.version.outputs.version }}-0ubuntu24.04" \
+          dch --newversion "${VERSION}-0ubuntu24.04" \
               --distribution noble \
               --force-distribution \
               ""
 
           dch --release ""
+          git add debian/changelog
 
       - name: Update RPM spec
+        env:
+          GPG_NAME: ${{ steps.gpg.outputs.name }}
+          GPG_EMAIL: ${{ steps.gpg.outputs.email }}
+          VERSION: ${{ steps.version.outputs.version }}
         run: |
           DATE_STR=$(date '+%a %b %d %Y')
 
           # Update Version field and insert release notes
-          awk --include=inplace --assign date_str="$DATE_STR" '
+          awk --include=inplace \
+            --assign date_str="$DATE_STR" \
+            --assign gpg_name="$GPG_NAME" \
+            --assign gpg_email="$GPG_EMAIL" \
+            --assign version="$VERSION" '
             function print_notes() {
                   while ((getline line < "/tmp/release-notes-section.md") > 0) {
                   print line
@@ -115,18 +134,19 @@ jobs:
             }
 
             function print_header() {
-              print "* " date_str " ${{ steps.gpg.outputs.name }} <${{ steps.gpg.outputs.email }}> - ${{ steps.version.outputs.version }}-1"
+              print "* " date_str " " gpg_name " <" gpg_email "> - " version "-1"
             }
 
             /^Version:/ {
-              print "Version:        ${{ steps.version.outputs.version }}"
+              print "Version:        " version
               next
             }
 
             /%changelog/ {
               print
               getline
-              if ($0 ~ /^\*.*${{ steps.version.outputs.version }}~dev-/) {
+              dev_pat = "^\\*.*" version "~dev-"
+              if ($0 ~ dev_pat) {
                 # Replace existing ~dev entry
                 print_header()
                 getline
@@ -145,18 +165,27 @@ jobs:
             }
             { print }
           ' rpm/mir.spec
+          git add rpm/mir.spec
 
       - name: Commit and push changelog
+        id: release
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          INPUTS_RELEASE_BRANCH: ${{ inputs.release_branch }}
         run: |
-          git add debian/changelog rpm/mir.spec
-          git commit --message "Update changelogs for ${{ steps.version.outputs.version }}"
-          git push origin "${{ inputs.release_branch }}"
+          git commit --message "Update changelogs for ${VERSION}"
+          git tag --annotate "v${VERSION}" --message "Release ${VERSION}"
+          echo "sha=$(git rev-parse --verify HEAD)" | tee --append "$GITHUB_OUTPUT"
+          git push --tags origin "${INPUTS_RELEASE_BRANCH}"
 
       - name: Finalize GitHub release
-        uses: actions/github-script@v8
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          SHA: ${{ steps.release.outputs.sha }}
         with:
           script: |
-            const tag = `v${{ steps.version.outputs.version }}`;
+            const tag = `v${process.env.VERSION}`;
 
             const fs = require('fs');
             const releaseNotes = fs.readFileSync('/tmp/release-notes-section.md', 'utf8');
@@ -176,12 +205,15 @@ jobs:
               process.exit(1);
             }
 
-            await github.rest.repos.updateRelease({
+            const updatedRelease = await github.rest.repos.updateRelease({
               owner: context.repo.owner,
               repo: context.repo.repo,
               release_id: release.id,
+              target_commitish: process.env.SHA,
               body: releaseNotes,
-              draft: true, // Keep as draft to allow manual review, for now
+              draft: false,
               prerelease: false
             });
-            console.log(`:info: Updated release ${release.html_url}`);
+            await core.summary
+              .addRaw(`- Release: [Mir v${process.env.VERSION}](${updatedRelease.data.html_url})`, true)
+              .write();

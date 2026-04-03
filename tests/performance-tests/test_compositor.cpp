@@ -16,6 +16,7 @@
 
 #include "system_performance_test.h"
 
+#include <format>
 #include <fstream>
 #include <string>
 
@@ -39,9 +40,8 @@ struct CompositorPerformance : SystemPerformanceTest
         const ::testing::TestInfo *const test_info =
                 ::testing::UnitTest::GetInstance()->current_test_info();
 
-        char output_filename[256];
-        snprintf(output_filename, sizeof(output_filename) - 1,
-                 "/tmp/%s_%s_server.log",
+        const auto output_filename = std::format(
+                 "/tmp/{}_{}_server.log",
                  test_info->test_case_name(), test_info->name());
         std::ofstream out{output_filename};
 

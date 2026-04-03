@@ -20,6 +20,7 @@
 #include <sys/types.h>
 #include <functional>
 #include <memory>
+#include <type_traits>
 
 namespace mir { class Server; }
 namespace mir { namespace frontend { class SessionCredentials; } }
@@ -73,10 +74,12 @@ private:
 };
 
 template<typename Policy>
+    requires std::is_base_of_v<ApplicationAuthorizer, Policy>
 class SetApplicationAuthorizer : public BasicSetApplicationAuthorizer
 {
 public:
     template<typename ...Args>
+        requires std::is_constructible_v<Policy, Args const&...>
     explicit SetApplicationAuthorizer(Args const& ...args) :
         BasicSetApplicationAuthorizer{[&args...]() { return std::make_shared<Policy>(args...); }} {}
 

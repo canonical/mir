@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "wayland_rs/src/lib.rs.h"
+#include "wayland_rs/src/ffi.rs.h"
 #include <wayland-client.h>
 #include <iostream>
 #include <thread>
@@ -58,7 +58,9 @@ int main()
     std::cout << "    3) The server stops." << std::endl;
     std::cout << "    4) We exit with exit code 0." << std::endl << std::endl;
 
-    auto server = mir::wayland_rs::create_wayland_server();
+    // TODO: Add a real GlobalFactory here, but we will keep it nullptr for the time being
+    // as that task is involved.
+    auto server = mir::wayland_rs::create_wayland_server(nullptr);
     std::thread server_thread([&] { run_server(server); });
 
     run_client();

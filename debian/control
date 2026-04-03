@@ -253,6 +253,8 @@ Depends: ${misc:Depends},
          ${shlibs:Depends},
          mir-platform-graphics-stub23,
          mir-platform-input-stub10,
+# FIXME: canonical/mir#4772
+         mir-platform-rendering-egl-generic,
 Description: Display Server for Ubuntu - wlcs integration
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.

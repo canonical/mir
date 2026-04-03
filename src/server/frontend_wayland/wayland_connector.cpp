@@ -34,6 +34,7 @@
 #include "wp_viewporter.h"
 #include "linux_drm_syncobj.h"
 #include "surface_registry.h"
+#include "keyboard_state_tracker.h"
 
 #include <mir/errno_utils.h>
 #include <mir/main_loop.h>
@@ -157,10 +158,10 @@ namespace
 {
 int halt_eventloop(int fd, uint32_t /*mask*/, void* data)
 {
-    auto display = reinterpret_cast<wl_display*>(data);
+    auto display = static_cast<wl_display*>(data);
     wl_display_terminate(display);
 
-    eventfd_t ignored;
+    eventfd_t ignored{};
     if (eventfd_read(fd, &ignored) < 0)
     {
         BOOST_THROW_EXCEPTION((std::system_error{
@@ -299,6 +300,11 @@ mf::WaylandConnector::WaylandConnector(
         this->allocator);
     subcompositor_global = std::make_unique<mf::WlSubcompositor>(display.get());
     auto const surface_registry = std::make_shared<mf::SurfaceRegistry>();
+
+    auto const action_group_manager =
+        std::make_shared<InputTriggerRegistry::ActionGroupManager>(token_authority, *executor);
+    auto const input_trigger_registry = std::make_shared<frontend::InputTriggerRegistry>();
+    auto const keyboard_state_tracker = std::make_shared<KeyboardStateTracker>();
     seat_global = std::make_unique<mf::WlSeat>(
         display.get(),
         *executor,
@@ -307,7 +313,9 @@ mf::WaylandConnector::WaylandConnector(
         keyboard_observer_registrar,
         seat,
         accessibility_manager,
-        surface_registry);
+        surface_registry,
+        input_trigger_registry,
+        keyboard_state_tracker);
     output_manager = std::make_unique<mf::OutputManager>(
         display.get(),
         executor,
@@ -348,7 +356,10 @@ mf::WaylandConnector::WaylandConnector(
         token_authority,
         surface_registry,
         clock,
-        cursor_observer_multiplexer});
+        cursor_observer_multiplexer,
+        action_group_manager,
+        input_trigger_registry,
+        keyboard_state_tracker});
 
     shm_global = std::make_unique<WlShm>(display.get(), executor);
 
@@ -601,11 +612,11 @@ bool mf::WaylandConnector::wl_display_global_filter_func_thunk(wl_client const* 
 bool mf::WaylandConnector::wl_display_global_filter_func(wl_client const* client, wl_global const* global) const
 {
     auto const* const interface = wl_global_get_interface(global);
-    auto const session = get_session(const_cast<wl_client*>(client));
+    auto const session = get_session(client);
     return extension_filter(session, interface->name);
 }
 
-auto mir::frontend::get_session(wl_client* wl_client) -> std::shared_ptr<scene::Session>
+auto mir::frontend::get_session(wl_client const* wl_client) -> std::shared_ptr<scene::Session>
 {
     return WlClient::from(wl_client).client_session();
 }

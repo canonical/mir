@@ -25,6 +25,8 @@ from pathlib import Path
 #######################
 
 # Project name
+#
+# TODO: Update with the official name of your project or product
 
 project = "Mir"
 author = "Canonical Ltd."
@@ -32,9 +34,10 @@ author = "Canonical Ltd."
 
 # Sidebar documentation title; best kept reasonably short
 #
-# The title you want to display for the documentation in the sidebar.
-# You might want to include a version number here.
-# To not display any title, set this option to an empty string.
+# TODO: To include a version number, add it here (hardcoded or automated).
+#
+# TODO: To disable the title, set to an empty string.
+
 try:
     release = subprocess.check_output(["git", "describe", "--tags", "--exact"], encoding="utf-8").strip()
 except subprocess.CalledProcessError:
@@ -52,6 +55,11 @@ html_title = f'{project} {release} documentation'
 # Now, the starter pack uses CC-BY-SA as the license
 # and the current year as the copyright year.
 #
+# TODO: If your docs need another license, specify it instead of 'CC-BY-SA'.
+#
+# TODO: If your documentation is a part of the code repository of your project,
+#       it inherits the code license instead; specify it instead of 'CC-BY-SA'.
+#
 # NOTE: For static works, it is common to provide the first publication year.
 #       Another option is to provide both the first year of publication
 #       and the current year, especially for docs that frequently change,
@@ -64,25 +72,38 @@ html_title = f'{project} {release} documentation'
 #       curl -H 'Authorization: token <TOKEN>' \
 #         -H 'Accept: application/vnd.github.v3.raw' \
 #         https://api.github.com/repos/canonical/<REPO> | jq '.created_at'
+
 copyright = '%s, %s' % (datetime.date.today().year, author)
 
 
 # Documentation website URL
 #
+# TODO: Update with the official URL of your docs or leave empty if unsure.
+#
 # NOTE: The Open Graph Protocol (OGP) enhances page display in a social graph
 #       and is used by social media platforms; see https://ogp.me/
+
 ogp_site_url = "https://canonical-mir.readthedocs-hosted.com/"
 
 
 # Preview name of the documentation website
+#
+# TODO: To use a different name for the project in previews, update as needed.
+
 ogp_site_name = project
 
 
 # Preview image URL
-ogp_image = "https://assets.ubuntu.com/v1/253da317-image-document-ubuntudocs.svg"
+#
+# TODO: To customise the preview image, update as needed.
+
+ogp_image = "https://assets.ubuntu.com/v1/cc828679-docs_illustration.svg"
 
 
 # Product favicon; shown in bookmarks, browser tabs, etc.
+
+# TODO: To customise the favicon, uncomment and update as needed.
+
 html_favicon = 'favicon.ico'
 
 
@@ -91,105 +112,134 @@ html_favicon = 'favicon.ico'
 
 html_context = {
     # Product page URL; can be different from product docs URL
+    #
+    # TODO: Change to your product website URL,
+    #       dropping the 'https://' prefix, e.g. 'ubuntu.com/lxd'.
+    #
+    # TODO: If there's no such website,
+    #       remove the {{ product_page }} link from the page header template
+    #       (usually .sphinx/_templates/header.html; also, see README.rst).
     "product_page": "canonical.com/mir",
-
     # Product tag image; the orange part of your logo, shown in the page header
-    'product_tag': '_static/tag.png',
-
+    #
+    # TODO: To add a tag image, uncomment and update as needed.
+    # 'product_tag': '_static/tag.png',
     # Your Discourse instance URL
-    'discourse': 'https://discourse.ubuntu.com/c/project/mir/15',
-
+    #
+    # TODO: Change to your Discourse instance URL or leave empty.
+    #
+    # NOTE: If set, adding ':discourse: 123' to an .rst file
+    #       will add a link to Discourse topic 123 at the bottom of the page.
+    "discourse": "https://discourse.ubuntu.com/c/project/mir/15",
     # Your Mattermost channel URL
-    "mattermost": '',
-
+    #
+    # TODO: Change to your Mattermost channel URL or leave empty.
+    "mattermost": "https://chat.canonical.com/canonical/channels/mir-internal",
     # Your Matrix channel URL
+    #
+    # TODO: Change to your Matrix channel URL or leave empty.
     "matrix": "https://matrix.to/#/#mir-server:matrix.org",
-
     # Your documentation GitHub repository URL
+    #
+    # TODO: Change to your documentation GitHub repository URL or leave empty.
+    #
+    # NOTE: If set, links for viewing the documentation source files
+    #       and creating GitHub issues are added at the bottom of each page.
     "github_url": "https://github.com/canonical/mir",
-
     # Docs branch in the repo; used in links for viewing the source files
+    #
+    # TODO: To customise the branch, uncomment and update as needed.
     'repo_default_branch': 'main',
-
     # Docs location in the repo; used in links for viewing the source files
-    "repo_folder": "/doc/sphinx/",
+    #
 
-    # To enable or disable the Previous / Next buttons at the bottom of pages
+
+    # TODO: To customise the directory, uncomment and update as needed.
+    "repo_folder": "/doc/sphinx/",
+    # TODO: To enable or disable the Previous / Next buttons at the bottom of pages
     # Valid options: none, prev, next, both
     # "sequential_nav": "both",
+    # TODO: To enable listing contributors on individual pages, set to True
     "display_contributors": False,
 
     # Required for feedback button
     'github_issues': 'enabled',
 }
 
+html_extra_path = ["robots.txt", "sitemapindex.xml"]
+
+# Allow opt-in build of the OpenAPI "Hello" example so docs stay clean by default.
+if os.getenv("OPENAPI", ""):
+    tags.add("openapi")
+    html_extra_path.append("how-to/assets/openapi.yaml")
+
+# TODO: To enable the edit button on pages, uncomment and change the link to a
+# public repository on GitHub or Launchpad. Any of the following link domains
+# are accepted:
+# - https://github.com/example-org/example"
+# - https://launchpad.net/example
+# - https://git.launchpad.net/example
+#
 html_theme_options = {
-    'source_edit_link': 'https://github.com/canonical/mir',
+'source_edit_link': 'https://github.com/canonical/mir',
 }
 
 # Project slug; see https://meta.discourse.org/t/what-is-category-slug/87897
-slug = ''
+#
+# TODO: If your documentation is hosted on https://docs.ubuntu.com/,
+#       uncomment and update as needed.
+
+# slug = ''
 
 #######################
 # Sitemap configuration: https://sphinx-sitemap.readthedocs.io/
 #######################
 
-# Base URL of RTD hosted project
+# Use RTD canonical URL to ensure duplicate pages have a specific canonical URL
 
-html_baseurl = 'https://canonical-starter-pack.readthedocs-hosted.com/'
+html_baseurl = os.environ.get("READTHEDOCS_CANONICAL_URL", "/")
 
-# URL scheme. Add language and version scheme elements.
-# When configured with RTD variables, check for RTD environment so manual runs succeed:
+# sphinx-sitemap uses html_baseurl to generate the full URL for each page:
 
-if 'READTHEDOCS_VERSION' in os.environ:
-    version = os.environ["READTHEDOCS_VERSION"]
-    sitemap_url_scheme = '{version}{link}'
-else:
-    sitemap_url_scheme = 'MANUAL/{link}'
+sitemap_url_scheme = '{link}'
 
 # Include `lastmod` dates in the sitemap:
 
 sitemap_show_lastmod = True
 
-#######################
-# Template and asset locations
-#######################
+# Exclude generated pages from the sitemap:
 
-#html_static_path = ["_static"]
-#templates_path = ["_templates"]
+sitemap_excludes = [
+    '404/',
+    'genindex/',
+    'search/',
+]
+
+# TODO: Add more pages to sitemap_excludes if needed. Wildcards are supported.
+#       For example, to exclude module pages generated by autodoc, add '_modules/*'.
+
+################################
+# Template and asset locations #
+################################
+
+# html_static_path = ["_static"]
+# templates_path = ["_templates"]
 
 
 #############
 # Redirects #
 #############
 
-# To set up redirects: https://documatt.gitlab.io/sphinx-reredirects/usage.html
-# For example: 'explanation/old-name.html': '../how-to/prettify.html',
+# Add redirects to the 'redirects.txt' file
+# https://sphinxext-rediraffe.readthedocs.io/en/latest/
+
 # To set up redirects in the Read the Docs project dashboard:
 # https://docs.readthedocs.io/en/stable/guides/redirects.html
-# NOTE: If undefined, set to None, or empty,
-#       the sphinx_reredirects extension will be disabled.
-redirects = {
-    '_static/cppguide': '../../reference/cppguide',
-    'explanation/architecture': '../../contributing/explanation/architecture',
-    'explanation/component_reports': '../../configuring/explanation/component-reports',
-    'explanation/libraries': '../../contributing/explanation/libraries',
-    'explanation/ok-so-what-is-this-wayland-thing-anyway': '../../tutorial/write-your-first-wayland-compositor',
-    'how-to/developing-a-wayland-compositor-using-mir': '../../tutorial/write-your-first-wayland-compositor',
-    'how-to/developing-wayland-extension-protocols-for-mir-servers' : '../how-to/how-to-integrate-a-custom-wayland-protocol',
-    'how-to/getting_involved_in_mir': '../../contributing/how-to/getting-involved-in-mir',
-    'how-to/how-to-calibrate-a-touchscreen-device': '../../configuring/how-to/calibrate-a-touchscreen-device',
-    'how-to/how-to-enable-graphics-core22-on-a-device': '../../contributing/how-to/enable-graphics-for-snaps-on-a-device',
-    'how-to/how-to-enable-remote-desktop': '../../configuring/how-to/enable-remote-desktop',
-    'how-to/how-to-enable-screencasting': '../../configuring/how-to/enable-screencasting',
-    'how-to/how-to-test-mir-for-a-release': '../../contributing/how-to/test-mir-for-a-release',
-    'how-to/how-to-update-symbols-map': '../../contributing/how-to/update-symbols-map',
-    'how-to/how-to-use-checkbox-mir': '../../contributing/how-to/use-checkbox-mir',
-    'reference/continuous-integration': '../../contributing/reference/continuous-integration',
-    'reference/dso_versioning_guide': '../../contributing/reference/dso-versioning-guide',
-    'explanation/mir-graphics-support': '../../explanation/platform-support',
-    'explanation/driver-quriks': '../../explanation/driver-quirks',
-}
+
+rediraffe_redirects = "redirects.txt"
+
+# Strips '/index.html' from destination URLs when building with 'dirhtml'
+rediraffe_dir_only = True
 
 
 ###########################
@@ -197,17 +247,27 @@ redirects = {
 ###########################
 
 # A regex list of URLs that are ignored by 'make linkcheck'
+#
+# TODO: Remove or adjust the ACME entry after you update the contributing guide
+
 linkcheck_ignore = [
     "http://127.0.0.1:8000",
+    "https://github.com",
+    r"https://matrix\.to/.*",
+    "https://example.com",
+    # SourceForge domains often block linkcheck
+    r"https://.*\.sourceforge\.(net|io)/.*",
     "how-to/getting_involved_in_mir",
     "https://www.mail-archive.com",
+    "https://manpages.ubuntu.com",
     ]
 
 
 # A regex list of URLs where anchors are ignored by 'make linkcheck'
+
 linkcheck_anchors_ignore_for_url = [
+    r"https://github\.com/.*",
     "https://docs.google.com/*",
-    "https://github.com/*",
     "https://manpages.ubuntu.com/*",
     "https://matrix.to*",
     "https://ticsdocumentation.tiobe.com/*",
@@ -235,23 +295,26 @@ myst_enable_extensions = set((
 
 # Custom Sphinx extensions; see
 # https://www.sphinx-doc.org/en/master/usage/extensions/index.html
+
 # NOTE: The canonical_sphinx extension is required for the starter pack.
-#       It automatically enables the following extensions:
-#       - custom-rst-roles
-#       - myst_parser
-#       - notfound.extension
-#       - related-links
-#       - sphinx_copybutton
-#       - sphinx_design
-#       - sphinx_reredirects
-#       - sphinx_tabs.tabs
-#       - sphinxcontrib.jquery
-#       - sphinxext.opengraph
-#       - terminal-output
-#       - youtube-links
 
 extensions = [
     "canonical_sphinx",
+    "notfound.extension",
+    "sphinx_design",
+    "sphinx_rerediraffe",
+    "sphinx_reredirects",
+    "sphinx_tabs.tabs",
+    "sphinxcontrib.jquery",
+    "sphinxext.opengraph",
+    "sphinx_config_options",
+    "sphinx_contributor_listing",
+    "sphinx_filtered_toctree",
+    "sphinx_related_links",
+    "sphinx_roles",
+    "sphinx_terminal",
+    "sphinx_ubuntu_images",
+    "sphinx_youtube_links",
     "sphinxcontrib.cairosvgconverter",
     "sphinx_last_updated_by_git",
     "sphinx.ext.intersphinx",
@@ -270,17 +333,46 @@ extensions = [
 
 exclude_patterns = [
     "doc-cheat-sheet*",
+    ".venv*",
 ]
 
 # Adds custom CSS files, located under 'html_static_path'
-html_css_files = []
+
+html_css_files = [
+    "https://assets.ubuntu.com/v1/d86746ef-cookie_banner.css",
+]
 
 
 # Adds custom JavaScript files, located under 'html_static_path'
-html_js_files = []
+
+html_js_files = [
+    "https://assets.ubuntu.com/v1/287a5e8f-bundle.js",
+]
+
+
+# Specifies a reST snippet to be appended to each .rst file
+
+rst_epilog = """
+"""
 
 # Feedback button at the top; enabled by default
-disable_feedback_button = False
+#
+# TODO: To disable the button, uncomment this.
+
+# disable_feedback_button = True
+
+
+# Your manpage URL
+#
+# TODO: To enable manpage links, uncomment and replace {codename} with required
+#       release, preferably an LTS release (e.g. noble). Do *not* substitute
+#       {section} or {page}; these will be replaced by sphinx at build time
+#
+# NOTE: If set, adding ':manpage:' to an .rst file
+#       adds a link to the corresponding man section at the bottom of the page.
+
+# manpages_url = 'https://manpages.ubuntu.com/manpages/{codename}/en/' + \
+#     'man{section}/{page}.{section}.html'
 
 
 # Specifies a reST snippet to be prepended to each .rst file
@@ -301,7 +393,7 @@ rst_prolog = """
 # Workaround for https://github.com/canonical/canonical-sphinx/issues/34
 
 if "discourse_prefix" not in html_context and "discourse" in html_context:
-    html_context["discourse_prefix"] = html_context["discourse"] + "/t/"
+    html_context["discourse_prefix"] = f"{html_context['discourse']}/t/"
 
 # Workaround for substitutions.yaml
 
@@ -310,9 +402,8 @@ if os.path.exists('./reuse/substitutions.yaml'):
         myst_substitutions = yaml.safe_load(fd.read())
 
 # Add configuration for intersphinx mapping
-
+# Map only the Sphinx documentation sets that you need to link to from your docs set.
 intersphinx_mapping = {
-    'starter-pack': ('https://canonical-example-product-documentation.readthedocs-hosted.com/en/latest', None),
     'checkbox': ("https://canonical-checkbox.readthedocs-hosted.com/latest/", None),
     'server': ('https://documentation.ubuntu.com/server/', None),
     'snapcraft': ('https://documentation.ubuntu.com/snapcraft/stable/', None),

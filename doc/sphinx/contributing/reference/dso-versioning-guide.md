@@ -191,4 +191,4 @@ versions. For the moment, we can not bother trying to make this work.
 
 [Binutils manual](https://sourceware.org/binutils/docs/ld/VERSION.html)
 
-[Former glibc maintainer's DSO guide](https://www.akkadia.org/drepper/dsohowto.pdf)
+[Former glibc maintainer's DSO guide](https://archive.org/download/dsohowto/dsohowto.pdf)

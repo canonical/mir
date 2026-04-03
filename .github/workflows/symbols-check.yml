@@ -7,27 +7,36 @@ on:
   merge_group:
     types: [checks_requested]
   pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+    - '.github/workflows/symbols-check.yml'
+    - 'include/**.h'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.number && format('pr{0}', github.event.number) || github.ref_name }}
   cancel-in-progress: true
 
+permissions: {}
+
 jobs:
   CheckSymbols:
     runs-on: ubuntu-24.04
 
+    permissions:
+      contents: read
+
     timeout-minutes: 20
     steps:
       - name: Check out code
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
 
       - name: Install dependencies
         run: |
           sudo --preserve-env apt-add-repository --yes ppa:mir-team/dev
           sudo apt-get install --yes libclang1-18 python3-clang-18
-          echo "MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH=/usr/lib/llvm-18/lib/libclang-18.so.1" >> $GITHUB_ENV
-          echo "MIR_SYMBOLS_MAP_GENERATOR_CLANG_LIBRARY_PATH=/usr/lib/llvm-18/lib" >> $GITHUB_ENV
+          echo "MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH=/usr/lib/llvm-18/lib/libclang-18.so.1" >> "$GITHUB_ENV"
+          echo "MIR_SYMBOLS_MAP_GENERATOR_CLANG_LIBRARY_PATH=/usr/lib/llvm-18/lib" >> "$GITHUB_ENV"
           sudo apt-get build-dep ./
 
       - name: Configure
@@ -45,6 +54,6 @@ jobs:
 
       - if: ${{ failure() && runner.debug }}
         name: Setup upterm session
-        uses: mxschmitt/action-tmate@v3
+        uses: mxschmitt/action-tmate@c0afd6f790e3a5564914980036ebf83216678101 # v3.23
         with:
           limit-access-to-actor: true

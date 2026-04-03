@@ -73,6 +73,8 @@ set(BROKEN_TESTS
   ClientSurfaceEventsTest.buffer_release # Has been removed upstream
 
   Anchor/LayerSurfaceLayoutTest.surfaces_with_exclusive_zone_set_to_negative_one_do_not_respect_other_exclusive_zones/*
+
+  ExtImageCopyCaptureTest.cursor_session_captures_pointer_image  # TODO: flaky https://github.com/canonical/mir/issues/4775
 )
 
 if (MIR_RUN_WLCS_TESTS)

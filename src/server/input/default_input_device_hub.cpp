@@ -755,7 +755,7 @@ void mi::DefaultInputDeviceHub::device_changed(Device* dev)
 
     if (dev_it == end(handles))
     {
-        log_debug("Ignoring changes to unknown device (it was likely removed already");
+        log_debug("Ignoring changes to unknown device (it was likely removed already)");
         return;
     }
 

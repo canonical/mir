@@ -205,7 +205,7 @@ auto probe_display_platform(
                         std::string{"Failed to set DRM interface version on device "} + device.devnode()}));
                 }
 
-                if (!mgk::get_cap_checked(tmp_fd, DRM_CLIENT_CAP_ATOMIC))
+                if (drmSetClientCap(tmp_fd, DRM_CLIENT_CAP_ATOMIC, 1) != 0)
                 {
                     mir::log_info("KMS device %s does not support Atomic KMS", device.devnode());
                     continue;

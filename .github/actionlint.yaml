@@ -1,0 +1,6 @@
+self-hosted-runner:
+  labels:
+    - reactive
+    - amd64
+    - 2xlarge-tiobe
+    - noble

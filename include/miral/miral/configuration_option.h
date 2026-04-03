@@ -23,6 +23,7 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <type_traits>
 
 namespace mir { class Server; }
 
@@ -157,6 +158,7 @@ public:
     /// \param option Name of the option
     /// \param description Description of the option
     template<typename Lambda>
+        requires requires { &std::remove_reference_t<Lambda>::operator(); }
     ConfigurationOption(
             Lambda&& callback,
             std::string const& option,

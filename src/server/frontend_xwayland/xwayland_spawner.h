@@ -41,7 +41,8 @@ namespace frontend
 class XWaylandSpawner
 {
 public:
-    XWaylandSpawner(std::function<void()> spawn);
+    XWaylandSpawner(std::function<void()> spawn) :
+        XWaylandSpawner(spawn, choose_display()) {}
     ~XWaylandSpawner();
 
     XWaylandSpawner(XWaylandSpawner const&) = delete;
@@ -58,7 +59,18 @@ public:
     static bool set_cloexec(mir::Fd const& fd, bool cloexec);
 
 private:
+    struct XDisplayPaths
+    {
+        int xdisplay{-1};
+        std::string lockfile;
+        std::string x11_socket;
+    };
+    XWaylandSpawner(std::function<void()> spawn, const XDisplayPaths &xp);
+    static int create_lockfile(XDisplayPaths &xp);
+    static XDisplayPaths choose_display();
     int const xdisplay;
+    std::string lockfile;
+    std::string x11_socket;
     std::vector<Fd> const fds;
     std::shared_ptr<dispatch::MultiplexingDispatchable> const dispatcher;
     std::unique_ptr<dispatch::ThreadedDispatcher> const spawn_thread;
