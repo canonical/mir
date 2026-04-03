@@ -390,3 +390,44 @@ TEST_F(LiveConfigIniFile, the_last_registration_of_a_key_is_used)
 
     ini_file.load_file(istream, fake_filename());
 }
+
+TEST_F(LiveConfigIniFile, later_stream_overrides_earlier_scalar)
+{
+    ini_file.add_int_attribute(a_key, "a scoped int", [this](auto... args) { int_handler(args...); });
+
+    std::istringstream stream1{a_key.to_string() + "=10\n"};
+    EXPECT_CALL(*this, int_handler(a_key, std::optional<int>{10}));
+    ini_file.load_file(stream1, "base.conf");
+
+    // Expect the value from stream2 to win
+    std::istringstream stream2{a_key.to_string() + "=99\n"};
+    EXPECT_CALL(*this, int_handler(a_key, std::optional<int>{10})).Times(0);
+    EXPECT_CALL(*this, int_handler(a_key, std::optional<int>{99}));
+    ini_file.load_file(stream2, "base.conf.d/99-override.conf");
+}
+
+TEST_F(LiveConfigIniFile, empty_value_clears_earlier_array_entries)
+{
+    ini_file.add_strings_attribute(a_strings_key, "strings", [this](auto... args) { strings_handler(args...); });
+
+    // An empty value for an array key clears all previously accumulated entries
+    std::istringstream stream{
+        a_strings_key.to_string() + "=foo\n" + a_strings_key.to_string() + "=bar\n" + a_strings_key.to_string() + "=\n"
+        + a_strings_key.to_string() + "=baz\n"};
+
+    EXPECT_CALL(*this, strings_handler(a_strings_key, Optional(IsEmpty())));
+    EXPECT_CALL(*this, strings_handler(a_strings_key, Optional(ElementsAre("baz"))));
+
+    ini_file.load_file(stream, fake_filename());
+}
+
+TEST_F(LiveConfigIniFile, done_handler_is_called_on_load_file)
+{
+    int done_count = 0;
+    ini_file.on_done([&done_count] { done_count++; });
+
+    std::istringstream empty_stream{""};
+    ini_file.load_file(empty_stream, fake_filename());
+
+    EXPECT_THAT(done_count, Eq(1));
+}
