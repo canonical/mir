@@ -23,20 +23,6 @@
 
 namespace mlc = miral::live_config;
 
-namespace
-{
-template <typename T>
-auto scalar_to_string(T const& v) -> std::string
-{
-    if constexpr (std::is_same_v<T, bool>)
-        return v ? "true" : "false";
-    else if constexpr (std::is_same_v<T, std::string_view> || std::is_same_v<T, std::string>)
-        return std::string{v};
-    else
-        return std::to_string(v);
-}
-} // namespace
-
 struct mlc::ConfigAggregator::Self
 {
     explicit Self(mlc::ParsingStore& parser) :
@@ -46,38 +32,40 @@ struct mlc::ConfigAggregator::Self
 
     /// Returns a handler suitable for registering on the parser that, when
     /// called with a parsed scalar value, forwards it into the aggregated store
-    /// as a string for later typed dispatch.
+    /// using the typed path (no string conversion).
     template <typename T>
     auto accumulate_scalar()
     {
-        return [&store = this->store](mlc::Key const& key, std::optional<T> value)
+        return [this](mlc::Key const& key, std::optional<T> value)
         {
             if (value)
-                store.update_scalar_value(key, scalar_to_string(*value), {});
+                store.update_typed_value(key, *value, file_being_loaded);
         };
     }
 
     /// Returns a handler suitable for registering on the parser that, when
     /// called with a parsed array span, appends each element into the
-    /// aggregated store, or clears the array if the span is empty.
+    /// aggregated store using the typed path, or clears the array if the span
+    /// is empty.
     template <typename T>
     auto accumulate_array()
     {
-        return [&store = this->store](mlc::Key const& key, std::optional<std::span<T const>> values)
+        return [this](mlc::Key const& key, std::optional<std::span<T const>> values)
         {
             if (values)
             {
                 if (values->empty())
-                    store.clear_array_value(key);
+                    store.clear_array(key);
                 else
                     for (auto const& v : *values)
-                        store.update_array_value(key, scalar_to_string(v), {});
+                        store.update_typed_array_value(key, v, file_being_loaded);
             }
         };
     }
 
     mlc::ParsingStore& parser;
     mlc::BasicStore store;
+    std::filesystem::path file_being_loaded;
 };
 
 mlc::ConfigAggregator::ConfigAggregator(ParsingStore& parser) :
@@ -93,7 +81,10 @@ void mlc::ConfigAggregator::load_all(
     self->store.clear_values();
 
     for (auto& [istream_ref, path] : config_files)
+    {
+        self->file_being_loaded = path;
         self->parser.load_file(istream_ref.get(), path);
+    }
 
     self->store.call_attribute_handlers();
 

@@ -19,6 +19,9 @@
 
 #include <miral/live_config.h>
 #include <filesystem>
+#include <string>
+#include <string_view>
+#include <variant>
 
 namespace miral
 {
@@ -27,6 +30,9 @@ namespace live_config
 class BasicStore : public Store
 {
 public:
+    using TypedScalar = std::variant<int, bool, float, std::string>;
+    using TypedArray = std::variant<std::vector<int>, std::vector<bool>, std::vector<float>, std::vector<std::string>>;
+
     BasicStore();
 
     void add_int_attribute(Key const& key, std::string_view description, HandleInt handler) override;
@@ -56,16 +62,46 @@ public:
 
     bool update_key(Key const& key, std::string_view value, std::filesystem::path modification_path);
 
+    /// Update a scalar value from an already-typed value (used by ConfigAggregator).
+    /// No string conversion is performed.
+    template <typename T> void update_typed_value(Key const& key, T value, std::filesystem::path const& path)
+    {
+        static_assert(
+            std::is_same_v<T, int> || std::is_same_v<T, bool> || std::is_same_v<T, float>
+                || std::is_same_v<T, std::string_view>,
+            "update_typed_value only supports int, bool, float, or std::string_view");
 
-    void update_scalar_value(Key const& key, std::string_view value, std::filesystem::path const& path);
-    void clear_array_value(Key const& key);
-    void update_array_value(Key const& key, std::string_view value, std::filesystem::path const& path);
+        if constexpr (std::is_same_v<T, std::string_view>)
+            update_typed_value_impl(key, TypedScalar{std::string{value}}, path);
+        else
+            update_typed_value_impl(key, TypedScalar{value}, path);
+    }
+
+    /// Append an array element from an already-typed value (used by ConfigAggregator).
+    /// No string conversion is performed.
+    template <typename T> void update_typed_array_value(Key const& key, T value, std::filesystem::path const& path)
+    {
+        static_assert(
+            std::is_same_v<T, int> || std::is_same_v<T, bool> || std::is_same_v<T, float>
+                || std::is_same_v<T, std::string>,
+            "update_typed_array_value only supports int, bool, float, or std::string");
+
+        if constexpr (std::is_same_v<T, std::string>)
+            update_typed_array_value_impl(key, TypedArray{std::vector<std::string>{std::string{value}}}, path);
+        else
+            update_typed_array_value_impl(key, TypedArray{std::vector<T>{std::move(value)}}, path);
+    }
+
+    void clear_array(Key const& key);
 
     void clear_values();
     void call_attribute_handlers() const;
     void call_done_handlers(std::string const& paths) const;
 
 private:
+    void update_typed_value_impl(Key const& key, TypedScalar value, std::filesystem::path const& path);
+    void update_typed_array_value_impl(Key const& key, TypedArray value, std::filesystem::path const& path);
+
     struct Self;
     std::shared_ptr<Self> self;
 };
