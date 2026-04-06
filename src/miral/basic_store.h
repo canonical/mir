@@ -56,13 +56,13 @@ public:
         Key const& key,
         std::string_view description,
         HandleStrings handler,
-        std::span<std::string const> initial_values);
+        std::span<std::string const> initial_values) override;
     void add_strings_attribute(
         Key const& key,
         std::string_view description,
         std::span<std::string const> preset,
         HandleStrings handler,
-        std::span<std::string const> initial_values);
+        std::span<std::string const> initial_values) override;
 
     void on_done(HandleDone handler) override;
 

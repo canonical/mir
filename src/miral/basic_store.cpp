@@ -128,7 +128,7 @@ private:
         bool clear_requested = false;
     };
 
-    std::mutex mutex;
+    mutable std::mutex mutex;
     std::map<Key, AttributeDetails> attribute_handlers;
     std::map<Key, ArrayAttributeDetails> array_attribute_handlers;
     std::list<HandleDone> done_handlers;
