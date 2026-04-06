@@ -981,7 +981,7 @@ WlcsPointer* miral::TestWlcsDisplayServer::create_pointer()
     executor->spawn([observer=std::move(observer), the_input_device_hub=mir_server->the_input_device_hub()]
                         { the_input_device_hub->remove_observer(observer); });
 
-    auto fake_pointer = new FakePointer;
+    auto fake_pointer = new FakePointer{};
     fake_pointer->runner = this;
     fake_pointer->pointer = std::move(fake_mouse);
 
@@ -1028,7 +1028,7 @@ WlcsTouch* miral::TestWlcsDisplayServer::create_touch()
     executor->spawn([observer=std::move(observer), the_input_device_hub=mir_server->the_input_device_hub()]
                         { the_input_device_hub->remove_observer(observer); });
 
-    auto fake_touch = new FakeTouch;
+    auto fake_touch = new FakeTouch{};
     fake_touch->runner = this;
     fake_touch->touch = std::move(fake_touch_dev);
 
