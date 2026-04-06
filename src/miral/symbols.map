@@ -775,3 +775,41 @@ global:
     miral::WindowSpecification::alpha*;
   };
 } MIRAL_5.6;
+
+MIRAL_5.8 {
+global:
+  extern "C++" {
+    miral::live_config::BasicStore::BasicStore*;
+    miral::live_config::BasicStore::add_bool_attribute*;
+    miral::live_config::BasicStore::add_float_attribute*;
+    miral::live_config::BasicStore::add_floats_attribute*;
+    miral::live_config::BasicStore::add_int_attribute*;
+    miral::live_config::BasicStore::add_ints_attribute*;
+    miral::live_config::BasicStore::add_string_attribute*;
+    miral::live_config::BasicStore::add_strings_attribute*;
+    miral::live_config::BasicStore::clear_array*;
+    miral::live_config::BasicStore::clear_values*;
+    miral::live_config::BasicStore::done*;
+    miral::live_config::BasicStore::on_done*;
+    miral::live_config::BasicStore::update_bool_array_key*;
+    miral::live_config::BasicStore::update_bool_key*;
+    miral::live_config::BasicStore::update_float_array_key*;
+    miral::live_config::BasicStore::update_float_key*;
+    miral::live_config::BasicStore::update_int_array_key*;
+    miral::live_config::BasicStore::update_int_key*;
+    miral::live_config::BasicStore::update_key*;
+    miral::live_config::BasicStore::update_string_array_key*;
+    miral::live_config::BasicStore::update_string_key*;
+    non-virtual?thunk?to?miral::live_config::BasicStore::add_bool_attribute*;
+    non-virtual?thunk?to?miral::live_config::BasicStore::add_float_attribute*;
+    non-virtual?thunk?to?miral::live_config::BasicStore::add_floats_attribute*;
+    non-virtual?thunk?to?miral::live_config::BasicStore::add_int_attribute*;
+    non-virtual?thunk?to?miral::live_config::BasicStore::add_ints_attribute*;
+    non-virtual?thunk?to?miral::live_config::BasicStore::add_string_attribute*;
+    non-virtual?thunk?to?miral::live_config::BasicStore::add_strings_attribute*;
+    non-virtual?thunk?to?miral::live_config::BasicStore::on_done*;
+    non-virtual?thunk?to?miral::live_config::IniFile::load_file*;
+    typeinfo?for?miral::live_config::BasicStore;
+    vtable?for?miral::live_config::BasicStore;
+  };
+} MIRAL_5.7;
