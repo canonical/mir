@@ -14,20 +14,39 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIRAL_BASIC_STORE_H
-#define MIRAL_BASIC_STORE_H
+#ifndef MIRAL_CONFIG_AGGREGATOR_H
+#define MIRAL_CONFIG_AGGREGATOR_H
 
 #include <miral/live_config.h>
 
 #include <filesystem>
+#include <functional>
 
 namespace miral::live_config
 {
-class BasicStore : public Store
+class ConfigAggregator : public live_config::Store
 {
 public:
-    BasicStore();
-    ~BasicStore();
+    struct Source
+    {
+        std::shared_ptr<Store> store;
+        std::move_only_function<void()> load;
+        std::filesystem::path file_path;
+    };
+
+    ConfigAggregator();
+    ~ConfigAggregator();
+
+    ConfigAggregator(ConfigAggregator const&) = delete;
+    ConfigAggregator(ConfigAggregator&&) = delete;
+    ConfigAggregator& operator=(ConfigAggregator const&) = delete;
+    ConfigAggregator& operator=(ConfigAggregator&&) = delete;
+
+    void add_source(Source&& source);
+    void update_source(Source&& source);
+    void remove_source(std::filesystem::path const& path);
+
+    void reload_all();
 
     void add_int_attribute(Key const& key, std::string_view description, HandleInt handler) override;
     void add_ints_attribute(Key const& key, std::string_view description, HandleInts handler) override;
@@ -66,24 +85,9 @@ public:
 
     void on_done(HandleDone handler) override;
 
-    using ForeachAttributeCallback =
-        std::function<void(Key const&, std::string_view, std::optional<std::string> const& preset)>;
-    using ForeachArrayCallback = std::function<void(
-        Key const&,
-        std::string_view,
-        std::span<std::string const> current_value,
-        std::optional<std::span<std::string const>> preset)>;
-
-    void foreach_attribute(ForeachAttributeCallback const& callback) const;
-    void foreach_array_attribute(ForeachArrayCallback const& callback) const;
-
-    void update_key(Key const& key, std::string_view value, std::filesystem::path const& modification_path);
-    void set_array(Key const& key, std::optional<std::span<std::string const>> value, std::filesystem::path const& modification_path);
-    void do_transaction(std::function<void()> transaction_body);
-
 private:
-    class Self;
-    std::shared_ptr<Self> self;
+    struct Self;
+    std::unique_ptr<Self> self;
 };
 }
 

@@ -63,6 +63,7 @@ public:
     void add_key(Key const& key, std::string_view description, std::optional<std::vector<std::string>> preset, HandleStrings handler, std::vector<std::string> initial_values);
 
     void update_key(Key const& key, std::string_view value, std::filesystem::path const& modification_path);
+    void set_array(Key const& key, std::optional<std::span<std::string const>> value, std::filesystem::path const& modification_path);
     void do_transaction(std::function<void()> transaction_body);
 
     void on_done(HandleDone handler);
@@ -187,6 +188,32 @@ void mlc::BasicStore::Self::update_key(Key const& key, std::string_view value, s
     else
     {
         mir::log_warning("Config key '%s' not recognized", key.to_string().c_str());
+    }
+}
+
+void mlc::BasicStore::Self::set_array(
+    Key const& key, std::optional<std::span<std::string const>> value, std::filesystem::path const& modification_path)
+{
+    if (auto const details_iter = array_attribute_handlers.find(key); details_iter != array_attribute_handlers.end())
+    {
+        auto& details = details_iter->second;
+
+        if (value)
+        {
+            details.parsed_values = std::vector<std::string>{value->begin(), value->end()};
+            details.clear_requested = false;
+        }
+        else
+        {
+            details.parsed_values.clear();
+            details.clear_requested = true;
+        }
+
+        details.modification_paths.push_back(modification_path);
+    }
+    else
+    {
+        mir::log_warning("Config key for array '%s' not recognized", key.to_string().c_str());
     }
 }
 
@@ -420,18 +447,14 @@ void process_as(std::function<void(mlc::Key const&, std::optional<std::span<Type
 }
 }
 
-void mlc::BasicStore::Self::foreach_attribute(
-    BasicStore::ForeachAttributeCallback const& callback) const
+void mlc::BasicStore::Self::foreach_attribute(BasicStore::ForeachAttributeCallback const& callback) const
 {
-    // std::lock_guard lock{mutex};
     for (auto const& [key, details] : attribute_handlers)
         callback(key, details.description, details.preset);
 }
 
-void mlc::BasicStore::Self::foreach_array_attribute(
-    BasicStore::ForeachArrayCallback const& callback) const
+void mlc::BasicStore::Self::foreach_array_attribute(BasicStore::ForeachArrayCallback const& callback) const
 {
-    // std::lock_guard lock{mutex};
     for (auto const& [key, details] : array_attribute_handlers)
         callback(key, details.description, details.parsed_values, details.preset);
 }
@@ -602,19 +625,22 @@ void mlc::BasicStore::update_key(Key const& key, std::string_view value, std::fi
     self->update_key(key, value, modification_path);
 }
 
+void mlc::BasicStore::set_array(Key const& key, std::optional<std::span<std::string const>> value, std::filesystem::path const& modification_path)
+{
+    self->set_array(key, value, modification_path);
+}
+
 void mlc::BasicStore::do_transaction(std::function<void()> transaction_body)
 {
     self->do_transaction(std::move(transaction_body));
 }
 
-void mlc::BasicStore::foreach_attribute(
-    ForeachAttributeCallback const& callback) const
+void mlc::BasicStore::foreach_attribute(ForeachAttributeCallback const& callback) const
 {
     self->foreach_attribute(callback);
 }
 
-void mlc::BasicStore::foreach_array_attribute(
-    ForeachArrayCallback const& callback) const
+void mlc::BasicStore::foreach_array_attribute(ForeachArrayCallback const& callback) const
 {
     self->foreach_array_attribute(callback);
 }
