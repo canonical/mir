@@ -15,6 +15,7 @@
  */
 
 #include "wayland_connector.h"
+#include "wayland_rs/src/ffi.rs.h"
 
 #include <mir/shell/token_authority.h>
 #include <mir/graphics/platform.h>
@@ -225,6 +226,11 @@ void mf::WaylandExtensions::run_builders(wl_display*, std::function<void(std::fu
 {
 }
 
+struct mf::WaylandConnector::ServerWrapper
+{
+    rust::Box<mir::wayland_rs::WaylandServer> server;
+};
+
 mf::WaylandConnector::WaylandConnector(
     std::shared_ptr<msh::Shell> const& shell,
     std::shared_ptr<time::Clock> const& clock,
@@ -257,6 +263,7 @@ mf::WaylandConnector::WaylandConnector(
     std::shared_ptr<input::CursorObserverMultiplexer> const& cursor_observer_multiplexer)
     : extension_filter{extension_filter},
       display{wl_display_create(), &cleanup_display},
+      server_wrapper{std::make_unique<ServerWrapper>(mir::wayland_rs::create_wayland_server())},
       pause_signal{eventfd(0, EFD_CLOEXEC | EFD_SEMAPHORE)},
       executor{std::make_shared<WaylandExecutor>(wl_display_get_event_loop(display.get()))},
       allocator{allocator_for_display(allocator, display.get(), executor)},

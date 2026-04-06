@@ -61,6 +61,6 @@ target_include_directories(mirwayland_rs-demo
   "$<TARGET_PROPERTY:mirwayland_rs,INTERFACE_INCLUDE_DIRECTORIES>")
 
 target_link_libraries(mirwayland_rs-demo
-  PRIVATE
+  PUBLIC
   mirwayland_rs
   PkgConfig::WAYLAND_CLIENT)
