@@ -610,3 +610,117 @@ TEST_F(ConfigAggregatorTest, override_wins_for_shared_key_after_base_update)
     load_all({{std::ref(updated_base), "base.conf"},
               {std::ref(override_again), "base.conf.d/99-override.conf"}});
 }
+
+// Invalid scalar in the second file causes the handler to not be called. So
+// the aggregator is only notified of the final value in the first file.
+TEST_F(ConfigAggregatorTest, invalid_scalar_value_in_one_of_multiple_yields_last_valid_value_1)
+{
+    aggregator.add_int_attribute(a_key, "a scoped int", [this](auto... args) { int_handler(args...); });
+
+    // stream1 has a valid value; stream2 (higher priority) has an unparseable value
+    std::istringstream stream1{a_key.to_string() + "=10\n"};
+    std::istringstream stream2{a_key.to_string() + "=not_a_number\n"};
+
+    // The last (highest-priority) file wins for scalars, and it holds an invalid value → nullopt
+    EXPECT_CALL(*this, int_handler(a_key, Optional(10)));
+
+    load_all({{std::ref(stream1), "base.conf"},
+              {std::ref(stream2), "base.conf.d/10-override.conf"}});
+}
+
+// Same as the previous case, except that the 30 is overriden by an invalid
+// value. Handlers are still not called.
+TEST_F(ConfigAggregatorTest, invalid_scalar_value_in_one_of_multiple_yields_last_valid_value_2)
+{
+    aggregator.add_int_attribute(a_key, "a scoped int", [this](auto... args) { int_handler(args...); });
+
+    std::istringstream stream1{a_key.to_string() + "=10\n" + a_key.to_string() + "=20\n"};
+    std::istringstream stream2{a_key.to_string() + "=30\n" + a_key.to_string() + "=not_a_number\n"};
+
+    EXPECT_CALL(*this, int_handler(a_key, Optional(20)));
+
+    load_all({{std::ref(stream1), "base.conf"},
+              {std::ref(stream2), "base.conf.d/10-override.conf"}});
+}
+
+// Since the invalid value in the second file is overridden by a valid value
+// after, its handlers are called and the config aggregator is notified of its
+// value (40)
+TEST_F(ConfigAggregatorTest, invalid_scalar_value_followed_by_valid_value_in_later_file_yields_valid)
+{
+    aggregator.add_int_attribute(a_key, "a scoped int", [this](auto... args) { int_handler(args...); });
+
+    std::istringstream stream1{a_key.to_string() + "=10\n" + a_key.to_string() + "=20\n"};
+    std::istringstream stream2{a_key.to_string() + "=30\n" + a_key.to_string() + "=also_not_a_number\n" + a_key.to_string() + "=40\n"};
+
+    // The last valid assignment in the highest-priority file wins for scalars
+    EXPECT_CALL(*this, int_handler(a_key, Optional(40)));
+
+    load_all({{std::ref(stream1), "base.conf"},
+              {std::ref(stream2), "base.conf.d/10-override.conf"}});
+}
+
+TEST_F(ConfigAggregatorTest, invalid_array_value_in_one_of_multiple_files_is_ignored)
+{
+    aggregator.add_ints_attribute(an_ints_key, "ints", [this](auto... args) { ints_handler(args...); });
+
+    // stream1 contributes valid entries; stream2 contributes one valid and one invalid entry
+    std::istringstream stream1{an_ints_key.to_string() + "=1\n" + an_ints_key.to_string() + "=2\n"};
+    std::istringstream stream2{an_ints_key.to_string() + "=3\n" + an_ints_key.to_string() + "=not_a_number\n"};
+
+    EXPECT_CALL(*this, ints_handler(an_ints_key, Optional(ElementsAre(1, 2, 3))));
+
+    load_all({{std::ref(stream1), "base.conf"},
+              {std::ref(stream2), "base.conf.d/10-override.conf"}});
+}
+
+TEST_F(ConfigAggregatorTest, invalid_ini_file_among_multiple_files_leaves_scalar_as_nullopt)
+{
+    aggregator.add_int_attribute(a_key, "a scoped int", [this](auto... args) { int_handler(args...); });
+
+    // stream1 is a valid ini file; stream2 is JSON (not valid ini)
+    std::istringstream stream1{a_key.to_string() + "=42\n"};
+    std::istringstream stream2{R"({"key": "value"})"};
+
+    // JSON content cannot be parsed as ini, so only stream1's value is available.
+    // Because stream2 is the higher-priority source but provides nothing parseable for a_key,
+    // the scalar from stream1 should be used (no override occurred).
+    EXPECT_CALL(*this, int_handler(a_key, Optional(42)));
+
+    load_all({{std::ref(stream1), "base.conf"},
+              {std::ref(stream2), "base.conf.d/10-override.conf"}});
+}
+
+TEST_F(ConfigAggregatorTest, invalid_ini_file_among_multiple_files_leaves_array_values_from_valid_files)
+{
+    aggregator.add_strings_attribute(a_strings_key, "strings", [this](auto... args) { strings_handler(args...); });
+
+    // stream1 is a valid ini file; stream2 is JSON (not valid ini)
+    std::istringstream stream1{a_strings_key.to_string() + "=foo\n" + a_strings_key.to_string() + "=bar\n"};
+    std::istringstream stream2{R"({"strings": ["baz"]})"};
+
+    // JSON content cannot be parsed as ini; array entries from stream1 remain intact
+    EXPECT_CALL(*this, strings_handler(a_strings_key, Optional(ElementsAre("foo", "bar"))));
+
+    load_all({{std::ref(stream1), "base.conf"},
+              {std::ref(stream2), "base.conf.d/10-override.conf"}});
+}
+
+TEST_F(ConfigAggregatorTest, clear_followed_by_invalid_array_value_yields_nullopt)
+{
+    aggregator.add_ints_attribute(an_ints_key, "ints", [this](auto... args) { ints_handler(args...); });
+
+    // stream1 provides initial values; stream2 first clears the array (empty assignment)
+    // then tries to append an invalid value
+    std::istringstream stream1{an_ints_key.to_string() + "=1\n" + an_ints_key.to_string() + "=2\n"};
+    std::istringstream stream2{
+        an_ints_key.to_string() + "=\n" +       // clears entries from stream1
+        an_ints_key.to_string() + "=bad_val\n"  // invalid integer after the clear
+    };
+
+    // After clearing and then encountering an invalid value, the result is nullopt
+    EXPECT_CALL(*this, ints_handler(an_ints_key, Optional(IsEmpty())));
+
+    load_all({{std::ref(stream1), "base.conf"},
+              {std::ref(stream2), "base.conf.d/10-override.conf"}});
+}
