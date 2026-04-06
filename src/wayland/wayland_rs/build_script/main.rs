@@ -45,6 +45,9 @@ fn main() {
 
     println!("cargo:rerun-if-changed=src/lib.rs");
     println!("cargo:rerun-if-changed=src/wayland_server_core.rs");
+    println!("cargo:rerun-if-changed=build_script/ffi_generation.rs");
+    println!("cargo:rerun-if-changed=build_script/protocol_middleware_generation.rs");
+    println!("cargo:rerun-if-changed=build_script/wayland_server_generation.rs");
 
     // First, parse the protocol XML files.
     let protocols: Vec<WaylandProtocol> = parse_protocols();
