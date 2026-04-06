@@ -2,4 +2,5 @@ src/protocols.rs
 src/dispatch.rs
 src/ffi.rs
 src/middleware.rs
-include/*
+wayland_rs_cpp/include
+wayland_rs_cpp/src
