@@ -216,7 +216,7 @@ pub struct WaylandEnumEntry {
 
 pub fn parse_protocols() -> Vec<WaylandProtocol> {
     let mut protocols = Vec::new();
-    let mut paths: Vec<_> = fs::read_dir("../../../wayland-protocols")
+    let mut paths: Vec<_> = fs::read_dir("../../../../wayland-protocols")
         .unwrap()
         .filter_map(|e| e.ok())
         .collect();
