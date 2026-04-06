@@ -170,18 +170,11 @@ pub fn wayland_arg_to_ffi_rust_str(arg: &WaylandArg) -> String {
         WaylandArgType::Uint => format!("{}: {}", name, "u32"),
         WaylandArgType::Fixed => format!("{}: {}", name, "f64"),
         WaylandArgType::String => format!("{}: {}", name, "&CxxString"),
-        WaylandArgType::Object => format!(
+        WaylandArgType::Object | WaylandArgType::NewId => format!(
             "{}: &Box<{}>",
             name,
             format_wayland_interface_to_rust_extension_struct(
-                &arg.interface.clone().expect("Object is missing interface")
-            )
-        ),
-        WaylandArgType::NewId => format!(
-            "{}: &Box<{}>",
-            name,
-            format_wayland_interface_to_rust_extension_struct(
-                &arg.interface.clone().expect("Object is missing interface")
+                arg.interface.as_ref().expect("Object is missing interface")
             )
         ),
         WaylandArgType::Array => format!("{}: {}", name, "&CxxVector<u8>"),
@@ -189,7 +182,7 @@ pub fn wayland_arg_to_ffi_rust_str(arg: &WaylandArg) -> String {
     };
 
     if arg.allow_null.unwrap_or(false) {
-        arg_str += format!(", has_{}: bool", arg.name).as_str();
+        arg_str.push_str(&format!(", has_{}: bool", arg.name));
     }
 
     arg_str
@@ -198,12 +191,9 @@ pub fn wayland_arg_to_ffi_rust_str(arg: &WaylandArg) -> String {
 fn wayland_arg_to_rust_param_str(arg: &WaylandArg, interface_name: &str) -> String {
     let name = sanitize_identifier(&arg.name);
     let mut param = match arg.type_ {
-        WaylandArgType::Int => name.clone(),
-        WaylandArgType::Uint => name.clone(),
-        WaylandArgType::Fixed => name.clone(),
+        WaylandArgType::Int | WaylandArgType::Uint | WaylandArgType::Fixed => name,
         WaylandArgType::String => format!("{}.to_string()", name),
-        WaylandArgType::Object => format!("&{}.wrapped", name),
-        WaylandArgType::NewId => format!("&{}.wrapped", name),
+        WaylandArgType::Object | WaylandArgType::NewId => format!("&{}.wrapped", name),
         WaylandArgType::Array => format!("{}.iter().cloned().collect()", name),
         WaylandArgType::Fd => format!("unsafe {{ BorrowedFd::borrow_raw({}) }}", name),
     };
