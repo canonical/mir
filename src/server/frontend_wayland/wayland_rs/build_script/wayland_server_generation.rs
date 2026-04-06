@@ -34,8 +34,8 @@ pub fn generate_wayland_server_generated_rs(protocols: &Vec<WaylandProtocol>) ->
     }
 }
 
-/// Generate the rust implementation for registering each global.
-/// These globals wil be outputted to a separate "wayland_server_globals.rs"
+/// Generate the Rust implementation for registering each global.
+/// These registrations are output to the generated "wayland_server_generated.rs"
 /// file.
 fn generate_register_globals_impl(protocol: &WaylandProtocol) -> Vec<TokenStream> {
     let namespace_name = generate_namespace(protocol);
