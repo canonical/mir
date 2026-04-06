@@ -145,7 +145,7 @@ try
         runner,
         "mir_demo_server.live-config",
         miral::ConfigFile::Mode::reload_on_change,
-        [&config_store](auto&... args){ config_store.load_file(args...); }};
+        [&config_store](auto arg){ config_store.load_files(arg); }};
 
     std::function<void()> shutdown_hook{[]{}};
     runner.add_stop_callback([&] { shutdown_hook(); });
