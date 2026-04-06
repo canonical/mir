@@ -36,6 +36,9 @@ public:
     void add_array_attribute(Key const& key, std::string_view description, HandleArrayAttribute handler);
     void on_done(std::function<void()> handler);
 
+    void foreach_scalar_attribute(std::function<void(Key const&, std::string_view)> const& callback) const;
+    void foreach_array_attribute(std::function<void(Key const&, std::string_view)> const& callback) const;
+
     void update_key(Key const& key, std::string_view value, std::filesystem::path const& modification_path);
     void do_transaction(std::function<void()> transaction_body);
 
