@@ -947,7 +947,7 @@ WlcsPointer* miral::TestWlcsDisplayServer::create_pointer()
     class DeviceObserver : public mir::input::NullInputDeviceObserver
     {
     public:
-        DeviceObserver(std::shared_ptr<mir::test::Signal> const& done)
+        explicit DeviceObserver(std::shared_ptr<mir::test::Signal> const& done)
             : done{done}
         {
         }
@@ -995,7 +995,7 @@ WlcsTouch* miral::TestWlcsDisplayServer::create_touch()
     class DeviceObserver : public mir::input::NullInputDeviceObserver
     {
     public:
-        DeviceObserver(std::shared_ptr<mir::test::Signal> const& done)
+        explicit DeviceObserver(std::shared_ptr<mir::test::Signal> const& done)
             : done{done}
         {
         }
