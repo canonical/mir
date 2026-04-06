@@ -263,7 +263,8 @@ mf::WaylandConnector::WaylandConnector(
     std::shared_ptr<input::CursorObserverMultiplexer> const& cursor_observer_multiplexer)
     : extension_filter{extension_filter},
       display{wl_display_create(), &cleanup_display},
-      server_wrapper{std::make_unique<ServerWrapper>(mir::wayland_rs::create_wayland_server())},
+      // TODO(mattkae): Run the server and hook it up to the rest of the system
+      server_wrapper{std::make_unique<ServerWrapper>(wayland_rs::create_wayland_server())},
       pause_signal{eventfd(0, EFD_CLOEXEC | EFD_SEMAPHORE)},
       executor{std::make_shared<WaylandExecutor>(wl_display_get_event_loop(display.get()))},
       allocator{allocator_for_display(allocator, display.get(), executor)},
