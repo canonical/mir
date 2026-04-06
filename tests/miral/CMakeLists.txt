@@ -81,6 +81,7 @@ find_program(XWAYLAND_EXECUTABLE Xwayland REQUIRED)
 mir_add_wrapped_executable(miral-test NOINSTALL
     external_client.cpp
     config_file.cpp
+    config_aggregator.cpp
     live_config.cpp
     live_config_ini_file.cpp
     magnifier.cpp
