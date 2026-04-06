@@ -22,6 +22,9 @@ public:
 
     void on_done(std::function<void()> handler);
 
+    void foreach_scalar_attribute(std::function<void(Key const&, std::string_view)> const& callback) const;
+    void foreach_array_attribute(std::function<void(Key const&, std::string_view)> const& callback) const;
+
 private:
     Self(Self const&) = delete;
     Self& operator=(Self const&) = delete;
@@ -40,7 +43,7 @@ private:
         ArrayValue array;
     };
 
-    std::mutex mutex;
+    mutable std::mutex mutex;
     std::map<Key, AttributeDetails> attribute_handlers;
     std::map<Key, ArrayAttributeDetails> array_attribute_handlers;
     std::list<std::function<void()>> done_handlers;
@@ -133,6 +136,22 @@ void mlc::BasicStore::Self::do_transaction(std::function<void()> transaction_bod
         }
 }
 
+void mlc::BasicStore::Self::foreach_scalar_attribute(
+    std::function<void(Key const&, std::string_view)> const& callback) const
+{
+    std::lock_guard lock{mutex};
+    for (auto const& [key, details] : attribute_handlers)
+        callback(key, details.description);
+}
+
+void mlc::BasicStore::Self::foreach_array_attribute(
+    std::function<void(Key const&, std::string_view)> const& callback) const
+{
+    std::lock_guard lock{mutex};
+    for (auto const& [key, details] : array_attribute_handlers)
+        callback(key, details.description);
+}
+
 mlc::BasicStore::BasicStore() :
     self{std::make_shared<Self>()}
 {
@@ -163,4 +182,16 @@ void mlc::BasicStore::update_key(Key const& key, std::string_view value, std::fi
 void mlc::BasicStore::do_transaction(std::function<void()> transaction_body)
 {
     self->do_transaction(std::move(transaction_body));
+}
+
+void mlc::BasicStore::foreach_scalar_attribute(
+    std::function<void(Key const&, std::string_view)> const& callback) const
+{
+    self->foreach_scalar_attribute(callback);
+}
+
+void mlc::BasicStore::foreach_array_attribute(
+    std::function<void(Key const&, std::string_view)> const& callback) const
+{
+    self->foreach_array_attribute(callback);
 }
