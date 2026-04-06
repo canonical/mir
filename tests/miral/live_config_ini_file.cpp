@@ -431,4 +431,3 @@ TEST_F(LiveConfigIniFile, done_handler_is_called_on_load_file)
 
     EXPECT_THAT(done_count, Eq(1));
 }
-
