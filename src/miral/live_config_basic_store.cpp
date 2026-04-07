@@ -541,8 +541,10 @@ void mlc::BasicStore::on_done(HandleDone handler)
     self->on_done(std::move(handler));
 }
 
-bool mlc::BasicStore::update_key(Key const& key, std::string_view value, std::filesystem::path modification_path)
+bool mlc::BasicStore::update_key(Key const& key, std::string_view value, std::filesystem::path const& modification_path)
 {
+    std::lock_guard lock{self->mutex};
+
     if (self->attribute_handlers.contains(key))
     {
         self->update_scalar_value(key, value, modification_path);
@@ -558,60 +560,71 @@ bool mlc::BasicStore::update_key(Key const& key, std::string_view value, std::fi
     return false;
 }
 
-void mlc::BasicStore::update_int_key(Key const& key, int value, std::filesystem::path path)
+void mlc::BasicStore::update_int_key(Key const& key, int value, std::filesystem::path const& path)
 {
+    std::lock_guard lock{self->mutex};
     self->update_typed_value(key, value, path);
 }
 
-void mlc::BasicStore::update_bool_key(Key const& key, bool value, std::filesystem::path path)
+void mlc::BasicStore::update_bool_key(Key const& key, bool value, std::filesystem::path const& path)
 {
+    std::lock_guard lock{self->mutex};
     self->update_typed_value(key, value, path);
 }
 
-void mlc::BasicStore::update_float_key(Key const& key, float value, std::filesystem::path path)
+void mlc::BasicStore::update_float_key(Key const& key, float value, std::filesystem::path const& path)
 {
+    std::lock_guard lock{self->mutex};
     self->update_typed_value(key, value, path);
 }
 
-void mlc::BasicStore::update_string_key(Key const& key, std::string_view value, std::filesystem::path path)
+void mlc::BasicStore::update_string_key(Key const& key, std::string_view value, std::filesystem::path const& path)
 {
+    std::lock_guard lock{self->mutex};
     self->update_typed_value(key, std::string{value}, path);
 }
 
-void mlc::BasicStore::update_int_array_key(Key const& key, std::span<int const> values, std::filesystem::path path)
+void mlc::BasicStore::update_int_array_key(Key const& key, std::span<int const> values, std::filesystem::path const& path)
 {
+    std::lock_guard lock{self->mutex};
     self->update_typed_array_value(key, TypedArray{std::vector<int>{values.begin(), values.end()}}, path);
 }
 
-void mlc::BasicStore::update_bool_array_key(Key const& key, std::span<bool const> values, std::filesystem::path path)
+void mlc::BasicStore::update_bool_array_key(Key const& key, std::span<bool const> values, std::filesystem::path const& path)
 {
+    std::lock_guard lock{self->mutex};
     self->update_typed_array_value(key, TypedArray{std::vector<bool>{values.begin(), values.end()}}, path);
 }
 
-void mlc::BasicStore::update_float_array_key(Key const& key, std::span<float const> values, std::filesystem::path path)
+void mlc::BasicStore::update_float_array_key(Key const& key, std::span<float const> values, std::filesystem::path const& path)
 {
+    std::lock_guard lock{self->mutex};
     self->update_typed_array_value(key, TypedArray{std::vector<float>{values.begin(), values.end()}}, path);
 }
 
 void mlc::BasicStore::update_string_array_key(
-    Key const& key, std::span<std::string const> values, std::filesystem::path path)
+    Key const& key, std::span<std::string const> values, std::filesystem::path const& path)
 {
+    std::lock_guard lock{self->mutex};
     self->update_typed_array_value(key, TypedArray{std::vector<std::string>{values.begin(), values.end()}}, path);
 }
 
 
-void mlc::BasicStore::clear_array(Key const& key, std::filesystem::path modification_path)
+void mlc::BasicStore::clear_array(Key const& key, std::filesystem::path const& modification_path)
 {
+    std::lock_guard lock{self->mutex};
     self->clear_array_value(key, modification_path);
 }
 
 void mlc::BasicStore::clear_values()
 {
+    std::lock_guard lock{self->mutex};
     self->clear();
 }
 
 void mlc::BasicStore::done(std::span<std::filesystem::path const> paths) const
 {
+    std::lock_guard lock{self->mutex};
     self->call_attribute_handlers();
     self->call_done_handlers(paths);
 }

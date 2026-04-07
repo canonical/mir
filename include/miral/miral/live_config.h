@@ -55,7 +55,9 @@ private:
 /// Interface for adding attributes to a live configuration store.
 ///
 /// The handlers should be called when the configuration is updated. There is
-/// no requirement to check the previous value has changed.
+/// no requirement to check the previous value has changed. For arrays, clears
+/// will trigger a call of the handler with an empty array. Updates will append
+/// onto the existing array.
 ///
 /// The `value` provided to the Handlers is `optional` to support values being
 /// explicitly unset. Store implementations default absent keys to `preset`.

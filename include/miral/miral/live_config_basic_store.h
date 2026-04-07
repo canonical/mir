@@ -67,20 +67,20 @@ public:
 
     void on_done(HandleDone handler) override;
 
-    bool update_key(Key const& key, std::string_view value, std::filesystem::path modification_path);
+    bool update_key(Key const& key, std::string_view value, std::filesystem::path const& modification_path);
 
-    void update_int_key(Key const& key, int value, std::filesystem::path modification_path);
-    void update_bool_key(Key const& key, bool value, std::filesystem::path modification_path);
-    void update_float_key(Key const& key, float value, std::filesystem::path modification_path);
-    void update_string_key(Key const& key, std::string_view value, std::filesystem::path modification_path);
+    void update_int_key(Key const& key, int value, std::filesystem::path const& modification_path);
+    void update_bool_key(Key const& key, bool value, std::filesystem::path const& modification_path);
+    void update_float_key(Key const& key, float value, std::filesystem::path const& modification_path);
+    void update_string_key(Key const& key, std::string_view value, std::filesystem::path const& modification_path);
 
-    void update_int_array_key(Key const& key, std::span<int const> values, std::filesystem::path modification_path);
-    void update_bool_array_key(Key const& key, std::span<bool const> values, std::filesystem::path modification_path);
-    void update_float_array_key(Key const& key, std::span<float const> values, std::filesystem::path modification_path);
+    void update_int_array_key(Key const& key, std::span<int const> values, std::filesystem::path const& modification_path);
+    void update_bool_array_key(Key const& key, std::span<bool const> values, std::filesystem::path const& modification_path);
+    void update_float_array_key(Key const& key, std::span<float const> values, std::filesystem::path const& modification_path);
     void update_string_array_key(
-        Key const& key, std::span<std::string const> values, std::filesystem::path modification_path);
+        Key const& key, std::span<std::string const> values, std::filesystem::path const& modification_path);
 
-    void clear_array(Key const& key, std::filesystem::path modification_path);
+    void clear_array(Key const& key, std::filesystem::path const& modification_path);
 
     void clear_values();
     void done(std::span<std::filesystem::path const> paths) const;
