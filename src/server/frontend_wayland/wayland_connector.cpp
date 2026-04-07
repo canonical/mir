@@ -15,7 +15,10 @@
  */
 
 #include "wayland_connector.h"
+
+#ifdef MIR_ENABLE_RUST
 #include "wayland_rs/src/ffi.rs.h"
+#endif
 
 #include <mir/shell/token_authority.h>
 #include <mir/graphics/platform.h>
@@ -228,7 +231,9 @@ void mf::WaylandExtensions::run_builders(wl_display*, std::function<void(std::fu
 
 struct mf::WaylandConnector::ServerWrapper
 {
+    #ifdef MIR_ENABLE_RUST
     rust::Box<mir::wayland_rs::WaylandServer> server;
+    #endif
 };
 
 mf::WaylandConnector::WaylandConnector(
@@ -264,7 +269,11 @@ mf::WaylandConnector::WaylandConnector(
     : extension_filter{extension_filter},
       display{wl_display_create(), &cleanup_display},
       // TODO(mattkae): Run the server and hook it up to the rest of the system
+      #ifdef MIR_ENABLE_RUST
       server_wrapper{std::make_unique<ServerWrapper>(wayland_rs::create_wayland_server())},
+      #else
+      server_wrapper{std::make_unique<ServerWrapper>()},
+      #endif
       pause_signal{eventfd(0, EFD_CLOEXEC | EFD_SEMAPHORE)},
       executor{std::make_shared<WaylandExecutor>(wl_display_get_event_loop(display.get()))},
       allocator{allocator_for_display(allocator, display.get(), executor)},

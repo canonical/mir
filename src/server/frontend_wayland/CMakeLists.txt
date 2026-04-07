@@ -1,7 +1,10 @@
 include_directories(../frontend_xwayland ${CMAKE_CURRENT_BINARY_DIR})
 
 pkg_check_modules(GIOUnix REQUIRED IMPORTED_TARGET gio-unix-2.0)
-add_subdirectory(wayland_rs/)
+
+if (MIR_ENABLE_RUST)
+  add_subdirectory(wayland_rs/)
+endif()
 
 set(WAYLAND_RS_FFI_HEADER
   ${CMAKE_BINARY_DIR}/target/$ENV{DEB_HOST_RUST_TYPE}/cxxbridge/wayland_rs/src/ffi.rs.h
