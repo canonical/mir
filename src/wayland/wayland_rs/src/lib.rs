@@ -21,4 +21,5 @@ include!("dispatch.rs");
 include!("protocols.rs");
 include!("middleware.rs");
 include!("ffi.rs");
-mod wayland_server;
+include!("wayland_server_generated.rs");
+mod wayland_server_core;
