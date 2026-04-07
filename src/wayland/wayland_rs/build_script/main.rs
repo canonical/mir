@@ -733,7 +733,9 @@ fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
         ))),
         false,
     );
-    get_box_method.set_body("return instance_.value();");
+    get_box_method.set_body(
+        "if (!instance_) { throw \"get_box() called before associate()\"; }\nreturn instance_.value();",
+    );
     class.add_method(get_box_method);
 
     for method in methods {
