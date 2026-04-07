@@ -128,7 +128,13 @@ target_link_libraries(mirfrontend-wayland
     mirplatform
     mircommon
     mircore
-    mirwayland_rs
   PRIVATE
     PkgConfig::GIOUnix
 )
+
+if (MIR_ENABLE_RUST)
+  target_link_libraries(mirfrontend-wayland
+    PUBLIC
+      mirwayland_rs
+  )
+endif()
