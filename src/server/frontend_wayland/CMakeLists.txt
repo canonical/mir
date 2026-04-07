@@ -1,21 +1,10 @@
 include_directories(../frontend_xwayland ${CMAKE_CURRENT_BINARY_DIR})
 
 pkg_check_modules(GIOUnix REQUIRED IMPORTED_TARGET gio-unix-2.0)
-add_subdirectory(wayland_rs/)
-
-set(WAYLAND_RS_FFI_HEADER
-  ${CMAKE_BINARY_DIR}/target/$ENV{DEB_HOST_RUST_TYPE}/cxxbridge/wayland_rs/src/ffi.rs.h
-)
-set_source_files_properties(${WAYLAND_RS_FFI_HEADER} PROPERTIES GENERATED TRUE)
 
 if (MIR_ENABLE_RUST)
   add_subdirectory(wayland_rs/)
 endif()
-
-set(WAYLAND_RS_FFI_HEADER
-  ${CMAKE_BINARY_DIR}/target/$ENV{DEB_HOST_RUST_TYPE}/cxxbridge/wayland_rs/src/ffi.rs.h
-)
-set_source_files_properties(${WAYLAND_RS_FFI_HEADER} PROPERTIES GENERATED TRUE)
 
 set(
   WAYLAND_SOURCES
@@ -86,7 +75,6 @@ set(
   input_trigger_registration_v1.cpp input_trigger_registration_v1.h
   input_trigger_action_v1.cpp       input_trigger_action_v1.h
   input_trigger_registry.cpp        input_trigger_registry.h
-  ${WAYLAND_RS_FFI_HEADER}
 )
 
 if (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" AND ${CMAKE_CXX_COMPILER_VERSION} VERSION_LESS 18.2)
