@@ -845,7 +845,7 @@ fn wayland_event_to_cpp_method(event: &WaylandEvent) -> CppMethod {
     }
 
     cpp_method.set_body(format!(
-        "instance_.value()->{}({});",
+        "if (!instance_.has_value()) {{\n    throw \"Wayland event sender used before associate()\";\n}}\ninstance_.value()->{}({});",
         event.name,
         sanitized_args.join(", ")
     ));
