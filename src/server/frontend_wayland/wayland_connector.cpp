@@ -15,7 +15,6 @@
  */
 
 #include "wayland_connector.h"
-
 #ifdef MIR_ENABLE_RUST
 #include "wayland_rs/src/ffi.rs.h"
 #endif

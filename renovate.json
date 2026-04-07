@@ -6,5 +6,12 @@
     "helpers:githubDigestChangelogs",
     "group:all",
     ":enablePreCommit"
+  ],
+  "packageRules": [
+    {
+      "matchPackageNames": ["myst-parser"],
+      "matchFileNames": ["doc/sphinx/requirements.txt"],
+      "enabled": false
+    }
   ]
 }
