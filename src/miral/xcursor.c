@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <dirent.h>
+#include <pthread.h>
 
 /*
  * From libXcursor/include/X11/extensions/Xcursor.h
@@ -701,25 +702,25 @@ error:
     return NULL;
 }
 
-static const char *
+static pthread_once_t xcursor_path_once = PTHREAD_ONCE_INIT;
+static char const *xcursor_library_path = NULL;
+
+static void
 _XcursorInitPath (void)
 {
-    char const *path = getenv ("XCURSOR_PATH");
-    if (!path)
+    xcursor_library_path = getenv ("XCURSOR_PATH");
+    if (!xcursor_library_path)
     {
-        path = _XcursorBuildXdgPath ();
-        if (!path)
-            path = XCURSORPATH;
+        xcursor_library_path = _XcursorBuildXdgPath ();
+        if (!xcursor_library_path)
+            xcursor_library_path = XCURSORPATH;
     }
-    return path;
 }
 
 static const char *
 XcursorLibraryPath (void)
 {
-    static char const *xcursor_library_path = NULL;
-    if (!xcursor_library_path)
-        xcursor_library_path = _XcursorInitPath ();
+    pthread_once (&xcursor_path_once, _XcursorInitPath);
     return xcursor_library_path;
 }
 
