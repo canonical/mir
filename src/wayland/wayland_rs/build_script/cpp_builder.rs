@@ -138,11 +138,19 @@ impl CppBuilder {
 
                 result.push_str("private:\n");
                 for member in &class.private_members {
-                    result.push_str(&format!(
-                        "    {} {};\n",
-                        cpp_arg_type_to_cpp_source(&member.cpp_type, true),
-                        member.name
-                    ));
+                    if member.optional {
+                        result.push_str(&format!(
+                            "    std::optional<{}> {};\n",
+                            cpp_arg_type_to_cpp_source(&member.cpp_type, true),
+                            member.name
+                        ));
+                    } else {
+                        result.push_str(&format!(
+                            "    {} {};\n",
+                            cpp_arg_type_to_cpp_source(&member.cpp_type, true),
+                            member.name
+                        ));
+                    }
                 }
 
                 result.push_str("};\n\n");
@@ -549,6 +557,7 @@ pub struct CppArg {
     pub cpp_type: CppType,
     pub name: String,
     pub has_name: Option<String>,
+    pub optional: bool,
 }
 
 impl CppArg {
@@ -562,6 +571,7 @@ impl CppArg {
             } else {
                 None
             },
+            optional,
         }
     }
 }
