@@ -62,10 +62,7 @@ target_include_directories(mirserverobjects
     ${PROJECT_SOURCE_DIR}/include/server
   PRIVATE
     ${PROJECT_SOURCE_DIR}/src/include/server
-    "$<TARGET_PROPERTY:mirwayland_rs,INTERFACE_INCLUDE_DIRECTORIES>"
 )
-
-add_dependencies(mirserverobjects mirwayland_rs-rust-build)
 
 target_link_libraries(mirserverobjects
   PUBLIC
