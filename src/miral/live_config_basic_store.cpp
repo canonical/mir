@@ -368,7 +368,7 @@ struct miral::live_config::BasicStore::Self
                 if (details.value)
                     details.dispatch(key, details.value->typed_value);
                 else if (details.preset)
-                    details.dispatch(key, *details.preset);
+                    details.dispatch(key, details.preset);
                 else
                     details.dispatch(key, std::nullopt);
             }
