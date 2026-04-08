@@ -65,8 +65,6 @@ struct mlc::ConfigAggregator::Self
             }
             if constexpr (std::is_same_v<T, int>)
                 store.update_int_array_key(key, *values, file_being_loaded);
-            else if constexpr (std::is_same_v<T, bool>)
-                store.update_bool_array_key(key, *values, file_being_loaded);
             else if constexpr (std::is_same_v<T, float>)
                 store.update_float_array_key(key, *values, file_being_loaded);
             else if constexpr (std::is_same_v<T, std::string>)
