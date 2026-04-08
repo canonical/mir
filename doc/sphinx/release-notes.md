@@ -69,9 +69,9 @@
     - BasicXCBConnection::destroy_window calls xcb_map_window instead of xcb_destroy_window [#4560](https://github.com/canonical/mir/issues/4560)
     - XCB replies not always freed [#4559](https://github.com/canonical/mir/issues/4559)
     - Making videos fullscreen in Google Chrome fails if the window isn't already fullscreen [#4688](https://github.com/canonical/mir/issues/4688)
-    - [X11] Set _NET_CLIENT_LIST_STACKING [#2023](https://github.com/canonical/mir/issues/2023)
+    - [X11] Set `_NET_CLIENT_LIST_STACKING` [#2023](https://github.com/canonical/mir/issues/2023)
     - Fatal signal handling is wildly unsafe [#2658](https://github.com/canonical/mir/issues/2658)
-    - DRM_CLIENT_CAP_ATOMIC check is performed with wrong ioctl call [#4774](https://github.com/canonical/mir/issues/4774)
+    - `DRM_CLIENT_CAP_ATOMIC` check is performed with wrong ioctl call [#4774](https://github.com/canonical/mir/issues/4774)
     - Clean up and improve `mgk::find_crtc_with_primary_plane` [#3972](https://github.com/canonical/mir/issues/3972)
     - If a surface has an opaque region BUT the alpha is not 1.0, then we shouldn't use it as an occlusion [#4696](https://github.com/canonical/mir/issues/4696)
 
