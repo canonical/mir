@@ -808,7 +808,6 @@ global:
     non-virtual?thunk?to?miral::live_config::BasicStore::add_string_attribute*;
     non-virtual?thunk?to?miral::live_config::BasicStore::add_strings_attribute*;
     non-virtual?thunk?to?miral::live_config::BasicStore::on_done*;
-    non-virtual?thunk?to?miral::live_config::IniFile::load_file*;
     typeinfo?for?miral::live_config::BasicStore;
     vtable?for?miral::live_config::BasicStore;
   };
