@@ -15,7 +15,7 @@
  */
 
 #include <miral/live_config_ini_file.h>
-#include <miral/live_config_basic_store.h>
+#include "live_config_basic_store.h"
 
 #include <mir/log.h>
 
