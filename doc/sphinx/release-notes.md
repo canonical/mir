@@ -45,6 +45,7 @@
     - mirinputplatform ABI unchanged at 10
 
   - Enhancements:
+
     - [evdev-rs] Implementing touch events in the evdev-rs platform [#4671](https://github.com/canonical/mir/pull/4671)
     - [evdev-rs] Fix missing initial events in evdev-rs [#4780](https://github.com/canonical/mir/pull/4780)
     - [evdev-rs] Add input event reporting to the evdev-rs input platform [#4769](https://github.com/canonical/mir/pull/4769)
@@ -66,6 +67,7 @@
     - Add the ability to set the alpha of a Window and retrieve it via WindowInfo [#4704](https://github.com/canonical/mir/pull/4704)
 
   - Bugs fixed:
+
     - BasicXCBConnection::destroy_window calls xcb_map_window instead of xcb_destroy_window [#4560](https://github.com/canonical/mir/issues/4560)
     - XCB replies not always freed [#4559](https://github.com/canonical/mir/issues/4559)
     - Making videos fullscreen in Google Chrome fails if the window isn't already fullscreen [#4688](https://github.com/canonical/mir/issues/4688)
@@ -76,6 +78,7 @@
     - If a surface has an opaque region BUT the alpha is not 1.0, then we shouldn't use it as an occlusion [#4696](https://github.com/canonical/mir/issues/4696)
 
   - New Contributors
+
     - @DiegoOst made their first contribution in https://github.com/canonical/mir/pull/4572
     - @magedss made their first contribution in https://github.com/canonical/mir/pull/4582
     - @aliihsancengiz made their first contribution in https://github.com/canonical/mir/pull/4591
