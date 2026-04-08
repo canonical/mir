@@ -212,6 +212,8 @@ public:
     auto get_extension(std::string const& name) const -> std::shared_ptr<void>;
 
 private:
+    struct ServerWrapper;
+
     void for_each_output_binding(
         wayland::Client* client,
         graphics::DisplayConfigurationOutputId output,
@@ -232,6 +234,7 @@ private:
     WaylandProtocolExtensionFilter const extension_filter;
 
     std::unique_ptr<wl_display, void(*)(wl_display*)> const display;
+    std::unique_ptr<ServerWrapper> server_wrapper;
     mir::Fd const pause_signal;
     std::unique_ptr<WlCompositor> compositor_global;
     std::unique_ptr<WlSubcompositor> subcompositor_global;
