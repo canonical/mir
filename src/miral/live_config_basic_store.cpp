@@ -50,6 +50,7 @@ struct AttributeDetails
     // Parses a raw string from a config file and stores it as a TypedScalar.
     std::function<TypedScalar(std::string_view, mlc::Key const&)> parse;
 
+    TypedScalar const empty_typed;
     std::string const description;
     std::optional<TypedScalar> const preset;
     std::optional<ScalarValue> value;
@@ -186,6 +187,7 @@ auto make_scalar_attribute(std::string_view description, std::optional<T> preset
     return {
         [handler](mlc::Key const& k, std::optional<TypedScalar> const& v) { dispatch_scalar<U>(handler, k, v); },
         [](std::string_view s, mlc::Key const& k) -> TypedScalar { return parse_scalar<T>(s, k); },
+        TypedScalar{T{}},
         std::string{description},
         typed_preset,
         std::nullopt,
@@ -621,4 +623,87 @@ void mlc::BasicStore::done(std::span<std::filesystem::path const> paths) const
     std::lock_guard lock{self->mutex};
     self->call_attribute_handlers();
     self->call_done_handlers(paths);
+}
+
+namespace
+{
+template <typename T>
+void foreach_typed_attribute(
+    std::map<mlc::Key, AttributeDetails> const& attribute_handlers,
+    std::function<void(mlc::Key const& key, std::string_view description, std::optional<T> preset)> fn)
+{
+    for (auto const& [key, details] : attribute_handlers)
+    {
+        if (!std::holds_alternative<T>(details.empty_typed))
+            continue;
+
+        auto const maybe_preset = details.preset.transform([](auto const& p) { return std::get<T>(p); });
+        fn(key, details.description, maybe_preset);
+    }
+}
+
+template <typename T>
+void foreach_typed_array_attribute(
+    std::map<mlc::Key, ArrayAttributeDetails> const& array_attribute_handlers,
+    std::function<void(mlc::Key const& key, std::string_view description, std::optional<std::span<T const>> preset)> fn)
+{
+    for (auto const& [key, details] : array_attribute_handlers)
+    {
+        if (!std::holds_alternative<std::vector<T>>(details.empty_typed))
+            continue;
+
+        auto const maybe_preset = details.preset.transform(
+            [](auto const& p) { return std::span<T const>{std::get<std::vector<T>>(p)}; });
+        fn(key, details.description, maybe_preset);
+    }
+}
+}
+
+void mlc::BasicStore::foreach_int_attribute(
+    std::function<void(Key const& key, std::string_view description, std::optional<int> preset)> fn) const
+{
+    foreach_typed_attribute(self->attribute_handlers, fn);
+}
+
+void mlc::BasicStore::foreach_bool_attribute(
+    std::function<void(Key const& key, std::string_view description, std::optional<bool> preset)> fn) const
+{
+    foreach_typed_attribute(self->attribute_handlers, fn);
+}
+
+void mlc::BasicStore::foreach_float_attribute(
+    std::function<void(Key const& key, std::string_view description, std::optional<float> preset)> fn) const
+{
+    foreach_typed_attribute(self->attribute_handlers, fn);
+}
+
+void mlc::BasicStore::foreach_string_attribute(
+    std::function<void(Key const& key, std::string_view description, std::optional<std::string_view> preset)> fn) const
+{
+    for (auto const& [key, details] : self->attribute_handlers)
+    {
+        if (!std::holds_alternative<std::string>(details.empty_typed))
+            continue;
+
+        auto const maybe_preset = details.preset.transform(
+            [](auto const& p) { return std::string_view{std::get<std::string>(p)}; });
+        fn(key, details.description, maybe_preset);
+    }
+}
+
+void mlc::BasicStore::foreach_ints_attribute(
+    std::function<void(Key const& key, std::string_view description, std::optional<std::span<int const>> preset)> fn) const
+{
+    foreach_typed_array_attribute(self->array_attribute_handlers, fn);
+}
+void mlc::BasicStore::foreach_floats_attribute(
+    std::function<void(Key const& key, std::string_view description, std::optional<std::span<float const>> preset)> fn) const
+{
+    foreach_typed_array_attribute(self->array_attribute_handlers, fn);
+}
+
+void mlc::BasicStore::foreach_strings_attribute(
+    std::function<void(Key const& key, std::string_view description, std::optional<std::span<std::string const>> preset)> fn) const
+{
+    foreach_typed_array_attribute(self->array_attribute_handlers, fn);
 }

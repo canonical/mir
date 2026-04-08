@@ -84,6 +84,22 @@ public:
     void clear_values();
     void done(std::span<std::filesystem::path const> paths) const;
 
+    void foreach_int_attribute(
+        std::function<void(Key const& key, std::string_view description, std::optional<int> preset)> fn) const;
+    void foreach_bool_attribute(
+        std::function<void(Key const& key, std::string_view description, std::optional<bool> preset)> fn) const;
+    void foreach_float_attribute(
+        std::function<void(Key const& key, std::string_view description, std::optional<float> preset)> fn) const;
+    void foreach_string_attribute(
+        std::function<void(Key const& key, std::string_view description, std::optional<std::string_view> preset)> fn) const;
+
+    void foreach_ints_attribute(
+        std::function<void(Key const& key, std::string_view description, std::optional<std::span<int const>> preset)> fn) const;
+    void foreach_floats_attribute(
+        std::function<void(Key const& key, std::string_view description, std::optional<std::span<float const>> preset)> fn) const;
+    void foreach_strings_attribute(
+        std::function<void(Key const& key, std::string_view description, std::optional<std::span<std::string const>> preset)> fn) const;
+
 private:
     struct Self;
     std::shared_ptr<Self> self;
