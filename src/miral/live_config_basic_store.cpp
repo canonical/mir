@@ -590,12 +590,6 @@ void mlc::BasicStore::update_int_array_key(Key const& key, std::span<int const> 
     self->update_typed_array_value(key, TypedArray{std::vector<int>{values.begin(), values.end()}}, path);
 }
 
-void mlc::BasicStore::update_bool_array_key(Key const& key, std::span<bool const> values, std::filesystem::path const& path)
-{
-    std::lock_guard lock{self->mutex};
-    self->update_typed_array_value(key, TypedArray{std::vector<bool>{values.begin(), values.end()}}, path);
-}
-
 void mlc::BasicStore::update_float_array_key(Key const& key, std::span<float const> values, std::filesystem::path const& path)
 {
     std::lock_guard lock{self->mutex};

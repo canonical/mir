@@ -75,7 +75,6 @@ public:
     void update_string_key(Key const& key, std::string_view value, std::filesystem::path const& modification_path);
 
     void update_int_array_key(Key const& key, std::span<int const> values, std::filesystem::path const& modification_path);
-    void update_bool_array_key(Key const& key, std::span<bool const> values, std::filesystem::path const& modification_path);
     void update_float_array_key(Key const& key, std::span<float const> values, std::filesystem::path const& modification_path);
     void update_string_array_key(
         Key const& key, std::span<std::string const> values, std::filesystem::path const& modification_path);
