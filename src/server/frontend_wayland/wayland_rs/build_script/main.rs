@@ -659,6 +659,7 @@ fn create_cpp_builder(protocol: &WaylandProtocol) -> CppBuilder {
     //   ffi.rs.h  →  include/*.h  →  ffi.rs.h
     builder.add_header_include("\"ffi_fwd.h\"");
     builder.add_header_include("<memory>");
+    builder.add_header_include("<optional>");
     builder.add_header_include("<cstdint>");
     builder.add_header_include("<rust/cxx.h>");
 
@@ -720,7 +721,7 @@ fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
             &format_wayland_interface_to_rust_extension_struct(&interface.name),
         )),
         "instance_",
-        false,
+        true,
     ));
 
     // Add the "get_box" method that will return the boxes rust interface. This is used
@@ -732,7 +733,9 @@ fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
         ))),
         false,
     );
-    get_box_method.set_body("return instance_;");
+    get_box_method.set_body(
+        "if (!instance_) { throw \"get_box() called before associate()\"; }\nreturn instance_.value();",
+    );
     class.add_method(get_box_method);
 
     for method in methods {
@@ -842,7 +845,7 @@ fn wayland_event_to_cpp_method(event: &WaylandEvent) -> CppMethod {
     }
 
     cpp_method.set_body(format!(
-        "instance_->{}({});",
+        "if (!instance_.has_value()) {{\n    throw \"Wayland event sender used before associate()\";\n}}\ninstance_.value()->{}({});",
         event.name,
         sanitized_args.join(", ")
     ));
