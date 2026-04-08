@@ -819,7 +819,7 @@ fn wayland_request_to_cpp_method(method: &WaylandRequest) -> CppMethod {
 }
 
 fn wayland_event_to_cpp_method(event: &WaylandEvent) -> CppMethod {
-    let mut cpp_method = CppMethod::new(format!("send_{}", event.name), None, false);
+    let mut cpp_method = CppMethod::new(format!("send_{}_event", event.name), None, false);
     let args = event.args.iter().map(wayland_arg_to_cpp_arg);
 
     let sanitized_args: Vec<String> = args
