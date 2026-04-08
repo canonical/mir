@@ -786,9 +786,11 @@ global:
     miral::live_config::ConfigAggregator::add_floats_attribute*;
     miral::live_config::ConfigAggregator::add_int_attribute*;
     miral::live_config::ConfigAggregator::add_ints_attribute*;
+    miral::live_config::ConfigAggregator::add_source*;
     miral::live_config::ConfigAggregator::add_string_attribute*;
     miral::live_config::ConfigAggregator::add_strings_attribute*;
-    miral::live_config::ConfigAggregator::load_all*;
+    miral::live_config::ConfigAggregator::remove_source*;
+    miral::live_config::ConfigAggregator::reload_all*;
     miral::live_config::ConfigAggregator::on_done*;
     non-virtual?thunk?to?miral::live_config::ConfigAggregator::?ConfigAggregator*;
     non-virtual?thunk?to?miral::live_config::ConfigAggregator::add_bool_attribute*;

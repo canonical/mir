@@ -26,11 +26,20 @@ class ParsingStore;
 class ConfigAggregator : public live_config::Store
 {
 public:
-    ConfigAggregator(ParsingStore& parser);
+    struct Source
+    {
+        std::shared_ptr<Store> store;
+        std::function<void()> load;
+        std::filesystem::path file_path;
+    };
+
+    ConfigAggregator();
     ~ConfigAggregator();
 
-    void load_all(
-        std::span<std::pair<std::reference_wrapper<std::istream>, std::filesystem::path>> const& config_files);
+    void add_source(Source&& source);
+    void remove_source(std::filesystem::path const& path);
+
+    void reload_all();
 
     void add_int_attribute(live_config::Key const& key, std::string_view description, HandleInt handler) override;
     void add_ints_attribute(live_config::Key const& key, std::string_view description, HandleInts handler) override;

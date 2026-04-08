@@ -1,3 +1,4 @@
+#include <memory>
 #include <miral/config_aggregator.h>
 #include <miral/live_config_ini_file.h>
 
@@ -12,8 +13,7 @@ namespace mlc = miral::live_config;
 
 struct ConfigAggregatorTest : Test
 {
-    mlc::IniFile ini_file;
-    mlc::ConfigAggregator aggregator{ini_file};
+    mlc::ConfigAggregator aggregator{};
 
     MOCK_METHOD(void, int_handler, (mlc::Key const& key, std::optional<int> value));
     MOCK_METHOD(void, bool_handler, (mlc::Key const& key, std::optional<bool> value));
@@ -70,8 +70,33 @@ struct ConfigAggregatorTest : Test
 
     void load_one(std::istream& stream, std::filesystem::path path = "test.conf")
     {
-        FilePairs files{{std::ref(stream), std::move(path)}};
-        aggregator.load_all(files);
+        auto ini_file = std::make_shared<mlc::IniFile>();
+        aggregator.add_source({
+            ini_file,
+            [=, &stream] { ini_file->load_file(stream, path); },
+            path,
+        });
+        aggregator.reload_all();
+    }
+
+    void load_all(FilePairs streams_paths)
+    {
+        for(auto const& [stream, path] : streams_paths)
+        {
+            auto ini_file = std::make_shared<mlc::IniFile>();
+            aggregator.add_source({
+                ini_file,
+                [=] { ini_file->load_file(stream, path); },
+                path,
+            });
+        }
+
+        aggregator.reload_all();
+
+
+        // Cleanup
+        for(auto const& [_, path] : streams_paths)
+            aggregator.remove_source(path);
     }
 };
 
@@ -402,10 +427,7 @@ TEST_F(ConfigAggregatorTest, later_file_overrides_earlier_scalar)
 
     EXPECT_CALL(*this, int_handler(a_key, std::optional<int>{99}));
 
-    FilePairs files{
-        {std::ref(stream1), "base.conf"},
-        {std::ref(stream2), "base.conf.d/99-override.conf"}};
-    aggregator.load_all(files);
+    load_all({{std::ref(stream1), "base.conf"}, {std::ref(stream2), "base.conf.d/99-override.conf"}});
 }
 
 TEST_F(ConfigAggregatorTest, array_values_are_appended_across_files)
@@ -418,11 +440,9 @@ TEST_F(ConfigAggregatorTest, array_values_are_appended_across_files)
 
     EXPECT_CALL(*this, strings_handler(a_strings_key, Optional(ElementsAre("foo", "bar", "baz"))));
 
-    FilePairs files{
-        {std::ref(stream1), "base.conf"},
-        {std::ref(stream2), "base.conf.d/10-override.conf"},
-        {std::ref(stream3), "base.conf.d/20-override.conf"}};
-    aggregator.load_all(files);
+    load_all({{std::ref(stream1), "base.conf"},
+              {std::ref(stream2), "base.conf.d/10-override.conf"},
+              {std::ref(stream3), "base.conf.d/20-override.conf"}});
 }
 
 TEST_F(ConfigAggregatorTest, combined_state_aggregated_across_files)
@@ -443,11 +463,9 @@ TEST_F(ConfigAggregatorTest, combined_state_aggregated_across_files)
     EXPECT_CALL(*this, int_handler(a_key, std::optional<int>{43}));
     EXPECT_CALL(*this, strings_handler(a_strings_key, Optional(ElementsAre("foo", "bar", "baz", "qux"))));
 
-    FilePairs files{
-        {std::ref(stream1), "base.conf"},
-        {std::ref(stream2), "base.conf.d/10-default.conf"},
-        {std::ref(stream3), fake_filename()}};
-    aggregator.load_all(files);
+    load_all({{std::ref(stream1), "base.conf"},
+              {std::ref(stream2), "base.conf.d/10-default.conf"},
+              {std::ref(stream3), fake_filename()}});
 }
 
 TEST_F(ConfigAggregatorTest, array_clears_override_defaults)
@@ -461,10 +479,8 @@ TEST_F(ConfigAggregatorTest, array_clears_override_defaults)
 
     EXPECT_CALL(*this, strings_handler(a_strings_key, Optional(IsEmpty())));
 
-    FilePairs files{
-        {std::ref(stream1), "base.conf"},
-        {std::ref(stream2), "base.conf.d/10-override.conf"}};
-    aggregator.load_all(files);
+    load_all({{std::ref(stream1), "base.conf"},
+              {std::ref(stream2), "base.conf.d/10-override.conf"}});
 }
 
 TEST_F(ConfigAggregatorTest, done_handlers_run_last_with_load_all)
@@ -479,8 +495,7 @@ TEST_F(ConfigAggregatorTest, done_handlers_run_last_with_load_all)
     EXPECT_CALL(*this, strings_handler(_, _)).WillOnce([&] { EXPECT_THAT(done_called, IsFalse()); });
 
     std::istringstream stream{a_key.to_string() + "=42\n" + a_strings_key.to_string() + "=foo\n"};
-    FilePairs files{{std::ref(stream), "base.conf"}};
-    aggregator.load_all(files);
+    load_all({{std::ref(stream), "base.conf"}});
 
     EXPECT_THAT(done_called, IsTrue());
 }
@@ -494,10 +509,8 @@ TEST_F(ConfigAggregatorTest, empty_value_in_later_file_clears_entries_from_earli
 
     EXPECT_CALL(*this, strings_handler(a_strings_key, Optional(ElementsAre("baz"))));
 
-    FilePairs files{
-        {std::ref(stream1), "base.conf"},
-        {std::ref(stream2), "base.conf.d/10-override.conf"}};
-    aggregator.load_all(files);
+    load_all({{std::ref(stream1), "base.conf"},
+              {std::ref(stream2), "base.conf.d/10-override.conf"}});
 }
 
 TEST_F(ConfigAggregatorTest, handlers_are_called_exactly_once_per_load_all)
@@ -516,8 +529,7 @@ TEST_F(ConfigAggregatorTest, handlers_are_called_exactly_once_per_load_all)
         stream_objects[i] = std::istringstream{
             a_key.to_string() + "=10\n" + an_ints_key.to_string() + "=20\n" + an_ints_key.to_string() + "=30\n"};
         auto const filepath = std::filesystem::path("base.conf.d/") / std::format("{:02}-override.conf", i);
-        FilePairs files{{std::ref(stream_objects[i]), filepath}};
-        aggregator.load_all(files);
+        load_all({{std::ref(stream_objects[i]), filepath}});
     }
 }
 
@@ -530,14 +542,9 @@ TEST_F(ConfigAggregatorTest, done_handler_is_called_once_per_load_all)
     std::istringstream stream2{a_key.to_string() + "=2\n"};
     std::istringstream stream3{a_key.to_string() + "=3\n"};
 
-    FilePairs files1{{std::ref(stream1), "base.conf"}};
-    aggregator.load_all(files1);
-
-    FilePairs files2{{std::ref(stream2), "base.conf.d/10-override.conf"}};
-    aggregator.load_all(files2);
-
-    FilePairs files3{{std::ref(stream3), "base.conf.d/20-override.conf"}};
-    aggregator.load_all(files3);
+    load_all({{std::ref(stream1), "base.conf"}});
+    load_all({{std::ref(stream2), "base.conf.d/10-override.conf"}});
+    load_all({{std::ref(stream3), "base.conf.d/20-override.conf"}});
 
     EXPECT_THAT(done_count, Eq(3));
 }
@@ -551,11 +558,8 @@ TEST_F(ConfigAggregatorTest, unassigned_key_yields_nullopt_across_calls)
 
     EXPECT_CALL(*this, int_handler(a_key, std::optional<int>{std::nullopt})).Times(2);
 
-    FilePairs files1{{std::ref(stream1), "base.conf"}};
-    aggregator.load_all(files1);
-
-    FilePairs files2{{std::ref(stream2), "base.conf.d/10-override.conf"}};
-    aggregator.load_all(files2);
+    load_all({{std::ref(stream1), "base.conf"}});
+    load_all({{std::ref(stream2), "base.conf.d/10-override.conf"}});
 }
 
 TEST_F(ConfigAggregatorTest, preset_is_used_when_no_file_assigns_to_key)
@@ -566,8 +570,7 @@ TEST_F(ConfigAggregatorTest, preset_is_used_when_no_file_assigns_to_key)
 
     EXPECT_CALL(*this, int_handler(a_key, std::optional<int>{13}));
 
-    FilePairs files{{std::ref(stream1), "base.conf"}};
-    aggregator.load_all(files);
+    load_all({{std::ref(stream1), "base.conf"}});
 }
 
 TEST_F(ConfigAggregatorTest, reload_updates_scalar_value)
@@ -577,13 +580,11 @@ TEST_F(ConfigAggregatorTest, reload_updates_scalar_value)
 
     EXPECT_CALL(*this, float_handler(_, _)).Times(AnyNumber());
     std::istringstream initial{cursor_scale.to_string() + "=1.0\n"};
-    FilePairs files1{{std::ref(initial), "base.conf"}};
-    aggregator.load_all(files1);
+    load_all({{std::ref(initial), "base.conf"}});
 
     EXPECT_CALL(*this, float_handler(cursor_scale, std::optional<float>{2.0f}));
     std::istringstream updated{cursor_scale.to_string() + "=2.0\n"};
-    FilePairs files2{{std::ref(updated), "base.conf"}};
-    aggregator.load_all(files2);
+    load_all({{std::ref(updated), "base.conf"}});
 }
 
 TEST_F(ConfigAggregatorTest, override_wins_for_shared_key_after_base_update)
@@ -597,8 +598,7 @@ TEST_F(ConfigAggregatorTest, override_wins_for_shared_key_after_base_update)
     EXPECT_CALL(*this, string_handler(_, _)).Times(AnyNumber());
     std::istringstream base{cursor_scale.to_string() + "=1.0\n"};
     std::istringstream override_stream{cursor_scale.to_string() + "=2.0\n"};
-    FilePairs files1{{std::ref(base), "base.conf"}, {std::ref(override_stream), "base.conf.d/99-override.conf"}};
-    aggregator.load_all(files1);
+    load_all({{std::ref(base), "base.conf"}, {std::ref(override_stream), "base.conf.d/99-override.conf"}});
 
     // Base updated to include a_third_key; override still has cursor_scale=2.0 and wins
     std::istringstream updated_base{cursor_scale.to_string() + "=1.0\n" + a_third_key.to_string() + "=hello\n"};
@@ -607,8 +607,6 @@ TEST_F(ConfigAggregatorTest, override_wins_for_shared_key_after_base_update)
     EXPECT_CALL(*this, float_handler(cursor_scale, std::optional<float>{2.0f}));
     EXPECT_CALL(*this, string_handler(a_third_key, std::optional<std::string_view const>{"hello"}));
 
-    FilePairs files2{
-        {std::ref(updated_base), "base.conf"},
-        {std::ref(override_again), "base.conf.d/99-override.conf"}};
-    aggregator.load_all(files2);
+    load_all({{std::ref(updated_base), "base.conf"},
+              {std::ref(override_again), "base.conf.d/99-override.conf"}});
 }
