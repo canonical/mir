@@ -35,8 +35,6 @@ namespace live_config
 /// handlers when values are updated. Unlike \ref IniFile, it does not parse
 /// configuration files; instead, callers update values programmatically via
 /// the \c update_*_key methods.
-///
-/// \remark Since MirAL 5.8
 class BasicStore : public Store
 {
 public:
