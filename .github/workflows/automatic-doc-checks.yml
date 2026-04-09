@@ -29,12 +29,33 @@ jobs:
       with:
         filters: .github/filters.yaml
 
-  documentation-checks:
+  spelling-check:
+    name: Spell check
     needs: [check-paths]
     if: needs.check-paths.outputs.should-run == 'true'
     permissions:
       contents: read
-    uses: canonical/documentation-workflows/.github/workflows/documentation-checks.yaml@aaeaf091e8f55145184ad897cb9834f224bd31de # main @ 2026.02.11
+    uses: canonical/documentation-workflows/.github/workflows/spelling-check.yaml@aaeaf091e8f55145184ad897cb9834f224bd31de # main @ 2026.02.11
+    with:
+      working-directory: doc/sphinx
+
+  inclusive-language-check:
+    name: Inclusive language check
+    needs: [check-paths]
+    if: needs.check-paths.outputs.should-run == 'true'
+    permissions:
+      contents: read
+    uses: canonical/documentation-workflows/.github/workflows/inclusive-language-check.yaml@aaeaf091e8f55145184ad897cb9834f224bd31de # main @ 2026.02.11
+    with:
+      working-directory: doc/sphinx
+
+  link-check:
+    name: Link check
+    needs: [check-paths]
+    if: needs.check-paths.outputs.should-run == 'true'
+    permissions:
+      contents: read
+    uses: canonical/documentation-workflows/.github/workflows/link-check.yaml@aaeaf091e8f55145184ad897cb9834f224bd31de # main @ 2026.02.11
     with:
       working-directory: doc/sphinx
       linkcheck-target: linkcheck-with-dependencies
