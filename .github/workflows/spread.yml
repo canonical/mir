@@ -10,12 +10,6 @@ on:
   merge_group:
     types: [checks_requested]
   pull_request:
-    paths-ignore:
-    - '.github/**'
-    - 'doc/sphinx/**'
-    - 'snap/**'
-    - '!doc/sphinx/conf.py'
-    - '!.github/workflows/spread.yml'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.number && format('pr{0}', github.event.number) || github.run_id }}
@@ -29,8 +23,22 @@ jobs:
 
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
+      should-run: ${{ steps.filter.outputs.code == 'true' || steps.filter.outputs.spread == 'true' || steps.filter.outputs.tools == 'true' }}
+
+    permissions:
+      contents: read
+      pull-requests: read
 
     steps:
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      with:
+        persist-credentials: false
+
+    - uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4.0.1
+      id: filter
+      with:
+        filters: .github/filters.yaml
+
     - id: set-matrix
       name: Determine BuildAndTest matrix
       run: |
@@ -71,6 +79,7 @@ jobs:
 
   BuildAndTest:
     needs: GetMatrix
+    if: needs.GetMatrix.outputs.should-run == 'true'
 
     strategy:
       fail-fast: false
