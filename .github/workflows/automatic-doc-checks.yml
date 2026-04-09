@@ -1,4 +1,4 @@
-name: Main Documentation Checks
+name: documentation-checks
 
 on:
   pull_request:
