@@ -7,9 +7,6 @@ on:
   merge_group:
     types: [checks_requested]
   pull_request:
-    paths:
-    - '.github/workflows/symbols-check.yml'
-    - 'include/**.h'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.number && format('pr{0}', github.event.number) || github.ref_name }}
@@ -18,7 +15,26 @@ concurrency:
 permissions: {}
 
 jobs:
+  check-paths:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      should-run: ${{ steps.filter.outputs.symbols }}
+    steps:
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      with:
+        persist-credentials: false
+
+    - uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4.0.1
+      id: filter
+      with:
+        filters: .github/filters.yaml
+
   CheckSymbols:
+    needs: [check-paths]
+    if: needs.check-paths.outputs.should-run == 'true'
     runs-on: ubuntu-24.04
 
     permissions:

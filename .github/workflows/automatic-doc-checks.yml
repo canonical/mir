@@ -2,9 +2,6 @@ name: Main Documentation Checks
 
 on:
   pull_request:
-    paths:
-    - '.github/workflows/automatic-doc-checks.yml'
-    - 'doc/sphinx/**'
   merge_group:
     types: [checks_requested]
 
@@ -15,7 +12,26 @@ concurrency:
 permissions: {}
 
 jobs:
+  check-paths:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      should-run: ${{ steps.filter.outputs.documentation }}
+    steps:
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      with:
+        persist-credentials: false
+
+    - uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4.0.1
+      id: filter
+      with:
+        filters: .github/filters.yaml
+
   documentation-checks:
+    needs: [check-paths]
+    if: needs.check-paths.outputs.should-run == 'true'
     permissions:
       contents: read
     uses: canonical/documentation-workflows/.github/workflows/documentation-checks.yaml@aaeaf091e8f55145184ad897cb9834f224bd31de # main @ 2026.02.11
