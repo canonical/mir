@@ -5,14 +5,6 @@ on:
     branches:
     - main
   pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
-    paths-ignore:
-    - '.github/**'
-    - 'doc/**'
-    - 'snap/**'
-    - 'spread**'
-    - 'tools/**'
-    - '!.github/workflows/tics.yml'
   merge_group:
     types: [checks_requested]
   workflow_dispatch:
@@ -38,9 +30,27 @@ concurrency:
 permissions: {}
 
 jobs:
+  check-paths:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      # Only run if we have access to secrets, and relevant files changed.
+      should-run: ${{ (github.event_name != 'pull_request' || github.repository == github.event.pull_request.head.repo.full_name) && (steps.filter.outputs.code == 'true' || steps.filter.outputs.tics == 'true') }}
+    steps:
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      with:
+        persist-credentials: false
+
+    - uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4.0.1
+      id: filter
+      with:
+        filters: .github/filters.yaml
+
   TICS:
-    # Only run if we have access to secrets.
-    if: github.event_name != 'pull_request' || github.repository == github.event.pull_request.head.repo.full_name
+    needs: [check-paths]
+    if: needs.check-paths.outputs.should-run == 'true'
 
     runs-on: [self-hosted, reactive, amd64, 2xlarge-tiobe, noble]
 
