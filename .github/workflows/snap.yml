@@ -2,15 +2,6 @@ name: Snap
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
-    paths-ignore:
-    - '.github/**'
-    - 'debian/**'
-    - 'doc/**'
-    - 'spread**'
-    - 'tests/**'
-    - 'tools/**'
-    - '!.github/workflows/snap.yml'
 
 concurrency:
   group: ${{ github.workflow }}-pr${{ github.event.number }}
@@ -23,8 +14,22 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       arches: ${{ steps.get-arches.outputs.arches }}
+      should-run: ${{ steps.filter.outputs.code == 'true' || steps.filter.outputs.snap == 'true' }}
+
+    permissions:
+      contents: read
+      pull-requests: read
 
     steps:
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      with:
+        persist-credentials: false
+
+    - uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4.0.1
+      id: filter
+      with:
+        filters: .github/filters.yaml
+
     - id: get-arches
       name: Determine which architectures to build for
       run: |
@@ -36,6 +41,7 @@ jobs:
 
   mir-libs:
     needs: [arches]
+    if: needs.arches.outputs.should-run == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
