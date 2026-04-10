@@ -630,9 +630,8 @@ TEST_F(ConfigAggregatorTest, invalid_scalar_value_in_one_of_multiple_files_yield
 {
     aggregator.add_int_attribute(a_key, "a scoped int", [this](auto... args) { int_handler(args...); });
 
-    // stream1 assigns the key twice with valid values; stream2 (higher priority) assigns the key twice, both unparseable
     std::istringstream stream1{a_key.to_string() + "=10\n" + a_key.to_string() + "=20\n"};
-    std::istringstream stream2{a_key.to_string() + "=30\n" + a_key.to_string() + "=also_not_a_number\n"};
+    std::istringstream stream2{a_key.to_string() + "=30\n" + a_key.to_string() + "=not_a_number\n"};
 
     // The last (highest-priority) file wins for scalars, and it holds an invalid value → nullopt
     EXPECT_CALL(*this, int_handler(a_key, Optional(20)));
