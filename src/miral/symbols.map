@@ -775,3 +775,33 @@ global:
     miral::WindowSpecification::alpha*;
   };
 } MIRAL_5.6;
+
+MIRAL_5.8 {
+global:
+  extern "C++" {
+    miral::live_config::ConfigAggregator::?ConfigAggregator*;
+    miral::live_config::ConfigAggregator::ConfigAggregator*;
+    miral::live_config::ConfigAggregator::add_bool_attribute*;
+    miral::live_config::ConfigAggregator::add_float_attribute*;
+    miral::live_config::ConfigAggregator::add_floats_attribute*;
+    miral::live_config::ConfigAggregator::add_int_attribute*;
+    miral::live_config::ConfigAggregator::add_ints_attribute*;
+    miral::live_config::ConfigAggregator::add_source*;
+    miral::live_config::ConfigAggregator::add_string_attribute*;
+    miral::live_config::ConfigAggregator::add_strings_attribute*;
+    miral::live_config::ConfigAggregator::remove_source*;
+    miral::live_config::ConfigAggregator::reload_all*;
+    miral::live_config::ConfigAggregator::on_done*;
+    non-virtual?thunk?to?miral::live_config::ConfigAggregator::?ConfigAggregator*;
+    non-virtual?thunk?to?miral::live_config::ConfigAggregator::add_bool_attribute*;
+    non-virtual?thunk?to?miral::live_config::ConfigAggregator::add_float_attribute*;
+    non-virtual?thunk?to?miral::live_config::ConfigAggregator::add_floats_attribute*;
+    non-virtual?thunk?to?miral::live_config::ConfigAggregator::add_int_attribute*;
+    non-virtual?thunk?to?miral::live_config::ConfigAggregator::add_ints_attribute*;
+    non-virtual?thunk?to?miral::live_config::ConfigAggregator::add_string_attribute*;
+    non-virtual?thunk?to?miral::live_config::ConfigAggregator::add_strings_attribute*;
+    non-virtual?thunk?to?miral::live_config::ConfigAggregator::on_done*;
+    typeinfo?for?miral::live_config::ConfigAggregator;
+    vtable?for?miral::live_config::ConfigAggregator;
+  };
+} MIRAL_5.7;

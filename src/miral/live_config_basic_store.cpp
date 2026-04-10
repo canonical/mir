@@ -291,6 +291,7 @@ struct miral::live_config::BasicStore::Self
         try
         {
             details.parse_and_append(parsed_values, value, key);
+            details.explicitly_cleared = false;
         }
         catch (std::exception const& e)
         {
@@ -301,7 +302,6 @@ struct miral::live_config::BasicStore::Self
                 path.c_str(),
                 e.what());
         }
-        details.explicitly_cleared = false;
     }
 
     void update_typed_value(mlc::Key const& key, TypedScalar value, std::filesystem::path const& path)
