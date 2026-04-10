@@ -390,3 +390,250 @@ TEST_F(LiveConfigIniFile, the_last_registration_of_a_key_is_used)
 
     ini_file.load_file(istream, fake_filename());
 }
+
+TEST_F(LiveConfigIniFile, an_string_value_assigned_to_an_int_key_is_skipped)
+{
+    mlc::Key const my_key{"my_int"};
+    std::istringstream bad_istream{"my_int=a_string"};
+
+    ini_file.add_int_attribute(my_key, "an int key", [this](auto... args) { int_handler(args...); });
+
+    // Parsing the string fails, the ini file throws and logs an error, and the handler is not called.
+    EXPECT_CALL(*this, int_handler(my_key, _)).Times(0);
+
+    ini_file.load_file(bad_istream, fake_filename());
+}
+
+// TODO should not fail
+// Right now, the bad line is detected while parsing, right as we're calling
+// handlers, which causes the handler to be skipped. Instead, the handler
+// should be called with the preset.
+TEST_F(LiveConfigIniFile, an_string_value_assigned_to_an_int_key_with_preset_falls_back_to_preset)
+{
+    mlc::Key const my_key{"my_int"};
+    std::istringstream bad_istream{"my_int=a_string"};
+
+    ini_file.add_int_attribute(my_key, "an int key", 42, [this](auto... args) { int_handler(args...); });
+
+    EXPECT_CALL(*this, int_handler(my_key, Eq(42)));
+
+    ini_file.load_file(bad_istream, fake_filename());
+}
+
+TEST_F(LiveConfigIniFile, multiple_string_values_assigned_to_an_int_key_are_skipped)
+{
+    mlc::Key const my_key{"my_ints"};
+    std::istringstream partially_bad_istream{
+        "my_ints=12\n"
+        "my_ints=a_string\n"
+        "my_ints=another_string\n"
+        "my_ints=67\n",
+    };
+
+    ini_file.add_ints_attribute(my_key, "an ints key", [this](auto... args) { ints_handler(args...); });
+
+    EXPECT_CALL(*this, ints_handler(my_key, Optional(ElementsAre(12, 67))));
+
+    ini_file.load_file(partially_bad_istream, fake_filename());
+}
+
+
+TEST_F(LiveConfigIniFile, yaml_content_causes_file_to_be_discarded)
+{
+    std::istringstream bad_istream{"key: value\n"};
+
+    ini_file.add_int_attribute(a_key, "a scoped int", [this](auto... args) { int_handler(args...); });
+    ini_file.add_string_attribute(a_string_key, "a string", [this](auto... args) { string_handler(args...); });
+
+    EXPECT_CALL(*this, int_handler(a_key, std::optional<int>{std::nullopt}));
+    EXPECT_CALL(*this, string_handler(a_string_key, Eq(std::nullopt)));
+
+    ini_file.load_file(bad_istream, fake_filename());
+}
+
+// TODO should discard the whole file
+// The first line is parsed correctly, and the second is skipped since it is
+// not a comment nor does it contain an equals sign. Handling and parsing
+// proceed normally. Instead, we should discard the whole file.
+TEST_F(LiveConfigIniFile, yaml_content_discards_valid_ini_lines_in_same_file)
+{
+    std::istringstream bad_istream{
+        "a_scope_an_int=42\n"
+        "key: value\n"};
+
+    ini_file.add_int_attribute(a_key, "a scoped int", [this](auto... args) { int_handler(args...); });
+
+    EXPECT_CALL(*this, int_handler(a_key, Eq(std::nullopt)));
+
+    ini_file.load_file(bad_istream, fake_filename());
+}
+
+// Same as above
+TEST_F(LiveConfigIniFile, yaml_content_with_preset_falls_back_to_preset)
+{
+    std::istringstream bad_istream{
+        "a_scope_an_int=42\n"
+        "key: value\n"};
+
+    ini_file.add_int_attribute(a_key, "a scoped int", 99, [this](auto... args) { int_handler(args...); });
+
+    EXPECT_CALL(*this, int_handler(a_key, Optional(99)));
+
+    ini_file.load_file(bad_istream, fake_filename());
+}
+
+// TODO whole file should be discarded, and the handler not called.
+TEST_F(LiveConfigIniFile, a_line_without_equals_is_skipped)
+{
+    std::istringstream bad_istream{"some_garbage"};
+
+    ini_file.add_string_attribute(a_string_key, "a string", [this](auto... args) { string_handler(args...); });
+
+    EXPECT_CALL(*this, string_handler(a_string_key, std::optional<std::string_view const>{std::nullopt})).Times(0);
+
+    ini_file.load_file(bad_istream, fake_filename());
+}
+
+// TODO BOOM
+TEST_F(LiveConfigIniFile, an_empty_key_is_skipped)
+{
+    std::istringstream bad_istream{"=some_value"};
+
+    ini_file.add_string_attribute(a_string_key, "a string", [this](auto... args) { string_handler(args...); });
+
+    EXPECT_CALL(*this, string_handler(a_string_key, std::optional<std::string_view const>{std::nullopt}));
+
+    ini_file.load_file(bad_istream, fake_filename());
+}
+
+// TODO BOOM
+// How does this interact with array clearing?
+TEST_F(LiveConfigIniFile, an_empty_string_value_is_passed_to_the_handler)
+{
+    std::istringstream bad_istream{"a_string="};
+
+    ini_file.add_string_attribute(a_string_key, "a string", [this](auto... args) { string_handler(args...); });
+
+    EXPECT_CALL(*this, string_handler(a_string_key, std::optional<std::string_view const>{""}));
+
+    ini_file.load_file(bad_istream, fake_filename());
+}
+
+TEST_F(LiveConfigIniFile, an_empty_int_value_is_ignored)
+{
+    std::istringstream bad_istream{"a_scope_an_int="};
+
+    ini_file.add_int_attribute(a_key, "a scoped int", [this](auto... args) { int_handler(args...); });
+
+    EXPECT_CALL(*this, int_handler(a_key, _)).Times(0);
+
+    ini_file.load_file(bad_istream, fake_filename());
+}
+
+TEST_F(LiveConfigIniFile, a_value_containing_equals_is_split_at_the_first_equals)
+{
+    std::istringstream bad_istream{"a_string=foo=bar"};
+
+    ini_file.add_string_attribute(a_string_key, "a string", [this](auto... args) { string_handler(args...); });
+
+    EXPECT_CALL(*this, string_handler(a_string_key, std::optional<std::string_view const>{"foo=bar"}));
+
+    ini_file.load_file(bad_istream, fake_filename());
+}
+
+// TODO should this pass? We don't trim so it will fail since the key won't
+// match. The value will also be wrong.
+TEST_F(LiveConfigIniFile, whitespace_around_equals_causes_the_line_to_be_skipped)
+{
+    std::istringstream bad_istream{"a_string = foo"};
+
+    ini_file.add_string_attribute(a_string_key, "a string", [this](auto... args) { string_handler(args...); });
+
+    EXPECT_CALL(*this, string_handler(a_string_key, std::optional<std::string_view const>{std::nullopt}));
+
+    ini_file.load_file(bad_istream, fake_filename());
+}
+
+// I don't think we acutally handle this one
+TEST_F(LiveConfigIniFile, blank_and_whitespace_lines_are_ignored_and_valid_lines_are_processed)
+{
+    std::istringstream bad_istream{
+        "\n"
+        "a_scope_an_int=42\n"
+        "   \n"
+        "\n"
+        "a_string=foo\n"};
+
+    ini_file.add_int_attribute(a_key, "a scoped int", [this](auto... args) { int_handler(args...); });
+    ini_file.add_string_attribute(a_string_key, "a string", [this](auto... args) { string_handler(args...); });
+
+    EXPECT_CALL(*this, int_handler(a_key, std::optional<int>{42}));
+    EXPECT_CALL(*this, string_handler(a_string_key, std::optional<std::string_view const>{"foo"}));
+
+    ini_file.load_file(bad_istream, fake_filename());
+}
+
+TEST_F(LiveConfigIniFile, an_empty_file_results_in_nullopt_values)
+{
+    std::istringstream empty_istream{""};
+
+    ini_file.add_int_attribute(a_key, "a scoped int", [this](auto... args) { int_handler(args...); });
+    ini_file.add_string_attribute(a_string_key, "a string", [this](auto... args) { string_handler(args...); });
+
+    EXPECT_CALL(*this, int_handler(a_key, std::optional<int>{std::nullopt}));
+    EXPECT_CALL(*this, string_handler(a_string_key, std::optional<std::string_view const>{std::nullopt}));
+
+    ini_file.load_file(empty_istream, fake_filename());
+}
+
+TEST_F(LiveConfigIniFile, a_file_with_only_comments_results_in_nullopt_values)
+{
+    std::istringstream comment_istream{
+        "# this is a comment\n"
+        "# another comment\n"};
+
+    ini_file.add_int_attribute(a_key, "a scoped int", [this](auto... args) { int_handler(args...); });
+
+    EXPECT_CALL(*this, int_handler(a_key, std::optional<int>{std::nullopt}));
+
+    ini_file.load_file(comment_istream, fake_filename());
+}
+
+TEST_F(LiveConfigIniFile, a_file_with_only_blank_lines_results_in_nullopt_values)
+{
+    std::istringstream blank_istream{"\n\n\n"};
+
+    ini_file.add_int_attribute(a_key, "a scoped int", [this](auto... args) { int_handler(args...); });
+
+    EXPECT_CALL(*this, int_handler(a_key, std::optional<int>{std::nullopt}));
+
+    ini_file.load_file(blank_istream, fake_filename());
+}
+
+TEST_F(LiveConfigIniFile, loading_a_file_twice_does_not_accumulate_array_values)
+{
+    ini_file.add_ints_attribute(an_ints_key, "ints", [this](auto... args) { ints_handler(args...); });
+
+    EXPECT_CALL(*this, ints_handler(an_ints_key, Optional(ElementsAre(1, 2)))).Times(2);
+
+    std::istringstream first_load{"ints=1\nints=2"};
+    ini_file.load_file(first_load, fake_filename());
+
+    std::istringstream second_load{"ints=1\nints=2"};
+    ini_file.load_file(second_load, fake_filename());
+}
+
+TEST_F(LiveConfigIniFile, loading_a_file_twice_uses_the_latest_file_values)
+{
+    ini_file.add_int_attribute(a_key, "a scoped int", [this](auto... args) { int_handler(args...); });
+
+    InSequence seq;
+    EXPECT_CALL(*this, int_handler(a_key, std::optional<int>{42}));
+    EXPECT_CALL(*this, int_handler(a_key, std::optional<int>{99}));
+
+    std::istringstream first_load{"a_scope_an_int=42"};
+    ini_file.load_file(first_load, fake_filename());
+
+    std::istringstream second_load{"a_scope_an_int=99"};
+    ini_file.load_file(second_load, fake_filename());
+}
