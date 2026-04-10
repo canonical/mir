@@ -355,6 +355,10 @@ fn generate_request_body(request: &WaylandRequest) -> TokenStream {
             let instance = data_init.init(#new_id_name, arc.clone());
             let boxed = Box::new(crate::middleware::#ext_interface_struct_name{ wrapped: instance });
             let mut guard = arc.lock().unwrap();
+            // SAFETY: The mutex guard provides the only mutable access to this child while
+            // the call is in progress, so this cannot introduce aliased mutable access across
+            // FFI. The unchecked pin is used only for the duration of the `associate()` call,
+            // and the guarded value is not moved while that temporary `Pin<&mut _>` exists.
             unsafe { guard.pin_mut_unchecked().associate(boxed); }
         }
     } else {
