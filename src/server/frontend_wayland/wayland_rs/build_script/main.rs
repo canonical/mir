@@ -706,7 +706,7 @@ fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
     }
 
     // Add the method that associates the boxed rust interface with the C++ class.
-    let mut associate_method = CppMethod::new("associate", None, false);
+    let mut associate_method = CppMethod::new("associate", None, true);
     associate_method.add_arg(CppArg::new(
         CppType::Box(snake_to_pascal(
             &format_wayland_interface_to_rust_extension_struct(&interface.name),

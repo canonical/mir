@@ -473,7 +473,13 @@ fn cpp_arg_type_to_cpp_source(cpp_type: &CppType, originates_from_rust: bool) ->
         (CppType::CppF64, _) => "double".into(),
         (CppType::Fd, _) => "int32_t".into(),
         (CppType::Object(name), _) => format!("std::unique_ptr<{}> const&", name),
-        (CppType::Box(name), _) => format!("rust::Box<{}>", name),
+        (CppType::Box(name), _) => {
+            if originates_from_rust {
+                format!("rust::Box<{}>", name)
+            } else {
+                format!("rust::Box<{}> const&", name)
+            }
+        }
         (CppType::String, true) => "rust::String".into(),
         (CppType::String, false) => "std::string const&".into(),
         (CppType::Array, true) => "rust::Vec<uint8_t>".into(),
@@ -533,7 +539,11 @@ fn cpp_arg_type_to_rust_source(cpp_type: &CppType, originates_from_rust: bool) -
         CppType::Fd => quote! { i32 },
         CppType::Box(name) => {
             let type_name = format_ident!("{}", name);
-            quote! { Box<#type_name> }
+            if originates_from_rust {
+                quote! { Box<#type_name> }
+            } else {
+                quote! { &Box<#type_name> }
+            }
         }
     }
 }
