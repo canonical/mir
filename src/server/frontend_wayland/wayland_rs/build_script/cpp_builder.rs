@@ -124,10 +124,17 @@ impl CppBuilder {
                     let args_str = Self::build_arg_str_for_cpp(method);
                     let retstring = Self::build_ret_string_for_cpp(method);
                     if method.originates_from_rust() {
-                        result.push_str(&format!(
-                            "    virtual auto {}({}) -> {} = 0;\n",
-                            method.name, args_str, retstring
-                        ));
+                        if method.body.is_some() {
+                            result.push_str(&format!(
+                                "    virtual auto {}({}) -> {};\n",
+                                method.name, args_str, retstring
+                            ));
+                        } else {
+                            result.push_str(&format!(
+                                "    virtual auto {}({}) -> {} = 0;\n",
+                                method.name, args_str, retstring
+                            ));
+                        }
                     } else {
                         result.push_str(&format!(
                             "    auto {}({}) -> {};\n",
@@ -181,7 +188,7 @@ impl CppBuilder {
             let namespace_str = namespace.name.join("::");
             for class in &namespace.classes {
                 for method in &class.methods {
-                    if method.is_virtual {
+                    if method.body.is_none() {
                         continue;
                     }
 

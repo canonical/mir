@@ -818,6 +818,12 @@ fn wayland_request_to_cpp_method(method: &WaylandRequest) -> CppMethod {
         cpp_method.add_arg(arg);
     }
 
+    if let Some(type_) = &method.type_ {
+        if type_ == "destructor" {
+            cpp_method.set_body("");
+        }
+    }
+
     cpp_method
 }
 
