@@ -345,6 +345,10 @@ fn generate_request_body(request: &WaylandRequest) -> TokenStream {
 
         quote! {
             let mut guard = data.lock().unwrap();
+            // SAFETY: The mutex guard provides the only mutable access to this child while
+            // the call is in progress, so this cannot introduce aliased mutable access across
+            // FFI. The unchecked pin is used only for the duration of the `associate()` call,
+            // and the guarded value is not moved while that temporary `Pin<&mut _>` exists.
             let child = unsafe { (&mut *guard).pin_mut_unchecked().#snake_request_name(#( #call_arg_names ),*) };
             let arc = Arc::new(Mutex::new(child));
 
@@ -367,6 +371,10 @@ fn generate_request_body(request: &WaylandRequest) -> TokenStream {
 
         quote! {
             let mut guard = data.lock().unwrap();
+            // SAFETY: The mutex guard provides the only mutable access to this child while
+            // the call is in progress, so this cannot introduce aliased mutable access across
+            // FFI. The unchecked pin is used only for the duration of the `associate()` call,
+            // and the guarded value is not moved while that temporary `Pin<&mut _>` exists.
             unsafe { (&mut *guard).pin_mut_unchecked().#snake_request_name(#( #call_arg_names ),*); }
         }
     }
