@@ -23,6 +23,7 @@
 #include <fcntl.h>
 #include <iostream>
 #include <cstring>
+#include <sys/stat.h>
 
 namespace mie = mir::input::evdev;
 
@@ -46,7 +47,28 @@ void fd_close(int fd, void* userdata)
 {
     auto fd_store = static_cast<mie::FdStore*>(userdata);
 
-    fd_store->remove_fd(fd);
+    // libinput will call fd_close on the fd if it receives a tablet switch event
+    // or a lid switch event, which causes the fd to be removed from the store.
+    // However, Mir does not actually open fds whenever libinput requests, instead they
+    // are opened whenever a device is added, and closed whenever it's removed. Therefore we
+    // can check if the path for the fd still exists in devtmpfs, and if it does, we can assume
+    // that the fd is still valid and should not be removed from the store.
+    try
+    {
+        auto path = fd_store->path_for(fd);
+
+        struct stat sb;
+        if (::stat(path.c_str(), &sb) == 0)
+            return;
+
+        if (errno == ENOENT)
+        {
+            fd_store->remove_fd(fd);
+        }
+    } catch (...) {
+        // Seems like we got called for an FD that we don't track?
+        return;
+    }
 }
 
 const libinput_interface fd_ops = {fd_open, fd_close};
