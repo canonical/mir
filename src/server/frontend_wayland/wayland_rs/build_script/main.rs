@@ -228,7 +228,14 @@ fn generate_global_dispatch_impl(
                 let instance = data_init.init(resource, arc.clone());
                 let boxed = Box::new(crate::middleware::#ext_interface_struct_name{ wrapped: instance });
                 let mut guard = arc.lock().unwrap();
-                unsafe { guard.pin_mut_unchecked().associate(boxed); }
+                // SAFETY: `guard` is a `MutexGuard`, so we have exclusive access to the
+                // underlying C++ object for the duration of this call and cannot concurrently
+                // create any aliasing references to it. The pointee is owned by `UniquePtr`,
+                // so taking a pinned mutable reference here does not move it, and the pinned
+                // reference is used only for this immediate FFI call and does not escape.
+                unsafe {
+                    guard.pin_mut_unchecked().associate(boxed);
+                }
             }
         }
     }
