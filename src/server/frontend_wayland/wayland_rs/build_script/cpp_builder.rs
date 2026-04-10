@@ -63,7 +63,7 @@ impl CppBuilder {
         for arg in &method.args {
             args.push(format!(
                 "{} {}",
-                cpp_arg_type_to_cpp_source(&arg.cpp_type, method.originates_from_rust()),
+                cpp_arg_type_to_cpp_source(&arg.cpp_type, method.originates_from_rust),
                 arg.name
             ));
 
@@ -129,7 +129,7 @@ impl CppBuilder {
                 for method in &class.methods {
                     let args_str = Self::build_arg_str_for_cpp(method);
                     let retstring = Self::build_ret_string_for_cpp(method);
-                    if method.originates_from_rust() {
+                    if method.is_virtual {
                         if method.body.is_some() {
                             result.push_str(&format!(
                                 "    virtual auto {}({}) -> {};\n",
@@ -240,7 +240,11 @@ impl CppBuilder {
             for class in &namespace.classes {
                 let class_name = format_ident!("{}", class.name);
                 // Generate methods for this class
-                let methods = class.methods.iter().map(|method| {
+                let methods = class.methods.iter().flat_map(|method| {
+                    if !method.generates_rust_code {
+                        return None;
+                    }
+
                     let method_name = format_ident!("{}", method.name);
                     let args = method.args.iter().flat_map(|arg| {
                         let arg_name = format_ident!("{}", arg.name);
@@ -249,7 +253,7 @@ impl CppBuilder {
                         // or not, since `std::optional` cannot be ferried over the C++/Rust boundary.
                         let arg_type = cpp_arg_type_to_rust_source(
                             &arg.cpp_type,
-                            method.originates_from_rust(),
+                            method.originates_from_rust,
                         );
                         let main_arg = quote! { #arg_name: #arg_type };
                         if let Some(has_name) = &arg.has_name {
@@ -268,19 +272,19 @@ impl CppBuilder {
                     if let Some(retval) = &method.retval {
                         let retval = cpp_return_type_to_rust_source(retval);
                         let retval = if method.throws { quote!{ Result<#retval> } } else { retval };
-                        quote! {
+                        Some(quote! {
                             pub fn #method_name(self: Pin<&mut #class_name>, #(#args),*) -> #retval;
-                        }
+                        })
                     } else {
                         if method.throws {
-                            quote! {
+                            Some(quote! {
                                 pub fn #method_name(self: Pin<&mut #class_name>, #(#args),*) -> Result<()>;
-                            }
+                            })
                         }
                         else {
-                            quote! {
+                            Some(quote! {
                                 pub fn #method_name(self: Pin<&mut #class_name>, #(#args),*);
-                            }
+                            })
                         }
                     }
                 });
@@ -405,12 +409,14 @@ impl CppEnumOption {
 }
 
 pub struct CppMethod {
-    pub name: String,
-    pub args: Vec<CppArg>,
-    pub retval: Option<CppType>,
-    pub is_virtual: bool,
-    pub body: Option<String>,
-    pub throws: bool,
+    name: String,
+    args: Vec<CppArg>,
+    retval: Option<CppType>,
+    is_virtual: bool,
+    body: Option<String>,
+    throws: bool,
+    originates_from_rust: bool,
+    generates_rust_code: bool,
 }
 
 impl CppMethod {
@@ -419,6 +425,8 @@ impl CppMethod {
         retval: Option<CppType>,
         is_virtual: bool,
         throws: bool,
+        originates_from_rust: bool,
+        generates_rust_code: bool,
     ) -> CppMethod {
         CppMethod {
             name: sanitize_identifier(&name.into()),
@@ -427,6 +435,8 @@ impl CppMethod {
             is_virtual,
             body: None,
             throws,
+            originates_from_rust,
+            generates_rust_code,
         }
     }
 
@@ -443,16 +453,6 @@ impl CppMethod {
     pub fn set_body(&mut self, body: impl Into<String>) {
         self.body = Some(body.into());
     }
-
-    // Return whether or not this method is called from Rust code.
-    pub fn originates_from_rust(&self) -> bool {
-        // If a method is virtual, we assume that it is a request method that
-        // is called from the Rust Wayland layer rather than an event method
-        // which is called from the C++ business logic layer.
-        // This is an assumption for now, but it is one that serves our needs.
-        // We may revisit this in the future.
-        self.is_virtual
-    }
 }
 
 pub enum CppType {
@@ -461,6 +461,7 @@ pub enum CppType {
     CppF64,
     String,
     Object(String),
+    Weak(String),
     Array,
     Fd,
     Box(String),
@@ -476,6 +477,9 @@ fn cpp_return_type_to_cpp_source(cpp_type: &CppType) -> String {
         CppType::String => "std::string".to_string(),
         CppType::Object(name) => {
             format!("std::shared_ptr<{}>", name)
+        }
+        CppType::Weak(name) => {
+            format!("wayland_rs::Weak<{}>", name)
         }
         CppType::Array => "std::vector<uint8_t>".to_string(),
         CppType::Fd => "int32_t".to_string(),
@@ -497,6 +501,7 @@ fn cpp_arg_type_to_cpp_source(cpp_type: &CppType, originates_from_rust: bool) ->
         (CppType::CppF64, _) => "double".into(),
         (CppType::Fd, _) => "int32_t".into(),
         (CppType::Object(name), _) => format!("std::shared_ptr<{}> const&", name),
+        (CppType::Weak(name), _) => format!("wayland_rs::Weak<{}> const&", name),
         (CppType::Box(name), _) => {
             if originates_from_rust {
                 format!("rust::Box<{}>", name)
@@ -525,6 +530,7 @@ fn cpp_return_type_to_rust_source(cpp_type: &CppType) -> TokenStream {
         }
         CppType::Array => quote! { &CxxVector<u8> },
         CppType::Fd => quote! { i32 },
+        CppType::Weak(_) => unreachable!("Weak type should not generate Rust code"),
         CppType::Box(name) => {
             let type_name = format_ident!("{}", name);
             quote! { &Box<#type_name> }
@@ -561,6 +567,7 @@ fn cpp_arg_type_to_rust_source(cpp_type: &CppType, originates_from_rust: bool) -
             }
         }
         CppType::Fd => quote! { i32 },
+        CppType::Weak(_) => unreachable!("Weak type should not generate Rust code"),
         CppType::Box(name) => {
             let type_name = format_ident!("{}", name);
             if originates_from_rust {
@@ -683,10 +690,10 @@ pub fn sanitize_identifier(name: &str) -> String {
 }
 
 pub struct CppArg {
-    pub cpp_type: CppType,
-    pub name: String,
-    pub has_name: Option<String>,
-    pub optional: bool,
+    cpp_type: CppType,
+    name: String,
+    has_name: Option<String>,
+    optional: bool,
 }
 
 impl CppArg {
@@ -702,5 +709,17 @@ impl CppArg {
             },
             optional,
         }
+    }
+
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    pub fn has_name(&self) -> Option<String> {
+        self.has_name.clone()
+    }
+
+    pub fn cpp_type(&self) -> &CppType {
+        &self.cpp_type
     }
 }
