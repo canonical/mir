@@ -228,7 +228,14 @@ fn generate_global_dispatch_impl(
                 let instance = data_init.init(resource, arc.clone());
                 let boxed = Box::new(crate::middleware::#ext_interface_struct_name{ wrapped: instance });
                 let mut guard = arc.lock().unwrap();
-                guard.pin_mut().associate(boxed);
+                // SAFETY: `guard` is a `MutexGuard`, so we have exclusive access to the
+                // underlying C++ object for the duration of this call and cannot concurrently
+                // create any aliasing references to it. The pointee is owned by `UniquePtr`,
+                // so taking a pinned mutable reference here does not move it, and the pinned
+                // reference is used only for this immediate FFI call and does not escape.
+                unsafe {
+                    guard.pin_mut_unchecked().associate(boxed);
+                }
             }
         }
     }
@@ -264,14 +271,14 @@ fn transform_argument_for_cpp(arg: &WaylandArg) -> Option<TokenStream> {
                 let has_arg_name = format_has_arg_ident(&arg.name);
                 Some(quote! {
                     let #has_arg_name = #arg_name.is_some();
-                    let #arg_name: &cxx::UniquePtr<ffi::#arg_type> = match #arg_name.as_ref() {
+                    let #arg_name: &cxx::SharedPtr<ffi::#arg_type> = match #arg_name.as_ref() {
                         Some(o) => o.data().unwrap(),
-                        None => &cxx::UniquePtr::<ffi::#arg_type>::null()
+                        None => &cxx::SharedPtr::<ffi::#arg_type>::null()
                     };
                 })
             } else {
                 Some(quote! {
-                    let #arg_name: &cxx::UniquePtr<ffi::#arg_type> = #arg_name.data().unwrap();
+                    let #arg_name: &cxx::SharedPtr<ffi::#arg_type> = #arg_name.data().unwrap();
                 })
             }
         }
@@ -338,7 +345,11 @@ fn generate_request_body(request: &WaylandRequest) -> TokenStream {
 
         quote! {
             let mut guard = data.lock().unwrap();
-            match (&mut *guard).pin_mut().#snake_request_name(#( #call_arg_names ),*) {
+            // SAFETY: The mutex guard provides the only mutable access to this child while
+            // the call is in progress, so this cannot introduce aliased mutable access across
+            // FFI. The unchecked pin is used only for the duration of the `associate()` call,
+            // and the guarded value is not moved while that temporary `Pin<&mut _>` exists.
+            match unsafe { (&mut *guard).pin_mut_unchecked().#snake_request_name(#( #call_arg_names ),*) } {
                 Ok(child) => {
                     let arc = Arc::new(Mutex::new(child));
 
@@ -349,7 +360,12 @@ fn generate_request_body(request: &WaylandRequest) -> TokenStream {
                     let instance = data_init.init(#new_id_name, arc.clone());
                     let boxed = Box::new(crate::middleware::#ext_interface_struct_name{ wrapped: instance });
                     let mut guard = arc.lock().unwrap();
-                    guard.pin_mut().associate(boxed);
+
+                    // SAFETY: The mutex guard provides the only mutable access to this child while
+                    // the call is in progress, so this cannot introduce aliased mutable access across
+                    // FFI. The unchecked pin is used only for the duration of the `associate()` call,
+                    // and the guarded value is not moved while that temporary `Pin<&mut _>` exists.
+                    unsafe { guard.pin_mut_unchecked().associate(boxed); };
                 }
                 Err(err) => {
                     let (code, message) = parse_post_error(err.what());
@@ -363,7 +379,11 @@ fn generate_request_body(request: &WaylandRequest) -> TokenStream {
 
         quote! {
             let mut guard = data.lock().unwrap();
-            if let Err(err) = (&mut *guard).pin_mut().#snake_request_name(#( #call_arg_names ),*) {
+            // SAFETY: The mutex guard provides the only mutable access to this child while
+            // the call is in progress, so this cannot introduce aliased mutable access across
+            // FFI. The unchecked pin is used only for the duration of the `associate()` call,
+            // and the guarded value is not moved while that temporary `Pin<&mut _>` exists.
+            if let Err(err) = unsafe { (&mut *guard).pin_mut_unchecked().#snake_request_name(#( #call_arg_names ),*) } {
                 let (code, message) = parse_post_error(err.what());
                 resource.post_error(code, message);
             }
@@ -490,7 +510,7 @@ fn generate_dispatch_impl(
         unsafe impl Send for ffi::#ext_struct_name {}
         unsafe impl Sync for ffi::#ext_struct_name {}
 
-        impl Dispatch<#namespace_name::#interface_name::#protocol_struct_name, Arc<Mutex<cxx::UniquePtr<ffi::#ext_struct_name>>>>
+        impl Dispatch<#namespace_name::#interface_name::#protocol_struct_name, Arc<Mutex<cxx::SharedPtr<ffi::#ext_struct_name>>>>
             for ServerState
         {
             fn request(
@@ -498,7 +518,7 @@ fn generate_dispatch_impl(
                 _client: &Client,
                 #resource_name: &#namespace_name::#interface_name::#protocol_struct_name,
                 request: <#namespace_name::#interface_name::#protocol_struct_name as wayland_server::Resource>::Request,
-                #data_name: &Arc<Mutex<cxx::UniquePtr<ffi::#ext_struct_name>>>,
+                #data_name: &Arc<Mutex<cxx::SharedPtr<ffi::#ext_struct_name>>>,
                 _dhandle: &DisplayHandle,
                 #data_init_name: &mut DataInit<'_, Self>,
             ) {
@@ -736,7 +756,7 @@ fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
     }
 
     // Add the method that associates the boxed rust interface with the C++ class.
-    let mut associate_method = CppMethod::new("associate", None, false, false);
+    let mut associate_method = CppMethod::new("associate", None, true, false);
     associate_method.add_arg(CppArg::new(
         CppType::Box(snake_to_pascal(
             &format_wayland_interface_to_rust_extension_struct(&interface.name),
@@ -847,6 +867,12 @@ fn wayland_request_to_cpp_method(method: &WaylandRequest) -> CppMethod {
 
     for arg in args {
         cpp_method.add_arg(arg);
+    }
+
+    if let Some(type_) = &method.type_ {
+        if type_ == "destructor" {
+            cpp_method.set_body("");
+        }
     }
 
     cpp_method

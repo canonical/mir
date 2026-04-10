@@ -130,10 +130,17 @@ impl CppBuilder {
                     let args_str = Self::build_arg_str_for_cpp(method);
                     let retstring = Self::build_ret_string_for_cpp(method);
                     if method.originates_from_rust() {
-                        result.push_str(&format!(
-                            "    virtual auto {}({}) -> {} = 0;\n",
-                            method.name, args_str, retstring
-                        ));
+                        if method.body.is_some() {
+                            result.push_str(&format!(
+                                "    virtual auto {}({}) -> {};\n",
+                                method.name, args_str, retstring
+                            ));
+                        } else {
+                            result.push_str(&format!(
+                                "    virtual auto {}({}) -> {} = 0;\n",
+                                method.name, args_str, retstring
+                            ));
+                        }
                     } else {
                         result.push_str(&format!(
                             "    auto {}({}) -> {};\n",
@@ -187,7 +194,7 @@ impl CppBuilder {
             let namespace_str = namespace.name.join("::");
             for class in &namespace.classes {
                 for method in &class.methods {
-                    if method.is_virtual {
+                    if method.body.is_none() {
                         continue;
                     }
 
@@ -468,7 +475,7 @@ fn cpp_return_type_to_cpp_source(cpp_type: &CppType) -> String {
         CppType::CppF64 => "double".to_string(),
         CppType::String => "std::string".to_string(),
         CppType::Object(name) => {
-            format!("std::unique_ptr<{}>", name)
+            format!("std::shared_ptr<{}>", name)
         }
         CppType::Array => "std::vector<uint8_t>".to_string(),
         CppType::Fd => "int32_t".to_string(),
@@ -489,8 +496,14 @@ fn cpp_arg_type_to_cpp_source(cpp_type: &CppType, originates_from_rust: bool) ->
         (CppType::CppU32, _) => "uint32_t".into(),
         (CppType::CppF64, _) => "double".into(),
         (CppType::Fd, _) => "int32_t".into(),
-        (CppType::Object(name), _) => format!("std::unique_ptr<{}> const&", name),
-        (CppType::Box(name), _) => format!("rust::Box<{}>", name),
+        (CppType::Object(name), _) => format!("std::shared_ptr<{}> const&", name),
+        (CppType::Box(name), _) => {
+            if originates_from_rust {
+                format!("rust::Box<{}>", name)
+            } else {
+                format!("rust::Box<{}> const&", name)
+            }
+        }
         (CppType::String, true) => "rust::String".into(),
         (CppType::String, false) => "std::string const&".into(),
         (CppType::Array, true) => "rust::Vec<uint8_t>".into(),
@@ -508,7 +521,7 @@ fn cpp_return_type_to_rust_source(cpp_type: &CppType) -> TokenStream {
         CppType::String => quote! { &CxxString },
         CppType::Object(name) => {
             let type_name = format_ident!("{}", name);
-            quote! { UniquePtr<#type_name> }
+            quote! { SharedPtr<#type_name> }
         }
         CppType::Array => quote! { &CxxVector<u8> },
         CppType::Fd => quote! { i32 },
@@ -538,7 +551,7 @@ fn cpp_arg_type_to_rust_source(cpp_type: &CppType, originates_from_rust: bool) -
         }
         CppType::Object(name) => {
             let type_name = format_ident!("{}", name);
-            quote! { &UniquePtr<#type_name> }
+            quote! { &SharedPtr<#type_name> }
         }
         CppType::Array => {
             if originates_from_rust {
@@ -550,7 +563,11 @@ fn cpp_arg_type_to_rust_source(cpp_type: &CppType, originates_from_rust: bool) -
         CppType::Fd => quote! { i32 },
         CppType::Box(name) => {
             let type_name = format_ident!("{}", name);
-            quote! { Box<#type_name> }
+            if originates_from_rust {
+                quote! { Box<#type_name> }
+            } else {
+                quote! { &Box<#type_name> }
+            }
         }
     }
 }
