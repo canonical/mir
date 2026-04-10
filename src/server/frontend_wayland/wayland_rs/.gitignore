@@ -1,0 +1,7 @@
+src/protocols.rs
+src/dispatch.rs
+src/ffi.rs
+src/middleware.rs
+src/wayland_server_generated.rs
+wayland_rs_cpp/include
+wayland_rs_cpp/src

@@ -216,7 +216,7 @@ pub struct WaylandEnumEntry {
 
 pub fn parse_protocols() -> Vec<WaylandProtocol> {
     let mut protocols = Vec::new();
-    let mut paths: Vec<_> = fs::read_dir("../../../wayland-protocols")
+    let mut paths: Vec<_> = fs::read_dir("../../../../wayland-protocols")
         .unwrap()
         .filter_map(|e| e.ok())
         .collect();
@@ -245,9 +245,7 @@ pub fn parse_protocols() -> Vec<WaylandProtocol> {
                 dependencies.push(interface_name.clone());
             }
             if let Some(enm) = &arg.enum_ {
-                let split = enm.split(".").collect::<Vec<&str>>();
-                if split.len() == 2 {
-                    let interface_name = split[0];
+                if let Some((interface_name, _)) = enm.split_once('.') {
                     dependencies.push(interface_name.to_string());
                 }
             }
