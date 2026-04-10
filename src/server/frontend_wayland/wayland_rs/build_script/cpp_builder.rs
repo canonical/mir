@@ -472,7 +472,7 @@ fn cpp_arg_type_to_cpp_source(cpp_type: &CppType, originates_from_rust: bool) ->
         (CppType::CppU32, _) => "uint32_t".into(),
         (CppType::CppF64, _) => "double".into(),
         (CppType::Fd, _) => "int32_t".into(),
-        (CppType::Object(name), _) => format!("std::shared_ptr<{}> const&", name),
+        (CppType::Object(name), _) => format!("std::unique_ptr<{}> const&", name),
         (CppType::Box(name), _) => {
             if originates_from_rust {
                 format!("rust::Box<{}>", name)
