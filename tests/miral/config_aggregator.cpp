@@ -611,7 +611,9 @@ TEST_F(ConfigAggregatorTest, override_wins_for_shared_key_after_base_update)
               {std::ref(override_again), "base.conf.d/99-override.conf"}});
 }
 
-TEST_F(ConfigAggregatorTest, invalid_scalar_value_in_one_of_multiple_files_yields_nullopt)
+// Invalid scalar in the second file causes the handler to not be called. So
+// the aggregator is only notified of the final value in the first file.
+TEST_F(ConfigAggregatorTest, invalid_scalar_value_in_one_of_multiple_yields_last_valid_value_1)
 {
     aggregator.add_int_attribute(a_key, "a scoped int", [this](auto... args) { int_handler(args...); });
 
@@ -626,26 +628,28 @@ TEST_F(ConfigAggregatorTest, invalid_scalar_value_in_one_of_multiple_files_yield
               {std::ref(stream2), "base.conf.d/10-override.conf"}});
 }
 
-TEST_F(ConfigAggregatorTest, invalid_scalar_value_in_one_of_multiple_files_yields_nullopt_key_assigned_twice)
+// Same as the previous case, except that the 30 is overriden by an invalid
+// value. Handlers are still not called.
+TEST_F(ConfigAggregatorTest, invalid_scalar_value_in_one_of_multiple_yields_last_valid_value_2)
 {
     aggregator.add_int_attribute(a_key, "a scoped int", [this](auto... args) { int_handler(args...); });
 
     std::istringstream stream1{a_key.to_string() + "=10\n" + a_key.to_string() + "=20\n"};
     std::istringstream stream2{a_key.to_string() + "=30\n" + a_key.to_string() + "=not_a_number\n"};
 
-    // The last (highest-priority) file wins for scalars, and it holds an invalid value → nullopt
     EXPECT_CALL(*this, int_handler(a_key, Optional(20)));
 
     load_all({{std::ref(stream1), "base.conf"},
               {std::ref(stream2), "base.conf.d/10-override.conf"}});
 }
 
+// Since the invalid value in the second file is overridden by a valid value
+// after, its handlers are called and the config aggregator is notified of its
+// value (40)
 TEST_F(ConfigAggregatorTest, invalid_scalar_value_followed_by_valid_value_in_later_file_yields_valid)
 {
     aggregator.add_int_attribute(a_key, "a scoped int", [this](auto... args) { int_handler(args...); });
 
-    // stream1 assigns the key twice with valid values; stream2 (higher priority) assigns the key three times:
-    // one valid, one invalid, then another valid value
     std::istringstream stream1{a_key.to_string() + "=10\n" + a_key.to_string() + "=20\n"};
     std::istringstream stream2{a_key.to_string() + "=30\n" + a_key.to_string() + "=also_not_a_number\n" + a_key.to_string() + "=40\n"};
 
@@ -656,7 +660,7 @@ TEST_F(ConfigAggregatorTest, invalid_scalar_value_followed_by_valid_value_in_lat
               {std::ref(stream2), "base.conf.d/10-override.conf"}});
 }
 
-TEST_F(ConfigAggregatorTest, invalid_array_value_in_one_of_multiple_files_yields_nullopt_for_that_element)
+TEST_F(ConfigAggregatorTest, invalid_array_value_in_one_of_multiple_files_is_ignored)
 {
     aggregator.add_ints_attribute(an_ints_key, "ints", [this](auto... args) { ints_handler(args...); });
 
@@ -664,7 +668,6 @@ TEST_F(ConfigAggregatorTest, invalid_array_value_in_one_of_multiple_files_yields
     std::istringstream stream1{an_ints_key.to_string() + "=1\n" + an_ints_key.to_string() + "=2\n"};
     std::istringstream stream2{an_ints_key.to_string() + "=3\n" + an_ints_key.to_string() + "=not_a_number\n"};
 
-    // The invalid entry in stream2 means the whole array value cannot be resolved → nullopt
     EXPECT_CALL(*this, ints_handler(an_ints_key, Optional(ElementsAre(1, 2, 3))));
 
     load_all({{std::ref(stream1), "base.conf"},
