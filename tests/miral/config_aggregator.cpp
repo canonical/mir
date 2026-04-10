@@ -703,6 +703,24 @@ TEST_F(ConfigAggregatorTest, invalid_ini_file_among_multiple_files_leaves_array_
               {std::ref(stream2), "base.conf.d/10-override.conf"}});
 }
 
+TEST_F(ConfigAggregatorTest, invalid_lines_among_valid_lines_are_ignored)
+{
+    aggregator.add_strings_attribute(a_strings_key, "strings", [this](auto... args) { strings_handler(args...); });
+
+    // stream1 is a valid ini file with one array entry
+    std::istringstream stream1{a_strings_key.to_string() + "=foo\n"};
+    // stream2 has one valid array entry, then invalid ini content, then another valid array entry
+    std::istringstream stream2{
+        a_strings_key.to_string() + "=bar\n" +
+        "{ \"invalid\": \"stuff\" }\n" +
+        a_strings_key.to_string() + "=baz\n"};
+
+    EXPECT_CALL(*this, strings_handler(a_strings_key, Optional(ElementsAre("foo", "bar", "baz"))));
+
+    load_all({{std::ref(stream1), "base.conf"},
+              {std::ref(stream2), "base.conf.d/10-override.conf"}});
+}
+
 TEST_F(ConfigAggregatorTest, clear_followed_by_invalid_array_value_yields_nullopt)
 {
     aggregator.add_ints_attribute(an_ints_key, "ints", [this](auto... args) { ints_handler(args...); });
