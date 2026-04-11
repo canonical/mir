@@ -22,6 +22,8 @@
 
 #include <atomic>
 
+struct WlcsKeyboard;
+
 namespace mir
 {
 class Executor;
@@ -43,6 +45,8 @@ struct TestWlcsDisplayServer : TestDisplayServer, public WlcsDisplayServer
     WlcsPointer* create_pointer();
 
     WlcsTouch* create_touch();
+
+    WlcsKeyboard* create_keyboard();
 
     std::shared_ptr<mir::test::Signal> expect_event_with_time(std::chrono::nanoseconds event_time);
 
