@@ -22,9 +22,7 @@
 
 #include <mir/udev/wrapper.h>
 
-#include <algorithm>
 #include <optional>
-#include <set>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -54,7 +52,21 @@ struct ValuedOption
     std::unordered_map<std::string, std::string> devnodes;
 };
 
-auto validate_structure(std::vector<std::string> const& tokens, std::set<std::string> const& available_options)
+struct OptionStructure
+{
+    static auto freeform(size_t expected_tokens) -> OptionStructure
+    {
+        return {
+            .expected_token_count = expected_tokens,
+            .check_specifiers = false,
+        };
+    }
+
+    size_t const expected_token_count{3}; // option name, specifier, specifier value
+    bool const  check_specifiers{true};
+};
+
+auto validate_structure(std::vector<std::string> const& tokens, std::unordered_map<std::string, OptionStructure> const& available_options)
     -> std::optional<std::tuple<std::string, std::string, std::string>>;
 
 auto matches(std::vector<std::string> tokens, std::string option_name, std::initializer_list<std::string> valid_values)
