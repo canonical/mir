@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <dirent.h>
+#include <pthread.h>
 
 /*
  * From libXcursor/include/X11/extensions/Xcursor.h
@@ -606,18 +607,121 @@ XcursorFileLoadImages (FILE *file, int size)
 #define XCURSORPATH "~/.icons:/usr/share/icons:/usr/share/pixmaps:~/.cursors:/usr/share/cursors/xorg-x11:"ICONDIR
 #endif
 
+/* Legacy-only entries from XCURSORPATH that are not already covered by the
+ * XDG spec search order (i.e. not $HOME/.icons, $HOME/.cursors,
+ * $XDG_DATA_DIRS/icons, or /usr/share/pixmaps — those are added explicitly
+ * by _XcursorBuildXdgPath). */
+#define XCURSORLEGACYPATH "/usr/share/cursors/xorg-x11:"ICONDIR
+
+static char *
+_XcursorBuildXdgPath (void)
+{
+    char const *home = getenv ("HOME");
+    char const *xdg_data_dirs = getenv ("XDG_DATA_DIRS");
+
+    if (!xdg_data_dirs || xdg_data_dirs[0] == '\0')
+        xdg_data_dirs = "/usr/local/share:/usr/share";
+
+    size_t len = 0;
+
+    /* $HOME/.icons: and $HOME/.cursors: */
+    if (home)
+        len += strlen (home) + strlen ("/.icons") + 1   /* +1 for ':' */
+             + strlen (home) + strlen ("/.cursors") + 1;
+
+    /* $XDG_DATA_DIRS/icons: (one entry per non-empty dir in XDG_DATA_DIRS) */
+    for (char const *p = xdg_data_dirs; p && *p; )
+    {
+        char const *colon = strchr (p, ':');
+        size_t const component_len = colon ? (size_t)(colon - p) : strlen (p);
+        if (component_len > 0)
+            len += component_len + strlen ("/icons") + 1;
+        p = colon ? colon + 1 : NULL;
+    }
+
+    /* /usr/share/pixmaps: */
+    len += strlen ("/usr/share/pixmaps") + 1;
+
+    /* legacy fallback entries not already covered above + '\0' */
+    len += strlen (XCURSORLEGACYPATH) + 1;
+
+    /* This allocation persists for the lifetime of the process (intentional). */
+    char *dynamic_path = malloc (len);
+    if (!dynamic_path)
+        return NULL;
+
+    char *p_out = dynamic_path;
+    size_t remaining = len;
+
+    if (home)
+    {
+        int const written = snprintf (p_out, remaining, "%s/.icons:", home);
+        if (written < 0 || (size_t)written >= remaining) goto error;
+        p_out += written;
+        remaining -= (size_t)written;
+    }
+
+    for (char const *p = xdg_data_dirs; p && *p; )
+    {
+        char const *colon = strchr (p, ':');
+        size_t const component_len = colon ? (size_t)(colon - p) : strlen (p);
+        char const *component_start = p;
+        p = colon ? colon + 1 : NULL;
+        if (component_len == 0)
+            continue;
+        int const written = snprintf (p_out, remaining, "%.*s/icons:", (int)component_len, component_start);
+        if (written < 0 || (size_t)written >= remaining) goto error;
+        p_out += written;
+        remaining -= (size_t)written;
+    }
+
+    {
+        int const written = snprintf (p_out, remaining, "/usr/share/pixmaps:");
+        if (written < 0 || (size_t)written >= remaining) goto error;
+        p_out += written;
+        remaining -= (size_t)written;
+    }
+
+    if (home)
+    {
+        int const written = snprintf (p_out, remaining, "%s/.cursors:", home);
+        if (written < 0 || (size_t)written >= remaining) goto error;
+        p_out += written;
+        remaining -= (size_t)written;
+    }
+
+    {
+        int const written = snprintf (p_out, remaining, "%s", XCURSORLEGACYPATH);
+        if (written < 0 || (size_t)written >= remaining) goto error;
+    }
+
+    return dynamic_path;
+
+error:
+    free (dynamic_path);
+    return NULL;
+}
+
+static pthread_once_t xcursor_path_once = PTHREAD_ONCE_INIT;
+static char const *xcursor_library_path = NULL;
+
+static void
+_XcursorInitPath (void)
+{
+    xcursor_library_path = getenv ("XCURSOR_PATH");
+    if (!xcursor_library_path)
+    {
+        xcursor_library_path = _XcursorBuildXdgPath ();
+        if (!xcursor_library_path)
+            xcursor_library_path = XCURSORPATH;
+    }
+}
+
 static const char *
 XcursorLibraryPath (void)
 {
-    static const char	*path;
-
-    if (!path)
-    {
-	path = getenv ("XCURSOR_PATH");
-	if (!path)
-	    path = XCURSORPATH;
-    }
-    return path;
+    pthread_once (&xcursor_path_once, _XcursorInitPath);
+    return xcursor_library_path;
 }
 
 static  void
