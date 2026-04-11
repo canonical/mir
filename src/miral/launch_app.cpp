@@ -16,7 +16,7 @@
 
 #include "launch_app.h"
 
-#include <boost/throw_exception.hpp>
+#include <mir/fatal.h>
 
 #include <string>
 #include <spawn.h>
@@ -24,7 +24,6 @@
 #include <signal.h>
 
 #include <cstring>
-#include <system_error>
 #include <vector>
 
 namespace
@@ -125,7 +124,7 @@ auto execute_with_environment(std::vector<std::string> const app, Environment& a
     posix_spawnattr_t attr;
     if (auto const error = posix_spawnattr_init(&attr))
     {
-        BOOST_THROW_EXCEPTION((std::system_error{error, std::system_category(), "Failed to init spawn attributes"}));
+        mir::fatal_error_abort("Failed to init spawn attributes: %s", strerror(error));
     }
 
     // Unblock all signals in the child, preserving their existing dispositions
@@ -137,7 +136,7 @@ auto execute_with_environment(std::vector<std::string> const app, Environment& a
         if (result != 0)
         {
             posix_spawnattr_destroy(&attr);
-            BOOST_THROW_EXCEPTION((std::system_error{result, std::system_category(), what}));
+            mir::fatal_error_abort("%s: %s", what, strerror(result));
         }
     };
 
@@ -161,7 +160,7 @@ auto execute_with_environment(std::vector<std::string> const app, Environment& a
 
     if (error != 0)
     {
-        BOOST_THROW_EXCEPTION((std::system_error{error, std::system_category(), "Failed to spawn process"}));
+        mir::fatal_error_abort("Failed to spawn process '%s': %s", exec_args[0], strerror(error));
     }
 
     return pid;
