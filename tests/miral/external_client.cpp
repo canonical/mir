@@ -20,6 +20,8 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include <cstdlib>
+#include <cstring>
 #include <filesystem>
 #include <fstream>
 
@@ -79,7 +81,8 @@ struct ExternalClient : miral::TestServer
     bool cannot_start_X_server()
     {
         // Starting an X server on LP builder, or Fedora CI, doesn't work
-        auto const lp_fake_runtime_dir = strcmp(getenv("XDG_RUNTIME_DIR"), "/tmp") == 0;
+        auto const xdg_runtime_dir = getenv("XDG_RUNTIME_DIR");
+        auto const lp_fake_runtime_dir = xdg_runtime_dir && strcmp(xdg_runtime_dir, "/tmp") == 0;
         auto const cannot_access_x11_unix = access("/tmp/.X11-unix/", W_OK) != 0;
 
         return lp_fake_runtime_dir || cannot_access_x11_unix;

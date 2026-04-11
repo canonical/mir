@@ -15,17 +15,15 @@
  */
 
 #include "launch_app.h"
-#include <mir/errno_utils.h>
-#include <mir/log.h>
 
-#include <boost/throw_exception.hpp>
+#include <mir/fatal.h>
 
 #include <string>
+#include <spawn.h>
 #include <unistd.h>
 #include <signal.h>
 
 #include <cstring>
-#include <system_error>
 #include <vector>
 
 namespace
@@ -118,25 +116,51 @@ auto execute_with_environment(std::vector<std::string> const app, Environment& a
 
     exec_args.push_back(nullptr);
 
-    pid_t pid = fork();
-
-    if (pid < 0)
+    // Use posix_spawnp() instead of fork()+exec() to avoid ASAN deadlocks.
+    // When fork() is called from a multithreaded process, ASAN's internal mutexes
+    // locked by other threads remain locked in the child, causing deadlock before
+    // exec() can run. posix_spawnp() uses vfork()/clone() internally, bypassing
+    // this issue.
+    posix_spawnattr_t attr;
+    if (auto const error = posix_spawnattr_init(&attr))
     {
-        BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), "Failed to fork process"}));
+        mir::fatal_error_abort("Failed to init spawn attributes: %s", strerror(error));
     }
 
-    if (pid == 0)
+    // Unblock all signals in the child, preserving their existing dispositions
+    sigset_t no_signals;
+    sigemptyset(&no_signals);
+
+    auto const check_spawn_attr = [&](int result, char const* what)
     {
-        sigset_t all_signals;
-        sigfillset(&all_signals);
-        pthread_sigmask(SIG_UNBLOCK, &all_signals, nullptr);
+        if (result != 0)
+        {
+            posix_spawnattr_destroy(&attr);
+            mir::fatal_error_abort("%s: %s", what, strerror(result));
+        }
+    };
 
-        // execvpe() isn't listed as being async-signal-safe, but the implementation looks fine and rewriting seems
-        // unnecessary
-        execvpe(exec_args[0], const_cast<char* const*>(exec_args.data()), const_cast<char* const*>(exec_env.data()));
+    check_spawn_attr(
+        posix_spawnattr_setsigmask(&attr, &no_signals),
+        "Failed to set signal mask for spawned process");
+    check_spawn_attr(
+        posix_spawnattr_setflags(&attr, POSIX_SPAWN_SETSIGMASK),
+        "Failed to set spawn flags for spawned process");
 
-        mir::log_warning("Failed to execute client (\"%s\") error: %s", exec_args[0], mir::errno_to_cstr(errno));
-        _exit(EXIT_FAILURE);
+    pid_t pid = -1;
+    auto const error = posix_spawnp(
+        &pid,
+        exec_args[0],
+        nullptr,
+        &attr,
+        const_cast<char* const*>(exec_args.data()),
+        const_cast<char* const*>(exec_env.data()));
+
+    posix_spawnattr_destroy(&attr);
+
+    if (error != 0)
+    {
+        mir::fatal_error_abort("Failed to spawn process '%s': %s", exec_args[0], strerror(error));
     }
 
     return pid;
