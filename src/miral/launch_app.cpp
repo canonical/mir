@@ -16,6 +16,7 @@
 
 #include "launch_app.h"
 
+#include <mir/log.h>
 #include <boost/throw_exception.hpp>
 
 #include <string>
@@ -161,7 +162,11 @@ auto execute_with_environment(std::vector<std::string> const app, Environment& a
 
     if (error != 0)
     {
-        BOOST_THROW_EXCEPTION((std::system_error{error, std::system_category(), "Failed to spawn process"}));
+        mir::log_warning(
+            "Failed to spawn process '%s': %s (%i)",
+            exec_args[0],
+            std::system_error(error, std::system_category()).what(),
+            error);
     }
 
     return pid;
