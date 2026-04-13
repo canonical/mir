@@ -24,6 +24,7 @@
 #include <unistd.h>
 #include <signal.h>
 
+#include <cerrno>
 #include <cstdlib>
 #include <cstring>
 #include <vector>
@@ -166,7 +167,7 @@ auto execute_with_environment(std::vector<std::string> const app, Environment& a
         // Fork a placeholder child that immediately exits, so the caller can
         // safely call waitpid() on the returned pid (matching the old fork()+exec()
         // contract where a real pid was always returned, even on exec failure).
-        // The child calls _exit() directly — no ASAN-instrumented code is run.
+        // The child calls _exit() immediately, avoiding any non-async-signal-safe work.
         pid_t const placeholder = fork();
         if (placeholder < 0)
             mir::fatal_error_abort("Failed to fork placeholder process: %s", strerror(errno));

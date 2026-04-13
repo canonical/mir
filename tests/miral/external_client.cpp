@@ -243,7 +243,7 @@ TEST_F(ExternalClient, launching_nonexistent_executable_returns_waitable_pid)
 {
     start_server();
 
-    auto const client_pid = external_client.launch({"/no/such/binary"});
+    auto const client_pid = external_client.launch(std::vector<std::string>{"/no/such/binary"});
     EXPECT_THAT(client_pid, Gt(0));
 
     int status = 0;
