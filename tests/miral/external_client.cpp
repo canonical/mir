@@ -248,6 +248,7 @@ TEST_F(ExternalClient, launching_nonexistent_executable_returns_waitable_pid)
 
     int status = 0;
     auto const waited_pid = waitpid(client_pid, &status, 0);
+    ASSERT_THAT(waited_pid, Ne(-1));
     EXPECT_THAT(waited_pid, Eq(client_pid));
     EXPECT_TRUE(WIFEXITED(status));
     EXPECT_THAT(WEXITSTATUS(status), Ne(0));
