@@ -17,6 +17,7 @@
 #include "launch_app.h"
 
 #include <mir/fatal.h>
+#include <mir/log.h>
 
 #include <string>
 #include <spawn.h>
@@ -160,7 +161,8 @@ auto execute_with_environment(std::vector<std::string> const app, Environment& a
 
     if (error != 0)
     {
-        mir::fatal_error_abort("Failed to spawn process '%s': %s", exec_args[0], strerror(error));
+        mir::log_warning("Failed to execute client (\"%s\") error: %s", exec_args[0], strerror(error));
+        return -1;
     }
 
     return pid;
