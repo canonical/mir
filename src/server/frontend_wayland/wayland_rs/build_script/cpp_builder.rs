@@ -263,8 +263,8 @@ impl CppBuilder {
                     // Note: When generating Rust bindings for C++ methods that will mutate the underlying
                     // C++ class, cxx.rs enforces that we `Pin` them.
                     //
-                    // Note: If a the method throws, we wrap it in a Result<...> type for the Rust side of
-                    // things. CXX.rs will take care of translating exceptions into this type for us.
+                    // Note: If the method throws, we wrap it in a Result<...> type for the Rust side of
+                    // things. cxx.rs will take care of translating exceptions into this type for us.
                     if let Some(retval) = &method.retval {
                         let retval = cpp_return_type_to_rust_source(retval);
                         let retval = if method.throws { quote!{ Result<#retval> } } else { retval };
