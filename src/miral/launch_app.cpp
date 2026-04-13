@@ -24,6 +24,7 @@
 #include <unistd.h>
 #include <signal.h>
 
+#include <cstdlib>
 #include <cstring>
 #include <vector>
 
@@ -162,7 +163,16 @@ auto execute_with_environment(std::vector<std::string> const app, Environment& a
     if (error != 0)
     {
         mir::log_warning("Failed to execute client (\"%s\") error: %s", exec_args[0], strerror(error));
-        return -1;
+        // Fork a placeholder child that immediately exits, so the caller can
+        // safely call waitpid() on the returned pid (matching the old fork()+exec()
+        // contract where a real pid was always returned, even on exec failure).
+        // The child calls _exit() directly — no ASAN-instrumented code is run.
+        pid_t const placeholder = fork();
+        if (placeholder < 0)
+            mir::fatal_error_abort("Failed to fork placeholder process: %s", strerror(errno));
+        if (placeholder == 0)
+            _exit(EXIT_FAILURE);
+        return placeholder;
     }
 
     return pid;
