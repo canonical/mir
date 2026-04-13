@@ -29,6 +29,11 @@ auto format_message(uint32_t error_code, char const* fmt, va_list args) -> std::
     auto const len = std::vsnprintf(nullptr, 0, fmt, args_copy);
     va_end(args_copy);
 
+    if (len < 0)
+    {
+        return std::to_string(error_code) + ": formatting error";
+    }
+
     std::vector<char> buf(len + 1);
     std::vsnprintf(buf.data(), buf.size(), fmt, args);
 

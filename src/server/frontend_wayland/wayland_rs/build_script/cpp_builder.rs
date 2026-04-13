@@ -573,7 +573,7 @@ fn cpp_arg_type_to_rust_source(cpp_type: &CppType, originates_from_rust: bool) -
 }
 
 /// Sanitize an identifier to ensure it's valid for Rust and C++.
-/// If the identifier starts with a digit, prefix it with an underscore.
+/// If the identifier starts with a digit, prefix it with r_.
 /// If the identifier is a Rust keyword, prefix it with r_.
 /// If the identifier is a C++ keyword, suffix it with _.
 pub fn sanitize_identifier(name: &str) -> String {
@@ -581,6 +581,7 @@ pub fn sanitize_identifier(name: &str) -> String {
         return "_empty".to_string();
     }
 
+    // These keywords originate from: https://en.cppreference.com/w/cpp/keywords.html
     const CPP_KEYWORDS: &[&str] = &[
         "alignas",
         "alignof",
