@@ -24,6 +24,7 @@
 #include <cstring>
 #include <filesystem>
 #include <fstream>
+#include <sys/wait.h>
 
 using namespace testing;
 
@@ -236,6 +237,20 @@ TEST_F(ExternalClient, another_strange_override_does_nothing)
     EXPECT_THAT(client_env_x11_value("SDL_VIDEODRIVER"), StrEq("wayland"));
     EXPECT_THAT(client_env_x11_value("NO_AT_BRIDGE"), StrEq("1"));
     EXPECT_THAT(client_env_x11_value("_JAVA_AWT_WM_NONREPARENTING"), StrEq("1"));
+}
+
+TEST_F(ExternalClient, launching_nonexistent_executable_returns_waitable_pid)
+{
+    start_server();
+
+    auto const client_pid = external_client.launch({"/no/such/binary"});
+    EXPECT_THAT(client_pid, Gt(0));
+
+    int status = 0;
+    auto const waited_pid = waitpid(client_pid, &status, 0);
+    EXPECT_THAT(waited_pid, Eq(client_pid));
+    EXPECT_TRUE(WIFEXITED(status));
+    EXPECT_THAT(WEXITSTATUS(status), Ne(0));
 }
 
 TEST_F(ExternalClient, split_command)
