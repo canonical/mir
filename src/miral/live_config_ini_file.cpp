@@ -15,6 +15,7 @@
  */
 
 #include "basic_store.h"
+#include "typed_store_adapter.h"
 
 #include <miral/live_config_ini_file.h>
 
@@ -27,6 +28,7 @@ class mlc::IniFile::Self: public mlc::BasicStore
 {
 public:
     void load_file(std::istream& istream, std::filesystem::path const& path);
+    TypedStoreAdapter adapter{*this};
 };
 
 namespace
@@ -81,70 +83,70 @@ mlc::IniFile::~IniFile() = default;
 
 void mlc::IniFile::add_int_attribute(Key const& key, std::string_view description, HandleInt handler)
 {
-    self->add_int_attribute(key, description, std::move(handler));
+    self->adapter.add_int_attribute(key, description, std::move(handler));
 }
 
 void mlc::IniFile::add_ints_attribute(Key const& key, std::string_view description, HandleInts handler)
 {
-    self->add_ints_attribute(key, description, std::move(handler));
+    self->adapter.add_ints_attribute(key, description, std::move(handler));
 }
 
 void mlc::IniFile::add_bool_attribute(Key const& key, std::string_view description, HandleBool handler)
 {
-    self->add_bool_attribute(key, description, std::move(handler));
+    self->adapter.add_bool_attribute(key, description, std::move(handler));
 }
 
 void mlc::IniFile::add_float_attribute(Key const& key, std::string_view description, HandleFloat handler)
 {
-    self->add_float_attribute(key, description, std::move(handler));
+    self->adapter.add_float_attribute(key, description, std::move(handler));
 }
 
 void mlc::IniFile::add_floats_attribute(Key const& key, std::string_view description, HandleFloats handler)
 {
-    self->add_floats_attribute(key, description, std::move(handler));
+    self->adapter.add_floats_attribute(key, description, std::move(handler));
 }
 
 void mlc::IniFile::add_string_attribute(Key const& key, std::string_view description, HandleString handler)
 {
-    self->add_string_attribute(key, description, std::move(handler));
+    self->adapter.add_string_attribute(key, description, std::move(handler));
 }
 
 void mlc::IniFile::add_strings_attribute(Key const& key, std::string_view description, HandleStrings handler)
 {
-    self->add_strings_attribute(key, description, std::move(handler));
+    self->adapter.add_strings_attribute(key, description, std::move(handler));
 }
 
 void mlc::IniFile::add_int_attribute(Key const& key, std::string_view description, int preset, HandleInt handler)
 {
-    self->add_int_attribute(key, description, preset, std::move(handler));
+    self->adapter.add_int_attribute(key, description, preset, std::move(handler));
 }
 
 void mlc::IniFile::add_ints_attribute(
     Key const& key, std::string_view description, std::span<int const> preset, HandleInts handler)
 {
-    self->add_ints_attribute(key, description, preset, std::move(handler));
+    self->adapter.add_ints_attribute(key, description, preset, std::move(handler));
 }
 
 void mlc::IniFile::add_bool_attribute(Key const& key, std::string_view description, bool preset, HandleBool handler)
 {
-    self->add_bool_attribute(key, description, preset, std::move(handler));
+    self->adapter.add_bool_attribute(key, description, preset, std::move(handler));
 }
 
 void mlc::IniFile::add_float_attribute(Key const& key, std::string_view description, float preset, HandleFloat handler)
 {
-    self->add_float_attribute(key, description, preset, std::move(handler));
+    self->adapter.add_float_attribute(key, description, preset, std::move(handler));
 }
 
 void mlc::IniFile::add_floats_attribute(
     Key const& key, std::string_view description, std::span<float const> preset, HandleFloats handler)
 {
-    self->add_floats_attribute(key, description, preset, std::move(handler));
+    self->adapter.add_floats_attribute(key, description, preset, std::move(handler));
 }
 
 void mlc::IniFile::add_string_attribute(
     Key const& key, std::string_view description, std::string_view preset, HandleString handler)
 {
-    self->add_string_attribute(key, description, preset, std::move(handler));
+    self->adapter.add_string_attribute(key, description, preset, std::move(handler));
 }
 
 void mlc::IniFile::add_strings_attribute(
@@ -153,7 +155,7 @@ void mlc::IniFile::add_strings_attribute(
     std::span<std::string const> preset,
     HandleStrings handler)
 {
-    self->add_strings_attribute(key, description, preset, std::move(handler));
+    self->adapter.add_strings_attribute(key, description, preset, std::move(handler));
 }
 
 void mlc::IniFile::on_done(HandleDone handler)

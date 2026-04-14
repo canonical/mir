@@ -20,39 +20,33 @@
 #include <miral/live_config.h>
 
 #include <filesystem>
+#include <set>
 
 namespace miral::live_config
 {
-class BasicStore : public Store
+class BasicStore
 {
 public:
     BasicStore();
     ~BasicStore();
 
-    void add_int_attribute(Key const& key, std::string_view description, HandleInt handler) override;
-    void add_ints_attribute(Key const& key, std::string_view description, HandleInts handler) override;
-    void add_bool_attribute(Key const& key, std::string_view description, HandleBool handler) override;
-    void add_float_attribute(Key const& key, std::string_view description, HandleFloat handler) override;
-    void add_floats_attribute(Key const& key, std::string_view description, HandleFloats handler) override;
-    void add_string_attribute(Key const& key, std::string_view description, HandleString handler) override;
-    void add_strings_attribute(Key const& key, std::string_view description, HandleStrings handler) override;
+    struct ScalarValue
+    {
+        std::string const value;
+        std::filesystem::path const modification_path;
+    };
+    using HandleAttribute = std::function<void(Key const& key, std::optional<ScalarValue> scalar)>;
 
-    void add_int_attribute(Key const& key, std::string_view description, int preset, HandleInt handler) override;
-    void add_ints_attribute(
-        Key const& key, std::string_view description, std::span<int const> preset, HandleInts handler) override;
-    void add_bool_attribute(Key const& key, std::string_view description, bool preset, HandleBool handler) override;
-    void add_float_attribute(Key const& key, std::string_view description, float preset, HandleFloat handler) override;
-    void add_floats_attribute(
-        Key const& key, std::string_view description, std::span<float const> preset, HandleFloats handler) override;
-    void add_string_attribute(
-        Key const& key, std::string_view description, std::string_view preset, HandleString handler) override;
-    void add_strings_attribute(
-        Key const& key,
-        std::string_view description,
-        std::span<std::string const> preset,
-        HandleStrings handler) override;
+    struct ArrayValue
+    {
+        std::vector<std::string> values;
+        std::set<std::filesystem::path> modification_paths;
+    };
+    using HandleArrayAttribute = std::function<void(Key const& key, ArrayValue array)>;
 
-    void on_done(HandleDone handler) override;
+    void add_scalar_attribute(Key const& key, std::string_view description, HandleAttribute handler);
+    void add_array_attribute(Key const& key, std::string_view description, HandleArrayAttribute handler);
+    void on_done(std::function<void()> handler);
 
     void update_key(Key const& key, std::string_view value, std::filesystem::path const& modification_path);
     void do_transaction(std::function<void()> transaction_body);

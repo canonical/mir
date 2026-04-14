@@ -15,6 +15,7 @@
  */
 
 #include "basic_store.h"
+#include "typed_store_adapter.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -26,9 +27,10 @@ namespace
 {
 auto const a_path = std::filesystem::path{"/some/config/file"};
 
-struct BasicStoreTest : Test
+struct TypedStoreAdapterTest : Test
 {
     mlc::BasicStore store;
+    mlc::TypedStoreAdapter adapter{store};
 
     MOCK_METHOD(void, int_handler, (mlc::Key const&, std::optional<int>));
     MOCK_METHOD(void, bool_handler, (mlc::Key const&, std::optional<bool>));
@@ -58,180 +60,181 @@ struct BasicStoreTest : Test
 };
 }
 
-TEST_F(BasicStoreTest, valid_int_value_is_handled)
+
+TEST_F(TypedStoreAdapterTest, valid_int_value_is_handled)
 {
-    store.add_int_attribute(an_int_key, "an integer", 0, [this](auto k, auto v){ int_handler(k, v); });
+    adapter.add_int_attribute(an_int_key, "an integer", 0, [this](auto k, auto v){ int_handler(k, v); });
 
     EXPECT_CALL(*this, int_handler(an_int_key, Optional(42)));
 
     update_and_run(an_int_key, "42");
 }
 
-TEST_F(BasicStoreTest, valid_bool_true_value_is_handled)
+TEST_F(TypedStoreAdapterTest, valid_bool_true_value_is_handled)
 {
-    store.add_bool_attribute(a_bool_key, "a bool", false, [this](auto k, auto v){ bool_handler(k, v); });
+    adapter.add_bool_attribute(a_bool_key, "a bool", false, [this](auto k, auto v){ bool_handler(k, v); });
 
     EXPECT_CALL(*this, bool_handler(a_bool_key, Optional(true)));
 
     update_and_run(a_bool_key, "true");
 }
 
-TEST_F(BasicStoreTest, valid_bool_false_value_is_handled)
+TEST_F(TypedStoreAdapterTest, valid_bool_false_value_is_handled)
 {
-    store.add_bool_attribute(a_bool_key, "a bool", true, [this](auto k, auto v){ bool_handler(k, v); });
+    adapter.add_bool_attribute(a_bool_key, "a bool", true, [this](auto k, auto v){ bool_handler(k, v); });
 
     EXPECT_CALL(*this, bool_handler(a_bool_key, Optional(false)));
 
     update_and_run(a_bool_key, "false");
 }
 
-TEST_F(BasicStoreTest, valid_float_value_is_handled)
+TEST_F(TypedStoreAdapterTest, valid_float_value_is_handled)
 {
-    store.add_float_attribute(a_float_key, "a float", 0.0f, [this](auto k, auto v){ float_handler(k, v); });
+    adapter.add_float_attribute(a_float_key, "a float", 0.0f, [this](auto k, auto v){ float_handler(k, v); });
 
     EXPECT_CALL(*this, float_handler(a_float_key, Optional(3.5f)));
 
     update_and_run(a_float_key, "3.5");
 }
 
-TEST_F(BasicStoreTest, valid_string_value_is_handled)
+TEST_F(TypedStoreAdapterTest, valid_string_value_is_handled)
 {
-    store.add_string_attribute(a_string_key, "a string", "default", [this](auto k, auto v){ string_handler(k, v); });
+    adapter.add_string_attribute(a_string_key, "a string", "default", [this](auto k, auto v){ string_handler(k, v); });
 
     EXPECT_CALL(*this, string_handler(a_string_key, Optional(std::string_view{"hello"})));
 
     update_and_run(a_string_key, "hello");
 }
 
-TEST_F(BasicStoreTest, int_preset_is_used_when_no_value_is_set)
+TEST_F(TypedStoreAdapterTest, int_preset_is_used_when_no_value_is_set)
 {
-    store.add_int_attribute(an_int_key, "an integer", 99, [this](auto k, auto v){ int_handler(k, v); });
+    adapter.add_int_attribute(an_int_key, "an integer", 99, [this](auto k, auto v){ int_handler(k, v); });
 
     EXPECT_CALL(*this, int_handler(an_int_key, Optional(99)));
 
     run_empty();
 }
 
-TEST_F(BasicStoreTest, bool_preset_is_used_when_no_value_is_set)
+TEST_F(TypedStoreAdapterTest, bool_preset_is_used_when_no_value_is_set)
 {
-    store.add_bool_attribute(a_bool_key, "a bool", true, [this](auto k, auto v){ bool_handler(k, v); });
+    adapter.add_bool_attribute(a_bool_key, "a bool", true, [this](auto k, auto v){ bool_handler(k, v); });
 
     EXPECT_CALL(*this, bool_handler(a_bool_key, Optional(true)));
 
     run_empty();
 }
 
-TEST_F(BasicStoreTest, float_preset_is_used_when_no_value_is_set)
+TEST_F(TypedStoreAdapterTest, float_preset_is_used_when_no_value_is_set)
 {
-    store.add_float_attribute(a_float_key, "a float", 1.5f, [this](auto k, auto v){ float_handler(k, v); });
+    adapter.add_float_attribute(a_float_key, "a float", 1.5f, [this](auto k, auto v){ float_handler(k, v); });
 
     EXPECT_CALL(*this, float_handler(a_float_key, Optional(1.5f)));
 
     run_empty();
 }
 
-TEST_F(BasicStoreTest, string_preset_is_used_when_no_value_is_set)
+TEST_F(TypedStoreAdapterTest, string_preset_is_used_when_no_value_is_set)
 {
-    store.add_string_attribute(a_string_key, "a string", "default", [this](auto k, auto v){ string_handler(k, v); });
+    adapter.add_string_attribute(a_string_key, "a string", "default", [this](auto k, auto v){ string_handler(k, v); });
 
     EXPECT_CALL(*this, string_handler(a_string_key, Optional(std::string_view{"default"})));
 
     run_empty();
 }
 
-TEST_F(BasicStoreTest, int_preset_is_used_when_value_cannot_be_parsed)
+TEST_F(TypedStoreAdapterTest, int_preset_is_used_when_value_cannot_be_parsed)
 {
-    store.add_int_attribute(an_int_key, "an integer", 99, [this](auto k, auto v){ int_handler(k, v); });
+    adapter.add_int_attribute(an_int_key, "an integer", 99, [this](auto k, auto v){ int_handler(k, v); });
 
     EXPECT_CALL(*this, int_handler(an_int_key, Optional(99)));
 
     update_and_run(an_int_key, "not_a_number");
 }
 
-TEST_F(BasicStoreTest, bool_preset_is_used_when_value_cannot_be_parsed)
+TEST_F(TypedStoreAdapterTest, bool_preset_is_used_when_value_cannot_be_parsed)
 {
-    store.add_bool_attribute(a_bool_key, "a bool", true, [this](auto k, auto v){ bool_handler(k, v); });
+    adapter.add_bool_attribute(a_bool_key, "a bool", true, [this](auto k, auto v){ bool_handler(k, v); });
 
     EXPECT_CALL(*this, bool_handler(a_bool_key, Optional(true)));
 
     update_and_run(a_bool_key, "not_a_bool");
 }
 
-TEST_F(BasicStoreTest, float_preset_is_used_when_value_cannot_be_parsed)
+TEST_F(TypedStoreAdapterTest, float_preset_is_used_when_value_cannot_be_parsed)
 {
-    store.add_float_attribute(a_float_key, "a float", 1.5f, [this](auto k, auto v){ float_handler(k, v); });
+    adapter.add_float_attribute(a_float_key, "a float", 1.5f, [this](auto k, auto v){ float_handler(k, v); });
 
     EXPECT_CALL(*this, float_handler(a_float_key, Optional(1.5f)));
 
     update_and_run(a_float_key, "not_a_float");
 }
 
-TEST_F(BasicStoreTest, int_handler_receives_nullopt_when_no_preset_and_no_value)
+TEST_F(TypedStoreAdapterTest, int_handler_receives_nullopt_when_no_preset_and_no_value)
 {
-    store.add_int_attribute(an_int_key, "an integer", [this](auto k, auto v){ int_handler(k, v); });
+    adapter.add_int_attribute(an_int_key, "an integer", [this](auto k, auto v){ int_handler(k, v); });
 
     EXPECT_CALL(*this, int_handler(an_int_key, Eq(std::nullopt)));
 
     run_empty();
 }
 
-TEST_F(BasicStoreTest, bool_handler_receives_nullopt_when_no_preset_and_no_value)
+TEST_F(TypedStoreAdapterTest, bool_handler_receives_nullopt_when_no_preset_and_no_value)
 {
-    store.add_bool_attribute(a_bool_key, "a bool", [this](auto k, auto v){ bool_handler(k, v); });
+    adapter.add_bool_attribute(a_bool_key, "a bool", [this](auto k, auto v){ bool_handler(k, v); });
 
     EXPECT_CALL(*this, bool_handler(a_bool_key, Eq(std::nullopt)));
 
     run_empty();
 }
 
-TEST_F(BasicStoreTest, float_handler_receives_nullopt_when_no_preset_and_no_value)
+TEST_F(TypedStoreAdapterTest, float_handler_receives_nullopt_when_no_preset_and_no_value)
 {
-    store.add_float_attribute(a_float_key, "a float", [this](auto k, auto v){ float_handler(k, v); });
+    adapter.add_float_attribute(a_float_key, "a float", [this](auto k, auto v){ float_handler(k, v); });
 
     EXPECT_CALL(*this, float_handler(a_float_key, Eq(std::nullopt)));
 
     run_empty();
 }
 
-TEST_F(BasicStoreTest, string_handler_receives_nullopt_when_no_preset_and_no_value)
+TEST_F(TypedStoreAdapterTest, string_handler_receives_nullopt_when_no_preset_and_no_value)
 {
-    store.add_string_attribute(a_string_key, "a string", [this](auto k, auto v){ string_handler(k, v); });
+    adapter.add_string_attribute(a_string_key, "a string", [this](auto k, auto v){ string_handler(k, v); });
 
     EXPECT_CALL(*this, string_handler(a_string_key, Eq(std::nullopt)));
 
     run_empty();
 }
 
-TEST_F(BasicStoreTest, int_handler_receives_nullopt_when_no_preset_and_bad_value)
+TEST_F(TypedStoreAdapterTest, int_handler_receives_nullopt_when_no_preset_and_bad_value)
 {
-    store.add_int_attribute(an_int_key, "an integer", [this](auto k, auto v){ int_handler(k, v); });
+    adapter.add_int_attribute(an_int_key, "an integer", [this](auto k, auto v){ int_handler(k, v); });
 
     EXPECT_CALL(*this, int_handler(an_int_key, Eq(std::nullopt)));
 
     update_and_run(an_int_key, "not_a_number");
 }
 
-TEST_F(BasicStoreTest, bool_handler_receives_nullopt_when_no_preset_and_bad_value)
+TEST_F(TypedStoreAdapterTest, bool_handler_receives_nullopt_when_no_preset_and_bad_value)
 {
-    store.add_bool_attribute(a_bool_key, "a bool", [this](auto k, auto v){ bool_handler(k, v); });
+    adapter.add_bool_attribute(a_bool_key, "a bool", [this](auto k, auto v){ bool_handler(k, v); });
 
     EXPECT_CALL(*this, bool_handler(a_bool_key, Eq(std::nullopt)));
 
     update_and_run(a_bool_key, "not_a_bool");
 }
 
-TEST_F(BasicStoreTest, float_handler_receives_nullopt_when_no_preset_and_bad_value)
+TEST_F(TypedStoreAdapterTest, float_handler_receives_nullopt_when_no_preset_and_bad_value)
 {
-    store.add_float_attribute(a_float_key, "a float", [this](auto k, auto v){ float_handler(k, v); });
+    adapter.add_float_attribute(a_float_key, "a float", [this](auto k, auto v){ float_handler(k, v); });
 
     EXPECT_CALL(*this, float_handler(a_float_key, Eq(std::nullopt)));
 
     update_and_run(a_float_key, "not_a_float");
 }
 
-TEST_F(BasicStoreTest, valid_ints_values_are_handled)
+TEST_F(TypedStoreAdapterTest, valid_ints_values_are_handled)
 {
-    store.add_ints_attribute(an_ints_key, "some ints", [this](auto k, auto v){ ints_handler(k, v); });
+    adapter.add_ints_attribute(an_ints_key, "some ints", [this](auto k, auto v){ ints_handler(k, v); });
 
     EXPECT_CALL(*this, ints_handler(an_ints_key, Optional(ElementsAre(1, 2, 3))));
 
@@ -243,9 +246,9 @@ TEST_F(BasicStoreTest, valid_ints_values_are_handled)
     });
 }
 
-TEST_F(BasicStoreTest, valid_floats_values_are_handled)
+TEST_F(TypedStoreAdapterTest, valid_floats_values_are_handled)
 {
-    store.add_floats_attribute(a_floats_key, "some floats", [this](auto k, auto v){ floats_handler(k, v); });
+    adapter.add_floats_attribute(a_floats_key, "some floats", [this](auto k, auto v){ floats_handler(k, v); });
 
     EXPECT_CALL(*this, floats_handler(a_floats_key, Optional(ElementsAre(1.0f, 2.5f))));
 
@@ -256,9 +259,9 @@ TEST_F(BasicStoreTest, valid_floats_values_are_handled)
     });
 }
 
-TEST_F(BasicStoreTest, valid_strings_values_are_handled)
+TEST_F(TypedStoreAdapterTest, valid_strings_values_are_handled)
 {
-    store.add_strings_attribute(a_strings_key, "some strings", [this](auto k, auto v){ strings_handler(k, v); });
+    adapter.add_strings_attribute(a_strings_key, "some strings", [this](auto k, auto v){ strings_handler(k, v); });
 
     EXPECT_CALL(*this, strings_handler(a_strings_key, Optional(ElementsAre("foo", "bar"))));
 
@@ -269,20 +272,20 @@ TEST_F(BasicStoreTest, valid_strings_values_are_handled)
     });
 }
 
-TEST_F(BasicStoreTest, ints_preset_is_used_when_no_values_are_set)
+TEST_F(TypedStoreAdapterTest, ints_preset_is_used_when_no_values_are_set)
 {
     std::vector<int> const preset_vals{10, 20};
-    store.add_ints_attribute(an_ints_key, "some ints", preset_vals, [this](auto k, auto v){ ints_handler(k, v); });
+    adapter.add_ints_attribute(an_ints_key, "some ints", preset_vals, [this](auto k, auto v){ ints_handler(k, v); });
 
     EXPECT_CALL(*this, ints_handler(an_ints_key, Optional(ElementsAreArray(preset_vals))));
 
     run_empty();
 }
 
-TEST_F(BasicStoreTest, ints_preset_is_used_when_all_values_cannot_be_parsed)
+TEST_F(TypedStoreAdapterTest, ints_preset_is_used_when_all_values_cannot_be_parsed)
 {
     std::vector<int> const preset_vals{10, 20};
-    store.add_ints_attribute(an_ints_key, "some ints", preset_vals, [this](auto k, auto v){ ints_handler(k, v); });
+    adapter.add_ints_attribute(an_ints_key, "some ints", preset_vals, [this](auto k, auto v){ ints_handler(k, v); });
 
     EXPECT_CALL(*this, ints_handler(an_ints_key, Optional(ElementsAreArray(preset_vals))));
 
@@ -293,20 +296,20 @@ TEST_F(BasicStoreTest, ints_preset_is_used_when_all_values_cannot_be_parsed)
     });
 }
 
-TEST_F(BasicStoreTest, floats_preset_is_used_when_no_values_are_set)
+TEST_F(TypedStoreAdapterTest, floats_preset_is_used_when_no_values_are_set)
 {
     std::vector<float> const preset_vals{1.1f, 2.2f};
-    store.add_floats_attribute(a_floats_key, "some floats", preset_vals, [this](auto k, auto v){ floats_handler(k, v); });
+    adapter.add_floats_attribute(a_floats_key, "some floats", preset_vals, [this](auto k, auto v){ floats_handler(k, v); });
 
     EXPECT_CALL(*this, floats_handler(a_floats_key, Optional(ElementsAreArray(preset_vals))));
 
     run_empty();
 }
 
-TEST_F(BasicStoreTest, floats_preset_is_used_when_all_values_cannot_be_parsed)
+TEST_F(TypedStoreAdapterTest, floats_preset_is_used_when_all_values_cannot_be_parsed)
 {
     std::vector<float> const preset_vals{1.1f, 2.2f};
-    store.add_floats_attribute(a_floats_key, "some floats", preset_vals, [this](auto k, auto v){ floats_handler(k, v); });
+    adapter.add_floats_attribute(a_floats_key, "some floats", preset_vals, [this](auto k, auto v){ floats_handler(k, v); });
 
     EXPECT_CALL(*this, floats_handler(a_floats_key, Optional(ElementsAreArray(preset_vals))));
 
@@ -317,19 +320,19 @@ TEST_F(BasicStoreTest, floats_preset_is_used_when_all_values_cannot_be_parsed)
     });
 }
 
-TEST_F(BasicStoreTest, strings_preset_is_used_when_no_values_are_set)
+TEST_F(TypedStoreAdapterTest, strings_preset_is_used_when_no_values_are_set)
 {
     std::vector<std::string> const preset_vals{"alpha", "beta"};
-    store.add_strings_attribute(a_strings_key, "some strings", preset_vals, [this](auto k, auto v){ strings_handler(k, v); });
+    adapter.add_strings_attribute(a_strings_key, "some strings", preset_vals, [this](auto k, auto v){ strings_handler(k, v); });
 
     EXPECT_CALL(*this, strings_handler(a_strings_key, Optional(ElementsAreArray(preset_vals))));
 
     run_empty();
 }
 
-TEST_F(BasicStoreTest, ints_bad_element_is_skipped_and_good_values_are_handled)
+TEST_F(TypedStoreAdapterTest, ints_bad_element_is_skipped_and_good_values_are_handled)
 {
-    store.add_ints_attribute(an_ints_key, "some ints", [this](auto k, auto v){ ints_handler(k, v); });
+    adapter.add_ints_attribute(an_ints_key, "some ints", [this](auto k, auto v){ ints_handler(k, v); });
 
     EXPECT_CALL(*this, ints_handler(an_ints_key, Optional(ElementsAre(1))));
 
@@ -340,9 +343,9 @@ TEST_F(BasicStoreTest, ints_bad_element_is_skipped_and_good_values_are_handled)
     });
 }
 
-TEST_F(BasicStoreTest, floats_bad_element_is_skipped_and_good_values_are_handled)
+TEST_F(TypedStoreAdapterTest, floats_bad_element_is_skipped_and_good_values_are_handled)
 {
-    store.add_floats_attribute(a_floats_key, "some floats", [this](auto k, auto v){ floats_handler(k, v); });
+    adapter.add_floats_attribute(a_floats_key, "some floats", [this](auto k, auto v){ floats_handler(k, v); });
 
     EXPECT_CALL(*this, floats_handler(a_floats_key, Optional(ElementsAre(FloatEq(1.0f)))));
 
@@ -353,36 +356,36 @@ TEST_F(BasicStoreTest, floats_bad_element_is_skipped_and_good_values_are_handled
     });
 }
 
-TEST_F(BasicStoreTest, ints_handler_receives_nullopt_when_no_preset_and_no_values)
+TEST_F(TypedStoreAdapterTest, ints_handler_receives_nullopt_when_no_preset_and_no_values)
 {
-    store.add_ints_attribute(an_ints_key, "some ints", [this](auto k, auto v){ ints_handler(k, v); });
+    adapter.add_ints_attribute(an_ints_key, "some ints", [this](auto k, auto v){ ints_handler(k, v); });
 
     EXPECT_CALL(*this, ints_handler(an_ints_key, Eq(std::nullopt)));
 
     run_empty();
 }
 
-TEST_F(BasicStoreTest, floats_handler_receives_nullopt_when_no_preset_and_no_values)
+TEST_F(TypedStoreAdapterTest, floats_handler_receives_nullopt_when_no_preset_and_no_values)
 {
-    store.add_floats_attribute(a_floats_key, "some floats", [this](auto k, auto v){ floats_handler(k, v); });
+    adapter.add_floats_attribute(a_floats_key, "some floats", [this](auto k, auto v){ floats_handler(k, v); });
 
     EXPECT_CALL(*this, floats_handler(a_floats_key, Eq(std::nullopt)));
 
     run_empty();
 }
 
-TEST_F(BasicStoreTest, strings_handler_receives_nullopt_when_no_preset_and_no_values)
+TEST_F(TypedStoreAdapterTest, strings_handler_receives_nullopt_when_no_preset_and_no_values)
 {
-    store.add_strings_attribute(a_strings_key, "some strings", [this](auto k, auto v){ strings_handler(k, v); });
+    adapter.add_strings_attribute(a_strings_key, "some strings", [this](auto k, auto v){ strings_handler(k, v); });
 
     EXPECT_CALL(*this, strings_handler(a_strings_key, Eq(std::nullopt)));
 
     run_empty();
 }
 
-TEST_F(BasicStoreTest, ints_handler_receives_nullopt_when_no_preset_and_all_values_are_bad)
+TEST_F(TypedStoreAdapterTest, ints_handler_receives_nullopt_when_no_preset_and_all_values_are_bad)
 {
-    store.add_ints_attribute(an_ints_key, "some ints", [this](auto k, auto v){ ints_handler(k, v); });
+    adapter.add_ints_attribute(an_ints_key, "some ints", [this](auto k, auto v){ ints_handler(k, v); });
 
     EXPECT_CALL(*this, ints_handler(an_ints_key, Eq(std::nullopt)));
 
@@ -392,9 +395,9 @@ TEST_F(BasicStoreTest, ints_handler_receives_nullopt_when_no_preset_and_all_valu
     });
 }
 
-TEST_F(BasicStoreTest, floats_handler_receives_nullopt_when_no_preset_and_all_values_are_bad)
+TEST_F(TypedStoreAdapterTest, floats_handler_receives_nullopt_when_no_preset_and_all_values_are_bad)
 {
-    store.add_floats_attribute(a_floats_key, "some floats", [this](auto k, auto v){ floats_handler(k, v); });
+    adapter.add_floats_attribute(a_floats_key, "some floats", [this](auto k, auto v){ floats_handler(k, v); });
 
     EXPECT_CALL(*this, floats_handler(a_floats_key, Eq(std::nullopt)));
 
