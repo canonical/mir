@@ -18,9 +18,8 @@
 #include <mir/test/death.h>
 
 #include <gtest/gtest.h>
+#include <csignal>
 #include <memory>
-#include <stdexcept>
-#include <libudev.h>
 
 namespace
 {
