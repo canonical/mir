@@ -20,8 +20,11 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include <cstdlib>
+#include <cstring>
 #include <filesystem>
 #include <fstream>
+#include <sys/wait.h>
 
 using namespace testing;
 
@@ -79,7 +82,8 @@ struct ExternalClient : miral::TestServer
     bool cannot_start_X_server()
     {
         // Starting an X server on LP builder, or Fedora CI, doesn't work
-        auto const lp_fake_runtime_dir = strcmp(getenv("XDG_RUNTIME_DIR"), "/tmp") == 0;
+        auto const xdg_runtime_dir = getenv("XDG_RUNTIME_DIR");
+        auto const lp_fake_runtime_dir = xdg_runtime_dir && strcmp(xdg_runtime_dir, "/tmp") == 0;
         auto const cannot_access_x11_unix = access("/tmp/.X11-unix/", W_OK) != 0;
 
         return lp_fake_runtime_dir || cannot_access_x11_unix;
@@ -233,6 +237,21 @@ TEST_F(ExternalClient, another_strange_override_does_nothing)
     EXPECT_THAT(client_env_x11_value("SDL_VIDEODRIVER"), StrEq("wayland"));
     EXPECT_THAT(client_env_x11_value("NO_AT_BRIDGE"), StrEq("1"));
     EXPECT_THAT(client_env_x11_value("_JAVA_AWT_WM_NONREPARENTING"), StrEq("1"));
+}
+
+TEST_F(ExternalClient, launching_nonexistent_executable_returns_waitable_pid)
+{
+    start_server();
+
+    auto const client_pid = external_client.launch(std::vector<std::string>{"/no/such/binary"});
+    EXPECT_THAT(client_pid, Gt(0));
+
+    int status = 0;
+    auto const waited_pid = waitpid(client_pid, &status, 0);
+    ASSERT_THAT(waited_pid, Ne(-1));
+    EXPECT_THAT(waited_pid, Eq(client_pid));
+    ASSERT_TRUE(WIFEXITED(status));
+    EXPECT_THAT(WEXITSTATUS(status), Ne(0));
 }
 
 TEST_F(ExternalClient, split_command)
