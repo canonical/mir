@@ -14,7 +14,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <mir_test_framework/udev_environment.h>
 #include <mir/udev/wrapper.h>
 #include <mir/test/death.h>
 
@@ -22,8 +21,6 @@
 #include <memory>
 #include <stdexcept>
 #include <libudev.h>
-
-namespace mtf=mir_test_framework;
 
 namespace
 {
@@ -40,16 +37,12 @@ bool KilledByInvalidMemoryAccess(int exit_status)
 /// as they purposefully do things that the address sanitizer would not like.
 class UdevWrapperDeathTest : public ::testing::Test
 {
-public:
-    mtf::UdevEnvironment udev_environment;
 };
 }
 
 TEST_F(UdevWrapperDeathTest, DereferencingEndReturnsInvalidObject)
 {
     ::testing::FLAGS_gtest_death_test_style = "threadsafe";
-    udev_environment.add_device("drm", "control64D", NULL, {}, {});
-    udev_environment.add_device("drm", "card1", NULL, {}, {});
 
     mir::udev::Enumerator devices(std::make_shared<mir::udev::Context>());
 
@@ -69,8 +62,6 @@ TEST_F(UdevWrapperDeathTest, DereferencingEndReturnsInvalidObject)
 TEST_F(UdevWrapperDeathTest, MemberDereferenceOfEndDies)
 {
     ::testing::FLAGS_gtest_death_test_style = "threadsafe";
-    udev_environment.add_device("drm", "control64D", NULL, {}, {});
-    udev_environment.add_device("drm", "card1", NULL, {}, {});
 
     mir::udev::Enumerator devices(std::make_shared<mir::udev::Context>());
 
