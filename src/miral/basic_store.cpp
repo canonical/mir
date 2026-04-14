@@ -3,7 +3,6 @@
 #include <mir/log.h>
 
 #include <algorithm>
-#include <format>
 #include <list>
 #include <map>
 #include <mutex>
@@ -17,13 +16,13 @@ class mlc::BasicStore::Self
 public:
     Self() = default;
 
-    void add_key(Key const& key, std::string_view description, std::optional<std::string> preset, HandleString handler);
-    void add_key(Key const& key, std::string_view description, std::optional<std::vector<std::string>> preset, HandleStrings handler);
+    void add_scalar_attribute(Key const& key, std::string_view description, HandleAttribute handler);
+    void add_array_attribute(Key const& key, std::string_view description, HandleArrayAttribute handler);
 
     void update_key(Key const& key, std::string_view value, std::filesystem::path const& modification_path);
     void do_transaction(std::function<void()> transaction_body);
 
-    void on_done(HandleDone handler);
+    void on_done(std::function<void()> handler);
 
 private:
     Self(Self const&) = delete;
@@ -37,17 +36,15 @@ private:
 
     struct AttributeDetails
     {
-        HandleString const handler;
+        HandleAttribute const handler;
         std::string const description;
-        std::optional<std::string> const preset;
         std::optional<ScalarValue> value;
     };
 
     struct ArrayAttributeDetails
     {
-        HandleStrings const handler;
+        HandleArrayAttribute const handler;
         std::string const description;
-        std::optional<std::vector<std::string>> const preset;
         std::vector<std::string> parsed_values;
         std::set<std::filesystem::path> modification_paths;
     };
@@ -55,14 +52,10 @@ private:
     std::mutex mutex;
     std::map<Key, AttributeDetails> attribute_handlers;
     std::map<Key, ArrayAttributeDetails> array_attribute_handlers;
-    std::list<HandleDone> done_handlers;
+    std::list<std::function<void()>> done_handlers;
 };
 
-void mlc::BasicStore::Self::add_key(
-    Key const& key,
-    std::string_view description,
-    std::optional<std::string> preset,
-    HandleString handler)
+void mlc::BasicStore::Self::add_scalar_attribute(Key const& key, std::string_view description, HandleAttribute handler)
 {
     std::lock_guard lock{mutex};
 
@@ -72,17 +65,17 @@ void mlc::BasicStore::Self::add_key(
         mir::log_warning("Config attribute handler for '%s' overwritten", key.to_string().c_str());
     }
 
-    attribute_handlers.emplace(key, AttributeDetails{handler, std::string{description}, preset, std::nullopt});
+    attribute_handlers.emplace(key, AttributeDetails{handler, std::string{description}, std::nullopt});
 }
 
-void mlc::BasicStore::Self::on_done(HandleDone handler)
+void mlc::BasicStore::Self::on_done(std::function<void()> handler)
 {
     std::lock_guard lock{mutex};
     done_handlers.emplace_back(std::move(handler));
 }
 
-void mlc::BasicStore::Self::add_key(Key const& key, std::string_view description,
-    std::optional<std::vector<std::string>> preset, HandleStrings handler)
+void mlc::BasicStore::Self::add_array_attribute(
+    Key const& key, std::string_view description, HandleArrayAttribute handler)
 {
     std::lock_guard lock{mutex};
 
@@ -93,7 +86,7 @@ void mlc::BasicStore::Self::add_key(Key const& key, std::string_view description
     }
 
     array_attribute_handlers.emplace(
-        key, ArrayAttributeDetails{handler, std::string{description}, preset, std::vector<std::string>{}, {}});
+        key, ArrayAttributeDetails{handler, std::string{description}, std::vector<std::string>{}, {}});
 }
 
 void mlc::BasicStore::Self::update_key(Key const& key, std::string_view value, std::filesystem::path const& modification_path)
@@ -128,15 +121,11 @@ void mlc::BasicStore::Self::do_transaction(std::function<void()> transaction_bod
 
     for (auto const& [key, details] : attribute_handlers)
     {
-        auto const maybe_value = [&]() -> std::optional<std::string_view>
-        {
-            if (details.value)
-                return details.value->value;
-            else if (details.preset)
-                return details.preset;
-            else
-                return std::nullopt;
-        }();
+        auto const maybe_value = details.value.transform(
+            [](ScalarValue const& v)
+            {
+                return v.value;
+            });
 
         try
         {
@@ -166,8 +155,6 @@ void mlc::BasicStore::Self::do_transaction(std::function<void()> transaction_bod
         {
             if (!details.parsed_values.empty())
                 return details.parsed_values;
-            else if (details.preset)
-                return details.preset;
             else
                 return std::nullopt;
         }();
@@ -222,87 +209,7 @@ void mlc::BasicStore::Self::do_transaction(std::function<void()> transaction_bod
         }
 }
 
-namespace
-{
-template<typename Type>
-void process_as(std::function<void(mlc::Key const&, std::optional<Type>)> const& handler, mlc::Key const& key, std::optional<std::string_view> val)
-{
-    if (val)
-    {
-        Type parsed_val{};
 
-        auto const [end, err] = std::from_chars(val->data(), val->data() + val->size(), parsed_val);
-
-        if ((err == std::errc{}) && (end ==val->data() + val->size()))
-        {
-            handler(key, parsed_val);
-        }
-        else
-        {
-            throw std::runtime_error(std::format("Config key '{}' has invalid value: {}", key.to_string(), *val));
-        }
-    }
-    else
-    {
-        handler(key, std::nullopt);
-    }
-}
-
-template<>
-void process_as<bool>(std::function<void(mlc::Key const&, std::optional<bool>)> const& handler, mlc::Key const& key, std::optional<std::string_view> val)
-{
-    if (val)
-    {
-        if (*val == "true")
-        {
-            handler(key, true);
-        }
-        else if (*val == "false")
-        {
-            handler(key, false);
-        }
-        else
-        {
-            throw std::runtime_error(std::format("Config key '{}' has invalid value: {}", key.to_string(), *val));
-        }
-    }
-    else
-    {
-        handler(key, std::nullopt);
-    }
-}
-
-template<typename Type>
-void process_as(std::function<void(mlc::Key const&, std::optional<std::span<Type>>)> const& handler, mlc::Key const& key,
-    std::optional<std::span<std::string const>> val)
-{
-    if (val)
-    {
-        std::vector<Type> parsed_vals;
-
-        for (auto const& v : *val)
-        {
-            Type parsed_val{};
-            auto const [end, err] = std::from_chars(v.data(), v.data() + v.size(), parsed_val);
-
-            if ((err == std::errc{}) && (end == v.data() + v.size()))
-            {
-                parsed_vals.push_back(parsed_val);
-            }
-            else
-            {
-                mir::log_warning("Config key '%s' has invalid value: %s", key.to_string().c_str(), v.c_str());
-            }
-        }
-
-        handler(key, parsed_vals);
-    }
-    else
-    {
-        handler(key, std::nullopt);
-    }
-}
-}
 
 mlc::BasicStore::BasicStore() :
     self{std::make_shared<Self>()}
@@ -311,127 +218,17 @@ mlc::BasicStore::BasicStore() :
 
 mlc::BasicStore::~BasicStore() = default;
 
-void mlc::BasicStore::add_int_attribute(Key const& key, std::string_view description, HandleInt handler)
+void mlc::BasicStore::add_scalar_attribute(Key const& key, std::string_view description, HandleAttribute handler)
 {
-    self->add_key(key, description, std::nullopt,
-        [handler](live_config::Key const& key, std::optional<std::string_view> val)
-    {
-        process_as<int>(handler, key, val);
-    });
+    self->add_scalar_attribute(key, description,  handler);
 }
 
-void mlc::BasicStore::add_ints_attribute(Key const& key, std::string_view description, HandleInts handler)
+void mlc::BasicStore::add_array_attribute(Key const& key, std::string_view description, HandleArrayAttribute handler)
 {
-    self->add_key(key, description, std::nullopt, [handler](Key const& key, std::optional<std::span<std::string const>> val)
-    {
-        process_as<int>(handler, key, val);
-    });
+    self->add_array_attribute(key, description, handler);
 }
 
-void mlc::BasicStore::add_bool_attribute(Key const& key, std::string_view description, HandleBool handler)
-{
-    self->add_key(key, description, std::nullopt,
-        [handler](live_config::Key const& key, std::optional<std::string_view> val)
-    {
-        process_as<bool>(handler, key, val);
-    });
-}
-
-void mlc::BasicStore::add_float_attribute(Key const& key, std::string_view description, HandleFloat handler)
-{
-    self->add_key(key, description, std::nullopt,
-        [handler](live_config::Key const& key, std::optional<std::string_view> val)
-    {
-        process_as<float>(handler, key, val);
-    });
-}
-
-void mlc::BasicStore::add_floats_attribute(Key const& key, std::string_view description, HandleFloats handler)
-{
-    self->add_key(key, description, std::nullopt, [handler](Key const& key, std::optional<std::span<std::string const>> val)
-    {
-        process_as<float>(handler, key, val);
-    });
-}
-
-void mlc::BasicStore::add_string_attribute(Key const& key, std::string_view description, HandleString handler)
-{
-    self->add_key(key, description, std::nullopt, handler);
-}
-
-void mlc::BasicStore::add_strings_attribute(Key const& key, std::string_view description, HandleStrings handler)
-{
-    self->add_key(key, description, std::nullopt, handler);
-}
-
-void mlc::BasicStore::add_int_attribute(Key const& key, std::string_view description, int preset, HandleInt handler)
-{
-    self->add_key(key, description, std::to_string(preset),
-        [handler](live_config::Key const& key, std::optional<std::string_view> val)
-        {
-            process_as<int>(handler, key, val);
-        });
-}
-
-void mlc::BasicStore::add_ints_attribute(Key const& key, std::string_view description, std::span<int const> preset, HandleInts handler)
-{
-    std::vector<std::string> str_preset;
-    str_preset.reserve(preset.size());
-    for (auto const& p : preset)
-    {
-        str_preset.emplace_back(std::to_string(p));
-    }
-
-    self->add_key(key, description, std::move(str_preset), [handler](Key const& key, std::optional<std::span<std::string const>> val)
-    {
-        process_as<int>(handler, key, val);
-    });
-}
-
-void mlc::BasicStore::add_bool_attribute(Key const& key, std::string_view description, bool preset, HandleBool handler)
-{
-    self->add_key(key, description, (preset ? "true" : "false"),
-        [handler](live_config::Key const& key, std::optional<std::string_view> val)
-        {
-            process_as<bool>(handler, key, val);
-        });
-}
-
-void mlc::BasicStore::add_float_attribute(Key const& key, std::string_view description, float preset, HandleFloat handler)
-{
-    self->add_key(key, description, std::to_string(preset),
-        [handler](live_config::Key const& key, std::optional<std::string_view> val)
-    {
-        process_as<float>(handler, key, val);
-    });
-}
-
-void mlc::BasicStore::add_floats_attribute(Key const& key, std::string_view description, std::span<float const> preset, HandleFloats handler)
-{
-    std::vector<std::string> str_preset;
-    str_preset.reserve(preset.size());
-    for (auto const& p : preset)
-    {
-        str_preset.emplace_back(std::to_string(p));
-    }
-
-    self->add_key(key, description, std::move(str_preset), [handler](Key const& key, std::optional<std::span<std::string const>> val)
-    {
-        process_as<float>(handler, key, val);
-    });
-}
-
-void mlc::BasicStore::add_string_attribute(Key const& key, std::string_view description, std::string_view preset, HandleString handler)
-{
-    self->add_key(key, description, std::string{preset}, handler);
-}
-
-void mlc::BasicStore::add_strings_attribute(Key const& key, std::string_view description, std::span<std::string const> preset, HandleStrings handler)
-{
-    self->add_key(key, description, std::vector<std::string>{preset.begin(), preset.end()}, handler);
-}
-
-void mlc::BasicStore::on_done(HandleDone handler)
+void mlc::BasicStore::on_done(std::function<void()> handler)
 {
     self->on_done(std::move(handler));
 }
