@@ -22,13 +22,30 @@
 
 auto const wayland_socket = "wayland-98";
 
+namespace
+{
+class WaylandServerNotificationHandler : public mir::wayland_rs::WaylandServerNotificationHandler
+{
+public:
+    auto client_added(rust::Box<mir::wayland_rs::WaylandClient> wayland_client) -> void override
+    {
+        std::cout << "Client connected " << wayland_client->pid() << "." << std::endl;
+    }
+
+    auto client_removed(rust::Box<mir::wayland_rs::WaylandClientId>) -> void override
+    {
+        std::cout << "Client disconnected." << std::endl;
+    }
+};
+}
+
 void run_server(rust::Box<mir::wayland_rs::WaylandServer>& server)
 {
     try
     {
         // TODO: Add a real GlobalFactory here, but we will keep it nullptr for the time being
         //  as that task is involved.
-        server->run(wayland_socket, nullptr);
+        server->run(wayland_socket, nullptr, std::make_unique<WaylandServerNotificationHandler>());
     }
     catch (rust::Error const& error)
     {

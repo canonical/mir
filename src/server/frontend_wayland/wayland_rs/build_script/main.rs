@@ -620,6 +620,41 @@ fn create_global_factory(protocols: &Vec<WaylandProtocol>) -> CppBuilder {
     builder
 }
 
+fn create_wayland_server_notification_handler() -> CppBuilder {
+    let mut builder: CppBuilder = CppBuilder::new(
+        "MIR_WAYLANDRS_WAYLAND_SERVER_NOTIFICATION_HANDLER",
+        "wayland_server_notification_handler",
+    );
+    builder.add_header_include("<memory>");
+    builder.add_header_include("<rust/cxx.h>");
+
+    builder.add_cpp_include("\"wayland_rs/src/ffi.rs.h\"");
+    let mut namespace = CppNamespace::new(vec!["mir", "wayland_rs"]);
+    namespace.add_forward_declaration_class("WaylandClient");
+    namespace.add_forward_declaration_class("WaylandClientId");
+    let mut class = CppClass::new("WaylandServerNotificationHandler");
+
+    let mut client_added_method = CppMethod::new("client_added", None, true, false, true, true);
+    client_added_method.add_arg(CppArg::new(
+        CppType::Box("WaylandClient".to_string()),
+        "wayland_client",
+        false,
+    ));
+    class.add_method(client_added_method);
+
+    let mut client_removed_method = CppMethod::new("client_removed", None, true, false, true, true);
+    client_removed_method.add_arg(CppArg::new(
+        CppType::Box("WaylandClientId".to_string()),
+        "id",
+        false,
+    ));
+    class.add_method(client_removed_method);
+
+    namespace.add_class(class);
+    builder.add_namespace(namespace);
+    builder
+}
+
 fn write_protocol_middleware(protocols: &Vec<WaylandProtocol>) {
     let middleware = generate_wayland_interface_middleware(protocols);
     write_generated_rust_file(middleware, "middleware.rs");
@@ -629,6 +664,9 @@ fn write_protocol_middleware(protocols: &Vec<WaylandProtocol>) {
 fn write_cpp_protocol_implementations(protocols: &Vec<WaylandProtocol>) {
     // First, create the global factory.
     let global_builder = create_global_factory(protocols);
+
+    // Then, create the WaylandServerNotificationHandler.
+    let wayland_server_notification_handler_builder = create_wayland_server_notification_handler();
 
     // Generate ffi_fwd.h first so that protocol headers can include it without
     // creating a circular dependency with the CXX-generated ffi.rs.h.
@@ -640,6 +678,7 @@ fn write_cpp_protocol_implementations(protocols: &Vec<WaylandProtocol>) {
         .map(|protocol| create_cpp_builder(protocol))
         .collect();
     builders.push(global_builder);
+    builders.push(wayland_server_notification_handler_builder);
 
     // Write the protocol headers
     for builder in &builders {
