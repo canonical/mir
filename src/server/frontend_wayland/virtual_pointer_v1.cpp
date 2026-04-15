@@ -383,13 +383,11 @@ void mf::VirtualPointerV1::axis_discrete(uint32_t time, uint32_t axis, double va
     {
     case mw::Pointer::Axis::horizontal_scroll:
         pending.scroll_h.discrete += geom::DeltaX{discrete};
-        pending.scroll_h.value120 += geom::DeltaX{discrete * 120};
         pending.scroll_h.precise += geom::DeltaXF{value};
         break;
 
     case mw::Pointer::Axis::vertical_scroll:
         pending.scroll_v.discrete += geom::DeltaY{discrete};
-        pending.scroll_v.value120 += geom::DeltaY{discrete * 120};
         pending.scroll_v.precise += geom::DeltaYF{value};
         break;
 
