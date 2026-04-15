@@ -21,6 +21,7 @@
  */
 
 #include "xcursor.h"
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -669,6 +670,11 @@ _XcursorBuildXdgPath (void)
         p = colon ? colon + 1 : NULL;
         if (component_len == 0)
             continue;
+        if (component_len > INT_MAX)
+        {
+            fprintf (stderr, "xcursor: XDG_DATA_DIRS component length exceeds INT_MAX\n");
+            abort ();
+        }
         int const written = snprintf (p_out, remaining, "%.*s/icons:", (int)component_len, component_start);
         if (written < 0 || (size_t)written >= remaining) goto error;
         p_out += written;
