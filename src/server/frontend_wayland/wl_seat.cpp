@@ -84,7 +84,7 @@ public:
     }
 
 private:
-    std::unordered_map<mw::Client*, std::vector<T*>> listeners;
+    std::unordered_map<void*, std::vector<T*>> listeners;
 };
 
 class mf::WlSeat::ConfigObserver : public mi::InputDeviceObserver
