@@ -203,10 +203,10 @@ public:
                 if (!libinput_path_add_device(lib.get(), devnode.c_str()))
                 {
                     /* Oops, libinput didn't want this after all.
-                     * libinput will have closed the FD as a part of failing to add
-                     * the device, so we only need to release our Device handle.
-                     */
+                     * Since we handle FDs ourselves, we need to clean up the FD we took for this device, otherwise we'll leak it.
+                    */
                     device_watchers.erase(devnum);
+                    device_fds.remove_fd(device_fds.take_fd(devnode.c_str()));
                 }
             });
     }
@@ -216,7 +216,9 @@ public:
         action_queue->enqueue(
             [
                 &devices = devices,
-                syspath = syspath
+                &device_fds = device_fds,
+                syspath = syspath,
+                devnode = devnode
             ]()
             {
                 for (auto const& input_device : devices)
@@ -228,6 +230,9 @@ public:
                         if (syspath == udev_device_get_syspath(device_udev))
                         {
                             libinput_path_remove_device(input_device->device());
+
+                            // Don't depend on libinput to remove the FD, since we control it ourselves; clear it ourselves.
+                            device_fds.remove_fd(device_fds.take_fd(devnode.c_str()));
                         }
                     }
                 }
@@ -239,7 +244,9 @@ public:
         action_queue->enqueue(
             [
                 &devices = devices,
-                syspath = syspath
+                &device_fds = device_fds,
+                syspath = syspath,
+                devnode = devnode
             ]()
             {
                 for (auto const& input_device : devices)
@@ -251,6 +258,8 @@ public:
                         if (syspath == udev_device_get_syspath(device_udev))
                         {
                             libinput_path_remove_device(input_device->device());
+
+                            device_fds.remove_fd(device_fds.take_fd(devnode.c_str()));
                         }
                     }
                 }
