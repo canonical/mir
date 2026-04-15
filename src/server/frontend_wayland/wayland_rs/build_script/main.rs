@@ -574,18 +574,15 @@ fn write_dispatch_rs(protocols: &Vec<WaylandProtocol>) {
             use crate::wayland_server_core::ServerState;
             use crate::ffi;
             use std::os::fd::{AsRawFd, RawFd};
-            use std::sync::{Arc, Mutex};
-            use std::cell::RefCell;
+            use std::sync::{Arc, LazyLock, Mutex, RwLock};
             use std::collections::HashMap;
             use std::ffi::CString;
 
-            thread_local! {
-                static OBJECT_REGISTRY: RefCell<HashMap<u32, ObjectId>> = RefCell::new(HashMap::new());
-            }
+            static OBJECT_REGISTRY: LazyLock<RwLock<HashMap<u32, ObjectId>>> = LazyLock::new(|| RwLock::new(HashMap::new()));
 
             fn register_resource(resource: &impl Resource) {
                 let id = resource.id();
-                OBJECT_REGISTRY.with(|r| r.borrow_mut().insert(id.protocol_id(), id));
+                OBJECT_REGISTRY.write().unwrap_or_else(|e| e.into_inner()).insert(id.protocol_id(), id);
             }
 
             fn parse_post_error(what: &str) -> (u32, u32, String) {
@@ -603,7 +600,7 @@ fn write_dispatch_rs(protocols: &Vec<WaylandProtocol>) {
             }
 
             fn post_protocol_error(resource: &impl Resource, object_id: u32, code: u32, message: String) {
-                let target_id = OBJECT_REGISTRY.with(|r| r.borrow().get(&object_id).cloned());
+                let target_id = OBJECT_REGISTRY.read().unwrap_or_else(|e| e.into_inner()).get(&object_id).cloned();
                 if let Some(handle) = resource.handle().upgrade() {
                     let id = target_id.unwrap_or_else(|| resource.id());
                     handle.post_error(id, code, CString::new(message).expect("Error message contained null byte"));
