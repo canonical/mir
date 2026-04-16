@@ -530,6 +530,15 @@ fn generate_dispatch_impl(
                     #(#request_handler_arms),*
                 }
             }
+
+            fn destroyed(
+                _state: &mut Self,
+                _client: ClientId,
+                resource: &#namespace_name::#interface_name::#protocol_struct_name,
+                _data: &Arc<Mutex<cxx::SharedPtr<ffi::#ext_struct_name>>>,
+            ) {
+                unregister_resource(resource);
+            }
         }
     }
 }
@@ -569,7 +578,7 @@ fn write_dispatch_rs(protocols: &Vec<WaylandProtocol>) {
         #[allow(dead_code, unused_imports)]
         mod dispatch {
             use wayland_server::{Client, DataInit, Dispatch, GlobalDispatch, New, DisplayHandle, Resource};
-            use wayland_server::backend::ObjectId;
+            use wayland_server::backend::{ClientId, ObjectId};
             use crate::protocols;
             use crate::wayland_server_core::ServerState;
             use crate::ffi;
@@ -583,6 +592,10 @@ fn write_dispatch_rs(protocols: &Vec<WaylandProtocol>) {
             fn register_resource(resource: &impl Resource) {
                 let id = resource.id();
                 OBJECT_REGISTRY.write().unwrap_or_else(|e| e.into_inner()).insert(id.protocol_id(), id);
+            }
+
+            fn unregister_resource(resource: &impl Resource) {
+                OBJECT_REGISTRY.write().unwrap_or_else(|e| e.into_inner()).remove(&resource.id().protocol_id());
             }
 
             fn parse_post_error(what: &str) -> (u32, u32, String) {
