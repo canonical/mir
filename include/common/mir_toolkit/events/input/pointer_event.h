@@ -37,7 +37,7 @@ typedef struct MirPointerEvent MirPointerEvent;
 MirPointerAxisSource mir_pointer_event_axis_source(MirPointerEvent const* event);
 
 /**
- * Retrieve the modifier keys pressed when the pointer action occured.
+ * Retrieve the modifier keys pressed when the pointer action occurred.
  *
  *   \param [in] event The pointer event
  *   \return           The modifier mask
@@ -45,7 +45,7 @@ MirPointerAxisSource mir_pointer_event_axis_source(MirPointerEvent const* event)
 MirInputEventModifiers mir_pointer_event_modifiers(MirPointerEvent const* event);
 
 /**
- * Retrieve the action which occured to generate a given pointer event.
+ * Retrieve the action which occurred to generate a given pointer event.
  *
  *  \param [in] event       The pointer event
  *  \return                 Action performed by the pointer
