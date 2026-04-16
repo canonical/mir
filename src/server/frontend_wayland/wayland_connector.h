@@ -34,6 +34,8 @@
 #include <thread>
 #include <vector>
 
+#include "wl_client_registry.h"
+
 namespace mir
 {
 class Executor;
@@ -232,7 +234,7 @@ private:
     WaylandProtocolExtensionFilter const extension_filter;
 
     rust::Box<mir::wayland_rs::WaylandServer> server;
-    mir::Fd const pause_signal;
+    std::shared_ptr<WlClientRegistry> client_registry;
     std::unique_ptr<WlCompositor> compositor_global;
     std::unique_ptr<WlSubcompositor> subcompositor_global;
     std::unique_ptr<WlSeat> seat_global;
@@ -247,7 +249,6 @@ private:
     std::unique_ptr<WaylandExtensions> const extensions;
     std::shared_ptr<scene::SessionLock> session_lock_;
     std::thread dispatch_thread;
-    wl_event_source* pause_source;
     std::string wayland_display;
 
     // Only accessed on event loop

@@ -41,12 +41,6 @@ class Resource;
 class Client : public wayland::LifetimeTracker
 {
 public:
-    /// Returns the Client object for the given libwayland client
-    static auto from(wl_client const* client) -> Client&;
-
-    /// The underlying Wayland client
-    virtual auto raw_client() const -> wl_client* = 0;
-
     /// True if the client's destroy listener has fired. The client object continues to exist after this until all
     /// resources have been cleaned up.
     virtual auto is_being_destroyed() const -> bool = 0;
@@ -54,7 +48,7 @@ public:
     /// The Mir session associated with this client. Be careful when using this that it's actually the session you want.
     /// All clients have a session but the surfaces they create may get associated with additional sessions.
     ///
-    /// For example all surfaces from a single XWayland server are attached to a single Client with a single cleint
+    /// For example all surfaces from a single XWayland server are attached to a single Client with a single client
     /// session, but their scene::Surfaces are associated with multiple sessions created in the XWayland frontend for
     /// individual apps.
     virtual auto client_session() const -> std::shared_ptr<scene::Session> = 0;
@@ -72,14 +66,6 @@ public:
     virtual void set_output_geometry_scale(float scale) = 0;
     virtual auto output_geometry_scale() -> float = 0;
     /// @}
-
-protected:
-    static void register_client(wl_client const* raw, std::shared_ptr<Client> const& shared);
-    static void unregister_client(wl_client const* raw);
-
-private:
-    friend Resource;
-    static auto shared_from(wl_client const* client) -> std::shared_ptr<Client>;
 };
 }
 }

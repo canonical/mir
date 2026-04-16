@@ -15,7 +15,8 @@
  */
 
 #include "wayland_connector.h"
-#include "global_factory.h"
+#include "wayland_rs/wayland_rs_cpp/include/wayland.h"
+#include "wl_client_registry.h"
 
 #include <mir/shell/token_authority.h>
 #include <mir/graphics/platform.h>
@@ -29,7 +30,6 @@
 #include "shm.h"
 #include "frame_executor.h"
 #include "output_manager.h"
-#include "wayland_executor.h"
 #include "desktop_file_manager.h"
 #include "foreign_toplevel_manager_v1.h"
 #include "wp_viewporter.h"
@@ -70,48 +70,67 @@ namespace mir
 {
 namespace frontend
 {
-class WlCompositor : public wayland::Compositor::Global
+class GlobalFactory : public wayland_rs::GlobalFactory {
+public:
+    GlobalFactory(std::shared_ptr<WlClientRegistry> const& client_registry,
+        WaylandConnector::WaylandProtocolExtensionFilter const extension_filter)
+        : client_registry(client_registry),
+          extension_filter(std::move(extension_filter))
+    {
+    }
+
+    auto can_view(rust::String interface_name, rust::Box<wayland_rs::WaylandClientId> client_id) -> bool override
+    {
+        auto const client = client_registry->from_id(std::move(client_id));
+        return extension_filter(client->client_session(), interface_name.c_str());
+    }
+
+    std::shared_ptr<WlClientRegistry> client_registry;
+    WaylandConnector::WaylandProtocolExtensionFilter const extension_filter;
+};
+
+class WaylandServerNotificationHandler : public wayland_rs::WaylandServerNotificationHandler
+{
+public:
+    explicit WaylandServerNotificationHandler(std::shared_ptr<WlClientRegistry> const& client_registry)
+        : client_registry(client_registry)
+    {}
+
+    auto client_added(rust::Box<wayland_rs::WaylandClient> wayland_client) -> void override
+    {
+        client_registry->add_client(std::move(wayland_client));
+    }
+
+    auto client_removed(rust::Box<wayland_rs::WaylandClientId> id) -> void override
+    {
+        client_registry->delete_client(std::move(id));
+    }
+
+    std::shared_ptr<WlClientRegistry> client_registry;
+};
+
+class WlCompositor : public wayland_rs::WlCompositorImpl
 {
 public:
     WlCompositor(
-        struct wl_display* display,
-        std::shared_ptr<mir::Executor> const& wayland_executor,
+        std::shared_ptr<WlClientRegistry> const& client_registry,
         std::shared_ptr<mir::Executor> const& frame_callback_executor,
         std::shared_ptr<mg::GraphicBufferAllocator> const& allocator)
-        : Global(display, Version<6>()),
+        : client_registry{client_registry},
           allocator{allocator},
-          wayland_executor{wayland_executor},
           frame_callback_executor{frame_callback_executor}
     {
     }
 
     void on_surface_created(wl_client* client, uint32_t id, std::function<void(WlSurface*)> const& callback);
+    auto create_surface() -> std::shared_ptr<wayland_rs::WlSurfaceImpl> override;
+    auto create_region() -> std::shared_ptr<wayland_rs::WlRegionImpl> override;
 
 private:
+    std::shared_ptr<WlClientRegistry> const& client_registry;
     std::shared_ptr<mg::GraphicBufferAllocator> const allocator;
-    std::shared_ptr<mir::Executor> const wayland_executor;
     std::shared_ptr<mir::Executor> const frame_callback_executor;
     std::map<std::pair<wl_client*, uint32_t>, std::vector<std::function<void(WlSurface*)>>> surface_callbacks;
-
-    class Instance : wayland::Compositor
-    {
-    public:
-        Instance(wl_resource* new_resource, WlCompositor* compositor)
-            : mw::Compositor{new_resource, Version<6>()},
-              compositor{compositor}
-        {
-        }
-
-    private:
-        void create_surface(wl_resource* new_surface) override;
-        void create_region(wl_resource* new_region) override;
-        WlCompositor* const compositor;
-    };
-
-    void bind(wl_resource* new_resource)
-    {
-        new Instance{new_resource, this};
-    }
 };
 
 void WlCompositor::on_surface_created(wl_client* client, uint32_t id, std::function<void(WlSurface*)> const& callback)
@@ -128,16 +147,15 @@ void WlCompositor::on_surface_created(wl_client* client, uint32_t id, std::funct
     }
 }
 
-void WlCompositor::Instance::create_surface(wl_resource* new_surface)
+auto WlCompositor::create_surface() -> std::shared_ptr<wayland_rs::WlSurfaceImpl>
 {
-    auto const surface = new WlSurface{
-        new_surface,
-        compositor->wayland_executor,
-        compositor->frame_callback_executor,
-        compositor->allocator};
+    auto const surface = std::make_shared<WlSurface>{
+        client,
+        frame_callback_executor,
+        allocator};
     auto const key = std::make_pair(wl_resource_get_client(new_surface), wl_resource_get_id(new_surface));
-    auto const callbacks = compositor->surface_callbacks.find(key);
-    if (callbacks != compositor->surface_callbacks.end())
+    auto const callbacks = surface_callbacks.find(key);
+    if (callbacks != surface_callbacks.end())
     {
         for (auto const& callback : callbacks->second)
         {
@@ -146,11 +164,6 @@ void WlCompositor::Instance::create_surface(wl_resource* new_surface)
         compositor->surface_callbacks.erase(callbacks);
     }
     // Wayland ojects delete themselves
-}
-
-void WlCompositor::Instance::create_region(wl_resource* new_region)
-{
-    new WlRegion{new_region};
 }
 }
 }
@@ -226,10 +239,6 @@ void mf::WaylandExtensions::run_builders(wl_display*, std::function<void(std::fu
 {
 }
 
-struct mf::WaylandConnector::ServerWrapper
-{
-};
-
 mf::WaylandConnector::WaylandConnector(
     std::shared_ptr<msh::Shell> const& shell,
     std::shared_ptr<time::Clock> const& clock,
@@ -262,6 +271,7 @@ mf::WaylandConnector::WaylandConnector(
     std::shared_ptr<input::CursorObserverMultiplexer> const& cursor_observer_multiplexer)
     : extension_filter{extension_filter},
       server{wayland_rs::create_wayland_server()},
+      client_registry{std::make_shared<WlClientRegistry>()},
       pause_signal{eventfd(0, EFD_CLOEXEC | EFD_SEMAPHORE)},
       allocator{allocator_for_display(allocator)},
       shell{shell},
@@ -280,8 +290,6 @@ mf::WaylandConnector::WaylandConnector(
     {
         BOOST_THROW_EXCEPTION(std::runtime_error{"Failed to create wl_display"});
     }
-
-    wl_display_set_global_filter(display.get(), &wl_display_global_filter_func_thunk, this);
 
     // Run the builders before creating the seat (because that's what GTK3 expects)
     extensions->run_builders(
@@ -417,23 +425,6 @@ mf::WaylandConnector::WaylandConnector(
     {
         fatal_error("Unable to bind Wayland socket");
     }
-
-    auto wayland_loop = wl_display_get_event_loop(display.get());
-
-    WlClient::setup_new_client_handler(server_wrapper, shell, session_authorizer, [this](WlClient& client)
-        {
-            int const fd = wl_client_get_fd(client.raw_client());
-            auto const handler_iter = connect_handlers.find(fd);
-
-            if (handler_iter != std::end(connect_handlers))
-            {
-                auto const callback = handler_iter->second;
-                connect_handlers.erase(handler_iter);
-                callback(client.client_session());
-            }
-        });
-
-    pause_source = wl_event_loop_add_fd(wayland_loop, pause_signal, WL_EVENT_READABLE, &halt_eventloop, display.get());
 }
 
 namespace
@@ -481,20 +472,23 @@ mf::WaylandConnector::~WaylandConnector()
 void mf::WaylandConnector::start()
 {
     dispatch_thread = std::thread{
-        [](wl_display* d)
+        [
+            wayland_display = wayland_display,
+            client_registry = client_registry,
+            extension_filter = extension_filter
+        ](wayland_rs::WaylandServer* server)
         {
             mir::set_thread_name("Mir/Wayland");
-            wl_display_run(d);
+            server->run(wayland_display,
+                std::make_unique<GlobalFactory>(client_registry, extension_filter),
+                std::make_unique<WaylandServerNotificationHandler>(client_registry));
         },
-        display.get()};
+        server.into_raw()};
 }
 
 void mf::WaylandConnector::stop()
 {
-    if (eventfd_write(pause_signal, 1) < 0)
-    {
-        log_error("WaylandConnector::stop() failed to send IPC eventloop pause signal: %s (%i)", mir::errno_to_cstr(errno), errno);
-    }
+    server->stop();
     if (dispatch_thread.joinable())
     {
         dispatch_thread.join();
@@ -606,18 +600,6 @@ void mf::WaylandConnector::for_each_output_binding(
     {
         (*og)->for_each_output_bound_by(client, [&](OutputInstance* o) { callback(o->resource); });
     }
-}
-
-bool mf::WaylandConnector::wl_display_global_filter_func_thunk(wl_client const* client, wl_global const* global, void *data)
-{
-    return static_cast<WaylandConnector*>(data)->wl_display_global_filter_func(client, global);
-}
-
-bool mf::WaylandConnector::wl_display_global_filter_func(wl_client const* client, wl_global const* global) const
-{
-    auto const* const interface = wl_global_get_interface(global);
-    auto const session = get_session(client);
-    return extension_filter(session, interface->name);
 }
 
 auto mir::frontend::get_session(wl_client const* wl_client) -> std::shared_ptr<scene::Session>

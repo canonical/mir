@@ -25,6 +25,7 @@ struct wl_display;
 #include <optional>
 #include <deque>
 #include "wayland_rs/wayland_rs_cpp/include/wayland.h"
+#include "wayland_rs/src/ffi.rs.h"
 
 #include <mir/wayland/client.h>
 
@@ -48,17 +49,8 @@ class SessionAuthorizer;
 class WlClient : public wayland::Client
 {
 public:
-    /// Initializes a ConstructionCtx that will create a WlClient for each wl_client created on the display. Should only
-    /// be called once per display. Destruction of the ConstructionCtx is handled automatically.
-    static void setup_new_client_handler(
-        wayland_rs::WaylandServer const& server,
-        std::shared_ptr<shell::Shell> const& shell,
-        std::shared_ptr<SessionAuthorizer> const& session_authorizer,
-        std::function<void(WlClient&)>&& client_created_callback);
-
-    ~WlClient();
-
-    auto raw_client() const -> wl_client* override { return client; }
+    WlClient(rust::Box<wayland_rs::WaylandClient> client, std::shared_ptr<scene::Session> const& session, shell::Shell* shell);
+    ~WlClient() override;
 
     auto is_being_destroyed() const -> bool override { return !owned_self; }
 
@@ -72,15 +64,9 @@ public:
     auto output_geometry_scale() -> float override { return output_geometry_scale_; }
 
 private:
-    WlClient(wl_client* client, std::shared_ptr<scene::Session> const& session, shell::Shell* shell);
-
-    static void handle_client_created(wl_listener* listener, void* data);
-    static void handle_client_destroyed(wl_listener* listener, void* data);
-
     /// This shell is owned by the ClientSessionConstructor, which outlives all clients.
     shell::Shell* const shell;
-    wl_client* const client;
-    wl_display* const display;
+    rust::Box<wayland_rs::WaylandClient> client;
     std::shared_ptr<scene::Session> const session;
 
     std::shared_ptr<WlClient> owned_self;

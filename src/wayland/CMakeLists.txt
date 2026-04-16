@@ -6,10 +6,8 @@ add_subdirectory(generator/)
 
 set(STANDARD_SOURCES
   lifetime_tracker.cpp
-  resource.cpp
   global.cpp
   protocol_error.cpp
-  client.cpp
 )
 
 add_library(mirwayland SHARED

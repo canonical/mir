@@ -55,6 +55,9 @@
 #include <wayland-server-core.h>
 #include <wayland-server-protocol.h>
 
+#include "wl_client.h"
+#include "wl_client_registry.h"
+
 namespace mf = mir::frontend;
 namespace geom = mir::geometry;
 namespace mw = mir::wayland;
@@ -114,12 +117,13 @@ bool mf::WlSurfaceState::surface_data_needs_refresh() const
 }
 
 mf::WlSurface::WlSurface(
-    wl_resource* new_resource,
+    rust::Box<wayland_rs::WaylandClient> client,
+    std::shared_ptr<WlClientRegistry> const& registry,
     std::shared_ptr<Executor> const& wayland_executor,
     std::shared_ptr<Executor> const& frame_callback_executor,
     std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator)
-    : Surface(new_resource, Version<6>()),
-        session{client->client_session()},
+    : WlSurfaceImpl(std::move(client)),
+        session{registry->from_client(WlSurfaceImpl::client)->client_session()},
         stream{session->create_buffer_stream({{}, mir_pixel_format_invalid, graphics::BufferUsage::undefined})},
         allocator{allocator},
         wayland_executor{wayland_executor},
