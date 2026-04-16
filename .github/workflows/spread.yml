@@ -56,8 +56,9 @@ jobs:
           "lxd:...:ubuntu_devel"
           "lxd:...:ubuntu_proposed"
           "lxd:...:ubuntu_questing"
-          "lxd:alpine-3.20:...:amd64"
           "lxd:alpine-3.21:...:amd64"
+          "lxd:alpine-3.22:...:amd64"
+          "lxd:alpine-3.23:...:amd64"
           "lxd:alpine-edge:...:amd64"
         )
 
