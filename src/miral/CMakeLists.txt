@@ -158,6 +158,7 @@ add_library(miral-external OBJECT
     sticky_keys.cpp                     ${miral_include}/miral/sticky_keys.h
     locate_pointer.cpp                  ${miral_include}/miral/locate_pointer.h
     config_aggregator.cpp               ${miral_include}/miral/config_aggregator.h
+    config_file_store_adapter.cpp       ${miral_include}/miral/config_file_store_adapter.h
 )
 
 add_library(miral SHARED
