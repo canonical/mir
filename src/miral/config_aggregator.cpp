@@ -85,7 +85,23 @@ void mlc::ConfigAggregator::update_source(Source&& source)
     auto const it = std::ranges::find_if(
         self->sources, [&](auto const& s) { return s.file_path == source.file_path; });
     if (it != self->sources.end())
+    {
+        // Catch up the replacement source on all attributes already registered,
+        // mirroring what add_source does for new sources.
+        self->store.foreach_scalar_attribute(
+            [&](Key const& key, std::string_view description)
+            {
+                source.store->add_string_attribute(key, description, self->scalar_accumulator());
+            });
+
+        self->store.foreach_array_attribute(
+            [&](Key const& key, std::string_view description)
+            {
+                source.store->add_strings_attribute(key, description, self->array_accumulator());
+            });
+
         *it = std::move(source);
+    }
 }
 
 void mlc::ConfigAggregator::remove_source(std::filesystem::path const& path)
