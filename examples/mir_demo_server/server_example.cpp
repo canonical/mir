@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <miral/config_file_store_adapter.h>
 #include "server_example_input_event_filter.h"
 #include "server_example_input_filter.h"
 #include "server_example_test_client.h"
@@ -129,23 +130,40 @@ try
 {
     miral::MirRunner runner{argc, argv, "mir/mir_demo_server.config"};
 
-    miral::live_config::IniFile config_store;
+    miral::live_config::ConfigAggregator config_aggregator{};
+    miral::ConfigFileStoreAdapter adapter{
+        config_aggregator,
+        [](std::unique_ptr<std::istream> stream, std::filesystem::path const& path)
+        {
+            auto parser = std::make_shared<miral::live_config::IniFile>();
+            return miral::live_config::ConfigAggregator::Source{
+                parser,
+                [parser, stream = std::move(stream), path]()
+                {
+                    parser->load_file(*stream, path);
+                },
+                path,
+            };
+        }};
+
+    miral::live_config::IniFile ini_file;
     runner.set_exception_handler(exception_handler);
 
-    miral::CursorScale cursor_scale{config_store};
-    miral::OutputFilter output_filter{config_store};
-    miral::InputConfiguration input_configuration{config_store};
-    miral::BounceKeys bounce_keys{config_store};
-    miral::SlowKeys slow_keys{config_store};
-    miral::StickyKeys sticky_keys{config_store};
-    miral::Keymap keymap{config_store};
-    miral::HoverClick hover_click{config_store};
+    miral::CursorScale cursor_scale{config_aggregator};
+    miral::OutputFilter output_filter{config_aggregator};
+    miral::InputConfiguration input_configuration{config_aggregator};
+    miral::BounceKeys bounce_keys{config_aggregator};
+    miral::SlowKeys slow_keys{config_aggregator};
+    miral::StickyKeys sticky_keys{config_aggregator};
+    miral::Keymap keymap{config_aggregator};
+    miral::HoverClick hover_click{config_aggregator};
 
     miral::ConfigFile config_file{
         runner,
         "mir_demo_server.live-config",
         miral::ConfigFile::Mode::reload_on_change,
-        [&config_store](auto&... args){ config_store.load_file(args...); }};
+        [&adapter](auto args) { adapter(args); },
+    };
 
     std::function<void()> shutdown_hook{[]{}};
     runner.add_stop_callback([&] { shutdown_hook(); });

@@ -45,6 +45,8 @@ class ConfigFile
 public:
     /// Loader functor is passed both the open stream and the actual path (for use in reporting problems)
     using Loader = std::function<void(std::istream& istream, std::filesystem::path const& path)>;
+    using OverrideLoader =
+        std::move_only_function<void(std::span<std::pair<std::unique_ptr<std::istream>, std::filesystem::path>>)>;
 
     /// Mode of reloading
     enum class Mode
@@ -54,6 +56,7 @@ public:
     };
 
     ConfigFile(MirRunner& runner, std::filesystem::path file, Mode mode, Loader load_config);
+    ConfigFile(MirRunner& runner, std::filesystem::path file, Mode mode, OverrideLoader load_config);
     ~ConfigFile();
 
 private:
