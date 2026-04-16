@@ -81,6 +81,7 @@ mir_add_wrapped_executable(miral-test NOINSTALL
     external_client.cpp
     config_file.cpp
     config_aggregator.cpp
+    config_file_store_adapter.cpp
     live_config.cpp
     live_config_ini_file.cpp
     magnifier.cpp
