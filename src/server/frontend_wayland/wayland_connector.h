@@ -20,6 +20,7 @@
 #include <mir/shell/token_authority.h>
 #include "wayland_wrapper.h"
 #include "input_trigger_registry.h"
+#include "wayland_rs/src/ffi.rs.h"
 
 #include <mir/fd.h>
 #include <mir/frontend/connector.h>
@@ -105,7 +106,6 @@ public:
     /// The resources needed to init Wayland extensions
     struct Context
     {
-        wl_display* display;
         std::shared_ptr<Executor> wayland_executor;
         std::shared_ptr<shell::Shell> shell;
         std::shared_ptr<SessionAuthorizer> session_authorizer;
@@ -212,8 +212,6 @@ public:
     auto get_extension(std::string const& name) const -> std::shared_ptr<void>;
 
 private:
-    struct ServerWrapper;
-
     void for_each_output_binding(
         wayland::Client* client,
         graphics::DisplayConfigurationOutputId output,
@@ -233,8 +231,7 @@ private:
      */
     WaylandProtocolExtensionFilter const extension_filter;
 
-    std::unique_ptr<wl_display, void(*)(wl_display*)> const display;
-    std::unique_ptr<ServerWrapper> server_wrapper;
+    rust::Box<mir::wayland_rs::WaylandServer> server;
     mir::Fd const pause_signal;
     std::unique_ptr<WlCompositor> compositor_global;
     std::unique_ptr<WlSubcompositor> subcompositor_global;
@@ -245,7 +242,6 @@ private:
     std::unique_ptr<WlShm> shm_global;
     std::unique_ptr<WpViewporter> viewporter;
     std::unique_ptr<LinuxDRMSyncobjManager> drm_syncobj;
-    std::shared_ptr<Executor> const executor;
     std::shared_ptr<graphics::GraphicBufferAllocator> const allocator;
     std::shared_ptr<shell::Shell> const shell;
     std::unique_ptr<WaylandExtensions> const extensions;

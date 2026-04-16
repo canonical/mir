@@ -14,37 +14,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_FRONTEND_EXECUTOR_H
-#define MIR_FRONTEND_EXECUTOR_H
+#ifndef MIR_GLOBAL_FACTORY_H
+#define MIR_GLOBAL_FACTORY_H
 
-#include <mir/executor.h>
-#include <mir/fd.h>
-
-#include <wayland-server-core.h>
-
-#include <mutex>
-#include <memory>
-#include <deque>
+#include "wayland_rs/wayland_rs_cpp/include/global_factory.h"
 
 namespace mir
 {
-namespace frontend
+namespace wayland
 {
-class WaylandExecutor : public Executor
-{
+class GlobalFactory : public wayland_rs::GlobalFactory {
 public:
-    explicit WaylandExecutor(wl_event_loop* loop);
-    ~WaylandExecutor();
+    GlobalFactory();
 
-    void spawn(std::function<void()>&& work) override;
-
-    class State;
-private:
-    std::shared_ptr<State> state;
-    mir::Fd const notify_fd;
-    wl_event_source* const source;
+    auto create_ext_data_control_manager_v1() -> std::unique_ptr<wayland_rs::ExtDataControlManagerV1Impl> override;
 };
 }
 }
 
-#endif //MIR_FRONTEND_EXECUTOR_H
+#endif //MIR_GLOBAL_FACTORY_H

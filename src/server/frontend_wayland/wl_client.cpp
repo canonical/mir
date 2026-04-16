@@ -78,7 +78,7 @@ void cleanup_construction_ctx(wl_listener* listener, void*)
 }
 
 void mf::WlClient::setup_new_client_handler(
-    wl_display* display,
+    wayland_rs::WaylandServer const& server,
     std::shared_ptr<shell::Shell> const& shell,
     std::shared_ptr<SessionAuthorizer> const& session_authorizer,
     std::function<void(WlClient&)>&& client_created_callback)

@@ -18,7 +18,7 @@
 #ifndef MIR_SERVER_FRONTEND_DATA_CONTROL_V1_H_
 #define MIR_SERVER_FRONTEND_DATA_CONTROL_V1_H_
 
-#include "ext-data-control-v1_wrapper.h"
+#include "wayland_rs/wayland_rs_cpp/include/ext_data_control_v1.h"
 
 namespace mir
 {
@@ -29,9 +29,8 @@ class Clipboard;
 namespace frontend
 {
 auto create_data_control_manager_v1(
-    struct wl_display* display,
     std::shared_ptr<mir::scene::Clipboard> const& clipboard,
-    std::shared_ptr<mir::scene::Clipboard> const& primary_clipboard) -> std::shared_ptr<wayland::DataControlManagerV1::Global>;
+    std::shared_ptr<mir::scene::Clipboard> const& primary_clipboard) -> std::shared_ptr<wayland_rs::ExtDataControlManagerV1Impl>;
 }
 }
 

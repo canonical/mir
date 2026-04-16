@@ -24,6 +24,7 @@ struct wl_display;
 #include <functional>
 #include <optional>
 #include <deque>
+#include "wayland_rs/wayland_rs_cpp/include/wayland.h"
 
 #include <mir/wayland/client.h>
 
@@ -31,6 +32,10 @@ struct MirEvent;
 
 namespace mir
 {
+namespace wayland_rs
+{
+class WaylandServer;
+}
 namespace shell
 {
 class Shell;
@@ -46,7 +51,7 @@ public:
     /// Initializes a ConstructionCtx that will create a WlClient for each wl_client created on the display. Should only
     /// be called once per display. Destruction of the ConstructionCtx is handled automatically.
     static void setup_new_client_handler(
-        wl_display* display,
+        wayland_rs::WaylandServer const& server,
         std::shared_ptr<shell::Shell> const& shell,
         std::shared_ptr<SessionAuthorizer> const& session_authorizer,
         std::function<void(WlClient&)>&& client_created_callback);
