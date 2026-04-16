@@ -7,6 +7,7 @@ backends:
         systems:
             - alpine-3.21
             - alpine-3.22
+            - alpine-3.23
             - alpine-edge
             - ubuntu-24.04
             - fedora-43
