@@ -102,6 +102,19 @@ jobs:
           lxc profile device add default "loop${i}" unix-block "source=/dev/loop${i}"
         done
 
+        if [[ "${MATRIX_SPREAD_TASK}" == *"ubuntu"* ]]; then
+          # Use the Azure Ubuntu mirror
+          lxc profile set default user.user-data - <<EOF
+        #cloud-config
+        apt:
+          sources_list: |
+            Types: deb
+            URIs: http://azure.archive.ubuntu.com/ubuntu/
+            Suites: noble noble-updates noble-security
+            Components: main universe
+        EOF
+        fi
+
         sudo apt-get update
         sudo apt-get install --yes binfmt-support qemu-user-static
         echo "LXD_DIR=/var/snap/lxd/common/lxd" >> "$GITHUB_ENV"
