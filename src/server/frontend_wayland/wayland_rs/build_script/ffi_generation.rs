@@ -51,6 +51,7 @@ pub fn generate_ffi(protocols: &Vec<WaylandProtocol>, builders: &Vec<CppBuilder>
                 fn uid(self: &WaylandClient) -> Result<u32>;
                 fn gid(self: &WaylandClient) -> Result<u32>;
                 fn equals(self: &WaylandClient, id: &WaylandClientId) -> bool;
+                fn id(self: &WaylandClient) -> Box<WaylandClientId>;
 
                 type WaylandClientId;
 
