@@ -465,6 +465,7 @@ pub enum CppType {
     Array,
     Fd,
     Box(String),
+    Bool,
 }
 
 /// Convert a CppType intended as a return value to its corresponding
@@ -486,6 +487,7 @@ fn cpp_return_type_to_cpp_source(cpp_type: &CppType) -> String {
         CppType::Box(name) => {
             format!("rust::Box<{}> const&", name)
         }
+        CppType::Bool => "bool".to_string(),
     }
 }
 
@@ -513,6 +515,7 @@ fn cpp_arg_type_to_cpp_source(cpp_type: &CppType, originates_from_rust: bool) ->
         (CppType::String, false) => "std::string const&".into(),
         (CppType::Array, true) => "rust::Vec<uint8_t>".into(),
         (CppType::Array, false) => "std::vector<uint8_t> const&".into(),
+        (CppType::Bool, _) => "bool".to_string(),
     }
 }
 
@@ -535,6 +538,7 @@ fn cpp_return_type_to_rust_source(cpp_type: &CppType) -> TokenStream {
             let type_name = format_ident!("{}", name);
             quote! { &Box<#type_name> }
         }
+        CppType::Bool => quote! { bool },
     }
 }
 
@@ -576,6 +580,7 @@ fn cpp_arg_type_to_rust_source(cpp_type: &CppType, originates_from_rust: bool) -
                 quote! { &Box<#type_name> }
             }
         }
+        CppType::Bool => quote! { bool },
     }
 }
 
