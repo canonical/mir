@@ -276,7 +276,7 @@ mf::WaylandConnector::WaylandConnector(
             "Failed to create IPC pause notification eventfd"}));
     }
 
-    if (!display)
+    if (!server.into_raw())
     {
         BOOST_THROW_EXCEPTION(std::runtime_error{"Failed to create wl_display"});
     }
