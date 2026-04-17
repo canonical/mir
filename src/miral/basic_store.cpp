@@ -122,7 +122,10 @@ void mlc::BasicStore::Self::do_transaction(std::function<void()> transaction_bod
         details.value = std::nullopt;
 
     for (auto& [key, details] : array_attribute_handlers)
+    {
         details.parsed_values.resize(0);
+        details.modification_paths.clear();
+    }
 
     transaction_body();
 
