@@ -30,7 +30,7 @@ jobs:
         filters: .github/filters.yaml
 
   spelling-check:
-    name: Spell check
+    name: ${{ needs.check-paths.outputs.should-run == 'true' && 'Documentation spelling check' || 'Documentation spelling check / Check spelling in the documentation' }}
     needs: [check-paths]
     if: needs.check-paths.outputs.should-run == 'true'
     permissions:
@@ -40,7 +40,7 @@ jobs:
       working-directory: doc/sphinx
 
   inclusive-language-check:
-    name: Inclusive language check
+    name: ${{ needs.check-paths.outputs.should-run == 'true' && 'Documentation inclusive language check' || 'Documentation inclusive language check / Check for inclusive language in the documentation' }}
     needs: [check-paths]
     if: needs.check-paths.outputs.should-run == 'true'
     permissions:
@@ -50,7 +50,7 @@ jobs:
       working-directory: doc/sphinx
 
   link-check:
-    name: Link check
+    name: ${{ needs.check-paths.outputs.should-run == 'true' && 'Documentation link check' || 'Documentation link check / Check links in the documentation' }}
     needs: [check-paths]
     if: needs.check-paths.outputs.should-run == 'true'
     permissions:
