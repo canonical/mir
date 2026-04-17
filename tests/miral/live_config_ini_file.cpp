@@ -258,38 +258,39 @@ TEST_F(LiveConfigIniFile, a_floats_preset_is_handled)
     ini_file.load_file(istream, fake_filename());
 }
 
-TEST_F(LiveConfigIniFile, a_bad_integer_value_is_ignored)
+TEST_F(LiveConfigIniFile, a_bad_integer_value_results_in_nullopt)
 {
     std::istringstream bad_istream{
         a_key.to_string()+"=42x"};
 
     ini_file.add_int_attribute(a_key, "a scoped int", [this](auto... args) { int_handler(args...); });
 
-    EXPECT_CALL(*this, int_handler(a_key, _)).Times(0);
+    // Without a preset the handler is called with nullopt to signal the parse failure gracefully.
+    EXPECT_CALL(*this, int_handler(a_key, Eq(std::nullopt)));
 
     ini_file.load_file(bad_istream, fake_filename());
 }
 
-TEST_F(LiveConfigIniFile, a_bad_float_value_is_ignored)
+TEST_F(LiveConfigIniFile, a_bad_float_value_results_in_nullopt)
 {
     std::istringstream bad_istream{
         a_key.to_string()+"=42x"};
 
     ini_file.add_float_attribute(a_key, "bad float", [this](auto... args) { float_handler(args...); });
 
-    EXPECT_CALL(*this, float_handler(a_key, _)).Times(0);
+    EXPECT_CALL(*this, float_handler(a_key, Eq(std::nullopt)));
 
     ini_file.load_file(bad_istream, fake_filename());
 }
 
-TEST_F(LiveConfigIniFile, a_bad_bool_value_is_ignored)
+TEST_F(LiveConfigIniFile, a_bad_bool_value_results_in_nullopt)
 {
     std::istringstream bad_istream{
         a_key.to_string()+"=42x"};
 
     ini_file.add_bool_attribute(a_key, "bad bool", [this](auto... args) { bool_handler(args...); });
 
-    EXPECT_CALL(*this, bool_handler(a_key, _)).Times(0);
+    EXPECT_CALL(*this, bool_handler(a_key, Eq(std::nullopt)));
 
     ini_file.load_file(bad_istream, fake_filename());
 }
