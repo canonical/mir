@@ -143,3 +143,13 @@ TEST(LiveConfig, key_has_expected_representations)
         EXPECT_THAT(key, ElementsAre("foo_122", "bar_", "baz"));
     });
 }
+
+TEST(LiveConfig, key_can_be_formatted_with_std_format)
+{
+    mlc::Key const key{"foo", "bar", "baz"};
+
+    EXPECT_THAT(std::format("{}", key), Eq("foo_bar_baz"));
+
+    // String format specs (e.g. width/fill) are accepted via the base std::formatter<std::string>
+    EXPECT_THAT(std::format("{:>15}", key), Eq("    foo_bar_baz"));
+}
