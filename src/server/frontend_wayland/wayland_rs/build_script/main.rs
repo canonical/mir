@@ -826,7 +826,14 @@ fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
 
     // Add a public accessor for the object ID so that C++ implementations
     // can pass it to ProtocolError.
-    let mut object_id_method = CppMethod::new("object_id", Some(CppType::CppU32), false, false);
+    let mut object_id_method = CppMethod::new(
+        "object_id",
+        Some(CppType::CppU32),
+        false,
+        false,
+        false,
+        false,
+    );
     object_id_method.set_body("return object_id_;");
     class.add_method(object_id_method);
 
