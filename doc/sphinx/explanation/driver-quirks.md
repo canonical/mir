@@ -35,7 +35,7 @@ specific device if its driver is blocked.
 Examples:
 
 - `--driver-quirks=skip:driver:nvidia`
-- `--driver-quirks=allow:device:/dev/dri/card0`
+- `--driver-quirks=allow:devnode:/dev/dri/card0`
 
 ## Disable probing for modesetting support
 
