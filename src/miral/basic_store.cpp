@@ -8,6 +8,7 @@
 #include <mutex>
 #include <ranges>
 #include <set>
+#include <stdexcept>
 
 namespace mlc = miral::live_config;
 
@@ -29,6 +30,15 @@ template <typename Range> auto join_comma(Range const& strings) -> std::string
     return temp;
 #endif
 }
+
+class ParsingError : public std::runtime_error
+{
+public:
+    explicit ParsingError(mlc::Key const& key, std::string_view value) :
+        std::runtime_error(std::format("Config key '{}' has invalid value: {}", key, value))
+    {
+    }
+};
 }
 
 class mlc::BasicStore::Self
@@ -164,14 +174,36 @@ void mlc::BasicStore::Self::do_transaction(std::function<void()> transaction_bod
         {
             details.handler(key, maybe_value);
         }
+        catch (ParsingError const& pe)
+        {
+            auto const path = details.value.transform([&](auto const& v) { return v.modification_path.string(); })
+                                  .value_or("never set");
+
+            if (auto const preset = details.preset)
+            {
+                mir::log_warning(
+                    "Parsing error: %s in file %s. Using preset value '%s' instead.",
+                    pe.what(),
+                    path.c_str(),
+                    preset->c_str());
+
+                details.handler(key, details.preset);
+            }
+            else
+            {
+                mir::log_warning(
+                    "Parsing error: %s in file %s, but no preset value. Using nullopt instead.",
+                    pe.what(),
+                    path.c_str());
+                details.handler(key, std::nullopt);
+            }
+        }
         catch (std::exception const& e)
         {
-            auto const path =
-                details.value.transform([&](auto const& v) { return v.modification_path.string(); })
-                    .value_or("never set");
-
+            auto const path = details.value.transform([&](auto const& v) { return v.modification_path.string(); })
+                                  .value_or("never set");
             // `std::string` is required to get a `c_str` from a string view.
-            auto const value_str = std::string{maybe_value.transform([](auto const& v) { return v; }).value_or("unset")};
+            auto const value_str = std::string{maybe_value.value_or("unset")};
 
             mir::log_warning(
                 "Error processing key '%s' with value '%s' in file '%s': %s",
@@ -247,7 +279,7 @@ void process_as(std::function<void(mlc::Key const&, std::optional<Type>)> const&
         }
         else
         {
-            throw std::runtime_error(std::format("Config key '{}' has invalid value: {}", key, *val));
+            throw ParsingError(key, *val);
         }
     }
     else
@@ -271,7 +303,7 @@ void process_as<bool>(std::function<void(mlc::Key const&, std::optional<bool>)> 
         }
         else
         {
-            throw std::runtime_error(std::format("Config key '{}' has invalid value: {}", key, *val));
+            throw ParsingError(key, *val);
         }
     }
     else
