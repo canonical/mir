@@ -42,11 +42,10 @@ int fd_open(const char* path, int flags, void* userdata)
     return fd_store->take_fd(path);
 }
 
-void fd_close(int fd, void* userdata)
+void fd_close(int /*fd*/, void* /*userdata*/)
 {
-    auto fd_store = static_cast<mie::FdStore*>(userdata);
-
-    fd_store->remove_fd(fd);
+    // Mir controls the lifetime of these FDs itself, by using a udev monitor to track devices.
+    // We don't really care what libinput wants, we will control the FDs ourselves.
 }
 
 const libinput_interface fd_ops = {fd_open, fd_close};

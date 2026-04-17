@@ -29,7 +29,7 @@ namespace wayland_rs
 class ProtocolError : public std::runtime_error
 {
 public:
-    ProtocolError(uint32_t error_code, char const* fmt, ...);
+    ProtocolError(uint32_t object_id, uint32_t error_code, char const* fmt, ...);
     auto what() const noexcept -> char const* override;
 
 private:
