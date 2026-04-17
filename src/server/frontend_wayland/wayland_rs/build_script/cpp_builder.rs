@@ -105,12 +105,18 @@ impl CppBuilder {
                 result.push_str("public:\n");
 
                 // Generate enums
+                //
+                // Enums are generated as structs so that they are easily usable as uint32_t in
+                // places that the protocol expects. This is how the old generator managed this.
                 for enum_ in &class.enums {
-                    result.push_str(&format!("    enum class {} : uint32_t\n", enum_.name));
+                    result.push_str(&format!("    struct {}\n", enum_.name));
                     result.push_str("    {\n");
 
                     for option in &enum_.options {
-                        result.push_str(&format!("        {} = {},\n", option.name, option.value,));
+                        result.push_str(&format!(
+                            "        static constexpr uint32_t {} = {};\n",
+                            option.name, option.value,
+                        ));
                     }
                     result.push_str("    };\n");
                     result.push_str("\n");
@@ -256,14 +262,25 @@ impl CppBuilder {
 
                     // Note: When generating Rust bindings for C++ methods that will mutate the underlying
                     // C++ class, cxx.rs enforces that we `Pin` them.
+                    //
+                    // Note: If the method throws, we wrap it in a Result<...> type for the Rust side of
+                    // things. cxx.rs will take care of translating exceptions into this type for us.
                     if let Some(retval) = &method.retval {
                         let retval = cpp_return_type_to_rust_source(retval);
+                        let retval = if method.throws { quote!{ Result<#retval> } } else { retval };
                         quote! {
                             pub fn #method_name(self: Pin<&mut #class_name>, #(#args),*) -> #retval;
                         }
                     } else {
-                        quote! {
-                            pub fn #method_name(self: Pin<&mut #class_name>, #(#args),*);
+                        if method.throws {
+                            quote! {
+                                pub fn #method_name(self: Pin<&mut #class_name>, #(#args),*) -> Result<()>;
+                            }
+                        }
+                        else {
+                            quote! {
+                                pub fn #method_name(self: Pin<&mut #class_name>, #(#args),*);
+                            }
                         }
                     }
                 });
@@ -393,16 +410,23 @@ pub struct CppMethod {
     pub retval: Option<CppType>,
     pub is_virtual: bool,
     pub body: Option<String>,
+    pub throws: bool,
 }
 
 impl CppMethod {
-    pub fn new(name: impl Into<String>, retval: Option<CppType>, is_virtual: bool) -> CppMethod {
+    pub fn new(
+        name: impl Into<String>,
+        retval: Option<CppType>,
+        is_virtual: bool,
+        throws: bool,
+    ) -> CppMethod {
         CppMethod {
             name: sanitize_identifier(&name.into()),
             args: vec![],
             retval,
             is_virtual,
             body: None,
+            throws,
         }
     }
 
@@ -549,19 +573,108 @@ fn cpp_arg_type_to_rust_source(cpp_type: &CppType, originates_from_rust: bool) -
 }
 
 /// Sanitize an identifier to ensure it's valid for Rust and C++.
-/// If the identifier starts with a digit, prefix it with an underscore.
+/// If the identifier starts with a digit, prefix it with r_.
 /// If the identifier is a Rust keyword, prefix it with r_.
+/// If the identifier is a C++ keyword, suffix it with _.
 pub fn sanitize_identifier(name: &str) -> String {
     if name.is_empty() {
         return "_empty".to_string();
     }
 
+    // These keywords originate from: https://en.cppreference.com/w/cpp/keywords.html
+    const CPP_KEYWORDS: &[&str] = &[
+        "alignas",
+        "alignof",
+        "and",
+        "and_eq",
+        "asm",
+        "auto",
+        "bitand",
+        "bitor",
+        "bool",
+        "break",
+        "case",
+        "catch",
+        "char",
+        "char8_t",
+        "char16_t",
+        "char32_t",
+        "class",
+        "compl",
+        "concept",
+        "const_cast",
+        "consteval",
+        "constexpr",
+        "constinit",
+        "co_await",
+        "co_return",
+        "co_yield",
+        "decltype",
+        "default",
+        "delete",
+        "do",
+        "double",
+        "dynamic_cast",
+        "else",
+        "enum",
+        "explicit",
+        "export",
+        "extern",
+        "float",
+        "for",
+        "friend",
+        "goto",
+        "if",
+        "inline",
+        "int",
+        "long",
+        "mutable",
+        "namespace",
+        "new",
+        "noexcept",
+        "not",
+        "not_eq",
+        "nullptr",
+        "operator",
+        "or",
+        "or_eq",
+        "private",
+        "protected",
+        "public",
+        "register",
+        "reinterpret_cast",
+        "requires",
+        "short",
+        "signed",
+        "sizeof",
+        "static_assert",
+        "static_cast",
+        "switch",
+        "template",
+        "this",
+        "thread_local",
+        "throw",
+        "try",
+        "typedef",
+        "typeid",
+        "typename",
+        "unsigned",
+        "using",
+        "virtual",
+        "void",
+        "volatile",
+        "wchar_t",
+        "while",
+        "xor",
+        "xor_eq",
+    ];
+
     // Try to parse as a regular identifier
-    // If it fails (e.g., it's a keyword), use raw identifier
+    // If it fails (e.g., it's a Rust keyword), use raw identifier
     match syn::parse_str::<Ident>(name) {
         Ok(_) => {
-            if name == "namespace" {
-                "namespace_".to_string()
+            if CPP_KEYWORDS.contains(&name) {
+                format!("{}_", name)
             } else {
                 name.to_string()
             }
