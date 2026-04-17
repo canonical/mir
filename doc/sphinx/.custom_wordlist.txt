@@ -129,6 +129,7 @@ kms
 libEGL
 libhybris
 libinput
+libmiral
 libmirclient
 libVA
 linux
