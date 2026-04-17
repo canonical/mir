@@ -267,8 +267,8 @@ impl CppBuilder {
                     // Note: When generating Rust bindings for C++ methods that will mutate the underlying
                     // C++ class, cxx.rs enforces that we `Pin` them.
                     //
-                    // Note: If a the method throws, we wrap it in a Result<...> type for the Rust side of
-                    // things. CXX.rs will take care of translating exceptions into this type for us.
+                    // Note: If the method throws, we wrap it in a Result<...> type for the Rust side of
+                    // things. cxx.rs will take care of translating exceptions into this type for us.
                     if let Some(retval) = &method.retval {
                         let retval = cpp_return_type_to_rust_source(retval);
                         let retval = if method.throws { quote!{ Result<#retval> } } else { retval };
@@ -580,7 +580,7 @@ fn cpp_arg_type_to_rust_source(cpp_type: &CppType, originates_from_rust: bool) -
 }
 
 /// Sanitize an identifier to ensure it's valid for Rust and C++.
-/// If the identifier starts with a digit, prefix it with an underscore.
+/// If the identifier starts with a digit, prefix it with r_.
 /// If the identifier is a Rust keyword, prefix it with r_.
 /// If the identifier is a C++ keyword, suffix it with _.
 pub fn sanitize_identifier(name: &str) -> String {
@@ -588,6 +588,7 @@ pub fn sanitize_identifier(name: &str) -> String {
         return "_empty".to_string();
     }
 
+    // These keywords originate from: https://en.cppreference.com/w/cpp/keywords.html
     const CPP_KEYWORDS: &[&str] = &[
         "alignas",
         "alignof",

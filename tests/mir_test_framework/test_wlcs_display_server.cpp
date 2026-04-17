@@ -14,6 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "test_wlcs_display_server_internals.h"
+
 #include <miral/test_wlcs_display_server.h>
 #include <wlcs/pointer.h>
 #include <wlcs/touch.h>
@@ -190,7 +192,6 @@ private:
     std::condition_variable notifier;
 };
 
-auto constexpr a_long_time = 5s;
 
 using ClientFd = int;
 
@@ -332,22 +333,6 @@ private:
         std::is_standard_layout<DestructionShim>::value,
         "DestructionShim must be Standard Layout for wl_container_of to be defined behaviour");
 };
-
-template<typename T>
-void emit_mir_event(miral::TestWlcsDisplayServer* runner,
-    mir::UniqueModulePtr<mir_test_framework::FakeInputDevice>& emitter,
-    T event)
-{
-    auto event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
-        std::chrono::steady_clock::now().time_since_epoch());
-
-    auto event_sent = runner->expect_event_with_time(event_time);
-
-    emitter->emit_event(event.with_event_time(event_time));
-
-    if (!event_sent->wait_for(a_long_time))
-        mir::fatal_error("fake event failed to go through");
-}
 }
 
 
@@ -837,6 +822,12 @@ WlcsTouch* wlcs_server_create_touch(WlcsDisplayServer* server)
 {
     return static_cast<miral::TestWlcsDisplayServer*>(server)->create_touch();
 }
+
+[[maybe_unused]]
+WlcsKeyboard* wlcs_server_create_keyboard(WlcsDisplayServer* server)
+{
+    return static_cast<miral::TestWlcsDisplayServer*>(server)->create_keyboard();
+}
 }
 
 miral::TestWlcsDisplayServer::TestWlcsDisplayServer(int argc, char const** argv) :
@@ -844,13 +835,16 @@ miral::TestWlcsDisplayServer::TestWlcsDisplayServer(int argc, char const** argv)
     resource_mapper{std::make_shared<ResourceMapper>()},
     event_listener{std::make_shared<InputEventListener>(*this)}
 {
-    WlcsDisplayServer::version = 2;
+    WlcsDisplayServer::version = std::min(WLCS_DISPLAY_SERVER_VERSION, 4);
     WlcsDisplayServer::start = &wlcs_server_start;
     WlcsDisplayServer::stop = &wlcs_server_stop;
     WlcsDisplayServer::create_client_socket = &wlcs_server_create_client_socket;
     WlcsDisplayServer::position_window_absolute = &wlcs_server_position_window_absolute;
     WlcsDisplayServer::create_pointer = &wlcs_server_create_pointer;
     WlcsDisplayServer::create_touch = &wlcs_server_create_touch;
+#if WLCS_DISPLAY_SERVER_VERSION >= 4
+    WlcsDisplayServer::create_keyboard = &wlcs_server_create_keyboard;
+#endif
 
     add_to_environment("MIR_SERVER_CURSOR", "null");
     add_to_environment("MIR_SERVER_ENABLE_KEY_REPEAT", "false");

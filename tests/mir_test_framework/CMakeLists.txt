@@ -45,6 +45,7 @@ add_library(mir-public-test-framework OBJECT
   test_server.cpp  ${PROJECT_SOURCE_DIR}/include/test/miral/test_server.h
   test_display_server.cpp  ${PROJECT_SOURCE_DIR}/include/test/miral/test_display_server.h
   test_wlcs_display_server.cpp ${PROJECT_SOURCE_DIR}/include/test/miral/test_wlcs_display_server.h
+  test_wlcs_display_server_keyboard.cpp
   ${PROJECT_SOURCE_DIR}/tests/include/mir_test_framework/mmap_wrapper.h
   mmap_wrapper.cpp
   window_management_test_harness.cpp ${PROJECT_SOURCE_DIR}/include/test/mir_test_framework/window_management_test_harness.h

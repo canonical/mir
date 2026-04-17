@@ -226,6 +226,8 @@ fn generate_global_dispatch_impl(
                 // the Rust resource in an "extension" object that ferries the data from C++ -> Rust.
                 // Finally, we associate this "extension" object with our C++ object.
                 let instance = data_init.init(resource, arc.clone());
+                register_resource(&instance);
+                let protocol_id = Resource::id(&instance).protocol_id();
                 let boxed = Box::new(crate::middleware::#ext_interface_struct_name{ wrapped: instance });
                 let mut guard = arc.lock().unwrap();
                 // SAFETY: `guard` is a `MutexGuard`, so we have exclusive access to the
@@ -234,7 +236,7 @@ fn generate_global_dispatch_impl(
                 // so taking a pinned mutable reference here does not move it, and the pinned
                 // reference is used only for this immediate FFI call and does not escape.
                 unsafe {
-                    guard.pin_mut_unchecked().associate(boxed);
+                    guard.pin_mut_unchecked().associate(boxed, protocol_id);
                 }
             }
         }
@@ -358,6 +360,8 @@ fn generate_request_body(request: &WaylandRequest) -> TokenStream {
                     // the Rust resource in an "extension" object that ferries the data from C++ -> Rust.
                     // Finally, we associate this "extension" object with our C++ object.
                     let instance = data_init.init(#new_id_name, arc.clone());
+                    register_resource(&instance);
+                    let protocol_id = Resource::id(&instance).protocol_id();
                     let boxed = Box::new(crate::middleware::#ext_interface_struct_name{ wrapped: instance });
                     let mut guard = arc.lock().unwrap();
 
@@ -365,11 +369,11 @@ fn generate_request_body(request: &WaylandRequest) -> TokenStream {
                     // the call is in progress, so this cannot introduce aliased mutable access across
                     // FFI. The unchecked pin is used only for the duration of the `associate()` call,
                     // and the guarded value is not moved while that temporary `Pin<&mut _>` exists.
-                    unsafe { guard.pin_mut_unchecked().associate(boxed); };
+                    unsafe { guard.pin_mut_unchecked().associate(boxed, protocol_id); };
                 }
                 Err(err) => {
-                    let (code, message) = parse_post_error(err.what());
-                    resource.post_error(code, message);
+                    let (object_id, code, message) = parse_post_error(err.what());
+                    post_protocol_error(resource, object_id, code, message);
                 }
             }
         }
@@ -384,8 +388,8 @@ fn generate_request_body(request: &WaylandRequest) -> TokenStream {
             // FFI. The unchecked pin is used only for the duration of the `associate()` call,
             // and the guarded value is not moved while that temporary `Pin<&mut _>` exists.
             if let Err(err) = unsafe { (&mut *guard).pin_mut_unchecked().#snake_request_name(#( #call_arg_names ),*) } {
-                let (code, message) = parse_post_error(err.what());
-                resource.post_error(code, message);
+                let (object_id, code, message) = parse_post_error(err.what());
+                post_protocol_error(resource, object_id, code, message);
             }
         }
     }
@@ -526,6 +530,15 @@ fn generate_dispatch_impl(
                     #(#request_handler_arms),*
                 }
             }
+
+            fn destroyed(
+                _state: &mut Self,
+                _client: ClientId,
+                resource: &#namespace_name::#interface_name::#protocol_struct_name,
+                _data: &Arc<Mutex<cxx::SharedPtr<ffi::#ext_struct_name>>>,
+            ) {
+                unregister_resource(resource);
+            }
         }
     }
 }
@@ -565,19 +578,45 @@ fn write_dispatch_rs(protocols: &Vec<WaylandProtocol>) {
         #[allow(dead_code, unused_imports)]
         mod dispatch {
             use wayland_server::{Client, DataInit, Dispatch, GlobalDispatch, New, DisplayHandle, Resource};
+            use wayland_server::backend::{ClientId, ObjectId};
             use crate::protocols;
             use crate::wayland_server_core::ServerState;
             use crate::ffi;
             use std::os::fd::{AsRawFd, RawFd};
-            use std::sync::{Arc, Mutex};
+            use std::sync::{Arc, LazyLock, Mutex, RwLock};
+            use std::collections::HashMap;
+            use std::ffi::CString;
 
-            fn parse_post_error(what: &str) -> (u32, String) {
-                match what.split_once(':') {
-                    Some((code_str, msg)) => match code_str.trim().parse::<u32>() {
-                        Ok(code) => (code, msg.trim().to_string()),
-                        Err(_) => (0, what.to_string()),
-                    },
-                    None => (0, what.to_string()),
+            static OBJECT_REGISTRY: LazyLock<RwLock<HashMap<u32, ObjectId>>> = LazyLock::new(|| RwLock::new(HashMap::new()));
+
+            fn register_resource(resource: &impl Resource) {
+                let id = resource.id();
+                OBJECT_REGISTRY.write().unwrap_or_else(|e| e.into_inner()).insert(id.protocol_id(), id);
+            }
+
+            fn unregister_resource(resource: &impl Resource) {
+                OBJECT_REGISTRY.write().unwrap_or_else(|e| e.into_inner()).remove(&resource.id().protocol_id());
+            }
+
+            fn parse_post_error(what: &str) -> (u32, u32, String) {
+                let mut parts = what.splitn(3, ':');
+                let object_id = parts.next()
+                    .and_then(|s| s.trim().parse::<u32>().ok())
+                    .unwrap_or(0);
+                let code = parts.next()
+                    .and_then(|s| s.trim().parse::<u32>().ok())
+                    .unwrap_or(0);
+                let message = parts.next()
+                    .map(|s| s.trim().to_string())
+                    .unwrap_or_else(|| what.to_string());
+                (object_id, code, message)
+            }
+
+            fn post_protocol_error(resource: &impl Resource, object_id: u32, code: u32, message: String) {
+                let target_id = OBJECT_REGISTRY.read().unwrap_or_else(|e| e.into_inner()).get(&object_id).cloned();
+                if let Some(handle) = resource.handle().upgrade() {
+                    let id = target_id.unwrap_or_else(|| resource.id());
+                    handle.post_error(id, code, CString::new(message).expect("Error message contained null byte"));
                 }
             }
 
@@ -810,7 +849,8 @@ fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
         "instance",
         false,
     ));
-    associate_method.set_body("instance_ = std::move(instance);");
+    associate_method.add_arg(CppArg::new(CppType::CppU32, "object_id", false));
+    associate_method.set_body("object_id_ = object_id;\ninstance_ = std::move(instance);");
     class.add_method(associate_method);
     class.add_private_member(CppArg::new(
         CppType::Box(snake_to_pascal(
@@ -819,6 +859,22 @@ fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
         "instance_",
         true,
     ));
+
+    // Add a private member for the object ID of the associated resource.
+    class.add_private_member(CppArg::new(CppType::CppU32, "object_id_", false));
+
+    // Add a public accessor for the object ID so that C++ implementations
+    // can pass it to ProtocolError.
+    let mut object_id_method = CppMethod::new(
+        "object_id",
+        Some(CppType::CppU32),
+        false,
+        false,
+        false,
+        false,
+    );
+    object_id_method.set_body("return object_id_;");
+    class.add_method(object_id_method);
 
     // Add the "get_box" method that will return the boxes rust interface. This is used
     // when sending a Box from C++ to Rust.
@@ -922,7 +978,7 @@ fn wayland_request_to_cpp_method(method: &WaylandRequest) -> Vec<CppMethod> {
     // If this is the case, we need to do the following:
     // 1. Generate a different virtual method that is NOT called from Rust which will handle
     //    the logic using the weak value.
-    // 2. Make th eoriginal handler NOT be virtual, as the overridable logic will be delegated
+    // 2. Make the original handler NOT be virtual, as the overridable logic will be delegated
     //    to the new method from #1.
     let wayland_weak_transformers: Vec<String> = args
         .clone()
