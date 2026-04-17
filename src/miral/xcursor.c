@@ -609,26 +609,42 @@ XcursorFileLoadImages (FILE *file, int size)
 #endif
 
 /* Legacy-only entries from XCURSORPATH that are not already covered by the
- * XDG spec search order (i.e. not $HOME/.icons, $HOME/.cursors,
- * $XDG_DATA_DIRS/icons, or /usr/share/pixmaps — those are added explicitly
- * by _XcursorBuildXdgPath). */
+ * XDG spec search order (i.e. not $HOME/.icons, $XDG_DATA_HOME/icons,
+ * $HOME/.cursors, $XDG_DATA_DIRS/icons, or /usr/share/pixmaps — those are
+ * added explicitly by _XcursorBuildXdgPath). */
 #define XCURSORLEGACYPATH "/usr/share/cursors/xorg-x11:"ICONDIR
 
 static char *
 _XcursorBuildXdgPath (void)
 {
     char const *home = getenv ("HOME");
+    char const *xdg_data_home = getenv ("XDG_DATA_HOME");
     char const *xdg_data_dirs = getenv ("XDG_DATA_DIRS");
+
+    /* Default XDG_DATA_HOME to $HOME/.local/share when unset or empty */
+    char *default_xdg_data_home = NULL;
+    if ((!xdg_data_home || xdg_data_home[0] == '\0') && home)
+    {
+        size_t const default_len = strlen (home) + strlen ("/.local/share") + 1;
+        default_xdg_data_home = malloc (default_len);
+        if (!default_xdg_data_home)
+            return NULL;
+        snprintf (default_xdg_data_home, default_len, "%s/.local/share", home);
+        xdg_data_home = default_xdg_data_home;
+    }
 
     if (!xdg_data_dirs || xdg_data_dirs[0] == '\0')
         xdg_data_dirs = "/usr/local/share:/usr/share";
 
     size_t len = 0;
 
-    /* $HOME/.icons: and $HOME/.cursors: */
+    /* $HOME/.icons:, $XDG_DATA_HOME/icons:, and $HOME/.cursors: */
     if (home)
-        len += strlen (home) + strlen ("/.icons") + 1   /* +1 for ':' */
-             + strlen (home) + strlen ("/.cursors") + 1;
+        len += strlen (home) + strlen ("/.icons") + 1;   /* +1 for ':' */
+    if (xdg_data_home)
+        len += strlen (xdg_data_home) + strlen ("/icons") + 1;
+    if (home)
+        len += strlen (home) + strlen ("/.cursors") + 1;
 
     /* $XDG_DATA_DIRS/icons: (one entry per non-empty dir in XDG_DATA_DIRS) */
     for (char const *p = xdg_data_dirs; p && *p; )
@@ -649,7 +665,10 @@ _XcursorBuildXdgPath (void)
     /* This allocation persists for the lifetime of the process (intentional). */
     char *dynamic_path = malloc (len);
     if (!dynamic_path)
+    {
+        free (default_xdg_data_home);
         return NULL;
+    }
 
     char *p_out = dynamic_path;
     size_t remaining = len;
@@ -657,6 +676,22 @@ _XcursorBuildXdgPath (void)
     if (home)
     {
         int const written = snprintf (p_out, remaining, "%s/.icons:", home);
+        if (written < 0 || (size_t)written >= remaining) goto error;
+        p_out += written;
+        remaining -= (size_t)written;
+    }
+
+    if (xdg_data_home)
+    {
+        int const written = snprintf (p_out, remaining, "%s/icons:", xdg_data_home);
+        if (written < 0 || (size_t)written >= remaining) goto error;
+        p_out += written;
+        remaining -= (size_t)written;
+    }
+
+    if (home)
+    {
+        int const written = snprintf (p_out, remaining, "%s/.cursors:", home);
         if (written < 0 || (size_t)written >= remaining) goto error;
         p_out += written;
         remaining -= (size_t)written;
@@ -688,22 +723,16 @@ _XcursorBuildXdgPath (void)
         remaining -= (size_t)written;
     }
 
-    if (home)
-    {
-        int const written = snprintf (p_out, remaining, "%s/.cursors:", home);
-        if (written < 0 || (size_t)written >= remaining) goto error;
-        p_out += written;
-        remaining -= (size_t)written;
-    }
-
     {
         int const written = snprintf (p_out, remaining, "%s", XCURSORLEGACYPATH);
         if (written < 0 || (size_t)written >= remaining) goto error;
     }
 
+    free (default_xdg_data_home);
     return dynamic_path;
 
 error:
+    free (default_xdg_data_home);
     free (dynamic_path);
     return NULL;
 }
