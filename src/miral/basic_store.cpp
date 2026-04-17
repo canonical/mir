@@ -239,7 +239,7 @@ void process_as(std::function<void(mlc::Key const&, std::optional<Type>)> const&
         }
         else
         {
-            throw std::runtime_error(std::format("Config key '{}' has invalid value: {}", key.to_string(), *val));
+            throw std::runtime_error(std::format("Config key '{}' has invalid value: {}", key, *val));
         }
     }
     else
@@ -263,7 +263,7 @@ void process_as<bool>(std::function<void(mlc::Key const&, std::optional<bool>)> 
         }
         else
         {
-            throw std::runtime_error(std::format("Config key '{}' has invalid value: {}", key.to_string(), *val));
+            throw std::runtime_error(std::format("Config key '{}' has invalid value: {}", key, *val));
         }
     }
     else
