@@ -19,6 +19,7 @@
 
 #include <memory>
 #include <stdexcept>
+#include <boost/throw_exception.hpp>
 
 namespace mir
 {
@@ -33,11 +34,13 @@ public:
     {
     }
 
+    Weak(Weak const& weak) = default;
+
     auto value() const -> T&
     {
         if (auto locked = ptr_.lock())
             return *locked;
-        throw std::logic_error{"Accessing expired wayland_rs::Weak"};
+        BOOST_THROW_EXCEPTION(std::logic_error{"Accessing expired wayland_rs::Weak"});
     }
 
     operator bool() const
