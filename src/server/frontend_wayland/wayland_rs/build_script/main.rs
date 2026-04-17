@@ -939,7 +939,7 @@ fn wayland_request_to_cpp_method(method: &WaylandRequest) -> Vec<CppMethod> {
     // If this is the case, we need to do the following:
     // 1. Generate a different virtual method that is NOT called from Rust which will handle
     //    the logic using the weak value.
-    // 2. Make th eoriginal handler NOT be virtual, as the overridable logic will be delegated
+    // 2. Make the original handler NOT be virtual, as the overridable logic will be delegated
     //    to the new method from #1.
     let wayland_weak_transformers: Vec<String> = args
         .clone()
