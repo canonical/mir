@@ -323,7 +323,7 @@ void process_as(std::function<void(mlc::Key const&, std::optional<Type>)> const&
         }
         else
         {
-            throw ParsingError(key, *val);
+            BOOST_THROW_EXCEPTION(ParsingError(key, *val));
         }
     }
     else
@@ -347,7 +347,7 @@ void process_as<bool>(std::function<void(mlc::Key const&, std::optional<bool>)> 
         }
         else
         {
-            throw ParsingError(key, *val);
+            BOOST_THROW_EXCEPTION(ParsingError(key, *val));
         }
     }
     else
