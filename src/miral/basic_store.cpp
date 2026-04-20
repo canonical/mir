@@ -22,7 +22,7 @@ template <typename Range> auto join_comma(Range const& strings) -> std::string
     auto comma_separated = strings | std::views::join_with(sep);
 
     // LEGACY(24.04) - `std::ranges::to` is not yet widely available, so we need to copy the result into a string
-    // manually if it's not available. Remove this workaround once we upgrade to 26.04
+    // manually if it's not available. Remove this workaround once we drop 24.04 support.
 #ifdef __cpp_lib_ranges_to_container
     return comma_separated | std::ranges::to<std::string>();
 #else
