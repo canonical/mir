@@ -274,7 +274,7 @@ TEST_F(BasicStoreTest, ints_preset_is_used_when_no_values_are_set)
     std::vector<int> const preset_vals{10, 20};
     store.add_ints_attribute(an_ints_key, "some ints", preset_vals, [this](auto k, auto v){ ints_handler(k, v); });
 
-    EXPECT_CALL(*this, ints_handler(an_ints_key, Optional(ElementsAre(10, 20))));
+    EXPECT_CALL(*this, ints_handler(an_ints_key, Optional(ElementsAreArray(preset_vals))));
 
     run_empty();
 }
@@ -284,7 +284,7 @@ TEST_F(BasicStoreTest, ints_preset_is_used_when_all_values_cannot_be_parsed)
     std::vector<int> const preset_vals{10, 20};
     store.add_ints_attribute(an_ints_key, "some ints", preset_vals, [this](auto k, auto v){ ints_handler(k, v); });
 
-    EXPECT_CALL(*this, ints_handler(an_ints_key, Optional(ElementsAre(10, 20))));
+    EXPECT_CALL(*this, ints_handler(an_ints_key, Optional(ElementsAreArray(preset_vals))));
 
     store.do_transaction([&]
     {
@@ -298,7 +298,7 @@ TEST_F(BasicStoreTest, floats_preset_is_used_when_no_values_are_set)
     std::vector<float> const preset_vals{1.1f, 2.2f};
     store.add_floats_attribute(a_floats_key, "some floats", preset_vals, [this](auto k, auto v){ floats_handler(k, v); });
 
-    EXPECT_CALL(*this, floats_handler(a_floats_key, Optional(ElementsAre(1.1f, 2.2f))));
+    EXPECT_CALL(*this, floats_handler(a_floats_key, Optional(ElementsAreArray(preset_vals))));
 
     run_empty();
 }
@@ -308,7 +308,7 @@ TEST_F(BasicStoreTest, floats_preset_is_used_when_all_values_cannot_be_parsed)
     std::vector<float> const preset_vals{1.1f, 2.2f};
     store.add_floats_attribute(a_floats_key, "some floats", preset_vals, [this](auto k, auto v){ floats_handler(k, v); });
 
-    EXPECT_CALL(*this, floats_handler(a_floats_key, Optional(ElementsAre(1.1f, 2.2f))));
+    EXPECT_CALL(*this, floats_handler(a_floats_key, Optional(ElementsAreArray(preset_vals))));
 
     store.do_transaction([&]
     {
@@ -322,7 +322,7 @@ TEST_F(BasicStoreTest, strings_preset_is_used_when_no_values_are_set)
     std::vector<std::string> const preset_vals{"alpha", "beta"};
     store.add_strings_attribute(a_strings_key, "some strings", preset_vals, [this](auto k, auto v){ strings_handler(k, v); });
 
-    EXPECT_CALL(*this, strings_handler(a_strings_key, Optional(ElementsAre("alpha", "beta"))));
+    EXPECT_CALL(*this, strings_handler(a_strings_key, Optional(ElementsAreArray(preset_vals))));
 
     run_empty();
 }
