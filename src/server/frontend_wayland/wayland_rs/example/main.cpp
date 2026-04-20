@@ -29,7 +29,14 @@ class WaylandServerNotificationHandler : public mir::wayland_rs::WaylandServerNo
 public:
     auto client_added(rust::Box<mir::wayland_rs::WaylandClient> wayland_client) -> void override
     {
-        std::cout << "Client connected " << wayland_client->pid() << "." << std::endl;
+        try
+        {
+            std::cout << "Client connected " << wayland_client->pid() << "." << std::endl;
+        }
+        catch (rust::Error const& error)
+        {
+            std::cerr << "Failed to get client pid: " << error.what() << std::endl;
+        }
     }
 
     auto client_removed(rust::Box<mir::wayland_rs::WaylandClientId>) -> void override

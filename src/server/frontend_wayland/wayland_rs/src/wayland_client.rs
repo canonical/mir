@@ -12,24 +12,30 @@ impl WaylandClient {
     }
 
     /// Retrieve the pid of the client.
-    pub fn pid(&self) -> i32 {
-        self.client
+    pub fn pid(&self) -> Result<i32, Box<dyn std::error::Error>> {
+        Ok(self
+            .client
             .get_credentials(&self.handle)
-            .map_or(0, |c| c.pid)
+            .map_err(|e| format!("Failed to get client credentials: {e}"))?
+            .pid)
     }
 
     /// Retrieve the uid of the client.
-    pub fn uid(&self) -> u32 {
-        self.client
+    pub fn uid(&self) -> Result<u32, Box<dyn std::error::Error>> {
+        Ok(self
+            .client
             .get_credentials(&self.handle)
-            .map_or(0, |c| c.uid)
+            .map_err(|e| format!("Failed to get client credentials: {e}"))?
+            .uid)
     }
 
     /// Retrieve the gid of the client.
-    pub fn gid(&self) -> u32 {
-        self.client
+    pub fn gid(&self) -> Result<u32, Box<dyn std::error::Error>> {
+        Ok(self
+            .client
             .get_credentials(&self.handle)
-            .map_or(0, |c| c.gid)
+            .map_err(|e| format!("Failed to get client credentials: {e}"))?
+            .gid)
     }
 
     /// Check if this client is wrapping the provided [WaylandClientId].
