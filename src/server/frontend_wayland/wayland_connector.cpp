@@ -71,26 +71,37 @@ namespace mir
 {
 namespace frontend
 {
-class GlobalFactory : public wayland_rs::GlobalFactory {
+class WaylandConnector::WaylandCompositorGlobal
+{
 public:
-    GlobalFactory(std::shared_ptr<WlClientRegistry> const& client_registry,
-        std::shared_ptr<WaylandConnector::WaylandCompositorGlobal> const& compositor_global,
-        WaylandConnector::WaylandProtocolExtensionFilter const extension_filter)
-        : client_registry(client_registry),
-          compositor_global(compositor_global),
-          extension_filter(std::move(extension_filter))
+    WaylandCompositorGlobal(
+        std::shared_ptr<WlClientRegistry> const& client_registry,
+        std::shared_ptr<mir::Executor> const& frame_callback_executor,
+        std::shared_ptr<mg::GraphicBufferAllocator> const& allocator)
+        : allocator{allocator},
+          frame_callback_executor{frame_callback_executor},
+          client_registry{client_registry}
     {
     }
 
-    auto can_view(rust::String interface_name, rust::Box<wayland_rs::WaylandClientId> client_id) -> bool override
+    void on_surface_created(rust::Box<wayland_rs::WaylandClientId> client_id, uint32_t id, std::function<void(WlSurface*)> const& callback)
     {
-        auto const client = client_registry->from_id(std::move(client_id));
-        return extension_filter(client->client_session(), interface_name.c_str());
+        auto const wl_surface = resource ? WlSurface::from(resource) : nullptr;
+        if (wl_surface)
+        {
+            callback(wl_surface);
+        }
+        else
+        {
+            surface_callbacks[std::make_pair(std::move(client_id), id)].push_back(callback);
+        }
     }
 
+    std::map<std::pair<rust::Box<wayland_rs::WaylandClientId>, uint32_t>, std::vector<std::function<void(WlSurface*)>>> surface_callbacks;
+    std::shared_ptr<mg::GraphicBufferAllocator> const allocator;
+    std::shared_ptr<mir::Executor> const frame_callback_executor;
+private:
     std::shared_ptr<WlClientRegistry> client_registry;
-    std::shared_ptr<WaylandConnector::WaylandCompositorGlobal> compositor_global;
-    WaylandConnector::WaylandProtocolExtensionFilter const extension_filter;
 };
 
 class WaylandServerNotificationHandler : public wayland_rs::WaylandServerNotificationHandler
@@ -111,39 +122,6 @@ public:
     }
 
     std::shared_ptr<WlClientRegistry> client_registry;
-};
-
-class WaylandConnector::WaylandCompositorGlobal
-{
-public:
-    WaylandCompositorGlobal(
-        std::shared_ptr<WlClientRegistry> const& client_registry,
-        std::shared_ptr<mir::Executor> const& frame_callback_executor,
-        std::shared_ptr<mg::GraphicBufferAllocator> const& allocator)
-        : client_registry{client_registry},
-          allocator{allocator},
-          frame_callback_executor{frame_callback_executor}
-    {
-    }
-
-    void on_surface_created(rust::Box<wayland_rs::WaylandClientId> client_id, uint32_t id, std::function<void(WlSurface*)> const& callback)
-    {
-        auto const wl_surface = resource ? WlSurface::from(resource) : nullptr;
-        if (wl_surface)
-        {
-            callback(wl_surface);
-        }
-        else
-        {
-            surface_callbacks[std::make_pair(std::move(client_id), id)].push_back(callback);
-        }
-    }
-
-    std::map<std::pair<rust::Box<wayland_rs::WaylandClientId>, uint32_t>, std::vector<std::function<void(WlSurface*)>>> surface_callbacks;
-private:
-    std::shared_ptr<WlClientRegistry> client_registry;
-    std::shared_ptr<mg::GraphicBufferAllocator> const allocator;
-    std::shared_ptr<mir::Executor> const frame_callback_executor;
 };
 
 class WlCompositor : public wayland_rs::WlCompositorImpl
@@ -196,6 +174,44 @@ private:
 
 private:
 
+};
+
+class GlobalFactory : public wayland_rs::GlobalFactory {
+public:
+    GlobalFactory(std::shared_ptr<WlClientRegistry> const& client_registry,
+        std::shared_ptr<WaylandConnector::WaylandCompositorGlobal> const& compositor_global,
+        WaylandConnector::WaylandProtocolExtensionFilter const extension_filter)
+        : client_registry(client_registry),
+          compositor_global(compositor_global),
+          extension_filter(std::move(extension_filter))
+    {
+    }
+
+    auto can_view(rust::String interface_name, rust::Box<wayland_rs::WaylandClientId> client_id) -> bool override
+    {
+        auto const client = client_registry->from_id(std::move(client_id));
+        return extension_filter(client->client_session(), interface_name.c_str());
+    }
+
+    auto create_wl_compositor(rust::Box<wayland_rs::WaylandClient> client) -> std::shared_ptr<wayland_rs::WlCompositorImpl> override
+    {
+        return std::make_shared<WlCompositor>(
+            std::move(client),
+            compositor_global,
+            client_registry,
+            compositor_global->frame_callback_executor,
+            compositor_global->allocator
+        );
+    }
+
+    auto create_wl_subcompositor(rust::Box<wayland_rs::WaylandClient> client) -> std::shared_ptr<wayland_rs::WlSubcompositorImpl> override
+    {
+        return std::make_shared<WlSubcompositor>(std::move(client));
+    }
+
+    std::shared_ptr<WlClientRegistry> client_registry;
+    std::shared_ptr<WaylandConnector::WaylandCompositorGlobal> compositor_global;
+    WaylandConnector::WaylandProtocolExtensionFilter const extension_filter;
 };
 }
 }
@@ -331,7 +347,6 @@ mf::WaylandConnector::WaylandConnector(
         client_registry,
         std::make_shared<FrameExecutor>(*main_loop),
         this->allocator);
-    subcompositor_global = std::make_unique<mf::WlSubcompositor>(display.get());
     auto const surface_registry = std::make_shared<mf::SurfaceRegistry>();
 
     auto const action_group_manager =

@@ -351,10 +351,9 @@ void mf::WlSurface::populate_surface_data(std::vector<shell::StreamSpecification
     }
 }
 
-mf::WlSurface* mf::WlSurface::from(wl_resource* resource)
+mf::WlSurface* mf::WlSurface::from(WlSurfaceImpl& impl)
 {
-    void* raw_surface = wl_resource_get_user_data(resource);
-    return static_cast<WlSurface*>(static_cast<wayland::Surface*>(raw_surface));
+    return static_cast<WlSurface*>(&impl);
 }
 
 void mf::WlSurface::send_frame_callbacks(CallbackList& list)

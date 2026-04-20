@@ -194,7 +194,7 @@ public:
     std::shared_ptr<scene::Session> const session;
     std::shared_ptr<compositor::BufferStream> const stream;
 
-    static WlSurface* from(wl_resource* resource);
+    static WlSurface* from(WlSurfaceImpl& impl);
 
     void attach(wayland_rs::Weak<wayland_rs::WlBufferImpl> const& buffer, bool has_buffer, int32_t x, int32_t y) override;
     void damage(int32_t x, int32_t y, int32_t width, int32_t height) override;

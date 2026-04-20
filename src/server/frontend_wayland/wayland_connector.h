@@ -237,7 +237,6 @@ private:
     rust::Box<mir::wayland_rs::WaylandServer> server;
     std::shared_ptr<WlClientRegistry> client_registry;
     std::shared_ptr<WaylandCompositorGlobal> compositor_global;
-    std::unique_ptr<WlSubcompositor> subcompositor_global;
     std::unique_ptr<WlSeat> seat_global;
     std::unique_ptr<OutputManager> output_manager;
     std::shared_ptr<DesktopFileManager> desktop_file_manager;
