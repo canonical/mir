@@ -279,6 +279,20 @@ TEST_F(BasicStoreTest, ints_preset_is_used_when_no_values_are_set)
     run_empty();
 }
 
+TEST_F(BasicStoreTest, ints_preset_is_used_when_all_values_cannot_be_parsed)
+{
+    std::vector<int> const preset_vals{10, 20};
+    store.add_ints_attribute(an_ints_key, "some ints", preset_vals, [this](auto k, auto v){ ints_handler(k, v); });
+
+    EXPECT_CALL(*this, ints_handler(an_ints_key, Optional(ElementsAre(10, 20))));
+
+    store.do_transaction([&]
+    {
+        store.update_key(an_ints_key, "not_a_number", a_path);
+        store.update_key(an_ints_key, "also_not_a_number", a_path);
+    });
+}
+
 TEST_F(BasicStoreTest, floats_preset_is_used_when_no_values_are_set)
 {
     std::vector<float> const preset_vals{1.1f, 2.2f};
@@ -287,6 +301,20 @@ TEST_F(BasicStoreTest, floats_preset_is_used_when_no_values_are_set)
     EXPECT_CALL(*this, floats_handler(a_floats_key, Optional(ElementsAre(1.1f, 2.2f))));
 
     run_empty();
+}
+
+TEST_F(BasicStoreTest, floats_preset_is_used_when_all_values_cannot_be_parsed)
+{
+    std::vector<float> const preset_vals{1.1f, 2.2f};
+    store.add_floats_attribute(a_floats_key, "some floats", preset_vals, [this](auto k, auto v){ floats_handler(k, v); });
+
+    EXPECT_CALL(*this, floats_handler(a_floats_key, Optional(ElementsAre(1.1f, 2.2f))));
+
+    store.do_transaction([&]
+    {
+        store.update_key(a_floats_key, "not_a_number", a_path);
+        store.update_key(a_floats_key, "also_not_a_number", a_path);
+    });
 }
 
 TEST_F(BasicStoreTest, strings_preset_is_used_when_no_values_are_set)
