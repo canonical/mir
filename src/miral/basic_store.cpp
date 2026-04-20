@@ -2,7 +2,6 @@
 
 #include <mir/log.h>
 
-#include <algorithm>
 #include <format>
 #include <list>
 #include <map>
@@ -11,6 +10,26 @@
 #include <set>
 
 namespace mlc = miral::live_config;
+
+namespace
+{
+template <typename Range> auto join_comma(Range const& strings) -> std::string
+{
+    auto const sep = std::string_view{", "};
+    auto comma_separated = strings | std::views::join_with(sep);
+
+    // LEGACY(24.04) - `std::ranges::to` is not yet widely available, so we need to copy the result into a string
+    // manually if it's not available. Remove this workaround once we upgrade to 26.04
+#ifdef __cpp_lib_ranges_to_container
+    return comma_separated | std::ranges::to<std::string>();
+#else
+    std::string temp;
+    std::ranges::copy(comma_separated, std::back_inserter(temp));
+
+    return temp;
+#endif
+}
+}
 
 class mlc::BasicStore::Self
 {
@@ -122,7 +141,10 @@ void mlc::BasicStore::Self::do_transaction(std::function<void()> transaction_bod
         details.value = std::nullopt;
 
     for (auto& [key, details] : array_attribute_handlers)
+    {
         details.parsed_values.resize(0);
+        details.modification_paths.clear();
+    }
 
     transaction_body();
 
@@ -180,28 +202,14 @@ void mlc::BasicStore::Self::do_transaction(std::function<void()> transaction_bod
         {
             auto const path = [&]
             {
-                // TODO Not all CI compilers support `std::ranges::to`
-                auto comma_separated =
-                    std::ranges::views::transform(details.modification_paths, [](auto const& p) { return p.string(); })
-                    | std::views::join_with(',');
+                if (details.modification_paths.empty())
+                    return std::string{"never set"};
 
-                std::string temp;
-                std::ranges::copy(comma_separated, std::back_inserter(temp));
-
-                return temp;
+                return join_comma(
+                    std::ranges::views::transform(details.modification_paths, [](auto const& p) { return p.string(); }));
             }();
+            auto const value_str = maybe_value.transform([](auto const& v) { return join_comma(v); }).value_or("unset");
 
-            auto const vector_to_string = [](auto const& v)
-            {
-                auto const comma_separated = v | std::views::join_with(',');
-
-                std::string temp;
-                std::ranges::copy(comma_separated, std::back_inserter(temp));
-
-                return temp;
-            };
-
-            auto const value_str = maybe_value.transform(vector_to_string).value_or("unset");
             mir::log_warning(
                 "Error processing key '%s' with values [%s] in file '%s': %s",
                 key.to_string().c_str(),
