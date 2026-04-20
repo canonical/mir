@@ -2,7 +2,6 @@
 
 #include <mir/log.h>
 
-#include <algorithm>
 #include <format>
 #include <list>
 #include <map>
