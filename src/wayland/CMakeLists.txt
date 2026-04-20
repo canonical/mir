@@ -40,6 +40,7 @@ mir_generate_protocol_wrapper(mirwayland "z" xdg-decoration-unstable-v1.xml)
 mir_generate_protocol_wrapper(mirwayland "wp_" viewporter.xml)
 mir_generate_protocol_wrapper(mirwayland "wp_" fractional-scale-v1.xml)
 mir_generate_protocol_wrapper(mirwayland "z" xdg-activation-v1.xml)
+mir_generate_protocol_wrapper(mirwayland "z" xdg-foreign-unstable-v2.xml)
 mir_generate_protocol_wrapper(mirwayland "wp_" linux-drm-syncobj-v1.xml)
 mir_generate_protocol_wrapper(mirwayland "ext_" ext-data-control-v1.xml)
 # We don't strip the "ext_" prefix here, because it would conflict

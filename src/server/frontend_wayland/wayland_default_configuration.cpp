@@ -58,6 +58,7 @@
 #include "data_control_v1.h"
 #include "input_trigger_registration_v1.h"
 #include "input_trigger_action_v1.h"
+#include "xdg_foreign_unstable_v2.h"
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
@@ -297,6 +298,12 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
                     ctx.display,
                     ctx.action_group_manager);
         }),
+    ExtensionBuilder{mw::XdgExporterV2::interface_name, [](auto const& ctx) -> std::shared_ptr<void>
+        {
+            return mf::create_xdg_foreign_unstable_v2(
+                ctx.display,
+                ctx.wayland_executor);
+        }},
 };
 
 ExtensionBuilder const xwayland_builder {
@@ -400,7 +407,8 @@ auto mf::get_standard_extensions() -> std::vector<std::string>
         mw::MirShellV1::interface_name,
         mw::XdgDecorationManagerV1::interface_name,
         mw::XdgActivationV1::interface_name,
-        mw::FractionalScaleManagerV1::interface_name};
+        mw::FractionalScaleManagerV1::interface_name,
+        mw::XdgExporterV2::interface_name};
 }
 
 auto mf::get_supported_extensions() -> std::vector<std::string>

@@ -650,5 +650,37 @@ global:
     virtual?thunk?to?mir::wayland::MirPositionerV1::*;
     typeinfo?for?mir::wayland::MirPositionerV1;
     vtable?for?mir::wayland::MirPositionerV1;
+
+    mir::wayland::zxdg_exporter_v2_interface_data;
+    mir::wayland::XdgExporterV2::*;
+    non-virtual?thunk?to?mir::wayland::XdgExporterV2::*;
+    virtual?thunk?to?mir::wayland::XdgExporterV2::*;
+    typeinfo?for?mir::wayland::XdgExporterV2;
+    vtable?for?mir::wayland::XdgExporterV2;
+    typeinfo?for?mir::wayland::XdgExporterV2::Global;
+    vtable?for?mir::wayland::XdgExporterV2::Global;
+
+    mir::wayland::zxdg_exported_v2_interface_data;
+    mir::wayland::XdgExportedV2::*;
+    non-virtual?thunk?to?mir::wayland::XdgExportedV2::*;
+    virtual?thunk?to?mir::wayland::XdgExportedV2::*;
+    typeinfo?for?mir::wayland::XdgExportedV2;
+    vtable?for?mir::wayland::XdgExportedV2;
+
+    mir::wayland::zxdg_importer_v2_interface_data;
+    mir::wayland::XdgImporterV2::*;
+    non-virtual?thunk?to?mir::wayland::XdgImporterV2::*;
+    virtual?thunk?to?mir::wayland::XdgImporterV2::*;
+    typeinfo?for?mir::wayland::XdgImporterV2;
+    vtable?for?mir::wayland::XdgImporterV2;
+    typeinfo?for?mir::wayland::XdgImporterV2::Global;
+    vtable?for?mir::wayland::XdgImporterV2::Global;
+
+    mir::wayland::zxdg_imported_v2_interface_data;
+    mir::wayland::XdgImportedV2::*;
+    non-virtual?thunk?to?mir::wayland::XdgImportedV2::*;
+    virtual?thunk?to?mir::wayland::XdgImportedV2::*;
+    typeinfo?for?mir::wayland::XdgImportedV2;
+    vtable?for?mir::wayland::XdgImportedV2;
   };
 };
