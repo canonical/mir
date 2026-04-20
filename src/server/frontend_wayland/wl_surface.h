@@ -126,7 +126,6 @@ class WlSurface : public wayland_rs::WlSurfaceImpl
 public:
     WlSurface(rust::Box<wayland_rs::WaylandClient> client,
               std::shared_ptr<WlClientRegistry> const& registry,
-              std::shared_ptr<mir::Executor> const& wayland_executor,
               std::shared_ptr<mir::Executor> const& frame_callback_executor,
               std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator);
 

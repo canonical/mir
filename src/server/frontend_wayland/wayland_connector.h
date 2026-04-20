@@ -161,6 +161,7 @@ class WaylandConnector : public Connector, public WaylandTools
 {
 public:
     using WaylandProtocolExtensionFilter = std::function<bool(std::shared_ptr<scene::Session> const&, char const*)>;
+    class WaylandCompositorGlobal;
 
     WaylandConnector(
         std::shared_ptr<shell::Shell> const& shell,
@@ -235,7 +236,7 @@ private:
 
     rust::Box<mir::wayland_rs::WaylandServer> server;
     std::shared_ptr<WlClientRegistry> client_registry;
-    std::unique_ptr<WlCompositor> compositor_global;
+    std::shared_ptr<WaylandCompositorGlobal> compositor_global;
     std::unique_ptr<WlSubcompositor> subcompositor_global;
     std::unique_ptr<WlSeat> seat_global;
     std::unique_ptr<OutputManager> output_manager;
