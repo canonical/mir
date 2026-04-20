@@ -7,4 +7,5 @@ wayland_rs_cpp/include/*
 wayland_rs_cpp/src/*
 
 !wayland_rs_cpp/include/protocol_error.h
+!wayland_rs_cpp/include/weak.h
 !wayland_rs_cpp/src/protocol_error.cpp

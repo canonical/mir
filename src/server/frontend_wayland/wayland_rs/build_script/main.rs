@@ -648,6 +648,8 @@ fn create_global_factory(protocols: &Vec<WaylandProtocol>) -> CppBuilder {
                     Some(CppType::Object(class_name)),
                     true,
                     false,
+                    true,
+                    true,
                 );
                 class.add_method(method);
             })
@@ -747,6 +749,7 @@ fn create_cpp_builder(protocol: &WaylandProtocol) -> CppBuilder {
     // CXX-generated ffi.rs.h to avoid a circular include dependency:
     //   ffi.rs.h  →  include/*.h  →  ffi.rs.h
     builder.add_header_include("\"ffi_fwd.h\"");
+    builder.add_header_include("\"weak.h\"");
     builder.add_header_include("<memory>");
     builder.add_header_include("<optional>");
     builder.add_header_include("<cstdint>");
@@ -780,22 +783,26 @@ fn write_cpp_source(builder: &CppBuilder) {
 fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
     let class_name = format_wayland_interface_to_cpp_class(&interface.name);
     let mut class = CppClass::new(class_name);
-    let methods = interface.items.iter().filter_map(|item| {
-        if let protocol_parser::InterfaceItem::Request(request) = item {
-            Some(wayland_request_to_cpp_method(request))
-        } else if let protocol_parser::InterfaceItem::Event(event) = item {
-            Some(wayland_event_to_cpp_method(event))
-        } else {
-            None
-        }
-    });
+    let methods = interface
+        .items
+        .iter()
+        .filter_map(|item| {
+            if let protocol_parser::InterfaceItem::Request(request) = item {
+                Some(wayland_request_to_cpp_method(request))
+            } else if let protocol_parser::InterfaceItem::Event(event) = item {
+                Some(vec![wayland_event_to_cpp_method(event)])
+            } else {
+                None
+            }
+        })
+        .flatten();
 
     for enum_ in wayland_interface_to_enums(interface) {
         class.add_enum(enum_);
     }
 
     // Add the method that associates the boxed rust interface with the C++ class.
-    let mut associate_method = CppMethod::new("associate", None, true, false);
+    let mut associate_method = CppMethod::new("associate", None, true, false, true, true);
     associate_method.add_arg(CppArg::new(
         CppType::Box(snake_to_pascal(
             &format_wayland_interface_to_rust_extension_struct(&interface.name),
@@ -819,7 +826,14 @@ fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
 
     // Add a public accessor for the object ID so that C++ implementations
     // can pass it to ProtocolError.
-    let mut object_id_method = CppMethod::new("object_id", Some(CppType::CppU32), false, false);
+    let mut object_id_method = CppMethod::new(
+        "object_id",
+        Some(CppType::CppU32),
+        false,
+        false,
+        false,
+        false,
+    );
     object_id_method.set_body("return object_id_;");
     class.add_method(object_id_method);
 
@@ -832,6 +846,8 @@ fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
         ))),
         false,
         false,
+        true,
+        true,
     );
     get_box_method.set_body(
         "if (!instance_) { throw \"get_box() called before associate()\"; }\nreturn instance_.value();",
@@ -887,7 +903,7 @@ fn wayland_arg_to_cpp_arg(arg: &WaylandArg) -> CppArg {
     CppArg::new(type_, arg.name.as_str(), arg.allow_null.unwrap_or(false))
 }
 
-fn wayland_request_to_cpp_method(method: &WaylandRequest) -> CppMethod {
+fn wayland_request_to_cpp_method(method: &WaylandRequest) -> Vec<CppMethod> {
     // Methods will have a return value in C++ if they are creating a new Wayland object.
     // Otherwise they always return void.
     let retval = match method
@@ -907,38 +923,151 @@ fn wayland_request_to_cpp_method(method: &WaylandRequest) -> CppMethod {
         None => None,
     };
 
-    let mut cpp_method = CppMethod::new(method.name.as_str(), retval, true, true);
     let args = method
         .args
         .iter()
         .filter(|arg| arg.type_ != WaylandArgType::NewId)
         .map(wayland_arg_to_cpp_arg);
 
+    // If a C++ argument is being sent from Rust to C++ as a shared_ptr, we do NOT want
+    // to encourage the protocol implementer to hold a shared reference to the object, as
+    // that muddies up the lifetimes significantly. Only the Rust Wayland frontend should
+    // have access to the lifetime. However, it is important for the protocol business logic
+    // to be able to interact with other protocol implementations. Hence, we wrap the shared_ptr
+    // in our own "Weak" construct.
+    //
+    // If this is the case, we need to do the following:
+    // 1. Generate a different virtual method that is NOT called from Rust which will handle
+    //    the logic using the weak value.
+    // 2. Make the original handler NOT be virtual, as the overridable logic will be delegated
+    //    to the new method from #1.
+    let wayland_weak_transformers: Vec<String> = args
+        .clone()
+        .flat_map(|arg| match arg.cpp_type() {
+            CppType::Object(type_name) => Some(format!(
+                "auto const wrapped_{name} = wayland_rs::Weak<{type_name}>({name});",
+                name = arg.name(),
+                type_name = type_name
+            )),
+            _ => None,
+        })
+        .collect();
+
+    let delegation_args: Vec<String> = args
+        .clone()
+        .flat_map(|arg| {
+            let call_arg = match arg.cpp_type() {
+                CppType::Object(_) => format!("wrapped_{}", arg.name()),
+                _ => arg.name().to_string(),
+            };
+            if let Some(has_name) = arg.has_name() {
+                vec![call_arg, has_name]
+            } else {
+                vec![call_arg]
+            }
+        })
+        .collect();
+
+    let has_retval = retval.is_some();
+    let mut cpp_method = CppMethod::new(
+        method.name.as_str(),
+        retval,
+        wayland_weak_transformers.is_empty(),
+        true,
+        true,
+        true,
+    );
     for arg in args {
         cpp_method.add_arg(arg);
     }
 
     if let Some(type_) = &method.type_ {
         if type_ == "destructor" {
+            assert!(wayland_weak_transformers.is_empty());
             cpp_method.set_body("");
         }
     }
 
-    cpp_method
+    if !wayland_weak_transformers.is_empty() {
+        // Build the body: wrap shared_ptrs in Weak, then delegate to the virtual overload
+        let return_prefix = if has_retval { "return " } else { "" };
+        let delegation_call = format!(
+            "{}{}({});",
+            return_prefix,
+            sanitize_identifier(&method.name),
+            delegation_args.join(", ")
+        );
+        let mut body_lines = wayland_weak_transformers;
+        body_lines.push(delegation_call);
+        cpp_method.set_body(body_lines.join("\n"));
+
+        // Generate the virtual method that protocol implementers override.
+        // This method uses Weak args instead of shared_ptr args.
+        let virtual_retval = method
+            .args
+            .iter()
+            .find(|arg| arg.type_ == WaylandArgType::NewId)
+            .map(|new_id_arg| {
+                CppType::Object(format_wayland_interface_to_cpp_class(
+                    new_id_arg
+                        .interface
+                        .as_ref()
+                        .expect("NewId is missing interface"),
+                ))
+            });
+        let mut virtual_method = CppMethod::new(
+            method.name.as_str(),
+            virtual_retval,
+            true,
+            true,
+            true,
+            false,
+        );
+        for wayland_arg in method
+            .args
+            .iter()
+            .filter(|arg| arg.type_ != WaylandArgType::NewId)
+        {
+            let cpp_arg = wayland_arg_to_cpp_arg(wayland_arg);
+            match cpp_arg.cpp_type() {
+                CppType::Object(type_name) => {
+                    virtual_method.add_arg(CppArg::new(
+                        CppType::Weak(type_name.clone()),
+                        wayland_arg.name.as_str(),
+                        wayland_arg.allow_null.unwrap_or(false),
+                    ));
+                }
+                _ => {
+                    virtual_method.add_arg(cpp_arg);
+                }
+            }
+        }
+
+        vec![cpp_method, virtual_method]
+    } else {
+        vec![cpp_method]
+    }
 }
 
 fn wayland_event_to_cpp_method(event: &WaylandEvent) -> CppMethod {
-    let mut cpp_method = CppMethod::new(format!("send_{}_event", event.name), None, false, false);
+    let mut cpp_method = CppMethod::new(
+        format!("send_{}_event", event.name),
+        None,
+        false,
+        false,
+        false,
+        true,
+    );
     let args = event.args.iter().map(wayland_arg_to_cpp_arg);
 
     let sanitized_args: Vec<String> = args
         .clone()
         .flat_map(|arg| {
-            let arg_name = match arg.cpp_type {
-                CppType::Object(_) => format!("{}->get_box()", sanitize_identifier(&arg.name)),
-                _ => sanitize_identifier(&arg.name),
+            let arg_name = match arg.cpp_type() {
+                CppType::Object(_) => format!("{}->get_box()", sanitize_identifier(&arg.name())),
+                _ => sanitize_identifier(&arg.name()),
             };
-            if let Some(has_name) = arg.has_name {
+            if let Some(has_name) = arg.has_name() {
                 vec![arg_name, has_name]
             } else {
                 vec![arg_name]
