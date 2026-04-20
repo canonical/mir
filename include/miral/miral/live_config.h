@@ -17,6 +17,7 @@
 #ifndef MIRAL_LIVE_CONFIG_H
 #define MIRAL_LIVE_CONFIG_H
 
+#include <format>
 #include <functional>
 #include <initializer_list>
 #include <memory>
@@ -103,5 +104,15 @@ public:
     Store& operator=(Store const&) = delete;
 };
 }
+
+/// \remark Since MirAL 5.8
+template<>
+struct std::formatter<miral::live_config::Key> : std::formatter<std::string>
+{
+    auto format(miral::live_config::Key const& key, std::format_context& ctx) const
+    {
+        return std::formatter<std::string>::format(key.to_string(), ctx);
+    }
+};
 
 #endif //MIRAL_LIVE_CONFIG_H
