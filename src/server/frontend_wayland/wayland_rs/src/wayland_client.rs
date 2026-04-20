@@ -47,7 +47,7 @@ impl WaylandClient {
 /// An opaque ID for the WaylandClient.
 ///
 /// This is useful when a client is removed because we cannot resolve
-/// a WaylandClient form a raw [ClientId]. Instead, the C++ side of things
+/// a WaylandClient from a raw [ClientId]. Instead, the C++ side of things
 /// can use [WaylandClient::equals] to check if this id matches one of their
 /// clients.
 pub struct WaylandClientId {
