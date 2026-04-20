@@ -241,7 +241,7 @@ auto mir::frontend::WaylandExtensions::get_extension(std::string const& name) co
     return {};
 }
 
-void mf::WaylandExtensions::run_builders(wl_display*, std::function<void(std::function<void()>&& work)> const&)
+void mf::WaylandExtensions::run_builders(std::function<void(std::function<void()>&& work)> const&)
 {
 }
 
@@ -278,29 +278,19 @@ mf::WaylandConnector::WaylandConnector(
     : extension_filter{extension_filter},
       server{wayland_rs::create_wayland_server()},
       client_registry{std::make_shared<WlClientRegistry>()},
-      pause_signal{eventfd(0, EFD_CLOEXEC | EFD_SEMAPHORE)},
       allocator{allocator_for_display(allocator)},
       shell{shell},
       extensions{std::move(extensions_)},
       session_lock_{session_lock}
 {
-    if (pause_signal == mir::Fd::invalid)
-    {
-        BOOST_THROW_EXCEPTION((std::system_error{
-            errno,
-            std::system_category(),
-            "Failed to create IPC pause notification eventfd"}));
-    }
-
     if (!server.into_raw())
     {
         BOOST_THROW_EXCEPTION(std::runtime_error{"Failed to create wl_display"});
     }
 
     // Run the builders before creating the seat (because that's what GTK3 expects)
-    extensions->run_builders(
-        display.get(),
-        [executor=executor](std::function<void()>&& work) { executor->spawn(std::move(work)); });
+    // TODO: Should this even take a function nowadays?
+    extensions->run_builders([](std::function<void()>&& work) { work(); });
 
     /*
      * Here be Dragons!
