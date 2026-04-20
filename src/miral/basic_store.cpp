@@ -2,12 +2,15 @@
 
 #include <mir/log.h>
 
+#include <boost/throw_exception.hpp>
+
 #include <format>
 #include <list>
 #include <map>
 #include <mutex>
 #include <ranges>
 #include <set>
+#include <stdexcept>
 
 namespace mlc = miral::live_config;
 
@@ -19,7 +22,7 @@ template <typename Range> auto join_comma(Range const& strings) -> std::string
     auto comma_separated = strings | std::views::join_with(sep);
 
     // LEGACY(24.04) - `std::ranges::to` is not yet widely available, so we need to copy the result into a string
-    // manually if it's not available. Remove this workaround once we upgrade to 26.04
+    // manually if it's not available. Remove this workaround once we drop 24.04 support.
 #ifdef __cpp_lib_ranges_to_container
     return comma_separated | std::ranges::to<std::string>();
 #else
@@ -29,6 +32,25 @@ template <typename Range> auto join_comma(Range const& strings) -> std::string
     return temp;
 #endif
 }
+
+class ParsingError : public std::runtime_error
+{
+public:
+    explicit ParsingError(mlc::Key const& key, std::string_view value) :
+        std::runtime_error(std::format("Config key '{}' has invalid value: {}", key, value))
+    {
+    }
+};
+
+class NoValidValuesError : public std::runtime_error
+{
+public:
+    explicit NoValidValuesError(mlc::Key const& key, std::span<std::string const> values) :
+        std::runtime_error(
+            std::format("All values assigned to config key '{}' are invalid ([{}]).", key, join_comma(values)))
+    {
+    }
+};
 }
 
 class mlc::BasicStore::Self
@@ -164,14 +186,36 @@ void mlc::BasicStore::Self::do_transaction(std::function<void()> transaction_bod
         {
             details.handler(key, maybe_value);
         }
+        catch (ParsingError const& pe)
+        {
+            auto const path = details.value.transform([&](auto const& v) { return v.modification_path.string(); })
+                                  .value_or("never set");
+
+            if (auto const preset = details.preset)
+            {
+                mir::log_warning(
+                    "Parsing error: %s in file %s. Using preset value '%s' instead.",
+                    pe.what(),
+                    path.c_str(),
+                    preset->c_str());
+
+                details.handler(key, details.preset);
+            }
+            else
+            {
+                mir::log_warning(
+                    "Parsing error: %s in file %s, but no preset value. Using nullopt instead.",
+                    pe.what(),
+                    path.c_str());
+                details.handler(key, std::nullopt);
+            }
+        }
         catch (std::exception const& e)
         {
-            auto const path =
-                details.value.transform([&](auto const& v) { return v.modification_path.string(); })
-                    .value_or("never set");
-
+            auto const path = details.value.transform([&](auto const& v) { return v.modification_path.string(); })
+                                  .value_or("never set");
             // `std::string` is required to get a `c_str` from a string view.
-            auto const value_str = std::string{maybe_value.transform([](auto const& v) { return v; }).value_or("unset")};
+            auto const value_str = std::string{maybe_value.value_or("unset")};
 
             mir::log_warning(
                 "Error processing key '%s' with value '%s' in file '%s': %s",
@@ -197,6 +241,38 @@ void mlc::BasicStore::Self::do_transaction(std::function<void()> transaction_bod
         try
         {
             details.handler(key, maybe_value);
+        }
+        catch (NoValidValuesError const& nvv)
+        {
+            auto const path = [&]
+            {
+                if (details.modification_paths.empty())
+                    return std::string{"never set"};
+
+                return join_comma(
+                    details.modification_paths | std::views::transform([](auto const& p) { return p.string(); }));
+            }();
+
+            if (auto const preset = details.preset)
+            {
+                auto const preset_str = join_comma(*details.preset);
+
+                mir::log_warning(
+                    "Parsing error: %s in file %s. Using preset value(s) '[%s]' instead.",
+                    nvv.what(),
+                    path.c_str(),
+                    preset_str.c_str());
+
+                details.handler(key, preset);
+            }
+            else
+            {
+                mir::log_warning(
+                    "Parsing error: %s in file %s, but no preset value. Using nullopt instead.",
+                    nvv.what(),
+                    path.c_str());
+                details.handler(key, std::nullopt);
+            }
         }
         catch (std::exception const& e)
         {
@@ -247,7 +323,7 @@ void process_as(std::function<void(mlc::Key const&, std::optional<Type>)> const&
         }
         else
         {
-            throw std::runtime_error(std::format("Config key '{}' has invalid value: {}", key, *val));
+            BOOST_THROW_EXCEPTION(ParsingError(key, *val));
         }
     }
     else
@@ -271,7 +347,7 @@ void process_as<bool>(std::function<void(mlc::Key const&, std::optional<bool>)> 
         }
         else
         {
-            throw std::runtime_error(std::format("Config key '{}' has invalid value: {}", key, *val));
+            BOOST_THROW_EXCEPTION(ParsingError(key, *val));
         }
     }
     else
@@ -301,6 +377,11 @@ void process_as(std::function<void(mlc::Key const&, std::optional<std::span<Type
             {
                 mir::log_warning("Config key '%s' has invalid value: %s", key.to_string().c_str(), v.c_str());
             }
+        }
+
+        if (!val->empty() && parsed_vals.empty())
+        {
+            BOOST_THROW_EXCEPTION(NoValidValuesError(key, *val));
         }
 
         handler(key, parsed_vals);
