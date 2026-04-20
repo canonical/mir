@@ -614,6 +614,25 @@ XcursorFileLoadImages (FILE *file, int size)
  * added explicitly by _XcursorBuildXdgPath). */
 #define XCURSORLEGACYPATH "/usr/share/cursors/xorg-x11:"ICONDIR
 
+/* Append str to *path_ptr by realloc-growing the buffer.
+ * On failure frees *path_ptr, sets it to NULL and returns 0. */
+static int
+_xcursor_path_append (char **path_ptr, char const *str)
+{
+    size_t const old_len = *path_ptr ? strlen (*path_ptr) : 0;
+    size_t const str_len = strlen (str);
+    char *new_path = realloc (*path_ptr, old_len + str_len + 1);
+    if (!new_path)
+    {
+        free (*path_ptr);
+        *path_ptr = NULL;
+        return 0;
+    }
+    memcpy (new_path + old_len, str, str_len + 1);
+    *path_ptr = new_path;
+    return 1;
+}
+
 static char *
 _XcursorBuildXdgPath (void)
 {
@@ -636,65 +655,27 @@ _XcursorBuildXdgPath (void)
     if (!xdg_data_dirs || xdg_data_dirs[0] == '\0')
         xdg_data_dirs = "/usr/local/share:/usr/share";
 
-    size_t len = 0;
-
-    /* $HOME/.icons:, $XDG_DATA_HOME/icons:, and $HOME/.cursors: */
-    if (home)
-        len += strlen (home) + strlen ("/.icons") + 1;   /* +1 for ':' */
-    if (xdg_data_home)
-        len += strlen (xdg_data_home) + strlen ("/icons") + 1;
-    if (home)
-        len += strlen (home) + strlen ("/.cursors") + 1;
-
-    /* $XDG_DATA_DIRS/icons: (one entry per non-empty dir in XDG_DATA_DIRS) */
-    for (char const *p = xdg_data_dirs; p && *p; )
-    {
-        char const *colon = strchr (p, ':');
-        size_t const component_len = colon ? (size_t)(colon - p) : strlen (p);
-        if (component_len > 0)
-            len += component_len + strlen ("/icons") + 1;
-        p = colon ? colon + 1 : NULL;
-    }
-
-    /* /usr/share/pixmaps: */
-    len += strlen ("/usr/share/pixmaps") + 1;
-
-    /* legacy fallback entries not already covered above + '\0' */
-    len += strlen (XCURSORLEGACYPATH) + 1;
-
-    /* This allocation persists for the lifetime of the process (intentional). */
-    char *dynamic_path = malloc (len);
-    if (!dynamic_path)
-    {
-        free (default_xdg_data_home);
-        return NULL;
-    }
-
-    char *p_out = dynamic_path;
-    size_t remaining = len;
+    char *path = NULL;
+    /* Temporary buffer for formatted entries; PATH_MAX covers any valid path
+     * component and "/icons:" suffix. */
+    char buf[PATH_MAX + 8];
 
     if (home)
     {
-        int const written = snprintf (p_out, remaining, "%s/.icons:", home);
-        if (written < 0 || (size_t)written >= remaining) goto error;
-        p_out += written;
-        remaining -= (size_t)written;
+        snprintf (buf, sizeof (buf), "%s/.icons:", home);
+        if (!_xcursor_path_append (&path, buf)) goto done;
     }
 
     if (xdg_data_home)
     {
-        int const written = snprintf (p_out, remaining, "%s/icons:", xdg_data_home);
-        if (written < 0 || (size_t)written >= remaining) goto error;
-        p_out += written;
-        remaining -= (size_t)written;
+        snprintf (buf, sizeof (buf), "%s/icons:", xdg_data_home);
+        if (!_xcursor_path_append (&path, buf)) goto done;
     }
 
     if (home)
     {
-        int const written = snprintf (p_out, remaining, "%s/.cursors:", home);
-        if (written < 0 || (size_t)written >= remaining) goto error;
-        p_out += written;
-        remaining -= (size_t)written;
+        snprintf (buf, sizeof (buf), "%s/.cursors:", home);
+        if (!_xcursor_path_append (&path, buf)) goto done;
     }
 
     for (char const *p = xdg_data_dirs; p && *p; )
@@ -705,36 +686,21 @@ _XcursorBuildXdgPath (void)
         p = colon ? colon + 1 : NULL;
         if (component_len == 0)
             continue;
-        if (component_len > INT_MAX)
+        if (component_len > PATH_MAX)
         {
-            fprintf (stderr, "xcursor: XDG_DATA_DIRS component length exceeds INT_MAX\n");
-            abort ();
+            fprintf (stderr, "xcursor: XDG_DATA_DIRS component length exceeds PATH_MAX, skipping\n");
+            continue;
         }
-        int const written = snprintf (p_out, remaining, "%.*s/icons:", (int)component_len, component_start);
-        if (written < 0 || (size_t)written >= remaining) goto error;
-        p_out += written;
-        remaining -= (size_t)written;
+        snprintf (buf, sizeof (buf), "%.*s/icons:", (int)component_len, component_start);
+        if (!_xcursor_path_append (&path, buf)) goto done;
     }
 
-    {
-        int const written = snprintf (p_out, remaining, "/usr/share/pixmaps:");
-        if (written < 0 || (size_t)written >= remaining) goto error;
-        p_out += written;
-        remaining -= (size_t)written;
-    }
+    if (!_xcursor_path_append (&path, "/usr/share/pixmaps:")) goto done;
+    _xcursor_path_append (&path, XCURSORLEGACYPATH);
 
-    {
-        int const written = snprintf (p_out, remaining, "%s", XCURSORLEGACYPATH);
-        if (written < 0 || (size_t)written >= remaining) goto error;
-    }
-
+done:
     free (default_xdg_data_home);
-    return dynamic_path;
-
-error:
-    free (default_xdg_data_home);
-    free (dynamic_path);
-    return NULL;
+    return path;
 }
 
 static pthread_once_t xcursor_path_once = PTHREAD_ONCE_INIT;
