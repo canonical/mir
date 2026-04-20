@@ -16,6 +16,7 @@
 
 #include "wayland_connector.h"
 #include "wayland_rs/wayland_rs_cpp/include/wayland.h"
+#include "wayland_rs/wayland_rs_cpp/include/wayland_server_notification_handler.h"
 #include "wl_client_registry.h"
 
 #include <mir/shell/token_authority.h>
@@ -109,6 +110,12 @@ public:
     std::shared_ptr<WlClientRegistry> client_registry;
 };
 
+class SurfaceRegistry
+{
+public:
+
+};
+
 class WlCompositor : public wayland_rs::WlCompositorImpl
 {
 public:
@@ -163,7 +170,6 @@ auto WlCompositor::create_surface() -> std::shared_ptr<wayland_rs::WlSurfaceImpl
         }
         compositor->surface_callbacks.erase(callbacks);
     }
-    // Wayland ojects delete themselves
 }
 }
 }
