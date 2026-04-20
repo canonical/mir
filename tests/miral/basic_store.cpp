@@ -352,11 +352,11 @@ TEST_F(BasicStoreTest, strings_handler_receives_nullopt_when_no_preset_and_no_va
     run_empty();
 }
 
-TEST_F(BasicStoreTest, ints_handler_receives_empty_span_when_no_preset_and_all_values_are_bad)
+TEST_F(BasicStoreTest, ints_handler_receives_nullopt_when_no_preset_and_all_values_are_bad)
 {
     store.add_ints_attribute(an_ints_key, "some ints", [this](auto k, auto v){ ints_handler(k, v); });
 
-    EXPECT_CALL(*this, ints_handler(an_ints_key, Optional(IsEmpty())));
+    EXPECT_CALL(*this, ints_handler(an_ints_key, Eq(std::nullopt)));
 
     store.do_transaction([&]
     {
@@ -364,11 +364,11 @@ TEST_F(BasicStoreTest, ints_handler_receives_empty_span_when_no_preset_and_all_v
     });
 }
 
-TEST_F(BasicStoreTest, floats_handler_receives_empty_span_when_no_preset_and_all_values_are_bad)
+TEST_F(BasicStoreTest, floats_handler_receives_nullopt_when_no_preset_and_all_values_are_bad)
 {
     store.add_floats_attribute(a_floats_key, "some floats", [this](auto k, auto v){ floats_handler(k, v); });
 
-    EXPECT_CALL(*this, floats_handler(a_floats_key, Optional(IsEmpty())));
+    EXPECT_CALL(*this, floats_handler(a_floats_key, Eq(std::nullopt)));
 
     store.do_transaction([&]
     {

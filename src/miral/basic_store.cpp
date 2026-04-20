@@ -2,6 +2,8 @@
 
 #include <mir/log.h>
 
+#include <boost/throw_exception.hpp>
+
 #include <format>
 #include <list>
 #include <map>
@@ -36,6 +38,16 @@ class ParsingError : public std::runtime_error
 public:
     explicit ParsingError(mlc::Key const& key, std::string_view value) :
         std::runtime_error(std::format("Config key '{}' has invalid value: {}", key, value))
+    {
+    }
+};
+
+class NoValidValuesError : public std::runtime_error
+{
+public:
+    explicit NoValidValuesError(mlc::Key const& key, std::span<std::string const> values) :
+        std::runtime_error(
+            std::format("All values assigned to config key '{}' are invalid ([{}]).", key, join_comma(values)))
     {
     }
 };
@@ -230,6 +242,38 @@ void mlc::BasicStore::Self::do_transaction(std::function<void()> transaction_bod
         {
             details.handler(key, maybe_value);
         }
+        catch (NoValidValuesError const& nvv)
+        {
+            auto const path = [&]
+            {
+                if (details.modification_paths.empty())
+                    return std::string{"never set"};
+
+                return join_comma(
+                    details.modification_paths | std::views::transform([](auto const& p) { return p.string(); }));
+            }();
+
+            if (auto const preset = details.preset)
+            {
+                auto const preset_str = join_comma(*details.preset);
+
+                mir::log_warning(
+                    "Parsing error: %s in file %s. Using preset value(s) '[%s]' instead.",
+                    nvv.what(),
+                    path.c_str(),
+                    preset_str.c_str());
+
+                details.handler(key, preset);
+            }
+            else
+            {
+                mir::log_warning(
+                    "Parsing error: %s in file %s, but no preset value. Using nullopt instead.",
+                    nvv.what(),
+                    path.c_str());
+                details.handler(key, std::nullopt);
+            }
+        }
         catch (std::exception const& e)
         {
             auto const path = [&]
@@ -333,6 +377,11 @@ void process_as(std::function<void(mlc::Key const&, std::optional<std::span<Type
             {
                 mir::log_warning("Config key '%s' has invalid value: %s", key.to_string().c_str(), v.c_str());
             }
+        }
+
+        if (!val->empty() && parsed_vals.empty())
+        {
+            BOOST_THROW_EXCEPTION(NoValidValuesError(key, *val));
         }
 
         handler(key, parsed_vals);
