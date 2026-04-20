@@ -688,8 +688,8 @@ _XcursorBuildXdgPath (void)
             continue;
         if (component_len > PATH_MAX)
         {
-            fprintf (stderr, "xcursor: XDG_DATA_DIRS component length exceeds PATH_MAX, skipping\n");
-            continue;
+            fprintf (stderr, "xcursor: XDG_DATA_DIRS component length exceeds PATH_MAX\n");
+            abort ();
         }
         snprintf (buf, sizeof (buf), "%.*s/icons:", (int)component_len, component_start);
         if (!_xcursor_path_append (&path, buf)) goto done;
