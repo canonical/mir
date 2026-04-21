@@ -144,11 +144,11 @@ public:
     auto create_surface() -> std::shared_ptr<wayland_rs::WlSurfaceImpl> override
     {
         auto const surface = std::make_shared<WlSurface>(
-            client.clone_box(),
+            client->clone_box(),
             client_registry,
             frame_callback_executor,
             allocator);
-        auto const key = std::make_pair(client.id(), wl_resource_get_id(new_surface));
+        auto const key = std::make_pair(client->id(), wl_resource_get_id(new_surface));
         auto const callbacks = global->surface_callbacks.find(key);
         if (callbacks != global->surface_callbacks.end())
         {
@@ -180,9 +180,11 @@ class GlobalFactory : public wayland_rs::GlobalFactory {
 public:
     GlobalFactory(std::shared_ptr<WlClientRegistry> const& client_registry,
         std::shared_ptr<WaylandConnector::WaylandCompositorGlobal> const& compositor_global,
+        WlSeat* seat_global,
         WaylandConnector::WaylandProtocolExtensionFilter const extension_filter)
         : client_registry(client_registry),
           compositor_global(compositor_global),
+          seat_global(seat_global),
           extension_filter(std::move(extension_filter))
     {
     }
@@ -209,8 +211,14 @@ public:
         return std::make_shared<WlSubcompositor>(std::move(client));
     }
 
+    auto create_wl_seat(rust::Box<wayland_rs::WaylandClient> client) -> std::shared_ptr<wayland_rs::WlSeatImpl> override
+    {
+        return seat_global->create(std::move(client));
+    }
+
     std::shared_ptr<WlClientRegistry> client_registry;
     std::shared_ptr<WaylandConnector::WaylandCompositorGlobal> compositor_global;
+    WlSeat* seat_global;
     WaylandConnector::WaylandProtocolExtensionFilter const extension_filter;
 };
 }
@@ -354,8 +362,6 @@ mf::WaylandConnector::WaylandConnector(
     auto const input_trigger_registry = std::make_shared<frontend::InputTriggerRegistry>();
     auto const keyboard_state_tracker = std::make_shared<KeyboardStateTracker>();
     seat_global = std::make_unique<mf::WlSeat>(
-        display.get(),
-        *executor,
         clock,
         input_hub,
         keyboard_observer_registrar,
@@ -511,12 +517,14 @@ void mf::WaylandConnector::start()
         [
             wayland_display = wayland_display,
             client_registry = client_registry,
-            extension_filter = extension_filter
+            compositor_global = compositor_global,
+            extension_filter = extension_filter,
+            seat_global = seat_global.get()
         ](wayland_rs::WaylandServer* server)
         {
             mir::set_thread_name("Mir/Wayland");
             server->run(wayland_display,
-                std::make_unique<GlobalFactory>(client_registry, extension_filter),
+                std::make_unique<GlobalFactory>(client_registry, compositor_global, seat_global, extension_filter),
                 std::make_unique<WaylandServerNotificationHandler>(client_registry));
         },
         server.into_raw()};

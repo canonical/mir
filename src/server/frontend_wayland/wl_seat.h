@@ -72,7 +72,7 @@ private:
     wayland::Weak<WlDataDevice> wl_data_device;
 };
 
-class WlSeat : public wayland::Seat::Global
+class WlSeat
 {
 public:
     WlSeat(
