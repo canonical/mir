@@ -1,3 +1,5 @@
+(exp-xdg-portals-support)=
+
 # XDG Portals support
 
 Mir does not have built-in support for XDG portals, but it is possible to use
@@ -19,7 +21,7 @@ variety of ways, but it typically runs as a separate process that communicates
 with the compositor and other system components to provide the necessary
 functionality.
 
-A list of XDK portals and the functions they provide can be found in the
+A list of XDG portals and the functions they provide can be found in the
 [XDG portal documentation](https://flatpak.github.io/xdg-desktop-portal/docs/api-reference.html).
 
 From the perspective of a compositor such as Mir, the portal backend is just
@@ -44,7 +46,7 @@ backend can function correctly with Mir-based compositors.
 
 ## Permissions and security considerations
 
-Because the Wayland extensions used by the portal backends are privileged Mir
+Because the Wayland extensions used by the portal backends are privileged, Mir
 does not, by default, enable them for all applications. The portal backend will
 need to be granted the necessary permissions to use them.
 
