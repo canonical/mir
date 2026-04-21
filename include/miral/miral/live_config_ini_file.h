@@ -20,6 +20,9 @@
 #include <miral/live_config.h>
 
 #include <filesystem>
+#include <istream>
+#include <memory>
+#include <utility>
 
 namespace miral::live_config
 {
