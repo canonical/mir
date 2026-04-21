@@ -79,6 +79,8 @@ public:
     void ensure_complete() const;
 
     bool reactive{false};
+    /// Serial of the parent's xdg_surface configure event this positioner is a response to.
+    /// Stored for popup repositioning synchronization (protocol: xdg_positioner.set_parent_configure).
     std::optional<uint32_t> parent_configure_serial;
 
 private:
