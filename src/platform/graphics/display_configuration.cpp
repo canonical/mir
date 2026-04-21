@@ -24,6 +24,7 @@ extern "C"
 #include <libdisplay-info/info.h>
 }
 
+#include <cstdlib>
 #include <ostream>
 #include <algorithm>
 
@@ -270,17 +271,17 @@ mg::DisplayInfo::DisplayInfo(std::vector<uint8_t> const& edid)
                                 di_info_parse_edid(edid.data(), edid.size()),
                                 &di_info_destroy})
     {
-        if (auto const di_make = di_info_get_make(info.get()))
+        if (std::unique_ptr<char, decltype(&free)> const di_make{di_info_get_make(info.get()), &free})
         {
-            vendor = di_make;
+            vendor.emplace(di_make.get());
         }
-        if (auto const di_model = di_info_get_model(info.get()))
+        if (std::unique_ptr<char, decltype(&free)> const di_model{di_info_get_model(info.get()), &free})
         {
-            model = di_model;
+            model.emplace(di_model.get());
         }
-        if (auto const di_serial = di_info_get_serial(info.get()))
+        if (std::unique_ptr<char, decltype(&free)> const di_serial{di_info_get_serial(info.get()), &free})
         {
-            serial = di_serial;
+            serial.emplace(di_serial.get());
         }
         if (auto const vendor_product = di_edid_get_vendor_product(di_info_get_edid(info.get())))
         {
