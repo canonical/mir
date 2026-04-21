@@ -64,8 +64,6 @@ public:
     using mw::XdgSurface::resource;
 
 private:
-    void set_window_role(WindowWlSurfaceRole* role);
-
     mw::Weak<WindowWlSurfaceRole> window_role_;
     mw::Weak<WlSurface> const surface;
 
@@ -180,8 +178,15 @@ void mf::XdgSurfaceStable::get_toplevel(wl_resource* new_toplevel)
             mw::generic_error_code,
             "Tried to create toplevel after destroying surface"));
     }
+    if (window_role_)
+    {
+        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+            resource,
+            Error::already_constructed,
+            "Tried to create toplevel on surface with existing role"));
+    }
     auto toplevel = new XdgToplevelStable{new_toplevel, this, &surface.value()};
-    set_window_role(toplevel);
+    window_role_ = mw::make_weak<WindowWlSurfaceRole>(toplevel);
 }
 
 void mf::XdgSurfaceStable::get_popup(
@@ -215,9 +220,16 @@ void mf::XdgSurfaceStable::get_popup(
             mw::generic_error_code,
             "Tried to create popup after destroying surface"));
     }
+    if (window_role_)
+    {
+        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+            resource,
+            Error::already_constructed,
+            "Tried to create toplevel on surface with existing role"));
+    }
 
     auto popup = new XdgPopupStable{new_popup, this, parent_role, *xdg_positioner, &surface.value()};
-    set_window_role(popup);
+    window_role_ = mw::make_weak<WindowWlSurfaceRole>(popup);
 }
 
 void mf::XdgSurfaceStable::set_window_geometry(int32_t x, int32_t y, int32_t width, int32_t height)
@@ -252,16 +264,6 @@ void mf::XdgSurfaceStable::send_configure()
 mw::Weak<mf::WindowWlSurfaceRole> const& mf::XdgSurfaceStable::window_role()
 {
     return window_role_;
-}
-
-void mf::XdgSurfaceStable::set_window_role(WindowWlSurfaceRole* role)
-{
-    if (window_role_)
-    {
-        log_warning("XdgSurfaceStable::window_role set multiple times");
-    }
-
-    window_role_ = mw::make_weak(role);
 }
 
 // XdgPopupStable
