@@ -302,7 +302,7 @@ void MirPositioner::set_constraint_adjustment(uint32_t constraint_adjustment)
     {
         new_placement_hints |= mir_placement_hints_flip_x;
     }
-    if (constraint_adjustment & ConstraintAdjustment::flip_x)
+    if (constraint_adjustment & ConstraintAdjustment::flip_y)
     {
         new_placement_hints |= mir_placement_hints_flip_y;
     }
