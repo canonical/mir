@@ -769,6 +769,10 @@ void mf::XdgPositionerStable::set_anchor(uint32_t anchor)
 
     switch (anchor)
     {
+        case Anchor::none:
+            placement = mir_placement_gravity_center;
+            break;
+
         case Anchor::top:
             placement = mir_placement_gravity_north;
             break;
