@@ -1,3 +1,8 @@
+---
+myst:
+  html_meta:
+    description: Mir support for the implementation of XDG Portals.
+---
 (exp-xdg-portals-support)=
 
 # XDG Portals support
@@ -50,13 +55,21 @@ Because the Wayland extensions used by the portal backends are privileged, Mir
 does not, by default, enable them for all applications. The portal backend will
 need to be granted the necessary permissions to use them.
 
-This should be done carefully, as granting too many permissions to the portal
-backend or allowing too many processes access could potentially allow access to
-sensitive resources or perform actions that could compromise the security of the
-system. It is important to only grant the necessary permissions and to ensure
-that the portal backend is properly sandboxed.
+The compositor and portal backend are both parts of the security boundary
+between the trusted computing base and untrusted applications. Mir does not
+currently have any native support for distinguishing between the portal backend
+and other clients; compositors that wish to provide a safe environment to run
+less-trusted applications will need to implement their own authentication and
+authorization.
 
-The exact steps for doing this will depend on the specific compositor and portal
-backend being used.
+_For example, Ubuntu Frame uses the apparmor label of a client for authentication
+with a built-in authorization list, while Miriway supports configuring a list of
+executables to be started by the shell with authorization._
 
-For one example, see [Enable screencasting](how-to-enable-screencasting).
+Regardless of the approach the compositor uses to authenticates the portal
+backend, the backend needs to be authorized to use any privileged protocols it
+is mediating access for. The list of such protocols will be determined by what
+the portal backend supports.
+
+For defense-in-depth against security bugs, the portal backend should not be
+authorized for any privileged protocols not needed.
