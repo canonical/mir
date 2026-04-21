@@ -77,7 +77,7 @@ void mf::WlSubcompositorInstance::get_subsurface(
         throw wayland::ProtocolError{
             new_subsurface,
             mw::Subcompositor::Error::bad_parent,
-            "Parent surface cannot be a descendent of the child surface"};
+            "Parent surface cannot be a descendant of the child surface"};
     }
     new WlSubsurface(new_subsurface, child_surface, parent_surface);
 }
