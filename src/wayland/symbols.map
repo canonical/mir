@@ -1,4 +1,4 @@
-MIRWAYLAND_2.17 {
+MIRWAYLAND_2.27 {
 global:
   extern "C++" {
     mir::wayland::Buffer::*;
