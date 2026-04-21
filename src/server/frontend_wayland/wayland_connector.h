@@ -241,7 +241,6 @@ private:
     std::unique_ptr<OutputManager> output_manager;
     std::shared_ptr<DesktopFileManager> desktop_file_manager;
     std::unique_ptr<WlDataDeviceManager> data_device_manager_global;
-    std::unique_ptr<WlShm> shm_global;
     std::unique_ptr<WpViewporter> viewporter;
     std::unique_ptr<LinuxDRMSyncobjManager> drm_syncobj;
     std::shared_ptr<graphics::GraphicBufferAllocator> const allocator;

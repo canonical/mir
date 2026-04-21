@@ -216,6 +216,11 @@ public:
         return seat_global->create(std::move(client));
     }
 
+    auto create_wl_shm(rust::Box<wayland_rs::WaylandClient> client) -> std::shared_ptr<wayland_rs::WlShmImpl> override
+    {
+        return std::make_shared<Shm>(std::move(client));
+    }
+
     std::shared_ptr<WlClientRegistry> client_registry;
     std::shared_ptr<WaylandConnector::WaylandCompositorGlobal> compositor_global;
     WlSeat* seat_global;
@@ -384,8 +389,6 @@ mf::WaylandConnector::WaylandConnector(
         std::move(pointer_input_dispatcher));
 
     extensions->init(WaylandExtensions::Context{
-        display.get(),
-        executor,
         shell,
         session_authorizer,
         main_clipboard,
@@ -412,8 +415,6 @@ mf::WaylandConnector::WaylandConnector(
         action_group_manager,
         input_trigger_registry,
         keyboard_state_tracker});
-
-    shm_global = std::make_unique<WlShm>(display.get(), executor);
 
     viewporter = std::make_unique<WpViewporter>(display.get());
 
