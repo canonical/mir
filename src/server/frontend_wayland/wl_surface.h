@@ -21,6 +21,7 @@
 #include <mir/geometry/forward.h>
 #include "wayland_wrapper.h"
 #include <mir/wayland/weak.h>
+#include <mir/wayland/lifetime_tracker.h>
 
 #include "wl_surface_role.h"
 #include "wayland_rs/wayland_rs_cpp/include/wayland.h"
@@ -121,7 +122,7 @@ private:
     WlSurface* const surface;
 };
 
-class WlSurface : public wayland_rs::WlSurfaceImpl
+class WlSurface : public wayland_rs::WlSurfaceImpl, public wayland::LifetimeTracker
 {
 public:
     WlSurface(rust::Box<wayland_rs::WaylandClient> client,

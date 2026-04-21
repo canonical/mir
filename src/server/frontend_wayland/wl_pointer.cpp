@@ -20,6 +20,7 @@
 #include "wl_surface.h"
 #include "wl_seat.h"
 #include "relative-pointer-unstable-v1_wrapper.h"
+#include "wayland_rs/src/ffi.rs.h"
 
 #include <mir/log.h>
 #include <mir/executor.h>
@@ -32,7 +33,6 @@
 #include <mir/renderer/sw/pixel_source.h>
 #include <mir/compositor/buffer_stream.h>
 #include <mir/events/pointer_event.h>
-#include <mir/wayland/client.h>
 
 #include <linux/input-event-codes.h>
 #include <boost/throw_exception.hpp>
@@ -161,8 +161,8 @@ auto mf::WlPointer::linux_button_to_mir_button(int linux_button) -> std::optiona
     return std::nullopt;
 }
 
-mf::WlPointer::WlPointer(wl_resource* new_resource)
-    : Pointer(new_resource, Version<9>()),
+mf::WlPointer::WlPointer(rust::Box<wayland_rs::WaylandClient> client)
+    : WlPointerImpl(std::move(client)),
       cursor{std::make_unique<NullCursor>()}
 {
 }
@@ -170,12 +170,18 @@ mf::WlPointer::WlPointer(wl_resource* new_resource)
 mf::WlPointer::~WlPointer()
 {
     if (surface_under_cursor)
-        surface_under_cursor.value().remove_destroy_listener(destroy_listener_id);
+    {
+        surface_under_cursor->with_value([&](auto& surface)
+        {
+            auto wl_surface = WlSurface::from(surface);
+            wl_surface->remove_destroy_listener(destroy_listener_id);
+        });
+    }
 }
 
-void mir::frontend::WlPointer::set_relative_pointer(mir::wayland::RelativePointerV1* relative_ptr)
+void mir::frontend::WlPointer::set_relative_pointer(wayland_rs::Weak<wayland_rs::ZwpRelativePointerV1Impl> relative_ptr)
 {
-    relative_pointer = make_weak(relative_ptr);
+    relative_pointer = std::move(relative_ptr);
 }
 
 void mir::frontend::WlPointer::event(std::shared_ptr<MirPointerEvent const> const& event, WlSurface& root_surface)
@@ -210,11 +216,15 @@ void mf::WlPointer::leave(std::optional<std::shared_ptr<MirPointerEvent const>> 
 {
     if (!surface_under_cursor)
         return;
-    surface_under_cursor.value().remove_destroy_listener(destroy_listener_id);
-    auto const serial = client->next_serial(event.value_or(nullptr));
-    send_leave_event(
-        serial,
-        surface_under_cursor.value().raw_resource());
+    surface_under_cursor.with_value([&](auto& surface)
+    {
+        auto const wl_surface = WlSurface::from(surface);
+        wl_surface->remove_destroy_listener(destroy_listener_id);
+        auto const serial = client->next_serial(event.value_or(nullptr));
+        send_leave_event(
+            serial,
+            wl_surface->object_id());
+    });
     current_position = std::nullopt;
     // Don't clear current_buttons, their state can survive leaving and entering surfaces (note we currently have logic
     // to prevent changing surfaces while buttons are pressed, we wouldn't need to clear current_buttons regardless)
