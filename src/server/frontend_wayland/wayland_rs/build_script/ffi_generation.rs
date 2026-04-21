@@ -92,6 +92,11 @@ fn generate_ffi_for_protocol(protocol: &WaylandProtocol) -> TokenStream {
 }
 
 fn generate_ffi_for_interface(interface: &WaylandInterface) -> TokenStream {
+    let interface_name_ext = format_ident!(
+        "{}",
+        format_wayland_interface_to_rust_extension_struct(&interface.name)
+    );
+
     let events: Vec<TokenStream> = interface
         .items
         .iter()
@@ -102,6 +107,7 @@ fn generate_ffi_for_interface(interface: &WaylandInterface) -> TokenStream {
         .collect();
 
     quote! {
+        fn post_error(self: &mut #interface_name_ext, code: u32, message: &CxxString);
         #(#events)*
     }
 }
