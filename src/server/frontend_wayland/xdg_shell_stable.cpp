@@ -906,6 +906,13 @@ void mf::XdgPositionerStable::set_reactive()
 
 void mf::XdgPositionerStable::set_parent_size(int32_t parent_width, int32_t parent_height)
 {
+    if (parent_width <= 0 || parent_height <= 0)
+    {
+        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+            resource,
+            Error::invalid_input,
+            "Invalid popup positioner parent size: %dx%d", parent_width, parent_height));
+    }
     parent_size = geom::Size{parent_width, parent_height};
 }
 
