@@ -775,3 +775,10 @@ global:
     miral::WindowSpecification::alpha*;
   };
 } MIRAL_5.6;
+
+MIRAL_5.8 {
+global:
+  extern "C++" {
+    miral::WindowSpecification::parent_size*;
+  };
+} MIRAL_5.7;
