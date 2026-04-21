@@ -43,7 +43,7 @@ public:
         auto const state = mutable_state.lock();
         state->potential_position = {abs_x, abs_y};
 
-        // If a click already occured in the past. Only start a new hover click if
+        // If a click already occurred in the past. Only start a new hover click if
         // the cursor moved "significantly" from the last position.
         auto const hover_click_origin = state->hover_click_origin;
 

@@ -549,11 +549,25 @@ void mf::XdgToplevelStable::resize(struct wl_resource* /*seat*/, uint32_t serial
 
 void mf::XdgToplevelStable::set_max_size(int32_t width, int32_t height)
 {
+    if (width < 0 || height < 0)
+    {
+        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+            resource,
+            Error::invalid_size,
+            "Invalid maximum size %dx%d", width, height));
+    }
     WindowWlSurfaceRole::set_max_size(width, height);
 }
 
 void mf::XdgToplevelStable::set_min_size(int32_t width, int32_t height)
 {
+    if (width < 0 || height < 0)
+    {
+        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+            resource,
+            Error::invalid_size,
+            "Invalid minimum size %dx%d", width, height));
+    }
     WindowWlSurfaceRole::set_min_size(width, height);
 }
 
@@ -861,7 +875,7 @@ void mf::XdgPositionerStable::set_constraint_adjustment(uint32_t constraint_adju
     {
         new_placement_hints |= mir_placement_hints_flip_x;
     }
-    if (constraint_adjustment & ConstraintAdjustment::flip_x)
+    if (constraint_adjustment & ConstraintAdjustment::flip_y)
     {
         new_placement_hints |= mir_placement_hints_flip_y;
     }
