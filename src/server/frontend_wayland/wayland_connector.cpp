@@ -371,8 +371,6 @@ mf::WaylandConnector::WaylandConnector(
         input_trigger_registry,
         keyboard_state_tracker);
     output_manager = std::make_unique<mf::OutputManager>(
-        display.get(),
-        executor,
         display_config_registrar);
 
     desktop_file_manager = std::make_shared<mf::DesktopFileManager>(
