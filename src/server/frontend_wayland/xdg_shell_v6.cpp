@@ -469,11 +469,25 @@ void mf::XdgToplevelV6::resize(struct wl_resource* /*seat*/, uint32_t serial, ui
 
 void mf::XdgToplevelV6::set_max_size(int32_t width, int32_t height)
 {
+    if (width < 0 || height < 0)
+    {
+        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+            resource,
+            mw::generic_error_code,
+            "Invalid maximum size %dx%d", width, height));
+    }
     WindowWlSurfaceRole::set_max_size(width, height);
 }
 
 void mf::XdgToplevelV6::set_min_size(int32_t width, int32_t height)
 {
+    if (width < 0 || height < 0)
+    {
+        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+            resource,
+            mw::generic_error_code,
+            "Invalid minimum size %dx%d", width, height));
+    }
     WindowWlSurfaceRole::set_min_size(width, height);
 }
 
