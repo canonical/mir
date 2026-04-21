@@ -59,8 +59,6 @@ public:
     using mw::XdgSurfaceV6::resource;
 
 private:
-    void set_window_role(WindowWlSurfaceRole* role);
-
     mw::Weak<WindowWlSurfaceRole> window_role_;
     mw::Weak<WlSurface> const surface;
 
@@ -235,8 +233,15 @@ void mf::XdgSurfaceV6::get_toplevel(wl_resource* new_toplevel)
             mw::generic_error_code,
             "Tried to create toplevel v6 after destroying surface"));
     }
+    if (window_role_)
+    {
+        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+            resource,
+            Error::already_constructed,
+            "Tried to create toplevel on surface with existing role"));
+    }
     auto toplevel = new XdgToplevelV6{new_toplevel, this, &surface.value()};
-    set_window_role(toplevel);
+    window_role_ = mw::make_weak<WindowWlSurfaceRole>(toplevel);
 }
 
 void mf::XdgSurfaceV6::get_popup(wl_resource* new_popup, struct wl_resource* parent_surface, struct wl_resource* positioner)
@@ -248,8 +253,15 @@ void mf::XdgSurfaceV6::get_popup(wl_resource* new_popup, struct wl_resource* par
             mw::generic_error_code,
             "Tried to create popup v6 after destroying surface"));
     }
+    if (window_role_)
+    {
+        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+            resource,
+            Error::already_constructed,
+            "Tried to create popup on surface with existing role"));
+    }
     auto popup = new XdgPopupV6{new_popup, this, XdgSurfaceV6::from(parent_surface), positioner, &surface.value()};
-    set_window_role(popup);
+    window_role_ = mw::make_weak<WindowWlSurfaceRole>(popup);
 }
 
 void mf::XdgSurfaceV6::set_window_geometry(int32_t x, int32_t y, int32_t width, int32_t height)
@@ -284,16 +296,6 @@ void mf::XdgSurfaceV6::send_configure()
 mw::Weak<mf::WindowWlSurfaceRole> const& mf::XdgSurfaceV6::window_role()
 {
     return window_role_;
-}
-
-void mf::XdgSurfaceV6::set_window_role(WindowWlSurfaceRole* role)
-{
-    if (window_role_)
-    {
-        log_warning("XdgSurfaceV6::window_role set multiple times");
-    }
-
-    window_role_ = mw::make_weak(role);
 }
 
 // XdgPopupV6
