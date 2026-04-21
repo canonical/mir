@@ -17,14 +17,41 @@
 #ifndef MIR_LOGGING_LOGGER_H_
 #define MIR_LOGGING_LOGGER_H_
 
+#include <format>
+#include <functional>
+#include <initializer_list>
+#include <iosfwd>
 #include <memory>
 #include <string>
-#include <iosfwd>
+#include <string_view>
+#include <utility>
 
 namespace mir
 {
 namespace logging
 {
+class Tag
+{
+public:
+    class Impl;
+
+    Tag(Tag const& parent, std::string_view name);
+
+    auto name() const -> std::string_view;
+private:
+    friend class Impl;
+    explicit Tag(std::unique_ptr<Impl> impl);
+
+    std::unique_ptr<Impl> const impl;
+};
+
+extern Tag const core;
+extern Tag const input;
+extern Tag const wayland;
+extern Tag const graphics;
+extern Tag const window_management;
+
+using Tags = std::initializer_list<std::reference_wrapper<Tag const> const>;
 
 enum class Severity
 {
@@ -54,6 +81,14 @@ public:
     virtual void log(char const* component, Severity severity, char const* format, ...)
          __attribute__ ((format (printf, 4, 5)));
 
+    virtual void log(Severity severity, Tags tags, std::string_view message);
+
+    template<typename... Args>
+    void log(Severity severity, Tags tags, std::format_string<Args...> fmt, Args&&... args)
+    {
+        log(severity, tags, std::format(fmt, std::forward<Args>(args)...));
+    }
+
 protected:
     Logger() {}
     virtual ~Logger() = default;
@@ -62,6 +97,7 @@ protected:
 };
 
 void log(Severity severity, const std::string& message, const std::string& component);
+void log(Severity severity, Tags tags, std::string_view message);
 void set_logger(std::shared_ptr<Logger> const& new_logger);
 void format_message(std::ostream& stream, Severity severity, std::string const& message, std::string const& component);
 

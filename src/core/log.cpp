@@ -88,6 +88,14 @@ void log(
     }
 }
 
+void log(
+    logging::Severity severity,
+    logging::Tags tags,
+    std::string_view message)
+{
+    logging::log(severity, tags, message);
+}
+
 void security_log(
     logging::Severity severity,
     std::string const& event,
