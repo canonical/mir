@@ -6,6 +6,8 @@ src/wayland_server_generated.rs
 wayland_rs_cpp/include/*
 wayland_rs_cpp/src/*
 
+!wayland_rs_cpp/include/lifetime_tracker.h
 !wayland_rs_cpp/include/protocol_error.h
 !wayland_rs_cpp/include/weak.h
+!wayland_rs_cpp/src/lifetime_tracker.cpp
 !wayland_rs_cpp/src/protocol_error.cpp
