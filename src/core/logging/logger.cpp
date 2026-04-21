@@ -26,9 +26,62 @@
 #include <cstdarg>
 #include <cstdio>
 #include <iterator>
+#include <ranges>
 #include <stdexcept>
+#include <string_view>
 
 namespace ml = mir::logging;
+
+class ml::Tag::Impl
+{
+public:
+    Impl(Tag const& parent, std::string_view name)
+        : name_{name},
+          parent{&parent}
+    {
+    }
+
+    auto name() const -> std::string_view
+    {
+        return name_;
+    }
+
+    static auto make_top_level_tag(std::string_view name) -> Tag
+    {
+        return Tag{std::unique_ptr<Impl>(new Impl{name})};
+    }
+private:
+    Impl(std::string_view name)
+        : name_{name},
+          parent{nullptr}
+    {
+    }
+
+    std::string name_;
+    [[maybe_unused]]
+    Tag const* parent;
+};
+
+ml::Tag::Tag(Tag const& parent, std::string_view name)
+    : impl{std::make_unique<Impl>(parent, name)}
+{
+}
+
+ml::Tag::Tag(std::unique_ptr<Impl> impl)
+    : impl{std::move(impl)}
+{
+}
+
+auto ml::Tag::name() const -> std::string_view
+{
+    return impl->name();
+}
+
+ml::Tag const ml::core{ml::Tag::Impl::make_top_level_tag("core")};
+ml::Tag const ml::input{ml::Tag::Impl::make_top_level_tag("input")};
+ml::Tag const ml::wayland{ml::Tag::Impl::make_top_level_tag("wayland")};
+ml::Tag const ml::graphics{ml::Tag::Impl::make_top_level_tag("graphics")};
+ml::Tag const ml::window_management{ml::Tag::Impl::make_top_level_tag("window_management")};
 
 void ml::Logger::log(char const* component, Severity severity, char const* format, ...)
 {
@@ -41,6 +94,20 @@ void ml::Logger::log(char const* component, Severity severity, char const* forma
 
     // Inefficient, but maintains API: Constructing a std::string for message/component.
     log(severity, std::string{message}, std::string{component});
+}
+
+void ml::Logger::log(Severity severity, Tags tags, std::string_view message)
+{
+    // Default implementation uses :-delimited tags as the component
+    // TODO: Remove the log(Severity, std::string, std::string) interface and replace
+    // with this one.
+
+
+    std::string component;
+    std::ranges::copy(
+        tags | std::views::transform([](Tag const& tag) { return tag.name(); }) | std::views::join_with(':'),
+        std::back_inserter(component));
+    log(severity, std::string{message}, component);
 }
 
 namespace
@@ -64,6 +131,13 @@ void ml::log(ml::Severity severity, const std::string& message, const std::strin
     auto const logger = get_logger();
 
     logger->log(severity, message, component);
+}
+
+void ml::log(Severity severity, Tags tags, std::string_view message)
+{
+    auto const logger = get_logger();
+
+    logger->log(severity, tags, message);
 }
 
 void ml::set_logger(std::shared_ptr<Logger> const& new_logger)

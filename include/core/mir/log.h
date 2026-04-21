@@ -20,9 +20,12 @@
 #define MIR_LOG_H_
 
 #include <mir/logging/logger.h>  // for Severity
+
+#include <format>
 #include <string>
 #include <cstdarg>
 #include <exception>
+#include <string_view>
 
 namespace mir
 {
@@ -40,6 +43,17 @@ void log(
     std::exception_ptr const& exception,
     std::string const& message);
 
+template <typename... Args>
+void log(logging::Severity severity, logging::Tags tags, std::format_string<Args...> fmt, Args&&... args)
+{
+    log(severity, tags, std::format(fmt, std::forward<Args>(args)...));
+}
+
+void log(
+    logging::Severity sev,
+    logging::Tags tags,
+    std::string_view message);
+
 /// Log a security event according to the OWASP specification
 ///
 /// \param severity The severity of the event
@@ -56,10 +70,44 @@ void security_log(
 #endif
 #endif
 
-#ifdef MIR_LOG_COMPONENT
 namespace {
 // Isolated namespace so that the component string is always correct for
 // where it's used.
+//
+// For C++-overload-resolution reasons these always-available functions need to be
+// defined in the same namespace as the conditionally-available ones below.
+
+template <typename... Args>
+void log_debug(logging::Tags tags, std::format_string<Args...> fmt, Args&&... args)
+{
+    log(logging::Severity::debug, tags, fmt, std::forward<Args>(args)...);
+}
+
+template <typename... Args>
+void log_info(logging::Tags tags, std::format_string<Args...> fmt, Args&&... args)
+{
+    log(logging::Severity::informational, tags, fmt, std::forward<Args>(args)...);
+}
+
+template <typename... Args>
+void log_warning(logging::Tags tags, std::format_string<Args...> fmt, Args&&... args)
+{
+    log(logging::Severity::warning, tags, fmt, std::forward<Args>(args)...);
+}
+
+template <typename... Args>
+void log_error(logging::Tags tags, std::format_string<Args...> fmt, Args&&... args)
+{
+    log(logging::Severity::error, tags, fmt, std::forward<Args>(args)...);
+}
+
+template <typename... Args>
+void log_critical(logging::Tags tags, std::format_string<Args...> fmt, Args&&... args)
+{
+    log(logging::Severity::critical, tags, fmt, std::forward<Args>(args)...);
+}
+
+#ifdef MIR_LOG_COMPONENT
 
 inline void log_info(std::string const& message)
 {
@@ -134,8 +182,8 @@ inline void log_warning(char const* fmt, ...)
                MIR_LOG_COMPONENT, fmt, va);
     va_end(va);
 }
-} // (nested anonymous) namespace
 #endif
+} // (nested anonymous) namespace
 
 } // namespace mir
 

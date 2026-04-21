@@ -400,7 +400,7 @@ void mir::Server::run()
 {
     try
     {
-        mir::log_info("Starting");
+        mir::log_info({logging::core}, "Starting");
         mir::security_log(
             logging::Severity::warning,
             "sys_startup",
@@ -460,7 +460,7 @@ auto mir::Server::supported_pixel_formats() const -> std::vector<MirPixelFormat>
 
 void mir::Server::stop()
 {
-    mir::log_info("Stopping");
+    mir::log_info({logging::core}, "Stopping");
     if (self->server_config)
         if (auto const main_loop = the_main_loop().get())
         {
