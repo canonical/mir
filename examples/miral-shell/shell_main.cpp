@@ -155,7 +155,7 @@ int main(int argc, char const* argv[])
         auto const keysym = mir_keyboard_event_keysym(key_event);
         auto const action = mir_keyboard_event_action(key_event);
 
-        if ((modifiers & mir_input_event_modifier_ctrl) && (modifiers & mir_input_event_modifier_shift) && (keysym == XKB_KEY_F12)) 
+        if ((modifiers & mir_input_event_modifier_ctrl) && (modifiers & mir_input_event_modifier_shift) && (keysym == XKB_KEY_F12))
         {
             if (action != mir_keyboard_action_down)
                 return true;
