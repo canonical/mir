@@ -802,7 +802,10 @@ void mf::XdgPositionerStable::set_anchor(uint32_t anchor)
             break;
 
         default:
-            placement = mir_placement_gravity_center;
+            BOOST_THROW_EXCEPTION(mw::ProtocolError(
+                resource,
+                mw::XdgPositioner::Error::invalid_input,
+                "Invalid anchor value %d", anchor));
     }
 
     aux_rect_placement_gravity = placement;
