@@ -14,14 +14,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-use crate::ffi::GlobalFactory;
+use crate::ffi::{GlobalFactory, WaylandServerNotificationHandler};
+use crate::wayland_client::{WaylandClient, WaylandClientId};
 use calloop::ping::Ping;
 use calloop::{generic::Generic, EventLoop, Interest, Mode, PostAction};
 use cxx::UniquePtr;
 use log;
 use std::error;
 use std::option::Option;
-use std::sync::{Arc, Mutex};
+use std::sync::{mpsc, Arc, Mutex};
 use wayland_server::{
     backend::{ClientData, ClientId, DisconnectReason},
     Display, DisplayHandle, ListeningSocket,
@@ -50,29 +51,55 @@ impl WaylandServer {
         &mut self,
         socket: &str,
         factory: UniquePtr<GlobalFactory>,
+        notification_handler: UniquePtr<WaylandServerNotificationHandler>,
     ) -> Result<(), Box<dyn error::Error>> {
         let display = Display::<ServerState>::new()?;
         let mut event_loop: EventLoop<'_, ServerState> = EventLoop::try_new()?;
         let loop_handle = event_loop.handle();
+        let (disconnect_tx, disconnect_rx) = mpsc::channel::<(ClientId, DisconnectReason)>();
         let mut state = ServerState {
             handle: display.handle(),
             stop_requested: false,
+            notification_handler,
+            disconnect_rx,
         };
 
         // First, add the listener to the event loop.
         let listener = ListeningSocket::bind(socket)?;
         loop_handle.insert_source(
             Generic::new(listener, Interest::READ, Mode::Level),
-            |_, listener, state: &mut ServerState| {
+            move |_, listener, state: &mut ServerState| {
                 if let Ok(stream) = listener.accept() {
                     if let Some(stream) = stream {
                         // Insert the client into the display.
                         // This registers the client's socket with the Display's internal backend.
-                        if let Err(e) = state
-                            .handle
-                            .insert_client(stream, std::sync::Arc::new(ClientState))
-                        {
-                            log::error!("Failed to add client: {}", e);
+                        let disconnect_tx = disconnect_tx.clone();
+                        let client_state = ClientState {
+                            on_disconnect: Box::new(move |client_id, reason| {
+                                log::info!(
+                                    "Client disconnected: {:?}, reason: {:?}",
+                                    client_id,
+                                    reason
+                                );
+                                // We publish the notification about the disconnected client onto the channel
+                                // so that the WaylandServerNotificationHandler is guaranteed to only be
+                                // spoken to on a single thread.
+                                let _ = disconnect_tx.send((client_id, reason));
+                            }),
+                        };
+                        match state.handle.insert_client(stream, Arc::new(client_state)) {
+                            Err(e) => log::error!("Failed to add client: {}", e),
+                            Ok(client) => {
+                                // Notify C++ that we have a new WaylandClient available to us.
+                                // The C++ side of things can choose to hold onto this Box if they
+                                // choose to.
+                                let wayland_client =
+                                    WaylandClient::new(client.clone(), state.handle.clone());
+                                state
+                                    .notification_handler
+                                    .pin_mut()
+                                    .client_added(Box::new(wayland_client));
+                            }
                         }
                     }
                 }
@@ -114,6 +141,7 @@ impl WaylandServer {
 
         WaylandServer::register_globals(&state, Arc::new(Mutex::new(factory)));
 
+        // TODO: Don't spin continuously
         while !state.stop_requested {
             // 1. Dispatch events
             // The event loop borrows `server` temporarily to run the callbacks
@@ -121,7 +149,15 @@ impl WaylandServer {
                 .dispatch(None, &mut state)
                 .map_err(|_| "Failed to dispatch event loop")?;
 
-            // 2. Flush clients
+            // 2. Process any pending disconnects
+            while let Ok((client_id, _reason)) = state.disconnect_rx.try_recv() {
+                state
+                    .notification_handler
+                    .pin_mut()
+                    .client_removed(Box::new(WaylandClientId::new(client_id)));
+            }
+
+            // 3. Flush clients
             // Because `event_loop.dispatch` only borrowed `server`, we get it back here.
             state
                 .handle
@@ -154,13 +190,19 @@ pub fn create_wayland_server() -> Box<WaylandServer> {
 pub struct ServerState {
     pub handle: DisplayHandle,
     stop_requested: bool,
+    notification_handler: UniquePtr<WaylandServerNotificationHandler>,
+    disconnect_rx: mpsc::Receiver<(ClientId, DisconnectReason)>,
 }
 
 /// The state of a wayland client.
-struct ClientState;
+struct ClientState {
+    on_disconnect: Box<dyn Fn(ClientId, DisconnectReason) + Send + Sync>,
+}
 
 impl ClientData for ClientState {
     fn initialized(&self, _client_id: ClientId) {}
 
-    fn disconnected(&self, _client_id: ClientId, _reason: DisconnectReason) {}
+    fn disconnected(&self, client_id: ClientId, reason: DisconnectReason) {
+        (self.on_disconnect)(client_id, reason);
+    }
 }

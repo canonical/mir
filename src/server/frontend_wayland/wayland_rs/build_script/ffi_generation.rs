@@ -34,6 +34,7 @@ pub fn generate_ffi(protocols: &Vec<WaylandProtocol>, builders: &Vec<CppBuilder>
     // Finally, build the file.
     quote! {
         use crate::wayland_server_core::*;
+        use crate::wayland_client::*;
         use crate::middleware::*;
 
         #[cxx::bridge(namespace = "mir::wayland_rs")]
@@ -42,8 +43,16 @@ pub fn generate_ffi(protocols: &Vec<WaylandProtocol>, builders: &Vec<CppBuilder>
             extern "Rust" {
                 type WaylandServer;
                 fn create_wayland_server() -> Box<WaylandServer>;
-                fn run(self: &mut WaylandServer, socket: &str, factory: UniquePtr<GlobalFactory>) -> Result<()>;
+                fn run(self: &mut WaylandServer, socket: &str, factory: UniquePtr<GlobalFactory>, notification_handler: UniquePtr<WaylandServerNotificationHandler>) -> Result<()>;
                 fn stop(self: &mut WaylandServer);
+
+                type WaylandClient;
+                fn pid(self: &WaylandClient) -> Result<i32>;
+                fn uid(self: &WaylandClient) -> Result<u32>;
+                fn gid(self: &WaylandClient) -> Result<u32>;
+                fn equals(self: &WaylandClient, id: &WaylandClientId) -> bool;
+
+                type WaylandClientId;
 
                 #(#rust_types)*
                 #(#rust_tokens)*
