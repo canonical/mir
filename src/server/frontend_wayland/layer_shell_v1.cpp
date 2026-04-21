@@ -267,6 +267,14 @@ void mf::LayerShellV1::Instance::get_layer_surface(
 {
     (void)namespace_; // Can be ignored if no special behavior is required;
 
+    if (layer > mw::LayerShellV1::Layer::overlay)
+    {
+        throw wayland::ProtocolError{
+            resource,
+            mw::LayerShellV1::Error::invalid_layer,
+            "Invalid layer %d", layer};
+    }
+
     new LayerSurfaceV1(
         new_layer_surface,
         WlSurface::from(surface),
@@ -635,6 +643,18 @@ void mf::LayerSurfaceV1::ack_configure(uint32_t serial)
 
 void mf::LayerSurfaceV1::set_layer(uint32_t layer)
 {
+    if (layer > mw::LayerShellV1::Layer::overlay)
+    {
+        // FIXME: This should be an invalid_layer error, but that isn't defined in the protocol yet
+        // See https://gitlab.freedesktop.org/wlroots/wlr-protocols/-/merge_requests/142
+        // wlroots incorrectly uses the zwlr_layer_shell_v1.error.invalid_layer error code for this,
+        // which is why we are matching the value (1) with invalid_size for now.
+        throw wayland::ProtocolError{
+            resource,
+            Error::invalid_size,
+            "Invalid layer %d", layer};
+    }
+
     shell::SurfaceSpecification spec;
     spec.depth_layer = layer_shell_layer_to_mir_depth_layer(layer);
     apply_spec(spec);
