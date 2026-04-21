@@ -225,7 +225,7 @@ void mf::XdgSurfaceStable::get_popup(
         BOOST_THROW_EXCEPTION(mw::ProtocolError(
             resource,
             Error::already_constructed,
-            "Tried to create toplevel on surface with existing role"));
+            "Tried to create popup on surface with existing role"));
     }
 
     auto popup = new XdgPopupStable{new_popup, this, parent_role, *xdg_positioner, &surface.value()};
