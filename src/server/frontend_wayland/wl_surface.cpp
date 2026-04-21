@@ -798,10 +798,10 @@ void mf::WlSurface::set_buffer_scale(int32_t scale)
 {
     if (scale <= 0)
     {
-        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+        throw wayland::ProtocolError{
             resource,
             Error::invalid_scale,
-            "Invalid scale %d", scale));
+            "Invalid scale %d", scale};
     }
     pending.scale = scale;
 }
