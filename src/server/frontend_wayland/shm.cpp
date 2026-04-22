@@ -252,16 +252,13 @@ void mf::ShmPool::create_buffer(
     int32_t stride,
     uint32_t format)
 {
-    // TODO: Pull supported formats out of RenderingPlatform to support more than the required formats
-    if (format != wayland::Shm::Format::argb8888 && format != wayland::Shm::Format::xrgb8888)
+    if (offset < 0)
     {
         throw wayland::ProtocolError{
             resource,
-            wayland::Shm::Error::invalid_format,
-            "Invalid SHM format requested"};
+            wayland::Shm::Error::invalid_stride,
+            "Invalid SHM buffer offset %d", offset};
     }
-    auto const pixel_size = 4; // All supported formats are 4 bytes per pixel
-
     if (width <= 0 || height <= 0)
     {
         throw wayland::ProtocolError{
@@ -276,6 +273,15 @@ void mf::ShmPool::create_buffer(
             wayland::Shm::Error::invalid_stride,
             "Invalid SHM buffer stride %d", stride};
     }
+    // TODO: Pull supported formats out of RenderingPlatform to support more than the required formats
+    if (format != wayland::Shm::Format::argb8888 && format != wayland::Shm::Format::xrgb8888)
+    {
+        throw wayland::ProtocolError{
+            resource,
+            wayland::Shm::Error::invalid_format,
+            "Invalid SHM format %u", format};
+    }
+    auto const pixel_size = 4; // All supported formats are 4 bytes per pixel
 
     auto const max_size = std::numeric_limits<int32_t>::max();
     auto const max_width = max_size / pixel_size;
