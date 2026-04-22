@@ -548,7 +548,6 @@ pub enum CppType {
     CppF64,
     String,
     Object(String),
-    Weak(String),
     Array,
     Fd,
     Box(String),
@@ -565,9 +564,6 @@ fn cpp_return_type_to_cpp_source(cpp_type: &CppType) -> String {
         CppType::String => "std::string".to_string(),
         CppType::Object(name) => {
             format!("std::shared_ptr<{}>", name)
-        }
-        CppType::Weak(name) => {
-            format!("wayland_rs::Weak<{}>", name)
         }
         CppType::Array => "std::vector<uint8_t>".to_string(),
         CppType::Fd => "int32_t".to_string(),
@@ -590,7 +586,6 @@ fn cpp_arg_type_to_cpp_source(cpp_type: &CppType, originates_from_rust: bool) ->
         (CppType::CppF64, _) => "double".into(),
         (CppType::Fd, _) => "int32_t".into(),
         (CppType::Object(name), _) => format!("std::shared_ptr<{}> const&", name),
-        (CppType::Weak(name), _) => format!("wayland_rs::Weak<{}> const&", name),
         (CppType::Box(name), _) => {
             if originates_from_rust {
                 format!("rust::Box<{}>", name)
@@ -620,7 +615,6 @@ fn cpp_return_type_to_rust_source(cpp_type: &CppType) -> TokenStream {
         }
         CppType::Array => quote! { &CxxVector<u8> },
         CppType::Fd => quote! { i32 },
-        CppType::Weak(_) => unreachable!("Weak type should not generate Rust code"),
         CppType::Box(name) => {
             let type_name = format_ident!("{}", name);
             quote! { &Box<#type_name> }
@@ -658,7 +652,6 @@ fn cpp_arg_type_to_rust_source(cpp_type: &CppType, originates_from_rust: bool) -
             }
         }
         CppType::Fd => quote! { i32 },
-        CppType::Weak(_) => unreachable!("Weak type should not generate Rust code"),
         CppType::Box(name) => {
             let type_name = format_ident!("{}", name);
             if originates_from_rust {
