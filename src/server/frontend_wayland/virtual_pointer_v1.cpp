@@ -223,7 +223,7 @@ void mf::VirtualPointerV1::motion_absolute(uint32_t time, uint32_t x, uint32_t y
     {
         // FIXME: Specific error proposed in https://gitlab.freedesktop.org/wlroots/wlr-protocols/-/merge_requests/143
         BOOST_THROW_EXCEPTION(
-            mw::ProtocolError(resource, wayland::generic_error_code, "Absolute motion coordinates %u,%u out of bounds %u,%u", x, y, x_extent, y_extent));
+            mw::ProtocolError(resource, mw::generic_error_code, "Absolute motion coordinates %u,%u out of bounds %u,%u", x, y, x_extent, y_extent));
     }
 
     pending.timestamp = std::chrono::milliseconds{time};
