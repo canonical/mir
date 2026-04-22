@@ -20,6 +20,7 @@
 #include <mir/shell/token_authority.h>
 #include "wayland_wrapper.h"
 #include "input_trigger_registry.h"
+#include "wayland_rs/src/ffi.rs.h"
 
 #include <mir/fd.h>
 #include <mir/frontend/connector.h>
@@ -32,6 +33,8 @@
 #include <unordered_set>
 #include <thread>
 #include <vector>
+
+#include "wl_client_registry.h"
 
 namespace mir
 {
@@ -105,7 +108,6 @@ public:
     /// The resources needed to init Wayland extensions
     struct Context
     {
-        wl_display* display;
         std::shared_ptr<Executor> wayland_executor;
         std::shared_ptr<shell::Shell> shell;
         std::shared_ptr<SessionAuthorizer> session_authorizer;
@@ -140,7 +142,7 @@ public:
     WaylandExtensions(WaylandExtensions const&) = delete;
     WaylandExtensions& operator=(WaylandExtensions const&) = delete;
 
-    virtual void run_builders(wl_display* display, std::function<void(std::function<void()>&& work)> const& run_on_wayland_mainloop);
+    virtual void run_builders(std::function<void(std::function<void()>&& work)> const& run_on_wayland_mainloop);
 
     void init(Context const& context);
 
@@ -159,6 +161,7 @@ class WaylandConnector : public Connector, public WaylandTools
 {
 public:
     using WaylandProtocolExtensionFilter = std::function<bool(std::shared_ptr<scene::Session> const&, char const*)>;
+    class WaylandCompositorGlobal;
 
     WaylandConnector(
         std::shared_ptr<shell::Shell> const& shell,
@@ -212,8 +215,6 @@ public:
     auto get_extension(std::string const& name) const -> std::shared_ptr<void>;
 
 private:
-    struct ServerWrapper;
-
     void for_each_output_binding(
         wayland::Client* client,
         graphics::DisplayConfigurationOutputId output,
@@ -233,25 +234,20 @@ private:
      */
     WaylandProtocolExtensionFilter const extension_filter;
 
-    std::unique_ptr<wl_display, void(*)(wl_display*)> const display;
-    std::unique_ptr<ServerWrapper> server_wrapper;
-    mir::Fd const pause_signal;
-    std::unique_ptr<WlCompositor> compositor_global;
-    std::unique_ptr<WlSubcompositor> subcompositor_global;
+    rust::Box<mir::wayland_rs::WaylandServer> server;
+    std::shared_ptr<WlClientRegistry> client_registry;
+    std::shared_ptr<WaylandCompositorGlobal> compositor_global;
     std::unique_ptr<WlSeat> seat_global;
     std::unique_ptr<OutputManager> output_manager;
     std::shared_ptr<DesktopFileManager> desktop_file_manager;
     std::unique_ptr<WlDataDeviceManager> data_device_manager_global;
-    std::unique_ptr<WlShm> shm_global;
     std::unique_ptr<WpViewporter> viewporter;
     std::unique_ptr<LinuxDRMSyncobjManager> drm_syncobj;
-    std::shared_ptr<Executor> const executor;
     std::shared_ptr<graphics::GraphicBufferAllocator> const allocator;
     std::shared_ptr<shell::Shell> const shell;
     std::unique_ptr<WaylandExtensions> const extensions;
     std::shared_ptr<scene::SessionLock> session_lock_;
     std::thread dispatch_thread;
-    wl_event_source* pause_source;
     std::string wayland_display;
 
     // Only accessed on event loop

@@ -31,67 +31,9 @@ namespace msh = mir::shell;
 
 namespace
 {
-static const int max_serial_event_pairs = 100;
-
-/// The context required for creating new WlClient's from wl_client*s
-struct ConstructionCtx
-{
-    ConstructionCtx(
-        std::shared_ptr<msh::Shell> const& shell,
-        std::shared_ptr<mf::SessionAuthorizer> const& session_authorizer,
-        std::function<void(mf::WlClient&)>&& client_created_callback)
-        : shell{shell},
-          session_authorizer{session_authorizer},
-          client_created_callback{std::make_unique<std::function<void(mf::WlClient&)>>(std::move(client_created_callback))}
-    {
-    }
-
-    wl_listener client_construction_listener;
-    wl_listener display_destruction_listener;
-    std::shared_ptr<msh::Shell> const shell;
-    std::shared_ptr<mf::SessionAuthorizer> const session_authorizer;
-    /// Needs to be a pointer so std::is_standard_layout passes
-    mir::StdLayoutUPtr<std::function<void(mf::WlClient&)>> const client_created_callback;
-};
-
-static_assert(
-    std::is_standard_layout<ConstructionCtx>::value,
-    "ConstructionCtx must be standard layout for wl_container_of to be defined behaviour.");
-
-/// Intermediary between the wl_client* and WlClient
-struct ClientCtx
-{
-    mf::WlClient* const client;
-    wl_listener destroy_listener;
-};
-
-static_assert(
-    std::is_standard_layout<ClientCtx>::value,
-    "ClientCtx must be standard layout for wl_container_of to be defined behaviour");
-
-void cleanup_construction_ctx(wl_listener* listener, void*)
-{
-    ConstructionCtx* construction_context;
-    construction_context = wl_container_of(listener, construction_context, display_destruction_listener);
-    delete construction_context;
-}
+constexpr int max_serial_event_pairs = 100;
 }
 
-void mf::WlClient::setup_new_client_handler(
-    wl_display* display,
-    std::shared_ptr<shell::Shell> const& shell,
-    std::shared_ptr<SessionAuthorizer> const& session_authorizer,
-    std::function<void(WlClient&)>&& client_created_callback)
-{
-    auto context = new ConstructionCtx{shell, session_authorizer, std::move(client_created_callback)};
-
-    context->client_construction_listener.notify = &handle_client_created;
-    wl_display_add_client_created_listener(display, &context->client_construction_listener);
-
-    // This handles deleting the ConstructionCtx we just created when the display is destoryed
-    context->display_destruction_listener.notify = &cleanup_construction_ctx;
-    wl_display_add_destroy_listener(display, &context->display_destruction_listener);
-}
 
 mf::WlClient::~WlClient()
 {
@@ -122,10 +64,9 @@ auto mf::WlClient::event_for(uint32_t serial) -> std::optional<std::shared_ptr<M
     return std::nullopt;
 }
 
-mf::WlClient::WlClient(wl_client* client, std::shared_ptr<ms::Session> const& session, msh::Shell* shell)
+mf::WlClient::WlClient(rust::Box<wayland_rs::WaylandClient> client, std::shared_ptr<ms::Session> const& session, msh::Shell* shell)
     : shell{shell},
-      client{client},
-      display{wl_client_get_display(client)},
+      client{std::move(client)},
       session{session}
 {
 }

@@ -15,7 +15,6 @@
  */
 
 #include "output_manager.h"
-#include "wayland_executor.h"
 
 #include <mir/observer_registrar.h>
 #include <mir/log.h>
@@ -230,9 +229,8 @@ void mf::OutputGlobal::instance_destroyed(OutputInstance* instance)
 class mf::OutputManager::DisplayConfigObserver: public graphics::NullDisplayConfigurationObserver
 {
 public:
-    DisplayConfigObserver(OutputManager& manager, std::shared_ptr<Executor> const& executor)
-        : manager{manager},
-          executor{executor}
+    DisplayConfigObserver(OutputManager& manager)
+        : manager{manager}
     {
     }
 
@@ -252,14 +250,11 @@ private:
 };
 
 mf::OutputManager::OutputManager(
-    wl_display* display,
-    std::shared_ptr<Executor> const& executor,
     std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> const& registrar)
-    : display{display},
-      registrar{registrar},
-      display_config_observer{std::make_shared<DisplayConfigObserver>(*this, executor)}
+    : registrar{registrar},
+      display_config_observer{std::make_shared<DisplayConfigObserver>(*this)}
 {
-    registrar->register_interest(display_config_observer, *executor);
+    registrar->register_interest(display_config_observer);
 }
 
 mf::OutputManager::~OutputManager()

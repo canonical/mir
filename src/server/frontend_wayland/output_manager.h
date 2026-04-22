@@ -105,9 +105,7 @@ public:
 class OutputManager
 {
 public:
-    OutputManager(
-        wl_display* display,
-        std::shared_ptr<Executor> const& executor,
+    explicit OutputManager(
         std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> const& registrar);
     ~OutputManager();
 
@@ -127,7 +125,6 @@ private:
 
     struct DisplayConfigObserver;
 
-    wl_display* const display;
     std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> const registrar;
     std::shared_ptr<DisplayConfigObserver> const display_config_observer;
     std::unordered_map<graphics::DisplayConfigurationOutputId, std::unique_ptr<OutputGlobal>> outputs;

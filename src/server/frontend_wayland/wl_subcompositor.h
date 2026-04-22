@@ -17,9 +17,9 @@
 #ifndef MIR_FRONTEND_WL_SUBSURFACE_H
 #define MIR_FRONTEND_WL_SUBSURFACE_H
 
-#include "wayland_wrapper.h"
 #include "wl_surface_role.h"
 #include "wl_surface.h"
+#include "wayland.h"
 
 #include <vector>
 #include <memory>
@@ -40,19 +40,21 @@ namespace frontend
 class WlSurface;
 class WlSubcompositorInstance;
 
-class WlSubcompositor : wayland::Subcompositor::Global
+class WlSubcompositor : public wayland_rs::WlSubcompositorImpl
 {
 public:
-    WlSubcompositor(wl_display* display);
-
-private:
-    void bind(wl_resource* new_wl_subcompositor);
+    explicit WlSubcompositor(rust::Box<wayland_rs::WaylandClient> client);
+    auto get_subsurface(std::shared_ptr<wayland_rs::WlSurfaceImpl> const& surface, std::shared_ptr<wayland_rs::WlSurfaceImpl> const& parent)
+       -> std::shared_ptr<wayland_rs::WlSubsurfaceImpl> override;
 };
 
-class WlSubsurface: public WlSurfaceRole, wayland::Subsurface
+class WlSubsurface: public WlSurfaceRole, public wayland_rs::WlSubsurfaceImpl
 {
 public:
-    WlSubsurface(wl_resource* new_subsurface, WlSurface* surface, WlSurface* parent_surface);
+    WlSubsurface(
+        rust::Box<wayland_rs::WaylandClient> client,
+        std::shared_ptr<wayland_rs::WlSurfaceImpl> const& surface,
+        std::shared_ptr<wayland_rs::WlSurfaceImpl> const& parent);
     ~WlSubsurface();
 
     void populate_surface_data(std::vector<shell::StreamSpecification>& buffer_streams,
@@ -67,12 +69,12 @@ public:
 
     auto subsurface_at(geometry::Point point) -> std::optional<WlSurface*>;
 
-    WlSurface* get_surface() const { return surface; }
+    std::shared_ptr<wayland_rs::WlSurfaceImpl> get_surface() const { return surface.lock(); }
 
 private:
+    void place_above(std::shared_ptr<wayland_rs::WlSurfaceImpl> const& sibling) override;
+    void place_below(std::shared_ptr<wayland_rs::WlSurfaceImpl> const& sibling) override;
     void set_position(int32_t x, int32_t y) override;
-    void place_above(struct wl_resource* sibling) override;
-    void place_below(struct wl_resource* sibling) override;
     void set_sync() override;
     void set_desync() override;
 
@@ -80,9 +82,8 @@ private:
     virtual void commit(WlSurfaceState const& state) override;
     void surface_destroyed() override;
 
-    WlSurface* const surface;
-    /// This class is responsible for removing itself from the parent's children list when needed
-    wayland::Weak<WlSurface> const parent;
+    std::weak_ptr<wayland_rs::WlSurfaceImpl> const surface;
+    std::weak_ptr<wayland_rs::WlSurfaceImpl> const parent;
     bool synchronized_;
     std::optional<WlSurfaceState> cached_state;
 };

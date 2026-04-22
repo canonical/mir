@@ -21,8 +21,10 @@
 #include <mir/geometry/forward.h>
 #include "wayland_wrapper.h"
 #include <mir/wayland/weak.h>
+#include <mir/wayland/lifetime_tracker.h>
 
 #include "wl_surface_role.h"
+#include "wayland_rs/wayland_rs_cpp/include/wayland.h"
 
 #include <mir/geometry/displacement.h>
 #include <mir/geometry/size.h>
@@ -65,6 +67,7 @@ class WlSubsurface;
 class ResourceLifetimeTracker;
 class Viewport;
 class SyncTimeline;
+class WlClientRegistry;
 
 struct WlSurfaceState
 {
@@ -119,15 +122,15 @@ private:
     WlSurface* const surface;
 };
 
-class WlSurface : public wayland::Surface
+class WlSurface : public wayland_rs::WlSurfaceImpl
 {
 public:
-    WlSurface(wl_resource* new_resource,
-              std::shared_ptr<mir::Executor> const& wayland_executor,
+    WlSurface(rust::Box<wayland_rs::WaylandClient> client,
+              std::shared_ptr<WlClientRegistry> const& registry,
               std::shared_ptr<mir::Executor> const& frame_callback_executor,
               std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator);
 
-    ~WlSurface();
+    ~WlSurface() override;
 
     using SceneSurfaceCreatedCallback = std::function<void(std::shared_ptr<scene::Surface>)>;
 
@@ -136,7 +139,6 @@ public:
     std::optional<geometry::Size> buffer_size() const { return buffer_size_; }
     bool synchronized() const;
     auto subsurface_at(geometry::Point point) -> std::optional<WlSurface*>;
-    wl_resource* raw_resource() const { return resource; }
     auto scene_surface() const -> std::optional<std::shared_ptr<scene::Surface>>;
     /// Callback is called immediately if the surface already has a scene::Surface, or else on the first commit where
     /// one exists
@@ -193,7 +195,18 @@ public:
     std::shared_ptr<scene::Session> const session;
     std::shared_ptr<compositor::BufferStream> const stream;
 
-    static WlSurface* from(wl_resource* resource);
+    static WlSurface* from(WlSurfaceImpl& impl);
+
+    void attach(wayland_rs::Weak<wayland_rs::WlBufferImpl> const& buffer, bool has_buffer, int32_t x, int32_t y) override;
+    void damage(int32_t x, int32_t y, int32_t width, int32_t height) override;
+    auto frame() -> std::shared_ptr<wayland_rs::WlCallbackImpl> override;
+    void set_opaque_region(wayland_rs::Weak<wayland_rs::WlRegionImpl> const& region, bool has_region) override;
+    void set_input_region(wayland_rs::Weak<wayland_rs::WlRegionImpl> const& region, bool has_region) override;
+    void commit() override;
+    void damage_buffer(int32_t x, int32_t y, int32_t width, int32_t height) override;
+    void set_buffer_transform(uint32_t transform) override;
+    void set_buffer_scale(int32_t scale) override;
+    void offset(int32_t x, int32_t y) override;
 
 private:
     std::shared_ptr<mir::graphics::GraphicBufferAllocator> const allocator;
@@ -241,17 +254,6 @@ private:
     wayland::Weak<SyncTimeline> sync_timeline;
 
     void send_frame_callbacks(CallbackList& list);
-
-    void attach(std::optional<wl_resource*> const& buffer, int32_t x, int32_t y) override;
-    void damage(int32_t x, int32_t y, int32_t width, int32_t height) override;
-    void frame(wl_resource* callback) override;
-    void set_opaque_region(std::optional<wl_resource*> const& region) override;
-    void set_input_region(std::optional<wl_resource*> const& region) override;
-    void commit() override;
-    void damage_buffer(int32_t x, int32_t y, int32_t width, int32_t height) override;
-    void set_buffer_transform(int32_t transform) override;
-    void set_buffer_scale(int32_t scale) override;
-    void offset(int32_t x, int32_t y) override;
 
     std::optional<geometry::Rectangles> opaque_region_;
 };

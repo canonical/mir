@@ -53,6 +53,11 @@ impl WaylandClient {
     pub fn clone_box(&self) -> Box<WaylandClient> {
         Box::new(self.clone())
     }
+
+    /// Clone the client to a new box.
+    pub fn clone_box(&self) -> Box<WaylandClient> {
+        Box::new(*self.clone())
+    }
 }
 
 /// An opaque ID for the WaylandClient.

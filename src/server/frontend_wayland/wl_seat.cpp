@@ -43,6 +43,9 @@
 #include <mutex>
 #include <algorithm>
 
+#include "mir/executor.h"
+#include "wayland_rs/src/ffi.rs.h"
+
 namespace mf = mir::frontend;
 namespace mi = mir::input;
 namespace ms = mir::scene;
@@ -59,12 +62,12 @@ public:
     ListenerList(ListenerList const&) = delete;
     ListenerList& operator=(ListenerList const&) = delete;
 
-    void register_listener(mw::Client* client, T* listener)
+    void register_listener(rust::Box<wayland_rs::WaylandClient> const* client, T* listener)
     {
         listeners[client].push_back(listener);
     }
 
-    void unregister_listener(mw::Client* client, T const* listener)
+    void unregister_listener(rust::Box<wayland_rs::WaylandClient> const* client, T const* listener)
     {
         std::vector<T*>& client_listeners = listeners[client];
         client_listeners.erase(
@@ -77,7 +80,7 @@ public:
             listeners.erase(client);
     }
 
-    void for_each(mw::Client* client, std::function<void(T*)> func)
+    void for_each(rust::Box<wayland_rs::WaylandClient> const* client, std::function<void(T*)> func)
     {
         for (auto listener: listeners[client])
             func(listener);
@@ -215,10 +218,14 @@ public:
 
         if (seat.focused_surface)
         {
-            seat.for_each_listener(seat.focused_surface.value().client, [&](WlKeyboard* keyboard)
-                {
-                    keyboard->handle_event(event);
-                });
+            seat.focused_surface.with_value([&](auto& surface)
+            {
+                rust::Box<wayland_rs::WaylandClient> const* client = &surface.client;
+                seat.for_each_listener(client, [&](WlKeyboard* keyboard)
+                    {
+                        keyboard->handle_event(event);
+                    });
+            });
         }
     }
 
@@ -242,22 +249,19 @@ private:
     ConsumedKeyTracker consumed_key_tracker;
 };
 
-class mf::WlSeat::Instance : public wayland::Seat
+class mf::WlSeat::Instance : public wayland_rs::WlSeatImpl
 {
 public:
-    Instance(wl_resource* new_resource, mf::WlSeat* seat);
+    Instance(rust::Box<wayland_rs::WaylandClient>, mf::WlSeat* seat);
 
     mf::WlSeat* const seat;
 
-private:
-    void get_pointer(wl_resource* new_pointer) override;
-    void get_keyboard(wl_resource* new_keyboard) override;
-    void get_touch(wl_resource* new_touch) override;
+    auto get_pointer() -> std::shared_ptr<wayland_rs::WlPointerImpl> override;
+    auto get_keyboard() -> std::shared_ptr<wayland_rs::WlKeyboardImpl> override;
+    auto get_touch() -> std::shared_ptr<wayland_rs::WlTouchImpl> override;
 };
 
 mf::WlSeat::WlSeat(
-    wl_display* display,
-    Executor& wayland_executor,
     std::shared_ptr<time::Clock> const& clock,
     std::shared_ptr<mi::InputDeviceHub> const& input_hub,
     std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> const& keyboard_observer_registrar,
@@ -266,8 +270,7 @@ mf::WlSeat::WlSeat(
     std::shared_ptr<mf::SurfaceRegistry> const& surface_registry,
     std::shared_ptr<mf::InputTriggerRegistry> const& input_trigger_registry,
     std::shared_ptr<KeyboardStateTracker> const& keyboard_state_tracker)
-    :   Global(display, Version<9>()),
-        keymap{std::make_shared<input::ParameterKeymap>()},
+    :   keymap{std::make_shared<input::ParameterKeymap>()},
         config_observer{
             std::make_shared<ConfigObserver>(
                 keymap,
@@ -287,7 +290,7 @@ mf::WlSeat::WlSeat(
         accessibility_manager{accessibility_manager}
 {
     input_hub->add_observer(config_observer);
-    keyboard_observer_registrar->register_interest(keyboard_observer, wayland_executor);
+    keyboard_observer_registrar->register_interest(keyboard_observer, immediate_executor);
 }
 
 mf::WlSeat::~WlSeat()
@@ -306,17 +309,17 @@ auto mf::WlSeat::from(struct wl_resource* resource) -> WlSeat*
     return instance ? instance->seat : nullptr;
 }
 
-void mf::WlSeat::for_each_listener(mw::Client* client, std::function<void(PointerEventDispatcher*)> func)
+void mf::WlSeat::for_each_listener(rust::Box<wayland_rs::WaylandClient> const* client, std::function<void(PointerEventDispatcher*)> func)
 {
     pointer_listeners->for_each(client, func);
 }
 
-void mf::WlSeat::for_each_listener(mw::Client* client, std::function<void(WlKeyboard*)> func)
+void mf::WlSeat::for_each_listener(rust::Box<wayland_rs::WaylandClient> const* client, std::function<void(WlKeyboard*)> func)
 {
     keyboard_listeners->for_each(client, func);
 }
 
-void mf::WlSeat::for_each_listener(mw::Client* client, std::function<void(WlTouch*)> func)
+void mf::WlSeat::for_each_listener(rust::Box<wayland_rs::WaylandClient> const* client, std::function<void(WlTouch*)> func)
 {
     touch_listeners->for_each(client, func);
 }
@@ -333,14 +336,14 @@ auto mf::WlSeat::make_keyboard_helper(KeyboardCallbacks* callbacks) -> std::shar
     return keyboard_helper;
 }
 
-void mf::WlSeat::bind(wl_resource* new_wl_seat)
+auto mir::frontend::WlSeat::create(rust::Box<wayland_rs::WaylandClient> client) -> std::shared_ptr<wayland_rs::WlSeatImpl>
 {
-    new Instance{new_wl_seat, this};
+    return std::make_shared<Instance>(std::move(client), this);
 }
 
 void mf::WlSeat::set_focus_to(WlSurface* new_surface)
 {
-    auto const new_client = new_surface ? new_surface->client : nullptr;
+    auto const new_client = new_surface ? &new_surface->client : nullptr;
     if (new_client != focused_client)
     {
         keyboard_listeners->for_each(focused_client, [](WlKeyboard* keyboard)
@@ -354,10 +357,13 @@ void mf::WlSeat::set_focus_to(WlSurface* new_surface)
     }
     if (focused_surface)
     {
-        focused_surface.value().remove_destroy_listener(focused_surface_destroy_listener_id);
+        focused_surface.with_value([&](auto& surface)
+        {
+            surface.remove_destroy_listener(focused_surface_destroy_listener_id);
+        });
     }
     focused_client = new_client;
-    focused_surface = mw::make_weak(new_surface);
+    focused_surface = wayland_rs::Weak<WlSurface>(new_surface);
     if (new_surface)
     {
         // This listener will be removed when either the focus changes or the seat is destroyed
@@ -380,13 +386,26 @@ void mf::WlSeat::set_focus_to(WlSurface* new_surface)
         });
 }
 
-mf::WlSeat::Instance::Instance(wl_resource* new_resource, mf::WlSeat* seat)
-    : mw::Seat(new_resource, Version<9>()),
+mf::WlSeat::Instance::Instance(rust::Box<wayland_rs::WaylandClient> client, mf::WlSeat* seat)
+    : WlSeatImpl(std::move(client)),
       seat{seat}
 {
     // TODO: Read the actual capabilities. Do we have a keyboard? Mouse? Touch?
     send_capabilities_event(Capability::pointer | Capability::keyboard | Capability::touch);
-    send_name_event_if_supported("seat0");
+    send_name_event("seat0");
+}
+
+auto mf::WlSeat::Instance::get_pointer() -> std::shared_ptr<wayland_rs::WlPointerImpl>
+{
+    auto const pointer = std::make_shared<WlPointer>(client->clone_box());
+    auto dispatcher = std::make_shared<PointerEventDispatcher>(pointer);
+    seat->pointer_listeners->register_listener(&client, dispatcher.get());
+    pointer->add_destroy_listener(
+        [listeners = seat->pointer_listeners, listener = std::move(dispatcher), client = client]()
+        {
+            listeners->unregister_listener(client, listener.get());
+        });
+    return pointer;
 }
 
 void mf::WlSeat::Instance::get_pointer(wl_resource* new_pointer)
@@ -394,7 +413,7 @@ void mf::WlSeat::Instance::get_pointer(wl_resource* new_pointer)
     auto const pointer = new WlPointer{new_pointer};
     auto dispatcher = std::make_shared<PointerEventDispatcher>(pointer);
 
-    seat->pointer_listeners->register_listener(client, dispatcher.get());
+    seat->pointer_listeners->register_listener(&client, dispatcher.get());
     pointer->add_destroy_listener(
         [listeners = seat->pointer_listeners, listener = std::move(dispatcher), client = client]()
         {
@@ -425,7 +444,7 @@ void mf::WlSeat::Instance::get_touch(wl_resource* new_touch)
         });
 }
 
-void mf::WlSeat::add_focus_listener(mw::Client* client, FocusListener* listener)
+void mf::WlSeat::add_focus_listener(rust::Box<wayland_rs::WaylandClient> const* client, FocusListener* listener)
 {
     focus_listeners->register_listener(client, listener);
     if (focused_client == client)
@@ -438,7 +457,7 @@ void mf::WlSeat::add_focus_listener(mw::Client* client, FocusListener* listener)
     }
 }
 
-void mf::WlSeat::remove_focus_listener(mw::Client* client, FocusListener* listener)
+void mf::WlSeat::remove_focus_listener(rust::Box<wayland_rs::WaylandClient> const* client, FocusListener* listener)
 {
     focus_listeners->unregister_listener(client, listener);
 }

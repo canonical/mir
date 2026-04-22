@@ -12,7 +12,6 @@ set(
   wayland_default_configuration.cpp
   wayland_connector.cpp         wayland_connector.h
   wl_client.cpp                 wl_client.h
-  wayland_executor.cpp          wayland_executor.h
   wayland_surface_observer.cpp  wayland_surface_observer.h
   wayland_input_dispatcher.cpp  wayland_input_dispatcher.h
   wl_data_device_manager.cpp    wl_data_device_manager.h
@@ -128,13 +127,7 @@ target_link_libraries(mirfrontend-wayland
     mirplatform
     mircommon
     mircore
+    mirwayland_rs
   PRIVATE
     PkgConfig::GIOUnix
 )
-
-if (MIR_ENABLE_RUST)
-  target_link_libraries(mirfrontend-wayland
-    PUBLIC
-      mirwayland_rs
-  )
-endif()
