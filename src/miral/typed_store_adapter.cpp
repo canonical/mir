@@ -246,8 +246,6 @@ void process_or_handle_error(
     {
         try
         {
-            auto const foo = std::views::transform(preset, [](auto const& e) { return to_string(e); });
-            auto const preset_str = join_comma(foo);
             process_as<Type>(handler, key, array.values, preset);
         }
         catch (NoValidValuesError const& nvv)
