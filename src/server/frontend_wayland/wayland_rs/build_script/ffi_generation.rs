@@ -46,15 +46,19 @@ pub fn generate_ffi(protocols: &Vec<WaylandProtocol>, builders: &Vec<CppBuilder>
                 fn run(self: &mut WaylandServer, socket: &str, factory: UniquePtr<GlobalFactory>, notification_handler: UniquePtr<WaylandServerNotificationHandler>) -> Result<()>;
                 fn stop(self: &mut WaylandServer);
 
+                fn next_serial() -> u32;
+
                 type WaylandClient;
                 fn pid(self: &WaylandClient) -> Result<i32>;
                 fn uid(self: &WaylandClient) -> Result<u32>;
                 fn gid(self: &WaylandClient) -> Result<u32>;
-                fn equals(self: &WaylandClient, id: &WaylandClientId) -> bool;
+                fn socket_fd(self: &WaylandClient) -> Result<i32>;
+                fn name(self: &WaylandClient) -> Result<String>;
                 fn id(self: &WaylandClient) -> Box<WaylandClientId>;
                 fn clone_box(self: &WaylandClient) -> Box<WaylandClient>;
-
+                
                 type WaylandClientId;
+                fn equals(self: &WaylandClientId, id: &Box<WaylandClientId>) -> bool;
 
                 #(#rust_types)*
                 #(#rust_tokens)*

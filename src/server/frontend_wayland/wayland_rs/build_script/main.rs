@@ -777,7 +777,6 @@ fn create_ffi_fwd_builder(protocols: &Vec<WaylandProtocol>) -> CppBuilder {
     // WaylandServer is declared in ffi.rs but used nowhere in the protocol headers;
     // include it for completeness so all Rust types are forward-declared.
     namespace.add_forward_declaration_class("WaylandServer");
-    // WaylandClient is used in the protected constructor of every generated XxxImpl.
     namespace.add_forward_declaration_class("WaylandClient");
 
     for protocol in protocols {
@@ -936,20 +935,13 @@ fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
     );
     class.add_method(post_error_method);
 
-    // Add a protected constructor and member so that subclasses know which client
-    // they are serving and can interact with it as they please.
-    class.add_protected_constructor_arg(CppArg::new(
-        CppType::Box("WaylandClient".to_string()),
-        "client",
-        false,
-    ));
-    class
-        .add_public_member(CppArg::new(
-            CppType::Box("WaylandClient".to_string()),
-            "client",
-            false,
-        ))
-        .set_const();
+    // Add a destroy_and_delete method that drops the Rust-side instance, allowing
+    // C++ code to manually deallocate an interface object.
+    let mut destroy_and_delete_method =
+        CppMethod::new("destroy_and_delete", None, false, false, false, false);
+    destroy_and_delete_method.set_body("instance_.reset();");
+    class.add_method(destroy_and_delete_method);
+
     for method in methods {
         class.add_method(method);
     }

@@ -2,7 +2,7 @@
  * Copyright © Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 or 3,
+ * under the terms of the GNU General Public License version 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -14,13 +14,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_WAYLAND_BASE_H_
-#define MIR_WAYLAND_BASE_H_
+#include "wl_compositor.h"
+#include "wl_surface.h"
+#include "wl_region.h"
 
-#include "lifetime_tracker.h"
-#include "weak.h"
-#include "resource.h"
-#include "global.h"
-#include "protocol_error.h"
+namespace mw = mir::wayland_rs;
+namespace mf = mir::frontend;
 
-#endif // MIR_WAYLAND_BASE_H_
+mf::WlCompositor::WlCompositor(std::shared_ptr<WlClient> const& client)
+{
+}
+
+auto mf::WlCompositor::create_region() -> std::shared_ptr<wayland_rs::WlRegionImpl>
+{
+    return std::make_shared<WlRegion>();
+}
+
+auto mf::WlCompositor::create_surface() -> std::shared_ptr<wayland_rs::WlSurfaceImpl>
+{
+
+}

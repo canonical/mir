@@ -18,8 +18,8 @@
 #define MIR_FRONTEND_WAYLAND_CONNECTOR_H_
 
 #include <mir/shell/token_authority.h>
-#include "wayland_wrapper.h"
 #include "input_trigger_registry.h"
+#include "wayland_rs/src/ffi.rs.h"
 
 #include <mir/fd.h>
 #include <mir/frontend/connector.h>
@@ -98,6 +98,7 @@ class DesktopFileManager;
 class SurfaceRegistry;
 class InputTriggerRegistry;
 class KeyboardStateTracker;
+class WlClientRegistry;
 
 class WaylandExtensions
 {
@@ -233,8 +234,8 @@ private:
      */
     WaylandProtocolExtensionFilter const extension_filter;
 
-    std::unique_ptr<wl_display, void(*)(wl_display*)> const display;
-    std::unique_ptr<ServerWrapper> server_wrapper;
+    rust::Box<mir::wayland_rs::WaylandServer> server;
+    std::shared_ptr<WlClientRegistry> client_registry;
     mir::Fd const pause_signal;
     std::unique_ptr<WlCompositor> compositor_global;
     std::unique_ptr<WlSubcompositor> subcompositor_global;

@@ -15,9 +15,7 @@
  */
 
 #include "wayland_connector.h"
-#ifdef MIR_ENABLE_RUST
-#include "wayland_rs/src/ffi.rs.h"
-#endif
+#include "wl_client_registry.h"
 
 #include <mir/shell/token_authority.h>
 #include <mir/graphics/platform.h>
@@ -66,7 +64,30 @@ namespace msh = mir::shell;
 namespace msh = mir::shell;
 namespace geom = mir::geometry;
 namespace mi = mir::input;
-namespace mw = mir::wayland;
+namespace mw = mir::wayland_rs;
+
+namespace
+{
+class WaylandServerNotificationHandler : public mw::WaylandServerNotificationHandler
+{
+public:
+    explicit WaylandServerNotificationHandler(std::shared_ptr<mf::WlClientRegistry> const& client_registry)
+        : client_registry(client_registry)
+    {}
+
+    auto client_added(rust::Box<mw::WaylandClient> wayland_client) -> void override
+    {
+        client_registry->add_client(std::move(wayland_client));
+    }
+
+    auto client_removed(rust::Box<mw::WaylandClientId> id) -> void override
+    {
+        client_registry->delete_client(std::move(id));
+    }
+
+    std::shared_ptr<mf::WlClientRegistry> client_registry;
+};
+}
 
 namespace mir
 {
@@ -227,13 +248,6 @@ auto mir::frontend::WaylandExtensions::get_extension(std::string const& name) co
 void mf::WaylandExtensions::run_builders(wl_display*, std::function<void(std::function<void()>&& work)> const&)
 {
 }
-
-struct mf::WaylandConnector::ServerWrapper
-{
-    #ifdef MIR_ENABLE_RUST
-    rust::Box<mir::wayland_rs::WaylandServer> server;
-    #endif
-};
 
 mf::WaylandConnector::WaylandConnector(
     std::shared_ptr<msh::Shell> const& shell,

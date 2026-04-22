@@ -22,11 +22,15 @@ use cxx::UniquePtr;
 use log;
 use std::error;
 use std::option::Option;
+use std::os::fd::AsRawFd;
+use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::{mpsc, Arc, Mutex};
 use wayland_server::{
     backend::{ClientData, ClientId, DisconnectReason},
     Display, DisplayHandle, ListeningSocket,
 };
+
+static SERIAL_COUNTER: AtomicU32 = AtomicU32::new(0);
 
 /// The wayland server.
 pub struct WaylandServer {
@@ -86,6 +90,7 @@ impl WaylandServer {
                                 // spoken to on a single thread.
                                 let _ = disconnect_tx.send((client_id, reason));
                             }),
+                            socket_fd: stream.as_raw_fd(),
                         };
                         match state.handle.insert_client(stream, Arc::new(client_state)) {
                             Err(e) => log::error!("Failed to add client: {}", e),
@@ -186,6 +191,11 @@ pub fn create_wayland_server() -> Box<WaylandServer> {
     Box::new(WaylandServer::new())
 }
 
+/// Increment and return the next serial number for the Wayland display.
+pub fn next_serial() -> u32 {
+    SERIAL_COUNTER.fetch_add(1, Ordering::Relaxed) + 1
+}
+
 /// The state of the wayland server.
 pub struct ServerState {
     pub handle: DisplayHandle,
@@ -195,8 +205,16 @@ pub struct ServerState {
 }
 
 /// The state of a wayland client.
-struct ClientState {
+pub struct ClientState {
     on_disconnect: Box<dyn Fn(ClientId, DisconnectReason) + Send + Sync>,
+    socket_fd: std::os::fd::RawFd,
+}
+
+impl ClientState {
+    /// Retrieve the socket file descriptor for this client's connection.
+    pub fn fd(&self) -> i32 {
+        self.socket_fd
+    }
 }
 
 impl ClientData for ClientState {

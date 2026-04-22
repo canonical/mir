@@ -16,36 +16,42 @@
 
 #ifndef MIR_WAYLAND_CLIENT_H_
 #define MIR_WAYLAND_CLIENT_H_
+#include "wayland_rs/src/ffi.rs.h"
 
 struct wl_client;
 
+#include "lifetime_tracker.h"
 #include <cstdint>
 #include <memory>
 #include <optional>
-
-#include <mir/wayland/lifetime_tracker.h>
+#include <rust/cxx.h>
 
 class MirEvent;
 
 namespace mir
 {
+namespace wayland_rs
+{
+class WaylandClient;
+class WaylandClientId;
+}
 namespace scene
 {
 class Session;
 }
 
-namespace wayland
+namespace frontend
 {
-class Resource;
+using RawWlClient = rust::Box<wayland_rs::WaylandClient>;
+using RawWlClientId = rust::Box<wayland_rs::WaylandClientId>;
 
-class Client : public wayland::LifetimeTracker
+class Client : public wayland_rs::LifetimeTracker
 {
 public:
-    /// Returns the Client object for the given libwayland client
-    static auto from(wl_client const* client) -> Client&;
+    virtual ~Client() = default;
 
     /// The underlying Wayland client
-    virtual auto raw_client() const -> wl_client* = 0;
+    virtual auto raw_client() const -> RawWlClient const& = 0;
 
     /// True if the client's destroy listener has fired. The client object continues to exist after this until all
     /// resources have been cleaned up.
@@ -72,14 +78,6 @@ public:
     virtual void set_output_geometry_scale(float scale) = 0;
     virtual auto output_geometry_scale() -> float = 0;
     /// @}
-
-protected:
-    static void register_client(wl_client const* raw, std::shared_ptr<Client> const& shared);
-    static void unregister_client(wl_client const* raw);
-
-private:
-    friend Resource;
-    static auto shared_from(wl_client const* client) -> std::shared_ptr<Client>;
 };
 }
 }

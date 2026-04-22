@@ -2,7 +2,7 @@
  * Copyright © Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 or 3,
+ * under the terms of the GNU General Public License version 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -14,34 +14,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_WAYLAND_GLOBAL_H_
-#define MIR_WAYLAND_GLOBAL_H_
+#ifndef MIR_FRONTEND_WL_COMPOSITOR_H
+#define MIR_FRONTEND_WL_COMPOSITOR_H
 
-struct wl_global;
+#include "wayland.h"
+#include "wl_client.h"
 
 namespace mir
 {
-namespace wayland
+namespace frontend
 {
-class Global
+class WlCompositor : public wayland_rs::WlCompositorImpl
 {
 public:
-    template<int V>
-    struct Version
-    {
-    };
+    WlCompositor(std::shared_ptr<WlClient> const& client);
 
-    explicit Global(wl_global* global);
-    virtual ~Global();
+    auto create_surface() -> std::shared_ptr<wayland_rs::WlSurfaceImpl> override;
+    auto create_region() -> std::shared_ptr<wayland_rs::WlRegionImpl> override;
 
-    Global(Global const&) = delete;
-    Global& operator=(Global const&) = delete;
-
-    virtual auto interface_name() const -> char const* = 0;
-
-    wl_global* const global;
+private:
+    std::shared_ptr<WlClient> client;
 };
 }
 }
 
-#endif // MIR_WAYLAND_GLOBAL_H_
+#endif //MIR_FRONTEND_WL_COMPOSITOR_H

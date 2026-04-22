@@ -12,6 +12,7 @@ set(
   wayland_default_configuration.cpp
   wayland_connector.cpp         wayland_connector.h
   wl_client.cpp                 wl_client.h
+  wl_client_registry.cpp        wl_client_registry.h
   wayland_executor.cpp          wayland_executor.h
   wayland_surface_observer.cpp  wayland_surface_observer.h
   wayland_input_dispatcher.cpp  wayland_input_dispatcher.h
@@ -21,6 +22,7 @@ set(
   output_manager.cpp            output_manager.h
   pointer_constraints_unstable_v1.cpp pointer_constraints_unstable_v1.h
   relative_pointer_unstable_v1.cpp    relative_pointer_unstable_v1.h
+  wl_compositor.cpp             wl_compositor.h
   wl_subcompositor.cpp          wl_subcompositor.h
                                 wl_surface_role.h
   window_wl_surface_role.cpp    window_wl_surface_role.h
