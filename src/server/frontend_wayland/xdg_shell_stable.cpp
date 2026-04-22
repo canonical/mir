@@ -769,6 +769,10 @@ void mf::XdgPositionerStable::set_anchor(uint32_t anchor)
 
     switch (anchor)
     {
+        case Anchor::none:
+            placement = mir_placement_gravity_center;
+            break;
+
         case Anchor::top:
             placement = mir_placement_gravity_north;
             break;
@@ -802,7 +806,10 @@ void mf::XdgPositionerStable::set_anchor(uint32_t anchor)
             break;
 
         default:
-            placement = mir_placement_gravity_center;
+            BOOST_THROW_EXCEPTION(mw::ProtocolError(
+                resource,
+                mw::XdgPositioner::Error::invalid_input,
+                "Invalid anchor value %u", anchor));
     }
 
     aux_rect_placement_gravity = placement;
