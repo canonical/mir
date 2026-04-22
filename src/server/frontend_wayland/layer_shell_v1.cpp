@@ -605,8 +605,9 @@ void mf::LayerSurfaceV1::ack_configure(uint32_t serial)
 
     if (acked_event == std::end(inflight_configures))
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error(
-            "Could not find acked configure with serial " + std::to_string(serial)));
+        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+            resource, mw::generic_error_code,
+            "Could not find acked configure with serial %u", serial));
     }
 
     auto const acked_configure_size = acked_event->second;
