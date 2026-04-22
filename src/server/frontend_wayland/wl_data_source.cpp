@@ -259,7 +259,7 @@ uint32_t mf::WlDataSource::drag_n_drop_set_actions(uint32_t dnd_actions, uint32_
         preferred_action = DndAction::move;
     }
 
-    if (dnd_actions | DndAction::ask)
+    if (dnd_actions & DndAction::ask)
     {
         preferred_action |= DndAction::move;
     }
@@ -268,7 +268,7 @@ uint32_t mf::WlDataSource::drag_n_drop_set_actions(uint32_t dnd_actions, uint32_
 
     for (auto action : {preferred_action, DndAction::copy, DndAction::move, DndAction::none})
     {
-        if (action | acceptable_options)
+        if (action & acceptable_options)
         {
             if (!dnd_action || dnd_action.value() != action)
             {
