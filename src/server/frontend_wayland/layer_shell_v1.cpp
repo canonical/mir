@@ -272,7 +272,7 @@ void mf::LayerShellV1::Instance::get_layer_surface(
         throw wayland::ProtocolError{
             resource,
             mw::LayerShellV1::Error::invalid_layer,
-            "Invalid layer %d", layer};
+            "Invalid layer %u", layer};
     }
 
     new LayerSurfaceV1(
@@ -652,7 +652,7 @@ void mf::LayerSurfaceV1::set_layer(uint32_t layer)
         throw wayland::ProtocolError{
             resource,
             Error::invalid_size,
-            "Invalid layer %d", layer};
+            "Invalid layer %u", layer};
     }
 
     shell::SurfaceSpecification spec;
