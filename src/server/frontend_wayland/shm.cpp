@@ -14,9 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <limits>
-
 #include "shm.h"
+#include <limits>
 #include <mir/graphics/drm_formats.h>
 #include "../shm_backing.h"
 #include <mir/log.h>
