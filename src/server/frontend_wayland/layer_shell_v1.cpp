@@ -648,10 +648,11 @@ void mf::LayerSurfaceV1::set_layer(uint32_t layer)
         // FIXME: This should be an invalid_layer error, but that isn't defined in the protocol yet
         // See https://gitlab.freedesktop.org/wlroots/wlr-protocols/-/merge_requests/142
         // wlroots incorrectly uses the zwlr_layer_shell_v1.error.invalid_layer error code for this,
-        // which is why we are matching the value (1) with invalid_size for now.
+        // so we are matching that even though it will be interpreted as zwlr_layer_surface_v1.error.invalid_size
+        // in the client.
         throw wayland::ProtocolError{
             resource,
-            Error::invalid_size,
+            mw::LayerShellV1::Error::invalid_layer,
             "Invalid layer %u", layer};
     }
 
