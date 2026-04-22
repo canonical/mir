@@ -122,7 +122,7 @@ private:
     WlSurface* const surface;
 };
 
-class WlSurface : public wayland_rs::WlSurfaceImpl, public wayland::LifetimeTracker
+class WlSurface : public wayland_rs::WlSurfaceImpl
 {
 public:
     WlSurface(rust::Box<wayland_rs::WaylandClient> client,

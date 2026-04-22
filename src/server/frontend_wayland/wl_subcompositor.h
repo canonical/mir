@@ -17,10 +17,9 @@
 #ifndef MIR_FRONTEND_WL_SUBSURFACE_H
 #define MIR_FRONTEND_WL_SUBSURFACE_H
 
-#include "wayland_wrapper.h"
 #include "wl_surface_role.h"
 #include "wl_surface.h"
-#include "wayland_rs/wayland_rs_cpp/include/wayland.h"
+#include "wayland.h"
 
 #include <vector>
 #include <memory>
@@ -45,7 +44,7 @@ class WlSubcompositor : public wayland_rs::WlSubcompositorImpl
 {
 public:
     explicit WlSubcompositor(rust::Box<wayland_rs::WaylandClient> client);
-    auto get_subsurface(wayland_rs::Weak<wayland_rs::WlSurfaceImpl> const& surface, wayland_rs::Weak<wayland_rs::WlSurfaceImpl> const& parent)
+    auto get_subsurface(std::shared_ptr<wayland_rs::WlSurfaceImpl> const& surface, std::shared_ptr<wayland_rs::WlSurfaceImpl> const& parent)
        -> std::shared_ptr<wayland_rs::WlSubsurfaceImpl> override;
 };
 
@@ -54,8 +53,8 @@ class WlSubsurface: public WlSurfaceRole, public wayland_rs::WlSubsurfaceImpl
 public:
     WlSubsurface(
         rust::Box<wayland_rs::WaylandClient> client,
-        wayland_rs::Weak<wayland_rs::WlSurfaceImpl> const& surface,
-        wayland_rs::Weak<wayland_rs::WlSurfaceImpl> const& parent);
+        std::shared_ptr<wayland_rs::WlSurfaceImpl> const& surface,
+        std::shared_ptr<wayland_rs::WlSurfaceImpl> const& parent);
     ~WlSubsurface();
 
     void populate_surface_data(std::vector<shell::StreamSpecification>& buffer_streams,
@@ -70,11 +69,11 @@ public:
 
     auto subsurface_at(geometry::Point point) -> std::optional<WlSurface*>;
 
-    wayland_rs::Weak<wayland_rs::WlSurfaceImpl> get_surface() const { return surface; }
+    std::shared_ptr<wayland_rs::WlSurfaceImpl> get_surface() const { return surface.lock(); }
 
 private:
-    void place_above(wayland_rs::Weak<wayland_rs::WlSurfaceImpl> const& sibling) override;
-    void place_below(wayland_rs::Weak<wayland_rs::WlSurfaceImpl> const& sibling) override;
+    void place_above(std::shared_ptr<wayland_rs::WlSurfaceImpl> const& sibling) override;
+    void place_below(std::shared_ptr<wayland_rs::WlSurfaceImpl> const& sibling) override;
     void set_position(int32_t x, int32_t y) override;
     void set_sync() override;
     void set_desync() override;
@@ -83,8 +82,8 @@ private:
     virtual void commit(WlSurfaceState const& state) override;
     void surface_destroyed() override;
 
-    wayland_rs::Weak<wayland_rs::WlSurfaceImpl> const surface;
-    wayland_rs::Weak<wayland_rs::WlSurfaceImpl> const parent;
+    std::weak_ptr<wayland_rs::WlSurfaceImpl> const surface;
+    std::weak_ptr<wayland_rs::WlSurfaceImpl> const parent;
     bool synchronized_;
     std::optional<WlSurfaceState> cached_state;
 };

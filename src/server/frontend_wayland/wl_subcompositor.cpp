@@ -18,8 +18,8 @@
 
 #include "wl_subcompositor.h"
 #include "wl_surface.h"
+#include "protocol_error.h"
 
-#include <mir/wayland/client.h>
 #include <mir/geometry/rectangle.h>
 #include <boost/throw_exception.hpp>
 
@@ -28,7 +28,7 @@
 
 namespace mf = mir::frontend;
 namespace geom = mir::geometry;
-namespace mw = mir::wayland;
+namespace mw = mir::wayland_rs;
 
 mf::WlSubcompositor::WlSubcompositor(rust::Box<wayland_rs::WaylandClient> client)
     : WlSubcompositorImpl(std::move(client))
@@ -36,8 +36,8 @@ mf::WlSubcompositor::WlSubcompositor(rust::Box<wayland_rs::WaylandClient> client
 }
 
 auto mf::WlSubcompositor::get_subsurface(
-    wayland_rs::Weak<wayland_rs::WlSurfaceImpl> const& surface,
-    wayland_rs::Weak<wayland_rs::WlSurfaceImpl> const& parent)
+    std::shared_ptr<wayland_rs::WlSurfaceImpl> const& surface,
+    std::shared_ptr<wayland_rs::WlSurfaceImpl> const& parent)
     -> std::shared_ptr<wayland_rs::WlSubsurfaceImpl>
 {
     return std::make_shared<WlSubsurface>(client->clone_box(), surface, parent);
@@ -45,8 +45,8 @@ auto mf::WlSubcompositor::get_subsurface(
 
 mf::WlSubsurface::WlSubsurface(
     rust::Box<wayland_rs::WaylandClient> client,
-    wayland_rs::Weak<wayland_rs::WlSurfaceImpl> const& surface,
-    wayland_rs::Weak<wayland_rs::WlSurfaceImpl> const& parent)
+    std::shared_ptr<wayland_rs::WlSurfaceImpl> const& surface,
+    std::shared_ptr<wayland_rs::WlSurfaceImpl> const& parent)
     : wayland_rs::WlSubsurfaceImpl(std::move(client)),
       surface{surface},
       parent{parent},
@@ -54,37 +54,28 @@ mf::WlSubsurface::WlSubsurface(
 {
     if (parent)
     {
-        parent.with_value([this](auto& parent)
-        {
-            auto const wl_surface = WlSurface::from(parent);
-            wl_surface->add_subsurface(this);
-        });
+        auto const wl_surface = WlSurface::from(*parent);
+        wl_surface->add_subsurface(this);
     }
 
-    surface.with_value([this](auto& surface)
-    {
-        auto const wl_surface = WlSurface::from(surface);
-        wl_surface->set_role(this);
-        wl_surface->pending_invalidate_surface_data();
-    });
+    auto const wl_surface = WlSurface::from(*surface);
+    wl_surface->set_role(this);
+    wl_surface->pending_invalidate_surface_data();
 }
 
 mf::WlSubsurface::~WlSubsurface()
 {
-    if (parent)
+    if (auto const locked_parent = parent.lock())
     {
-        parent.with_value([this](auto& captured_parent)
-        {
-            auto const wl_surface = WlSurface::from(captured_parent);
-            wl_surface->remove_subsurface(this);
-        });
+        auto const wl_surface = WlSurface::from(*locked_parent);
+        wl_surface->remove_subsurface(this);
     }
 
-    surface.with_value([](auto& captured_surface)
+    if (auto const locked_surface = surface.lock())
     {
-        auto const wl_surface = WlSurface::from(captured_surface);
+        auto const wl_surface = WlSurface::from(*locked_surface);
         wl_surface->clear_role();
-    });
+    }
     refresh_surface_data_now();
 }
 
@@ -92,26 +83,23 @@ void mf::WlSubsurface::populate_surface_data(std::vector<shell::StreamSpecificat
                                              std::vector<mir::geometry::Rectangle>& input_shape_accumulator,
                                              geometry::Displacement const& parent_offset) const
 {
-    surface.with_value([&](auto& captured_surface)
+    if (auto const locked_surface = surface.lock())
     {
-        auto const wl_surface = WlSurface::from(captured_surface);
+        auto const wl_surface = WlSurface::from(*locked_surface);
         if (wl_surface->buffer_size())
         {
             // surface is mapped
             wl_surface->populate_surface_data(buffer_streams, input_shape_accumulator, parent_offset);
         }
-    });
+    }
 }
 
 auto mf::WlSubsurface::total_offset() const -> geom::Displacement
 {
-    if (parent)
+    if (auto const locked_parent = parent.lock())
     {
-        return parent.with_value([](auto& captured_parent)
-        {
-            auto const wl_surface = WlSurface::from(captured_parent);
-            return wl_surface->offset();
-        });
+        auto const wl_surface = WlSurface::from(*locked_parent);
+        return wl_surface->offset();
     }
 
     return geom::Displacement{};
@@ -119,23 +107,21 @@ auto mf::WlSubsurface::total_offset() const -> geom::Displacement
 
 auto mf::WlSubsurface::synchronized() const -> bool
 {
-    bool const parent_synchronized = parent && parent.with_value([](auto& captured_parent)
+    bool parent_synchronized{false};
+    if (auto const locked_parent = parent.lock())
     {
-        auto const wl_surface = WlSurface::from(captured_parent);
-        return wl_surface->synchronized();
-    });
+        auto const wl_surface = WlSurface::from(*locked_parent);
+        parent_synchronized = wl_surface->synchronized();
+    }
     return synchronized_ || parent_synchronized;
 }
 
 auto mf::WlSubsurface::scene_surface() const -> std::optional<std::shared_ptr<scene::Surface>>
 {
-    if (parent)
+    if (auto const locked_parent = parent.lock())
     {
-        return parent.with_value([](auto& captured_parent)
-        {
-            auto const wl_surface = WlSurface::from(captured_parent);
-            return wl_surface->scene_surface();
-        });
+        auto const wl_surface = WlSurface::from(*locked_parent);
+        return wl_surface->scene_surface();
     }
 
     return std::nullopt;
@@ -145,101 +131,92 @@ void mf::WlSubsurface::parent_has_committed()
 {
     if (cached_state && synchronized())
     {
-        surface.with_value([&](auto& captured_surface)
+        if (auto const locked_surface = surface.lock())
         {
-            auto const wl_surface = WlSurface::from(captured_surface);
+            auto const wl_surface = WlSurface::from(*locked_surface);
             wl_surface->commit(cached_state.value());
-        });
+        }
         cached_state = std::nullopt;
     }
 }
 
 auto mf::WlSubsurface::subsurface_at(geom::Point point) -> std::optional<WlSurface*>
 {
-    return surface.with_value([&point](auto& captured)
+    if (auto const locked_surface = surface.lock())
     {
-        auto const wl_surface = WlSurface::from(captured);
+        auto const wl_surface = WlSurface::from(*locked_surface);
         return wl_surface->subsurface_at(point);
-    });
+    }
+    return std::nullopt;
 }
 
 void mf::WlSubsurface::set_position(int32_t x, int32_t y)
 {
-    surface.with_value([x, y](auto& captured)
+    if (auto const locked_surface = surface.lock())
     {
-        auto const wl_surface = WlSurface::from(captured);
+        auto const wl_surface = WlSurface::from(*locked_surface);
         wl_surface->set_pending_offset(geom::Displacement(x, y));
-    });
+    }
 }
 
-void mf::WlSubsurface::place_above(wayland_rs::Weak<wayland_rs::WlSurfaceImpl> const& sibling)
+void mf::WlSubsurface::place_above(std::shared_ptr<wayland_rs::WlSurfaceImpl> const& sibling)
 {
-    if (!parent)
+    auto const locked_parent = parent.lock();
+    if (!locked_parent)
     {
         // Parent has been destroyed, ignore
         return;
     }
 
-    if (sibling == surface)
+    if (sibling == surface.lock())
     {
-        BOOST_THROW_EXCEPTION(wayland_rs::ProtocolError(
+        BOOST_THROW_EXCEPTION(mw::ProtocolError(
             object_id(),
-            mw::Subsurface::Error::bad_surface,
+            mw::WlSubsurfaceImpl::Error::bad_surface,
             "wl_subsurface.place_above: sibling cannot be the subsurface itself"));
     }
 
-    parent.with_value([&](auto& captured_parent)
+    auto parent_surface = WlSurface::from(*locked_parent);
+    auto sibling_surface = WlSurface::from(*sibling);
+    if (sibling != locked_parent && !parent_surface->has_subsurface_with_surface(sibling_surface))
     {
-        auto parent_surface = WlSurface::from(captured_parent);
-        sibling.with_value([&](auto& captured_sibling)
-        {
-            auto sibling_surface = WlSurface::from(captured_sibling);
-            if (sibling != parent && !parent_surface->has_subsurface_with_surface(sibling_surface))
-            {
-                BOOST_THROW_EXCEPTION(wayland_rs::ProtocolError(
-                    object_id(),
-                    mw::Subsurface::Error::bad_surface,
-                    "wl_subsurface.place_above: sibling must be the parent or a sibling subsurface"));
-            }
+        BOOST_THROW_EXCEPTION(wayland_rs::ProtocolError(
+            object_id(),
+            mw::WlSubsurfaceImpl::Error::bad_surface,
+            "wl_subsurface.place_above: sibling must be the parent or a sibling subsurface"));
+    }
 
-            parent_surface->reorder_subsurface(this, sibling_surface, WlSurface::SubsurfacePlacement::above);
-        });
-    });
+    parent_surface->reorder_subsurface(this, sibling_surface, WlSurface::SubsurfacePlacement::above);
 }
 
-void mf::WlSubsurface::place_below(wayland_rs::Weak<wayland_rs::WlSurfaceImpl> const& sibling)
+void mf::WlSubsurface::place_below(std::shared_ptr<wayland_rs::WlSurfaceImpl> const& sibling)
 {
-    if (!parent)
+    auto const locked_parent = parent.lock();
+    if (!locked_parent)
     {
         // Parent has been destroyed, ignore
         return;
     }
 
-    if (sibling == surface)
+    if (sibling == surface.lock())
     {
         BOOST_THROW_EXCEPTION(wayland_rs::ProtocolError(
             object_id(),
-            mw::Subsurface::Error::bad_surface,
+            mw::WlSubsurfaceImpl::Error::bad_surface,
             "wl_subsurface.place_below: sibling cannot be the subsurface itself"));
     }
 
-    parent.with_value([&](auto& captured_parent)
+    auto parent_surface = WlSurface::from(*locked_parent);
+    auto sibling_surface = WlSurface::from(*sibling);
+    if (sibling != locked_parent && !parent_surface->has_subsurface_with_surface(sibling_surface))
     {
-        auto parent_surface = WlSurface::from(captured_parent);
-        sibling.with_value([&](auto& captured_sibling)
-        {
-            auto sibling_surface = WlSurface::from(captured_sibling);
-            if (sibling != parent && !parent_surface->has_subsurface_with_surface(sibling_surface))
-            {
-                BOOST_THROW_EXCEPTION(wayland_rs::ProtocolError(
-                    object_id(),
-                    mw::Subsurface::Error::bad_surface,
-                    "wl_subsurface.place_above: sibling must be the parent or a sibling subsurface"));
-            }
+        BOOST_THROW_EXCEPTION(wayland_rs::ProtocolError(
+            object_id(),
+            mw::WlSubsurfaceImpl::Error::bad_surface,
+            "wl_subsurface.place_below: sibling must be the parent or a sibling subsurface"));
+    }
 
-            parent_surface->reorder_subsurface(this, sibling_surface, WlSurface::SubsurfacePlacement::below);
-        });
-    });
+    parent_surface->reorder_subsurface(this, sibling_surface, WlSurface::SubsurfacePlacement::below);
 }
 
 void mf::WlSubsurface::set_sync()
@@ -254,13 +231,10 @@ void mf::WlSubsurface::set_desync()
 
 void mf::WlSubsurface::refresh_surface_data_now()
 {
-    if (parent)
+    if (auto const locked_parent = parent.lock())
     {
-        parent.with_value([](auto& captured)
-        {
-            auto wl_surface = WlSurface::from(captured);
-            wl_surface->refresh_surface_data_now();
-        });
+        auto wl_surface = WlSurface::from(*locked_parent);
+        wl_surface->refresh_surface_data_now();
     }
 }
 
@@ -273,11 +247,12 @@ void mf::WlSubsurface::commit(WlSurfaceState const& state)
 
     if (cached_state.value().buffer)
     {
-        bool const currently_mapped =  surface.with_value([&](auto& captured_surface)
+        bool currently_mapped{false};
+        if (auto const locked_surface = surface.lock())
         {
-            auto const wl_surface = WlSurface::from(captured_surface);
-            return static_cast<bool>(wl_surface->buffer_size());
-        });
+            auto const wl_surface = WlSurface::from(*locked_surface);
+            currently_mapped = static_cast<bool>(wl_surface->buffer_size());
+        }
         bool const pending_mapped = cached_state.value().buffer.value();
         if (currently_mapped != pending_mapped)
         {
@@ -287,22 +262,22 @@ void mf::WlSubsurface::commit(WlSurfaceState const& state)
 
     if (synchronized())
     {
-        if (cached_state.value().surface_data_needs_refresh() && parent)
+        if (cached_state.value().surface_data_needs_refresh())
         {
-            parent.with_value([](auto& captured)
+            if (auto const locked_parent = parent.lock())
             {
-                auto wl_surface = WlSurface::from(captured);
+                auto wl_surface = WlSurface::from(*locked_parent);
                 wl_surface->pending_invalidate_surface_data();
-            });
+            }
         }
     }
     else
     {
-        surface.with_value([&](auto& captured_surface)
+        if (auto const locked_surface = surface.lock())
         {
-            auto const wl_surface = WlSurface::from(captured_surface);
+            auto const wl_surface = WlSurface::from(*locked_surface);
             wl_surface->commit(cached_state.value());
-        });
+        }
 
         if (cached_state.value().surface_data_needs_refresh())
             refresh_surface_data_now();
@@ -312,7 +287,7 @@ void mf::WlSubsurface::commit(WlSurfaceState const& state)
 
 void mf::WlSubsurface::surface_destroyed()
 {
-    if (!surface)
+    if (surface.expired())
     {
         BOOST_THROW_EXCEPTION(std::runtime_error{
             "wl_surface destroyed before it's associated wl_subsurface@" + std::to_string(object_id())});
