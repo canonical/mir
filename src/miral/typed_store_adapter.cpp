@@ -173,14 +173,6 @@ void process_as(
     }
 }
 
-template <typename T>
-auto to_string(T const& thing) -> std::string {
-    if constexpr(std::is_same_v<T, std::string_view>)
-        return std::string{thing};
-    else
-        return std::to_string(thing);
-}
-
 template <typename Type, typename HandlerType>
 void process_or_handle_error(
     HandlerType const& handler,
@@ -205,7 +197,7 @@ void process_or_handle_error(
                 "Parsing error: %s in file %s. Using preset value '%s' instead.",
                 pe.what(),
                 path.c_str(),
-                to_string(*preset).c_str());
+                std::to_string(*preset).c_str());
 
             handler(key, preset);
         }
@@ -257,7 +249,7 @@ void process_or_handle_error(
         if (!preset.empty())
         {
             auto const preset_str =
-                join_comma(std::views::transform(preset, [](auto const& e) { return to_string(e); }));
+                join_comma(std::views::transform(preset, [](auto const& e) { return std::to_string(e); }));
 
             mir::log_warning(
                 "Parsing error: %s in file %s. Using preset value(s) '[%s]' instead.",
