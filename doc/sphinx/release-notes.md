@@ -44,7 +44,7 @@
     - miroil ABI unchanged at 8
     - mirplatform ABI unchanged at 34
     - mirserver ABI unchanged at 67
-    - mirwayland ABI unchanged at 5
+    - mirwayland ABI bumped to 6
     - mirplatformgraphics ABI unchanged at 23
     - mirinputplatform ABI unchanged at 10
 

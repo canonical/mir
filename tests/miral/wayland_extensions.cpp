@@ -422,7 +422,7 @@ TEST_F(WaylandExtensions, recommeded_extensions_subset_of_supported_extensions)
 
 TEST_F(WaylandExtensions, disable_can_remove_default_extensions)
 {
-    std::string const extension_to_remove{"zxdg_shell_v6"};
+    std::string const extension_to_remove{"xdg_wm_base"};
     miral::WaylandExtensions extensions;
     extensions.disable(extension_to_remove);
 
