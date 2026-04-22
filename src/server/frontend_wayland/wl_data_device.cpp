@@ -96,8 +96,40 @@ public:
         source->dnd_finished();
     }
 
+    static bool valid_actions(uint32_t dnd_actions)
+    {
+        return (dnd_actions & ~(
+            mw::DataDeviceManager::DndAction::none |
+            mw::DataDeviceManager::DndAction::copy |
+            mw::DataDeviceManager::DndAction::move |
+            mw::DataDeviceManager::DndAction::ask)) == 0;
+    }
+
+    static bool valid_action(uint32_t dnd_action)
+    {
+        return dnd_action == mw::DataDeviceManager::DndAction::none ||
+            dnd_action == mw::DataDeviceManager::DndAction::copy ||
+            dnd_action == mw::DataDeviceManager::DndAction::move ||
+            dnd_action == mw::DataDeviceManager::DndAction::ask;
+    }
+
     void set_actions(uint32_t dnd_actions, uint32_t preferred_action) override
     {
+        if (!valid_actions(dnd_actions))
+        {
+            throw mw::ProtocolError(
+                resource,
+                Error::invalid_action_mask,
+                "Invalid DnD actions 0x%x", dnd_actions);
+        }
+        if (!valid_action(preferred_action))
+        {
+            throw mw::ProtocolError(
+                resource,
+                Error::invalid_action,
+                "Invalid DnD action 0x%x", preferred_action);
+        }
+
         const auto action = source->offer_set_actions(dnd_actions, preferred_action);
 
         if (!dnd_action || dnd_action.value() != action)
