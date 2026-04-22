@@ -188,9 +188,11 @@ void process_or_handle_error(
     std::optional<ScalarValue> const& scalar,
     std::optional<Type> const& preset)
 {
+    auto const value_view = scalar.transform([](auto const& s) { return std::string_view{s.value}; });
+
     try
     {
-        process_as<Type>(handler, key, scalar.transform([](auto const& v) { return v.value; }), preset);
+        process_as<Type>(handler, key, value_view, preset);
     }
     catch (ParsingError const& pe)
     {
@@ -219,7 +221,7 @@ void process_or_handle_error(
         auto const path =
             scalar.transform([&](auto const& s) { return s.modification_path.string(); }).value_or("never set");
         // `std::string` is required to get a `c_str` from a string view.
-        auto const value_str = std::string{scalar.transform([](auto const& s) { return s.value; }).value_or("unset")};
+        auto const value_str = std::string{value_view.value_or("unset")};
 
         mir::log_warning(
             "Error processing key '%s' with value '%s' in file '%s': %s",
@@ -357,7 +359,8 @@ void mlc::TypedStoreAdapter::add_string_attribute(
         description,
         [handler = std::move(handler)](Key const& k, std::optional<ScalarValue> val)
         {
-            handler(k, val.transform([](auto const s) { return s.value; }));
+            auto const value_view = val.transform([](auto const& s) { return std::string_view{s.value}; });
+            handler(k, value_view);
         });
 }
 
