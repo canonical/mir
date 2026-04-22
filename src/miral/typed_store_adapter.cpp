@@ -256,8 +256,8 @@ void process_or_handle_error(
 
         if (!preset.empty())
         {
-            auto const foo = std::views::transform(preset, [](auto const& e) { return to_string(e); });
-            auto const preset_str = join_comma(foo);
+            auto const preset_str =
+                join_comma(std::views::transform(preset, [](auto const& e) { return to_string(e); }));
 
             mir::log_warning(
                 "Parsing error: %s in file %s. Using preset value(s) '[%s]' instead.",
