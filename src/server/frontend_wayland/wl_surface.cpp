@@ -241,7 +241,7 @@ bool mf::WlSurface::has_subsurface_with_surface(WlSurface* surface) const
         [surface](auto const* child)
         {
             WlSurface* child_surface = child->get_surface();
-            return child_surface && (child_surface == surface || child_surface->has_subsurface_with_surface(surface));
+            return child_surface == surface || child_surface->has_subsurface_with_surface(surface);
         });
 }
 
