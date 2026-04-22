@@ -325,6 +325,20 @@ void mf::ShmPool::create_buffer(
 
 void mf::ShmPool::resize(int32_t new_size)
 {
+    if (new_size < 0)
+    {
+        throw wayland::ProtocolError{
+            resource,
+            wayland::Shm::Error::invalid_stride,
+            "Invalid new size %d", new_size};
+    }
+    if (static_cast<size_t>(new_size) < backing_store->size())
+    {
+        throw wayland::ProtocolError{
+            resource,
+            wayland::Shm::Error::invalid_stride,
+            "New size %d is smaller than the current size of the backing store", new_size};
+    }
     backing_store->resize(new_size);
 }
 
