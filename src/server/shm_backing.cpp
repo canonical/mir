@@ -259,7 +259,7 @@ public:
 
     void resize(size_t new_size);
 
-    size_t size();
+    size_t size() const;
 
     template<typename T>
     auto lock_range(size_t start, size_t len)
@@ -420,7 +420,7 @@ void ShmBacking::resize(size_t new_size)
         backing_size_is_guaranteed_at_least(this->backing_store, new_size));
 }
 
-size_t ShmBacking::size()
+size_t ShmBacking::size() const
 {
     auto mapping = *current_mapping.lock();
     return mapping->size;
@@ -535,7 +535,7 @@ public:
         backing_store.resize(new_size);
     }
 
-    size_t size() override
+    size_t size() const override
     {
         return backing_store.size();
     }
