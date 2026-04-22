@@ -278,9 +278,10 @@ void mf::ShmPool::create_buffer(
             "Invalid SHM buffer stride %d", stride};
     }
 
-    auto const max_size = std::numeric_limits<int32_t>::max() / pixel_size;
+    auto const max_size = std::numeric_limits<int32_t>::max();
+    auto const max_width = max_size / pixel_size;
     auto const max_height = max_size / stride;
-    if (width > max_size || height > max_height)
+    if (width > max_width || height > max_height)
     {
         throw wayland::ProtocolError{
             resource,
