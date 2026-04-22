@@ -57,16 +57,16 @@ auto mf::RecentTokens::contains(std::string_view token) const -> bool
 
 template <typename T>
 void iterate_and_erase_expired(
-    std::vector<mir::wayland::Weak<T>>& vec, auto&& callback)
+    std::vector<std::weak_ptr<T>>& vec, auto&& callback)
 {
     std::erase_if(
         vec,
         [&](auto& action)
         {
-            if (!action)
+            if (action.expired())
                 return true; // Erase
 
-            callback(action.value());
+            callback(action);
             return false; // Don't erase
         });
 }
@@ -76,7 +76,7 @@ mf::InputTriggerRegistry::InputTriggerRegistry() = default;
 bool mf::InputTriggerRegistry::register_trigger(Trigger* trigger)
 {
     // Housekeeping
-    std::erase_if(triggers, [](auto const& weak_trigger) { return !weak_trigger; });
+    std::erase_if(triggers, [](auto const& weak_trigger) { return weak_trigger.expired(); });
 
     auto const already_registered = sr::any_of(
         triggers, [trigger](auto const& other_trigger) { return trigger->is_same_trigger(&other_trigger.value()); });
