@@ -422,8 +422,8 @@ void ShmBacking::resize(size_t new_size)
 
 size_t ShmBacking::size()
 {
-   auto mapping = *current_mapping.lock();
-   return mapping->size;
+    auto mapping = *current_mapping.lock();
+    return mapping->size;
 }
 
 class ROMappableRange : public mir::shm::ReadMappableRange
