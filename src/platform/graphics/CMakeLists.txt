@@ -148,7 +148,7 @@ target_link_libraries(
   mirplatformgraphicscommon
 
   PUBLIC
-    mirwayland
+    mirwayland_rs
     mircommon
     kms_utils
     PkgConfig::EGL

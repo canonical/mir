@@ -310,6 +310,16 @@ fn transform_argument_for_cpp(arg: &WaylandArg) -> Option<TokenStream> {
     }
 }
 
+/// Returns true for the special-case `zwp_linux_buffer_params_v1::create` request.
+///
+/// This request doesn't carry a `new_id` arg itself, but it asynchronously creates
+/// a `wl_buffer` via the `created` event.  The C++ side returns a
+/// `SharedPtr<WlBufferImpl>` (null on failure) and the Rust dispatch creates the
+/// Wayland resource and sends the event.
+fn is_linux_dmabuf_create(interface: &WaylandInterface, request: &WaylandRequest) -> bool {
+    interface.name == "zwp_linux_buffer_params_v1" && request.name == "create"
+}
+
 /// Generate the body of a request handler arm.
 ///
 /// Requests come in two distinct forms:
@@ -317,7 +327,7 @@ fn transform_argument_for_cpp(arg: &WaylandArg) -> Option<TokenStream> {
 /// 2. Resource creation requests which ask the C++ interface to create
 ///    the resource for them. These methods MUST call data_init.init()
 ///    with the newly created C++ resource.
-fn generate_request_body(request: &WaylandRequest) -> TokenStream {
+fn generate_request_body(request: &WaylandRequest, interface: &WaylandInterface) -> TokenStream {
     let snake_request_name = dash_to_snake_ident(&sanitize_identifier(request.name.as_str()));
     let new_id_arg = request
         .args
@@ -386,6 +396,47 @@ fn generate_request_body(request: &WaylandRequest) -> TokenStream {
                 }
             }
         }
+    } else if is_linux_dmabuf_create(interface, request) {
+        // Special case: zwp_linux_buffer_params_v1::create returns a WlBufferImpl from C++.
+        // Rust creates the wl_buffer resource and sends either the `created` or `failed` event.
+        let call_arg_names: Vec<TokenStream> =
+            request.args.iter().flat_map(arg_to_tokens).collect();
+
+        quote! {
+            let mut params_guard = data.lock().unwrap();
+            // SAFETY: see other request handler arms for the safety rationale on pin_mut_unchecked.
+            match unsafe { (&mut *params_guard).pin_mut_unchecked().#snake_request_name(#( #call_arg_names ),*) } {
+                Ok(child) => {
+                    if child.is_null() {
+                        unsafe { (&mut *params_guard).pin_mut_unchecked().send_failed_event(); }
+                    } else {
+                        let child_arc = Arc::new(Mutex::new(child));
+                        let child_resource = client.create_resource::<
+                            wayland_server::protocol::wl_buffer::WlBuffer,
+                            Arc<Mutex<cxx::SharedPtr<ffi::WlBufferImpl>>>,
+                            ServerState
+                        >(
+                            dhandle,
+                            1,
+                            child_arc.clone(),
+                        ).expect("Failed to create wl_buffer for linux-dmabuf create");
+                        register_resource(&child_resource);
+                        let protocol_id = Resource::id(&child_resource).protocol_id();
+                        let boxed = Box::new(crate::middleware::WlBufferExt { wrapped: child_resource });
+                        {
+                            let mut child_guard = child_arc.lock().unwrap();
+                            unsafe { child_guard.pin_mut_unchecked().associate(boxed, protocol_id); }
+                            let child_box = unsafe { child_guard.pin_mut_unchecked().get_box() };
+                            unsafe { (&mut *params_guard).pin_mut_unchecked().send_created_event(child_box); }
+                        }
+                    }
+                }
+                Err(err) => {
+                    let (object_id, code, message) = parse_post_error(err.what());
+                    post_protocol_error(resource, object_id, code, message);
+                }
+            }
+        }
     } else {
         let call_arg_names: Vec<TokenStream> =
             request.args.iter().flat_map(arg_to_tokens).collect();
@@ -434,7 +485,7 @@ fn generate_request_handler_arms(
                 .filter_map(transform_argument_for_cpp)
                 .collect();
 
-            let body = generate_request_body(request);
+            let body = generate_request_body(request, interface);
 
             Some(quote! {
                 #namespace_name::#interface_name::Request::#request_name { #( #arg_names ),* } => {
@@ -485,6 +536,10 @@ fn generate_dispatch_impl(
         _ => false,
     });
 
+    // Check if any request uses deferred creation (needs client + dhandle to create resources).
+    // Currently only zwp_linux_buffer_params_v1::create uses this pattern.
+    let interface_has_deferred_creation = interface.name == "zwp_linux_buffer_params_v1";
+
     let data_init_name = format_ident!(
         "{}",
         if interface_creates_wayland_objects {
@@ -519,6 +574,24 @@ fn generate_dispatch_impl(
         }
     );
 
+    let client_name = format_ident!(
+        "{}",
+        if interface_has_deferred_creation {
+            "client"
+        } else {
+            "_client"
+        }
+    );
+
+    let dhandle_name = format_ident!(
+        "{}",
+        if interface_has_deferred_creation {
+            "dhandle"
+        } else {
+            "_dhandle"
+        }
+    );
+
     quote! {
         unsafe impl Send for ffi::#ext_struct_name {}
         unsafe impl Sync for ffi::#ext_struct_name {}
@@ -528,11 +601,11 @@ fn generate_dispatch_impl(
         {
             fn request(
                 _state: &mut Self,
-                _client: &Client,
+                #client_name: &Client,
                 #resource_name: &#namespace_name::#interface_name::#protocol_struct_name,
                 request: <#namespace_name::#interface_name::#protocol_struct_name as wayland_server::Resource>::Request,
                 #data_name: &Arc<Mutex<cxx::SharedPtr<ffi::#ext_struct_name>>>,
-                _dhandle: &DisplayHandle,
+                #dhandle_name: &DisplayHandle,
                 #data_init_name: &mut DataInit<'_, Self>,
             ) {
                 match request {
@@ -899,7 +972,7 @@ fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
         .iter()
         .filter_map(|item| {
             if let protocol_parser::InterfaceItem::Request(request) = item {
-                Some(wayland_request_to_cpp_method(request))
+                Some(wayland_request_to_cpp_method(request, interface))
             } else if let protocol_parser::InterfaceItem::Event(event) = item {
                 Some(vec![wayland_event_to_cpp_method(event)])
             } else {
@@ -1032,9 +1105,12 @@ fn wayland_arg_to_cpp_arg(arg: &WaylandArg) -> CppArg {
     CppArg::new(type_, arg.name.as_str(), arg.allow_null.unwrap_or(false))
 }
 
-fn wayland_request_to_cpp_method(method: &WaylandRequest) -> Vec<CppMethod> {
-    // Methods will have a return value in C++ if they are creating a new Wayland object.
-    // Otherwise they always return void.
+fn wayland_request_to_cpp_method(
+    method: &WaylandRequest,
+    interface: &WaylandInterface,
+) -> Vec<CppMethod> {
+    // Methods will have a return value in C++ if they are creating a new Wayland object
+    // (either directly via a new_id arg, or via deferred creation through a subsequent event).
     let retval = match method
         .args
         .iter()
@@ -1049,7 +1125,14 @@ fn wayland_request_to_cpp_method(method: &WaylandRequest) -> Vec<CppMethod> {
             );
             Some(CppType::Object(name))
         }
-        None => None,
+        None => {
+            // Special case: zwp_linux_buffer_params_v1::create returns a WlBufferImpl
+            if is_linux_dmabuf_create(interface, method) {
+                Some(CppType::Object("WlBufferImpl".to_string()))
+            } else {
+                None
+            }
+        }
     };
 
     let args = method
@@ -1143,6 +1226,13 @@ fn wayland_request_to_cpp_method(method: &WaylandRequest) -> Vec<CppMethod> {
                         .as_ref()
                         .expect("NewId is missing interface"),
                 ))
+            })
+            .or_else(|| {
+                if is_linux_dmabuf_create(interface, method) {
+                    Some(CppType::Object("WlBufferImpl".to_string()))
+                } else {
+                    None
+                }
             });
         let mut virtual_method = CppMethod::new(
             method.name.as_str(),

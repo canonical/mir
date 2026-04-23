@@ -257,7 +257,11 @@ impl WaylandEventLoopHandle {
             .insert_source(
                 Generic::new(owned_fd, Interest::READ, Mode::Level),
                 move |_, _, _| {
-                    if let Some(mut cb) = callback_clone.lock().expect("No recovery from lock poisoning").take() {
+                    if let Some(mut cb) = callback_clone
+                        .lock()
+                        .expect("No recovery from lock poisoning")
+                        .take()
+                    {
                         cb.pin_mut().ready();
                     }
                     Ok(PostAction::Remove)
