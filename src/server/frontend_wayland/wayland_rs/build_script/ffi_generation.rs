@@ -48,6 +48,14 @@ pub fn generate_ffi(protocols: &Vec<WaylandProtocol>, builders: &Vec<CppBuilder>
 
                 fn next_serial() -> u32;
 
+                type WaylandEventLoopHandle;
+                fn watch_fd(self: &WaylandEventLoopHandle, fd: i32, callback: UniquePtr<FdReadyCallback>) -> Box<FdWatchToken>;
+                fn spawn(self: &WaylandEventLoopHandle, work: UniquePtr<WorkCallback>);
+                fn clone_box(self: &WaylandEventLoopHandle) -> Box<WaylandEventLoopHandle>;
+
+                type FdWatchToken;
+                fn cancel(self: &mut FdWatchToken);
+
                 type WaylandClient;
                 fn pid(self: &WaylandClient) -> Result<i32>;
                 fn uid(self: &WaylandClient) -> Result<u32>;
@@ -56,6 +64,7 @@ pub fn generate_ffi(protocols: &Vec<WaylandProtocol>, builders: &Vec<CppBuilder>
                 fn name(self: &WaylandClient) -> Result<String>;
                 fn id(self: &WaylandClient) -> Box<WaylandClientId>;
                 fn clone_box(self: &WaylandClient) -> Box<WaylandClient>;
+                fn kill(self: &WaylandClient, object_id: u32, code: u32, message: &CxxString);
                 
                 type WaylandClientId;
                 fn equals(self: &WaylandClientId, id: &Box<WaylandClientId>) -> bool;

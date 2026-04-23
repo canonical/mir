@@ -45,6 +45,7 @@
 #include <mir/frontend/wayland.h>
 
 #include <future>
+#include <mutex>
 #include <optional>
 #include <sys/eventfd.h>
 #include <sys/stat.h>
@@ -85,7 +86,27 @@ public:
         client_registry->delete_client(std::move(id));
     }
 
+    auto loop_ready(rust::Box<mw::WaylandEventLoopHandle> event_loop_handle) -> void override
+    {
+        std::lock_guard lock{event_loop_handle_mutex};
+        event_loop_handle_ = std::move(event_loop_handle);
+    }
+
+    auto event_loop_handle() -> mw::WaylandEventLoopHandle*
+    {
+        std::lock_guard lock{event_loop_handle_mutex};
+        if (event_loop_handle_)
+        {
+            return &**event_loop_handle_;
+        }
+        return nullptr;
+    }
+
     std::shared_ptr<mf::WlClientRegistry> client_registry;
+
+private:
+    std::mutex event_loop_handle_mutex;
+    std::optional<rust::Box<mw::WaylandEventLoopHandle>> event_loop_handle_;
 };
 }
 

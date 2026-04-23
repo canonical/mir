@@ -1,4 +1,6 @@
 use crate::wayland_server_core::ClientState;
+use cxx::CxxString;
+use wayland_backend::protocol::ProtocolError;
 use wayland_server::{backend::ClientId, Client, DisplayHandle};
 
 /// A C++ friendly wrapper around a wayland [Client] object.
@@ -67,6 +69,19 @@ impl WaylandClient {
     /// Clone this client into a new [Box].
     pub fn clone_box(&self) -> Box<WaylandClient> {
         Box::new(self.clone())
+    }
+
+    /// Kill this client with a protocol error.
+    ///
+    /// This will disconnect the client, sending the protocol error as the reason.
+    pub fn kill(&self, object_id: u32, code: u32, message: &CxxString) {
+        let error = ProtocolError {
+            code,
+            object_id,
+            object_interface: String::new(),
+            message: message.to_string(),
+        };
+        self.client.kill(&self.handle, error);
     }
 }
 

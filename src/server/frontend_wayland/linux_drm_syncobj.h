@@ -17,7 +17,7 @@
 #ifndef MIR_SERVER_FRONTEND_LINUX_DRM_SYNCOBJ_H_
 #define MIR_SERVER_FRONTEND_LINUX_DRM_SYNCOBJ_H_
 
-#include "linux-drm-syncobj-v1_wrapper.h"
+#include "linux_drm_syncobj_v1.h"
 #include <mir/graphics/platform.h>
 #include <mir/time/posix_clock.h>
 
@@ -25,39 +25,24 @@ namespace mir::frontend
 {
 class WlSurface;
 
-class LinuxDRMSyncobjManager : public wayland::LinuxDrmSyncobjManagerV1::Global
-{
-public:
-    LinuxDRMSyncobjManager(
-        struct wl_display* display,
-        std::span<std::shared_ptr<graphics::DRMRenderingProvider>> providers);
-
-private:
-    void bind(struct wl_resource* new_wp_linux_drm_syncobj_manager_v1) override;
-
-    std::shared_ptr<std::vector<std::shared_ptr<graphics::DRMRenderingProvider>> const> const providers;
-};
-
 class SyncPoint
 {
 public:
-    auto wait(time::PosixClock<CLOCK_MONOTONIC>::time_point until) const -> bool;
-
-    void signal();
-
-    auto to_eventfd() const -> Fd;
-private:
-    friend class SyncTimeline;
     SyncPoint(std::shared_ptr<graphics::drm::Syncobj> timeline, uint64_t point);
 
+    auto wait(time::PosixClock<CLOCK_MONOTONIC>::time_point until) const -> bool;
+    void signal();
+    auto to_eventfd() const -> Fd;
+
+private:
     std::shared_ptr<graphics::drm::Syncobj> timeline;
     uint64_t point;
 };
 
-class SyncTimeline : public mir::wayland::LinuxDrmSyncobjSurfaceV1
+class SyncTimeline : public wayland_rs::WpLinuxDrmSyncobjSurfaceV1Impl, std::enable_shared_from_this<SyncTimeline>
 {
 public:
-    SyncTimeline(struct wl_resource* new_timeline_surface, WlSurface* surface);
+    explicit SyncTimeline(WlSurface* surface);
 
     struct Points
     {
@@ -79,10 +64,10 @@ public:
      */
     bool timeline_set() const;
 
-private:
-    void set_acquire_point(struct wl_resource* timeline, uint32_t point_hi, uint32_t point_lo) override;
-    void set_release_point(struct wl_resource* timeline, uint32_t point_hi, uint32_t point_lo) override;
+    auto set_acquire_point(wayland_rs::Weak<wayland_rs::WpLinuxDrmSyncobjTimelineV1Impl> const& timeline, uint32_t point_hi, uint32_t point_lo) -> void override;
+    auto set_release_point(wayland_rs::Weak<wayland_rs::WpLinuxDrmSyncobjTimelineV1Impl> const& timeline, uint32_t point_hi, uint32_t point_lo) -> void override;
 
+private:
     std::optional<SyncPoint> acquire_point;
     std::optional<SyncPoint> release_point;
 };
@@ -91,19 +76,18 @@ namespace syncobj
 {
 class Manager;
 
-class Timeline : public wayland::LinuxDrmSyncobjTimelineV1
+class Timeline : public wayland_rs::WpLinuxDrmSyncobjTimelineV1Impl
 {
 public:
+    Timeline(
+        mir::Fd fd,
+        std::vector<std::shared_ptr<graphics::DRMRenderingProvider>> const& providers);
     auto syncobj() const -> std::shared_ptr<graphics::drm::Syncobj>;
 
-    static auto from(struct wl_resource* resource) -> Timeline*;
+    static auto from(WpLinuxDrmSyncobjTimelineV1Impl* resource) -> Timeline*;
 private:
     friend class Manager;
 
-    Timeline(
-        struct wl_resource* new_timeline,
-        mir::Fd fd,
-        std::vector<std::shared_ptr<graphics::DRMRenderingProvider>> const& providers);
 
     std::shared_ptr<graphics::drm::Syncobj> imported_timeline;
 };

@@ -38,6 +38,12 @@ namespace mir
 {
 class Executor;
 
+namespace wayland_rs
+{
+struct WaylandEventLoopHandle;
+struct FdWatchToken;
+}
+
 namespace graphics
 {
 class GraphicBufferAllocator;
@@ -114,13 +120,14 @@ private:
     WlSurface* const surface;
 };
 
-class WlSurface : public wayland_rs::WlSurfaceImpl
+class WlSurface : public wayland_rs::WlSurfaceImpl, public std::enable_shared_from_this<WlSurface>
 {
 public:
     WlSurface(std::shared_ptr<WlClient> const& client,
               std::shared_ptr<mir::Executor> const& wayland_executor,
               std::shared_ptr<mir::Executor> const& frame_callback_executor,
-              std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator);
+              std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
+              rust::Box<wayland_rs::WaylandEventLoopHandle> event_loop_handle);
 
     ~WlSurface() override;
 
@@ -154,7 +161,7 @@ public:
     void commit(WlSurfaceState const& state);
     auto confine_pointer_state() const -> MirPointerConfinementState;
 
-    void set_fractional_scale(FractionalScaleV1* fractional_scale);
+    void set_fractional_scale(std::shared_ptr<FractionalScaleV1> const& fractional_scale);
     auto get_fractional_scale() const -> wayland_rs::Weak<FractionalScaleV1>;
 
     /**
@@ -198,7 +205,10 @@ public:
     std::shared_ptr<scene::Session> const session;
     std::shared_ptr<compositor::BufferStream> const stream;
 
+    static WlSurface* from(WlSurfaceImpl* impl);
+
 private:
+    std::weak_ptr<WlClient> client;
     std::shared_ptr<mir::graphics::GraphicBufferAllocator> const allocator;
     std::shared_ptr<mir::Executor> const wayland_executor;
     std::shared_ptr<mir::Executor> const frame_callback_executor;
@@ -220,8 +230,11 @@ private:
     /* State for when a buffer update is waiting for a client fence to signal
      */
     struct PendingBufferState;
+    struct BufferReadyCallback;
     std::unique_ptr<PendingBufferState> pending_context;
-    struct wl_event_source* buffer_ready_source{nullptr};
+    std::optional<rust::Box<wayland_rs::FdWatchToken>> buffer_ready_token;
+
+    rust::Box<wayland_rs::WaylandEventLoopHandle> event_loop_handle;
 
     static void complete_commit(WlSurface* surf);
 

@@ -687,6 +687,36 @@ fn create_global_factory(protocols: &Vec<WaylandProtocol>) -> CppBuilder {
     builder
 }
 
+fn create_work_callback_builder() -> CppBuilder {
+    let mut builder = CppBuilder::new("MIR_WAYLANDRS_WORK_CALLBACK", "work_callback");
+
+    builder.add_cpp_include("\"wayland_rs/src/ffi.rs.h\"");
+    let mut namespace = CppNamespace::new(vec!["mir", "wayland_rs"]);
+    let mut class = CppClass::new("WorkCallback");
+
+    let execute_method = CppMethod::new("execute", None, true, false, true, true);
+    class.add_method(execute_method);
+
+    namespace.add_class(class);
+    builder.add_namespace(namespace);
+    builder
+}
+
+fn create_fd_ready_callback_builder() -> CppBuilder {
+    let mut builder = CppBuilder::new("MIR_WAYLANDRS_FD_READY_CALLBACK", "fd_ready_callback");
+
+    builder.add_cpp_include("\"wayland_rs/src/ffi.rs.h\"");
+    let mut namespace = CppNamespace::new(vec!["mir", "wayland_rs"]);
+    let mut class = CppClass::new("FdReadyCallback");
+
+    let ready_method = CppMethod::new("ready", None, true, false, true, true);
+    class.add_method(ready_method);
+
+    namespace.add_class(class);
+    builder.add_namespace(namespace);
+    builder
+}
+
 fn create_wayland_server_notification_handler() -> CppBuilder {
     let mut builder: CppBuilder = CppBuilder::new(
         "MIR_WAYLANDRS_WAYLAND_SERVER_NOTIFICATION_HANDLER",
@@ -699,6 +729,7 @@ fn create_wayland_server_notification_handler() -> CppBuilder {
     let mut namespace = CppNamespace::new(vec!["mir", "wayland_rs"]);
     namespace.add_forward_declaration_class("WaylandClient");
     namespace.add_forward_declaration_class("WaylandClientId");
+    namespace.add_forward_declaration_class("WaylandEventLoopHandle");
     let mut class = CppClass::new("WaylandServerNotificationHandler");
 
     let mut client_added_method = CppMethod::new("client_added", None, true, false, true, true);
@@ -716,6 +747,14 @@ fn create_wayland_server_notification_handler() -> CppBuilder {
         false,
     ));
     class.add_method(client_removed_method);
+
+    let mut loop_ready_method = CppMethod::new("loop_ready", None, true, false, true, true);
+    loop_ready_method.add_arg(CppArg::new(
+        CppType::Box("WaylandEventLoopHandle".to_string()),
+        "event_loop_handle",
+        false,
+    ));
+    class.add_method(loop_ready_method);
 
     namespace.add_class(class);
     builder.add_namespace(namespace);
@@ -746,6 +785,8 @@ fn write_cpp_protocol_implementations(protocols: &Vec<WaylandProtocol>) {
         .collect();
     builders.push(global_builder);
     builders.push(wayland_server_notification_handler_builder);
+    builders.push(create_work_callback_builder());
+    builders.push(create_fd_ready_callback_builder());
 
     // Write the protocol headers
     for builder in &builders {

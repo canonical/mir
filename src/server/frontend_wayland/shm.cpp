@@ -205,13 +205,9 @@ auto mf::ShmBuffer::data() -> std::shared_ptr<mrs::RWMappable>
         format_.as_mir_format().value());
 }
 
-auto mf::ShmBuffer::from(wl_resource* resource) -> ShmBuffer*
+auto mf::ShmBuffer::from(WlBufferImpl* impl) -> ShmBuffer*
 {
-    if (auto buffer = wayland::Buffer::from(resource))
-    {
-        return dynamic_cast<ShmBuffer*>(buffer);
-    }
-    return nullptr;
+    return dynamic_cast<ShmBuffer*>(impl);
 }
 
 mf::ShmPool::ShmPool(
