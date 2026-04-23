@@ -62,6 +62,7 @@ public:
     void add_key(Key const& key, std::string_view description, std::optional<std::vector<std::string>> preset, HandleStrings handler);
 
     void update_key(Key const& key, std::string_view value, std::filesystem::path const& modification_path);
+    bool clear_array(Key const& key);
     void do_transaction(std::function<void()> transaction_body);
 
     void on_done(HandleDone handler);
@@ -91,6 +92,7 @@ private:
         std::optional<std::vector<std::string>> const preset;
         std::vector<std::string> parsed_values;
         std::set<std::filesystem::path> modification_paths;
+        bool clear_requested = false;
     };
 
     std::mutex mutex;
@@ -156,6 +158,19 @@ void mlc::BasicStore::Self::update_key(Key const& key, std::string_view value, s
     }
 }
 
+auto mlc::BasicStore::Self::clear_array(Key const& key) -> bool
+{
+    if (auto const details_iter = array_attribute_handlers.find(key); details_iter != array_attribute_handlers.end())
+    {
+        auto& details = details_iter->second;
+        details.parsed_values.clear();
+        details.modification_paths.clear();
+        details.clear_requested = true;
+        return true;
+    }
+    return false;
+}
+
 void mlc::BasicStore::Self::do_transaction(std::function<void()> transaction_body)
 {
     std::lock_guard lock{mutex};
@@ -166,6 +181,7 @@ void mlc::BasicStore::Self::do_transaction(std::function<void()> transaction_bod
     {
         details.parsed_values.resize(0);
         details.modification_paths.clear();
+        details.clear_requested = false;
     }
 
     transaction_body();
@@ -228,6 +244,13 @@ void mlc::BasicStore::Self::do_transaction(std::function<void()> transaction_bod
 
     for (auto const& [key, details] : array_attribute_handlers)
     {
+        if (details.clear_requested)
+        {
+            details.handler(key, std::span<std::string const>{});
+            if (details.parsed_values.empty())
+                continue;
+        }
+
         auto const maybe_value = [&]() -> std::optional<std::vector<std::string>>
         {
             if (!details.parsed_values.empty())
@@ -528,6 +551,11 @@ void mlc::BasicStore::on_done(HandleDone handler)
 void mlc::BasicStore::update_key(Key const& key, std::string_view value, std::filesystem::path const& modification_path)
 {
     self->update_key(key, value, modification_path);
+}
+
+auto mlc::BasicStore::clear_array(Key const& key) -> bool
+{
+    return self->clear_array(key);
 }
 
 void mlc::BasicStore::do_transaction(std::function<void()> transaction_body)
