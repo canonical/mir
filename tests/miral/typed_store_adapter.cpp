@@ -406,3 +406,71 @@ TEST_F(TypedStoreAdapterTest, floats_handler_receives_nullopt_when_no_preset_and
         store.update_key(a_floats_key, "not_a_float", a_path);
     });
 }
+
+TEST_F(TypedStoreAdapterTest, clear_array_within_transaction_removes_previously_accumulated_values)
+{
+    adapter.add_ints_attribute(an_ints_key, "some ints", [this](auto k, auto v){ ints_handler(k, v); });
+
+    InSequence seq;
+    EXPECT_CALL(*this, ints_handler(an_ints_key, Optional(IsEmpty())));
+    EXPECT_CALL(*this, ints_handler(an_ints_key, Optional(ElementsAre(3))));
+
+    store.do_transaction([&]
+    {
+        store.update_key(an_ints_key, "1", a_path);
+        store.update_key(an_ints_key, "2", a_path);
+        store.clear_array(an_ints_key);
+        store.update_key(an_ints_key, "3", a_path);
+    });
+}
+
+TEST_F(TypedStoreAdapterTest, clear_array_within_transaction_with_no_following_values_results_in_empty)
+{
+    adapter.add_ints_attribute(an_ints_key, "some ints", [this](auto k, auto v){ ints_handler(k, v); });
+
+    EXPECT_CALL(*this, ints_handler(an_ints_key, Optional(IsEmpty())));
+
+    store.do_transaction([&]
+    {
+        store.update_key(an_ints_key, "1", a_path);
+        store.update_key(an_ints_key, "2", a_path);
+        store.clear_array(an_ints_key);
+    });
+}
+
+TEST_F(TypedStoreAdapterTest, clear_array_within_transaction_with_preset_and_no_following_values_clears_the_array)
+{
+    std::vector<int> const preset_vals{10, 20};
+    adapter.add_ints_attribute(an_ints_key, "some ints", preset_vals, [this](auto k, auto v){ ints_handler(k, v); });
+
+    EXPECT_CALL(*this, ints_handler(an_ints_key, Optional(IsEmpty())));
+
+    store.do_transaction([&]
+    {
+        store.update_key(an_ints_key, "1", a_path);
+        store.clear_array(an_ints_key);
+    });
+}
+
+TEST_F(TypedStoreAdapterTest, clear_array_on_unregistered_key_does_not_crash)
+{
+    mlc::Key const unregistered_key{"unregistered_key"};
+
+    EXPECT_NO_THROW(store.do_transaction([&]
+    {
+        store.clear_array(unregistered_key);
+    }));
+}
+
+TEST_F(TypedStoreAdapterTest, clear_array_on_scalar_key_does_not_affect_its_value)
+{
+    adapter.add_int_attribute(an_int_key, "an integer", [this](auto k, auto v){ int_handler(k, v); });
+
+    EXPECT_CALL(*this, int_handler(an_int_key, Optional(42)));
+
+    store.do_transaction([&]
+    {
+        store.update_key(an_int_key, "42", a_path);
+        store.clear_array(an_int_key);
+    });
+}

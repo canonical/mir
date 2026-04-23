@@ -231,59 +231,78 @@ void process_or_handle_error(
     ArrayValue const& array,
     std::span<Type const>  preset)
 {
-    try
-    {
-        process_as<Type>(handler, key, array.values, preset);
-    }
-    catch (NoValidValuesError const& nvv)
-    {
-        auto const path = [&]
-        {
-            if (array.modification_paths.empty())
-                return std::string{"never set"};
+    if (array.clear_requested)
+        handler(key, std::optional<std::span<Type const>>{std::span<Type const>{}});
 
-            return join_comma(
-                array.modification_paths | std::views::transform([](auto const& p) { return p.string(); }));
-        }();
-
-        if (!preset.empty())
+    if (!array.values.empty())
+    {
+        try
         {
-            auto const preset_str =
-                join_comma(std::views::transform(preset, [](auto const& e) { return std::to_string(e); }));
+            process_as<Type>(handler, key, array.values, preset);
+        }
+        catch (NoValidValuesError const& nvv)
+        {
+            if (array.clear_requested)
+            {
+                mir::log_warning("Array cleared then appended with an invalid value. Discarding current state");
+                return;
+            }
+
+            auto const path = [&]
+            {
+                if (array.modification_paths.empty())
+                    return std::string{"never set"};
+
+                return join_comma(
+                    array.modification_paths | std::views::transform([](auto const& p) { return p.string(); }));
+            }();
+
+            if (!preset.empty())
+            {
+                auto const preset_str =
+                    join_comma(std::views::transform(preset, [](auto const& e) { return std::to_string(e); }));
+
+                mir::log_warning(
+                    "Parsing error: %s in file %s. Using preset value(s) '[%s]' instead.",
+                    nvv.what(),
+                    path.c_str(),
+                    preset_str.c_str());
+
+                handler(key, preset);
+            }
+            else
+            {
+                mir::log_warning(
+                    "Parsing error: %s in file %s, but no preset value. Using nullopt instead.", nvv.what(), path.c_str());
+                handler(key, std::nullopt);
+            }
+        }
+        catch (std::exception const& e)
+        {
+            auto const path = [&]
+            {
+                if (array.modification_paths.empty())
+                    return std::string{"never set"};
+
+                return join_comma(
+                    std::ranges::views::transform(array.modification_paths, [](auto const& p) { return p.string(); }));
+            }();
+            auto const value_str = array.values.empty() ? "unset" : join_comma(array.values);
 
             mir::log_warning(
-                "Parsing error: %s in file %s. Using preset value(s) '[%s]' instead.",
-                nvv.what(),
+                "Error processing key '%s' with values [%s] in file '%s': %s",
+                key.to_string().c_str(),
+                value_str.c_str(),
                 path.c_str(),
-                preset_str.c_str());
-
-            handler(key, preset);
-        }
-        else
-        {
-            mir::log_warning(
-                "Parsing error: %s in file %s, but no preset value. Using nullopt instead.", nvv.what(), path.c_str());
-            handler(key, std::nullopt);
+                e.what());
         }
     }
-    catch (std::exception const& e)
+    else if (!array.clear_requested) // Empty but never cleared
     {
-        auto const path = [&]
-        {
-            if (array.modification_paths.empty())
-                return std::string{"never set"};
-
-            return join_comma(
-                std::ranges::views::transform(array.modification_paths, [](auto const& p) { return p.string(); }));
-        }();
-        auto const value_str = array.values.empty() ? "unset" : join_comma(array.values);
-
-        mir::log_warning(
-            "Error processing key '%s' with values [%s] in file '%s': %s",
-            key.to_string().c_str(),
-            value_str.c_str(),
-            path.c_str(),
-            e.what());
+        if (!preset.empty())
+            handler(key, preset);
+        else
+            handler(key, std::nullopt);
     }
 }
 }
@@ -364,9 +383,13 @@ void mlc::TypedStoreAdapter::add_strings_attribute(
         description,
         [handler = std::move(handler)](Key const& k, ArrayValue val)
         {
-            auto const maybe_values =
-                val.values.empty() ? std::nullopt : std::optional<std::span<std::string const>>{val.values};
-            handler(k, maybe_values);
+            if (val.clear_requested)
+                handler(k, std::span<std::string const>{});
+
+            if (!val.values.empty())
+                handler(k, val.values);
+            else if (!val.clear_requested)
+                handler(k, std::nullopt);
         });
 }
 
@@ -442,5 +465,14 @@ void mlc::TypedStoreAdapter::add_strings_attribute(
         key,
         description,
         [handler = std::move(handler), copied_preset = std::vector<std::string>{preset.begin(), preset.end()}](
-            Key const& k, ArrayValue val) { handler(k, val.values.empty() ? copied_preset : val.values); });
+            Key const& k, ArrayValue val)
+        {
+            if (val.clear_requested)
+                handler(k, std::span<std::string const>{});
+
+            if (!val.values.empty())
+                handler(k, val.values);
+            else if (!val.clear_requested)
+                handler(k, copied_preset);
+        });
 }
