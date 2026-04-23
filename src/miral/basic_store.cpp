@@ -18,6 +18,7 @@ public:
     void add_array_attribute(Key const& key, std::string_view description, HandleArrayAttribute handler);
 
     void update_key(Key const& key, std::string_view value, std::filesystem::path const& modification_path);
+    bool clear_array(Key const& key);
     void do_transaction(std::function<void()> transaction_body);
 
     void on_done(std::function<void()> handler);
@@ -101,6 +102,19 @@ void mlc::BasicStore::Self::update_key(Key const& key, std::string_view value, s
     }
 }
 
+auto mlc::BasicStore::Self::clear_array(Key const& key) -> bool
+{
+    if (auto const details_iter = array_attribute_handlers.find(key); details_iter != array_attribute_handlers.end())
+    {
+        auto& details = details_iter->second;
+        details.array.values.clear();
+        details.array.modification_paths.clear();
+        details.array.clear_requested = true;
+        return true;
+    }
+    return false;
+}
+
 void mlc::BasicStore::Self::do_transaction(std::function<void()> transaction_body)
 {
     std::lock_guard lock{mutex};
@@ -111,6 +125,7 @@ void mlc::BasicStore::Self::do_transaction(std::function<void()> transaction_bod
     {
         details.array.values.resize(0);
         details.array.modification_paths.clear();
+        details.array.clear_requested = false;
     }
 
     transaction_body();
@@ -177,6 +192,11 @@ void mlc::BasicStore::on_done(std::function<void()> handler)
 void mlc::BasicStore::update_key(Key const& key, std::string_view value, std::filesystem::path const& modification_path)
 {
     self->update_key(key, value, modification_path);
+}
+
+auto mlc::BasicStore::clear_array(Key const& key) -> bool
+{
+    return self->clear_array(key);
 }
 
 void mlc::BasicStore::do_transaction(std::function<void()> transaction_body)

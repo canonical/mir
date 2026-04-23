@@ -41,6 +41,7 @@ public:
     {
         std::vector<std::string> values;
         std::set<std::filesystem::path> modification_paths;
+        bool clear_requested = false;
     };
     using HandleArrayAttribute = std::function<void(Key const& key, ArrayValue array)>;
 
@@ -52,6 +53,7 @@ public:
     void foreach_array_attribute(std::function<void(Key const&, std::string_view)> const& callback) const;
 
     void update_key(Key const& key, std::string_view value, std::filesystem::path const& modification_path);
+    bool clear_array(Key const& key);
     void do_transaction(std::function<void()> transaction_body);
 
 private:

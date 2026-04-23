@@ -498,3 +498,47 @@ TEST_F(LiveConfigIniFile, loading_a_file_twice_uses_the_latest_file_values)
     std::istringstream second_load{"a_scope_an_int=99"};
     ini_file.load_file(second_load, fake_filename());
 }
+
+TEST_F(LiveConfigIniFile, an_empty_value_for_an_array_key_clears_previously_accumulated_values_in_the_same_file)
+{
+    ini_file.add_ints_attribute(an_ints_key, "ints", [this](auto... args) { ints_handler(args...); });
+
+    InSequence seq;
+    EXPECT_CALL(*this, ints_handler(an_ints_key, Optional(IsEmpty())));
+    EXPECT_CALL(*this, ints_handler(an_ints_key, Optional(ElementsAre(3))));
+
+    std::istringstream istream_with_clear{"ints=1\nints=2\nints=\nints=3"};
+    ini_file.load_file(istream_with_clear, fake_filename());
+}
+
+TEST_F(LiveConfigIniFile, an_empty_value_for_an_array_key_with_no_following_values_results_in_empty)
+{
+    ini_file.add_ints_attribute(an_ints_key, "ints", [this](auto... args) { ints_handler(args...); });
+
+    EXPECT_CALL(*this, ints_handler(an_ints_key, Optional(IsEmpty())));
+
+    std::istringstream istream_with_only_clear{"ints=1\nints=2\nints="};
+    ini_file.load_file(istream_with_only_clear, fake_filename());
+}
+
+TEST_F(LiveConfigIniFile, an_empty_value_for_an_array_key_with_preset_and_no_following_values_clears_the_array)
+{
+    ini_file.add_ints_attribute(an_ints_key, "ints", {{10, 20}}, [this](auto... args) { ints_handler(args...); });
+
+    EXPECT_CALL(*this, ints_handler(an_ints_key, Optional(IsEmpty())));
+
+    std::istringstream istream_with_only_clear{"ints=1\nints="};
+    ini_file.load_file(istream_with_only_clear, fake_filename());
+}
+
+TEST_F(LiveConfigIniFile, an_empty_value_for_a_strings_array_key_clears_previously_accumulated_values)
+{
+    ini_file.add_strings_attribute(a_strings_key, "strings", [this](auto... args) { strings_handler(args...); });
+
+    InSequence seq;
+    EXPECT_CALL(*this, strings_handler(a_strings_key, Optional(IsEmpty())));
+    EXPECT_CALL(*this, strings_handler(a_strings_key, Optional(ElementsAre("baz"))));
+
+    std::istringstream istream_with_clear{"strings=foo\nstrings=bar\nstrings=\nstrings=baz"};
+    ini_file.load_file(istream_with_clear, fake_filename());
+}
