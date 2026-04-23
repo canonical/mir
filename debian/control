@@ -89,7 +89,7 @@ Section: libdevel
 Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmircore2 (= ${binary:Version}),
+Depends: libmircore3 (= ${binary:Version}),
          ${misc:Depends},
 Description: Display server for Ubuntu - development headers
  Mir is a display server running on linux systems, with a focus on efficiency,
@@ -261,7 +261,7 @@ Description: Display Server for Ubuntu - wlcs integration
  .
  Contains libraries for integration with the wlcs test suite
 
-Package: libmircore2
+Package: libmircore3
 Section: libs
 Architecture: linux-any
 Multi-Arch: same

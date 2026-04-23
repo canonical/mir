@@ -1,17 +1,17 @@
-MIR_CORE_2.9 {
+MIR_CORE_2.27 {
  global:
   extern "C++" {
     mir::AnonymousShmFile::?AnonymousShmFile*;
     mir::AnonymousShmFile::AnonymousShmFile*;
     mir::AnonymousShmFile::base_ptr*;
     mir::AnonymousShmFile::fd*;
-    mir::Fd::Fd*;
-    mir::Fd::invalid*;
-    mir::Fd::operator*;
     mir::fatal_error*;
     mir::fatal_error_abort*;
     mir::fatal_error_except*;
-    mir::geometry::Rectangles::Rectangles*;
+    mir::Fd::Fd*;
+    mir::Fd::invalid*;
+    mir::Fd::operator*;
+    mir::geometry::operator*;
     mir::geometry::Rectangles::add*;
     mir::geometry::Rectangles::begin*;
     mir::geometry::Rectangles::bounding_rectangle*;
@@ -19,54 +19,36 @@ MIR_CORE_2.9 {
     mir::geometry::Rectangles::confine*;
     mir::geometry::Rectangles::end*;
     mir::geometry::Rectangles::operator*;
+    mir::geometry::Rectangles::Rectangles*;
     mir::geometry::Rectangles::remove*;
     mir::geometry::Rectangles::size*;
-    mir::geometry::operator*;
+    mir::input::MouseKeysKeymap*;
+    mir::input::MouseKeysKeymap::get_action*;
+    mir::input::MouseKeysKeymap::set_action*;
+    mir::log*;
+    mir::logging::core;
+    mir::logging::DumbConsoleLogger::log*;
+    mir::logging::graphics;
+    mir::logging::input;
+    mir::logging::Logger::?Logger*;
+    mir::logging::Logger::log*;
+    mir::logging::Logger::Logger*;
+    mir::logging::Logger::operator*;
+    mir::logging::Tag::?Tag*;
+    mir::logging::Tag::Tag*;
+    mir::logging::wayland;
+    mir::logging::window_management;
     mir::mir_depth_layer_get_index?MirDepthLayer?;
+    mir::report_exception*;
+    mir::security_log*;
+    non-virtual?thunk?to?mir::logging::DumbConsoleLogger::log*;
     typeinfo?for?mir::AnonymousShmFile;
+    typeinfo?for?mir::logging::DumbConsoleLogger;
+    typeinfo?for?mir::logging::Logger;
     typeinfo?for?mir::ShmFile;
     vtable?for?mir::AnonymousShmFile;
+    vtable?for?mir::logging::DumbConsoleLogger;
+    vtable?for?mir::logging::Logger;
   };
 local: *;
 };
-
-MIR_CORE_2.21 {
- global:
-  extern "C++" {
-    mir::input::MouseKeysKeymap*;
-    mir::input::MouseKeysKeymap::set_action*;
-    mir::input::MouseKeysKeymap::get_action*;
-  };
-} MIR_CORE_2.9;
-
-MIR_CORE_2.24 {
-global:
-  extern "C++" {
-    mir::report_exception*;
-  };
-} MIR_CORE_2.21;
-
-MIR_CORE_2.26 {
-  global:
-    extern "C++" {
-      mir::log*;
-      mir::logging::DumbConsoleLogger::log*;
-      mir::logging::Logger::?Logger*;
-      mir::logging::Logger::Logger*;
-      mir::logging::Logger::log*;
-      mir::logging::Logger::operator*;
-      mir::security_log*;
-      non-virtual?thunk?to?mir::logging::DumbConsoleLogger::log*;
-      typeinfo?for?mir::logging::DumbConsoleLogger;
-      typeinfo?for?mir::logging::Logger;
-      vtable?for?mir::logging::DumbConsoleLogger;
-      vtable?for?mir::logging::Logger;
-      mir::logging::Tag::Tag*;
-      mir::logging::Tag::?Tag*;
-      mir::logging::core;
-      mir::logging::input;
-      mir::logging::wayland;
-      mir::logging::graphics;
-      mir::logging::window_management;
-    };
-} MIR_CORE_2.24;
