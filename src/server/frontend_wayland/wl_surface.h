@@ -23,13 +23,14 @@
 #include "weak.h"
 #include "wl_surface_role.h"
 #include "wl_client.h"
+#include "linux_drm_syncobj.h"
 
 #include <mir/geometry/displacement.h>
 #include <mir/geometry/size.h>
 #include <mir/geometry/rectangle.h>
 #include <mir/geometry/rectangles.h>
 #include <mir/shell/surface_specification.h>
-#include "linux_drm_syncobj.h"
+#include <rust/cxx.h>
 
 #include <vector>
 #include <list>

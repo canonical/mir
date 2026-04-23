@@ -18,7 +18,7 @@
 #define MIR_PLATFORM_GBM_KMS_LINUX_DMABUF_H_
 
 #include "egl_context_executor.h"
-#include "linux-dmabuf-stable-v1_wrapper.h"
+#include "linux"
 
 #include <EGL/egl.h>
 #include <memory>
@@ -100,7 +100,7 @@ private:
     std::unique_ptr<EGLBufferCopier> const blitter;
 };
 
-class LinuxDmaBuf : public mir::wayland::LinuxDmabufV1::Global
+class LinuxDmaBuf : public mir::wayland_rs::LinuxDmabufV1::Global
 {
 public:
     LinuxDmaBuf(

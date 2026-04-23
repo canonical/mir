@@ -27,6 +27,7 @@
 #include "protocol_error.h"
 #include "fd_ready_callback.h"
 #include "wayland_server_notification_handler.h"
+#include <rust/cxx.h>
 #include "wayland_rs/src/ffi.rs.h"
 #include "wayland_frontend.tp.h"
 
