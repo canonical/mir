@@ -413,6 +413,7 @@ TEST_F(ConfigAggregatorTest, empty_value_clears_earlier_array_entries_in_same_st
         a_strings_key.to_string() + "=\n" +
         a_strings_key.to_string() + "=baz\n"};
 
+    InSequence seq;
     EXPECT_CALL(*this, strings_handler(a_strings_key, Optional(ElementsAre("baz"))));
 
     load_one(stream, fake_filename());
@@ -477,7 +478,7 @@ TEST_F(ConfigAggregatorTest, array_clears_override_defaults)
     std::istringstream stream1{a_strings_key.to_string() + "=foo\n" + a_strings_key.to_string() + "=bar\n"};
     std::istringstream stream2{a_strings_key.to_string() + "=\n"};
 
-    EXPECT_CALL(*this, strings_handler(a_strings_key, Optional(IsEmpty())));
+    EXPECT_CALL(*this, strings_handler(a_strings_key, Eq(std::nullopt)));
 
     load_all({{std::ref(stream1), "base.conf"},
               {std::ref(stream2), "base.conf.d/10-override.conf"}});
@@ -507,6 +508,7 @@ TEST_F(ConfigAggregatorTest, empty_value_in_later_file_clears_entries_from_earli
     std::istringstream stream1{a_strings_key.to_string() + "=foo\n" + a_strings_key.to_string() + "=bar\n"};
     std::istringstream stream2{a_strings_key.to_string() + "=\n" + a_strings_key.to_string() + "=baz\n"};
 
+    InSequence seq;
     EXPECT_CALL(*this, strings_handler(a_strings_key, Optional(ElementsAre("baz"))));
 
     load_all({{std::ref(stream1), "base.conf"},
@@ -695,7 +697,7 @@ TEST_F(ConfigAggregatorTest, invalid_ini_file_among_multiple_files_leaves_array_
               {std::ref(stream2), "base.conf.d/10-override.conf"}});
 }
 
-TEST_F(ConfigAggregatorTest, clear_followed_by_invalid_array_value_yields_nullopt)
+TEST_F(ConfigAggregatorTest, clear_followed_by_invalid_array_value_yields_empty)
 {
     aggregator.add_ints_attribute(an_ints_key, "ints", [this](auto... args) { ints_handler(args...); });
 
@@ -707,8 +709,7 @@ TEST_F(ConfigAggregatorTest, clear_followed_by_invalid_array_value_yields_nullop
         an_ints_key.to_string() + "=bad_val\n"  // invalid integer after the clear
     };
 
-    // After clearing and then encountering an invalid value, the result is nullopt
-    EXPECT_CALL(*this, ints_handler(an_ints_key, Optional(IsEmpty())));
+    EXPECT_CALL(*this, ints_handler(an_ints_key, Eq(std::nullopt)));
 
     load_all({{std::ref(stream1), "base.conf"},
               {std::ref(stream2), "base.conf.d/10-override.conf"}});

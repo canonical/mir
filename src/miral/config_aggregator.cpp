@@ -39,9 +39,7 @@ struct mlc::ConfigAggregator::Self: BasicStore
     {
         return [this](mlc::Key const& key, std::optional<std::span<std::string const>> values)
         {
-            if (values)
-                for (auto const& v : *values)
-                    update_key(key, v, file_being_loaded);
+            set_array(key, values, file_being_loaded);
         };
     }
 
@@ -81,7 +79,6 @@ void mlc::ConfigAggregator::reload_all()
     self->do_transaction(
         [&]
         {
-
             for (auto& source : self->sources)
             {
                 self->file_being_loaded = source.file_path;
@@ -108,6 +105,7 @@ void mlc::ConfigAggregator::reload_all()
                             source.store->add_strings_attribute(
                                 key, description, self->array_accumulator(), current_value);
                     });
+
                 source.load();
             }
         });

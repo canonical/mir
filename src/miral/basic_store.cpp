@@ -59,6 +59,11 @@ public:
 template <typename T>
 auto to_str_vec(std::span<T const> s) -> std::vector<std::string>
 {
+    if constexpr (std::is_same_v<T, std::string>)
+    {
+        return std::vector<std::string>{s.begin(), s.end()};
+    }
+
     std::vector<std::string> v;
     v.reserve(s.size());
     for (auto const& p : s)
@@ -73,7 +78,7 @@ auto to_str_vec(std::span<T const> s) -> std::vector<std::string>
             else
                 v.emplace_back(std::to_string(p));
         }
-        else
+        else if constexpr (std::is_integral_v<T>)
         {
             v.emplace_back(std::to_string(p));
         }
@@ -92,6 +97,7 @@ public:
     void add_key(Key const& key, std::string_view description, std::optional<std::vector<std::string>> preset, HandleStrings handler, std::vector<std::string> initial_values);
 
     void update_key(Key const& key, std::string_view value, std::filesystem::path const& modification_path);
+    void set_array(Key const& key, std::optional<std::span<std::string const>> value, std::filesystem::path const& modification_path);
     void do_transaction(std::function<void()> transaction_body);
 
     void on_done(HandleDone handler);
@@ -216,6 +222,32 @@ void mlc::BasicStore::Self::update_key(Key const& key, std::string_view value, s
     else
     {
         mir::log_warning("Config key '%s' not recognized", key.to_string().c_str());
+    }
+}
+
+void mlc::BasicStore::Self::set_array(
+    Key const& key, std::optional<std::span<std::string const>> value, std::filesystem::path const& modification_path)
+{
+    if (auto const details_iter = array_attribute_handlers.find(key); details_iter != array_attribute_handlers.end())
+    {
+        auto& details = details_iter->second;
+
+        if(value)
+        {
+            details.parsed_values = to_str_vec(*value);
+            details.clear_requested = false;
+        }
+        else
+        {
+            details.parsed_values.clear();
+            details.clear_requested = true;
+        }
+
+        details.modification_paths.push_back(modification_path);
+    }
+    else
+    {
+        mir::log_warning("Config key for array '%s' not recognized", key.to_string().c_str());
     }
 }
 
@@ -628,6 +660,11 @@ void mlc::BasicStore::on_done(HandleDone handler)
 void mlc::BasicStore::update_key(Key const& key, std::string_view value, std::filesystem::path const& modification_path)
 {
     self->update_key(key, value, modification_path);
+}
+
+void mlc::BasicStore::set_array(Key const& key, std::optional<std::span<std::string const>> value, std::filesystem::path const& modification_path)
+{
+    self->set_array(key, value, modification_path);
 }
 
 void mlc::BasicStore::do_transaction(std::function<void()> transaction_body)

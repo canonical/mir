@@ -78,6 +78,7 @@ public:
     void foreach_array_attribute(ForeachArrayCallback const& callback) const;
 
     void update_key(Key const& key, std::string_view value, std::filesystem::path const& modification_path);
+    void set_array(Key const& key, std::optional<std::span<std::string const>> value, std::filesystem::path const& modification_path);
     void do_transaction(std::function<void()> transaction_body);
 
 private:
