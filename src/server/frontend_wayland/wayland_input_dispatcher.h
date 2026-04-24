@@ -19,7 +19,7 @@
 
 #include <mir_toolkit/common.h>
 #include <mir/geometry/point.h>
-#include <mir/wayland/weak.h>
+#include "weak.h"
 
 #include <memory>
 #include <chrono>
@@ -55,7 +55,7 @@ private:
     WaylandInputDispatcher& operator=(WaylandInputDispatcher const&) = delete;
 
     WlSeat* const seat;
-    wayland::Weak<WlSurface> const wl_surface;
+    wayland_rs::Weak<WlSurface> const wl_surface;
 };
 }
 }
