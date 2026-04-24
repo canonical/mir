@@ -17,15 +17,14 @@
 #ifndef MIR_FRONTEND_WL_KEYBOARD_H
 #define MIR_FRONTEND_WL_KEYBOARD_H
 
-#include <mir/wayland/weak.h>
-
-#include "wayland_wrapper.h"
+#include "wayland.h"
+#include "weak.h"
 #include "keyboard_helper.h"
 #include "wl_seat.h"
 
 namespace mir
 {
-namespace wayland
+namespace wayland_rs
 {
 class Client;
 }
@@ -34,18 +33,19 @@ namespace frontend
 class WlSurface;
 
 class WlKeyboard
-    : public wayland::Keyboard,
+    : public wayland_rs::WlKeyboardImpl,
       private KeyboardCallbacks
 {
 public:
-    WlKeyboard(wl_resource* new_resource, WlSeat& seat);
+    WlKeyboard(WlSeat& seat, std::shared_ptr<wayland_rs::Client> const& client);
 
     void handle_event(std::shared_ptr<MirEvent const> const& event);
     void focus_on(WlSurface* surface);
 
 private:
     std::shared_ptr<KeyboardHelper> const helper;
-    wayland::Weak<WlSurface> focused_surface;
+    std::shared_ptr<wayland_rs::Client> client;
+    wayland_rs::Weak<WlSurface> focused_surface;
 
     /// KeyboardCallbacks overrides
     /// @{

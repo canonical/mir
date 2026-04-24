@@ -16,7 +16,6 @@
 
 #include <ranges>
 
-#include "fractional-scale-v1_wrapper.h"
 #include "fractional_scale_v1.h"
 #include <mir/default_server_configuration.h>
 
@@ -49,7 +48,6 @@
 #include "wl_shell.h"
 #include "wlr_screencopy_v1.h"
 #include "xdg_activation_v1.h"
-#include "xdg-decoration-unstable-v1_wrapper.h"
 #include "xdg_decoration_unstable_v1.h"
 #include "xdg_output_v1.h"
 #include "xdg_shell_stable.h"
@@ -63,7 +61,7 @@ namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace mo = mir::options;
-namespace mw = mir::wayland;
+namespace mw = mir::wayland_rs;
 
 namespace
 {

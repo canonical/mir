@@ -18,8 +18,9 @@
 #define MIR_FRONTEND_KEYBOARD_HELPER_H
 
 #include <mir/shell/keyboard_helper.h>
-#include "wayland_wrapper.h"
+#include "wayland.h"
 #include <mir/events/xkb_modifiers.h>
+#include <mir/fd.h>
 
 #include <optional>
 #include <vector>
