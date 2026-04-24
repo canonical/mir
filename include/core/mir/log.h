@@ -77,16 +77,31 @@ namespace {
 // For C++-overload-resolution reasons these always-available functions need to be
 // defined in the same namespace as the conditionally-available ones below.
 
+inline void log_debug(logging::Tags tags, std::string_view message)
+{
+    mir::log(logging::Severity::debug, tags, message);
+}
+
 template <typename... Args>
 void log_debug(logging::Tags tags, std::format_string<Args...> fmt, Args&&... args)
 {
-    log(logging::Severity::debug, tags, fmt, std::forward<Args>(args)...);
+    log_debug(tags, std::format(fmt, std::forward<Args>(args)...));
+}
+
+inline void log_info(logging::Tags tags, std::string_view message)
+{
+    mir::log(logging::Severity::informational, tags, message);
 }
 
 template <typename... Args>
 void log_info(logging::Tags tags, std::format_string<Args...> fmt, Args&&... args)
 {
-    log(logging::Severity::informational, tags, fmt, std::forward<Args>(args)...);
+    log_info(tags, std::format(fmt, std::forward<Args>(args)...));
+}
+
+inline void log_warning(logging::Tags tags, std::string_view message)
+{
+    mir::log(logging::Severity::warning, tags, message);
 }
 
 template <typename... Args>
@@ -95,10 +110,20 @@ void log_warning(logging::Tags tags, std::format_string<Args...> fmt, Args&&... 
     log(logging::Severity::warning, tags, fmt, std::forward<Args>(args)...);
 }
 
+inline void log_error(logging::Tags tags, std::string_view message)
+{
+    mir::log(logging::Severity::error, tags, message);
+}
+
 template <typename... Args>
 void log_error(logging::Tags tags, std::format_string<Args...> fmt, Args&&... args)
 {
     log(logging::Severity::error, tags, fmt, std::forward<Args>(args)...);
+}
+
+inline void log_critical(logging::Tags tags, std::string_view message)
+{
+    mir::log(logging::Severity::critical, tags, message);
 }
 
 template <typename... Args>
