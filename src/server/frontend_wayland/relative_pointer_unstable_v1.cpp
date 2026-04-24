@@ -21,75 +21,35 @@
 #include <mir/shell/shell.h>
 #include <mir/shell/surface_specification.h>
 
-namespace mw = mir::wayland;
+namespace mw = mir::wayland_rs;
 
 namespace mir
 {
 namespace frontend
 {
-class RelativePointerManagerV1 : public wayland::RelativePointerManagerV1
+class RelativePointerV1 : public mw::ZwpRelativePointerV1Impl, public std::enable_shared_from_this<RelativePointerV1>
 {
 public:
-    RelativePointerManagerV1(wl_resource* resource, std::shared_ptr<shell::Shell> shell);
-
-    class Global : public wayland::RelativePointerManagerV1::Global
-    {
-    public:
-        Global(wl_display* display, std::shared_ptr<shell::Shell> shell);
-
-    private:
-        void bind(wl_resource* new_zwp_relative_pointer_manager_v1) override;
-        std::shared_ptr<shell::Shell> const shell;
-    };
+    RelativePointerV1(wayland_rs::Weak<wayland_rs::WlPointerImpl> const& pointer);
 
 private:
-    std::shared_ptr<shell::Shell> const shell;
-
-    void get_relative_pointer(wl_resource* id, wl_resource* pointer) override;
-};
-
-class RelativePointerV1 : public wayland::RelativePointerV1
-{
-public:
-    RelativePointerV1(wl_resource* id, WlPointer* pointer);
-
-private:
-    wayland::Weak<WlPointer> const pointer;
+    mw::Weak<WlPointer> const pointer_;
 };
 }
 }
 
-auto mir::frontend::create_relative_pointer_unstable_v1(wl_display *display, std::shared_ptr<shell::Shell> shell)
--> std::shared_ptr<mw::RelativePointerManagerV1::Global>
-{
-    return std::make_shared<RelativePointerManagerV1::Global>(display, std::move(shell));
-}
-
-mir::frontend::RelativePointerManagerV1::Global::Global(wl_display* display, std::shared_ptr<shell::Shell> shell) :
-    wayland::RelativePointerManagerV1::Global::Global{display, Version<1>{}},
+mir::frontend::RelativePointerManagerV1::RelativePointerManagerV1(std::shared_ptr<shell::Shell> shell) :
     shell{std::move(shell)}
 {
 }
 
-void mir::frontend::RelativePointerManagerV1::Global::bind(wl_resource* new_zwp_relative_pointer_manager_v1)
+auto mir::frontend::RelativePointerManagerV1::get_relative_pointer(wayland_rs::Weak<wayland_rs::WlPointerImpl> const& pointer) -> std::shared_ptr<wayland_rs::ZwpRelativePointerV1Impl>
 {
-    new RelativePointerManagerV1{new_zwp_relative_pointer_manager_v1, shell};
+    return std::make_shared<RelativePointerV1>(pointer);
 }
 
-mir::frontend::RelativePointerManagerV1::RelativePointerManagerV1(wl_resource* resource, std::shared_ptr<shell::Shell> shell) :
-    wayland::RelativePointerManagerV1{resource, Version<1>{}},
-    shell{std::move(shell)}
+mir::frontend::RelativePointerV1::RelativePointerV1(wayland_rs::Weak<wayland_rs::WlPointerImpl> const& pointer) :
+    pointer_{WlPointer::from(&pointer.value())->shared_from_this()}
 {
-}
-
-void mir::frontend::RelativePointerManagerV1::get_relative_pointer(wl_resource* id, wl_resource* pointer)
-{
-    new RelativePointerV1{id, dynamic_cast<WlPointer*>(wayland::Pointer::from(pointer))};
-}
-
-mir::frontend::RelativePointerV1::RelativePointerV1(wl_resource* id, WlPointer* pointer) :
-    wayland::RelativePointerV1{id, Version<1>{}},
-    pointer{pointer}
-{
-    pointer->set_relative_pointer(this);
+    pointer_.value().set_relative_pointer(shared_from_this());
 }
