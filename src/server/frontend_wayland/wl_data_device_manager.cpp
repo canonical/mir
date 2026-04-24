@@ -21,53 +21,37 @@
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
-namespace mw = mir::wayland;
+namespace mw = mir::wayland_rs;
 
 mf::WlDataDeviceManager::WlDataDeviceManager(
-    struct wl_display* display,
-    std::shared_ptr<mir::Executor> const& wayland_executor,
+    std::shared_ptr<Executor> const& wayland_executor,
     std::shared_ptr<ms::Clipboard> const& clipboard,
     std::shared_ptr<DragIconController> drag_icon_controller,
-    std::shared_ptr<PointerInputDispatcher> pointer_input_dispatcher) :
-    Global(display, Version<3>()),
+    std::shared_ptr<PointerInputDispatcher> pointer_input_dispatcher,
+    std::shared_ptr<wayland_rs::Client> const& client) :
     wayland_executor{wayland_executor},
     clipboard{clipboard},
     drag_icon_controller{std::move(drag_icon_controller)},
-    pointer_input_dispatcher{std::move(pointer_input_dispatcher)}
+    pointer_input_dispatcher{std::move(pointer_input_dispatcher)},
+    client{client}
 {
 }
 
-mf::WlDataDeviceManager::~WlDataDeviceManager()
+auto mf::WlDataDeviceManager::create_data_source() -> std::shared_ptr<wayland_rs::WlDataSourceImpl>
 {
+    return std::make_shared<WlDataSource>(
+        wayland_executor,
+        *clipboard);
 }
 
-mf::WlDataDeviceManager::Instance::Instance(wl_resource* new_resource, WlDataDeviceManager* manager)
-    : wayland::DataDeviceManager(new_resource, Version<3>()),
-      manager{manager}
+auto mf::WlDataDeviceManager::get_data_device(mw::Weak<mw::WlSeatImpl> const& seat) -> std::shared_ptr<mw::WlDataDeviceImpl>
 {
-}
-
-void mf::WlDataDeviceManager::Instance::create_data_source(wl_resource* new_data_source)
-{
-    new WlDataSource{
-        new_data_source,
-        manager->wayland_executor,
-        *manager->clipboard};
-}
-
-void mf::WlDataDeviceManager::Instance::get_data_device(wl_resource* new_data_device, wl_resource* seat)
-{
-    auto const realseat = mf::WlSeat::from(seat);
-    new WlDataDevice{
-        new_data_device,
-        *manager->wayland_executor,
-        *manager->clipboard,
+    auto const realseat = mf::WlSeat::from(&seat.value());
+    return std::make_shared<WlDataDevice>(
+        *wayland_executor,
+        *clipboard,
         *realseat,
-        manager->pointer_input_dispatcher,
-        manager->drag_icon_controller};
-}
-
-void mf::WlDataDeviceManager::bind(wl_resource* new_resource)
-{
-    new WlDataDeviceManager::Instance{new_resource, this};
+        pointer_input_dispatcher,
+        drag_icon_controller,
+        client);
 }

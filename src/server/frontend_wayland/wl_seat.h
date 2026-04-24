@@ -18,8 +18,10 @@
 #define MIR_FRONTEND_WL_SEAT_H
 
 #include "input_trigger_registry.h"
-#include "wayland_wrapper.h"
-#include <mir/wayland/weak.h>
+#include "wayland.h"
+#include "weak.h"
+#include "client.h"
+#include "lifetime_tracker.h"
 
 #include <functional>
 
@@ -68,15 +70,14 @@ public:
     void start_dispatch_to_data_device(WlDataDevice* wl_data_device);
     void stop_dispatch_to_data_device();
 private:
-    wayland::Weak<WlPointer> wl_pointer;
-    wayland::Weak<WlDataDevice> wl_data_device;
+    wayland_rs::Weak<WlPointer> wl_pointer;
+    wayland_rs::Weak<WlDataDevice> wl_data_device;
 };
 
-class WlSeat : public wayland::Seat::Global
+class WlSeat : public wayland_rs::WlSeatImpl
 {
 public:
     WlSeat(
-        wl_display* display,
         Executor& wayland_executor,
         std::shared_ptr<time::Clock> const& clock,
         std::shared_ptr<mir::input::InputDeviceHub> const& input_hub,
@@ -94,18 +95,18 @@ public:
     WlSeat(WlSeat&&) = delete;
     WlSeat& operator=(WlSeat&&) = delete;
 
-    static auto from(struct wl_resource* resource) -> WlSeat*;
+    static auto from(WlSeatImpl* impl) -> WlSeat*;
 
-    void for_each_listener(wayland::Client* client, std::function<void(PointerEventDispatcher*)> func);
-    void for_each_listener(wayland::Client* client, std::function<void(WlKeyboard*)> func);
-    void for_each_listener(wayland::Client* client, std::function<void(WlTouch*)> func);
+    void for_each_listener(wayland_rs::Client* client, std::function<void(PointerEventDispatcher*)> func);
+    void for_each_listener(wayland_rs::Client* client, std::function<void(WlKeyboard*)> func);
+    void for_each_listener(wayland_rs::Client* client, std::function<void(WlTouch*)> func);
 
     class FocusListener
     {
     public:
         /// The surface that has focus if the currently focused surface belongs to the relevant client. nullptr if there
         /// is no focused surface or it belongs to a different client.
-        virtual void focus_on(WlSurface* surface) = 0;
+        virtual void focus_on(std::shared_ptr<WlSurface> const& surface) = 0;
 
         FocusListener() = default;
         virtual ~FocusListener() = default;
@@ -118,15 +119,15 @@ public:
     auto make_keyboard_helper(KeyboardCallbacks* callbacks) -> std::shared_ptr<KeyboardHelper>;
 
     /// Adds the listener for future use, and makes a call into it to inform of initial state
-    void add_focus_listener(wayland::Client* client, FocusListener* listener);
-    void remove_focus_listener(wayland::Client* client, FocusListener* listener);
+    void add_focus_listener(wayland_rs::Client* client, FocusListener* listener);
+    void remove_focus_listener(wayland_rs::Client* client, FocusListener* listener);
 
 private:
     void set_focus_to(WlSurface* surface);
 
-    wayland::Client* focused_client{nullptr}; ///< Can be null
-    wayland::Weak<WlSurface> focused_surface;
-    wayland::DestroyListenerId focused_surface_destroy_listener_id{};
+    wayland_rs::Client* focused_client{nullptr}; ///< Can be null
+    wayland_rs::Weak<WlSurface> focused_surface;
+    wayland_rs::DestroyListenerId focused_surface_destroy_listener_id{};
 
     template<class T>
     class ListenerList;
@@ -151,8 +152,6 @@ private:
     std::shared_ptr<input::Seat> const seat;
 
     std::shared_ptr<shell::AccessibilityManager> const accessibility_manager;
-
-    void bind(wl_resource* new_wl_seat) override;
 };
 }
 }

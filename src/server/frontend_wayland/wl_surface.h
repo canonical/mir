@@ -124,7 +124,7 @@ private:
 class WlSurface : public wayland_rs::WlSurfaceImpl, public std::enable_shared_from_this<WlSurface>
 {
 public:
-    WlSurface(std::shared_ptr<WlClient> const& client,
+    WlSurface(std::shared_ptr<wayland_rs::Client> const& client,
               std::shared_ptr<mir::Executor> const& wayland_executor,
               std::shared_ptr<mir::Executor> const& frame_callback_executor,
               std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
@@ -207,9 +207,9 @@ public:
     std::shared_ptr<compositor::BufferStream> const stream;
 
     static WlSurface* from(WlSurfaceImpl* impl);
+    std::weak_ptr<wayland_rs::Client> const client;
 
 private:
-    std::weak_ptr<WlClient> client;
     std::shared_ptr<mir::graphics::GraphicBufferAllocator> const allocator;
     std::shared_ptr<mir::Executor> const wayland_executor;
     std::shared_ptr<mir::Executor> const frame_callback_executor;

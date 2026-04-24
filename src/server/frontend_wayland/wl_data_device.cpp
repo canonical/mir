@@ -27,18 +27,19 @@
 #include <mir/scene/session.h>
 #include <mir/scene/surface.h>
 #include <mir/shell/surface_specification.h>
-#include <mir/wayland/client.h>
-#include <mir/wayland/protocol_error.h>
+#include "client.h"
+#include "protocol_error.h"
+#include "weak.h"
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
-namespace mw = mir::wayland;
+namespace mw = mir::wayland_rs;
 using namespace mir::geometry;
 
 class mf::WlDataDevice::ClipboardObserver : public ms::ClipboardObserver
 {
 public:
-    ClipboardObserver(WlDataDevice* device) : device{device}
+    explicit ClipboardObserver(std::shared_ptr<WlDataDevice> const& device) : device{device}
     {
     }
 
@@ -75,21 +76,23 @@ private:
         }
     }
 
-    wayland::Weak<WlDataDevice> const device;
+    wayland_rs::Weak<WlDataDevice> const device;
 };
 
-class mf::WlDataDevice::Offer : public wayland::DataOffer
+class mf::WlDataDevice::Offer : public wayland_rs::WlDataOfferImpl, public std::enable_shared_from_this<mf::WlDataDevice::Offer>
 {
 public:
-    Offer(WlDataDevice* device, std::shared_ptr<ms::DataExchangeSource> const& source);
+    Offer(std::shared_ptr<WlDataDevice> const& device, std::shared_ptr<ms::DataExchangeSource> const& source);
 
-    void accept(uint32_t /*serial*/, std::optional<std::string> const& mime_type) override
+    auto associate(rust::Box<wayland_rs::WlDataOfferExt> instance, uint32_t object_id) -> void override;
+
+    auto accept(uint32_t, rust::String mime_type, bool has_mime_type) -> void override
     {
-        accepted_mime_type = mime_type;
-        source->offer_accepted(mime_type);
+        accepted_mime_type = has_mime_type ? std::string(mime_type.c_str()) : std::optional<std::string>();
+        source->offer_accepted(accepted_mime_type);
     }
 
-    void receive(std::string const& mime_type, mir::Fd fd) override;
+    auto receive(rust::String mime_type, int32_t fd) -> void override;
 
     void finish() override
     {
@@ -103,72 +106,79 @@ public:
         if (!dnd_action || dnd_action.value() != action)
         {
             dnd_action = action;
-            send_action_event_if_supported(action);
+            send_action_event(action);
         }
     }
 
 private:
     friend mf::WlDataDevice;
-    wayland::Weak<WlDataDevice> const device;
+    mw::Weak<WlDataDevice> const device;
     std::shared_ptr<ms::DataExchangeSource> const source;
     std::optional<std::string> accepted_mime_type;
     std::optional<uint32_t> dnd_action;
 };
 
-mf::WlDataDevice::Offer::Offer(WlDataDevice* device, std::shared_ptr<ms::DataExchangeSource> const& source) :
-    mw::DataOffer(*device),
+mf::WlDataDevice::Offer::Offer(std::shared_ptr<WlDataDevice> const& device, std::shared_ptr<ms::DataExchangeSource> const& source) :
     device{device},
     source{source}
 {
-    device->send_data_offer_event(resource);
+}
+
+auto mf::WlDataDevice::Offer::associate(rust::Box<mw::WlDataOfferExt> instance, uint32_t object_id) -> void
+{
+    device.value().send_data_offer_event(instance);
+    WlDataOfferImpl::associate(std::move(instance), object_id);
     for (auto const& type : source->mime_types())
     {
         send_offer_event(type);
     }
 }
 
-void mf::WlDataDevice::Offer::receive(std::string const& mime_type, mir::Fd fd)
+auto mf::WlDataDevice::Offer::receive(rust::String mime_type, int32_t fd) -> void
 {
     if (device && device.value().current_offer.is(*this))
     {
-        source->initiate_send(mime_type, fd);
+        source->initiate_send(mime_type.c_str(), Fd{IntOwnedFd{fd}});
     }
 }
 
 mf::WlDataDevice::WlDataDevice(
-    wl_resource* new_resource,
     Executor& wayland_executor,
     scene::Clipboard& clipboard,
     WlSeat& seat,
     std::shared_ptr<PointerInputDispatcher> pointer_input_dispatcher,
-    std::shared_ptr<DragIconController> drag_icon_controller)
-    : mw::DataDevice(new_resource, Version<3>()),
-      clipboard{clipboard},
+    std::shared_ptr<DragIconController> drag_icon_controller,
+    std::shared_ptr<wayland_rs::Client> const& client)
+    : clipboard{clipboard},
       seat{seat},
-      clipboard_observer{std::make_shared<ClipboardObserver>(this)},
+      clipboard_observer{std::make_shared<ClipboardObserver>(shared_from_this())},
       pointer_input_dispatcher{std::move(pointer_input_dispatcher)},
       drag_icon_controller{std::move(drag_icon_controller)},
+      client{client},
       end_of_gesture_callback{[this, &wayland_executor] { wayland_executor.spawn([this]
         { this->clipboard.end_of_dnd_gesture(); drag_surface.reset(); }); }}
 {
     clipboard.register_interest(clipboard_observer, wayland_executor);
     // this will call focus_on() with the initial state
-    seat.add_focus_listener(client, this);
+    seat.add_focus_listener(client.get(), this);
 }
 
 mf::WlDataDevice::~WlDataDevice()
 {
     clipboard.unregister_interest(*clipboard_observer);
-    seat.remove_focus_listener(client, this);
+    seat.remove_focus_listener(client.get(), this);
 }
 
-void mf::WlDataDevice::set_selection(std::optional<wl_resource*> const& source, uint32_t serial)
+auto mir::frontend::WlDataDevice::set_selection(
+    mw::Weak<mw::WlDataSourceImpl> const& source,
+    bool has_source,
+    uint32_t serial) -> void
 {
     // TODO: verify serial
     (void)serial;
-    if (source)
+    if (has_source)
     {
-        auto const wl_source = WlDataSource::from(source.value());
+        auto const wl_source = WlDataSource::from(&source.value());
         wl_source->set_clipboard_paste_source();
     }
     else
@@ -177,17 +187,19 @@ void mf::WlDataDevice::set_selection(std::optional<wl_resource*> const& source, 
     }
 }
 
-void mf::WlDataDevice::start_drag(
-    std::optional<wl_resource*> const& source,
-    wl_resource* origin,
-    std::optional<wl_resource*> const& icon,
-    uint32_t serial)
+auto mir::frontend::WlDataDevice::start_drag(
+    mw::Weak<mw::WlDataSourceImpl> const& source,
+    bool has_source,
+    mw::Weak<mw::WlSurfaceImpl> const& origin,
+    mw::Weak<mw::WlSurfaceImpl> const& icon,
+    bool has_icon,
+    uint32_t serial) -> void
 {
     // "The client must have an active implicit grab that matches the serial"
-    if (!weak_surface || weak_surface.value().client != client || WlSurface::from(origin)->client != client)
+    if (!weak_surface || weak_surface.value().client.lock() != client || WlSurface::from(&origin.value())->client.lock() != client)
     {
         BOOST_THROW_EXCEPTION(
-            mw::ProtocolError(resource, Error::role, "The client must have an active implicit grab"));
+            mw::ProtocolError(object_id(), Error::role, "The client must have an active implicit grab"));
     }
 
     validate_pointer_event(client->event_for(serial));
@@ -199,16 +211,19 @@ void mf::WlDataDevice::start_drag(
             pointer->start_dispatch_to_data_device(this);
         });
 
-    if (icon)
+    if (has_icon)
     {
-        auto const icon_surface = WlSurface::from(icon.value());
+        auto const icon_surface = WlSurface::from(&icon.value());
 
-        drag_surface.emplace(icon_surface, drag_icon_controller);
+        drag_surface.emplace(icon_surface->shared_from_this(), drag_icon_controller);
     }
 
-    if (auto const wl_source = WlDataSource::from(source.value()))
+    if (has_source)
     {
-        wl_source->start_drag_n_drop_gesture();
+        if (auto const wl_source = WlDataSource::from(&source.value()))
+        {
+            wl_source->start_drag_n_drop_gesture();
+        }
     }
 }
 
@@ -217,20 +232,20 @@ void mf::WlDataDevice::validate_pointer_event(std::optional<std::shared_ptr<MirE
     if (!drag_event || !drag_event.value() || mir_event_get_type(drag_event.value().get()) != mir_event_type_input)
     {
         BOOST_THROW_EXCEPTION(
-            mw::ProtocolError(this->resource, Error::role, "Serial does not correspond to an input event"));
+            mw::ProtocolError(object_id(), Error::role, "Serial does not correspond to an input event"));
     }
 
     auto const input_ev = mir_event_get_input_event(drag_event.value().get());
     if (mir_input_event_get_type(input_ev) != mir_input_event_type_pointer)
     {
         BOOST_THROW_EXCEPTION(
-            mw::ProtocolError(this->resource, Error::role, "Serial does not correspond to a pointer event"));
+            mw::ProtocolError(object_id(), Error::role, "Serial does not correspond to a pointer event"));
     }
 }
 
-void mf::WlDataDevice::focus_on(WlSurface* surface)
+void mf::WlDataDevice::focus_on(std::shared_ptr<WlSurface> const& surface)
 {
-    weak_surface = make_weak(surface);
+    weak_surface = mw::Weak(surface);
     has_focus = static_cast<bool>(surface);
     paste_source_set(clipboard.paste_source());
 }
@@ -241,8 +256,9 @@ void mf::WlDataDevice::paste_source_set(std::shared_ptr<ms::DataExchangeSource> 
     {
         if (!current_offer || current_offer.value().source != source)
         {
-            current_offer = wayland::make_weak(new Offer{this, source});
-            send_selection_event(current_offer.value().resource);
+            auto const offer = std::make_shared<Offer>(shared_from_this(), source);
+            current_offer = mw::Weak(offer);
+            send_selection_event(offer, true);
         }
     }
     else
@@ -250,7 +266,7 @@ void mf::WlDataDevice::paste_source_set(std::shared_ptr<ms::DataExchangeSource> 
         if (current_offer)
         {
             current_offer = {};
-            send_selection_event(std::nullopt);
+            send_selection_event(nullptr, false);
         }
     }
 }
@@ -279,7 +295,7 @@ void mf::WlDataDevice::event(std::shared_ptr<MirPointerEvent const> const& event
         send_leave_event();
         if (current_offer)
         {
-            if (!current_offer.value().accepted_mime_type && wl_resource_get_version(resource) >= 3)
+            if (!current_offer.value().accepted_mime_type)
             {
                 current_offer.value().source->cancelled();
             }
@@ -323,11 +339,11 @@ void mf::WlDataDevice::event(std::shared_ptr<MirPointerEvent const> const& event
             auto const serial = client->next_serial(nullptr);
             if (current_offer)
             {
-                send_enter_event(serial, target_surface->resource, x, y, current_offer.value().resource);
+                send_enter_event(serial, target_surface->shared_from_this(), x, y, current_offer.value().shared_from_this(), true);
             }
             else
             {
-                send_enter_event(serial, target_surface->resource, x, y, std::nullopt);
+                send_enter_event(serial, target_surface->shared_from_this(), x, y, nullptr, false);
             }
 
             sent_enter = true;
@@ -357,14 +373,14 @@ void mf::WlDataDevice::make_new_dnd_offer_if_possible(std::shared_ptr<mir::scene
 {
     if (source)
     {
-        current_offer = wayland::make_weak(new Offer{this, source});
-        current_offer.value().send_action_event_if_supported(mw::DataDeviceManager::DndAction::none);
-        current_offer.value().send_source_actions_event_if_supported(source->actions());
+        current_offer = mw::Weak(std::make_shared<Offer>(shared_from_this(), source));
+        current_offer.value().send_action_event(mw::WlDataDeviceManagerImpl::DndAction::none);
+        current_offer.value().send_source_actions_event(source->actions());
     }
 }
 
-mf::WlDataDevice::DragIconSurface::DragIconSurface(WlSurface* icon, std::shared_ptr<DragIconController> drag_icon_controller)
-    : NullWlSurfaceRole(icon),
+mf::WlDataDevice::DragIconSurface::DragIconSurface(std::shared_ptr<WlSurface> const& icon, std::shared_ptr<DragIconController> drag_icon_controller)
+    : NullWlSurfaceRole(icon.get()),
       surface{icon},
       drag_icon_controller{std::move(drag_icon_controller)}
 {

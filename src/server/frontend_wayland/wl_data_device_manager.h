@@ -17,7 +17,9 @@
 #ifndef MIR_FRONTEND_WL_DATA_DEVICE_MANAGER_H_
 #define MIR_FRONTEND_WL_DATA_DEVICE_MANAGER_H_
 
-#include "wayland_wrapper.h"
+#include "wayland.h"
+#include "client.h"
+#include <memory>
 
 namespace mir
 {
@@ -32,36 +34,25 @@ namespace frontend
 class DragIconController;
 class PointerInputDispatcher;
 
-class WlDataDeviceManager : public wayland::DataDeviceManager::Global
+class WlDataDeviceManager : public wayland_rs::WlDataDeviceManagerImpl
 {
 public:
     WlDataDeviceManager(
-        struct wl_display* display,
         std::shared_ptr<Executor> const& wayland_executor,
         std::shared_ptr<scene::Clipboard> const& clipboard,
         std::shared_ptr<DragIconController> drag_icon_controller,
-        std::shared_ptr<PointerInputDispatcher> pointer_input_dispatcher);
-    ~WlDataDeviceManager();
+        std::shared_ptr<PointerInputDispatcher> pointer_input_dispatcher,
+        std::shared_ptr<wayland_rs::Client> const& client);
+
+    auto create_data_source() -> std::shared_ptr<wayland_rs::WlDataSourceImpl> override;
+    auto get_data_device(wayland_rs::Weak<wayland_rs::WlSeatImpl> const& seat) -> std::shared_ptr<wayland_rs::WlDataDeviceImpl> override;
 
 private:
     std::shared_ptr<Executor> const wayland_executor;
     std::shared_ptr<scene::Clipboard> const clipboard;
     std::shared_ptr<DragIconController> const drag_icon_controller;
     std::shared_ptr<PointerInputDispatcher> pointer_input_dispatcher;
-
-    void bind(wl_resource* new_resource) override;
-
-    class Instance : wayland::DataDeviceManager
-    {
-    public:
-        Instance(wl_resource* new_resource, WlDataDeviceManager* manager);
-
-    private:
-        void create_data_source(wl_resource* new_resource) override;
-        void get_data_device(wl_resource* new_data_device, wl_resource* seat) override;
-
-        WlDataDeviceManager* const manager;
-    };
+    std::shared_ptr<wayland_rs::Client> client;
 };
 }
 }

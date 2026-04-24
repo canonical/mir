@@ -1018,6 +1018,7 @@ fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
         false,
         false,
     );
+    object_id_method.set_const();
     object_id_method.set_body("return object_id_;");
     class.add_method(object_id_method);
 

@@ -119,7 +119,7 @@ bool mf::WlSurfaceState::surface_data_needs_refresh() const
 }
 
 mf::WlSurface::WlSurface(
-    std::shared_ptr<WlClient> const& client,
+    std::shared_ptr<mw::Client> const& client,
     std::shared_ptr<Executor> const& wayland_executor,
     std::shared_ptr<Executor> const& frame_callback_executor,
     std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,

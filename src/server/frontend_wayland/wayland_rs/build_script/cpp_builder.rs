@@ -133,22 +133,23 @@ impl CppBuilder {
                 for method in &class.methods {
                     let args_str = Self::build_arg_str_for_cpp(method);
                     let retstring = Self::build_ret_string_for_cpp(method);
+                    let const_str = if method.is_const { " const" } else { "" };
                     if method.is_virtual {
                         if method.body.is_some() {
                             result.push_str(&format!(
-                                "    virtual auto {}({}) -> {};\n",
-                                method.name, args_str, retstring
+                                "    virtual auto {}({}){} -> {};\n",
+                                method.name, args_str, const_str, retstring
                             ));
                         } else {
                             result.push_str(&format!(
-                                "    virtual auto {}({}) -> {} = 0;\n",
-                                method.name, args_str, retstring
+                                "    virtual auto {}({}){} -> {} = 0;\n",
+                                method.name, args_str, const_str, retstring
                             ));
                         }
                     } else {
                         result.push_str(&format!(
-                            "    auto {}({}) -> {};\n",
-                            method.name, args_str, retstring
+                            "    auto {}({}){} -> {};\n",
+                            method.name, args_str, const_str, retstring
                         ));
                     }
                 }
@@ -261,10 +262,11 @@ impl CppBuilder {
 
                     let args_str = Self::build_arg_str_for_cpp(method);
                     let retstring = Self::build_ret_string_for_cpp(method);
+                    let const_str = if method.is_const { " const" } else { "" };
 
                     result.push_str(&format!(
-                        "auto {}::{}::{}({}) -> {}\n",
-                        namespace_str, class.name, method.name, args_str, retstring
+                        "auto {}::{}::{}({}){} -> {}\n",
+                        namespace_str, class.name, method.name, args_str, const_str, retstring
                     ));
                     result.push_str("{\n");
                     let body = method
@@ -500,6 +502,7 @@ pub struct CppMethod {
     args: Vec<CppArg>,
     retval: Option<CppType>,
     is_virtual: bool,
+    is_const: bool,
     body: Option<String>,
     throws: bool,
     originates_from_rust: bool,
@@ -520,6 +523,7 @@ impl CppMethod {
             args: vec![],
             retval,
             is_virtual,
+            is_const: false,
             body: None,
             throws,
             originates_from_rust,
@@ -532,6 +536,10 @@ impl CppMethod {
         self.args
             .last_mut()
             .expect("args cannot be empty after push")
+    }
+
+    pub fn set_const(&mut self) {
+        self.is_const = true;
     }
 
     // Set the body of the method.
