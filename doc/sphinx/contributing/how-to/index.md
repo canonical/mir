@@ -15,8 +15,9 @@ These how-to guides cover the key aspects of working on Mir.
 
 - [Debugging Mir snaps](how-to-debug-mir-snaps)
 
-## Testing
+## Testing and releasing
 
+- [](how-to-release-a-new-mir-version)
 - [](how-to-test-mir-for-a-release)
 - [Using checkbox-mir](how-to-use-checkbox-mir)
 
