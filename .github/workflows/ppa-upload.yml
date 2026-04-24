@@ -1,9 +1,11 @@
 name: PPA Upload
 
 on:
+  schedule:
+  - cron: "0 7 * * *" # Daily at 07:00 UTC
+  workflow_dispatch:
   push:
     branches:
-    - main
     - release/[0-9]+.[0-9]+
     tags:
     - v[0-9]+.[0-9]+.[0-9]+
