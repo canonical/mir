@@ -15,78 +15,39 @@
  */
 
 #include "fractional_scale_v1.h"
+#include "protocol_error.h"
 
 #include <mir/graphics/display_configuration.h>
-#include <mir/wayland/protocol_error.h>
 #include "wl_surface.h"
 
 #include <boost/throw_exception.hpp>
 #include <memory>
 
-namespace mir
-{
-namespace frontend
-{
-
-class FractionalScaleManagerV1: public wayland::FractionalScaleManagerV1
-{
-    public:
-        FractionalScaleManagerV1(struct wl_resource* resource);
-
-        class Global: public wayland::FractionalScaleManagerV1::Global
-        {
-            public:
-                Global(wl_display* display);
-
-            private:
-                virtual void bind(wl_resource* new_wp_fractional_scale_manager_v1) override;
-        };
-
-    private:
-        virtual void get_fractional_scale(struct wl_resource* id, struct wl_resource* surface) override;
-};
-
-}
-}
-
 namespace mf = mir::frontend;
 
-auto mf::create_fractional_scale_v1(wl_display* display)
-    -> std::shared_ptr<wayland::FractionalScaleManagerV1::Global>
-{
-    return std::make_shared<FractionalScaleManagerV1::Global>(display);
-}
 
-mf::FractionalScaleManagerV1::FractionalScaleManagerV1(struct wl_resource* resource)
-    : mir::wayland::FractionalScaleManagerV1{resource, Version<1>{}}
+mf::FractionalScaleManagerV1::FractionalScaleManagerV1()
 {
 }
 
-mf::FractionalScaleManagerV1::Global::Global(wl_display* display)
-    : wayland::FractionalScaleManagerV1::Global{display, Version<1>{}}
-{
-}
 
-void mf::FractionalScaleManagerV1::Global::bind(wl_resource* new_wp_fractional_scale_manager_v1)
+auto mf::FractionalScaleManagerV1::get_fractional_scale(wayland_rs::Weak<wayland_rs::WlSurfaceImpl> const& surface)
+    -> std::shared_ptr<wayland_rs::WpFractionalScaleV1Impl>
 {
-    new FractionalScaleManagerV1{new_wp_fractional_scale_manager_v1};
-}
-
-void mf::FractionalScaleManagerV1::get_fractional_scale(struct wl_resource* id, struct wl_resource* surface)
-{
-    auto surf = WlSurface::from(surface);
+    auto surf = WlSurface::from(&surface.value());
     if (surf->get_fractional_scale())
     {
-        BOOST_THROW_EXCEPTION(mir::wayland::ProtocolError(
-            resource, Error::fractional_scale_exists, "Surface already has a fractional scale component attached"));
+        BOOST_THROW_EXCEPTION(mir::wayland_rs::ProtocolError(
+            object_id(), Error::fractional_scale_exists, "Surface already has a fractional scale component attached"));
     }
 
-    surf->set_fractional_scale(new FractionalScaleV1{id});
+    auto const result = std::make_shared<FractionalScaleV1>();
+    surf->set_fractional_scale(result);
+    return result;
 }
 
-mf::FractionalScaleV1::FractionalScaleV1(struct wl_resource* resource)
-    : mir::wayland::FractionalScaleV1{resource, Version<1>{}},
-        surface_outputs()
+mf::FractionalScaleV1::FractionalScaleV1()
+    : surface_outputs()
 {
 }
 
