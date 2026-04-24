@@ -163,6 +163,8 @@ std::vector<std::string> run_client_enumerator(mir::Server& server)
         return {};
     }
 
+    auto const wayland_display = server.wayland_display();
+
     auto const pid = fork();
     if (pid == 0)
     {
@@ -170,7 +172,6 @@ std::vector<std::string> run_client_enumerator(mir::Server& server)
         dup2(pipefd[1], STDOUT_FILENO);
         close(pipefd[1]);
 
-        auto const wayland_display = server.wayland_display();
         setenv("WAYLAND_DISPLAY", wayland_display.value().c_str(),  true);
 
         ClientGlobalEnumerator enumerator;
