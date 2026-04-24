@@ -14,11 +14,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "add_virtual_device.h"
+
 #include <mir/input/composite_event_filter.h>
-#include <mir/input/device.h>
 #include <mir/input/event_builder.h>
 #include <mir/input/input_device_hub.h>
-#include <mir/input/input_device_observer.h>
 #include <mir/input/input_device_registry.h>
 #include <mir/input/input_sink.h>
 #include <mir/input/virtual_input_device.h>
@@ -37,58 +37,8 @@ using namespace std::chrono_literals;
 namespace
 {
 static constexpr auto locate_pointer_delay = 100ms;
-
-// Mostly to account for CI slowness.
-// Adds a test pointer and waits till it's added before proceeding
-std::shared_ptr<mir::input::VirtualInputDevice> add_test_pointer(
-    std::weak_ptr<mir::input::InputDeviceRegistry> const& input_device_registry,
-    std::weak_ptr<mir::input::InputDeviceHub> const& input_device_hub)
-{
-    std::shared_ptr<mir::input::VirtualInputDevice> test_device =
-        std::make_shared<mir::input::VirtualInputDevice>("test-device", mir::input::DeviceCapability::pointer);
-
-    struct SignalingObserver : public mir::input::InputDeviceObserver
-    {
-        using Device = mir::input::Device;
-        std::shared_ptr<Device> const device_to_wait_for;
-        std::weak_ptr<mir::input::InputDeviceHub> const device_hub;
-        mir::test::Signal device_added_;
-
-        SignalingObserver(std::shared_ptr<Device> const& to_wait_for) :
-            device_to_wait_for{to_wait_for}
-        {
-        }
-
-        virtual void device_added(std::shared_ptr<Device> const& device) override
-        {
-            if (device->unique_id() == device_to_wait_for->unique_id())
-                device_added_.raise();
-        }
-
-        virtual void device_changed(std::shared_ptr<Device> const&)
-        {
-        }
-        virtual void device_removed(std::shared_ptr<Device> const&)
-        {
-        }
-        virtual void changes_complete()
-        {
-        }
-
-        void wait()
-        {
-            device_added_.wait();
-        }
-    };
-
-    auto input_device_observer =
-        std::make_shared<SignalingObserver>(input_device_registry.lock()->add_device(test_device).lock());
-    input_device_hub.lock()->add_observer(input_device_observer);
-    input_device_observer->wait();
-    input_device_observer.reset();
-
-    return test_device;
-}
+// Accounts for CI slowness - provides ample time for the alarm to fire after scheduling
+static constexpr auto locate_pointer_callback_timeout = std::chrono::seconds{5};
 }
 
 struct TestLocatePointer : miral::TestServer
@@ -165,7 +115,8 @@ TEST_P(TestPointerMovementTracking, cursor_location_is_tracked_on_movement)
             locate_pointer_invoked.raise();
         });
 
-    auto test_device = add_test_pointer(input_device_registry, input_device_hub);
+    auto test_device = miral::test::add_test_device(
+        input_device_registry.lock(), input_device_hub.lock(), mir::input::DeviceCapability::pointer);
     test_device->if_started_then(
         [this, final_pointer_position](auto* sink, auto* builder)
         {
@@ -181,7 +132,7 @@ TEST_P(TestPointerMovementTracking, cursor_location_is_tracked_on_movement)
             locate_pointer.schedule_request();
         });
 
-    locate_pointer_invoked.wait_for(locate_pointer_delay + 10ms);
+    EXPECT_TRUE(locate_pointer_invoked.wait_for(locate_pointer_callback_timeout));
 
     auto const expected_position = final_pointer_position.value_or(mir::geometry::PointF{0, 0});
     EXPECT_THAT(locate_pointer_position, Optional(expected_position));
