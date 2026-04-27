@@ -36,6 +36,7 @@ public:
     class Impl;
 
     Tag(Tag const& parent, std::string_view name);
+    ~Tag();
 
     auto name() const -> std::string_view;
 private:
