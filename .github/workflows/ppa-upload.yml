@@ -1,17 +1,53 @@
 name: PPA Upload
 
 on:
+  schedule:
+  - cron: "0 7 * * *" # Daily at 07:00 UTC
+  workflow_dispatch:
   push:
     branches:
-    - main
     - release/[0-9]+.[0-9]+
     tags:
     - v[0-9]+.[0-9]+.[0-9]+
+    paths-ignore:
+    - ".github/**"
+    - "!.github/workflows/ppa-upload.yml"
+    - "doc/**"
+    - "rpm/**"
+    - "snap/**"
+    - "spread/**"
 
 permissions: {}
 
 jobs:
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+    outputs:
+      should_run: ${{ steps.check.outputs.should_run }}
+    steps:
+    - name: Check for new commits since last successful run
+      id: check
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        if [ "${{ github.event_name }}" != "schedule" ]; then
+          echo "should_run=true" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+        last_sha=$(gh api \
+          "repos/${{ github.repository }}/actions/workflows/ppa-upload.yml/runs?status=success&branch=main&per_page=1" \
+          --jq '.workflow_runs[0].head_sha // empty')
+        if [ "$last_sha" != "${{ github.sha }}" ]; then
+          echo "should_run=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "should_run=false" >> "$GITHUB_OUTPUT"
+        fi
+
   PPAUpload:
+    needs: check
+    if: needs.check.outputs.should_run == 'true'
     permissions:
       contents: read
     strategy:
@@ -20,6 +56,7 @@ jobs:
         release:
         - "24.04"
         - "25.10"
+        - "26.04"
         - "devel"
 
     runs-on: ubuntu-latest
