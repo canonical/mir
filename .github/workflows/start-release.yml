@@ -210,7 +210,7 @@ jobs:
 
             const commentBody = [
               `## ${process.env.INPUTS_VERSION}~rc1`,
-              'Please test this release candidate following the [test-mir-for-a-release](https://canonical-mir.readthedocs.io/en/latest/contributing/how-to/test-mir-for-a-release.html) document.',
+              'Please test this release candidate following the [test-mir-for-a-release](https://canonical.com/mir/docs/latest/contributing/how-to/test-mir-for-a-release) document.',
               ...markedSections,
             ].join('\n\n');
 

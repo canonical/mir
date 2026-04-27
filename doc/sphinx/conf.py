@@ -402,6 +402,7 @@ if os.path.exists('./reuse/substitutions.yaml'):
 # Add configuration for intersphinx mapping
 # Map only the Sphinx documentation sets that you need to link to from your docs set.
 intersphinx_mapping = {
+    'frame': ("https://ubuntu.com/frame/docs/24", None),
     'checkbox': ("https://canonical-checkbox.readthedocs-hosted.com/latest/", None),
     'server': ('https://documentation.ubuntu.com/server/', None),
     'snapcraft': ('https://documentation.ubuntu.com/snapcraft/stable/', None),
