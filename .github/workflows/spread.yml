@@ -61,6 +61,7 @@ jobs:
           "lxd:...:ubuntu_devel"
           "lxd:...:ubuntu_proposed"
           "lxd:...:ubuntu_questing"
+          "lxd:...:ubuntu_resolute"
           "lxd:alpine-3.21:...:amd64"
           "lxd:alpine-3.22:...:amd64"
           "lxd:alpine-3.23:...:amd64"
