@@ -1255,7 +1255,11 @@ private:
     {
     public:
         GLMapping(DmabufTexBuffer const& parent)
-            : parent{parent}
+            : parent{parent},
+              readback_format_{
+                  get_gl_pixel_format(parent.pixel_format())
+                      ? parent.pixel_format()
+                      : mir_pixel_format_abgr_8888}
         {
             auto data_promise = std::make_shared<std::promise<std::unique_ptr<std::byte const[]>>>();
             parent.egl_executor->spawn(
@@ -1302,8 +1306,16 @@ private:
 
         auto format() const -> MirPixelFormat override
         {
-            // Because we're reading through GL the underlying format doesn't matter
-            return mir_pixel_format_argb_8888;
+            // Return the MirPixelFormat that matches the byte layout actually written by glReadPixels.
+            // When the buffer's pixel format has a known GL equivalent, glReadPixels uses that format's
+            // GL enumerant, so the bytes in memory correspond to parent.pixel_format() directly.
+            // When falling back to GL_RGBA (unknown format), the output bytes are [R, G, B, A] on
+            // little-endian, which corresponds to mir_pixel_format_abgr_8888.
+            //
+            // Returning the wrong format here causes ShmBufferTexture to choose the wrong GL upload
+            // format (e.g. GL_BGRA_EXT instead of GL_RGBA for an ABGR buffer), swapping the red and
+            // blue channels and producing a colour tint in the rendered output.
+            return readback_format_;
         }
 
         auto stride() const -> geom::Stride override
@@ -1318,6 +1330,7 @@ private:
 
     private:
         DmabufTexBuffer const& parent;
+        MirPixelFormat const readback_format_;
         std::shared_future<std::unique_ptr<std::byte const[]>> data_;
     };
 
