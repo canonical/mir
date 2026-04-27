@@ -100,7 +100,11 @@ impl CppBuilder {
 
             // Generate classes
             for class in &namespace.classes {
-                result.push_str(&format!("class {}\n", class.name));
+                if let Some(superclass) = &class.superclass {
+                    result.push_str(&format!("class {} : public {}\n", class.name, superclass));
+                } else {
+                    result.push_str(&format!("class {}\n", class.name));
+                }
                 result.push_str("{\n");
                 result.push_str("public:\n");
 
@@ -149,6 +153,16 @@ impl CppBuilder {
                     }
                 }
 
+                for member in &class.public_members {
+                    let const_str = if member.is_const { " const" } else { "" };
+                    result.push_str(&format!(
+                        "    {}{} {};\n",
+                        cpp_arg_type_to_cpp_source(&member.cpp_type, true),
+                        const_str,
+                        member.name
+                    ));
+                }
+
                 if !class.protected_constructor_args.is_empty()
                     || !class.protected_members.is_empty()
                 {
@@ -181,9 +195,11 @@ impl CppBuilder {
                     }
 
                     for member in &class.protected_members {
+                        let const_str = if member.is_const { " const" } else { "" };
                         result.push_str(&format!(
-                            "    {} {};\n",
+                            "    {}{} {};\n",
                             cpp_arg_type_to_cpp_source(&member.cpp_type, true),
+                            const_str,
                             member.name
                         ));
                     }
@@ -193,16 +209,19 @@ impl CppBuilder {
 
                 result.push_str("private:\n");
                 for member in &class.private_members {
+                    let const_str = if member.is_const { " const" } else { "" };
                     if member.optional {
                         result.push_str(&format!(
-                            "    std::optional<{}> {};\n",
+                            "    std::optional<{}>{} {};\n",
                             cpp_arg_type_to_cpp_source(&member.cpp_type, true),
+                            const_str,
                             member.name
                         ));
                     } else {
                         result.push_str(&format!(
-                            "    {} {};\n",
+                            "    {}{} {};\n",
                             cpp_arg_type_to_cpp_source(&member.cpp_type, true),
+                            const_str,
                             member.name
                         ));
                     }
@@ -378,8 +397,10 @@ impl CppNamespace {
 
 pub struct CppClass {
     pub name: String,
+    pub superclass: Option<String>,
     pub methods: Vec<CppMethod>,
     pub enums: Vec<CppEnum>,
+    pub public_members: Vec<CppArg>,
     pub protected_constructor_args: Vec<CppArg>,
     pub protected_members: Vec<CppArg>,
     pub private_members: Vec<CppArg>,
@@ -389,12 +410,18 @@ impl CppClass {
     pub fn new(name: impl Into<String>) -> CppClass {
         CppClass {
             name: sanitize_identifier(&name.into()),
+            superclass: None,
             methods: vec![],
             enums: vec![],
+            public_members: vec![],
             protected_constructor_args: vec![],
             protected_members: vec![],
             private_members: vec![],
         }
+    }
+
+    pub fn set_superclass(&mut self, name: impl Into<String>) {
+        self.superclass = Some(name.into());
     }
 
     pub fn add_method(&mut self, method: CppMethod) -> &mut CppMethod {
@@ -411,18 +438,18 @@ impl CppClass {
             .expect("enums cannot be empty after push")
     }
 
+    pub fn add_public_member(&mut self, member: CppArg) -> &mut CppArg {
+        self.public_members.push(member);
+        self.public_members
+            .last_mut()
+            .expect("public_members cannot be empty after push")
+    }
+
     pub fn add_protected_constructor_arg(&mut self, arg: CppArg) -> &mut CppArg {
         self.protected_constructor_args.push(arg);
         self.protected_constructor_args
             .last_mut()
             .expect("protected_constructor_args cannot be empty after push")
-    }
-
-    pub fn add_protected_member(&mut self, member: CppArg) -> &mut CppArg {
-        self.protected_members.push(member);
-        self.protected_members
-            .last_mut()
-            .expect("members cannot be empty after push")
     }
 
     pub fn add_private_member(&mut self, member: CppArg) -> &mut CppArg {
@@ -760,6 +787,7 @@ pub struct CppArg {
     name: String,
     has_name: Option<String>,
     optional: bool,
+    is_const: bool,
 }
 
 impl CppArg {
@@ -774,7 +802,13 @@ impl CppArg {
                 None
             },
             optional,
+            is_const: false,
         }
+    }
+
+    pub fn set_const(&mut self) -> &mut Self {
+        self.is_const = true;
+        self
     }
 
     pub fn name(&self) -> &str {
