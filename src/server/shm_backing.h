@@ -59,10 +59,10 @@ public:
      * not fatal (although faulting reads will return 0 and faulting writes
      * will not be visible in any other mapping).
      *
-     * \ref access_fault() returns whether or not an access fault has occured
+     * \ref access_fault() returns whether or not an access fault has occurred
      * in the lifetime of this Mapping<T>.
      *
-     * \returns    Whether an access fault has occured on this Mapping<T>
+     * \returns    Whether an access fault has occurred on this Mapping<T>
      */
     virtual auto access_fault() const -> bool = 0;
 

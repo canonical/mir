@@ -204,6 +204,7 @@ RenderingPlatform
 replug
 RPi
 runtime
+sandboxed
 sanitizer
 Sanitizer
 sanitizers
@@ -251,6 +252,8 @@ ubuntu
 udev
 unary
 UndefinedBehaviourSanitizer
+untrusted
+URIs
 usecases
 userland
 userspace

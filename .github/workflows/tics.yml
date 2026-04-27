@@ -4,6 +4,13 @@ on:
   push:
     branches:
     - main
+    paths-ignore:
+    - ".github/**"
+    - "!.github/workflows/tics.yml"
+    - "doc/**"
+    - "snap/**"
+    - "spread.yaml"
+    - "spread/**"
   pull_request:
   merge_group:
     types: [checks_requested]
