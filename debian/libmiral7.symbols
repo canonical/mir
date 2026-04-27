@@ -729,3 +729,5 @@ libmiral.so.7 libmiral7 #MINVER#
  (c++)"miral::WindowInfo::alpha() const@MIRAL_5.7" 5.7.0
  (c++)"miral::WindowSpecification::alpha() const@MIRAL_5.7" 5.7.0
  (c++)"miral::WindowSpecification::alpha()@MIRAL_5.7" 5.7.0
+ MIRAL_5.8@MIRAL_5.8 5.8.0
+ (c++)"std::formatter<miral::live_config::Key, char>::format(miral::live_config::Key const&, std::basic_format_context<std::__format::_Sink_iter<char>, char>&) const@MIRAL_5.8" 5.8.0

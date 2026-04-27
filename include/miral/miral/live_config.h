@@ -24,6 +24,7 @@
 #include <optional>
 #include <span>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 namespace miral::live_config
@@ -109,10 +110,8 @@ public:
 template<>
 struct std::formatter<miral::live_config::Key> : std::formatter<std::string>
 {
-    auto format(miral::live_config::Key const& key, std::format_context& ctx) const
-    {
-        return std::formatter<std::string>::format(key.to_string(), ctx);
-    }
+        auto format(miral::live_config::Key const& key, std::format_context& ctx) const
+            -> decltype(std::declval<std::formatter<std::string>>().format(std::declval<std::string>(), std::declval<std::format_context&>()));
 };
 
 #endif //MIRAL_LIVE_CONFIG_H

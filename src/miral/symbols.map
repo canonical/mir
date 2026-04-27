@@ -775,3 +775,10 @@ global:
     miral::WindowSpecification::alpha*;
   };
 } MIRAL_5.6;
+
+MIRAL_5.8 {
+global:
+  extern "C++" {
+    "std::formatter<miral::live_config::Key, char>::format(miral::live_config::Key const&, std::basic_format_context<std::__format::_Sink_iter<char>, char>&) const";
+  };
+} MIRAL_5.7;
